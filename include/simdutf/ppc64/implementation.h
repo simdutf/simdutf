@@ -9,7 +9,6 @@ namespace ppc64 {
 
 namespace {
 using namespace simdutf;
-using namespace simdutf::dom;
 } // namespace
 
 class implementation final : public simdutf::implementation {
