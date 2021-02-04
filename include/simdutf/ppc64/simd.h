@@ -2,7 +2,6 @@
 #define SIMDUTF_PPC64_SIMD_H
 
 #include "simdutf.h"
-#include "simdutf/internal/simdprune_tables.h"
 #include "simdutf/ppc64/bitmanipulation.h"
 #include <type_traits>
 
