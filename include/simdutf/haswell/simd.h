@@ -1,7 +1,6 @@
 #ifndef SIMDUTF_HASWELL_SIMD_H
 #define SIMDUTF_HASWELL_SIMD_H
 
-#include "simdutf/internal/simdprune_tables.h"
 
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
