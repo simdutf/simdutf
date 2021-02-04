@@ -1,6 +1,7 @@
 #ifndef SIMDUTF_H
 #define SIMDUTF_H
 #include <string>
+#include <cstring>
 #include <atomic>
 #include <vector>
 

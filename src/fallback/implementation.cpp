@@ -13,9 +13,9 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
     uint64_t next_pos = pos + 16;
     if (next_pos <= len) { // if it is safe to read 8 more bytes, check that they are ascii
       uint64_t v1;
-      memcpy(&v1, data + pos, sizeof(uint64_t));
+      std::memcpy(&v1, data + pos, sizeof(uint64_t));
       uint64_t v2;
-      memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
+      std::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
       uint64_t v{v1 | v2};
       if ((v & 0x8080808080808080) == 0) {
         pos = next_pos;
