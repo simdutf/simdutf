@@ -1,7 +1,7 @@
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
-namespace stage1 {
+namespace utf8_validation {
 
 /**
  * Validates that the string is actual UTF-8.
@@ -28,7 +28,7 @@ bool generic_validate_utf8(const char * input, size_t length) {
     return generic_validate_utf8<utf8_checker>(reinterpret_cast<const uint8_t *>(input),length);
 }
 
-} // namespace stage1
+} // namespace utf8_validation
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf

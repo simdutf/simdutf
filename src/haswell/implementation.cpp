@@ -35,15 +35,15 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 } // namespace simdutf
 
 #include "generic/buf_block_reader.h"
-#include "generic/stage1/utf8_lookup4_algorithm.h"
-#include "generic/stage1/utf8_validator.h"
+#include "generic/utf8_validation/utf8_lookup4_algorithm.h"
+#include "generic/utf8_validation/utf8_validator.h"
 
 
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 
 simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
-  return haswell::stage1::generic_validate_utf8(buf,len);
+  return haswell::utf8_validation::generic_validate_utf8(buf,len);
 }
 
 } // namespace SIMDUTF_IMPLEMENTATION
