@@ -1,11 +1,11 @@
 #ifndef SIMDUTF_IMPLEMENTATION_H
 #define SIMDUTF_IMPLEMENTATION_H
-
-#include "simdutf/common_defs.h"
-#include "simdutf/internal/isadetection.h"
 #include <string>
 #include <atomic>
 #include <vector>
+#include "simdutf/common_defs.h"
+#include "simdutf/internal/isadetection.h"
+
 
 namespace simdutf {
 

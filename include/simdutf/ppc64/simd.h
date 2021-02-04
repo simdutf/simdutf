@@ -177,51 +177,6 @@ template <typename T> struct base8_numeric : base8<T> {
     return (__m128i)vec_perm((__m128i)lookup_table, (__m128i)lookup_table, this->value);
   }
 
-  // Copies to 'output" all bytes corresponding to a 0 in the mask (interpreted
-  // as a bitset). Passing a 0 value for mask would be equivalent to writing out
-  // every byte to output. Only the first 16 - count_ones(mask) bytes of the
-  // result are significant but 16 bytes get written. Design consideration: it
-  // seems like a function with the signature simd8<L> compress(uint32_t mask)
-  // would be sensible, but the AVX ISA makes this kind of approach difficult.
-  template <typename L>
-  simdutf_really_inline void compress(uint16_t mask, L *output) const {
-    using internal::BitsSetTable256mul2;
-    using internal::pshufb_combine_table;
-    using internal::thintable_epi8;
-    // this particular implementation was inspired by work done by @animetosho
-    // we do it in two steps, first 8 bytes and then second 8 bytes
-    uint8_t mask1 = uint8_t(mask);      // least significant 8 bits
-    uint8_t mask2 = uint8_t(mask >> 8); // most significant 8 bits
-    // next line just loads the 64-bit values thintable_epi8[mask1] and
-    // thintable_epi8[mask2] into a 128-bit register, using only
-    // two instructions on most compilers.
-#ifdef __LITTLE_ENDIAN__
-    __m128i shufmask = (__m128i)(__vector unsigned long long){
-        thintable_epi8[mask1], thintable_epi8[mask2]};
-#else
-    __m128i shufmask = (__m128i)(__vector unsigned long long){
-        thintable_epi8[mask2], thintable_epi8[mask1]};
-    shufmask = (__m128i)vec_reve((__m128i)shufmask);
-#endif
-    // we increment by 0x08 the second half of the mask
-    shufmask = ((__m128i)shufmask) +
-               ((__m128i)(__vector int){0, 0, 0x08080808, 0x08080808});
-
-    // this is the version "nearly pruned"
-    __m128i pruned = vec_perm(this->value, this->value, shufmask);
-    // we still need to put the two halves together.
-    // we compute the popcount of the first half:
-    int pop1 = BitsSetTable256mul2[mask1];
-    // then load the corresponding mask, what it does is to write
-    // only the first pop1 bytes from the first 8 bytes, and then
-    // it fills in with the bytes from the second 8 bytes + some filling
-    // at the end.
-    __m128i compactmask =
-        vec_vsx_ld(0, reinterpret_cast<const uint8_t *>(pshufb_combine_table + pop1 * 8));
-    __m128i answer = vec_perm(pruned, (__m128i)vec_splats(0), compactmask);
-    vec_vsx_st(answer, 0, reinterpret_cast<__m128i *>(output));
-  }
-
   template <typename L>
   simdutf_really_inline simd8<L>
   lookup_16(L replace0, L replace1, L replace2, L replace3, L replace4,
@@ -422,15 +377,6 @@ template <typename T> struct simd8x64 {
            (this->chunks[2] | this->chunks[3]);
   }
 
-  simdutf_really_inline void compress(uint64_t mask, T *output) const {
-    this->chunks[0].compress(uint16_t(mask), output);
-    this->chunks[1].compress(uint16_t(mask >> 16),
-                             output + 16 - count_ones(mask & 0xFFFF));
-    this->chunks[2].compress(uint16_t(mask >> 32),
-                             output + 32 - count_ones(mask & 0xFFFFFFFF));
-    this->chunks[3].compress(uint16_t(mask >> 48),
-                             output + 48 - count_ones(mask & 0xFFFFFFFFFFFF));
-  }
 
   simdutf_really_inline uint64_t to_bitmask() const {
     uint64_t r0 = uint32_t(this->chunks[0].to_bitmask());

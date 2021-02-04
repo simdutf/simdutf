@@ -1,6 +1,8 @@
 #ifndef SIMDUTF_H
 #define SIMDUTF_H
-
+#include <string>
+#include <atomic>
+#include <vector>
 
 #include "simdutf/compiler_check.h"
 #include "simdutf/common_defs.h"
@@ -10,7 +12,7 @@ SIMDUTF_DISABLE_UNDESIRED_WARNINGS
 
 // Public API
 #include "simdutf/simdutf_version.h"
-#include "simdutf/implementation.h"tion.h"
+#include "simdutf/implementation.h"
 
 
 // Implementation-internal files (must be included before the implementations themselves, to keep

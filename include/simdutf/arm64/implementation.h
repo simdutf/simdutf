@@ -9,7 +9,6 @@ namespace arm64 {
 
 namespace {
 using namespace simdutf;
-using namespace simdutf::dom;
 }
 
 class implementation final : public simdutf::implementation {

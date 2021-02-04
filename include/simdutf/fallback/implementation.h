@@ -8,7 +8,6 @@ namespace fallback {
 
 namespace {
 using namespace simdutf;
-using namespace simdutf::dom;
 }
 
 class implementation final : public simdutf::implementation {

@@ -2,6 +2,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <random>
+#include <iostream>
+#include <iomanip>
+
 
 class RandomUTF8 final {
 public:

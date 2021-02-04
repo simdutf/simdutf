@@ -21,7 +21,7 @@ bool generic_validate_utf8(const uint8_t * input, size_t length) {
     c.check_next_input(in);
     reader.advance();
     c.check_eof();
-    return c.errors() == error_code::SUCCESS;
+    return !c.errors();
 }
 
 bool generic_validate_utf8(const char * input, size_t length) {

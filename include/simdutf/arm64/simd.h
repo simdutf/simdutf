@@ -2,7 +2,6 @@
 #define SIMDUTF_ARM64_SIMD_H
 
 #include "simdutf.h"
-#include "simdutf/internal/simdprune_tables.h"
 #include "simdutf/arm64/bitmanipulation.h"
 #include <type_traits>
 
@@ -247,48 +246,6 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
     }
 
 
-    // Copies to 'output" all bytes corresponding to a 0 in the mask (interpreted as a bitset).
-    // Passing a 0 value for mask would be equivalent to writing out every byte to output.
-    // Only the first 16 - count_ones(mask) bytes of the result are significant but 16 bytes
-    // get written.
-    // Design consideration: it seems like a function with the
-    // signature simd8<L> compress(uint16_t mask) would be
-    // sensible, but the AVX ISA makes this kind of approach difficult.
-    template<typename L>
-    simdutf_really_inline void compress(uint16_t mask, L * output) const {
-      using internal::thintable_epi8;
-      using internal::BitsSetTable256mul2;
-      using internal::pshufb_combine_table;
-      // this particular implementation was inspired by work done by @animetosho
-      // we do it in two steps, first 8 bytes and then second 8 bytes
-      uint8_t mask1 = uint8_t(mask); // least significant 8 bits
-      uint8_t mask2 = uint8_t(mask >> 8); // most significant 8 bits
-      // next line just loads the 64-bit values thintable_epi8[mask1] and
-      // thintable_epi8[mask2] into a 128-bit register, using only
-      // two instructions on most compilers.
-      uint64x2_t shufmask64 = {thintable_epi8[mask1], thintable_epi8[mask2]};
-      uint8x16_t shufmask = vreinterpretq_u8_u64(shufmask64);
-      // we increment by 0x08 the second half of the mask
-#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-      uint8x16_t inc = make_uint8x16_t(0, 0, 0, 0, 0, 0, 0, 0, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08);
-#else
-      uint8x16_t inc = {0, 0, 0, 0, 0, 0, 0, 0, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08};
-#endif
-      shufmask = vaddq_u8(shufmask, inc);
-      // this is the version "nearly pruned"
-      uint8x16_t pruned = vqtbl1q_u8(*this, shufmask);
-      // we still need to put the two halves together.
-      // we compute the popcount of the first half:
-      int pop1 = BitsSetTable256mul2[mask1];
-      // then load the corresponding mask, what it does is to write
-      // only the first pop1 bytes from the first 8 bytes, and then
-      // it fills in with the bytes from the second 8 bytes + some filling
-      // at the end.
-      uint8x16_t compactmask = vld1q_u8(reinterpret_cast<const uint8_t *>(pshufb_combine_table + pop1 * 8));
-      uint8x16_t answer = vqtbl1q_u8(pruned, compactmask);
-      vst1q_u8(reinterpret_cast<uint8_t*>(output), answer);
-    }
-
     template<typename L>
     simdutf_really_inline simd8<L> lookup_16(
         L replace0,  L replace1,  L replace2,  L replace3,
@@ -436,14 +393,6 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
 
     simdutf_really_inline simd8<T> reduce_or() const {
       return (this->chunks[0] | this->chunks[1]) | (this->chunks[2] | this->chunks[3]);
-    }
-
-
-    simdutf_really_inline void compress(uint64_t mask, T * output) const {
-      this->chunks[0].compress(uint16_t(mask), output);
-      this->chunks[1].compress(uint16_t(mask >> 16), output + 16 - count_ones(mask & 0xFFFF));
-      this->chunks[2].compress(uint16_t(mask >> 32), output + 32 - count_ones(mask & 0xFFFFFFFF));
-      this->chunks[3].compress(uint16_t(mask >> 48), output + 48 - count_ones(mask & 0xFFFFFFFFFFFF));
     }
 
     simdutf_really_inline uint64_t to_bitmask() const {

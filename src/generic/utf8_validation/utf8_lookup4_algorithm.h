@@ -171,8 +171,8 @@ using namespace simd;
       }
     }
     // do not forget to call check_eof!
-    simdutf_really_inline error_code errors() {
-      return this->error.any_bits_set_anywhere() ? error_code::UTF8_ERROR : error_code::SUCCESS;
+    simdutf_really_inline bool errors() {
+      return this->error.any_bits_set_anywhere();
     }
 
   }; // struct utf8_checker

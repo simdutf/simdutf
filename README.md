@@ -2,6 +2,23 @@
 simdutf 
 ===============================================
 
+
+Requirements
+-------
+
+- C++11 compatible compiler.
+- Recent CMake (at least 3.13)
+
+Usage
+-------
+
+```
+cmake -B build
+cmake --build build
+cd build
+ctest .
+```
+
 License
 -------
 

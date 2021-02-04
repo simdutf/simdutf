@@ -4,7 +4,6 @@
 #include <cassert>
 #include "simdutf/portability.h"
 
-namespace simdutf {
 
 #if defined(__GNUC__)
   // Marks a block with a name so that MCA analysis can see it.
@@ -161,7 +160,6 @@ namespace simdutf {
 SIMDUTF_PUSH_DISABLE_ALL_WARNINGS
 #include "simdutf/nonstd/string_view.hpp"
 SIMDUTF_POP_DISABLE_WARNINGS
-
 namespace std {
   using string_view = nonstd::string_view;
 }
