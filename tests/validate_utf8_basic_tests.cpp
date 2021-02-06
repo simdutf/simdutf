@@ -1,44 +1,10 @@
 #include "simdutf.h"
 #include <cstddef>
 #include <cstdint>
-#include <random>
 #include <iostream>
 #include <iomanip>
 
-#include "helpers/random_utf8.h"
-#include "reference/validate_utf8.h"
-
-void brute_force_tests() {
-  printf("running brute-force UTF-8 tests... ");
-  fflush(NULL);
-  std::random_device rd{};
-  simdutf::tests::helpers::RandomUTF8 gen_1_2_3_4(rd, 1, 1, 1, 1);
-  size_t total = 1000;
-  for (size_t i = 0; i < total; i++) {
-
-    auto UTF8 = gen_1_2_3_4.generate(rand() % 256);
-    if (!simdutf::validate_utf8((const char *)UTF8.data(), UTF8.size())) {
-      std::cerr << "bug" << std::endl;
-      abort();
-    }
-    for (size_t flip = 0; flip < 1000; ++flip) {
-      // we are going to hack the string as long as it is UTF-8
-      const int bitflip{1 << (rand() % 8)};
-      UTF8[rand() % UTF8.size()] = uint8_t(bitflip); // we flip exactly one bit
-      bool is_ok =
-          simdutf::validate_utf8((const char *)UTF8.data(), UTF8.size());
-      bool is_ok_basic =
-          simdutf::tests::reference::validate_utf8((const char *)UTF8.data(), UTF8.size());
-      if (is_ok != is_ok_basic) {
-        std::cerr << "bug" << std::endl;
-        abort();
-      }
-    }
-  }
-  printf("tests ok.\n");
-}
-
-void test() {
+int main() {
   printf("running hard-coded UTF-8 tests... ");
   fflush(NULL);
   // additional tests are from autobahn websocket testsuite
@@ -95,33 +61,8 @@ void test() {
       abort();
     }
   }
-  printf("tests ok.\n");
-}
 
-// This is an attempt at reproducing an issue with the utf8 fuzzer
-void puzzler() {
-  std::cout << "running puzzler... " << std::endl;
-  const char* bad64 = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x1c\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
-  size_t length = 64;
-  std::cout << "Input: \"";
-  for(size_t j = 0; j < length; j++) {
-    std::cout << "\\x" << std::hex << std::setw(2) << std::setfill('0') << uint32_t(bad64[j]);
-  }
-  std::cout << "\"" << std::endl;
-  bool is_ok{true};
-  for(const auto& e: simdutf::available_implementations) {
-      if(!e->supported_by_runtime_system()) { continue; }
-      const bool current = e->validate_utf8(bad64, length);
-      std::cout << e->name() << " returns " << current << std::endl;
-      if(current) { is_ok = false; }
-  }
-  if(!is_ok) { abort(); }
-  std::cout << "Ok!" << std::endl;
-}
+  puts("OK");
 
-int main() {
-  puzzler();
-  brute_force_tests();
-  test();
   return EXIT_SUCCESS;
 }

@@ -3,9 +3,27 @@ add_subdirectory(reference)
 
 include(${PROJECT_SOURCE_DIR}/cmake/add_cpp_test.cmake)
 link_libraries(simdutf)
-add_cpp_test(unicode_tests)
-target_link_libraries(unicode_tests
+
+add_cpp_test(validate_utf8_basic_tests)
+target_link_libraries(validate_utf8_basic_tests
     PUBLIC
-        simdutf-headers simdutf::tests::helpers::random_utf8
-        simdutf-headers simdutf::tests::helpers::validate_utf8
+        simdutf-headers
+        simdutf::tests::helpers::random_utf8
+        simdutf::tests::helpers::validate_utf8
+)
+
+add_cpp_test(validate_utf8_brute_force_tests)
+target_link_libraries(validate_utf8_brute_force_tests
+    PUBLIC
+        simdutf-headers
+        simdutf::tests::helpers::random_utf8
+        simdutf::tests::helpers::validate_utf8
+)
+
+add_cpp_test(validate_utf8_puzzler_tests)
+target_link_libraries(validate_utf8_puzzler_tests
+    PUBLIC
+        simdutf-headers
+        simdutf::tests::helpers::random_utf8
+        simdutf::tests::helpers::validate_utf8
 )
