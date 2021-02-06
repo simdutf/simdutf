@@ -1,5 +1,3 @@
-
-
 add_library(simdutf-include-source INTERFACE)
 target_link_libraries(simdutf-include-source INTERFACE simdutf-headers)
 target_include_directories(simdutf-include-source INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
