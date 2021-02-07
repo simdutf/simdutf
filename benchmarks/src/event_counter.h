@@ -1,7 +1,6 @@
 #ifndef __EVENT_COUNTER_H
 #define __EVENT_COUNTER_H
 
-#include <cassert>
 #include <cctype>
 #ifndef _MSC_VER
 #include <dirent.h>
@@ -9,20 +8,9 @@
 #include <unistd.h>
 #include <cinttypes>
 
-#include <cstdio>
-#include <cstdlib>
 #include <cstring>
 
-#include <algorithm>
 #include <chrono>
-#include <cstring>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <map>
-#include <set>
-#include <sstream>
-#include <string>
 #include <vector>
 
 #include "linux-perf-events.h"
@@ -30,18 +18,11 @@
 #include <libgen.h>
 #endif
 
-
-using std::string;
-using std::vector;
-using std::chrono::steady_clock;
-using std::chrono::time_point;
-using std::chrono::duration;
-
 struct event_count {
-  duration<double> elapsed;
-  vector<unsigned long long> event_counts;
+  std::chrono::duration<double> elapsed;
+  std::vector<unsigned long long> event_counts;
   event_count() : elapsed(0), event_counts{0,0,0,0,0} {}
-  event_count(const duration<double> _elapsed, const vector<unsigned long long> _event_counts) : elapsed(_elapsed), event_counts(_event_counts) {}
+  event_count(const std::chrono::duration<double> _elapsed, const std::vector<unsigned long long> _event_counts) : elapsed(_elapsed), event_counts(_event_counts) {}
   event_count(const event_count& other): elapsed(other.elapsed), event_counts(other.event_counts) { }
 
   // The types of counters (so we can read the getter more easily)
@@ -53,8 +34,8 @@ struct event_count {
     CACHE_MISSES
   };
 
-  double elapsed_sec() const { return duration<double>(elapsed).count(); }
-  double elapsed_ns() const { return duration<double, std::nano>(elapsed).count(); }
+  double elapsed_sec() const { return std::chrono::duration<double>(elapsed).count(); }
+  double elapsed_ns() const { return std::chrono::duration<double, std::nano>(elapsed).count(); }
   double cycles() const { return static_cast<double>(event_counts[CPU_CYCLES]); }
   double instructions() const { return static_cast<double>(event_counts[INSTRUCTIONS]); }
   double branch_misses() const { return static_cast<double>(event_counts[BRANCH_MISSES]); }
@@ -111,11 +92,11 @@ struct event_aggregate {
 
 struct event_collector {
   event_count count{};
-  time_point<steady_clock> start_clock{};
+  std::chrono::time_point<std::chrono::steady_clock> start_clock{};
 
 #if defined(__linux__)
   LinuxEvents<PERF_TYPE_HARDWARE> linux_events;
-  event_collector() : linux_events(vector<int>{
+  event_collector() : linux_events(std::vector<int>{
     PERF_COUNT_HW_CPU_CYCLES,
     PERF_COUNT_HW_INSTRUCTIONS,
     PERF_COUNT_HW_BRANCH_MISSES,
@@ -136,10 +117,10 @@ struct event_collector {
 #if defined(__linux)
     linux_events.start();
 #endif
-    start_clock = steady_clock::now();
+    start_clock = std::chrono::steady_clock::now();
   }
   inline event_count& end() {
-    time_point<steady_clock> end_clock = steady_clock::now();
+    const auto end_clock = std::chrono::steady_clock::now();
 #if defined(__linux)
     linux_events.end(count.event_counts);
 #endif
