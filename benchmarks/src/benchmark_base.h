@@ -66,6 +66,7 @@ namespace simdutf::benchmarks {
           all << allocate_count;
         }
 
+        all.has_events = collector.has_events();
         return all;
     }
 }

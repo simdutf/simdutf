@@ -60,14 +60,12 @@ namespace simdutf::benchmarks {
     }
 
     void BenchmarkBase::print_summary(const event_aggregate& all, double data_size) const {
-        const double _1GHz = 1'000'000'000.0;
-
-        const double freq = (all.best.cycles() / all.best.elapsed_sec()) / _1GHz;
-        const double insperunit = all.best.instructions() / data_size;
         const double gbs = data_size / all.best.elapsed_ns();
 
-        const bool has_events = true; // TODO
-        if (has_events) {
+        if (all.has_events) {
+            const double _1GHz = 1'000'000'000.0;
+            const double freq = (all.best.cycles() / all.best.elapsed_sec()) / _1GHz;
+            const double insperunit = all.best.instructions() / data_size;
             printf("%8.3f ins/byte, %8.3f GHz, %8.3f GB/s \n", insperunit, freq, gbs);
         } else {
             printf("%8.3f GB/s \n", gbs);

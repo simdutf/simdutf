@@ -63,12 +63,13 @@ struct event_count {
 };
 
 struct event_aggregate {
+  bool has_events = false;
   int iterations = 0;
   event_count total{};
   event_count best{};
   event_count worst{};
 
-  event_aggregate() {}
+  event_aggregate() = default;
 
   void operator<<(const event_count& other) {
     if (iterations == 0 || other.elapsed < best.elapsed) {
