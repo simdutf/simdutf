@@ -13,7 +13,7 @@
 // Default Haswell to on if this is x86-64. Even if we're not compiled for it, it could be selected
 // at runtime.
 #ifndef SIMDUTF_IMPLEMENTATION_HASWELL
-#define SIMDUTF_IMPLEMENTATION_HASWELL (SIMDUTF_IS_X86_64)
+#define SIMDUTF_IMPLEMENTATION_HASWELL (SIMDUTF_IS_X86_64 && __AVX2__)
 #endif
 // To see why  (__BMI__) && (__PCLMUL__) && (__LZCNT__) are not part of this next line, see
 // https://github.com/simdutf/simdutf/issues/1247
