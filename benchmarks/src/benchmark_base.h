@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <variant>
 #include <random>
+#include "event_counter.h"
 
 namespace simdutf::benchmarks {
 
@@ -45,9 +46,26 @@ namespace simdutf::benchmarks {
     protected:
         virtual void run(const std::string& procedure_name, size_t iterations) = 0;
 
-        void run(const input::Testcase& testcase);
+        template<typename PROCEDURE>
+        event_aggregate count_events(PROCEDURE, size_t iterations);
+        void print_summary(const event_aggregate& all, double data_size) const;
 
+        void run(const input::Testcase& testcase);
         void prepare_input(const input::Testcase& benchmark);
         void load_file(const std::filesystem::path& path);
     };
+
+    template<typename PROCEDURE>
+    event_aggregate BenchmarkBase::count_events(PROCEDURE procedure, size_t iterations) {
+        event_collector collector;
+        event_aggregate all{};
+        for(size_t i = 0; i < iterations; i++) {
+          collector.start();
+          procedure();
+          event_count allocate_count = collector.end();
+          all << allocate_count;
+        }
+
+        return all;
+    }
 }

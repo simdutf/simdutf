@@ -1,6 +1,7 @@
 #include "benchmark.h"
 #include "simdutf.h"
 
+#include <cassert>
 #include <array>
 
 namespace simdutf::benchmarks {
@@ -8,7 +9,7 @@ namespace simdutf::benchmarks {
 Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
     : BenchmarkBase(std::move(testcases)) {
 
-    std::array<std::string, 1> implemented_functions{"validatate_utf8"};
+    std::array<std::string, 1> implemented_functions{"validate_utf8"};
 
     for (const auto& implementation: simdutf::available_implementations) {
         for (const auto& function: implemented_functions) {
@@ -40,7 +41,34 @@ Benchmark Benchmark::create(const CommandLine& cmdline) {
 }
 
 void Benchmark::run(const std::string& procedure_name, size_t iterations) {
-    printf("will run: %s, %lu iteration(s)\n", procedure_name.c_str(), iterations);
+    printf("%s, input size: %lu, iterations: %lu, \n",
+           procedure_name.c_str(), input_data.size(), iterations);
+
+    const size_t p = procedure_name.find('+');
+    assert(p != std::string::npos);
+
+    const std::string name{procedure_name.substr(0, p)};
+    const std::string impl{procedure_name.substr(p + 1)};
+
+    auto implementation = simdutf::available_implementations[impl];
+    if (implementation == nullptr) {
+        throw std::runtime_error("Wrong implementation " + impl);
+    }
+
+    if (name == "validate_utf8") {
+        const char*  data = reinterpret_cast<const char*>(input_data.data());
+        const size_t size = input_data.size();
+        volatile bool sink{false};
+
+        auto proc = [implementation, data, size, &sink]() {
+            sink = implementation->validate_utf8(data, size);
+        };
+
+        const auto result = count_events(proc, iterations);
+        print_summary(result, size);
+    }
+    else
+        abort();
 }
 
 const std::set<std::string>& Benchmark::all_procedures() const {
