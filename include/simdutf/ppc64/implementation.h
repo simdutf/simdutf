@@ -16,8 +16,8 @@ public:
   simdutf_really_inline implementation()
       : simdutf::implementation("ppc64", "PPC64 ALTIVEC",
                                  internal::instruction_set::ALTIVEC) {}
-  simdutf_warn_unused bool validate_utf8(const char *buf,
-                                          size_t len) const noexcept final;
+  simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+  simdutf_warn_unused bool validate_utf16(const char *buf, size_t len) const noexcept final;
 };
 
 } // namespace ppc64

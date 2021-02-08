@@ -17,6 +17,7 @@ public:
       internal::instruction_set::AVX2 | internal::instruction_set::PCLMULQDQ | internal::instruction_set::BMI1 | internal::instruction_set::BMI2
   ) {}
   simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+  simdutf_warn_unused bool validate_utf16(const char *buf, size_t len) const noexcept final;
 };
 
 } // namespace haswell

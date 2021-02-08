@@ -15,6 +15,7 @@ class implementation final : public simdutf::implementation {
 public:
   simdutf_really_inline implementation() : simdutf::implementation("westmere", "Intel/AMD SSE4.2", internal::instruction_set::SSE42 | internal::instruction_set::PCLMULQDQ) {}
   simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+  simdutf_warn_unused bool validate_utf16(const char *buf, size_t len) const noexcept final;
 };
 
 } // namespace westmere

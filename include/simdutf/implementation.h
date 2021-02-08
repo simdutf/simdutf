@@ -30,6 +30,15 @@ simdutf_really_inline simdutf_warn_unused bool validate_utf8(const std::string_v
 }
 
 /**
+ * Validate the UTF-16 string.
+ *
+ * @param buf the string to validate.
+ * @param len the length of the string in bytes.
+ * @return true if the string is valid UTF-16.
+ */
+simdutf_warn_unused bool validate_utf16(const char * buf, size_t len) noexcept;
+
+/**
  * Validate the UTF-8 string.
  *
  * @param p the string to validate.
@@ -38,6 +47,27 @@ simdutf_really_inline simdutf_warn_unused bool validate_utf8(const std::string_v
 simdutf_really_inline simdutf_warn_unused bool validate_utf8(const std::string& s) noexcept {
   return validate_utf8(s.data(), s.size());
 }
+
+/**
+ * Validate the UTF-16 string.
+ *
+ * @param sv the string_view to validate.
+ * @return true if the string is valid UTF-16.
+ */
+simdutf_really_inline simdutf_warn_unused bool validate_utf16(const std::string_view sv) noexcept {
+  return validate_utf16(sv.data(), sv.size());
+}
+
+/**
+ * Validate the UTF-16 string.
+ *
+ * @param s the string to validate.
+ * @return true if the string is valid UTF-16.
+ */
+simdutf_really_inline simdutf_warn_unused bool validate_utf16(const std::string& s) noexcept {
+  return validate_utf16(s.data(), s.size());
+}
+
 /**
  * An implementation of simdutf for a particular CPU architecture.
  *
@@ -97,6 +127,17 @@ public:
    * @return true if and only if the string is valid UTF-8.
    */
   simdutf_warn_unused virtual bool validate_utf8(const char *buf, size_t len) const noexcept = 0;
+
+  /**
+   * Validate the UTF-16 string.
+   *
+   * Overridden by each implementation.
+   *
+   * @param buf the string to validate.
+   * @param len the length of the string in bytes.
+   * @return true if and only if the string is valid UTF-16.
+   */
+  simdutf_warn_unused virtual bool validate_utf16(const char *buf, size_t len) const noexcept = 0;
 
 protected:
   /** @private Construct an implementation with the given name and description. For subclasses. */

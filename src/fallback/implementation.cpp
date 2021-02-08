@@ -1,5 +1,7 @@
 #include "simdutf/fallback/begin.h"
 
+#include "generic/utf16_validation/utf16_scalar_validator.h"
+
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 
@@ -64,6 +66,10 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
     pos = next_pos;
   }
   return true;
+}
+
+simdutf_warn_unused bool implementation::validate_utf16(const char *buf, size_t len) const noexcept {
+    return simdutf::fallback::utf16_validation::scalar_validate_utf16(buf, len);
 }
 
 } // namespace SIMDUTF_IMPLEMENTATION

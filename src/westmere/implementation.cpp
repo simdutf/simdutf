@@ -36,6 +36,7 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 #include "generic/buf_block_reader.h"
 #include "generic/utf8_validation/utf8_lookup4_algorithm.h"
 #include "generic/utf8_validation/utf8_validator.h"
+#include "generic/utf16_validation/utf16_scalar_validator.h"
 
 //
 // Implementation-specific overrides
@@ -46,6 +47,10 @@ namespace SIMDUTF_IMPLEMENTATION {
 
 simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
   return westmere::utf8_validation::generic_validate_utf8(buf,len);
+}
+
+simdutf_warn_unused bool implementation::validate_utf16(const char *buf, size_t len) const noexcept {
+  return westmere::utf16_validation::scalar_validate_utf16(buf,len);
 }
 
 } // namespace SIMDUTF_IMPLEMENTATION

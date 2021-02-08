@@ -19,6 +19,7 @@ public:
   ) {}
 
   simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+  simdutf_warn_unused bool validate_utf16(const char *buf, size_t len) const noexcept final;
 };
 
 } // namespace fallback
