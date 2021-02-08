@@ -69,6 +69,56 @@ simdutf_really_inline simdutf_warn_unused bool validate_utf16(const std::string&
 }
 
 /**
+ * Convert possibly broken UTF-8 string into UTF-16 string.
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * @param input         the string to convert
+ * @param length        the length of the string in bytes
+ * @param utf16_buffer  the pointer to buffer that can hold conversion result
+ * @return the number of written bytes; 0 if the input was not valid UTF-8 string
+ */
+simdutf_warn_unused size_t convert_utf8_to_utf16(const char * buf, size_t len, char* utf16_output) noexcept;
+
+/**
+ * Convert valid UTF-8 string into UTF-16 string.
+ *
+ * This function assumes that the input string is valid UTF-8.
+ *
+ * @param input         the string to convert
+ * @param length        the length of the string in bytes
+ * @param utf16_buffer  the pointer to buffer that can hold conversion result
+ * @return the number of written bytes
+ */
+simdutf_warn_unused size_t convert_valid_utf8_to_utf16(const char * buf, size_t len, char* utf16_buffer) noexcept;
+
+/**
+ * Convert possibly broken UTF-16 string into UTF-8 string.
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * @param input         the string to convert
+ * @param length        the length of the string in bytes
+ * @param utf16_buffer  the pointer to buffer that can hold conversion result
+ * @return number of written bytes; 0 if input is not a valid UTF-16 string
+ */
+simdutf_warn_unused size_t convert_utf16_to_utf8(const char * buf, size_t len, char* utf16_buffer) noexcept;
+
+/**
+ * Convert valid UTF-16 string into UTF-8 string.
+ *
+ * This function assumes that the input string is valid UTF-16.
+ *
+ * @param input         the string to convert
+ * @param length        the length of the string in bytes
+ * @param utf16_buffer  the pointer to buffer that can hold conversion result
+ * @return number of written bytes; 0 if conversion is not possible
+ */
+simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char * buf, size_t len, char* utf16_buffer) noexcept;
+
+/**
  * An implementation of simdutf for a particular CPU architecture.
  *
  * Also used to maintain the currently active implementation. The active implementation is
