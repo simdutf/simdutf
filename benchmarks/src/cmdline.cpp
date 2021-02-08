@@ -38,8 +38,20 @@ namespace {
             if ((arg == "-F") or (arg == "--input-file")) {
                 const std::string& value = arguments.at(i + 1);
                 cmdline.files.insert(value);
-
                 i += 2;
+
+                try {
+                    while (true) {
+                        const std::string& value = arguments.at(i);
+                        if (not value.empty() and value[0] != '-') {
+                            cmdline.files.insert(value);
+                            i += 1;
+                        } else
+                            break;
+                    }
+                } catch (const std::out_of_range&) {
+                    /* that's fine */;
+                }
             }
             else if ((arg == "-P") or (arg == "--procedure")) {
                 const std::string& value = arguments.at(i + 1);
