@@ -61,6 +61,10 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
   return 0; // stub
 }
 
+simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char* /*buf*/, size_t /*len*/, char* /*utf8_output*/) const noexcept {
+  return 0; // stub
+}
+
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
 
