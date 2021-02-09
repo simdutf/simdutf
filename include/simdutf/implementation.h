@@ -227,6 +227,18 @@ public:
    */
   simdutf_warn_unused virtual size_t convert_utf16_to_utf8(const char * buf, size_t len, char* utf8_buffer) const noexcept = 0;
 
+  /**
+   * Convert valid UTF-16 string into UTF-8 string.
+   *
+   * This function assumes that the input string is valid UTF-16.
+   *
+   * @param input         the string to convert
+   * @param length        the length of the string in bytes
+   * @param utf8_buffer   the pointer to buffer that can hold conversion result
+   * @return number of written bytes; 0 if conversion is not possible
+   */
+  simdutf_warn_unused virtual size_t convert_valid_utf16_to_utf8(const char * buf, size_t len, char* utf8_buffer) const noexcept = 0;
+
 protected:
   /** @private Construct an implementation with the given name and description. For subclasses. */
   simdutf_really_inline implementation(

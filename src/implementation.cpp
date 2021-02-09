@@ -59,6 +59,10 @@ public:
     return set_best()->convert_utf16_to_utf8(buf, len, utf8_output);
   }
 
+  simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char * buf, size_t len, char* utf8_output) const noexcept final override {
+    return set_best()->convert_valid_utf16_to_utf8(buf, len, utf8_output);
+  }
+
   simdutf_really_inline detect_best_supported_implementation_on_first_use() noexcept : implementation("best_supported_detector", "Detects the best supported implementation and sets it", 0) {}
 
 private:
@@ -112,6 +116,10 @@ public:
   }
 
   simdutf_warn_unused size_t convert_utf16_to_utf8(const char*, size_t, char*) const noexcept final override {
+    return 0;
+  }
+
+  simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char*, size_t, char*) const noexcept final override {
     return 0;
   }
 
