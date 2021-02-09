@@ -189,6 +189,19 @@ public:
    */
   simdutf_warn_unused virtual bool validate_utf16(const char *buf, size_t len) const noexcept = 0;
 
+  /**
+   * Convert possibly broken UTF-8 string into UTF-16 string.
+   *
+   * During the conversion also validation of the input string is done.
+   * This function is suitable to work with inputs from untrusted sources.
+   *
+   * @param input         the string to convert
+   * @param length        the length of the string in bytes
+   * @param utf16_buffer  the pointer to buffer that can hold conversion result
+   * @return the number of written bytes; 0 if the input was not valid UTF-8 string
+   */
+  simdutf_warn_unused virtual size_t convert_utf8_to_utf16(const char * buf, size_t len, char* utf16_output) const noexcept = 0;
+
 protected:
   /** @private Construct an implementation with the given name and description. For subclasses. */
   simdutf_really_inline implementation(

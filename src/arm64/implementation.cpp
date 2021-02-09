@@ -51,6 +51,10 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
   return arm64::utf8_validation::generic_validate_utf8(buf,len);
 }
 
+simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* /*buf*/, size_t /*len*/, char* /*utf16_output*/) const noexcept {
+  return 0; // stub
+}
+
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
 
