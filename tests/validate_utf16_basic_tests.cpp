@@ -2,46 +2,124 @@
 
 #include <random>
 #include <algorithm>
+#include <stdexcept>
+
+namespace utf16 {
+
+  // returns whether the value can be represented in the UTF-16
+  bool valid_value(uint32_t value) {
+    /*
+      RFC-2781 (2. UTF-16 definition):
+
+      Characters with values greater than 0x10FFFF cannot be encoded in UTF-16.
+    */
+    if (value > 0x10'FFFF)
+      return false;
+
+    /*
+      RFC-2781 (2. UTF-16 definition):
+
+      Note: Values between 0xD800 and 0xDFFF are specifically reserved for
+      use with UTF-16, and don't have any characters assigned to them.
+    */
+    if ((value >= 0xD800) and (value <= 0xDFFF))
+      return false;
+
+    return true;
+  }
+
+  // Encodes the value using either one or two words (returns 1 or 2 respectively)
+  // Returns 0 if the value cannot be encoded
+  int encode(uint32_t value, uint16_t& W1, uint16_t& W2) {
+    if (!valid_value(value))
+      return 0;
+
+    if (value <= 0xffff) {
+      W1 = uint16_t(value);
+      return 1;
+    } else {
+      value -= 0x10000;
+      W1 = uint16_t(0xd800 | ((value >> 10) & 0x03ff));
+      W2 = uint16_t(0xdc00 | (value & 0x03ff));
+      return 2;
+    }
+  }
+} // namespace utf16
 
 namespace utf16::random {
 
-  // Generates UTF16 string with one-word codepoints; values
-  // from ranges [0x0000 .. 0xd7ff] and [0xe000 .. 0xffff]
-  class SingleCodepointGenerator {
+  /*
+    Generates valid random UTF-16
+
+    It might generate streams consisting:
+    - only single 16-bit words (Generator(..., 1, 0));
+    - only surrogate pairs, two 16-bit words (Generator(..., 0, 1))
+    - mixed, depending on given probabilities (Generator(..., 1, 1))
+  */
+  class Generator {
     std::mt19937 gen;
 
   public:
-    SingleCodepointGenerator(std::random_device& rd)
-      : gen{rd()} {}
+    Generator(std::random_device& rd, int single_word_prob, int two_words_probability)
+      : gen{rd()}
+      , utf16_length({double(single_word_prob),
+                      double(single_word_prob),
+                      double(2 * two_words_probability)}) {}
 
     std::vector<uint16_t> generate(size_t size);
     std::vector<uint16_t> generate(size_t size, long seed);
 
   private:
-    std::uniform_int_distribution<uint16_t> random_word{0x0000, 0xffff};
-    uint16_t generate();
+    std::discrete_distribution<> utf16_length;
+    std::uniform_int_distribution<uint32_t> single_word0{0x0000'0000, 0x0000'd7ff};
+    std::uniform_int_distribution<uint32_t> single_word1{0x0000'e000, 0x0000'ffff};
+    std::uniform_int_distribution<uint32_t> two_words   {0x0001'0000, 0x0010'ffff};
+    uint32_t generate();
   };
 
-  std::vector<uint16_t> SingleCodepointGenerator::generate(size_t count)
+  std::vector<uint16_t> Generator::generate(size_t size)
   {
+    if (size % 2 == 1)
+      throw std::invalid_argument("Not implemented yet");
+
     std::vector<uint16_t> result;
-    result.reserve(count);
-    for (size_t i=0; i < count; i++)
-      result.push_back(generate());
+    result.reserve(size);
+
+    uint16_t W1;
+    uint16_t W2;
+    while (result.size() < size) {
+      const uint32_t value = generate();
+      switch (utf16::encode(value, W1, W2)) {
+        case 0:
+          throw std::runtime_error("Random UTF-16 generator is broken");
+        case 1:
+          result.push_back(W1);
+          break;
+        case 2:
+          result.push_back(W1);
+          result.push_back(W2);
+          break;
+      }
+    }
 
     return result;
   }
 
-  std::vector<uint16_t> SingleCodepointGenerator::generate(size_t size, long seed) {
+  std::vector<uint16_t> Generator::generate(size_t size, long seed) {
     gen.seed(seed);
     return generate(size);
   }
 
-  uint16_t SingleCodepointGenerator::generate() {
-    while (true) {
-      const uint16_t res = random_word(gen);
-      if (res <= 0xd7ff or res >= 0xe000)
-        return res;
+  uint32_t Generator::generate() {
+    switch (utf16_length(gen)) {
+      case 0:
+        return single_word0(gen);
+      case 1:
+        return single_word1(gen);
+      case 2:
+        return two_words(gen);
+      default:
+        abort();
     }
   }
 
@@ -76,12 +154,32 @@ void test_impl_##name(const simdutf::implementation& implementation)
 
 std::vector<uint16_t> generate_valid_utf16(size_t size = 512) {
   std::random_device rd{};
-  utf16::random::SingleCodepointGenerator generator{rd};
+  utf16::random::Generator generator{rd, 1, 0};
   return generator.generate(size);
 }
 
-TEST(validate_utf16__returns_true_for_valid_input_single_codepoint) {
-  const auto utf16{generate_valid_utf16()};
+TEST(validate_utf16__returns_true_for_valid_input__single_words) {
+  std::random_device rd{};
+  utf16::random::Generator generator{rd, 1, 0};
+  const auto utf16{generator.generate(512)};
+
+  ASSERT_TRUE(implementation.validate_utf16(
+                reinterpret_cast<const char*>(utf16.data()), utf16.size() * 2));
+}
+
+TEST(validate_utf16__returns_true_for_valid_input__surrogate_pairs) {
+  std::random_device rd{};
+  utf16::random::Generator generator{rd, 0, 1};
+  const auto utf16{generator.generate(512)};
+
+  ASSERT_TRUE(implementation.validate_utf16(
+                reinterpret_cast<const char*>(utf16.data()), utf16.size() * 2));
+}
+
+TEST(validate_utf16__returns_true_for_valid_input__mixed) {
+  std::random_device rd{};
+  utf16::random::Generator generator{rd, 1, 1};
+  const auto utf16{generator.generate(512)};
 
   ASSERT_TRUE(implementation.validate_utf16(
                 reinterpret_cast<const char*>(utf16.data()), utf16.size() * 2));
@@ -138,7 +236,9 @@ int main() {
     const simdutf::implementation& impl = *implementation;
     printf("Checking implementation %s\n", implementation->name().c_str());
 
-    validate_utf16__returns_true_for_valid_input_single_codepoint(*implementation);
+    validate_utf16__returns_true_for_valid_input__single_words(*implementation);
+    validate_utf16__returns_true_for_valid_input__surrogate_pairs(*implementation);
+    validate_utf16__returns_true_for_valid_input__mixed(*implementation);
     validate_utf16__returns_true_for_empty_string(*implementation);
     validate_utf16__returns_false_when_input_has_odd_number_of_bytes(*implementation);
     validate_utf16__returns_false_when_input_has_wrong_first_word_value(*implementation);

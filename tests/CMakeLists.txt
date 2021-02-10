@@ -22,3 +22,4 @@ target_link_libraries(validate_utf8_puzzler_tests PUBLIC simdutf-headers)
 
 add_cpp_test(validate_utf16_basic_tests)
 target_link_libraries(validate_utf16_basic_tests PUBLIC simdutf-headers)
+target_compile_options(validate_utf16_basic_tests PRIVATE -Wfatal-errors)
