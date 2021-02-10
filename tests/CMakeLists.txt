@@ -19,3 +19,6 @@ target_link_libraries(validate_utf8_brute_force_tests
 
 add_cpp_test(validate_utf8_puzzler_tests)
 target_link_libraries(validate_utf8_puzzler_tests PUBLIC simdutf-headers)
+
+add_cpp_test(validate_utf16_basic_tests)
+target_link_libraries(validate_utf16_basic_tests PUBLIC simdutf-headers)
