@@ -1,5 +1,6 @@
 #include "simdutf.h"
 
+#include <array>
 #include <random>
 #include <algorithm>
 #include <stdexcept>
@@ -176,6 +177,7 @@ TEST(validate_utf16__returns_true_for_valid_input__surrogate_pairs) {
                 reinterpret_cast<const char*>(utf16.data()), utf16.size() * 2));
 }
 
+// mixed = either 16-bit or 32-bit codewords
 TEST(validate_utf16__returns_true_for_valid_input__mixed) {
   std::random_device rd{};
   utf16::random::Generator generator{rd, 1, 1};
@@ -219,10 +221,61 @@ TEST(validate_utf16__returns_false_when_input_has_wrong_first_word_value) {
       const uint16_t old = utf16[i];
       utf16[i] = wrong_value;
 
-      ASSERT_FALSE(implementation.validate_utf16(buf, 1));
+      ASSERT_FALSE(implementation.validate_utf16(buf, len));
 
       utf16[i] = old;
     }
+  }
+}
+
+/*
+ RFC-2781:
+
+ 3) [..] if W2 is not between 0xDC00 and 0xDFFF, the sequence is in error.
+    Terminate.
+*/
+TEST(validate_utf16__returns_false_when_input_has_wrong_second_word_value) {
+  auto utf16{generate_valid_utf16(128)};
+  const char*  buf = reinterpret_cast<const char*>(utf16.data());
+  const size_t len = 2 * utf16.size();
+
+  const std::array<uint16_t, 5> sample_wrong_second_word{
+    0x0000, 0x1000, 0xdbff, 0xe000, 0xffff
+  };
+
+  const uint16_t valid_surrogate_W1 = 0xd800;
+  for (uint16_t W2: sample_wrong_second_word) {
+    for (size_t i=0; i < utf16.size() - 1; i++) {
+      const uint16_t old_W1 = utf16[i + 0];
+      const uint16_t old_W2 = utf16[i + 1];
+
+      utf16[i + 0] = valid_surrogate_W1;
+      utf16[i + 1] = W2;
+
+      ASSERT_FALSE(implementation.validate_utf16(buf, len));
+
+      utf16[i + 0] = old_W1;
+      utf16[i + 1] = old_W2;
+    }
+  }
+}
+
+/*
+ RFC-2781:
+
+ 3) If there is no W2 (that is, the sequence ends with W1) [...]
+    the sequence is in error. Terminate.
+*/
+TEST(validate_utf16__returns_false_when_input_is_truncated) {
+  const uint16_t valid_surrogate_W1 = 0xd800;
+  for (size_t size = 1; size < 128; size++) {
+    auto utf16{generate_valid_utf16(128)};
+    const char*  buf = reinterpret_cast<const char*>(utf16.data());
+    const size_t len = 2 * utf16.size();
+
+    utf16[size - 1] = valid_surrogate_W1;
+
+    ASSERT_FALSE(implementation.validate_utf16(buf, len));
   }
 }
 
@@ -242,5 +295,7 @@ int main() {
     validate_utf16__returns_true_for_empty_string(*implementation);
     validate_utf16__returns_false_when_input_has_odd_number_of_bytes(*implementation);
     validate_utf16__returns_false_when_input_has_wrong_first_word_value(*implementation);
+    validate_utf16__returns_false_when_input_has_wrong_second_word_value(*implementation);
+    validate_utf16__returns_false_when_input_is_truncated(*implementation);
   }
 }
