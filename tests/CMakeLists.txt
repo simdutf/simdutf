@@ -14,12 +14,12 @@ target_link_libraries(validate_utf8_brute_force_tests
     PUBLIC
         simdutf-headers
         simdutf::tests::helpers::random_utf8
-        simdutf::tests::helpers::validate_utf8
+        simdutf::tests::reference
 )
 
 add_cpp_test(validate_utf8_puzzler_tests)
 target_link_libraries(validate_utf8_puzzler_tests PUBLIC simdutf-headers)
 
 add_cpp_test(validate_utf16_basic_tests)
-target_link_libraries(validate_utf16_basic_tests PUBLIC simdutf-headers)
+target_link_libraries(validate_utf16_basic_tests PUBLIC simdutf simdutf::tests::reference)
 target_compile_options(validate_utf16_basic_tests PRIVATE -Wfatal-errors)

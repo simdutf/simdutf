@@ -6,47 +6,8 @@
 #include <algorithm>
 #include <stdexcept>
 
-namespace utf16 {
-
-  // returns whether the value can be represented in the UTF-16
-  bool valid_value(uint32_t value) {
-    /*
-      RFC-2781 (2. UTF-16 definition):
-
-      Characters with values greater than 0x10FFFF cannot be encoded in UTF-16.
-    */
-    if (value > 0x10'FFFF)
-      return false;
-
-    /*
-      RFC-2781 (2. UTF-16 definition):
-
-      Note: Values between 0xD800 and 0xDFFF are specifically reserved for
-      use with UTF-16, and don't have any characters assigned to them.
-    */
-    if ((value >= 0xD800) and (value <= 0xDFFF))
-      return false;
-
-    return true;
-  }
-
-  // Encodes the value using either one or two words (returns 1 or 2 respectively)
-  // Returns 0 if the value cannot be encoded
-  int encode(uint32_t value, uint16_t& W1, uint16_t& W2) {
-    if (!valid_value(value))
-      return 0;
-
-    if (value <= 0xffff) {
-      W1 = uint16_t(value);
-      return 1;
-    } else {
-      value -= 0x10000;
-      W1 = uint16_t(0xd800 | ((value >> 10) & 0x03ff));
-      W2 = uint16_t(0xdc00 | (value & 0x03ff));
-      return 2;
-    }
-  }
-} // namespace utf16
+#include "reference/encode_utf16.h"
+#include "test_macros.h"
 
 namespace utf16::random {
 
@@ -91,7 +52,7 @@ namespace utf16::random {
     uint16_t W2;
     while (result.size() < size) {
       const uint32_t value = generate();
-      switch (utf16::encode(value, W1, W2)) {
+      switch (simdutf::tests::reference::utf16::encode(value, W1, W2)) {
         case 0:
           throw std::runtime_error("Random UTF-16 generator is broken");
         case 1:
@@ -127,46 +88,6 @@ namespace utf16::random {
 
 } // namespace utf16::random
 
-using test_procedure = void (*)(const simdutf::implementation& impl);
-std::list<test_procedure>& test_procedures() {
-  static std::list<test_procedure> singleton;
-
-  return singleton;
-}
-
-struct register_test {
-  register_test(test_procedure proc) {
-    test_procedures().push_back(proc);
-  }
-};
-
-#define TEST(name)                                          \
-void test_impl_##name(const simdutf::implementation& impl); \
-void name(const simdutf::implementation& impl) {            \
-  std::string title = #name;                                \
-  std::replace(title.begin(), title.end(), '_', ' ');       \
-  printf("%s...", title.c_str()); fflush(stdout);           \
-  test_impl_##name(impl);                                   \
-  puts(" OK");                                              \
-}                                                           \
-static register_test test_register_##name(name);            \
-void test_impl_##name(const simdutf::implementation& implementation)
-
-#define ASSERT_TRUE(cond) {                                 \
-  const bool expr = (cond);                                 \
-  if (!expr) {                                              \
-    printf("expected %s to be true, it's false\n", #cond);  \
-    exit(1);                                                \
-  }                                                         \
-}
-
-#define ASSERT_FALSE(cond) {                                \
-  const bool expr = !(cond);                                \
-  if (!expr) {                                              \
-    printf("expected %s to be false, it's true\n", #cond);  \
-    exit(1);                                                \
-  }                                                         \
-}
 
 std::vector<uint16_t> generate_valid_utf16(size_t size = 512) {
   std::random_device rd{};
