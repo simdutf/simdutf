@@ -2,6 +2,7 @@
 
 #include <array>
 #include <random>
+#include <list>
 #include <algorithm>
 #include <stdexcept>
 
@@ -126,6 +127,19 @@ namespace utf16::random {
 
 } // namespace utf16::random
 
+using test_procedure = void (*)(const simdutf::implementation& impl);
+std::list<test_procedure>& test_procedures() {
+  static std::list<test_procedure> singleton;
+
+  return singleton;
+}
+
+struct register_test {
+  register_test(test_procedure proc) {
+    test_procedures().push_back(proc);
+  }
+};
+
 #define TEST(name)                                          \
 void test_impl_##name(const simdutf::implementation& impl); \
 void name(const simdutf::implementation& impl) {            \
@@ -135,6 +149,7 @@ void name(const simdutf::implementation& impl) {            \
   test_impl_##name(impl);                                   \
   puts(" OK");                                              \
 }                                                           \
+static register_test test_register_##name(name);            \
 void test_impl_##name(const simdutf::implementation& implementation)
 
 #define ASSERT_TRUE(cond) {                                 \
@@ -289,13 +304,7 @@ int main() {
     const simdutf::implementation& impl = *implementation;
     printf("Checking implementation %s\n", implementation->name().c_str());
 
-    validate_utf16__returns_true_for_valid_input__single_words(*implementation);
-    validate_utf16__returns_true_for_valid_input__surrogate_pairs(*implementation);
-    validate_utf16__returns_true_for_valid_input__mixed(*implementation);
-    validate_utf16__returns_true_for_empty_string(*implementation);
-    validate_utf16__returns_false_when_input_has_odd_number_of_bytes(*implementation);
-    validate_utf16__returns_false_when_input_has_wrong_first_word_value(*implementation);
-    validate_utf16__returns_false_when_input_has_wrong_second_word_value(*implementation);
-    validate_utf16__returns_false_when_input_is_truncated(*implementation);
+    for (auto test: test_procedures())
+      test(*implementation);
   }
 }
