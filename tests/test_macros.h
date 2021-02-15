@@ -1,5 +1,7 @@
 #pragma once
 
+#include <list>
+
 namespace {
 
   using test_procedure = void (*)(const simdutf::implementation& impl);
