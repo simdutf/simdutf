@@ -8,7 +8,7 @@ namespace simdutf::tests::helpers {
 
     RandomInt::RandomInt(uint64_t lo, uint64_t hi, uint64_t seed)
       : distr{lo, hi}
-      , gen{seed} {}
+      , gen(seed) {}
 
     uint64_t RandomInt::operator()() {
       return distr(gen);
@@ -18,7 +18,7 @@ namespace simdutf::tests::helpers {
       : RandomIntRanges(ranges, std::random_device{}()) {}
 
     RandomIntRanges::RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint16_t>> ranges_, uint64_t seed)
-      : gen{seed} {
+      : gen(seed) {
 
       if (ranges_.size() == 0)
         throw std::invalid_argument("Ranges must not be empty");
