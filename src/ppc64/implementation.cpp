@@ -1,8 +1,5 @@
 #include "simdutf/ppc64/begin.h"
 
-//
-// Stage 1
-//
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {

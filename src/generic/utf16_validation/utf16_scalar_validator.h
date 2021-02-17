@@ -1,3 +1,4 @@
+// Daniel: This should go in the fallback kernel TODO
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
