@@ -38,6 +38,12 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 #include "generic/utf8_validation/utf8_lookup4_algorithm.h"
 #include "generic/utf8_validation/utf8_validator.h"
 #include "generic/utf16_validation/utf16_scalar_validator.h"
+// transcoding from UTF-16 to UTF-8
+#include "generic/utf16_to_utf8/valid_utf16_to_utf8.h"
+#include "generic/utf16_to_utf8/utf16_to_utf8.h"
+// transcoding from UTF-8 to UTF-16
+#include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
+#include "generic/utf8_to_utf16/utf8_to_utf16.h"
 
 //
 // Implementation-specific overrides
