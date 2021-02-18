@@ -43,23 +43,23 @@ public:
     return set_best()->validate_utf8(buf, len);
   }
 
-  simdutf_warn_unused bool validate_utf16(const char * buf, size_t len) const noexcept final override {
+  simdutf_warn_unused bool validate_utf16(const char16_t * buf, size_t len) const noexcept final override {
     return set_best()->validate_utf16(buf, len);
   }
 
-  simdutf_warn_unused size_t convert_utf8_to_utf16(const char * buf, size_t len, char* utf16_output) const noexcept final override {
+  simdutf_warn_unused size_t convert_utf8_to_utf16(const char * buf, size_t len, char16_t* utf16_output) const noexcept final override {
     return set_best()->convert_utf8_to_utf16(buf, len, utf16_output);
   }
 
-  simdutf_warn_unused size_t convert_valid_utf8_to_utf16(const char * buf, size_t len, char* utf16_output) const noexcept final override {
+  simdutf_warn_unused size_t convert_valid_utf8_to_utf16(const char * buf, size_t len, char16_t* utf16_output) const noexcept final override {
     return set_best()->convert_valid_utf8_to_utf16(buf, len, utf16_output);
   }
 
-  simdutf_warn_unused size_t convert_utf16_to_utf8(const char * buf, size_t len, char* utf8_output) const noexcept final override {
+  simdutf_warn_unused size_t convert_utf16_to_utf8(const char16_t * buf, size_t len, char* utf8_output) const noexcept final override {
     return set_best()->convert_utf16_to_utf8(buf, len, utf8_output);
   }
 
-  simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char * buf, size_t len, char* utf8_output) const noexcept final override {
+  simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char16_t * buf, size_t len, char* utf8_output) const noexcept final override {
     return set_best()->convert_valid_utf16_to_utf8(buf, len, utf8_output);
   }
 
@@ -103,23 +103,23 @@ public:
     // fallback, it implies that the programmer would need a fallback for our fallback.
   }
 
-  simdutf_warn_unused bool validate_utf16(const char*, size_t) const noexcept final override {
+  simdutf_warn_unused bool validate_utf16(const char16_t*, size_t) const noexcept final override {
     return false;
   }
 
-  simdutf_warn_unused size_t convert_utf8_to_utf16(const char*, size_t, char*) const noexcept final override {
+  simdutf_warn_unused size_t convert_utf8_to_utf16(const char*, size_t, char16_t*) const noexcept final override {
     return 0;
   }
 
-  simdutf_warn_unused size_t convert_valid_utf8_to_utf16(const char*, size_t, char*) const noexcept final override {
+  simdutf_warn_unused size_t convert_valid_utf8_to_utf16(const char*, size_t, char16_t*) const noexcept final override {
     return 0;
   }
 
-  simdutf_warn_unused size_t convert_utf16_to_utf8(const char*, size_t, char*) const noexcept final override {
+  simdutf_warn_unused size_t convert_utf16_to_utf8(const char16_t*, size_t, char*) const noexcept final override {
     return 0;
   }
 
-  simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char*, size_t, char*) const noexcept final override {
+  simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char16_t*, size_t, char*) const noexcept final override {
     return 0;
   }
 

@@ -19,6 +19,6 @@ else(MSVC)
     target_compile_options(simdutf INTERFACE -fPIC)
   endif()
   target_compile_options(simdutf PRIVATE -Wall -Wextra -Weffc++)
-  target_compile_options(simdutf PRIVATE -Wsign-compare -Wshadow -Wwrite-strings -Wpointer-arith -Winit-self -Wconversion -Wno-sign-conversion)
+  target_compile_options(simdutf PRIVATE -Wfatal-errors -Wsign-compare -Wshadow -Wwrite-strings -Wpointer-arith -Winit-self -Wconversion -Wno-sign-conversion)
 endif(MSVC)
 

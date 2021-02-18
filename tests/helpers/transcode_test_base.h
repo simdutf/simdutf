@@ -28,13 +28,18 @@ namespace simdutf::tests::helpers {
       for (const uint32_t codepoint: collection) {
         prepare_input(codepoint, conversion);
       }
-
       output.resize(reference_output.size() + output_size_margin);
     }
 
     template <typename PROCEDURE>
-    bool operator()(PROCEDURE procedure) {
-      const size_t saved_bytes = procedure(input.data(), input.size(), output.data());
+    bool toutf16(PROCEDURE procedure) {
+      size_t saved_bytes = saved_bytes = procedure(input.data(), input.size(), reinterpret_cast<char16_t*>(output.data()));
+      return validate(saved_bytes);
+    }
+
+    template <typename PROCEDURE>
+    bool toutf8(PROCEDURE procedure) {
+      size_t saved_bytes = procedure(reinterpret_cast<char16_t*>(input.data()), input.size(), output.data());
       return validate(saved_bytes);
     }
 

@@ -9,7 +9,11 @@
 
 // Default Westmere to on if this is x86-64, unless we'll always select Haswell.
 #ifndef SIMDUTF_IMPLEMENTATION_WESTMERE
-#define SIMDUTF_IMPLEMENTATION_WESTMERE (SIMDUTF_IS_X86_64 && !SIMDUTF_REQUIRES_HASWELL)
+//
+// You do not want to set it to (SIMDUTF_IS_X86_64 && !SIMDUTF_REQUIRES_HASWELL)
+// because you want to rely on runtime dispatch!
+//
+#define SIMDUTF_IMPLEMENTATION_WESTMERE (SIMDUTF_IS_X86_64)
 #endif
 #define SIMDUTF_CAN_ALWAYS_RUN_WESTMERE (SIMDUTF_IMPLEMENTATION_WESTMERE && SIMDUTF_IS_X86_64 && __SSE4_2__ && __PCLMUL__)
 

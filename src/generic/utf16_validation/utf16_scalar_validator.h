@@ -60,7 +60,7 @@ namespace utf16 {
     }
 } // namespace utf16
 
-bool scalar_validate_utf16(const char * input, size_t length) {
+bool scalar_validate_utf16(const char16_t * input, size_t length) {
     if (length % 2 == 1) // a UTF-16 conists 16-bit words only, odd-length strings are not valid
         return false;
 

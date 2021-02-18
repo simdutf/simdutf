@@ -50,17 +50,17 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
   return westmere::utf8_validation::generic_validate_utf8(buf, len);
 }
 
-simdutf_warn_unused bool implementation::validate_utf16(const char *buf, size_t len) const noexcept {
+simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, size_t len) const noexcept {
   return westmere::utf16_validation::scalar_validate_utf16(buf, len);
 }
 
-simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* /*buf*/, size_t /*len*/, char* /*utf16_output*/) const noexcept {
+simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* /*buf*/, size_t /*len*/, char16_t* /*utf16_output*/) const noexcept {
   return 0; // stub
 }
 
-simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* /*buf*/, size_t /*len*/, char* /*utf16_output*/) const noexcept {
+simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* input, size_t size, char16_t* utf16_output) const noexcept {
   size_t pos = 0;
-  uint16_t *start = output;
+  char16_t* start{utf16_output};
   while (pos + 16 <= size) {
     const __m128i in = _mm_loadu_si128((__m128i *)(input + pos));
     const uint16_t non_ascii_chars = uint16_t(_mm_movemask_epi8(in));
@@ -68,11 +68,11 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
     if(non_ascii_chars == 0) {
         // could use _mm_cvtepi8_epi16
         const __m128i out1 = _mm_unpacklo_epi8(in, _mm_setzero_si128());// order of parameter determines endianness
-        _mm_storeu_si128((__m128i*)output, out1);
-        output += 8;
+        _mm_storeu_si128((__m128i*)utf16_output, out1);
+        utf16_output += 8;
         const __m128i out2 = _mm_unpackhi_epi8(in, _mm_setzero_si128());
-        _mm_storeu_si128((__m128i*)output, out2);
-        output += 8;
+        _mm_storeu_si128((__m128i*)utf16_output, out2);
+        utf16_output += 8;
         pos += 16;
         continue;
     }
@@ -86,7 +86,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
     const __m128i hn = _mm_set1_epi8(uint8_t(0xF));
     const __m128i in_high_nibbles = _mm_and_si128(hn, _mm_srli_epi16(in, 4));
     // We could remove the UTF8 headers with one instruction:
-    const uint16_t start_of_code_point = uint16_t(_mm_movemask_epi8(_mm_shuffle_epi8(_mm_set_epi8(0xff, 0xff, 0xff, 0xff, 0x0, 0x0, 0x0, 0x0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff), in_high_nibbles)));
+    const uint16_t start_of_code_point = uint16_t(_mm_movemask_epi8(_mm_shuffle_epi8(_mm_set_epi8(char(0xff), char(0xff), char(0xff), char(0xff), 0x0, 0x0, 0x0, 0x0, char(0xff), char(0xff), char(0xff), char(0xff), char(0xff), char(0xff), char(0xff), char(0xff)), in_high_nibbles)));
     /////////////
     // ASCII characters are the start and the end of a code point 
     // and anything immediately before the start of a code point 
@@ -95,8 +95,8 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
     const uint16_t end_of_code_point = uint16_t((start_of_code_point >> 1) | (! non_ascii_chars));
     const uint16_t twelvebits_mask = 0xFFF;
     const uint16_t twelvebits_end_of_code_point = end_of_code_point&twelvebits_mask;
-    const uint8_t idx = utf8bigindex[twelvebits_end_of_code_point][0];
-    const uint8_t consumed = utf8bigindex[twelvebits_end_of_code_point][1];
+    const uint8_t idx = utf8_to_utf16::utf8bigindex[twelvebits_end_of_code_point][0];
+    const uint8_t consumed = utf8_to_utf16::utf8bigindex[twelvebits_end_of_code_point][1];
     //
     // Let us first try to see if we are in the easy two-byte scenario
     //
@@ -105,16 +105,16 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
         // we process SIX (6) input code-words. The max length in bytes of six code words
         // spanning between 1 and 2 bytes each is 12 bytes.
         // On processors where pdep/pext is fast, we might be able to use a small lookup table.
-        const __m128i sh = _mm_loadu_si128((const __m128i *)shufutf8[idx]);
+        const __m128i sh = _mm_loadu_si128((const __m128i *)utf8_to_utf16::shufutf8[idx]);
         const __m128i perm = _mm_shuffle_epi8(in, sh);
         const __m128i ascii = _mm_and_si128(perm,_mm_set1_epi16(0x7f));
         const __m128i highbyte = _mm_and_si128(perm,_mm_set1_epi16(0x1f00));
         const __m128i composed = _mm_or_si128(ascii,_mm_srli_epi16(highbyte,2));
-        _mm_storeu_si128((__m128i*)output, composed);
-        output += 6;
+        _mm_storeu_si128((__m128i*)utf16_output, composed);
+        utf16_output += 6;
         pos += consumed;
     } else if (idx < 145) {
-        const __m128i sh = _mm_loadu_si128((const __m128i *)shufutf8[idx]);
+        const __m128i sh = _mm_loadu_si128((const __m128i *)utf8_to_utf16::shufutf8[idx]);
         const __m128i perm = _mm_shuffle_epi8(in, sh);
         const __m128i ascii = _mm_and_si128(perm,_mm_set1_epi32(0x7f)); // 7 or 6 bits
         const __m128i middlebyte = _mm_and_si128(perm,_mm_set1_epi32(0x3f00)); // 5 or 6 bits
@@ -123,11 +123,11 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
         const __m128i highbyte_shifted = _mm_srli_epi32(highbyte,4);
         const __m128i composed = _mm_or_si128(_mm_or_si128(ascii,middlebyte_shifted),highbyte_shifted);
         const __m128i composed_repacked = _mm_packus_epi32(composed,composed);
-        _mm_storeu_si128((__m128i*)output,  composed_repacked);
-        output += 4;
+        _mm_storeu_si128((__m128i*)utf16_output,  composed_repacked);
+        utf16_output += 4;
         pos += consumed;
     } else if(idx < 209) {
-        const __m128i sh = _mm_loadu_si128((const __m128i *)shufutf8[idx]);
+        const __m128i sh = _mm_loadu_si128((const __m128i *)utf8_to_utf16::shufutf8[idx]);
         const __m128i perm = _mm_shuffle_epi8(in, sh);
         const __m128i ascii = _mm_and_si128(perm,_mm_set1_epi32(0x7f)); 
         const __m128i middlebyte = _mm_and_si128(perm,_mm_set1_epi32(0x3f00));
@@ -153,12 +153,12 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
         _mm_storeu_si128((__m128i*)surrogate_buffer,  surrogates);
         for(size_t i = 0; i < 3; i++) {
             if(basic_buffer[i]<65536) {
-                *output = uint16_t(basic_buffer[i]);
-                output++;
+                utf16_output[0] = uint16_t(basic_buffer[i]);
+                utf16_output++;
             } else {
-                output[0] = uint16_t(surrogate_buffer[i] &0xFFFF);
-                output[1] = uint16_t(surrogate_buffer[i] >> 16);
-                output += 2;
+                utf16_output[0] = uint16_t(surrogate_buffer[i] &0xFFFF);
+                utf16_output[1] = uint16_t(surrogate_buffer[i] >> 16);
+                utf16_output += 2;
             }
         }
         pos += consumed;        
@@ -166,17 +166,17 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
         // here we know that there is an error but we do not handle errors
     }
   }
-  size_t len = strlen_utf8_to_utf16_with_length(input + pos, size - pos);
-  finisher_functions::utf8_to_utf16_with_length(input + pos, size - pos, output);
-  output += len;
-  return output - start;
+  size_t len = utf8_to_utf16::finisher_functions::strlen_utf8(input + pos, size - pos);
+  utf8_to_utf16::finisher_functions::utf8_to_utf16_with_length(input + pos, size - pos, utf16_output);
+  utf16_output += len;
+  return utf16_output - start;
 }
 
-simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char* /*buf*/, size_t /*len*/, char* /*utf8_output*/) const noexcept {
+simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t* /*buf*/, size_t /*len*/, char* /*utf8_output*/) const noexcept {
   return 0; // stub
 }
 
-simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const char* /*buf*/, size_t /*len*/, char* /*utf8_output*/) const noexcept {
+simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const char16_t* /*buf*/, size_t /*len*/, char* /*utf8_output*/) const noexcept {
   return 0; // stub
 }
 

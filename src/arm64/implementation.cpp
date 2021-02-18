@@ -54,23 +54,23 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
   return arm64::utf8_validation::generic_validate_utf8(buf,len);
 }
 
-simdutf_warn_unused bool implementation::validate_utf16(const char *buf, size_t len) const noexcept {
+simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, size_t len) const noexcept {
   return arm64::utf16_validation::scalar_validate_utf16(buf, len);
 }
 
-simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* /*buf*/, size_t /*len*/, char* /*utf16_output*/) const noexcept {
+simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* /*buf*/, size_t /*len*/, char16_t* /*utf16_output*/) const noexcept {
   return 0; // stub
 }
 
-simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* /*buf*/, size_t /*len*/, char* /*utf16_output*/) const noexcept {
+simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* /*buf*/, size_t /*len*/, char16_t* /*utf16_output*/) const noexcept {
   return 0; // stub
 }
 
-simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char* /*buf*/, size_t /*len*/, char* /*utf8_output*/) const noexcept {
+simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t* /*buf*/, size_t /*len*/, char* /*utf8_output*/) const noexcept {
   return 0; // stub
 }
 
-simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const char* /*buf*/, size_t /*len*/, char* /*utf8_output*/) const noexcept {
+simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const char16_t* /*buf*/, size_t /*len*/, char* /*utf8_output*/) const noexcept {
   return 0; // stub
 }
 
