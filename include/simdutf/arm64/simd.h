@@ -434,6 +434,17 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
         this->chunks[3] <= mask
       ).to_bitmask();
     }
+
+    simdutf_really_inline uint64_t lt(const T m) const {
+      const simd8<T> mask = simd8<T>::splat(m);
+      return  simd8x64<bool>(
+        this->chunks[0] < mask,
+        this->chunks[1] < mask,
+        this->chunks[2] < mask,
+        this->chunks[3] < mask
+      ).to_bitmask();
+    }
+
   }; // struct simd8x64<T>
 
 } // namespace simd

@@ -58,6 +58,15 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* /*b
   return 0; // stub
 }
 
+uint64_t compute_utf8_continuation_mask(const char* input) {
+  simd8x64<int8_t> in(reinterpret_cast<const int8_t *>(input));
+  return in.lt(-65 + 1); // -65 is 0b10111111 in two-complement's, so largest possible continuabtion byte
+}
+
+size_t convert(const char* input, size_t size, char16_t* utf16_output) {
+  
+}
+
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* input, size_t size, char16_t* utf16_output) const noexcept {
   size_t pos = 0;
   char16_t* start{utf16_output};
