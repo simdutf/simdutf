@@ -2,12 +2,36 @@
 
 #include <stdexcept>
 #include <algorithm>
+#include <string>
 
 #include <tests/reference/encode_utf8.h>
 #include <tests/reference/encode_utf16.h>
 
 namespace simdutf::tests::helpers {
 
+  void transcode_test_base::encode_utf8(uint32_t codepoint, std::vector<char>& target) {
+    ::simdutf::tests::reference::utf8::encode(codepoint, [&target](uint8_t byte) {
+      target.push_back(byte);
+    });
+  }
+
+  void transcode_test_base::encode_utf16(uint32_t codepoint, std::vector<char16_t>& target) {
+    char16_t W1;
+    char16_t W2;
+    switch (::simdutf::tests::reference::utf16::encode(codepoint, W1, W2)) {
+      case 1:
+        target.push_back(W1);
+        break;
+
+      case 2:
+        target.push_back(W1);
+        target.push_back(W2);
+        break;
+
+      default:
+        throw std::invalid_argument(std::string("Value can't be encoded as UTF16 code-point : ") + std::to_string(codepoint));
+    }
+  }
 
   /**
    * transcode_utf8_to_utf16_test_base can be used to test UTF8 => UTF16 transcoding.
@@ -26,12 +50,6 @@ namespace simdutf::tests::helpers {
   void transcode_utf8_to_utf16_test_base::prepare_input(uint32_t codepoint) {
       encode_utf8(codepoint, input_utf8);
       encode_utf16(codepoint, reference_output_utf16);
-  }
-
-  void transcode_utf8_to_utf16_test_base::encode_utf8(uint32_t codepoint, std::vector<char>& target) {
-    ::simdutf::tests::reference::utf8::encode(codepoint, [&target](uint8_t byte) {
-      target.push_back(byte);
-    });
   }
 
  
@@ -57,23 +75,6 @@ namespace simdutf::tests::helpers {
     return true;
   }
 
-  void transcode_utf8_to_utf16_test_base::encode_utf16(uint32_t codepoint, std::vector<char16_t>& target) {
-    char16_t W1;
-    char16_t W2;
-    switch (::simdutf::tests::reference::utf16::encode(codepoint, W1, W2)) {
-      case 1:
-        target.push_back(W1);
-        break;
-
-      case 2:
-        target.push_back(W1);
-        target.push_back(W2);
-        break;
-
-      default:
-        throw std::invalid_argument(std::string("Value can't be encoded as UTF16 code-point : ") + std::to_string(codepoint));
-    }
-  }
 
 
 
@@ -98,12 +99,6 @@ namespace simdutf::tests::helpers {
       encode_utf8(codepoint, reference_output_utf8);
   }
 
-  void transcode_utf16_to_utf8_test_base::encode_utf8(uint32_t codepoint, std::vector<char>& target) {
-    ::simdutf::tests::reference::utf8::encode(codepoint, [&target](uint8_t byte) {
-      target.push_back(byte);
-    });
-  }
-
  
   bool transcode_utf16_to_utf8_test_base::validate(size_t saved_chars) const {
     if (saved_chars != reference_output_utf8.size()) {
@@ -126,19 +121,4 @@ namespace simdutf::tests::helpers {
     return true;
   }
 
-  void transcode_utf16_to_utf8_test_base::encode_utf16(uint32_t codepoint, std::vector<char16_t>& target) {
-    char16_t W1;
-    char16_t W2;
-    switch (::simdutf::tests::reference::utf16::encode(codepoint, W1, W2)) {
-      case 1:
-        target.push_back(W1);
-        break;
-      case 2:
-        target.push_back(W1);
-        target.push_back(W2);
-        break;
-      default:
-        throw std::invalid_argument(std::string("Value can't be encoded as UTF16 code-point : ") + std::to_string(codepoint));
-    }
-  }
 }

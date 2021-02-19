@@ -14,10 +14,16 @@ namespace simdutf::tests::helpers {
    * However, more could be done to avoid code redundancies.
    */
 
+
+  class transcode_test_base {
+  protected:
+    void encode_utf8(uint32_t codepoint, std::vector<char>& target);
+    void encode_utf16(uint32_t codepoint, std::vector<char16_t>& target);
+  };
   /**
    * This class can be used to test UTF8 => UTF16 transcoding.
    */ 
-  class transcode_utf8_to_utf16_test_base {
+  class transcode_utf8_to_utf16_test_base : transcode_test_base {
   public:
     using GenerateCodepoint = std::function<uint32_t()>;
 
@@ -46,8 +52,6 @@ namespace simdutf::tests::helpers {
 
   private:
     void prepare_input(uint32_t codepoint);
-    void encode_utf8(uint32_t codepoint, std::vector<char>& target);
-    void encode_utf16(uint32_t codepoint, std::vector<char16_t>& target);
     bool validate(size_t procedure_result) const;
   };
 
@@ -55,7 +59,7 @@ namespace simdutf::tests::helpers {
   /**
    * This class can be used to test UTF16 => UTF8 transcoding.
    */
-  class transcode_utf16_to_utf8_test_base {
+  class transcode_utf16_to_utf8_test_base : transcode_test_base {
   public:
     using GenerateCodepoint = std::function<uint32_t()>;
 
@@ -85,8 +89,6 @@ namespace simdutf::tests::helpers {
 
   private:
     void prepare_input(uint32_t codepoint);
-    void encode_utf8(uint32_t codepoint, std::vector<char>& target);
-    void encode_utf16(uint32_t codepoint, std::vector<char16_t>& target);
     bool validate(size_t procedure_result) const;
   };
 
