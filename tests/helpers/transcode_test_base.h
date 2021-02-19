@@ -10,8 +10,6 @@ namespace simdutf::tests::helpers {
    * It would be nice to use a single helper for both UTF8 => UTF16
    * and UTF8 <= UTF16, but the function signatures differ when you
    * represent UTF8 with char8_t and UTF16 with char16_t.
-   *
-   * However, more could be done to avoid code redundancies.
    */
 
 
@@ -20,6 +18,7 @@ namespace simdutf::tests::helpers {
     void encode_utf8(uint32_t codepoint, std::vector<char>& target);
     void encode_utf16(uint32_t codepoint, std::vector<char16_t>& target);
   };
+
   /**
    * This class can be used to test UTF8 => UTF16 transcoding.
    */ 
