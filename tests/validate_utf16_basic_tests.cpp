@@ -29,8 +29,8 @@ namespace utf16::random {
                       double(single_word_prob),
                       double(2 * two_words_probability)}) {}
 
-    std::vector<uint16_t> generate(size_t size);
-    std::vector<uint16_t> generate(size_t size, long seed);
+    std::vector<char16_t> generate(size_t size);
+    std::vector<char16_t> generate(size_t size, long seed);
 
   private:
     std::discrete_distribution<> utf16_length;
@@ -40,16 +40,16 @@ namespace utf16::random {
     uint32_t generate();
   };
 
-  std::vector<uint16_t> Generator::generate(size_t size)
+  std::vector<char16_t> Generator::generate(size_t size)
   {
     if (size % 2 == 1)
       throw std::invalid_argument("Not implemented yet");
 
-    std::vector<uint16_t> result;
+    std::vector<char16_t> result;
     result.reserve(size);
 
-    uint16_t W1;
-    uint16_t W2;
+    char16_t W1;
+    char16_t W2;
     while (result.size() < size) {
       const uint32_t value = generate();
       switch (simdutf::tests::reference::utf16::encode(value, W1, W2)) {
@@ -68,7 +68,7 @@ namespace utf16::random {
     return result;
   }
 
-  std::vector<uint16_t> Generator::generate(size_t size, long seed) {
+  std::vector<char16_t> Generator::generate(size_t size, long seed) {
     gen.seed(seed);
     return generate(size);
   }
@@ -89,7 +89,7 @@ namespace utf16::random {
 } // namespace utf16::random
 
 
-std::vector<uint16_t> generate_valid_utf16(size_t size = 512) {
+std::vector<char16_t> generate_valid_utf16(size_t size = 512) {
   std::random_device rd{};
   utf16::random::Generator generator{rd, 1, 0};
   return generator.generate(size);
@@ -101,7 +101,7 @@ TEST(validate_utf16__returns_true_for_valid_input__single_words) {
   const auto utf16{generator.generate(512)};
 
   ASSERT_TRUE(implementation.validate_utf16(
-                reinterpret_cast<const char*>(utf16.data()), utf16.size() * 2));
+                reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
 }
 
 TEST(validate_utf16__returns_true_for_valid_input__surrogate_pairs) {
@@ -110,7 +110,7 @@ TEST(validate_utf16__returns_true_for_valid_input__surrogate_pairs) {
   const auto utf16{generator.generate(512)};
 
   ASSERT_TRUE(implementation.validate_utf16(
-                reinterpret_cast<const char*>(utf16.data()), utf16.size() * 2));
+                reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
 }
 
 // mixed = either 16-bit or 32-bit codewords
@@ -120,19 +120,13 @@ TEST(validate_utf16__returns_true_for_valid_input__mixed) {
   const auto utf16{generator.generate(512)};
 
   ASSERT_TRUE(implementation.validate_utf16(
-                reinterpret_cast<const char*>(utf16.data()), utf16.size() * 2));
+                reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
 }
 
 TEST(validate_utf16__returns_true_for_empty_string) {
-  const char* buf = "";
+  const char16_t* buf = (char16_t*)"";
 
   ASSERT_TRUE(implementation.validate_utf16(buf, 0));
-}
-
-TEST(validate_utf16__returns_false_when_input_has_odd_number_of_bytes) {
-  const char* buf = "?";
-
-  ASSERT_FALSE(implementation.validate_utf16(buf, 1));
 }
 
 // The first word must not be in range [0xDC00 .. 0xDFFF]
@@ -149,12 +143,12 @@ TEST(validate_utf16__returns_false_when_input_has_odd_number_of_bytes) {
 */
 TEST(validate_utf16__returns_false_when_input_has_wrong_first_word_value) {
   auto utf16{generate_valid_utf16(128)};
-  const char*  buf = reinterpret_cast<const char*>(utf16.data());
-  const size_t len = 2 * utf16.size();
+  const char16_t*  buf = reinterpret_cast<const char16_t*>(utf16.data());
+  const size_t len = utf16.size();
 
-  for (uint16_t wrong_value = 0xdc00; wrong_value <= 0xdfff; wrong_value++) {
+  for (char16_t wrong_value = 0xdc00; wrong_value <= 0xdfff; wrong_value++) {
     for (size_t i=0; i < utf16.size(); i++) {
-      const uint16_t old = utf16[i];
+      const char16_t old = utf16[i];
       utf16[i] = wrong_value;
 
       ASSERT_FALSE(implementation.validate_utf16(buf, len));
@@ -172,18 +166,18 @@ TEST(validate_utf16__returns_false_when_input_has_wrong_first_word_value) {
 */
 TEST(validate_utf16__returns_false_when_input_has_wrong_second_word_value) {
   auto utf16{generate_valid_utf16(128)};
-  const char*  buf = reinterpret_cast<const char*>(utf16.data());
-  const size_t len = 2 * utf16.size();
+  const char16_t*  buf = reinterpret_cast<const char16_t*>(utf16.data());
+  const size_t len = utf16.size();
 
-  const std::array<uint16_t, 5> sample_wrong_second_word{
+  const std::array<char16_t, 5> sample_wrong_second_word{
     0x0000, 0x1000, 0xdbff, 0xe000, 0xffff
   };
 
-  const uint16_t valid_surrogate_W1 = 0xd800;
-  for (uint16_t W2: sample_wrong_second_word) {
+  const char16_t valid_surrogate_W1 = 0xd800;
+  for (char16_t W2: sample_wrong_second_word) {
     for (size_t i=0; i < utf16.size() - 1; i++) {
-      const uint16_t old_W1 = utf16[i + 0];
-      const uint16_t old_W2 = utf16[i + 1];
+      const char16_t old_W1 = utf16[i + 0];
+      const char16_t old_W2 = utf16[i + 1];
 
       utf16[i + 0] = valid_surrogate_W1;
       utf16[i + 1] = W2;
@@ -203,11 +197,11 @@ TEST(validate_utf16__returns_false_when_input_has_wrong_second_word_value) {
     the sequence is in error. Terminate.
 */
 TEST(validate_utf16__returns_false_when_input_is_truncated) {
-  const uint16_t valid_surrogate_W1 = 0xd800;
+  const char16_t valid_surrogate_W1 = 0xd800;
   for (size_t size = 1; size < 128; size++) {
     auto utf16{generate_valid_utf16(128)};
-    const char*  buf = reinterpret_cast<const char*>(utf16.data());
-    const size_t len = 2 * utf16.size();
+    const char16_t*  buf = reinterpret_cast<const char16_t*>(utf16.data());
+    const size_t len = utf16.size();
 
     utf16[size - 1] = valid_surrogate_W1;
 

@@ -1,8 +1,5 @@
 #include "simdutf/arm64/begin.h"
 
-//
-// Stage 1
-//
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
@@ -39,8 +36,13 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 #include "generic/buf_block_reader.h"
 #include "generic/utf8_validation/utf8_lookup4_algorithm.h"
 #include "generic/utf8_validation/utf8_validator.h"
-#include "generic/utf16_validation/utf16_scalar_validator.h"
-
+#include "generic/utf16_validation/utf16_scalar_validator.h" // Daniel: This should go in the fallback kernel TODO
+// transcoding from UTF-16 to UTF-8
+#include "generic/utf16_to_utf8/valid_utf16_to_utf8.h"
+#include "generic/utf16_to_utf8/utf16_to_utf8.h"
+// transcoding from UTF-8 to UTF-16
+#include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
+#include "generic/utf8_to_utf16/utf8_to_utf16.h"
 
 //
 // Implementation-specific overrides
@@ -52,23 +54,23 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
   return arm64::utf8_validation::generic_validate_utf8(buf,len);
 }
 
-simdutf_warn_unused bool implementation::validate_utf16(const char *buf, size_t len) const noexcept {
+simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, size_t len) const noexcept {
   return arm64::utf16_validation::scalar_validate_utf16(buf, len);
 }
 
-simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* /*buf*/, size_t /*len*/, char* /*utf16_output*/) const noexcept {
+simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* /*buf*/, size_t /*len*/, char16_t* /*utf16_output*/) const noexcept {
   return 0; // stub
 }
 
-simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* /*buf*/, size_t /*len*/, char* /*utf16_output*/) const noexcept {
+simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* /*buf*/, size_t /*len*/, char16_t* /*utf16_output*/) const noexcept {
   return 0; // stub
 }
 
-simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char* /*buf*/, size_t /*len*/, char* /*utf8_output*/) const noexcept {
+simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t* /*buf*/, size_t /*len*/, char* /*utf8_output*/) const noexcept {
   return 0; // stub
 }
 
-simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const char* /*buf*/, size_t /*len*/, char* /*utf8_output*/) const noexcept {
+simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const char16_t* /*buf*/, size_t /*len*/, char* /*utf8_output*/) const noexcept {
   return 0; // stub
 }
 

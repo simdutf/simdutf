@@ -134,7 +134,7 @@ Benchmark utility for simdutf
 
 Usage:
 
-    -h, --hep                       show help
+    -h, --help                      show help
     -F [PATH], --input-file [PATH]  set dataset path
     -P [NAME], --procedure [NAME]   choose procedure(s) to test
     -I --iterations                 number of iterations (default: 100)
@@ -143,7 +143,7 @@ Usage:
 Examples:
 
     # test all known UTF8 procedures against 10k random input (in 100 iterations)
-    $ benchmark -R 10240 -I 100
+    $ benchmark --random-utf8 10240 -I 100
 
     # test validate procedures implemeted for AVX2 against two custom files
     $ benchmark -P "validate*avx2*" -F ~/plain_ascii.txt -F ~/chinese_huge.txt
