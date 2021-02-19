@@ -134,7 +134,7 @@ Benchmark utility for simdutf
 
 Usage:
 
-    -h, --help                       show help
+    -h, --help                      show help
     -F [PATH], --input-file [PATH]  set dataset path
     -P [NAME], --procedure [NAME]   choose procedure(s) to test
     -I --iterations                 number of iterations (default: 100)
