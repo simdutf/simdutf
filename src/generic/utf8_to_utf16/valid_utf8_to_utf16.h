@@ -4321,6 +4321,9 @@ const uint8_t utf8bigindex[4096][2] =
 // The finisher_functions namespace contains
 // functions that can be used to "finish" the processing.
 // They are not expected to fast.
+//
+// TODO: we can do much better and they should be moved elsewhere.
+//
 // Author: Michel Rouzic (https://github.com/Photosounder)
 // Original source:
 // https://github.com/Photosounder/rouziclib/blob/master/rouziclib/text/unicode.c
@@ -4436,7 +4439,7 @@ char16_t *sprint_utf16(char16_t *str, uint32_t c)	{
 void utf8_to_utf16_with_length(const char *utf8, size_t len, char16_t *utf16) {
 	int j;
 	uint32_t c;
-  size_t i;
+    size_t i;
 	for (i=0, j=0, c=1; i < len; i++) {
 		c = utf8_to_unicode32(&utf8[i], &i);
 		sprint_utf16(&utf16[j], c);

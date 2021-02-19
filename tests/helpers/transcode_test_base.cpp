@@ -71,7 +71,7 @@ namespace simdutf::tests::helpers {
         break;
 
       default:
-        throw std::invalid_argument("Value can't be encoded as UTF16");
+        throw std::invalid_argument(std::string("Value can't be encoded as UTF16 code-point : ") + std::to_string(codepoint));
     }
   }
 
@@ -138,7 +138,7 @@ namespace simdutf::tests::helpers {
         target.push_back(W2);
         break;
       default:
-        throw std::invalid_argument("Value can't be encoded as UTF16");
+        throw std::invalid_argument(std::string("Value can't be encoded as UTF16 code-point : ") + std::to_string(codepoint));
     }
   }
 }

@@ -101,7 +101,7 @@ TEST(validate_utf16__returns_true_for_valid_input__single_words) {
   const auto utf16{generator.generate(512)};
 
   ASSERT_TRUE(implementation.validate_utf16(
-                reinterpret_cast<const char16_t*>(utf16.data()), utf16.size() * 2));
+                reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
 }
 
 TEST(validate_utf16__returns_true_for_valid_input__surrogate_pairs) {
@@ -110,7 +110,7 @@ TEST(validate_utf16__returns_true_for_valid_input__surrogate_pairs) {
   const auto utf16{generator.generate(512)};
 
   ASSERT_TRUE(implementation.validate_utf16(
-                reinterpret_cast<const char16_t*>(utf16.data()), utf16.size() * 2));
+                reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
 }
 
 // mixed = either 16-bit or 32-bit codewords
@@ -120,19 +120,13 @@ TEST(validate_utf16__returns_true_for_valid_input__mixed) {
   const auto utf16{generator.generate(512)};
 
   ASSERT_TRUE(implementation.validate_utf16(
-                reinterpret_cast<const char16_t*>(utf16.data()), utf16.size() * 2));
+                reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
 }
 
 TEST(validate_utf16__returns_true_for_empty_string) {
   const char16_t* buf = (char16_t*)"";
 
   ASSERT_TRUE(implementation.validate_utf16(buf, 0));
-}
-
-TEST(validate_utf16__returns_false_when_input_has_odd_number_of_bytes) {
-  const char16_t* buf = (char16_t*)"?";
-
-  ASSERT_FALSE(implementation.validate_utf16(buf, 1));
 }
 
 // The first word must not be in range [0xDC00 .. 0xDFFF]
