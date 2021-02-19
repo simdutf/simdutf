@@ -63,7 +63,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
     const uint16_t non_ascii_chars = uint16_t(_mm_movemask_epi8(in));
     // ASCII is likely common in many cases, we want a fast path.
     if(non_ascii_chars == 0) {
-        // could use _mm_cvtepi8_epi16
+        // could use _mm256_cvtepu8_epi16/_mm_cvtepu8_epi16 (SSE4.1)
         const __m128i out1 = _mm_unpacklo_epi8(in, _mm_setzero_si128());// order of parameter determines endianness
         _mm_storeu_si128((__m128i*)utf16_output, out1);
         utf16_output += 8;
