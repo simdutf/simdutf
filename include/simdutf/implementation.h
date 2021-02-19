@@ -184,7 +184,7 @@ public:
    * Overridden by each implementation.
    *
    * @param buf the string to validate.
-   * @param len the length of the string in bytes.
+   * @param len the length of the string in number of char16_t.
    * @return true if and only if the string is valid UTF-16.
    */
   simdutf_warn_unused virtual bool validate_utf16(const char16_t *buf, size_t len) const noexcept = 0;
@@ -198,7 +198,7 @@ public:
    * @param input         the string to convert
    * @param length        the length of the string in bytes
    * @param utf16_buffer  the pointer to buffer that can hold conversion result
-   * @return the number of written bytes; 0 if the input was not valid UTF-8 string
+   * @return the number of written char16_t; 0 if the input was not valid UTF-8 string
    */
   simdutf_warn_unused virtual size_t convert_utf8_to_utf16(const char * buf, size_t len, char16_t* utf8_output) const noexcept = 0;
 
@@ -210,7 +210,7 @@ public:
    * @param input         the string to convert
    * @param length        the length of the string in bytes
    * @param utf16_buffer  the pointer to buffer that can hold conversion result
-   * @return the number of written bytes
+   * @return the number of written char16_t
    */
   simdutf_warn_unused virtual size_t convert_valid_utf8_to_utf16(const char * buf, size_t len, char16_t* utf16_buffer) const noexcept = 0;
 

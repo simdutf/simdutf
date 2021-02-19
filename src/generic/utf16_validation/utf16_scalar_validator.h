@@ -61,15 +61,11 @@ namespace utf16 {
 } // namespace utf16
 
 bool scalar_validate_utf16(const char16_t * input, size_t length) {
-    if (length % 2 == 1) // a UTF-16 conists 16-bit words only, odd-length strings are not valid
-        return false;
-
     auto consumer = [](uint32_t /**/){};
     auto error_handler = [](const uint16_t* /**/, const uint16_t* /**/, utf16::Error /**/){
         return false; // do nothing, just tell the decoder to break decoding
     };
-
-    return utf16::decode(reinterpret_cast<const uint16_t*>(input), length / 2, consumer, error_handler);
+    return utf16::decode(reinterpret_cast<const uint16_t*>(input), length, consumer, error_handler);
 }
 
 } // namespace utf16_validation

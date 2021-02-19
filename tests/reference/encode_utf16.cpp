@@ -26,17 +26,17 @@ namespace simdutf::tests::reference::utf16 {
 
   // Encodes the value using either one or two words (returns 1 or 2 respectively)
   // Returns 0 if the value cannot be encoded
-  int encode(uint32_t value, uint16_t& W1, uint16_t& W2) {
+  int encode(uint32_t value, char16_t& W1, char16_t& W2) {
     if (!valid_value(value))
       return 0;
 
     if (value <= 0xffff) {
-      W1 = uint16_t(value);
+      W1 = char16_t(value);
       return 1;
     } else {
       value -= 0x10000;
-      W1 = uint16_t(0xd800 | ((value >> 10) & 0x03ff));
-      W2 = uint16_t(0xdc00 | (value & 0x03ff));
+      W1 = char16_t(0xd800 | ((value >> 10) & 0x03ff));
+      W2 = char16_t(0xdc00 | (value & 0x03ff));
       return 2;
     }
   }

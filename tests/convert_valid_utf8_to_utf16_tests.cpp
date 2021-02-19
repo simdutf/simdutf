@@ -13,14 +13,16 @@
 namespace {
   std::array<size_t, 4> input_size{16, 64, 128, 256};
 
-  using simdutf::tests::helpers::TranscodeTestBase;
+  using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
+
+  /*using simdutf::tests::helpers::TranscodeTestBase;
   using simdutf::tests::helpers::Conversion;
 
   class TranscodeTest: public TranscodeTestBase {
   public:
     TranscodeTest(GenerateCodepoint generate, size_t input_size)
       : TranscodeTestBase(generate, input_size, Conversion::utf8_to_utf16) {}
-  };
+  };*/
 }
 
 TEST(convert_pure_ASCII) {
@@ -34,8 +36,8 @@ TEST(convert_pure_ASCII) {
   };
 
   for (size_t size: input_size) {
-    TranscodeTest test(generator, size);
-    ASSERT_TRUE(test.toutf16(procedure));
+    transcode_utf8_to_utf16_test_base test(generator, size);
+    ASSERT_TRUE(test(procedure));
   }
 }
 
@@ -47,8 +49,8 @@ TEST(convert_1_or_2_UTF8_bytes) {
   };
 
   for (size_t size: input_size) {
-    TranscodeTest test(random, size);
-    ASSERT_TRUE(test.toutf16(procedure));
+    transcode_utf8_to_utf16_test_base test(random, size);
+    ASSERT_TRUE(test(procedure));
   }
 }
 
@@ -62,8 +64,8 @@ TEST(convert_1_or_2_or_3_UTF8_bytes) {
   };
 
   for (size_t size: input_size) {
-    TranscodeTest test(random, size);
-    ASSERT_TRUE(test.toutf16(procedure));
+    transcode_utf8_to_utf16_test_base test(random, size);
+    ASSERT_TRUE(test(procedure));
   }
 }
 
@@ -75,8 +77,8 @@ TEST(convert_3_or_4_UTF8_bytes) {
   };
 
   for (size_t size: input_size) {
-    TranscodeTest test(random, size);
-    ASSERT_TRUE(test.toutf16(procedure));
+    transcode_utf8_to_utf16_test_base test(random, size);
+    ASSERT_TRUE(test(procedure));
   }
 }
 

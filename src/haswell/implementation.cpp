@@ -1,5 +1,4 @@
 #include "simdutf/haswell/begin.h"
-
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
