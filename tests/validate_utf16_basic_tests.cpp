@@ -17,8 +17,9 @@ namespace {
 
 TEST(validate_utf16__returns_true_for_valid_input__single_words) {
   std::random_device rd{};
-  simdutf::tests::helpers::random_utf16 generator{rd, 1, 0};
-  const auto utf16{generator.generate(512)};
+    simdutf::tests::helpers::random_utf16 generator{rd, 1, 0};
+  const long seed = 0; // make test repeatable
+  const auto utf16{generator.generate(512, seed)};
 
   ASSERT_TRUE(implementation.validate_utf16(
               reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
@@ -135,6 +136,9 @@ int main() {
       puts("SIMDUTF implementation is null");
       abort();
     }
+
+    if (implementation->name() != "westmere") // XXX: remove
+        continue;
 
     const simdutf::implementation& impl = *implementation;
     printf("Checking implementation %s\n", implementation->name().c_str());

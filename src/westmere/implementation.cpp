@@ -130,6 +130,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   return consumed;
 }
 
+#include "sse_validate_utf16le.cpp"
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -157,7 +158,11 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
 }
 
 simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, size_t len) const noexcept {
-  return westmere::utf16_validation::scalar_validate_utf16(buf, len);
+  const char16_t* tail = sse_validate_utf16le(buf, len);
+  if (tail)
+    return westmere::utf16_validation::scalar_validate_utf16(tail, len - (tail - buf));
+  else
+    return false;
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
