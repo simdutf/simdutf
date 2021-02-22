@@ -58,12 +58,48 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* /*b
   return 0; // stub
 }
 
+// This function locates all bytes corresponding to a continuation byte (0b10______).
 uint64_t compute_utf8_continuation_mask(const char* input) {
   simd8x64<int8_t> in(reinterpret_cast<const int8_t *>(input));
   return in.lt(-65 + 1); // -65 is 0b10111111 in two-complement's, so largest possible continuabtion byte
 }
 
-size_t convert(const char* input, size_t size, char16_t* utf16_output) {
+// Convert up to 12 bytes.
+// returns how many bytes were consumed
+size_t convert_masked_utf8(const char* input, uint64_t utf8_continuation_mask, char16_t* utf16_output) {
+
+}
+
+size_t convert(const char* input, size_t size, char16_t*& utf16_output) {
+  size_t pos = 0;
+  //
+  // If you expect a lot of pure ASCII inputs, then you should put a 
+  // specialized loop here that advances to the first non-ASCII input.
+  //
+  while(pos + 64 <= size) { 
+    // this loop could be unrolled further. For example, we could process the mask
+    // far more than 64 bytes.
+    //
+    // For pure ASCII inputs, this function is not optimally fast because they are
+    // faster ways to just check for ASCII than to compute the continuation mask.
+    // However, the continuation mask is more informative. There might be a trade-off
+    // involved.
+    //
+    uint64_t utf8_continuation_mask = compute_utf8_continuation_mask(input + pos);
+    if(utf8_continuation_mask != 0) {
+      // Slow path. We hope that the compiler will recognize that this is a slow path.
+      size_t max_starting_point = (pos + 64) - 12;
+      while(pos <= max_starting_point) {
+        size_t consumed = convert_masked_utf8(input + pos, utf8_continuation_mask, utf16_output);
+        pos += consumed;
+        utf8_continuation_mask >>= consumed;
+      }
+    } else {
+      // If the input is valid and you only have non-continuation bytes, then they must be
+      // all ASCII!
+
+    }
+  } 
   
 }
 
