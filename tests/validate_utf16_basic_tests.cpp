@@ -130,6 +130,27 @@ TEST(validate_utf16__returns_false_when_input_is_truncated) {
   }
 }
 
+
+#include "validate_utf16_testcases.inl"
+
+TEST(validate_utf16__all_cases_for_8_words) {
+  constexpr size_t len = 32;
+  char16_t buf[len];
+  for (int i=0; i < validate_utf16_testcase_size; i++) {
+
+    // prepare input
+    const auto& testcase = validate_utf16_testcase[i];
+    for (int j=0; j < 8; j++)
+      buf[j] = testcase.values[j];
+
+    for (int j=8; j < len; j++)
+      buf[j] = V;
+
+    // check
+    ASSERT_TRUE(implementation.validate_utf16(buf, len) == testcase.valid);
+  }
+}
+
 int main() {
   for (const auto& implementation: simdutf::available_implementations) {
     if (implementation == nullptr) {

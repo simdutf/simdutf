@@ -37,10 +37,10 @@ def find_error_in_words(words):
 
     for i, kind in enumerate(words):
         if kind == 'V':
-            if prev == 'L': # lower surrogate must be followed by higher surrogate
+            if prev == 'L':
                 return f'low surrogate {i - 1} must be followed by high surrogate'
         elif kind == 'L':
-            if prev == 'L': # lower surrogate must be followed by higher surrogate
+            if prev == 'L':
                 return f'low surrogate {i - 1} must be followed by high surrogate'
         elif kind == 'H':
             if prev != 'L':
@@ -62,16 +62,22 @@ def bitmask(words, state):
     return result
 
 
+def mask(words):
+    V = bitmask(words, 'V')
+    L = bitmask(words, 'L')
+    H = bitmask(words, 'H')
+
+    a = L & (H >> 2)
+    b = a << 2
+    c = V | a | b
+
+    return c
+
+
 def main():
     for words in all_sequences():
 
-        V = bitmask(words, 'V')
-        L = bitmask(words, 'L')
-        H = bitmask(words, 'H')
-
-        a = L & (H >> 2)
-        b = a << 2
-        c = V | a | b
+        c = mask(words)
 
         if False:
             words_image = "[ %s ]" % ' | '.join(words)

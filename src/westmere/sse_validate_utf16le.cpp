@@ -40,7 +40,7 @@
 */
 
 /* Returns:
-   - pointer to last character unprocessed (scalar fallback should check the rest);
+   - pointer to the last unprocessed character (a scalar fallback should check the rest);
    - nullptr if an error was detected.
 */
 const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
