@@ -54,18 +54,20 @@ def find_error_in_words(words):
 def bitmask(words, state):
     result = 0
     for bit, type in enumerate(words):
-        result |= 1 << (2*bit) # fake 1 yiels by the SSE code
-
         if type == state:
+            # We compare words (_mm_cmpeq_epi16), but gather MSB of separate bytes
+            # (_mm_movemask_epi8). Thus each word yields 2 bits: either 00 or 11.
+
+            result |= 1 << (2*bit + 0)
             result |= 1 << (2*bit + 1)
 
     return result
 
 
 def mask(words):
-    V = bitmask(words, 'V')
     L = bitmask(words, 'L')
     H = bitmask(words, 'H')
+    V = (~(L | H)) & 0xffff
 
     a = L & (H >> 2)
     b = a << 2
@@ -74,28 +76,38 @@ def mask(words):
     return c
 
 
-def main():
+def dump():
     for words in all_sequences():
 
         c = mask(words)
 
-        if False:
-            words_image = "[ %s ]" % ' | '.join(words)
-            error = find_error_in_words(words)
-            if error == '':
-                valid_image = 'T'
-            else:
-                valid_image = ' '
-            print(words_image, valid_image, '{:016b} {:04x}'.format(c, c))
+        words_image = "[ %s ]" % ' | '.join(words)
+        error = find_error_in_words(words)
+        if error == '':
+            valid_image = 'T'
+        else:
+            valid_image = ' '
+
+        print(words_image, valid_image, '{:016b} {:04x}'.format(c, c))
+
+
+def proof():
+    case1_hit = False
+    case2_hit = False
+    for words in all_sequences():
+
+        c = mask(words)
 
         if c == 0xffff:
+            case1_hit = True
             # all 8 words are valid (either 'V' or pairs 'L', 'H')
             assert find_error_in_words(words) == ''
 
-        if c == 0x7fff:
+        if c == 0x3fff:
+            case2_hit = True
             # all 7 words are valid (either 'V' or pairs 'L', 'H')
             # the last words is either 'L' or 'H' (the word will be
-            # re-examined in the next iteration
+            # re-examined in the next iteration of an algorihm)
             if words[-1] == 'H':
                 assert find_error_in_words(words) == 'high surrogate 7 must be preceded by low surrogate'
             elif words[-1] == 'L':
@@ -103,7 +115,17 @@ def main():
             else:
                 assert False
 
+    assert case1_hit
+    assert case2_hit
+
     print("All OK")
+
+
+def main():
+    if 0:
+        dump()
+    else:
+        proof()
 
 
 if __name__ == '__main__':

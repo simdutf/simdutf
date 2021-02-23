@@ -46,73 +46,53 @@
 const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
     const char16_t* end = input + size;
 
-    const __m128i v_d000 = _mm_set1_epi32(0xd000'd000);
-    const __m128i v_f000 = _mm_set1_epi32(0xf000'f000);
-    const __m128i v_0f00 = _mm_set1_epi32(0x0f00'0f00);
-    const __m128i v_0080 = _mm_set1_epi32(0x0080'0080);
+    const __m128i v_d800 = _mm_set1_epi32(0xd800'd800);
+    const __m128i v_f800 = _mm_set1_epi32(0xf800'f800);
+    const __m128i v_fc00 = _mm_set1_epi32(0xfc00'fc00);
+    const __m128i v_dc00 = _mm_set1_epi32(0xdc00'dc00);
 
     while (input + 8 < end) {
         const __m128i in = _mm_loadu_si128((__m128i*)input);
 
-        // 1. Check whether we have any 0xD??? word.
-        const __m128i eq = _mm_cmpeq_epi16(_mm_and_si128(in, v_f000), v_d000);
-        if (_mm_movemask_epi8(eq) == 0x0000) {
+        // 1. Check whether we have any 0xD800..DFFF word (0b1101'1xxx'yyyy'yyyy).
+        const __m128i surrogates_wordmask = _mm_cmpeq_epi16(_mm_and_si128(in, v_f800), v_d800);
+        const uint16_t surrogates_bitmask = _mm_movemask_epi8(surrogates_wordmask);
+        if (surrogates_bitmask == 0x0000) {
             input += 8;
         } else {
-            // 2. We have some 0xD??? words, classify each word by 3rd nibble 'x'
-            // in = [ 1101 | xxxx | ???? | ???? ] x 8
-            //          3      2      1      0    <-- nibble index
+            // 2. We have some surrogates that have to be distinguished:
+            //    - low  surrogates: 0b1101'10xx'yyyy'yyyy (0xD800..0xDBFF)
+            //    - high surrogates: 0b1101'11xx'yyyy'yyyy (0xDC00..0xDFFF)
+            //
+            //    Fact: high surrogate has 11th bit set
 
-            // t0 = [ 0000 | xxxx | 0000 | 0000 ] x 8
-            const __m128i t0 = _mm_and_si128(in, v_0f00);
+            // V - non-surrogate words
+            //     V = not surrogates_wordmask
+            const uint16_t V = ~surrogates_bitmask;
 
-            // Reset 3rd nibble when 4rd nibble is not 0xd.
-            // Thanks to that it will be marked as valid during classification.
-            const __m128i t1 = _mm_and_si128(t0, eq);
+            // H - word-mask for high surrogates: the six highest bits are 0b1101'11
+            const __m128i vH = _mm_cmpeq_epi16(_mm_and_si128(in, v_fc00), v_dc00);
+            const uint16_t H = _mm_movemask_epi8(vH);
 
-            const __m128i classify_nibble = _mm_setr_epi8(
-                /* bits: 0bVLH0'0000 */
-                /* 0 */  char(0b1000'0000),  // valid word (V)
-                /* 1 */  char(0b1000'0000),  // valid word
-                /* 2 */  char(0b1000'0000),  // valid word
-                /* 3 */  char(0b1000'0000),  // valid word
-                /* 4 */  char(0b1000'0000),  // valid word
-                /* 5 */  char(0b1000'0000),  // valid word
-                /* 6 */  char(0b1000'0000),  // valid word
-                /* 7 */  char(0b1000'0000),  // valid word
-                /* 8 */  char(0b0100'0000),  // low surrogate (L)
-                /* 9 */  char(0b0100'0000),  // low surrogate
-                /* a */  char(0b0100'0000),  // low surrogate
-                /* b */  char(0b0100'0000),  // low surrogate
-                /* c */  char(0b0010'0000),  // high surrogate (H)
-                /* d */  char(0b0010'0000),  // high surrogate
-                /* e */  char(0b0010'0000),  // high surrogate
-                /* f */  char(0b0010'0000)   // high surrogate
-            );
-            // t2 = [ VHL0 | 0000 | 1000 | 0000 ] x 8
-            const __m128i t2 = _mm_shuffle_epi8(classify_nibble, t1);
+            // L - word mask for low surrogates
+            //     L = not H and surrogates_wordmask
+            const uint16_t L = ~H & surrogates_bitmask;
 
-            // Note: We'are getting MSB for each byte, not word. Each word
-            //       yields two bits, but only the 1st one of the pair is important.
-            const int V = _mm_movemask_epi8(t2); // TODO: check if V can be reused from the first _mm_movemask_epi8
-            const int L = _mm_movemask_epi8(_mm_slli_epi16(t2, 1));
-            const int H = _mm_movemask_epi8(_mm_slli_epi16(t2, 2));
-
-            const int a = L & (H >> 2);  // A low surrogate must be followed by high one.
-                                         // (A low surrogate placed in the 7th register's word
-                                         // is an exception we handle.)
-            const int b = a << 2;        // Just mark that the opposite fact is hold,
-                                         // thanks to that we have only two masks for valid case.
-            const int c = V | a | b;     // Combine all the masks into the final one.
+            const uint16_t a = L & (H >> 2);  // A low surrogate must be followed by high one.
+                                              // (A low surrogate placed in the 7th register's word
+                                              // is an exception we handle.)
+            const uint16_t b = a << 2;        // Just mark that the opposite fact is hold,
+                                              // thanks to that we have only two masks for valid case.
+            const uint16_t c = V | a | b;     // Combine all the masks into the final one.
 
             if (c == 0xffff)
                 // The whole input register contains valid UTF16, i.e.,
                 // either single words or proper surrogates.
                 input += 8;
-            else if (c == 0x7fff)
+            else if (c == 0x3fff)
                 // The 7 lower words of the input register contains valid UTF16.
                 // The 7th word may be either a low or high surrogate. It the next
-                // iteration we 1) check if a low surrogate is followed by high
+                // iteration we 1) check if the low surrogate is followed by a high
                 // one, 2) reject sole hight surrogate.
                 input += 7;
             else
