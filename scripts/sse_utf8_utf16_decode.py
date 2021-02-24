@@ -16,7 +16,7 @@ def compute_locations(mask):
     return answer
 
 
-# computes the gaps between the 1
+# computes the gaps between the 1, assuming we had an initial 1
 def compute_code_point_size(mask):
     positions = compute_locations(mask)
     answer = []
@@ -179,32 +179,6 @@ def main():
         arrg.append((c,0))
   print("const uint8_t utf8bigindex["+str(len(arrg))+"][2] = ")
   print(cpp_arrayarray_initializer(arrg), end=";\n")
-  ## Slim version
-  arrg=[]
-  for xidx in range(1<<11):
-    # xidx represent the continuation bytes, hence the negation (xor) in the next line
-    x =  2 * (xidx^((1<<11)-1)) + 1 # We always start with a leading byte (hence the "1").
-    sizes = compute_code_point_size(x)
-    if(easy_case12(sizes)):
-        z1 = grab_easy_case12_code_point_size(sizes)
-        idx = index[tuple(z1)]
-        s = sum(z1)
-        arrg.append((idx,s))
-    elif(easy_case123(sizes)):
-        z1 = grab_easy_case123_code_point_size(sizes)
-        idx = index[tuple(z1)]
-        s = sum(z1)
-        arrg.append((idx,s))
-    elif(easy_case1234(sizes)):
-        z1 = grab_easy_case1234_code_point_size(sizes)
-        idx = index[tuple(z1)]
-        s = sum(z1)
-        arrg.append((idx,s))
-    else:
-        arrg.append((c,0))
-  print("const uint8_t utf8index["+str(len(arrg))+"][2] = ")
-  print(cpp_arrayarray_initializer(arrg), end=";\n")
-
 
 
 if __name__ == '__main__':

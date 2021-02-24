@@ -1,4 +1,6 @@
 #include "simdutf/westmere/begin.h"
+#include <iostream>
+#include <string>
 
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
@@ -63,26 +65,60 @@ uint64_t compute_utf8_continuation_mask(const char* input) {
   simd8x64<int8_t> in(reinterpret_cast<const int8_t *>(input));
   return in.lt(-65 + 1); // -65 is 0b10111111 in two-complement's, so largest possible continuabtion byte
 }
+std::string DecimalToBinaryString64(uint64_t a)
+{
+    uint64_t b = a;
+    std::string binary = "";
+    uint64_t mask = 0x8000000000000000ul;
+    while (mask > 0)
+    {
+        binary += ((b & mask) == 0) ? '0' : '1';
+        mask >>= 1;
+    }
+    return binary;
+}
+
+std::string DecimalToBinaryString(int a)
+{
+    uint b = (uint)a;
+    std::string binary = "";
+    uint mask = 0x80000000u;
+    while (mask > 0)
+    {
+        binary += ((b & mask) == 0) ? '0' : '1';
+        mask >>= 1;
+    }
+    return binary;
+}
+
+std::string ByteToBinaryString(uint8_t a)
+{
+    uint b = (uint)a;
+    std::string binary = "";
+    uint mask = 0x80u;
+    while (mask > 0)
+    {
+        binary += ((b & mask) == 0) ? '0' : '1';
+        mask >>= 1;
+    }
+
+    return binary;
+}
 
 // Convert up to 12 bytes.
 // returns how many bytes were consumed
-size_t convert_masked_utf8(const char* input, uint64_t utf8_continuation_mask, char16_t* utf16_output) {
+size_t convert_masked_utf8(const char* input, uint64_t utf8_end_of_code_point_mask, char16_t*& utf16_output) {
   // we use an approach where we try to process up to 12 input bytes.
   // Why 12 input bytes and not 16? Because we are concerned with the size of the lookup tables.
   // Also 12 is nicely divisible by two and three.
   //
-  // The utf8_continuation_mask should always have zero in the least significant bit, hence
-  // we only need an 11-bit lookup table.
-  //
-  const uint16_t eleventbits_mask = 0x7FF;
-  const uint16_t elevenbits_continuation_byte = (utf8_continuation_mask>>1)&eleventbits_mask;
-  const uint8_t idx = utf8_to_utf16::utf8index[elevenbits_continuation_byte][0];
-  const uint8_t consumed = utf8_to_utf16::utf8index[elevenbits_continuation_byte][1];
-  //
-  // Let us first try to see if we are in the easy two-byte scenario
-  //
+  const uint16_t twelve_bits_mask = 0xFFF;
+  const uint16_t twelve_bits_utf8_end_of_code_point_mask = utf8_end_of_code_point_mask&twelve_bits_mask;
+  const uint8_t idx = utf8_to_utf16::utf8bigindex[twelve_bits_utf8_end_of_code_point_mask][0];
+  const uint8_t consumed = utf8_to_utf16::utf8bigindex[twelve_bits_utf8_end_of_code_point_mask][1];
   const __m128i in = _mm_loadu_si128((__m128i *)input);
   if(idx < 64) {
+        // SIX (6) input code-words
         // this is a relatively easy scenario
         // we process SIX (6) input code-words. The max length in bytes of six code words
         // spanning between 1 and 2 bytes each is 12 bytes.
@@ -93,8 +129,9 @@ size_t convert_masked_utf8(const char* input, uint64_t utf8_continuation_mask, c
         const __m128i highbyte = _mm_and_si128(perm,_mm_set1_epi16(0x1f00));
         const __m128i composed = _mm_or_si128(ascii,_mm_srli_epi16(highbyte,2));
         _mm_storeu_si128((__m128i*)utf16_output, composed);
-        utf16_output += 6;
+        utf16_output += 6; // We wrote 12 bytes, 6 code points.
     } else if (idx < 145) {
+        // FOUR (4) input code-words
         const __m128i sh = _mm_loadu_si128((const __m128i *)utf8_to_utf16::shufutf8[idx]);
         const __m128i perm = _mm_shuffle_epi8(in, sh);
         const __m128i ascii = _mm_and_si128(perm,_mm_set1_epi32(0x7f)); // 7 or 6 bits
@@ -107,6 +144,7 @@ size_t convert_masked_utf8(const char* input, uint64_t utf8_continuation_mask, c
         _mm_storeu_si128((__m128i*)utf16_output,  composed_repacked);
         utf16_output += 4;
     } else if(idx < 209) {
+        // TWO (2) input code-words
         const __m128i sh = _mm_loadu_si128((const __m128i *)utf8_to_utf16::shufutf8[idx]);
         const __m128i perm = _mm_shuffle_epi8(in, sh);
         const __m128i ascii = _mm_and_si128(perm,_mm_set1_epi32(0x7f)); 
@@ -147,10 +185,9 @@ size_t convert_masked_utf8(const char* input, uint64_t utf8_continuation_mask, c
     return consumed;
 }
 
-size_t convert(const char* input, size_t size, char16_t*& utf16_output) {
+size_t _convert_valid_utf8_to_utf16(const char* input, size_t size, char16_t* utf16_output) {
   size_t pos = 0;
   char16_t* start{utf16_output};
-
   //
   // If you expect a lot of pure ASCII inputs, then you should put a 
   // specialized loop here that advances to the first non-ASCII input.
@@ -167,16 +204,24 @@ size_t convert(const char* input, size_t size, char16_t*& utf16_output) {
     uint64_t utf8_continuation_mask = compute_utf8_continuation_mask(input + pos);
     if(utf8_continuation_mask != 0) {
       // Slow path. We hope that the compiler will recognize that this is a slow path.
-      size_t max_starting_point = (pos + 64) - 12;
+
+      // Anything that is not a continuation mask is a 'leading byte', that is, the
+      // start of a new code point.
+      uint64_t utf8_leading_mask = ~utf8_continuation_mask;
+      // The *start* of code points is not so useful, rather, we want the *end* of code points.
+      uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
+      size_t max_starting_point = (pos + 64) - 12 - 1;
       while(pos <= max_starting_point) {
-        size_t consumed = convert_masked_utf8(input + pos, utf8_continuation_mask, utf16_output);
+        size_t consumed = convert_masked_utf8(input + pos, utf8_end_of_code_point_mask, utf16_output);
         pos += consumed;
-        utf8_continuation_mask >>= consumed;
+        utf8_end_of_code_point_mask >>= consumed;
       }
     } else {
-      // If the input is valid and you only have non-continuation bytes, then they must be
-      // all ASCII!
-
+      const __m128i in = _mm_loadu_si128((__m128i *)(input+pos));
+      _mm_storeu_si128((__m128i*)utf16_output, _mm_cvtepu8_epi16(in));
+      _mm_storeu_si128((__m128i*)(utf16_output + 8), _mm_cvtepu8_epi16(_mm_srli_si128(in,8)));
+      utf16_output += 16;
+      pos += 16;
     }
   } 
   size_t len = utf8_to_utf16::finisher_functions::strlen_utf8(input + pos, size - pos);
@@ -186,7 +231,9 @@ size_t convert(const char* input, size_t size, char16_t*& utf16_output) {
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* input, size_t size, char16_t* utf16_output) const noexcept {
-  size_t pos = 0;
+
+  return _convert_valid_utf8_to_utf16(input, size, utf16_output);
+  /*size_t pos = 0;
   char16_t* start{utf16_output};
   while (pos + 16 <= size) {
     const __m128i in = _mm_loadu_si128((__m128i *)(input + pos));
@@ -296,7 +343,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
   size_t len = utf8_to_utf16::finisher_functions::strlen_utf8(input + pos, size - pos);
   utf8_to_utf16::finisher_functions::utf8_to_utf16_with_length(input + pos, size - pos, utf16_output);
   utf16_output += len;
-  return utf16_output - start;
+  return utf16_output - start;*/
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t* /*buf*/, size_t /*len*/, char* /*utf8_output*/) const noexcept {
