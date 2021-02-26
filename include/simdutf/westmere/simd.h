@@ -206,6 +206,10 @@ namespace simd {
     simdutf_really_inline simd8<bool> any_bits_set() const { return ~this->bits_not_set(); }
     simdutf_really_inline simd8<bool> any_bits_set(simd8<uint8_t> bits) const { return ~this->bits_not_set(bits); }
     simdutf_really_inline bool is_ascii() const { return _mm_movemask_epi8(*this) == 0; }
+    simdutf_really_inline void store_ascii_as_utf16(uint8_t * p) {
+      _mm_storeu_si128(reinterpret_cast<__m128i *>(p), _mm_cvtepu8_epi16(*this));
+      _mm_storeu_si128(reinterpret_cast<__m128i *>(p), _mm_cvtepu8_epi16(_mm_srli_si128(*this,8)));
+    }
     simdutf_really_inline bool bits_not_set_anywhere() const { return _mm_testz_si128(*this, *this); }
     simdutf_really_inline bool any_bits_set_anywhere() const { return !bits_not_set_anywhere(); }
     simdutf_really_inline bool bits_not_set_anywhere(simd8<uint8_t> bits) const { return _mm_testz_si128(*this, bits); }
@@ -242,6 +246,17 @@ namespace simd {
 
     simdutf_really_inline simd8<T> reduce_or() const {
       return (this->chunks[0] | this->chunks[1]) | (this->chunks[2] | this->chunks[3]);
+    }
+
+    simdutf_really_inline bool is_ascii() const {
+      return input.reduce_or().is_ascii();
+    }
+
+    simdutf_really_inline void store_ascii_as_utf16(T ptr[128]) const {
+      this->chunks[0].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*0);
+      this->chunks[1].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*2);
+      this->chunks[2].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*4);
+      this->chunks[3].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*6);
     }
 
     simdutf_really_inline uint64_t to_bitmask() const {

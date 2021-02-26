@@ -232,6 +232,11 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
 
     // Bit-specific operations
     simdutf_really_inline simd8<bool> any_bits_set(simd8<uint8_t> bits) const { return vtstq_u8(*this, bits); }
+    simdutf_really_inline bool is_ascii() const { return bits.max_val() < 0b10000000u; }
+    simdutf_really_inline void store_ascii_as_utf16(uint8_t * p) {
+      vst1q_u16(p, vmovl_u8(vget_low_u8 (*this)));
+      vst1q_u16(p + 16, vmovl_high_u8(*this));
+    }
     simdutf_really_inline bool any_bits_set_anywhere() const { return this->max_val() != 0; }
     simdutf_really_inline bool any_bits_set_anywhere(simd8<uint8_t> bits) const { return (*this & bits).any_bits_set_anywhere(); }
     template<int N>
@@ -393,6 +398,17 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
 
     simdutf_really_inline simd8<T> reduce_or() const {
       return (this->chunks[0] | this->chunks[1]) | (this->chunks[2] | this->chunks[3]);
+    }
+
+    simdutf_really_inline bool is_ascii() const {
+      return input.reduce_or().is_ascii();
+    }
+
+    simdutf_really_inline void store_ascii_as_utf16(T ptr[128]) const {
+      this->chunks[0].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*0);
+      this->chunks[1].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*2);
+      this->chunks[2].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*4);
+      this->chunks[3].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*6);
     }
 
     simdutf_really_inline uint64_t to_bitmask() const {

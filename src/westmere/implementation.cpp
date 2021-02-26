@@ -60,48 +60,6 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* /*b
   return 0; // stub
 }
 
-/*
-// for debugging purposes, to be removed later
-std::string DecimalToBinaryString64(uint64_t a)
-{
-    uint64_t b = a;
-    std::string binary = "";
-    uint64_t mask = 0x8000000000000000ul;
-    while (mask > 0)
-    {
-        binary += ((b & mask) == 0) ? '0' : '1';
-        mask >>= 1;
-    }
-    return binary;
-}
-// for debugging purposes, to be removed later
-std::string DecimalToBinaryString(int a)
-{
-    uint b = (uint)a;
-    std::string binary = "";
-    uint mask = 0x80000000u;
-    while (mask > 0)
-    {
-        binary += ((b & mask) == 0) ? '0' : '1';
-        mask >>= 1;
-    }
-    return binary;
-}
-
-// for debugging purposes, to be removed later
-std::string ByteToBinaryString(uint8_t a)
-{
-    uint b = (uint)a;
-    std::string binary = "";
-    uint mask = 0x80u;
-    while (mask > 0)
-    {
-        binary += ((b & mask) == 0) ? '0' : '1';
-        mask >>= 1;
-    }
-
-    return binary;
-}*/
 
 // Convert up to 12 bytes.
 // returns how many bytes were consumed
@@ -213,15 +171,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
         utf8_end_of_code_point_mask >>= consumed;
       }
     } else {
-      // next bit should be implemented as in.store_ascii 
-      _mm_storeu_si128((__m128i*)utf16_output, _mm_cvtepu8_epi16(in.chunks[0]));
-      _mm_storeu_si128((__m128i*)(utf16_output + 8), _mm_cvtepu8_epi16(_mm_srli_si128(in.chunks[0],8)));
-      _mm_storeu_si128((__m128i*)(utf16_output + 16), _mm_cvtepu8_epi16(in.chunks[1]));
-      _mm_storeu_si128((__m128i*)(utf16_output + 24), _mm_cvtepu8_epi16(_mm_srli_si128(in.chunks[1],8)));
-      _mm_storeu_si128((__m128i*)(utf16_output + 32), _mm_cvtepu8_epi16(in.chunks[2]));
-      _mm_storeu_si128((__m128i*)(utf16_output + 40), _mm_cvtepu8_epi16(_mm_srli_si128(in.chunks[2],8)));
-      _mm_storeu_si128((__m128i*)(utf16_output + 48), _mm_cvtepu8_epi16(in.chunks[3]));
-      _mm_storeu_si128((__m128i*)(utf16_output + 56), _mm_cvtepu8_epi16(_mm_srli_si128(in.chunks[3],8)));
+      in.store_ascii_as_utf16(utf16_output);
       utf16_output += 64;
       pos += 64;
     }

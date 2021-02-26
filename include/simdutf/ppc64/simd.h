@@ -323,6 +323,11 @@ template <> struct simd8<uint8_t> : base8_numeric<uint8_t> {
   simdutf_really_inline simd8<bool> any_bits_set(simd8<uint8_t> bits) const {
     return ~this->bits_not_set(bits);
   }
+
+  simdutf_really_inline bool is_ascii() const { 
+      return this->saturating_sub(0b01111111u).bits_not_set_anywhere();
+  }
+
   simdutf_really_inline bool bits_not_set_anywhere() const {
     return vec_all_eq(this->value, (__m128i)vec_splats(0));
   }
@@ -376,6 +381,10 @@ template <typename T> struct simd8x64 {
            (this->chunks[2] | this->chunks[3]);
   }
 
+
+  simdutf_really_inline bool is_ascii() const {
+    return input.reduce_or().is_ascii();
+  }
 
   simdutf_really_inline uint64_t to_bitmask() const {
     uint64_t r0 = uint32_t(this->chunks[0].to_bitmask());
