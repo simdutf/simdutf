@@ -169,6 +169,8 @@ namespace std {
 /// If EXPR is an error, returns it.
 #define SIMDUTF_TRY(EXPR) { auto _err = (EXPR); if (_err) { return _err; } }
 
+#include <string>
+#include <climits>
 
 // Useful for debugging purposes
 namespace simdutf {

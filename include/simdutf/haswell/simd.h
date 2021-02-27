@@ -21,7 +21,10 @@ namespace simd {
     // Conversion to SIMD register
     simdutf_really_inline operator const __m256i&() const { return this->value; }
     simdutf_really_inline operator __m256i&() { return this->value; }
-
+    simdutf_really_inline void store_ascii_as_utf16(char16_t * ptr) const {
+      _mm256_storeu_si256(reinterpret_cast<__m256i *>(p), _mm256_cvtepu8_epi16(_mm256_castsi256_si128(*this)));
+      _mm256_storeu_si256(reinterpret_cast<__m256i *>(p + 16), _mm256_cvtepu8_epi16(_mm256_extractf128_si256(*this,1)));
+    }
     // Bit operations
     simdutf_really_inline Child operator|(const Child other) const { return _mm256_or_si256(*this, other); }
     simdutf_really_inline Child operator&(const Child other) const { return _mm256_and_si256(*this, other); }
@@ -158,7 +161,6 @@ namespace simd {
         v8, v9, v10,v11,v12,v13,v14,v15
       );
     }
-
     // Order-sensitive comparisons
     simdutf_really_inline simd8<int8_t> max_val(const simd8<int8_t> other) const { return _mm256_max_epi8(*this, other); }
     simdutf_really_inline simd8<int8_t> min_val(const simd8<int8_t> other) const { return _mm256_min_epi8(*this, other); }
@@ -222,10 +224,6 @@ namespace simd {
     simdutf_really_inline simd8<bool> any_bits_set() const { return ~this->bits_not_set(); }
     simdutf_really_inline simd8<bool> any_bits_set(simd8<uint8_t> bits) const { return ~this->bits_not_set(bits); }
     simdutf_really_inline bool is_ascii() const { return _mm256_movemask_epi8(*this) == 0; }
-    simdutf_really_inline void store_ascii_as_utf16(uint8_t * p) {
-      _mm256_storeu_si256(reinterpret_cast<__m256i *>(p), _mm256_cvtepu8_epi16(_mm256_castsi256_si128(*this)));
-      _mm256_storeu_si256(reinterpret_cast<__m256i *>(p + 32), _mm256_cvtepu8_epi16(_mm256_extractf128_si256(*this,1)));
-    }
     simdutf_really_inline bool bits_not_set_anywhere() const { return _mm256_testz_si256(*this, *this); }
     simdutf_really_inline bool any_bits_set_anywhere() const { return !bits_not_set_anywhere(); }
     simdutf_really_inline bool bits_not_set_anywhere(simd8<uint8_t> bits) const { return _mm256_testz_si256(*this, bits); }
@@ -272,9 +270,9 @@ namespace simd {
       return input.reduce_or().is_ascii();
     }
 
-    simdutf_really_inline void store_ascii_as_utf16(T ptr[128]) const {
+    simdutf_really_inline void store_ascii_as_utf16(char16_t * ptr) const {
       this->chunks[0].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*0);
-      this->chunks[1].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*2);
+      this->chunks[1].store_ascii_as_utf16(ptr+sizeof(simd8<T>));
     }
 
     simdutf_really_inline simd8x64<T> bit_or(const T m) const {
