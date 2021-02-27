@@ -5,6 +5,10 @@
 #include "scalar/utf16.h"
 
 #include "simdutf/westmere/begin.h"
+#include <utility>
+#include <internal/utf16_decode.h>
+#include <internal/utf8_encode.h>
+
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
@@ -133,6 +137,24 @@ size_t convert_masked_utf8_to_utf16(const char *input,
 }
 
 #include "sse_validate_utf16le.cpp"
+#include "sse-convert-utf16-to-utf8.cpp"
+
+size_t scalar_convert_valid_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) {
+  auto encode_utf8 = [&utf8_output](uint32_t value) {
+    ::simdutf::internal::utf8::encode(value, [&utf8_output](const uint8_t byte)
+                                             {*utf8_output++ = byte;});
+  };
+
+  auto error_handler = [](const char16_t*, const char16_t*, simdutf::internal::utf16::Error) {
+    return false; // just break decoding
+  };
+
+  char* start = utf8_output;
+  if (::simdutf::internal::utf16::decode(buf, len, encode_utf8, error_handler))
+    return utf8_output - start;
+  else
+    return 0;
+}
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -175,8 +197,6 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf
   return converter.convert(buf, len, utf16_output);
 }
 
-
-
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* input, size_t size,
     char16_t* utf16_output) const noexcept {
   return utf8_to_utf16::convert_valid(input, size,  utf16_output);
@@ -187,7 +207,23 @@ simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t*
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-  return fallback::utf16_to_utf8::scalar_convert(buf, len, utf8_output);
+  std::pair<const char16_t*, char*> ret = sse_convert_valid_utf16_to_utf8(buf, len, utf8_output);
+  if (ret.first == nullptr)
+    return 0;
+
+  size_t saved_bytes = ret.second - utf8_output;
+  size_t scalar_saved_bytes = 0;
+
+  if (ret.first != buf + len) {
+    const size_t scalar_saved_bytes = fallback::utf16_to_utf8::scalar_convert(
+                                        ret.first, len - (ret.first - buf), ret.second);
+    if (scalar_saved_bytes == 0)
+      return 0;
+
+    saved_bytes += scalar_saved_bytes;
+  }
+
+  return saved_bytes;
 }
 
 simdutf_warn_unused size_t implementation::count_utf16(const char16_t * input, size_t length) const noexcept {

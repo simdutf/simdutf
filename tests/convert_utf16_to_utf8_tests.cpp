@@ -178,9 +178,13 @@ int main() {
     }
 
     const simdutf::implementation& impl = *implementation;
+    if (implementation->name() != "westmere")
+      continue;
+
     printf("Checking implementation %s\n", implementation->name().c_str());
 
     for (auto test: test_procedures())
-      test(*implementation);
+      if (test.name.find("1_or_2_UTF8") != std::string::npos)
+        test(*implementation);
   }
 }
