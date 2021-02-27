@@ -15,23 +15,23 @@ namespace utf8 {
     }
 
     if (value < 0x00000800) {
-      consumer(0xc0 | (value >> 6));
-      consumer(0x80 | (value & 0x3f));
+      consumer(0xc0 | uint8_t(value >> 6));
+      consumer(0x80 | uint8_t(value & 0x3f));
       return 2;
     }
 
     if (value < 0x00010000) {
-      consumer(0xe0 | (value >> 12));
-      consumer(0x80 | ((value >> 6) & 0x3f));
-      consumer(0x80 | (value & 0x3f));
+      consumer(0xe0 | uint8_t(value >> 12));
+      consumer(0x80 | uint8_t((value >> 6) & 0x3f));
+      consumer(0x80 | uint8_t(value & 0x3f));
       return 3;
     }
 
     {
-      consumer(0xf0 | (value >> 18));
-      consumer(0x80 | ((value >> 12) & 0x3f));
-      consumer(0x80 | ((value >> 6) & 0x3f));
-      consumer(0x80 | (value & 0x3f));
+      consumer(0xf0 | uint8_t(value >> 18));
+      consumer(0x80 | uint8_t((value >> 12) & 0x3f));
+      consumer(0x80 | uint8_t((value >> 6) & 0x3f));
+      consumer(0x80 | uint8_t(value & 0x3f));
       return 4;
     }
   }

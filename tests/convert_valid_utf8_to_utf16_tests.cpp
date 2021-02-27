@@ -57,7 +57,7 @@ TEST(convert_1_or_2_or_3_UTF8_bytes) {
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
     // range for 1, 2 or 3 UTF-8 bytes
     simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0xd7ff},
-                                                   {0xe000, 0xffff}});
+                                                     {0xe000, 0xffff}});
 
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
       return implementation.convert_valid_utf8_to_utf16(utf8, size, utf16);
@@ -74,7 +74,7 @@ TEST(convert_3_or_4_UTF8_bytes) {
   for(size_t trial = 0; trial < 10000; trial ++) {
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
     simdutf::tests::helpers::RandomIntRanges random({{0x0800, 0xd800-1},
-                                                   {0xe000, 0x10'ffff}}); // range for 3 or 4 UTF-8 bytes
+                                                     {0xe000, 0x10'ffff}}); // range for 3 or 4 UTF-8 bytes
 
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
       return implementation.convert_valid_utf8_to_utf16(utf8, size, utf16);
