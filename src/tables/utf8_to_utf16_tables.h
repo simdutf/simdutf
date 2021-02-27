@@ -6,7 +6,7 @@ namespace simdutf {
 namespace {
 namespace utf8_to_utf16 {
 
-const uint8_t shufutf8[209][16] = 
+const uint8_t shufutf8[209][16] =
 {	{0, 255, 1, 255, 2, 255, 3, 255, 4, 255, 5, 255, 0, 0, 0, 0},
  	{0, 255, 1, 255, 2, 255, 3, 255, 4, 255, 6, 5, 0, 0, 0, 0},
  	{0, 255, 1, 255, 2, 255, 3, 255, 5, 4, 6, 255, 0, 0, 0, 0},
@@ -219,7 +219,7 @@ const uint8_t shufutf8[209][16] =
 /* number of two bytes : 64 */
 /* number of two + three bytes : 145 */
 /* number of two + three + four bytes : 209 */
-const uint8_t utf8bigindex[4096][2] = 
+const uint8_t utf8bigindex[4096][2] =
 {	{209, 0},
  	{209, 0},
  	{209, 0},

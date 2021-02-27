@@ -181,7 +181,7 @@ std::string toBinaryString(T b) {
    while (mask > 0) {
     binary += ((b & mask) == 0) ? '0' : '1';
     mask >>= 1;
-  }    
+  }
   return binary;
 }
 }

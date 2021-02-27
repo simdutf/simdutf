@@ -88,7 +88,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     const __m128i ascii = _mm_and_si128(perm, _mm_set1_epi32(0x7f));
     const __m128i middlebyte = _mm_and_si128(perm, _mm_set1_epi32(0x3f00));
     const __m128i middlebyte_shifted = _mm_srli_epi32(middlebyte, 2);
-    __m128i middlehighbyte = _mm_and_si128(perm, _mm_set1_epi32(0x3f0000)); 
+    __m128i middlehighbyte = _mm_and_si128(perm, _mm_set1_epi32(0x3f0000));
     // correct for spurious high bit
     const __m128i correct =
         _mm_srli_epi32(_mm_and_si128(perm, _mm_set1_epi32(0x400000)), 1);
@@ -171,7 +171,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
   // The implementation is not specific to westmere and should be moved to the generic directory.
   size_t pos = 0;
   char16_t* start{utf16_output};
-  while(pos + 64 <= size) { 
+  while(pos + 64 <= size) {
     // this loop could be unrolled further. For example, we could process the mask
     // far more than 64 bytes.
     //
@@ -200,7 +200,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
       utf16_output += 64;
       pos += 64;
     }
-  } 
+  }
   size_t len = utf8_to_utf16::finisher_functions::strlen_utf8(input + pos, size - pos);
   utf8_to_utf16::finisher_functions::utf8_to_utf16_with_length(input + pos, size - pos, utf16_output);
   utf16_output += len;
