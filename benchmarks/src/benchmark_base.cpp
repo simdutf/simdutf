@@ -74,7 +74,11 @@ namespace simdutf::benchmarks {
             const double _1GHz = 1'000'000'000.0;
             const double freq = (all.best.cycles() / all.best.elapsed_sec()) / _1GHz;
             const double insperunit = all.best.instructions() / data_size;
-            printf("%8.3f ins/byte, %8.3f GHz, %8.3f GB/s \n", insperunit, freq, gbs);
+            const double inspercycle = all.best.instructions() / all.best.cycles();
+            const double cmisperunit = all.best.cache_misses() / data_size;
+            const double bmisperunit = all.best.branch_misses() / data_size;
+
+            printf("%8.3f ins/byte, %8.3f GHz, %8.3f GB/s, %8.3f ins/cycle, %g b.misses/byte, %g c.mis/byte \n", insperunit, freq, gbs, inspercycle, bmisperunit, cmisperunit);
         } else {
             printf("%8.3f GB/s \n", gbs);
         }
