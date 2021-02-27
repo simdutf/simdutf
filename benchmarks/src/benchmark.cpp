@@ -80,8 +80,8 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         const auto result = count_events(proc, iterations);
         print_summary(result, size);
     } else {
-        std::cerr << "Unsupported procedure: " << name << std::endl;
-        std::cerr << "Report the issue." << std::endl;
+        std::cerr << "Unsupported procedure: " << name << '\n';
+        std::cerr << "Report the issue." << '\n';
         std::cerr << " Aborting ! " << std::endl;
         abort();
     }

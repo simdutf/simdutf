@@ -37,13 +37,13 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   // Why 12 input bytes and not 16? Because we are concerned with the size of
   // the lookup tables. Also 12 is nicely divisible by two and three.
   //
-  const uint16_t twelve_bits_mask = 0xFFF;
-  const uint16_t twelve_bits_utf8_end_of_code_point_mask =
-      utf8_end_of_code_point_mask & twelve_bits_mask;
+  const uint16_t input_mask = 0xFFF;
+  const uint16_t input_utf8_end_of_code_point_mask =
+      utf8_end_of_code_point_mask & input_mask;
   const uint8_t idx =
-      utf8_to_utf16::utf8bigindex[twelve_bits_utf8_end_of_code_point_mask][0];
+      utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][0];
   const uint8_t consumed =
-      utf8_to_utf16::utf8bigindex[twelve_bits_utf8_end_of_code_point_mask][1];
+      utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][1];
   const __m128i in = _mm_loadu_si128((__m128i *)input);
   if (idx < 64) {
     // SIX (6) input code-words
@@ -164,7 +164,8 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* /*b
 
 
 
-simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* input, size_t size, char16_t* utf16_output) const noexcept {
+simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* input, size_t size,
+    char16_t* utf16_output) const noexcept {
   // The implementation is not specific to westmere and should be moved to the generic directory.
   size_t pos = 0;
   char16_t* start{utf16_output};
@@ -178,7 +179,8 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
     // involved.
     //
     simd8x64<int8_t> in(reinterpret_cast<const int8_t *>(input + pos));
-    uint64_t utf8_continuation_mask = in.lt(-65 + 1); // -65 is 0b10111111 in two-complement's, so largest possible continuabtion byte
+    uint64_t utf8_continuation_mask = in.lt(-65 + 1);
+    // -65 is 0b10111111 in two-complement's, so largest possible continuation byte
     if(utf8_continuation_mask != 0) {
       // Slow path. We hope that the compiler will recognize that this is a slow path.
       // Anything that is not a continuation mask is a 'leading byte', that is, the
@@ -188,7 +190,8 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
       uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
       size_t max_starting_point = (pos + 64) - 12 - 1;
       while(pos <= max_starting_point) {
-        size_t consumed = convert_masked_utf8_to_utf16(input + pos, utf8_end_of_code_point_mask, utf16_output);
+        size_t consumed = convert_masked_utf8_to_utf16(input + pos,
+                            utf8_end_of_code_point_mask, utf16_output);
         pos += consumed;
         utf8_end_of_code_point_mask >>= consumed;
       }
