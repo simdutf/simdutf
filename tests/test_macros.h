@@ -5,15 +5,24 @@
 namespace {
 
   using test_procedure = void (*)(const simdutf::implementation& impl);
-  std::list<test_procedure>& test_procedures() {
-    static std::list<test_procedure> singleton;
+  struct test_entry {
+    std::string name;
+    test_procedure procedure;
+
+    void operator()(const simdutf::implementation& impl) {
+      procedure(impl);
+    }
+  };
+
+  std::list<test_entry>& test_procedures() {
+    static std::list<test_entry> singleton;
 
     return singleton;
   }
 
   struct register_test {
-    register_test(test_procedure proc) {
-      test_procedures().push_back(proc);
+    register_test(const char* name, test_procedure proc) {
+      test_procedures().push_back({name, proc});
     }
   };
 
@@ -28,7 +37,7 @@ void name(const simdutf::implementation& impl) {            \
   test_impl_##name(impl);                                   \
   puts(" OK");                                              \
 }                                                           \
-static register_test test_register_##name(name);            \
+static register_test test_register_##name(#name, name);     \
 void test_impl_##name(const simdutf::implementation& implementation)
 
 #define ASSERT_TRUE(cond) {                                 \
