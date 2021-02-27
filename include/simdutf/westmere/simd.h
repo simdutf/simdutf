@@ -249,7 +249,7 @@ namespace simd {
     }
 
     simdutf_really_inline bool is_ascii() const {
-      return input.reduce_or().is_ascii();
+      return this->reduce_or().is_ascii();
     }
 
     simdutf_really_inline void store_ascii_as_utf16(char16_t * ptr) const {

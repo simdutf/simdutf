@@ -22,8 +22,8 @@ namespace simd {
     simdutf_really_inline operator const __m256i&() const { return this->value; }
     simdutf_really_inline operator __m256i&() { return this->value; }
     simdutf_really_inline void store_ascii_as_utf16(char16_t * ptr) const {
-      _mm256_storeu_si256(reinterpret_cast<__m256i *>(p), _mm256_cvtepu8_epi16(_mm256_castsi256_si128(*this)));
-      _mm256_storeu_si256(reinterpret_cast<__m256i *>(p + 16), _mm256_cvtepu8_epi16(_mm256_extractf128_si256(*this,1)));
+      _mm256_storeu_si256(reinterpret_cast<__m256i *>(ptr), _mm256_cvtepu8_epi16(_mm256_castsi256_si128(*this)));
+      _mm256_storeu_si256(reinterpret_cast<__m256i *>(ptr + 16), _mm256_cvtepu8_epi16(_mm256_extractf128_si256(*this,1)));
     }
     // Bit operations
     simdutf_really_inline Child operator|(const Child other) const { return _mm256_or_si256(*this, other); }
@@ -267,7 +267,7 @@ namespace simd {
     }
 
     simdutf_really_inline bool is_ascii() const {
-      return input.reduce_or().is_ascii();
+      return this->reduce_or().is_ascii();
     }
 
     simdutf_really_inline void store_ascii_as_utf16(char16_t * ptr) const {
