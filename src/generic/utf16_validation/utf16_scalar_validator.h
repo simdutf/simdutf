@@ -1,5 +1,4 @@
 #include "internal/utf16_decode.h"
-#include "internal/utf8_encode.h"
 
 // Daniel: This should go in the fallback kernel TODO
 namespace simdutf {

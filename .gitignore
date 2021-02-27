@@ -2,3 +2,7 @@
 
 build
 *-build-*
+
+# Python cache
+
+__pycache__

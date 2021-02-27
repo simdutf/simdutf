@@ -1,5 +1,6 @@
 #include "simdutf/fallback/begin.h"
 #include "generic/utf16_validation/utf16_scalar_validator.h"
+#include "generic/utf16_to_utf8/utf16_to_utf8.h"
 
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
@@ -209,12 +210,12 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
   return utf8_to_utf16_with_length(buf, len, utf16_output);
 }
 
-simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t* /*buf*/, size_t /*len*/, char* /*utf8_output*/) const noexcept {
-  return 0; // stub
+simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
+  return fallback::utf16_to_utf8::scalar_convert(buf, len, utf8_output);
 }
 
-simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const char16_t* /*buf*/, size_t /*len*/, char* /*utf8_output*/) const noexcept {
-  return 0; // stub
+simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
+  return fallback::utf16_to_utf8::scalar_convert(buf, len, utf8_output);
 }
 
 } // namespace SIMDUTF_IMPLEMENTATION
