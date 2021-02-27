@@ -1,9 +1,6 @@
-#include "simdutf/westmere/begin.h"
 #include "tables/utf8_to_utf16_tables.h"
 
-#include <iostream>
-#include <string>
-
+#include "simdutf/westmere/begin.h"
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {

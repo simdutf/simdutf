@@ -1,6 +1,6 @@
-#include "simdutf/arm64/begin.h"
 #include "tables/utf8_to_utf16_tables.h"
 
+#include "simdutf/arm64/begin.h"
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
