@@ -1,5 +1,6 @@
-#include "simdutf/westmere/begin.h"
+#include "tables/utf8_to_utf16_tables.h"
 
+#include "simdutf/westmere/begin.h"
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
@@ -24,6 +25,109 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
   // Caller requires a bool (all 1's). All values resulting from the subtraction will be <= 64, so signed comparison is fine.
   return simd8<int8_t>(is_third_byte | is_fourth_byte) > int8_t(0);
 }
+
+// Convert up to 12 bytes from utf8 to utf16 using a mask indicating the
+// end of the code points. Only the least significant 12 bits of the mask
+// are accessed.
+// It returns how many bytes were consumed (up to 12).
+size_t convert_masked_utf8_to_utf16(const char *input,
+                           uint64_t utf8_end_of_code_point_mask,
+                           char16_t *&utf16_output) {
+  // we use an approach where we try to process up to 12 input bytes.
+  // Why 12 input bytes and not 16? Because we are concerned with the size of
+  // the lookup tables. Also 12 is nicely divisible by two and three.
+  //
+  const uint16_t input_mask = 0xFFF;
+  const uint16_t input_utf8_end_of_code_point_mask =
+      utf8_end_of_code_point_mask & input_mask;
+  const uint8_t idx =
+      utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][0];
+  const uint8_t consumed =
+      utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][1];
+  const __m128i in = _mm_loadu_si128((__m128i *)input);
+  if (idx < 64) {
+    // SIX (6) input code-words
+    // this is a relatively easy scenario
+    // we process SIX (6) input code-words. The max length in bytes of six code
+    // words spanning between 1 and 2 bytes each is 12 bytes. On processors
+    // where pdep/pext is fast, we might be able to use a small lookup table.
+    const __m128i sh =
+        _mm_loadu_si128((const __m128i *)utf8_to_utf16::shufutf8[idx]);
+    const __m128i perm = _mm_shuffle_epi8(in, sh);
+    const __m128i ascii = _mm_and_si128(perm, _mm_set1_epi16(0x7f));
+    const __m128i highbyte = _mm_and_si128(perm, _mm_set1_epi16(0x1f00));
+    const __m128i composed = _mm_or_si128(ascii, _mm_srli_epi16(highbyte, 2));
+    _mm_storeu_si128((__m128i *)utf16_output, composed);
+    utf16_output += 6; // We wrote 12 bytes, 6 code points.
+  } else if (idx < 145) {
+    // FOUR (4) input code-words
+    const __m128i sh =
+        _mm_loadu_si128((const __m128i *)utf8_to_utf16::shufutf8[idx]);
+    const __m128i perm = _mm_shuffle_epi8(in, sh);
+    const __m128i ascii =
+        _mm_and_si128(perm, _mm_set1_epi32(0x7f)); // 7 or 6 bits
+    const __m128i middlebyte =
+        _mm_and_si128(perm, _mm_set1_epi32(0x3f00)); // 5 or 6 bits
+    const __m128i middlebyte_shifted = _mm_srli_epi32(middlebyte, 2);
+    const __m128i highbyte =
+        _mm_and_si128(perm, _mm_set1_epi32(0x0f0000)); // 4 bits
+    const __m128i highbyte_shifted = _mm_srli_epi32(highbyte, 4);
+    const __m128i composed =
+        _mm_or_si128(_mm_or_si128(ascii, middlebyte_shifted), highbyte_shifted);
+    const __m128i composed_repacked = _mm_packus_epi32(composed, composed);
+    _mm_storeu_si128((__m128i *)utf16_output, composed_repacked);
+    utf16_output += 4;
+  } else if (idx < 209) {
+    // TWO (2) input code-words
+    const __m128i sh =
+        _mm_loadu_si128((const __m128i *)utf8_to_utf16::shufutf8[idx]);
+    const __m128i perm = _mm_shuffle_epi8(in, sh);
+    const __m128i ascii = _mm_and_si128(perm, _mm_set1_epi32(0x7f));
+    const __m128i middlebyte = _mm_and_si128(perm, _mm_set1_epi32(0x3f00));
+    const __m128i middlebyte_shifted = _mm_srli_epi32(middlebyte, 2);
+    __m128i middlehighbyte = _mm_and_si128(perm, _mm_set1_epi32(0x3f0000));
+    // correct for spurious high bit
+    const __m128i correct =
+        _mm_srli_epi32(_mm_and_si128(perm, _mm_set1_epi32(0x400000)), 1);
+    middlehighbyte = _mm_xor_si128(correct, middlehighbyte);
+    const __m128i middlehighbyte_shifted = _mm_srli_epi32(middlehighbyte, 4);
+    const __m128i highbyte = _mm_and_si128(perm, _mm_set1_epi32(0x07000000));
+    const __m128i highbyte_shifted = _mm_srli_epi32(highbyte, 6);
+    const __m128i composed =
+        _mm_or_si128(_mm_or_si128(ascii, middlebyte_shifted),
+                     _mm_or_si128(highbyte_shifted, middlehighbyte_shifted));
+    const __m128i composedminus =
+        _mm_sub_epi32(composed, _mm_set1_epi32(0x10000));
+    const __m128i lowtenbits =
+        _mm_and_si128(composedminus, _mm_set1_epi32(0x3ff));
+    const __m128i hightenbits = _mm_srli_epi32(composedminus, 10);
+    const __m128i lowtenbitsadd =
+        _mm_add_epi32(lowtenbits, _mm_set1_epi32(0xDC00));
+    const __m128i hightenbitsadd =
+        _mm_add_epi32(hightenbits, _mm_set1_epi32(0xD800));
+    const __m128i lowtenbitsaddshifted = _mm_slli_epi32(lowtenbitsadd, 16);
+    const __m128i surrogates =
+        _mm_or_si128(hightenbitsadd, lowtenbitsaddshifted);
+    uint32_t basic_buffer[4];
+    _mm_storeu_si128((__m128i *)basic_buffer, composed);
+    uint32_t surrogate_buffer[4];
+    _mm_storeu_si128((__m128i *)surrogate_buffer, surrogates);
+    for (size_t i = 0; i < 3; i++) {
+      if (basic_buffer[i] < 65536) {
+        utf16_output[0] = uint16_t(basic_buffer[i]);
+        utf16_output++;
+      } else {
+        utf16_output[0] = uint16_t(surrogate_buffer[i] & 0xFFFF);
+        utf16_output[1] = uint16_t(surrogate_buffer[i] >> 16);
+        utf16_output += 2;
+      }
+    }
+  } else {
+    // here we know that there is an error but we do not handle errors
+  }
+  return consumed;
+}
+
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -58,112 +162,43 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* /*b
   return 0; // stub
 }
 
-simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* input, size_t size, char16_t* utf16_output) const noexcept {
+
+
+simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* input, size_t size,
+    char16_t* utf16_output) const noexcept {
+  // The implementation is not specific to westmere and should be moved to the generic directory.
   size_t pos = 0;
   char16_t* start{utf16_output};
-  while (pos + 16 <= size) {
-    const __m128i in = _mm_loadu_si128((__m128i *)(input + pos));
-    const uint16_t non_ascii_chars = uint16_t(_mm_movemask_epi8(in));
-    // ASCII is likely common in many cases, we want a fast path.
-    if(non_ascii_chars == 0) {
-        // could use _mm256_cvtepu8_epi16/_mm_cvtepu8_epi16 (SSE4.1)
-        const __m128i out1 = _mm_unpacklo_epi8(in, _mm_setzero_si128());// order of parameter determines endianness
-        _mm_storeu_si128((__m128i*)utf16_output, out1);
-        utf16_output += 8;
-        const __m128i out2 = _mm_unpackhi_epi8(in, _mm_setzero_si128());
-        _mm_storeu_si128((__m128i*)utf16_output, out2);
-        utf16_output += 8;
-        pos += 16;
-        continue;
-    }
-    // 
-    // Otherwise, we use an approach where we try to process up to 12 input bytes.
-    // Why 12 input bytes and not 16? Because we are concerned with the size of the lookup tables.
-    // Also 12 is nicely divisible by two and three.
+  while(pos + 64 <= size) {
+    // this loop could be unrolled further. For example, we could process the mask
+    // far more than 64 bytes.
     //
-    // The most significant 4 bits (high nibble) can be used to classify the bytes, as
-    // to whether they start a new code point.
-    const __m128i hn = _mm_set1_epi8(uint8_t(0xF));
-    const __m128i in_high_nibbles = _mm_and_si128(hn, _mm_srli_epi16(in, 4));
-    // We could remove the UTF8 headers with one instruction:
-    const uint16_t start_of_code_point = uint16_t(_mm_movemask_epi8(_mm_shuffle_epi8(_mm_set_epi8(char(0xff), char(0xff), char(0xff), char(0xff), 0x0, 0x0, 0x0, 0x0, char(0xff), char(0xff), char(0xff), char(0xff), char(0xff), char(0xff), char(0xff), char(0xff)), in_high_nibbles)));
-    /////////////
-    // ASCII characters are the start and the end of a code point 
-    // and anything immediately before the start of a code point 
-    // must be the end of a start of code point.
-    ///////////
-    const uint16_t end_of_code_point = uint16_t((start_of_code_point >> 1) | (! non_ascii_chars));
-    const uint16_t twelvebits_mask = 0xFFF;
-    const uint16_t twelvebits_end_of_code_point = end_of_code_point&twelvebits_mask;
-    const uint8_t idx = utf8_to_utf16::utf8bigindex[twelvebits_end_of_code_point][0];
-    const uint8_t consumed = utf8_to_utf16::utf8bigindex[twelvebits_end_of_code_point][1];
+    // For pure ASCII inputs, this function is not optimally fast because they are
+    // faster ways to just check for ASCII than to compute the continuation mask.
+    // However, the continuation mask is more informative. There might be a trade-off
+    // involved.
     //
-    // Let us first try to see if we are in the easy two-byte scenario
-    //
-    if(idx < 64) {
-        // this is a relatively easy scenario
-        // we process SIX (6) input code-words. The max length in bytes of six code words
-        // spanning between 1 and 2 bytes each is 12 bytes.
-        // On processors where pdep/pext is fast, we might be able to use a small lookup table.
-        const __m128i sh = _mm_loadu_si128((const __m128i *)utf8_to_utf16::shufutf8[idx]);
-        const __m128i perm = _mm_shuffle_epi8(in, sh);
-        const __m128i ascii = _mm_and_si128(perm,_mm_set1_epi16(0x7f));
-        const __m128i highbyte = _mm_and_si128(perm,_mm_set1_epi16(0x1f00));
-        const __m128i composed = _mm_or_si128(ascii,_mm_srli_epi16(highbyte,2));
-        _mm_storeu_si128((__m128i*)utf16_output, composed);
-        utf16_output += 6;
+    simd8x64<int8_t> in(reinterpret_cast<const int8_t *>(input + pos));
+    uint64_t utf8_continuation_mask = in.lt(-65 + 1);
+    // -65 is 0b10111111 in two-complement's, so largest possible continuation byte
+    if(utf8_continuation_mask != 0) {
+      // Slow path. We hope that the compiler will recognize that this is a slow path.
+      // Anything that is not a continuation mask is a 'leading byte', that is, the
+      // start of a new code point.
+      uint64_t utf8_leading_mask = ~utf8_continuation_mask;
+      // The *start* of code points is not so useful, rather, we want the *end* of code points.
+      uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
+      size_t max_starting_point = (pos + 64) - 12 - 1;
+      while(pos <= max_starting_point) {
+        size_t consumed = convert_masked_utf8_to_utf16(input + pos,
+                            utf8_end_of_code_point_mask, utf16_output);
         pos += consumed;
-    } else if (idx < 145) {
-        const __m128i sh = _mm_loadu_si128((const __m128i *)utf8_to_utf16::shufutf8[idx]);
-        const __m128i perm = _mm_shuffle_epi8(in, sh);
-        const __m128i ascii = _mm_and_si128(perm,_mm_set1_epi32(0x7f)); // 7 or 6 bits
-        const __m128i middlebyte = _mm_and_si128(perm,_mm_set1_epi32(0x3f00)); // 5 or 6 bits
-        const __m128i middlebyte_shifted = _mm_srli_epi32(middlebyte,2);
-        const __m128i highbyte = _mm_and_si128(perm,_mm_set1_epi32(0x0f0000)); // 4 bits
-        const __m128i highbyte_shifted = _mm_srli_epi32(highbyte,4);
-        const __m128i composed = _mm_or_si128(_mm_or_si128(ascii,middlebyte_shifted),highbyte_shifted);
-        const __m128i composed_repacked = _mm_packus_epi32(composed,composed);
-        _mm_storeu_si128((__m128i*)utf16_output,  composed_repacked);
-        utf16_output += 4;
-        pos += consumed;
-    } else if(idx < 209) {
-        const __m128i sh = _mm_loadu_si128((const __m128i *)utf8_to_utf16::shufutf8[idx]);
-        const __m128i perm = _mm_shuffle_epi8(in, sh);
-        const __m128i ascii = _mm_and_si128(perm,_mm_set1_epi32(0x7f)); 
-        const __m128i middlebyte = _mm_and_si128(perm,_mm_set1_epi32(0x3f00));
-        const __m128i middlebyte_shifted = _mm_srli_epi32(middlebyte,2);
-        __m128i middlehighbyte = _mm_and_si128(perm,_mm_set1_epi32(0x3f0000));//_mm_xor_si128(_mm_and_si128(perm,_mm_set1_epi32(0x3f0000)), );
-        // correct for spurious high bit
-        const __m128i correct = _mm_srli_epi32(_mm_and_si128(perm,_mm_set1_epi32(0x400000)),1);
-        middlehighbyte = _mm_xor_si128(correct, middlehighbyte);
-        const __m128i middlehighbyte_shifted = _mm_srli_epi32(middlehighbyte,4);
-        const __m128i highbyte = _mm_and_si128(perm,_mm_set1_epi32(0x07000000));
-        const __m128i highbyte_shifted = _mm_srli_epi32(highbyte,6);
-        const __m128i composed = _mm_or_si128(_mm_or_si128(ascii,middlebyte_shifted),_mm_or_si128(highbyte_shifted,middlehighbyte_shifted));
-        const __m128i composedminus = _mm_sub_epi32(composed,_mm_set1_epi32(0x10000));
-        const __m128i lowtenbits = _mm_and_si128(composedminus,_mm_set1_epi32(0x3ff));
-        const __m128i hightenbits = _mm_srli_epi32(composedminus,10);
-        const __m128i lowtenbitsadd = _mm_add_epi32(lowtenbits,_mm_set1_epi32(0xDC00));
-        const __m128i hightenbitsadd = _mm_add_epi32(hightenbits,_mm_set1_epi32(0xD800));
-        const __m128i lowtenbitsaddshifted = _mm_slli_epi32(lowtenbitsadd,16);
-        const __m128i surrogates = _mm_or_si128(hightenbitsadd,lowtenbitsaddshifted);
-        uint32_t basic_buffer[4];
-        _mm_storeu_si128((__m128i*)basic_buffer,  composed);
-        uint32_t surrogate_buffer[4];
-        _mm_storeu_si128((__m128i*)surrogate_buffer,  surrogates);
-        for(size_t i = 0; i < 3; i++) {
-            if(basic_buffer[i]<65536) {
-                utf16_output[0] = uint16_t(basic_buffer[i]);
-                utf16_output++;
-            } else {
-                utf16_output[0] = uint16_t(surrogate_buffer[i] &0xFFFF);
-                utf16_output[1] = uint16_t(surrogate_buffer[i] >> 16);
-                utf16_output += 2;
-            }
-        }
-        pos += consumed;        
+        utf8_end_of_code_point_mask >>= consumed;
+      }
     } else {
-        // here we know that there is an error but we do not handle errors
+      in.store_ascii_as_utf16(utf16_output);
+      utf16_output += 64;
+      pos += 64;
     }
   }
   size_t len = utf8_to_utf16::finisher_functions::strlen_utf8(input + pos, size - pos);

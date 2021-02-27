@@ -16,7 +16,7 @@ def compute_locations(mask):
     return answer
 
 
-# computes the gaps between the 1
+# computes the gaps between the 1, assuming we had an initial 1
 def compute_code_point_size(mask):
     positions = compute_locations(mask)
     answer = []
@@ -179,6 +179,7 @@ def main():
         arrg.append((c,0))
   print("const uint8_t utf8bigindex["+str(len(arrg))+"][2] = ")
   print(cpp_arrayarray_initializer(arrg), end=";\n")
+
 
 if __name__ == '__main__':
     main()

@@ -107,7 +107,6 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
     simdutf_really_inline base_u8(const uint8x16_t _value) : value(_value) {}
     simdutf_really_inline operator const uint8x16_t&() const { return this->value; }
     simdutf_really_inline operator uint8x16_t&() { return this->value; }
-
     // Bit operations
     simdutf_really_inline simd8<T> operator|(const simd8<T> other) const { return vorrq_u8(*this, other); }
     simdutf_really_inline simd8<T> operator&(const simd8<T> other) const { return vandq_u8(*this, other); }
@@ -232,6 +231,8 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
 
     // Bit-specific operations
     simdutf_really_inline simd8<bool> any_bits_set(simd8<uint8_t> bits) const { return vtstq_u8(*this, bits); }
+    simdutf_really_inline bool is_ascii() const { return this->max_val() < 0b10000000u; }
+
     simdutf_really_inline bool any_bits_set_anywhere() const { return this->max_val() != 0; }
     simdutf_really_inline bool any_bits_set_anywhere(simd8<uint8_t> bits) const { return (*this & bits).any_bits_set_anywhere(); }
     template<int N>
@@ -274,7 +275,10 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
     static simdutf_really_inline simd8<int8_t> splat(int8_t _value) { return vmovq_n_s8(_value); }
     static simdutf_really_inline simd8<int8_t> zero() { return vdupq_n_s8(0); }
     static simdutf_really_inline simd8<int8_t> load(const int8_t values[16]) { return vld1q_s8(values); }
-
+    simdutf_really_inline void store_ascii_as_utf16(char16_t * p) const {
+      vst1q_u16(reinterpret_cast<uint16_t*>(p), vmovl_u8(vget_low_u8 (*this)));
+      vst1q_u16(reinterpret_cast<uint16_t*>(p + 8), vmovl_high_u8(*this));
+    }
     // Conversion from/to SIMD register
     simdutf_really_inline simd8(const int8x16_t _value) : value{_value} {}
     simdutf_really_inline operator const int8x16_t&() const { return this->value; }
@@ -317,7 +321,6 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
 
     // Store to array
     simdutf_really_inline void store(int8_t dst[16]) const { return vst1q_s8(dst, *this); }
-
     // Explicit conversion to/from unsigned
     //
     // Under Visual Studio/ARM64 uint8x16_t and int8x16_t are apparently the same type.
@@ -395,6 +398,17 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
       return (this->chunks[0] | this->chunks[1]) | (this->chunks[2] | this->chunks[3]);
     }
 
+    simdutf_really_inline bool is_ascii() const {
+      return reduce_or().is_ascii();
+    }
+
+    simdutf_really_inline void store_ascii_as_utf16(char16_t * ptr) const {
+      this->chunks[0].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*0);
+      this->chunks[1].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*1);
+      this->chunks[2].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*2);
+      this->chunks[3].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*3);
+    }
+
     simdutf_really_inline uint64_t to_bitmask() const {
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
       const uint8x16_t bit_mask = make_uint8x16_t(
@@ -434,6 +448,17 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
         this->chunks[3] <= mask
       ).to_bitmask();
     }
+
+    simdutf_really_inline uint64_t lt(const T m) const {
+      const simd8<T> mask = simd8<T>::splat(m);
+      return  simd8x64<bool>(
+        this->chunks[0] < mask,
+        this->chunks[1] < mask,
+        this->chunks[2] < mask,
+        this->chunks[3] < mask
+      ).to_bitmask();
+    }
+
   }; // struct simd8x64<T>
 
 } // namespace simd

@@ -20,14 +20,22 @@ namespace simdutf::benchmarks {
     void BenchmarkBase::run(const input::Testcase& testcase) {
         prepare_input(testcase);
 
-        const auto& known_procedurs = all_procedures();
+        const auto& known_procedures = all_procedures();
 
         if (testcase.tested_procedures.empty()) {
-            for (const auto& procedure: known_procedurs)
+            for (const auto& procedure: known_procedures)
                 run(procedure, testcase.iterations);
         } else {
+            std::set<std::string> to_be_tested;
             for (const auto& procedure: testcase.tested_procedures) {
-                if (known_procedurs.count(procedure) > 0)
+                for(const auto& candidate: known_procedures) {
+                    if(candidate.find(procedure) != std::string::npos) {
+                        to_be_tested.insert(candidate);
+                    }
+                }
+            }
+
+            for (const auto& procedure: to_be_tested) {
                     run(procedure, testcase.iterations);
             }
         }
@@ -66,7 +74,11 @@ namespace simdutf::benchmarks {
             const double _1GHz = 1'000'000'000.0;
             const double freq = (all.best.cycles() / all.best.elapsed_sec()) / _1GHz;
             const double insperunit = all.best.instructions() / data_size;
-            printf("%8.3f ins/byte, %8.3f GHz, %8.3f GB/s \n", insperunit, freq, gbs);
+            const double inspercycle = all.best.instructions() / all.best.cycles();
+            const double cmisperunit = all.best.cache_misses() / data_size;
+            const double bmisperunit = all.best.branch_misses() / data_size;
+
+            printf("%8.3f ins/byte, %8.3f GHz, %8.3f GB/s, %8.3f ins/cycle, %g b.misses/byte, %g c.mis/byte \n", insperunit, freq, gbs, inspercycle, bmisperunit, cmisperunit);
         } else {
             printf("%8.3f GB/s \n", gbs);
         }

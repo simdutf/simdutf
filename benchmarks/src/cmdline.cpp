@@ -56,7 +56,6 @@ namespace {
             else if ((arg == "-P") or (arg == "--procedure")) {
                 const std::string& value = arguments.at(i + 1);
                 cmdline.procedures.insert(value);
-
                 i += 2;
             }
             else if ((arg == "-I") or (arg == "--iterations")) {
@@ -145,8 +144,8 @@ Examples:
     # test all known UTF8 procedures against 10k random input (in 100 iterations)
     $ benchmark --random-utf8 10240 -I 100
 
-    # test validate procedures implemeted for AVX2 against two custom files
-    $ benchmark -P "validate*avx2*" -F ~/plain_ascii.txt -F ~/chinese_huge.txt
+    # test procedures implemented with the haswell kernel against two custom files
+    $ benchmark -P "avx2" -F ~/plain_ascii.txt -F ~/chinese_huge.txt
 )txt", file);
 }
 
