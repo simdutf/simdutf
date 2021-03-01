@@ -1,126 +1,44 @@
 #include "simdutf.h"
 
 #include <array>
-#include <random>
-#include <list>
 #include <algorithm>
-#include <stdexcept>
 
-#include "reference/encode_utf16.h"
+#include "helpers/random_utf16.h"
 #include "test_macros.h"
-
-namespace utf16::random {
-
-  /*
-    Generates valid random UTF-16
-
-    It might generate streams consisting:
-    - only single 16-bit words (Generator(..., 1, 0));
-    - only surrogate pairs, two 16-bit words (Generator(..., 0, 1))
-    - mixed, depending on given probabilities (Generator(..., 1, 1))
-  */
-  class Generator {
-    std::mt19937 gen;
-
-  public:
-    Generator(std::random_device& rd, int single_word_prob, int two_words_probability)
-      : gen{rd()}
-      , utf16_length({double(single_word_prob),
-                      double(single_word_prob),
-                      double(2 * two_words_probability)}) {}
-
-    std::vector<char16_t> generate(size_t size);
-    std::vector<char16_t> generate(size_t size, long seed);
-
-  private:
-    std::discrete_distribution<> utf16_length;
-    std::uniform_int_distribution<uint32_t> single_word0{0x0000'0000, 0x0000'd7ff};
-    std::uniform_int_distribution<uint32_t> single_word1{0x0000'e000, 0x0000'ffff};
-    std::uniform_int_distribution<uint32_t> two_words   {0x0001'0000, 0x0010'ffff};
-    uint32_t generate();
-  };
-
-  std::vector<char16_t> Generator::generate(size_t size)
-  {
-    if (size % 2 == 1)
-      throw std::invalid_argument("Not implemented yet");
-
-    std::vector<char16_t> result;
-    result.reserve(size);
-
-    char16_t W1;
-    char16_t W2;
-    while (result.size() < size) {
-      const uint32_t value = generate();
-      switch (simdutf::tests::reference::utf16::encode(value, W1, W2)) {
-        case 0:
-          throw std::runtime_error("Random UTF-16 generator is broken");
-        case 1:
-          result.push_back(W1);
-          break;
-        case 2:
-          result.push_back(W1);
-          result.push_back(W2);
-          break;
-      }
-    }
-
-    return result;
-  }
-
-  std::vector<char16_t> Generator::generate(size_t size, long seed) {
-    gen.seed(seed);
-    return generate(size);
-  }
-
-  uint32_t Generator::generate() {
-    switch (utf16_length(gen)) {
-      case 0:
-        return single_word0(gen);
-      case 1:
-        return single_word1(gen);
-      case 2:
-        return two_words(gen);
-      default:
-        abort();
-    }
-  }
-
-} // namespace utf16::random
 
 
 std::vector<char16_t> generate_valid_utf16(size_t size = 512) {
   std::random_device rd{};
-  utf16::random::Generator generator{rd, 1, 0};
+  simdutf::tests::helpers::random_utf16 generator{rd, 1, 0};
   return generator.generate(size);
 }
 
 TEST(validate_utf16__returns_true_for_valid_input__single_words) {
   std::random_device rd{};
-  utf16::random::Generator generator{rd, 1, 0};
+  simdutf::tests::helpers::random_utf16 generator{rd, 1, 0};
   const auto utf16{generator.generate(512)};
 
   ASSERT_TRUE(implementation.validate_utf16(
-                reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
+              reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
 }
 
 TEST(validate_utf16__returns_true_for_valid_input__surrogate_pairs) {
   std::random_device rd{};
-  utf16::random::Generator generator{rd, 0, 1};
+  simdutf::tests::helpers::random_utf16 generator{rd, 0, 1};
   const auto utf16{generator.generate(512)};
 
   ASSERT_TRUE(implementation.validate_utf16(
-                reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
+              reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
 }
 
 // mixed = either 16-bit or 32-bit codewords
 TEST(validate_utf16__returns_true_for_valid_input__mixed) {
   std::random_device rd{};
-  utf16::random::Generator generator{rd, 1, 1};
+  simdutf::tests::helpers::random_utf16 generator{rd, 1, 1};
   const auto utf16{generator.generate(512)};
 
   ASSERT_TRUE(implementation.validate_utf16(
-                reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
+              reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
 }
 
 TEST(validate_utf16__returns_true_for_empty_string) {

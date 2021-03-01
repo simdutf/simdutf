@@ -19,7 +19,10 @@ add_cpp_test(validate_utf8_puzzler_tests)
 target_link_libraries(validate_utf8_puzzler_tests PUBLIC simdutf-headers)
 
 add_cpp_test(validate_utf16_basic_tests)
-target_link_libraries(validate_utf16_basic_tests PUBLIC simdutf simdutf::tests::reference)
+target_link_libraries(validate_utf16_basic_tests
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
 target_compile_options(validate_utf16_basic_tests PRIVATE -Wfatal-errors)
 
 add_cpp_test(convert_valid_utf8_to_utf16_tests)
