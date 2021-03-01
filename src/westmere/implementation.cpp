@@ -1,4 +1,6 @@
 #include "tables/utf8_to_utf16_tables.h"
+#include "scalar/utf8_to_utf16/valid_utf8_to_utf16.h"
+#include "scalar/utf8_to_utf16/utf8_to_utf16.h"
 
 #include "simdutf/westmere/begin.h"
 namespace simdutf {
@@ -159,7 +161,7 @@ simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, siz
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
-   return haswell::utf8_to_utf16::scalar_convert_utf8_to_utf16(buf, len, utf16_output);
+   return scalar::utf8_to_utf16::scalar_convert_utf8_to_utf16(buf, len, utf16_output);
 }
 
 
@@ -201,7 +203,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
       pos += 64;
     }
   }
-  utf16_output += utf8_to_utf16::scalar_convert_valid_utf8_to_utf16(input + pos, size - pos, utf16_output);
+  utf16_output += scalar::utf8_to_utf16::scalar_convert_valid_utf8_to_utf16(input + pos, size - pos, utf16_output);
   return utf16_output - start;
 }
 
