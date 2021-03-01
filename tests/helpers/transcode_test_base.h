@@ -11,13 +11,12 @@ namespace simdutf::tests::helpers {
    * and UTF8 <= UTF16, but the function signatures differ when you
    * represent UTF8 with char8_t and UTF16 with char16_t.
    */
-
-
   class transcode_test_base {
   protected:
     void encode_utf8(uint32_t codepoint, std::vector<char>& target);
     void encode_utf16(uint32_t codepoint, std::vector<char16_t>& target);
   };
+
 
   /**
    * This class can be used to test UTF8 => UTF16 transcoding.
@@ -89,6 +88,7 @@ namespace simdutf::tests::helpers {
   private:
     void prepare_input(uint32_t codepoint);
     bool validate(size_t procedure_result) const;
+    bool is_input_valid() const;
   };
 
 

@@ -6,6 +6,7 @@
 
 #include <tests/reference/encode_utf8.h>
 #include <tests/reference/encode_utf16.h>
+#include <tests/reference/validate_utf16.h>
 
 namespace simdutf::tests::helpers {
 
@@ -76,14 +77,9 @@ namespace simdutf::tests::helpers {
   }
 
 
-
-
   /**
    * transcode_utf16_to_utf8_test_base can be used to test UTF16 => UTF8 transcoding.
    */
-
-
-
   transcode_utf16_to_utf8_test_base::transcode_utf16_to_utf8_test_base(GenerateCodepoint generate,
                                        size_t input_size) {
     while (input_utf16.size() < input_size) {
@@ -99,8 +95,20 @@ namespace simdutf::tests::helpers {
       encode_utf8(codepoint, reference_output_utf8);
   }
 
+  bool transcode_utf16_to_utf8_test_base::is_input_valid() const {
+    return simdutf::tests::reference::validate_utf16(input_utf16.data(), input_utf16.size());
+  }
  
   bool transcode_utf16_to_utf8_test_base::validate(size_t saved_chars) const {
+    if (saved_chars == 0) {
+      if (is_input_valid()) {
+        printf("input UTF-16 string is valid, but conversion routine returned 0, indicating input error");
+        return false;
+      }
+
+      return true;
+    }
+
     if (saved_chars != reference_output_utf8.size()) {
       printf("wrong saved bytes value: procedure returned %lu bytes, it should be %lu\n",
              saved_chars, reference_output_utf8.size());

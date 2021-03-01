@@ -7,10 +7,12 @@
 #include "test_macros.h"
 
 
-std::vector<char16_t> generate_valid_utf16(size_t size = 512) {
-  std::random_device rd{};
-  simdutf::tests::helpers::random_utf16 generator{rd, 1, 0};
-  return generator.generate(size);
+namespace {
+  std::vector<char16_t> generate_valid_utf16(size_t size = 512) {
+    std::random_device rd{};
+    simdutf::tests::helpers::random_utf16 generator{rd, 1, 0};
+    return generator.generate(size);
+  }
 }
 
 TEST(validate_utf16__returns_true_for_valid_input__single_words) {

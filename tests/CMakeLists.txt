@@ -30,3 +30,9 @@ target_link_libraries(convert_valid_utf8_to_utf16_tests
   PUBLIC simdutf
          simdutf::tests::reference
          simdutf::tests::helpers)
+
+add_cpp_test(convert_utf16_to_utf8_tests)
+target_link_libraries(convert_utf16_to_utf8_tests
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
