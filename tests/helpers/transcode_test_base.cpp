@@ -109,9 +109,21 @@ namespace simdutf::tests::helpers {
       return true;
     }
 
+    auto dump = [this, saved_chars](const char* title, const std::vector<char>& array) {
+      return;
+      printf("%s", title);
+      for (size_t i=0; i < saved_chars; i++) {
+        printf(" %02x", (uint8_t)array[i]);
+      }
+      putchar('\n');
+    };
+
     if (saved_chars != reference_output_utf8.size()) {
       printf("wrong saved bytes value: procedure returned %lu bytes, it should be %lu\n",
              saved_chars, reference_output_utf8.size());
+
+      dump("expected :", reference_output_utf8);
+      dump("actual   :", output_utf8);
       return false;
     }
     // Note that, in general, output_utf8.size() will not matched saved_chars.
@@ -123,14 +135,6 @@ namespace simdutf::tests::helpers {
     if (it1 != output_utf8.begin() + saved_chars) {
       printf("mismatched output at %lu: actual value 0x%02x, expected 0x%02x\n",
              std::distance(output_utf8.begin(), it1), *it1, *it2);
-
-      auto dump = [this, saved_chars](const char* title, const std::vector<char>& array) {
-        printf("%s", title);
-        for (size_t i=0; i < saved_chars; i++) {
-          printf(" %02x", (uint8_t)array[i]);
-        }
-        putchar('\n');
-      };
 
       dump("expected :", reference_output_utf8);
       dump("actual   :", output_utf8);

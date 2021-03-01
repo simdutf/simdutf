@@ -14,7 +14,7 @@ namespace {
 
   using simdutf::tests::helpers::transcode_utf16_to_utf8_test_base;
 
-  constexpr int trials = 100;
+  constexpr int trials = 1000;
 }
 
 TEST(convert_pure_ASCII) {
@@ -27,6 +27,7 @@ TEST(convert_pure_ASCII) {
     return implementation.convert_valid_utf16_to_utf8(utf8, size, utf16);
   };
 
+  std::array<size_t, 1> input_size{16};
   for (size_t size: input_size) {
     transcode_utf16_to_utf8_test_base test(generator, size);
     ASSERT_TRUE(test(procedure));
@@ -53,8 +54,10 @@ TEST(convert_into_1_or_2_or_3_UTF8_bytes) {
   for(size_t trial = 0; trial < trials; trial ++) {
     if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
     // range for 1, 2 or 3 UTF-8 bytes
-    simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0xd7ff},
-                                                     {0xe000, 0xffff}});
+    simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0x007f},
+                                                     {0x0080, 0x07ff},
+                                                     {0x0800, 0xd7ff},
+                                                     {0xe000, 0xffff}}, 0);
 
     auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
       return implementation.convert_valid_utf16_to_utf8(utf8, size, utf16);
@@ -184,7 +187,7 @@ int main() {
     printf("Checking implementation %s\n", implementation->name().c_str());
 
     for (auto test: test_procedures())
-      if (test.name.find("1_or_2_UTF8") != std::string::npos)
+      if (test.name.find("convert_into_1_or_2_or_3_UTF8_bytes") != std::string::npos)
         test(*implementation);
   }
 }
