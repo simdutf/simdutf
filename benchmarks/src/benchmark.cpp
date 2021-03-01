@@ -10,7 +10,7 @@ namespace simdutf::benchmarks {
 Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
     : BenchmarkBase(std::move(testcases)) {
 
-    std::array<std::string, 2> implemented_functions{"validate_utf8", "convert_valid_utf8_to_utf16"};
+    std::array<std::string, 3> implemented_functions{"validate_utf8", "convert_utf8_to_utf16", "convert_valid_utf8_to_utf16"};
 
     for (const auto& implementation: simdutf::available_implementations) {
         for (const auto& function: implemented_functions) {
@@ -65,6 +65,17 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
             sink = implementation->validate_utf8(data, size);
         };
 
+        const auto result = count_events(proc, iterations);
+        print_summary(result, size);
+    } else if(name == "convert_utf8_to_utf16") {
+        const char*  data = reinterpret_cast<const char*>(input_data.data());
+        const size_t size = input_data.size();
+        std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
+        volatile size_t sink{0};
+
+        auto proc = [implementation, data, size, &output_buffer, &sink]() {
+            sink = implementation->convert_utf8_to_utf16(data, size, output_buffer.get());
+        };
         const auto result = count_events(proc, iterations);
         print_summary(result, size);
     } else if(name == "convert_valid_utf8_to_utf16") {

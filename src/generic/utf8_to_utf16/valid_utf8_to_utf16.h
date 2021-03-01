@@ -3,149 +3,60 @@ namespace SIMDUTF_IMPLEMENTATION {
 namespace {
 namespace utf8_to_utf16 {
 
-using namespace simd;
-
-// The finisher_functions namespace contains
-// functions that can be used to "finish" the processing.
-// They are not expected to fast.
-//
-// TODO: we can do much better and they should be moved elsewhere.
-//
-// Author: Michel Rouzic (https://github.com/Photosounder)
-// Original source:
-// https://github.com/Photosounder/rouziclib/blob/master/rouziclib/text/unicode.c
-// Project license: Apache
-namespace finisher_functions {
-
-int utf8_char_size(const char *c) {
-  const uint8_t m0x = 0x80, c0x = 0x00, m10x = 0xC0, c10x = 0x80, m110x = 0xE0,
-                c110x = 0xC0, m1110x = 0xF0, c1110x = 0xE0, m11110x = 0xF8,
-                c11110x = 0xF0;
-
-  if ((c[0] & m0x) == c0x)
-    return 1;
-
-  if ((c[0] & m110x) == c110x)
-    if ((c[1] & m10x) == c10x)
-      return 2;
-
-  if ((c[0] & m1110x) == c1110x)
-    if ((c[1] & m10x) == c10x)
-      if ((c[2] & m10x) == c10x)
-        return 3;
-
-  if ((c[0] & m11110x) == c11110x)
-    if ((c[1] & m10x) == c10x)
-      if ((c[2] & m10x) == c10x)
-        if ((c[3] & m10x) == c10x)
-          return 4;
-
-  if ((c[0] & m10x) == c10x) // not a first UTF-8 byte
-    return 0;
-
-  return -1; // if c[0] is a first byte but the other bytes don't match
-}
-static inline int codepoint_utf16_size(uint32_t c) {
-  if (c < 0x10000)
-    return 1;
-  if (c < 0x110000)
-    return 2;
-
-  return 0;
-}
-
-uint32_t utf8_to_unicode32(const char *c, size_t *index) {
-  uint32_t v;
-  int size;
-  const uint8_t m6 = 63, m5 = 31, m4 = 15, m3 = 7;
-
-  if (c == NULL)
-    return 0;
-
-  size = utf8_char_size(c);
-
-  if (size > 0 && index)
-    *index += size - 1;
-
-  switch (size) {
-  case 1:
-    v = c[0];
-    break;
-  case 2:
-    v = c[0] & m5;
-    v = v << 6 | (c[1] & m6);
-    break;
-  case 3:
-    v = c[0] & m4;
-    v = v << 6 | (c[1] & m6);
-    v = v << 6 | (c[2] & m6);
-    break;
-  case 4:
-    v = c[0] & m3;
-    v = v << 6 | (c[1] & m6);
-    v = v << 6 | (c[2] & m6);
-    v = v << 6 | (c[3] & m6);
-    break;
-  case 0:  // not a first UTF-8 byte
-  case -1: // corrupt UTF-8 letter
-  default:
-    v = -1;
-    break;
+size_t scalar_convert_valid_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) {
+ const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);
+  size_t pos = 0;
+  char16_t* start{utf16_output};
+  while (pos < len) {
+    // try to convert the next block of 16 ASCII bytes
+    if (pos + 16 <= len) { // if it is safe to read 8 more bytes, check that they are ascii
+      uint64_t v1;
+      ::memcpy(&v1, data + pos, sizeof(uint64_t));
+      uint64_t v2;
+      ::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
+      uint64_t v{v1 | v2};
+      if ((v & 0x8080808080808080) == 0) {
+        size_t final_pos = pos + 16;
+        while(pos < final_pos) { 
+          *utf16_output++ = char16_t(buf[pos]);
+          pos++;
+        }
+        continue;
+      }
+    }
+    uint8_t leading_byte = data[pos]; // leading byte
+    if (leading_byte < 0b10000000) {
+      // converting one ASCII byte !!!
+      *utf16_output++ = char16_t(leading_byte);
+      pos++;
+    } else if ((leading_byte & 0b11100000) == 0b11000000) {
+      // We have a two-byte UTF-8, it should become
+      // a single UTF-16 word.
+      if(pos + 1 > len) { break; } // minimal bound checking
+      *utf16_output++ = char16_t(((leading_byte & 31) << 6) | (data[pos + 1] & 63));
+      pos += 2;
+    } else if ((leading_byte & 0b11110000) == 0b11100000) {
+      // We have a three-byte UTF-8, it should become
+      // a single UTF-16 word.
+      if(pos + 2 > len) { break; } // minimal bound checking
+      *utf16_output++ = char16_t(((leading_byte & 15) << 6) | ((data[pos + 1] & 63) << 12) | (data[pos + 2] & 63));
+      pos += 3;
+    } else if ((leading_byte & 0b11111000) == 0b11110000) { // 0b11110000
+      // we have a 4-byte UTF-8 word.
+      if(pos + 3 > len) { break; } // minimal bound checking
+      uint32_t code_word = ((leading_byte & 7) << 18 )| ((data[pos + 1] & 63) << 12) 
+                           | ((data[pos + 2] & 63) << 6) | (data[pos + 3] & 63);
+      code_word -= 0x10000;
+      *utf16_output++ = char16_t(0xD800 + (code_word >> 10));
+      *utf16_output++ = char16_t(0xDC00 + (code_word & 0x3FF));
+      pos += 4;
+    } else {
+      // we may have a continuation but we do not do error checking
+    }
   }
-
-  return v;
+  return utf16_output - start;
 }
 
-char16_t *sprint_utf16(char16_t *str, uint32_t c)	{
-	int c_size;
-
-	if (str==NULL)
-		return NULL;
-
-	c_size = codepoint_utf16_size(c);
-	switch (c_size) {
-		case 1:
-			str[0] = uint16_t(c);
-			if (c > 0)
-				str[1] = '\0';
-			break;
-
-		case 2:
-			c -= 0x10000;
-			str[0] = uint16_t(0xD800 + (c >> 10));
-			str[1] = uint16_t(0xDC00 + (c & 0x3FF));
-			str[2] = '\0';
-			break;
-
-		default:
-			str[0] = '\0';
-	}
-	return str;
-}
-
-void utf8_to_utf16_with_length(const char *utf8, size_t len, char16_t *utf16) {
-	int j;
-	uint32_t c;
-    size_t i;
-	for (i=0, j=0, c=1; i < len; i++) {
-		c = utf8_to_unicode32(&utf8[i], &i);
-		sprint_utf16(&utf16[j], c);
-		j += codepoint_utf16_size(c);
-	}
-}
-
-size_t strlen_utf8(const char *str, size_t len) {
-  size_t i, count;
-  uint32_t c;
-
-  for (i = 0, count = 0; i < len; i++) {
-    c = utf8_to_unicode32(&str[i], &i);
-    count += codepoint_utf16_size(c);
-  }
-  return count;
-}
-
-} // namespace finisher_functions
 
 } // namespace utf8_to_utf16
 } // unnamed namespace

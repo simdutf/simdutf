@@ -159,8 +159,8 @@ simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, siz
   return arm64::utf16_validation::scalar_validate_utf16(buf, len);
 }
 
-simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* /*buf*/, size_t /*len*/, char16_t* /*utf16_output*/) const noexcept {
-  return 0; // stub
+simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
+  return arm64::utf8_to_utf16::scalar_convert_utf8_to_utf16(buf, len, utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* input, size_t size,
@@ -200,9 +200,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
       pos += 64;
     }
   }
-  size_t len = utf8_to_utf16::finisher_functions::strlen_utf8(input + pos, size - pos);
-  utf8_to_utf16::finisher_functions::utf8_to_utf16_with_length(input + pos, size - pos, utf16_output);
-  utf16_output += len;
+  utf16_output += utf8_to_utf16::scalar_convert_valid_utf8_to_utf16(input + pos, size - pos, utf16_output);
   return utf16_output - start;
 }
 
