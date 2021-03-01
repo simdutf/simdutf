@@ -83,7 +83,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     utf16_output += 4;
   } else if (idx < 209) {
     // TWO (2) input code-words
-    uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t*>(utf8_to_utf16::shufutf8[idx]));
+    uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t*>(utf8_to_utf16_tables::shufutf8[idx]));
     uint8x16_t perm = vqtbl1q_u8(in, sh);
     uint8x16_t ascii = vandq_u8(perm, vmovq_n_u32(0x7f));
     uint8x16_t middlebyte = vandq_u8(perm, vmovq_n_u32(0x3f00));
