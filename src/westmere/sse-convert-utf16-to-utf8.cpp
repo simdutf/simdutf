@@ -3,9 +3,9 @@
     We consider two cases:
     1. an input register contains no surrogates --- i.e. each value
        is in range 0x0000 .. 0xffff and fits in 16 bits
-    2. an input register contains surrogates --- i.e. codepoints 
+    2. an input register contains surrogates --- i.e. codepoints
        can have 16 or 32 bits.
-    
+
     It should be also checked if a special case when the input has only
     surrogates (32-bit codepoints) appears in real data.
 
@@ -64,6 +64,7 @@ std::pair<const char16_t*, char*> sse_convert_valid_utf16_to_utf8(const char16_t
   const __m128i v_0000 = _mm_setzero_si128();
   const __m128i v_f800 = _mm_set1_epi16((int16_t)0xf800);
   const __m128i v_d800 = _mm_set1_epi16((int16_t)0xd800);
+  const __m128i v_c080 = _mm_set1_epi16((int16_t)0xc080);
 
   while (buf + 8 < end) {
 
@@ -102,7 +103,6 @@ std::pair<const char16_t*, char*> sse_convert_valid_utf16_to_utf8(const char16_t
           // expected output   : [110a|aaaa|10bb|bbbb] x 8
           const __m128i v_1f00 = _mm_set1_epi16((int16_t)0x1f00);
           const __m128i v_003f = _mm_set1_epi16((int16_t)0x003f);
-          const __m128i v_c080 = _mm_set1_epi16((int16_t)0xc080);
 
           // t0 = [000a|aaaa|bbbb|bb00]
           const __m128i t0 = _mm_slli_epi16(in, 2);
@@ -142,7 +142,6 @@ std::pair<const char16_t*, char*> sse_convert_valid_utf16_to_utf8(const char16_t
           }
       // case 2: words from register produce either 1, 2 or 3 UTF-8 bytes
       } else {
-#if 0
           // 1. prepare 3-byte values
           // input 16-bit words : [aaaa|bbbb|bbcc|cccc] x 8
           // output words bc    : [10bb|bbbb|10cc|cccc]
@@ -152,7 +151,7 @@ std::pair<const char16_t*, char*> sse_convert_valid_utf16_to_utf8(const char16_t
           const __m128i v_8080 = _mm_set1_epi16((int16_t)0x8080);
           const __m128i v_00e0 = _mm_set1_epi16((int16_t)0x00e0);
 
-          // t0 = [00bb|bbbb|aaaa|aa00]
+          // t0 = [00bb|bbbb|cccc|cc00]
           const __m128i t0 = _mm_slli_epi16(in, 2);
           // t1 = [00bb|bbbb|0000|0000]
           const __m128i t1 = _mm_and_si128(t0, v_3f00);
@@ -165,29 +164,49 @@ std::pair<const char16_t*, char*> sse_convert_valid_utf16_to_utf8(const char16_t
 
           // t5 = [0000|0000|0000|aaaa]
           const __m128i t5 = _mm_srli_epi16(in, 12);
-          // t6 = [0000|0000|1110|aaaa]
-          const __m128i t6 = _mm_or_si128(t5, v_00e0);
-          // a  = mask t6
-          const __m128i a  = _mm_andnot_si128(one_or_two_bytes_bytemask, t6);
+          // a  = [0000|0000|1110|aaaa] -- masking is not needed, as shuffles will omit this byte if not needed
+          const __m128i a  = _mm_or_si128(t5, v_00e0);
 
           // 2. prepare 2-byte values
           // t3 = [00bb|bbbb|00cc|cccc], but for the 2-byte case 'b' subword has 5 bits, in fact:
           // t3 = [000b|bbbb|00cc|cccc] -- thus
-          // t6 = [110b|bbbb|10cc|cccc]
-          const __m128i t6 = _mm_or_si128(t3, v_c080);
+          // t7 = [110b|bbbb|10cc|cccc]
+          const __m128i t7 = _mm_or_si128(t3, v_c080);
 
           // 3. join lower words
-          const __m128i t9  = _mm_blendv_epi8(bc, t6, one_or_two_bytes_bytemask);
-          const __m128i t10 = _mm_blendv_epi8(t9, t6, one_byte_bytemask);
+          const __m128i t8 = _mm_blendv_epi8(bc, t7, one_or_two_bytes_bytemask);
+          const __m128i t9 = _mm_blendv_epi8(t8, in, one_byte_bytemask);
 
           // 4. expand words 16-bit => 32-bit
-          const __m128i out0 = _mm_unpacklo_epi16(t10, a);
-          const __m128i out1 = _mm_unpackhi_epi16(t10, a);
+          const __m128i out0 = _mm_unpacklo_epi16(t9, a);
+          const __m128i out1 = _mm_unpackhi_epi16(t9, a);
 
-          // 5. compress -- 2 x shuffle
-#else
-      abort();
-#endif
+          // 5. compress 32-bit words into 1, 2 or 3 bytes -- 2 x shuffle
+          const uint16_t mask = (one_byte_bitmask & 0x5555) | 
+                                (one_or_two_bytes_bitmask & 0xaaaa);
+
+          const uint8_t mask0 = uint8_t(mask);
+
+          const uint8_t* row0 = &utf16_to_utf8::pack_1_2_3_utf8_bytes[mask0][0];
+          const __m128i shuffle0 = _mm_loadu_si128((__m128i*)(row0 + 1));
+          const __m128i utf8_0 = _mm_shuffle_epi8(out0, shuffle0);
+
+          const uint8_t mask1 = (mask >> 8);
+          const uint8_t* row1 = &utf16_to_utf8::pack_1_2_3_utf8_bytes[mask1][0];
+          const __m128i shuffle1 = _mm_loadu_si128((__m128i*)(row1 + 1));
+          const __m128i utf8_1 = _mm_shuffle_epi8(out1, shuffle1);
+
+          _mm_storeu_si128((__m128i*)utf8_output, utf8_0);
+          utf8_output += row0[0];
+          _mm_storeu_si128((__m128i*)utf8_output, utf8_1);
+          utf8_output += row1[0];
+
+          if (surrogates_bitmask == 0x0000) {
+            buf += 8;
+          } else {
+            buf += 7;
+            utf8_output -= 1;
+          }
       }
     // surrogate pairs in a register
     } else {
