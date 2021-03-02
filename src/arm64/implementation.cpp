@@ -48,9 +48,9 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   const uint16_t input_utf8_end_of_code_point_mask =
       utf8_end_of_code_point_mask & input_mask;
   const uint8_t idx =
-      utf8_to_utf16_tables::utf8bigindex[input_utf8_end_of_code_point_mask][0];
+      tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][0];
   const uint8_t consumed =
-      utf8_to_utf16_tables::utf8bigindex[input_utf8_end_of_code_point_mask][1];
+      tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][1];
 
   uint8x16_t in = vld1q_u8(reinterpret_cast<const uint8_t*>(input));
 
@@ -59,7 +59,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // this is a relatively easy scenario
     // we process SIX (6) input code-words. The max length in bytes of six code
     // words spanning between 1 and 2 bytes each is 12 bytes.
-    uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t*>(utf8_to_utf16_tables::shufutf8[idx]));
+    uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t*>(tables::utf8_to_utf16::shufutf8[idx]));
     uint8x16_t perm = vqtbl1q_u8(in, sh);
     uint8x16_t ascii = vandq_u8(perm, vmovq_n_u16(0x7f));
     uint8x16_t highbyte = vandq_u8(perm, vmovq_n_u16(0x1f00));
@@ -68,7 +68,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     utf16_output += 6; // We wrote 12 bytes, 6 code points.
   } else if (idx < 145) {
     // FOUR (4) input code-words
-    uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t*>(utf8_to_utf16_tables::shufutf8[idx]));
+    uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t*>(tables::utf8_to_utf16::shufutf8[idx]));
     uint8x16_t perm = vqtbl1q_u8(in, sh);
     uint8x16_t ascii =
         vandq_u8(perm, vmovq_n_u32(0x7f)); // 7 or 6 bits
@@ -85,7 +85,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     utf16_output += 4;
   } else if (idx < 209) {
     // TWO (2) input code-words
-    uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t*>(utf8_to_utf16_tables::shufutf8[idx]));
+    uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t*>(tables::utf8_to_utf16::shufutf8[idx]));
     uint8x16_t perm = vqtbl1q_u8(in, sh);
     uint8x16_t ascii = vandq_u8(perm, vmovq_n_u32(0x7f));
     uint8x16_t middlebyte = vandq_u8(perm, vmovq_n_u32(0x3f00));

@@ -4,7 +4,8 @@
 
 namespace simdutf {
 namespace {
-namespace utf8_to_utf16_tables {
+namespace tables {
+namespace utf8_to_utf16 {
 
 const uint8_t shufutf8[209][16] =
 {	{0, 255, 1, 255, 2, 255, 3, 255, 4, 255, 5, 255, 0, 0, 0, 0},
@@ -4316,7 +4317,8 @@ const uint8_t utf8bigindex[4096][2] =
  	{16, 7},
  	{32, 7},
  	{0, 6}};
-} // utf8_to_utf16_tables namespace
+} // utf8_to_utf16 namespace
+} // tables namespace
 } // unnamed namespace
 } // namespace simdutf
 
