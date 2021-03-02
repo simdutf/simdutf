@@ -35,7 +35,7 @@ inline size_t scalar_convert_utf8_to_utf16(const char* buf, size_t len, char16_t
     } else if ((leading_byte & 0b11100000) == 0b11000000) {
       // We have a two-byte UTF-8, it should become
       // a single UTF-16 word.
-      if(pos + 1 > len) { break; } // minimal bound checking
+      if(pos + 1 > len) { return 0; } // minimal bound checking
       if ((data[pos + 1] & 0b11000000) != 0b10000000) { return 0; }
       // range check
       int code_point = (leading_byte & 0b00011111) << 6 | (data[pos + 1] & 0b00111111);
@@ -45,7 +45,7 @@ inline size_t scalar_convert_utf8_to_utf16(const char* buf, size_t len, char16_t
     } else if ((leading_byte & 0b11110000) == 0b11100000) {
       // We have a three-byte UTF-8, it should become
       // a single UTF-16 word.
-      if(pos + 2 > len) { break; } // minimal bound checking
+      if(pos + 2 > len) { return 0; } // minimal bound checking
 
       if ((data[pos + 1] & 0b11000000) != 0b10000000) { return 0; }
       if ((data[pos + 2] & 0b11000000) != 0b10000000) { return 0; }
@@ -61,7 +61,7 @@ inline size_t scalar_convert_utf8_to_utf16(const char* buf, size_t len, char16_t
       pos += 3;
     } else if ((leading_byte & 0b11111000) == 0b11110000) { // 0b11110000
       // we have a 4-byte UTF-8 word.
-      if(pos + 3 > len) { break; } // minimal bound checking
+      if(pos + 3 > len) { return 0; } // minimal bound checking
       if ((data[pos + 1] & 0b11000000) != 0b10000000) { return 0; }
       if ((data[pos + 2] & 0b11000000) != 0b10000000) { return 0; }
       if ((data[pos + 3] & 0b11000000) != 0b10000000) { return 0; }
