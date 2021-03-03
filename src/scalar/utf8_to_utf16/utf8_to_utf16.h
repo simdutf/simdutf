@@ -38,7 +38,7 @@ inline size_t scalar_convert_utf8_to_utf16(const char* buf, size_t len, char16_t
       if(pos + 1 > len) { return 0; } // minimal bound checking
       if ((data[pos + 1] & 0b11000000) != 0b10000000) { return 0; }
       // range check
-      int code_point = (leading_byte & 0b00011111) << 6 | (data[pos + 1] & 0b00111111);
+      uint32_t code_point = (leading_byte & 0b00011111) << 6 | (data[pos + 1] & 0b00111111);
       if (code_point < 0x80 || 0x7ff < code_point) { return 0; }
       *utf16_output++ = char16_t(code_point);
       pos += 2;
@@ -50,7 +50,7 @@ inline size_t scalar_convert_utf8_to_utf16(const char* buf, size_t len, char16_t
       if ((data[pos + 1] & 0b11000000) != 0b10000000) { return 0; }
       if ((data[pos + 2] & 0b11000000) != 0b10000000) { return 0; }
       // range check
-      int code_point = (leading_byte & 0b00001111) << 12 |
+      uint32_t code_point = (leading_byte & 0b00001111) << 12 |
                    (data[pos + 1] & 0b00111111) << 6 |
                    (data[pos + 2] & 0b00111111);
       if (code_point < 0x800 || 0xffff < code_point ||
