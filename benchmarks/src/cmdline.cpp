@@ -3,7 +3,7 @@
 #include <vector>
 #include <stdexcept>
 
-constexpr size_t DEFAULT_ITERATIONS = 100;
+constexpr size_t DEFAULT_ITERATIONS = 400;
 
 namespace {
 
