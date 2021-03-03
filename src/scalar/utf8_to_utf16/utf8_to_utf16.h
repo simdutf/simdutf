@@ -6,7 +6,7 @@ namespace scalar {
 namespace {
 namespace utf8_to_utf16 {
 
-inline size_t scalar_convert_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) {
+inline size_t convert(const char* buf, size_t len, char16_t* utf16_output) {
  const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);
   size_t pos = 0;
   char16_t* start{utf16_output};

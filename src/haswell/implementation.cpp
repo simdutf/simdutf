@@ -158,7 +158,7 @@ simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, siz
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
-   return scalar::utf8_to_utf16::scalar_convert_utf8_to_utf16(buf, len, utf16_output);
+   return scalar::utf8_to_utf16::convert(buf, len, utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* input, size_t size, 
@@ -198,7 +198,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
       pos += 64;
     }
   }
-  utf16_output += scalar::utf8_to_utf16::scalar_convert_valid_utf8_to_utf16(input + pos, size - pos, utf16_output);
+  utf16_output += scalar::utf8_to_utf16::convert_valid(input + pos, size - pos, utf16_output);
   return utf16_output - start;
 }
 

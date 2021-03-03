@@ -69,6 +69,8 @@ namespace simdutf::benchmarks {
 
     void BenchmarkBase::print_summary(const event_aggregate& all, double data_size) const {
         const double gbs = data_size / all.best.elapsed_ns();
+        const double gbs_avs = data_size / (all.total.elapsed_ns()/all.iterations);
+        const double error_margin = (gbs-gbs_avs)/gbs_avs * 100;
 
         if (all.has_events) {
             const double _1GHz = 1'000'000'000.0;
@@ -78,9 +80,10 @@ namespace simdutf::benchmarks {
             const double cmisperunit = all.best.cache_misses() / data_size;
             const double bmisperunit = all.best.branch_misses() / data_size;
 
-            printf("%8.3f ins/byte, %8.3f GHz, %8.3f GB/s, %8.3f ins/cycle, %g b.misses/byte, %g c.mis/byte \n", insperunit, freq, gbs, inspercycle, bmisperunit, cmisperunit);
+            printf("%8.3f ins/byte, %8.3f GHz, %8.3f GB/s (%.1f %%), %8.3f ins/cycle, %g b.misses/byte, %g c.mis/byte \n", insperunit, freq, gbs, error_margin, inspercycle, bmisperunit, cmisperunit);
         } else {
-            printf("%8.3f GB/s \n", gbs);
+            printf("%8.3f GB/s (%.1f %%)\n", gbs, error_margin);
         }
+        if(error_margin>10) { printf("WARNING: Measurements are noisy, try increasing iteration count (-I).\n"); }
     }
 }

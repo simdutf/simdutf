@@ -6,20 +6,17 @@ namespace scalar {
 namespace {
 namespace utf8_to_utf16 {
 
-inline size_t scalar_convert_valid_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) {
+inline size_t convert_valid(const char* buf, size_t len, char16_t* utf16_output) {
  const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);
   size_t pos = 0;
   char16_t* start{utf16_output};
   while (pos < len) {
-    // try to convert the next block of 16 ASCII bytes
-    if (pos + 16 <= len) { // if it is safe to read 8 more bytes, check that they are ascii
-      uint64_t v1;
-      ::memcpy(&v1, data + pos, sizeof(uint64_t));
-      uint64_t v2;
-      ::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
-      uint64_t v{v1 | v2};
+    // try to convert the next block of 8 ASCII bytes
+    if (pos + 8 <= len) { // if it is safe to read 8 more bytes, check that they are ascii
+      uint64_t v;
+      ::memcpy(&v, data + pos, sizeof(uint64_t));
       if ((v & 0x8080808080808080) == 0) {
-        size_t final_pos = pos + 16;
+        size_t final_pos = pos + 8;
         while(pos < final_pos) { 
           *utf16_output++ = char16_t(buf[pos]);
           pos++;

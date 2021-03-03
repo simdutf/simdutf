@@ -64,8 +64,9 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         auto proc = [implementation, data, size, &sink]() {
             sink = implementation->validate_utf8(data, size);
         };
-
+        count_events(proc, iterations); // warming up!
         const auto result = count_events(proc, iterations);
+        if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
         print_summary(result, size);
     } else if(name == "convert_utf8_to_utf16") {
         const char*  data = reinterpret_cast<const char*>(input_data.data());
@@ -76,23 +77,25 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         auto proc = [implementation, data, size, &output_buffer, &sink]() {
             sink = implementation->convert_utf8_to_utf16(data, size, output_buffer.get());
         };
+        count_events(proc, iterations); // warming up!
         const auto result = count_events(proc, iterations);
+        if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
         print_summary(result, size);
     } else if(name == "convert_valid_utf8_to_utf16") {
         const char*  data = reinterpret_cast<const char*>(input_data.data());
         const size_t size = input_data.size();
         std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
         volatile size_t sink{0};
-
         auto proc = [implementation, data, size, &output_buffer, &sink]() {
             sink = implementation->convert_valid_utf8_to_utf16(data, size, output_buffer.get());
         };
-
+        count_events(proc, iterations); // warming up!
         const auto result = count_events(proc, iterations);
+        if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
         print_summary(result, size);
     } else {
         std::cerr << "Unsupported procedure: " << name << '\n';
-        std::cerr << "Report the issue." << '\n';
+        std::cerr << "Report the issue.\n";
         std::cerr << " Aborting ! " << std::endl;
         abort();
     }
