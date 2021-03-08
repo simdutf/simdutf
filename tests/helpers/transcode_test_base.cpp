@@ -6,7 +6,10 @@
 
 #include <tests/reference/encode_utf8.h>
 #include <tests/reference/encode_utf16.h>
+#include <tests/reference/decode_utf16.h>
 #include <tests/reference/validate_utf16.h>
+
+#include <cstdio>
 
 namespace simdutf::tests::helpers {
 
@@ -89,6 +92,22 @@ namespace simdutf::tests::helpers {
 
     output_utf8.resize(reference_output_utf8.size() + output_size_margin);
   }
+    
+  transcode_utf16_to_utf8_test_base::transcode_utf16_to_utf8_test_base(const std::vector<char16_t>& input_utf16)
+    : input_utf16{input_utf16} {
+
+    auto consume = [this](const uint32_t codepoint) {
+      ::simdutf::tests::reference::utf8::encode(codepoint, [this](uint8_t byte) {
+        reference_output_utf8.push_back(byte);
+      });
+    };
+
+    auto error_handler = [](const char16_t*, const char16_t*,  simdutf::tests::reference::utf16::Error) -> bool {
+      throw std::invalid_argument("Wrong UTF-16 input");
+    };
+    simdutf::tests::reference::utf16::decode(input_utf16.data(), input_utf16.size(), consume, error_handler);
+    output_utf8.resize(reference_output_utf8.size() + output_size_margin);
+  }
 
   void transcode_utf16_to_utf8_test_base::prepare_input(uint32_t codepoint) {
       encode_utf16(codepoint, input_utf16);
@@ -110,7 +129,6 @@ namespace simdutf::tests::helpers {
     }
 
     auto dump = [this, saved_chars](const char* title, const std::vector<char>& array) {
-      return;
       printf("%s", title);
       for (size_t i=0; i < saved_chars; i++) {
         printf(" %02x", (uint8_t)array[i]);

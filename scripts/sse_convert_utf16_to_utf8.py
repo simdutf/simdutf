@@ -1,5 +1,23 @@
 #!/usr/bin/env python3
 
+import sys
+
+
+def format_array(array):
+    result = []
+    for value in array:
+        if value < 0 or value == 0x80:
+            result.append('0x80')
+        else:
+            result.append(str(value))
+
+    return ', '.join(result)
+
+
+def assure_array_length(array, size, value = 0x80):
+    while len(array) < size:
+        array.append(value)
+
 
 CPP_1_2 = """
   // 1 byte for length, 16 bytes for mask
@@ -135,6 +153,240 @@ def shuffle_for_conversion_1_2_3_utf8_bytes_aux():
     yield (shuffle, output_bytes)
 
 
+CPP_EXPAND_SURROGATES = """
+  // 2x16 bytes for masks, dwords_consumed
+  const uint8_t expand_surrogates[256][33] = {
+%(rows)s
+  };
+"""
+
+
+def shuffle_for_expanding_surrogate_pairs(file):
+  rows = []
+  indent = (' ' * 4)
+  for shuffle, dwords_consumed in shuffle_for_expanding_surrogate_pairs_aux():
+
+    # If we consume, say 6 dwords of 8, then anyway the C++ conversion
+    # routing convert 2 extra dwords (zeroed) into 2 UTF-8 bytes. Thus
+    # we have # to subtract this zero_dwords from saved bytes, to get
+    # the real number of output bytes.
+    zero_dwords = 8 - dwords_consumed;
+
+    assert len(shuffle) == 32
+    rows.append('%s{%s}' % (indent, format_array(shuffle + [zero_dwords])))
+
+  file.write(CPP_EXPAND_SURROGATES % {'rows': ',\n'.join(rows)})
+
+
+# Our input 8-bit bitmask informs which word contains a surrogate (low or high one).
+# At this point we do not need to know which is which, as we assume that word
+# expansion is done after validation. (Let's assume L - low surrogate, H - high
+# surrogate, V - any valid non-surrogate word).
+# 
+# Example 1: bitmask 1001'1110 describes a sequence V-L-H-L-H-V-V-? -- the last
+# surrogate word might be either L or H, we'll ignore it. Two adjacent bits
+# are expected to contain low & high surrogates
+#
+# Example 2: bitmask 0011'0110 describes a sequence V-L-K-V-L-H-V-V.
+#
+# Example 3: bitmask 0000'0001 is not valid --- sole surrogate word must not start
+# a chunk of string, and C++ takes care not to pass such wrong input.
+#
+# Example 4: bitmask 0000'1110 is not valid too
+#
+# We expand all words into  32-bit lanes, spanning two SSE registers.
+def shuffle_for_expanding_surrogate_pairs_aux():
+
+  def shuffle_mask(mask):
+    result = []
+    prev = 'V'
+    dwords_consumed = 0
+    for i in range(8):
+      bit = bool(mask & (1 << i))
+      if bit:
+        if prev == 'V':
+          curr = 'L'
+        elif prev == 'L':
+          curr = 'H'
+        elif prev == 'H':
+          curr = 'L'
+
+        result.append(2*i + 0)
+        result.append(2*i + 1)
+        
+        if curr == 'L':
+          dwords_consumed += 1
+
+      else:
+        if prev == 'V':
+          curr = 'V'
+        elif prev == 'L':
+          raise ValueError('invalid sequence')
+        elif prev == 'H':
+          curr = 'V'
+
+        result.append(2*i + 0)
+        result.append(2*i + 1)
+        result.append(-1)
+        result.append(-1)
+
+        dwords_consumed += 1
+
+      prev = curr
+    #for
+
+    if curr == 'L': # a sole low surrogate word at the end, discard it (C++ code deals with this case)
+        del result[-1]
+        del result[-1]
+        dwords_consumed -= 1
+
+    while len(result) < 32:
+        result.append(-1)
+
+    return result, dwords_consumed
+
+  invalid = 0
+
+  # our input is in form: hdgcfbea
+  # we need bits in seq:  hgfedcba
+  def as_mask(x):
+    def bit(k):
+      return int(bool((1 << k) & x))
+
+    return bit(0) \
+         | (bit(2) << 1) \
+         | (bit(4) << 2) \
+         | (bit(6) << 3) \
+         | (bit(1) << 4) \
+         | (bit(3) << 5) \
+         | (bit(5) << 6) \
+         | (bit(7) << 7)
+
+
+  if False:
+      print('{:08b}'.format(as_mask(0x85)))
+      shuffle_mask(as_mask(0x85))
+      sys.exit(1)
+
+  for x in range(256):
+    mask = as_mask(x)
+
+    try:
+      yield shuffle_mask(mask)
+    except ValueError:
+      yield (([-1] * 32), 0)
+
+
+CPP_UCS4_TO_UTF8 = """
+  struct UCS4_to_UTF8 {
+    uint8_t shuffle[16];
+    uint8_t const_bits_mask[16];
+    uint8_t output_bytes;
+  };
+
+  const UCS4_to_UTF8 ucs4_to_utf8[256] = {
+%(rows)s
+  };
+"""
+
+"""
+The input is 8-bit mask: geca'hfdb. Two-bit words: ab, cd, ef, gh
+encodes how many UTF-8 bytes are store in each dword of an SSE
+register:
+- 00 - 1 byte
+- 01 - 2 bytes
+- 10 - 3 bytes
+- 11 - 4 bytes
+
+We output 3 values:
+- a shuffle mask to extract UTF-8 bytes,
+- mask to complete UTF-8 format,
+- the total number of UTF-8 bytes.
+"""
+def ucs4_to_utf8(file):
+    rows = []
+    indent = (' ' * 4)
+    for shuffle, const_bits_mask, output_bytes in ucs4_to_utf8_aux():
+        #print(output_bytes)
+        rows.append('%s{{%s}, {%s}, %d}' % (indent,
+                                            format_array(shuffle),
+                                            format_array(const_bits_mask),
+                                            output_bytes))
+
+    file.write(CPP_UCS4_TO_UTF8 % {'rows': ',\n'.join(rows)})
+
+
+def ucs4_to_utf8_aux():
+    for x in range(256):
+        shuffle     = []
+        utf8bits    = []
+        output_bytes = 0
+
+        def bit(k):
+            return int(bool((1 << k) & x))
+
+        def code(bit1, bit0):
+            return 2*bit1 + bit0
+
+        ab = code(bit(1), bit(0))
+        cd = code(bit(5), bit(4))
+        ef = code(bit(3), bit(2))
+        gh = code(bit(7), bit(6))
+
+        for i, count in enumerate([ab, cd, ef, gh]):
+            if count == 0:
+                shuffle.append(4*i + 0)
+
+                utf8bits.append(0x00)
+                utf8bits.append(0x00)
+                utf8bits.append(0x00)
+                utf8bits.append(0x00)
+
+                output_bytes += 1
+            elif count == 1:
+                shuffle.append(4*i + 1)
+                shuffle.append(4*i + 0)
+
+                utf8bits.append(0b10000000)
+                utf8bits.append(0b11000000)
+                utf8bits.append(0x00)
+                utf8bits.append(0x00)
+
+                output_bytes += 2
+            elif count == 2:
+                shuffle.append(4*i + 2)
+                shuffle.append(4*i + 1)
+                shuffle.append(4*i + 0)
+
+                utf8bits.append(0b10000000)
+                utf8bits.append(0b10000000)
+                utf8bits.append(0b11100000)
+                utf8bits.append(0x00)
+
+                output_bytes += 3
+            elif count == 3:
+                shuffle.append(4*i + 3)
+                shuffle.append(4*i + 2)
+                shuffle.append(4*i + 1)
+                shuffle.append(4*i + 0)
+
+                utf8bits.append(0b10000000)
+                utf8bits.append(0b10000000)
+                utf8bits.append(0b10000000)
+                utf8bits.append(0b11110000)
+
+                output_bytes += 4
+            else:
+                assert False
+
+        assure_array_length(shuffle, 16, 0x80)
+        assert len(utf8bits) == 16
+        assert len(shuffle) == 16
+
+        yield (shuffle, utf8bits, output_bytes)
+
+
+
 CPP_HEADER = """// file generated by scripts/sse_convert_utf16_to_utf8.py
 namespace utf16_to_utf8 {
 """
@@ -147,6 +399,8 @@ def main():
     f.write(CPP_HEADER)
     shuffle_for_conversion_1_or_2_utf8_bytes(f)
     shuffle_for_conversion_1_2_3_utf8_bytes(f)
+    shuffle_for_expanding_surrogate_pairs(f)
+    ucs4_to_utf8(f)
     f.write(CPP_FOOTER)
 
 
