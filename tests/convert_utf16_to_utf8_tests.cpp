@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <iostream>
 
+#include <tests/reference/validate_utf16.h>
+#include <tests/reference/decode_utf16.h>
 #include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_int.h>
 
@@ -75,7 +77,7 @@ TEST(convert_into_3_or_4_UTF8_bytes) {
     if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
     // range for 3 or 4 UTF-8 bytes
     simdutf::tests::helpers::RandomIntRanges random({{0x0800, 0xd800-1},
-                                                     {0xe000, 0x10'ffff}});
+                                                     {0xe000, 0x10'ffff}}, 0);
 
     auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
       return implementation.convert_valid_utf16_to_utf8(utf8, size, utf16);
@@ -173,6 +175,106 @@ TEST(convert_fails_if_there_is_surrogate_pair_is_followed_by_high_surrogate) {
   }
 }
 
+namespace {
+  std::vector<std::vector<char16_t>> all_combinations() {
+    const char16_t V_1byte_start  = 0x0042; // non-surrogate word the yields 1 UTF-8 byte
+    const char16_t V_2bytes_start = 0x017f; // non-surrogate word the yields 2 UTF-8 bytes
+    const char16_t V_3bytes_start = 0xefff; // non-surrogate word the yields 3 UTF-8 bytes
+    const char16_t L        = 0xd9ca; // low surrogate
+    const char16_t H        = 0xde42; // high surrogate
+
+    std::vector<std::vector<char16_t>> result;
+    std::vector<char16_t> row(32, '*');
+
+    std::array<int, 8> pattern{0};
+    while (true) {
+      //if (result.size() > 5) break;
+
+      // 1. produce output
+      char16_t V_1byte = V_1byte_start;
+      char16_t V_2bytes = V_2bytes_start;
+      char16_t V_3bytes = V_3bytes_start;
+      for (int i=0; i < 8; i++) {
+        switch (pattern[i]) {
+          case 0:
+            row[i] = V_1byte++;
+            break;
+          case 1:
+            row[i] = V_2bytes++;
+            break;
+          case 2:
+            row[i] = V_3bytes++;
+            break;
+          case 3:
+            row[i] = L;
+            break;
+          case 4:
+            row[i] = H;
+            break;
+          default:
+            abort();
+        }
+      } // for
+
+      if (row[7] == L) {
+        row[8] = H; // make input valid
+        result.push_back(row);
+
+        row[8] = V_1byte; // broken input
+        result.push_back(row);
+      } else {
+        row[8] = V_1byte;
+        result.push_back(row);
+      }
+
+      // next pattern
+      int i = 0;
+      int carry = 1;
+      for (/**/; i < 8 && carry; i++) {
+        pattern[i] += carry;
+        if (pattern[i] == 5) {
+          pattern[i] = 0;
+          carry = 1;
+        } else
+          carry = 0;
+      }
+
+      if (carry == 1 and i == 8)
+        break;
+
+    } // while
+
+    return result;
+  }
+}
+
+TEST(all_possible_8_codepoint_combinations) {
+  auto procedure = [&implementation](const char16_t* utf16, size_t size, char* utf8) -> size_t {
+    return implementation.convert_valid_utf16_to_utf8(utf16, size, utf8);
+  };
+
+  std::vector<char> output_utf8(256, ' ');
+  int id = 0;
+  const auto& combinations = all_combinations();
+  for (const auto& input_utf16: combinations) {
+#if 0
+    printf("id = %d/%lu: ", id, combinations.size());
+    for (int i=0; i < 10; i++) {
+      printf(" %04x", input_utf16[i]);
+    }
+    putchar('\n');
+#endif
+
+    if (simdutf::tests::reference::validate_utf16(input_utf16.data(), input_utf16.size())) {
+      transcode_utf16_to_utf8_test_base test(input_utf16);
+      ASSERT_TRUE(test(procedure));
+    } else {
+      ASSERT_FALSE(procedure(input_utf16.data(), input_utf16.size(), output_utf8.data()));
+    }
+    id += 1;
+  }
+}
+
 int main() {
   for (const auto& implementation: simdutf::available_implementations) {
     if (implementation == nullptr) {
@@ -187,7 +289,6 @@ int main() {
     printf("Checking implementation %s\n", implementation->name().c_str());
 
     for (auto test: test_procedures())
-      if (test.name.find("convert_into_1_or_2_or_3_UTF8_bytes") != std::string::npos)
-        test(*implementation);
+      test(*implementation);
   }
 }

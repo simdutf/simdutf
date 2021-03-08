@@ -14,10 +14,10 @@ namespace simdutf::tests::helpers {
       return distr(gen);
     }
 
-    RandomIntRanges::RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint16_t>> ranges)
+    RandomIntRanges::RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint64_t>> ranges)
       : RandomIntRanges(ranges, std::random_device{}()) {}
 
-    RandomIntRanges::RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint16_t>> ranges_, uint64_t seed)
+    RandomIntRanges::RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint64_t>> ranges_, uint64_t seed)
       : gen(seed) {
 
       if (ranges_.size() == 0)
