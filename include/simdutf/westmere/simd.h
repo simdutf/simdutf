@@ -151,7 +151,8 @@ namespace simd {
         v8, v9, v10,v11,v12,v13,v14,v15
       );
     }
-    simdutf_really_inline operator simd8<uint8_t>() const { return this->value; }
+    simdutf_really_inline operator simd8<uint8_t>() const;
+    simdutf_really_inline bool is_ascii() const { return _mm_movemask_epi8(*this) == 0; }
 
     // Order-sensitive comparisons
     simdutf_really_inline simd8<int8_t> max_val(const simd8<int8_t> other) const { return _mm_max_epi8(*this, other); }
@@ -224,6 +225,7 @@ namespace simd {
     template<int N>
     simdutf_really_inline int get_bit() const { return _mm_movemask_epi8(_mm_slli_epi16(*this, 7-N)); }
   };
+  simdutf_really_inline simd8<int8_t>::operator simd8<uint8_t>() const { return this->value; }
 
   template<typename T>
   struct simd8x64 {

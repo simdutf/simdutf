@@ -345,6 +345,8 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
 
     simdutf_really_inline int8_t max_val() const { return vmaxvq_s8(*this); }
     simdutf_really_inline int8_t min_val() const { return vminvq_s8(*this); }
+    simdutf_really_inline bool is_ascii() const { return this->min_val() >= 0; }
+
     // Order-sensitive comparisons
     simdutf_really_inline simd8<int8_t> max_val(const simd8<int8_t> other) const { return vmaxq_s8(*this, other); }
     simdutf_really_inline simd8<int8_t> min_val(const simd8<int8_t> other) const { return vminq_s8(*this, other); }

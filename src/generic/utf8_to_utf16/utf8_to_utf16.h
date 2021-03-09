@@ -112,6 +112,7 @@ using namespace simd;
     // If this is nonzero, there has been a UTF-8 error.
     simd8<uint8_t> error;
 
+    validating_transcoder() : error(uint8_t(0)) {}
     //
     // Check whether the current bytes are valid UTF-8.
     //
@@ -130,8 +131,7 @@ using namespace simd;
       char16_t* start{utf16_output};
       while(pos + 64 <= size) {
         simd8x64<int8_t> input(reinterpret_cast<const int8_t *>(in + pos));
-        simd8<int8_t> bits = input.reduce_or();
-        if(bits.min_val() >= 0) {
+        if(input.is_ascii()) {
           input.store_ascii_as_utf16(utf16_output);
           utf16_output += 64;
           pos += 64;
