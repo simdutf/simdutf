@@ -282,6 +282,7 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
     // Conversion from/to SIMD register
     simdutf_really_inline simd8(const int8x16_t _value) : value{_value} {}
     simdutf_really_inline operator const int8x16_t&() const { return this->value; }
+
     simdutf_really_inline operator int8x16_t&() { return this->value; }
 
     // Zero constructor
@@ -329,7 +330,12 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
 #ifndef SIMDUTF_REGULAR_VISUAL_STUDIO
     simdutf_really_inline explicit simd8(const uint8x16_t other): simd8(vreinterpretq_s8_u8(other)) {}
 #endif
-    simdutf_really_inline explicit operator simd8<uint8_t>() const { return vreinterpretq_u8_s8(this->value); }
+    simdutf_really_inline operator simd8<uint8_t>() const { return vreinterpretq_u8_s8(this->value); }
+
+    simdutf_really_inline simd8<int8_t> operator|(const simd8<int8_t> other) const { return vorrq_s8(*this, other); }
+    simdutf_really_inline simd8<int8_t> operator&(const simd8<int8_t> other) const { return vandq_s8(*this, other); }
+    simdutf_really_inline simd8<int8_t> operator^(const simd8<int8_t> other) const { return veorq_s8(*this, other); }
+    simdutf_really_inline simd8<int8_t> bit_andnot(const simd8<int8_t> other) const { return vbicq_s8(*this, other); }
 
     // Math
     simdutf_really_inline simd8<int8_t> operator+(const simd8<int8_t> other) const { return vaddq_s8(*this, other); }
@@ -337,6 +343,8 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
     simdutf_really_inline simd8<int8_t>& operator+=(const simd8<int8_t> other) { *this = *this + other; return *this; }
     simdutf_really_inline simd8<int8_t>& operator-=(const simd8<int8_t> other) { *this = *this - other; return *this; }
 
+    simdutf_really_inline int8_t max_val() const { return vmaxvq_s8(*this); }
+    simdutf_really_inline int8_t min_val() const { return vminvq_s8(*this); }
     // Order-sensitive comparisons
     simdutf_really_inline simd8<int8_t> max_val(const simd8<int8_t> other) const { return vmaxq_s8(*this, other); }
     simdutf_really_inline simd8<int8_t> min_val(const simd8<int8_t> other) const { return vminq_s8(*this, other); }
