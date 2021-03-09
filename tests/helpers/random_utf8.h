@@ -16,6 +16,8 @@ public:
              int prob_3bytes, int prob_4bytes);
 
   std::vector<uint8_t> generate(size_t output_bytes);
+  // include the number of code points
+  std::pair<std::vector<uint8_t>,size_t> generate_counted(size_t output_bytes);
   std::vector<uint8_t> generate(size_t output_bytes, long seed);
 
 private:

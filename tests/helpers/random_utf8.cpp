@@ -9,11 +9,13 @@ RandomUTF8::RandomUTF8(std::random_device &rd, int prob_1byte, int prob_2bytes,
     : gen(rd()), bytes_count({double(prob_1byte), double(prob_2bytes),
                               double(prob_3bytes), double(prob_4bytes)}) {}
 
-std::vector<uint8_t> RandomUTF8::generate(size_t output_bytes) {
+std::pair<std::vector<uint8_t>,size_t> RandomUTF8::generate_counted(size_t output_bytes) {
   std::vector<uint8_t> result;
   result.reserve(output_bytes);
   uint8_t candidate, head;
+  size_t count{0};
   while (result.size() < output_bytes) {
+    count++;
     switch (bytes_count(gen)) {
     case 0: // 1 byte
       candidate = uint8_t(val_7bit(gen));
@@ -71,7 +73,11 @@ std::vector<uint8_t> RandomUTF8::generate(size_t output_bytes) {
   }
   result.push_back(0); // EOS for scalar code
 
-  return result;
+  return make_pair(result,count);
+}
+
+std::vector<uint8_t> RandomUTF8::generate(size_t output_bytes) {
+  return generate_counted(output_bytes).first;
 }
 
 std::vector<uint8_t> RandomUTF8::generate(size_t output_bytes, long seed) {
