@@ -151,6 +151,7 @@ namespace simd {
         v8, v9, v10,v11,v12,v13,v14,v15
       );
     }
+    simdutf_really_inline operator simd8<uint8_t>() const { return this->value; }
 
     // Order-sensitive comparisons
     simdutf_really_inline simd8<int8_t> max_val(const simd8<int8_t> other) const { return _mm_max_epi8(*this, other); }

@@ -137,6 +137,8 @@ namespace simd {
     simdutf_really_inline simd8(int8_t _value) : simd8(splat(_value)) {}
     // Array constructor
     simdutf_really_inline simd8(const int8_t values[32]) : simd8(load(values)) {}
+    simdutf_really_inline operator simd8<uint8_t>() const { return this->value; }
+
     // Member-by-member initialization
     simdutf_really_inline simd8(
       int8_t v0,  int8_t v1,  int8_t v2,  int8_t v3,  int8_t v4,  int8_t v5,  int8_t v6,  int8_t v7,
