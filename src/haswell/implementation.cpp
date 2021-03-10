@@ -158,7 +158,6 @@ simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, siz
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
-  // return scalar::utf8_to_utf16::convert(buf, len, utf16_output);
   utf8_to_utf16::validating_transcoder converter;
   return converter.convert(buf, len, utf16_output);
 }
