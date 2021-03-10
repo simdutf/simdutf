@@ -475,11 +475,9 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
         (this->chunks[3] <= mask_high) & (this->chunks[3] >= mask_low)
       ).to_bitmask();
     }
-random_utf16
     simdutf_really_inline uint64_t not_in_range(const T low, const T high) const {
       const simd8<T> mask_low = simd8<T>::splat(low);
-      const simd8<T> mask_high = simd8<T>::splat(high);random_utf16
-random_utf16
+      const simd8<T> mask_high = simd8<T>::splat(high);
       return  simd8x64<bool>(
         (this->chunks[0] > mask_high) | (this->chunks[0] < mask_low),
         (this->chunks[1] > mask_high) | (this->chunks[1] < mask_low),
@@ -487,7 +485,6 @@ random_utf16
         (this->chunks[3] > mask_high) | (this->chunks[3] < mask_low)
       ).to_bitmask();
     }
-random_utf16
     simdutf_really_inline uint64_t lt(const T m) const {
       const simd8<T> mask = simd8<T>::splat(m);
       return  simd8x64<bool>(
@@ -502,7 +499,7 @@ random_utf16
   template<>
   simdutf_really_inline uint64_t simd8x64<uint16_t>::not_in_range(const uint16_t low, const uint16_t high) const {
       const simd8<uint16_t> mask_low = simd8<uint16_t>::splat(low);
-      const simd8<uint16_t> mask_high = simd8<uint16_t>::splat(high);random_utf16
+      const simd8<uint16_t> mask_high = simd8<uint16_t>::splat(high);
       return  simd8x64<uint16_t>(
         (this->chunks[0] > mask_high) | (this->chunks[0] < mask_low),
         (this->chunks[1] > mask_high) | (this->chunks[1] < mask_low),
