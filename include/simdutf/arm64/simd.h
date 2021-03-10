@@ -400,13 +400,13 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
     simd8x64() = delete; // no default constructor allowed
 
     simdutf_really_inline simd8x64(const simd8<T> chunk0, const simd8<T> chunk1, const simd8<T> chunk2, const simd8<T> chunk3) : chunks{chunk0, chunk1, chunk2, chunk3} {}
-    simdutf_really_inline simd8x64(const T ptr[64]) : chunks{simd8<T>::load(ptr), simd8<T>::load(ptr+sizeof(simd8<T>)/sizeof(T)), simd8<T>::load(ptr+2*sizeof(simd8<T>)/sizeof(T)), simd8<T>::load(ptr+3*sizeof(simd8<T>)/sizeof(T))} {}
+    simdutf_really_inline simd8x64(const T* ptr) : chunks{simd8<T>::load(ptr), simd8<T>::load(ptr+sizeof(simd8<T>)/sizeof(T)), simd8<T>::load(ptr+2*sizeof(simd8<T>)/sizeof(T)), simd8<T>::load(ptr+3*sizeof(simd8<T>)/sizeof(T))} {}
 
-    simdutf_really_inline void store(T ptr[64]) const {
-      this->chunks[0].store(ptr+sizeof(simd8<T>)*0);
-      this->chunks[1].store(ptr+sizeof(simd8<T>)*1);
-      this->chunks[2].store(ptr+sizeof(simd8<T>)*2);
-      this->chunks[3].store(ptr+sizeof(simd8<T>)*3);
+    simdutf_really_inline void store(T* ptr) const {
+      this->chunks[0].store(ptr+sizeof(simd8<T>)*0/sizeof(T));
+      this->chunks[1].store(ptr+sizeof(simd8<T>)*1/sizeof(T));
+      this->chunks[2].store(ptr+sizeof(simd8<T>)*2/sizeof(T));
+      this->chunks[3].store(ptr+sizeof(simd8<T>)*3/sizeof(T));
     }
 
     simdutf_really_inline simd8<T> reduce_or() const {

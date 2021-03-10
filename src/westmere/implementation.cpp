@@ -221,7 +221,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const cha
 }
 
 simdutf_warn_unused size_t implementation::count_utf16(const char16_t * input, size_t length) const noexcept {
-  return scalar::utf16::count_code_points(input, length);
+  return utf16::count_code_points(input, length);
 }
 
 simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t length) const noexcept {

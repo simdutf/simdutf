@@ -301,9 +301,9 @@ namespace simd {
     simdutf_really_inline simd8x64(const simd8<T> chunk0, const simd8<T> chunk1) : chunks{chunk0, chunk1} {}
     simdutf_really_inline simd8x64(const T* ptr) : chunks{simd8<T>::load(ptr), simd8<T>::load(ptr+sizeof(simd8<T>)/sizeof(T))} {}
 
-    simdutf_really_inline void store(T ptr[64]) const {
-      this->chunks[0].store(ptr+sizeof(simd8<T>)*0);
-      this->chunks[1].store(ptr+sizeof(simd8<T>)*1);
+    simdutf_really_inline void store(T* ptr) const {
+      this->chunks[0].store(ptr+sizeof(simd8<T>)*0/sizeof(T));
+      this->chunks[1].store(ptr+sizeof(simd8<T>)*1/sizeof(T));
     }
 
     simdutf_really_inline uint64_t to_bitmask() const {
@@ -371,8 +371,8 @@ namespace simd {
       const simd8<T> mask_low = simd8<T>::splat(low);
       const simd8<T> mask_high = simd8<T>::splat(high);
       return  simd8x64<bool>(
-        (this->chunks[0] > mask_high) & (this->chunks[0] < mask_low),
-        (this->chunks[1] > mask_high) & (this->chunks[1] < mask_low)
+        (this->chunks[0] > mask_high) | (this->chunks[0] < mask_low),
+        (this->chunks[1] > mask_high) | (this->chunks[1] < mask_low)
       ).to_bitmask();
     }
     simdutf_really_inline uint64_t lt(const T m) const {
