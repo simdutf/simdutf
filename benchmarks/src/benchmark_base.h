@@ -14,7 +14,7 @@ namespace simdutf::benchmarks {
             std::filesystem::path path;
         };
 
-        struct RandomUTF8 {
+        struct random_utf8 {
             size_t size;
             int utf_1byte_prob = 1;
             int utf_2bytes_prob = 1;
@@ -25,7 +25,7 @@ namespace simdutf::benchmarks {
         struct Testcase {
             std::set<std::string> tested_procedures;
             size_t iterations;
-            std::variant<File, RandomUTF8> input;
+            std::variant<File, random_utf8> input;
         };
     }
 

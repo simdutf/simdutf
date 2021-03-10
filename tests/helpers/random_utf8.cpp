@@ -4,12 +4,12 @@ namespace simdutf {
 namespace tests {
 namespace helpers {
 
-RandomUTF8::RandomUTF8(std::random_device &rd, int prob_1byte, int prob_2bytes,
+random_utf8::random_utf8(std::random_device &rd, int prob_1byte, int prob_2bytes,
                        int prob_3bytes, int prob_4bytes)
     : gen(rd()), bytes_count({double(prob_1byte), double(prob_2bytes),
                               double(prob_3bytes), double(prob_4bytes)}) {}
 
-std::pair<std::vector<uint8_t>,size_t> RandomUTF8::generate_counted(size_t output_bytes) {
+std::pair<std::vector<uint8_t>,size_t> random_utf8::generate_counted(size_t output_bytes) {
   std::vector<uint8_t> result;
   result.reserve(output_bytes);
   uint8_t candidate, head;
@@ -76,11 +76,11 @@ std::pair<std::vector<uint8_t>,size_t> RandomUTF8::generate_counted(size_t outpu
   return make_pair(result,count);
 }
 
-std::vector<uint8_t> RandomUTF8::generate(size_t output_bytes) {
+std::vector<uint8_t> random_utf8::generate(size_t output_bytes) {
   return generate_counted(output_bytes).first;
 }
 
-std::vector<uint8_t> RandomUTF8::generate(size_t output_bytes, long seed) {
+std::vector<uint8_t> random_utf8::generate(size_t output_bytes, long seed) {
   gen.seed(uint32_t(seed));
   return generate(output_bytes);
 }

@@ -8,17 +8,20 @@ namespace simdutf {
 namespace tests {
 namespace helpers {
 
-  std::vector<char16_t> random_utf16::generate(size_t size)
-  {
-    if (size % 2 == 1)
-      throw std::invalid_argument("Not implemented yet");
+  std::vector<char16_t> random_utf16::generate(size_t size) {
+    return generate_counted(size).first;
+  }
+
+  std::pair<std::vector<char16_t>,size_t> random_utf16::generate_counted(size_t size) {
 
     std::vector<char16_t> result;
     result.reserve(size);
 
     char16_t W1;
     char16_t W2;
+    size_t count{0};
     while (result.size() < size) {
+      count++;
       const uint32_t value = generate();
       switch (simdutf::tests::reference::utf16::encode(value, W1, W2)) {
         case 0:
@@ -33,8 +36,9 @@ namespace helpers {
       }
     }
 
-    return result;
+    return make_pair(result,count);
   }
+
 
   std::vector<char16_t> random_utf16::generate(size_t size, long seed) {
     gen.seed(seed);
