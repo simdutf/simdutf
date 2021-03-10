@@ -161,9 +161,7 @@ using namespace simd;
           }
         }
       }
-      if(this->error.any_bits_set_anywhere()) {
-          return 0;
-      }
+      if(errors()) { return 0; }
       if(pos < size) {
         size_t howmany  = scalar::utf8_to_utf16::convert(in + pos, size - pos, utf16_output);
         if(howmany == 0) { return 0; }
@@ -172,7 +170,7 @@ using namespace simd;
       return utf16_output - start;
     }
 
-    simdutf_really_inline bool errors() {
+    simdutf_really_inline bool errors() const {
       return this->error.any_bits_set_anywhere();
     }
 
