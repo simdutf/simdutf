@@ -249,7 +249,7 @@ namespace simd {
     simd8x64() = delete; // no default constructor allowed
 
     simdutf_really_inline simd8x64(const simd8<T> chunk0, const simd8<T> chunk1) : chunks{chunk0, chunk1} {}
-    simdutf_really_inline simd8x64(const T ptr[64]) : chunks{simd8<T>::load(ptr), simd8<T>::load(ptr+32)} {}
+    simdutf_really_inline simd8x64(const T ptr[64]) : chunks{simd8<T>::load(ptr), simd8<T>::load(ptr+sizeof(simd8<T>)/sizeof(T)), simd8<T>::load(ptr+2*sizeof(simd8<T>)/sizeof(T)), simd8<T>::load(ptr+3*sizeof(simd8<T>)/sizeof(T))} {}
 
     simdutf_really_inline void store(T ptr[64]) const {
       this->chunks[0].store(ptr+sizeof(simd8<T>)*0);
@@ -306,6 +306,29 @@ namespace simd {
       ).to_bitmask();
     }
 
+    simdutf_really_inline uint64_t in_range(const T low, const T high) const {
+      const simd8<T> mask_low = simd8<T>::splat(low);
+      const simd8<T> mask_high = simd8<T>::splat(high);
+
+      return  simd8x64<bool>(
+        (this->chunks[0] <= mask_high) & (this->chunks[0] >= mask_low),
+        (this->chunks[1] <= mask_high) & (this->chunks[1] >= mask_low),
+        (this->chunks[2] <= mask_high) & (this->chunks[2] >= mask_low),
+        (this->chunks[3] <= mask_high) & (this->chunks[3] >= mask_low)
+      ).to_bitmask();
+    }
+random_utf16
+    simdutf_really_inline uint64_t not_in_range(const T low, const T high) const {
+      const simd8<T> mask_low = simd8<T>::splat(low);
+      const simd8<T> mask_high = simd8<T>::splat(high);random_utf16
+random_utf16
+      return  simd8x64<bool>(
+        (this->chunks[0] > mask_high) & (this->chunks[0] < mask_low),
+        (this->chunks[1] > mask_high) & (this->chunks[1] < mask_low),
+        (this->chunks[2] > mask_high) & (this->chunks[2] < mask_low),
+        (this->chunks[3] > mask_high) & (this->chunks[3] < mask_low)
+      ).to_bitmask();
+    }
     simdutf_really_inline uint64_t lt(const T m) const {
       const simd8<T> mask = simd8<T>::splat(m);
       return  simd8x64<bool>(

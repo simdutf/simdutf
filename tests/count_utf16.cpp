@@ -37,7 +37,6 @@ TEST(count_just_one_word) {
     }
   }
 }
-
 TEST(count_1_or_2_UTF16_words) {
   for (size_t trial = 0; trial < 10000; trial++) {
     if ((trial % 100) == 0) {
@@ -56,6 +55,7 @@ TEST(count_1_or_2_UTF16_words) {
     }
   }
 }
+
 
 
 

@@ -17,7 +17,6 @@ simdutf_really_inline size_t count_code_points(const char* in, size_t size) {
     }
     return count + scalar::utf8::count_code_points(in + pos, size - pos);
 }
-
 } // utf8 namespace
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
