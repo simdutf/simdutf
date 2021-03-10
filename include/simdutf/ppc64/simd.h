@@ -324,7 +324,7 @@ template <> struct simd8<uint8_t> : base8_numeric<uint8_t> {
     return ~this->bits_not_set(bits);
   }
 
-  simdutf_really_inline bool is_ascii() const {random_utf16
+  simdutf_really_inline bool is_ascii() const {
       return this->saturating_sub(0b01111111u).bits_not_set_anywhere();
   }
 
@@ -426,11 +426,9 @@ template <typename T> struct simd8x64 {
         (this->chunks[3] <= mask_high) & (this->chunks[3] >= mask_low)
       ).to_bitmask();
   }
-random_utf16
   simdutf_really_inline uint64_t not_in_range(const T low, const T high) const {
       const simd8<T> mask_low = simd8<T>::splat(low);
-      const simd8<T> mask_high = simd8<T>::splat(high);random_utf16
-random_utf16
+      const simd8<T> mask_high = simd8<T>::splat(high);
       return  simd8x64<bool>(
         (this->chunks[0] > mask_high) & (this->chunks[0] < mask_low),
         (this->chunks[1] > mask_high) & (this->chunks[1] < mask_low),
