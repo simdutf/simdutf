@@ -56,9 +56,6 @@ TEST(count_1_or_2_UTF16_words) {
   }
 }
 
-
-
-
 TEST(count_2_UTF16_words) {
   for (size_t trial = 0; trial < 10000; trial++) {
     std::random_device rd{};
