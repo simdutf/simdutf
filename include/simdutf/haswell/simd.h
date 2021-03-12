@@ -127,7 +127,8 @@ namespace simd {
       ));
     }
   };
-
+  
+  
   // Signed bytes
   template<>
   struct simd8<int8_t> : base8_numeric<int8_t> {
@@ -137,6 +138,8 @@ namespace simd {
     simdutf_really_inline simd8(int8_t _value) : simd8(splat(_value)) {}
     // Array constructor
     simdutf_really_inline simd8(const int8_t values[32]) : simd8(load(values)) {}
+    simdutf_really_inline operator simd8<uint8_t>() const;
+
     // Member-by-member initialization
     simdutf_really_inline simd8(
       int8_t v0,  int8_t v1,  int8_t v2,  int8_t v3,  int8_t v4,  int8_t v5,  int8_t v6,  int8_t v7,
@@ -161,6 +164,7 @@ namespace simd {
         v8, v9, v10,v11,v12,v13,v14,v15
       );
     }
+    simdutf_really_inline bool is_ascii() const { return _mm256_movemask_epi8(*this) == 0; }
     // Order-sensitive comparisons
     simdutf_really_inline simd8<int8_t> max_val(const simd8<int8_t> other) const { return _mm256_max_epi8(*this, other); }
     simdutf_really_inline simd8<int8_t> min_val(const simd8<int8_t> other) const { return _mm256_min_epi8(*this, other); }
@@ -201,6 +205,8 @@ namespace simd {
         v8, v9, v10,v11,v12,v13,v14,v15
       );
     }
+    simdutf_really_inline operator simd8<int8_t>() const { return this->value; }
+
 
     // Saturated math
     simdutf_really_inline simd8<uint8_t> saturating_add(const simd8<uint8_t> other) const { return _mm256_adds_epu8(*this, other); }
@@ -237,6 +243,7 @@ namespace simd {
     template<int N>
     simdutf_really_inline int get_bit() const { return _mm256_movemask_epi8(_mm256_slli_epi16(*this, 7-N)); }
   };
+  simdutf_really_inline simd8<int8_t>::operator simd8<uint8_t>() const { return this->value; }
 
   // Unsigned bytes
   template<>
@@ -287,6 +294,7 @@ namespace simd {
     simdutf_really_inline bool any_bits_set_anywhere(simd8<uint16_t> bits) const { return !bits_not_set_anywhere(bits); }
   };
 
+ 
 
   template<typename T>
   struct simd8x64 {
