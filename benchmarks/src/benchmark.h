@@ -2,6 +2,7 @@
 
 #include "benchmark_base.h"
 #include "cmdline.h"
+#include "simdutf.h"
 
 namespace simdutf::benchmarks {
 
@@ -19,6 +20,13 @@ namespace simdutf::benchmarks {
 
     private:
         std::set<std::string> known_procedures;
+
+    private:
+        void run_validate_utf8(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_utf8_to_utf16(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_valid_utf8_to_utf16(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_utf16_to_utf8(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_valid_utf16_to_utf8(const simdutf::implementation& implementation, size_t iterations);
     };
 
 } // namespace simdutf::benchmarks
