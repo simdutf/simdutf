@@ -24,7 +24,7 @@ namespace simdutf::benchmarks {
 
         if (testcase.tested_procedures.empty()) {
             for (const auto& procedure: known_procedures)
-                run(procedure, testcase.iterations);
+                run(procedure, testcase);
         } else {
             std::set<std::string> to_be_tested;
             for (const auto& procedure: testcase.tested_procedures) {
@@ -36,9 +36,22 @@ namespace simdutf::benchmarks {
             }
 
             for (const auto& procedure: to_be_tested) {
-                    run(procedure, testcase.iterations);
+                run(procedure, testcase);
             }
         }
+    }
+
+    void BenchmarkBase::run(const std::string& procedure_name, const input::Testcase& testcase) {
+        printf("%s, input size: %lu, iterations: %lu",
+           procedure_name.c_str(), input_data.size(), testcase.iterations);
+
+        if (std::holds_alternative<input::File>(testcase.input)) {
+            const input::File& file{std::get<input::File>(testcase.input)};
+            printf(", dataset: %s\n", file.path.c_str());
+        } else
+            putchar('\n');
+
+        run(procedure_name, testcase.iterations);
     }
 
     void BenchmarkBase::prepare_input(const input::Testcase& testcase) {

@@ -51,6 +51,7 @@ namespace simdutf::benchmarks {
         void print_summary(const event_aggregate& all, double data_size) const;
 
         void run(const input::Testcase& testcase);
+        void run(const std::string& procedure_name, const input::Testcase& testcase);
         void prepare_input(const input::Testcase& benchmark);
         void load_file(const std::filesystem::path& path);
     };
