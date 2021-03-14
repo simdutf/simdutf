@@ -1,8 +1,7 @@
 #include "tables/utf8_to_utf16_tables.h"
 #include "scalar/utf8_to_utf16/valid_utf8_to_utf16.h"
 #include "scalar/utf8_to_utf16/utf8_to_utf16.h"
-#include "scalar/utf8.h"
-#include "scalar/utf16.h"
+#include "tables/utf16_to_utf8_tables.h"
 
 #include "simdutf/westmere/begin.h"
 #include <utility>
@@ -137,7 +136,9 @@ size_t convert_masked_utf8_to_utf16(const char *input,
 }
 
 #include "sse_validate_utf16le.cpp"
-#include "sse-convert-utf16-to-utf8.cpp"
+#include "sse_convert_utf16_to_utf8.cpp"
+
+// UTF-16 => UTF-8 conversion
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
