@@ -139,23 +139,6 @@ size_t convert_masked_utf8_to_utf16(const char *input,
 #include "sse_validate_utf16le.cpp"
 #include "sse-convert-utf16-to-utf8.cpp"
 
-size_t scalar_convert_valid_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) {
-  auto encode_utf8 = [&utf8_output](uint32_t value) {
-    ::simdutf::internal::utf8::encode(value, [&utf8_output](const uint8_t byte)
-                                             {*utf8_output++ = byte;});
-  };
-
-  auto error_handler = [](const char16_t*, const char16_t*, simdutf::internal::utf16::Error) {
-    return false; // just break decoding
-  };
-
-  char* start = utf8_output;
-  if (::simdutf::internal::utf16::decode(buf, len, encode_utf8, error_handler))
-    return utf8_output - start;
-  else
-    return 0;
-}
-
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
