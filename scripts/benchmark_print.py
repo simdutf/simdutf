@@ -147,13 +147,15 @@ def print_speed_comparison(data):
 
 
 def main():
+    if len(sys.argv) < 2:
+        print("No input files")
+        print("Provide output from the benchmark utility")
+        return
+
     for path in sys.argv[1:]:
         with open(path, 'rt') as f:
             data = parse(f)
             print_speed_comparison(data)
-    else:
-        print("No input files")
-        print("Provide output from the benchmark utility")
 
 
 if __name__ == '__main__':
