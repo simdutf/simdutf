@@ -1,62 +1,68 @@
 /*
+    The vectorized algorithm works on single SSE register i.e., it
+    loads eight 16-bit words.
 
-    We consider two cases:
-    1. an input register contains no surrogates --- i.e. each value
-       is in range 0x0000 .. 0xffff and fits in 16 bits
-    2. an input register contains surrogates --- i.e. codepoints
+    We consider three cases:
+    1. an input register contains no surrogates and each value
+       is in range 0x0000 .. 0x07ff.
+    2. an input register contains no surrogates and values are
+       is in range 0x0000 .. 0xffff.
+    3. an input register contains surrogates --- i.e. codepoints
        can have 16 or 32 bits.
 
-    It should be also checked if a special case when the input has only
-    surrogates (32-bit codepoints) appears in real data.
+    Ad 1.
 
-    --------------------------------------------------
+    When values are less than 0x0800, it means that a 16-bit words
+    can be converted into: 1) single UTF8 byte (when it's an ASCII
+    char) or 2) two UTF8 bytes.
 
-    Ad 1. A single 16-bit code UTF-16 can yield 1, 2 or 3 UTF-8 bytes.
-    It depends on value, as follows:
+    For this case we do only some shuffle to obtain these 2-byte
+    codes and finally compress the whole SSE register with a single
+    shuffle.
 
-    - 0x0000 .. 0x007F -> 1 byte (ASCII)
-    - 0x0080 .. 0x07FF -> 2 bytes
-    - 0x0800 .. 0xFFFF -> 3 bytes
+    We need 256-entry lookup table to get a compression pattern
+    and the number of output bytes in the compressed vector register.
+    Each entry occupies 17 bytes.
 
-    Example input (a-f are bitfields):
-    - word 0 would yield three UTF-8 bytes
-    - word 1 would yield two UTF-8 bytes
-    - word 2 would yield one UTF-8 byte
+    Ad 2.
 
-    [aaaa|bbbb|bbcc|cccc|0000|0ddd|ddee|eeee|0000|0000|0fff|ffff| ...........]
-    |      word 0       |      word 1       |        word 2     | words 3..7 |
+    When values fit in 16-bit words, but are above 0x07ff, then
+    a single word may produce one, two or three UTF8 bytes.
 
-    1. detect ASCII
+    We prepare data for all these three cases in two registers.
+    The first register contains lower two UTF8 bytes (used in all
+    cases), while the second one contains just the third byte for
+    the three-UTF8-bytes case.
 
-    [0000|0000|0000|0000|0000|0000|0000|0000|1111|1111|1111|1111] - one_byte_bytemask
-    |      word 0       |      word 1       |        word 2     |
+    Finally these two registers are interleaved forming eight-element
+    array of 32-bit values. The array spans two SSE registers.
+    The bytes from the registers are compressed using two shuffles.
 
-    2. detect ASCII or 2-byte output
+    We need 256-entry lookup table to get a compression pattern
+    and the number of output bytes in the compressed vector register.
+    Each entry occupies 17 bytes.
 
-    [0000|0000|0000|0000|1111|1111|1111|1111|1111|1111|1111|1111] - one_or_two_bytes_bytemask
-    |      word 0       |      word 1       |        word 2     |
+    Ad 3.
 
-    3. 2-byte output:
+    The input is normalized into 32-bit words, it spans two registers.
+    Next the 32-bit words are converted into UCS32. For non-surrogate
+    entries there's no need to do anything. In the case of words
+    containing surrogate pairs, the RFC-imposed algorithm is used
+    (RFC-2781, 2.2 Decoding UTF-16).
 
-    one_or_two_bytes_bytemask and not one_byte_bytemask
+    Next, the UCS32 is converted into UTF8 withing 32-bit words. Finally
+    the registers are compressed. Then we complete missing bits in UTF8
+    bytes.
 
-    4. 3-byte output
+    We need 256-entry lookup table to get a compression pattern, UTF8
+    bit patterns, and the number of output bytes in the compressed
+    vector register. Each entry occupies 33 bytes.
 
-    not one_or_two_bytes_bytemask
-
-
+    Summarize:
+    - We need three 256-entry tables that have 17152 bytes in total.
 */
 
 #include "sse-convert-utf16-to-utf8-lookup.cpp"
-
-#if 0
-#include "1.h"
-#if 0
-#define D(name) printf("%-20s = ", #name); dump_epu32_hex(name);
-#else
-#define D(_)
-#endif
-#endif
 
 namespace {
   int convert_UCS4_to_UTF8(__m128i in, __m128i& out) {
@@ -100,9 +106,9 @@ namespace {
 
     // merged = [000000ww|00zzzzzz|00yyyyyy|00xxxxxx] for 2, 3, 4 UTF-8 bytes
     __m128i merged;
-    merged = _mm_or_si128(_mm_or_si128(byte1, byte2), 
+    merged = _mm_or_si128(_mm_or_si128(byte1, byte2),
                           _mm_or_si128(byte3, byte4));
-    // merged = [00000000|00000000|00000000|0xxxxxxx] for 1 UTF-8 byte 
+    // merged = [00000000|00000000|00000000|0xxxxxxx] for 1 UTF-8 byte
 
     merged = _mm_blendv_epi8(merged, in, mask_1_byte);
 
@@ -131,7 +137,7 @@ namespace {
     // merged = [000000ww|00zzzzzz|00yyyyyy|00xxxxxx]
     //          [00000000|00000000|00000000|0xxxxxxx]
     merged = _mm_or_si128(merged, _mm_loadu_si128((__m128i*)to_utf8.const_bits_mask));
-    
+
     out = _mm_shuffle_epi8(merged, _mm_loadu_si128((__m128i*)to_utf8.shuffle));
 
     return to_utf8.output_bytes;
@@ -143,7 +149,7 @@ namespace {
   Returns a pair: the first unprocessed byte from buf and utf8_output
   A scalar routing should carry on the conversion of the tail.
 */
-std::pair<const char16_t*, char*> sse_convert_valid_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) {
+std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) {
 
   char* start = utf8_output;
   const char16_t* end = buf + len;
@@ -269,7 +275,7 @@ std::pair<const char16_t*, char*> sse_convert_valid_utf16_to_utf8(const char16_t
           const __m128i out1 = _mm_unpackhi_epi16(t9, a);
 
           // 5. compress 32-bit words into 1, 2 or 3 bytes -- 2 x shuffle
-          const uint16_t mask = (one_byte_bitmask & 0x5555) | 
+          const uint16_t mask = (one_byte_bitmask & 0x5555) |
                                 (one_or_two_bytes_bitmask & 0xaaaa);
 
           const uint8_t mask0 = uint8_t(mask);
@@ -305,7 +311,7 @@ std::pair<const char16_t*, char*> sse_convert_valid_utf16_to_utf8(const char16_t
       const uint16_t V = ~surrogates_bitmask;
 
       // 1b. obtain mask for high surrogates (0xDC00..0xDFFF)
-      const __m128i vH = _mm_cmpeq_epi16(_mm_and_si128(in, v_fc00), v_dc00); 
+      const __m128i vH = _mm_cmpeq_epi16(_mm_and_si128(in, v_fc00), v_dc00);
       const uint16_t H = _mm_movemask_epi8(vH);
 
       // 1c. obtain mask for log surrogates (0xD800..0xDBFF)
@@ -327,7 +333,7 @@ std::pair<const char16_t*, char*> sse_convert_valid_utf16_to_utf8(const char16_t
 
       // 2. use surrogates_bitmask to obtain shuffle pattern
       //    we expand 16-bit words into 32-bit words
-      // 
+      //
       //    surrogates_bitmask = hhggffeeddccbbaa
       //    expansion_id       = 0h0g0f0e0d0c0b0a
       //                       |        0h0g0f0e0
