@@ -93,9 +93,6 @@ namespace BOM {
 } // namespace
 
 void Benchmark::run(const std::string& procedure_name, size_t iterations) {
-    printf("%s, input size: %lu, iterations: %lu, \n",
-           procedure_name.c_str(), input_data.size(), iterations);
-
     const size_t p = procedure_name.find('+');
     assert(p != std::string::npos);
 
