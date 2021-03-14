@@ -127,23 +127,48 @@ def print_speed_comparison(data):
         results[(input.procedure, input.dataset_name)] = result
 
     datasets = list(sorted(datasets))
+    procedures = list(sorted(procedures))
 
-    table = Table()
-    table.set_header(['procedure'] + datasets)
+    def by_procedure():
+        table = Table()
+        table.set_header(['procedure'] + datasets)
 
-    for procedure in procedures:
-        row = []
-        row.append(procedure)
+        for procedure in procedures:
+            row = []
+            row.append(procedure)
+            for dataset in datasets:
+                try:
+                    result = results[(procedure, dataset)]
+                    row.append('%0.3f GB/s' % (result.speed_gbs))
+                except KeyError:
+                    row.append('--')
+
+            table.add_row(row)
+
+        return table
+
+    def by_dataset():
+        table = Table()
+        table.set_header(['dataset'] + procedures)
+
         for dataset in datasets:
-            try:
-                result = results[(procedure, dataset)]
-                row.append('%0.3f GB/s' % (result.speed_gbs))
-            except KeyError:
-                row.append('--')
+            row = []
+            row.append(dataset)
+            for procedure in procedures:
+                try:
+                    result = results[(procedure, dataset)]
+                    row.append('%0.3f GB/s' % (result.speed_gbs))
+                except KeyError:
+                    row.append('--')
 
-        table.add_row(row)
+            table.add_row(row)
 
-    print(table)
+        return table
+
+    if len(procedures) >= len(datasets):
+        print(by_procedure())
+    else:
+        print(by_dataset())
 
 
 def main():
