@@ -295,8 +295,56 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
   const __m128i v_c080 = _mm_set1_epi16((int16_t)0xc080);
 
   while (buf + 8 < end) {
-
     __m128i in = _mm_loadu_si128((__m128i*)buf);
+
+    // Case 1: no bits set above 11th bit (1 or 2 bytes)
+    const __m128i v_ff80 = _mm_set1_epi16((int16_t)0xff80);
+    const __m128i one_or_two_bytes_bytemask = _mm_cmpeq_epi16(_mm_and_si128(in, v_f800), v_0000);
+    const uint16_t one_or_two_bytes_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_or_two_bytes_bytemask));
+    if (one_or_two_bytes_bitmask == 0xffff) {
+      const __m128i one_byte_bytemask = _mm_cmpeq_epi16(_mm_and_si128(in, v_ff80), v_0000);
+      const uint16_t one_byte_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_byte_bytemask));
+
+      const __m128i v_1f00 = _mm_set1_epi16((int16_t)0x1f00);
+      const __m128i v_003f = _mm_set1_epi16((int16_t)0x003f);
+
+      // t0 = [000a|aaaa|bbbb|bb00]
+      const __m128i t0 = _mm_slli_epi16(in, 2);
+      // t1 = [000a|aaaa|0000|0000]
+      const __m128i t1 = _mm_and_si128(t0, v_1f00);
+      // t2 = [0000|0000|00bb|bbbb]
+      const __m128i t2 = _mm_and_si128(in, v_003f);
+      // t3 = [000a|aaaa|00bb|bbbb]
+      const __m128i t3 = _mm_or_si128(t1, t2);
+      // t4 = [110a|aaaa|10bb|bbbb]
+      const __m128i t4 = _mm_or_si128(t3, v_c080);
+
+      // 2. merge ASCII and 2-byte codewords
+      const __m128i utf8_unpacked = _mm_blendv_epi8(t4, in, one_byte_bytemask);
+
+      // 3. prepare bitmask for 8-bit lookup
+      //    one_byte_bitmask = hhggffeeddccbbaa -- the bits are doubled (h - MSB, a - LSB)
+      const uint16_t m0 = one_byte_bitmask & 0x5555;  // m0 = 0h0g0f0e0d0c0b0a
+      const uint16_t m1 = m0 >> 7;                    // m1 = 00000000h0g0f0e0
+      const uint8_t  m2 = (m0 | m1) & 0xff;           // m2 =         hdgcfbea
+
+      // 4. pack the bytes
+      const uint8_t* row = &tables::utf16_to_utf8::pack_1_2_utf8_bytes[m2][0];
+      const __m128i shuffle = _mm_loadu_si128((__m128i*)(row + 1));
+      const __m128i utf8_packed = _mm_shuffle_epi8(utf8_unpacked, shuffle);
+
+      // 5. store bytes
+      _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
+
+      // 6. adjust pointers
+      buf += 8;
+      utf8_output += row[0];
+      continue;
+    }
+
+    // At this point we know that we have words greater than 0x07ff.
+    // It means either non-surrogate values yielding up to UTF8 bytes
+    // or surrogate pairs.
 
     // 1. Check if there are any surrogate word in the input chunk.
     //    We have also deal with situation when there is a suggogate word
@@ -313,9 +361,6 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
       // it would produce just one output byte and we just trim it.
       in = _mm_andnot_si128(surrogates_bytemask, in);
 
-      // a single 16-bit UTF-16 word can yield 1, 2 or 3 UTF-8 bytes
-      const __m128i v_ff80 = _mm_set1_epi16((int16_t)0xff80);
-
       // no bits set above 7th bit
       const __m128i one_byte_bytemask = _mm_cmpeq_epi16(_mm_and_si128(in, v_ff80), v_0000);
       // no bits set above 11th bit
@@ -324,117 +369,71 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
       const uint16_t one_byte_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_byte_bytemask));
       const uint16_t one_or_two_bytes_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_or_two_bytes_bytemask));
 
-      // case 1: words from register produce either 1 or 2 UTF-8 bytes
-      if ((one_byte_bitmask | one_or_two_bytes_bitmask) == 0xffff) {
-          // 1. prepare 2-byte values
-          // input 16-bit word : [0000|0aaa|aabb|bbbb] x 8
-          // expected output   : [110a|aaaa|10bb|bbbb] x 8
-          const __m128i v_1f00 = _mm_set1_epi16((int16_t)0x1f00);
-          const __m128i v_003f = _mm_set1_epi16((int16_t)0x003f);
-
-          // t0 = [000a|aaaa|bbbb|bb00]
-          const __m128i t0 = _mm_slli_epi16(in, 2);
-          // t1 = [000a|aaaa|0000|0000]
-          const __m128i t1 = _mm_and_si128(t0, v_1f00);
-          // t2 = [0000|0000|00bb|bbbb]
-          const __m128i t2 = _mm_and_si128(in, v_003f);
-          // t3 = [000a|aaaa|00bb|bbbb]
-          const __m128i t3 = _mm_or_si128(t1, t2);
-          // t4 = [110a|aaaa|10bb|bbbb]
-          const __m128i t4 = _mm_or_si128(t3, v_c080);
-
-          // 2. merge ASCII and 2-byte codewords
-          const __m128i utf8_unpacked = _mm_blendv_epi8(t4, in, one_byte_bytemask);
-
-          // 3. prepare bitmask for 8-bit lookup
-          //    one_byte_bitmask = hhggffeeddccbbaa -- the bits are doubled (h - MSB, a - LSB)
-          const uint16_t m0 = one_byte_bitmask & 0x5555;  // m0 = 0h0g0f0e0d0c0b0a
-          const uint16_t m1 = m0 >> 7;                    // m1 = 00000000h0g0f0e0
-          const uint8_t  m2 = (m0 | m1) & 0xff;           // m2 =         hdgcfbea
-
-          // 4. pack the bytes
-          const uint8_t* row = &tables::utf16_to_utf8::pack_1_2_utf8_bytes[m2][0];
-          const __m128i shuffle = _mm_loadu_si128((__m128i*)(row + 1));
-          const __m128i utf8_packed = _mm_shuffle_epi8(utf8_unpacked, shuffle);
-
-          // 5. store bytes
-          _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
-
-          // 6. adjust pointers
-          if (surrogates_bitmask == 0x0000) {
-            buf += 8;
-            utf8_output += row[0];
-          } else {
-            buf += 7;
-            utf8_output += row[0] - 1;
-          }
       // case 2: words from register produce either 1, 2 or 3 UTF-8 bytes
+      // 1. prepare 3-byte values
+      // input 16-bit words : [aaaa|bbbb|bbcc|cccc] x 8
+      // output words bc    : [10bb|bbbb|10cc|cccc]
+      //              a     : [0000|0000|1110|aaaa]
+      const __m128i v_3f00 = _mm_set1_epi16((int16_t)0x3f00);
+      const __m128i v_003f = _mm_set1_epi16((int16_t)0x003f);
+      const __m128i v_8080 = _mm_set1_epi16((int16_t)0x8080);
+      const __m128i v_00e0 = _mm_set1_epi16((int16_t)0x00e0);
+
+      // t0 = [00bb|bbbb|cccc|cc00]
+      const __m128i t0 = _mm_slli_epi16(in, 2);
+      // t1 = [00bb|bbbb|0000|0000]
+      const __m128i t1 = _mm_and_si128(t0, v_3f00);
+      // t2 = [0000|0000|00cc|cccc]
+      const __m128i t2 = _mm_and_si128(in, v_003f);
+      // t3 = [00bb|bbbb|00cc|cccc]
+      const __m128i t3 = _mm_or_si128(t1, t2);
+      // bc = [10bb|bbbb|10cc|cccc]
+      const __m128i bc = _mm_or_si128(t3, v_8080);
+
+      // t5 = [0000|0000|0000|aaaa]
+      const __m128i t5 = _mm_srli_epi16(in, 12);
+      // a  = [0000|0000|1110|aaaa] -- masking is not needed, as shuffles will omit this byte if not requred in output
+      const __m128i a  = _mm_or_si128(t5, v_00e0);
+
+      // 2. prepare 2-byte values
+      // t3 = [00bb|bbbb|00cc|cccc], but for the 2-byte case 'b' subword has 5 bits, in fact:
+      // t3 = [000b|bbbb|00cc|cccc] -- thus
+      // t7 = [110b|bbbb|10cc|cccc]
+      const __m128i t7 = _mm_or_si128(t3, v_c080);
+
+      // 3. join lower words
+      const __m128i t8 = _mm_blendv_epi8(bc, t7, one_or_two_bytes_bytemask);
+      const __m128i t9 = _mm_blendv_epi8(t8, in, one_byte_bytemask);
+
+      // 4. expand words 16-bit => 32-bit
+      const __m128i out0 = _mm_unpacklo_epi16(t9, a);
+      const __m128i out1 = _mm_unpackhi_epi16(t9, a);
+
+      // 5. compress 32-bit words into 1, 2 or 3 bytes -- 2 x shuffle
+      const uint16_t mask = (one_byte_bitmask & 0x5555) |
+                            (one_or_two_bytes_bitmask & 0xaaaa);
+
+      const uint8_t mask0 = uint8_t(mask);
+
+      const uint8_t* row0 = &tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask0][0];
+      const __m128i shuffle0 = _mm_loadu_si128((__m128i*)(row0 + 1));
+      const __m128i utf8_0 = _mm_shuffle_epi8(out0, shuffle0);
+
+      const uint8_t mask1 = (mask >> 8);
+      const uint8_t* row1 = &tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask1][0];
+      const __m128i shuffle1 = _mm_loadu_si128((__m128i*)(row1 + 1));
+      const __m128i utf8_1 = _mm_shuffle_epi8(out1, shuffle1);
+
+      _mm_storeu_si128((__m128i*)utf8_output, utf8_0);
+      utf8_output += row0[0];
+      _mm_storeu_si128((__m128i*)utf8_output, utf8_1);
+      utf8_output += row1[0];
+
+      if (surrogates_bitmask == 0x0000) {
+        buf += 8;
       } else {
-          // 1. prepare 3-byte values
-          // input 16-bit words : [aaaa|bbbb|bbcc|cccc] x 8
-          // output words bc    : [10bb|bbbb|10cc|cccc]
-          //              a     : [0000|0000|1110|aaaa]
-          const __m128i v_3f00 = _mm_set1_epi16((int16_t)0x3f00);
-          const __m128i v_003f = _mm_set1_epi16((int16_t)0x003f);
-          const __m128i v_8080 = _mm_set1_epi16((int16_t)0x8080);
-          const __m128i v_00e0 = _mm_set1_epi16((int16_t)0x00e0);
-
-          // t0 = [00bb|bbbb|cccc|cc00]
-          const __m128i t0 = _mm_slli_epi16(in, 2);
-          // t1 = [00bb|bbbb|0000|0000]
-          const __m128i t1 = _mm_and_si128(t0, v_3f00);
-          // t2 = [0000|0000|00cc|cccc]
-          const __m128i t2 = _mm_and_si128(in, v_003f);
-          // t3 = [00bb|bbbb|00cc|cccc]
-          const __m128i t3 = _mm_or_si128(t1, t2);
-          // bc = [10bb|bbbb|10cc|cccc]
-          const __m128i bc = _mm_or_si128(t3, v_8080);
-
-          // t5 = [0000|0000|0000|aaaa]
-          const __m128i t5 = _mm_srli_epi16(in, 12);
-          // a  = [0000|0000|1110|aaaa] -- masking is not needed, as shuffles will omit this byte if not requred in output
-          const __m128i a  = _mm_or_si128(t5, v_00e0);
-
-          // 2. prepare 2-byte values
-          // t3 = [00bb|bbbb|00cc|cccc], but for the 2-byte case 'b' subword has 5 bits, in fact:
-          // t3 = [000b|bbbb|00cc|cccc] -- thus
-          // t7 = [110b|bbbb|10cc|cccc]
-          const __m128i t7 = _mm_or_si128(t3, v_c080);
-
-          // 3. join lower words
-          const __m128i t8 = _mm_blendv_epi8(bc, t7, one_or_two_bytes_bytemask);
-          const __m128i t9 = _mm_blendv_epi8(t8, in, one_byte_bytemask);
-
-          // 4. expand words 16-bit => 32-bit
-          const __m128i out0 = _mm_unpacklo_epi16(t9, a);
-          const __m128i out1 = _mm_unpackhi_epi16(t9, a);
-
-          // 5. compress 32-bit words into 1, 2 or 3 bytes -- 2 x shuffle
-          const uint16_t mask = (one_byte_bitmask & 0x5555) |
-                                (one_or_two_bytes_bitmask & 0xaaaa);
-
-          const uint8_t mask0 = uint8_t(mask);
-
-          const uint8_t* row0 = &tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask0][0];
-          const __m128i shuffle0 = _mm_loadu_si128((__m128i*)(row0 + 1));
-          const __m128i utf8_0 = _mm_shuffle_epi8(out0, shuffle0);
-
-          const uint8_t mask1 = (mask >> 8);
-          const uint8_t* row1 = &tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask1][0];
-          const __m128i shuffle1 = _mm_loadu_si128((__m128i*)(row1 + 1));
-          const __m128i utf8_1 = _mm_shuffle_epi8(out1, shuffle1);
-
-          _mm_storeu_si128((__m128i*)utf8_output, utf8_0);
-          utf8_output += row0[0];
-          _mm_storeu_si128((__m128i*)utf8_output, utf8_1);
-          utf8_output += row1[0];
-
-          if (surrogates_bitmask == 0x0000) {
-            buf += 8;
-          } else {
-            buf += 7;
-            utf8_output -= 1;
-          }
+        buf += 7;
+        utf8_output -= 1;
       }
     // surrogate pair(s) in a register
     } else {
