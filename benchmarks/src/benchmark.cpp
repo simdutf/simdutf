@@ -10,7 +10,7 @@ namespace simdutf::benchmarks {
 Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
     : BenchmarkBase(std::move(testcases)) {
 
-    std::array<std::string, 3> implemented_functions{"validate_utf8", "convert_utf8_to_utf16", "convert_valid_utf8_to_utf16"};
+    std::array<std::string, 5> implemented_functions{"validate_utf8", "convert_utf8_to_utf16", "count_utf8", "count_utf16", "convert_valid_utf8_to_utf16"};
 
     for (const auto& implementation: simdutf::available_implementations) {
         for (const auto& function: implemented_functions) {
@@ -26,7 +26,7 @@ Benchmark Benchmark::create(const CommandLine& cmdline) {
 
     using input::Testcase;
     using input::File;
-    using input::RandomUTF8;
+    using input::random_utf8;
 
     for (const size_t iterations: cmdline.iterations) {
         for (const auto& path: cmdline.files) {
@@ -34,7 +34,7 @@ Benchmark Benchmark::create(const CommandLine& cmdline) {
         }
 
         for (const size_t size: cmdline.random_size) {
-            testcases.emplace_back(Testcase{cmdline.procedures, iterations, RandomUTF8{size}});
+            testcases.emplace_back(Testcase{cmdline.procedures, iterations, random_utf8{size}});
         }
     }
 
@@ -67,6 +67,32 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         count_events(proc, iterations); // warming up!
         const auto result = count_events(proc, iterations);
         if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
+        print_summary(result, size);
+    } else if(name == "count_utf8") {
+        const char*  data = reinterpret_cast<const char*>(input_data.data());
+        const size_t size = input_data.size();
+        volatile size_t sink{0};
+
+        auto proc = [implementation, data, size, &sink]() {
+            sink = implementation->count_utf8(data, size);
+        };
+        count_events(proc, iterations); // warming up!
+        const auto result = count_events(proc, iterations);
+        if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+        print_summary(result, size);
+    } else if(name == "count_utf16") {
+        const char*  utf8data = reinterpret_cast<const char*>(input_data.data());
+        const size_t utf8size = input_data.size();
+        std::unique_ptr<char16_t[]> tmp_buffer_utf16{new char16_t[utf8size]};
+        const size_t size = implementation->convert_utf8_to_utf16(utf8data, utf8size, tmp_buffer_utf16.get());
+        const char16_t*  data = tmp_buffer_utf16.get();
+        volatile size_t sink{0};
+        auto proc = [implementation, data, size, &sink]() {
+            sink = implementation->count_utf16(data, size);
+        };
+        count_events(proc, iterations); // warming up!
+        const auto result = count_events(proc, iterations);
+        if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
         print_summary(result, size);
     } else if(name == "convert_utf8_to_utf16") {
         const char*  data = reinterpret_cast<const char*>(input_data.data());

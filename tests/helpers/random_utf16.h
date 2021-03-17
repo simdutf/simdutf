@@ -28,7 +28,7 @@ namespace helpers {
 
     std::vector<char16_t> generate(size_t size);
     std::vector<char16_t> generate(size_t size, long seed);
-
+    std::pair<std::vector<char16_t>,size_t> generate_counted(size_t size);
   private:
     std::discrete_distribution<> utf16_length;
     std::uniform_int_distribution<uint32_t> single_word0{0x0000'0000, 0x0000'd7ff};

@@ -324,7 +324,7 @@ template <> struct simd8<uint8_t> : base8_numeric<uint8_t> {
     return ~this->bits_not_set(bits);
   }
 
-  simdutf_really_inline bool is_ascii() const { 
+  simdutf_really_inline bool is_ascii() const {
       return this->saturating_sub(0b01111111u).bits_not_set_anywhere();
   }
 
@@ -365,15 +365,14 @@ template <typename T> struct simd8x64 {
   simdutf_really_inline simd8x64(const simd8<T> chunk0, const simd8<T> chunk1,
                                   const simd8<T> chunk2, const simd8<T> chunk3)
       : chunks{chunk0, chunk1, chunk2, chunk3} {}
-  simdutf_really_inline simd8x64(const T ptr[64])
-      : chunks{simd8<T>::load(ptr), simd8<T>::load(ptr + 16),
-               simd8<T>::load(ptr + 32), simd8<T>::load(ptr + 48)} {}
 
-  simdutf_really_inline void store(T ptr[64]) const {
-    this->chunks[0].store(ptr + sizeof(simd8<T>) * 0);
-    this->chunks[1].store(ptr + sizeof(simd8<T>) * 1);
-    this->chunks[2].store(ptr + sizeof(simd8<T>) * 2);
-    this->chunks[3].store(ptr + sizeof(simd8<T>) * 3);
+  simdutf_really_inline simd8x64(const T* ptr) : chunks{simd8<T>::load(ptr), simd8<T>::load(ptr+sizeof(simd8<T>)/sizeof(T)), simd8<T>::load(ptr+2*sizeof(simd8<T>)/sizeof(T)), simd8<T>::load(ptr+3*sizeof(simd8<T>)/sizeof(T))} {}
+
+  simdutf_really_inline void store(T* ptr) const {
+    this->chunks[0].store(ptr + sizeof(simd8<T>) * 0/sizeof(T));
+    this->chunks[1].store(ptr + sizeof(simd8<T>) * 1/sizeof(T));
+    this->chunks[2].store(ptr + sizeof(simd8<T>) * 2/sizeof(T));
+    this->chunks[3].store(ptr + sizeof(simd8<T>) * 3/sizeof(T));
   }
 
   simdutf_really_inline simd8<T> reduce_or() const {
@@ -416,6 +415,27 @@ template <typename T> struct simd8x64 {
         .to_bitmask();
   }
 
+  simdutf_really_inline uint64_t in_range(const T low, const T high) const {
+      const simd8<T> mask_low = simd8<T>::splat(low);
+      const simd8<T> mask_high = simd8<T>::splat(high);
+
+      return  simd8x64<bool>(
+        (this->chunks[0] <= mask_high) & (this->chunks[0] >= mask_low),
+        (this->chunks[1] <= mask_high) & (this->chunks[1] >= mask_low),
+        (this->chunks[2] <= mask_high) & (this->chunks[2] >= mask_low),
+        (this->chunks[3] <= mask_high) & (this->chunks[3] >= mask_low)
+      ).to_bitmask();
+  }
+  simdutf_really_inline uint64_t not_in_range(const T low, const T high) const {
+      const simd8<T> mask_low = simd8<T>::splat(low);
+      const simd8<T> mask_high = simd8<T>::splat(high);
+      return  simd8x64<bool>(
+        (this->chunks[0] > mask_high) | (this->chunks[0] < mask_low),
+        (this->chunks[1] > mask_high) | (this->chunks[1] < mask_low),
+        (this->chunks[2] > mask_high) | (this->chunks[2] < mask_low),
+        (this->chunks[3] > mask_high) | (this->chunks[3] < mask_low)
+      ).to_bitmask();
+  }
   simdutf_really_inline uint64_t lt(const T m) const {
     const simd8<T> mask = simd8<T>::splat(m);
     return simd8x64<bool>(this->chunks[0] < mask, this->chunks[1] < mask,

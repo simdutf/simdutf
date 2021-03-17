@@ -12,7 +12,7 @@ int main() {
   printf("running brute-force UTF-8 tests... ");
   fflush(NULL);
   std::random_device rd{};
-  simdutf::tests::helpers::RandomUTF8 gen_1_2_3_4(rd, 1, 1, 1, 1);
+  simdutf::tests::helpers::random_utf8 gen_1_2_3_4(rd, 1, 1, 1, 1);
   size_t total = 1000;
   for (size_t i = 0; i < total; i++) {
 

@@ -42,3 +42,16 @@ target_link_libraries(convert_utf16_to_utf8_tests
   PUBLIC simdutf
          simdutf::tests::reference
          simdutf::tests::helpers)
+
+
+add_cpp_test(count_utf8)
+target_link_libraries(count_utf8
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
+
+add_cpp_test(count_utf16)
+target_link_libraries(count_utf16
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
