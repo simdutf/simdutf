@@ -1,8 +1,13 @@
 #pragma once
 
+#include "simdutf.h"
+
+#include <string>
 #include <list>
 
-namespace {
+namespace simdutf::test {
+
+  int main(int argc, char* argv[]);
 
   using test_procedure = void (*)(const simdutf::implementation& impl);
   struct test_entry {
@@ -14,19 +19,14 @@ namespace {
     }
   };
 
-  std::list<test_entry>& test_procedures() {
-    static std::list<test_entry> singleton;
-
-    return singleton;
-  }
+  std::list<test_entry>& test_procedures();
 
   struct register_test {
-    register_test(const char* name, test_procedure proc) {
-      test_procedures().push_back({name, proc});
-    }
+    register_test(const char* name, test_procedure proc);
   };
 
-}
+} // namespace namespace simdutf::test
+
 
 #define TEST(name)                                          \
 void test_impl_##name(const simdutf::implementation& impl); \
@@ -37,7 +37,7 @@ void name(const simdutf::implementation& impl) {            \
   test_impl_##name(impl);                                   \
   puts(" OK");                                              \
 }                                                           \
-static register_test test_register_##name(#name, name);     \
+static simdutf::test::register_test test_register_##name(#name, name); \
 void test_impl_##name(const simdutf::implementation& implementation)
 
 #define ASSERT_TRUE(cond) {                                 \

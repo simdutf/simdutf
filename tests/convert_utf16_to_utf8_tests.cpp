@@ -1,15 +1,14 @@
 #include "simdutf.h"
 
 #include <array>
-#include <algorithm>
 #include <iostream>
 
 #include <tests/reference/validate_utf16.h>
 #include <tests/reference/decode_utf16.h>
 #include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_int.h>
+#include <tests/helpers/test.h>
 
-#include "test_macros.h"
 
 namespace {
   std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
@@ -275,20 +274,6 @@ TEST(all_possible_8_codepoint_combinations) {
   }
 }
 
-int main() {
-  for (const auto& implementation: simdutf::available_implementations) {
-    if (implementation == nullptr) {
-      puts("SIMDUTF implementation is null");
-      abort();
-    }
-
-    const simdutf::implementation& impl = *implementation;
-    if (implementation->name() != "westmere")
-      continue;
-
-    printf("Checking implementation %s\n", implementation->name().c_str());
-
-    for (auto test: test_procedures())
-      test(*implementation);
-  }
+int main(int argc, char* argv[]) {
+  return simdutf::test::main(argc, argv);
 }
