@@ -1,3 +1,6 @@
+#include "scalar/utf8.h"
+#include "scalar/utf16.h"
+
 #include "simdutf/ppc64/begin.h"
 
 namespace simdutf {
@@ -41,6 +44,9 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 // transcoding from UTF-8 to UTF-16
 #include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
 #include "generic/utf8_to_utf16/utf8_to_utf16.h"
+// other functions
+#include "generic/utf8.h"
+#include "generic/utf16.h"
 
 //
 // Implementation-specific overrides
@@ -70,6 +76,14 @@ simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t*
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
   return fallback::utf16_to_utf8::scalar_convert(buf, len, utf8_output);
+}
+
+simdutf_warn_unused size_t implementation::count_utf16(const char16_t * input, size_t length) const noexcept {
+  return scalar::utf16::count_code_points(input, length);
+}
+
+simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t length) const noexcept {
+  return utf8::count_code_points(input, length);
 }
 
 } // namespace SIMDUTF_IMPLEMENTATION

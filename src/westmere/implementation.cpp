@@ -1,6 +1,8 @@
 #include "tables/utf8_to_utf16_tables.h"
 #include "scalar/utf8_to_utf16/valid_utf8_to_utf16.h"
 #include "scalar/utf8_to_utf16/utf8_to_utf16.h"
+#include "scalar/utf8.h"
+#include "scalar/utf16.h"
 
 #include "simdutf/westmere/begin.h"
 namespace simdutf {
@@ -146,6 +148,9 @@ size_t convert_masked_utf8_to_utf16(const char *input,
 // transcoding from UTF-8 to UTF-16
 #include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
 #include "generic/utf8_to_utf16/utf8_to_utf16.h"
+// other functions
+#include "generic/utf8.h"
+#include "generic/utf16.h"
 //
 // Implementation-specific overrides
 //
@@ -166,50 +171,15 @@ simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, siz
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
-   return scalar::utf8_to_utf16::convert(buf, len, utf16_output);
+  utf8_to_utf16::validating_transcoder converter;
+  return converter.convert(buf, len, utf16_output);
 }
 
 
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* input, size_t size,
     char16_t* utf16_output) const noexcept {
-  // The implementation is not specific to westmere and should be moved to the generic directory.
-  size_t pos = 0;
-  char16_t* start{utf16_output};
-  while(pos + 64 <= size) {
-    // this loop could be unrolled further. For example, we could process the mask
-    // far more than 64 bytes.
-    //
-    // For pure ASCII inputs, this function is not optimally fast because they are
-    // faster ways to just check for ASCII than to compute the continuation mask.
-    // However, the continuation mask is more informative. There might be a trade-off
-    // involved.
-    //
-    simd8x64<int8_t> in(reinterpret_cast<const int8_t *>(input + pos));
-    uint64_t utf8_continuation_mask = in.lt(-65 + 1);
-    // -65 is 0b10111111 in two-complement's, so largest possible continuation byte
-    if(utf8_continuation_mask != 0) {
-      // Slow path. We hope that the compiler will recognize that this is a slow path.
-      // Anything that is not a continuation mask is a 'leading byte', that is, the
-      // start of a new code point.
-      uint64_t utf8_leading_mask = ~utf8_continuation_mask;
-      // The *start* of code points is not so useful, rather, we want the *end* of code points.
-      uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
-      size_t max_starting_point = (pos + 64) - 12 - 1;
-      while(pos <= max_starting_point) {
-        size_t consumed = convert_masked_utf8_to_utf16(input + pos,
-                            utf8_end_of_code_point_mask, utf16_output);
-        pos += consumed;
-        utf8_end_of_code_point_mask >>= consumed;
-      }
-    } else {
-      in.store_ascii_as_utf16(utf16_output);
-      utf16_output += 64;
-      pos += 64;
-    }
-  }
-  utf16_output += scalar::utf8_to_utf16::convert_valid(input + pos, size - pos, utf16_output);
-  return utf16_output - start;
+  return utf8_to_utf16::convert_valid(input, size,  utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
@@ -218,6 +188,14 @@ simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t*
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
   return fallback::utf16_to_utf8::scalar_convert(buf, len, utf8_output);
+}
+
+simdutf_warn_unused size_t implementation::count_utf16(const char16_t * input, size_t length) const noexcept {
+  return utf16::count_code_points(input, length);
+}
+
+simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t length) const noexcept {
+  return utf8::count_code_points(input, length);
 }
 
 } // namespace SIMDUTF_IMPLEMENTATION
