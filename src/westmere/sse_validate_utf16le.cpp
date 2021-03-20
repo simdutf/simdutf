@@ -53,7 +53,7 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
 
     while (input + 16 < end) {
         // 0. Load data: since the validation takes into account only higher
-        //    byte of each byte, we compress the two vectors into one which
+        //    byte of each word, we compress the two vectors into one which
         //    consists only the higher bytes.
         const __m128i in0 = _mm_loadu_si128((__m128i*)(input + 0*8));
         const __m128i in1 = _mm_loadu_si128((__m128i*)(input + 1*8));
@@ -96,10 +96,10 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
 
             if (c == 0xffff)
                 // The whole input register contains valid UTF16, i.e.,
-                // either single words or proper surrogates.
+                // either single words or proper surrogate pairs.
                 input += 16;
             else if (c == 0x7fff)
-                // The 7 lower words of the input register contains valid UTF16.
+                // The 15 lower words of the input register contains valid UTF16.
                 // The 15th word may be either a low or high surrogate. It the next
                 // iteration we 1) check if the low surrogate is followed by a high
                 // one, 2) reject sole hight surrogate.

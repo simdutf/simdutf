@@ -1,12 +1,19 @@
+# Note: Validation is done for 8-word input, we just need to check 3^8 = 6561 cases
+#       Validation for 16-word inputs reqires 3**16 = 43'046'721 checks
+
+ELEMENTS_COUNT   = 8
+ALL_MASK         = (1 << ELEMENTS_COUNT) - 1
+ALL_BUT_ONE_MASK = (ALL_MASK >> 1)
+
 # 'V' - single-word character (always valid)
 # 'L' - low surrogate (must be followed by the high surrogate)
 # 'H' - high surrogate
 def all_sequences():
-    index = ['V'] * 8
+    index = ['V'] * ELEMENTS_COUNT
 
     def increment():
         nonlocal index
-        for i in range(8):
+        for i in range(ELEMENTS_COUNT):
             if index[i] == 'V':
                 index[i] = 'L'
                 return False
@@ -31,7 +38,7 @@ def find_error_in_words(words):
     prev = None
 
     if words[0] == 'H':
-        # We assume that our vector algoritm load proper data into vectors.
+        # We assume that our vector algoritm loads proper data into vectors.
         # In the case low surrogate was the last item in the previous iteration.
         return 'high surrogate must not start a chunk'
 
@@ -55,11 +62,9 @@ def bitmask(words, state):
     result = 0
     for bit, type in enumerate(words):
         if type == state:
-            # We compare words (_mm_cmpeq_epi16), but gather MSB of separate bytes
-            # (_mm_movemask_epi8). Thus each word yields 2 bits: either 00 or 11.
-
-            result |= 1 << (2*bit + 0)
-            result |= 1 << (2*bit + 1)
+            # In SSE vector algorithm we compare 2 x 16 higher bytes of input
+            # words, which yields a 16-bit mask.
+            result |= 1 << bit
 
     return result
 
@@ -67,10 +72,10 @@ def bitmask(words, state):
 def mask(words):
     L = bitmask(words, 'L')
     H = bitmask(words, 'H')
-    V = (~(L | H)) & 0xffff
+    V = (~(L | H)) & ALL_MASK
 
-    a = L & (H >> 2)
-    b = a << 2
+    a = L & (H >> 1)
+    b = a << 1
     c = V | a | b
 
     return c
@@ -98,14 +103,14 @@ def proof():
 
         c = mask(words)
 
-        if c == 0xffff:
+        if c == ALL_MASK:
             case1_hit = True
-            # all 8 words are valid (either 'V' or pairs 'L', 'H')
-            assert find_error_in_words(words) == ''
+            # all 16 words are valid (either 'V' or pairs 'L', 'H')
+            assert find_error_in_words(words) == '', (words, find_error_in_words(words))
 
-        if c == 0x3fff:
+        if c == ALL_BUT_ONE_MASK:
             case2_hit = True
-            # all 7 words are valid (either 'V' or pairs 'L', 'H')
+            # all 15 words are valid (either 'V' or pairs 'L', 'H')
             # the last words is either 'L' or 'H' (the word will be
             # re-examined in the next iteration of an algorihm)
             if words[-1] == 'H':
