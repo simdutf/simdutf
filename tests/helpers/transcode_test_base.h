@@ -71,6 +71,8 @@ namespace simdutf::tests::helpers {
   public:
     transcode_utf16_to_utf8_test_base(GenerateCodepoint generate, size_t input_size);
 
+    transcode_utf16_to_utf8_test_base(const std::vector<char16_t>& input_utf16);
+
     template <typename COLLECTION>
     transcode_utf16_to_utf8_test_base(COLLECTION&& collection) {
       for (const uint32_t codepoint: collection) {

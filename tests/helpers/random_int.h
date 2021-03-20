@@ -27,8 +27,8 @@ namespace simdutf::tests::helpers {
     std::vector<Distribution> ranges;
 
   public:
-    RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint16_t>> ranges);
-    RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint16_t>> ranges, uint64_t seed);
+    RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint64_t>> ranges);
+    RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint64_t>> ranges, uint64_t seed);
 
     uint64_t operator()();
   };

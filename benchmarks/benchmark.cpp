@@ -21,6 +21,7 @@ int main(int argc, char* argv[]) {
     }
 
     using simdutf::benchmarks::Benchmark;
+
     Benchmark benchmark{Benchmark::create(cmdline)};
     if (cmdline.show_procedures) {
         const auto& known_procedures = benchmark.all_procedures();
