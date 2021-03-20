@@ -133,17 +133,17 @@ TEST(validate_utf16__returns_false_when_input_is_truncated) {
 
 #include "validate_utf16_testcases.inl"
 
-TEST(validate_utf16__all_cases_for_8_words) {
+TEST(validate_utf16__extensive_tests) {
   constexpr size_t len = 32;
   char16_t buf[len];
   for (int i=0; i < validate_utf16_testcase_size; i++) {
 
     // prepare input
     const auto& testcase = validate_utf16_testcase[i];
-    for (int j=0; j < 8; j++)
+    for (int j=0; j < 16; j++)
       buf[j] = testcase.values[j];
 
-    for (int j=8; j < len; j++)
+    for (int j=16; j < len; j++)
       buf[j] = V;
 
     // check
@@ -157,9 +157,6 @@ int main() {
       puts("SIMDUTF implementation is null");
       abort();
     }
-
-    if (implementation->name() != "westmere") // XXX: remove
-        continue;
 
     const simdutf::implementation& impl = *implementation;
     printf("Checking implementation %s\n", implementation->name().c_str());
