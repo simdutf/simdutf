@@ -12,7 +12,7 @@ def main():
         text = path.read_text(encoding='utf8')
 
         dstpath = path.parent / (path.name + '.utf16')
-        print(f"Writing {dstpath}")
+        print("Writing" % dstpath)
         dstpath.write_text(text, encoding='utf16')
 
 
