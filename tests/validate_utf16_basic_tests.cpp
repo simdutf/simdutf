@@ -17,8 +17,9 @@ namespace {
 
 TEST(validate_utf16__returns_true_for_valid_input__single_words) {
   std::random_device rd{};
-  simdutf::tests::helpers::random_utf16 generator{rd, 1, 0};
-  const auto utf16{generator.generate(512)};
+    simdutf::tests::helpers::random_utf16 generator{rd, 1, 0};
+  const long seed = 0; // make test repeatable
+  const auto utf16{generator.generate(512, seed)};
 
   ASSERT_TRUE(implementation.validate_utf16(
               reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
@@ -126,6 +127,27 @@ TEST(validate_utf16__returns_false_when_input_is_truncated) {
     utf16[size - 1] = valid_surrogate_W1;
 
     ASSERT_FALSE(implementation.validate_utf16(buf, len));
+  }
+}
+
+
+#include "validate_utf16_testcases.inl"
+
+TEST(validate_utf16__extensive_tests) {
+  constexpr size_t len = 32;
+  char16_t buf[len];
+  for (int i=0; i < validate_utf16_testcase_size; i++) {
+
+    // prepare input
+    const auto& testcase = validate_utf16_testcase[i];
+    for (int j=0; j < 16; j++)
+      buf[j] = testcase.values[j];
+
+    for (int j=16; j < len; j++)
+      buf[j] = V;
+
+    // check
+    ASSERT_TRUE(implementation.validate_utf16(buf, len) == testcase.valid);
   }
 }
 

@@ -134,10 +134,11 @@ Benchmark utility for simdutf
 Usage:
 
     -h, --help                      show help
-    -F [PATH], --input-file [PATH]  set dataset path
+    -F [PATH], --input-file [PATH]  set dataset path (may be used many times)
     -P [NAME], --procedure [NAME]   choose procedure(s) to test
     -I --iterations                 number of iterations (default: 100)
     --random-utf8 [size]            use random UTF8 data of given size
+    --show-procedures               prints all known procedures for -P/--procedure
 
 Examples:
 
