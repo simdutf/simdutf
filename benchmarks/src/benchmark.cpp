@@ -10,11 +10,11 @@ namespace simdutf::benchmarks {
 Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
     : BenchmarkBase(std::move(testcases)) {
 
-    std::array<std::string, 8> implemented_functions{
+    std::vector<std::string> implemented_functions{
         "validate_utf8",
         "validate_utf16",
         "count_utf8", 
-        "count_utf16"
+        "count_utf16",
         "convert_utf8_to_utf16",
         "convert_valid_utf8_to_utf16",
         "convert_utf16_to_utf8",
