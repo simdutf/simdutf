@@ -8,10 +8,8 @@
 
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/transcode_test_base.h>
-
 #include <tests/helpers/random_utf8.h>
-
-#include "test_macros.h"
+#include <tests/helpers/test.h>
 
 namespace {
 std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
@@ -91,17 +89,6 @@ TEST(count_1_2_3_or_4_UTF8_bytes) {
   }
 }
 
-int main() {
-  for (const auto &implementation : simdutf::available_implementations) {
-    if (implementation == nullptr) {
-      puts("SIMDUTF implementation is null");
-      abort();
-    }
-
-    const simdutf::implementation &impl = *implementation;
-    printf("Checking implementation %s\n", implementation->name().c_str());
-
-    for (auto test : test_procedures())
-      test(*implementation);
-  }
+int main(int argc, char* argv[]) {
+  return simdutf::test::main(argc, argv);
 }

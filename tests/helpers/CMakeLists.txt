@@ -1,4 +1,6 @@
 add_library(simdutf_tests_helpers STATIC
+  test.h
+  test.cpp
   random_int.h
   random_int.cpp
   transcode_test_base.h

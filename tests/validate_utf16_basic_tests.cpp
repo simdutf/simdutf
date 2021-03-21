@@ -4,7 +4,7 @@
 #include <algorithm>
 
 #include "helpers/random_utf16.h"
-#include "test_macros.h"
+#include <tests/helpers/test.h>
 
 
 namespace {
@@ -130,7 +130,6 @@ TEST(validate_utf16__returns_false_when_input_is_truncated) {
   }
 }
 
-
 #include "validate_utf16_testcases.inl"
 
 TEST(validate_utf16__extensive_tests) {
@@ -151,17 +150,6 @@ TEST(validate_utf16__extensive_tests) {
   }
 }
 
-int main() {
-  for (const auto& implementation: simdutf::available_implementations) {
-    if (implementation == nullptr) {
-      puts("SIMDUTF implementation is null");
-      abort();
-    }
-
-    const simdutf::implementation& impl = *implementation;
-    printf("Checking implementation %s\n", implementation->name().c_str());
-
-    for (auto test: test_procedures())
-      test(*implementation);
-  }
+int main(int argc, char* argv[]) {
+  return simdutf::test::main(argc, argv);
 }
