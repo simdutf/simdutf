@@ -11,7 +11,7 @@ set(PROJECT_VERSION_PATCH 0)
 include(GNUInstallDirs)
 include(cmake/simdutf-flags.cmake)
 
-
+set(SIMDUTF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 enable_testing()
 add_subdirectory(include)

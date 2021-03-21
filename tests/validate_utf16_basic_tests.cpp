@@ -5,6 +5,7 @@
 
 #include "helpers/random_utf16.h"
 #include <tests/helpers/test.h>
+#include <fstream>
 
 
 namespace {
@@ -130,23 +131,66 @@ TEST(validate_utf16__returns_false_when_input_is_truncated) {
   }
 }
 
-#include "validate_utf16_testcases.inl"
-
 TEST(validate_utf16__extensive_tests) {
+  const std::string path{"validate_utf16_testcases.txt"};
+  std::ifstream file{path};
+  if (not file) {
+    printf("File '%s' cannot be open, skipping test\n", path.c_str());
+    return;
+  }
+
+  constexpr uint16_t V = 0xfaea;
+  constexpr uint16_t L = 0xd852;
+  constexpr uint16_t H = 0xde12;
+
   constexpr size_t len = 32;
   char16_t buf[len];
-  for (int i=0; i < validate_utf16_testcase_size; i++) {
+
+  long lineno = 0;
+  while (file) {
+    std::string line;
+    std::getline(file, line);
+    lineno += 1;
+    if (line.empty() or line[0] == '#')
+      continue;
+
+    // format: [TF][VLH]{16}
+    bool valid = false;
+    switch (line[0]) {
+      case 'T':
+        valid = true;
+        break;
+      case 'F':
+        valid = false;
+        break;
+      default:
+        throw std::invalid_argument("Error at line #" + std::to_string(lineno) +
+                                    ": the first character must be either 'T' or 'F'");
+    }
 
     // prepare input
-    const auto& testcase = validate_utf16_testcase[i];
-    for (int j=0; j < 16; j++)
-      buf[j] = testcase.values[j];
+    for (int i=0; i < len; i++)
+      buf[i] = V;
 
-    for (int j=16; j < len; j++)
-      buf[j] = V;
+    for (int i=1; i < line.size(); i++) {
+      switch (line[i]) {
+        case 'L':
+          buf[i - 1] = L;
+          break;
+        case 'H':
+          buf[i - 1] = H;
+          break;
+        case 'V':
+          buf[i - 1] = V;
+          break;
+        default:
+          throw std::invalid_argument("Error at line #" + std::to_string(lineno) +
+                                      ": allowed characters are 'L', 'H' and 'V'");
+      }
+    }
 
     // check
-    ASSERT_TRUE(implementation.validate_utf16(buf, len) == testcase.valid);
+    ASSERT_TRUE(implementation.validate_utf16(buf, len) == valid);
   }
 }
 
