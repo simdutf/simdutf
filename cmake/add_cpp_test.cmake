@@ -10,7 +10,10 @@ function(add_cpp_test TEST_NAME)
   if (ARGS_COMPILE_ONLY)
     list(APPEND ${ARGS_LABELS} compile_only)
   endif()
-
+  if(SIMDUTF_SANITIZE)
+    add_compile_options(-fsanitize=address  -fno-omit-frame-pointer -fno-sanitize-recover=all)
+    add_compile_definitions(ASAN_OPTIONS=detect_leaks=1)
+  endif()
   # Add the compile target
   if (ARGS_LIBRARY)
     add_library(${TEST_NAME} STATIC ${ARGS_SOURCES})

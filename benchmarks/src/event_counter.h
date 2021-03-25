@@ -18,6 +18,10 @@
 #include <libgen.h>
 #endif
 
+#if __APPLE__ &&  __aarch64__
+#include "apple_arm_events.h"
+#endif
+
 struct event_count {
   std::chrono::duration<double> elapsed;
   std::vector<unsigned long long> event_counts;
@@ -107,6 +111,14 @@ struct event_collector {
   bool has_events() {
     return linux_events.is_working();
   }
+#elif __APPLE__ &&  __aarch64__
+  performance_counters diff;
+  event_collector() : diff(0) {
+    setup_performance_counters();
+  }
+  bool has_events() {
+    return setup_performance_counters();
+  }
 #else
   event_collector() {}
   bool has_events() {
@@ -117,6 +129,8 @@ struct event_collector {
   inline void start() {
 #if defined(__linux)
     linux_events.start();
+#elif __APPLE__ &&  __aarch64__
+    if(has_events()) { diff = get_counters(); }
 #endif
     start_clock = std::chrono::steady_clock::now();
   }
@@ -124,6 +138,16 @@ struct event_collector {
     const auto end_clock = std::chrono::steady_clock::now();
 #if defined(__linux)
     linux_events.end(count.event_counts);
+#elif __APPLE__ &&  __aarch64__
+    if(has_events()) {
+      performance_counters end = get_counters();
+      diff = end - diff;
+    }
+    count.event_counts[0] = diff.cycles;
+    count.event_counts[1] = diff.instructions;
+    count.event_counts[2] = diff.missed_branches;
+    count.event_counts[3] = 0;
+    count.event_counts[4] = diff.cachemiss;
 #endif
     count.elapsed = end_clock - start_clock;
     return count;
