@@ -219,7 +219,9 @@ inline performance_counters get_counters() {
     }
     return 1;
   }
-  return performance_counters{g_counters[0 + 2], g_counters[3 + 2],
+  // g_counters[3 + 2] might be the number of decoded instructions
+  // whereas g_counters[0] is the number of retired instructions.
+  return performance_counters{g_counters[0 + 2], g_counters[0],
                               g_counters[4 + 2], g_counters[5 + 2]};
 }
 
