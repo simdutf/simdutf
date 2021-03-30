@@ -250,9 +250,9 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
 
           We precomputer byte 1 for case #3 and -- **conditionally** -- precompute
           either byte 1 for case #2 or byte 2 for case #3. Note that they
-          are differ in exactly one bit. This 
+          differ by exactly one bit.
 
-          Finlly from these two words we build proper UTF-8 sequence, taking
+          Finally from these two words we build proper UTF-8 sequence, taking
           into account the case (i.e, the number of bytes to write).
         */
 #define vec(x) _mm_set1_epi16(x)
