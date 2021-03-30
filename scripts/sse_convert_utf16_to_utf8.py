@@ -138,13 +138,13 @@ def shuffle_for_conversion_1_2_3_utf8_bytes_aux():
 
       if subword == 0:
         shuffle.append(i*4 + 2)
+        shuffle.append(i*4 + 3)
         shuffle.append(i*4 + 1)
-        shuffle.append(i*4 + 0)
       elif subword == 3:
         shuffle.append(i*4 + 0)
       elif subword == 2:
+        shuffle.append(i*4 + 3)
         shuffle.append(i*4 + 1)
-        shuffle.append(i*4 + 0)
 
     output_bytes = len(shuffle)
     while (len(shuffle) < 16):
