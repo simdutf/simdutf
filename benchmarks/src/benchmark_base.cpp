@@ -20,13 +20,14 @@ namespace simdutf::benchmarks {
     void BenchmarkBase::run(const input::Testcase& testcase) {
         prepare_input(testcase);
         auto detected_encoding = simdutf::autodetect_encoding(input_data.data(), input_data.size());
-        std::cout << "input detected as " << simdutf::to_string(detected_encoding) << "\n";
-
+        printf("input detected as %s\n", simdutf::to_string(detected_encoding).c_str());
+        printf("current system detected as %s\n", active_implementation->name().c_str());
+        printf("===========================\n");
 
         const auto& known_procedures = all_procedures();
 
         if (testcase.tested_procedures.empty()) {
-            for (const std::string procedure: known_procedures) {
+            for (const std::string& procedure: known_procedures) {
                 // We will first identify the input.
                 auto expected_input_encoding = expected_encodings(procedure);
                 const bool is_in = expected_input_encoding.find(detected_encoding) != expected_input_encoding.end();
