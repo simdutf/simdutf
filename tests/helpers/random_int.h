@@ -7,7 +7,7 @@
 #include <cstdint>
 
 namespace simdutf::tests::helpers {
-  
+
   class RandomInt {
     std::mt19937 gen;
     std::uniform_int_distribution<uint64_t> distr;

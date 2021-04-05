@@ -271,7 +271,7 @@ public:
 
   /**
    * Count the number of code points (characters) in the string assuming that
-   * it is valid.   
+   * it is valid.
    *
    * This function assumes that the input string is valid UTF-16.
    *
@@ -282,7 +282,7 @@ public:
    * @return number of code points
    */
   simdutf_warn_unused virtual size_t count_utf16(const char16_t * input, size_t length) const noexcept = 0;
- 
+
   /**
    * Count the number of code points (characters) in the string assuming that
    * it is valid.

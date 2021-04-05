@@ -76,7 +76,7 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf
   return converter.convert(buf, len, utf16_output);
 }
 
-simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* input, size_t size, 
+simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* input, size_t size,
     char16_t* utf16_output) const noexcept {
    return utf8_to_utf16::convert_valid(input, size,  utf16_output);
 }

@@ -87,4 +87,4 @@ inline size_t count_code_points(const char* buf, size_t len) {
 } // namespace scalar
 } // namespace simdutf
 
-#endif 
+#endif

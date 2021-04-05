@@ -56,7 +56,7 @@ namespace simdutf::tests::helpers {
       encode_utf16(codepoint, reference_output_utf16);
   }
 
- 
+
   bool transcode_utf8_to_utf16_test_base::validate(size_t saved_chars) const {
     if (saved_chars != reference_output_utf16.size()) {
       printf("wrong saved bytes value: procedure returned %lu bytes, it should be %lu\n",
@@ -92,7 +92,7 @@ namespace simdutf::tests::helpers {
 
     output_utf8.resize(reference_output_utf8.size() + output_size_margin);
   }
-    
+
   transcode_utf16_to_utf8_test_base::transcode_utf16_to_utf8_test_base(const std::vector<char16_t>& input_utf16)
     : input_utf16{input_utf16} {
 
@@ -117,7 +117,7 @@ namespace simdutf::tests::helpers {
   bool transcode_utf16_to_utf8_test_base::is_input_valid() const {
     return simdutf::tests::reference::validate_utf16(input_utf16.data(), input_utf16.size());
   }
- 
+
   bool transcode_utf16_to_utf8_test_base::validate(size_t saved_chars) const {
     if (saved_chars == 0) {
       if (is_input_valid()) {

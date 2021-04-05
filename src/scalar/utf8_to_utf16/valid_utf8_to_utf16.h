@@ -17,7 +17,7 @@ inline size_t convert_valid(const char* buf, size_t len, char16_t* utf16_output)
       ::memcpy(&v, data + pos, sizeof(uint64_t));
       if ((v & 0x8080808080808080) == 0) {
         size_t final_pos = pos + 8;
-        while(pos < final_pos) { 
+        while(pos < final_pos) {
           *utf16_output++ = char16_t(buf[pos]);
           pos++;
         }

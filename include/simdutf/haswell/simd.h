@@ -127,8 +127,8 @@ namespace simd {
       ));
     }
   };
-  
-  
+
+
   // Signed bytes
   template<>
   struct simd8<int8_t> : base8_numeric<int8_t> {
@@ -294,7 +294,7 @@ namespace simd {
     simdutf_really_inline bool any_bits_set_anywhere(simd8<uint16_t> bits) const { return !bits_not_set_anywhere(bits); }
   };
 
- 
+
 
   template<typename T>
   struct simd8x64 {

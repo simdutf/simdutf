@@ -14,7 +14,7 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
     std::vector<std::pair<std::string,std::set<simdutf::encoding_type>>> implemented_functions{
         {"validate_utf8", {simdutf::encoding_type::UTF8}},
         {"validate_utf16", {simdutf::encoding_type::UTF16_LE}},
-        {"count_utf8", {simdutf::encoding_type::UTF8}}, 
+        {"count_utf8", {simdutf::encoding_type::UTF8}},
         {"count_utf16", {simdutf::encoding_type::UTF16_LE}},
         {"convert_utf8_to_utf16", {simdutf::encoding_type::UTF8}},
         {"convert_valid_utf8_to_utf16", {simdutf::encoding_type::UTF8}},
