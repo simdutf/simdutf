@@ -1,5 +1,6 @@
 #include "simdutf.h"
 #include "implementation.cpp"
+#include "encoding_types.cpp"
 
 SIMDUTF_PUSH_DISABLE_WARNINGS
 SIMDUTF_DISABLE_UNDESIRED_WARNINGS
