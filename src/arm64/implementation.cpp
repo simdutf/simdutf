@@ -11,7 +11,6 @@ namespace {
 
 using namespace simd;
 
-
 simdutf_really_inline bool is_ascii(const simd8x64<uint8_t>& input) {
     simd8<uint8_t> bits = input.reduce_or();
     return bits.max_val() < 0b10000000u;

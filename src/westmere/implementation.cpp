@@ -91,7 +91,6 @@ simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t*
     return 0;
 
   size_t saved_bytes = ret.second - utf8_output;
-  size_t scalar_saved_bytes = 0;
 
   if (ret.first != buf + len) {
     const size_t scalar_saved_bytes = fallback::utf16_to_utf8::scalar_convert(

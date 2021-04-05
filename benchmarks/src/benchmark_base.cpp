@@ -1,6 +1,6 @@
 #include "benchmark_base.h"
 #include "tests/helpers/random_utf8.h"
-
+#include "simdutf.h"
 #include <fstream>
 
 namespace simdutf::benchmarks {
@@ -19,12 +19,19 @@ namespace simdutf::benchmarks {
 
     void BenchmarkBase::run(const input::Testcase& testcase) {
         prepare_input(testcase);
+        auto detected_encoding = simdutf::autodetect_encoding(input_data.data(), input_data.size());
+        std::cout << "input detected as " << simdutf::to_string(detected_encoding) << "\n";
+
 
         const auto& known_procedures = all_procedures();
 
         if (testcase.tested_procedures.empty()) {
-            for (const auto& procedure: known_procedures)
-                run(procedure, testcase);
+            for (const std::string procedure: known_procedures) {
+                // We will first identify the input.
+                auto expected_input_encoding = expected_encodings(procedure);
+                const bool is_in = expected_input_encoding.find(detected_encoding) != expected_input_encoding.end();
+                if(is_in) { run(procedure, testcase); }
+            }
         } else {
             std::set<std::string> to_be_tested;
             for (const auto& procedure: testcase.tested_procedures) {

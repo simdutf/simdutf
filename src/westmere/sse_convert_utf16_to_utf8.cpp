@@ -130,7 +130,7 @@ int convert_UCS4_to_UTF8(__m128i in, __m128i& out) {
   const int m0 = _mm_movemask_epi8(count);
 
   // Compress a sparse 16-bit word bitmask into 8-bit one: hgdcfeba
-  const uint8_t mask = (m0 >> 6) | m0;
+  const uint8_t mask = static_cast<uint8_t>((m0 >> 6) | m0);
 
   const auto& to_utf8 = tables::utf16_to_utf8::ucs4_to_utf8[mask];
   // merged = [000000ww|00zzzzzz|00yyyyyy|00xxxxxx]
@@ -149,7 +149,6 @@ int convert_UCS4_to_UTF8(__m128i in, __m128i& out) {
 */
 std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) {
 
-  char* start = utf8_output;
   const char16_t* end = buf + len;
 
   const __m128i v_0000 = _mm_setzero_si128();
@@ -164,8 +163,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
     // 1. Check if there are any surrogate word in the input chunk.
     //    We have also deal with situation when there is a suggogate word
     //    at the and of chunk.
-    const __m128i s0 = _mm_and_si128(in, v_f800);
-    const __m128i surrogates_bytemask = _mm_cmpeq_epi16(s0, v_d800);
+    const __m128i surrogates_bytemask = _mm_cmpeq_epi16(_mm_and_si128(in, v_f800), v_d800);
 
     // bitmask = 0x0000 if there are no surrogates
     //         = 0xc000 if the last word is a surrogate
@@ -213,7 +211,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
           //    one_byte_bitmask = hhggffeeddccbbaa -- the bits are doubled (h - MSB, a - LSB)
           const uint16_t m0 = one_byte_bitmask & 0x5555;  // m0 = 0h0g0f0e0d0c0b0a
           const uint16_t m1 = m0 >> 7;                    // m1 = 00000000h0g0f0e0
-          const uint8_t  m2 = (m0 | m1) & 0xff;           // m2 =         hdgcfbea
+          const uint8_t  m2 = static_cast<uint8_t>((m0 | m1) & 0xff);           // m2 =         hdgcfbea
 
           // 4. pack the bytes
           const uint8_t* row = &tables::utf16_to_utf8::pack_1_2_utf8_bytes[m2][0];
@@ -255,7 +253,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
           Finally from these two words we build proper UTF-8 sequence, taking
           into account the case (i.e, the number of bytes to write).
         */
-#define vec(x) _mm_set1_epi16(x)
+#define vec(x) _mm_set1_epi16(static_cast<uint16_t>(x))
         const __m128i t0 = _mm_shuffle_epi8(in, dup_even);
         const __m128i t1 = _mm_and_si128(t0, vec(0b0011'1111'0111'1111));
         const __m128i t2 = _mm_or_si128 (t1, vec(0b1000'0000'0000'0000));
@@ -283,7 +281,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
         const __m128i shuffle0 = _mm_loadu_si128((__m128i*)(row0 + 1));
         const __m128i utf8_0 = _mm_shuffle_epi8(out0, shuffle0);
 
-        const uint8_t mask1 = (mask >> 8);
+        const uint8_t mask1 = static_cast<uint8_t>(mask >> 8);
         const uint8_t* row1 = &tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask1][0];
         const __m128i shuffle1 = _mm_loadu_si128((__m128i*)(row1 + 1));
         const __m128i utf8_1 = _mm_shuffle_epi8(out1, shuffle1);
@@ -311,10 +309,10 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
 
       // 1b. obtain mask for high surrogates (0xDC00..0xDFFF)
       const __m128i vH = _mm_cmpeq_epi16(_mm_and_si128(in, v_fc00), v_dc00);
-      const uint16_t H = _mm_movemask_epi8(vH);
+      const uint16_t H = static_cast<uint16_t>(_mm_movemask_epi8(vH));
 
       // 1c. obtain mask for log surrogates (0xD800..0xDBFF)
-      const uint16_t L = ~H & surrogates_bitmask;
+      const uint16_t L = static_cast<uint16_t>(~H & surrogates_bitmask);
 
       const uint16_t a = L & (H >> 2);
       const uint16_t b = a << 2;
@@ -337,7 +335,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
       //    expansion_id       = 0h0g0f0e0d0c0b0a
       //                       |        0h0g0f0e0
       //                       =        ehdgcfbea
-      const uint8_t expansion_id = (surrogates_bitmask & 0x5555) | ((surrogates_bitmask >> 7) & 0xaaaa);
+      const uint8_t expansion_id = static_cast<uint8_t>((surrogates_bitmask & 0x5555) | ((surrogates_bitmask >> 7) & 0xaaaa));
 
       const __m128i shuffle_lo = _mm_loadu_si128((__m128i*)&tables::utf16_to_utf8::expand_surrogates[expansion_id][0]);
       const __m128i shuffle_hi = _mm_loadu_si128((__m128i*)&tables::utf16_to_utf8::expand_surrogates[expansion_id][16]);

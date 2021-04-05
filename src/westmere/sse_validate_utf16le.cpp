@@ -65,7 +65,7 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
 
         // 1. Check whether we have any 0xD800..DFFF word (0b1101'1xxx'yyyy'yyyy).
         const __m128i surrogates_wordmask = _mm_cmpeq_epi8(_mm_and_si128(in, v_f8), v_d8);
-        const uint16_t surrogates_bitmask = _mm_movemask_epi8(surrogates_wordmask);
+        const uint16_t surrogates_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(surrogates_wordmask));
         if (surrogates_bitmask == 0x0000) {
             input += 16;
         } else {
@@ -81,11 +81,11 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
 
             // H - word-mask for high surrogates: the six highest bits are 0b1101'11
             const __m128i vH = _mm_cmpeq_epi8(_mm_and_si128(in, v_fc), v_dc);
-            const uint16_t H = _mm_movemask_epi8(vH);
+            const uint16_t H = static_cast<uint16_t>(_mm_movemask_epi8(vH));
 
             // L - word mask for low surrogates
             //     L = not H and surrogates_wordmask
-            const uint16_t L = ~H & surrogates_bitmask;
+            const uint16_t L = static_cast<uint16_t>(~H & surrogates_bitmask);
 
             const uint16_t a = L & (H >> 1);  // A low surrogate must be followed by high one.
                                               // (A low surrogate placed in the 7th register's word

@@ -2,11 +2,21 @@
 #include <initializer_list>
 
 namespace simdutf {
-
 bool implementation::supported_by_runtime_system() const {
   uint32_t required_instruction_sets = this->required_instruction_sets();
   uint32_t supported_instruction_sets = internal::detect_supported_architectures();
   return ((supported_instruction_sets & required_instruction_sets) == required_instruction_sets);
+}
+
+simdutf_warn_unused encoding_type implementation::autodetect_encoding(const char * input, size_t length) const noexcept {
+    auto bom_encoding = simdutf::BOM::check_bom(input, length);
+    if(bom_encoding != encoding_type::unspecified) { return bom_encoding; }
+    if(validate_utf8(input, length)) { return encoding_type::UTF8; }
+    // Rest could be improved.
+    if((length % 2) == 0) {
+      if(validate_utf16(reinterpret_cast<const char16_t*>(input), length)) { return encoding_type::UTF32_LE; }
+    }
+    return encoding_type::unspecified;
 }
 
 namespace internal {
@@ -188,6 +198,9 @@ SIMDUTF_DLLIMPORTEXPORT internal::atomic_ptr<const implementation> active_implem
 
 simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept {
   return active_implementation->validate_utf8(buf, len);
+}
+simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const char * buf, size_t length) noexcept {
+  return active_implementation->autodetect_encoding(buf, length);
 }
 
 const implementation * builtin_implementation() {

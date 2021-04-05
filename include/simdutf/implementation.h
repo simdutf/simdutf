@@ -10,6 +10,22 @@
 namespace simdutf {
 
 /**
+ * Autodetect the encoding of the input.
+ *
+ * @param input the string to analyze.
+ * @param length the length of the string in bytes.
+ * @return the detected encoding type
+ */
+simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const char * input, size_t length) noexcept;
+simdutf_really_inline simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const uint8_t * input, size_t length) noexcept {
+  return autodetect_encoding(reinterpret_cast<const char *>(input), length);
+}
+simdutf_really_inline simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const std::string_view sv) noexcept {
+  return autodetect_encoding(sv.data(), sv.size());
+}
+
+
+/**
  * Validate the UTF-8 string.
  *
  * @param input the string to validate.
@@ -156,6 +172,14 @@ public:
    * @return true if the implementation can be safely used on the current system (determined at runtime)
    */
   bool supported_by_runtime_system() const;
+
+  /**
+   * This function will try to detect the encoding
+   * @param input the string to identify
+   * @param length the length of the string in bytes.
+   * @return the encoding type detected
+   */
+  virtual encoding_type autodetect_encoding(const char * input, size_t length) const noexcept;
 
   /**
    * @private For internal implementation use
