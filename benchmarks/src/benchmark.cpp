@@ -226,11 +226,15 @@ void Benchmark::run_count_utf8(const simdutf::implementation& implementation, si
 }
 
 void Benchmark::run_count_utf16(const simdutf::implementation& implementation, size_t iterations) {
-    const char*  utf8data = reinterpret_cast<const char*>(input_data.data());
-    const size_t utf8size = input_data.size();
-    std::unique_ptr<char16_t[]> tmp_buffer_utf16{new char16_t[utf8size]};
-    const size_t size = implementation.convert_utf8_to_utf16(utf8data, utf8size, tmp_buffer_utf16.get());
-    const char16_t*  data = tmp_buffer_utf16.get();
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char16_t*  data = reinterpret_cast<const char16_t*>(input_data.data());
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+        printf("# The input size is not divisible by two (it is %lu + %lu for BOM)",
+               input_data.size(), BOM::bom_byte_size(bom));
+        printf(" Running function on truncated input.\n");
+    }
+    size /= 2;
     volatile size_t sink{0};
     auto proc = [&implementation, data, size, &sink]() {
         sink = implementation.count_utf16(data, size);
