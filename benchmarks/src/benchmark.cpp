@@ -195,7 +195,7 @@ void Benchmark::run_convert_valid_utf16_to_utf8(const simdutf::implementation& i
 
     size /= 2;
 
-    // Note: non-surroage words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
     //       thus we're making safe assumption that each 16-bit word will be expanded
     //       to four bytes.
     std::unique_ptr<char[]> output_buffer{new char[size * 4]};
