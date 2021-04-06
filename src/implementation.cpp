@@ -9,10 +9,19 @@ bool implementation::supported_by_runtime_system() const {
 }
 
 simdutf_warn_unused encoding_type implementation::autodetect_encoding(const char * input, size_t length) const noexcept {
+    // If there is a BOM, then we trust it.
     auto bom_encoding = simdutf::BOM::check_bom(input, length);
     if(bom_encoding != encoding_type::unspecified) { return bom_encoding; }
+    // UTF8 is common, it includes ASCII, and is commonly represented
+    // without a BOM, so if it fits, go with that. Note that it is still
+    // possible to get it wrong, we are only 'guessing'. If some has UTF-16
+    // data without a BOM, it could pass as UTF-8.
+    //
+    // An interesting twist might be to check for UTF-16 ASCII first (every
+    // other byte is zero).
     if(validate_utf8(input, length)) { return encoding_type::UTF8; }
-    // Rest could be improved.
+    // The next most common encoding that might appear without BOM is probably
+    // UTF-16LE, so try that next.
     if((length % 2) == 0) {
       if(validate_utf16(reinterpret_cast<const char16_t*>(input), length)) { return encoding_type::UTF16_LE; }
     }

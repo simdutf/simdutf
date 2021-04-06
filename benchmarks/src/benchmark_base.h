@@ -43,7 +43,7 @@ namespace simdutf::benchmarks {
         BenchmarkBase(std::vector<input::Testcase>&& testcases);
         bool run();
         virtual const std::set<std::string>& all_procedures() const = 0;
-        virtual std::set<simdutf::encoding_type> expected_encodings(std::string procedure) = 0;
+        virtual std::set<simdutf::encoding_type> expected_encodings(const std::string& procedure) = 0;
 
     protected:
         virtual void run(const std::string& procedure_name, size_t iterations) = 0;

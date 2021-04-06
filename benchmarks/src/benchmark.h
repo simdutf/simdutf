@@ -13,7 +13,7 @@ namespace simdutf::benchmarks {
 
         static Benchmark create(const CommandLine& cmdline);
         virtual const std::set<std::string>& all_procedures() const override;
-        virtual std::set<simdutf::encoding_type> expected_encodings(std::string procedure) override;
+        virtual std::set<simdutf::encoding_type> expected_encodings(const std::string& procedure) override;
 
     protected:
         virtual void run(const std::string& procedure_name, size_t iterations) override;

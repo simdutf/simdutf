@@ -249,7 +249,7 @@ const std::set<std::string>& Benchmark::all_procedures() const {
     return known_procedures;
 }
 
-std::set<simdutf::encoding_type> Benchmark::expected_encodings(std::string procedure) {
+std::set<simdutf::encoding_type> Benchmark::expected_encodings(const std::string& procedure) {
     return expected_input_encoding[procedure];
 }
 
