@@ -94,18 +94,19 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
                                               // thanks to that we have only two masks for valid case.
             const uint16_t c = V | a | b;     // Combine all the masks into the final one.
 
-            if (c == 0xffff)
+            if (c == 0xffff) {
                 // The whole input register contains valid UTF16, i.e.,
                 // either single words or proper surrogate pairs.
                 input += 16;
-            else if (c == 0x7fff)
+            } else if (c == 0x7fff) {
                 // The 15 lower words of the input register contains valid UTF16.
                 // The 15th word may be either a low or high surrogate. It the next
                 // iteration we 1) check if the low surrogate is followed by a high
-                // one, 2) reject sole hight surrogate.
+                // one, 2) reject sole high surrogate.
                 input += 15;
-            else
+            } else {
                 return nullptr;
+            }
         }
     }
 

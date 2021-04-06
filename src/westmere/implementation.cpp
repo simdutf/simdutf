@@ -69,10 +69,11 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
 
 simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, size_t len) const noexcept {
   const char16_t* tail = sse_validate_utf16le(buf, len);
-  if (tail)
+  if (tail) {
     return westmere::utf16_validation::scalar_validate_utf16(tail, len - (tail - buf));
-  else
+  } else {
     return false;
+  }
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
@@ -87,20 +88,14 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
 
 simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
   std::pair<const char16_t*, char*> ret = sse_convert_utf16_to_utf8(buf, len, utf8_output);
-  if (ret.first == nullptr)
-    return 0;
-
+  if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf8_output;
-
   if (ret.first != buf + len) {
     const size_t scalar_saved_bytes = fallback::utf16_to_utf8::scalar_convert(
                                         ret.first, len - (ret.first - buf), ret.second);
-    if (scalar_saved_bytes == 0)
-      return 0;
-
+    if (scalar_saved_bytes == 0) { return 0; }
     saved_bytes += scalar_saved_bytes;
   }
-
   return saved_bytes;
 }
 

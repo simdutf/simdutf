@@ -14,7 +14,7 @@ simdutf_warn_unused encoding_type implementation::autodetect_encoding(const char
     if(validate_utf8(input, length)) { return encoding_type::UTF8; }
     // Rest could be improved.
     if((length % 2) == 0) {
-      if(validate_utf16(reinterpret_cast<const char16_t*>(input), length)) { return encoding_type::UTF32_LE; }
+      if(validate_utf16(reinterpret_cast<const char16_t*>(input), length)) { return encoding_type::UTF16_LE; }
     }
     return encoding_type::unspecified;
 }

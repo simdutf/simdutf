@@ -16,10 +16,11 @@ namespace BOM {
 // Note that BOM for UTF8 is discouraged.
 encoding_type check_bom(const uint8_t* byte, size_t length) {
         if (length >= 2 && byte[0] == 0xff and byte[1] == 0xfe) {
-            if (length >= 4 && byte[2] == 0x00 and byte[3] == 0x0)
+            if (length >= 4 && byte[2] == 0x00 and byte[3] == 0x0) {
                 return encoding_type::UTF32_LE;
-            else
+            } else {
                 return encoding_type::UTF16_LE;
+            }
         } else if (length >= 2 && byte[0] == 0xfe and byte[1] == 0xff) {
             return encoding_type::UTF16_BE;
         } else if (length >= 4 && byte[0] == 0x00 and byte[1] == 0x00 and byte[2] == 0xfe and byte[3] == 0xff) {
