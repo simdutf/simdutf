@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 namespace simdutf::tests::helpers {
-  
+
     RandomInt::RandomInt(uint64_t lo, uint64_t hi) : RandomInt(lo, hi, std::random_device{}()) {}
 
     RandomInt::RandomInt(uint64_t lo, uint64_t hi, uint64_t seed)

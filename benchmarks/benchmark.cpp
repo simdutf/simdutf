@@ -29,7 +29,6 @@ int main(int argc, char* argv[]) {
         for (const auto& name: known_procedures) {
             printf("- %s\n", name.c_str());
         }
-
         return EXIT_SUCCESS;
     } else {
         return benchmark.run() ? EXIT_SUCCESS : EXIT_FAILURE;

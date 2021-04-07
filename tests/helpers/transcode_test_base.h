@@ -20,7 +20,7 @@ namespace simdutf::tests::helpers {
 
   /**
    * This class can be used to test UTF8 => UTF16 transcoding.
-   */ 
+   */
   class transcode_utf8_to_utf16_test_base : transcode_test_base {
   public:
     using GenerateCodepoint = std::function<uint32_t()>;

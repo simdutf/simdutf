@@ -174,6 +174,7 @@ namespace std {
 
 // Useful for debugging purposes
 namespace simdutf {
+
 template <typename T>
 std::string toBinaryString(T b) {
    std::string binary = "";

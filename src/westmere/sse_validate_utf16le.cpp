@@ -65,7 +65,7 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
 
         // 1. Check whether we have any 0xD800..DFFF word (0b1101'1xxx'yyyy'yyyy).
         const __m128i surrogates_wordmask = _mm_cmpeq_epi8(_mm_and_si128(in, v_f8), v_d8);
-        const uint16_t surrogates_bitmask = _mm_movemask_epi8(surrogates_wordmask);
+        const uint16_t surrogates_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(surrogates_wordmask));
         if (surrogates_bitmask == 0x0000) {
             input += 16;
         } else {
@@ -81,11 +81,11 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
 
             // H - word-mask for high surrogates: the six highest bits are 0b1101'11
             const __m128i vH = _mm_cmpeq_epi8(_mm_and_si128(in, v_fc), v_dc);
-            const uint16_t H = _mm_movemask_epi8(vH);
+            const uint16_t H = static_cast<uint16_t>(_mm_movemask_epi8(vH));
 
             // L - word mask for low surrogates
             //     L = not H and surrogates_wordmask
-            const uint16_t L = ~H & surrogates_bitmask;
+            const uint16_t L = static_cast<uint16_t>(~H & surrogates_bitmask);
 
             const uint16_t a = L & (H >> 1);  // A low surrogate must be followed by high one.
                                               // (A low surrogate placed in the 7th register's word
@@ -94,18 +94,19 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
                                               // thanks to that we have only two masks for valid case.
             const uint16_t c = V | a | b;     // Combine all the masks into the final one.
 
-            if (c == 0xffff)
+            if (c == 0xffff) {
                 // The whole input register contains valid UTF16, i.e.,
                 // either single words or proper surrogate pairs.
                 input += 16;
-            else if (c == 0x7fff)
+            } else if (c == 0x7fff) {
                 // The 15 lower words of the input register contains valid UTF16.
                 // The 15th word may be either a low or high surrogate. It the next
                 // iteration we 1) check if the low surrogate is followed by a high
-                // one, 2) reject sole hight surrogate.
+                // one, 2) reject sole high surrogate.
                 input += 15;
-            else
+            } else {
                 return nullptr;
+            }
         }
     }
 

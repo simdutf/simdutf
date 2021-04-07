@@ -17,7 +17,6 @@ public:
       "Generic fallback implementation",
       0
   ) {}
-
   simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
   simdutf_warn_unused bool validate_utf16(const char16_t *buf, size_t len) const noexcept final;
   simdutf_warn_unused size_t convert_utf8_to_utf16(const char * buf, size_t len, char16_t* utf16_output) const noexcept final;

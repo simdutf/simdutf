@@ -20,7 +20,7 @@ inline size_t convert(const char* buf, size_t len, char16_t* utf16_output) {
       uint64_t v{v1 | v2};
       if ((v & 0x8080808080808080) == 0) {
         size_t final_pos = pos + 16;
-        while(pos < final_pos) { 
+        while(pos < final_pos) {
           *utf16_output++ = char16_t(buf[pos]);
           pos++;
         }

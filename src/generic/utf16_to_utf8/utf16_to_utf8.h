@@ -6,7 +6,7 @@ namespace SIMDUTF_IMPLEMENTATION {
 namespace {
 namespace utf16_to_utf8 {
 
-size_t scalar_convert(const char16_t* buf, size_t len, char* utf8_output) {
+inline size_t scalar_convert(const char16_t* buf, size_t len, char* utf8_output) {
   auto consumer = [&utf8_output](uint32_t value) {
     ::simdutf::internal::utf8::encode(value, [&utf8_output](uint8_t byte) {
       *utf8_output++ = byte;

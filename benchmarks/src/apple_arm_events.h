@@ -3,7 +3,7 @@
  * Duc Tri Nguyen (CERG GMU)
  * Modified from M1:
  * https://gist.github.com/dougallj/5bafb113492047c865c0c8cfbc930155#file-m1_robsize-c-L390
- * 
+ *
  * Adapted by D. Lemire
  */
 #ifndef M1CYCLES_H

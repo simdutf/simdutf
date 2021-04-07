@@ -2,11 +2,30 @@
 #include <initializer_list>
 
 namespace simdutf {
-
 bool implementation::supported_by_runtime_system() const {
   uint32_t required_instruction_sets = this->required_instruction_sets();
   uint32_t supported_instruction_sets = internal::detect_supported_architectures();
   return ((supported_instruction_sets & required_instruction_sets) == required_instruction_sets);
+}
+
+simdutf_warn_unused encoding_type implementation::autodetect_encoding(const char * input, size_t length) const noexcept {
+    // If there is a BOM, then we trust it.
+    auto bom_encoding = simdutf::BOM::check_bom(input, length);
+    if(bom_encoding != encoding_type::unspecified) { return bom_encoding; }
+    // UTF8 is common, it includes ASCII, and is commonly represented
+    // without a BOM, so if it fits, go with that. Note that it is still
+    // possible to get it wrong, we are only 'guessing'. If some has UTF-16
+    // data without a BOM, it could pass as UTF-8.
+    //
+    // An interesting twist might be to check for UTF-16 ASCII first (every
+    // other byte is zero).
+    if(validate_utf8(input, length)) { return encoding_type::UTF8; }
+    // The next most common encoding that might appear without BOM is probably
+    // UTF-16LE, so try that next.
+    if((length % 2) == 0) {
+      if(validate_utf16(reinterpret_cast<const char16_t*>(input), length)) { return encoding_type::UTF16_LE; }
+    }
+    return encoding_type::unspecified;
 }
 
 namespace internal {
@@ -188,6 +207,9 @@ SIMDUTF_DLLIMPORTEXPORT internal::atomic_ptr<const implementation> active_implem
 
 simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept {
   return active_implementation->validate_utf8(buf, len);
+}
+simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const char * buf, size_t length) noexcept {
+  return active_implementation->autodetect_encoding(buf, length);
 }
 
 const implementation * builtin_implementation() {
