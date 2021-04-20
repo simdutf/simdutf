@@ -1,5 +1,5 @@
 #ifndef INOUE_UTF8_TO_UTF16_TABLES_H
-#define INOUE_UTF8_TO_UTF1_TABLES6_H
+#define INOUE_UTF8_TO_UTF16_TABLES_H
 /**
  * These huge tables maybe be included multiple times in the binary. We do not
  * care because this code is not meant to be used in production. Not to be

@@ -105,12 +105,18 @@ static inline void store_8_ascii_bytes_as_utf16(const uint8_t *input, char16_t *
 
 #elif defined(__x86_64__)
 
-static inline std::pair<__m128i, __m128i>
+
+struct simd32bytes {
+    __m128i first;
+    __m128i second;
+};
+
+static inline simd32bytes
 vector_load_32bytes(const uint8_t *ptr) noexcept {
   // Could possibly use AVX but the algorithm was designed originally around
   // 16-byte registers.
-  return std::make_pair(_mm_loadu_si128(reinterpret_cast<const __m128i *>(ptr)),
-                        _mm_loadu_si128((const __m128i *)(ptr + 16)));
+  return simd32bytes{_mm_loadu_si128(reinterpret_cast<const __m128i *>(ptr)),
+                        _mm_loadu_si128((const __m128i *)(ptr + 16))};
 }
 
 static inline __m128i vector_load_16bytes(const uint8_t *ptr) noexcept {
@@ -129,7 +135,7 @@ static inline __m128i vector_constant_u8(uint8_t c) noexcept {
 }
 
 // emulate the POWER vec_perm intrinsic.
-static inline __m128i vector_permute(std::pair<__m128i, __m128i> a,
+static inline __m128i vector_permute(simd32bytes a,
                                      __m128i shuf) noexcept {
   // This is going to hurt. We have to emulate cross lane shuffling, somehow.
   // We do two shuffles and then we blend?
