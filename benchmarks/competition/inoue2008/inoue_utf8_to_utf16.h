@@ -94,6 +94,11 @@ template <int n>
 static inline uint16x8_t vector_shift_left(uint16x8_t a) noexcept {
   return vshlq_n_u16(a, n);
 }
+
+static inline void store_8_ascii_bytes_as_utf16(const uint8_t *input, char16_t * output) noexcept {
+      vst1q_u16(reinterpret_cast<uint16_t*>(output), vmovl_u8(vld1_u8 (input)));
+}
+
 #elif defined(__x86_64__)
 
 static inline std::pair<__m128i, __m128i>
@@ -147,6 +152,10 @@ static inline __m128i vector_or(__m128i a, __m128i b) noexcept {
 
 template <int n> static inline __m128i vector_shift_left(__m128i a) noexcept {
   return _mm_srli_epi16(a, n);
+}
+
+static inline void store_8_ascii_bytes_as_utf16(const uint8_t *input, char16_t * output) noexcept {
+  _mm_storeu_si128(reinterpret_cast<__m128i *>(output), _mm_cvtepu8_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i *>(input))));
 }
 
 #else // __ARM_NEON
@@ -232,6 +241,17 @@ static inline size_t convert_valid(const char *input_char, size_t size,
   const uint8_t *input = reinterpret_cast<const uint8_t *>(input_char);
   // The algorithm may read up to 32 bytes forward.
   while (position + 32 <= size) {
+    //
+    // We have a fast ASCII path since sequences of 8 ASCII characters can be common.
+    uint64_t v8;
+    ::memcpy(&v8, input_char + position, sizeof(uint64_t));
+    if ((v8 & 0x8080808080808080) == 0) {
+      store_8_ascii_bytes_as_utf16(reinterpret_cast<const uint8_t *>(input_char), utf16_output);
+      position += 8;
+      utf16_output += 8;
+      continue;
+    }
+    // ASCII path failed, we fall back on generic routine.
     uint32_t gathered_prefix{0};
     // step 1: gather prefix of 8 characters and convert them to length in bytes
     // This covers up to 24 bytes.
