@@ -6,10 +6,14 @@
  */
 
 // This is an implementation of  Accelerating UTF-8 Decoding Using SIMD
-// Instructions based on Hiroshi Inoue and Hideaki Komatsu and Toshio Nakatani,
+// Instructions based on
+
+// Hiroshi Inoue and Hideaki Komatsu and Toshio Nakatani,
 // Accelerating UTF-8 Decoding Using SIMD Instructions (in Japanese),
 // Information Processing Society of Japan Transactions on Programming 1 (2),
-// 2008. Slides at
+// 2008.
+//
+// Slides at
 // https://researcher.watson.ibm.com/researcher/files/jp-INOUEHRS/IPSJPRO2008_SIMDdecoding.pdf
 //
 // It appears that the original implementation was done for IBM hardware. We do
