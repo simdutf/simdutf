@@ -41,9 +41,12 @@ namespace inoue2008 {
 // Same type (i.e. same length in UTF-8 representation) of characters tends to
 // appear repeatedly in real-world data
 
+
 static inline uint8x16x2_t vector_load_32bytes(const uint8_t *ptr) noexcept {
-  return vld2q_u8(ptr);
+  // Note that vld2q_u8 does interleave, which we do not want!
+  return {vld1q_u8(ptr),vld1q_u8(ptr+16)};
 }
+
 static inline uint8x16_t vector_load_16bytes(const uint8_t *ptr) noexcept {
   return vld1q_u8(ptr);
 }
@@ -63,11 +66,18 @@ static inline uint16x8_t vector_constant_u8(uint8_t c) noexcept {
 static inline uint16x8_t vector_permute(uint8x16x2_t a,
                                         uint8x16_t shuf) noexcept {
   return vqtbl2q_u8(a, shuf);
+  /**
+   *     __m128i idx128 = _mm_set1_epi64(idx);
+    idx128 = _mm_or_si128(idx128, _mm_cmpgt_epi8(idx128, _mm_set1_epi8(31)));
+    __m128i r128_0 = _mm_shuffle_epi8(t.val[0], idx128);
+    __m128i r128_1 = _mm_shuffle_epi8(t.val[1], idx128);
+    __m128i r128 = _mm_blendv_epi8(r128_0, r128_1, _mm_slli_epi32(idx128, 3));*/
 }
 
 static inline uint16x8_t vector_select(uint16x8_t a, uint16x8_t b,
                                        uint16x8_t c) noexcept {
-  return vbslq_u16(a, b, c);
+  // c does the selection on a and b
+  return vbslq_u16(c, b, a);
 }
 
 static inline uint16x8_t vector_and(uint16x8_t a, uint16x8_t b) noexcept {
@@ -103,10 +113,8 @@ static inline size_t scalar_convert_valid(const char* buf, size_t len, char16_t*
       }
     }
     uint8_t leading_byte = data[pos]; // leading byte
-    printf("leading byte %u\n", leading_byte);
     if (leading_byte < 0b10000000) {
       // converting one ASCII byte !!!
-      printf("ASCII %c\n", leading_byte);
       *utf16_output++ = char16_t(leading_byte);
       pos++;
     } else if ((leading_byte & 0b11100000) == 0b11000000) {
@@ -168,7 +176,6 @@ static inline size_t convert_valid(const char *input_char, size_t size,
       // The original paper has gathered_prefix = (gathered_prefix * 3) + length;
       // but this makes no sense since length is in [1,3]. It does make sense if
       // we map length to 0,1,2.
-      printf("length = %d", length);
       gathered_prefix = (gathered_prefix * 3) + (length - 1);
       position += length;
     }
@@ -186,31 +193,8 @@ static inline size_t convert_valid(const char *input_char, size_t size,
 
     // We take 32 bytes
     const auto v = vector_load_32bytes(p);
-    for(size_t i = 0; i < 32;i++) {
-        printf("%x ", p[i]);
-    }
-    printf("\n");
-    printf("vpattern1\n");
-    for(size_t i = 0; i < 16;i++) {
-        printf("%x ", vpattern1[i]);
-    }
-    printf("\n");
-    printf("vpattern2\n");
-
-        for(size_t i = 0; i < 16;i++) {
-        printf("%x ", vpattern2[i]);
-    }
-    printf("\n");
     auto vtmp1 = vector_permute(v, vpattern1);
-    for(size_t i = 0; i < 8;i++) {
-        printf("%x ", vtmp1[i]);
-    }
-    printf("\n");
     auto vtmp2 = vector_permute(v, vpattern2);
-    for(size_t i = 0; i < 8;i++) {
-        printf("%x ", vtmp2[i]);
-    }
-    printf("\n");
     // Original paper has :
     // const auto vconstant_0x0FC0 = vector_constant_u16(0x0FC0);
     // But it does not make good sense.
@@ -242,20 +226,18 @@ static inline size_t convert_valid(const char *input_char, size_t size,
     //
     // If vtmp2 contains the 'least' significant word, then we just
     // need to mask its most significant bits and to "OR".
-    vtmp2 = vector_and(vtmp2, vector_constant_u8(0x7F));
-   // const auto vout = vector_or(vtmp2, vtmp1);
+    vtmp2 = vector_and(vtmp2, vector_constant_u16(0x7F));
+    const auto vout = vector_or(vtmp2, vtmp1);
     // The original algorithm was as follow:
     // const auto vtmp3 = vector_select(vtmp1, vtmp2, vmask1);
     // step 4: mask off unused bits
     // const auto vout = vector_and(vtmp3, vmask2);
     // So it required two additional masks!!!
     // step 5: write out the result
-   // vector_store(utf16_output, vout);
-    vector_store(utf16_output, vtmp2);
+    // vector_store(utf16_output, vout);
+    vector_store(utf16_output, vout);
     utf16_output += 8; // We always write 8 characters.
   }
-  printf("position = %zu \n", position);
-    printf("size - position = %zu \n", size - position);
   // Finish the tail.
   size_t tail_length = scalar_convert_valid(input_char + position, size - position, utf16_output);
   return utf16_output - utf16_output_orig + tail_length;
@@ -266,36 +248,48 @@ static inline size_t convert_valid(const char *input_char, size_t size,
 // minimal testing
 static inline void inoue_test() {
     char16_t utf16_output[50];
-    size_t len = inoue2008::convert_valid("abcd", 4,utf16_output);
-   // len = 4
-//61 62 63 64
-    printf("len = %zu\n", len);
-    for(size_t i = 0; i < len;i++) {
-        printf("%x ", utf16_output[i]);
+    const char * ascii_seq = "abcd                                   ";
+    size_t len = inoue2008::convert_valid(ascii_seq, 32,utf16_output);
+    if(len != 32) {
+        throw std::runtime_error("bad length on ascii sequence");
     }
-    printf("\n");
-   len = inoue2008::convert_valid("\xc3\xa9\x74\xc3\xa9", 5,utf16_output);
-   //len = 3
-   //char16_t expected2 = {0xe9, 0x74 0xe9};
-//e9 74 e9
-    printf("len = %zu\n", len);
-    for(size_t i = 0; i < len;i++) {
-        printf("%x ", utf16_output[i]);
+    size_t i = 0;
+    for(; i < len; i++) {
+        if(utf16_output[i] != ascii_seq[i]) {
+          throw std::runtime_error("bad ascii transcoding");
+        }
     }
-    printf("\n");
     len = inoue2008::convert_valid("\xe9\xac\xb2\x20\xe9\xac\xbc                                   ", 41,utf16_output);
-    //f(len != 3) {
-     //   throw std::runtime_error("bug");
-    //}
-    // 9b32 20 9b3c 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
-    //char16_t expected3 = {0x9b32, 0x20 0x9b3c};
-    printf("len = %zu\n", len);
-    for(size_t i = 0; i < len;i++) {
-        printf("%x ", utf16_output[i]);
+    if(len != 37) {
+        throw std::runtime_error("bad length on three-byte sequence");
     }
-   // len = 3
+    const char16_t expected3[] = {0x9b32, 0x20, 0x9b3c};
+    for(i = 0; i < 3; i++) {
+        if(expected3[i] != utf16_output[i]) {
+            throw std::runtime_error("bad three-byte transcoding");
+        }
+    }
+    for(; i < len; i++) {
+        if(0x20 != utf16_output[i]) {
+            throw std::runtime_error("bad three-byte transcoding");
+        }
+    }
+   len = inoue2008::convert_valid("\xc3\xa9\x74\xc3\xa9                                   ", 32,utf16_output);
+   const char16_t expected2[] = {0xe9, 0x74, 0xe9};
+    if(len != 30) {
+        throw std::runtime_error("bad length on two-byte sequence");
+    }
+    for(i = 0; i < 3; i++) {
+        if(expected2[i] != utf16_output[i]) {
+            throw std::runtime_error("bad two-byte transcoding");
+        }
+    }
+    for(; i < len; i++) {
+        if(0x20 != utf16_output[i]) {
+            throw std::runtime_error("bad two-byte transcoding");
+        }
+    }
 
-    printf("\n");    
 }
 } // namespace inoue2008
 #endif 

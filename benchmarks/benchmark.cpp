@@ -2,7 +2,9 @@
 #include "src/benchmark.h"
 
 int main(int argc, char* argv[]) {
-inoue2008::inoue_test();
+#ifdef INOUE2008
+    inoue2008::inoue_test(); // minimal testing
+#endif
     using simdutf::benchmarks::CommandLine;
     CommandLine cmdline;
     try {
