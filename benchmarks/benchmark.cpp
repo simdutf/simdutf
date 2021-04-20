@@ -2,7 +2,7 @@
 #include "src/benchmark.h"
 
 int main(int argc, char* argv[]) {
-
+inoue2008::inoue_test();
     using simdutf::benchmarks::CommandLine;
     CommandLine cmdline;
     try {

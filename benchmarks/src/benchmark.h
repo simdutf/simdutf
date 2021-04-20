@@ -3,6 +3,8 @@
 #include "cmdline.h"
 #include "simdutf.h"
 
+#include "benchmarks/competition/inoue2008/inoue_utf8_to_utf16.h"
+
 namespace simdutf::benchmarks {
 
     class Benchmark : public BenchmarkBase {
