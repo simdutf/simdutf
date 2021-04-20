@@ -44,7 +44,11 @@
 #endif // __ARM_NEON
 
 #ifdef __x86_64__
+#include "simdutf.h"
+
 #include <x86intrin.h>
+
+SIMDUTF_TARGET_WESTMERE
 #endif // __x86_64__
 
 namespace inoue2008 {
@@ -392,4 +396,9 @@ static inline void inoue_test() {
 
 #endif // INOUE2008
 } // namespace inoue2008
+
+
+#ifdef __x86_64__
+SIMDUTF_UNTARGET_REGION
+#endif // __x86_64__
 #endif // INOUE_UTF8_TO_UTF16_H
