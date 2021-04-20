@@ -7,7 +7,7 @@
 
 // This is an implementation of  Accelerating UTF-8 Decoding Using SIMD
 // Instructions based on
-
+//
 // Hiroshi Inoue and Hideaki Komatsu and Toshio Nakatani,
 // Accelerating UTF-8 Decoding Using SIMD Instructions (in Japanese),
 // Information Processing Society of Japan Transactions on Programming 1 (2),
@@ -21,6 +21,8 @@
 //
 // It does not handle 4-byte inputs.
 // It does not validate the input.
+//
+// Adapted by D. Lemire in April 2021.
 
 /***
  * Implementation note:
@@ -144,12 +146,13 @@ static inline __m128i vector_permute(simd32bytes a,
   __m128i firstshuffle = _mm_shuffle_epi8(a.first, shuf);
   __m128i secondshuffle =
       _mm_shuffle_epi8(a.second, _mm_sub_epi8(shuf, _mm_set1_epi8(16)));
-  return _mm_blendv_epi8(shuf_first_lane, secondshuffle, firstshuffle);
+  __m128i blended = _mm_blendv_epi8(secondshuffle, firstshuffle, shuf_first_lane);
+  return blended;
 }
 
 static inline __m128i vector_select(__m128i a, __m128i b, __m128i c) noexcept {
   // There might be a moire economical way to do a select with SSE?
-  return _mm_or_si128(_mm_and_si128(c, a), _mm_andnot_si128(c, b));
+  return _mm_or_si128(_mm_and_si128(c, b), _mm_andnot_si128(c, a));
 }
 
 static inline __m128i vector_and(__m128i a, __m128i b) noexcept {
@@ -161,7 +164,7 @@ static inline __m128i vector_or(__m128i a, __m128i b) noexcept {
 }
 
 template <int n> static inline __m128i vector_shift_left(__m128i a) noexcept {
-  return _mm_srli_epi16(a, n);
+  return _mm_slli_epi16(a, n);
 }
 
 static inline void store_8_ascii_bytes_as_utf16(const uint8_t *input, char16_t * output) noexcept {
@@ -373,6 +376,10 @@ static inline void inoue_test() {
   const char16_t expected3[] = {0x9b32, 0x20, 0x9b3c};
   for (i = 0; i < 3; i++) {
     if (expected3[i] != utf16_output[i]) {
+      for(i = 0; i < 3; i++) {
+        printf("%04x ", utf16_output[i]);
+      }
+      printf("\n");
       throw std::runtime_error("bad three-byte transcoding");
     }
   }
@@ -390,6 +397,10 @@ static inline void inoue_test() {
   }
   for (i = 0; i < 3; i++) {
     if (expected2[i] != utf16_output[i]) {
+      for(i = 0; i < 3; i++) {
+        printf("%04x ", utf16_output[i]);
+      }
+      printf("\n");
       throw std::runtime_error("bad two-byte transcoding");
     }
   }
