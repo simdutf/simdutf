@@ -29,6 +29,13 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
             expected_input_encoding.insert(make_pair(name,function.second));
         }
     }
+#ifdef INOUE2008
+    {
+        std::string name = "convert_valid_utf8_to_utf16+inoue2008";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+    }
+#endif 
 }
 
 //static
@@ -58,6 +65,13 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
 
     const std::string name{procedure_name.substr(0, p)};
     const std::string impl{procedure_name.substr(p + 1)};
+#ifdef INOUE2008
+    if(impl == "inoue2008") {
+        // this is a special case
+        run_convert_valid_utf8_to_utf16_inoue2008(iterations);
+        return;
+    }
+#endif
 
     auto implementation = simdutf::available_implementations[impl];
     if (implementation == nullptr) {
@@ -140,6 +154,29 @@ void Benchmark::run_convert_utf8_to_utf16(const simdutf::implementation& impleme
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
     print_summary(result, size);
 }
+
+#ifdef INOUE2008
+void Benchmark::run_convert_valid_utf8_to_utf16_inoue2008(size_t iterations) {
+    // Inoue2008 is only up to 3-byte UTF8 sequence.
+    for(uint8_t c : input_data) {
+        if(c>=0b11110000) {
+            std::cerr << "Warning: Inoue 2008 does not support 4-byte inputs!" << std::endl;
+            break;
+        }
+    }
+    const char*  data = reinterpret_cast<const char*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
+    volatile size_t sink{0};
+    auto proc = [data, size, &output_buffer, &sink]() {
+        sink = inoue2008::convert_valid(data, size, output_buffer.get());
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
+    print_summary(result, size);
+}
+#endif
 
 void Benchmark::run_convert_valid_utf8_to_utf16(const simdutf::implementation& implementation, size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());

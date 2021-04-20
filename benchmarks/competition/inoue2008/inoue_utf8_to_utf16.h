@@ -1,7 +1,7 @@
 /**
  * We do a full header implementation for simplicity. This code is for
  * comparison purposes only and not meant to be used in production (ever).
- * 
+ *
  * Not to be released as part of our public API. This is private code.
  */
 
@@ -30,21 +30,25 @@
  * This is problematic for x64 (pre AVX-512). However, NEON has the appropriate
  * instructions.
  */
-#ifdef __ARM_NEON
 #ifndef INOUE_UTF8_TO_UTF16_H
 #define INOUE_UTF8_TO_UTF16_H
 #define INOUE2008
-#include <arm_neon.h>
 #include "inoue_utf8_to_utf16_tables.h"
+#include <utility>
+#ifdef __ARM_NEON
+#include <arm_neon.h>
+#endif // __ARM_NEON
+
+#ifdef __x86_64__
+#include <x86intrin.h>
+#endif // __x86_64__
+
 namespace inoue2008 {
-
-// Same type (i.e. same length in UTF-8 representation) of characters tends to
-// appear repeatedly in real-world data
-
+#ifdef __ARM_NEON
 
 static inline uint8x16x2_t vector_load_32bytes(const uint8_t *ptr) noexcept {
   // Note that vld2q_u8 does interleave, which we do not want!
-  return {vld1q_u8(ptr),vld1q_u8(ptr+16)};
+  return {vld1q_u8(ptr), vld1q_u8(ptr + 16)};
 }
 
 static inline uint8x16_t vector_load_16bytes(const uint8_t *ptr) noexcept {
@@ -66,12 +70,6 @@ static inline uint16x8_t vector_constant_u8(uint8_t c) noexcept {
 static inline uint16x8_t vector_permute(uint8x16x2_t a,
                                         uint8x16_t shuf) noexcept {
   return vqtbl2q_u8(a, shuf);
-  /**
-   *     __m128i idx128 = _mm_set1_epi64(idx);
-    idx128 = _mm_or_si128(idx128, _mm_cmpgt_epi8(idx128, _mm_set1_epi8(31)));
-    __m128i r128_0 = _mm_shuffle_epi8(t.val[0], idx128);
-    __m128i r128_1 = _mm_shuffle_epi8(t.val[1], idx128);
-    __m128i r128 = _mm_blendv_epi8(r128_0, r128_1, _mm_slli_epi32(idx128, 3));*/
 }
 
 static inline uint16x8_t vector_select(uint16x8_t a, uint16x8_t b,
@@ -92,20 +90,81 @@ template <int n>
 static inline uint16x8_t vector_shift_left(uint16x8_t a) noexcept {
   return vshlq_n_u16(a, n);
 }
+#elif defined(__x86_64__)
 
+static inline std::pair<__m128i, __m128i>
+vector_load_32bytes(const uint8_t *ptr) noexcept {
+  // Could possibly use AVX but the algorithm was designed originally around
+  // 16-byte registers.
+  return std::make_pair(_mm_loadu_si128(reinterpret_cast<const __m128i *>(ptr)),
+                        _mm_loadu_si128((const __m128i *)(ptr + 16)));
+}
 
-static inline size_t scalar_convert_valid(const char* buf, size_t len, char16_t* utf16_output) {
- const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);
+static inline __m128i vector_load_16bytes(const uint8_t *ptr) noexcept {
+  return _mm_loadu_si128(reinterpret_cast<const __m128i *>(ptr));
+}
+static inline void vector_store(char16_t *ptr, __m128i a) noexcept {
+  return _mm_storeu_si128(reinterpret_cast<__m128i *>(ptr), __m128i);
+}
+
+static inline __m128i vector_constant_u16(uint16_t c) noexcept {
+  return _mm_set1_epi16(int16_t(c));
+}
+
+static inline __m128i vector_constant_u8(uint8_t c) noexcept {
+  return _mm_set1_epi8(int16_t(c));
+}
+
+// emulate the POWER vec_perm intrinsic.
+static inline __m128i vector_permute(std::pair<__m128i, __m128i> a,
+                                     __m128i shuf) noexcept {
+  // This is going to hurt. We have to emulate cross lane shuffling, somehow.
+  // We do two shuffles and then we blend?
+  __m128i shuf_first_lane =
+      _mm_cmpgt_epi8(_mm_set1_epi8(16), shuf); // mask for second lane
+  __m128i firstshuffle = _mm_shuffle_epi8(a.first, shuf);
+  __m128i secondshuffle =
+      _mm_shuffle_epi8(a.second, _mm_sub_epi8(shuf, _mm_set1_epi8(16)));
+  return _mm_blendv_epi8(shuf_first_lane, secondshuffle, firstshuffle);
+}
+
+static inline __m128i vector_select(__m128i a, __m128i b, __m128i c) noexcept {
+  // There might be a moire economical way to do a select with SSE?
+  return _mm_or_si128(_mm_and_si128(c, a), _mm_andnot_si128(c, b));
+}
+
+static inline __m128i vector_and(__m128i a, __m128i b) noexcept {
+  return _mm_and_si128(a, b);
+}
+
+static inline __m128i vector_or(__m128i a, __m128i b) noexcept {
+  return _mm_or_si128(a, b);
+}
+
+template <int n> static inline __m128i vector_shift_left(__m128i a) noexcept {
+  return _mm_srli_epi16(a, n);
+}
+
+#else // __ARM_NEON
+// It is not 64-bit ARM or x64 so...?
+#undef INOUE2008
+#endif // __ARM_NEON
+
+#ifdef INOUE2008
+static inline size_t scalar_convert_valid(const char *buf, size_t len,
+                                          char16_t *utf16_output) {
+  const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);
   size_t pos = 0;
-  char16_t* start{utf16_output};
+  char16_t *start{utf16_output};
   while (pos < len) {
     // try to convert the next block of 8 ASCII bytes
-    if (pos + 8 <= len) { // if it is safe to read 8 more bytes, check that they are ascii
+    if (pos + 8 <=
+        len) { // if it is safe to read 8 more bytes, check that they are ascii
       uint64_t v;
       ::memcpy(&v, data + pos, sizeof(uint64_t));
       if ((v & 0x8080808080808080) == 0) {
         size_t final_pos = pos + 8;
-        while(pos < final_pos) {
+        while (pos < final_pos) {
           *utf16_output++ = char16_t(buf[pos]);
           pos++;
         }
@@ -120,20 +179,31 @@ static inline size_t scalar_convert_valid(const char* buf, size_t len, char16_t*
     } else if ((leading_byte & 0b11100000) == 0b11000000) {
       // We have a two-byte UTF-8, it should become
       // a single UTF-16 word.
-      if(pos + 1 > len) { break; } // minimal bound checking
-      *utf16_output++ = char16_t(((leading_byte &0b00011111) << 6) | (data[pos + 1] &0b00111111));
+      if (pos + 1 > len) {
+        break;
+      } // minimal bound checking
+      *utf16_output++ = char16_t(((leading_byte & 0b00011111) << 6) |
+                                 (data[pos + 1] & 0b00111111));
       pos += 2;
     } else if ((leading_byte & 0b11110000) == 0b11100000) {
       // We have a three-byte UTF-8, it should become
       // a single UTF-16 word.
-      if(pos + 2 > len) { break; } // minimal bound checking
-      *utf16_output++ = char16_t(((leading_byte &0b00001111) << 12) | ((data[pos + 1] &0b00111111) << 6) | (data[pos + 2] &0b00111111));
+      if (pos + 2 > len) {
+        break;
+      } // minimal bound checking
+      *utf16_output++ = char16_t(((leading_byte & 0b00001111) << 12) |
+                                 ((data[pos + 1] & 0b00111111) << 6) |
+                                 (data[pos + 2] & 0b00111111));
       pos += 3;
     } else if ((leading_byte & 0b11111000) == 0b11110000) { // 0b11110000
       // we have a 4-byte UTF-8 word.
-      if(pos + 3 > len) { break; } // minimal bound checking
-      uint32_t code_word = ((leading_byte & 0b00000111) << 18 )| ((data[pos + 1] &0b00111111) << 12)
-                           | ((data[pos + 2] &0b00111111) << 6) | (data[pos + 3] &0b00111111);
+      if (pos + 3 > len) {
+        break;
+      } // minimal bound checking
+      uint32_t code_word = ((leading_byte & 0b00000111) << 18) |
+                           ((data[pos + 1] & 0b00111111) << 12) |
+                           ((data[pos + 2] & 0b00111111) << 6) |
+                           (data[pos + 3] & 0b00111111);
       code_word -= 0x10000;
       *utf16_output++ = char16_t(0xD800 + (code_word >> 10));
       *utf16_output++ = char16_t(0xDC00 + (code_word & 0x3FF));
@@ -145,16 +215,15 @@ static inline size_t scalar_convert_valid(const char* buf, size_t len, char16_t*
   return utf16_output - start;
 }
 
-
 // Input should be UTF-8 with 1, 2 or 3 -byte characters.
 static inline size_t convert_valid(const char *input_char, size_t size,
-                     char16_t *utf16_output) noexcept {
+                                   char16_t *utf16_output) noexcept {
   char16_t *utf16_output_orig = utf16_output;
   size_t position{0};
   // We should have
   //   const static uint8_t prefix_to_length_table[] = {1, 1, 1, 1, -, -, 2, 3};
-  // But we need fill something in for the continuation byte. Setting 0 might be disastrous.
-  // So let us use 1.
+  // But we need fill something in for the continuation byte. Setting 0 might be
+  // disastrous. So let us use 1.
   const static uint8_t prefix_to_length_table[] = {1, 1, 1, 1, 1, 1, 2, 3};
   const uint8_t *input = reinterpret_cast<const uint8_t *>(input_char);
   // The algorithm may read up to 32 bytes forward.
@@ -162,20 +231,22 @@ static inline size_t convert_valid(const char *input_char, size_t size,
     uint32_t gathered_prefix{0};
     // step 1: gather prefix of 8 characters and convert them to length in bytes
     // This covers up to 24 bytes.
-    const uint8_t * const p  = input;
+    const uint8_t *const p = input;
     for (int i = 0; i < 8; i++) {
-      // The original paper takes (input[position] >> 3) which leaves 5 bits out of 8 bits.
-      // That makes little sense unless the algorithm does validation but it clearly does
-      // not since it jumps from leading bytes to leading bytes.
+      // The original paper takes (input[position] >> 3) which leaves 5 bits out
+      // of 8 bits. That makes little sense unless the algorithm does validation
+      // but it clearly does not since it jumps from leading bytes to leading
+      // bytes.
       const uint8_t prefix = (input[position] >> 5);
-      // It is not clear that a table is needed, but let us stick with the original 
-      // algorithm.
-      const uint8_t length = prefix_to_length_table[prefix];       
-      // If length == 0, then we hit a continuation and the whole thing is garbage.
+      // It is not clear that a table is needed, but let us stick with the
+      // original algorithm.
+      const uint8_t length = prefix_to_length_table[prefix];
+      // If length == 0, then we hit a continuation and the whole thing is
+      // garbage.
       //
-      // The original paper has gathered_prefix = (gathered_prefix * 3) + length;
-      // but this makes no sense since length is in [1,3]. It does make sense if
-      // we map length to 0,1,2.
+      // The original paper has gathered_prefix = (gathered_prefix * 3) +
+      // length; but this makes no sense since length is in [1,3]. It does make
+      // sense if we map length to 0,1,2.
       gathered_prefix = (gathered_prefix * 3) + (length - 1);
       position += length;
     }
@@ -201,27 +272,28 @@ static inline size_t convert_valid(const char *input_char, size_t size,
     //
     // vtmp1 contains up to 10 bits
     // 1110ABCD 10EFGHIJ (10 bits)
-    // or 
+    // or
     // 110ABCDE (5 bits)
     //
     // Shift left by four
     // ABCD10EF GHIJ----
     // or
-    //     110A BCDE----  
+    //     110A BCDE----
     //
     // Shift left by six
     // CD10EFGH IJ------
     // or
     //   110ABC DE------
     //
-    // We select with 
+    // We select with
     //   0b1111 11111111
     // We get either
     // ABCDEFGH IJ------
     // or
     // ----0ABC DE------
-    vtmp1 = vector_select(vector_shift_left<4>(vtmp1),
-                               vector_shift_left<6>(vtmp1), vector_constant_u16(0x0FFF));
+    vtmp1 =
+        vector_select(vector_shift_left<4>(vtmp1), vector_shift_left<6>(vtmp1),
+                      vector_constant_u16(0x0FFF));
     // The original algorithm seemed to complicated so I simplified it.
     //
     // If vtmp2 contains the 'least' significant word, then we just
@@ -239,58 +311,61 @@ static inline size_t convert_valid(const char *input_char, size_t size,
     utf16_output += 8; // We always write 8 characters.
   }
   // Finish the tail.
-  size_t tail_length = scalar_convert_valid(input_char + position, size - position, utf16_output);
+  size_t tail_length = scalar_convert_valid(input_char + position,
+                                            size - position, utf16_output);
   return utf16_output - utf16_output_orig + tail_length;
 }
 
-
-
 // minimal testing
 static inline void inoue_test() {
-    char16_t utf16_output[50];
-    const char * ascii_seq = "abcd                                   ";
-    size_t len = inoue2008::convert_valid(ascii_seq, 32,utf16_output);
-    if(len != 32) {
-        throw std::runtime_error("bad length on ascii sequence");
+  char16_t utf16_output[50];
+  const char *ascii_seq = "abcd                                   ";
+  size_t len = inoue2008::convert_valid(ascii_seq, 32, utf16_output);
+  if (len != 32) {
+    throw std::runtime_error("bad length on ascii sequence");
+  }
+  size_t i = 0;
+  for (; i < len; i++) {
+    if (utf16_output[i] != ascii_seq[i]) {
+      throw std::runtime_error("bad ascii transcoding");
     }
-    size_t i = 0;
-    for(; i < len; i++) {
-        if(utf16_output[i] != ascii_seq[i]) {
-          throw std::runtime_error("bad ascii transcoding");
-        }
+  }
+  len = inoue2008::convert_valid(
+      "\xe9\xac\xb2\x20\xe9\xac\xbc                                   ", 41,
+      utf16_output);
+  if (len != 37) {
+    throw std::runtime_error("bad length on three-byte sequence");
+  }
+  const char16_t expected3[] = {0x9b32, 0x20, 0x9b3c};
+  for (i = 0; i < 3; i++) {
+    if (expected3[i] != utf16_output[i]) {
+      throw std::runtime_error("bad three-byte transcoding");
     }
-    len = inoue2008::convert_valid("\xe9\xac\xb2\x20\xe9\xac\xbc                                   ", 41,utf16_output);
-    if(len != 37) {
-        throw std::runtime_error("bad length on three-byte sequence");
+  }
+  for (; i < len; i++) {
+    if (0x20 != utf16_output[i]) {
+      throw std::runtime_error("bad three-byte transcoding");
     }
-    const char16_t expected3[] = {0x9b32, 0x20, 0x9b3c};
-    for(i = 0; i < 3; i++) {
-        if(expected3[i] != utf16_output[i]) {
-            throw std::runtime_error("bad three-byte transcoding");
-        }
+  }
+  len = inoue2008::convert_valid(
+      "\xc3\xa9\x74\xc3\xa9                                   ", 32,
+      utf16_output);
+  const char16_t expected2[] = {0xe9, 0x74, 0xe9};
+  if (len != 30) {
+    throw std::runtime_error("bad length on two-byte sequence");
+  }
+  for (i = 0; i < 3; i++) {
+    if (expected2[i] != utf16_output[i]) {
+      throw std::runtime_error("bad two-byte transcoding");
     }
-    for(; i < len; i++) {
-        if(0x20 != utf16_output[i]) {
-            throw std::runtime_error("bad three-byte transcoding");
-        }
+  }
+  for (; i < len; i++) {
+    if (0x20 != utf16_output[i]) {
+      throw std::runtime_error("bad two-byte transcoding");
     }
-   len = inoue2008::convert_valid("\xc3\xa9\x74\xc3\xa9                                   ", 32,utf16_output);
-   const char16_t expected2[] = {0xe9, 0x74, 0xe9};
-    if(len != 30) {
-        throw std::runtime_error("bad length on two-byte sequence");
-    }
-    for(i = 0; i < 3; i++) {
-        if(expected2[i] != utf16_output[i]) {
-            throw std::runtime_error("bad two-byte transcoding");
-        }
-    }
-    for(; i < len; i++) {
-        if(0x20 != utf16_output[i]) {
-            throw std::runtime_error("bad two-byte transcoding");
-        }
-    }
-
+  }
 }
+
+#endif // INOUE2008
 } // namespace inoue2008
-#endif 
-#endif
+#endif // INOUE_UTF8_TO_UTF16_H

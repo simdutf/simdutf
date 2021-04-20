@@ -33,6 +33,10 @@ namespace simdutf::benchmarks {
         void run_convert_valid_utf8_to_utf16(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf16_to_utf8(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_valid_utf16_to_utf8(const simdutf::implementation& implementation, size_t iterations);
+#ifdef INOUE2008
+        void run_convert_valid_utf8_to_utf16_inoue2008(size_t iterations);
+#endif
+
     };
 
 } // namespace simdutf::benchmarks
