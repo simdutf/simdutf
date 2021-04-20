@@ -1,4 +1,3 @@
-#ifdef __ARM_NEON
 #ifndef INOUE_UTF8_TO_UTF16_TABLES_H
 #define INOUE_UTF8_TO_UTF1_TABLES6_H
 /**
@@ -13181,5 +13180,4 @@ const static uint8_t pattern2[6561][16] = {
 };
 
 } // namespace inoue2008
-#endif
 #endif
