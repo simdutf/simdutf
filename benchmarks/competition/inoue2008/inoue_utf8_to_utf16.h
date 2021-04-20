@@ -117,7 +117,7 @@ static inline __m128i vector_load_16bytes(const uint8_t *ptr) noexcept {
   return _mm_loadu_si128(reinterpret_cast<const __m128i *>(ptr));
 }
 static inline void vector_store(char16_t *ptr, __m128i a) noexcept {
-  return _mm_storeu_si128(reinterpret_cast<__m128i *>(ptr), __m128i);
+  return _mm_storeu_si128(reinterpret_cast<__m128i *>(ptr), a);
 }
 
 static inline __m128i vector_constant_u16(uint16_t c) noexcept {
