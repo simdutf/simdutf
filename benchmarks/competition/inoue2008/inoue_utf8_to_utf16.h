@@ -144,7 +144,7 @@ static inline __m128i vector_permute(simd32bytes a,
   __m128i firstshuffle = _mm_shuffle_epi8(a.first, shuf);
   __m128i secondshuffle =
       _mm_shuffle_epi8(a.second, _mm_sub_epi8(shuf, _mm_set1_epi8(16)));
-  return _mm_blendv_epi8(shuf_first_lane, secondshuffle, firstshuffle);
+  return _mm_blendv_epi8(secondshuffle, firstshuffle, shuf_first_lane);
 }
 
 static inline __m128i vector_select(__m128i a, __m128i b, __m128i c) noexcept {
