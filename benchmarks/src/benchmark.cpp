@@ -5,6 +5,20 @@
 #include <array>
 #include <iostream>
 
+#ifdef __x86_64__
+/**
+ * benchmarks/competition/u8u16 contains an open source version of u8u16, referenced in
+ * Cameron, Robert D, A case study in SIMD text processing with parallel bit streams: UTF-8 to UTF-16 transcoding,
+ * Proceedings of the 13th ACM SIGPLAN Symposium on Principles and practice of parallel programming, 91--98.
+ */
+// It seems that u8u16 is not good at scoping macros.
+#undef LITTLE_ENDIAN
+#undef BYTE_ORDER
+#undef BIG_ENDIAN
+#include "benchmarks/competition/u8u16/config/p4_config.h"
+#include "benchmarks/competition/u8u16/src/libu8u16.c"
+#endif
+
 namespace simdutf::benchmarks {
 
 Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
@@ -36,6 +50,14 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
     }
 #endif
+#ifdef __x86_64__
+    {
+        std::string name = "convert_utf8_to_utf16+u8u16";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+    }
+#endif
+
 }
 
 //static
@@ -72,7 +94,13 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         return;
     }
 #endif
-
+#ifdef __x86_64__
+    if(impl == "u8u16") {
+        // this is a special case
+        run_convert_utf8_to_utf16_u8u16(iterations);
+        return;
+    }
+#endif
     auto implementation = simdutf::available_implementations[impl];
     if (implementation == nullptr) {
         throw std::runtime_error("Wrong implementation " + impl);
@@ -164,12 +192,40 @@ void Benchmark::run_convert_valid_utf8_to_utf16_inoue2008(size_t iterations) {
             break;
         }
     }
+    // This is currently minimally tested. Itt is possible that the transcoding could be wrong.
+    // It is also unsafe: it could fail in disastrous ways if the input is adversarial.
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
     std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
     volatile size_t sink{0};
     auto proc = [data, size, &output_buffer, &sink]() {
         sink = inoue2008::convert_valid(data, size, output_buffer.get());
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
+    print_summary(result, size);
+}
+#endif
+
+#ifdef __x86_64__
+// Cameron's u8u16
+void Benchmark::run_convert_utf8_to_utf16_u8u16(size_t iterations) {
+    // u8u16 wants to take mutable chars, let us hope it does not actually mutate anything!
+    //
+    // This is currently untested. At a glance it looks fine, but
+    // it is possible that the transcoding could be wrong.
+    char*  data = reinterpret_cast<char*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
+    volatile size_t sink{0};
+    auto proc = [data, size, &output_buffer, &sink]() {
+        char * srcbuf_ptr = data;
+        size_t inbytes_left = size;
+        char * trgtbuf_ptr = reinterpret_cast<char *>(output_buffer.get());
+        size_t outbytes_left = size * sizeof(char16_t);
+        u8u16(&srcbuf_ptr, &inbytes_left, &trgtbuf_ptr, &outbytes_left);
+        sink = (reinterpret_cast<char16_t *>(trgtbuf_ptr) - output_buffer.get());
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);

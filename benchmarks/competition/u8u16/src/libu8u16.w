@@ -843,7 +843,6 @@ BytePack * U8pack = (BytePack *) U8data;
 size_t full_packs = inbytes / PACKSIZE;
 size_t excess_bytes = inbytes % PACKSIZE;
 intptr_t U8data_offset = ((intptr_t) U8data)  % PACKSIZE;
-int pack = 0;
 BytePack partial_pack;
 if (excess_bytes == 0) partial_pack = simd_const_8(0);
 else if (U8data_offset +  excess_bytes > PACKSIZE)
@@ -1335,7 +1334,7 @@ unsigned char u16_bytes_per_reg[16] __attribute__((aligned(16)));
 __declspec(align(16)) unsigned char u16_bytes_per_reg[16];
 #endif
 #if ((DOUBLEBYTE_DELETION == FROM_LEFT8) || (BIT_DELETION == ROTATION_TO_LEFT8))
-BitBlock delcounts_2, delcounts_4, delcounts_8, u16_advance_8, u16_bytes_8;
+BitBlock delcounts_2, delcounts_4, delcounts_8;
 #endif
 #if (BIT_DELETION == ROTATION_TO_LEFT8)
 BitBlock rotl_2, rotl_4, sll_8;
@@ -1486,7 +1485,6 @@ buffered_u8u16(char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbyte
   if (inbuf && *inbuf && outbuf && *outbuf) /* are all non-NULL */ @+  {
     unsigned char * inbuf_start = (unsigned char *) *inbuf;
     size_t max_inbytes = min(3 * (*outbytesleft) / 2, *inbytesleft);
-    size_t inbytes_start = *inbytesleft;
     size_t internal_space = 2 * (*inbytesleft) + PACKSIZE;
     size_t internal_space_left = internal_space;
     char * internal_buf_start = (char *) malloc(internal_space);
@@ -1494,7 +1492,7 @@ buffered_u8u16(char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbyte
     size_t return_code = u8u16(inbuf, &max_inbytes, &internal_buf, &internal_space_left);
     intptr_t u16advance = internal_space - internal_space_left;
     intptr_t u8advance = (intptr_t) (*inbuf) - (intptr_t) inbuf_start;
-    if (u16advance > *outbytesleft) {
+    if (size_t(u16advance) > *outbytesleft) {
       errno = E2BIG;
       return_code = (size_t) -1;
       do {
@@ -1504,7 +1502,7 @@ buffered_u8u16(char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbyte
         while (is_suffix_byte(inbuf_start[u8advance]));
         if (is_prefix4_byte(inbuf_start[u8advance])) u16advance -= 4;
         else u16advance -= 2;
-      } while (u16advance > *outbytesleft);
+      } while (size_t(u16advance) > *outbytesleft);
     }
     memcpy(*outbuf, internal_buf_start, u16advance);
     free(internal_buf_start);

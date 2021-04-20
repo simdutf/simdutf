@@ -183,7 +183,7 @@ SIMD_type simd_add_2(SIMD_type a, SIMD_type b)
 	 simd_and(simd_slli_32(r,sh),simd_const_4((15<<sh)&15))
 #define simd_slli_8(r, sh)\
 	 (sh == 1 ? simd_add_8(r,r):\
-          simd_and(simd_slli_32(r,sh),simd_const_8((255<<sh) &255)))
+          simd_and(simd_slli_32(r,sh),simd_const_8(char((255<<sh) &255))))
 
 
 
@@ -669,8 +669,8 @@ static inline SIMD_type simd_splat_32(SIMD_type x) {
 void print_bit_block(char * var_name, SIMD_type v) {
   union {SIMD_type vec; unsigned char elems[8];} x;
   x.vec = v;
-  unsigned char c, bit_reversed;
-  int i;
+  unsigned char c;//, bit_reversed;
+  size_t i;
   printf("%20s = ", var_name);
   for (i = 0; i < sizeof(SIMD_type); i++) {
     c = x.elems[i];
@@ -680,7 +680,7 @@ void print_bit_block(char * var_name, SIMD_type v) {
 }
 
 static inline int bitblock_bit_count(SIMD_type v) {
-  int bit_count = 0;
+  //int bit_count = 0;
   SIMD_type cts_2 = simd_add_2_lh(v, v);
   SIMD_type cts_4 = simd_add_4_lh(cts_2, cts_2);
   SIMD_type cts_8 = simd_add_8_lh(cts_4, cts_4);

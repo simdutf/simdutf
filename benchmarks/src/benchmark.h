@@ -3,6 +3,12 @@
 #include "cmdline.h"
 #include "simdutf.h"
 
+/**
+ * inoue2008 is:
+ * Hiroshi Inoue and Hideaki Komatsu and Toshio Nakatani,
+ * Accelerating UTF-8 Decoding Using SIMD Instructions (in Japanese),
+ * Information Processing Society of Japan Transactions on Programming 1 (2), 2008.
+ */
 #include "benchmarks/competition/inoue2008/inoue_utf8_to_utf16.h"
 
 namespace simdutf::benchmarks {
@@ -34,9 +40,21 @@ namespace simdutf::benchmarks {
         void run_convert_utf16_to_utf8(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_valid_utf16_to_utf8(const simdutf::implementation& implementation, size_t iterations);
 #ifdef INOUE2008
+        /**
+         * Hiroshi Inoue and Hideaki Komatsu and Toshio Nakatani,
+         * Accelerating UTF-8 Decoding Using SIMD Instructions (in Japanese),
+         * Information Processing Society of Japan Transactions on Programming 1 (2), 2008.
+         */
         void run_convert_valid_utf8_to_utf16_inoue2008(size_t iterations);
 #endif
-
+#ifdef __x86_64__
+        /**
+         * benchmarks/competition/u8u16 contains an open source version of u8u16, referenced in
+         * Cameron, Robert D, A case study in SIMD text processing with parallel bit streams: UTF-8 to UTF-16 transcoding,
+         * Proceedings of the 13th ACM SIGPLAN Symposium on Principles and practice of parallel programming, 91--98.
+         */
+        void run_convert_utf8_to_utf16_u8u16(size_t iterations);
+#endif
     };
 
 } // namespace simdutf::benchmarks
