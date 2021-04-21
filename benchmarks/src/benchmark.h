@@ -56,6 +56,13 @@ namespace simdutf::benchmarks {
         void run_convert_utf8_to_utf16_u8u16(size_t iterations);
 #endif
         void run_convert_utf8_to_utf16_hoehrmann(size_t iterations);
+        /**
+         * LLVM relies on code from the Unicode Consortium
+         * https://en.wikipedia.org/wiki/Unicode_Consortium
+         */
+        void run_convert_utf8_to_utf16_llvm(size_t iterations);
+        void run_convert_utf16_to_utf8_llvm(size_t iterations);
+
     };
 
 } // namespace simdutf::benchmarks

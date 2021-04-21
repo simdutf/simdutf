@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "benchmarks/competition/hoehrmann/hoehrmann.h"
+#include "benchmarks/competition/llvm/ConvertUTF.cpp"
 
 
 #ifdef __x86_64__
@@ -65,7 +66,16 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
     }
-
+    {
+        std::string name = "convert_utf8_to_utf16+llvm";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+    }
+    {
+        std::string name = "convert_utf16_to_utf8+llvm";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+    }
 }
 
 //static
@@ -112,6 +122,15 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
     if(impl == "hoehrmann") {
         // this is a special case
         run_convert_utf8_to_utf16_hoehrmann(iterations);
+        return;
+    }
+    if(impl == "llvm") {
+        // this is a special case
+        if(name == "convert_utf8_to_utf16") {
+          run_convert_utf8_to_utf16_llvm(iterations);
+        } else if(name == "convert_utf16_to_utf8") {
+          run_convert_utf16_to_utf8_llvm(iterations);
+        }
         return;
     }
     auto implementation = simdutf::available_implementations[impl];
@@ -251,8 +270,13 @@ void Benchmark::run_convert_utf8_to_utf16_u8u16(size_t iterations) {
         size_t inbytes_left = size;
         char * trgtbuf_ptr = reinterpret_cast<char *>(output_buffer.get());
         size_t outbytes_left = size * sizeof(char16_t);
-        u8u16(&srcbuf_ptr, &inbytes_left, &trgtbuf_ptr, &outbytes_left);
-        sink = (reinterpret_cast<char16_t *>(trgtbuf_ptr) - output_buffer.get());
+        size_t result_code = u8u16(&srcbuf_ptr, &inbytes_left, &trgtbuf_ptr, &outbytes_left);
+        bool is_ok = (result_code != size_t(-1));
+        if(is_ok) {
+          sink = (reinterpret_cast<char16_t *>(trgtbuf_ptr) - output_buffer.get());
+        } else {
+          sink = 0;
+        }
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
@@ -371,6 +395,72 @@ const std::set<std::string>& Benchmark::all_procedures() const {
 
 std::set<simdutf::encoding_type> Benchmark::expected_encodings(const std::string& procedure) {
     return expected_input_encoding[procedure];
+}
+
+
+/**
+ * LLVM relies on code from the Unicode Consortium
+ * https://en.wikipedia.org/wiki/Unicode_Consortium
+ */
+void Benchmark::run_convert_utf8_to_utf16_llvm(size_t iterations) {
+    const char*  data = reinterpret_cast<const char*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
+    volatile size_t sink{0};
+    auto proc = [data, size, &output_buffer, &sink]() {
+      const unsigned char * sourceStart = reinterpret_cast<const unsigned char *>(data);
+      const unsigned char * sourceEnd = sourceStart + size;
+      short unsigned int * targetStart =  reinterpret_cast<short unsigned int *>(output_buffer.get());
+      short unsigned int * targetEnd = targetStart + size;
+      bool  is_ok = (llvm::conversionOK == llvm::ConvertUTF8toUTF16 (&sourceStart, sourceEnd, &targetStart, targetEnd, llvm::ConversionFlags::strictConversion));
+      if(is_ok) {
+          sink = (targetStart - reinterpret_cast<short unsigned int *>(output_buffer.get()));
+      } else {
+          sink = 0;
+      }
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
+    print_summary(result, size);
+}
+
+
+void Benchmark::run_convert_utf16_to_utf8_llvm(size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+        printf("# The input size is not divisible by two (it is %lu + %lu for BOM)",
+               input_data.size(), BOM::bom_byte_size(bom));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 2;
+
+    // Note: non-surroage words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    //       thus we're making safe assumption that each 16-bit word will be expanded
+    //       to four bytes.
+    std::unique_ptr<char[]> output_buffer{new char[size * 4]};
+
+    volatile size_t sink{0};
+
+    auto proc = [data, size, &output_buffer, &sink]() {
+      const short unsigned int * sourceStart = reinterpret_cast<const short unsigned int *>(data);
+      const short unsigned int * sourceEnd = sourceStart + size;
+      unsigned char * targetStart =  reinterpret_cast<unsigned char *>(output_buffer.get());
+      unsigned char * targetEnd = targetStart + size * 4;
+      bool  is_ok = (llvm::conversionOK == llvm::ConvertUTF16toUTF8 (&sourceStart, sourceEnd, &targetStart, targetEnd, llvm::ConversionFlags::strictConversion));
+      if(is_ok) {
+          sink = (targetStart - reinterpret_cast<unsigned char *>(output_buffer.get()));
+      } else {
+          sink = 0;
+      }
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    print_summary(result, size);
 }
 
 } // namespace
