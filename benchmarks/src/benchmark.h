@@ -54,6 +54,11 @@ namespace simdutf::benchmarks {
          * Proceedings of the 13th ACM SIGPLAN Symposium on Principles and practice of parallel programming, 91--98.
          */
         void run_convert_utf8_to_utf16_u8u16(size_t iterations);
+        /**
+         * Olivier Goffart, UTF-8 processing using SIMD (SSE4), 2012.
+         * https://woboq.com/blog/utf-8-processing-using-simd.html
+         */
+        void run_convert_utf8_to_utf16_utf8sse4(size_t iterations);
 #endif
         void run_convert_utf8_to_utf16_hoehrmann(size_t iterations);
         /**

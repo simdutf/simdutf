@@ -6,8 +6,18 @@
 #include <iostream>
 
 #include "benchmarks/competition/hoehrmann/hoehrmann.h"
+/**
+ * LLVM relies on code from the Unicode Consortium
+ * https://en.wikipedia.org/wiki/Unicode_Consortium
+ */
 #include "benchmarks/competition/llvm/ConvertUTF.cpp"
-
+#ifdef __x86_64__
+/**
+ * Olivier Goffart, UTF-8 processing using SIMD (SSE4), 2012.
+ * https://woboq.com/blog/utf-8-processing-using-simd.html
+ */
+#include "benchmarks/competition/utf8sse4/fromutf8-sse.cpp"
+#endif
 
 #ifdef __x86_64__
 /**
@@ -57,6 +67,11 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
 #ifdef __x86_64__
     {
         std::string name = "convert_utf8_to_utf16+u8u16";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+    }
+    {
+        std::string name = "convert_utf8_to_utf16+utf8sse4";
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
     }
@@ -116,6 +131,11 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
     if(impl == "u8u16") {
         // this is a special case
         run_convert_utf8_to_utf16_u8u16(iterations);
+        return;
+    }
+    if(impl == "utf8sse4") {
+        // this is a special case
+        run_convert_utf8_to_utf16_utf8sse4(iterations);
         return;
     }
 #endif
@@ -255,7 +275,10 @@ void Benchmark::run_convert_utf8_to_utf16_hoehrmann(size_t iterations) {
 }
 
 #ifdef __x86_64__
-// Cameron's u8u16
+/**
+ * Cameron, Robert D, A case study in SIMD text processing with parallel bit streams: UTF-8 to UTF-16 transcoding,
+ * Proceedings of the 13th ACM SIGPLAN Symposium on Principles and practice of parallel programming, 91--98.
+ */
 void Benchmark::run_convert_utf8_to_utf16_u8u16(size_t iterations) {
     // u8u16 wants to take mutable chars, let us hope it does not actually mutate anything!
     //
@@ -271,6 +294,34 @@ void Benchmark::run_convert_utf8_to_utf16_u8u16(size_t iterations) {
         char * trgtbuf_ptr = reinterpret_cast<char *>(output_buffer.get());
         size_t outbytes_left = size * sizeof(char16_t);
         size_t result_code = u8u16(&srcbuf_ptr, &inbytes_left, &trgtbuf_ptr, &outbytes_left);
+        bool is_ok = (result_code != size_t(-1));
+        if(is_ok) {
+          sink = (reinterpret_cast<char16_t *>(trgtbuf_ptr) - output_buffer.get());
+        } else {
+          sink = 0;
+        }
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
+    print_summary(result, size);
+}
+/**
+ * Olivier Goffart, UTF-8 processing using SIMD (SSE4), 2012.
+ * https://woboq.com/blog/utf-8-processing-using-simd.html
+ */
+
+void Benchmark::run_convert_utf8_to_utf16_utf8sse4(size_t iterations) {
+    const char*  data = reinterpret_cast<const char*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
+    volatile size_t sink{0};
+    auto proc = [data, size, &output_buffer, &sink]() {
+        const char * srcbuf_ptr = data;
+        size_t inbytes_left = size;
+        char * trgtbuf_ptr = reinterpret_cast<char *>(output_buffer.get());
+        size_t outbytes_left = size * sizeof(char16_t);
+        size_t result_code = utf8sse4::fromUtf8(&srcbuf_ptr, &inbytes_left, &trgtbuf_ptr, &outbytes_left);
         bool is_ok = (result_code != size_t(-1));
         if(is_ok) {
           sink = (reinterpret_cast<char16_t *>(trgtbuf_ptr) - output_buffer.get());
