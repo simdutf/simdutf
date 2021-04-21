@@ -5,6 +5,9 @@
 #include <array>
 #include <iostream>
 
+#include "benchmarks/competition/hoehrmann/hoehrmann.h"
+
+
 #ifdef __x86_64__
 /**
  * benchmarks/competition/u8u16 contains an open source version of u8u16, referenced in
@@ -57,6 +60,11 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
     }
 #endif
+    {
+        std::string name = "convert_utf8_to_utf16+hoehrmann";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+    }
 
 }
 
@@ -101,6 +109,11 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         return;
     }
 #endif
+    if(impl == "hoehrmann") {
+        // this is a special case
+        run_convert_utf8_to_utf16_hoehrmann(iterations);
+        return;
+    }
     auto implementation = simdutf::available_implementations[impl];
     if (implementation == nullptr) {
         throw std::runtime_error("Wrong implementation " + impl);
@@ -207,6 +220,20 @@ void Benchmark::run_convert_valid_utf8_to_utf16_inoue2008(size_t iterations) {
     print_summary(result, size);
 }
 #endif
+
+void Benchmark::run_convert_utf8_to_utf16_hoehrmann(size_t iterations) {
+    uint8_t const *  data = input_data.data();
+    const size_t size = input_data.size();
+    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
+    volatile size_t sink{0};
+    auto proc = [data, size, &output_buffer, &sink]() {
+        sink = hoehrmann::toUtf16(data, size, output_buffer.get());
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    print_summary(result, size);
+}
 
 #ifdef __x86_64__
 // Cameron's u8u16

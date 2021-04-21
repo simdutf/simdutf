@@ -55,6 +55,7 @@ namespace simdutf::benchmarks {
          */
         void run_convert_utf8_to_utf16_u8u16(size_t iterations);
 #endif
+        void run_convert_utf8_to_utf16_hoehrmann(size_t iterations);
     };
 
 } // namespace simdutf::benchmarks
