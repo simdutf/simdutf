@@ -182,7 +182,7 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
 #ifdef __x86_64__
     if(impl == "cppcon2018") {
         // this is a special case
-        if(name == "convert_valid_utf8_to_utf16") {
+        if(name == "convert_utf8_to_utf16") {
           run_convert_utf8_to_utf16_cppcon2018(iterations);
         } else {
           std::cerr << "unrecognized:" << procedure_name << "\n";
