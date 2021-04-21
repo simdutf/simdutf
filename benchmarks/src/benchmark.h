@@ -48,7 +48,7 @@ namespace simdutf::benchmarks {
         void run_convert_valid_utf8_to_utf16_inoue2008(size_t iterations);
 #endif
 #ifdef __x86_64__
-       /** 
+       /**
         * utf8lut: Vectorized UTF-8 converter.
         * by stgatilov (2019)
         *  https://dirtyhandscoding.github.io/posts/utf8lut-vectorized-utf-8-converter-introduction.html

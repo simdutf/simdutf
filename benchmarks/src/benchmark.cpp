@@ -5,7 +5,7 @@
 #include <array>
 #include <iostream>
 #ifdef __x86_64__
-/** 
+/**
  * utf8lut: Vectorized UTF-8 converter.
  * by stgatilov (2019)
  *  https://dirtyhandscoding.github.io/posts/utf8lut-vectorized-utf-8-converter-introduction.html
@@ -29,7 +29,7 @@ SIMDUTF_UNTARGET_REGION
 #endif
 
 /**
- * Bjoern Hoehrmann 
+ * Bjoern Hoehrmann
  * http://bjoern.hoehrmann.de/utf-8/decoder/dfa/
  */
 #include "benchmarks/competition/hoehrmann/hoehrmann.h"
@@ -228,7 +228,7 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         if(name == "convert_utf8_to_utf16") {
           run_convert_utf8_to_utf16_hoehrmann(iterations);
         } else {
-          std::cerr << "unrecognized:" << procedure_name << "\n";    
+          std::cerr << "unrecognized:" << procedure_name << "\n";
         }
         return;
     }
@@ -350,7 +350,7 @@ void Benchmark::run_convert_valid_utf8_to_utf16_inoue2008(size_t iterations) {
 }
 #endif
 /**
- * Bjoern Hoehrmann 
+ * Bjoern Hoehrmann
  * http://bjoern.hoehrmann.de/utf-8/decoder/dfa/
  */
 void Benchmark::run_convert_utf8_to_utf16_hoehrmann(size_t iterations) {
@@ -368,7 +368,7 @@ void Benchmark::run_convert_utf8_to_utf16_hoehrmann(size_t iterations) {
 }
 
 #ifdef __x86_64__
-/** 
+/**
  * utf8lut: Vectorized UTF-8 converter.
  * by stgatilov (2019)
  *  https://dirtyhandscoding.github.io/posts/utf8lut-vectorized-utf-8-converter-introduction.html
@@ -406,7 +406,7 @@ void Benchmark::run_convert_utf16_to_utf8_utf8lut(size_t iterations) {
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
     print_summary(result, size);
 }
-/** 
+/**
  * utf8lut: Vectorized UTF-8 converter.
  * by stgatilov (2019)
  *  https://dirtyhandscoding.github.io/posts/utf8lut-vectorized-utf-8-converter-introduction.html
@@ -444,7 +444,7 @@ void Benchmark::run_convert_valid_utf16_to_utf8_utf8lut(size_t iterations) {
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
     print_summary(result, size);
 }
-/** 
+/**
  * utf8lut: Vectorized UTF-8 converter.
  * by stgatilov (2019)
  *  https://dirtyhandscoding.github.io/posts/utf8lut-vectorized-utf-8-converter-introduction.html
@@ -469,7 +469,7 @@ void Benchmark::run_convert_utf8_to_utf16_utf8lut(size_t iterations) {
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
     print_summary(result, size);
 }
-/** 
+/**
  * utf8lut: Vectorized UTF-8 converter.
  * by stgatilov (2019)
  *  https://dirtyhandscoding.github.io/posts/utf8lut-vectorized-utf-8-converter-introduction.html
