@@ -34,7 +34,7 @@ encoding_type check_bom(const uint8_t* byte, size_t length) {
 encoding_type check_bom(const char* byte, size_t length) {
       return check_bom(reinterpret_cast<const uint8_t*>(byte), length);
  }
- 
+
  size_t bom_byte_size(encoding_type bom) {
         switch (bom) {
             case UTF16_LE:     return 2;

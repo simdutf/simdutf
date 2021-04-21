@@ -105,7 +105,7 @@ simdutf_warn_unused size_t convert_utf8_to_utf16(const char * input, size_t leng
  * @param input         the string to convert
  * @param length        the length of the string in bytes
  * @param utf16_buffer  the pointer to buffer that can hold conversion result
- * @return the number of written bytes
+ * @return the number of written char16_t words
  */
 simdutf_warn_unused size_t convert_valid_utf8_to_utf16(const char * input, size_t length, char16_t* utf16_buffer) noexcept;
 
@@ -118,7 +118,7 @@ simdutf_warn_unused size_t convert_valid_utf8_to_utf16(const char * input, size_
  * @param input         the string to convert
  * @param length        the length of the string in bytes
  * @param utf8_buffer   the pointer to buffer that can hold conversion result
- * @return number of written bytes; 0 if input is not a valid UTF-16 string
+ * @return number of written char16_t words; 0 if input is not a valid UTF-16 string
  */
 simdutf_warn_unused size_t convert_utf16_to_utf8(const char16_t * buf, size_t len, char* utf8_buffer) noexcept;
 
