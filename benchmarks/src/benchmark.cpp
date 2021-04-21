@@ -4,7 +4,21 @@
 #include <cassert>
 #include <array>
 #include <iostream>
+#ifdef __x86_64__
+/**
+ * Bob Steagall, CppCon2018
+ * https://github.com/BobSteagall/CppCon2018/
+ *
+ * Fast Conversion From UTF-8 with C++, DFAs, and SSE Intrinsics
+ * https://www.youtube.com/watch?v=5FQ87-Ecb-A
+ */
+#include "benchmarks/competition/CppCon2018/utf_utils.cpp"
+#endif
 
+/**
+ * Bjoern Hoehrmann 
+ * http://bjoern.hoehrmann.de/utf-8/decoder/dfa/
+ */
 #include "benchmarks/competition/hoehrmann/hoehrmann.h"
 /**
  * LLVM relies on code from the Unicode Consortium
@@ -75,6 +89,11 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
     }
+    {
+        std::string name = "convert_utf8_to_utf16+cppcon2018";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+    }
 #endif
     {
         std::string name = "convert_utf8_to_utf16+hoehrmann";
@@ -89,7 +108,7 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
     {
         std::string name = "convert_utf16_to_utf8+llvm";
         known_procedures.insert(name);
-        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
     }
 }
 
@@ -128,6 +147,11 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
     }
 #endif
 #ifdef __x86_64__
+    if(impl == "cppcon2018") {
+        // this is a special case
+        run_convert_utf8_to_utf16_cppcon2018(iterations);
+        return;
+    }
     if(impl == "u8u16") {
         // this is a special case
         run_convert_utf8_to_utf16_u8u16(iterations);
@@ -259,7 +283,10 @@ void Benchmark::run_convert_valid_utf8_to_utf16_inoue2008(size_t iterations) {
     print_summary(result, size);
 }
 #endif
-
+/**
+ * Bjoern Hoehrmann 
+ * http://bjoern.hoehrmann.de/utf-8/decoder/dfa/
+ */
 void Benchmark::run_convert_utf8_to_utf16_hoehrmann(size_t iterations) {
     uint8_t const *  data = input_data.data();
     const size_t size = input_data.size();
@@ -275,6 +302,27 @@ void Benchmark::run_convert_utf8_to_utf16_hoehrmann(size_t iterations) {
 }
 
 #ifdef __x86_64__
+/**
+ * Bob Steagall, CppCon2018
+ * https://github.com/BobSteagall/CppCon2018/
+ *
+ * Fast Conversion From UTF-8 with C++, DFAs, and SSE Intrinsics
+ * https://www.youtube.com/watch?v=5FQ87-Ecb-A
+ */
+void Benchmark::run_convert_utf8_to_utf16_cppcon2018(size_t iterations) {
+    using char8_t   = unsigned char;
+    const char8_t*  data = reinterpret_cast<const char8_t*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
+    volatile size_t sink{0};
+    auto proc = [data, size, &output_buffer, &sink]() {
+      sink = uu::UtfUtils::SseConvert(data, data + size, output_buffer.get());
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
+    print_summary(result, size);
+}
 /**
  * Cameron, Robert D, A case study in SIMD text processing with parallel bit streams: UTF-8 to UTF-16 transcoding,
  * Proceedings of the 13th ACM SIGPLAN Symposium on Principles and practice of parallel programming, 91--98.
@@ -306,11 +354,11 @@ void Benchmark::run_convert_utf8_to_utf16_u8u16(size_t iterations) {
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
     print_summary(result, size);
 }
+
 /**
  * Olivier Goffart, UTF-8 processing using SIMD (SSE4), 2012.
  * https://woboq.com/blog/utf-8-processing-using-simd.html
  */
-
 void Benchmark::run_convert_utf8_to_utf16_utf8sse4(size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
@@ -362,7 +410,7 @@ void Benchmark::run_convert_utf16_to_utf8(const simdutf::implementation& impleme
 
     size /= 2;
 
-    // Note: non-surroage words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
     //       thus we're making safe assumption that each 16-bit word will be expanded
     //       to four bytes.
     std::unique_ptr<char[]> output_buffer{new char[size * 4]};
@@ -489,7 +537,7 @@ void Benchmark::run_convert_utf16_to_utf8_llvm(size_t iterations) {
 
     size /= 2;
 
-    // Note: non-surroage words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
     //       thus we're making safe assumption that each 16-bit word will be expanded
     //       to four bytes.
     std::unique_ptr<char[]> output_buffer{new char[size * 4]};

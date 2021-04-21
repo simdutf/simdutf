@@ -48,6 +48,14 @@ namespace simdutf::benchmarks {
         void run_convert_valid_utf8_to_utf16_inoue2008(size_t iterations);
 #endif
 #ifdef __x86_64__
+       /**
+        * Bob Steagall, CppCon2018
+        * https://github.com/BobSteagall/CppCon2018/
+        *
+        * Fast Conversion From UTF-8 with C++, DFAs, and SSE Intrinsics
+        * https://www.youtube.com/watch?v=5FQ87-Ecb-A
+        */
+        void run_convert_utf8_to_utf16_cppcon2018(size_t iterations);
         /**
          * benchmarks/competition/u8u16 contains an open source version of u8u16, referenced in
          * Cameron, Robert D, A case study in SIMD text processing with parallel bit streams: UTF-8 to UTF-16 transcoding,
