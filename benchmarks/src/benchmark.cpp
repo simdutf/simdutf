@@ -191,7 +191,7 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
     }
     if(impl == "u8u16") {
         // this is a special case
-        if(name == "convert_valid_utf8_to_utf16") {
+        if(name == "convert_utf8_to_utf16") {
           run_convert_utf8_to_utf16_u8u16(iterations);
         } else {
           std::cerr << "unrecognized:" << procedure_name << "\n";
@@ -200,7 +200,7 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
     }
     if(impl == "utf8sse4") {
         // this is a special case
-        if(name == "convert_valid_utf8_to_utf16") {
+        if(name == "convert_utf8_to_utf16") {
           run_convert_utf8_to_utf16_utf8sse4(iterations);
         } else {
           std::cerr << "unrecognized:" << procedure_name << "\n";
