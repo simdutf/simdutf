@@ -81,7 +81,7 @@ static inline uint16x8_t vector_permute(uint8x16x2_t a,
                                         uint8x16_t shuf) noexcept {
   return vqtbl2q_u8(a, shuf);
 }
-
+// returns (c & b) | (a & not(b))
 static inline uint16x8_t vector_select(uint16x8_t a, uint16x8_t b,
                                        uint16x8_t c) noexcept {
   // c does the selection on a and b
@@ -149,9 +149,9 @@ static inline __m128i vector_permute(simd32bytes a,
   __m128i blended = _mm_blendv_epi8(secondshuffle, firstshuffle, shuf_first_lane);
   return blended;
 }
-
+// returns (c & b) | (a & not(b))
 static inline __m128i vector_select(__m128i a, __m128i b, __m128i c) noexcept {
-  // There might be a moire economical way to do a select with SSE?
+  // There might be a more economical way to do a select with SSE?
   return _mm_or_si128(_mm_and_si128(c, b), _mm_andnot_si128(c, a));
 }
 
