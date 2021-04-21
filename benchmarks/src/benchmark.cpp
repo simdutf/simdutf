@@ -5,6 +5,19 @@
 #include <array>
 #include <iostream>
 #ifdef __x86_64__
+/** 
+ * utf8lut: Vectorized UTF-8 converter.
+ * by stgatilov (2019)
+ *  https://dirtyhandscoding.github.io/posts/utf8lut-vectorized-utf-8-converter-introduction.html
+ */
+SIMDUTF_TARGET_WESTMERE
+namespace {
+#include "benchmarks/competition/utf8lut/src/utf8lut.h"
+}
+SIMDUTF_UNTARGET_REGION
+
+//  ConversionResult ConvertInMemory(BaseBufferProcessor &processor, const char *inputBuffer, long long inputSize, char *outputBuffer, long long outputSize) {
+
 /**
  * Bob Steagall, CppCon2018
  * https://github.com/BobSteagall/CppCon2018/
@@ -85,6 +98,26 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
     }
     {
+        std::string name = "convert_utf16_to_utf8+utf8lut";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
+    }
+    {
+        std::string name = "convert_valid_utf16_to_utf8+utf8lut";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
+    }
+    {
+        std::string name = "convert_utf8_to_utf16+utf8lut";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+    }
+    {
+        std::string name = "convert_valid_utf8_to_utf16+utf8lut";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+    }
+    {
         std::string name = "convert_utf8_to_utf16+utf8sse4";
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
@@ -149,23 +182,54 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
 #ifdef __x86_64__
     if(impl == "cppcon2018") {
         // this is a special case
-        run_convert_utf8_to_utf16_cppcon2018(iterations);
+        if(name == "convert_valid_utf8_to_utf16") {
+          run_convert_utf8_to_utf16_cppcon2018(iterations);
+        } else {
+          std::cerr << "unrecognized:" << procedure_name << "\n";
+        }
         return;
     }
     if(impl == "u8u16") {
         // this is a special case
-        run_convert_utf8_to_utf16_u8u16(iterations);
+        if(name == "convert_valid_utf8_to_utf16") {
+          run_convert_utf8_to_utf16_u8u16(iterations);
+        } else {
+          std::cerr << "unrecognized:" << procedure_name << "\n";
+        }
         return;
     }
     if(impl == "utf8sse4") {
         // this is a special case
-        run_convert_utf8_to_utf16_utf8sse4(iterations);
+        if(name == "convert_valid_utf8_to_utf16") {
+          run_convert_utf8_to_utf16_utf8sse4(iterations);
+        } else {
+          std::cerr << "unrecognized:" << procedure_name << "\n";
+        }
+        return;
+    }
+    if(impl == "utf8lut") {
+        // this is a special case
+        if(name == "convert_valid_utf8_to_utf16") {
+          run_convert_valid_utf8_to_utf16_utf8lut(iterations);
+        } else if(name == "convert_utf8_to_utf16") {
+          run_convert_utf8_to_utf16_utf8lut(iterations);
+        } else if(name == "convert_utf16_to_utf8") {
+          run_convert_utf16_to_utf8_utf8lut(iterations);
+        } else if(name == "convert_valid_utf16_to_utf8") {
+          run_convert_valid_utf16_to_utf8_utf8lut(iterations);
+        } else {
+          std::cerr << "unrecognized:" << procedure_name << "\n";
+        }
         return;
     }
 #endif
     if(impl == "hoehrmann") {
         // this is a special case
-        run_convert_utf8_to_utf16_hoehrmann(iterations);
+        if(name == "convert_utf8_to_utf16") {
+          run_convert_utf8_to_utf16_hoehrmann(iterations);
+        } else {
+          std::cerr << "unrecognized:" << procedure_name << "\n";    
+        }
         return;
     }
     if(impl == "llvm") {
@@ -174,6 +238,8 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
           run_convert_utf8_to_utf16_llvm(iterations);
         } else if(name == "convert_utf16_to_utf8") {
           run_convert_utf16_to_utf8_llvm(iterations);
+        } else {
+          std::cerr << "unrecognized:" << procedure_name << "\n";
         }
         return;
     }
@@ -302,6 +368,132 @@ void Benchmark::run_convert_utf8_to_utf16_hoehrmann(size_t iterations) {
 }
 
 #ifdef __x86_64__
+/** 
+ * utf8lut: Vectorized UTF-8 converter.
+ * by stgatilov (2019)
+ *  https://dirtyhandscoding.github.io/posts/utf8lut-vectorized-utf-8-converter-introduction.html
+ */
+void Benchmark::run_convert_utf16_to_utf8_utf8lut(size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+        printf("# The input size is not divisible by two (it is %lu + %lu for BOM)",
+               input_data.size(), BOM::bom_byte_size(bom));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 2;
+
+    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    //       thus we're making safe assumption that each 16-bit word will be expanded
+    //       to four bytes.
+    std::unique_ptr<char[]> output_buffer{new char[size * 4]};
+
+    volatile size_t sink{0};
+
+    auto proc = [data, size, &output_buffer, &sink]() {
+      std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf16,dfUtf8>::WithOptions<>::Create());
+      ConversionResult result = ConvertInMemory(*processor, reinterpret_cast<const char*>(data), 2*size, reinterpret_cast<char*>(output_buffer.get()), size * 4);
+      if(result.status != 0) {
+          sink = 0;
+      } else {
+          sink = result.outputSize;
+      }
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    print_summary(result, size);
+}
+/** 
+ * utf8lut: Vectorized UTF-8 converter.
+ * by stgatilov (2019)
+ *  https://dirtyhandscoding.github.io/posts/utf8lut-vectorized-utf-8-converter-introduction.html
+ */
+void Benchmark::run_convert_valid_utf16_to_utf8_utf8lut(size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+        printf("# The input size is not divisible by two (it is %lu + %lu for BOM)",
+               input_data.size(), BOM::bom_byte_size(bom));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 2;
+
+    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    //       thus we're making safe assumption that each 16-bit word will be expanded
+    //       to four bytes.
+    std::unique_ptr<char[]> output_buffer{new char[size * 4]};
+
+    volatile size_t sink{0};
+
+    auto proc = [data, size, &output_buffer, &sink]() {
+      std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf16,dfUtf8>::WithOptions<cmFull>::Create());
+      ConversionResult result = ConvertInMemory(*processor, reinterpret_cast<const char*>(data), 2*size, reinterpret_cast<char*>(output_buffer.get()), size * 4);
+      if(result.status != 0) {
+          sink = 0;
+      } else {
+          sink = result.outputSize;
+      }
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    print_summary(result, size);
+}
+/** 
+ * utf8lut: Vectorized UTF-8 converter.
+ * by stgatilov (2019)
+ *  https://dirtyhandscoding.github.io/posts/utf8lut-vectorized-utf-8-converter-introduction.html
+ */
+void Benchmark::run_convert_utf8_to_utf16_utf8lut(size_t iterations) {
+    const char*  data = reinterpret_cast<const char*>(input_data.data());
+    const size_t size = input_data.size();
+
+    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size+8]};
+    volatile size_t sink{0};
+    auto proc = [data, size, &output_buffer, &sink]() {
+      std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf8, dfUtf16>::WithOptions<>::Create());
+      ConversionResult result = ConvertInMemory(*processor, data, size, reinterpret_cast<char*>(output_buffer.get()), size*2+16);
+      if(result.status != 0) {
+          sink = 0;
+      } else {
+          sink = result.outputSize / 2;
+      }
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
+    print_summary(result, size);
+}
+/** 
+ * utf8lut: Vectorized UTF-8 converter.
+ * by stgatilov (2019)
+ *  https://dirtyhandscoding.github.io/posts/utf8lut-vectorized-utf-8-converter-introduction.html
+ */
+void Benchmark::run_convert_valid_utf8_to_utf16_utf8lut(size_t iterations) {
+    const char*  data = reinterpret_cast<const char*>(input_data.data());
+    const size_t size = input_data.size();
+
+    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size+8]};
+    volatile size_t sink{0};
+    auto proc = [data, size, &output_buffer, &sink]() {
+      std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf8, dfUtf16>::WithOptions<cmFull>::Create());
+      ConversionResult result = ConvertInMemory(*processor, data, size, reinterpret_cast<char*>(output_buffer.get()), size*2+16);
+      if(result.status != 0) {
+          sink = 0;
+      } else {
+          sink = result.outputSize / 2;
+      }
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
+    print_summary(result, size);
+}
 /**
  * Bob Steagall, CppCon2018
  * https://github.com/BobSteagall/CppCon2018/
