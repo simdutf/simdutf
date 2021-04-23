@@ -159,34 +159,30 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
   while (buf + 8 < end) {
 
     __m128i in = _mm_loadu_si128((__m128i*)buf);
+    // a single 16-bit UTF-16 word can yield 1, 2 or 3 UTF-8 bytes
+    const __m128i v_ff80 = _mm_set1_epi16((int16_t)0xff80);
+    // no bits set above 7th bit
+    const __m128i one_byte_bytemask = _mm_cmpeq_epi16(_mm_and_si128(in, v_ff80), v_0000);
+    const uint16_t one_byte_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_byte_bytemask));
 
-    // 1. Check if there are any surrogate word in the input chunk.
-    //    We have also deal with situation when there is a suggogate word
-    //    at the end of a chunk.
-    const __m128i surrogates_bytemask = _mm_cmpeq_epi16(_mm_and_si128(in, v_f800), v_d800);
+    if(one_byte_bitmask == 0xffff) { // ASCII fast path!!!!
+      // 1. pack the bytes
+      // obviously suboptimal.
+      const __m128i utf8_packed = _mm_packus_epi16(in,in);
+      // 2. store (64 bytes)
+      _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
 
-    // bitmask = 0x0000 if there are no surrogates
-    //         = 0xc000 if the last word is a surrogate
-    const uint16_t surrogates_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(surrogates_bytemask));
+      // 3. adjust pointers
+      buf += 8;
+      utf8_output += 8;
+      continue; // we are done for this round!
 
-    if ((surrogates_bitmask == 0x0000) or (surrogates_bitmask == 0xc000)) {
-      // In case of surrogate on the last position reset its value. Thanks to that
-      // it would produce just one output byte and we just trim it.
-      in = _mm_andnot_si128(surrogates_bytemask, in);
+    }
 
-      // a single 16-bit UTF-16 word can yield 1, 2 or 3 UTF-8 bytes
-      const __m128i v_ff80 = _mm_set1_epi16((int16_t)0xff80);
-
-      // no bits set above 7th bit
-      const __m128i one_byte_bytemask = _mm_cmpeq_epi16(_mm_and_si128(in, v_ff80), v_0000);
-      // no bits set above 11th bit
-      const __m128i one_or_two_bytes_bytemask = _mm_cmpeq_epi16(_mm_and_si128(in, v_f800), v_0000);
-
-      const uint16_t one_byte_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_byte_bytemask));
-      const uint16_t one_or_two_bytes_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_or_two_bytes_bytemask));
-
-      // case 1: words from register produce either 1 or 2 UTF-8 bytes
-      if ((one_byte_bitmask | one_or_two_bytes_bitmask) == 0xffff) {
+    // no bits set above 11th bit
+    const __m128i one_or_two_bytes_bytemask = _mm_cmpeq_epi16(_mm_and_si128(in, v_f800), v_0000);
+    const uint16_t one_or_two_bytes_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_or_two_bytes_bytemask));
+    if (one_or_two_bytes_bitmask == 0xffff) {
           // 1. prepare 2-byte values
           // input 16-bit word : [0000|0aaa|aabb|bbbb] x 8
           // expected output   : [110a|aaaa|10bb|bbbb] x 8
@@ -222,15 +218,24 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
           _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
 
           // 6. adjust pointers
-          if (surrogates_bitmask == 0x0000) {
-            buf += 8;
-            utf8_output += row[0];
-          } else {
-            buf += 7;
-            utf8_output += row[0] - 1;
-          }
-      // case 2: words from register produce either 1, 2 or 3 UTF-8 bytes
-      } else {
+          buf += 8;
+          utf8_output += row[0];
+          continue;
+
+    }
+
+    // 1. Check if there are any surrogate word in the input chunk.
+    //    We have also deal with situation when there is a suggogate word
+    //    at the end of a chunk.
+    const __m128i surrogates_bytemask = _mm_cmpeq_epi16(_mm_and_si128(in, v_f800), v_d800);
+
+    // bitmask = 0x0000 if there are no surrogates
+    //         = 0xc000 if the last word is a surrogate
+    const uint16_t surrogates_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(surrogates_bytemask));
+    // It might seem like checking for surrogates_bitmask == 0xc000 could help. However,
+    // it is likely an uncommon occurrence.
+    if (surrogates_bitmask == 0x0000) {
+      // case: words from register produce either 1, 2 or 3 UTF-8 bytes
         const __m128i dup_even = _mm_setr_epi16(0x0000, 0x0202, 0x0404, 0x0606,
                                                 0x0808, 0x0a0a, 0x0c0c, 0x0e0e);
 
@@ -291,13 +296,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
         _mm_storeu_si128((__m128i*)utf8_output, utf8_1);
         utf8_output += row1[0];
 
-        if (surrogates_bitmask == 0x0000) {
-          buf += 8;
-        } else {
-          buf += 7;
-          utf8_output -= 1;
-        }
-      }
+        buf += 8;
     // surrogate pair(s) in a register
     } else {
       ///// copy of validation from sse_validate_utf16le.cpp
