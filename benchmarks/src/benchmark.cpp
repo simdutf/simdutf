@@ -16,7 +16,6 @@ namespace {
 }
 SIMDUTF_UNTARGET_REGION
 
-//  ConversionResult ConvertInMemory(BaseBufferProcessor &processor, const char *inputBuffer, long long inputSize, char *outputBuffer, long long outputSize) {
 
 /**
  * Bob Steagall, CppCon2018
