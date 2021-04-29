@@ -55,6 +55,8 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
         // 0. Load data: since the validation takes into account only higher
         //    byte of each word, we compress the two vectors into one which
         //    consists only the higher bytes.
+        const auto in0 = simd8<uint8_t>("x");
+#if 0
         const __m128i in0 = _mm_loadu_si128((__m128i*)(input + 0*8));
         const __m128i in1 = _mm_loadu_si128((__m128i*)(input + 1*8));
 
@@ -108,6 +110,7 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
                 return nullptr;
             }
         }
+#endif
     }
 
     return input;
