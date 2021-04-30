@@ -19,6 +19,11 @@ cd build
 ctest .
 ```
 
+Testing data
+------------
+
+https://github.com/lemire/unicode_lipsum
+
 License
 -------
 
