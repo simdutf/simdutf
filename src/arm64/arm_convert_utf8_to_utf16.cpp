@@ -13,9 +13,9 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   const uint16_t input_utf8_end_of_code_point_mask =
       utf8_end_of_code_point_mask & input_mask;
   const uint8_t idx =
-      tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][0];
+      tables::utf8_to_utf16::utf8index[input_utf8_end_of_code_point_mask];
   const uint8_t consumed =
-      tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][1];
+      tables::utf8_to_utf16::consumed[idx];
 
   uint8x16_t in = vld1q_u8(reinterpret_cast<const uint8_t*>(input));
 

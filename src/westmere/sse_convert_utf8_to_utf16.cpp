@@ -16,9 +16,9 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   const uint16_t input_utf8_end_of_code_point_mask =
       utf8_end_of_code_point_mask & input_mask;
   const uint8_t idx =
-      tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][0];
+      tables::utf8_to_utf16::utf8index[input_utf8_end_of_code_point_mask];
   const uint8_t consumed =
-      tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][1];
+      tables::utf8_to_utf16::consumed[idx];
   const __m128i in = _mm_loadu_si128((__m128i *)input);
   if (idx < 64) {
     // SIX (6) input code-words
