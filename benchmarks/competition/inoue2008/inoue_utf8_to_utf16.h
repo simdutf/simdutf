@@ -271,7 +271,9 @@ static inline size_t convert_valid(const char *input_char, size_t size,
     uint32_t gathered_prefix{0};
     // step 1: gather prefix of 8 characters and convert them to length in bytes
     // This covers up to 24 bytes.
-    const uint8_t *const p = input + position;
+
+    // We take 32 bytes
+    const auto v = vector_load_32bytes(input + position);
     for (int i = 0; i < 8; i++) {
       // The original paper takes (input[position] >> 3) which leaves 5 bits out
       // of 8 bits. That makes little sense unless the algorithm does validation
@@ -302,8 +304,6 @@ static inline size_t convert_valid(const char *input_char, size_t size,
 
     // step 3: move data bits using constants
 
-    // We take 32 bytes
-    const auto v = vector_load_32bytes(p);
     auto vtmp1 = vector_permute(v, vpattern1);
     auto vtmp2 = vector_permute(v, vpattern2);
     // Original paper has :
