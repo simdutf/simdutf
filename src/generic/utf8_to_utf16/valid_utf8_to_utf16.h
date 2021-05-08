@@ -35,6 +35,8 @@ simdutf_warn_unused size_t convert_valid(const char* input, size_t size,
       uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
       size_t max_starting_point = (pos + 64) - 12 - 1;
       while(pos <= max_starting_point) {
+        // Performance note: our ability to compute 'consumed' and
+        // then shift and recompute is critical.
         size_t consumed = convert_masked_utf8_to_utf16(input + pos,
                             utf8_end_of_code_point_mask, utf16_output);
         pos += consumed;

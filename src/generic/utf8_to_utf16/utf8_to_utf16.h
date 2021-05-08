@@ -154,6 +154,8 @@ using namespace simd;
           uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
           size_t max_starting_point = (pos + 64) - 12 - 1;
           while(pos <= max_starting_point) {
+            // Performance note: our ability to compute 'consumed' and
+            // then shift and recompute is critical.
             size_t consumed = convert_masked_utf8_to_utf16(in + pos,
                             utf8_end_of_code_point_mask, utf16_output);
             pos += consumed;

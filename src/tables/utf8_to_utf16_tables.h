@@ -6,6 +6,17 @@ namespace simdutf {
 namespace {
 namespace tables {
 namespace utf8_to_utf16 {
+/**
+ * utf8bigindex uses about 8 kB
+ * shufutf8 uses about 3344 B
+ *
+ * So we use a bit over 11 kB. It would be
+ * easy to save about 4 kB by only
+ * storing the index in utf8bigindex, and
+ * deriving the consumed bytes otherwise.
+ * However, this may come at a significant (10% to 20%)
+ * performance penalty.
+ */
 
 const uint8_t shufutf8[209][16] =
 {	{0, 255, 1, 255, 2, 255, 3, 255, 4, 255, 5, 255, 0, 0, 0, 0},
