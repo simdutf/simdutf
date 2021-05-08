@@ -3,6 +3,9 @@
  * comparison purposes only and not meant to be used in production (ever).
  *
  * Not to be released as part of our public API. This is private code.
+ * Do not use this code for any other purpose than for benchmarking within
+ * simdutf.
+ *
  */
 
 // This is an implementation of  Accelerating UTF-8 Decoding Using SIMD
@@ -268,7 +271,7 @@ static inline size_t convert_valid(const char *input_char, size_t size,
     uint32_t gathered_prefix{0};
     // step 1: gather prefix of 8 characters and convert them to length in bytes
     // This covers up to 24 bytes.
-    const uint8_t *const p = input;
+    const uint8_t *const p = input + position;
     for (int i = 0; i < 8; i++) {
       // The original paper takes (input[position] >> 3) which leaves 5 bits out
       // of 8 bits. That makes little sense unless the algorithm does validation
