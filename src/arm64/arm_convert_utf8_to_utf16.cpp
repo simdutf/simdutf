@@ -2,16 +2,12 @@
 // end of the code points. Only the least significant 12 bits of the mask
 // are accessed.
 // It returns how many bytes were consumed (up to 12).
-size_t convert_masked_utf8_to_utf16(const char *input,
-                           uint64_t utf8_end_of_code_point_mask,
+void convert_masked_utf8_to_utf16(const char *input,
+                           int idx,
                            char16_t *&utf16_output) {
   // we use an approach where we try to process up to 12 input bytes.
   // Why 12 input bytes and not 16? Because we are concerned with the size of
   // the lookup tables. Also 12 is nicely divisible by two and three.
-  const uint8_t idx =
-      tables::utf8_to_utf16::utf8index[utf8_end_of_code_point_mask & 0xFFF];
-  const uint8_t consumed =
-      tables::utf8_to_utf16::consumed[idx];
 
   uint8x16_t in = vld1q_u8(reinterpret_cast<const uint8_t*>(input));
 
@@ -91,5 +87,4 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   } else {
     // here we know that there is an error but we do not handle errors
   }
-  return consumed;
 }

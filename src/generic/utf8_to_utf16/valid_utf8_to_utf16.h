@@ -34,9 +34,23 @@ simdutf_warn_unused size_t convert_valid(const char* input, size_t size,
       // The *start* of code points is not so useful, rather, we want the *end* of code points.
       uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
       size_t max_starting_point = (pos + 64) - 12 - 1;
+      // We always have at least 5 rounds, so we can tell the compiler that much.
+      // Next loop might get unrolled.
+      for(size_t i = 0; i < 5; i++) {
+        const uint8_t idx = tables::utf8_to_utf16::utf8index[utf8_end_of_code_point_mask & 0xFFF];
+        const uint8_t consumed = tables::utf8_to_utf16::consumed[idx];
+
+        convert_masked_utf8_to_utf16(input + pos,
+                            idx, utf16_output);
+        pos += consumed;
+        utf8_end_of_code_point_mask >>= consumed;
+      }
       while(pos <= max_starting_point) {
-        size_t consumed = convert_masked_utf8_to_utf16(input + pos,
-                            utf8_end_of_code_point_mask, utf16_output);
+        const uint8_t idx = tables::utf8_to_utf16::utf8index[utf8_end_of_code_point_mask & 0xFFF];
+        const uint8_t consumed = tables::utf8_to_utf16::consumed[idx];
+
+        convert_masked_utf8_to_utf16(input + pos,
+                            idx, utf16_output);
         pos += consumed;
         utf8_end_of_code_point_mask >>= consumed;
       }
