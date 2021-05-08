@@ -12,11 +12,8 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   // Why 12 input bytes and not 16? Because we are concerned with the size of
   // the lookup tables. Also 12 is nicely divisible by two and three.
   //
-  const uint16_t input_mask = 0xFFF;
-  const uint16_t input_utf8_end_of_code_point_mask =
-      utf8_end_of_code_point_mask & input_mask;
   const uint8_t idx =
-      tables::utf8_to_utf16::utf8index[input_utf8_end_of_code_point_mask];
+      tables::utf8_to_utf16::utf8index[utf8_end_of_code_point_mask & 0xFFF];
   const uint8_t consumed =
       tables::utf8_to_utf16::consumed[idx];
   const __m128i in = _mm_loadu_si128((__m128i *)input);
