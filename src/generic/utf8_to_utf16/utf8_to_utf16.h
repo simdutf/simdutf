@@ -153,23 +153,13 @@ using namespace simd;
           uint64_t utf8_leading_mask = ~utf8_continuation_mask;
           uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
           size_t max_starting_point = (pos + 64) - 12 - 1;
-          // We always have at least 5 rounds, so we can tell the compiler that much.
-          // Next loop might get unrolled.
-          for(size_t i = 0; i < 5; i++) {
-            const uint8_t idx = tables::utf8_to_utf16::utf8index[utf8_end_of_code_point_mask & 0xFFF];
-            const uint8_t consumed = tables::utf8_to_utf16::consumed[idx];
-            convert_masked_utf8_to_utf16(in + pos,
-                            idx, utf16_output);
-            pos += consumed;
-            utf8_end_of_code_point_mask >>= consumed;
-          }
           while(pos <= max_starting_point) {
             const uint8_t idx = tables::utf8_to_utf16::utf8index[utf8_end_of_code_point_mask & 0xFFF];
             const uint8_t consumed = tables::utf8_to_utf16::consumed[idx];
+            utf8_end_of_code_point_mask >>= consumed;
             convert_masked_utf8_to_utf16(in + pos,
                             idx, utf16_output);
             pos += consumed;
-            utf8_end_of_code_point_mask >>= consumed;
           }
         }
       }
