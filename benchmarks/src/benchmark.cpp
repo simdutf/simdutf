@@ -392,7 +392,7 @@ void Benchmark::run_convert_utf16_to_utf8_utf8lut(size_t iterations) {
     volatile size_t sink{0};
 
     auto proc = [data, size, &output_buffer, &sink]() {
-      std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf16,dfUtf8>::WithOptions<>::Create());
+      std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf16,dfUtf8>::WithOptions<cmValidate>::Create());
       ConversionResult result = ConvertInMemory(*processor, reinterpret_cast<const char*>(data), 2*size, reinterpret_cast<char*>(output_buffer.get()), size * 4);
       if(result.status != 0) {
           sink = 0;
@@ -455,7 +455,7 @@ void Benchmark::run_convert_utf8_to_utf16_utf8lut(size_t iterations) {
     std::unique_ptr<char16_t[]> output_buffer{new char16_t[size+8]};
     volatile size_t sink{0};
     auto proc = [data, size, &output_buffer, &sink]() {
-      std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf8, dfUtf16>::WithOptions<>::Create());
+      std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf8, dfUtf16>::WithOptions<cmValidate>::Create());
       ConversionResult result = ConvertInMemory(*processor, data, size, reinterpret_cast<char*>(output_buffer.get()), size*2+16);
       if(result.status != 0) {
           sink = 0;
