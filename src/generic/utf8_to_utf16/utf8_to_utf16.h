@@ -156,8 +156,8 @@ using namespace simd;
           while(pos <= max_starting_point) {
             size_t consumed = convert_masked_utf8_to_utf16(in + pos,
                             utf8_end_of_code_point_mask, utf16_output);
-           pos += consumed;
-           utf8_end_of_code_point_mask >>= consumed;
+            pos += consumed;
+            utf8_end_of_code_point_mask >>= consumed;
           }
         }
       }
