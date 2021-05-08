@@ -152,15 +152,28 @@ using namespace simd;
           uint64_t utf8_continuation_mask = input.lt(-65 + 1);
           uint64_t utf8_leading_mask = ~utf8_continuation_mask;
           uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
-          size_t max_starting_point = (pos + 64) - 12 - 1;
-          while(pos <= max_starting_point) {
+          // We process in blocks of up to 12 bytes.
+          size_t max_starting_point = (pos + 64) - 12;
+          // Next loop is going to run at least five times.
+          while(pos < max_starting_point) {
             // Performance note: our ability to compute 'consumed' and
-            // then shift and recompute is critical.
+            // then shift and recompute is critical. If there is a
+            // latency of, say, 4 cycles on getting 'consumed', then
+            // the inner loop might have a total latency of about 6 cycles.
+            // Yet we process between 6 to 12 inputs bytes, thus we get
+            // a speed limit between 1 cycle/byte and 0.5 cycle/byte
+            // for this section of the code. Hence, there is a limit
+            // to how much we can further increase this latency before
+            // it seriously harms performance.
             size_t consumed = convert_masked_utf8_to_utf16(in + pos,
                             utf8_end_of_code_point_mask, utf16_output);
             pos += consumed;
             utf8_end_of_code_point_mask >>= consumed;
           }
+          // At this point there may remain between 0 and 12 bytes in the
+          // 64-byte block.These bytes will be processed again. So we have an 
+          // 80% efficiency (in the worst case). In practice we expect an 
+          // 85% to 90% efficiency.
         }
       }
       if(errors()) { return 0; }
