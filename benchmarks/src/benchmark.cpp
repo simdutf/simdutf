@@ -283,7 +283,8 @@ void Benchmark::run_validate_utf8(const simdutf::implementation& implementation,
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
-    print_summary(result, size);
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
 }
 
 void Benchmark::run_validate_utf16(const simdutf::implementation& implementation, size_t iterations) {
@@ -306,7 +307,8 @@ void Benchmark::run_validate_utf16(const simdutf::implementation& implementation
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
-    print_summary(result, size);
+    size_t char_count = active_implementation->count_utf16(data, size);
+    print_summary(result, size, char_count);
 }
 
 void Benchmark::run_convert_utf8_to_utf16(const simdutf::implementation& implementation, size_t iterations) {
@@ -321,7 +323,8 @@ void Benchmark::run_convert_utf8_to_utf16(const simdutf::implementation& impleme
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    print_summary(result, size);
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
 }
 
 #ifdef INOUE2008
@@ -345,7 +348,8 @@ void Benchmark::run_convert_valid_utf8_to_utf16_inoue2008(size_t iterations) {
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
-    print_summary(result, size);
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
 }
 #endif
 /**
@@ -363,7 +367,8 @@ void Benchmark::run_convert_utf8_to_utf16_hoehrmann(size_t iterations) {
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    print_summary(result, size);
+    size_t char_count = active_implementation->count_utf8(reinterpret_cast<const char*>(data), size);
+    print_summary(result, size, char_count);
 }
 
 #ifdef __x86_64__
@@ -403,7 +408,8 @@ void Benchmark::run_convert_utf16_to_utf8_utf8lut(size_t iterations) {
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    print_summary(result, input_data.size());
+    size_t char_count = active_implementation->count_utf16(data, size);
+    print_summary(result, input_data.size(), char_count);
 }
 /**
  * utf8lut: Vectorized UTF-8 converter.
@@ -441,7 +447,8 @@ void Benchmark::run_convert_valid_utf16_to_utf8_utf8lut(size_t iterations) {
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    print_summary(result, input_data.size());
+    size_t char_count = active_implementation->count_utf16(data, size);
+    print_summary(result, input_data.size(), char_count);
 }
 /**
  * utf8lut: Vectorized UTF-8 converter.
@@ -466,7 +473,8 @@ void Benchmark::run_convert_utf8_to_utf16_utf8lut(size_t iterations) {
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
-    print_summary(result, size);
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
 }
 /**
  * utf8lut: Vectorized UTF-8 converter.
@@ -491,7 +499,8 @@ void Benchmark::run_convert_valid_utf8_to_utf16_utf8lut(size_t iterations) {
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
-    print_summary(result, size);
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
 }
 /**
  * Bob Steagall, CppCon2018
@@ -512,7 +521,8 @@ void Benchmark::run_convert_utf8_to_utf16_cppcon2018(size_t iterations) {
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
-    print_summary(result, size);
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
 }
 /**
  * Cameron, Robert D, A case study in SIMD text processing with parallel bit streams: UTF-8 to UTF-16 transcoding,
@@ -543,7 +553,8 @@ void Benchmark::run_convert_utf8_to_utf16_u8u16(size_t iterations) {
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
-    print_summary(result, size);
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
 }
 
 /**
@@ -571,7 +582,8 @@ void Benchmark::run_convert_utf8_to_utf16_utf8sse4(size_t iterations) {
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
-    print_summary(result, size);
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
 }
 #endif
 
@@ -586,7 +598,8 @@ void Benchmark::run_convert_valid_utf8_to_utf16(const simdutf::implementation& i
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
-    print_summary(result, size);
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
 }
 
 void Benchmark::run_convert_utf16_to_utf8(const simdutf::implementation& implementation, size_t iterations) {
@@ -614,7 +627,8 @@ void Benchmark::run_convert_utf16_to_utf8(const simdutf::implementation& impleme
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    print_summary(result, input_data.size());
+    size_t char_count = active_implementation->count_utf16(data, size);
+    print_summary(result, input_data.size(), char_count);
 }
 
 void Benchmark::run_convert_valid_utf16_to_utf8(const simdutf::implementation& implementation, size_t iterations) {
@@ -642,7 +656,8 @@ void Benchmark::run_convert_valid_utf16_to_utf8(const simdutf::implementation& i
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    print_summary(result, input_data.size());
+    size_t char_count = active_implementation->count_utf16(data, size);
+    print_summary(result, input_data.size(), char_count);
 }
 
 void Benchmark::run_count_utf8(const simdutf::implementation& implementation, size_t iterations) {
@@ -656,7 +671,8 @@ void Benchmark::run_count_utf8(const simdutf::implementation& implementation, si
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    print_summary(result, size);
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
 }
 
 void Benchmark::run_count_utf16(const simdutf::implementation& implementation, size_t iterations) {
@@ -676,7 +692,8 @@ void Benchmark::run_count_utf16(const simdutf::implementation& implementation, s
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    print_summary(result, input_data.size());
+    size_t char_count = active_implementation->count_utf16(data, size);
+    print_summary(result, input_data.size(), char_count);
 }
 
 const std::set<std::string>& Benchmark::all_procedures() const {
@@ -712,7 +729,8 @@ void Benchmark::run_convert_utf8_to_utf16_llvm(size_t iterations) {
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
-    print_summary(result, size);
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
 }
 
 
@@ -750,7 +768,8 @@ void Benchmark::run_convert_utf16_to_utf8_llvm(size_t iterations) {
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    print_summary(result, input_data.size());
+    size_t char_count = active_implementation->count_utf16(data, size);
+    print_summary(result, input_data.size(), char_count);
 }
 
 } // namespace
