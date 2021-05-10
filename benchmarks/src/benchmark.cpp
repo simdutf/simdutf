@@ -521,7 +521,7 @@ void Benchmark::run_convert_utf8_to_utf16_cppcon2018(size_t iterations) {
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
-    size_t char_count = active_implementation->count_utf8(data, size);
+    size_t char_count = active_implementation->count_utf8(reinterpret_cast<const char*>(data), size);
     print_summary(result, size, char_count);
 }
 /**
