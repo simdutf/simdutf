@@ -69,6 +69,7 @@ struct simd16<int16_t> : base16_numeric<int16_t> {
   simdutf_really_inline simd16(int16_t _value) : simd16(splat(_value)) {}
   // Array constructor
   simdutf_really_inline simd16(const int16_t* values) : simd16(load(values)) {}
+  simdutf_really_inline simd16(const char16_t* values) : simd16(load(reinterpret_cast<const int16_t*>(values))) {}
   // Member-by-member initialization
   simdutf_really_inline simd16(
     int16_t v0, int16_t v1, int16_t v2, int16_t v3, int16_t v4, int16_t v5, int16_t v6, int16_t v7)
@@ -92,6 +93,7 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
   simdutf_really_inline simd16(uint16_t _value) : simd16(splat(_value)) {}
   // Array constructor
   simdutf_really_inline simd16(const uint16_t* values) : simd16(load(values)) {}
+  simdutf_really_inline simd16(const char16_t* values) : simd16(load(reinterpret_cast<const uint16_t*>(values))) {}
   // Member-by-member initialization
   simdutf_really_inline simd16(
     uint16_t v0, uint16_t v1, uint16_t v2, uint16_t v3, uint16_t v4, uint16_t v5, uint16_t v6, uint16_t v7)
@@ -137,5 +139,10 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
   // e.g. value.get_bit<7>() gets the high bit
   template<int N>
   simdutf_really_inline int get_bit() const { return _mm_movemask_epi8(_mm_slli_epi16(*this, 7-N)); }
+
+  // Pack with the unsigned saturation  two uint16_t words into single uint8_t vector
+  static simdutf_really_inline simd8<uint8_t> pack(const simd16<uint16_t>& v0, const simd16<uint16_t>& v1) {
+    return _mm_packus_epi16(v0, v1);
+  }
 };
 simdutf_really_inline simd16<int16_t>::operator simd16<uint16_t>() const { return this->value; }

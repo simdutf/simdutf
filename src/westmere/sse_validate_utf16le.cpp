@@ -46,28 +46,26 @@
 const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
     const char16_t* end = input + size;
 
-    const __m128i v_d8 = _mm_set1_epi8(int8_t(0xd8));
-    const __m128i v_f8 = _mm_set1_epi8(int8_t(0xf8));
-    const __m128i v_fc = _mm_set1_epi8(int8_t(0xfc));
-    const __m128i v_dc = _mm_set1_epi8(int8_t(0xdc));
+    const auto v_d8 = simd8<uint8_t>::splat(0xd8);
+    const auto v_f8 = simd8<uint8_t>::splat(0xf8);
+    const auto v_fc = simd8<uint8_t>::splat(0xfc);
+    const auto v_dc = simd8<uint8_t>::splat(0xdc);
 
     while (input + 16 < end) {
         // 0. Load data: since the validation takes into account only higher
         //    byte of each word, we compress the two vectors into one which
         //    consists only the higher bytes.
-        const auto in0 = simd8<uint8_t>("x");
-#if 0
-        const __m128i in0 = _mm_loadu_si128((__m128i*)(input + 0*8));
-        const __m128i in1 = _mm_loadu_si128((__m128i*)(input + 1*8));
+        const auto in0 = simd16<uint16_t>(input + 0*8);
+        const auto in1 = simd16<uint16_t>(input + 1*8);
 
-        const __m128i t0  = _mm_srli_epi16(in0, 8);
-        const __m128i t1  = _mm_srli_epi16(in1, 8);
+        const auto t0 = in0.shr<8>();
+        const auto t1 = in1.shr<8>();
 
-        const __m128i in  = _mm_packus_epi16(t0, t1);
+        const auto in = simd16<uint16_t>::pack(t0, t1);
 
         // 1. Check whether we have any 0xD800..DFFF word (0b1101'1xxx'yyyy'yyyy).
-        const __m128i surrogates_wordmask = _mm_cmpeq_epi8(_mm_and_si128(in, v_f8), v_d8);
-        const uint16_t surrogates_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(surrogates_wordmask));
+        const auto surrogates_wordmask = (in & v_f8) == v_d8;
+        const uint16_t surrogates_bitmask = surrogates_wordmask.to_bitmask();
         if (surrogates_bitmask == 0x0000) {
             input += 16;
         } else {
@@ -110,7 +108,6 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
                 return nullptr;
             }
         }
-#endif
     }
 
     return input;
