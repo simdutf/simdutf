@@ -80,8 +80,8 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
             const uint16_t V = ~surrogates_bitmask;
 
             // H - word-mask for high surrogates: the six highest bits are 0b1101'11
-            const __m128i vH = _mm_cmpeq_epi8(_mm_and_si128(in, v_fc), v_dc);
-            const uint16_t H = static_cast<uint16_t>(_mm_movemask_epi8(vH));
+            const auto    vH = (in & v_fc) == v_dc;
+            const uint16_t H = vH.to_bitmask();
 
             // L - word mask for low surrogates
             //     L = not H and surrogates_wordmask
