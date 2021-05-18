@@ -1,0 +1,148 @@
+template<typename T>
+struct simd16;
+
+template<typename T, typename Mask=simd16<bool>>
+struct base16: base<simd16<T>> {
+  typedef uint16_t bitmask_t;
+  typedef uint32_t bitmask2_t;
+
+  simdutf_really_inline base16() : base<simd16<T>>() {}
+  simdutf_really_inline base16(const __m256i _value) : base<simd16<T>>(_value) {}
+  template <typename Pointer>
+  simdutf_really_inline base16(const Pointer* ptr) : base16(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(ptr))) {}
+
+  simdutf_really_inline Mask operator==(const simd16<T> other) const { return _mm256_cmpeq_epi16(*this, other); }
+
+  static const int SIZE = sizeof(base<simd16<T>>::value);
+
+  template<int N=1>
+  simdutf_really_inline simd16<T> prev(const simd16<T> prev_chunk) const {
+    return _mm256_alignr_epi8(*this, prev_chunk, 16 - N);
+  }
+};
+
+// SIMD byte mask type (returned by things like eq and gt)
+template<>
+struct simd16<bool>: base16<bool> {
+  static simdutf_really_inline simd16<bool> splat(bool _value) { return _mm256_set1_epi16(uint16_t(-(!!_value))); }
+
+  simdutf_really_inline simd16<bool>() : base16() {}
+  simdutf_really_inline simd16<bool>(const __m256i _value) : base16<bool>(_value) {}
+  // Splat constructor
+  simdutf_really_inline simd16<bool>(bool _value) : base16<bool>(splat(_value)) {}
+
+  simdutf_really_inline int to_bitmask() const { return _mm256_movemask_epi8(*this); }
+  simdutf_really_inline bool any() const { return !_mm256_testz_si256(*this, *this); }
+  simdutf_really_inline simd16<bool> operator~() const { return *this ^ true; }
+};
+
+template<typename T>
+struct base16_numeric: base16<T> {
+  static simdutf_really_inline simd16<T> splat(T _value) { return _mm256_set1_epi16(_value); }
+  static simdutf_really_inline simd16<T> zero() { return _mm256_setzero_si256(); }
+  static simdutf_really_inline simd16<T> load(const T values[8]) {
+    return _mm256_loadu_si256(reinterpret_cast<const __m256i *>(values));
+  }
+
+  simdutf_really_inline base16_numeric() : base16<T>() {}
+  simdutf_really_inline base16_numeric(const __m256i _value) : base16<T>(_value) {}
+
+  // Store to array
+  simdutf_really_inline void store(T dst[8]) const { return _mm256_storeu_si256(reinterpret_cast<__m256i *>(dst), *this); }
+
+  // Override to distinguish from bool version
+  simdutf_really_inline simd16<T> operator~() const { return *this ^ 0xFFu; }
+
+  // Addition/subtraction are the same for signed and unsigned
+  simdutf_really_inline simd16<T> operator+(const simd16<T> other) const { return _mm256_add_epi16(*this, other); }
+  simdutf_really_inline simd16<T> operator-(const simd16<T> other) const { return _mm256_sub_epi16(*this, other); }
+  simdutf_really_inline simd16<T>& operator+=(const simd16<T> other) { *this = *this + other; return *static_cast<simd16<T>*>(this); }
+  simdutf_really_inline simd16<T>& operator-=(const simd16<T> other) { *this = *this - other; return *static_cast<simd16<T>*>(this); }
+};
+
+// Signed words
+template<>
+struct simd16<int16_t> : base16_numeric<int16_t> {
+  simdutf_really_inline simd16() : base16_numeric<int16_t>() {}
+  simdutf_really_inline simd16(const __m256i _value) : base16_numeric<int16_t>(_value) {}
+  // Splat constructor
+  simdutf_really_inline simd16(int16_t _value) : simd16(splat(_value)) {}
+  // Array constructor
+  simdutf_really_inline simd16(const int16_t* values) : simd16(load(values)) {}
+  simdutf_really_inline simd16(const char16_t* values) : simd16(load(reinterpret_cast<const int16_t*>(values))) {}
+  // Order-sensitive comparisons
+  simdutf_really_inline simd16<int16_t> max_val(const simd16<int16_t> other) const { return _mm256_max_epi16(*this, other); }
+  simdutf_really_inline simd16<int16_t> min_val(const simd16<int16_t> other) const { return _mm256_min_epi16(*this, other); }
+  simdutf_really_inline simd16<bool> operator>(const simd16<int16_t> other) const { return _mm256_cmpgt_epi16(*this, other); }
+  simdutf_really_inline simd16<bool> operator<(const simd16<int16_t> other) const { return _mm256_cmpgt_epi16(other, *this); }
+};
+
+// Unsigned words
+template<>
+struct simd16<uint16_t>: base16_numeric<uint16_t>  {
+  simdutf_really_inline simd16() : base16_numeric<uint16_t>() {}
+  simdutf_really_inline simd16(const __m256i _value) : base16_numeric<uint16_t>(_value) {}
+
+  // Splat constructor
+  simdutf_really_inline simd16(uint16_t _value) : simd16(splat(_value)) {}
+  // Array constructor
+  simdutf_really_inline simd16(const uint16_t* values) : simd16(load(values)) {}
+  simdutf_really_inline simd16(const char16_t* values) : simd16(load(reinterpret_cast<const uint16_t*>(values))) {}
+
+  // Saturated math
+  simdutf_really_inline simd16<uint16_t> saturating_add(const simd16<uint16_t> other) const { return _mm256_adds_epu16(*this, other); }
+  simdutf_really_inline simd16<uint16_t> saturating_sub(const simd16<uint16_t> other) const { return _mm256_subs_epu16(*this, other); }
+
+  // Order-specific operations
+  simdutf_really_inline simd16<uint16_t> max_val(const simd16<uint16_t> other) const { return _mm256_max_epu16(*this, other); }
+  simdutf_really_inline simd16<uint16_t> min_val(const simd16<uint16_t> other) const { return _mm256_min_epu16(*this, other); }
+  // Same as >, but only guarantees true is nonzero (< guarantees true = -1)
+  simdutf_really_inline simd16<uint16_t> gt_bits(const simd16<uint16_t> other) const { return this->saturating_sub(other); }
+  // Same as <, but only guarantees true is nonzero (< guarantees true = -1)
+  simdutf_really_inline simd16<uint16_t> lt_bits(const simd16<uint16_t> other) const { return other.saturating_sub(*this); }
+  simdutf_really_inline simd16<bool> operator<=(const simd16<uint16_t> other) const { return other.max_val(*this) == other; }
+  simdutf_really_inline simd16<bool> operator>=(const simd16<uint16_t> other) const { return other.min_val(*this) == other; }
+  simdutf_really_inline simd16<bool> operator>(const simd16<uint16_t> other) const { return this->gt_bits(other).any_bits_set(); }
+  simdutf_really_inline simd16<bool> operator<(const simd16<uint16_t> other) const { return this->gt_bits(other).any_bits_set(); }
+
+  // Bit-specific operations
+  simdutf_really_inline simd16<bool> bits_not_set() const { return *this == uint16_t(0); }
+  simdutf_really_inline simd16<bool> bits_not_set(simd16<uint16_t> bits) const { return (*this & bits).bits_not_set(); }
+  simdutf_really_inline simd16<bool> any_bits_set() const { return ~this->bits_not_set(); }
+  simdutf_really_inline simd16<bool> any_bits_set(simd16<uint16_t> bits) const { return ~this->bits_not_set(bits); }
+
+  simdutf_really_inline bool bits_not_set_anywhere() const { return _mm256_testz_si256(*this, *this); }
+  simdutf_really_inline bool any_bits_set_anywhere() const { return !bits_not_set_anywhere(); }
+  simdutf_really_inline bool bits_not_set_anywhere(simd16<uint16_t> bits) const { return _mm256_testz_si256(*this, bits); }
+  simdutf_really_inline bool any_bits_set_anywhere(simd16<uint16_t> bits) const { return !bits_not_set_anywhere(bits); }
+  template<int N>
+  simdutf_really_inline simd16<uint16_t> shr() const { return simd16<uint16_t>(_mm256_srli_epi16(*this, N)); }
+  template<int N>
+  simdutf_really_inline simd16<uint16_t> shl() const { return simd16<uint16_t>(_mm256_slli_epi16(*this, N)); }
+  // Get one of the bits and make a bitmask out of it.
+  // e.g. value.get_bit<7>() gets the high bit
+  template<int N>
+  simdutf_really_inline int get_bit() const { return _mm256_movemask_epi8(_mm256_slli_epi16(*this, 7-N)); }
+
+  // Pack with the unsigned saturation  two uint16_t words into single uint8_t vector
+  static simdutf_really_inline simd8<uint8_t> pack(const simd16<uint16_t>& v0, const simd16<uint16_t>& v1) {
+    // Note: the AVX2 variant of pack operates on 128-bit lanes, thus
+    //       we have to shuffle lanes in order to produce bytes in the
+    //       correct order.
+
+    // get the 0th lanes
+    const __m128i lo_0 = _mm256_extracti128_si256(v0, 0);
+    const __m128i lo_1 = _mm256_extracti128_si256(v1, 0);
+
+    // get the 1st lanes
+    const __m128i hi_0 = _mm256_extracti128_si256(v0, 1);
+    const __m128i hi_1 = _mm256_extracti128_si256(v1, 1);
+
+    // build new vectors (shuffle lanes)
+    const __m256i t0 = _mm256_set_m128i(lo_1, lo_0);
+    const __m256i t1 = _mm256_set_m128i(hi_1, hi_0);
+
+    // pack words in linear order from v0 and v1
+    return _mm256_packus_epi16(t0, t1);
+  }
+};

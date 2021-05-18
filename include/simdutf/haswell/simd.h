@@ -392,6 +392,8 @@ namespace simd {
     }
   }; // struct simd8x64<T>
 
+  #include "simd16.h.inl"
+
 } // namespace simd
 
 } // unnamed namespace
