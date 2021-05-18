@@ -51,12 +51,12 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
     const auto v_fc = simd8<uint8_t>::splat(0xfc);
     const auto v_dc = simd8<uint8_t>::splat(0xdc);
 
-    while (input + 16 < end) {
+    while (input + simd16<uint16_t>::SIZE * 2 < end) {
         // 0. Load data: since the validation takes into account only higher
         //    byte of each word, we compress the two vectors into one which
         //    consists only the higher bytes.
-        const auto in0 = simd16<uint16_t>(input + 0*8);
-        const auto in1 = simd16<uint16_t>(input + 1*8);
+        const auto in0 = simd16<uint16_t>(input);
+        const auto in1 = simd16<uint16_t>(input + simd16<uint16_t>::SIZE / sizeof(char16_t));
 
         const auto t0 = in0.shr<8>();
         const auto t1 = in1.shr<8>();
