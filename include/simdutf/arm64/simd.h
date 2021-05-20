@@ -164,7 +164,7 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
     static simdutf_really_inline uint8x16_t splat(uint8_t _value) { return vmovq_n_u8(_value); }
     static simdutf_really_inline uint8x16_t zero() { return vdupq_n_u8(0); }
     static simdutf_really_inline uint8x16_t load(const uint8_t* values) { return vld1q_u8(values); }
-
+    simdutf_really_inline simd8(const simd8<uint8_t>& value) = default;
     simdutf_really_inline simd8(const uint8x16_t _value) : base_u8<uint8_t>(_value) {}
     // Zero constructor
     simdutf_really_inline simd8() : simd8(zero()) {}
@@ -271,15 +271,15 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
     uint16x8_t value;
     static simdutf_really_inline uint16x8_t load(const uint16_t* values) { return vld1q_u16(values); }
     static simdutf_really_inline simd8<uint16_t> splat(uint16_t _value) { return vmovq_n_u16(_value); }
-    simdutf_really_inline simd8(const uint16x8_t _value) { value = _value; }
+    simdutf_really_inline simd8(const uint16x8_t _value) : value(_value) {}
     simdutf_really_inline simd8<uint16_t> operator>(const simd8<uint16_t> other) const { return vcgtq_u16(*this, other); }
     simdutf_really_inline simd8<uint16_t> operator<(const simd8<uint16_t> other) const { return vcltq_u16(*this, other); }
     simdutf_really_inline operator const uint16x8_t&() const { return this->value; }
+    simdutf_really_inline operator const int16x8_t() const { return vreinterpretq_s16_u16(this->value); }
+    simdutf_really_inline operator const uint8x16_t() const { return vreinterpretq_u8_u16(this->value); }
     simdutf_really_inline simd8<uint16_t> operator|(const simd8<uint16_t> other) const { return vorrq_u16(*this, other); }
     simdutf_really_inline simd8<uint16_t> operator&(const simd8<uint16_t> other) const { return vandq_u16(*this, other); }
     simdutf_really_inline simd8<uint16_t> operator^(const simd8<uint16_t> other) const { return veorq_u16(*this, other); }
-
-//shit
   };
 
   // Signed bytes
@@ -297,6 +297,7 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
     // Conversion from/to SIMD register
     simdutf_really_inline simd8(const int8x16_t _value) : value{_value} {}
     simdutf_really_inline operator const int8x16_t&() const { return this->value; }
+    simdutf_really_inline operator const uint8x16_t() const { return vreinterpretq_u8_s8(this->value); }
 
     simdutf_really_inline operator int8x16_t&() { return this->value; }
 
@@ -447,8 +448,8 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
       };
 #endif
       // Add each of the elements next to each other, successively, to stuff each 8 byte mask into one.
-      uint8x16_t sum0 = vpaddq_u8(this->chunks[0] & bit_mask, this->chunks[1] & bit_mask);
-      uint8x16_t sum1 = vpaddq_u8(this->chunks[2] & bit_mask, this->chunks[3] & bit_mask);
+      uint8x16_t sum0 = vpaddq_u8(vandq_u8(uint8x16_t(this->chunks[0]), bit_mask), vandq_u8(uint8x16_t(this->chunks[1]), bit_mask));
+      uint8x16_t sum1 = vpaddq_u8(vandq_u8(uint8x16_t(this->chunks[2]), bit_mask), vandq_u8(uint8x16_t(this->chunks[3]), bit_mask));
       sum0 = vpaddq_u8(sum0, sum1);
       sum0 = vpaddq_u8(sum0, sum0);
       return vgetq_lane_u64(vreinterpretq_u64_u8(sum0), 0);
