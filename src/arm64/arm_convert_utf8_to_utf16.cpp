@@ -26,8 +26,8 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // words spanning between 1 and 2 bytes each is 12 bytes.
     uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t*>(tables::utf8_to_utf16::shufutf8[idx]));
     uint8x16_t perm = vqtbl1q_u8(in, sh);
-    uint8x16_t ascii = vandq_u8(perm, vmovq_n_u16(0x7f));
-    uint8x16_t highbyte = vandq_u8(perm, vmovq_n_u16(0x1f00));
+    uint8x16_t ascii = vandq_u8(perm, vreinterpretq_u8_u16(vmovq_n_u16(0x7f)));
+    uint8x16_t highbyte = vandq_u8(perm, vreinterpretq_u8_u16(vmovq_n_u16(0x1f00)));
     uint8x16_t composed = vorrq_u8(ascii, vshrq_n_u16(highbyte, 2));
     vst1q_u8(reinterpret_cast<uint8_t*>(utf16_output), composed);
     utf16_output += 6; // We wrote 12 bytes, 6 code points.
