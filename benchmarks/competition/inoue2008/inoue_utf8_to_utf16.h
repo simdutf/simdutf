@@ -76,13 +76,13 @@ static inline uint16x8_t vector_constant_u16(uint16_t c) noexcept {
 }
 
 static inline uint16x8_t vector_constant_u8(uint8_t c) noexcept {
-  return vmovq_n_u8(c);
+  return vreinterpretq_u16_u8(vmovq_n_u8(c));
 }
 
 // emulate the POWER vec_perm intrinsic.
 static inline uint16x8_t vector_permute(uint8x16x2_t a,
                                         uint8x16_t shuf) noexcept {
-  return vqtbl2q_u8(a, shuf);
+  return vreinterpretq_u16_u8(vqtbl2q_u8(a, shuf));
 }
 // returns (c & b) | (a & not(b))
 static inline uint16x8_t vector_select(uint16x8_t a, uint16x8_t b,

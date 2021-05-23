@@ -28,7 +28,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     uint8x16_t perm = vqtbl1q_u8(in, sh);
     uint8x16_t ascii = vandq_u8(perm, vreinterpretq_u8_u16(vmovq_n_u16(0x7f)));
     uint8x16_t highbyte = vandq_u8(perm, vreinterpretq_u8_u16(vmovq_n_u16(0x1f00)));
-    uint8x16_t composed = vorrq_u8(ascii, vshrq_n_u16(highbyte, 2));
+    uint8x16_t composed = vorrq_u8(ascii, vreinterpretq_u8_u16(vshrq_n_u16(vreinterpretq_u16_u8(highbyte), 2)));
     vst1q_u8(reinterpret_cast<uint8_t*>(utf16_output), composed);
     utf16_output += 6; // We wrote 12 bytes, 6 code points.
   } else if (idx < 145) {
@@ -36,15 +36,15 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t*>(tables::utf8_to_utf16::shufutf8[idx]));
     uint8x16_t perm = vqtbl1q_u8(in, sh);
     uint8x16_t ascii =
-        vandq_u8(perm, vmovq_n_u32(0x7f)); // 7 or 6 bits
+        vandq_u8(perm, vreinterpretq_u8_u32(vmovq_n_u32(0x7f))); // 7 or 6 bits
     uint8x16_t middlebyte =
-        vandq_u8(perm, vmovq_n_u32(0x3f00)); // 5 or 6 bits
-    uint8x16_t middlebyte_shifted = vshrq_n_u32(middlebyte, 2);
+        vandq_u8(perm, vreinterpretq_u8_u32(vmovq_n_u32(0x3f00))); // 5 or 6 bits
+    uint8x16_t middlebyte_shifted = vreinterpretq_u8_u32(vshrq_n_u32(vreinterpretq_u32_u8(middlebyte), 2));
     uint32x4_t highbyte =
-        vandq_u8(perm, vmovq_n_u32(0x0f0000)); // 4 bits
+        vreinterpretq_u32_u8(vandq_u8(perm, vreinterpretq_u8_u32(vmovq_n_u32(0x0f0000)))); // 4 bits
     uint32x4_t highbyte_shifted = vshrq_n_u32(highbyte, 4);
     uint32x4_t composed =
-        vorrq_u32(vorrq_u32(ascii, middlebyte_shifted), highbyte_shifted);
+        vorrq_u32(vorrq_u32(vreinterpretq_u32_u8(ascii), vreinterpretq_u32_u8(middlebyte_shifted)), highbyte_shifted);
     uint16x8_t composed_repacked = vmovn_high_u32(vmovn_u32(composed), composed);
     vst1q_u16(reinterpret_cast<uint16_t*>(utf16_output), composed_repacked);
     utf16_output += 4;
@@ -52,22 +52,22 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // TWO (2) input code-words
     uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t*>(tables::utf8_to_utf16::shufutf8[idx]));
     uint8x16_t perm = vqtbl1q_u8(in, sh);
-    uint8x16_t ascii = vandq_u8(perm, vmovq_n_u32(0x7f));
-    uint8x16_t middlebyte = vandq_u8(perm, vmovq_n_u32(0x3f00));
-    uint8x16_t middlebyte_shifted = vshrq_n_u32(middlebyte, 2);
-    uint8x16_t middlehighbyte = vandq_u8(perm, vmovq_n_u32(0x3f0000));
+    uint8x16_t ascii = vandq_u8(perm, vreinterpretq_u8_u32(vmovq_n_u32(0x7f)));
+    uint8x16_t middlebyte = vandq_u8(perm, vreinterpretq_u8_u32(vmovq_n_u32(0x3f00)));
+    uint8x16_t middlebyte_shifted = vreinterpretq_u8_u32(vshrq_n_u32(vreinterpretq_u32_u8(middlebyte), 2));
+    uint8x16_t middlehighbyte = vandq_u8(perm, vreinterpretq_u8_u32(vmovq_n_u32(0x3f0000)));
     // correct for spurious high bit
     uint8x16_t correct =
-        vshrq_n_u32(vandq_u8(perm, vmovq_n_u32(0x400000)), 1);
+        vreinterpretq_u8_u32(vshrq_n_u32(vreinterpretq_u32_u8(vandq_u8(perm, vreinterpretq_u8_u32(vmovq_n_u32(0x400000)))), 1));
     middlehighbyte = veorq_u8(correct, middlehighbyte);
-    uint8x16_t middlehighbyte_shifted = vshrq_n_u32(middlehighbyte, 4);
-    uint8x16_t highbyte = vandq_u8(perm, vmovq_n_u32(0x07000000));
-    uint8x16_t highbyte_shifted = vshrq_n_u32(highbyte, 6);
+    uint8x16_t middlehighbyte_shifted = vreinterpretq_u8_u32(vshrq_n_u32(vreinterpretq_u32_u8(middlehighbyte), 4));
+    uint8x16_t highbyte = vandq_u8(perm, vreinterpretq_u8_u32(vmovq_n_u32(0x07000000)));
+    uint8x16_t highbyte_shifted =vreinterpretq_u8_u32(vshrq_n_u32(vreinterpretq_u32_u8(highbyte), 6));
     uint8x16_t composed =
         vorrq_u8(vorrq_u8(ascii, middlebyte_shifted),
                      vorrq_u8(highbyte_shifted, middlehighbyte_shifted));
     uint32x4_t composedminus =
-        vsubq_u32(composed, vmovq_n_u32(0x10000));
+        vsubq_u32(vreinterpretq_u32_u8(composed), vmovq_n_u32(0x10000));
     uint32x4_t lowtenbits =
         vandq_u32(composedminus, vmovq_n_u32(0x3ff));
     uint32x4_t hightenbits = vshrq_n_u32(composedminus, 10);
@@ -79,7 +79,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     uint32x4_t surrogates =
         vorrq_u32(hightenbitsadd, lowtenbitsaddshifted);
     uint32_t basic_buffer[4];
-    vst1q_u32(basic_buffer, composed);
+    vst1q_u32(basic_buffer, vreinterpretq_u32_u8(composed));
     uint32_t surrogate_buffer[4];
     vst1q_u32(surrogate_buffer, surrogates);
     for (size_t i = 0; i < 3; i++) {

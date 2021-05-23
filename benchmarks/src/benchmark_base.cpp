@@ -88,24 +88,35 @@ namespace simdutf::benchmarks {
                           std::istreambuf_iterator<char>());
     }
 
-    void BenchmarkBase::print_summary(const event_aggregate& all, double data_size) const {
+    void BenchmarkBase::print_summary(const event_aggregate& all, double data_size, double character_count) const {
         const double gbs = data_size / all.best.elapsed_ns();
+        const double gcs = character_count / all.best.elapsed_ns();
+        const double byte_per_char = data_size / character_count; 
+
         const double gbs_avs = data_size / (all.total.elapsed_ns()/all.iterations);
         const double error_margin = (gbs-gbs_avs)/gbs_avs * 100;
 
         if (all.has_events) {
             const double _1GHz = 1'000'000'000.0;
             const double freq = (all.best.cycles() / all.best.elapsed_sec()) / _1GHz;
-            const double insperunit = all.best.instructions() / data_size;
-            const double cycleperunit = all.best.instructions() / data_size;
+            const double insperbyte = all.best.instructions() / data_size;
+            const double cycleperbyte = all.best.instructions() / data_size;
 
             const double inspercycle = all.best.instructions() / all.best.cycles();
-            const double cmisperunit = all.best.cache_misses() / data_size;
-            const double bmisperunit = all.best.branch_misses() / data_size;
+            const double cmisperbyte = all.best.cache_misses() / data_size;
+            const double bmisperbyte = all.best.branch_misses() / data_size;
 
-            printf("%8.3f ins/byte, %8.3f cycle/byte, %8.3f GHz, %8.3f GB/s (%.1f %%), %8.3f ins/cycle, %g b.misses/byte, %g c.mis/byte \n", insperunit, cycleperunit, freq, gbs, error_margin, inspercycle, bmisperunit, cmisperunit);
+            printf("%8.3f ins/byte, %8.3f cycle/byte, %8.3f GB/s (%.1f %%), %8.6f b.misses/byte, %8.6f c.mis/byte, %8.3f GHz, %8.3f ins/cycle \n", insperbyte, cycleperbyte, gbs, error_margin, bmisperbyte, cmisperbyte, freq, inspercycle);
+            const double insperchar = all.best.instructions() / character_count;
+            const double cycleperchar = all.best.instructions() / character_count;
+
+            const double cmisperchar = all.best.cache_misses() / character_count;
+            const double bmisperchar = all.best.branch_misses() / character_count;
+
+            printf("%8.3f ins/char, %8.3f cycle/char, %8.3f Gc/s (%.1f %%), %8.6f b.misses/char, %8.6f c.mis/char, %8.2f byte/char \n", insperchar, cycleperchar, gcs, error_margin, bmisperchar, cmisperchar, byte_per_char);
+
         } else {
-            printf("%8.3f GB/s (%.1f %%)\n", gbs, error_margin);
+            printf("%8.3f GB/s (%.1f %%) %8.3f Gc/s %8.2f byte/char \n", gbs, error_margin, gcs, byte_per_char);
         }
         if(error_margin>10) { printf("WARNING: Measurements are noisy, try increasing iteration count (-I).\n"); }
     }
