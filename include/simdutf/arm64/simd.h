@@ -266,21 +266,6 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
       return vqtbl1q_u8(*this, simd8<uint8_t>(original));
     }
   };
-  template<>
-  struct simd8<uint16_t> {
-    uint16x8_t value;
-    static simdutf_really_inline uint16x8_t load(const uint16_t* values) { return vld1q_u16(values); }
-    static simdutf_really_inline simd8<uint16_t> splat(uint16_t _value) { return vmovq_n_u16(_value); }
-    simdutf_really_inline simd8(const uint16x8_t _value) : value(_value) {}
-    simdutf_really_inline simd8<uint16_t> operator>(const simd8<uint16_t> other) const { return vcgtq_u16(*this, other); }
-    simdutf_really_inline simd8<uint16_t> operator<(const simd8<uint16_t> other) const { return vcltq_u16(*this, other); }
-    simdutf_really_inline operator const uint16x8_t&() const { return this->value; }
-    simdutf_really_inline operator const int16x8_t() const { return vreinterpretq_s16_u16(this->value); }
-    simdutf_really_inline operator const uint8x16_t() const { return vreinterpretq_u8_u16(this->value); }
-    simdutf_really_inline simd8<uint16_t> operator|(const simd8<uint16_t> other) const { return vorrq_u16(*this, other); }
-    simdutf_really_inline simd8<uint16_t> operator&(const simd8<uint16_t> other) const { return vandq_u16(*this, other); }
-    simdutf_really_inline simd8<uint16_t> operator^(const simd8<uint16_t> other) const { return veorq_u16(*this, other); }
-  };
 
   // Signed bytes
   template<>
@@ -507,17 +492,7 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
     }
 
   }; // struct simd8x64<T>
-  template<>
-  simdutf_really_inline uint64_t simd8x64<uint16_t>::not_in_range(const uint16_t low, const uint16_t high) const {
-      const simd8<uint16_t> mask_low = simd8<uint16_t>::splat(low);
-      const simd8<uint16_t> mask_high = simd8<uint16_t>::splat(high);
-      return  simd8x64<uint16_t>(
-        (this->chunks[0] > mask_high) | (this->chunks[0] < mask_low),
-        (this->chunks[1] > mask_high) | (this->chunks[1] < mask_low),
-        (this->chunks[2] > mask_high) | (this->chunks[2] < mask_low),
-        (this->chunks[3] > mask_high) | (this->chunks[3] < mask_low)
-      ).to_bitmask();
-    }
+  #include "simd16.h.inl"
 } // namespace simd
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
