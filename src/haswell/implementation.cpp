@@ -32,9 +32,9 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
   return simd8<int8_t>(is_third_byte | is_fourth_byte) > int8_t(0);
 }
 
-#include "westmere/sse_convert_utf8_to_utf16.cpp"
-#include "westmere/sse_validate_utf16le.cpp"
-#include "westmere/sse_convert_utf16_to_utf8.cpp"
+#include "haswell/sse_convert_utf8_to_utf16.cpp"
+#include "haswell/sse_validate_utf16le.cpp"
+#include "haswell/sse_convert_utf16_to_utf8.cpp"
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
