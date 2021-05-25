@@ -160,6 +160,8 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
     }
     simdutf_really_inline bool any() const { return vmaxvq_u8(*this) != 0; }
     simdutf_really_inline bool none() const { return vmaxvq_u8(*this) == 0; }
+    simdutf_really_inline bool all() const { return vmaxvq_u8(*this) == 0xFF; }
+
 
   };
 

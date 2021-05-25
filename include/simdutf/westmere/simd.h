@@ -15,7 +15,6 @@ namespace simd {
 
     // Conversion from SIMD register
     simdutf_really_inline base(const __m128i _value) : value(_value) {}
-
     // Conversion to SIMD register
     simdutf_really_inline operator const __m128i&() const { return this->value; }
     simdutf_really_inline operator __m128i&() { return this->value; }
@@ -42,6 +41,8 @@ namespace simd {
     typedef uint16_t bitmask_t;
     typedef uint32_t bitmask2_t;
 
+    simdutf_really_inline T first() const { return _mm_extract_epi8(*this,0); }
+    simdutf_really_inline T last() const { return _mm_extract_epi8(*this,15); }
     simdutf_really_inline base8() : base<simd8<T>>() {}
     simdutf_really_inline base8(const __m128i _value) : base<simd8<T>>(_value) {}
 
@@ -67,6 +68,8 @@ namespace simd {
 
     simdutf_really_inline int to_bitmask() const { return _mm_movemask_epi8(*this); }
     simdutf_really_inline bool any() const { return !_mm_testz_si128(*this, *this); }
+    simdutf_really_inline bool none() const { return _mm_testz_si128(*this, *this); }
+    simdutf_really_inline bool all() const { return _mm_movemask_epi8(*this) == 0xFFFF; }
     simdutf_really_inline simd8<bool> operator~() const { return *this ^ true; }
   };
 
