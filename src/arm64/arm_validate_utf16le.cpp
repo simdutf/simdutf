@@ -33,10 +33,10 @@ const char16_t* arm_validate_utf16le(const char16_t* input, size_t size) {
             // const uint8x16_t allbutlast = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0xFF};
             //             match = vorrq_u8(match, allbutlast);
             // but sh will do:
-            const auto fmatch = simd8<uint8_t>(match) | sh;
+            const auto fmatch = simd8<bool>(simd8<uint8_t>(match) | sh);
             // We deliberately take these two lines out of the following branchy code
             // so that they are always s
-            if (fmatch.min_val() == 0xFF && low_vh == 0) {
+            if (fmatch.all() && low_vh == 0) {
                 input += (high_vl == 0) ? 16 : 15;
             } else {
                 return nullptr;
