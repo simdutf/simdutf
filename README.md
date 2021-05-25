@@ -2,6 +2,13 @@
 simdutf 
 ===============================================
 
+This library provide fast Unicode functions such as
+
+- UTF-8 and UTF-16 validation
+- UTF-8 to UTF-16 transcoding, with or without validation.
+- UTF-16 to UTF-8 transcoding, with or without validation.
+
+Functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, etc.).
 
 Requirements
 -------
