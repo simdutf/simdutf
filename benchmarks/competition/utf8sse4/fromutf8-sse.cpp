@@ -210,7 +210,7 @@ size_t fromUtf8(const char **inbuf, size_t *inbytesleft, char **outbuf, size_t *
     // modified by D. Lemire on June 1st 2021, was:
     // for (i = 0; i < len - need; ++i) {
     // which is wrong.
-    for (i = 0; i < len; ++i) {        
+    for (i = 0; i < len; ++i) {
         ch = chars[i];
         if (need) {
             if ((ch&0xc0) == 0x80) {
