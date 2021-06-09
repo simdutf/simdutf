@@ -25,7 +25,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   if(input_utf8_end_of_code_point_mask == 0xFFF) {
     // We process in chunks of 12 bytes (could do more?)
     // Use 8 bytes.
-    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf16_output), _mm_cvtepu8_epi16(in)));
+    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf16_output), _mm_cvtepu8_epi16(in));
     // Use 4 bytes.
     _mm_storeu_si128(reinterpret_cast<__m128i *>(utf16_output + 8), _mm_cvtepu8_epi16(_mm_srli_si128(in,8)));
     utf16_output += 12; // We wrote 12 16-bit characters.
@@ -46,7 +46,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   if(input_utf8_end_of_code_point_mask == 0x924) {
     // We want to take 4 3-byte UTF-8 words and turn them into 4 2-byte UTF-16 words.
     // There is probably a more efficient sequence, but the following might do.
-    const __m128i sh = _mm_setr_epi8(2, 1, 0, 255, 5, 4, 3, 255, 8, 7, 6, 255, 11, 10, 9, 255);
+    const __m128i sh = _mm_setr_epi8(2, 1, 0, -1, 5, 4, 3, -1, 8, 7, 6, -1, 11, 10, 9, -1);
     const __m128i perm = _mm_shuffle_epi8(in, sh);
     const __m128i ascii =
         _mm_and_si128(perm, _mm_set1_epi32(0x7f)); // 7 or 6 bits
