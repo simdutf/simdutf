@@ -152,7 +152,9 @@ using namespace simd;
           uint64_t utf8_continuation_mask = input.lt(-65 + 1);
           uint64_t utf8_leading_mask = ~utf8_continuation_mask;
           uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
-          // We process in blocks of up to 12 bytes.
+          // We process in blocks of up to 12 bytes except possibly
+          // for fast paths which may process up to 16 bytes. For the
+          // slow path to work, we should have at least 12 input bytes left.
           size_t max_starting_point = (pos + 64) - 12;
           // Next loop is going to run at least five times.
           while(pos < max_starting_point) {

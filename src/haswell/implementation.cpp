@@ -52,7 +52,7 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 #include "generic/utf8_to_utf16/utf8_to_utf16.h"
 // other functions
 #include "generic/utf8.h"
-#include "generic/utf16.h"
+//#include "generic/utf16.h"
 
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
@@ -100,7 +100,9 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const cha
 }
 
 simdutf_warn_unused size_t implementation::count_utf16(const char16_t * input, size_t length) const noexcept {
-  return utf16::count_code_points(input, length);
+  // TEMPORARY HACK SO WE CAN BUILD
+  return scalar::utf16::count_code_points(input, length);
+  //return utf16::count_code_points(input, length);
 }
 
 simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t length) const noexcept {

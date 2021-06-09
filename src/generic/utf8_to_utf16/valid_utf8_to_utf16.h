@@ -33,9 +33,12 @@ simdutf_warn_unused size_t convert_valid(const char* input, size_t size,
       uint64_t utf8_leading_mask = ~utf8_continuation_mask;
       // The *start* of code points is not so useful, rather, we want the *end* of code points.
       uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
-      // We process in blocks of up to 12 bytes.
+      // We process in blocks of up to 12 bytes except possibly
+      // for fast paths which may process up to 16 bytes. For the
+      // slow path to work, we should have at least 12 input bytes left.
       size_t max_starting_point = (pos + 64) - 12;
-      // Next loop is going to run at least five times.
+      // Next loop is going to run at least five times when using solely
+      // the slow/regular path, and at least four times if there are fast paths.
       while(pos < max_starting_point) {
         // Performance note: our ability to compute 'consumed' and
         // then shift and recompute is critical. If there is a
@@ -46,6 +49,10 @@ simdutf_warn_unused size_t convert_valid(const char* input, size_t size,
         // for this section of the code. Hence, there is a limit
         // to how much we can further increase this latency before
         // it seriously harms performance.
+        //
+        // Thus we may allow convert_masked_utf8_to_utf16 to process
+        // more bytes at a time under a fast-path mode where 16 bytes
+        // are consumed at once (e.g., when encountering ASCII).
         size_t consumed = convert_masked_utf8_to_utf16(input + pos,
                             utf8_end_of_code_point_mask, utf16_output);
         pos += consumed;
