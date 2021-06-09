@@ -10,35 +10,32 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   // the lookup tables. Also 12 is nicely divisible by two and three.
   //
   uint8x16_t in = vld1q_u8(reinterpret_cast<const uint8_t*>(input));
-  const uint16_t input_mask = 0xFFF;
   const uint16_t input_utf8_end_of_code_point_mask =
-      utf8_end_of_code_point_mask & input_mask;
+      utf8_end_of_code_point_mask & 0xFFF;
   //
   // Optimization note: our main path below is load-latency dependent. Thus it is maybe
   // beneficial to have fast paths that depend on branch prediction but have less latency.
   // This results in more instructions but, potentially, also higher speeds.
   //
   // We first try a few fast paths.
-  if(input_utf8_end_of_code_point_mask == 0xFFF) {
-    // We process in chunks of 12 bytes (could do more?)
-    // Use 8 bytes.
+  if((utf8_end_of_code_point_mask & 0xFFFF) == 0xFFFF) {
+    // We process in chunks of 16 bytes
     vst1q_u16(reinterpret_cast<uint16_t*>(utf16_output), vmovl_u8(vget_low_u8 (in)));
-    // Use 4 bytes.
     vst1q_u16(reinterpret_cast<uint16_t*>(utf16_output) + 8, vmovl_high_u8(in));
-    utf16_output += 12; // We wrote 12 16-bit characters.
-    return 12; // We consumed 12 bytes.
+    utf16_output += 16; // We wrote 16 16-bit characters.
+    return 16; // We consumed 16 bytes.
   }
-  if(input_utf8_end_of_code_point_mask == 0xaaa) {
-    // We want to take 6 2-byte UTF-8 words and turn them into 6 2-byte UTF-16 words.
+  if((utf8_end_of_code_point_mask & 0xFFFF) == 0xaaaa) {
+    // We want to take 8 2-byte UTF-8 words and turn them into 8 2-byte UTF-16 words.
     // There is probably a more efficient sequence, but the following might do.
-    uint8x16_t sh = {1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 0, 0, 0, 0};
+    uint8x16_t sh = {1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14};
     uint8x16_t perm = vqtbl1q_u8(in, sh);
     uint8x16_t ascii = vandq_u8(perm, vreinterpretq_u8_u16(vmovq_n_u16(0x7f)));
     uint8x16_t highbyte = vandq_u8(perm, vreinterpretq_u8_u16(vmovq_n_u16(0x1f00)));
     uint8x16_t composed = vorrq_u8(ascii, vreinterpretq_u8_u16(vshrq_n_u16(vreinterpretq_u16_u8(highbyte), 2)));
     vst1q_u8(reinterpret_cast<uint8_t*>(utf16_output), composed);
-    utf16_output += 6; // We wrote 12 bytes, 6 code points.
-    return 12;
+    utf16_output += 8; // We wrote 16 bytes, 8 code points.
+    return 16;
   }
   if(input_utf8_end_of_code_point_mask == 0x924) {
     // We want to take 4 3-byte UTF-8 words and turn them into 4 2-byte UTF-16 words.

@@ -29,6 +29,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     return 16; // We consumed 16 bytes.
   }
   if(((utf8_end_of_code_point_mask & 0xFFFF) == 0xaaaa)) {
+    // We want to take 8 2-byte UTF-8 words and turn them into 8 2-byte UTF-16 words.
     // There is probably a more efficient sequence, but the following might do.
     const __m128i sh = _mm_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
     const __m128i perm = _mm_shuffle_epi8(in, sh);
