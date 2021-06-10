@@ -51,12 +51,12 @@ const char16_t* avx2_validate_utf16le(const char16_t* input, size_t size) {
     const auto v_fc = simd8<uint8_t>::splat(0xfc);
     const auto v_dc = simd8<uint8_t>::splat(0xdc);
 
-    while (input + simd16<uint16_t>::SIZE * 2 < end) {
+    while (input + simd16<uint16_t>::ELEMENTS * 2 < end) {
         // 0. Load data: since the validation takes into account only higher
         //    byte of each word, we compress the two vectors into one which
         //    consists only the higher bytes.
         const auto in0 = simd16<uint16_t>(input);
-        const auto in1 = simd16<uint16_t>(input + simd16<uint16_t>::SIZE / sizeof(char16_t));
+        const auto in1 = simd16<uint16_t>(input + simd16<uint16_t>::ELEMENTS);
 
         const auto t0 = in0.shr<8>();
         const auto t1 = in1.shr<8>();
@@ -67,7 +67,7 @@ const char16_t* avx2_validate_utf16le(const char16_t* input, size_t size) {
         const auto surrogates_wordmask = (in & v_f8) == v_d8;
         const uint32_t surrogates_bitmask = surrogates_wordmask.to_bitmask();
         if (surrogates_bitmask == 0x0) {
-            input += simd16<uint16_t>::SIZE * 2;
+            input += simd16<uint16_t>::ELEMENTS * 2;
         } else {
             // 2. We have some surrogates that have to be distinguished:
             //    - low  surrogates: 0b1101'10xx'yyyy'yyyy (0xD800..0xDBFF)
@@ -97,13 +97,13 @@ const char16_t* avx2_validate_utf16le(const char16_t* input, size_t size) {
             if (c == 0xffffffff) {
                 // The whole input register contains valid UTF16, i.e.,
                 // either single words or proper surrogate pairs.
-                input += simd16<uint16_t>::SIZE * 2;
+                input += simd16<uint16_t>::ELEMENTS * 2;
             } else if (c == 0x7fffffff) {
                 // The 31 lower words of the input register contains valid UTF16.
                 // The 31 word may be either a low or high surrogate. It the next
                 // iteration we 1) check if the low surrogate is followed by a high
                 // one, 2) reject sole high surrogate.
-                input += simd16<uint16_t>::SIZE * 2 - 1;
+                input += simd16<uint16_t>::ELEMENTS * 2 - 1;
             } else {
                 return nullptr;
             }

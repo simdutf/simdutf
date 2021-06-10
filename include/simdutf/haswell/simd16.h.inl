@@ -3,8 +3,7 @@ struct simd16;
 
 template<typename T, typename Mask=simd16<bool>>
 struct base16: base<simd16<T>> {
-  typedef uint16_t bitmask_t;
-  typedef uint32_t bitmask2_t;
+  using bitmask_type = uint32_t;
 
   simdutf_really_inline base16() : base<simd16<T>>() {}
   simdutf_really_inline base16(const __m256i _value) : base<simd16<T>>(_value) {}
@@ -13,7 +12,11 @@ struct base16: base<simd16<T>> {
 
   simdutf_really_inline Mask operator==(const simd16<T> other) const { return _mm256_cmpeq_epi16(*this, other); }
 
+  /// the size of vector in bytes
   static const int SIZE = sizeof(base<simd16<T>>::value);
+
+  /// the number of elements of type T a vector can hold
+  static const int ELEMENTS = SIZE / sizeof(T);
 
   template<int N=1>
   simdutf_really_inline simd16<T> prev(const simd16<T> prev_chunk) const {
@@ -31,7 +34,7 @@ struct simd16<bool>: base16<bool> {
   // Splat constructor
   simdutf_really_inline simd16<bool>(bool _value) : base16<bool>(splat(_value)) {}
 
-  simdutf_really_inline int to_bitmask() const { return _mm256_movemask_epi8(*this); }
+  simdutf_really_inline bitmask_type to_bitmask() const { return _mm256_movemask_epi8(*this); }
   simdutf_really_inline bool any() const { return !_mm256_testz_si256(*this, *this); }
   simdutf_really_inline simd16<bool> operator~() const { return *this ^ true; }
 };
@@ -51,7 +54,7 @@ struct base16_numeric: base16<T> {
   simdutf_really_inline void store(T dst[8]) const { return _mm256_storeu_si256(reinterpret_cast<__m256i *>(dst), *this); }
 
   // Override to distinguish from bool version
-  simdutf_really_inline simd16<T> operator~() const { return *this ^ 0xFFu; }
+  simdutf_really_inline simd16<T> operator~() const { return *this ^ 0xFFFFu; }
 
   // Addition/subtraction are the same for signed and unsigned
   simdutf_really_inline simd16<T> operator+(const simd16<T> other) const { return _mm256_add_epi16(*this, other); }
@@ -122,9 +125,9 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
   // Get one of the bits and make a bitmask out of it.
   // e.g. value.get_bit<7>() gets the high bit
   template<int N>
-  simdutf_really_inline int get_bit() const { return _mm256_movemask_epi8(_mm256_slli_epi16(*this, 7-N)); }
+  simdutf_really_inline int get_bit() const { return _mm256_movemask_epi8(_mm256_slli_epi16(*this, 15-N)); }
 
-  // Pack with the unsigned saturation  two uint16_t words into single uint8_t vector
+  // Pack with the unsigned saturation two uint16_t words into single uint8_t vector
   static simdutf_really_inline simd8<uint8_t> pack(const simd16<uint16_t>& v0, const simd16<uint16_t>& v1) {
     // Note: the AVX2 variant of pack operates on 128-bit lanes, thus
     //       we have to shuffle lanes in order to produce bytes in the
