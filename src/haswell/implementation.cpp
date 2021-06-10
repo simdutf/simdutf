@@ -33,7 +33,7 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 }
 
 #include "haswell/sse_convert_utf8_to_utf16.cpp"
-#include "haswell/sse_validate_utf16le.cpp"
+#include "haswell/avx2_validate_utf16le.cpp"
 #include "haswell/sse_convert_utf16_to_utf8.cpp"
 
 } // unnamed namespace
@@ -63,7 +63,7 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
 }
 
 simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, size_t len) const noexcept {
-  const char16_t* tail = sse_validate_utf16le(buf, len);
+  const char16_t* tail = avx2_validate_utf16le(buf, len);
   if (tail) {
     return haswell::utf16_validation::scalar_validate_utf16(tail, len - (tail - buf));
   } else {
