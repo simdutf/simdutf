@@ -17,7 +17,7 @@
 // You do not want to restrict it like so: SIMDUTF_IS_X86_64 && __AVX2__
 // because we want to rely on *runtime dispatch*.
 //
-#define SIMDUTF_IMPLEMENTATION_HASWELL (SIMDUTF_IS_X86_64)
+//#define SIMDUTF_IMPLEMENTATION_HASWELL (SIMDUTF_IS_X86_64)
 #endif
 // To see why  (__BMI__) && (__PCLMUL__) && (__LZCNT__) are not part of this next line, see
 // https://github.com/simdutf/simdutf/issues/1247

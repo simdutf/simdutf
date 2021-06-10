@@ -17,7 +17,6 @@ namespace simd {
 
     // Conversion from SIMD register
     simdutf_really_inline base(const __m256i _value) : value(_value) {}
-
     // Conversion to SIMD register
     simdutf_really_inline operator const __m256i&() const { return this->value; }
     simdutf_really_inline operator __m256i&() { return this->value; }
@@ -46,7 +45,8 @@ namespace simd {
 
     simdutf_really_inline base8() : base<simd8<T>>() {}
     simdutf_really_inline base8(const __m256i _value) : base<simd8<T>>(_value) {}
-
+    simdutf_really_inline T first() const { return _mm256_extract_epi8(*this,0); }
+    simdutf_really_inline T last() const { return _mm256_extract_epi8(*this,31); }
     simdutf_really_inline Mask operator==(const simd8<T> other) const { return _mm256_cmpeq_epi8(*this, other); }
 
     static const int SIZE = sizeof(base<T>::value);
@@ -69,6 +69,8 @@ namespace simd {
 
     simdutf_really_inline int to_bitmask() const { return _mm256_movemask_epi8(*this); }
     simdutf_really_inline bool any() const { return !_mm256_testz_si256(*this, *this); }
+    simdutf_really_inline bool none() const { return _mm256_testz_si256(*this, *this); }
+    simdutf_really_inline bool all() const { return _mm256_movemask_epi8(*this) == 0xFFFFFFFF; }
     simdutf_really_inline simd8<bool> operator~() const { return *this ^ true; }
   };
 

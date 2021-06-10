@@ -107,6 +107,9 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
     simdutf_really_inline base_u8(const uint8x16_t _value) : value(_value) {}
     simdutf_really_inline operator const uint8x16_t&() const { return this->value; }
     simdutf_really_inline operator uint8x16_t&() { return this->value; }
+    simdutf_really_inline T first() const { return vgetq_lane_u8(*this,0); }
+    simdutf_really_inline T last() const { return vgetq_lane_u8(*this,15); }
+
     // Bit operations
     simdutf_really_inline simd8<T> operator|(const simd8<T> other) const { return vorrq_u8(*this, other); }
     simdutf_really_inline simd8<T> operator&(const simd8<T> other) const { return vandq_u8(*this, other); }
@@ -156,14 +159,18 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
       return vgetq_lane_u16(vreinterpretq_u16_u8(tmp), 0);
     }
     simdutf_really_inline bool any() const { return vmaxvq_u8(*this) != 0; }
+    simdutf_really_inline bool none() const { return vmaxvq_u8(*this) == 0; }
+    simdutf_really_inline bool all() const { return vmaxvq_u8(*this) == 0xFF; }
+
+
   };
 
   // Unsigned bytes
   template<>
   struct simd8<uint8_t>: base_u8<uint8_t> {
-    static simdutf_really_inline uint8x16_t splat(uint8_t _value) { return vmovq_n_u8(_value); }
-    static simdutf_really_inline uint8x16_t zero() { return vdupq_n_u8(0); }
-    static simdutf_really_inline uint8x16_t load(const uint8_t* values) { return vld1q_u8(values); }
+    static simdutf_really_inline simd8<uint8_t> splat(uint8_t _value) { return vmovq_n_u8(_value); }
+    static simdutf_really_inline simd8<uint8_t> zero() { return vdupq_n_u8(0); }
+    static simdutf_really_inline simd8<uint8_t> load(const uint8_t* values) { return vld1q_u8(values); }
     simdutf_really_inline simd8(const simd8<uint8_t>& value) = default;
     simdutf_really_inline simd8(const uint8x16_t _value) : base_u8<uint8_t>(_value) {}
     // Zero constructor
@@ -262,7 +269,7 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
     }
 
     template<typename T>
-    simdutf_really_inline simd8<uint8_t> apply_lookup_16_to(const simd8<T> original) {
+    simdutf_really_inline simd8<uint8_t> apply_lookup_16_to(const simd8<T> original) const {
       return vqtbl1q_u8(*this, simd8<uint8_t>(original));
     }
   };
