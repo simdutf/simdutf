@@ -65,7 +65,7 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
 
         // 1. Check whether we have any 0xD800..DFFF word (0b1101'1xxx'yyyy'yyyy).
         const auto surrogates_wordmask = (in & v_f8) == v_d8;
-        const uint16_t surrogates_bitmask = surrogates_wordmask.to_bitmask();
+        const uint16_t surrogates_bitmask = static_cast<uint16_t>(surrogates_wordmask.to_bitmask());
         if (surrogates_bitmask == 0x0000) {
             input += 16;
         } else {
@@ -81,7 +81,7 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
 
             // H - word-mask for high surrogates: the six highest bits are 0b1101'11
             const auto    vH = (in & v_fc) == v_dc;
-            const uint16_t H = vH.to_bitmask();
+            const uint16_t H = static_cast<uint16_t>(vH.to_bitmask());
 
             // L - word mask for low surrogates
             //     L = not H and surrogates_wordmask
