@@ -314,7 +314,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
       const uint16_t L = static_cast<uint16_t>(~H & surrogates_bitmask);
 
       const uint16_t a = L & (H >> 2);
-      const uint16_t b = a << 2;
+      const uint16_t b = static_cast<uint16_t>(a << 2);
       const uint16_t c = V | a | b;
       ///// end of copy
 

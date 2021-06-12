@@ -5,12 +5,13 @@
 #include "../base/PerfDefs.h"
 
 //a single entry of each LUT is defined
+struct m128pair { __m128i __a, __b; };
 struct EncoderLutEntry {
     __m128i shuf;                       //shuffling mask to move bytes into position
     __m128i headerMask;                 //mask of bits which represents header (for each byte)
     union {
         uint32_t dstStep;               //number of bytes processed in output buffer
-        struct { __m128i __a, __b; } s;   //padding up to 64 bytes
+        m128pair s;   //padding up to 64 bytes
     };
 };
 

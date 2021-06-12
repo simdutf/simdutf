@@ -2,7 +2,6 @@
 #include "scalar/utf16.h"
 
 #include "simdutf/ppc64/begin.h"
-
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {

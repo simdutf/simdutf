@@ -133,6 +133,9 @@ template<int SrcFormat, int DstFormat>
 bool ProcessorSelector<SrcFormat, DstFormat>::OnErrorMissCodeUnits(
     void *context, const char *&srcBuffer, int srcBytes, char *&dstBuffer, int dstBytes
 ) {
+    (void)dstBytes; // otherwise it is unused
+    (void)dstBuffer; // otherwise it is unused
+    (void)srcBytes; // otherwise it is unused 
     srcBuffer += GetUnitSizeOfFormat(SrcFormat);
     if (context) {
         int &counter = *(int*)context;

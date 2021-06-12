@@ -1,4 +1,5 @@
 #include "simdutf/fallback/begin.h"
+
 #include "generic/utf16_validation/utf16_scalar_validator.h"
 #include "generic/utf16_to_utf8/utf16_to_utf8.h"
 #include "scalar/utf8_to_utf16/valid_utf8_to_utf16.h"

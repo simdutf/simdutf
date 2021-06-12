@@ -3,11 +3,11 @@
 #include "scalar/utf8_to_utf16/utf8_to_utf16.h"
 #include "tables/utf16_to_utf8_tables.h"
 
-#include "simdutf/westmere/begin.h"
 #include <utility>
 #include <internal/utf16_decode.h>
 #include <internal/utf8_encode.h>
 
+#include "simdutf/westmere/begin.h"
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
