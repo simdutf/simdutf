@@ -77,12 +77,12 @@ int convert_UCS4_to_UTF8(uint32x4_t in, uint8x16_t& out) {
 
   // 0a. convert surrogate pairs into UCS
   {
-      const uint32x4_t v_00010400 = vmovq_n_u32(0x00010400);
-      const uint32x4_t v_00010000 = vmovq_n_u32(0x00010000);
-      const __m128i t0 = _mm_madd_epi16(in, v_00010400); // join 10-bit words into single 20-bit word
-      const __m128i t1 = vaddq_s32 (t0, v_00010000); // add 0x1'0000
-
-      in = _mm_blendv_epi8(in, t1, mask_4_bytes);
+      const uint32x4_t firstpart = vandq_u32(in, vmovq_n_u32(0x03ff0000));
+      const uint32x4_t secondpart = vandq_u32(in, vmovq_n_u32(0x000003ff));
+      const uint32x4_t shiftedfirstpart =  vshrq_n_u32(firstpart, 10);
+      const uint32x4_t t0 = vorrq_u32(shiftedfirstpart, secondpart); // join 10-bit words into single 20-bit word
+      const uint32x4_t t1 = vaddq_u32 (t0, vmovq_n_u32(0x00010000)); // add 0x1'0000
+      in = vbslq_u32(in, t1, mask_4_bytes);
   }
 
   // 1a. shift 6-bit words - step #1
@@ -95,22 +95,22 @@ int convert_UCS4_to_UTF8(uint32x4_t in, uint8x16_t& out) {
   const uint32x4_t v_00003f00 = vmovq_n_u32(0x00003f00);
   const uint32x4_t v_003f0000 = vmovq_n_u32(0x003f0000);
   const uint32x4_t v_0f000000 = vmovq_n_u32(0x0f000000);
-  __m128i byte1 = _mm_and_si128(in, v_0000003f);
-  __m128i byte2 = vshlq_u32(in, 2);
-  byte2 = _mm_and_si128(byte2, v_00003f00); // byte2 = [00000000|00000000|00yyyyyy|00000000]
-  __m128i byte3 = vshlq_u32(in, 4);
-  byte3 = _mm_and_si128(byte3, v_003f0000); // byte3 = [00000000|00zzzzzz|00000000|00000000]
-  __m128i byte4 = vshlq_u32(in, 6);
-  byte4 = _mm_and_si128(byte4, v_0f000000); // byte4 = [000000ww|00000000|00000000|00000000]
+  uint32x4_t byte1 = vandq_u32(in, v_0000003f);
+  uint32x4_t byte2 = vshlq_u32(in, 2);
+  byte2 = vandq_u32(byte2, v_00003f00); // byte2 = [00000000|00000000|00yyyyyy|00000000]
+  uint32x4_t byte3 = vshlq_u32(in, 4);
+  byte3 = vandq_u32(byte3, v_003f0000); // byte3 = [00000000|00zzzzzz|00000000|00000000]
+  uint32x4_t byte4 = vshlq_u32(in, 6);
+  byte4 = vandq_u32(byte4, v_0f000000); // byte4 = [000000ww|00000000|00000000|00000000]
 
   // merged = [000000ww|00zzzzzz|00yyyyyy|00xxxxxx] for 2, 3, 4 UTF-8 bytes
-  __m128i merged;
-  merged = _mm_or_si128(_mm_or_si128(byte1, byte2),
-                        _mm_or_si128(byte3, byte4));
+  uint32x4_t merged;
+  merged = vorrq_u32(vorrq_u32(byte1, byte2),
+                        vorrq_u32(byte3, byte4));
   // merged = [00000000|00000000|00000000|0xxxxxxx] for 1 UTF-8 byte
 
-  merged = _mm_blendv_epi8(merged, in, mask_1_byte);
-
+  merged = vbslq_u32(mask_1_byte, in, mask_1_byte);
+ 
   // Count how many UTF-8 bytes produce each 32-bit word. We are adding three bitmask,
   // thus the addition result will be in range 0..3 (it spans 2 bits), where:
   // * 0 = 0b00 - 1 byte
@@ -120,10 +120,10 @@ int convert_UCS4_to_UTF8(uint32x4_t in, uint8x16_t& out) {
   // We keep just bits #7 and #14 of the masks. After addition the bit #7 will
   // hold the lower bit of the sum, bit #15 -- the higher bit.
   const uint32x4_t v_00004080      = vmovq_n_u32(0x00004080);
-  const __m128i cnt_2_3_4_bytes = _mm_and_si128(mask_2_3_4_bytes, v_00004080);
-  const __m128i cnt_3_4_bytes   = _mm_and_si128(mask_3_4_bytes, v_00004080);
-  const __m128i cnt_4_bytes     = _mm_and_si128(mask_4_bytes, v_00004080);
-  const __m128i count = vaddq_s32(vaddq_s32(cnt_2_3_4_bytes, cnt_3_4_bytes), cnt_4_bytes);
+  const uint32x4_t cnt_2_3_4_bytes = vandq_u32(mask_2_3_4_bytes, v_00004080);
+  const uint32x4_t cnt_3_4_bytes   = vandq_u32(mask_3_4_bytes, v_00004080);
+  const uint32x4_t cnt_4_bytes     = vandq_u32(mask_4_bytes, v_00004080);
+  const uint32x4_t count = vaddq_s32(vaddq_s32(cnt_2_3_4_bytes, cnt_3_4_bytes), cnt_4_bytes);
 
   // Now, when we gather MSB using _mm_movemask_epi8, we obtain a bitmask
   // like this: 00hg00fe00dc00ba, where hg, fe, dc and ba are the two-bit counters.
@@ -135,14 +135,13 @@ int convert_UCS4_to_UTF8(uint32x4_t in, uint8x16_t& out) {
   const auto& to_utf8 = tables::utf16_to_utf8::ucs4_to_utf8[mask];
   // merged = [000000ww|00zzzzzz|00yyyyyy|00xxxxxx]
   //          [00000000|00000000|00000000|0xxxxxxx]
-  merged = _mm_or_si128(merged, _mm_loadu_si128((__m128i*)to_utf8.const_bits_mask));
+  merged = vorrq_u32(merged, _mm_loadu_si128((__m128i*)to_utf8.const_bits_mask));
 
   out = _mm_shuffle_epi8(merged, _mm_loadu_si128((__m128i*)to_utf8.shuffle));
 
   return to_utf8.output_bytes;
 }
 
-#ifdef CUTOFF
 
 /*
   Returns a pair: the first unprocessed byte from buf and utf8_output
@@ -165,7 +164,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
     // 1. Check if there are any surrogate word in the input chunk.
     //    We have also deal with situation when there is a suggogate word
     //    at the and of chunk.
-    const __m128i surrogates_bytemask = _mm_cmpeq_epi16(_mm_and_si128(in, v_f800), v_d800);
+    const __m128i surrogates_bytemask = _mm_cmpeq_epi16(vandq_u32(in, v_f800), v_d800);
 
     // bitmask = 0x0000 if there are no surrogates
     //         = 0xc000 if the last word is a surrogate
@@ -180,9 +179,9 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
       const __m128i v_ff80 = _mm_set1_epi16((int16_t)0xff80);
 
       // no bits set above 7th bit
-      const __m128i one_byte_bytemask = _mm_cmpeq_epi16(_mm_and_si128(in, v_ff80), v_0000);
+      const __m128i one_byte_bytemask = _mm_cmpeq_epi16(vandq_u32(in, v_ff80), v_0000);
       // no bits set above 11th bit
-      const __m128i one_or_two_bytes_bytemask = _mm_cmpeq_epi16(_mm_and_si128(in, v_f800), v_0000);
+      const __m128i one_or_two_bytes_bytemask = _mm_cmpeq_epi16(vandq_u32(in, v_f800), v_0000);
 
       const uint16_t one_byte_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_byte_bytemask));
       const uint16_t one_or_two_bytes_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_or_two_bytes_bytemask));
@@ -198,13 +197,13 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
           // t0 = [000a|aaaa|bbbb|bb00]
           const __m128i t0 = _mm_slli_epi16(in, 2);
           // t1 = [000a|aaaa|0000|0000]
-          const __m128i t1 = _mm_and_si128(t0, v_1f00);
+          const __m128i t1 = vandq_u32(t0, v_1f00);
           // t2 = [0000|0000|00bb|bbbb]
-          const __m128i t2 = _mm_and_si128(in, v_003f);
+          const __m128i t2 = vandq_u32(in, v_003f);
           // t3 = [000a|aaaa|00bb|bbbb]
-          const __m128i t3 = _mm_or_si128(t1, t2);
+          const __m128i t3 = vorrq_u32(t1, t2);
           // t4 = [110a|aaaa|10bb|bbbb]
-          const __m128i t4 = _mm_or_si128(t3, v_c080);
+          const __m128i t4 = vorrq_u32(t3, v_c080);
 
           // 2. merge ASCII and 2-byte codewords
           const __m128i utf8_unpacked = _mm_blendv_epi8(t4, in, one_byte_bytemask);
@@ -257,14 +256,14 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
         */
 #define vec(x) _mm_set1_epi16(static_cast<uint16_t>(x))
         const __m128i t0 = _mm_shuffle_epi8(in, dup_even);
-        const __m128i t1 = _mm_and_si128(t0, vec(0b0011'1111'0111'1111));
-        const __m128i t2 = _mm_or_si128 (t1, vec(0b1000'0000'0000'0000));
+        const __m128i t1 = vandq_u32(t0, vec(0b0011'1111'0111'1111));
+        const __m128i t2 = vorrq_u32 (t1, vec(0b1000'0000'0000'0000));
 
 
         const __m128i s0 = _mm_srli_epi16(in, 4);
-        const __m128i s1 = _mm_and_si128(s0, vec(0b0000'1111'1111'1100));
+        const __m128i s1 = vandq_u32(s0, vec(0b0000'1111'1111'1100));
         const __m128i s2 = _mm_maddubs_epi16(s1, vec(0x0140));
-        const __m128i s3 = _mm_or_si128(s2, vec(0b1100'0000'1110'0000));
+        const __m128i s3 = vorrq_u32(s2, vec(0b1100'0000'1110'0000));
         const __m128i m0 = _mm_andnot_si128(one_or_two_bytes_bytemask, vec(0b0100'0000'0000'0000));
         const __m128i s4 = _mm_xor_si128(s3, m0);
 #undef vec
@@ -310,7 +309,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
       const uint16_t V = ~surrogates_bitmask;
 
       // 1b. obtain mask for high surrogates (0xDC00..0xDFFF)
-      const __m128i vH = _mm_cmpeq_epi16(_mm_and_si128(in, v_fc00), v_dc00);
+      const __m128i vH = _mm_cmpeq_epi16(vandq_u32(in, v_fc00), v_dc00);
       const uint16_t H = static_cast<uint16_t>(_mm_movemask_epi8(vH));
 
       // 1c. obtain mask for log surrogates (0xD800..0xDBFF)
@@ -327,7 +326,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
 
       // 3. keep 10 lowest bits from surrogate pairs having actual data
       const uint32x4_t v_03ff03ff = vmovq_n_u32(0x03ff03ff);
-      const __m128i t0         = _mm_and_si128(in, v_03ff03ff);
+      const __m128i t0         = vandq_u32(in, v_03ff03ff);
       const __m128i in1        = _mm_blendv_epi8(in, t0, surrogates_bytemask);
 
       // 2. use surrogates_bitmask to obtain shuffle pattern
