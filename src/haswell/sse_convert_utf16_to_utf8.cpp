@@ -156,28 +156,38 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
   const __m128i v_d800 = _mm_set1_epi16((int16_t)0xd800);
   const __m128i v_c080 = _mm_set1_epi16((int16_t)0xc080);
 
-  while (buf + 8 < end) {
+  while (buf + 16 <= end) {
 
     __m128i in = _mm_loadu_si128((__m128i*)buf);
     // a single 16-bit UTF-16 word can yield 1, 2 or 3 UTF-8 bytes
     const __m128i v_ff80 = _mm_set1_epi16((int16_t)0xff80);
+    if(_mm_testz_si128(in, v_ff80)) { // ASCII fast path!!!!
+        __m128i nextin = _mm_loadu_si128((__m128i*)buf+1);
+        if(!_mm_testz_si128(nextin, v_ff80)) {
+          // 1. pack the bytes
+          // obviously suboptimal.
+          const __m128i utf8_packed = _mm_packus_epi16(in,in);
+          // 2. store (16 bytes)
+          _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
+          // 3. adjust pointers
+          buf += 8;
+          utf8_output += 8;
+          in = nextin;
+        } else {
+          // 1. pack the bytes
+          // obviously suboptimal.
+          const __m128i utf8_packed = _mm_packus_epi16(in,nextin);
+          // 2. store (16 bytes)
+          _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
+          // 3. adjust pointers
+          buf += 16;
+          utf8_output += 16;
+          continue; // we are done for this round!
+        }
+    }
     // no bits set above 7th bit
     const __m128i one_byte_bytemask = _mm_cmpeq_epi16(_mm_and_si128(in, v_ff80), v_0000);
     const uint16_t one_byte_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_byte_bytemask));
-
-    if(one_byte_bitmask == 0xffff) { // ASCII fast path!!!!
-      // 1. pack the bytes
-      // obviously suboptimal.
-      const __m128i utf8_packed = _mm_packus_epi16(in,in);
-      // 2. store (64 bytes)
-      _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
-
-      // 3. adjust pointers
-      buf += 8;
-      utf8_output += 8;
-      continue; // we are done for this round!
-
-    }
 
     // no bits set above 11th bit
     const __m128i one_or_two_bytes_bytemask = _mm_cmpeq_epi16(_mm_and_si128(in, v_f800), v_0000);
@@ -279,7 +289,18 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
         // 5. compress 32-bit words into 1, 2 or 3 bytes -- 2 x shuffle
         const uint16_t mask = (one_byte_bitmask & 0x5555) |
                               (one_or_two_bytes_bitmask & 0xaaaa);
-
+        if(mask == 0) {
+          // We only have three-byte words. Use fast path.
+          const __m128i shuffle = _mm_setr_epi8(2,3,1,6,7,5,10,11,9,14,15,13,-1,-1,-1,-1);
+          const __m128i utf8_0 = _mm_shuffle_epi8(out0, shuffle);
+          const __m128i utf8_1 = _mm_shuffle_epi8(out1, shuffle);
+          _mm_storeu_si128((__m128i*)utf8_output, utf8_0);
+          utf8_output += 12;
+          _mm_storeu_si128((__m128i*)utf8_output, utf8_1);
+          utf8_output += 12;
+          buf += 8;
+          continue;
+        }
         const uint8_t mask0 = uint8_t(mask);
 
         const uint8_t* row0 = &tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask0][0];
