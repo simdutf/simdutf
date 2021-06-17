@@ -20,8 +20,8 @@ namespace helpers {
     std::mt19937 gen;
 
   public:
-    random_utf16(std::random_device& rd, int single_word_prob, int two_words_probability)
-      : gen{rd()}
+    random_utf16(uint32_t seed, int single_word_prob, int two_words_probability)
+      : gen{seed}
       , utf16_length({double(single_word_prob),
                       double(single_word_prob),
                       double(2 * two_words_probability)}) {}

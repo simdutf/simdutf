@@ -4,8 +4,6 @@
 
 namespace simdutf::tests::helpers {
 
-    RandomInt::RandomInt(uint64_t lo, uint64_t hi) : RandomInt(lo, hi, std::random_device{}()) {}
-
     RandomInt::RandomInt(uint64_t lo, uint64_t hi, uint64_t seed)
       : distr{lo, hi}
       , gen(seed) {}
@@ -13,9 +11,6 @@ namespace simdutf::tests::helpers {
     uint64_t RandomInt::operator()() {
       return distr(gen);
     }
-
-    RandomIntRanges::RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint64_t>> ranges)
-      : RandomIntRanges(ranges, std::random_device{}()) {}
 
     RandomIntRanges::RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint64_t>> ranges_, uint64_t seed)
       : gen(seed) {

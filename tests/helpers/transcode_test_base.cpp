@@ -119,6 +119,12 @@ namespace simdutf::tests::helpers {
   }
 
   bool transcode_utf16_to_utf8_test_base::validate(size_t saved_chars) const {
+    if (!is_input_valid()) {
+      if (saved_chars != 0) {
+        printf("input UTF-16 string is not valid, but conversion routine returned %zu, indicating a valid input\n", saved_chars);
+        return false;
+      }
+    }
     if (saved_chars == 0) {
       if (is_input_valid()) {
         printf("input UTF-16 string is valid, but conversion routine returned 0, indicating input error");

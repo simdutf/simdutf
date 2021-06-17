@@ -141,6 +141,7 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
     simdutf_really_inline simd8() : simd8(vdupq_n_u8(0)) {}
     // Splat constructor
     simdutf_really_inline simd8(bool _value) : simd8(splat(_value)) {}
+    simdutf_really_inline void store(uint8_t dst[16]) const { return vst1q_u8(dst, *this); }
 
     // We return uint32_t instead of uint16_t because that seems to be more efficient for most
     // purposes (cutting it down to uint16_t costs performance in some compilers).
@@ -160,7 +161,7 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
     }
     simdutf_really_inline bool any() const { return vmaxvq_u8(*this) != 0; }
     simdutf_really_inline bool none() const { return vmaxvq_u8(*this) == 0; }
-    simdutf_really_inline bool all() const { return vmaxvq_u8(*this) == 0xFF; }
+    simdutf_really_inline bool all() const { return vminvq_u8(*this) == 0xFF; }
 
 
   };
