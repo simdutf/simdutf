@@ -25,7 +25,7 @@ TEST(convert_pure_ASCII) {
   };
 
   auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
-    return implementation.convert_utf16_to_utf8(utf8, size, utf16);
+    return implementation.convert_valid_utf16_to_utf8(utf8, size, utf16);
   };
 
   std::array<size_t, 1> input_size{16};
@@ -41,7 +41,7 @@ TEST(convert_into_1_or_2_UTF8_bytes) {
     simdutf::tests::helpers::RandomInt random(0x0000, 0x07ff); // range for 1 or 2 UTF-8 bytes
 
     auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
-      return implementation.convert_utf16_to_utf8(utf8, size, utf16);
+      return implementation.convert_valid_utf16_to_utf8(utf8, size, utf16);
     };
 
     for (size_t size: input_size) {
@@ -61,7 +61,7 @@ TEST(convert_into_1_or_2_or_3_UTF8_bytes) {
                                                      {0xe000, 0xffff}}, 0);
 
     auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
-      return implementation.convert_utf16_to_utf8(utf8, size, utf16);
+      return implementation.convert_valid_utf16_to_utf8(utf8, size, utf16);
     };
 
     for (size_t size: input_size) {
@@ -79,7 +79,7 @@ TEST(convert_into_3_or_4_UTF8_bytes) {
                                                      {0xe000, 0x10'ffff}}, 0);
 
     auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
-      return implementation.convert_utf16_to_utf8(utf8, size, utf16);
+      return implementation.convert_valid_utf16_to_utf8(utf8, size, utf16);
     };
 
     for (size_t size: input_size) {
@@ -89,90 +89,6 @@ TEST(convert_into_3_or_4_UTF8_bytes) {
   }
 }
 
-TEST(convert_fails_if_there_is_sole_low_surrogate) {
-  auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
-    return implementation.convert_utf16_to_utf8(utf8, size, utf16);
-  };
-
-  const size_t size = 64;
-  transcode_utf16_to_utf8_test_base test([](){return '*';}, size);
-
-  for (char16_t low_surrogate = 0xdc00; low_surrogate <= 0xdfff; low_surrogate++) {
-    for (size_t i=0; i < size; i++) {
-
-      const auto old = test.input_utf16[i];
-      test.input_utf16[i] = low_surrogate;
-      ASSERT_TRUE(test(procedure));
-      test.input_utf16[i] = old;
-    }
-  }
-}
-
-TEST(convert_fails_if_there_is_sole_high_surrogate) {
-  auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
-    return implementation.convert_utf16_to_utf8(utf8, size, utf16);
-  };
-
-  const size_t size = 64;
-  transcode_utf16_to_utf8_test_base test([](){return '*';}, size);
-
-  for (char16_t high_surrogate = 0xdc00; high_surrogate <= 0xdfff; high_surrogate++) {
-    for (size_t i=0; i < size; i++) {
-
-      const auto old = test.input_utf16[i];
-      test.input_utf16[i] = high_surrogate;
-      ASSERT_TRUE(test(procedure));
-      test.input_utf16[i] = old;
-    }
-  }
-}
-
-TEST(convert_fails_if_there_is_low_surrogate_is_followed_by_another_low_surrogate) {
-  auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
-    return implementation.convert_utf16_to_utf8(utf8, size, utf16);
-  };
-
-  const size_t size = 64;
-  transcode_utf16_to_utf8_test_base test([](){return '*';}, size);
-
-  for (char16_t low_surrogate = 0xdc00; low_surrogate <= 0xdfff; low_surrogate++) {
-    for (size_t i=0; i < size - 1; i++) {
-
-      const auto old0 = test.input_utf16[i + 0];
-      const auto old1 = test.input_utf16[i + 1];
-      test.input_utf16[i + 0] = low_surrogate;
-      test.input_utf16[i + 1] = low_surrogate;
-      ASSERT_TRUE(test(procedure));
-      test.input_utf16[i + 0] = old0;
-      test.input_utf16[i + 1] = old1;
-    }
-  }
-}
-
-TEST(convert_fails_if_there_is_surrogate_pair_is_followed_by_high_surrogate) {
-  auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
-    return implementation.convert_utf16_to_utf8(utf8, size, utf16);
-  };
-
-  const size_t size = 64;
-  transcode_utf16_to_utf8_test_base test([](){return '*';}, size);
-
-  const char16_t low_surrogate = 0xd801;
-  const char16_t high_surrogate = 0xdc02;
-  for (size_t i=0; i < size - 2; i++) {
-
-    const auto old0 = test.input_utf16[i + 0];
-    const auto old1 = test.input_utf16[i + 1];
-    const auto old2 = test.input_utf16[i + 2];
-    test.input_utf16[i + 0] = low_surrogate;
-    test.input_utf16[i + 1] = high_surrogate;
-    test.input_utf16[i + 2] = high_surrogate;
-    ASSERT_TRUE(test(procedure));
-    test.input_utf16[i + 0] = old0;
-    test.input_utf16[i + 1] = old1;
-    test.input_utf16[i + 2] = old2;
-  }
-}
 
 namespace {
   std::vector<std::vector<char16_t>> all_combinations() {
@@ -249,26 +165,16 @@ namespace {
 
 TEST(all_possible_8_codepoint_combinations) {
   auto procedure = [&implementation](const char16_t* utf16, size_t size, char* utf8) -> size_t {
-    return implementation.convert_utf16_to_utf8(utf16, size, utf8);
+    return implementation.convert_valid_utf16_to_utf8(utf16, size, utf8);
   };
 
   std::vector<char> output_utf8(256, ' ');
   int id = 0;
   const auto& combinations = all_combinations();
   for (const auto& input_utf16: combinations) {
-#if 0
-    printf("id = %d/%lu: ", id, combinations.size());
-    for (int i=0; i < 10; i++) {
-      printf(" %04x", input_utf16[i]);
-    }
-    putchar('\n');
-#endif
-
     if (simdutf::tests::reference::validate_utf16(input_utf16.data(), input_utf16.size())) {
       transcode_utf16_to_utf8_test_base test(input_utf16);
       ASSERT_TRUE(test(procedure));
-    } else {
-      ASSERT_FALSE(procedure(input_utf16.data(), input_utf16.size(), output_utf8.data()));
     }
     id += 1;
   }
