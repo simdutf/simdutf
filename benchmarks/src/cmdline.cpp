@@ -3,7 +3,7 @@
 #include <vector>
 #include <stdexcept>
 
-constexpr size_t DEFAULT_ITERATIONS = 400;
+constexpr size_t DEFAULT_ITERATIONS = 1000;
 
 namespace {
 
@@ -135,8 +135,8 @@ Usage:
 
     -h, --help                      show help
     -F [PATH], --input-file [PATH]  set dataset path (may be used many times)
-    -P [NAME], --procedure [NAME]   choose procedure(s) to test
-    -I --iterations                 number of iterations (default: 400)
+    -P [NAME], --procedure [NAME]   choose procedure(s) to test (may be used many times, a substring match suffices)
+    -I --iterations                 number of iterations (default: 1000)
     --random-utf8 [size]            use random UTF8 data of given size
     --show-procedures               prints all known procedures for -P/--procedure
 
@@ -146,7 +146,12 @@ Examples:
     $ benchmark --random-utf8 10240 -I 100
 
     # test procedures implemented with the haswell kernel against two custom files
-    $ benchmark -P "avx2" -F ~/plain_ascii.txt -F ~/chinese_huge.txt
+    $ benchmark -P haswell -F ~/plain_ascii.txt -F ~/chinese_huge.txt
+
+
+    # test two procedures (convert_utf8_to_utf16+llvm and ) implemented with the
+    # haswell kernel against all files matching a pattern (POSIX)
+    $ benchmark -P convert_utf8_to_utf16+llvm -P convert_utf8_to_utf16+u8u16 -F *.utf8.txt
 )txt", file);
 }
 
