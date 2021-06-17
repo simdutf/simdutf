@@ -41,8 +41,6 @@ inline size_t convert(const char16_t* buf, size_t len, char* utf8_output) {
       *utf8_output++ = char((word>>12) | 0b11100000);
       *utf8_output++ = char(((word>>6) & 0b111111) | 0b10000000);
       *utf8_output++ = char((word & 0b111111) | 0b10000000);
-                                 //   printf("wrote 3 bytes\n");
-
       pos++;      
     } else {
       // must be a surrogate pair
