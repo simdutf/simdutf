@@ -123,24 +123,24 @@ int convert_UCS4_to_UTF8(uint32x4_t in, uint8x16_t& out) {
   const uint32x4_t cnt_2_3_4_bytes = vandq_u32(mask_2_3_4_bytes, v_00004080);
   const uint32x4_t cnt_3_4_bytes   = vandq_u32(mask_3_4_bytes, v_00004080);
   const uint32x4_t cnt_4_bytes     = vandq_u32(mask_4_bytes, v_00004080);
-  const uint32x4_t count = vaddq_s32(vaddq_s32(cnt_2_3_4_bytes, cnt_3_4_bytes), cnt_4_bytes);
+  const uint32x4_t count = vaddq_u32(vaddq_u32(cnt_2_3_4_bytes, cnt_3_4_bytes), cnt_4_bytes);
 
-  // Now, when we gather MSB using _mm_movemask_epi8, we obtain a bitmask
+  // Now, when we gather MSB, we obtain a bitmask
   // like this: 00hg00fe00dc00ba, where hg, fe, dc and ba are the two-bit counters.
-  const int m0 = _mm_movemask_epi8(count);
-
   // Compress a sparse 16-bit word bitmask into 8-bit one: hgdcfeba
-  const uint8_t mask = static_cast<uint8_t>((m0 >> 6) | m0);
+  const uint16x8_t bitmask = { 0x0201 , 0x0000, 0x2010, 0x0000, 0x0804, 0x0000, 0x8040, 0x0000 };
+  uint16x8_t m0 = vandq_u16(input, bitmask);
+  const uint8_t mask = vaddvq_u8(minput);
 
   const auto& to_utf8 = tables::utf16_to_utf8::ucs4_to_utf8[mask];
   // merged = [000000ww|00zzzzzz|00yyyyyy|00xxxxxx]
   //          [00000000|00000000|00000000|0xxxxxxx]
-  merged = vorrq_u32(merged, _mm_loadu_si128((__m128i*)to_utf8.const_bits_mask));
-
-  out = _mm_shuffle_epi8(merged, _mm_loadu_si128((__m128i*)to_utf8.shuffle));
+  merged = vorrq_u32(merged, vld1q_u8(to_utf8.const_bits_mask));
+  out = vqtbl2q_u8(merged, vld1q_u8(to_utf8.shuffle));
 
   return to_utf8.output_bytes;
 }
+
 
 
 /*
@@ -148,24 +148,101 @@ int convert_UCS4_to_UTF8(uint32x4_t in, uint8x16_t& out) {
   A scalar routing should carry on the conversion of the tail.
 */
 
-std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) {
+std::pair<const char16_t*, char*> arm_convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) {
 
   const char16_t* end = buf + len;
 
-  const __m128i v_0000 = _mm_setzero_si128();
-  const __m128i v_f800 = _mm_set1_epi16((int16_t)0xf800);
-  const __m128i v_d800 = _mm_set1_epi16((int16_t)0xd800);
-  const __m128i v_c080 = _mm_set1_epi16((int16_t)0xc080);
+  const uint16x8_t v_0000 = vmovq_n_u16(0);
+  const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
+  const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
+  const uint16x8_t v_c080 = vmovq_n_u16((uint16_t)0xc080);
 
   while (buf + 8 < end) {
 
-    __m128i in = _mm_loadu_si128((__m128i*)buf);
+    uint16x8_t in = vld1q_u16(buf);
+
+    if(vmaxvq_u16(in) == 0xffff) { // ASCII fast path!!!!
+      // 1. pack the bytes
+      // obviously suboptimal.
+      const __m128i utf8_packed = _mm_packus_epi16(in,in);
+      // 2. store (64 bytes)
+      _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
+
+      // 3. adjust pointers
+      buf += 8;
+      utf8_output += 8;
+      continue; // we are done for this round!
+    }
+    
+    const uint16_t one_byte_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_byte_bytemask));
+
 
     // 1. Check if there are any surrogate word in the input chunk.
     //    We have also deal with situation when there is a suggogate word
     //    at the and of chunk.
-    const __m128i surrogates_bytemask = _mm_cmpeq_epi16(vandq_u32(in, v_f800), v_d800);
+    const uint16x8_t surrogates_bytemask = vceqq_u16(vandq_u16(in, v_f800), v_d800);
 
+    // Performance note: movmask is expensive under ARM NEON so we simplify the
+    // algorithm somewhat.
+    if(vmaxvq_u16(surrogates_bytemask) == 0) {
+
+      // a single 16-bit UTF-16 word can yield 1, 2 or 3 UTF-8 bytes
+      const uint16x8_t v_ff80 = vmovq_n_u16((uint16_t)0xff80);
+
+      // no bits set above 7th bit
+      const uint16x8_t one_byte_bytemask = vceqq_u16(vandq_u32(in, v_ff80), v_0000);
+      // no bits set above 11th bit
+      const uint16x8_t one_or_two_bytes_bytemask = vceqq_u16(vandq_u32(in, v_f800), v_0000);
+
+      const uint16_t one_byte_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_byte_bytemask));
+      const uint16_t one_or_two_bytes_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_or_two_bytes_bytemask));
+
+      // case 1: words from register produce either 1 or 2 UTF-8 bytes
+      if ((one_byte_bitmask | one_or_two_bytes_bitmask) == 0xffff) {
+          // 1. prepare 2-byte values
+          // input 16-bit word : [0000|0aaa|aabb|bbbb] x 8
+          // expected output   : [110a|aaaa|10bb|bbbb] x 8
+          const __m128i v_1f00 = vmovq_n_u16((int16_t)0x1f00);
+          const __m128i v_003f = vmovq_n_u16((int16_t)0x003f);
+
+          // t0 = [000a|aaaa|bbbb|bb00]
+          const __m128i t0 = _mm_slli_epi16(in, 2);
+          // t1 = [000a|aaaa|0000|0000]
+          const __m128i t1 = vandq_u32(t0, v_1f00);
+          // t2 = [0000|0000|00bb|bbbb]
+          const __m128i t2 = vandq_u32(in, v_003f);
+          // t3 = [000a|aaaa|00bb|bbbb]
+          const __m128i t3 = vorrq_u32(t1, t2);
+          // t4 = [110a|aaaa|10bb|bbbb]
+          const __m128i t4 = vorrq_u32(t3, v_c080);
+
+          // 2. merge ASCII and 2-byte codewords
+          const __m128i utf8_unpacked = _mm_blendv_epi8(t4, in, one_byte_bytemask);
+
+          // 3. prepare bitmask for 8-bit lookup
+          //    one_byte_bitmask = hhggffeeddccbbaa -- the bits are doubled (h - MSB, a - LSB)
+          const uint16_t m0 = one_byte_bitmask & 0x5555;  // m0 = 0h0g0f0e0d0c0b0a
+          const uint16_t m1 = m0 >> 7;                    // m1 = 00000000h0g0f0e0
+          const uint8_t  m2 = static_cast<uint8_t>((m0 | m1) & 0xff);           // m2 =         hdgcfbea
+
+          // 4. pack the bytes
+          const uint8_t* row = &tables::utf16_to_utf8::pack_1_2_utf8_bytes[m2][0];
+          const __m128i shuffle = _mm_loadu_si128((__m128i*)(row + 1));
+          const __m128i utf8_packed = _mm_shuffle_epi8(utf8_unpacked, shuffle);
+
+          // 5. store bytes
+          _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
+
+          // 6. adjust pointers
+          if (surrogates_bitmask == 0x0000) {
+            buf += 8;
+            utf8_output += row[0];
+          } else {
+            buf += 7;
+            utf8_output += row[0] - 1;
+          }
+
+    }
     // bitmask = 0x0000 if there are no surrogates
     //         = 0xc000 if the last word is a surrogate
     const uint16_t surrogates_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(surrogates_bytemask));
@@ -176,12 +253,12 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
       in = _mm_andnot_si128(surrogates_bytemask, in);
 
       // a single 16-bit UTF-16 word can yield 1, 2 or 3 UTF-8 bytes
-      const __m128i v_ff80 = _mm_set1_epi16((int16_t)0xff80);
+      const __m128i v_ff80 = vmovq_n_u16((int16_t)0xff80);
 
       // no bits set above 7th bit
-      const __m128i one_byte_bytemask = _mm_cmpeq_epi16(vandq_u32(in, v_ff80), v_0000);
+      const __m128i one_byte_bytemask = vceqq_u16(vandq_u32(in, v_ff80), v_0000);
       // no bits set above 11th bit
-      const __m128i one_or_two_bytes_bytemask = _mm_cmpeq_epi16(vandq_u32(in, v_f800), v_0000);
+      const __m128i one_or_two_bytes_bytemask = vceqq_u16(vandq_u32(in, v_f800), v_0000);
 
       const uint16_t one_byte_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_byte_bytemask));
       const uint16_t one_or_two_bytes_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_or_two_bytes_bytemask));
@@ -191,8 +268,8 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
           // 1. prepare 2-byte values
           // input 16-bit word : [0000|0aaa|aabb|bbbb] x 8
           // expected output   : [110a|aaaa|10bb|bbbb] x 8
-          const __m128i v_1f00 = _mm_set1_epi16((int16_t)0x1f00);
-          const __m128i v_003f = _mm_set1_epi16((int16_t)0x003f);
+          const __m128i v_1f00 = vmovq_n_u16((int16_t)0x1f00);
+          const __m128i v_003f = vmovq_n_u16((int16_t)0x003f);
 
           // t0 = [000a|aaaa|bbbb|bb00]
           const __m128i t0 = _mm_slli_epi16(in, 2);
@@ -254,7 +331,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
           Finally from these two words we build proper UTF-8 sequence, taking
           into account the case (i.e, the number of bytes to write).
         */
-#define vec(x) _mm_set1_epi16(static_cast<uint16_t>(x))
+#define vec(x) vmovq_n_u16(static_cast<uint16_t>(x))
         const __m128i t0 = _mm_shuffle_epi8(in, dup_even);
         const __m128i t1 = vandq_u32(t0, vec(0b0011'1111'0111'1111));
         const __m128i t2 = vorrq_u32 (t1, vec(0b1000'0000'0000'0000));
@@ -302,14 +379,14 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
     // surrogate pair(s) in a register
     } else {
       ///// copy of validation from sse_validate_utf16le.cpp
-      const __m128i v_fc00 = _mm_set1_epi16(int16_t(0xfc00));
-      const __m128i v_dc00 = _mm_set1_epi16(int16_t(0xdc00));
+      const __m128i v_fc00 = vmovq_n_u16(int16_t(0xfc00));
+      const __m128i v_dc00 = vmovq_n_u16(int16_t(0xdc00));
       // 1. validate surrogates
       // 1a. non-surrogate words
       const uint16_t V = ~surrogates_bitmask;
 
       // 1b. obtain mask for high surrogates (0xDC00..0xDFFF)
-      const __m128i vH = _mm_cmpeq_epi16(vandq_u32(in, v_fc00), v_dc00);
+      const __m128i vH = vceqq_u16(vandq_u32(in, v_fc00), v_dc00);
       const uint16_t H = static_cast<uint16_t>(_mm_movemask_epi8(vH));
 
       // 1c. obtain mask for log surrogates (0xD800..0xDBFF)
