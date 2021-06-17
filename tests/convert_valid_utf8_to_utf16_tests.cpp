@@ -36,8 +36,9 @@ TEST(convert_pure_ASCII) {
 
 TEST(convert_1_or_2_UTF8_bytes) {
   for(size_t trial = 0; trial < trials; trial ++) {
+    uint32_t seed{1234+uint32_t(trial)};
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
-    simdutf::tests::helpers::RandomInt random(0x0000, 0x07ff); // range for 1 or 2 UTF-8 bytes
+    simdutf::tests::helpers::RandomInt random(0x0000, 0x07ff, seed); // range for 1 or 2 UTF-8 bytes
 
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
       return implementation.convert_valid_utf8_to_utf16(utf8, size, utf16);
@@ -52,10 +53,11 @@ TEST(convert_1_or_2_UTF8_bytes) {
 
 TEST(convert_1_or_2_or_3_UTF8_bytes) {
   for(size_t trial = 0; trial < trials; trial ++) {
+    uint32_t seed{1234+uint32_t(trial)};
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
     // range for 1, 2 or 3 UTF-8 bytes
     simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0xd7ff},
-                                                     {0xe000, 0xffff}});
+                                                     {0xe000, 0xffff}}, seed);
 
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
       return implementation.convert_valid_utf8_to_utf16(utf8, size, utf16);
@@ -70,9 +72,10 @@ TEST(convert_1_or_2_or_3_UTF8_bytes) {
 
 TEST(convert_3_or_4_UTF8_bytes) {
   for(size_t trial = 0; trial < trials; trial ++) {
+    uint32_t seed{1234+uint32_t(trial)};
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
     simdutf::tests::helpers::RandomIntRanges random({{0x0800, 0xd800-1},
-                                                     {0xe000, 0x10'ffff}}); // range for 3 or 4 UTF-8 bytes
+                                                     {0xe000, 0x10'ffff}}, seed); // range for 3 or 4 UTF-8 bytes
 
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
       return implementation.convert_valid_utf8_to_utf16(utf8, size, utf16);

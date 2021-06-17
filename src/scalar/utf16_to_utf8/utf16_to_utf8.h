@@ -48,7 +48,7 @@ inline size_t convert(const char16_t* buf, size_t len, char* utf8_output) {
       // must be a surrogate pair
       if(pos + 1 >= len) { return 0; }
       uint16_t diff = uint16_t(word - 0xD800);
-      if(diff >= 0x3FF) { return 0; }
+      if(diff > 0x3FF) { return 0; }
       uint16_t next_word = data[pos + 1];
       uint16_t diff2 = uint16_t(next_word - 0xDC00);
       if(diff2 > 0x3FF) { return 0; }

@@ -14,7 +14,7 @@ inline simdutf_warn_unused bool validate(const char16_t *buf, size_t len) noexce
     if((word &0xF800) == 0xD800) {
         if(pos + 1 >= len) { return false; }
         uint16_t diff = uint16_t(word - 0xD800);
-        if(diff >= 0x3FF) { return false; }
+        if(diff > 0x3FF) { return false; }
         uint16_t next_word = data[pos + 1];
         uint16_t diff2 = uint16_t(next_word - 0xDC00);
         if(diff2 > 0x3FF) { return false; }
@@ -22,7 +22,6 @@ inline simdutf_warn_unused bool validate(const char16_t *buf, size_t len) noexce
     } else {
         pos++;
     }
-
   }
   return true;
 }

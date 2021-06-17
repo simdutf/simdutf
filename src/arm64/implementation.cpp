@@ -1,4 +1,6 @@
 #include "tables/utf8_to_utf16_tables.h"
+#include "scalar/utf16_to_utf8/valid_utf16_to_utf8.h"
+#include "scalar/utf16_to_utf8/utf16_to_utf8.h"
 #include "scalar/utf8_to_utf16/valid_utf8_to_utf16.h"
 #include "scalar/utf8_to_utf16/utf8_to_utf16.h"
 #include "scalar/utf8.h"
@@ -62,7 +64,7 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
 simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, size_t len) const noexcept {
   const char16_t* tail = arm_validate_utf16le(buf, len);
   if (tail) {
-    return utf16_validation::scalar_validate_utf16(tail, len - (tail - buf));
+    return scalar::utf16::validate(tail, len - (tail - buf));
   } else {
     return false;
   }
@@ -79,11 +81,11 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-  return scalar::utf8_to_utf16::convert(buf, len, utf8_output);
+  return scalar::utf16_to_utf8::convert(buf, len, utf8_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-  return scalar::utf8_to_utf16::convert_valid(buf, len, utf8_output);
+  return scalar::utf16_to_utf8::convert_valid(buf, len, utf8_output);
 }
 
 simdutf_warn_unused size_t implementation::count_utf16(const char16_t * input, size_t length) const noexcept {

@@ -37,8 +37,9 @@ TEST(convert_pure_ASCII) {
 
 TEST(convert_into_1_or_2_UTF8_bytes) {
   for(size_t trial = 0; trial < trials; trial ++) {
+    uint32_t seed{1234+uint32_t(trial)};
     if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
-    simdutf::tests::helpers::RandomInt random(0x0000, 0x07ff); // range for 1 or 2 UTF-8 bytes
+    simdutf::tests::helpers::RandomInt random(0x0000, 0x07ff, seed); // range for 1 or 2 UTF-8 bytes
 
     auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
       return implementation.convert_valid_utf16_to_utf8(utf8, size, utf16);

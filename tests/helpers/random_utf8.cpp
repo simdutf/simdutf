@@ -4,9 +4,9 @@ namespace simdutf {
 namespace tests {
 namespace helpers {
 
-random_utf8::random_utf8(std::random_device &rd, int prob_1byte, int prob_2bytes,
+random_utf8::random_utf8(uint32_t seed, int prob_1byte, int prob_2bytes,
                        int prob_3bytes, int prob_4bytes)
-    : gen(rd()), bytes_count({double(prob_1byte), double(prob_2bytes),
+    : gen(seed), bytes_count({double(prob_1byte), double(prob_2bytes),
                               double(prob_3bytes), double(prob_4bytes)}) {}
 
 std::pair<std::vector<uint8_t>,size_t> random_utf8::generate_counted(size_t output_bytes) {
