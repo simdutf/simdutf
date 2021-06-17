@@ -1,7 +1,5 @@
 #include "simdutf/fallback/begin.h"
 
-#include "generic/utf16_validation/utf16_scalar_validator.h"
-//#include "generic/utf16_to_utf8/utf16_to_utf8.h"
 #include "scalar/utf16_to_utf8/valid_utf16_to_utf8.h"
 #include "scalar/utf16_to_utf8/utf16_to_utf8.h"
 #include "scalar/utf8_to_utf16/valid_utf8_to_utf16.h"
@@ -17,7 +15,7 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
 }
 
 simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, size_t len) const noexcept {
-    return fallback::utf16_validation::scalar_validate_utf16(buf, len);
+    return scalar::utf16::validate(buf, len);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
