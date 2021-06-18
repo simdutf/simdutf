@@ -53,39 +53,17 @@
   A scalar routing should carry on the conversion of the tail.
 */
 std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) {
-printf("\n\nSTART\n");
-const char16_t* origbuf(buf);
-const char* origout(utf8_output);
-
   const char16_t* end = buf + len;
-
-
   const __m256i v_0000 = _mm256_setzero_si256();
   const __m256i v_f800 = _mm256_set1_epi16((int16_t)0xf800);
   const __m256i v_d800 = _mm256_set1_epi16((int16_t)0xd800);
   const __m256i v_c080 = _mm256_set1_epi16((int16_t)0xc080);
 
   while (buf + 16 <= end) {
-/*printf("loop len = %zu \n", utf8_output - origout);
-for(size_t i = 0; i < 16; i++ ) {
-
-        uint16_t word = buf[i];
-        if((word & 0xFF80)==0) {
-          printf("A");
-        } else if((word & 0xF800)==0) {
-          printf("2");
-        } else if((word &0xF800 ) != 0xD800) {
-          printf("3");
-        } else {
-          printf("4");
-        }
-}
-printf("\n");*/
     __m256i in = _mm256_loadu_si256((__m256i*)buf);
     // a single 16-bit UTF-16 word can yield 1, 2 or 3 UTF-8 bytes
     const __m256i v_ff80 = _mm256_set1_epi16((int16_t)0xff80);
     if(_mm256_testz_si256(in, v_ff80)) { // ASCII fast path!!!!
-   // printf("A\n");
         // 1. pack the bytes
         const __m128i utf8_packed = _mm_packus_epi16(_mm256_castsi256_si128(in),_mm256_extractf128_si256(in,1));
         // 2. store (16 bytes)
@@ -125,24 +103,13 @@ printf("\n");*/
           const __m256i utf8_unpacked = _mm256_blendv_epi8(t4, in, one_byte_bytemask);
 
           // 3. prepare bitmask for 8-bit lookup
-          //    one_byte_bitmask = hhggffeeddccbbaa -- the bits are doubled (h - MSB, a - LSB)
-          //    one_byte_bitmask = hhggffeeddccbbaa -- the bits are doubled (h - MSB, a - LSB)
-         const uint16_t m0 = uint16_t(one_byte_bitmask) & 0x5555;  // m0 = 0h0g0f0e0d0c0b0a
-         const uint16_t m1 = m0 >> 7;                    // m1 = 00000000h0g0f0e0
-          const uint8_t  m2 = static_cast<uint8_t>((m0 | m1) & 0xff);           // m2 =         hdgcfbea
-
-         const uint16_t m0_2 = uint16_t(one_byte_bitmask>>16) & 0x5555;  // m0 = 0h0g0f0e0d0c0b0a
-         const uint16_t m1_2 = m0_2 >> 7;                    // m1 = 00000000h0g0f0e0
-          const uint8_t  m2_2 = static_cast<uint8_t>((m0_2 | m1_2) & 0xff);           // m2 =         hdgcfbea
-
-     //     const uint32_t m0 = one_byte_bitmask & 0x55555555;                       // m0 = 0h0g0f0e0d0c0b0a
-       //   const uint32_t m1 = m0 >> 16;                                             // m1 = 00000000h0g0f0e0
-        //  const uint16_t m2 = static_cast<uint16_t>((m0 | m1) & 0xffff);           // m2 =         hdgcfbea
-          //printf("%x %x \n", uint8_t(m2), uint8_t(m2>>8));
+          const uint32_t M0 = one_byte_bitmask & 0x55555555;
+          const uint32_t M1 = M0 >> 7;
+          const uint32_t M2 = (M1 | M0)  & 0x00ff00ff;
           // 4. pack the bytes
 
-          const uint8_t* row = &tables::utf16_to_utf8::pack_1_2_utf8_bytes[uint8_t(m2)][0];
-          const uint8_t* row_2 = &tables::utf16_to_utf8::pack_1_2_utf8_bytes[uint8_t(m2_2)][0];
+          const uint8_t* row = &tables::utf16_to_utf8::pack_1_2_utf8_bytes[uint8_t(M2)][0];
+          const uint8_t* row_2 = &tables::utf16_to_utf8::pack_1_2_utf8_bytes[uint8_t(M2>>16)][0];
 
           const __m128i shuffle = _mm_loadu_si128((__m128i*)(row + 1));
           const __m128i shuffle_2 = _mm_loadu_si128((__m128i*)(row_2 + 1));
@@ -158,21 +125,6 @@ printf("\n");*/
           buf += 16;
           continue;
     }
-    printf("3+\n");
-for(size_t i = 0; i < 16; i++ ) {
-
-        uint16_t word = buf[i];
-        if((word & 0xFF80)==0) {
-          printf("A");
-        } else if((word & 0xF800)==0) {
-          printf("2");
-        } else if((word &0xF800 ) != 0xD800) {
-          printf("3");
-        } else {
-          printf("4");
-        }
-}
-printf("\n");
     // 1. Check if there are any surrogate word in the input chunk.
     //    We have also deal with situation when there is a suggogate word
     //    at the end of a chunk.
@@ -230,7 +182,7 @@ printf("\n");
         // 5. compress 32-bit words into 1, 2 or 3 bytes -- 2 x shuffle
         const uint32_t mask = (one_byte_bitmask & 0x55555555) |
                               (one_or_two_bytes_bitmask & 0xaaaaaaaa);
-        /*if(mask == 0) {
+        if(mask == 0) {
           // We only have three-byte words. Use fast path.
           const __m256i shuffle = _mm256_setr_epi8(2,3,1,6,7,5,10,11,9,14,15,13,-1,-1,-1,-1, 2,3,1,6,7,5,10,11,9,14,15,13,-1,-1,-1,-1);
           const __m256i utf8_0 = _mm256_shuffle_epi8(out0, shuffle);
@@ -245,7 +197,7 @@ printf("\n");
           utf8_output += 12;
           buf += 16;
           continue;
-        }*/
+        }
         const uint8_t mask0 = uint8_t(mask);
         const uint8_t* row0 = &tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask0][0];
         const __m128i shuffle0 = _mm_loadu_si128((__m128i*)(row0 + 1));
@@ -276,7 +228,6 @@ printf("\n");
         _mm_storeu_si128((__m128i*)utf8_output, utf8_3);
         utf8_output += row3[0];
         buf += 16;
-       //buf+=8;
     // surrogate pair(s) in a register
     } else {
       // Let us do a scalar fallback.
@@ -309,6 +260,5 @@ printf("\n");
       buf += k;
     }
   } // while
-printf("==========exit len = %zu \n", utf8_output - origout);
   return std::make_pair(buf, utf8_output);
 }
