@@ -182,7 +182,8 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
         // 5. compress 32-bit words into 1, 2 or 3 bytes -- 2 x shuffle
         const uint32_t mask = (one_byte_bitmask & 0x55555555) |
                               (one_or_two_bytes_bitmask & 0xaaaaaaaa);
-        if(mask == 0) {
+        // Due to the wider registers, the following path is less likely to be useful.
+        /*if(mask == 0) {
           // We only have three-byte words. Use fast path.
           const __m256i shuffle = _mm256_setr_epi8(2,3,1,6,7,5,10,11,9,14,15,13,-1,-1,-1,-1, 2,3,1,6,7,5,10,11,9,14,15,13,-1,-1,-1,-1);
           const __m256i utf8_0 = _mm256_shuffle_epi8(out0, shuffle);
@@ -197,7 +198,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
           utf8_output += 12;
           buf += 16;
           continue;
-        }
+        }*/
         const uint8_t mask0 = uint8_t(mask);
         const uint8_t* row0 = &tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask0][0];
         const __m128i shuffle0 = _mm_loadu_si128((__m128i*)(row0 + 1));
