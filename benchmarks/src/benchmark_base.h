@@ -37,7 +37,7 @@ namespace simdutf::benchmarks {
 
         std::vector<input::Testcase> testcases;
 
-        std::random_device rd{};
+        uint32_t seed{1234};
 
     public:
         BenchmarkBase(std::vector<input::Testcase>&& testcases);

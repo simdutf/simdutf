@@ -23,9 +23,9 @@ TEST(count_pure_ASCII) {
       std::cout << ".";
       std::cout.flush();
     }
-    std::random_device rd{};
+    uint32_t seed{1234};
 
-    simdutf::tests::helpers::random_utf8 random(rd, 1, 0, 0, 0);
+    simdutf::tests::helpers::random_utf8 random(seed, 1, 0, 0, 0);
 
     for (size_t size : input_size) {
       auto generated = random.generate_counted(size);
@@ -42,9 +42,9 @@ TEST(count_1_or_2_UTF8_bytes) {
       std::cout << ".";
       std::cout.flush();
     }
-    std::random_device rd{};
+    uint32_t seed{1234};
 
-    simdutf::tests::helpers::random_utf8 random(rd, 1, 1, 0, 0);
+    simdutf::tests::helpers::random_utf8 random(seed, 1, 1, 0, 0);
 
     for (size_t size : input_size) {
       auto generated = random.generate_counted(size);
@@ -61,9 +61,9 @@ TEST(count_1_or_2_or_3_UTF8_bytes) {
       std::cout << ".";
       std::cout.flush();
     }
-    std::random_device rd{};
+    uint32_t seed{1234};
 
-    simdutf::tests::helpers::random_utf8 random(rd, 1, 1, 1, 0);
+    simdutf::tests::helpers::random_utf8 random(seed, 1, 1, 1, 0);
 
     for (size_t size : input_size) {
       auto generated = random.generate_counted(size);
@@ -76,9 +76,9 @@ TEST(count_1_or_2_or_3_UTF8_bytes) {
 
 TEST(count_1_2_3_or_4_UTF8_bytes) {
   for (size_t trial = 0; trial < 10000; trial++) {
-    std::random_device rd{};
+    uint32_t seed{1234};
 
-    simdutf::tests::helpers::random_utf8 random(rd, 1, 1, 1, 1);
+    simdutf::tests::helpers::random_utf8 random(seed, 1, 1, 1, 1);
 
     for (size_t size : input_size) {
       auto generated = random.generate_counted(size);

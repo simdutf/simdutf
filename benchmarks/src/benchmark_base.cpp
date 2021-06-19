@@ -67,9 +67,10 @@ namespace simdutf::benchmarks {
             const input::File& file{std::get<input::File>(testcase.input)};
             load_file(file.path);
         } else {
+            uint32_t seed{1234};
             const input::random_utf8& random{std::get<input::random_utf8>(testcase.input)};
 
-            simdutf::tests::helpers::random_utf8 gen_1_2_3_4(rd,
+            simdutf::tests::helpers::random_utf8 gen_1_2_3_4(seed,
                 random.utf_1byte_prob,
                 random.utf_2bytes_prob,
                 random.utf_3bytes_prob,

@@ -8,37 +8,44 @@
 #include <fstream>
 
 
-namespace {
-  std::vector<char16_t> generate_valid_utf16(size_t size = 512) {
-    std::random_device rd{};
-    simdutf::tests::helpers::random_utf16 generator{rd, 1, 0};
-    return generator.generate(size);
+TEST(validate_utf16__returns_true_for_valid_input__single_words) {
+  uint32_t seed{1234};
+  simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
+  for(size_t trial = 0; trial < 1000; trial++) {
+    const auto utf16{generator.generate(512, seed)};
+
+    ASSERT_TRUE(implementation.validate_utf16(
+              reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
   }
 }
 
-TEST(validate_utf16__returns_true_for_valid_input__single_words) {
-  std::random_device rd{};
-    simdutf::tests::helpers::random_utf16 generator{rd, 1, 0};
-  const long seed = 0; // make test repeatable
-  const auto utf16{generator.generate(512, seed)};
+TEST(validate_utf16__returns_true_for_valid_input__surrogate_pairs_short) {
+  uint32_t seed{1234};
+  simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
+  for(size_t trial = 0; trial < 1000; trial++) {
+    const auto utf16{generator.generate(8)};
 
-  ASSERT_TRUE(implementation.validate_utf16(
+    ASSERT_TRUE(implementation.validate_utf16(
               reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
+  }
 }
 
-TEST(validate_utf16__returns_true_for_valid_input__surrogate_pairs) {
-  std::random_device rd{};
-  simdutf::tests::helpers::random_utf16 generator{rd, 0, 1};
-  const auto utf16{generator.generate(512)};
 
-  ASSERT_TRUE(implementation.validate_utf16(
+TEST(validate_utf16__returns_true_for_valid_input__surrogate_pairs) {
+  uint32_t seed{1234};
+  simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
+  for(size_t trial = 0; trial < 1000; trial++) {
+    const auto utf16{generator.generate(512)};
+
+    ASSERT_TRUE(implementation.validate_utf16(
               reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
+  }
 }
 
 // mixed = either 16-bit or 32-bit codewords
 TEST(validate_utf16__returns_true_for_valid_input__mixed) {
-  std::random_device rd{};
-  simdutf::tests::helpers::random_utf16 generator{rd, 1, 1};
+  uint32_t seed{1234};
+  simdutf::tests::helpers::random_utf16 generator{seed, 1, 1};
   const auto utf16{generator.generate(512)};
 
   ASSERT_TRUE(implementation.validate_utf16(
@@ -64,18 +71,22 @@ TEST(validate_utf16__returns_true_for_empty_string) {
       is in error [...]
 */
 TEST(validate_utf16__returns_false_when_input_has_wrong_first_word_value) {
-  auto utf16{generate_valid_utf16(128)};
-  const char16_t*  buf = reinterpret_cast<const char16_t*>(utf16.data());
-  const size_t len = utf16.size();
+  uint32_t seed{1234};
+  simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
+  for(size_t trial = 0; trial < 10; trial++) {
+    auto utf16{generator.generate(128)};
+    const char16_t*  buf = reinterpret_cast<const char16_t*>(utf16.data());
+    const size_t len = utf16.size();
 
-  for (char16_t wrong_value = 0xdc00; wrong_value <= 0xdfff; wrong_value++) {
-    for (size_t i=0; i < utf16.size(); i++) {
-      const char16_t old = utf16[i];
-      utf16[i] = wrong_value;
+    for (char16_t wrong_value = 0xdc00; wrong_value <= 0xdfff; wrong_value++) {
+      for (size_t i=0; i < utf16.size(); i++) {
+        const char16_t old = utf16[i];
+        utf16[i] = wrong_value;
 
-      ASSERT_FALSE(implementation.validate_utf16(buf, len));
+        ASSERT_FALSE(implementation.validate_utf16(buf, len));
 
-      utf16[i] = old;
+        utf16[i] = old;
+      }
     }
   }
 }
@@ -87,7 +98,9 @@ TEST(validate_utf16__returns_false_when_input_has_wrong_first_word_value) {
     Terminate.
 */
 TEST(validate_utf16__returns_false_when_input_has_wrong_second_word_value) {
-  auto utf16{generate_valid_utf16(128)};
+  uint32_t seed{1234};
+  simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
+  auto utf16{generator.generate(128)};
   const char16_t*  buf = reinterpret_cast<const char16_t*>(utf16.data());
   const size_t len = utf16.size();
 
@@ -120,8 +133,10 @@ TEST(validate_utf16__returns_false_when_input_has_wrong_second_word_value) {
 */
 TEST(validate_utf16__returns_false_when_input_is_truncated) {
   const char16_t valid_surrogate_W1 = 0xd800;
+  uint32_t seed{1234};
+  simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
   for (size_t size = 1; size < 128; size++) {
-    auto utf16{generate_valid_utf16(128)};
+    auto utf16{generator.generate(128)};
     const char16_t*  buf = reinterpret_cast<const char16_t*>(utf16.data());
     const size_t len = utf16.size();
 

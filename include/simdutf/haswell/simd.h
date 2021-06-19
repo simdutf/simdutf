@@ -70,7 +70,7 @@ namespace simd {
     simdutf_really_inline uint32_t to_bitmask() const { return uint32_t(_mm256_movemask_epi8(*this)); }
     simdutf_really_inline bool any() const { return !_mm256_testz_si256(*this, *this); }
     simdutf_really_inline bool none() const { return _mm256_testz_si256(*this, *this); }
-    simdutf_really_inline bool all() const { return _mm256_movemask_epi8(*this) == 0xFFFFFFFF; }
+    simdutf_really_inline bool all() const { return static_cast<uint32_t>(_mm256_movemask_epi8(*this)) == 0xFFFFFFFF; }
     simdutf_really_inline simd8<bool> operator~() const { return *this ^ true; }
   };
 

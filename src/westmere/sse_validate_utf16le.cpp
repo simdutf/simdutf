@@ -90,7 +90,7 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
             const uint16_t a = L & (H >> 1);  // A low surrogate must be followed by high one.
                                               // (A low surrogate placed in the 7th register's word
                                               // is an exception we handle.)
-            const uint16_t b = a << 1;        // Just mark that the opposite fact is hold,
+            const uint16_t b = static_cast<uint16_t>(a << 1);        // Just mark that the opposite fact is hold,
                                               // thanks to that we have only two masks for valid case.
             const uint16_t c = V | a | b;     // Combine all the masks into the final one.
 

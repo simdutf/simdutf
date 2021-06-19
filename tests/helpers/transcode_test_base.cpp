@@ -72,7 +72,12 @@ namespace simdutf::tests::helpers {
                                     reference_output_utf16.begin(), reference_output_utf16.end());
     if (it1 != output_utf16.begin() + saved_chars) {
       printf("mismatched output at %lu: actual value 0x%04x, expected 0x%04x\n",
-             std::distance(output_utf16.begin(), it1), *it1, *it2);
+             std::distance(output_utf16.begin(), it1), uint16_t(*it1), uint16_t(*it2));
+      for(size_t i = 0; i < output_utf16.size(); i++) {
+        if(reference_output_utf16[i] != output_utf16[i]) { printf(" ==> "); }
+        printf("at %zu expected 0x%04x and got 0x%04x\n ", i, uint16_t(reference_output_utf16[i]), uint16_t(output_utf16[i]));
+      }
+
       return false;
     }
 
@@ -119,6 +124,12 @@ namespace simdutf::tests::helpers {
   }
 
   bool transcode_utf16_to_utf8_test_base::validate(size_t saved_chars) const {
+    if (!is_input_valid()) {
+      if (saved_chars != 0) {
+        printf("input UTF-16 string is not valid, but conversion routine returned %zu, indicating a valid input\n", saved_chars);
+        return false;
+      }
+    }
     if (saved_chars == 0) {
       if (is_input_valid()) {
         printf("input UTF-16 string is valid, but conversion routine returned 0, indicating input error");
@@ -152,10 +163,14 @@ namespace simdutf::tests::helpers {
                                     reference_output_utf8.begin(), reference_output_utf8.end());
     if (it1 != output_utf8.begin() + saved_chars) {
       printf("mismatched output at %lu: actual value 0x%02x, expected 0x%02x\n",
-             std::distance(output_utf8.begin(), it1), *it1, *it2);
+             std::distance(output_utf8.begin(), it1), uint8_t(*it1), uint8_t(*it2));
 
       dump("expected :", reference_output_utf8);
       dump("actual   :", output_utf8);
+      for(size_t i = 0; i < reference_output_utf8.size(); i++) {
+        if(reference_output_utf8[i] != output_utf8[i]) { printf(" ==> "); }
+        printf("at %zu expected 0x%02x and got 0x%02x\n ", i, uint8_t(reference_output_utf8[i]), uint8_t(output_utf8[i]));
+      }
       return false;
     }
 

@@ -4,16 +4,18 @@
 #include <emmintrin.h>
 #include "../base/PerfDefs.h"
 
+struct shufstep {
+    uint32_t _shufC_part0;
+    uint32_t _shufC_part1;
+    uint32_t srcStep;           //number of bytes processed in input buffer
+    uint32_t dstStep;           //number of symbols produced in output buffer (doubled)
+};
+
 struct DecoderCoreInfo {
     __m128i shufAB;                     //shuffling mask to get lower two bytes of symbols
     union {
         __m128i shufC;                  //shuffling mask to get third bytes of symbols
-        struct {
-            uint32_t _shufC_part0;
-            uint32_t _shufC_part1;
-            uint32_t srcStep;           //number of bytes processed in input buffer
-            uint32_t dstStep;           //number of symbols produced in output buffer (doubled)
-        } s;
+        shufstep s;
     };
 };
 struct DecoderValidationInfo {
