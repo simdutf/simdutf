@@ -48,8 +48,6 @@ namespace simdutf::tests::reference::utf16 {
                 const uint32_t lo = W2 & 0x3ff;
                 const uint32_t tmp = lo | (hi << 10); // build a 20-bit temporary value U'
 
-                //printf("XXX %x %x %x %x\n", W1 & 0x3ff, W2 & 0x3ff, tmp, tmp + 0x10000);
-
                 consumer(tmp + 0x10000);
             }
 
