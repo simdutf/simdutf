@@ -182,7 +182,7 @@ std::pair<const char16_t*, char*> arm_convert_utf16_to_utf8(const char16_t* buf,
         */
 #define vec(x) vmovq_n_u16(static_cast<uint16_t>(x))
         // t0: [aaaa|bbbb|bbcc|cccc] => [bbcc|cccc|bbcc|cccc] 
-        const uint16x8_t t0 = vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(in), dup_even));
+        const uint16x8_t t0 = vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(in), vreinterpretq_u8_u16(dup_even)));
         // t1: [00cc|cccc|0bcc|cccc]
         const uint16x8_t t1 = vandq_u16(t0, vec(0b0011'1111'0111'1111));
         // t2: [10cc|cccc|0bcc|cccc]
