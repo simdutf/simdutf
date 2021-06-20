@@ -154,7 +154,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
           We precompute byte 1 for case #1 and the common byte for cases #2 & #3
           in register t2.
 
-          We precomputer byte 1 for case #3 and -- **conditionally** -- precompute
+          We precompute byte 1 for case #3 and -- **conditionally** -- precompute
           either byte 1 for case #2 or byte 2 for case #3. Note that they
           differ by exactly one bit.
 

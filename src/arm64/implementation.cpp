@@ -5,6 +5,8 @@
 #include "scalar/utf8_to_utf16/utf8_to_utf16.h"
 #include "scalar/utf8.h"
 #include "scalar/utf16.h"
+#include "tables/utf16_to_utf8_tables.h"
+
 
 #include "simdutf/arm64/begin.h"
 namespace simdutf {
@@ -35,7 +37,7 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
     simd8<bool> is_fourth_byte = prev3 >= uint8_t(0b11110000u);
     return is_third_byte ^ is_fourth_byte;
 }
-
+#include "arm_convert_utf16_to_utf8.cpp"
 #include "arm_convert_utf8_to_utf16.cpp"
 #include "arm_validate_utf16le.cpp"
 
@@ -81,11 +83,21 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-  return scalar::utf16_to_utf8::convert(buf, len, utf8_output);
+  //return scalar::utf16_to_utf8::convert(buf, len, utf8_output);
+  std::pair<const char16_t*, char*> ret = arm_convert_utf16_to_utf8(buf, len, utf8_output);
+  if (ret.first == nullptr) { return 0; }
+  size_t saved_bytes = ret.second - utf8_output;
+  if (ret.first != buf + len) {
+    const size_t scalar_saved_bytes = scalar::utf16_to_utf8::convert(
+                                        ret.first, len - (ret.first - buf), ret.second);
+    if (scalar_saved_bytes == 0) { return 0; }
+    saved_bytes += scalar_saved_bytes;
+  }
+  return saved_bytes;
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-  return scalar::utf16_to_utf8::convert_valid(buf, len, utf8_output);
+  return convert_utf16_to_utf8(buf, len, utf8_output);
 }
 
 simdutf_warn_unused size_t implementation::count_utf16(const char16_t * input, size_t length) const noexcept {
