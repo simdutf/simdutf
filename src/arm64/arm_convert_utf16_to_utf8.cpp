@@ -200,6 +200,19 @@ std::pair<const char16_t*, char*> arm_convert_utf16_to_utf8(const char16_t* buf,
                                     0x2000, 0x8000 };
         const uint16x8_t combined = vorrq_u16(vandq_u16(one_byte_bytemask, onemask), vandq_u16(one_or_two_bytes_bytemask, twomask));
         const uint16_t mask = vaddvq_u16(combined);
+        // The following fast path may or may not be beneficial.
+        /*if(mask == 0) {
+          // We only have three-byte words. Use fast path.
+          const uint8x16_t shuffle = {2,3,1,6,7,5,10,11,9,14,15,13,0,0,0,0};
+          const uint8x16_t utf8_0 = vqtbl1q_u8(out0, shuffle);
+          const uint8x16_t utf8_1 = vqtbl1q_u8(out1, shuffle);
+          vst1q_u8(utf8_output, utf8_0);
+          utf8_output += 12;
+          vst1q_u8(utf8_output, utf8_1);
+          utf8_output += 12;
+          buf += 8;
+          continue;
+        }*/
         const uint8_t mask0 = uint8_t(mask);
 
         const uint8_t* row0 = &tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask0][0];
