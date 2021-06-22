@@ -88,6 +88,7 @@ simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t*
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf8_output;
   if (ret.first != buf + len) {
+    printf("calling scalar with %zu \n ", len - (ret.first - buf) );
     const size_t scalar_saved_bytes = scalar::utf16_to_utf8::convert(
                                         ret.first, len - (ret.first - buf), ret.second);
     if (scalar_saved_bytes == 0) { return 0; }

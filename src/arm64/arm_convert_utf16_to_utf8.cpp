@@ -53,7 +53,7 @@
 */
 std::pair<const char16_t*, char*> arm_convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_out) {
   uint8_t * utf8_output = reinterpret_cast<uint8_t*>(utf8_out);
-
+printf("#--------------------\n");
 
   const char16_t* end = buf + len;
 
@@ -62,9 +62,7 @@ std::pair<const char16_t*, char*> arm_convert_utf16_to_utf8(const char16_t* buf,
   const uint16x8_t v_c080 = vmovq_n_u16((uint16_t)0xc080);
 
   while (buf + 16 <= end) {
-
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
-
     if(vmaxvq_u16(in) <= 0x7F) { // ASCII fast path!!!!
         // It is common enough that we have sequences of 16 consecutive ASCII characters.
         uint16x8_t nextin = vld1q_u16(reinterpret_cast<const uint16_t *>(buf) + 8);
@@ -108,19 +106,15 @@ std::pair<const char16_t*, char*> arm_convert_utf16_to_utf8(const char16_t* buf,
           const uint16x8_t t3 = vorrq_u16(t1, t2);
           // t4 = [110a|aaaa|10bb|bbbb]
           const uint16x8_t t4 = vorrq_u16(t3, v_c080);
-
           // 2. merge ASCII and 2-byte codewords
           const uint16x8_t v_007f = vmovq_n_u16((uint16_t)0x007F);
           const uint16x8_t one_byte_bytemask = vcleq_u16(in, v_007f);
-          const uint8x16_t utf8_unpacked = vreinterpretq_u8_u16(vbslq_u16(t4, in, one_byte_bytemask));
-
+          const uint8x16_t utf8_unpacked = vreinterpretq_u8_u16(vbslq_u16(one_byte_bytemask, in, t4));
           // 3. prepare bitmask for 8-bit lookup
-
-
-          const uint16x8_t mask = { 0x0001, 0x0010, 
-                                    0x0002, 0x0020, 
-                                    0x0004, 0x0040, 
-                                    0x0008, 0x0080 };
+          const uint16x8_t mask = { 0x0001, 0x0004, 
+                                    0x0010, 0x0040, 
+                                    0x0002, 0x0008, 
+                                    0x0020, 0x0080 };
           uint16_t m2 = vaddvq_u16(vandq_u16(one_byte_bytemask, mask));
           // 4. pack the bytes
           const uint8_t* row = &tables::utf16_to_utf8::pack_1_2_utf8_bytes[m2][0];
