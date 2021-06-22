@@ -43,18 +43,15 @@
     Each entry occupies 17 bytes.
 
 
-    Summarize:
+    To summarize:
     - We need two 256-entry tables that have 8704 bytes in total.
 */
-
 /*
   Returns a pair: the first unprocessed byte from buf and utf8_output
   A scalar routing should carry on the conversion of the tail.
 */
 std::pair<const char16_t*, char*> arm_convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_out) {
   uint8_t * utf8_output = reinterpret_cast<uint8_t*>(utf8_out);
-printf("#--------------------\n");
-
   const char16_t* end = buf + len;
 
   const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
@@ -130,27 +127,10 @@ printf("#--------------------\n");
           continue;
 
     }
-
-    // no bits set above 7th bit
-    //const __m128i one_byte_bytemask = vceq_u16(_mm_and_si128(in, v_ff80), v_0000);
-    //const uint16_t one_byte_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_byte_bytemask));
-
-    // no bits set above 11th bit
-    //const __m128i one_or_two_bytes_bytemask = vceq_u16(_mm_and_si128(in, v_f800), v_0000);
-    //const uint16_t one_or_two_bytes_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_or_two_bytes_bytemask));
-
-    // 1. Check if there are any surrogate word in the input chunk.
-    //    We have also deal with situation when there is a suggogate word
-    //    at the end of a chunk.
     const uint16x8_t surrogates_bytemask = vceqq_u16(vandq_u16(in, v_f800), v_d800);
-
-    // bitmask = 0x0000 if there are no surrogates
-    //         = 0xc000 if the last word is a surrogate
-    //const uint16_t surrogates_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(surrogates_bytemask));
     // It might seem like checking for surrogates_bitmask == 0xc000 could help. However,
     // it is likely an uncommon occurrence.
       if (vmaxvq_u16(surrogates_bytemask) == 0) {
-
       // case: words from register produce either 1, 2 or 3 UTF-8 bytes
         const uint16x8_t dup_even = {0x0000, 0x0202, 0x0404, 0x0606,
                                      0x0808, 0x0a0a, 0x0c0c, 0x0e0e};
@@ -174,25 +154,32 @@ printf("#--------------------\n");
           Finally from these two words we build proper UTF-8 sequence, taking
           into account the case (i.e, the number of bytes to write).
         */
+        /**
+         * Given [aaaa|bbbb|bbcc|cccc] our goal is to produce:
+         * t2 => [0ccc|cccc] [10cc|cccc]
+         * s4 => [1110|aaaa] ([110b|bbbb] OR [10bb|bbbb])
+         */
 #define vec(x) vmovq_n_u16(static_cast<uint16_t>(x))
-        // t0: [aaaa|bbbb|bbcc|cccc] => [bbcc|cccc|bbcc|cccc] 
+        // [aaaa|bbbb|bbcc|cccc] => [bbcc|cccc|bbcc|cccc]
         const uint16x8_t t0 = vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(in), vreinterpretq_u8_u16(dup_even)));
-        // t1: [00cc|cccc|0bcc|cccc]
+        // [bbcc|cccc|bbcc|cccc] => [00cc|cccc|0bcc|cccc]
         const uint16x8_t t1 = vandq_u16(t0, vec(0b0011'1111'0111'1111));
-        // t2: [10cc|cccc|0bcc|cccc]
+        // [00cc|cccc|0bcc|cccc] => [10cc|cccc|0bcc|cccc]
         const uint16x8_t t2 = vorrq_u16 (t1, vec(0b1000'0000'0000'0000));
 
         // s0: [aaaa|bbbb|bbcc|cccc] => [0000|0000|0000|aaaa]
-        const uint16x8_t s0 = vshlq_n_u16(in, 12);
+        const uint16x8_t s0 = vshrq_n_u16(in, 12);
         // s1: [aaaa|bbbb|bbcc|cccc] => [0000|bbbb|bb00|0000]
         const uint16x8_t s1 = vandq_u16(in, vec(0b0000'1111'1100'0000));
-        const uint16x8_t s1s = vshlq_n_u16(s1, 6);
+        // [0000|bbbb|bb00|0000] => [00bb|bbbb|0000|0000]
+        const uint16x8_t s1s = vshlq_n_u16(s1, 2);
+        // [00bb|bbbb|0000|aaaa]
         const uint16x8_t s2 = vorrq_u16(s0, s1s);
-        // s3: [0000|aaaa|bbbb|bb00] => [11bb|0000|1110|aaaa]
+        // s3: [00bb|bbbb|0000|aaaa] => [11bb|bbbb|1110|aaaa]
         const uint16x8_t s3 = vorrq_u16(s2, vec(0b1100'0000'1110'0000));
         const uint16x8_t v_07ff = vmovq_n_u16((uint16_t)0x07FF);
         const uint16x8_t one_or_two_bytes_bytemask = vcleq_u16(in, v_07ff);
-        const uint16x8_t m0 = vbicq_u16(one_or_two_bytes_bytemask, vec(0b0100'0000'0000'0000));
+        const uint16x8_t m0 = vbicq_u16(vec(0b0100'0000'0000'0000), one_or_two_bytes_bytemask);
         const uint16x8_t s4 = veorq_u16(s3, m0);
 #undef vec
 
@@ -213,7 +200,6 @@ printf("#--------------------\n");
                                     0x2000, 0x8000 };
         const uint16x8_t combined = vorrq_u16(vandq_u16(one_byte_bytemask, onemask), vandq_u16(one_or_two_bytes_bytemask, twomask));
         const uint16_t mask = vaddvq_u16(combined);
-
         const uint8_t mask0 = uint8_t(mask);
 
         const uint8_t* row0 = &tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask0][0];
@@ -221,7 +207,6 @@ printf("#--------------------\n");
         const uint8x16_t utf8_0 = vqtbl1q_u8(out0, shuffle0);
 
         const uint8_t mask1 = static_cast<uint8_t>(mask >> 8);
-
         const uint8_t* row1 = &tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask1][0];
         const uint8x16_t shuffle1 = vld1q_u8(row1 + 1);
         const uint8x16_t utf8_1 = vqtbl1q_u8(out1, shuffle1);
@@ -235,6 +220,8 @@ printf("#--------------------\n");
     // surrogate pair(s) in a register
     } else {
       // Let us do a scalar fallback.
+      // It may seem wasteful to use scalar code, but being efficient with SIMD
+      // in the presence of surrogate pairs may require non-trivial tables.
       int k = 0;
       for(; k < 15; k++) {
         uint16_t word = buf[k];

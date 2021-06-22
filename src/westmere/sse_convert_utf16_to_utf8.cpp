@@ -43,7 +43,7 @@
     Each entry occupies 17 bytes.
 
 
-    Summarize:
+    To summarize:
     - We need two 256-entry tables that have 8704 bytes in total.
 */
 
@@ -171,15 +171,26 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
           Finally from these two words we build proper UTF-8 sequence, taking
           into account the case (i.e, the number of bytes to write).
         */
+        /**
+         * Given [aaaa|bbbb|bbcc|cccc] our goal is to produce:
+         * t2 => [0ccc|cccc] [10cc|cccc]
+         * s4 => [1110|aaaa] ([110b|bbbb] OR [10bb|bbbb])
+         */
 #define vec(x) _mm_set1_epi16(static_cast<uint16_t>(x))
+        // [aaaa|bbbb|bbcc|cccc] => [bbcc|cccc|bbcc|cccc]
         const __m128i t0 = _mm_shuffle_epi8(in, dup_even);
+        // [bbcc|cccc|bbcc|cccc] => [00cc|cccc|0bcc|cccc]
         const __m128i t1 = _mm_and_si128(t0, vec(0b0011'1111'0111'1111));
+        // [00cc|cccc|0bcc|cccc] => [10cc|cccc|0bcc|cccc]
         const __m128i t2 = _mm_or_si128 (t1, vec(0b1000'0000'0000'0000));
 
-
+        // [aaaa|bbbb|bbcc|cccc] =>  [0000|aaaa|bbbb|bbcc]
         const __m128i s0 = _mm_srli_epi16(in, 4);
+        // [0000|aaaa|bbbb|bbcc] => [0000|aaaa|bbbb|bb00]
         const __m128i s1 = _mm_and_si128(s0, vec(0b0000'1111'1111'1100));
+        // [0000|aaaa|bbbb|bb00] => [00bb|bbbb|0000|aaaa]
         const __m128i s2 = _mm_maddubs_epi16(s1, vec(0x0140));
+        // [00bb|bbbb|0000|aaaa] => [11bb|bbbb|1110|aaaa]
         const __m128i s3 = _mm_or_si128(s2, vec(0b1100'0000'1110'0000));
         const __m128i m0 = _mm_andnot_si128(one_or_two_bytes_bytemask, vec(0b0100'0000'0000'0000));
         const __m128i s4 = _mm_xor_si128(s3, m0);
@@ -225,6 +236,8 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
     // surrogate pair(s) in a register
     } else {
       // Let us do a scalar fallback.
+      // It may seem wasteful to use scalar code, but being efficient with SIMD
+      // in the presence of surrogate pairs may require non-trivial tables.
       int k = 0;
       for(; k < 15; k++) {
         uint16_t word = buf[k];
