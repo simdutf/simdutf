@@ -292,8 +292,8 @@ void Benchmark::run_validate_utf16(const simdutf::implementation& implementation
     const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
     size_t size = input_data.size() - BOM::bom_byte_size(bom);
     if (size % 2 != 0) {
-        printf("# The input size is not divisible by two (it is %lu + %lu for BOM)",
-               input_data.size(), BOM::bom_byte_size(bom));
+        printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
         printf(" Running function on truncated input.\n");
     }
 
@@ -382,8 +382,8 @@ void Benchmark::run_convert_utf16_to_utf8_utf8lut(size_t iterations) {
     const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
     size_t size = input_data.size() - BOM::bom_byte_size(bom);
     if (size % 2 != 0) {
-        printf("# The input size is not divisible by two (it is %lu + %lu for BOM)",
-               input_data.size(), BOM::bom_byte_size(bom));
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
         printf(" Running function on truncated input.\n");
     }
 
@@ -421,8 +421,8 @@ void Benchmark::run_convert_valid_utf16_to_utf8_utf8lut(size_t iterations) {
     const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
     size_t size = input_data.size() - BOM::bom_byte_size(bom);
     if (size % 2 != 0) {
-        printf("# The input size is not divisible by two (it is %lu + %lu for BOM)",
-               input_data.size(), BOM::bom_byte_size(bom));
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
         printf(" Running function on truncated input.\n");
     }
 
@@ -607,8 +607,8 @@ void Benchmark::run_convert_utf16_to_utf8(const simdutf::implementation& impleme
     const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
     size_t size = input_data.size() - BOM::bom_byte_size(bom);
     if (size % 2 != 0) {
-        printf("# The input size is not divisible by two (it is %lu + %lu for BOM)",
-               input_data.size(), BOM::bom_byte_size(bom));
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
         printf(" Running function on truncated input.\n");
     }
 
@@ -636,8 +636,8 @@ void Benchmark::run_convert_valid_utf16_to_utf8(const simdutf::implementation& i
     const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
     size_t size = input_data.size() - BOM::bom_byte_size(bom);
     if (size % 2 != 0) {
-        printf("# The input size is not divisible by two (it is %lu + %lu for BOM)",
-               input_data.size(), BOM::bom_byte_size(bom));
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
         printf(" Running function on truncated input.\n");
     }
 
@@ -680,8 +680,8 @@ void Benchmark::run_count_utf16(const simdutf::implementation& implementation, s
     const char16_t*  data = reinterpret_cast<const char16_t*>(input_data.data());
     size_t size = input_data.size() - BOM::bom_byte_size(bom);
     if (size % 2 != 0) {
-        printf("# The input size is not divisible by two (it is %lu + %lu for BOM)",
-               input_data.size(), BOM::bom_byte_size(bom));
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
         printf(" Running function on truncated input.\n");
     }
     size /= 2;
@@ -739,8 +739,8 @@ void Benchmark::run_convert_utf16_to_utf8_llvm(size_t iterations) {
     const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
     size_t size = input_data.size() - BOM::bom_byte_size(bom);
     if (size % 2 != 0) {
-        printf("# The input size is not divisible by two (it is %lu + %lu for BOM)",
-               input_data.size(), BOM::bom_byte_size(bom));
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
         printf(" Running function on truncated input.\n");
     }
 
