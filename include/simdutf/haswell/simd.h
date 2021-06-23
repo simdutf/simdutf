@@ -136,8 +136,6 @@ namespace simd {
   struct simd8<int8_t> : base8_numeric<int8_t> {
     simdutf_really_inline simd8() : base8_numeric<int8_t>() {}
     simdutf_really_inline simd8(const __m256i _value) : base8_numeric<int8_t>(_value) {}
-    // next line is a hack that is seemingly needed by visual studio
-    simdutf_really_inline simd8<int8_t>(const base<uint8_t>& o) : base8_numeric<int8_t>(o._value) {}
 
     // Splat constructor
     simdutf_really_inline simd8(int8_t _value) : simd8(splat(_value)) {}
@@ -209,7 +207,6 @@ namespace simd {
         v8, v9, v10,v11,v12,v13,v14,v15
       );
     }
-    simdutf_really_inline operator simd8<int8_t>() const { return this->value; }
 
 
     // Saturated math
