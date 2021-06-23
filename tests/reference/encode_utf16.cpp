@@ -18,7 +18,7 @@ namespace simdutf::tests::reference::utf16 {
       Note: Values between 0xD800 and 0xDFFF are specifically reserved for
       use with UTF-16, and don't have any characters assigned to them.
     */
-    if ((value >= 0xD800) and (value <= 0xDFFF))
+    if ((value >= 0xD800) && (value <= 0xDFFF))
       return false;
 
     return true;
