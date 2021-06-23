@@ -25,14 +25,17 @@ target_link_libraries(validate_utf16_basic_tests
          simdutf::tests::helpers)
 target_compile_options(validate_utf16_basic_tests PRIVATE -Wfatal-errors)
 
-set(SCRIPT ${SIMDUTF_SOURCE_DIR}/scripts/sse_validate_utf16le_testcases.py)
-add_custom_command(TARGET validate_utf8_basic_tests
-                   COMMAND python3 ${SCRIPT}
+
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_FOUND)
+  set(SCRIPT ${SIMDUTF_SOURCE_DIR}/scripts/sse_validate_utf16le_testcases.py)
+  add_custom_command(TARGET validate_utf16_basic_tests
+                   COMMAND ${Python3_EXECUTABLE} ${SCRIPT}
                    DEPENDS ${SCRIPT}
                    VERBATIM
-)
-unset(SCRIPT)
-
+  )
+  unset(SCRIPT)
+endif(Python3_FOUND)
 
 add_cpp_test(convert_valid_utf8_to_utf16_tests)
 target_link_libraries(convert_valid_utf8_to_utf16_tests
