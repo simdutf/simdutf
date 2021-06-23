@@ -194,6 +194,9 @@ template <> struct simd8<int8_t> : base8_numeric<int8_t> {
   simdutf_really_inline simd8() : base8_numeric<int8_t>() {}
   simdutf_really_inline simd8(const __m128i _value)
       : base8_numeric<int8_t>(_value) {}
+  // next line is a hack that is seemingly needed by visual studio
+  simdutf_really_inline simd8<int8_t>(const base<uint8_t>& o) : base8_numeric<int8_t>(o._value) {}
+
   // Splat constructor
   simdutf_really_inline simd8(int8_t _value) : simd8(splat(_value)) {}
   // Array constructor
