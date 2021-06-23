@@ -1,4 +1,4 @@
-name: Ubuntu 20.04 Sanitized CI (GCC 9)
+name: Ubuntu 20.04 CI (GCC 9)
 
 on:
   push:
@@ -20,6 +20,6 @@ jobs:
         run: |
           mkdir build &&
           cd build &&
-          cmake   ..  &&
+          cmake -DSIMDUTF_SANITIZE=ON ..  &&
           cmake --build .   &&
           ctest -j --output-on-failure 
