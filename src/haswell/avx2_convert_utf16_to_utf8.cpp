@@ -58,8 +58,9 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
   const __m256i v_f800 = _mm256_set1_epi16((int16_t)0xf800);
   const __m256i v_d800 = _mm256_set1_epi16((int16_t)0xd800);
   const __m256i v_c080 = _mm256_set1_epi16((int16_t)0xc080);
+  const size_t safety_margin = 8; // to avoid overruns
 
-  while (buf + 16 <= end) {
+  while (buf + 16 + safety_margin <= end) {
     __m256i in = _mm256_loadu_si256((__m256i*)buf);
     // a single 16-bit UTF-16 word can yield 1, 2 or 3 UTF-8 bytes
     const __m256i v_ff80 = _mm256_set1_epi16((int16_t)0xff80);

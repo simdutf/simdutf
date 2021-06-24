@@ -14,7 +14,8 @@ simdutf_warn_unused size_t convert_valid(const char* input, size_t size,
   // The implementation is not specific to haswell and should be moved to the generic directory.
   size_t pos = 0;
   char16_t* start{utf16_output};
-  while(pos + 64 <= size) {
+  const size_t safety_margin = 16; // to avoid overruns!
+  while(pos + 64 + safety_margin <= size) {
     // this loop could be unrolled further. For example, we could process the mask
     // far more than 64 bytes.
     //

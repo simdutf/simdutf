@@ -40,6 +40,8 @@ namespace simdutf::tests::helpers {
         prepare_input(codepoint);
       }
       output_utf16.resize(reference_output_utf16.size() + output_size_margin);
+      output_utf16.shrink_to_fit(); // to help detect overruns.
+
     }
 
     template <typename PROCEDURE>
@@ -79,6 +81,7 @@ namespace simdutf::tests::helpers {
         prepare_input(codepoint);
       }
       output_utf8.resize(reference_output_utf8.size() + output_size_margin);
+      output_utf8.shrink_to_fit(); // to help detect overruns.
     }
 
     template <typename PROCEDURE>

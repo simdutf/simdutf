@@ -129,7 +129,8 @@ using namespace simd;
     simdutf_really_inline size_t convert(const char* in, size_t size, char16_t* utf16_output) {
       size_t pos = 0;
       char16_t* start{utf16_output};
-      while(pos + 64 <= size) {
+      const size_t safety_margin = 16; // to avoid overruns!
+      while(pos + 64 + safety_margin <= size) {
         simd8x64<int8_t> input(reinterpret_cast<const int8_t *>(in + pos));
         if(input.is_ascii()) {
           input.store_ascii_as_utf16(utf16_output);
