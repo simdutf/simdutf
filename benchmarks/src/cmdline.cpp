@@ -16,7 +16,7 @@ namespace {
         std::vector<std::string> arguments;
         for (int i=1; i < argc; i++) {
             std::string arg{argv[i]};
-            if ((arg == "--help") or (arg == "-h")) {
+            if ((arg == "--help") || (arg == "-h")) {
                 cmdline.show_help = true;
                 return cmdline;
             }
@@ -35,7 +35,7 @@ namespace {
         for (size_t i=0; i < arguments.size(); /**/) {
             const std::string& arg = arguments[i];
 
-            if ((arg == "-F") or (arg == "--input-file")) {
+            if ((arg == "-F") || (arg == "--input-file")) {
                 const std::string& value = arguments.at(i + 1);
                 cmdline.files.insert(value);
                 i += 2;
@@ -43,7 +43,7 @@ namespace {
                 try {
                     while (true) {
                         const std::string& value = arguments.at(i);
-                        if (not value.empty() and value[0] != '-') {
+                        if (! value.empty() && value[0] != '-') {
                             cmdline.files.insert(value);
                             i += 1;
                         } else
@@ -53,12 +53,12 @@ namespace {
                     /* that's fine */;
                 }
             }
-            else if ((arg == "-P") or (arg == "--procedure")) {
+            else if ((arg == "-P") || (arg == "--procedure")) {
                 const std::string& value = arguments.at(i + 1);
                 cmdline.procedures.insert(value);
                 i += 2;
             }
-            else if ((arg == "-I") or (arg == "--iterations")) {
+            else if ((arg == "-I") || (arg == "--iterations")) {
                 const std::string& value = arguments.at(i + 1);
                 const long iterations = std::stoi(value);
                 if (iterations <= 0) {
@@ -89,15 +89,15 @@ namespace {
 
     void fixup_and_validate(CommandLine& cmdline) {
         if (cmdline.iterations.empty()) {
-            const bool default_needed = (not cmdline.procedures.empty() or
-                                         not cmdline.random_size.empty() or
-                                         not cmdline.files.empty());
+            const bool default_needed = (! cmdline.procedures.empty() ||
+                                         ! cmdline.random_size.empty() ||
+                                         ! cmdline.files.empty());
             if (default_needed)
                 cmdline.iterations.insert(DEFAULT_ITERATIONS);
         }
 
         for (const auto& path: cmdline.files) {
-            if (not std::filesystem::exists(path))
+            if (! std::filesystem::exists(path))
                 throw std::runtime_error("File " + path.string() + " does not exist");
         }
     }
@@ -117,10 +117,10 @@ CommandLine CommandLine::parse_arguments(int argc, char* argv[])
 
 bool CommandLine::empty() const {
     return procedures.empty()
-       and random_size.empty()
-       and files.empty()
-       and iterations.empty()
-       and (show_procedures == false);
+       && random_size.empty()
+       && files.empty()
+       && iterations.empty()
+       && (show_procedures == false);
 }
 
 void CommandLine::print_help() {
