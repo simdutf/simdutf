@@ -106,9 +106,6 @@ struct simd16<int16_t> : base16_numeric<int16_t> {
     int16_t v0, int16_t v1, int16_t v2, int16_t v3, int16_t v4, int16_t v5, int16_t v6, int16_t v7)
     : simd16({v0, v1, v2, v3, v4, v5, v6, v7}) {}
 #endif
-  simdutf_really_inline simd16(
-    int16_t v0, int16_t v1, int16_t v2, int16_t v3, int16_t v4, int16_t v5, int16_t v6, int16_t v7)
-    : simd16({v0, v1, v2, v3, v4, v5, v6, v7}) {}
   simdutf_really_inline operator simd16<uint16_t>() const;
   simdutf_really_inline operator const uint16x8_t&() const { return this->value; }
   simdutf_really_inline operator const int16x8_t() const { return vreinterpretq_s16_u16(this->value); }

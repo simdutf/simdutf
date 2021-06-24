@@ -13,7 +13,7 @@ namespace simdutf::tests::helpers {
     std::uniform_int_distribution<uint64_t> distr;
 
   public:
-    RandomInt(uint64_t lo, uint64_t hi, uint64_t seed);
+    RandomInt(uint64_t lo, uint64_t hi, uint64_t seed) noexcept;
 
     uint32_t operator()();
   };
@@ -26,7 +26,7 @@ namespace simdutf::tests::helpers {
     std::vector<Distribution> ranges;
 
   public:
-    RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint64_t>> ranges, uint64_t seed);
+    RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint64_t>> ranges, uint64_t seed) noexcept;
 
     uint32_t operator()();
   };

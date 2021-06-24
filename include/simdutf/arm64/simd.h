@@ -312,8 +312,8 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     static simdutf_really_inline simd8<int8_t> zero() { return vdupq_n_s8(0); }
     static simdutf_really_inline simd8<int8_t> load(const int8_t values[16]) { return vld1q_s8(values); }
     simdutf_really_inline void store_ascii_as_utf16(char16_t * p) const {
-      vst1q_u16(reinterpret_cast<uint16_t*>(p), vmovl_u8(vget_low_u8 (*this)));
-      vst1q_u16(reinterpret_cast<uint16_t*>(p + 8), vmovl_high_u8(*this));
+      vst1q_u16(reinterpret_cast<uint16_t*>(p), vmovl_u8(vget_low_u8 (vreinterpretq_u8_s8(this->value))));
+      vst1q_u16(reinterpret_cast<uint16_t*>(p + 8), vmovl_high_u8(vreinterpretq_u8_s8(this->value)));
     }
     // Conversion from/to SIMD register
     simdutf_really_inline simd8(const int8x16_t _value) : value{_value} {}
@@ -380,8 +380,8 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     simdutf_really_inline simd8<int8_t>& operator+=(const simd8<int8_t> other) { *this = *this + other; return *this; }
     simdutf_really_inline simd8<int8_t>& operator-=(const simd8<int8_t> other) { *this = *this - other; return *this; }
 
-    simdutf_really_inline int8_t max_val() const { return vmaxvq_s8(*this); }
-    simdutf_really_inline int8_t min_val() const { return vminvq_s8(*this); }
+    simdutf_really_inline int8_t max_val() const { return vmaxvq_s8(value); }
+    simdutf_really_inline int8_t min_val() const { return vminvq_s8(value); }
     simdutf_really_inline bool is_ascii() const { return this->min_val() >= 0; }
 
     // Order-sensitive comparisons

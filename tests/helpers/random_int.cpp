@@ -4,7 +4,7 @@
 
 namespace simdutf::tests::helpers {
 
-    RandomInt::RandomInt(uint64_t lo, uint64_t hi, uint64_t seed)
+    RandomInt::RandomInt(uint64_t lo, uint64_t hi, uint64_t seed) noexcept
       : distr{lo, hi}
       , gen(std::mt19937::result_type(seed)) {}
 
@@ -12,11 +12,8 @@ namespace simdutf::tests::helpers {
       return uint32_t(distr(gen));
     }
 
-    RandomIntRanges::RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint64_t>> ranges_, uint64_t seed)
+    RandomIntRanges::RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint64_t>> ranges_, uint64_t seed) noexcept
       : gen(std::mt19937::result_type(seed)) {
-
-      if (ranges_.size() == 0)
-        throw std::invalid_argument("Ranges must not be empty");
 
       for (const auto [lo, hi]: ranges_)
         ranges.emplace_back(lo, hi);
