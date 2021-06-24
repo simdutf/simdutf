@@ -51,6 +51,7 @@ namespace simdutf::benchmarks {
         template<typename PROCEDURE>
         event_aggregate count_events(PROCEDURE, size_t iterations);
         void print_summary(const event_aggregate& all, double data_size, double character_count) const;
+        void print_summary(const event_aggregate& all, size_t data_size, size_t character_count) const;
 
         void run(const input::Testcase& testcase);
         void run(const std::string& procedure_name, const input::Testcase& testcase);
