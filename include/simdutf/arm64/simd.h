@@ -56,7 +56,6 @@ simdutf_really_inline uint8x16_t make_uint8x16_t(uint8_t x1,  uint8_t x2,  uint8
   return x;
 }
 
-
 // We have to do the same work for make_int8x16_t
 simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3,  int8_t x4,
                                        int8_t x5,  int8_t x6,  int8_t x7,  int8_t x8,
@@ -86,6 +85,23 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
   x = vsetq_lane_s8(x16, x, 15);
   return x;
 }
+
+simdutf_really_inline uint16x8_t make_uint16x8_t(uint16_t x1,  uint16_t x2,  uint16_t x3,  uint16_t x4,
+                                       uint16_t x5,  uint16_t x6,  uint16_t x7,  uint16_t x8) {
+  uint16x8_t x{};
+  x = vsetq_lane_u16(x1, x, 0);
+  x = vsetq_lane_u16(x2, x, 1);
+  x = vsetq_lane_u16(x3, x, 2);
+  x = vsetq_lane_u16(x4, x, 3);
+  x = vsetq_lane_u16(x5, x, 4);
+  x = vsetq_lane_u16(x6, x, 5);
+  x = vsetq_lane_u16(x7, x, 6);
+  x = vsetq_lane_u16(x8, x, 7);;
+  return x;
+}
+
+
+
 
 // End of private section with Visual Studio workaround
 } // namespace
