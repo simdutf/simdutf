@@ -120,7 +120,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
           // 3. prepare bitmask for 8-bit lookup
           //    one_byte_bitmask = hhggffeeddccbbaa -- the bits are doubled (h - MSB, a - LSB)
           const uint16_t m0 = one_byte_bitmask & 0x5555;  // m0 = 0h0g0f0e0d0c0b0a
-          const uint16_t m1 = m0 >> 7;                    // m1 = 00000000h0g0f0e0
+          const uint16_t m1 = static_cast<uint16_t>(m0 >> 7);                    // m1 = 00000000h0g0f0e0
           const uint8_t  m2 = static_cast<uint8_t>((m0 | m1) & 0xff);           // m2 =         hdgcfbea
           // 4. pack the bytes
           const uint8_t* row = &tables::utf16_to_utf8::pack_1_2_utf8_bytes[m2][0];

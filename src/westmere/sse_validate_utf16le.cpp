@@ -77,7 +77,7 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
 
             // V - non-surrogate words
             //     V = not surrogates_wordmask
-            const uint16_t V = ~surrogates_bitmask;
+            const uint16_t V = static_cast<uint16_t>(~surrogates_bitmask);
 
             // H - word-mask for high surrogates: the six highest bits are 0b1101'11
             const auto    vH = (in & v_fc) == v_dc;
@@ -87,12 +87,12 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
             //     L = not H and surrogates_wordmask
             const uint16_t L = static_cast<uint16_t>(~H & surrogates_bitmask);
 
-            const uint16_t a = L & (H >> 1);  // A low surrogate must be followed by high one.
+            const uint16_t a = static_cast<uint16_t>(L & (H >> 1));  // A low surrogate must be followed by high one.
                                               // (A low surrogate placed in the 7th register's word
                                               // is an exception we handle.)
             const uint16_t b = static_cast<uint16_t>(a << 1);        // Just mark that the opposite fact is hold,
                                               // thanks to that we have only two masks for valid case.
-            const uint16_t c = V | a | b;     // Combine all the masks into the final one.
+            const uint16_t c = static_cast<uint16_t>(V | a | b);     // Combine all the masks into the final one.
 
             if (c == 0xffff) {
                 // The whole input register contains valid UTF16, i.e.,
