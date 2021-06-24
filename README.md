@@ -44,6 +44,24 @@ cmake --build build
 ./build/benchmarks/benchmark --help
 ```
 
+Single-header version
+----------------------
+
+You can create a single-header version of the library where
+all of the code is put into two files (`simdutf.h` and `simdutf.cpp`).
+
+```
+python3 ./singleheader/amalgamate.py
+```
+
+Under Linux and macOS, you may test it as follows:
+
+```
+cd singleheader
+c++ -o amalgamation_demo amalgamation_demo.cpp -std=c++17
+./amalgamation_demo
+```
+
 API
 -----
 
