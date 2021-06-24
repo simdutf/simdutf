@@ -208,6 +208,27 @@ SIMDUTF_DLLIMPORTEXPORT internal::atomic_ptr<const implementation> active_implem
 simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept {
   return active_implementation->validate_utf8(buf, len);
 }
+simdutf_warn_unused size_t convert_utf8_to_utf16(const char * input, size_t length, char16_t* utf16_output) noexcept {
+  return active_implementation->convert_utf8_to_utf16(input, length, utf16_output);
+}
+simdutf_warn_unused bool validate_utf16(const char16_t * buf, size_t len) noexcept {
+  return active_implementation->validate_utf16(buf, len);
+}
+simdutf_warn_unused size_t convert_valid_utf8_to_utf16(const char * input, size_t length, char16_t* utf16_buffer) noexcept {
+  return active_implementation->convert_valid_utf8_to_utf16(input, length, utf16_buffer);
+}
+simdutf_warn_unused size_t convert_utf16_to_utf8(const char16_t * buf, size_t len, char* utf8_buffer) noexcept {
+  return active_implementation->convert_utf16_to_utf8(buf, len, utf8_buffer);
+}
+simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char16_t * buf, size_t len, char* utf8_buffer) noexcept {
+  return active_implementation->convert_valid_utf16_to_utf8(buf, len, utf8_buffer);
+}
+simdutf_warn_unused size_t count_utf16(const char16_t * input, size_t length) noexcept {
+  return active_implementation->count_utf16(input, length);
+}
+simdutf_warn_unused size_t count_utf8(const char * input, size_t length) noexcept {
+  return active_implementation->count_utf8(input, length);
+} 
 simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const char * buf, size_t length) noexcept {
   return active_implementation->autodetect_encoding(buf, length);
 }

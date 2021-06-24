@@ -134,6 +134,34 @@ simdutf_warn_unused size_t convert_utf16_to_utf8(const char16_t * buf, size_t le
  */
 simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char16_t * buf, size_t len, char* utf8_buffer) noexcept;
 
+
+/**
+ * Count the number of code points (characters) in the string assuming that
+ * it is valid.
+ *
+ * This function assumes that the input string is valid UTF-16.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the string to process
+ * @param length        the length of the string in words
+ * @return number of code points
+ */
+simdutf_warn_unused size_t count_utf16(const char16_t * input, size_t length) noexcept;
+
+/**
+ * Count the number of code points (characters) in the string assuming that
+ * it is valid.
+ *
+ * This function assumes that the input string is valid UTF-8.
+ *
+ * @param input         the string to process
+ * @param length        the length of the string in bytes
+ * @return number of code points
+ */
+simdutf_warn_unused size_t count_utf8(const char * input, size_t length) noexcept;
+
+
 /**
  * An implementation of simdutf for a particular CPU architecture.
  *

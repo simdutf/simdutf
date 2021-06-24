@@ -108,8 +108,8 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
           const uint32_t M2 = (M1 | M0)  & 0x00ff00ff;
           // 4. pack the bytes
 
-          const uint8_t* row = &tables::utf16_to_utf8::pack_1_2_utf8_bytes[uint8_t(M2)][0];
-          const uint8_t* row_2 = &tables::utf16_to_utf8::pack_1_2_utf8_bytes[uint8_t(M2>>16)][0];
+          const uint8_t* row = &simdutf::tables::utf16_to_utf8::pack_1_2_utf8_bytes[uint8_t(M2)][0];
+          const uint8_t* row_2 = &simdutf::tables::utf16_to_utf8::pack_1_2_utf8_bytes[uint8_t(M2>>16)][0];
 
           const __m128i shuffle = _mm_loadu_si128((__m128i*)(row + 1));
           const __m128i shuffle_2 = _mm_loadu_si128((__m128i*)(row_2 + 1));
@@ -211,23 +211,23 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
           continue;
         }*/
         const uint8_t mask0 = uint8_t(mask);
-        const uint8_t* row0 = &tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask0][0];
+        const uint8_t* row0 = &simdutf::tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask0][0];
         const __m128i shuffle0 = _mm_loadu_si128((__m128i*)(row0 + 1));
         const __m128i utf8_0 = _mm_shuffle_epi8(_mm256_castsi256_si128(out0), shuffle0);
 
         const uint8_t mask1 = static_cast<uint8_t>(mask >> 8);
-        const uint8_t* row1 = &tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask1][0];
+        const uint8_t* row1 = &simdutf::tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask1][0];
         const __m128i shuffle1 = _mm_loadu_si128((__m128i*)(row1 + 1));
         const __m128i utf8_1 = _mm_shuffle_epi8(_mm256_castsi256_si128(out1), shuffle1);
 
         const uint8_t mask2 = static_cast<uint8_t>(mask >> 16);
-        const uint8_t* row2 = &tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask2][0];
+        const uint8_t* row2 = &simdutf::tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask2][0];
         const __m128i shuffle2 = _mm_loadu_si128((__m128i*)(row2 + 1));
         const __m128i utf8_2 = _mm_shuffle_epi8(_mm256_extractf128_si256(out0,1), shuffle2);
 
 
         const uint8_t mask3 = static_cast<uint8_t>(mask >> 24);
-        const uint8_t* row3 = &tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask3][0];
+        const uint8_t* row3 = &simdutf::tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask3][0];
         const __m128i shuffle3 = _mm_loadu_si128((__m128i*)(row3 + 1));
         const __m128i utf8_3 = _mm_shuffle_epi8(_mm256_extractf128_si256(out1,1), shuffle3);
 
