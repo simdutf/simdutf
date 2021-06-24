@@ -1,6 +1,7 @@
 #ifdef __GNUC__
 #if __GNUC__ < 8
 #define _mm256_set_m128i(xmm1, xmm2) _mm256_permute2f128_si256(_mm256_castsi128_si256(xmm1), _mm256_castsi128_si256(xmm2), 2)
+#define _mm256_setr_m128i(xmm2, xmm1)  _mm256_permute2f128_si256(_mm256_castsi128_si256(xmm1), _mm256_castsi128_si256(xmm2), 2)
 #endif
 #endif
 
