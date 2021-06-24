@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
    std::cout << "wrote " << utf16words << " UTF-16 words." << std::endl;
    return EXIT_SUCCESS;
 }
-
+```
 
 API
 -----
