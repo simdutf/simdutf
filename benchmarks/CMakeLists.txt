@@ -19,16 +19,3 @@ add_subdirectory(src)
 
 add_executable(benchmark benchmark.cpp)
 target_link_libraries(benchmark PUBLIC simdutf simdutf::benchmarks::benchmark)
-
-
-if(CMAKE_CXX_COMPILER_ID MATCHES GNU)
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 9.0)
-  elseif(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 8.0)
-    target_link_libraries(benchmark PUBLIC stdc++fs)
-  elseif(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 6.0)
-    target_link_libraries(benchmark PUBLIC stdc++fs)
-    target_compile_definitions(benchmark PUBLIC EXPERIMENTAL)
-  else()
-    message(FATAL_ERROR "Filesystem is not available in ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
-  endif()
-endif()
