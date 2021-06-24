@@ -24,7 +24,7 @@ namespace simdutf::tests::helpers {
       range_index = Distribution(0, ranges.size() - 1);
     }
 
-    uint64_t RandomIntRanges::operator()() {
+    uint32_t RandomIntRanges::operator()() {
       const auto index = range_index(gen);
       return ranges[index](gen);
     }
