@@ -6,7 +6,7 @@ namespace simdutf::tests::helpers {
 
     RandomInt::RandomInt(uint64_t lo, uint64_t hi, uint64_t seed)
       : distr{lo, hi}
-      , gen(seed) {}
+      , gen(std::mt19937::result_type(seed)) {}
 
     uint64_t RandomInt::operator()() {
       return distr(gen);

@@ -59,8 +59,8 @@ namespace simdutf::tests::helpers {
 
   bool transcode_utf8_to_utf16_test_base::validate(size_t saved_chars) const {
     if (saved_chars != reference_output_utf16.size()) {
-      printf("wrong saved bytes value: procedure returned %lu bytes, it should be %lu\n",
-             saved_chars, reference_output_utf16.size());
+      printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
+             size_t(saved_chars), size_t(reference_output_utf16.size()));
       return false;
     }
 
@@ -71,8 +71,8 @@ namespace simdutf::tests::helpers {
     auto [it1, it2] = std::mismatch(output_utf16.begin(), output_utf16.begin() + saved_chars,
                                     reference_output_utf16.begin(), reference_output_utf16.end());
     if (it1 != output_utf16.begin() + saved_chars) {
-      printf("mismatched output at %lu: actual value 0x%04x, expected 0x%04x\n",
-             std::distance(output_utf16.begin(), it1), uint16_t(*it1), uint16_t(*it2));
+      printf("mismatched output at %zu: actual value 0x%04x, expected 0x%04x\n",
+             size_t(std::distance(output_utf16.begin(), it1)), uint16_t(*it1), uint16_t(*it2));
       for(size_t i = 0; i < output_utf16.size(); i++) {
         if(reference_output_utf16[i] != output_utf16[i]) { printf(" ==> "); }
         printf("at %zu expected 0x%04x and got 0x%04x\n ", i, uint16_t(reference_output_utf16[i]), uint16_t(output_utf16[i]));
@@ -148,8 +148,8 @@ namespace simdutf::tests::helpers {
     };
 
     if (saved_chars != reference_output_utf8.size()) {
-      printf("wrong saved bytes value: procedure returned %lu bytes, it should be %lu\n",
-             saved_chars, reference_output_utf8.size());
+      printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
+             size_t(saved_chars), size_t(reference_output_utf8.size()));
 
       dump("expected :", reference_output_utf8);
       dump("actual   :", output_utf8);
@@ -162,8 +162,8 @@ namespace simdutf::tests::helpers {
     auto [it1, it2] = std::mismatch(output_utf8.begin(), output_utf8.begin() + saved_chars,
                                     reference_output_utf8.begin(), reference_output_utf8.end());
     if (it1 != output_utf8.begin() + saved_chars) {
-      printf("mismatched output at %lu: actual value 0x%02x, expected 0x%02x\n",
-             std::distance(output_utf8.begin(), it1), uint8_t(*it1), uint8_t(*it2));
+      printf("mismatched output at %zu: actual value 0x%02x, expected 0x%02x\n",
+             size_t(std::distance(output_utf8.begin(), it1)), uint8_t(*it1), uint8_t(*it2));
 
       dump("expected :", reference_output_utf8);
       dump("actual   :", output_utf8);
