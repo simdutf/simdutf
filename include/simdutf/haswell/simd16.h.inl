@@ -1,3 +1,10 @@
+#ifdef __GNUC__
+#if __GNUC__ < 8
+#define _mm256_set_m128i(xmm1, xmm2) _mm256_permute2f128_si256(_mm256_castsi128_si256(xmm1), _mm256_castsi128_si256(xmm2), 2)
+#define _mm256_setr_m128i(xmm2, xmm1)  _mm256_permute2f128_si256(_mm256_castsi128_si256(xmm1), _mm256_castsi128_si256(xmm2), 2)
+#endif
+#endif
+
 template<typename T>
 struct simd16;
 
@@ -231,8 +238,8 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
       ).to_bitmask();
     }
     simdutf_really_inline uint64_t not_in_range(const T low, const T high) const {
-      const simd16<T> mask_low = simd16<T>::splat(low-1);
-      const simd16<T> mask_high = simd16<T>::splat(high+1);
+      const simd16<T> mask_low = simd16<T>::splat(static_cast<T>(low-1));
+      const simd16<T> mask_high = simd16<T>::splat(static_cast<T>(high+1));
       return simd16x32<bool>(
         (this->chunks[0] >= mask_high) | (this->chunks[0] <= mask_low),
         (this->chunks[1] >= mask_high) | (this->chunks[1] <= mask_low)

@@ -89,22 +89,14 @@ struct base16_numeric: base16<T> {
 template<>
 struct simd16<int16_t> : base16_numeric<int16_t> {
   simdutf_really_inline simd16() : base16_numeric<int16_t>() {}
-  simdutf_really_inline simd16(const uint16x8_t _value) : base16_numeric<int16_t>(_value) {}
+  //simdutf_really_inline simd16(const uint16x8_t _value) : base16_numeric<int16_t>(_value) {}
+  simdutf_really_inline simd16(const int16x8_t _value) : base16_numeric<int16_t>(vreinterpretq_u16_s16(_value)) {}
+
   // Splat constructor
   simdutf_really_inline simd16(int16_t _value) : simd16(splat(_value)) {}
   // Array constructor
   simdutf_really_inline simd16(const int16_t* values) : simd16(load(values)) {}
   simdutf_really_inline simd16(const char16_t* values) : simd16(load(reinterpret_cast<const int16_t*>(values))) {}
-  // Member-by-member initialization
-#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-  simdutf_really_inline simd16(
-    int16_t v0, int16_t v1, int16_t v2, int16_t v3, int16_t v4, int16_t v5, int16_t v6, int16_t v7)
-    : simd16(make_int16x8_t(v0, v1, v2, v3, v4, v5, v6, v7)) {}
-#else
-  simdutf_really_inline simd16(
-    int16_t v0, int16_t v1, int16_t v2, int16_t v3, int16_t v4, int16_t v5, int16_t v6, int16_t v7)
-    : simd16({v0, v1, v2, v3, v4, v5, v6, v7}) {}
-#endif
   simdutf_really_inline operator simd16<uint16_t>() const;
   simdutf_really_inline operator const uint16x8_t&() const { return this->value; }
   simdutf_really_inline operator const int16x8_t() const { return vreinterpretq_s16_u16(this->value); }
@@ -132,23 +124,7 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
   // Array constructor
   simdutf_really_inline simd16(const uint16_t* values) : simd16(load(values)) {}
   simdutf_really_inline simd16(const char16_t* values) : simd16(load(reinterpret_cast<const uint16_t*>(values))) {}
-  // Member-by-member initialization
-#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-  simdutf_really_inline simd16(
-    uint16_t v0, uint16_t v1, uint16_t v2, uint16_t v3, uint16_t v4, uint16_t v5, uint16_t v6, uint16_t v7)
-  : simd16(make_uint16x8_t(v0, v1, v2, v3, v4, v5, v6, v7)) {}
-#else
-  simdutf_really_inline simd16(
-    uint16_t v0, uint16_t v1, uint16_t v2, uint16_t v3, uint16_t v4, uint16_t v5, uint16_t v6, uint16_t v7)
-  : simd16({v0, v1, v2, v3, v4, v5, v6, v7}) {}
-#endif
 
-  // Repeat 16 values as many times as necessary (usually for lookup tables)
-  simdutf_really_inline static simd16<uint16_t> repeat_16(
-    uint16_t v0, uint16_t v1, uint16_t v2, uint16_t v3, uint16_t v4, uint16_t v5, uint16_t v6, uint16_t v7
-  ) {
-    return simd16<uint16_t>(v0, v1, v2, v3, v4, v5, v6, v7);
-  }
 
   simdutf_really_inline int16_t max_val() const { return vmaxvq_u16(*this); }
   simdutf_really_inline int16_t min_val() const { return vminvq_u16(*this); }
