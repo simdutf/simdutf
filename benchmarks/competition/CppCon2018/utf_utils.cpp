@@ -1229,8 +1229,8 @@ UtfUtils::ConvertAsciiWithSse(char8_t const*& pSrc, char16_t*& pDst) noexcept
 ///     the number of trailing zero bits, as an `int32_t`.
 //--------------------------------------------------------------------------------------------------
 //
-#if defined KEWB_PLATFORM_LINUX  &&  (defined KEWB_COMPILER_CLANG  ||  defined KEWB_COMPILER_GCC)
-
+#if defined KEWB_COMPILER_CLANG  ||  defined KEWB_COMPILER_GCC
+// previous line modified by D. Lemire on June 23rd 2021: we want support for not just Linux!
     KEWB_FORCE_INLINE int32_t
     UtfUtils::GetTrailingZeros(int32_t x) noexcept
     {
@@ -1246,7 +1246,6 @@ UtfUtils::ConvertAsciiWithSse(char8_t const*& pSrc, char16_t*& pDst) noexcept
         _BitScanForward(&indx, (unsigned long) x);
         return (int32_t) indx;
     }
-
 #endif
 
 //--------------------------------------------------------------------------------------------------

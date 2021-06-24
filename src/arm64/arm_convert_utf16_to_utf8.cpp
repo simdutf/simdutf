@@ -108,10 +108,17 @@ std::pair<const char16_t*, char*> arm_convert_utf16_to_utf8(const char16_t* buf,
           const uint16x8_t one_byte_bytemask = vcleq_u16(in, v_007f);
           const uint8x16_t utf8_unpacked = vreinterpretq_u8_u16(vbslq_u16(one_byte_bytemask, in, t4));
           // 3. prepare bitmask for 8-bit lookup
-          const uint16x8_t mask = { 0x0001, 0x0004, 
-                                    0x0010, 0x0040, 
-                                    0x0002, 0x0008, 
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+          const uint16x8_t mask = make_uint16x8_t(0x0001, 0x0004,
+                                    0x0010, 0x0040,
+                                    0x0002, 0x0008,
+                                    0x0020, 0x0080);
+#else
+          const uint16x8_t mask = { 0x0001, 0x0004,
+                                    0x0010, 0x0040,
+                                    0x0002, 0x0008,
                                     0x0020, 0x0080 };
+#endif
           uint16_t m2 = vaddvq_u16(vandq_u16(one_byte_bytemask, mask));
           // 4. pack the bytes
           const uint8_t* row = &tables::utf16_to_utf8::pack_1_2_utf8_bytes[m2][0];
@@ -132,9 +139,13 @@ std::pair<const char16_t*, char*> arm_convert_utf16_to_utf8(const char16_t* buf,
     // it is likely an uncommon occurrence.
       if (vmaxvq_u16(surrogates_bytemask) == 0) {
       // case: words from register produce either 1, 2 or 3 UTF-8 bytes
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+        const uint16x8_t dup_even = make_uint16x8_t(0x0000, 0x0202, 0x0404, 0x0606,
+                                     0x0808, 0x0a0a, 0x0c0c, 0x0e0e);
+#else
         const uint16x8_t dup_even = {0x0000, 0x0202, 0x0404, 0x0606,
                                      0x0808, 0x0a0a, 0x0c0c, 0x0e0e};
-
+#endif
         /* In this branch we handle three cases:
            1. [0000|0000|0ccc|cccc] => [0ccc|cccc]                           - single UFT-8 byte
            2. [0000|0bbb|bbcc|cccc] => [110b|bbbb], [10cc|cccc]              - two UTF-8 bytes
@@ -190,14 +201,25 @@ std::pair<const char16_t*, char*> arm_convert_utf16_to_utf8(const char16_t* buf,
         // 5. compress 32-bit words into 1, 2 or 3 bytes -- 2 x shuffle
         const uint16x8_t v_007f = vmovq_n_u16((uint16_t)0x007F);
         const uint16x8_t one_byte_bytemask = vcleq_u16(in, v_007f);
-        const uint16x8_t onemask = { 0x0001, 0x0004, 
-                                    0x0010, 0x0040, 
-                                    0x0100, 0x0400, 
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+        const uint16x8_t onemask = make_uint16x8_t(0x0001, 0x0004,
+                                    0x0010, 0x0040,
+                                    0x0100, 0x0400,
+                                    0x1000, 0x4000 );
+        const uint16x8_t twomask = make_uint16x8_t(0x0002, 0x0008,
+                                    0x0020, 0x0080,
+                                    0x0200, 0x0800,
+                                    0x2000, 0x8000 );
+#else
+        const uint16x8_t onemask = { 0x0001, 0x0004,
+                                    0x0010, 0x0040,
+                                    0x0100, 0x0400,
                                     0x1000, 0x4000 };
-        const uint16x8_t twomask = { 0x0002, 0x0008, 
-                                    0x0020, 0x0080, 
-                                    0x0200, 0x0800, 
+        const uint16x8_t twomask = { 0x0002, 0x0008,
+                                    0x0020, 0x0080,
+                                    0x0200, 0x0800,
                                     0x2000, 0x8000 };
+#endif
         const uint16x8_t combined = vorrq_u16(vandq_u16(one_byte_bytemask, onemask), vandq_u16(one_or_two_bytes_bytemask, twomask));
         const uint16_t mask = vaddvq_u16(combined);
         // The following fast path may or may not be beneficial.

@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
     Benchmark benchmark{Benchmark::create(cmdline)};
     if (cmdline.show_procedures) {
         const auto& known_procedures = benchmark.all_procedures();
-        printf("Available procedures (%lu)\n", known_procedures.size());
+        printf("Available procedures (%zu)\n", size_t(known_procedures.size()));
         for (const auto& name: known_procedures) {
             printf("- %s\n", name.c_str());
         }

@@ -9,7 +9,7 @@ namespace simdutf::benchmarks {
         : testcases{std::move(testcases)} {}
 
     bool BenchmarkBase::run() {
-        printf("testcases: %lu\n", testcases.size());
+        printf("testcases: %zu\n", size_t(testcases.size()));
         for (const auto& testcase: testcases) {
             run(testcase);
         }
@@ -50,12 +50,12 @@ namespace simdutf::benchmarks {
     }
 
     void BenchmarkBase::run(const std::string& procedure_name, const input::Testcase& testcase) {
-        printf("%s, input size: %lu, iterations: %lu",
-           procedure_name.c_str(), input_data.size(), testcase.iterations);
+        printf("%s, input size: %zu, iterations: %zu",
+           procedure_name.c_str(), size_t(input_data.size()), size_t(testcase.iterations));
 
         if (std::holds_alternative<input::File>(testcase.input)) {
             const input::File& file{std::get<input::File>(testcase.input)};
-            printf(", dataset: %s\n", file.path.c_str());
+            printf(", dataset: %s\n", reinterpret_cast<const char*>(file.path.c_str()));
         } else
             putchar('\n');
 
