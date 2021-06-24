@@ -8,8 +8,8 @@ namespace simdutf::tests::helpers {
       : distr{lo, hi}
       , gen(std::mt19937::result_type(seed)) {}
 
-    uint64_t RandomInt::operator()() {
-      return distr(gen);
+    uint32_t RandomInt::operator()() {
+      return uint32_t(distr(gen));
     }
 
     RandomIntRanges::RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint64_t>> ranges_, uint64_t seed)

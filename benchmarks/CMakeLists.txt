@@ -1,13 +1,13 @@
-if (CMAKE_COMPILER_IS_GNUCXX) 
-    add_compile_options("-fdiagnostics-color")
+if (CMAKE_COMPILER_IS_GNUCXX)
+  add_compile_options("-fdiagnostics-color")
+  add_compile_options("-Wpedantic")
+  add_compile_options("-Wextra")
+  add_compile_options("-Wall")
 endif()
 if(SIMDUTF_SANITIZE)
   add_compile_options(-fsanitize=address  -fno-omit-frame-pointer -fno-sanitize-recover=all)
   add_compile_definitions(ASAN_OPTIONS=detect_leaks=1)
 endif()
-add_compile_options("-Wpedantic")
-add_compile_options("-Wextra")
-add_compile_options("-Wall")
 
 add_subdirectory(src)
 

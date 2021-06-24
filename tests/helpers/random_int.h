@@ -15,7 +15,7 @@ namespace simdutf::tests::helpers {
   public:
     RandomInt(uint64_t lo, uint64_t hi, uint64_t seed);
 
-    uint64_t operator()();
+    uint32_t operator()();
   };
 
   class RandomIntRanges {
