@@ -26,6 +26,6 @@ namespace simdutf::tests::helpers {
 
     uint32_t RandomIntRanges::operator()() {
       const auto index = range_index(gen);
-      return ranges[index](gen);
+      return uint32_t(ranges[index](gen));
     }
 }
