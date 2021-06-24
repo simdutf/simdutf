@@ -1,5 +1,3 @@
-simdutf: insanely fast Unicode validation and transcoding
-===============================================
 [![Alpine Linux](https://github.com/lemire/simdutf/actions/workflows/alpine.yml/badge.svg)](https://github.com/lemire/simdutf/actions/workflows/alpine.yml)
 [![MSYS2-CI](https://github.com/lemire/simdutf/actions/workflows/msys2.yml/badge.svg)](https://github.com/lemire/simdutf/actions/workflows/msys2.yml)
 [![MSYS2-CLANG-CI](https://github.com/lemire/simdutf/actions/workflows/msys2-clang.yml/badge.svg)](https://github.com/lemire/simdutf/actions/workflows/msys2-clang.yml)
@@ -7,6 +5,8 @@ simdutf: insanely fast Unicode validation and transcoding
 [![VS16-ARM-CI](https://github.com/lemire/simdutf/actions/workflows/vs16-arm-ci.yml/badge.svg)](https://github.com/lemire/simdutf/actions/workflows/vs16-arm-ci.yml)
 [![VS16-CI](https://github.com/lemire/simdutf/actions/workflows/vs16-ci.yml/badge.svg)](https://github.com/lemire/simdutf/actions/workflows/vs16-ci.yml)
 
+simdutf: insanely fast Unicode validation and transcoding
+===============================================
 
 This library provide fast Unicode functions such as
 
