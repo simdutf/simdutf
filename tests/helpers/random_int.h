@@ -15,7 +15,7 @@ namespace simdutf::tests::helpers {
   public:
     RandomInt(uint64_t lo, uint64_t hi, uint64_t seed) noexcept;
 
-    uint32_t operator()();
+    uint32_t operator()() noexcept;
   };
 
   class RandomIntRanges {
@@ -28,7 +28,7 @@ namespace simdutf::tests::helpers {
   public:
     RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint64_t>> ranges, uint64_t seed) noexcept;
 
-    uint32_t operator()();
+    uint32_t operator()() noexcept;
   };
 
 }

@@ -8,7 +8,7 @@ namespace simdutf::tests::helpers {
       : distr{lo, hi}
       , gen(std::mt19937::result_type(seed)) {}
 
-    uint32_t RandomInt::operator()() {
+    uint32_t RandomInt::operator()() noexcept {
       return uint32_t(distr(gen));
     }
 
@@ -21,7 +21,7 @@ namespace simdutf::tests::helpers {
       range_index = Distribution(0, ranges.size() - 1);
     }
 
-    uint32_t RandomIntRanges::operator()() {
+    uint32_t RandomIntRanges::operator()() noexcept {
       const auto index = range_index(gen);
       return uint32_t(ranges[index](gen));
     }

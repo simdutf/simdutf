@@ -113,10 +113,10 @@ struct simd16<int16_t> : base16_numeric<int16_t> {
   simdutf_really_inline int16_t max_val() const { return vmaxvq_s16(*this); }
   simdutf_really_inline int16_t min_val() const { return vminvq_s16(*this); }
   // Order-sensitive comparisons
-  simdutf_really_inline simd16<int16_t> max_val(const simd16<int16_t> other) const { return vmaxq_s16(*this, other); }
-  simdutf_really_inline simd16<int16_t> min_val(const simd16<int16_t> other) const { return vmaxq_s16(*this, other); }
-  simdutf_really_inline simd16<bool> operator>(const simd16<int16_t> other) const { return vcgtq_s16(*this, other); }
-  simdutf_really_inline simd16<bool> operator<(const simd16<int16_t> other) const { return vcltq_s16(*this, other); }
+  simdutf_really_inline simd16<int16_t> max_val(const simd16<int16_t> other) const { return vmaxq_s16(vreinterpretq_s16_u16(this->value), vreinterpretq_s16_u16(other.value)); }
+  simdutf_really_inline simd16<int16_t> min_val(const simd16<int16_t> other) const { return vmaxq_s16(vreinterpretq_s16_u16(this->value), vreinterpretq_s16_u16(other.value)); }
+  simdutf_really_inline simd16<bool> operator>(const simd16<int16_t> other) const { return vcgtq_s16(vreinterpretq_s16_u16(this->value), vreinterpretq_s16_u16(other.value)); }
+  simdutf_really_inline simd16<bool> operator<(const simd16<int16_t> other) const { return vcltq_s16(vreinterpretq_s16_u16(this->value), vreinterpretq_s16_u16(other.value)); }
 };
 
 
