@@ -96,7 +96,7 @@ TEST(convert_fails_if_there_is_sole_low_surrogate) {
   };
 
   const size_t size = 64;
-  transcode_utf16_to_utf8_test_base test([](){return '*';}, size);
+  transcode_utf16_to_utf8_test_base test([](){return '*';}, size + 32);
 
   for (char16_t low_surrogate = 0xdc00; low_surrogate <= 0xdfff; low_surrogate++) {
     for (size_t i=0; i < size; i++) {
@@ -115,7 +115,7 @@ TEST(convert_fails_if_there_is_sole_high_surrogate) {
   };
 
   const size_t size = 64;
-  transcode_utf16_to_utf8_test_base test([](){return '*';}, size);
+  transcode_utf16_to_utf8_test_base test([](){return '*';}, size + 32);
 
   for (char16_t high_surrogate = 0xdc00; high_surrogate <= 0xdfff; high_surrogate++) {
     for (size_t i=0; i < size; i++) {
@@ -134,7 +134,7 @@ TEST(convert_fails_if_there_is_low_surrogate_is_followed_by_another_low_surrogat
   };
 
   const size_t size = 64;
-  transcode_utf16_to_utf8_test_base test([](){return '*';}, size);
+  transcode_utf16_to_utf8_test_base test([](){return '*';}, size + 32);
 
   for (char16_t low_surrogate = 0xdc00; low_surrogate <= 0xdfff; low_surrogate++) {
     for (size_t i=0; i < size - 1; i++) {
@@ -156,7 +156,7 @@ TEST(convert_fails_if_there_is_surrogate_pair_is_followed_by_high_surrogate) {
   };
 
   const size_t size = 64;
-  transcode_utf16_to_utf8_test_base test([](){return '*';}, size);
+  transcode_utf16_to_utf8_test_base test([](){return '*';}, size + 32);
 
   const char16_t low_surrogate = 0xd801;
   const char16_t high_surrogate = 0xdc02;
