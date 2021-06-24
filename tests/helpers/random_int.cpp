@@ -13,7 +13,7 @@ namespace simdutf::tests::helpers {
     }
 
     RandomIntRanges::RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint64_t>> ranges_, uint64_t seed)
-      : gen(seed) {
+      : gen(std::mt19937::result_type(seed)) {
 
       if (ranges_.size() == 0)
         throw std::invalid_argument("Ranges must not be empty");
