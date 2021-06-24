@@ -58,8 +58,9 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
   const __m256i v_f800 = _mm256_set1_epi16((int16_t)0xf800);
   const __m256i v_d800 = _mm256_set1_epi16((int16_t)0xd800);
   const __m256i v_c080 = _mm256_set1_epi16((int16_t)0xc080);
+  const size_t safety_margin = 8; // to avoid overruns
 
-  while (buf + 16 <= end) {
+  while (buf + 16 + safety_margin <= end) {
     __m256i in = _mm256_loadu_si256((__m256i*)buf);
     // a single 16-bit UTF-16 word can yield 1, 2 or 3 UTF-8 bytes
     const __m256i v_ff80 = _mm256_set1_epi16((int16_t)0xff80);
@@ -245,8 +246,10 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
       // Let us do a scalar fallback.
       // It may seem wasteful to use scalar code, but being efficient with SIMD
       // in the presence of surrogate pairs may require non-trivial tables.
-      int k = 0;
-      for(; k < 15; k++) {
+      size_t forward = 15;
+      size_t k = 0;
+      if(size_t(end - buf) < forward + 1) { forward = size_t(end - buf - 1);}
+      for(; k < forward; k++) {
         uint16_t word = buf[k];
         if((word & 0xFF80)==0) {
           *utf8_output++ = char(word);

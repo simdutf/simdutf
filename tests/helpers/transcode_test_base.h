@@ -29,7 +29,7 @@ namespace simdutf::tests::helpers {
     std::vector<char16_t> output_utf16; // what the procedure under test produced
     std::vector<char16_t> reference_output_utf16; // what we are expecting
 
-    static constexpr size_t output_size_margin = 128; // extra room for buggy procedures
+    static constexpr size_t output_size_margin = 0; // extra room for buggy procedures
 
   public:
     transcode_utf8_to_utf16_test_base(GenerateCodepoint generate, size_t input_size);
@@ -40,6 +40,8 @@ namespace simdutf::tests::helpers {
         prepare_input(codepoint);
       }
       output_utf16.resize(reference_output_utf16.size() + output_size_margin);
+      output_utf16.shrink_to_fit(); // to help detect overruns.
+
     }
 
     template <typename PROCEDURE>
@@ -66,7 +68,7 @@ namespace simdutf::tests::helpers {
 
     std::vector<char16_t> input_utf16; // source-encoded mesage: what we're going to transcode
 
-    static constexpr size_t output_size_margin = 128; // extra room for buggy procedures
+    static constexpr size_t output_size_margin = 0; // extra room for buggy procedures
 
   public:
     transcode_utf16_to_utf8_test_base(GenerateCodepoint generate, size_t input_size);
@@ -79,6 +81,7 @@ namespace simdutf::tests::helpers {
         prepare_input(codepoint);
       }
       output_utf8.resize(reference_output_utf8.size() + output_size_margin);
+      output_utf8.shrink_to_fit(); // to help detect overruns.
     }
 
     template <typename PROCEDURE>
