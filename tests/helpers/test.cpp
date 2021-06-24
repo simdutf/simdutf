@@ -22,7 +22,7 @@ namespace {
     std::list<std::string> args;
     for (int i=1; i < argc; i++) {
       std::string arg{argv[i]};
-      if ((arg == "-h") or (arg == "--help")) {
+      if ((arg == "-h") || (arg == "--help")) {
         cmdline.show_help = true;
         return cmdline;
       }

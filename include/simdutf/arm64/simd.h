@@ -100,7 +100,19 @@ simdutf_really_inline uint16x8_t make_uint16x8_t(uint16_t x1,  uint16_t x2,  uin
   return x;
 }
 
-
+simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t x3,  int16_t x4,
+                                       int16_t x5,  int16_t x6,  int16_t x7,  int16_t x8) {
+  uint16x8_t x{};
+  x = vsetq_lane_s16(x1, x, 0);
+  x = vsetq_lane_s16(x2, x, 1);
+  x = vsetq_lane_s16(x3, x, 2);
+  x = vsetq_lane_s16(x4, x, 3);
+  x = vsetq_lane_s16(x5, x, 4);
+  x = vsetq_lane_s16(x6, x, 5);
+  x = vsetq_lane_s16(x7, x, 6);
+  x = vsetq_lane_s16(x8, x, 7);;
+  return x;
+}
 
 
 // End of private section with Visual Studio workaround
@@ -300,14 +312,13 @@ simdutf_really_inline uint16x8_t make_uint16x8_t(uint16_t x1,  uint16_t x2,  uin
     static simdutf_really_inline simd8<int8_t> zero() { return vdupq_n_s8(0); }
     static simdutf_really_inline simd8<int8_t> load(const int8_t values[16]) { return vld1q_s8(values); }
     simdutf_really_inline void store_ascii_as_utf16(char16_t * p) const {
-      vst1q_u16(reinterpret_cast<uint16_t*>(p), vmovl_u8(vget_low_u8 (*this)));
-      vst1q_u16(reinterpret_cast<uint16_t*>(p + 8), vmovl_high_u8(*this));
+      vst1q_u16(reinterpret_cast<uint16_t*>(p), vmovl_u8(vget_low_u8 (vreinterpretq_u8_s8(this->value))));
+      vst1q_u16(reinterpret_cast<uint16_t*>(p + 8), vmovl_high_u8(vreinterpretq_u8_s8(this->value)));
     }
     // Conversion from/to SIMD register
     simdutf_really_inline simd8(const int8x16_t _value) : value{_value} {}
     simdutf_really_inline operator const int8x16_t&() const { return this->value; }
     simdutf_really_inline operator const uint8x16_t() const { return vreinterpretq_u8_s8(this->value); }
-
     simdutf_really_inline operator int8x16_t&() { return this->value; }
 
     // Zero constructor
@@ -346,7 +357,7 @@ simdutf_really_inline uint16x8_t make_uint16x8_t(uint16_t x1,  uint16_t x2,  uin
     }
 
     // Store to array
-    simdutf_really_inline void store(int8_t dst[16]) const { return vst1q_s8(dst, *this); }
+    simdutf_really_inline void store(int8_t dst[16]) const { return vst1q_s8(dst, value); }
     // Explicit conversion to/from unsigned
     //
     // Under Visual Studio/ARM64 uint8x16_t and int8x16_t are apparently the same type.
@@ -357,27 +368,27 @@ simdutf_really_inline uint16x8_t make_uint16x8_t(uint16_t x1,  uint16_t x2,  uin
 #endif
     simdutf_really_inline operator simd8<uint8_t>() const { return vreinterpretq_u8_s8(this->value); }
 
-    simdutf_really_inline simd8<int8_t> operator|(const simd8<int8_t> other) const { return vorrq_s8(*this, other); }
-    simdutf_really_inline simd8<int8_t> operator&(const simd8<int8_t> other) const { return vandq_s8(*this, other); }
-    simdutf_really_inline simd8<int8_t> operator^(const simd8<int8_t> other) const { return veorq_s8(*this, other); }
-    simdutf_really_inline simd8<int8_t> bit_andnot(const simd8<int8_t> other) const { return vbicq_s8(*this, other); }
+    simdutf_really_inline simd8<int8_t> operator|(const simd8<int8_t> other) const { return vorrq_s8(value, other.value); }
+    simdutf_really_inline simd8<int8_t> operator&(const simd8<int8_t> other) const { return vandq_s8(value, other.value); }
+    simdutf_really_inline simd8<int8_t> operator^(const simd8<int8_t> other) const { return veorq_s8(value, other.value); }
+    simdutf_really_inline simd8<int8_t> bit_andnot(const simd8<int8_t> other) const { return vbicq_s8(value, other.value); }
 
     // Math
-    simdutf_really_inline simd8<int8_t> operator+(const simd8<int8_t> other) const { return vaddq_s8(*this, other); }
-    simdutf_really_inline simd8<int8_t> operator-(const simd8<int8_t> other) const { return vsubq_s8(*this, other); }
+    simdutf_really_inline simd8<int8_t> operator+(const simd8<int8_t> other) const { return vaddq_s8(value, other.value); }
+    simdutf_really_inline simd8<int8_t> operator-(const simd8<int8_t> other) const { return vsubq_s8(value, other.value); }
     simdutf_really_inline simd8<int8_t>& operator+=(const simd8<int8_t> other) { *this = *this + other; return *this; }
     simdutf_really_inline simd8<int8_t>& operator-=(const simd8<int8_t> other) { *this = *this - other; return *this; }
 
-    simdutf_really_inline int8_t max_val() const { return vmaxvq_s8(*this); }
-    simdutf_really_inline int8_t min_val() const { return vminvq_s8(*this); }
+    simdutf_really_inline int8_t max_val() const { return vmaxvq_s8(value); }
+    simdutf_really_inline int8_t min_val() const { return vminvq_s8(value); }
     simdutf_really_inline bool is_ascii() const { return this->min_val() >= 0; }
 
     // Order-sensitive comparisons
-    simdutf_really_inline simd8<int8_t> max_val(const simd8<int8_t> other) const { return vmaxq_s8(*this, other); }
-    simdutf_really_inline simd8<int8_t> min_val(const simd8<int8_t> other) const { return vminq_s8(*this, other); }
-    simdutf_really_inline simd8<bool> operator>(const simd8<int8_t> other) const { return vcgtq_s8(*this, other); }
-    simdutf_really_inline simd8<bool> operator<(const simd8<int8_t> other) const { return vcltq_s8(*this, other); }
-    simdutf_really_inline simd8<bool> operator==(const simd8<int8_t> other) const { return vceqq_s8(*this, other); }
+    simdutf_really_inline simd8<int8_t> max_val(const simd8<int8_t> other) const { return vmaxq_s8(value, other.value); }
+    simdutf_really_inline simd8<int8_t> min_val(const simd8<int8_t> other) const { return vminq_s8(value, other.value); }
+    simdutf_really_inline simd8<bool> operator>(const simd8<int8_t> other) const { return vcgtq_s8(value, other.value); }
+    simdutf_really_inline simd8<bool> operator<(const simd8<int8_t> other) const { return vcltq_s8(value, other.value); }
+    simdutf_really_inline simd8<bool> operator==(const simd8<int8_t> other) const { return vceqq_s8(value, other.value); }
 
     template<int N=1>
     simdutf_really_inline simd8<int8_t> prev(const simd8<int8_t> prev_chunk) const {

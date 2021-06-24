@@ -88,6 +88,10 @@ namespace simdutf::benchmarks {
         input_data.assign(std::istreambuf_iterator<char>(file),
                           std::istreambuf_iterator<char>());
     }
+    void BenchmarkBase::print_summary(const event_aggregate& all, size_t data_size, size_t character_count) const {
+        print_summary(all, double(data_size), double(character_count));
+    }
+
 
     void BenchmarkBase::print_summary(const event_aggregate& all, double data_size, double character_count) const {
         const double gbs = data_size / all.best.elapsed_ns();
