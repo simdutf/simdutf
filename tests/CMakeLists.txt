@@ -1,4 +1,7 @@
 set(SIMDUTF_TEST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../)
+if(MSVC)
+  add_compile_options("/Zi" "/EHsc" "/GR")
+endif()
 
 add_subdirectory(helpers)
 add_subdirectory(reference)

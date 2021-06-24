@@ -90,7 +90,6 @@ template<>
 struct simd16<int16_t> : base16_numeric<int16_t> {
   simdutf_really_inline simd16() : base16_numeric<int16_t>() {}
   simdutf_really_inline simd16(const uint16x8_t _value) : base16_numeric<int16_t>(_value) {}
-  simdutf_really_inline simd16(const int16x8_t _value) : base16_numeric<int16_t>(vreinterpretq_u16_s16(_value)) {}
   // Splat constructor
   simdutf_really_inline simd16(int16_t _value) : simd16(splat(_value)) {}
   // Array constructor
@@ -110,8 +109,8 @@ struct simd16<int16_t> : base16_numeric<int16_t> {
   simdutf_really_inline operator const uint16x8_t&() const { return this->value; }
   simdutf_really_inline operator const int16x8_t() const { return vreinterpretq_s16_u16(this->value); }
 
-  simdutf_really_inline int16_t max_val() const { return vmaxvq_s16(*this); }
-  simdutf_really_inline int16_t min_val() const { return vminvq_s16(*this); }
+  simdutf_really_inline int16_t max_val() const { return vmaxvq_s16(vreinterpretq_s16_u16(this->value)); }
+  simdutf_really_inline int16_t min_val() const { return vminvq_s16(vreinterpretq_s16_u16(this->value)); }
   // Order-sensitive comparisons
   simdutf_really_inline simd16<int16_t> max_val(const simd16<int16_t> other) const { return vmaxq_s16(vreinterpretq_s16_u16(this->value), vreinterpretq_s16_u16(other.value)); }
   simdutf_really_inline simd16<int16_t> min_val(const simd16<int16_t> other) const { return vmaxq_s16(vreinterpretq_s16_u16(this->value), vreinterpretq_s16_u16(other.value)); }

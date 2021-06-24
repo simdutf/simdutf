@@ -22,7 +22,7 @@ namespace simdutf::tests::helpers {
     }
 
     uint32_t RandomIntRanges::operator()() noexcept {
-      const auto index = range_index(gen);
+      const size_t index = size_t(range_index(gen));
       return uint32_t(ranges[index](gen));
     }
 }

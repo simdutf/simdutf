@@ -357,7 +357,7 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     }
 
     // Store to array
-    simdutf_really_inline void store(int8_t dst[16]) const { return vst1q_s8(dst, *this); }
+    simdutf_really_inline void store(int8_t dst[16]) const { return vst1q_s8(dst, value); }
     // Explicit conversion to/from unsigned
     //
     // Under Visual Studio/ARM64 uint8x16_t and int8x16_t are apparently the same type.
