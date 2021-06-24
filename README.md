@@ -21,8 +21,8 @@ The functions are accelerated using SIMD instructions
 Requirements
 -------
 
-- C++11 compatible compiler.
-- Recent CMake (at least 3.13)
+- C++11 compatible compiler. We support LLVM clang, GCC, Visual Studio.
+- Recent CMake (at least 3.15)
 
 Usage
 -------
