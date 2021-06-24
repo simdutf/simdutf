@@ -89,7 +89,9 @@ struct base16_numeric: base16<T> {
 template<>
 struct simd16<int16_t> : base16_numeric<int16_t> {
   simdutf_really_inline simd16() : base16_numeric<int16_t>() {}
-  //simdutf_really_inline simd16(const uint16x8_t _value) : base16_numeric<int16_t>(_value) {}
+#ifndef SIMDUTF_REGULAR_VISUAL_STUDIO
+  simdutf_really_inline simd16(const uint16x8_t _value) : base16_numeric<int16_t>(_value) {}
+#endif
   simdutf_really_inline simd16(const int16x8_t _value) : base16_numeric<int16_t>(vreinterpretq_u16_s16(_value)) {}
 
   // Splat constructor
