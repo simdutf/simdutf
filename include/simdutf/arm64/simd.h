@@ -527,7 +527,7 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     }
 
   }; // struct simd8x64<T>
-  #include "simd16.h.inl"
+  #include "simdutf/arm64/simd16-inl.h"
 } // namespace simd
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION

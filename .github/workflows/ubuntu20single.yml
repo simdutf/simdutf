@@ -1,0 +1,24 @@
+name: Ubuntu 20.04 single-header CI (GCC 9)
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  ubuntu-build:
+    if: >-
+      ! contains(toJSON(github.event.commits.*.message), '[skip ci]') &&
+      ! contains(toJSON(github.event.commits.*.message), '[skip github]')
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use cmake
+        run: |
+          python3 ./singleheader/amalgamate.py &&
+          cd singleheader &&
+          c++ -o amalgamation_demo amalgamation_demo.cpp -std=c++17 &&
+          ./amalgamation_demo

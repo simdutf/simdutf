@@ -1,13 +1,3 @@
-#include "tables/utf8_to_utf16_tables.h"
-#include "scalar/utf16_to_utf8/valid_utf16_to_utf8.h"
-#include "scalar/utf16_to_utf8/utf16_to_utf8.h"
-#include "scalar/utf8_to_utf16/valid_utf8_to_utf16.h"
-#include "scalar/utf8_to_utf16/utf8_to_utf16.h"
-#include "scalar/utf8.h"
-#include "scalar/utf16.h"
-#include "tables/utf16_to_utf8_tables.h"
-
-
 #include "simdutf/arm64/begin.h"
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
@@ -37,9 +27,9 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
     simd8<bool> is_fourth_byte = prev3 >= uint8_t(0b11110000u);
     return is_third_byte ^ is_fourth_byte;
 }
-#include "arm_convert_utf16_to_utf8.cpp"
-#include "arm_convert_utf8_to_utf16.cpp"
-#include "arm_validate_utf16le.cpp"
+#include "arm64/arm_convert_utf16_to_utf8.cpp"
+#include "arm64/arm_convert_utf8_to_utf16.cpp"
+#include "arm64/arm_validate_utf16le.cpp"
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION

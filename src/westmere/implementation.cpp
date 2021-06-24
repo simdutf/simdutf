@@ -1,11 +1,4 @@
-#include "tables/utf8_to_utf16_tables.h"
-#include "scalar/utf8_to_utf16/valid_utf8_to_utf16.h"
-#include "scalar/utf8_to_utf16/utf8_to_utf16.h"
-#include "tables/utf16_to_utf8_tables.h"
-
 #include <utility>
-#include <internal/utf16_decode.h>
-#include <internal/utf8_encode.h>
 
 #include "simdutf/westmere/begin.h"
 namespace simdutf {
@@ -33,9 +26,9 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
   return simd8<int8_t>(is_third_byte | is_fourth_byte) > int8_t(0);
 }
 
-#include "sse_convert_utf8_to_utf16.cpp"
-#include "sse_validate_utf16le.cpp"
-#include "sse_convert_utf16_to_utf8.cpp"
+#include "westmere/sse_convert_utf8_to_utf16.cpp"
+#include "westmere/sse_validate_utf16le.cpp"
+#include "westmere/sse_convert_utf16_to_utf8.cpp"
 
 // UTF-16 => UTF-8 conversion
 
