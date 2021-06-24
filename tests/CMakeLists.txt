@@ -23,8 +23,6 @@ target_link_libraries(validate_utf16_basic_tests
   PUBLIC simdutf
          simdutf::tests::reference
          simdutf::tests::helpers)
-target_compile_options(validate_utf16_basic_tests PRIVATE -Wfatal-errors)
-
 
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_FOUND)
