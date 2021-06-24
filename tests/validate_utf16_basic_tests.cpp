@@ -184,10 +184,11 @@ TEST(validate_utf16__extensive_tests) {
     }
 
     // prepare input
-    for (int i=0; i < len; i++)
+    for (size_t i = 0; i < len; i++) {
       buf[i] = V;
+    }
 
-    for (int i=1; i < line.size(); i++) {
+    for (size_t i = 1; i < line.size(); i++) {
       switch (line[i]) {
         case 'L':
           buf[i - 1] = L;
