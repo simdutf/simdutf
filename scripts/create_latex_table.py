@@ -24,7 +24,7 @@ for line in content:
         
     if line.startswith("convert"):
         codec = re.search(r"\+(\w+)",line).group(1)
-        rfile = re.search(r"/(\w+)\.",line).group(1)
+        rfile = re.search(r"/(\w+)[\.-]",line).group(1)
         currentrow["codec"] = codec
         currentrow["dataset"] = rfile
         datasets.add(rfile)
