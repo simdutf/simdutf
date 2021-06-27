@@ -26,7 +26,7 @@
     #endif
     #define KEWB_ALIGN_FN   __attribute__ ((aligned (128)))
 
-#elif defined __GNUG__ || defined __GNUC__
+#elif defined __GNUG__ || defined __GNUC__ || defined __MSYS__
 
     #define KEWB_COMPILER_GCC
     #ifdef __OPTIMIZE__
@@ -52,7 +52,7 @@
 
 //- Detect OS and include relevant SSE headers; only Linux and Windows are currently supported.
 //
-#if defined __linux__
+#if defined __linux__ || __MSYS__
     #define KEWB_PLATFORM_LINUX
 #elif defined _WIN32
     #define KEWB_PLATFORM_WINDOWS

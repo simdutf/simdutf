@@ -34,7 +34,7 @@ inline simdutf_warn_unused bool validate(const char *buf, size_t len) noexcept {
       if ((data[pos + 1] & 0b11000000) != 0b10000000) { return false; }
       // range check
       code_point = (byte & 0b00011111) << 6 | (data[pos + 1] & 0b00111111);
-      if (code_point < 0x80 || 0x7ff < code_point) { return false; }
+      if ((code_point < 0x80) || (0x7ff < code_point)) { return false; }
     } else if ((byte & 0b11110000) == 0b11100000) {
       next_pos = pos + 3;
       if (next_pos > len) { return false; }
@@ -44,7 +44,7 @@ inline simdutf_warn_unused bool validate(const char *buf, size_t len) noexcept {
       code_point = (byte & 0b00001111) << 12 |
                    (data[pos + 1] & 0b00111111) << 6 |
                    (data[pos + 2] & 0b00111111);
-      if (code_point < 0x800 || 0xffff < code_point ||
+      if ((code_point < 0x800) || (0xffff < code_point) ||
           (0xd7ff < code_point && code_point < 0xe000)) {
         return false;
       }
