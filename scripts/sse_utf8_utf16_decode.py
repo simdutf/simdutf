@@ -176,7 +176,8 @@ def main():
         s = sum(z1)
         arrg.append((idx,s))
     else:
-        arrg.append((c,0))
+        # we are in error, use a bogus index
+        arrg.append((0,12))
   print("const uint8_t utf8bigindex["+str(len(arrg))+"][2] = ")
   print(cpp_arrayarray_initializer(arrg), end=";\n")
 

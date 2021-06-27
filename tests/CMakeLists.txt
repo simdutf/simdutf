@@ -73,3 +73,10 @@ target_link_libraries(count_utf16
   PUBLIC simdutf
          simdutf::tests::reference
          simdutf::tests::helpers)
+
+
+add_cpp_test(basic_fuzzer)
+target_link_libraries(basic_fuzzer
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
