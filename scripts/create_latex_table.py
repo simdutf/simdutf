@@ -50,6 +50,7 @@ def get(d, k):
     for x in table:
         if(x['codec'] == k) and (x['dataset'] == d):
             return x["result"]
+datasets=sorted(datasets)
 for dataset in datasets:
     s = dataset
     for k in kernels:

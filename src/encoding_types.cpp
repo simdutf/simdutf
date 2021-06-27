@@ -2,9 +2,9 @@
 namespace simdutf {
 std::string to_string(encoding_type bom) {
   switch (bom) {
-      case UTF16_LE:     return "UTF16 litte-endian";
+      case UTF16_LE:     return "UTF16 little-endian";
       case UTF16_BE:     return "UTF16 big-endian";
-      case UTF32_LE:     return "UTF32 litte-endian";
+      case UTF32_LE:     return "UTF32 little-endian";
       case UTF32_BE:     return "UTF32 big-endian";
       case UTF8:         return "UTF8";
       case unspecified:  return "unknown";
