@@ -37,7 +37,7 @@ for line in content:
         table.append(currentrow)
         currentrow = {}
 
-favorite_kernels = ["llvm", "hoehrmann",  "cppcon2018", "u8u16", "utf8sse4", "utf8lut", "haswell", "arm64"]
+favorite_kernels = ["icu", "llvm", "hoehrmann",  "cppcon2018", "u8u16", "utf8sse4", "utf8lut", "haswell", "arm64"]
 kernels = []
 s = "  "
 for k in favorite_kernels:
