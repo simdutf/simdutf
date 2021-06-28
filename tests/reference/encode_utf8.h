@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace simdutf::tests::reference::utf8 {
+namespace simdutf { namespace tests { namespace reference { namespace utf8 {
 
   template <typename CONSUMER>
   int encode(uint32_t value, CONSUMER consumer) {
@@ -32,4 +32,4 @@ namespace simdutf::tests::reference::utf8 {
           return 4;
       }
   }
-} // namespace utf8
+}}}} // namespace utf8

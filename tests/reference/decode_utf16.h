@@ -2,7 +2,7 @@
 
 #include <cstdio>
 
-namespace simdutf::tests::reference::utf16 {
+namespace simdutf { namespace tests { namespace reference { namespace utf16 {
 
     enum class Error {
         high_surrogate_out_of_range,
@@ -57,4 +57,4 @@ namespace simdutf::tests::reference::utf16 {
         return true;
     }
 
-}
+}}}}

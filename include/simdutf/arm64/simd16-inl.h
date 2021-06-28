@@ -277,11 +277,11 @@ simdutf_really_inline simd16<int16_t>::operator simd16<uint16_t>() const { retur
   simdutf_really_inline uint64_t simd16x32<uint16_t>::not_in_range(const uint16_t low, const uint16_t high) const {
       const simd16<uint16_t> mask_low = simd16<uint16_t>::splat(low);
       const simd16<uint16_t> mask_high = simd16<uint16_t>::splat(high);
-      auto x = simd16x32<uint16_t>(
-        uint16x8_t((this->chunks[0] > mask_high) | (this->chunks[0] < mask_low)),
-        uint16x8_t((this->chunks[1] > mask_high) | (this->chunks[1] < mask_low)),
-        uint16x8_t((this->chunks[2] > mask_high) | (this->chunks[2] < mask_low)),
-        uint16x8_t((this->chunks[3] > mask_high) | (this->chunks[3] < mask_low))
+      simd16x32<uint16_t> x(
+        simd16<uint16_t>((this->chunks[0] > mask_high) | (this->chunks[0] < mask_low)),
+        simd16<uint16_t>((this->chunks[1] > mask_high) | (this->chunks[1] < mask_low)),
+        simd16<uint16_t>((this->chunks[2] > mask_high) | (this->chunks[2] < mask_low)),
+        simd16<uint16_t>((this->chunks[3] > mask_high) | (this->chunks[3] < mask_low))
       );
       return  x.to_bitmask();
     }

@@ -31,9 +31,9 @@ namespace helpers {
     std::pair<std::vector<char16_t>,size_t> generate_counted(size_t size);
   private:
     std::discrete_distribution<> utf16_length;
-    std::uniform_int_distribution<uint32_t> single_word0{0x0000'0000, 0x0000'd7ff};
-    std::uniform_int_distribution<uint32_t> single_word1{0x0000'e000, 0x0000'ffff};
-    std::uniform_int_distribution<uint32_t> two_words   {0x0001'0000, 0x0010'ffff};
+    std::uniform_int_distribution<uint32_t> single_word0{0x00000000, 0x0000d7ff};
+    std::uniform_int_distribution<uint32_t> single_word1{0x0000e000, 0x0000ffff};
+    std::uniform_int_distribution<uint32_t> two_words   {0x00010000, 0x0010ffff};
     uint32_t generate();
   };
 

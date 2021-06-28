@@ -6,6 +6,9 @@ add_library(simdutf_benchmarks_benchmark STATIC
     benchmark.cpp
     benchmark.h
 )
+set_property(TARGET simdutf_benchmarks_benchmark PROPERTY CXX_STANDARD 17)
+set_property(TARGET simdutf_benchmarks_benchmark PROPERTY CXX_STANDARD_REQUIRED ON)
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT MINGW)
   target_link_libraries(simdutf_benchmarks_benchmark PUBLIC stdc++fs)
 endif()

@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace simdutf::tests::reference::utf16 {
+namespace simdutf { namespace tests { namespace reference { namespace utf16 {
 
   // returns whether the value can be represented in the UTF-16
   bool valid_value(uint32_t value);
@@ -11,4 +11,4 @@ namespace simdutf::tests::reference::utf16 {
   // Returns 0 if the value cannot be encoded
   int encode(uint32_t value, char16_t& W1, char16_t& W2);
 
-} // namespace utf16
+}}}} // namespace utf16

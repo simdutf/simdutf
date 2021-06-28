@@ -4,7 +4,7 @@
 #include <vector>
 #include <functional>
 
-namespace simdutf::tests::helpers {
+namespace simdutf { namespace tests { namespace helpers {
 
   /**
    * It would be nice to use a single helper for both UTF8 => UTF16
@@ -97,4 +97,4 @@ namespace simdutf::tests::helpers {
   };
 
 
-} // namespace simdutf::tests::helpers
+}}} // namespace simdutf::tests::helpers

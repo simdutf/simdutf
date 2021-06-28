@@ -13,7 +13,7 @@ namespace {
 
   using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
 
-  constexpr size_t trials = 10'000;
+  constexpr size_t trials = 10000;
 }
 
 TEST(convert_pure_ASCII) {
@@ -76,7 +76,7 @@ TEST(convert_3_or_4_UTF8_bytes) {
     uint32_t seed{1234+uint32_t(trial)};
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
     simdutf::tests::helpers::RandomIntRanges random({{0x0800, 0xd800-1},
-                                                     {0xe000, 0x10'ffff}}, seed); // range for 3 or 4 UTF-8 bytes
+                                                     {0xe000, 0x10ffff}}, seed); // range for 3 or 4 UTF-8 bytes
 
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
       return implementation.convert_utf8_to_utf16(utf8, size, utf16);

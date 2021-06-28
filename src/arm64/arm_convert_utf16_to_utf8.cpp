@@ -174,23 +174,23 @@ std::pair<const char16_t*, char*> arm_convert_utf16_to_utf8(const char16_t* buf,
         // [aaaa|bbbb|bbcc|cccc] => [bbcc|cccc|bbcc|cccc]
         const uint16x8_t t0 = vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(in), vreinterpretq_u8_u16(dup_even)));
         // [bbcc|cccc|bbcc|cccc] => [00cc|cccc|0bcc|cccc]
-        const uint16x8_t t1 = vandq_u16(t0, vec(0b0011'1111'0111'1111));
+        const uint16x8_t t1 = vandq_u16(t0, vec(0b0011111101111111));
         // [00cc|cccc|0bcc|cccc] => [10cc|cccc|0bcc|cccc]
-        const uint16x8_t t2 = vorrq_u16 (t1, vec(0b1000'0000'0000'0000));
+        const uint16x8_t t2 = vorrq_u16 (t1, vec(0b1000000000000000));
 
         // s0: [aaaa|bbbb|bbcc|cccc] => [0000|0000|0000|aaaa]
         const uint16x8_t s0 = vshrq_n_u16(in, 12);
         // s1: [aaaa|bbbb|bbcc|cccc] => [0000|bbbb|bb00|0000]
-        const uint16x8_t s1 = vandq_u16(in, vec(0b0000'1111'1100'0000));
+        const uint16x8_t s1 = vandq_u16(in, vec(0b0000111111000000));
         // [0000|bbbb|bb00|0000] => [00bb|bbbb|0000|0000]
         const uint16x8_t s1s = vshlq_n_u16(s1, 2);
         // [00bb|bbbb|0000|aaaa]
         const uint16x8_t s2 = vorrq_u16(s0, s1s);
         // s3: [00bb|bbbb|0000|aaaa] => [11bb|bbbb|1110|aaaa]
-        const uint16x8_t s3 = vorrq_u16(s2, vec(0b1100'0000'1110'0000));
+        const uint16x8_t s3 = vorrq_u16(s2, vec(0b1100000011100000));
         const uint16x8_t v_07ff = vmovq_n_u16((uint16_t)0x07FF);
         const uint16x8_t one_or_two_bytes_bytemask = vcleq_u16(in, v_07ff);
-        const uint16x8_t m0 = vbicq_u16(vec(0b0100'0000'0000'0000), one_or_two_bytes_bytemask);
+        const uint16x8_t m0 = vbicq_u16(vec(0b0100000000000000), one_or_two_bytes_bytemask);
         const uint16x8_t s4 = veorq_u16(s3, m0);
 #undef vec
 

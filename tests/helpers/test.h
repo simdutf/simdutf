@@ -1,11 +1,12 @@
 #pragma once
 
 #include "simdutf.h"
-
+#include <algorithm>
 #include <string>
 #include <list>
 
-namespace simdutf::test {
+
+namespace simdutf { namespace test {
 
   int main(int argc, char* argv[]);
 
@@ -25,7 +26,7 @@ namespace simdutf::test {
     register_test(const char* name, test_procedure proc);
   };
 
-} // namespace namespace simdutf::test
+}} // namespace namespace simdutf::test
 
 
 #define TEST(name)                                          \
