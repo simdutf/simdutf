@@ -66,7 +66,7 @@ Requirements
 -------
 
 - C++11 compatible compiler. We support LLVM clang, GCC, Visual Studio. (Our optional benchmark tool requires C++17.)
-- Recent CMake (at least 3.15) if you rely on CMake; otherwise you may use the single header version.
+- Recent CMake (at least 3.15) if you rely on CMake; otherwise you may use the [single header version](#single-header-version).
 
 Usage
 -------
