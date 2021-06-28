@@ -18,6 +18,9 @@ This library provide fast Unicode functions such as
 The functions are accelerated using SIMD instructions
 (e.g., ARM NEON, SSE, AVX, etc.).
 
+The library compiles down to tens of kilobytes.
+Our functions are exception-free and non allocating.
+
 Requirements
 -------
 
