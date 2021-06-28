@@ -28,6 +28,8 @@ The library compiles down to tens of kilobytes. Our functions are exception-free
 How fast is it?
 -----------------
 
+It can be 3 to 10 times faster than the popular ICU library on non-ASCII strings. It can be 20x faster when processing ASCII.
+
 System: AMD Rome (Zen2), ICU version 67.1, GNU GCC 10. [Lipsum data files](https://github.com/lemire/unicode_lipsum).
 
 UTF-16 to UTF-8 transcoding (with validation):
