@@ -25,6 +25,39 @@ The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX,
 
 The library compiles down to tens of kilobytes. Our functions are exception-free and non allocating. We have extensive tests.
 
+How fast is it?
+-----------------
+
+System: AMD Rome (Zen2), ICU version 67.1, GNU GCC 10. [Lipsum data files](https://github.com/lemire/unicode_lipsum).
+
+UTF-16 to UTF-8 transcoding (with validation):
+
+|    |ICU |  simdutf | ratio|
+----|-----|----------|------
+|Arabic | 0.42 | 4.2 | 10x |
+|Chinese | 0.39 | 3.0 | 8x |
+|Emoji | 0.23 | 0.32 | 1.4x |
+|Hebrew | 0.59 | 4.2 | 7x |
+|Hindi | 0.24 | 2.9 | 12x |
+|Japanese | 0.30 | 2.8 | 9x |
+|Korean | 0.39 | 2.8 | 7x |
+|Latin | 0.93 | 18. | 19x |
+|Russian | 0.27 | 4.2 | 15x |
+
+UTF-8 to UTF-16 transcoding (with validation):
+
+|  | ICU | simdutf | ratio|
+----|-----|----------|------
+|Arabic | 0.29 | 1.4 | 5x |
+|Chinese | 0.39 | 1.3 | 3x |
+|Emoji | 0.15 | 0.47 | 3x |
+|Hebrew | 0.28 | 1.4 | 5x |
+|Hindi | 0.34 | 1.0 | 3x |
+|Japanese | 0.38 | 1.4 | 4x |
+|Korean | 0.48 | 0.97 | 2x |
+|Latin | 0.95 | 20. | 21x |
+|Russian | 0.29 | 1.5 | 5x |
+
 Requirements
 -------
 
