@@ -16,10 +16,10 @@ Not all sequences of bytes are valid Unicode strings. It is unsafe to use Unicod
 
 This library provide fast Unicode functions such as
 
-- UTF-8 and UTF-16 validation
-- UTF-8 to UTF-16 transcoding, with or without validation.
-- UTF-16 to UTF-8 transcoding, with or without validation.
-- UTF-8 and UTF-16 character counting
+- UTF-8 and UTF-16 validation,
+- UTF-8 to UTF-16 transcoding, with or without validation,
+- UTF-16 to UTF-8 transcoding, with or without validation,
+- UTF-8 and UTF-16 character counting.
 
 The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion caracters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).
 
