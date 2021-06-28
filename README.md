@@ -8,6 +8,12 @@
 simdutf: insanely fast Unicode validation and transcoding
 ===============================================
 
+Most modern software relies on the [Unicode standard](https://en.wikipedia.org/wiki/Unicode). In memory, Unicode strings are represented using either
+UTF-8 or UTF-16. The UTF-8 format is the de facto standard on the web (JSON, HTML, etc.) and it has been adopted as the default in many popular
+programming languages (Go, Rust, Swift, etc.). The UTF-16 format is standard in Java, C# and in many Windows technologies.
+
+Not all sequences of bytes are valid Unicode strings. It is unsafe to use Unicode strings in UTF-8 and UTF-16 without first validating them. Furthermore, we often need to convert strings from one encoding to another, by a process called [transcoding](https://en.wikipedia.org/wiki/Transcoding). For security purposes, such transcoding should be validating: it should refuse to transcode incorrect strings.
+
 This library provide fast Unicode functions such as
 
 - UTF-8 and UTF-16 validation
@@ -15,11 +21,9 @@ This library provide fast Unicode functions such as
 - UTF-16 to UTF-8 transcoding, with or without validation.
 - UTF-8 and UTF-16 character counting
 
-The functions are accelerated using SIMD instructions
-(e.g., ARM NEON, SSE, AVX, etc.).
+The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion caracters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).
 
-The library compiles down to tens of kilobytes.
-Our functions are exception-free and non allocating.
+The library compiles down to tens of kilobytes. Our functions are exception-free and non allocating. We have extensive tests.
 
 Requirements
 -------
@@ -67,6 +71,8 @@ c++ -o amalgamation_demo amalgamation_demo.cpp -std=c++17
 
 Example
 ---------
+
+Using the single-header version, you could compile the following program.
 
 ```C++
 #include <iostream>
