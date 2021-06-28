@@ -13,8 +13,6 @@
 #include <unicode/unistr.h>
 #define ICU_AVAILABLE 1
 // U_ICU_VERSION is relevant here.
-#else
-#error "ICU not found"
 #endif //__has_include (<unicode/unistr.h>)
 #endif // defined __has_include
 
