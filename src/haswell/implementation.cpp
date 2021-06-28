@@ -9,7 +9,9 @@
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
-
+#ifndef SIMDUTF_HASWELL_H
+#error "haswell.h must be included"
+#endif
 using namespace simd;
 
 

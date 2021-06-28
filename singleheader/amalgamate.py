@@ -46,6 +46,7 @@ found_includes = []
 current_implementation=''
 
 def doinclude(fid, file, line):
+    print(f"// doinclude: invoked with file={file}, line={line}")
     p = os.path.join(AMALGAMATE_INCLUDE_PATH, file)
     pi = os.path.join(AMALGAMATE_SOURCE_PATH, file)
 
@@ -61,9 +62,17 @@ def doinclude(fid, file, line):
         elif file not in found_includes:
             found_includes.append(file)
             dofile(fid, AMALGAMATE_INCLUDE_PATH, file)
+        else:
+            print(f"//doinclude: {file} already included: {line}")
     elif os.path.exists(pi):
         # generic includes are included multiple times
-        if re.match('.*generic/.*h', file):
+        # generic includes are included multiple times
+        if re.match('.*generic/.*.h', file):
+            dofile(fid, AMALGAMATE_SOURCE_PATH, file)
+        # begin/end_implementation are also included multiple times
+        elif re.match('.*/begin.h', file):
+            dofile(fid, AMALGAMATE_SOURCE_PATH, file)
+        elif re.match('.*/end.h', file):
             dofile(fid, AMALGAMATE_SOURCE_PATH, file)
         elif file not in found_includes:
             found_includes.append(file)
@@ -76,7 +85,7 @@ def doinclude(fid, file, line):
 
 def dofile(fid, prepath, filename):
     global current_implementation
-    # print(f"// dofile: invoked with prepath={prepath}, filename={filename}",file=fid)
+    print(f"// dofile: invoked with prepath={prepath}, filename={filename}",file=fid)
     file = os.path.join(prepath, filename)
     RELFILE = os.path.relpath(file, PROJECTPATH)
     # Last lines are always ignored. Files should end by an empty lines.
@@ -137,7 +146,8 @@ for h in ALLCHEADERS:
     doinclude(amal_h, h, f"ERROR {h} not found")
 
 amal_h.close()
-
+print()
+print()
 print(f"Creating {AMAL_C}")
 amal_c = open(AMAL_C, 'w')
 print(f"/* auto-generated on {timestamp}. Do not edit! */", file=amal_c)

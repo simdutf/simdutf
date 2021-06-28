@@ -50,6 +50,8 @@
 
 #ifdef __x86_64__
 #include "simdutf.h"
+#define SIMDUTF_TARGET_WESTMERE SIMDUTF_TARGET_REGION("sse4.2,pclmul")
+
 
 #include <x86intrin.h>
 

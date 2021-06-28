@@ -119,23 +119,5 @@
 /// If EXPR is an error, returns it.
 #define SIMDUTF_TRY(EXPR) { auto _err = (EXPR); if (_err) { return _err; } }
 
-#include <string>
-#include <climits>
-
-// Useful for debugging purposes
-namespace simdutf {
-
-template <typename T>
-std::string toBinaryString(T b) {
-   std::string binary = "";
-   T mask = T(1) << (sizeof(T) * CHAR_BIT - 1);
-   while (mask > 0) {
-    binary += ((b & mask) == 0) ? '0' : '1';
-    mask >>= 1;
-  }
-  return binary;
-}
-}
-
 
 #endif // SIMDUTF_COMMON_DEFS_H

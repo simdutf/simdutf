@@ -2,7 +2,9 @@
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
-
+#ifndef SIMDUTF_ARM64_H
+#error "arm64.h must be included"
+#endif
 using namespace simd;
 
 simdutf_really_inline bool is_ascii(const simd8x64<uint8_t>& input) {

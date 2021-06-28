@@ -6,7 +6,9 @@
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
-
+#ifndef SIMDUTF_PPC64_H
+#error "ppc64.h must be included"
+#endif
 using namespace simd;
 
 
