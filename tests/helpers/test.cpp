@@ -176,7 +176,7 @@ Examples:
 
 } // namespace
 
-namespace simdutf::test {
+namespace simdutf { namespace test {
 
   std::list<test_entry>& test_procedures() {
     static std::list<test_entry> singleton;
@@ -196,4 +196,4 @@ namespace simdutf::test {
     return 0;
   }
 
-} // namespace namespace simdutf::test
+}} // namespace namespace simdutf::test

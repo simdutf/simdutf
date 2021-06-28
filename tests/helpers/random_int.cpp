@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace simdutf::tests::helpers {
+namespace simdutf { namespace tests { namespace helpers {
 
     RandomInt::RandomInt(uint64_t lo, uint64_t hi, uint64_t seed) noexcept
       : distr{lo, hi}
@@ -25,4 +25,4 @@ namespace simdutf::tests::helpers {
       const size_t index = size_t(range_index(gen));
       return uint32_t(ranges[index](gen));
     }
-}
+}}}
