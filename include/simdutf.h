@@ -23,12 +23,6 @@ SIMDUTF_DISABLE_UNDESIRED_WARNINGS
 // compile unless that implementation is turned on).
 #include "simdutf/internal/isadetection.h"
 
-// Implementations
-#include "simdutf/arm64.h"
-#include "simdutf/haswell.h"
-#include "simdutf/westmere.h"
-#include "simdutf/ppc64.h"
-#include "simdutf/fallback.h"
 
 SIMDUTF_POP_DISABLE_WARNINGS
 

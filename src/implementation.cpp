@@ -1,5 +1,32 @@
 #include "simdutf.h"
 #include <initializer_list>
+#include <string>
+#include <climits>
+
+// Useful for debugging purposes
+namespace simdutf {
+namespace {
+
+template <typename T>
+std::string toBinaryString(T b) {
+   std::string binary = "";
+   T mask = T(1) << (sizeof(T) * CHAR_BIT - 1);
+   while (mask > 0) {
+    binary += ((b & mask) == 0) ? '0' : '1';
+    mask >>= 1;
+  }
+  return binary;
+}
+}
+}
+
+// Implementations
+#include "simdutf/arm64.h"
+#include "simdutf/haswell.h"
+#include "simdutf/westmere.h"
+#include "simdutf/ppc64.h"
+#include "simdutf/fallback.h"
+
 
 namespace simdutf {
 bool implementation::supported_by_runtime_system() const {
@@ -240,3 +267,4 @@ const implementation * builtin_implementation() {
 
 
 } // namespace simdutf
+
