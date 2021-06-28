@@ -12,9 +12,9 @@
 #include <cstdio>
 
 namespace simdutf { namespace tests { namespace helpers {
-
+  // C++11 does not have mismatch.
   template<class InputIt1, class InputIt2>
-  std::pair<InputIt1, InputIt2> mismatch(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2) {
+  std::pair<InputIt1, InputIt2> our_mismatch(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2) {
     while (first1 != last1 && first2 != last2 && *first1 == *first2) {
         ++first1, ++first2;
     }
@@ -76,7 +76,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
     // At this point, we know that the lengths are the same so std::mismatch is enough
     // to tell us whether the strings are identical.
-    auto it = mismatch(output_utf16.begin(), output_utf16.begin() + saved_chars,
+    auto it = our_mismatch(output_utf16.begin(), output_utf16.begin() + saved_chars,
                                     reference_output_utf16.begin(), reference_output_utf16.end());
     if (it.first != output_utf16.begin() + saved_chars) {
       printf("mismatched output at %zu: actual value 0x%04x, expected 0x%04x\n",
@@ -167,7 +167,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
     // At this point, we know that the lengths are the same so std::mismatch is enough
     // to tell us whether the strings are identical.
-    auto it = mismatch(output_utf8.begin(), output_utf8.begin() + saved_chars,
+    auto it = our_mismatch(output_utf8.begin(), output_utf8.begin() + saved_chars,
                                     reference_output_utf8.begin(), reference_output_utf8.end());
     if (it.first != output_utf8.begin() + saved_chars) {
       printf("mismatched output at %zu: actual value 0x%02x, expected 0x%02x\n",
