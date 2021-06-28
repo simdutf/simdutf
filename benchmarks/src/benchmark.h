@@ -4,6 +4,22 @@
 #include "simdutf.h"
 
 /**
+ * ICU is a standard library that is often already present on the system.
+ */
+#if defined __has_include
+#if __has_include (<unicode/unistr.h>)
+#include <unicode/uconfig.h>
+#include <unicode/platform.h>
+#include <unicode/unistr.h>
+#define ICU_AVAILABLE 1
+// U_ICU_VERSION is relevant here.
+#else
+#error "ICU not found"
+#endif //__has_include (<unicode/unistr.h>)
+#endif // defined __has_include
+
+
+/**
  * inoue2008 is:
  * Hiroshi Inoue and Hideaki Komatsu and Toshio Nakatani,
  * Accelerating UTF-8 Decoding Using SIMD Instructions (in Japanese),
@@ -39,6 +55,10 @@ namespace simdutf::benchmarks {
         void run_convert_valid_utf8_to_utf16(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf16_to_utf8(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_valid_utf16_to_utf8(const simdutf::implementation& implementation, size_t iterations);
+#if ICU_AVAILABLE
+        void run_convert_utf8_to_utf16_icu(size_t iterations);
+        void run_convert_utf16_to_utf8_icu(size_t iterations);
+#endif
 #ifdef INOUE2008
         /**
          * Hiroshi Inoue and Hideaki Komatsu and Toshio Nakatani,
