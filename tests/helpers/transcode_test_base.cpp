@@ -11,7 +11,15 @@
 
 #include <cstdio>
 
-namespace simdutf::tests::helpers {
+namespace simdutf { namespace tests { namespace helpers {
+
+  template<class InputIt1, class InputIt2>
+  std::pair<InputIt1, InputIt2> mismatch(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2) {
+    while (first1 != last1 && first2 != last2 && *first1 == *first2) {
+        ++first1, ++first2;
+    }
+    return std::make_pair(first1, first2);
+  }
 
   void transcode_test_base::encode_utf8(uint32_t codepoint, std::vector<char>& target) {
     ::simdutf::tests::reference::utf8::encode(codepoint, [&target](uint8_t byte) {
@@ -68,11 +76,11 @@ namespace simdutf::tests::helpers {
 
     // At this point, we know that the lengths are the same so std::mismatch is enough
     // to tell us whether the strings are identical.
-    auto [it1, it2] = std::mismatch(output_utf16.begin(), output_utf16.begin() + saved_chars,
+    auto it = mismatch(output_utf16.begin(), output_utf16.begin() + saved_chars,
                                     reference_output_utf16.begin(), reference_output_utf16.end());
-    if (it1 != output_utf16.begin() + saved_chars) {
+    if (it.first != output_utf16.begin() + saved_chars) {
       printf("mismatched output at %zu: actual value 0x%04x, expected 0x%04x\n",
-             size_t(std::distance(output_utf16.begin(), it1)), uint16_t(*it1), uint16_t(*it2));
+             size_t(std::distance(output_utf16.begin(), it.first)), uint16_t(*it.first), uint16_t(*it.second));
       for(size_t i = 0; i < output_utf16.size(); i++) {
         if(reference_output_utf16[i] != output_utf16[i]) { printf(" ==> "); }
         printf("at %zu expected 0x%04x and got 0x%04x\n ", i, uint16_t(reference_output_utf16[i]), uint16_t(output_utf16[i]));
@@ -159,11 +167,11 @@ namespace simdutf::tests::helpers {
 
     // At this point, we know that the lengths are the same so std::mismatch is enough
     // to tell us whether the strings are identical.
-    auto [it1, it2] = std::mismatch(output_utf8.begin(), output_utf8.begin() + saved_chars,
+    auto it = mismatch(output_utf8.begin(), output_utf8.begin() + saved_chars,
                                     reference_output_utf8.begin(), reference_output_utf8.end());
-    if (it1 != output_utf8.begin() + saved_chars) {
+    if (it.first != output_utf8.begin() + saved_chars) {
       printf("mismatched output at %zu: actual value 0x%02x, expected 0x%02x\n",
-             size_t(std::distance(output_utf8.begin(), it1)), uint8_t(*it1), uint8_t(*it2));
+             size_t(std::distance(output_utf8.begin(), it.first)), uint8_t(*it.first), uint8_t(*it.second));
 
       dump("expected :", reference_output_utf8);
       dump("actual   :", output_utf8);
@@ -177,4 +185,4 @@ namespace simdutf::tests::helpers {
     return true;
   }
 
-}
+}}}

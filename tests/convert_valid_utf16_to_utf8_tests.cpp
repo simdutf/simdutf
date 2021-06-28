@@ -77,7 +77,7 @@ TEST(convert_into_3_or_4_UTF8_bytes) {
     if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
     // range for 3 or 4 UTF-8 bytes
     simdutf::tests::helpers::RandomIntRanges random({{0x0800, 0xd800-1},
-                                                     {0xe000, 0x10'ffff}}, 0);
+                                                     {0xe000, 0x10ffff}}, 0);
 
     auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
       return implementation.convert_valid_utf16_to_utf8(utf8, size, utf16);

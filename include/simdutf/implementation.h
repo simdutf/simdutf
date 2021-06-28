@@ -20,10 +20,6 @@ simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const char * inpu
 simdutf_really_inline simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const uint8_t * input, size_t length) noexcept {
   return autodetect_encoding(reinterpret_cast<const char *>(input), length);
 }
-simdutf_really_inline simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const std::string_view sv) noexcept {
-  return autodetect_encoding(sv.data(), sv.size());
-}
-
 
 /**
  * Validate the UTF-8 string.
@@ -33,17 +29,6 @@ simdutf_really_inline simdutf_warn_unused simdutf::encoding_type autodetect_enco
  * @return true if the string is valid UTF-8.
  */
 simdutf_warn_unused bool validate_utf8(const char * input, size_t length) noexcept;
-
-
-/**
- * Validate the UTF-8 string.
- *
- * @param sv the string_view to validate.
- * @return true if the string is valid UTF-8.
- */
-simdutf_really_inline simdutf_warn_unused bool validate_utf8(const std::string_view sv) noexcept {
-  return validate_utf8(sv.data(), sv.size());
-}
 
 /**
  * Validate the UTF-16 string.
@@ -62,16 +47,6 @@ simdutf_warn_unused bool validate_utf16(const char16_t * buf, size_t len) noexce
  */
 simdutf_really_inline simdutf_warn_unused bool validate_utf8(const std::string& s) noexcept {
   return validate_utf8(s.data(), s.size());
-}
-
-/**
- * Validate the UTF-16 string.
- *
- * @param sv the string_view to validate.
- * @return true if the string is valid UTF-16.
- */
-simdutf_really_inline simdutf_warn_unused bool validate_utf16(const std::string_view sv) noexcept {
-  return validate_utf16(reinterpret_cast<const char16_t*>(sv.data()), sv.size());
 }
 
 /**
@@ -328,8 +303,8 @@ public:
 protected:
   /** @private Construct an implementation with the given name and description. For subclasses. */
   simdutf_really_inline implementation(
-    std::string_view name,
-    std::string_view description,
+    std::string name,
+    std::string description,
     uint32_t required_instruction_sets
   ) :
     _name(name),
@@ -386,7 +361,7 @@ public:
    * @param name the implementation to find, e.g. "westmere", "haswell", "arm64"
    * @return the implementation, or nullptr if the parse failed.
    */
-  const implementation * operator[](const std::string_view &name) const noexcept {
+  const implementation * operator[](const std::string &name) const noexcept {
     for (const implementation * impl : *this) {
       if (impl->name() == name) { return impl; }
     }

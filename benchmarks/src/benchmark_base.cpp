@@ -102,7 +102,7 @@ namespace simdutf::benchmarks {
         const double error_margin = (gbs-gbs_avs)/gbs_avs * 100;
 
         if (all.has_events) {
-            const double _1GHz = 1'000'000'000.0;
+            const double _1GHz = 1000000000.0;
             const double freq = (all.best.cycles() / all.best.elapsed_sec()) / _1GHz;
             const double insperbyte = all.best.instructions() / data_size;
             const double cycleperbyte = all.best.instructions() / data_size;

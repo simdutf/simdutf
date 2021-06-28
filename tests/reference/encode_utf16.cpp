@@ -1,6 +1,6 @@
 #include "encode_utf16.h"
 
-namespace simdutf::tests::reference::utf16 {
+namespace simdutf { namespace tests { namespace reference { namespace utf16 {
 
   // returns whether the value can be represented in the UTF-16
   bool valid_value(uint32_t value) {
@@ -9,7 +9,7 @@ namespace simdutf::tests::reference::utf16 {
 
       Characters with values greater than 0x10FFFF cannot be encoded in UTF-16.
     */
-    if (value > 0x10'FFFF)
+    if (value > 0x10FFFF)
       return false;
 
     /*
@@ -40,4 +40,4 @@ namespace simdutf::tests::reference::utf16 {
       return 2;
     }
   }
-} // namespace utf16
+}}}} // namespace utf16

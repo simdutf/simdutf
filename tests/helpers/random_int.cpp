@@ -15,8 +15,8 @@ namespace simdutf::tests::helpers {
     RandomIntRanges::RandomIntRanges(std::initializer_list<std::pair<uint64_t, uint64_t>> ranges_, uint64_t seed) noexcept
       : gen(std::mt19937::result_type(seed)) {
 
-      for (const auto [lo, hi]: ranges_)
-        ranges.emplace_back(lo, hi);
+      for (const auto lohi: ranges_)
+        ranges.emplace_back(lohi.first, lohi.second);
 
       range_index = Distribution(0, ranges.size() - 1);
     }

@@ -6,7 +6,7 @@
 #include <utility>
 #include <cstdint>
 
-namespace simdutf::tests::helpers {
+namespace simdutf { namespace tests { namespace helpers {
 
   class RandomInt {
     std::mt19937 gen;
@@ -31,4 +31,4 @@ namespace simdutf::tests::helpers {
     uint32_t operator()() noexcept;
   };
 
-}
+}}}

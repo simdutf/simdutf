@@ -19,3 +19,6 @@ add_subdirectory(src)
 
 add_executable(benchmark benchmark.cpp)
 target_link_libraries(benchmark PUBLIC simdutf simdutf::benchmarks::benchmark)
+
+set_property(TARGET benchmark PROPERTY CXX_STANDARD 17)
+set_property(TARGET benchmark PROPERTY CXX_STANDARD_REQUIRED ON)
