@@ -10,16 +10,13 @@ include(${PROJECT_SOURCE_DIR}/cmake/add_cpp_test.cmake)
 link_libraries(simdutf)
 
 add_cpp_test(validate_utf8_basic_tests)
-target_link_libraries(validate_utf8_basic_tests PUBLIC simdutf-headers)
 
 add_cpp_test(validate_utf8_brute_force_tests)
 target_link_libraries(validate_utf8_brute_force_tests
-  PUBLIC simdutf-headers
-         simdutf::tests::helpers
+  PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
 
 add_cpp_test(validate_utf8_puzzler_tests)
-target_link_libraries(validate_utf8_puzzler_tests PUBLIC simdutf-headers)
 
 add_cpp_test(validate_utf16_basic_tests)
 target_link_libraries(validate_utf16_basic_tests
