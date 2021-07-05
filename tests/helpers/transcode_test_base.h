@@ -44,11 +44,27 @@ namespace simdutf { namespace tests { namespace helpers {
 
     }
 
+    inline bool output_size() const {
+      return reference_output_utf16.size();
+    }
+
     template <typename PROCEDURE>
     bool operator()(PROCEDURE procedure) {
       size_t saved_chars = procedure(input_utf8.data(), input_utf8.size(), output_utf16.data());
       return validate(saved_chars);
     }
+
+    template <typename PROCEDURE>
+    bool check_size(PROCEDURE procedure) {
+      size_t saved_chars = procedure(input_utf8.data(), input_utf8.size());
+      if (saved_chars != reference_output_utf16.size()) {
+        printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
+             size_t(saved_chars), size_t(reference_output_utf16.size()));
+        return false;
+      }
+      return true;
+    }
+
 
   private:
     void prepare_input(uint32_t codepoint);
@@ -75,6 +91,10 @@ namespace simdutf { namespace tests { namespace helpers {
 
     transcode_utf16_to_utf8_test_base(const std::vector<char16_t>& input_utf16);
 
+    inline bool output_size() const {
+      return reference_output_utf8.size();
+    }
+
     template <typename COLLECTION>
     transcode_utf16_to_utf8_test_base(COLLECTION&& collection) {
       for (const uint32_t codepoint: collection) {
@@ -89,7 +109,16 @@ namespace simdutf { namespace tests { namespace helpers {
       size_t saved_chars = procedure(input_utf16.data(), input_utf16.size(), output_utf8.data());
       return validate(saved_chars);
     }
-
+    template <typename PROCEDURE>
+    bool check_size(PROCEDURE procedure) {
+      size_t saved_chars = procedure(input_utf16.data(), input_utf16.size());
+      if (saved_chars != reference_output_utf8.size()) {
+        printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
+             size_t(saved_chars), size_t(reference_output_utf8.size()));
+        return false;
+      }
+      return true;
+    }
   private:
     void prepare_input(uint32_t codepoint);
     bool validate(size_t procedure_result) const;

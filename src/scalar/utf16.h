@@ -42,10 +42,13 @@ inline size_t utf8length_from_utf16(const char16_t* buf, size_t len) {
   const uint16_t * p = reinterpret_cast<const uint16_t *>(buf);
   size_t counter{0};
   for(size_t i = 0; i < len; i++) {
+    /** ASCII **/
     if(p[i] <= 0x7F) { counter++; }
+    /** two-byte **/
     else if(p[i] <= 0x7FF) { counter += 2; }
-    else if(p[i] <= 0xD7FF) { counter += 3; }
-    else if(p[i] <= 0xDFFF) { counter += 2; }
+    /** three-byte **/
+    else if((p[i] <= 0xD7FF) || (p[i] >= 0xE000)) { counter += 3; }
+    /** surrogates -- 4 bytes **/
     else { counter += 2; }
   }
   return counter;
