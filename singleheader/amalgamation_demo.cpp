@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
        std::cout << "invalid UTF-8" << std::endl;
        return EXIT_FAILURE;
    }
-   // We need a buffer of size simdutf::utf16length_from_utf8(ascii, 4).
+   // We need a buffer of size simdutf::utf16_length_from_utf8(ascii, 4).
    char16_t utf16_output[4];
    // convert to UTF-16LE
    size_t utf16words = simdutf::convert_utf8_to_utf16(ascii, 4, utf16_output);

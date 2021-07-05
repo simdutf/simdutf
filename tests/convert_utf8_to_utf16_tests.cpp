@@ -28,7 +28,7 @@ TEST(convert_pure_ASCII) {
       return implementation.convert_utf8_to_utf16(utf8, size, utf16);
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
-      return implementation.utf16length_from_utf8(utf8, size);
+      return implementation.utf16_length_from_utf8(utf8, size);
     };
 
     for (size_t size: input_size) {
@@ -49,7 +49,7 @@ TEST(convert_1_or_2_UTF8_bytes) {
       return implementation.convert_utf8_to_utf16(utf8, size, utf16);
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
-      return implementation.utf16length_from_utf8(utf8, size);
+      return implementation.utf16_length_from_utf8(utf8, size);
     };
     for (size_t size: input_size) {
       transcode_utf8_to_utf16_test_base test(random, size);
@@ -71,7 +71,7 @@ TEST(convert_1_or_2_or_3_UTF8_bytes) {
       return implementation.convert_utf8_to_utf16(utf8, size, utf16);
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
-      return implementation.utf16length_from_utf8(utf8, size);
+      return implementation.utf16_length_from_utf8(utf8, size);
     };
     for (size_t size: input_size) {
       transcode_utf8_to_utf16_test_base test(random, size);
@@ -92,7 +92,7 @@ TEST(convert_3_or_4_UTF8_bytes) {
       return implementation.convert_utf8_to_utf16(utf8, size, utf16);
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
-      return implementation.utf16length_from_utf8(utf8, size);
+      return implementation.utf16_length_from_utf8(utf8, size);
     };
     for (size_t size: input_size) {
       transcode_utf8_to_utf16_test_base test(random, size);

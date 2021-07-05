@@ -126,7 +126,7 @@ int main(int argc, char *argv[]) {
        std::cout << "invalid UTF-8" << std::endl;
        return EXIT_FAILURE;
    }
-   // We need a buffer of size simdutf::utf16length_from_utf8(ascii, 4).
+   // We need a buffer of size simdutf::utf16_length_from_utf8(ascii, 4).
    char16_t utf16_output[4];
    // convert to UTF-16LE
    size_t utf16words = simdutf::convert_utf8_to_utf16(ascii, 4, utf16_output);
@@ -206,7 +206,7 @@ simdutf_warn_unused size_t convert_valid_utf8_to_utf16(const char * input, size_
  * @param length        the length of the string in bytes
  * @return the number of char16_t words required to encode the UTF-8 string as UTF-16
  */
-simdutf_warn_unused size_t utf16length_from_utf8(const char * input, size_t length) noexcept;
+simdutf_warn_unused size_t utf16_length_from_utf8(const char * input, size_t length) noexcept;
 
 /**
  * Convert possibly broken UTF-16 string into UTF-8 string.
@@ -248,7 +248,7 @@ simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char16_t * input, s
  * @param length        the length of the string in 2-byte words (char16_t)
  * @return the number of bytes required to encode the UTF-16 string as UTF-8
  */
-simdutf_warn_unused size_t utf8length_from_utf16(const char16_t * input, size_t length) noexcept;
+simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t * input, size_t length) noexcept;
 
 /**
  * Count the number of code points (characters) in the string assuming that

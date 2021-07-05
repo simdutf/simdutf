@@ -78,7 +78,7 @@ inline size_t count_code_points(const char* buf, size_t len) {
     return counter;
 }
 
-inline size_t utf16length_from_utf8(const char* buf, size_t len) {
+inline size_t utf16_length_from_utf8(const char* buf, size_t len) {
     const int8_t * p = reinterpret_cast<const int8_t *>(buf);
     size_t counter{0};
     for(size_t i = 0; i < len; i++) {
