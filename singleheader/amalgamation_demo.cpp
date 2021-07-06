@@ -3,6 +3,7 @@
 #include "simdutf.cpp"
 
 int main(int argc, char *argv[]) {
+    const char * ascii = "1234";
    // 4 == strlen(ascii)
    bool validutf8 = simdutf::validate_utf8(ascii, 4);
    if(validutf8) {
