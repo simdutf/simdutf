@@ -272,10 +272,10 @@ simdutf_warn_unused size_t count_utf16(const char16_t * input, size_t length) no
 simdutf_warn_unused size_t count_utf8(const char * input, size_t length) noexcept {
   return active_implementation->count_utf8(input, length);
 }
-simdutf_warn_unused size_t implementation::utf8_length_from_utf16(const char16_t * input, size_t length) const noexcept {
+simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t * input, size_t length) noexcept {
   return active_implementation->utf8_length_from_utf16(input, length);
 }
-simdutf_warn_unused size_t implementation::utf16_length_from_utf8(const char * input, size_t length) const noexcept {
+simdutf_warn_unused size_t utf16_length_from_utf8(const char * input, size_t length) noexcept {
   return active_implementation->utf16_length_from_utf8(input, length);
 }
 simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const char * buf, size_t length) noexcept {
