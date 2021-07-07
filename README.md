@@ -33,38 +33,16 @@ How fast is it?
 Over a wide range of realistic data sources, we transcode a billion characters per second or more. Our approach can be 3 to 10 times faster than the popular ICU library on difficult (non-ASCII) strings. We can be 20x faster than ICU when processing easy strings (ASCII). Our good results apply to both recent x64 and ARM processors.
 
 
-To illustrate, we present a benchmark result with values are in billions of characters processed by second.
-
-System: AMD Rome (Zen2), ICU version 67.1, GNU GCC 10. [Lipsum data files](https://github.com/lemire/unicode_lipsum).
+To illustrate, we present a benchmark result with values are in billions of characters processed by second. Consider the following figures.
 
 
-UTF-16LE to UTF-8 transcoding (with validation):
 
-|    |ICU |  simdutf | ratio|
-----|-----|----------|------
-|Arabic | 0.42 | 4.2 | 10x |
-|Chinese | 0.39 | 3.0 | 8x |
-|Emoji | 0.23 | 0.32 | 1.4x |
-|Hebrew | 0.59 | 4.2 | 7x |
-|Hindi | 0.24 | 2.9 | 12x |
-|Japanese | 0.30 | 2.8 | 9x |
-|Korean | 0.39 | 2.8 | 7x |
-|Latin | 0.93 | 18. | 19x |
-|Russian | 0.27 | 4.2 | 15x |
+<img src="doc/utf8utf16.png" width="50%" />
 
-UTF-8 to UTF-16LE transcoding (with validation):
+<img src="doc/utf16utf8.png" width="50%" />
 
-|  | ICU | simdutf | ratio|
-----|-----|----------|------
-|Arabic | 0.29 | 1.4 | 5x |
-|Chinese | 0.39 | 1.3 | 3x |
-|Emoji | 0.15 | 0.47 | 3x |
-|Hebrew | 0.28 | 1.4 | 5x |
-|Hindi | 0.34 | 1.0 | 3x |
-|Japanese | 0.38 | 1.4 | 4x |
-|Korean | 0.48 | 0.97 | 2x |
-|Latin | 0.95 | 20. | 21x |
-|Russian | 0.29 | 1.5 | 5x |
+
+
 
 Requirements
 -------
