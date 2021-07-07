@@ -9,7 +9,6 @@
 #include <tests/reference/decode_utf16.h>
 #include <tests/reference/validate_utf16.h>
 
-#include <cstdio>
 
 namespace simdutf { namespace tests { namespace helpers {
   // C++11 does not have mismatch.

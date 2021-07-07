@@ -9,14 +9,12 @@ import subprocess
 import os
 import re
 import shutil
-
-if sys.version_info < (3, 0):
+if sys.version_info[0] < 3:
     sys.stdout.write("Sorry, requires Python 3.x or better\n")
     sys.exit(1)
 
 SCRIPTPATH = os.path.dirname(os.path.abspath(sys.argv[0]))
 PROJECTPATH = os.path.dirname(SCRIPTPATH)
-
 print(f"SCRIPTPATH={SCRIPTPATH} PROJECTPATH={PROJECTPATH}")
 
 
@@ -46,7 +44,6 @@ found_includes = []
 current_implementation=''
 
 def doinclude(fid, file, line):
-    print(f"// doinclude: invoked with file={file}, line={line}")
     p = os.path.join(AMALGAMATE_INCLUDE_PATH, file)
     pi = os.path.join(AMALGAMATE_SOURCE_PATH, file)
 
@@ -63,7 +60,7 @@ def doinclude(fid, file, line):
             found_includes.append(file)
             dofile(fid, AMALGAMATE_INCLUDE_PATH, file)
         else:
-            print(f"//doinclude: {file} already included: {line}")
+            pass
     elif os.path.exists(pi):
         # generic includes are included multiple times
         # generic includes are included multiple times
@@ -78,7 +75,7 @@ def doinclude(fid, file, line):
             found_includes.append(file)
             dofile(fid, AMALGAMATE_SOURCE_PATH, file)
         else:
-            print(f"//doinclude: {file} already included: {line}")
+            pass
     else:
         # If we don't recognize it, just emit the #include
         print(line, file=fid)
@@ -117,7 +114,8 @@ def dofile(fid, prepath, filename):
                     print(f"// redefining SIMDUTF_IMPLEMENTATION to \"{current_implementation}\"\n// {line}", file=fid)
                 elif undefines_simdutf_implementation.search(line):
                     # Don't include #undef SIMDUTF_IMPLEMENTATION since we're handling it ourselves
-                    print(f"// {line}")
+                    # print(f"// {line}")
+                    pass
                 else:
                     # copy the line, with SIMDUTF_IMPLEMENTATION replace to what it is currently defined to
                     print(uses_simdutf_implementation.sub(current_implementation+"\\1",line), file=fid)
@@ -164,8 +162,6 @@ if SCRIPTPATH != AMALGAMATE_OUTPUT_PATH:
 print("Done with all files generation.")
 
 print(f"Files have been written to directory: {AMALGAMATE_OUTPUT_PATH}/")
-print(subprocess.run(['ls', '-la', AMAL_C, AMAL_H, DEMOCPP, README],
-                     stdout=subprocess.PIPE).stdout.decode('utf-8').strip())
 print("Done with all files generation.")
 
 

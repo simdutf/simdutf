@@ -75,7 +75,6 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const cha
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-  //return scalar::utf16_to_utf8::convert(buf, len, utf8_output);
   std::pair<const char16_t*, char*> ret = arm_convert_utf16_to_utf8(buf, len, utf8_output);
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf8_output;
@@ -100,6 +99,13 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
   return utf8::count_code_points(input, length);
 }
 
+simdutf_warn_unused size_t implementation::utf8_length_from_utf16(const char16_t * input, size_t length) const noexcept {
+  return utf16::utf8_length_from_utf16(input, length);
+}
+
+simdutf_warn_unused size_t implementation::utf16_length_from_utf8(const char * input, size_t length) const noexcept {
+  return utf8::utf16_length_from_utf8(input, length);
+}
 
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
