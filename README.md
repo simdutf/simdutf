@@ -12,14 +12,14 @@ Most modern software relies on the [Unicode standard](https://en.wikipedia.org/w
 UTF-8 or UTF-16. The UTF-8 format is the de facto standard on the web (JSON, HTML, etc.) and it has been adopted as the default in many popular
 programming languages (Go, Rust, Swift, etc.). The UTF-16 format is standard in Java, C# and in many Windows technologies.
 
-Not all sequences of bytes are valid Unicode strings. It is unsafe to use Unicode strings in UTF-8 and UTF-16 without first validating them. Furthermore, we often need to convert strings from one encoding to another, by a process called [transcoding](https://en.wikipedia.org/wiki/Transcoding). For security purposes, such transcoding should be validating: it should refuse to transcode incorrect strings.
+Not all sequences of bytes are valid Unicode strings. It is unsafe to use Unicode strings in UTF-8 and UTF-16LE without first validating them. Furthermore, we often need to convert strings from one encoding to another, by a process called [transcoding](https://en.wikipedia.org/wiki/Transcoding). For security purposes, such transcoding should be validating: it should refuse to transcode incorrect strings.
 
 This library provide fast Unicode functions such as
 
-- UTF-8 and UTF-16 validation,
-- UTF-8 to UTF-16 transcoding, with or without validation,
-- UTF-16 to UTF-8 transcoding, with or without validation,
-- UTF-8 and UTF-16 character counting.
+- UTF-8 and UTF-16LE validation,
+- UTF-8 to UTF-16LE transcoding, with or without validation,
+- UTF-16LE to UTF-8 transcoding, with or without validation,
+- UTF-8 and UTF-16LE character counting.
 
 The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion caracters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).
 
@@ -28,13 +28,13 @@ The library compiles down to tens of kilobytes. Our functions are exception-free
 How fast is it?
 -----------------
 
-It can be 3 to 10 times faster than the popular ICU library on non-ASCII strings. It can be 20x faster when processing ASCII.
+It can be 3 to 10 times faster than the popular ICU library on non-ASCII strings. It can be 20x faster than ICU when processing ASCII.
 
 System: AMD Rome (Zen2), ICU version 67.1, GNU GCC 10. [Lipsum data files](https://github.com/lemire/unicode_lipsum).
 
 Values are in billions of characters processed by second.
 
-UTF-16 to UTF-8 transcoding (with validation):
+UTF-16LE to UTF-8 transcoding (with validation):
 
 |    |ICU |  simdutf | ratio|
 ----|-----|----------|------
@@ -48,7 +48,7 @@ UTF-16 to UTF-8 transcoding (with validation):
 |Latin | 0.93 | 18. | 19x |
 |Russian | 0.27 | 4.2 | 15x |
 
-UTF-8 to UTF-16 transcoding (with validation):
+UTF-8 to UTF-16LE transcoding (with validation):
 
 |  | ICU | simdutf | ratio|
 ----|-----|----------|------
@@ -130,19 +130,19 @@ int main(int argc, char *argv[]) {
     std::cerr << "invalid UTF-8" << std::endl;
     return EXIT_FAILURE;
   }
-  // We need a buffer of size where to write the UTF-16 words.
+  // We need a buffer of size where to write the UTF-16LE words.
   size_t expected_utf16words = simdutf::utf16_length_from_utf8(source, 4);
   std::unique_ptr<char16_t[]> utf16_output{new char16_t[expected_utf16words]};
   // convert to UTF-16LE
   size_t utf16words =
       simdutf::convert_utf8_to_utf16(source, 4, utf16_output.get());
-  std::cout << "wrote " << utf16words << " UTF-16 words." << std::endl;
+  std::cout << "wrote " << utf16words << " UTF-16LE words." << std::endl;
   // It wrote utf16words * sizeof(char16_t) bytes.
   bool validutf16 = simdutf::validate_utf16(utf16_output.get(), utf16words);
   if (validutf16) {
-    std::cout << "valid UTF-16" << std::endl;
+    std::cout << "valid UTF-16LE" << std::endl;
   } else {
-    std::cerr << "invalid UTF-16" << std::endl;
+    std::cerr << "invalid UTF-16LE" << std::endl;
     return EXIT_FAILURE;
   }
   // convert it back:
@@ -185,20 +185,20 @@ namespace simdutf {
 simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept;
 
 /**
- * Validate the UTF-16 string.
+ * Validate the UTF-16LE string.
  *
  * Overridden by each implementation.
  *
  * This function is not BOM-aware.
  *
- * @param buf the UTF-16 string to validate.
+ * @param buf the UTF-16LE string to validate.
  * @param len the length of the string in number of 2-byte words (char16_t).
- * @return true if and only if the string is valid UTF-16.
+ * @return true if and only if the string is valid UTF-16LE.
  */
 simdutf_warn_unused bool validate_utf16(const char16_t *buf, size_t len) noexcept;
 
 /**
- * Convert possibly broken UTF-8 string into UTF-16 string.
+ * Convert possibly broken UTF-8 string into UTF-16LE string.
  *
  * During the conversion also validation of the input string is done.
  * This function is suitable to work with inputs from untrusted sources.
@@ -211,7 +211,7 @@ simdutf_warn_unused bool validate_utf16(const char16_t *buf, size_t len) noexcep
 simdutf_warn_unused size_t convert_utf8_to_utf16(const char * input, size_t length, char16_t* utf8_output) noexcept;
 
 /**
- * Convert valid UTF-8 string into UTF-16 string.
+ * Convert valid UTF-8 string into UTF-16LE string.
  *
  * This function assumes that the input string is valid UTF-8.
  *
@@ -223,39 +223,39 @@ simdutf_warn_unused size_t convert_utf8_to_utf16(const char * input, size_t leng
 simdutf_warn_unused size_t convert_valid_utf8_to_utf16(const char * input, size_t length, char16_t* utf16_buffer) noexcept;
 
 /**
- * Compute the number of 2-byte words that this UTF-8 string would require in UTF-16 format.
+ * Compute the number of 2-byte words that this UTF-8 string would require in UTF-16LE format.
  *
  * This function does not validate the input.
  *
  * @param input         the UTF-8 string to process
  * @param length        the length of the string in bytes
- * @return the number of char16_t words required to encode the UTF-8 string as UTF-16
+ * @return the number of char16_t words required to encode the UTF-8 string as UTF-16LE
  */
 simdutf_warn_unused size_t utf16_length_from_utf8(const char * input, size_t length) noexcept;
 
 /**
- * Convert possibly broken UTF-16 string into UTF-8 string.
+ * Convert possibly broken UTF-16LE string into UTF-8 string.
  *
  * During the conversion also validation of the input string is done.
  * This function is suitable to work with inputs from untrusted sources.
  *
  * This function is not BOM-aware.
  *
- * @param input         the UTF-16 string to convert
+ * @param input         the UTF-16LE string to convert
  * @param length        the length of the string in 2-byte words (char16_t)
  * @param utf8_buffer   the pointer to buffer that can hold conversion result
- * @return number of written words; 0 if input is not a valid UTF-16 string
+ * @return number of written words; 0 if input is not a valid UTF-16LE string
  */
 simdutf_warn_unused size_t convert_utf16_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) noexcept;
 
 /**
- * Convert valid UTF-16 string into UTF-8 string.
+ * Convert valid UTF-16LE string into UTF-8 string.
  *
- * This function assumes that the input string is valid UTF-16.
+ * This function assumes that the input string is valid UTF-16LE.
  *
  * This function is not BOM-aware.
  *
- * @param input         the UTF-16 string to convert
+ * @param input         the UTF-16LE string to convert
  * @param length        the length of the string in 2-byte words (char16_t)
  * @param utf8_buffer   the pointer to buffer that can hold the conversion result
  * @return number of written words; 0 if conversion is not possible
@@ -263,15 +263,15 @@ simdutf_warn_unused size_t convert_utf16_to_utf8(const char16_t * input, size_t 
 simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) noexcept;
 
 /**
- * Compute the number of bytes that this UTF-16 string would require in UTF-8 format.
+ * Compute the number of bytes that this UTF-16LE string would require in UTF-8 format.
  *
  * This function does not validate the input.
  *
  * This function is not BOM-aware.
  *
- * @param input         the UTF-16 string to convert
+ * @param input         the UTF-16LE string to convert
  * @param length        the length of the string in 2-byte words (char16_t)
- * @return the number of bytes required to encode the UTF-16 string as UTF-8
+ * @return the number of bytes required to encode the UTF-16LE string as UTF-8
  */
 simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t * input, size_t length) noexcept;
 
@@ -279,11 +279,11 @@ simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t * input, size_t
  * Count the number of code points (characters) in the string assuming that
  * it is valid.
  *
- * This function assumes that the input string is valid UTF-16.
+ * This function assumes that the input string is valid UTF-16LE.
  *
  * This function is not BOM-aware.
  *
- * @param input         the UTF-16 string to process
+ * @param input         the UTF-16LE string to process
  * @param length        the length of the string in 2-byte words (char16_t)
  * @return number of code points
  */

@@ -40,12 +40,12 @@ namespace simdutf { namespace tests { namespace helpers {
         break;
 
       default:
-        throw std::invalid_argument(std::string("Value can't be encoded as UTF16 code-point : ") + std::to_string(codepoint));
+        throw std::invalid_argument(std::string("Value can't be encoded as UTF-16 code-point : ") + std::to_string(codepoint));
     }
   }
 
   /**
-   * transcode_utf8_to_utf16_test_base can be used to test UTF8 => UTF16 transcoding.
+   * transcode_utf8_to_utf16_test_base can be used to test UTF-8 => UTF-16 transcoding.
    */
 
   transcode_utf8_to_utf16_test_base::transcode_utf8_to_utf16_test_base(GenerateCodepoint generate,
@@ -93,7 +93,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
 
   /**
-   * transcode_utf16_to_utf8_test_base can be used to test UTF16 => UTF8 transcoding.
+   * transcode_utf16_to_utf8_test_base can be used to test UTF-16 => UTF-8 transcoding.
    */
   transcode_utf16_to_utf8_test_base::transcode_utf16_to_utf8_test_base(GenerateCodepoint generate,
                                        size_t input_size) {

@@ -1,9 +1,9 @@
 /*
-    In UTF16 words in range 0xD800 to 0xDFFF have special meaning.
+    In UTF-16 words in range 0xD800 to 0xDFFF have special meaning.
 
     In a vectorized algorithm we want to examine the most significant
     nibble in order to select a fast path. If none of highest nibbles
-    are 0xD (13), than we are sure that UTF16 chunk in a vector
+    are 0xD (13), than we are sure that UTF-16 chunk in a vector
     register is valid.
 
     Let us analyze what we need to check if the nibble is 0xD. The
@@ -95,11 +95,11 @@ const char16_t* avx2_validate_utf16le(const char16_t* input, size_t size) {
             const uint32_t c = V | a | b;     // Combine all the masks into the final one.
 
             if (c == 0xffffffff) {
-                // The whole input register contains valid UTF16, i.e.,
+                // The whole input register contains valid UTF-16, i.e.,
                 // either single words or proper surrogate pairs.
                 input += simd16<uint16_t>::ELEMENTS * 2;
             } else if (c == 0x7fffffff) {
-                // The 31 lower words of the input register contains valid UTF16.
+                // The 31 lower words of the input register contains valid UTF-16.
                 // The 31 word may be either a low or high surrogate. It the next
                 // iteration we 1) check if the low surrogate is followed by a high
                 // one, 2) reject sole high surrogate.

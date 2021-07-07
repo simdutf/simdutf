@@ -8,9 +8,9 @@
 namespace simdutf { namespace tests { namespace helpers {
 
   /**
-   * It would be nice to use a single helper for both UTF8 => UTF16
-   * and UTF8 <= UTF16, but the function signatures differ when you
-   * represent UTF8 with char8_t and UTF16 with char16_t.
+   * It would be nice to use a single helper for both UTF-8 => UTF-16LE
+   * and UTF-8 <= UTF-16LE, but the function signatures differ when you
+   * represent UTF8 with char8_t and UTF-16LE with char16_t.
    */
   class transcode_test_base {
   protected:
@@ -20,7 +20,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
 
   /**
-   * This class can be used to test UTF8 => UTF16 transcoding.
+   * This class can be used to test UTF-8 => UTF-16LE transcoding.
    */
   class transcode_utf8_to_utf16_test_base : transcode_test_base {
   public:
@@ -74,7 +74,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
 
   /**
-   * This class can be used to test UTF16 => UTF8 transcoding.
+   * This class can be used to test UTF-16LE => UTF-8 transcoding.
    */
   class transcode_utf16_to_utf8_test_base : transcode_test_base {
   public:

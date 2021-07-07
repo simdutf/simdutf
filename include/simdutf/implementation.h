@@ -34,20 +34,20 @@ simdutf_really_inline simdutf_warn_unused simdutf::encoding_type autodetect_enco
 simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept;
 
 /**
- * Validate the UTF-16 string.
+ * Validate the UTF-16LE string.
  *
  * Overridden by each implementation.
  *
  * This function is not BOM-aware.
  *
- * @param buf the UTF-16 string to validate.
+ * @param buf the UTF-16LE string to validate.
  * @param len the length of the string in number of 2-byte words (char16_t).
- * @return true if and only if the string is valid UTF-16.
+ * @return true if and only if the string is valid UTF-16LE.
  */
 simdutf_warn_unused bool validate_utf16(const char16_t *buf, size_t len) noexcept;
 
 /**
- * Convert possibly broken UTF-8 string into UTF-16 string.
+ * Convert possibly broken UTF-8 string into UTF-16LE string.
  *
  * During the conversion also validation of the input string is done.
  * This function is suitable to work with inputs from untrusted sources.
@@ -60,7 +60,7 @@ simdutf_warn_unused bool validate_utf16(const char16_t *buf, size_t len) noexcep
 simdutf_warn_unused size_t convert_utf8_to_utf16(const char * input, size_t length, char16_t* utf8_output) noexcept;
 
 /**
- * Convert valid UTF-8 string into UTF-16 string.
+ * Convert valid UTF-8 string into UTF-16LE string.
  *
  * This function assumes that the input string is valid UTF-8.
  *
@@ -72,7 +72,7 @@ simdutf_warn_unused size_t convert_utf8_to_utf16(const char * input, size_t leng
 simdutf_warn_unused size_t convert_valid_utf8_to_utf16(const char * input, size_t length, char16_t* utf16_buffer) noexcept;
 
 /**
- * Compute the number of 2-byte words that this UTF-8 string would require in UTF-16 format.
+ * Compute the number of 2-byte words that this UTF-8 string would require in UTF-16LE format.
  *
  * This function does not validate the input.
  *
@@ -80,33 +80,33 @@ simdutf_warn_unused size_t convert_valid_utf8_to_utf16(const char * input, size_
  *
  * @param input         the UTF-8 string to process
  * @param length        the length of the string in bytes
- * @return the number of char16_t words required to encode the UTF-8 string as UTF-16
+ * @return the number of char16_t words required to encode the UTF-8 string as UTF-16LE
  */
 simdutf_warn_unused size_t utf16_length_from_utf8(const char * input, size_t length) noexcept;
 
 /**
- * Convert possibly broken UTF-16 string into UTF-8 string.
+ * Convert possibly broken UTF-16LE string into UTF-8 string.
  *
  * During the conversion also validation of the input string is done.
  * This function is suitable to work with inputs from untrusted sources.
  *
  * This function is not BOM-aware.
  *
- * @param input         the UTF-16 string to convert
+ * @param input         the UTF-16LE string to convert
  * @param length        the length of the string in 2-byte words (char16_t)
  * @param utf8_buffer   the pointer to buffer that can hold conversion result
- * @return number of written words; 0 if input is not a valid UTF-16 string
+ * @return number of written words; 0 if input is not a valid UTF-16LE string
  */
 simdutf_warn_unused size_t convert_utf16_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) noexcept;
 
 /**
- * Convert valid UTF-16 string into UTF-8 string.
+ * Convert valid UTF-16LE string into UTF-8 string.
  *
- * This function assumes that the input string is valid UTF-16.
+ * This function assumes that the input string is valid UTF-16LE.
  *
  * This function is not BOM-aware.
  *
- * @param input         the UTF-16 string to convert
+ * @param input         the UTF-16LE string to convert
  * @param length        the length of the string in 2-byte words (char16_t)
  * @param utf8_buffer   the pointer to buffer that can hold the conversion result
  * @return number of written words; 0 if conversion is not possible
@@ -114,13 +114,13 @@ simdutf_warn_unused size_t convert_utf16_to_utf8(const char16_t * input, size_t 
 simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) noexcept;
 
 /**
- * Compute the number of bytes that this UTF-16 string would require in UTF-8 format.
+ * Compute the number of bytes that this UTF-16LE string would require in UTF-8 format.
  *
  * This function does not validate the input.
  *
- * @param input         the UTF-16 string to convert
+ * @param input         the UTF-16LE string to convert
  * @param length        the length of the string in 2-byte words (char16_t)
- * @return the number of bytes required to encode the UTF-16 string as UTF-8
+ * @return the number of bytes required to encode the UTF-16LE string as UTF-8
  */
 simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t * input, size_t length) noexcept;
 
@@ -128,11 +128,11 @@ simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t * input, size_t
  * Count the number of code points (characters) in the string assuming that
  * it is valid.
  *
- * This function assumes that the input string is valid UTF-16.
+ * This function assumes that the input string is valid UTF-16LE.
  *
  * This function is not BOM-aware.
  *
- * @param input         the UTF-16 string to process
+ * @param input         the UTF-16LE string to process
  * @param length        the length of the string in 2-byte words (char16_t)
  * @return number of code points
  */
@@ -219,20 +219,20 @@ public:
   simdutf_warn_unused virtual bool validate_utf8(const char *buf, size_t len) const noexcept = 0;
 
   /**
-   * Validate the UTF-16 string.
+   * Validate the UTF-16LE string.
    *
    * Overridden by each implementation.
    *
    * This function is not BOM-aware.
    *
-   * @param buf the UTF-16 string to validate.
+   * @param buf the UTF-16LE string to validate.
    * @param len the length of the string in number of 2-byte words (char16_t).
-   * @return true if and only if the string is valid UTF-16.
+   * @return true if and only if the string is valid UTF-16LE.
    */
   simdutf_warn_unused virtual bool validate_utf16(const char16_t *buf, size_t len) const noexcept = 0;
 
   /**
-   * Convert possibly broken UTF-8 string into UTF-16 string.
+   * Convert possibly broken UTF-8 string into UTF-16LE string.
    *
    * During the conversion also validation of the input string is done.
    * This function is suitable to work with inputs from untrusted sources.
@@ -245,7 +245,7 @@ public:
   simdutf_warn_unused virtual size_t convert_utf8_to_utf16(const char * input, size_t length, char16_t* utf8_output) const noexcept = 0;
 
   /**
-   * Convert valid UTF-8 string into UTF-16 string.
+   * Convert valid UTF-8 string into UTF-16LE string.
    *
    * This function assumes that the input string is valid UTF-8.
    *
@@ -257,39 +257,39 @@ public:
   simdutf_warn_unused virtual size_t convert_valid_utf8_to_utf16(const char * input, size_t length, char16_t* utf16_buffer) const noexcept = 0;
 
   /**
-   * Compute the number of 2-byte words that this UTF-8 string would require in UTF-16 format.
+   * Compute the number of 2-byte words that this UTF-8 string would require in UTF-16LE format.
    *
    * This function does not validate the input.
    *
    * @param input         the UTF-8 string to process
    * @param length        the length of the string in bytes
-   * @return the number of char16_t words required to encode the UTF-8 string as UTF-16
+   * @return the number of char16_t words required to encode the UTF-8 string as UTF-16LE
    */
   simdutf_warn_unused virtual size_t utf16_length_from_utf8(const char * input, size_t length) const noexcept = 0;
 
   /**
-   * Convert possibly broken UTF-16 string into UTF-8 string.
+   * Convert possibly broken UTF-16LE string into UTF-8 string.
    *
    * During the conversion also validation of the input string is done.
    * This function is suitable to work with inputs from untrusted sources.
    *
    * This function is not BOM-aware.
    *
-   * @param input         the UTF-16 string to convert
+   * @param input         the UTF-16LE string to convert
    * @param length        the length of the string in 2-byte words (char16_t)
    * @param utf8_buffer   the pointer to buffer that can hold conversion result
-   * @return number of written words; 0 if input is not a valid UTF-16 string
+   * @return number of written words; 0 if input is not a valid UTF-16LE string
    */
   simdutf_warn_unused virtual size_t convert_utf16_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) const noexcept = 0;
 
   /**
-   * Convert valid UTF-16 string into UTF-8 string.
+   * Convert valid UTF-16LE string into UTF-8 string.
    *
-   * This function assumes that the input string is valid UTF-16.
+   * This function assumes that the input string is valid UTF-16LE.
    *
    * This function is not BOM-aware.
    *
-   * @param input         the UTF-16 string to convert
+   * @param input         the UTF-16LE string to convert
    * @param length        the length of the string in 2-byte words (char16_t)
    * @param utf8_buffer   the pointer to buffer that can hold the conversion result
    * @return number of written words; 0 if conversion is not possible
@@ -297,15 +297,15 @@ public:
   simdutf_warn_unused virtual size_t convert_valid_utf16_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) const noexcept = 0;
 
   /**
-   * Compute the number of bytes that this UTF-16 string would require in UTF-8 format.
+   * Compute the number of bytes that this UTF-16LE string would require in UTF-8 format.
    *
    * This function does not validate the input.
    *
    * This function is not BOM-aware.
    *
-   * @param input         the UTF-16 string to convert
+   * @param input         the UTF-16LE string to convert
    * @param length        the length of the string in 2-byte words (char16_t)
-   * @return the number of bytes required to encode the UTF-16 string as UTF-8
+   * @return the number of bytes required to encode the UTF-16LE string as UTF-8
    */
   simdutf_warn_unused virtual size_t utf8_length_from_utf16(const char16_t * input, size_t length) const noexcept = 0;
 
@@ -313,11 +313,11 @@ public:
    * Count the number of code points (characters) in the string assuming that
    * it is valid.
    *
-   * This function assumes that the input string is valid UTF-16.
+   * This function assumes that the input string is valid UTF-16LE.
    *
    * This function is not BOM-aware.
    *
-   * @param input         the UTF-16 string to process
+   * @param input         the UTF-16LE string to process
    * @param length        the length of the string in 2-byte words (char16_t)
    * @return number of code points
    */
