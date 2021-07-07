@@ -19,6 +19,8 @@ This library provide fast Unicode functions such as
 - UTF-8 and UTF-16LE validation,
 - UTF-8 to UTF-16LE transcoding, with or without validation,
 - UTF-16LE to UTF-8 transcoding, with or without validation,
+- From an UTF-8 string, compute the size of the UTF-16 equivalent string,
+- From an UTF-16 string, compute the size of the UTF-8 equivalent string,
 - UTF-8 and UTF-16LE character counting.
 
 The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion caracters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).
@@ -28,11 +30,13 @@ The library compiles down to tens of kilobytes. Our functions are exception-free
 How fast is it?
 -----------------
 
-It can be 3 to 10 times faster than the popular ICU library on non-ASCII strings. It can be 20x faster than ICU when processing ASCII.
+Over a wide range of realistic data sources, we transcode a billion characters per second or more. Our approach can be 3 to 10 times faster than the popular ICU library on difficult (non-ASCII) strings. We can be 20x faster than ICU when processing easy strings (ASCII). Our good results apply to both recent x64 and ARM processors.
+
+
+To illustrate, we present a benchmark result with values are in billions of characters processed by second.
 
 System: AMD Rome (Zen2), ICU version 67.1, GNU GCC 10. [Lipsum data files](https://github.com/lemire/unicode_lipsum).
 
-Values are in billions of characters processed by second.
 
 UTF-16LE to UTF-8 transcoding (with validation):
 
@@ -66,9 +70,10 @@ Requirements
 -------
 
 - C++11 compatible compiler. We support LLVM clang, GCC, Visual Studio. (Our optional benchmark tool requires C++17.)
-- Recent CMake (at least 3.15) if you rely on CMake; otherwise you may use the [single header version](#single-header-version).
+- For high speed, you should have a recent 64-bit system (e.g., ARM or x64).
+- If you rely on CMake, you should use a recent CMake (at least 3.15) ; otherwise you may use the [single header version](#single-header-version).
 
-Usage
+Usage (CMake)
 -------
 
 ```
