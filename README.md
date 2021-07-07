@@ -37,10 +37,12 @@ To illustrate, we present a benchmark result with values are in billions of char
 
 
 
-<img src="doc/utf8utf16.png" width="50%" />
+<img src="doc/utf8utf16.png" width="70%" />
 
-<img src="doc/utf16utf8.png" width="50%" />
+<img src="doc/utf16utf8.png" width="70%" />
 
+
+Datasets: https://github.com/lemire/unicode_lipsum
 
 
 
@@ -288,12 +290,7 @@ simdutf_warn_unused size_t count_utf8(const char * input, size_t length) noexcep
 }
 ```
 
-Testing data
-------------
 
-We recommend the following data repository.
-
-https://github.com/lemire/unicode_lipsum
 
 License
 -------
