@@ -44,6 +44,8 @@ To illustrate, we present a benchmark result with values are in billions of char
 
 Datasets: https://github.com/lemire/unicode_lipsum
 
+Please refer to our benchmarking tool for a proper interpretation of the numbers. Our results are reproducible.
+
 
 
 Requirements
