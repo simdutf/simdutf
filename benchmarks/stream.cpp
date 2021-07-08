@@ -85,7 +85,7 @@ void run_from_utf8(const std::vector<char> &input_data, size_t approx_output_dat
     size_t effective_length = trim_partial_utf8(
         reinterpret_cast<const uint8_t *>(input_data.data()), len);
     size_t utf8count = simdutf::count_utf8(input_data.data(), effective_length);
-    std::cout << utf8count << "\t";
+    std::cout << utf8count << ",\t";
     auto size_procedure = [effective_length, &input_data, &buffer]() -> size_t {
       return simdutf::convert_utf8_to_utf16(input_data.data(), effective_length,
                                             buffer.data());
