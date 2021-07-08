@@ -22,3 +22,9 @@ target_link_libraries(benchmark PUBLIC simdutf simdutf::benchmarks::benchmark)
 
 set_property(TARGET benchmark PROPERTY CXX_STANDARD 17)
 set_property(TARGET benchmark PROPERTY CXX_STANDARD_REQUIRED ON)
+
+add_executable(stream stream.cpp)
+target_link_libraries(stream PUBLIC simdutf)
+
+set_property(TARGET stream PROPERTY CXX_STANDARD 17)
+set_property(TARGET stream PROPERTY CXX_STANDARD_REQUIRED ON)
