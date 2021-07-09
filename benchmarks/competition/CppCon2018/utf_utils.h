@@ -47,17 +47,16 @@
     #define KEWB_ALIGN_FN
 
 #else
-    #error "Unsupported combination of compiler and platform"
+    #define KEWB_FORCE_INLINE   inline
+    #define KEWB_ALIGN_FN
 #endif
 
 //- Detect OS and include relevant SSE headers; only Linux and Windows are currently supported.
 //
-#if defined __linux__ || __MSYS__
-    #define KEWB_PLATFORM_LINUX
-#elif defined _WIN32
+#if defined _WIN32
     #define KEWB_PLATFORM_WINDOWS
 #else
-    #error "Unsupported combination of compiler and platform"
+    #define KEWB_PLATFORM_LINUX
 #endif
 SIMDUTF_TARGET_WESTMERE
 
