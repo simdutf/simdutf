@@ -65,6 +65,8 @@ cd build
 ctest .
 ```
 
+Visual Studio users must specify whether they want to build the Release or Debug version.
+
 To run benchmarks, execute the `benchmark` command. You can get help on its
 usage by first building it and then calling it with the `--help` flag.
 E.g., under Linux you may do the following:
@@ -74,6 +76,14 @@ cmake -B build
 cmake --build build
 ./build/benchmarks/benchmark --help
 ```
+
+Instructions are similar for Visual Studio users.
+
+Since UCI is so common and popular, we assume that you may have it already on your system. When
+it is not found, it is simply omitted from the benchmarks. Thus, to benchmark against UCI, make
+sure you have UCI installed on your machine and that cmake can find it. For macOS, you may
+install it with brew using `brew install icu4c`. If you have UCI on your system but cmake cannot
+find it, you may need to provide cmake with a path to ICU, such as `ICU_ROOT=/usr/local/opt/icu4c cmake -B build`.
 
 Single-header version
 ----------------------

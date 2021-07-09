@@ -4,7 +4,7 @@
 #include "simdutf.cpp"
 #include "simdutf.h"
 
-int main(int argc, char *argv[]) {
+int main(int , char *[]) {
   const char *source = "1234";
   // 4 == strlen(source)
   bool validutf8 = simdutf::validate_utf8(source, 4);
