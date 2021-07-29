@@ -383,7 +383,7 @@ template <typename T> struct simd8x64 {
 
 
   simdutf_really_inline bool is_ascii() const {
-    return input.reduce_or().is_ascii();
+    return reduce_or().is_ascii();
   }
 
   simdutf_really_inline uint64_t to_bitmask() const {
