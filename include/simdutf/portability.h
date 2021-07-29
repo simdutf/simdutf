@@ -44,8 +44,14 @@
 #elif defined(__aarch64__) || defined(_M_ARM64)
 #define SIMDUTF_IS_ARM64 1
 #elif defined(__PPC64__) || defined(_M_PPC64)
-#define SIMDUTF_IS_PPC64 1
+//#define SIMDUTF_IS_PPC64 1
+#pragma message("The simdutf library does yet support SIMD acceleration under\
+POWER processors. Please see https://github.com/lemire/simdutf/issues/51")
 #else
+// The simdutf library is designed
+// for 64-bit processors and it seems that you are not
+// compiling for a known 64-bit platform. Please
+// use a 64-bit target such as x64 or 64-bit ARM for best performance.
 #define SIMDUTF_IS_32BITS 1
 
 // We do not support 32-bit platforms, but it can be
