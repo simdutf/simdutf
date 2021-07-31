@@ -159,6 +159,13 @@ if SCRIPTPATH != AMALGAMATE_OUTPUT_PATH:
   shutil.copy2(os.path.join(SCRIPTPATH,"amalgamate_demo.cpp"),AMALGAMATE_OUTPUT_PATH)
   shutil.copy2(os.path.join(SCRIPTPATH,"README.md"),AMALGAMATE_OUTPUT_PATH)
 
+import zipfile
+zf = zipfile.ZipFile(os.path.join(AMALGAMATE_OUTPUT_PATH,'singleheader.zip'), 'w', zipfile.ZIP_DEFLATED)
+zf.write(os.path.join(AMALGAMATE_OUTPUT_PATH,"simdutf.cpp"))
+zf.write(os.path.join(AMALGAMATE_OUTPUT_PATH,"simdutf.h"))
+zf.write(os.path.join(AMALGAMATE_OUTPUT_PATH,"amalgamation_demo.cpp"))
+
+
 print("Done with all files generation.")
 
 print(f"Files have been written to directory: {AMALGAMATE_OUTPUT_PATH}/")
