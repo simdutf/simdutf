@@ -161,9 +161,9 @@ if SCRIPTPATH != AMALGAMATE_OUTPUT_PATH:
 
 import zipfile
 zf = zipfile.ZipFile(os.path.join(AMALGAMATE_OUTPUT_PATH,'singleheader.zip'), 'w', zipfile.ZIP_DEFLATED)
-zf.write(os.path.join(AMALGAMATE_OUTPUT_PATH,"simdutf.cpp"))
-zf.write(os.path.join(AMALGAMATE_OUTPUT_PATH,"simdutf.h"))
-zf.write(os.path.join(AMALGAMATE_OUTPUT_PATH,"amalgamation_demo.cpp"))
+zf.write(os.path.join(AMALGAMATE_OUTPUT_PATH,"simdutf.cpp"), "simdutf.cpp")
+zf.write(os.path.join(AMALGAMATE_OUTPUT_PATH,"simdutf.h"), "simdutf.h")
+zf.write(os.path.join(AMALGAMATE_OUTPUT_PATH,"amalgamation_demo.cpp"), "amalgamation_demo.cpp")
 
 
 print("Done with all files generation.")
