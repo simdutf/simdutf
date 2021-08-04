@@ -170,6 +170,9 @@ int main(int argc, char *argv[]) {
 API
 -----
 
+Our API is made of a few non-allocating function. They typically take a pointer and a length as a parameter, 
+and they sometimes take a pointer to an output buffer. Users are responsible for memory allocation.
+
 ```C++
 namespace simdutf {
 
