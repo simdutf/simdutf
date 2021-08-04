@@ -11,11 +11,11 @@ enum {
   /**
    * The major version (MAJOR.minor.revision) of simdutf being used.
    */
-  SIMDUTF_VERSION_MAJOR = 0,
+  SIMDUTF_VERSION_MAJOR = 1,
   /**
    * The minor version (major.MINOR.revision) of simdutf being used.
    */
-  SIMDUTF_VERSION_MINOR = 1,
+  SIMDUTF_VERSION_MINOR = 0,
   /**
    * The revision (major.minor.REVISION) of simdutf being used.
    */
