@@ -25,10 +25,13 @@ inline simdutf_warn_unused bool validate(const char *buf, size_t len) noexcept {
       }
     }
     unsigned char byte = data[pos];
-    if (byte < 0b10000000) {
-      pos++;
-      continue;
-    } else if ((byte & 0b11100000) == 0b11000000) {
+
+    while (byte < 0b10000000) {
+      if (++pos == len) { return true; }
+      byte = data[pos];
+    }
+
+    if ((byte & 0b11100000) == 0b11000000) {
       next_pos = pos + 2;
       if (next_pos > len) { return false; }
       if ((data[pos + 1] & 0b11000000) != 0b10000000) { return false; }
