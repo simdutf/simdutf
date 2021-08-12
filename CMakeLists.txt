@@ -6,8 +6,8 @@ project(simdutf
   VERSION 1.0.0
 )
 
-set(SIMDJSON_LIB_VERSION "1.0.0" CACHE STRING "simdutf library version")
-set(SIMDJSON_LIB_SOVERSION "1" CACHE STRING "simdutf library soversion")
+set(SIMDUTF_LIB_VERSION "1.0.0" CACHE STRING "simdutf library version")
+set(SIMDUTF_LIB_SOVERSION "1" CACHE STRING "simdutf library soversion")
 
 include(GNUInstallDirs)
 include(cmake/simdutf-flags.cmake)
