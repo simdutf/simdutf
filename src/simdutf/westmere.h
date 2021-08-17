@@ -42,7 +42,6 @@ namespace westmere {
 
 // Declarations
 #include "simdutf/westmere/bitmanipulation.h"
-#include "simdutf/westmere/bitmask.h"
 #include "simdutf/westmere/simd.h"
 
 #include "simdutf/westmere/end.h"

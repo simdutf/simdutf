@@ -32,7 +32,6 @@ namespace arm64 {
 // Declarations
 #include "simdutf/arm64/intrinsics.h"
 #include "simdutf/arm64/bitmanipulation.h"
-#include "simdutf/arm64/bitmask.h"
 #include "simdutf/arm64/simd.h"
 
 #include "simdutf/arm64/end.h"
