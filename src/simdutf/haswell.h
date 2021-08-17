@@ -48,7 +48,6 @@ namespace haswell {
 
 // Declarations
 #include "simdutf/haswell/bitmanipulation.h"
-#include "simdutf/haswell/bitmask.h"
 #include "simdutf/haswell/simd.h"
 
 #include "simdutf/haswell/end.h"

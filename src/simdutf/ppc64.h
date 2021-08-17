@@ -32,7 +32,6 @@ namespace ppc64 {
 // Declarations
 #include "simdutf/ppc64/intrinsics.h"
 #include "simdutf/ppc64/bitmanipulation.h"
-#include "simdutf/ppc64/bitmask.h"
 #include "simdutf/ppc64/simd.h"
 
 #include "simdutf/ppc64/end.h"
