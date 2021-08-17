@@ -6,3 +6,9 @@ build
 # Python cache
 
 __pycache__
+
+# Amalgamated source files
+
+singleheader/simdutf.cpp
+singleheader/simdutf.h
+singleheader/singleheader.zip
