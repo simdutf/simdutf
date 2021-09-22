@@ -53,7 +53,8 @@ Requirements
 
 - C++11 compatible compiler. We support LLVM clang, GCC, Visual Studio. (Our optional benchmark tool requires C++17.)
 - For high speed, you should have a recent 64-bit system (e.g., ARM or x64).
-- If you rely on CMake, you should use a recent CMake (at least 3.15) ; otherwise you may use the [single header version](#single-header-version).
+- If you rely on CMake, you should use a recent CMake (at least 3.15) ; otherwise you may use the [single header version](#single-header-version). The library is also available from Microsoft's vcpkg.
+
 
 Usage (CMake)
 -------
@@ -309,7 +310,10 @@ simdutf_warn_unused size_t count_utf8(const char * input, size_t length) noexcep
 }
 ```
 
+Usage
+-----
 
+The library used by [haskell/text](https://github.com/haskell/text).
 
 License
 -------
