@@ -315,6 +315,11 @@ Usage
 
 The library used by [haskell/text](https://github.com/haskell/text).
 
+References
+-----------
+
+* Daniel Lemire, Wojciech Muła,  [Transcoding Billions of Unicode Characters per Second with SIMD Instructions](https://arxiv.org/abs/2109.10433), Software: Practice and Experience (to appear)
+
 License
 -------
 
