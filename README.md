@@ -56,6 +56,16 @@ Requirements
 - If you rely on CMake, you should use a recent CMake (at least 3.15) ; otherwise you may use the [single header version](#single-header-version). The library is also available from Microsoft's vcpkg.
 
 
+Usage (Usage)
+-------
+
+
+We made a video to help you get started with the library. 
+
+[![the simdutf library](http://img.youtube.com/vi/H9NZtb7ykYs/0.jpg)](https://www.youtube.com/watch?v=H9NZtb7ykYs)<br />
+
+
+
 Usage (CMake)
 -------
 
