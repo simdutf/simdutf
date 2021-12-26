@@ -90,10 +90,10 @@ cmake --build build
 
 Instructions are similar for Visual Studio users.
 
-Since UCI is so common and popular, we assume that you may have it already on your system. When
-it is not found, it is simply omitted from the benchmarks. Thus, to benchmark against UCI, make
-sure you have UCI installed on your machine and that cmake can find it. For macOS, you may
-install it with brew using `brew install icu4c`. If you have UCI on your system but cmake cannot
+Since ICU is so common and popular, we assume that you may have it already on your system. When
+it is not found, it is simply omitted from the benchmarks. Thus, to benchmark against ICU, make
+sure you have ICU installed on your machine and that cmake can find it. For macOS, you may
+install it with brew using `brew install icu4c`. If you have ICU on your system but cmake cannot
 find it, you may need to provide cmake with a path to ICU, such as `ICU_ROOT=/usr/local/opt/icu4c cmake -B build`.
 
 Single-header version
