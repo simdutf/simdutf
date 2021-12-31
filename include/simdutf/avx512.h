@@ -1,4 +1,5 @@
-// included directly in portabiliy.h
+#ifndef SIMDUTF_AVX512_H_
+#define SIMDUTF_AVX512_H_
 
 /*
     It's possible to override AVX512 settings with cmake DCMAKE_CXX_FLAGS.
@@ -75,3 +76,4 @@
 # endif
 #endif
 
+#endif // SIMDUTF_AVX512_H_
