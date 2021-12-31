@@ -76,6 +76,8 @@ use a 64-bit target such as x64, 64-bit ARM or 64-bit PPC.")
 #endif // SIMDUTF_NO_PORTABILITY_WARNING
 #endif // SIMDUTF_IS_32BITS
 
+#include "avx512.h"
+
 // this is almost standard?
 #undef STRINGIFY_IMPLEMENTATION_
 #undef STRINGIFY

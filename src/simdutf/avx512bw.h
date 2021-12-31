@@ -5,7 +5,9 @@
 
 // An AVX512 implementation can be determined only in runtime.
 #ifndef SIMDUTF_IMPLEMENTATION_AVX512BW
-#define SIMDUTF_IMPLEMENTATION_AVX512BW (SIMDUTF_IS_X86_64)
+#define SIMDUTF_IMPLEMENTATION_AVX512BW (SIMDUTF_HAS_AVX512F && \
+                                         SIMDUTF_HAS_AVX512DQ && \
+                                         SIMDUTF_HAS_AVX512VL)
 #endif
 
 #if SIMDUTF_IMPLEMENTATION_AVX512BW
