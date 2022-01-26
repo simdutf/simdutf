@@ -18,3 +18,10 @@ const __m512i v_0000_00c0 = _mm512_set1_epi32(0xc0);
 const __m512i v_0000_0080 = _mm512_set1_epi32(0x80);
 const __m512i v_fc00_fc00 = _mm512_set1_epi32(0xfc00fc00);
 const __m512i v_d800_dc00 = _mm512_set1_epi32(0xd800dc00);
+
+const __m512i broadcast_0th_lane = _mm512_setr_epi32(
+    0, 1, 2, 3,
+    0, 1, 2, 3,
+    0, 1, 2, 3,
+    0, 1, 2, 3
+);

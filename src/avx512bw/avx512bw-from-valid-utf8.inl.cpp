@@ -13,12 +13,14 @@
      byte 0 of reg              byte 63 of reg
 */
 __m512i expand_bytes(const char* ptr) {
-    // load bytes 0..15 (16)
-    const __m128i tmp0 = _mm_loadu_si128((const __m128i*)ptr);
-    const __m512i t0 = _mm512_broadcast_i64x2(tmp0);
+    // load bytes 0..15 (16) and broadcast the 128-bit lane
+    const __m128i lane    = _mm_loadu_si128((const __m128i*)ptr);
+    const __m512i lane512 = _mm512_castsi128_si512(lane);
+    const __m512i t0 = _mm512_permutexvar_epi32(broadcast_0th_lane, lane512);
 
     // load bytes 16..19 (4)
-    const uint32_t tmp1 = *(uint32_t*)(ptr + 16);
+    uint32_t tmp1;
+    memcpy(&tmp1, ptr + 16, sizeof(tmp1));
     const __m512i t1 = _mm512_set1_epi32(tmp1);
 
     // In the last lane we need bytes 13..19, so we're placing
@@ -171,10 +173,10 @@ __m512i expanded_utf8_to_utf32(__m512i char_class, __m512i utf8) {
     }
 
     /* 5. Shift right the values by variable amounts to reset lowest bits
-        |aaab.bbbb|bccc.cccd|dddd.d000|0000.0000| 4-byte char -- by 11
-        |aaaa.bbbb|bbcc.cccc|????.??00|0000.0000| 3-byte char -- by 16
-        |aaaa.abbb|bbb?.????|????.???0|0000.0000| 2-byte char -- by 21
-        |aaaa.aaa?|????.????|????.????|?000.0000| ASCII char -- by 25 */
+        |0000.0000|000a.aabb|bbbb.cccc|ccdd.dddd| 4-byte char -- by 11
+        |0000.0000|0000.0000|aaaa.bbbb|bbcc.cccc| 3-byte char -- by 16
+        |0000.0000|0000.0000|0000.0aaa|aabb.bbbb| 2-byte char -- by 21
+        |0000.0000|0000.0000|0000.0000|0aaa.aaaa| ASCII char -- by 25 */
     {
         // 4 * [25, 25, 25, 25, 25, 25, 25, 25, 0, 0, 0, 0, 21, 21, 16, 11]
         const __m512i shift_right = _mm512_setr_epi64(
@@ -198,20 +200,12 @@ __m512i expanded_utf8_to_utf32(__m512i char_class, __m512i utf8) {
 
 // See: http://0x80.pl/notesen/2021-12-22-test-and-clear-bit.html
 bool test_and_clear_bit(uint32_t& val, int bitpos) {
-    uint32_t flag = 0;
+    const uint32_t bitmask = uint32_t(1) << bitpos;
+    const uint32_t old = val;
 
-    asm (
-        "btr  %[bitpos], %[val]    \n"
-        "setc %b[flag]             \n"
-        : [val] "=r" (val),
-          [flag] "=r" (flag)
-        : [bitpos] "r" (bitpos),
-          "0" (val),
-          "1" (flag)
-        : "cc"
-    );
+    val &= ~bitmask;
 
-    return flag;
+    return val < old;
 }
 
 /*
@@ -226,7 +220,7 @@ size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
     const __mmask16 sp_mask = _mm512_mask_cmpgt_epu32_mask(valid, utf32, v_0000_ffff);
     if (sp_mask == 0) {
         // XXX: Masked vmovdqa is slow;
-        //      Check: If we processed larger blocks, can we
+        //      Check: If we processed larger blocks, we can
         //      assume that the unmasked store won't overflow.
         _mm256_mask_storeu_epi16((__m256i*)output, valid, _mm512_cvtepi32_epi16(utf32));
         return count;
@@ -278,7 +272,7 @@ size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
     valid_utf8_to_fixed_length converts a valid UTF-8 string into UTF-32.
 
     The `OUTPUT` template type decides what to do with UTF-32: store
-    it directly or convert into UTF-16 (with axv).
+    it directly or convert into UTF-16 (with AVX512).
 
     Input:
     - str           - valid UTF-8 string
@@ -306,7 +300,7 @@ std::pair<const char*, OUTPUT*> valid_utf8_to_fixed_length(const char* str, size
         const __m512i input = expand_bytes(ptr);
 
         /* 2. Classify which words contain valid UTF-8 characters.
-               We test if the 0th byte is not a continuation byte (0b10xxxxxx) */
+              We test if the 0th byte is not a continuation byte (0b10xxxxxx) */
         __mmask16 valid;
         {
             const __m512i t0 = _mm512_and_si512(input, v_0000_00c0);
