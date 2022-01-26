@@ -21,6 +21,18 @@ introduced two pseudo-architectures:
 - **avx512bw**,
 - **avx512vbmi**.
 
+The easies way to build the AVX512 variant is to force a specific architecture,
+for instance **icelake-server**.
+
+```
+$ CXXFLAGS=-march=icelake-server cmake -B build -S . -G Ninja
+$ cmake --build build
+```
+
+It's also possible to setup individual preprocessor flags when needed, to force
+compiling for given subset of AVX512 extensions. The list of defines can be
+found in `simdutf/include/simdutf/avx512.h`.
+
 
 simdutf: Unicode validation and transcoding at billions of characters per second
 ===============================================
