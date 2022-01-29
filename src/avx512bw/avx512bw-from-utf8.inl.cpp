@@ -13,7 +13,7 @@ bool validate_utf8_structure(__m512i input) {
     /* 1. bitmask for various character byte classes.
 
         leading: 111010011100011010001
-                 abccdddefgggghiijjjjk   a-k -- 11 UTF8- chars characters
+                 abccdddefgggghiijjjjk   a-k -- 11 UTF-8 chars characters
 
         ascii:   110000011000010000001
                  ab     ef    h      k
@@ -107,9 +107,9 @@ bool validate_utf8_structure(__m512i input) {
     // Note: equality can be replace by series of xor.
     const uint64_t valid_4bytes = (_4bytes & next4) & ~(next1 | next2 | next3);
     return (valid_ascii == ascii)
-       and (valid_2bytes == _2bytes)
-       and (valid_3bytes == _3bytes)
-       and (valid_4bytes == _4bytes);
+        && (valid_2bytes == _2bytes)
+        && (valid_3bytes == _3bytes)
+        && (valid_4bytes == _4bytes);
 }
 
 /*
@@ -329,10 +329,10 @@ __mmask64 validate_leading_bytes(__m512i leading_bytes, __m512i continuation1, _
 
 template <unsigned idx0, unsigned idx1, unsigned idx2, unsigned idx3>
 __m512i shuffle_epi128(__m512i v) {
-    static_assert((idx0 >= 0 and idx0 <= 3), "idx0 must be in range 0..3");
-    static_assert((idx1 >= 0 and idx1 <= 3), "idx1 must be in range 0..3");
-    static_assert((idx2 >= 0 and idx2 <= 3), "idx2 must be in range 0..3");
-    static_assert((idx3 >= 0 and idx3 <= 3), "idx3 must be in range 0..3");
+    static_assert((idx0 >= 0 && idx0 <= 3), "idx0 must be in range 0..3");
+    static_assert((idx1 >= 0 && idx1 <= 3), "idx1 must be in range 0..3");
+    static_assert((idx2 >= 0 && idx2 <= 3), "idx2 must be in range 0..3");
+    static_assert((idx3 >= 0 && idx3 <= 3), "idx3 must be in range 0..3");
 
     constexpr unsigned shuffle = idx0 | (idx1 << 2) | (idx2 << 4) | (idx3 << 6);
     return _mm512_shuffle_i32x4(v, v, shuffle);
