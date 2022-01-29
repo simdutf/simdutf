@@ -301,12 +301,12 @@ std::pair<const char*, OUTPUT*> valid_utf8_to_fixed_length(const char* str, size
 
         /* 2. Classify which words contain valid UTF-8 characters.
               We test if the 0th byte is not a continuation byte (0b10xxxxxx) */
-        __mmask16 valid;
+        __mmask16 leading_byte;
         {
             const __m512i t0 = _mm512_and_si512(input, v_0000_00c0);
-            valid = _mm512_cmpneq_epu32_mask(t0, v_0000_0080);
+            leading_byte = _mm512_cmpneq_epu32_mask(t0, v_0000_0080);
         }
-        const int valid_count = __builtin_popcount(valid);
+        const int valid_count = __builtin_popcount(_cvtmask16_u32(leading_byte));
 
         // 3. Find out character classes
         __m512i char_class;
@@ -320,7 +320,7 @@ std::pair<const char*, OUTPUT*> valid_utf8_to_fixed_length(const char* str, size
         const __m512i utf32 = expanded_utf8_to_utf32(char_class, input);
 
         // 4. Pack only the valid words
-        const __m512i out = _mm512_mask_compress_epi32(_mm512_setzero_si512(), valid, utf32);
+        const __m512i out = _mm512_mask_compress_epi32(_mm512_setzero_si512(), leading_byte, utf32);
 
         // 5. Store them
         if (UTF32) {
