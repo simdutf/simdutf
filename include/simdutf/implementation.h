@@ -1,7 +1,9 @@
 #ifndef SIMDUTF_IMPLEMENTATION_H
 #define SIMDUTF_IMPLEMENTATION_H
 #include <string>
+#if !defined(SIMDUTF_NO_THREADS)
 #include <atomic>
+#endif
 #include <vector>
 #include "simdutf/common_defs.h"
 #include "simdutf/internal/isadetection.h"
@@ -425,6 +427,17 @@ class atomic_ptr {
 public:
   atomic_ptr(T *_ptr) : ptr{_ptr} {}
 
+#if defined(SIMDUTF_NO_THREADS)
+  operator const T*() const { return ptr; }
+  const T& operator*() const { return *ptr; }
+  const T* operator->() const { return ptr; }
+
+  operator T*() { return ptr; }
+  T& operator*() { return *ptr; }
+  T* operator->() { return ptr; }
+  atomic_ptr& operator=(T *_ptr) { ptr = _ptr; return *this; }
+
+#else
   operator const T*() const { return ptr.load(); }
   const T& operator*() const { return *ptr; }
   const T* operator->() const { return ptr.load(); }
@@ -434,8 +447,14 @@ public:
   T* operator->() { return ptr.load(); }
   atomic_ptr& operator=(T *_ptr) { ptr = _ptr; return *this; }
 
+#endif
+
 private:
+#if defined(SIMDUTF_NO_THREADS)
+  T* ptr;
+#else
   std::atomic<T*> ptr;
+#endif
 };
 
 } // namespace internal

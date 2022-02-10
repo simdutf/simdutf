@@ -2,7 +2,9 @@
 #define SIMDUTF_H
 #include <string>
 #include <cstring>
+#if !defined(SIMDUTF_NO_THREADS)
 #include <atomic>
+#endif
 #include <vector>
 
 #include "simdutf/compiler_check.h"
