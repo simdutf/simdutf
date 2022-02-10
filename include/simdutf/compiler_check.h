@@ -32,4 +32,10 @@
 #error simdutf requires a compiler compliant with the C++11 standard
 #endif
 
+#if defined(SIMDUTF_CPLUSPLUS17)
+#if !__has_include(<atomic>)
+#define SIMDUTF_NO_THREADS 1
+#endif
+#endif
+
 #endif // SIMDUTF_COMPILER_CHECK_H
