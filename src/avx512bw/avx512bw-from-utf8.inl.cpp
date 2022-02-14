@@ -27,14 +27,14 @@ bool validate_utf8_structure(__m512i input) {
         4 bytes: 000000000100010010000
                           gggg   jjjj
     */
-    uint64_t leading;
-    uint64_t ascii;
-    uint64_t _2bytes;
-    uint64_t _3bytes;
-    uint64_t _4bytes;
+    __mmask64 leading;
+    __mmask64 ascii;
+    __mmask64 _2bytes;
+    __mmask64 _3bytes;
+    __mmask64 _4bytes;
 
     // we can validate 60 - 4 leading bytes
-    constexpr uint64_t mask  = 0x0ffffffffffffffflu;
+    constexpr __mmask64 mask  = 0x0ffffffffffffffflu;
 
     {
         const __m512i t0 = _mm512_and_si512(input, v_c0);
@@ -56,10 +56,10 @@ bool validate_utf8_structure(__m512i input) {
         _4bytes = _mm512_cmpeq_epi8_mask(t0, v_f0) & mask;
     }
 
-    const uint64_t next1 = leading >> 1;
-    const uint64_t next2 = leading >> 2;
-    const uint64_t next3 = leading >> 3;
-    const uint64_t next4 = leading >> 4;
+    const __mmask64 next1 = _kshiftri_mask64(leading, 1);
+    const __mmask64 next2 = _kshiftri_mask64(leading, 2);
+    const __mmask64 next3 = _kshiftri_mask64(leading, 3);
+    const __mmask64 next4 = _kshiftri_mask64(leading, 4);
 
     /* 1. validate ASCII
         ascii =             110000011000010000001
@@ -68,7 +68,7 @@ bool validate_utf8_structure(__m512i input) {
         next1 =             110100111000110100010
         next & ascii =      100000011000010000000
     */
-    const uint64_t valid_ascii = ascii & next1;
+    const __mmask64 valid_ascii = _kand_mask64(ascii, next1);
 
 
     /* 2. validate 2-byte chars
@@ -79,7 +79,7 @@ bool validate_utf8_structure(__m512i input) {
         ------------------------------
         and-all  001000000000001000000
     */
-    const uint64_t valid_2bytes = (_2bytes & next2) & ~next1;
+    const __mmask64 valid_2bytes = _kandn_mask64(next1, _kand_mask64(_2bytes, next2));
 
     /* 3. validate 3-byte chars
 
@@ -91,7 +91,7 @@ bool validate_utf8_structure(__m512i input) {
         and-all  000010000000000000000
 
     */
-    const uint64_t valid_3bytes = (_3bytes & next3) & ~(next1 | next2);
+    const __mmask64 valid_3bytes = _kandn_mask64(_kor_mask64(next1, next2), _kand_mask64(_3bytes, next3));
 
     /* 4. validate 4-byte chars
 
@@ -104,12 +104,23 @@ bool validate_utf8_structure(__m512i input) {
         and-all  000000000100000010000
     */
 
-    // Note: equality can be replace by series of xor.
-    const uint64_t valid_4bytes = (_4bytes & next4) & ~(next1 | next2 | next3);
-    return (valid_ascii == ascii)
-        && (valid_2bytes == _2bytes)
-        && (valid_3bytes == _3bytes)
-        && (valid_4bytes == _4bytes);
+	const __mmask64 t0 = _kor_mask64(_kor_mask64(next1, next2), next3);
+    const __mmask64 t1 = _kand_mask64(_4bytes, next4);
+
+    // valid_3bytes = (_3bytes & next3) & ~(next1 | next2);
+    const __mmask64 valid_4bytes = _kandn_mask64(t0, t1);
+
+    // eqX == 0 iff the arumets are equal
+    const __mmask64 eq0 = _kxor_mask64(valid_ascii, ascii);
+    const __mmask64 eq1 = _kxor_mask64(valid_2bytes, _2bytes);
+    const __mmask64 eq2 = _kxor_mask64(valid_3bytes, _3bytes);
+    const __mmask64 eq3 = _kxor_mask64(valid_4bytes, _4bytes);
+
+    unsigned char unused1;
+    unsigned char unused2;
+    // (eq0 | eq1) == 0 and (eq2 | eq3) == 0
+    return _kortest_mask64_u8(eq0, eq1, &unused1)
+        && _kortest_mask64_u8(eq2, eq3, &unused2);
 }
 
 /*
