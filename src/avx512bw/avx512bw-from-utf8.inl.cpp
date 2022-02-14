@@ -41,19 +41,19 @@ bool validate_utf8_structure(__m512i input) {
         leading = _mm512_cmpneq_epu8_mask(t0, v_80);
     }
     {
-        ascii = _mm512_testn_epi8_mask(input, v_80) & mask;
+        ascii = _mm512_mask_testn_epi8_mask(mask, input, v_80);
     }
     {
         const __m512i t0 = _mm512_and_si512(input, v_e0);
-        _2bytes = _mm512_cmpeq_epi8_mask(t0, v_c0) & mask;
+        _2bytes = _mm512_mask_cmpeq_epi8_mask(mask, t0, v_c0);
     }
     {
         const __m512i t0 = _mm512_and_si512(input, v_f0);
-        _3bytes = _mm512_cmpeq_epi8_mask(t0, v_e0) & mask;
+        _3bytes = _mm512_mask_cmpeq_epi8_mask(mask, t0, v_e0);
     }
     {
         const __m512i t0 = _mm512_and_si512(input, v_f8);
-        _4bytes = _mm512_cmpeq_epi8_mask(t0, v_f0) & mask;
+        _4bytes = _mm512_mask_cmpeq_epi8_mask(mask, t0, v_f0);
     }
 
     const __mmask64 next1 = _kshiftri_mask64(leading, 1);
