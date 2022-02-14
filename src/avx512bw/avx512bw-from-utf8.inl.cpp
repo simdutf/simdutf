@@ -27,8 +27,6 @@ bool validate_utf8_structure(__m512i input) {
         4 bytes: 000000000100010010000
                           gggg   jjjj
     */
-    __mmask64 leading;
-    __mmask64 ascii;
     __mmask64 _2bytes;
     __mmask64 _3bytes;
     __mmask64 _4bytes;
@@ -36,13 +34,9 @@ bool validate_utf8_structure(__m512i input) {
     // we can validate 60 - 4 leading bytes
     constexpr __mmask64 mask  = 0x0ffffffffffffffflu;
 
-    {
-        const __m512i t0 = _mm512_and_si512(input, v_c0);
-        leading = _mm512_cmpneq_epu8_mask(t0, v_80);
-    }
-    {
-        ascii = _mm512_mask_testn_epi8_mask(mask, input, v_80);
-    }
+    // (input & 0xc0 != 0x80) <=> int8(input) > -65
+    const __mmask64 leading = _mm512_cmpgt_epi8_mask(input, v_neg65);
+    const __mmask64 ascii = _mm512_mask_testn_epi8_mask(mask, input, v_80);
     {
         const __m512i t0 = _mm512_and_si512(input, v_e0);
         _2bytes = _mm512_mask_cmpeq_epi8_mask(mask, t0, v_c0);
@@ -202,11 +196,7 @@ __mmask64 validate_leading_bytes(__m512i leading_bytes, __m512i continuation1, _
     //    (0b0xxx_xxxx) --- so we looking for 0b11xx_xxxx chars.
     //
     //    (We may mask-out some leading bytes via `tested_chars`).
-    __mmask64 valid;
-    {
-        const __m512i t0 = _mm512_and_si512(leading_bytes, v_c0);
-        valid = _mm512_cmpeq_epi8_mask(t0, v_c0);
-    }
+    __mmask64 valid = _mm512_cmpge_epu8_mask(leading_bytes, v_c0);
 
     __mmask64 _2bytes;
     {
@@ -226,11 +216,11 @@ __mmask64 validate_leading_bytes(__m512i leading_bytes, __m512i continuation1, _
         _4bytes = _mm512_cmpeq_epi8_mask(t0, v_f0);
     }
 
-    // 1. Handle 2-byte chars
+    // 2. Handle 2-byte chars
     //    Valid if leading byte is not 0xc0 nor 0xc1
     __mmask64 valid_2bytes = _mm512_mask_cmpge_epu8_mask(_2bytes, leading_bytes, v_c2);
 
-    // 4. Handle 3-byte chars
+    // 3. Handle 3-byte chars
     //    let M = (continuation1 & 03f) > 0x1f
     continuation1 = _mm512_and_si512(continuation1, v_3f);
     __mmask64 valid_3bytes;
@@ -274,7 +264,7 @@ __mmask64 validate_leading_bytes(__m512i leading_bytes, __m512i continuation1, _
         valid_3bytes = _mm512_mask_cmpgt_epu8_mask(_3bytes, t0, v_1f);
     }
 
-    // 5. Handle 4-byte chars
+    // 4. Handle 4-byte chars
     __mmask64 valid_4bytes;
     {
         // continuation1 in range [0..63] (0b0000_0000 .. 0b0011_1111)

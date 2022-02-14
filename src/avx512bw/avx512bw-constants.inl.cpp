@@ -29,6 +29,7 @@ const __m512i v_c2 = _mm512_set1_epi8(char(0xc2));
 const __m512i v_e0 = _mm512_set1_epi8(char(0xe0));
 const __m512i v_f0 = _mm512_set1_epi8(char(0xf0));
 const __m512i v_f8 = _mm512_set1_epi8(char(0xf8));
+const __m512i v_neg65 = _mm512_set1_epi8(-65);
 
 const __m512i broadcast_0th_lane = _mm512_setr_epi32(
     0, 1, 2, 3,
