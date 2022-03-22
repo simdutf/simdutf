@@ -19,7 +19,7 @@ enum {
   /**
    * The revision (major.minor.REVISION) of simdutf being used.
    */
-  SIMDUTF_VERSION_REVISION = 0
+  SIMDUTF_VERSION_REVISION = 1
 };
 } // namespace simdutf
 
