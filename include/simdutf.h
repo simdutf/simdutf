@@ -2,7 +2,6 @@
 #define SIMDUTF_H
 #include <string>
 #include <cstring>
-#include <atomic>
 #include <vector>
 
 #include "simdutf/compiler_check.h"
