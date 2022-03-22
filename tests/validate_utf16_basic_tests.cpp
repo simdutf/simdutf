@@ -6,7 +6,17 @@
 #include "helpers/random_utf16.h"
 #include <tests/helpers/test.h>
 #include <fstream>
-
+#include <iostream>
+TEST(issue92) {
+  char16_t input[] = u"\u5d00\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041"; 
+  size_t strlen = sizeof(input)/sizeof(char16_t)-1;
+  ASSERT_TRUE(implementation.validate_utf16(input, strlen));  
+  ASSERT_TRUE(implementation.utf8_length_from_utf16(input, strlen) 
+     == 2 + strlen);
+  size_t size = implementation.utf8_length_from_utf16(input, strlen);
+  std::unique_ptr<char[]> output_buffer{new char[size]};
+  ASSERT_TRUE(implementation.convert_valid_utf16_to_utf8(input, strlen, output_buffer.get()) == size);
+}
 
 TEST(validate_utf16__returns_true_for_valid_input__single_words) {
   uint32_t seed{1234};
