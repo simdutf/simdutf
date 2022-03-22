@@ -7,6 +7,8 @@
 #include <tests/helpers/test.h>
 #include <fstream>
 #include <iostream>
+#include <memory>
+
 TEST(issue92) {
   char16_t input[] = u"\u5d00\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041"; 
   size_t strlen = sizeof(input)/sizeof(char16_t)-1;
