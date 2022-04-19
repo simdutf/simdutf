@@ -361,7 +361,7 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     // Explicit conversion to/from unsigned
     //
     // Under Visual Studio/ARM64 uint8x16_t and int8x16_t are apparently the same type.
-    // In theory, we could check this occurence with std::same_as and std::enabled_if but it is C++14
+    // In theory, we could check this occurrence with std::same_as and std::enabled_if but it is C++14
     // and relatively ugly and hard to read.
 #ifndef SIMDUTF_REGULAR_VISUAL_STUDIO
     simdutf_really_inline explicit simd8(const uint8x16_t other): simd8(vreinterpretq_s8_u8(other)) {}
