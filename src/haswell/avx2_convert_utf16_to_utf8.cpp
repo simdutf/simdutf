@@ -127,7 +127,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
           continue;
     }
     // 1. Check if there are any surrogate word in the input chunk.
-    //    We have also deal with situation when there is a suggogate word
+    //    We have also deal with situation when there is a surrogate word
     //    at the end of a chunk.
     const __m256i surrogates_bytemask = _mm256_cmpeq_epi16(_mm256_and_si256(in, v_f800), v_d800);
 
