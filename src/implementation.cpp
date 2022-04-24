@@ -26,6 +26,8 @@ std::string toBinaryString(T b) {
 #include "simdutf/westmere.h"
 #include "simdutf/ppc64.h"
 #include "simdutf/fallback.h"
+#include "simdutf/avx512bw.h"
+#include "simdutf/avx512vbmi.h"
 
 
 namespace simdutf {
@@ -65,16 +67,22 @@ const haswell::implementation haswell_singleton{};
 #endif
 #if SIMDUTF_IMPLEMENTATION_WESTMERE
 const westmere::implementation westmere_singleton{};
-#endif // SIMDUTF_IMPLEMENTATION_WESTMERE
+#endif
+#if SIMDUTF_IMPLEMENTATION_AVX512BW
+const avx512bw::implementation avx512bw_singleton{};
+#endif
+#if SIMDUTF_IMPLEMENTATION_AVX512VBMI
+const avx512vbmi::implementation avx512vbmi_singleton{};
+#endif
 #if SIMDUTF_IMPLEMENTATION_ARM64
 const arm64::implementation arm64_singleton{};
-#endif // SIMDUTF_IMPLEMENTATION_ARM64
+#endif
 #if SIMDUTF_IMPLEMENTATION_PPC64
 const ppc64::implementation ppc64_singleton{};
-#endif // SIMDUTF_IMPLEMENTATION_PPC64
+#endif
 #if SIMDUTF_IMPLEMENTATION_FALLBACK
 const fallback::implementation fallback_singleton{};
-#endif // SIMDUTF_IMPLEMENTATION_FALLBACK
+#endif
 
 /**
  * @private Detects best supported implementation on first use, and sets it
@@ -139,6 +147,12 @@ const std::initializer_list<const implementation *> available_implementation_poi
 #endif
 #if SIMDUTF_IMPLEMENTATION_WESTMERE
   &westmere_singleton,
+#endif
+#if SIMDUTF_IMPLEMENTATION_AVX512BW
+  &avx512bw_singleton,
+#endif
+#if SIMDUTF_IMPLEMENTATION_AVX512VBMI
+  &avx512vbmi_singleton,
 #endif
 #if SIMDUTF_IMPLEMENTATION_ARM64
   &arm64_singleton,
