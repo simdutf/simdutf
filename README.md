@@ -25,7 +25,7 @@ The easies way to build the AVX512 variant is to force a specific architecture,
 for instance **icelake-server**.
 
 ```
-$ CXXFLAGS=-march=icelake-server cmake -B build -S . -G Ninja
+$ CXXFLAGS=-march=icelake-server cmake -B build .
 $ cmake --build build
 ```
 
