@@ -57,7 +57,6 @@ POSSIBILITY OF SUCH DAMAGE.
 namespace simdutf {
 namespace internal {
 
-
 enum instruction_set {
   DEFAULT = 0x0,
   NEON = 0x1,
@@ -69,7 +68,11 @@ enum instruction_set {
   ALTIVEC = 0x80,
   AVX512F = 0x100,
   AVX512BW = 0x200,
-  AVX512DQ = 0x400
+  AVX512DQ = 0x400,
+  AVX512VL = 0x800,
+  AVX512VBMI = 0x1000,
+  AVX512VBMI2 = 0x2000,
+  AVX512BITALG = 0x4000,
 };
 
 #if defined(__PPC64__)
@@ -196,6 +199,18 @@ static inline uint32_t detect_supported_architectures() {
   }
   if (ebx & cpuid_bit::ebx::avx512dq) {
     host_isa |= instruction_set::AVX512DQ;
+  }
+  if (ebx & cpuid_bit::ebx::avx512vl) {
+    host_isa |= instruction_set::AVX512VL;
+  }
+  if (ecx & cpuid_bit::ecx::avx512vbmi) {
+    host_isa |= instruction_set::AVX512VBMI;
+  }
+  if (ecx & cpuid_bit::ecx::avx512vbmi2) {
+    host_isa |= instruction_set::AVX512VBMI2;
+  }
+  if (ecx & cpuid_bit::ecx::avx512bitalg) {
+    host_isa |= instruction_set::AVX512BITALG;
   }
 
   return host_isa;

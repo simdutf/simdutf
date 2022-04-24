@@ -36,5 +36,11 @@ SIMDUTF_DISABLE_UNDESIRED_WARNINGS
 #if SIMDUTF_IMPLEMENTATION_WESTMERE
 #include "westmere/implementation.cpp"
 #endif
+#if SIMDUTF_IMPLEMENTATION_AVX512BW
+#include "avx512bw/implementation.cpp"
+#endif
+#if SIMDUTF_IMPLEMENTATION_AVX512VBMI
+#include "avx512vbmi/implementation.cpp"
+#endif
 
 SIMDUTF_POP_DISABLE_WARNINGS
