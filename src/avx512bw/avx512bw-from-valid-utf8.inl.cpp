@@ -21,11 +21,17 @@ __m512i expand_bytes(const char* ptr) {
     // load bytes 16..19 (4)
     uint32_t tmp1;
     memcpy(&tmp1, ptr + 16, sizeof(tmp1));
-    const __m512i t1 = _mm512_set1_epi32(tmp1);
+    const __m512i t1 = _mm512_set1_epi32(tmp1); // latency 3
 
     // In the last lane we need bytes 13..19, so we're placing
     // 32-bit word from t1 at 0th position of the lane
-    const __m512i t2 = _mm512_mask_mov_epi32(t0, 0x1000, t1);
+    const __m512i t2 = _mm512_mask_mov_epi32(t0, 0x1000, t1); // latency 1
+
+    // We could also do the above using a single load/mask instruction.
+    // We want to load the 32-bit at ptr+16 in 12th position within the register.
+    // ptr + 4*(-8) + 12*4 = ptr + 4*4.
+    // const __m512i t2 = _mm512_mask_loadu_epi32(t0, 0x1000, ptr + 4*(-8)); // latency: 8
+    // However, _mm512_mask_loadu_epi32 might be remarkably expensive.
 
     /** pshufb
         # lane{0,1,2} have got bytes: [  0,  1,  2,  3,  4,  5,  6,  8,  9, 10, 11, 12, 13, 14, 15]
@@ -215,13 +221,13 @@ bool test_and_clear_bit(uint32_t& val, int bitpos) {
     Returns how many 16-bit words were stored.
 */
 size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
-    const __mmask16 valid = uint16_t((1 << count) - 1);
+    // We could do away with 'valid' if we do not mind overflowing the output.
+    const __mmask16 valid = _cvtu32_mask16((1 << count) - 1);
     // 1. check if we have any surrogate pairs
     const __mmask16 sp_mask = _mm512_mask_cmpgt_epu32_mask(valid, utf32, v_0000_ffff);
     if (sp_mask == 0) {
-        // XXX: Masked vmovdqa is slow;
-        //      Check: If we processed larger blocks, we can
-        //      assume that the unmasked store won't overflow.
+        // _mm512_cvtepi32_epi16 has a latency of 4 cycles according to Intel (skylake).
+        // _mm256_mask_storeu_epi16 has a latency of 5 cycles according to Intel (skylake).
         _mm256_mask_storeu_epi16((__m256i*)output, valid, _mm512_cvtepi32_epi16(utf32));
         return count;
     }
