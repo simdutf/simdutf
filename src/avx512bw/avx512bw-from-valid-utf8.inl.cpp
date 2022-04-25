@@ -32,7 +32,6 @@ __m512i expand_bytes(const char* ptr) {
     // ptr + 4*(-8) + 12*4 = ptr + 4*4.
     // const __m512i t2 = _mm512_mask_loadu_epi32(t0, 0x1000, ptr + 4*(-8)); // latency: 8
     // However, _mm512_mask_loadu_epi32 might be remarkably expensive.
-
     /** pshufb
         # lane{0,1,2} have got bytes: [  0,  1,  2,  3,  4,  5,  6,  8,  9, 10, 11, 12, 13, 14, 15]
         # lane3 has got bytes:        [ 16, 17, 18, 19,  4,  5,  6,  8,  9, 10, 11, 12, 13, 14, 15]
@@ -201,77 +200,6 @@ __m512i expanded_utf8_to_utf32(__m512i char_class, __m512i utf8) {
     }
 
     return values;
-}
-
-
-// See: http://0x80.pl/notesen/2021-12-22-test-and-clear-bit.html
-bool test_and_clear_bit(uint32_t& val, int bitpos) {
-    const uint32_t bitmask = uint32_t(1) << bitpos;
-    const uint32_t old = val;
-
-    val &= ~bitmask;
-
-    return val < old;
-}
-
-/*
-    utf32_to_utf16 converts `count` lower UTF-32 words
-    from input `utf32` into UTF-16.
-
-    Returns how many 16-bit words were stored.
-*/
-size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
-    // We could do away with 'valid' if we do not mind overflowing the output.
-    const __mmask16 valid = _cvtu32_mask16((1 << count) - 1);
-    // 1. check if we have any surrogate pairs
-    const __mmask16 sp_mask = _mm512_mask_cmpgt_epu32_mask(valid, utf32, v_0000_ffff);
-    if (sp_mask == 0) {
-        // _mm512_cvtepi32_epi16 has a latency of 4 cycles according to Intel (skylake).
-        // _mm256_mask_storeu_epi16 has a latency of 5 cycles according to Intel (skylake).
-        _mm256_mask_storeu_epi16((__m256i*)output, valid, _mm512_cvtepi32_epi16(utf32));
-        return count;
-    }
-
-    uint16_t words[32];
-
-    {
-        // 2. build surrogate pair words in 32-bit lanes
-
-        //    t0 = 8 x [000000000000aaaa|aaaaaabbbbbbbbbb]
-        const __m512i t0 = _mm512_sub_epi32(utf32, v_0001_0000);
-
-        //    t1 = 8 x [000000aaaaaaaaaa|bbbbbbbbbb000000]
-        const __m512i t1 = _mm512_slli_epi32(t0, 6);
-
-        //    t2 = 8 x [000000aaaaaaaaaa|aaaaaabbbbbbbbbb] -- copy hi word from t1 to t0
-        //         0xe4 = (t1 and v_ffff_0000) or (t0 and not v_ffff_0000)
-        const __m512i t2 = _mm512_ternarylogic_epi32(t1, t0, v_ffff_0000, 0xe4);
-
-        //    t2 = 8 x [110110aaaaaaaaaa|110111bbbbbbbbbb] -- copy hi word from t1 to t0
-        //         0xba = (t2 and not v_fc00_fc000) or v_d800_dc00
-        const __m512i t3 = _mm512_ternarylogic_epi32(t2, v_fc00_fc00, v_d800_dc00, 0xba);
-
-        _mm512_storeu_si512((__m512i*)words, t3);
-    }
-
-    // 3. store valid 16-bit values
-    _mm256_mask_storeu_epi16((__m256i*)output, valid, _mm512_cvtepi32_epi16(utf32));
-
-    int sp = __builtin_popcount(sp_mask);
-
-    // 4. copy surrogate pairs
-    uint32_t mask = sp_mask;
-    for (int i=count; i >= 0 && mask != 0; i--) {
-        if (test_and_clear_bit(mask, i)) {
-            output[i + sp] = words[2*i + 0];
-            sp -= 1;
-            output[i + sp] = words[2*i + 1];
-        } else {
-            output[i + sp] = output[i];
-        }
-    }
-
-    return count + __builtin_popcount(sp_mask);
 }
 
 /*
