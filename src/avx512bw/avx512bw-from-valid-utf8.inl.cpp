@@ -32,7 +32,6 @@ __m512i expand_bytes(const char* ptr) {
     // ptr + 4*(-8) + 12*4 = ptr + 4*4.
     // const __m512i t2 = _mm512_mask_loadu_epi32(t0, 0x1000, ptr + 4*(-8)); // latency: 8
     // However, _mm512_mask_loadu_epi32 might be remarkably expensive.
-
     /** pshufb
         # lane{0,1,2} have got bytes: [  0,  1,  2,  3,  4,  5,  6,  8,  9, 10, 11, 12, 13, 14, 15]
         # lane3 has got bytes:        [ 16, 17, 18, 19,  4,  5,  6,  8,  9, 10, 11, 12, 13, 14, 15]

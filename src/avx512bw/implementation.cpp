@@ -11,7 +11,9 @@ namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
 #   include "avx512bw-constants.inl.cpp"
+#   include "avx512bw-utf8-common.inl.cpp"
 #   include "avx512bw-from-valid-utf8.inl.cpp"
+#   include "avx512bw-from-utf8.inl.cpp"
 } // namespace
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
@@ -28,7 +30,41 @@ simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, siz
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
-   return scalar::utf8_to_utf16::convert(buf, len, utf16_output);
+  // Note: the AVX512 validation procedure is not able to detect
+  //       error when stream starts with continuation bytes.
+  //       So we have check if the first byte is not a continuation one
+  //       and return early.
+  if ((len > 0) && ((uint8_t(buf[0]) & 0xc0) == 0x80)) {
+    return 0;
+  }
+
+  utf8_to_utf16_result ret = avx512bw::validating_utf8_to_fixed_length<char16_t>(buf, len, utf16_output);
+  if (ret.second == nullptr)
+    return 0;
+
+  size_t saved_bytes = ret.second - utf16_output;
+  const char* end = buf + len;
+  if (ret.first == end) {
+    return saved_bytes;
+  }
+
+  // Note: the AVX512 procedure looks up 4 bytes forward, and
+  //       correctly converts multi-byte chars even if their
+  //       continuation bytes lie outsiede 16-byte window.
+  //       It means, we have to skip continuation bytes from
+  //       the beginning ret.first, as they were already consumed.
+  while (ret.first != end and ((uint8_t(*ret.first) & 0xc0) == 0x80)) {
+      ret.first += 1;
+  }
+
+  if (ret.first != end) {
+    const size_t scalar_saved_bytes = scalar::utf8_to_utf16::convert_valid(
+                                        ret.first, len - (ret.first - buf), ret.second);
+    if (scalar_saved_bytes == 0) { return 0; }
+    saved_bytes += scalar_saved_bytes;
+  }
+
+  return saved_bytes;
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
