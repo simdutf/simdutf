@@ -367,32 +367,25 @@ std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str,
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
         const __mmask64 ascii = _mm512_test_epi8_mask(utf8, v_80);
         if (ascii == 0) {
-            const __m256i h0 = _mm512_castsi512_si256(utf8);
-            const __m256i h1 = _mm512_extracti32x8_epi32(utf8, 1);
-
-            const __m128i t0 = _mm256_castsi256_si128(h0);
-            const __m128i t1 = _mm256_extracti32x4_epi32(h0, 1);
-            const __m128i t2 = _mm256_castsi256_si128(h1);
-            const __m128i t3 = _mm256_extracti32x4_epi32(h1, 1);
-
             if (UTF32) {
+                const __m128i t0 = _mm512_castsi512_si128(utf8);
+                const __m128i t1 = _mm512_extracti32x4_epi32(utf8, 1);
+                const __m128i t2 = _mm512_extracti32x4_epi32(utf8, 2);
+                const __m128i t3 = _mm512_extracti32x4_epi32(utf8, 3);
                 _mm512_storeu_si512((__m512i*)(output + 0*16), _mm512_cvtepu8_epi32(t0));
                 _mm512_storeu_si512((__m512i*)(output + 1*16), _mm512_cvtepu8_epi32(t1));
                 _mm512_storeu_si512((__m512i*)(output + 2*16), _mm512_cvtepu8_epi32(t2));
                 _mm512_storeu_si512((__m512i*)(output + 3*16), _mm512_cvtepu8_epi32(t3));
+            } else {
+                const __m256i h0 = _mm512_castsi512_si256(utf8);
+                const __m256i h1 = _mm512_extracti64x4_epi64(utf8, 1);
+                _mm512_storeu_si512((__m512i*)(output + 0*16), _mm512_cvtepu8_epi16(h0));
+                _mm512_storeu_si512((__m512i*)(output + 2*16), _mm512_cvtepu8_epi16(h1));
             }
-            else {
-                _mm256_storeu_si256((__m256i*)(output + 0*16), _mm256_cvtepu8_epi16(t0));
-                _mm256_storeu_si256((__m256i*)(output + 1*16), _mm256_cvtepu8_epi16(t1));
-                _mm256_storeu_si256((__m256i*)(output + 2*16), _mm256_cvtepu8_epi16(t2));
-                _mm256_storeu_si256((__m256i*)(output + 3*16), _mm256_cvtepu8_epi16(t3));
-            }
-
             output += 64;
             ptr += 64;
             continue;
         }
-
         // 1. Validate the structure of UTF-8 sequence.
         //    Note: procedure validates chars that starts in range [0..60]
         //    of input.
