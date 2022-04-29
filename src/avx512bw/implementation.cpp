@@ -13,6 +13,7 @@ namespace {
 #   include "avx512bw-constants.inl.cpp"
 #   include "avx512bw-utf8-common.inl.cpp"
 #   include "avx512bw-from-valid-utf8.inl.cpp"
+#   include "avx512bw-utf8-validation.inl.cpp"
 #   include "avx512bw-from-utf8.inl.cpp"
 } // namespace
 } // namespace SIMDUTF_IMPLEMENTATION
