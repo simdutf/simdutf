@@ -69,12 +69,12 @@ simdutf_really_inline __m512i check_special_cases(__m512i input, const __m512i p
 
   struct avx512_utf8_checker {
     // If this is nonzero, there has been a UTF-8 error.
-    __m512i error;
+    __m512i error{};
 
     // The last input we received
-    __m512i prev_input_block;
+    __m512i prev_input_block{};
     // Whether the last input we received was incomplete (used for ASCII fast path)
-    __m512i prev_incomplete;
+    __m512i prev_incomplete{};
 
     //
     // Check whether the current bytes are valid UTF-8.

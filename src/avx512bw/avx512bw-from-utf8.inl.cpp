@@ -9,7 +9,7 @@ and then there's another leading byte.
 
 We don't handle end-of-stream here.
 */
-bool validate_utf8_structure(__m512i input) {
+inline bool validate_utf8_structure(__m512i input) {
     /* 1. bitmask for various character byte classes.
 
         leading: 111010011100011010001
@@ -187,7 +187,7 @@ in form 0b1111_xxxx. The two most significant bits encodes condition (c <= 0x0f)
 Now we negate 6th bit, and then the these two most significant bits represents
 the required combination which is later tested.
 */
-__mmask64 validate_leading_bytes(__m512i leading_bytes, __m512i continuation1, __mmask64 tested_chars) {
+inline __mmask64 validate_leading_bytes(__m512i leading_bytes, __m512i continuation1, __mmask64 tested_chars) {
 
     const __m512i nibble0 = _mm512_and_si512(leading_bytes, v_0f);
 
@@ -344,7 +344,7 @@ constexpr __m512i broadcast_epi128(__m512i v) {
     return shuffle_epi128<idx, idx, idx, idx>(v);
 }
 
-__m512i rotate_by1_epi8(const __m512i input) {
+inline __m512i rotate_by1_epi8(const __m512i input) {
 
     // lanes order: 1, 2, 3, 0 => 0b00_11_10_01
     const __m512i permuted = _mm512_shuffle_i32x4(input, input, 0x39);
@@ -362,11 +362,20 @@ std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str,
     const char* end = ptr + len;
 
     OUTPUT* output = dwords;
-
-    while (ptr + 64 < end) {
+    avx512_utf8_checker checker{};
+    const __m512i expand_ver2 = _mm512_setr_epi64(
+        0x0403020103020100,
+        0x0605040305040302,
+        0x0807060507060504,
+        0x0a09080709080706,
+        0x0c0b0a090b0a0908,
+        0x0e0d0c0b0d0c0b0a,
+        0x000f0e0d0f0e0d0c,
+        0x0201000f01000f0e
+    );
+    while (ptr + 64 + 4 < end) {
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
-        const __mmask64 ascii = _mm512_test_epi8_mask(utf8, v_80);
-        if (ascii == 0) {
+        if(checker.check_next_input(utf8)) {
             if (UTF32) {
                 const __m128i t0 = _mm512_castsi512_si128(utf8);
                 const __m128i t1 = _mm512_extracti32x4_epi32(utf8, 1);
@@ -386,36 +395,8 @@ std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str,
             ptr += 64;
             continue;
         }
-        // 1. Validate the structure of UTF-8 sequence.
-        //    Note: procedure validates chars that starts in range [0..60]
-        //    of input.
-        if (not validate_utf8_structure(utf8)) {
-            return {ptr, nullptr};
-        }
 
-        // 2. Precise validate: once we know that the bytes structure is correct,
-        //    we have to check for some forbidden input values.
-        //    Note: this procedure validates chars in range [0..63], due to
-        //    method of obtaining continuation1 vector.
-        const __m512i continuation1 = rotate_by1_epi8(utf8);
-        if (not validate_leading_bytes(utf8, continuation1, 0x0ffffffffffffffflu)) {
-            return {ptr, nullptr};
-        }
-
-        const __m512i expand_ver2 = _mm512_setr_epi64(
-            0x0403020103020100,
-            0x0605040305040302,
-            0x0807060507060504,
-            0x0a09080709080706,
-            0x0c0b0a090b0a0908,
-            0x0e0d0c0b0d0c0b0a,
-            0x000f0e0d0f0e0d0c,
-            0x0201000f01000f0e
-        );
-
-        // 3. Convert 3*16 input bytes
-        // We waste the last 16 bytes, which are not fully validated...
-        // this is another topic to check in the future.
+        // 3. Convert input bytes
 #define TRANSCODE16(LANE0, LANE1)                                                                            \
         {                                                                                                    \
             const __m512i merged = _mm512_mask_mov_epi32(LANE0, 0x1000, LANE1);                              \
@@ -453,8 +434,58 @@ std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str,
         const __m512i lane3 = broadcast_epi128<3>(utf8);
         TRANSCODE16(lane2, lane3)
 
-        ptr += 3*16;
+        uint32_t tmp1;
+        memcpy(&tmp1, ptr + 64, sizeof(tmp1));
+        const __m512i lane4 = _mm512_set1_epi32(tmp1);
+        TRANSCODE16(lane3, lane4)
+        ptr += 4*16;
     }
+    // For the final pass, we validate 64 bytes, but we only transcode
+    // 3*16 bytes.
+    if (ptr + 64 < end) {
+        const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
+        if(checker.check_next_input(utf8)) {
+            if (UTF32) {
+                const __m128i t0 = _mm512_castsi512_si128(utf8);
+                const __m128i t1 = _mm512_extracti32x4_epi32(utf8, 1);
+                const __m128i t2 = _mm512_extracti32x4_epi32(utf8, 2);
+                const __m128i t3 = _mm512_extracti32x4_epi32(utf8, 3);
+                _mm512_storeu_si512((__m512i*)(output + 0*16), _mm512_cvtepu8_epi32(t0));
+                _mm512_storeu_si512((__m512i*)(output + 1*16), _mm512_cvtepu8_epi32(t1));
+                _mm512_storeu_si512((__m512i*)(output + 2*16), _mm512_cvtepu8_epi32(t2));
+                _mm512_storeu_si512((__m512i*)(output + 3*16), _mm512_cvtepu8_epi32(t3));
+            } else {
+                const __m256i h0 = _mm512_castsi512_si256(utf8);
+                const __m256i h1 = _mm512_extracti64x4_epi64(utf8, 1);
+                _mm512_storeu_si512((__m512i*)(output + 0*16), _mm512_cvtepu8_epi16(h0));
+                _mm512_storeu_si512((__m512i*)(output + 2*16), _mm512_cvtepu8_epi16(h1));
+            }
+            output += 64;
+            ptr += 64;
+        } else {
 
+            const __m512i lane0 = broadcast_epi128<0>(utf8);
+            const __m512i lane1 = broadcast_epi128<1>(utf8);
+            TRANSCODE16(lane0, lane1)
+
+            const __m512i lane2 = broadcast_epi128<2>(utf8);
+            TRANSCODE16(lane1, lane2)
+
+            const __m512i lane3 = broadcast_epi128<3>(utf8);
+            TRANSCODE16(lane2, lane3)
+
+            ptr += 3*16;
+        }
+    }
+#undef TRANSCODE16
+    // final step, if the input is valid, padding it with zeroes
+    {
+       const __m512i utf8 = _mm512_maskz_loadu_epi8((1ULL<<(end - ptr))-1, (const __m512i*)ptr);
+       checker.check_next_input(utf8);
+    }
+    checker.check_eof();
+    if(checker.errors()) {
+        return {ptr, nullptr}; // We found an error.
+    }
     return {ptr, output};
 }
