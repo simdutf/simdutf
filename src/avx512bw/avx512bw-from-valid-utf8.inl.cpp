@@ -258,7 +258,8 @@ std::pair<const char*, OUTPUT*> valid_utf8_to_fixed_length(const char* str, size
 
         // 5. Store them
         if (UTF32) {
-            _mm512_storeu_si512((__m512i*)output, out);
+            const __mmask16 valid = uint16_t((1 << valid_count) - 1);
+            _mm512_mask_storeu_epi32((__m512i*)output, valid, out);
             output += valid_count;
         } else {
             output += utf32_to_utf16(out, valid_count, output);

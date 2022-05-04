@@ -15,7 +15,7 @@ namespace {
 
   constexpr size_t trials = 10000;
 }
-
+/*
 TEST(convert_pure_ASCII) {
   for(size_t trial = 0; trial < trials; trial ++) {
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
@@ -37,7 +37,7 @@ TEST(convert_pure_ASCII) {
       ASSERT_TRUE(test.check_size(size_procedure));    
     }
   }
-}
+}*/
 
 TEST(convert_1_or_2_UTF8_bytes) {
   for(size_t trial = 0; trial < trials; trial ++) {
