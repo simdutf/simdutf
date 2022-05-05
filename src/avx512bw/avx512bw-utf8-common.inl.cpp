@@ -72,3 +72,167 @@ size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
     return count + __builtin_popcount(sp_mask);
 }
 
+/**
+ * Store the last N bytes of previous followed by 512-N bytes from input.
+ */
+template <int N> 
+__m512i prev(__m512i input, __m512i previous) {
+    static_assert(N<=32, "N must be no larger than 32");
+    const __m512i movemask = _mm512_setr_epi32(28,29,30,31,0,1,2,3,4,5,6,7,8,9,10,11);
+    const __m512i rotated = _mm512_permutex2var_epi32(input, movemask, previous);
+    return _mm512_alignr_epi8(input, rotated, 16-N);
+}
+
+template <unsigned idx0, unsigned idx1, unsigned idx2, unsigned idx3>
+__m512i shuffle_epi128(__m512i v) {
+    static_assert((idx0 >= 0 && idx0 <= 3), "idx0 must be in range 0..3");
+    static_assert((idx1 >= 0 && idx1 <= 3), "idx1 must be in range 0..3");
+    static_assert((idx2 >= 0 && idx2 <= 3), "idx2 must be in range 0..3");
+    static_assert((idx3 >= 0 && idx3 <= 3), "idx3 must be in range 0..3");
+
+    constexpr unsigned shuffle = idx0 | (idx1 << 2) | (idx2 << 4) | (idx3 << 6);
+    return _mm512_shuffle_i32x4(v, v, shuffle);
+}
+
+template <unsigned idx>
+constexpr __m512i broadcast_epi128(__m512i v) {
+    return shuffle_epi128<idx, idx, idx, idx>(v);
+}
+
+/**
+ * Current unused.
+ */
+template <int N>
+__m512i rotate_by_N_epi8(const __m512i input) {
+
+    // lanes order: 1, 2, 3, 0 => 0b00_11_10_01
+    const __m512i permuted = _mm512_shuffle_i32x4(input, input, 0x39);
+
+    return _mm512_alignr_epi8(permuted, input, N);
+}
+
+/*
+    expanded_utf8_to_utf32 converts expanded UTF-8 characters (`utf8`)
+    stored at separate 32-bit lanes.
+
+    For each lane we have also a character class (`char_class), given in form
+    0x8080800N, where N is 4 higest bits from the leading byte; 0x80 resets
+    corresponding bytes during pshufb.
+*/
+__m512i expanded_utf8_to_utf32(__m512i char_class, __m512i utf8) {
+    /*
+        Input:
+        - utf8: bytes stored at separate 32-bit words
+        - valid: which words have valid UTF-8 characters
+
+        Bit layout of single word. We show 4 cases for each possible
+        UTF-8 character encoding. The `?` denotes bits we must not
+        assume their value.
+
+        |10dd.dddd|10cc.cccc|10bb.bbbb|1111.0aaa| 4-byte char
+        |????.????|10cc.cccc|10bb.bbbb|1110.aaaa| 3-byte char
+        |????.????|????.????|10bb.bbbb|110a.aaaa| 2-byte char
+        |????.????|????.????|????.????|0aaa.aaaa| ASCII char
+          byte 3    byte 2    byte 1     byte 0
+    */
+
+    /* 1. Reset control bits of continuation bytes and the MSB
+          of the leading byte; this makes all bytes unsigned (and
+          does not alter ASCII char).
+
+        |00dd.dddd|00cc.cccc|00bb.bbbb|0111.0aaa| 4-byte char
+        |00??.????|00cc.cccc|00bb.bbbb|0110.aaaa| 3-byte char
+        |00??.????|00??.????|00bb.bbbb|010a.aaaa| 2-byte char
+        |00??.????|00??.????|00??.????|0aaa.aaaa| ASCII char
+         ^^        ^^        ^^        ^
+    */
+    __m512i values;
+    values = _mm512_and_si512(utf8, v_3f3f_3f7f);
+
+    /* 2. Swap and join fields A-B and C-D
+
+        |0000.cccc|ccdd.dddd|0001.110a|aabb.bbbb| 4-byte char
+        |0000.cccc|cc??.????|0001.10aa|aabb.bbbb| 3-byte char
+        |0000.????|????.????|0001.0aaa|aabb.bbbb| 2-byte char
+        |0000.????|????.????|000a.aaaa|aa??.????| ASCII char */
+    values = _mm512_maddubs_epi16(values, v_0140_0140);
+
+    /* 3. Swap and join fields AB & CD
+
+        |0000.0001|110a.aabb|bbbb.cccc|ccdd.dddd| 4-byte char
+        |0000.0001|10aa.aabb|bbbb.cccc|cc??.????| 3-byte char
+        |0000.0001|0aaa.aabb|bbbb.????|????.????| 2-byte char
+        |0000.000a|aaaa.aa??|????.????|????.????| ASCII char */
+    values = _mm512_madd_epi16(values, v_0001_1000);
+
+    /* 4. Shift left the values by variable amounts to reset highest UTF-8 bits
+        |aaab.bbbb|bccc.cccd|dddd.d000|0000.0000| 4-byte char -- by 11
+        |aaaa.bbbb|bbcc.cccc|????.??00|0000.0000| 3-byte char -- by 10
+        |aaaa.abbb|bbb?.????|????.???0|0000.0000| 2-byte char -- by 9
+        |aaaa.aaa?|????.????|????.????|?000.0000| ASCII char -- by 7 */
+    {
+        /** pshufb
+
+        continuation = 0
+        ascii    = 7
+        _2_bytes = 9
+        _3_bytes = 10
+        _4_bytes = 11
+
+        shift_left_v3 = 4 * [
+            ascii, # 0000
+            ascii, # 0001
+            ascii, # 0010
+            ascii, # 0011
+            ascii, # 0100
+            ascii, # 0101
+            ascii, # 0110
+            ascii, # 0111
+            continuation, # 1000
+            continuation, # 1001
+            continuation, # 1010
+            continuation, # 1011
+            _2_bytes, # 1100
+            _2_bytes, # 1101
+            _3_bytes, # 1110
+            _4_bytes, # 1111
+        ] */
+        const __m512i shift_left_v3 = _mm512_setr_epi64(
+            0x0707070707070707,
+            0x0b0a090900000000,
+            0x0707070707070707,
+            0x0b0a090900000000,
+            0x0707070707070707,
+            0x0b0a090900000000,
+            0x0707070707070707,
+            0x0b0a090900000000
+        );
+
+        const __m512i shift = _mm512_shuffle_epi8(shift_left_v3, char_class);
+        values = _mm512_sllv_epi32(values, shift);
+    }
+
+    /* 5. Shift right the values by variable amounts to reset lowest bits
+        |0000.0000|000a.aabb|bbbb.cccc|ccdd.dddd| 4-byte char -- by 11
+        |0000.0000|0000.0000|aaaa.bbbb|bbcc.cccc| 3-byte char -- by 16
+        |0000.0000|0000.0000|0000.0aaa|aabb.bbbb| 2-byte char -- by 21
+        |0000.0000|0000.0000|0000.0000|0aaa.aaaa| ASCII char -- by 25 */
+    {
+        // 4 * [25, 25, 25, 25, 25, 25, 25, 25, 0, 0, 0, 0, 21, 21, 16, 11]
+        const __m512i shift_right = _mm512_setr_epi64(
+            0x1919191919191919,
+            0x0b10151500000000,
+            0x1919191919191919,
+            0x0b10151500000000,
+            0x1919191919191919,
+            0x0b10151500000000,
+            0x1919191919191919,
+            0x0b10151500000000
+        );
+
+        const __m512i shift = _mm512_shuffle_epi8(shift_right, char_class);
+        values = _mm512_srlv_epi32(values, shift);
+    }
+
+    return values;
+}

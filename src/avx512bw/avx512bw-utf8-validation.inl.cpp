@@ -1,13 +1,6 @@
 // file included directly
 
 
-template <int N> 
-__m512i prev(__m512i input, __m512i previous) {
-  const __m512i movemask = _mm512_setr_epi32(28,29,30,31,0,1,2,3,4,5,6,7,8,9,10,11);
-  __m512i rotated = _mm512_permutex2var_epi32(input, movemask, previous);
-  return _mm512_alignr_epi8(input, rotated, 16-N);
-}
-
 simdutf_really_inline __m512i check_special_cases(__m512i input, const __m512i prev1) {
   __m512i mask1 = _mm512_setr_epi64(
         0x0202020202020202,
