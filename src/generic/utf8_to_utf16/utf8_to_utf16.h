@@ -174,8 +174,8 @@ using namespace simd;
             utf8_end_of_code_point_mask >>= consumed;
           }
           // At this point there may remain between 0 and 12 bytes in the
-          // 64-byte block.These bytes will be processed again. So we have an 
-          // 80% efficiency (in the worst case). In practice we expect an 
+          // 64-byte block.These bytes will be processed again. So we have an
+          // 80% efficiency (in the worst case). In practice we expect an
           // 85% to 90% efficiency.
         }
       }

@@ -22,7 +22,10 @@ int main() {
       std::cout << e->name() << " returns " << current << std::endl;
       if(current) { is_ok = false; }
   }
-  if(!is_ok) { abort(); }
+  if(!is_ok) {
+    puts("FAIL");
+    EXIT_FAILURE;
+  }
 
   puts("OK");
 

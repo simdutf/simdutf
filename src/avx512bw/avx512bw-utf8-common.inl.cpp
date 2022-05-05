@@ -75,7 +75,7 @@ size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
 /**
  * Store the last N bytes of previous followed by 512-N bytes from input.
  */
-template <int N> 
+template <int N>
 __m512i prev(__m512i input, __m512i previous) {
     static_assert(N<=32, "N must be no larger than 32");
     const __m512i movemask = _mm512_setr_epi32(28,29,30,31,0,1,2,3,4,5,6,7,8,9,10,11);

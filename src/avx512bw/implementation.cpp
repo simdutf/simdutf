@@ -25,7 +25,19 @@ namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 
 simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
-    return scalar::utf8::validate(buf, len);
+    avx512_utf8_checker checker{};
+    const char* ptr = buf;
+    const char* end = ptr + len;
+    for (; ptr + 64 <= end; ptr += 64) {
+        const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
+        checker.check_next_input(utf8);
+    }
+    {
+       const __m512i utf8 = _mm512_maskz_loadu_epi8((1ULL<<(end - ptr))-1, (const __m512i*)ptr);
+       checker.check_next_input(utf8);
+    }
+    checker.check_eof();
+    return ! checker.errors();
 }
 
 simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, size_t len) const noexcept {
@@ -33,14 +45,6 @@ simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, siz
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
-  // Note: the AVX512 validation procedure is not able to detect
-  //       error when stream starts with continuation bytes.
-  //       So we have check if the first byte is not a continuation one
-  //       and return early.
-  if ((len > 0) && ((uint8_t(buf[0]) & 0xc0) == 0x80)) {
-    return 0;
-  }
-
   utf8_to_utf16_result ret = avx512bw::validating_utf8_to_fixed_length<char16_t>(buf, len, utf16_output);
   if (ret.second == nullptr)
     return 0;
@@ -53,7 +57,7 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf
 
   // Note: the AVX512 procedure looks up 4 bytes forward, and
   //       correctly converts multi-byte chars even if their
-  //       continuation bytes lie outsiede 16-byte window.
+  //       continuation bytes lie outside 16-byte window.
   //       It means, we have to skip continuation bytes from
   //       the beginning ret.first, as they were already consumed.
   while (ret.first != end and ((uint8_t(*ret.first) & 0xc0) == 0x80)) {

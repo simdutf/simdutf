@@ -36,7 +36,7 @@ std::pair<const char*, OUTPUT*> valid_utf8_to_fixed_length(const char* str, size
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
         const __mmask64 ascii = _mm512_test_epi8_mask(utf8, v_80);
         if(ascii == 0) {
-            STORE_ASCII(UTF32, utf8, output) 
+            STORE_ASCII(UTF32, utf8, output)
             output += 64;
             ptr += 64;
             continue;
@@ -67,7 +67,7 @@ std::pair<const char*, OUTPUT*> valid_utf8_to_fixed_length(const char* str, size
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
         const __mmask64 ascii = _mm512_test_epi8_mask(utf8, v_80);
         if(ascii == 0) {
-            STORE_ASCII(UTF32, utf8, output) 
+            STORE_ASCII(UTF32, utf8, output)
             output += 64;
             ptr += 64;
         } else {

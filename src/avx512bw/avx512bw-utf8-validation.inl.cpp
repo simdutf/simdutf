@@ -40,7 +40,7 @@ simdutf_really_inline __m512i check_special_cases(__m512i input, const __m512i p
     __m512i byte_2_high = _mm512_shuffle_epi8(mask3, index3);
     return _mm512_ternarylogic_epi64(byte_1_high, byte_1_low, byte_2_high, 128);
   }
-  
+
   simdutf_really_inline __m512i check_multibyte_lengths(const __m512i input,
       const __m512i prev_input, const __m512i sc) {
     __m512i prev2 = prev<2>(input, prev_input);
@@ -101,7 +101,7 @@ simdutf_really_inline __m512i check_special_cases(__m512i input, const __m512i p
       // possibly finish them.
       this->error = _mm512_or_si512(this->error, this->prev_incomplete);
     }
-  
+
     // returns true if ASCII.
     simdutf_really_inline bool check_next_input(const __m512i input) {
       const __mmask64 ascii = _mm512_test_epi8_mask(input, v_80);
