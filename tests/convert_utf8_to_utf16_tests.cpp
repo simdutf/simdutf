@@ -9,13 +9,13 @@
 
 
 namespace {
-  std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
+  std::array<size_t, 9> input_size{7, 12, 16, 64, 67, 128, 256, 511, 1000};
 
   using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
 
   constexpr size_t trials = 10000;
 }
-/*
+
 TEST(convert_pure_ASCII) {
   for(size_t trial = 0; trial < trials; trial ++) {
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
@@ -37,7 +37,7 @@ TEST(convert_pure_ASCII) {
       ASSERT_TRUE(test.check_size(size_procedure));    
     }
   }
-}*/
+}
 
 TEST(convert_1_or_2_UTF8_bytes) {
   for(size_t trial = 0; trial < trials; trial ++) {

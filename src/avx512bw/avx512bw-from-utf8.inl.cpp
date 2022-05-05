@@ -384,7 +384,6 @@ inline __m512i rotate_by1_epi8(const __m512i input) {
 
 template <typename OUTPUT>
 std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str, size_t len, OUTPUT* dwords) {
-    printf("\n\nvalidating_utf8_to_fixed_length receiving %zu bytes \n", len);
     constexpr bool UTF32 = std::is_same<OUTPUT, uint32_t>::value;
     constexpr bool UTF16 = std::is_same<OUTPUT, char16_t>::value;
     static_assert(UTF32 or UTF16, "output type has to be uint32_t (for UTF-32) or char16_t (for UTF-16)");
@@ -408,8 +407,7 @@ std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str,
      * In the main loop, we consume 64 bytes per iteration,
      * but we access 64 + 4 bytes.
      */
-    while (ptr + 64 + 4 < end) {
-        printf("Processing a wide block");
+    while (ptr + 64 + 4 <= end) {
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
         if(checker.check_next_input(utf8)) {
             if (UTF32) {
@@ -453,9 +451,7 @@ std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str,
 
     // For the final pass, we validate 64 bytes, but we only transcode
     // 3*16 bytes, so we may end up double-validating 16 bytes.
-    if (ptr + 64 < end) {
-                printf("Processing a simple block");
-
+    if (ptr + 64 <= end) {
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
         if(checker.check_next_input(utf8)) {
             if (UTF32) {
@@ -491,17 +487,13 @@ std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str,
         validatedptr += 4*16;
     }
     {
-        printf("Validating %zu bytes \n", end - validatedptr);
-
        const __m512i utf8 = _mm512_maskz_loadu_epi8((1ULL<<(end - validatedptr))-1, (const __m512i*)validatedptr);
        checker.check_next_input(utf8);
     }
     checker.check_eof();
     if(checker.errors()) {
-        printf("validating_utf8_to_fixed_length returning an invalid \n");
         return {ptr, nullptr}; // We found an error.
     }
-    printf("validating_utf8_to_fixed_length returning a valid \n");
     return {ptr, output};
 }
 
