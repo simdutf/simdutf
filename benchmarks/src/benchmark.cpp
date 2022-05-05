@@ -303,7 +303,7 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
     if (impl.find("avx512") != std::string::npos) {
         // We pause for after each AVX-512 call to make sure
         // that other benchmarks are not affected by frequency throttling.
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 
