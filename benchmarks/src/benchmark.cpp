@@ -4,6 +4,8 @@
 #include <cassert>
 #include <array>
 #include <iostream>
+#include <chrono>
+#include <thread>
 #ifdef __x86_64__
 /**
  * utf8lut: Vectorized UTF-8 converter.
@@ -297,6 +299,11 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         std::cerr << "Report the issue.\n";
         std::cerr << " Aborting ! " << std::endl;
         abort();
+    }
+    if (impl.find("avx512") != std::string::npos) {
+        // We pause for after each AVX-512 call to make sure
+        // that other benchmarks are not affected by frequency throttling.
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 

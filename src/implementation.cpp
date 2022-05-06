@@ -124,7 +124,7 @@ public:
   simdutf_warn_unused size_t count_utf8(const char * buf, size_t len) const noexcept final override {
     return set_best()->count_utf8(buf, len);
   }
-  
+
   simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t * buf, size_t len) const noexcept override {
     return set_best()->utf8_length_from_utf16(buf, len);
   }
@@ -206,7 +206,7 @@ public:
   simdutf_warn_unused size_t count_utf8(const char *, size_t) const noexcept final override {
     return 0;
   }
-  
+
   simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t *, size_t) const noexcept override {
     return 0;
   }

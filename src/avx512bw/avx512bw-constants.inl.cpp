@@ -21,6 +21,7 @@ const __m512i v_d800_dc00 = _mm512_set1_epi32(0xd800dc00);
 const __m512i v_0f = _mm512_set1_epi8(0x0f);
 const __m512i v_10 = _mm512_set1_epi8(0x10);
 const __m512i v_40 = _mm512_set1_epi8(0x40);
+const __m512i v_7f = _mm512_set1_epi8(char(0x7f));
 const __m512i v_80 = _mm512_set1_epi8(char(0x80));
 const __m512i v_1f = _mm512_set1_epi8(0x1f);
 const __m512i v_3f = _mm512_set1_epi8(0x3f);
