@@ -9,7 +9,7 @@
 
 
 namespace {
-  std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
+  std::array<size_t, 9> input_size{7, 12, 16, 64, 67, 128, 256, 511, 1000};
 
   using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
 

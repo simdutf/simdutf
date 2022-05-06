@@ -152,7 +152,7 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
   simdutf_really_inline simd16<uint16_t> shr() const { return simd16<uint16_t>(vshrq_n_u16(*this, N)); }
   template<int N>
   simdutf_really_inline simd16<uint16_t> shl() const { return simd16<uint16_t>(vshlq_n_u16(*this, N)); }
-  
+
   // logical operations
   simdutf_really_inline simd16<uint16_t> operator|(const simd16<uint16_t> other) const { return vorrq_u16(*this, other); }
   simdutf_really_inline simd16<uint16_t> operator&(const simd16<uint16_t> other) const { return vandq_u16(*this, other); }
