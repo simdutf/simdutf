@@ -56,6 +56,10 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
   return ppc64::utf8_validation::generic_validate_utf8(buf,len);
 }
 
+simdutf_warn_unused bool implementation::validate_ascii(const char *buf, size_t len) const noexcept {
+  return ppc64::utf8_validation::generic_validate_ascii(buf,len);
+}
+
 simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, size_t len) const noexcept {
   return scalar::utf16::validate(buf, len);
 }

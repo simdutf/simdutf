@@ -170,6 +170,12 @@ using namespace simd;
 
       }
     }
+
+    simdutf_really_inline void check_next_input_ascii(const simd8x64<uint8_t>& input) {
+      if(simdutf_likely(is_ascii(input))) {
+        this->error |= this->prev_incomplete;
+      }
+    }
     // do not forget to call check_eof!
     simdutf_really_inline bool errors() const {
       return this->error.any_bits_set_anywhere();
