@@ -440,6 +440,15 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
       this->chunks[3].store(ptr+sizeof(simd8<T>)*3/sizeof(T));
     }
 
+
+    simdutf_really_inline simd8x64<T>& operator |=(const simd8x64<T> &other) {
+      this->chunks[0] |= other.chunks[0];
+      this->chunks[1] |= other.chunks[1];
+      this->chunks[2] |= other.chunks[2];
+      this->chunks[3] |= other.chunks[3];
+      return *this;
+    }
+
     simdutf_really_inline simd8<T> reduce_or() const {
       return (this->chunks[0] | this->chunks[1]) | (this->chunks[2] | this->chunks[3]);
     }

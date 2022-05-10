@@ -271,6 +271,12 @@ namespace simd {
       return r_lo | (r_hi << 32);
     }
 
+    simdutf_really_inline simd8x64<T>& operator|=(const simd8x64<T> &other) {
+      this->chunks[0] | other.chunks[0];
+      this->chunks[1] | other.chunks[1];
+      return *this;
+    }
+
     simdutf_really_inline simd8<T> reduce_or() const {
       return this->chunks[0] | this->chunks[1];
     }
