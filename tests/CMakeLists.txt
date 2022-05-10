@@ -9,9 +9,9 @@ add_subdirectory(reference)
 include(${PROJECT_SOURCE_DIR}/cmake/add_cpp_test.cmake)
 link_libraries(simdutf)
 
-add_cpp_test(validate_utf8_basic_tests)
-
 add_cpp_test(validate_ascii_basic_tests)
+
+add_cpp_test(validate_utf8_basic_tests)
 
 add_cpp_test(validate_utf8_brute_force_tests)
 target_link_libraries(validate_utf8_brute_force_tests
