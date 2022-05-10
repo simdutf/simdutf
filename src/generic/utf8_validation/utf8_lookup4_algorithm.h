@@ -175,6 +175,9 @@ using namespace simd;
       if(simdutf_likely(is_ascii(input))) {
         this->error |= this->prev_incomplete;
       }
+      else {
+        this->error = 1;
+      }
     }
     // do not forget to call check_eof!
     simdutf_really_inline bool errors() const {
