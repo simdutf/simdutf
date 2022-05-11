@@ -31,8 +31,8 @@ bool generic_validate_utf8(const char * input, size_t length) {
 template<class checker>
 bool generic_validate_ascii(const uint8_t * input, size_t length) {
     buf_block_reader<64> reader(input, length);
-    uint8_t b[64]{};
-    simd::simd8x64<uint8_t> running_or(b);
+    uint8_t blocks[64]{};
+    simd::simd8x64<uint8_t> running_or(blocks);
     while (reader.has_full_block()) {
       simd::simd8x64<uint8_t> in(reader.full_block());
       running_or |= in;
