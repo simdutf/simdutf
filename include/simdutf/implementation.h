@@ -36,6 +36,17 @@ simdutf_really_inline simdutf_warn_unused simdutf::encoding_type autodetect_enco
 simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept;
 
 /**
+ * Validate the ASCII string.
+ *
+ * Overridden by each implementation.
+ *
+ * @param buf the ASCII string to validate.
+ * @param len the length of the string in bytes.
+ * @return true if and only if the string is valid ASCII.
+ */
+simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept;
+
+/**
  * Validate the UTF-16LE string.
  *
  * Overridden by each implementation.
@@ -219,6 +230,17 @@ public:
    * @return true if and only if the string is valid UTF-8.
    */
   simdutf_warn_unused virtual bool validate_utf8(const char *buf, size_t len) const noexcept = 0;
+
+  /**
+   * Validate the ASCII string.
+   *
+   * Overridden by each implementation.
+   *
+   * @param buf the ASCII string to validate.
+   * @param len the length of the string in bytes.
+   * @return true if and only if the string is valid ASCII.
+   */
+  simdutf_warn_unused virtual bool validate_ascii(const char *buf, size_t len) const noexcept = 0;
 
   /**
    * Validate the UTF-16LE string.

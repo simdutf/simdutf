@@ -251,7 +251,7 @@ namespace simd {
   struct simd8x64 {
     static constexpr int NUM_CHUNKS = 64 / sizeof(simd8<T>);
     static_assert(NUM_CHUNKS == 2, "Haswell kernel should use two registers per 64-byte block.");
-    const simd8<T> chunks[NUM_CHUNKS];
+    simd8<T> chunks[NUM_CHUNKS];
 
     simd8x64(const simd8x64<T>& o) = delete; // no copy allowed
     simd8x64<T>& operator=(const simd8<T> other) = delete; // no assignment allowed
@@ -269,6 +269,12 @@ namespace simd {
       uint64_t r_lo = uint32_t(this->chunks[0].to_bitmask());
       uint64_t r_hi =                       this->chunks[1].to_bitmask();
       return r_lo | (r_hi << 32);
+    }
+
+    simdutf_really_inline simd8x64<T>& operator|=(const simd8x64<T> &other) {
+      this->chunks[0] |= other.chunks[0];
+      this->chunks[1] |= other.chunks[1];
+      return *this;
     }
 
     simdutf_really_inline simd8<T> reduce_or() const {

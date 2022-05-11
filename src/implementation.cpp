@@ -89,6 +89,10 @@ public:
     return set_best()->validate_utf8(buf, len);
   }
 
+  simdutf_warn_unused bool validate_ascii(const char * buf, size_t len) const noexcept final override {
+    return set_best()->validate_ascii(buf, len);
+  }
+
   simdutf_warn_unused bool validate_utf16(const char16_t * buf, size_t len) const noexcept final override {
     return set_best()->validate_utf16(buf, len);
   }
@@ -165,6 +169,10 @@ public:
     // fallback, it implies that the programmer would need a fallback for our fallback.
   }
 
+  simdutf_warn_unused bool validate_ascii(const char *, size_t) const noexcept final override {
+    return false;
+  }
+
   simdutf_warn_unused bool validate_utf16(const char16_t*, size_t) const noexcept final override {
     return false;
   }
@@ -192,7 +200,7 @@ public:
   simdutf_warn_unused size_t count_utf8(const char *, size_t) const noexcept final override {
     return 0;
   }
-  
+
   simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t *, size_t) const noexcept override {
     return 0;
   }
@@ -250,6 +258,9 @@ SIMDUTF_DLLIMPORTEXPORT internal::atomic_ptr<const implementation> active_implem
 
 simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept {
   return active_implementation->validate_utf8(buf, len);
+}
+simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept {
+  return active_implementation->validate_ascii(buf, len);
 }
 simdutf_warn_unused size_t convert_utf8_to_utf16(const char * input, size_t length, char16_t* utf16_output) noexcept {
   return active_implementation->convert_utf8_to_utf16(input, length, utf16_output);

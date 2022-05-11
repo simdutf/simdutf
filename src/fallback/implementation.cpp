@@ -4,6 +4,7 @@
 #include "scalar/utf16_to_utf8/utf16_to_utf8.h"
 #include "scalar/utf8_to_utf16/valid_utf8_to_utf16.h"
 #include "scalar/utf8_to_utf16/utf8_to_utf16.h"
+#include "scalar/ascii.h"
 #include "scalar/utf8.h"
 #include "scalar/utf16.h"
 
@@ -12,6 +13,10 @@ namespace SIMDUTF_IMPLEMENTATION {
 
 simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
     return scalar::utf8::validate(buf, len);
+}
+
+simdutf_warn_unused bool implementation::validate_ascii(const char *buf, size_t len) const noexcept {
+    return scalar::ascii::validate(buf, len);
 }
 
 simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, size_t len) const noexcept {

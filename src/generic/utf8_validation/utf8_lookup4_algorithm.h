@@ -170,6 +170,7 @@ using namespace simd;
 
       }
     }
+
     // do not forget to call check_eof!
     simdutf_really_inline bool errors() const {
       return this->error.any_bits_set_anywhere();

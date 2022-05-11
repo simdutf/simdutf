@@ -356,7 +356,7 @@ template <typename T> struct simd8x64 {
   static constexpr int NUM_CHUNKS = 64 / sizeof(simd8<T>);
   static_assert(NUM_CHUNKS == 4,
                 "PPC64 kernel should use four registers per 64-byte block.");
-  const simd8<T> chunks[NUM_CHUNKS];
+  simd8<T> chunks[NUM_CHUNKS];
 
   simd8x64(const simd8x64<T> &o) = delete; // no copy allowed
   simd8x64<T> &
@@ -375,6 +375,15 @@ template <typename T> struct simd8x64 {
     this->chunks[2].store(ptr + sizeof(simd8<T>) * 2/sizeof(T));
     this->chunks[3].store(ptr + sizeof(simd8<T>) * 3/sizeof(T));
   }
+
+
+  simdutf_really_inline simd8x64<T>& operator |=(const simd8x64<T> &other) {
+      this->chunks[0] |= other.chunks[0];
+      this->chunks[1] |= other.chunks[1];
+      this->chunks[2] |= other.chunks[2];
+      this->chunks[3] |= other.chunks[3];
+      return *this;
+    }
 
   simdutf_really_inline simd8<T> reduce_or() const {
     return (this->chunks[0] | this->chunks[1]) |
