@@ -91,19 +91,21 @@ TEST(convert_3_or_4_UTF8_bytes) {
 
 TEST(issue111) {
   char16_t input[] = u"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaコaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-  size_t strlen = sizeof(input)/sizeof(char16_t)-1;
-  ASSERT_TRUE(implementation.validate_utf16(input, strlen));
-  ASSERT_TRUE(implementation.utf8_length_from_utf16(input, strlen)
-              == 2 + strlen);
-  size_t size = implementation.utf8_length_from_utf16(input, strlen);
-  std::unique_ptr<char[]> utf8_buffer{new char[size]};
-  ASSERT_TRUE(implementation.convert_valid_utf16_to_utf8(input, strlen, utf8_buffer.get()) == size);
+  size_t utf16_len = sizeof(input) / sizeof(char16_t) - 1;
+  ASSERT_TRUE(implementation.validate_utf16(input, utf16_len));
+  ASSERT_TRUE(implementation.utf8_length_from_utf16(input, utf16_len)
+              == 2 + utf16_len);
+  size_t utf8_len = implementation.utf8_length_from_utf16(input, utf16_len);
+  std::unique_ptr<char[]> utf8_buffer{new char[utf8_len]};
+  ASSERT_TRUE(implementation.convert_valid_utf16_to_utf8(input, utf16_len, utf8_buffer.get())
+              == utf8_len);
 
-  std::unique_ptr<char16_t[]> utf16_buffer{new char16_t[strlen]};
+  std::unique_ptr<char16_t[]> utf16_buffer{new char16_t[utf16_len]};
 
-  ASSERT_TRUE(implementation.convert_valid_utf8_to_utf16(utf8_buffer.get(), size, utf16_buffer.get()) == strlen);
+  ASSERT_TRUE(implementation.convert_valid_utf8_to_utf16(utf8_buffer.get(), utf8_len, utf16_buffer.get())
+              == utf16_len);
 
-  ASSERT_TRUE(std::char_traits<char16_t>::compare(input, utf16_buffer.get(), strlen) == 0);
+  ASSERT_TRUE(std::char_traits<char16_t>::compare(input, utf16_buffer.get(), utf16_len) == 0);
 }
 
 int main(int argc, char* argv[]) {
