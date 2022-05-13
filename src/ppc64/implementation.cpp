@@ -42,6 +42,8 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 // transcoding from UTF-8 to UTF-16
 #include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
 #include "generic/utf8_to_utf16/utf8_to_utf16.h"
+// transcoding from UTF-8 to UTF-32
+#include "generic/ut8_to_utf32/valid_utf8_to_utf32.h"
 // other functions
 #include "generic/utf8.h"
 #include "generic/utf16.h"
@@ -69,6 +71,10 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* /*b
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* /*buf*/, size_t /*len*/, char16_t* /*utf16_output*/) const noexcept {
+  return 0; // stub
+}
+
+simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(const char* /*buf*/, size_t /*len*/, char32_t* /*utf16_output*/) const noexcept {
   return 0; // stub
 }
 

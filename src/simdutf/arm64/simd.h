@@ -315,6 +315,10 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
       vst1q_u16(reinterpret_cast<uint16_t*>(p), vmovl_u8(vget_low_u8 (vreinterpretq_u8_s8(this->value))));
       vst1q_u16(reinterpret_cast<uint16_t*>(p + 8), vmovl_high_u8(vreinterpretq_u8_s8(this->value)));
     }
+    simdutf_really_inline void store_ascii_as_utf32(char32_t * p) const {
+      vst1q_u16(reinterpret_cast<uint32_t*>(p), vmovl_u8(vget_low_u8 (vreinterpretq_u8_s8(this->value))));
+      vst1q_u16(reinterpret_cast<uint32_t*>(p + 8), vmovl_high_u8(vreinterpretq_u8_s8(this->value)));
+    }
     // Conversion from/to SIMD register
     simdutf_really_inline simd8(const int8x16_t _value) : value{_value} {}
     simdutf_really_inline operator const int8x16_t&() const { return this->value; }
@@ -462,6 +466,13 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
       this->chunks[1].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*1);
       this->chunks[2].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*2);
       this->chunks[3].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*3);
+    }
+
+    simdutf_really_inline void store_ascii_as_utf32(char32_t * ptr) const {
+      this->chunks[0].store_ascii_as_utf32(ptr+sizeof(simd8<T>)*0);
+      this->chunks[1].store_ascii_as_utf32(ptr+sizeof(simd8<T>)*1);
+      this->chunks[2].store_ascii_as_utf32(ptr+sizeof(simd8<T>)*2);
+      this->chunks[3].store_ascii_as_utf32(ptr+sizeof(simd8<T>)*3);
     }
 
     simdutf_really_inline uint64_t to_bitmask() const {
