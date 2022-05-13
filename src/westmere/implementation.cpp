@@ -29,6 +29,7 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 }
 
 #include "westmere/sse_convert_utf8_to_utf16.cpp"
+#include "westmere/sse_convert_utf8_to_utf32.cpp"
 #include "westmere/sse_validate_utf16le.cpp"
 #include "westmere/sse_convert_utf16_to_utf8.cpp"
 
@@ -44,6 +45,7 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 // transcoding from UTF-8 to UTF-16
 #include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
 #include "generic/utf8_to_utf16/utf8_to_utf16.h"
+#include "generic/ut8_to_utf32/valid_utf8_to_utf32.h"
 // other functions
 #include "generic/utf8.h"
 #include "generic/utf16.h"

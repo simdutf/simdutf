@@ -22,6 +22,10 @@ namespace simd {
       _mm_storeu_si128(reinterpret_cast<__m128i *>(p), _mm_cvtepu8_epi16(*this));
       _mm_storeu_si128(reinterpret_cast<__m128i *>(p+8), _mm_cvtepu8_epi16(_mm_srli_si128(*this,8)));
     }
+    simdutf_really_inline void store_ascii_as_utf32(char32_t * p) const {
+      _mm_storeu_si128(reinterpret_cast<__m128i *>(p), _mm_cvtepu8_epi32(*this));
+      _mm_storeu_si128(reinterpret_cast<__m128i *>(p+8), _mm_cvtepu8_epi32(_mm_srli_si128(*this,8)));
+    }
     // Bit operations
     simdutf_really_inline Child operator|(const Child other) const { return _mm_or_si128(*this, other); }
     simdutf_really_inline Child operator&(const Child other) const { return _mm_and_si128(*this, other); }
@@ -319,6 +323,13 @@ namespace simd {
       this->chunks[1].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*1);
       this->chunks[2].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*2);
       this->chunks[3].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*3);
+    }
+
+    simdutf_really_inline void store_ascii_as_utf32(char32_t * ptr) const {
+      this->chunks[0].store_ascii_as_utf32(ptr+sizeof(simd8<T>)*0);
+      this->chunks[1].store_ascii_as_utf32(ptr+sizeof(simd8<T>)*1);
+      this->chunks[2].store_ascii_as_utf32(ptr+sizeof(simd8<T>)*2);
+      this->chunks[3].store_ascii_as_utf32(ptr+sizeof(simd8<T>)*3);
     }
 
     simdutf_really_inline uint64_t to_bitmask() const {
