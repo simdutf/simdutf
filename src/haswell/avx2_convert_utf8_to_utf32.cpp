@@ -23,8 +23,8 @@ size_t convert_masked_utf8_to_utf32(const char *input,
       utf8_end_of_code_point_mask & 0xFFF;
   if(((utf8_end_of_code_point_mask & 0xFFFF) == 0xFFFF)) {
     // We process the data in chunks of 16 bytes.
-    _mm256_storeu_si256(reinterpret_cast<__m256i *>(utf16_output), _mm256_cvtepu8_epi16(in));
-    utf16_output += 16; // We wrote 16 16-bit characters.
+    _mm256_storeu_si256(reinterpret_cast<__m256i *>(utf32_output), _mm256_cvtepu8_epi16(in));
+    utf32_output += 16; // We wrote 16 16-bit characters.
     return 16; // We consumed 16 bytes.
   }
   if(((utf8_end_of_code_point_mask & 0xFFFF) == 0xaaaa)) {
