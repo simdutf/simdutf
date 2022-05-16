@@ -1,3 +1,6 @@
+// depends on "tables/utf8_to_utf16_tables.h"
+
+
 // Convert up to 12 bytes from utf8 to utf32 using a mask indicating the
 // end of the code points. Only the least significant 12 bits of the mask
 // are accessed.
