@@ -6,6 +6,7 @@
 
 #include <tests/reference/encode_utf8.h>
 #include <tests/reference/encode_utf16.h>
+#include <tests/reference/encode_utf32.h>
 #include <tests/reference/decode_utf16.h>
 #include <tests/reference/validate_utf16.h>
 
@@ -42,6 +43,12 @@ namespace simdutf { namespace tests { namespace helpers {
       default:
         throw std::invalid_argument(std::string("Value can't be encoded as UTF-16 code-point : ") + std::to_string(codepoint));
     }
+  }
+
+  void transcode_test_base::encode_utf32(uint32_t codepoint, std::vector<char32_t>& target) {
+    ::simdutf::tests::reference::utf32::encode(codepoint, [&target](uint32_t word) {
+      target.push_back(word);
+    });
   }
 
   /**
@@ -91,6 +98,51 @@ namespace simdutf { namespace tests { namespace helpers {
     return true;
   }
 
+  /**
+   * transcode_utf8_to_utf32_test_base can be used to test UTF-8 => UTF-32 transcoding.
+   */
+  transcode_utf8_to_utf32_test_base::transcode_utf8_to_utf32_test_base(GenerateCodepoint generate,
+                                       size_t input_size) {
+    while (input_utf8.size() < input_size) {
+      const uint32_t codepoint = generate();
+      prepare_input(codepoint);
+    }
+
+    output_utf32.resize(reference_output_utf32.size() + output_size_margin);
+  }
+
+  void transcode_utf8_to_utf32_test_base::prepare_input(uint32_t codepoint) {
+      encode_utf8(codepoint, input_utf8);
+      encode_utf32(codepoint, reference_output_utf32);
+  }
+
+
+  bool transcode_utf8_to_utf32_test_base::validate(size_t saved_chars) const {
+    if (saved_chars != reference_output_utf32.size()) {
+      printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
+             size_t(saved_chars), size_t(reference_output_utf32.size()));
+      return false;
+    }
+
+    // Note that, in general, output_utf16.size() will not matched saved_chars.
+
+    // At this point, we know that the lengths are the same so std::mismatch is enough
+    // to tell us whether the strings are identical.
+    auto it = our_mismatch(output_utf32.begin(), output_utf32.begin() + saved_chars,
+                                    reference_output_utf32.begin(), reference_output_utf32.end());
+    if (it.first != output_utf32.begin() + saved_chars) {
+      printf("mismatched output at %zu: actual value 0x%04x, expected 0x%04x\n",
+             size_t(std::distance(output_utf32.begin(), it.first)), uint16_t(*it.first), uint16_t(*it.second));
+      for(size_t i = 0; i < output_utf32.size(); i++) {
+        if(reference_output_utf32[i] != output_utf32[i]) { printf(" ==> "); }
+        printf("at %zu expected 0x%04x and got 0x%04x\n ", i, uint16_t(reference_output_utf32[i]), uint16_t(output_utf32[i]));
+      }
+
+      return false;
+    }
+
+    return true;
+  }
 
   /**
    * transcode_utf16_to_utf8_test_base can be used to test UTF-16 => UTF-8 transcoding.

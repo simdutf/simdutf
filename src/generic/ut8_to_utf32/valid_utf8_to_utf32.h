@@ -38,7 +38,7 @@ simdutf_warn_unused size_t convert_valid(const char* input, size_t size,
 }
 
 
-} // namespace utf8_to_utf16
+} // namespace utf8_to_utf32
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
