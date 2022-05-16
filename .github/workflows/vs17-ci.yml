@@ -1,0 +1,42 @@
+name: VS17-CI
+
+on: [push, pull_request]
+
+jobs:
+  ci:
+    if: >-
+      ! contains(toJSON(github.event.commits.*.message), '[skip ci]') &&
+      ! contains(toJSON(github.event.commits.*.message), '[skip github]')
+    name: windows-vs17
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {gen: Visual Studio 17 2022, arch: x64, shared: ON}
+          - {gen: Visual Studio 17 2022, arch: x64, shared: OFF}
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: Configure
+      run: |
+        cmake -G "${{matrix.gen}}" -A ${{matrix.arch}} -DBUILD_SHARED_LIBS=${{matrix.shared}} -B build
+    - name: Build Debug
+      run: cmake --build build --config Debug --verbose
+    - name: Build Release
+      run: cmake --build build --config Release --verbose
+    - name: Run Release tests
+      run: |
+        cd build
+        ctest -C Release   --output-on-failure
+    - name: Run Debug tests
+      run: |
+        cd build
+        ctest -C Debug  --output-on-failure
+    - name: Install
+      run: |
+        cmake --install build --config Release
+    - name: Test Installation
+      run: |
+        cmake -G "${{matrix.gen}}" -A ${{matrix.arch}}  -B build_install_test tests/installation_tests/find
+        cmake --build build_install_test --config Release
