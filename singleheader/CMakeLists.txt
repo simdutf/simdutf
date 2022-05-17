@@ -152,33 +152,3 @@ if(NOT SIMDUTF_LEGACY_VISUAL_STUDIO AND NOT SIMDUTF_WINDOWS_DLL)
 else()
   MESSAGE( STATUS "You either have an old Visual Studio or you are building a DLL, simdutf-singleheader test disabled." )
 endif()
-
-#
-# Test the existing simdutf.cpp/simdutf.h using the existing amalgamation_demo.cpp, using
-# the files from the repository.
-#
-# By design, this will fail if the original files are missing (it should).
-#
-if (NOT (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_BINARY_DIR}))
-
-  add_library(simdutf-singleheader-include-source-direct-from-repository INTERFACE)
-  target_include_directories(simdutf-singleheader-include-source-direct-from-repository INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
-
-  add_library(simdutf-singleheader-source-direct-from-repository INTERFACE)
-  target_sources(simdutf-singleheader-source-direct-from-repository INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
-  target_link_libraries(simdutf-singleheader-source-direct-from-repository INTERFACE simdutf-singleheader-include-source-direct-from-repository)
-
-  # If you want to use simdutf as a DLL under Windows, it makes little sense to run the following static test. Furthermore
-  # when a DLL was built, we pass SIMDUTF_USING_WINDOWS_DYNAMIC_LIBRARY=1 within the simdutf-flags so that static compilation
-  # breaks. Simply put: under Windows you should not mix static and dynamic. Pick one.
-  if(NOT SIMDUTF_LEGACY_VISUAL_STUDIO AND NOT SIMDUTF_WINDOWS_DLL)
-    add_executable(amalgamation_demo_direct_from_repository ${CMAKE_CURRENT_SOURCE_DIR}/amalgamation_demo.cpp)
-    target_link_libraries(amalgamation_demo_direct_from_repository simdutf-singleheader-include-source-direct-from-repository)
-    add_test(amalgamation_demo_direct_from_repository amalgamation_demo_direct_from_repository ${EXAMPLE_JSON} ${EXAMPLE_NDJSON})
-    set_property(TEST amalgamation_demo_direct_from_repository APPEND PROPERTY LABELS per_implementation singleheader)
-    add_dependencies(singleheader_tests amalgamation_demo_direct_from_repository)
-    MESSAGE( STATUS "Including amalgamation_demo_direct_from_repository test." )
-  else()
-    MESSAGE( STATUS "You either have an old Visual Studio or you are building a DLL, amalgamation_demo test disabled." )
-  endif()
-endif()
