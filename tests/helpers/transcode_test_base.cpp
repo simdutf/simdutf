@@ -135,7 +135,7 @@ namespace simdutf { namespace tests { namespace helpers {
              size_t(std::distance(output_utf32.begin(), it.first)), uint16_t(*it.first), uint16_t(*it.second));
       for(size_t i = 0; i < output_utf32.size(); i++) {
         if(reference_output_utf32[i] != output_utf32[i]) { printf(" ==> "); }
-        printf("at %zu expected 0x%04x and got 0x%04x\n ", i, uint16_t(reference_output_utf32[i]), uint16_t(output_utf32[i]));
+        printf("at %zu expected 0x%04x and got 0x%04x\n ", i, uint32_t(reference_output_utf32[i]), uint32_t(output_utf32[i]));
       }
 
       return false;
