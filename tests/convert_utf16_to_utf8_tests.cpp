@@ -264,7 +264,6 @@ TEST(all_possible_8_codepoint_combinations) {
   };
 
   std::vector<char> output_utf8(256, ' ');
-  int id = 0;
   const auto& combinations = all_combinations();
   for (const auto& input_utf16: combinations) {
 
@@ -274,7 +273,6 @@ TEST(all_possible_8_codepoint_combinations) {
     } else {
       ASSERT_FALSE(procedure(input_utf16.data(), input_utf16.size(), output_utf8.data()));
     }
-    id += 1;
   }
 }
 
