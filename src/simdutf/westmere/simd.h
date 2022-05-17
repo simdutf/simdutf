@@ -23,8 +23,8 @@ namespace simd {
       _mm_storeu_si128(reinterpret_cast<__m128i *>(p+8), _mm_cvtepu8_epi16(_mm_srli_si128(*this,8)));
     }
     simdutf_really_inline void store_ascii_as_utf32(char32_t * p) const {
-      _mm_storeu_si128(reinterpret_cast<__m128i *>(p), _mm_cvtepu8_epi32(*this));
-      _mm_storeu_si128(reinterpret_cast<__m128i *>(p+8), _mm_cvtepu8_epi32(_mm_srli_si128(*this,8)));
+      _mm256_storeu_si256(reinterpret_cast<__m256i *>(p), _mm256_cvtepu8_epi32(*this));
+      _mm256_storeu_si256(reinterpret_cast<__m256i *>(p+8), _mm256_cvtepu8_epi32(_mm_srli_si128(*this,8)));
     }
     // Bit operations
     simdutf_really_inline Child operator|(const Child other) const { return _mm_or_si128(*this, other); }

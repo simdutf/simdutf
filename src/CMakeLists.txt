@@ -1,3 +1,4 @@
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 add_library(simdutf-include-source INTERFACE)
 target_include_directories(simdutf-include-source INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 add_library(simdutf-source INTERFACE)
