@@ -50,6 +50,24 @@
 
 #ifdef __x86_64__
 #include "simdutf.h"
+
+
+#ifdef SIMDUTF_CLANG_VISUAL_STUDIO
+/**
+ * You are not supposed, normally, to include these
+ * headers directly. Instead you should either include intrin.h
+ * or x86intrin.h. However, when compiling with clang
+ * under Windows (i.e., when _MSC_VER is set), these headers
+ * only get included *if* the corresponding features are detected
+ * from macros.
+ */
+#include <bmiintrin.h>
+#include <lzcntintrin.h>
+#include <immintrin.h>
+#include <smmintrin.h>
+#include <tmmintrin.h>
+#endif // SIMDUTF_CLANG_VISUAL_STUDIO
+
 #define SIMDUTF_TARGET_WESTMERE SIMDUTF_TARGET_REGION("sse4.2,pclmul")
 
 
