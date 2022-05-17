@@ -116,7 +116,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
         _mm_or_si128(_mm_or_si128(ascii, middlebyte_shifted),
                      _mm_or_si128(highbyte_shifted, middlehighbyte_shifted));
     _mm_storeu_si128((__m128i *)utf32_output, composed);
-    utf32_output += 2;
+    utf32_output += 3;
   } else {
     // here we know that there is an error but we do not handle errors
   }
