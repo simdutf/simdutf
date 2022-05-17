@@ -1,5 +1,4 @@
 #include "simdutf/avx512bw/intrinsics.h"
-#include "simdutf/avx512bw/begin.h"
 
 #include "scalar/utf16_to_utf8/valid_utf16_to_utf8.h"
 #include "scalar/utf16_to_utf8/utf16_to_utf8.h"
@@ -8,6 +7,7 @@
 #include "scalar/utf8.h"
 #include "scalar/utf16.h"
 
+#include "simdutf/avx512bw/begin.h"
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
@@ -21,6 +21,7 @@ namespace {
 } // namespace
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
+
 
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {

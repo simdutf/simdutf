@@ -5,35 +5,6 @@
 [![VS16-ARM-CI](https://github.com/lemire/simdutf/actions/workflows/vs16-arm-ci.yml/badge.svg)](https://github.com/lemire/simdutf/actions/workflows/vs16-arm-ci.yml)
 [![VS16-CI](https://github.com/lemire/simdutf/actions/workflows/vs16-ci.yml/badge.svg)](https://github.com/lemire/simdutf/actions/workflows/vs16-ci.yml)
 
-
-AVX512 feature branch
-==============================================
-
-This branch is meant to introduce AVX512 implementations.  At this point we
-focus only on AVX512 extension subsets that natively support byte and word
-elements.  AVX512BW is the real minimum, although we would need more
-extensions (AVX512CD and AVX512VL for sure).
-
-AVX512BW supports only in-lane shuffles, while AVX512VBMI also register-wide
-shuffles. This makes huge difference in vectorized algorithms, thus we
-introduced two pseudo-architectures:
-
-- **avx512bw**,
-- **avx512vbmi**.
-
-The easies way to build the AVX512 variant is to force a specific architecture,
-for instance **icelake-server**.
-
-```
-$ CXXFLAGS=-march=icelake-server cmake -B build .
-$ cmake --build build
-```
-
-It's also possible to setup individual preprocessor flags when needed, to force
-compiling for given subset of AVX512 extensions. The list of defines can be
-found in `simdutf/include/simdutf/avx512.h`.
-
-
 simdutf: Unicode validation and transcoding at billions of characters per second
 ===============================================
 
@@ -52,7 +23,7 @@ This library provide fast Unicode functions such as
 - From an UTF-16 string, compute the size of the UTF-8 equivalent string,
 - UTF-8 and UTF-16LE character counting.
 
-The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion caracters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).
+The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, AVX-512, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion caracters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).
 
 The library compiles down to tens of kilobytes. Our functions are exception-free and non allocating. We have extensive tests.
 
