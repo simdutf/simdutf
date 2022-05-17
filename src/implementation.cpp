@@ -22,13 +22,11 @@ std::string toBinaryString(T b) {
 
 // Implementations
 #include "simdutf/arm64.h"
+#include "simdutf/avx512bw.h"
 #include "simdutf/haswell.h"
 #include "simdutf/westmere.h"
 #include "simdutf/ppc64.h"
 #include "simdutf/fallback.h"
-#include "simdutf/avx512bw.h"
-#include "simdutf/avx512vbmi.h"
-
 
 namespace simdutf {
 bool implementation::supported_by_runtime_system() const {
@@ -62,17 +60,15 @@ namespace internal {
 // Static array of known implementations. We're hoping these get baked into the executable
 // without requiring a static initializer.
 
+
+#if SIMDUTF_IMPLEMENTATION_AVX512BW
+const avx512bw::implementation avx512bw_singleton{};
+#endif
 #if SIMDUTF_IMPLEMENTATION_HASWELL
 const haswell::implementation haswell_singleton{};
 #endif
 #if SIMDUTF_IMPLEMENTATION_WESTMERE
 const westmere::implementation westmere_singleton{};
-#endif
-#if SIMDUTF_IMPLEMENTATION_AVX512BW
-const avx512bw::implementation avx512bw_singleton{};
-#endif
-#if SIMDUTF_IMPLEMENTATION_AVX512VBMI
-const avx512vbmi::implementation avx512vbmi_singleton{};
 #endif
 #if SIMDUTF_IMPLEMENTATION_ARM64
 const arm64::implementation arm64_singleton{};
@@ -146,17 +142,14 @@ private:
 const detect_best_supported_implementation_on_first_use detect_best_supported_implementation_on_first_use_singleton;
 
 const std::initializer_list<const implementation *> available_implementation_pointers {
+#if SIMDUTF_IMPLEMENTATION_AVX512BW
+  &avx512bw_singleton,
+#endif
 #if SIMDUTF_IMPLEMENTATION_HASWELL
   &haswell_singleton,
 #endif
 #if SIMDUTF_IMPLEMENTATION_WESTMERE
   &westmere_singleton,
-#endif
-#if SIMDUTF_IMPLEMENTATION_AVX512BW
-  &avx512bw_singleton,
-#endif
-#if SIMDUTF_IMPLEMENTATION_AVX512VBMI
-  &avx512vbmi_singleton,
 #endif
 #if SIMDUTF_IMPLEMENTATION_ARM64
   &arm64_singleton,

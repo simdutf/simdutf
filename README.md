@@ -89,7 +89,7 @@ Usage (Usage)
 -------
 
 
-We made a video to help you get started with the library. 
+We made a video to help you get started with the library.
 
 [![the simdutf library](http://img.youtube.com/vi/H9NZtb7ykYs/0.jpg)](https://www.youtube.com/watch?v=H9NZtb7ykYs)<br />
 
@@ -130,7 +130,7 @@ Single-header version
 
 You can create a single-header version of the library where
 all of the code is put into two files (`simdutf.h` and `simdutf.cpp`).
-We publish a zip archive containing these files, e.g., see 
+We publish a zip archive containing these files, e.g., see
 https://github.com/simdutf/simdutf/releases/download/v1.0.1/singleheader.zip
 
 You may generate it on your own using a Python script.
@@ -210,7 +210,7 @@ int main(int argc, char *argv[]) {
 API
 -----
 
-Our API is made of a few non-allocating function. They typically take a pointer and a length as a parameter, 
+Our API is made of a few non-allocating function. They typically take a pointer and a length as a parameter,
 and they sometimes take a pointer to an output buffer. Users are responsible for memory allocation.
 
 ```C++

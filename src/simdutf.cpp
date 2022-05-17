@@ -27,6 +27,9 @@ SIMDUTF_DISABLE_UNDESIRED_WARNINGS
 #if SIMDUTF_IMPLEMENTATION_FALLBACK
 #include "fallback/implementation.cpp"
 #endif
+#if SIMDUTF_IMPLEMENTATION_AVX512BW
+#include "avx512bw/implementation.cpp"
+#endif
 #if SIMDUTF_IMPLEMENTATION_HASWELL
 #include "haswell/implementation.cpp"
 #endif
@@ -35,12 +38,6 @@ SIMDUTF_DISABLE_UNDESIRED_WARNINGS
 #endif
 #if SIMDUTF_IMPLEMENTATION_WESTMERE
 #include "westmere/implementation.cpp"
-#endif
-#if SIMDUTF_IMPLEMENTATION_AVX512BW
-#include "avx512bw/implementation.cpp"
-#endif
-#if SIMDUTF_IMPLEMENTATION_AVX512VBMI
-#include "avx512vbmi/implementation.cpp"
 #endif
 
 SIMDUTF_POP_DISABLE_WARNINGS

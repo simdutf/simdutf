@@ -50,4 +50,4 @@ jobs:
           cd build
           cmake  -DCMAKE_BUILD_TYPE=${{ matrix.type }}  ..
           cmake --build . --verbose
-          ctest -j4 --output-on-failure 
+          ctest -j4 --output-on-failure

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 
 project(simdutf
   DESCRIPTION "Fast Unicode validation, transcoding and processing"
-  LANGUAGES CXX 
+  LANGUAGES CXX
   VERSION 1.0.0
 )
 

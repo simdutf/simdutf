@@ -2,6 +2,7 @@
 #include "tests/helpers/random_utf8.h"
 #include "simdutf.h"
 #include <fstream>
+#include <iostream>
 
 namespace simdutf::benchmarks {
 
@@ -55,7 +56,11 @@ namespace simdutf::benchmarks {
 
         if (std::holds_alternative<input::File>(testcase.input)) {
             const input::File& file{std::get<input::File>(testcase.input)};
-            printf(", dataset: %s\n", reinterpret_cast<const char*>(file.path.c_str()));
+            // You'd think that the following would work, but no, not always:
+            // printf(", dataset: %s\n", reinterpret_cast<const char*>(file.path.c_str()));
+            std::string path_string{file.path.string()};
+            printf(", dataset: %s\n", reinterpret_cast<const char*>(path_string.c_str()));
+
         } else
             putchar('\n');
 

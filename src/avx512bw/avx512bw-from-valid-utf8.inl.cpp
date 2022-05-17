@@ -59,7 +59,6 @@ std::pair<const char*, OUTPUT*> valid_utf8_to_fixed_length(const char* str, size
         TRANSCODE16(lane3, lane4)
         ptr += 4*16;
     }
-    const char* validatedptr = ptr; // validated up to ptr
 
     // For the final pass, we validate 64 bytes, but we only transcode
     // 3*16 bytes, so we may end up double-validating 16 bytes.
@@ -83,7 +82,6 @@ std::pair<const char*, OUTPUT*> valid_utf8_to_fixed_length(const char* str, size
 
             ptr += 3*16;
         }
-        validatedptr += 4*16;
     }
     return {ptr, output};
 }

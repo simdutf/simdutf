@@ -1,3 +1,4 @@
+#include "simdutf/avx512bw/intrinsics.h"
 #include "simdutf/avx512bw/begin.h"
 
 #include "scalar/utf16_to_utf8/valid_utf16_to_utf8.h"
@@ -38,6 +39,11 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
     }
     checker.check_eof();
     return ! checker.errors();
+}
+
+
+simdutf_warn_unused bool implementation::validate_ascii(const char *buf, size_t len) const noexcept {
+    return scalar::ascii::validate(buf, len);
 }
 
 simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, size_t len) const noexcept {

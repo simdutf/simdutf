@@ -22,4 +22,4 @@ jobs:
           cd build &&
           cmake ..  &&
           cmake --build .  --verbose &&
-          ctest -j --output-on-failure 
+          ctest -j --output-on-failure

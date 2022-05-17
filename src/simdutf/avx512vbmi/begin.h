@@ -1,1 +1,0 @@
-#define SIMDUTF_IMPLEMENTATION avx512vbmi
