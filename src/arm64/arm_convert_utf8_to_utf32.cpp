@@ -20,11 +20,11 @@ size_t convert_masked_utf8_to_utf32(const char *input,
   // We first try a few fast paths.
   if((utf8_end_of_code_point_mask & 0xffff) == 0xffff) {
     // We process in chunks of 16 bytes
-    utf32_output = reinterpret_cast<uint32_t*>(utf32_output);
-    vst1q_u32(utf32_output, vmovl_u16(vget_low_u16(vmovl_u8(vget_low_u8 (in)))));
-    vst1q_u32(utf32_output + 4, vmovl_high_u16(vmovl_u8(vget_low_u8 (in))));
-    vst1q_u32(utf32_output + 8, vmovl_u16(vget_low_u16(vmovl_high_u8(in))));
-    vst1q_u32(utf32_output + 12, vmovl_high_u16(vmovl_high_u8(in)));
+    uint32_t* utf32 = reinterpret_cast<uint32_t*>(utf32_output);
+    vst1q_u32(utf32, vmovl_u16(vget_low_u16(vmovl_u8(vget_low_u8 (in)))));
+    vst1q_u32(utf32 + 4, vmovl_high_u16(vmovl_u8(vget_low_u8 (in))));
+    vst1q_u32(utf32 + 8, vmovl_u16(vget_low_u16(vmovl_high_u8(in))));
+    vst1q_u32(utf32 + 12, vmovl_high_u16(vmovl_high_u8(in)));
     utf32_output += 16; // We wrote 16 16-bit characters.
     return 16; // We consumed 16 bytes.
   }
