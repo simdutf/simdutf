@@ -316,8 +316,10 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
       vst1q_u16(reinterpret_cast<uint16_t*>(p + 8), vmovl_high_u8(vreinterpretq_u8_s8(this->value)));
     }
     simdutf_really_inline void store_ascii_as_utf32(char32_t * p) const {
-      vst1q_u16(reinterpret_cast<uint32_t*>(p), vmovl_u8(vget_low_u8 (vreinterpretq_u8_s8(this->value))));
-      vst1q_u16(reinterpret_cast<uint32_t*>(p + 8), vmovl_high_u8(vreinterpretq_u8_s8(this->value)));
+      vst1q_u32(reinterpret_cast<uint32_t*>(p), vmovl_u16(vget_low_u16(vmovl_u8(vget_low_u8 (vreinterpretq_u8_s8(this->value))))));
+      vst1q_u32(reinterpret_cast<uint32_t*>(p + 4), vmovl_high_u16(vmovl_u8(vget_low_u8 (vreinterpretq_u8_s8(this->value)))));
+      vst1q_u32(reinterpret_cast<uint32_t*>(p + 8), vmovl_u16(vget_low_u16(vmovl_high_u8(vreinterpretq_u8_s8(this->value)))));
+      vst1q_u32(reinterpret_cast<uint32_t*>(p + 12), vmovl_high_u16(vmovl_high_u8(vreinterpretq_u8_s8(this->value))));
     }
     // Conversion from/to SIMD register
     simdutf_really_inline simd8(const int8x16_t _value) : value{_value} {}
