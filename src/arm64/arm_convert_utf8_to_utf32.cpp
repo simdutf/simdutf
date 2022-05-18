@@ -18,16 +18,17 @@ size_t convert_masked_utf8_to_utf32(const char *input,
   // This results in more instructions but, potentially, also higher speeds.
   //
   // We first try a few fast paths.
-  if((utf8_end_of_code_point_mask & 0xFFFF) == 0xFFFF) {
+  if((utf8_end_of_code_point_mask & 0xffff) == 0xffff) {
     // We process in chunks of 16 bytes
-    vst1q_u32(reinterpret_cast<uint32_t*>(utf32_output), vmovl_u16(vget_low_u16(vmovl_u8(vget_low_u8 (in)))));
-    vst1q_u32(reinterpret_cast<uint32_t*>(utf32_output) + 4, vmovl_high_u16(vmovl_u8(vget_low_u8 (in))));
-    vst1q_u32(reinterpret_cast<uint32_t*>(utf32_output) + 8, vmovl_u16(vget_low_u16(vmovl_high_u8(in))));
-    vst1q_u32(reinterpret_cast<uint32_t*>(utf32_output) + 12, vmovl_high_u16(vmovl_high_u8(in)));
+    utf32_output = reinterpret_cast<uint32_t*>(utf32_output);
+    vst1q_u32(utf32_output, vmovl_u16(vget_low_u16(vmovl_u8(vget_low_u8 (in)))));
+    vst1q_u32(utf32_output + 4, vmovl_high_u16(vmovl_u8(vget_low_u8 (in))));
+    vst1q_u32(utf32_output + 8, vmovl_u16(vget_low_u16(vmovl_high_u8(in))));
+    vst1q_u32(utf32_output + 12, vmovl_high_u16(vmovl_high_u8(in)));
     utf32_output += 16; // We wrote 16 16-bit characters.
     return 16; // We consumed 16 bytes.
   }
-  if((utf8_end_of_code_point_mask & 0xFFFF) == 0xaaaa) {
+  if((utf8_end_of_code_point_mask & 0xffff) == 0xaaaa) {
     // We want to take 8 2-byte UTF-8 words and turn them into 8 4-byte UTF-32 words.
     // There is probably a more efficient sequence, but the following might do.
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO

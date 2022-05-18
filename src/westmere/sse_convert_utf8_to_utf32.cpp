@@ -20,15 +20,15 @@ size_t convert_masked_utf8_to_utf32(const char *input,
   // We first try a few fast paths.
   const __m128i in = _mm_loadu_si128((__m128i *)input);
   const uint16_t input_utf8_end_of_code_point_mask =
-      utf8_end_of_code_point_mask & 0xFFF;
-  if(((utf8_end_of_code_point_mask & 0xFFFF) == 0xFFFF)) {
+      utf8_end_of_code_point_mask & 0xfff;
+  if(((utf8_end_of_code_point_mask & 0xffff) == 0xffff)) {
     // We process the data in chunks of 16 bytes.
     _mm256_storeu_si256(reinterpret_cast<__m256i *>(utf32_output), _mm256_cvtepu8_epi32(in));
     _mm256_storeu_si256(reinterpret_cast<__m256i *>(utf32_output+8), _mm256_cvtepu8_epi32(_mm_srli_si128(in,8)));
     utf32_output += 16; // We wrote 16 16-bit characters.
     return 16; // We consumed 16 bytes.
   }
-  if(((utf8_end_of_code_point_mask & 0xFFFF) == 0xaaaa)) {
+  if(((utf8_end_of_code_point_mask & 0xffff) == 0xaaaa)) {
     // We want to take 8 2-byte UTF-8 words and turn them into 8 4-byte UTF-32 words.
     // There is probably a more efficient sequence, but the following might do.
     const __m128i sh = _mm_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
