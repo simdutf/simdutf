@@ -52,6 +52,7 @@ namespace simdutf::benchmarks {
         void run_convert_utf8_to_utf16(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf8_to_utf16_with_dynamic_allocation(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_valid_utf8_to_utf16(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_valid_utf8_to_utf32(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf16_to_utf8(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf16_to_utf8_with_dynamic_allocation(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_valid_utf16_to_utf8(const simdutf::implementation& implementation, size_t iterations);
