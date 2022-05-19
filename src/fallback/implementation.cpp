@@ -5,6 +5,7 @@
 #include "scalar/utf8_to_utf16/valid_utf8_to_utf16.h"
 #include "scalar/utf8_to_utf16/utf8_to_utf16.h"
 #include "scalar/utf8_to_utf32/valid_utf8_to_utf32.h"
+#include "scalar/utf8_to_utf32/utf8_to_utf32.h"
 #include "scalar/ascii.h"
 #include "scalar/utf8.h"
 #include "scalar/utf16.h"
@@ -30,6 +31,10 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
    return scalar::utf8_to_utf16::convert_valid(buf, len, utf16_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_utf8_to_utf32(const char* buf, size_t len, char32_t* utf32_output) const noexcept {
+   return scalar::utf8_to_utf32::convert(buf, len, utf32_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(const char* input, size_t size,

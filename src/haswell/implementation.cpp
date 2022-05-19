@@ -1,6 +1,8 @@
 #include "tables/utf8_to_utf16_tables.h"
 #include "scalar/utf8_to_utf16/valid_utf8_to_utf16.h"
 #include "scalar/utf8_to_utf16/utf8_to_utf16.h"
+#include "scalar/utf8_to_utf32/valid_utf8_to_utf32.h"
+#include "scalar/utf8_to_utf32/utf8_to_utf32.h"
 #include "tables/utf16_to_utf8_tables.h"
 #include "scalar/utf8.h"
 #include "scalar/utf16.h"
@@ -51,6 +53,7 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 #include "generic/utf8_to_utf16/utf8_to_utf16.h"
 // transcoding from UTF-8 to UTF-32
 #include "generic/utf8_to_utf32/valid_utf8_to_utf32.h"
+#include "generic/utf8_to_utf32/utf8_to_utf32.h"
 // other functions
 #include "generic/utf8.h"
 #include "generic/utf16.h"
@@ -85,6 +88,11 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* input, size_t size,
     char16_t* utf16_output) const noexcept {
    return utf8_to_utf16::convert_valid(input, size,  utf16_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_utf8_to_utf32(const char* buf, size_t len, char32_t* utf32_output) const noexcept {
+  utf8_to_utf32::validating_transcoder converter;
+  return converter.convert(buf, len, utf32_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(const char* input, size_t size,
