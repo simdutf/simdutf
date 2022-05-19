@@ -23,9 +23,11 @@ size_t convert_masked_utf8_to_utf32(const char *input,
       utf8_end_of_code_point_mask & 0xfff;
   if(((utf8_end_of_code_point_mask & 0xffff) == 0xffff)) {
     // We process the data in chunks of 16 bytes.
-    _mm256_storeu_si256(reinterpret_cast<__m256i *>(utf32_output), _mm256_cvtepu8_epi32(in));
-    _mm256_storeu_si256(reinterpret_cast<__m256i *>(utf32_output+8), _mm256_cvtepu8_epi32(_mm_srli_si128(in,8)));
-    utf32_output += 16; // We wrote 16 16-bit characters.
+    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output), _mm_cvtepu8_epi32(in));
+    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output+4), _mm_cvtepu8_epi32(_mm_srli_si128(in,4)));
+    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output+8), _mm_cvtepu8_epi32(_mm_srli_si128(in,8)));
+    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output+12), _mm_cvtepu8_epi32(_mm_srli_si128(in,12)));
+    utf32_output += 16; // We wrote 16 32-bit characters.
     return 16; // We consumed 16 bytes.
   }
   if(((utf8_end_of_code_point_mask & 0xffff) == 0xaaaa)) {
@@ -36,8 +38,9 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     const __m128i ascii = _mm_and_si128(perm, _mm_set1_epi16(0x7f));
     const __m128i highbyte = _mm_and_si128(perm, _mm_set1_epi16(0x1f00));
     const __m128i composed = _mm_or_si128(ascii, _mm_srli_epi16(highbyte, 2));
-    _mm256_storeu_si256((__m256i *)utf32_output, _mm256_cvtepu16_epi32(composed));
-    utf32_output += 8; // We wrote 16 bytes, 8 code points.
+    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output), _mm_cvtepu8_epi32(composed));
+    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output+4), _mm_cvtepu8_epi32(_mm_srli_si128(composed,4)));
+    utf32_output += 8; // We wrote 32 bytes, 8 code points.
     return 16;
   }
   if(input_utf8_end_of_code_point_mask == 0x924) {
@@ -77,7 +80,8 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     const __m128i ascii = _mm_and_si128(perm, _mm_set1_epi16(0x7f));
     const __m128i highbyte = _mm_and_si128(perm, _mm_set1_epi16(0x1f00));
     const __m128i composed = _mm_or_si128(ascii, _mm_srli_epi16(highbyte, 2));
-    _mm256_storeu_si256((__m256i *)utf32_output, _mm256_cvtepu16_epi32(composed));
+    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output), _mm_cvtepu8_epi32(composed));
+    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output+4), _mm_cvtepu8_epi32(_mm_srli_si128(composed,4)));
     utf32_output += 6; // We wrote 12 bytes, 6 code points.
   } else if (idx < 145) {
     // FOUR (4) input code-words
