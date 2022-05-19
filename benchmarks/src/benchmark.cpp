@@ -169,6 +169,11 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
     }
     {
+        std::string name = "convert_utf8_to_utf32+llvm";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+    }
+    {
         std::string name = "convert_utf16_to_utf8+llvm";
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
@@ -283,6 +288,8 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         // this is a special case
         if(name == "convert_utf8_to_utf16") {
           run_convert_utf8_to_utf16_llvm(iterations);
+        } else if(name == "convert_utf8_to_utf32") {
+          run_convert_utf8_to_utf32_llvm(iterations);
         } else if(name == "convert_utf16_to_utf8") {
           run_convert_utf16_to_utf8_llvm(iterations);
         } else {
@@ -955,6 +962,31 @@ void Benchmark::run_convert_utf8_to_utf16_llvm(size_t iterations) {
       bool  is_ok = (llvm::conversionOK == llvm::ConvertUTF8toUTF16 (&sourceStart, sourceEnd, &targetStart, targetEnd, llvm::ConversionFlags::strictConversion));
       if(is_ok) {
           sink = (targetStart - reinterpret_cast<short unsigned int *>(output_buffer.get()));
+      } else {
+          sink = 0;
+      }
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
+}
+
+
+void Benchmark::run_convert_utf8_to_utf32_llvm(size_t iterations) {
+    const char*  data = reinterpret_cast<const char*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char32_t[]> output_buffer{new char32_t[size]};
+    volatile size_t sink{0};
+    auto proc = [data, size, &output_buffer, &sink]() {
+      const unsigned char * sourceStart = reinterpret_cast<const unsigned char *>(data);
+      const unsigned char * sourceEnd = sourceStart + size;
+      unsigned int * targetStart =  reinterpret_cast<unsigned int *>(output_buffer.get());
+      unsigned int * targetEnd = targetStart + size;
+      bool  is_ok = (llvm::conversionOK == llvm::ConvertUTF8toUTF32 (&sourceStart, sourceEnd, &targetStart, targetEnd, llvm::ConversionFlags::strictConversion));
+      if(is_ok) {
+          sink = (targetStart - reinterpret_cast<unsigned int *>(output_buffer.get()));
       } else {
           sink = 0;
       }
