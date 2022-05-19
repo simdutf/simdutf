@@ -78,7 +78,9 @@ namespace simdutf::benchmarks {
        void run_convert_valid_utf16_to_utf8_utf8lut(size_t iterations);
 
        void run_convert_utf8_to_utf16_utf8lut(size_t iterations);
+       void run_convert_utf8_to_utf32_utf8lut(size_t iterations);
        void run_convert_valid_utf8_to_utf16_utf8lut(size_t iterations);
+       void run_convert_valid_utf8_to_utf32_utf8lut(size_t iterations);
 
        /**
         * Bob Steagall, CppCon2018

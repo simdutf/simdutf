@@ -128,7 +128,17 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
     }
     {
+        std::string name = "convert_utf8_to_utf32+utf8lut";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+    }
+    {
         std::string name = "convert_valid_utf8_to_utf16+utf8lut";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+    }
+    {
+        std::string name = "convert_valid_utf8_to_utf32+utf8lut";
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
     }
@@ -236,8 +246,12 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         // this is a special case
         if(name == "convert_valid_utf8_to_utf16") {
           run_convert_valid_utf8_to_utf16_utf8lut(iterations);
+        } else if(name == "convert_valid_utf8_to_utf32") {
+          run_convert_valid_utf8_to_utf32_utf8lut(iterations);
         } else if(name == "convert_utf8_to_utf16") {
           run_convert_utf8_to_utf16_utf8lut(iterations);
+        } else if(name == "convert_utf8_to_utf32") {
+          run_convert_utf8_to_utf32_utf8lut(iterations);
         } else if(name == "convert_utf16_to_utf8") {
           run_convert_utf16_to_utf8_utf8lut(iterations);
         } else if(name == "convert_valid_utf16_to_utf8") {
@@ -575,6 +589,32 @@ void Benchmark::run_convert_utf8_to_utf16_utf8lut(size_t iterations) {
  * by stgatilov (2019)
  *  https://dirtyhandscoding.github.io/posts/utf8lut-vectorized-utf-8-converter-introduction.html
  */
+void Benchmark::run_convert_utf8_to_utf32_utf8lut(size_t iterations) {
+    const char*  data = reinterpret_cast<const char*>(input_data.data());
+    const size_t size = input_data.size();
+
+    std::unique_ptr<char32_t[]> output_buffer{new char32_t[size+24]};
+    volatile size_t sink{0};
+    auto proc = [data, size, &output_buffer, &sink]() {
+      std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf8, dfUtf32>::WithOptions<cmValidate>::Create());
+      ConversionResult result = ConvertInMemory(*processor, data, size, reinterpret_cast<char*>(output_buffer.get()), size*4+32);
+      if(result.status != 0) {
+          sink = 0;
+      } else {
+          sink = result.outputSize / 2;
+      }
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
+}
+/**
+ * utf8lut: Vectorized UTF-8 converter.
+ * by stgatilov (2019)
+ *  https://dirtyhandscoding.github.io/posts/utf8lut-vectorized-utf-8-converter-introduction.html
+ */
 void Benchmark::run_convert_valid_utf8_to_utf16_utf8lut(size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
@@ -584,6 +624,32 @@ void Benchmark::run_convert_valid_utf8_to_utf16_utf8lut(size_t iterations) {
     auto proc = [data, size, &output_buffer, &sink]() {
       std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf8, dfUtf16>::WithOptions<cmFull>::Create());
       ConversionResult result = ConvertInMemory(*processor, data, size, reinterpret_cast<char*>(output_buffer.get()), size*2+16);
+      if(result.status != 0) {
+          sink = 0;
+      } else {
+          sink = result.outputSize / 2;
+      }
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
+}
+/**
+ * utf8lut: Vectorized UTF-8 converter.
+ * by stgatilov (2019)
+ *  https://dirtyhandscoding.github.io/posts/utf8lut-vectorized-utf-8-converter-introduction.html
+ */
+void Benchmark::run_convert_valid_utf8_to_utf32_utf8lut(size_t iterations) {
+    const char*  data = reinterpret_cast<const char*>(input_data.data());
+    const size_t size = input_data.size();
+
+    std::unique_ptr<char32_t[]> output_buffer{new char32_t[size+24]};
+    volatile size_t sink{0};
+    auto proc = [data, size, &output_buffer, &sink]() {
+      std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf8, dfUtf32>::WithOptions<cmFull>::Create());
+      ConversionResult result = ConvertInMemory(*processor, data, size, reinterpret_cast<char*>(output_buffer.get()), size*4+32);
       if(result.status != 0) {
           sink = 0;
       } else {
