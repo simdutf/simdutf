@@ -38,8 +38,8 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     const __m128i ascii = _mm_and_si128(perm, _mm_set1_epi16(0x7f));
     const __m128i highbyte = _mm_and_si128(perm, _mm_set1_epi16(0x1f00));
     const __m128i composed = _mm_or_si128(ascii, _mm_srli_epi16(highbyte, 2));
-    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output), _mm_cvtepu8_epi32(composed));
-    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output+4), _mm_cvtepu8_epi32(_mm_srli_si128(composed,4)));
+    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output), _mm_cvtepu16_epi32(composed));
+    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output+4), _mm_cvtepu16_epi32(_mm_srli_si128(composed,8)));
     utf32_output += 8; // We wrote 32 bytes, 8 code points.
     return 16;
   }
@@ -80,8 +80,8 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     const __m128i ascii = _mm_and_si128(perm, _mm_set1_epi16(0x7f));
     const __m128i highbyte = _mm_and_si128(perm, _mm_set1_epi16(0x1f00));
     const __m128i composed = _mm_or_si128(ascii, _mm_srli_epi16(highbyte, 2));
-    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output), _mm_cvtepu8_epi32(composed));
-    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output+4), _mm_cvtepu8_epi32(_mm_srli_si128(composed,4)));
+    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output), _mm_cvtepu16_epi32(composed));
+    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output+4), _mm_cvtepu16_epi32(_mm_srli_si128(composed,8)));
     utf32_output += 6; // We wrote 12 bytes, 6 code points.
   } else if (idx < 145) {
     // FOUR (4) input code-words
