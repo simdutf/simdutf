@@ -123,6 +123,19 @@ simdutf_warn_unused size_t convert_valid_utf8_to_utf32(const char * input, size_
 simdutf_warn_unused size_t utf16_length_from_utf8(const char * input, size_t length) noexcept;
 
 /**
+ * Compute the number of 4-byte words that this UTF-8 string would require in UTF-32LE format.
+ *
+ * This function does not validate the input.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-8 string to process
+ * @param length        the length of the string in bytes
+ * @return the number of char32_t words required to encode the UTF-8 string as UTF-32LE
+ */
+simdutf_warn_unused size_t utf32_length_from_utf8(const char * input, size_t length) noexcept;
+
+/**
  * Convert possibly broken UTF-16LE string into UTF-8 string.
  *
  * During the conversion also validation of the input string is done.
@@ -340,6 +353,17 @@ public:
    * @return the number of char16_t words required to encode the UTF-8 string as UTF-16LE
    */
   simdutf_warn_unused virtual size_t utf16_length_from_utf8(const char * input, size_t length) const noexcept = 0;
+
+   /**
+   * Compute the number of 4-byte words that this UTF-8 string would require in UTF-32LE format.
+   *
+   * This function does not validate the input.
+   *
+   * @param input         the UTF-8 string to process
+   * @param length        the length of the string in bytes
+   * @return the number of char32_t words required to encode the UTF-8 string as UTF-32LE
+   */
+  simdutf_warn_unused virtual size_t utf32_length_from_utf8(const char * input, size_t length) const noexcept = 0;
 
   /**
    * Convert possibly broken UTF-16LE string into UTF-8 string.

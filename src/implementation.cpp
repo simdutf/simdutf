@@ -137,6 +137,10 @@ public:
     return set_best()->utf16_length_from_utf8(buf, len);
   }
 
+  simdutf_warn_unused size_t utf32_length_from_utf8(const char * buf, size_t len) const noexcept override {
+    return set_best()->utf32_length_from_utf8(buf, len);
+  }
+
   simdutf_really_inline detect_best_supported_implementation_on_first_use() noexcept : implementation("best_supported_detector", "Detects the best supported implementation and sets it", 0) {}
 
 private:
@@ -225,6 +229,10 @@ public:
     return 0;
   }
 
+  simdutf_warn_unused size_t utf32_length_from_utf8(const char *, size_t) const noexcept override {
+    return 0;
+  }
+
   unsupported_implementation() : implementation("unsupported", "Unsupported CPU (no detected SIMD instructions)", 0) {}
 };
 
@@ -310,6 +318,9 @@ simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t * input, size_t
 }
 simdutf_warn_unused size_t utf16_length_from_utf8(const char * input, size_t length) noexcept {
   return active_implementation->utf16_length_from_utf8(input, length);
+}
+simdutf_warn_unused size_t utf32_length_from_utf8(const char * input, size_t length) noexcept {
+  return active_implementation->utf32_length_from_utf8(input, length);
 }
 simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const char * buf, size_t length) noexcept {
   return active_implementation->autodetect_encoding(buf, length);

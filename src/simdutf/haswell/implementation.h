@@ -29,6 +29,7 @@ public:
   simdutf_warn_unused size_t count_utf8(const char * buf, size_t length) const noexcept;
   simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t * input, size_t length) const noexcept;
   simdutf_warn_unused size_t utf16_length_from_utf8(const char * input, size_t length) const noexcept;
+  simdutf_warn_unused size_t utf32_length_from_utf8(const char * input, size_t length) const noexcept;
 };
 
 } // namespace haswell
