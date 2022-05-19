@@ -103,6 +103,7 @@ namespace simdutf::benchmarks {
         void run_convert_utf8_to_utf16_utf8sse4(size_t iterations);
 #endif
         void run_convert_utf8_to_utf16_hoehrmann(size_t iterations);
+        void run_convert_utf8_to_utf32_hoehrmann(size_t iterations);
         /**
          * LLVM relies on code from the Unicode Consortium
          * https://en.wikipedia.org/wiki/Unicode_Consortium

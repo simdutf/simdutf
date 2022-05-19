@@ -159,6 +159,11 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
     }
     {
+        std::string name = "convert_utf8_to_utf32+hoehrmann";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+    }
+    {
         std::string name = "convert_utf8_to_utf16+llvm";
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
@@ -266,6 +271,9 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         // this is a special case
         if(name == "convert_utf8_to_utf16") {
           run_convert_utf8_to_utf16_hoehrmann(iterations);
+        }
+        if(name == "convert_utf8_to_utf32") {
+          run_convert_utf8_to_utf32_hoehrmann(iterations);
         } else {
           std::cerr << "unrecognized:" << procedure_name << "\n";
         }
@@ -471,6 +479,24 @@ void Benchmark::run_convert_utf8_to_utf16_hoehrmann(size_t iterations) {
     volatile size_t sink{0};
     auto proc = [data, size, &output_buffer, &sink]() {
         sink = hoehrmann::toUtf16(data, size, output_buffer.get());
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    size_t char_count = active_implementation->count_utf8(reinterpret_cast<const char*>(data), size);
+    print_summary(result, size, char_count);
+}
+/**
+ * Bjoern Hoehrmann
+ * http://bjoern.hoehrmann.de/utf-8/decoder/dfa/
+ */
+void Benchmark::run_convert_utf8_to_utf32_hoehrmann(size_t iterations) {
+    uint8_t const *  data = input_data.data();
+    const size_t size = input_data.size();
+    std::unique_ptr<char32_t[]> output_buffer{new char32_t[size]};
+    volatile size_t sink{0};
+    auto proc = [data, size, &output_buffer, &sink]() {
+        sink = hoehrmann::toUtf32(data, size, output_buffer.get());
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
