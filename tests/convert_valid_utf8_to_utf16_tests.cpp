@@ -90,7 +90,9 @@ TEST(convert_3_or_4_UTF8_bytes) {
 }
 
 TEST(issue111) {
-  char16_t input[] = u"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaコaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  // We stick to ASCII for our source code given that there is no universal way to specify the character encoding of
+  // the source files.
+  char16_t input[] = u"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\u30b3aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
   size_t utf16_len = sizeof(input) / sizeof(char16_t) - 1;
   ASSERT_TRUE(implementation.validate_utf16(input, utf16_len));
   ASSERT_TRUE(implementation.utf8_length_from_utf16(input, utf16_len)
