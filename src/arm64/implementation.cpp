@@ -113,7 +113,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const cha
 simdutf_warn_unused size_t implementation::convert_utf16_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
   std::pair<const char16_t*, char32_t*> ret = arm_convert_utf16_to_utf32(buf, len, utf32_output);
   if (ret.first == nullptr) { return 0; }
-  size_t saved_bytes = ret.second - utf8_output;
+  size_t saved_bytes = ret.second - utf32_output;
   if (ret.first != buf + len) {
     const size_t scalar_saved_bytes = scalar::utf16_to_utf32::convert(
                                         ret.first, len - (ret.first - buf), ret.second);
