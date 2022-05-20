@@ -10,6 +10,7 @@ target_include_directories(simdutf PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DI
 if(MSVC)
   if("${MSVC_TOOLSET_VERSION}" STREQUAL "140")
     target_compile_options(simdutf INTERFACE /W0 /sdl)
+    set(SIMDUTF_LEGACY_VISUAL_STUDIO TRUE)
   else()
     target_compile_options(simdutf INTERFACE /WX /W3 /sdl /w34714) # https://docs.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warning-level-4-c4714?view=vs-2019
   endif()
@@ -30,4 +31,8 @@ if(SIMDUTF_SANITIZE)
   target_compile_options(simdutf INTERFACE -fsanitize=address  -fno-omit-frame-pointer -fno-sanitize-recover=all)
   target_compile_definitions(simdutf INTERFACE ASAN_OPTIONS=detect_leaks=1)
   target_link_libraries(simdutf INTERFACE -fsanitize=address  -fno-omit-frame-pointer -fno-sanitize-recover=all)
+endif()
+
+if(MSVC AND BUILD_SHARED_LIBS)
+  set(SIMDUTF_WINDOWS_DLL TRUE)
 endif()
