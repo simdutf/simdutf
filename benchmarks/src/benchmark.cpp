@@ -154,6 +154,11 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
     }
+    {
+        std::string name = "convert_utf8_to_utf32+cppcon2018";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+    }
 #endif
     {
         std::string name = "convert_utf8_to_utf16+hoehrmann";
@@ -230,6 +235,8 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
     if(impl == "cppcon2018") {
         // this is a special case
         if(name == "convert_utf8_to_utf16") {
+          run_convert_utf8_to_utf16_cppcon2018(iterations);
+        } else if(name == "convert_utf8_to_utf32") {
           run_convert_utf8_to_utf16_cppcon2018(iterations);
         } else {
           std::cerr << "unrecognized:" << procedure_name << "\n";
@@ -747,6 +754,28 @@ void Benchmark::run_convert_utf8_to_utf16_cppcon2018(size_t iterations) {
     const char8_t*  data = reinterpret_cast<const char8_t*>(input_data.data());
     const size_t size = input_data.size();
     std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
+    volatile size_t sink{0};
+    auto proc = [data, size, &output_buffer, &sink]() {
+      sink = uu::UtfUtils::SseConvert(data, data + size, output_buffer.get());
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
+    size_t char_count = active_implementation->count_utf8(reinterpret_cast<const char*>(data), size);
+    print_summary(result, size, char_count);
+}
+/**
+ * Bob Steagall, CppCon2018
+ * https://github.com/BobSteagall/CppCon2018/
+ *
+ * Fast Conversion From UTF-8 with C++, DFAs, and SSE Intrinsics
+ * https://www.youtube.com/watch?v=5FQ87-Ecb-A
+ */
+void Benchmark::run_convert_utf8_to_utf32_cppcon2018(size_t iterations) {
+    using char8_t   = unsigned char;
+    const char8_t*  data = reinterpret_cast<const char8_t*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char32_t[]> output_buffer{new char32_t[size]};
     volatile size_t sink{0};
     auto proc = [data, size, &output_buffer, &sink]() {
       sink = uu::UtfUtils::SseConvert(data, data + size, output_buffer.get());

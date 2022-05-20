@@ -92,6 +92,7 @@ namespace simdutf::benchmarks {
         * https://www.youtube.com/watch?v=5FQ87-Ecb-A
         */
         void run_convert_utf8_to_utf16_cppcon2018(size_t iterations);
+        void run_convert_utf8_to_utf32_cppcon2018(size_t iterations);
         /**
          * benchmarks/competition/u8u16 contains an open source version of u8u16, referenced in
          * Cameron, Robert D, A case study in SIMD text processing with parallel bit streams: UTF-8 to UTF-16 transcoding,
