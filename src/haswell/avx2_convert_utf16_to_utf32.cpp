@@ -75,9 +75,10 @@ std::pair<const char16_t*, char32_t*> avx2_convert_utf16_to_utf32(const char16_t
       // case: we extend all sixteen 16-bit words to sixteen 32-bit words
         _mm256_storeu_si256(reinterpret_cast<__m256i *>(utf32_output), _mm256_cvtepu16_epi32(_mm256_castsi256_si128(in)));
         _mm256_storeu_si256(reinterpret_cast<__m256i *>(utf32_output + 8), _mm256_cvtepu16_epi32(_mm256_extractf128_si256(in,1)));
+        utf32_output += 16;
         buf += 16;
     // surrogate pair(s) in a register
-    } else {/*
+    } else {
       // Let us do a scalar fallback.
       // It may seem wasteful to use scalar code, but being efficient with SIMD
       // in the presence of surrogate pairs may require non-trivial tables.
@@ -86,15 +87,9 @@ std::pair<const char16_t*, char32_t*> avx2_convert_utf16_to_utf32(const char16_t
       if(size_t(end - buf) < forward + 1) { forward = size_t(end - buf - 1);}
       for(; k < forward; k++) {
         uint16_t word = buf[k];
-        if((word & 0xFF80)==0) {
-          *utf32_output++ = char(word);
-        } else if((word & 0xF800)==0) {
-          *utf32_output++ = char((word>>6) | 0b11000000);
-          *utf32_output++ = char((word & 0b111111) | 0b10000000);
-        } else if((word &0xF800 ) != 0xD800) {
-          *utf32_output++ = char((word>>12) | 0b11100000);
-          *utf32_output++ = char(((word>>6) & 0b111111) | 0b10000000);
-          *utf32_output++ = char((word & 0b111111) | 0b10000000);
+        if((word &0xF800 ) != 0xD800) {
+          // No surrogate pair
+          *utf32_output++ = char32_t(word);
         } else {
           // must be a surrogate pair
           uint16_t diff = uint16_t(word - 0xD800);
@@ -103,13 +98,10 @@ std::pair<const char16_t*, char32_t*> avx2_convert_utf16_to_utf32(const char16_t
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
           if((diff | diff2) > 0x3FF)  { return std::make_pair(nullptr, utf32_output); }
           uint32_t value = (diff << 10) + diff2 + 0x10000;
-          *utf32_output++ = char((value>>18) | 0b11110000);
-          *utf32_output++ = char(((value>>12) & 0b111111) | 0b10000000);
-          *utf32_output++ = char(((value>>6) & 0b111111) | 0b10000000);
-          *utf32_output++ = char((value & 0b111111) | 0b10000000);
+          *utf32_output++ = char32_t(value);
         }
       }
-      buf += k;*/
+      buf += k;
     }
   } // while
   return std::make_pair(buf, utf32_output);
