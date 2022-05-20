@@ -290,5 +290,5 @@ std::pair<const char16_t*, char32_t*> arm_convert_utf16_to_utf32(const char16_t*
     }
   } // while*/
 
-  return std::make_pair(buf, reinterpret_cast<char*>(utf32_output));
+  return std::make_pair(buf, reinterpret_cast<char*>(utf32_out));
 }
