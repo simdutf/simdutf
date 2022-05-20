@@ -2,6 +2,8 @@
 
 #include "scalar/utf16_to_utf8/valid_utf16_to_utf8.h"
 #include "scalar/utf16_to_utf8/utf16_to_utf8.h"
+#include "scalar/utf16_to_utf32/valid_utf16_to_utf32.h"
+#include "scalar/utf16_to_utf32/utf16_to_utf32.h"
 #include "scalar/utf8_to_utf16/valid_utf8_to_utf16.h"
 #include "scalar/utf8_to_utf16/utf8_to_utf16.h"
 #include "scalar/utf8_to_utf32/valid_utf8_to_utf32.h"
@@ -48,6 +50,14 @@ simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t*
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
   return scalar::utf16_to_utf8::convert_valid(buf, len, utf8_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_utf16_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
+  return scalar::utf16_to_utf32::convert(buf, len, utf32_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
+  return scalar::utf16_to_utf32::convert_valid(buf, len, utf32_output);
 }
 
 simdutf_warn_unused size_t implementation::count_utf16(const char16_t * input, size_t length) const noexcept {

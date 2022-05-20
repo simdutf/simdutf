@@ -61,7 +61,7 @@ inline size_t convert_valid(const char16_t* buf, size_t len, char* utf8_output) 
   return utf8_output - start;
 }
 
-} // utf8_to_utf16 namespace
+} // utf16_to_utf8 namespace
 } // unnamed namespace
 } // namespace scalar
 } // namespace simdutf

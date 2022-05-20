@@ -40,6 +40,7 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 #include "haswell/avx2_convert_utf8_to_utf32.cpp"
 #include "haswell/avx2_validate_utf16le.cpp"
 #include "haswell/avx2_convert_utf16_to_utf8.cpp"
+#include "haswell/avx2_convert_utf16_to_utf32.cpp"
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -101,7 +102,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(const cha
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-  std::pair<const char16_t*, char*> ret = haswell::sse_convert_utf16_to_utf8(buf, len, utf8_output);
+  std::pair<const char16_t*, char*> ret = haswell::avx2_convert_utf16_to_utf8(buf, len, utf8_output);
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf8_output;
   if (ret.first != buf + len) {
@@ -115,6 +116,23 @@ simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t*
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
   return convert_utf16_to_utf8(buf, len, utf8_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_utf16_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
+  std::pair<const char16_t*, char32_t*> ret = haswell::avx2_convert_utf16_to_utf32(buf, len, utf32_output);
+  if (ret.first == nullptr) { return 0; }
+  size_t saved_bytes = ret.second - utf32_output;
+  if (ret.first != buf + len) {
+    const size_t scalar_saved_bytes = scalar::utf16_to_utf32::convert(
+                                        ret.first, len - (ret.first - buf), ret.second);
+    if (scalar_saved_bytes == 0) { return 0; }
+    saved_bytes += scalar_saved_bytes;
+  }
+  return saved_bytes;
+}
+
+simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
+  return convert_utf16_to_utf32(buf, len, utf32_output);
 }
 
 simdutf_warn_unused size_t implementation::count_utf16(const char16_t * input, size_t length) const noexcept {
