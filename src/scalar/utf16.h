@@ -61,7 +61,7 @@ inline size_t utf32_length_from_utf16(const char16_t* buf, size_t len) {
   for(size_t i = 0; i < len; i++) {
     counter += ((p[i] & 0xFC00) != 0xDC00);
   }
-  return 2*counter;
+  return counter;
 }
 
 } // utf16 namespace

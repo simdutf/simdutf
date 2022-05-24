@@ -41,7 +41,7 @@ simdutf_really_inline size_t utf32_length_from_utf16(const char16_t* in, size_t 
       uint64_t not_pair = input.not_in_range(0xDC00, 0xDFFF);
       count += count_ones(not_pair) / 2;
     }
-    return 2*count + scalar::utf16::utf32_length_from_utf16(in + pos, size - pos);
+    return count + scalar::utf16::utf32_length_from_utf16(in + pos, size - pos);
 }
 } // utf16
 } // unnamed namespace
