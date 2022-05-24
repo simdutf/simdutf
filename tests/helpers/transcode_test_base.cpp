@@ -290,7 +290,7 @@ namespace simdutf { namespace tests { namespace helpers {
       return true;
     }
 
-    auto dump = [this, saved_chars](const char* title, const std::vector<char32_t>& array) {
+    auto dump = [saved_chars](const char* title, const std::vector<char32_t>& array) {
       printf("%s", title);
       for (size_t i=0; i < saved_chars; i++) {
         printf(" %02x", (uint8_t)array[i]);
