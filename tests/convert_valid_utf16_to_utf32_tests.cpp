@@ -170,14 +170,12 @@ TEST(all_possible_8_codepoint_combinations) {
   };
 
   std::vector<char> output_utf32(256, ' ');
-  int id = 0;
   const auto& combinations = all_combinations();
   for (const auto& input_utf16: combinations) {
     if (simdutf::tests::reference::validate_utf16(input_utf16.data(), input_utf16.size())) {
       transcode_utf16_to_utf32_test_base test(input_utf16);
       ASSERT_TRUE(test(procedure));
     }
-    id += 1;
   }
 }
 
