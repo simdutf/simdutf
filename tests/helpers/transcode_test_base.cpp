@@ -293,7 +293,7 @@ namespace simdutf { namespace tests { namespace helpers {
     auto dump = [saved_chars](const char* title, const std::vector<char32_t>& array) {
       printf("%s", title);
       for (size_t i=0; i < saved_chars; i++) {
-        printf(" %02x", (uint8_t)array[i]);
+        printf(" %08x", (uint32_t)array[i]);
       }
       putchar('\n');
     };
@@ -320,7 +320,7 @@ namespace simdutf { namespace tests { namespace helpers {
       dump("actual   :", output_utf32);
       for(size_t i = 0; i < reference_output_utf32.size(); i++) {
         if(reference_output_utf32[i] != output_utf32[i]) { printf(" ==> "); }
-        printf("at %zu expected 0x%02x and got 0x%02x\n ", i, uint32_t(reference_output_utf32[i]), uint32_t(output_utf32[i]));
+        printf("at %zu expected 0x%08x and got 0x%08x\n ", i, uint32_t(reference_output_utf32[i]), uint32_t(output_utf32[i]));
       }
       return false;
     }
