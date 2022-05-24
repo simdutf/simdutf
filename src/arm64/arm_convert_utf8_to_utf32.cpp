@@ -41,8 +41,9 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     uint8x16_t ascii = vandq_u8(perm, vreinterpretq_u8_u16(vmovq_n_u16(0x7f)));
     uint8x16_t highbyte = vandq_u8(perm, vreinterpretq_u8_u16(vmovq_n_u16(0x1f00)));
     uint8x16_t composed = vorrq_u8(ascii, vreinterpretq_u8_u16(vshrq_n_u16(vreinterpretq_u16_u8(highbyte), 2)));
-    vst1q_u16(reinterpret_cast<uint16_t*>(utf32_output), vreinterpretq_u16_u8(composed));
-    utf32_output += 8; // We wrote 16 bytes, 8 code points.
+    vst1q_u32(reinterpret_cast<uint32_t*>(utf32_output),  vmovl_u16(vget_low_u16(vreinterpretq_u16_u8(composed))));
+    vst1q_u32(reinterpret_cast<uint32_t*>(utf32_output+4),  vmovl_high_u16(vreinterpretq_u16_u8(composed)));
+    utf32_output += 8; // We wrote 32 bytes, 8 code points.
     return 16;
   }
   if(input_utf8_end_of_code_point_mask == 0x924) {
@@ -86,7 +87,8 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     uint8x16_t ascii = vandq_u8(perm, vreinterpretq_u8_u16(vmovq_n_u16(0x7f)));
     uint8x16_t highbyte = vandq_u8(perm, vreinterpretq_u8_u16(vmovq_n_u16(0x1f00)));
     uint8x16_t composed = vorrq_u8(ascii, vreinterpretq_u8_u16(vshrq_n_u16(vreinterpretq_u16_u8(highbyte), 2)));
-    vst1q_u8(reinterpret_cast<uint8_t*>(utf32_output), composed);
+    vst1q_u32(reinterpret_cast<uint32_t*>(utf32_output),  vmovl_u16(vget_low_u16(vreinterpretq_u16_u8(composed))));
+    vst1q_u32(reinterpret_cast<uint32_t*>(utf32_output+4),  vmovl_high_u16(vreinterpretq_u16_u8(composed)));
     utf32_output += 6; // We wrote 12 bytes, 6 code points.
   } else if (idx < 145) {
     // FOUR (4) input code-words
