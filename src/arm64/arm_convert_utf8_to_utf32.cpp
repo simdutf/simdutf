@@ -34,13 +34,14 @@ size_t convert_masked_utf8_to_utf32(const char *input,
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
     const uint8x16_t sh = make_uint8x16_t(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
 #else
+    //const uint8x16_t sh = {1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14};
     const uint8x16_t sh = {1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14};
 #endif
     uint8x16_t perm = vqtbl1q_u8(in, sh);
     uint8x16_t ascii = vandq_u8(perm, vreinterpretq_u8_u16(vmovq_n_u16(0x7f)));
     uint8x16_t highbyte = vandq_u8(perm, vreinterpretq_u8_u16(vmovq_n_u16(0x1f00)));
     uint8x16_t composed = vorrq_u8(ascii, vreinterpretq_u8_u16(vshrq_n_u16(vreinterpretq_u16_u8(highbyte), 2)));
-    vst1q_u8(reinterpret_cast<uint8_t*>(utf32_output), composed);
+    vst1q_u16(reinterpret_cast<uint16_t*>(utf32_output), vreinterpretq_u16_u8(composed));
     utf32_output += 8; // We wrote 16 bytes, 8 code points.
     return 16;
   }
