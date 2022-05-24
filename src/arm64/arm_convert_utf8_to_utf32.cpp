@@ -4,11 +4,12 @@
 // It returns how many bytes were consumed (up to 12).
 size_t convert_masked_utf8_to_utf32(const char *input,
                            uint64_t utf8_end_of_code_point_mask,
-                           char32_t *&utf32_output) {
+                           char32_t *&utf32_out) {
   // we use an approach where we try to process up to 12 input bytes.
   // Why 12 input bytes and not 16? Because we are concerned with the size of
   // the lookup tables. Also 12 is nicely divisible by two and three.
   //
+  uint32_t* utf32_output = reinterpret_cast<uint32_t*>(utf32_out);
   uint8x16_t in = vld1q_u8(reinterpret_cast<const uint8_t*>(input));
   const uint16_t input_utf8_end_of_code_point_mask =
       utf8_end_of_code_point_mask & 0xFFF;
@@ -20,11 +21,10 @@ size_t convert_masked_utf8_to_utf32(const char *input,
   // We first try a few fast paths.
   if((utf8_end_of_code_point_mask & 0xffff) == 0xffff) {
     // We process in chunks of 16 bytes
-    uint32_t* utf32 = reinterpret_cast<uint32_t*>(utf32_output);
-    vst1q_u32(utf32, vmovl_u16(vget_low_u16(vmovl_u8(vget_low_u8 (in)))));
-    vst1q_u32(utf32 + 4, vmovl_high_u16(vmovl_u8(vget_low_u8 (in))));
-    vst1q_u32(utf32 + 8, vmovl_u16(vget_low_u16(vmovl_high_u8(in))));
-    vst1q_u32(utf32 + 12, vmovl_high_u16(vmovl_high_u8(in)));
+    vst1q_u32(utf32_output, vmovl_u16(vget_low_u16(vmovl_u8(vget_low_u8 (in)))));
+    vst1q_u32(utf32_output + 4, vmovl_high_u16(vmovl_u8(vget_low_u8 (in))));
+    vst1q_u32(utf32_output + 8, vmovl_u16(vget_low_u16(vmovl_high_u8(in))));
+    vst1q_u32(utf32_output + 12, vmovl_high_u16(vmovl_high_u8(in)));
     utf32_output += 16; // We wrote 16 16-bit characters.
     return 16; // We consumed 16 bytes.
   }
@@ -41,8 +41,8 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     uint8x16_t ascii = vandq_u8(perm, vreinterpretq_u8_u16(vmovq_n_u16(0x7f)));
     uint8x16_t highbyte = vandq_u8(perm, vreinterpretq_u8_u16(vmovq_n_u16(0x1f00)));
     uint8x16_t composed = vorrq_u8(ascii, vreinterpretq_u8_u16(vshrq_n_u16(vreinterpretq_u16_u8(highbyte), 2)));
-    vst1q_u32(reinterpret_cast<uint32_t*>(utf32_output),  vmovl_u16(vget_low_u16(vreinterpretq_u16_u8(composed))));
-    vst1q_u32(reinterpret_cast<uint32_t*>(utf32_output+4),  vmovl_high_u16(vreinterpretq_u16_u8(composed)));
+    vst1q_u32(utf32_output,  vmovl_u16(vget_low_u16(vreinterpretq_u16_u8(composed))));
+    vst1q_u32(utf32_output+4,  vmovl_high_u16(vreinterpretq_u16_u8(composed)));
     utf32_output += 8; // We wrote 32 bytes, 8 code points.
     return 16;
   }
@@ -65,7 +65,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     uint32x4_t highbyte_shifted = vshrq_n_u32(highbyte, 4);
     uint32x4_t composed =
         vorrq_u32(vorrq_u32(vreinterpretq_u32_u8(ascii), vreinterpretq_u32_u8(middlebyte_shifted)), highbyte_shifted);
-    vst1q_u32(reinterpret_cast<uint32_t*>(utf32_output), composed);
+    vst1q_u32(utf32_output, composed);
     utf32_output += 4;
     return 12;
   }
@@ -87,8 +87,8 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     uint8x16_t ascii = vandq_u8(perm, vreinterpretq_u8_u16(vmovq_n_u16(0x7f)));
     uint8x16_t highbyte = vandq_u8(perm, vreinterpretq_u8_u16(vmovq_n_u16(0x1f00)));
     uint8x16_t composed = vorrq_u8(ascii, vreinterpretq_u8_u16(vshrq_n_u16(vreinterpretq_u16_u8(highbyte), 2)));
-    vst1q_u32(reinterpret_cast<uint32_t*>(utf32_output),  vmovl_u16(vget_low_u16(vreinterpretq_u16_u8(composed))));
-    vst1q_u32(reinterpret_cast<uint32_t*>(utf32_output+4),  vmovl_high_u16(vreinterpretq_u16_u8(composed)));
+    vst1q_u32(utf32_output,  vmovl_u16(vget_low_u16(vreinterpretq_u16_u8(composed))));
+    vst1q_u32(utf32_output+4,  vmovl_high_u16(vreinterpretq_u16_u8(composed)));
     utf32_output += 6; // We wrote 12 bytes, 6 code points.
   } else if (idx < 145) {
     // FOUR (4) input code-words
@@ -104,7 +104,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     uint32x4_t highbyte_shifted = vshrq_n_u32(highbyte, 4);
     uint32x4_t composed =
         vorrq_u32(vorrq_u32(vreinterpretq_u32_u8(ascii), vreinterpretq_u32_u8(middlebyte_shifted)), highbyte_shifted);
-    vst1q_u32(reinterpret_cast<uint32_t*>(utf32_output), composed);
+    vst1q_u32(utf32_output, composed);
     utf32_output += 4;
   } else if (idx < 209) {
     // TWO (2) input code-words
@@ -124,7 +124,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     uint8x16_t composed =
         vorrq_u8(vorrq_u8(ascii, middlebyte_shifted),
                      vorrq_u8(highbyte_shifted, middlehighbyte_shifted));
-    vst1q_u32(reinterpret_cast<uint32_t*>(utf32_output), vreinterpretq_u32_u8(composed));
+    vst1q_u32(utf32_output, vreinterpretq_u32_u8(composed));
     utf32_output += 3;
   } else {
     // here we know that there is an error but we do not handle errors
