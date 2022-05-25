@@ -18,47 +18,7 @@ namespace {
   constexpr int trials = 1000;
 }
 
-TEST(convert_pure_ASCII) {
-  size_t counter = 0;
-  auto generator = [&counter]() -> uint32_t {
-    return counter++ & 0x7f;
-  };
-
-  auto procedure = [&implementation](const char16_t* utf16, size_t size, char32_t* utf32) -> size_t {
-    return implementation.convert_utf16_to_utf32(utf16, size, utf32);
-  };
-  auto size_procedure = [&implementation](const char16_t* utf16, size_t size) -> size_t {
-    return implementation.utf32_length_from_utf16(utf16, size);
-  };
-  std::array<size_t, 1> input_size{16};
-  for (size_t size: input_size) {
-    transcode_utf16_to_utf32_test_base test(generator, size);
-    ASSERT_TRUE(test(procedure));
-    ASSERT_TRUE(test.check_size(size_procedure));    
-  }
-}
-
-TEST(convert_into_1_or_2_UTF8_bytes) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    uint32_t seed{1234+uint32_t(trial)};
-    if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
-    simdutf::tests::helpers::RandomInt random(0x0000, 0x07ff, seed); // range for 1 or 2 UTF-8 bytes
-
-    auto procedure = [&implementation](const char16_t* utf16, size_t size, char32_t* utf32) -> size_t {
-      return implementation.convert_utf16_to_utf32(utf16, size, utf32);
-    };
-    auto size_procedure = [&implementation](const char16_t* utf16, size_t size) -> size_t {
-      return implementation.utf32_length_from_utf16(utf16, size);
-    };
-    for (size_t size: input_size) {
-      transcode_utf16_to_utf32_test_base test(random, size);
-      ASSERT_TRUE(test(procedure));
-      ASSERT_TRUE(test.check_size(size_procedure));    
-    }
-  }
-}
-
-TEST(convert_into_1_or_2_or_3_UTF8_bytes) {
+TEST(convert_2_UTF16_bytes) {
   for(size_t trial = 0; trial < trials; trial ++) {
     if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
     // range for 1, 2 or 3 UTF-8 bytes
@@ -81,7 +41,7 @@ TEST(convert_into_1_or_2_or_3_UTF8_bytes) {
   }
 }
 
-TEST(convert_into_3_or_4_UTF8_bytes) {
+TEST(convert_with_surrogates) {
   for(size_t trial = 0; trial < trials; trial ++) {
     if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
     // range for 3 or 4 UTF-8 bytes
