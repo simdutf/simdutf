@@ -1,21 +1,20 @@
-name: VS16-ARM-CI
+name: VS17-ARM-CI
 
 on: [push, pull_request]
 
 jobs:
   ci:
-    name: windows-vs16
+    name: windows-vs17
     runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - {arch: ARM}
-          - {arch: ARM64}
+          - {gen: Visual Studio 17 2022, arch: ARM64}
     steps:
       - name: checkout
         uses: actions/checkout@v2
       - name: Use cmake
         run: |
-          cmake -A ${{ matrix.arch }} -DCMAKE_CROSSCOMPILING=1 -B build  &&
+          cmake -G "${{matrix.gen}}" -A ${{ matrix.arch }} -DCMAKE_CROSSCOMPILING=1 -B build  &&
           cmake --build build --verbose

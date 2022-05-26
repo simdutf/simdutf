@@ -12,10 +12,25 @@
 #include <stdint.h>
 #endif
 #ifdef _MSC_VER
+// Daniel Lemire (2022-05-17): the next few lines were slightly modified to get it to build under clangcl
+#ifdef __clang__
+#include <stdint.h>
+#else
 #include "stdint.h"
+#endif
+
+#ifndef LITTLE_ENDIAN
 #define LITTLE_ENDIAN 1234
+#endif
+
+#ifndef BIG_ENDIAN
 #define BIG_ENDIAN 4321
+#endif
+
+#ifndef BYTE_ORDER
 #define BYTE_ORDER LITTLE_ENDIAN
+#endif
+
 #endif
 #include <limits.h>
 

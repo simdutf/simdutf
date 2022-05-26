@@ -104,7 +104,6 @@ Examples:
         abort();
       }
 
-      const simdutf::implementation& impl = *implementation;
       fprintf(file, "- %s\n", implementation->name().c_str());
     }
   }
@@ -152,7 +151,6 @@ Examples:
           }
       }
 
-      const simdutf::implementation& impl = *implementation;
       printf("Checking implementation %s\n", implementation->name().c_str());
 
       auto filter = [&cmdline](const simdutf::test::test_entry& test) -> bool {
