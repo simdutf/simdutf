@@ -14,6 +14,7 @@
 #include "scalar/utf8_to_utf16/utf8_to_utf16.h"
 #include "scalar/utf8.h"
 #include "scalar/utf16.h"
+#include "scalar/utf32.h"
 //
 
 
