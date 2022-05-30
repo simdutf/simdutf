@@ -13,7 +13,7 @@ TEST(validate_utf32__returns_true_for_valid_input) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf32 generator{seed};
   for(size_t trial = 0; trial < 1000; trial++) {
-    const auto utf32{generator.generate(1024, seed)};
+    const auto utf32{generator.generate(256, seed)};
 
     ASSERT_TRUE(implementation.validate_utf32(
               reinterpret_cast<const char32_t*>(utf32.data()), utf32.size()));
@@ -30,7 +30,7 @@ TEST(validate_utf32__returns_false_when_input_in_forbidden_range) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf32 generator{seed};
   for(size_t trial = 0; trial < 10; trial++) {
-    auto utf32{generator.generate(512)};
+    auto utf32{generator.generate(128)};
     const char32_t*  buf = reinterpret_cast<const char32_t*>(utf32.data());
     const size_t len = utf32.size();
 
@@ -55,7 +55,7 @@ TEST(validate_utf32__returns_false_when_input_too_large) {
   std::mt19937 gen{seed};
 
   for(size_t trial = 0; trial < 10; trial++) {
-    auto utf32{generator.generate(512)};
+    auto utf32{generator.generate(128)};
     const char32_t*  buf = reinterpret_cast<const char32_t*>(utf32.data());
     const size_t len = utf32.size();
 
