@@ -56,9 +56,8 @@ std::pair<const char16_t*, char32_t*> avx2_convert_utf16_to_utf32(const char16_t
   const char16_t* end = buf + len;
   const __m256i v_f800 = _mm256_set1_epi16((int16_t)0xf800);
   const __m256i v_d800 = _mm256_set1_epi16((int16_t)0xd800);
-  const size_t safety_margin = 11; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
 
-  while (buf + 16 + safety_margin <= end) {
+  while (buf + 16 <= end) {
     __m256i in = _mm256_loadu_si256((__m256i*)buf);
     
     // 1. Check if there are any surrogate word in the input chunk.
