@@ -1,6 +1,5 @@
 #include "simdutf.h"
 #include <initializer_list>
-#include <string>
 #include <climits>
 
 // Useful for debugging purposes
@@ -22,11 +21,11 @@ std::string toBinaryString(T b) {
 
 // Implementations
 #include "simdutf/arm64.h"
-#include "simdutf/icelake.h"
 #include "simdutf/haswell.h"
 #include "simdutf/westmere.h"
 #include "simdutf/ppc64.h"
 #include "simdutf/fallback.h"
+#include "simdutf/icelake.h"
 
 namespace simdutf {
 bool implementation::supported_by_runtime_system() const {
@@ -301,7 +300,7 @@ simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const char * buf,
 }
 
 const implementation * builtin_implementation() {
-  static const implementation * builtin_impl = available_implementations[STRINGIFY(SIMDUTF_BUILTIN_IMPLEMENTATION)];
+  static const implementation * builtin_impl = available_implementations[SIMDUTF_STRINGIFY(SIMDUTF_BUILTIN_IMPLEMENTATION)];
   return builtin_impl;
 }
 

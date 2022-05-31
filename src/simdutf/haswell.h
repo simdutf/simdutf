@@ -45,7 +45,6 @@ namespace haswell {
 // The rest need to be inside the region
 //
 #include "simdutf/haswell/begin.h"
-
 // Declarations
 #include "simdutf/haswell/bitmanipulation.h"
 #include "simdutf/haswell/simd.h"

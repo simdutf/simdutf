@@ -1,2 +1,0 @@
-#undef TRANSCODE16
-#undef STORE_ASCII

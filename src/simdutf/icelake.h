@@ -1,15 +1,6 @@
 #ifndef SIMDUTF_ICELAKE_H
 #define SIMDUTF_ICELAKE_H
 
-#ifdef SIMDUTF_HASWELL_H
-#error "icelake.h must be included before haswell.h"
-#endif
-#ifdef SIMDUTF_WESTMERE_H
-#error "icelake.h must be included before westmere.h"
-#endif
-#ifdef SIMDUTF_FALLBACK_H
-#error "icelake.h must be included before fallback.h"
-#endif
 
 #include "simdutf/portability.h"
 // We allow icelake on x64.
@@ -39,8 +30,21 @@ namespace icelake {
 } // namespace icelake
 } // namespace simdutf
 
+
+
+//
+// These two need to be included outside SIMDUTF_TARGET_REGION
+//
 #include "simdutf/icelake/intrinsics.h"
 #include "simdutf/icelake/implementation.h"
+
+//
+// The rest need to be inside the region
+//
+//#include "simdutf/icelake/begin.h"
+//#include "simdutf/icelake/end.h"
+
+
 
 #endif // SIMDUTF_IMPLEMENTATION_ICELAKE
 #endif // SIMDUTF_ICELAKE_H

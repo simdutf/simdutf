@@ -1,6 +1,6 @@
 
 /*
-    This upcoming macro (TRANSCODE16) takes 16 + 4 bytes (of a UTF-8 string)
+    This upcoming macro (SIMDUTF_ICELAKE_TRANSCODE16) takes 16 + 4 bytes (of a UTF-8 string)
     and loads all possible 4-byte substring into an AVX512 register.
 
     For example if we have bytes abcdefgh... we create following 32-bit lanes
@@ -39,21 +39,20 @@
             15,  0,  1,  2,
         ]
 */
-// needed by TRANSCODE16
-const __m512i expand_ver2 = _mm512_setr_epi64(
-        0x0403020103020100,
-        0x0605040305040302,
-        0x0807060507060504,
-        0x0a09080709080706,
-        0x0c0b0a090b0a0908,
-        0x0e0d0c0b0d0c0b0a,
-        0x000f0e0d0f0e0d0c,
-        0x0201000f01000f0e
-    );
 
-#define TRANSCODE16(LANE0, LANE1)                                                                            \
+#define SIMDUTF_ICELAKE_TRANSCODE16(LANE0, LANE1)                                                                            \
         {                                                                                                    \
             const __m512i merged = _mm512_mask_mov_epi32(LANE0, 0x1000, LANE1);                              \
+            const __m512i expand_ver2 = _mm512_setr_epi64(                                                   \
+                0x0403020103020100,                                                                          \
+                0x0605040305040302,                                                                          \
+                0x0807060507060504,                                                                          \
+                0x0a09080709080706,                                                                          \
+                0x0c0b0a090b0a0908,                                                                          \
+                0x0e0d0c0b0d0c0b0a,                                                                          \
+                0x000f0e0d0f0e0d0c,                                                                          \
+                0x0201000f01000f0e                                                                           \
+            );                                                                                               \
             const __m512i input = _mm512_shuffle_epi8(merged, expand_ver2);                                  \
                                                                                                              \
             __mmask16 leading_bytes;                                                                         \
@@ -84,7 +83,7 @@ const __m512i expand_ver2 = _mm512_setr_epi64(
         }
 
 
-#define STORE_ASCII(UTF32, utf8, output)                                                  \
+#define SIMDUTF_ICELAKE_STORE_ASCII(UTF32, utf8, output)                                                  \
         if (UTF32) {                                                                      \
                 const __m128i t0 = _mm512_castsi512_si128(utf8);                          \
                 const __m128i t1 = _mm512_extracti32x4_epi32(utf8, 1);                    \
