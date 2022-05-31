@@ -34,6 +34,7 @@ std::pair<const char*, OUTPUT*> valid_utf8_to_fixed_length(const char* str, size
      */
     while (ptr + 64 + 4 <= end) {
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
+        const __m512i v_80 = _mm512_set1_epi8(char(0x80));
         const __mmask64 ascii = _mm512_test_epi8_mask(utf8, v_80);
         if(ascii == 0) {
             STORE_ASCII(UTF32, utf8, output)
@@ -64,6 +65,7 @@ std::pair<const char*, OUTPUT*> valid_utf8_to_fixed_length(const char* str, size
     // 3*16 bytes, so we may end up double-validating 16 bytes.
     if (ptr + 64 <= end) {
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
+        const __m512i v_80 = _mm512_set1_epi8(char(0x80));
         const __mmask64 ascii = _mm512_test_epi8_mask(utf8, v_80);
         if(ascii == 0) {
             STORE_ASCII(UTF32, utf8, output)

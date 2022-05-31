@@ -57,12 +57,16 @@ const __m512i expand_ver2 = _mm512_setr_epi64(
             const __m512i input = _mm512_shuffle_epi8(merged, expand_ver2);                                  \
                                                                                                              \
             __mmask16 leading_bytes;                                                                         \
+            const __m512i v_0000_00c0 = _mm512_set1_epi32(0xc0);                                             \
             const __m512i t0 = _mm512_and_si512(input, v_0000_00c0);                                         \
+            const __m512i v_0000_0080 = _mm512_set1_epi32(0x80);                                             \
             leading_bytes = _mm512_cmpneq_epu32_mask(t0, v_0000_0080);                                       \
                                                                                                              \
             __m512i char_class;                                                                              \
             char_class = _mm512_srli_epi32(input, 4);                                                        \
             /*  char_class = ((input >> 4) & 0x0f) | 0x80808000 */                                           \
+            const __m512i v_0000_000f = _mm512_set1_epi32(0x0f);                                             \
+            const __m512i v_8080_8000 = _mm512_set1_epi32(0x80808000);                                       \
             char_class = _mm512_ternarylogic_epi32(char_class, v_0000_000f, v_8080_8000, 0xea);              \
                                                                                                              \
             const int valid_count = __builtin_popcount(leading_bytes);                                       \

@@ -67,12 +67,14 @@ enum instruction_set {
   BMI2 = 0x40,
   ALTIVEC = 0x80,
   AVX512F = 0x100,
-  AVX512BW = 0x200,
-  AVX512DQ = 0x400,
-  AVX512VL = 0x800,
-  AVX512VBMI = 0x1000,
-  AVX512VBMI2 = 0x2000,
-  AVX512BITALG = 0x4000,
+  AVX512DQ = 0x200,
+  AVX512IFMA = 0x400,
+  AVX512PF = 0x800,
+  AVX512ER = 0x1000,
+  AVX512CD = 0x2000,
+  AVX512BW = 0x4000,
+  AVX512VL = 0x8000,
+  AVX512VBMI2 = 0x10000
 };
 
 #if defined(__PPC64__)
@@ -197,22 +199,18 @@ static inline uint32_t detect_supported_architectures() {
   if (ebx & cpuid_bit::ebx::avx512bw) {
     host_isa |= instruction_set::AVX512BW;
   }
+  if (ebx & cpuid_bit::ebx::avx512cd) {
+    host_isa |= instruction_set::AVX512CD;
+  }
   if (ebx & cpuid_bit::ebx::avx512dq) {
     host_isa |= instruction_set::AVX512DQ;
   }
   if (ebx & cpuid_bit::ebx::avx512vl) {
     host_isa |= instruction_set::AVX512VL;
   }
-  if (ecx & cpuid_bit::ecx::avx512vbmi) {
-    host_isa |= instruction_set::AVX512VBMI;
-  }
   if (ecx & cpuid_bit::ecx::avx512vbmi2) {
     host_isa |= instruction_set::AVX512VBMI2;
   }
-  if (ecx & cpuid_bit::ecx::avx512bitalg) {
-    host_isa |= instruction_set::AVX512BITALG;
-  }
-
   return host_isa;
 }
 #else // fallback

@@ -1,5 +1,5 @@
 // file included directly
-
+/*
 const __m512i v_3f3f_3f7f = _mm512_set1_epi32(0x3f3f3f7f);
 const __m512i v_3f3f_3f00 = _mm512_set1_epi32(0x3f3f3f00);
 const __m512i v_0140_0140 = _mm512_set1_epi32(0x01400140);
@@ -38,3 +38,4 @@ const __m512i broadcast_0th_lane = _mm512_setr_epi32(
     0, 1, 2, 3,
     0, 1, 2, 3
 );
+*/

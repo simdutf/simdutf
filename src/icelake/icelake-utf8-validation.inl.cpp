@@ -11,6 +11,7 @@ simdutf_really_inline __m512i check_special_cases(__m512i input, const __m512i p
         0x4915012180808080,
         0x0202020202020202,
         0x4915012180808080);
+    const __m512i v_0f = _mm512_set1_epi8(0x0f);
     __m512i index1 = _mm512_and_si512(_mm512_srli_epi16(prev1, 4), v_0f);
 
     __m512i byte_1_high = _mm512_shuffle_epi8(mask1, index1);
@@ -48,8 +49,10 @@ simdutf_really_inline __m512i check_special_cases(__m512i input, const __m512i p
     __m512i is_third_byte  = _mm512_subs_epu8(prev2, _mm512_set1_epi8(0b11100000u-1)); // Only 111_____ will be > 0
     __m512i is_fourth_byte  = _mm512_subs_epu8(prev3, _mm512_set1_epi8(0b11110000u-1)); // Only 1111____ will be > 0
     __m512i is_third_or_fourth_byte = _mm512_or_si512(is_third_byte, is_fourth_byte);
+    const __m512i v_7f = _mm512_set1_epi8(char(0x7f));
     is_third_or_fourth_byte = _mm512_adds_epu8(v_7f, is_third_or_fourth_byte);
     // We want to compute (is_third_or_fourth_byte AND v80) XOR sc.
+    const __m512i v_80 = _mm512_set1_epi8(char(0x80));
     return _mm512_ternarylogic_epi32(is_third_or_fourth_byte, v_80, sc, 0b1101010);
     //__m512i is_third_or_fourth_byte_mask = _mm512_and_si512(is_third_or_fourth_byte, v_80);
     //return _mm512_xor_si512(is_third_or_fourth_byte_mask, sc);
@@ -104,6 +107,7 @@ simdutf_really_inline __m512i check_special_cases(__m512i input, const __m512i p
 
     // returns true if ASCII.
     simdutf_really_inline bool check_next_input(const __m512i input) {
+      const __m512i v_80 = _mm512_set1_epi8(char(0x80));
       const __mmask64 ascii = _mm512_test_epi8_mask(input, v_80);
       if(ascii == 0) {
         this->error = _mm512_or_si512(this->error, this->prev_incomplete);

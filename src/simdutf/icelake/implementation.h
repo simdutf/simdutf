@@ -1,10 +1,10 @@
-#ifndef SIMDUTF_AVX512VBMI_IMPLEMENTATION_H
-#define SIMDUTF_AVX512VBMI_IMPLEMENTATION_H
+#ifndef SIMDUTF_ICELAKE_IMPLEMENTATION_H
+#define SIMDUTF_ICELAKE_IMPLEMENTATION_H
 
 #include "simdutf/implementation.h"
 
 namespace simdutf {
-namespace avx512vbmi {
+namespace icelake {
 
 namespace {
 using namespace simdutf;
@@ -13,11 +13,12 @@ using namespace simdutf;
 class implementation final : public simdutf::implementation {
 public:
   simdutf_really_inline implementation() : simdutf::implementation(
-      "avx512vbmi",
-      "Intel AVX512 (AVX512VBMI, AVX512BW extensions)",
-       internal::instruction_set::AVX512VBMI) {}
+      "icelake",
+      "Intel AVX512 (AVX-512BW, AVX-512CD, AVX-512VL, AVX-512VBMI2 extensions)",
+      internal::instruction_set::AVX2 | internal::instruction_set::PCLMULQDQ | internal::instruction_set::BMI1 | internal::instruction_set::BMI2 | internal::instruction_set::AVX512BW | internal::instruction_set::AVX512CD | internal::instruction_set::AVX512VL | internal::instruction_set::AVX512VBMI2 ) {}
 
   simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+  simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) const noexcept final;
   simdutf_warn_unused bool validate_utf16(const char16_t *buf, size_t len) const noexcept final;
   simdutf_warn_unused size_t convert_utf8_to_utf16(const char * buf, size_t len, char16_t* utf16_output) const noexcept final;
   simdutf_warn_unused size_t convert_valid_utf8_to_utf16(const char * buf, size_t len, char16_t* utf16_buffer) const noexcept final;
@@ -29,7 +30,7 @@ public:
   simdutf_warn_unused size_t utf16_length_from_utf8(const char * input, size_t length) const noexcept;
 };
 
-} // namespace avx512vbmi
+} // namespace icelake
 } // namespace simdutf
 
-#endif // SIMDUTF_AVX512VBMI_IMPLEMENTATION_H
+#endif // SIMDUTF_ICELAKE_IMPLEMENTATION_H

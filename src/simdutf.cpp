@@ -27,8 +27,8 @@ SIMDUTF_DISABLE_UNDESIRED_WARNINGS
 #if SIMDUTF_IMPLEMENTATION_FALLBACK
 #include "fallback/implementation.cpp"
 #endif
-#if SIMDUTF_IMPLEMENTATION_AVX512BW
-#include "avx512bw/implementation.cpp"
+#if SIMDUTF_IMPLEMENTATION_ICELAKE
+#include "icelake/implementation.cpp"
 #endif
 #if SIMDUTF_IMPLEMENTATION_HASWELL
 #include "haswell/implementation.cpp"
