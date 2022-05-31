@@ -68,7 +68,7 @@
             const __m512i v_8080_8000 = _mm512_set1_epi32(0x80808000);                                       \
             char_class = _mm512_ternarylogic_epi32(char_class, v_0000_000f, v_8080_8000, 0xea);              \
                                                                                                              \
-            const int valid_count = __builtin_popcount(leading_bytes);                                       \
+            const int valid_count = count_ones(leading_bytes);                                       \
             const __m512i utf32 = expanded_utf8_to_utf32(char_class, input);                                 \
                                                                                                              \
             const __m512i out = _mm512_mask_compress_epi32(_mm512_setzero_si512(), leading_bytes, utf32);    \

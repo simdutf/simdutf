@@ -60,7 +60,7 @@ size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
     // 3. store valid 16-bit values
     _mm256_mask_storeu_epi16((__m256i*)output, valid, _mm512_cvtepi32_epi16(utf32));
 
-    int sp = __builtin_popcount(sp_mask);
+    int sp = count_ones(sp_mask);
 
     // 4. copy surrogate pairs
     uint32_t mask = sp_mask;
@@ -74,7 +74,7 @@ size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
         }
     }
 
-    return count + __builtin_popcount(sp_mask);
+    return count + count_ones(sp_mask);
 }
 
 /**
