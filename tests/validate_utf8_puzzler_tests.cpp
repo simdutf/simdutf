@@ -17,7 +17,10 @@ int main() {
   std::cout << "\"" << std::endl;
   bool is_ok{true};
   for(const auto& e: simdutf::available_implementations) {
-      if(!e->supported_by_runtime_system()) { continue; }
+      if(!e->supported_by_runtime_system()) {
+        std::cout << e->name() << " is unsupported by current processor " << std::endl;
+        continue;
+      }
       const bool current = e->validate_utf8(bad64, length);
       std::cout << e->name() << " returns " << current << std::endl;
       if(current) { is_ok = false; }

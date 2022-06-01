@@ -100,11 +100,14 @@ Examples:
     fprintf(file, "Available implementations:\n");
     for (const auto& implementation: simdutf::available_implementations) {
       if (implementation == nullptr) {
-        puts("SIMDUTF implementation is null");
+        puts("implementation is null which is unexpected.");
         abort();
       }
-
-      fprintf(file, "- %s\n", implementation->name().c_str());
+      if (implementation->supported_by_runtime_system()) {
+        fprintf(file, "- %s\n", implementation->name().c_str());
+      } else {
+        fprintf(file, "- %s [unsupported by current processor]\n", implementation->name().c_str());
+      }
     }
   }
 
@@ -141,10 +144,13 @@ Examples:
 
     for (const auto& implementation: simdutf::available_implementations) {
       if (implementation == nullptr) {
-        puts("SIMDUTF implementation is null");
+        puts("implementation is null which is unexpected");
         abort();
       }
-
+      if (!implementation->supported_by_runtime_system()) {
+        printf("Implementation %s is unsupported by the current processor.\n", implementation->name().c_str());
+        continue;
+      }
       if (not cmdline.architectures.empty()) {
           if (cmdline.architectures.count(implementation->name()) == 0) {
             continue;
