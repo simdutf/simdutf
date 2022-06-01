@@ -21,6 +21,7 @@ bool test_and_clear_bit(uint32_t& val, int bitpos) {
 size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
     const __mmask16 valid = uint16_t((1 << count) - 1);
     // 1. check if we have any surrogate pairs
+    const __m512i v_0000_ffff = _mm512_set1_epi32(0x0000ffff);
     const __mmask16 sp_mask = _mm512_mask_cmpgt_epu32_mask(valid, utf32, v_0000_ffff);
     if (sp_mask == 0) {
         // XXX: Masked vmovdqa is slow;
@@ -36,6 +37,7 @@ size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
         // 2. build surrogate pair words in 32-bit lanes
 
         //    t0 = 8 x [000000000000aaaa|aaaaaabbbbbbbbbb]
+        const __m512i v_0001_0000 = _mm512_set1_epi32(0x00010000);
         const __m512i t0 = _mm512_sub_epi32(utf32, v_0001_0000);
 
         //    t1 = 8 x [000000aaaaaaaaaa|bbbbbbbbbb000000]
@@ -43,10 +45,13 @@ size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
 
         //    t2 = 8 x [000000aaaaaaaaaa|aaaaaabbbbbbbbbb] -- copy hi word from t1 to t0
         //         0xe4 = (t1 and v_ffff_0000) or (t0 and not v_ffff_0000)
+        const __m512i v_ffff_0000 = _mm512_set1_epi32(0xffff0000);
         const __m512i t2 = _mm512_ternarylogic_epi32(t1, t0, v_ffff_0000, 0xe4);
 
         //    t2 = 8 x [110110aaaaaaaaaa|110111bbbbbbbbbb] -- copy hi word from t1 to t0
         //         0xba = (t2 and not v_fc00_fc000) or v_d800_dc00
+        const __m512i v_fc00_fc00 = _mm512_set1_epi32(0xfc00fc00);
+        const __m512i v_d800_dc00 = _mm512_set1_epi32(0xd800dc00);
         const __m512i t3 = _mm512_ternarylogic_epi32(t2, v_fc00_fc00, v_d800_dc00, 0xba);
 
         _mm512_storeu_si512((__m512i*)words, t3);
@@ -55,11 +60,11 @@ size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
     // 3. store valid 16-bit values
     _mm256_mask_storeu_epi16((__m256i*)output, valid, _mm512_cvtepi32_epi16(utf32));
 
-    int sp = __builtin_popcount(sp_mask);
+    int sp = static_cast<int>(count_ones(sp_mask));
 
     // 4. copy surrogate pairs
     uint32_t mask = sp_mask;
-    for (int i=count; i >= 0 && mask != 0; i--) {
+    for (int i = count; i >= 0 && mask != 0; i--) {
         if (test_and_clear_bit(mask, i)) {
             output[i + sp] = words[2*i + 0];
             sp -= 1;
@@ -69,7 +74,7 @@ size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
         }
     }
 
-    return count + __builtin_popcount(sp_mask);
+    return count + static_cast<unsigned int>(count_ones(sp_mask));
 }
 
 /**
@@ -147,6 +152,7 @@ __m512i expanded_utf8_to_utf32(__m512i char_class, __m512i utf8) {
          ^^        ^^        ^^        ^
     */
     __m512i values;
+    const __m512i v_3f3f_3f7f = _mm512_set1_epi32(0x3f3f3f7f);
     values = _mm512_and_si512(utf8, v_3f3f_3f7f);
 
     /* 2. Swap and join fields A-B and C-D
@@ -155,6 +161,7 @@ __m512i expanded_utf8_to_utf32(__m512i char_class, __m512i utf8) {
         |0000.cccc|cc??.????|0001.10aa|aabb.bbbb| 3-byte char
         |0000.????|????.????|0001.0aaa|aabb.bbbb| 2-byte char
         |0000.????|????.????|000a.aaaa|aa??.????| ASCII char */
+    const __m512i v_0140_0140 = _mm512_set1_epi32(0x01400140);
     values = _mm512_maddubs_epi16(values, v_0140_0140);
 
     /* 3. Swap and join fields AB & CD
@@ -163,6 +170,7 @@ __m512i expanded_utf8_to_utf32(__m512i char_class, __m512i utf8) {
         |0000.0001|10aa.aabb|bbbb.cccc|cc??.????| 3-byte char
         |0000.0001|0aaa.aabb|bbbb.????|????.????| 2-byte char
         |0000.000a|aaaa.aa??|????.????|????.????| ASCII char */
+    const __m512i v_0001_1000 = _mm512_set1_epi32(0x00011000);
     values = _mm512_madd_epi16(values, v_0001_1000);
 
     /* 4. Shift left the values by variable amounts to reset highest UTF-8 bits

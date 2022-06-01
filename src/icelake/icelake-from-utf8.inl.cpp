@@ -21,7 +21,7 @@ std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str,
     while (ptr + 64 + 4 <= end) {
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
         if(checker.check_next_input(utf8)) {
-            STORE_ASCII(UTF32, utf8, output)
+            SIMDUTF_ICELAKE_STORE_ASCII(UTF32, utf8, output)
             output += 64;
             ptr += 64;
             continue;
@@ -30,18 +30,18 @@ std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str,
 
         const __m512i lane0 = broadcast_epi128<0>(utf8);
         const __m512i lane1 = broadcast_epi128<1>(utf8);
-        TRANSCODE16(lane0, lane1)
+        SIMDUTF_ICELAKE_TRANSCODE16(lane0, lane1)
 
         const __m512i lane2 = broadcast_epi128<2>(utf8);
-        TRANSCODE16(lane1, lane2)
+        SIMDUTF_ICELAKE_TRANSCODE16(lane1, lane2)
 
         const __m512i lane3 = broadcast_epi128<3>(utf8);
-        TRANSCODE16(lane2, lane3)
+        SIMDUTF_ICELAKE_TRANSCODE16(lane2, lane3)
 
         uint32_t tmp1;
-        memcpy(&tmp1, ptr + 64, sizeof(tmp1));
+        ::memcpy(&tmp1, ptr + 64, sizeof(tmp1));
         const __m512i lane4 = _mm512_set1_epi32(tmp1);
-        TRANSCODE16(lane3, lane4)
+        SIMDUTF_ICELAKE_TRANSCODE16(lane3, lane4)
         ptr += 4*16;
     }
     const char* validatedptr = ptr; // validated up to ptr
@@ -51,19 +51,19 @@ std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str,
     if (ptr + 64 <= end) {
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
         if(checker.check_next_input(utf8)) {
-            STORE_ASCII(UTF32, utf8, output)
+            SIMDUTF_ICELAKE_STORE_ASCII(UTF32, utf8, output)
             output += 64;
             ptr += 64;
         } else {
             const __m512i lane0 = broadcast_epi128<0>(utf8);
             const __m512i lane1 = broadcast_epi128<1>(utf8);
-            TRANSCODE16(lane0, lane1)
+            SIMDUTF_ICELAKE_TRANSCODE16(lane0, lane1)
 
             const __m512i lane2 = broadcast_epi128<2>(utf8);
-            TRANSCODE16(lane1, lane2)
+            SIMDUTF_ICELAKE_TRANSCODE16(lane1, lane2)
 
             const __m512i lane3 = broadcast_epi128<3>(utf8);
-            TRANSCODE16(lane2, lane3)
+            SIMDUTF_ICELAKE_TRANSCODE16(lane2, lane3)
 
             ptr += 3*16;
         }

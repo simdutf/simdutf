@@ -1,6 +1,5 @@
 #include "simdutf.h"
 #include <initializer_list>
-#include <string>
 #include <climits>
 
 // Useful for debugging purposes
@@ -22,13 +21,11 @@ std::string toBinaryString(T b) {
 
 // Implementations
 #include "simdutf/arm64.h"
-#include "simdutf/avx512bw.h"
 #include "simdutf/haswell.h"
 #include "simdutf/westmere.h"
 #include "simdutf/ppc64.h"
 #include "simdutf/fallback.h"
-#include "simdutf/avx512bw.h"
-#include "simdutf/avx512vbmi.h"
+#include "simdutf/icelake.h"
 
 namespace simdutf {
 bool implementation::supported_by_runtime_system() const {
@@ -63,8 +60,8 @@ namespace internal {
 // without requiring a static initializer.
 
 
-#if SIMDUTF_IMPLEMENTATION_AVX512BW
-const avx512bw::implementation avx512bw_singleton{};
+#if SIMDUTF_IMPLEMENTATION_ICELAKE
+const icelake::implementation icelake_singleton{};
 #endif
 #if SIMDUTF_IMPLEMENTATION_HASWELL
 const haswell::implementation haswell_singleton{};
@@ -144,20 +141,14 @@ private:
 const detect_best_supported_implementation_on_first_use detect_best_supported_implementation_on_first_use_singleton;
 
 const std::initializer_list<const implementation *> available_implementation_pointers {
-#if SIMDUTF_IMPLEMENTATION_AVX512BW
-  &avx512bw_singleton,
+#if SIMDUTF_IMPLEMENTATION_ICELAKE
+  &icelake_singleton,
 #endif
 #if SIMDUTF_IMPLEMENTATION_HASWELL
   &haswell_singleton,
 #endif
 #if SIMDUTF_IMPLEMENTATION_WESTMERE
   &westmere_singleton,
-#endif
-#if SIMDUTF_IMPLEMENTATION_AVX512BW
-  &avx512bw_singleton,
-#endif
-#if SIMDUTF_IMPLEMENTATION_AVX512VBMI
-  &avx512vbmi_singleton,
 #endif
 #if SIMDUTF_IMPLEMENTATION_ARM64
   &arm64_singleton,
@@ -309,7 +300,7 @@ simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const char * buf,
 }
 
 const implementation * builtin_implementation() {
-  static const implementation * builtin_impl = available_implementations[STRINGIFY(SIMDUTF_BUILTIN_IMPLEMENTATION)];
+  static const implementation * builtin_impl = available_implementations[SIMDUTF_STRINGIFY(SIMDUTF_BUILTIN_IMPLEMENTATION)];
   return builtin_impl;
 }
 
