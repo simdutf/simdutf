@@ -14,12 +14,11 @@ namespace {
 #ifndef SIMDUTF_ICELAKE_H
 #error "icelake.h must be included"
 #endif
-
-#   include "icelake-utf8-common.inl.cpp"
-#   include "icelake-macros.inl.cpp"
-#   include "icelake-from-valid-utf8.inl.cpp"
-#   include "icelake-utf8-validation.inl.cpp"
-#   include "icelake-from-utf8.inl.cpp"
+#include "icelake/icelake-utf8-common.inl.cpp"
+#include "icelake/icelake-macros.inl.cpp"
+#include "icelake/icelake-from-valid-utf8.inl.cpp"
+#include "icelake/icelake-utf8-validation.inl.cpp"
+#include "icelake/icelake-from-utf8.inl.cpp"
 } // namespace
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
