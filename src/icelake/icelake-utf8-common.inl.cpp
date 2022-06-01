@@ -60,11 +60,11 @@ size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
     // 3. store valid 16-bit values
     _mm256_mask_storeu_epi16((__m256i*)output, valid, _mm512_cvtepi32_epi16(utf32));
 
-    int sp = __builtin_popcount(sp_mask);
+    int sp = static_cast<int>(count_ones(sp_mask));
 
     // 4. copy surrogate pairs
     uint32_t mask = sp_mask;
-    for (int i=count; i >= 0 && mask != 0; i--) {
+    for (int i = count; i >= 0 && mask != 0; i--) {
         if (test_and_clear_bit(mask, i)) {
             output[i + sp] = words[2*i + 0];
             sp -= 1;
@@ -74,7 +74,7 @@ size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
         }
     }
 
-    return count + __builtin_popcount(sp_mask);
+    return count + static_cast<unsigned int>(count_ones(sp_mask));
 }
 
 /**

@@ -41,8 +41,10 @@ namespace icelake {
 //
 // The rest need to be inside the region
 //
-//#include "simdutf/icelake/begin.h"
-//#include "simdutf/icelake/end.h"
+#include "simdutf/icelake/begin.h"
+// Declarations
+#include "simdutf/icelake/bitmanipulation.h"
+#include "simdutf/icelake/end.h"
 
 
 
