@@ -20,7 +20,7 @@ namespace helpers {
   public:
     random_utf32(uint32_t seed)
       : gen{seed},
-        range({double(length_first_range / number_code_points), double(length_second_range / number_code_points)}) {}
+        range({double(length_first_range) / double(number_code_points), double(length_second_range) / double(number_code_points)}) {}
     // Uniformly randomize over the two ranges
 
     std::vector<char32_t> generate(size_t size);
