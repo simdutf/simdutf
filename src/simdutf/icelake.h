@@ -3,11 +3,20 @@
 
 
 #include "simdutf/portability.h"
-// We allow icelake on x64.
-#ifndef SIMDUTF_IMPLEMENTATION_ICELAKE
-#define SIMDUTF_IMPLEMENTATION_ICELAKE (SIMDUTF_IS_X86_64)
+
+#ifdef __has_include
+// How do we detect that a compiler supports vbmi2?
+// For sure if the following header is found, we are ok?
+#if __has_include(<avx512vbmi2intrin.h>)
+#define SIMDUTF_COMPILER_SUPPORTS_VBMI2 1
+#endif
 #endif
 
+
+// We allow icelake on x64 as long as the compiler is known to support VBMI2.
+#ifndef SIMDUTF_IMPLEMENTATION_ICELAKE
+#define SIMDUTF_IMPLEMENTATION_ICELAKE ((SIMDUTF_IS_X86_64) && (SIMDJSON_COMPILER_SUPPORTS_VBMI2))
+#endif
 
 // To see why  (__BMI__) && (__PCLMUL__) && (__LZCNT__) are not part of this next line, see
 // https://github.com/simdutf/simdutf/issues/1247
