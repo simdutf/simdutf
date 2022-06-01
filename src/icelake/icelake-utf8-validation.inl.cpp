@@ -91,7 +91,7 @@ simdutf_really_inline __m512i check_special_cases(__m512i input, const __m512i p
     simdutf_really_inline void check_utf8_bytes(const __m512i input, const __m512i prev_input) {
       // Flip prev1...prev3 so we can easily determine if they are 2+, 3+ or 4+ lead bytes
       // (2, 3, 4-byte leads become large positive numbers instead of small negative numbers)
-      __m512i prev1 = prev<1>(input, prev_input);//_mm512_alignr_epi8(input,rotated,15);//_mm512_alignr_epi8(input, prev_input, 32 - 1);
+      __m512i prev1 = prev<1>(input, prev_input);
       __m512i sc = check_special_cases(input, prev1);
       this->error = _mm512_or_si512(check_multibyte_lengths(input, prev_input, sc), this->error);
     }
