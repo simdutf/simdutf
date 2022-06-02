@@ -34,7 +34,7 @@ TEST(convert_pure_ASCII) {
     ASSERT_TRUE(test(procedure));
   }
 }
-
+/*
 TEST(convert_into_1_or_2_UTF8_bytes) {
   for(size_t trial = 0; trial < trials; trial ++) {
     uint32_t seed{1234+uint32_t(trial)};
@@ -50,7 +50,7 @@ TEST(convert_into_1_or_2_UTF8_bytes) {
       ASSERT_TRUE(test(procedure));
     }
   }
-}
+}*/
 
 TEST(convert_into_1_or_2_or_3_UTF8_bytes) {
   for(size_t trial = 0; trial < trials; trial ++) {
