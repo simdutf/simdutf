@@ -12,6 +12,13 @@
 #endif
 #endif
 
+#ifdef _MSC_VER
+#if _MSC_VER >= 1920
+// Visual Studio 2019 and up support VBMI2 under x64 even if the header
+// avx512vbmi2intrin.h is not found.
+#define SIMDUTF_COMPILER_SUPPORTS_VBMI2 1
+#endif
+#endif
 
 // We allow icelake on x64 as long as the compiler is known to support VBMI2.
 #ifndef SIMDUTF_IMPLEMENTATION_ICELAKE
