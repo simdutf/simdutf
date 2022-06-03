@@ -28,13 +28,13 @@ TEST(convert_pure_ASCII) {
     return implementation.convert_valid_utf32_to_utf8(utf32, size, utf8);
   };
 
-  std::array<size_t, 1> input_size{16};
+  std::array<size_t, 5> input_size{16, 12, 64, 128, 256};
   for (size_t size: input_size) {
     transcode_utf32_to_utf8_test_base test(generator, size);
     ASSERT_TRUE(test(procedure));
   }
 }
-/*
+
 TEST(convert_into_1_or_2_UTF8_bytes) {
   for(size_t trial = 0; trial < trials; trial ++) {
     uint32_t seed{1234+uint32_t(trial)};
@@ -50,7 +50,7 @@ TEST(convert_into_1_or_2_UTF8_bytes) {
       ASSERT_TRUE(test(procedure));
     }
   }
-}*/
+}
 
 TEST(convert_into_1_or_2_or_3_UTF8_bytes) {
   for(size_t trial = 0; trial < trials; trial ++) {
