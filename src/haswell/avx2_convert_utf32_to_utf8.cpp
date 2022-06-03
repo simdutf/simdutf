@@ -20,15 +20,29 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf
       const __m128i v_ff80 = _mm_set1_epi16((int16_t)0xff80);
       const __m128i utf16_packed = _mm_packus_epi32(_mm256_castsi256_si128(in),_mm256_extractf128_si256(in,1));
       if(_mm_testz_si128(utf16_packed, v_ff80)) { // ASCII fast path!!!!
-        // 1. pack the bytes
-        // obviously suboptimal.
-        const __m128i utf8_packed = _mm_packus_epi16(utf16_packed,utf16_packed);
-        // 2. store (16 bytes)
-        _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
-        // 3. adjust pointers
-        buf += 8;
-        utf8_output += 8;
-        continue;
+        __m256i nextin = _mm256_loadu_si256((__m256i*)buf+1);
+        __m128i nextutf16_packed = _mm_packus_epi32(_mm256_castsi256_si128(nextin),_mm256_extractf128_si256(nextin,1));
+        if(!_mm_testz_si128(nextutf16_packed, v_ff80)) {
+          // 1. pack the bytes
+          // obviously suboptimal.
+          const __m128i utf8_packed = _mm_packus_epi16(utf16_packed,utf16_packed);
+          // 2. store (16 bytes)
+          _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
+          // 3. adjust pointers
+          buf += 8;
+          utf8_output += 8;
+          in = nextin;
+        } else {
+          // 1. pack the bytes
+          // obviously suboptimal.
+          const __m128i utf8_packed = _mm_packus_epi16(utf16_packed,nextutf16_packed);
+          // 2. store (16 bytes)
+          _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
+          // 3. adjust pointers
+          buf += 16;
+          utf8_output += 16;
+          continue; // we are done for this round!
+        }
       }
 
       // no bits set above 7th bit
