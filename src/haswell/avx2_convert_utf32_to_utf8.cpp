@@ -8,7 +8,7 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf
 
   const size_t safety_margin = 11; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
 
-  while (buf + 8 + safety_margin <= end) {
+  while (buf + 16 + safety_margin <= end) {
     __m256i in = _mm256_loadu_si256((__m256i*)buf);
 
     // no bits set above 16th bit (<=> all words produce 1, 2 or 3 UTF8 bytes <=> can pack to UTF16 without surrogate pairs)
