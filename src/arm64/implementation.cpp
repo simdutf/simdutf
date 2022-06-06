@@ -32,6 +32,7 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 #include "arm64/arm_convert_utf8_to_utf16.cpp"
 #include "arm64/arm_convert_utf16_to_utf8.cpp"
 #include "arm64/arm_convert_utf32_to_utf8.cpp"
+#include "arm64/arm_convert_utf32_to_utf16.cpp"
 #include "arm64/arm_validate_utf16le.cpp"
 
 } // unnamed namespace
@@ -113,6 +114,22 @@ simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf8(const cha
   return convert_utf32_to_utf8(buf, len, utf8_output);
 }
 
+simdutf_warn_unused size_t implementation::convert_utf32_to_utf16(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
+  std::pair<const char32_t*, char16_t*> ret = arm_convert_utf32_to_utf16(buf, len, utf16_output);
+  if (ret.first == nullptr) { return 0; }
+  size_t saved_bytes = ret.second - utf16_output;
+  if (ret.first != buf + len) {
+    const size_t scalar_saved_bytes = scalar::utf32_to_utf16::convert(
+                                        ret.first, len - (ret.first - buf), ret.second);
+    if (scalar_saved_bytes == 0) { return 0; }
+    saved_bytes += scalar_saved_bytes;
+  }
+  return saved_bytes;
+}
+
+simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf16(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
+  return convert_utf32_to_utf16(buf, len, utf16_output);
+}
 
 simdutf_warn_unused size_t implementation::count_utf16(const char16_t * input, size_t length) const noexcept {
   return utf16::count_code_points(input, length);
