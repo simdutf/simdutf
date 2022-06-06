@@ -12,7 +12,7 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf
     __m256i in = _mm256_loadu_si256((__m256i*)buf);
 
     // no bits set above 16th bit (<=> all words produce 1, 2 or 3 UTF8 bytes <=> can pack to UTF16 without surrogate pairs)
-    const __m256i one_two_three_bytes_bytemask = _mm256_cmpeq_epi16(_mm256_and_si256(in, v_ffff0000), v_00000000);
+    const __m256i one_two_three_bytes_bytemask = _mm256_cmpeq_epi32(_mm256_and_si256(in, v_ffff0000), v_00000000);
     const uint32_t one_two_three_bytes_bitmask = static_cast<uint32_t>(_mm256_movemask_epi8(one_two_three_bytes_bytemask));
 
     if (one_two_three_bytes_bitmask == 0xffffffff) {
