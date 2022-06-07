@@ -77,7 +77,9 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         {"convert_utf16_to_utf8_with_dynamic_allocation", {simdutf::encoding_type::UTF16_LE}},
         {"convert_valid_utf16_to_utf8", {simdutf::encoding_type::UTF16_LE}},
         {"convert_utf32_to_utf8", {simdutf::encoding_type::UTF32_LE}},
-        {"convert_valid_utf32_to_utf8", {simdutf::encoding_type::UTF32_LE}}
+        {"convert_valid_utf32_to_utf8", {simdutf::encoding_type::UTF32_LE}},
+        {"convert_utf32_to_utf16", {simdutf::encoding_type::UTF32_LE}},
+        {"convert_valid_utf32_to_utf16", {simdutf::encoding_type::UTF32_LE}}
     };
 
     for (const auto& implementation: simdutf::available_implementations) {
@@ -298,6 +300,10 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         run_convert_utf32_to_utf8(*implementation, iterations);
     } else if(name == "convert_valid_utf32_to_utf8") {
         run_convert_valid_utf32_to_utf8(*implementation, iterations);
+    } else if(name == "convert_utf32_to_utf16") {
+        run_convert_utf32_to_utf16(*implementation, iterations);
+    } else if(name == "convert_valid_utf32_to_utf16") {
+        run_convert_valid_utf32_to_utf16(*implementation, iterations);
     } else {
         std::cerr << "Unsupported procedure: " << name << '\n';
         std::cerr << "Report the issue.\n";
@@ -837,6 +843,62 @@ void Benchmark::run_convert_valid_utf32_to_utf8(const simdutf::implementation& i
 
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {
         sink = implementation.convert_valid_utf32_to_utf8(data, size, output_buffer.get());
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    size_t char_count = size;
+    print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_convert_utf32_to_utf16(const simdutf::implementation& implementation, size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 4;
+
+    // Note: In the "worst" case, a 32-bit word will yield two 16-bit words. So, we are making a safe
+    // assumption that each word will produce 2 bytes.
+    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size * 2]};
+
+    volatile size_t sink{0};
+
+    auto proc = [&implementation, data, size, &output_buffer, &sink]() {
+        sink = implementation.convert_utf32_to_utf16(data, size, output_buffer.get());
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    size_t char_count = size;
+    print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_convert_valid_utf32_to_utf16(const simdutf::implementation& implementation, size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 4;
+
+    // Note: In the "worst" case, a 32-bit word will yield two 16-bit words. So, we are making a safe
+    // assumption that each word will produce 2 bytes.
+    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size * 2]};
+
+    volatile size_t sink{0};
+
+    auto proc = [&implementation, data, size, &output_buffer, &sink]() {
+        sink = implementation.convert_valid_utf32_to_utf16(data, size, output_buffer.get());
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
