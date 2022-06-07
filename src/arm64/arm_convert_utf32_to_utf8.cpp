@@ -1,4 +1,4 @@
-std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf, size_t len, char* utf8_output) {
+std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf, size_t len, char* utf8_out) {
   uint8_t * utf8_output = reinterpret_cast<uint8_t*>(utf8_out);
   const char32_t* end = buf + len;
 
@@ -9,7 +9,7 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
     uint32x4_t in = vld1q_u32(reinterpret_cast<const uint32_t *>(buf));
     uint32x4_t nextin = vld1q_u32(reinterpret_cast<const uint32_t *>(buf+4));
     if(vmaxq_u32(vorrq_u32(in, nextin)) <= 0xFFFF) {
-      in = vcombine(vmovn_u32(in), vmovn_u32(nextin));
+      in = vcombine_u16(vmovn_u32(in), vmovn_u32(nextin));
       if(vmaxvq_u16(in) <= 0x7F) { // ASCII fast path!!!!
           // 1. pack the bytes
           // obviously suboptimal.
