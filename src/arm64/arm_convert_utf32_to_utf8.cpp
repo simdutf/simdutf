@@ -8,7 +8,11 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
   while (buf + 16 <= end) {
     uint32x4_t in = vld1q_u32(reinterpret_cast<const uint32_t *>(buf));
     uint32x4_t nextin = vld1q_u32(reinterpret_cast<const uint32_t *>(buf+4));
+
+    // Check if no bits set above 16th
     if(vmaxq_u32(vorrq_u32(in, nextin)) <= 0xFFFF) {
+      // Pack UTF-32 to UTF-16 safely (without surrogate pairs)
+      // Apply UTF-16 => UTF-8 routine (arm_convert_utf16_to_utf8.cpp)
       in = vcombine_u16(vmovn_u32(in), vmovn_u32(nextin));
       if(vmaxvq_u16(in) <= 0x7F) { // ASCII fast path!!!!
           // 1. pack the bytes
@@ -185,6 +189,7 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
 
           buf += 8;
       }
+    // At least one 32-bit word will produce a surrogate pair in UTF-16 <=> will produce four UTF-8 bytes.
     } else {
       // Let us do a scalar fallback.
       // It may seem wasteful to use scalar code, but being efficient with SIMD

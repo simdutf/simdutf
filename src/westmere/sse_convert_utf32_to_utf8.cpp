@@ -14,7 +14,10 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
     const __m128i one_two_three_bytes_bytemask = _mm_cmpeq_epi32(combined_bytemask, v_0000);
     const uint32_t one_two_three_bytes_bitmask = static_cast<uint32_t>(_mm_movemask_epi8(one_two_three_bytes_bytemask));
 
+    // Check if no bits set above 16th
     if (one_two_three_bytes_bitmask == 0xffff) {
+      // Pack UTF-32 to UTF-16 safely (without surrogate pairs)
+      // Apply UTF-16 => UTF-8 routine (sse_convert_utf16_to_utf8.cpp)
       in = _mm_packus_epi32(in, nextin);
 
       // a single 16-bit UTF-16 word can yield 1, 2 or 3 UTF-8 bytes
@@ -164,7 +167,7 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
 
           buf += 8;
       }
-      // At least one 32-bit word produce a surrogate pair in UTF-16
+    // At least one 32-bit word produce a surrogate pair in UTF-16 <=> will produce four UTF-8 bytes
     } else {
       // Let us do a scalar fallback.
       // It may seem wasteful to use scalar code, but being efficient with SIMD
