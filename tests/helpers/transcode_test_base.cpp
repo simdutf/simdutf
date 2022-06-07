@@ -286,4 +286,82 @@ namespace simdutf { namespace tests { namespace helpers {
     return true;
   }
 
+
+  /**
+   * transcode_utf32_to_utf16_test_base can be used to test UTF-32 => UTF-16LE transcoding.
+   */
+  transcode_utf32_to_utf16_test_base::transcode_utf32_to_utf16_test_base(GenerateCodepoint generate,
+                                       size_t input_size) {
+    while (input_utf32.size() < input_size) {
+      const uint32_t codepoint = generate();
+      prepare_input(codepoint);
+    }
+
+    output_utf16.resize(reference_output_utf16.size() + output_size_margin);
+  }
+
+  void transcode_utf32_to_utf16_test_base::prepare_input(uint32_t codepoint) {
+      encode_utf32(codepoint, input_utf32);
+      encode_utf16(codepoint, reference_output_utf16);
+  }
+
+  bool transcode_utf32_to_utf16_test_base::is_input_valid() const {
+    return simdutf::tests::reference::validate_utf32(input_utf32.data(), input_utf32.size());
+  }
+
+  bool transcode_utf32_to_utf16_test_base::validate(size_t saved_chars) const {
+    if (!is_input_valid()) {
+      if (saved_chars != 0) {
+        printf("input UTF-32 string is not valid, but conversion routine returned %zu, indicating a valid input\n", saved_chars);
+        return false;
+      }
+    }
+    if (saved_chars == 0) {
+      if (is_input_valid()) {
+        printf("input UTF-32 string is valid, but conversion routine returned 0, indicating input error");
+        return false;
+      }
+
+      return true;
+    }
+
+    auto dump = [saved_chars](const char* title, const std::vector<char16_t>& array) {
+      printf("%s", title);
+      for (size_t i=0; i < saved_chars; i++) {
+        printf(" %02x", (uint16_t)array[i]);
+      }
+      putchar('\n');
+    };
+
+    if (saved_chars != reference_output_utf16.size()) {
+      printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
+             size_t(saved_chars), size_t(reference_output_utf16.size()));
+
+      dump("expected :", reference_output_utf16);
+      dump("actual   :", output_utf16);
+      return false;
+    }
+    // Note that, in general, output_utf16.size() will not matched saved_chars.
+
+    // At this point, we know that the lengths are the same so std::mismatch is enough
+    // to tell us whether the strings are identical.
+    auto it = our_mismatch(output_utf16.begin(), output_utf16.begin() + saved_chars,
+                                    reference_output_utf16.begin(), reference_output_utf16.end());
+    if (it.first != output_utf16.begin() + saved_chars) {
+      printf("mismatched output at %zu: actual value 0x%02x, expected 0x%02x\n",
+             size_t(std::distance(output_utf16.begin(), it.first)), uint8_t(*it.first), uint8_t(*it.second));
+
+      dump("expected :", reference_output_utf16);
+      dump("actual   :", output_utf16);
+      for(size_t i = 0; i < reference_output_utf16.size(); i++) {
+        if(reference_output_utf16[i] != output_utf16[i]) { printf(" ==> "); }
+        printf("at %zu expected 0x%02x and got 0x%02x\n ", i, uint8_t(reference_output_utf16[i]), uint8_t(output_utf16[i]));
+      }
+      return false;
+    }
+
+    return true;
+  }
+
+
 }}}

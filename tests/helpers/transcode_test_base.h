@@ -182,4 +182,56 @@ namespace simdutf { namespace tests { namespace helpers {
   };
 
 
+  /**
+   * This class can be used to test UTF-32LE => UTF-16LE transcoding.
+   */
+  class transcode_utf32_to_utf16_test_base : transcode_test_base {
+  public:
+    using GenerateCodepoint = std::function<uint32_t()>;
+
+    std::vector<char16_t> output_utf16; // what the procedure under test produced
+    std::vector<char16_t> reference_output_utf16; // what we are expecting
+
+    std::vector<char32_t> input_utf32; // source-encoded mesage: what we're going to transcode
+
+    static constexpr size_t output_size_margin = 0; // extra room for buggy procedures
+
+  public:
+    transcode_utf32_to_utf16_test_base(GenerateCodepoint generate, size_t input_size);
+
+    inline bool output_size() const {
+      return reference_output_utf16.size();
+    }
+
+    template <typename COLLECTION>
+    transcode_utf32_to_utf16_test_base(COLLECTION&& collection) {
+      for (const uint32_t codepoint: collection) {
+        prepare_input(codepoint);
+      }
+      output_utf16.resize(reference_output_utf16.size() + output_size_margin);
+      output_utf16.shrink_to_fit(); // to help detect overruns.
+    }
+
+    template <typename PROCEDURE>
+    bool operator()(PROCEDURE procedure) {
+      size_t saved_chars = procedure(input_utf32.data(), input_utf32.size(), output_utf16.data());
+      return validate(saved_chars);
+    }
+    template <typename PROCEDURE>
+    bool check_size(PROCEDURE procedure) {
+      size_t saved_chars = procedure(input_utf32.data(), input_utf32.size());
+      if (saved_chars != reference_output_utf16.size()) {
+        printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
+             size_t(saved_chars), size_t(reference_output_utf16.size()));
+        return false;
+      }
+      return true;
+    }
+  private:
+    void prepare_input(uint32_t codepoint);
+    bool validate(size_t procedure_result) const;
+    bool is_input_valid() const;
+  };
+
+
 }}} // namespace simdutf::tests::helpers
