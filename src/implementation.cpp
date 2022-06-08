@@ -49,7 +49,8 @@ simdutf_warn_unused encoding_type implementation::autodetect_encoding(const char
     // The next most common encoding that might appear without BOM is probably
     // UTF-16LE, so try that next.
     if((length % 2) == 0) {
-      if(validate_utf16(reinterpret_cast<const char16_t*>(input), length)) { return encoding_type::UTF16_LE; }
+      // important: we need to divide by two
+      if(validate_utf16(reinterpret_cast<const char16_t*>(input), length/2)) { return encoding_type::UTF16_LE; }
     }
     return encoding_type::unspecified;
 }

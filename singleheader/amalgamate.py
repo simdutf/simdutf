@@ -9,6 +9,7 @@ import subprocess
 import os
 import re
 import shutil
+import datetime
 if sys.version_info[0] < 3:
     sys.stdout.write("Sorry, requires Python 3.x or better\n")
     sys.exit(1)
@@ -127,14 +128,18 @@ def dofile(fid, prepath, filename):
 # does not change with locale and timezone at time of generation.
 # Forcing it to be UTC is difficult, because it needs to be portable
 # between gnu date and busybox date.
-timestamp = subprocess.run(['git', 'show', '-s', '--format=%ci', 'HEAD'],
+try:
+    timestamp = subprocess.run(['git', 'show', '-s', '--format=%ci', 'HEAD'],
                            stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
+except:
+    print("git not found, timestamp based on current time")
+    timestamp = str(datetime.datetime.now())
 print(f"timestamp is {timestamp}")
 
 os.makedirs(AMALGAMATE_OUTPUT_PATH, exist_ok=True)
 AMAL_H = os.path.join(AMALGAMATE_OUTPUT_PATH, "simdutf.h")
 AMAL_C = os.path.join(AMALGAMATE_OUTPUT_PATH, "simdutf.cpp")
-DEMOCPP = os.path.join(AMALGAMATE_OUTPUT_PATH, "amalgamate_demo.cpp")
+DEMOCPP = os.path.join(AMALGAMATE_OUTPUT_PATH, "amalgamation_demo.cpp")
 README = os.path.join(AMALGAMATE_OUTPUT_PATH, "README.md")
 
 print(f"Creating {AMAL_H}")
@@ -156,7 +161,7 @@ amal_c.close()
 
 # copy the README and DEMOCPP
 if SCRIPTPATH != AMALGAMATE_OUTPUT_PATH:
-  shutil.copy2(os.path.join(SCRIPTPATH,"amalgamate_demo.cpp"),AMALGAMATE_OUTPUT_PATH)
+  shutil.copy2(os.path.join(SCRIPTPATH,"amalgamation_demo.cpp"),AMALGAMATE_OUTPUT_PATH)
   shutil.copy2(os.path.join(SCRIPTPATH,"README.md"),AMALGAMATE_OUTPUT_PATH)
 
 import zipfile
