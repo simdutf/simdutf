@@ -161,6 +161,16 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
     }
+    {
+        std::string name = "convert_utf32_to_utf8+llvm";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF32_LE})));
+    }
+    {
+        std::string name = "convert_utf32_to_utf16+llvm";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF32_LE})));
+    }
 }
 
 //static
@@ -266,6 +276,10 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
           run_convert_utf8_to_utf16_llvm(iterations);
         } else if(name == "convert_utf16_to_utf8") {
           run_convert_utf16_to_utf8_llvm(iterations);
+        } else if(name == "convert_utf32_to_utf8") {
+        	run_convert_utf32_to_utf8_llvm(iterations);
+        } else if(name == "convert_utf32_to_utf16") {
+          run_convert_utf32_to_utf16_llvm(iterations);
         } else {
           std::cerr << "unrecognized:" << procedure_name << "\n";
         }
@@ -1016,6 +1030,82 @@ void Benchmark::run_convert_utf16_to_utf8_llvm(size_t iterations) {
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
     size_t char_count = active_implementation->count_utf16(data, size);
+    print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_convert_utf32_to_utf8_llvm(size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 4;
+
+		// Note: a single 32-bit word can yield up to four UTF-8 bytes. We are
+		//       making a safe assumption that each 32-bit word will yield four
+		//       UTF-8 bytes.
+    std::unique_ptr<char[]> output_buffer{new char[size * 4]};
+
+    volatile size_t sink{0};
+
+    auto proc = [data, size, &output_buffer, &sink]() {
+      const unsigned int * sourceStart = reinterpret_cast<const unsigned int *>(data);
+      const unsigned int * sourceEnd = sourceStart + size;
+      unsigned char * targetStart =  reinterpret_cast<unsigned char *>(output_buffer.get());
+      unsigned char * targetEnd = targetStart + size*4;
+      bool  is_ok = (llvm::conversionOK == llvm::ConvertUTF32toUTF8 (&sourceStart, sourceEnd, &targetStart, targetEnd, llvm::ConversionFlags::strictConversion));
+      if(is_ok) {
+          sink = (targetStart - reinterpret_cast<unsigned char *>(output_buffer.get()));
+      } else {
+          sink = 0;
+      }
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    size_t char_count = size;
+    print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_convert_utf32_to_utf16_llvm(size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 4;
+
+		// Note: a single 32-bit word can produce a surrogate pair, i.e. two
+		//       16-bit words. We are making a safe assumption that each 32-
+		//       bit word will yield two 16-bit words.
+    std::unique_ptr<char[]> output_buffer{new char[size * 2]};
+
+    volatile size_t sink{0};
+
+    auto proc = [data, size, &output_buffer, &sink]() {
+      const unsigned int * sourceStart = reinterpret_cast<const unsigned int *>(data);
+      const unsigned int * sourceEnd = sourceStart + size;
+      short unsigned int * targetStart =  reinterpret_cast<short unsigned int *>(output_buffer.get());
+      short unsigned int * targetEnd = targetStart + size*2;
+      bool  is_ok = (llvm::conversionOK == llvm::ConvertUTF32toUTF16 (&sourceStart, sourceEnd, &targetStart, targetEnd, llvm::ConversionFlags::strictConversion));
+      if(is_ok) {
+          sink = (targetStart - reinterpret_cast<short unsigned int *>(output_buffer.get()));
+      } else {
+          sink = 0;
+      }
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    size_t char_count = size;
     print_summary(result, input_data.size(), char_count);
 }
 

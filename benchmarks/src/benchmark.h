@@ -110,6 +110,8 @@ namespace simdutf::benchmarks {
          */
         void run_convert_utf8_to_utf16_llvm(size_t iterations);
         void run_convert_utf16_to_utf8_llvm(size_t iterations);
+        void run_convert_utf32_to_utf8_llvm(size_t iterations);
+        void run_convert_utf32_to_utf16_llvm(size_t iterations);
 
     };
 
