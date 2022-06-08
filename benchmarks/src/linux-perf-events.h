@@ -92,9 +92,7 @@ public:
   }
 
 private:
-  void report_error(const std::string &context) {
-    if (working)
-      std::cerr << (context + ": " + std::string(strerror(errno))) << std::endl;
+  void report_error(const std::string &) {
     working = false;
   }
 };
