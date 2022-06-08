@@ -32,18 +32,12 @@ struct event_count {
   enum event_counter_types {
     CPU_CYCLES,
     INSTRUCTIONS,
-    BRANCH_MISSES,
-    CACHE_REFERENCES,
-    CACHE_MISSES
   };
 
   double elapsed_sec() const { return std::chrono::duration<double>(elapsed).count(); }
   double elapsed_ns() const { return std::chrono::duration<double, std::nano>(elapsed).count(); }
   double cycles() const { return static_cast<double>(event_counts[CPU_CYCLES]); }
   double instructions() const { return static_cast<double>(event_counts[INSTRUCTIONS]); }
-  double branch_misses() const { return static_cast<double>(event_counts[BRANCH_MISSES]); }
-  double cache_references() const { return static_cast<double>(event_counts[CACHE_REFERENCES]); }
-  double cache_misses() const { return static_cast<double>(event_counts[CACHE_MISSES]); }
 
   event_count& operator=(const event_count& other) {
     this->elapsed = other.elapsed;
@@ -89,9 +83,6 @@ struct event_aggregate {
   double elapsed_ns() const { return total.elapsed_ns() / iterations; }
   double cycles() const { return total.cycles() / iterations; }
   double instructions() const { return total.instructions() / iterations; }
-  double branch_misses() const { return total.branch_misses() / iterations; }
-  double cache_references() const { return total.cache_references() / iterations; }
-  double cache_misses() const { return total.cache_misses() / iterations; }
 };
 
 struct event_collector {
@@ -103,9 +94,6 @@ struct event_collector {
   event_collector() : linux_events(std::vector<int>{
     PERF_COUNT_HW_CPU_CYCLES,
     PERF_COUNT_HW_INSTRUCTIONS,
-    PERF_COUNT_HW_BRANCH_MISSES,
-    PERF_COUNT_HW_CACHE_REFERENCES,
-    PERF_COUNT_HW_CACHE_MISSES
   }) {}
   bool has_events() {
     return linux_events.is_working();

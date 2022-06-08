@@ -108,17 +108,12 @@ namespace simdutf::benchmarks {
             const double cycleperbyte = all.best.instructions() / data_size;
 
             const double inspercycle = all.best.instructions() / all.best.cycles();
-            const double cmisperbyte = all.best.cache_misses() / data_size;
-            const double bmisperbyte = all.best.branch_misses() / data_size;
 
-            printf("%8.3f ins/byte, %8.3f cycle/byte, %8.3f GB/s (%.1f %%), %8.6f b.misses/byte, %8.6f c.mis/byte, %8.3f GHz, %8.3f ins/cycle \n", insperbyte, cycleperbyte, gbs, error_margin, bmisperbyte, cmisperbyte, freq, inspercycle);
+            printf("%8.3f ins/byte, %8.3f cycle/byte, %8.3f GB/s (%.1f %%),  %8.3f GHz, %8.3f ins/cycle \n", insperbyte, cycleperbyte, gbs, error_margin, freq, inspercycle);
             const double insperchar = all.best.instructions() / character_count;
             const double cycleperchar = all.best.instructions() / character_count;
 
-            const double cmisperchar = all.best.cache_misses() / character_count;
-            const double bmisperchar = all.best.branch_misses() / character_count;
-
-            printf("%8.3f ins/char, %8.3f cycle/char, %8.3f Gc/s (%.1f %%), %8.6f b.misses/char, %8.6f c.mis/char, %8.2f byte/char \n", insperchar, cycleperchar, gcs, error_margin, bmisperchar, cmisperchar, byte_per_char);
+            printf("%8.3f ins/char, %8.3f cycle/char, %8.3f Gc/s (%.1f %%) %8.2f byte/char \n", insperchar, cycleperchar, gcs, error_margin, byte_per_char);
 
         } else {
             printf("%8.3f GB/s (%.1f %%) %8.3f Gc/s %8.2f byte/char \n", gbs, error_margin, gcs, byte_per_char);
