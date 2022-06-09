@@ -591,8 +591,8 @@ void Benchmark::run_convert_valid_utf16_to_utf8_utf8lut(size_t iterations) {
 void Benchmark::run_convert_utf8_to_utf16_utf8lut(size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
-    // utf8lut requires an extra 16 bytes of padding.
-    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size*2+16]};
+    // utf8lut requires an extra 8 bytes of padding.
+    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size*2+8]};
     volatile size_t sink{0};
     auto proc = [data, size, &output_buffer, &sink]() {
       std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf8, dfUtf16>::WithOptions<cmValidate>::Create());
@@ -617,8 +617,8 @@ void Benchmark::run_convert_utf8_to_utf16_utf8lut(size_t iterations) {
 void Benchmark::run_convert_valid_utf8_to_utf16_utf8lut(size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
-    // utf8lut requires an extra 16 bytes of padding.
-    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size*2+16]};
+    // utf8lut requires an extra 8 bytes of padding.
+    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size*2+8]};
     volatile size_t sink{0};
     auto proc = [data, size, &output_buffer, &sink]() {
       std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf8, dfUtf16>::WithOptions<cmFull>::Create());
