@@ -689,7 +689,7 @@ void Benchmark::run_convert_utf8_to_utf32_utf8lut(size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
 
-    std::unique_ptr<char32_t[]> output_buffer{new char32_t[size+24]};
+    std::unique_ptr<char32_t[]> output_buffer{new char32_t[4*size+32]};
     volatile size_t sink{0};
     auto proc = [data, size, &output_buffer, &sink]() {
       std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf8, dfUtf32>::WithOptions<cmValidate>::Create());
@@ -741,7 +741,7 @@ void Benchmark::run_convert_valid_utf8_to_utf32_utf8lut(size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
 
-    std::unique_ptr<char32_t[]> output_buffer{new char32_t[size+24]};
+    std::unique_ptr<char32_t[]> output_buffer{new char32_t[4*size+32]};
     volatile size_t sink{0};
     auto proc = [data, size, &output_buffer, &sink]() {
       std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf8, dfUtf32>::WithOptions<cmFull>::Create());
