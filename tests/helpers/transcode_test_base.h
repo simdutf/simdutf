@@ -167,7 +167,8 @@ namespace simdutf { namespace tests { namespace helpers {
     }
     template <typename PROCEDURE>
     bool check_size(PROCEDURE procedure) {
-      size_t saved_chars = procedure(input_utf32.data(), input_utf32.size());
+      size_t saved_chars = procedure(input_utf32.data(), input_utf32.size(), output_utf8.data());
+      output_utf8.clear();
       if (saved_chars != reference_output_utf8.size()) {
         printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
              size_t(saved_chars), size_t(reference_output_utf8.size()));
@@ -219,7 +220,8 @@ namespace simdutf { namespace tests { namespace helpers {
     }
     template <typename PROCEDURE>
     bool check_size(PROCEDURE procedure) {
-      size_t saved_chars = procedure(input_utf32.data(), input_utf32.size());
+      size_t saved_chars = procedure(input_utf32.data(), input_utf32.size(), output_utf16.data());
+      output_utf16.clear();
       if (saved_chars != reference_output_utf16.size()) {
         printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
              size_t(saved_chars), size_t(reference_output_utf16.size()));

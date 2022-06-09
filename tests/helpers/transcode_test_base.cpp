@@ -288,7 +288,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
 
   /**
-   * transcode_utf32_to_utf16_test_base can be used to test UTF-32 => UTF-16LE transcoding.
+   * transcode_utf32_to_utf16_test_base can be used to test UTF-32LE => UTF-16LE transcoding.
    */
   transcode_utf32_to_utf16_test_base::transcode_utf32_to_utf16_test_base(GenerateCodepoint generate,
                                        size_t input_size) {
