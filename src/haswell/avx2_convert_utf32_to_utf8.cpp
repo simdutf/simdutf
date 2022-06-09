@@ -19,7 +19,7 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf
       // Can safely pack 32-bit UTF32 words to 16-bit UTF16 words without surrogate pairs
       // Apply UTF-16 => UTF-8 routine on 128 bits (../westmere/sse_convert_utf16_to_utf8.cpp)
       const __m128i v_ff80 = _mm_set1_epi16((int16_t)0xff80);
-      const __m128i utf16_packed = _mm_packus_epi32(_mm256_castsi256_si128(in),_mm256_extractf128_si256(in,1));
+      __m128i utf16_packed = _mm_packus_epi32(_mm256_castsi256_si128(in),_mm256_extractf128_si256(in,1));
       if(_mm_testz_si128(utf16_packed, v_ff80)) { // ASCII fast path!!!!
         __m256i nextin = _mm256_loadu_si256((__m256i*)buf+1);
         __m128i nextutf16_packed = _mm_packus_epi32(_mm256_castsi256_si128(nextin),_mm256_extractf128_si256(nextin,1));
@@ -32,7 +32,7 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf
           // 3. adjust pointers
           buf += 8;
           utf8_output += 8;
-          in = nextin;
+          utf16_packed = nextutf16_packed;
         } else {
           // 1. pack the bytes
           // obviously suboptimal.
