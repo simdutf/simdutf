@@ -523,13 +523,14 @@ void Benchmark::run_convert_utf16_to_utf8_utf8lut(size_t iterations) {
     // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
     //       thus we're making safe assumption that each 16-bit word will be expanded
     //       to four bytes.
-    std::unique_ptr<char[]> output_buffer{new char[size * 4]};
+    // utf8lut requires an extra 16 bytes of padding.
+    std::unique_ptr<char[]> output_buffer{new char[size * 4 + 16]};
 
     volatile size_t sink{0};
 
     auto proc = [data, size, &output_buffer, &sink]() {
       std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf16,dfUtf8>::WithOptions<cmValidate>::Create());
-      ConversionResult result = ConvertInMemory(*processor, reinterpret_cast<const char*>(data), 2*size, reinterpret_cast<char*>(output_buffer.get()), size * 4);
+      ConversionResult result = ConvertInMemory(*processor, reinterpret_cast<const char*>(data), 2*size, reinterpret_cast<char*>(output_buffer.get()), size * 4 + 16);
       if(result.status != 0) {
           sink = 0;
       } else {
@@ -562,13 +563,14 @@ void Benchmark::run_convert_valid_utf16_to_utf8_utf8lut(size_t iterations) {
     // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
     //       thus we're making safe assumption that each 16-bit word will be expanded
     //       to four bytes.
-    std::unique_ptr<char[]> output_buffer{new char[size * 4]};
+    // utf8lut requires an extra 16 bytes of padding.
+    std::unique_ptr<char[]> output_buffer{new char[size * 4 + 16]};
 
     volatile size_t sink{0};
 
     auto proc = [data, size, &output_buffer, &sink]() {
       std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf16,dfUtf8>::WithOptions<cmFull>::Create());
-      ConversionResult result = ConvertInMemory(*processor, reinterpret_cast<const char*>(data), 2*size, reinterpret_cast<char*>(output_buffer.get()), size * 4);
+      ConversionResult result = ConvertInMemory(*processor, reinterpret_cast<const char*>(data), 2*size, reinterpret_cast<char*>(output_buffer.get()), size * 4 + 16);
       if(result.status != 0) {
           sink = 0;
       } else {
@@ -589,8 +591,8 @@ void Benchmark::run_convert_valid_utf16_to_utf8_utf8lut(size_t iterations) {
 void Benchmark::run_convert_utf8_to_utf16_utf8lut(size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
-
-    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size+8]};
+    // utf8lut requires an extra 16 bytes of padding.
+    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size*2+16]};
     volatile size_t sink{0};
     auto proc = [data, size, &output_buffer, &sink]() {
       std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf8, dfUtf16>::WithOptions<cmValidate>::Create());
@@ -615,8 +617,8 @@ void Benchmark::run_convert_utf8_to_utf16_utf8lut(size_t iterations) {
 void Benchmark::run_convert_valid_utf8_to_utf16_utf8lut(size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
-
-    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size+8]};
+    // utf8lut requires an extra 16 bytes of padding.
+    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size*2+16]};
     volatile size_t sink{0};
     auto proc = [data, size, &output_buffer, &sink]() {
       std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf8, dfUtf16>::WithOptions<cmFull>::Create());
@@ -653,13 +655,14 @@ void Benchmark::run_convert_utf32_to_utf8_utf8lut(size_t iterations) {
     // Note: a single 32-bit word can yield up to four UTF-8 bytes. We are
     //       making a safe assumption that each 32-bit word will yield four
     //       UTF-8 bytes.
-    std::unique_ptr<char[]> output_buffer{new char[size * 4]};
+    // utf8lut requires an extra 16 bytes of padding.
+    std::unique_ptr<char[]> output_buffer{new char[size * 4 + 16]};
 
     volatile size_t sink{0};
 
     auto proc = [data, size, &output_buffer, &sink]() {
-      std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf16,dfUtf8>::WithOptions<cmValidate>::Create());
-      ConversionResult result = ConvertInMemory(*processor, reinterpret_cast<const char*>(data), 2*size, reinterpret_cast<char*>(output_buffer.get()), size * 4);
+      std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf32,dfUtf8>::WithOptions<cmValidate>::Create());
+      ConversionResult result = ConvertInMemory(*processor, reinterpret_cast<const char*>(data), 4*size, reinterpret_cast<char*>(output_buffer.get()), size * 4 + 16);
       if(result.status != 0) {
           sink = 0;
       } else {
@@ -692,13 +695,14 @@ void Benchmark::run_convert_valid_utf32_to_utf8_utf8lut(size_t iterations) {
     // Note: a single 32-bit word can yield up to four UTF-8 bytes. We are
     //       making a safe assumption that each 32-bit word will yield four
     //       UTF-8 bytes.
-    std::unique_ptr<char[]> output_buffer{new char[size * 4]};
+    // utf8lut requires an extra 16 bytes of padding.
+    std::unique_ptr<char[]> output_buffer{new char[size * 4 + 16]};
 
     volatile size_t sink{0};
 
     auto proc = [data, size, &output_buffer, &sink]() {
-      std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf16,dfUtf8>::WithOptions<cmFull>::Create());
-      ConversionResult result = ConvertInMemory(*processor, reinterpret_cast<const char*>(data), 2*size, reinterpret_cast<char*>(output_buffer.get()), size * 4);
+      std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf32,dfUtf8>::WithOptions<cmFull>::Create());
+      ConversionResult result = ConvertInMemory(*processor, reinterpret_cast<const char*>(data), 4*size, reinterpret_cast<char*>(output_buffer.get()), size * 4 + 16);
       if(result.status != 0) {
           sink = 0;
       } else {
