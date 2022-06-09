@@ -135,6 +135,16 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
     }
+		{
+        std::string name = "convert_utf32_to_utf8+utf8lut";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF32_LE})));
+    }
+    {
+        std::string name = "convert_valid_utf32_to_utf8+utf8lut";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF32_BE})));
+    }
     {
         std::string name = "convert_utf8_to_utf16+utf8sse4";
         known_procedures.insert(name);
@@ -255,6 +265,10 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
           run_convert_utf16_to_utf8_utf8lut(iterations);
         } else if(name == "convert_valid_utf16_to_utf8") {
           run_convert_valid_utf16_to_utf8_utf8lut(iterations);
+		} else if(name == "convert_utf32_to_utf8") {
+          run_convert_utf32_to_utf8_utf8lut(iterations);
+        } else if(name == "convert_valid_utf32_to_utf8") {
+          run_convert_valid_utf32_to_utf8_utf8lut(iterations);
         } else {
           std::cerr << "unrecognized:" << procedure_name << "\n";
         }
@@ -618,6 +632,84 @@ void Benchmark::run_convert_valid_utf8_to_utf16_utf8lut(size_t iterations) {
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
     size_t char_count = active_implementation->count_utf8(data, size);
     print_summary(result, size, char_count);
+}
+/**
+ * utf8lut: Vectorized UTF-8 converter.
+ * by stgatilov (2019)
+ *  https://dirtyhandscoding.github.io/posts/utf8lut-vectorized-utf-8-converter-introduction.html
+ */
+void Benchmark::run_convert_utf32_to_utf8_utf8lut(size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 4;
+
+    // Note: a single 32-bit word can yield up to four UTF-8 bytes. We are
+    //       making a safe assumption that each 32-bit word will yield four
+    //       UTF-8 bytes.
+    std::unique_ptr<char[]> output_buffer{new char[size * 4]};
+
+    volatile size_t sink{0};
+
+    auto proc = [data, size, &output_buffer, &sink]() {
+      std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf16,dfUtf8>::WithOptions<cmValidate>::Create());
+      ConversionResult result = ConvertInMemory(*processor, reinterpret_cast<const char*>(data), 2*size, reinterpret_cast<char*>(output_buffer.get()), size * 4);
+      if(result.status != 0) {
+          sink = 0;
+      } else {
+          sink = result.outputSize;
+      }
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    size_t char_count = size;
+    print_summary(result, input_data.size(), char_count);
+}
+/**
+ * utf8lut: Vectorized UTF-8 converter.
+ * by stgatilov (2019)
+ *  https://dirtyhandscoding.github.io/posts/utf8lut-vectorized-utf-8-converter-introduction.html
+ */
+void Benchmark::run_convert_valid_utf32_to_utf8_utf8lut(size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 4;
+
+    // Note: a single 32-bit word can yield up to four UTF-8 bytes. We are
+    //       making a safe assumption that each 32-bit word will yield four
+    //       UTF-8 bytes.
+    std::unique_ptr<char[]> output_buffer{new char[size * 4]};
+
+    volatile size_t sink{0};
+
+    auto proc = [data, size, &output_buffer, &sink]() {
+      std::unique_ptr<BaseBufferProcessor> processor(ProcessorSelector<dfUtf16,dfUtf8>::WithOptions<cmFull>::Create());
+      ConversionResult result = ConvertInMemory(*processor, reinterpret_cast<const char*>(data), 2*size, reinterpret_cast<char*>(output_buffer.get()), size * 4);
+      if(result.status != 0) {
+          sink = 0;
+      } else {
+          sink = result.outputSize;
+      }
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    size_t char_count = size;
+    print_summary(result, input_data.size(), char_count);
 }
 /**
  * Bob Steagall, CppCon2018
@@ -1045,9 +1137,9 @@ void Benchmark::run_convert_utf32_to_utf8_llvm(size_t iterations) {
 
     size /= 4;
 
-		// Note: a single 32-bit word can yield up to four UTF-8 bytes. We are
-		//       making a safe assumption that each 32-bit word will yield four
-		//       UTF-8 bytes.
+    // Note: a single 32-bit word can yield up to four UTF-8 bytes. We are
+    //       making a safe assumption that each 32-bit word will yield four
+    //       UTF-8 bytes.
     std::unique_ptr<char[]> output_buffer{new char[size * 4]};
 
     volatile size_t sink{0};
@@ -1083,9 +1175,9 @@ void Benchmark::run_convert_utf32_to_utf16_llvm(size_t iterations) {
 
     size /= 4;
 
-		// Note: a single 32-bit word can produce a surrogate pair, i.e. two
-		//       16-bit words. We are making a safe assumption that each 32-
-		//       bit word will yield two 16-bit words.
+    // Note: a single 32-bit word can produce a surrogate pair, i.e. two
+    //       16-bit words. We are making a safe assumption that each 32-
+    //       bit word will yield two 16-bit words.
     std::unique_ptr<char[]> output_buffer{new char[size * 2]};
 
     volatile size_t sink{0};
