@@ -2,7 +2,6 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
   uint8_t * utf8_output = reinterpret_cast<uint8_t*>(utf8_out);
   const char32_t* end = buf + len;
 
-  const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
   const uint16x8_t v_c080 = vmovq_n_u16((uint16_t)0xc080);
 
   while (buf + 16 <= end) {
@@ -10,14 +9,14 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
     uint32x4_t nextin = vld1q_u32(reinterpret_cast<const uint32_t *>(buf+4));
 
     // Check if no bits set above 16th
-    if(vmaxq_u32(vorrq_u32(in, nextin)) <= 0xFFFF) {
+    if(vmaxvq_u32(vorrq_u32(in, nextin)) <= 0xFFFF) {
       // Pack UTF-32 to UTF-16 safely (without surrogate pairs)
       // Apply UTF-16 => UTF-8 routine (arm_convert_utf16_to_utf8.cpp)
-      in = vcombine_u16(vmovn_u32(in), vmovn_u32(nextin));
-      if(vmaxvq_u16(in) <= 0x7F) { // ASCII fast path!!!!
+      uint16x8_t utf16_packed = vcombine_u16(vmovn_u32(in), vmovn_u32(nextin));
+      if(vmaxvq_u16(utf16_packed) <= 0x7F) { // ASCII fast path!!!!
           // 1. pack the bytes
           // obviously suboptimal.
-          uint8x8_t utf8_packed = vmovn_u16(in);
+          uint8x8_t utf8_packed = vmovn_u16(utf16_packed);
           // 2. store (8 bytes)
           vst1_u8(utf8_output, utf8_packed);
           // 3. adjust pointers
@@ -26,7 +25,7 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
           continue; // we are done for this round!
       }
 
-      if (vmaxvq_u16(in) <= 0x7FF) {
+      if (vmaxvq_u16(utf16_packed) <= 0x7FF) {
             // 1. prepare 2-byte values
             // input 16-bit word : [0000|0aaa|aabb|bbbb] x 8
             // expected output   : [110a|aaaa|10bb|bbbb] x 8
@@ -34,19 +33,19 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
             const uint16x8_t v_003f = vmovq_n_u16((int16_t)0x003f);
 
             // t0 = [000a|aaaa|bbbb|bb00]
-            const uint16x8_t t0 = vshlq_n_u16(in, 2);
+            const uint16x8_t t0 = vshlq_n_u16(utf16_packed, 2);
             // t1 = [000a|aaaa|0000|0000]
             const uint16x8_t t1 = vandq_u16(t0, v_1f00);
             // t2 = [0000|0000|00bb|bbbb]
-            const uint16x8_t t2 = vandq_u16(in, v_003f);
+            const uint16x8_t t2 = vandq_u16(utf16_packed, v_003f);
             // t3 = [000a|aaaa|00bb|bbbb]
             const uint16x8_t t3 = vorrq_u16(t1, t2);
             // t4 = [110a|aaaa|10bb|bbbb]
             const uint16x8_t t4 = vorrq_u16(t3, v_c080);
             // 2. merge ASCII and 2-byte codewords
             const uint16x8_t v_007f = vmovq_n_u16((uint16_t)0x007F);
-            const uint16x8_t one_byte_bytemask = vcleq_u16(in, v_007f);
-            const uint8x16_t utf8_unpacked = vreinterpretq_u8_u16(vbslq_u16(one_byte_bytemask, in, t4));
+            const uint16x8_t one_byte_bytemask = vcleq_u16(utf16_packed, v_007f);
+            const uint8x16_t utf8_unpacked = vreinterpretq_u8_u16(vbslq_u16(one_byte_bytemask, utf16_packed, t4));
             // 3. prepare bitmask for 8-bit lookup
   #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
             const uint16x8_t mask = make_uint16x8_t(0x0001, 0x0004,
@@ -108,16 +107,16 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
            */
   #define vec(x) vmovq_n_u16(static_cast<uint16_t>(x))
           // [aaaa|bbbb|bbcc|cccc] => [bbcc|cccc|bbcc|cccc]
-          const uint16x8_t t0 = vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(in), vreinterpretq_u8_u16(dup_even)));
+          const uint16x8_t t0 = vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(utf16_packed), vreinterpretq_u8_u16(dup_even)));
           // [bbcc|cccc|bbcc|cccc] => [00cc|cccc|0bcc|cccc]
           const uint16x8_t t1 = vandq_u16(t0, vec(0b0011111101111111));
           // [00cc|cccc|0bcc|cccc] => [10cc|cccc|0bcc|cccc]
           const uint16x8_t t2 = vorrq_u16 (t1, vec(0b1000000000000000));
 
           // s0: [aaaa|bbbb|bbcc|cccc] => [0000|0000|0000|aaaa]
-          const uint16x8_t s0 = vshrq_n_u16(in, 12);
+          const uint16x8_t s0 = vshrq_n_u16(utf16_packed, 12);
           // s1: [aaaa|bbbb|bbcc|cccc] => [0000|bbbb|bb00|0000]
-          const uint16x8_t s1 = vandq_u16(in, vec(0b0000111111000000));
+          const uint16x8_t s1 = vandq_u16(utf16_packed, vec(0b0000111111000000));
           // [0000|bbbb|bb00|0000] => [00bb|bbbb|0000|0000]
           const uint16x8_t s1s = vshlq_n_u16(s1, 2);
           // [00bb|bbbb|0000|aaaa]
@@ -125,7 +124,7 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
           // s3: [00bb|bbbb|0000|aaaa] => [11bb|bbbb|1110|aaaa]
           const uint16x8_t s3 = vorrq_u16(s2, vec(0b1100000011100000));
           const uint16x8_t v_07ff = vmovq_n_u16((uint16_t)0x07FF);
-          const uint16x8_t one_or_two_bytes_bytemask = vcleq_u16(in, v_07ff);
+          const uint16x8_t one_or_two_bytes_bytemask = vcleq_u16(utf16_packed, v_07ff);
           const uint16x8_t m0 = vbicq_u16(vec(0b0100000000000000), one_or_two_bytes_bytemask);
           const uint16x8_t s4 = veorq_u16(s3, m0);
   #undef vec
@@ -136,7 +135,7 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
 
           // 5. compress 32-bit words into 1, 2 or 3 bytes -- 2 x shuffle
           const uint16x8_t v_007f = vmovq_n_u16((uint16_t)0x007F);
-          const uint16x8_t one_byte_bytemask = vcleq_u16(in, v_007f);
+          const uint16x8_t one_byte_bytemask = vcleq_u16(utf16_packed, v_007f);
   #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
           const uint16x8_t onemask = make_uint16x8_t(0x0001, 0x0004,
                                       0x0010, 0x0040,
