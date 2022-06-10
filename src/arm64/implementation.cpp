@@ -147,6 +147,14 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf8(const char * i
   return utf8::utf16_length_from_utf8(input, length);
 }
 
+simdutf_warn_unused size_t implementation::utf8_length_from_utf32(const char32_t * input, size_t length) const noexcept {
+  return scalar::utf32::utf8_length_from_utf32(input, length);
+}
+
+simdutf_warn_unused size_t implementation::utf16_length_from_utf32(const char32_t * input, size_t length) const noexcept {
+  return scalar::utf32::utf16_length_from_utf32(input, length);
+}
+
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
 
