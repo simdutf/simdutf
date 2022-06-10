@@ -30,8 +30,7 @@ TEST(convert_pure_ASCII) {
 
   std::array<size_t, 5> input_size{16, 12, 64, 128, 256};
   for (size_t size: input_size) {
-    transcode_utf32_to_utf8_test_base test(generator, size);
-    ASSERT_TRUE(test.check_size(procedure));   
+    transcode_utf32_to_utf8_test_base test(generator, size); 
     ASSERT_TRUE(test(procedure));
   }
 }
@@ -47,8 +46,7 @@ TEST(convert_into_1_or_2_UTF8_bytes) {
     };
 
     for (size_t size: input_size) {
-      transcode_utf32_to_utf8_test_base test(random, size);
-      ASSERT_TRUE(test.check_size(procedure));   
+      transcode_utf32_to_utf8_test_base test(random, size);  
       ASSERT_TRUE(test(procedure));
     }
   }
@@ -68,8 +66,7 @@ TEST(convert_into_1_or_2_or_3_UTF8_bytes) {
     };
 
     for (size_t size: input_size) {
-      transcode_utf32_to_utf8_test_base test(random, size);
-      ASSERT_TRUE(test.check_size(procedure));   
+      transcode_utf32_to_utf8_test_base test(random, size);   
       ASSERT_TRUE(test(procedure));
     }
   }
@@ -87,8 +84,7 @@ TEST(convert_into_3_or_4_UTF8_bytes) {
     };
 
     for (size_t size: input_size) {
-      transcode_utf32_to_utf8_test_base test(random, size);
-      ASSERT_TRUE(test.check_size(procedure));   
+      transcode_utf32_to_utf8_test_base test(random, size);  
       ASSERT_TRUE(test(procedure));
     }
   }
