@@ -155,7 +155,18 @@ simdutf_warn_unused size_t implementation::utf8_length_from_utf32(const char32_t
 }
 
 simdutf_warn_unused size_t implementation::utf16_length_from_utf32(const char32_t * input, size_t length) const noexcept {
-  return scalar::utf32::utf16_length_from_utf32(input, length);
+  const __m128i v_00000000 = _mm_setzero_si128();
+  const __m128i v_ffff0000 = _mm_set1_epi32((int32_t)0xffff0000);
+  size_t pos = 0;
+  size_t count = 0;
+  for(;pos + 4 <= length; pos += 4) {
+    __m128i in = _mm_loadu_si128((__m128i*)(input + pos));
+    const __m128i surrogate_bytemask = _mm_cmpeq_epi32(_mm_and_si128(in, v_ffff0000), v_00000000);
+    const uint16_t surrogate_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(surrogate_bytemask));
+    size_t surrogate_count = count_ones(static_cast<uint16_t>(~surrogate_bitmask))/4;
+    count += 4 + surrogate_count;
+  }
+  return count + scalar::utf32::utf16_length_from_utf32(input + pos, length - pos);
 }
 
 } // namespace SIMDUTF_IMPLEMENTATION
