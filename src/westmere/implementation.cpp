@@ -151,7 +151,29 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf8(const char * i
 }
 
 simdutf_warn_unused size_t implementation::utf8_length_from_utf32(const char32_t * input, size_t length) const noexcept {
-  return scalar::utf32::utf8_length_from_utf32(input, length);
+  const __m128i v_00000000 = _mm_setzero_si128();
+  const __m128i v_ffffff80 = _mm_set1_epi32((int32_t)0xffffff80);
+  const __m128i v_fffff800 = _mm_set1_epi32((int32_t)0xfffff800);
+  const __m128i v_ffff0000 = _mm_set1_epi32((int32_t)0xffff0000);
+  size_t pos = 0;
+  size_t count = 0;
+  for(;pos + 4 <= length; pos += 4) {
+    __m128i in = _mm_loadu_si128((__m128i*)(input + pos));
+    const __m128i ascii_bytes_bytemask = _mm_cmpeq_epi32(_mm_and_si128(in, v_ffffff80), v_00000000);
+    const __m128i one_two_bytes_bytemask = _mm_cmpeq_epi32(_mm_and_si128(in, v_fffff800), v_00000000);
+    const __m128i two_bytes_bytemask = _mm_xor_si128(one_two_bytes_bytemask, ascii_bytes_bytemask);
+    const __m128i one_two_three_bytes_bytemask = _mm_cmpeq_epi32(_mm_and_si128(in, v_ffff0000), v_00000000);
+    const __m128i three_bytes_bytemask = _mm_xor_si128(one_two_three_bytes_bytemask, one_two_bytes_bytemask);
+    const uint16_t ascii_bytes_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(ascii_bytes_bytemask));
+    const uint16_t two_bytes_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(two_bytes_bytemask));
+    const uint16_t three_bytes_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(three_bytes_bytemask));
+
+    size_t ascii_count = count_ones(ascii_bytes_bitmask) / 4;
+    size_t two_bytes_count = count_ones(two_bytes_bitmask) / 4;
+    size_t three_bytes_count = count_ones(three_bytes_bitmask) / 4;
+    count += 16 - 3*ascii_count - 2*two_bytes_count - three_bytes_count;
+  }
+  return count + scalar::utf32::utf8_length_from_utf32(input + pos, length - pos);
 }
 
 simdutf_warn_unused size_t implementation::utf16_length_from_utf32(const char32_t * input, size_t length) const noexcept {
