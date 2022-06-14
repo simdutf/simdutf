@@ -14,6 +14,13 @@ std::pair<const char32_t*, char16_t*> avx2_convert_utf32_to_utf16(const char32_t
     const uint32_t saturation_bitmask = static_cast<uint32_t>(_mm256_movemask_epi8(saturation_bytemask));
 
     if (saturation_bitmask == 0xffffffff) {
+      // validation
+      const __m256i v_f800 = _mm256_set1_epi32((int32_t)0xf800);
+      const __m256i v_dc00 = _mm256_set1_epi32((int32_t)0xdc00);
+      const __m256i forbidden_bytemask = _mm256_cmpeq_epi32(_mm256_and_si256(in, v_f800), v_dc00);
+      const uint32_t forbidden_bitmask = static_cast<uint32_t>(_mm256_movemask_epi8(forbidden_bytemask));
+      if (forbidden_bitmask != 0) { return std::make_pair(nullptr, utf16_output); }
+
       const __m128i utf16_packed = _mm_packus_epi32(_mm256_castsi256_si128(in),_mm256_extractf128_si256(in,1));
       _mm_storeu_si128((__m128i*)utf16_output, utf16_packed);
       utf16_output += 8;
@@ -26,9 +33,11 @@ std::pair<const char32_t*, char16_t*> avx2_convert_utf32_to_utf16(const char32_t
         uint32_t word = buf[k];
         if((word & 0xFFFF0000)==0) {
           // will not generate a surrogate pair
+          if (word >= 0xD800 && word <= 0xDFFF) { return std::make_pair(nullptr, utf16_output); }
           *utf16_output++ = char16_t(word);
         } else {
           // will generate a surrogate pair
+          if (word > 0x10FFFF) { return std::make_pair(nullptr, utf16_output); }
           word -= 0x10000;
           *utf16_output++ = char16_t(0xD800 + (word >> 10));
           *utf16_output++ = char16_t(0xDC00 + (word & 0x3FF));

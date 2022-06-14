@@ -84,6 +84,12 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf
     const uint32_t saturation_bitmask = static_cast<uint32_t>(_mm256_movemask_epi8(saturation_bytemask));
     if (saturation_bitmask == 0xffffffff) {
       // case: words from register produce either 1, 2 or 3 UTF-8 bytes
+      // validate input first
+      const __m256i v_dc00 = _mm256_set1_epi16((int16_t)0xdc00);
+      const __m256i forbidden_bytemask = _mm256_cmpeq_epi16(_mm256_and_si256(in_16, v_f800), v_dc00);
+      const uint32_t forbidden_bitmask = static_cast<uint32_t>(_mm256_movemask_epi8(forbidden_bytemask));
+      if (forbidden_bitmask != 0) { return std::make_pair(nullptr, utf8_output); }
+
       const __m256i dup_even = _mm256_setr_epi16(0x0000, 0x0202, 0x0404, 0x0606,
                                               0x0808, 0x0a0a, 0x0c0c, 0x0e0e,
                                               0x0000, 0x0202, 0x0404, 0x0606,
@@ -203,10 +209,12 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf
           *utf8_output++ = char((word>>6) | 0b11000000);
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else if((word & 0xFFFF0000 )==0) {  // 3-byte
+          if (word >= 0xD800 && word <= 0xDFFF) { return std::make_pair(nullptr, utf8_output); }
           *utf8_output++ = char((word>>12) | 0b11100000);
           *utf8_output++ = char(((word>>6) & 0b111111) | 0b10000000);
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else {  // 4-byte
+          if (word > 0x10FFFF) { return std::make_pair(nullptr, utf8_output); }
           *utf8_output++ = char((word>>18) | 0b11110000);
           *utf8_output++ = char(((word>>12) & 0b111111) | 0b10000000);
           *utf8_output++ = char(((word>>6) & 0b111111) | 0b10000000);
