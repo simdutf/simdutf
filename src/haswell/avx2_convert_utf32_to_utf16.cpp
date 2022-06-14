@@ -16,8 +16,8 @@ std::pair<const char32_t*, char16_t*> avx2_convert_utf32_to_utf16(const char32_t
     if (saturation_bitmask == 0xffffffff) {
       // validation
       const __m256i v_f800 = _mm256_set1_epi32((int32_t)0xf800);
-      const __m256i v_dc00 = _mm256_set1_epi32((int32_t)0xdc00);
-      const __m256i forbidden_bytemask = _mm256_cmpeq_epi32(_mm256_and_si256(in, v_f800), v_dc00);
+      const __m256i v_d800 = _mm256_set1_epi32((int32_t)0xd800);
+      const __m256i forbidden_bytemask = _mm256_cmpeq_epi32(_mm256_and_si256(in, v_f800), v_d800);
       const uint32_t forbidden_bitmask = static_cast<uint32_t>(_mm256_movemask_epi8(forbidden_bytemask));
       if (forbidden_bitmask != 0) { return std::make_pair(nullptr, utf16_output); }
 

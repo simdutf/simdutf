@@ -15,9 +15,9 @@ std::pair<const char32_t*, char16_t*> sse_convert_utf32_to_utf16(const char32_t*
     if (saturation_bitmask == 0xffff) {
       // validation
       const __m128i v_f800 = _mm_set1_epi32((int32_t)0xf800);
-      const __m128i v_dc00 = _mm_set1_epi32((int32_t)0xdc00);
-      const __m128i forbidden_bytemask = _mm_cmpeq_epi32(_mm_and_si128(in, v_f800), v_dc00);
-      const __m128i nextforbidden_bytemask = _mm_cmpeq_epi32(_mm_and_si128(nextin, v_f800), v_dc00);
+      const __m128i v_d800 = _mm_set1_epi32((int32_t)0xd800);
+      const __m128i forbidden_bytemask = _mm_cmpeq_epi32(_mm_and_si128(in, v_f800), v_d800);
+      const __m128i nextforbidden_bytemask = _mm_cmpeq_epi32(_mm_and_si128(nextin, v_f800), v_d800);
       const uint32_t forbidden_bitmask = static_cast<uint32_t>(_mm_movemask_epi8(_mm_or_si128(forbidden_bytemask, nextforbidden_bytemask)));
       if (forbidden_bitmask != 0) { return std::make_pair(nullptr, utf16_output); }
       // Pack UTF-32 to UTF-16 safely (without surrogate pairs)

@@ -85,8 +85,8 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf
     if (saturation_bitmask == 0xffffffff) {
       // case: words from register produce either 1, 2 or 3 UTF-8 bytes
       // validate input first
-      const __m256i v_dc00 = _mm256_set1_epi16((int16_t)0xdc00);
-      const __m256i forbidden_bytemask = _mm256_cmpeq_epi16(_mm256_and_si256(in_16, v_f800), v_dc00);
+      const __m256i v_d800 = _mm256_set1_epi16((int16_t)0xd800);
+      const __m256i forbidden_bytemask = _mm256_cmpeq_epi16(_mm256_and_si256(in_16, v_f800), v_d800);
       const uint32_t forbidden_bitmask = static_cast<uint32_t>(_mm256_movemask_epi8(forbidden_bytemask));
       if (forbidden_bitmask != 0) { return std::make_pair(nullptr, utf8_output); }
 
