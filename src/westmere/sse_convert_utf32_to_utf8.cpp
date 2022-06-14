@@ -206,10 +206,12 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
           *utf8_output++ = char((word>>6) | 0b11000000);
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else if((word &0xFFFF0000 )==0) {
+          if (word >= 0xD800 && word <= 0xDFFF) { return std::make_pair(nullptr, utf8_output); }
           *utf8_output++ = char((word>>12) | 0b11100000);
           *utf8_output++ = char(((word>>6) & 0b111111) | 0b10000000);
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else {
+          if (word > 0x10FFFF) { return std::make_pair(nullptr, utf8_output); }
           *utf8_output++ = char((word>>18) | 0b11110000);
           *utf8_output++ = char(((word>>12) & 0b111111) | 0b10000000);
           *utf8_output++ = char(((word>>6) & 0b111111) | 0b10000000);

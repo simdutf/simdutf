@@ -33,9 +33,11 @@ std::pair<const char32_t*, char16_t*> sse_convert_utf32_to_utf16(const char32_t*
         uint32_t word = buf[k];
         if((word & 0xFFFF0000)==0) {
           // will not generate a surrogate pair
+          if (word >= 0xD800 && word <= 0xDFFF) { return std::make_pair(nullptr, utf16_output); }
           *utf16_output++ = char16_t(word);
         } else {
           // will generate a surrogate pair
+          if (word > 0x10FFFF) { return std::make_pair(nullptr, utf16_output); }
           word -= 0x10000;
           *utf16_output++ = char16_t(0xD800 + (word >> 10));
           *utf16_output++ = char16_t(0xDC00 + (word & 0x3FF));
