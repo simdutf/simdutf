@@ -10,8 +10,9 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
   const __m128i v_7fffffff = _mm_set1_epi32((uint32_t)0x7fffffff);
   __m128i running_max = _mm_setzero_si128();
   __m128i forbidden_bytemask = _mm_setzero_si128();
+  const size_t safety_margin = 11; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
 
-  while (buf + 16 <= end) {
+  while (buf + 16 + safety_margin <= end) {
     __m128i in = _mm_loadu_si128((__m128i*)buf);
     __m128i nextin = _mm_loadu_si128((__m128i*)buf+1);
     running_max = _mm_max_epu32(_mm_max_epu32(in, running_max), nextin);
