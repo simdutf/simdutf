@@ -132,7 +132,7 @@ TEST(convert_fails_if_input_too_large) {
   for (size_t j = 0; j < 1000; j++) {
     uint32_t wrong_value = generator();
     for (size_t i=0; i < size; i++) {
-      const auto old = test.input_utf32[i];
+      auto old = test.input_utf32[i];
       test.input_utf32[i] = wrong_value;
       ASSERT_TRUE(test(procedure));
       test.input_utf32[i] = old;
