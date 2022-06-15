@@ -121,13 +121,13 @@ TEST(convert_fails_if_there_is_surrogate) {
 
 TEST(convert_fails_if_input_too_large) {
   uint32_t seed{1234};
-  simdutf::tests::helpers::RandomInt generator{0x110000, 0xffffffff, seed};
+  simdutf::tests::helpers::RandomInt generator(0x110000, 0xffffffff, seed);
 
   auto procedure = [&implementation](const char32_t* utf32, size_t size, char* utf8) -> size_t {
     return implementation.convert_utf32_to_utf8(utf32, size, utf8);
   };
-  const size_t size = 100;
-  transcode_utf32_to_utf8_test_base test([](){return '*';}, size);
+  const size_t size = 64;
+  transcode_utf32_to_utf8_test_base test([](){return '*';}, size+32);
 
   for (size_t j = 0; j < 1000; j++) {
     uint32_t wrong_value = generator();
