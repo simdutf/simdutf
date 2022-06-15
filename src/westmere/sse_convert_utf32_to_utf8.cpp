@@ -3,16 +3,21 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
   const char32_t* end = buf + len;
 
   const __m128i v_0000 = _mm_setzero_si128();
-  const __m128i v_f800 = _mm_set1_epi16((int16_t)0xf800);
-  const __m128i v_c080 = _mm_set1_epi16((int16_t)0xc080);
-  const __m128i v_ff80 = _mm_set1_epi16((int16_t)0xff80);
-  const __m128i v_ffff0000 = _mm_set1_epi32((int32_t)0xffff0000);
+  const __m128i v_f800 = _mm_set1_epi16((uint16_t)0xf800);
+  const __m128i v_c080 = _mm_set1_epi16((uint16_t)0xc080);
+  const __m128i v_ff80 = _mm_set1_epi16((uint16_t)0xff80);
+  const __m128i v_ffff0000 = _mm_set1_epi32((uint32_t)0xffff0000);
+  const __m128i v_7fffffff = _mm_set1_epi32((uint32_t)0x7fffffff);
+  __m128i running_max = _mm_setzero_si128();
+  __m128i forbidden_bytemask = _mm_setzero_si128();
 
   while (buf + 16 <= end) {
     __m128i in = _mm_loadu_si128((__m128i*)buf);
     __m128i nextin = _mm_loadu_si128((__m128i*)buf+1);
+    running_max = _mm_max_epu32(_mm_max_epu32(in, running_max), nextin);
+
     // Pack 32-bit UTF-32 words to 16-bit UTF-16 words with unsigned saturation
-    __m128i in_16 = _mm_packus_epi32(in, nextin);
+    __m128i in_16 = _mm_packus_epi32(_mm_and_si128(in, v_7fffffff), _mm_and_si128(nextin, v_7fffffff));
     
     // Try to apply UTF-16 => UTF-8 from ./sse_convert_utf16_to_utf8.cpp
     
@@ -20,7 +25,8 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
     if(_mm_testz_si128(in_16, v_ff80)) { // ASCII fast path!!!!
       __m128i thirdin = _mm_loadu_si128((__m128i*)buf+2);
       __m128i fourthin = _mm_loadu_si128((__m128i*)buf+3);
-      __m128i nextin_16 = _mm_packus_epi32(thirdin, fourthin);
+      running_max = _mm_max_epu32(_mm_max_epu32(thirdin, running_max), fourthin);
+      __m128i nextin_16 = _mm_packus_epi32(_mm_and_si128(thirdin, v_7fffffff), _mm_and_si128(fourthin, v_7fffffff));
       if(!_mm_testz_si128(nextin_16, v_ff80)) {
         // 1. pack the bytes
         // obviously suboptimal.
@@ -100,11 +106,8 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
 
     if (saturation_bitmask == 0xffff) {
       // case: words from register produce either 1, 2 or 3 UTF-8 bytes
-      // validate input first
       const __m128i v_d800 = _mm_set1_epi16((int16_t)0xd800);
-      const __m128i forbidden_bytemask = _mm_cmpeq_epi16(_mm_and_si128(in_16, v_f800), v_d800);
-      const uint32_t forbidden_bitmask = static_cast<uint32_t>(_mm_movemask_epi8(forbidden_bytemask));
-      if (forbidden_bitmask != 0) { return std::make_pair(nullptr, utf8_output); }
+      forbidden_bytemask = _mm_or_si128(forbidden_bytemask, _mm_cmpeq_epi16(_mm_and_si128(in_16, v_f800), v_d800));
 
       const __m128i dup_even = _mm_setr_epi16(0x0000, 0x0202, 0x0404, 0x0606,
                                               0x0808, 0x0a0a, 0x0c0c, 0x0e0e);
@@ -221,6 +224,14 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
       buf += k;
     }
   } // while
+
+  // check for invalid input
+  const __m128i v_10ffff = _mm_set1_epi32((uint32_t)0x10ffff);
+  if(static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi32(_mm_max_epu32(running_max, v_10ffff), v_10ffff))) != 0xffff) {
+    return std::make_pair(nullptr, utf8_output);
+  }
+
+  if (static_cast<uint32_t>(_mm_movemask_epi8(forbidden_bytemask)) != 0) { return std::make_pair(nullptr, utf8_output); }
 
   return std::make_pair(buf, utf8_output);
 }

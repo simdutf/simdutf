@@ -1,19 +1,23 @@
 std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf, size_t len, char* utf8_output) {
   const char32_t* end = buf + len;
   const __m256i v_0000 = _mm256_setzero_si256();
-  const __m256i v_ffff0000 = _mm256_set1_epi32((int32_t)0xffff0000);
-  const __m256i v_ff80 = _mm256_set1_epi16((int16_t)0xff80);
-  const __m256i v_f800 = _mm256_set1_epi16((int16_t)0xf800);
-  const __m256i v_c080 = _mm256_set1_epi16((int16_t)0xc080);
+  const __m256i v_ffff0000 = _mm256_set1_epi32((uint32_t)0xffff0000);
+  const __m256i v_ff80 = _mm256_set1_epi16((uint16_t)0xff80);
+  const __m256i v_f800 = _mm256_set1_epi16((uint16_t)0xf800);
+  const __m256i v_c080 = _mm256_set1_epi16((uint16_t)0xc080);
+  const __m256i v_7fffffff = _mm256_set1_epi32((uint32_t)0x7fffffff);
+  __m256i running_max = _mm256_setzero_si256();
+  __m256i forbidden_bytemask = _mm256_setzero_si256();
 
   const size_t safety_margin = 11; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
 
   while (buf + 16 + safety_margin <= end) {
     __m256i in = _mm256_loadu_si256((__m256i*)buf);
     __m256i nextin = _mm256_loadu_si256((__m256i*)buf+1);
+    running_max = _mm256_max_epu32(_mm256_max_epu32(in, running_max), nextin);
 
     // Pack 32-bit UTF-32 words to 16-bit UTF-16 words with unsigned saturation
-    __m256i in_16 = _mm256_packus_epi32(in, nextin);
+    __m256i in_16 = _mm256_packus_epi32(_mm256_and_si256(in, v_7fffffff), _mm256_and_si256(nextin, v_7fffffff));
     in_16 = _mm256_permute4x64_epi64(in_16, 0b11011000);
     
     // Try to apply UTF-16 => UTF-8 routine on 256 bits (haswell/avx2_convert_utf16_to_utf8.cpp)
@@ -84,11 +88,8 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf
     const uint32_t saturation_bitmask = static_cast<uint32_t>(_mm256_movemask_epi8(saturation_bytemask));
     if (saturation_bitmask == 0xffffffff) {
       // case: words from register produce either 1, 2 or 3 UTF-8 bytes
-      // validate input first
       const __m256i v_d800 = _mm256_set1_epi16((int16_t)0xd800);
-      const __m256i forbidden_bytemask = _mm256_cmpeq_epi16(_mm256_and_si256(in_16, v_f800), v_d800);
-      const uint32_t forbidden_bitmask = static_cast<uint32_t>(_mm256_movemask_epi8(forbidden_bytemask));
-      if (forbidden_bitmask != 0) { return std::make_pair(nullptr, utf8_output); }
+      forbidden_bytemask = _mm256_or_si256(forbidden_bytemask, _mm256_cmpeq_epi16(_mm256_and_si256(in_16, v_f800), v_d800));
 
       const __m256i dup_even = _mm256_setr_epi16(0x0000, 0x0202, 0x0404, 0x0606,
                                               0x0808, 0x0a0a, 0x0c0c, 0x0e0e,
@@ -224,5 +225,14 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf
       buf += k;
     }
   } // while
+
+  // check for invalid input
+  const __m256i v_10ffff = _mm256_set1_epi32((uint32_t)0x10ffff);
+  if(static_cast<uint32_t>(_mm256_movemask_epi8(_mm256_cmpeq_epi32(_mm256_max_epu32(running_max, v_10ffff), v_10ffff))) != 0xffffffff) {
+    return std::make_pair(nullptr, utf8_output);
+  }
+
+  if (static_cast<uint32_t>(_mm256_movemask_epi8(forbidden_bytemask)) != 0) { return std::make_pair(nullptr, utf8_output); }
+
   return std::make_pair(buf, utf8_output);
 }
