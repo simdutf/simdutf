@@ -185,7 +185,7 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf32(const char32_
     __m128i in = _mm_loadu_si128((__m128i*)(input + pos));
     const __m128i surrogate_bytemask = _mm_cmpeq_epi32(_mm_and_si128(in, v_ffff0000), v_00000000);
     const uint16_t surrogate_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(surrogate_bytemask));
-    size_t surrogate_count = 16-count_ones(surrogate_bitmask)/4;
+    size_t surrogate_count = (16-count_ones(surrogate_bitmask))/4;
     count += 4 + surrogate_count;
   }
   return count + scalar::utf32::utf16_length_from_utf32(input + pos, length - pos);
