@@ -7,7 +7,13 @@ std::pair<const char32_t*, char16_t*> arm_convert_utf32_to_utf16(const char32_t*
 
     // Check if no bits set above 16th
     if(vmaxvq_u32(in) <= 0xFFFF) {
-      vst1_u16(utf16_output, vmovn_u32(in));
+      uint16x4_t utf16_packed = vmovn_u32(in);
+      const uint16x4_t v_d800 = vmov_n_u16((uint16_t)0xd800);
+      const uint16x4_t v_dfff = vmov_n_u16((uint16_t)0xdfff);
+      if (vmaxv_u16(vand_u16(vcle_u16(utf16_packed, v_dfff), vcge_u16(utf16_packed, v_d800))) != 0) {
+        return std::make_pair(nullptr, reinterpret_cast<char16_t*>(utf16_output));
+      }
+      vst1_u16(utf16_output, utf16_packed);
       utf16_output += 4;
       buf += 4;
     } else {
@@ -18,9 +24,11 @@ std::pair<const char32_t*, char16_t*> arm_convert_utf32_to_utf16(const char32_t*
         uint32_t word = buf[k];
         if((word & 0xFFFF0000)==0) {
           // will not generate a surrogate pair
+          if (word >= 0xD800 && word <= 0xDFFF) { return std::make_pair(nullptr, reinterpret_cast<char16_t*>(utf16_output)); }
           *utf16_output++ = char16_t(word);
         } else {
           // will generate a surrogate pair
+          if (word > 0x10FFFF) { return std::make_pair(nullptr, reinterpret_cast<char16_t*>(utf16_output)); }
           word -= 0x10000;
           *utf16_output++ = char16_t(0xD800 + (word >> 10));
           *utf16_output++ = char16_t(0xDC00 + (word & 0x3FF));
