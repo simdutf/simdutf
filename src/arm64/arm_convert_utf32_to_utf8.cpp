@@ -4,6 +4,8 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
 
   const uint16x8_t v_c080 = vmovq_n_u16((uint16_t)0xc080);
 
+  uint16x8_t forbidden_bytemask = vmovq_n_u16(0x0);
+
   while (buf + 16 <= end) {
     uint32x4_t in = vld1q_u32(reinterpret_cast<const uint32_t *>(buf));
     uint32x4_t nextin = vld1q_u32(reinterpret_cast<const uint32_t *>(buf+4));
@@ -76,9 +78,8 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
         // case: words from register produce either 1, 2 or 3 UTF-8 bytes
         const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
         const uint16x8_t v_dfff = vmovq_n_u16((uint16_t)0xdfff);
-        if (vmaxvq_u16(vandq_u16(vcleq_u16(utf16_packed, v_dfff), vcgeq_u16(utf16_packed, v_d800))) != 0) {
-          return std::make_pair(nullptr, reinterpret_cast<char*>(utf8_output));
-        }
+        forbidden_bytemask = vorrq_u16(vandq_u16(vcleq_u16(utf16_packed, v_dfff), vcgeq_u16(utf16_packed, v_d800)), forbidden_bytemask);
+
   #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
           const uint16x8_t dup_even = make_uint16x8_t(0x0000, 0x0202, 0x0404, 0x0606,
                                       0x0808, 0x0a0a, 0x0c0c, 0x0e0e);
@@ -224,6 +225,11 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
       buf += k;
     }
   } // while
+
+  // check for invalid input
+  if (vmaxvq_u16(forbidden_bytemask) != 0) {
+    return std::make_pair(nullptr, reinterpret_cast<char*>(utf8_output));
+  }
 
   return std::make_pair(buf, reinterpret_cast<char*>(utf8_output));
 }

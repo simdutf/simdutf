@@ -2,17 +2,19 @@ std::pair<const char32_t*, char16_t*> arm_convert_utf32_to_utf16(const char32_t*
   uint16_t * utf16_output = reinterpret_cast<uint16_t*>(utf16_out);
   const char32_t* end = buf + len;
 
+  uint16x4_t forbidden_bytemask = vmov_n_u16(0x0);
+
   while(buf + 4 <= end) {
     uint32x4_t in = vld1q_u32(reinterpret_cast<const uint32_t *>(buf));
 
     // Check if no bits set above 16th
     if(vmaxvq_u32(in) <= 0xFFFF) {
       uint16x4_t utf16_packed = vmovn_u32(in);
+
       const uint16x4_t v_d800 = vmov_n_u16((uint16_t)0xd800);
       const uint16x4_t v_dfff = vmov_n_u16((uint16_t)0xdfff);
-      if (vmaxv_u16(vand_u16(vcle_u16(utf16_packed, v_dfff), vcge_u16(utf16_packed, v_d800))) != 0) {
-        return std::make_pair(nullptr, reinterpret_cast<char16_t*>(utf16_output));
-      }
+      forbidden_bytemask = vorr_u16(vand_u16(vcle_u16(utf16_packed, v_dfff), vcge_u16(utf16_packed, v_d800)), forbidden_bytemask);
+
       vst1_u16(utf16_output, utf16_packed);
       utf16_output += 4;
       buf += 4;
@@ -36,6 +38,11 @@ std::pair<const char32_t*, char16_t*> arm_convert_utf32_to_utf16(const char32_t*
       }
       buf += k;
     }
+  }
+
+  // check for invalid input
+  if (vmaxv_u16(forbidden_bytemask) != 0) {
+    return std::make_pair(nullptr, reinterpret_cast<char16_t*>(utf16_output));
   }
 
   return std::make_pair(buf, reinterpret_cast<char16_t*>(utf16_output));
