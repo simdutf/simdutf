@@ -148,11 +148,49 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf8(const char * i
 }
 
 simdutf_warn_unused size_t implementation::utf8_length_from_utf32(const char32_t * input, size_t length) const noexcept {
-  return scalar::utf32::utf8_length_from_utf32(input, length);
+  const uint32x4_t v_7f = vmovq_n_u32((uint32_t)0x7f);
+  const uint32x4_t v_7ff = vmovq_n_u32((uint32_t)0x7ff);
+  const uint32x4_t v_ffff = vmovq_n_u32((uint32_t)0xffff);
+  const uint32x4_t v_1 = vmovq_n_u32((uint32_t)0x1);
+  size_t pos = 0;
+  size_t count = 0;
+  for(;pos + 4 <= length; pos += 4) {
+    uint32x4_t in = vld1q_u32(reinterpret_cast<const uint32_t *>(input + pos));
+    const uint32x4_t ascii_bytes_bytemask = vcleq_u32(in, v_7f);
+    const uint32x4_t one_two_bytes_bytemask = vcleq_u32(in, v_7ff);
+    const uint32x4_t two_bytes_bytemask = veorq_u32(one_two_bytes_bytemask, ascii_bytes_bytemask);
+    const uint32x4_t three_bytes_bytemask = veorq_u32(vcleq_u32(in, v_ffff), one_two_bytes_bytemask);
+
+    const uint16x8_t reduced_ascii_bytes_bytemask = vreinterpretq_u16_u32(vandq_u32(ascii_bytes_bytemask, v_1));
+    const uint16x8_t reduced_two_bytes_bytemask = vreinterpretq_u16_u32(vandq_u32(two_bytes_bytemask, v_1));
+    const uint16x8_t reduced_three_bytes_bytemask = vreinterpretq_u16_u32(vandq_u32(three_bytes_bytemask, v_1));
+
+    const uint16x8_t compressed_bytemask0 = vpaddq_u16(reduced_ascii_bytes_bytemask, reduced_two_bytes_bytemask);
+    const uint16x8_t compressed_bytemask1 = vpaddq_u16(reduced_three_bytes_bytemask, reduced_three_bytes_bytemask);
+
+    size_t ascii_count = count_ones(vgetq_lane_u64(vreinterpretq_u64_u16(compressed_bytemask0), 0));
+    size_t two_bytes_count = count_ones(vgetq_lane_u64(vreinterpretq_u64_u16(compressed_bytemask0), 1));
+    size_t three_bytes_count = count_ones(vgetq_lane_u64(vreinterpretq_u64_u16(compressed_bytemask1), 0));
+
+    count += 16 - 3*ascii_count - 2*two_bytes_count - three_bytes_count;
+  }
+  return count + scalar::utf32::utf8_length_from_utf32(input + pos, length - pos);
 }
 
 simdutf_warn_unused size_t implementation::utf16_length_from_utf32(const char32_t * input, size_t length) const noexcept {
-  return scalar::utf32::utf16_length_from_utf32(input, length);
+  const uint32x4_t v_ffff = vmovq_n_u32((uint32_t)0xffff);
+  const uint32x4_t v_1 = vmovq_n_u32((uint32_t)0x1);
+  size_t pos = 0;
+  size_t count = 0;
+  for(;pos + 4 <= length; pos += 4) {
+    uint32x4_t in = vld1q_u32(reinterpret_cast<const uint32_t *>(input + pos));
+    const uint32x4_t surrogate_bytemask = vcgtq_u32(in, v_ffff);
+    const uint16x8_t reduced_bytemask = vreinterpretq_u16_u32(vandq_u32(surrogate_bytemask, v_1));
+    const uint16x8_t compressed_bytemask = vpaddq_u16(reduced_bytemask, reduced_bytemask);
+    size_t surrogate_count = count_ones(vgetq_lane_u64(vreinterpretq_u64_u16(compressed_bytemask), 0));
+    count += 4 + surrogate_count;
+  }
+  return count + scalar::utf32::utf16_length_from_utf32(input + pos, length - pos);
 }
 
 } // namespace SIMDUTF_IMPLEMENTATION

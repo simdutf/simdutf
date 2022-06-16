@@ -152,9 +152,9 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf8(const char * i
 
 simdutf_warn_unused size_t implementation::utf8_length_from_utf32(const char32_t * input, size_t length) const noexcept {
   const __m128i v_00000000 = _mm_setzero_si128();
-  const __m128i v_ffffff80 = _mm_set1_epi32((int32_t)0xffffff80);
-  const __m128i v_fffff800 = _mm_set1_epi32((int32_t)0xfffff800);
-  const __m128i v_ffff0000 = _mm_set1_epi32((int32_t)0xffff0000);
+  const __m128i v_ffffff80 = _mm_set1_epi32((uint32_t)0xffffff80);
+  const __m128i v_fffff800 = _mm_set1_epi32((uint32_t)0xfffff800);
+  const __m128i v_ffff0000 = _mm_set1_epi32((uint32_t)0xffff0000);
   size_t pos = 0;
   size_t count = 0;
   for(;pos + 4 <= length; pos += 4) {
@@ -178,7 +178,7 @@ simdutf_warn_unused size_t implementation::utf8_length_from_utf32(const char32_t
 
 simdutf_warn_unused size_t implementation::utf16_length_from_utf32(const char32_t * input, size_t length) const noexcept {
   const __m128i v_00000000 = _mm_setzero_si128();
-  const __m128i v_ffff0000 = _mm_set1_epi32((int32_t)0xffff0000);
+  const __m128i v_ffff0000 = _mm_set1_epi32((uint32_t)0xffff0000);
   size_t pos = 0;
   size_t count = 0;
   for(;pos + 4 <= length; pos += 4) {
