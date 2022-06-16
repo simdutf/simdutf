@@ -19,9 +19,9 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
 
     // Pack 32-bit UTF-32 words to 16-bit UTF-16 words with unsigned saturation
     __m128i in_16 = _mm_packus_epi32(_mm_and_si128(in, v_7fffffff), _mm_and_si128(nextin, v_7fffffff));
-    
+
     // Try to apply UTF-16 => UTF-8 from ./sse_convert_utf16_to_utf8.cpp
-    
+
     // Check for ASCII fast path
     if(_mm_testz_si128(in_16, v_ff80)) { // ASCII fast path!!!!
       __m128i thirdin = _mm_loadu_si128((__m128i*)buf+2);
@@ -100,14 +100,14 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
       continue;
     }
 
-    
+
     // Check for overflow in packing
     const __m128i saturation_bytemask = _mm_cmpeq_epi32(_mm_and_si128(_mm_or_si128(in, nextin), v_ffff0000), v_0000);
     const uint32_t saturation_bitmask = static_cast<uint32_t>(_mm_movemask_epi8(saturation_bytemask));
 
     if (saturation_bitmask == 0xffff) {
       // case: words from register produce either 1, 2 or 3 UTF-8 bytes
-      const __m128i v_d800 = _mm_set1_epi16((int16_t)0xd800);
+      const __m128i v_d800 = _mm_set1_epi16((uint16_t)0xd800);
       forbidden_bytemask = _mm_or_si128(forbidden_bytemask, _mm_cmpeq_epi16(_mm_and_si128(in_16, v_f800), v_d800));
 
       const __m128i dup_even = _mm_setr_epi16(0x0000, 0x0202, 0x0404, 0x0606,

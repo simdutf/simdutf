@@ -4,6 +4,7 @@ std::pair<const char32_t*, char16_t*> sse_convert_utf32_to_utf16(const char32_t*
 
   const __m128i v_0000 = _mm_setzero_si128();
   const __m128i v_ffff0000 = _mm_set1_epi32((int32_t)0xffff0000);
+  __m128i forbidden_bytemask = _mm_setzero_si128();
 
   while (buf + 8 <= end) {
     __m128i in = _mm_loadu_si128((__m128i*)buf);
@@ -13,15 +14,13 @@ std::pair<const char32_t*, char16_t*> sse_convert_utf32_to_utf16(const char32_t*
 
     // Check if no bits set above 16th
     if (saturation_bitmask == 0xffff) {
-      // validation
-      const __m128i v_f800 = _mm_set1_epi32((int32_t)0xf800);
-      const __m128i v_d800 = _mm_set1_epi32((int32_t)0xd800);
-      const __m128i forbidden_bytemask = _mm_cmpeq_epi32(_mm_and_si128(in, v_f800), v_d800);
-      const __m128i nextforbidden_bytemask = _mm_cmpeq_epi32(_mm_and_si128(nextin, v_f800), v_d800);
-      const uint32_t forbidden_bitmask = static_cast<uint32_t>(_mm_movemask_epi8(_mm_or_si128(forbidden_bytemask, nextforbidden_bytemask)));
-      if (forbidden_bitmask != 0) { return std::make_pair(nullptr, utf16_output); }
-      // Pack UTF-32 to UTF-16 safely (without surrogate pairs)
+      // Pack UTF-32 to UTF-16
       const __m128i utf16_packed = _mm_packus_epi32(in, nextin);
+
+      const __m128i v_f800 = _mm_set1_epi16((uint16_t)0xf800);
+      const __m128i v_d800 = _mm_set1_epi16((uint16_t)0xd800);
+      forbidden_bytemask = _mm_or_si128(forbidden_bytemask, _mm_cmpeq_epi16(_mm_and_si128(utf16_packed, v_f800), v_d800));
+
       _mm_storeu_si128((__m128i*)utf16_output, utf16_packed);
       utf16_output += 8;
       buf += 8;
@@ -46,6 +45,9 @@ std::pair<const char32_t*, char16_t*> sse_convert_utf32_to_utf16(const char32_t*
       buf += k;
     }
   }
+
+  // check for invalid input
+  if (static_cast<uint32_t>(_mm_movemask_epi8(forbidden_bytemask)) != 0) { return std::make_pair(nullptr, utf16_output); }
 
   return std::make_pair(buf, utf16_output);
 }

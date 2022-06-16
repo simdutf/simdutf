@@ -19,9 +19,9 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf
     // Pack 32-bit UTF-32 words to 16-bit UTF-16 words with unsigned saturation
     __m256i in_16 = _mm256_packus_epi32(_mm256_and_si256(in, v_7fffffff), _mm256_and_si256(nextin, v_7fffffff));
     in_16 = _mm256_permute4x64_epi64(in_16, 0b11011000);
-    
+
     // Try to apply UTF-16 => UTF-8 routine on 256 bits (haswell/avx2_convert_utf16_to_utf8.cpp)
-    
+
     if(_mm256_testz_si256(in_16, v_ff80)) { // ASCII fast path!!!!
       // 1. pack the bytes
       const __m128i utf8_packed = _mm_packus_epi16(_mm256_castsi256_si128(in_16),_mm256_extractf128_si256(in_16,1));
@@ -88,7 +88,7 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf
     const uint32_t saturation_bitmask = static_cast<uint32_t>(_mm256_movemask_epi8(saturation_bytemask));
     if (saturation_bitmask == 0xffffffff) {
       // case: words from register produce either 1, 2 or 3 UTF-8 bytes
-      const __m256i v_d800 = _mm256_set1_epi16((int16_t)0xd800);
+      const __m256i v_d800 = _mm256_set1_epi16((uint16_t)0xd800);
       forbidden_bytemask = _mm256_or_si256(forbidden_bytemask, _mm256_cmpeq_epi16(_mm256_and_si256(in_16, v_f800), v_d800));
 
       const __m256i dup_even = _mm256_setr_epi16(0x0000, 0x0202, 0x0404, 0x0606,

@@ -2,6 +2,8 @@ std::pair<const char32_t*, char16_t*> avx2_convert_utf32_to_utf16(const char32_t
   const char32_t* end = buf + len;
 
   const size_t safety_margin = 11; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
+  __m256i forbidden_bytemask = _mm256_setzero_si256();
+
 
   while (buf + 8 + safety_margin <= end) {
     __m256i in = _mm256_loadu_si256((__m256i*)buf);
@@ -14,12 +16,9 @@ std::pair<const char32_t*, char16_t*> avx2_convert_utf32_to_utf16(const char32_t
     const uint32_t saturation_bitmask = static_cast<uint32_t>(_mm256_movemask_epi8(saturation_bytemask));
 
     if (saturation_bitmask == 0xffffffff) {
-      // validation
-      const __m256i v_f800 = _mm256_set1_epi32((int32_t)0xf800);
-      const __m256i v_d800 = _mm256_set1_epi32((int32_t)0xd800);
-      const __m256i forbidden_bytemask = _mm256_cmpeq_epi32(_mm256_and_si256(in, v_f800), v_d800);
-      const uint32_t forbidden_bitmask = static_cast<uint32_t>(_mm256_movemask_epi8(forbidden_bytemask));
-      if (forbidden_bitmask != 0) { return std::make_pair(nullptr, utf16_output); }
+      const __m256i v_f800 = _mm256_set1_epi32((uint32_t)0xf800);
+      const __m256i v_d800 = _mm256_set1_epi32((uint32_t)0xd800);
+      forbidden_bytemask = _mm256_or_si256(forbidden_bytemask, _mm256_cmpeq_epi32(_mm256_and_si256(in, v_f800), v_d800));
 
       const __m128i utf16_packed = _mm_packus_epi32(_mm256_castsi256_si128(in),_mm256_extractf128_si256(in,1));
       _mm_storeu_si128((__m128i*)utf16_output, utf16_packed);
@@ -46,6 +45,9 @@ std::pair<const char32_t*, char16_t*> avx2_convert_utf32_to_utf16(const char32_t
       buf += k;
     }
   }
+
+  // check for invalid input
+  if (static_cast<uint32_t>(_mm256_movemask_epi8(forbidden_bytemask)) != 0) { return std::make_pair(nullptr, utf16_output); }
 
   return std::make_pair(buf, utf16_output);
 }
