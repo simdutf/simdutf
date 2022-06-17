@@ -21,7 +21,7 @@ datasets = set()
 codecs = set()
 
 for line in content:
-        
+
     if line.startswith("convert"):
         codec = re.search(r"\+(\w+)",line).group(1)
         rfile = re.search(r"/(\w+)[\.-]",line).group(1)

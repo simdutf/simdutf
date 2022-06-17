@@ -22,4 +22,4 @@ jobs:
           cd build &&
           cmake -DSIMDUTF_SANITIZE=ON ..  &&
           cmake --build .   &&
-          ctest -j --output-on-failure 
+          ctest -j --output-on-failure

@@ -20,8 +20,8 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   // We first try a few fast paths.
   const __m128i in = _mm_loadu_si128((__m128i *)input);
   const uint16_t input_utf8_end_of_code_point_mask =
-      utf8_end_of_code_point_mask & 0xFFF;
-  if(((utf8_end_of_code_point_mask & 0xFFFF) == 0xFFFF)) {
+      utf8_end_of_code_point_mask & 0xfff;
+  if(((utf8_end_of_code_point_mask & 0xffff) == 0xffff)) {
     // We process the data in chunks of 16 bytes.
     _mm_storeu_si128(reinterpret_cast<__m128i *>(utf16_output), _mm_cvtepu8_epi16(in));
     _mm_storeu_si128(reinterpret_cast<__m128i *>(utf16_output + 8), _mm_cvtepu8_epi16(_mm_srli_si128(in,8)));
@@ -138,7 +138,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
         utf16_output[0] = uint16_t(basic_buffer[i]);
         utf16_output++;
       } else {
-        utf16_output[0] = uint16_t(surrogate_buffer[i] & 0xFFFF);
+        utf16_output[0] = uint16_t(surrogate_buffer[i] & 0xffff);
         utf16_output[1] = uint16_t(surrogate_buffer[i] >> 16);
         utf16_output += 2;
       }

@@ -59,7 +59,7 @@ def shuffle_for_conversion_1_or_2_utf8_bytes_aux():
   # t0 = in & 0x5555       // t0 = 0h0g0f0e0d0c0b0a
   # t1 = t0 >> 7           // t1 = 00000000h0g0f0e0
   # t2 = (t0 | t1) & 0xff  // t2 =         hdgcfbea
-  
+
   for mask in range(256):
     def getbit(k):
       return (mask & (1 << k) != 0)
@@ -72,7 +72,7 @@ def shuffle_for_conversion_1_or_2_utf8_bytes_aux():
     f = getbit(3)
     g = getbit(5)
     h = getbit(7)
-    
+
     shuffle = []
     for word_index, bit in enumerate([a, b, c, d, e, f, g, h]):
       if bit: # 1 byte
@@ -122,7 +122,7 @@ def shuffle_for_conversion_1_2_3_utf8_bytes_aux():
   #       = hdgcfbea
 
   # Each two-bit subword decides how many bytes will be copied from a 32-bit word of register:
-  # | e | a | ea |  
+  # | e | a | ea |
   # +---+---+----+-------
   # | 0 | 0 |  0 |  3 bytes
   # | 0 | 1 |  1 |  -- such combination will never come from C++ code, it has no sense
@@ -182,7 +182,7 @@ def shuffle_for_expanding_surrogate_pairs(file):
 # At this point we do not need to know which is which, as we assume that word
 # expansion is done after validation. (Let's assume L - low surrogate, H - high
 # surrogate, V - any valid non-surrogate word).
-# 
+#
 # Example 1: bitmask 1001'1110 describes a sequence V-L-H-L-H-V-V-? -- the last
 # surrogate word might be either L or H, we'll ignore it. Two adjacent bits
 # are expected to contain low & high surrogates
@@ -213,7 +213,7 @@ def shuffle_for_expanding_surrogate_pairs_aux():
 
         result.append(2*i + 0)
         result.append(2*i + 1)
-        
+
         if curr == 'L':
           dwords_consumed += 1
 

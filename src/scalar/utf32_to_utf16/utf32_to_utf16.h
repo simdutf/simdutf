@@ -16,7 +16,7 @@ inline size_t convert(const char32_t* buf, size_t len, char16_t* utf16_output) {
       if (word >= 0xD800 && word <= 0xDFFF) { return 0; }
       // will not generate a surrogate pair
       *utf16_output++ = char16_t(word);
-      pos++;      
+      pos++;
     } else {
       // will generate a surrogate pair
       if (word > 0x10FFFF) { return 0; }

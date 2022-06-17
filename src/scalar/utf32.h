@@ -17,7 +17,7 @@ inline simdutf_warn_unused bool validate(const char32_t *buf, size_t len) noexce
   }
   return true;
 }
-  
+
 inline size_t utf8_length_from_utf32(const char32_t* buf, size_t len) {
   // We are not BOM aware.
   const uint32_t * p = reinterpret_cast<const uint32_t *>(buf);

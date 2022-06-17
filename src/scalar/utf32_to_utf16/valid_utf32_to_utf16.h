@@ -15,7 +15,7 @@ inline size_t convert_valid(const char32_t* buf, size_t len, char16_t* utf16_out
     if((word & 0xFFFF0000)==0) {
       // will not generate a surrogate pair
       *utf16_output++ = char16_t(word);
-      pos++;      
+      pos++;
     } else {
       // will generate a surrogate pair
       word -= 0x10000;

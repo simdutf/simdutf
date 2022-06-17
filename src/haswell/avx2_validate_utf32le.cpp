@@ -17,7 +17,6 @@ const char32_t* avx2_validate_utf32le(const char32_t* input, size_t size) {
         currentoffsetmax = _mm256_max_epu32(_mm256_add_epi32(in, offset), currentoffsetmax);
         input += 8;
     }
-   
     __m256i is_zero = _mm256_xor_si256(_mm256_max_epu32(currentmax, standardmax), standardmax);
     if(_mm256_testz_si256(is_zero, is_zero) == 0) {
         return nullptr;

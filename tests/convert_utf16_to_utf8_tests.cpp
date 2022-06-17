@@ -34,7 +34,7 @@ TEST(convert_pure_ASCII) {
   for (size_t size: input_size) {
     transcode_utf16_to_utf8_test_base test(generator, size);
     ASSERT_TRUE(test(procedure));
-    ASSERT_TRUE(test.check_size(size_procedure));    
+    ASSERT_TRUE(test.check_size(size_procedure));
   }
 }
 
@@ -53,7 +53,7 @@ TEST(convert_into_1_or_2_UTF8_bytes) {
     for (size_t size: input_size) {
       transcode_utf16_to_utf8_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
-      ASSERT_TRUE(test.check_size(size_procedure));    
+      ASSERT_TRUE(test.check_size(size_procedure));
     }
   }
 }
@@ -76,7 +76,7 @@ TEST(convert_into_1_or_2_or_3_UTF8_bytes) {
     for (size_t size: input_size) {
       transcode_utf16_to_utf8_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
-      ASSERT_TRUE(test.check_size(size_procedure));    
+      ASSERT_TRUE(test.check_size(size_procedure));
     }
   }
 }
@@ -97,7 +97,7 @@ TEST(convert_into_3_or_4_UTF8_bytes) {
     for (size_t size: input_size) {
       transcode_utf16_to_utf8_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
-      ASSERT_TRUE(test.check_size(size_procedure));    
+      ASSERT_TRUE(test.check_size(size_procedure));
     }
   }
 }

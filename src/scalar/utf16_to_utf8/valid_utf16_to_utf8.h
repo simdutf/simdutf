@@ -41,7 +41,7 @@ inline size_t convert_valid(const char16_t* buf, size_t len, char* utf8_output) 
       *utf8_output++ = char((word>>12) | 0b11100000);
       *utf8_output++ = char(((word>>6) & 0b111111) | 0b10000000);
       *utf8_output++ = char((word & 0b111111) | 0b10000000);
-      pos++;      
+      pos++;
     } else {
       // must be a surrogate pair
       uint16_t diff = uint16_t(word - 0xD800);
@@ -61,7 +61,7 @@ inline size_t convert_valid(const char16_t* buf, size_t len, char* utf8_output) 
   return utf8_output - start;
 }
 
-} // utf8_to_utf16 namespace
+} // utf16_to_utf8 namespace
 } // unnamed namespace
 } // namespace scalar
 } // namespace simdutf
