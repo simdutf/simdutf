@@ -810,6 +810,7 @@ void Benchmark::run_convert_valid_utf8_to_utf16_utf8lut(size_t iterations) {
     size_t char_count = active_implementation->count_utf8(data, size);
     print_summary(result, size, char_count);
 }
+
 /**
  * utf8lut: Vectorized UTF-8 converter.
  * by stgatilov (2019)
@@ -842,6 +843,20 @@ void Benchmark::run_convert_utf32_to_utf8_utf8lut(size_t iterations) {
           sink = 0;
       } else {
           sink = result.outputSize;
+      }
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    size_t char_count = size;
+    print_summary(result, input_data.size(), char_count);
+}
+
+/**
+ * utf8lut: Vectorized UTF-8 converter.
+ * by stgatilov (2019)
+ *  https://dirtyhandscoding.github.io/posts/utf8lut-vectorized-utf-8-converter-introduction.html
+ */
 void Benchmark::run_convert_valid_utf8_to_utf32_utf8lut(size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
@@ -863,6 +878,11 @@ void Benchmark::run_convert_valid_utf8_to_utf32_utf8lut(size_t iterations) {
     size_t char_count = size;
     print_summary(result, input_data.size(), char_count);
 }
+/**
+ * utf8lut: Vectorized UTF-8 converter.
+ * by stgatilov (2019)
+ *  https://dirtyhandscoding.github.io/posts/utf8lut-vectorized-utf-8-converter-introduction.html
+ */
 /**
  * utf8lut: Vectorized UTF-8 converter.
  * by stgatilov (2019)
@@ -902,9 +922,6 @@ void Benchmark::run_convert_valid_utf32_to_utf8_utf8lut(size_t iterations) {
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
     size_t char_count = size;
     print_summary(result, input_data.size(), char_count);
-    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
-    size_t char_count = active_implementation->count_utf8(data, size);
-    print_summary(result, size, char_count);
 }
 /**
  * Bob Steagall, CppCon2018
