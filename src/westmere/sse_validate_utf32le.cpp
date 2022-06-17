@@ -17,7 +17,6 @@ const char32_t* sse_validate_utf32le(const char32_t* input, size_t size) {
         currentoffsetmax = _mm_max_epu32(_mm_add_epi32(in, offset), currentoffsetmax);
         input += 4;
     }
-
     __m128i is_zero = _mm_xor_si128(_mm_max_epu32(currentmax, standardmax), standardmax);
     if(_mm_test_all_zeros(is_zero, is_zero) == 0) {
         return nullptr;
