@@ -17,8 +17,11 @@ This library provide fast Unicode functions such as
 - UTF-8 and UTF-16LE validation,
 - UTF-8 to UTF-16LE transcoding, with or without validation,
 - UTF-16LE to UTF-8 transcoding, with or without validation,
+- UTF-32LE to UTF-8 transcoding, with or without validation,
+- UTF-32LE to UTF-16LE transcoding, with or without validation,
 - From an UTF-8 string, compute the size of the UTF-16 equivalent string,
 - From an UTF-16 string, compute the size of the UTF-8 equivalent string,
+- From an UTF-32 string, compute the size of the UTF-8 or UTF-16LE equivalent string,
 - UTF-8 and UTF-16LE character counting.
 
 The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion caracters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).
@@ -287,6 +290,86 @@ simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char16_t * input, s
  * @return the number of bytes required to encode the UTF-16LE string as UTF-8
  */
 simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t * input, size_t length) noexcept;
+
+/**
+ * Convert possibly broken UTF-32LE string into UTF-8 string.
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-32LE string to convert
+ * @param length        the length of the string in 4-byte words (char32_t)
+ * @param utf8_buffer   the pointer to buffer that can hold conversion result
+ * @return number of written words; 0 if input is not a valid UTF-32LE string
+ */
+simdutf_warn_unused size_t convert_utf32_to_utf8(const char32_t * input, size_t length, char* utf8_buffer) noexcept;
+
+/**
+ * Convert valid UTF-32LE string into UTF-8 string.
+ *
+ * This function assumes that the input string is valid UTF-32LE.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-32LE string to convert
+ * @param length        the length of the string in 4-byte words (char32_t)
+ * @param utf8_buffer   the pointer to buffer that can hold the conversion result
+ * @return number of written words; 0 if conversion is not possible
+ */
+simdutf_warn_unused size_t convert_valid_utf32_to_utf8(const char32_t * input, size_t length, char* utf8_buffer) noexcept;
+
+/**
+ * Convert possibly broken UTF-32LE string into UTF-16LE string.
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-32LE string to convert
+ * @param length        the length of the string in 4-byte words (char32_t)
+ * @param utf16_buffer   the pointer to buffer that can hold conversion result
+ * @return number of written words; 0 if input is not a valid UTF-32LE string
+ */
+simdutf_warn_unused size_t convert_utf32_to_utf16(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;
+
+/**
+ * Convert valid UTF-32LE string into UTF-16LE string.
+ *
+ * This function assumes that the input string is valid UTF-32LE.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-32LE string to convert
+ * @param length        the length of the string in 4-byte words (char32_t)
+ * @param utf16_buffer   the pointer to buffer that can hold the conversion result
+ * @return number of written words; 0 if conversion is not possible
+ */
+simdutf_warn_unused size_t convert_valid_utf32_to_utf16(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;
+
+/**
+ * Compute the number of bytes that this UTF-32LE string would require in UTF-8 format.
+ *
+ * This function does not validate the input.
+ *
+ * @param input         the UTF-32LE string to convert
+ * @param length        the length of the string in 4-byte words (char32_t)
+ * @return the number of bytes required to encode the UTF-32LE string as UTF-8
+ */
+simdutf_warn_unused size_t utf8_length_from_utf32(const char32_t * input, size_t length) noexcept;
+
+/**
+ * Compute the number of bytes that this UTF-32LE string would require in UTF-16 format.
+ *
+ * This function does not validate the input.
+ *
+ * @param input         the UTF-32LE string to convert
+ * @param length        the length of the string in 4-byte words (char32_t)
+ * @return the number of bytes required to encode the UTF-32LE string as UTF-16
+ */
+simdutf_warn_unused size_t utf16_length_from_utf32(const char32_t * input, size_t length) noexcept;
 
 /**
  * Count the number of code points (characters) in the string assuming that
