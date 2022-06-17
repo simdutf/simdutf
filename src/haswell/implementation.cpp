@@ -35,6 +35,11 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 }
 
 #include "haswell/avx2_convert_utf8_to_utf16.cpp"
+<<<<<<< HEAD
+=======
+#include "haswell/avx2_validate_utf16le.cpp"
+#include "haswell/avx2_validate_utf32le.cpp"
+>>>>>>> 0dd100f (Add declarations for utf32 validation.)
 #include "haswell/avx2_convert_utf16_to_utf8.cpp"
 #include "haswell/avx2_convert_utf32_to_utf8.cpp"
 #include "haswell/avx2_convert_utf32_to_utf16.cpp"
@@ -75,6 +80,14 @@ simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, siz
   }
 }
 
+simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, size_t len) const noexcept {
+  const char32_t* tail = avx2_validate_utf32le(buf, len);
+  if (tail) {
+    return scalar::utf32::validate(tail, len - (tail - buf));
+  } else {
+    return false;
+  }
+}
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
   utf8_to_utf16::validating_transcoder converter;
