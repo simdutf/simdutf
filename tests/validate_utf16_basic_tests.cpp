@@ -10,10 +10,10 @@
 #include <memory>
 
 TEST(issue92) {
-  char16_t input[] = u"\u5d00\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041"; 
+  char16_t input[] = u"\u5d00\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041";
   size_t strlen = sizeof(input)/sizeof(char16_t)-1;
-  ASSERT_TRUE(implementation.validate_utf16(input, strlen));  
-  ASSERT_TRUE(implementation.utf8_length_from_utf16(input, strlen) 
+  ASSERT_TRUE(implementation.validate_utf16(input, strlen));
+  ASSERT_TRUE(implementation.utf8_length_from_utf16(input, strlen)
      == 2 + strlen);
   size_t size = implementation.utf8_length_from_utf16(input, strlen);
   std::unique_ptr<char[]> output_buffer{new char[size]};
