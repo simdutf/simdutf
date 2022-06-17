@@ -88,7 +88,7 @@ def buildshuf123_threebytes(sizes):
             answer[4*i] = pos + 2
             answer[4*i+1] = pos + 1
             answer[4*i+2] = pos
-            answer[4*i+3] = 0xff         
+            answer[4*i+3] = 0xff
             pos += 3
     return answer
 
@@ -118,7 +118,7 @@ def buildshuf1234_fourbytes(sizes):
             answer[4*i] = pos + 3
             answer[4*i+1] = pos + 2
             answer[4*i+2] = pos + 1
-            answer[4*i+3] = pos      
+            answer[4*i+3] = pos
             pos += 4
     return answer
 

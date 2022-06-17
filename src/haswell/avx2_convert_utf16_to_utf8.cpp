@@ -52,7 +52,7 @@
   Returns a pair: the first unprocessed byte from buf and utf8_output
   A scalar routing should carry on the conversion of the tail.
 */
-std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) {
+std::pair<const char16_t*, char*> avx2_convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) {
   const char16_t* end = buf + len;
   const __m256i v_0000 = _mm256_setzero_si256();
   const __m256i v_f800 = _mm256_set1_epi16((int16_t)0xf800);

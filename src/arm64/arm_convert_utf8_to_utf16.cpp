@@ -11,21 +11,21 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   //
   uint8x16_t in = vld1q_u8(reinterpret_cast<const uint8_t*>(input));
   const uint16_t input_utf8_end_of_code_point_mask =
-      utf8_end_of_code_point_mask & 0xFFF;
+      utf8_end_of_code_point_mask & 0xfff;
   //
   // Optimization note: our main path below is load-latency dependent. Thus it is maybe
   // beneficial to have fast paths that depend on branch prediction but have less latency.
   // This results in more instructions but, potentially, also higher speeds.
   //
   // We first try a few fast paths.
-  if((utf8_end_of_code_point_mask & 0xFFFF) == 0xFFFF) {
+  if((utf8_end_of_code_point_mask & 0xffff) == 0xffff) {
     // We process in chunks of 16 bytes
     vst1q_u16(reinterpret_cast<uint16_t*>(utf16_output), vmovl_u8(vget_low_u8 (in)));
     vst1q_u16(reinterpret_cast<uint16_t*>(utf16_output) + 8, vmovl_high_u8(in));
     utf16_output += 16; // We wrote 16 16-bit characters.
     return 16; // We consumed 16 bytes.
   }
-  if((utf8_end_of_code_point_mask & 0xFFFF) == 0xaaaa) {
+  if((utf8_end_of_code_point_mask & 0xffff) == 0xaaaa) {
     // We want to take 8 2-byte UTF-8 words and turn them into 8 2-byte UTF-16 words.
     // There is probably a more efficient sequence, but the following might do.
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
@@ -141,7 +141,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
         utf16_output[0] = uint16_t(basic_buffer[i]);
         utf16_output++;
       } else {
-        utf16_output[0] = uint16_t(surrogate_buffer[i] & 0xFFFF);
+        utf16_output[0] = uint16_t(surrogate_buffer[i] & 0xffff);
         utf16_output[1] = uint16_t(surrogate_buffer[i] >> 16);
         utf16_output += 2;
       }

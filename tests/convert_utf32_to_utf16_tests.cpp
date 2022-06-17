@@ -34,7 +34,7 @@ TEST(convert_into_2_UTF16_bytes) {
     for (size_t size: input_size) {
       transcode_utf32_to_utf16_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
-      ASSERT_TRUE(test.check_size(size_procedure));    
+      ASSERT_TRUE(test.check_size(size_procedure));
     }
   }
 }
@@ -54,7 +54,7 @@ TEST(convert_into_4_UTF16_bytes) {
     for (size_t size: input_size) {
       transcode_utf32_to_utf16_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
-      ASSERT_TRUE(test.check_size(size_procedure));    
+      ASSERT_TRUE(test.check_size(size_procedure));
     }
   }
 }
@@ -76,7 +76,7 @@ TEST(convert_into_2_or_4_UTF16_bytes) {
     for (size_t size: input_size) {
       transcode_utf32_to_utf16_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
-      ASSERT_TRUE(test.check_size(size_procedure));    
+      ASSERT_TRUE(test.check_size(size_procedure));
     }
   }
 }

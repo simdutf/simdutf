@@ -51,15 +51,21 @@ namespace simdutf::benchmarks {
         void run_count_utf8(const simdutf::implementation& implementation, size_t iterations);
         void run_count_utf16(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf8_to_utf16(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_utf8_to_utf32(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf8_to_utf16_with_dynamic_allocation(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_utf8_to_utf32_with_dynamic_allocation(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_valid_utf8_to_utf16(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_valid_utf8_to_utf32(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf16_to_utf8(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_utf16_to_utf32(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf16_to_utf8_with_dynamic_allocation(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_utf16_to_utf32_with_dynamic_allocation(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_valid_utf16_to_utf8(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf32_to_utf8(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_valid_utf32_to_utf8(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf32_to_utf16(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_valid_utf32_to_utf16(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_valid_utf16_to_utf32(const simdutf::implementation& implementation, size_t iterations);
 #if ICU_AVAILABLE
         void run_convert_utf8_to_utf16_icu(size_t iterations);
         void run_convert_utf16_to_utf8_icu(size_t iterations);
@@ -82,7 +88,9 @@ namespace simdutf::benchmarks {
        void run_convert_valid_utf16_to_utf8_utf8lut(size_t iterations);
 
        void run_convert_utf8_to_utf16_utf8lut(size_t iterations);
+       void run_convert_utf8_to_utf32_utf8lut(size_t iterations);
        void run_convert_valid_utf8_to_utf16_utf8lut(size_t iterations);
+       void run_convert_valid_utf8_to_utf32_utf8lut(size_t iterations);
 
        void run_convert_utf32_to_utf8_utf8lut(size_t iterations);
        void run_convert_valid_utf32_to_utf8_utf8lut(size_t iterations);
@@ -95,6 +103,7 @@ namespace simdutf::benchmarks {
         * https://www.youtube.com/watch?v=5FQ87-Ecb-A
         */
         void run_convert_utf8_to_utf16_cppcon2018(size_t iterations);
+        void run_convert_utf8_to_utf32_cppcon2018(size_t iterations);
         /**
          * benchmarks/competition/u8u16 contains an open source version of u8u16, referenced in
          * Cameron, Robert D, A case study in SIMD text processing with parallel bit streams: UTF-8 to UTF-16 transcoding,
@@ -108,14 +117,17 @@ namespace simdutf::benchmarks {
         void run_convert_utf8_to_utf16_utf8sse4(size_t iterations);
 #endif
         void run_convert_utf8_to_utf16_hoehrmann(size_t iterations);
+        void run_convert_utf8_to_utf32_hoehrmann(size_t iterations);
         /**
          * LLVM relies on code from the Unicode Consortium
          * https://en.wikipedia.org/wiki/Unicode_Consortium
          */
         void run_convert_utf8_to_utf16_llvm(size_t iterations);
+        void run_convert_utf8_to_utf32_llvm(size_t iterations);
         void run_convert_utf16_to_utf8_llvm(size_t iterations);
         void run_convert_utf32_to_utf8_llvm(size_t iterations);
         void run_convert_utf32_to_utf16_llvm(size_t iterations);
+        void run_convert_utf16_to_utf32_llvm(size_t iterations);
 
     };
 
