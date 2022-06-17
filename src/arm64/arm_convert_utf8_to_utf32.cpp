@@ -9,7 +9,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
   // Why 12 input bytes and not 16? Because we are concerned with the size of
   // the lookup tables. Also 12 is nicely divisible by two and three.
   //
-  uint32_t* utf32_output = reinterpret_cast<uint32_t*>(utf32_out);
+  uint32_t*& utf32_output = reinterpret_cast<uint32_t*&>(utf32_out);
   uint8x16_t in = vld1q_u8(reinterpret_cast<const uint8_t*>(input));
   const uint16_t input_utf8_end_of_code_point_mask =
       utf8_end_of_code_point_mask & 0xFFF;

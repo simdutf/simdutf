@@ -230,6 +230,5 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
   if (vmaxvq_u16(forbidden_bytemask) != 0) {
     return std::make_pair(nullptr, reinterpret_cast<char*>(utf8_output));
   }
-
   return std::make_pair(buf, reinterpret_cast<char*>(utf8_output));
 }
