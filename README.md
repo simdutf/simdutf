@@ -14,7 +14,7 @@ Not all sequences of bytes are valid Unicode strings. It is unsafe to use Unicod
 
 This library provide fast Unicode functions such as
 
-- UTF-8 and UTF-16LE validation,
+- ASCII, UTF-8, UTF-16LE and UTF-32LE validation,
 - UTF-8 to UTF-16LE transcoding, with or without validation,
 - UTF-16LE to UTF-8 transcoding, with or without validation,
 - UTF-32LE to UTF-8 transcoding, with or without validation,
@@ -188,6 +188,16 @@ and they sometimes take a pointer to an output buffer. Users are responsible for
 ```C++
 namespace simdutf {
 
+/**
+ * Validate the ASCII string.
+ *
+ * Overridden by each implementation.
+ *
+ * @param buf the ASCII string to validate.
+ * @param len the length of the string in bytes.
+ * @return true if and only if the string is valid ASCII.
+ */
+simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept;
 
 /**
  * Validate the UTF-8 string.
@@ -212,6 +222,19 @@ simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept;
  * @return true if and only if the string is valid UTF-16LE.
  */
 simdutf_warn_unused bool validate_utf16(const char16_t *buf, size_t len) noexcept;
+
+/**
+ * Validate the UTF-32LE string.
+ *
+ * Overridden by each implementation.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param buf the UTF-32LE string to validate.
+ * @param len the length of the string in number of 4-byte words (char32_t).
+ * @return true if and only if the string is valid UTF-32LE.
+ */
+simdutf_warn_unused bool validate_utf32(const char32_t *buf, size_t len) noexcept;
 
 /**
  * Convert possibly broken UTF-8 string into UTF-16LE string.

@@ -53,6 +53,9 @@ simdutf_warn_unused encoding_type implementation::autodetect_encoding(const char
       // important: we need to divide by two
       if(validate_utf16(reinterpret_cast<const char16_t*>(input), length/2)) { return encoding_type::UTF16_LE; }
     }
+    if((length % 4) == 0) {
+      if(validate_utf32(reinterpret_cast<const char32_t*>(input), length/4)) { return encoding_type::UTF32_LE; }
+    }
     return encoding_type::unspecified;
 }
 
@@ -96,6 +99,10 @@ public:
 
   simdutf_warn_unused bool validate_utf16(const char16_t * buf, size_t len) const noexcept final override {
     return set_best()->validate_utf16(buf, len);
+  }
+
+  simdutf_warn_unused bool validate_utf32(const char32_t * buf, size_t len) const noexcept final override {
+    return set_best()->validate_utf32(buf, len);
   }
 
   simdutf_warn_unused size_t convert_utf8_to_utf16(const char * buf, size_t len, char16_t* utf16_output) const noexcept final override {
@@ -199,6 +206,10 @@ public:
   }
 
   simdutf_warn_unused bool validate_utf16(const char16_t*, size_t) const noexcept final override {
+    return false;
+  }
+
+  simdutf_warn_unused bool validate_utf32(const char32_t*, size_t) const noexcept final override {
     return false;
   }
 
@@ -311,11 +322,14 @@ simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept {
 simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept {
   return active_implementation->validate_ascii(buf, len);
 }
-simdutf_warn_unused size_t convert_utf8_to_utf16(const char * input, size_t length, char16_t* utf16_output) noexcept {
-  return active_implementation->convert_utf8_to_utf16(input, length, utf16_output);
-}
 simdutf_warn_unused bool validate_utf16(const char16_t * buf, size_t len) noexcept {
   return active_implementation->validate_utf16(buf, len);
+}
+simdutf_warn_unused bool validate_utf32(const char32_t * buf, size_t len) noexcept {
+  return active_implementation->validate_utf32(buf, len);
+}
+simdutf_warn_unused size_t convert_utf8_to_utf16(const char * input, size_t length, char16_t* utf16_output) noexcept {
+  return active_implementation->convert_utf8_to_utf16(input, length, utf16_output);
 }
 simdutf_warn_unused size_t convert_valid_utf8_to_utf16(const char * input, size_t length, char16_t* utf16_buffer) noexcept {
   return active_implementation->convert_valid_utf8_to_utf16(input, length, utf16_buffer);
