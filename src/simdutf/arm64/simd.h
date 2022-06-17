@@ -200,7 +200,6 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     static simdutf_really_inline simd8<uint8_t> splat(uint8_t _value) { return vmovq_n_u8(_value); }
     static simdutf_really_inline simd8<uint8_t> zero() { return vdupq_n_u8(0); }
     static simdutf_really_inline simd8<uint8_t> load(const uint8_t* values) { return vld1q_u8(values); }
-    simdutf_really_inline simd8(const simd8<uint8_t>& value) = default;
     simdutf_really_inline simd8(const uint8x16_t _value) : base_u8<uint8_t>(_value) {}
     // Zero constructor
     simdutf_really_inline simd8() : simd8(zero()) {}

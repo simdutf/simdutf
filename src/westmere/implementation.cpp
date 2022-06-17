@@ -29,12 +29,12 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 }
 
 #include "westmere/sse_validate_utf16le.cpp"
+#include "westmere/sse_validate_utf32le.cpp"
+
 #include "westmere/sse_convert_utf8_to_utf16.cpp"
 #include "westmere/sse_convert_utf16_to_utf8.cpp"
 #include "westmere/sse_convert_utf32_to_utf8.cpp"
 #include "westmere/sse_convert_utf32_to_utf16.cpp"
-
-// UTF-16 => UTF-8 conversion
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -68,6 +68,15 @@ simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, siz
   const char16_t* tail = sse_validate_utf16le(buf, len);
   if (tail) {
     return scalar::utf16::validate(tail, len - (tail - buf));
+  } else {
+    return false;
+  }
+}
+
+simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, size_t len) const noexcept {
+  const char32_t* tail = sse_validate_utf32le(buf, len);
+  if (tail) {
+    return scalar::utf32::validate(tail, len - (tail - buf));
   } else {
     return false;
   }

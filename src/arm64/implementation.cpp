@@ -29,12 +29,14 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
     simd8<bool> is_fourth_byte = prev3 >= uint8_t(0b11110000u);
     return is_third_byte ^ is_fourth_byte;
 }
+
+#include "arm64/arm_validate_utf16le.cpp"
+#include "arm64/arm_validate_utf32le.cpp"
+
 #include "arm64/arm_convert_utf8_to_utf16.cpp"
 #include "arm64/arm_convert_utf16_to_utf8.cpp"
 #include "arm64/arm_convert_utf32_to_utf8.cpp"
 #include "arm64/arm_convert_utf32_to_utf16.cpp"
-#include "arm64/arm_validate_utf16le.cpp"
-
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
@@ -65,6 +67,15 @@ simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, siz
   const char16_t* tail = arm_validate_utf16le(buf, len);
   if (tail) {
     return scalar::utf16::validate(tail, len - (tail - buf));
+  } else {
+    return false;
+  }
+}
+
+simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, size_t len) const noexcept {
+  const char32_t* tail = arm_validate_utf32le(buf, len);
+  if (tail) {
+    return scalar::utf32::validate(tail, len - (tail - buf));
   } else {
     return false;
   }

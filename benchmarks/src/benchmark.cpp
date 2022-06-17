@@ -68,6 +68,7 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
     std::vector<std::pair<std::string,std::set<simdutf::encoding_type>>> implemented_functions{
         {"validate_utf8", {simdutf::encoding_type::UTF8}},
         {"validate_utf16", {simdutf::encoding_type::UTF16_LE}},
+        {"validate_utf32", {simdutf::encoding_type::UTF32_LE}},
         {"count_utf8", {simdutf::encoding_type::UTF8}},
         {"count_utf16", {simdutf::encoding_type::UTF16_LE}},
         {"convert_utf8_to_utf16", {simdutf::encoding_type::UTF8}},
@@ -308,6 +309,8 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         run_validate_utf8(*implementation, iterations);
     } else if (name == "validate_utf16") {
         run_validate_utf16(*implementation, iterations);
+    } else if(name == "validate_utf32") {
+        run_validate_utf32(*implementation, iterations);
     } else if(name == "count_utf8") {
         run_count_utf8(*implementation, iterations);
     } else if(name == "count_utf16") {
@@ -377,6 +380,30 @@ void Benchmark::run_validate_utf16(const simdutf::implementation& implementation
     const auto result = count_events(proc, iterations);
     if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
     size_t char_count = active_implementation->count_utf16(data, size);
+    print_summary(result, size, char_count);
+}
+
+void Benchmark::run_validate_utf32(const simdutf::implementation& implementation, size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+        printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 4;
+
+    volatile bool sink{false};
+
+    auto proc = [&implementation, data, size, &sink]() {
+        sink = implementation.validate_utf32(data, size);
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
+    size_t char_count = size;
     print_summary(result, size, char_count);
 }
 

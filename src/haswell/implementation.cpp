@@ -34,12 +34,13 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
   return simd8<int8_t>(is_third_byte | is_fourth_byte) > int8_t(0);
 }
 
+#include "haswell/avx2_validate_utf16le.cpp"
+#include "haswell/avx2_validate_utf32le.cpp"
+
 #include "haswell/avx2_convert_utf8_to_utf16.cpp"
 #include "haswell/avx2_convert_utf16_to_utf8.cpp"
 #include "haswell/avx2_convert_utf32_to_utf8.cpp"
 #include "haswell/avx2_convert_utf32_to_utf16.cpp"
-#include "haswell/avx2_validate_utf16le.cpp"
-
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
@@ -75,6 +76,14 @@ simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, siz
   }
 }
 
+simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, size_t len) const noexcept {
+  const char32_t* tail = avx2_validate_utf32le(buf, len);
+  if (tail) {
+    return scalar::utf32::validate(tail, len - (tail - buf));
+  } else {
+    return false;
+  }
+}
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
   utf8_to_utf16::validating_transcoder converter;
