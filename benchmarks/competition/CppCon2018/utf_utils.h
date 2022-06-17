@@ -368,7 +368,7 @@ UtfUtils::FastConvert(char8_t const* pSrc, char8_t const* pSrcEnd, char32_t* pDs
 ///     indicate an error was encountered.
 //--------------------------------------------------------------------------------------------------
 //
-KEWB_FORCE_INLINE ptrdiff_t
+ptrdiff_t
 UtfUtils::SseConvert(char8_t const* pSrc, char8_t const* pSrcEnd, char32_t* pDst) noexcept
 {
     return SseBigTableConvert(pSrc, pSrcEnd, pDst);

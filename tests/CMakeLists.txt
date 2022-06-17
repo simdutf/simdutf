@@ -26,6 +26,12 @@ target_link_libraries(validate_utf16_basic_tests
          simdutf::tests::reference
          simdutf::tests::helpers)
 
+add_cpp_test(validate_utf32_basic_tests)
+target_link_libraries(validate_utf32_basic_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
+
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_FOUND)
   set(SCRIPT ${SIMDUTF_SOURCE_DIR}/scripts/sse_validate_utf16le_testcases.py)
@@ -43,11 +49,23 @@ target_link_libraries(convert_valid_utf8_to_utf16_tests
          simdutf::tests::reference
          simdutf::tests::helpers)
 
+add_cpp_test(convert_valid_utf8_to_utf32_tests)
+target_link_libraries(convert_valid_utf8_to_utf32_tests
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
+
 add_cpp_test(convert_utf8_to_utf16_tests)
 target_link_libraries(convert_utf8_to_utf16_tests
   PUBLIC simdutf
          simdutf::tests::reference
          simdutf::tests::helpers)
+
+add_cpp_test(convert_utf8_to_utf32_tests)
+target_link_libraries(convert_utf8_to_utf32_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
 
 add_cpp_test(convert_utf16_to_utf8_tests)
 target_link_libraries(convert_utf16_to_utf8_tests
@@ -55,11 +73,47 @@ target_link_libraries(convert_utf16_to_utf8_tests
          simdutf::tests::reference
          simdutf::tests::helpers)
 
+add_cpp_test(convert_utf32_to_utf8_tests)
+target_link_libraries(convert_utf32_to_utf8_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
+
+add_cpp_test(convert_utf32_to_utf16_tests)
+target_link_libraries(convert_utf32_to_utf16_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
+
 add_cpp_test(convert_valid_utf16_to_utf8_tests)
 target_link_libraries(convert_valid_utf16_to_utf8_tests
   PUBLIC simdutf
          simdutf::tests::reference
          simdutf::tests::helpers)
+
+add_cpp_test(convert_valid_utf32_to_utf8_tests)
+target_link_libraries(convert_valid_utf32_to_utf8_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
+
+add_cpp_test(convert_valid_utf32_to_utf16_tests)
+target_link_libraries(convert_valid_utf32_to_utf16_tests
+PUBLIC simdutf
+simdutf::tests::reference
+simdutf::tests::helpers)
+
+add_cpp_test(convert_utf16_to_utf32_tests)
+target_link_libraries(convert_utf16_to_utf32_tests
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
+
+add_cpp_test(convert_valid_utf16_to_utf32_tests)
+target_link_libraries(convert_valid_utf16_to_utf32_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
 
 add_cpp_test(count_utf8)
 target_link_libraries(count_utf8

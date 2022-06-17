@@ -20,14 +20,14 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   // We first try a few fast paths.
   const __m128i in = _mm_loadu_si128((__m128i *)input);
   const uint16_t input_utf8_end_of_code_point_mask =
-      utf8_end_of_code_point_mask & 0xFFF;
-  if(((utf8_end_of_code_point_mask & 0xFFFF) == 0xFFFF)) {
+      utf8_end_of_code_point_mask & 0xfff;
+  if(((utf8_end_of_code_point_mask & 0xffff) == 0xffff)) {
     // We process the data in chunks of 16 bytes.
     _mm256_storeu_si256(reinterpret_cast<__m256i *>(utf16_output), _mm256_cvtepu8_epi16(in));
     utf16_output += 16; // We wrote 16 16-bit characters.
     return 16; // We consumed 16 bytes.
   }
-  if(((utf8_end_of_code_point_mask & 0xFFFF) == 0xaaaa)) {
+  if(((utf8_end_of_code_point_mask & 0xffff) == 0xaaaa)) {
     // We want to take 8 2-byte UTF-8 words and turn them into 8 2-byte UTF-16 words.
     // There is probably a more efficient sequence, but the following might do.
     const __m128i sh = _mm_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
@@ -136,7 +136,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
         utf16_output[0] = uint16_t(basic_buffer[i]);
         utf16_output++;
       } else {
-        utf16_output[0] = uint16_t(surrogate_buffer[i] & 0xFFFF);
+        utf16_output[0] = uint16_t(surrogate_buffer[i] & 0xffff);
         utf16_output[1] = uint16_t(surrogate_buffer[i] >> 16);
         utf16_output += 2;
       }
