@@ -22,7 +22,7 @@
 
 // We allow icelake on x64 as long as the compiler is known to support VBMI2.
 #ifndef SIMDUTF_IMPLEMENTATION_ICELAKE
-#define SIMDUTF_IMPLEMENTATION_ICELAKE ((SIMDUTF_IS_X86_64) && (SIMDJSON_COMPILER_SUPPORTS_VBMI2))
+#define SIMDUTF_IMPLEMENTATION_ICELAKE ((SIMDUTF_IS_X86_64) && (SIMDUTF_COMPILER_SUPPORTS_VBMI2))
 #endif
 
 // To see why  (__BMI__) && (__PCLMUL__) && (__LZCNT__) are not part of this next line, see
