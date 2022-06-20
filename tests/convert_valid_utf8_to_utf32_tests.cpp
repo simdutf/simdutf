@@ -90,7 +90,7 @@ TEST(convert_3_or_4_UTF8_bytes) {
   }
 }
 
-TEST(convert_a_lot_of_ASCII) {
+TEST(issue132) {
   uint32_t seed{1234};
 
   // range for 2,3 and 4 UTF-8 bytes 
