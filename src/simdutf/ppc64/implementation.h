@@ -16,6 +16,7 @@ public:
   simdutf_really_inline implementation()
       : simdutf::implementation("ppc64", "PPC64 ALTIVEC",
                                  internal::instruction_set::ALTIVEC) {}
+  simdutf_warn_unused std::vector<encoding_type> op_autodetect_encoding(const char * input, size_t length) const noexcept final;
   simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
   simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) const noexcept final;
   simdutf_warn_unused bool validate_utf16(const char16_t *buf, size_t len) const noexcept final;
