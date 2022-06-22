@@ -428,7 +428,7 @@ simdutf_warn_unused size_t convert_valid_utf32_to_utf16(const char32_t * input, 
 simdutf_warn_unused size_t utf8_length_from_utf32(const char32_t * input, size_t length) noexcept;
 
 /**
- * Compute the number of bytes that this UTF-32LE string would require in UTF-16 format.
+ * Compute the number of two-byte words that this UTF-32LE string would require in UTF-16 format.
  *
  * This function does not validate the input.
  *
@@ -437,6 +437,15 @@ simdutf_warn_unused size_t utf8_length_from_utf32(const char32_t * input, size_t
  * @return the number of bytes required to encode the UTF-32LE string as UTF-16
  */
 simdutf_warn_unused size_t utf16_length_from_utf32(const char32_t * input, size_t length) noexcept;
+
+/**
+ * Convert possibly broken UTF-16LE string into UTF-32LE string.
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * This function is not BOM-aware.
+ *
  * @param input         the UTF-16LE string to convert
  * @param length        the length of the string in 2-byte words (char16_t)
  * @param utf32_buffer   the pointer to buffer that can hold conversion result
