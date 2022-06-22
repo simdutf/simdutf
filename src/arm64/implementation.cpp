@@ -76,7 +76,6 @@ simdutf_warn_unused std::vector<encoding_type> implementation::op_autodetect_enc
     }
     return out;
 }
-}
 
 simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
   return arm64::utf8_validation::generic_validate_utf8(buf,len);
