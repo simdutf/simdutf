@@ -36,6 +36,8 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
   return simd8<int8_t>(is_third_byte | is_fourth_byte) > int8_t(0);
 }
 
+#include "haswell/avx2_op_autodetect_encoding.cpp"
+
 #include "haswell/avx2_validate_utf16le.cpp"
 #include "haswell/avx2_validate_utf32le.cpp"
 
@@ -68,7 +70,15 @@ namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 
 simdutf_warn_unused std::vector<encoding_type> implementation::op_autodetect_encoding(const char * input, size_t length) const noexcept {
-  return std::vector<simdutf::encoding_type>(simdutf::autodetect_encoding(input, length));
+  if (length % 2 == 0) {
+    return avx2_op_autodetect_encoding<utf8_validation::utf8_checker>(input, length);
+  } else {
+    if (implementation::validate_utf8(input, length)) {
+      return std::vector<encoding_type>(encoding_type::UTF8);
+    } else {
+      return std::vector<encoding_type>(encoding_type::unspecified);
+    }
+  }
 }
 
 simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
