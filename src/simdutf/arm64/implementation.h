@@ -14,7 +14,7 @@ using namespace simdutf;
 class implementation final : public simdutf::implementation {
 public:
   simdutf_really_inline implementation() : simdutf::implementation("arm64", "ARM NEON", internal::instruction_set::NEON) {}
-  simdutf_warn_unused std::vector<encoding_type> op_autodetect_encoding(const char * input, size_t length) const noexcept final;
+  simdutf_warn_unused std::vector<encoding_type> op_autodetect_encodings(const char * input, size_t length) const noexcept final;
   simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
   simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) const noexcept final;
   simdutf_warn_unused bool validate_utf16(const char16_t *buf, size_t len) const noexcept final;
