@@ -74,9 +74,9 @@ simdutf_warn_unused std::vector<encoding_type> implementation::op_autodetect_enc
     return avx2_op_autodetect_encoding<utf8_validation::utf8_checker>(input, length);
   } else {
     if (implementation::validate_utf8(input, length)) {
-      return std::vector<encoding_type>(encoding_type::UTF8);
+      return std::vector<encoding_type>(1,encoding_type::UTF8);
     } else {
-      return std::vector<encoding_type>(encoding_type::unspecified);
+      return std::vector<encoding_type>(1,encoding_type::unspecified);
     }
   }
 }

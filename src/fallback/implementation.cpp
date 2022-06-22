@@ -26,7 +26,7 @@ namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 
 simdutf_warn_unused std::vector<encoding_type> implementation::op_autodetect_encoding(const char * input, size_t length) const noexcept {
-  return std::vector<simdutf::encoding_type>(simdutf::autodetect_encoding(input, length));
+  return std::vector<simdutf::encoding_type>(1, simdutf::autodetect_encoding(input, length));
 }
 
 simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {

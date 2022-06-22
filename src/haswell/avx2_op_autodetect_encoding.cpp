@@ -3,6 +3,7 @@ template<class checker>
 std::vector<simdutf::encoding_type> avx2_op_autodetect_encoding(const char * buf, size_t len) {
     const char* start = buf;
     const char* end = buf + len;
+    std::vector<simdutf::encoding_type> out;
 
     const auto v_d8 = simd8<uint8_t>::splat(0xd8);
     const auto v_f8 = simd8<uint8_t>::splat(0xf8);
@@ -52,7 +53,8 @@ std::vector<simdutf::encoding_type> avx2_op_autodetect_encoding(const char * buf
             } else if (c0 == 0x7fffffff) {
                 input += simd16<uint16_t>::ELEMENTS * 2 - 1;
             } else {
-                return std::vector<simdutf::encoding_type>(simdutf::encoding_type::unspecified);
+                out.push_back(simdutf::encoding_type::unspecified);
+                return out;
             }
 
             while (input + simd16<uint16_t>::ELEMENTS * 2 < end16) {
@@ -87,12 +89,14 @@ std::vector<simdutf::encoding_type> avx2_op_autodetect_encoding(const char * buf
                     } else if (c == 0x7fffffff) {
                         input += simd16<uint16_t>::ELEMENTS * 2 - 1;
                     } else {
-                        return std::vector<simdutf::encoding_type>(simdutf::encoding_type::unspecified);
+                        out.push_back(simdutf::encoding_type::unspecified);
+                        return out;
                     }
                 }
             }
 
-            return std::vector<simdutf::encoding_type>(simdutf::encoding_type::UTF16_LE);
+            out.push_back(simdutf::encoding_type::UTF16_LE);
+            return out;
         }
         // If no surrogate, validate under other encodings as well
 
@@ -109,7 +113,6 @@ std::vector<simdutf::encoding_type> avx2_op_autodetect_encoding(const char * buf
     }
 
     // Check which encodings are possible
-    std::vector<simdutf::encoding_type> out;
 
     if (!check.errors()) {
         if (scalar::utf8::validate(buf, len - (buf - start))) {
