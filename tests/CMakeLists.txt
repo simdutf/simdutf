@@ -127,6 +127,12 @@ target_link_libraries(count_utf16
          simdutf::tests::reference
          simdutf::tests::helpers)
 
+add_cpp_test(one_pass_autodetect_encodings_tests)
+target_link_libraries(one_pass_autodetect_encodings_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
+
 add_cpp_test(basic_fuzzer)
 target_link_libraries(basic_fuzzer
   PUBLIC simdutf
