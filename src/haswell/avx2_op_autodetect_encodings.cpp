@@ -1,6 +1,6 @@
 template<class checker>
 // len is known to be a multiple of 2 when this is called
-int avx2_op_autodetect_encodings(const char * buf, size_t len) {
+int avx2_detect_encodings(const char * buf, size_t len) {
     const char* start = buf;
     const char* end = buf + len;
 
