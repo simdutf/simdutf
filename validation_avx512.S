@@ -18,12 +18,11 @@ utf16le_validate_avx512:
 	// invariant: buf+len remains constant at loop entry
 	mov		%rsi, %rax		// remember len for return value
 
+	vpbroadcastd	.Ld800(%rip), %zmm31
 	vpbroadcastd	.Lfc00(%rip), %zmm25
 	vpbroadcastd	.Lfdd0(%rip), %zmm26
 	vpbroadcastd	.Lfffe(%rip), %zmm28
 	vpbroadcastd	.Lfdf0(%rip), %zmm27
-
-	vpbroadcastd	.Ld800(%rip), %zmm31
 
 	mov		$0x7fffffff, %edx	// mask ignoring the lookahead
 	kmovd		%edx, %k5
@@ -41,7 +40,11 @@ utf16le_validate_avx512:
 	sub		%rcx, %rsi
 
 	// detect various special code points
-1:	vpandd		%zmm25, %zmm0, %zmm2	// zmm0 & 0xfc00 (for surrogates)
+1:	vpcmpleuw	%zmm0, %zmm31, %k2	// 0xd800 <= c0 (any interesting characters present?)
+	ktestd		%k2, %k2		// if not, there's nothing to validate
+	jz		.Ltrivial
+
+	vpandd		%zmm25, %zmm0, %zmm2	// zmm0 & 0xfc00 (for surrogates)
 	vpcmpleuw	%zmm0, %zmm26, %k4	// 0xfdd0 <= c0 (noncharacter)
 	vpcmpnltuw	%zmm28, %zmm0, %k1	// c0 <= 0xfffe (noncharacter)
 	vpcmpequw	%zmm31, %zmm2, %k2{%k5}	// 0xd800 <= c0 < 0xdc00 (high surrogate, except lookahead)
@@ -70,10 +73,11 @@ utf16le_validate_avx512:
 	kord		%k1, %k6, %k1		// mismatched surrogates or BMP noncharacters?
 
 .Lsimple:
-	kshiftrd	$30, %k2, %k6		// high surrogate carry
 	kortestd	%k1, %k4		// any encoding error present?
 	jnz		.Lfail
 
+.Ltrivial:
+	kshiftrd	$30, %k2, %k6		// high surrogate carry
 	cmp		$32, %rsi		// can we load a zmm register?
 	jae		0b			// if yes, validate next 31 characters
 
