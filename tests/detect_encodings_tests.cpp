@@ -35,6 +35,54 @@ TEST(pure_utf8_ASCII) {
   }
 }
 
+TEST(pure_utf16_ASCII) {
+  for (size_t trial = 0; trial < 10000; trial++) {
+    if ((trial % 100) == 0) {
+      std::cout << ".";
+      std::cout.flush();
+    }
+    uint32_t seed{1234};
+
+    simdutf::tests::helpers::RandomInt random(0,127, seed);
+
+    for (size_t size : input_size) {
+      std::vector<uint16_t> generated;
+      for (int i = 0; i < size; i++) {
+        generated.push_back(uint16_t(random()));
+      }
+      auto expected = simdutf::encoding_type::UTF8 | simdutf::encoding_type::UTF16_LE;    // 3
+      auto actual = implementation.detect_encodings(
+                      reinterpret_cast<const char *>(generated.data()),
+                      size);
+      ASSERT_TRUE(actual == expected);
+    }
+  }
+}
+
+TEST(pure_utf32_ASCII) {
+  for (size_t trial = 0; trial < 10000; trial++) {
+    if ((trial % 100) == 0) {
+      std::cout << ".";
+      std::cout.flush();
+    }
+    uint32_t seed{1234};
+
+    simdutf::tests::helpers::RandomInt random(0,127, seed);
+
+    for (size_t size : input_size) {
+      std::vector<uint32_t> generated;
+      for (int i = 0; i < size; i++) {
+        generated.push_back(random());
+      }
+      auto expected = simdutf::encoding_type::UTF8 | simdutf::encoding_type::UTF16_LE | simdutf::encoding_type::UTF32_LE;    // 11
+      auto actual = implementation.detect_encodings(
+                      reinterpret_cast<const char *>(generated.data()),
+                      size);
+      ASSERT_TRUE(actual == expected);
+    }
+  }
+}
+
 int main(int argc, char* argv[]) {
   return simdutf::test::main(argc, argv);
 }
