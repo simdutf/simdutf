@@ -32,8 +32,8 @@ simdutf_really_inline simdutf_warn_unused simdutf::encoding_type autodetect_enco
  * @param length the length of the string in bytes.
  * @return the detected encoding type
  */
-simdutf_warn_unused std::vector<simdutf::encoding_type> op_autodetect_encodings(const char * input, size_t length) noexcept;
-simdutf_really_inline simdutf_warn_unused std::vector<simdutf::encoding_type> op_autodetect_encodings(const uint8_t * input, size_t length) noexcept {
+simdutf_warn_unused int op_autodetect_encodings(const char * input, size_t length) noexcept;
+simdutf_really_inline simdutf_warn_unused int op_autodetect_encodings(const uint8_t * input, size_t length) noexcept {
   return op_autodetect_encodings(reinterpret_cast<const char *>(input), length);
 }
 
@@ -407,7 +407,7 @@ public:
    * @param length the length of the string in bytes.
    * @return the encoding type detected
    */
-  virtual std::vector<encoding_type> op_autodetect_encodings(const char * input, size_t length) const noexcept = 0;
+  virtual int op_autodetect_encodings(const char * input, size_t length) const noexcept = 0;
 
   /**
    * @private For internal implementation use

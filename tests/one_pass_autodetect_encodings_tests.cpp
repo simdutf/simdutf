@@ -15,7 +15,7 @@ std::array<size_t, 7> input_size{8, 16, 12, 64, 68, 128, 256};
 } // namespace
 
 TEST(pure_utf8_ASCII) {
-  for (size_t trial = 0; trial < 10; trial++) {
+  for (size_t trial = 0; trial < 10000; trial++) {
     if ((trial % 100) == 0) {
       std::cout << ".";
       std::cout.flush();
@@ -26,10 +26,8 @@ TEST(pure_utf8_ASCII) {
 
     for (size_t size : input_size) {
       auto generated = random.generate_counted(size);
-      std::vector<simdutf::encoding_type> expected;
-      expected.push_back(simdutf::encoding_type::UTF8);
-      expected.push_back(simdutf::encoding_type::UTF16_LE);
-      std::vector<simdutf::encoding_type> actual = implementation.op_autodetect_encodings(
+      auto expected = simdutf::encoding_type::UTF8 | simdutf::encoding_type::UTF16_LE;    // 3
+      auto actual = implementation.op_autodetect_encodings(
                       reinterpret_cast<const char *>(generated.first.data()),
                       size);
       ASSERT_TRUE(actual == expected);

@@ -1,6 +1,6 @@
 template<class checker>
 // len is known to be a multiple of 2 when this is called
-std::vector<simdutf::encoding_type> avx2_op_autodetect_encodings(const char * buf, size_t len) {
+int avx2_op_autodetect_encodings(const char * buf, size_t len) {
     const char* start = buf;
     const char* end = buf + len;
 
@@ -8,7 +8,7 @@ std::vector<simdutf::encoding_type> avx2_op_autodetect_encodings(const char * bu
     bool is_utf16 = true;
     bool is_utf32 = true;
 
-    std::vector<simdutf::encoding_type> out;
+    int out = 0;
 
     const auto v_d8 = simd8<uint8_t>::splat(0xd8);
     const auto v_f8 = simd8<uint8_t>::splat(0xf8);
@@ -161,19 +161,19 @@ std::vector<simdutf::encoding_type> avx2_op_autodetect_encodings(const char * bu
 
     if (is_utf8 && !check.errors()) {
         if (scalar::utf8::validate(buf, len - (buf - start))) {
-            out.push_back(simdutf::encoding_type::UTF8);
+            out |= simdutf::encoding_type::UTF8;
         }
     }
 
     if (is_utf16 && scalar::utf16::validate(reinterpret_cast<const char16_t*>(buf), (len - (buf - start))/2)) {
-        out.push_back(simdutf::encoding_type::UTF16_LE);
+        out |= simdutf::encoding_type::UTF16_LE;
     }
 
     if (is_utf32) {
         const __m256i standardmax = _mm256_set1_epi32(0x10ffff);
         __m256i is_zero = _mm256_xor_si256(_mm256_max_epu32(currentmax, standardmax), standardmax);
         if (_mm256_testz_si256(is_zero, is_zero) == 1 && scalar::utf32::validate(reinterpret_cast<const char32_t*>(buf), (len - (buf - start))/4)) {
-            out.push_back(simdutf::encoding_type::UTF32_LE);
+            out |= simdutf::encoding_type::UTF32_LE;
         }
     }
 

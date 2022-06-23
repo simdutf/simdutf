@@ -69,14 +69,14 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 
-simdutf_warn_unused std::vector<encoding_type> implementation::op_autodetect_encodings(const char * input, size_t length) const noexcept {
+simdutf_warn_unused int implementation::op_autodetect_encodings(const char * input, size_t length) const noexcept {
   if (length % 2 == 0) {
     return avx2_op_autodetect_encodings<utf8_validation::utf8_checker>(input, length);
   } else {
     if (implementation::validate_utf8(input, length)) {
-      return std::vector<encoding_type>(1,encoding_type::UTF8);
+      return 1;
     } else {
-      return std::vector<encoding_type>(1,encoding_type::unspecified);
+      return 0;
     }
   }
 }
