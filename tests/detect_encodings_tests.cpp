@@ -27,7 +27,7 @@ TEST(pure_utf8_ASCII) {
     for (size_t size : input_size) {
       auto generated = random.generate_counted(size);
       auto expected = simdutf::encoding_type::UTF8 | simdutf::encoding_type::UTF16_LE;    // 3
-      auto actual = implementation.op_autodetect_encodings(
+      auto actual = implementation.detect_encodings(
                       reinterpret_cast<const char *>(generated.first.data()),
                       size);
       ASSERT_TRUE(actual == expected);
