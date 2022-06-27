@@ -30,7 +30,7 @@ int avx2_detect_encodings(const char * buf, size_t len) {
         const auto in16 = simd16<uint16_t>::pack(v0, v1);
 
         const auto surrogates_wordmask0 = (in16 & v_f8) == v_d8;
-        const uint32_t surrogates_bitmask0 = surrogates_wordmask0.to_bitmask();
+        uint32_t surrogates_bitmask0 = surrogates_wordmask0.to_bitmask();
 
         // Check for surrogates
         if (surrogates_bitmask0 != 0x0) {
@@ -38,10 +38,23 @@ int avx2_detect_encodings(const char * buf, size_t len) {
             is_utf8 = false;
             // Can still be either UTF-16LE or UTF-32LE depending on the positions of the surrogates
             // To be valid UTF-32LE, a surrogate cannot be in the two most significant bytes of any 32-bit word.
-            // On the other hand, to be valid UTF-16LE, at least one surrogate must be in the two most significant 
+            // On the other hand, to be valid UTF-16LE, at least one surrogate must be in the two most significant
             // bytes of a 32-bit word since they always come in pairs in UTF-16LE.
             // Note that we always proceed in multiple of 4 before this point so there is no offset in 32-bit words.
-            // TODO: edge case when there is a lone surrogate at the end (must check next input)
+
+            // Edge case when there is a lone surrogate at the end (must check next input)
+            if (surrogates_bitmask0 == 0x80000000) {
+                const __m256i thirdin = _mm256_loadu_si256((__m256i*)buf+2);
+                const auto u2 = simd16<uint16_t>(thirdin);
+
+                const auto v2 = u2.shr<8>();
+
+                const auto nextin16 = simd16<uint16_t>::pack(v1, v2);
+
+                const auto surrogates_wordmask1 = (nextin16 & v_f8) == v_d8;
+                surrogates_bitmask0 = surrogates_wordmask1.to_bitmask();
+                buf++;
+            }
             if ((surrogates_bitmask0 & 0xaaaaaaaa) != 0) {
                 is_utf32 = false;
                 // Code from avx2_validate_utf16le.cpp
