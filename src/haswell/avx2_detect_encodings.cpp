@@ -27,7 +27,7 @@ int avx2_detect_encodings(const char * buf, size_t len) {
         const auto v0 = u0.shr<8>();
         const auto v1 = u1.shr<8>();
 
-        const auto in16 = simd16<uint16_t>::pack(v0, v1);
+        auto in16 = simd16<uint16_t>::pack(v0, v1);
 
         const auto surrogates_wordmask0 = (in16 & v_f8) == v_d8;
         uint32_t surrogates_bitmask0 = surrogates_wordmask0.to_bitmask();
@@ -49,9 +49,9 @@ int avx2_detect_encodings(const char * buf, size_t len) {
 
                 const auto v2 = u2.shr<8>();
 
-                const auto nextin16 = simd16<uint16_t>::pack(v1, v2);
+                in16 = simd16<uint16_t>::pack(v1, v2);
 
-                const auto surrogates_wordmask1 = (nextin16 & v_f8) == v_d8;
+                const auto surrogates_wordmask1 = (in16 & v_f8) == v_d8;
                 surrogates_bitmask0 = surrogates_wordmask1.to_bitmask();
                 buf++;
             }

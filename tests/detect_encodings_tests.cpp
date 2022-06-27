@@ -10,6 +10,7 @@
 #include <tests/helpers/random_utf8.h>
 #include <tests/helpers/random_utf16.h>
 #include <tests/helpers/test.h>
+#include <tests/reference/encode_utf16.h>
 
 namespace {
 std::array<size_t, 7> input_size{8, 16, 12, 64, 68, 128, 256};
@@ -173,6 +174,35 @@ TEST(utf32_surrogates) {
                       size);
       ASSERT_TRUE(actual == expected);
     }
+  }
+}
+
+TEST(edge_surrogate) {
+  for (size_t trial = 0; trial < 10000; trial++) {
+    if ((trial % 100) == 0) {
+      std::cout << ".";
+      std::cout.flush();
+    }
+    uint32_t seed{1234};
+
+    simdutf::tests::helpers::RandomInt random(0x10000, 0x10ffff, seed);
+
+    const size_t size = 512;
+    std::vector<uint16_t> generated(size/2,0);
+    int i = 31;
+    while (i + 32 < (size/2) - 1) {
+      char16_t W1;
+      char16_t W2;
+      ASSERT_EQUAL(simdutf::tests::reference::utf16::encode(random(), W1, W2), 2);
+      generated[i] = W1;
+      generated[i+1] = W2;
+      i += 32;
+    }
+    auto expected = simdutf::encoding_type::UTF16_LE;
+    auto actual = implementation.detect_encodings(
+                    reinterpret_cast<const char *>(generated.data()),
+                    size);
+    ASSERT_TRUE(actual == expected);
   }
 }
 
