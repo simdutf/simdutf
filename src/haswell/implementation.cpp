@@ -74,9 +74,9 @@ simdutf_warn_unused int implementation::detect_encodings(const char * input, siz
     return avx2_detect_encodings<utf8_validation::utf8_checker>(input, length);
   } else {
     if (implementation::validate_utf8(input, length)) {
-      return 1;
+      return simdutf::encoding_type::UTF8;
     } else {
-      return 0;
+      return simdutf::encoding_type::unspecified;
     }
   }
 }
