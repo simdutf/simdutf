@@ -104,7 +104,6 @@ int arm_detect_encodings(const char * buf, size_t len) {
                         if (fmatch.all() && low_vh == 0) {
                             input += (high_vl == 0) ? 16 : 15;
                         } else {
-                            printf("A");
                             is_utf16 = false;
                             break;
                         }

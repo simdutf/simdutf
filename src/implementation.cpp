@@ -89,7 +89,7 @@ public:
   const std::string &description() const noexcept final { return set_best()->description(); }
   uint32_t required_instruction_sets() const noexcept final { return set_best()->required_instruction_sets(); }
 
-  simdutf_warn_unused int detect_encodings(const char * input, size_t length) const noexcept {
+  simdutf_warn_unused int detect_encodings(const char * input, size_t length) const noexcept override {
     return set_best()->detect_encodings(input, length);
   }
 
@@ -218,7 +218,7 @@ const std::initializer_list<const implementation *> available_implementation_poi
 // So we can return UNSUPPORTED_ARCHITECTURE from the parser when there is no support
 class unsupported_implementation final : public implementation {
 public:
-  simdutf_warn_unused int detect_encodings(const char *, size_t) const noexcept {
+  simdutf_warn_unused int detect_encodings(const char *, size_t) const noexcept override {
     return encoding_type::unspecified;
   }
 
