@@ -1,7 +1,5 @@
 	.section .rodata
-	.balign 32
-.Lperm:	.byte		1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
-	.byte		17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 0
+	.balign 4
 .L0080:	.int		0x00800080
 .L0800:	.int		0x08000800
 
@@ -13,13 +11,19 @@
 .Ld800:	.int		0xd800d800
 .Ldc00:	.int		0xdc00dc00
 
-.L3f1f:	.int		0x3f1f3f1f
+.L3f3f:	.int		0x3f3f3f3f
 .L80c0:	.int		0x80c080c0
 
-.L003f3f0f:
-	.int		0x003f3f0f
 .L008080e0:
 	.int		0x008080e0
+.L808080f0:
+	.int		0x808080f0
+.L0040:	.int		0x28402840
+
+	.balign 8
+	// masks for vpmultishiftq
+.Lms3:	.byte		12, 6, 0, 16, 44, 38, 32, 48
+.Lms4:	.byte		24, 18, 12, 6, 56, 50, 44, 38
 
 	.text
 	.globl utf16le_to_utf8_avx512
@@ -41,11 +45,10 @@ utf16le_to_utf8_avx512:
 	vpbroadcastd	.Ld800(%rip), %zmm28
 	vpbroadcastd	.Ldc00(%rip), %zmm27
 
-	vpbroadcastd	.L3f1f(%rip), %zmm23
+	vpbroadcastd	.L3f3f(%rip), %zmm23
 	vpbroadcastd	.L80c0(%rip), %zmm22
 
-	vpbroadcastd	.L000f3f3f(%rip), %zmm21
-	vpbroadcastd	.L008080e0(%rip), %zmm20
+	vpbroadcastd	.L008080e0(%rip), %zmm21
 
 	mov		$0x7fffffff, %eax	// mask ignoring the lookahead
 	kmovd		%eax, %k7
@@ -61,14 +64,14 @@ utf16le_to_utf8_avx512:
 	sub		$31, %rdx
 
 	// fast path 1: all ASCII characters?
-	vpcmpltuw	%zmm31, %zmm0, %k1	// zmm0 < 0x0080?  (ASCII character?)
-	kortestd	%k1, %k1
-	jc		.L1byte
+	vpcmpnltuw	%zmm31, %zmm0, %k1	// zmm0 >= 0x0080?  (not ASCII character?)
+	ktestd		%k1, %k1
+	jz		.L1byte
 
 	// fast path 2: all one or two byte?
-	vpcmpltuw	%zmm30, %zmm0, %k2	// zmm0 < 0x0800? (two byte character?)
-	kortestd	%k2, %k2
-	jc		.L2byte
+	vpcmpltuw	%zmm30, %zmm0, %k2	// zmm0 >= 0x0800? (not two byte character?)
+	ktestd		%k2, %k2
+	jz		.L2byte
 
 	// noncharacters present?
 	vpcmpngtuw	%zmm26, %zmm0, %k5	// 0xfdd0 <= c0
@@ -87,7 +90,7 @@ utf16le_to_utf8_avx512:
 	jz		.L3byte			// all encodings fit in 3 bytes
 
 	// slow path: handle surrogates
-	ud2 // ...
+	jmp		.L4byte
 
 	// fast path 1: all ASCII characters
 .L1byte:vpmovwb		%zmm0, %ymm0		// compress into ASCII
@@ -97,8 +100,7 @@ utf16le_to_utf8_avx512:
 
 	// fast path 2: 1 or 2 byte encodings
 	// input for 2 byte encoding: 0000 0ABC DEFG HJKL
-.L2byte:knotd		%k1, %k1		// 2byte character?
-	vpsrlw		$6, %zmm0, %zmm1	// 0000 0000 000A BCDE
+.L2byte:vpsrlw		$6, %zmm0, %zmm1	// 0000 0000 000A BCDE
 	vpsllw		$8, %zmm0, %zmm2	// DEFG HJKL 0000 0000
 	vpord		%zmm2, %zmm1, %zmm1	// DEFG HJKL 000A BCDE
 	vpandd		%zmm23, %zmm1, %zmm1	// 00FG HJKL 000A BCDE
@@ -113,56 +115,46 @@ utf16le_to_utf8_avx512:
 	jmp		.Lnext
 
 	// fast path 3: 1, 2, or 3 byte encodings, no surrogates
-.L3byte:vextracti64x4	$1, %zmm0, %ymm2	// obtain high 15 characters
-	vpmovzxwd	%ymm0, %zmm1		// zero extend into dwords for further processing
-	vpmovzxwd	%ymm2, %zmm2
+.L3byte:vpbroadcastq	.Lms3(%rip), %zmm3	// 3 byte multi shift mask
 
-	// process 1 and 2 byte encodings, same code as above
-	kandnd		%k2, %k1, %k1		// k1: is two byte character
-	vpsrlw		$6, %zmm0, %zmm3
+	// process 1 and 2 byte encodings
+	kandnd		%k1, %k2, %k3		// which of zmm0 are 2 byte characters?
+	vpsrlw		$6, %zmm0, %zmm4
 	vpsllw		$8, %zmm0, %zmm2
-	vpord		%zmm3, %zmm2, %zmm2
+	vpord		%zmm4, %zmm2, %zmm2
 	vpandd		%zmm23, %zmm2, %zmm2
-	vpaddw		%zmm22, %zmm2, %zmm0{%k1} // join 1 and 2 byte cases back into zmm0
+	vpaddw		%zmm22, %zmm2, %zmm0{%k3}
 
-	// process 3 byte encodings
-	// input:	00000000 00000000 ABCDEFGH JKLMNOPQ
-	// output:	00000000 10LMNOPQ 10EFGHJK 1110ABCD
-	kaddq		%k6, %k6, %k5		// second least byte in each dword
-	knotq		%k5, %k5		// XXXXXXXX XXXXXXXX -------- XXXXXXXX
-	vpslld		$16, %zmm1, %zmm3	// ABCDEFGH JKLMNOPQ 00000000 00000000
-	vpslld		$16, %zmm2, %zmm4
-	vpslrd		$12, %zmm1, %zmm5	// 00000000 00000000 00000000 0000ABCD
-	vpslrd		$12, %zmm2, %zmm6
-	vpslld		$2, %zmm1, %zmm1	// 00000000 000000AB CDEFGHJK LMNOPQ00
-	vpslld		$2, %zmm2, %zmm2
-	vpaddb		%zmm3, %zmm5, %zmm1{%k5}// ABCDEFGH JKLMNOPQ CDEFGHJK 0000ABCD
-	vpaddb		%zmm4, %zmm6, %zmm2{%k5}
-	vpandd		%zmm21, %zmm1, %zmm1	// 00000000 00LMNOPQ 00EFGHJK 0000ABCD
-	vpandd		%zmm21, %zmm2, %zmm2
-	vpord		%zmm20, %zmm1, %zmm1	// 00000000 10LMNOPQ 10EFGHJK 1110ABCD
-	vpord		%zmm20, %zmm2, %zmm2
 
-	// join 1, 2, and 3 byte encodings
-	vextracti64x4	$1, %zmm0, %ymm3
-	krshiftd	$16, %k2, %k1		// is it a 1/2 byte encoding in ymm3?
-	vpmovzxwd	%ymm0, %zmm1{%k2}	// merge 1/2 byte characters into 3 byte dwords
-	vpmovzxwd	%ymm3, %zmm2{%k1}
+	vextracti64x4	$1, %zmm0, %ymm2	// obtain high 15 characters
+	vpmovzxwd	%zmm0, %zmm1		// these are a mix of already translated 1/2 byte chars
+	vpmovzxwd	%zmm2, %zmm2		// and untranslated 3 byte chars.  Will be fixed up later
+
+	krshiftd	$16, %k2, %k4		// which of zmm2 is a 3 byte character?
+
+	// process 3 byte cases
+	// input: ABCDEFGH JKLMNOPQ
+	vpmultishiftqb	%zmm1, %zmm3, %zmm5	// 00000000 JKLMNOPQ CDEFGHJK 0000ABCD
+	vpmultishiftqb	%zmm2, %zmm3, %zmm6
+	vpandd		%zmm23, %zmm5, %zmm5	// 00000000 00LMNOPQ 00EFGHJK 0000ABCD
+	vpandd		%zmm23, %zmm6, %zmm6
+	vpord		%zmm21, %zmm5, %zmm1{%k2} // 00000000 10LMNOPQ 10EFGHJK 1110ABCD
+	vpord		%zmm21, %zmm6, %zmm2{%k4} // ... and join with 1/2 byte cases
 
 	// find encoding lengths and compress
-	vptestmb	%zmm2, %zmm2, %k2	// which bytes are nonzero in k2?
-	vptestmb	%zmm1, %zmm1, %k1
-	korq		%k6, %k2, %k2		// which bytes make up the encoding (1--3)?
-	korq		%k6, %k1, %k1
-	vpcompressb	%zmm2, %zmm2{%k2}{z}	// smoosh all the characters together
-	vpcompressb	%zmm1, %zmm1{%k1}{z}
-	kmovq		%k2, %r8
+	vptestmb	%zmm1, %zmm1, %k1	// which bytes are nonzero in k2
+	vptestmb	%zmm2, %zmm2, %k2
+	korq		%k6, %k1, %k1		// which bytes make up the encoding (1--3)?
+	korq		%k6, %k2, %k2		// this takes care of NUL bytes in the input
 	kmovq		%k1, %rax
-	shl		$4, %r8			// ignore lookahead
+	kmovq		%k2, %r8
+	shl		$4, $r8			// ignore lookahead
 	popcnt		%rax, %rax		// length of data in zmm1
 	popcnt		%r8, %r8		// length of data in zmm2
-	vmovdqu8	%zmm1, (%rdi)		// store first half to output
-	vmovdqu8	%zmm2, (%rdi, %rax, 1)	// store second half after first
-	add		%rax, %rdi		// advance output pointer by first half
-	add		%r8, %rdi		// advance output pointer by second half
-	jmp		next
+	vpcompressb	%zmm1, (%rdi){%k1}{z}	// store the resulting UTF-8 test
+	add		%rax, %rdi		// advance output to second half
+	vpcompressb	%zmm2, (%rdi){%k2}{z}
+	add		%r8, %rdi		// advance output past second half
+	jmp		.Lnext
+
+	// slow path: 1--4 byte encoding, surrogates
