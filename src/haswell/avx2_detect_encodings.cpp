@@ -67,8 +67,7 @@ int avx2_detect_encodings(const char * buf, size_t len) {
                 } else if (c0 == 0x7fffffff) {
                     input += simd16<uint16_t>::ELEMENTS * 2 - 1;
                 } else {
-                    is_utf16 = false;
-                    break;
+                    return simdutf::encoding_type::unspecified;
                 }
 
                 while (input + simd16<uint16_t>::ELEMENTS * 2 < end16) {
@@ -103,8 +102,7 @@ int avx2_detect_encodings(const char * buf, size_t len) {
                         } else if (c == 0x7fffffff) {
                             input += simd16<uint16_t>::ELEMENTS * 2 - 1;
                         } else {
-                            is_utf16 = false;
-                            break;
+                            return simdutf::encoding_type::unspecified;
                         }
                     }
                 }
@@ -135,10 +133,10 @@ int avx2_detect_encodings(const char * buf, size_t len) {
 
                     __m256i forbidden_words = _mm256_xor_si256(_mm256_max_epu32(currentoffsetmax, standardoffsetmax), standardoffsetmax);
                     if(_mm256_testz_si256(forbidden_words, forbidden_words) == 0) {
-                        is_utf32 = false;
+                        return simdutf::encoding_type::unspecified;
                     }
                 } else {
-                    is_utf32 = false;
+                    return simdutf::encoding_type::unspecified;
                 }
             }
             break;
