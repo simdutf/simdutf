@@ -1391,17 +1391,48 @@ void Benchmark::run_count_utf16(const simdutf::implementation& implementation, s
 }
 
 void Benchmark::run_detect_encodings(const simdutf::implementation& implementation, size_t iterations) {
-    const char*  data = reinterpret_cast<const char*>(input_data.data());
-    const size_t size = input_data.size();
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char* data = reinterpret_cast<const char*>(input_data.data() + BOM::bom_byte_size(bom));
+    const size_t size = input_data.size() - BOM::bom_byte_size(bom);
     volatile size_t sink{0};
-
     auto proc = [&implementation, data, size, &sink]() {
         sink = implementation.detect_encodings(data, size);
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
-    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
     size_t char_count = size;
+    if((sink == 0) && (size != 0) && (iterations > 0)) {
+        std::cerr << "The output is zero which might indicate an error.\n";
+    } else {
+        std::cout << "Detected format: ";
+        if(sink & simdutf::encoding_type::UTF8) {
+            char_count =  active_implementation->count_utf8(data, size);
+            std::cout << " UTF8";
+        }
+        if(sink & simdutf::encoding_type::UTF16_LE) {
+            std::cout << " UTF16LE";
+            char_count =  active_implementation->count_utf16(reinterpret_cast<const char16_t*>(data), size/2);
+        }
+        if(sink & simdutf::encoding_type::UTF32_LE) {
+            std::cout << " UTF32LE";
+            char_count = size/4;
+        }
+        std::cout << std::endl;
+    }
+    if((bom) && (bom & ~sink)) {
+        std::cerr << "[Error] BOM format     : ";
+        if(bom & simdutf::encoding_type::UTF8) {
+            std::cerr << " UTF8";
+        } else if(bom & simdutf::encoding_type::UTF16_LE) {
+            std::cerr << " UTF16LE";
+        } else if(bom & simdutf::encoding_type::UTF32_LE) {
+            std::cerr << " UTF32LE";
+        }
+        std::cerr << std::endl;
+    }
+    if((sink & (sink - 1)) != 0) {
+        std::cout << "More than one format possible, character count is ambiguous." << std::endl;
+    }
     print_summary(result, size, char_count);
 }
 
