@@ -28,7 +28,7 @@ This library provide fast Unicode functions such as
 - From an UTF-16 string, compute the size of the UTF-32 equivalent string (equivalent to UTF-16 character counting),
 - UTF-8 and UTF-16LE character counting.
 
-The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion caracters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).
+The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion characters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).
 
 The library compiles down to tens of kilobytes. Our functions are exception-free and non allocating. We have extensive tests.
 
