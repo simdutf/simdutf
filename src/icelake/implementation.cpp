@@ -19,6 +19,9 @@ namespace {
 #include "icelake/icelake-from-valid-utf8.inl.cpp"
 #include "icelake/icelake-utf8-validation.inl.cpp"
 #include "icelake/icelake-from-utf8.inl.cpp"
+#include "icelake/icelake-ascii-validation.inl.cpp"
+#include "icelake/icelake-utf32-validation.inl.cpp"
+
 } // namespace
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
@@ -44,19 +47,12 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
 
 
 simdutf_warn_unused bool implementation::validate_ascii(const char *buf, size_t len) const noexcept {
-    const char* ptr = buf;
-    const char* end = ptr + len;
-    const __m512i ascii = _mm512_set1_epi8((uint8_t)0x80);
-    __m512i running_or = _mm512_setzero_si512();
-    for (; ptr + 64 <= end; ptr += 64) {
-        const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
-        running_or = _mm512_ternarylogic_epi32(running_or, utf8, ascii, 0xf8); // running_or | (utf8 & ascii)
-    }
-    if (_mm512_test_epi8_mask(running_or, running_or) != 0) {
-      return false;
-    } else {
-      return scalar::ascii::validate(ptr, len - (ptr - buf));
-    }
+  const char* tail = icelake::validate_ascii(buf, len);
+  if (tail) {
+    return scalar::ascii::validate(tail, len - (tail - buf));
+  } else {
+    return false;
+  }
 }
 
 simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, size_t len) const noexcept {
@@ -64,31 +60,12 @@ simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, siz
 }
 
 simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, size_t len) const noexcept {
-    const char32_t* ptr = buf;
-    const char32_t* end = ptr + len;
-
-    const __m512i offset = _mm512_set1_epi32((uint32_t)0xffff2000);
-    __m512i currentmax = _mm512_setzero_si512();
-    __m512i currentoffsetmax = _mm512_setzero_si512();
-
-    for (; ptr + 16 <= end; ptr += 16) {
-        const __m512i utf32 = _mm512_loadu_si512((const __m512i*)ptr);
-        currentmax = _mm512_max_epu32(utf32, currentmax);
-        currentoffsetmax = _mm512_max_epu32(_mm512_add_epi32(utf32, offset), currentoffsetmax);
-    }
-
-    const __m512i standardmax = _mm512_set1_epi32((uint32_t)0x10ffff);
-    const __m512i standardoffsetmax = _mm512_set1_epi32((uint32_t)0xfffff7ff);
-    __m512i is_zero = _mm512_xor_si512(_mm512_max_epu32(currentmax, standardmax), standardmax);
-    if (_mm512_test_epi8_mask(is_zero, is_zero) != 0) {
-      return false;
-    }
-    is_zero = _mm512_xor_si512(_mm512_max_epu32(currentoffsetmax, standardoffsetmax), standardoffsetmax);
-    if (_mm512_test_epi8_mask(is_zero, is_zero) != 0) {
-      return false;
-    }
-
-    return scalar::utf32::validate(ptr, len - (ptr - buf));
+  const char32_t * tail = icelake::validate_utf32(buf, len);
+  if (tail) {
+    return scalar::utf32::validate(tail, len - (tail - buf));
+  } else {
+    return false;
+  }
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
