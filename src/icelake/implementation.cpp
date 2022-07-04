@@ -116,9 +116,33 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf32(const char* buf
    return scalar::utf8_to_utf32::convert(buf, len, utf32_output);
 }
 
-simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(const char* input, size_t size,
-    char32_t* utf32_output) const noexcept {
-  return scalar::utf8_to_utf32::convert_valid(input, size,  utf32_output);
+simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(const char* buf, size_t len,
+    char32_t* utf32_out) const noexcept {
+  uint32_t * utf32_output = reinterpret_cast<uint32_t *>(utf32_out);
+  utf8_to_utf32_result ret = icelake::valid_utf8_to_fixed_length<uint32_t>(buf, len, utf32_output);
+  size_t saved_bytes = ret.second - utf32_output;
+  const char* end = buf + len;
+  if (ret.first == end) {
+    return saved_bytes;
+  }
+
+  // Note: AVX512 procedure looks up 4 bytes forward, and
+  //       correctly converts multi-byte chars even if their
+  //       continuation bytes lie outsiede 16-byte window.
+  //       It meas, we have to skip continuation bytes from
+  //       the beginning ret.first, as they were already consumed.
+  while (ret.first != end && ((uint8_t(*ret.first) & 0xc0) == 0x80)) {
+      ret.first += 1;
+  }
+
+  if (ret.first != end) {
+    const size_t scalar_saved_bytes = scalar::utf8_to_utf32::convert_valid(
+                                        ret.first, len - (ret.first - buf), reinterpret_cast<char32_t *>(ret.second));
+    if (scalar_saved_bytes == 0) { return 0; }
+    saved_bytes += scalar_saved_bytes;
+  }
+
+  return saved_bytes;
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
