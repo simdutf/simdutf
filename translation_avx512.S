@@ -3,10 +3,6 @@
 .L0080:	.int		0x00800080
 .L0800:	.int		0x08000800
 
-.Lfdd0:	.int		0xfdd0fdd0
-.Lfdf0:	.int		0xfdf0fdf0
-.Lfffe:	.int		0xfffefffe
-
 .Lfc00:	.int		0xfc00fc00
 .Ld800:	.int		0xd800d800
 .Ldc00:	.int		0xdc00dc00
@@ -18,7 +14,7 @@
 	.int		0x008080e0
 .L808080f0:
 	.int		0x808080f0
-.L0040:	.int		0x28402840
+.L2840:	.int		0x00002840
 
 	.balign 8
 	// masks for vpmultishiftq
@@ -37,9 +33,9 @@ utf16le_to_utf8_avx512:
 	vpbroadcastd	.L0080(%rip), %zmm31
 	vpbroadcastd	.L0800(%rip), %zmm30
 
-	vpbroadcastd	.Lfdd0(%rip), %zmm26
-	vpbroadcastd	.Lfdf0(%rip), %zmm25
-	vpbroadcastd	.Lfffe(%rip), %zmm24
+//	vpbroadcastd	.Lfdd0(%rip), %zmm26
+//	vpbroadcastd	.Lfdf0(%rip), %zmm25
+//	vpbroadcastd	.Lfffe(%rip), %zmm24
 
 	vpbroadcastd	.Lfc00(%rip), %zmm29
 	vpbroadcastd	.Ld800(%rip), %zmm28
@@ -48,13 +44,19 @@ utf16le_to_utf8_avx512:
 	vpbroadcastd	.L3f3f(%rip), %zmm23
 	vpbroadcastd	.L80c0(%rip), %zmm22
 
+	vpbroadcastq	.Lms3(%rip), %zmm24	// 3 byte multi shift mask
 	vpbroadcastd	.L008080e0(%rip), %zmm21
+
+	vpbroadcastd	.L2840(%rip), %zmm26
+	vpbroadcastd	.L808080f0(%rip), %zmm25
 
 	mov		$0x7fffffff, %eax	// mask ignoring the lookahead
 	kmovd		%eax, %k7
 
 	mov		$0x1111111111111111, %rax // the least byte of each dword
 	kmovq		%rax, %k6
+
+	kxord		%k0, %k0, %k0		// low surrogate carry
 
 	cmp 		$32, %rdx		// can we load a zmm register?
 	jb		.Ltail
@@ -63,48 +65,31 @@ utf16le_to_utf8_avx512:
 	add		$62, %rsi		// advance to next block (sans lookahead)
 	sub		$31, %rdx
 
-	// fast path 1: all ASCII characters?
 	vpcmpnltuw	%zmm31, %zmm0, %k1	// zmm0 >= 0x0080?  (not ASCII character?)
-	ktestd		%k1, %k1
-	jz		.L1byte
-
-	// fast path 2: all one or two byte?
-	vpcmpltuw	%zmm30, %zmm0, %k2	// zmm0 >= 0x0800? (not two byte character?)
-	ktestd		%k2, %k2
-	jz		.L2byte
-
-	// noncharacters present?
-	vpcmpngtuw	%zmm26, %zmm0, %k5	// 0xfdd0 <= c0
-	vpcmpltuw	%zmm25, %zmm0, %k5{%k5}	// 0xfdd0 <= c0 < 0xfdf0 (noncharacter)
-	vpcmpnltuw	%zmm24, %zmm0, %k0	// 0xfffe <= c0 (noncharacter)
-
-	kortestd	%k5, %k0
-	jnz		.Lfail
-
-	// fast path 3: surrogates present?
-	vpandd		%zmm29, %zmm0, %zmm1	// zmm0 & 0xfc00 (for surrogates)
-	vpcmpequw	%zmm28, %zmm0, %k3{%k7}	// 0xd800 <= c0 < 0xdc00 (high surrogate, except lookahead)
-	vpcmpequw	%zmm27, %zmm0, %k4	// 0xdc00 <= c0 < 0xe000 (low surrogate)
-
-	kortestd	%k3, %k4		// if no surrogates, are present
-	jz		.L3byte			// all encodings fit in 3 bytes
-
-	// slow path: handle surrogates
-	jmp		.L4byte
+	ktestd		%k1, %k1		// all ASCII characters?
+	jnz		1f			// if not, do slower processing
 
 	// fast path 1: all ASCII characters
-.L1byte:vpmovwb		%zmm0, %ymm0		// compress into ASCII
+	vpmovwb		%zmm0, %ymm0		// compress into ASCII
 	vmovdqu8	%ymm0, (%rdi)		// and store into destination
 	add		$31, %rdi
+	kxord		%k0, %k0, %k0		// no high surrogates to carry over
 	jmp		.Lnext			// and go to next iteration
 
-	// fast path 2: 1 or 2 byte encodings
-	// input for 2 byte encoding: 0000 0ABC DEFG HJKL
-.L2byte:vpsrlw		$6, %zmm0, %zmm1	// 0000 0000 000A BCDE
-	vpsllw		$8, %zmm0, %zmm2	// DEFG HJKL 0000 0000
-	vpord		%zmm2, %zmm1, %zmm1	// DEFG HJKL 000A BCDE
-	vpandd		%zmm23, %zmm1, %zmm1	// 00FG HJKL 000A BCDE
-	vpaddw		%zmm22, %zmm1, %zmm0{%k1} // 10FG HJKL 110A BCDE or 0000 0000 0EFG HJKL
+1:	vpcmpltuw	%zmm30, %zmm0, %k2	// zmm0 >= 0x0800? (>2 byte character?)
+	kandnd		%k1, %k2, %k3		// which of zmm0 are 2 byte characters?
+
+	// process 1 and 2 byte encodings
+	// input: 0000 0ABC DEFG HJKL
+	vpsrlw		$6, %zmm0, %zmm4	// 00000000 000ABCDE
+	vpsllw		$8, %zmm0, %zmm2	// DEFGHJKL 00000000
+	vpternlogd	$0xea, %zmm23, %zmm4, %zmm2 // 00FGHJKL 000ABCDE
+	vpaddw		%zmm22, %zmm2, %zmm0{%k3} // 10FGHJKL 110ABCDE or 00000000 0EFGHJKL
+
+	ktestd		%k2, %k2		// all 1 or 2 byte characters?
+	jnz		1f			// if not, do slower processing
+
+	// fast path 2: 1 or 2 byte encodings only
 	vpcmpnltub	%zmm30, %zmm0, %k2	// for each word: 01 if ASCII, 11 if 2byte
 	vpcompressb	%zmm0, %zmm0{%k2}{z}	// smoosh all the characters together
 	vmovdqu8	%zmm0, (%rdi)		// and store to destination buffer
@@ -112,30 +97,28 @@ utf16le_to_utf8_avx512:
 	shl		$1, %eax		// ignore high bit (lookahead)
 	popcnt		%eax, %eax		// count number of two byte characters
 	lea		31(%rdi, %rax, 1), %rdi	// advance destination buffer
+
+	kxord		%k0, %k0, %k0		// no high surrogates to carry over
 	jmp		.Lnext
 
-	// fast path 3: 1, 2, or 3 byte encodings, no surrogates
-.L3byte:vpbroadcastq	.Lms3(%rip), %zmm3	// 3 byte multi shift mask
+	// surrogates present?
+1:	vpandd		%zmm29, %zmm0, %zmm3	// zmm0 & 0xfc00 (for surrogates)
+	vpcmpequw	%zmm28, %zmm3, %k5{%k7}	// 0xd800 <= c0 < 0xdc00 (high surrogate, except lookahead)
+	vpcmpequw	%zmm27, %zmm3, %k6	// 0xdc00 <= c0 < 0xe000 (low surrogate)
 
-	// process 1 and 2 byte encodings
-	kandnd		%k1, %k2, %k3		// which of zmm0 are 2 byte characters?
-	vpsrlw		$6, %zmm0, %zmm4
-	vpsllw		$8, %zmm0, %zmm2
-	vpord		%zmm4, %zmm2, %zmm2
-	vpandd		%zmm23, %zmm2, %zmm2
-	vpaddw		%zmm22, %zmm2, %zmm0{%k3}
-
-
+	vpaddw		%zmm26, %zmm0, %zmm0{%k5} // fix high surrogates to 00000xab cdEFGHJK
 	vextracti64x4	$1, %zmm0, %ymm2	// obtain high 15 characters
 	vpmovzxwd	%zmm0, %zmm1		// these are a mix of already translated 1/2 byte chars
 	vpmovzxwd	%zmm2, %zmm2		// and untranslated 3 byte chars.  Will be fixed up later
 
-	krshiftd	$16, %k2, %k4		// which of zmm2 is a 3 byte character?
+	krshiftd	$16, %k2, %k4		// which of zmm2 is a 3 or 4 byte character?
+	kortestd	%k5, %k6		// if surrogates are present
+	jnz		1f			// go and handle them (slowest path)
 
-	// process 3 byte cases
+	// fast path 3: 1, 2, or 3 byte encodings, no surrogates
 	// input: ABCDEFGH JKLMNOPQ
-	vpmultishiftqb	%zmm1, %zmm3, %zmm5	// 00000000 JKLMNOPQ CDEFGHJK 0000ABCD
-	vpmultishiftqb	%zmm2, %zmm3, %zmm6
+	vpmultishiftqb	%zmm1, %zmm24, %zmm5	// 00000000 JKLMNOPQ CDEFGHJK 0000ABCD
+	vpmultishiftqb	%zmm2, %zmm24, %zmm6
 	vpandd		%zmm23, %zmm5, %zmm5	// 00000000 00LMNOPQ 00EFGHJK 0000ABCD
 	vpandd		%zmm23, %zmm6, %zmm6
 	vpord		%zmm21, %zmm5, %zmm1{%k2} // 00000000 10LMNOPQ 10EFGHJK 1110ABCD
@@ -158,3 +141,38 @@ utf16le_to_utf8_avx512:
 	jmp		.Lnext
 
 	// slow path: 1--4 byte encoding, surrogates
+1:	vpbroadcastq	.Lms4(%rip), %zmm6	// 4 byte multi shift mask
+	vpalignd	$1, %zmm2, %zmm1, %zmm3	// low surrogates shifted in place of high ones
+	vpalignd	$1, %zmm1, %zmm2, %zmm4
+
+	// check for mismatched surrogates
+	kaddd		%k5, %k5, %k1		// high surrogate shifted in place of low surrogate
+	kord		%k0, %k1, %k1		// with carry applied
+	kshiftrd	$1, %k6, %k0		// low surrogate shifted in place of high surrogate
+	kandnd		%k5, %k0, %k0		// high surrogate without low surrogate after?
+	kandnd		%k6, %k1, %k1		// low surrogate without high surrogate before?
+	kortestd	%k0, %k1		// either case (mismatched or lone surrogate?)
+	jnz		.Lfail
+
+	// process 4 byte sequences
+	// input:  (hi) 110110AB CDEFGHJK  (lo) 110111LM NOPQRSTU
+	// output: 10PQRSTU 10JKLMNO 10cdEFGH 11110xab
+	// where xabcd = 0ABCD + 00001
+	krshiftd	$16, %k5, %k1		// where are 4 byte chars in zmm2/zmm4
+	vpslld		$16, %zmm1, %zmm1{%k5}	// if 4 byte, 00000xab cdEFGHJK 00000000 00000000
+	vpslld		$16, %zmm2, %zmm2{%k1}
+	vpslld		$6, %zmm3, %zmm3	// 00000000 00000000 LMNOPQRS TU000000
+	vpslld		$6, %zmm4, %zmm4
+	vpaddd		%zmm3, %zmm1, %zmm1{%k5} // 3 byte: 00000000 00000000 ABCDEFGH JKLMNOPQ
+	vpaddd		%zmm4, %zmm2, %zmm2{%k1} // 4 byte: 00000xab cdEFGHJK LMNOPQRS TU000000
+
+	vpblendmd	%zmm24, %zmm6, %zmm5{%k5} // 3 byte or 4 byte multishift mask
+	vpblendmd	%zmm24, %zmm6, %zmm6{%k1}
+	vpmultishiftq	%zmm1, %zmm5, %zmm5	// 3 byte: 00000000 JKLMNOPQ CDEFGHJK 0000ABCD
+	vpmultishiftq	%zmm2, %zmm6, %zmm6	// 4 byte: NOPQRSTU GHJKLMNO abcdEFGH 00000xab
+	vpblendmd	%zmm21, %zmm25, %zmm3{%k5} // 3 byte: 008080e0  4 byte: 808080f0
+	vpblendmd	%zmm21, %zmm25, %zmm4{%k1}
+	vpternlogd	$0xea, %zmm3, %zmm23, %zmm5 // 3 byte: 00000000 10LMNOPQ 10EFGHJK 1110ABCD
+	vpternlogd	$0xea, %zmm4, %zmm23, %zmm6 // 4 byte: 10PQRSTU 10JKLMNO 10cdEFGH 11110xab
+	vpblendmd	%zmm1, %zmm5, %zmm1{%k2}    // merge into already translated 1 and 2 byte characters
+	vpblendmd	%zmm2, %zmm6, %zmm2{%k4}
