@@ -41,8 +41,9 @@
  */
 
 	.text
-	.globl utf16le_to_utf8_avx512
-	.type utf16le_to_utf8_avx512, @function
+	.globl		utf16le_to_utf8_avx512
+	.type		utf16le_to_utf8_avx512, @function
+	.balign		16
 utf16le_to_utf8_avx512:
 	// rdi: outbuf
 	// rsi: inbuf
@@ -69,6 +70,7 @@ utf16le_to_utf8_avx512:
 	cmp		$32, %rdx		// enough left for a zmm register?
 	jb		.Ltail			// if not, tail processing time!
 
+	.balign		16
 .Loop:	vmovdqu16	(%rsi), %zmm0
 	add		$62, %rsi		// advance to next block (sans lookahead)
 	sub		$31, %rdx		// and account for the bytes consumed
@@ -142,28 +144,13 @@ utf16le_to_utf8_avx512:
 	kandnd		%k5, %k6, %k6		// low surrogate without high surrogate before?
 	kandnd		%k4, %k7, %k7		// high surrogate without low surrogate before?
 	kortestd	%k6, %k7		// either case (mismatched or lone surrogate)?
-	jz		4f
-
-	// decoding failure
-	kord		%k7, %k6, %k6		// where did the encoding error occur?
-	kmovd		%k6, %edx
-	tzcnt		%edx, %edx		// set remaining input length to valid prefix length
-
-	// Dock tail to length of its valid prefix
-	// this is very similar to the tail processing code
-	bzhi		%edx, %r11d, %eax	// eax = 0x7fffffff & 1 << edx
-	kmovd		%eax, %k7		// mask of words still in the buffer
-	vmovdqu16	%zmm0, %zmm0{%k7}{z}	// mask input to valid prefix padded with U+000000
-	lea		-62(%rsi, %rdx, 2), %rsi // move rsi back to end of valid prefix
-	lea		-31(%rdx), %r10		// do not count NUL byte padding in output length
-	xor		%edx, %edx		// no further input to be processed
-	jmp		.Llastiteration
+	jnz		.Lfail
 
 	// preprocess surrogates in zmm1, zmm2
 	// input hi: 110110VU TSRQPNML  lo: 110111KJ HGFEDCBA
 	// wvuts = 0vuts + 1 (plane shift)
 	// output: 00000000 000wvuts RQPNMLKJ HGFEDCBA
-4:	kshiftrd	$16, %k4, %k6		// location of high surrogates in zmm2
+	kshiftrd	$16, %k4, %k6		// location of high surrogates in zmm2
 	vmovdqa32	%zmm22, %zmm16{%k4}	// 3 or 4 character tag bits for zmm1
 	vmovdqa32	%zmm22, %zmm17{%k6}	// ... and zmm2
 
@@ -249,5 +236,20 @@ utf16le_to_utf8_avx512:
 
 	vzeroupper
 	ret
+
+	// decoding failure
+.Lfail:	kord		%k7, %k6, %k6		// where did the encoding error occur?
+	kmovd		%k6, %edx
+	tzcnt		%edx, %edx		// set remaining input length to valid prefix length
+
+	// Dock tail to length of its valid prefix
+	// this is very similar to the tail processing code
+	bzhi		%edx, %r11d, %eax	// eax = 0x7fffffff & 1 << edx
+	kmovd		%eax, %k7		// mask of words still in the buffer
+	vmovdqu16	%zmm0, %zmm0{%k7}{z}	// mask input to valid prefix padded with U+000000
+	lea		-62(%rsi, %rdx, 2), %rsi // move rsi back to end of valid prefix
+	lea		-31(%rdx), %r10		// do not count NUL byte padding in output length
+	xor		%edx, %edx		// no further input to be processed
+	jmp		.Llastiteration
 
 	.size utf16le_to_utf8_avx512, .-utf16le_to_utf8_avx512
