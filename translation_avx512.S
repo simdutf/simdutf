@@ -1,178 +1,253 @@
 	.section .rodata
 	.balign 4
-.L0080:	.int		0x00800080
-.L0800:	.int		0x08000800
-
-.Lfc00:	.int		0xfc00fc00
-.Ld800:	.int		0xd800d800
-.Ldc00:	.int		0xdc00dc00
-
-.L3f3f:	.int		0x3f3f3f3f
-.L80c0:	.int		0x80c080c0
-
-.L008080e0:
-	.int		0x008080e0
+.L0080:	.short		0x0080, 0x0080
+.L3f3f:	.short		0x3f3f, 0x3f3f
+.L80c0:	.short		0x80c0, 0x80c0
+.Lfc00:	.short		0xfc00, 0xfc00
+.Ld800:	.short		0xd800, 0xd800
+.Ldc00:	.short		0xdc00, 0xdc00
+.Lfca02400:
+	// clear the surrogate tag bits and apply plane shift
+	// 0x10000 - 0xdc00 - (0xd800 << 10)
+	.int		0xfca02400
+.L8080e000:
+	.int		0x8080e000
 .L808080f0:
 	.int		0x808080f0
-.L2840:	.int		0x00002840
+.L00010101:
+	.int		0x00010101
 
-	.balign 8
-	// masks for vpmultishiftq
-.Lms3:	.byte		12, 6, 0, 16, 44, 38, 32, 48
-.Lms4:	.byte		24, 18, 12, 6, 56, 50, 44, 38
+	.balign	8
+	// mask for vpmultishiftbq
+	// input:  00000000 000WVUTS RQPNMLKJ HGFEDCBA
+	// output: HGFEDCBA PNMLKJHG VUTSRQPN 00000WVU
+.Lms:	.byte		18, 12, 6, 0,  50, 44, 38, 32
+
+/*
+ * General approach:
+ *
+ * 1. fast path for all ASCII/all 2 byte character (< U+0800)
+ * 2. extend to dword, decode surrogates if needed
+ * 3. check for mismatched surrogates if needed
+ * 4. shift bits into place using .Lms(%rip)
+ * 5. mask and apply Unicode tag bits (0x80, 0xc0, 0xe0, 0xf0)
+ *    to the bytes of each dword according to whether it's 2, 3,
+ *    or 4 byte.  ASCII bytes skip this step.
+ * 6. compress by removing unused bytes
+ * 7. deposit into output buffer
+ *
+ * The tail is handled by padding it with NUL bytes and
+ * subtracting these from the output count afterwards.
+ */
 
 	.text
 	.globl utf16le_to_utf8_avx512
-	.type utf16le_to_utf8, @function
+	.type utf16le_to_utf8_avx512, @function
 utf16le_to_utf8_avx512:
 	// rdi: outbuf
 	// rsi: inbuf
-	// rdx: len
+	// rdx: inlen
 	// rcx: &outlen
 
 	vpbroadcastd	.L0080(%rip), %zmm31
-	vpbroadcastd	.L0800(%rip), %zmm30
+	vpslld		$4, %zmm31, %zmm30	// 0x0800
+	vpbroadcastd	.L3f3f(%rip), %zmm29
+	vpbroadcastd	.L80c0(%rip), %zmm28
 
-//	vpbroadcastd	.Lfdd0(%rip), %zmm26
-//	vpbroadcastd	.Lfdf0(%rip), %zmm25
-//	vpbroadcastd	.Lfffe(%rip), %zmm24
-
-	vpbroadcastd	.Lfc00(%rip), %zmm29
-	vpbroadcastd	.Ld800(%rip), %zmm28
-	vpbroadcastd	.Ldc00(%rip), %zmm27
-
-	vpbroadcastd	.L3f3f(%rip), %zmm23
-	vpbroadcastd	.L80c0(%rip), %zmm22
-
-	vpbroadcastq	.Lms3(%rip), %zmm24	// 3 byte multi shift mask
-	vpbroadcastd	.L008080e0(%rip), %zmm21
-
-	vpbroadcastd	.L2840(%rip), %zmm26
-	vpbroadcastd	.L808080f0(%rip), %zmm25
-
-	mov		$0x7fffffff, %eax	// mask ignoring the lookahead
-	kmovd		%eax, %k7
-
-	mov		$0x1111111111111111, %rax // the least byte of each dword
-	kmovq		%rax, %k6
+	vpbroadcastd	.Lfc00(%rip), %zmm27
+	vpbroadcastd	.Ld800(%rip), %zmm26
+	vpbroadcastd	.Ldc00(%rip), %zmm25
 
 	kxord		%k0, %k0, %k0		// low surrogate carry
+	mov		$0x7fffffff, %r11	// (this constant is also used after .Ltail)
+	kmovd		%r11d, %k1		// mask ignoring the lookahead
 
-	cmp 		$32, %rdx		// can we load a zmm register?
-	jb		.Ltail
+	mov		%rdi, %r8		// stash output buffer for later
+	mov		%rsi, %r9		// same with input buffer
+	xor		%r10, %r10		// number by which to adjust output length
 
-0:	vmovdqu16	(%rsi), %zmm0
+	cmp		$32, %rdx		// enough left for a zmm register?
+	jb		.Ltail			// if not, tail processing time!
+
+.Loop:	vmovdqu16	(%rsi), %zmm0
 	add		$62, %rsi		// advance to next block (sans lookahead)
-	sub		$31, %rdx
+	sub		$31, %rdx		// and account for the bytes consumed
 
-	vpcmpnltuw	%zmm31, %zmm0, %k1	// zmm0 >= 0x0080?  (not ASCII character?)
-	ktestd		%k1, %k1		// all ASCII characters?
-	jnz		1f			// if not, do slower processing
+.Llastiteration:
+	vpcmpnltuw	%zmm31, %zmm0, %k2{%k1}	// 0x0080 <= zmm0? except lookahead (non-ASCII character?)
+	ktestd		%k2, %k2		// if any non-ASCII character is present,
+	jnz		1f			// do slower processing, else ...
 
 	// fast path 1: all ASCII characters
 	vpmovwb		%zmm0, %ymm0		// compress into ASCII
-	vmovdqu8	%ymm0, (%rdi)		// and store into destination
-	add		$31, %rdi
-	kxord		%k0, %k0, %k0		// no high surrogates to carry over
-	jmp		.Lnext			// and go to next iteration
+	vmovdqu		%ymm0, (%rdi)		// and deposit into output buffer
 
-1:	vpcmpltuw	%zmm30, %zmm0, %k2	// zmm0 >= 0x0800? (>2 byte character?)
-	kandnd		%k1, %k2, %k3		// which of zmm0 are 2 byte characters?
+	add		$31, %rdi		// advance output buffer
+	kxord		%k0, %k0, %k0		// clear surrogate carry
+	cmp		$32, %rdx		// enough left for another round?
+	jae		.Loop			// if yes, go again!
+	jmp		.Ltail			// if not, tail processing time!
 
-	// process 1 and 2 byte encodings
-	// input: 0000 0ABC DEFG HJKL
-	vpsrlw		$6, %zmm0, %zmm4	// 00000000 000ABCDE
-	vpsllw		$8, %zmm0, %zmm2	// DEFGHJKL 00000000
-	vpternlogd	$0xea, %zmm23, %zmm4, %zmm2 // 00FGHJKL 000ABCDE
-	vpaddw		%zmm22, %zmm2, %zmm0{%k3} // 10FGHJKL 110ABCDE or 00000000 0EFGHJKL
+1:	vpcmpltuw	%zmm30, %zmm0, %k3	// zmm0 < 0x0800? (1--2 byte character?)
+	kortestd	%k3, %k3		// if any >2 byte characters are present,
+	jnc		2f			// do slower processing, else ...
 
-	ktestd		%k2, %k2		// all 1 or 2 byte characters?
-	jnz		1f			// if not, do slower processing
+	// fast path 2: all 1 and 3 byte encodings
+	// input:  00000LKJ HGFEDCBA or 00000000 0GFEDCBA
+	// output: 10FEDCBA 110LKJHG or 0GFEDCBA
+	vpsrlw		$6, %zmm0, %zmm1	// 00000000 000LKJHG
+	vpsllw		$8, %zmm0, %zmm2	// HGFEDCBA 00000000
+	vpternlogd	$0xa4, %zmm29, %zmm2, %zmm1 // 00FEDCBA 000LKJHG  zmm1 = (zmm1|zmm2) & 0x3f3f
+	vpaddw		%zmm28, %zmm1, %zmm0{%k2} // 10FEDCBA 110LKJHG or 00000000 0GFEDCBA
 
-	// fast path 2: 1 or 2 byte encodings only
-	vpcmpnltub	%zmm30, %zmm0, %k2	// for each word: 01 if ASCII, 11 if 2byte
-	vpcompressb	%zmm0, %zmm0{%k2}{z}	// smoosh all the characters together
-	vmovdqu8	%zmm0, (%rdi)		// and store to destination buffer
-	kmovd		%k1, %eax		// determine advance based on k1
-	shl		$1, %eax		// ignore high bit (lookahead)
-	popcnt		%eax, %eax		// count number of two byte characters
+	kmovd		%k2, %eax		// determine advance based on k2
+	popcnt		%eax, %eax		// convert to number of two byte characters
+
+	vpcmpnltub	%zmm30, %zmm0, %k3	// 01 if ASCII, 11 if 2 byte
+	vpcompressb	%zmm0, %zmm0{%k3}{z}	// smoosh all characters together
+	vmovdqu8	%zmm0, (%rdi)		// and deposit into memory
+
 	lea		31(%rdi, %rax, 1), %rdi	// advance destination buffer
+	kxord		%k0, %k0, %k0		// clear surrogate carry
+	cmp		$32, %rdx		// enough left for another round?
+	jae		.Loop			// if yes, go again!
+	jmp		.Ltail			// if not, tail processing time!
 
-	kxord		%k0, %k0, %k0		// no high surrogates to carry over
-	jmp		.Lnext
+2:	vpbroadcastq	.Lms(%rip), %zmm23	// multishift mask
+	vpbroadcastd	.L8080e000(%rip), %zmm16 // 3 byte character tag bits
+	vmovdqa32	%zmm16, %zmm17		// same for high characters
 
-	// surrogates present?
-1:	vpandd		%zmm29, %zmm0, %zmm3	// zmm0 & 0xfc00 (for surrogates)
-	vpcmpequw	%zmm28, %zmm3, %k5{%k7}	// 0xd800 <= c0 < 0xdc00 (high surrogate, except lookahead)
-	vpcmpequw	%zmm27, %zmm3, %k6	// 0xdc00 <= c0 < 0xe000 (low surrogate)
+	vextracti32x8	$2, %zmm0, %ymm2
+	vpmovzxwd	%ymm0, %zmm1		// low 16 characters as dwords
+	vpmovzxwd	%ymm2, %zmm2		// high 15 characters as dwords
 
-	vpaddw		%zmm26, %zmm0, %zmm0{%k5} // fix high surrogates to 00000xab cdEFGHJK
-	vextracti64x4	$1, %zmm0, %ymm2	// obtain high 15 characters
-	vpmovzxwd	%zmm0, %zmm1		// these are a mix of already translated 1/2 byte chars
-	vpmovzxwd	%zmm2, %zmm2		// and untranslated 3 byte chars.  Will be fixed up later
+	kxord		%k6, %k6, %k6		// surrogate carry out if no surrogates present
 
-	krshiftd	$16, %k2, %k4		// which of zmm2 is a 3 or 4 byte character?
-	kortestd	%k5, %k6		// if surrogates are present
-	jnz		1f			// go and handle them (slowest path)
+	vpandd		%zmm27, %zmm0, %zmm1	// zmm0 & 0xfc00 (prepare to check for surrogates)
+	vpcmpequw	%zmm26, %zmm1, %k4{%k1}	// 0xd800 <= zmm0 < 0xdc00 (high surrogate, except lookahead)
+	vpcmpequw	%zmm25, %zmm1, %k5	// 0xdc00 <= zmm0 < 0xe000 (low surrogate)
+	kortestd	%k4, %k5		// any surrogates present?
+	jz		3f			// if not, skip surrogate preprocessing
 
-	// fast path 3: 1, 2, or 3 byte encodings, no surrogates
-	// input: ABCDEFGH JKLMNOPQ
-	vpmultishiftqb	%zmm1, %zmm24, %zmm5	// 00000000 JKLMNOPQ CDEFGHJK 0000ABCD
-	vpmultishiftqb	%zmm2, %zmm24, %zmm6
-	vpandd		%zmm23, %zmm5, %zmm5	// 00000000 00LMNOPQ 00EFGHJK 0000ABCD
-	vpandd		%zmm23, %zmm6, %zmm6
-	vpord		%zmm21, %zmm5, %zmm1{%k2} // 00000000 10LMNOPQ 10EFGHJK 1110ABCD
-	vpord		%zmm21, %zmm6, %zmm2{%k4} // ... and join with 1/2 byte cases
+	vpbroadcastd	.L808080f0(%rip), %zmm22
+	vpbroadcastd	.Lfca02400(%rip), %zmm24
 
-	// find encoding lengths and compress
-	vptestmb	%zmm1, %zmm1, %k1	// which bytes are nonzero in k2
-	vptestmb	%zmm2, %zmm2, %k2
-	korq		%k6, %k1, %k1		// which bytes make up the encoding (1--3)?
-	korq		%k6, %k2, %k2		// this takes care of NUL bytes in the input
-	kmovq		%k1, %rax
-	kmovq		%k2, %r8
-	shl		$4, $r8			// ignore lookahead
-	popcnt		%rax, %rax		// length of data in zmm1
-	popcnt		%r8, %r8		// length of data in zmm2
-	vpcompressb	%zmm1, (%rdi){%k1}{z}	// store the resulting UTF-8 test
-	add		%rax, %rdi		// advance output to second half
-	vpcompressb	%zmm2, (%rdi){%k2}{z}
-	add		%r8, %rdi		// advance output past second half
-	jmp		.Lnext
-
-	// slow path: 1--4 byte encoding, surrogates
-1:	vpbroadcastq	.Lms4(%rip), %zmm6	// 4 byte multi shift mask
-	vpalignd	$1, %zmm2, %zmm1, %zmm3	// low surrogates shifted in place of high ones
-	vpalignd	$1, %zmm1, %zmm2, %zmm4
+	valignd		$1, %zmm2, %zmm1, %zmm3	// low surrogates corresponding to zmm1
+	valignd		$1, %zmm1, %zmm2, %zmm4	// low surrogates corresponding to zmm2
 
 	// check for mismatched surrogates
-	kaddd		%k5, %k5, %k1		// high surrogate shifted in place of low surrogate
-	kord		%k0, %k1, %k1		// with carry applied
-	kshiftrd	$1, %k6, %k0		// low surrogate shifted in place of high surrogate
-	kandnd		%k5, %k0, %k0		// high surrogate without low surrogate after?
-	kandnd		%k6, %k1, %k1		// low surrogate without high surrogate before?
-	kortestd	%k0, %k1		// either case (mismatched or lone surrogate?)
-	jnz		.Lfail
+	kaddd		%k4, %k4, %k6		// high surrogates shifted in place of low surrogates
+	kord		%k0, %K6, %k6		// ... with surrogate carry applied
+	kshiftrd	$1, %k5, %k7		// low surrogates shifted in place of high surrogates
+	kandnd		%k5, %k6, %k6		// low surrogate without high surrogate before?
+	kandnd		%k4, %k7, %k7		// high surrogate without low surrogate before?
+	kortestd	%k6, %k7		// either case (mismatched or lone surrogate)?
+	jz		4f
 
-	// process 4 byte sequences
-	// input:  (hi) 110110AB CDEFGHJK  (lo) 110111LM NOPQRSTU
-	// output: 10PQRSTU 10JKLMNO 10cdEFGH 11110xab
-	// where xabcd = 0ABCD + 00001
-	krshiftd	$16, %k5, %k1		// where are 4 byte chars in zmm2/zmm4
-	vpslld		$16, %zmm1, %zmm1{%k5}	// if 4 byte, 00000xab cdEFGHJK 00000000 00000000
-	vpslld		$16, %zmm2, %zmm2{%k1}
-	vpslld		$6, %zmm3, %zmm3	// 00000000 00000000 LMNOPQRS TU000000
-	vpslld		$6, %zmm4, %zmm4
-	vpaddd		%zmm3, %zmm1, %zmm1{%k5} // 3 byte: 00000000 00000000 ABCDEFGH JKLMNOPQ
-	vpaddd		%zmm4, %zmm2, %zmm2{%k1} // 4 byte: 00000xab cdEFGHJK LMNOPQRS TU000000
+	// decoding failure
+	kord		%k7, %k6, %k6		// where did the encoding error occur?
+	kmovd		%k6, %edx
+	tzcnt		%edx, %edx		// set remaining input length to valid prefix length
 
-	vpblendmd	%zmm24, %zmm6, %zmm5{%k5} // 3 byte or 4 byte multishift mask
-	vpblendmd	%zmm24, %zmm6, %zmm6{%k1}
-	vpmultishiftq	%zmm1, %zmm5, %zmm5	// 3 byte: 00000000 JKLMNOPQ CDEFGHJK 0000ABCD
-	vpmultishiftq	%zmm2, %zmm6, %zmm6	// 4 byte: NOPQRSTU GHJKLMNO abcdEFGH 00000xab
-	vpblendmd	%zmm21, %zmm25, %zmm3{%k5} // 3 byte: 008080e0  4 byte: 808080f0
-	vpblendmd	%zmm21, %zmm25, %zmm4{%k1}
-	vpternlogd	$0xea, %zmm3, %zmm23, %zmm5 // 3 byte: 00000000 10LMNOPQ 10EFGHJK 1110ABCD
-	vpternlogd	$0xea, %zmm4, %zmm23, %zmm6 // 4 byte: 10PQRSTU 10JKLMNO 10cdEFGH 11110xab
-	vpblendmd	%zmm1, %zmm5, %zmm1{%k2}    // merge into already translated 1 and 2 byte characters
-	vpblendmd	%zmm2, %zmm6, %zmm2{%k4}
+	// Dock tail to length of its valid prefix
+	// this is very similar to the tail processing code
+	bzhi		%edx, %r11d, %eax	// eax = 0x7fffffff & 1 << edx
+	kmovd		%eax, %k7		// mask of words still in the buffer
+	vmovdqu16	%zmm0, %zmm0{%k7}{z}	// mask input to valid prefix padded with U+000000
+	lea		-62(%rsi, %rdx, 2), %rsi // move rsi back to end of valid prefix
+	lea		-31(%rdx), %r10		// do not count NUL byte padding in output length
+	xor		%edx, %edx		// no further input to be processed
+	jmp		.Llastiteration
+
+	// preprocess surrogates in zmm1, zmm2
+	// input hi: 110110VU TSRQPNML  lo: 110111KJ HGFEDCBA
+	// wvuts = 0vuts + 1 (plane shift)
+	// output: 00000000 000wvuts RQPNMLKJ HGFEDCBA
+4:	kshiftrd	$16, %k4, %k6		// location of high surrogates in zmm2
+	vmovdqa32	%zmm22, %zmm16{%k4}	// 3 or 4 character tag bits for zmm1
+	vmovdqa32	%zmm22, %zmm17{%k6}	// ... and zmm2
+
+	vpslld		$10, %zmm1, %zmm1{%k4}	// if 4 byte: 00000011 0110VUTS RQPNML00 00000000
+	vpslld		$10, %zmm2, %zmm2{%k6}
+	vpaddd		%zmm24, %zmm3, %zmm3	//            11111100 10100001 000000KJ HGFEDCBA
+	vpaddd		%zmm24, %zmm4, %zmm4
+	vpaddd		%zmm3, %zmm1, %zmm1{%k4} //if 4 byte: 00000000 000wvuts RQPNMLKJ HGFEDCBA
+	vpaddd		%zmm4, %zmm2, %zmm2{%k4}
+
+	// compute masks to ignore low surrogates in compress step
+	// if no surrogates occur, k4 and k5 are conveniently already clear
+	kshiftrd	$30, %k4, %k6		// true surrogate carry out
+	kshiftrd	$16, %k5, %k4		// which of zmm2 correspond to low surrogates?
+	vpmovm2d	%k5, %zmm3		// ffffffff if low surrogate, 00000000 otherwise
+	vpmovm2d	%k4, %zmm4		// same for zmm2
+	vpmovb2m	%zmm3, %k4		// which bytes in zmm1 correspond to low surrogates?
+	vpmovb2m	%zmm4, %k5		// which bytes in zmm2 correspond to low surrogates?
+
+	// transcode 1, 2, 3, and 4 byte characters at once!
+3:	vpmultishiftqb	%zmm1, %zmm23, %zmm1	// HGFEDCBA PNMLKJHG VUTSRQPN 00000WVU
+	vpmultishiftqb	%zmm2, %zmm23, %zmm2
+
+	vpbroadcastd	.L00010101(%rip), %zmm21
+	kmovd		%k6, %k0		// surrogate carry out to carry in
+
+	kshiftrd	$16, %k3, %k7		// which of zmm2 are 1 or 2 byte characters?
+	kshiftrd	$16, %k2, %k6		// which of zmm2 are 2--4 byte characters?
+	vpslld		$16, %zmm28, %zmm16{%k3} // 2 byte: 80c00000  3 byte: 8080e000  4 byte: 808080f0
+	vpslld		$16, %zmm28, %zmm17{%K7} // same for high characters
+	vpternlogd	$0xea, %zmm29, %zmm16, %zmm1{%k2} // if 2--4 byte, zmm1 = zmm1 & 0x3f3f3f3f | zmm16
+	vpternlogd	$0xea, %zmm29, %zmm17, %zmm2{%k6} // this masks and applies tag bits in one step.
+
+	// Okay, kinda confusing, isn't it?  Here's what is going on.
+	// CASE    INPUT IN ZMM1/ZMM2       ZMM16/17  OUTPUT IN ZMM1/ZMM2
+	// 1 byte  00000 00000000 0GFEDCBA  --------  0GFEDCBA 00000000 00000000 00000000
+	// 2 byte  00000 00000LKJ HGFEDCBA  80c00000  10FEDCBA 110LKJHG 00000000 00000000
+	// 3 byte  00000 RQPNMLKJ HGFEDCBA  8080e000  10FEDCBA 10MLKJHG 1110RQPN 00000000
+	// 4 byte  wvuts RQPNMLKJ HGFEDCBA  808080f0  10FEDCBA 10MLKJHG 10tsRQPN 11110wvu
+
+	// smoosh characters together and output
+	vpcmpnltub	%zmm21, %zmm1, %k2	// which bytes in zmm1 do we want to deposit?
+	vpcmpnltub	%zmm21, %zmm2, %k3	// (all nonzero bytes and the MSB of each dword)
+	kandnq		%k2, %k4, %k2		// do not deposit bytes corresponding to low surrogates
+	kandnq		%k3, %k5, %k3
+	vpcompressb	%zmm1, %zmm1{%k2}	// smoosh characters together
+	vpcompressb	%zmm2, %zmm2{%k3}
+
+	kmovq		%k2, %rax
+	kmovq		%k3, %rcx
+	popcnt		%rax, %rax		// number of UTF-8 bytes in zmm1
+	shl		$4, %rcx		// ignore lookahead in zmm2
+	popcnt		%rcx, %rcx		// number of UTF-8 bytes in zmm2
+
+	vmovdqu8	%zmm1, (%rdi)
+	add		%rax, %rdi
+	vmovdqu8	%zmm2, (%rdi)
+	add		%rax, %rdi
+
+	cmp		$32, %rdx		// enough left for another round?
+	jae		.Loop			// if yes, go again!
+
+.Ltail:	jz		.Lend			// if there's nothing left to decode, finish
+						// (all paths to this label have ZF set iff RDX=0)
+
+	// Process <31 words tail.
+	// Strategie: pad remaining input with U+0000 and move r8 back to account
+	// for the size of the padding
+	bzhi		%edx, %r11d, %eax	// eax = 0x7fffffff & 1 << edx
+	kmovd		%eax, %k7		// mask of words still in the buffer
+	vmovdqu16	(%rsi), %zmm0{%k7}{z}	// manually load tail padded with U+000000
+	lea		(%rsi, %rdx, 2), %rsi	// advance rsi to end of buffer
+	lea		-31(%rdx), %r10		// set up r10 with the neg. number of padding characters
+	xor		%edx, %edx		// no further input to be processed
+	jmp		.Llastiteration
+
+.Lend:	mov		%rsi, %rax
+	sub		%r9, %rax		// input length = buffer end - buffer start
+	shr		$1, %rax		// in characters
+	sub		%r8, %rdi		// output length = buffer end - buffer start
+	add		%r10, %rdi		// ... - number of padding characters
+	mov		%rdi, (%rcx)		// deposit into *outlen
+
+	vzeroupper
+	ret
+
+	.size utf16le_to_utf8_avx512, .-utf16le_to_utf8_avx512
