@@ -1,16 +1,17 @@
 // file included directly
 
 const char32_t* validate_utf32(const char32_t* buf, size_t len) {
-    const char32_t* end = buf + len;
+    const char32_t* end = len >= 16 ? buf + len - 16 : nullptr;
 
     const __m512i offset = _mm512_set1_epi32((uint32_t)0xffff2000);
     __m512i currentmax = _mm512_setzero_si512();
     __m512i currentoffsetmax = _mm512_setzero_si512();
 
-    for (; buf + 16 <= end; buf += 16) {
-        const __m512i utf32 = _mm512_loadu_si512((const __m512i*)buf);
-        currentmax = _mm512_max_epu32(utf32, currentmax);
-        currentoffsetmax = _mm512_max_epu32(_mm512_add_epi32(utf32, offset), currentoffsetmax);
+    while (buf <= end) {
+      __m512i utf32 = _mm512_loadu_si512((const __m512i*)buf);
+      buf += 16;
+      currentoffsetmax = _mm512_max_epu32(_mm512_add_epi32(utf32, offset), currentoffsetmax);
+      currentmax = _mm512_max_epu32(utf32, currentmax);
     }
 
     const __m512i standardmax = _mm512_set1_epi32((uint32_t)0x10ffff);
