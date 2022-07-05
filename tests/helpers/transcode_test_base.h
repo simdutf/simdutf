@@ -27,7 +27,7 @@ namespace simdutf { namespace tests { namespace helpers {
   public:
     using GenerateCodepoint = std::function<uint32_t()>;
 
-    std::vector<char> input_utf8; // source-encoded mesage: what we're going to transcode
+    std::vector<char> input_utf8; // source-encoded message: what we're going to transcode
     std::vector<char16_t> output_utf16; // what the procedure under test produced
     std::vector<char16_t> reference_output_utf16; // what we are expecting
 
@@ -81,7 +81,7 @@ namespace simdutf { namespace tests { namespace helpers {
   public:
     using GenerateCodepoint = std::function<uint32_t()>;
 
-    std::vector<char> input_utf8; // source-encoded mesage: what we're going to transcode
+    std::vector<char> input_utf8; // source-encoded message: what we're going to transcode
     std::vector<char32_t> output_utf32; // what the procedure under test produced
     std::vector<char32_t> reference_output_utf32; // what we are expecting
 
@@ -138,7 +138,7 @@ namespace simdutf { namespace tests { namespace helpers {
     std::vector<char> output_utf8; // what the procedure under test produced
     std::vector<char> reference_output_utf8; // what we are expecting
 
-    std::vector<char16_t> input_utf16; // source-encoded mesage: what we're going to transcode
+    std::vector<char16_t> input_utf16; // source-encoded message: what we're going to transcode
 
     static constexpr size_t output_size_margin = 0; // extra room for buggy procedures
 
@@ -192,7 +192,7 @@ namespace simdutf { namespace tests { namespace helpers {
     std::vector<char> output_utf8; // what the procedure under test produced
     std::vector<char> reference_output_utf8; // what we are expecting
 
-    std::vector<char32_t> input_utf32; // source-encoded mesage: what we're going to transcode
+    std::vector<char32_t> input_utf32; // source-encoded message: what we're going to transcode
 
     static constexpr size_t output_size_margin = 0; // extra room for buggy procedures
 
@@ -246,7 +246,7 @@ namespace simdutf { namespace tests { namespace helpers {
     std::vector<char16_t> output_utf16; // what the procedure under test produced
     std::vector<char16_t> reference_output_utf16; // what we are expecting
 
-    std::vector<char32_t> input_utf32; // source-encoded mesage: what we're going to transcode
+    std::vector<char32_t> input_utf32; // source-encoded message: what we're going to transcode
 
     static constexpr size_t output_size_margin = 0; // extra room for buggy procedures
 
@@ -299,7 +299,7 @@ namespace simdutf { namespace tests { namespace helpers {
     std::vector<char32_t> output_utf32; // what the procedure under test produced
     std::vector<char32_t> reference_output_utf32; // what we are expecting
 
-    std::vector<char16_t> input_utf16; // source-encoded mesage: what we're going to transcode
+    std::vector<char16_t> input_utf16; // source-encoded message: what we're going to transcode
 
     static constexpr size_t output_size_margin = 0; // extra room for buggy procedures
 
