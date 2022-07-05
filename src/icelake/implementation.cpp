@@ -155,7 +155,22 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf32(const ch
 }
 
 simdutf_warn_unused size_t implementation::count_utf16(const char16_t * input, size_t length) const noexcept {
-  return scalar::utf16::count_code_points(input, length);
+  const char16_t* end = length >= 32 ? input + length - 32 : nullptr;
+  const char16_t* ptr = input;
+
+  const __m512i low = _mm512_set1_epi16((uint16_t)0xdc00);
+  const __m512i high = _mm512_set1_epi16((uint16_t)0xdfff);
+
+  size_t count{0};
+
+  while (ptr <= end) {
+    __m512i utf16 = _mm512_loadu_si512((const __m512i*)ptr);
+    ptr += 32;
+    uint64_t not_high_surrogate = static_cast<uint64_t>(_mm512_cmpgt_epu16_mask(utf16, high) | _mm512_cmplt_epu16_mask(utf16, low));
+    count += count_ones(not_high_surrogate);
+  }
+
+  return count + scalar::utf16::count_code_points(ptr, length - (ptr - input));
 }
 
 simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t length) const noexcept {
