@@ -174,7 +174,21 @@ simdutf_warn_unused size_t implementation::count_utf16(const char16_t * input, s
 }
 
 simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t length) const noexcept {
-  return scalar::utf8::count_code_points(input, length);
+  const char* end = length >= 64 ? input + length - 64 : nullptr;
+  const char* ptr = input;
+
+  const __m512i continuation = _mm512_set1_epi8(char(0b10111111));
+
+  size_t count{0};
+
+  while (ptr <= end) {
+    __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
+    ptr += 64;
+    uint64_t continuation_bitmask = static_cast<uint64_t>(_mm512_cmple_epi8_mask(utf8, continuation));
+    count += 64 - count_ones(continuation_bitmask);
+  }
+
+  return count + scalar::utf8::count_code_points(ptr, length - (ptr - input));
 }
 
 simdutf_warn_unused size_t implementation::utf8_length_from_utf16(const char16_t * input, size_t length) const noexcept {
