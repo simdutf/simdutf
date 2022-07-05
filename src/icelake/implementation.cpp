@@ -135,7 +135,7 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf32(const char* buf
 
   if (ret.first != end) {
     const size_t scalar_saved_bytes = scalar::utf8_to_utf32::convert(
-                                        ret.first, len - (ret.first - buf), reinterpret_cast<char32_t *>(ret.second));
+                                        ret.first, len - (ret.first - buf), utf32_out + saved_bytes);
     if (scalar_saved_bytes == 0) { return 0; }
     saved_bytes += scalar_saved_bytes;
   }
@@ -163,7 +163,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(const cha
 
   if (ret.first != end) {
     const size_t scalar_saved_bytes = scalar::utf8_to_utf32::convert_valid(
-                                        ret.first, len - (ret.first - buf), reinterpret_cast<char32_t *>(ret.second));
+                                        ret.first, len - (ret.first - buf), utf32_out + saved_bytes);
     if (scalar_saved_bytes == 0) { return 0; }
     saved_bytes += scalar_saved_bytes;
   }
