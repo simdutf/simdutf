@@ -38,7 +38,7 @@ def find_error_in_words(words):
     prev = None
 
     if words[0] == 'H':
-        # We assume that our vector algoritm loads proper data into vectors.
+        # We assume that our vector algorithm loads proper data into vectors.
         # In the case low surrogate was the last item in the previous iteration.
         return 'high surrogate must not start a chunk'
 
@@ -112,7 +112,7 @@ def proof():
             case2_hit = True
             # all 15 words are valid (either 'V' or pairs 'L', 'H')
             # the last words is either 'L' or 'H' (the word will be
-            # re-examined in the next iteration of an algorihm)
+            # re-examined in the next iteration of an algorithm)
             if words[-1] == 'H':
                 assert find_error_in_words(words) == 'high surrogate 7 must be preceded by low surrogate'
             elif words[-1] == 'L':

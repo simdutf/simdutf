@@ -13,7 +13,7 @@ jobs:
           - {gen: Visual Studio 17 2022, arch: ARM64}
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Use cmake
         run: |
           cmake -G "${{matrix.gen}}" -A ${{ matrix.arch }} -DCMAKE_CROSSCOMPILING=1 -B build  &&
