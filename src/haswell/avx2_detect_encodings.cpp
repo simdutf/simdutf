@@ -174,7 +174,7 @@ int avx2_detect_encodings(const char * buf, size_t len) {
         out |= simdutf::encoding_type::UTF16_LE;
     }
 
-    if (is_utf32 && len % 4 == 0) {
+    if (is_utf32 && (len % 4 == 0)) {
         const __m256i standardmax = _mm256_set1_epi32(0x10ffff);
         __m256i is_zero = _mm256_xor_si256(_mm256_max_epu32(currentmax, standardmax), standardmax);
         if (_mm256_testz_si256(is_zero, is_zero) == 1 && scalar::utf32::validate(reinterpret_cast<const char32_t*>(buf), (len - (buf - start))/4)) {

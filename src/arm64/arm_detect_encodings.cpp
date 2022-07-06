@@ -171,8 +171,15 @@ int arm_detect_encodings(const char * buf, size_t len) {
 
     // Check which encodings are possible
 
-    if (is_utf8 && !check.errors()) {
-        if (scalar::utf8::validate(buf, len - (buf - start))) {
+    if (is_utf8) {
+        if (static_cast<size_t>(buf - start) != len) {
+            uint8_t block[64]{};
+            std::memset(block, 0x20, 64);
+            std::memcpy(block, buf, len - (buf - start));
+            simd::simd8x64<uint8_t> in(block);
+            check.check_next_input(in);
+        }
+        if (!check.errors()) {
             out |= simdutf::encoding_type::UTF8;
         }
     }
@@ -181,7 +188,7 @@ int arm_detect_encodings(const char * buf, size_t len) {
         out |= simdutf::encoding_type::UTF16_LE;
     }
 
-    if (is_utf32) {
+    if (is_utf32 && (len % 4 == 0)) {
         const uint32x4_t standardmax = vmovq_n_u32(0x10ffff);
         uint32x4_t is_zero = veorq_u32(vmaxq_u32(currentmax, standardmax), standardmax);
         if (vmaxvq_u32(is_zero) == 0 && scalar::utf32::validate(reinterpret_cast<const char32_t*>(buf), (len - (buf - start))/4)) {
