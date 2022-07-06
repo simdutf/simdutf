@@ -157,8 +157,15 @@ int avx2_detect_encodings(const char * buf, size_t len) {
 
     // Check which encodings are possible
 
-    if (is_utf8 && !check.errors()) {
-        if (scalar::utf8::validate(buf, len - (buf - start))) {
+    if (is_utf8) {
+        if (static_cast<size_t>(buf - start) != len) {
+            uint8_t block[64]{};
+            std::memset(block, 0x20, 64);
+            std::memcpy(block, buf, len - (buf - start));
+            simd::simd8x64<uint8_t> in(block);
+            check.check_next_input(in);
+        }
+        if (!check.errors()) {
             out |= simdutf::encoding_type::UTF8;
         }
     }
@@ -167,7 +174,7 @@ int avx2_detect_encodings(const char * buf, size_t len) {
         out |= simdutf::encoding_type::UTF16_LE;
     }
 
-    if (is_utf32) {
+    if (is_utf32 && len % 4 == 0) {
         const __m256i standardmax = _mm256_set1_epi32(0x10ffff);
         __m256i is_zero = _mm256_xor_si256(_mm256_max_epu32(currentmax, standardmax), standardmax);
         if (_mm256_testz_si256(is_zero, is_zero) == 1 && scalar::utf32::validate(reinterpret_cast<const char32_t*>(buf), (len - (buf - start))/4)) {
