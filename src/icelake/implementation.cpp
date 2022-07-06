@@ -270,7 +270,7 @@ simdutf_warn_unused size_t implementation::utf8_length_from_utf16(const char16_t
     ptr += 32;
     __mmask32 ascii_bitmask = _mm512_cmple_epu16_mask(utf16, v_007f);
     __mmask32 two_bytes_bitmask = _mm512_mask_cmple_epu16_mask(~ascii_bitmask, utf16, v_07ff);
-    __mmask32 not_one_two_bytes = ~ascii_bitmask | ~two_bytes_bitmask;
+    __mmask32 not_one_two_bytes = ~(ascii_bitmask | two_bytes_bitmask);
     __mmask32 surrogates_bitmask = _mm512_mask_cmple_epu16_mask(not_one_two_bytes, utf16, v_dfff) & _mm512_mask_cmpge_epu16_mask(not_one_two_bytes, utf16, v_d800);
 
     size_t ascii_count = count_ones(ascii_bitmask);
@@ -285,7 +285,30 @@ simdutf_warn_unused size_t implementation::utf8_length_from_utf16(const char16_t
 }
 
 simdutf_warn_unused size_t implementation::utf8_length_from_utf32(const char32_t * input, size_t length) const noexcept {
-  return scalar::utf32::utf8_length_from_utf32(input, length);
+  const char32_t* end = length >= 16 ? input + length - 16 : nullptr;
+  const char32_t* ptr = input;
+
+  const __m512i v_0000_007f = _mm512_set1_epi32((uint32_t)0x7f);
+  const __m512i v_0000_07ff = _mm512_set1_epi32((uint32_t)0x7ff);
+  const __m512i v_0000_ffff = _mm512_set1_epi32((uint32_t)0x0000ffff);
+
+  size_t count{0};
+
+  while (ptr <= end) {
+    __m512i utf32 = _mm512_loadu_si512((const __m512i*)ptr);
+    ptr += 16;
+    __mmask16 ascii_bitmask = _mm512_cmple_epu32_mask(utf32, v_0000_007f);
+    __mmask16 two_bytes_bitmask = _mm512_mask_cmple_epu32_mask(~ascii_bitmask, utf32, v_0000_07ff);
+    __mmask16 three_bytes_bitmask = _mm512_mask_cmple_epu32_mask(~(ascii_bitmask | two_bytes_bitmask), utf32, v_0000_ffff);
+
+    size_t ascii_count = count_ones(ascii_bitmask);
+    size_t two_bytes_count = count_ones(two_bytes_bitmask);
+    size_t three_bytes_count = count_ones(three_bytes_bitmask);
+    size_t four_bytes_count = 16 - ascii_count - two_bytes_count - three_bytes_count;
+    count += ascii_count + 2*two_bytes_count + 3*three_bytes_count + 4*four_bytes_count;
+  }
+
+  return count + scalar::utf32::utf8_length_from_utf32(ptr, length - (ptr - input));
 }
 
 simdutf_warn_unused size_t implementation::utf16_length_from_utf8(const char * input, size_t length) const noexcept {
