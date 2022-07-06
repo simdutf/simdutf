@@ -91,7 +91,7 @@ utf16le_to_utf8_avx512:
 	jmp		.Ltail			// if not, tail processing time!
 
 1:	vpcmpltuw	%zmm30, %zmm0, %k3	// zmm0 < 0x0800? (1--2 byte character?)
-	kortestd	%k3, %k3		// if any >2 byte characters are present,
+	ktestd		%k1, %k3		// if any >2 byte characters are present,
 	jnc		2f			// do slower processing, else ...
 
 	// fast path 2: all 1 and 3 byte encodings
@@ -99,7 +99,7 @@ utf16le_to_utf8_avx512:
 	// output: 10FEDCBA 110LKJHG or 0GFEDCBA
 	vpsrlw		$6, %zmm0, %zmm1	// 00000000 000LKJHG
 	vpsllw		$8, %zmm0, %zmm2	// HGFEDCBA 00000000
-	vpternlogd	$0xa4, %zmm29, %zmm2, %zmm1 // 00FEDCBA 000LKJHG  zmm1 = (zmm1|zmm2) & 0x3f3f
+	vpternlogd	$0xa8, %zmm29, %zmm2, %zmm1 // 00FEDCBA 000LKJHG  zmm1 = (zmm1|zmm2) & 0x3f3f
 	vpaddw		%zmm28, %zmm1, %zmm0{%k2} // 10FEDCBA 110LKJHG or 00000000 0GFEDCBA
 
 	kmovd		%k2, %eax		// determine advance based on k2
@@ -119,27 +119,27 @@ utf16le_to_utf8_avx512:
 	vpbroadcastd	.L8080e000(%rip), %zmm16 // 3 byte character tag bits
 	vmovdqa32	%zmm16, %zmm17		// same for high characters
 
-	vextracti32x8	$2, %zmm0, %ymm2
+	vextracti32x8	$1, %zmm0, %ymm2
 	vpmovzxwd	%ymm0, %zmm1		// low 16 characters as dwords
 	vpmovzxwd	%ymm2, %zmm2		// high 15 characters as dwords
 
 	kxord		%k6, %k6, %k6		// surrogate carry out if no surrogates present
 
-	vpandd		%zmm27, %zmm0, %zmm1	// zmm0 & 0xfc00 (prepare to check for surrogates)
-	vpcmpequw	%zmm26, %zmm1, %k4{%k1}	// 0xd800 <= zmm0 < 0xdc00 (high surrogate, except lookahead)
-	vpcmpequw	%zmm25, %zmm1, %k5	// 0xdc00 <= zmm0 < 0xe000 (low surrogate)
+	vpandd		%zmm27, %zmm0, %zmm3	// zmm0 & 0xfc00 (prepare to check for surrogates)
+	vpcmpequw	%zmm26, %zmm3, %k4{%k1}	// 0xd800 <= zmm0 < 0xdc00 (high surrogate, except lookahead)
+	vpcmpequw	%zmm25, %zmm3, %k5	// 0xdc00 <= zmm0 < 0xe000 (low surrogate)
 	kortestd	%k4, %k5		// any surrogates present?
 	jz		3f			// if not, skip surrogate preprocessing
 
 	vpbroadcastd	.L808080f0(%rip), %zmm22
 	vpbroadcastd	.Lfca02400(%rip), %zmm24
 
-	valignd		$1, %zmm2, %zmm1, %zmm3	// low surrogates corresponding to zmm1
-	valignd		$1, %zmm1, %zmm2, %zmm4	// low surrogates corresponding to zmm2
+	valignd		$1, %zmm1, %zmm2, %zmm3	// low surrogates corresponding to zmm1
+	valignd		$1, %zmm2, %zmm1, %zmm4	// low surrogates corresponding to zmm2
 
 	// check for mismatched surrogates
 	kaddd		%k4, %k4, %k6		// high surrogates shifted in place of low surrogates
-	kord		%k0, %K6, %k6		// ... with surrogate carry applied
+	kord		%k0, %k6, %k6		// ... with surrogate carry applied
 	kshiftrd	$1, %k5, %k7		// low surrogates shifted in place of high surrogates
 	kandnd		%k5, %k6, %k6		// low surrogate without high surrogate before?
 	kandnd		%k4, %k7, %k7		// high surrogate without low surrogate before?
@@ -159,7 +159,7 @@ utf16le_to_utf8_avx512:
 	vpaddd		%zmm24, %zmm3, %zmm3	//            11111100 10100001 000000KJ HGFEDCBA
 	vpaddd		%zmm24, %zmm4, %zmm4
 	vpaddd		%zmm3, %zmm1, %zmm1{%k4} //if 4 byte: 00000000 000wvuts RQPNMLKJ HGFEDCBA
-	vpaddd		%zmm4, %zmm2, %zmm2{%k4}
+	vpaddd		%zmm4, %zmm2, %zmm2{%k6}
 
 	// compute masks to ignore low surrogates in compress step
 	// if no surrogates occur, k4 and k5 are conveniently already clear
@@ -171,18 +171,21 @@ utf16le_to_utf8_avx512:
 	vpmovb2m	%zmm4, %k5		// which bytes in zmm2 correspond to low surrogates?
 
 	// transcode 1, 2, 3, and 4 byte characters at once!
-3:	vpmultishiftqb	%zmm1, %zmm23, %zmm1	// HGFEDCBA PNMLKJHG VUTSRQPN 00000WVU
-	vpmultishiftqb	%zmm2, %zmm23, %zmm2
+3:	vpmultishiftqb	%zmm1, %zmm23, %zmm3	// HGFEDCBA PNMLKJHG VUTSRQPN 00000WVU
+	vpmultishiftqb	%zmm2, %zmm23, %zmm4
 
 	vpbroadcastd	.L00010101(%rip), %zmm21
 	kmovd		%k6, %k0		// surrogate carry out to carry in
 
+	knotd		%k2, %k2		// which of zmm2:zmm1 are ASCII characters?
 	kshiftrd	$16, %k3, %k7		// which of zmm2 are 1 or 2 byte characters?
-	kshiftrd	$16, %k2, %k6		// which of zmm2 are 2--4 byte characters?
+	kshiftrd	$16, %k2, %k6		// which of zmm2 are ASCII characters?
 	vpslld		$16, %zmm28, %zmm16{%k3} // 2 byte: 80c00000  3 byte: 8080e000  4 byte: 808080f0
 	vpslld		$16, %zmm28, %zmm17{%K7} // same for high characters
-	vpternlogd	$0xea, %zmm29, %zmm16, %zmm1{%k2} // if 2--4 byte, zmm1 = zmm1 & 0x3f3f3f3f | zmm16
-	vpternlogd	$0xea, %zmm29, %zmm17, %zmm2{%k6} // this masks and applies tag bits in one step.
+	vpternlogd	$0xea, %zmm16, %zmm29, %zmm3 // zmm1 = zmm1 & 0x3f3f3f3f | zmm16
+	vpternlogd	$0xea, %zmm17, %zmm29, %zmm4 // this masks and applies tag bits in one step.
+	vpslld		$24, %zmm1, %zmm3{%k2}	// if ASCII, 0GFEDCBA 00000000 00000000 00000000
+	vpslld		$24, %zmm2, %zmm4{%k6}
 
 	// Okay, kinda confusing, isn't it?  Here's what is going on.
 	// CASE    INPUT IN ZMM1/ZMM2       ZMM16/17  OUTPUT IN ZMM1/ZMM2
@@ -192,40 +195,29 @@ utf16le_to_utf8_avx512:
 	// 4 byte  wvuts RQPNMLKJ HGFEDCBA  808080f0  10FEDCBA 10MLKJHG 10tsRQPN 11110wvu
 
 	// smoosh characters together and output
-	vpcmpnltub	%zmm21, %zmm1, %k2	// which bytes in zmm1 do we want to deposit?
-	vpcmpnltub	%zmm21, %zmm2, %k3	// (all nonzero bytes and the MSB of each dword)
+	vpcmpnltub	%zmm21, %zmm3, %k2	// which bytes in zmm1 do we want to deposit?
+	vpcmpnltub	%zmm21, %zmm4, %k3	// (all nonzero bytes and the MSB of each dword)
 	kandnq		%k2, %k4, %k2		// do not deposit bytes corresponding to low surrogates
 	kandnq		%k3, %k5, %k3
-	vpcompressb	%zmm1, %zmm1{%k2}	// smoosh characters together
-	vpcompressb	%zmm2, %zmm2{%k3}
+	vpcompressb	%zmm3, %zmm3{%k2}{z}	// smoosh characters together
+	vpcompressb	%zmm4, %zmm4{%k3}{z}
 
 	kmovq		%k2, %rax
-	kmovq		%k3, %rcx
+	kmovq		%k3, %r11
 	popcnt		%rax, %rax		// number of UTF-8 bytes in zmm1
-	shl		$4, %rcx		// ignore lookahead in zmm2
-	popcnt		%rcx, %rcx		// number of UTF-8 bytes in zmm2
+	shl		$4, %r11		// ignore lookahead in zmm2
+	popcnt		%r11, %r11		// number of UTF-8 bytes in zmm2
 
-	vmovdqu8	%zmm1, (%rdi)
-	add		%rax, %rdi
-	vmovdqu8	%zmm2, (%rdi)
-	add		%rax, %rdi
+	vmovdqu8	%zmm3, (%rdi)		// deposit first half of output
+	add		%rax, %rdi		// advance past first half of output
+	vmovdqu8	%zmm4, (%rdi)		// deposit second half of output
+	add		%r11, %rdi		// advance past second half of output
 
 	cmp		$32, %rdx		// enough left for another round?
 	jae		.Loop			// if yes, go again!
 
-.Ltail:	jz		.Lend			// if there's nothing left to decode, finish
-						// (all paths to this label have ZF set iff RDX=0)
-
-	// Process <31 words tail.
-	// Strategie: pad remaining input with U+0000 and move r8 back to account
-	// for the size of the padding
-	bzhi		%edx, %r11d, %eax	// eax = 0x7fffffff & 1 << edx
-	kmovd		%eax, %k7		// mask of words still in the buffer
-	vmovdqu16	(%rsi), %zmm0{%k7}{z}	// manually load tail padded with U+000000
-	lea		(%rsi, %rdx, 2), %rsi	// advance rsi to end of buffer
-	lea		-31(%rdx), %r10		// set up r10 with the neg. number of padding characters
-	xor		%edx, %edx		// no further input to be processed
-	jmp		.Llastiteration
+.Ltail:	test		%edx, %edx		// anything left to decode at all?
+	jnz		4f			// if yes, process it
 
 .Lend:	mov		%rsi, %rax
 	sub		%r9, %rax		// input length = buffer end - buffer start
@@ -236,6 +228,18 @@ utf16le_to_utf8_avx512:
 
 	vzeroupper
 	ret
+
+	// Process <31 words tail.
+	// Strategie: pad remaining input with U+0000 and move r8 back to account
+	// for the size of the padding
+4:	mov		$0x7fffffff, %eax
+	bzhi		%edx, %eax, %eax	// eax = 0x7fffffff & 1 << edx
+	kmovd		%eax, %k7		// mask of words still in the buffer
+	vmovdqu16	(%rsi), %zmm0{%k7}{z}	// manually load tail padded with U+000000
+	lea		(%rsi, %rdx, 2), %rsi	// advance rsi to end of buffer
+	lea		-31(%rdx), %r10		// set up r10 with the neg. number of padding characters
+	xor		%edx, %edx		// no further input to be processed
+	jmp		.Llastiteration
 
 	// decoding failure
 .Lfail:	kord		%k7, %k6, %k6		// where did the encoding error occur?
@@ -252,4 +256,15 @@ utf16le_to_utf8_avx512:
 	xor		%edx, %edx		// no further input to be processed
 	jmp		.Llastiteration
 
-	.size utf16le_to_utf8_avx512, .-utf16le_to_utf8_avx512
+	.size		utf16le_to_utf8_avx512, .-utf16le_to_utf8_avx512
+
+
+// return the length of the output buffer for transcoding the given number of characters
+	.type		utf16le_to_utf8_buflen_avx512, @function
+	.globl		utf16le_to_utf8_buflen_avx512
+utf16le_to_utf8_buflen_avx512:
+	lea		95(,%rdi,4), %rax	// up to 4 bytes for each character
+						// plus 95 byte we might store past the end
+	ret
+
+	.size		utf16le_to_utf8_buflen_avx512, .-utf16le_to_utf8_buflen_avx512
