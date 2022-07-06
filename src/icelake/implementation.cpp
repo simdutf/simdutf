@@ -336,7 +336,22 @@ simdutf_warn_unused size_t implementation::utf32_length_from_utf16(const char16_
 }
 
 simdutf_warn_unused size_t implementation::utf16_length_from_utf32(const char32_t * input, size_t length) const noexcept {
-  return scalar::utf32::utf16_length_from_utf32(input, length);
+  const char32_t* end = length >= 16 ? input + length - 16 : nullptr;
+  const char32_t* ptr = input;
+
+  const __m512i v_0000_ffff = _mm512_set1_epi32((uint32_t)0x0000ffff);
+
+  size_t count{0};
+
+  while (ptr <= end) {
+    __m512i utf32 = _mm512_loadu_si512((const __m512i*)ptr);
+    ptr += 16;
+    __mmask16 surrogates_bitmask = _mm512_cmpgt_epu32_mask(utf32, v_0000_ffff);
+
+    count += 16 + count_ones(surrogates_bitmask);
+  }
+
+  return count + scalar::utf32::utf16_length_from_utf32(ptr, length - (ptr - input));
 }
 
 simdutf_warn_unused size_t implementation::utf32_length_from_utf8(const char * input, size_t length) const noexcept {
