@@ -19,6 +19,9 @@ namespace {
 #include "icelake/icelake-from-valid-utf8.inl.cpp"
 #include "icelake/icelake-utf8-validation.inl.cpp"
 #include "icelake/icelake-from-utf8.inl.cpp"
+#include "icelake/icelake-ascii-validation.inl.cpp"
+#include "icelake/icelake-utf32-validation.inl.cpp"
+
 } // namespace
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
@@ -44,7 +47,12 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
 
 
 simdutf_warn_unused bool implementation::validate_ascii(const char *buf, size_t len) const noexcept {
-    return scalar::ascii::validate(buf, len);
+  const char* tail = icelake::validate_ascii(buf, len);
+  if (tail) {
+    return scalar::ascii::validate(tail, len - (tail - buf));
+  } else {
+    return false;
+  }
 }
 
 simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, size_t len) const noexcept {
@@ -52,7 +60,12 @@ simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, siz
 }
 
 simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, size_t len) const noexcept {
-    return scalar::utf32::validate(buf, len);
+  const char32_t * tail = icelake::validate_utf32(buf, len);
+  if (tail) {
+    return scalar::utf32::validate(tail, len - (tail - buf));
+  } else {
+    return false;
+  }
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
