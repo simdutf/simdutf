@@ -206,6 +206,27 @@ TEST(edge_surrogate) {
   }
 }
 
+TEST(tail_utf8) {
+  for (size_t trial = 0; trial < 10000; trial++) {
+    if ((trial % 100) == 0) {
+      std::cout << ".";
+      std::cout.flush();
+    }
+    uint32_t seed{1234};
+
+    simdutf::tests::helpers::random_utf8 random(seed, 0, 0, 1, 0);
+    std::array<size_t, 5> multiples_three{12, 54, 66, 126, 252};
+    for (size_t size : multiples_three) {
+      auto generated = random.generate_counted(size);
+      auto expected = simdutf::encoding_type::UTF8 | simdutf::encoding_type::UTF16_LE;
+      auto actual = implementation.detect_encodings(
+                      reinterpret_cast<const char *>(generated.first.data()),
+                      size);
+      ASSERT_TRUE(actual == expected);
+    }
+  }
+}
+
 int main(int argc, char* argv[]) {
   return simdutf::test::main(argc, argv);
 }
