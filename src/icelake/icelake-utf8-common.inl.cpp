@@ -1,6 +1,7 @@
 // Common procedures for both validating and non-validating conversions from UTF-8.
 
 using utf8_to_utf16_result = std::pair<const char*, char16_t*>;
+using utf8_to_utf32_result = std::pair<const char*, uint32_t*>;
 
 // See: http://0x80.pl/notesen/2021-12-22-test-and-clear-bit.html
 bool test_and_clear_bit(uint32_t& val, int bitpos) {
