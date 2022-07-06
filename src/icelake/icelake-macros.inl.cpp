@@ -78,7 +78,7 @@
                 _mm512_mask_storeu_epi32((__m512i*)output, valid, out);                                      \
                 output += valid_count;                                                                       \
             } else {                                                                                         \
-                output += utf32_to_utf16(out, valid_count, output);                                          \
+                output += utf32_to_utf16(out, valid_count, reinterpret_cast<char16_t *>(output));            \
             }                                                                                                \
         }
 
