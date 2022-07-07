@@ -30,6 +30,16 @@ const char16_t *vectors[] = {
 	u"🚀🚁🚂🚃🚄🚅🚆🚇🚈🚉🚊🚋🚌🚍🚎🚏🚐🚑🚒🚓🚔🚕🚖🚗🚘🚙🚚🚛🚜🚝🚞🚟\uffff" /* map symbols (x32) */
 	u"no bikes: 🚳, no drinking: 🚱, no littering: 🚯\uffff", /* map symbols intermixed with ASCII */
 
+	/* test cases with encoding errors */
+	u"\xd834\xdd1e\uffff", /* flipped surrogates */
+	u"x\xd830\xdd20\uffff", /* in odd position */
+	u"0123456789abcdef0123456789abcdef\uffff", /* full block */
+	u"0123456789abcdef0123456789abcde\xd800\uffff", /* lone high surrogate in lookahead */
+	u"0123456789abcdef0123456789abcde\xdc01\uffff", /* lone low surrogate in lookahead */
+	u"0123456789abcdef0123456789abcd\xd802\xdc03\uffff", /* surrogate split over lookahead */
+	u"0123456789abcdef0123456789abcd\xdc04\xd805\uffff", /* same with flipped surrogate pair */
+	u"0123456789abcdef0123456789abcde\xd806\xdc07\uffff", /* matched surrogate in lookahead */
+	u"0123456789abcdef0123456789abcde\xdc08\xd809\uffff", /* flipped surrogate in lookahead */
 	NULL,
 };
 

@@ -60,22 +60,23 @@ utf16le_to_utf8_avx512:
 	vpbroadcastd	.Ldc00(%rip), %zmm25
 
 	kxord		%k0, %k0, %k0		// low surrogate carry
-	mov		$0x7fffffff, %r11	// (this constant is also used after .Ltail)
-	kmovd		%r11d, %k1		// mask ignoring the lookahead
+	mov		$0x7fffffff, %eax	// (this constant is also used after .Ltail)
+	kmovd		%eax, %k1		// mask ignoring the lookahead
 
 	mov		%rdi, %r8		// stash output buffer for later
 	mov		%rsi, %r9		// same with input buffer
-	xor		%r10, %r10		// number by which to adjust output length
+	xor		%eax, %eax		// number by which to adjust output length
 
 	cmp		$32, %rdx		// enough left for a zmm register?
 	jb		.Ltail			// if not, tail processing time!
 
 	.balign		16
 .Loop:	vmovdqu16	(%rsi), %zmm0
-	add		$62, %rsi		// advance to next block (sans lookahead)
-	sub		$31, %rdx		// and account for the bytes consumed
-
+	sub		$31, %rdx		// account for the bytes consumed
 .Llastiteration:
+	add		$62, %rsi		// and advance to next block (sans lookahead)
+
+.Lfailiteration:
 	vpcmpnltuw	%zmm31, %zmm0, %k2{%k1}	// 0x0080 <= zmm0? except lookahead (non-ASCII character?)
 	ktestd		%k2, %k2		// if any non-ASCII character is present,
 	jnz		1f			// do slower processing, else ...
@@ -102,14 +103,14 @@ utf16le_to_utf8_avx512:
 	vpternlogd	$0xa8, %zmm29, %zmm2, %zmm1 // 00FEDCBA 000LKJHG  zmm1 = (zmm1|zmm2) & 0x3f3f
 	vpaddw		%zmm28, %zmm1, %zmm0{%k2} // 10FEDCBA 110LKJHG or 00000000 0GFEDCBA
 
-	kmovd		%k2, %eax		// determine advance based on k2
-	popcnt		%eax, %eax		// convert to number of two byte characters
+	kmovd		%k2, %r10d		// determine advance based on k2
+	popcnt		%r10d, %r10d		// convert to number of two byte characters
 
 	vpcmpnltub	%zmm30, %zmm0, %k3	// 01 if ASCII, 11 if 2 byte
 	vpcompressb	%zmm0, %zmm0{%k3}{z}	// smoosh all characters together
 	vmovdqu8	%zmm0, (%rdi)		// and deposit into memory
 
-	lea		31(%rdi, %rax, 1), %rdi	// advance destination buffer
+	lea		31(%rdi, %r10, 1), %rdi	// advance destination buffer
 	kxord		%k0, %k0, %k0		// clear surrogate carry
 	cmp		$32, %rdx		// enough left for another round?
 	jae		.Loop			// if yes, go again!
@@ -202,15 +203,15 @@ utf16le_to_utf8_avx512:
 	vpcompressb	%zmm3, %zmm3{%k2}{z}	// smoosh characters together
 	vpcompressb	%zmm4, %zmm4{%k3}{z}
 
-	kmovq		%k2, %rax
+	kmovq		%k2, %r10
 	kmovq		%k3, %r11
-	popcnt		%rax, %rax		// number of UTF-8 bytes in zmm1
+	popcnt		%r10, %r10		// number of UTF-8 bytes in zmm1
 	shl		$4, %r11		// ignore lookahead in zmm2
 	popcnt		%r11, %r11		// number of UTF-8 bytes in zmm2
 
 	vmovdqu8	%zmm3, (%rdi)		// deposit first half of output
-	add		%rax, %rdi		// advance past first half of output
-	vmovdqu8	%zmm4, (%rdi)		// deposit second half of output
+	vmovdqu8	%zmm4, (%rdi, %r10, 1)	// deposit second half of output
+	add		%r10, %rdi		// advance past first half of output
 	add		%r11, %rdi		// advance past second half of output
 
 	cmp		$32, %rdx		// enough left for another round?
@@ -219,11 +220,11 @@ utf16le_to_utf8_avx512:
 .Ltail:	test		%edx, %edx		// anything left to decode at all?
 	jnz		4f			// if yes, process it
 
-.Lend:	mov		%rsi, %rax
-	sub		%r9, %rax		// input length = buffer end - buffer start
-	shr		$1, %rax		// in characters
+.Lend:	add		%rax, %rdi		// subtract padding characters from buffer end
+	sub		%r9, %rsi		// input length = buffer end - buffer start
+	shr		$1, %rsi		// in characters
+	add		%rsi, %rax		// ... - number of padding characters
 	sub		%r8, %rdi		// output length = buffer end - buffer start
-	add		%r10, %rdi		// ... - number of padding characters
 	mov		%rdi, (%rcx)		// deposit into *outlen
 
 	vzeroupper
@@ -236,8 +237,7 @@ utf16le_to_utf8_avx512:
 	bzhi		%edx, %eax, %eax	// eax = 0x7fffffff & 1 << edx
 	kmovd		%eax, %k7		// mask of words still in the buffer
 	vmovdqu16	(%rsi), %zmm0{%k7}{z}	// manually load tail padded with U+000000
-	lea		(%rsi, %rdx, 2), %rsi	// advance rsi to end of buffer
-	lea		-31(%rdx), %r10		// set up r10 with the neg. number of padding characters
+	lea		-31(%rdx), %rax		// set up r10 with the neg. number of padding characters
 	xor		%edx, %edx		// no further input to be processed
 	jmp		.Llastiteration
 
@@ -248,13 +248,13 @@ utf16le_to_utf8_avx512:
 
 	// Dock tail to length of its valid prefix
 	// this is very similar to the tail processing code
-	bzhi		%edx, %r11d, %eax	// eax = 0x7fffffff & 1 << edx
+	mov		$0x7fffffff, %eax
+	bzhi		%edx, %eax, %eax	// eax = 0x7fffffff & 1 << edx
 	kmovd		%eax, %k7		// mask of words still in the buffer
 	vmovdqu16	%zmm0, %zmm0{%k7}{z}	// mask input to valid prefix padded with U+000000
-	lea		-62(%rsi, %rdx, 2), %rsi // move rsi back to end of valid prefix
-	lea		-31(%rdx), %r10		// do not count NUL byte padding in output length
+	lea		-31(%rdx), %rax		// do not count NUL byte padding in output length
 	xor		%edx, %edx		// no further input to be processed
-	jmp		.Llastiteration
+	jmp		.Lfailiteration
 
 	.size		utf16le_to_utf8_avx512, .-utf16le_to_utf8_avx512
 
