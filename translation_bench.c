@@ -29,8 +29,8 @@
 
 typedef size_t utf16le_to_utf8(unsigned char[restrict], const char16_t[restrict], size_t, size_t *);
 typedef size_t utf16le_buflen(size_t);
-extern utf16le_to_utf8 utf16le_to_utf8_ref, utf16le_to_utf8_avx512;
-extern utf16le_buflen utf16le_to_utf8_buflen_ref, utf16le_to_utf8_buflen_avx512;
+extern utf16le_to_utf8 utf16le_to_utf8_ref, utf16le_to_utf8_avx512, utf16le_to_utf8_avx512i;
+extern utf16le_buflen utf16le_to_utf8_buflen_ref, utf16le_to_utf8_buflen_avx512, utf16le_to_utf8_buflen_avx512i;
 
 static const struct utf16le_to_utf8_method {
 	const char *name;
@@ -39,6 +39,7 @@ static const struct utf16le_to_utf8_method {
 } to_utf8_methods[] = {
 	{ "ref", utf16le_to_utf8_ref, utf16le_to_utf8_buflen_ref },
 	{ "avx512", utf16le_to_utf8_avx512, utf16le_to_utf8_buflen_avx512 },
+	{ "avx512i", utf16le_to_utf8_avx512i, utf16le_to_utf8_buflen_avx512i },
 	{ NULL, NULL, NULL },
 };
 
