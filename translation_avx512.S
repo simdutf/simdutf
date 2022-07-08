@@ -59,7 +59,9 @@ utf16le_to_utf8_avx512:
 	vpbroadcastd	.Ld800(%rip), %zmm26
 	vpbroadcastd	.Ldc00(%rip), %zmm25
 
-	kxord		%k0, %k0, %k0		// low surrogate carry
+	push		%rbx
+	xor		%ebx, %ebx		// low surrogate carry
+
 	mov		$0x7fffffff, %eax	// (this constant is also used after .Ltail)
 	kmovd		%eax, %k1		// mask ignoring the lookahead
 
@@ -82,11 +84,10 @@ utf16le_to_utf8_avx512:
 	jnz		1f			// do slower processing, else ...
 
 	// fast path 1: all ASCII characters
-	vpmovwb		%zmm0, %ymm0		// compress into ASCII
-	vmovdqu		%ymm0, (%rdi)		// and deposit into output buffer
+	vpmovwb		%zmm0, (%rdi)		// compress into ASCII and deposit
 
 	add		$31, %rdi		// advance output buffer
-	kxord		%k0, %k0, %k0		// clear surrogate carry
+	xor		%ebx, %ebx		// clear surrogate carry
 	cmp		$32, %rdx		// enough left for another round?
 	jae		.Loop			// if yes, go again!
 	jmp		.Ltail			// if not, tail processing time!
@@ -111,7 +112,7 @@ utf16le_to_utf8_avx512:
 	vmovdqu8	%zmm0, (%rdi)		// and deposit into memory
 
 	lea		31(%rdi, %r10, 1), %rdi	// advance destination buffer
-	kxord		%k0, %k0, %k0		// clear surrogate carry
+	xor		%ebx, %ebx		// clear surrogate carry
 	cmp		$32, %rdx		// enough left for another round?
 	jae		.Loop			// if yes, go again!
 	jmp		.Ltail			// if not, tail processing time!
@@ -139,17 +140,20 @@ utf16le_to_utf8_avx512:
 	valignd		$1, %zmm2, %zmm1, %zmm4	// low surrogates corresponding to zmm2
 
 	// check for mismatched surrogates
-	kaddd		%k4, %k4, %k6		// high surrogates shifted in place of low surrogates
-	kord		%k0, %k6, %k6		// ... with surrogate carry applied
-	kshiftrd	$1, %k5, %k7		// low surrogates shifted in place of high surrogates
-	kandnd		%k5, %k6, %k6		// low surrogate without high surrogate before?
-	kandnd		%k4, %k7, %k7		// high surrogate without low surrogate before?
-	kortestd	%k6, %k7		// either case (mismatched or lone surrogate)?
-	jnz		.Lfail
+	kmovd		%k4, %r10d		// move hi/lo surrogate masks to general purpose registers
+	kmovd		%k5, %r11d		// this moves the validation off p0/p5, making it no longer
+						// part of the critical path
+
+	lea		(%rbx, %r10, 2), %ebx	// high surrogates shifted in place of low surrogates w/ carry
+	andn		%r11d, %ebx, %ebx	// low surrogate without high surrogate before?
+	shr		%r11d			// low surrogates shifted in place of high surrogates
+	andn		%r10d, %r11d, %r11d	// high surrogate without low surrogate after?
+	or		%r11d, %ebx		// either of these two cases?
+	jnz		.Lfail			// if yes, encoding error, else we have ebx == 0
 
 	// preprocess surrogates in zmm1, zmm2
 	// input hi: 110110VU TSRQPNML  lo: 110111KJ HGFEDCBA
-	// wvuts = 0vuts + 1 (plane shift)
+	// wvuts = 0VUTS + 1 (plane shift)
 	// output: 00000000 000wvuts RQPNMLKJ HGFEDCBA
 	kshiftrd	$16, %k4, %k6		// location of high surrogates in zmm2
 	vmovdqa32	%zmm22, %zmm16{%k4}	// 3 or 4 character tag bits for zmm1
@@ -164,19 +168,20 @@ utf16le_to_utf8_avx512:
 
 	// compute masks to ignore low surrogates in compress step
 	// if no surrogates occur, k4 and k5 are conveniently already clear
-	kshiftrd	$30, %k4, %k6		// true surrogate carry out
 	kshiftrd	$16, %k5, %k4		// which of zmm2 correspond to low surrogates?
 	vpmovm2d	%k5, %zmm3		// ffffffff if low surrogate, 00000000 otherwise
 	vpmovm2d	%k4, %zmm4		// same for zmm2
 	vpmovb2m	%zmm3, %k4		// which bytes in zmm1 correspond to low surrogates?
 	vpmovb2m	%zmm4, %k5		// which bytes in zmm2 correspond to low surrogates?
 
+	shr		$30, %r10d		// set up !ZF == high surrogate carry out
+
 	// transcode 1, 2, 3, and 4 byte characters at once!
 3:	vpmultishiftqb	%zmm1, %zmm23, %zmm3	// HGFEDCBA PNMLKJHG VUTSRQPN 00000WVU
 	vpmultishiftqb	%zmm2, %zmm23, %zmm4
 
 	vpbroadcastd	.L00010101(%rip), %zmm21
-	kmovd		%k6, %k0		// surrogate carry out to carry in
+	setnz		%bl			// set up surrogate carry out
 
 	knotd		%k2, %k2		// which of zmm2:zmm1 are ASCII characters?
 	kshiftrd	$16, %k3, %k7		// which of zmm2 are 1 or 2 byte characters?
@@ -222,11 +227,12 @@ utf16le_to_utf8_avx512:
 
 .Lend:	add		%rax, %rdi		// subtract padding characters from buffer end
 	sub		%r9, %rsi		// input length = buffer end - buffer start
-	shr		$1, %rsi		// in characters
+	sar		$1, %rsi		// in characters
 	add		%rsi, %rax		// ... - number of padding characters
 	sub		%r8, %rdi		// output length = buffer end - buffer start
 	mov		%rdi, (%rcx)		// deposit into *outlen
 
+	pop		%rbx
 	vzeroupper
 	ret
 
@@ -234,7 +240,7 @@ utf16le_to_utf8_avx512:
 	// Strategie: pad remaining input with U+0000 and move r8 back to account
 	// for the size of the padding
 4:	mov		$0x7fffffff, %eax
-	bzhi		%edx, %eax, %eax	// eax = 0x7fffffff & 1 << edx
+	bzhi		%edx, %eax, %eax	// eax = 0x7fffffff & (1 << edx) - 1
 	kmovd		%eax, %k7		// mask of words still in the buffer
 	vmovdqu16	(%rsi), %zmm0{%k7}{z}	// manually load tail padded with U+000000
 	lea		-31(%rdx), %rax		// set up r10 with the neg. number of padding characters
@@ -242,14 +248,15 @@ utf16le_to_utf8_avx512:
 	jmp		.Llastiteration
 
 	// decoding failure
-.Lfail:	kord		%k7, %k6, %k6		// where did the encoding error occur?
-	kmovd		%k6, %edx
-	tzcnt		%edx, %edx		// set remaining input length to valid prefix length
+.Lfail:	tzcnt		%ebx, %edx		// where did the decoding error occur?
+	kmovd		%k5, %ebx		// fake the surrogate carry: if an error occured due to
+	and		$1, %ebx		// the carry not matching a leading low surrogate, the
+						// final iteration would produce zero bytes anyway
 
 	// Dock tail to length of its valid prefix
 	// this is very similar to the tail processing code
 	mov		$0x7fffffff, %eax
-	bzhi		%edx, %eax, %eax	// eax = 0x7fffffff & 1 << edx
+	bzhi		%edx, %eax, %eax	// eax = 0x7fffffff & (1 << edx) - 1
 	kmovd		%eax, %k7		// mask of words still in the buffer
 	vmovdqu16	%zmm0, %zmm0{%k7}{z}	// mask input to valid prefix padded with U+000000
 	lea		-31(%rdx), %rax		// do not count NUL byte padding in output length
