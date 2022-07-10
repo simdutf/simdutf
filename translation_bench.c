@@ -311,20 +311,65 @@ fail1:	free(data);
 	return (-1);
 }
 
+static void
+usage(const char *argv0)
+{
+	fprintf(stderr, "Usage: %s [-r test[,...]] file...\n", argv0);
+	exit(EXIT_FAILURE);
+}
+
+
 extern int
 main(int argc, char *argv[])
 {
-	int i, j;
+	static struct utf16le_to_utf8_method *methods = (struct utf16le_to_utf8_method *)to_utf8_methods;
+
+	int i = 1, j, k, n;
 
 	setlinebuf(stdout);
 	init_counters();
 
-	if (argc < 2) {
-		fprintf(stderr, "Usage: %s file...\n", argv[0]);
-		return (EXIT_FAILURE);
+	if (argc < 2)
+		usage(argv[0]);
+
+	if (strcmp(argv[1], "-r") == 0) {
+		char *tok;
+
+		if (argc < 3)
+			usage(argv[0]);
+
+		for (n = 0; methods[n].name != NULL; n++)
+			;
+
+		methods = malloc((n+1) * sizeof *methods);
+		if (methods == NULL) {
+			perror("malloc");
+			return (EXIT_FAILURE);
+		}
+
+		memcpy(methods, to_utf8_methods, (n+1) * sizeof *methods);
+
+		tok = strtok(argv[2], ",");
+		j = 0;
+		while (tok != NULL) {
+			/* find the method and add it to methods */
+			for (k = 0; to_utf8_methods[k].name != NULL; k++)
+				if (strcmp(tok, to_utf8_methods[k].name) == 0)
+					goto found;
+
+			/* not found: */
+			fprintf(stderr, "unknown benchmark: %s\n", tok);
+			return (EXIT_FAILURE);
+
+		found:	methods[j++] = to_utf8_methods[k];
+			tok = strtok(NULL, ",");
+		}
+
+		methods[j].name = NULL;
+		i = 3;
 	}
 
-	for (i = 1; i < argc; i++) {
+	for (; i < argc; i++) {
 		struct stat st;
 		size_t len;
 		int res;
@@ -337,8 +382,8 @@ main(int argc, char *argv[])
 
 		len = st.st_size > SIZE_MAX ? SIZE_MAX : (size_t)st.st_size;
 
-		for (j = 0; to_utf8_methods[j].name != NULL; j++)
-			run_test(to_utf8_methods[j].name, test_utf16le_to_utf8, (void *)&to_utf8_methods[j], argv[i], len);
+		for (j = 0; methods[j].name != NULL; j++)
+			run_test(methods[j].name, test_utf16le_to_utf8, (void *)&methods[j], argv[i], len);
 	}
 
 	return (EXIT_SUCCESS);
