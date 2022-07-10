@@ -99,12 +99,12 @@ utf16le_to_utf8_avx512:
 	// fast path 2: all 1 and 3 byte encodings
 	// input:  00000LKJ HGFEDCBA or 00000000 0GFEDCBA
 	// output: 10FEDCBA 110LKJHG or 0GFEDCBA
+	kmovd		%k2, %eax		// determine advance based on k2
 	vpsrlw		$6, %zmm0, %zmm1	// 00000000 000LKJHG
 	vpsllw		$8, %zmm0, %zmm2	// HGFEDCBA 00000000
 	vpternlogd	$0xa8, %zmm29, %zmm2, %zmm1 // 00FEDCBA 000LKJHG  zmm1 = (zmm1|zmm2) & 0x3f3f
 	vpaddw		%zmm28, %zmm1, %zmm0{%k2} // 10FEDCBA 110LKJHG or 00000000 0GFEDCBA
 
-	kmovd		%k2, %eax		// determine advance based on k2
 	popcnt		%eax, %eax		// convert to number of two byte characters
 
 	vpcmpnltub	%zmm30, %zmm0, %k3	// 01 if ASCII, 11 if 2 byte
@@ -174,13 +174,15 @@ utf16le_to_utf8_avx512:
 	vpmultishiftqb	%zmm2, %zmm23, %zmm4
 
 	vpbroadcastd	.L00010101(%rip), %zmm21
-	setnz		%al			// set up surrogate carry out
 
 	knotd		%k2, %k2		// which of zmm2:zmm1 are ASCII characters?
 	kshiftrd	$16, %k3, %k7		// which of zmm2 are 1 or 2 byte characters?
 	kshiftrd	$16, %k2, %k6		// which of zmm2 are ASCII characters?
+
 	vpslld		$16, %zmm28, %zmm16{%k3} // 2 byte: 80c00000  3 byte: 8080e000  4 byte: 808080f0
 	vpslld		$16, %zmm28, %zmm17{%k7} // same for high characters
+	vpblendmd	%zmm20, %zmm21, %zmm5{%k5} // prepare masks for desired byte detection:
+	vpblendmd	%zmm20, %zmm21, %zmm6{%k4} // if low surrogate ffffffff else 00010101
 	vpternlogd	$0xea, %zmm16, %zmm29, %zmm3 // zmm1 = zmm1 & 0x3f3f3f3f | zmm16
 	vpternlogd	$0xea, %zmm17, %zmm29, %zmm4 // this masks and applies tag bits in one step.
 	vpslld		$24, %zmm1, %zmm3{%k2}	// if ASCII, 0GFEDCBA 00000000 00000000 00000000
@@ -194,15 +196,14 @@ utf16le_to_utf8_avx512:
 	// 4 byte  wvuts RQPNMLKJ HGFEDCBA  808080f0  10FEDCBA 10MLKJHG 10tsRQPN 11110wvu
 
 	// smoosh characters together and output
-	vpblendmd	%zmm20, %zmm21, %zmm1{%k5} // if low surrogate ffffffff else 00010101
-	vpblendmd	%zmm20, %zmm21, %zmm2{%k4}
-	vpcmpnltub	%zmm1, %zmm3, %k2	// which bytes in zmm1 do we want to deposit?  (all nonzero
-	vpcmpnltub	%zmm2, %zmm4, %k3	// ... bytes and the MSB of each dword but no low surrogates)
+	vpcmpnltub	%zmm5, %zmm3, %k2	// which bytes in zmm1 do we want to deposit?  (all nonzero
+	vpcmpnltub	%zmm6, %zmm4, %k3	// ... bytes and the MSB of each dword but no low surrogates)
+	kmovq		%k2, %r10		// get the masks so we can find out how long the output is
+	kmovq		%k3, %r11
 	vpcompressb	%zmm3, %zmm3{%k2}{z}	// smoosh characters together
 	vpcompressb	%zmm4, %zmm4{%k3}{z}
 
-	kmovq		%k2, %r10
-	kmovq		%k3, %r11
+	setnz		%al			// set up surrogate carry out
 	popcnt		%r10, %r10		// number of UTF-8 bytes in zmm1
 	shl		$4, %r11		// ignore lookahead in zmm2
 	popcnt		%r11, %r11		// number of UTF-8 bytes in zmm2
