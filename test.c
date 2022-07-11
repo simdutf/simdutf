@@ -16,6 +16,8 @@ extern size_t utf16le_validate_avx512(const char16_t in[restrict], size_t len);
 
 /* all test vectors end in U+FFFF to allow embedded NUL characters */
 const char16_t *vectors[] = {
+	u"0123456789abcdef0123456789abcdef\uffff", /* full block */
+
 	u"\uffff", /* empty string */
 	u"Das Pferd frisst keinen Gurkensalat.\uffff", /* ASCII string */
 	u"Fix Schwyz quäkt Jürgen blöd vom Paß.\uffff", /* ISO-8859-1 string */
@@ -129,7 +131,7 @@ int test(int i, const char16_t *vector)
 
 	/* check for validation failure */
 	refvalid = utf16le_validate_ref(vector, inlen);
-	avx512valid = utf16le_validate_ref(vector, inlen);
+	avx512valid = utf16le_validate_avx512(vector, inlen);
 	if (refvalid != avx512valid) {
 		print_vector(i, vector);
 		printf("validation mismatch:\n");

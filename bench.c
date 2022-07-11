@@ -157,7 +157,7 @@ counterdiff(uint64_t out[EVENT_COUNT], uint64_t start[], uint64_t end[])
 /* https://golang.org/design/14313-benchmark-format */
 static void
 print_results(
-    const char *name,
+    const char *group, const char *name,
     struct counters *start, struct counters *end,
     const char *filename, size_t n, size_t m) {
 	uint64_t counts[EVENT_COUNT];
@@ -169,9 +169,9 @@ print_results(
 	if (name == NULL || name[0] == '\0')
 		name = " ";
 
-	printf("Benchmark%c%s/%s\t%10zu\t"
+	printf("Benchmark%c%s/%s/%s\t%10zu\t"
 	    "%.8g ns/op\t%.8g MB/s",
-	    toupper(name[0]), name+1, filename, m,
+	    toupper(group[0]), group+1, name, filename, m,
 	    (elapsed * 1e9) / m, (1e-6 * n * m) / elapsed);
 
 	if (num_counters == EVENT_COUNT) {
@@ -184,7 +184,7 @@ print_results(
 
 /* run one test case for the specified n and print the result */
 static void
-run_test(const char *name, testfunc *test, void *payload,
+run_test(const char *group, const char *name, testfunc *test, void *payload,
     const char *filename, size_t n)
 {
 	struct counters start, end;
@@ -201,19 +201,19 @@ run_test(const char *name, testfunc *test, void *payload,
 
 		res = reset_counters(&start);
 		if (res != 0) {
-			printf("FAIL\t%s\n", name);
+			printf("FAIL\t%s/%s\n", group, name);
 			return;
 		}
 
 		res = test(&start, payload, filename, n, m);
 		if (res != 0) {
-			printf("FAIL\t%s\n", name);
+			printf("FAIL\t%s/%s\n", group, name);
 			return;
 		}
 
 		res = reset_counters(&end);
 		if (res != 0) {
-			printf("FAIL\t%s\n", name);
+			printf("FAIL\t%s/%s\n", group, name);
 			return;
 		}
 
@@ -235,7 +235,7 @@ run_test(const char *name, testfunc *test, void *payload,
 			break;
 	}
 
-	print_results(name, &start, &end, filename, n, m);
+	print_results(group, name, &start, &end, filename, n, m);
 }
 
 /* test UTF-16 to UTF-8 transcoding by reading a file of n bytes from filename. */
@@ -301,7 +301,7 @@ test_utf16le_to_utf8(struct counters *c, void *payload, const char *filename, si
 		sum += method->to_utf8(out, data, len, &outlen);
 
 	if (sum != len * m)
-		fprintf(stderr, "Warning (%s/%s): encoding error\n", filename, method->name);
+		fprintf(stderr, "Warning (%s/%s): encoding error (%zu < %zu)\n", filename, method->name, sum/m, len);
 
 	free(out);
 	free(data);
@@ -369,7 +369,7 @@ test_utf16le_validate(struct counters *c, void *payload, const char *filename, s
 		sum += method->validate(data, len);
 
 	if (sum != len * m)
-		fprintf(stderr, "Warning (%s/%s): encoding error\n", filename, method->name);
+		fprintf(stderr, "Warning (%s/%s): encoding error (%zu < %zu)\n", filename, method->name, sum/m, len);
 
 	free(data);
 
@@ -453,10 +453,10 @@ main(int argc, char *argv[])
 		len = st.st_size > SIZE_MAX ? SIZE_MAX : (size_t)st.st_size;
 
 		for (j = 0; methods[j].name != NULL; j++) {
-			run_test(methods[j].name, test_utf16le_to_utf8, (void *)&methods[j], argv[i], len);
+			run_test("16LEto8", methods[j].name, test_utf16le_to_utf8, (void *)&methods[j], argv[i], len);
 
 			if (methods[j].validate != NULL)
-				run_test(methods[j].name, test_utf16le_validate, (void*)&methods[j], argv[i], len);
+				run_test("16LEvalidate", methods[j].name, test_utf16le_validate, (void*)&methods[j], argv[i], len);
 		}
 	}
 

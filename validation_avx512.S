@@ -27,8 +27,8 @@ utf16le_validate_avx512:
 .Loop:	vpandd		(%rdi), %zmm31, %zmm0	// mask input to top 6 bits
 	add		$62, %rdi
 	sub		$31, %rsi
-	vpcmpequw	%zmm30, %zmm0, %k2{%k1}	// 0xd800 <= input < 0xdc000 (high surrogate, except lookahead)
-	vpcmpequw	%zmm29, %zmm0, %k3
+	vpcmpequw	%zmm30, %zmm0, %k2{%k1}	// 0xd800 <= input < 0xdc00 (high surrogate, except lookahead)
+	vpcmpequw	%zmm29, %zmm0, %k3	// 0xdc00 <= input < 0xe000 (low surrogate)
 	kmovd		%k2, %ecx
 	kmovd		%k3, %edx
 	lea		(%rax, %rcx, 2), %eax	// high surrogates + carry
@@ -44,8 +44,8 @@ utf16le_validate_avx512:
 .Ltail:	mov		$0x7fffffff, %ecx
 	bzhi		%esi, %ecx, %ecx	// ecx = 0x7fffffff & (1 << ecx) - 1
 	kmovd		%ecx, %k4		// mask of words we want to load
-	vmovdqu16	(%rdi), %zmm0{%k4}	// load relevant tail bytes
-
+	vmovdqu16	(%rdi), %zmm0{%k4}{z}	// load relevant tail bytes
+	sub		$31, %rsi		// advance rsi for accounting in case of decoding failure
 	vpandd		%zmm31, %zmm0, %zmm0
 	vpcmpequw	%zmm30, %zmm0, %k2{%k1}
 	vpcmpequw	%Zmm29, %zmm0, %k3
@@ -65,8 +65,8 @@ utf16le_validate_avx512:
 	or		%edx, %eax		// either case?
 
 	tzcnt		%eax, %eax		// where did the decoding error occur?
-	lea		-31(%rsi, %rax, 1), %rax // calculate number of valid characters
-	sub		%r9, %rax
+	lea		-31(%r9, %rax, 1), %rax // calculate number of valid characters
+	sub		%rsi, %rax
 	vzeroupper
 	ret
 
