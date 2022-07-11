@@ -121,38 +121,27 @@ utf16le_to_utf8_avx512:
 	vpbroadcastd	.L8080e000(%rip), %zmm16 // 3 byte character tag bits
 	vmovdqa32	%zmm16, %zmm17		// same for high characters
 
+	vpandd		%zmm27, %zmm0, %zmm3	// zmm0 & 0xfc00 (prepare to check for surrogates)
+	vpcmpequw	%zmm26, %zmm3, %k4{%k1}	// 0xd800 <= zmm0 < 0xdc00 (high surrogate, except lookahead)
+	vpcmpequw	%zmm25, %zmm3, %k5	// 0xdc00 <= zmm0 < 0xe000 (low surrogate)
+
 	vextracti32x8	$1, %zmm0, %ymm2
 	vpmovzxwd	%ymm0, %zmm1		// low 16 characters as dwords
 	vpmovzxwd	%ymm2, %zmm2		// high 15 characters as dwords
 
-	vpandd		%zmm27, %zmm0, %zmm3	// zmm0 & 0xfc00 (prepare to check for surrogates)
-	vpcmpequw	%zmm26, %zmm3, %k4{%k1}	// 0xd800 <= zmm0 < 0xdc00 (high surrogate, except lookahead)
-	vpcmpequw	%zmm25, %zmm3, %k5	// 0xdc00 <= zmm0 < 0xe000 (low surrogate)
 	kortestd	%k4, %k5		// any surrogates present?
 	jz		3f			// if not, skip surrogate preprocessing
 
+	// preprocess surrogates in zmm1, zmm2
+	// input hi: 110110VU TSRQPNML  lo: 110111KJ HGFEDCBA
+	// wvuts = 0VUTS + 1 (plane shift)
+	// output: 00000000 000wvuts RQPNMLKJ HGFEDCBA
 	vpbroadcastd	.L808080f0(%rip), %zmm22
 	vpbroadcastd	.Lfca02400(%rip), %zmm24
 
 	valignd		$1, %zmm1, %zmm2, %zmm3	// low surrogates corresponding to zmm1
 	valignd		$1, %zmm2, %zmm1, %zmm4	// low surrogates corresponding to zmm2
 
-	// check for mismatched surrogates
-	kmovd		%k4, %r10d		// move hi/lo surrogate masks to general purpose registers
-	kmovd		%k5, %r11d		// this moves the validation off p0/p5, making it no longer
-						// part of the critical path
-
-	lea		(%rax, %r10, 2), %eax	// high surrogates shifted in place of low surrogates w/ carry
-	andn		%r11d, %eax, %eax	// low surrogate without high surrogate before?
-	shr		%r11d			// low surrogates shifted in place of high surrogates
-	andn		%r10d, %r11d, %r11d	// high surrogate without low surrogate after?
-	or		%r11d, %eax		// either of these two cases?
-	jnz		.Lfail			// if yes, encoding error, else we have eax == 0
-
-	// preprocess surrogates in zmm1, zmm2
-	// input hi: 110110VU TSRQPNML  lo: 110111KJ HGFEDCBA
-	// wvuts = 0VUTS + 1 (plane shift)
-	// output: 00000000 000wvuts RQPNMLKJ HGFEDCBA
 	kshiftrd	$16, %k4, %k6		// location of high surrogates in zmm2
 	vmovdqa32	%zmm22, %zmm16{%k4}	// 3 or 4 character tag bits for zmm1
 	vmovdqa32	%zmm22, %zmm17{%k6}	// ... and zmm2
@@ -164,9 +153,22 @@ utf16le_to_utf8_avx512:
 	vpaddd		%zmm3, %zmm1, %zmm1{%k4} //if 4 byte: 00000000 000wvuts RQPNMLKJ HGFEDCBA
 	vpaddd		%zmm4, %zmm2, %zmm2{%k6}
 
+	kmovd		%k4, %r10d		// move hi/lo surrogate masks to general purpose registers
+	kmovd		%k5, %r11d		// this moves the validation off p0/p5, making it no longer
+						// part of the critical path
+
+	kshiftrd	$16, %k5, %k4		// which of zmm2 correspond to low surrogates?
+
+	// check for mismatched surrogates
+	lea		(%rax, %r10, 2), %eax	// high surrogates shifted in place of low surrogates w/ carry
+	andn		%r11d, %eax, %eax	// low surrogate without high surrogate before?
+	shr		%r11d			// low surrogates shifted in place of high surrogates
+	andn		%r10d, %r11d, %r11d	// high surrogate without low surrogate after?
+	or		%r11d, %eax		// either of these two cases?
+	jnz		.Lfail			// if yes, encoding error, else we have eax == 0
+
 	// compute masks to ignore low surrogates in compress step
 	// if no surrogates occur, k4 and k5 are conveniently already clear
-	kshiftrd	$16, %k5, %k4		// which of zmm2 correspond to low surrogates?
 	shr		$30, %r10d		// set up !ZF == high surrogate carry out
 
 	// transcode 1, 2, 3, and 4 byte characters at once!
