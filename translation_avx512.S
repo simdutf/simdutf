@@ -160,19 +160,17 @@ utf16le_to_utf8_avx512:
 	kshiftrd	$16, %k5, %k4		// which of zmm2 correspond to low surrogates?
 
 	// check for mismatched surrogates
-	lea		(%rax, %r10, 2), %eax	// high surrogates shifted in place of low surrogates w/ carry
-	andn		%r11d, %eax, %eax	// low surrogate without high surrogate before?
-	shr		%r11d			// low surrogates shifted in place of high surrogates
-	andn		%r10d, %r11d, %r11d	// high surrogate without low surrogate after?
-	or		%r11d, %eax		// either of these two cases?
+	add		%r10d, %eax		// high surrogates shifted in place of low surrogates w/ carry
+	add		%r10d, %eax		// use 2x add so p6 can be used instead of p1
+	xor		%r11d, %eax		// do these match the low surrogates?
 	jnz		.Lfail			// if yes, encoding error, else we have eax == 0
 
-	// compute masks to ignore low surrogates in compress step
-	// if no surrogates occur, k4 and k5 are conveniently already clear
 	shr		$30, %r10d		// set up !ZF == high surrogate carry out
 
 	// transcode 1, 2, 3, and 4 byte characters at once!
-3:	vpmultishiftqb	%zmm1, %zmm23, %zmm3	// HGFEDCBA PNMLKJHG VUTSRQPN 00000WVU
+	// at this point, k4:k5 indicates the dwords in zmm2:zmm1 that hold low surrogates
+3:	setnz		%al			// set up surrogate carry out
+	vpmultishiftqb	%zmm1, %zmm23, %zmm3	// HGFEDCBA PNMLKJHG VUTSRQPN 00000WVU
 	vpmultishiftqb	%zmm2, %zmm23, %zmm4
 
 	vpbroadcastd	.L00010101(%rip), %zmm21
@@ -205,7 +203,6 @@ utf16le_to_utf8_avx512:
 	vpcompressb	%zmm3, %zmm3{%k2}{z}	// smoosh characters together
 	vpcompressb	%zmm4, %zmm4{%k3}{z}
 
-	setnz		%al			// set up surrogate carry out
 	popcnt		%r10, %r10		// number of UTF-8 bytes in zmm1
 	shl		$4, %r11		// ignore lookahead in zmm2
 	popcnt		%r11, %r11		// number of UTF-8 bytes in zmm2
@@ -245,9 +242,16 @@ utf16le_to_utf8_avx512:
 
 	// decoding failure: dock input to length of its valid prefix and run final iteration
 	// this is very similar to the tail processing code
-.Lfail:	tzcnt		%eax, %edx		// where did the decoding error occur?
+.Lfail:	xor		%r11d, %eax		// restore high surrogates+carry
+	andn		%r11d, %eax, %eax	// low surrogates without high surrogates before?
+	shr		%r11d			// low surrogates in place of high surrogates
+	andn		%r10d, %r11d, %r11d	// high surrogates without low surrogates after?
+	or		%r11d, %eax		// either case?
+
+	tzcnt		%eax, %edx		// where did the decoding error occur?
 	mov		$0x7fffffff, %eax
 	bzhi		%edx, %eax, %eax	// eax = 0x7fffffff & (1 << edx) - 1
+
 	kmovd		%eax, %k7		// mask of words still in the buffer
 	kmovd		%k5, %eax		// fake the surrogate carry: if an error occured due to
 	and		$1, %eax		// the carry not matching a leading low surrogate, the
