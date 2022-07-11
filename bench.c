@@ -29,17 +29,21 @@
 
 typedef size_t utf16le_to_utf8(unsigned char[restrict], const char16_t[restrict], size_t, size_t *);
 typedef size_t utf16le_buflen(size_t);
+typedef size_t utf16le_validate(const char16_t[restrict], size_t);
+
 extern utf16le_to_utf8 utf16le_to_utf8_ref, utf16le_to_utf8_avx512, utf16le_to_utf8_avx512i;
 extern utf16le_buflen utf16le_to_utf8_buflen_ref, utf16le_to_utf8_buflen_avx512, utf16le_to_utf8_buflen_avx512i;
+extern utf16le_validate utf16le_validate_ref, utf16le_validate_avx512;
 
-static const struct utf16le_to_utf8_method {
+static const struct utf16le_method {
 	const char *name;
 	utf16le_to_utf8 *to_utf8;
 	utf16le_buflen *buflen;
-} to_utf8_methods[] = {
-	{ "ref", utf16le_to_utf8_ref, utf16le_to_utf8_buflen_ref },
-	{ "avx512", utf16le_to_utf8_avx512, utf16le_to_utf8_buflen_avx512 },
-	{ "avx512i", utf16le_to_utf8_avx512i, utf16le_to_utf8_buflen_avx512i },
+	utf16le_validate *validate;
+} utf16le_methods[] = {
+	{ "ref", utf16le_to_utf8_ref, utf16le_to_utf8_buflen_ref, utf16le_validate_ref },
+	{ "avx512", utf16le_to_utf8_avx512, utf16le_to_utf8_buflen_avx512, utf16le_validate_avx512 },
+	{ "avx512i", utf16le_to_utf8_avx512i, utf16le_to_utf8_buflen_avx512i, NULL },
 	{ NULL, NULL, NULL },
 };
 
@@ -238,7 +242,7 @@ run_test(const char *name, testfunc *test, void *payload,
 static int
 test_utf16le_to_utf8(struct counters *c, void *payload, const char *filename, size_t n, size_t m)
 {
-	struct utf16le_to_utf8_method *method = (struct utf16le_to_utf8_method *)payload;
+	struct utf16le_method *method = (struct utf16le_method *)payload;
 	ssize_t count;
 	size_t len, i, rem, outlen;
 	volatile size_t sum = 0;
@@ -311,6 +315,72 @@ fail1:	free(data);
 	return (-1);
 }
 
+/* test UTF-16 validation by reading a file of n bytes from filename. */
+static int
+test_utf16le_validate(struct counters *c, void *payload, const char *filename, size_t n, size_t m)
+{
+	struct utf16le_method *method = (struct utf16le_method *)payload;
+	ssize_t count;
+	size_t len, i, rem;
+	volatile size_t sum = 0;
+	int res, fd;
+	char16_t *data;
+
+	len = n / sizeof *data;
+	data = memory_allocate(len * sizeof *data);
+	if (data == NULL) {
+		perror("memory_allocate");
+
+		return (-1);
+	}
+
+	fd = open(filename, O_RDONLY);
+	if (fd == -1) {
+		perror(filename);
+
+		goto fail1;
+	}
+
+	rem = n;
+	while (rem > 0) {
+		count = read(fd, (char *)data + (n - rem), rem);
+		if (count < 0) {
+			perror(filename);
+
+			goto fail3;
+		} else if (count == 0) {
+			fprintf(stderr, "%s: file shorter than expected (%zu B < %zu B)\n",
+			    filename, n - rem, n);
+
+			goto fail3;
+		}
+
+		rem -= count;
+	}
+
+	close(fd);
+
+	/* skip initialisation step in benchmark measurements */
+	res = reset_counters(c);
+	if (res != 0)
+		return (-1);
+
+	for (i = 0; i < m; i++)
+		sum += method->validate(data, len);
+
+	if (sum != len * m)
+		fprintf(stderr, "Warning (%s/%s): encoding error\n", filename, method->name);
+
+	free(data);
+
+	return (0);
+
+fail3:	close(fd);
+fail1:	free(data);
+
+	return (-1);
+}
+
 static void
 usage(const char *argv0)
 {
@@ -322,7 +392,7 @@ usage(const char *argv0)
 extern int
 main(int argc, char *argv[])
 {
-	static struct utf16le_to_utf8_method *methods = (struct utf16le_to_utf8_method *)to_utf8_methods;
+	static struct utf16le_method *methods = (struct utf16le_method *)utf16le_methods;
 
 	int i = 1, j, k, n;
 
@@ -347,21 +417,21 @@ main(int argc, char *argv[])
 			return (EXIT_FAILURE);
 		}
 
-		memcpy(methods, to_utf8_methods, (n+1) * sizeof *methods);
+		memcpy(methods, utf16le_methods, (n+1) * sizeof *methods);
 
 		tok = strtok(argv[2], ",");
 		j = 0;
 		while (tok != NULL) {
 			/* find the method and add it to methods */
-			for (k = 0; to_utf8_methods[k].name != NULL; k++)
-				if (strcmp(tok, to_utf8_methods[k].name) == 0)
+			for (k = 0; utf16le_methods[k].name != NULL; k++)
+				if (strcmp(tok, utf16le_methods[k].name) == 0)
 					goto found;
 
 			/* not found: */
 			fprintf(stderr, "unknown benchmark: %s\n", tok);
 			return (EXIT_FAILURE);
 
-		found:	methods[j++] = to_utf8_methods[k];
+		found:	methods[j++] = utf16le_methods[k];
 			tok = strtok(NULL, ",");
 		}
 
@@ -382,8 +452,12 @@ main(int argc, char *argv[])
 
 		len = st.st_size > SIZE_MAX ? SIZE_MAX : (size_t)st.st_size;
 
-		for (j = 0; methods[j].name != NULL; j++)
+		for (j = 0; methods[j].name != NULL; j++) {
 			run_test(methods[j].name, test_utf16le_to_utf8, (void *)&methods[j], argv[i], len);
+
+			if (methods[j].validate != NULL)
+				run_test(methods[j].name, test_utf16le_validate, (void*)&methods[j], argv[i], len);
+		}
 	}
 
 	return (EXIT_SUCCESS);

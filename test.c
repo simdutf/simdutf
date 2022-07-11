@@ -11,6 +11,9 @@ extern size_t utf16le_to_utf8_buflen_ref(size_t);
 extern size_t utf16le_to_utf8_buflen_avx512(size_t);
 extern size_t utf16le_to_utf8_buflen_avx512i(size_t);
 
+extern size_t utf16le_validate_ref(const char16_t in[restrict], size_t len);
+extern size_t utf16le_validate_avx512(const char16_t in[restrict], size_t len);
+
 /* all test vectors end in U+FFFF to allow embedded NUL characters */
 const char16_t *vectors[] = {
 	u"\uffff", /* empty string */
@@ -82,7 +85,7 @@ void print_utf8(const unsigned char *str, size_t len)
 int test(int i, const char16_t *vector)
 {
 	unsigned char *refbuf, *avx512buf, *avx512ibuf;
-	size_t reflen, avx512len, avx512ilen, inlen;
+	size_t reflen, avx512len, avx512ilen, inlen, refvalid, avx512valid;
 	size_t refxlat, avx512xlat, avx512ixlat, refout = -1, avx512out = -1, avx512iout = -1;
 	int result = 0;
 
@@ -123,6 +126,18 @@ int test(int i, const char16_t *vector)
 	refbuf[reflen] = 0xfe;
 	avx512buf[avx512len] = 0xfe;
 	avx512ibuf[avx512ilen] = 0xfe;
+
+	/* check for validation failure */
+	refvalid = utf16le_validate_ref(vector, inlen);
+	avx512valid = utf16le_validate_ref(vector, inlen);
+	if (refvalid != avx512valid) {
+		print_vector(i, vector);
+		printf("validation mismatch:\n");
+		printf("	validated: %zu (ref) vs. %zu (avx512)\n", refvalid, avx512valid);
+
+		result = 1;
+		goto end;
+	}
 
 	refxlat = utf16le_to_utf8_ref(refbuf, vector, inlen, &refout);
 	avx512xlat = utf16le_to_utf8_avx512(avx512buf, vector, inlen, &avx512out);
@@ -172,7 +187,7 @@ int test(int i, const char16_t *vector)
 		abort();
 	}
 
-	free(refbuf);
+end:	free(refbuf);
 	free(avx512buf);
 	free(avx512ibuf);
 

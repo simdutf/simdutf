@@ -28,25 +28,17 @@ utf16le_validate_ref(const char16_t buf[], size_t len)
 				break; /* surrogate split over end of buffer */
 
 			c1 = buf[pos + 1];
-			if ((c1 & 0xfc00) != 0xdc00)
+			if (c1 < 0xdc00 || 0xe000 <= c1)
 				break; /* unmatched high surrogate */
-
-			c = c1 + (c0 << 10) + 0x10000 - 0xdc00 - (0xd800 << 10);
-
-			if ((c & 0xffff) >= 0xfffe)
-				break; /* noncharacter */
 
 			rem -= 2;
 			pos += 2;
 		} else if (c0 < 0xe000)
 			break; /* unmatched low surrogate */
-		else if (0xfdd0 <= c0 && c0 < 0xfdf0)
-			break; /* noncharacter */
-		else if (c0 < 0xfffe) {
+		else {
 			rem -= 1;
 			pos += 1;
-		} else /* reject 0xfffe to distinguish UTF16-BE */
-			break; /* noncharacter */
+		}
 	}
 
 	return (len - rem);
