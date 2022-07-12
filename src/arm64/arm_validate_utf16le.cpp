@@ -23,7 +23,7 @@ const char16_t* arm_validate_utf16le(const char16_t* input, size_t size) {
             //    - low  surrogates: 0b1101'10xx'yyyy'yyyy (0xD800..0xDBFF)
             //    - high surrogates: 0b1101'11xx'yyyy'yyyy (0xDC00..0xDFFF)
             //
-            //    Fact: high surrogate has 1th bit set (3rd bit in the higher word)
+            //    Fact: high surrogate has 11th bit set (3rd bit in the higher word)
 
             // V - non-surrogate words
             //     V = not surrogates_wordmask
