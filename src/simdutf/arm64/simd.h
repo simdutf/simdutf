@@ -187,6 +187,13 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
       tmp = vpaddq_u8(tmp, tmp);
       return vgetq_lane_u16(vreinterpretq_u16_u8(tmp), 0);
     }
+
+    // Returns a 64 bit integer with every bit being replicated to 4, so in
+    // result it is 64 bit.
+    simdutf_really_inline uint64_t to_bitmask64() const {
+      return vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(*this), 4)), 0);
+    }
+
     simdutf_really_inline bool any() const { return vmaxvq_u8(*this) != 0; }
     simdutf_really_inline bool none() const { return vmaxvq_u8(*this) == 0; }
     simdutf_really_inline bool all() const { return vminvq_u8(*this) == 0xFF; }
