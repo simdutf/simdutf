@@ -303,7 +303,7 @@ simdutf_warn_unused size_t convert_valid_utf32_to_utf16(const char32_t * input, 
 simdutf_warn_unused size_t utf8_length_from_utf32(const char32_t * input, size_t length) noexcept;
 
 /**
- * Compute the number of bytes that this UTF-32LE string would require in UTF-16 format.
+ * Compute the number of two-byte words that this UTF-32LE string would require in UTF-16 format.
  *
  * This function does not validate the input.
  *
@@ -683,7 +683,7 @@ public:
   simdutf_warn_unused virtual size_t utf8_length_from_utf32(const char32_t * input, size_t length) const noexcept = 0;
 
   /**
-   * Compute the number of bytes that this UTF-32LE string would require in UTF-16 format.
+   * Compute the number of two-byte words that this UTF-32LE string would require in UTF-16 format.
    *
    * This function does not validate the input.
    *

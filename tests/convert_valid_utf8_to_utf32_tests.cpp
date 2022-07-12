@@ -1,10 +1,12 @@
 #include "simdutf.h"
 
 #include <array>
+#include <queue>
 #include <iostream>
 
 #include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_int.h>
+#include <tests/reference/encode_utf8.h>
 #include <tests/helpers/test.h>
 
 namespace {
@@ -84,6 +86,32 @@ TEST(convert_3_or_4_UTF8_bytes) {
     for (size_t size: input_size) {
       transcode_utf8_to_utf32_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
+    }
+  }
+}
+
+TEST(issue132) {
+  uint32_t seed{1234};
+
+  // range for 2,3 and 4 UTF-8 bytes 
+  simdutf::tests::helpers::RandomIntRanges random({{0x080, 0xd800-1},
+                                                    {0xe000, 0x10ffff}}, seed);
+
+  auto procedure = [&implementation](const char* utf8, size_t size, char32_t* utf32) -> size_t {
+    return implementation.convert_valid_utf8_to_utf32(utf8, size, utf32);
+  };
+
+  const size_t size = 200;
+  std::vector<uint32_t> data(size+32, '*');
+
+  for (size_t j = 0; j < 1000; j++) {
+    uint32_t non_ascii = random();
+    for (size_t i=0; i < size; i++) {
+      auto old = data[i];
+      data[i] = non_ascii;
+      transcode_utf8_to_utf32_test_base test(data);
+      ASSERT_TRUE(test(procedure));
+      data[i] = old;
     }
   }
 }
