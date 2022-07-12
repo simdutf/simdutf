@@ -15,27 +15,44 @@ const char16_t* arm_validate_utf16le(const char16_t* input, size_t size) {
         const auto t1 = in1.shr<8>();
         const simd8<uint8_t> in = simd16<uint16_t>::pack(t0, t1);
         // 1. Check whether we have any 0xD800..DFFF word (0b1101'1xxx'yyyy'yyyy).
-        const auto surrogates_wordmask = ((in & v_f8) == v_d8);
-        if(surrogates_wordmask.none()) {
+        const uint64_t surrogates_wordmask = ((in & v_f8) == v_d8).to_bitmask64();
+        if(surrogates_wordmask == 0) {
             input += 16;
         } else {
-            const auto vH = simd8<uint8_t>((in & v_fc) ==  v_dc);
-            const auto vL = simd8<uint8_t>(surrogates_wordmask).bit_andnot(vH);
-            // We are going to need these later:
-            const uint8_t low_vh = vH.first();
-            const uint8_t high_vl = vL.last();
-            // We shift vH down, possibly killing low_vh
-            const auto sh = simd8<uint8_t>({1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0xFF});
-            const auto vHshifteddown = vH.apply_lookup_16_to(sh);
-            const auto match = vHshifteddown == vL;
-            // We need to handle the fact that high_vl is unmatched.
-            // We could use this...
-            // const uint8x16_t allbutlast = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0xFF};
-            //             match = vorrq_u8(match, allbutlast);
-            // but sh will do:
-            const auto fmatch = simd8<bool>(simd8<uint8_t>(match) | sh);
-            if (fmatch.all() && low_vh == 0) {
-                input += (high_vl == 0) ? 16 : 15;
+            // 2. We have some surrogates that have to be distinguished:
+            //    - low  surrogates: 0b1101'10xx'yyyy'yyyy (0xD800..0xDBFF)
+            //    - high surrogates: 0b1101'11xx'yyyy'yyyy (0xDC00..0xDFFF)
+            //
+            //    Fact: high surrogate has 11th bit set (3rd bit in the higher word)
+
+            // V - non-surrogate words
+            //     V = not surrogates_wordmask
+            const uint64_t V = ~surrogates_wordmask;
+
+            // H - word-mask for high surrogates: the six highest bits are 0b1101'11
+            const auto vH = ((in & v_fc) ==  v_dc);
+            const uint64_t H = vH.to_bitmask64();
+
+            // L - word mask for low surrogates
+            //     L = not H and surrogates_wordmask
+            const uint64_t L = ~H & surrogates_wordmask;
+
+            const uint64_t a = L & (H >> 4); // A low surrogate must be followed by high one.
+                              // (A low surrogate placed in the 7th register's word
+                              // is an exception we handle.)
+            const uint64_t b = a << 4; // Just mark that the opposite fact is hold,
+                          // thanks to that we have only two masks for valid case.
+            const uint64_t c = V | a | b;      // Combine all the masks into the final one.
+            if (c == ~0ull) {
+                // The whole input register contains valid UTF-16, i.e.,
+                // either single words or proper surrogate pairs.
+                input += 16;
+            } else if (c == 0xfffffffffffffffull) {
+                // The 15 lower words of the input register contains valid UTF-16.
+                // The 15th word may be either a low or high surrogate. It the next
+                // iteration we 1) check if the low surrogate is followed by a high
+                // one, 2) reject sole high surrogate.
+                input += 15;
             } else {
                 return nullptr;
             }
