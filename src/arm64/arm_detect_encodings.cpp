@@ -36,11 +36,11 @@ int arm_detect_encodings(const char * buf, size_t len) {
         const auto in16 = simd16<uint16_t>::pack(v0, v1);
         const auto nextin16 = simd16<uint16_t>::pack(v2, v3);
 
-        const auto surrogates_wordmask0 = (in16 & v_f8) == v_d8;
-        const auto surrogates_wordmask1 = (nextin16 & v_f8) == v_d8;
+        const uint64_t surrogates_wordmask0 = ((in16 & v_f8) == v_d8).to_bitmask64();
+        const uint64_t surrogates_wordmask1 = ((nextin16 & v_f8) == v_d8).to_bitmask64();
 
         // Check for surrogates
-        if (!surrogates_wordmask0.none() || !surrogates_wordmask1.none()) {
+        if (surrogates_wordmask0 != 0 || surrogates_wordmask1 != 0) {
             // Cannot be UTF8
             is_utf8 = false;
             // Can still be either UTF-16LE or UTF-32LE depending on the positions of the surrogates
@@ -49,7 +49,7 @@ int arm_detect_encodings(const char * buf, size_t len) {
             // bytes of a 32-bit word since they always come in pairs in UTF-16LE.
             // Note that we always proceed in multiple of 4 before this point so there is no offset in 32-bit words.
 
-            if (((surrogates_wordmask0.to_bitmask() | surrogates_wordmask1.to_bitmask()) & 0xaaaa) != 0) {
+            if (((surrogates_wordmask0 | surrogates_wordmask1) & 0xf0f0f0f0f0f0f0f0) != 0) {
                 is_utf32 = false;
                 // Code from arm_validate_utf16le.cpp
                 // Not efficient, we do not process surrogates_wordmask1
@@ -59,50 +59,54 @@ int arm_detect_encodings(const char * buf, size_t len) {
                 const auto v_fc = simd8<uint8_t>::splat(0xfc);
                 const auto v_dc = simd8<uint8_t>::splat(0xdc);
 
-                const auto vH0 = simd8<uint8_t>((in16 & v_fc) ==  v_dc);
-                const auto vL0 = simd8<uint8_t>(surrogates_wordmask0).bit_andnot(vH0);
+                const uint64_t V0 = ~surrogates_wordmask0;
 
-                const uint8_t low_vh0 = vH0.first();
-                const uint8_t high_vl0 = vL0.last();
+                const auto vH0 = ((in16 & v_fc) ==  v_dc);
+                const uint64_t H0 = vH0.to_bitmask64();
 
-                const auto sh0 = simd8<uint8_t>({1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0xFF});
-                const auto vHshifteddown0 = vH0.apply_lookup_16_to(sh0);
-                const auto match0 = vHshifteddown0 == vL0;
+                const uint64_t L0 = ~H0 & surrogates_wordmask0;
 
-                const auto fmatch0 = simd8<bool>(simd8<uint8_t>(match0) | sh0);
+                const uint64_t a0 = L0 & (H0 >> 4);
 
-                if (fmatch0.all() && low_vh0 == 0) {
-                    input += (high_vl0 == 0) ? 16 : 15;
+                const uint64_t b0 = a0 << 4;
+
+                const uint64_t c0 = V0 | a0 | b0;
+                if (c0 == ~0ull) {
+                    input += 16;
+                } else if (c0 == 0xfffffffffffffffull) {
+                    input += 15;
                 } else {
                     is_utf16 = false;
                     break;
                 }
 
-                 while (input + 16 < end16) {
+                while (input + 16 < end16) {
                     const auto in0 = simd16<uint16_t>(input);
                     const auto in1 = simd16<uint16_t>(input + simd16<uint16_t>::SIZE / sizeof(char16_t));
                     const auto t0 = in0.shr<8>();
                     const auto t1 = in1.shr<8>();
                     const simd8<uint8_t> in_16 = simd16<uint16_t>::pack(t0, t1);
 
-                    const auto surrogates_wordmask = ((in_16 & v_f8) == v_d8);
-                    if(surrogates_wordmask.none()) {
+                    const uint64_t surrogates_wordmask = ((in_16 & v_f8) == v_d8).to_bitmask64();
+                    if(surrogates_wordmask == 0) {
                         input += 16;
                     } else {
-                        const auto vH = simd8<uint8_t>((in_16 & v_fc) ==  v_dc);
-                        const auto vL = simd8<uint8_t>(surrogates_wordmask).bit_andnot(vH);
+                        const uint64_t V = ~surrogates_wordmask;
 
-                        const uint8_t low_vh = vH.first();
-                        const uint8_t high_vl = vL.last();
+                        const auto vH = ((in_16 & v_fc) ==  v_dc);
+                        const uint64_t H = vH.to_bitmask64();
 
-                        const auto sh = simd8<uint8_t>({1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0xFF});
-                        const auto vHshifteddown = vH.apply_lookup_16_to(sh);
-                        const auto match = vHshifteddown == vL;
+                        const uint64_t L = ~H & surrogates_wordmask;
 
-                        const auto fmatch = simd8<bool>(simd8<uint8_t>(match) | sh);
+                        const uint64_t a = L & (H >> 4);
 
-                        if (fmatch.all() && low_vh == 0) {
-                            input += (high_vl == 0) ? 16 : 15;
+                        const uint64_t b = a << 4;
+
+                        const uint64_t c = V | a | b;
+                        if (c == ~0ull) {
+                            input += 16;
+                        } else if (c == 0xfffffffffffffffull) {
+                            input += 15;
                         } else {
                             is_utf16 = false;
                             break;
