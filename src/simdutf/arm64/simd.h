@@ -188,7 +188,7 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
       return vgetq_lane_u16(vreinterpretq_u16_u8(tmp), 0);
     }
 
-    // Returns a 64 bit integer with every bit being replicated to 4, so in
+    // Returns 4-bit out of each byte, alternating between the high 4 bits and low bits
     // result it is 64 bit.
     // This method is expected to be faster than none() and is equivalent
     // when the vector register is the result of a comparison, with byte
