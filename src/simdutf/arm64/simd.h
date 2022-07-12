@@ -190,6 +190,9 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
 
     // Returns a 64 bit integer with every bit being replicated to 4, so in
     // result it is 64 bit.
+    // This method is expected to be faster than none() and is equivalent
+    // when the vector register is the result of a comparison, with byte
+    // values 0xff and 0x00.
     simdutf_really_inline uint64_t to_bitmask64() const {
       return vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(*this), 4)), 0);
     }
