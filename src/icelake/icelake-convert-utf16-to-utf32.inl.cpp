@@ -64,15 +64,17 @@ std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf
 
         //  5. Store all valid UTF-32 words (only low surrogate positions are invalid)
         const __m512i compressed_first = _mm512_maskz_compress_epi32((__mmask16)(~L), utf32_first);
-        const auto count_first = count_ones((uint16_t)(~L));
-        _mm512_mask_storeu_epi32((__m512i *) utf32_output, __mmask16((1 << count_first) - 1),compressed_first);
-        utf32_output += count_first;
+        _mm512_storeu_epi32((__m512i *) utf32_output, compressed_first);
+        utf32_output += count_ones((uint16_t)(~L));
         const __m512i compressed_second = _mm512_maskz_compress_epi32((__mmask16)((~L)>>16), utf32_second);
-        const auto count_second = count_ones((~L)>>16);
-        _mm512_mask_storeu_epi32((__m512i *) utf32_output, __mmask16((1 << count_second) - 1), compressed_second);
-        utf32_output += count_second;
+        _mm512_storeu_epi32((__m512i *) utf32_output, compressed_second);
+        utf32_output += count_ones((~L)>>16);
         // Only process 31 words, but keep track of the 32nd word as a lookahead/carry for next iteration
-        buf += 31;
+        buf += 32;
+        if ((H & 0x80000000)) {
+          buf--;
+          utf32_output--;
+        }
       } else {
         // invalid case
         return std::make_pair(nullptr, utf32_output);
