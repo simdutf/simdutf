@@ -8,23 +8,28 @@ project(simdutf
 
 set(SIMDUTF_LIB_VERSION "1.0.1" CACHE STRING "simdutf library version")
 set(SIMDUTF_LIB_SOVERSION "1" CACHE STRING "simdutf library soversion")
+option(SIMDUTF_TESTS "Whether the tests are included as part of the CMake Build." ON)
+option(SIMDUTF_BENCHMARKS "Whether the benchmarks are included as part of the CMake Build." ON)
 
 include(GNUInstallDirs)
 include(cmake/simdutf-flags.cmake)
 
 set(SIMDUTF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-enable_testing()
 add_subdirectory(src)
-add_subdirectory(tests)
 add_subdirectory(singleheader)
-
-if(CMAKE_CXX_COMPILER_ID MATCHES GNU AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0)
-  message(STATUS "The benchmark tool requires GCC 8.0 or better.")
-else()
-  add_subdirectory(benchmarks)
+if (SIMDUTF_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
 endif()
 
+if (SIMDUTF_BENCHMARKS)
+  if(CMAKE_CXX_COMPILER_ID MATCHES GNU AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0)
+    message(STATUS "The benchmark tool requires GCC 8.0 or better.")
+  else()
+    add_subdirectory(benchmarks)
+  endif()
+endif()
 
 # ---- Install rules ----
 add_library(simdutf::simdutf ALIAS simdutf)
