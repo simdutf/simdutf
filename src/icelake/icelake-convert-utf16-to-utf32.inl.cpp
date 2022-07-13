@@ -39,31 +39,18 @@ std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf
             |1101.10aa.aaaa.aaaa|1101.10bb.bbbb.bbbb|
                 high surrogate      low surrogate
         */
-
-        /*  1. Load an offset by one 16-bit word to align high surrogates with low surrogates
-            in      |1101.11aa.aaaa.aaaa|1101.10bb.bbbb.bbbb|
-            shifted |????.????.????.????|1101.11aa.aaaa.aaaa|
-        */
-        const __m512i shift_right = _mm512_setr_epi64(
-              0x0004000300020001,
-              0x0008000700060005,
-              0x000c000b000a0009,
-              0x0010000f000e000d,
-              0x0014001300120011,
-              0x0018001700160015,
-              0x001c001b001a0019,
-              0x0000001f001e001d
-        );
-        const __m512i shifted = _mm512_permutexvar_epi16(shift_right, in);
-
-        /*  2. Expand all words to 32-bit words
-            in      |0000.0000.0000.0000.1101.11aa.aaaa.aaaa|0000.0000.0000.0000.1101.10bb.bbbb.bbbb|
-            shifted |????.????.????.????.????.????.????.????|0000.0000.0000.0000.1101.11aa.aaaa.aaaa|
+        /*  1. Expand all words to 32-bit words
+            in  |0000.0000.0000.0000.1101.11aa.aaaa.aaaa|0000.0000.0000.0000.1101.10bb.bbbb.bbbb|
         */
         const __m512i first = _mm512_cvtepu16_epi32(_mm512_castsi512_si256(in));
         const __m512i second = _mm512_cvtepu16_epi32(_mm512_extracti32x8_epi32(in,1));
-        const __m512i shifted_first = _mm512_cvtepu16_epi32(_mm512_castsi512_si256(shifted));
-        const __m512i shifted_second = _mm512_cvtepu16_epi32(_mm512_extracti32x8_epi32(shifted,1));
+
+        /*  2. Shift by one 16-bit word to align high surrogates with low surrogates
+            in      |0000.0000.0000.0000.1101.11aa.aaaa.aaaa|0000.0000.0000.0000.1101.10bb.bbbb.bbbb|
+            shifted |????.????.????.????.????.????.????.????|0000.0000.0000.0000.1101.11aa.aaaa.aaaa|
+        */
+        const __m512i shifted_first = _mm512_alignr_epi32(second, first, 1);
+        const __m512i shifted_second = _mm512_alignr_epi32(_mm512_setzero_si512(), second, 1);
 
         /*  3. Align all low surrogates in first and second by shifting to the left by 10 bits
             |0000.0000.0000.0000.1101.11aa.aaaa.aaaa|0000.0011.0110.bbbb.bbbb.bb00.0000.0000|
