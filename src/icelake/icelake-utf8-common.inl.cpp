@@ -5,7 +5,7 @@ using utf8_to_utf32_result = std::pair<const char*, uint32_t*>;
 
 
 // See: http://0x80.pl/notesen/2021-12-22-test-and-clear-bit.html
-bool test_and_clear_bit(uint32_t& val, int bitpos) {
+simdutf_really_inline bool test_and_clear_bit(uint32_t& val, int bitpos) {
 #if SIMDUTF_REGULAR_VISUAL_STUDIO
     static_assert(sizeof(uint32_t) == sizeof(long), "assuming that uint32_t is a long.");
     return _bittestandreset(reinterpret_cast<long*>(&val), long(bitpos));
@@ -45,15 +45,12 @@ bool test_and_clear_bit(uint32_t& val, int bitpos) {
 
     Returns how many 16-bit words were stored.
 */
-size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
+simdutf_really_inline size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
     const __mmask16 valid = uint16_t((1 << count) - 1);
     // 1. check if we have any surrogate pairs
     const __m512i v_0000_ffff = _mm512_set1_epi32(0x0000ffff);
     const __mmask16 sp_mask = _mm512_mask_cmpgt_epu32_mask(valid, utf32, v_0000_ffff);
     if (sp_mask == 0) {
-        // XXX: Masked vmovdqa is slow;
-        //      Check: If we processed larger blocks, we can
-        //      assume that the unmasked store won't overflow.
         _mm256_mask_storeu_epi16((__m256i*)output, valid, _mm512_cvtepi32_epi16(utf32));
         return count;
     }
@@ -156,7 +153,7 @@ __m512i rotate_by_N_epi8(const __m512i input) {
     0x8080800N, where N is 4 higest bits from the leading byte; 0x80 resets
     corresponding bytes during pshufb.
 */
-__m512i expanded_utf8_to_utf32(__m512i char_class, __m512i utf8) {
+simdutf_really_inline __m512i expanded_utf8_to_utf32(__m512i char_class, __m512i utf8) {
     /*
         Input:
         - utf8: bytes stored at separate 32-bit words
