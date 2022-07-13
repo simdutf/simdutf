@@ -367,7 +367,10 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
     // a variable when calling the benchmark program. E.g.,
     // SIMDUTF_SKIP_CPU_CHECK=ON benchmark -F myfile.txt
     // This might result in a crash (E.g., Illegal instruction).
+    SIMDUTF_PUSH_DISABLE_WARNINGS
+    SIMDUTF_DISABLE_DEPRECATED_WARNING // Disable CRT_SECURE warning on MSVC: manually verified this is safe
     static const char * skip_check = getenv("SIMDUTF_SKIP_CPU_CHECK");
+    SIMDUTF_POP_DISABLE_WARNINGS
     if(!skip_check && !implementation->supported_by_runtime_system()) {
         std::cout << procedure_name << ": unsupported by the system\n";
         return;
