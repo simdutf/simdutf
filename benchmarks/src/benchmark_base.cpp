@@ -104,8 +104,6 @@ namespace simdutf::benchmarks {
         const double gbs = data_size / best_time;
         const double gcs = character_count / best_time;
         const double byte_per_char = data_size / character_count;
-
-        const double gbs_avs = data_size / avg_time;
         const double error_margin = (avg_time / best_time - 1) * 100;
 
         if (all.has_events) {
