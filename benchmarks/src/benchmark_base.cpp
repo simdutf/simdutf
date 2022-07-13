@@ -99,12 +99,14 @@ namespace simdutf::benchmarks {
 
 
     void BenchmarkBase::print_summary(const event_aggregate& all, double data_size, double character_count) const {
-        const double gbs = data_size / all.best.elapsed_ns();
-        const double gcs = character_count / all.best.elapsed_ns();
+        const double best_time = all.best.elapsed_ns();
+        const double avg_time = all.total.elapsed_ns() / all.iterations;
+        const double gbs = data_size / best_time;
+        const double gcs = character_count / best_time;
         const double byte_per_char = data_size / character_count;
 
-        const double gbs_avs = data_size / (all.total.elapsed_ns()/all.iterations);
-        const double error_margin = (gbs-gbs_avs)/gbs_avs * 100;
+        const double gbs_avs = data_size / avg_time;
+        const double error_margin = (avg_time / best_time - 1) * 100;
 
         if (all.has_events) {
             const double _1GHz = 1000000000.0;

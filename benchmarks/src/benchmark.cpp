@@ -333,8 +333,7 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         // this is a special case
         if(name == "convert_utf8_to_utf16") {
           run_convert_utf8_to_utf16_hoehrmann(iterations);
-        }
-        if(name == "convert_utf8_to_utf32") {
+        } else if(name == "convert_utf8_to_utf32") {
           run_convert_utf8_to_utf32_hoehrmann(iterations);
         } else {
           std::cerr << "unrecognized:" << procedure_name << "\n";
@@ -364,7 +363,15 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
     if (implementation == nullptr) {
         throw std::runtime_error("Wrong implementation " + impl);
     }
-
+    // If you want to skip the CPU feature checks, you can set
+    // a variable when calling the benchmark program. E.g.,
+    // SIMDUTF_SKIP_CPU_CHECK=ON benchmark -F myfile.txt
+    // This might result in a crash (E.g., Illegal instruction).
+    static const char * skip_check = getenv("SIMDUTF_SKIP_CPU_CHECK");
+    if(!skip_check && !implementation->supported_by_runtime_system()) {
+        std::cout << procedure_name << ": unsupported by the system\n";
+        return;
+    }
     if (name == "validate_utf8") {
         run_validate_utf8(*implementation, iterations);
     } else if (name == "validate_utf16") {
@@ -413,11 +420,11 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         std::cerr << " Aborting ! " << std::endl;
         abort();
     }
-    if (impl.find("avx512") != std::string::npos) {
-        // We pause for after each AVX-512 call to make sure
-        // that other benchmarks are not affected by frequency throttling.
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
+    // We pause for after each call to make sure
+    // that other benchmarks are not affected by frequency throttling.
+    // This was initially introduced for AVX-512 only, but it is probably
+    // wise to have it always.
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
 
 void Benchmark::run_validate_utf8(const simdutf::implementation& implementation, size_t iterations) {
