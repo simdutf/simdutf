@@ -3,15 +3,40 @@
 using utf8_to_utf16_result = std::pair<const char*, char16_t*>;
 using utf8_to_utf32_result = std::pair<const char*, uint32_t*>;
 
+
 // See: http://0x80.pl/notesen/2021-12-22-test-and-clear-bit.html
 bool test_and_clear_bit(uint32_t& val, int bitpos) {
+#if SIMDUTF_REGULAR_VISUAL_STUDIO
+    return _bittestandreset(val, bitpos);
+#else
+    /* Non-Microsoft C/C++-compatible compiler, assumes that it supports inline
+    * assembly */
+    uint32_t flag = 0;
+
+    asm (
+         "btr  %[bitpos], %[val]    \n"
+         "setc %b[flag]             \n"
+         : [val] "=r" (val),
+           [flag] "=r" (flag)
+         : [bitpos] "r" (bitpos),
+           "0" (val),
+           "1" (flag)
+         : "cc"
+     );
+
+     return flag;
+#endif  // _MSC_VER
+    /***
+    * portable way:
     const uint32_t bitmask = uint32_t(1) << bitpos;
     const uint32_t old = val;
 
     val &= ~bitmask;
 
     return val < old;
+    ***/
 }
+
 
 /*
     utf32_to_utf16 converts `count` lower UTF-32 words
