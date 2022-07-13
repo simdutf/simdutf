@@ -6,28 +6,20 @@
 */
 std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) {
   const char16_t* end = buf + len;
-  const __m512i v_f800 = _mm512_set1_epi16((uint16_t)0xf800);
+  const __m512i v_fc00 = _mm512_set1_epi16((uint16_t)0xfc00);
   const __m512i v_d800 = _mm512_set1_epi16((uint16_t)0xd800);
+  const __m512i v_dc00 = _mm512_set1_epi16((uint16_t)0xdc00);
 
   while (buf + 32 <= end) {
     __m512i in = _mm512_loadu_si512((__m512i*)buf);
 
-    // S - bitmask for surrogates
-    const __mmask32 S = _mm512_cmpeq_epi16_mask(_mm512_and_si512(in, v_f800), v_d800);
+    // L - bitmask for surrogates
+    const __mmask32 L = _mm512_cmpeq_epi16_mask(_mm512_and_si512(in, v_fc00), v_d800);
+    // H - bitmask for high surrogates
+    const __mmask32 H = _mm512_cmpeq_epi16_mask(_mm512_and_si512(in, v_fc00), v_dc00);
 
-    if (S == 0x00000000) {
-    // extend all thirty-two 16-bit words to thirty-two 32-bit words
-      _mm512_storeu_si512((__m512i *)(utf32_output), _mm512_cvtepu16_epi32(_mm512_castsi512_si256(in)));
-      _mm512_storeu_si512((__m512i *)(utf32_output + 16), _mm512_cvtepu16_epi32(_mm512_extracti32x8_epi32(in,1)));
-      utf32_output += 32;
-      buf += 32;
-    // surrogate pair(s) in a register
-    } else {
-      const __m512i v_fc00 = _mm512_set1_epi16((uint16_t)0xfc00);
-      // L - bitmask for low surrogates
-      const __mmask32 L = _mm512_cmpeq_epi16_mask(_mm512_and_si512(in, v_fc00), v_d800);
-      // H - bitmask for high surrogates
-      const __mmask32 H = ~L & S;
+    if ((H|L)) {
+      // surrogate pair(s) in a register
       const __mmask32 V = (H ^ (L << 1));   // A low surrogate must be followed by high one and a high one must be preceded by a low one.
                                             // If valid, V should be equal to 0. We must also handle when the last word of the chunk is a
                                             // low surrogate.
@@ -86,7 +78,15 @@ std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf
         // invalid case
         return std::make_pair(nullptr, utf32_output);
       }
+    } else {
+      // no surrogates
+      // extend all thirty-two 16-bit words to thirty-two 32-bit words
+      _mm512_storeu_si512((__m512i *)(utf32_output), _mm512_cvtepu16_epi32(_mm512_castsi512_si256(in)));
+      _mm512_storeu_si512((__m512i *)(utf32_output + 16), _mm512_cvtepu16_epi32(_mm512_extracti32x8_epi32(in,1)));
+      utf32_output += 32;
+      buf += 32;
     }
   } // while
+
   return std::make_pair(buf, utf32_output);
 }
