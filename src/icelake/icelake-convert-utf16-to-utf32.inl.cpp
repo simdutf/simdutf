@@ -85,6 +85,7 @@ std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf
       _mm512_storeu_si512((__m512i *)(utf32_output + 16), _mm512_cvtepu16_epi32(_mm512_extracti32x8_epi32(in,1)));
       utf32_output += 32;
       buf += 32;
+      carry = 0;
     }
   } // while
 
