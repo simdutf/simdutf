@@ -10,7 +10,9 @@ std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf
   const __m512i v_d800 = _mm512_set1_epi16((uint16_t)0xd800);
   const __m512i v_dc00 = _mm512_set1_epi16((uint16_t)0xdc00);
 
-  while (buf + 32 <= end) {
+  __mmask32 carry{0};
+
+  while (buf + 31 <= end) {
     __m512i in = _mm512_loadu_si512((__m512i*)buf);
 
     // H - bitmask for high surrogates
@@ -20,9 +22,8 @@ std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf
 
     if ((H|L)) {
       // surrogate pair(s) in a register
-      const __mmask32 V = (L ^ (H << 1));   // A high surrogate must be followed by low one and a low one must be preceded by a high one.
-                                            // If valid, V should be equal to 0. We must also handle when the last word of the chunk is a
-                                            // low surrogate.
+      const __mmask32 V = (L ^ (carry | (H << 1)));   // A high surrogate must be followed by low one and a low one must be preceded by a high one.
+                                                      // If valid, V should be equal to 0
 
       if(V == 0) {
         // valid case
@@ -62,19 +63,17 @@ std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf
         const __m512i added_second = _mm512_mask_add_epi32(aligned_second, (__mmask16)(H>>16), aligned_second, shifted_second);
         const __m512i utf32_second = _mm512_mask_add_epi32(added_second, (__mmask16)(H>>16), added_second, constant);
 
-        //  5. Store all valid UTF-32 words (only low surrogate positions are invalid)
-        const __m512i compressed_first = _mm512_maskz_compress_epi32((__mmask16)(~L), utf32_first);
+        //  5. Store all valid UTF-32 words (low surrogate positions and 32nd word are invalid)
+        const __mmask32 valid = ~L & 0x7fffffff;
+        const __m512i compressed_first = _mm512_maskz_compress_epi32((__mmask16)(valid), utf32_first);
         _mm512_storeu_epi32((__m512i *) utf32_output, compressed_first);
-        utf32_output += count_ones((uint16_t)(~L));
-        const __m512i compressed_second = _mm512_maskz_compress_epi32((__mmask16)((~L)>>16), utf32_second);
+        utf32_output += count_ones((uint16_t)(valid));
+        const __m512i compressed_second = _mm512_maskz_compress_epi32((__mmask16)(valid >> 16), utf32_second);
         _mm512_storeu_epi32((__m512i *) utf32_output, compressed_second);
-        utf32_output += count_ones((~L)>>16);
-        // Only process 31 words, but keep track of the 32nd word as a lookahead/carry for next iteration
-        buf += 32;
-        if ((H & 0x80000000)) {
-          buf--;
-          utf32_output--;
-        }
+        utf32_output += count_ones(valid >>16);
+        // Only process 31 words, but keep track if the 31st word is a high surrogate as a carry
+        buf += 31;
+        carry = (H >> 30) & 0x1;
       } else {
         // invalid case
         return std::make_pair(nullptr, utf32_output);
@@ -89,5 +88,5 @@ std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf
     }
   } // while
 
-  return std::make_pair(buf, utf32_output);
+  return std::make_pair(buf+carry, utf32_output);
 }
