@@ -112,7 +112,18 @@ simdutf_really_inline __m512i expand_utf8_to_utf32(__m512i input) {
     return expanded_utf8_to_utf32(char_class, input);
 }
 
-#define SIMDUTF_ICELAKE_TRANSCODE16(LANE0, LANE1)                                                                            \
+#define SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(INPUT, VALID_COUNT)                                    \
+{                                                                                                   \
+    if (UTF32) {                                                                                    \
+        const __mmask16 valid_mask = uint16_t((1 << VALID_COUNT) - 1);                              \
+        _mm512_mask_storeu_epi32((__m512i*)output, valid_mask, INPUT);                              \
+        output += VALID_COUNT;                                                                      \
+    } else {                                                                                        \
+        output += utf32_to_utf16(INPUT, VALID_COUNT, reinterpret_cast<char16_t *>(output));         \
+    }                                                                                               \
+}
+
+#define SIMDUTF_ICELAKE_TRANSCODE16(LANE0, LANE1)                                                            \
         {                                                                                                    \
             const __m512i merged = _mm512_mask_mov_epi32(LANE0, 0x1000, LANE1);                              \
             const __m512i expand_ver2 = _mm512_setr_epi64(                                                   \

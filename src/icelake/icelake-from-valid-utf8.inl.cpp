@@ -54,27 +54,12 @@ std::pair<const char*, OUTPUT*> valid_utf8_to_fixed_length(const char* str, size
             vec0 = _mm512_mask_expand_epi32(vec0, __mmask16(((1<<valid_count1)-1)<<valid_count0), vec1);
             valid_count0 += valid_count1;
             vec0 = expand_utf8_to_utf32(vec0);
-            if (UTF32) {
-                const __mmask16 valid = uint16_t((1 << valid_count0) - 1);
-                _mm512_mask_storeu_epi32((__m512i*)output, valid, vec0);
-                output += valid_count0;
-            } else {
-                output += utf32_to_utf16(vec0, valid_count0, reinterpret_cast<char16_t *>(output));
-            } 
+            SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec0, valid_count0)
         } else {
             vec0 = expand_utf8_to_utf32(vec0);
             vec1 = expand_utf8_to_utf32(vec1);
-            if (UTF32) {
-                const __mmask16 valid0 = uint16_t((1 << valid_count0) - 1);
-                _mm512_mask_storeu_epi32((__m512i*)output, valid0, vec0);
-                output += valid_count0;
-                const __mmask16 valid1 = uint16_t((1 << valid_count1) - 1);
-                _mm512_mask_storeu_epi32((__m512i*)output, valid1, vec1);
-                output += valid_count1;
-            } else {
-                output += utf32_to_utf16(vec0, valid_count0, reinterpret_cast<char16_t *>(output));
-                output += utf32_to_utf16(vec1, valid_count1, reinterpret_cast<char16_t *>(output));
-            } 
+            SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec0, valid_count0)
+            SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec1, valid_count1)
         }
         const __m512i lane3 = broadcast_epi128<3>(utf8);
         int valid_count2;
@@ -88,27 +73,12 @@ std::pair<const char*, OUTPUT*> valid_utf8_to_fixed_length(const char* str, size
             vec2 = _mm512_mask_expand_epi32(vec2, __mmask16(((1<<valid_count3)-1)<<valid_count2), vec3);
             valid_count2 += valid_count3;
             vec2 = expand_utf8_to_utf32(vec2);
-            if (UTF32) {
-                const __mmask16 valid = uint16_t((1 << valid_count2) - 1);
-                _mm512_mask_storeu_epi32((__m512i*)output, valid, vec2);
-                output += valid_count2;
-            } else {
-                output += utf32_to_utf16(vec2, valid_count2, reinterpret_cast<char16_t *>(output));
-            } 
+            SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec2, valid_count2)
         } else {
             vec2 = expand_utf8_to_utf32(vec2);
             vec3 = expand_utf8_to_utf32(vec3);
-            if (UTF32) {
-                const __mmask16 valid2 = uint16_t((1 << valid_count2) - 1);
-                _mm512_mask_storeu_epi32((__m512i*)output, valid2, vec2);
-                output += valid_count2;
-                const __mmask16 valid3 = uint16_t((1 << valid_count3) - 1);
-                _mm512_mask_storeu_epi32((__m512i*)output, valid3, vec3);
-                output += valid_count3;
-            } else {
-                output += utf32_to_utf16(vec2, valid_count2, reinterpret_cast<char16_t *>(output));
-                output += utf32_to_utf16(vec3, valid_count3, reinterpret_cast<char16_t *>(output));
-            } 
+            SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec2, valid_count2)
+            SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec3, valid_count3)
         }
         ptr += 4*16;
     }
@@ -133,29 +103,14 @@ std::pair<const char*, OUTPUT*> valid_utf8_to_fixed_length(const char* str, size
                 vec0 = _mm512_mask_expand_epi32(vec0, __mmask16(((1<<valid_count1)-1)<<valid_count0), vec1);
                 valid_count0 += valid_count1;
                 vec0 = expand_utf8_to_utf32(vec0);
-                if (UTF32) {
-                    const __mmask16 valid = uint16_t((1 << valid_count0) - 1);
-                    _mm512_mask_storeu_epi32((__m512i*)output, valid, vec0);
-                    output += valid_count0;
-                } else {
-                    output += utf32_to_utf16(vec0, valid_count0, reinterpret_cast<char16_t *>(output));
-                } 
+                SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec0, valid_count0)
             } else {
                 vec0 = expand_utf8_to_utf32(vec0);
                 vec1 = expand_utf8_to_utf32(vec1);
-                if (UTF32) {
-                    const __mmask16 valid0 = uint16_t((1 << valid_count0) - 1);
-                    _mm512_mask_storeu_epi32((__m512i*)output, valid0, vec0);
-                    output += valid_count0;
-                    const __mmask16 valid1 = uint16_t((1 << valid_count1) - 1);
-                    _mm512_mask_storeu_epi32((__m512i*)output, valid1, vec1);
-                    output += valid_count1;
-               } else {
-                    output += utf32_to_utf16(vec0, valid_count0, reinterpret_cast<char16_t *>(output));
-                    output += utf32_to_utf16(vec1, valid_count1, reinterpret_cast<char16_t *>(output));
-                } 
+                SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec0, valid_count0)
+                SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec1, valid_count1)
             }
-        
+
             const __m512i lane3 = broadcast_epi128<3>(utf8);
             SIMDUTF_ICELAKE_TRANSCODE16(lane2, lane3)
 
