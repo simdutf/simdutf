@@ -43,7 +43,6 @@ std::pair<const char*, OUTPUT*> valid_utf8_to_fixed_length(const char* str, size
             continue;
         }
 
-
         const __m512i lane0 = broadcast_epi128<0>(utf8);
         const __m512i lane1 = broadcast_epi128<1>(utf8);
         int valid_count0;
@@ -114,8 +113,6 @@ std::pair<const char*, OUTPUT*> valid_utf8_to_fixed_length(const char* str, size
         ptr += 4*16;
     }
 
-    // For the final pass, we validate 64 bytes, but we only transcode
-    // 3*16 bytes, so we may end up double-validating 16 bytes.
     if (ptr + 64 <= end) {
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
         const __m512i v_80 = _mm512_set1_epi8(char(0x80));
@@ -127,12 +124,38 @@ std::pair<const char*, OUTPUT*> valid_utf8_to_fixed_length(const char* str, size
         } else {
             const __m512i lane0 = broadcast_epi128<0>(utf8);
             const __m512i lane1 = broadcast_epi128<1>(utf8);
-
-            SIMDUTF_ICELAKE_TRANSCODE16(lane0, lane1)
-
+            int valid_count0;
+            __m512i vec0 = expand_and_identify(lane0, lane1, valid_count0);
             const __m512i lane2 = broadcast_epi128<2>(utf8);
-            SIMDUTF_ICELAKE_TRANSCODE16(lane1, lane2)
-
+            int valid_count1;
+            __m512i vec1 = expand_and_identify(lane1, lane2, valid_count1);
+            if(valid_count0 + valid_count1 <= 16) {
+                vec0 = _mm512_mask_expand_epi32(vec0, __mmask16(((1<<valid_count1)-1)<<valid_count0), vec1);
+                valid_count0 += valid_count1;
+                vec0 = expand_utf8_to_utf32(vec0);
+                if (UTF32) {
+                    const __mmask16 valid = uint16_t((1 << valid_count0) - 1);
+                    _mm512_mask_storeu_epi32((__m512i*)output, valid, vec0);
+                    output += valid_count0;
+                } else {
+                    output += utf32_to_utf16(vec0, valid_count0, reinterpret_cast<char16_t *>(output));
+                } 
+            } else {
+                vec0 = expand_utf8_to_utf32(vec0);
+                vec1 = expand_utf8_to_utf32(vec1);
+                if (UTF32) {
+                    const __mmask16 valid0 = uint16_t((1 << valid_count0) - 1);
+                    _mm512_mask_storeu_epi32((__m512i*)output, valid0, vec0);
+                    output += valid_count0;
+                    const __mmask16 valid1 = uint16_t((1 << valid_count1) - 1);
+                    _mm512_mask_storeu_epi32((__m512i*)output, valid1, vec1);
+                    output += valid_count1;
+               } else {
+                    output += utf32_to_utf16(vec0, valid_count0, reinterpret_cast<char16_t *>(output));
+                    output += utf32_to_utf16(vec1, valid_count1, reinterpret_cast<char16_t *>(output));
+                } 
+            }
+        
             const __m512i lane3 = broadcast_epi128<3>(utf8);
             SIMDUTF_ICELAKE_TRANSCODE16(lane2, lane3)
 
