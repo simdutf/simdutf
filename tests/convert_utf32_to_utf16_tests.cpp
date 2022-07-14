@@ -26,7 +26,7 @@ TEST(convert_into_2_UTF16_bytes) {
                                                      {0xe000, 0xffff}}, 0);
 
     auto procedure = [&implementation](const char32_t* utf32, size_t size, char16_t* utf16) -> size_t {
-      return implementation.convert_utf32_to_utf16(utf32, size, utf16);
+      return implementation.convert_utf32_to_utf16le(utf32, size, utf16);
     };
     auto size_procedure = [&implementation](const char32_t* utf32, size_t size) -> size_t {
       return implementation.utf16_length_from_utf32(utf32, size);
@@ -46,7 +46,7 @@ TEST(convert_into_4_UTF16_bytes) {
     simdutf::tests::helpers::RandomIntRanges random({{0x10000, 0x10ffff}}, 0);
 
     auto procedure = [&implementation](const char32_t* utf32, size_t size, char16_t* utf16) -> size_t {
-      return implementation.convert_utf32_to_utf16(utf32, size, utf16);
+      return implementation.convert_utf32_to_utf16le(utf32, size, utf16);
     };
     auto size_procedure = [&implementation](const char32_t* utf32, size_t size) -> size_t {
       return implementation.utf16_length_from_utf32(utf32, size);
@@ -68,7 +68,7 @@ TEST(convert_into_2_or_4_UTF16_bytes) {
                                                      {0x10000, 0x10ffff}}, 0);
 
     auto procedure = [&implementation](const char32_t* utf32, size_t size, char16_t* utf16) -> size_t {
-      return implementation.convert_utf32_to_utf16(utf32, size, utf16);
+      return implementation.convert_utf32_to_utf16le(utf32, size, utf16);
     };
     auto size_procedure = [&implementation](const char32_t* utf32, size_t size) -> size_t {
       return implementation.utf16_length_from_utf32(utf32, size);
@@ -83,7 +83,7 @@ TEST(convert_into_2_or_4_UTF16_bytes) {
 
 TEST(convert_fails_if_there_is_surrogate) {
   auto procedure = [&implementation](const char32_t* utf32, size_t size, char16_t* utf16) -> size_t {
-    return implementation.convert_utf32_to_utf16(utf32, size, utf16);
+    return implementation.convert_utf32_to_utf16le(utf32, size, utf16);
   };
   const size_t size = 64;
   transcode_utf32_to_utf16_test_base test([](){return '*';}, size + 32);
@@ -103,7 +103,7 @@ TEST(convert_fails_if_input_too_large) {
   simdutf::tests::helpers::RandomInt generator(0x110000, 0xffffffff, seed);
 
   auto procedure = [&implementation](const char32_t* utf32, size_t size, char16_t* utf16) -> size_t {
-    return implementation.convert_utf32_to_utf16(utf32, size, utf16);
+    return implementation.convert_utf32_to_utf16le(utf32, size, utf16);
   };
   const size_t size = 64;
   transcode_utf32_to_utf16_test_base test([](){return '*';}, size+32);

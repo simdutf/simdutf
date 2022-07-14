@@ -26,7 +26,7 @@ TEST(convert_into_2_UTF16_bytes) {
                                                      {0xe000, 0xffff}}, 0);
 
     auto procedure = [&implementation](const char32_t* utf32, size_t size, char16_t* utf16) -> size_t {
-      return implementation.convert_utf32_to_utf16(utf32, size, utf16);
+      return implementation.convert_utf32_to_utf16le(utf32, size, utf16);
     };
     auto size_procedure = [&implementation](const char32_t* utf32, size_t size) -> size_t {
       return implementation.utf16_length_from_utf32(utf32, size);
@@ -46,7 +46,7 @@ TEST(convert_into_4_UTF16_bytes) {
     simdutf::tests::helpers::RandomIntRanges random({{0x10000, 0x10ffff}}, 0);
 
     auto procedure = [&implementation](const char32_t* utf32, size_t size, char16_t* utf16) -> size_t {
-      return implementation.convert_utf32_to_utf16(utf32, size, utf16);
+      return implementation.convert_utf32_to_utf16le(utf32, size, utf16);
     };
     auto size_procedure = [&implementation](const char32_t* utf32, size_t size) -> size_t {
       return implementation.utf16_length_from_utf32(utf32, size);
@@ -68,7 +68,7 @@ TEST(convert_into_2_or_4_UTF16_bytes) {
                                                      {0x10000, 0x10ffff}}, 0);
 
     auto procedure = [&implementation](const char32_t* utf32, size_t size, char16_t* utf16) -> size_t {
-      return implementation.convert_utf32_to_utf16(utf32, size, utf16);
+      return implementation.convert_utf32_to_utf16le(utf32, size, utf16);
     };
     auto size_procedure = [&implementation](const char32_t* utf32, size_t size) -> size_t {
       return implementation.utf16_length_from_utf32(utf32, size);

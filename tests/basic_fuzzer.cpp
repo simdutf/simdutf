@@ -52,13 +52,13 @@ TEST(basic_fuzz) {
       }
       bool is_ok_utf8 =
           implementation.validate_utf8(buf.input.data(), buf.input.size());
-      bool is_ok_utf16 = implementation.validate_utf16(
+      bool is_ok_utf16 = implementation.validate_utf16le(
           reinterpret_cast<char16_t *>(buf.input.data()),
           buf.input.size() / sizeof(char16_t));
-      size_t sizeutf8 = implementation.convert_utf8_to_utf16(
+      size_t sizeutf8 = implementation.convert_utf8_to_utf16le(
           buf.input.data(), buf.input.size(),
           reinterpret_cast<char16_t *>(buf.output.data()));
-      size_t sizeutf16 = implementation.convert_utf16_to_utf8(
+      size_t sizeutf16 = implementation.convert_utf16le_to_utf8(
           reinterpret_cast<char16_t *>(buf.input.data()),
           buf.input.size() / sizeof(char16_t), buf.output.data());
       if(is_ok_utf8 ? sizeutf8 == 0 : sizeutf8 > 0) {

@@ -57,7 +57,7 @@ simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept;
  * @param len the length of the string in number of 2-byte words (char16_t).
  * @return true if and only if the string is valid UTF-16LE.
  */
-simdutf_warn_unused bool validate_utf16(const char16_t *buf, size_t len) noexcept;
+simdutf_warn_unused bool validate_utf16le(const char16_t *buf, size_t len) noexcept;
 
 /**
  * Validate the UTF-32LE string.
@@ -83,7 +83,7 @@ simdutf_warn_unused bool validate_utf32(const char32_t *buf, size_t len) noexcep
  * @param utf16_buffer  the pointer to buffer that can hold conversion result
  * @return the number of written char16_t; 0 if the input was not valid UTF-8 string
  */
-simdutf_warn_unused size_t convert_utf8_to_utf16(const char * input, size_t length, char16_t* utf16_output) noexcept;
+simdutf_warn_unused size_t convert_utf8_to_utf16le(const char * input, size_t length, char16_t* utf16_output) noexcept;
 
 /**
  * Convert possibly broken UTF-8 string into UTF-32LE string.
@@ -108,7 +108,7 @@ simdutf_warn_unused size_t convert_utf8_to_utf32(const char * input, size_t leng
  * @param utf16_buffer  the pointer to buffer that can hold conversion result
  * @return the number of written char16_t
  */
-simdutf_warn_unused size_t convert_valid_utf8_to_utf16(const char * input, size_t length, char16_t* utf16_buffer) noexcept;
+simdutf_warn_unused size_t convert_valid_utf8_to_utf16le(const char * input, size_t length, char16_t* utf16_buffer) noexcept;
 
 /**
  * Convert valid UTF-8 string into UTF-32LE string.
@@ -163,7 +163,7 @@ simdutf_warn_unused size_t utf32_length_from_utf8(const char * input, size_t len
  * @param utf8_buffer   the pointer to buffer that can hold conversion result
  * @return number of written words; 0 if input is not a valid UTF-16LE string
  */
-simdutf_warn_unused size_t convert_utf16_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) noexcept;
+simdutf_warn_unused size_t convert_utf16le_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) noexcept;
 
 /**
  * Convert valid UTF-16LE string into UTF-8 string.
@@ -177,7 +177,7 @@ simdutf_warn_unused size_t convert_utf16_to_utf8(const char16_t * input, size_t 
  * @param utf8_buffer   the pointer to buffer that can hold the conversion result
  * @return number of written words; 0 if conversion is not possible
  */
-simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) noexcept;
+simdutf_warn_unused size_t convert_valid_utf16le_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) noexcept;
 
 /**
  * Convert possibly broken UTF-16LE string into UTF-32LE string.
@@ -192,7 +192,7 @@ simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char16_t * input, s
  * @param utf32_buffer   the pointer to buffer that can hold conversion result
  * @return number of written words; 0 if input is not a valid UTF-16LE string
  */
-simdutf_warn_unused size_t convert_utf16_to_utf32(const char16_t * input, size_t length, char32_t* utf32_buffer) noexcept;
+simdutf_warn_unused size_t convert_utf16le_to_utf32(const char16_t * input, size_t length, char32_t* utf32_buffer) noexcept;
 
 /**
  * Convert valid UTF-16LE string into UTF-32LE string.
@@ -206,7 +206,7 @@ simdutf_warn_unused size_t convert_utf16_to_utf32(const char16_t * input, size_t
  * @param utf32_buffer   the pointer to buffer that can hold the conversion result
  * @return number of written words; 0 if conversion is not possible
  */
-simdutf_warn_unused size_t convert_valid_utf16_to_utf32(const char16_t * input, size_t length, char32_t* utf32_buffer) noexcept;
+simdutf_warn_unused size_t convert_valid_utf16le_to_utf32(const char16_t * input, size_t length, char32_t* utf32_buffer) noexcept;
 
 /**
  * Compute the number of bytes that this UTF-16LE string would require in UTF-8 format.
@@ -217,7 +217,7 @@ simdutf_warn_unused size_t convert_valid_utf16_to_utf32(const char16_t * input, 
  * @param length        the length of the string in 2-byte words (char16_t)
  * @return the number of bytes required to encode the UTF-16LE string as UTF-8
  */
-simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t * input, size_t length) noexcept;
+simdutf_warn_unused size_t utf8_length_from_utf16le(const char16_t * input, size_t length) noexcept;
 
 /**
  * Convert possibly broken UTF-32LE string into UTF-8 string.
@@ -261,7 +261,7 @@ simdutf_warn_unused size_t convert_valid_utf32_to_utf8(const char32_t * input, s
  * @param utf16_buffer   the pointer to buffer that can hold conversion result
  * @return number of written words; 0 if input is not a valid UTF-32LE string
  */
-simdutf_warn_unused size_t convert_utf32_to_utf16(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;
+simdutf_warn_unused size_t convert_utf32_to_utf16le(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;
 
 /**
  * Convert valid UTF-32LE string into UTF-16LE string.
@@ -275,7 +275,7 @@ simdutf_warn_unused size_t convert_utf32_to_utf16(const char32_t * input, size_t
  * @param utf16_buffer   the pointer to buffer that can hold the conversion result
  * @return number of written words; 0 if conversion is not possible
  */
-simdutf_warn_unused size_t convert_valid_utf32_to_utf16(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;
+simdutf_warn_unused size_t convert_valid_utf32_to_utf16le(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;
 
 /**
  * Compute the number of bytes that this UTF-32LE string would require in UTF-8 format.
@@ -302,7 +302,7 @@ simdutf_warn_unused size_t utf16_length_from_utf32(const char32_t * input, size_
 /*
  * Compute the number of bytes that this UTF-16LE string would require in UTF-32LE format.
  *
- * This function is equivalent to count_utf16.
+ * This function is equivalent to count_utf16le.
  *
  * This function does not validate the input.
  *
@@ -312,7 +312,7 @@ simdutf_warn_unused size_t utf16_length_from_utf32(const char32_t * input, size_
  * @param length        the length of the string in 2-byte words (char16_t)
  * @return the number of bytes required to encode the UTF-16LE string as UTF-32LE
  */
-simdutf_warn_unused size_t utf32_length_from_utf16(const char16_t * input, size_t length) noexcept;
+simdutf_warn_unused size_t utf32_length_from_utf16le(const char16_t * input, size_t length) noexcept;
 
 /**
  * Count the number of code points (characters) in the string assuming that
@@ -326,7 +326,7 @@ simdutf_warn_unused size_t utf32_length_from_utf16(const char16_t * input, size_
  * @param length        the length of the string in 2-byte words (char16_t)
  * @return number of code points
  */
-simdutf_warn_unused size_t count_utf16(const char16_t * input, size_t length) noexcept;
+simdutf_warn_unused size_t count_utf16le(const char16_t * input, size_t length) noexcept;
 
 /**
  * Count the number of code points (characters) in the string assuming that
@@ -430,7 +430,7 @@ public:
    * @param len the length of the string in number of 2-byte words (char16_t).
    * @return true if and only if the string is valid UTF-16LE.
    */
-  simdutf_warn_unused virtual bool validate_utf16(const char16_t *buf, size_t len) const noexcept = 0;
+  simdutf_warn_unused virtual bool validate_utf16le(const char16_t *buf, size_t len) const noexcept = 0;
 
   /**
    * Validate the UTF-32LE string.
@@ -456,7 +456,7 @@ public:
    * @param utf16_buffer  the pointer to buffer that can hold conversion result
    * @return the number of written char16_t; 0 if the input was not valid UTF-8 string
    */
-  simdutf_warn_unused virtual size_t convert_utf8_to_utf16(const char * input, size_t length, char16_t* utf16_output) const noexcept = 0;
+  simdutf_warn_unused virtual size_t convert_utf8_to_utf16le(const char * input, size_t length, char16_t* utf16_output) const noexcept = 0;
 
   /**
    * Convert possibly broken UTF-8 string into UTF-32LE string.
@@ -481,7 +481,7 @@ public:
    * @param utf16_buffer  the pointer to buffer that can hold conversion result
    * @return the number of written char16_t
    */
-  simdutf_warn_unused virtual size_t convert_valid_utf8_to_utf16(const char * input, size_t length, char16_t* utf16_buffer) const noexcept = 0;
+  simdutf_warn_unused virtual size_t convert_valid_utf8_to_utf16le(const char * input, size_t length, char16_t* utf16_buffer) const noexcept = 0;
 
   /**
    * Convert valid UTF-8 string into UTF-32LE string.
@@ -532,7 +532,7 @@ public:
    * @param utf8_buffer   the pointer to buffer that can hold conversion result
    * @return number of written words; 0 if input is not a valid UTF-16LE string
    */
-  simdutf_warn_unused virtual size_t convert_utf16_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) const noexcept = 0;
+  simdutf_warn_unused virtual size_t convert_utf16le_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) const noexcept = 0;
 
   /**
    * Convert valid UTF-16LE string into UTF-8 string.
@@ -546,7 +546,7 @@ public:
    * @param utf8_buffer   the pointer to buffer that can hold the conversion result
    * @return number of written words; 0 if conversion is not possible
    */
-  simdutf_warn_unused virtual size_t convert_valid_utf16_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) const noexcept = 0;
+  simdutf_warn_unused virtual size_t convert_valid_utf16le_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) const noexcept = 0;
 
 
   /**
@@ -562,7 +562,7 @@ public:
    * @param utf32_buffer   the pointer to buffer that can hold conversion result
    * @return number of written words; 0 if input is not a valid UTF-16LE string
    */
-  simdutf_warn_unused virtual size_t convert_utf16_to_utf32(const char16_t * input, size_t length, char32_t* utf32_buffer) const noexcept = 0;
+  simdutf_warn_unused virtual size_t convert_utf16le_to_utf32(const char16_t * input, size_t length, char32_t* utf32_buffer) const noexcept = 0;
 
   /**
    * Convert valid UTF-16LE string into UTF-32LE string.
@@ -576,7 +576,7 @@ public:
    * @param utf32_buffer   the pointer to buffer that can hold the conversion result
    * @return number of written words; 0 if conversion is not possible
    */
-  simdutf_warn_unused virtual size_t convert_valid_utf16_to_utf32(const char16_t * input, size_t length, char32_t* utf32_buffer) const noexcept = 0;
+  simdutf_warn_unused virtual size_t convert_valid_utf16le_to_utf32(const char16_t * input, size_t length, char32_t* utf32_buffer) const noexcept = 0;
 
   /**
    * Compute the number of bytes that this UTF-16LE string would require in UTF-8 format.
@@ -589,7 +589,7 @@ public:
    * @param length        the length of the string in 2-byte words (char16_t)
    * @return the number of bytes required to encode the UTF-16LE string as UTF-8
    */
-  simdutf_warn_unused virtual size_t utf8_length_from_utf16(const char16_t * input, size_t length) const noexcept = 0;
+  simdutf_warn_unused virtual size_t utf8_length_from_utf16le(const char16_t * input, size_t length) const noexcept = 0;
 
   /**
    * Convert possibly broken UTF-32LE string into UTF-8 string.
@@ -633,7 +633,7 @@ public:
    * @param utf16_buffer   the pointer to buffer that can hold conversion result
    * @return number of written words; 0 if input is not a valid UTF-32LE string
    */
-  simdutf_warn_unused virtual size_t convert_utf32_to_utf16(const char32_t * input, size_t length, char16_t* utf16_buffer) const noexcept = 0;
+  simdutf_warn_unused virtual size_t convert_utf32_to_utf16le(const char32_t * input, size_t length, char16_t* utf16_buffer) const noexcept = 0;
 
   /**
    * Convert valid UTF-32LE string into UTF-16LE string.
@@ -647,7 +647,7 @@ public:
    * @param utf16_buffer   the pointer to buffer that can hold the conversion result
    * @return number of written words; 0 if conversion is not possible
    */
-  simdutf_warn_unused virtual size_t convert_valid_utf32_to_utf16(const char32_t * input, size_t length, char16_t* utf16_buffer) const noexcept = 0;
+  simdutf_warn_unused virtual size_t convert_valid_utf32_to_utf16le(const char32_t * input, size_t length, char16_t* utf16_buffer) const noexcept = 0;
 
   /**
    * Compute the number of bytes that this UTF-32LE string would require in UTF-8 format.
@@ -674,7 +674,7 @@ public:
   /*
    * Compute the number of bytes that this UTF-16LE string would require in UTF-32LE format.
    *
-   * This function is equivalent to count_utf16.
+   * This function is equivalent to count_utf16le.
    *
    * This function does not validate the input.
    *
@@ -684,7 +684,7 @@ public:
    * @param length        the length of the string in 2-byte words (char16_t)
    * @return the number of bytes required to encode the UTF-16LE string as UTF-32LE
    */
-  simdutf_warn_unused virtual size_t utf32_length_from_utf16(const char16_t * input, size_t length) const noexcept = 0;
+  simdutf_warn_unused virtual size_t utf32_length_from_utf16le(const char16_t * input, size_t length) const noexcept = 0;
 
   /**
    * Count the number of code points (characters) in the string assuming that
@@ -698,7 +698,7 @@ public:
    * @param length        the length of the string in 2-byte words (char16_t)
    * @return number of code points
    */
-  simdutf_warn_unused virtual size_t count_utf16(const char16_t * input, size_t length) const noexcept = 0;
+  simdutf_warn_unused virtual size_t count_utf16le(const char16_t * input, size_t length) const noexcept = 0;
 
   /**
    * Count the number of code points (characters) in the string assuming that

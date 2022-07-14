@@ -25,7 +25,7 @@ TEST(convert_pure_ASCII) {
   };
 
   auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
-    return implementation.convert_valid_utf16_to_utf8(utf8, size, utf16);
+    return implementation.convert_valid_utf16le_to_utf8(utf8, size, utf16);
   };
 
   std::array<size_t, 1> input_size{16};
@@ -42,7 +42,7 @@ TEST(convert_into_1_or_2_UTF8_bytes) {
     simdutf::tests::helpers::RandomInt random(0x0000, 0x07ff, seed); // range for 1 or 2 UTF-8 bytes
 
     auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
-      return implementation.convert_valid_utf16_to_utf8(utf8, size, utf16);
+      return implementation.convert_valid_utf16le_to_utf8(utf8, size, utf16);
     };
 
     for (size_t size: input_size) {
@@ -62,7 +62,7 @@ TEST(convert_into_1_or_2_or_3_UTF8_bytes) {
                                                      {0xe000, 0xffff}}, 0);
 
     auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
-      return implementation.convert_valid_utf16_to_utf8(utf8, size, utf16);
+      return implementation.convert_valid_utf16le_to_utf8(utf8, size, utf16);
     };
 
     for (size_t size: input_size) {
@@ -80,7 +80,7 @@ TEST(convert_into_3_or_4_UTF8_bytes) {
                                                      {0xe000, 0x10ffff}}, 0);
 
     auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
-      return implementation.convert_valid_utf16_to_utf8(utf8, size, utf16);
+      return implementation.convert_valid_utf16le_to_utf8(utf8, size, utf16);
     };
 
     for (size_t size: input_size) {
@@ -166,7 +166,7 @@ namespace {
 
 TEST(all_possible_8_codepoint_combinations) {
   auto procedure = [&implementation](const char16_t* utf16, size_t size, char* utf8) -> size_t {
-    return implementation.convert_valid_utf16_to_utf8(utf16, size, utf8);
+    return implementation.convert_valid_utf16le_to_utf8(utf16, size, utf8);
   };
 
   std::vector<char> output_utf8(256, ' ');
