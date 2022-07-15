@@ -40,7 +40,7 @@
         ]
 */
 
-#define SIMDUTF_ICELAKE_TRANSCODE16(LANE0, LANE1)                                                                            \
+#define SIMDUTF_ICELAKE_TRANSCODE16(LANE0, LANE1, MASKED)                                                    \
         {                                                                                                    \
             const __m512i merged = _mm512_mask_mov_epi32(LANE0, 0x1000, LANE1);                              \
             const __m512i expand_ver2 = _mm512_setr_epi64(                                                   \
@@ -74,13 +74,41 @@
             const __m512i out = _mm512_mask_compress_epi32(_mm512_setzero_si512(), leading_bytes, utf32);    \
                                                                                                              \
             if (UTF32) {                                                                                     \
-                const __mmask16 valid = uint16_t((1 << valid_count) - 1);                                    \
-                _mm512_mask_storeu_epi32((__m512i*)output, valid, out);                                      \
+                if(MASKED) {                                                                                 \
+                  const __mmask16 valid = uint16_t((1 << valid_count) - 1);                                  \
+                  _mm512_mask_storeu_epi32((__m512i*)output, valid, out);                                    \
+                } else {                                                                                     \
+                    _mm512_storeu_epi32((__m512i*)output, out);                                              \
+                }                                                                                            \
                 output += valid_count;                                                                       \
             } else {                                                                                         \
-                output += utf32_to_utf16(out, valid_count, reinterpret_cast<char16_t *>(output));            \
+                if(MASKED) {                                                                                 \
+                    output += utf32_to_utf16_masked(out, valid_count, reinterpret_cast<char16_t *>(output)); \
+                } else {                                                                                     \
+                    output += utf32_to_utf16(out, valid_count, reinterpret_cast<char16_t *>(output));        \
+                }                                                                                            \
             }                                                                                                \
         }
+
+
+#define SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(INPUT, VALID_COUNT, MASKED)                                    \
+{                                                                                                           \
+    if (UTF32) {                                                                                            \
+        if(MASKED) {                                                                                        \
+            const __mmask16 valid_mask = uint16_t((1 << VALID_COUNT) - 1);                                  \
+            _mm512_mask_storeu_epi32((__m512i*)output, valid_mask, INPUT);                                  \
+        } else {                                                                                            \
+            _mm512_storeu_epi32((__m512i*)output, INPUT);                                              \
+        }                                                                                                   \
+        output += VALID_COUNT;                                                                              \
+    } else {                                                                                                \
+        if(MASKED) {                                                                                        \
+            output += utf32_to_utf16_masked(INPUT, VALID_COUNT, reinterpret_cast<char16_t *>(output));      \
+        } else {                                                                                            \
+            output += utf32_to_utf16(INPUT, VALID_COUNT, reinterpret_cast<char16_t *>(output));             \
+        }                                                                                                   \
+    }                                                                                                       \
+}
 
 
 #define SIMDUTF_ICELAKE_STORE_ASCII(UTF32, utf8, output)                                                  \
