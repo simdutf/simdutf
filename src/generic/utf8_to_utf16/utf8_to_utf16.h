@@ -168,7 +168,7 @@ using namespace simd;
             // for this section of the code. Hence, there is a limit
             // to how much we can further increase this latency before
             // it seriously harms performance.
-            size_t consumed = convert_masked_utf8_to_utf16(in + pos,
+            size_t consumed = convert_masked_utf8_to_utf16<endian>(in + pos,
                             utf8_end_of_code_point_mask, utf16_output);
             pos += consumed;
             utf8_end_of_code_point_mask >>= consumed;

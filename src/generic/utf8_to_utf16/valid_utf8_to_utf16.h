@@ -52,7 +52,7 @@ simdutf_warn_unused size_t convert_valid(const char* input, size_t size,
         // Thus we may allow convert_masked_utf8_to_utf16 to process
         // more bytes at a time under a fast-path mode where 16 bytes
         // are consumed at once (e.g., when encountering ASCII).
-        size_t consumed = convert_masked_utf8_to_utf16(input + pos,
+        size_t consumed = convert_masked_utf8_to_utf16<endian>(input + pos,
                             utf8_end_of_code_point_mask, utf16_output);
         pos += consumed;
         utf8_end_of_code_point_mask >>= consumed;

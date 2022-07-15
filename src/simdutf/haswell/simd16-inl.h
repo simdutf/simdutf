@@ -134,6 +134,20 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
   template<int N>
   simdutf_really_inline int get_bit() const { return _mm256_movemask_epi8(_mm256_slli_epi16(*this, 15-N)); }
 
+  simdutf_really_inline simd16<uint16_t> swap_bytes() const {
+    const __m256i swap = _mm256_setr_epi32(
+      0x02030001,
+      0x06070405,
+      0x0a0b0809,
+      0x0e0f0c0d,
+      0x12131011,
+      0x16171415,
+      0x1a1b1819,
+      0x1e1f1c1d
+    );
+    return _mm256_shuffle_epi8(*this, swap);
+  }
+
   // Pack with the unsigned saturation two uint16_t words into single uint8_t vector
   static simdutf_really_inline simd8<uint8_t> pack(const simd16<uint16_t>& v0, const simd16<uint16_t>& v1) {
     // Note: the AVX2 variant of pack operates on 128-bit lanes, thus

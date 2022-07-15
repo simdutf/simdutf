@@ -52,6 +52,7 @@
   Returns a pair: the first unprocessed byte from buf and utf8_output
   A scalar routing should carry on the conversion of the tail.
 */
+template <endianness big_endian>
 std::pair<const char16_t*, char*> avx2_convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) {
   const char16_t* end = buf + len;
   const __m256i v_0000 = _mm256_setzero_si256();
@@ -62,6 +63,11 @@ std::pair<const char16_t*, char*> avx2_convert_utf16_to_utf8(const char16_t* buf
 
   while (buf + 16 + safety_margin <= end) {
     __m256i in = _mm256_loadu_si256((__m256i*)buf);
+    if (big_endian) {
+      const __m256i swap = _mm256_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14,
+                                  17, 16, 19, 18, 21, 20, 23, 22, 25, 24, 27, 26, 29, 28, 31, 30);
+      in = _mm256_shuffle_epi8(in, swap);
+    }
     // a single 16-bit UTF-16 word can yield 1, 2 or 3 UTF-8 bytes
     const __m256i v_ff80 = _mm256_set1_epi16((int16_t)0xff80);
     if(_mm256_testz_si256(in, v_ff80)) { // ASCII fast path!!!!
