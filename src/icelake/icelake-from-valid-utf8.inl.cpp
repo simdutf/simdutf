@@ -31,8 +31,10 @@ std::pair<const char*, OUTPUT*> valid_utf8_to_fixed_length(const char* str, size
     /**
      * In the main loop, we consume 64 bytes per iteration,
      * but we access 64 + 4 bytes.
+     * We check for ptr + 64 + 64 <= end because
+     * we want to be do maskless writes without overruns.
      */
-    while (ptr + 64 + 4 <= end) {
+    while (ptr + 64 + 64 <= end) {
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
         const __m512i v_80 = _mm512_set1_epi8(char(0x80));
         const __mmask64 ascii = _mm512_test_epi8_mask(utf8, v_80);

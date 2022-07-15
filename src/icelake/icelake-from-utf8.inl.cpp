@@ -18,7 +18,7 @@ std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str,
      * In the main loop, we consume 64 bytes per iteration,
      * but we access 64 + 4 bytes.
      */
-    while (ptr + 64 + 4 <= end) {
+    while (ptr + 64 + 64 <= end) {
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
         if(checker.check_next_input(utf8)) {
             SIMDUTF_ICELAKE_STORE_ASCII(UTF32, utf8, output)
