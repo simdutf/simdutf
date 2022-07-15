@@ -67,7 +67,8 @@ simdutf_really_inline size_t utf32_to_utf16(__m512i utf32, unsigned int count, c
     const __mmask16 sp_mask = _mm512_cmpgt_epu32_mask(utf32, v_0000_ffff);
 
     if (sp_mask == 0) {
-        _mm256_storeu_epi16((__m256i*)output, _mm512_cvtepi32_epi16(utf32));
+        // technically, it should be _mm256_storeu_epi16
+        _mm256_storeu_si256((__m256i*)output, _mm512_cvtepi32_epi16(utf32));
         return count;
     }
 

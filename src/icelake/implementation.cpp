@@ -298,8 +298,8 @@ simdutf_warn_unused size_t implementation::utf8_length_from_utf32(const char32_t
     __m512i utf32 = _mm512_loadu_si512((const __m512i*)ptr);
     ptr += 16;
     __mmask16 ascii_bitmask = _mm512_cmple_epu32_mask(utf32, v_0000_007f);
-    __mmask16 two_bytes_bitmask = _mm512_mask_cmple_epu32_mask(~ascii_bitmask, utf32, v_0000_07ff);
-    __mmask16 three_bytes_bitmask = _mm512_mask_cmple_epu32_mask(~(ascii_bitmask | two_bytes_bitmask), utf32, v_0000_ffff);
+    __mmask16 two_bytes_bitmask = _mm512_mask_cmple_epu32_mask(_knot_mask16(ascii_bitmask), utf32, v_0000_07ff);
+    __mmask16 three_bytes_bitmask = _mm512_mask_cmple_epu32_mask(_knot_mask16(_mm512_kor(ascii_bitmask, two_bytes_bitmask)), utf32, v_0000_ffff);
 
     size_t ascii_count = count_ones(ascii_bitmask);
     size_t two_bytes_count = count_ones(two_bytes_bitmask);
