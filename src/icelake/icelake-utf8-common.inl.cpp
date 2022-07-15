@@ -51,14 +51,11 @@ simdutf_really_inline size_t utf32_to_utf16(__m512i utf32, unsigned int count, c
     const __m512i v_0000_ffff = _mm512_set1_epi32(0x0000ffff);
     const __mmask16 sp_mask = _mm512_mask_cmpgt_epu32_mask(valid, utf32, v_0000_ffff);
     
-    // 2. store valid 16-bit values
-    _mm256_mask_storeu_epi16((__m256i*)output, valid, _mm512_cvtepi32_epi16(utf32));
 
     if (sp_mask == 0) {
+        _mm256_mask_storeu_epi16((__m256i*)output, valid, _mm512_cvtepi32_epi16(utf32));
         return count;
     }
-
-    uint16_t words[32];
 
     {
         // build surrogate pair words in 32-bit lanes
@@ -80,23 +77,10 @@ simdutf_really_inline size_t utf32_to_utf16(__m512i utf32, unsigned int count, c
         const __m512i v_fc00_fc00 = _mm512_set1_epi32(0xfc00fc00);
         const __m512i v_d800_dc00 = _mm512_set1_epi32(0xd800dc00);
         const __m512i t3 = _mm512_ternarylogic_epi32(t2, v_fc00_fc00, v_d800_dc00, 0xba);
-
-        _mm512_storeu_si512((__m512i*)words, t3);
-    }
-
-
-    int sp = static_cast<int>(count_ones(sp_mask));
-
-    // copy surrogate pairs
-    uint32_t mask = sp_mask;
-    for (int i = count; i >= 0 && mask != 0; i--) {
-        if (test_and_clear_bit(mask, i)) {
-            output[i + sp] = words[2*i + 0];
-            sp -= 1;
-            output[i + sp] = words[2*i + 1];
-        } else {
-            output[i + sp] = output[i];
-        }
+        const __m512i t4 = _mm512_mask_blend_epi32(sp_mask, utf32, t3);
+        const __m512i t5 = _mm512_ror_epi32(t4, 16);
+        const  __mmask32 nonzero = _mm512_cmpneq_epi16_mask(t5, _mm512_setzero_si512());
+         _mm512_mask_compressstoreu_epi16(output, nonzero, t5);
     }
 
     return count + static_cast<unsigned int>(count_ones(sp_mask));
