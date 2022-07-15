@@ -79,7 +79,7 @@ simdutf_warn_unused bool implementation::validate_ascii(const char *buf, size_t 
 simdutf_warn_unused bool implementation::validate_utf16le(const char16_t *buf, size_t len) const noexcept {
   const char16_t* tail = avx2_validate_utf16le(buf, len);
   if (tail) {
-    return scalar::utf16::validate(tail, len - (tail - buf));
+    return scalar::utf16::validate<endianness::LITTLE>(tail, len - (tail - buf));
   } else {
     return false;
   }
@@ -96,12 +96,12 @@ simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, siz
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
   utf8_to_utf16::validating_transcoder converter;
-  return converter.convert(buf, len, utf16_output);
+  return converter.convert<endianness::LITTLE>(buf, len, utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16le(const char* input, size_t size,
     char16_t* utf16_output) const noexcept {
-   return utf8_to_utf16::convert_valid(input, size,  utf16_output);
+   return utf8_to_utf16::convert_valid<endianness::LITTLE>(input, size,  utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf32(const char* buf, size_t len, char32_t* utf32_output) const noexcept {
@@ -119,7 +119,7 @@ simdutf_warn_unused size_t implementation::convert_utf16le_to_utf8(const char16_
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf8_output;
   if (ret.first != buf + len) {
-    const size_t scalar_saved_bytes = scalar::utf16_to_utf8::convert(
+    const size_t scalar_saved_bytes = scalar::utf16_to_utf8::convert<endianness::LITTLE>(
                                         ret.first, len - (ret.first - buf), ret.second);
     if (scalar_saved_bytes == 0) { return 0; }
     saved_bytes += scalar_saved_bytes;
@@ -149,7 +149,7 @@ simdutf_warn_unused size_t implementation::convert_utf16le_to_utf32(const char16
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf32_output;
   if (ret.first != buf + len) {
-    const size_t scalar_saved_bytes = scalar::utf16_to_utf32::convert(
+    const size_t scalar_saved_bytes = scalar::utf16_to_utf32::convert<endianness::LITTLE>(
                                         ret.first, len - (ret.first - buf), ret.second);
     if (scalar_saved_bytes == 0) { return 0; }
     saved_bytes += scalar_saved_bytes;
@@ -166,7 +166,7 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf16le(const char32
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf16_output;
   if (ret.first != buf + len) {
-    const size_t scalar_saved_bytes = scalar::utf32_to_utf16::convert(
+    const size_t scalar_saved_bytes = scalar::utf32_to_utf16::convert<endianness::LITTLE>(
                                         ret.first, len - (ret.first - buf), ret.second);
     if (scalar_saved_bytes == 0) { return 0; }
     saved_bytes += scalar_saved_bytes;

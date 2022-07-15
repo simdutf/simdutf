@@ -8,6 +8,7 @@ namespace utf8_to_utf16 {
 
 using namespace simd;
 
+template <endianness endian>
 simdutf_warn_unused size_t convert_valid(const char* input, size_t size,
     char16_t* utf16_output) noexcept {
   // The implementation is not specific to haswell and should be moved to the generic directory.
@@ -62,7 +63,7 @@ simdutf_warn_unused size_t convert_valid(const char* input, size_t size,
       // 85% to 90% efficiency.
     }
   }
-  utf16_output += scalar::utf8_to_utf16::convert_valid(input + pos, size - pos, utf16_output);
+  utf16_output += scalar::utf8_to_utf16::convert_valid<endian>(input + pos, size - pos, utf16_output);
   return utf16_output - start;
 }
 

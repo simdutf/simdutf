@@ -6,12 +6,13 @@ namespace scalar {
 namespace {
 namespace utf16_to_utf32 {
 
+template <endianness big_endian>
 inline size_t convert(const char16_t* buf, size_t len, char32_t* utf32_output) {
  const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
   size_t pos = 0;
   char32_t* start{utf32_output};
   while (pos < len) {
-    uint16_t word = data[pos];
+    uint16_t word = big_endian ? utf16::swap_bytes(data[pos]) : data[pos];
     if((word &0xF800 ) != 0xD800) {
       // No surrogate pair, extend 16-bit word to 32-bit word
       *utf32_output++ = char32_t(word);

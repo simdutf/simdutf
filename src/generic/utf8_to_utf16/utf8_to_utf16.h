@@ -125,7 +125,7 @@ using namespace simd;
     }
 
 
-
+    template <endianness endian>
     simdutf_really_inline size_t convert(const char* in, size_t size, char16_t* utf16_output) {
       size_t pos = 0;
       char16_t* start{utf16_output};
@@ -181,7 +181,7 @@ using namespace simd;
       }
       if(errors()) { return 0; }
       if(pos < size) {
-        size_t howmany  = scalar::utf8_to_utf16::convert(in + pos, size - pos, utf16_output);
+        size_t howmany  = scalar::utf8_to_utf16::convert<endian>(in + pos, size - pos, utf16_output);
         if(howmany == 0) { return 0; }
         utf16_output += howmany;
       }

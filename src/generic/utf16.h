@@ -13,7 +13,7 @@ simdutf_really_inline size_t count_code_points(const char16_t* in, size_t size) 
       uint64_t not_pair = input.not_in_range(0xDC00, 0xDFFF);
       count += count_ones(not_pair) / 2;
     }
-    return count + scalar::utf16::count_code_points(in + pos, size - pos);
+    return count + scalar::utf16::count_code_points<endianness::LITTLE>(in + pos, size - pos);
 }
 simdutf_really_inline size_t utf8_length_from_utf16le(const char16_t* in, size_t size) {
     size_t pos = 0;
@@ -31,7 +31,7 @@ simdutf_really_inline size_t utf8_length_from_utf16le(const char16_t* in, size_t
       size_t fourbyte_count = 32 - count_ones(not_pair_mask) / 2;
       count += 2 * fourbyte_count + 3 * threebyte_count + 2 * twobyte_count + ascii_count;
     }
-    return count + scalar::utf16::utf8_length_from_utf16le(in + pos, size - pos);
+    return count + scalar::utf16::utf8_length_from_utf16<endianness::LITTLE>(in + pos, size - pos);
 }
 simdutf_really_inline size_t utf32_length_from_utf16le(const char16_t* in, size_t size) {
     size_t pos = 0;
@@ -41,7 +41,7 @@ simdutf_really_inline size_t utf32_length_from_utf16le(const char16_t* in, size_
       uint64_t not_pair = input.not_in_range(0xDC00, 0xDFFF);
       count += count_ones(not_pair) / 2;
     }
-    return count + scalar::utf16::utf32_length_from_utf16le(in + pos, size - pos);
+    return count + scalar::utf16::utf32_length_from_utf16<endianness::LITTLE>(in + pos, size - pos);
 }
 } // utf16
 } // unnamed namespace

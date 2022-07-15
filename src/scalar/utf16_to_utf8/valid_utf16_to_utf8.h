@@ -6,6 +6,7 @@ namespace scalar {
 namespace {
 namespace utf16_to_utf8 {
 
+template <endianness big_endian>
 inline size_t convert_valid(const char16_t* buf, size_t len, char* utf8_output) {
  const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
   size_t pos = 0;
@@ -15,16 +16,17 @@ inline size_t convert_valid(const char16_t* buf, size_t len, char* utf8_output) 
     if (pos + 4 <= len) { // if it is safe to read 8 more bytes, check that they are ascii
       uint64_t v;
       ::memcpy(&v, data + pos, sizeof(uint64_t));
+      if (big_endian) v = (v >> 8) | (v << (64 - 8));
       if ((v & 0xFF80FF80FF80FF80) == 0) {
         size_t final_pos = pos + 4;
         while(pos < final_pos) {
-          *utf8_output++ = char(buf[pos]);
+          *utf8_output++ = big_endian ? char(utf16::swap_bytes(buf[pos])) : char(buf[pos]);
           pos++;
         }
         continue;
       }
     }
-    uint16_t word = data[pos];
+    uint16_t word = big_endian ? utf16::swap_bytes(data[pos]) : data[pos];
     if((word & 0xFF80)==0) {
       // will generate one UTF-8 bytes
       *utf8_output++ = char(word);
