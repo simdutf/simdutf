@@ -6,20 +6,68 @@ using utf8_to_utf32_result = std::pair<const char*, uint32_t*>;
 
 
 /*
-    utf32_to_utf16 converts `count` lower UTF-32 words
-    from input `utf32` into UTF-16.
+    utf32_to_utf16_masked converts `count` lower UTF-32 words
+    from input `utf32` into UTF-16. It differs from utf32_to_utf16
+    in that it 'masks' the writes.
 
     Returns how many 16-bit words were stored.
 */
-simdutf_really_inline size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
+simdutf_really_inline size_t utf32_to_utf16_masked(__m512i utf32, unsigned int count, char16_t* output) {
     const __mmask16 valid = uint16_t((1 << count) - 1);
     // 1. check if we have any surrogate pairs
     const __m512i v_0000_ffff = _mm512_set1_epi32(0x0000ffff);
     const __mmask16 sp_mask = _mm512_mask_cmpgt_epu32_mask(valid, utf32, v_0000_ffff);
-    
 
     if (sp_mask == 0) {
         _mm256_mask_storeu_epi16((__m256i*)output, valid, _mm512_cvtepi32_epi16(utf32));
+        return count;
+    }
+
+    {
+        // build surrogate pair words in 32-bit lanes
+
+        //    t0 = 8 x [000000000000aaaa|aaaaaabbbbbbbbbb]
+        const __m512i v_0001_0000 = _mm512_set1_epi32(0x00010000);
+        const __m512i t0 = _mm512_sub_epi32(utf32, v_0001_0000);
+
+        //    t1 = 8 x [000000aaaaaaaaaa|bbbbbbbbbb000000]
+        const __m512i t1 = _mm512_slli_epi32(t0, 6);
+
+        //    t2 = 8 x [000000aaaaaaaaaa|aaaaaabbbbbbbbbb] -- copy hi word from t1 to t0
+        //         0xe4 = (t1 and v_ffff_0000) or (t0 and not v_ffff_0000)
+        const __m512i v_ffff_0000 = _mm512_set1_epi32(0xffff0000);
+        const __m512i t2 = _mm512_ternarylogic_epi32(t1, t0, v_ffff_0000, 0xe4);
+
+        //    t2 = 8 x [110110aaaaaaaaaa|110111bbbbbbbbbb] -- copy hi word from t1 to t0
+        //         0xba = (t2 and not v_fc00_fc000) or v_d800_dc00
+        const __m512i v_fc00_fc00 = _mm512_set1_epi32(0xfc00fc00);
+        const __m512i v_d800_dc00 = _mm512_set1_epi32(0xd800dc00);
+        const __m512i t3 = _mm512_ternarylogic_epi32(t2, v_fc00_fc00, v_d800_dc00, 0xba);
+        const __m512i t4 = _mm512_mask_blend_epi32(sp_mask, utf32, t3);
+        const __m512i t5 = _mm512_ror_epi32(t4, 16);
+        const  __mmask32 nonzero = _mm512_cmpneq_epi16_mask(t5, _mm512_setzero_si512());
+         _mm512_mask_compressstoreu_epi16(output, nonzero, t5);
+    }
+
+    return count + static_cast<unsigned int>(count_ones(sp_mask));
+}
+
+
+
+
+/*
+    utf32_to_utf16 converts `count` lower UTF-32 words
+    from input `utf32` into UTF-16. It may overflow.
+
+    Returns how many 16-bit words were stored.
+*/
+simdutf_really_inline size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
+    // 1. check if we have any surrogate pairs
+    const __m512i v_0000_ffff = _mm512_set1_epi32(0x0000ffff);
+    const __mmask16 sp_mask = _mm512_cmpgt_epu32_mask(utf32, v_0000_ffff);
+
+    if (sp_mask == 0) {
+        _mm256_storeu_epi16((__m256i*)output, _mm512_cvtepi32_epi16(utf32));
         return count;
     }
 
