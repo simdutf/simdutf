@@ -20,7 +20,6 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   //
   // We first try a few fast paths.
   const __m128i swap = _mm_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
-
   const __m128i in = _mm_loadu_si128((__m128i *)input);
   const uint16_t input_utf8_end_of_code_point_mask =
       utf8_end_of_code_point_mask & 0xfff;
@@ -40,10 +39,11 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // We want to take 8 2-byte UTF-8 words and turn them into 8 2-byte UTF-16 words.
     // There is probably a more efficient sequence, but the following might do.
     const __m128i sh = _mm_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
-    const __m128i perm = big_endian ? sh : _mm_shuffle_epi8(in, sh);
+    const __m128i perm = _mm_shuffle_epi8(in, sh);
     const __m128i ascii = _mm_and_si128(perm, _mm_set1_epi16(0x7f));
     const __m128i highbyte = _mm_and_si128(perm, _mm_set1_epi16(0x1f00));
-    const __m128i composed = _mm_or_si128(ascii, _mm_srli_epi16(highbyte, 2));
+    __m128i composed = _mm_or_si128(ascii, _mm_srli_epi16(highbyte, 2));
+    if (big_endian) composed = _mm_shuffle_epi8(composed, swap);
     _mm_storeu_si128((__m128i *)utf16_output, composed);
     utf16_output += 8; // We wrote 16 bytes, 8 code points.
     return 16;

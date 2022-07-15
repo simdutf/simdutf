@@ -28,7 +28,7 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
   return simd8<int8_t>(is_third_byte | is_fourth_byte) > int8_t(0);
 }
 
-#include "westmere/sse_validate_utf16le.cpp"
+#include "westmere/sse_validate_utf16.cpp"
 #include "westmere/sse_validate_utf32le.cpp"
 
 #include "westmere/sse_convert_utf8_to_utf16.cpp"
@@ -72,7 +72,7 @@ simdutf_warn_unused bool implementation::validate_ascii(const char *buf, size_t 
 }
 
 simdutf_warn_unused bool implementation::validate_utf16le(const char16_t *buf, size_t len) const noexcept {
-  const char16_t* tail = sse_validate_utf16le(buf, len);
+  const char16_t* tail = sse_validate_utf16<endianness::LITTLE>(buf, len);
   if (tail) {
     return scalar::utf16::validate<endianness::LITTLE>(tail, len - (tail - buf));
   } else {
@@ -110,7 +110,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(const cha
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16le_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-  std::pair<const char16_t*, char*> ret = sse_convert_utf16_to_utf8(buf, len, utf8_output);
+  std::pair<const char16_t*, char*> ret = sse_convert_utf16_to_utf8<endianness::LITTLE>(buf, len, utf8_output);
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf8_output;
   if (ret.first != buf + len) {
@@ -140,7 +140,7 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(const char32_t*
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16le_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
-  std::pair<const char16_t*, char32_t*> ret = sse_convert_utf16_to_utf32(buf, len, utf32_output);
+  std::pair<const char16_t*, char32_t*> ret = sse_convert_utf16_to_utf32<endianness::LITTLE>(buf, len, utf32_output);
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf32_output;
   if (ret.first != buf + len) {
@@ -157,7 +157,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf8(const cha
 }
 
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf16le(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-  std::pair<const char32_t*, char16_t*> ret = sse_convert_utf32_to_utf16(buf, len, utf16_output);
+  std::pair<const char32_t*, char16_t*> ret = sse_convert_utf32_to_utf16<endianness::LITTLE>(buf, len, utf16_output);
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf16_output;
   if (ret.first != buf + len) {

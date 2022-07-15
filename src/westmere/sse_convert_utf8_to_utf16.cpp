@@ -19,13 +19,20 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   // This results in more instructions but, potentially, also higher speeds.
   //
   // We first try a few fast paths.
+  const __m128i swap = _mm_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
   const __m128i in = _mm_loadu_si128((__m128i *)input);
   const uint16_t input_utf8_end_of_code_point_mask =
       utf8_end_of_code_point_mask & 0xfff;
   if(((utf8_end_of_code_point_mask & 0xffff) == 0xffff)) {
     // We process the data in chunks of 16 bytes.
-    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf16_output), _mm_cvtepu8_epi16(in));
-    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf16_output + 8), _mm_cvtepu8_epi16(_mm_srli_si128(in,8)));
+    __m128i ascii_first = _mm_cvtepu8_epi16(in);
+    __m128i ascii_second = _mm_cvtepu8_epi16(_mm_srli_si128(in,8));
+    if (big_endian) {
+      ascii_first = _mm_shuffle_epi8(ascii_first, swap);
+      ascii_second = _mm_shuffle_epi8(ascii_second, swap);
+    }
+    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf16_output), ascii_first);
+    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf16_output + 8), ascii_second);
     utf16_output += 16; // We wrote 16 16-bit characters.
     return 16; // We consumed 16 bytes.
   }
@@ -36,7 +43,8 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     const __m128i perm = _mm_shuffle_epi8(in, sh);
     const __m128i ascii = _mm_and_si128(perm, _mm_set1_epi16(0x7f));
     const __m128i highbyte = _mm_and_si128(perm, _mm_set1_epi16(0x1f00));
-    const __m128i composed = _mm_or_si128(ascii, _mm_srli_epi16(highbyte, 2));
+    __m128i composed = _mm_or_si128(ascii, _mm_srli_epi16(highbyte, 2));
+    if (big_endian) composed = _mm_shuffle_epi8(composed, swap);
     _mm_storeu_si128((__m128i *)utf16_output, composed);
     utf16_output += 8; // We wrote 16 bytes, 8 code points.
     return 16;
@@ -56,7 +64,8 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     const __m128i highbyte_shifted = _mm_srli_epi32(highbyte, 4);
     const __m128i composed =
         _mm_or_si128(_mm_or_si128(ascii, middlebyte_shifted), highbyte_shifted);
-    const __m128i composed_repacked = _mm_packus_epi32(composed, composed);
+    __m128i composed_repacked = _mm_packus_epi32(composed, composed);
+    if (big_endian) composed_repacked = _mm_shuffle_epi8(composed_repacked, swap);
     _mm_storeu_si128((__m128i *)utf16_output, composed_repacked);
     utf16_output += 4;
     return 12;
@@ -78,7 +87,8 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     const __m128i perm = _mm_shuffle_epi8(in, sh);
     const __m128i ascii = _mm_and_si128(perm, _mm_set1_epi16(0x7f));
     const __m128i highbyte = _mm_and_si128(perm, _mm_set1_epi16(0x1f00));
-    const __m128i composed = _mm_or_si128(ascii, _mm_srli_epi16(highbyte, 2));
+    __m128i composed = _mm_or_si128(ascii, _mm_srli_epi16(highbyte, 2));
+    if (big_endian) composed = _mm_shuffle_epi8(composed, swap);
     _mm_storeu_si128((__m128i *)utf16_output, composed);
     utf16_output += 6; // We wrote 12 bytes, 6 code points.
   } else if (idx < 145) {
@@ -96,7 +106,8 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     const __m128i highbyte_shifted = _mm_srli_epi32(highbyte, 4);
     const __m128i composed =
         _mm_or_si128(_mm_or_si128(ascii, middlebyte_shifted), highbyte_shifted);
-    const __m128i composed_repacked = _mm_packus_epi32(composed, composed);
+     __m128i composed_repacked = _mm_packus_epi32(composed, composed);
+    if (big_endian) composed_repacked = _mm_shuffle_epi8(composed_repacked, swap);
     _mm_storeu_si128((__m128i *)utf16_output, composed_repacked);
     utf16_output += 4;
   } else if (idx < 209) {
@@ -128,15 +139,20 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     const __m128i hightenbitsadd =
         _mm_add_epi32(hightenbits, _mm_set1_epi32(0xD800));
     const __m128i lowtenbitsaddshifted = _mm_slli_epi32(lowtenbitsadd, 16);
-    const __m128i surrogates =
+    __m128i surrogates =
         _mm_or_si128(hightenbitsadd, lowtenbitsaddshifted);
     uint32_t basic_buffer[4];
+    uint32_t basic_buffer_swap[4];
+    if (big_endian) {
+      _mm_storeu_si128((__m128i *)basic_buffer_swap, _mm_shuffle_epi8(composed, swap));
+      surrogates = _mm_shuffle_epi8(surrogates, swap);
+    }
     _mm_storeu_si128((__m128i *)basic_buffer, composed);
     uint32_t surrogate_buffer[4];
     _mm_storeu_si128((__m128i *)surrogate_buffer, surrogates);
     for (size_t i = 0; i < 3; i++) {
       if (basic_buffer[i] < 65536) {
-        utf16_output[0] = uint16_t(basic_buffer[i]);
+        utf16_output[0] = big_endian ? uint16_t(basic_buffer_swap[i]) : uint16_t(basic_buffer[i]);
         utf16_output++;
       } else {
         utf16_output[0] = uint16_t(surrogate_buffer[i] & 0xffff);

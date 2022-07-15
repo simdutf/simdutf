@@ -51,6 +51,7 @@
   Returns a pair: the first unprocessed byte from buf and utf8_output
   A scalar routing should carry on the conversion of the tail.
 */
+template <endianness big_endian>
 std::pair<const char16_t*, char32_t*> sse_convert_utf16_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) {
   const char16_t* end = buf + len;
 
@@ -59,6 +60,11 @@ std::pair<const char16_t*, char32_t*> sse_convert_utf16_to_utf32(const char16_t*
 
   while (buf + 16 <= end) {
     __m128i in = _mm_loadu_si128((__m128i*)buf);
+
+    if (big_endian) {
+      const __m128i swap = _mm_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
+      in = _mm_shuffle_epi8(in, swap);
+    }
 
     // 1. Check if there are any surrogate word in the input chunk.
     //    We have also deal with situation when there is a surrogate word

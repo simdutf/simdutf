@@ -134,17 +134,10 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
   template<int N>
   simdutf_really_inline int get_bit() const { return _mm256_movemask_epi8(_mm256_slli_epi16(*this, 15-N)); }
 
+  // Change the endianness
   simdutf_really_inline simd16<uint16_t> swap_bytes() const {
-    const __m256i swap = _mm256_setr_epi32(
-      0x02030001,
-      0x06070405,
-      0x0a0b0809,
-      0x0e0f0c0d,
-      0x12131011,
-      0x16171415,
-      0x1a1b1819,
-      0x1e1f1c1d
-    );
+    const __m256i swap = _mm256_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14,
+                                  17, 16, 19, 18, 21, 20, 23, 22, 25, 24, 27, 26, 29, 28, 31, 30);
     return _mm256_shuffle_epi8(*this, swap);
   }
 
@@ -214,6 +207,13 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
       return simd16x32<T>(
         this->chunks[0] | mask,
         this->chunks[1] | mask
+      );
+    }
+
+    simdutf_really_inline simd16<T> swap_bytes() const {
+      return simd16x32<T>(
+        this->chunks[0].swap_bytes(),
+        this->chunks[1].swap_bytes()
       );
     }
 
