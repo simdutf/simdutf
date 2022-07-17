@@ -210,11 +210,9 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
       );
     }
 
-    simdutf_really_inline simd16<T> swap_bytes() const {
-      return simd16x32<T>(
-        this->chunks[0].swap_bytes(),
-        this->chunks[1].swap_bytes()
-      );
+    simdutf_really_inline void swap_bytes() const {
+      this->chunks[0].swap_bytes();
+      this->chunks[1].swap_bytes();
     }
 
     simdutf_really_inline uint64_t eq(const T m) const {

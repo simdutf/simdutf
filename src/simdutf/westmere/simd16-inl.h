@@ -196,11 +196,11 @@ template<typename T>
       return r0 | (r1 << 16) | (r2 << 32) | (r3 << 48);
     }
 
-    simdutf_really_inline simd16<T> swap_bytes() const {
-      return simd16x32<T>(
-        this->chunks[0].swap_bytes(),
-        this->chunks[1].swap_bytes()
-      );
+    simdutf_really_inline void swap_bytes() const {
+      this->chunks[0].swap_bytes();
+      this->chunks[1].swap_bytes();
+      this->chunks[2].swap_bytes();
+      this->chunks[3].swap_bytes();
     }
 
     simdutf_really_inline uint64_t eq(const T m) const {

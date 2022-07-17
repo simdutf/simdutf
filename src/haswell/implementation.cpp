@@ -183,7 +183,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16le_to_utf32(const 
 }
 
 simdutf_warn_unused size_t implementation::count_utf16le(const char16_t * input, size_t length) const noexcept {
-  return utf16::count_code_points(input, length);
+  return utf16::count_code_points<endianness::LITTLE>(input, length);
 }
 
 simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t length) const noexcept {
@@ -191,11 +191,11 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
 }
 
 simdutf_warn_unused size_t implementation::utf8_length_from_utf16le(const char16_t * input, size_t length) const noexcept {
-  return utf16::utf8_length_from_utf16le(input, length);
+  return utf16::utf8_length_from_utf16<endianness::LITTLE>(input, length);
 }
 
 simdutf_warn_unused size_t implementation::utf32_length_from_utf16le(const char16_t * input, size_t length) const noexcept {
-  return utf16::utf32_length_from_utf16le(input, length);
+  return utf16::utf32_length_from_utf16<endianness::LITTLE>(input, length);
 }
 
 simdutf_warn_unused size_t implementation::utf16_length_from_utf8(const char * input, size_t length) const noexcept {
