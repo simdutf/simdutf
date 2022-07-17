@@ -46,8 +46,8 @@ std::pair<const char32_t*, char16_t*> avx2_convert_utf32_to_utf16(const char32_t
           uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
           uint16_t low_surrogate = uint16_t(0xDC00 + (word & 0x3FF));
           if (big_endian) {
-            high_surrogate = (high_surrogate >> 8) | (high_surrogate << 8);
-            low_surrogate = (low_surrogate >> 8) | (low_surrogate << 8);
+            high_surrogate = uint16_t((high_surrogate >> 8) | (high_surrogate << 8));
+            low_surrogate = uint16_t((low_surrogate >> 8) | (low_surrogate << 8));
           }
           *utf16_output++ = char16_t(high_surrogate);
           *utf16_output++ = char16_t(low_surrogate);
