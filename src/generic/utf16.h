@@ -63,7 +63,7 @@ simdutf_really_inline size_t change_endianness_utf16(const char16_t* in, size_t 
     output += 32;
   }
 
-  return scalar::utf16::change_endianness_utf16(in + pos, size - pos, output);
+  return pos + scalar::utf16::change_endianness_utf16(in + pos, size - pos, output);
 }
 
 } // utf16

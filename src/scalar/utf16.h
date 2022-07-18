@@ -80,7 +80,7 @@ simdutf_really_inline size_t change_endianness_utf16(const char16_t* in, size_t 
   for (size_t i = 0; i < size; i++) {
     *output++ = uint16_t(input[i] >> 8 | input[i] << 8);
   }
-  return 0;
+  return size;
 }
 
 } // utf16 namespace
