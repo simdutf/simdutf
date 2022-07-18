@@ -52,6 +52,20 @@ simdutf_really_inline size_t utf32_length_from_utf16(const char16_t* in, size_t 
     return count + scalar::utf16::utf32_length_from_utf16<endianness::LITTLE>(in + pos, size - pos);
 }
 
+simdutf_really_inline size_t change_endianness_utf16(const char16_t* in, size_t size, char16_t* output) {
+  size_t pos = 0;
+
+  while (pos + 32 <= size) {
+    simd16x32<uint16_t> input(reinterpret_cast<const uint16_t *>(in + pos));
+    input.swap_bytes();
+    input.store(reinterpret_cast<uint16_t *>(output));
+    pos += 32;
+    output += 32;
+  }
+
+  return scalar::utf16::change_endianness_utf16(in + pos, size - pos, output);
+}
+
 } // utf16
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION

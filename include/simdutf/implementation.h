@@ -414,6 +414,20 @@ simdutf_warn_unused size_t convert_valid_utf32_to_utf16le(const char32_t * input
 simdutf_warn_unused size_t convert_valid_utf32_to_utf16be(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;
 
 /**
+ * Change the endianness of the input. Can be used to go from UTF-16LE to UTF-16BE or
+ * from UTF-16BE to UTF-16LE.
+ *
+ * This function does not validate the input.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-16 string to process
+ * @param length        the length of the string in 2-byte words (char16_t)
+ * @param output        the pointer to buffer that can hold the conversion result
+ */
+simdutf_warn_unused size_t change_endianness_utf16(const char16_t * input, size_t length, char16_t * output) noexcept;
+
+/**
  * Compute the number of bytes that this UTF-32LE string would require in UTF-8 format.
  *
  * This function does not validate the input.
@@ -950,6 +964,20 @@ public:
    * @return number of written words; 0 if conversion is not possible
    */
   simdutf_warn_unused virtual size_t convert_valid_utf32_to_utf16be(const char32_t * input, size_t length, char16_t* utf16_buffer) const noexcept = 0;
+
+  /**
+   * Change the endianness of the input. Can be used to go from UTF-16LE to UTF-16BE or
+   * from UTF-16BE to UTF-16LE.
+   *
+   * This function does not validate the input.
+   *
+   * This function is not BOM-aware.
+   *
+   * @param input         the UTF-16 string to process
+   * @param length        the length of the string in 2-byte words (char16_t)
+   * @param output        the pointer to buffer that can hold the conversion result
+   */
+  simdutf_warn_unused virtual size_t change_endianness_utf16(const char16_t * input, size_t length, char16_t * output) const noexcept = 0;
 
   /**
    * Compute the number of bytes that this UTF-32LE string would require in UTF-8 format.

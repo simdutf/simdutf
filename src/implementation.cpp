@@ -189,6 +189,10 @@ public:
     return set_best()->convert_valid_utf16be_to_utf32(buf, len, utf32_output);
   }
 
+  simdutf_warn_unused size_t change_endianness_utf16(const char16_t * buf, size_t len, char16_t * output) const noexcept final override {
+    return set_best()->change_endianness_utf16(buf, len, output);
+  }
+
   simdutf_warn_unused size_t count_utf16le(const char16_t * buf, size_t len) const noexcept final override {
     return set_best()->count_utf16le(buf, len);
   }
@@ -369,6 +373,10 @@ public:
     return 0;
   }
 
+  simdutf_warn_unused size_t change_endianness_utf16(const char16_t *, size_t, char16_t *) const noexcept final override {
+    return 0;
+  }
+
   simdutf_warn_unused size_t count_utf16le(const char16_t *, size_t) const noexcept final override {
     return 0;
   }
@@ -534,6 +542,9 @@ simdutf_warn_unused size_t convert_valid_utf16le_to_utf32(const char16_t * buf, 
 }
 simdutf_warn_unused size_t convert_valid_utf16be_to_utf32(const char16_t * buf, size_t len, char32_t* utf32_buffer) noexcept {
   return active_implementation->convert_valid_utf16be_to_utf32(buf, len, utf32_buffer);
+}
+simdutf_warn_unused size_t change_endianness_utf16(const char16_t * input, size_t length, char16_t * output) noexcept {
+  return active_implementation->change_endianness_utf16(input, length, output);
 }
 simdutf_warn_unused size_t count_utf16le(const char16_t * input, size_t length) noexcept {
   return active_implementation->count_utf16le(input, length);

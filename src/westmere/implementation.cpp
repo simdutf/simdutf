@@ -247,6 +247,10 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_utf32(const 
   return convert_utf16be_to_utf32(buf, len, utf32_output);
 }
 
+simdutf_warn_unused size_t implementation::change_endianness_utf16(const char16_t * input, size_t length, char16_t * output) const noexcept {
+  return utf16::change_endianness_utf16(input, length, output);
+}
+
 simdutf_warn_unused size_t implementation::count_utf16le(const char16_t * input, size_t length) const noexcept {
   return utf16::count_code_points<endianness::LITTLE>(input, length);
 }
