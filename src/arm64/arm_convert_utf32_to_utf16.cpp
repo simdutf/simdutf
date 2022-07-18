@@ -18,7 +18,7 @@ std::pair<const char32_t*, char16_t*> arm_convert_utf32_to_utf16(const char32_t*
 
       if (big_endian) {
         #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-        const uint8x8_t swap = make_uint8x16_t(1, 0, 3, 2, 5, 4, 7, 6);
+        const uint8x8_t swap = make_uint8x8_t(1, 0, 3, 2, 5, 4, 7, 6);
         #else
         const uint8x8_t swap = {1, 0, 3, 2, 5, 4, 7, 6};
         #endif
