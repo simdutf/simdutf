@@ -88,7 +88,7 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
 
 simdutf_really_inline uint8x8_t make_uint8x8_t(uint8_t x1,  uint8_t x2,  uint8_t x3,  uint8_t x4,
                                        uint8_t x5,  uint8_t x6,  uint8_t x7,  uint8_t x8) {
-  uint16x8_t x{};
+  uint8x8_t x{};
   x = vsetq_lane_u8(x1, x, 0);
   x = vsetq_lane_u8(x2, x, 1);
   x = vsetq_lane_u8(x3, x, 2);
