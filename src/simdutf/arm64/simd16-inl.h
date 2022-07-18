@@ -162,6 +162,16 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
   static simdutf_really_inline simd8<uint8_t> pack(const simd16<uint16_t>& v0, const simd16<uint16_t>& v1) {
     return vqmovn_high_u16(vqmovn_u16(v0), v1);
   }
+
+  // Change the endianness
+  simdutf_really_inline simd16<uint16_t> swap_bytes() const {
+    #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+    const uint8x16_t swap = make_uint8x16_t(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
+    #else
+    const uint8x16_t swap = {1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14};
+    #endif
+    return vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(*this), swap));
+  }
 };
 simdutf_really_inline simd16<int16_t>::operator simd16<uint16_t>() const { return this->value; }
 
@@ -219,6 +229,11 @@ simdutf_really_inline simd16<int16_t>::operator simd16<uint16_t>() const { retur
       sum0 = vpaddq_u8(sum0, sum1);
       sum0 = vpaddq_u8(sum0, sum0);
       return vgetq_lane_u64(vreinterpretq_u64_u8(sum0), 0);
+    }
+
+    simdutf_really_inline void swap_bytes() const {
+      this->chunks[0].swap_bytes();
+      this->chunks[1].swap_bytes();
     }
 
     simdutf_really_inline uint64_t eq(const T m) const {

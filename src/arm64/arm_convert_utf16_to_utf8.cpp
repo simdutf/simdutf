@@ -50,6 +50,7 @@
   Returns a pair: the first unprocessed byte from buf and utf8_output
   A scalar routing should carry on the conversion of the tail.
 */
+template <endianness big_endian>
 std::pair<const char16_t*, char*> arm_convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_out) {
   uint8_t * utf8_output = reinterpret_cast<uint8_t*>(utf8_out);
   const char16_t* end = buf + len;
@@ -60,6 +61,14 @@ std::pair<const char16_t*, char*> arm_convert_utf16_to_utf8(const char16_t* buf,
 
   while (buf + 16 <= end) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
+    if (big_endian) {
+      #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+      const uint8x16_t swap = make_uint8x16_t(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
+      #else
+      const uint8x16_t swap = {1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14};
+      #endif
+      in = vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(in), swap));
+    }
     if(vmaxvq_u16(in) <= 0x7F) { // ASCII fast path!!!!
         // It is common enough that we have sequences of 16 consecutive ASCII characters.
         uint16x8_t nextin = vld1q_u16(reinterpret_cast<const uint16_t *>(buf) + 8);
