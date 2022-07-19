@@ -7,6 +7,7 @@
 #include "simdutf/compiler_check.h"
 #include "simdutf/common_defs.h"
 #include "simdutf/encoding_types.h"
+#include "simdutf/result.h"
 
 SIMDUTF_PUSH_DISABLE_WARNINGS
 SIMDUTF_DISABLE_UNDESIRED_WARNINGS

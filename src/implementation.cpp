@@ -89,7 +89,7 @@ public:
   const std::string &description() const noexcept final { return set_best()->description(); }
   uint32_t required_instruction_sets() const noexcept final { return set_best()->required_instruction_sets(); }
 
-  simdutf_warn_unused bool validate_utf8(const char * buf, size_t len) const noexcept final override {
+  simdutf_warn_unused result validate_utf8(const char * buf, size_t len) const noexcept final override {
     return set_best()->validate_utf8(buf, len);
   }
 
@@ -214,8 +214,8 @@ const std::initializer_list<const implementation *> available_implementation_poi
 // So we can return UNSUPPORTED_ARCHITECTURE from the parser when there is no support
 class unsupported_implementation final : public implementation {
 public:
-  simdutf_warn_unused bool validate_utf8(const char *, size_t) const noexcept final override {
-    return false; // Just refuse to validate. Given that we have a fallback implementation
+  simdutf_warn_unused result validate_utf8(const char *, size_t) const noexcept final override {
+    return result(false, 0); // Just refuse to validate. Given that we have a fallback implementation
     // it seems unlikely that unsupported_implementation will ever be used. If it is used,
     // then it will flag all strings as invalid. The alternative is to return an error_code
     // from which the user has to figure out whether the string is valid UTF-8... which seems
@@ -364,7 +364,7 @@ const implementation *detect_best_supported_implementation_on_first_use::set_bes
 SIMDUTF_DLLIMPORTEXPORT const internal::available_implementation_list available_implementations{};
 SIMDUTF_DLLIMPORTEXPORT internal::atomic_ptr<const implementation> active_implementation{&internal::detect_best_supported_implementation_on_first_use_singleton};
 
-simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept {
+simdutf_warn_unused result validate_utf8(const char *buf, size_t len) noexcept {
   return active_implementation->validate_utf8(buf, len);
 }
 simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept {
