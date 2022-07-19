@@ -2,11 +2,13 @@ namespace simdutf {
 
   simdutf_really_inline result::result() : is_valid{true}, length{0} {};
 
-  simdutf_really_inline result::result(bool _is_valid, size_t _length) : is_valid{_is_valid}, length{_length} {};
+  simdutf_really_inline result::result(bool _is_valid) : is_valid{_is_valid}, length{0} {};
+
+  simdutf_really_inline result::result(bool _is_valid, size_t _length) : is_valid{_is_valid}, length{_is_valid ? _length : 0} {};
 
   simdutf_really_inline void result::invalidate() {
-    is_valid = false;
-    length = 0;
+    this->is_valid = false;
+    this->length = 0;
   }
 
   simdutf_really_inline result& result::operator++() {

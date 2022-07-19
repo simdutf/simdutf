@@ -66,7 +66,7 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 
-simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
+simdutf_warn_unused result implementation::validate_utf8(const char *buf, size_t len) const noexcept {
   return ppc64::utf8_validation::generic_validate_utf8(buf,len);
 }
 

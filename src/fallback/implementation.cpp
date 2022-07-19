@@ -25,7 +25,7 @@
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 
-simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
+simdutf_warn_unused result implementation::validate_utf8(const char *buf, size_t len) const noexcept {
     return scalar::utf8::validate(buf, len);
 }
 

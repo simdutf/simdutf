@@ -7,7 +7,7 @@ namespace utf8_validation {
  * Validates that the string is actual UTF-8.
  */
 template<class checker>
-bool generic_validate_utf8(const uint8_t * input, size_t length) {
+result generic_validate_utf8(const uint8_t * input, size_t length) {
     checker c{};
     buf_block_reader<64> reader(input, length);
     while (reader.has_full_block()) {
@@ -21,10 +21,10 @@ bool generic_validate_utf8(const uint8_t * input, size_t length) {
     c.check_next_input(in);
     reader.advance();
     c.check_eof();
-    return !c.errors();
+    return result(!c.errors(), length);
 }
 
-bool generic_validate_utf8(const char * input, size_t length) {
+result generic_validate_utf8(const char * input, size_t length) {
     return generic_validate_utf8<utf8_checker>(reinterpret_cast<const uint8_t *>(input),length);
 }
 

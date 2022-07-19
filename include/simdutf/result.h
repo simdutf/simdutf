@@ -8,13 +8,17 @@ struct result {
 
   simdutf_really_inline result();
 
+  simdutf_really_inline result(bool _is_valid);
+
   simdutf_really_inline result(bool _is_valid, size_t _length);
 
   simdutf_really_inline void invalidate();
 
+  simdutf_really_inline operator bool() { return this->is_valid; };
   simdutf_really_inline result& operator++();
   simdutf_really_inline result operator+(const result other) const;
   simdutf_really_inline result& operator+=(const result other);
+
 };
 
 }
