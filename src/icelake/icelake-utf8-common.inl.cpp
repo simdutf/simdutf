@@ -45,8 +45,12 @@ simdutf_really_inline size_t utf32_to_utf16_masked(__m512i utf32, unsigned int c
         const __m512i t3 = _mm512_ternarylogic_epi32(t2, v_fc00_fc00, v_d800_dc00, 0xba);
         const __m512i t4 = _mm512_mask_blend_epi32(sp_mask, utf32, t3);
         const __m512i t5 = _mm512_ror_epi32(t4, 16);
-        const  __mmask32 nonzero = _mm512_cmpneq_epi16_mask(t5, _mm512_setzero_si512());
-         _mm512_mask_compressstoreu_epi16(output, nonzero, t5);
+        // Here we want to trim all of the upper 16-bit words from the 2-byte
+        // characters represented as 4-byte values. We can compute it from
+        // sp_mask or the following... It can be more optimized!
+        const  __mmask32 nonzero = _kor_mask32(0xaaaaaaaa,_mm512_cmpneq_epi16_mask(t5, _mm512_setzero_si512()));
+        const  __mmask32 nonzero_masked = _kand_mask32(nonzero, __mmask32((uint64_t(1) << (2*count)) - 1));
+        _mm512_mask_compressstoreu_epi16(output, nonzero_masked, t5);
     }
 
     return count + static_cast<unsigned int>(count_ones(sp_mask));
@@ -62,7 +66,7 @@ simdutf_really_inline size_t utf32_to_utf16_masked(__m512i utf32, unsigned int c
     Returns how many 16-bit words were stored.
 */
 simdutf_really_inline size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
-    // 1. check if we have any surrogate pairs
+    // check if we have any surrogate pairs
     const __m512i v_0000_ffff = _mm512_set1_epi32(0x0000ffff);
     const __mmask16 sp_mask = _mm512_cmpgt_epu32_mask(utf32, v_0000_ffff);
 
@@ -94,7 +98,7 @@ simdutf_really_inline size_t utf32_to_utf16(__m512i utf32, unsigned int count, c
         const __m512i t3 = _mm512_ternarylogic_epi32(t2, v_fc00_fc00, v_d800_dc00, 0xba);
         const __m512i t4 = _mm512_mask_blend_epi32(sp_mask, utf32, t3);
         const __m512i t5 = _mm512_ror_epi32(t4, 16);
-        const  __mmask32 nonzero = _mm512_cmpneq_epi16_mask(t5, _mm512_setzero_si512());
+        const  __mmask32 nonzero = _kor_mask32(0xaaaaaaaa,_mm512_cmpneq_epi16_mask(t5, _mm512_setzero_si512()));
          _mm512_mask_compressstoreu_epi16(output, nonzero, t5);
     }
 
