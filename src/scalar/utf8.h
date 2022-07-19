@@ -6,7 +6,7 @@ namespace scalar {
 namespace {
 namespace utf8 {
 // credit: based on code from Google Fuchsia (Apache Licensed)
-inline simdutf_warn_unused result validate(const char *buf, size_t len) noexcept {
+inline simdutf_warn_unused bool validate(const char *buf, size_t len) noexcept {
   const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);
   uint64_t pos = 0;
   uint32_t code_point = 0;
@@ -27,44 +27,44 @@ inline simdutf_warn_unused result validate(const char *buf, size_t len) noexcept
     unsigned char byte = data[pos];
 
     while (byte < 0b10000000) {
-      if (++pos == len) { return result(true, pos); }
+      if (++pos == len) { return true; }
       byte = data[pos];
     }
 
     if ((byte & 0b11100000) == 0b11000000) {
       next_pos = pos + 2;
-      if (next_pos > len) { return result(false); }
-      if ((data[pos + 1] & 0b11000000) != 0b10000000) { return result(false); }
+      if (next_pos > len) { return false; }
+      if ((data[pos + 1] & 0b11000000) != 0b10000000) { return false; }
       // range check
       code_point = (byte & 0b00011111) << 6 | (data[pos + 1] & 0b00111111);
-      if ((code_point < 0x80) || (0x7ff < code_point)) { return result(false); }
+      if ((code_point < 0x80) || (0x7ff < code_point)) { return false; }
     } else if ((byte & 0b11110000) == 0b11100000) {
       next_pos = pos + 3;
-      if (next_pos > len) { return result(false); }
-      if ((data[pos + 1] & 0b11000000) != 0b10000000) { return result(false); }
-      if ((data[pos + 2] & 0b11000000) != 0b10000000) { return result(false); }
+      if (next_pos > len) { return false; }
+      if ((data[pos + 1] & 0b11000000) != 0b10000000) { return false; }
+      if ((data[pos + 2] & 0b11000000) != 0b10000000) { return false; }
       // range check
       code_point = (byte & 0b00001111) << 12 |
                    (data[pos + 1] & 0b00111111) << 6 |
                    (data[pos + 2] & 0b00111111);
       if ((code_point < 0x800) || (0xffff < code_point) ||
           (0xd7ff < code_point && code_point < 0xe000)) {
-        return result(false);
+        return false;
       }
     } else if ((byte & 0b11111000) == 0b11110000) { // 0b11110000
       next_pos = pos + 4;
-      if (next_pos > len) { return result(false); }
-      if ((data[pos + 1] & 0b11000000) != 0b10000000) { return result(false); }
-      if ((data[pos + 2] & 0b11000000) != 0b10000000) { return result(false); }
-      if ((data[pos + 3] & 0b11000000) != 0b10000000) { return result(false); }
+      if (next_pos > len) { return false; }
+      if ((data[pos + 1] & 0b11000000) != 0b10000000) { return false; }
+      if ((data[pos + 2] & 0b11000000) != 0b10000000) { return false; }
+      if ((data[pos + 3] & 0b11000000) != 0b10000000) { return false; }
       // range check
       code_point =
           (byte & 0b00000111) << 18 | (data[pos + 1] & 0b00111111) << 12 |
           (data[pos + 2] & 0b00111111) << 6 | (data[pos + 3] & 0b00111111);
-      if (code_point <= 0xffff || 0x10ffff < code_point) { return result(false); }
+      if (code_point <= 0xffff || 0x10ffff < code_point) { return false; }
     } else {
       // we may have a continuation
-      return result(false);
+      return false;
     }
     pos = next_pos;
   }

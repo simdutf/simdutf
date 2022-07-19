@@ -1,7 +1,7 @@
 #include "simdutf.h"
 #include "implementation.cpp"
 #include "encoding_types.cpp"
-#include "result.cpp"
+#include "error.cpp"
 // The large tables should be included once and they
 // should not depend on a kernel.
 #include "tables/utf8_to_utf16_tables.h"
