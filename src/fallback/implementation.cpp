@@ -29,6 +29,10 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
     return scalar::utf8::validate(buf, len);
 }
 
+simdutf_warn_unused result implementation::validate_utf8_with_errors(const char *buf, size_t len) const noexcept {
+    return scalar::utf8::validate_with_errors(buf, len);
+}
+
 simdutf_warn_unused bool implementation::validate_ascii(const char *buf, size_t len) const noexcept {
     return scalar::ascii::validate(buf, len);
 }

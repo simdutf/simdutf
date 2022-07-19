@@ -28,6 +28,32 @@ bool generic_validate_utf8(const char * input, size_t length) {
     return generic_validate_utf8<utf8_checker>(reinterpret_cast<const uint8_t *>(input),length);
 }
 
+/**
+ * Validates that the string is actual UTF-8 and stops on errors.
+ */
+template<class checker>
+result generic_validate_utf8_with_error(const uint8_t * input, size_t length) {
+    checker c{};
+    buf_block_reader<64> reader(input, length);
+    while (reader.has_full_block()) {
+      simd::simd8x64<uint8_t> in(reader.full_block());
+      c.check_next_input(in);
+      reader.advance();
+    }
+    uint8_t block[64]{};
+    reader.get_remainder(block);
+    simd::simd8x64<uint8_t> in(block);
+    c.check_next_input(in);
+    reader.advance();
+    c.check_eof();
+    return !c.errors();
+}
+
+result generic_validate_utf8_with_errors(const char * input, size_t length) {
+    return scalar::utf8::validate_with_errors(input, length);
+    //return generic_validate_utf8_with_errors<utf8_checker>(reinterpret_cast<const uint8_t *>(input),length);
+}
+
 template<class checker>
 bool generic_validate_ascii(const uint8_t * input, size_t length) {
     buf_block_reader<64> reader(input, length);

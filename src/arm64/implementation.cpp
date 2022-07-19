@@ -66,6 +66,10 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
   return arm64::utf8_validation::generic_validate_utf8(buf,len);
 }
 
+simdutf_warn_unused result implementation::validate_utf8_with_errors(const char *buf, size_t len) const noexcept {
+  return arm64::utf8_validation::generic_validate_utf8_with_errors(buf,len);
+}
+
 simdutf_warn_unused bool implementation::validate_ascii(const char *buf, size_t len) const noexcept {
   return arm64::utf8_validation::generic_validate_ascii(buf,len);
 }

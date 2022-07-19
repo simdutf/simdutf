@@ -93,6 +93,10 @@ public:
     return set_best()->validate_utf8(buf, len);
   }
 
+  simdutf_warn_unused result validate_utf8_with_errors(const char * buf, size_t len) const noexcept final override {
+    return set_best()->validate_utf8_with_errors(buf, len);
+  }
+
   simdutf_warn_unused bool validate_ascii(const char * buf, size_t len) const noexcept final override {
     return set_best()->validate_ascii(buf, len);
   }
@@ -223,6 +227,10 @@ public:
     // implementation. And, when it does happen (that we have an unsupported implementation),
     // what are the chances that the programmer has a fallback? Given that *we* provide the
     // fallback, it implies that the programmer would need a fallback for our fallback.
+  }
+
+  simdutf_warn_unused result validate_utf8_with_errors(const char *, size_t) const noexcept final override {
+    return result(error_code::OTHER, 0);
   }
 
   simdutf_warn_unused bool validate_ascii(const char *, size_t) const noexcept final override {
@@ -366,6 +374,9 @@ SIMDUTF_DLLIMPORTEXPORT internal::atomic_ptr<const implementation> active_implem
 
 simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept {
   return active_implementation->validate_utf8(buf, len);
+}
+simdutf_warn_unused result validate_utf8_with_errors(const char *buf, size_t len) noexcept {
+  return active_implementation->validate_utf8_with_errors(buf, len);
 }
 simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept {
   return active_implementation->validate_ascii(buf, len);
