@@ -135,7 +135,7 @@ TEST(surrogate_error) {
         const unsigned char old = utf8[i];
         const unsigned char second_old = utf8[i+1];
         utf8[i] = 0b11101101;                 // Leading byte is always the same
-        for (size_t s = 0x8; s < 0xf; s++) {  // Modify second byte to create a surrogate codepoint
+        for (int s = 0x8; s < 0xf; s++) {  // Modify second byte to create a surrogate codepoint
           utf8[i+1] = (utf8[i+1] & 0b11000011) | (s << 2);
           simdutf::result res = implementation.validate_utf8_with_errors(reinterpret_cast<const char*>(utf8.data()), utf8.size());
           ASSERT_EQUAL(res.error, simdutf::error_code::SURROGATE);
