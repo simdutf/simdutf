@@ -20,6 +20,12 @@ target_link_libraries(validate_utf8_brute_force_tests
 
 add_cpp_test(validate_utf8_puzzler_tests)
 
+add_cpp_test(validate_utf8_with_errors_tests)
+target_link_libraries(validate_utf8_with_errors_tests
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
+
 add_cpp_test(validate_utf16_basic_tests)
 target_link_libraries(validate_utf16_basic_tests
   PUBLIC simdutf

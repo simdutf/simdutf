@@ -112,16 +112,14 @@ inline simdutf_warn_unused result validate_with_errors(const char *buf, size_t l
       code_point = (byte & 0b00001111) << 12 |
                    (data[pos + 1] & 0b00111111) << 6 |
                    (data[pos + 2] & 0b00111111);
-      if ((code_point < 0x800) || (0xffff < code_point) ||
-          (0xd7ff < code_point && code_point < 0xe000)) {
-        return result(error_code::OVERLONG, pos);
-      }
+      if ((code_point < 0x800) || (0xffff < code_point)) { return result(error_code::OVERLONG, pos);}
+      if (0xd7ff < code_point && code_point < 0xe000) { return result(error_code::SURROGATE, pos); }
     } else if ((byte & 0b11111000) == 0b11110000) { // 0b11110000
       next_pos = pos + 4;
       if (next_pos > len) { return result(error_code::TOO_SHORT, pos); }
-      if ((data[pos + 1] & 0b11000000) != 0b10000000) { result(error_code::TOO_SHORT, pos); }
-      if ((data[pos + 2] & 0b11000000) != 0b10000000) { result(error_code::TOO_SHORT, pos); }
-      if ((data[pos + 3] & 0b11000000) != 0b10000000) { result(error_code::TOO_SHORT, pos); }
+      if ((data[pos + 1] & 0b11000000) != 0b10000000) { return result(error_code::TOO_SHORT, pos); }
+      if ((data[pos + 2] & 0b11000000) != 0b10000000) { return result(error_code::TOO_SHORT, pos); }
+      if ((data[pos + 3] & 0b11000000) != 0b10000000) { return result(error_code::TOO_SHORT, pos); }
       // range check
       code_point =
           (byte & 0b00000111) << 18 | (data[pos + 1] & 0b00111111) << 12 |
@@ -129,8 +127,9 @@ inline simdutf_warn_unused result validate_with_errors(const char *buf, size_t l
       if (code_point <= 0xffff) { return result(error_code::OVERLONG, pos); }
       if (0x10ffff < code_point) { return result(error_code::TOO_LARGE, pos); }
     } else {
-      // we may have a continuation
-      return result(error_code::HEADER_BITS, pos);
+      // we either have too many continuation bytes or an invalid leading byte
+      if ((byte & 0b11000000) == 0b10000000) { return result(error_code::TOO_LONG, pos); }
+      else { return result(error_code::HEADER_BITS, pos); }
     }
     pos = next_pos;
   }
