@@ -67,6 +67,7 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
     // the std::set<simdutf::encoding_type> value represents the *expected* encoding.
     std::vector<std::pair<std::string,std::set<simdutf::encoding_type>>> implemented_functions{
         {"validate_utf8", {simdutf::encoding_type::UTF8}},
+        {"validate_utf8_with_errors", {simdutf::encoding_type::UTF8}},
         {"validate_utf16", {simdutf::encoding_type::UTF16_LE}},
         {"validate_utf32", {simdutf::encoding_type::UTF32_LE}},
         
@@ -365,6 +366,8 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
 
     if (name == "validate_utf8") {
         run_validate_utf8(*implementation, iterations);
+    } else if (name == "validate_utf8_with_errors") {
+        run_validate_utf8_with_errors(*implementation, iterations);
     } else if (name == "validate_utf16") {
         run_validate_utf16(*implementation, iterations);
     } else if(name == "validate_utf32") {
@@ -428,6 +431,24 @@ void Benchmark::run_validate_utf8(const simdutf::implementation& implementation,
     size_t char_count = active_implementation->count_utf8(data, size);
     print_summary(result, size, char_count);
 }
+
+void Benchmark::run_validate_utf8_with_errors(const simdutf::implementation& implementation, size_t iterations) {
+    const char*  data = reinterpret_cast<const char*>(input_data.data());
+    const size_t size = input_data.size();
+    volatile bool sink{false};
+
+    auto proc = [&implementation, data, size, &sink]() {
+        result res = implementation.validate_utf8_with_errors(data, size);
+        sink = !(res.error);
+    };
+
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
+}
+
 
 void Benchmark::run_validate_utf16(const simdutf::implementation& implementation, size_t iterations) {
     const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
