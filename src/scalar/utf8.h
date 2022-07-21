@@ -139,18 +139,21 @@ inline simdutf_warn_unused result validate_with_errors(const char *buf, size_t l
 // Finds the previous leading byte and validates with errors from there
 // Used to pinpoint the location of an error when an invalid chunk is detected
 inline simdutf_warn_unused result rewind_and_validate_with_errors(const char *buf, size_t len) noexcept {
+  size_t extra_len{0};
   // A leading byte cannot be further than 4 bytes away
   for(int i = 0; i < 5; i++) {
     unsigned char byte = *buf;
-    if ((byte & 0b11000000) == 0b11000000) {
+    if ((byte & 0b11000000) != 0b10000000) {
       break;
     } else {
       buf--;
-      len++;
+      extra_len++;
     }
   }
 
-  return validate_with_errors(buf, len);
+  result res = validate_with_errors(buf, len + extra_len);
+  res.position -= extra_len;
+  return res;
 }
 
 inline size_t count_code_points(const char* buf, size_t len) {
