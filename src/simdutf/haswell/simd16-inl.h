@@ -171,8 +171,6 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
     static_assert(NUM_CHUNKS == 2, "Haswell kernel should use two registers per 64-byte block.");
     const simd16<T> chunks[NUM_CHUNKS];
 
-    simd16x32(const simd16x32<T>& o) = delete; // no copy allowed
-    simd16x32<T>& operator=(const simd16<T> other) = delete; // no assignment allowed
     simd16x32() = delete; // no default constructor allowed
 
     simdutf_really_inline simd16x32(const simd16<T> chunk0, const simd16<T> chunk1) : chunks{chunk0, chunk1} {}
@@ -210,9 +208,10 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
       );
     }
 
-    simdutf_really_inline void swap_bytes() const {
-      this->chunks[0].swap_bytes();
-      this->chunks[1].swap_bytes();
+    simdutf_really_inline simd16x32<T> swap_bytes() const {
+      return simd16x32<T>(
+      this->chunks[0].swap_bytes(),
+      this->chunks[1].swap_bytes());
     }
 
     simdutf_really_inline uint64_t eq(const T m) const {

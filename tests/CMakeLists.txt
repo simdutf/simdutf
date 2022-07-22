@@ -20,8 +20,14 @@ target_link_libraries(validate_utf8_brute_force_tests
 
 add_cpp_test(validate_utf8_puzzler_tests)
 
-add_cpp_test(validate_utf16_basic_tests)
-target_link_libraries(validate_utf16_basic_tests
+add_cpp_test(validate_utf16le_basic_tests)
+target_link_libraries(validate_utf16le_basic_tests
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
+
+add_cpp_test(validate_utf16be_basic_tests)
+target_link_libraries(validate_utf16be_basic_tests
   PUBLIC simdutf
          simdutf::tests::reference
          simdutf::tests::helpers)
@@ -35,7 +41,7 @@ target_link_libraries(validate_utf32_basic_tests
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_FOUND)
   set(SCRIPT ${SIMDUTF_SOURCE_DIR}/scripts/sse_validate_utf16le_testcases.py)
-  add_custom_command(TARGET validate_utf16_basic_tests
+  add_custom_command(TARGET validate_utf16le_basic_tests
                    COMMAND ${Python3_EXECUTABLE} ${SCRIPT}
                    DEPENDS ${SCRIPT}
                    VERBATIM
@@ -43,8 +49,8 @@ if(Python3_FOUND)
   unset(SCRIPT)
 endif(Python3_FOUND)
 
-add_cpp_test(convert_valid_utf8_to_utf16_tests)
-target_link_libraries(convert_valid_utf8_to_utf16_tests
+add_cpp_test(convert_valid_utf8_to_utf16le_tests)
+target_link_libraries(convert_valid_utf8_to_utf16le_tests
   PUBLIC simdutf
          simdutf::tests::reference
          simdutf::tests::helpers)
@@ -55,8 +61,14 @@ target_link_libraries(convert_valid_utf8_to_utf32_tests
          simdutf::tests::reference
          simdutf::tests::helpers)
 
-add_cpp_test(convert_utf8_to_utf16_tests)
-target_link_libraries(convert_utf8_to_utf16_tests
+add_cpp_test(convert_utf8_to_utf16le_tests)
+target_link_libraries(convert_utf8_to_utf16le_tests
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
+
+add_cpp_test(convert_utf8_to_utf16be_tests)
+target_link_libraries(convert_utf8_to_utf16be_tests
   PUBLIC simdutf
          simdutf::tests::reference
          simdutf::tests::helpers)
@@ -67,8 +79,8 @@ target_link_libraries(convert_utf8_to_utf32_tests
         simdutf::tests::reference
         simdutf::tests::helpers)
 
-add_cpp_test(convert_utf16_to_utf8_tests)
-target_link_libraries(convert_utf16_to_utf8_tests
+add_cpp_test(convert_utf16le_to_utf8_tests)
+target_link_libraries(convert_utf16le_to_utf8_tests
   PUBLIC simdutf
          simdutf::tests::reference
          simdutf::tests::helpers)
@@ -79,14 +91,14 @@ target_link_libraries(convert_utf32_to_utf8_tests
         simdutf::tests::reference
         simdutf::tests::helpers)
 
-add_cpp_test(convert_utf32_to_utf16_tests)
-target_link_libraries(convert_utf32_to_utf16_tests
+add_cpp_test(convert_utf32_to_utf16le_tests)
+target_link_libraries(convert_utf32_to_utf16le_tests
   PUBLIC simdutf
         simdutf::tests::reference
         simdutf::tests::helpers)
 
-add_cpp_test(convert_valid_utf16_to_utf8_tests)
-target_link_libraries(convert_valid_utf16_to_utf8_tests
+add_cpp_test(convert_valid_utf16le_to_utf8_tests)
+target_link_libraries(convert_valid_utf16le_to_utf8_tests
   PUBLIC simdutf
          simdutf::tests::reference
          simdutf::tests::helpers)
@@ -97,20 +109,20 @@ target_link_libraries(convert_valid_utf32_to_utf8_tests
         simdutf::tests::reference
         simdutf::tests::helpers)
 
-add_cpp_test(convert_valid_utf32_to_utf16_tests)
-target_link_libraries(convert_valid_utf32_to_utf16_tests
+add_cpp_test(convert_valid_utf32_to_utf16le_tests)
+target_link_libraries(convert_valid_utf32_to_utf16le_tests
 PUBLIC simdutf
 simdutf::tests::reference
 simdutf::tests::helpers)
 
-add_cpp_test(convert_utf16_to_utf32_tests)
-target_link_libraries(convert_utf16_to_utf32_tests
+add_cpp_test(convert_utf16le_to_utf32_tests)
+target_link_libraries(convert_utf16le_to_utf32_tests
   PUBLIC simdutf
          simdutf::tests::reference
          simdutf::tests::helpers)
 
-add_cpp_test(convert_valid_utf16_to_utf32_tests)
-target_link_libraries(convert_valid_utf16_to_utf32_tests
+add_cpp_test(convert_valid_utf16le_to_utf32_tests)
+target_link_libraries(convert_valid_utf16le_to_utf32_tests
   PUBLIC simdutf
         simdutf::tests::reference
         simdutf::tests::helpers)

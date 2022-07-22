@@ -57,8 +57,8 @@ simdutf_really_inline size_t change_endianness_utf16(const char16_t* in, size_t 
 
   while (pos + 32 <= size) {
     simd16x32<uint16_t> input(reinterpret_cast<const uint16_t *>(in + pos));
-    input.swap_bytes();
-    input.store(reinterpret_cast<uint16_t *>(output));
+    simd16x32<uint16_t> swapped = input.swap_bytes();
+    swapped.store(reinterpret_cast<uint16_t *>(output));
     pos += 32;
     output += 32;
   }

@@ -20,7 +20,7 @@ simdutf_warn_unused size_t convert_valid(const char* input, size_t size,
     // far more than 64 bytes.
     simd8x64<int8_t> in(reinterpret_cast<const int8_t *>(input + pos));
     if(in.is_ascii()) {
-      in.store_ascii_as_utf16(utf16_output);
+      in.store_ascii_as_utf16<endian>(utf16_output);
       utf16_output += 64;
       pos += 64;
     } else {

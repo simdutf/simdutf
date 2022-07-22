@@ -133,7 +133,7 @@ using namespace simd;
       while(pos + 64 + safety_margin <= size) {
         simd8x64<int8_t> input(reinterpret_cast<const int8_t *>(in + pos));
         if(input.is_ascii()) {
-          input.store_ascii_as_utf16(utf16_output);
+          input.store_ascii_as_utf16<endian>(utf16_output);
           utf16_output += 64;
           pos += 64;
         } else {
