@@ -175,8 +175,14 @@ target_link_libraries(count_utf8
          simdutf::tests::reference
          simdutf::tests::helpers)
 
-add_cpp_test(count_utf16)
-target_link_libraries(count_utf16
+add_cpp_test(count_utf16le)
+target_link_libraries(count_utf16le
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
+
+add_cpp_test(count_utf16be)
+target_link_libraries(count_utf16be
   PUBLIC simdutf
          simdutf::tests::reference
          simdutf::tests::helpers)
