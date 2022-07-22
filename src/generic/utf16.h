@@ -15,7 +15,7 @@ simdutf_really_inline size_t count_code_points(const char16_t* in, size_t size) 
       uint64_t not_pair = input.not_in_range(0xDC00, 0xDFFF);
       count += count_ones(not_pair) / 2;
     }
-    return count + scalar::utf16::count_code_points<endianness::LITTLE>(in + pos, size - pos);
+    return count + scalar::utf16::count_code_points<big_endian>(in + pos, size - pos);
 }
 
 template <endianness big_endian>
@@ -36,7 +36,8 @@ simdutf_really_inline size_t utf8_length_from_utf16(const char16_t* in, size_t s
       size_t fourbyte_count = 32 - count_ones(not_pair_mask) / 2;
       count += 2 * fourbyte_count + 3 * threebyte_count + 2 * twobyte_count + ascii_count;
     }
-    return count + scalar::utf16::utf8_length_from_utf16<endianness::LITTLE>(in + pos, size - pos);
+    //printf("C: %lu S: %lu ", count, scalar::utf16::utf8_length_from_utf16<big_endian>(in + pos, size - pos));
+    return count + scalar::utf16::utf8_length_from_utf16<big_endian>(in + pos, size - pos);
 }
 
 template <endianness big_endian>
@@ -49,7 +50,7 @@ simdutf_really_inline size_t utf32_length_from_utf16(const char16_t* in, size_t 
       uint64_t not_pair = input.not_in_range(0xDC00, 0xDFFF);
       count += count_ones(not_pair) / 2;
     }
-    return count + scalar::utf16::utf32_length_from_utf16<endianness::LITTLE>(in + pos, size - pos);
+    return count + scalar::utf16::utf32_length_from_utf16<big_endian>(in + pos, size - pos);
 }
 
 simdutf_really_inline void change_endianness_utf16(const char16_t* in, size_t size, char16_t* output) {
@@ -57,8 +58,8 @@ simdutf_really_inline void change_endianness_utf16(const char16_t* in, size_t si
 
   while (pos + 32 <= size) {
     simd16x32<uint16_t> input(reinterpret_cast<const uint16_t *>(in + pos));
-    simd16x32<uint16_t> swapped = input.swap_bytes();
-    swapped.store(reinterpret_cast<uint16_t *>(output));
+    input.swap_bytes();
+    input.store(reinterpret_cast<uint16_t *>(output));
     pos += 32;
     output += 32;
   }

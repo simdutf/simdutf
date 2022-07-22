@@ -55,7 +55,7 @@ inline size_t utf8_length_from_utf16(const char16_t* buf, size_t len) {
     /** two-byte **/
     else if (word <= 0x7FF) { counter += 2; }
     /** three-byte **/
-    else if((word <= 0xD7FF) || (p[i] >= 0xE000)) { counter += 3; }
+    else if((word <= 0xD7FF) || (word >= 0xE000)) { counter += 3; }
     /** surrogates -- 4 bytes **/
     else { counter += 2; }
   }

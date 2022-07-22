@@ -157,8 +157,10 @@ template<typename T>
   struct simd16x32 {
     static constexpr int NUM_CHUNKS = 64 / sizeof(simd16<T>);
     static_assert(NUM_CHUNKS == 4, "Westmere kernel should use four registers per 64-byte block.");
-    const simd16<T> chunks[NUM_CHUNKS];
+    simd16<T> chunks[NUM_CHUNKS];
 
+    simd16x32(const simd16x32<T>& o) = delete; // no copy allowed
+    simd16x32<T>& operator=(const simd16<T> other) = delete; // no assignment allowed
     simd16x32() = delete; // no default constructor allowed
 
     simdutf_really_inline simd16x32(const simd16<T> chunk0, const simd16<T> chunk1, const simd16<T> chunk2, const simd16<T> chunk3) : chunks{chunk0, chunk1, chunk2, chunk3} {}
@@ -194,12 +196,11 @@ template<typename T>
       return r0 | (r1 << 16) | (r2 << 32) | (r3 << 48);
     }
 
-    simdutf_really_inline simd16x32<T> swap_bytes() const {
-      return simd16x32<T>(
-      this->chunks[0].swap_bytes(),
-      this->chunks[1].swap_bytes(),
-      this->chunks[2].swap_bytes(),
-      this->chunks[3].swap_bytes());
+    simdutf_really_inline void swap_bytes() {
+      this->chunks[0] = this->chunks[0].swap_bytes();
+      this->chunks[1] = this->chunks[1].swap_bytes();
+      this->chunks[2] = this->chunks[2].swap_bytes();
+      this->chunks[3] = this->chunks[3].swap_bytes();
     }
 
     simdutf_really_inline uint64_t eq(const T m) const {
