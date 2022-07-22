@@ -49,8 +49,12 @@ TEST(convert_1_or_2_UTF8_bytes) {
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
     simdutf::tests::helpers::RandomInt random(0x0000, 0x07ff, seed); // range for 1 or 2 UTF-8 bytes
 
-    auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
-      return implementation.convert_utf8_to_utf16be(utf8, size, utf16);
+    auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16le) -> size_t {
+      std::vector<char16_t> utf16be;
+      utf16be.reserve(size);
+      size_t len = implementation.convert_utf8_to_utf16be(utf8, size, utf16be.data());
+      ASSERT_EQUAL(implementation.change_endianness_utf16(utf16be.data(), len, utf16le), len);
+      return len;
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
       return implementation.utf16_length_from_utf8(utf8, size);
@@ -71,8 +75,12 @@ TEST(convert_1_or_2_or_3_UTF8_bytes) {
     simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0xd7ff},
                                                      {0xe000, 0xffff}}, seed);
 
-    auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
-      return implementation.convert_utf8_to_utf16be(utf8, size, utf16);
+    auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16le) -> size_t {
+      std::vector<char16_t> utf16be;
+      utf16be.reserve(size);
+      size_t len = implementation.convert_utf8_to_utf16be(utf8, size, utf16be.data());
+      ASSERT_EQUAL(implementation.change_endianness_utf16(utf16be.data(), len, utf16le), len);
+      return len;
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
       return implementation.utf16_length_from_utf8(utf8, size);
@@ -92,8 +100,12 @@ TEST(convert_3_or_4_UTF8_bytes) {
     simdutf::tests::helpers::RandomIntRanges random({{0x0800, 0xd800-1},
                                                      {0xe000, 0x10ffff}}, seed); // range for 3 or 4 UTF-8 bytes
 
-    auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
-      return implementation.convert_utf8_to_utf16be(utf8, size, utf16);
+    auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16le) -> size_t {
+      std::vector<char16_t> utf16be;
+      utf16be.reserve(size);
+      size_t len = implementation.convert_utf8_to_utf16be(utf8, size, utf16be.data());
+      ASSERT_EQUAL(implementation.change_endianness_utf16(utf16be.data(), len, utf16le), len);
+      return len;
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
       return implementation.utf16_length_from_utf8(utf8, size);
@@ -104,27 +116,6 @@ TEST(convert_3_or_4_UTF8_bytes) {
       ASSERT_TRUE(test.check_size(size_procedure));
     }
   }
-}
-
-TEST(issue111) {
-  // We stick to ASCII for our source code given that there is no universal way to specify the character encoding of
-  // the source files.
-  char16_t input[] = u"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\u30b3aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-  size_t utf16_len = sizeof(input) / sizeof(char16_t) - 1;
-  ASSERT_TRUE(implementation.validate_utf16le(input, utf16_len));
-  ASSERT_TRUE(implementation.utf8_length_from_utf16le(input, utf16_len)
-              == 2 + utf16_len);
-  size_t utf8_len = implementation.utf8_length_from_utf16le(input, utf16_len);
-  std::unique_ptr<char[]> utf8_buffer{new char[utf8_len]};
-  ASSERT_TRUE(implementation.convert_utf16le_to_utf8(input, utf16_len, utf8_buffer.get())
-              == utf8_len);
-
-  std::unique_ptr<char16_t[]> utf16_buffer{new char16_t[utf16_len]};
-
-  ASSERT_TRUE(implementation.convert_utf8_to_utf16be(utf8_buffer.get(), utf8_len, utf16_buffer.get())
-              == utf16_len);
-
-  ASSERT_TRUE(std::char_traits<char16_t>::compare(input, utf16_buffer.get(), utf16_len) == 0);
 }
 
 int main(int argc, char* argv[]) {
