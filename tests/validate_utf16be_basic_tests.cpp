@@ -16,8 +16,8 @@ TEST(validate_utf16be__returns_true_for_valid_input__single_words) {
     const auto utf16{generator.generate(512, seed)};
     std::vector<char16_t> flipped;
     flipped.reserve(utf16.size());
-    const size_t size = implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
-    ASSERT_EQUAL(size, utf16.size());
+    implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
+
     ASSERT_TRUE(implementation.validate_utf16be(
               reinterpret_cast<const char16_t*>(flipped.data()), flipped.size()));
   }
@@ -30,8 +30,8 @@ TEST(validate_utf16be__returns_true_for_valid_input__surrogate_pairs_short) {
     const auto utf16{generator.generate(8)};
     std::vector<char16_t> flipped;
     flipped.reserve(utf16.size());
-    const size_t size = implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
-    ASSERT_EQUAL(size, utf16.size());
+    implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
+
     ASSERT_TRUE(implementation.validate_utf16be(
               reinterpret_cast<const char16_t*>(flipped.data()), flipped.size()));
   }
@@ -45,9 +45,8 @@ TEST(validate_utf16be__returns_true_for_valid_input__surrogate_pairs) {
     const auto utf16{generator.generate(512)};
     std::vector<char16_t> flipped;
     flipped.reserve(utf16.size());
-    const size_t size = implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
+    implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
 
-    ASSERT_EQUAL(size, utf16.size());
     ASSERT_TRUE(implementation.validate_utf16be(
               reinterpret_cast<const char16_t*>(flipped.data()), flipped.size()));
   }
@@ -60,9 +59,8 @@ TEST(validate_utf16be__returns_true_for_valid_input__mixed) {
   const auto utf16{generator.generate(512)};
   std::vector<char16_t> flipped;
   flipped.reserve(utf16.size());
-  const size_t size = implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
+  implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
 
-  ASSERT_EQUAL(size, utf16.size());
   ASSERT_TRUE(implementation.validate_utf16be(
               reinterpret_cast<const char16_t*>(flipped.data()), flipped.size()));
 }
@@ -94,9 +92,7 @@ TEST(validate_utf16be__returns_false_when_input_has_wrong_first_word_value) {
 
     std::vector<char16_t> flipped;
     flipped.reserve(len);
-    const size_t size = implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
-
-    ASSERT_EQUAL(size, len);
+    implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
 
     for (char16_t wrong_value = 0xdc00; wrong_value <= 0xdfff; wrong_value++) {
       for (size_t i=0; i < utf16.size(); i++) {
@@ -125,9 +121,7 @@ TEST(validate_utf16be__returns_false_when_input_has_wrong_second_word_value) {
 
   std::vector<char16_t> flipped;
   flipped.reserve(len);
-  const size_t size = implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
-
-  ASSERT_EQUAL(size, len);
+  implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
 
   const std::array<char16_t, 5> sample_wrong_second_word{
     0x0000, 0x0010, 0xffdb, 0x00e0, 0xffff
@@ -166,9 +160,7 @@ TEST(validate_utf16be__returns_false_when_input_is_truncated) {
 
     std::vector<char16_t> flipped;
     flipped.reserve(len);
-    const size_t len2 = implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
-
-    ASSERT_EQUAL(len, len2);
+    implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
 
     flipped[size - 1] = valid_surrogate_W1;
 

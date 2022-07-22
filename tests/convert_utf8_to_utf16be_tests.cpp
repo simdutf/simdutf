@@ -28,7 +28,7 @@ TEST(convert_pure_ASCII) {
       std::vector<char16_t> utf16be;
       utf16be.reserve(size);
       size_t len = implementation.convert_utf8_to_utf16be(utf8, size, utf16be.data());
-      ASSERT_EQUAL(implementation.change_endianness_utf16(utf16be.data(), len, utf16le), len);
+      implementation.change_endianness_utf16(utf16be.data(), len, utf16le);
       return len;
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
@@ -53,7 +53,7 @@ TEST(convert_1_or_2_UTF8_bytes) {
       std::vector<char16_t> utf16be;
       utf16be.reserve(size);
       size_t len = implementation.convert_utf8_to_utf16be(utf8, size, utf16be.data());
-      ASSERT_EQUAL(implementation.change_endianness_utf16(utf16be.data(), len, utf16le), len);
+      implementation.change_endianness_utf16(utf16be.data(), len, utf16le);
       return len;
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
@@ -79,7 +79,7 @@ TEST(convert_1_or_2_or_3_UTF8_bytes) {
       std::vector<char16_t> utf16be;
       utf16be.reserve(size);
       size_t len = implementation.convert_utf8_to_utf16be(utf8, size, utf16be.data());
-      ASSERT_EQUAL(implementation.change_endianness_utf16(utf16be.data(), len, utf16le), len);
+      implementation.change_endianness_utf16(utf16be.data(), len, utf16le);
       return len;
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
@@ -104,7 +104,7 @@ TEST(convert_3_or_4_UTF8_bytes) {
       std::vector<char16_t> utf16be;
       utf16be.reserve(size);
       size_t len = implementation.convert_utf8_to_utf16be(utf8, size, utf16be.data());
-      ASSERT_EQUAL(implementation.change_endianness_utf16(utf16be.data(), len, utf16le), len);
+      implementation.change_endianness_utf16(utf16be.data(), len, utf16le);
       return len;
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {

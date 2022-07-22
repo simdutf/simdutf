@@ -74,13 +74,12 @@ inline size_t utf32_length_from_utf16(const char16_t* buf, size_t len) {
   return counter;
 }
 
-simdutf_really_inline size_t change_endianness_utf16(const char16_t* in, size_t size, char16_t* out) {
+simdutf_really_inline void change_endianness_utf16(const char16_t* in, size_t size, char16_t* out) {
   const uint16_t * input = reinterpret_cast<const uint16_t *>(in);
   uint16_t * output = reinterpret_cast<uint16_t *>(out);
   for (size_t i = 0; i < size; i++) {
     *output++ = uint16_t(input[i] >> 8 | input[i] << 8);
   }
-  return size;
 }
 
 } // utf16 namespace

@@ -425,7 +425,7 @@ simdutf_warn_unused size_t convert_valid_utf32_to_utf16be(const char32_t * input
  * @param length        the length of the string in 2-byte words (char16_t)
  * @param output        the pointer to buffer that can hold the conversion result
  */
-simdutf_warn_unused size_t change_endianness_utf16(const char16_t * input, size_t length, char16_t * output) noexcept;
+void change_endianness_utf16(const char16_t * input, size_t length, char16_t * output) noexcept;
 
 /**
  * Compute the number of bytes that this UTF-32LE string would require in UTF-8 format.
@@ -977,7 +977,7 @@ public:
    * @param length        the length of the string in 2-byte words (char16_t)
    * @param output        the pointer to buffer that can hold the conversion result
    */
-  simdutf_warn_unused virtual size_t change_endianness_utf16(const char16_t * input, size_t length, char16_t * output) const noexcept = 0;
+  virtual void change_endianness_utf16(const char16_t * input, size_t length, char16_t * output) const noexcept = 0;
 
   /**
    * Compute the number of bytes that this UTF-32LE string would require in UTF-8 format.

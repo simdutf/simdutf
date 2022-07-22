@@ -39,7 +39,7 @@ public:
   simdutf_warn_unused size_t convert_utf16be_to_utf32(const char16_t * buf, size_t len, char32_t* utf32_buffer) const noexcept final;
   simdutf_warn_unused size_t convert_valid_utf16le_to_utf32(const char16_t * buf, size_t len, char32_t* utf32_buffer) const noexcept final;
   simdutf_warn_unused size_t convert_valid_utf16be_to_utf32(const char16_t * buf, size_t len, char32_t* utf32_buffer) const noexcept final;
-  simdutf_warn_unused size_t change_endianness_utf16(const char16_t * buf, size_t length, char16_t * output) const noexcept final;
+  void change_endianness_utf16(const char16_t * buf, size_t length, char16_t * output) const noexcept final;
   simdutf_warn_unused size_t count_utf16le(const char16_t * buf, size_t length) const noexcept;
   simdutf_warn_unused size_t count_utf16be(const char16_t * buf, size_t length) const noexcept;
   simdutf_warn_unused size_t count_utf8(const char * buf, size_t length) const noexcept;
