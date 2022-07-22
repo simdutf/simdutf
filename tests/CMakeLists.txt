@@ -55,6 +55,12 @@ target_link_libraries(convert_valid_utf8_to_utf16le_tests
          simdutf::tests::reference
          simdutf::tests::helpers)
 
+add_cpp_test(convert_valid_utf8_to_utf16be_tests)
+target_link_libraries(convert_valid_utf8_to_utf16be_tests
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
+
 add_cpp_test(convert_valid_utf8_to_utf32_tests)
 target_link_libraries(convert_valid_utf8_to_utf32_tests
   PUBLIC simdutf
@@ -115,6 +121,12 @@ target_link_libraries(convert_valid_utf16le_to_utf8_tests
          simdutf::tests::reference
          simdutf::tests::helpers)
 
+add_cpp_test(convert_valid_utf16be_to_utf8_tests)
+target_link_libraries(convert_valid_utf16be_to_utf8_tests
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
+
 add_cpp_test(convert_valid_utf32_to_utf8_tests)
 target_link_libraries(convert_valid_utf32_to_utf8_tests
   PUBLIC simdutf
@@ -123,9 +135,15 @@ target_link_libraries(convert_valid_utf32_to_utf8_tests
 
 add_cpp_test(convert_valid_utf32_to_utf16le_tests)
 target_link_libraries(convert_valid_utf32_to_utf16le_tests
-PUBLIC simdutf
-simdutf::tests::reference
-simdutf::tests::helpers)
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
+
+add_cpp_test(convert_valid_utf32_to_utf16be_tests)
+target_link_libraries(convert_valid_utf32_to_utf16be_tests
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
 
 add_cpp_test(convert_utf16le_to_utf32_tests)
 target_link_libraries(convert_utf16le_to_utf32_tests
@@ -141,6 +159,12 @@ target_link_libraries(convert_utf16be_to_utf32_tests
 
 add_cpp_test(convert_valid_utf16le_to_utf32_tests)
 target_link_libraries(convert_valid_utf16le_to_utf32_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
+
+add_cpp_test(convert_valid_utf16be_to_utf32_tests)
+target_link_libraries(convert_valid_utf16be_to_utf32_tests
   PUBLIC simdutf
         simdutf::tests::reference
         simdutf::tests::helpers)
