@@ -17,7 +17,6 @@ inline size_t convert(const char32_t* buf, size_t len, char16_t* utf16_output) {
       if (word >= 0xD800 && word <= 0xDFFF) { return 0; }
       // will not generate a surrogate pair
       *utf16_output++ = big_endian ? char16_t(utf16::swap_bytes(uint16_t(word))) : char16_t(word);
-      pos++;
     } else {
       // will generate a surrogate pair
       if (word > 0x10FFFF) { return 0; }
@@ -30,8 +29,8 @@ inline size_t convert(const char32_t* buf, size_t len, char16_t* utf16_output) {
       }
       *utf16_output++ = char16_t(high_surrogate);
       *utf16_output++ = char16_t(low_surrogate);
-      pos++;
     }
+    pos++;
   }
   return utf16_output - start;
 }

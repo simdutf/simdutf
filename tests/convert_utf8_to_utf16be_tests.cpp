@@ -26,7 +26,7 @@ TEST(convert_pure_ASCII) {
 
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16le) -> size_t {
       std::vector<char16_t> utf16be;
-      utf16be.reserve(size);
+      utf16be.reserve(2*size);
       size_t len = implementation.convert_utf8_to_utf16be(utf8, size, utf16be.data());
       implementation.change_endianness_utf16(utf16be.data(), len, utf16le);
       return len;
@@ -51,7 +51,7 @@ TEST(convert_1_or_2_UTF8_bytes) {
 
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16le) -> size_t {
       std::vector<char16_t> utf16be;
-      utf16be.reserve(size);
+      utf16be.reserve(2*size);
       size_t len = implementation.convert_utf8_to_utf16be(utf8, size, utf16be.data());
       implementation.change_endianness_utf16(utf16be.data(), len, utf16le);
       return len;
@@ -77,7 +77,7 @@ TEST(convert_1_or_2_or_3_UTF8_bytes) {
 
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16le) -> size_t {
       std::vector<char16_t> utf16be;
-      utf16be.reserve(size);
+      utf16be.reserve(2*size);
       size_t len = implementation.convert_utf8_to_utf16be(utf8, size, utf16be.data());
       implementation.change_endianness_utf16(utf16be.data(), len, utf16le);
       return len;
@@ -102,7 +102,7 @@ TEST(convert_3_or_4_UTF8_bytes) {
 
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16le) -> size_t {
       std::vector<char16_t> utf16be;
-      utf16be.reserve(size);
+      utf16be.reserve(2*size);
       size_t len = implementation.convert_utf8_to_utf16be(utf8, size, utf16be.data());
       implementation.change_endianness_utf16(utf16be.data(), len, utf16le);
       return len;
