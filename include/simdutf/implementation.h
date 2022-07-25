@@ -449,7 +449,7 @@ simdutf_warn_unused size_t utf8_length_from_utf32(const char32_t * input, size_t
  */
 simdutf_warn_unused size_t utf16_length_from_utf32(const char32_t * input, size_t length) noexcept;
 
-/*
+/**
  * Compute the number of bytes that this UTF-16LE string would require in UTF-32LE format.
  *
  * This function is equivalent to count_utf16le.
@@ -464,7 +464,7 @@ simdutf_warn_unused size_t utf16_length_from_utf32(const char32_t * input, size_
  */
 simdutf_warn_unused size_t utf32_length_from_utf16le(const char16_t * input, size_t length) noexcept;
 
-/*
+/**
  * Compute the number of bytes that this UTF-16BE string would require in UTF-32LE format.
  *
  * This function is equivalent to count_utf16be.
