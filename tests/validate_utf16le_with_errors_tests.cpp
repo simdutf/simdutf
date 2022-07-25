@@ -231,7 +231,6 @@ TEST(validate_utf16__extensive_tests) {
     simdutf::result res = implementation.validate_utf16le_with_errors(reinterpret_cast<const char16_t*>(buf), len);
 
     ASSERT_EQUAL(res.error, valid);
-    ASSERT_EQUAL(res.position, len);
   }
 }
 
