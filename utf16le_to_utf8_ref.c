@@ -67,5 +67,5 @@ utf16le_to_utf8_ref(unsigned char out[restrict], const char16_t in[restrict], si
 extern size_t
 utf16le_to_utf8_buflen_ref(size_t n)
 {
-	return (4*n);
+	return (3*n);
 }

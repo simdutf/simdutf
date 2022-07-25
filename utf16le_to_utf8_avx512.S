@@ -268,7 +268,7 @@ utf16le_to_utf8_avx512:
 	.type		utf16le_to_utf8_buflen_avx512, @function
 	.globl		utf16le_to_utf8_buflen_avx512
 utf16le_to_utf8_buflen_avx512:
-	lea		95(,%rdi,4), %rax	// up to 4 bytes for each character
+	lea		95(%rdi,%rdi,2), %rax	// up to 3 bytes for each word
 						// plus 95 byte we might store past the end
 	ret
 

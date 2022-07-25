@@ -157,5 +157,5 @@ utf16le_to_utf8_avx512i(unsigned char outbuf[restrict], const char16_t inbuf[res
 extern size_t
 utf16le_to_utf8_buflen_avx512i(size_t n)
 {
-	return (4*n + 95);
+	return (3*n + 95);
 }
