@@ -113,7 +113,13 @@ simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, siz
 }
 
 simdutf_warn_unused result implementation::validate_utf32_with_errors(const char32_t *buf, size_t len) const noexcept {
-  return scalar::utf32::validate_with_errors(buf, len);
+  result res = sse_validate_utf32le_with_errors(buf, len);
+  if (res.position != len) {
+    result scalar_res = scalar::utf32::validate_with_errors(buf + res.position, len - res.position);
+    return result(scalar_res.error, res.position + scalar_res.position);
+  } else {
+    return res;
+  }
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
