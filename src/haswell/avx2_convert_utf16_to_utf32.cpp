@@ -52,6 +52,7 @@
   Returns a pair: the first unprocessed byte from buf and utf32_output
   A scalar routing should carry on the conversion of the tail.
 */
+template <endianness big_endian>
 std::pair<const char16_t*, char32_t*> avx2_convert_utf16_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) {
   const char16_t* end = buf + len;
   const __m256i v_f800 = _mm256_set1_epi16((int16_t)0xf800);
@@ -59,6 +60,11 @@ std::pair<const char16_t*, char32_t*> avx2_convert_utf16_to_utf32(const char16_t
 
   while (buf + 16 <= end) {
     __m256i in = _mm256_loadu_si256((__m256i*)buf);
+    if (big_endian) {
+      const __m256i swap = _mm256_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14,
+                                  17, 16, 19, 18, 21, 20, 23, 22, 25, 24, 27, 26, 29, 28, 31, 30);
+      in = _mm256_shuffle_epi8(in, swap);
+    }
 
     // 1. Check if there are any surrogate word in the input chunk.
     //    We have also deal with situation when there is a surrogate word
@@ -85,14 +91,14 @@ std::pair<const char16_t*, char32_t*> avx2_convert_utf16_to_utf32(const char16_t
       size_t k = 0;
       if(size_t(end - buf) < forward + 1) { forward = size_t(end - buf - 1);}
       for(; k < forward; k++) {
-        uint16_t word = buf[k];
+        uint16_t word = big_endian ? scalar::utf16::swap_bytes(buf[k]) : buf[k];
         if((word &0xF800 ) != 0xD800) {
           // No surrogate pair
           *utf32_output++ = char32_t(word);
         } else {
           // must be a surrogate pair
           uint16_t diff = uint16_t(word - 0xD800);
-          uint16_t next_word = buf[k+1];
+          uint16_t next_word = big_endian ? scalar::utf16::swap_bytes(buf[k+1]) : buf[k+1];
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
           if((diff | diff2) > 0x3FF)  { return std::make_pair(nullptr, utf32_output); }

@@ -51,6 +51,7 @@
   Returns a pair: the first unprocessed byte from buf and utf8_output
   A scalar routing should carry on the conversion of the tail.
 */
+template <endianness big_endian>
 std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) {
 
   const char16_t* end = buf + len;
@@ -61,10 +62,18 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
   const __m128i v_c080 = _mm_set1_epi16((int16_t)0xc080);
   while (buf + 16 <= end) {
     __m128i in = _mm_loadu_si128((__m128i*)buf);
+    if (big_endian) {
+      const __m128i swap = _mm_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
+      in = _mm_shuffle_epi8(in, swap);
+    }
     // a single 16-bit UTF-16 word can yield 1, 2 or 3 UTF-8 bytes
     const __m128i v_ff80 = _mm_set1_epi16((int16_t)0xff80);
     if(_mm_testz_si128(in, v_ff80)) { // ASCII fast path!!!!
         __m128i nextin = _mm_loadu_si128((__m128i*)buf+1);
+        if (big_endian) {
+          const __m128i swap = _mm_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
+          nextin = _mm_shuffle_epi8(nextin, swap);
+        }
         if(!_mm_testz_si128(nextin, v_ff80)) {
           // 1. pack the bytes
           // obviously suboptimal.
@@ -242,7 +251,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
       size_t k = 0;
       if(size_t(end - buf) < forward + 1) { forward = size_t(end - buf - 1);}
       for(; k < forward; k++) {
-        uint16_t word = buf[k];
+        uint16_t word = big_endian ? scalar::utf16::swap_bytes(buf[k]) : buf[k];
         if((word & 0xFF80)==0) {
           *utf8_output++ = char(word);
         } else if((word & 0xF800)==0) {
@@ -255,7 +264,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
         } else {
           // must be a surrogate pair
           uint16_t diff = uint16_t(word - 0xD800);
-          uint16_t next_word = buf[k+1];
+          uint16_t next_word = big_endian ? scalar::utf16::swap_bytes(buf[k+1]) : buf[k+1];
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
           if((diff | diff2) > 0x3FF)  { return std::make_pair(nullptr, utf8_output); }

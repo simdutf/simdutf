@@ -140,6 +140,12 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
   template<int N>
   simdutf_really_inline int get_bit() const { return _mm_movemask_epi8(_mm_slli_epi16(*this, 7-N)); }
 
+  // Change the endianness
+  simdutf_really_inline simd16<uint16_t> swap_bytes() const {
+    const __m128i swap = _mm_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
+    return _mm_shuffle_epi8(*this, swap);
+  }
+
   // Pack with the unsigned saturation  two uint16_t words into single uint8_t vector
   static simdutf_really_inline simd8<uint8_t> pack(const simd16<uint16_t>& v0, const simd16<uint16_t>& v1) {
     return _mm_packus_epi16(v0, v1);
@@ -151,7 +157,7 @@ template<typename T>
   struct simd16x32 {
     static constexpr int NUM_CHUNKS = 64 / sizeof(simd16<T>);
     static_assert(NUM_CHUNKS == 4, "Westmere kernel should use four registers per 64-byte block.");
-    const simd16<T> chunks[NUM_CHUNKS];
+    simd16<T> chunks[NUM_CHUNKS];
 
     simd16x32(const simd16x32<T>& o) = delete; // no copy allowed
     simd16x32<T>& operator=(const simd16<T> other) = delete; // no assignment allowed
@@ -188,6 +194,13 @@ template<typename T>
       uint64_t r2 =          this->chunks[2].to_bitmask() ;
       uint64_t r3 =          this->chunks[3].to_bitmask() ;
       return r0 | (r1 << 16) | (r2 << 32) | (r3 << 48);
+    }
+
+    simdutf_really_inline void swap_bytes() {
+      this->chunks[0] = this->chunks[0].swap_bytes();
+      this->chunks[1] = this->chunks[1].swap_bytes();
+      this->chunks[2] = this->chunks[2].swap_bytes();
+      this->chunks[3] = this->chunks[3].swap_bytes();
     }
 
     simdutf_really_inline uint64_t eq(const T m) const {

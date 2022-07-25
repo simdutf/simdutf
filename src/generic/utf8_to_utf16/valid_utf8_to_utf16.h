@@ -8,6 +8,7 @@ namespace utf8_to_utf16 {
 
 using namespace simd;
 
+template <endianness endian>
 simdutf_warn_unused size_t convert_valid(const char* input, size_t size,
     char16_t* utf16_output) noexcept {
   // The implementation is not specific to haswell and should be moved to the generic directory.
@@ -19,7 +20,7 @@ simdutf_warn_unused size_t convert_valid(const char* input, size_t size,
     // far more than 64 bytes.
     simd8x64<int8_t> in(reinterpret_cast<const int8_t *>(input + pos));
     if(in.is_ascii()) {
-      in.store_ascii_as_utf16(utf16_output);
+      in.store_ascii_as_utf16<endian>(utf16_output);
       utf16_output += 64;
       pos += 64;
     } else {
@@ -51,7 +52,7 @@ simdutf_warn_unused size_t convert_valid(const char* input, size_t size,
         // Thus we may allow convert_masked_utf8_to_utf16 to process
         // more bytes at a time under a fast-path mode where 16 bytes
         // are consumed at once (e.g., when encountering ASCII).
-        size_t consumed = convert_masked_utf8_to_utf16(input + pos,
+        size_t consumed = convert_masked_utf8_to_utf16<endian>(input + pos,
                             utf8_end_of_code_point_mask, utf16_output);
         pos += consumed;
         utf8_end_of_code_point_mask >>= consumed;
@@ -62,7 +63,7 @@ simdutf_warn_unused size_t convert_valid(const char* input, size_t size,
       // 85% to 90% efficiency.
     }
   }
-  utf16_output += scalar::utf8_to_utf16::convert_valid(input + pos, size - pos, utf16_output);
+  utf16_output += scalar::utf8_to_utf16::convert_valid<endian>(input + pos, size - pos, utf16_output);
   return utf16_output - start;
 }
 

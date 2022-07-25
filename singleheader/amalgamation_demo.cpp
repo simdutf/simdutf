@@ -19,10 +19,10 @@ int main(int , char *[]) {
   std::unique_ptr<char16_t[]> utf16_output{new char16_t[expected_utf16words]};
   // convert to UTF-16LE
   size_t utf16words =
-      simdutf::convert_utf8_to_utf16(source, 4, utf16_output.get());
+      simdutf::convert_utf8_to_utf16le(source, 4, utf16_output.get());
   std::cout << "wrote " << utf16words << " UTF-16LE words." << std::endl;
   // It wrote utf16words * sizeof(char16_t) bytes.
-  bool validutf16 = simdutf::validate_utf16(utf16_output.get(), utf16words);
+  bool validutf16 = simdutf::validate_utf16le(utf16_output.get(), utf16words);
   if (validutf16) {
     std::cout << "valid UTF-16LE" << std::endl;
   } else {
@@ -32,10 +32,10 @@ int main(int , char *[]) {
   // convert it back:
   // We need a buffer of size where to write the UTF-8 words.
   size_t expected_utf8words =
-      simdutf::utf8_length_from_utf16(utf16_output.get(), utf16words);
+      simdutf::utf8_length_from_utf16le(utf16_output.get(), utf16words);
   std::unique_ptr<char[]> utf8_output{new char[expected_utf8words]};
   // convert to UTF-8
-  size_t utf8words = simdutf::convert_utf16_to_utf8(
+  size_t utf8words = simdutf::convert_utf16le_to_utf8(
       utf16_output.get(), utf16words, utf8_output.get());
   std::cout << "wrote " << utf8words << " UTF-8 words." << std::endl;
   std::string final_string(utf8_output.get(), utf8words);

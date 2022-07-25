@@ -18,9 +18,17 @@ namespace simd {
     // Conversion to SIMD register
     simdutf_really_inline operator const __m128i&() const { return this->value; }
     simdutf_really_inline operator __m128i&() { return this->value; }
+    template <endianness big_endian>
     simdutf_really_inline void store_ascii_as_utf16(char16_t * p) const {
-      _mm_storeu_si128(reinterpret_cast<__m128i *>(p), _mm_cvtepu8_epi16(*this));
-      _mm_storeu_si128(reinterpret_cast<__m128i *>(p+8), _mm_cvtepu8_epi16(_mm_srli_si128(*this,8)));
+      __m128i first = _mm_cvtepu8_epi16(*this);
+      __m128i second = _mm_cvtepu8_epi16(_mm_srli_si128(*this,8));
+      if (big_endian) {
+        const __m128i swap = _mm_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
+        first = _mm_shuffle_epi8(first, swap);
+        second = _mm_shuffle_epi8(second, swap);
+      }
+      _mm_storeu_si128(reinterpret_cast<__m128i *>(p), first);
+      _mm_storeu_si128(reinterpret_cast<__m128i *>(p+8), second);
     }
     simdutf_really_inline void store_ascii_as_utf32(char32_t * p) const {
       _mm_storeu_si128(reinterpret_cast<__m128i *>(p), _mm_cvtepu8_epi32(*this));
@@ -320,11 +328,12 @@ namespace simd {
       return this->reduce_or().is_ascii();
     }
 
+    template <endianness endian>
     simdutf_really_inline void store_ascii_as_utf16(char16_t * ptr) const {
-      this->chunks[0].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*0);
-      this->chunks[1].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*1);
-      this->chunks[2].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*2);
-      this->chunks[3].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*3);
+      this->chunks[0].template store_ascii_as_utf16<endian>(ptr+sizeof(simd8<T>)*0);
+      this->chunks[1].template store_ascii_as_utf16<endian>(ptr+sizeof(simd8<T>)*1);
+      this->chunks[2].template store_ascii_as_utf16<endian>(ptr+sizeof(simd8<T>)*2);
+      this->chunks[3].template store_ascii_as_utf16<endian>(ptr+sizeof(simd8<T>)*3);
     }
 
     simdutf_really_inline void store_ascii_as_utf32(char32_t * ptr) const {
