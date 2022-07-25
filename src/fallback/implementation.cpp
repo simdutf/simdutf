@@ -41,6 +41,10 @@ simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, siz
     return scalar::utf16::validate(buf, len);
 }
 
+simdutf_warn_unused result implementation::validate_utf16le_with_errors(const char16_t *buf, size_t len) const noexcept {
+    return scalar::utf16::validate_with_errors(buf, len);
+}
+
 simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, size_t len) const noexcept {
     return scalar::utf32::validate(buf, len);
 }

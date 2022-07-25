@@ -105,6 +105,10 @@ public:
     return set_best()->validate_utf16(buf, len);
   }
 
+  simdutf_warn_unused result validate_utf16le_with_errors(const char16_t * buf, size_t len) const noexcept final override {
+    return set_best()->validate_utf16le_with_errors(buf, len);
+  }
+
   simdutf_warn_unused bool validate_utf32(const char32_t * buf, size_t len) const noexcept final override {
     return set_best()->validate_utf32(buf, len);
   }
@@ -239,6 +243,10 @@ public:
 
   simdutf_warn_unused bool validate_utf16(const char16_t*, size_t) const noexcept final override {
     return false;
+  }
+
+  simdutf_warn_unused result validate_utf16le_with_errors(const char16_t*, size_t) const noexcept final override {
+    return result(error_code::OTHER, 0);
   }
 
   simdutf_warn_unused bool validate_utf32(const char32_t*, size_t) const noexcept final override {
@@ -389,6 +397,9 @@ simdutf_warn_unused size_t convert_utf8_to_utf32(const char * input, size_t leng
 }
 simdutf_warn_unused bool validate_utf16(const char16_t * buf, size_t len) noexcept {
   return active_implementation->validate_utf16(buf, len);
+}
+simdutf_warn_unused result validate_utf16le_with_errors(const char16_t * buf, size_t len) noexcept {
+  return active_implementation->validate_utf16le_with_errors(buf, len);
 }
 simdutf_warn_unused bool validate_utf32(const char32_t * buf, size_t len) noexcept {
   return active_implementation->validate_utf32(buf, len);
