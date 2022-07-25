@@ -81,6 +81,14 @@ std::pair<const char16_t*, char*> arm_convert_utf16_to_utf8(const char16_t* buf,
           // 3. adjust pointers
           buf += 8;
           utf8_output += 8;
+          if (big_endian) {
+            #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+            const uint8x16_t swap = make_uint8x16_t(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
+            #else
+            const uint8x16_t swap = {1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14};
+            #endif
+            nextin = vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(nextin), swap));
+          }
           in = nextin;
         } else {
           // 1. pack the bytes
@@ -270,7 +278,7 @@ std::pair<const char16_t*, char*> arm_convert_utf16_to_utf8(const char16_t* buf,
       size_t k = 0;
       if(size_t(end - buf) < forward + 1) { forward = size_t(end - buf - 1);}
       for(; k < forward; k++) {
-        uint16_t word = buf[k];
+        uint16_t word = big_endian ? scalar::utf16::swap_bytes(buf[k]) : buf[k];
         if((word & 0xFF80)==0) {
           *utf8_output++ = char(word);
         } else if((word & 0xF800)==0) {
@@ -283,7 +291,7 @@ std::pair<const char16_t*, char*> arm_convert_utf16_to_utf8(const char16_t* buf,
         } else {
           // must be a surrogate pair
           uint16_t diff = uint16_t(word - 0xD800);
-          uint16_t next_word = buf[k+1];
+          uint16_t next_word = big_endian ? scalar::utf16::swap_bytes(buf[k + 1]) : buf[k + 1];
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
           if((diff | diff2) > 0x3FF)  { return std::make_pair(nullptr, reinterpret_cast<char*>(utf8_output)); }

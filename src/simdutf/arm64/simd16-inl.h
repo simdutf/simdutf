@@ -180,7 +180,7 @@ simdutf_really_inline simd16<int16_t>::operator simd16<uint16_t>() const { retur
   struct simd16x32 {
     static constexpr int NUM_CHUNKS = 64 / sizeof(simd16<T>);
     static_assert(NUM_CHUNKS == 4, "ARM kernel should use four registers per 64-byte block.");
-    const simd16<T> chunks[NUM_CHUNKS];
+    simd16<T> chunks[NUM_CHUNKS];
 
     simd16x32(const simd16x32<T>& o) = delete; // no copy allowed
     simd16x32<T>& operator=(const simd16<T> other) = delete; // no assignment allowed
@@ -231,9 +231,11 @@ simdutf_really_inline simd16<int16_t>::operator simd16<uint16_t>() const { retur
       return vgetq_lane_u64(vreinterpretq_u64_u8(sum0), 0);
     }
 
-    simdutf_really_inline void swap_bytes() const {
-      this->chunks[0].swap_bytes();
-      this->chunks[1].swap_bytes();
+    simdutf_really_inline void swap_bytes() {
+      this->chunks[0] = this->chunks[0].swap_bytes();
+      this->chunks[1] = this->chunks[1].swap_bytes();
+      this->chunks[2] = this->chunks[2].swap_bytes();
+      this->chunks[3] = this->chunks[3].swap_bytes();
     }
 
     simdutf_really_inline uint64_t eq(const T m) const {
