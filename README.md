@@ -14,7 +14,7 @@ Not all sequences of bytes are valid Unicode strings. It is unsafe to use Unicod
 
 This library provide fast Unicode functions such as
 
-- ASCII, UTF-8, UTF-16LE and UTF-32LE validation,
+- ASCII, UTF-8, UTF-16LE and UTF-32LE validation (with and without error specification),
 - UTF-8 to UTF-16LE transcoding, with or without validation,
 - UTF-8 to UTF-32LE transcoding, with or without validation,
 - UTF-16LE to UTF-8 transcoding, with or without validation,
@@ -213,6 +213,17 @@ simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept;
  * @return true if and only if the string is valid UTF-8.
  */
 simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept;
+
+/**
+ * Validate the UTF-8 string and stop on errors.
+ *
+ * Overridden by each implementation.
+ *
+ * @param buf the UTF-8 string to validate.
+ * @param len the length of the string in bytes.
+ * @return a result pair struct with an error code and the position of the error if any.
+ */
+simdutf_warn_unused result validate_utf8_with_errors(const char *buf, size_t len) noexcept;
 
 /**
  * Validate the UTF-16LE string.
@@ -510,6 +521,34 @@ simdutf_warn_unused size_t count_utf8(const char * input, size_t length) noexcep
 
 
 }
+```
+
+Errors
+------
+
+For validation, we also provide validating functions that will stop on errors and return a struct indicating the type of error and its
+location in the input string. We report six types of errors related to UTF-8, UTF-16 and UTF-32 encodings:
+```c++
+enum error_code {
+  SUCCESS = 0,
+  HEADER_BITS,  // Any byte must have fewer than 5 header bits
+  TOO_SHORT,    // The leading byte must be followed by N-1 continuation bytes, where N is the UTF-8 character length
+                // This is also the error when the input is truncated
+  TOO_LONG,     // The leading byte must not be a continuation byte
+  OVERLONG,     // The decoded character must be above U+7F for two-byte characters, U+7FF for three-byte characters,
+                // and U+FFFF for four-byte characters.
+  TOO_LARGE,    // The decoded character must be less than or equal to U+10FFFF
+  SURROGATE,    // The decoded character must be not be in U+D800...DFFF (UTF-8 or UTF-32) OR
+                // a high surrogate must be followed by a low surrogate and a low surrogate must be preceded by a high surrogate (UTF-16)
+  OTHER         // Not related to validation/transcoding
+};
+```
+The returned struct `result` is essentially a pair of two fields,
+```c++
+struct result {
+  error_code error;
+  size_t position;
+};
 ```
 
 Usage
