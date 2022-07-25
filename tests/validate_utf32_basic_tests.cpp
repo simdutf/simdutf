@@ -54,12 +54,12 @@ TEST(validate_utf32__returns_false_when_input_too_large) {
   std::uniform_int_distribution<uint32_t> bad_range{0x110000, 0xffffffff};
   std::mt19937 gen{seed};
 
-  for(size_t trial = 0; trial < 10; trial++) {
+  for(size_t trial = 0; trial < 1000; trial++) {
     auto utf32{generator.generate(128)};
     const char32_t*  buf = reinterpret_cast<const char32_t*>(utf32.data());
     const size_t len = utf32.size();
 
-    for (size_t r = 0; r < 1000; r++) {
+    for (size_t r = 0; r < 10; r++) {
       uint32_t wrong_value = bad_range(gen);
       for (size_t i = 0; i < utf32.size(); i++) {
         const char32_t old = utf32[i];

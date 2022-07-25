@@ -50,6 +50,12 @@ target_link_libraries(validate_utf32_basic_tests
         simdutf::tests::reference
         simdutf::tests::helpers)
 
+add_cpp_test(validate_utf32_with_errors_tests)
+target_link_libraries(validate_utf32_with_errors_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
+
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_FOUND)
   set(SCRIPT ${SIMDUTF_SOURCE_DIR}/scripts/sse_validate_utf16le_testcases.py)
