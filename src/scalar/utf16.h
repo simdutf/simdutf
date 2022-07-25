@@ -51,6 +51,7 @@ inline simdutf_warn_unused result validate_with_errors(const char16_t *buf, size
   return result(error_code::SUCCESS, pos);
 }
 
+template <endianness big_endian>
 inline size_t count_code_points(const char16_t* buf, size_t len) {
   // We are not BOM aware.
   const uint16_t * p = reinterpret_cast<const uint16_t *>(buf);

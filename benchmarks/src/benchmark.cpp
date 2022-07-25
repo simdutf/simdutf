@@ -498,7 +498,7 @@ void Benchmark::run_validate_utf16le_with_errors(const simdutf::implementation& 
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
-    size_t char_count = active_implementation->count_utf16(data, size);
+    size_t char_count = active_implementation->count_utf16le(data, size);
     print_summary(result, size, char_count);
 }
 
