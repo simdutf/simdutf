@@ -44,7 +44,7 @@ TEST(validate_utf32_with_errors__returns_error_when_input_in_forbidden_range) {
         const char32_t old = utf32[i];
         utf32[i] = wrong_value;
 
-        simdutf::result res = implementation.validate_utf32_with_errors(reinterpret_cast<const char32_t*>(utf32.data()), utf32.size());
+        simdutf::result res = implementation.validate_utf32_with_errors(buf, len);
 
         ASSERT_EQUAL(res.error, simdutf::error_code::SURROGATE);
         ASSERT_EQUAL(res.position, i);
@@ -73,7 +73,7 @@ TEST(validate_utf32_with_errors__returns_error_when_input_too_large) {
         const char32_t old = utf32[i];
         utf32[i] = wrong_value;
 
-        simdutf::result res = implementation.validate_utf32_with_errors(reinterpret_cast<const char32_t*>(utf32.data()), utf32.size());
+        simdutf::result res = implementation.validate_utf32_with_errors(buf, len);
 
         ASSERT_EQUAL(res.error, simdutf::error_code::TOO_LARGE);
         ASSERT_EQUAL(res.position, i);
