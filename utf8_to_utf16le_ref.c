@@ -10,7 +10,7 @@
  * occurs, read more input into the buffer and continue translation.
  */
 extern size_t
-utf16le_to_utf8_ref(char16_t out[restrict], const unsigned char in[restrict], size_t len, size_t *outlen)
+utf8_to_utf16le_ref(char16_t out[restrict], const unsigned char in[restrict], size_t len, size_t *outlen)
 {
 	size_t inpos, rem = len, outpos = 0;
 
@@ -99,4 +99,10 @@ utf16le_to_utf8_ref(char16_t out[restrict], const unsigned char in[restrict], si
 
 	*outlen = outpos;
 	return (len - rem);
+}
+
+extern size_t
+utf8_to_utf16le_buflen_ref(size_t n)
+{
+	return (n);
 }

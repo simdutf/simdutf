@@ -261,3 +261,13 @@ utf8_to_utf16le_avx512:
 	jmp		.Ltail
 
 	.size utf8_to_utf16le_avx512, .-utf8_to_utf16le_avx512
+
+// Compute the maximal output buffer size in words needed to transcode an UTF-8
+// string into UTF-16LE.
+	.globl utf8_to_utf16le_buflen_avx512
+	.type utf8_to_utf16le_buflen_avx512, @function
+utf8_to_utf16le_buflen_avx512:
+	lea		31(%rdi), %rax		// may write up to 31 words past the end of the buffer
+	ret
+
+	.size utf8_to_utf16le_buflen_avx512, .-utf8_to_utf16le_buflen_avx512
