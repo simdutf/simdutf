@@ -32,6 +32,12 @@ target_link_libraries(validate_utf16_basic_tests
          simdutf::tests::reference
          simdutf::tests::helpers)
 
+add_cpp_test(validate_utf16le_with_errors_tests)
+target_link_libraries(validate_utf16le_with_errors_tests
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
+
 add_cpp_test(validate_utf32_basic_tests)
 target_link_libraries(validate_utf32_basic_tests
   PUBLIC simdutf
