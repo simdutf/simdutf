@@ -140,6 +140,7 @@ const result sse_validate_utf16le_with_errors(const char16_t* input, size_t size
         const uint16_t surrogates_bitmask = static_cast<uint16_t>(surrogates_wordmask.to_bitmask());
         if (surrogates_bitmask == 0x0000) {
             input += 16;
+            pos += 16;
         } else {
             // 2. We have some surrogates that have to be distinguished:
             //    - low  surrogates: 0b1101'10xx'yyyy'yyyy (0xD800..0xDBFF)

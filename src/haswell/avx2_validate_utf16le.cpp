@@ -140,6 +140,7 @@ const result avx2_validate_utf16le_with_errors(const char16_t* input, size_t siz
         const uint32_t surrogates_bitmask = surrogates_wordmask.to_bitmask();
         if (surrogates_bitmask == 0x0) {
             input += simd16<uint16_t>::ELEMENTS * 2;
+            pos += simd16<uint16_t>::ELEMENTS * 2;
         } else {
             // 2. We have some surrogates that have to be distinguished:
             //    - low  surrogates: 0b1101'10xx'yyyy'yyyy (0xD800..0xDBFF)
