@@ -110,6 +110,19 @@ simdutf_warn_unused result validate_utf16le_with_errors(const char16_t *buf, siz
 simdutf_warn_unused bool validate_utf32(const char32_t *buf, size_t len) noexcept;
 
 /**
+ * Validate the UTF-32LE string and stop on error.
+ *
+ * Overridden by each implementation.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param buf the UTF-32LE string to validate.
+ * @param len the length of the string in number of 4-byte words (char32_t).
+ * @return a result pair struct with an error code and the position of the error if any.
+ */
+simdutf_warn_unused result validate_utf32_with_errors(const char32_t *buf, size_t len) noexcept;
+
+/**
  * Convert possibly broken UTF-8 string into UTF-16LE string.
  *
  * During the conversion also validation of the input string is done.
@@ -684,6 +697,19 @@ public:
    * @return true if and only if the string is valid UTF-32LE.
    */
   simdutf_warn_unused virtual bool validate_utf32(const char32_t *buf, size_t len) const noexcept = 0;
+
+  /**
+   * Validate the UTF-32LE string and stop on error.
+   *
+   * Overridden by each implementation.
+   *
+   * This function is not BOM-aware.
+   *
+   * @param buf the UTF-32LE string to validate.
+   * @param len the length of the string in number of 4-byte words (char32_t).
+   * @return a result pair struct with an error code and the position of the error if any.
+   */
+  simdutf_warn_unused virtual result validate_utf32_with_errors(const char32_t *buf, size_t len) const noexcept = 0;
 
   /**
    * Convert possibly broken UTF-8 string into UTF-16LE string.
