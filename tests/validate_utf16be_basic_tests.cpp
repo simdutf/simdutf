@@ -14,8 +14,7 @@ TEST(validate_utf16be__returns_true_for_valid_input__single_words) {
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
   for(size_t trial = 0; trial < 1000; trial++) {
     const auto utf16{generator.generate(512, seed)};
-    std::vector<char16_t> flipped;
-    flipped.reserve(utf16.size());
+    std::vector<char16_t> flipped(utf16.size());
     implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
 
     ASSERT_TRUE(implementation.validate_utf16be(
@@ -28,8 +27,7 @@ TEST(validate_utf16be__returns_true_for_valid_input__surrogate_pairs_short) {
   simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
   for(size_t trial = 0; trial < 1000; trial++) {
     const auto utf16{generator.generate(8)};
-    std::vector<char16_t> flipped;
-    flipped.reserve(utf16.size());
+    std::vector<char16_t> flipped(utf16.size());
     implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
 
     ASSERT_TRUE(implementation.validate_utf16be(
@@ -43,8 +41,7 @@ TEST(validate_utf16be__returns_true_for_valid_input__surrogate_pairs) {
   simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
   for(size_t trial = 0; trial < 1000; trial++) {
     const auto utf16{generator.generate(512)};
-    std::vector<char16_t> flipped;
-    flipped.reserve(utf16.size());
+    std::vector<char16_t> flipped(utf16.size());
     implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
 
     ASSERT_TRUE(implementation.validate_utf16be(
@@ -57,8 +54,7 @@ TEST(validate_utf16be__returns_true_for_valid_input__mixed) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 1};
   const auto utf16{generator.generate(512)};
-  std::vector<char16_t> flipped;
-  flipped.reserve(utf16.size());
+  std::vector<char16_t> flipped(utf16.size());
   implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
 
   ASSERT_TRUE(implementation.validate_utf16be(
@@ -90,8 +86,7 @@ TEST(validate_utf16be__returns_false_when_input_has_wrong_first_word_value) {
     auto utf16{generator.generate(128)};
     const size_t len = utf16.size();
 
-    std::vector<char16_t> flipped;
-    flipped.reserve(len);
+    std::vector<char16_t> flipped(len);
     implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
 
     for (char16_t wrong_value = 0xdc00; wrong_value <= 0xdfff; wrong_value++) {
@@ -119,8 +114,7 @@ TEST(validate_utf16be__returns_false_when_input_has_wrong_second_word_value) {
   auto utf16{generator.generate(128)};
   const size_t len = utf16.size();
 
-  std::vector<char16_t> flipped;
-  flipped.reserve(len);
+  std::vector<char16_t> flipped(len);
   implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
 
   const std::array<char16_t, 5> sample_wrong_second_word{
@@ -158,8 +152,7 @@ TEST(validate_utf16be__returns_false_when_input_is_truncated) {
     auto utf16{generator.generate(128)};
     const size_t len = utf16.size();
 
-    std::vector<char16_t> flipped;
-    flipped.reserve(len);
+    std::vector<char16_t> flipped(len);
     implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
 
     flipped[size - 1] = valid_surrogate_W1;

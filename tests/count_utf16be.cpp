@@ -30,8 +30,7 @@ TEST(count_just_one_word) {
 
     for (size_t size : input_size) {
       auto generated = random.generate_counted(size);
-      std::vector<char16_t> utf16be;
-      utf16be.reserve(generated.first.size());
+      std::vector<char16_t> utf16be(generated.first.size());
       implementation.change_endianness_utf16(reinterpret_cast<const char16_t *>(generated.first.data()), generated.first.size(), utf16be.data());
       size_t count = implementation.count_utf16be(utf16be.data(), size);
       ASSERT_EQUAL(count, generated.second);
@@ -50,8 +49,7 @@ TEST(count_1_or_2_UTF16_words) {
 
     for (size_t size : input_size) {
       auto generated = random.generate_counted(size);
-      std::vector<char16_t> utf16be;
-      utf16be.reserve(generated.first.size());
+      std::vector<char16_t> utf16be(generated.first.size());
       implementation.change_endianness_utf16(reinterpret_cast<const char16_t *>(generated.first.data()), generated.first.size(), utf16be.data());
       size_t count = implementation.count_utf16be(utf16be.data(), size);
       ASSERT_EQUAL(count, generated.second);
@@ -68,8 +66,7 @@ TEST(count_2_UTF16_words) {
     for (size_t size : input_size) {
 
       auto generated = random.generate_counted(size);
-      std::vector<char16_t> utf16be;
-      utf16be.reserve(generated.first.size());
+      std::vector<char16_t> utf16be(generated.first.size());
       implementation.change_endianness_utf16(reinterpret_cast<const char16_t *>(generated.first.data()), generated.first.size(), utf16be.data());
       size_t count = implementation.count_utf16be(utf16be.data(), size);
       ASSERT_EQUAL(count, generated.second);

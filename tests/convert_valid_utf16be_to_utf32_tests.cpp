@@ -28,8 +28,7 @@ TEST(convert_2_UTF16_bytes) {
                                                      {0xe000, 0xffff}}, 0);
 
     auto procedure = [&implementation](const char16_t* utf16le, size_t size, char32_t* utf32) -> size_t {
-      std::vector<char16_t> utf16be;
-      utf16be.reserve(size);
+      std::vector<char16_t> utf16be(size);
       implementation.change_endianness_utf16(utf16le, size, utf16be.data());
       return implementation.convert_valid_utf16be_to_utf32(utf16be.data(), size, utf32);
     };
@@ -49,8 +48,7 @@ TEST(convert_with_surrogate_pairs) {
                                                      {0xe000, 0x10ffff}}, 0);
 
     auto procedure = [&implementation](const char16_t* utf16le, size_t size, char32_t* utf32) -> size_t {
-      std::vector<char16_t> utf16be;
-      utf16be.reserve(size);
+      std::vector<char16_t> utf16be(size);
       implementation.change_endianness_utf16(utf16le, size, utf16be.data());
       return implementation.convert_valid_utf16be_to_utf32(utf16be.data(), size, utf32);
     };
@@ -138,8 +136,7 @@ namespace {
 
 TEST(all_possible_8_codepoint_combinations) {
   auto procedure = [&implementation](const char16_t* utf16le, size_t size, char32_t* utf32) -> size_t {
-    std::vector<char16_t> utf16be;
-    utf16be.reserve(size);
+    std::vector<char16_t> utf16be(size);
     implementation.change_endianness_utf16(utf16le, size, utf16be.data());
     return implementation.convert_valid_utf16be_to_utf32(utf16be.data(), size, utf32);
   };
