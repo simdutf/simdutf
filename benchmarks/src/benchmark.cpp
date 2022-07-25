@@ -371,6 +371,8 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         run_validate_utf8_with_errors(*implementation, iterations);
     } else if (name == "validate_utf16") {
         run_validate_utf16(*implementation, iterations);
+    } else if (name == "validate_utf16le_with_errors") {
+        run_validate_utf16le_with_errors(*implementation, iterations);
     } else if(name == "validate_utf32") {
         run_validate_utf32(*implementation, iterations);
     } else if(name == "count_utf8") {
@@ -467,6 +469,31 @@ void Benchmark::run_validate_utf16(const simdutf::implementation& implementation
 
     auto proc = [&implementation, data, size, &sink]() {
         sink = implementation.validate_utf16(data, size);
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
+    size_t char_count = active_implementation->count_utf16(data, size);
+    print_summary(result, size, char_count);
+}
+
+void Benchmark::run_validate_utf16le_with_errors(const simdutf::implementation& implementation, size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+        printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 2;
+
+    volatile bool sink{false};
+
+    auto proc = [&implementation, data, size, &sink]() {
+        result res = implementation.validate_utf16le_with_errors(data, size);
+        sink = !(res.error);
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
