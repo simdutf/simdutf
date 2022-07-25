@@ -192,13 +192,13 @@ TEST(validate_utf16__extensive_tests) {
       continue;
 
     // format: [TF][VLH]{16}
-    bool valid = false;
+    simdutf::error_code valid = simdutf::error_code::SURROGATE;
     switch (line[0]) {
       case 'T':
-        valid = true;
+        valid = simdutf::error_code::SUCCESS;
         break;
       case 'F':
-        valid = false;
+        valid = simdutf::error_code::SURROGATE;
         break;
       default:
         throw std::invalid_argument("Error at line #" + std::to_string(lineno) +
@@ -230,7 +230,7 @@ TEST(validate_utf16__extensive_tests) {
     // check
     simdutf::result res = implementation.validate_utf16le_with_errors(reinterpret_cast<const char16_t*>(buf), len);
 
-    ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
+    ASSERT_EQUAL(res.error, valid);
     ASSERT_EQUAL(res.position, len);
   }
 }
