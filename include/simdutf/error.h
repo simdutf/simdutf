@@ -23,10 +23,6 @@ struct result {
   simdutf_really_inline result();
 
   simdutf_really_inline result(error_code, size_t);
-
-  simdutf_really_inline void set(error_code, size_t);
-
-  simdutf_really_inline operator bool() { return !(this->error); }
 };
 
 }

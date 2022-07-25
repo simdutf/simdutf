@@ -16,8 +16,9 @@ TEST(no_error) {
   simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
   for(size_t trial = 0; trial < num_trials; trial++) {
     const auto utf8{generator.generate(512, seed)};
-    ASSERT_TRUE(implementation.validate_utf8_with_errors(
-              reinterpret_cast<const char*>(utf8.data()), utf8.size()));
+    simdutf::result res = implementation.validate_utf8_with_errors(reinterpret_cast<const char*>(utf8.data()), utf8.size());
+    ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
+    ASSERT_EQUAL(res.position, utf8.size());
   }
 }
 
