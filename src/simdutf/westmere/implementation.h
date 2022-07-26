@@ -17,6 +17,7 @@ public:
   simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
   simdutf_warn_unused result validate_utf8_with_errors(const char *buf, size_t len) const noexcept final;
   simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) const noexcept final;
+  simdutf_warn_unused result validate_ascii_with_errors(const char *buf, size_t len) const noexcept final;
   simdutf_warn_unused bool validate_utf16le(const char16_t *buf, size_t len) const noexcept final;
   simdutf_warn_unused bool validate_utf16be(const char16_t *buf, size_t len) const noexcept final;
   simdutf_warn_unused result validate_utf16le_with_errors(const char16_t *buf, size_t len) const noexcept final;
