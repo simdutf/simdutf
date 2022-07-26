@@ -14,7 +14,7 @@
 
 .Lfc00:	.short		0xfc00, 0xfc00
 .Ld7c0dc00:
-	.short		0xd800 - 0x0400, 0xdc00
+	.short		0xd800 - 0x0040, 0xdc00
 .L0800:	.short		0x0800, 0x0800
 .Ld800:	.short		0xd800, 0xd800
 .L0400:	.short		0x0400, 0x0400
@@ -60,16 +60,19 @@ utf8_to_utf16le_avx512:
 
 .Loop:	vmovdqu8	(%rsi), %zmm0		// load 64 byte from input buffer
 	vpcmpnltub	%zmm31, %zmm0, %k1	// 0x80 <= zmm0 (not ASCII)
-	ktestd		%k1, %k1		// all ASCII (first 32 byte only)?
+	ktestq		%k1, %k1		// all ASCII?
 	jnz		1f
 
 	// Fast path 1: all ASCII characters
+	vextracti32x8	$1, %zmm0, %ymm2
 	vpmovzxbw	%ymm0, %zmm1		// convert to UTF-16LE
+	vpmovzxbw	%ymm2, %zmm2
 	vmovdqu16	%zmm1, (%rdi)		// and deposit in output buffer
+	vmovdqu16	%zmm2, 64(%rdi)
 
-	sub		$32, %rdx		// apply processed input
-	add		$32, %rsi		// advance source buffer
-	add		$64, %rdi		// advance output buffer
+	sub		$64, %rdx		// apply processed input
+	add		$64, %rsi		// advance source buffer
+	sub		$-128, %rdi		// advance output buffer
 	cmp		$64, %rdx		// enough left for another iteration?
 	jae		.Loop			// if yes, go again!
 	jmp		.Ltail			// else handle tail
@@ -99,6 +102,12 @@ utf8_to_utf16le_avx512:
 	mov		%r8, %rax
 	not		%rax			// LEAD: UTF-8 first bytes
 
+	shl		$3, %r14		// where follow bytes three bytes after a lead byte should be
+	or		%r14, %rax		// FIRST+4TH: the first and the fourth byte of each sequence
+	shr		$1, %rax		// LAST+3RD: the last byte of each sequence and the third byte of each
+	or		%r14, %rax		// including for 4 byte sequences ending at position 63 (but not others)
+	kmovq		%rax, %k6		// ... 4 byte sequence, i.e. where we want to start to decode the input
+
 	// check if there is an encoding error
 	// check for correct character sequencing and validity
 	// we don't need to check for 0xf8 <= zmm0 here: if this
@@ -106,15 +115,10 @@ utf8_to_utf16le_avx512:
 	// encode a character > U+10FFFF and is rejected later on
 	add		%r12, %r12		// where follow bytes directly after a lead byte should be
 	shl		$2, %r13		// where follow bytes two bytes after a lead byte should be
-	shl		$3, %r14		// where follow bytes three bytes after a lead byte should be
 	or		%r14, %r13
 	or		%r13, %r12		// where we expect follow bytes to be
 	cmp		%r12, %r8		// does that match reality?
 	jne		.Lfail2			// if not, I've got bad news for you
-
-	or		%r14, %rax		// FIRST+4TH: the first and the fourth byte of each sequence
-	shr		$1, %rax		// LAST+3RD: the last byte of each sequence and the third byte of each
-	kmovq		%rax, %k6		// ... 4 byte sequence, i.e. where we want to start to decode the input
 
 	vpcompressb	%zmm27, %zmm7{%k6}{z}	// the indices of the input bytes marked in L+3RD
 	vpmovzxbw	%ymm7, %zmm7		// ... zero expanded into words
@@ -150,10 +154,10 @@ utf8_to_utf16le_avx512:
 	// hi surrogate  11110WVU 10TSRQPN 10MLKJHG           0WVUTSRQPNMLKJHG
 	// lo surrogate                    10MLKJHG 10FEDCBA  0000MLKJHGFEDCVA
 
-	pext		%rax, %r14, %r13	// words in zmm1 that represent high surrogates
-	kmovd		%r13d, %k1
-	add		%r13d, %r13d		// words in zmm1 that represent low surrogates
+	pext		%rax, %r14, %r13	// words in zmm1 that represent low surrogates
 	kmovd		%r13d, %k2
+	shr		$1, %r13d		// words in zmm1 that represent high surrogates
+	kmovd		%r13d, %k1
 	kord		%k1, %k2, %k3		// words in zmm1 that represent surrogates
 
 	// post process surrogates.  Here we assume that each high surrogate is followed by a low surrogate
@@ -171,17 +175,17 @@ utf8_to_utf16le_avx512:
 	and		%rbx, %r9		// mask out those bits that are not part of the input
 	pdep		%r9, %r12, %r9		// the first up to 32 start bytes in %r9
 	lzcnt		%r9, %rcx
-	mov		$1, %r12
+	mov		$1, %r12d
 	ror		%cl, %r12		// the bit after the highest bit in rax
 	and		%r14, %r12		// does this bit correspond to a high surrogate?
-	andn		%r9, %r12, %r9		// if it does, clear it in RCX (last word must not be high surrogate)
+	andn		%r9, %r12, %r9		// if it does, clear it in R9 (last word must not be high surrogate)
 
 	lzcnt		%r9, %rcx		// number of vector items that were not processed
-	add		$64, %rsi		// advance source by whole input vector...
-	sub		%rcx, %rsi		// except for the bytes we didn't actually process
-	lea		-64(%rdx, %rcx, 1), %rdx // same with item count
-	popcnt		%r9, %rcx		// number of words written out
-	lea		(%rdi, %rcx, 2), %rdi	// advance output buffer by that many words
+	sub		$64, %rcx		// negative number of vector items processed
+	sub		%rcx, %rsi		// advance source vector by processed prefix
+	add		%rcx, %rdx		// and subtract these from item count
+	popcnt		%r9, %r9		// number of words written out
+	lea		(%rdi, %r9, 2), %rdi	// advance output buffer by that many words
 
 	// check 3 and 4 byte sequences for correctness
 	shl		$2, %r10		// the end bytes of 3 byte sequences
@@ -190,10 +194,10 @@ utf8_to_utf16le_avx512:
 	vpcmpltuw	%zmm23, %zmm1, %k4{%k4}	// any 3 byte characters < 0x0800?
 
 	vpsubw		%zmm22, %zmm1, %zmm2	// zmm1 - 0xd800
-	knotd		%k3, %k6
+	knotd		%k3, %k6		// words in zmm1 that do not represent surrogates
 	vpcmpltuw	%zmm23, %zmm2, %k0{%k6}	// any unexpected surrogates?
 	kord		%k4, %k0, %k0
-	vpcmpnltuw	%zmm24, %zmm2, %k4{%k1}	// any botched high surrogates?  These occur when
+	vpcmpnltuw	%zmm21, %zmm2, %k4{%k1}	// any botched high surrogates?  These occur when
 						// char < U+10000 or > U+10FFFF or lead byte >F7
 	kortestd	%k4, %k0
 	jnz		.Lfail3
@@ -241,24 +245,26 @@ utf8_to_utf16le_avx512:
 	tzcnt		%r12, %rdx		// find location of first mismatch
 	bt		%rdx, %r8		// is this because of a follow byte that is present but should not?
 	jc		.Ltail			// if this is the case, rdx is how many bytes are still valid
-	bzhi		%rdx, %rax, %rax	// lead bytes preceding the mismatch
+	not		%r8			// LEAD bytes
+	bzhi		%rdx, %r8, %rax		// lead bytes preceding the mismatch
 	mov		$63, %edx
-	tzcnt		%eax, %eax
+	lzcnt		%rax, %rax
 	sub		%eax, %edx		// length of prefix before the lead byte of first missing follow byte
 	jmp		.Ltail
 
 	// overlong encoding, 5+ byte sequence, or surrogate encoded in K4|K0
+	// invariant: the error can never be at a low surrogate
 .Lfail3:
+	sub		%r9, %rdi		// roll back rdi adjustment
+	sub		%r9, %rdi
+	add		%rcx, %rsi		// roll back rsi adjustment
 	kord		%k4, %k0, %k0		// where did errors occur?
-	kmovd		%k0, %r11d
-	blsi		%r11d, %r11d		// where did the first error occur?
+	kmovd		%k0, %edx
+	blsi		%edx, %edx		// where did the first error occur?
 	stc
 	adc		%rax, %rax		// LEAD+4TH once again
 	pdep		%rax, %rdx, %rdx	// which start byte does this error correspond to?
 	tzcnt		%rdx, %rdx		// process input until just before that start byte
-	test		%r11d, %r13d		// was the error in a low surrogate?
-	jz		.Ltail			// if not, process valid tail
-	sub		$3, %edx		// if yes, adjust to until end of previous character
 	jmp		.Ltail
 
 	.size utf8_to_utf16le_avx512, .-utf8_to_utf16le_avx512
@@ -268,7 +274,7 @@ utf8_to_utf16le_avx512:
 	.globl utf8_to_utf16le_buflen_avx512
 	.type utf8_to_utf16le_buflen_avx512, @function
 utf8_to_utf16le_buflen_avx512:
-	lea		31(%rdi), %rax		// may write up to 31 words past the end of the buffer
+	lea		63(%rdi), %rax		// may write up to 63 words past the end of the buffer
 	ret
 
 	.size utf8_to_utf16le_buflen_avx512, .-utf8_to_utf16le_buflen_avx512

@@ -21,7 +21,7 @@ utf8_to_utf16le_ref(char16_t out[restrict], const unsigned char in[restrict], si
 			rem--;
 			inpos++;
 			out[outpos++] = c0;
-		} else if (0xc0 <= c0 && c0 < 0xdf) {
+		} else if (0xc0 <= c0 && c0 < 0xe0) {
 			unsigned c1, c;
 
 			if (rem < 2)
@@ -38,7 +38,7 @@ utf8_to_utf16le_ref(char16_t out[restrict], const unsigned char in[restrict], si
 			rem -= 2;
 			inpos += 2;
 			out[outpos++] = c;
-		} else if (0xe0 <= c0 && c0 < 0xef) {
+		} else if (0xe0 <= c0 && c0 < 0xf0) {
 			unsigned c1, c2, c;
 
 			if (rem < 3)

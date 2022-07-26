@@ -15,8 +15,8 @@ extern size_t utf8_to_utf16le_buflen_avx512(size_t);
 /* all test vectors end in FF to allow embedded NUL characters */
 const char *vectors[] = {
 	"\xff", /* empty string */
-	"Das Pferd frisst keinen Gurkensalat.\xff", /* ASCII string */
 	"Fix Schwyz quäkt Jürgen blöd vom Paß.\xff", /* ISO-8859-1 string */
+	"Das Pferd frisst keinen Gurkensalat.\xff", /* ASCII string */
 	"ドイツの科学は世界一です！\xff", /* Japanese mixed script string */
 	"يولد جميع الناس أحرارًا متساوين في الكرامة والحقوق.\xff", /* Arabic */
 	"國之語音，異乎中國，與文字不相流通，故愚民有所欲言，而終不得伸其情者多矣。予為此憫然，新制二十八字，欲使人人易習便日用耳。\xff", /* Chinese */
@@ -34,6 +34,25 @@ const char *vectors[] = {
 	"no bikes: 🚳, no drinking: 🚱, no littering: 🚯\xff", /* map symbols intermixed with ASCII */
 
 	/* test cases with encoding errors */
+	"foo\xc0\x80""bar\xff", /* overlong two byte */
+	"bump\xc1\x81this\xff",
+	"this sucks\xe0\x80\x80\xff", /* overlong three byte */
+	"and don't get me started\xe0\x81\xbf\xff",
+	"no surrogates for you!\xf0\x80\x80\x80\xff", /* overlong four byte */
+	"even messier\xf0\x8f\xbf\xbf\xff",
+	"that sounds crazy\xf4\x90\x80\x80\xff", /* character out of range */
+	"Röck döts\xf7\xbf\xbf\xbf\xff",
+	"NEEDS MOAR!!!\xf8\x80\x80\x80\x80\xff", /* overlong sequences */
+	"I SAID MÖAR!\xfb\xbf\xbf\xbf\xbf\xff",
+	"素晴らしいですね\xfc\x80\x80\x80\x80\x80\xff",
+	"真香！\xfd\xbf\xbf\xbf\xbf\xbf\xff",
+	"尽二秀才\xfe\xff", /* illegal bytes */
+	"\x80""believe me!\xff", /* lone follow byte */
+	"really\x80, I need this!\xff",
+	"reaa\x80\x80lly\xff",
+	"hicup\xc2\x80\x80\xff", /* too many follow bytes */
+	"sneeze\xe4\x81\x82\x83\xff",
+	"snooze\xf1\x90\x91\x92\x93\xff",
 	NULL,
 };
 
@@ -56,7 +75,7 @@ void print_vector(int i, const char *vector)
 	printf("VECTOR %d (%zu)\n", i, len);
 
 	for (j = 0; j < len; j++)
-		printf("%s%02x", j % 32 == 0 ? "\n\t" : " ", (unsigned)vector[j]);
+		printf("%s%02x", j % 32 == 0 ? "\n\t" : " ", (unsigned)(unsigned char)vector[j]);
 
 	putchar('\n');
 }
