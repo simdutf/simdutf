@@ -207,6 +207,17 @@ namespace simdutf {
 simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept;
 
 /**
+ * Validate the ASCII string and stop on error.
+ *
+ * Overridden by each implementation.
+ *
+ * @param buf the ASCII string to validate.
+ * @param len the length of the string in bytes.
+ * @return a result pair struct with an error code and the position of the error if any.
+ */
+simdutf_warn_unused result validate_ascii_with_errors(const char *buf, size_t len) noexcept;
+
+/**
  * Validate the UTF-8 string.
  *
  * Overridden by each implementation.
