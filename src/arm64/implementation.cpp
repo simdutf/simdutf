@@ -75,7 +75,7 @@ simdutf_warn_unused bool implementation::validate_ascii(const char *buf, size_t 
 }
 
 simdutf_warn_unused result implementation::validate_ascii_with_errors(const char *buf, size_t len) const noexcept {
-  return scalar::ascii::validate_with_errors(buf, len);
+  return arm64::utf8_validation::generic_validate_ascii_with_errors(buf,len);
 }
 
 simdutf_warn_unused bool implementation::validate_utf16le(const char16_t *buf, size_t len) const noexcept {
