@@ -143,8 +143,7 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf16be(const char* b
 
 simdutf_warn_unused result implementation::convert_utf8_to_utf16le_with_errors(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
   utf8_to_utf16::validating_transcoder converter;
-  return scalar::utf8_to_utf16::convert_with_errors<endianness::LITTLE>(buf, len, utf16_output);
-  //return converter.convert_with_errors<endianness::LITTLE>(buf, len, utf16_output);
+  return converter.convert_with_errors<endianness::LITTLE>(buf, len, utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16le(const char* input, size_t size,

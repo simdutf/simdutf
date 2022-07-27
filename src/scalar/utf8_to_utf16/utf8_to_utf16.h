@@ -185,6 +185,27 @@ inline result convert_with_errors(const char* buf, size_t len, char16_t* utf16_o
   return result(error_code::SUCCESS, utf16_output - start);
 }
 
+template <endianness endian>
+inline result rewind_and_convert_with_errors(const char* buf, size_t len, char16_t* utf16_output) {
+  size_t extra_len{0};
+  // A leading byte cannot be further than 4 bytes away
+  for(int i = 0; i < 5; i++) {
+    unsigned char byte = *buf;
+    if ((byte & 0b11000000) != 0b10000000) {
+      break;
+    } else {
+      buf--;
+      extra_len++;
+    }
+  }
+
+  result res = convert_with_errors<endian>(buf, len + extra_len, utf16_output);
+  if (res.error) {
+    res.position -= extra_len;
+  }
+  return res;
+}
+
 } // utf8_to_utf16 namespace
 } // unnamed namespace
 } // namespace scalar
