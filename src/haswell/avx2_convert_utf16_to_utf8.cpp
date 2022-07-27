@@ -287,6 +287,12 @@ std::pair<const char16_t*, char*> avx2_convert_utf16_to_utf8(const char16_t* buf
 }
 
 
+/*
+  Returns a pair: a result struct and utf8_output.
+  If there is an error, the count field of the result is the position of the error.
+  Otherwise, it is the position of the first unprocessed byte in buf (even if finished).
+  A scalar routing should carry on the conversion of the tail if needed.
+*/
 template <endianness big_endian>
 std::pair<result, char*> avx2_convert_utf16_to_utf8_with_errors(const char16_t* buf, size_t len, char* utf8_output) {
   const char16_t* end = buf + len;
