@@ -110,6 +110,10 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf16be(const char* /
   return 0; // stub
 }
 
+simdutf_warn_unused result implementation::convert_utf8_to_utf16le_with_errors(const char* /*buf*/, size_t /*len*/, char16_t* /*utf16_output*/) const noexcept {
+  return result(error_code::OTHER, 0); // stub
+}
+
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16le(const char* /*buf*/, size_t /*len*/, char16_t* /*utf16_output*/) const noexcept {
   return 0; // stub
 }

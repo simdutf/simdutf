@@ -133,6 +133,10 @@ public:
     return set_best()->convert_utf8_to_utf16be(buf, len, utf16_output);
   }
 
+  simdutf_warn_unused result convert_utf8_to_utf16le_with_errors(const char * buf, size_t len, char16_t* utf16_output) const noexcept final override {
+    return set_best()->convert_utf8_to_utf16le_with_errors(buf, len, utf16_output);
+  }
+
   simdutf_warn_unused size_t convert_valid_utf8_to_utf16le(const char * buf, size_t len, char16_t* utf16_output) const noexcept final override {
     return set_best()->convert_valid_utf8_to_utf16le(buf, len, utf16_output);
   }
@@ -333,6 +337,10 @@ public:
     return 0;
   }
 
+  simdutf_warn_unused result convert_utf8_to_utf16le_with_errors(const char*, size_t, char16_t*) const noexcept final override {
+    return result(error_code::OTHER, 0);
+  }
+
   simdutf_warn_unused size_t convert_valid_utf8_to_utf16le(const char*, size_t, char16_t*) const noexcept final override {
     return 0;
   }
@@ -517,6 +525,9 @@ simdutf_warn_unused size_t convert_utf8_to_utf16le(const char * input, size_t le
 }
 simdutf_warn_unused size_t convert_utf8_to_utf16be(const char * input, size_t length, char16_t* utf16_output) noexcept {
   return active_implementation->convert_utf8_to_utf16be(input, length, utf16_output);
+}
+simdutf_warn_unused result convert_utf8_to_utf16le_with_errors(const char * input, size_t length, char16_t* utf16_output) noexcept {
+  return active_implementation->convert_utf8_to_utf16le_with_errors(input, length, utf16_output);
 }
 simdutf_warn_unused size_t convert_utf8_to_utf32(const char * input, size_t length, char32_t* utf32_output) noexcept {
   return active_implementation->convert_utf8_to_utf32(input, length, utf32_output);

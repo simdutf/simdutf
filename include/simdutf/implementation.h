@@ -160,6 +160,19 @@ simdutf_warn_unused size_t convert_utf8_to_utf16le(const char * input, size_t le
 simdutf_warn_unused size_t convert_utf8_to_utf16be(const char * input, size_t length, char16_t* utf16_output) noexcept;
 
 /**
+ * Convert possibly broken UTF-8 string into UTF-16LE string and stop on error.
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * @param input         the UTF-8 string to convert
+ * @param length        the length of the string in bytes
+ * @param utf16_buffer  the pointer to buffer that can hold conversion result
+ * @return a result pair struct with an error code and the position of the error if any.
+ */
+simdutf_warn_unused result convert_utf8_to_utf16le_with_errors(const char * input, size_t length, char16_t* utf16_output) noexcept;
+
+/**
  * Convert possibly broken UTF-8 string into UTF-32LE string.
  *
  * During the conversion also validation of the input string is done.
@@ -758,6 +771,19 @@ public:
    * @return the number of written char16_t; 0 if the input was not valid UTF-8 string
    */
   simdutf_warn_unused virtual size_t convert_utf8_to_utf16be(const char * input, size_t length, char16_t* utf16_output) const noexcept = 0;
+
+  /**
+   * Convert possibly broken UTF-8 string into UTF-16LE string and stop on error.
+   *
+   * During the conversion also validation of the input string is done.
+   * This function is suitable to work with inputs from untrusted sources.
+   *
+   * @param input         the UTF-8 string to convert
+   * @param length        the length of the string in bytes
+   * @param utf16_buffer  the pointer to buffer that can hold conversion result
+   * @return a result pair struct with an error code and the position of the error if any.
+   */
+  simdutf_warn_unused virtual result convert_utf8_to_utf16le_with_errors(const char * input, size_t length, char16_t* utf16_output) const noexcept = 0;
 
   /**
    * Convert possibly broken UTF-8 string into UTF-32LE string.
