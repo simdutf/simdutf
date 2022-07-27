@@ -19,7 +19,7 @@ TEST(validate_utf16le_with_errors__returns_success_for_valid_input__single_words
     simdutf::result res = implementation.validate_utf16le_with_errors(reinterpret_cast<const char16_t*>(utf16.data()), utf16.size());
 
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
-    ASSERT_EQUAL(res.position, utf16.size());
+    ASSERT_EQUAL(res.count, utf16.size());
   }
 }
 
@@ -32,7 +32,7 @@ TEST(validate_utf16le_with_errors__returns_success_for_valid_input__surrogate_pa
     simdutf::result res = implementation.validate_utf16le_with_errors(reinterpret_cast<const char16_t*>(utf16.data()), utf16.size());
 
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
-    ASSERT_EQUAL(res.position, utf16.size());
+    ASSERT_EQUAL(res.count, utf16.size());
   }
 }
 
@@ -46,7 +46,7 @@ TEST(validate_utf16le_with_errors__returns_success_for_valid_input__surrogate_pa
     simdutf::result res = implementation.validate_utf16le_with_errors(reinterpret_cast<const char16_t*>(utf16.data()), utf16.size());
 
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
-    ASSERT_EQUAL(res.position, utf16.size());
+    ASSERT_EQUAL(res.count, utf16.size());
   }
 }
 
@@ -59,7 +59,7 @@ TEST(validate_utf16le_with_errors__returns_success_for_valid_input__mixed) {
   simdutf::result res = implementation.validate_utf16le_with_errors(reinterpret_cast<const char16_t*>(utf16.data()), utf16.size());
 
   ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
-  ASSERT_EQUAL(res.position, utf16.size());
+  ASSERT_EQUAL(res.count, utf16.size());
 }
 
 TEST(validate_utf16le_with_errors__returns_success_for_empty_string) {
@@ -68,7 +68,7 @@ TEST(validate_utf16le_with_errors__returns_success_for_empty_string) {
   simdutf::result res = implementation.validate_utf16le_with_errors(reinterpret_cast<const char16_t*>(buf), 0);
 
   ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
-  ASSERT_EQUAL(res.position, 0);
+  ASSERT_EQUAL(res.count, 0);
 }
 
 // The first word must not be in range [0xDC00 .. 0xDFFF]
@@ -99,7 +99,7 @@ TEST(validate_utf16le_with_errors__returns_error_when_input_has_wrong_first_word
         simdutf::result res = implementation.validate_utf16le_with_errors(reinterpret_cast<const char16_t*>(buf), len);
 
         ASSERT_EQUAL(res.error, simdutf::error_code::SURROGATE);
-        ASSERT_EQUAL(res.position, i);
+        ASSERT_EQUAL(res.count, i);
 
         utf16[i] = old;
       }
@@ -136,7 +136,7 @@ TEST(validate_utf16le_with_errors__returns_error_when_input_has_wrong_second_wor
       simdutf::result res = implementation.validate_utf16le_with_errors(reinterpret_cast<const char16_t*>(buf), len);
 
       ASSERT_EQUAL(res.error, simdutf::error_code::SURROGATE);
-      ASSERT_EQUAL(res.position, i);
+      ASSERT_EQUAL(res.count, i);
 
       utf16[i + 0] = old_W1;
       utf16[i + 1] = old_W2;
@@ -164,7 +164,7 @@ TEST(validate_utf16le_with_errors__returns_error_when_input_is_truncated) {
     simdutf::result res = implementation.validate_utf16le_with_errors(reinterpret_cast<const char16_t*>(buf), len);
 
     ASSERT_EQUAL(res.error, simdutf::error_code::SURROGATE);
-    ASSERT_EQUAL(res.position, size - 1);
+    ASSERT_EQUAL(res.count, size - 1);
   }
 }
 

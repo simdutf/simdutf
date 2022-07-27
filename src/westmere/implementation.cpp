@@ -99,9 +99,9 @@ simdutf_warn_unused bool implementation::validate_utf16be(const char16_t *buf, s
 
 simdutf_warn_unused result implementation::validate_utf16le_with_errors(const char16_t *buf, size_t len) const noexcept {
   result res = sse_validate_utf16le_with_errors(buf, len);
-  if (res.position != len) {
-    result scalar_res = scalar::utf16::validate_with_errors(buf + res.position, len - res.position);
-    return result(scalar_res.error, res.position + scalar_res.position);
+  if (res.count != len) {
+    result scalar_res = scalar::utf16::validate_with_errors(buf + res.count, len - res.count);
+    return result(scalar_res.error, res.count + scalar_res.count);
   } else {
     return res;
   }
@@ -118,9 +118,9 @@ simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, siz
 
 simdutf_warn_unused result implementation::validate_utf32_with_errors(const char32_t *buf, size_t len) const noexcept {
   result res = sse_validate_utf32le_with_errors(buf, len);
-  if (res.position != len) {
-    result scalar_res = scalar::utf32::validate_with_errors(buf + res.position, len - res.position);
-    return result(scalar_res.error, res.position + scalar_res.position);
+  if (res.count != len) {
+    result scalar_res = scalar::utf32::validate_with_errors(buf + res.count, len - res.count);
+    return result(scalar_res.error, res.count + scalar_res.count);
   } else {
     return res;
   }

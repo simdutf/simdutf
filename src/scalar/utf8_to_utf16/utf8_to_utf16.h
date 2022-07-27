@@ -201,7 +201,7 @@ inline result rewind_and_convert_with_errors(const char* buf, size_t len, char16
 
   result res = convert_with_errors<endian>(buf, len + extra_len, utf16_output);
   if (res.error) {
-    res.position -= extra_len;
+    res.count -= extra_len;
   }
   return res;
 }

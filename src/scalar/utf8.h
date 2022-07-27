@@ -152,7 +152,7 @@ inline simdutf_warn_unused result rewind_and_validate_with_errors(const char *bu
   }
 
   result res = validate_with_errors(buf, len + extra_len);
-  res.position -= extra_len;
+  res.count -= extra_len;
   return res;
 }
 

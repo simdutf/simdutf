@@ -19,7 +19,7 @@ TEST(no_error_ASCII) {
         simdutf::result res = implementation.validate_ascii_with_errors(reinterpret_cast<const char*>(ascii.data()), ascii.size());
 
         ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
-        ASSERT_EQUAL(res.position, ascii.size());
+        ASSERT_EQUAL(res.count, ascii.size());
     }
 }
 
@@ -36,7 +36,7 @@ TEST(error_ASCII) {
             simdutf::result res = implementation.validate_ascii_with_errors(reinterpret_cast<const char*>(ascii.data()), ascii.size());
 
             ASSERT_EQUAL(res.error, simdutf::error_code::TOO_LARGE);
-            ASSERT_EQUAL(res.position, i);
+            ASSERT_EQUAL(res.count, i);
 
             ascii[i] -= 0b10000000;
         }

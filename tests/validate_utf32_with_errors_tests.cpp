@@ -18,7 +18,7 @@ TEST(validate_utf32_with_errors__returns_success_for_valid_input) {
     simdutf::result res = implementation.validate_utf32_with_errors(reinterpret_cast<const char32_t*>(utf32.data()), utf32.size());
 
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
-    ASSERT_EQUAL(res.position, utf32.size());
+    ASSERT_EQUAL(res.count, utf32.size());
   }
 }
 
@@ -28,7 +28,7 @@ TEST(validate_utf32_with_errors__returns_success_for_empty_string) {
   simdutf::result res = implementation.validate_utf32_with_errors(buf, 0);
 
   ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
-  ASSERT_EQUAL(res.position, 0);
+  ASSERT_EQUAL(res.count, 0);
 }
 
 TEST(validate_utf32_with_errors__returns_error_when_input_in_forbidden_range) {
@@ -47,7 +47,7 @@ TEST(validate_utf32_with_errors__returns_error_when_input_in_forbidden_range) {
         simdutf::result res = implementation.validate_utf32_with_errors(buf, len);
 
         ASSERT_EQUAL(res.error, simdutf::error_code::SURROGATE);
-        ASSERT_EQUAL(res.position, i);
+        ASSERT_EQUAL(res.count, i);
 
         utf32[i] = old;
       }
@@ -76,7 +76,7 @@ TEST(validate_utf32_with_errors__returns_error_when_input_too_large) {
         simdutf::result res = implementation.validate_utf32_with_errors(buf, len);
 
         ASSERT_EQUAL(res.error, simdutf::error_code::TOO_LARGE);
-        ASSERT_EQUAL(res.position, i);
+        ASSERT_EQUAL(res.count, i);
 
         utf32[i] = old;
       }

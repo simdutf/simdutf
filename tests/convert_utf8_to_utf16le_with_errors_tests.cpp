@@ -30,8 +30,8 @@ TEST(convert_pure_ASCII) {
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
       simdutf::result res = implementation.convert_utf8_to_utf16le_with_errors(utf8, size, utf16);
       ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
-      ASSERT_EQUAL(res.position, size);
-      return res.position;
+      ASSERT_EQUAL(res.count, size);
+      return res.count;
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
       return implementation.utf16_length_from_utf8(utf8, size);
@@ -54,7 +54,7 @@ TEST(convert_1_or_2_UTF8_bytes) {
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
       simdutf::result res = implementation.convert_utf8_to_utf16le_with_errors(utf8, size, utf16);
       ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
-      return res.position;
+      return res.count;
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
       return implementation.utf16_length_from_utf8(utf8, size);
@@ -78,7 +78,7 @@ TEST(convert_1_or_2_or_3_UTF8_bytes) {
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
       simdutf::result res = implementation.convert_utf8_to_utf16le_with_errors(utf8, size, utf16);
       ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
-      return res.position;
+      return res.count;
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
       return implementation.utf16_length_from_utf8(utf8, size);
@@ -101,7 +101,7 @@ TEST(convert_3_or_4_UTF8_bytes) {
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
       simdutf::result res = implementation.convert_utf8_to_utf16le_with_errors(utf8, size, utf16);
       ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
-      return res.position;
+      return res.count;
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
       return implementation.utf16_length_from_utf8(utf8, size);
@@ -127,7 +127,7 @@ TEST(header_bits_error) {
         auto procedure = [&implementation, &i](const char* utf8, size_t size, char16_t* utf16) -> size_t {
           simdutf::result res = implementation.convert_utf8_to_utf16le_with_errors(utf8, size, utf16);
           ASSERT_EQUAL(res.error, simdutf::error_code::HEADER_BITS);
-          ASSERT_EQUAL(res.position, i);
+          ASSERT_EQUAL(res.count, i);
           return 0;
         };
         const unsigned char old = test.input_utf8[i];
@@ -151,7 +151,7 @@ TEST(too_short_error) {
         auto procedure = [&implementation, &i, &leading_byte_pos](const char* utf8, size_t size, char16_t* utf16) -> size_t {
           simdutf::result res = implementation.convert_utf8_to_utf16le_with_errors(utf8, size, utf16);
           ASSERT_EQUAL(res.error, simdutf::error_code::TOO_SHORT);
-          ASSERT_EQUAL(res.position, leading_byte_pos);
+          ASSERT_EQUAL(res.count, leading_byte_pos);
           return 0;
         };
         const unsigned char old = test.input_utf8[i];
@@ -176,7 +176,7 @@ TEST(too_long_error) {
         auto procedure = [&implementation, &i](const char* utf8, size_t size, char16_t* utf16) -> size_t {
           simdutf::result res = implementation.convert_utf8_to_utf16le_with_errors(utf8, size, utf16);
           ASSERT_EQUAL(res.error, simdutf::error_code::TOO_LONG);
-          ASSERT_EQUAL(res.position, i);
+          ASSERT_EQUAL(res.count, i);
           return 0;
         };
         const unsigned char old = test.input_utf8[i];
@@ -199,7 +199,7 @@ TEST(overlong_error) {
         auto procedure = [&implementation, &i](const char* utf8, size_t size, char16_t* utf16) -> size_t {
           simdutf::result res = implementation.convert_utf8_to_utf16le_with_errors(utf8, size, utf16);
           ASSERT_EQUAL(res.error, simdutf::error_code::TOO_LARGE);
-          ASSERT_EQUAL(res.position, i);
+          ASSERT_EQUAL(res.count, i);
           return 0;
         };
         const unsigned char old = test.input_utf8[i];
@@ -232,7 +232,7 @@ TEST(too_large_error) {
         auto procedure = [&implementation, &i](const char* utf8, size_t size, char16_t* utf16) -> size_t {
           simdutf::result res = implementation.convert_utf8_to_utf16le_with_errors(utf8, size, utf16);
           ASSERT_EQUAL(res.error, simdutf::error_code::TOO_LARGE);
-          ASSERT_EQUAL(res.position, i);
+          ASSERT_EQUAL(res.count, i);
           return 0;
         };
         test.input_utf8[i] += ((test.input_utf8[i] & 0b100) == 0b100) ? 0b10 : 0b100;   // Make sure we get too large error and not header bits error
@@ -257,7 +257,7 @@ TEST(surrogate_error) {
           utf8[i+1] = (utf8[i+1] & 0b11000011) | (s << 2);
           simdutf::result res = implementation.validate_utf8_with_errors(reinterpret_cast<const char*>(utf8.data()), utf8.size());
           ASSERT_EQUAL(res.error, simdutf::error_code::SURROGATE);
-          ASSERT_EQUAL(res.position, i);
+          ASSERT_EQUAL(res.count, i);
         }
         utf8[i] = old;
         utf8[i+1] = second_old;

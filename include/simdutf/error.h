@@ -18,7 +18,7 @@ enum error_code {
 
 struct result {
   error_code error;
-  size_t position;
+  size_t count;     // In case of error, indicates the position of the error. In case of success, indicates the number of words validated/written.
 
   simdutf_really_inline result();
 

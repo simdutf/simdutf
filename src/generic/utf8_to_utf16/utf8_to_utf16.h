@@ -215,7 +215,7 @@ using namespace simd;
           }
           if (errors()) {
             result res = scalar::utf8_to_utf16::rewind_and_convert_with_errors<endian>(in + pos, size - pos, utf16_output);
-            res.position += pos;
+            res.count += pos;
             return res;
           }
           uint64_t utf8_continuation_mask = input.lt(-65 + 1);
@@ -249,16 +249,16 @@ using namespace simd;
       }
       if(errors()) {
         result res = scalar::utf8_to_utf16::rewind_and_convert_with_errors<endian>(in + pos, size - pos, utf16_output);
-        res.position += pos;
+        res.count += pos;
         return res;
       }
       if(pos < size) {
         result res = scalar::utf8_to_utf16::rewind_and_convert_with_errors<endian>(in + pos, size - pos, utf16_output);
         if (res.error) {    // In case of error, we want the error position
-          res.position += pos;
+          res.count += pos;
           return res;
         } else {    // In case of success, we want the number of word written
-          utf16_output += res.position;
+          utf16_output += res.count;
         }
       }
       return result(error_code::SUCCESS, utf16_output - start);

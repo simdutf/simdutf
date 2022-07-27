@@ -42,7 +42,7 @@ result generic_validate_utf8_with_errors(const uint8_t * input, size_t length) {
       if(c.errors()) {
         if (count != 0) { count--; } // Sometimes the error is only detected in the next chunk
         result res = scalar::utf8::rewind_and_validate_with_errors(reinterpret_cast<const char*>(input + count), length - count);
-        res.position += count;
+        res.count += count;
         return res;
       }
       reader.advance();
@@ -56,7 +56,7 @@ result generic_validate_utf8_with_errors(const uint8_t * input, size_t length) {
     c.check_eof();
     if (c.errors()) {
       result res = scalar::utf8::rewind_and_validate_with_errors(reinterpret_cast<const char*>(input) + count, length - count);
-      res.position += count;
+      res.count += count;
       return res;
     } else {
       return result(error_code::SUCCESS, length);
@@ -96,7 +96,7 @@ result generic_validate_ascii_with_errors(const uint8_t * input, size_t length) 
     simd::simd8x64<uint8_t> in(reader.full_block());
     if (!in.is_ascii()) {
       result res = scalar::ascii::validate_with_errors(reinterpret_cast<const char*>(input + count), length - count);
-      return result(res.error, count + res.position);
+      return result(res.error, count + res.count);
     }
     reader.advance();
 
@@ -107,7 +107,7 @@ result generic_validate_ascii_with_errors(const uint8_t * input, size_t length) 
   simd::simd8x64<uint8_t> in(block);
   if (!in.is_ascii()) {
     result res = scalar::ascii::validate_with_errors(reinterpret_cast<const char*>(input + count), length - count);
-    return result(res.error, count + res.position);
+    return result(res.error, count + res.count);
   } else {
     return result(error_code::SUCCESS, length);
   }
