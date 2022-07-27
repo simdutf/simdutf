@@ -193,7 +193,21 @@ simdutf_warn_unused size_t implementation::convert_utf16be_to_utf8(const char16_
 }
 
 simdutf_warn_unused result implementation::convert_utf16le_to_utf8_with_errors(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-  return scalar::utf16_to_utf8::convert_with_errors<endianness::LITTLE>(buf, len, utf8_output);
+  // ret.first.count is always the position in the buffer, not the number of words written even if finished
+  std::pair<result, char*> ret = haswell::avx2_convert_utf16_to_utf8_with_errors<endianness::LITTLE>(buf, len, utf8_output);
+  if (ret.first.error) { return ret.first; }
+  if (ret.first.count != len) { // All good so far, but not finished
+    result scalar_res = scalar::utf16_to_utf8::convert_with_errors<endianness::LITTLE>(
+                                        buf + ret.first.count, len - ret.first.count, ret.second);
+    if (scalar_res.error) {
+      scalar_res.count += ret.first.count;
+      return scalar_res;
+    } else {
+      ret.second += scalar_res.count;
+    }
+  }
+  ret.first.count = ret.second - utf8_output;   // Set count to the number of 8-bit words written
+  return ret.first;
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16le_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
