@@ -122,8 +122,12 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16be(const c
   return 0; // stub
 }
 
-simdutf_warn_unused size_t implementation::convert_utf8_to_utf32(const char* /*buf*/, size_t /*len*/, char16_t* /*utf16_output*/) const noexcept {
+simdutf_warn_unused size_t implementation::convert_utf8_to_utf32(const char* /*buf*/, size_t /*len*/, char32_t* /*utf16_output*/) const noexcept {
   return 0; // stub
+}
+
+simdutf_warn_unused result implementation::convert_utf8_to_utf32_with_errors(const char* /*buf*/, size_t /*len*/, char32_t* /*utf16_output*/) const noexcept {
+  return result(error_code::OTHER, 0); // stub
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(const char* /*buf*/, size_t /*len*/, char32_t* /*utf16_output*/) const noexcept {
