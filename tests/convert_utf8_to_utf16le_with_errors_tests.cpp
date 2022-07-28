@@ -245,22 +245,27 @@ TEST(too_large_error) {
 
 TEST(surrogate_error) {
   uint32_t seed{1234};
-  simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
+  simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0xd800-1},
+                                              {0xe000, 0x10ffff}}, seed);
   for(size_t trial = 0; trial < num_trials; trial++) {
-    auto utf8{generator.generate(512, seed)};
-    for (int i = 1; i < 512; i++) {
-      if((utf8[i] & 0b11110000) == 0b11100000) { // Can only have surrogate error in 3-bytes case
-        const unsigned char old = utf8[i];
-        const unsigned char second_old = utf8[i+1];
-        utf8[i] = 0b11101101;                 // Leading byte is always the same
-        for (int s = 0x8; s < 0xf; s++) {  // Modify second byte to create a surrogate codepoint
-          utf8[i+1] = (utf8[i+1] & 0b11000011) | (s << 2);
-          simdutf::result res = implementation.validate_utf8_with_errors(reinterpret_cast<const char*>(utf8.data()), utf8.size());
+    transcode_utf8_to_utf16_test_base test(random, fix_size);
+    for (int i = 1; i < fix_size; i++) {
+      if((test.input_utf8[i] & 0b11110000) == 0b11100000) { // Can only have surrogate error in 3-bytes case
+        auto procedure = [&implementation, &i](const char* utf8, size_t size, char16_t* utf16) -> size_t {
+          simdutf::result res = implementation.convert_utf8_to_utf16le_with_errors(utf8, size, utf16);
           ASSERT_EQUAL(res.error, simdutf::error_code::SURROGATE);
           ASSERT_EQUAL(res.count, i);
+          return 0;
+        };
+        const unsigned char old = test.input_utf8[i];
+        const unsigned char second_old = test.input_utf8[i+1];
+        test.input_utf8[i] = char(0b11101101);
+        for (int s = 0x8; s < 0xf; s++) {  // Modify second byte to create a surrogate codepoint
+          test.input_utf8[i+1] = (test.input_utf8[i+1] & 0b11000011) | (s << 2);
+          ASSERT_TRUE(test(procedure));
         }
-        utf8[i] = old;
-        utf8[i+1] = second_old;
+        test.input_utf8[i] = old;
+        test.input_utf8[i+1] = second_old;
       }
     }
   }
