@@ -151,6 +151,26 @@ inline result convert_with_errors(const char* buf, size_t len, char32_t* utf32_o
   return result(error_code::SUCCESS, utf32_output - start);
 }
 
+inline result rewind_and_convert_with_errors(const char* buf, size_t len, char32_t* utf32_output) {
+  size_t extra_len{0};
+  // A leading byte cannot be further than 4 bytes away
+  for(int i = 0; i < 5; i++) {
+    unsigned char byte = *buf;
+    if ((byte & 0b11000000) != 0b10000000) {
+      break;
+    } else {
+      buf--;
+      extra_len++;
+    }
+  }
+
+  result res = convert_with_errors(buf, len + extra_len, utf32_output);
+  if (res.error) {
+    res.count -= extra_len;
+  }
+  return res;
+}
+
 } // utf8_to_utf32 namespace
 } // unnamed namespace
 } // namespace scalar
