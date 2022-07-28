@@ -205,12 +205,12 @@ TEST(overlong_error) {
         const unsigned char old = test.input_utf8[i];
         const unsigned char second_old = test.input_utf8[i+1];
         if ((old & 0b11100000) == 0b11000000) { // two-bytes case, change to a value less or equal than 0x7f
-          test.input_utf8[i] = 0b11000000;
+          test.input_utf8[i] = char(0b11000000);
         } else if ((old & 0b11110000) == 0b11100000) {  // three-bytes case, change to a value less or equal than 0x7ff
-          test.input_utf8[i] = 0b11100000;
+          test.input_utf8[i] = char(0b11100000);
           test.input_utf8[i+1] = test.input_utf8[i+1] & 0b11011111;
         } else {  // four-bytes case, change to a value less or equal than 0xffff
-          test.input_utf8[i] = 0b11110000;
+          test.input_utf8[i] = char(0b11110000);
           test.input_utf8[i+1] = test.input_utf8[i+1] & 0b11001111;
         }
         ASSERT_TRUE(test(procedure));
