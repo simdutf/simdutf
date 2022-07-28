@@ -126,6 +126,7 @@ namespace simdutf { namespace tests { namespace helpers {
   private:
     void prepare_input(uint32_t codepoint);
     bool validate(size_t procedure_result) const;
+    bool is_input_valid() const;
   };
 
 

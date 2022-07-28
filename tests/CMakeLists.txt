@@ -114,6 +114,12 @@ target_link_libraries(convert_utf8_to_utf32_tests
         simdutf::tests::reference
         simdutf::tests::helpers)
 
+add_cpp_test(convert_utf8_to_utf32_with_errors_tests)
+target_link_libraries(convert_utf8_to_utf32_with_errors_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
+
 add_cpp_test(convert_utf16le_to_utf8_tests)
 target_link_libraries(convert_utf16le_to_utf8_tests
   PUBLIC simdutf
