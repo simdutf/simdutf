@@ -30,20 +30,26 @@
 typedef size_t utf16le_to_utf8(unsigned char[restrict], const char16_t[restrict], size_t, size_t *);
 typedef size_t utf16le_buflen(size_t);
 typedef size_t utf16le_validate(const char16_t[restrict], size_t);
+typedef size_t utf8_to_utf16le(const char16_t[restrict], unsigned char[restrict], size_t, size_t *);
+typedef size_t utf8_buflen(size_t);
 
 extern utf16le_to_utf8 utf16le_to_utf8_ref, utf16le_to_utf8_avx512, utf16le_to_utf8_avx512i;
 extern utf16le_buflen utf16le_to_utf8_buflen_ref, utf16le_to_utf8_buflen_avx512, utf16le_to_utf8_buflen_avx512i;
 extern utf16le_validate utf16le_validate_ref, utf16le_validate_avx512;
+extern utf8_to_utf16le utf8_to_utf16le_ref, utf8_to_utf16le_avx512;
+extern utf8_buflen utf8_to_utf16le_buflen_ref, utf8_to_utf16le_buflen_avx512;
 
 static const struct utf16le_method {
 	const char *name;
 	utf16le_to_utf8 *to_utf8;
-	utf16le_buflen *buflen;
-	utf16le_validate *validate;
+	utf16le_buflen *buflen16;
+	utf16le_validate *validate16;
+	utf8_to_utf16le *to_utf16le;
+	utf8_buflen *buflen8;
 } utf16le_methods[] = {
-	{ "ref", utf16le_to_utf8_ref, utf16le_to_utf8_buflen_ref, utf16le_validate_ref },
-	{ "avx512", utf16le_to_utf8_avx512, utf16le_to_utf8_buflen_avx512, utf16le_validate_avx512 },
-	{ "avx512i", utf16le_to_utf8_avx512i, utf16le_to_utf8_buflen_avx512i, NULL },
+	{ "ref", utf16le_to_utf8_ref, utf16le_to_utf8_buflen_ref, utf16le_validate_ref, utf8_to_utf16le_ref, utf8_to_utf16le_buflen_ref },
+	{ "avx512", utf16le_to_utf8_avx512, utf16le_to_utf8_buflen_avx512, utf16le_validate_avx512, utf8_to_utf16le_avx512, utf8_to_utf16le_buflen_avx512 },
+	{ "avx512i", utf16le_to_utf8_avx512i, utf16le_to_utf8_buflen_avx512i, NULL, NULL, NULL },
 	{ NULL, NULL, NULL },
 };
 
@@ -258,7 +264,7 @@ test_utf16le_to_utf8(struct counters *c, void *payload, const char *filename, si
 		return (-1);
 	}
 
-	outlen = method->buflen(len);
+	outlen = method->buflen16(len);
 	out = memory_allocate(outlen);
 	if (out == NULL) {
 		perror("memory_allocate");
@@ -299,6 +305,83 @@ test_utf16le_to_utf8(struct counters *c, void *payload, const char *filename, si
 
 	for (i = 0; i < m; i++)
 		sum += method->to_utf8(out, data, len, &outlen);
+
+	if (sum != len * m)
+		fprintf(stderr, "Warning (%s/%s): encoding error (%zu < %zu)\n", filename, method->name, sum/m, len);
+
+	free(out);
+	free(data);
+
+	return (0);
+
+fail3:	close(fd);
+fail2:	free(out);
+fail1:	free(data);
+
+	return (-1);
+}
+
+/* test UTF-8 to UTF-16 transcoding by reading a file of n bytes from filename. */
+static int
+test_utf8_to_utf16le(struct counters *c, void *payload, const char *filename, size_t n, size_t m)
+{
+	struct utf16le_method *method = (struct utf16le_method *)payload;
+	ssize_t count;
+	size_t len, i, rem, outlen;
+	volatile size_t sum = 0;
+	int res, fd;
+	unsigned char *data;
+	char16_t *out;
+
+	len = n / sizeof *data;
+	data = memory_allocate(len * sizeof *data);
+	if (data == NULL) {
+		perror("memory_allocate");
+
+		return (-1);
+	}
+
+	outlen = method->buflen8(len * sizeof *out);
+	out = memory_allocate(outlen);
+	if (out == NULL) {
+		perror("memory_allocate");
+
+		goto fail1;
+	}
+
+	fd = open(filename, O_RDONLY);
+	if (fd == -1) {
+		perror(filename);
+
+		goto fail2;
+	}
+
+	rem = n;
+	while (rem > 0) {
+		count = read(fd, (char *)data + (n - rem), rem);
+		if (count < 0) {
+			perror(filename);
+
+			goto fail3;
+		} else if (count == 0) {
+			fprintf(stderr, "%s: file shorter than expected (%zu B < %zu B)\n",
+			    filename, n - rem, n);
+
+			goto fail3;
+		}
+
+		rem -= count;
+	}
+
+	close(fd);
+
+	/* skip initialisation step in benchmark measurements */
+	res = reset_counters(c);
+	if (res != 0)
+		return (-1);
+
+	for (i = 0; i < m; i++)
+		sum += method->to_utf16le(out, data, len, &outlen);
 
 	if (sum != len * m)
 		fprintf(stderr, "Warning (%s/%s): encoding error (%zu < %zu)\n", filename, method->name, sum/m, len);
@@ -366,7 +449,7 @@ test_utf16le_validate(struct counters *c, void *payload, const char *filename, s
 		return (-1);
 
 	for (i = 0; i < m; i++)
-		sum += method->validate(data, len);
+		sum += method->validate16(data, len);
 
 	if (sum != len * m)
 		fprintf(stderr, "Warning (%s/%s): encoding error (%zu < %zu)\n", filename, method->name, sum/m, len);
@@ -442,7 +525,16 @@ main(int argc, char *argv[])
 	for (; i < argc; i++) {
 		struct stat st;
 		size_t len;
-		int res;
+		int res, type;
+
+		if (strstr(argv[i], "utf8") != NULL)
+			type = 8;
+		else if (strstr(argv[i], "utf16") != NULL)
+			type = 16;
+		else {
+			fprintf(stderr, "%s: unknown encoding\n", argv[i]);
+			continue;
+		}
 
 		res = stat(argv[i], &st);
 		if (res != 0) {
@@ -453,10 +545,16 @@ main(int argc, char *argv[])
 		len = st.st_size > SIZE_MAX ? SIZE_MAX : (size_t)st.st_size;
 
 		for (j = 0; methods[j].name != NULL; j++) {
-			run_test("16LEto8", methods[j].name, test_utf16le_to_utf8, (void *)&methods[j], argv[i], len);
+			if (type == 16) {
+				if (methods[j].to_utf8 != NULL)
+					run_test("16LEto8", methods[j].name, test_utf16le_to_utf8, (void *)&methods[j], argv[i], len);
 
-			if (methods[j].validate != NULL)
-				run_test("16LEvalidate", methods[j].name, test_utf16le_validate, (void*)&methods[j], argv[i], len);
+				if (methods[j].validate16 != NULL)
+					run_test("16LEvalidate", methods[j].name, test_utf16le_validate, (void*)&methods[j], argv[i], len);
+			} else if (type == 8) {
+				if (methods[j].to_utf16le != NULL)
+					run_test("8to16LE", methods[j].name, test_utf8_to_utf16le, (void *)&methods[j], argv[i], len);
+			}
 		}
 	}
 

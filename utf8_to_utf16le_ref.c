@@ -12,7 +12,7 @@
 extern size_t
 utf8_to_utf16le_ref(char16_t out[restrict], const unsigned char in[restrict], size_t len, size_t *outlen)
 {
-	size_t inpos, rem = len, outpos = 0;
+	size_t inpos = 0, rem = len, outpos = 0;
 
 	while (rem > 0) {
 		unsigned c0 = in[inpos];
