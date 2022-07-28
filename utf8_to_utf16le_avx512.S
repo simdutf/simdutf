@@ -29,7 +29,6 @@ utf8_to_utf16le_avx512:
 	push		%rbx
 	push		%r12			// todo: reduce these
 	push		%r13
-	push		%r14
 
 	vpbroadcastd	.L80(%rip), %zmm31
 	vpbroadcastd	.Lc0(%rip), %zmm30
@@ -44,6 +43,7 @@ utf8_to_utf16le_avx512:
 	vpbroadcastd	.L0800(%rip), %zmm23
 	vpbroadcastd	.Ld800(%rip), %zmm22
 	vpsrlw		$1, %zmm23, %zmm21	// 0x0400, 0x0400
+	vpxor		%ymm15, %ymm15, %ymm15	// zero register
 
 	push		%rdi			// stash output buffer for latter
 	push		%rsi			// dito with input buffer
@@ -58,17 +58,17 @@ utf8_to_utf16le_avx512:
 
 	.balign		16
 .Loop:	vmovdqu8	(%rsi), %zmm0		// load 64 byte from input buffer
-	vpcmpnltub	%zmm31, %zmm0, %k1	// 0x80 <= zmm0 (not ASCII)
-	ktestd		%k1, %k1		// all ASCII?
-	jnz		1f
+	vpcmpltub	%zmm31, %zmm0, %k1	// zmm0 < 0x80 (ASCII)
+	kortestd	%k1, %k1		// all ASCII?
+	jnc		1f
 
 	// Fast path 1: all ASCII characters
 	vpmovzxbw	%ymm0, %zmm1		// convert to UTF-16LE
 	vmovdqu16	%zmm1, (%rdi)		// and deposit in output buffer
 
-	sub		$32, %rdx		// apply processed input
 	add		$32, %rsi		// advance source buffer
-	sub		$-64, %rdi		// advance output buffer
+	sub		$32, %rdx		// apply processed input
+	add		$64, %rdi		// advance output buffer
 	cmp		$64, %rdx		// enough left for another iteration?
 	jae		.Loop			// if yes, go again!
 	jmp		.Ltail			// else handle tail
@@ -84,31 +84,30 @@ utf8_to_utf16le_avx512:
 	jnz		.Lfail1
 
 	// move masks into scalar registers to play with
-	kmovq		%k1, %r11
+	kmovq		%k1, %rax		// ASCII
 	kmovq		%k2, %r12		// LEAD234
 	kmovq		%k3, %r13		// LEAD34
-	kmovq		%k4, %r14		// LEAD4
+	kmovq		%k4, %r11		// LEAD4
 
 	// compute the various bit masks we need to assembly the UTF-16 characters
 	// of note: we will later only process Unicode characters that start no later
 	// than 5 bytes before the end of the input.  LAST may contain wrong data for
 	// the last 4 bytes of input, but we don't care about that a whole lot.
-	andn		%r11, %r12, %r8		// FOLLOW: follow bytes
-	andn		%r13, %r14, %r10	// LEAD3: lead bytes for 3 byte sequences
-	mov		%r8, %rax
-	not		%rax			// LEAD: UTF-8 first bytes
+	or		%r12, %rax		// LEAD: UTF-8 first bytes
+	mov		%rax, %r8
+	andn		%r13, %r11, %r10	// LEAD3: lead bytes for 3 byte sequences
 
-	shl		$3, %r14		// where follow bytes three bytes after a lead byte should be
-	or		%r14, %rax		// FIRST+4TH: the first and the fourth byte of each sequence
+	shl		$3, %r11		// where follow bytes three bytes after a lead byte should be
+	or		%r11, %rax		// FIRST+4TH: the first and the fourth byte of each sequence
 	shr		$1, %rax		// LAST+3RD: the last byte of each sequence and the third byte of each
 						// ... 4 byte sequence, i.e. where we want to start to decode the input
-	or		%r14, %rax		// including for 4 byte sequences ending at position 63 (but not others)
+	or		%r11, %rax		// including for 4 byte sequences ending at position 63 (but not others)
 
 	// compute permutation mask and load the last bytes
 	kmovq		%rax, %k6
 	vpcompressb	%zmm27, %zmm7{%k6}{z}	// the indices of the input bytes marked in L+3RD
 	vpmovzxbw	%ymm7, %zmm7		// ... zero expanded into words
-	vmovdqu8	%zmm30, %zmm6{%k1}{z}	// ASCII: 00000000  other: 11000000
+	vpblendmb	%zmm15, %zmm30, %zmm6{%k1} // ASCII: 00000000  other: 11000000
 	vpandnd		%zmm0, %zmm6, %zmm0	// high two bits cleared where not ASCII
 	vpermb		%zmm0, %zmm7, %zmm1{%k7}{z} // the last byte of each character
 
@@ -119,8 +118,9 @@ utf8_to_utf16le_avx512:
 	// encode a character > U+10FFFF and is rejected later on
 	shl		$2, %r13		// where follow bytes two bytes after a lead byte should be
 	add		%r12, %r12		// where follow bytes directly after a lead byte should be
-	or		%r14, %r13
+	or		%r11, %r13
 	or		%r13, %r12		// where we expect follow bytes to be
+	not		%r8			// FOLLOW: UTF-8 follow bytes
 	cmp		%r12, %r8		// does that match reality?
 	jne		.Lfail2			// if not, I've got bad news for you
 
@@ -150,7 +150,7 @@ utf8_to_utf16le_avx512:
 	// hi surrogate  11110WVU 10TSRQPN 10MLKJHG           0WVUTSRQPNMLKJHG
 	// lo surrogate                    10MLKJHG 10FEDCBA  0000MLKJHGFEDCVA
 
-	pext		%rax, %r14, %r13	// words in zmm1 that represent low surrogates
+	pext		%rax, %r11, %r13	// words in zmm1 that represent low surrogates
 	kmovd		%r13d, %k2
 	shr		$1, %r13		// words in zmm1 that represent high surrogates
 	kmovd		%r13d, %k1
@@ -215,7 +215,6 @@ utf8_to_utf16le_avx512:
 	mov		%rsi, %rax
 	mov		%rdi, (%rcx)
 
-	pop		%r14
 	pop		%r13
 	pop		%r12
 	pop		%rbx
@@ -227,7 +226,7 @@ utf8_to_utf16le_avx512:
 2:	bzhi		%rdx, %rbx, %rbx	// set ebx to mask of bytes left in tail
 	kmovq		%rbx, %k1
 	vmovdqu8	(%rsi), %zmm0{%k1}{z}	// load input under mask
-	vpcmpnltub	%zmm31, %zmm0, %k1	// 0x80 <= zmm0 (not ASCII)
+	vpcmpltub	%zmm31, %zmm0, %k1	// zmm0 < 0x80 (ASCII)
 	jmp		.Ltailiteration		// process rest as normal (no ASCII fast path, I'm sorry)
 
 	// failure case: bytes C0 or C1 present (in K5)
