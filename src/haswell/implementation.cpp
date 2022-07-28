@@ -236,6 +236,10 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(const char32_t*
   return saved_bytes;
 }
 
+simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
+  return scalar::utf32_to_utf8::convert_with_errors(buf, len, utf8_output);
+}
+
 simdutf_warn_unused size_t implementation::convert_utf16le_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
   std::pair<const char16_t*, char32_t*> ret = haswell::avx2_convert_utf16_to_utf32<endianness::LITTLE>(buf, len, utf32_output);
   if (ret.first == nullptr) { return 0; }

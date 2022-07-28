@@ -118,6 +118,10 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(const char32_t*
   return scalar::utf32_to_utf8::convert(buf, len, utf8_output);
 }
 
+simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
+  return scalar::utf32_to_utf8::convert_with_errors(buf, len, utf8_output);
+}
+
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf8(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
   return scalar::utf32_to_utf8::convert_valid(buf, len, utf8_output);
 }
