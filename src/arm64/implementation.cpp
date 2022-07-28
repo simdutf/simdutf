@@ -116,7 +116,7 @@ simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, siz
 }
 
 simdutf_warn_unused result implementation::validate_utf32_with_errors(const char32_t *buf, size_t len) const noexcept {
-    result res = arm_validate_utf32le_with_errors(buf, len);
+  result res = arm_validate_utf32le_with_errors(buf, len);
   if (res.count != len) {
     result scalar_res = scalar::utf32::validate_with_errors(buf + res.count, len - res.count);
     return result(scalar_res.error, res.count + scalar_res.count);
@@ -157,7 +157,7 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf32(const char* buf
 
 simdutf_warn_unused result implementation::convert_utf8_to_utf32_with_errors(const char* buf, size_t len, char32_t* utf32_output) const noexcept {
   utf8_to_utf32::validating_transcoder converter;
-  return converter.convert(buf, len, utf32_output);
+  return converter.convert_with_errors(buf, len, utf32_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(const char* input, size_t size,
