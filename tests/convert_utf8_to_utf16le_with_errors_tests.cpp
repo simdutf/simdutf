@@ -198,7 +198,7 @@ TEST(overlong_error) {
       if((unsigned char)test.input_utf8[i] >= (unsigned char)0b11000000) { // Only non-ASCII leading bytes can be overlong
         auto procedure = [&implementation, &i](const char* utf8, size_t size, char16_t* utf16) -> size_t {
           simdutf::result res = implementation.convert_utf8_to_utf16le_with_errors(utf8, size, utf16);
-          ASSERT_EQUAL(res.error, simdutf::error_code::TOO_LARGE);
+          ASSERT_EQUAL(res.error, simdutf::error_code::OVERLONG);
           ASSERT_EQUAL(res.count, i);
           return 0;
         };
