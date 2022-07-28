@@ -12,12 +12,10 @@
 .Lf0:	.byte		0xf0, 0xf0, 0xf0, 0xf0
 .Lc2:	.byte		0xc2, 0xc2, 0xc2, 0xc2
 
-.Lfc00:	.short		0xfc00, 0xfc00
 .Ld7c0dc00:
 	.short		0xd800 - 0x0040, 0xdc00
 .L0800:	.short		0x0800, 0x0800
 .Ld800:	.short		0xd800, 0xd800
-.L0400:	.short		0x0400, 0x0400
 
 	.text
 	.globl		utf8_to_utf16le_avx512
@@ -41,11 +39,11 @@ utf8_to_utf16le_avx512:
 
 	vmovdqa64	.Lid(%rip), %zmm27
 	vpternlogd	$0xff, %zmm26, %zmm26, %zmm26 // ffffffff
-	vpbroadcastd	.Lfc00(%rip), %zmm25
+	vpsllw		$10, %zmm26, %zmm25	// 0xfc00, 0xfc00
 	vpbroadcastd	.Ld7c0dc00(%rip), %zmm24
 	vpbroadcastd	.L0800(%rip), %zmm23
 	vpbroadcastd	.Ld800(%rip), %zmm22
-	vpbroadcastd	.L0400(%rip), %zmm21
+	vpsrlw		$1, %zmm23, %zmm21	// 0x0400, 0x0400
 
 	push		%rdi			// stash output buffer for latter
 	push		%rsi			// dito with input buffer
@@ -58,21 +56,19 @@ utf8_to_utf16le_avx512:
 	cmp		$64, %rdx		// enough left for another iteration?
 	jb		.Ltail
 
+	.balign		16
 .Loop:	vmovdqu8	(%rsi), %zmm0		// load 64 byte from input buffer
 	vpcmpnltub	%zmm31, %zmm0, %k1	// 0x80 <= zmm0 (not ASCII)
-	ktestq		%k1, %k1		// all ASCII?
+	ktestd		%k1, %k1		// all ASCII?
 	jnz		1f
 
 	// Fast path 1: all ASCII characters
-	vextracti32x8	$1, %zmm0, %ymm2
 	vpmovzxbw	%ymm0, %zmm1		// convert to UTF-16LE
-	vpmovzxbw	%ymm2, %zmm2
 	vmovdqu16	%zmm1, (%rdi)		// and deposit in output buffer
-	vmovdqu16	%zmm2, 64(%rdi)
 
-	sub		$64, %rdx		// apply processed input
-	add		$64, %rsi		// advance source buffer
-	sub		$-128, %rdi		// advance output buffer
+	sub		$32, %rdx		// apply processed input
+	add		$32, %rsi		// advance source buffer
+	sub		$-64, %rdi		// advance output buffer
 	cmp		$64, %rdx		// enough left for another iteration?
 	jae		.Loop			// if yes, go again!
 	jmp		.Ltail			// else handle tail
@@ -105,28 +101,28 @@ utf8_to_utf16le_avx512:
 	shl		$3, %r14		// where follow bytes three bytes after a lead byte should be
 	or		%r14, %rax		// FIRST+4TH: the first and the fourth byte of each sequence
 	shr		$1, %rax		// LAST+3RD: the last byte of each sequence and the third byte of each
+						// ... 4 byte sequence, i.e. where we want to start to decode the input
 	or		%r14, %rax		// including for 4 byte sequences ending at position 63 (but not others)
-	kmovq		%rax, %k6		// ... 4 byte sequence, i.e. where we want to start to decode the input
+
+	// compute permutation mask and load the last bytes
+	kmovq		%rax, %k6
+	vpcompressb	%zmm27, %zmm7{%k6}{z}	// the indices of the input bytes marked in L+3RD
+	vpmovzxbw	%ymm7, %zmm7		// ... zero expanded into words
+	vmovdqu8	%zmm30, %zmm6{%k1}{z}	// ASCII: 00000000  other: 11000000
+	vpandnd		%zmm0, %zmm6, %zmm0	// high two bits cleared where not ASCII
+	vpermb		%zmm0, %zmm7, %zmm1{%k7}{z} // the last byte of each character
 
 	// check if there is an encoding error
 	// check for correct character sequencing and validity
 	// we don't need to check for 0xf8 <= zmm0 here: if this
 	// occurs, we decode it as a 4 byte sequence which will
 	// encode a character > U+10FFFF and is rejected later on
-	add		%r12, %r12		// where follow bytes directly after a lead byte should be
 	shl		$2, %r13		// where follow bytes two bytes after a lead byte should be
+	add		%r12, %r12		// where follow bytes directly after a lead byte should be
 	or		%r14, %r13
 	or		%r13, %r12		// where we expect follow bytes to be
 	cmp		%r12, %r8		// does that match reality?
 	jne		.Lfail2			// if not, I've got bad news for you
-
-	vpcompressb	%zmm27, %zmm7{%k6}{z}	// the indices of the input bytes marked in L+3RD
-	vpmovzxbw	%ymm7, %zmm7		// ... zero expanded into words
-
-	// join the bits of each UTF-16 word and load the last bytes
-	vmovdqu8	%zmm30, %zmm6{%k1}{z}	// ASCII: 00000000  other: 11000000
-	vpandnd		%zmm0, %zmm6, %zmm0	// high two bits cleared where not ASCII
-	vpermb		%zmm0, %zmm7, %zmm1{%k7}{z} // the last byte of each character
 
 	// add in second last bytes
 	and		%rax, %r8		// LAST+3RD bits that are FOLLOW bits (i.e. not for ASCII)
@@ -134,7 +130,7 @@ utf8_to_utf16le_avx512:
 	kmovq		%r8, %k6
 
 	vpaddw		%zmm26, %zmm7, %zmm7	// indices of the second last bytes
-	vmovdqu8	%zmm0, %zmm6{%k6}{z}	// only byte that are the second last byte of a sequence
+	vmovdqu8	%zmm0, %zmm6{%k6}{z}	// only bytes that are the second last byte of a sequence
 	vpermb		%zmm6, %zmm7, %zmm2{%k7}{z} // the second last bytes (of two, three byte seq, surrogates)
 	vpsllw		$6, %zmm2, %zmm2	// shifted into position
 	vpaddw		%zmm2, %zmm1, %zmm1	// and add to the last bytes
@@ -156,35 +152,35 @@ utf8_to_utf16le_avx512:
 
 	pext		%rax, %r14, %r13	// words in zmm1 that represent low surrogates
 	kmovd		%r13d, %k2
-	shr		$1, %r13d		// words in zmm1 that represent high surrogates
+	shr		$1, %r13		// words in zmm1 that represent high surrogates
 	kmovd		%r13d, %k1
 	kord		%k1, %k2, %k3		// words in zmm1 that represent surrogates
 
-	// post process surrogates.  Here we assume that each high surrogate is followed by a low surrogate
-	vmovdqu16	%zmm25, %zmm6{%k2}{z}	// lo surr: 1111110000000000  other: 00000000 00000000
-	vpexpandw	%zmm24, %zmm7{%k3}{z}	// hi surr: 1101011111000000  lo surr: 1101110000000000
-	vpsrlw		$4, %zmm1, %zmm1{%k1}	// hi surr: 00000WVUTSRQPNML, others unchanged
-	vpandnd		%zmm1, %zmm6, %zmm1	// lo surr: 000000KJHGFEDCBA, others unchanged
-	vpaddw		%zmm7, %zmm1, %zmm1     // hi:    110110vutsRQPNML  lo surr: 110111VUTSRQPNML
-						// vuts = WVUTS - 1
-
-	// compute the number characters in zmm1 and deposit
-	vmovdqu16	%zmm1, (%rdi)		// deposit decoded text into output
-	mov		$-1, %r12d
-	mov		%rax, %r9
-	and		%rbx, %r9		// mask out those bits that are not part of the input
-	pdep		%r9, %r12, %r9		// the first up to 32 start bytes in %r9
-	lzcnt		%r9, %rcx
-	mov		$1, %r12d
-	ror		%cl, %r12		// the bit after the highest bit in rax
-	and		%r14, %r12		// does this bit correspond to a high surrogate?
-	andn		%r9, %r12, %r9		// if it does, clear it in R9 (last word must not be high surrogate)
+	// compute the number characters in zmm1 and advance input buffer, count
+	// if the last word is a high surrogate, discard it as we don't have code
+	// to straddle surrogate pairs over a pair of input vectors
+	and		$0x80000000, %r13d	// 80000000 if last item is a high surrogate, 00000000 otherwise
+	not		%r13d			// 7fffffff if last item is a high surrogate, ffffffff otherwise
+	mov		%rax, %r9		// LAST+3RD bytes
+	and		%rbx, %r9		// those that are part of the input
+	pdep		%r9, %r13, %r9		// the first up to 32 LAST+3RD byte such that
+						// ... the last one is not a high surrogate
 
 	lzcnt		%r9, %rcx		// number of vector items that were not processed
 	sub		$64, %rcx		// negative number of vector items processed
 	sub		%rcx, %rsi		// advance source vector by processed prefix
 	add		%rcx, %rdx		// and subtract these from item count
 	popcnt		%r9, %r9		// number of words written out
+
+	// post process surrogates and deposit.
+	// Here we assume that each high surrogate is followed by a low surrogate
+	vmovdqu16	%zmm25, %zmm6{%k2}{z}	// lo surr: 1111110000000000  other: 00000000 00000000
+	vpexpandw	%zmm24, %zmm7{%k3}{z}	// hi surr: 1101011111000000  lo surr: 1101110000000000
+	vpsrlw		$4, %zmm1, %zmm1{%k1}	// hi surr: 00000WVUTSRQPNML, others unchanged
+	vpandnd		%zmm1, %zmm6, %zmm1	// lo surr: 000000KJHGFEDCBA, others unchanged
+	vpaddw		%zmm7, %zmm1, %zmm1     // hi:    110110vutsRQPNML  lo surr: 110111VUTSRQPNML
+	vmovdqu16	%zmm1, (%rdi)		// deposit decoded text into output
+						// vuts = WVUTS - 1
 	lea		(%rdi, %r9, 2), %rdi	// advance output buffer by that many words
 
 	// check 3 and 4 byte sequences for correctness
@@ -227,6 +223,7 @@ utf8_to_utf16le_avx512:
 	ret
 
 	// handle the remaining tail bytes
+	.balign		16
 2:	bzhi		%rdx, %rbx, %rbx	// set ebx to mask of bytes left in tail
 	kmovq		%rbx, %k1
 	vmovdqu8	(%rsi), %zmm0{%k1}{z}	// load input under mask
