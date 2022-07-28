@@ -148,7 +148,7 @@ TEST(too_short_error) {
     int leading_byte_pos = 0;
     for (int i = 0; i < fix_size; i++) {
       if((test.input_utf8[i] & 0b11000000) == 0b10000000) {  // Only process continuation bytes by making them leading bytes
-        auto procedure = [&implementation, &i, &leading_byte_pos](const char* utf8, size_t size, char16_t* utf16) -> size_t {
+        auto procedure = [&implementation, &leading_byte_pos](const char* utf8, size_t size, char16_t* utf16) -> size_t {
           simdutf::result res = implementation.convert_utf8_to_utf16le_with_errors(utf8, size, utf16);
           ASSERT_EQUAL(res.error, simdutf::error_code::TOO_SHORT);
           ASSERT_EQUAL(res.count, leading_byte_pos);
@@ -195,7 +195,7 @@ TEST(overlong_error) {
   for(size_t trial = 0; trial < num_trials; trial++) {
     transcode_utf8_to_utf16_test_base test(random, fix_size);
     for (int i = 1; i < fix_size; i++) {
-      if(test.input_utf8[i] >= 0b11000000) { // Only non-ASCII leading bytes can be overlong
+      if((unsigned char)test.input_utf8[i] >= (unsigned char)0b11000000) { // Only non-ASCII leading bytes can be overlong
         auto procedure = [&implementation, &i](const char* utf8, size_t size, char16_t* utf16) -> size_t {
           simdutf::result res = implementation.convert_utf8_to_utf16le_with_errors(utf8, size, utf16);
           ASSERT_EQUAL(res.error, simdutf::error_code::TOO_LARGE);
