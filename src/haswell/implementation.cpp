@@ -327,6 +327,10 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf16be(const char32
   return saved_bytes;
 }
 
+simdutf_warn_unused result implementation::convert_utf32_to_utf16le_with_errors(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
+  return scalar::utf32_to_utf16::convert_with_errors<endianness::LITTLE>(buf, len, utf16_output);
+}
+
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf16le(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
   return convert_utf32_to_utf16le(buf, len, utf16_output);
 }
