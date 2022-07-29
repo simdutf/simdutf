@@ -30,8 +30,8 @@ const char32_t* arm_validate_utf32le(const char32_t* input, size_t size) {
 
 
 const result arm_validate_utf32le_with_errors(const char32_t* input, size_t size) {
+    const char32_t* start = input;
     const char32_t* end = input + size;
-    size_t pos = 0;
 
     const uint32x4_t standardmax = vmovq_n_u32(0x10ffff);
     const uint32x4_t offset = vmovq_n_u32(0xffff2000);
@@ -46,17 +46,16 @@ const result arm_validate_utf32le_with_errors(const char32_t* input, size_t size
 
         uint32x4_t is_zero = veorq_u32(vmaxq_u32(currentmax, standardmax), standardmax);
         if(vmaxvq_u32(is_zero) != 0) {
-            return result(error_code::TOO_LARGE, pos);
+            return result(error_code::TOO_LARGE, input - start);
         }
 
         is_zero = veorq_u32(vmaxq_u32(currentoffsetmax, standardoffsetmax), standardoffsetmax);
         if(vmaxvq_u32(is_zero) != 0) {
-            return result(error_code::SURROGATE, pos);
+            return result(error_code::SURROGATE, input - start);
         }
 
-        pos += 4;
         input += 4;
     }
 
-    return result(error_code::SUCCESS, pos);
+    return result(error_code::SUCCESS, input - start);
 }

@@ -121,8 +121,8 @@ const char16_t* avx2_validate_utf16(const char16_t* input, size_t size) {
 
 
 const result avx2_validate_utf16le_with_errors(const char16_t* input, size_t size) {
+    const char16_t* start = input;
     const char16_t* end = input + size;
-    size_t pos = 0;
 
     const auto v_d8 = simd8<uint8_t>::splat(0xd8);
     const auto v_f8 = simd8<uint8_t>::splat(0xf8);
@@ -146,7 +146,6 @@ const result avx2_validate_utf16le_with_errors(const char16_t* input, size_t siz
         const uint32_t surrogates_bitmask = surrogates_wordmask.to_bitmask();
         if (surrogates_bitmask == 0x0) {
             input += simd16<uint16_t>::ELEMENTS * 2;
-            pos += simd16<uint16_t>::ELEMENTS * 2;
         } else {
             // 2. We have some surrogates that have to be distinguished:
             //    - low  surrogates: 0b1101'10xx'yyyy'yyyy (0xD800..0xDBFF)
@@ -177,19 +176,17 @@ const result avx2_validate_utf16le_with_errors(const char16_t* input, size_t siz
                 // The whole input register contains valid UTF-16, i.e.,
                 // either single words or proper surrogate pairs.
                 input += simd16<uint16_t>::ELEMENTS * 2;
-                pos += simd16<uint16_t>::ELEMENTS * 2;
             } else if (c == 0x7fffffff) {
                 // The 31 lower words of the input register contains valid UTF-16.
                 // The 31 word may be either a low or high surrogate. It the next
                 // iteration we 1) check if the low surrogate is followed by a high
                 // one, 2) reject sole high surrogate.
                 input += simd16<uint16_t>::ELEMENTS * 2 - 1;
-                pos += simd16<uint16_t>::ELEMENTS * 2 - 1;
             } else {
-                return result(error_code::SURROGATE, pos);
+                return result(error_code::SURROGATE, input - start);
             }
         }
     }
 
-    return result(error_code::SUCCESS, pos);
+    return result(error_code::SUCCESS, input - start);
 }

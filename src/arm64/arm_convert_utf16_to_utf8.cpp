@@ -319,12 +319,12 @@ std::pair<const char16_t*, char*> arm_convert_utf16_to_utf8(const char16_t* buf,
 template <endianness big_endian>
 std::pair<result, char*> arm_convert_utf16_to_utf8_with_errors(const char16_t* buf, size_t len, char* utf8_out) {
   uint8_t * utf8_output = reinterpret_cast<uint8_t*>(utf8_out);
+    const char16_t* start = buf;
   const char16_t* end = buf + len;
 
   const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
   const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
   const uint16x8_t v_c080 = vmovq_n_u16((uint16_t)0xc080);
-  size_t pos{0};
 
   while (buf + 16 <= end) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
@@ -347,7 +347,6 @@ std::pair<result, char*> arm_convert_utf16_to_utf8_with_errors(const char16_t* b
           vst1_u8(utf8_output, utf8_packed);
           // 3. adjust pointers
           buf += 8;
-          pos += 8;
           utf8_output += 8;
           if (big_endian) {
             #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
@@ -366,7 +365,6 @@ std::pair<result, char*> arm_convert_utf16_to_utf8_with_errors(const char16_t* b
           vst1q_u8(utf8_output, utf8_packed);
           // 3. adjust pointers
           buf += 16;
-          pos += 16;
           utf8_output += 16;
           continue; // we are done for this round!
         }
@@ -416,7 +414,6 @@ std::pair<result, char*> arm_convert_utf16_to_utf8_with_errors(const char16_t* b
 
           // 6. adjust pointers
           buf += 8;
-          pos += 8;
           utf8_output += row[0];
           continue;
 
@@ -539,7 +536,6 @@ std::pair<result, char*> arm_convert_utf16_to_utf8_with_errors(const char16_t* b
         utf8_output += row1[0];
 
         buf += 8;
-        pos += 8;
     // surrogate pair(s) in a register
     } else {
       // Let us do a scalar fallback.
@@ -565,7 +561,7 @@ std::pair<result, char*> arm_convert_utf16_to_utf8_with_errors(const char16_t* b
           uint16_t next_word = big_endian ? scalar::utf16::swap_bytes(buf[k + 1]) : buf[k + 1];
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
-          if((diff | diff2) > 0x3FF)  { return std::make_pair(result(error_code::SURROGATE, pos + k - 1), reinterpret_cast<char*>(utf8_output)); }
+          if((diff | diff2) > 0x3FF)  { return std::make_pair(result(error_code::SURROGATE, buf - start + k - 1), reinterpret_cast<char*>(utf8_output)); }
           uint32_t value = (diff << 10) + diff2 + 0x10000;
           *utf8_output++ = char((value>>18) | 0b11110000);
           *utf8_output++ = char(((value>>12) & 0b111111) | 0b10000000);
@@ -574,9 +570,8 @@ std::pair<result, char*> arm_convert_utf16_to_utf8_with_errors(const char16_t* b
         }
       }
       buf += k;
-      pos += k;
     }
   } // while
 
-  return std::make_pair(result(error_code::SUCCESS, pos), reinterpret_cast<char*>(utf8_output));
+  return std::make_pair(result(error_code::SUCCESS, buf - start), reinterpret_cast<char*>(utf8_output));
 }

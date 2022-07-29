@@ -32,8 +32,8 @@ const char32_t* avx2_validate_utf32le(const char32_t* input, size_t size) {
 
 
 const result avx2_validate_utf32le_with_errors(const char32_t* input, size_t size) {
+    const char32_t* start = input;
     const char32_t* end = input + size;
-    size_t pos = 0;
 
     const __m256i standardmax = _mm256_set1_epi32(0x10ffff);
     const __m256i offset = _mm256_set1_epi32(0xffff2000);
@@ -48,16 +48,15 @@ const result avx2_validate_utf32le_with_errors(const char32_t* input, size_t siz
 
         __m256i is_zero = _mm256_xor_si256(_mm256_max_epu32(currentmax, standardmax), standardmax);
         if(_mm256_testz_si256(is_zero, is_zero) == 0) {
-            return result(error_code::TOO_LARGE, pos);
+            return result(error_code::TOO_LARGE, input - start);
         }
 
         is_zero = _mm256_xor_si256(_mm256_max_epu32(currentoffsetmax, standardoffsetmax), standardoffsetmax);
         if(_mm256_testz_si256(is_zero, is_zero) == 0) {
-            return result(error_code::SURROGATE, pos);
+            return result(error_code::SURROGATE, input - start);
         }
         input += 8;
-        pos += 8;
     }
 
-    return result(error_code::SUCCESS, pos);
+    return result(error_code::SUCCESS, input - start);
 }

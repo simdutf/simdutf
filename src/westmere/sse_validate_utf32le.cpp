@@ -32,8 +32,8 @@ const char32_t* sse_validate_utf32le(const char32_t* input, size_t size) {
 
 
 const result sse_validate_utf32le_with_errors(const char32_t* input, size_t size) {
+    const char32_t* start = input;
     const char32_t* end = input + size;
-    size_t pos = 0;
 
     const __m128i standardmax = _mm_set1_epi32(0x10ffff);
     const __m128i offset = _mm_set1_epi32(0xffff2000);
@@ -48,17 +48,15 @@ const result sse_validate_utf32le_with_errors(const char32_t* input, size_t size
 
         __m128i is_zero = _mm_xor_si128(_mm_max_epu32(currentmax, standardmax), standardmax);
         if(_mm_test_all_zeros(is_zero, is_zero) == 0) {
-            return result(error_code::TOO_LARGE, pos);
+            return result(error_code::TOO_LARGE, input - start);
         }
 
         is_zero = _mm_xor_si128(_mm_max_epu32(currentoffsetmax, standardoffsetmax), standardoffsetmax);
         if(_mm_test_all_zeros(is_zero, is_zero) == 0) {
-            return result(error_code::SURROGATE, pos);
+            return result(error_code::SURROGATE, input - start);
         }
         input += 4;
-        pos += 4;
     }
-    
 
-    return result(error_code::SUCCESS, pos);
+    return result(error_code::SUCCESS, input - start);
 }

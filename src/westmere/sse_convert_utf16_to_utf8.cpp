@@ -291,14 +291,13 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
 */
 template <endianness big_endian>
 std::pair<result, char*> sse_convert_utf16_to_utf8_with_errors(const char16_t* buf, size_t len, char* utf8_output) {
-
+  const char16_t* start = buf;
   const char16_t* end = buf + len;
 
   const __m128i v_0000 = _mm_setzero_si128();
   const __m128i v_f800 = _mm_set1_epi16((int16_t)0xf800);
   const __m128i v_d800 = _mm_set1_epi16((int16_t)0xd800);
   const __m128i v_c080 = _mm_set1_epi16((int16_t)0xc080);
-  size_t pos{0};
 
   while (buf + 16 <= end) {
     __m128i in = _mm_loadu_si128((__m128i*)buf);
@@ -322,7 +321,6 @@ std::pair<result, char*> sse_convert_utf16_to_utf8_with_errors(const char16_t* b
           _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
           // 3. adjust pointers
           buf += 8;
-          pos += 8;
           utf8_output += 8;
           in = nextin;
         } else {
@@ -333,7 +331,6 @@ std::pair<result, char*> sse_convert_utf16_to_utf8_with_errors(const char16_t* b
           _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
           // 3. adjust pointers
           buf += 16;
-          pos += 16;
           utf8_output += 16;
           continue; // we are done for this round!
         }
@@ -383,7 +380,6 @@ std::pair<result, char*> sse_convert_utf16_to_utf8_with_errors(const char16_t* b
 
           // 6. adjust pointers
           buf += 8;
-          pos += 8;
           utf8_output += row[0];
           continue;
 
@@ -465,7 +461,6 @@ std::pair<result, char*> sse_convert_utf16_to_utf8_with_errors(const char16_t* b
           _mm_storeu_si128((__m128i*)utf8_output, utf8_1);
           utf8_output += 12;
           buf += 8;
-          pos += 8;
           continue;
         }
         const uint8_t mask0 = uint8_t(mask);
@@ -486,7 +481,6 @@ std::pair<result, char*> sse_convert_utf16_to_utf8_with_errors(const char16_t* b
         utf8_output += row1[0];
 
         buf += 8;
-        pos += 8;
     // surrogate pair(s) in a register
     } else {
       // Let us do a scalar fallback.
@@ -512,7 +506,7 @@ std::pair<result, char*> sse_convert_utf16_to_utf8_with_errors(const char16_t* b
           uint16_t next_word = big_endian ? scalar::utf16::swap_bytes(buf[k+1]) : buf[k+1];
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
-          if((diff | diff2) > 0x3FF)  { return std::make_pair(result(error_code::SURROGATE, pos + k - 1), utf8_output); }
+          if((diff | diff2) > 0x3FF)  { return std::make_pair(result(error_code::SURROGATE, buf - start + k - 1), utf8_output); }
           uint32_t value = (diff << 10) + diff2 + 0x10000;
           *utf8_output++ = char((value>>18) | 0b11110000);
           *utf8_output++ = char(((value>>12) & 0b111111) | 0b10000000);
@@ -521,9 +515,8 @@ std::pair<result, char*> sse_convert_utf16_to_utf8_with_errors(const char16_t* b
         }
       }
       buf += k;
-      pos += k;
     }
   } // while
 
-  return std::make_pair(result(error_code::SUCCESS, pos), utf8_output);
+  return std::make_pair(result(error_code::SUCCESS, buf - start), utf8_output);
 }
