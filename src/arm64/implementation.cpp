@@ -231,7 +231,20 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(const char32_t*
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
-  return scalar::utf32_to_utf8::convert_with_errors(buf, len, utf8_output);
+  // ret.first.count is always the position in the buffer, not the number of words written even if finished
+  std::pair<result, char*> ret = arm_convert_utf32_to_utf8_with_errors(buf, len, utf8_output);
+  if (ret.first.count != len) {
+    result scalar_res = scalar::utf32_to_utf8::convert_with_errors(
+                                        buf + ret.first.count, len - ret.first.count, ret.second);
+    if (scalar_res.error) {
+      scalar_res.count += ret.first.count;
+      return scalar_res;
+    } else {
+      ret.second += scalar_res.count;
+    }
+  }
+  ret.first.count = ret.second - utf8_output;   // Set count to the number of 8-bit words written
+  return ret.first;
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16le_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
