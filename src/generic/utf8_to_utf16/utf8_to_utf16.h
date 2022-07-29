@@ -125,7 +125,7 @@ using namespace simd;
     }
 
 
-
+    template <endianness endian>
     simdutf_really_inline size_t convert(const char* in, size_t size, char16_t* utf16_output) {
       size_t pos = 0;
       char16_t* start{utf16_output};
@@ -133,7 +133,7 @@ using namespace simd;
       while(pos + 64 + safety_margin <= size) {
         simd8x64<int8_t> input(reinterpret_cast<const int8_t *>(in + pos));
         if(input.is_ascii()) {
-          input.store_ascii_as_utf16(utf16_output);
+          input.store_ascii_as_utf16<endian>(utf16_output);
           utf16_output += 64;
           pos += 64;
         } else {
@@ -168,7 +168,7 @@ using namespace simd;
             // for this section of the code. Hence, there is a limit
             // to how much we can further increase this latency before
             // it seriously harms performance.
-            size_t consumed = convert_masked_utf8_to_utf16(in + pos,
+            size_t consumed = convert_masked_utf8_to_utf16<endian>(in + pos,
                             utf8_end_of_code_point_mask, utf16_output);
             pos += consumed;
             utf8_end_of_code_point_mask >>= consumed;
@@ -181,7 +181,7 @@ using namespace simd;
       }
       if(errors()) { return 0; }
       if(pos < size) {
-        size_t howmany  = scalar::utf8_to_utf16::convert(in + pos, size - pos, utf16_output);
+        size_t howmany  = scalar::utf8_to_utf16::convert<endian>(in + pos, size - pos, utf16_output);
         if(howmany == 0) { return 0; }
         utf16_output += howmany;
       }

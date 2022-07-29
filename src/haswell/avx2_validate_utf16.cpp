@@ -43,7 +43,8 @@
    - pointer to the last unprocessed character (a scalar fallback should check the rest);
    - nullptr if an error was detected.
 */
-const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
+template <endianness big_endian>
+const char16_t* avx2_validate_utf16(const char16_t* input, size_t size) {
     const char16_t* end = input + size;
 
     const auto v_d8 = simd8<uint8_t>::splat(0xd8);
@@ -51,12 +52,17 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
     const auto v_fc = simd8<uint8_t>::splat(0xfc);
     const auto v_dc = simd8<uint8_t>::splat(0xdc);
 
-    while (input + simd16<uint16_t>::SIZE * 2 < end) {
+    while (input + simd16<uint16_t>::ELEMENTS * 2 < end) {
         // 0. Load data: since the validation takes into account only higher
         //    byte of each word, we compress the two vectors into one which
         //    consists only the higher bytes.
-        const auto in0 = simd16<uint16_t>(input);
-        const auto in1 = simd16<uint16_t>(input + simd16<uint16_t>::SIZE / sizeof(char16_t));
+        auto in0 = simd16<uint16_t>(input);
+        auto in1 = simd16<uint16_t>(input + simd16<uint16_t>::ELEMENTS);
+
+        if (big_endian) {
+            in0 = in0.swap_bytes();
+            in1 = in1.swap_bytes();
+        }
 
         const auto t0 = in0.shr<8>();
         const auto t1 = in1.shr<8>();
@@ -65,9 +71,9 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
 
         // 1. Check whether we have any 0xD800..DFFF word (0b1101'1xxx'yyyy'yyyy).
         const auto surrogates_wordmask = (in & v_f8) == v_d8;
-        const uint16_t surrogates_bitmask = static_cast<uint16_t>(surrogates_wordmask.to_bitmask());
-        if (surrogates_bitmask == 0x0000) {
-            input += 16;
+        const uint32_t surrogates_bitmask = surrogates_wordmask.to_bitmask();
+        if (surrogates_bitmask == 0x0) {
+            input += simd16<uint16_t>::ELEMENTS * 2;
         } else {
             // 2. We have some surrogates that have to be distinguished:
             //    - low  surrogates: 0b1101'10xx'yyyy'yyyy (0xD800..0xDBFF)
@@ -77,33 +83,33 @@ const char16_t* sse_validate_utf16le(const char16_t* input, size_t size) {
 
             // V - non-surrogate words
             //     V = not surrogates_wordmask
-            const uint16_t V = static_cast<uint16_t>(~surrogates_bitmask);
+            const uint32_t V = ~surrogates_bitmask;
 
             // H - word-mask for high surrogates: the six highest bits are 0b1101'11
             const auto    vH = (in & v_fc) == v_dc;
-            const uint16_t H = static_cast<uint16_t>(vH.to_bitmask());
+            const uint32_t H = vH.to_bitmask();
 
             // L - word mask for low surrogates
             //     L = not H and surrogates_wordmask
-            const uint16_t L = static_cast<uint16_t>(~H & surrogates_bitmask);
+            const uint32_t L = ~H & surrogates_bitmask;
 
-            const uint16_t a = static_cast<uint16_t>(L & (H >> 1));  // A low surrogate must be followed by high one.
+            const uint32_t a = L & (H >> 1);  // A low surrogate must be followed by high one.
                                               // (A low surrogate placed in the 7th register's word
                                               // is an exception we handle.)
-            const uint16_t b = static_cast<uint16_t>(a << 1);        // Just mark that the opposite fact is hold,
+            const uint32_t b = a << 1;        // Just mark that the opposite fact is hold,
                                               // thanks to that we have only two masks for valid case.
-            const uint16_t c = static_cast<uint16_t>(V | a | b);     // Combine all the masks into the final one.
+            const uint32_t c = V | a | b;     // Combine all the masks into the final one.
 
-            if (c == 0xffff) {
+            if (c == 0xffffffff) {
                 // The whole input register contains valid UTF-16, i.e.,
                 // either single words or proper surrogate pairs.
-                input += 16;
-            } else if (c == 0x7fff) {
-                // The 15 lower words of the input register contains valid UTF-16.
-                // The 15th word may be either a low or high surrogate. It the next
+                input += simd16<uint16_t>::ELEMENTS * 2;
+            } else if (c == 0x7fffffff) {
+                // The 31 lower words of the input register contains valid UTF-16.
+                // The 31 word may be either a low or high surrogate. It the next
                 // iteration we 1) check if the low surrogate is followed by a high
                 // one, 2) reject sole high surrogate.
-                input += 15;
+                input += simd16<uint16_t>::ELEMENTS * 2 - 1;
             } else {
                 return nullptr;
             }

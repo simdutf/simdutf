@@ -86,6 +86,20 @@ simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3
   return x;
 }
 
+simdutf_really_inline uint8x8_t make_uint8x8_t(uint8_t x1,  uint8_t x2,  uint8_t x3,  uint8_t x4,
+                                         uint8_t x5,  uint8_t x6,  uint8_t x7,  uint8_t x8) {
+  uint8x8_t x{};
+  x = vset_lane_u8(x1, x, 0);
+  x = vset_lane_u8(x2, x, 1);
+  x = vset_lane_u8(x3, x, 2);
+  x = vset_lane_u8(x4, x, 3);
+  x = vset_lane_u8(x5, x, 4);
+  x = vset_lane_u8(x6, x, 5);
+  x = vset_lane_u8(x7, x, 6);
+  x = vset_lane_u8(x8, x, 7);
+  return x;
+}
+
 simdutf_really_inline uint16x8_t make_uint16x8_t(uint16_t x1,  uint16_t x2,  uint16_t x3,  uint16_t x4,
                                        uint16_t x5,  uint16_t x6,  uint16_t x7,  uint16_t x8) {
   uint16x8_t x{};
@@ -320,9 +334,21 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     static simdutf_really_inline simd8<int8_t> splat(int8_t _value) { return vmovq_n_s8(_value); }
     static simdutf_really_inline simd8<int8_t> zero() { return vdupq_n_s8(0); }
     static simdutf_really_inline simd8<int8_t> load(const int8_t values[16]) { return vld1q_s8(values); }
+    template <endianness big_endian>
     simdutf_really_inline void store_ascii_as_utf16(char16_t * p) const {
-      vst1q_u16(reinterpret_cast<uint16_t*>(p), vmovl_u8(vget_low_u8 (vreinterpretq_u8_s8(this->value))));
-      vst1q_u16(reinterpret_cast<uint16_t*>(p + 8), vmovl_high_u8(vreinterpretq_u8_s8(this->value)));
+      uint16x8_t first = vmovl_u8(vget_low_u8 (vreinterpretq_u8_s8(this->value)));
+      uint16x8_t second = vmovl_high_u8(vreinterpretq_u8_s8(this->value));
+      if (big_endian) {
+        #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+        const uint8x16_t swap = make_uint8x16_t(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
+        #else
+        const uint8x16_t swap = {1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14};
+        #endif
+        first = vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(first), swap));
+        second = vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(second), swap));
+      }
+      vst1q_u16(reinterpret_cast<uint16_t*>(p), first);
+      vst1q_u16(reinterpret_cast<uint16_t*>(p + 8), second);
     }
     simdutf_really_inline void store_ascii_as_utf32(char32_t * p) const {
       vst1q_u32(reinterpret_cast<uint32_t*>(p), vmovl_u16(vget_low_u16(vmovl_u8(vget_low_u8 (vreinterpretq_u8_s8(this->value))))));
@@ -472,11 +498,12 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
       return reduce_or().is_ascii();
     }
 
+    template <endianness endian>
     simdutf_really_inline void store_ascii_as_utf16(char16_t * ptr) const {
-      this->chunks[0].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*0);
-      this->chunks[1].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*1);
-      this->chunks[2].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*2);
-      this->chunks[3].store_ascii_as_utf16(ptr+sizeof(simd8<T>)*3);
+      this->chunks[0].template store_ascii_as_utf16<endian>(ptr+sizeof(simd8<T>)*0);
+      this->chunks[1].template store_ascii_as_utf16<endian>(ptr+sizeof(simd8<T>)*1);
+      this->chunks[2].template store_ascii_as_utf16<endian>(ptr+sizeof(simd8<T>)*2);
+      this->chunks[3].template store_ascii_as_utf16<endian>(ptr+sizeof(simd8<T>)*3);
     }
 
     simdutf_really_inline void store_ascii_as_utf32(char32_t * ptr) const {
