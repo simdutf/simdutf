@@ -41,7 +41,7 @@ inline simdutf_warn_unused result validate_with_errors(const char16_t *buf, size
         if(pos + 1 >= len) { return result(error_code::SURROGATE, pos); }
         uint16_t diff = uint16_t(word - 0xD800);
         if(diff > 0x3FF) { return result(error_code::SURROGATE, pos); }
-        uint16_t next_word = data[pos + 1];
+        uint16_t next_word = big_endian ? uint16_t((data[pos + 1] >> 8) | (data[pos + 1] << 8)) : data[pos + 1];
         uint16_t diff2 = uint16_t(next_word - 0xDC00);
         if(diff2 > 0x3FF) { return result(error_code::SURROGATE, pos); }
         pos += 2;
