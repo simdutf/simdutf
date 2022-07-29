@@ -366,6 +366,21 @@ simdutf_warn_unused size_t convert_utf16le_to_utf32(const char16_t * input, size
 simdutf_warn_unused size_t convert_utf16be_to_utf32(const char16_t * input, size_t length, char32_t* utf32_buffer) noexcept;
 
 /**
+ * Convert possibly broken UTF-16LE string into UTF-32LE string and stop on error.
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-16LE string to convert
+ * @param length        the length of the string in 2-byte words (char16_t)
+ * @param utf32_buffer   the pointer to buffer that can hold conversion result
+ * @return a result pair struct with an error code and either the position of the error if any or the number of char32_t written if successful.
+ */
+simdutf_warn_unused result convert_utf16le_to_utf32_with_errors(const char16_t * input, size_t length, char32_t* utf32_buffer) noexcept;
+
+/**
  * Convert valid UTF-16LE string into UTF-32LE string.
  *
  * This function assumes that the input string is valid UTF-16LE.
@@ -1016,6 +1031,21 @@ public:
    * @return number of written words; 0 if input is not a valid UTF-16BE string
    */
   simdutf_warn_unused virtual size_t convert_utf16be_to_utf32(const char16_t * input, size_t length, char32_t* utf32_buffer) const noexcept = 0;
+
+  /**
+   * Convert possibly broken UTF-16LE string into UTF-32LE string and stop on error.
+   *
+   * During the conversion also validation of the input string is done.
+   * This function is suitable to work with inputs from untrusted sources.
+   *
+   * This function is not BOM-aware.
+   *
+   * @param input         the UTF-16LE string to convert
+   * @param length        the length of the string in 2-byte words (char16_t)
+   * @param utf32_buffer   the pointer to buffer that can hold conversion result
+   * @return a result pair struct with an error code and either the position of the error if any or the number of char32_t written if successful.
+   */
+  simdutf_warn_unused virtual result convert_utf16le_to_utf32_with_errors(const char16_t * input, size_t length, char32_t* utf32_buffer) const noexcept = 0;
 
   /**
    * Convert valid UTF-16LE string into UTF-32LE string.
