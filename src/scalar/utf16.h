@@ -31,11 +31,12 @@ inline simdutf_warn_unused bool validate(const char16_t *buf, size_t len) noexce
   return true;
 }
 
+template <endianness big_endian>
 inline simdutf_warn_unused result validate_with_errors(const char16_t *buf, size_t len) noexcept {
   const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
   uint64_t pos = 0;
   while (pos < len) {
-    uint16_t word = data[pos];
+    uint16_t word = big_endian ? swap_bytes(data[pos]) : data[pos];
     if((word & 0xF800) == 0xD800) {
         if(pos + 1 >= len) { return result(error_code::SURROGATE, pos); }
         uint16_t diff = uint16_t(word - 0xD800);

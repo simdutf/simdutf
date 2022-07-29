@@ -119,7 +119,8 @@ const char16_t* sse_validate_utf16(const char16_t* input, size_t size) {
 }
 
 
-const result sse_validate_utf16le_with_errors(const char16_t* input, size_t size) {
+template <endianness big_endian>
+const result sse_validate_utf16_with_errors(const char16_t* input, size_t size) {
     const char16_t* start = input;
     const char16_t* end = input + size;
 
@@ -132,8 +133,13 @@ const result sse_validate_utf16le_with_errors(const char16_t* input, size_t size
         // 0. Load data: since the validation takes into account only higher
         //    byte of each word, we compress the two vectors into one which
         //    consists only the higher bytes.
-        const auto in0 = simd16<uint16_t>(input);
-        const auto in1 = simd16<uint16_t>(input + simd16<uint16_t>::SIZE / sizeof(char16_t));
+        auto in0 = simd16<uint16_t>(input);
+        auto in1 = simd16<uint16_t>(input + simd16<uint16_t>::SIZE / sizeof(char16_t));
+
+        if (big_endian) {
+            in0 = in0.swap_bytes();
+            in1 = in1.swap_bytes();
+        }
 
         const auto t0 = in0.shr<8>();
         const auto t1 = in1.shr<8>();
