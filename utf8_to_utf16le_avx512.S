@@ -12,7 +12,7 @@
 
 .Ld7c0dc00:
 	.short		0xd800 - 0x0040, 0xdc00
-.L0800:	.short		0x0800, 0x0800
+.L0400:	.short		0x0400, 0x0400
 .Ld800:	.short		0xd800, 0xd800
 
 	.text
@@ -24,24 +24,23 @@ utf8_to_utf16le_avx512:
 	// rsi: inbuf
 	// rdx: inlen
 	// rcx: &outlen
-	push		%rbx
-	push		%r12			// todo: reduce these
-	push		%r13
 
+	// load constants and masks
 	vpbroadcastd	.Lc0(%rip), %zmm30
 	vpaddb		%zmm30, %zmm30, %zmm31	// 0x80, 0x80, 0x80, 0x80
 	vpbroadcastd	.Lf0(%rip), %zmm28
 	vpaddb		%zmm28, %zmm28, %zmm29	// 0xe0, 0xe0, 0xe0, 0xe0
 	vpbroadcastd	.Lc2(%rip), %zmm20
-
 	vmovdqa64	.Lid(%rip), %zmm27
 	vpternlogd	$0xff, %zmm26, %zmm26, %zmm26 // ffffffff
 	vpsllw		$10, %zmm26, %zmm25	// 0xfc00, 0xfc00
 	vpbroadcastd	.Ld7c0dc00(%rip), %zmm24
-	vpbroadcastd	.L0800(%rip), %zmm23
+	vpbroadcastd	.L0400(%rip), %zmm21
 	vpbroadcastd	.Ld800(%rip), %zmm22
-	vpsrlw		$1, %zmm23, %zmm21	// 0x0400, 0x0400
-	vpxor		%ymm15, %ymm15, %ymm15	// zero register
+	vpaddw		%zmm21, %zmm21, %zmm23	// 0x0800, 0x0800
+
+	push		%rbx			// stash callee-saved registers
+	push		%r12
 
 	push		%rdi			// stash output buffer for latter
 	push		%rsi			// dito with input buffer
@@ -79,12 +78,12 @@ utf8_to_utf16le_avx512:
 	ktestq		%k5, %k5		// if present, encoding error!
 	jnz		.Lfail1
 
+	kmovq		%k2, %r12		// LEAD234
 	ktestq		%k3, %k3		// any 3 or 4 byte sequences present?
 	jnz		2f			// if yes, take slow path
 
 	// Fast path 2: all ASCII or 2 byte
 	// move masks into scalar registers to play with
-	kmovq		%k2, %r12		// LEAD2
 	andn		%rbx, %r12, %r9		// the last byte of each character within the bounds of rbx
 	mov		$0xffffffff, %eax	// the least significant 32 bit in r13d
 	pdep		%r9, %rax, %r9		// the first up to 32 of these
@@ -118,6 +117,7 @@ utf8_to_utf16le_avx512:
 	cmp		%r12, %r8		// does that match reality?
 	jne		.Lfail2			// if not, I've got bad news for you
 
+	// advance pointers, counters, and iterate
 	sub		%rcx, %rsi		// advance source vector by processed prefix
 	add		%rcx, %rdx		// and subtract these from item count
 	lea		(%rdi, %r9, 2), %rdi	// advance output buffer by that many words
@@ -130,9 +130,8 @@ utf8_to_utf16le_avx512:
 
 	// move masks into scalar registers to play with
 	kmovq		%k1, %rax		// ASCII
-	kmovq		%k2, %r12		// LEAD234
-	kmovq		%k3, %r13		// LEAD34
 	kmovq		%k4, %r11		// LEAD4
+	kmovq		%k3, %r9		// LEAD34
 
 	// compute the various bit masks we need to assembly the UTF-16 characters
 	// of note: we will later only process Unicode characters that start no later
@@ -140,7 +139,7 @@ utf8_to_utf16le_avx512:
 	// the last 4 bytes of input, but we don't care about that a whole lot.
 	or		%r12, %rax		// LEAD: UTF-8 first bytes
 	mov		%rax, %r8
-	andn		%r13, %r11, %r10	// LEAD3: lead bytes for 3 byte sequences
+	andn		%r9, %r11, %r10		// LEAD3: lead bytes for 3 byte sequences
 
 	shl		$3, %r11		// where follow bytes three bytes after a lead byte should be
 	or		%r11, %rax		// FIRST+4TH: the first and the fourth byte of each sequence
@@ -149,10 +148,11 @@ utf8_to_utf16le_avx512:
 	or		%r11, %rax		// including for 4 byte sequences ending at position 63 (but not others)
 
 	// compute permutation mask and load the last bytes
+	knotq		%k1, %k5		// not ASCII bytes
 	kmovq		%rax, %k6
 	vpcompressb	%zmm27, %zmm7{%k6}{z}	// the indices of the input bytes marked in L+3RD
 	vpmovzxbw	%ymm7, %zmm7		// ... zero expanded into words
-	vpblendmb	%zmm15, %zmm30, %zmm6{%k1} // ASCII: 00000000  other: 11000000
+	vmovdqu8	%zmm30, %zmm6{%k5}	// ASCII: 00000000  other: 11000000
 	vpandnd		%zmm0, %zmm6, %zmm0	// high two bits cleared where not ASCII
 	vpermb		%zmm0, %zmm7, %zmm1{%k7}{z} // the last byte of each character
 
@@ -161,21 +161,18 @@ utf8_to_utf16le_avx512:
 	// we don't need to check for 0xf8 <= zmm0 here: if this
 	// occurs, we decode it as a 4 byte sequence which will
 	// encode a character > U+10FFFF and is rejected later on
-	shl		$2, %r13		// where follow bytes two bytes after a lead byte should be
+	shl		$2, %r9			// where follow bytes two bytes after a lead byte should be
 	add		%r12, %r12		// where follow bytes directly after a lead byte should be
-	or		%r11, %r13
-	or		%r13, %r12		// where we expect follow bytes to be
+	or		%r11, %r9
+	or		%r9, %r12		// where we expect follow bytes to be
 	not		%r8			// FOLLOW: UTF-8 follow bytes
 	cmp		%r12, %r8		// does that match reality?
 	jne		.Lfail2			// if not, I've got bad news for you
 
 	// add in second last bytes
-	and		%rax, %r8		// LAST+3RD bits that are FOLLOW bits (i.e. not for ASCII)
-	shr		$1, %r8			// those bits preceeding them (unless ASCII)
-	kmovq		%r8, %k6
-
+	kshiftrq	$1, %k5, %k5		// bytes that precede non-ASCII bytes
 	vpaddw		%zmm26, %zmm7, %zmm7	// indices of the second last bytes
-	vmovdqu8	%zmm0, %zmm6{%k6}{z}	// only bytes that are the second last byte of a sequence
+	vmovdqu8	%zmm0, %zmm6{%k5}{z}	// only bytes that precede non-ASCII bytes
 	vpermb		%zmm6, %zmm7, %zmm2{%k7}{z} // the second last bytes (of two, three byte seq, surrogates)
 	vpsllw		$6, %zmm2, %zmm2	// shifted into position
 	vpaddw		%zmm2, %zmm1, %zmm1	// and add to the last bytes
@@ -195,20 +192,20 @@ utf8_to_utf16le_avx512:
 	// hi surrogate  11110WVU 10TSRQPN 10MLKJHG           0WVUTSRQPNMLKJHG
 	// lo surrogate                    10MLKJHG 10FEDCBA  0000MLKJHGFEDCVA
 
-	pext		%rax, %r11, %r13	// words in zmm1 that represent low surrogates
-	kmovd		%r13d, %k2
-	shr		$1, %r13		// words in zmm1 that represent high surrogates
-	kmovd		%r13d, %k1
+	pext		%rax, %r11, %rcx	// words in zmm1 that represent low surrogates
+	kmovd		%ecx, %k2
+	shr		$1, %rcx		// words in zmm1 that represent high surrogates
+	kmovd		%ecx, %k1
 	kord		%k1, %k2, %k3		// words in zmm1 that represent surrogates
 
 	// compute the number characters in zmm1 and advance input buffer, count
 	// if the last word is a high surrogate, discard it as we don't have code
 	// to straddle surrogate pairs over a pair of input vectors
-	and		$0x80000000, %r13d	// 80000000 if last item is a high surrogate, 00000000 otherwise
-	not		%r13d			// 7fffffff if last item is a high surrogate, ffffffff otherwise
+	and		$0x80000000, %ecx	// 80000000 if last item is a high surrogate, 00000000 otherwise
+	not		%ecx			// 7fffffff if last item is a high surrogate, ffffffff otherwise
 	mov		%rax, %r9		// LAST+3RD bytes
 	and		%rbx, %r9		// those that are part of the input
-	pdep		%r9, %r13, %r9		// the first up to 32 LAST+3RD byte such that
+	pdep		%r9, %rcx, %r9		// the first up to 32 LAST+3RD byte such that
 						// ... the last one is not a high surrogate
 
 	lzcnt		%r9, %rcx		// number of vector items that were not processed
@@ -260,7 +257,6 @@ utf8_to_utf16le_avx512:
 	mov		%rsi, %rax
 	mov		%rdi, (%rcx)
 
-	pop		%r13
 	pop		%r12
 	pop		%rbx
 	vzeroupper
