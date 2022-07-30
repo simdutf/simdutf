@@ -15,9 +15,10 @@ extern size_t utf8_to_utf16le_buflen_avx512(size_t);
 /* all test vectors end in FF to allow embedded NUL characters */
 const char *vectors[] = {
 	"\xff", /* empty string */
-	"Fix Schwyz quäkt Jürgen blöd vom Paß.\xff", /* ISO-8859-1 string */
-	"Das Pferd frisst keinen Gurkensalat.\xff", /* ASCII string */
-	"ドイツの科学は世界一です！\xff", /* Japanese mixed script string */
+	"Sphinx of black quartz, judge my vows!\n#include <stdio.h>\n\nint main(void)\n{\n\tputs(\"hello world\");\n}\n\xff", /* ASCII */
+	"Fix Schwyz quäkt Jürgen blöd vom Paß.\xff", /* ISO-8859-1 */
+	"Falsches Üben von Xylophonmusik quält jeden größeren Zwerg.  Voyez le brick géant que j’examine près du wharf.\xff"
+	"すべての人間は、生れながらにして自由であり、かつ、尊厳と権利とについて平等である。\xff", /* Japanese mixed script */
 	"يولد جميع الناس أحرارًا متساوين في الكرامة والحقوق.\xff", /* Arabic */
 	"國之語音，異乎中國，與文字不相流通，故愚民有所欲言，而終不得伸其情者多矣。予為此憫然，新制二十八字，欲使人人易習便日用耳。\xff", /* Chinese */
 	"모든 인간은 태어날 때부터 자유로우며 그 존엄과 권리에 있어 동등하다. 인간은 천부적으로 이성과 양심을 부여받았으며 서로 형제애의 정신으로 행동하여야 한다.\xff", /* Korean */
@@ -26,6 +27,8 @@ const char *vectors[] = {
 	"A small step for man\0a large step for mankind\0\xff", /* NUL embedded into ASCII */
 	"Université\0TÉLUQ\xff", /* NUL embedded into two-byte characters */
 	"Germany\0דייטשלאנד\0آلمان\0Германия\xff", /* NUL embedded into three byte characters */
+	"ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄA\xff", /* all two byte */
+	"AÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\xff", /* two byte on odd positions */
 
 	"𑀤𑁂𑀯𑀸𑀦𑀁𑀧𑀺𑀬𑁂𑀦 𑀧𑀺𑀬𑀤𑀲𑀺𑀦 𑀮𑀸𑀚𑀺𑀦𑀯𑀻𑀲𑀢𑀺𑀯𑀲𑀸𑀪𑀺𑀲𑀺𑀢𑁂𑀦\xff", /* Brahmi script, all surrogates */
 	"x😀😁😂😃😄😅😆😇😈😉😊😋😌😍😎😏\xff", /* Emoji w/ surrogates in odd positions */
@@ -47,12 +50,16 @@ const char *vectors[] = {
 	"素晴らしいですね\xfc\x80\x80\x80\x80\x80\xff",
 	"真香！\xfd\xbf\xbf\xbf\xbf\xbf\xff",
 	"尽二秀才\xfe\xff", /* illegal bytes */
-	"\x80""believe me!\xff", /* lone follow byte */
-	"really\x80, I need this!\xff",
+	"\x80""Glaub mir!  Das Pferd frisst keinen Gurkensalat!\xff", /* lone follow byte */
+	"really\x80, you gotta believe me with this one!\xff",
 	"reaa\x80\x80lly\xff",
+	"間違い\x80ない\xff",
 	"hicup\xc2\x80\x80\xff", /* too many follow bytes */
 	"sneeze\xe4\x81\x82\x83\xff",
 	"snooze\xf1\x90\x91\x92\x93\xff",
+	"This text\xc7is all wonky!  I wonder why that is...\xff", /* not enough follow bytes */
+	"I have too many\xc5€€€\xff",
+	"吾輩は猫である。\xe3\x81名前はまだ無い。\xff",
 	NULL,
 };
 
