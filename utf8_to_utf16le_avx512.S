@@ -70,7 +70,6 @@ utf8_to_utf16le_avx512:
 	jae		.Loop			// if yes, go again!
 	jmp		.Ltail			// else handle tail
 
-.Ltailiteration:
 	// classify characters further
 1:	vpcmpnltub	%zmm30, %zmm0, %k2	// 0xc0 <= zmm0 (2, 3, or 4 start bytes)
 	vpcmpnltub	%zmm29, %zmm0, %k3	// 0xe0 <= zmm0 (3 or 4 byte start bytes)
@@ -83,12 +82,16 @@ utf8_to_utf16le_avx512:
 	jnz		2f			// if yes, take slow path
 
 	// Fast path 2: all ASCII or 2 byte
-	// move masks into scalar registers to play with
-	andn		%rbx, %r12, %r9		// the last byte of each character within the bounds of rbx
+	not		%r12			// the last byte of each character
 	mov		$0xffffffff, %eax	// the least significant 32 bit in r13d
-	pdep		%r9, %rax, %r9		// the first up to 32 of these
+	pdep		%r12, %rax, %r9		// the first up to 32 of these
+	lzcnt		%r9, %rcx		// number of vector items that were not processed
+	sub		$64, %rcx		// negative number of vector items processed
 
-	// compute permutation mask and load the last bytes
+	// Translate into UTF-8.  It's a bit simpler than in the general case.
+	// --- CASE ---  -------------- INPUT --------------  ---- OUTPUT ----
+	// ascii                                    0GFEDCBA  000000000GFEDCBA
+	// 2 byte                          110LKJHG 10FEDCBA  00000LKJHGFEDCBA
 	vpsubb		%zmm20, %zmm0, %zmm2{%k2}{z} // 2 byte sequence lead bytes with tag bits subtracted
 	korq		%k1, %k2, %k5		// LEAD: first bytes of each sequence
 	knotq		%k2, %k6		// FOLLOW: last bytes of each sequence
@@ -100,32 +103,23 @@ utf8_to_utf16le_avx512:
 	vpaddw		%zmm2, %zmm1, %zmm1	// and added to the last byte
 	vmovdqu16	%zmm1, (%rdi)		// and deposit decoded text into output
 
-	// Decoded input (simpler than the general case):
-	// --- CASE ---  -------------- INPUT --------------  ---- OUTPUT ----
-	// ascii                                    0GFEDCBA  000000000GFEDCBA
-	// 2 byte                          110LKJHG 10FEDCBA  00000LKJHGFEDCBA
-
-	// compute the number of words written out and how many bytes we consumed
-	lzcnt		%r9, %rcx		// number of vector items that were not processed
-	sub		$64, %rcx		// negative number of vector items processed
-	popcnt		%r9, %r9		// number of words written out
-
 	// check if there is a sequencing error (i.e. lead byte not followed by follow byte)
 	kmovq		%k5, %r8		// LEAD
-	add		%r12, %r12		// where follow bytes should be
-	not		%r8			// where they are
+	stc
+	adc		%r12, %r12		// where follow bytes should not be
 	cmp		%r12, %r8		// does that match reality?
 	jne		.Lfail2			// if not, I've got bad news for you
 
 	// advance pointers, counters, and iterate
 	sub		%rcx, %rsi		// advance source vector by processed prefix
 	add		%rcx, %rdx		// and subtract these from item count
-	lea		(%rdi, %r9, 2), %rdi	// advance output buffer by that many words
+	add		$64, %rdi		// advance output buffer
 	cmp		$64, %rdx		// enough for another round?
 	jae		.Loop			// if yes, go again!
 	jmp		.Ltail			// else handle tail
 
 	.balign		16
+.Ltailiteration:
 2:	vpcmpnltub	%zmm28, %zmm0, %k4	// 0xf0 <= zmm0 (4 byte start bytes)
 
 	// move masks into scalar registers to play with
@@ -152,7 +146,7 @@ utf8_to_utf16le_avx512:
 	kmovq		%rax, %k6
 	vpcompressb	%zmm27, %zmm7{%k6}{z}	// the indices of the input bytes marked in L+3RD
 	vpmovzxbw	%ymm7, %zmm7		// ... zero expanded into words
-	vmovdqu8	%zmm30, %zmm6{%k5}	// ASCII: 00000000  other: 11000000
+	vmovdqu8	%zmm30, %zmm6{%k5}{z}	// ASCII: 00000000  other: 11000000
 	vpandnd		%zmm0, %zmm6, %zmm0	// high two bits cleared where not ASCII
 	vpermb		%zmm0, %zmm7, %zmm1{%k7}{z} // the last byte of each character
 
@@ -244,7 +238,7 @@ utf8_to_utf16le_avx512:
 	jae		.Loop			// if yes, go again!
 
 .Ltail:	test		%rdx, %rdx		// any bytes left to process?
-	jnz		2f			// if yes, deal with them
+	jnz		3f			// if yes, deal with them
 
 	// compute input/output length and finish
 	pop		%rcx			// &outbuf
@@ -264,11 +258,17 @@ utf8_to_utf16le_avx512:
 
 	// handle the remaining tail bytes
 	.balign		16
-2:	bzhi		%rdx, %rbx, %rbx	// set ebx to mask of bytes left in tail
+3:	bzhi		%rdx, %rbx, %rbx	// set ebx to mask of bytes left in tail
 	kmovq		%rbx, %k1
 	vmovdqu8	(%rsi), %zmm0{%k1}{z}	// load input under mask
 	vpcmpltub	%zmm31, %zmm0, %k1	// zmm0 < 0x80 (ASCII)
-	jmp		.Ltailiteration		// process rest as normal (no ASCII fast path, I'm sorry)
+	vpcmpnltub	%zmm30, %zmm0, %k2	// 0xc0 <= zmm0 (2, 3, or 4 start bytes)
+	vpcmpnltub	%zmm29, %zmm0, %k3	// 0xe0 <= zmm0 (3 or 4 byte start bytes)
+	vpcmpltub	%zmm20, %zmm0, %k5{%k2}	// 0xc0 <= zmm0 < 0xc2 (illegal two byte sequence?)
+	ktestq		%k5, %k5		// if present, encoding error!
+	jnz		.Lfail1
+	kmovq		%k2, %r12		// LEAD234
+	jmp		.Ltailiteration
 
 	// failure case: bytes C0 or C1 present (in K5)
 .Lfail1:
