@@ -83,10 +83,9 @@ utf8_to_utf16le_avx512:
 
 	// Fast path 2: all ASCII or 2 byte
 	not		%r12			// the last byte of each character
-	mov		$0xffffffff, %eax	// the least significant 32 bit in r13d
-	pdep		%r12, %rax, %r9		// the first up to 32 of these
-	lzcnt		%r9, %rcx		// number of vector items that were not processed
-	sub		$64, %rcx		// negative number of vector items processed
+	mov		%ebx, %ecx		// rax = ffffffff (the least 32 bit)
+	pdep		%r12, %rcx, %rcx	// the first up to 32 of these
+	lzcnt		%rcx, %rcx		// number of vector items that were not processed
 
 	// Translate into UTF-8.  It's a bit simpler than in the general case.
 	// --- CASE ---  -------------- INPUT --------------  ---- OUTPUT ----
@@ -111,8 +110,9 @@ utf8_to_utf16le_avx512:
 	jne		.Lfail2			// if not, I've got bad news for you
 
 	// advance pointers, counters, and iterate
-	sub		%rcx, %rsi		// advance source vector by processed prefix
-	add		%rcx, %rdx		// and subtract these from item count
+	add		$64, %rsi		// advance source by full vector
+	sub		%rcx, %rsi		// but not the parts that weren't processed
+	lea		-64(%rdx, %rcx, 1), %rdx // process item count the same way
 	add		$64, %rdi		// advance output buffer
 	cmp		$64, %rdx		// enough for another round?
 	jae		.Loop			// if yes, go again!
@@ -203,9 +203,9 @@ utf8_to_utf16le_avx512:
 						// ... the last one is not a high surrogate
 
 	lzcnt		%r9, %rcx		// number of vector items that were not processed
-	sub		$64, %rcx		// negative number of vector items processed
-	sub		%rcx, %rsi		// advance source vector by processed prefix
-	add		%rcx, %rdx		// and subtract these from item count
+	add		$64, %rsi		// advance source by full vector
+	sub		%rcx, %rsi		// but not the parts that weren't processed
+	lea		-64(%rdx, %rcx, 1), %rdx // process item count the same way
 	popcnt		%r9, %r9		// number of words written out
 
 	// post process surrogates and deposit.
@@ -294,7 +294,7 @@ utf8_to_utf16le_avx512:
 .Lfail3:
 	sub		%r9, %rdi		// roll back rdi adjustment
 	sub		%r9, %rdi
-	add		%rcx, %rsi		// roll back rsi adjustment
+	lea		-64(%rsi, %rcx, 1), %rsi // roll back rsi adjustment
 	kord		%k4, %k0, %k0		// where did errors occur?
 	kmovd		%k0, %edx
 	blsi		%edx, %edx		// where did the first error occur?
@@ -311,7 +311,7 @@ utf8_to_utf16le_avx512:
 	.globl utf8_to_utf16le_buflen_avx512
 	.type utf8_to_utf16le_buflen_avx512, @function
 utf8_to_utf16le_buflen_avx512:
-	lea		63(%rdi), %rax		// may write up to 63 words past the end of the buffer
+	lea		31(%rdi), %rax		// may write up to 31 words past the end of the buffer
 	ret
 
 	.size utf8_to_utf16le_buflen_avx512, .-utf8_to_utf16le_buflen_avx512
