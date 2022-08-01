@@ -48,7 +48,7 @@ namespace simdutf::benchmarks {
         void run_validate_utf8(const simdutf::implementation& implementation, size_t iterations);
         void run_validate_utf8_with_errors(const simdutf::implementation& implementation, size_t iterations);
         void run_validate_utf16(const simdutf::implementation& implementation, size_t iterations);
-        void run_validate_utf16le_with_errors(const simdutf::implementation& implementation, size_t iterations);
+        void run_validate_utf16_with_errors(const simdutf::implementation& implementation, size_t iterations);
         void run_validate_utf32(const simdutf::implementation& implementation, size_t iterations);
         void run_validate_utf32_with_errors(const simdutf::implementation& implementation, size_t iterations);
         void run_count_utf8(const simdutf::implementation& implementation, size_t iterations);

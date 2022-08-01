@@ -69,7 +69,7 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         {"validate_utf8", {simdutf::encoding_type::UTF8}},
         {"validate_utf8_with_errors", {simdutf::encoding_type::UTF8}},
         {"validate_utf16", {simdutf::encoding_type::UTF16_LE}},
-        {"validate_utf16le_with_errors", {simdutf::encoding_type::UTF16_LE}},
+        {"validate_utf16_with_errors", {simdutf::encoding_type::UTF16_LE}},
         {"validate_utf32", {simdutf::encoding_type::UTF32_LE}},
         {"validate_utf32_with_errors", {simdutf::encoding_type::UTF32_LE}},
         
@@ -378,8 +378,8 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         run_validate_utf8_with_errors(*implementation, iterations);
     } else if (name == "validate_utf16") {
         run_validate_utf16(*implementation, iterations);
-    } else if (name == "validate_utf16le_with_errors") {
-        run_validate_utf16le_with_errors(*implementation, iterations);
+    } else if (name == "validate_utf16_with_errors") {
+        run_validate_utf16_with_errors(*implementation, iterations);
     } else if(name == "validate_utf32") {
         run_validate_utf32(*implementation, iterations);
     } else if(name == "validate_utf32_with_errors") {
@@ -498,7 +498,7 @@ void Benchmark::run_validate_utf16(const simdutf::implementation& implementation
     print_summary(result, size, char_count);
 }
 
-void Benchmark::run_validate_utf16le_with_errors(const simdutf::implementation& implementation, size_t iterations) {
+void Benchmark::run_validate_utf16_with_errors(const simdutf::implementation& implementation, size_t iterations) {
     const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
     const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
     size_t size = input_data.size() - BOM::bom_byte_size(bom);
