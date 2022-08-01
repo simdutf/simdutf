@@ -389,7 +389,7 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf16le_with_errors(
   return ret.first;
 }
 
-simdutf_warn_unused result implementation::convert_utf32_to_utf16lb_with_errors(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
+simdutf_warn_unused result implementation::convert_utf32_to_utf16be_with_errors(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of words written even if finished
   std::pair<result, char16_t*> ret = arm_convert_utf32_to_utf16_with_errors<endianness::BIG>(buf, len, utf16_output);
   if (ret.first.count != len) {
