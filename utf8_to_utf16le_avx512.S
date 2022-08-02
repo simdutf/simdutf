@@ -210,12 +210,14 @@ utf8_to_utf16le_avx512:
 
 	// post process surrogates and deposit.
 	// Here we assume that each high surrogate is followed by a low surrogate
+	bzhi		%r9d, %ebx, %r8d	// output words that hold meaningful characters
+	kmovd		%r8d, %k5
 	vmovdqu16	%zmm25, %zmm6{%k2}{z}	// lo surr: 1111110000000000  other: 00000000 00000000
 	vpexpandw	%zmm24, %zmm7{%k3}{z}	// hi surr: 1101011111000000  lo surr: 1101110000000000
 	vpsrlw		$4, %zmm1, %zmm1{%k1}	// hi surr: 00000WVUTSRQPNML, others unchanged
 	vpandnd		%zmm1, %zmm6, %zmm1	// lo surr: 000000KJHGFEDCBA, others unchanged
 	vpaddw		%zmm7, %zmm1, %zmm1     // hi:    110110vutsRQPNML  lo surr: 110111VUTSRQPNML
-	vmovdqu16	%zmm1, (%rdi)		// deposit decoded text into output
+	vmovdqu16	%zmm1, (%rdi){%k5}	// deposit decoded text into output
 						// vuts = WVUTS - 1
 	lea		(%rdi, %r9, 2), %rdi	// advance output buffer by that many words
 
@@ -311,7 +313,7 @@ utf8_to_utf16le_avx512:
 	.globl utf8_to_utf16le_buflen_avx512
 	.type utf8_to_utf16le_buflen_avx512, @function
 utf8_to_utf16le_buflen_avx512:
-	lea		31(%rdi), %rax		// may write up to 31 words past the end of the buffer
+	mov		%rdi, %rax		// does not write past the end of the buffer
 	ret
 
 	.size utf8_to_utf16le_buflen_avx512, .-utf8_to_utf16le_buflen_avx512
