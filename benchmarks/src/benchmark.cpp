@@ -73,25 +73,25 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         {"validate_utf32", {simdutf::encoding_type::UTF32_LE}},
         {"validate_utf32_with_errors", {simdutf::encoding_type::UTF32_LE}},
         
+
         {"count_utf8", {simdutf::encoding_type::UTF8}},
         {"count_utf16", {simdutf::encoding_type::UTF16_LE}},
-        
+
         {"convert_utf8_to_utf16", {simdutf::encoding_type::UTF8}},
         {"convert_utf8_to_utf16_with_errors", {simdutf::encoding_type::UTF8}},
         {"convert_utf8_to_utf16_with_dynamic_allocation", {simdutf::encoding_type::UTF8}},
         {"convert_valid_utf8_to_utf16", {simdutf::encoding_type::UTF8}},
-        
+
         {"convert_utf8_to_utf32", {simdutf::encoding_type::UTF8}},
         {"convert_utf8_to_utf32_with_errors", {simdutf::encoding_type::UTF8}},
         {"convert_utf8_to_utf32_with_dynamic_allocation", {simdutf::encoding_type::UTF8}},
         {"convert_valid_utf8_to_utf32", {simdutf::encoding_type::UTF8}},
-        
+
         {"convert_utf16_to_utf8", {simdutf::encoding_type::UTF16_LE}},
         {"convert_utf16_to_utf8_with_errors", {simdutf::encoding_type::UTF16_LE}},
         {"convert_utf16_to_utf8_with_dynamic_allocation", {simdutf::encoding_type::UTF16_LE}},
         {"convert_valid_utf16_to_utf8", {simdutf::encoding_type::UTF16_LE}},
 
-        
         {"convert_utf16_to_utf32", {simdutf::encoding_type::UTF16_LE}},
         {"convert_utf16_to_utf32_with_errors", {simdutf::encoding_type::UTF16_LE}},
         {"convert_utf16_to_utf32_with_dynamic_allocation", {simdutf::encoding_type::UTF16_LE}},
@@ -104,6 +104,8 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         {"convert_utf32_to_utf16", {simdutf::encoding_type::UTF32_LE}},
         {"convert_utf32_to_utf16_with_errors", {simdutf::encoding_type::UTF32_LE}},
         {"convert_valid_utf32_to_utf16", {simdutf::encoding_type::UTF32_LE}},
+
+        {"detect_encodings", {simdutf::encoding_type::UTF8, simdutf::encoding_type::UTF16_LE, simdutf::encoding_type::UTF32_LE}}
 
     };
 
@@ -432,6 +434,8 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         run_convert_valid_utf32_to_utf16(*implementation, iterations);
     } else if(name == "convert_valid_utf16_to_utf32") {
         run_convert_valid_utf16_to_utf32(*implementation, iterations);
+    } else if(name == "detect_encodings") {
+        run_detect_encodings(*implementation, iterations);
     } else {
         std::cerr << "Unsupported procedure: " << name << '\n';
         std::cerr << "Report the issue.\n";
@@ -1626,6 +1630,52 @@ void Benchmark::run_count_utf16(const simdutf::implementation& implementation, s
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
     size_t char_count = active_implementation->count_utf16le(data, size);
     print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_detect_encodings(const simdutf::implementation& implementation, size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char* data = reinterpret_cast<const char*>(input_data.data() + BOM::bom_byte_size(bom));
+    const size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    volatile size_t sink{0};
+    auto proc = [&implementation, data, size, &sink]() {
+        sink = implementation.detect_encodings(data, size);
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    size_t char_count = size;
+    if((sink == 0) && (size != 0) && (iterations > 0)) {
+        std::cerr << "The output is zero which might indicate an error.\n";
+    } else {
+        std::cout << "Detected format: ";
+        if(sink & simdutf::encoding_type::UTF8) {
+            char_count =  active_implementation->count_utf8(data, size);
+            std::cout << " UTF8";
+        }
+        if(sink & simdutf::encoding_type::UTF16_LE) {
+            std::cout << " UTF16LE";
+            char_count =  active_implementation->count_utf16(reinterpret_cast<const char16_t*>(data), size/2);
+        }
+        if(sink & simdutf::encoding_type::UTF32_LE) {
+            std::cout << " UTF32LE";
+            char_count = size/4;
+        }
+        std::cout << std::endl;
+    }
+    if((bom) && (bom & ~sink)) {
+        std::cerr << "[Error] BOM format     : ";
+        if(bom & simdutf::encoding_type::UTF8) {
+            std::cerr << " UTF8";
+        } else if(bom & simdutf::encoding_type::UTF16_LE) {
+            std::cerr << " UTF16LE";
+        } else if(bom & simdutf::encoding_type::UTF32_LE) {
+            std::cerr << " UTF32LE";
+        }
+        std::cerr << std::endl;
+    }
+    if((sink & (sink - 1)) != 0) {
+        std::cout << "More than one format possible, character count is ambiguous." << std::endl;
+    }
+    print_summary(result, size, char_count);
 }
 
 const std::set<std::string>& Benchmark::all_procedures() const {

@@ -276,6 +276,12 @@ target_link_libraries(count_utf16be
          simdutf::tests::reference
          simdutf::tests::helpers)
 
+add_cpp_test(detect_encodings_tests)
+target_link_libraries(detect_encodings_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
+
 add_cpp_test(basic_fuzzer)
 target_link_libraries(basic_fuzzer
   PUBLIC simdutf

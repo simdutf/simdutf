@@ -23,6 +23,20 @@ simdutf_really_inline simdutf_warn_unused simdutf::encoding_type autodetect_enco
   return autodetect_encoding(reinterpret_cast<const char *>(input), length);
 }
 
+/**
+ * Autodetect the possible encodings of the input in one pass.
+ * 
+ * Overriden by each implementation.
+ *
+ * @param input the string to analyze.
+ * @param length the length of the string in bytes.
+ * @return the detected encoding type
+ */
+simdutf_warn_unused int detect_encodings(const char * input, size_t length) noexcept;
+simdutf_really_inline simdutf_warn_unused int detect_encodings(const uint8_t * input, size_t length) noexcept {
+  return detect_encodings(reinterpret_cast<const char *>(input), length);
+}
+
 
 /**
  * Validate the UTF-8 string.
@@ -770,6 +784,14 @@ public:
    * @return the encoding type detected
    */
   virtual encoding_type autodetect_encoding(const char * input, size_t length) const noexcept;
+
+  /**
+   * This function will try to detect the possible encodings in one pass
+   * @param input the string to identify
+   * @param length the length of the string in bytes.
+   * @return the encoding type detected
+   */
+  virtual int detect_encodings(const char * input, size_t length) const noexcept = 0;
 
   /**
    * @private For internal implementation use

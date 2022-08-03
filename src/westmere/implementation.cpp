@@ -28,6 +28,8 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
   return simd8<int8_t>(is_third_byte | is_fourth_byte) > int8_t(0);
 }
 
+#include "westmere/sse_detect_encodings.cpp"
+
 #include "westmere/sse_validate_utf16.cpp"
 #include "westmere/sse_validate_utf32le.cpp"
 
@@ -62,6 +64,18 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
+
+simdutf_warn_unused int implementation::detect_encodings(const char * input, size_t length) const noexcept {
+  if (length % 2 == 0) {
+    return sse_detect_encodings<utf8_validation::utf8_checker>(input, length);
+  } else {
+    if (implementation::validate_utf8(input, length)) {
+      return simdutf::encoding_type::UTF8;
+    } else {
+      return simdutf::encoding_type::unspecified;
+    }
+  }
+}
 
 simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
   return westmere::utf8_validation::generic_validate_utf8(buf, len);

@@ -30,6 +30,8 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
     return is_third_byte ^ is_fourth_byte;
 }
 
+#include "arm64/arm_detect_encodings.cpp"
+
 #include "arm64/arm_validate_utf16.cpp"
 #include "arm64/arm_validate_utf32le.cpp"
 
@@ -61,6 +63,18 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 //
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
+
+simdutf_warn_unused int implementation::detect_encodings(const char * input, size_t length) const noexcept {
+  if (length % 2 == 0) {
+    return arm_detect_encodings<utf8_validation::utf8_checker>(input, length);
+  } else {
+    if (implementation::validate_utf8(input, length)) {
+      return simdutf::encoding_type::UTF8;
+    } else {
+      return simdutf::encoding_type::unspecified;
+    }
+  }
+}
 
 simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
   return arm64::utf8_validation::generic_validate_utf8(buf,len);
