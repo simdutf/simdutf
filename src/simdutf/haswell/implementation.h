@@ -16,6 +16,7 @@ public:
       "Intel/AMD AVX2",
       internal::instruction_set::AVX2 | internal::instruction_set::PCLMULQDQ | internal::instruction_set::BMI1 | internal::instruction_set::BMI2
   ) {}
+  simdutf_warn_unused int detect_encodings(const char * input, size_t length) const noexcept final;
   simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
   simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) const noexcept final;
   simdutf_warn_unused bool validate_utf16le(const char16_t *buf, size_t len) const noexcept final;

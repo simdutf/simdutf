@@ -25,6 +25,19 @@
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 
+simdutf_warn_unused int implementation::detect_encodings(const char * input, size_t length) const noexcept {
+  int out = 0;
+  if(validate_utf8(input, length)) { out |= encoding_type::UTF8; }
+  if((length % 2) == 0) {
+    if(validate_utf16(reinterpret_cast<const char16_t*>(input), length/2)) { out |= encoding_type::UTF16_LE; }
+  }
+  if((length % 4) == 0) {
+    if(validate_utf32(reinterpret_cast<const char32_t*>(input), length/4)) { out |= encoding_type::UTF32_LE; }
+  }
+
+  return out;
+}
+
 simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
     return scalar::utf8::validate(buf, len);
 }
