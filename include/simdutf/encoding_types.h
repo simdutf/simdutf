@@ -12,6 +12,11 @@ enum encoding_type {
         unspecified = 0
 };
 
+enum endianness {
+        LITTLE,
+        BIG
+};
+
 std::string to_string(encoding_type bom);
 
 // Note that BOM for UTF8 is discouraged.

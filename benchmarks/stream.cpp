@@ -87,7 +87,7 @@ void run_from_utf8(const std::vector<char> &input_data, size_t approx_output_dat
     size_t utf8count = simdutf::count_utf8(input_data.data(), effective_length);
     std::cout << utf8count << ",\t";
     auto size_procedure = [effective_length, &input_data, &buffer]() -> size_t {
-      return simdutf::convert_utf8_to_utf16(input_data.data(), effective_length,
+      return simdutf::convert_utf8_to_utf16le(input_data.data(), effective_length,
                                             buffer.data());
     };
     std::cout << utf8count / bench(size_procedure) << "\n";
@@ -103,11 +103,11 @@ void run_from_utf16(const std::vector<char> &input_data, size_t approx_output_da
   for (size_t len = min_len; len <= input_data.size(); len+= (len < offset ? offset/50+1 : offset)) {
     size_t effective_length = trim_partial_utf16(
         reinterpret_cast<const uint16_t *>(input_data.data()), len / 2);
-    size_t utf16count = simdutf::count_utf16(
+    size_t utf16count = simdutf::count_utf16le(
         reinterpret_cast<const char16_t *>(input_data.data()), effective_length);
     std::cout << utf16count << ",\t";
     auto size_procedure = [effective_length, &input_data, &buffer]() -> size_t {
-      return simdutf::convert_utf16_to_utf8(
+      return simdutf::convert_utf16le_to_utf8(
           reinterpret_cast<const char16_t *>(input_data.data()), effective_length,
           buffer.data());
     };
