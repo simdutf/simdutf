@@ -14,13 +14,13 @@ Not all sequences of bytes are valid Unicode strings. It is unsafe to use Unicod
 
 This library provide fast Unicode functions such as
 
-- ASCII, UTF-8, UTF-16LE/BE and UTF-32LE validation, with and without error specification,
-- UTF-8 to UTF-16LE/BE transcoding, with or without validation, with and without error specification,
-- UTF-8 to UTF-32LE transcoding, with or without validation, with and without error specification,
-- UTF-16LE/BE to UTF-8 transcoding, with or without validation, with and without error specification,
-- UTF-32LE to UTF-8 transcoding, with or without validation, with and without error specification,
-- UTF-32LE to UTF-16LE/BE transcoding, with or without validation, with and without error specification,
-- UTF-16LE/BE to UTF-32LE transcoding, with or without validation, with and without error specification,
+- ASCII, UTF-8, UTF-16LE/BE and UTF-32LE validation, with and without error identification,
+- UTF-8 to UTF-16LE/BE transcoding, with or without validation, with and without error identification,
+- UTF-8 to UTF-32LE transcoding, with or without validation, with and without error identification,
+- UTF-16LE/BE to UTF-8 transcoding, with or without validation, with and without error identification,
+- UTF-32LE to UTF-8 transcoding, with or without validation, with and without error identification,
+- UTF-32LE to UTF-16LE/BE transcoding, with or without validation, with and without error identification,
+- UTF-16LE/BE to UTF-32LE transcoding, with or without validation, with and without error identification,
 - From an UTF-8 string, compute the size of the UTF-16 equivalent string,
 - From an UTF-8 string, compute the size of the UTF-32 equivalent string (equivalent to UTF-8 character counting),
 - From an UTF-16LE/BE string, compute the size of the UTF-8 equivalent string,
