@@ -29,7 +29,7 @@ simdutf_warn_unused int implementation::detect_encodings(const char * input, siz
   int out = 0;
   if(validate_utf8(input, length)) { out |= encoding_type::UTF8; }
   if((length % 2) == 0) {
-    if(validate_utf16(reinterpret_cast<const char16_t*>(input), length/2)) { out |= encoding_type::UTF16_LE; }
+    if(validate_utf16le(reinterpret_cast<const char16_t*>(input), length/2)) { out |= encoding_type::UTF16_LE; }
   }
   if((length % 4) == 0) {
     if(validate_utf32(reinterpret_cast<const char32_t*>(input), length/4)) { out |= encoding_type::UTF32_LE; }

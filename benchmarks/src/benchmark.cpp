@@ -1653,7 +1653,7 @@ void Benchmark::run_detect_encodings(const simdutf::implementation& implementati
         }
         if(sink & simdutf::encoding_type::UTF16_LE) {
             std::cout << " UTF16LE";
-            char_count =  active_implementation->count_utf16(reinterpret_cast<const char16_t*>(data), size/2);
+            char_count =  active_implementation->count_utf16le(reinterpret_cast<const char16_t*>(data), size/2);
         }
         if(sink & simdutf::encoding_type::UTF32_LE) {
             std::cout << " UTF32LE";
