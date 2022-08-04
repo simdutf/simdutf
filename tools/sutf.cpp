@@ -212,7 +212,19 @@ void CommandLine::run_procedure(std::ostream* output) {
 }
 
 void CommandLine::iconv_fallback() {
+  std::string command("iconv");
+  if (!output_file.empty()) {
+    command += " -o ";
+    command += output_file;
+  }
+  command += " -f " + from_encoding + " -t " + to_encoding;
+  for (auto file : input_files) {
+    command += " " + std::string(file);
+  }
 
+  if (! system(command.c_str())) {
+    throw std::runtime_error("Error with iconv.");
+  }
 }
 
 void CommandLine::load_file(const std::filesystem::path& path) {
