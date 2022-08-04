@@ -68,96 +68,140 @@ CommandLine parse_and_validate_arguments(int argc, char* argv[]) {
 }
 
 void CommandLine::run() {
-  std::ostream* output;
   if (output_file.empty()) {
-    for (auto file : input_files) {
-      load_file(file);
-      run_procedure(&std::cout);
-    }
+    run_procedure(&std::cout);
   } else {
-    std::ofstream output(output_file, std::ios::binary);
-    for (auto file : input_files) {
-      load_file(file);
-      run_procedure(&output);
-    }
+    std::ofstream output(output_file, std::ios::binary | std::ios::trunc);
+    run_procedure(&output);
     output.close();
   }
 }
 
 void CommandLine::run_procedure(std::ostream* output) {
-
   if (from_encoding == "UTF-8") {
-    const char* data = reinterpret_cast<const char*>(input_data.data());
-    size_t size = input_data.size();
     if (to_encoding == "UTF-16LE") {
-      std::vector<char16_t> output_buffer(size);
-      size_t len = simdutf::convert_utf8_to_utf16le(data, size, output_buffer.data());
-      output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char16_t));
+      for (auto file : input_files) {
+        load_file(file);
+        const char* data = reinterpret_cast<const char*>(input_data.data());
+        const size_t size = input_data.size();
+        std::vector<char16_t> output_buffer(size);
+        size_t len = simdutf::convert_utf8_to_utf16le(data, size, output_buffer.data());
+        output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char16_t));
+      }
     } else if (to_encoding == "UTF-16BE") {
-      std::vector<char16_t> output_buffer(size);
-      size_t len = simdutf::convert_utf8_to_utf16be(data, size, output_buffer.data());
-      output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char16_t));
+      for (auto file : input_files) {
+        load_file(file);
+        const char* data = reinterpret_cast<const char*>(input_data.data());
+        size_t size = input_data.size();
+        std::vector<char16_t> output_buffer(size);
+        size_t len = simdutf::convert_utf8_to_utf16be(data, size, output_buffer.data());
+        output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char16_t));
+      }
     } else if (to_encoding == "UTF-32LE") {
-      std::vector<char32_t> output_buffer(size);
-      size_t len = simdutf::convert_utf8_to_utf32(data, size, output_buffer.data());
-      output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char32_t));
+      for (auto file : input_files) {
+        load_file(file);
+        const char* data = reinterpret_cast<const char*>(input_data.data());
+        size_t size = input_data.size();
+        std::vector<char32_t> output_buffer(size);
+        size_t len = simdutf::convert_utf8_to_utf32(data, size, output_buffer.data());
+        output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char32_t));
+      }
     } else {
       iconv_fallback();
     }
   }
   else if (from_encoding == "UTF-16LE") {
-    const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
-    size_t size = input_data.size() / 2;
     if (to_encoding == "UTF-8") {
-      std::vector<char> output_buffer(2*size);
-      size_t len = simdutf::convert_utf16le_to_utf8(data, size, output_buffer.data());
-      output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char));
+      for (auto file : input_files) {
+        load_file(file);
+        const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
+        const size_t size = input_data.size() / 2;
+        std::vector<char> output_buffer(2*size);
+        size_t len = simdutf::convert_utf16le_to_utf8(data, size, output_buffer.data());
+        output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char));
+      }
     } else if (to_encoding == "UTF-16BE") {
-      std::vector<char16_t> output_buffer(size);
-      simdutf::change_endianness_utf16(data, size, output_buffer.data());
-      output->write(reinterpret_cast<char *>(output_buffer.data()), size);
+      for (auto file : input_files) {
+        load_file(file);
+        const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
+        const size_t size = input_data.size() / 2;
+        std::vector<char16_t> output_buffer(size);
+        simdutf::change_endianness_utf16(data, size, output_buffer.data());
+        output->write(reinterpret_cast<char *>(output_buffer.data()), size);
+      }
     } else if (to_encoding == "UTF-32LE") {
-      std::vector<char32_t> output_buffer(size);
-      size_t len = simdutf::convert_utf16le_to_utf32(data, size, output_buffer.data());
-      output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char32_t));
+      for (auto file : input_files) {
+        load_file(file);
+        const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
+        const size_t size = input_data.size() / 2;
+        std::vector<char32_t> output_buffer(size);
+        size_t len = simdutf::convert_utf16le_to_utf32(data, size, output_buffer.data());
+        output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char32_t));
+      }
     } else {
       std::cout << "UNSUPPORTED" << std::endl;
     }
   }
   else if (from_encoding == "UTF-16BE") {
-    const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
-    size_t size = input_data.size() / 2;
     if (to_encoding == "UTF-8") {
-      std::vector<char> output_buffer(2*size);
-      size_t len = simdutf::convert_utf16be_to_utf8(data, size, output_buffer.data());
-      output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char));
+      for (auto file : input_files) {
+        load_file(file);
+        const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
+        const size_t size = input_data.size() / 2;
+        std::vector<char> output_buffer(2*size);
+        size_t len = simdutf::convert_utf16be_to_utf8(data, size, output_buffer.data());
+        output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char));
+      }
     } else if (to_encoding == "UTF-16BE") {
-      std::vector<char16_t> output_buffer(size);
-      simdutf::change_endianness_utf16(data, size, output_buffer.data());
-      output->write(reinterpret_cast<char *>(output_buffer.data()), size);
+      for (auto file : input_files) {
+        load_file(file);
+        const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
+        const size_t size = input_data.size() / 2;
+        std::vector<char16_t> output_buffer(size);
+        simdutf::change_endianness_utf16(data, size, output_buffer.data());
+        output->write(reinterpret_cast<char *>(output_buffer.data()), size);
+      }
     } else if (to_encoding == "UTF-32LE") {
-      std::vector<char32_t> output_buffer(size);
-      size_t len = simdutf::convert_utf16be_to_utf32(data, size, output_buffer.data());
-      output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char32_t));
+      for (auto file : input_files) {
+        load_file(file);
+        const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
+        const size_t size = input_data.size() / 2;
+        std::vector<char32_t> output_buffer(size);
+        size_t len = simdutf::convert_utf16be_to_utf32(data, size, output_buffer.data());
+        output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char32_t));
+      }
     } else {
       iconv_fallback();
     }
   }
   else if (from_encoding == "UTF-32LE") {
-    const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data());
-    size_t size = input_data.size() / 4;
     if (to_encoding == "UTF-8") {
-      std::vector<char> output_buffer(4*size);
-      size_t len = simdutf::convert_utf32_to_utf8(data, size, output_buffer.data());
-      output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char));
+      for (auto file : input_files) {
+        load_file(file);
+        const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data());
+        const size_t size = input_data.size() / 4;
+        std::vector<char> output_buffer(4*size);
+        size_t len = simdutf::convert_utf32_to_utf8(data, size, output_buffer.data());
+        output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char));
+      }
     } else if (to_encoding == "UTF-16LE") {
-      std::vector<char16_t> output_buffer(2*size);
-      size_t len = simdutf::convert_utf32_to_utf16le(data, size, output_buffer.data());
-      output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char16_t));
+      for (auto file : input_files) {
+        load_file(file);
+        const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data());
+        const size_t size = input_data.size() / 4;
+        std::vector<char16_t> output_buffer(2*size);
+        size_t len = simdutf::convert_utf32_to_utf16le(data, size, output_buffer.data());
+        output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char16_t));
+      }
     } else if (to_encoding == "UTF-16BE") {
-      std::vector<char16_t> output_buffer(2*size);
-      size_t len = simdutf::convert_utf32_to_utf16be(data, size, output_buffer.data());
-      output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char16_t));
+      for (auto file : input_files) {
+        load_file(file);
+        const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data());
+        const size_t size = input_data.size() / 4;
+        std::vector<char16_t> output_buffer(2*size);
+        size_t len = simdutf::convert_utf32_to_utf16be(data, size, output_buffer.data());
+        output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char16_t));
+      }
     } else {
       iconv_fallback();
     }
@@ -176,7 +220,6 @@ void CommandLine::load_file(const std::filesystem::path& path) {
   file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   file.open(path);
 
-  input_data.clear();
   input_data.assign(std::istreambuf_iterator<char>(file),
                     std::istreambuf_iterator<char>());
 }
@@ -193,8 +236,9 @@ int main(int argc, char* argv[]) {
   try {
     CommandLine cmdline = parse_and_validate_arguments(argc, argv);
     cmdline.run();
+    return EXIT_SUCCESS;
   } catch (const std::exception& e) {
       printf("%s\n", e.what());
       return EXIT_FAILURE;
-    }
+  }
 }
