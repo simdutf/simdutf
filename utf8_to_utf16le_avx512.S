@@ -123,7 +123,7 @@ utf8_to_utf16le_avx512:
 2:	vpcmpnltub	%zmm28, %zmm0, %k4	// 0xf0 <= zmm0 (4 byte start bytes)
 
 	// move masks into scalar registers to play with
-	kmovq		%k1, %rax		// ASCII
+	kmovq		%k1, %r8		// ASCII
 	kmovq		%k4, %r11		// LEAD4
 	kmovq		%k3, %r9		// LEAD34
 
@@ -131,14 +131,12 @@ utf8_to_utf16le_avx512:
 	// of note: we will later only process Unicode characters that start no later
 	// than 5 bytes before the end of the input.  LAST may contain wrong data for
 	// the last 4 bytes of input, but we don't care about that a whole lot.
-	or		%r12, %rax		// LEAD: UTF-8 first bytes
-	mov		%rax, %r8
+	or		%r12, %r8		// LEAD: UTF-8 first bytes
+	lea		(%r8, %r11, 8), %rax	// FIRST+4TH: the first and the fourth byte of each sequence
 	andn		%r9, %r11, %r10		// LEAD3: lead bytes for 3 byte sequences
-
-	shl		$3, %r11		// where follow bytes three bytes after a lead byte should be
-	or		%r11, %rax		// FIRST+4TH: the first and the fourth byte of each sequence
 	shr		$1, %rax		// LAST+3RD: the last byte of each sequence and the third byte of each
 						// ... 4 byte sequence, i.e. where we want to start to decode the input
+	shl		$3, %r11		// where follow bytes three bytes after a lead byte should be
 	or		%r11, %rax		// including for 4 byte sequences ending at position 63 (but not others)
 
 	// compute permutation mask and load the last bytes
@@ -163,6 +161,13 @@ utf8_to_utf16le_avx512:
 	cmp		%r12, %r8		// does that match reality?
 	jne		.Lfail2			// if not, I've got bad news for you
 
+	// find location of surrogates
+	pext		%rax, %r11, %rcx	// words in zmm1 that represent low surrogates
+	kmovd		%ecx, %k2
+	shr		$1, %rcx		// words in zmm1 that represent high surrogates
+	kmovd		%ecx, %k1
+	kord		%k1, %k2, %k6		// words in zmm1 that represent surrogates
+
 	// add in second last bytes
 	kshiftrq	$1, %k5, %k5		// bytes that precede non-ASCII bytes
 	vpaddw		%zmm26, %zmm7, %zmm7	// indices of the second last bytes
@@ -186,12 +191,6 @@ utf8_to_utf16le_avx512:
 	// hi surrogate  11110WVU 10TSRQPN 10MLKJHG           0WVUTSRQPNMLKJHG
 	// lo surrogate                    10MLKJHG 10FEDCBA  0000MLKJHGFEDCVA
 
-	pext		%rax, %r11, %rcx	// words in zmm1 that represent low surrogates
-	kmovd		%ecx, %k2
-	shr		$1, %rcx		// words in zmm1 that represent high surrogates
-	kmovd		%ecx, %k1
-	kord		%k1, %k2, %k3		// words in zmm1 that represent surrogates
-
 	// compute the number characters in zmm1 and advance input buffer, count
 	// if the last word is a high surrogate, discard it as we don't have code
 	// to straddle surrogate pairs over a pair of input vectors
@@ -211,13 +210,13 @@ utf8_to_utf16le_avx512:
 	// post process surrogates and deposit.
 	// Here we assume that each high surrogate is followed by a low surrogate
 	bzhi		%r9d, %ebx, %r8d	// output words that hold meaningful characters
-	kmovd		%r8d, %k5
+	kmovd		%r8d, %k4
 	vmovdqu16	%zmm25, %zmm6{%k2}{z}	// lo surr: 1111110000000000  other: 00000000 00000000
-	vpexpandw	%zmm24, %zmm7{%k3}{z}	// hi surr: 1101011111000000  lo surr: 1101110000000000
+	vpexpandw	%zmm24, %zmm7{%k6}{z}	// hi surr: 1101011111000000  lo surr: 1101110000000000
 	vpsrlw		$4, %zmm1, %zmm1{%k1}	// hi surr: 00000WVUTSRQPNML, others unchanged
 	vpandnd		%zmm1, %zmm6, %zmm1	// lo surr: 000000KJHGFEDCBA, others unchanged
 	vpaddw		%zmm7, %zmm1, %zmm1     // hi:    110110vutsRQPNML  lo surr: 110111VUTSRQPNML
-	vmovdqu16	%zmm1, (%rdi){%k5}	// deposit decoded text into output
+	vmovdqu16	%zmm1, (%rdi){%k4}	// deposit decoded text into output
 						// vuts = WVUTS - 1
 	lea		(%rdi, %r9, 2), %rdi	// advance output buffer by that many words
 
@@ -228,7 +227,7 @@ utf8_to_utf16le_avx512:
 	vpcmpltuw	%zmm23, %zmm1, %k4{%k4}	// any 3 byte characters < 0x0800?
 
 	vpsubw		%zmm22, %zmm1, %zmm2	// zmm1 - 0xd800
-	knotd		%k3, %k6		// words in zmm1 that do not represent surrogates
+	knotd		%k6, %k6		// words in zmm1 that do not represent surrogates
 	vpcmpltuw	%zmm23, %zmm2, %k0{%k6}	// any unexpected surrogates?
 	kord		%k4, %k0, %k0
 	vpcmpnltuw	%zmm21, %zmm2, %k4{%k1}	// any botched high surrogates?  These occur when
