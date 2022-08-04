@@ -14,13 +14,13 @@ Not all sequences of bytes are valid Unicode strings. It is unsafe to use Unicod
 
 This library provide fast Unicode functions such as
 
-- ASCII, UTF-8, UTF-16LE/BE and UTF-32LE validation,
-- UTF-8 to UTF-16LE/BE transcoding, with or without validation,
-- UTF-8 to UTF-32LE transcoding, with or without validation,
-- UTF-16LE/BE to UTF-8 transcoding, with or without validation,
-- UTF-32LE to UTF-8 transcoding, with or without validation,
-- UTF-32LE to UTF-16LE/BE transcoding, with or without validation,
-- UTF-16LE/BE to UTF-32LE transcoding, with or without validation,
+- ASCII, UTF-8, UTF-16LE/BE and UTF-32LE validation, with and without error identification,
+- UTF-8 to UTF-16LE/BE transcoding, with or without validation, with and without error identification,
+- UTF-8 to UTF-32LE transcoding, with or without validation, with and without error identification,
+- UTF-16LE/BE to UTF-8 transcoding, with or without validation, with and without error identification,
+- UTF-32LE to UTF-8 transcoding, with or without validation, with and without error identification,
+- UTF-32LE to UTF-16LE/BE transcoding, with or without validation, with and without error identification,
+- UTF-16LE/BE to UTF-32LE transcoding, with or without validation, with and without error identification,
 - From an UTF-8 string, compute the size of the UTF-16 equivalent string,
 - From an UTF-8 string, compute the size of the UTF-32 equivalent string (equivalent to UTF-8 character counting),
 - From an UTF-16LE/BE string, compute the size of the UTF-8 equivalent string,
@@ -205,6 +205,17 @@ namespace simdutf {
 simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept;
 
 /**
+ * Validate the ASCII string and stop on error.
+ *
+ * Overridden by each implementation.
+ *
+ * @param buf the ASCII string to validate.
+ * @param len the length of the string in bytes.
+ * @return a result pair struct with an error code and either the position of the error if any or the number of words validated if successful.
+ */
+simdutf_warn_unused result validate_ascii_with_errors(const char *buf, size_t len) noexcept;
+
+/**
  * Validate the UTF-8 string.
  *
  * Overridden by each implementation.
@@ -214,6 +225,17 @@ simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept;
  * @return true if and only if the string is valid UTF-8.
  */
 simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept;
+
+/**
+ * Validate the UTF-8 string and stop on error.
+ *
+ * Overridden by each implementation.
+ *
+ * @param buf the UTF-8 string to validate.
+ * @param len the length of the string in bytes.
+ * @return a result pair struct with an error code and either the position of the error if any or the number of words validated if successful.
+ */
+simdutf_warn_unused result validate_utf8_with_errors(const char *buf, size_t len) noexcept;
 
 /**
  * Validate the UTF-16LE string.
@@ -242,6 +264,32 @@ simdutf_warn_unused bool validate_utf16le(const char16_t *buf, size_t len) noexc
 simdutf_warn_unused bool validate_utf16be(const char16_t *buf, size_t len) noexcept;
 
 /**
+ * Validate the UTF-16LE string and stop on error.
+ *
+ * Overridden by each implementation.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param buf the UTF-16LE string to validate.
+ * @param len the length of the string in number of 2-byte words (char16_t).
+ * @return a result pair struct with an error code and either the position of the error if any or the number of words validated if successful.
+ */
+simdutf_warn_unused result validate_utf16le_with_errors(const char16_t *buf, size_t len) noexcept;
+
+/**
+ * Validate the UTF-16BE string and stop on error.
+ *
+ * Overridden by each implementation.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param buf the UTF-16BE string to validate.
+ * @param len the length of the string in number of 2-byte words (char16_t).
+ * @return a result pair struct with an error code and either the position of the error if any or the number of words validated if successful.
+ */
+simdutf_warn_unused result validate_utf16be_with_errors(const char16_t *buf, size_t len) noexcept;
+
+/**
  * Validate the UTF-32LE string.
  *
  * Overridden by each implementation.
@@ -253,6 +301,20 @@ simdutf_warn_unused bool validate_utf16be(const char16_t *buf, size_t len) noexc
  * @return true if and only if the string is valid UTF-32LE.
  */
 simdutf_warn_unused bool validate_utf32(const char32_t *buf, size_t len) noexcept;
+
+/**
+ * Validate the UTF-32LE string and stop on error.
+ *
+ * Overridden by each implementation.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param buf the UTF-32LE string to validate.
+ * @param len the length of the string in number of 4-byte words (char32_t).
+ * @return a result pair struct with an error code and either the position of the error if any or the number of words validated if successful.
+ */
+simdutf_warn_unused result validate_utf32_with_errors(const char32_t *buf, size_t len) noexcept;
+
 
 /**
  * Convert possibly broken UTF-8 string into UTF-16LE string.
@@ -279,6 +341,32 @@ simdutf_warn_unused size_t convert_utf8_to_utf16le(const char * input, size_t le
  * @return the number of written char16_t; 0 if the input was not valid UTF-8 string
  */
 simdutf_warn_unused size_t convert_utf8_to_utf16be(const char * input, size_t length, char16_t* utf16_output) noexcept;
+
+/**
+ * Convert possibly broken UTF-8 string into UTF-16LE string and stop on error.
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * @param input         the UTF-8 string to convert
+ * @param length        the length of the string in bytes
+ * @param utf16_buffer  the pointer to buffer that can hold conversion result
+ * @return a result pair struct with an error code and either the position of the error if any or the number of char16_t written if successful.
+ */
+simdutf_warn_unused result convert_utf8_to_utf16le_with_errors(const char * input, size_t length, char16_t* utf16_output) noexcept;
+
+/**
+ * Convert possibly broken UTF-8 string into UTF-16BE string and stop on error.
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * @param input         the UTF-8 string to convert
+ * @param length        the length of the string in bytes
+ * @param utf16_buffer  the pointer to buffer that can hold conversion result
+ * @return a result pair struct with an error code and either the position of the error if any or the number of char16_t written if successful.
+ */
+simdutf_warn_unused result convert_utf8_to_utf16be_with_errors(const char * input, size_t length, char16_t* utf16_output) noexcept;
 
 /**
  * Convert valid UTF-8 string into UTF-16LE string.
@@ -327,6 +415,19 @@ simdutf_warn_unused size_t utf16_length_from_utf8(const char * input, size_t len
  * @return the number of written char32_t; 0 if the input was not valid UTF-8 string
  */
 simdutf_warn_unused size_t convert_utf8_to_utf32(const char * input, size_t length, char32_t* utf32_output) noexcept;
+
+/**
+ * Convert possibly broken UTF-8 string into UTF-32LE string and stop on error.
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * @param input         the UTF-8 string to convert
+ * @param length        the length of the string in bytes
+ * @param utf32_buffer  the pointer to buffer that can hold conversion result
+ * @return a result pair struct with an error code and either the position of the error if any or the number of char32_t written if successful.
+ */
+simdutf_warn_unused result convert_utf8_to_utf32_with_errors(const char * input, size_t length, char32_t* utf32_output) noexcept;
 
 /**
  * Convert valid UTF-8 string into UTF-32LE string.
@@ -384,6 +485,36 @@ simdutf_warn_unused size_t convert_utf16le_to_utf8(const char16_t * input, size_
  * @return number of written words; 0 if input is not a valid UTF-16LE string
  */
 simdutf_warn_unused size_t convert_utf16be_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) noexcept;
+
+/**
+ * Convert possibly broken UTF-16LE string into UTF-8 string and stop on error.
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-16LE string to convert
+ * @param length        the length of the string in 2-byte words (char16_t)
+ * @param utf8_buffer   the pointer to buffer that can hold conversion result
+ * @return a result pair struct with an error code and either the position of the error if any or the number of char written if successful.
+ */
+simdutf_warn_unused result convert_utf16le_to_utf8_with_errors(const char16_t * input, size_t length, char* utf8_buffer) noexcept;
+
+/**
+ * Convert possibly broken UTF-16BE string into UTF-8 string and stop on error.
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-16BE string to convert
+ * @param length        the length of the string in 2-byte words (char16_t)
+ * @param utf8_buffer   the pointer to buffer that can hold conversion result
+ * @return a result pair struct with an error code and either the position of the error if any or the number of char written if successful.
+ */
+simdutf_warn_unused result convert_utf16be_to_utf8_with_errors(const char16_t * input, size_t length, char* utf8_buffer) noexcept;
 
 /**
  * Convert valid UTF-16LE string into UTF-8 string.
@@ -450,6 +581,22 @@ simdutf_warn_unused size_t utf8_length_from_utf16be(const char16_t * input, size
  */
 simdutf_warn_unused size_t convert_utf32_to_utf8(const char32_t * input, size_t length, char* utf8_buffer) noexcept;
 
+
+/**
+ * Convert possibly broken UTF-32LE string into UTF-8 string and stop on error.
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-32LE string to convert
+ * @param length        the length of the string in 4-byte words (char32_t)
+ * @param utf8_buffer   the pointer to buffer that can hold conversion result
+ * @return a result pair struct with an error code and either the position of the error if any or the number of char written if successful.
+ */
+simdutf_warn_unused result convert_utf32_to_utf8_with_errors(const char32_t * input, size_t length, char* utf8_buffer) noexcept;
+
 /**
  * Convert valid UTF-32LE string into UTF-8 string.
  *
@@ -493,6 +640,36 @@ simdutf_warn_unused size_t convert_utf32_to_utf16le(const char32_t * input, size
  * @return number of written words; 0 if input is not a valid UTF-32LE string
  */
 simdutf_warn_unused size_t convert_utf32_to_utf16be(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;
+
+/**
+ * Convert possibly broken UTF-32LE string into UTF-16LE string and stop on error.
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-32LE string to convert
+ * @param length        the length of the string in 4-byte words (char32_t)
+ * @param utf16_buffer   the pointer to buffer that can hold conversion result
+ * @return a result pair struct with an error code and either the position of the error if any or the number of char16_t written if successful.
+ */
+simdutf_warn_unused result convert_utf32_to_utf16le_with_errors(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;
+
+/**
+ * Convert possibly broken UTF-32LE string into UTF-16BE string and stop on error.
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-32LE string to convert
+ * @param length        the length of the string in 4-byte words (char32_t)
+ * @param utf16_buffer   the pointer to buffer that can hold conversion result
+ * @return a result pair struct with an error code and either the position of the error if any or the number of char16_t written if successful.
+ */
+simdutf_warn_unused result convert_utf32_to_utf16be_with_errors(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;
 
 /**
  * Convert valid UTF-32LE string into UTF-16LE string.
@@ -573,6 +750,36 @@ simdutf_warn_unused size_t convert_utf16le_to_utf32(const char16_t * input, size
  * @return number of written words; 0 if input is not a valid UTF-16LE string
  */
 simdutf_warn_unused size_t convert_utf16be_to_utf32(const char16_t * input, size_t length, char32_t* utf32_buffer) noexcept;
+
+/**
+ * Convert possibly broken UTF-16LE string into UTF-32LE string and stop on error.
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-16LE string to convert
+ * @param length        the length of the string in 2-byte words (char16_t)
+ * @param utf32_buffer   the pointer to buffer that can hold conversion result
+ * @return a result pair struct with an error code and either the position of the error if any or the number of char32_t written if successful.
+ */
+simdutf_warn_unused result convert_utf16le_to_utf32_with_errors(const char16_t * input, size_t length, char32_t* utf32_buffer) noexcept;
+
+/**
+ * Convert possibly broken UTF-16BE string into UTF-32LE string and stop on error.
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-16BE string to convert
+ * @param length        the length of the string in 2-byte words (char16_t)
+ * @param utf32_buffer   the pointer to buffer that can hold conversion result
+ * @return a result pair struct with an error code and either the position of the error if any or the number of char32_t written if successful.
+ */
+simdutf_warn_unused result convert_utf16be_to_utf32_with_errors(const char16_t * input, size_t length, char32_t* utf32_buffer) noexcept;
 
 /**
  * Convert valid UTF-16LE string into UTF-32LE string.
@@ -688,6 +895,36 @@ void change_endianness_utf16(const char16_t * input, size_t length, char16_t * o
 
 }
 ```
+
+Errors
+------
+
+For validation and transcoding, we also provide functions that will stop on error and return a result struct which is a pair of two fields:
+```c++
+struct result {
+  error_code error;
+  size_t position;
+};
+```
+On error, the `error` field indicates the type of error encountered and the `position` field indicates its word position in the input string.
+We report six types of errors related to UTF-8, UTF-16 and UTF-32 encodings:
+```c++
+enum error_code {
+  SUCCESS = 0,
+  HEADER_BITS,  // Any byte must have fewer than 5 header bits.
+  TOO_SHORT,    // The leading byte must be followed by N-1 continuation bytes, where N is the UTF-8 character length
+                // This is also the error when the input is truncated.
+  TOO_LONG,     // The leading byte must not be a continuation byte.
+  OVERLONG,     // The decoded character must be above U+7F for two-byte characters, U+7FF for three-byte characters,
+                // and U+FFFF for four-byte characters.
+  TOO_LARGE,    // The decoded character must be less than or equal to U+10FFFF OR less than or equal than U+7F for ASCII.
+  SURROGATE,    // The decoded character must be not be in U+D800...DFFF (UTF-8 or UTF-32) OR
+                // a high surrogate must be followed by a low surrogate and a low surrogate must be preceded by a high surrogate (UTF-16)
+  OTHER         // Not related to validation/transcoding.
+};
+```
+On success, the `error` field is set to `SUCCESS` and the `position` field indicates either the number of words validated for validation functions or the number of written
+words in the output format for transcoding functions.
 
 Usage
 -----

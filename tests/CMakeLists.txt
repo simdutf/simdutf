@@ -11,6 +11,11 @@ link_libraries(simdutf)
 
 add_cpp_test(validate_ascii_basic_tests)
 
+add_cpp_test(validate_ascii_with_errors_tests)
+target_link_libraries(validate_ascii_with_errors_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)
+
 add_cpp_test(validate_utf8_basic_tests)
 
 add_cpp_test(validate_utf8_brute_force_tests)
@@ -20,11 +25,17 @@ target_link_libraries(validate_utf8_brute_force_tests
 
 add_cpp_test(validate_utf8_puzzler_tests)
 
-add_cpp_test(validate_utf16le_basic_tests)
-target_link_libraries(validate_utf16le_basic_tests
+add_cpp_test(validate_utf8_with_errors_tests)
+target_link_libraries(validate_utf8_with_errors_tests
   PUBLIC simdutf
          simdutf::tests::reference
          simdutf::tests::helpers)
+
+add_cpp_test(validate_utf16le_basic_tests)
+target_link_libraries(validate_utf16le_basic_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
 
 add_cpp_test(validate_utf16be_basic_tests)
 target_link_libraries(validate_utf16be_basic_tests
@@ -32,8 +43,26 @@ target_link_libraries(validate_utf16be_basic_tests
          simdutf::tests::reference
          simdutf::tests::helpers)
 
+add_cpp_test(validate_utf16le_with_errors_tests)
+target_link_libraries(validate_utf16le_with_errors_tests
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
+
+add_cpp_test(validate_utf16be_with_errors_tests)
+target_link_libraries(validate_utf16be_with_errors_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
+
 add_cpp_test(validate_utf32_basic_tests)
 target_link_libraries(validate_utf32_basic_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
+
+add_cpp_test(validate_utf32_with_errors_tests)
+target_link_libraries(validate_utf32_with_errors_tests
   PUBLIC simdutf
         simdutf::tests::reference
         simdutf::tests::helpers)
@@ -79,8 +108,26 @@ target_link_libraries(convert_utf8_to_utf16be_tests
          simdutf::tests::reference
          simdutf::tests::helpers)
 
+add_cpp_test(convert_utf8_to_utf16le_with_errors_tests)
+target_link_libraries(convert_utf8_to_utf16le_with_errors_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
+
+add_cpp_test(convert_utf8_to_utf16be_with_errors_tests)
+target_link_libraries(convert_utf8_to_utf16be_with_errors_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
+
 add_cpp_test(convert_utf8_to_utf32_tests)
 target_link_libraries(convert_utf8_to_utf32_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
+
+add_cpp_test(convert_utf8_to_utf32_with_errors_tests)
+target_link_libraries(convert_utf8_to_utf32_with_errors_tests
   PUBLIC simdutf
         simdutf::tests::reference
         simdutf::tests::helpers)
@@ -97,8 +144,26 @@ target_link_libraries(convert_utf16be_to_utf8_tests
          simdutf::tests::reference
          simdutf::tests::helpers)
 
+add_cpp_test(convert_utf16le_to_utf8_with_errors_tests)
+target_link_libraries(convert_utf16le_to_utf8_with_errors_tests
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
+
+add_cpp_test(convert_utf16be_to_utf8_with_errors_tests)
+target_link_libraries(convert_utf16be_to_utf8_with_errors_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
+
 add_cpp_test(convert_utf32_to_utf8_tests)
 target_link_libraries(convert_utf32_to_utf8_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
+
+add_cpp_test(convert_utf32_to_utf8_with_errors_tests)
+target_link_libraries(convert_utf32_to_utf8_with_errors_tests
   PUBLIC simdutf
         simdutf::tests::reference
         simdutf::tests::helpers)
@@ -111,6 +176,18 @@ target_link_libraries(convert_utf32_to_utf16le_tests
 
 add_cpp_test(convert_utf32_to_utf16be_tests)
 target_link_libraries(convert_utf32_to_utf16be_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
+
+add_cpp_test(convert_utf32_to_utf16le_with_errors_tests)
+target_link_libraries(convert_utf32_to_utf16le_with_errors_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
+
+add_cpp_test(convert_utf32_to_utf16be_with_errors_tests)
+target_link_libraries(convert_utf32_to_utf16be_with_errors_tests
   PUBLIC simdutf
         simdutf::tests::reference
         simdutf::tests::helpers)
@@ -157,6 +234,18 @@ target_link_libraries(convert_utf16be_to_utf32_tests
          simdutf::tests::reference
          simdutf::tests::helpers)
 
+add_cpp_test(convert_utf16le_to_utf32_with_errors_tests)
+target_link_libraries(convert_utf16le_to_utf32_with_errors_tests
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
+
+add_cpp_test(convert_utf16be_to_utf32_with_errors_tests)
+target_link_libraries(convert_utf16be_to_utf32_with_errors_tests
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
+
 add_cpp_test(convert_valid_utf16le_to_utf32_tests)
 target_link_libraries(convert_valid_utf16le_to_utf32_tests
   PUBLIC simdutf
@@ -186,6 +275,12 @@ target_link_libraries(count_utf16be
   PUBLIC simdutf
          simdutf::tests::reference
          simdutf::tests::helpers)
+
+add_cpp_test(detect_encodings_tests)
+target_link_libraries(detect_encodings_tests
+  PUBLIC simdutf
+        simdutf::tests::reference
+        simdutf::tests::helpers)
 
 add_cpp_test(basic_fuzzer)
 target_link_libraries(basic_fuzzer
