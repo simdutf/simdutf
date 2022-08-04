@@ -1,5 +1,4 @@
-#include "../singleheader/simdutf.h"
-#include "../singleheader/simdutf.cpp"
+#include "simdutf.h"
 
 #include <filesystem>
 #include <vector>

@@ -18,6 +18,7 @@ enable_testing()
 add_subdirectory(src)
 add_subdirectory(tests)
 add_subdirectory(singleheader)
+add_subdirectory(tools)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES GNU AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0)
   message(STATUS "The benchmark tool requires GCC 8.0 or better.")
