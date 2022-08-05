@@ -73,7 +73,7 @@ inline simdutf_warn_unused bool validate(const char *buf, size_t len) noexcept {
 
 inline simdutf_warn_unused result validate_with_errors(const char *buf, size_t len) noexcept {
   const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);
-  uint64_t pos = 0;
+  size_t pos = 0;
   uint32_t code_point = 0;
   while (pos < len) {
     // check of the next 8 bytes are ascii.

@@ -215,11 +215,11 @@ void CommandLine::iconv_fallback() {
   std::string command("iconv");
   if (!output_file.empty()) {
     command += " -o ";
-    command += output_file;
+    command += output_file.string();
   }
   command += " -f " + from_encoding + " -t " + to_encoding;
   for (auto file : input_files) {
-    command += " " + std::string(file);
+    command += " " + file.string();
   }
 
   if (! system(command.c_str())) {
