@@ -174,14 +174,14 @@ utf8_to_utf16le_avx512:
 	vmovdqu8	%zmm0, %zmm6{%k5}{z}	// only bytes that precede non-ASCII bytes
 	vpermb		%zmm6, %zmm7, %zmm2{%k7}{z} // the second last bytes (of two, three byte seq, surrogates)
 	vpsllw		$6, %zmm2, %zmm2	// shifted into position
-	vpaddw		%zmm2, %zmm1, %zmm1	// and add to the last bytes
+	vpaddw		%zmm2, %zmm1, %zmm2	// and add to the last bytes
 
 	// add in third last bytes
 	vpaddw		%zmm26, %zmm7, %zmm7	// indices of the third last bytes
 	vmovdqu8	%zmm0, %zmm6{%k3}{z}	// only those that are the third last byte of a sequece (i.e. LEAD34)
 	vpermb		%zmm6, %zmm7, %zmm3{%k7}{z} // the third last bytes (of three byte sequences, hi surrogate)
 	vpsllw		$12, %zmm3, %zmm3	// shifted into position
-	vpaddw		%zmm3, %zmm1, %zmm1	// and added to the other bytes
+	vpaddw		%zmm3, %zmm2, %zmm1	// and added to the other bytes
 
 	// now we have the following situation; the tag bits have already been cleared.
 	// --- CASE ---  -------------- INPUT --------------  ---- OUTPUT ----
@@ -194,10 +194,10 @@ utf8_to_utf16le_avx512:
 	// compute the number characters in zmm1 and advance input buffer, count
 	// if the last word is a high surrogate, discard it as we don't have code
 	// to straddle surrogate pairs over a pair of input vectors
-	and		$0x80000000, %ecx	// 80000000 if last item is a high surrogate, 00000000 otherwise
-	not		%ecx			// 7fffffff if last item is a high surrogate, ffffffff otherwise
 	mov		%rax, %r9		// LAST+3RD bytes
+	and		$0x80000000, %ecx	// 80000000 if last item is a high surrogate, 00000000 otherwise
 	and		%rbx, %r9		// those that are part of the input
+	not		%ecx			// 7fffffff if last item is a high surrogate, ffffffff otherwise
 	pdep		%r9, %rcx, %r9		// the first up to 32 LAST+3RD byte such that
 						// ... the last one is not a high surrogate
 
@@ -211,11 +211,11 @@ utf8_to_utf16le_avx512:
 	// Here we assume that each high surrogate is followed by a low surrogate
 	bzhi		%r9d, %ebx, %r8d	// output words that hold meaningful characters
 	kmovd		%r8d, %k4
-	vmovdqu16	%zmm25, %zmm6{%k2}{z}	// lo surr: 1111110000000000  other: 00000000 00000000
+	vmovdqu16	%zmm2, %zmm2{%k2}{z}	// only low surrogates
 	vpexpandw	%zmm24, %zmm7{%k6}{z}	// hi surr: 1101011111000000  lo surr: 1101110000000000
-	vpsrlw		$4, %zmm1, %zmm1{%k1}	// hi surr: 00000WVUTSRQPNML, others unchanged
-	vpandnd		%zmm1, %zmm6, %zmm1	// lo surr: 000000KJHGFEDCBA, others unchanged
-	vpaddw		%zmm7, %zmm1, %zmm1     // hi:    110110vutsRQPNML  lo surr: 110111VUTSRQPNML
+	vpandnd		%zmm2, %zmm25, %zmm2	// lo surr: 000000KJHGFEDCBA
+	vpsrlw		$4, %zmm1, %zmm2{%k1}	// hi surr: 00000WVUTSRQPNML  lo surr: 000000KJHGFEDCBA
+	vpaddw		%zmm7, %zmm2, %zmm1{%k6} // hi sur: 110110vutsRQPNML  lo surr: 110111KJHGFEDCBA
 	vmovdqu16	%zmm1, (%rdi){%k4}	// deposit decoded text into output
 						// vuts = WVUTS - 1
 	lea		(%rdi, %r9, 2), %rdi	// advance output buffer by that many words
