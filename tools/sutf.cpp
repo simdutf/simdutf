@@ -79,7 +79,7 @@ void CommandLine::run() {
 
 void CommandLine::run_procedure(std::ostream* output) {
   if (from_encoding == "UTF-8") {
-    if (to_encoding == "UTF-16LE") {
+    if (to_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
       for (auto file : input_files) {
         load_file(file);
         const char* data = reinterpret_cast<const char*>(input_data.data());
@@ -110,7 +110,7 @@ void CommandLine::run_procedure(std::ostream* output) {
       iconv_fallback();
     }
   }
-  else if (from_encoding == "UTF-16LE") {
+  else if (from_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
     if (to_encoding == "UTF-8") {
       for (auto file : input_files) {
         load_file(file);
@@ -152,7 +152,7 @@ void CommandLine::run_procedure(std::ostream* output) {
         size_t len = simdutf::convert_utf16be_to_utf8(data, size, output_buffer.data());
         output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char));
       }
-    } else if (to_encoding == "UTF-16BE") {
+    } else if (to_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
       for (auto file : input_files) {
         load_file(file);
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
@@ -184,7 +184,7 @@ void CommandLine::run_procedure(std::ostream* output) {
         size_t len = simdutf::convert_utf32_to_utf8(data, size, output_buffer.data());
         output->write(reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char));
       }
-    } else if (to_encoding == "UTF-16LE") {
+    } else if (to_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
       for (auto file : input_files) {
         load_file(file);
         const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data());
@@ -222,7 +222,7 @@ void CommandLine::iconv_fallback() {
     command += " " + file.string();
   }
 
-  if (! system(command.c_str())) {
+  if (system(command.c_str())) {
     throw std::runtime_error("Error with iconv.");
   }
 }
