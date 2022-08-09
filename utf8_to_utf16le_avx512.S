@@ -223,13 +223,13 @@ utf8_to_utf16le_avx512:
 	// check 3 and 4 byte sequences for correctness
 	shl		$2, %r10		// the end bytes of 3 byte sequences
 	pext		%rax, %r10, %r10	// words in zmm1 that represent three byte sequences
-	kmovd		%r10d, %k4
-	vpcmpltuw	%zmm23, %zmm1, %k4{%k4}	// any 3 byte characters < 0x0800?
+	kmovd		%r10d, %k6
 
+	vpcmpltuw	%zmm23, %zmm1, %k4{%k6}	// any 3 byte characters < 0x0800?
 	vpsubw		%zmm22, %zmm1, %zmm2	// zmm1 - 0xd800
-	knotd		%k6, %k6		// words in zmm1 that do not represent surrogates
 	vpcmpltuw	%zmm23, %zmm2, %k0{%k6}	// any unexpected surrogates?
 	kord		%k4, %k0, %k0
+
 	vpcmpnltuw	%zmm21, %zmm2, %k4{%k1}	// any botched high surrogates?  These occur when
 						// char < U+10000 or > U+10FFFF or lead byte >F7
 	kortestd	%k4, %k0
