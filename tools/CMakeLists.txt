@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.15)
 add_executable(sutf sutf.cpp)
 target_link_libraries(sutf PUBLIC simdutf)
 
-if(NOT(MSVC))
+if(NOT(MSVC) AND NOT(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
   target_link_options(sutf PRIVATE "-static-libstdc++")
 endif()
 
