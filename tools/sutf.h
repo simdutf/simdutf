@@ -3,7 +3,6 @@
 #include <filesystem>
 #include <vector>
 #include <set>
-//#include <ostream>
 
 
 class CommandLine
@@ -24,5 +23,5 @@ public:
   void run_procedure(std::FILE *fp);
   void iconv_fallback();
   bool load_file(const std::filesystem::path&);
-  bool write_file(std::FILE *fp, const char * data, size_t length);
+  bool write_to_file_descriptor(std::FILE *fp, const char * data, size_t length);
 };
