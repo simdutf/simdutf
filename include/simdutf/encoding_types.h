@@ -1,3 +1,5 @@
+#include <string>
+
 namespace simdutf {
 
 enum encoding_type {
