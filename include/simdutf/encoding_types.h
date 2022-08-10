@@ -15,7 +15,7 @@ enum endianness {
         BIG
 };
 
-//std::string to_string(encoding_type bom);
+std::string to_string(encoding_type bom);
 
 // Note that BOM for UTF8 is discouraged.
 namespace BOM {
