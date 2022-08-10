@@ -4,10 +4,7 @@
 #include <string>
 #include <set>
 #include <filesystem>
-//#include <iostream>
-//#include <ostream>
 #include <iterator>
-//#include <fstream>
 #include <climits>
 
 CommandLine parse_and_validate_arguments(int argc, char* argv[]) {
