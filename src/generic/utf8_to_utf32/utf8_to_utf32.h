@@ -188,6 +188,81 @@ using namespace simd;
       return utf32_output - start;
     }
 
+    simdutf_really_inline result convert_with_errors(const char* in, size_t size, char32_t* utf32_output) {
+      size_t pos = 0;
+      char32_t* start{utf32_output};
+      const size_t safety_margin = 16; // to avoid overruns!
+      while(pos + 64 + safety_margin <= size) {
+        simd8x64<int8_t> input(reinterpret_cast<const int8_t *>(in + pos));
+        if(input.is_ascii()) {
+          input.store_ascii_as_utf32(utf32_output);
+          utf32_output += 64;
+          pos += 64;
+        } else {
+          // you might think that a for-loop would work, but under Visual Studio, it is not good enough.
+          static_assert((simd8x64<uint8_t>::NUM_CHUNKS == 2) || (simd8x64<uint8_t>::NUM_CHUNKS == 4),
+              "We support either two or four chunks per 64-byte block.");
+          auto zero = simd8<uint8_t>{uint8_t(0)};
+          if(simd8x64<uint8_t>::NUM_CHUNKS == 2) {
+            this->check_utf8_bytes(input.chunks[0], zero);
+            this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
+          } else if(simd8x64<uint8_t>::NUM_CHUNKS == 4) {
+            this->check_utf8_bytes(input.chunks[0], zero);
+            this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
+            this->check_utf8_bytes(input.chunks[2], input.chunks[1]);
+            this->check_utf8_bytes(input.chunks[3], input.chunks[2]);
+          }
+          if (errors()) {
+            result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(in + pos, size - pos, utf32_output);
+            res.count += pos;
+            return res;
+          }
+          uint64_t utf8_continuation_mask = input.lt(-65 + 1);
+          uint64_t utf8_leading_mask = ~utf8_continuation_mask;
+          uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
+          // We process in blocks of up to 12 bytes except possibly
+          // for fast paths which may process up to 16 bytes. For the
+          // slow path to work, we should have at least 12 input bytes left.
+          size_t max_starting_point = (pos + 64) - 12;
+          // Next loop is going to run at least five times.
+          while(pos < max_starting_point) {
+            // Performance note: our ability to compute 'consumed' and
+            // then shift and recompute is critical. If there is a
+            // latency of, say, 4 cycles on getting 'consumed', then
+            // the inner loop might have a total latency of about 6 cycles.
+            // Yet we process between 6 to 12 inputs bytes, thus we get
+            // a speed limit between 1 cycle/byte and 0.5 cycle/byte
+            // for this section of the code. Hence, there is a limit
+            // to how much we can further increase this latency before
+            // it seriously harms performance.
+            size_t consumed = convert_masked_utf8_to_utf32(in + pos,
+                            utf8_end_of_code_point_mask, utf32_output);
+            pos += consumed;
+            utf8_end_of_code_point_mask >>= consumed;
+          }
+          // At this point there may remain between 0 and 12 bytes in the
+          // 64-byte block.These bytes will be processed again. So we have an
+          // 80% efficiency (in the worst case). In practice we expect an
+          // 85% to 90% efficiency.
+        }
+      }
+      if(errors()) {
+        result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(in + pos, size - pos, utf32_output);
+        res.count += pos;
+        return res;
+      }
+      if(pos < size) {
+        result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(in + pos, size - pos, utf32_output);
+        if (res.error) {    // In case of error, we want the error position
+          res.count += pos;
+          return res;
+        } else {    // In case of success, we want the number of word written
+          utf32_output += res.count;
+        }
+      }
+      return result(error_code::SUCCESS, utf32_output - start);
+    }
+
     simdutf_really_inline bool errors() const {
       return this->error.any_bits_set_anywhere();
     }

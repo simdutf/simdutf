@@ -44,7 +44,6 @@ TEST(convert_2_UTF16_bytes) {
 TEST(convert_with_surrogates) {
   for(size_t trial = 0; trial < trials; trial ++) {
     if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
-    // range for 3 or 4 UTF-8 bytes
     simdutf::tests::helpers::RandomIntRanges random({{0x0800, 0xd800-1},
                                                      {0xe000, 0x10ffff}}, 0);
 
