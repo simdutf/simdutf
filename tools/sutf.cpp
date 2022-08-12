@@ -87,7 +87,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
   if (from_encoding == "UTF-8") {
     if (to_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
       for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.c_str()); continue; }
+        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str()); continue; }
         const char* data = reinterpret_cast<const char*>(input_data.data());
         const size_t size = input_data.size();
         std::vector<char16_t> output_buffer(size);
@@ -96,7 +96,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       }
     } else if (to_encoding == "UTF-16BE") {
       for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.c_str());  continue; }
+        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char* data = reinterpret_cast<const char*>(input_data.data());
         size_t size = input_data.size();
         std::vector<char16_t> output_buffer(size);
@@ -105,7 +105,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       }
     } else if (to_encoding == "UTF-32LE") {
       for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.c_str());  continue; }
+        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char* data = reinterpret_cast<const char*>(input_data.data());
         size_t size = input_data.size();
         std::vector<char32_t> output_buffer(size);
@@ -119,7 +119,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
   else if (from_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
     if (to_encoding == "UTF-8") {
       for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.c_str());  continue; }
+        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
         const size_t size = input_data.size() / 2;
         std::vector<char> output_buffer(2*size);
@@ -128,7 +128,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       }
     } else if (to_encoding == "UTF-16BE") {
       for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.c_str());  continue; }
+        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
         const size_t size = input_data.size() / 2;
         std::vector<char16_t> output_buffer(size);
@@ -137,7 +137,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       }
     } else if (to_encoding == "UTF-32LE") {
       for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.c_str());  continue; }
+        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
         const size_t size = input_data.size() / 2;
         std::vector<char32_t> output_buffer(size);
@@ -151,7 +151,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
   else if (from_encoding == "UTF-16BE") {
     if (to_encoding == "UTF-8") {
       for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.c_str());  continue; }
+        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
         const size_t size = input_data.size() / 2;
         std::vector<char> output_buffer(2*size);
@@ -160,7 +160,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       }
     } else if (to_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
       for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.c_str());  continue; }
+        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
         const size_t size = input_data.size() / 2;
         std::vector<char16_t> output_buffer(size);
@@ -169,7 +169,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       }
     } else if (to_encoding == "UTF-32LE") {
       for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.c_str());  continue; }
+        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
         const size_t size = input_data.size() / 2;
         std::vector<char32_t> output_buffer(size);
@@ -183,7 +183,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
   else if (from_encoding == "UTF-32LE") {
     if (to_encoding == "UTF-8") {
       for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.c_str());  continue; }
+        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data());
         const size_t size = input_data.size() / 4;
         std::vector<char> output_buffer(4*size);
@@ -192,7 +192,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       }
     } else if (to_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
       for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.c_str());  continue; }
+        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data());
         const size_t size = input_data.size() / 4;
         std::vector<char16_t> output_buffer(2*size);
@@ -201,7 +201,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       }
     } else if (to_encoding == "UTF-16BE") {
       for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.c_str());  continue; }
+        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data());
         const size_t size = input_data.size() / 4;
         std::vector<char16_t> output_buffer(2*size);
