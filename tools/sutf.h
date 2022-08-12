@@ -1,5 +1,12 @@
 #include "simdutf.h"
 
+#if !defined(ICONV_AVAILABLE) && __has_include (<iconv.h>)
+#define ICONV_AVAILABLE 1
+#endif //__has_include (<iconv.h>)
+#if ICONV_AVAILABLE
+#include <iconv.h>
+#endif
+
 #include <filesystem>
 #include <vector>
 #include <set>
@@ -21,7 +28,7 @@ public:
 
   void run();
   void run_procedure(std::FILE *fp);
-  void iconv_fallback();
+  void iconv_fallback(std::FILE *fp);
   bool load_file(const std::filesystem::path&);
   bool write_to_file_descriptor(std::FILE *fp, const char * data, size_t length);
 };

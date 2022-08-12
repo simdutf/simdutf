@@ -71,7 +71,7 @@ void CommandLine::run() {
   } else {
     SIMDUTF_DISABLE_DEPRECATED_WARNING 
     std::FILE *fp = std::fopen(output_file.string().c_str(), "wb");
-    SIMDUTF_POP_DISABLE_WARNINGS
+    //SIMDUTF_POP_DISABLE_WARNINGS
     if (fp == NULL) {
       printf("Could not open %s\n",output_file.string().c_str());
       return;
@@ -90,30 +90,30 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str()); continue; }
         const char* data = reinterpret_cast<const char*>(input_data.data());
         const size_t size = input_data.size();
-        std::vector<char16_t> output_buffer(size);
-        size_t len = simdutf::convert_utf8_to_utf16le(data, size, output_buffer.data());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char16_t));
+        std::unique_ptr<char16_t[]> output_buffer(new char16_t[size]);
+        size_t len = simdutf::convert_utf8_to_utf16le(data, size, output_buffer.get());
+        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t));
       }
     } else if (to_encoding == "UTF-16BE") {
       for (auto file : input_files) {
         if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char* data = reinterpret_cast<const char*>(input_data.data());
         size_t size = input_data.size();
-        std::vector<char16_t> output_buffer(size);
-        size_t len = simdutf::convert_utf8_to_utf16be(data, size, output_buffer.data());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char16_t));
+        std::unique_ptr<char16_t[]> output_buffer(new char16_t[size]);
+        size_t len = simdutf::convert_utf8_to_utf16be(data, size, output_buffer.get());
+        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t));
       }
     } else if (to_encoding == "UTF-32LE") {
       for (auto file : input_files) {
         if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char* data = reinterpret_cast<const char*>(input_data.data());
         size_t size = input_data.size();
-        std::vector<char32_t> output_buffer(size);
-        size_t len = simdutf::convert_utf8_to_utf32(data, size, output_buffer.data());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char32_t));
+        std::unique_ptr<char32_t[]> output_buffer(new char32_t[size]);
+        size_t len = simdutf::convert_utf8_to_utf32(data, size, output_buffer.get());
+        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char32_t));
       }
     } else {
-      iconv_fallback();
+      iconv_fallback(fpout);
     }
   }
   else if (from_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
@@ -122,27 +122,27 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
         const size_t size = input_data.size() / 2;
-        std::vector<char> output_buffer(2*size);
-        size_t len = simdutf::convert_utf16le_to_utf8(data, size, output_buffer.data());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char));
+        std::unique_ptr<char[]> output_buffer(new char[3*size]);
+        size_t len = simdutf::convert_utf16le_to_utf8(data, size, output_buffer.get());
+        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char));
       }
     } else if (to_encoding == "UTF-16BE") {
       for (auto file : input_files) {
         if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
         const size_t size = input_data.size() / 2;
-        std::vector<char16_t> output_buffer(size);
-        simdutf::change_endianness_utf16(data, size, output_buffer.data());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.data()), size);
+        std::unique_ptr<char16_t[]> output_buffer(new char16_t[size]);
+        simdutf::change_endianness_utf16(data, size, output_buffer.get());
+        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), size);
       }
     } else if (to_encoding == "UTF-32LE") {
       for (auto file : input_files) {
         if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
         const size_t size = input_data.size() / 2;
-        std::vector<char32_t> output_buffer(size);
-        size_t len = simdutf::convert_utf16le_to_utf32(data, size, output_buffer.data());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char32_t));
+        std::unique_ptr<char32_t[]> output_buffer(new char32_t[size]);
+        size_t len = simdutf::convert_utf16le_to_utf32(data, size, output_buffer.get());
+        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char32_t));
       }
     } else {
       printf("UNSUPPORTED");
@@ -154,30 +154,30 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
         const size_t size = input_data.size() / 2;
-        std::vector<char> output_buffer(2*size);
-        size_t len = simdutf::convert_utf16be_to_utf8(data, size, output_buffer.data());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char));
+        std::unique_ptr<char[]> output_buffer(new char[3*size]);
+        size_t len = simdutf::convert_utf16be_to_utf8(data, size, output_buffer.get());
+        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char));
       }
     } else if (to_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
       for (auto file : input_files) {
         if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
         const size_t size = input_data.size() / 2;
-        std::vector<char16_t> output_buffer(size);
-        simdutf::change_endianness_utf16(data, size, output_buffer.data());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.data()), size);
+        std::unique_ptr<char16_t[]> output_buffer(new char16_t[size]);
+        simdutf::change_endianness_utf16(data, size, output_buffer.get());
+        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), size);
       }
     } else if (to_encoding == "UTF-32LE") {
       for (auto file : input_files) {
         if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
         const size_t size = input_data.size() / 2;
-        std::vector<char32_t> output_buffer(size);
-        size_t len = simdutf::convert_utf16be_to_utf32(data, size, output_buffer.data());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char32_t));
+        std::unique_ptr<char32_t[]> output_buffer(new char32_t[size]);
+        size_t len = simdutf::convert_utf16be_to_utf32(data, size, output_buffer.get());
+        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char32_t));
       }
     } else {
-      iconv_fallback();
+      iconv_fallback(fpout);
     }
   }
   else if (from_encoding == "UTF-32LE") {
@@ -186,51 +186,54 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data());
         const size_t size = input_data.size() / 4;
-        std::vector<char> output_buffer(4*size);
-        size_t len = simdutf::convert_utf32_to_utf8(data, size, output_buffer.data());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char));
+        std::unique_ptr<char[]> output_buffer(new char[4*size]);
+        size_t len = simdutf::convert_utf32_to_utf8(data, size, output_buffer.get());
+        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char));
       }
     } else if (to_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
       for (auto file : input_files) {
         if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data());
         const size_t size = input_data.size() / 4;
-        std::vector<char16_t> output_buffer(2*size);
-        size_t len = simdutf::convert_utf32_to_utf16le(data, size, output_buffer.data());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char16_t));
+        std::unique_ptr<char16_t[]> output_buffer(new char16_t[2*size]);
+        size_t len = simdutf::convert_utf32_to_utf16le(data, size, output_buffer.get());
+        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t));
       }
     } else if (to_encoding == "UTF-16BE") {
       for (auto file : input_files) {
         if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data());
         const size_t size = input_data.size() / 4;
-        std::vector<char16_t> output_buffer(2*size);
-        size_t len = simdutf::convert_utf32_to_utf16be(data, size, output_buffer.data());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.data()), len * sizeof(char16_t));
+        std::unique_ptr<char16_t[]> output_buffer(new char16_t[2*size]);
+        size_t len = simdutf::convert_utf32_to_utf16be(data, size, output_buffer.get());
+        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t));
       }
     } else {
-      iconv_fallback();
+      iconv_fallback(fpout);
     }
   }
   else {
-    iconv_fallback();
+    iconv_fallback(fpout);
   }
 }
 
-void CommandLine::iconv_fallback() {
-  std::string command("iconv");
-  if (!output_file.empty()) {
-    command += " -o ";
-    command += output_file.string();
+void CommandLine::iconv_fallback(std::FILE *fpout) {
+  iconv_t cv = iconv_open(from_encoding.c_str(), to_encoding.c_str());
+  if (cv == (iconv_t)(-1)) {
+    fprintf( stderr,"[iconv] cannot initialize %s to %s converter\n", from_encoding.c_str(), to_encoding.c_str());
+    return;
   }
-  command += " -f " + from_encoding + " -t " + to_encoding;
-  for (auto file : input_files) {
-    command += " " + file.string();
+  size_t inbytes = input_data.size();
+  size_t outbytes = 4 * inbytes;
+  std::unique_ptr<char[]> output_buffer(new char[outbytes]);
+  char * inptr = reinterpret_cast<char *>(input_data.data());
+  char * outptr = output_buffer.get();
+  size_t result = iconv(cv, &inptr, &inbytes, &outptr, &outbytes);
+  if (result == static_cast<size_t>(-1)) {
+    fprintf( stderr,"[iconv] Error iconv.\n");
+    return;
   }
-
-  if (system(command.c_str())) {
-    throw std::runtime_error("Error with iconv.");
-  }
+  write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), result);
 }
 
 
@@ -245,7 +248,7 @@ bool CommandLine::load_file(const std::filesystem::path& path) {
 
   SIMDUTF_DISABLE_DEPRECATED_WARNING // Disable CRT_SECURE warning on MSVC: manually verified this is safe
   std::FILE *fp = std::fopen(path.string().c_str(), "rb");
-  SIMDUTF_POP_DISABLE_WARNINGS
+  //SIMDUTF_POP_DISABLE_WARNINGS
 
   if (fp == NULL) { return false; }
 
