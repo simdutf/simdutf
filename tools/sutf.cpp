@@ -218,6 +218,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
 }
 
 void CommandLine::iconv_fallback(std::FILE *fpout) {
+  #if ICONV_AVAILABLE
   iconv_t cv = iconv_open(from_encoding.c_str(), to_encoding.c_str());
   if (cv == (iconv_t)(-1)) {
     fprintf( stderr,"[iconv] cannot initialize %s to %s converter\n", from_encoding.c_str(), to_encoding.c_str());
@@ -234,6 +235,10 @@ void CommandLine::iconv_fallback(std::FILE *fpout) {
     return;
   }
   write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), result);
+  #else
+  fprintf("Conversion from %s to %s is not supported by the simdutf library and iconv is not available.\n", from_encoding.c_str(), to_encoding.c_str());
+  show_formats();
+  #endif
 }
 
 
