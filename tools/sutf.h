@@ -3,7 +3,6 @@
 #include <filesystem>
 #include <vector>
 #include <set>
-#include <ostream>
 
 
 class CommandLine
@@ -21,7 +20,8 @@ public:
   static void show_formats();
 
   void run();
-  void run_procedure(std::ostream*);
+  void run_procedure(std::FILE *fp);
   void iconv_fallback();
-  void load_file(const std::filesystem::path&);
+  bool load_file(const std::filesystem::path&);
+  bool write_to_file_descriptor(std::FILE *fp, const char * data, size_t length);
 };
