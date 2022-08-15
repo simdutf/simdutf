@@ -103,7 +103,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         size_t len = simdutf::convert_utf8_to_utf16be(data, size, output_buffer.get());
         write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t));
       }
-    } else if (to_encoding == "UTF-32LE") {
+    } else if (to_encoding == "UTF-32LE" || to_encoding == "UTF-32") {
       for (auto file : input_files) {
         if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char* data = reinterpret_cast<const char*>(input_data.data());
@@ -135,7 +135,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         simdutf::change_endianness_utf16(data, size, output_buffer.get());
         write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), size);
       }
-    } else if (to_encoding == "UTF-32LE") {
+    } else if (to_encoding == "UTF-32LE" || to_encoding == "UTF-32") {
       for (auto file : input_files) {
         if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
@@ -167,7 +167,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         simdutf::change_endianness_utf16(data, size, output_buffer.get());
         write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), size);
       }
-    } else if (to_encoding == "UTF-32LE") {
+    } else if (to_encoding == "UTF-32LE" || to_encoding == "UTF-32") {
       for (auto file : input_files) {
         if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
@@ -180,7 +180,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       iconv_fallback(fpout);
     }
   }
-  else if (from_encoding == "UTF-32LE") {
+  else if (from_encoding == "UTF-32LE" || to_encoding == "UTF-32") {
     if (to_encoding == "UTF-8") {
       for (auto file : input_files) {
         if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
