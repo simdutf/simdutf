@@ -145,7 +145,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char32_t));
       }
     } else {
-      printf("UNSUPPORTED");
+      iconv_fallback(fpout);
     }
   }
   else if (from_encoding == "UTF-16BE") {
@@ -219,22 +219,28 @@ void CommandLine::run_procedure(std::FILE *fpout) {
 
 void CommandLine::iconv_fallback(std::FILE *fpout) {
   #if ICONV_AVAILABLE
-  iconv_t cv = iconv_open(from_encoding.c_str(), to_encoding.c_str());
+  iconv_t cv = iconv_open(to_encoding.c_str(), from_encoding.c_str());
   if (cv == (iconv_t)(-1)) {
     fprintf( stderr,"[iconv] cannot initialize %s to %s converter\n", from_encoding.c_str(), to_encoding.c_str());
     return;
   }
-  size_t inbytes = input_data.size();
-  size_t outbytes = 4 * inbytes;
-  std::unique_ptr<char[]> output_buffer(new char[outbytes]);
-  char * inptr = reinterpret_cast<char *>(input_data.data());
-  char * outptr = output_buffer.get();
-  size_t result = iconv(cv, &inptr, &inbytes, &outptr, &outbytes);
-  if (result == static_cast<size_t>(-1)) {
-    fprintf( stderr,"[iconv] Error iconv.\n");
-    return;
+  for (auto file : input_files) {
+    if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
+    size_t inbytes = input_data.size();
+    size_t outbytes = sizeof(uint32_t) * inbytes;
+    size_t start_outbytes = outbytes;
+    std::unique_ptr<char[]> output_buffer(new char[outbytes]);
+    char * inptr = reinterpret_cast<char *>(input_data.data());
+    char * outptr = reinterpret_cast<char *>(output_buffer.get());
+    size_t result = iconv(cv, &inptr, &inbytes, &outptr, &outbytes);
+    if (result == static_cast<size_t>(-1)) {
+      fprintf( stderr,"[iconv] Error iconv.\n");
+      return;
+    }
+
+    write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), start_outbytes - outbytes);
   }
-  write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), result);
+  iconv_close(cv);
   #else
   fprintf( stderr, "Conversion from %s to %s is not supported by the simdutf library and iconv is not available.\n", from_encoding.c_str(), to_encoding.c_str());
   show_formats();
