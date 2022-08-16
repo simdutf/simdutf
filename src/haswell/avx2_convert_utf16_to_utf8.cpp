@@ -53,7 +53,7 @@
   A scalar routing should carry on the conversion of the tail.
 */
 template <endianness big_endian>
-std::pair<const char16_t*, char*> avx2_convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) {
+simdutf::pair<const char16_t*, char*> avx2_convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) {
   const char16_t* end = buf + len;
   const __m256i v_0000 = _mm256_setzero_si256();
   const __m256i v_f800 = _mm256_set1_epi16((int16_t)0xf800);
@@ -272,7 +272,7 @@ std::pair<const char16_t*, char*> avx2_convert_utf16_to_utf8(const char16_t* buf
           uint16_t next_word = big_endian ? scalar::utf16::swap_bytes(buf[k+1]) : buf[k+1];
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
-          if((diff | diff2) > 0x3FF)  { return std::make_pair(nullptr, utf8_output); }
+          if((diff | diff2) > 0x3FF)  { return simdutf::pair<const char16_t*, char*>(nullptr, utf8_output); }
           uint32_t value = (diff << 10) + diff2 + 0x10000;
           *utf8_output++ = char((value>>18) | 0b11110000);
           *utf8_output++ = char(((value>>12) & 0b111111) | 0b10000000);
@@ -283,7 +283,7 @@ std::pair<const char16_t*, char*> avx2_convert_utf16_to_utf8(const char16_t* buf
       buf += k;
     }
   } // while
-  return std::make_pair(buf, utf8_output);
+  return simdutf::make_pair(buf, utf8_output);
 }
 
 
@@ -294,7 +294,7 @@ std::pair<const char16_t*, char*> avx2_convert_utf16_to_utf8(const char16_t* buf
   A scalar routing should carry on the conversion of the tail if needed.
 */
 template <endianness big_endian>
-std::pair<result, char*> avx2_convert_utf16_to_utf8_with_errors(const char16_t* buf, size_t len, char* utf8_output) {
+simdutf::pair<result, char*> avx2_convert_utf16_to_utf8_with_errors(const char16_t* buf, size_t len, char* utf8_output) {
   const char16_t* start = buf;
   const char16_t* end = buf + len;
 
@@ -515,7 +515,7 @@ std::pair<result, char*> avx2_convert_utf16_to_utf8_with_errors(const char16_t* 
           uint16_t next_word = big_endian ? scalar::utf16::swap_bytes(buf[k+1]) : buf[k+1];
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
-          if((diff | diff2) > 0x3FF)  { return std::make_pair(result(error_code::SURROGATE, buf - start + k - 1), utf8_output); }
+          if((diff | diff2) > 0x3FF)  { return simdutf::make_pair(result(error_code::SURROGATE, buf - start + k - 1), utf8_output); }
           uint32_t value = (diff << 10) + diff2 + 0x10000;
           *utf8_output++ = char((value>>18) | 0b11110000);
           *utf8_output++ = char(((value>>12) & 0b111111) | 0b10000000);
@@ -526,5 +526,5 @@ std::pair<result, char*> avx2_convert_utf16_to_utf8_with_errors(const char16_t* 
       buf += k;
     }
   } // while
-  return std::make_pair(result(error_code::SUCCESS, buf - start), utf8_output);
+  return simdutf::make_pair(result(error_code::SUCCESS, buf - start), utf8_output);
 }
