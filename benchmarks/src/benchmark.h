@@ -7,16 +7,26 @@
  * ICU is a standard library that is often already present on the system.
  */
 #if defined __has_include
-#if __has_include (<unicode/unistr.h>)
-#include <unicode/uconfig.h>
-#include <unicode/platform.h>
-#include <unicode/unistr.h>
+#if !defined(ICU_AVAILABLE) && __has_include (<unicode/unistr.h>)
 #define ICU_AVAILABLE 1
 // U_ICU_VERSION is relevant here.
 #endif //__has_include (<unicode/unistr.h>)
+
+#if !defined(ICONV_AVAILABLE) && __has_include (<iconv.h>)
+#define ICONV_AVAILABLE 1
+#endif //__has_include (<iconv.h>)
+
 #endif // defined __has_include
 
+#if ICU_AVAILABLE
+#include <unicode/uconfig.h>
+#include <unicode/platform.h>
+#include <unicode/unistr.h>
+#endif
 
+#if ICONV_AVAILABLE
+#include <iconv.h>
+#endif
 /**
  * inoue2008 is:
  * Hiroshi Inoue and Hideaki Komatsu and Toshio Nakatani,
@@ -79,6 +89,10 @@ namespace simdutf::benchmarks {
 #if ICU_AVAILABLE
         void run_convert_utf8_to_utf16_icu(size_t iterations);
         void run_convert_utf16_to_utf8_icu(size_t iterations);
+#endif
+#if ICONV_AVAILABLE
+        void run_convert_utf8_to_utf16_iconv(size_t iterations);
+        void run_convert_utf16_to_utf8_iconv(size_t iterations);
 #endif
 #ifdef INOUE2008
         /**
