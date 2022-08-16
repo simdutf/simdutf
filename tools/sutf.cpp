@@ -69,9 +69,10 @@ void CommandLine::run() {
   if (output_file.empty()) {
     run_procedure(stdout);
   } else {
+    SIMDUTF_PUSH_DISABLE_WARNINGS
     SIMDUTF_DISABLE_DEPRECATED_WARNING 
     std::FILE *fp = std::fopen(output_file.string().c_str(), "wb");
-    //SIMDUTF_POP_DISABLE_WARNINGS
+    SIMDUTF_POP_DISABLE_WARNINGS
     if (fp == NULL) {
       printf("Could not open %s\n",output_file.string().c_str());
       return;
@@ -256,10 +257,10 @@ bool CommandLine::write_to_file_descriptor(std::FILE *fp, const char * data, siz
 }
 
 bool CommandLine::load_file(const std::filesystem::path& path) {
-
+  SIMDUTF_PUSH_DISABLE_WARNINGS
   SIMDUTF_DISABLE_DEPRECATED_WARNING // Disable CRT_SECURE warning on MSVC: manually verified this is safe
   std::FILE *fp = std::fopen(path.string().c_str(), "rb");
-  //SIMDUTF_POP_DISABLE_WARNINGS
+  SIMDUTF_POP_DISABLE_WARNINGS
 
   if (fp == NULL) { return false; }
 
