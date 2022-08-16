@@ -195,7 +195,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(const cha
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16le_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-  std::pair<const char16_t*, char*> ret = sse_convert_utf16_to_utf8<endianness::LITTLE>(buf, len, utf8_output);
+  simdutf::pair<const char16_t*, char*> ret = sse_convert_utf16_to_utf8<endianness::LITTLE>(buf, len, utf8_output);
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf8_output;
   if (ret.first != buf + len) {
@@ -208,7 +208,7 @@ simdutf_warn_unused size_t implementation::convert_utf16le_to_utf8(const char16_
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16be_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-  std::pair<const char16_t*, char*> ret = sse_convert_utf16_to_utf8<endianness::BIG>(buf, len, utf8_output);
+  simdutf::pair<const char16_t*, char*> ret = sse_convert_utf16_to_utf8<endianness::BIG>(buf, len, utf8_output);
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf8_output;
   if (ret.first != buf + len) {
@@ -222,7 +222,7 @@ simdutf_warn_unused size_t implementation::convert_utf16be_to_utf8(const char16_
 
 simdutf_warn_unused result implementation::convert_utf16le_to_utf8_with_errors(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of words written even if finished
-  std::pair<result, char*> ret = westmere::sse_convert_utf16_to_utf8_with_errors<endianness::LITTLE>(buf, len, utf8_output);
+  simdutf::pair<result, char*> ret = westmere::sse_convert_utf16_to_utf8_with_errors<endianness::LITTLE>(buf, len, utf8_output);
   if (ret.first.error) { return ret.first; }  // Can return directly since scalar fallback already found correct ret.first.count
   if (ret.first.count != len) { // All good so far, but not finished
     result scalar_res = scalar::utf16_to_utf8::convert_with_errors<endianness::LITTLE>(
@@ -240,7 +240,7 @@ simdutf_warn_unused result implementation::convert_utf16le_to_utf8_with_errors(c
 
 simdutf_warn_unused result implementation::convert_utf16be_to_utf8_with_errors(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of words written even if finished
-  std::pair<result, char*> ret = westmere::sse_convert_utf16_to_utf8_with_errors<endianness::BIG>(buf, len, utf8_output);
+  simdutf::pair<result, char*> ret = westmere::sse_convert_utf16_to_utf8_with_errors<endianness::BIG>(buf, len, utf8_output);
   if (ret.first.error) { return ret.first; }  // Can return directly since scalar fallback already found correct ret.first.count
   if (ret.first.count != len) { // All good so far, but not finished
     result scalar_res = scalar::utf16_to_utf8::convert_with_errors<endianness::BIG>(
@@ -265,7 +265,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_utf8(const c
 }
 
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
-  std::pair<const char32_t*, char*> ret = sse_convert_utf32_to_utf8(buf, len, utf8_output);
+  simdutf::pair<const char32_t*, char*> ret = sse_convert_utf32_to_utf8(buf, len, utf8_output);
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf8_output;
   if (ret.first != buf + len) {
@@ -279,7 +279,7 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(const char32_t*
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of words written even if finished
-  std::pair<result, char*> ret = westmere::sse_convert_utf32_to_utf8_with_errors(buf, len, utf8_output);
+  simdutf::pair<result, char*> ret = westmere::sse_convert_utf32_to_utf8_with_errors(buf, len, utf8_output);
   if (ret.first.count != len) {
     result scalar_res = scalar::utf32_to_utf8::convert_with_errors(
                                         buf + ret.first.count, len - ret.first.count, ret.second);
@@ -295,7 +295,7 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(con
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16le_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
-  std::pair<const char16_t*, char32_t*> ret = sse_convert_utf16_to_utf32<endianness::LITTLE>(buf, len, utf32_output);
+  simdutf::pair<const char16_t*, char32_t*> ret = sse_convert_utf16_to_utf32<endianness::LITTLE>(buf, len, utf32_output);
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf32_output;
   if (ret.first != buf + len) {
@@ -308,7 +308,7 @@ simdutf_warn_unused size_t implementation::convert_utf16le_to_utf32(const char16
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16be_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
-  std::pair<const char16_t*, char32_t*> ret = sse_convert_utf16_to_utf32<endianness::BIG>(buf, len, utf32_output);
+  simdutf::pair<const char16_t*, char32_t*> ret = sse_convert_utf16_to_utf32<endianness::BIG>(buf, len, utf32_output);
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf32_output;
   if (ret.first != buf + len) {
@@ -322,7 +322,7 @@ simdutf_warn_unused size_t implementation::convert_utf16be_to_utf32(const char16
 
 simdutf_warn_unused result implementation::convert_utf16le_to_utf32_with_errors(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of words written even if finished
-  std::pair<result, char32_t*> ret = westmere::sse_convert_utf16_to_utf32_with_errors<endianness::LITTLE>(buf, len, utf32_output);
+  simdutf::pair<result, char32_t*> ret = westmere::sse_convert_utf16_to_utf32_with_errors<endianness::LITTLE>(buf, len, utf32_output);
   if (ret.first.error) { return ret.first; }  // Can return directly since scalar fallback already found correct ret.first.count
   if (ret.first.count != len) { // All good so far, but not finished
     result scalar_res = scalar::utf16_to_utf32::convert_with_errors<endianness::LITTLE>(
@@ -340,7 +340,7 @@ simdutf_warn_unused result implementation::convert_utf16le_to_utf32_with_errors(
 
 simdutf_warn_unused result implementation::convert_utf16be_to_utf32_with_errors(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of words written even if finished
-  std::pair<result, char32_t*> ret = westmere::sse_convert_utf16_to_utf32_with_errors<endianness::BIG>(buf, len, utf32_output);
+  simdutf::pair<result, char32_t*> ret = westmere::sse_convert_utf16_to_utf32_with_errors<endianness::BIG>(buf, len, utf32_output);
   if (ret.first.error) { return ret.first; }  // Can return directly since scalar fallback already found correct ret.first.count
   if (ret.first.count != len) { // All good so far, but not finished
     result scalar_res = scalar::utf16_to_utf32::convert_with_errors<endianness::BIG>(
@@ -361,7 +361,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf8(const cha
 }
 
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf16le(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-  std::pair<const char32_t*, char16_t*> ret = sse_convert_utf32_to_utf16<endianness::LITTLE>(buf, len, utf16_output);
+  simdutf::pair<const char32_t*, char16_t*> ret = sse_convert_utf32_to_utf16<endianness::LITTLE>(buf, len, utf16_output);
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf16_output;
   if (ret.first != buf + len) {
@@ -374,7 +374,7 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf16le(const char32
 }
 
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf16be(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-  std::pair<const char32_t*, char16_t*> ret = sse_convert_utf32_to_utf16<endianness::BIG>(buf, len, utf16_output);
+  simdutf::pair<const char32_t*, char16_t*> ret = sse_convert_utf32_to_utf16<endianness::BIG>(buf, len, utf16_output);
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf16_output;
   if (ret.first != buf + len) {
@@ -388,7 +388,7 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf16be(const char32
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf16le_with_errors(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of words written even if finished
-  std::pair<result, char16_t*> ret = westmere::sse_convert_utf32_to_utf16_with_errors<endianness::LITTLE>(buf, len, utf16_output);
+  simdutf::pair<result, char16_t*> ret = westmere::sse_convert_utf32_to_utf16_with_errors<endianness::LITTLE>(buf, len, utf16_output);
   if (ret.first.count != len) {
     result scalar_res = scalar::utf32_to_utf16::convert_with_errors<endianness::LITTLE>(
                                         buf + ret.first.count, len - ret.first.count, ret.second);
@@ -405,7 +405,7 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf16le_with_errors(
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf16be_with_errors(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of words written even if finished
-  std::pair<result, char16_t*> ret = westmere::sse_convert_utf32_to_utf16_with_errors<endianness::BIG>(buf, len, utf16_output);
+  simdutf::pair<result, char16_t*> ret = westmere::sse_convert_utf32_to_utf16_with_errors<endianness::BIG>(buf, len, utf16_output);
   if (ret.first.count != len) {
     result scalar_res = scalar::utf32_to_utf16::convert_with_errors<endianness::BIG>(
                                         buf + ret.first.count, len - ret.first.count, ret.second);

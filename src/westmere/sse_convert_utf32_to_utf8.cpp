@@ -1,4 +1,4 @@
-std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf, size_t len, char* utf8_output) {
+simdutf::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf, size_t len, char* utf8_output) {
 
   const char32_t* end = buf + len;
 
@@ -210,12 +210,12 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
           *utf8_output++ = char((word>>6) | 0b11000000);
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else if((word &0xFFFF0000 )==0) {
-          if (word >= 0xD800 && word <= 0xDFFF) { return std::make_pair(nullptr, utf8_output); }
+          if (word >= 0xD800 && word <= 0xDFFF) { return simdutf::pair<const char32_t*, char*>(nullptr, utf8_output); }
           *utf8_output++ = char((word>>12) | 0b11100000);
           *utf8_output++ = char(((word>>6) & 0b111111) | 0b10000000);
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else {
-          if (word > 0x10FFFF) { return std::make_pair(nullptr, utf8_output); }
+          if (word > 0x10FFFF) { return simdutf::pair<const char32_t*, char*>(nullptr, utf8_output); }
           *utf8_output++ = char((word>>18) | 0b11110000);
           *utf8_output++ = char(((word>>12) & 0b111111) | 0b10000000);
           *utf8_output++ = char(((word>>6) & 0b111111) | 0b10000000);
@@ -229,16 +229,16 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
   // check for invalid input
   const __m128i v_10ffff = _mm_set1_epi32((uint32_t)0x10ffff);
   if(static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi32(_mm_max_epu32(running_max, v_10ffff), v_10ffff))) != 0xffff) {
-    return std::make_pair(nullptr, utf8_output);
+    return simdutf::pair<const char32_t*, char*>(nullptr, utf8_output);
   }
 
-  if (static_cast<uint32_t>(_mm_movemask_epi8(forbidden_bytemask)) != 0) { return std::make_pair(nullptr, utf8_output); }
+  if (static_cast<uint32_t>(_mm_movemask_epi8(forbidden_bytemask)) != 0) { return simdutf::pair<const char32_t*, char*>(nullptr, utf8_output); }
 
-  return std::make_pair(buf, utf8_output);
+  return simdutf::pair(buf, utf8_output);
 }
 
 
-std::pair<result, char*> sse_convert_utf32_to_utf8_with_errors(const char32_t* buf, size_t len, char* utf8_output) {
+simdutf::pair<result, char*> sse_convert_utf32_to_utf8_with_errors(const char32_t* buf, size_t len, char* utf8_output) {
 
   const char32_t* end = buf + len;
   const char32_t* start = buf;
@@ -260,7 +260,7 @@ std::pair<result, char*> sse_convert_utf32_to_utf8_with_errors(const char32_t* b
     // Check for too large input
     __m128i max_input = _mm_max_epu32(_mm_max_epu32(in, nextin), v_10ffff);
     if(static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi32(max_input, v_10ffff))) != 0xffff) {
-      return std::make_pair(result(error_code::TOO_LARGE, buf - start), utf8_output);
+      return simdutf::pair(result(error_code::TOO_LARGE, buf - start), utf8_output);
     }
 
     // Pack 32-bit UTF-32 words to 16-bit UTF-16 words with unsigned saturation
@@ -286,7 +286,7 @@ std::pair<result, char*> sse_convert_utf32_to_utf8_with_errors(const char32_t* b
         in_16 = nextin_16;
         __m128i next_max_input = _mm_max_epu32(_mm_max_epu32(thirdin, fourthin), v_10ffff);
         if(static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi32(next_max_input, v_10ffff))) != 0xffff) {
-          return std::make_pair(result(error_code::TOO_LARGE, buf - start), utf8_output);
+          return simdutf::pair(result(error_code::TOO_LARGE, buf - start), utf8_output);
         }
       } else {
         // 1. pack the bytes
@@ -361,7 +361,7 @@ std::pair<result, char*> sse_convert_utf32_to_utf8_with_errors(const char32_t* b
       const __m128i v_d800 = _mm_set1_epi16((uint16_t)0xd800);
       const __m128i forbidden_bytemask = _mm_cmpeq_epi16(_mm_and_si128(in_16, v_f800), v_d800);
       if (static_cast<uint32_t>(_mm_movemask_epi8(forbidden_bytemask)) != 0) {
-        return std::make_pair(result(error_code::SURROGATE, buf - start), utf8_output);
+        return simdutf::pair(result(error_code::SURROGATE, buf - start), utf8_output);
       }
 
       const __m128i dup_even = _mm_setr_epi16(0x0000, 0x0202, 0x0404, 0x0606,
@@ -464,12 +464,12 @@ std::pair<result, char*> sse_convert_utf32_to_utf8_with_errors(const char32_t* b
           *utf8_output++ = char((word>>6) | 0b11000000);
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else if((word &0xFFFF0000 )==0) {
-          if (word >= 0xD800 && word <= 0xDFFF) { return std::make_pair(result(error_code::SURROGATE, buf - start + k), utf8_output); }
+          if (word >= 0xD800 && word <= 0xDFFF) { return simdutf::pair(result(error_code::SURROGATE, buf - start + k), utf8_output); }
           *utf8_output++ = char((word>>12) | 0b11100000);
           *utf8_output++ = char(((word>>6) & 0b111111) | 0b10000000);
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else {
-          if (word > 0x10FFFF) { return std::make_pair(result(error_code::TOO_LARGE, buf- start + k), utf8_output); }
+          if (word > 0x10FFFF) { return simdutf::pair(result(error_code::TOO_LARGE, buf- start + k), utf8_output); }
           *utf8_output++ = char((word>>18) | 0b11110000);
           *utf8_output++ = char(((word>>12) & 0b111111) | 0b10000000);
           *utf8_output++ = char(((word>>6) & 0b111111) | 0b10000000);
@@ -480,5 +480,5 @@ std::pair<result, char*> sse_convert_utf32_to_utf8_with_errors(const char32_t* b
     }
   } // while
 
-  return std::make_pair(result(error_code::SUCCESS, buf - start), utf8_output);
+  return simdutf::pair(result(error_code::SUCCESS, buf - start), utf8_output);
 }
