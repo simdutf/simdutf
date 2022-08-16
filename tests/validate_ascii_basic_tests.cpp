@@ -60,14 +60,14 @@ int main() {
       "\xee\x80\x80",
       "\xef\xbb\xbf"};
   for (size_t i = 0; i < sizeof(goodsequences)/sizeof(goodsequences[0]); i++) {
-    size_t len = std::strlen(goodsequences[i]);
+    size_t len = ::strlen(goodsequences[i]);
     if (!simdutf::validate_ascii(goodsequences[i], len)) {
       printf("bug goodsequences[%zu]\n", i);
       abort();
     }
   }
   for (size_t i = 0; i < sizeof(badsequences)/sizeof(badsequences[0]); i++) {
-    size_t len = std::strlen(badsequences[i]);
+    size_t len = ::strlen(badsequences[i]);
     if (simdutf::validate_ascii(badsequences[i], len)) {
       printf("bug lookup2 badsequences[%zu]\n", i);
       abort();

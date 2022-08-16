@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
   }
   // We need a buffer of size where to write the UTF-16LE words.
   size_t expected_utf16words = simdutf::utf16_length_from_utf8(source, 4);
-  char16_t *utf16_output = new char16_t[expected_utf16words];
+  char16_t *utf16_output = (char16_t *)malloc(sizeof(char16_t) * expected_utf16words);
   // convert to UTF-16LE
   size_t utf16words = simdutf::convert_utf8_to_utf16le(source, 4, utf16_output);
   // It wrote utf16words * sizeof(char16_t) bytes.
@@ -22,23 +22,23 @@ int main(int argc, char *argv[]) {
     printf("valid UTF-16LE\n");
   } else {
     printf("invalid UTF-16LE\n");
-    delete[] utf16_output;
+    free(utf16_output);
     return EXIT_FAILURE;
   }
   // convert it back:
   // We need a buffer of size where to write the UTF-8 words.
   size_t expected_utf8words =
       simdutf::utf8_length_from_utf16le(utf16_output, utf16words);
-  char *utf8_output = new char[expected_utf8words];
+  char *utf8_output = (char*) malloc(expected_utf8words);
   // convert to UTF-8
   size_t utf8words =
       simdutf::convert_utf16le_to_utf8(utf16_output, utf16words, utf8_output);
   if ((utf8words != 4) || (strncmp(utf8_output, source, utf8words) != 0)) {
     printf("bad conversion\n");
-    delete[] utf8_output;
+    free(utf8_output);
     return EXIT_FAILURE;
   } else {
-    delete[] utf8_output;
+    free(utf8_output);
     printf("perfect round trip\n");
   }
   return EXIT_SUCCESS;

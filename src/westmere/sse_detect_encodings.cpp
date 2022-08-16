@@ -180,8 +180,8 @@ int sse_detect_encodings(const char * buf, size_t len) {
     if (is_utf8) {
         if (static_cast<size_t>(buf - start) != len) {
             uint8_t block[64]{};
-            std::memset(block, 0x20, 64);
-            std::memcpy(block, buf, len - (buf - start));
+            ::memset(block, 0x20, 64);
+            ::memcpy(block, buf, len - (buf - start));
             simd::simd8x64<uint8_t> in(block);
             check.check_next_input(in);
         }

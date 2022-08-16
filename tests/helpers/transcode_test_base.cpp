@@ -21,7 +21,7 @@ namespace simdutf { namespace tests { namespace helpers {
     while (first1 != last1 && first2 != last2 && *first1 == *first2) {
         ++first1, ++first2;
     }
-    return simdutf::make_pair(first1, first2);
+    return std::make_pair(first1, first2);
   }
 
   void transcode_test_base::encode_utf8(uint32_t codepoint, std::vector<char>& target) {
