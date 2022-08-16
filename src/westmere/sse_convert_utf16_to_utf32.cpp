@@ -108,7 +108,7 @@ simdutf::pair<const char16_t*, char32_t*> sse_convert_utf16_to_utf32(const char1
       buf += k;
     }
   } // while
-  return simdutf::pair(buf, utf32_output);
+  return simdutf::make_pair(buf, utf32_output);
 }
 
 
@@ -168,7 +168,7 @@ simdutf::pair<result, char32_t*> sse_convert_utf16_to_utf32_with_errors(const ch
           uint16_t next_word = big_endian ? scalar::utf16::swap_bytes(buf[k+1]) : buf[k+1];
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
-          if((diff | diff2) > 0x3FF)  { return simdutf::pair(result(error_code::SURROGATE, buf - start + k - 1), utf32_output); }
+          if((diff | diff2) > 0x3FF)  { return simdutf::make_pair(result(error_code::SURROGATE, buf - start + k - 1), utf32_output); }
           uint32_t value = (diff << 10) + diff2 + 0x10000;
           *utf32_output++ = char32_t(value);
         }
@@ -176,5 +176,5 @@ simdutf::pair<result, char32_t*> sse_convert_utf16_to_utf32_with_errors(const ch
       buf += k;
     }
   } // while
-  return simdutf::pair(result(error_code::SUCCESS, buf - start), utf32_output);
+  return simdutf::make_pair(result(error_code::SUCCESS, buf - start), utf32_output);
 }

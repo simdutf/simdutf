@@ -60,7 +60,7 @@ simdutf::pair<const char32_t*, char16_t*> avx2_convert_utf32_to_utf16(const char
   // check for invalid input
   if (static_cast<uint32_t>(_mm256_movemask_epi8(forbidden_bytemask)) != 0) { return simdutf::pair<const char32_t*, char16_t*>(nullptr, utf16_output); }
 
-  return simdutf::pair(buf, utf16_output);
+  return simdutf::make_pair(buf, utf16_output);
 }
 
 
@@ -86,7 +86,7 @@ simdutf::pair<result, char16_t*> avx2_convert_utf32_to_utf16_with_errors(const c
       const __m256i v_d800 = _mm256_set1_epi32((uint32_t)0xd800);
       const __m256i forbidden_bytemask = _mm256_cmpeq_epi32(_mm256_and_si256(in, v_f800), v_d800);
       if (static_cast<uint32_t>(_mm256_movemask_epi8(forbidden_bytemask)) != 0x0) {
-        return simdutf::pair(result(error_code::SURROGATE, buf - start), utf16_output);
+        return simdutf::make_pair(result(error_code::SURROGATE, buf - start), utf16_output);
       }
 
       __m128i utf16_packed = _mm_packus_epi32(_mm256_castsi256_si128(in),_mm256_extractf128_si256(in,1));
@@ -105,11 +105,11 @@ simdutf::pair<result, char16_t*> avx2_convert_utf32_to_utf16_with_errors(const c
         uint32_t word = buf[k];
         if((word & 0xFFFF0000)==0) {
           // will not generate a surrogate pair
-          if (word >= 0xD800 && word <= 0xDFFF) { return simdutf::pair(result(error_code::SURROGATE, buf - start + k), utf16_output); }
+          if (word >= 0xD800 && word <= 0xDFFF) { return simdutf::make_pair(result(error_code::SURROGATE, buf - start + k), utf16_output); }
           *utf16_output++ = big_endian ? char16_t((uint16_t(word) >> 8) | (uint16_t(word) << 8)) : char16_t(word);
         } else {
           // will generate a surrogate pair
-          if (word > 0x10FFFF) { return simdutf::pair(result(error_code::TOO_LARGE, buf - start + k), utf16_output); }
+          if (word > 0x10FFFF) { return simdutf::make_pair(result(error_code::TOO_LARGE, buf - start + k), utf16_output); }
           word -= 0x10000;
           uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
           uint16_t low_surrogate = uint16_t(0xDC00 + (word & 0x3FF));
@@ -125,5 +125,5 @@ simdutf::pair<result, char16_t*> avx2_convert_utf32_to_utf16_with_errors(const c
     }
   }
 
-  return simdutf::pair(result(error_code::SUCCESS, buf - start), utf16_output);
+  return simdutf::make_pair(result(error_code::SUCCESS, buf - start), utf16_output);
 }

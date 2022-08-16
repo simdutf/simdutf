@@ -61,7 +61,7 @@ simdutf::pair<const char32_t*, char16_t*> sse_convert_utf32_to_utf16(const char3
   // check for invalid input
   if (static_cast<uint32_t>(_mm_movemask_epi8(forbidden_bytemask)) != 0) { return simdutf::pair<const char32_t*, char16_t*>(nullptr, utf16_output); }
 
-  return simdutf::pair(buf, utf16_output);
+  return simdutf::make_pair(buf, utf16_output);
 }
 
 
@@ -88,7 +88,7 @@ simdutf::pair<result, char16_t*> sse_convert_utf32_to_utf16_with_errors(const ch
       const __m128i v_d800 = _mm_set1_epi16((uint16_t)0xd800);
       const __m128i forbidden_bytemask = _mm_cmpeq_epi16(_mm_and_si128(utf16_packed, v_f800), v_d800);
       if (static_cast<uint32_t>(_mm_movemask_epi8(forbidden_bytemask)) != 0) {
-        return simdutf::pair(result(error_code::SURROGATE, buf - start), utf16_output);
+        return simdutf::make_pair(result(error_code::SURROGATE, buf - start), utf16_output);
       }
 
       if (big_endian) {
@@ -107,11 +107,11 @@ simdutf::pair<result, char16_t*> sse_convert_utf32_to_utf16_with_errors(const ch
         uint32_t word = buf[k];
         if((word & 0xFFFF0000)==0) {
           // will not generate a surrogate pair
-          if (word >= 0xD800 && word <= 0xDFFF) { return simdutf::pair(result(error_code::SURROGATE, buf - start + k), utf16_output); }
+          if (word >= 0xD800 && word <= 0xDFFF) { return simdutf::make_pair(result(error_code::SURROGATE, buf - start + k), utf16_output); }
           *utf16_output++ = big_endian ? char16_t((uint16_t(word) >> 8) | (uint16_t(word) << 8)) : char16_t(word);
         } else {
           // will generate a surrogate pair
-          if (word > 0x10FFFF) { return simdutf::pair(result(error_code::TOO_LARGE, buf - start + k), utf16_output); }
+          if (word > 0x10FFFF) { return simdutf::make_pair(result(error_code::TOO_LARGE, buf - start + k), utf16_output); }
           word -= 0x10000;
           uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
           uint16_t low_surrogate = uint16_t(0xDC00 + (word & 0x3FF));
@@ -127,5 +127,5 @@ simdutf::pair<result, char16_t*> sse_convert_utf32_to_utf16_with_errors(const ch
     }
   }
 
-  return simdutf::pair(result(error_code::SUCCESS, buf - start), utf16_output);
+  return simdutf::make_pair(result(error_code::SUCCESS, buf - start), utf16_output);
 }

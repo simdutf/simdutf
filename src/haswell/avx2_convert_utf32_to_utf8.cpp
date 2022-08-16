@@ -234,7 +234,7 @@ simdutf::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t*
 
   if (static_cast<uint32_t>(_mm256_movemask_epi8(forbidden_bytemask)) != 0) { return simdutf::pair<const char32_t*, char*>(nullptr, utf8_output); }
 
-  return simdutf::pair(buf, utf8_output);
+  return simdutf::make_pair(buf, utf8_output);
 }
 
 
@@ -258,7 +258,7 @@ simdutf::pair<result, char*> avx2_convert_utf32_to_utf8_with_errors(const char32
     // Check for too large input
     const __m256i max_input = _mm256_max_epu32(_mm256_max_epu32(in, nextin), v_10ffff);
     if(static_cast<uint32_t>(_mm256_movemask_epi8(_mm256_cmpeq_epi32(max_input, v_10ffff))) != 0xffffffff) {
-      return simdutf::pair(result(error_code::TOO_LARGE, buf - start), utf8_output);
+      return simdutf::make_pair(result(error_code::TOO_LARGE, buf - start), utf8_output);
     }
 
     // Pack 32-bit UTF-32 words to 16-bit UTF-16 words with unsigned saturation
@@ -338,7 +338,7 @@ simdutf::pair<result, char*> avx2_convert_utf32_to_utf8_with_errors(const char32
       const __m256i v_d800 = _mm256_set1_epi16((uint16_t)0xd800);
       const __m256i forbidden_bytemask = _mm256_cmpeq_epi16(_mm256_and_si256(in_16, v_f800), v_d800);
       if (static_cast<uint32_t>(_mm256_movemask_epi8(forbidden_bytemask)) != 0x0) {
-        return simdutf::pair(result(error_code::SURROGATE, buf - start), utf8_output);
+        return simdutf::make_pair(result(error_code::SURROGATE, buf - start), utf8_output);
       }
 
       const __m256i dup_even = _mm256_setr_epi16(0x0000, 0x0202, 0x0404, 0x0606,
@@ -460,12 +460,12 @@ simdutf::pair<result, char*> avx2_convert_utf32_to_utf8_with_errors(const char32
           *utf8_output++ = char((word>>6) | 0b11000000);
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else if((word & 0xFFFF0000 )==0) {  // 3-byte
-          if (word >= 0xD800 && word <= 0xDFFF) { return simdutf::pair(result(error_code::SURROGATE, buf - start + k), utf8_output); }
+          if (word >= 0xD800 && word <= 0xDFFF) { return simdutf::make_pair(result(error_code::SURROGATE, buf - start + k), utf8_output); }
           *utf8_output++ = char((word>>12) | 0b11100000);
           *utf8_output++ = char(((word>>6) & 0b111111) | 0b10000000);
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else {  // 4-byte
-          if (word > 0x10FFFF) { return simdutf::pair(result(error_code::TOO_LARGE, buf - start + k), utf8_output); }
+          if (word > 0x10FFFF) { return simdutf::make_pair(result(error_code::TOO_LARGE, buf - start + k), utf8_output); }
           *utf8_output++ = char((word>>18) | 0b11110000);
           *utf8_output++ = char(((word>>12) & 0b111111) | 0b10000000);
           *utf8_output++ = char(((word>>6) & 0b111111) | 0b10000000);
@@ -476,5 +476,5 @@ simdutf::pair<result, char*> avx2_convert_utf32_to_utf8_with_errors(const char32
     }
   } // while
 
-  return simdutf::pair(result(error_code::SUCCESS, buf - start), utf8_output);
+  return simdutf::make_pair(result(error_code::SUCCESS, buf - start), utf8_output);
 }
