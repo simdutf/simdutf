@@ -1,20 +1,32 @@
 #include "simdutf.h"
-#include <initializer_list>
-#include <string>
 #include <climits>
+
+// We roll our own 'pair' to be independent from the standard library.
+namespace simdutf {
+template <typename T1, typename T2>
+struct pair {
+  typedef T1 first_type;
+  typedef T2 second_type;
+  T1 first;
+  T2 second;
+  pair() = default;
+  pair(const T1& x, const T2& y) : first(x), second(y) {}
+};
+}
 
 // Useful for debugging purposes
 namespace simdutf {
 namespace {
-
 template <typename T>
-std::string toBinaryString(T b) {
-   std::string binary = "";
+char* toBinaryString(T b) {
+   static char binary[256];
+   size_t index = 0;
    T mask = T(1) << (sizeof(T) * CHAR_BIT - 1);
    while (mask > 0) {
-    binary += ((b & mask) == 0) ? '0' : '1';
+    binary[index++] = ((b & mask) == 0) ? '0' : '1';
     mask >>= 1;
   }
+  binary[index++] = '\0';
   return binary;
 }
 }
@@ -85,8 +97,8 @@ const fallback::implementation fallback_singleton{};
  */
 class detect_best_supported_implementation_on_first_use final : public implementation {
 public:
-  const std::string &name() const noexcept final { return set_best()->name(); }
-  const std::string &description() const noexcept final { return set_best()->description(); }
+  const char* name() const noexcept final { return set_best()->name(); }
+  const char* description() const noexcept final { return set_best()->description(); }
   uint32_t required_instruction_sets() const noexcept final { return set_best()->required_instruction_sets(); }
 
   simdutf_warn_unused int detect_encodings(const char * input, size_t length) const noexcept override {
@@ -309,7 +321,12 @@ private:
 
 const detect_best_supported_implementation_on_first_use detect_best_supported_implementation_on_first_use_singleton;
 
-const std::initializer_list<const implementation *> available_implementation_pointers {
+#ifndef SIMDUTF_IMPLEMENTATION_COUNT
+#define SIMDUTF_IMPLEMENTATION_COUNT SIMDUTF_IMPLEMENTATION_HASWELL+SIMDUTF_IMPLEMENTATION_WESTMERE+\
+  SIMDUTF_IMPLEMENTATION_ARM64+SIMDUTF_IMPLEMENTATION_PPC64+SIMDUTF_IMPLEMENTATION_FALLBACK
+#endif // SIMDUTF_IMPLEMENTATION_COUNT
+
+const implementation * available_implementation_pointers[SIMDUTF_IMPLEMENTATION_COUNT] = {
 #if SIMDUTF_IMPLEMENTATION_HASWELL
   &haswell_singleton,
 #endif
@@ -555,13 +572,13 @@ public:
 const unsupported_implementation unsupported_singleton{};
 
 size_t available_implementation_list::size() const noexcept {
-  return internal::available_implementation_pointers.size();
+  return SIMDUTF_IMPLEMENTATION_COUNT;
 }
 const implementation * const *available_implementation_list::begin() const noexcept {
-  return internal::available_implementation_pointers.begin();
+  return available_implementation_pointers;
 }
 const implementation * const *available_implementation_list::end() const noexcept {
-  return internal::available_implementation_pointers.end();
+  return available_implementation_pointers + SIMDUTF_IMPLEMENTATION_COUNT;
 }
 const implementation *available_implementation_list::detect_best_supported() const noexcept {
   // They are prelisted in priority order, so we just go down the list
@@ -594,7 +611,8 @@ const implementation *detect_best_supported_implementation_on_first_use::set_bes
 } // namespace internal
 
 SIMDUTF_DLLIMPORTEXPORT const internal::available_implementation_list available_implementations{};
-SIMDUTF_DLLIMPORTEXPORT internal::atomic_ptr<const implementation> active_implementation{&internal::detect_best_supported_implementation_on_first_use_singleton};
+
+SIMDUTF_DLLIMPORTEXPORT atomic_ptr<const implementation> active_implementation{&internal::detect_best_supported_implementation_on_first_use_singleton};
 
 simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept {
   return active_implementation->validate_utf8(buf, len);

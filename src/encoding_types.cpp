@@ -1,6 +1,6 @@
 
 namespace simdutf {
-std::string to_string(encoding_type bom) {
+const char* to_string(encoding_type bom) {
   switch (bom) {
       case UTF16_LE:     return "UTF16 little-endian";
       case UTF16_BE:     return "UTF16 big-endian";

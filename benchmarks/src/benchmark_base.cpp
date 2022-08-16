@@ -20,8 +20,8 @@ namespace simdutf::benchmarks {
     void BenchmarkBase::run(const input::Testcase& testcase) {
         prepare_input(testcase);
         auto detected_encoding = simdutf::autodetect_encoding(input_data.data(), input_data.size());
-        printf("input detected as %s\n", simdutf::to_string(detected_encoding).c_str());
-        printf("current system detected as %s\n", active_implementation->name().c_str());
+        printf("input detected as %s\n", simdutf::to_string(detected_encoding));
+        printf("current system detected as %s\n", active_implementation->name());
         printf("===========================\n");
 
         const auto& known_procedures = all_procedures();

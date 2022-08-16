@@ -51,7 +51,7 @@
   A scalar routing should carry on the conversion of the tail.
 */
 template <endianness big_endian>
-std::pair<const char16_t*, char32_t*> arm_convert_utf16_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_out) {
+simdutf::pair<const char16_t*, char32_t*> arm_convert_utf16_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_out) {
   uint32_t * utf32_output = reinterpret_cast<uint32_t*>(utf32_out);
   const char16_t* end = buf + len;
 
@@ -96,7 +96,7 @@ std::pair<const char16_t*, char32_t*> arm_convert_utf16_to_utf32(const char16_t*
           uint16_t next_word = big_endian ? scalar::utf16::swap_bytes(buf[k + 1]) : buf[k + 1];
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
-          if((diff | diff2) > 0x3FF)  { return std::make_pair(nullptr, reinterpret_cast<char32_t*>(utf32_output)); }
+          if((diff | diff2) > 0x3FF)  { return simdutf::pair<const char16_t*, char32_t*>{nullptr, reinterpret_cast<char32_t*>(utf32_output)}; }
           uint32_t value = (diff << 10) + diff2 + 0x10000;
           *utf32_output++ = char32_t(value);
         }
@@ -104,7 +104,7 @@ std::pair<const char16_t*, char32_t*> arm_convert_utf16_to_utf32(const char16_t*
       buf += k;
     }
   } // while
-  return std::make_pair(buf, reinterpret_cast<char32_t*>(utf32_output));
+  return simdutf::pair<const char16_t*, char32_t*>{buf, reinterpret_cast<char32_t*>(utf32_output)};
 }
 
 
@@ -115,7 +115,7 @@ std::pair<const char16_t*, char32_t*> arm_convert_utf16_to_utf32(const char16_t*
   A scalar routing should carry on the conversion of the tail if needed.
 */
 template <endianness big_endian>
-std::pair<result, char32_t*> arm_convert_utf16_to_utf32_with_errors(const char16_t* buf, size_t len, char32_t* utf32_out) {
+simdutf::pair<result, char32_t*> arm_convert_utf16_to_utf32_with_errors(const char16_t* buf, size_t len, char32_t* utf32_out) {
   uint32_t * utf32_output = reinterpret_cast<uint32_t*>(utf32_out);
   const char16_t* start = buf;
   const char16_t* end = buf + len;
@@ -161,7 +161,7 @@ std::pair<result, char32_t*> arm_convert_utf16_to_utf32_with_errors(const char16
           uint16_t next_word = big_endian ? scalar::utf16::swap_bytes(buf[k + 1]) : buf[k + 1];
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
-          if((diff | diff2) > 0x3FF)  { return std::make_pair(result(error_code::SURROGATE, buf - start + k - 1), reinterpret_cast<char32_t*>(utf32_output)); }
+          if((diff | diff2) > 0x3FF)  { return simdutf::pair<result, char32_t*>(result(error_code::SURROGATE, buf - start + k - 1), reinterpret_cast<char32_t*>(utf32_output)); }
           uint32_t value = (diff << 10) + diff2 + 0x10000;
           *utf32_output++ = char32_t(value);
         }
@@ -169,5 +169,5 @@ std::pair<result, char32_t*> arm_convert_utf16_to_utf32_with_errors(const char16
       buf += k;
     }
   } // while
-  return std::make_pair(result(error_code::SUCCESS, buf - start), reinterpret_cast<char32_t*>(utf32_output));
+  return simdutf::pair<result, char32_t*>(result(error_code::SUCCESS, buf - start), reinterpret_cast<char32_t*>(utf32_output));
 }

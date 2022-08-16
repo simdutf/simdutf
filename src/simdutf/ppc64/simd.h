@@ -3,7 +3,6 @@
 
 #include "simdutf.h"
 #include "simdutf/ppc64/bitmanipulation.h"
-#include <type_traits>
 
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {

@@ -12,9 +12,9 @@ inline simdutf_warn_unused bool validate(const char *buf, size_t len) noexcept {
     // process in blocks of 16 bytes when possible
     for (;pos + 16 < len; pos += 16) {
         uint64_t v1;
-        std::memcpy(&v1, data + pos, sizeof(uint64_t));
+        ::memcpy(&v1, data + pos, sizeof(uint64_t));
         uint64_t v2;
-        std::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
+        ::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
         uint64_t v{v1 | v2};
         if ((v & 0x8080808080808080) != 0) { return false; }
     }
@@ -31,9 +31,9 @@ inline simdutf_warn_unused result validate_with_errors(const char *buf, size_t l
     // process in blocks of 16 bytes when possible
     for (;pos + 16 < len; pos += 16) {
         uint64_t v1;
-        std::memcpy(&v1, data + pos, sizeof(uint64_t));
+        ::memcpy(&v1, data + pos, sizeof(uint64_t));
         uint64_t v2;
-        std::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
+        ::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
         uint64_t v{v1 | v2};
         if ((v & 0x8080808080808080) != 0) {
             for (;pos < len; pos ++) {

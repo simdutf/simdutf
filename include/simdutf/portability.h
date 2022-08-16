@@ -41,13 +41,22 @@
 
 #if defined(__x86_64__) || defined(_M_AMD64)
 #define SIMDUTF_IS_X86_64 1
+#define SIMDUTF_IS_ARM64 0
+#define SIMDUTF_IS_PPC64 0
 #elif defined(__aarch64__) || defined(_M_ARM64)
 #define SIMDUTF_IS_ARM64 1
+#define SIMDUTF_IS_X86_64 0
+#define SIMDUTF_IS_PPC64 0
 #elif defined(__PPC64__) || defined(_M_PPC64)
+#define SIMDUTF_IS_X86_64 0
+#define SIMDUTF_IS_ARM64 0
+#define SIMDUTF_IS_PPC64 0
 //#define SIMDUTF_IS_PPC64 1
 #pragma message("The simdutf library does yet support SIMD acceleration under\
 POWER processors. Please see https://github.com/lemire/simdutf/issues/51")
 #else
+#define SIMDUTF_IS_X86_64 0
+#define SIMDUTF_IS_ARM64 0
 // The simdutf library is designed
 // for 64-bit processors and it seems that you are not
 // compiling for a known 64-bit platform. Please

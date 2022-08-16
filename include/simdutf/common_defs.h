@@ -1,7 +1,6 @@
 #ifndef SIMDUTF_COMMON_DEFS_H
 #define SIMDUTF_COMMON_DEFS_H
 
-#include <cassert>
 #include "simdutf/portability.h"
 
 
