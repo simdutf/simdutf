@@ -287,3 +287,11 @@ target_link_libraries(basic_fuzzer
   PUBLIC simdutf
          simdutf::tests::reference
          simdutf::tests::helpers)
+
+add_cpp_test(nostd)
+target_link_libraries(nostd
+  PUBLIC simdutf::tests::helpers
+  simdutf::tests::reference)
+if((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+  target_compile_options(nostd PUBLIC -nostdlib++)
+endif((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))

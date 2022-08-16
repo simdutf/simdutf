@@ -619,7 +619,7 @@ inline const implementation *get_best_implementation() noexcept {
         return  reinterpret_cast<const implementation *>(&unsupported_singleton);
       }
     }
-    return available_implementations.detect_best_supported(); simdutf::pair
+    return available_implementations.detect_best_supported();
   }();
   return best_choice;
 }
