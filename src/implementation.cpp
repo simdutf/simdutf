@@ -1,5 +1,5 @@
 #include "simdutf.h"
-#include <climits>
+#include <limits.h>
 
 // We roll our own 'pair' to be independent from the standard library.
 namespace simdutf {
@@ -93,7 +93,7 @@ const fallback::implementation fallback_singleton{};
 #endif // SIMDUTF_IMPLEMENTATION_FALLBACK
 
 /**
- * @private Detects best supported implementation on first use, and sets it
+ * @private Detects best supported implementation on first use
  */
 class detect_best_supported_implementation_on_first_use final : public implementation {
 public:
@@ -587,32 +587,57 @@ const implementation *available_implementation_list::detect_best_supported() con
     uint32_t required_instruction_sets = impl->required_instruction_sets();
     if ((supported_instruction_sets & required_instruction_sets) == required_instruction_sets) { return impl; }
   }
-  return &unsupported_singleton; // this should never happen?
+  return reinterpret_cast<const implementation *>(&unsupported_singleton); // this should never happen?
 }
 
-const implementation *detect_best_supported_implementation_on_first_use::set_best() const noexcept {
-  SIMDUTF_PUSH_DISABLE_WARNINGS
-  SIMDUTF_DISABLE_DEPRECATED_WARNING // Disable CRT_SECURE warning on MSVC: manually verified this is safe
-  char *force_implementation_name = getenv("SIMDUTF_FORCE_IMPLEMENTATION");
-  SIMDUTF_POP_DISABLE_WARNINGS
-
-  if (force_implementation_name) {
-    auto force_implementation = available_implementations[force_implementation_name];
-    if (force_implementation) {
-      return active_implementation = force_implementation;
-    } else {
-      // Note: abort() and stderr usage within the library is forbidden.
-      return active_implementation = &unsupported_singleton;
+inline const implementation *get_best_implementation() noexcept {
+  /**
+   * We use the fact that starting with C++11, the initialization of static local variable
+   * is thread safe.
+   *
+   * The standard states:
+   *
+   * such a variable is initialized the first time control passes through its declaration;
+   * such a variable is considered initialized upon the completion of its initialization.
+   * If the initialization exits by throwing an exception, the initialization is not complete,
+   * so it will be tried again the next time control enters the declaration.  If control enters
+   * the declaration concurrently while the variable is being initialized, the concurrent execution
+   * shall wait for completion of the initialization.
+   *
+   */
+  const static implementation *best_choice = []() {
+    SIMDUTF_PUSH_DISABLE_WARNINGS
+    SIMDUTF_DISABLE_DEPRECATED_WARNING // Disable CRT_SECURE warning on MSVC: manually verified this is safe
+    char *force_implementation_name = getenv("SIMDUTF_FORCE_IMPLEMENTATION");
+    SIMDUTF_POP_DISABLE_WARNINGS
+    if (force_implementation_name) {
+      auto force_implementation = available_implementations[force_implementation_name];
+      if (force_implementation) {
+        return force_implementation;
+      } else {
+        // Note: abort() and stderr usage within the library is forbidden.
+        return  reinterpret_cast<const implementation *>(&unsupported_singleton);
+      }
     }
-  }
-  return active_implementation = available_implementations.detect_best_supported();
+    return available_implementations.detect_best_supported(); simdutf::pair
+  }();
+  return best_choice;
+}
+
+
+const implementation *detect_best_supported_implementation_on_first_use::set_best() const noexcept {
+  /**
+   * The thread-safe method is get_best_implementation() is called. This means that each time
+   * 'set_best()' is called, we have a concurrency/thread-safety overhead.
+   */
+  return get_best_implementation();
 }
 
 } // namespace internal
 
 SIMDUTF_DLLIMPORTEXPORT const internal::available_implementation_list available_implementations{};
 
-SIMDUTF_DLLIMPORTEXPORT atomic_ptr<const implementation> active_implementation{&internal::detect_best_supported_implementation_on_first_use_singleton};
+SIMDUTF_DLLIMPORTEXPORT const implementation* const active_implementation{&internal::detect_best_supported_implementation_on_first_use_singleton};
 
 simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept {
   return active_implementation->validate_utf8(buf, len);

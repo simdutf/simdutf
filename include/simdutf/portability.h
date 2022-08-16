@@ -1,15 +1,11 @@
 #ifndef SIMDUTF_PORTABILITY_H
 #define SIMDUTF_PORTABILITY_H
 
-#include <cstddef>
-#include <cstdint>
-#include <cstdlib>
-#include <cfloat>
-#include <cassert>
-#ifndef _WIN32
-// strcasecmp, strncasecmp
-#include <strings.h>
-#endif
+#include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <float.h>
+#include <string.h>
 
 #ifdef _MSC_VER
 #define SIMDUTF_VISUAL_STUDIO 1
