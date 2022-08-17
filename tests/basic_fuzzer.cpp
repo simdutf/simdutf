@@ -2,10 +2,11 @@
 
 #include <array>
 #include <iostream>
+#include <stdexcept>
+#include <random>
 
-#include <tests/helpers/random_int.h>
+#include <tests/reference/encode_utf8.h>
 #include <tests/helpers/test.h>
-#include <tests/helpers/transcode_test_base.h>
 
 /**
  * We should be able to receive random data without any problem
@@ -17,6 +18,187 @@
 namespace {
 std::array<size_t, 10> input_size{7, 16, 12, 64, 67, 128, 129, 256, 1024, 1025};
 }
+
+//  Possible states.
+//  Format: xxx_yyy where xxx is the number of bytes (in UTF-8) and yyy is the error encoded (if any).
+enum state {
+  ONE_VALID = 0,
+  ONE_TOO_LONG,
+  ONE_TOO_LARGE,
+  TWO_VALID,  // 3
+  TWO_HEADER,
+  TWO_TOO_SHORT,
+  TWO_TOO_LONG,
+  TWO_OVERLONG,
+  THREE_VALID,  // 8
+  THREE_HEADER,
+  THREE_TOO_SHORT,
+  THREE_TOO_LONG,
+  THREE_OVERLONG,
+  THREE_SURROGATE,
+  FOUR_VALID, // 14
+  FOUR_HEADER,
+  FOUR_TOO_SHORT,
+  FOUR_TOO_LONG,
+  FOUR_OVERLONG,
+  FOUR_TOO_LARGE
+};
+
+struct state_tracker {
+  private:
+  enum state current_state;
+  std::mt19937 gen;
+
+  public:
+  state_tracker(uint32_t lo, uint32_t hi, uint64_t seed) noexcept
+      : gen(std::mt19937::result_type(seed)) {
+    current_state = next_state();
+  }
+
+  void next(std::vector<char>& output) {
+    // Write current state to output
+    auto consume = [&output](uint8_t byte) {
+      output.push_back(byte);
+    };
+    switch(current_state)
+    {
+      case ONE_VALID: {
+        simdutf::tests::reference::utf8::encode(generate(0x0, 0x7f), consume);
+        break;
+      }
+      case ONE_TOO_LONG: {
+        simdutf::tests::reference::utf8::encode(generate(0x0, 0x7f), consume);
+        output.push_back(generate(0x80, 0xbf)); // Add random continuation byte
+        break;
+      }
+      case ONE_TOO_LARGE: {
+        output.push_back(generate(0x80, 0xff));
+        break;
+      }
+      case TWO_VALID: {
+        simdutf::tests::reference::utf8::encode(generate(0x80, 0x7ff), consume);
+        break;
+      }
+      case TWO_HEADER: {
+        uint32_t codepoint = generate(0x80, 0x7ff);
+        output.push_back(0xf8 | (codepoint >> 6));  // Corrupt leading byte
+        output.push_back(0x80 | (codepoint & 0x3f));
+        break;
+      }
+      case TWO_TOO_SHORT: {
+        output.push_back(generate(0xc1, 0xdf)); // Only produce normal leading byte
+        break;
+      }
+      case TWO_TOO_LONG: {
+        simdutf::tests::reference::utf8::encode(generate(0x80, 0x7ff), consume);
+        output.push_back(generate(0x80, 0xbf)); // Add random continuation byte
+        break;
+      }
+      case TWO_OVERLONG: {
+        output.push_back(0xc0); // Add "empty" leading byte
+        output.push_back(generate(0x80, 0xbf)); // Add random continuation byte
+        break;
+      }
+      case THREE_VALID: {
+        uint32_t codepoint = generate(0x800, 0xffff);
+        // Hacky, but there is only a ~3.2% to generate a codepoint in the forbidden range each time
+        while (codepoint >= 0xd800 && codepoint <= 0xdfff) {
+          codepoint = generate(0x800, 0xffff);
+        }
+        simdutf::tests::reference::utf8::encode(generate(0x80, 0x7ff), consume);
+        break;
+      }
+      case THREE_HEADER: {
+        uint32_t codepoint = generate(0x800, 0xffff);
+        // Hacky, but there is only a ~3.2% to generate a codepoint in the forbidden range each time
+        while (codepoint >= 0xd800 && codepoint <= 0xdfff) {
+          codepoint = generate(0x800, 0xffff);
+        }
+        output.push_back(0xf8 | (codepoint >> 12)); // Corrupt leading byte
+        output.push_back(0x80 | ((codepoint >> 6) & 0x3f));
+        output.push_back(0x80 | (codepoint & 0x3f));
+        break;
+      }
+      case THREE_TOO_SHORT: {
+        uint32_t codepoint = generate(0x800, 0xffff);
+        // Hacky, but there is only a ~3.2% to generate a codepoint in the forbidden range each time
+        while (codepoint >= 0xd800 && codepoint <= 0xdfff) {
+          codepoint = generate(0x800, 0xffff);
+        }
+        output.push_back(0xe0 | (codepoint >> 12)); // Corrupt leading byte
+        output.push_back(0x80 | ((codepoint >> 6) & 0x3f));
+        break;
+      }
+      case THREE_TOO_LONG: {
+        uint32_t codepoint = generate(0x800, 0xffff);
+        // Hacky, but there is only a ~3.2% to generate a codepoint in the forbidden range each time
+        while (codepoint >= 0xd800 && codepoint <= 0xdfff) {
+          codepoint = generate(0x800, 0xffff);
+        }
+        simdutf::tests::reference::utf8::encode(generate(0x80, 0x7ff), consume);
+        output.push_back(generate(0x80, 0xbf)); // Add random continuation byte
+        break;
+      }
+      case THREE_OVERLONG: {
+        output.push_back(0xe0); // Add "empty" leading byte
+        output.push_back(generate(0x80, 0x9f)); // First continuation byte must start by 0x8_ or 0x9_
+        output.push_back(generate(0x80, 0xbf)); // Add random continuation byte
+        break;
+      }
+      case THREE_SURROGATE: {
+        simdutf::tests::reference::utf8::encode(generate(0xd800, 0xdfff), consume);
+        break;
+      }
+      case FOUR_VALID: {
+        simdutf::tests::reference::utf8::encode(generate(0x10000, 0x10ffff), consume);
+        break;
+      }
+      case FOUR_HEADER: {
+        uint32_t codepoint = generate(0x10000, 0x10ffff);
+        output.push_back(0xf8 | (codepoint >> 18));   // Corrupt leading byte
+        output.push_back(0x80 | ((codepoint >> 12) & 0x3f));
+        output.push_back(0x80 | ((codepoint >> 6) & 0x3f));
+        output.push_back(0x80 | (codepoint & 0x3f));
+        break;
+      }
+      case FOUR_TOO_SHORT: {
+        uint32_t codepoint = generate(0x10000, 0x10ffff);
+        output.push_back(0xf0 | (codepoint >> 18));
+        output.push_back(0x80 | ((codepoint >> 12) & 0x3f));
+        output.push_back(0x80 | ((codepoint >> 6) & 0x3f));
+        break;
+      }
+      case FOUR_TOO_LONG: {
+        simdutf::tests::reference::utf8::encode(generate(0x10000, 0x10ffff), consume);
+        output.push_back(generate(0x80, 0xbf)); // Add random continuation byte
+        break;
+      }
+      case FOUR_OVERLONG: {
+        output.push_back(0xf0); // Add "empty" leading byte
+        output.push_back(generate(0x80, 0x8f)); // First continuation byte must have start by 0x8_
+        output.push_back(generate(0x80, 0xbf)); // Add two random continuation bytes
+        output.push_back(generate(0x80, 0xbf));
+        break;
+      }
+      case FOUR_TOO_LARGE: {
+        simdutf::tests::reference::utf8::encode(generate(0x110000, 0x1fffff), consume);
+        break;
+      }
+    }
+    // Move to next state
+    next_state();
+  }
+
+  private:
+  uint32_t generate(uint32_t lo, uint32_t hi) {
+    return std::uniform_int_distribution<uint32_t>{lo, hi}(gen);
+  }
+
+  enum state next_state() {
+    // Valid indexes are 0, 3, 8 and 14, (20 states in total)
+    return static_cast<state>(std::discrete_distribution<>{20,1,1,20,1,1,1,1,20,1,1,1,1,1,20,1,1,1,1,1}(gen));
+  }
+};
 
 struct buffer {
   std::vector<char> input;
