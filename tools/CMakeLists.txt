@@ -19,6 +19,7 @@ endif(Iconv_FOUND)
 
 if((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
    target_link_options(sutf PRIVATE "-static-libstdc++")
+   target_link_options(sutf PRIVATE "-Wl,--gc-sections")
  endif()
 
 set_property(TARGET sutf PROPERTY CXX_STANDARD 17)
