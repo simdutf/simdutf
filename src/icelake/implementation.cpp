@@ -19,6 +19,7 @@ namespace {
 #include "icelake/icelake-from-valid-utf8.inl.cpp"
 #include "icelake/icelake-utf8-validation.inl.cpp"
 #include "icelake/icelake-from-utf8.inl.cpp"
+#include "icelake/icelake-convert-utf16-to-utf32.inl.cpp"
 #include "icelake/icelake-ascii-validation.inl.cpp"
 #include "icelake/icelake-utf32-validation.inl.cpp"
 
@@ -210,7 +211,16 @@ simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf16(const ch
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
-  return scalar::utf16_to_utf32::convert(buf, len, utf32_output);
+  std::pair<const char16_t*, char32_t*> ret = icelake::convert_utf16_to_utf32(buf, len, utf32_output);
+  if (ret.first == nullptr) { return 0; }
+  size_t saved_bytes = ret.second - utf32_output;
+  if (ret.first != buf + len) {
+    const size_t scalar_saved_bytes = scalar::utf16_to_utf32::convert(
+                                        ret.first, len - (ret.first - buf), ret.second);
+    if (scalar_saved_bytes == 0) { return 0; }
+    saved_bytes += scalar_saved_bytes;
+  }
+  return saved_bytes;
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
