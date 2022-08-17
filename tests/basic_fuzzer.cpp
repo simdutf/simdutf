@@ -125,38 +125,49 @@ TEST(overflow_fuzz) {
           reinterpret_cast<char32_t *>(buf.input.data()),
           buf.input.size() / sizeof(char32_t));
       if (is_ok_utf8) {
-        buf.output.resize(implementation.utf16_length_from_utf8(buf.input.data(), buf.input.size()));
+        size_t expected_length = implementation.utf16_length_from_utf8(buf.input.data(), buf.input.size());
+        buf.output.resize(expected_length);
         size_t utf8_to_utf16 = implementation.convert_utf8_to_utf16le(
             buf.input.data(), buf.input.size(),
             reinterpret_cast<char16_t *>(buf.output.data()));
-        buf.output.resize(implementation.utf32_length_from_utf8(buf.input.data(), buf.input.size()));
+        ASSERT_TRUE(expected_length > 0 && expected_length == buf.output.size() && expected_length == utf8_to_utf16);
+
+        expected_length = implementation.utf32_length_from_utf8(buf.input.data(), buf.input.size());
+        buf.output.resize(expected_length);
         size_t utf8_to_utf32 = implementation.convert_utf8_to_utf32(
             buf.input.data(), buf.input.size(),
             reinterpret_cast<char32_t *>(buf.output.data()));
+        ASSERT_TRUE(expected_length > 0 && expected_length == buf.output.size() && expected_length == utf8_to_utf32);
       }
       if (is_ok_utf16) {
-        buf.output.resize(implementation.utf8_length_from_utf16le(reinterpret_cast<char16_t *>(buf.input.data()),
-            buf.input.size() / sizeof(char16_t)));
+        size_t expected_length = implementation.utf8_length_from_utf16le(reinterpret_cast<char16_t *>(buf.input.data()), buf.input.size() / sizeof(char16_t));
+        buf.output.resize(expected_length);
         size_t utf16_to_utf8 = implementation.convert_utf16le_to_utf8(
             reinterpret_cast<char16_t *>(buf.input.data()),
             buf.input.size() / sizeof(char16_t), buf.output.data());
-        buf.output.resize(implementation.utf32_length_from_utf16le(reinterpret_cast<char16_t *>(buf.input.data()),
-            buf.input.size() / sizeof(char16_t)));
+        ASSERT_TRUE(expected_length > 0 && expected_length == buf.output.size() && expected_length == utf16_to_utf8);
+
+        expected_length = implementation.utf32_length_from_utf16le(reinterpret_cast<char16_t *>(buf.input.data()), buf.input.size() / sizeof(char16_t));
+        buf.output.resize(expected_length);
         size_t utf16_to_utf32 = implementation.convert_utf16le_to_utf32(
             reinterpret_cast<char16_t *>(buf.input.data()),
             buf.input.size() / sizeof(char16_t), reinterpret_cast<char32_t *>(buf.output.data()));
+        ASSERT_TRUE(expected_length > 0 && expected_length == buf.output.size() && expected_length == utf16_to_utf32);
       }
       if (is_ok_utf32) {
-        buf.output.resize(implementation.utf8_length_from_utf32(reinterpret_cast<char32_t *>(buf.input.data()),
-            buf.input.size() / sizeof(char32_t)));
+        size_t expected_length = implementation.utf8_length_from_utf32(reinterpret_cast<char32_t *>(buf.input.data()), buf.input.size() / sizeof(char32_t));
+        buf.output.resize(expected_length);
         size_t utf32_to_utf8 = implementation.convert_utf32_to_utf8(
             reinterpret_cast<char32_t *>(buf.input.data()),
             buf.input.size() / sizeof(char32_t), buf.output.data());
-        buf.output.resize(implementation.utf16_length_from_utf32(reinterpret_cast<char32_t *>(buf.input.data()),
-            buf.input.size() / sizeof(char32_t)));
+        ASSERT_TRUE(expected_length > 0 && expected_length == buf.output.size() && expected_length == utf32_to_utf8);
+
+        expected_length = implementation.utf16_length_from_utf32(reinterpret_cast<char32_t *>(buf.input.data()), buf.input.size() / sizeof(char32_t));
+        buf.output.resize(expected_length);
         size_t utf32_to_utf16 = implementation.convert_utf32_to_utf16le(
             reinterpret_cast<char32_t *>(buf.input.data()),
             buf.input.size() / sizeof(char32_t), reinterpret_cast<char16_t *>(buf.output.data()));
+        ASSERT_TRUE(expected_length > 0 && expected_length == buf.output.size() && expected_length == utf32_to_utf16);
       }
     }
   }
