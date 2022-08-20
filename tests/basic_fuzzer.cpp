@@ -47,56 +47,77 @@ enum state {
 struct state_tracker {
   private:
   enum state current_state;
+  enum state first_error;
+  double state_weights[20];
   std::mt19937 gen;
 
   public:
-  state_tracker(uint32_t lo, uint32_t hi, uint64_t seed) noexcept
-      : gen(std::mt19937::result_type(seed)) {
+  state_tracker(uint64_t seed, double onevalid, double onetoolong, double onetoolarge, double twovalid, double twoheader, double twotooshort,
+            double twotoolong, double twooverlong, double threevalid, double threeheader, double threetooshort, double threetoolong, double threeoverlong,
+            double threesurrogate, double fourvalid, double fourheader, double fourtooshort, double fourtoolong, double fouroverlong, double fourtoolarge) noexcept
+      : gen(std::mt19937::result_type(seed)), state_weights{onevalid, onetoolong, onetoolarge, twovalid, twoheader, twotooshort, twotoolong, twooverlong, threevalid, threeheader,
+        threetooshort, threetoolong, threeoverlong, threesurrogate, fourvalid, fourheader, fourtooshort, fourtoolong, fouroverlong, fourtoolarge} {
     current_state = next_state();
+    first_error = current_state;
   }
 
-  void next(std::vector<char>& output) {
+  // valid_weight is the weight of having a valid state (4 valid states) and invalid_weight is the weight of having a invalid state (16 invalid states)
+  state_tracker(uint64_t seed, double valid_weight, double invalid_weight) :
+                state_tracker(seed, valid_weight/4, invalid_weight/16, invalid_weight/16, valid_weight/4, invalid_weight/16, invalid_weight/16, invalid_weight/16, invalid_weight/16,
+                valid_weight/4, invalid_weight/16, invalid_weight/16, invalid_weight/16, invalid_weight/16, invalid_weight/16, valid_weight/4, invalid_weight/16, invalid_weight/16,
+                invalid_weight/16, invalid_weight/16, invalid_weight/16) {}
+
+  size_t next(std::vector<char>& output) {
     // Write current state to output
     auto consume = [&output](uint8_t byte) {
       output.push_back(byte);
     };
+    size_t count{0};
     switch(current_state)
     {
       case ONE_VALID: {
         simdutf::tests::reference::utf8::encode(generate(0x0, 0x7f), consume);
+        count = 1;
         break;
       }
       case ONE_TOO_LONG: {
         simdutf::tests::reference::utf8::encode(generate(0x0, 0x7f), consume);
         output.push_back(generate(0x80, 0xbf)); // Add random continuation byte
+        count = 2;
         break;
       }
       case ONE_TOO_LARGE: {
         output.push_back(generate(0x80, 0xff));
+        count = 1;
         break;
       }
       case TWO_VALID: {
         simdutf::tests::reference::utf8::encode(generate(0x80, 0x7ff), consume);
+        count = 2;
         break;
       }
       case TWO_HEADER: {
         uint32_t codepoint = generate(0x80, 0x7ff);
         output.push_back(0xf8 | (codepoint >> 6));  // Corrupt leading byte
         output.push_back(0x80 | (codepoint & 0x3f));
+        count = 2;
         break;
       }
       case TWO_TOO_SHORT: {
         output.push_back(generate(0xc1, 0xdf)); // Only produce normal leading byte
+        count = 1;
         break;
       }
       case TWO_TOO_LONG: {
         simdutf::tests::reference::utf8::encode(generate(0x80, 0x7ff), consume);
         output.push_back(generate(0x80, 0xbf)); // Add random continuation byte
+        count = 3;
         break;
       }
       case TWO_OVERLONG: {
         output.push_back(0xc0); // Add "empty" leading byte
         output.push_back(generate(0x80, 0xbf)); // Add random continuation byte
+        count = 2;
         break;
       }
       case THREE_VALID: {
@@ -106,51 +127,55 @@ struct state_tracker {
           codepoint = generate(0x800, 0xffff);
         }
         simdutf::tests::reference::utf8::encode(generate(0x80, 0x7ff), consume);
+        count = 3;
         break;
       }
       case THREE_HEADER: {
         uint32_t codepoint = generate(0x800, 0xffff);
-        // Hacky, but there is only a ~3.2% to generate a codepoint in the forbidden range each time
         while (codepoint >= 0xd800 && codepoint <= 0xdfff) {
           codepoint = generate(0x800, 0xffff);
         }
         output.push_back(0xf8 | (codepoint >> 12)); // Corrupt leading byte
         output.push_back(0x80 | ((codepoint >> 6) & 0x3f));
         output.push_back(0x80 | (codepoint & 0x3f));
+        count = 3;
         break;
       }
       case THREE_TOO_SHORT: {
         uint32_t codepoint = generate(0x800, 0xffff);
-        // Hacky, but there is only a ~3.2% to generate a codepoint in the forbidden range each time
         while (codepoint >= 0xd800 && codepoint <= 0xdfff) {
           codepoint = generate(0x800, 0xffff);
         }
         output.push_back(0xe0 | (codepoint >> 12)); // Corrupt leading byte
         output.push_back(0x80 | ((codepoint >> 6) & 0x3f));
+        count = 2;
         break;
       }
       case THREE_TOO_LONG: {
         uint32_t codepoint = generate(0x800, 0xffff);
-        // Hacky, but there is only a ~3.2% to generate a codepoint in the forbidden range each time
         while (codepoint >= 0xd800 && codepoint <= 0xdfff) {
           codepoint = generate(0x800, 0xffff);
         }
         simdutf::tests::reference::utf8::encode(generate(0x80, 0x7ff), consume);
         output.push_back(generate(0x80, 0xbf)); // Add random continuation byte
+        count = 4;
         break;
       }
       case THREE_OVERLONG: {
         output.push_back(0xe0); // Add "empty" leading byte
         output.push_back(generate(0x80, 0x9f)); // First continuation byte must start by 0x8_ or 0x9_
         output.push_back(generate(0x80, 0xbf)); // Add random continuation byte
+        count = 3;
         break;
       }
       case THREE_SURROGATE: {
         simdutf::tests::reference::utf8::encode(generate(0xd800, 0xdfff), consume);
+        count = 3;
         break;
       }
       case FOUR_VALID: {
         simdutf::tests::reference::utf8::encode(generate(0x10000, 0x10ffff), consume);
+        count = 4;
         break;
       }
       case FOUR_HEADER: {
@@ -159,6 +184,7 @@ struct state_tracker {
         output.push_back(0x80 | ((codepoint >> 12) & 0x3f));
         output.push_back(0x80 | ((codepoint >> 6) & 0x3f));
         output.push_back(0x80 | (codepoint & 0x3f));
+        count = 4;
         break;
       }
       case FOUR_TOO_SHORT: {
@@ -166,11 +192,13 @@ struct state_tracker {
         output.push_back(0xf0 | (codepoint >> 18));
         output.push_back(0x80 | ((codepoint >> 12) & 0x3f));
         output.push_back(0x80 | ((codepoint >> 6) & 0x3f));
+        count = 3;
         break;
       }
       case FOUR_TOO_LONG: {
         simdutf::tests::reference::utf8::encode(generate(0x10000, 0x10ffff), consume);
         output.push_back(generate(0x80, 0xbf)); // Add random continuation byte
+        count = 5;
         break;
       }
       case FOUR_OVERLONG: {
@@ -178,15 +206,24 @@ struct state_tracker {
         output.push_back(generate(0x80, 0x8f)); // First continuation byte must have start by 0x8_
         output.push_back(generate(0x80, 0xbf)); // Add two random continuation bytes
         output.push_back(generate(0x80, 0xbf));
+        count = 4;
         break;
       }
       case FOUR_TOO_LARGE: {
         simdutf::tests::reference::utf8::encode(generate(0x110000, 0x1fffff), consume);
+        count = 4;
         break;
+      }
+    }
+    if (first_error != ONE_VALID) {
+      if (current_state != ONE_VALID || current_state != TWO_VALID || current_state != THREE_VALID || current_state != FOUR_VALID) {
+        first_error = current_state;
       }
     }
     // Move to next state
     next_state();
+
+    return count;
   }
 
   private:
@@ -195,8 +232,8 @@ struct state_tracker {
   }
 
   enum state next_state() {
-    // Valid indexes are 0, 3, 8 and 14, (20 states in total)
-    return static_cast<state>(std::discrete_distribution<>{20,1,1,20,1,1,1,1,20,1,1,1,1,1,20,1,1,1,1,1}(gen));
+    return static_cast<state>(std::discrete_distribution<>{state_weights[0], state_weights[1], state_weights[2], state_weights[3], state_weights[4], state_weights[5], state_weights[6], state_weights[7], state_weights[8], state_weights[9],
+              state_weights[10], state_weights[11], state_weights[12], state_weights[14], state_weights[13], state_weights[15], state_weights[16], state_weights[17], state_weights[18], state_weights[19]}(gen));
   }
 };
 
