@@ -115,7 +115,7 @@ struct state_tracker {
         break;
       }
       case TWO_OVERLONG: {
-        output.push_back(0xc0); // Add "empty" leading byte
+        output.push_back(char(0xc0)); // Add "empty" leading byte
         output.push_back(generate(0x80, 0xbf)); // Add random continuation byte
         count = 2;
         break;
@@ -162,7 +162,7 @@ struct state_tracker {
         break;
       }
       case THREE_OVERLONG: {
-        output.push_back(0xe0); // Add "empty" leading byte
+        output.push_back(char(0xe0)); // Add "empty" leading byte
         output.push_back(generate(0x80, 0x9f)); // First continuation byte must start by 0x8_ or 0x9_
         output.push_back(generate(0x80, 0xbf)); // Add random continuation byte
         count = 3;
@@ -202,7 +202,7 @@ struct state_tracker {
         break;
       }
       case FOUR_OVERLONG: {
-        output.push_back(0xf0); // Add "empty" leading byte
+        output.push_back(char(0xf0)); // Add "empty" leading byte
         output.push_back(generate(0x80, 0x8f)); // First continuation byte must have start by 0x8_
         output.push_back(generate(0x80, 0xbf)); // Add two random continuation bytes
         output.push_back(generate(0x80, 0xbf));
