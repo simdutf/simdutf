@@ -55,8 +55,8 @@ struct state_tracker {
   state_tracker(uint64_t seed, double onevalid, double onetoolong, double onetoolarge, double twovalid, double twoheader, double twotooshort,
             double twotoolong, double twooverlong, double threevalid, double threeheader, double threetooshort, double threetoolong, double threeoverlong,
             double threesurrogate, double fourvalid, double fourheader, double fourtooshort, double fourtoolong, double fouroverlong, double fourtoolarge) noexcept
-      : gen(std::mt19937::result_type(seed)), state_weights{onevalid, onetoolong, onetoolarge, twovalid, twoheader, twotooshort, twotoolong, twooverlong, threevalid, threeheader,
-        threetooshort, threetoolong, threeoverlong, threesurrogate, fourvalid, fourheader, fourtooshort, fourtoolong, fouroverlong, fourtoolarge} {
+      : state_weights{onevalid, onetoolong, onetoolarge, twovalid, twoheader, twotooshort, twotoolong, twooverlong, threevalid, threeheader, threetooshort, threetoolong,
+        threeoverlong, threesurrogate, fourvalid, fourheader, fourtooshort, fourtoolong, fouroverlong, fourtoolarge}, gen(std::mt19937::result_type(seed)) {
     current_state = next_state();
     first_error = current_state;
   }
@@ -215,8 +215,8 @@ struct state_tracker {
         break;
       }
     }
-    if (first_error != ONE_VALID) {
-      if (current_state != ONE_VALID || current_state != TWO_VALID || current_state != THREE_VALID || current_state != FOUR_VALID) {
+    if (first_error == ONE_VALID || first_error == TWO_VALID || first_error == THREE_VALID || first_error == FOUR_VALID) {
+      if (current_state != ONE_VALID && current_state != TWO_VALID && current_state != THREE_VALID && current_state != FOUR_VALID) {
         first_error = current_state;
       }
     }
