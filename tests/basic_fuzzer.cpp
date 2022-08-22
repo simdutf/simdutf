@@ -9,6 +9,8 @@
 #include <tests/reference/encode_utf8.h>
 #include <tests/helpers/test.h>
 
+uint32_t seed = 123;
+
 std::string message;
 
 extern "C" {
@@ -248,11 +250,11 @@ struct state_tracker {
 
 TEST(basic_fuzz) {
   size_t counter{0};
+  state_tracker tracker(seed, 1, 1);
   while (counter < 100000) {
-    state_tracker tracker(counter, 1, 1);
     for (size_t size : input_size) {
       std::vector<char> input(size);
-      std::vector<char> output(4*size);
+      std::vector<char> output(3);
       while (input.size() < size) {
         tracker.next(input);
       }
@@ -314,8 +316,8 @@ TEST(basic_fuzz) {
 
 TEST(overflow_fuzz) {
   size_t counter{0};
+  state_tracker tracker(seed, 1, 1);
   while (counter < 100000) {
-    state_tracker tracker(counter, 1, 1);
     for (size_t size : input_size) {
       std::vector<char> input(size);
       std::vector<char> output(4*size);
@@ -385,4 +387,15 @@ TEST(overflow_fuzz) {
 }
 
 
-int main(int argc, char *argv[]) { return simdutf::test::main(argc, argv); }
+int main(int argc, char *argv[]) {
+  if (argc == 2) {
+    try {
+      seed = std::stoi(argv[1]);
+      return simdutf::test::main(, argv);
+    } catch (const std::exception& e) {
+        printf("%s\n", e.what());
+        return EXIT_FAILURE;
+    }
+  }
+  return simdutf::test::main(argc, argv);
+}
