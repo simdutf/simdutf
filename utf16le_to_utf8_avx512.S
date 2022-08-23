@@ -84,7 +84,7 @@ utf16le_to_utf8_avx512:
 	jnz		1f			// do slower processing, else ...
 
 	// fast path 1: all ASCII characters
-	vpmovwb		%zmm0, (%rdi)		// compress into ASCII and deposit
+	vpmovwb		%zmm0, (%rdi){%k1}	// compress into ASCII and deposit
 
 	add		$31, %rdi		// advance output buffer
 	xor		%eax, %eax		// clear surrogate carry
@@ -107,9 +107,9 @@ utf16le_to_utf8_avx512:
 
 	popcnt		%eax, %eax		// convert to number of two byte characters
 
-	vpcmpnltub	%zmm30, %zmm0, %k3	// 01 if ASCII, 11 if 2 byte
-	vpcompressb	%zmm0, %zmm0{%k3}{z}	// smoosh all characters together
-	vmovdqu8	%zmm0, (%rdi)		// and deposit into memory
+	vpblendmw	%zmm30, %zmm20, %zmm1{%k1} // 0800 for ASCII/2byte, FFFF for lookahead
+	vpcmpnltub	%zmm1, %zmm0, %k3	// 01 if ASCII, 11 if 2 byte, 00 if lookahead
+	vpcompressb	%zmm0, (%rdi){%k3}	// smoosh all characters together
 
 	lea		31(%rdi, %rax, 1), %rdi	// advance destination buffer
 	xor		%eax, %eax		// clear surrogate carry
@@ -157,8 +157,6 @@ utf16le_to_utf8_avx512:
 	kmovd		%k5, %r11d		// this moves the validation off p0/p5, making it no longer
 						// part of the critical path
 
-	kshiftrd	$16, %k5, %k4		// which of zmm2 correspond to low surrogates?
-
 	// check for mismatched surrogates
 	add		%r10d, %eax		// high surrogates shifted in place of low surrogates w/ carry
 	add		%r10d, %eax		// use 2x add so p6 can be used instead of p1
@@ -176,13 +174,15 @@ utf16le_to_utf8_avx512:
 	vpbroadcastd	.L00010101(%rip), %zmm21
 
 	knotd		%k2, %k2		// which of zmm2:zmm1 are ASCII characters?
+	kandnd		%k1, %k5, %k5		// which of zmm2:zmm1 shall be written out? (not lo surr, not lookahead)
 	kshiftrd	$16, %k3, %k7		// which of zmm2 are 1 or 2 byte characters?
 	kshiftrd	$16, %k2, %k6		// which of zmm2 are ASCII characters?
+	kshiftrd	$16, %k5, %k4		// which of zmm2 shall be written out?
 
 	vpslld		$16, %zmm28, %zmm16{%k3} // 2 byte: 80c00000  3 byte: 8080e000  4 byte: 808080f0
 	vpslld		$16, %zmm28, %zmm17{%k7} // same for high characters
-	vpblendmd	%zmm20, %zmm21, %zmm5{%k5} // prepare masks for desired byte detection:
-	vpblendmd	%zmm20, %zmm21, %zmm6{%k4} // if low surrogate ffffffff else 00010101
+	vpblendmd	%zmm21, %zmm20, %zmm5{%k5} // prepare masks for desired byte detection:
+	vpblendmd	%zmm21, %zmm20, %zmm6{%k4} // if written out 00010101 else ffffffff
 	vpternlogd	$0xea, %zmm16, %zmm29, %zmm3 // zmm1 = zmm1 & 0x3f3f3f3f | zmm16
 	vpternlogd	$0xea, %zmm17, %zmm29, %zmm4 // this masks and applies tag bits in one step.
 	vpslld		$24, %zmm1, %zmm3{%k2}	// if ASCII, 0GFEDCBA 00000000 00000000 00000000
@@ -200,25 +200,22 @@ utf16le_to_utf8_avx512:
 	vpcmpnltub	%zmm6, %zmm4, %k3	// ... bytes and the MSB of each dword but no low surrogates)
 	kmovq		%k2, %r10		// get the masks so we can find out how long the output is
 	kmovq		%k3, %r11
-	vpcompressb	%zmm3, %zmm3{%k2}{z}	// smoosh characters together
-	vpcompressb	%zmm4, %zmm4{%k3}{z}
-
+	vpcompressb	%zmm3, (%rdi){%k2}	// smoosh characters together
 	popcnt		%r10, %r10		// number of UTF-8 bytes in zmm1
-	shl		$4, %r11		// ignore lookahead in zmm2
+	vpcompressb	%zmm4, (%rdi, %r10, 1){%k3}
 	popcnt		%r11, %r11		// number of UTF-8 bytes in zmm2
 
-	vmovdqu8	%zmm3, (%rdi)		// deposit first half of output
-	vmovdqu8	%zmm4, (%rdi, %r10, 1)	// deposit second half of output after first half
 	add		%r10, %rdi		// advance past first half of output
 	add		%r11, %rdi		// advance past second half of output
 
 	cmp		$32, %rdx		// enough left for another round?
 	jae		.Loop			// if yes, go again!
 
+	sub		%r9, %rdi		// advance past padding bytes (for tail treatment)
 .Ltail:	test		%edx, %edx		// anything left to decode at all?
 	jnz		4f			// if yes, process it
 
-.Lend:	pop		%rax			// origin input buffer start
+.Lend:	pop		%rax			// start of input buffer
 	add		%r9, %rdi		// subtract padding characters from buffer end
 	sub		%rax, %rsi		// input length = buffer end - buffer start
 	sar		$1, %rsi		// in characters
@@ -230,12 +227,12 @@ utf16le_to_utf8_avx512:
 	ret
 
 	// Process <31 words tail.
-	// Strategie: pad remaining input with U+0000 and move r8 back to account
-	// for the size of the padding
+	// Strategy: pad remaining input with U+0000 and
+	// remember negated number of padding bytes in r9
 4:	mov		$0x7fffffff, %r9d
 	bzhi		%edx, %r9d, %r9d	// r9d = 0x7fffffff & (1 << edx) - 1
-	kmovd		%r9d, %k7		// mask of words still in the buffer
-	vmovdqu16	(%rsi), %zmm0{%k7}{z}	// manually load tail padded with U+000000
+	kmovd		%r9d, %k1		// mask of words still in the buffer
+	vmovdqu16	(%rsi), %zmm0{%k1}{z}	// manually load tail padded with U+000000
 	lea		-31(%rdx), %r9		// set up r9 with the neg. number of padding characters
 	xor		%edx, %edx		// no further input to be processed
 	jmp		.Llastiteration
@@ -252,11 +249,11 @@ utf16le_to_utf8_avx512:
 	mov		$0x7fffffff, %eax
 	bzhi		%edx, %eax, %eax	// eax = 0x7fffffff & (1 << edx) - 1
 
-	kmovd		%eax, %k7		// mask of words still in the buffer
+	kmovd		%eax, %k1		// mask of words still in the buffer
 	kmovd		%k5, %eax		// fake the surrogate carry: if an error occured due to
 	and		$1, %eax		// the carry not matching a leading low surrogate, the
 						// final iteration would produce zero bytes anyway
-	vmovdqu16	%zmm0, %zmm0{%k7}{z}	// mask input to valid prefix padded with U+000000
+	vmovdqu16	%zmm0, %zmm0{%k1}{z}	// mask input to valid prefix padded with U+000000
 	lea		-31(%rdx), %r9		// do not count NUL byte padding in output length
 	xor		%edx, %edx		// no further input to be processed
 	jmp		.Lfailiteration
@@ -268,7 +265,7 @@ utf16le_to_utf8_avx512:
 	.type		utf16le_to_utf8_buflen_avx512, @function
 	.globl		utf16le_to_utf8_buflen_avx512
 utf16le_to_utf8_buflen_avx512:
-	lea		95(%rdi,%rdi,2), %rax	// up to 3 bytes for each word
+	lea		(%rdi,%rdi,2), %rax	// up to 3 bytes for each word
 						// plus 95 byte we might store past the end
 	ret
 

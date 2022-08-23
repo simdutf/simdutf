@@ -16,11 +16,12 @@ extern size_t utf16le_validate_avx512(const char16_t in[restrict], size_t len);
 
 /* all test vectors end in U+FFFF to allow embedded NUL characters */
 const char16_t *vectors[] = {
-	u"0123456789abcdef0123456789abcdef\uffff", /* full block */
+	u"Université\0TÉLUQ\uffff", /* NUL embedded into two-byte characters */
 
 	u"\uffff", /* empty string */
 	u"Das Pferd frisst keinen Gurkensalat.\uffff", /* ASCII string */
 	u"Fix Schwyz quäkt Jürgen blöd vom Paß.\uffff", /* ISO-8859-1 string */
+	u"Freude, schöne Götterfunken, Tochter aus Elysium!  Wir betreten feuertrunken, teuerste dein Heiligtum!\uffff",
 	u"ドイツの科学は世界一です！\uffff", /* Japanese mixed script string */
 	u"يولد جميع الناس أحرارًا متساوين في الكرامة والحقوق.\uffff", /* Arabic */
 	u"國之語音，異乎中國，與文字不相流通，故愚民有所欲言，而終不得伸其情者多矣。予為此憫然，新制二十八字，欲使人人易習便日用耳。\uffff", /* Chinese */
