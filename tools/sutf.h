@@ -8,18 +8,20 @@
 #endif
 
 #include <filesystem>
-#include <vector>
-#include <set>
+#include <array>
+#include <queue>
 
+constexpr size_t CHUNK_SIZE = 1048576;
 
 class CommandLine
 {
 public:
   std::string from_encoding;
   std::string to_encoding;
-  std::set<std::filesystem::path> input_files;
+  std::queue<std::filesystem::path> input_files;
+  std::FILE* current_file = NULL;
   std::filesystem::path output_file;
-  std::vector<uint8_t> input_data;
+  std::array<uint8_t, CHUNK_SIZE> input_data;
 
   CommandLine() = default;
   static CommandLine parse_and_validate_arguments(int argc, char* argv[]);
@@ -29,6 +31,6 @@ public:
   void run();
   void run_procedure(std::FILE *fp);
   void iconv_fallback(std::FILE *fp);
-  bool load_file(const std::filesystem::path&);
+  bool load_data(size_t count);
   bool write_to_file_descriptor(std::FILE *fp, const char * data, size_t length);
 };

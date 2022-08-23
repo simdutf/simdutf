@@ -53,7 +53,7 @@ CommandLine parse_and_validate_arguments(int argc, char* argv[]) {
       if (! std::filesystem::exists(arg)) {
         throw std::runtime_error("File " + arg + " does not exist.");
       }
-      cmdline.input_files.insert(arg);
+      cmdline.input_files.push(arg);
       i++;
     }
   }
@@ -70,16 +70,16 @@ void CommandLine::run() {
     run_procedure(stdout);
   } else {
     SIMDUTF_PUSH_DISABLE_WARNINGS
-    SIMDUTF_DISABLE_DEPRECATED_WARNING 
+    SIMDUTF_DISABLE_DEPRECATED_WARNING
     std::FILE *fp = std::fopen(output_file.string().c_str(), "wb");
     SIMDUTF_POP_DISABLE_WARNINGS
     if (fp == NULL) {
-      printf("Could not open %s\n",output_file.string().c_str());
+      printf("Could not open %s\n", output_file.string().c_str());
       return;
     }
     run_procedure(fp);
     if(fclose(fp) != 0) {
-      printf("Failed to close %s\n",output_file.string().c_str());
+      printf("Failed to close %s\n", output_file.string().c_str());
     }
   }
 }
@@ -87,8 +87,8 @@ void CommandLine::run() {
 void CommandLine::run_procedure(std::FILE *fpout) {
   if (from_encoding == "UTF-8") {
     if (to_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
-      for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str()); continue; }
+      while (!(input_files.empty())) {
+        if(!load_data(CHUNK_SIZE)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop(); continue; }
         const char* data = reinterpret_cast<const char*>(input_data.data());
         const size_t size = input_data.size();
         std::unique_ptr<char16_t[]> output_buffer(new char16_t[size]);
@@ -96,8 +96,8 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t));
       }
     } else if (to_encoding == "UTF-16BE") {
-      for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
+      while (!(input_files.empty())) {
+        if(!load_data(CHUNK_SIZE)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop(); continue; }
         const char* data = reinterpret_cast<const char*>(input_data.data());
         size_t size = input_data.size();
         std::unique_ptr<char16_t[]> output_buffer(new char16_t[size]);
@@ -105,8 +105,8 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t));
       }
     } else if (to_encoding == "UTF-32LE" || to_encoding == "UTF-32") {
-      for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
+      while (!(input_files.empty())) {
+        if(!load_data(CHUNK_SIZE)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop(); continue; }
         const char* data = reinterpret_cast<const char*>(input_data.data());
         size_t size = input_data.size();
         std::unique_ptr<char32_t[]> output_buffer(new char32_t[size]);
@@ -119,8 +119,8 @@ void CommandLine::run_procedure(std::FILE *fpout) {
   }
   else if (from_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
     if (to_encoding == "UTF-8") {
-      for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
+      while (!(input_files.empty())) {
+        if(!load_data(CHUNK_SIZE)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop(); continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
         const size_t size = input_data.size() / 2;
         std::unique_ptr<char[]> output_buffer(new char[3*size]);
@@ -128,8 +128,8 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char));
       }
     } else if (to_encoding == "UTF-16BE") {
-      for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
+      while (!(input_files.empty())) {
+        if(!load_data(CHUNK_SIZE)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop(); continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
         const size_t size = input_data.size() / 2;
         std::unique_ptr<char16_t[]> output_buffer(new char16_t[size]);
@@ -137,8 +137,8 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), size);
       }
     } else if (to_encoding == "UTF-32LE" || to_encoding == "UTF-32") {
-      for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
+      while (!(input_files.empty())) {
+        if(!load_data(CHUNK_SIZE)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop(); continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
         const size_t size = input_data.size() / 2;
         std::unique_ptr<char32_t[]> output_buffer(new char32_t[size]);
@@ -151,8 +151,8 @@ void CommandLine::run_procedure(std::FILE *fpout) {
   }
   else if (from_encoding == "UTF-16BE") {
     if (to_encoding == "UTF-8") {
-      for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
+      while (!(input_files.empty())) {
+        if(!load_data(CHUNK_SIZE)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop(); continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
         const size_t size = input_data.size() / 2;
         std::unique_ptr<char[]> output_buffer(new char[3*size]);
@@ -160,8 +160,8 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char));
       }
     } else if (to_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
-      for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
+      while (!(input_files.empty())) {
+        if(!load_data(CHUNK_SIZE)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop(); continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
         const size_t size = input_data.size() / 2;
         std::unique_ptr<char16_t[]> output_buffer(new char16_t[size]);
@@ -169,8 +169,8 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), size);
       }
     } else if (to_encoding == "UTF-32LE" || to_encoding == "UTF-32") {
-      for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
+      while (!(input_files.empty())) {
+        if(!load_data(CHUNK_SIZE)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop(); continue; }
         const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data());
         const size_t size = input_data.size() / 2;
         std::unique_ptr<char32_t[]> output_buffer(new char32_t[size]);
@@ -183,8 +183,8 @@ void CommandLine::run_procedure(std::FILE *fpout) {
   }
   else if (from_encoding == "UTF-32LE" || to_encoding == "UTF-32") {
     if (to_encoding == "UTF-8") {
-      for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
+      while (!(input_files.empty())) {
+        if(!load_data(CHUNK_SIZE)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop(); continue; }
         const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data());
         const size_t size = input_data.size() / 4;
         std::unique_ptr<char[]> output_buffer(new char[4*size]);
@@ -192,8 +192,8 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char));
       }
     } else if (to_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
-      for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
+      while (!(input_files.empty())) {
+        if(!load_data(CHUNK_SIZE)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop(); continue; }
         const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data());
         const size_t size = input_data.size() / 4;
         std::unique_ptr<char16_t[]> output_buffer(new char16_t[2*size]);
@@ -201,8 +201,8 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t));
       }
     } else if (to_encoding == "UTF-16BE") {
-      for (auto file : input_files) {
-        if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
+      while (!(input_files.empty())) {
+        if(!load_data(CHUNK_SIZE)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop(); continue; }
         const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data());
         const size_t size = input_data.size() / 4;
         std::unique_ptr<char16_t[]> output_buffer(new char16_t[2*size]);
@@ -225,8 +225,8 @@ void CommandLine::iconv_fallback(std::FILE *fpout) {
     fprintf( stderr,"[iconv] cannot initialize %s to %s converter\n", from_encoding.c_str(), to_encoding.c_str());
     return;
   }
-  for (auto file : input_files) {
-    if(!load_file(file)) { printf("Could not load %s\n", file.string().c_str());  continue; }
+  while (!(input_files.empty())) {
+    if(!load_data(CHUNK_SIZE)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop();  continue; }
     size_t inbytes = input_data.size();
     size_t outbytes = sizeof(uint32_t) * inbytes;
     size_t start_outbytes = outbytes;
@@ -256,41 +256,29 @@ bool CommandLine::write_to_file_descriptor(std::FILE *fp, const char * data, siz
   return true;
 }
 
-bool CommandLine::load_file(const std::filesystem::path& path) {
-  SIMDUTF_PUSH_DISABLE_WARNINGS
-  SIMDUTF_DISABLE_DEPRECATED_WARNING // Disable CRT_SECURE warning on MSVC: manually verified this is safe
-  std::FILE *fp = std::fopen(path.string().c_str(), "rb");
-  SIMDUTF_POP_DISABLE_WARNINGS
+bool CommandLine::load_data(size_t count) {
+  while (count > 0) {
+    // Open a file if no file is opened
+    if (current_file == NULL) {
+      SIMDUTF_PUSH_DISABLE_WARNINGS
+      SIMDUTF_DISABLE_DEPRECATED_WARNING // Disable CRT_SECURE warning on MSVC: manually verified this is safe
+      current_file = std::fopen(input_files.front().string().c_str(), "rb");
+      SIMDUTF_POP_DISABLE_WARNINGS
 
-  if (fp == NULL) { return false; }
+      if (current_file == NULL) { return false; }
+    }
 
-  // Get the file size
-  if(std::fseek(fp, 0, SEEK_END) < 0) {
-    std::fclose(fp);
-    return false;
+    // Try to read count bytes
+    size_t bytes_read = std::fread(input_data.data(), 1, count, current_file);
+    if (std::ferror(current_file)) { return false; }
+    if (std::feof(current_file)) {
+      if (std::fclose(current_file) != 0) { return false; }
+      input_files.pop();
+      current_file = NULL;
+      if (input_files.empty()) { break; }
+    }
+    count -= bytes_read;
   }
-#if defined(SIMDUTF_VISUAL_STUDIO) && !SIMDUTF_IS_32BITS
-  __int64 file_size_in_bytes = _ftelli64(fp);
-  if(file_size_in_bytes == -1L) {
-    std::fclose(fp);
-    return false;
-  }
-#else
-  long file_size_in_bytes = std::ftell(fp);
-  if((file_size_in_bytes < 0) || (file_size_in_bytes == LONG_MAX)) {
-    std::fclose(fp);
-    return false;
-  }
-#endif
-
-  // Allocate the memory, we zero the buffer through resize
-  // but that's inconsequential for newly allocated memory.
-  size_t length = static_cast<size_t>(file_size_in_bytes);
-  input_data.resize(static_cast<size_t>(length));
-
-  std::rewind(fp);
-  size_t bytes_read = std::fread(input_data.data(), 1, length, fp);
-  if (std::fclose(fp) != 0 || bytes_read != length) { return false; }
   return true;
 }
 
