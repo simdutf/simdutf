@@ -27,7 +27,7 @@ void __asan_on_error() {
  */
 
 namespace {
-std::array<size_t, 10> input_size{7, 16, 12, 64, 67, 128, 129, 256, 1024, 1025};
+std::vector<size_t> input_size{7, 16, 12, 64, 67, 128, 129, 256, 1024, 1025};
 }
 
 //  Possible states.
@@ -254,7 +254,7 @@ TEST(basic_fuzz) {
   while (counter < 100000) {
     for (size_t size : input_size) {
       std::vector<char> input(size);
-      std::vector<char> output(3);
+      std::vector<char> output(4*size);
       while (input.size() < size) {
         tracker.next(input);
       }
@@ -391,11 +391,14 @@ int main(int argc, char *argv[]) {
   if (argc == 2) {
     try {
       seed = std::stoi(argv[1]);
-      return simdutf::test::main(, argv);
     } catch (const std::exception& e) {
         printf("%s\n", e.what());
         return EXIT_FAILURE;
     }
   }
-  return simdutf::test::main(argc, argv);
+  std::mt19937 gen{seed};
+  for (int i = 0; i < 20; i++) {
+    input_size.push_back(std::uniform_int_distribution<uint32_t>{50, 800}(gen));
+  }
+  return simdutf::test::main((argc==2) ? 1 : argc, argv);
 }
