@@ -11,7 +11,7 @@
 #include <array>
 #include <queue>
 
-constexpr size_t CHUNK_SIZE = 1048576;
+constexpr size_t CHUNK_SIZE = 1048576;    // Must be at least 4
 
 class CommandLine
 {
@@ -31,8 +31,9 @@ public:
   void run();
   void run_procedure(std::FILE *fp);
   template <typename PROCEDURE>
-  void run_simdutf_procedure(PROCEDURE proc);
+  size_t run_simdutf_procedure(PROCEDURE proc);
   void iconv_fallback(std::FILE *fp);
   bool load_data(size_t count, size_t *input_size);
   bool write_to_file_descriptor(std::FILE *fp, const char * data, size_t length);
+  size_t find_last_leading_byte(size_t size);
 };
