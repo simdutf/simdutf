@@ -33,7 +33,7 @@ public:
   template <typename PROCEDURE>
   size_t run_simdutf_procedure(PROCEDURE proc);
   void iconv_fallback(std::FILE *fp);
-  bool load_data(size_t count, size_t *input_size);
+  bool load_data(size_t *input_size);
   bool write_to_file_descriptor(std::FILE *fp, const char * data, size_t length);
   size_t find_last_leading_byte(size_t size);
 };

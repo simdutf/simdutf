@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <iterator>
 #include <climits>
+#include <cerrno>
 
 CommandLine parse_and_validate_arguments(int argc, char* argv[]) {
   CommandLine cmdline;
@@ -270,7 +271,7 @@ size_t CommandLine::run_simdutf_procedure(PROCEDURE proc) {
   size_t leftovers{0};
   while(!(input_files.empty())) {
     size_t input_size = leftovers;
-    if(!load_data(CHUNK_SIZE, &input_size)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop();  continue; }
+    if(!load_data(&input_size)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop();  continue; }
     leftovers = input_size - proc(input_size);
     // Copy leftover bytes to the start of input_data
     for (int i = 0; i < leftovers; i++) {
@@ -287,9 +288,11 @@ void CommandLine::iconv_fallback(std::FILE *fpout) {
     fprintf( stderr,"[iconv] cannot initialize %s to %s converter\n", from_encoding.c_str(), to_encoding.c_str());
     return;
   }
+  size_t leftovers{0};
   while (!(input_files.empty())) {
-    size_t inbytes{0};
-    if(!load_data(CHUNK_SIZE, &inbytes)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop();  continue; }
+    size_t input_size{leftovers};
+    if(!load_data(&input_size)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop();  continue; }
+    size_t inbytes = input_size;
     size_t outbytes = sizeof(uint32_t) * inbytes;
     size_t start_outbytes = outbytes;
     std::unique_ptr<char[]> output_buffer(new char[outbytes]);
@@ -297,8 +300,18 @@ void CommandLine::iconv_fallback(std::FILE *fpout) {
     char * outptr = reinterpret_cast<char *>(output_buffer.get());
     size_t result = iconv(cv, &inptr, &inbytes, &outptr, &outbytes);
     if (result == static_cast<size_t>(-1)) {
-      fprintf( stderr,"[iconv] Error iconv.\n");
-      return;
+      if (errno == EINVAL) {  // Incomplete multibyte sequence error is ok
+        // Copy leftover bytes to the start of input_data
+        leftovers = inbytes;
+        for (int i = 0; i < leftovers; i++) {
+          input_data[i] = input_data[input_size-leftovers+i];
+        }
+      } else {
+        fprintf( stderr,"[iconv] Error iconv.\n");
+        return;
+      }
+    } else {
+      leftovers = 0;
     }
 
     write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), start_outbytes - outbytes);
@@ -318,8 +331,9 @@ bool CommandLine::write_to_file_descriptor(std::FILE *fp, const char * data, siz
   return true;
 }
 
-// Loads count bytes into input_data and increments *input_size by number of bytes read
-bool CommandLine::load_data(size_t count, size_t *input_size) {
+// Loads CHUNK_SIZE bytes into input_data and increments *input_size by number of bytes read
+bool CommandLine::load_data(size_t *input_size) {
+  size_t count = CHUNK_SIZE;
   while (count > 0) {
     // Open a file if no file is opened
     if (current_file == NULL) {
