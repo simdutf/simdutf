@@ -16,8 +16,6 @@ extern size_t utf16le_validate_avx512(const char16_t in[restrict], size_t len);
 
 /* all test vectors end in U+FFFF to allow embedded NUL characters */
 const char16_t *vectors[] = {
-	u"Université\0TÉLUQ\uffff", /* NUL embedded into two-byte characters */
-
 	u"\uffff", /* empty string */
 	u"Das Pferd frisst keinen Gurkensalat.\uffff", /* ASCII string */
 	u"Fix Schwyz quäkt Jürgen blöd vom Paß.\uffff", /* ISO-8859-1 string */

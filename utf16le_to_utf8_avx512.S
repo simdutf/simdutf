@@ -49,6 +49,7 @@ utf16le_to_utf8_avx512:
 	// rsi: inbuf
 	// rdx: inlen
 	// rcx: &outlen
+	push		%rbx
 
 	vpbroadcastd	.L0080(%rip), %zmm31
 	vpslld		$4, %zmm31, %zmm30	// 0x0800
@@ -109,7 +110,12 @@ utf16le_to_utf8_avx512:
 
 	vpblendmw	%zmm30, %zmm20, %zmm1{%k1} // 0800 for ASCII/2byte, FFFF for lookahead
 	vpcmpnltub	%zmm1, %zmm0, %k3	// 01 if ASCII, 11 if 2 byte, 00 if lookahead
-	vpcompressb	%zmm0, (%rdi){%k3}	// smoosh all characters together
+	vpcompressb	%zmm0, %zmm1{%k3}{z}	// smoosh all characters together
+
+	kmovq		%k3, %r10
+	pext		%r10, %r10, %r10	// compute mask of valid bytes in zmm1
+	kmovq		%r10, %k3
+	vmovdqu8	%zmm1, (%rdi){%k3}	// deposit transcoded bytes into output
 
 	lea		31(%rdi, %rax, 1), %rdi	// advance destination buffer
 	xor		%eax, %eax		// clear surrogate carry
@@ -196,14 +202,24 @@ utf16le_to_utf8_avx512:
 	// 4 byte  wvuts RQPNMLKJ HGFEDCBA  808080f0  10FEDCBA 10MLKJHG 10tsRQPN 11110wvu
 
 	// smoosh characters together and output
-	vpcmpnltub	%zmm5, %zmm3, %k2	// which bytes in zmm1 do we want to deposit?  (all nonzero
-	vpcmpnltub	%zmm6, %zmm4, %k3	// ... bytes and the MSB of each dword but no low surrogates)
+	// we could use vpcompressb zmm, mem{k} here, but it's really slow for some reason.
+	vpcmpnltub	%zmm5, %zmm3, %k2	// which bytes in zmm1 do we want to deposit?  (nonzero bytes,
+	vpcmpnltub	%zmm6, %zmm4, %k3	// ..., the MSB of each dword but no lo surr. and no lookahead)
 	kmovq		%k2, %r10		// get the masks so we can find out how long the output is
 	kmovq		%k3, %r11
-	vpcompressb	%zmm3, (%rdi){%k2}	// smoosh characters together
-	popcnt		%r10, %r10		// number of UTF-8 bytes in zmm1
-	vpcompressb	%zmm4, (%rdi, %r10, 1){%k3}
-	popcnt		%r11, %r11		// number of UTF-8 bytes in zmm2
+	vpcompressb	%zmm3, %zmm3{%k2}{z}	// smoosh characters together
+	vpcompressb	%zmm4, %zmm4{%k3}{z}
+
+	pext		%r10, %r10, %rbx	// mask of valid bytes in zmm3
+	popcnt		%r10, %r10		// number of UTF-8 bytes in zmm3
+	kmovq		%rbx, %k2
+
+	pext		%r11, %r11, %rbx	// mask of valid bytes in zmm4
+	popcnt		%r11, %r11		// number of UTF-8 bytes in zmm4
+	kmovq		%rbx, %k3
+
+	vmovdqu8	%zmm3, (%rdi){%k2}	// deposit into output
+	vmovdqu8	%zmm4, (%rdi, %r10, 1){%k3}
 
 	add		%r10, %rdi		// advance past first half of output
 	add		%r11, %rdi		// advance past second half of output
@@ -223,6 +239,7 @@ utf16le_to_utf8_avx512:
 	sub		%r8, %rdi		// output length = buffer end - buffer start
 	mov		%rdi, (%rcx)		// deposit into *outlen
 
+	pop		%rbx
 	vzeroupper
 	ret
 
