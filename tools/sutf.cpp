@@ -90,34 +90,38 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       auto proc = [this, &fpout](size_t size) {
         std::unique_ptr<char16_t[]> output_buffer(new char16_t[size]);
         size_t len = simdutf::convert_utf8_to_utf16le(reinterpret_cast<const char*>(input_data.data()), size, output_buffer.get());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t));
+        if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
+        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t)); }
       };
       run_simdutf_procedure(proc);
     } else if (to_encoding == "UTF-16BE") {
       auto proc = [this, &fpout](size_t size) {
         std::unique_ptr<char16_t[]> output_buffer(new char16_t[size]);
         size_t len = simdutf::convert_utf8_to_utf16be(reinterpret_cast<const char*>(input_data.data()), size, output_buffer.get());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t));
+        if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
+        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t)); }
       };
       run_simdutf_procedure(proc);
     } else if (to_encoding == "UTF-32LE" || to_encoding == "UTF-32") {
       auto proc = [this, &fpout](size_t size) {
         std::unique_ptr<char32_t[]> output_buffer(new char32_t[size]);
         size_t len = simdutf::convert_utf8_to_utf32(reinterpret_cast<const char*>(input_data.data()), size, output_buffer.get());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char32_t));
+        if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
+        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char32_t)); }
       };
       run_simdutf_procedure(proc);
     } else {
       iconv_fallback(fpout);
     }
   }
-  else if (from_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
+  else if (from_encoding == "UTF-16LE" || from_encoding == "UTF-16") {
     if (to_encoding == "UTF-8") {
       auto proc = [this, &fpout](size_t size_bytes) {
         const size_t size = size_bytes / 2;
         std::unique_ptr<char[]> output_buffer(new char[4*size]);
         size_t len = simdutf::convert_utf16le_to_utf8(reinterpret_cast<const char16_t*>(input_data.data()), size, output_buffer.get());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char));
+        if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
+        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char)); }
       };
       run_simdutf_procedure(proc);
     } else if (to_encoding == "UTF-16BE") {
@@ -133,7 +137,8 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         const size_t size = size_bytes / 2;
         std::unique_ptr<char32_t[]> output_buffer(new char32_t[size]);
         size_t len = simdutf::convert_utf16le_to_utf32(reinterpret_cast<const char16_t*>(input_data.data()), size, output_buffer.get());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char32_t));
+        if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
+        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char32_t)); }
       };
       run_simdutf_procedure(proc);
     } else {
@@ -146,7 +151,8 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         const size_t size = size_bytes / 2;
         std::unique_ptr<char[]> output_buffer(new char[3*size]);
         size_t len = simdutf::convert_utf16be_to_utf8(reinterpret_cast<const char16_t*>(input_data.data()), size, output_buffer.get());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char));
+        if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
+        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char)); }
       };
       run_simdutf_procedure(proc);
     } else if (to_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
@@ -162,20 +168,22 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         const size_t size = size_bytes / 2;
         std::unique_ptr<char32_t[]> output_buffer(new char32_t[size]);
         size_t len = simdutf::convert_utf16be_to_utf32(reinterpret_cast<const char16_t*>(input_data.data()), size, output_buffer.get());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char32_t));
+        if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
+        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char32_t)); }
       };
       run_simdutf_procedure(proc);
     } else {
       iconv_fallback(fpout);
     }
   }
-  else if (from_encoding == "UTF-32LE" || to_encoding == "UTF-32") {
+  else if (from_encoding == "UTF-32LE" || from_encoding == "UTF-32") {
     if (to_encoding == "UTF-8") {
       auto proc = [this, &fpout](size_t size_bytes) {
-          const size_t size = size_bytes / 4;
-          std::unique_ptr<char[]> output_buffer(new char[4*size]);
-          size_t len = simdutf::convert_utf32_to_utf8(reinterpret_cast<const char32_t*>(input_data.data()), size, output_buffer.get());
-          write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char));
+        const size_t size = size_bytes / 4;
+        std::unique_ptr<char[]> output_buffer(new char[4*size]);
+        size_t len = simdutf::convert_utf32_to_utf8(reinterpret_cast<const char32_t*>(input_data.data()), size, output_buffer.get());
+        if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
+        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char)); }
       };
       run_simdutf_procedure(proc);
     } else if (to_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
@@ -183,7 +191,8 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         const size_t size = size_bytes / 4;
         std::unique_ptr<char16_t[]> output_buffer(new char16_t[2*size]);
         size_t len = simdutf::convert_utf32_to_utf16le(reinterpret_cast<const char32_t*>(input_data.data()), size, output_buffer.get());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t));
+        if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
+        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t)); }
       };
       run_simdutf_procedure(proc);
     } else if (to_encoding == "UTF-16BE") {
@@ -191,7 +200,8 @@ void CommandLine::run_procedure(std::FILE *fpout) {
         const size_t size = size_bytes / 4;
         std::unique_ptr<char16_t[]> output_buffer(new char16_t[2*size]);
         size_t len = simdutf::convert_utf32_to_utf16be(reinterpret_cast<const char32_t*>(input_data.data()), size, output_buffer.get());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t));
+        if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
+        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t)); }
       };
       run_simdutf_procedure(proc);
     } else {
