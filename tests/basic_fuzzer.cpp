@@ -11,6 +11,7 @@
 #include <tests/helpers/test.h>
 
 uint32_t seed = 123;
+const size_t MAX_SIZE = 1025;
 
 std::vector<char> input;
 std::pair<bool,bool> is_ok_utf8 = std::make_pair(false,false);
@@ -41,7 +42,7 @@ extern "C" {
 void __asan_on_error() {
   std::fstream log;
   log.open("fuzzer_log.txt", std::ios::app);
-  size_t buf_size = 4*1025 + 3;
+  const size_t buf_size = 4*MAX_SIZE + 3;
   char buffer[buf_size];
   for (int i = 0; i < input.size(); i++) {
     sprintf(buffer + 4*i + 1, "\\x%02x", input[i]);
@@ -73,7 +74,7 @@ void __asan_on_error() {
  */
 
 namespace {
-std::vector<size_t> input_size{7, 16, 12, 64, 67, 128, 129, 256, 1024, 1025};
+std::vector<size_t> input_size{7, 16, 12, 64, 67, 128, 129, 256, 1024, MAX_SIZE};
 }
 
 //  Possible states.
