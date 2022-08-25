@@ -277,7 +277,7 @@ struct state_tracker {
       }
     }
     // Move to next state
-    next_state();
+    current_state = next_state();
 
     return count;
   }
@@ -298,7 +298,7 @@ TEST(basic_fuzz) {
   state_tracker tracker(seed, 1, 1);
   while (counter < 100000) {
     for (size_t size : input_size) {
-      input.resize(size);
+      input.clear();
       std::vector<char> output(4*size);
       while (input.size() < size) {
         tracker.next(input);
@@ -374,7 +374,7 @@ TEST(overflow_fuzz) {
   state_tracker tracker(seed, 1, 1);
   while (counter < 100000) {
     for (size_t size : input_size) {
-      input.resize(size);
+      input.clear();
       std::vector<char> output(4*size);
       while (input.size() < size) {
         tracker.next(input);
