@@ -38,11 +38,10 @@ void reset() {
 }
 
 extern "C" {
-size_t MAX_SIZE = 1025;
 void __asan_on_error() {
   std::fstream log;
   log.open("fuzzer_log.txt", std::ios::app);
-  size_t buf_size = 4*MAX_SIZE + 3;
+  size_t buf_size = 4*1025 + 3;
   char buffer[buf_size];
   for (int i = 0; i < input.size(); i++) {
     sprintf(buffer + 4*i + 1, "\\x%02x", input[i]);
