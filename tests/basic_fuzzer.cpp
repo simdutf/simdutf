@@ -11,6 +11,7 @@
 #include <tests/helpers/test.h>
 
 uint32_t seed = 123;
+size_t MAX_SIZE = 1025;
 
 std::vector<char> input;
 std::pair<bool,bool> is_ok_utf8 = std::make_pair(false,false);
@@ -41,13 +42,14 @@ extern "C" {
 void __asan_on_error() {
   std::fstream log;
   log.open("fuzzer_log.txt", std::ios::app);
-  char buffer[4*input.size() + 3];
+  size_t buf_size = 4*MAX_SIZE + 3;
+  char buffer[buf_size];
   for (int i = 0; i < input.size(); i++) {
     sprintf(buffer + 4*i + 1, "\\x%02x", input[i]);
   }
   buffer[0] = '"';
-  buffer[4*input.size() + 1] = '"';
-  buffer[4*input.size() + 2] = '\0';
+  buffer[buf_size - 2] = '"';
+  buffer[buf_size - 1] = '\0';
   log << std::boolalpha;
   log << "Input: " << buffer << std::endl;
   if (is_ok_utf8.first) { log << "validate_utf8:" << is_ok_utf8.second << std::endl; }
@@ -72,7 +74,7 @@ void __asan_on_error() {
  */
 
 namespace {
-std::vector<size_t> input_size{7, 16, 12, 64, 67, 128, 129, 256, 1024, 1025};
+std::vector<size_t> input_size{7, 16, 12, 64, 67, 128, 129, 256, 1024, MAX_SIZE};
 }
 
 //  Possible states.
@@ -463,7 +465,7 @@ int main(int argc, char *argv[]) {
   }
   std::mt19937 gen{seed};
   for (int i = 0; i < 20; i++) {
-    input_size.push_back(std::uniform_int_distribution<uint32_t>{50, 800}(gen));
+    input_size.push_back(std::uniform_int_distribution<uint32_t>{50, 800}(gen));  // Range must be less than max_size
   }
   return simdutf::test::main((argc==2) ? 1 : argc, argv);
 }
