@@ -130,7 +130,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
   else if (from_encoding == "UTF-16LE" || from_encoding == "UTF-16") {
     if (to_encoding == "UTF-8") {
       auto proc = [this, &fpout](size_t size_bytes) {
-        if ((input_data[size_bytes-2] & 0xdc00) == 0xd800) { size_bytes -= 2; } // Check if last word is a high surrogate
+        if ((input_data[size_bytes-1] & 0xfc) == 0xd8) { size_bytes -= 2; } // Check if last word is a high surrogate
         const size_t size = size_bytes / 2;
         size_t len = simdutf::convert_utf16le_to_utf8(reinterpret_cast<const char16_t*>(input_data.data()), size, output_buffer.data());
         if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
@@ -151,7 +151,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       run_simdutf_procedure(proc);  // No leftovers since change_endianness does not validate
     } else if (to_encoding == "UTF-32LE" || to_encoding == "UTF-32") {
       auto proc = [this, &fpout](size_t size_bytes) {
-        if ((input_data[size_bytes-2] & 0xdc00) == 0xd800) { size_bytes -= 2; } // Check if last word is a high surrogate
+        if ((input_data[size_bytes-1] & 0xfc) == 0xd8) { size_bytes -= 2; } // Check if last word is a high surrogate
         const size_t size = size_bytes / 2;
         size_t len = simdutf::convert_utf16le_to_utf32(reinterpret_cast<const char16_t*>(input_data.data()), size, reinterpret_cast<char32_t*>(output_buffer.data()));
         if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
@@ -169,7 +169,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
   else if (from_encoding == "UTF-16BE") {
     if (to_encoding == "UTF-8") {
       auto proc = [this, &fpout](size_t size_bytes) {
-        if ((input_data[size_bytes-1] & 0xdc00) == 0xd800) { size_bytes -= 2; } // Check if last word is a high surrogate
+        if ((input_data[size_bytes-2] & 0xfc) == 0xd8) { size_bytes -= 2; } // Check if last word is a high surrogate
         const size_t size = size_bytes / 2;
         size_t len = simdutf::convert_utf16be_to_utf8(reinterpret_cast<const char16_t*>(input_data.data()), size, output_buffer.data());
         if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
@@ -190,7 +190,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       run_simdutf_procedure(proc);  // No leftovers since change_endianness does not validate
     } else if (to_encoding == "UTF-32LE" || to_encoding == "UTF-32") {
       auto proc = [this, &fpout](size_t size_bytes) {
-        if ((input_data[size_bytes-1] & 0xdc00) == 0xd800) { size_bytes -= 2; } // Check if last word is a high surrogate
+        if ((input_data[size_bytes-2] & 0xfc) == 0xd8) { size_bytes -= 2; } // Check if last word is a high surrogate
         const size_t size = size_bytes / 2;
         size_t len = simdutf::convert_utf16be_to_utf32(reinterpret_cast<const char16_t*>(input_data.data()), size, reinterpret_cast<char32_t*>(output_buffer.data()));
         if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
