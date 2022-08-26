@@ -90,45 +90,39 @@ void CommandLine::run_procedure(std::FILE *fpout) {
     if (to_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
       auto proc = [this, &fpout](size_t size) {
         size = find_last_leading_byte(size);
-        std::unique_ptr<char16_t[]> output_buffer(new char16_t[size]);
-        size_t len = simdutf::convert_utf8_to_utf16le(reinterpret_cast<const char*>(input_data.data()), size, output_buffer.get());
+        size_t len = simdutf::convert_utf8_to_utf16le(reinterpret_cast<const char*>(input_data.data()), size, reinterpret_cast<char16_t*>(output_buffer.get()));
         if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
-        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t)); }
+        else { write_to_file_descriptor(fpout, output_buffer.get(), len * sizeof(char16_t)); }
         return size;
       };
       size_t leftovers = run_simdutf_procedure(proc);
-      std::unique_ptr<char16_t[]> output_buffer(new char16_t[leftovers]);
-      size_t len = simdutf::convert_utf8_to_utf16le(reinterpret_cast<const char*>(input_data.data()), leftovers, output_buffer.get());
+      size_t len = simdutf::convert_utf8_to_utf16le(reinterpret_cast<const char*>(input_data.data()), leftovers, reinterpret_cast<char16_t*>(output_buffer.get()));
       if (len == 0 && leftovers != 0) { printf("Could not convert last %ld bytes.\n", leftovers); }
-      else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t)); }
+      else { write_to_file_descriptor(fpout, output_buffer.get(), len * sizeof(char16_t)); }
     } else if (to_encoding == "UTF-16BE") {
       auto proc = [this, &fpout](size_t size) {
         size = find_last_leading_byte(size);
-        std::unique_ptr<char16_t[]> output_buffer(new char16_t[size]);
-        size_t len = simdutf::convert_utf8_to_utf16be(reinterpret_cast<const char*>(input_data.data()), size, output_buffer.get());
+        size_t len = simdutf::convert_utf8_to_utf16be(reinterpret_cast<const char*>(input_data.data()), size, reinterpret_cast<char16_t*>(output_buffer.get()));
         if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
-        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t)); }
+        else { write_to_file_descriptor(fpout, output_buffer.get(), len * sizeof(char16_t)); }
         return size;
       };
       size_t leftovers = run_simdutf_procedure(proc);
-      std::unique_ptr<char16_t[]> output_buffer(new char16_t[leftovers]);
-      size_t len = simdutf::convert_utf8_to_utf16be(reinterpret_cast<const char*>(input_data.data()), leftovers, output_buffer.get());
+      size_t len = simdutf::convert_utf8_to_utf16be(reinterpret_cast<const char*>(input_data.data()), leftovers, reinterpret_cast<char16_t*>(output_buffer.get()));
       if (len == 0 && leftovers != 0) { printf("Could not convert last %ld bytes.\n", leftovers); }
-      else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t)); }
+      else { write_to_file_descriptor(fpout, output_buffer.get(), len * sizeof(char16_t)); }
     } else if (to_encoding == "UTF-32LE" || to_encoding == "UTF-32") {
       auto proc = [this, &fpout](size_t size) {
         size = find_last_leading_byte(size);
-        std::unique_ptr<char32_t[]> output_buffer(new char32_t[size]);
-        size_t len = simdutf::convert_utf8_to_utf32(reinterpret_cast<const char*>(input_data.data()), size, output_buffer.get());
+        size_t len = simdutf::convert_utf8_to_utf32(reinterpret_cast<const char*>(input_data.data()), size, reinterpret_cast<char32_t*>(output_buffer.get()));
         if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
-        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char32_t)); }
+        else { write_to_file_descriptor(fpout, output_buffer.get(), len * sizeof(char32_t)); }
         return size;
       };
       size_t leftovers = run_simdutf_procedure(proc);
-      std::unique_ptr<char32_t[]> output_buffer(new char32_t[leftovers]);
-      size_t len = simdutf::convert_utf8_to_utf32(reinterpret_cast<const char*>(input_data.data()), leftovers, output_buffer.get());
+      size_t len = simdutf::convert_utf8_to_utf32(reinterpret_cast<const char*>(input_data.data()), leftovers, reinterpret_cast<char32_t*>(output_buffer.get()));
       if (len == 0 && leftovers != 0) { printf("Could not convert last %ld bytes.\n", leftovers); }
-      else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char32_t)); }
+      else { write_to_file_descriptor(fpout, output_buffer.get(), len * sizeof(char32_t)); }
     } else {
       iconv_fallback(fpout);
     }
@@ -138,41 +132,36 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       auto proc = [this, &fpout](size_t size_bytes) {
         if ((input_data[size_bytes-2] & 0xdc00) == 0xd800) { size_bytes -= 2; } // Check if last word is a high surrogate
         const size_t size = size_bytes / 2;
-        std::unique_ptr<char[]> output_buffer(new char[4*size]);
         size_t len = simdutf::convert_utf16le_to_utf8(reinterpret_cast<const char16_t*>(input_data.data()), size, output_buffer.get());
         if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
-        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char)); }
+        else { write_to_file_descriptor(fpout, output_buffer.get(), len * sizeof(char)); }
         return size_bytes;
       };
       size_t leftovers = run_simdutf_procedure(proc);
-      std::unique_ptr<char[]> output_buffer(new char[4*leftovers]);
       size_t len = simdutf::convert_utf16le_to_utf8(reinterpret_cast<const char16_t*>(input_data.data()), leftovers, output_buffer.get());
       if (len == 0 && leftovers != 0) { printf("Could not convert last %ld bytes.\n", leftovers); }
-      else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char)); }
+      else { write_to_file_descriptor(fpout, output_buffer.get(), len * sizeof(char)); }
     } else if (to_encoding == "UTF-16BE") {
       auto proc = [this, &fpout](size_t size_bytes) {
         const size_t size = size_bytes / 2;
-        std::unique_ptr<char16_t[]> output_buffer(new char16_t[size]);
-        simdutf::change_endianness_utf16(reinterpret_cast<const char16_t*>(input_data.data()), size, output_buffer.get());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), size);
+        simdutf::change_endianness_utf16(reinterpret_cast<const char16_t*>(input_data.data()), size, reinterpret_cast<char16_t*>(output_buffer.get()));
+        write_to_file_descriptor(fpout, output_buffer.get(), size);
         return size_bytes;
       };
-      run_simdutf_procedure(proc);
+      run_simdutf_procedure(proc);  // No leftovers since change_endianness does not validate
     } else if (to_encoding == "UTF-32LE" || to_encoding == "UTF-32") {
       auto proc = [this, &fpout](size_t size_bytes) {
         if ((input_data[size_bytes-2] & 0xdc00) == 0xd800) { size_bytes -= 2; } // Check if last word is a high surrogate
         const size_t size = size_bytes / 2;
-        std::unique_ptr<char32_t[]> output_buffer(new char32_t[size]);
-        size_t len = simdutf::convert_utf16le_to_utf32(reinterpret_cast<const char16_t*>(input_data.data()), size, output_buffer.get());
+        size_t len = simdutf::convert_utf16le_to_utf32(reinterpret_cast<const char16_t*>(input_data.data()), size, reinterpret_cast<char32_t*>(output_buffer.get()));
         if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
-        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char32_t)); }
+        else { write_to_file_descriptor(fpout, output_buffer.get(), len * sizeof(char32_t)); }
         return size_bytes;
       };
       size_t leftovers = run_simdutf_procedure(proc);
-      std::unique_ptr<char32_t[]> output_buffer(new char32_t[leftovers]);
-      size_t len = simdutf::convert_utf16le_to_utf32(reinterpret_cast<const char16_t*>(input_data.data()), leftovers, output_buffer.get());
+      size_t len = simdutf::convert_utf16le_to_utf32(reinterpret_cast<const char16_t*>(input_data.data()), leftovers, reinterpret_cast<char32_t*>(output_buffer.get()));
       if (len == 0 && leftovers != 0) { printf("Could not convert last %ld bytes.\n", leftovers); }
-      else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char32_t)); }
+      else { write_to_file_descriptor(fpout, output_buffer.get(), len * sizeof(char32_t)); }
     } else {
       iconv_fallback(fpout);
     }
@@ -182,41 +171,36 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       auto proc = [this, &fpout](size_t size_bytes) {
         if ((input_data[size_bytes-1] & 0xdc00) == 0xd800) { size_bytes -= 2; } // Check if last word is a high surrogate
         const size_t size = size_bytes / 2;
-        std::unique_ptr<char[]> output_buffer(new char[3*size]);
         size_t len = simdutf::convert_utf16be_to_utf8(reinterpret_cast<const char16_t*>(input_data.data()), size, output_buffer.get());
         if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
-        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char)); }
+        else { write_to_file_descriptor(fpout, output_buffer.get(), len * sizeof(char)); }
         return size_bytes;
       };
       size_t leftovers = run_simdutf_procedure(proc);
-      std::unique_ptr<char[]> output_buffer(new char[3*leftovers]);
       size_t len = simdutf::convert_utf16be_to_utf8(reinterpret_cast<const char16_t*>(input_data.data()), leftovers, output_buffer.get());
       if (len == 0 && leftovers != 0) { printf("Could not convert last %ld bytes.\n", leftovers); }
-      else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char)); }
+      else { write_to_file_descriptor(fpout, output_buffer.get(), len * sizeof(char)); }
     } else if (to_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
       auto proc = [this, &fpout](size_t size_bytes) {
         const size_t size = size_bytes / 2;
-        std::unique_ptr<char16_t[]> output_buffer(new char16_t[size]);
-        simdutf::change_endianness_utf16(reinterpret_cast<const char16_t*>(input_data.data()), size, output_buffer.get());
-        write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), size);
+        simdutf::change_endianness_utf16(reinterpret_cast<const char16_t*>(input_data.data()), size, reinterpret_cast<char16_t*>(output_buffer.get()));
+        write_to_file_descriptor(fpout, output_buffer.get(), size);
         return size_bytes;
       };
-      run_simdutf_procedure(proc);
+      run_simdutf_procedure(proc);  // No leftovers since change_endianness does not validate
     } else if (to_encoding == "UTF-32LE" || to_encoding == "UTF-32") {
       auto proc = [this, &fpout](size_t size_bytes) {
         if ((input_data[size_bytes-1] & 0xdc00) == 0xd800) { size_bytes -= 2; } // Check if last word is a high surrogate
         const size_t size = size_bytes / 2;
-        std::unique_ptr<char32_t[]> output_buffer(new char32_t[size]);
-        size_t len = simdutf::convert_utf16be_to_utf32(reinterpret_cast<const char16_t*>(input_data.data()), size, output_buffer.get());
+        size_t len = simdutf::convert_utf16be_to_utf32(reinterpret_cast<const char16_t*>(input_data.data()), size, reinterpret_cast<char32_t*>(output_buffer.get()));
         if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
-        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char32_t)); }
+        else { write_to_file_descriptor(fpout, output_buffer.get(), len * sizeof(char32_t)); }
         return size_bytes;
       };
       size_t leftovers = run_simdutf_procedure(proc);
-      std::unique_ptr<char32_t[]> output_buffer(new char32_t[leftovers]);
-      size_t len = simdutf::convert_utf16be_to_utf32(reinterpret_cast<const char16_t*>(input_data.data()), leftovers, output_buffer.get());
+      size_t len = simdutf::convert_utf16be_to_utf32(reinterpret_cast<const char16_t*>(input_data.data()), leftovers, reinterpret_cast<char32_t*>(output_buffer.get()));
       if (len == 0 && leftovers!= 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
-      else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char32_t)); }
+      else { write_to_file_descriptor(fpout, output_buffer.get(), len * sizeof(char32_t)); }
     } else {
       iconv_fallback(fpout);
     }
@@ -225,30 +209,27 @@ void CommandLine::run_procedure(std::FILE *fpout) {
     if (to_encoding == "UTF-8") {
       auto proc = [this, &fpout](size_t size_bytes) {
         const size_t size = size_bytes / 4;
-        std::unique_ptr<char[]> output_buffer(new char[4*size]);
         size_t len = simdutf::convert_utf32_to_utf8(reinterpret_cast<const char32_t*>(input_data.data()), size, output_buffer.get());
         if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
-        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char)); }
+        else { write_to_file_descriptor(fpout, output_buffer.get(), len * sizeof(char)); }
         return size_bytes;
       };
       run_simdutf_procedure(proc);
     } else if (to_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
       auto proc = [this, &fpout](size_t size_bytes) {
         const size_t size = size_bytes / 4;
-        std::unique_ptr<char16_t[]> output_buffer(new char16_t[2*size]);
-        size_t len = simdutf::convert_utf32_to_utf16le(reinterpret_cast<const char32_t*>(input_data.data()), size, output_buffer.get());
+        size_t len = simdutf::convert_utf32_to_utf16le(reinterpret_cast<const char32_t*>(input_data.data()), size, reinterpret_cast<char16_t*>(output_buffer.get()));
         if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
-        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t)); }
+        else { write_to_file_descriptor(fpout, output_buffer.get(), len * sizeof(char16_t)); }
         return size_bytes;
       };
       run_simdutf_procedure(proc);
     } else if (to_encoding == "UTF-16BE") {
       auto proc = [this, &fpout](size_t size_bytes) {
         const size_t size = size_bytes / 4;
-        std::unique_ptr<char16_t[]> output_buffer(new char16_t[2*size]);
-        size_t len = simdutf::convert_utf32_to_utf16be(reinterpret_cast<const char32_t*>(input_data.data()), size, output_buffer.get());
+        size_t len = simdutf::convert_utf32_to_utf16be(reinterpret_cast<const char32_t*>(input_data.data()), size, reinterpret_cast<char16_t*>(output_buffer.get()));
         if (len == 0 && size != 0) { printf("Could not convert %s\n", input_files.front().string().c_str()); input_files.pop(); }
-        else { write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), len * sizeof(char16_t)); }
+        else { write_to_file_descriptor(fpout, output_buffer.get(), len * sizeof(char16_t)); }
         return size_bytes;
       };
       run_simdutf_procedure(proc);
@@ -295,7 +276,6 @@ void CommandLine::iconv_fallback(std::FILE *fpout) {
     size_t inbytes = input_size;
     size_t outbytes = sizeof(uint32_t) * inbytes;
     size_t start_outbytes = outbytes;
-    std::unique_ptr<char[]> output_buffer(new char[outbytes]);
     char * inptr = reinterpret_cast<char *>(input_data.data());
     char * outptr = reinterpret_cast<char *>(output_buffer.get());
     size_t result = iconv(cv, &inptr, &inbytes, &outptr, &outbytes);
@@ -314,7 +294,7 @@ void CommandLine::iconv_fallback(std::FILE *fpout) {
       leftovers = 0;
     }
 
-    write_to_file_descriptor(fpout, reinterpret_cast<char *>(output_buffer.get()), start_outbytes - outbytes);
+    write_to_file_descriptor(fpout, output_buffer.get(), start_outbytes - outbytes);
   }
   iconv_close(cv);
   #else
