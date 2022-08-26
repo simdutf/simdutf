@@ -14,11 +14,15 @@ CommandLine parse_and_validate_arguments(int argc, char* argv[]) {
 
   for (int i=1; i < argc; i++) {
     std::string arg{argv[i]};
-    if ((arg == "--help") || (arg == "-h")) {
+    if ((arg == "-h") || (arg == "--help")) {
       CommandLine::show_help();
       return cmdline;
     }
-    else if ((arg == "--list") || (arg == "-l")) {
+    else if ((arg == "-u") || (arg == "--usage")) {
+      CommandLine::show_usage();
+      return cmdline;
+    }
+    else if ((arg == "-l") || (arg == "--list")) {
       CommandLine::show_formats();
       return cmdline;
     }
@@ -29,26 +33,62 @@ CommandLine parse_and_validate_arguments(int argc, char* argv[]) {
 
   bool has_from_arg = false;
   bool has_to_arg = false;
+  bool has_output_arg = false;
 
   for (size_t i=0; i < arguments.size();) {
     const std::string& arg = arguments[i];
+    size_t size = arg.size();
 
     if (arg == "-f") {
+      if (has_from_arg) {
+        throw std::invalid_argument("Only a single source encoding argument is allowed.");
+      }
       const std::string& value = arguments.at(i + 1);
       cmdline.from_encoding = value;
       has_from_arg = true;
       i += 2;
     }
     else if (arg == "-t") {
+      if (has_to_arg) {
+        throw std::invalid_argument("Only a single destination encoding argument is allowed.");
+      }
       const std::string& value = arguments.at(i + 1);
       cmdline.to_encoding = value;
       has_to_arg = true;
       i += 2;
     }
     else if (arg == "-o") {
+      if (has_output_arg) {
+        throw std::invalid_argument("Only a single output file is allowed.");
+      }
+      has_output_arg = true;
       const std::string& value = arguments.at(i + 1);
       cmdline.output_file = value;
       i += 2;
+    }
+    else if (size > 12 && arg.substr(0, 12) == "--from-code=") {
+      if (has_from_arg) {
+        throw std::invalid_argument("Only a single source encoding argument is allowed.");
+      }
+      cmdline.from_encoding = arg.substr(12);
+      has_from_arg = true;
+      i++;
+    }
+    else if (size > 10 && arg.substr(0, 10) == "--to-code=") {
+      if (has_to_arg) {
+        throw std::invalid_argument("Only a single destination encoding argument is allowed.");
+      }
+      cmdline.to_encoding = arg.substr(10);
+      has_to_arg = true;
+      i++;
+    }
+    else if (size > 9 && arg.substr(0, 9) == "--output=") {
+      if (has_output_arg) {
+        throw std::invalid_argument("Only a single output file is allowed.");
+      }
+      cmdline.output_file = arg.substr(9);
+      has_output_arg = true;
+      i++;
     }
     else {
       if (! std::filesystem::exists(arg)) {
@@ -60,7 +100,7 @@ CommandLine parse_and_validate_arguments(int argc, char* argv[]) {
   }
 
   if (!has_from_arg || !has_to_arg) {
-    throw std::invalid_argument("Missing -f or -t argument(s).");
+    throw std::invalid_argument("Missing -f ENCODING/--from_code=ENCODING or -t ENCODING/--to_code=ENCODING argument(s).");
   }
 
   return cmdline;
@@ -330,11 +370,34 @@ size_t CommandLine::find_last_leading_byte(size_t size) {
 }
 
 void CommandLine::show_help() {
-  printf("Usage: sutf [OPTION...] [-f encoding] [-t encoding] [inputfile ...]\n");
+  #if ICONV_AVAILABLE
+  printf("Convert encoding of input files from one encoding to another using simdutf library for supported formats and iconv for other formats.\n");
+  #else
+  printf("Convert encoding of input files from one encoding to another using simdutf library for supported formats.\n");
+  #endif
+  printf("Usage: sutf [OPTIONS...] [INPUTFILES...]\n\n");
+  printf(" Encoding specification(mandatory):\n"
+         "  -f, --from-code=ENCODING       encoding of source text\n"
+         "  -t, --to-code=ENCODING         encoding of output\n\n");
+  printf(" Output(optional):\n"
+         "  -o,--output=FILE               output file\n\n");
+  printf(" Information(optional):\n"
+         "  -h,--help                      Display this help text\n"
+         "  -u,--usage                     Display short usage message\n"
+         "  -l,--list                      Display supported formats by simdutf library\n\n");
+  printf("If output is not specified, the output is redirected to standard output.\n");
+}
+
+void CommandLine::show_usage() {
+  printf("Usage: sutf [OPTION...] [-f ENCODING] [-t ENCODING] [-o OUTPUTFILE] [-l] [-h] [-u]\n"
+         "            [--from-code=ENCODING] [--to-code=ENCODING] [--output=OUTPUTFILE] [--list] [--help] [--usage] [INPUTFILES...]\n");
 }
 
 void CommandLine::show_formats() {
-  printf("UTF-8 UTF-16LE UTF-16BE UTF-32LE\n");
+  printf("Formats supported by simdutf library: UTF-8, UTF-16LE, UTF-16BE, UTF-32LE\n");
+  #if ICONV_AVAILABLE
+  printf("Try \"iconv -l\" or \"iconv --list\" to see formats supported by iconv.\n");
+  #endif
 }
 
 int main(int argc, char* argv[]) {
@@ -344,6 +407,7 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
   } catch (const std::exception& e) {
       printf("%s\n", e.what());
+      CommandLine::show_help();
       return EXIT_FAILURE;
   }
 }

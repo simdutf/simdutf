@@ -28,6 +28,7 @@ public:
   CommandLine() = default;
   static CommandLine parse_and_validate_arguments(int argc, char* argv[]);
   static void show_help();
+  static void show_usage();
   static void show_formats();
 
   void run();
