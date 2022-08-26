@@ -97,7 +97,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       };
       size_t leftovers = run_simdutf_procedure(proc);
       size_t len = simdutf::convert_utf8_to_utf16le(reinterpret_cast<const char*>(input_data.data()), leftovers, reinterpret_cast<char16_t*>(output_buffer.data()));
-      if (len == 0 && leftovers != 0) { printf("Could not convert last %ld bytes.\n", leftovers); }
+      if (len == 0 && leftovers != 0) { printf("Could not convert last %lu bytes.\n", leftovers); }
       else { write_to_file_descriptor(fpout, output_buffer.data(), len * sizeof(char16_t)); }
     } else if (to_encoding == "UTF-16BE") {
       auto proc = [this, &fpout](size_t size) {
@@ -109,7 +109,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       };
       size_t leftovers = run_simdutf_procedure(proc);
       size_t len = simdutf::convert_utf8_to_utf16be(reinterpret_cast<const char*>(input_data.data()), leftovers, reinterpret_cast<char16_t*>(output_buffer.data()));
-      if (len == 0 && leftovers != 0) { printf("Could not convert last %ld bytes.\n", leftovers); }
+      if (len == 0 && leftovers != 0) { printf("Could not convert last %lu bytes.\n", leftovers); }
       else { write_to_file_descriptor(fpout, output_buffer.data(), len * sizeof(char16_t)); }
     } else if (to_encoding == "UTF-32LE" || to_encoding == "UTF-32") {
       auto proc = [this, &fpout](size_t size) {
@@ -121,7 +121,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       };
       size_t leftovers = run_simdutf_procedure(proc);
       size_t len = simdutf::convert_utf8_to_utf32(reinterpret_cast<const char*>(input_data.data()), leftovers, reinterpret_cast<char32_t*>(output_buffer.data()));
-      if (len == 0 && leftovers != 0) { printf("Could not convert last %ld bytes.\n", leftovers); }
+      if (len == 0 && leftovers != 0) { printf("Could not convert last %lu bytes.\n", leftovers); }
       else { write_to_file_descriptor(fpout, output_buffer.data(), len * sizeof(char32_t)); }
     } else {
       iconv_fallback(fpout);
@@ -139,7 +139,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       };
       size_t leftovers = run_simdutf_procedure(proc);
       size_t len = simdutf::convert_utf16le_to_utf8(reinterpret_cast<const char16_t*>(input_data.data()), leftovers, output_buffer.data());
-      if (len == 0 && leftovers != 0) { printf("Could not convert last %ld bytes.\n", leftovers); }
+      if (len == 0 && leftovers != 0) { printf("Could not convert last %lu bytes.\n", leftovers); }
       else { write_to_file_descriptor(fpout, output_buffer.data(), len * sizeof(char)); }
     } else if (to_encoding == "UTF-16BE") {
       auto proc = [this, &fpout](size_t size_bytes) {
@@ -160,7 +160,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       };
       size_t leftovers = run_simdutf_procedure(proc);
       size_t len = simdutf::convert_utf16le_to_utf32(reinterpret_cast<const char16_t*>(input_data.data()), leftovers, reinterpret_cast<char32_t*>(output_buffer.data()));
-      if (len == 0 && leftovers != 0) { printf("Could not convert last %ld bytes.\n", leftovers); }
+      if (len == 0 && leftovers != 0) { printf("Could not convert last %lu bytes.\n", leftovers); }
       else { write_to_file_descriptor(fpout, output_buffer.data(), len * sizeof(char32_t)); }
     } else {
       iconv_fallback(fpout);
@@ -178,7 +178,7 @@ void CommandLine::run_procedure(std::FILE *fpout) {
       };
       size_t leftovers = run_simdutf_procedure(proc);
       size_t len = simdutf::convert_utf16be_to_utf8(reinterpret_cast<const char16_t*>(input_data.data()), leftovers, output_buffer.data());
-      if (len == 0 && leftovers != 0) { printf("Could not convert last %ld bytes.\n", leftovers); }
+      if (len == 0 && leftovers != 0) { printf("Could not convert last %lu bytes.\n", leftovers); }
       else { write_to_file_descriptor(fpout, output_buffer.data(), len * sizeof(char)); }
     } else if (to_encoding == "UTF-16LE" || to_encoding == "UTF-16") {
       auto proc = [this, &fpout](size_t size_bytes) {
