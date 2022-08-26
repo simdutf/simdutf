@@ -252,7 +252,7 @@ size_t CommandLine::run_simdutf_procedure(PROCEDURE proc) {
   size_t leftovers{0};
   while(!(input_files.empty())) {
     size_t input_size = leftovers;
-    if(!load_data(&input_size)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop();  continue; }
+    if(!load_chunk(&input_size)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop();  continue; }
     leftovers = input_size - proc(input_size);
     // Copy leftover bytes to the start of input_data
     for (int i = 0; i < leftovers; i++) {
@@ -272,7 +272,7 @@ void CommandLine::iconv_fallback(std::FILE *fpout) {
   size_t leftovers{0};
   while (!(input_files.empty())) {
     size_t input_size{leftovers};
-    if(!load_data(&input_size)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop();  continue; }
+    if(!load_chunk(&input_size)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop();  continue; }
     size_t inbytes = input_size;
     size_t outbytes = sizeof(uint32_t) * inbytes;
     size_t start_outbytes = outbytes;
@@ -311,9 +311,9 @@ bool CommandLine::write_to_file_descriptor(std::FILE *fp, const char * data, siz
   return true;
 }
 
-// Loads CHUNK_SIZE bytes into input_data and increments *input_size by number of bytes read
-bool CommandLine::load_data(size_t *input_size) {
-  size_t count = CHUNK_SIZE;
+// Loads a chunk of data (CHUNK_SIZE bytes). *input_size is the current input size and is updated to the new input size after.
+bool CommandLine::load_chunk(size_t *input_size) {
+  size_t count = CHUNK_SIZE - *input_size;
   while (count > 0) {
     // Open a file if no file is opened
     if (current_file == NULL) {
@@ -342,14 +342,14 @@ bool CommandLine::load_data(size_t *input_size) {
 }
 
 // UNSAFE if size < 4 (should never happen when CHUNK_SIZE >= 4)
-// Given the size of the input from the start of input_data, finds the last leading byte
+// Given the size of the input from the start of input_data, returns the size just before the last leading bytes
 size_t CommandLine::find_last_leading_byte(size_t size) {
-  // A leading byte cannot be further than 4 bytes away from the end for valid input
-  for (int i = 0; i < 5; i++) {
-    if ((input_data[size - 1] & 0b11000000) != 0b10000000) { break; }
+  // A leading byte cannot be further than 3 bytes away from the end for valid input
+  for (int i = 0; i < 4; i++) {
     size--;
+    if ((input_data[size] & 0b11000000) != 0b10000000) { break; }
   }
-  return size - 1;
+  return size;
 }
 
 void CommandLine::show_help() {
