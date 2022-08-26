@@ -45,7 +45,10 @@ void __asan_on_error() {
   const size_t buf_size = 4*MAX_SIZE + 3;
   char buffer[buf_size];
   for (int i = 0; i < input.size(); i++) {
-    sprintf(buffer + 4*i + 1, "\\x%02x", input[i]);
+SIMDUTF_PUSH_DISABLE_WARNINGS
+SIMDUTF_DISABLE_DEPRECATED_WARNING
+     sprintf(buffer + 4*i + 1, "\\x%02x", input[i]);
+SIMDUTF_POP_DISABLE_WARNINGS
   }
   buffer[0] = '"';
   buffer[buf_size - 2] = '"';
