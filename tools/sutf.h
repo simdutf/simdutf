@@ -12,7 +12,7 @@
 #include <memory>
 #include <queue>
 
-constexpr size_t CHUNK_SIZE = 1024;    // Must be at least 4
+constexpr size_t CHUNK_SIZE = 65536;    // Must be at least 4
 
 class CommandLine
 {
