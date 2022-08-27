@@ -78,6 +78,7 @@ SIMDUTF_POP_DISABLE_WARNINGS
 
 namespace {
 std::vector<size_t> input_size{7, 16, 12, 64, 67, 128, 129, 256, 1024, MAX_SIZE};
+int weights[6][2] = {{10,90}, {25,75}, {50,50}, {75,25}, {90,10}, {99,1}};
 }
 
 //  Possible states.
@@ -300,157 +301,161 @@ struct state_tracker {
 
 TEST(basic_fuzz) {
   size_t counter{0};
-  state_tracker tracker(seed, 1, 1);
-  while (counter < 100000) {
-    for (size_t size : input_size) {
-      input.clear();
-      std::vector<char> output(4*size);
-      while (input.size() < size) {
-        tracker.next(input);
+  for(int i = 0; i < 6; i++) {
+    state_tracker tracker(seed, weights[i][0], weights[i][1]);
+    while (counter < 100000) {
+      for (size_t size : input_size) {
+        input.clear();
+        std::vector<char> output(4*size);
+        while (input.size() < size) {
+          tracker.next(input);
+        }
+        counter++;
+        if ((counter % 10000) == 0) {
+          printf("-");
+          fflush(NULL);
+        }
+        reset();
+        is_ok_utf8.first = true;
+        is_ok_utf8.second =
+            implementation.validate_utf8(input.data(), input.size());
+        is_ok_utf16.first = true;
+        is_ok_utf16.second = implementation.validate_utf16le(
+            reinterpret_cast<char16_t *>(input.data()),
+            input.size() / sizeof(char16_t));
+        is_ok_utf32.first = true;
+        is_ok_utf32.second = implementation.validate_utf32(
+            reinterpret_cast<char32_t *>(input.data()),
+            input.size() / sizeof(char32_t));
+        utf8_to_utf16.first = true;
+        utf8_to_utf16.second = implementation.convert_utf8_to_utf16le(
+            input.data(), input.size(),
+            reinterpret_cast<char16_t *>(output.data()));
+        utf8_to_utf32.first = true;
+        utf8_to_utf32.second = implementation.convert_utf8_to_utf32(
+            input.data(), input.size(),
+            reinterpret_cast<char32_t *>(output.data()));
+        utf16_to_utf8.first = true;
+        utf16_to_utf8.second = implementation.convert_utf16le_to_utf8(
+            reinterpret_cast<char16_t *>(input.data()),
+            input.size() / sizeof(char16_t), output.data());
+        utf16_to_utf32.first = true;
+        utf16_to_utf32.second = implementation.convert_utf16le_to_utf32(
+            reinterpret_cast<char16_t *>(input.data()),
+            input.size() / sizeof(char16_t), reinterpret_cast<char32_t *>(output.data()));
+        utf32_to_utf8.first = true;
+        utf32_to_utf8.second = implementation.convert_utf32_to_utf8(
+            reinterpret_cast<char32_t *>(input.data()),
+            input.size() / sizeof(char32_t), output.data());
+        utf32_to_utf16.first = true;
+        utf32_to_utf16.second = implementation.convert_utf32_to_utf16le(
+            reinterpret_cast<char32_t *>(input.data()),
+            input.size() / sizeof(char32_t), reinterpret_cast<char16_t *>(output.data()));
+        if(is_ok_utf8.second ? (utf8_to_utf16.second == 0 || utf8_to_utf32.second == 0) : (utf8_to_utf16.second > 0 || utf8_to_utf32.second > 0)) {
+          std::cout << (is_ok_utf8.second ? "UTF-8 is ok" : "UTF-8 is not ok") << std::endl;
+          std::cout << " size = " << input.size() << std::endl;
+          std::cout << "  implementation.convert_utf8_to_utf16.second return " << utf8_to_utf16.second << std::endl;
+          std::cout << "  implementation.convert_utf8_to_utf32.second return " << utf8_to_utf32.second << std::endl;
+        }
+        ASSERT_TRUE(is_ok_utf8.second ? (utf8_to_utf16.second > 0 && utf8_to_utf32.second > 0) : (utf8_to_utf16.second == 0 && utf8_to_utf32.second == 0));
+        if(is_ok_utf16.second ? (utf16_to_utf8.second == 0 || utf16_to_utf32.second == 0) : (utf16_to_utf8.second > 0 || utf16_to_utf32.second > 0)) {
+          std::cout << (is_ok_utf16.second ? "UTF-16 is ok" : "UTF-16 is not ok") << std::endl;
+          std::cout << " size = " << input.size() / sizeof(char16_t) << std::endl;
+          std::cout << "  implementation.convert_utf16_to_utf8.second return " << utf16_to_utf8.second << std::endl;
+          std::cout << "  implementation.convert_utf16_to_utf32.second return " << utf16_to_utf32.second << std::endl;
+        }
+        ASSERT_TRUE(is_ok_utf16.second ? (utf16_to_utf8.second > 0 && utf16_to_utf32.second > 0) : (utf16_to_utf8.second == 0 && utf16_to_utf32.second == 0));
+        if(is_ok_utf32.second ? (utf32_to_utf8.second == 0 || utf32_to_utf16.second == 0) : (utf32_to_utf8.second > 0 || utf32_to_utf16.second > 0)) {
+          std::cout << (is_ok_utf32.second ? "UTF-32 is ok" : "UTF-32 is not ok") << std::endl;
+          std::cout << " size = " << input.size() / sizeof(char32_t) << std::endl;
+          std::cout << "  implementation.convert_utf32_to_utf8.second return " << utf32_to_utf8.second << std::endl;
+          std::cout << "  implementation.convert_utf32_to_utf16.second return " << utf32_to_utf16.second << std::endl;
+        }
+        ASSERT_TRUE(is_ok_utf32.second ? (utf32_to_utf8.second > 0 && utf32_to_utf16.second > 0) : (utf32_to_utf8.second == 0 && utf32_to_utf16.second == 0));
       }
-      counter++;
-      if ((counter % 10000) == 0) {
-        printf("-");
-        fflush(NULL);
-      }
-      reset();
-      is_ok_utf8.first = true;
-      is_ok_utf8.second =
-          implementation.validate_utf8(input.data(), input.size());
-      is_ok_utf16.first = true;
-      is_ok_utf16.second = implementation.validate_utf16le(
-          reinterpret_cast<char16_t *>(input.data()),
-          input.size() / sizeof(char16_t));
-      is_ok_utf32.first = true;
-      is_ok_utf32.second = implementation.validate_utf32(
-          reinterpret_cast<char32_t *>(input.data()),
-          input.size() / sizeof(char32_t));
-      utf8_to_utf16.first = true;
-      utf8_to_utf16.second = implementation.convert_utf8_to_utf16le(
-          input.data(), input.size(),
-          reinterpret_cast<char16_t *>(output.data()));
-      utf8_to_utf32.first = true;
-      utf8_to_utf32.second = implementation.convert_utf8_to_utf32(
-          input.data(), input.size(),
-          reinterpret_cast<char32_t *>(output.data()));
-      utf16_to_utf8.first = true;
-      utf16_to_utf8.second = implementation.convert_utf16le_to_utf8(
-          reinterpret_cast<char16_t *>(input.data()),
-          input.size() / sizeof(char16_t), output.data());
-      utf16_to_utf32.first = true;
-      utf16_to_utf32.second = implementation.convert_utf16le_to_utf32(
-          reinterpret_cast<char16_t *>(input.data()),
-          input.size() / sizeof(char16_t), reinterpret_cast<char32_t *>(output.data()));
-      utf32_to_utf8.first = true;
-      utf32_to_utf8.second = implementation.convert_utf32_to_utf8(
-          reinterpret_cast<char32_t *>(input.data()),
-          input.size() / sizeof(char32_t), output.data());
-      utf32_to_utf16.first = true;
-      utf32_to_utf16.second = implementation.convert_utf32_to_utf16le(
-          reinterpret_cast<char32_t *>(input.data()),
-          input.size() / sizeof(char32_t), reinterpret_cast<char16_t *>(output.data()));
-      if(is_ok_utf8.second ? (utf8_to_utf16.second == 0 || utf8_to_utf32.second == 0) : (utf8_to_utf16.second > 0 || utf8_to_utf32.second > 0)) {
-        std::cout << (is_ok_utf8.second ? "UTF-8 is ok" : "UTF-8 is not ok") << std::endl;
-        std::cout << " size = " << input.size() << std::endl;
-        std::cout << "  implementation.convert_utf8_to_utf16.second return " << utf8_to_utf16.second << std::endl;
-        std::cout << "  implementation.convert_utf8_to_utf32.second return " << utf8_to_utf32.second << std::endl;
-      }
-      ASSERT_TRUE(is_ok_utf8.second ? (utf8_to_utf16.second > 0 && utf8_to_utf32.second > 0) : (utf8_to_utf16.second == 0 && utf8_to_utf32.second == 0));
-      if(is_ok_utf16.second ? (utf16_to_utf8.second == 0 || utf16_to_utf32.second == 0) : (utf16_to_utf8.second > 0 || utf16_to_utf32.second > 0)) {
-        std::cout << (is_ok_utf16.second ? "UTF-16 is ok" : "UTF-16 is not ok") << std::endl;
-        std::cout << " size = " << input.size() / sizeof(char16_t) << std::endl;
-        std::cout << "  implementation.convert_utf16_to_utf8.second return " << utf16_to_utf8.second << std::endl;
-        std::cout << "  implementation.convert_utf16_to_utf32.second return " << utf16_to_utf32.second << std::endl;
-      }
-      ASSERT_TRUE(is_ok_utf16.second ? (utf16_to_utf8.second > 0 && utf16_to_utf32.second > 0) : (utf16_to_utf8.second == 0 && utf16_to_utf32.second == 0));
-      if(is_ok_utf32.second ? (utf32_to_utf8.second == 0 || utf32_to_utf16.second == 0) : (utf32_to_utf8.second > 0 || utf32_to_utf16.second > 0)) {
-        std::cout << (is_ok_utf32.second ? "UTF-32 is ok" : "UTF-32 is not ok") << std::endl;
-        std::cout << " size = " << input.size() / sizeof(char32_t) << std::endl;
-        std::cout << "  implementation.convert_utf32_to_utf8.second return " << utf32_to_utf8.second << std::endl;
-        std::cout << "  implementation.convert_utf32_to_utf16.second return " << utf32_to_utf16.second << std::endl;
-      }
-      ASSERT_TRUE(is_ok_utf32.second ? (utf32_to_utf8.second > 0 && utf32_to_utf16.second > 0) : (utf32_to_utf8.second == 0 && utf32_to_utf16.second == 0));
     }
   }
 }
 
 TEST(overflow_fuzz) {
   size_t counter{0};
-  state_tracker tracker(seed, 1, 1);
-  while (counter < 100000) {
-    for (size_t size : input_size) {
-      input.clear();
-      std::vector<char> output(4*size);
-      while (input.size() < size) {
-        tracker.next(input);
-      }
-      counter++;
-      if ((counter % 10000) == 0) {
-        printf("-");
-        fflush(NULL);
-      }
-      reset();
-      is_ok_utf8.first = true;
-      is_ok_utf8.second =
-          implementation.validate_utf8(input.data(), input.size());
-      is_ok_utf16.first = true;
-      is_ok_utf16.second = implementation.validate_utf16le(
-          reinterpret_cast<char16_t *>(input.data()),
-          input.size() / sizeof(char16_t));
-      is_ok_utf32.first = true;
-      is_ok_utf32.second = implementation.validate_utf32(
-          reinterpret_cast<char32_t *>(input.data()),
-          input.size() / sizeof(char32_t));
-      if (is_ok_utf8.second) {
-        size_t expected_length = implementation.utf16_length_from_utf8(input.data(), input.size());
-        output.resize(expected_length);
-        utf8_to_utf16.first = true;
-        utf8_to_utf16.second = implementation.convert_utf8_to_utf16le(
-            input.data(), input.size(),
-            reinterpret_cast<char16_t *>(output.data()));
-        ASSERT_TRUE(expected_length > 0 && expected_length == output.size() && expected_length == utf8_to_utf16.second);
-
-        expected_length = implementation.utf32_length_from_utf8(input.data(), input.size());
-        output.resize(expected_length);
-        utf8_to_utf32.first = true;
-        utf8_to_utf32.second = implementation.convert_utf8_to_utf32(
-            input.data(), input.size(),
-            reinterpret_cast<char32_t *>(output.data()));
-        ASSERT_TRUE(expected_length > 0 && expected_length == output.size() && expected_length == utf8_to_utf32.second);
-      }
-      if (is_ok_utf16.second) {
-        size_t expected_length = implementation.utf8_length_from_utf16le(reinterpret_cast<char16_t *>(input.data()), input.size() / sizeof(char16_t));
-        output.resize(expected_length);
-        utf16_to_utf8.first = true;
-        utf16_to_utf8.second = implementation.convert_utf16le_to_utf8(
+  for(int i = 0; i < 6; i++) {
+    state_tracker tracker(seed, weights[i][0], weights[i][1]);
+    while (counter < 100000) {
+      for (size_t size : input_size) {
+        input.clear();
+        std::vector<char> output(4*size);
+        while (input.size() < size) {
+          tracker.next(input);
+        }
+        counter++;
+        if ((counter % 10000) == 0) {
+          printf("-");
+          fflush(NULL);
+        }
+        reset();
+        is_ok_utf8.first = true;
+        is_ok_utf8.second =
+            implementation.validate_utf8(input.data(), input.size());
+        is_ok_utf16.first = true;
+        is_ok_utf16.second = implementation.validate_utf16le(
             reinterpret_cast<char16_t *>(input.data()),
-            input.size() / sizeof(char16_t), output.data());
-        ASSERT_TRUE(expected_length > 0 && expected_length == output.size() && expected_length == utf16_to_utf8.second);
-
-        expected_length = implementation.utf32_length_from_utf16le(reinterpret_cast<char16_t *>(input.data()), input.size() / sizeof(char16_t));
-        output.resize(expected_length);
-        utf16_to_utf32.first = true;
-        utf16_to_utf32.second = implementation.convert_utf16le_to_utf32(
-            reinterpret_cast<char16_t *>(input.data()),
-            input.size() / sizeof(char16_t), reinterpret_cast<char32_t *>(output.data()));
-        ASSERT_TRUE(expected_length > 0 && expected_length == output.size() && expected_length == utf16_to_utf32.second);
-      }
-      if (is_ok_utf32.second) {
-        size_t expected_length = implementation.utf8_length_from_utf32(reinterpret_cast<char32_t *>(input.data()), input.size() / sizeof(char32_t));
-        output.resize(expected_length);
-        utf32_to_utf8.first = true;
-        utf32_to_utf8.second = implementation.convert_utf32_to_utf8(
+            input.size() / sizeof(char16_t));
+        is_ok_utf32.first = true;
+        is_ok_utf32.second = implementation.validate_utf32(
             reinterpret_cast<char32_t *>(input.data()),
-            input.size() / sizeof(char32_t), output.data());
-        ASSERT_TRUE(expected_length > 0 && expected_length == output.size() && expected_length == utf32_to_utf8.second);
+            input.size() / sizeof(char32_t));
+        if (is_ok_utf8.second) {
+          size_t expected_length = implementation.utf16_length_from_utf8(input.data(), input.size());
+          output.resize(expected_length);
+          utf8_to_utf16.first = true;
+          utf8_to_utf16.second = implementation.convert_utf8_to_utf16le(
+              input.data(), input.size(),
+              reinterpret_cast<char16_t *>(output.data()));
+          ASSERT_TRUE(expected_length > 0 && expected_length == output.size() && expected_length == utf8_to_utf16.second);
 
-        expected_length = implementation.utf16_length_from_utf32(reinterpret_cast<char32_t *>(input.data()), input.size() / sizeof(char32_t));
-        output.resize(expected_length);
-        utf32_to_utf16.first = true;
-        utf32_to_utf16.second = implementation.convert_utf32_to_utf16le(
-            reinterpret_cast<char32_t *>(input.data()),
-            input.size() / sizeof(char32_t), reinterpret_cast<char16_t *>(output.data()));
-        ASSERT_TRUE(expected_length > 0 && expected_length == output.size() && expected_length == utf32_to_utf16.second);
+          expected_length = implementation.utf32_length_from_utf8(input.data(), input.size());
+          output.resize(expected_length);
+          utf8_to_utf32.first = true;
+          utf8_to_utf32.second = implementation.convert_utf8_to_utf32(
+              input.data(), input.size(),
+              reinterpret_cast<char32_t *>(output.data()));
+          ASSERT_TRUE(expected_length > 0 && expected_length == output.size() && expected_length == utf8_to_utf32.second);
+        }
+        if (is_ok_utf16.second) {
+          size_t expected_length = implementation.utf8_length_from_utf16le(reinterpret_cast<char16_t *>(input.data()), input.size() / sizeof(char16_t));
+          output.resize(expected_length);
+          utf16_to_utf8.first = true;
+          utf16_to_utf8.second = implementation.convert_utf16le_to_utf8(
+              reinterpret_cast<char16_t *>(input.data()),
+              input.size() / sizeof(char16_t), output.data());
+          ASSERT_TRUE(expected_length > 0 && expected_length == output.size() && expected_length == utf16_to_utf8.second);
+
+          expected_length = implementation.utf32_length_from_utf16le(reinterpret_cast<char16_t *>(input.data()), input.size() / sizeof(char16_t));
+          output.resize(expected_length);
+          utf16_to_utf32.first = true;
+          utf16_to_utf32.second = implementation.convert_utf16le_to_utf32(
+              reinterpret_cast<char16_t *>(input.data()),
+              input.size() / sizeof(char16_t), reinterpret_cast<char32_t *>(output.data()));
+          ASSERT_TRUE(expected_length > 0 && expected_length == output.size() && expected_length == utf16_to_utf32.second);
+        }
+        if (is_ok_utf32.second) {
+          size_t expected_length = implementation.utf8_length_from_utf32(reinterpret_cast<char32_t *>(input.data()), input.size() / sizeof(char32_t));
+          output.resize(expected_length);
+          utf32_to_utf8.first = true;
+          utf32_to_utf8.second = implementation.convert_utf32_to_utf8(
+              reinterpret_cast<char32_t *>(input.data()),
+              input.size() / sizeof(char32_t), output.data());
+          ASSERT_TRUE(expected_length > 0 && expected_length == output.size() && expected_length == utf32_to_utf8.second);
+
+          expected_length = implementation.utf16_length_from_utf32(reinterpret_cast<char32_t *>(input.data()), input.size() / sizeof(char32_t));
+          output.resize(expected_length);
+          utf32_to_utf16.first = true;
+          utf32_to_utf16.second = implementation.convert_utf32_to_utf16le(
+              reinterpret_cast<char32_t *>(input.data()),
+              input.size() / sizeof(char32_t), reinterpret_cast<char16_t *>(output.data()));
+          ASSERT_TRUE(expected_length > 0 && expected_length == output.size() && expected_length == utf32_to_utf16.second);
+        }
       }
     }
   }
