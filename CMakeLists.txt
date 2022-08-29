@@ -7,9 +7,14 @@ project(simdutf
 )
 
 include(GNUInstallDirs)
-if(PROJECT_IS_TOP_LEVEL)
-  include(CTest)
-endif(PROJECT_IS_TOP_LEVEL)
+# The following requires CMake 3.21.
+# if(PROJECT_IS_TOP_LEVEL)
+#  message(STATUS "Building simdutf as a top-level project.")
+#  include(CTest)
+#else()
+#  message(STATUS "Building simdutf as a subproject.")
+#endif(PROJECT_IS_TOP_LEVEL)
+include(CTest)
 include(cmake/simdutf-flags.cmake)
 
 set(SIMDUTF_LIB_VERSION "1.0.1" CACHE STRING "simdutf library version")
@@ -22,23 +27,28 @@ add_subdirectory(src)
 add_subdirectory(singleheader)
 
 if (BUILD_TESTING)
+  message(STATUS "The tests are enabled.")
   add_subdirectory(tests)
+else()
+  message(STATUS "The tests are disabled.")
 endif(BUILD_TESTING)
 
 
 if(CMAKE_CXX_COMPILER_ID MATCHES GNU AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0)
   message(STATUS "The benchmark tool requires GCC 8.0 or better.")
 else()
-  add_subdirectory(benchmarks)
   add_subdirectory(tools)
 endif()
 
 if (SIMDUTF_BENCHMARKS)
-  if(NOT CMAKE_CXX_COMPILER_ID MATCHES GNU OR CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0")
+  if((CMAKE_CXX_COMPILER_ID MATCHES GNU) AND (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0"))
     message(STATUS "The benchmark tool requires GCC 8.0 or better.")
   else()
+    message(STATUS "The benchmarks can be disabled by setting SIMDUTF_BENCHMARKS, e.g., -D SIMDUTF_BENCHMARKS=OFF.")
     add_subdirectory(benchmarks)
   endif()
+else()
+  message(STATUS "The benchmarks can be enabled by setting SIMDUTF_BENCHMARKS, e.g., -D SIMDUTF_BENCHMARKS=ON.")
 endif()
 
 # ---- Install rules ----
