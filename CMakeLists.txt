@@ -23,6 +23,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES GNU AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS
   message(STATUS "The benchmark tool requires GCC 8.0 or better.")
 else()
   add_subdirectory(benchmarks)
+  add_subdirectory(tools)
 endif()
 
 
