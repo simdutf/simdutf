@@ -10,8 +10,8 @@
 .Lf0:	.byte		0xf0, 0xf0, 0xf0, 0xf0
 .Lc2:	.byte		0xc2, 0xc2, 0xc2, 0xc2
 
-.Ld7c0dc00:
-	.short		0xd800 - 0x0040, 0xdc00
+.Ld7c0d7c0:
+	.short		0xd800 - 0x0040, 0xd800 - 0x0040
 .L0400:	.short		0x0400, 0x0400
 .Ld800:	.short		0xd800, 0xd800
 
@@ -33,11 +33,11 @@ utf8_to_utf16le_avx512:
 	vpbroadcastd	.Lc2(%rip), %zmm20
 	vmovdqa64	.Lid(%rip), %zmm27
 	vpternlogd	$0xff, %zmm26, %zmm26, %zmm26 // ffffffff
-	vpsllw		$10, %zmm26, %zmm25	// 0xfc00, 0xfc00
-	vpbroadcastd	.Ld7c0dc00(%rip), %zmm24
+	vpbroadcastd	.Ld7c0d7c0(%rip), %zmm24
 	vpbroadcastd	.L0400(%rip), %zmm21
 	vpbroadcastd	.Ld800(%rip), %zmm22
 	vpaddw		%zmm21, %zmm21, %zmm23	// 0x0800, 0x0800
+	vpaddw		%zmm21, %zmm22, %zmm25	// 0xdc00, 0xdc00
 
 	push		%rbx			// stash callee-saved registers
 	push		%r12
@@ -166,7 +166,6 @@ utf8_to_utf16le_avx512:
 	kmovd		%ecx, %k2
 	shr		$1, %rcx		// words in zmm1 that represent high surrogates
 	kmovd		%ecx, %k1
-	kord		%k1, %k2, %k6		// words in zmm1 that represent surrogates
 
 	// add in second last bytes
 	kshiftrq	$1, %k5, %k5		// bytes that precede non-ASCII bytes
@@ -189,7 +188,7 @@ utf8_to_utf16le_avx512:
 	// 2 byte                          110LKJHG 10FEDCBA  00000LKJHGFEDCBA
 	// 3 byte                 1110RQPN 10MLKJHG 10FEDCBA  RQPNMLKJHGFEDCBA
 	// hi surrogate  11110WVU 10TSRQPN 10MLKJHG           0WVUTSRQPNMLKJHG
-	// lo surrogate                    10MLKJHG 10FEDCBA  0000MLKJHGFEDCVA
+	// lo surrogate                    10MLKJHG 10FEDCBA  0000MLKJHGFEDCBA
 
 	// compute the number characters in zmm1 and advance input buffer, count
 	// if the last word is a high surrogate, discard it as we don't have code
@@ -211,13 +210,11 @@ utf8_to_utf16le_avx512:
 	// Here we assume that each high surrogate is followed by a low surrogate
 	bzhi		%r9d, %ebx, %r8d	// output words that hold meaningful characters
 	kmovd		%r8d, %k4
-	vmovdqu16	%zmm2, %zmm2{%k2}{z}	// only low surrogates
-	vpexpandw	%zmm24, %zmm7{%k6}{z}	// hi surr: 1101011111000000  lo surr: 1101110000000000
-	vpandnd		%zmm2, %zmm25, %zmm2	// lo surr: 000000KJHGFEDCBA
-	vpsrlw		$4, %zmm1, %zmm2{%k1}	// hi surr: 00000WVUTSRQPNML  lo surr: 000000KJHGFEDCBA
-	vpaddw		%zmm7, %zmm2, %zmm1{%k6} // hi sur: 110110vutsRQPNML  lo surr: 110111KJHGFEDCBA
+	vmovdqu16	%zmm25, %zmm2{%k2}{z}	// lo surr: 1101110000000000, other:  0000000000000000
+	vpsrlw		$4, %zmm1, %zmm3	// hi surr: 00000WVUTSRQPNML  vuts = WVUTS - 1
+	vpord		%zmm1, %zmm2, %zmm1	// lo surr: 110111KJHGFEDCBA, other:  unchanged
+	vpaddw		%zmm24, %zmm3, %zmm1{%k1}// hi sur: 110110vutsRQPNML, other:  unchanged
 	vmovdqu16	%zmm1, (%rdi){%k4}	// deposit decoded text into output
-						// vuts = WVUTS - 1
 	lea		(%rdi, %r9, 2), %rdi	// advance output buffer by that many words
 
 	// check 3 and 4 byte sequences for correctness
