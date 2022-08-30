@@ -60,6 +60,10 @@ const char *vectors[] = {
 	"This text\xc7is all wonky!  I wonder why that is...\xff", /* not enough follow bytes */
 	"I have too many\xc5€€€\xff",
 	"吾輩は猫である。\xe3\x81名前はまだ無い。\xff",
+
+	/* checks for implementation details */
+	"01§456789abcdef0123456789abcdef0123456789abcdef0123456789abcde字\xff", /* check for correct wrap around of third-last bytes */
+
 	NULL,
 };
 

@@ -48,6 +48,8 @@ utf8_to_utf16le_avx512:
 
 	mov		$0x5555555555555555, %rax
 	kmovq		%rax, %k7		// the LSB of each word
+	mov		$0x3fffffffffffffff, %rax
+	kmovq		%rax, %k0		// all except the last two byte of the vector
 	mov		$-1, %rbx		// the valid prefix of bits in the input
 
 	cmp		$64, %rdx		// enough left for another iteration?
@@ -176,8 +178,9 @@ utf8_to_utf16le_avx512:
 	vpaddw		%zmm2, %zmm1, %zmm2	// and add to the last bytes
 
 	// add in third last bytes
+	kandq		%k0, %k3, %k3		// bytes that could be third-last bytes (LEAD34 sans wrap around)
 	vpaddw		%zmm26, %zmm7, %zmm7	// indices of the third last bytes
-	vmovdqu8	%zmm0, %zmm6{%k3}{z}	// only those that are the third last byte of a sequece (i.e. LEAD34)
+	vmovdqu8	%zmm0, %zmm6{%k3}{z}	// only those that are the third last byte of a sequece
 	vpermb		%zmm6, %zmm7, %zmm3{%k7}{z} // the third last bytes (of three byte sequences, hi surrogate)
 	vpsllw		$12, %zmm3, %zmm3	// shifted into position
 	vpaddw		%zmm3, %zmm2, %zmm1	// and added to the other bytes
@@ -224,12 +227,12 @@ utf8_to_utf16le_avx512:
 
 	vpcmpltuw	%zmm23, %zmm1, %k4{%k6}	// any 3 byte characters < 0x0800?
 	vpsubw		%zmm22, %zmm1, %zmm2	// zmm1 - 0xd800
-	vpcmpltuw	%zmm23, %zmm2, %k0{%k6}	// any unexpected surrogates?
-	kord		%k4, %k0, %k0
+	vpcmpltuw	%zmm23, %zmm2, %k2{%k6}	// any unexpected surrogates?
+	kord		%k4, %k2, %k2
 
 	vpcmpnltuw	%zmm21, %zmm2, %k4{%k1}	// any botched high surrogates?  These occur when
 						// char < U+10000 or > U+10FFFF or lead byte >F7
-	kortestd	%k4, %k0
+	kortestd	%k4, %k2
 	jnz		.Lfail3
 
 	cmp		$64, %rdx		// enough for another round?
@@ -287,14 +290,14 @@ utf8_to_utf16le_avx512:
 	sub		%eax, %edx		// length of prefix before the lead byte of first missing follow byte
 	jmp		.Ltail
 
-	// overlong encoding, 5+ byte sequence, or surrogate encoded in K4|K0
+	// overlong encoding, 5+ byte sequence, or surrogate encoded in K4|K2
 	// invariant: the error can never be at a low surrogate
 .Lfail3:
 	sub		%r9, %rdi		// roll back rdi adjustment
 	sub		%r9, %rdi
 	lea		-64(%rsi, %rcx, 1), %rsi // roll back rsi adjustment
-	kord		%k4, %k0, %k0		// where did errors occur?
-	kmovd		%k0, %edx
+	kord		%k4, %k2, %k2		// where did errors occur?
+	kmovd		%k2, %edx
 	blsi		%edx, %edx		// where did the first error occur?
 	stc
 	adc		%rax, %rax		// LEAD+4TH once again
