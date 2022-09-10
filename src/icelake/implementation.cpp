@@ -57,7 +57,39 @@ simdutf_warn_unused bool implementation::validate_ascii(const char *buf, size_t 
 }
 
 simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, size_t len) const noexcept {
-    return scalar::utf16::validate(buf, len);
+  __m512i top6_mask = _mm512_set1_epi32(0xfc00fc00);
+  __m512i surrogate1 = _mm512_set1_epi32(0xd800d800);
+  __m512i surrogate2 = _mm512_set1_epi32(0xdc00dc00);
+  size_t i = 0;
+  constexpr size_t word_per_vector = sizeof(__m512i)/sizeof(char16_t);
+  uint32_t previous_low_surrogates = 0;
+  for(;i + word_per_vector <= len; i+=word_per_vector) {
+    __m512i input = _mm512_loadu_si512(buf + i);
+    __m512i masked_input = _mm512_and_si512(input, top6_mask);
+    // 0xd800 <= input < 0xdc00 (high surrogate, except lookahead)
+    __mmask32 low_surrogate = _mm512_cmpeq_epu16_mask(masked_input, surrogate1);
+    // 0xdc00 <= input < 0xe000 (low surrogate)
+    __mmask32 high_surrogate = _mm512_cmpeq_epu16_mask(masked_input, surrogate2);
+    if((low_surrogate<<1) + (previous_low_surrogates>>31) != high_surrogate) {
+      return false; // could identify location
+    }
+    previous_low_surrogates = low_surrogate;
+  }
+  // here we have 
+  // i + word_per_vector > len which indicates how many bytes we must decode
+  {
+     uint32_t leftover = uint32_t(i + word_per_vector - len);
+    __m512i input = _mm512_maskz_loadu_epi16((uint32_t(1)<<leftover)-1, buf + i);
+    __m512i masked_input = _mm512_and_si512(input, top6_mask);
+    // 0xd800 <= input < 0xdc00 (high surrogate, except lookahead)
+    __mmask32 low_surrogate = _mm512_cmpeq_epu16_mask(masked_input, surrogate1);
+    // 0xdc00 <= input < 0xe000 (low surrogate)
+    __mmask32 high_surrogate = _mm512_cmpeq_epu16_mask(masked_input, surrogate2);
+    if((low_surrogate<<1) + (previous_low_surrogates>>31) != high_surrogate) {
+      return false; // could identify location
+    }
+  }
+  return true;
 }
 
 simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, size_t len) const noexcept {
