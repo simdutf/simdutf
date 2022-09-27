@@ -298,7 +298,6 @@ utf8_to_utf16le_avx512:
 	lea		-64(%rsi, %rcx, 1), %rsi // roll back rsi adjustment
 	kord		%k4, %k2, %k2		// where did errors occur?
 	kmovd		%k2, %edx
-	blsi		%edx, %edx		// where did the first error occur?
 	stc
 	adc		%rax, %rax		// LEAD+4TH once again
 	pdep		%rax, %rdx, %rdx	// which start byte does this error correspond to?
