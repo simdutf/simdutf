@@ -37,7 +37,7 @@
 #define SIMDUTF_TARGET_ICELAKE
 #define SIMDJSON_UNTARGET_ICELAKE
 #else
-#define SIMDUTF_TARGET_ICELAKE SIMDUTF_TARGET_REGION("avx512f,avx512dq,avx512cd,avx512bw,avx512vbmi,avx512vbmi2,avx512vl,avx2,bmi,pclmul,lzcnt")
+#define SIMDUTF_TARGET_ICELAKE SIMDUTF_TARGET_REGION("avx512f,avx512dq,avx512cd,avx512bw,avx512vbmi,avx512vbmi2,avx512vl,avx2,bmi,bmi2,pclmul,lzcnt")
 #define SIMDUTF_UNTARGET_ICELAKE SIMDUTF_UNTARGET_REGION
 #endif
 

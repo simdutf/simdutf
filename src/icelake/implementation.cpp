@@ -69,12 +69,99 @@ simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, siz
   }
 }
 
+void print(__m512i x) {
+  uint8_t buffer[64];
+  _mm512_storeu_epi16(buffer, x);
+  for (size_t i = 0; i < 64; i++) {
+    printf("%02x ", buffer[i]);
+  }
+  printf("\n");
+}
+
+void printx16(__m512i x) {
+  uint16_t buffer[32];
+  _mm512_storeu_epi16(buffer, x);
+  for (size_t i = 0; i < 32; i++) {
+    printf("%04x ", buffer[i]);
+  }
+  printf("\n");
+}
+void printbinaryu32(uint32_t x) {
+  for (int i = 31; i >= 0; i--) {
+    if (x & (1 << i)) {
+      printf("1");
+    } else {
+      printf("0");
+    }
+  }
+}
+void printbinaryu64(uint64_t x) {
+  for (int i = 63; i >= 0; i--) {
+    if (x & (1ULL << i)) {
+      printf("1");
+    } else {
+      printf("0");
+    }
+  }
+}
+void printbinaryu16(uint16_t x) {
+  for (int i = 15; i >= 0; i--) {
+    if (x & (1 << i)) {
+      printf("1");
+    } else {
+      printf("0");
+    }
+    if (i == 7) {
+      printf("-");
+    }
+  }
+}
+
+void printbinaryu8(uint8_t x) {
+  for (int i = 7; i >= 0; i--) {
+    if (x & (1 << i)) {
+      printf("1");
+    } else {
+      printf("0");
+    }
+  }
+}
+
+void printb16(__m512i x) {
+  uint16_t buffer[32];
+  _mm512_storeu_epi16(buffer, x);
+  for (size_t i = 0; i < 32; i++) {
+    printbinaryu16(buffer[i]);
+    printf(" ");
+  }
+  printf("\n");
+}
+
+void printb8(__m512i x) {
+  uint8_t buffer[64];
+  _mm512_storeu_epi16(buffer, x);
+  for (size_t i = 0; i < 64; i++) {
+    printbinaryu8(buffer[i]);
+    printf(" ");
+    if(((i+1)%8) == 0)  { printf("\n"); }
+  }
+  
+}
+
+void printu16dec(__m512i x) {
+  uint16_t buffer[32];
+  _mm512_storeu_epi16(buffer, x);
+  for (size_t i = 0; i < 32; i++) {
+    printf("%02d ", uint16_t(buffer[i]));
+  }
+  printf("\n");
+}
 
 enum { SIMDUTF_FULL, SIMDUTF_TAIL, SIMDUTF_OK = -1 };
 
 // Return -1 if ok, otherwise might return the location
 // of the error.
-template <int tail = SIMDUTF_FULL> static inline int process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap) {
+template <int tail = SIMDUTF_FULL> static inline uint64_t process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap) {
   // constants
   __m512i mask_identity = _mm512_set_epi8(63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
   __m512i mask_c0c0c0c0 = _mm512_set1_epi32(0xc0c0c0c0);
@@ -106,7 +193,7 @@ template <int tail = SIMDUTF_FULL> static inline int process_block_utf8_to_utf16
     } else {
       if (gap <= 32) {
         __m512i input1 = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(input));
-        _mm512_mask_storeu_epi16(out, ((uint64_t(1) << (gap)) - 1), input1);
+        _mm512_mask_storeu_epi16(out, __mmask32((uint64_t(1) << (gap)) - 1), input1);
         out += gap;
         in += gap;
       } else {
@@ -114,7 +201,7 @@ template <int tail = SIMDUTF_FULL> static inline int process_block_utf8_to_utf16
         _mm512_storeu_si512(out, input1);
         out += 32;
         __m512i input2 = _mm512_cvtepu8_epi16(_mm512_extracti64x4_epi64(input, 1));
-        _mm512_mask_storeu_epi16(out, ((uint32_t(1) << (gap - 32)) - 1), input2);
+        _mm512_mask_storeu_epi16(out, __mmask32((uint32_t(1) << (gap - 32)) - 1), input2);
         out += gap - 32;
         in += gap;
       }
@@ -132,6 +219,7 @@ template <int tail = SIMDUTF_FULL> static inline int process_block_utf8_to_utf16
                                                                      // Overlong 2-byte sequence
   if (_ktestz_mask64_u8(milltwobytes, milltwobytes) == 0) {
     // Overlong 2-byte sequence
+    printf("Overlong 2-byte sequence\n");
     return __tzcnt_u64(milltwobytes);
     // encoding error
   }
@@ -147,11 +235,12 @@ template <int tail = SIMDUTF_FULL> static inline int process_block_utf8_to_utf16
     __mmask64 m1234 = m1 | m234;
     // mismatched continuation bytes:
     if (mc != (b ^ m1234)) {
+      printf("mismatched continuation bytes\n");
       // mismatched continuation bytes
       // continuation bytes at b ^ m1234, they should be at mc,
       // so if (b ^ m1234) &~ mc is non zero...
       // there is a continuation byte present where there should not be one
-      int err1 = __tzcnt_u64(mc ^ (b ^ m1234));
+      uint64_t err1 = __tzcnt_u64(mc ^ (b ^ m1234));
       if (((b ^ m1234) & ~mc) != 0) {
         return err1;
       }
@@ -199,7 +288,7 @@ template <int tail = SIMDUTF_FULL> static inline int process_block_utf8_to_utf16
     thirdlastbytes = _mm512_slli_epi16(thirdlastbytes, 12);                // shifted into position
     __m512i thirdsecondandlastbytes = _mm512_add_epi16(secondandlastbytes, thirdlastbytes);
 
-    __mmask32 Mlo = _pext_u64(mp3, mend);
+    __mmask32 Mlo = __mmask32(_pext_u64(mp3, mend));
     __mmask32 Mhi = (Mlo >> 1);
     __m512i lo_surr_mask = _mm512_maskz_mov_epi16(Mlo,
                                                   mask_dc00dc00); // lo surr: 1101110000000000, other:  0000000000000000
@@ -215,21 +304,21 @@ template <int tail = SIMDUTF_FULL> static inline int process_block_utf8_to_utf16
     //  (It might not be needed to AND with b.)
     __mmask64 mprocessed = (tail == SIMDUTF_FULL) ? _pdep_u64(Mout, mend) : _pdep_u64(Mout, _kand_mask64(mend, b)); // we adjust mend at the end of the output.
 
-    int nout = _mm_popcnt_u64(mprocessed);
-    int nin = 64 - _lzcnt_u64(mprocessed);
+    int64_t nout = _mm_popcnt_u64(mprocessed);
+    int64_t nin = 64 - _lzcnt_u64(mprocessed);
     // Encodings out of range...
     {
       // the location of 3-byte sequence start bytes in the input
       __mmask64 m3 = m34 & (b ^ m4);
       // words in Wout corresponding to 3-byte sequences.
-      __mmask64 M3 = _pext_u64(m3 << 2, mend);
+      __mmask32 M3 = __mmask32(_pext_u64(m3 << 2, mend));
       __m512i mask_08000800 = _mm512_set1_epi32(0x08000800);
-      __mmask32 Msmall800 = _mm512_mask_cmplt_epi16_mask(M3, Wout, mask_08000800);
+      __mmask32 Msmall800 = _mm512_mask_cmplt_epu16_mask(M3, Wout, mask_08000800);
       __m512i mask_d800d800 = _mm512_set1_epi32(0xd800d800);
       __m512i Moutminusd800 = _mm512_sub_epi16(Wout, mask_d800d800);
-      __mmask32 M3s = _mm512_mask_cmplt_epi16_mask(M3, Moutminusd800, mask_08000800);
+      __mmask32 M3s = _mm512_mask_cmplt_epu16_mask(M3, Moutminusd800, mask_08000800);
       __m512i mask_04000400 = _mm512_set1_epi32(0x04000400);
-      __mmask32 M4s = _mm512_mask_cmpge_epi16_mask(Mhi, Moutminusd800, mask_04000400);
+      __mmask32 M4s = _mm512_mask_cmpge_epu16_mask(Mhi, Moutminusd800, mask_04000400);
 
       if (!_kortestz_mask32_u8(M4s, _kor_mask32(Msmall800, M3s))) {
         // Encodings out of range
@@ -237,7 +326,7 @@ template <int tail = SIMDUTF_FULL> static inline int process_block_utf8_to_utf16
       }
     }
 
-    _mm512_mask_storeu_epi16(out, ((uint64_t(1) << nout) - 1), Wout);
+    _mm512_mask_storeu_epi16(out, __mmask32((uint64_t(1) << nout) - 1), Wout);
     out += nout;
     in += nin;
     return SIMDUTF_OK; // ok
@@ -254,7 +343,7 @@ template <int tail = SIMDUTF_FULL> static inline int process_block_utf8_to_utf16
     // continuation bytes at (b ^ leading), they should be at (m234 << 1),
     // so if (b ^ leading) &~ (m234 << 1) is non zero...
     // there is a continuation byte present where there should not be one
-    int err1 = __tzcnt_u64((m234 << 1) ^ (b ^ leading));
+    uint64_t err1 = __tzcnt_u64((m234 << 1) ^ (b ^ leading));
     if (((b ^ leading) & ~(m234 << 1)) != 0) {
       return err1;
     }
@@ -271,7 +360,7 @@ template <int tail = SIMDUTF_FULL> static inline int process_block_utf8_to_utf16
   follow = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(follow));             // ... zero extended into words
   lead = _mm512_slli_epi16(lead, 6);                                         // shifted into position
   __m512i final = _mm512_add_epi16(follow, lead);                            // combining lead and follow
-  int nout, nin;
+  int64_t nout, nin;
   if (tail == SIMDUTF_FULL) {
     // Next part is UTF-16 specific and can be generalized to UTF-32.
     _mm512_storeu_epi16(out, final);
@@ -280,7 +369,7 @@ template <int tail = SIMDUTF_FULL> static inline int process_block_utf8_to_utf16
   } else {
     nout = _mm_popcnt_u64(_pdep_u64(0xFFFFFFFF, leading));
     nin = 64 - _lzcnt_u64(_pdep_u64(0xFFFFFFFF, continuation_or_ascii));
-    _mm512_mask_storeu_epi16(out, ((uint64_t(1) << nout) - 1), final);
+    _mm512_mask_storeu_epi16(out, __mmask32((uint64_t(1) << nout) - 1), final);
   }
   out += nout; // UTF-8 to UTF-16 is only expansionary in this case.
   // computing the consumed input is more fun:
@@ -293,16 +382,16 @@ std::pair<const char *, char16_t *> new_convert_utf8_to_utf16(const char *in, si
 
   // main loop
   while (in + 64 <= final_in) {
-    int result = process_block_utf8_to_utf16<SIMDUTF_FULL>(in, out, final_in - in);
-    if (result != -1) {
+    uint64_t result = process_block_utf8_to_utf16<SIMDUTF_FULL>(in, out, final_in - in);
+    if (result != uint64_t(-1)) {
       return std::make_pair(in, nullptr);
     }
   }
   // Need to handle the tail.
   // We might need to call it more than once.
   while (in < final_in) {
-    int result = process_block_utf8_to_utf16<SIMDUTF_TAIL>(in, out, final_in - in);
-    if (result != -1) {
+    uint64_t result = process_block_utf8_to_utf16<SIMDUTF_TAIL>(in, out, final_in - in);
+    if (result != uint64_t(-1)) {
       return std::make_pair(in, nullptr);
     }
   }
@@ -310,10 +399,11 @@ std::pair<const char *, char16_t *> new_convert_utf8_to_utf16(const char *in, si
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
-  utf8_to_utf16_result ret = new_convert_utf8_to_utf16(buf, len, utf16_output);//icelake::validating_utf8_to_fixed_length<char16_t>(buf, len, utf16_output);
-  if (ret.second == nullptr)
+  utf8_to_utf16_result ret = new_convert_utf8_to_utf16(buf, len, utf16_output);
+  //icelake::validating_utf8_to_fixed_length<char16_t>(buf, len, utf16_output);
+  if (ret.second == nullptr) {
     return 0;
-
+  }
   return ret.second - utf16_output;
 }
 
