@@ -6,6 +6,7 @@
 #ifdef SIMDUTF_VISUAL_STUDIO
 // under clang within visual studio, this will include <x86intrin.h>
 #include <intrin.h>  // visual studio or clang
+#include <immintrin.h>
 #else
 #include <x86intrin.h> // elsewhere
 #endif // SIMDUTF_VISUAL_STUDIO
