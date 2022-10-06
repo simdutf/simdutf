@@ -18,7 +18,8 @@ using utf8_to_utf32_result = std::pair<const char*, uint32_t*>;
     The provided in and out pointers are advanced according to how many input
     bytes have been processed.
 */template <block_processing_mode tail = SIMDUTF_FULL>
-simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap) {
+//simdutf_really_inline 
+uint64_t process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap) {
   // constants
   __m512i mask_identity = _mm512_set_epi8(63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
   __m512i mask_c0c0c0c0 = _mm512_set1_epi32(0xc0c0c0c0);
@@ -33,9 +34,9 @@ simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char
   __mmask64 b = (tail == SIMDUTF_FULL) ? 0xFFFFFFFFFFFFFFFF : (uint64_t(1) << gap) - 1;
   __m512i input = (tail == SIMDUTF_FULL) ? _mm512_loadu_epi8(in) : _mm512_maskz_loadu_epi8(b, in);
   __mmask64 m1 = (tail == SIMDUTF_FULL) ? _mm512_cmplt_epu8_mask(input, mask_80808080) : _mm512_mask_cmplt_epu8_mask(b, input, mask_80808080);
-  unsigned char pure_ascii;
-  (void)_kortest_mask64_u8(~b, m1, &pure_ascii);
-  if (pure_ascii) { // all ASCII
+  //unsigned char pure_ascii;
+  //(void)_kortest_mask64_u8(~b, m1, &pure_ascii);
+  if (m1 == b) { // all ASCII
     if (tail == SIMDUTF_FULL) {
       // we convert a full 64-byte block, writing 128 bytes.
       __m512i input1 = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(input));
