@@ -20,7 +20,8 @@ size_t utf16le_to_utf8_avx512i(const char16_t *inbuf, size_t inlen,
     __mmask16 is12blo, is12bhi, is1blo, is1bhi, outmlo, outmhi;
     __mmask32 is234byte, is12byte, is1byte, hisurr, losurr, outmask;
     __mmask64 wantlo, wanthi;
-    int advlo, advhi, carryout;
+    int carryout;
+	int64_t advlo, advhi;
 
     in = _mm512_loadu_epi16(inbuf);
     inlen -= 31;
@@ -63,7 +64,7 @@ size_t utf16le_to_utf8_avx512i(const char16_t *inbuf, size_t inlen,
       out = _mm512_maskz_compress_epi8(smoosh, in);
       _mm512_mask_storeu_epi8(outbuf, (__mmask64)_pext_u64(smoosh, smoosh),
                               out);
-      outbuf += 31 + __builtin_popcountl((int)is234byte);
+      outbuf += 31 + _mm_popcnt_u32((int)is234byte);
       carry = 0;
 
       if (inlen < 32) {
@@ -160,8 +161,8 @@ size_t utf16le_to_utf8_avx512i(const char16_t *inbuf, size_t inlen,
 
     outlo = _mm512_maskz_compress_epi8(wantlo, mslo);
     outhi = _mm512_maskz_compress_epi8(wanthi, mshi);
-    advlo = __builtin_popcountll(wantlo);
-    advhi = __builtin_popcountll(wanthi);
+    advlo = _mm_popcnt_u64(wantlo);
+    advhi = _mm_popcnt_u64(wanthi);
 
     _mm512_mask_storeu_epi8(outbuf, _pext_u64(wantlo, wantlo), outlo);
     _mm512_mask_storeu_epi8(outbuf + advlo, _pext_u64(wanthi, wanthi), outhi);
