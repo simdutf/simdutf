@@ -6,6 +6,7 @@
 #ifdef SIMDUTF_VISUAL_STUDIO
 // under clang within visual studio, this will include <x86intrin.h>
 #include <intrin.h>  // visual studio or clang
+#include <immintrin.h>
 #else
 #include <x86intrin.h> // elsewhere
 #endif // SIMDUTF_VISUAL_STUDIO
@@ -30,6 +31,7 @@
  * are fooled.
  */
 #include <bmiintrin.h>   // for _blsr_u64
+#include <bmi2intrin.h> // for _pext_u64, _pdep_u64
 #include <lzcntintrin.h> // for  __lzcnt64
 #include <immintrin.h>   // for most things (AVX2, AVX512, _popcnt64)
 #include <smmintrin.h>
