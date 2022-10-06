@@ -75,7 +75,7 @@ simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char
                                                                      // Overlong 2-byte sequence
   if (_ktestz_mask64_u8(milltwobytes, milltwobytes) == 0) {
     // Overlong 2-byte sequence
-    return __tzcnt_u64(milltwobytes);
+    return _tzcnt_u64(milltwobytes);
     // encoding error
   }
   if (_ktestz_mask64_u8(m34, m34) == 0) {
@@ -96,7 +96,7 @@ simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char
         // continuation bytes at b ^ m1234, they should be at mc,
         // so if (b ^ m1234) &~ mc is non zero...
         // there is a continuation byte present where there should not be one
-        uint64_t err1 = __tzcnt_u64(mc ^ (b ^ m1234));
+        uint64_t err1 = _tzcnt_u64(mc ^ (b ^ m1234));
         if (((b ^ m1234) & ~mc) != 0) {
           return err1;
         }
@@ -162,7 +162,7 @@ simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char
         __mmask32 M3s = _mm512_mask_cmplt_epu16_mask(M3, Moutminusd800, mask_08000800);
         if (_kor_mask32(Msmall800, M3s)) {
           // Encodings out of range
-          return __tzcnt_u64(_pdep_u64(m1234, _kor_mask32(Msmall800, M3s)));
+          return _tzcnt_u64(_pdep_u64(m1234, _kor_mask32(Msmall800, M3s)));
         }
       }
       _mm512_mask_storeu_epi16(out, __mmask32((uint64_t(1) << nout) - 1), Wout);
@@ -179,7 +179,7 @@ simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char
       // continuation bytes at b ^ m1234, they should be at mc,
       // so if (b ^ m1234) &~ mc is non zero...
       // there is a continuation byte present where there should not be one
-      uint64_t err1 = __tzcnt_u64(mc ^ (b ^ m1234));
+      uint64_t err1 = _tzcnt_u64(mc ^ (b ^ m1234));
       if (((b ^ m1234) & ~mc) != 0) {
         return err1;
       }
@@ -258,7 +258,7 @@ simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char
       __mmask32 M4s = _mm512_mask_cmpge_epu16_mask(Mhi, Moutminusd800, mask_04000400);
       if (!_kortestz_mask32_u8(M4s, _kor_mask32(Msmall800, M3s))) {
         // Encodings out of range
-        return __tzcnt_u64(_pdep_u64(_kor_mask64(m1234, mp3), _kor_mask32(M4s, _kor_mask32(Msmall800, M3s))));
+        return _tzcnt_u64(_pdep_u64(_kor_mask64(m1234, mp3), _kor_mask32(M4s, _kor_mask32(Msmall800, M3s))));
       }
     }
     _mm512_mask_storeu_epi16(out, __mmask32((uint64_t(1) << nout) - 1), Wout);
@@ -277,7 +277,7 @@ simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char
     // continuation bytes at (b ^ leading), they should be at (m234 << 1),
     // so if (b ^ leading) &~ (m234 << 1) is non zero...
     // there is a continuation byte present where there should not be one
-    uint64_t err1 = __tzcnt_u64((m234 << 1) ^ (b ^ leading));
+    uint64_t err1 = _tzcnt_u64((m234 << 1) ^ (b ^ leading));
     if (((b ^ leading) & ~(m234 << 1)) != 0) {
       return err1;
     }

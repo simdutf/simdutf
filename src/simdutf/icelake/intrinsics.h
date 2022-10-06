@@ -9,6 +9,9 @@
 #include <immintrin.h>
 #else
 #include <x86intrin.h> // elsewhere
+#ifndef _tzcnt_u64
+#define _tzcnt_u64(x) __tzcnt_u64(x)
+#endif // _tzcnt_u64
 #endif // SIMDUTF_VISUAL_STUDIO
 
 #ifdef SIMDUTF_CLANG_VISUAL_STUDIO
@@ -31,6 +34,7 @@
  * are fooled.
  */
 #include <bmiintrin.h>   // for _blsr_u64
+#include <bmi2intrin.h>  // for _pext_u64, _pdep_u64
 #include <lzcntintrin.h> // for  __lzcnt64
 #include <immintrin.h>   // for most things (AVX2, AVX512, _popcnt64)
 #include <smmintrin.h>
