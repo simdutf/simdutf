@@ -6,20 +6,22 @@ constexpr uint64_t SIMDUTF_OK = uint64_t(-1);
 using utf8_to_utf16_result = std::pair<const char*, char16_t*>;
 using utf8_to_utf32_result = std::pair<const char*, uint32_t*>;
 
+
 /*
     process_block_utf8_to_utf16 converts up to 64 bytes from 'in' from UTF-8
     to UTF-16. When tail = SIMDUTF_FULL, then the full input buffer (64 bytes)
     might be used. When tail = SIMDUTF_TAIL, we take into account 'gap' which
     indicates how many input bytes are relevant.
 
-    Returns -1 when the result is correct, otherwise it returns a positive
-    integer indicating the position of an error in the input.
+    Returns -1 when the result is correct, otherwise it returns a non-negative
+    integer indicating the position of an error in the input (when compute_error_location is true)
+    or zero.
 
     The provided in and out pointers are advanced according to how many input
     bytes have been processed.
-*/template <block_processing_mode tail = SIMDUTF_FULL>
-//simdutf_really_inline 
-uint64_t process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap) {
+*/
+template <bool compute_error_location, block_processing_mode tail = SIMDUTF_FULL>
+simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap) {
   // constants
   __m512i mask_identity = _mm512_set_epi8(63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
   __m512i mask_c0c0c0c0 = _mm512_set1_epi32(0xc0c0c0c0);
@@ -34,8 +36,6 @@ uint64_t process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap
   __mmask64 b = (tail == SIMDUTF_FULL) ? 0xFFFFFFFFFFFFFFFF : (uint64_t(1) << gap) - 1;
   __m512i input = (tail == SIMDUTF_FULL) ? _mm512_loadu_epi8(in) : _mm512_maskz_loadu_epi8(b, in);
   __mmask64 m1 = (tail == SIMDUTF_FULL) ? _mm512_cmplt_epu8_mask(input, mask_80808080) : _mm512_mask_cmplt_epu8_mask(b, input, mask_80808080);
-  //unsigned char pure_ascii;
-  //(void)_kortest_mask64_u8(~b, m1, &pure_ascii);
   if (m1 == b) { // all ASCII
     if (tail == SIMDUTF_FULL) {
       // we convert a full 64-byte block, writing 128 bytes.
@@ -76,7 +76,7 @@ uint64_t process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap
                                                                      // Overlong 2-byte sequence
   if (_ktestz_mask64_u8(milltwobytes, milltwobytes) == 0) {
     // Overlong 2-byte sequence
-    return _tzcnt_u64(milltwobytes);
+    return compute_error_location ? _tzcnt_u64(milltwobytes) : 0;
     // encoding error
   }
   if (_ktestz_mask64_u8(m34, m34) == 0) {
@@ -85,28 +85,28 @@ uint64_t process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap
 
     __mmask64 mask_not_ascii = (tail == SIMDUTF_FULL) ? _knot_mask64(m1) : _kand_mask64(_knot_mask64(m1), b);
 
-    __mmask64 mp1 = m234 << 1;
-    __mmask64 mp2 = m34 << 2;
+    __mmask64 mp1 = _kshiftli_mask64(m234, 1);
+    __mmask64 mp2 = _kshiftli_mask64(m34, 2);
     if (m4 == 0) {
       // Fast path with 1,2,3 bytes
       __mmask64 mc = mp1 | mp2; // expected continuation bytes
       __mmask64 m1234 = m1 | m234;
       // mismatched continuation bytes:
-      if (mc != (b ^ m1234)) {
+      if (simdutf_unlikely(mc != (b ^ m1234))) {
         // mismatched continuation bytes
         // continuation bytes at b ^ m1234, they should be at mc,
         // so if (b ^ m1234) &~ mc is non zero...
         // there is a continuation byte present where there should not be one
         uint64_t err1 = _tzcnt_u64(mc ^ (b ^ m1234));
         if (((b ^ m1234) & ~mc) != 0) {
-          return err1;
+          return compute_error_location ? err1 : 0;
         }
         // err1 will point at a missing continuation byte,
         // and the leading byte should be prior to it.
         uint64_t mpre = (uint64_t(1) << err1) - 1;
         //  lead byte that is missing a continuation byte
         uint64_t missing = (mpre & m234);
-        return 64 - _lzcnt_u64(missing) - 1;
+        return compute_error_location? 64 - _lzcnt_u64(missing) - 1 : 0;
       }
 
       // mend: identifying the last bytes of each sequence to be decoded
@@ -163,7 +163,7 @@ uint64_t process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap
         __mmask32 M3s = _mm512_mask_cmplt_epu16_mask(M3, Moutminusd800, mask_08000800);
         if (_kor_mask32(Msmall800, M3s)) {
           // Encodings out of range
-          return _tzcnt_u64(_pdep_u64(m1234, _kor_mask32(Msmall800, M3s)));
+          return compute_error_location ? _tzcnt_u64(_pdep_u64(m1234, _kor_mask32(Msmall800, M3s))) : 0;
         }
       }
       _mm512_mask_storeu_epi16(out, __mmask32((uint64_t(1) << nout) - 1), Wout);
@@ -171,7 +171,7 @@ uint64_t process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap
       in += nin;
       return SIMDUTF_OK; // ok
     }
-    __mmask64 mp3 = m4 << 3;
+    __mmask64 mp3 = _kshiftli_mask64(m4, 3);
     __mmask64 mc = mp1 | mp2 | mp3; // expected continuation bytes
     __mmask64 m1234 = m1 | m234;
     // mismatched continuation bytes:
@@ -182,17 +182,17 @@ uint64_t process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap
       // there is a continuation byte present where there should not be one
       uint64_t err1 = _tzcnt_u64(mc ^ (b ^ m1234));
       if (((b ^ m1234) & ~mc) != 0) {
-        return err1;
+        return compute_error_location ? err1 : 0;
       }
       // err1 will point at a missing continuation byte,
       // and the leading byte should be prior to it.
       uint64_t mpre = (uint64_t(1) << err1) - 1;
       //  lead byte that is missing a continuation byte
       uint64_t missing = (mpre & m234);
-      return 64 - _lzcnt_u64(missing) - 1;
+      return compute_error_location ? 64 - _lzcnt_u64(missing) - 1 : 1;
     }
 
-    __mmask64 m4s3 = m4 << 3;
+    __mmask64 m4s3 = _kshiftli_mask64(m4, 3);
 
     // mend: identifying the last bytes of each sequence to be decoded
     __mmask64 mend = _kor_mask64((_kor_mask64(m4s3, _kor_mask64(m1, m234)) >> 1), m4s3);
@@ -259,7 +259,7 @@ uint64_t process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap
       __mmask32 M4s = _mm512_mask_cmpge_epu16_mask(Mhi, Moutminusd800, mask_04000400);
       if (!_kortestz_mask32_u8(M4s, _kor_mask32(Msmall800, M3s))) {
         // Encodings out of range
-        return _tzcnt_u64(_pdep_u64(_kor_mask64(m1234, mp3), _kor_mask32(M4s, _kor_mask32(Msmall800, M3s))));
+        return compute_error_location ? _tzcnt_u64(_pdep_u64(_kor_mask64(m1234, mp3), _kor_mask32(M4s, _kor_mask32(Msmall800, M3s)))) : 0;
       }
     }
     _mm512_mask_storeu_epi16(out, __mmask32((uint64_t(1) << nout) - 1), Wout);
@@ -273,21 +273,21 @@ uint64_t process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap
   __m512i leading2byte = _mm512_maskz_sub_epi8(m234, input, mask_c2c2c2c2);
   __mmask64 leading = tail == (tail == SIMDUTF_FULL) ? _kor_mask64(m1, m234) : _kand_mask64(_kor_mask64(m1, m234), b); // first bytes of each sequence
   __mmask64 continuation_or_ascii = (tail == SIMDUTF_FULL) ? _knot_mask64(m234) : _kand_mask64(_knot_mask64(m234), b);
-  if ((m234 << 1) != (b ^ leading)) {
+  if (_kshiftli_mask64(m234, 1) != (b ^ leading)) {
     // two byte without continuation
     // continuation bytes at (b ^ leading), they should be at (m234 << 1),
     // so if (b ^ leading) &~ (m234 << 1) is non zero...
     // there is a continuation byte present where there should not be one
     uint64_t err1 = _tzcnt_u64((m234 << 1) ^ (b ^ leading));
     if (((b ^ leading) & ~(m234 << 1)) != 0) {
-      return err1;
+      return compute_error_location ? err1 : 0;
     }
     // err1 will point at a missing continuation byte,
     // and the leading byte should be prior to it.
     uint64_t mpre = (uint64_t(1) << err1) - 1;
     //  lead byte that is missing a continuation byte
     uint64_t missing = (mpre & m234);
-    return 64 - _lzcnt_u64(missing) - 1;
+    return compute_error_location ? 64 - _lzcnt_u64(missing) - 1 : 0;
   }
   __m512i lead = _mm512_maskz_compress_epi8(leading, leading2byte);          // will contain zero for ascii, and the data
   lead = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(lead));                 // ... zero extended into words
@@ -311,9 +311,6 @@ uint64_t process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap
   in += nin;
   return SIMDUTF_OK; // we are fine.
 }
-
-
-
 
 
 
@@ -368,9 +365,6 @@ simdutf_really_inline size_t utf32_to_utf16_masked(__m512i utf32, unsigned int c
 
     return count + static_cast<unsigned int>(count_ones(sp_mask));
 }
-
-
-
 
 /*
     utf32_to_utf16 converts `count` lower UTF-32 words
