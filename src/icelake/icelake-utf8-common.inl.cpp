@@ -92,7 +92,7 @@ simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char
       __mmask64 mc = mp1 | mp2; // expected continuation bytes
       __mmask64 m1234 = m1 | m234;
       // mismatched continuation bytes:
-      if (simdutf_unlikely(mc != (b ^ m1234))) {
+      if (mc != (b ^ m1234)) {
         // mismatched continuation bytes
         // continuation bytes at b ^ m1234, they should be at mc,
         // so if (b ^ m1234) &~ mc is non zero...
