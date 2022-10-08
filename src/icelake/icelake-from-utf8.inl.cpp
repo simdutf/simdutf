@@ -10,22 +10,15 @@
  */
 utf8_to_utf16_result fast_avx512_convert_utf8_to_utf16(const char *in, size_t len, char16_t *out) {
   const char *const final_in = in + len;
-
-  // main loop
-  while (in + 64 <= final_in) {
-    uint64_t result = process_block_utf8_to_utf16<false, SIMDUTF_FULL>(in, out, final_in - in);
-    if (result != SIMDUTF_OK) {
-        return std::make_pair(in, nullptr);
-    }
+  uint64_t result = SIMDUTF_OK;
+  while (result == SIMDUTF_OK) {
+    if (in + 64 <= final_in) {
+        result = process_block_utf8_to_utf16<false, SIMDUTF_FULL>(in, out, final_in - in);
+    } else if(in < final_in) {
+        result = process_block_utf8_to_utf16<false, SIMDUTF_TAIL>(in, out, final_in - in);
+    } else { break; }
   }
-  // Need to handle the tail.
-  // We might need to call it more than once.
-  while (in < final_in) {
-    uint64_t result = process_block_utf8_to_utf16<false, SIMDUTF_TAIL>(in, out, final_in - in);
-    if (result != SIMDUTF_OK) {
-      return std::make_pair(in, nullptr);
-    }
-  }
+  if(result != SIMDUTF_OK) { out = nullptr; }
   return std::make_pair(in, out);
 }
 
