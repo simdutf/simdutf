@@ -80,6 +80,7 @@ simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char
     // encoding error
   }
   if (_ktestz_mask64_u8(m34, m34) == 0) {
+    // We have a 3-byte sequence and/or a 2-byte sequence
     __mmask64 m4 = _mm512_cmp_epu8_mask(input, mask_f0f0f0f0,
                                         _MM_CMPINT_NLT); // 0xf0 <= zmm0 (4 byte start bytes)
 
@@ -171,6 +172,9 @@ simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char
       in += nin;
       return SIMDUTF_OK; // ok
     }
+    //
+    // We have a 4-byte sequence, this is the general case.
+    // Slow!
     __mmask64 mp3 = _kshiftli_mask64(m4, 3);
     __mmask64 mc = mp1 | mp2 | mp3; // expected continuation bytes
     __mmask64 m1234 = m1 | m234;
