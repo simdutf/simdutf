@@ -30,7 +30,9 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
     return is_third_byte ^ is_fourth_byte;
 }
 
-#include "arm64/arm_validate_utf16le.cpp"
+#include "arm64/arm_detect_encodings.cpp"
+
+#include "arm64/arm_validate_utf16.cpp"
 #include "arm64/arm_validate_utf32le.cpp"
 
 #include "arm64/arm_convert_utf8_to_utf16.cpp"
@@ -62,20 +64,69 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 
+simdutf_warn_unused int implementation::detect_encodings(const char * input, size_t length) const noexcept {
+  if (length % 2 == 0) {
+    return arm_detect_encodings<utf8_validation::utf8_checker>(input, length);
+  } else {
+    if (implementation::validate_utf8(input, length)) {
+      return simdutf::encoding_type::UTF8;
+    } else {
+      return simdutf::encoding_type::unspecified;
+    }
+  }
+}
+
 simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
   return arm64::utf8_validation::generic_validate_utf8(buf,len);
+}
+
+simdutf_warn_unused result implementation::validate_utf8_with_errors(const char *buf, size_t len) const noexcept {
+  return arm64::utf8_validation::generic_validate_utf8_with_errors(buf,len);
 }
 
 simdutf_warn_unused bool implementation::validate_ascii(const char *buf, size_t len) const noexcept {
   return arm64::utf8_validation::generic_validate_ascii(buf,len);
 }
 
-simdutf_warn_unused bool implementation::validate_utf16(const char16_t *buf, size_t len) const noexcept {
-  const char16_t* tail = arm_validate_utf16le(buf, len);
+simdutf_warn_unused result implementation::validate_ascii_with_errors(const char *buf, size_t len) const noexcept {
+  return arm64::utf8_validation::generic_validate_ascii_with_errors(buf,len);
+}
+
+simdutf_warn_unused bool implementation::validate_utf16le(const char16_t *buf, size_t len) const noexcept {
+  const char16_t* tail = arm_validate_utf16<endianness::LITTLE>(buf, len);
   if (tail) {
-    return scalar::utf16::validate(tail, len - (tail - buf));
+    return scalar::utf16::validate<endianness::LITTLE>(tail, len - (tail - buf));
   } else {
     return false;
+  }
+}
+
+simdutf_warn_unused bool implementation::validate_utf16be(const char16_t *buf, size_t len) const noexcept {
+  const char16_t* tail = arm_validate_utf16<endianness::BIG>(buf, len);
+  if (tail) {
+    return scalar::utf16::validate<endianness::BIG>(tail, len - (tail - buf));
+  } else {
+    return false;
+  }
+}
+
+simdutf_warn_unused result implementation::validate_utf16le_with_errors(const char16_t *buf, size_t len) const noexcept {
+  result res = arm_validate_utf16_with_errors<endianness::LITTLE>(buf, len);
+  if (res.count != len) {
+    result scalar_res = scalar::utf16::validate_with_errors<endianness::LITTLE>(buf + res.count, len - res.count);
+    return result(scalar_res.error, res.count + scalar_res.count);
+  } else {
+    return res;
+  }
+}
+
+simdutf_warn_unused result implementation::validate_utf16be_with_errors(const char16_t *buf, size_t len) const noexcept {
+  result res = arm_validate_utf16_with_errors<endianness::BIG>(buf, len);
+  if (res.count != len) {
+    result scalar_res = scalar::utf16::validate_with_errors<endianness::BIG>(buf + res.count, len - res.count);
+    return result(scalar_res.error, res.count + scalar_res.count);
+  } else {
+    return res;
   }
 }
 
@@ -88,14 +139,44 @@ simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, siz
   }
 }
 
-simdutf_warn_unused size_t implementation::convert_utf8_to_utf16(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
-  utf8_to_utf16::validating_transcoder converter;
-  return converter.convert(buf, len, utf16_output);
+simdutf_warn_unused result implementation::validate_utf32_with_errors(const char32_t *buf, size_t len) const noexcept {
+  result res = arm_validate_utf32le_with_errors(buf, len);
+  if (res.count != len) {
+    result scalar_res = scalar::utf32::validate_with_errors(buf + res.count, len - res.count);
+    return result(scalar_res.error, res.count + scalar_res.count);
+  } else {
+    return res;
+  }
 }
 
-simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16(const char* input, size_t size,
+simdutf_warn_unused size_t implementation::convert_utf8_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
+  utf8_to_utf16::validating_transcoder converter;
+  return converter.convert<endianness::LITTLE>(buf, len, utf16_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_utf8_to_utf16be(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
+  utf8_to_utf16::validating_transcoder converter;
+  return converter.convert<endianness::BIG>(buf, len, utf16_output);
+}
+
+simdutf_warn_unused result implementation::convert_utf8_to_utf16le_with_errors(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
+  utf8_to_utf16::validating_transcoder converter;
+  return converter.convert_with_errors<endianness::LITTLE>(buf, len, utf16_output);
+}
+
+simdutf_warn_unused result implementation::convert_utf8_to_utf16be_with_errors(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
+  utf8_to_utf16::validating_transcoder converter;
+  return converter.convert_with_errors<endianness::BIG>(buf, len, utf16_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16le(const char* input, size_t size,
     char16_t* utf16_output) const noexcept {
-  return utf8_to_utf16::convert_valid(input, size,  utf16_output);
+  return utf8_to_utf16::convert_valid<endianness::LITTLE>(input, size,  utf16_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16be(const char* input, size_t size,
+    char16_t* utf16_output) const noexcept {
+  return utf8_to_utf16::convert_valid<endianness::BIG>(input, size,  utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf32(const char* buf, size_t len, char32_t* utf32_output) const noexcept {
@@ -103,17 +184,22 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf32(const char* buf
   return converter.convert(buf, len, utf32_output);
 }
 
+simdutf_warn_unused result implementation::convert_utf8_to_utf32_with_errors(const char* buf, size_t len, char32_t* utf32_output) const noexcept {
+  utf8_to_utf32::validating_transcoder converter;
+  return converter.convert_with_errors(buf, len, utf32_output);
+}
+
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(const char* input, size_t size,
     char32_t* utf32_output) const noexcept {
   return utf8_to_utf32::convert_valid(input, size,  utf32_output);
 }
 
-simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-  std::pair<const char16_t*, char*> ret = arm_convert_utf16_to_utf8(buf, len, utf8_output);
+simdutf_warn_unused size_t implementation::convert_utf16le_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
+  std::pair<const char16_t*, char*> ret = arm_convert_utf16_to_utf8<endianness::LITTLE>(buf, len, utf8_output);
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf8_output;
   if (ret.first != buf + len) {
-    const size_t scalar_saved_bytes = scalar::utf16_to_utf8::convert(
+    const size_t scalar_saved_bytes = scalar::utf16_to_utf8::convert<endianness::LITTLE>(
                                         ret.first, len - (ret.first - buf), ret.second);
     if (scalar_saved_bytes == 0) { return 0; }
     saved_bytes += scalar_saved_bytes;
@@ -121,8 +207,61 @@ simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t*
   return saved_bytes;
 }
 
-simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-  return convert_utf16_to_utf8(buf, len, utf8_output);
+simdutf_warn_unused size_t implementation::convert_utf16be_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
+  std::pair<const char16_t*, char*> ret = arm_convert_utf16_to_utf8<endianness::BIG>(buf, len, utf8_output);
+  if (ret.first == nullptr) { return 0; }
+  size_t saved_bytes = ret.second - utf8_output;
+  if (ret.first != buf + len) {
+    const size_t scalar_saved_bytes = scalar::utf16_to_utf8::convert<endianness::BIG>(
+                                        ret.first, len - (ret.first - buf), ret.second);
+    if (scalar_saved_bytes == 0) { return 0; }
+    saved_bytes += scalar_saved_bytes;
+  }
+  return saved_bytes;
+}
+
+simdutf_warn_unused result implementation::convert_utf16le_to_utf8_with_errors(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
+  // ret.first.count is always the position in the buffer, not the number of words written even if finished
+  std::pair<result, char*> ret = arm_convert_utf16_to_utf8_with_errors<endianness::LITTLE>(buf, len, utf8_output);
+  if (ret.first.error) { return ret.first; }  // Can return directly since scalar fallback already found correct ret.first.count
+  if (ret.first.count != len) { // All good so far, but not finished
+    result scalar_res = scalar::utf16_to_utf8::convert_with_errors<endianness::LITTLE>(
+                                        buf + ret.first.count, len - ret.first.count, ret.second);
+    if (scalar_res.error) {
+      scalar_res.count += ret.first.count;
+      return scalar_res;
+    } else {
+      ret.second += scalar_res.count;
+    }
+  }
+  ret.first.count = ret.second - utf8_output;   // Set count to the number of 8-bit words written
+  return ret.first;
+}
+
+simdutf_warn_unused result implementation::convert_utf16be_to_utf8_with_errors(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
+  // ret.first.count is always the position in the buffer, not the number of words written even if finished
+  std::pair<result, char*> ret = arm_convert_utf16_to_utf8_with_errors<endianness::BIG>(buf, len, utf8_output);
+  if (ret.first.error) { return ret.first; }  // Can return directly since scalar fallback already found correct ret.first.count
+  if (ret.first.count != len) { // All good so far, but not finished
+    result scalar_res = scalar::utf16_to_utf8::convert_with_errors<endianness::BIG>(
+                                        buf + ret.first.count, len - ret.first.count, ret.second);
+    if (scalar_res.error) {
+      scalar_res.count += ret.first.count;
+      return scalar_res;
+    } else {
+      ret.second += scalar_res.count;
+    }
+  }
+  ret.first.count = ret.second - utf8_output;   // Set count to the number of 8-bit words written
+  return ret.first;
+}
+
+simdutf_warn_unused size_t implementation::convert_valid_utf16le_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
+  return convert_utf16le_to_utf8(buf, len, utf8_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
+  return convert_utf16be_to_utf8(buf, len, utf8_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
@@ -138,29 +277,95 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(const char32_t*
   return saved_bytes;
 }
 
-simdutf_warn_unused size_t implementation::convert_utf16_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
-  std::pair<const char16_t*, char32_t*> ret = arm_convert_utf16_to_utf32(buf, len, utf32_output);
+simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
+  // ret.first.count is always the position in the buffer, not the number of words written even if finished
+  std::pair<result, char*> ret = arm_convert_utf32_to_utf8_with_errors(buf, len, utf8_output);
+  if (ret.first.count != len) {
+    result scalar_res = scalar::utf32_to_utf8::convert_with_errors(
+                                        buf + ret.first.count, len - ret.first.count, ret.second);
+    if (scalar_res.error) {
+      scalar_res.count += ret.first.count;
+      return scalar_res;
+    } else {
+      ret.second += scalar_res.count;
+    }
+  }
+  ret.first.count = ret.second - utf8_output;   // Set count to the number of 8-bit words written
+  return ret.first;
+}
+
+simdutf_warn_unused size_t implementation::convert_utf16le_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
+  std::pair<const char16_t*, char32_t*> ret = arm_convert_utf16_to_utf32<endianness::LITTLE>(buf, len, utf32_output);
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf32_output;
   if (ret.first != buf + len) {
-    const size_t scalar_saved_bytes = scalar::utf16_to_utf32::convert(
+    const size_t scalar_saved_bytes = scalar::utf16_to_utf32::convert<endianness::LITTLE>(
                                         ret.first, len - (ret.first - buf), ret.second);
     if (scalar_saved_bytes == 0) { return 0; }
     saved_bytes += scalar_saved_bytes;
   }
   return saved_bytes;
+}
+
+simdutf_warn_unused size_t implementation::convert_utf16be_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
+  std::pair<const char16_t*, char32_t*> ret = arm_convert_utf16_to_utf32<endianness::BIG>(buf, len, utf32_output);
+  if (ret.first == nullptr) { return 0; }
+  size_t saved_bytes = ret.second - utf32_output;
+  if (ret.first != buf + len) {
+    const size_t scalar_saved_bytes = scalar::utf16_to_utf32::convert<endianness::BIG>(
+                                        ret.first, len - (ret.first - buf), ret.second);
+    if (scalar_saved_bytes == 0) { return 0; }
+    saved_bytes += scalar_saved_bytes;
+  }
+  return saved_bytes;
+}
+
+simdutf_warn_unused result implementation::convert_utf16le_to_utf32_with_errors(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
+  // ret.first.count is always the position in the buffer, not the number of words written even if finished
+  std::pair<result, char32_t*> ret = arm_convert_utf16_to_utf32_with_errors<endianness::LITTLE>(buf, len, utf32_output);
+  if (ret.first.error) { return ret.first; }  // Can return directly since scalar fallback already found correct ret.first.count
+  if (ret.first.count != len) { // All good so far, but not finished
+    result scalar_res = scalar::utf16_to_utf32::convert_with_errors<endianness::LITTLE>(
+                                        buf + ret.first.count, len - ret.first.count, ret.second);
+    if (scalar_res.error) {
+      scalar_res.count += ret.first.count;
+      return scalar_res;
+    } else {
+      ret.second += scalar_res.count;
+    }
+  }
+  ret.first.count = ret.second - utf32_output;   // Set count to the number of 8-bit words written
+  return ret.first;
+}
+
+simdutf_warn_unused result implementation::convert_utf16be_to_utf32_with_errors(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
+  // ret.first.count is always the position in the buffer, not the number of words written even if finished
+  std::pair<result, char32_t*> ret = arm_convert_utf16_to_utf32_with_errors<endianness::BIG>(buf, len, utf32_output);
+  if (ret.first.error) { return ret.first; }  // Can return directly since scalar fallback already found correct ret.first.count
+  if (ret.first.count != len) { // All good so far, but not finished
+    result scalar_res = scalar::utf16_to_utf32::convert_with_errors<endianness::BIG>(
+                                        buf + ret.first.count, len - ret.first.count, ret.second);
+    if (scalar_res.error) {
+      scalar_res.count += ret.first.count;
+      return scalar_res;
+    } else {
+      ret.second += scalar_res.count;
+    }
+  }
+  ret.first.count = ret.second - utf32_output;   // Set count to the number of 8-bit words written
+  return ret.first;
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf8(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
   return convert_utf32_to_utf8(buf, len, utf8_output);
 }
 
-simdutf_warn_unused size_t implementation::convert_utf32_to_utf16(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-  std::pair<const char32_t*, char16_t*> ret = arm_convert_utf32_to_utf16(buf, len, utf16_output);
+simdutf_warn_unused size_t implementation::convert_utf32_to_utf16le(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
+  std::pair<const char32_t*, char16_t*> ret = arm_convert_utf32_to_utf16<endianness::LITTLE>(buf, len, utf16_output);
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf16_output;
   if (ret.first != buf + len) {
-    const size_t scalar_saved_bytes = scalar::utf32_to_utf16::convert(
+    const size_t scalar_saved_bytes = scalar::utf32_to_utf16::convert<endianness::LITTLE>(
                                         ret.first, len - (ret.first - buf), ret.second);
     if (scalar_saved_bytes == 0) { return 0; }
     saved_bytes += scalar_saved_bytes;
@@ -168,28 +373,99 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf16(const char32_t
   return saved_bytes;
 }
 
-simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf16(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-  return convert_utf32_to_utf16(buf, len, utf16_output);
+simdutf_warn_unused size_t implementation::convert_utf32_to_utf16be(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
+  std::pair<const char32_t*, char16_t*> ret = arm_convert_utf32_to_utf16<endianness::BIG>(buf, len, utf16_output);
+  if (ret.first == nullptr) { return 0; }
+  size_t saved_bytes = ret.second - utf16_output;
+  if (ret.first != buf + len) {
+    const size_t scalar_saved_bytes = scalar::utf32_to_utf16::convert<endianness::BIG>(
+                                        ret.first, len - (ret.first - buf), ret.second);
+    if (scalar_saved_bytes == 0) { return 0; }
+    saved_bytes += scalar_saved_bytes;
+  }
+  return saved_bytes;
 }
 
-simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
-  return convert_utf16_to_utf32(buf, len, utf32_output);
+simdutf_warn_unused result implementation::convert_utf32_to_utf16le_with_errors(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
+  // ret.first.count is always the position in the buffer, not the number of words written even if finished
+  std::pair<result, char16_t*> ret = arm_convert_utf32_to_utf16_with_errors<endianness::LITTLE>(buf, len, utf16_output);
+  if (ret.first.count != len) {
+    result scalar_res = scalar::utf32_to_utf16::convert_with_errors<endianness::LITTLE>(
+                                        buf + ret.first.count, len - ret.first.count, ret.second);
+    if (scalar_res.error) {
+      scalar_res.count += ret.first.count;
+      return scalar_res;
+    } else {
+      ret.second += scalar_res.count;
+    }
+  }
+  ret.first.count = ret.second - utf16_output;   // Set count to the number of 8-bit words written
+  return ret.first;
 }
 
-simdutf_warn_unused size_t implementation::count_utf16(const char16_t * input, size_t length) const noexcept {
-  return utf16::count_code_points(input, length);
+simdutf_warn_unused result implementation::convert_utf32_to_utf16be_with_errors(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
+  // ret.first.count is always the position in the buffer, not the number of words written even if finished
+  std::pair<result, char16_t*> ret = arm_convert_utf32_to_utf16_with_errors<endianness::BIG>(buf, len, utf16_output);
+  if (ret.first.count != len) {
+    result scalar_res = scalar::utf32_to_utf16::convert_with_errors<endianness::BIG>(
+                                        buf + ret.first.count, len - ret.first.count, ret.second);
+    if (scalar_res.error) {
+      scalar_res.count += ret.first.count;
+      return scalar_res;
+    } else {
+      ret.second += scalar_res.count;
+    }
+  }
+  ret.first.count = ret.second - utf16_output;   // Set count to the number of 8-bit words written
+  return ret.first;
+}
+
+simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf16le(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
+  return convert_utf32_to_utf16le(buf, len, utf16_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf16be(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
+  return convert_utf32_to_utf16be(buf, len, utf16_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_valid_utf16le_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
+  return convert_utf16le_to_utf32(buf, len, utf32_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
+  return convert_utf16be_to_utf32(buf, len, utf32_output);
+}
+
+void implementation::change_endianness_utf16(const char16_t * input, size_t length, char16_t * output) const noexcept {
+  utf16::change_endianness_utf16(input, length, output);
+}
+
+simdutf_warn_unused size_t implementation::count_utf16le(const char16_t * input, size_t length) const noexcept {
+  return utf16::count_code_points<endianness::LITTLE>(input, length);
+}
+
+simdutf_warn_unused size_t implementation::count_utf16be(const char16_t * input, size_t length) const noexcept {
+  return utf16::count_code_points<endianness::BIG>(input, length);
 }
 
 simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t length) const noexcept {
   return utf8::count_code_points(input, length);
 }
 
-simdutf_warn_unused size_t implementation::utf8_length_from_utf16(const char16_t * input, size_t length) const noexcept {
-  return utf16::utf8_length_from_utf16(input, length);
+simdutf_warn_unused size_t implementation::utf8_length_from_utf16le(const char16_t * input, size_t length) const noexcept {
+  return utf16::utf8_length_from_utf16<endianness::LITTLE>(input, length);
 }
 
-simdutf_warn_unused size_t implementation::utf32_length_from_utf16(const char16_t * input, size_t length) const noexcept {
-  return utf16::utf32_length_from_utf16(input, length);
+simdutf_warn_unused size_t implementation::utf8_length_from_utf16be(const char16_t * input, size_t length) const noexcept {
+  return utf16::utf8_length_from_utf16<endianness::BIG>(input, length);
+}
+
+simdutf_warn_unused size_t implementation::utf32_length_from_utf16le(const char16_t * input, size_t length) const noexcept {
+  return utf16::utf32_length_from_utf16<endianness::LITTLE>(input, length);
+}
+
+simdutf_warn_unused size_t implementation::utf32_length_from_utf16be(const char16_t * input, size_t length) const noexcept {
+  return utf16::utf32_length_from_utf16<endianness::BIG>(input, length);
 }
 
 simdutf_warn_unused size_t implementation::utf16_length_from_utf8(const char * input, size_t length) const noexcept {

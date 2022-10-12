@@ -18,6 +18,21 @@ inline simdutf_warn_unused bool validate(const char32_t *buf, size_t len) noexce
   return true;
 }
 
+inline simdutf_warn_unused result validate_with_errors(const char32_t *buf, size_t len) noexcept {
+  const uint32_t *data = reinterpret_cast<const uint32_t *>(buf);
+  size_t pos = 0;
+  for(;pos < len; pos++) {
+    uint32_t word = data[pos];
+    if(word > 0x10FFFF) {
+        return result(error_code::TOO_LARGE, pos);
+    }
+    if(word >= 0xD800 && word <= 0xDFFF) {
+        return result(error_code::SURROGATE, pos);
+    }
+  }
+  return result(error_code::SUCCESS, pos);
+}
+
 inline size_t utf8_length_from_utf32(const char32_t* buf, size_t len) {
   // We are not BOM aware.
   const uint32_t * p = reinterpret_cast<const uint32_t *>(buf);

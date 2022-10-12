@@ -26,13 +26,13 @@ int main(int argc, char *argv[]) {
    }
    char16_t utf16_output[4];
    // convert to UTF-16LE
-   size_t utf16words = simdutf::convert_utf8_to_utf16(ascii, 4, utf16_output);
+   size_t utf16words = simdutf::convert_utf8_to_utf16le(ascii, 4, utf16_output);
    std::cout << \"wrote \" << utf16words << \" UTF-16 words.\" << std::endl;
    // It wrote utf16words * sizeof(char16_t) bytes.
    //
    // convert it back:
    char buffer[4];
-   size_t utf8words = simdutf::convert_utf16_to_utf8(utf16_output, utf16words, buffer);
+   size_t utf8words = simdutf::convert_utf16le_to_utf8(utf16_output, utf16words, buffer);
    std::cout << \"wrote \" << utf8words << \" UTF-8 words.\" << std::endl;
    return EXIT_SUCCESS;
 }")

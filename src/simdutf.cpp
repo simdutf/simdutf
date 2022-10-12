@@ -1,6 +1,7 @@
 #include "simdutf.h"
 #include "implementation.cpp"
 #include "encoding_types.cpp"
+#include "error.cpp"
 // The large tables should be included once and they
 // should not depend on a kernel.
 #include "tables/utf8_to_utf16_tables.h"
@@ -8,6 +9,11 @@
 // End of tables.
 
 // The scalar routines should be included once.
+#include "scalar/ascii.h"
+#include "scalar/utf8.h"
+#include "scalar/utf16.h"
+#include "scalar/utf32.h"
+
 #include "scalar/utf32_to_utf8/valid_utf32_to_utf8.h"
 #include "scalar/utf32_to_utf8/utf32_to_utf8.h"
 
@@ -25,11 +31,6 @@
 
 #include "scalar/utf8_to_utf32/valid_utf8_to_utf32.h"
 #include "scalar/utf8_to_utf32/utf8_to_utf32.h"
-
-#include "scalar/ascii.h"
-#include "scalar/utf8.h"
-#include "scalar/utf16.h"
-#include "scalar/utf32.h"
 //
 
 

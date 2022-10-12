@@ -12,62 +12,62 @@
 TEST(issue92) {
   char16_t input[] = u"\u5d00\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041";
   size_t strlen = sizeof(input)/sizeof(char16_t)-1;
-  ASSERT_TRUE(implementation.validate_utf16(input, strlen));
-  ASSERT_TRUE(implementation.utf8_length_from_utf16(input, strlen)
+  ASSERT_TRUE(implementation.validate_utf16le(input, strlen));
+  ASSERT_TRUE(implementation.utf8_length_from_utf16le(input, strlen)
      == 2 + strlen);
-  size_t size = implementation.utf8_length_from_utf16(input, strlen);
+  size_t size = implementation.utf8_length_from_utf16le(input, strlen);
   std::unique_ptr<char[]> output_buffer{new char[size]};
-  ASSERT_TRUE(implementation.convert_valid_utf16_to_utf8(input, strlen, output_buffer.get()) == size);
+  ASSERT_TRUE(implementation.convert_valid_utf16le_to_utf8(input, strlen, output_buffer.get()) == size);
 }
 
-TEST(validate_utf16__returns_true_for_valid_input__single_words) {
+TEST(validate_utf16le__returns_true_for_valid_input__single_words) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
   for(size_t trial = 0; trial < 1000; trial++) {
     const auto utf16{generator.generate(512, seed)};
 
-    ASSERT_TRUE(implementation.validate_utf16(
+    ASSERT_TRUE(implementation.validate_utf16le(
               reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
   }
 }
 
-TEST(validate_utf16__returns_true_for_valid_input__surrogate_pairs_short) {
+TEST(validate_utf16le__returns_true_for_valid_input__surrogate_pairs_short) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
   for(size_t trial = 0; trial < 1000; trial++) {
     const auto utf16{generator.generate(8)};
 
-    ASSERT_TRUE(implementation.validate_utf16(
+    ASSERT_TRUE(implementation.validate_utf16le(
               reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
   }
 }
 
 
-TEST(validate_utf16__returns_true_for_valid_input__surrogate_pairs) {
+TEST(validate_utf16le__returns_true_for_valid_input__surrogate_pairs) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
   for(size_t trial = 0; trial < 1000; trial++) {
     const auto utf16{generator.generate(512)};
 
-    ASSERT_TRUE(implementation.validate_utf16(
+    ASSERT_TRUE(implementation.validate_utf16le(
               reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
   }
 }
 
 // mixed = either 16-bit or 32-bit codewords
-TEST(validate_utf16__returns_true_for_valid_input__mixed) {
+TEST(validate_utf16le__returns_true_for_valid_input__mixed) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 1};
   const auto utf16{generator.generate(512)};
 
-  ASSERT_TRUE(implementation.validate_utf16(
+  ASSERT_TRUE(implementation.validate_utf16le(
               reinterpret_cast<const char16_t*>(utf16.data()), utf16.size()));
 }
 
-TEST(validate_utf16__returns_true_for_empty_string) {
+TEST(validate_utf16le__returns_true_for_empty_string) {
   const char16_t* buf = (char16_t*)"";
 
-  ASSERT_TRUE(implementation.validate_utf16(buf, 0));
+  ASSERT_TRUE(implementation.validate_utf16le(buf, 0));
 }
 
 // The first word must not be in range [0xDC00 .. 0xDFFF]
@@ -82,7 +82,7 @@ TEST(validate_utf16__returns_true_for_empty_string) {
    2) Determine if W1 is between 0xD800 and 0xDBFF. If not, the sequence
       is in error [...]
 */
-TEST(validate_utf16__returns_false_when_input_has_wrong_first_word_value) {
+TEST(validate_utf16le__returns_false_when_input_has_wrong_first_word_value) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
   for(size_t trial = 0; trial < 10; trial++) {
@@ -95,7 +95,7 @@ TEST(validate_utf16__returns_false_when_input_has_wrong_first_word_value) {
         const char16_t old = utf16[i];
         utf16[i] = wrong_value;
 
-        ASSERT_FALSE(implementation.validate_utf16(buf, len));
+        ASSERT_FALSE(implementation.validate_utf16le(buf, len));
 
         utf16[i] = old;
       }
@@ -109,7 +109,7 @@ TEST(validate_utf16__returns_false_when_input_has_wrong_first_word_value) {
  3) [..] if W2 is not between 0xDC00 and 0xDFFF, the sequence is in error.
     Terminate.
 */
-TEST(validate_utf16__returns_false_when_input_has_wrong_second_word_value) {
+TEST(validate_utf16le__returns_false_when_input_has_wrong_second_word_value) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
   auto utf16{generator.generate(128)};
@@ -129,7 +129,7 @@ TEST(validate_utf16__returns_false_when_input_has_wrong_second_word_value) {
       utf16[i + 0] = valid_surrogate_W1;
       utf16[i + 1] = W2;
 
-      ASSERT_FALSE(implementation.validate_utf16(buf, len));
+      ASSERT_FALSE(implementation.validate_utf16le(buf, len));
 
       utf16[i + 0] = old_W1;
       utf16[i + 1] = old_W2;
@@ -143,7 +143,7 @@ TEST(validate_utf16__returns_false_when_input_has_wrong_second_word_value) {
  3) If there is no W2 (that is, the sequence ends with W1) [...]
     the sequence is in error. Terminate.
 */
-TEST(validate_utf16__returns_false_when_input_is_truncated) {
+TEST(validate_utf16le__returns_false_when_input_is_truncated) {
   const char16_t valid_surrogate_W1 = 0xd800;
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
@@ -154,12 +154,12 @@ TEST(validate_utf16__returns_false_when_input_is_truncated) {
 
     utf16[size - 1] = valid_surrogate_W1;
 
-    ASSERT_FALSE(implementation.validate_utf16(buf, len));
+    ASSERT_FALSE(implementation.validate_utf16le(buf, len));
   }
 }
 
-TEST(validate_utf16__extensive_tests) {
-  const std::string path{"validate_utf16_testcases.txt"};
+TEST(validate_utf16le__extensive_tests) {
+  const std::string path{"validate_utf16le_testcases.txt"};
   std::ifstream file{path};
   if (not file) {
     printf("File '%s' cannot be open, skipping test\n", path.c_str());
@@ -218,7 +218,7 @@ TEST(validate_utf16__extensive_tests) {
     }
 
     // check
-    ASSERT_TRUE(implementation.validate_utf16(buf, len) == valid);
+    ASSERT_TRUE(implementation.validate_utf16le(buf, len) == valid);
   }
 }
 

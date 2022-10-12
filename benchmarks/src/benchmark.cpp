@@ -69,34 +69,44 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
     // the std::set<simdutf::encoding_type> value represents the *expected* encoding.
     std::vector<std::pair<std::string,std::set<simdutf::encoding_type>>> implemented_functions{
         {"validate_utf8", {simdutf::encoding_type::UTF8}},
+        {"validate_utf8_with_errors", {simdutf::encoding_type::UTF8}},
         {"validate_utf16", {simdutf::encoding_type::UTF16_LE}},
+        {"validate_utf16_with_errors", {simdutf::encoding_type::UTF16_LE}},
         {"validate_utf32", {simdutf::encoding_type::UTF32_LE}},
-        
+        {"validate_utf32_with_errors", {simdutf::encoding_type::UTF32_LE}},
+
         {"count_utf8", {simdutf::encoding_type::UTF8}},
         {"count_utf16", {simdutf::encoding_type::UTF16_LE}},
-        
+
         {"convert_utf8_to_utf16", {simdutf::encoding_type::UTF8}},
+        {"convert_utf8_to_utf16_with_errors", {simdutf::encoding_type::UTF8}},
         {"convert_utf8_to_utf16_with_dynamic_allocation", {simdutf::encoding_type::UTF8}},
         {"convert_valid_utf8_to_utf16", {simdutf::encoding_type::UTF8}},
-        
+
         {"convert_utf8_to_utf32", {simdutf::encoding_type::UTF8}},
+        {"convert_utf8_to_utf32_with_errors", {simdutf::encoding_type::UTF8}},
         {"convert_utf8_to_utf32_with_dynamic_allocation", {simdutf::encoding_type::UTF8}},
         {"convert_valid_utf8_to_utf32", {simdutf::encoding_type::UTF8}},
-        
+
         {"convert_utf16_to_utf8", {simdutf::encoding_type::UTF16_LE}},
+        {"convert_utf16_to_utf8_with_errors", {simdutf::encoding_type::UTF16_LE}},
         {"convert_utf16_to_utf8_with_dynamic_allocation", {simdutf::encoding_type::UTF16_LE}},
         {"convert_valid_utf16_to_utf8", {simdutf::encoding_type::UTF16_LE}},
 
-        
         {"convert_utf16_to_utf32", {simdutf::encoding_type::UTF16_LE}},
+        {"convert_utf16_to_utf32_with_errors", {simdutf::encoding_type::UTF16_LE}},
         {"convert_utf16_to_utf32_with_dynamic_allocation", {simdutf::encoding_type::UTF16_LE}},
         {"convert_valid_utf16_to_utf32", {simdutf::encoding_type::UTF16_LE}},
 
         {"convert_utf32_to_utf8", {simdutf::encoding_type::UTF32_LE}},
+        {"convert_utf32_to_utf8_with_errors", {simdutf::encoding_type::UTF32_LE}},
         {"convert_valid_utf32_to_utf8", {simdutf::encoding_type::UTF32_LE}},
 
         {"convert_utf32_to_utf16", {simdutf::encoding_type::UTF32_LE}},
+        {"convert_utf32_to_utf16_with_errors", {simdutf::encoding_type::UTF32_LE}},
         {"convert_valid_utf32_to_utf16", {simdutf::encoding_type::UTF32_LE}},
+
+        {"detect_encodings", {simdutf::encoding_type::UTF8, simdutf::encoding_type::UTF16_LE, simdutf::encoding_type::UTF32_LE}}
 
     };
 
@@ -116,6 +126,21 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
     }
     {
         std::string name = "convert_utf16_to_utf8+icu";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
+    }
+#endif
+#ifdef ICONV_AVAILABLE
+#ifdef _LIBICONV_VERSION
+    std::cout << "Using iconv version " << _LIBICONV_VERSION << std::endl;
+#endif
+    {
+        std::string name = "convert_utf8_to_utf16+iconv";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+    }
+    {
+        std::string name = "convert_utf16_to_utf8+iconv";
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
     }
@@ -275,6 +300,16 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         return;
     }
 #endif
+#ifdef ICONV_AVAILABLE
+    if(impl == "iconv") {
+        if(name == "convert_utf8_to_utf16") {
+          run_convert_utf8_to_utf16_iconv(iterations);
+        } else if(name == "convert_utf16_to_utf8") {
+          run_convert_utf16_to_utf8_iconv(iterations);
+        }
+        return;
+    }
+#endif
 #ifdef __x86_64__
     if(impl == "cppcon2018") {
         // this is a special case
@@ -377,18 +412,28 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
     }
     if (name == "validate_utf8") {
         run_validate_utf8(*implementation, iterations);
+    } else if (name == "validate_utf8_with_errors") {
+        run_validate_utf8_with_errors(*implementation, iterations);
     } else if (name == "validate_utf16") {
         run_validate_utf16(*implementation, iterations);
+    } else if (name == "validate_utf16_with_errors") {
+        run_validate_utf16_with_errors(*implementation, iterations);
     } else if(name == "validate_utf32") {
         run_validate_utf32(*implementation, iterations);
+    } else if(name == "validate_utf32_with_errors") {
+        run_validate_utf32_with_errors(*implementation, iterations);
     } else if(name == "count_utf8") {
         run_count_utf8(*implementation, iterations);
     } else if(name == "count_utf16") {
         run_count_utf16(*implementation, iterations);
     } else if(name == "convert_utf8_to_utf16") {
         run_convert_utf8_to_utf16(*implementation, iterations);
+    } else if(name == "convert_utf8_to_utf16_with_errors") {
+        run_convert_utf8_to_utf16_with_errors(*implementation, iterations);
     } else if(name == "convert_utf8_to_utf32") {
         run_convert_utf8_to_utf32(*implementation, iterations);
+    } else if(name == "convert_utf8_to_utf32_with_errors") {
+        run_convert_utf8_to_utf32_with_errors(*implementation, iterations);
     } else if(name == "convert_utf8_to_utf16_with_dynamic_allocation") {
         run_convert_utf8_to_utf16_with_dynamic_allocation(*implementation, iterations);
     } else if(name == "convert_utf8_to_utf32_with_dynamic_allocation") {
@@ -399,8 +444,12 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         run_convert_valid_utf8_to_utf32(*implementation, iterations);
     } else if(name == "convert_utf16_to_utf8") {
         run_convert_utf16_to_utf8(*implementation, iterations);
+    } else if(name == "convert_utf16_to_utf8_with_errors") {
+        run_convert_utf16_to_utf8_with_errors(*implementation, iterations);
     } else if(name == "convert_utf16_to_utf32") {
         run_convert_utf16_to_utf32(*implementation, iterations);
+    } else if(name == "convert_utf16_to_utf32_with_errors") {
+        run_convert_utf16_to_utf32_with_errors(*implementation, iterations);
     } else if(name == "convert_utf16_to_utf8_with_dynamic_allocation") {
         run_convert_utf16_to_utf8_with_dynamic_allocation(*implementation, iterations);
     } else if(name == "convert_utf16_to_utf32_with_dynamic_allocation") {
@@ -409,14 +458,20 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         run_convert_valid_utf16_to_utf8(*implementation, iterations);
     } else if(name == "convert_utf32_to_utf8") {
         run_convert_utf32_to_utf8(*implementation, iterations);
+    } else if(name == "convert_utf32_to_utf8_with_errors") {
+        run_convert_utf32_to_utf8_with_errors(*implementation, iterations);
     } else if(name == "convert_valid_utf32_to_utf8") {
         run_convert_valid_utf32_to_utf8(*implementation, iterations);
     } else if(name == "convert_utf32_to_utf16") {
         run_convert_utf32_to_utf16(*implementation, iterations);
+    } else if(name == "convert_utf32_to_utf16_with_errors") {
+        run_convert_utf32_to_utf16_with_errors(*implementation, iterations);
     } else if(name == "convert_valid_utf32_to_utf16") {
         run_convert_valid_utf32_to_utf16(*implementation, iterations);
     } else if(name == "convert_valid_utf16_to_utf32") {
         run_convert_valid_utf16_to_utf32(*implementation, iterations);
+    } else if(name == "detect_encodings") {
+        run_detect_encodings(*implementation, iterations);
     } else {
         std::cerr << "Unsupported procedure: " << name << '\n';
         std::cerr << "Report the issue.\n";
@@ -446,6 +501,24 @@ void Benchmark::run_validate_utf8(const simdutf::implementation& implementation,
     print_summary(result, size, char_count);
 }
 
+void Benchmark::run_validate_utf8_with_errors(const simdutf::implementation& implementation, size_t iterations) {
+    const char*  data = reinterpret_cast<const char*>(input_data.data());
+    const size_t size = input_data.size();
+    volatile bool sink{false};
+
+    auto proc = [&implementation, data, size, &sink]() {
+        result res = implementation.validate_utf8_with_errors(data, size);
+        sink = !(res.error);
+    };
+
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
+}
+
+
 void Benchmark::run_validate_utf16(const simdutf::implementation& implementation, size_t iterations) {
     const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
     const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
@@ -461,12 +534,37 @@ void Benchmark::run_validate_utf16(const simdutf::implementation& implementation
     volatile bool sink{false};
 
     auto proc = [&implementation, data, size, &sink]() {
-        sink = implementation.validate_utf16(data, size);
+        sink = implementation.validate_utf16le(data, size);
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
-    size_t char_count = active_implementation->count_utf16(data, size);
+    size_t char_count = active_implementation->count_utf16le(data, size);
+    print_summary(result, size, char_count);
+}
+
+void Benchmark::run_validate_utf16_with_errors(const simdutf::implementation& implementation, size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+        printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 2;
+
+    volatile bool sink{false};
+
+    auto proc = [&implementation, data, size, &sink]() {
+        result res = implementation.validate_utf16le_with_errors(data, size);
+        sink = !(res.error);
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
+    size_t char_count = active_implementation->count_utf16le(data, size);
     print_summary(result, size, char_count);
 }
 
@@ -494,6 +592,31 @@ void Benchmark::run_validate_utf32(const simdutf::implementation& implementation
     print_summary(result, size, char_count);
 }
 
+void Benchmark::run_validate_utf32_with_errors(const simdutf::implementation& implementation, size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+        printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 4;
+
+    volatile bool sink{false};
+
+    auto proc = [&implementation, data, size, &sink]() {
+        result res = implementation.validate_utf32_with_errors(data, size);
+        sink = !(res.error);
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
+    size_t char_count = size;
+    print_summary(result, size, char_count);
+}
+
 void Benchmark::run_convert_utf8_to_utf16(const simdutf::implementation& implementation, size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
@@ -501,7 +624,7 @@ void Benchmark::run_convert_utf8_to_utf16(const simdutf::implementation& impleme
     volatile size_t sink{0};
 
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {
-        sink = implementation.convert_utf8_to_utf16(data, size, output_buffer.get());
+        sink = implementation.convert_utf8_to_utf16le(data, size, output_buffer.get());
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
@@ -510,6 +633,22 @@ void Benchmark::run_convert_utf8_to_utf16(const simdutf::implementation& impleme
     print_summary(result, size, char_count);
 }
 
+void Benchmark::run_convert_utf8_to_utf16_with_errors(const simdutf::implementation& implementation, size_t iterations) {
+    const char*  data = reinterpret_cast<const char*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
+    volatile bool sink{false};
+
+    auto proc = [&implementation, data, size, &output_buffer, &sink]() {
+        result res = implementation.convert_utf8_to_utf16le_with_errors(data, size, output_buffer.get());
+        sink = !(res.error);
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
+}
 
 void Benchmark::run_convert_utf8_to_utf32(const simdutf::implementation& implementation, size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
@@ -527,6 +666,22 @@ void Benchmark::run_convert_utf8_to_utf32(const simdutf::implementation& impleme
     print_summary(result, size, char_count);
 }
 
+void Benchmark::run_convert_utf8_to_utf32_with_errors(const simdutf::implementation& implementation, size_t iterations) {
+    const char*  data = reinterpret_cast<const char*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char32_t[]> output_buffer{new char32_t[size]};
+    volatile bool sink{false};
+
+    auto proc = [&implementation, data, size, &output_buffer, &sink]() {
+        result res = implementation.convert_utf8_to_utf32_with_errors(data, size, output_buffer.get());
+        sink = !(res.error);
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
+}
 
 void Benchmark::run_convert_utf8_to_utf16_with_dynamic_allocation(const simdutf::implementation& implementation, size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
@@ -535,7 +690,7 @@ void Benchmark::run_convert_utf8_to_utf16_with_dynamic_allocation(const simdutf:
     auto proc = [&implementation, data, size, &sink]() {
         auto dyn_size = implementation.utf16_length_from_utf8(data, size);
         std::unique_ptr<char16_t[]> output_buffer{new char16_t[dyn_size]};
-        sink = implementation.convert_utf8_to_utf16(data, size, output_buffer.get());
+        sink = implementation.convert_utf8_to_utf16le(data, size, output_buffer.get());
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
@@ -576,7 +731,7 @@ void Benchmark::run_convert_utf8_to_utf16_icu(size_t iterations) {
     size_t char_count = active_implementation->count_utf8(data, size);
     // checking
     std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
-    size_t expected = convert_utf8_to_utf16(data, size, output_buffer.get());
+    size_t expected = convert_utf8_to_utf16le(data, size, output_buffer.get());
     if(expected != sink) { std::cerr << "The number of UTF-16 words does not match.\n"; }
     print_summary(result, size, char_count);
 }
@@ -601,7 +756,84 @@ void Benchmark::run_convert_utf16_to_utf8_icu(size_t iterations) {
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    size_t char_count = active_implementation->count_utf16(data, size);
+    size_t char_count = active_implementation->count_utf16le(data, size);
+    print_summary(result, input_data.size(), char_count);
+}
+#endif
+
+#ifdef ICONV_AVAILABLE
+void Benchmark::run_convert_utf8_to_utf16_iconv(size_t iterations) {
+    iconv_t cv = iconv_open("UTF-16LE", "UTF-8");
+    if (cv == (iconv_t)(-1)) {
+        fprintf( stderr,"[iconv] cannot initialize UTF-8 to UTF-16LE converter\n");
+        return;
+    }
+    char*  data = reinterpret_cast<char*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
+    volatile size_t sink{0};
+
+    auto proc = [&cv, data, size, &output_buffer, &sink]() {
+        size_t inbytes = size;
+        size_t outbytes = sizeof(uint16_t) * size;
+        char * inptr = data;
+       // inbytes = strlen(inptr);
+        char * outptr = reinterpret_cast<char *>(output_buffer.get());
+        size_t result = iconv(cv, &inptr, &inbytes, &outptr, &outbytes);
+        if (result == static_cast<size_t>(-1)) {
+            sink = 0;
+        } else {
+            sink = (sizeof(uint16_t) * size - outbytes) / sizeof(char);;
+        }
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    iconv_close(cv);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    size_t char_count = active_implementation->count_utf8(data, size);
+    print_summary(result, size, char_count);
+}
+void Benchmark::run_convert_utf16_to_utf8_iconv(size_t iterations) {
+    iconv_t cv = iconv_open("UTF-8", "UTF-16LE");
+    if (cv == (iconv_t)(-1)) {
+        fprintf( stderr,"[iconv] cannot initialize the UTF-16LE to UTF-8 converter\n");
+        return;
+    }
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    char16_t* data = reinterpret_cast<char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 2;
+
+    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    //       thus we're making safe assumption that each 16-bit word will be expanded
+    //       to four bytes.
+    std::unique_ptr<char[]> output_buffer{new char[size * 4]};
+
+    volatile size_t sink{0};
+
+    auto proc = [cv, data, size, &output_buffer, &sink]() {
+        size_t inbytes = sizeof(uint16_t) * size;
+        size_t outbytes = 4 * size;
+        char * inptr = reinterpret_cast<char *>(data);
+        char * outptr = output_buffer.get();
+        size_t result = iconv(cv, &inptr, &inbytes, &outptr, &outbytes);
+        if (result == static_cast<size_t>(-1)) {
+            sink = 0;
+        } else {
+            sink = (4 * size - outbytes) / sizeof(char16_t);
+        }
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    iconv_close(cv);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    size_t char_count = active_implementation->count_utf16le(data, size);
     print_summary(result, input_data.size(), char_count);
 }
 #endif
@@ -706,7 +938,7 @@ void Benchmark::run_convert_utf16_to_utf8_utf8lut(size_t iterations) {
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    size_t char_count = active_implementation->count_utf16(data, size);
+    size_t char_count = active_implementation->count_utf16le(data, size);
     print_summary(result, input_data.size(), char_count);
 }
 /**
@@ -746,7 +978,7 @@ void Benchmark::run_convert_valid_utf16_to_utf8_utf8lut(size_t iterations) {
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    size_t char_count = active_implementation->count_utf16(data, size);
+    size_t char_count = active_implementation->count_utf16le(data, size);
     print_summary(result, input_data.size(), char_count);
 }
 /**
@@ -1053,7 +1285,7 @@ void Benchmark::run_convert_valid_utf8_to_utf16(const simdutf::implementation& i
     std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
     volatile size_t sink{0};
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {
-        sink = implementation.convert_valid_utf8_to_utf16(data, size, output_buffer.get());
+        sink = implementation.convert_valid_utf8_to_utf16le(data, size, output_buffer.get());
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
@@ -1097,12 +1329,42 @@ void Benchmark::run_convert_utf16_to_utf8(const simdutf::implementation& impleme
     volatile size_t sink{0};
 
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {
-        sink = implementation.convert_utf16_to_utf8(data, size, output_buffer.get());
+        sink = implementation.convert_utf16le_to_utf8(data, size, output_buffer.get());
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    size_t char_count = active_implementation->count_utf16(data, size);
+    size_t char_count = active_implementation->count_utf16le(data, size);
+    print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_convert_utf16_to_utf8_with_errors(const simdutf::implementation& implementation, size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 2;
+
+    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    //       thus we're making safe assumption that each 16-bit word will be expanded
+    //       to four bytes.
+    std::unique_ptr<char[]> output_buffer{new char[size * 4]};
+
+    volatile bool sink{false};
+
+    auto proc = [&implementation, data, size, &output_buffer, &sink]() {
+        result res = implementation.convert_utf16le_to_utf8_with_errors(data, size, output_buffer.get());
+        sink = !(res.error);
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
+    size_t char_count = active_implementation->count_utf16le(data, size);
     print_summary(result, input_data.size(), char_count);
 }
 
@@ -1125,12 +1387,41 @@ void Benchmark::run_convert_utf16_to_utf32(const simdutf::implementation& implem
     volatile size_t sink{0};
 
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {
-        sink = implementation.convert_utf16_to_utf32(data, size, output_buffer.get());
+        sink = implementation.convert_utf16le_to_utf32(data, size, output_buffer.get());
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    size_t char_count = active_implementation->count_utf16(data, size);
+    size_t char_count = active_implementation->count_utf16le(data, size);
+    print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_convert_utf16_to_utf32_with_errors(const simdutf::implementation& implementation, size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 2;
+
+    // Note: all words yield 4 bytes. We are making a safe assumption that all words
+    // will be non-surrogate words so the size would get doubled (16 bits -> 32 bits).
+    std::unique_ptr<char32_t[]> output_buffer{new char32_t[size * 2]};
+
+    volatile bool sink{false};
+
+    auto proc = [&implementation, data, size, &output_buffer, &sink]() {
+        result res = implementation.convert_utf16le_to_utf32_with_errors(data, size, output_buffer.get());
+        sink = !(res.error);
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
+    size_t char_count = active_implementation->count_utf16le(data, size);
     print_summary(result, input_data.size(), char_count);
 }
 
@@ -1154,14 +1445,14 @@ void Benchmark::run_convert_utf16_to_utf8_with_dynamic_allocation(const simdutf:
     volatile size_t sink{0};
 
     auto proc = [&implementation, data, size, &sink]() {
-        auto dyn_size = implementation.utf8_length_from_utf16(data, size);
+        auto dyn_size = implementation.utf8_length_from_utf16le(data, size);
         std::unique_ptr<char[]> output_buffer{new char[dyn_size]};
-        sink = implementation.convert_utf16_to_utf8(data, size, output_buffer.get());
+        sink = implementation.convert_utf16le_to_utf8(data, size, output_buffer.get());
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    size_t char_count = active_implementation->count_utf16(data, size);
+    size_t char_count = active_implementation->count_utf16le(data, size);
     print_summary(result, input_data.size(), char_count);
 }
 
@@ -1183,14 +1474,14 @@ void Benchmark::run_convert_utf16_to_utf32_with_dynamic_allocation(const simdutf
     volatile size_t sink{0};
 
     auto proc = [&implementation, data, size, &sink]() {
-        auto dyn_size = implementation.utf32_length_from_utf16(data, size);
+        auto dyn_size = implementation.utf32_length_from_utf16le(data, size);
         std::unique_ptr<char32_t[]> output_buffer{new char32_t[dyn_size]};
-        sink = implementation.convert_utf16_to_utf32(data, size, output_buffer.get());
+        sink = implementation.convert_utf16le_to_utf32(data, size, output_buffer.get());
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    size_t char_count = active_implementation->count_utf16(data, size);
+    size_t char_count = active_implementation->count_utf16le(data, size);
     print_summary(result, input_data.size(), char_count);
 }
 
@@ -1214,12 +1505,12 @@ void Benchmark::run_convert_valid_utf16_to_utf8(const simdutf::implementation& i
     volatile size_t sink{0};
 
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {
-        sink = implementation.convert_valid_utf16_to_utf8(data, size, output_buffer.get());
+        sink = implementation.convert_valid_utf16le_to_utf8(data, size, output_buffer.get());
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    size_t char_count = active_implementation->count_utf16(data, size);
+    size_t char_count = active_implementation->count_utf16le(data, size);
     print_summary(result, input_data.size(), char_count);
 }
 
@@ -1251,6 +1542,34 @@ void Benchmark::run_convert_utf32_to_utf8(const simdutf::implementation& impleme
     print_summary(result, input_data.size(), char_count);
 }
 
+void Benchmark::run_convert_utf32_to_utf8_with_errors(const simdutf::implementation& implementation, size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 4 != 0) {
+       printf("# The input size is not divisible by four (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 4;
+
+    // Note: In the "worst" case, a 32-bit word will yield 4 UTF-8 bytes. So, we are making a safe
+    // assumption that each word will produce 4 bytes.
+    std::unique_ptr<char[]> output_buffer{new char[size * 4]};
+
+    volatile bool sink{false};
+
+    auto proc = [&implementation, data, size, &output_buffer, &sink]() {
+        result res = implementation.convert_utf32_to_utf8_with_errors(data, size, output_buffer.get());
+        sink = !(res.error);
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
+    size_t char_count = size;
+    print_summary(result, input_data.size(), char_count);
+}
 
 void Benchmark::run_convert_valid_utf32_to_utf8(const simdutf::implementation& implementation, size_t iterations) {
     const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
@@ -1301,12 +1620,12 @@ void Benchmark::run_convert_valid_utf16_to_utf32(const simdutf::implementation& 
     volatile size_t sink{0};
 
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {
-        sink = implementation.convert_valid_utf16_to_utf32(data, size, output_buffer.get());
+        sink = implementation.convert_valid_utf16le_to_utf32(data, size, output_buffer.get());
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    size_t char_count = active_implementation->count_utf16(data, size);
+    size_t char_count = active_implementation->count_utf16le(data, size);
     print_summary(result, input_data.size(), char_count);
 }
 
@@ -1329,7 +1648,7 @@ void Benchmark::run_convert_utf32_to_utf16(const simdutf::implementation& implem
     volatile size_t sink{0};
 
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {
-        sink = implementation.convert_utf32_to_utf16(data, size, output_buffer.get());
+        sink = implementation.convert_utf32_to_utf16le(data, size, output_buffer.get());
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
@@ -1338,7 +1657,34 @@ void Benchmark::run_convert_utf32_to_utf16(const simdutf::implementation& implem
     print_summary(result, input_data.size(), char_count);
 }
 
+void Benchmark::run_convert_utf32_to_utf16_with_errors(const simdutf::implementation& implementation, size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 4 != 0) {
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
 
+    size /= 4;
+
+    // Note: In the "worst" case, a 32-bit word will yield two 16-bit words. So, we are making a safe
+    // assumption that each word will produce 2 bytes.
+    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size * 2]};
+
+    volatile bool sink{false};
+
+    auto proc = [&implementation, data, size, &output_buffer, &sink]() {
+        result res = implementation.convert_utf32_to_utf16le_with_errors(data, size, output_buffer.get());
+        sink = !(res.error);
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == false) &&  (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
+    size_t char_count = size;
+    print_summary(result, input_data.size(), char_count);
+}
 
 void Benchmark::run_convert_valid_utf32_to_utf16(const simdutf::implementation& implementation, size_t iterations) {
     const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
@@ -1359,7 +1705,7 @@ void Benchmark::run_convert_valid_utf32_to_utf16(const simdutf::implementation& 
     volatile size_t sink{0};
 
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {
-        sink = implementation.convert_valid_utf32_to_utf16(data, size, output_buffer.get());
+        sink = implementation.convert_valid_utf32_to_utf16le(data, size, output_buffer.get());
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
@@ -1395,13 +1741,59 @@ void Benchmark::run_count_utf16(const simdutf::implementation& implementation, s
     size /= 2;
     volatile size_t sink{0};
     auto proc = [&implementation, data, size, &sink]() {
-        sink = implementation.count_utf16(data, size);
+        sink = implementation.count_utf16le(data, size);
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    size_t char_count = active_implementation->count_utf16(data, size);
+    size_t char_count = active_implementation->count_utf16le(data, size);
     print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_detect_encodings(const simdutf::implementation& implementation, size_t iterations) {
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char* data = reinterpret_cast<const char*>(input_data.data() + BOM::bom_byte_size(bom));
+    const size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    volatile size_t sink{0};
+    auto proc = [&implementation, data, size, &sink]() {
+        sink = implementation.detect_encodings(data, size);
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    size_t char_count = size;
+    if((sink == 0) && (size != 0) && (iterations > 0)) {
+        std::cerr << "The output is zero which might indicate an error.\n";
+    } else {
+        std::cout << "Detected format: ";
+        if(sink & simdutf::encoding_type::UTF8) {
+            char_count =  active_implementation->count_utf8(data, size);
+            std::cout << " UTF8";
+        }
+        if(sink & simdutf::encoding_type::UTF16_LE) {
+            std::cout << " UTF16LE";
+            char_count =  active_implementation->count_utf16le(reinterpret_cast<const char16_t*>(data), size/2);
+        }
+        if(sink & simdutf::encoding_type::UTF32_LE) {
+            std::cout << " UTF32LE";
+            char_count = size/4;
+        }
+        std::cout << std::endl;
+    }
+    if((bom) && (bom & ~sink)) {
+        std::cerr << "[Error] BOM format     : ";
+        if(bom & simdutf::encoding_type::UTF8) {
+            std::cerr << " UTF8";
+        } else if(bom & simdutf::encoding_type::UTF16_LE) {
+            std::cerr << " UTF16LE";
+        } else if(bom & simdutf::encoding_type::UTF32_LE) {
+            std::cerr << " UTF32LE";
+        }
+        std::cerr << std::endl;
+    }
+    if((sink & (sink - 1)) != 0) {
+        std::cout << "More than one format possible, character count is ambiguous." << std::endl;
+    }
+    print_summary(result, size, char_count);
 }
 
 const std::set<std::string>& Benchmark::all_procedures() const {
@@ -1501,7 +1893,7 @@ void Benchmark::run_convert_utf16_to_utf8_llvm(size_t iterations) {
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    size_t char_count = active_implementation->count_utf16(data, size);
+    size_t char_count = active_implementation->count_utf16le(data, size);
     print_summary(result, input_data.size(), char_count);
 }
 
@@ -1556,7 +1948,7 @@ void Benchmark::run_convert_utf16_to_utf32_llvm(size_t iterations) {
 
     size /= 2;
 
-    // Note: all words yield four bytes. We make the safe assumption that all words 
+    // Note: all words yield four bytes. We make the safe assumption that all words
     // will be non surrogate words so the size will double (16 bits -> 32 bits).
     std::unique_ptr<char32_t[]> output_buffer{new char32_t[size * 2]};
 
@@ -1577,7 +1969,7 @@ void Benchmark::run_convert_utf16_to_utf32_llvm(size_t iterations) {
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    size_t char_count = active_implementation->count_utf16(data, size);
+    size_t char_count = active_implementation->count_utf16le(data, size);
     print_summary(result, input_data.size(), char_count);
 }
 
