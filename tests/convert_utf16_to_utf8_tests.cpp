@@ -138,7 +138,7 @@ TEST(convert_fails_if_there_is_sole_high_surrogate) {
   }
 }
 
-TEST(convert_fails_if_there_is_low_surrogate_is_followed_by_another_low_surrogate) {
+TEST(convert_fails_if_there_is_low_surrogate_followed_by_another_low_surrogate) {
   auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
     return implementation.convert_utf16_to_utf8(utf8, size, utf16);
   };
@@ -160,7 +160,7 @@ TEST(convert_fails_if_there_is_low_surrogate_is_followed_by_another_low_surrogat
   }
 }
 
-TEST(convert_fails_if_there_is_surrogate_pair_is_followed_by_high_surrogate) {
+TEST(convert_fails_if_there_is_surrogate_pair_followed_by_high_surrogate) {
   auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
     return implementation.convert_utf16_to_utf8(utf8, size, utf16);
   };
@@ -240,7 +240,7 @@ namespace {
       // next pattern
       int i = 0;
       int carry = 1;
-      for (/**/; i < 8 && carry; i++) {
+      for (; i < 8 && carry; i++) {
         pattern[i] += carry;
         if (pattern[i] == 5) {
           pattern[i] = 0;
