@@ -22,6 +22,7 @@ namespace {
 #include "icelake/icelake-convert-utf16-to-utf32.inl.cpp"
 #include "icelake/icelake-ascii-validation.inl.cpp"
 #include "icelake/icelake-utf32-validation.inl.cpp"
+#include "icelake/icelake_convert_utf16_to_utf8.inl.cpp"
 
 } // namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -164,11 +165,14 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(const cha
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-  return scalar::utf16_to_utf8::convert(buf, len, utf8_output);
+  size_t outlen;
+  size_t inlen = utf16le_to_utf8_avx512i(buf, len, (unsigned char*)utf8_output, &outlen);
+  if(inlen != len) { return 0; }
+  return outlen;
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-  return scalar::utf16_to_utf8::convert_valid(buf, len, utf8_output);
+  return convert_utf16_to_utf8(buf, len, utf8_output);
 }
 
 
