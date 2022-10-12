@@ -77,10 +77,8 @@ use a 64-bit target such as x64, 64-bit ARM or 64-bit PPC.")
 #endif // SIMDUTF_IS_32BITS
 
 // this is almost standard?
-#undef STRINGIFY_IMPLEMENTATION_
-#undef STRINGIFY
-#define STRINGIFY_IMPLEMENTATION_(a) #a
-#define STRINGIFY(a) STRINGIFY_IMPLEMENTATION_(a)
+#define SIMDUTF_STRINGIFY_IMPLEMENTATION_(a) #a
+#define SIMDUTF_STRINGIFY(a) SIMDUTF_STRINGIFY_IMPLEMENTATION_(a)
 
 // Our fast kernels require 64-bit systems.
 //
@@ -104,13 +102,13 @@ use a 64-bit target such as x64, 64-bit ARM or 64-bit PPC.")
 // til 8.0 so SIMDUTF_TARGET_REGION and SIMDUTF_UNTARGET_REGION must be *outside* of a
 // namespace.
 #define SIMDUTF_TARGET_REGION(T)                                                       \
-  _Pragma(STRINGIFY(                                                           \
+  _Pragma(SIMDUTF_STRINGIFY(                                                           \
       clang attribute push(__attribute__((target(T))), apply_to = function)))
 #define SIMDUTF_UNTARGET_REGION _Pragma("clang attribute pop")
 #elif defined(__GNUC__)
 // GCC is easier
 #define SIMDUTF_TARGET_REGION(T)                                                       \
-  _Pragma("GCC push_options") _Pragma(STRINGIFY(GCC target(T)))
+  _Pragma("GCC push_options") _Pragma(SIMDUTF_STRINGIFY(GCC target(T)))
 #define SIMDUTF_UNTARGET_REGION _Pragma("GCC pop_options")
 #endif // clang then gcc
 
@@ -140,15 +138,6 @@ use a 64-bit target such as x64, 64-bit ARM or 64-bit PPC.")
 // macro is not defined.
 #undef SIMDUTF_THREADS_ENABLED
 #endif
-#endif
-
-
-#if defined(__clang__)
-#define NO_SANITIZE_UNDEFINED __attribute__((no_sanitize("undefined")))
-#elif defined(__GNUC__)
-#define NO_SANITIZE_UNDEFINED __attribute__((no_sanitize_undefined))
-#else
-#define NO_SANITIZE_UNDEFINED
 #endif
 
 #ifdef SIMDUTF_VISUAL_STUDIO

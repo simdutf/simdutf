@@ -29,7 +29,7 @@ This library provide fast Unicode functions such as
 - UTF-8 and UTF-16LE/BE character counting.
 - UTF-16 endianness change (UTF16-LE/BE to UTF-16-BE/LE)
 
-The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion characters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).
+The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, AVX-512, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion caracters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).
 
 The library compiles down to tens of kilobytes. Our functions are exception-free and non allocating. We have extensive tests.
 
@@ -60,7 +60,7 @@ Requirements
 - C++11 compatible compiler. We support LLVM clang, GCC, Visual Studio. (Our optional benchmark tool requires C++17.)
 - For high speed, you should have a recent 64-bit system (e.g., ARM or x64).
 - If you rely on CMake, you should use a recent CMake (at least 3.15) ; otherwise you may use the [single header version](#single-header-version). The library is also available from Microsoft's vcpkg.
-
+- AVX-512 support require a processor with AVX512-VBMI2 (Ice Lake or better) and a recent compiler (GCC 8 or better, Visual Studio 2019 or better, LLVM clang 6 or better).
 
 Usage (Usage)
 -------

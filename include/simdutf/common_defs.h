@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include "simdutf/portability.h"
+#include "simdutf/avx512.h"
 
 
 #if defined(__GNUC__)

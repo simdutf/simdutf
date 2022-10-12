@@ -2,6 +2,7 @@
 #include "tests/helpers/random_utf8.h"
 #include "simdutf.h"
 #include <fstream>
+#include <iostream>
 
 namespace simdutf::benchmarks {
 
@@ -55,7 +56,11 @@ namespace simdutf::benchmarks {
 
         if (std::holds_alternative<input::File>(testcase.input)) {
             const input::File& file{std::get<input::File>(testcase.input)};
-            printf(", dataset: %s\n", reinterpret_cast<const char*>(file.path.c_str()));
+            // You'd think that the following would work, but no, not always:
+            // printf(", dataset: %s\n", reinterpret_cast<const char*>(file.path.c_str()));
+            std::string path_string{file.path.string()};
+            printf(", dataset: %s\n", reinterpret_cast<const char*>(path_string.c_str()));
+
         } else
             putchar('\n');
 
@@ -94,12 +99,12 @@ namespace simdutf::benchmarks {
 
 
     void BenchmarkBase::print_summary(const event_aggregate& all, double data_size, double character_count) const {
-        const double gbs = data_size / all.best.elapsed_ns();
-        const double gcs = character_count / all.best.elapsed_ns();
-        const double byte_per_char = data_size / character_count; 
-
-        const double gbs_avs = data_size / (all.total.elapsed_ns()/all.iterations);
-        const double error_margin = (gbs-gbs_avs)/gbs_avs * 100;
+        const double best_time = all.best.elapsed_ns();
+        const double avg_time = all.total.elapsed_ns() / all.iterations;
+        const double gbs = data_size / best_time;
+        const double gcs = character_count / best_time;
+        const double byte_per_char = data_size / character_count;
+        const double error_margin = (avg_time / best_time - 1) * 100;
 
         if (all.has_events) {
             const double _1GHz = 1000000000.0;

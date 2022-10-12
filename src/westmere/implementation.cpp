@@ -1,5 +1,3 @@
-#include <utility>
-
 #include "simdutf/westmere/begin.h"
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {

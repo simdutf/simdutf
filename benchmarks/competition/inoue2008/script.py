@@ -1,7 +1,7 @@
 ## prefix_to_length_table
 ## We do
 ## const uint8_t prefix = (input[position] >> 5);
-## so 
+## so
 ## 00000000 becomes  000
 ## 10000000 becomes  100
 ## 11000000 becomes  110
@@ -48,13 +48,13 @@ for i in range(3**8):
             pattern1.append(0xFF)
             pattern1.append(0xFF)
         elif(i == 2):
-            pattern1.append(pos)     
+            pattern1.append(pos)
             pattern1.append(0xFF)
         elif(i==3):
             pattern1.append(pos +1)
-            pattern1.append(pos)  
+            pattern1.append(pos)
         else:
-            print("BUG")          
+            print("BUG")
         pos += i
     table_pattern1.append(pattern1)
     table_pattern2.append(pattern2)

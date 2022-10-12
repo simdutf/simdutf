@@ -1,6 +1,5 @@
 #include "simdutf.h"
 #include <initializer_list>
-#include <string>
 #include <climits>
 
 // Useful for debugging purposes
@@ -26,7 +25,7 @@ std::string toBinaryString(T b) {
 #include "simdutf/westmere.h"
 #include "simdutf/ppc64.h"
 #include "simdutf/fallback.h"
-
+#include "simdutf/icelake.h"
 
 namespace simdutf {
 bool implementation::supported_by_runtime_system() const {
@@ -64,21 +63,25 @@ namespace internal {
 // Static array of known implementations. We're hoping these get baked into the executable
 // without requiring a static initializer.
 
+
+#if SIMDUTF_IMPLEMENTATION_ICELAKE
+const icelake::implementation icelake_singleton{};
+#endif
 #if SIMDUTF_IMPLEMENTATION_HASWELL
 const haswell::implementation haswell_singleton{};
 #endif
 #if SIMDUTF_IMPLEMENTATION_WESTMERE
 const westmere::implementation westmere_singleton{};
-#endif // SIMDUTF_IMPLEMENTATION_WESTMERE
+#endif
 #if SIMDUTF_IMPLEMENTATION_ARM64
 const arm64::implementation arm64_singleton{};
-#endif // SIMDUTF_IMPLEMENTATION_ARM64
+#endif
 #if SIMDUTF_IMPLEMENTATION_PPC64
 const ppc64::implementation ppc64_singleton{};
-#endif // SIMDUTF_IMPLEMENTATION_PPC64
+#endif
 #if SIMDUTF_IMPLEMENTATION_FALLBACK
 const fallback::implementation fallback_singleton{};
-#endif // SIMDUTF_IMPLEMENTATION_FALLBACK
+#endif
 
 /**
  * @private Detects best supported implementation on first use, and sets it
@@ -310,6 +313,9 @@ private:
 const detect_best_supported_implementation_on_first_use detect_best_supported_implementation_on_first_use_singleton;
 
 const std::initializer_list<const implementation *> available_implementation_pointers {
+#if SIMDUTF_IMPLEMENTATION_ICELAKE
+  &icelake_singleton,
+#endif
 #if SIMDUTF_IMPLEMENTATION_HASWELL
   &haswell_singleton,
 #endif
@@ -760,7 +766,7 @@ simdutf_warn_unused int detect_encodings(const char * buf, size_t length) noexce
 }
 
 const implementation * builtin_implementation() {
-  static const implementation * builtin_impl = available_implementations[STRINGIFY(SIMDUTF_BUILTIN_IMPLEMENTATION)];
+  static const implementation * builtin_impl = available_implementations[SIMDUTF_STRINGIFY(SIMDUTF_BUILTIN_IMPLEMENTATION)];
   return builtin_impl;
 }
 
