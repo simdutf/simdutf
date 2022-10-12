@@ -2,6 +2,26 @@
 
 // File contains conversion procedure from possibly invalid UTF-8 strings.
 
+/**
+ * Attempts to convert up to len 1-byte words from in (in UTF-8 format) to
+ * out.
+ * Returns the position of the input and output after the processing is
+ * completed. Upon error, the output is set to null.
+ */
+utf8_to_utf16_result fast_avx512_convert_utf8_to_utf16(const char *in, size_t len, char16_t *out) {
+  const char *const final_in = in + len;
+  uint64_t result = SIMDUTF_OK;
+  while (result == SIMDUTF_OK) {
+    if (in + 64 <= final_in) {
+        result = process_block_utf8_to_utf16<false, SIMDUTF_FULL>(in, out, final_in - in);
+    } else if(in < final_in) {
+        result = process_block_utf8_to_utf16<false, SIMDUTF_TAIL>(in, out, final_in - in);
+    } else { break; }
+  }
+  if(result != SIMDUTF_OK) { out = nullptr; }
+  return std::make_pair(in, out);
+}
+
 
 template <typename OUTPUT>
 std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str, size_t len, OUTPUT* dwords) {

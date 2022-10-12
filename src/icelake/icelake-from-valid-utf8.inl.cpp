@@ -2,7 +2,6 @@
 
 // File contains conversion procedure from VALID UTF-8 strings.
 
-
 /*
     valid_utf8_to_fixed_length converts a valid UTF-8 string into UTF-32.
 
