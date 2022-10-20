@@ -64,7 +64,33 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
 }
 
 simdutf_warn_unused result implementation::validate_utf8_with_errors(const char *buf, size_t len) const noexcept {
-    return scalar::utf8::validate_with_errors(buf, len);
+    avx512_utf8_checker checker{};
+    const char* ptr = buf;
+    const char* end = ptr + len;
+    size_t count{0};
+    for (; ptr + 64 <= end; ptr += 64) {
+      const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
+      checker.check_next_input(utf8);
+      if(checker.errors()) {
+        if (count != 0) { count--; } // Sometimes the error is only detected in the next chunk
+        result res = scalar::utf8::rewind_and_validate_with_errors(reinterpret_cast<const char*>(buf + count), len - count);
+        res.count += count;
+        return res;
+      }
+      count += 64;
+    }
+    {
+      const __m512i utf8 = _mm512_maskz_loadu_epi8((1ULL<<(end - ptr))-1, (const __m512i*)ptr);
+      checker.check_next_input(utf8);
+      if(checker.errors()) {
+        if (count != 0) { count--; } // Sometimes the error is only detected in the next chunk
+        result res = scalar::utf8::rewind_and_validate_with_errors(reinterpret_cast<const char*>(buf + count), len - count);
+        res.count += count;
+        return res;
+      } else {
+        return result(error_code::SUCCESS, len);
+      }
+    }
 }
 
 simdutf_warn_unused bool implementation::validate_ascii(const char *buf, size_t len) const noexcept {
