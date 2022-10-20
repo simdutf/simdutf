@@ -65,16 +65,18 @@ std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf
 
         //  5. Store all valid UTF-32 words (low surrogate positions and 32nd word are invalid)
         const __mmask32 valid = ~L & 0x7fffffff;
-        // We deliberately do a _mm512_maskz_compress_epi32 followed by _mm512_mask_storeu_epi32
+        // We deliberately do a _mm512_maskz_compress_epi32 followed by storeu_epi32
         // to ease performance portability to Zen 4.
         // The first _mm512_mask_storeu_epi32 could be safely replaced by a _mm512_storeu_epi32.
         const __m512i compressed_first = _mm512_maskz_compress_epi32((__mmask16)(valid), utf32_first);
         const size_t howmany1 = count_ones((uint16_t)(valid));
-        _mm512_mask_storeu_epi32((__m512i *) utf32_output, __mmask16((1<<howmany1)-1), compressed_first);
+        _mm512_storeu_epi32((__m512i *) utf32_output,  compressed_first);
         utf32_output += howmany1;
         const __m512i compressed_second = _mm512_maskz_compress_epi32((__mmask16)(valid >> 16), utf32_second);
         const size_t howmany2 = count_ones((uint16_t)(valid >> 16));
-        _mm512_mask_storeu_epi32((__m512i *) utf32_output, __mmask16((1<<howmany1)-1), compressed_second);
+        // The following could be unsafe in some cases?
+        //_mm512_storeu_epi32((__m512i *) utf32_output, compressed_second);
+        _mm512_mask_storeu_epi32((__m512i *) utf32_output, __mmask16((1<<howmany2)-1), compressed_second);
         utf32_output += howmany2;
         // Only process 31 words, but keep track if the 31st word is a high surrogate as a carry
         buf += 31;
