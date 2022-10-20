@@ -103,7 +103,24 @@ simdutf_warn_unused bool implementation::validate_ascii(const char *buf, size_t 
 }
 
 simdutf_warn_unused result implementation::validate_ascii_with_errors(const char *buf, size_t len) const noexcept {
-    return scalar::ascii::validate_with_errors(buf, len);
+  const char* buf_orig = buf;
+  const char* end = buf + len;
+  const __m512i ascii = _mm512_set1_epi8((uint8_t)0x80);
+  for (; buf + 64 <= end; buf += 64) {
+    const __m512i input = _mm512_loadu_si512((const __m512i*)buf);
+    __mmask64 notascii = _mm512_cmp_epu8_mask(input, ascii, _MM_CMPINT_NLT);
+    if(notascii) {
+      return result(error_code::TOO_LARGE, buf - buf_orig + _tzcnt_u64(notascii));
+    }
+  }
+  {
+    const __m512i input = _mm512_maskz_loadu_epi8((1ULL<<(end - buf))-1, (const __m512i*)buf);
+    __mmask64 notascii = _mm512_cmp_epu8_mask(input, ascii, _MM_CMPINT_NLT);
+    if(notascii) {
+      return result(error_code::TOO_LARGE, buf - buf_orig + _tzcnt_u64(notascii));
+    }
+  }
+  return result(error_code::SUCCESS, len);
 }
 
 simdutf_warn_unused bool implementation::validate_utf16le(const char16_t *buf, size_t len) const noexcept {
