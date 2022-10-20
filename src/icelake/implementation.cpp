@@ -334,6 +334,7 @@ simdutf_warn_unused size_t implementation::convert_utf16le_to_utf32(const char16
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf32_output;
   if (ret.first != buf + len) {
+    if(ret.first > buf + len) {printf("FUCKKKK\n");}
     const size_t scalar_saved_bytes = scalar::utf16_to_utf32::convert<endianness::LITTLE>(
                                         ret.first, len - (ret.first - buf), ret.second);
     if (scalar_saved_bytes == 0) { return 0; }

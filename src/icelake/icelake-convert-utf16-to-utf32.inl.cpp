@@ -9,10 +9,10 @@ std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf
   const __m512i v_fc00 = _mm512_set1_epi16((uint16_t)0xfc00);
   const __m512i v_d800 = _mm512_set1_epi16((uint16_t)0xd800);
   const __m512i v_dc00 = _mm512_set1_epi16((uint16_t)0xdc00);
-
   __mmask32 carry{0};
 
   while (buf + 32 <= end) {
+    // Always safe because buf + 32 <= end so that end - buf >= 32 bytes:
     __m512i in = _mm512_loadu_si512((__m512i*)buf);
 
     // H - bitmask for high surrogates
@@ -65,12 +65,17 @@ std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf
 
         //  5. Store all valid UTF-32 words (low surrogate positions and 32nd word are invalid)
         const __mmask32 valid = ~L & 0x7fffffff;
+        // We deliberately do a _mm512_maskz_compress_epi32 followed by _mm512_mask_storeu_epi32
+        // to ease performance portability to Zen 4.
+        // The first _mm512_mask_storeu_epi32 could be safely replaced by a _mm512_storeu_epi32.
         const __m512i compressed_first = _mm512_maskz_compress_epi32((__mmask16)(valid), utf32_first);
-        _mm512_storeu_epi32((__m512i *) utf32_output, compressed_first);
-        utf32_output += count_ones((uint16_t)(valid));
+        const size_t howmany1 = count_ones((uint16_t)(valid));
+        _mm512_mask_storeu_epi32((__m512i *) utf32_output, __mmask16((1<<howmany1)-1), compressed_first);
+        utf32_output += howmany1;
         const __m512i compressed_second = _mm512_maskz_compress_epi32((__mmask16)(valid >> 16), utf32_second);
-        _mm512_storeu_epi32((__m512i *) utf32_output, compressed_second);
-        utf32_output += count_ones(valid >>16);
+        const size_t howmany2 = count_ones((uint16_t)(valid >> 16));
+        _mm512_mask_storeu_epi32((__m512i *) utf32_output, __mmask16((1<<howmany1)-1), compressed_second);
+        utf32_output += howmany2;
         // Only process 31 words, but keep track if the 31st word is a high surrogate as a carry
         buf += 31;
         carry = (H >> 30) & 0x1;
@@ -82,12 +87,11 @@ std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf
       // no surrogates
       // extend all thirty-two 16-bit words to thirty-two 32-bit words
       _mm512_storeu_si512((__m512i *)(utf32_output), _mm512_cvtepu16_epi32(_mm512_castsi512_si256(in)));
-      _mm512_storeu_si512((__m512i *)(utf32_output + 16), _mm512_cvtepu16_epi32(_mm512_extracti32x8_epi32(in,1)));
+      _mm512_storeu_si512((__m512i *)(utf32_output) + 1, _mm512_cvtepu16_epi32(_mm512_extracti32x8_epi32(in,1)));
       utf32_output += 32;
       buf += 32;
       carry = 0;
     }
   } // while
-
   return std::make_pair(buf+carry, utf32_output);
 }

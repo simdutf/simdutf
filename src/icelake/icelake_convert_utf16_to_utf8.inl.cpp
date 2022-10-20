@@ -35,7 +35,7 @@
 
     if (_ktestz_mask32_u8(is234byte, is234byte)) {
       // fast path for ASCII only
-      _mm512_mask_cvtepi16_storeu_epi8(outbuf, (__mmask64)inmask, in);
+      _mm512_mask_cvtepi16_storeu_epi8(outbuf, inmask, in);
       outbuf += 31;
       carry = 0;
 
