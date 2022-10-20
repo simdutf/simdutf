@@ -12,7 +12,7 @@ std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf
 
   __mmask32 carry{0};
 
-  while (buf + 31 <= end) {
+  while (buf + 32 <= end) {
     __m512i in = _mm512_loadu_si512((__m512i*)buf);
 
     // H - bitmask for high surrogates

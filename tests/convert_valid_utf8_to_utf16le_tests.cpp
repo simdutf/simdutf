@@ -78,7 +78,7 @@ TEST(convert_3_UTF8_bytes) {
     simdutf::tests::helpers::RandomIntRanges random({{0x0800, 0xd800-1}}, seed); // range for 3 UTF-8 bytes
 
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
-      return implementation.convert_valid_utf8_to_utf16(utf8, size, utf16);
+      return implementation.convert_valid_utf8_to_utf16le(utf8, size, utf16);
     };
 
     for (size_t size: input_size) {
@@ -115,7 +115,7 @@ TEST(convert_null_4_UTF8_bytes) {
                                                      {0x10000, 0x10ffff}}, seed); // range for 3 or 4 UTF-8 bytes
 
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
-      return implementation.convert_valid_utf8_to_utf16(utf8, size, utf16);
+      return implementation.convert_valid_utf8_to_utf16le(utf8, size, utf16);
     };
 
     for (size_t size: input_size) {
