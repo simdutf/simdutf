@@ -285,14 +285,14 @@ simdutf_warn_unused bool implementation::validate_utf16be(const char16_t *buf, s
    const char16_t *end = buf + len;
    const __m512i byteflip = _mm512_setr_epi64(
             0x0607040502030001,
-            0x0e100c0d0a0b0809,
+            0x0e0f0c0d0a0b0809,
             0x0607040502030001,
-            0x0e100c0d0a0b0809,
+            0x0e0f0c0d0a0b0809,
             0x0607040502030001,
-            0x0e100c0d0a0b0809,
+            0x0e0f0c0d0a0b0809,
             0x0607040502030001,
-            0x0e100c0d0a0b0809
-        );;
+            0x0e0f0c0d0a0b0809
+        );
     for(;buf + 32 <= end; ) {
       __m512i in = _mm512_shuffle_epi8(_mm512_loadu_si512((__m512i*)buf), byteflip);
       __m512i diff = _mm512_sub_epi16(in, _mm512_set1_epi16(uint16_t(0xD800)));
@@ -355,7 +355,7 @@ simdutf_warn_unused result implementation::validate_utf32_with_errors(const char
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
-  utf8_to_utf16_result ret = fast_avx512_convert_utf8_to_utf16(buf, len, utf16_output);
+  utf8_to_utf16_result ret = fast_avx512_convert_utf8_to_utf16<endianness::LITTLE>(buf, len, utf16_output);
   if (ret.second == nullptr) {
     return 0;
   }
@@ -363,7 +363,11 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf16le(const char* b
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16be(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
-   return scalar::utf8_to_utf16::convert<endianness::BIG>(buf, len, utf16_output);
+  utf8_to_utf16_result ret = fast_avx512_convert_utf8_to_utf16<endianness::BIG>(buf, len, utf16_output);
+  if (ret.second == nullptr) {
+    return 0;
+  }
+  return ret.second - utf16_output;
 }
 
 simdutf_warn_unused result implementation::convert_utf8_to_utf16le_with_errors(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
@@ -593,7 +597,31 @@ simdutf_warn_unused size_t implementation::count_utf16le(const char16_t * input,
 }
 
 simdutf_warn_unused size_t implementation::count_utf16be(const char16_t * input, size_t length) const noexcept {
-  return scalar::utf16::count_code_points<endianness::BIG>(input, length);
+  const char16_t* end = length >= 32 ? input + length - 32 : nullptr;
+  const char16_t* ptr = input;
+
+  const __m512i low = _mm512_set1_epi16((uint16_t)0xdc00);
+  const __m512i high = _mm512_set1_epi16((uint16_t)0xdfff);
+
+  size_t count{0};
+  const __m512i byteflip = _mm512_setr_epi64(
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809
+        );
+  while (ptr <= end) {
+    __m512i utf16 = _mm512_shuffle_epi8(_mm512_loadu_si512((__m512i*)ptr), byteflip);
+    ptr += 32;
+    uint64_t not_high_surrogate = static_cast<uint64_t>(_mm512_cmpgt_epu16_mask(utf16, high) | _mm512_cmplt_epu16_mask(utf16, low));
+    count += count_ones(not_high_surrogate);
+  }
+
+  return count + scalar::utf16::count_code_points<endianness::BIG>(ptr, length - (ptr - input));
 }
 
 
@@ -647,7 +675,42 @@ simdutf_warn_unused size_t implementation::utf8_length_from_utf16le(const char16
 }
 
 simdutf_warn_unused size_t implementation::utf8_length_from_utf16be(const char16_t * input, size_t length) const noexcept {
-  return scalar::utf16::utf8_length_from_utf16<endianness::BIG>(input, length);
+  const char16_t* end = length >= 32 ? input + length - 32 : nullptr;
+  const char16_t* ptr = input;
+
+  const __m512i v_007f = _mm512_set1_epi16((uint16_t)0x007f);
+  const __m512i v_07ff = _mm512_set1_epi16((uint16_t)0x07ff);
+  const __m512i v_dfff = _mm512_set1_epi16((uint16_t)0xdfff);
+  const __m512i v_d800 = _mm512_set1_epi16((uint16_t)0xd800);
+
+  size_t count{0};
+  const __m512i byteflip = _mm512_setr_epi64(
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809
+        );
+  while (ptr <= end) {
+    __m512i utf16 = _mm512_loadu_si512((const __m512i*)ptr);
+    utf16 = _mm512_shuffle_epi8(utf16, byteflip);
+    ptr += 32;
+    __mmask32 ascii_bitmask = _mm512_cmple_epu16_mask(utf16, v_007f);
+    __mmask32 two_bytes_bitmask = _mm512_mask_cmple_epu16_mask(~ascii_bitmask, utf16, v_07ff);
+    __mmask32 not_one_two_bytes = ~(ascii_bitmask | two_bytes_bitmask);
+    __mmask32 surrogates_bitmask = _mm512_mask_cmple_epu16_mask(not_one_two_bytes, utf16, v_dfff) & _mm512_mask_cmpge_epu16_mask(not_one_two_bytes, utf16, v_d800);
+
+    size_t ascii_count = count_ones(ascii_bitmask);
+    size_t two_bytes_count = count_ones(two_bytes_bitmask);
+    size_t surrogate_bytes_count = count_ones(surrogates_bitmask);
+    size_t three_bytes_count = 32 - ascii_count - two_bytes_count - surrogate_bytes_count;
+    count += ascii_count + 2*two_bytes_count + 3*three_bytes_count + 2*surrogate_bytes_count;
+  }
+
+  return count + scalar::utf16::utf8_length_from_utf16<endianness::BIG>(ptr, length - (ptr - input));
 }
 
 simdutf_warn_unused size_t implementation::utf32_length_from_utf16le(const char16_t * input, size_t length) const noexcept {
@@ -655,11 +718,23 @@ simdutf_warn_unused size_t implementation::utf32_length_from_utf16le(const char1
 }
 
 simdutf_warn_unused size_t implementation::utf32_length_from_utf16be(const char16_t * input, size_t length) const noexcept {
-  return scalar::utf16::utf32_length_from_utf16<endianness::BIG>(input, length);
+  return implementation::count_utf16be(input, length);
 }
 
 simdutf_warn_unused size_t implementation::utf16_length_from_utf8(const char * input, size_t length) const noexcept {
-  return scalar::utf8::utf16_length_from_utf8(input, length);
+    size_t pos = 0;
+    size_t count = 0;
+    // This algorithm could no doubt be improved!
+    for(;pos + 64 <= length; pos += 64) {
+      __m512i utf8 = _mm512_loadu_si512((const __m512i*)(input+pos));
+      uint64_t utf8_continuation_mask = _mm512_cmple_epi8_mask(utf8, _mm512_set1_epi8(-65+1));
+      // We count one word for anything that is not a continuation (so
+      // leading bytes).
+      count += 64 - _popcnt64(utf8_continuation_mask);
+      uint64_t utf8_4byte = _mm512_cmpge_epu8_mask(utf8, _mm512_set1_epi8(int8_t(240)));
+      count += _popcnt64(utf8_4byte);
+    }
+    return count + scalar::utf8::utf16_length_from_utf8(input + pos, length - pos);
 }
 
 simdutf_warn_unused size_t implementation::utf8_length_from_utf32(const char32_t * input, size_t length) const noexcept {

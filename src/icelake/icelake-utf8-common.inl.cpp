@@ -6,7 +6,6 @@ constexpr uint64_t SIMDUTF_OK = uint64_t(-1);
 using utf8_to_utf16_result = std::pair<const char*, char16_t*>;
 using utf8_to_utf32_result = std::pair<const char*, uint32_t*>;
 
-
 /*
     process_block_utf8_to_utf16 converts up to 64 bytes from 'in' from UTF-8
     to UTF-16. When tail = SIMDUTF_FULL, then the full input buffer (64 bytes)
@@ -20,7 +19,7 @@ using utf8_to_utf32_result = std::pair<const char*, uint32_t*>;
     The provided in and out pointers are advanced according to how many input
     bytes have been processed.
 */
-template <bool compute_error_location, block_processing_mode tail = SIMDUTF_FULL>
+template <bool compute_error_location, block_processing_mode tail, endianness big_endian>
 simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap) {
   // constants
   __m512i mask_identity = _mm512_set_epi8(63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
@@ -32,6 +31,16 @@ simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char
   __m512i mask_ffffffff = _mm512_set1_epi32(0xffffffff);
   __m512i mask_d7c0d7c0 = _mm512_set1_epi32(0xd7c0d7c0);
   __m512i mask_dc00dc00 = _mm512_set1_epi32(0xdc00dc00);
+  __m512i byteflip = _mm512_setr_epi64(
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809
+        );
   // Note that 'tail' is a compile-time constant !
   __mmask64 b = (tail == SIMDUTF_FULL) ? 0xFFFFFFFFFFFFFFFF : (uint64_t(1) << gap) - 1;
   __m512i input = (tail == SIMDUTF_FULL) ? _mm512_loadu_epi8(in) : _mm512_maskz_loadu_epi8(b, in);
@@ -40,9 +49,11 @@ simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char
     if (tail == SIMDUTF_FULL) {
       // we convert a full 64-byte block, writing 128 bytes.
       __m512i input1 = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(input));
+      if(big_endian) { input1 = _mm512_shuffle_epi8(input1, byteflip); }
       _mm512_storeu_si512(out, input1);
       out += 32;
       __m512i input2 = _mm512_cvtepu8_epi16(_mm512_extracti64x4_epi64(input, 1));
+      if(big_endian) { input2 = _mm512_shuffle_epi8(input2, byteflip); }
       _mm512_storeu_si512(out, input2);
       out += 32;
       in += 64;          // consumed 64 bytes
@@ -50,14 +61,17 @@ simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char
     } else {
       if (gap <= 32) {
         __m512i input1 = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(input));
+        if(big_endian) { input1 = _mm512_shuffle_epi8(input1, byteflip); }
         _mm512_mask_storeu_epi16(out, __mmask32((uint64_t(1) << (gap)) - 1), input1);
         out += gap;
         in += gap;
       } else {
         __m512i input1 = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(input));
+        if(big_endian) { input1 = _mm512_shuffle_epi8(input1, byteflip); }
         _mm512_storeu_si512(out, input1);
         out += 32;
         __m512i input2 = _mm512_cvtepu8_epi16(_mm512_extracti64x4_epi64(input, 1));
+        if(big_endian) { input2 = _mm512_shuffle_epi8(input2, byteflip); }
         _mm512_mask_storeu_epi16(out, __mmask32((uint32_t(1) << (gap - 32)) - 1), input2);
         out += gap - 32;
         in += gap;
@@ -167,6 +181,7 @@ simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char
           return compute_error_location ? _tzcnt_u64(_pdep_u64(m1234, _kor_mask32(Msmall800, M3s))) : 0;
         }
       }
+      if(big_endian) { Wout = _mm512_shuffle_epi8(Wout, byteflip); }
       _mm512_mask_storeu_epi16(out, __mmask32((uint64_t(1) << nout) - 1), Wout);
       out += nout;
       in += nin;
@@ -266,6 +281,7 @@ simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char
         return compute_error_location ? _tzcnt_u64(_pdep_u64(_kor_mask64(m1234, mp3), _kor_mask32(M4s, _kor_mask32(Msmall800, M3s)))) : 0;
       }
     }
+    if(big_endian) { Wout = _mm512_shuffle_epi8(Wout, byteflip); }
     _mm512_mask_storeu_epi16(out, __mmask32((uint64_t(1) << nout) - 1), Wout);
     out += nout;
     in += nin;
@@ -302,12 +318,14 @@ simdutf_really_inline uint64_t process_block_utf8_to_utf16(const char *&in, char
   int64_t nout, nin;
   if (tail == SIMDUTF_FULL) {
     // Next part is UTF-16 specific and can be generalized to UTF-32.
+    if(big_endian) { final = _mm512_shuffle_epi8(final, byteflip); }
     _mm512_storeu_epi16(out, final);
     nout = 32;
     nin = 64 - _lzcnt_u64(_pdep_u64(0xFFFFFFFF, continuation_or_ascii));
   } else {
     nout = _mm_popcnt_u64(_pdep_u64(0xFFFFFFFF, leading));
     nin = 64 - _lzcnt_u64(_pdep_u64(0xFFFFFFFF, continuation_or_ascii));
+    if(big_endian) { final = _mm512_shuffle_epi8(final, byteflip); }
     _mm512_mask_storeu_epi16(out, __mmask32((uint64_t(1) << nout) - 1), final);
   }
   out += nout; // UTF-8 to UTF-16 is only expansionary in this case.

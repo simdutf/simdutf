@@ -8,14 +8,15 @@
  * Returns the position of the input and output after the processing is
  * completed. Upon error, the output is set to null.
  */
+template <endianness big_endian>
 utf8_to_utf16_result fast_avx512_convert_utf8_to_utf16(const char *in, size_t len, char16_t *out) {
   const char *const final_in = in + len;
   uint64_t result = SIMDUTF_OK;
   while (result == SIMDUTF_OK) {
     if (in + 64 <= final_in) {
-        result = process_block_utf8_to_utf16<false, SIMDUTF_FULL>(in, out, final_in - in);
+        result = process_block_utf8_to_utf16<false, SIMDUTF_FULL, big_endian>(in, out, final_in - in);
     } else if(in < final_in) {
-        result = process_block_utf8_to_utf16<false, SIMDUTF_TAIL>(in, out, final_in - in);
+        result = process_block_utf8_to_utf16<false, SIMDUTF_TAIL, big_endian>(in, out, final_in - in);
     } else { break; }
   }
   if(result != SIMDUTF_OK) { out = nullptr; }
