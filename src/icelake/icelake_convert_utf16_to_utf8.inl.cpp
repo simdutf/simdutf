@@ -6,12 +6,23 @@
  * is written to 'outlen' and the function reports the number of input word
  * consumed.
  */
- size_t utf16le_to_utf8_avx512i(const char16_t *inbuf, size_t inlen,
+ template <endianness big_endian>
+ size_t utf16_to_utf8_avx512i(const char16_t *inbuf, size_t inlen,
                                unsigned char *outbuf, size_t *outlen) {
   // TODO: Consider improving maintainability.
   __m512i in;
   __mmask32 inmask = _cvtu32_mask32(0x7fffffff);
   __mmask16 inmask16 = _cvtu32_mask16(0x7fff);
+  __m512i byteflip = _mm512_setr_epi64(
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809
+        );
   const char16_t * const inbuf_orig = inbuf;
   const unsigned char * const outbuf_orig = outbuf;
   int adjust = 0, carry = 0;
@@ -25,6 +36,7 @@
 	  int64_t advlo, advhi;
 
     in = _mm512_loadu_epi16(inbuf);
+    if(big_endian) { in = _mm512_shuffle_epi8(in, byteflip); }
     inlen -= 31;
   lastiteration:
     inbuf += 31;
@@ -188,6 +200,7 @@ tail:
     // We must have inlen < 31.
     inmask = _cvtu32_mask32((1 << inlen) - 1);
     in = _mm512_maskz_loadu_epi16(inmask, inbuf);
+    if(big_endian) { in = _mm512_shuffle_epi8(in, byteflip); }
     adjust = (int)inlen - 31;
     inlen = 0;
     goto lastiteration;
