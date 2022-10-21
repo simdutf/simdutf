@@ -33,19 +33,134 @@ namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 
 
-simdutf_warn_unused int implementation::detect_encodings(const char * input, size_t length) const noexcept {
-  int out = 0;
-  if(validate_utf8(input, length)) { out |= encoding_type::UTF8; }
-  if((length % 2) == 0) {
-    if(validate_utf16le(reinterpret_cast<const char16_t*>(input), length/2)) { out |= encoding_type::UTF16_LE; }
-  }
-  if((length % 4) == 0) {
-    if(validate_utf32(reinterpret_cast<const char32_t*>(input), length/4)) { out |= encoding_type::UTF32_LE; }
-  }
+simdutf_warn_unused int
+implementation::detect_encodings(const char *input,
+                                 size_t length) const noexcept {
+  if (length % 2 == 0) {
+    const char *buf = input;
 
-  return out;
+    const char *start = buf;
+    const char *end = input + length;
+
+    bool is_utf8 = true;
+    bool is_utf16 = true;
+    bool is_utf32 = true;
+
+    int out = 0;
+
+    avx512_utf8_checker checker{};
+    __m512i currentmax = _mm512_setzero_si512();
+    while (buf + 64 <= end) {
+      __m512i in = _mm512_loadu_si512((__m512i *)buf);
+      __m512i diff = _mm512_sub_epi16(in, _mm512_set1_epi16(uint16_t(0xD800)));
+      __mmask32 surrogates =
+          _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0800)));
+      if (surrogates) {
+        is_utf8 = false;
+
+        // Can still be either UTF-16LE or UTF-32LE depending on the positions
+        // of the surrogates To be valid UTF-32LE, a surrogate cannot be in the
+        // two most significant bytes of any 32-bit word. On the other hand, to
+        // be valid UTF-16LE, at least one surrogate must be in the two most
+        // significant bytes of a 32-bit word since they always come in pairs in
+        // UTF-16LE. Note that we always proceed in multiple of 4 before this
+        // point so there is no offset in 32-bit words.
+
+        if ((surrogates & 0xaaaaaaaa) != 0) {
+          is_utf32 = false;
+          __mmask32 highsurrogates = _mm512_cmplt_epu16_mask(
+              diff, _mm512_set1_epi16(uint16_t(0x0400)));
+          __mmask32 lowsurrogates = surrogates ^ highsurrogates;
+          // high must be followed by low
+          if ((highsurrogates << 1) != lowsurrogates) {
+            return simdutf::encoding_type::unspecified;
+          }
+
+          bool ends_with_high = ((highsurrogates & 0x80000000) != 0);
+          if (ends_with_high) {
+            buf +=
+                31 *
+                sizeof(char16_t); // advance only by 31 words so that we start
+                                  // with the high surrogate on the next round.
+          } else {
+            buf += 32 * sizeof(char16_t);
+          }
+          is_utf16 = validate_utf16le(reinterpret_cast<const char16_t *>(buf),
+                                      (end - buf) / sizeof(char16_t));
+          if (!is_utf16) {
+            return simdutf::encoding_type::unspecified;
+
+          } else {
+            return simdutf::encoding_type::UTF16_LE;
+          }
+
+        } else {
+          is_utf16 = false;
+          // Check for UTF-32LE
+          if (length % 4 == 0) {
+            const char32_t *input32 = reinterpret_cast<const char32_t *>(buf);
+            const char32_t *end32 =
+                reinterpret_cast<const char32_t *>(start) + length / 4;
+            if (validate_utf32(input32, end32 - input32)) {
+              return simdutf::encoding_type::UTF32_LE;
+            }
+          }
+          return simdutf::encoding_type::unspecified;
+        }
+        break;
+      }
+      // If no surrogate, validate under other encodings as well
+
+      // UTF-32LE validation
+      currentmax = _mm512_max_epu32(in, currentmax);
+
+      // UTF-8 validation
+      checker.check_next_input(in);
+
+      buf += 64;
+    }
+
+    // Check which encodings are possible
+
+    if (is_utf8) {
+      size_t current_length = static_cast<size_t>(buf - start);
+      if (current_length != length) {
+        const __m512i utf8 = _mm512_maskz_loadu_epi8(
+            (1ULL << (length - current_length)) - 1, (const __m512i *)buf);
+        checker.check_next_input(utf8);
+      }
+      checker.check_eof();
+      if (!checker.errors()) {
+        out |= simdutf::encoding_type::UTF8;
+      }
+    }
+
+    if (is_utf16 && scalar::utf16::validate<endianness::LITTLE>(
+                        reinterpret_cast<const char16_t *>(buf),
+                        (length - (buf - start)) / 2)) {
+      out |= simdutf::encoding_type::UTF16_LE;
+    }
+
+    if (is_utf32 && (length % 4 == 0)) {
+      currentmax = _mm512_max_epu32(
+          _mm512_maskz_loadu_epi8(
+              (1ULL << (length - static_cast<size_t>(buf - start))) - 1,
+              (const __m512i *)buf),
+          currentmax);
+      __mmask16 outside_range = _mm512_cmp_epu32_mask(currentmax, _mm512_set1_epi32(0x10ffff),
+                                _MM_CMPINT_GT);
+      if (outside_range == 0) {
+        out |= simdutf::encoding_type::UTF32_LE;
+      }
+    }
+
+    return out;
+  } else if (implementation::validate_utf8(input, length)) {
+    return simdutf::encoding_type::UTF8;
+  } else {
+    return simdutf::encoding_type::unspecified;
+  }
 }
-
 
 simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
     avx512_utf8_checker checker{};
@@ -425,7 +540,6 @@ simdutf_warn_unused size_t implementation::convert_utf16le_to_utf32(const char16
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf32_output;
   if (ret.first != buf + len) {
-    if(ret.first > buf + len) {printf("FUCKKKK\n");}
     const size_t scalar_saved_bytes = scalar::utf16_to_utf32::convert<endianness::LITTLE>(
                                         ret.first, len - (ret.first - buf), ret.second);
     if (scalar_saved_bytes == 0) { return 0; }
