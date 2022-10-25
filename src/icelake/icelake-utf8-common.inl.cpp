@@ -292,15 +292,36 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
     in that it 'masks' the writes.
 
     Returns how many 16-bit words were stored.
+
+    byteflip is used for flipping 16-bit words, and it should be
+        __m512i byteflip = _mm512_setr_epi64(
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809
+        );
+    We pass it to the (always inlined) function to encourage the compiler to
+    keep the value in a (constant) register.
 */
-simdutf_really_inline size_t utf32_to_utf16_masked(__m512i utf32, unsigned int count, char16_t* output) {
+template <endianness big_endian>
+simdutf_really_inline size_t utf32_to_utf16_masked(const __m512i byteflip, __m512i utf32, unsigned int count, char16_t* output) {
+
     const __mmask16 valid = uint16_t((1 << count) - 1);
     // 1. check if we have any surrogate pairs
     const __m512i v_0000_ffff = _mm512_set1_epi32(0x0000ffff);
     const __mmask16 sp_mask = _mm512_mask_cmpgt_epu32_mask(valid, utf32, v_0000_ffff);
 
     if (sp_mask == 0) {
-        _mm256_mask_storeu_epi16((__m256i*)output, valid, _mm512_cvtepi32_epi16(utf32));
+        if(big_endian) {
+          _mm256_mask_storeu_epi16((__m256i*)output, valid, _mm256_shuffle_epi8(_mm512_cvtepi32_epi16(utf32), _mm512_castsi512_si256(byteflip)));
+
+        } else {
+          _mm256_mask_storeu_epi16((__m256i*)output, valid, _mm512_cvtepi32_epi16(utf32));
+        }
         return count;
     }
 
@@ -325,13 +346,17 @@ simdutf_really_inline size_t utf32_to_utf16_masked(__m512i utf32, unsigned int c
         const __m512i v_d800_dc00 = _mm512_set1_epi32(0xd800dc00);
         const __m512i t3 = _mm512_ternarylogic_epi32(t2, v_fc00_fc00, v_d800_dc00, 0xba);
         const __m512i t4 = _mm512_mask_blend_epi32(sp_mask, utf32, t3);
-        const __m512i t5 = _mm512_ror_epi32(t4, 16);
+        __m512i t5 = _mm512_ror_epi32(t4, 16);
         // Here we want to trim all of the upper 16-bit words from the 2-byte
         // characters represented as 4-byte values. We can compute it from
         // sp_mask or the following... It can be more optimized!
         const  __mmask32 nonzero = _kor_mask32(0xaaaaaaaa,_mm512_cmpneq_epi16_mask(t5, _mm512_setzero_si512()));
         const  __mmask32 nonzero_masked = _kand_mask32(nonzero, __mmask32((uint64_t(1) << (2*count)) - 1));
-        _mm512_mask_compressstoreu_epi16(output, nonzero_masked, t5);
+        if(big_endian) { t5 = _mm512_shuffle_epi8(t5, byteflip); }
+        // we deliberately avoid _mm512_mask_compressstoreu_epi16 for portability (zen4)
+        __m512i compressed = _mm512_maskz_compress_epi16(nonzero_masked, t5);
+        _mm512_mask_storeu_epi16(output, (1<<(count + static_cast<unsigned int>(count_ones(sp_mask)))) - 1, compressed);
+        //_mm512_mask_compressstoreu_epi16(output, nonzero_masked, t5);
     }
 
     return count + static_cast<unsigned int>(count_ones(sp_mask));
@@ -342,15 +367,34 @@ simdutf_really_inline size_t utf32_to_utf16_masked(__m512i utf32, unsigned int c
     from input `utf32` into UTF-16. It may overflow.
 
     Returns how many 16-bit words were stored.
+
+    byteflip is used for flipping 16-bit words, and it should be
+        __m512i byteflip = _mm512_setr_epi64(
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809
+        );
+    We pass it to the (always inlined) function to encourage the compiler to
+    keep the value in a (constant) register.
 */
-simdutf_really_inline size_t utf32_to_utf16(__m512i utf32, unsigned int count, char16_t* output) {
+template <endianness big_endian>
+simdutf_really_inline size_t utf32_to_utf16(const __m512i byteflip, __m512i utf32, unsigned int count, char16_t* output) {
     // check if we have any surrogate pairs
     const __m512i v_0000_ffff = _mm512_set1_epi32(0x0000ffff);
     const __mmask16 sp_mask = _mm512_cmpgt_epu32_mask(utf32, v_0000_ffff);
 
     if (sp_mask == 0) {
         // technically, it should be _mm256_storeu_epi16
-        _mm256_storeu_si256((__m256i*)output, _mm512_cvtepi32_epi16(utf32));
+        if(big_endian) {
+          _mm256_storeu_si256((__m256i*)output, _mm256_shuffle_epi8(_mm512_cvtepi32_epi16(utf32),_mm512_castsi512_si256(byteflip)));
+        } else {
+          _mm256_storeu_si256((__m256i*)output, _mm512_cvtepi32_epi16(utf32));
+        }
         return count;
     }
 
@@ -375,9 +419,13 @@ simdutf_really_inline size_t utf32_to_utf16(__m512i utf32, unsigned int count, c
         const __m512i v_d800_dc00 = _mm512_set1_epi32(0xd800dc00);
         const __m512i t3 = _mm512_ternarylogic_epi32(t2, v_fc00_fc00, v_d800_dc00, 0xba);
         const __m512i t4 = _mm512_mask_blend_epi32(sp_mask, utf32, t3);
-        const __m512i t5 = _mm512_ror_epi32(t4, 16);
+        __m512i t5 = _mm512_ror_epi32(t4, 16);
         const  __mmask32 nonzero = _kor_mask32(0xaaaaaaaa,_mm512_cmpneq_epi16_mask(t5, _mm512_setzero_si512()));
-         _mm512_mask_compressstoreu_epi16(output, nonzero, t5);
+        if(big_endian) { t5 = _mm512_shuffle_epi8(t5, byteflip); }
+        // we deliberately avoid _mm512_mask_compressstoreu_epi16 for portability (zen4)
+        __m512i compressed = _mm512_maskz_compress_epi16(nonzero, t5);
+        _mm512_mask_storeu_epi16(output, (1<<(count + static_cast<unsigned int>(count_ones(sp_mask)))) - 1, compressed);
+        //_mm512_mask_compressstoreu_epi16(output, nonzero, t5);
     }
 
     return count + static_cast<unsigned int>(count_ones(sp_mask));

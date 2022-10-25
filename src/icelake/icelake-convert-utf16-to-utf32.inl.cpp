@@ -4,16 +4,27 @@
   Returns a pair: the first unprocessed byte from buf and utf32_output
   A scalar routing should carry on the conversion of the tail.
 */
-std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) {
+template <endianness big_endian>
+std::tuple<const char16_t*, char32_t*, bool> convert_utf16_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) {
   const char16_t* end = buf + len;
   const __m512i v_fc00 = _mm512_set1_epi16((uint16_t)0xfc00);
   const __m512i v_d800 = _mm512_set1_epi16((uint16_t)0xd800);
   const __m512i v_dc00 = _mm512_set1_epi16((uint16_t)0xdc00);
   __mmask32 carry{0};
-
+  const __m512i byteflip = _mm512_setr_epi64(
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809
+        );
   while (buf + 32 <= end) {
     // Always safe because buf + 32 <= end so that end - buf >= 32 bytes:
     __m512i in = _mm512_loadu_si512((__m512i*)buf);
+    if(big_endian) { in = _mm512_shuffle_epi8(in, byteflip); }
 
     // H - bitmask for high surrogates
     const __mmask32 H = _mm512_cmpeq_epi16_mask(_mm512_and_si512(in, v_fc00), v_d800);
@@ -83,7 +94,7 @@ std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf
         carry = (H >> 30) & 0x1;
       } else {
         // invalid case
-        return std::make_pair(nullptr, utf32_output);
+        return std::make_tuple(buf+carry, utf32_output, false);
       }
     } else {
       // no surrogates
@@ -95,5 +106,5 @@ std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf
       carry = 0;
     }
   } // while
-  return std::make_pair(buf+carry, utf32_output);
+  return std::make_tuple(buf+carry, utf32_output, true);
 }

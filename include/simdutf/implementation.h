@@ -5,6 +5,7 @@
 #include <atomic>
 #endif
 #include <vector>
+#include <tuple>
 #include "simdutf/common_defs.h"
 #include "simdutf/internal/isadetection.h"
 
@@ -25,7 +26,7 @@ simdutf_really_inline simdutf_warn_unused simdutf::encoding_type autodetect_enco
 
 /**
  * Autodetect the possible encodings of the input in one pass.
- * 
+ *
  * Overriden by each implementation.
  *
  * @param input the string to analyze.
