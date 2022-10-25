@@ -11,16 +11,38 @@
 template <endianness big_endian>
 utf8_to_utf16_result fast_avx512_convert_utf8_to_utf16(const char *in, size_t len, char16_t *out) {
   const char *const final_in = in + len;
-  uint64_t result = SIMDUTF_OK;
-  while (result == SIMDUTF_OK) {
+  bool result = true;
+  while (result) {
     if (in + 64 <= final_in) {
-        result = process_block_utf8_to_utf16<false, SIMDUTF_FULL, big_endian>(in, out, final_in - in);
+        result = process_block_utf8_to_utf16<SIMDUTF_FULL, big_endian>(in, out, final_in - in);
     } else if(in < final_in) {
-        result = process_block_utf8_to_utf16<false, SIMDUTF_TAIL, big_endian>(in, out, final_in - in);
+        result = process_block_utf8_to_utf16<SIMDUTF_TAIL, big_endian>(in, out, final_in - in);
     } else { break; }
   }
-  if(result != SIMDUTF_OK) { out = nullptr; }
+  if(!result) { out = nullptr; }
   return std::make_pair(in, out);
+}
+
+template <endianness big_endian>
+simdutf::result fast_avx512_convert_utf8_to_utf16_with_errors(const char *in, size_t len, char16_t *out) {
+  const char *const init_in = in;
+  const char16_t *const init_out = out;
+  const char *const final_in = in + len;
+  bool  result = true;
+  while (result) {
+    if (in + 64 <= final_in) {
+        result = process_block_utf8_to_utf16<SIMDUTF_FULL, big_endian>(in, out, final_in - in);
+    } else if(in < final_in) {
+        result = process_block_utf8_to_utf16<SIMDUTF_TAIL, big_endian>(in, out, final_in - in);
+    } else { break; }
+  }
+  if(!result) {
+    simdutf::result res = scalar::utf8_to_utf16::rewind_and_convert_with_errors<big_endian>(in, final_in - in, out);
+    res.count += (in - init_in);
+    return res;
+  } else {
+    return simdutf::result(error_code::SUCCESS,out - init_out);
+  }
 }
 
 

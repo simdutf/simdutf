@@ -902,8 +902,9 @@ Errors
 For validation and transcoding, we also provide functions that will stop on error and return a result struct which is a pair of two fields:
 ```c++
 struct result {
-  error_code error;
-  size_t position;
+  error_code error; // see `struct error_code`.
+  size_t count; // In case of error, indicates the position of the error in the input.
+  // In case of success, indicates the number of words validated/written.
 };
 ```
 On error, the `error` field indicates the type of error encountered and the `position` field indicates its word position in the input string.
