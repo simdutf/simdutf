@@ -13,7 +13,10 @@
 namespace simdutf {
 
 /**
- * Autodetect the encoding of the input.
+ * Autodetect the encoding of the input, a single encoding is recommended.
+ * E.g., the function might return simdutf::encoding_type::UTF8, 
+ * simdutf::encoding_type::UTF16_LE, simdutf::encoding_type::UTF16_BE, or
+ * simdutf::encoding_type::UTF32_LE.
  *
  * @param input the string to analyze.
  * @param length the length of the string in bytes.
@@ -26,6 +29,8 @@ simdutf_really_inline simdutf_warn_unused simdutf::encoding_type autodetect_enco
 
 /**
  * Autodetect the possible encodings of the input in one pass.
+ * E.g., if the input might be UTF-16LE or UTF-8, this function returns
+ * the value (simdutf::encoding_type::UTF8 | simdutf::encoding_type::UTF16_LE).
  *
  * Overriden by each implementation.
  *

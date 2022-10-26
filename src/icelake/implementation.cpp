@@ -36,6 +36,9 @@ namespace SIMDUTF_IMPLEMENTATION {
 simdutf_warn_unused int
 implementation::detect_encodings(const char *input,
                                  size_t length) const noexcept {
+  // If there is a BOM, then we trust it.
+  auto bom_encoding = simdutf::BOM::check_bom(input, length);
+  if(bom_encoding != encoding_type::unspecified) { return bom_encoding; }
   if (length % 2 == 0) {
     const char *buf = input;
 
@@ -585,7 +588,7 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf32(const char* buf
 }
 
 simdutf_warn_unused result implementation::convert_utf8_to_utf32_with_errors(const char* buf, size_t len, char32_t* utf32_output) const noexcept {
-   // TODO: port to icelake (4)
+   // TODO: port to icelake (1)
    return scalar::utf8_to_utf32::convert_with_errors(buf, len, utf32_output);
 }
 
@@ -633,12 +636,12 @@ simdutf_warn_unused size_t implementation::convert_utf16be_to_utf8(const char16_
 }
 
 simdutf_warn_unused result implementation::convert_utf16le_to_utf8_with_errors(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-   // TODO: port to icelake (5)
+   // TODO: port to icelake (2)
   return scalar::utf16_to_utf8::convert_with_errors<endianness::LITTLE>(buf, len, utf8_output);
 }
 
 simdutf_warn_unused result implementation::convert_utf16be_to_utf8_with_errors(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-   // TODO: port to icelake (6)
+   // TODO: port to icelake (3)
   return scalar::utf16_to_utf8::convert_with_errors<endianness::BIG>(buf, len, utf8_output);
 }
 
@@ -651,47 +654,47 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_utf8(const c
 }
 
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
-   // TODO: port to icelake (7)
+   // TODO: port to icelake (4)
   return scalar::utf32_to_utf8::convert(buf, len, utf8_output);
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
-   // TODO: port to icelake (8)
+   // TODO: port to icelake (5)
   return scalar::utf32_to_utf8::convert_with_errors(buf, len, utf8_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf8(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
-   // TODO: port to icelake (9)
+   // TODO: port to icelake (6)
   return scalar::utf32_to_utf8::convert_valid(buf, len, utf8_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf16le(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-   // TODO: port to icelake (10)
+   // TODO: port to icelake (7)
   return scalar::utf32_to_utf16::convert<endianness::LITTLE>(buf, len, utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf16be(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-   // TODO: port to icelake (11)
+   // TODO: port to icelake (8)
   return scalar::utf32_to_utf16::convert<endianness::BIG>(buf, len, utf16_output);
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf16le_with_errors(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-   // TODO: port to icelake (12)
+   // TODO: port to icelake (9)
   return scalar::utf32_to_utf16::convert_with_errors<endianness::LITTLE>(buf, len, utf16_output);
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf16be_with_errors(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-   // TODO: port to icelake (13)
+   // TODO: port to icelake (10)
   return scalar::utf32_to_utf16::convert_with_errors<endianness::BIG>(buf, len, utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf16le(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-   // TODO: port to icelake (14)
+   // TODO: port to icelake (11)
   return scalar::utf32_to_utf16::convert_valid<endianness::LITTLE>(buf, len, utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf16be(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-   // TODO: port to icelake (15)
+   // TODO: port to icelake (12)
   return scalar::utf32_to_utf16::convert_valid<endianness::BIG>(buf, len, utf16_output);
 }
 
