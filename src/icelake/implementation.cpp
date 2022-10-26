@@ -587,9 +587,41 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf32(const char* buf
   return saved_bytes;
 }
 
-simdutf_warn_unused result implementation::convert_utf8_to_utf32_with_errors(const char* buf, size_t len, char32_t* utf32_output) const noexcept {
-   // TODO: port to icelake (1)
-   return scalar::utf8_to_utf32::convert_with_errors(buf, len, utf32_output);
+simdutf_warn_unused result implementation::convert_utf8_to_utf32_with_errors(const char* buf, size_t len, char32_t* utf32) const noexcept {
+  uint32_t * utf32_output = reinterpret_cast<uint32_t *>(utf32);
+  auto ret = icelake::validating_utf8_to_fixed_length_with_constant_checks<endianness::LITTLE, uint32_t>(buf, len, utf32_output);
+  if (!std::get<2>(ret)) {
+    result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(std::get<0>(ret), len - (std::get<0>(ret) - buf), reinterpret_cast<char32_t *>(std::get<1>(ret)));
+    res.count += (std::get<0>(ret) - buf);
+    return res;
+  }
+  size_t saved_bytes = std::get<1>(ret) - utf32_output;
+  const char* end = buf + len;
+  if (std::get<0>(ret) == end) {
+    return {simdutf::SUCCESS, saved_bytes};
+  }
+
+  // Note: the AVX512 procedure looks up 4 bytes forward, and
+  //       correctly converts multi-byte chars even if their
+  //       continuation bytes lie outside 16-byte window.
+  //       It means, we have to skip continuation bytes from
+  //       the beginning ret.first, as they were already consumed.
+  while (std::get<0>(ret) != end and ((uint8_t(*std::get<0>(ret)) & 0xc0) == 0x80)) {
+      std::get<0>(ret) += 1;
+  }
+
+  if (std::get<0>(ret) != end) {
+    auto scalar_result = scalar::utf8_to_utf32::convert_with_errors(
+                                        std::get<0>(ret), len - (std::get<0>(ret) - buf), reinterpret_cast<char32_t *>(utf32_output) + saved_bytes);
+    if (scalar_result.error != simdutf::SUCCESS) {
+      scalar_result.count +=  (std::get<0>(ret) - buf);
+    } else {
+      scalar_result.count += saved_bytes;
+    }
+    return scalar_result;
+  }
+
+  return {simdutf::SUCCESS, size_t(std::get<1>(ret) - utf32_output)};
 }
 
 
