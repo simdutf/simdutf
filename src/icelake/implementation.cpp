@@ -14,16 +14,17 @@ namespace {
 #ifndef SIMDUTF_ICELAKE_H
 #error "icelake.h must be included"
 #endif
-#include "icelake/icelake-utf8-common.inl.cpp"
-#include "icelake/icelake-macros.inl.cpp"
-#include "icelake/icelake-from-valid-utf8.inl.cpp"
-#include "icelake/icelake-utf8-validation.inl.cpp"
-#include "icelake/icelake-from-utf8.inl.cpp"
-#include "icelake/icelake-convert-utf16-to-utf32.inl.cpp"
-#include "icelake/icelake-ascii-validation.inl.cpp"
-#include "icelake/icelake-utf32-validation.inl.cpp"
+#include "icelake/icelake_utf8_common.inl.cpp"
+#include "icelake/icelake_macros.inl.cpp"
+#include "icelake/icelake_from_valid_utf8.inl.cpp"
+#include "icelake/icelake_utf8_validation.inl.cpp"
+#include "icelake/icelake_from_utf8.inl.cpp"
+#include "icelake/icelake_convert_utf16_to_utf32.inl.cpp"
+#include "icelake/icelake_convert_utf32_to_utf8.inl.cpp"
+#include "icelake/icelake_convert_utf32_to_utf16.inl.cpp"
+#include "icelake/icelake_ascii_validation.inl.cpp"
+#include "icelake/icelake_utf32_validation.inl.cpp"
 #include "icelake/icelake_convert_utf16_to_utf8.inl.cpp"
-//#include "icelake/icelake_detect_encodings.cpp"
 
 } // namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -668,13 +669,25 @@ simdutf_warn_unused size_t implementation::convert_utf16be_to_utf8(const char16_
 }
 
 simdutf_warn_unused result implementation::convert_utf16le_to_utf8_with_errors(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-   // TODO: port to icelake (2)
-  return scalar::utf16_to_utf8::convert_with_errors<endianness::LITTLE>(buf, len, utf8_output);
+  size_t outlen;
+  size_t inlen = utf16_to_utf8_avx512i<endianness::LITTLE>(buf, len, (unsigned char*)utf8_output, &outlen);
+  if(inlen != len) {
+    result res = scalar::utf16_to_utf8::convert_with_errors<endianness::LITTLE>(buf + inlen, len - outlen, utf8_output + outlen);
+    res.count += inlen;
+    return res;
+  }
+  return {simdutf::SUCCESS, outlen};
 }
 
 simdutf_warn_unused result implementation::convert_utf16be_to_utf8_with_errors(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
-   // TODO: port to icelake (3)
-  return scalar::utf16_to_utf8::convert_with_errors<endianness::BIG>(buf, len, utf8_output);
+  size_t outlen;
+  size_t inlen = utf16_to_utf8_avx512i<endianness::BIG>(buf, len, (unsigned char*)utf8_output, &outlen);
+  if(inlen != len) {
+    result res = scalar::utf16_to_utf8::convert_with_errors<endianness::BIG>(buf + inlen, len - outlen, utf8_output + outlen);
+    res.count += inlen;
+    return res;
+  }
+  return {simdutf::SUCCESS, outlen};
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16le_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
@@ -685,49 +698,107 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_utf8(const c
   return convert_utf16be_to_utf8(buf, len, utf8_output);
 }
 
+
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
-   // TODO: port to icelake (4)
-  return scalar::utf32_to_utf8::convert(buf, len, utf8_output);
+  std::pair<const char32_t*, char*> ret = avx512_convert_utf32_to_utf8(buf, len, utf8_output);
+  if (ret.first == nullptr) { return 0; }
+  size_t saved_bytes = ret.second - utf8_output;
+  if (ret.first != buf + len) {
+    const size_t scalar_saved_bytes = scalar::utf32_to_utf8::convert(
+                                        ret.first, len - (ret.first - buf), ret.second);
+    if (scalar_saved_bytes == 0) { return 0; }
+    saved_bytes += scalar_saved_bytes;
+  }
+  return saved_bytes;
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
-   // TODO: port to icelake (5)
-  return scalar::utf32_to_utf8::convert_with_errors(buf, len, utf8_output);
+  // ret.first.count is always the position in the buffer, not the number of words written even if finished
+  std::pair<result, char*> ret = icelake::avx512_convert_utf32_to_utf8_with_errors(buf, len, utf8_output);
+  if (ret.first.count != len) {
+    result scalar_res = scalar::utf32_to_utf8::convert_with_errors(
+                                        buf + ret.first.count, len - ret.first.count, ret.second);
+    if (scalar_res.error) {
+      scalar_res.count += ret.first.count;
+      return scalar_res;
+    } else {
+      ret.second += scalar_res.count;
+    }
+  }
+  ret.first.count = ret.second - utf8_output;   // Set count to the number of 8-bit words written
+  return ret.first;
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf8(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
-   // TODO: port to icelake (6)
-  return scalar::utf32_to_utf8::convert_valid(buf, len, utf8_output);
+  return convert_utf32_to_utf8(buf, len, utf8_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf16le(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-   // TODO: port to icelake (7)
-  return scalar::utf32_to_utf16::convert<endianness::LITTLE>(buf, len, utf16_output);
+  std::pair<const char32_t*, char16_t*> ret = avx512_convert_utf32_to_utf16<endianness::LITTLE>(buf, len, utf16_output);
+  if (ret.first == nullptr) { return 0; }
+  size_t saved_bytes = ret.second - utf16_output;
+  if (ret.first != buf + len) {
+    const size_t scalar_saved_bytes = scalar::utf32_to_utf16::convert<endianness::LITTLE>(
+                                        ret.first, len - (ret.first - buf), ret.second);
+    if (scalar_saved_bytes == 0) { return 0; }
+    saved_bytes += scalar_saved_bytes;
+  }
+  return saved_bytes;
 }
 
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf16be(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-   // TODO: port to icelake (8)
-  return scalar::utf32_to_utf16::convert<endianness::BIG>(buf, len, utf16_output);
+  std::pair<const char32_t*, char16_t*> ret = avx512_convert_utf32_to_utf16<endianness::BIG>(buf, len, utf16_output);
+  if (ret.first == nullptr) { return 0; }
+  size_t saved_bytes = ret.second - utf16_output;
+  if (ret.first != buf + len) {
+    const size_t scalar_saved_bytes = scalar::utf32_to_utf16::convert<endianness::BIG>(
+                                        ret.first, len - (ret.first - buf), ret.second);
+    if (scalar_saved_bytes == 0) { return 0; }
+    saved_bytes += scalar_saved_bytes;
+  }
+  return saved_bytes;
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf16le_with_errors(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-   // TODO: port to icelake (9)
-  return scalar::utf32_to_utf16::convert_with_errors<endianness::LITTLE>(buf, len, utf16_output);
+  // ret.first.count is always the position in the buffer, not the number of words written even if finished
+  std::pair<result, char16_t*> ret = avx512_convert_utf32_to_utf16_with_errors<endianness::LITTLE>(buf, len, utf16_output);
+  if (ret.first.count != len) {
+    result scalar_res = scalar::utf32_to_utf16::convert_with_errors<endianness::LITTLE>(
+                                        buf + ret.first.count, len - ret.first.count, ret.second);
+    if (scalar_res.error) {
+      scalar_res.count += ret.first.count;
+      return scalar_res;
+    } else {
+      ret.second += scalar_res.count;
+    }
+  }
+  ret.first.count = ret.second - utf16_output;   // Set count to the number of 8-bit words written
+  return ret.first;
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf16be_with_errors(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-   // TODO: port to icelake (10)
-  return scalar::utf32_to_utf16::convert_with_errors<endianness::BIG>(buf, len, utf16_output);
+  // ret.first.count is always the position in the buffer, not the number of words written even if finished
+  std::pair<result, char16_t*> ret = avx512_convert_utf32_to_utf16_with_errors<endianness::BIG>(buf, len, utf16_output);
+  if (ret.first.count != len) {
+    result scalar_res = scalar::utf32_to_utf16::convert_with_errors<endianness::BIG>(
+                                        buf + ret.first.count, len - ret.first.count, ret.second);
+    if (scalar_res.error) {
+      scalar_res.count += ret.first.count;
+      return scalar_res;
+    } else {
+      ret.second += scalar_res.count;
+    }
+  }
+  ret.first.count = ret.second - utf16_output;   // Set count to the number of 8-bit words written
+  return ret.first;
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf16le(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-   // TODO: port to icelake (11)
-  return scalar::utf32_to_utf16::convert_valid<endianness::LITTLE>(buf, len, utf16_output);
+  return convert_utf32_to_utf16le(buf, len, utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf16be(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-   // TODO: port to icelake (12)
-  return scalar::utf32_to_utf16::convert_valid<endianness::BIG>(buf, len, utf16_output);
+  return convert_utf32_to_utf16be(buf, len, utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16le_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) const noexcept {
