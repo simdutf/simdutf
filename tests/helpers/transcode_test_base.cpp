@@ -172,7 +172,7 @@ namespace simdutf { namespace tests { namespace helpers {
              size_t(std::distance(output_utf32.begin(), it.first)), uint16_t(*it.first), uint16_t(*it.second));
       for(size_t i = 0; i < output_utf32.size(); i++) {
         if(reference_output_utf32[i] != output_utf32[i]) { printf(" ==> "); }
-        printf("at %zu expected 0x%04x and got 0x%04x\n ", i, uint32_t(reference_output_utf32[i]), uint32_t(output_utf32[i]));
+        printf("at %zu expected 0x%08x and got 0x%08x\n ", i, uint32_t(reference_output_utf32[i]), uint32_t(output_utf32[i]));
       }
 
       return false;
@@ -528,7 +528,7 @@ namespace simdutf { namespace tests { namespace helpers {
       dump("actual   :", output_utf16);
       for(size_t i = 0; i < reference_output_utf16.size(); i++) {
         if(reference_output_utf16[i] != output_utf16[i]) { printf(" ==> "); }
-        printf("at %zu expected 0x%02x and got 0x%02x\n ", i, uint8_t(reference_output_utf16[i]), uint8_t(output_utf16[i]));
+        printf("at %zu expected 0x%04x 0x%04x\n ", i, uint16_t(reference_output_utf16[i]), uint16_t(output_utf16[i]));
       }
       return false;
     }

@@ -303,7 +303,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
     std::vector<char16_t> input_utf16; // source-encoded message: what we're going to transcode
 
-    static constexpr size_t output_size_margin = 0; // extra room for buggy procedures
+    static constexpr size_t output_size_margin = 16; // extra room for buggy procedures
 
   public:
     transcode_utf16_to_utf32_test_base(GenerateCodepoint generate, size_t input_size);

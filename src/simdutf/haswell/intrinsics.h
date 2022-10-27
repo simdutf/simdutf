@@ -41,11 +41,7 @@
 // has it as a macro.
 #ifndef _blsr_u64
 // we roll our own
-SIMDUTF_TARGET_HASWELL
-static simdutf_really_inline uint64_t _blsr_u64(uint64_t n) {
-  return (n - 1) & n;
-}
-SIMDUTF_UNTARGET_REGION
+#define _blsr_u64(n) ((n - 1) & n)
 #endif //  _blsr_u64
 #endif // SIMDUTF_CLANG_VISUAL_STUDIO
 

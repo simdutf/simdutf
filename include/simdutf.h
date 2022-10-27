@@ -2,7 +2,6 @@
 #define SIMDUTF_H
 #include <cstring>
 
-
 #include "simdutf/compiler_check.h"
 #include "simdutf/common_defs.h"
 #include "simdutf/encoding_types.h"

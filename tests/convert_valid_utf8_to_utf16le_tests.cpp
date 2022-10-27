@@ -9,7 +9,7 @@
 #include <memory>
 
 namespace {
-  std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
+  std::array<size_t, 9> input_size{7, 12, 16, 64, 67, 128, 256, 511, 1000};
 
   using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
 
@@ -71,12 +71,48 @@ TEST(convert_1_or_2_or_3_UTF8_bytes) {
   }
 }
 
+TEST(convert_3_UTF8_bytes) {
+  for(size_t trial = 0; trial < trials; trial ++) {
+    uint32_t seed{1234+uint32_t(trial)};
+    if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+    simdutf::tests::helpers::RandomIntRanges random({{0x0800, 0xd800-1}}, seed); // range for 3 UTF-8 bytes
+
+    auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
+      return implementation.convert_valid_utf8_to_utf16le(utf8, size, utf16);
+    };
+
+    for (size_t size: input_size) {
+      transcode_utf8_to_utf16_test_base test(random, size);
+      ASSERT_TRUE(test(procedure));
+    }
+  }
+}
+
 TEST(convert_3_or_4_UTF8_bytes) {
   for(size_t trial = 0; trial < trials; trial ++) {
     uint32_t seed{1234+uint32_t(trial)};
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
     simdutf::tests::helpers::RandomIntRanges random({{0x0800, 0xd800-1},
                                                      {0xe000, 0x10ffff}}, seed); // range for 3 or 4 UTF-8 bytes
+
+    auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
+      return implementation.convert_valid_utf8_to_utf16le(utf8, size, utf16);
+    };
+
+    for (size_t size: input_size) {
+      transcode_utf8_to_utf16_test_base test(random, size);
+      ASSERT_TRUE(test(procedure));
+    }
+  }
+}
+
+
+TEST(convert_null_4_UTF8_bytes) {
+  for(size_t trial = 0; trial < trials; trial ++) {
+    uint32_t seed{1234+uint32_t(trial)};
+    if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+    simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0x00000},
+                                                     {0x10000, 0x10ffff}}, seed); // range for 3 or 4 UTF-8 bytes
 
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
       return implementation.convert_valid_utf8_to_utf16le(utf8, size, utf16);

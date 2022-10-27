@@ -97,7 +97,7 @@ TEST(convert_fails_if_there_is_sole_high_surrogate) {
   }
 }
 
-TEST(convert_fails_if_there_is_low_surrogate_is_followed_by_another_low_surrogate) {
+TEST(convert_fails_if_there_is_low_surrogate_followed_by_another_low_surrogate) {
   auto procedure = [&implementation](const char16_t* utf16, size_t size, char32_t* utf32) -> size_t {
     return implementation.convert_utf16le_to_utf32(utf16, size, utf32);
   };
@@ -119,7 +119,7 @@ TEST(convert_fails_if_there_is_low_surrogate_is_followed_by_another_low_surrogat
   }
 }
 
-TEST(convert_fails_if_there_is_surrogate_pair_is_followed_by_high_surrogate) {
+TEST(convert_fails_if_there_is_surrogate_pair_followed_by_high_surrogate) {
   auto procedure = [&implementation](const char16_t* utf16, size_t size, char32_t* utf32) -> size_t {
     return implementation.convert_utf16le_to_utf32(utf16, size, utf32);
   };

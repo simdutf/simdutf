@@ -4,6 +4,8 @@
 #include <cassert>
 #include <array>
 #include <iostream>
+#include <chrono>
+#include <thread>
 #ifdef __x86_64__
 /**
  * utf8lut: Vectorized UTF-8 converter.
@@ -396,7 +398,18 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
     if (implementation == nullptr) {
         throw std::runtime_error("Wrong implementation " + impl);
     }
-
+    // If you want to skip the CPU feature checks, you can set
+    // a variable when calling the benchmark program. E.g.,
+    // SIMDUTF_SKIP_CPU_CHECK=ON benchmark -F myfile.txt
+    // This might result in a crash (E.g., Illegal instruction).
+    SIMDUTF_PUSH_DISABLE_WARNINGS
+    SIMDUTF_DISABLE_DEPRECATED_WARNING // Disable CRT_SECURE warning on MSVC: manually verified this is safe
+    static const char * skip_check = getenv("SIMDUTF_SKIP_CPU_CHECK");
+    SIMDUTF_POP_DISABLE_WARNINGS
+    if(!skip_check && !implementation->supported_by_runtime_system()) {
+        std::cout << procedure_name << ": unsupported by the system\n";
+        return;
+    }
     if (name == "validate_utf8") {
         run_validate_utf8(*implementation, iterations);
     } else if (name == "validate_utf8_with_errors") {
@@ -465,6 +478,11 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         std::cerr << " Aborting ! " << std::endl;
         abort();
     }
+    // We pause for after each call to make sure
+    // that other benchmarks are not affected by frequency throttling.
+    // This was initially introduced for AVX-512 only, but it is probably
+    // wise to have it always.
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
 
 void Benchmark::run_validate_utf8(const simdutf::implementation& implementation, size_t iterations) {

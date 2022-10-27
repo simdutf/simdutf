@@ -102,6 +102,25 @@ TEST(convert_3_or_4_UTF8_bytes) {
   }
 }
 
+
+TEST(convert_null_4_UTF8_bytes) {
+  for(size_t trial = 0; trial < trials; trial ++) {
+    uint32_t seed{1234+uint32_t(trial)};
+    if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+    simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0x00000},
+                                                     {0x10000, 0x10ffff}}, seed); // range for 3 or 4 UTF-8 bytes
+
+    auto procedure = [&implementation](const char* utf8, size_t size, char32_t* utf32) -> size_t {
+      return implementation.convert_utf8_to_utf32(utf8, size, utf32);
+    };
+
+    for (size_t size: input_size) {
+      transcode_utf8_to_utf32_test_base test(random, size);
+      ASSERT_TRUE(test(procedure));
+    }
+  }
+}
+
 int main(int argc, char* argv[]) {
   return simdutf::test::main(argc, argv);
 }
