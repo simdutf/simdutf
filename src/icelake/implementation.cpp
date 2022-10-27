@@ -1079,9 +1079,9 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf8(const char * i
       uint64_t utf8_continuation_mask = _mm512_cmple_epi8_mask(utf8, _mm512_set1_epi8(-65+1));
       // We count one word for anything that is not a continuation (so
       // leading bytes).
-      count += 64 - _popcnt64(utf8_continuation_mask);
+      count += 64 - count_ones(utf8_continuation_mask);
       uint64_t utf8_4byte = _mm512_cmpge_epu8_mask(utf8, _mm512_set1_epi8(int8_t(240)));
-      count += _popcnt64(utf8_4byte);
+      count += count_ones(utf8_4byte);
     }
     return count + scalar::utf8::utf16_length_from_utf8(input + pos, length - pos);
 }
