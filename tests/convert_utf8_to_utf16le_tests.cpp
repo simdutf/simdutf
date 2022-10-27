@@ -28,13 +28,13 @@ TEST(convert_check_validation) {
   for (size_t i = 0; i < total; i++) {
     auto UTF8 = gen_1_2_3_4.generate(rand() % 256);
     std::unique_ptr<char16_t[]> buffer(new char16_t[UTF8.size()]);
-    ASSERT_TRUE(implementation.convert_utf8_to_utf16((const char *)UTF8.data(), UTF8.size(), buffer.get()) > 0);
+    ASSERT_TRUE(implementation.convert_utf8_to_utf16le((const char *)UTF8.data(), UTF8.size(), buffer.get()) > 0);
     for (size_t flip = 0; flip < 1000; ++flip) {
       // we are going to hack the string as long as it is UTF-8
       const int bitflip{1 << (rand() % 8)};
       UTF8[rand() % UTF8.size()] = uint8_t(bitflip); // we flip exactly one bit
       bool is_ok =
-          (implementation.convert_utf8_to_utf16((const char *)UTF8.data(), UTF8.size(), buffer.get()) > 0);
+          (implementation.convert_utf8_to_utf16le((const char *)UTF8.data(), UTF8.size(), buffer.get()) > 0);
       bool is_ok_reference =
           simdutf::tests::reference::validate_utf8((const char *)UTF8.data(), UTF8.size());
       ASSERT_TRUE(is_ok == is_ok_reference);
@@ -85,12 +85,12 @@ TEST(convert_check_validation_examples) {
   for (size_t i = 0; i < sizeof(goodsequences)/sizeof(goodsequences[0]); i++) {
     size_t len = std::strlen(goodsequences[i]);
     std::unique_ptr<char16_t[]> buffer(new char16_t[len]);
-    ASSERT_TRUE(implementation.convert_utf8_to_utf16(goodsequences[i], len, buffer.get()) > 0);
+    ASSERT_TRUE(implementation.convert_utf8_to_utf16le(goodsequences[i], len, buffer.get()) > 0);
   }
   for (size_t i = 0; i < sizeof(badsequences)/sizeof(badsequences[0]); i++) {
     size_t len = std::strlen(badsequences[i]);
     std::unique_ptr<char16_t[]> buffer(new char16_t[len]);
-    ASSERT_TRUE(implementation.convert_utf8_to_utf16(badsequences[i], len, buffer.get()) == 0);
+    ASSERT_TRUE(implementation.convert_utf8_to_utf16le(badsequences[i], len, buffer.get()) == 0);
   }
 }
 
@@ -167,7 +167,7 @@ TEST(convert_3_UTF8_bytes) {
     simdutf::tests::helpers::RandomIntRanges random({{0x0800, 0xd800-1}}, seed); // range for 3 UTF-8 bytes
 
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
-      return implementation.convert_utf8_to_utf16(utf8, size, utf16);
+      return implementation.convert_utf8_to_utf16le(utf8, size, utf16);
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
       return implementation.utf16_length_from_utf8(utf8, size);
@@ -211,7 +211,7 @@ TEST(convert_null_4_UTF8_bytes) {
                                                      {0x10000, 0x10ffff}}, seed); // range for 3 or 4 UTF-8 bytes
 
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16) -> size_t {
-      return implementation.convert_utf8_to_utf16(utf8, size, utf16);
+      return implementation.convert_utf8_to_utf16le(utf8, size, utf16);
     };
 
     for (size_t size: input_size) {

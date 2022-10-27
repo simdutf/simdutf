@@ -17,12 +17,23 @@
     - pair.first    - the first unprocessed input byte
     - pair.second   - the first unprocessed output word
 */
-template <typename OUTPUT>
+template <endianness big_endian, typename OUTPUT>
 std::pair<const char*, OUTPUT*> valid_utf8_to_fixed_length(const char* str, size_t len, OUTPUT* dwords) {
     constexpr bool UTF32 = std::is_same<OUTPUT, uint32_t>::value;
     constexpr bool UTF16 = std::is_same<OUTPUT, char16_t>::value;
     static_assert(UTF32 or UTF16, "output type has to be uint32_t (for UTF-32) or char16_t (for UTF-16)");
+    static_assert(!(UTF32 and big_endian), "we do not currently support big-endian UTF-32");
 
+    __m512i byteflip = _mm512_setr_epi64(
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809
+        );
     const char* ptr = str;
     const char* end = ptr + len;
 

@@ -159,7 +159,7 @@ TEST(validate_utf16le__returns_false_when_input_is_truncated) {
 }
 
 TEST(validate_utf16le__extensive_tests) {
-  const std::string path{"validate_utf16le_testcases.txt"};
+  const std::string path{"validate_utf16_testcases.txt"};
   std::ifstream file{path};
   if (not file) {
     printf("File '%s' cannot be open, skipping test\n", path.c_str());

@@ -4,16 +4,27 @@
   Returns a pair: the first unprocessed byte from buf and utf32_output
   A scalar routing should carry on the conversion of the tail.
 */
-std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) {
+template <endianness big_endian>
+std::tuple<const char16_t*, char32_t*, bool> convert_utf16_to_utf32(const char16_t* buf, size_t len, char32_t* utf32_output) {
   const char16_t* end = buf + len;
   const __m512i v_fc00 = _mm512_set1_epi16((uint16_t)0xfc00);
   const __m512i v_d800 = _mm512_set1_epi16((uint16_t)0xd800);
   const __m512i v_dc00 = _mm512_set1_epi16((uint16_t)0xdc00);
-
   __mmask32 carry{0};
-
-  while (buf + 31 <= end) {
+  const __m512i byteflip = _mm512_setr_epi64(
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809,
+            0x0607040502030001,
+            0x0e0f0c0d0a0b0809
+        );
+  while (buf + 32 <= end) {
+    // Always safe because buf + 32 <= end so that end - buf >= 32 bytes:
     __m512i in = _mm512_loadu_si512((__m512i*)buf);
+    if(big_endian) { in = _mm512_shuffle_epi8(in, byteflip); }
 
     // H - bitmask for high surrogates
     const __mmask32 H = _mm512_cmpeq_epi16_mask(_mm512_and_si512(in, v_fc00), v_d800);
@@ -65,29 +76,35 @@ std::pair<const char16_t*, char32_t*> convert_utf16_to_utf32(const char16_t* buf
 
         //  5. Store all valid UTF-32 words (low surrogate positions and 32nd word are invalid)
         const __mmask32 valid = ~L & 0x7fffffff;
+        // We deliberately do a _mm512_maskz_compress_epi32 followed by storeu_epi32
+        // to ease performance portability to Zen 4.
+        // The first _mm512_mask_storeu_epi32 could be safely replaced by a _mm512_storeu_epi32.
         const __m512i compressed_first = _mm512_maskz_compress_epi32((__mmask16)(valid), utf32_first);
-        _mm512_storeu_epi32((__m512i *) utf32_output, compressed_first);
-        utf32_output += count_ones((uint16_t)(valid));
+        const size_t howmany1 = count_ones((uint16_t)(valid));
+        _mm512_storeu_epi32((__m512i *) utf32_output,  compressed_first);
+        utf32_output += howmany1;
         const __m512i compressed_second = _mm512_maskz_compress_epi32((__mmask16)(valid >> 16), utf32_second);
-        _mm512_storeu_epi32((__m512i *) utf32_output, compressed_second);
-        utf32_output += count_ones(valid >>16);
+        const size_t howmany2 = count_ones((uint16_t)(valid >> 16));
+        // The following could be unsafe in some cases?
+        //_mm512_storeu_epi32((__m512i *) utf32_output, compressed_second);
+        _mm512_mask_storeu_epi32((__m512i *) utf32_output, __mmask16((1<<howmany2)-1), compressed_second);
+        utf32_output += howmany2;
         // Only process 31 words, but keep track if the 31st word is a high surrogate as a carry
         buf += 31;
         carry = (H >> 30) & 0x1;
       } else {
         // invalid case
-        return std::make_pair(nullptr, utf32_output);
+        return std::make_tuple(buf+carry, utf32_output, false);
       }
     } else {
       // no surrogates
       // extend all thirty-two 16-bit words to thirty-two 32-bit words
       _mm512_storeu_si512((__m512i *)(utf32_output), _mm512_cvtepu16_epi32(_mm512_castsi512_si256(in)));
-      _mm512_storeu_si512((__m512i *)(utf32_output + 16), _mm512_cvtepu16_epi32(_mm512_extracti32x8_epi32(in,1)));
+      _mm512_storeu_si512((__m512i *)(utf32_output) + 1, _mm512_cvtepu16_epi32(_mm512_extracti32x8_epi32(in,1)));
       utf32_output += 32;
       buf += 32;
       carry = 0;
     }
   } // while
-
-  return std::make_pair(buf+carry, utf32_output);
+  return std::make_tuple(buf+carry, utf32_output, true);
 }

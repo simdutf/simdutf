@@ -83,13 +83,12 @@
                 output += valid_count;                                                                       \
             } else {                                                                                         \
                 if(MASKED) {                                                                                 \
-                    output += utf32_to_utf16_masked(out, valid_count, reinterpret_cast<char16_t *>(output)); \
+                    output += utf32_to_utf16_masked<big_endian>(byteflip, out, valid_count, reinterpret_cast<char16_t *>(output)); \
                 } else {                                                                                     \
-                    output += utf32_to_utf16(out, valid_count, reinterpret_cast<char16_t *>(output));        \
+                    output += utf32_to_utf16<big_endian>(byteflip, out, valid_count, reinterpret_cast<char16_t *>(output));        \
                 }                                                                                            \
             }                                                                                                \
         }
-
 
 #define SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(INPUT, VALID_COUNT, MASKED)                                    \
 {                                                                                                           \
@@ -103,15 +102,15 @@
         output += VALID_COUNT;                                                                              \
     } else {                                                                                                \
         if(MASKED) {                                                                                        \
-            output += utf32_to_utf16_masked(INPUT, VALID_COUNT, reinterpret_cast<char16_t *>(output));      \
+            output += utf32_to_utf16_masked<big_endian>(byteflip, INPUT, VALID_COUNT, reinterpret_cast<char16_t *>(output));      \
         } else {                                                                                            \
-            output += utf32_to_utf16(INPUT, VALID_COUNT, reinterpret_cast<char16_t *>(output));             \
+            output += utf32_to_utf16<big_endian>(byteflip, INPUT, VALID_COUNT, reinterpret_cast<char16_t *>(output));             \
         }                                                                                                   \
     }                                                                                                       \
 }
 
 
-#define SIMDUTF_ICELAKE_STORE_ASCII(UTF32, utf8, output)                                                  \
+#define SIMDUTF_ICELAKE_STORE_ASCII(UTF32, utf8, output)                                  \
         if (UTF32) {                                                                      \
                 const __m128i t0 = _mm512_castsi512_si128(utf8);                          \
                 const __m128i t1 = _mm512_extracti32x4_epi32(utf8, 1);                    \
@@ -124,6 +123,11 @@
         } else {                                                                          \
                 const __m256i h0 = _mm512_castsi512_si256(utf8);                          \
                 const __m256i h1 = _mm512_extracti64x4_epi64(utf8, 1);                    \
+                if(big_endian) {                                                          \
+                _mm512_storeu_si512((__m512i*)(output + 0*16), _mm512_shuffle_epi8(_mm512_cvtepu8_epi16(h0), byteflip)); \
+                _mm512_storeu_si512((__m512i*)(output + 2*16), _mm512_shuffle_epi8(_mm512_cvtepu8_epi16(h1), byteflip)); \
+                } else {                                                                  \
                 _mm512_storeu_si512((__m512i*)(output + 0*16), _mm512_cvtepu8_epi16(h0)); \
                 _mm512_storeu_si512((__m512i*)(output + 2*16), _mm512_cvtepu8_epi16(h1)); \
+                }                                                                         \
         }
