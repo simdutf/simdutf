@@ -35,7 +35,7 @@
     int carryout;
 	  int64_t advlo, advhi;
 
-    in = _mm512_loadu_epi16(inbuf);
+    in = _mm512_loadu_si512(inbuf);
     if(big_endian) { in = _mm512_shuffle_epi8(in, byteflip); }
     inlen -= 31;
   lastiteration:

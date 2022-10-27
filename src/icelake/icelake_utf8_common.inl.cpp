@@ -39,7 +39,7 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
         );
   // Note that 'tail' is a compile-time constant !
   __mmask64 b = (tail == SIMDUTF_FULL) ? 0xFFFFFFFFFFFFFFFF : (uint64_t(1) << gap) - 1;
-  __m512i input = (tail == SIMDUTF_FULL) ? _mm512_loadu_epi8(in) : _mm512_maskz_loadu_epi8(b, in);
+  __m512i input = (tail == SIMDUTF_FULL) ? _mm512_loadu_si512(in) : _mm512_maskz_loadu_epi8(b, in);
   __mmask64 m1 = (tail == SIMDUTF_FULL) ? _mm512_cmplt_epu8_mask(input, mask_80808080) : _mm512_mask_cmplt_epu8_mask(b, input, mask_80808080);
   if (m1 == b) { // all ASCII
     if (tail == SIMDUTF_FULL) {
@@ -268,7 +268,7 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
   if (tail == SIMDUTF_FULL) {
     // Next part is UTF-16 specific and can be generalized to UTF-32.
     if(big_endian) { final = _mm512_shuffle_epi8(final, byteflip); }
-    _mm512_storeu_epi16(out, final);
+    _mm512_storeu_si512(out, final);
     nout = 32;
     nin = 64 - _lzcnt_u64(_pdep_u64(0xFFFFFFFF, continuation_or_ascii));
   } else {

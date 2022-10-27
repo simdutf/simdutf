@@ -78,10 +78,9 @@ std::tuple<const char16_t*, char32_t*, bool> convert_utf16_to_utf32(const char16
         const __mmask32 valid = ~L & 0x7fffffff;
         // We deliberately do a _mm512_maskz_compress_epi32 followed by storeu_epi32
         // to ease performance portability to Zen 4.
-        // The first _mm512_mask_storeu_epi32 could be safely replaced by a _mm512_storeu_epi32.
         const __m512i compressed_first = _mm512_maskz_compress_epi32((__mmask16)(valid), utf32_first);
         const size_t howmany1 = count_ones((uint16_t)(valid));
-        _mm512_storeu_epi32((__m512i *) utf32_output,  compressed_first);
+        _mm512_storeu_si512((__m512i *) utf32_output,  compressed_first);
         utf32_output += howmany1;
         const __m512i compressed_second = _mm512_maskz_compress_epi32((__mmask16)(valid >> 16), utf32_second);
         const size_t howmany2 = count_ones((uint16_t)(valid >> 16));
