@@ -891,10 +891,10 @@ We also provide a command-line tool which can be build as follows:
 ```
 cmake -B build && cmake --build build --target sutf
 ```
-This builds the executable in `./build/tool/`. sutf enables the user to easily transcode files from one encoding to another directly from the command line.
-The usage is very similar to (iconv)[https://www.gnu.org/software/libiconv/] (see `sutf --help` for more details). sutf relies on the simdutf library functions for fast transcoding of supported
-formats (UTF-8, UTF-16LE, UTF-16BE and UTF-32LE). If iconv is found on the system, sutf falls back on iconv for other formats supported by iconv (a message lets the user know if iconv is available
-during compilation). Example of transcoding two input files to an output file, from UTF-8 to UTF-16LE:
+This command builds the executable in `./build/tool/` under most platforms. The sutf tool enables the user to easily transcode files from one encoding to another directly from the command line.
+The usage is similar to [iconv](https://www.gnu.org/software/libiconv/) (see `sutf --help` for more details). The sutf command-line tool relies on the simdutf library functions for fast transcoding of supported
+formats (UTF-8, UTF-16LE, UTF-16BE and UTF-32LE). If iconv is found on the system and simdutf does not support a conversion, the sutf tool falls back on iconv: a message lets the user know if iconv is available
+during compilation. The following is an example of transcoding two input files to an output file, from UTF-8 to UTF-16LE:
 ```
 sutf -f UTF-8 -t UTF-16LE -o output_file.txt first_input_file.txt second_input_file.txt
 ```
