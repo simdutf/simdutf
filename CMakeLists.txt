@@ -17,8 +17,8 @@ include(GNUInstallDirs)
 include(CTest)
 include(cmake/simdutf-flags.cmake)
 
-set(SIMDUTF_LIB_VERSION "1.0.1" CACHE STRING "simdutf library version")
-set(SIMDUTF_LIB_SOVERSION "1" CACHE STRING "simdutf library soversion")
+set(SIMDUTF_LIB_VERSION "2.0.0" CACHE STRING "simdutf library version")
+set(SIMDUTF_LIB_SOVERSION "2" CACHE STRING "simdutf library soversion")
 option(SIMDUTF_BENCHMARKS "Whether the benchmarks are included as part of the CMake Build." ON)
 
 set(SIMDUTF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
