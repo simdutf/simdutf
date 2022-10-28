@@ -27,10 +27,9 @@
   const unsigned char * const outbuf_orig = outbuf;
   int adjust = 0, carry = 0;
   while (inlen >= 32) {
-    //__m512i hi, lo;
     __mmask32   is1byte;
     int carryout;
-	  int64_t advlo, advhi;
+	  //int64_t advlo, advhi;
 
     in = _mm512_loadu_si512(inbuf);
     if(big_endian) { in = _mm512_shuffle_epi8(in, byteflip); }
@@ -182,8 +181,8 @@
     const uint64_t wantlo_uint64 = _cvtmask64_u64(wantlo);
     const uint64_t wanthi_uint64 = _cvtmask64_u64(wanthi);
 
-    advlo = _mm_popcnt_u64(wantlo_uint64);
-    advhi = _mm_popcnt_u64(wanthi_uint64);
+    uint64_t advlo = _mm_popcnt_u64(wantlo_uint64);
+    uint64_t advhi = _mm_popcnt_u64(wanthi_uint64);
 
     _mm512_mask_storeu_epi8(outbuf, _cvtu64_mask64(_pext_u64(wantlo_uint64, wantlo_uint64)), outlo);
     _mm512_mask_storeu_epi8(outbuf + advlo, _cvtu64_mask64(_pext_u64(wanthi_uint64, wanthi_uint64)), outhi);
