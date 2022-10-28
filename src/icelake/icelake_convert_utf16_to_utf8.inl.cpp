@@ -27,9 +27,8 @@
   const unsigned char * const outbuf_orig = outbuf;
   int adjust = 0, carry = 0;
   while (inlen >= 32) {
-    __m512i hi, lo, fc00masked, taghi, taglo, mslo, mshi, outlo, outhi, magiclo,
-        magichi;
-    __mmask32   is1byte, hisurr, losurr, outmask;
+    //__m512i hi, lo;
+    __mmask32   is1byte;
     int carryout;
 	  int64_t advlo, advhi;
 
@@ -85,17 +84,18 @@
         continue;
       }
     }
-    lo = _mm512_cvtepu16_epi32(_mm512_castsi512_si256(in));
-    hi = _mm512_cvtepu16_epi32(_mm512_extracti32x8_epi32(in, 1));
+    __m512i lo = _mm512_cvtepu16_epi32(_mm512_castsi512_si256(in));
+    __m512i hi = _mm512_cvtepu16_epi32(_mm512_extracti32x8_epi32(in, 1));
 
     carryout = _cvtu32_mask32(0);
 
-    taglo = taghi = _mm512_set1_epi32(0x8080e000);
+    __m512i taglo = _mm512_set1_epi32(0x8080e000);
+    __m512i taghi = _mm512_set1_epi32(0x8080e000);
 
-    fc00masked = _mm512_and_epi32(in, _mm512_set1_epi16(int16_t(0xfc00)));
-    hisurr = _mm512_mask_cmp_epu16_mask(
+    const __m512i fc00masked = _mm512_and_epi32(in, _mm512_set1_epi16(int16_t(0xfc00)));
+    __mmask32 hisurr = _mm512_mask_cmp_epu16_mask(
         inmask, fc00masked, _mm512_set1_epi16(int16_t(0xd800)), _MM_CMPINT_EQ);
-    losurr = _mm512_cmp_epu16_mask(
+    __mmask32 losurr = _mm512_cmp_epu16_mask(
         fc00masked, _mm512_set1_epi16(int16_t(0xdc00)), _MM_CMPINT_EQ);
 
     carryout = 0;
@@ -139,13 +139,13 @@
     hi = _mm512_maskz_mov_epi32(inmask16,hi);
     carry = carryout;
 
-    mslo =
+    __m512i mslo =
         _mm512_multishift_epi64_epi8(_mm512_set1_epi64(0x20262c3200060c12), lo);
 
-    mshi =
+    __m512i mshi =
         _mm512_multishift_epi64_epi8(_mm512_set1_epi64(0x20262c3200060c12), hi);
 
-    outmask = _kandn_mask64(losurr, inmask);
+    __mmask32 outmask = _kandn_mask64(losurr, inmask);
     __mmask64 outmhi = _kshiftri_mask64(outmask, 16);
 
     is1byte = _knot_mask64(is234byte);
@@ -156,9 +156,9 @@
         _mm512_mask_mov_epi32(taglo, is12byte, _mm512_set1_epi32(0x80c00000));
     taghi =
         _mm512_mask_mov_epi32(taghi, is12bhi, _mm512_set1_epi32(0x80c00000));
-    magiclo = _mm512_mask_blend_epi32(outmask, _mm512_set1_epi32(0xffffffff),
+    __m512i magiclo = _mm512_mask_blend_epi32(outmask, _mm512_set1_epi32(0xffffffff),
                                       _mm512_set1_epi32(0x00010101));
-    magichi = _mm512_mask_blend_epi32(outmhi, _mm512_set1_epi32(0xffffffff),
+    __m512i magichi = _mm512_mask_blend_epi32(outmhi, _mm512_set1_epi32(0xffffffff),
                                       _mm512_set1_epi32(0x00010101));
 
 
@@ -177,8 +177,8 @@
 
     const __mmask64 wantlo = _mm512_cmp_epu8_mask(mslo, magiclo, _MM_CMPINT_NLT);
     const __mmask64 wanthi = _mm512_cmp_epu8_mask(mshi, magichi, _MM_CMPINT_NLT);
-    outlo = _mm512_maskz_compress_epi8(wantlo, mslo);
-    outhi = _mm512_maskz_compress_epi8(wanthi, mshi);
+    __m512i outlo = _mm512_maskz_compress_epi8(wantlo, mslo);
+    __m512i outhi = _mm512_maskz_compress_epi8(wanthi, mshi);
     const uint64_t wantlo_uint64 = _cvtmask64_u64(wantlo);
     const uint64_t wanthi_uint64 = _cvtmask64_u64(wanthi);
 
