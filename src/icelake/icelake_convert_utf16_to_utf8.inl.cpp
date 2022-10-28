@@ -29,9 +29,7 @@
   while (inlen >= 32) {
     __m512i hi, lo, fc00masked, taghi, taglo, mslo, mshi, outlo, outhi, magiclo,
         magichi;
-    __mmask64 is12bhi, is1bhi, outmlo, outmhi;
-    __mmask32 is234byte, is12byte, is1byte, hisurr, losurr, outmask;
-    __mmask64 wantlo, wanthi;
+    __mmask32   is1byte, hisurr, losurr, outmask;
     int carryout;
 	  int64_t advlo, advhi;
 
@@ -42,7 +40,7 @@
     inbuf += 31;
 
   failiteration:
-    is234byte = _mm512_mask_cmp_epu16_mask(
+    const __mmask32 is234byte = _mm512_mask_cmp_epu16_mask(
       inmask, in, _mm512_set1_epi16(0x0080), _MM_CMPINT_NLT);
 
     if (_ktestz_mask32_u8(inmask, is234byte)) {
@@ -58,7 +56,7 @@
       }
     }
 
-    is12byte =
+    const __mmask32 is12byte =
         _mm512_cmp_epu16_mask(in, _mm512_set1_epi16(0x0800), _MM_CMPINT_LT);
 
     if (_ktestc_mask32_u8(is12byte, inmask)) {
@@ -78,7 +76,7 @@
       out = _mm512_maskz_compress_epi8(smoosh, in);
       _mm512_mask_storeu_epi8(outbuf, _cvtu64_mask64(_pext_u64(_cvtmask64_u64(smoosh), _cvtmask64_u64(smoosh))),
                               out);
-      outbuf += 31 + _mm_popcnt_u32((int)is234byte);
+      outbuf += 31 + _mm_popcnt_u32(_cvtmask32_u32(is234byte));
       carry = 0;
 
       if (inlen < 32) {
@@ -148,24 +146,23 @@
         _mm512_multishift_epi64_epi8(_mm512_set1_epi64(0x20262c3200060c12), hi);
 
     outmask = _kandn_mask64(losurr, inmask);
-    outmlo = outmask;
-    outmhi = _kshiftri_mask64(outmask, 16);
+    __mmask64 outmhi = _kshiftri_mask64(outmask, 16);
 
     is1byte = _knot_mask64(is234byte);
-    is1bhi = _kshiftri_mask64(is1byte, 16);
-    is12bhi = _kshiftri_mask64(is12byte, 16);
+    __mmask64 is1bhi = _kshiftri_mask64(is1byte, 16);
+    __mmask64 is12bhi = _kshiftri_mask64(is12byte, 16);
 
     taglo =
         _mm512_mask_mov_epi32(taglo, is12byte, _mm512_set1_epi32(0x80c00000));
     taghi =
         _mm512_mask_mov_epi32(taghi, is12bhi, _mm512_set1_epi32(0x80c00000));
-    magiclo = _mm512_mask_blend_epi32(outmlo, _mm512_set1_epi32(0xffffffff),
+    magiclo = _mm512_mask_blend_epi32(outmask, _mm512_set1_epi32(0xffffffff),
                                       _mm512_set1_epi32(0x00010101));
     magichi = _mm512_mask_blend_epi32(outmhi, _mm512_set1_epi32(0xffffffff),
                                       _mm512_set1_epi32(0x00010101));
 
 
-    magiclo = _mm512_mask_blend_epi32(outmlo, _mm512_set1_epi32(0xffffffff),
+    magiclo = _mm512_mask_blend_epi32(outmask, _mm512_set1_epi32(0xffffffff),
                                       _mm512_set1_epi32(0x00010101));
     magichi = _mm512_mask_blend_epi32(outmhi, _mm512_set1_epi32(0xffffffff),
                                       _mm512_set1_epi32(0x00010101));
@@ -178,16 +175,18 @@
 
     mshi = _mm512_mask_slli_epi32(mshi, is1bhi, hi, 24);
 
-    wantlo = _mm512_cmp_epu8_mask(mslo, magiclo, _MM_CMPINT_NLT);
-    wanthi = _mm512_cmp_epu8_mask(mshi, magichi, _MM_CMPINT_NLT);
+    const __mmask64 wantlo = _mm512_cmp_epu8_mask(mslo, magiclo, _MM_CMPINT_NLT);
+    const __mmask64 wanthi = _mm512_cmp_epu8_mask(mshi, magichi, _MM_CMPINT_NLT);
     outlo = _mm512_maskz_compress_epi8(wantlo, mslo);
     outhi = _mm512_maskz_compress_epi8(wanthi, mshi);
+    const uint64_t wantlo_uint64 = _cvtmask64_u64(wantlo);
+    const uint64_t wanthi_uint64 = _cvtmask64_u64(wanthi);
 
-    advlo = _mm_popcnt_u64(wantlo);
-    advhi = _mm_popcnt_u64(wanthi);
+    advlo = _mm_popcnt_u64(wantlo_uint64);
+    advhi = _mm_popcnt_u64(wanthi_uint64);
 
-    _mm512_mask_storeu_epi8(outbuf, _pext_u64(wantlo, wantlo), outlo);
-    _mm512_mask_storeu_epi8(outbuf + advlo, _pext_u64(wanthi, wanthi), outhi);
+    _mm512_mask_storeu_epi8(outbuf, _cvtu64_mask64(_pext_u64(wantlo_uint64, wantlo_uint64)), outlo);
+    _mm512_mask_storeu_epi8(outbuf + advlo, _cvtu64_mask64(_pext_u64(wanthi_uint64, wanthi_uint64)), outhi);
     outbuf += advlo + advhi;
   }
   outbuf -= adjust;
