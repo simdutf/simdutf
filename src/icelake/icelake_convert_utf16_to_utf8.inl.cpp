@@ -29,7 +29,7 @@
   while (inlen >= 32) {
     __m512i hi, lo, fc00masked, taghi, taglo, mslo, mshi, outlo, outhi, magiclo,
         magichi;
-    __mmask64 is12blo, is12bhi, is1blo, is1bhi, outmlo, outmhi;
+    __mmask64 is12bhi, is1bhi, outmlo, outmhi;
     __mmask32 is234byte, is12byte, is1byte, hisurr, losurr, outmask;
     __mmask64 wantlo, wanthi;
     int carryout;
@@ -46,7 +46,6 @@
       inmask, in, _mm512_set1_epi16(0x0080), _MM_CMPINT_NLT);
 
     if (_ktestz_mask32_u8(inmask, is234byte)) {
-    //if (_ktestz_mask32_u8(is234byte, is234byte)) {
       // fast path for ASCII only
       _mm512_mask_cvtepi16_storeu_epi8(outbuf, inmask, in);
       outbuf += 31;
@@ -77,7 +76,7 @@
                                   _mm512_set1_epi16(0x0800));
       smoosh = _mm512_cmp_epu8_mask(in, cmpmask, _MM_CMPINT_NLT);
       out = _mm512_maskz_compress_epi8(smoosh, in);
-      _mm512_mask_storeu_epi8(outbuf, (__mmask64)_pext_u64(smoosh, smoosh),
+      _mm512_mask_storeu_epi8(outbuf, _cvtu64_mask64(_pext_u64(_cvtmask64_u64(smoosh), _cvtmask64_u64(smoosh))),
                               out);
       outbuf += 31 + _mm_popcnt_u32((int)is234byte);
       carry = 0;
@@ -105,14 +104,14 @@
     if (!_kortestz_mask32_u8(hisurr, losurr)) {
       // handle surrogates
       __m512i his, los;
-      __mmask64 hisurrhi, hisurrlo;
+      __mmask32 hisurrhi, hisurrlo;
       unsigned int h = (unsigned)hisurr, l = (unsigned)losurr, hinolo, lonohi;
 
       los = _mm512_alignr_epi32(hi, lo, 1);
       his = _mm512_alignr_epi32(lo, hi, 1);
 
-      hisurrlo = (__mmask64)hisurr;
-      hisurrhi = (__mmask64)_kshiftri_mask64(hisurr, 16);
+      hisurrlo = hisurr;
+      hisurrhi = _kshiftri_mask64(hisurr, 16);
       taglo =
           _mm512_mask_mov_epi32(taglo, hisurrlo, _mm512_set1_epi32(0x808080f0));
       taghi =
@@ -126,7 +125,6 @@
       hi = _mm512_mask_add_epi32(hi, hisurrhi, hi, his);
 
       carryout = _kshiftri_mask64(hisurr, 30);
-
       // check for mismatched surrogates
       if ((h + h + carry) ^ l) {
         lonohi = l & ~(h + h + carry);
@@ -150,17 +148,15 @@
         _mm512_multishift_epi64_epi8(_mm512_set1_epi64(0x20262c3200060c12), hi);
 
     outmask = _kandn_mask64(losurr, inmask);
-    outmlo = (__mmask64)outmask;
-    outmhi = (__mmask64)_kshiftri_mask64(outmask, 16);
+    outmlo = outmask;
+    outmhi = _kshiftri_mask64(outmask, 16);
 
     is1byte = _knot_mask64(is234byte);
-    is1blo = (__mmask64)is1byte;
-    is1bhi = (__mmask64)_kshiftri_mask64(is1byte, 16);
-    is12blo = (__mmask64)is12byte;
-    is12bhi = (__mmask64)_kshiftri_mask64(is12byte, 16);
+    is1bhi = _kshiftri_mask64(is1byte, 16);
+    is12bhi = _kshiftri_mask64(is12byte, 16);
 
     taglo =
-        _mm512_mask_mov_epi32(taglo, is12blo, _mm512_set1_epi32(0x80c00000));
+        _mm512_mask_mov_epi32(taglo, is12byte, _mm512_set1_epi32(0x80c00000));
     taghi =
         _mm512_mask_mov_epi32(taghi, is12bhi, _mm512_set1_epi32(0x80c00000));
     magiclo = _mm512_mask_blend_epi32(outmlo, _mm512_set1_epi32(0xffffffff),
@@ -178,7 +174,7 @@
                                      0xea); // A&B|C
     mshi = _mm512_ternarylogic_epi32(mshi, _mm512_set1_epi32(0x3f3f3f3f), taghi,
                                      0xea);
-    mslo = _mm512_mask_slli_epi32(mslo, is1blo, lo, 24);
+    mslo = _mm512_mask_slli_epi32(mslo, is1byte, lo, 24);
 
     mshi = _mm512_mask_slli_epi32(mshi, is1bhi, hi, 24);
 
