@@ -76,7 +76,7 @@ size_t trim_partial_utf16(const uint16_t *buf, size_t len) {
 }
 
 void run_from_utf8(const std::vector<char> &input_data, size_t approx_output_datapoints = 128) {
-  std::vector<char16_t> buffer(input_data.size());
+  std::vector<char16_t> buffer(simdutf::utf16_length_from_utf8(input_data.data(), input_data.size()));
   size_t min_len = 64;
   if(input_data.size() < min_len) { return; }
   size_t offset = size_t(round(double(input_data.size() - min_len) / approx_output_datapoints));
@@ -95,7 +95,7 @@ void run_from_utf8(const std::vector<char> &input_data, size_t approx_output_dat
 }
 
 void run_from_utf16(const std::vector<char> &input_data, size_t approx_output_datapoints = 128) {
-  std::vector<char> buffer(input_data.size());
+  std::vector<char> buffer(simdutf::utf8_length_from_utf16le(reinterpret_cast<const char16_t *>(input_data.data()), input_data.size()/2));
   size_t min_len = 64;
   if(input_data.size() < min_len) { return; }
   std::cout << "n,\tspeed\n";
