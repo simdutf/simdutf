@@ -22,7 +22,7 @@ utf8_to_utf16le_avx512i(char16_t outbuf[restrict],
 			in = _mm512_loadu_epi8(inbuf);
 
 			m1 = _mm512_cmp_epu8_mask(in, _mm512_set1_epi8(0x80), _MM_CMPINT_LT);
-			if (_ktestc_mask32_u8(m1, m1)) { /* all ASCII? */
+			if (_kortestc_mask32_u8(m1, m1)) { /* all ASCII? */
 				__m512i out;
 
 				out = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(in));
@@ -30,14 +30,14 @@ utf8_to_utf16le_avx512i(char16_t outbuf[restrict],
 
 				inbuf += 32;
 				inlen -= 32;
-				outbuf += 64;
+				outbuf += 32;
 				continue;
 			}
 
 			m234 = _mm512_cmp_epu8_mask(in, _mm512_set1_epi8(0xc0), _MM_CMPINT_NLT);
 			m34 = _mm512_cmp_epu8_mask(in, _mm512_set1_epi8(0xe0), _MM_CMPINT_NLT);
 			mc1c2 = _mm512_mask_cmp_epu8_mask(m234, in, _mm512_set1_epi8(0xc2), _MM_CMPINT_LT);
-			if (_ktestz_mask64_u8(mc1c2, mc1c2)) { /* C1/C2 present? */
+			if (!_ktestz_mask64_u8(mc1c2, mc1c2)) { /* C1/C2 present? */
 			has_c1c2:
 				inlen = _tzcnt_u64(mc1c2);
 				goto tail;
@@ -50,9 +50,9 @@ utf8_to_utf16le_avx512i(char16_t outbuf[restrict],
 
 				mend = ~m234;
 				minusc2 = _mm512_maskz_sub_epi8(m234, in, _mm512_set1_epi8(0xc2));
-				first = _mm512_cvtepi8_epi16(_mm512_castsi512_si256(
+				first = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(
 				    _mm512_maskz_compress_epi8(m1234, minusc2)));
-				second = _mm512_cvtepi8_epi16(_mm512_castsi512_si256(
+				second = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(
 				    _mm512_maskz_compress_epi8(mend, in)));
 				out = _mm512_add_epi16(second, _mm512_slli_epi16(first, 6));
 				_mm512_storeu_epi16(outbuf, out);
@@ -64,9 +64,9 @@ utf8_to_utf16le_avx512i(char16_t outbuf[restrict],
 					mismatch = mend + mend + 1 ^ m1234;
 					inlen = _tzcnt_u64(mismatch);
 					/* lead byte where follow byte expected? */
-					if (m1234 & 1 << inlen) {
-						lead_before = m1234 & (1 << inlen) - 1;
-						inlen = 64 - _lzcnt_u64(lead_before);
+					if (m1234 & 1ULL << inlen) {
+						lead_before = m1234 & (1ULL << inlen) - 1;
+						inlen = 63 - _lzcnt_u64(lead_before);
 					}
 
 					goto tail;
@@ -76,11 +76,11 @@ utf8_to_utf16le_avx512i(char16_t outbuf[restrict],
 				not_processed = _lzcnt_u64((uint64_t)mout);
 				inbuf += 64 - not_processed;
 				inlen -= 64 - not_processed;
-				outbuf += 64;
+				outbuf += 32;
 				continue;
 			}
 		} else { /* handle tail bytes: no fast paths, expedited processing. */
-		tail:	b = _cvtu64_mask64((1 << inlen) -1);
+		tail:	b = _cvtu64_mask64((1ULL << inlen) -1);
 			in = _mm512_maskz_loadu_epi8(b, inbuf);
 			m1 = _mm512_cmp_epu8_mask(in, _mm512_set1_epi8(0x80), _MM_CMPINT_LT);
 			m234 = _mm512_cmp_epu8_mask(in, _mm512_set1_epi8(0xc0), _MM_CMPINT_NLT);
@@ -88,7 +88,7 @@ utf8_to_utf16le_avx512i(char16_t outbuf[restrict],
 			m1234 = m1 | m234;
 
 			mc1c2 = _mm512_mask_cmp_epu8_mask(m234, in, _mm512_set1_epi8(0xc2), _MM_CMPINT_LT);
-			if (_ktestz_mask64_u8(mc1c2, mc1c2)) /* C1/C2 present? */
+			if (!_ktestz_mask64_u8(mc1c2, mc1c2)) /* C1/C2 present? */
 				goto has_c1c2;
 		}
 
@@ -125,9 +125,9 @@ utf8_to_utf16le_avx512i(char16_t outbuf[restrict],
 			inlen = _tzcnt_u64(mismatch);
 
 			/* lead byte where follow byte expected? */
-			if (m1234 & 1 << inlen) {
-				lead_before = m1234 & (1 << inlen) - 1;
-				inlen = 64 - _lzcnt_u64(lead_before);
+			if (m1234 & 1ULL << inlen) {
+				lead_before = m1234 & (1ULL << inlen) - 1;
+				inlen = 63 - _lzcnt_u64(lead_before);
 			}
 
 			goto tail;
@@ -163,9 +163,9 @@ utf8_to_utf16le_avx512i(char16_t outbuf[restrict],
 		Mout = ~(Mhi & _cvtu32_mask32(0x80000000));
 		mprocessed = _cvtu64_mask64(_pdep_u64((uint64_t)Mout, b & mend));
 		nin = 64 - _lzcnt_u64(mprocessed);
-		nout = _popcnt64(mprocessed);
+		nout = __builtin_popcountll(mprocessed);
 
-		_mm512_mask_storeu_epi16(outbuf, _cvtu32_mask32((1 << nout) -1), Wout);
+		_mm512_mask_storeu_epi16(outbuf, _cvtu32_mask32((1ULL << nout) -1), Wout);
 		inbuf += nin;
 		inlen -= nin;
 		outbuf += nout;

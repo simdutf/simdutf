@@ -36,8 +36,8 @@ typedef size_t utf8_buflen(size_t);
 extern utf16le_to_utf8 utf16le_to_utf8_ref, utf16le_to_utf8_avx512, utf16le_to_utf8_avx512i;
 extern utf16le_buflen utf16le_to_utf8_buflen_ref, utf16le_to_utf8_buflen_avx512, utf16le_to_utf8_buflen_avx512i;
 extern utf16le_validate utf16le_validate_ref, utf16le_validate_avx512;
-extern utf8_to_utf16le utf8_to_utf16le_ref, utf8_to_utf16le_avx512;
-extern utf8_buflen utf8_to_utf16le_buflen_ref, utf8_to_utf16le_buflen_avx512;
+extern utf8_to_utf16le utf8_to_utf16le_ref, utf8_to_utf16le_avx512, utf8_to_utf16le_avx512i;
+extern utf8_buflen utf8_to_utf16le_buflen_ref, utf8_to_utf16le_buflen_avx512, utf8_to_utf16le_buflen_avx512i;
 
 static const struct utf16le_method {
 	const char *name;
@@ -49,7 +49,7 @@ static const struct utf16le_method {
 } utf16le_methods[] = {
 	{ "ref", utf16le_to_utf8_ref, utf16le_to_utf8_buflen_ref, utf16le_validate_ref, utf8_to_utf16le_ref, utf8_to_utf16le_buflen_ref },
 	{ "avx512", utf16le_to_utf8_avx512, utf16le_to_utf8_buflen_avx512, utf16le_validate_avx512, utf8_to_utf16le_avx512, utf8_to_utf16le_buflen_avx512 },
-	{ "avx512i", utf16le_to_utf8_avx512i, utf16le_to_utf8_buflen_avx512i, NULL, NULL, NULL },
+	{ "avx512i", utf16le_to_utf8_avx512i, utf16le_to_utf8_buflen_avx512i, NULL, utf8_to_utf16le_avx512i, utf8_to_utf16le_buflen_avx512i },
 	{ NULL, NULL, NULL },
 };
 

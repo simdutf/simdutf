@@ -16,10 +16,13 @@ extern size_t utf8_to_utf16le_buflen_avx512i(size_t);
 
 /* all test vectors end in FF to allow embedded NUL characters */
 const char *vectors[] = {
+	"\xfe\xff", /* illegal bytes */
+	"尽二秀才\xfe\xff", /* illegal bytes */
+
 	"\xff", /* empty string */
 	"Sphinx of black quartz, judge my vows!\n#include <stdio.h>\n\nint main(void)\n{\n\tputs(\"hello world\");\n}\n\xff", /* ASCII */
 	"Fix Schwyz quäkt Jürgen blöd vom Paß.\xff", /* ISO-8859-1 */
-	"Falsches Üben von Xylophonmusik quält jeden größeren Zwerg.  Voyez le brick géant que j’examine près du wharf.\xff"
+	"Falsches Üben von Xylophonmusik quält jeden größeren Zwerg.  Voyez le brick géant que j’examine près du wharf.\xff",
 	"すべての人間は、生れながらにして自由であり、かつ、尊厳と権利とについて平等である。\xff", /* Japanese mixed script */
 	"يولد جميع الناس أحرارًا متساوين في الكرامة والحقوق.\xff", /* Arabic */
 	"國之語音，異乎中國，與文字不相流通，故愚民有所欲言，而終不得伸其情者多矣。予為此憫然，新制二十八字，欲使人人易習便日用耳。\xff", /* Chinese */
@@ -170,7 +173,7 @@ int test(int i, const char *vector)
 		print_vector(i, vector);
 		printf("length mismatch:\n");
 		printf("	converted: %zu (ref) vs %zu (avx512) vs %zu (avx512i)\n", refxlat, avx512xlat, avx512ixlat);
-		printf("	output length: %zu (ref) vs %zu (avx512) vx %zu (avx512i)\n", refout, avx512out, avx512iout);
+		printf("	output length: %zu (ref) vs %zu (avx512) vs %zu (avx512i)\n", refout, avx512out, avx512iout);
 
 		goto failed;
 	}
