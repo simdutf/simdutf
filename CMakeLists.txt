@@ -20,6 +20,7 @@ include(cmake/simdutf-flags.cmake)
 set(SIMDUTF_LIB_VERSION "2.0.2" CACHE STRING "simdutf library version")
 set(SIMDUTF_LIB_SOVERSION "2" CACHE STRING "simdutf library soversion")
 option(SIMDUTF_BENCHMARKS "Whether the benchmarks are included as part of the CMake Build." ON)
+option(SIMDUTF_TOOLS "Whether the tools are included as part of the CMake build." ON)
 
 set(SIMDUTF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -34,11 +35,14 @@ else()
 endif(BUILD_TESTING)
 
 
-if(CMAKE_CXX_COMPILER_ID MATCHES GNU AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0)
-  message(STATUS "The benchmark tool requires GCC 8.0 or better.")
-else()
-  add_subdirectory(tools)
+if (SIMDUTF_TOOLS)
+  if(CMAKE_CXX_COMPILER_ID MATCHES GNU AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0)
+    message(STATUS "The benchmark tool requires GCC 8.0 or better.")
+  else()
+    add_subdirectory(tools)
+  endif()
 endif()
+
 
 if (SIMDUTF_BENCHMARKS)
   if((CMAKE_CXX_COMPILER_ID MATCHES GNU) AND (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0"))
