@@ -14,13 +14,18 @@ jobs:
       ! contains(toJSON(github.event.commits.*.message), '[skip ci]') &&
       ! contains(toJSON(github.event.commits.*.message), '[skip github]')
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        include:
+          - {shared: ON}
+          - {shared: OFF}
     steps:
       - uses: actions/checkout@v3
       - name: Use cmake
         run: |
           mkdir build &&
           cd build &&
-          cmake -DCMAKE_INSTALL_PREFIX:PATH=destination  ..  &&
+          cmake -DCMAKE_INSTALL_PREFIX:PATH=destination -DBUILD_SHARED_LIBS=${{matrix.shared}} ..  &&
           cmake --build .   &&
           ctest -j --output-on-failure &&
           cmake --install . &&
