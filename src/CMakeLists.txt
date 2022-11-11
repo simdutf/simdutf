@@ -3,7 +3,7 @@ target_include_directories(simdutf-include-source INTERFACE $<BUILD_INTERFACE:${
 add_library(simdutf-source INTERFACE)
 target_sources(simdutf-source INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/simdutf.cpp)
 target_link_libraries(simdutf-source INTERFACE simdutf-include-source)
-add_library(simdutf STATIC simdutf.cpp)
+add_library(simdutf simdutf.cpp)
 target_include_directories(simdutf PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> )
 target_include_directories(simdutf PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>")
 
