@@ -776,8 +776,13 @@ void Benchmark::run_convert_utf8_to_utf16_iconv(size_t iterations) {
     auto proc = [&cv, data, size, &output_buffer, &sink]() {
         size_t inbytes = size;
         size_t outbytes = sizeof(uint16_t) * size;
+        // win-iconv includes WINICONV_CONST in its function signatures
+        // https://github.com/simdutf/simdutf/pull/178
+#ifdef WINICONV_CONST
+        WINICONV_CONST char * inptr = reinterpret_cast<WINICONV_CONST char *>(data);
+#else
         char * inptr = data;
-       // inbytes = strlen(inptr);
+#endif
         char * outptr = reinterpret_cast<char *>(output_buffer.get());
         size_t result = iconv(cv, &inptr, &inbytes, &outptr, &outbytes);
         if (result == static_cast<size_t>(-1)) {
@@ -820,7 +825,11 @@ void Benchmark::run_convert_utf16_to_utf8_iconv(size_t iterations) {
     auto proc = [cv, data, size, &output_buffer, &sink]() {
         size_t inbytes = sizeof(uint16_t) * size;
         size_t outbytes = 4 * size;
+#ifdef WINICONV_CONST
+        WINICONV_CONST char * inptr = reinterpret_cast<WINICONV_CONST char *>(data);
+#else
         char * inptr = reinterpret_cast<char *>(data);
+#endif
         char * outptr = output_buffer.get();
         size_t result = iconv(cv, &inptr, &inbytes, &outptr, &outbytes);
         if (result == static_cast<size_t>(-1)) {
