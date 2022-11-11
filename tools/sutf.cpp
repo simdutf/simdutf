@@ -293,7 +293,13 @@ void CommandLine::iconv_fallback(std::FILE *fpout) {
     size_t inbytes = input_size;
     size_t outbytes = sizeof(uint32_t) * inbytes;
     size_t start_outbytes = outbytes;
+    // win-iconv includes WINICONV_CONST in its function signatures
+    // https://github.com/simdutf/simdutf/pull/178
+#ifdef WINICONV_CONST
+    WINICONV_CONST char * inptr = reinterpret_cast<WINICONV_CONST char *>(input_data.data());
+#else
     char * inptr = reinterpret_cast<char *>(input_data.data());
+#endif
     char * outptr = reinterpret_cast<char *>(output_buffer.data());
     size_t result = iconv(cv, &inptr, &inbytes, &outptr, &outbytes);
     if (result == static_cast<size_t>(-1)) {
