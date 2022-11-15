@@ -172,11 +172,8 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
     __mmask64 mc = _kor_mask64(_kor_mask64(mp1, mp2), mp3); // expected continuation bytes
     __mmask64 m1234 = _kor_mask64(m1, m234);
 
-
-    __mmask64 m4s3 = _kshiftli_mask64(m4, 3);
-
     // mend: identifying the last bytes of each sequence to be decoded
-    __mmask64 mend = _kor_mask64(_kshiftri_mask64(_kor_mask64(m4s3, m1234), 1), m4s3);
+    __mmask64 mend = _kor_mask64(_kshiftri_mask64(_kor_mask64(mp3, m1234), 1), mp3);
     if (tail != SIMDUTF_FULL) {
       mend = _kor_mask64(mend, __mmask64(uint64_t(1) << (gap - 1)));
     }
