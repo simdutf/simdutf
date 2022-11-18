@@ -16,11 +16,10 @@ extern size_t utf8_to_utf16le_buflen_avx512i(size_t);
 
 /* all test vectors end in FF to allow embedded NUL characters */
 const char *vectors[] = {
-	"\xfe\xff", /* illegal bytes */
-	"尽二秀才\xfe\xff", /* illegal bytes */
-
 	"\xff", /* empty string */
-	"Sphinx of black quartz, judge my vows!\n#include <stdio.h>\n\nint main(void)\n{\n\tputs(\"hello world\");\n}\n\xff", /* ASCII */
+	"Sphinx of black quartz, judge my vows!\n"
+	"#include <stdio.h>\n\nint main(void)\n{\n\tputs(\"hello world\");\n}\n"
+	"3.14159265358979323846264338327950\xff", /* ASCII */
 	"Fix Schwyz quäkt Jürgen blöd vom Paß.\xff", /* ISO-8859-1 */
 	"Falsches Üben von Xylophonmusik quält jeden größeren Zwerg.  Voyez le brick géant que j’examine près du wharf.\xff",
 	"すべての人間は、生れながらにして自由であり、かつ、尊厳と権利とについて平等である。\xff", /* Japanese mixed script */
@@ -54,6 +53,7 @@ const char *vectors[] = {
 	"I SAID MÖAR!\xfb\xbf\xbf\xbf\xbf\xff",
 	"素晴らしいですね\xfc\x80\x80\x80\x80\x80\xff",
 	"真香！\xfd\xbf\xbf\xbf\xbf\xbf\xff",
+	"\xfe\xff", /* illegal bytes */
 	"尽二秀才\xfe\xff", /* illegal bytes */
 	"\x80""Glaub mir!  Das Pferd frisst keinen Gurkensalat!\xff", /* lone follow byte */
 	"really\x80, you gotta believe me with this one!\xff",
@@ -68,7 +68,7 @@ const char *vectors[] = {
 
 	/* checks for implementation details */
 	"01§456789abcdef0123456789abcdef0123456789abcdef0123456789abcde字\xff", /* check for correct wrap around of third-last bytes */
-
+	"0123456789abcdef0123456789abcdef°23456789ABCDEF0123456789abcdef0123456789ABCdef0123456789abcDEF\xff",
 	NULL,
 };
 
