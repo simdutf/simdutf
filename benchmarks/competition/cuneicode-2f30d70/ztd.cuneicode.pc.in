@@ -1,0 +1,7 @@
+includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
+
+Name: @PROJECT_NAME@
+Description: @PROJECT_DESCRIPTION@
+URL: https://ztdcuneicode.rtfd.io
+Version: @PROJECT_VERSION@
+Cflags: -I${includedir}

@@ -1,0 +1,14 @@
+@PACKAGE_INIT@
+
+if (TARGET ztd::cuneicode)
+	get_target_property(ZTD_CUNEICODE_INCLUDE_DIRS
+		ztd.cuneicode.single INTERFACE_INCLUDE_DIRECTORIES)
+	set_and_check(ZTD_CUNEICODE_INCLUDE_DIRS "${ZTD_CUNEICODE_INCLUDE_DIRS}")
+endif()
+
+if(TARGET ztd::cuneicode::single)
+	get_target_property(ZTD_CUNEICODE_SINGLE_INCLUDE_DIRS
+		ztd.cuneicode.single INTERFACE_INCLUDE_DIRECTORIES)
+	set_and_check(ZTD_CUNEICODE_INCLUDE_DIRS "${ZTD_CUNEICODE_SINGLE_INCLUDE_DIRS}")
+	set(ZTD_CUNEICODE_LIBRARIES_SINGLE ztd::cuneicode::single)
+endif()
