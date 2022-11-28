@@ -902,7 +902,9 @@ sutf -f UTF-8 -t UTF-16LE -o output_file.txt first_input_file.txt second_input_f
 Usage
 -----
 
-The library used by [haskell/text](https://github.com/haskell/text).
+The simdutf library is used by:
+- [https://bun.sh](Bun),  a fast JavaScript runtime,
+- [haskell/text](https://github.com/haskell/text), a library for fast operations over Unicode text.
 
 References
 -----------
