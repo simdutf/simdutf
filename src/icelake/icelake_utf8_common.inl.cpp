@@ -41,7 +41,8 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
   __mmask64 b = (tail == SIMDUTF_FULL) ? 0xFFFFFFFFFFFFFFFF : (uint64_t(1) << gap) - 1;
   __m512i input = (tail == SIMDUTF_FULL) ? _mm512_loadu_si512(in) : _mm512_maskz_loadu_epi8(b, in);
   __mmask64 m1 = (tail == SIMDUTF_FULL) ? _mm512_cmplt_epu8_mask(input, mask_80808080) : _mm512_mask_cmplt_epu8_mask(b, input, mask_80808080);
-  if (m1 == b) { // all ASCII
+  if(_ktestc_mask64_u8(m1, b)) {// NOT(m1) AND b -- if all zeroes, then all ASCII
+  // alternatively, we could do 'if (m1 == b) { '
     if (tail == SIMDUTF_FULL) {
       // we convert a full 64-byte block, writing 128 bytes.
       __m512i input1 = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(input));
@@ -89,7 +90,7 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
     return false;
   }
   if (_ktestz_mask64_u8(m34, m34) == 0) {
-    // We have a 3-byte sequence and/or a 2-byte sequence
+    // We have a 3-byte sequence and/or a 2-byte sequence, or possibly even a 4-byte sequence!
     __mmask64 m4 = _mm512_cmp_epu8_mask(input, mask_f0f0f0f0,
                                         _MM_CMPINT_NLT); // 0xf0 <= zmm0 (4 byte start bytes)
 
@@ -97,14 +98,24 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
 
     __mmask64 mp1 = _kshiftli_mask64(m234, 1);
     __mmask64 mp2 = _kshiftli_mask64(m34, 2);
-    if (m4 == 0) {
+    // We could do it as follows...
+    // if (_kortestz_mask64_u8(m4,m4)) { // compute the bitwise OR of the 64-bit masks a and b and return 1 if all zeroes
+    // but GCC generates better code when we do:
+    if (m4 == 0) { // compute the bitwise OR of the 64-bit masks a and b and return 1 if all zeroes
+      // equivalently, we could do 'if (m4 == 0) {'.
       // Fast path with 1,2,3 bytes
       __mmask64 mc = _kor_mask64(mp1, mp2); // expected continuation bytes
       __mmask64 m1234 = _kor_mask64(m1, m234);
       // mismatched continuation bytes:
-      __mmask64 bxorm1234 = _kxor_mask64(b, m1234);
-      if (mc != bxorm1234) { return false; }
-
+      if (tail == SIMDUTF_FULL) {
+        __mmask64 xnormcm1234 = _kxnor_mask64(mc, m1234); // XNOR of mc and m1234 should be all zero if they differ
+        // the presence of a 1 bit indicates that they overlap.
+        // _kortestz_mask64_u8: compute the bitwise OR of 64-bit masksand return 1 if all zeroes.
+        if (!_kortestz_mask64_u8(xnormcm1234, xnormcm1234)) { return false; }
+      } else {
+        __mmask64 bxorm1234 = _kxor_mask64(b, m1234);
+        if (mc != bxorm1234) { return false; }
+      }
       // mend: identifying the last bytes of each sequence to be decoded
       __mmask64 mend = _kshiftri_mask64(m1234, 1);
       if (tail != SIMDUTF_FULL) {
@@ -224,8 +235,15 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
     int64_t nin = 64 - _lzcnt_u64(mprocessed);
 
     // mismatched continuation bytes:
-    __mmask64 bxorm1234 = _kxor_mask64(b, m1234);
-    if (mc != bxorm1234) { return false; }
+    if (tail == SIMDUTF_FULL) {
+      __mmask64 xnormcm1234 = _kxnor_mask64(mc, m1234); // XNOR of mc and m1234 should be all zero if they differ
+      // the presence of a 1 bit indicates that they overlap.
+      // _kortestz_mask64_u8: compute the bitwise OR of 64-bit masksand return 1 if all zeroes.
+      if (!_kortestz_mask64_u8(xnormcm1234, xnormcm1234)) { return false; }
+    } else {
+      __mmask64 bxorm1234 = _kxor_mask64(b, m1234);
+      if (mc != bxorm1234) { return false; }
+    }
     // Encodings out of range...
     {
       // the location of 3-byte sequence start bytes in the input
@@ -253,8 +271,13 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
   __m512i leading2byte = _mm512_maskz_sub_epi8(m234, input, mask_c2c2c2c2);
   __mmask64 leading = tail == (tail == SIMDUTF_FULL) ? _kor_mask64(m1, m234) : _kand_mask64(_kor_mask64(m1, m234), b); // first bytes of each sequence
   __mmask64 continuation_or_ascii = (tail == SIMDUTF_FULL) ? _knot_mask64(m234) : _kand_mask64(_knot_mask64(m234), b);
-  __mmask64 bxorleading = _kxor_mask64(b, leading);
-  if (_kshiftli_mask64(m234, 1) != bxorleading) { return false; }
+  if (tail == SIMDUTF_FULL) {
+      __mmask64 xnor234leading = _kxnor_mask64(_kshiftli_mask64(m234, 1), leading);
+      if (!_kortestz_mask64_u8(xnor234leading, xnor234leading)) { return false; }
+  } else {
+    __mmask64 bxorleading = _kxor_mask64(b, leading);
+    if (_kshiftli_mask64(m234, 1) != bxorleading) { return false; }
+  }
   __m512i lead = _mm512_maskz_compress_epi8(leading, leading2byte);          // will contain zero for ascii, and the data
   lead = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(lead));                 // ... zero extended into words
   __m512i follow = _mm512_maskz_compress_epi8(continuation_or_ascii, input); // the last bytes of each sequence
