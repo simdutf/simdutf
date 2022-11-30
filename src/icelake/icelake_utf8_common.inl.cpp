@@ -90,7 +90,7 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
     return false;
   }
   if (_ktestz_mask64_u8(m34, m34) == 0) {
-    // We have a 3-byte sequence and/or a 2-byte sequence
+    // We have a 3-byte sequence and/or a 2-byte sequence, or possibly even a 4-byte sequence!
     __mmask64 m4 = _mm512_cmp_epu8_mask(input, mask_f0f0f0f0,
                                         _MM_CMPINT_NLT); // 0xf0 <= zmm0 (4 byte start bytes)
 
@@ -98,7 +98,10 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
 
     __mmask64 mp1 = _kshiftli_mask64(m234, 1);
     __mmask64 mp2 = _kshiftli_mask64(m34, 2);
-    if (_kortestz_mask64_u8(m4,m4)) { // compute the bitwise OR of the 64-bit masks a and b and return 1 if all zeroes 
+    // We could do it as follows...
+    // if (_kortestz_mask64_u8(m4,m4)) { // compute the bitwise OR of the 64-bit masks a and b and return 1 if all zeroes
+    // but GCC generates better code when we do:
+    if (m4 == 0) { // compute the bitwise OR of the 64-bit masks a and b and return 1 if all zeroes
       // equivalently, we could do 'if (m4 == 0) {'.
       // Fast path with 1,2,3 bytes
       __mmask64 mc = _kor_mask64(mp1, mp2); // expected continuation bytes
