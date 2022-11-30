@@ -201,7 +201,8 @@ size_t fromUtf8(const char **inbuf, size_t *inbytesleft, char **outbuf, size_t *
     uint min_uc = 0;
 
     uchar ch;
-    int invalid = 0;
+    // D.Lemire (Nov 30 2022: the variable 'invalid' is never read.)
+    // int invalid = 0;
 
     ushort *start =qch;
 
@@ -228,7 +229,7 @@ size_t fromUtf8(const char **inbuf, size_t *inbytesleft, char **outbuf, size_t *
                     } else if ((uc < min_uc) || QChar::isSurrogate(uc) || nonCharacter || uc > QChar::LastValidCodePoint) {
                         // error: overlong sequence, UTF16 surrogate or non-character
                         *qch++ = replacement;
-                        ++invalid;
+                        // ++invalid;
                     } else {
                         *qch++ = ((uc & 0xff) << 8) | ((uc & 0xff00) >> 8);
                     }
@@ -238,7 +239,7 @@ size_t fromUtf8(const char **inbuf, size_t *inbytesleft, char **outbuf, size_t *
                 // error
                 i = error;
                 *qch++ = replacement;
-                ++invalid;
+                // ++invalid;
                 need = 0;
                 headerdone = true;
             }
@@ -266,7 +267,7 @@ size_t fromUtf8(const char **inbuf, size_t *inbytesleft, char **outbuf, size_t *
             } else {
                 // error
                 *qch++ = replacement;
-                ++invalid;
+                // ++invalid;
                 headerdone = true;
             }
         }
