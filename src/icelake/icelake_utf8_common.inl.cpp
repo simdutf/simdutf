@@ -101,7 +101,6 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
     // if (_kortestz_mask64_u8(m4,m4)) { // compute the bitwise OR of the 64-bit masks a and b and return 1 if all zeroes
     // but GCC generates better code when we do:
     if (m4 == 0) { // compute the bitwise OR of the 64-bit masks a and b and return 1 if all zeroes
-      // equivalently, we could do 'if (m4 == 0) {'.
       // Fast path with 1,2,3 bytes
       __mmask64 mc = _kor_mask64(mp1, mp2); // expected continuation bytes
       __mmask64 m1234 = _kor_mask64(m1, m234);
