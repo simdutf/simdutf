@@ -22,7 +22,6 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
   __m512i mask_c0c0c0c0 = _mm512_set1_epi32(0xc0c0c0c0);
   __m512i mask_80808080 = _mm512_set1_epi32(0x80808080);
   __m512i mask_f0f0f0f0 = _mm512_set1_epi32(0xf0f0f0f0);
-//  __m512i mask_e0e0e0e0 = _mm512_set1_epi32(0xe0e0e0e0);
   __m512i mask_dfdfdfdf_tail = _mm512_set_epi64(0xffffdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf);
   __m512i mask_c2c2c2c2 = _mm512_set1_epi32(0xc2c2c2c2);
   __m512i mask_ffffffff = _mm512_set1_epi32(0xffffffff);
