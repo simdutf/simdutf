@@ -134,7 +134,6 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
                                                               beforeasciibytes); // the second last bytes (of two, three byte seq,
                                                                                  // surrogates)
       secondlastbytes = _mm512_slli_epi16(secondlastbytes, 6);                   // shifted into position
-      __m512i secondandlastbytes = _mm512_add_epi16(secondlastbytes, lastbytes);
 
       __m512i indexofthirdlastbytes = _mm512_add_epi16(mask_ffffffff,
                                                        indexofsecondlastbytes); // indices of the second last bytes
@@ -144,8 +143,7 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
                                                              thirdlastbyte); // the third last bytes (of three byte sequences, hi
                                                                              // surrogate)
       thirdlastbytes = _mm512_slli_epi16(thirdlastbytes, 12);                // shifted into position
-      __m512i thirdsecondandlastbytes = _mm512_add_epi16(secondandlastbytes, thirdlastbytes);
-      __m512i Wout = thirdsecondandlastbytes;
+      __m512i Wout = _mm512_ternarylogic_epi32(lastbytes, secondlastbytes, thirdlastbytes, 254);
       // the elements of Wout excluding the last element if it happens to be a high surrogate:
 
       __mmask64 mprocessed = (tail == SIMDUTF_FULL) ? _pdep_u64(0xFFFFFFFF, mend) : _pdep_u64(0xFFFFFFFF, _kand_mask64(mend, b)); // we adjust mend at the end of the output.
@@ -199,8 +197,6 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
                                                             beforeasciibytes); // the second last bytes (of two, three byte seq,
                                                                                // surrogates)
     secondlastbytes = _mm512_slli_epi16(secondlastbytes, 6);                   // shifted into position
-    __m512i secondandlastbytes = _mm512_add_epi16(secondlastbytes, lastbytes);
-
     __m512i indexofthirdlastbytes = _mm512_add_epi16(mask_ffffffff,
                                                      indexofsecondlastbytes); // indices of the second last bytes
     __m512i thirdlastbyte = _mm512_maskz_mov_epi8(m34,
@@ -209,7 +205,8 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
                                                            thirdlastbyte); // the third last bytes (of three byte sequences, hi
                                                                            // surrogate)
     thirdlastbytes = _mm512_slli_epi16(thirdlastbytes, 12);                // shifted into position
-    __m512i thirdsecondandlastbytes = _mm512_add_epi16(secondandlastbytes, thirdlastbytes);
+    __m512i thirdsecondandlastbytes = _mm512_ternarylogic_epi32(lastbytes, secondlastbytes, thirdlastbytes, 254);
+
     uint64_t Mlo_uint64 = _pext_u64(mp3, mend);
     __mmask32 Mlo = __mmask32(Mlo_uint64);
     __mmask32 Mhi = __mmask32(Mlo_uint64 >> 1);
