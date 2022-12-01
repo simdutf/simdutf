@@ -22,7 +22,7 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
   __m512i mask_c0c0c0c0 = _mm512_set1_epi32(0xc0c0c0c0);
   __m512i mask_80808080 = _mm512_set1_epi32(0x80808080);
   __m512i mask_f0f0f0f0 = _mm512_set1_epi32(0xf0f0f0f0);
-  __m512i mask_e0e0e0e0 = _mm512_set1_epi32(0xe0e0e0e0);
+  __m512i mask_dfdfdfdf_tail = _mm512_set_epi64(0xffffdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf);
   __m512i mask_c2c2c2c2 = _mm512_set1_epi32(0xc2c2c2c2);
   __m512i mask_ffffffff = _mm512_set1_epi32(0xffffffff);
   __m512i mask_d7c0d7c0 = _mm512_set1_epi32(0xd7c0d7c0);
@@ -73,14 +73,14 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
         out += gap - 32;
         in += gap;
       }
-      return true;; // we are done
+      return true; // we are done
     }
   }
   // classify characters further
   __mmask64 m234 = _mm512_cmp_epu8_mask(mask_c0c0c0c0, input,
                                         _MM_CMPINT_LE); // 0xc0 <= input, 2, 3, or 4 leading byte
-  __mmask64 m34 = _mm512_cmp_epu8_mask(mask_e0e0e0e0, input,
-                                       _MM_CMPINT_LE); // 0xe0 <= input,  3 or 4 leading byte
+  __mmask64 m34 = _mm512_cmp_epu8_mask(mask_dfdfdfdf_tail, input,
+                                       _MM_CMPINT_LT); // 0xdf < input,  3 or 4 leading byte
 
   __mmask64 milltwobytes = _mm512_mask_cmp_epu8_mask(m234, input, mask_c2c2c2c2,
                                                      _MM_CMPINT_LT); // 0xc0 <= input < 0xc2 (illegal two byte sequence)
@@ -102,7 +102,6 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
     // if (_kortestz_mask64_u8(m4,m4)) { // compute the bitwise OR of the 64-bit masks a and b and return 1 if all zeroes
     // but GCC generates better code when we do:
     if (m4 == 0) { // compute the bitwise OR of the 64-bit masks a and b and return 1 if all zeroes
-      // equivalently, we could do 'if (m4 == 0) {'.
       // Fast path with 1,2,3 bytes
       __mmask64 mc = _kor_mask64(mp1, mp2); // expected continuation bytes
       __mmask64 m1234 = _kor_mask64(m1, m234);
@@ -136,20 +135,16 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
                                                               beforeasciibytes); // the second last bytes (of two, three byte seq,
                                                                                  // surrogates)
       secondlastbytes = _mm512_slli_epi16(secondlastbytes, 6);                   // shifted into position
-      __m512i secondandlastbytes = _mm512_add_epi16(secondlastbytes, lastbytes);
 
-      __mmask64 mask_thirdlastbytes = _kand_mask64(m34, 0x3fffffffffffffff); // bytes that could be third-last bytes
-                                                                             // (LEAD34 sans wrap around)
       __m512i indexofthirdlastbytes = _mm512_add_epi16(mask_ffffffff,
                                                        indexofsecondlastbytes); // indices of the second last bytes
-      __m512i thirdlastbyte = _mm512_maskz_mov_epi8(mask_thirdlastbytes,
+      __m512i thirdlastbyte = _mm512_maskz_mov_epi8(m34,
                                                     clearedbytes); // only those that are the third last byte of a sequece
       __m512i thirdlastbytes = _mm512_maskz_permutexvar_epi8(0x5555555555555555, indexofthirdlastbytes,
                                                              thirdlastbyte); // the third last bytes (of three byte sequences, hi
                                                                              // surrogate)
       thirdlastbytes = _mm512_slli_epi16(thirdlastbytes, 12);                // shifted into position
-      __m512i thirdsecondandlastbytes = _mm512_add_epi16(secondandlastbytes, thirdlastbytes);
-      __m512i Wout = thirdsecondandlastbytes;
+      __m512i Wout = _mm512_ternarylogic_epi32(lastbytes, secondlastbytes, thirdlastbytes, 254);
       // the elements of Wout excluding the last element if it happens to be a high surrogate:
 
       __mmask64 mprocessed = (tail == SIMDUTF_FULL) ? _pdep_u64(0xFFFFFFFF, mend) : _pdep_u64(0xFFFFFFFF, _kand_mask64(mend, b)); // we adjust mend at the end of the output.
@@ -203,19 +198,16 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
                                                             beforeasciibytes); // the second last bytes (of two, three byte seq,
                                                                                // surrogates)
     secondlastbytes = _mm512_slli_epi16(secondlastbytes, 6);                   // shifted into position
-    __m512i secondandlastbytes = _mm512_add_epi16(secondlastbytes, lastbytes);
 
-    __mmask64 mask_thirdlastbytes = _kand_mask64(m34, 0x3fffffffffffffff); // bytes that could be third-last bytes
-                                                                           // (LEAD34 sans wrap around)
     __m512i indexofthirdlastbytes = _mm512_add_epi16(mask_ffffffff,
                                                      indexofsecondlastbytes); // indices of the second last bytes
-    __m512i thirdlastbyte = _mm512_maskz_mov_epi8(mask_thirdlastbytes,
+    __m512i thirdlastbyte = _mm512_maskz_mov_epi8(m34,
                                                   clearedbytes); // only those that are the third last byte of a sequece
     __m512i thirdlastbytes = _mm512_maskz_permutexvar_epi8(0x5555555555555555, indexofthirdlastbytes,
                                                            thirdlastbyte); // the third last bytes (of three byte sequences, hi
                                                                            // surrogate)
     thirdlastbytes = _mm512_slli_epi16(thirdlastbytes, 12);                // shifted into position
-    __m512i thirdsecondandlastbytes = _mm512_add_epi16(secondandlastbytes, thirdlastbytes);
+    __m512i thirdsecondandlastbytes = _mm512_ternarylogic_epi32(lastbytes, secondlastbytes, thirdlastbytes, 254);
     uint64_t Mlo_uint64 = _pext_u64(mp3, mend);
     __mmask32 Mlo = __mmask32(Mlo_uint64);
     __mmask32 Mhi = __mmask32(Mlo_uint64 >> 1);
