@@ -22,7 +22,8 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
   __m512i mask_c0c0c0c0 = _mm512_set1_epi32(0xc0c0c0c0);
   __m512i mask_80808080 = _mm512_set1_epi32(0x80808080);
   __m512i mask_f0f0f0f0 = _mm512_set1_epi32(0xf0f0f0f0);
-  __m512i mask_e0e0e0e0 = _mm512_set1_epi32(0xe0e0e0e0);
+//  __m512i mask_e0e0e0e0 = _mm512_set1_epi32(0xe0e0e0e0);
+  __m512i mask_dfdfdfdf_tail = _mm512_set_epi64(0xffffdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf);
   __m512i mask_c2c2c2c2 = _mm512_set1_epi32(0xc2c2c2c2);
   __m512i mask_ffffffff = _mm512_set1_epi32(0xffffffff);
   __m512i mask_d7c0d7c0 = _mm512_set1_epi32(0xd7c0d7c0);
@@ -79,9 +80,8 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
   // classify characters further
   __mmask64 m234 = _mm512_cmp_epu8_mask(mask_c0c0c0c0, input,
                                         _MM_CMPINT_LE); // 0xc0 <= input, 2, 3, or 4 leading byte
-  __mmask64 m34 = _mm512_cmp_epu8_mask(mask_e0e0e0e0, input,
-                                       _MM_CMPINT_LE); // 0xe0 <= input,  3 or 4 leading byte
-
+  __mmask64 m34 = _mm512_cmp_epu8_mask(mask_dfdfdfdf_tail, input,
+                                       _MM_CMPINT_LT);// 0xdf < input,  3 or 4 leading byte (except for last two bytes where 0xff<input is always false)
   __mmask64 milltwobytes = _mm512_mask_cmp_epu8_mask(m234, input, mask_c2c2c2c2,
                                                      _MM_CMPINT_LT); // 0xc0 <= input < 0xc2 (illegal two byte sequence)
                                                                      // Overlong 2-byte sequence
@@ -138,11 +138,9 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
       secondlastbytes = _mm512_slli_epi16(secondlastbytes, 6);                   // shifted into position
       __m512i secondandlastbytes = _mm512_add_epi16(secondlastbytes, lastbytes);
 
-      __mmask64 mask_thirdlastbytes = _kand_mask64(m34, 0x3fffffffffffffff); // bytes that could be third-last bytes
-                                                                             // (LEAD34 sans wrap around)
       __m512i indexofthirdlastbytes = _mm512_add_epi16(mask_ffffffff,
                                                        indexofsecondlastbytes); // indices of the second last bytes
-      __m512i thirdlastbyte = _mm512_maskz_mov_epi8(mask_thirdlastbytes,
+      __m512i thirdlastbyte = _mm512_maskz_mov_epi8(m34,
                                                     clearedbytes); // only those that are the third last byte of a sequece
       __m512i thirdlastbytes = _mm512_maskz_permutexvar_epi8(0x5555555555555555, indexofthirdlastbytes,
                                                              thirdlastbyte); // the third last bytes (of three byte sequences, hi
@@ -205,11 +203,9 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
     secondlastbytes = _mm512_slli_epi16(secondlastbytes, 6);                   // shifted into position
     __m512i secondandlastbytes = _mm512_add_epi16(secondlastbytes, lastbytes);
 
-    __mmask64 mask_thirdlastbytes = _kand_mask64(m34, 0x3fffffffffffffff); // bytes that could be third-last bytes
-                                                                           // (LEAD34 sans wrap around)
     __m512i indexofthirdlastbytes = _mm512_add_epi16(mask_ffffffff,
                                                      indexofsecondlastbytes); // indices of the second last bytes
-    __m512i thirdlastbyte = _mm512_maskz_mov_epi8(mask_thirdlastbytes,
+    __m512i thirdlastbyte = _mm512_maskz_mov_epi8(m34,
                                                   clearedbytes); // only those that are the third last byte of a sequece
     __m512i thirdlastbytes = _mm512_maskz_permutexvar_epi8(0x5555555555555555, indexofthirdlastbytes,
                                                            thirdlastbyte); // the third last bytes (of three byte sequences, hi
