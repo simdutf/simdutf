@@ -1,0 +1,19 @@
+@PACKAGE_INIT@
+
+find_package(ztd.version CONFIG REQUIRED)
+find_package(ztd.tag_invoke CONFIG REQUIRED)
+include(${CMAKE_CURRENT_LIST_DIR}/ztd.idk-targets.cmake)
+
+if (TARGET ztd.idk)
+	add_library(ztd::idk ALIAS ztd.idk)
+	get_target_property(ZTD_IDK_INCLUDE_DIRS
+		ztd.idk INTERFACE_INCLUDE_DIRECTORIES)
+	set_and_check(ZTD_IDK_INCLUDE_DIRS "${ZTD_IDK_INCLUDE_DIRS}")
+endif()
+
+if(TARGET ztd::idk::single)
+	get_target_property(ZTD_IDK_SINGLE_INCLUDE_DIRS
+		ztd.idk.single INTERFACE_INCLUDE_DIRECTORIES)
+	set_and_check(ZTD_IDK_INCLUDE_DIRS "${ZTD_IDK_SINGLE_INCLUDE_DIRS}")
+	set(ZTD_IDK_LIBRARIES_SINGLE ztd::idk::single)
+endif()

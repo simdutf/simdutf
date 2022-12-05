@@ -1,0 +1,35 @@
+name: Windows
+
+on: [push]
+
+env:
+  CTEST_OUTPUT_ON_FAILURE: 1
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    
+    - name: configure
+      run: |
+        cmake -B build/debug   "-DCMAKE_CXX_FLAGS_INIT=/Wv:18" "-DCMAKE_C_FLAGS_INIT=/Wv:18" -D ZTD_CUNEICODE_TESTS=ON -D ZTD_CUNEICODE_EXAMPLES=ON -D ZTD_CUNEICODE_GENERATE_SINGLE=ON
+        cmake -B build/release "-DCMAKE_CXX_FLAGS_INIT=/Wv:18" "-DCMAKE_C_FLAGS_INIT=/Wv:18" -D ZTD_CUNEICODE_TESTS=ON -D ZTD_CUNEICODE_EXAMPLES=ON -D ZTD_CUNEICODE_GENERATE_SINGLE=ON
+
+    - name: build
+      run: |
+        cmake --build build/debug   --config Debug
+        cmake --build build/release --config Release
+
+    - name: test
+      run: |
+        cd build/debug
+        ctest --build-config Debug
+        cd ../..
+        cd build/release
+        ctest --build-config Release
+        cd ../..

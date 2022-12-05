@@ -1,0 +1,18 @@
+@PACKAGE_INIT@
+
+find_package(ztd.version CONFIG REQUIRED)
+include(${CMAKE_CURRENT_LIST_DIR}/ztd.tag_invoke-targets.cmake)
+
+if (TARGET ztd.tag_invoke)
+	add_library(ztd::tag_invoke ALIAS ztd.tag_invoke)
+	get_target_property(ZTD_TAG_INVOKE_INCLUDE_DIRS
+		ztd.tag_invoke INTERFACE_INCLUDE_DIRECTORIES)
+	set_and_check(ZTD_TAG_INVOKE_INCLUDE_DIRS "${ZTD_TAG_INVOKE_INCLUDE_DIRS}")
+endif()
+
+if(TARGET ztd::tag_invoke::single)
+	get_target_property(ZTD_TAG_INVOKE_SINGLE_INCLUDE_DIRS
+		ztd.tag_invoke.single INTERFACE_INCLUDE_DIRECTORIES)
+	set_and_check(ZTD_TAG_INVOKE_INCLUDE_DIRS "${ZTD_TAG_INVOKE_SINGLE_INCLUDE_DIRS}")
+	set(ZTD_TAG_INVOKE_LIBRARIES_SINGLE ztd::tag_invoke::single)
+endif()

@@ -1,0 +1,1 @@
+int completely_out_of_the_way_declaration;

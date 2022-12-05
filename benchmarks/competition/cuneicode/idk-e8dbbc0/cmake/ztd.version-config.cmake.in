@@ -1,0 +1,17 @@
+@PACKAGE_INIT@
+
+include(${CMAKE_CURRENT_LIST_DIR}/ztd.version-targets.cmake)
+
+if (TARGET ztd.version)
+	add_library(ztd::version ALIAS ztd.version)
+	get_target_property(ZTD_VERSION_INCLUDE_DIRS
+		ztd.version INTERFACE_INCLUDE_DIRECTORIES)
+	set_and_check(ZTD_VERSION_INCLUDE_DIRS "${ZTD_VERSION_INCLUDE_DIRS}")
+endif()
+
+if(TARGET ztd::version::single)
+	get_target_property(ZTD_VERSION_SINGLE_INCLUDE_DIRS
+		ztd.version.single INTERFACE_INCLUDE_DIRECTORIES)
+	set_and_check(ZTD_VERSION_INCLUDE_DIRS "${ZTD_VERSION_SINGLE_INCLUDE_DIRS}")
+	set(ZTD_VERSION_LIBRARIES_SINGLE ztd::version::single)
+endif()
