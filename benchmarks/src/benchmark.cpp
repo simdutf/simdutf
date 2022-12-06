@@ -64,9 +64,9 @@ SIMDUTF_UNTARGET_REGION
 
 /**
  * Nemanja Trifunovic, UTF8-CPP: UTF-8 with C++ in a Portable Way
- * https://github.com/nemtrif/utfcpp
+ * https://github.com/nemtrif/utfcpp/releases/tag/v3.2.2
  */
-#include "benchmarks/competition/utfcpp-3.2.2/source/utf8.h"
+#include "benchmarks/competition/utfcpp/source/utf8.h"
 
 namespace simdutf::benchmarks {
 
@@ -2064,15 +2064,22 @@ void Benchmark::run_convert_utf32_to_utf16_llvm(size_t iterations) {
 
 /**
  * Nemanja Trifunovic, UTF8-CPP: UTF-8 with C++ in a Portable Way
- * https://github.com/nemtrif/utfcpp
+ * https://github.com/nemtrif/utfcpp/releases/tag/v3.2.2
  */
 void Benchmark::run_convert_utf8_to_utf16_utfcpp(size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
+
     volatile size_t sink{0};
+
     auto proc = [data, size,  &sink]() {
-        auto str = utf8::utf8to16(std::string_view(data, size));
-        sink = str.length();
+	try {
+            auto str = utf8::utf8to16(std::string_view(data, size));
+	    sink = 0;
+	}
+	catch (const char* msg) {
+	    sink = 1;
+	}
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
@@ -2095,11 +2102,16 @@ void Benchmark::run_convert_utf16_to_utf8_utfcpp(size_t iterations) {
         printf(" Running function on truncated input.\n");
     }
     size /= 2;
+
     volatile size_t sink{0};
 
-    auto proc = [data, size, &sink]() {
-    	auto str = utf8::utf16to8(std::u16string_view(data));
-	sink = str.size();
+    auto proc = [data, &sink]() {
+        try {
+            auto str = utf8::utf16to8(std::u16string_view(data));
+            sink = 0;
+	} catch (const char* msg) {
+            sink = 1;
+	}
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
@@ -2111,10 +2123,16 @@ void Benchmark::run_convert_utf16_to_utf8_utfcpp(size_t iterations) {
 void Benchmark::run_convert_utf8_to_utf32_utfcpp(size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
+
     volatile size_t sink{0};
+
     auto proc = [data, size,  &sink]() {
-        auto str = utf8::utf8to32(std::string_view(data, size));
-        sink = str.length();
+        try {
+           auto str = utf8::utf8to32(std::string_view(data, size));
+           sink = 0;
+	} catch (const char* msg) {
+           sink = 1;
+	}
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
@@ -2133,11 +2151,16 @@ void Benchmark::run_convert_utf32_to_utf8_utfcpp(size_t iterations) {
         printf(" Running function on truncated input.\n");
     }
     size /= 4;
+
     volatile size_t sink{0};
 
-    auto proc = [data, size, &sink]() {
-        auto str = utf8::utf32to8(std::u32string_view(data));
-	sink = str.size();
+    auto proc = [data, &sink]() {
+        try {
+           auto str = utf8::utf32to8(std::u32string_view(data));
+	   sink = 0;
+	} catch (const char* msg) {
+           sink = 1;
+	}
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);

@@ -1,5 +1,0 @@
----
-BasedOnStyle: InheritParentConfig
-
-# Overall Alignment
-ColumnLimit: 83
