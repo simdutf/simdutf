@@ -35,6 +35,12 @@
  */
 #include "benchmarks/competition/inoue2008/inoue_utf8_to_utf16.h"
 
+/**
+ * Nemanja Trifunovic, UTF8-CPP: UTF-8 with C++ in a Portable Way
+ * https://github.com/nemtrif/utfcpp/releases/tag/v3.2.2
+ */
+#include "benchmarks/competition/utfcpp/source/utf8.h"
+
 namespace simdutf::benchmarks {
 
     class Benchmark : public BenchmarkBase {
@@ -152,7 +158,14 @@ namespace simdutf::benchmarks {
         void run_convert_utf32_to_utf8_llvm(size_t iterations);
         void run_convert_utf32_to_utf16_llvm(size_t iterations);
         void run_convert_utf16_to_utf32_llvm(size_t iterations);
-
+        /**
+        * Nemanja Trifunovic, UTF8-CPP: UTF-8 with C++ in a Portable Way
+        * https://github.com/nemtrif/utfcpp/releases/tag/v3.2.2
+        */
+        void run_convert_utf8_to_utf16_utfcpp(size_t iterations);
+	void run_convert_utf16_to_utf8_utfcpp(size_t iterations);
+	void run_convert_utf8_to_utf32_utfcpp(size_t iterations);
+	void run_convert_utf32_to_utf8_utfcpp(size_t iterations);
     };
 
 } // namespace simdutf::benchmarks
