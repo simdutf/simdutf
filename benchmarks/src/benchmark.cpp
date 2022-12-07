@@ -2074,7 +2074,7 @@ void Benchmark::run_convert_utf8_to_utf16_utfcpp(size_t iterations) {
 
     auto proc = [data_string, &sink]() {
 	try {
-            auto str = utf8::utf8to16(data_string);
+            std::u16string str = utf8::utf8to16(data_string);
 	    sink = 1;
 	}
 	catch (const char* msg) {
@@ -2108,7 +2108,7 @@ void Benchmark::run_convert_utf16_to_utf8_utfcpp(size_t iterations) {
 
     auto proc = [data_string, &sink]() {
         try {
-            auto str = utf8::utf16to8(data_string);
+            std::string str = utf8::utf16to8(data_string);
             sink = 1;
 	} catch (const char* msg) {
             sink = 0;
@@ -2129,7 +2129,7 @@ void Benchmark::run_convert_utf8_to_utf32_utfcpp(size_t iterations) {
 
     auto proc = [data_string,  &sink]() {
         try {
-           auto str = utf8::utf8to32(data_string);
+           std::u32string str = utf8::utf8to32(data_string);
            sink = 1;
 	} catch (const char* msg) {
            sink = 0;
@@ -2158,7 +2158,7 @@ void Benchmark::run_convert_utf32_to_utf8_utfcpp(size_t iterations) {
 
     auto proc = [data_string, &sink]() {
         try {
-           auto str = utf8::utf32to8(data_string);
+	   std::string str = utf8::utf32to8(data_string);
 	   sink = 1;
 	} catch (const char* msg) {
            sink = 0;
