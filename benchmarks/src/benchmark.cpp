@@ -2079,6 +2079,7 @@ void Benchmark::run_convert_utf8_to_utf16_utfcpp(size_t iterations) {
 	    sink = 1;
 	}
 	catch (const char* msg) {
+            std::cout << msg << std::endl;
 	    sink = 0;
 	}
     };
@@ -2112,6 +2113,7 @@ void Benchmark::run_convert_utf16_to_utf8_utfcpp(size_t iterations) {
             utf8::utf16to8(data, data + size, std::back_inserter(str));
             sink = 1;
 	} catch (const char* msg) {
+            std::cout << msg << std::endl;
             sink = 0;
 	}
     };
@@ -2134,6 +2136,7 @@ void Benchmark::run_convert_utf8_to_utf32_utfcpp(size_t iterations) {
            utf8::utf8to32(data, data + size, std::back_inserter(str));
            sink = 1;
 	} catch (const char* msg) {
+           std::cout << msg << std::endl;
            sink = 0;
 	}
     };
@@ -2163,6 +2166,7 @@ void Benchmark::run_convert_utf32_to_utf8_utfcpp(size_t iterations) {
            utf8::utf16to8(data, data + size, std::back_inserter(str));
 	   sink = 1;
 	} catch (const char* msg) {
+           std::cout << msg << std::endl;
            sink = 0;
 	}
     };
