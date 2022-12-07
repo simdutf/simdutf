@@ -2069,12 +2069,12 @@ void Benchmark::run_convert_utf32_to_utf16_llvm(size_t iterations) {
 void Benchmark::run_convert_utf8_to_utf16_utfcpp(size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
-
+    auto data_string = std::string_view(data,size);
     volatile size_t sink{0};
 
-    auto proc = [data, size,  &sink]() {
+    auto proc = [data_string, &sink]() {
 	try {
-            auto str = utf8::utf8to16(std::string_view(data, size));
+            auto str = utf8::utf8to16(data_string);
 	    sink = 0;
 	}
 	catch (const char* msg) {
@@ -2096,6 +2096,7 @@ void Benchmark::run_convert_utf16_to_utf8_utfcpp(size_t iterations) {
     const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
     const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
     size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    auto data_string = std::u16string_view(data);
     if (size % 2 != 0) {
        printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
                size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
@@ -2105,9 +2106,9 @@ void Benchmark::run_convert_utf16_to_utf8_utfcpp(size_t iterations) {
 
     volatile size_t sink{0};
 
-    auto proc = [data, &sink]() {
+    auto proc = [data_string, &sink]() {
         try {
-            auto str = utf8::utf16to8(std::u16string_view(data));
+            auto str = utf8::utf16to8(data_string);
             sink = 0;
 	} catch (const char* msg) {
             sink = 1;
@@ -2123,12 +2124,12 @@ void Benchmark::run_convert_utf16_to_utf8_utfcpp(size_t iterations) {
 void Benchmark::run_convert_utf8_to_utf32_utfcpp(size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
-
+    auto data_string = std::string_view(data, size);
     volatile size_t sink{0};
 
-    auto proc = [data, size,  &sink]() {
+    auto proc = [data_string,  &sink]() {
         try {
-           auto str = utf8::utf8to32(std::string_view(data, size));
+           auto str = utf8::utf8to32(data_string);
            sink = 0;
 	} catch (const char* msg) {
            sink = 1;
@@ -2145,6 +2146,7 @@ void Benchmark::run_convert_utf32_to_utf8_utfcpp(size_t iterations) {
     const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
     const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data() + BOM::bom_byte_size(bom));
     size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    auto data_string = std::u32string_view(data);
     if (size % 4 != 0) {
        printf("# The input size is not divisible by four (it is %zu + %zu for BOM)",
                size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
@@ -2154,9 +2156,9 @@ void Benchmark::run_convert_utf32_to_utf8_utfcpp(size_t iterations) {
 
     volatile size_t sink{0};
 
-    auto proc = [data, &sink]() {
+    auto proc = [data_string, &sink]() {
         try {
-           auto str = utf8::utf32to8(std::u32string_view(data));
+           auto str = utf8::utf32to8(data_string);
 	   sink = 0;
 	} catch (const char* msg) {
            sink = 1;
