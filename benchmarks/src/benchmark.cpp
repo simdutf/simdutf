@@ -7,6 +7,7 @@
 #include <chrono>
 #include <thread>
 #include <string>
+#include <vector>
 #ifdef __x86_64__
 /**
  * utf8lut: Vectorized UTF-8 converter.
@@ -2070,7 +2071,6 @@ void Benchmark::run_convert_utf8_to_utf16_utfcpp(size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
     std::string data_string = std::string(data);
-    
     volatile size_t sink{0};
 
     auto proc = [data_string, &sink]() {
@@ -2104,14 +2104,13 @@ void Benchmark::run_convert_utf16_to_utf8_utfcpp(size_t iterations) {
                size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
         printf(" Running function on truncated input.\n");
     }
-    size /= 2;
 
     volatile size_t sink{0};
 
-    auto proc = [data_string, &sink]() {
+    auto proc = [data, size, &sink]() {
         try {
-            std::u16string_view utf16stringview(data_string);
-            std::string str = utf8::utf16to8(data_string);
+	    std::string str;
+            utf8::utf16to8(data, data + size, std::back_inserter(str));
             sink = 1;
 	} catch (const char* msg) {
             sink = 0;
@@ -2119,6 +2118,7 @@ void Benchmark::run_convert_utf16_to_utf8_utfcpp(size_t iterations) {
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
+    size /=2;
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
     size_t char_count = active_implementation->count_utf16le(data, size);
     print_summary(result, input_data.size(), char_count);
@@ -2156,14 +2156,13 @@ void Benchmark::run_convert_utf32_to_utf8_utfcpp(size_t iterations) {
                size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
         printf(" Running function on truncated input.\n");
     }
-    size /= 4;
 
     volatile size_t sink{0};
 
-    auto proc = [data_string, &sink]() {
+    auto proc = [data, size, &sink]() {
         try {
-           std::u32string_view utf32stringview(data_string);
-	   std::string str = utf8::utf32to8(data_string);
+           std::string str;
+           utf8::utf16to8(data, data + size, std::back_inserter(str));
 	   sink = 1;
 	} catch (const char* msg) {
            sink = 0;
@@ -2172,7 +2171,7 @@ void Benchmark::run_convert_utf32_to_utf8_utfcpp(size_t iterations) {
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    size_t char_count = size;
+    size_t char_count = size/4;
     print_summary(result, input_data.size(), char_count);
 }
 
