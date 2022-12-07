@@ -2070,13 +2070,12 @@ void Benchmark::run_convert_utf32_to_utf16_llvm(size_t iterations) {
 void Benchmark::run_convert_utf8_to_utf16_utfcpp(size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
-    std::string data_string = std::string(data);
     volatile size_t sink{0};
 
-    auto proc = [data_string, &sink]() {
+    auto proc = [data, size, &sink]() {
 	try {
-            std::string_view stringview(data_string);
-            std::u16string str = utf8::utf8to16(data_string);
+            std::vector <unsigned short> str;
+            utf8::utf8to16(data, data + size, std::back_inserter(str));
 	    sink = 1;
 	}
 	catch (const char* msg) {
@@ -2127,13 +2126,12 @@ void Benchmark::run_convert_utf16_to_utf8_utfcpp(size_t iterations) {
 void Benchmark::run_convert_utf8_to_utf32_utfcpp(size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
-    std::string data_string = std::string(data);
     volatile size_t sink{0};
 
-    auto proc = [data_string,  &sink]() {
+    auto proc = [data,  size, &sink]() {
         try {
-           std::string_view stringview(data_string);
-           std::u32string str = utf8::utf8to32(data_string);
+           std::vector<int> str;
+           utf8::utf8to32(data, data + size, std::back_inserter(str));
            sink = 1;
 	} catch (const char* msg) {
            sink = 0;
