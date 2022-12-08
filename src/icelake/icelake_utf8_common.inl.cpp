@@ -44,6 +44,7 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
   if(_ktestc_mask64_u8(m1, b)) {// NOT(m1) AND b -- if all zeroes, then all ASCII
   // alternatively, we could do 'if (m1 == b) { '
     if (tail == SIMDUTF_FULL) {
+      in += 64;          // consumed 64 bytes
       // we convert a full 64-byte block, writing 128 bytes.
       __m512i input1 = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(input));
       if(big_endian) { input1 = _mm512_shuffle_epi8(input1, byteflip); }
@@ -53,15 +54,14 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
       if(big_endian) { input2 = _mm512_shuffle_epi8(input2, byteflip); }
       _mm512_storeu_si512(out, input2);
       out += 32;
-      in += 64;          // consumed 64 bytes
       return true; // we are done
     } else {
+      in += gap;
       if (gap <= 32) {
         __m512i input1 = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(input));
         if(big_endian) { input1 = _mm512_shuffle_epi8(input1, byteflip); }
         _mm512_mask_storeu_epi16(out, __mmask32((uint64_t(1) << (gap)) - 1), input1);
         out += gap;
-        in += gap;
       } else {
         __m512i input1 = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(input));
         if(big_endian) { input1 = _mm512_shuffle_epi8(input1, byteflip); }
@@ -71,7 +71,6 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
         if(big_endian) { input2 = _mm512_shuffle_epi8(input2, byteflip); }
         _mm512_mask_storeu_epi16(out, __mmask32((uint32_t(1) << (gap - 32)) - 1), input2);
         out += gap - 32;
-        in += gap;
       }
       return true; // we are done
     }
@@ -120,6 +119,8 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
       if (tail != SIMDUTF_FULL) {
         mend = _kor_mask64(mend, (uint64_t(1) << (gap - 1)));
       }
+
+
       __m512i last_and_third = _mm512_maskz_compress_epi8(mend, mask_identity);
       __m512i last_and_thirdu16 = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(last_and_third));
 
@@ -149,8 +150,6 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
 
       __mmask64 mprocessed = (tail == SIMDUTF_FULL) ? _pdep_u64(0xFFFFFFFF, mend) : _pdep_u64(0xFFFFFFFF, _kand_mask64(mend, b)); // we adjust mend at the end of the output.
 
-      int64_t nout = _mm_popcnt_u64(mprocessed);
-      int64_t nin = 64 - _lzcnt_u64(mprocessed);
 
       // Encodings out of range...
       {
@@ -165,10 +164,11 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
         __mmask32 M3s = _mm512_mask_cmplt_epu16_mask(M3, Moutminusd800, mask_08000800);
         if (_kor_mask32(Msmall800, M3s)) { return false; }
       }
+      int64_t nout = _mm_popcnt_u64(mprocessed);
+      in +=  64 - _lzcnt_u64(mprocessed);
       if(big_endian) { Wout = _mm512_shuffle_epi8(Wout, byteflip); }
       _mm512_mask_storeu_epi16(out, __mmask32((uint64_t(1) << nout) - 1), Wout);
       out += nout;
-      in += nin;
       return true; // ok
     }
     //
@@ -223,8 +223,6 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
     __mmask32 Mout = ~(Mhi & 0x80000000);
     __mmask64 mprocessed = (tail == SIMDUTF_FULL) ? _pdep_u64(Mout, mend) : _pdep_u64(Mout, _kand_mask64(mend, b)); // we adjust mend at the end of the output.
 
-    int64_t nout = _mm_popcnt_u64(mprocessed);
-    int64_t nin = 64 - _lzcnt_u64(mprocessed);
 
     // mismatched continuation bytes:
     if (tail == SIMDUTF_FULL) {
@@ -251,47 +249,46 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
       __mmask32 M4s = _mm512_mask_cmpge_epu16_mask(Mhi, Moutminusd800, mask_04000400);
       if (!_kortestz_mask32_u8(M4s, _kor_mask32(Msmall800, M3s))) { return false; }
     }
+    in += 64 - _lzcnt_u64(mprocessed);
+    int64_t nout = _mm_popcnt_u64(mprocessed);
     if(big_endian) { Wout = _mm512_shuffle_epi8(Wout, byteflip); }
     _mm512_mask_storeu_epi16(out, __mmask32((uint64_t(1) << nout) - 1), Wout);
     out += nout;
-    in += nin;
     return true; // ok
   }
   // Fast path 2: all ASCII or 2 byte
+  __mmask64 continuation_or_ascii = (tail == SIMDUTF_FULL) ? _knot_mask64(m234) : _kand_mask64(_knot_mask64(m234), b);
   // on top of -0xc0 we substract -2 which we get back later of the
   // continuation byte tags
   __m512i leading2byte = _mm512_maskz_sub_epi8(m234, input, mask_c2c2c2c2);
   __mmask64 leading = tail == (tail == SIMDUTF_FULL) ? _kor_mask64(m1, m234) : _kand_mask64(_kor_mask64(m1, m234), b); // first bytes of each sequence
-  __mmask64 continuation_or_ascii = (tail == SIMDUTF_FULL) ? _knot_mask64(m234) : _kand_mask64(_knot_mask64(m234), b);
   if (tail == SIMDUTF_FULL) {
-      __mmask64 xnor234leading = _kxnor_mask64(_kshiftli_mask64(m234, 1), leading);
-      if (!_kortestz_mask64_u8(xnor234leading, xnor234leading)) { return false; }
+    __mmask64 xnor234leading = _kxnor_mask64(_kshiftli_mask64(m234, 1), leading);
+    if (!_kortestz_mask64_u8(xnor234leading, xnor234leading)) { return false; }
   } else {
     __mmask64 bxorleading = _kxor_mask64(b, leading);
     if (_kshiftli_mask64(m234, 1) != bxorleading) { return false; }
   }
+  in += 64 - _lzcnt_u64(_pdep_u64(0xFFFFFFFF, continuation_or_ascii));
+
   __m512i lead = _mm512_maskz_compress_epi8(leading, leading2byte);          // will contain zero for ascii, and the data
   lead = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(lead));                 // ... zero extended into words
   __m512i follow = _mm512_maskz_compress_epi8(continuation_or_ascii, input); // the last bytes of each sequence
   follow = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(follow));             // ... zero extended into words
   lead = _mm512_slli_epi16(lead, 6);                                         // shifted into position
   __m512i final = _mm512_add_epi16(follow, lead);                            // combining lead and follow
-  int64_t nout, nin;
+
+  if(big_endian) { final = _mm512_shuffle_epi8(final, byteflip); }
   if (tail == SIMDUTF_FULL) {
     // Next part is UTF-16 specific and can be generalized to UTF-32.
-    if(big_endian) { final = _mm512_shuffle_epi8(final, byteflip); }
     _mm512_storeu_si512(out, final);
-    nout = 32;
-    nin = 64 - _lzcnt_u64(_pdep_u64(0xFFFFFFFF, continuation_or_ascii));
+    out += 32; // UTF-8 to UTF-16 is only expansionary in this case.
   } else {
-    nout = _mm_popcnt_u64(_pdep_u64(0xFFFFFFFF, leading));
-    nin = 64 - _lzcnt_u64(_pdep_u64(0xFFFFFFFF, continuation_or_ascii));
-    if(big_endian) { final = _mm512_shuffle_epi8(final, byteflip); }
+    int nout = int(_mm_popcnt_u64(_pdep_u64(0xFFFFFFFF, leading)));
     _mm512_mask_storeu_epi16(out, __mmask32((uint64_t(1) << nout) - 1), final);
+    out += nout; // UTF-8 to UTF-16 is only expansionary in this case.
   }
-  out += nout; // UTF-8 to UTF-16 is only expansionary in this case.
-  // computing the consumed input is more fun:
-  in += nin;
+
   return true; // we are fine.
 }
 
