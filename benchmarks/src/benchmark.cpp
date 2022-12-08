@@ -2073,15 +2073,14 @@ void Benchmark::run_convert_utf8_to_utf16_utfcpp(size_t iterations) {
     volatile size_t sink{0};
 
     auto proc = [data, size, &sink]() {
-	try {
+	    try {
             std::vector <unsigned short> str;
             utf8::utf8to16(data, data + size, std::back_inserter(str));
-	    sink = 1;
-	}
-	catch (const char* msg) {
+	        sink = str.size();
+	    } catch (const char* msg) {
             std::cout << msg << std::endl;
-	    sink = 0;
-	}
+	        sink = 0;
+	    }
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
@@ -2108,13 +2107,13 @@ void Benchmark::run_convert_utf16_to_utf8_utfcpp(size_t iterations) {
 
     auto proc = [data, size, &sink]() {
         try {
-	    std::string str;
+	        std::string str;
             utf8::utf16to8(data, data + size, std::back_inserter(str));
-            sink = 1;
-	} catch (const char* msg) {
+            sink = str.size();
+	    } catch (const char* msg) {
             std::cout << msg << std::endl;
             sink = 0;
-	}
+	    }
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
@@ -2133,11 +2132,11 @@ void Benchmark::run_convert_utf8_to_utf32_utfcpp(size_t iterations) {
         try {
            std::vector<int> str;
            utf8::utf8to32(data, data + size, std::back_inserter(str));
-           sink = 1;
-	} catch (const char* msg) {
+           sink = str.size();
+	    } catch (const char* msg) {
            std::cout << msg << std::endl;
            sink = 0;
-	}
+	    }
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
@@ -2162,11 +2161,11 @@ void Benchmark::run_convert_utf32_to_utf8_utfcpp(size_t iterations) {
         try {
            std::string str;
            utf8::utf16to8(data, data + size, std::back_inserter(str));
-	   sink = 1;
-	} catch (const char* msg) {
+	       sink = str.size();
+	    } catch (const char* msg) {
            std::cout << msg << std::endl;
            sink = 0;
-	}
+	    }
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
