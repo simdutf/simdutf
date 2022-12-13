@@ -171,4 +171,12 @@ use a 64-bit target such as x64, 64-bit ARM or 64-bit PPC.")
 
 #endif
 
+
+#if defined(__GNUC__) && !defined(__clang__)
+#if __GNUC__ >= 11
+#define SIMDUTF_GCC11ORMORE 1
+#endif //  __GNUC__ >= 11
+#endif // defined(__GNUC__) && !defined(__clang__)
+
+
 #endif // SIMDUTF_PORTABILITY_H

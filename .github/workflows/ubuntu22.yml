@@ -1,4 +1,4 @@
-name: Ubuntu 20.04 Sanitized CI (GCC 9)
+name: Ubuntu 22.04 Sanitized CI (GCC 11)
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
     if: >-
       ! contains(toJSON(github.event.commits.*.message), '[skip ci]') &&
       ! contains(toJSON(github.event.commits.*.message), '[skip github]')
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         include:
@@ -25,7 +25,7 @@ jobs:
         run: |
           mkdir build &&
           cd build &&
-          cmake -DCMAKE_CXX_FLAGS=-Werror -DCMAKE_INSTALL_PREFIX:PATH=destination -DBUILD_SHARED_LIBS=${{matrix.shared}} ..  -DSIMDUTF_BENCHMARKS=OFF &&
+          cmake -DCMAKE_CXX_FLAGS=-Werror -DCMAKE_INSTALL_PREFIX:PATH=destination -DBUILD_SHARED_LIBS=${{matrix.shared}} ..   -DSIMDUTF_BENCHMARKS=OFF &&
           cmake --build .   &&
           ctest -j --output-on-failure &&
           cmake --install . &&
