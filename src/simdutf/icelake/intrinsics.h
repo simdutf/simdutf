@@ -68,6 +68,8 @@
 #endif // defined(__GNUC__) && !defined(__clang__)
 
 #if SIMDUTF_GCC8
+#pragma GCC push_options
+#pragma GCC target("avx512f")
 /**
  * GCC 8 fails to provide _mm512_set_epi8. We roll our own.
  */
@@ -81,6 +83,7 @@ inline __m512i _mm512_set_epi8(uint8_t a0, uint8_t a1, uint8_t a2, uint8_t a3, u
                           uint64_t(a55) + (uint64_t(a54) << 8) + (uint64_t(a53) << 16) + (uint64_t(a52) << 24) + (uint64_t(a51) << 32) + (uint64_t(a50) << 40) + (uint64_t(a49) << 48) + (uint64_t(a48) << 56),
                           uint64_t(a63) + (uint64_t(a62) << 8) + (uint64_t(a61) << 16) + (uint64_t(a60) << 24) + (uint64_t(a59) << 32) + (uint64_t(a58) << 40) + (uint64_t(a57) << 48) + (uint64_t(a56) << 56));
 }
+#pragma GCC pop_options
 #endif // SIMDUTF_GCC8
 
 #endif // SIMDUTF_HASWELL_INTRINSICS_H
