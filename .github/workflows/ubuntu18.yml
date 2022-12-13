@@ -20,6 +20,6 @@ jobs:
         run: |
           mkdir build &&
           cd build &&
-          cmake -DCMAKE_CXX_FLAGS=-Werror ..  &&
+          cmake -DCMAKE_CXX_FLAGS=-Werror ..  -DSIMDUTF_BENCHMARKS=OFF  -DSIMDUTF_BENCHMARKS=OFF &&
           cmake --build .  --verbose &&
           ctest -j --output-on-failure
