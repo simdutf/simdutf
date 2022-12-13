@@ -1,4 +1,4 @@
-name: Ubuntu 18.04 CI (GCC 7)
+name: Ubuntu 22.04 Sanitized CI (GCC 12)
 
 on:
   push:
@@ -13,13 +13,18 @@ jobs:
     if: >-
       ! contains(toJSON(github.event.commits.*.message), '[skip ci]') &&
       ! contains(toJSON(github.event.commits.*.message), '[skip github]')
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        include:
+          - {shared: ON}
+          - {shared: OFF}
     steps:
       - uses: actions/checkout@v3
       - name: Use cmake
         run: |
           mkdir build &&
           cd build &&
-          cmake -DCMAKE_CXX_FLAGS=-Werror ..  &&
-          cmake --build .  --verbose &&
+          CXX=g++-12 cmake -DCMAKE_CXX_FLAGS=-Werror  -DBUILD_SHARED_LIBS=${{matrix.shared}} ..  &&
+          cmake --build .   &&
           ctest -j --output-on-failure

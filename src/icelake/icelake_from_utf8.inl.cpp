@@ -8,6 +8,7 @@
  * Returns the position of the input and output after the processing is
  * completed. Upon error, the output is set to null.
  */
+
 template <endianness big_endian>
 utf8_to_utf16_result fast_avx512_convert_utf8_to_utf16(const char *in, size_t len, char16_t *out) {
   const char *const final_in = in + len;

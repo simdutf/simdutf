@@ -6,9 +6,8 @@
  * is written to 'outlen' and the function reports the number of input word
  * consumed.
  */
-
- template <endianness big_endian>
- size_t utf16_to_utf8_avx512i(const char16_t *inbuf, size_t inlen,
+template <endianness big_endian>
+size_t utf16_to_utf8_avx512i(const char16_t *inbuf, size_t inlen,
                                unsigned char *outbuf, size_t *outlen) {
   __m512i in;
   __mmask32 inmask = _cvtu32_mask32(0x7fffffff);
