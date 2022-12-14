@@ -448,12 +448,12 @@ __m512i prev(__m512i input, __m512i previous) {
     static_assert(N<=32, "N must be no larger than 32");
     const __m512i movemask = _mm512_setr_epi32(28,29,30,31,0,1,2,3,4,5,6,7,8,9,10,11);
     const __m512i rotated = _mm512_permutex2var_epi32(input, movemask, previous);
-#if SIMDUTF_GCC8
-    constexpr int shift = 16-N; // workaround for GCC8
+#if SIMDUTF_GCC8 || SIMDUTF_GCC9
+    constexpr int shift = 16-N; // workaround for GCC8,9
     return _mm512_alignr_epi8(input, rotated, shift);
 #else
     return _mm512_alignr_epi8(input, rotated, 16-N);
-#endif // SIMDUTF_GCC8
+#endif // SIMDUTF_GCC8 || SIMDUTF_GCC9
 }
 
 template <unsigned idx0, unsigned idx1, unsigned idx2, unsigned idx3>

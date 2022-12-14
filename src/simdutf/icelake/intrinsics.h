@@ -81,7 +81,9 @@ SIMDUTF_POP_DISABLE_WARNINGS
 
 #if __GNUC__ == 8
 #define SIMDUTF_GCC8 1
-#endif //  __GNUC__ == 8
+#elif __GNUC__ == 9
+#define SIMDUTF_GCC9 1
+#endif //  __GNUC__ == 8 || __GNUC__ == 9
 
 #endif // defined(__GNUC__) && !defined(__clang__)
 
