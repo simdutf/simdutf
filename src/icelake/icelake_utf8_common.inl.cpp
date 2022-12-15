@@ -269,8 +269,13 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
     __mmask64 bxorleading = _kxor_mask64(b, leading);
     if (_kshiftli_mask64(m234, 1) != bxorleading) { return false; }
   }
-  in += 64 - _lzcnt_u64(_pdep_u64(0xFFFFFFFF, continuation_or_ascii));
-
+  //
+  if (tail == SIMDUTF_FULL) {
+    in += 32;
+    if(int8_t(*in) <= int8_t(0xc0)) in++;
+  } else {
+    in += 64 - _lzcnt_u64(_pdep_u64(0xFFFFFFFF, continuation_or_ascii));
+  }
   __m512i lead = _mm512_maskz_compress_epi8(leading, leading2byte);          // will contain zero for ascii, and the data
   lead = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(lead));                 // ... zero extended into words
   __m512i follow = _mm512_maskz_compress_epi8(continuation_or_ascii, input); // the last bytes of each sequence
@@ -281,8 +286,9 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
   if(big_endian) { final = _mm512_shuffle_epi8(final, byteflip); }
   if (tail == SIMDUTF_FULL) {
     // Next part is UTF-16 specific and can be generalized to UTF-32.
-    _mm512_storeu_si512(out, final);
-    out += 32; // UTF-8 to UTF-16 is only expansionary in this case.
+    int nout = _mm_popcnt_u32(uint32_t(leading));
+    _mm512_mask_storeu_epi16(out, __mmask32((uint64_t(1) << nout) - 1), final);
+    out += nout; // UTF-8 to UTF-16 is only expansionary in this case.
   } else {
     int nout = int(_mm_popcnt_u64(_pdep_u64(0xFFFFFFFF, leading)));
     _mm512_mask_storeu_epi16(out, __mmask32((uint64_t(1) << nout) - 1), final);
