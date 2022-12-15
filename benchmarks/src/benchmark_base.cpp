@@ -110,13 +110,13 @@ namespace simdutf::benchmarks {
             const double _1GHz = 1000000000.0;
             const double freq = (all.best.cycles() / all.best.elapsed_sec()) / _1GHz;
             const double insperbyte = all.best.instructions() / data_size;
-            const double cycleperbyte = all.best.instructions() / data_size;
+            const double cycleperbyte = all.best.cycles() / data_size;
 
             const double inspercycle = all.best.instructions() / all.best.cycles();
 
             printf("%8.3f ins/byte, %8.3f cycle/byte, %8.3f GB/s (%.1f %%),  %8.3f GHz, %8.3f ins/cycle \n", insperbyte, cycleperbyte, gbs, error_margin, freq, inspercycle);
             const double insperchar = all.best.instructions() / character_count;
-            const double cycleperchar = all.best.instructions() / character_count;
+            const double cycleperchar = all.best.cycles() / character_count;
 
             printf("%8.3f ins/char, %8.3f cycle/char, %8.3f Gc/s (%.1f %%) %8.2f byte/char \n", insperchar, cycleperchar, gcs, error_margin, byte_per_char);
 
