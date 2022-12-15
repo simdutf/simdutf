@@ -271,8 +271,19 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
   }
   //
   if (tail == SIMDUTF_FULL) {
+    // In the two-byte/ASCII scenario, we are easily latency bound, so we want
+    // to increment the input buffer as quickly as possible.
+    // We process 32 bytes unless the byte at index 32 is a continuation byte,
+    // in which case we include it as well for a total of 33 bytes.
+    // Note that if x is an ASCII byte, then the following is false:
+    // int8_t(x) <= int8_t(0xc0) under two's complement.
     in += 32;
     if(int8_t(*in) <= int8_t(0xc0)) in++;
+    // The alternative is to do
+    // in += 64 - _lzcnt_u64(_pdep_u64(0xFFFFFFFF, continuation_or_ascii));
+    // but it requires loading the input, doing the mask computation, and converting
+    // back the mask to a general register. It just takes too long, leaving the
+    // processor likely to be idle.
   } else {
     in += 64 - _lzcnt_u64(_pdep_u64(0xFFFFFFFF, continuation_or_ascii));
   }
