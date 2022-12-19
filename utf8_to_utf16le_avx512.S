@@ -84,17 +84,16 @@ utf8_to_utf16le_avx512:
 	jnz		2f			// if yes, take slow path
 
 	// Fast path 2: all ASCII or 2 byte
-	not		%r12			// the last byte of each character
-	mov		%ebx, %ecx		// rax = ffffffff (the least 32 bit)
-	pdep		%r12, %rcx, %rcx	// the first up to 32 of these
-	lzcnt		%rcx, %rcx		// number of vector items that were not processed
+	korq		%k1, %k2, %k5		// LEAD: first bytes of each sequence
+	kmovq		%k5, %r8		// LEAD bytes
+	pext		%r8d, %r8d, %ecx	// one bit for each char in the first 32 byte of input
+	kmovd		%ecx, %k1
 
 	// Translate into UTF-8.  It's a bit simpler than in the general case.
 	// --- CASE ---  -------------- INPUT --------------  ---- OUTPUT ----
 	// ascii                                    0GFEDCBA  000000000GFEDCBA
 	// 2 byte                          110LKJHG 10FEDCBA  00000LKJHGFEDCBA
 	vpsubb		%zmm20, %zmm0, %zmm2{%k2}{z} // 2 byte sequence lead bytes with tag bits subtracted
-	korq		%k1, %k2, %k5		// LEAD: first bytes of each sequence
 	knotq		%k2, %k6		// FOLLOW: last bytes of each sequence
 	vpcompressb	%zmm2, %zmm2{%k5}{z}	// the first byte of each sequence
 	vpmovzxbw	%ymm2, %zmm2		// ... zero extended into words
@@ -102,20 +101,25 @@ utf8_to_utf16le_avx512:
 	vpmovzxbw	%ymm1, %zmm1		// ... zero extended into words
 	vpsllw		$6, %zmm2, %zmm2	// shifted into position
 	vpaddw		%zmm2, %zmm1, %zmm1	// and added to the last byte
-	vmovdqu16	%zmm1, (%rdi)		// and deposit decoded text into output
+
+	bt		$31, %r12d		// does a 2 byte sequence straddle bytes 31/32?
+	sbb		$32, %rdx		// if yes, we have processed 33 bytes, if no 32 bytes.
 
 	// check if there is a sequencing error (i.e. lead byte not followed by follow byte)
-	kmovq		%k5, %r8		// LEAD
-	stc
-	adc		%r12, %r12		// where follow bytes should not be
+	add		%r12, %r12		// where follow bytes should be
+	not		%r12			// where the should not be
 	cmp		%r12, %r8		// does that match reality?
 	jne		.Lfail2			// if not, I've got bad news for you
 
+	vmovdqu16	%zmm1, (%rdi){%k1}	// deposit decoded text into output
+
 	// advance pointers, counters, and iterate
-	add		$64, %rsi		// advance source by full vector
-	sub		%rcx, %rsi		// but not the parts that weren't processed
-	lea		-64(%rdx, %rcx, 1), %rdx // process item count the same way
-	add		$64, %rdi		// advance output buffer
+	cmpb		$0xc0, 31(%rsi)		// does a 2 byte sequence straddle bytes 31/32?
+	sbb		$-33, %rsi		// if yes, we have processed 33 bytes, if no 32 bytes.
+
+	popcnt		%r8d, %r8d		// number of characters converted in 32/33 byte of input
+	lea		(%rdi, %r8, 2), %rdi	// advance output by that many words
+
 	cmp		$64, %rdx		// enough for another round?
 	jae		.Loop			// if yes, go again!
 	jmp		.Ltail			// else handle tail
