@@ -3,6 +3,22 @@
 [![MSYS2-CLANG-CI](https://github.com/lemire/simdutf/actions/workflows/msys2-clang.yml/badge.svg)](https://github.com/lemire/simdutf/actions/workflows/msys2-clang.yml)
 [![Ubuntu 20.04 CI (GCC 9)](https://github.com/lemire/simdutf/actions/workflows/ubuntu20sani.yml/badge.svg)](https://github.com/lemire/simdutf/actions/workflows/ubuntu20sani.yml)
 
+
+# Table of contents
+
+- [simdutf: Unicode validation and transcoding at billions of characters per second](#simdutf-unicode-validation-and-transcoding-at-billions-of-characters-per-second)
+  - [How fast is it?](#how-fast-is-it)
+  - [Real-World Usage](#real-world-usage)
+  - [Requirements](#requirements)
+  - [Usage (Usage)](#usage-usage)
+  - [Usage (CMake)](#usage-cmake)
+  - [Single-header version](#single-header-version)
+  - [Example](#example)
+  - [API](#api)
+  - [The sutf command-line tool](#the-sutf-command-line-tool)
+  - [References](#references)
+  - [License](#license)
+
 simdutf: Unicode validation and transcoding at billions of characters per second
 ===============================================
 
@@ -56,6 +72,15 @@ Datasets: https://github.com/lemire/unicode_lipsum
 
 Please refer to our benchmarking tool for a proper interpretation of the numbers. Our results are reproducible.
 
+
+Real-World Usage
+-----
+
+The simdutf library is used by:
+- [Bun](https://bun.sh),  a fast JavaScript runtime,
+- [haskell/text](https://github.com/haskell/text), a library for fast operations over Unicode text,
+- [klogg](https://github.com/variar/klogg), a Really fast log explorer,
+- [Pixie](https://github.com/pixie-io/pixie), observability tool for Kubernetes applications.
 
 
 Requirements
@@ -916,15 +941,6 @@ during compilation. The following is an example of transcoding two input files t
 ```
 sutf -f UTF-8 -t UTF-16LE -o output_file.txt first_input_file.txt second_input_file.txt
 ```
-
-Usage
------
-
-The simdutf library is used by:
-- [Bun](https://bun.sh),  a fast JavaScript runtime,
-- [haskell/text](https://github.com/haskell/text), a library for fast operations over Unicode text,
-- [klogg](https://github.com/variar/klogg), a Really fast log explorer,
-- [Pixie](https://github.com/pixie-io/pixie), observability tool for Kubernetes applications.
 
 
 References
