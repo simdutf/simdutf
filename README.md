@@ -271,6 +271,11 @@ enum error_code {
 On success, the `error` field is set to `SUCCESS` and the `position` field indicates either the number of words validated for validation functions or the number of written
 words in the output format for transcoding functions.
 
+Generally speaking, functions that report errors always stop soon after an error is
+encountered and might therefore be faster on inputs where an error occurs early in the input.
+The functions that return a boolean indicating whether or not an error has been encountered
+are meant to be used in an *optimistic setting*---when we expect that inputs will almost always
+be correct.
 
 We have fast validation functions.
 
@@ -298,7 +303,9 @@ simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept;
 simdutf_warn_unused result validate_ascii_with_errors(const char *buf, size_t len) noexcept;
 
 /**
- * Validate the UTF-8 string.
+ * Validate the UTF-8 string. This function may be best when you expect
+ * the input to be almost always valid. Otherwise, consider using
+ * validate_utf8_with_errors.
  *
  * Overridden by each implementation.
  *
@@ -309,7 +316,8 @@ simdutf_warn_unused result validate_ascii_with_errors(const char *buf, size_t le
 simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept;
 
 /**
- * Validate the UTF-8 string and stop on error.
+ * Validate the UTF-8 string and stop on error. It might be faster than
+ * validate_utf8 when an error is expected to occur early.
  *
  * Overridden by each implementation.
  *
@@ -320,7 +328,9 @@ simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept;
 simdutf_warn_unused result validate_utf8_with_errors(const char *buf, size_t len) noexcept;
 
 /**
- * Validate the UTF-16LE string.
+ * Validate the UTF-16LE string. This function may be best when you expect
+ * the input to be almost always valid. Otherwise, consider using
+ * validate_utf16le_with_errors.
  *
  * Overridden by each implementation.
  *
@@ -333,7 +343,9 @@ simdutf_warn_unused result validate_utf8_with_errors(const char *buf, size_t len
 simdutf_warn_unused bool validate_utf16le(const char16_t *buf, size_t len) noexcept;
 
 /**
- * Validate the UTF-16BE string.
+ * Validate the UTF-16BE string. This function may be best when you expect
+ * the input to be almost always valid. Otherwise, consider using
+ * validate_utf16be_with_errors.
  *
  * Overridden by each implementation.
  *
@@ -346,7 +358,8 @@ simdutf_warn_unused bool validate_utf16le(const char16_t *buf, size_t len) noexc
 simdutf_warn_unused bool validate_utf16be(const char16_t *buf, size_t len) noexcept;
 
 /**
- * Validate the UTF-16LE string and stop on error.
+ * Validate the UTF-16LE string and stop on error. It might be faster than
+ * validate_utf16le when an error is expected to occur early.
  *
  * Overridden by each implementation.
  *
@@ -359,7 +372,8 @@ simdutf_warn_unused bool validate_utf16be(const char16_t *buf, size_t len) noexc
 simdutf_warn_unused result validate_utf16le_with_errors(const char16_t *buf, size_t len) noexcept;
 
 /**
- * Validate the UTF-16BE string and stop on error.
+ * Validate the UTF-16BE string and stop on error. It might be faster than
+ * validate_utf16be when an error is expected to occur early.
  *
  * Overridden by each implementation.
  *
@@ -907,13 +921,18 @@ Usage
 -----
 
 The simdutf library is used by:
-- [https://bun.sh](Bun),  a fast JavaScript runtime,
-- [haskell/text](https://github.com/haskell/text), a library for fast operations over Unicode text.
+- [Bun](https://bun.sh),  a fast JavaScript runtime,
+- [haskell/text](https://github.com/haskell/text), a library for fast operations over Unicode text,
+- [klogg](https://github.com/variar/klogg), a Really fast log explorer,
+- [Pixie](https://github.com/pixie-io/pixie), observability tool for Kubernetes applications.
+
 
 References
 -----------
 
-* Daniel Lemire, Wojciech Muła,  [Transcoding Billions of Unicode Characters per Second with SIMD Instructions](https://arxiv.org/abs/2109.10433), Software: Practice and Experience (to appear)
+* Robert Clausecker, Daniel Lemire, Transcoding Unicode Characters with AVX-512 Instructions (in preparation).
+* Daniel Lemire, Wojciech Muła,  [Transcoding Billions of Unicode Characters per Second with SIMD Instructions](https://arxiv.org/abs/2109.10433), Software: Practice and Experience52 (2), 2022.
+* John Keiser, Daniel Lemire, [Validating UTF-8 In Less Than One Instruction Per Byte](https://arxiv.org/abs/2010.03090), Software: Practice and Experience 51 (5), 2021.
 
 License
 -------
