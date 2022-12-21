@@ -21,7 +21,7 @@
 #endif
 // To see why  (__BMI__) && (__PCLMUL__) && (__LZCNT__) are not part of this next line, see
 // https://github.com/simdutf/simdutf/issues/1247
-#define SIMDUTF_CAN_ALWAYS_RUN_HASWELL ((SIMDUTF_IMPLEMENTATION_HASWELL) && (SIMDUTF_IS_X86_64) && (__AVX2__))
+#define SIMDUTF_CAN_ALWAYS_RUN_HASWELL ((SIMDUTF_IMPLEMENTATION_HASWELL) && (SIMDUTF_IS_X86_64) && (__AVX2__) &&(!SIMDUTF_IS_32BITS))
 
 #if SIMDUTF_IMPLEMENTATION_HASWELL
 

@@ -30,7 +30,7 @@
 #define SIMDUTF_CAN_ALWAYS_RUN_ICELAKE ((SIMDUTF_IMPLEMENTATION_ICELAKE) && (SIMDUTF_IS_X86_64) && (__AVX2__) && (SIMDUTF_HAS_AVX512F && \
                                          SIMDUTF_HAS_AVX512DQ && \
                                          SIMDUTF_HAS_AVX512VL && \
-                                           SIMDUTF_HAS_AVX512VBMI2))
+                                           SIMDUTF_HAS_AVX512VBMI2) && (!SIMDUTF_IS_32BITS))
 
 #if SIMDUTF_IMPLEMENTATION_ICELAKE
 #if SIMDUTF_CAN_ALWAYS_RUN_ICELAKE
