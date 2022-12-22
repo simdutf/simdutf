@@ -141,6 +141,7 @@ Examples:
       print_tests();
       return;
     }
+    size_t matching_implementation{0};
 
     for (const auto& implementation: simdutf::available_implementations) {
       if (implementation == nullptr) {
@@ -156,6 +157,7 @@ Examples:
             continue;
           }
       }
+      matching_implementation++;
 
       printf("Checking implementation %s\n", implementation->name().c_str());
 
@@ -172,9 +174,12 @@ Examples:
       };
 
       for (auto test: simdutf::test::test_procedures()) {
-        if (filter(test))
-          test(*implementation);
+        if (filter(test)) { test(*implementation); }
       }
+    }
+    if(matching_implementation == 0) {
+      puts("not a single compatible implementation found, this is an error");
+      abort();
     }
   }
 

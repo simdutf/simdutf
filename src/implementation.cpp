@@ -20,12 +20,13 @@ std::string toBinaryString(T b) {
 }
 
 // Implementations
+// The best choice should always come first!
 #include "simdutf/arm64.h"
+#include "simdutf/icelake.h"
 #include "simdutf/haswell.h"
 #include "simdutf/westmere.h"
 #include "simdutf/ppc64.h"
-#include "simdutf/fallback.h"
-#include "simdutf/icelake.h"
+#include "simdutf/fallback.h" // have it always last.
 
 namespace simdutf {
 bool implementation::supported_by_runtime_system() const {

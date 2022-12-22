@@ -77,7 +77,7 @@ inline simdutf_warn_unused result validate_with_errors(const char *buf, size_t l
   uint32_t code_point = 0;
   while (pos < len) {
     // check of the next 8 bytes are ascii.
-    uint64_t next_pos = pos + 16;
+    size_t next_pos = pos + 16;
     if (next_pos <= len) { // if it is safe to read 8 more bytes, check that they are ascii
       uint64_t v1;
       std::memcpy(&v1, data + pos, sizeof(uint64_t));

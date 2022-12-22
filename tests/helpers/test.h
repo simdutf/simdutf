@@ -9,7 +9,6 @@
 namespace simdutf { namespace test {
 
   int main(int argc, char* argv[]);
-
   using test_procedure = void (*)(const simdutf::implementation& impl);
   struct test_entry {
     std::string name;
