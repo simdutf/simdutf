@@ -6,6 +6,7 @@
 #include "tables/utf16_to_utf8_tables.h"
 #include "scalar/utf8.h"
 #include "scalar/utf16.h"
+
 #include "simdutf/haswell/begin.h"
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
