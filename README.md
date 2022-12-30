@@ -77,7 +77,8 @@ Real-World Usage
 -----
 
 The simdutf library is used by:
-- [Bun](https://bun.sh),  a fast JavaScript runtime,
+- [Node.js](https://nodejs.org/en/), a standard JavaScript runtime environment,
+- [Bun](https://bun.sh), a fast JavaScript runtime environment,
 - [haskell/text](https://github.com/haskell/text), a library for fast operations over Unicode text,
 - [klogg](https://github.com/variar/klogg), a Really fast log explorer,
 - [Pixie](https://github.com/pixie-io/pixie), observability tool for Kubernetes applications.
