@@ -3,7 +3,7 @@
 #include <vector>
 #include <stdexcept>
 
-constexpr size_t DEFAULT_ITERATIONS = 2000;
+constexpr size_t DEFAULT_ITERATIONS = 3000;
 
 namespace {
 
@@ -136,7 +136,7 @@ Usage:
     -h, --help                      show help
     -F [PATH], --input-file [PATH]  set dataset path (may be used many times)
     -P [NAME], --procedure [NAME]   choose procedure(s) to test (may be used many times, a substring match suffices)
-    -I --iterations                 number of iterations (default: 2000)
+    -I --iterations                 number of iterations (default: 3000)
     --random-utf8 [size]            use random UTF8 data of given size
     --show-procedures               prints all known procedures for -P/--procedure
 
