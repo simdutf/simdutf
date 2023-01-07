@@ -55,7 +55,9 @@
  * At this point in time, SIMDUTF_IS_BIG_ENDIAN is defined.
  */
 #if SIMDUTF_IS_BIG_ENDIAN
-#error "The simdutf library requires a little-endian system. Please see https://github.com/simdutf/simdutf/issues/204 "
+#pragma message("The simdutf library requires a little-endian system.  \
+Please see https://github.com/simdutf/simdutf/issues/204 \
+Please test your software thoroughly.")
 #endif
 
 
