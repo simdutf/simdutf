@@ -6,6 +6,15 @@ project(simdutf
   VERSION 1.0.0
 )
 
+include (TestBigEndian)
+TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
+if(IS_BIG_ENDIAN)
+  message(STATUS "The simdutf library currently requires a little-endian system.")
+  message(STATUS "https://github.com/simdutf/simdutf/issues/204")
+  message(SEND_ERROR "We do not support big-endian systems.")
+  return()
+endif()
+
 include(GNUInstallDirs)
 # The following requires CMake 3.21.
 # if(PROJECT_IS_TOP_LEVEL)
