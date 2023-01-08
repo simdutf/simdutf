@@ -62,8 +62,8 @@ implementation::detect_encodings(const char *input,
       if (surrogates) {
         is_utf8 = false;
 
-        // Can still be either UTF-16LE or UTF-32LE depending on the positions
-        // of the surrogates To be valid UTF-32LE, a surrogate cannot be in the
+        // Can still be either UTF-16LE or UTF-32 depending on the positions
+        // of the surrogates To be valid UTF-32, a surrogate cannot be in the
         // two most significant bytes of any 32-bit word. On the other hand, to
         // be valid UTF-16LE, at least one surrogate must be in the two most
         // significant bytes of a 32-bit word since they always come in pairs in
@@ -100,7 +100,7 @@ implementation::detect_encodings(const char *input,
 
         } else {
           is_utf16 = false;
-          // Check for UTF-32LE
+          // Check for UTF-32
           if (length % 4 == 0) {
             const char32_t *input32 = reinterpret_cast<const char32_t *>(buf);
             const char32_t *end32 =
@@ -115,7 +115,7 @@ implementation::detect_encodings(const char *input,
       }
       // If no surrogate, validate under other encodings as well
 
-      // UTF-32LE validation
+      // UTF-32 validation
       currentmax = _mm512_max_epu32(in, currentmax);
 
       // UTF-8 validation

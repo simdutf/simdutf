@@ -19,6 +19,11 @@ target_link_libraries(validate_ascii_with_errors_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
 
+add_cpp_test(bele_tests)
+target_link_libraries(bele_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)
+
 add_cpp_test(validate_utf8_basic_tests)
 target_link_libraries(validate_utf8_basic_tests
   PUBLIC simdutf::tests::helpers

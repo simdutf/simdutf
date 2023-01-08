@@ -36,8 +36,8 @@ int avx2_detect_encodings(const char * buf, size_t len) {
         if (surrogates_bitmask0 != 0x0) {
             // Cannot be UTF8
             is_utf8 = false;
-            // Can still be either UTF-16LE or UTF-32LE depending on the positions of the surrogates
-            // To be valid UTF-32LE, a surrogate cannot be in the two most significant bytes of any 32-bit word.
+            // Can still be either UTF-16LE or UTF-32 depending on the positions of the surrogates
+            // To be valid UTF-32, a surrogate cannot be in the two most significant bytes of any 32-bit word.
             // On the other hand, to be valid UTF-16LE, at least one surrogate must be in the two most significant
             // bytes of a 32-bit word since they always come in pairs in UTF-16LE.
             // Note that we always proceed in multiple of 4 before this point so there is no offset in 32-bit words.
@@ -108,7 +108,7 @@ int avx2_detect_encodings(const char * buf, size_t len) {
                 }
             } else {
                 is_utf16 = false;
-                // Check for UTF-32LE
+                // Check for UTF-32
                 if (len % 4 == 0) {
                     const char32_t * input = reinterpret_cast<const char32_t*>(buf);
                     const char32_t* end32 = reinterpret_cast<const char32_t*>(start) + len/4;
@@ -143,7 +143,7 @@ int avx2_detect_encodings(const char * buf, size_t len) {
         }
         // If no surrogate, validate under other encodings as well
 
-        // UTF-32LE validation
+        // UTF-32 validation
         currentmax = _mm256_max_epu32(in, currentmax);
         currentmax = _mm256_max_epu32(nextin, currentmax);
 

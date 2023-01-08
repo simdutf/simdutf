@@ -76,7 +76,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
 
   /**
-   * This class can be used to test UTF-8 => UTF-32LE transcoding.
+   * This class can be used to test UTF-8 => UTF-32 transcoding.
    */
   class transcode_utf8_to_utf32_test_base : transcode_test_base {
   public:
@@ -185,7 +185,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
 
   /**
-   * This class can be used to test UTF-32LE => UTF-8 transcoding.
+   * This class can be used to test UTF-32 => UTF-8 transcoding.
    */
   class transcode_utf32_to_utf8_test_base : transcode_test_base {
   public:
@@ -239,7 +239,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
 
   /**
-   * This class can be used to test UTF-32LE => UTF-16LE transcoding.
+   * This class can be used to test UTF-32 => UTF-16LE transcoding.
    */
   class transcode_utf32_to_utf16_test_base : transcode_test_base {
   public:
@@ -292,7 +292,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
 
   /**
-   * This class can be used to test UTF-16LE => UTF-32LE transcoding.
+   * This class can be used to test UTF-16LE => UTF-32 transcoding.
    */
   class transcode_utf16_to_utf32_test_base : transcode_test_base {
   public:
