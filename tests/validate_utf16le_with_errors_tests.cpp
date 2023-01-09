@@ -1,5 +1,9 @@
 #include "simdutf.h"
 
+#ifndef SIMDUTF_IS_BIG_ENDIAN
+#error "SIMDUTF_IS_BIG_ENDIAN should be defined."
+#endif
+
 #include <array>
 #include <algorithm>
 
@@ -83,6 +87,9 @@ TEST(validate_utf16le_with_errors__returns_success_for_empty_string) {
    2) Determine if W1 is between 0xD800 and 0xDBFF. If not, the sequence
       is in error [...]
 */
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port this test for big-endian platforms.
+#else
 TEST(validate_utf16le_with_errors__returns_error_when_input_has_wrong_first_word_value) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
@@ -106,6 +113,7 @@ TEST(validate_utf16le_with_errors__returns_error_when_input_has_wrong_first_word
     }
   }
 }
+#endif
 
 /*
  RFC-2781:
@@ -113,6 +121,9 @@ TEST(validate_utf16le_with_errors__returns_error_when_input_has_wrong_first_word
  3) [..] if W2 is not between 0xDC00 and 0xDFFF, the sequence is in error.
     Terminate.
 */
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port this test for big-endian platforms.
+#else
 TEST(validate_utf16le_with_errors__returns_error_when_input_has_wrong_second_word_value) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
@@ -143,6 +154,7 @@ TEST(validate_utf16le_with_errors__returns_error_when_input_has_wrong_second_wor
     }
   }
 }
+#endif
 
 /*
  RFC-2781:
@@ -150,6 +162,9 @@ TEST(validate_utf16le_with_errors__returns_error_when_input_has_wrong_second_wor
  3) If there is no W2 (that is, the sequence ends with W1) [...]
     the sequence is in error. Terminate.
 */
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port this test for big-endian platforms.
+#else
 TEST(validate_utf16le_with_errors__returns_error_when_input_is_truncated) {
   const char16_t valid_surrogate_W1 = 0xd800;
   uint32_t seed{1234};
@@ -167,7 +182,11 @@ TEST(validate_utf16le_with_errors__returns_error_when_input_is_truncated) {
     ASSERT_EQUAL(res.count, size - 1);
   }
 }
+#endif
 
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port this test for big-endian platforms.
+#else
 TEST(validate_utf16le_with_errors__extensive_tests) {
   const std::string path{"validate_utf16_testcases.txt"};
   std::ifstream file{path};
@@ -233,6 +252,7 @@ TEST(validate_utf16le_with_errors__extensive_tests) {
     ASSERT_EQUAL(res.error, valid);
   }
 }
+#endif
 
 int main(int argc, char* argv[]) {
   return simdutf::test::main(argc, argv);

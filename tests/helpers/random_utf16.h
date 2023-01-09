@@ -9,7 +9,7 @@ namespace tests {
 namespace helpers {
 
   /*
-    Generates valid random UTF-16
+    Generates valid random UTF-16LE
 
     It might generate streams consisting:
     - only single 16-bit words (random_utf16(..., 1, 0));

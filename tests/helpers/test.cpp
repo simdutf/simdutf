@@ -97,6 +97,11 @@ Examples:
   }
 
   void print_architectures(FILE *file) {
+#if SIMDUTF_IS_BIG_ENDIAN
+    fprintf(file, "Big-endian system detected.\n");
+#else
+    fprintf(file, "Little-endian system detected.\n");
+#endif
     fprintf(file, "Available implementations:\n");
     for (const auto& implementation: simdutf::available_implementations) {
       if (implementation == nullptr) {

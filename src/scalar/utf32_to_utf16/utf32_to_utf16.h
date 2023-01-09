@@ -16,14 +16,14 @@ inline size_t convert(const char32_t* buf, size_t len, char16_t* utf16_output) {
     if((word & 0xFFFF0000)==0) {
       if (word >= 0xD800 && word <= 0xDFFF) { return 0; }
       // will not generate a surrogate pair
-      *utf16_output++ = big_endian ? char16_t(utf16::swap_bytes(uint16_t(word))) : char16_t(word);
+      *utf16_output++ = !match_system(big_endian) ? char16_t(utf16::swap_bytes(uint16_t(word))) : char16_t(word);
     } else {
       // will generate a surrogate pair
       if (word > 0x10FFFF) { return 0; }
       word -= 0x10000;
       uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
       uint16_t low_surrogate = uint16_t(0xDC00 + (word & 0x3FF));
-      if (big_endian) {
+      if (!match_system(big_endian)) {
         high_surrogate = utf16::swap_bytes(high_surrogate);
         low_surrogate = utf16::swap_bytes(low_surrogate);
       }
@@ -45,14 +45,14 @@ inline result convert_with_errors(const char32_t* buf, size_t len, char16_t* utf
     if((word & 0xFFFF0000)==0) {
       if (word >= 0xD800 && word <= 0xDFFF) { return result(error_code::SURROGATE, pos); }
       // will not generate a surrogate pair
-      *utf16_output++ = big_endian ? char16_t(utf16::swap_bytes(uint16_t(word))) : char16_t(word);
+      *utf16_output++ = !match_system(big_endian) ? char16_t(utf16::swap_bytes(uint16_t(word))) : char16_t(word);
     } else {
       // will generate a surrogate pair
       if (word > 0x10FFFF) { return result(error_code::TOO_LARGE, pos); }
       word -= 0x10000;
       uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
       uint16_t low_surrogate = uint16_t(0xDC00 + (word & 0x3FF));
-      if (big_endian) {
+      if (!match_system(big_endian)) {
         high_surrogate = utf16::swap_bytes(high_surrogate);
         low_surrogate = utf16::swap_bytes(low_surrogate);
       }

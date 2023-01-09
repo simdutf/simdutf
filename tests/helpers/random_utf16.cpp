@@ -1,5 +1,5 @@
 #include "random_utf16.h"
-
+#include "simdutf.h"
 #include "../reference/encode_utf16.h"
 
 #include <stdexcept>
@@ -13,7 +13,6 @@ namespace helpers {
   }
 
   std::pair<std::vector<char16_t>,size_t> random_utf16::generate_counted(size_t size) {
-
     std::vector<char16_t> result;
     result.reserve(size);
 
@@ -35,7 +34,12 @@ namespace helpers {
           break;
       }
     }
-
+#ifndef SIMDUTF_IS_BIG_ENDIAN
+#error "SIMDUTF_IS_BIG_ENDIAN should be defined."
+#endif
+#if SIMDUTF_IS_BIG_ENDIAN
+    change_endianness_utf16(result.data(), result.size(), result.data());
+#endif
     return make_pair(result,count);
   }
 

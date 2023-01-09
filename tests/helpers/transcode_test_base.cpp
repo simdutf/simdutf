@@ -1,4 +1,9 @@
 #include "transcode_test_base.h"
+#include "simdutf.h"
+
+#ifndef SIMDUTF_IS_BIG_ENDIAN
+#error "SIMDUTF_IS_BIG_ENDIAN should be defined."
+#endif
 
 #include <stdexcept>
 #include <algorithm>
@@ -35,10 +40,18 @@ namespace simdutf { namespace tests { namespace helpers {
     char16_t W2;
     switch (::simdutf::tests::reference::utf16::encode(codepoint, W1, W2)) {
       case 1:
+#if SIMDUTF_IS_BIG_ENDIAN
+        W1 = char16_t((uint16_t(W1)<<8)|(uint16_t(W1)>>8));
+
+#endif
         target.push_back(W1);
         break;
 
       case 2:
+#if SIMDUTF_IS_BIG_ENDIAN
+        W1 = char16_t((uint16_t(W1)<<8)|(uint16_t(W1)>>8));
+        W2 = char16_t((uint16_t(W2)<<8)|(uint16_t(W2)>>8));
+#endif
         target.push_back(W1);
         target.push_back(W2);
         break;
@@ -275,7 +288,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
 
   /**
-   * transcode_utf16_to_utf32_test_base can be used to test UTF-16LE => UTF-32LE transcoding.
+   * transcode_utf16_to_utf32_test_base can be used to test UTF-16LE => UTF-32 transcoding.
    */
   transcode_utf16_to_utf32_test_base::transcode_utf16_to_utf32_test_base(GenerateCodepoint generate,
                                        size_t input_size) {
@@ -461,7 +474,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
 
   /**
-   * transcode_utf32_to_utf16_test_base can be used to test UTF-32LE => UTF-16LE transcoding.
+   * transcode_utf32_to_utf16_test_base can be used to test UTF-32 => UTF-16LE transcoding.
    */
   transcode_utf32_to_utf16_test_base::transcode_utf32_to_utf16_test_base(GenerateCodepoint generate,
                                        size_t input_size) {

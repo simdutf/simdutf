@@ -18,6 +18,9 @@ namespace {
   constexpr int trials = 1000;
 }
 
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port the next test.
+#else
 TEST(issue_a73) {
   const char16_t utf16[] =
       u"\ubced\uf799\u8794\uf0a6\u8a83\uf0bb\uad82\ufb82\u9797\u9bf0\uadaf"
@@ -80,8 +83,11 @@ TEST(issue_a73) {
     ASSERT_TRUE(output[i] == expected[i]);
   }
 }
+#endif
 
-
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port the next test.
+#else
 TEST(issue_a72) {
   const char16_t utf16[] =
       u"\ufb8f\ua092\ub1cb\ufd99\u0dad\ud2be\u87ab\u88f0\u8a88\ua127\ua4f9"
@@ -101,6 +107,7 @@ TEST(issue_a72) {
     ASSERT_TRUE(utf8[i] == expected[i]);
   }
 }
+#endif
 
 TEST(convert_pure_ASCII) {
   size_t counter = 0;
@@ -186,6 +193,9 @@ TEST(convert_into_3_or_4_UTF8_bytes) {
   }
 }
 
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port the next test.
+#else
 TEST(convert_fails_if_there_is_sole_low_surrogate) {
   auto procedure = [&implementation](const char16_t* utf16, size_t size, char* utf8) -> size_t {
     return implementation.convert_utf16le_to_utf8(utf16, size, utf8);
@@ -202,7 +212,11 @@ TEST(convert_fails_if_there_is_sole_low_surrogate) {
     }
   }
 }
+#endif
 
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port the next test.
+#else
 TEST(convert_fails_if_there_is_sole_high_surrogate) {
   auto procedure = [&implementation](const char16_t* utf16, size_t size, char* utf8) -> size_t {
     return implementation.convert_utf16le_to_utf8(utf16, size, utf8);
@@ -221,7 +235,11 @@ TEST(convert_fails_if_there_is_sole_high_surrogate) {
     }
   }
 }
+#endif
 
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port the next test.
+#else
 TEST(convert_fails_if_there_is_low_surrogate_followed_by_another_low_surrogate) {
   auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
     return implementation.convert_utf16le_to_utf8(utf8, size, utf16);
@@ -243,7 +261,11 @@ TEST(convert_fails_if_there_is_low_surrogate_followed_by_another_low_surrogate) 
     }
   }
 }
+#endif
 
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port the next test.
+#else
 TEST(convert_fails_if_there_is_surrogate_pair_followed_by_high_surrogate) {
   auto procedure = [&implementation](const char16_t* utf8, size_t size, char* utf16) -> size_t {
     return implementation.convert_utf16le_to_utf8(utf8, size, utf16);
@@ -268,7 +290,11 @@ TEST(convert_fails_if_there_is_surrogate_pair_followed_by_high_surrogate) {
     test.input_utf16[i + 2] = old2;
   }
 }
+#endif
 
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port the next test.
+#else
 namespace {
   std::vector<std::vector<char16_t>> all_combinations() {
     const char16_t V_1byte_start  = 0x0042; // non-surrogate word the yields 1 UTF-8 byte
@@ -359,6 +385,7 @@ TEST(all_possible_8_codepoint_combinations) {
     }
   }
 }
+#endif
 
 int main(int argc, char* argv[]) {
   return simdutf::test::main(argc, argv);

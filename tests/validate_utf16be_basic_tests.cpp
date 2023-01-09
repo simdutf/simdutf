@@ -1,5 +1,9 @@
 #include "simdutf.h"
 
+#ifndef SIMDUTF_IS_BIG_ENDIAN
+#error "SIMDUTF_IS_BIG_ENDIAN should be defined."
+#endif
+
 #include <array>
 #include <algorithm>
 
@@ -16,7 +20,6 @@ TEST(validate_utf16be__returns_true_for_valid_input__single_words) {
     const auto utf16{generator.generate(512, seed)};
     std::vector<char16_t> flipped(utf16.size());
     implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
-
     ASSERT_TRUE(implementation.validate_utf16be(
               reinterpret_cast<const char16_t*>(flipped.data()), flipped.size()));
   }
@@ -79,6 +82,9 @@ TEST(validate_utf16be__returns_true_for_empty_string) {
    2) Determine if W1 is between 0xD800 and 0xDBFF. If not, the sequence
       is in error [...]
 */
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port this test for big-endian platforms.
+#else
 TEST(validate_utf16be__returns_false_when_input_has_wrong_first_word_value) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
@@ -101,6 +107,7 @@ TEST(validate_utf16be__returns_false_when_input_has_wrong_first_word_value) {
     }
   }
 }
+#endif
 
 /*
  RFC-2781:
@@ -108,6 +115,9 @@ TEST(validate_utf16be__returns_false_when_input_has_wrong_first_word_value) {
  3) [..] if W2 is not between 0xDC00 and 0xDFFF, the sequence is in error.
     Terminate.
 */
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port this test for big-endian platforms.
+#else
 TEST(validate_utf16be__returns_false_when_input_has_wrong_second_word_value) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
@@ -137,6 +147,7 @@ TEST(validate_utf16be__returns_false_when_input_has_wrong_second_word_value) {
     }
   }
 }
+#endif
 
 /*
  RFC-2781:
@@ -144,6 +155,9 @@ TEST(validate_utf16be__returns_false_when_input_has_wrong_second_word_value) {
  3) If there is no W2 (that is, the sequence ends with W1) [...]
     the sequence is in error. Terminate.
 */
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port this test for big-endian platforms.
+#else
 TEST(validate_utf16be__returns_false_when_input_is_truncated) {
   const char16_t valid_surrogate_W1 = 0x00d8;
   uint32_t seed{1234};
@@ -160,6 +174,7 @@ TEST(validate_utf16be__returns_false_when_input_is_truncated) {
     ASSERT_FALSE(implementation.validate_utf16be(reinterpret_cast<const char16_t*>(flipped.data()), len));
   }
 }
+#endif
 
 
 int main(int argc, char* argv[]) {

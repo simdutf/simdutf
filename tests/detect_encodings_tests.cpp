@@ -85,6 +85,9 @@ TEST(pure_utf32_ASCII) {
   }
 }
 
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port this test for big-endian platforms.
+#else
 TEST(no_utf8_bytes_no_surrogates) {
   for (size_t trial = 0; trial < 10000; trial++) {
     if ((trial % 100) == 0) {
@@ -109,6 +112,7 @@ TEST(no_utf8_bytes_no_surrogates) {
     }
   }
 }
+#endif
 
 TEST(two_utf8_bytes) {
   for (size_t trial = 0; trial < 10000; trial++) {
@@ -126,6 +130,14 @@ TEST(two_utf8_bytes) {
       auto actual = implementation.detect_encodings(
                       reinterpret_cast<const char *>(generated.first.data()),
                       size);
+      if(actual != expected) {
+        if((actual & simdutf::encoding_type::UTF8) == 0) {
+          std::cout << "failed to detect valid UTF-8." << std::endl;
+        }
+        if((actual & simdutf::encoding_type::UTF16_LE) == 0) {
+          std::cout << "failed to detect valid UTF-16LE." << std::endl;
+        }
+      }
       ASSERT_TRUE(actual == expected);
     }
   }
@@ -152,6 +164,9 @@ TEST(utf_16_surrogates) {
   }
 }
 
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port this test for big-endian platforms.
+#else
 TEST(utf32_surrogates) {
   for (size_t trial = 0; trial < 10000; trial++) {
     if ((trial % 100) == 0) {
@@ -176,6 +191,7 @@ TEST(utf32_surrogates) {
     }
   }
 }
+#endif
 
 TEST(edge_surrogate) {
   for (size_t trial = 0; trial < 10000; trial++) {
