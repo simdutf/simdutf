@@ -15,7 +15,7 @@
 namespace {
 std::array<size_t, 7> input_size{8, 16, 12, 64, 68, 128, 256};
 } // namespace
-/*
+
 TEST(pure_utf8_ASCII) {
   for (size_t trial = 0; trial < 10000; trial++) {
     if ((trial % 100) == 0) {
@@ -85,6 +85,9 @@ TEST(pure_utf32_ASCII) {
   }
 }
 
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port this test for big-endian platforms.
+#else
 TEST(no_utf8_bytes_no_surrogates) {
   for (size_t trial = 0; trial < 10000; trial++) {
     if ((trial % 100) == 0) {
@@ -108,7 +111,8 @@ TEST(no_utf8_bytes_no_surrogates) {
       ASSERT_TRUE(actual == expected);
     }
   }
-}*/
+}
+#endif
 
 TEST(two_utf8_bytes) {
   for (size_t trial = 0; trial < 10000; trial++) {
@@ -160,6 +164,9 @@ TEST(utf_16_surrogates) {
   }
 }
 
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port this test for big-endian platforms.
+#else
 TEST(utf32_surrogates) {
   for (size_t trial = 0; trial < 10000; trial++) {
     if ((trial % 100) == 0) {
@@ -184,6 +191,7 @@ TEST(utf32_surrogates) {
     }
   }
 }
+#endif
 
 TEST(edge_surrogate) {
   for (size_t trial = 0; trial < 10000; trial++) {
