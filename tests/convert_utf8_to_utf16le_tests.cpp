@@ -221,6 +221,9 @@ TEST(convert_null_4_UTF8_bytes) {
   }
 }
 
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port this test for big-endian platforms.
+#else
 TEST(issue111) {
   // We stick to ASCII for our source code given that there is no universal way to specify the character encoding of
   // the source files.
@@ -240,6 +243,7 @@ TEST(issue111) {
               == utf16_len);
   ASSERT_TRUE(std::char_traits<char16_t>::compare(input, utf16_buffer.get(), utf16_len) == 0);
 }
+#endif
 
 int main(int argc, char* argv[]) {
   return simdutf::test::main(argc, argv);

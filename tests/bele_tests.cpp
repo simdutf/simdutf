@@ -19,6 +19,12 @@ const size_t utf16_size = sizeof(utf16le_string)/sizeof(uint16_t);
 
 const unsigned char utf16be_string[] = {0x00,0x40,0x00,0xa7,0x22,0x08,0xd8,0x35,0xdc,0xaa};
 const char16_t *utf16be = reinterpret_cast<const char16_t*>(utf16be_string); // Technically undefined behavior.
+#if SIMDUTF_IS_BIG_ENDIAN
+const char16_t *utf16 = utf16be;
+#else
+const char16_t *utf16 = utf16le;
+#endif
+
 // Native order
 #if SIMDUTF_IS_BIG_ENDIAN
 const unsigned char utf32_string[] = {0x00,0x00,0x00,0x40,0x00,0x00,0x00,0xa7,0x00,0x00,0x22,0x08,0x00,0x01,0xd4,0xaa};

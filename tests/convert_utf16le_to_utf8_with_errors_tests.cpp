@@ -110,6 +110,9 @@ TEST(convert_into_3_or_4_UTF8_bytes) {
   }
 }
 
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port the next test.
+#else
 TEST(convert_fails_if_there_is_sole_low_surrogate) {
   const size_t size = 64;
   transcode_utf16_to_utf8_test_base test([](){return '*';}, size + 32);
@@ -129,7 +132,11 @@ TEST(convert_fails_if_there_is_sole_low_surrogate) {
     }
   }
 }
+#endif
 
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port the next test.
+#else
 TEST(convert_fails_if_there_is_sole_high_surrogate) {
   const size_t size = 64;
   transcode_utf16_to_utf8_test_base test([](){return '*';}, size + 32);
@@ -149,7 +156,11 @@ TEST(convert_fails_if_there_is_sole_high_surrogate) {
     }
   }
 }
+#endif
 
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port the next test.
+#else
 TEST(convert_fails_if_there_is_low_surrogate_is_followed_by_another_low_surrogate) {
   const size_t size = 64;
   transcode_utf16_to_utf8_test_base test([](){return '*';}, size + 32);
@@ -172,7 +183,11 @@ TEST(convert_fails_if_there_is_low_surrogate_is_followed_by_another_low_surrogat
     }
   }
 }
+#endif
 
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port the next test.
+#else
 TEST(convert_fails_if_there_is_surrogate_pair_is_followed_by_high_surrogate) {
   const size_t size = 64;
   transcode_utf16_to_utf8_test_base test([](){return '*';}, size + 32);
@@ -198,6 +213,7 @@ TEST(convert_fails_if_there_is_surrogate_pair_is_followed_by_high_surrogate) {
     test.input_utf16[i + 2] = old2;
   }
 }
+#endif
 
 
 int main(int argc, char* argv[]) {

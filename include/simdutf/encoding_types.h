@@ -17,6 +17,8 @@ enum endianness {
         BIG
 };
 
+bool match_system(endianness e);
+
 std::string to_string(encoding_type bom);
 
 // Note that BOM for UTF8 is discouraged.

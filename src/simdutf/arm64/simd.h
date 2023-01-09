@@ -338,7 +338,7 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     simdutf_really_inline void store_ascii_as_utf16(char16_t * p) const {
       uint16x8_t first = vmovl_u8(vget_low_u8 (vreinterpretq_u8_s8(this->value)));
       uint16x8_t second = vmovl_high_u8(vreinterpretq_u8_s8(this->value));
-      if (big_endian) {
+      if (!match_system(big_endian)) {
         #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
         const uint8x16_t swap = make_uint8x16_t(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
         #else

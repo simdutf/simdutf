@@ -9,9 +9,7 @@ project(simdutf
 include (TestBigEndian)
 TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
 if(IS_BIG_ENDIAN)
-  message(STATUS "The simdutf library currently requires a little-endian system.")
-  message(STATUS "https://github.com/simdutf/simdutf/issues/204")
-  message(WARNING "We do not support big-endian systems.")
+  message(STATUS "Big-endian system detected.")
 endif()
 
 include(GNUInstallDirs)

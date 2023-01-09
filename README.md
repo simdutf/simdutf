@@ -222,6 +222,11 @@ API
 Our API is made of a few non-allocating function. They typically take a pointer and a length as a parameter,
 and they sometimes take a pointer to an output buffer. Users are responsible for memory allocation.
 
+We use three types of data pointer types:
+- `char*` for UTF-8 or indeterminate Unicode formats,
+- `char16_t*` for UTF-16 (both UTF-16LE and UTF-16BE),
+- `char32_t*` for UTF-32. UTF-32 is primarily used for internal use, not data interchange. Thus, unless otherwise stated, `char32_t` refers to the native type and is typically UTF-32LE since virtually all systems are little-endian today.
+
 Our functions and declarations are all in the `simdutf` namespace. Thus you should prefix our functions
 and types with `simdutf::` as required.
 

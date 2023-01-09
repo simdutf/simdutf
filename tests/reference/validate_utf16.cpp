@@ -1,5 +1,9 @@
 #include "validate_utf16.h"
 
+#ifndef SIMDUTF_IS_BIG_ENDIAN
+#error "SIMDUTF_IS_BIG_ENDIAN should be defined."
+#endif
+
 namespace simdutf {
 namespace tests {
 namespace reference {
@@ -9,7 +13,13 @@ simdutf_warn_unused bool validate_utf16(const char16_t *buf, size_t len) noexcep
   const char16_t* end = buf + len;
 
   while (curr != end) {
+#if SIMDUTF_IS_BIG_ENDIAN
+      // By convention, we always take as an input an UTF-16LE.
+      const uint16_t W1 = uint16_t((uint16_t(*curr) << 8) | (uint16_t(*curr) >> 8));
+#else
       const uint16_t W1 = *curr;
+#endif
+
       curr += 1;
 
       if (W1 < 0xd800 || W1 > 0xdfff) { // fast path, code point is equal to character's value
@@ -23,8 +33,13 @@ simdutf_warn_unused bool validate_utf16(const char16_t *buf, size_t len) noexcep
       if (curr == end) { // required the next word, but we're already at the end of data
         return false;
       }
-
+#if SIMDUTF_IS_BIG_ENDIAN
+      // By convention, we always take as an input an UTF-16LE.
+      const uint16_t W2 = uint16_t((uint16_t(*curr) << 8) | (uint16_t(*curr) >> 8));
+#else
       const uint16_t W2 = *curr;
+#endif
+
       if (W2 < 0xdc00 || W2 > 0xdfff) // W2 = 0xdc00 .. 0xdfff
         return false;
 

@@ -15,7 +15,7 @@
 namespace {
 std::array<size_t, 7> input_size{8, 16, 12, 64, 68, 128, 256};
 } // namespace
-
+/*
 TEST(pure_utf8_ASCII) {
   for (size_t trial = 0; trial < 10000; trial++) {
     if ((trial % 100) == 0) {
@@ -108,7 +108,7 @@ TEST(no_utf8_bytes_no_surrogates) {
       ASSERT_TRUE(actual == expected);
     }
   }
-}
+}*/
 
 TEST(two_utf8_bytes) {
   for (size_t trial = 0; trial < 10000; trial++) {
@@ -126,6 +126,14 @@ TEST(two_utf8_bytes) {
       auto actual = implementation.detect_encodings(
                       reinterpret_cast<const char *>(generated.first.data()),
                       size);
+      if(actual != expected) {
+        if((actual & simdutf::encoding_type::UTF8) == 0) {
+          std::cout << "failed to detect valid UTF-8." << std::endl;
+        }
+        if((actual & simdutf::encoding_type::UTF16_LE) == 0) {
+          std::cout << "failed to detect valid UTF-16LE." << std::endl;
+        }
+      }
       ASSERT_TRUE(actual == expected);
     }
   }

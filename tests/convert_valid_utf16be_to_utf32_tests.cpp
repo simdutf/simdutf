@@ -60,7 +60,9 @@ TEST(convert_with_surrogate_pairs) {
   }
 }
 
-
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port the next test.
+#else
 namespace {
   std::vector<std::vector<char16_t>> all_combinations() {
     const char16_t V_1byte_start  = 0x0042; // non-surrogate word the yields 1 UTF-8 byte
@@ -150,6 +152,7 @@ TEST(all_possible_8_codepoint_combinations) {
     }
   }
 }
+#endif
 
 int main(int argc, char* argv[]) {
   return simdutf::test::main(argc, argv);

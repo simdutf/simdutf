@@ -1,5 +1,13 @@
 
 namespace simdutf {
+bool match_system(endianness e) {
+#if SIMDUTF_IS_BIG_ENDIAN
+    return e == endianness::BIG;
+#else
+    return e == endianness::LITTLE;
+#endif
+}
+
 std::string to_string(encoding_type bom) {
   switch (bom) {
       case UTF16_LE:     return "UTF16 little-endian";
