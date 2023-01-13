@@ -818,7 +818,7 @@ public:
    *
    * @return a mask of all required `internal::instruction_set::` values
    */
-  virtual uint32_t required_instruction_sets() const { return _required_instruction_sets; };
+  virtual uint32_t required_instruction_sets() const { return _required_instruction_sets; }
 
 
   /**
