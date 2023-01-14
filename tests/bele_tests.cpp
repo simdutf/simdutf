@@ -13,12 +13,12 @@ const char *utf8 = reinterpret_cast<const char*>(utf8_string);
 const size_t utf8_size = sizeof(utf8_string)/sizeof(uint8_t);
 
 const unsigned char utf16le_string[] = {0x40,0x00,0xa7,0x00,0x08,0x22,0x35,0xd8,0xaa,0xdc};
-const char16_t *utf16le = reinterpret_cast<const char16_t*>(utf16le_string); // Technically undefined behavior.
+const char16_t *utf16le = reinterpret_cast<const char16_t*>(utf16le_string);
 const size_t utf16_size = sizeof(utf16le_string)/sizeof(uint16_t);
 
 
 const unsigned char utf16be_string[] = {0x00,0x40,0x00,0xa7,0x22,0x08,0xd8,0x35,0xdc,0xaa};
-const char16_t *utf16be = reinterpret_cast<const char16_t*>(utf16be_string); // Technically undefined behavior.
+const char16_t *utf16be = reinterpret_cast<const char16_t*>(utf16be_string);
 #if SIMDUTF_IS_BIG_ENDIAN
 const char16_t *utf16 = utf16be;
 #else
