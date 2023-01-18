@@ -117,7 +117,7 @@ void run_from_utf16(const std::vector<char> &input_data, size_t approx_output_da
 
 int main(int argc, char **argv) {
   printf("# current system detected as %s.\n",
-         simdutf::active_implementation->name().c_str());
+         simdutf::get_active_implementation()->name().c_str());
   if (argc < 2) {
     std::cerr << "Please provide a file argument." << std::endl;
     return EXIT_FAILURE;

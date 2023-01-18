@@ -103,7 +103,7 @@ Examples:
     fprintf(file, "Little-endian system detected.\n");
 #endif
     fprintf(file, "Available implementations:\n");
-    for (const auto& implementation: simdutf::available_implementations) {
+    for (const auto& implementation: simdutf::get_available_implementations()) {
       if (implementation == nullptr) {
         puts("implementation is null which is unexpected.");
         abort();
@@ -148,7 +148,7 @@ Examples:
     }
     size_t matching_implementation{0};
 
-    for (const auto& implementation: simdutf::available_implementations) {
+    for (const auto& implementation: simdutf::get_available_implementations()) {
       if (implementation == nullptr) {
         puts("implementation is null which is unexpected");
         abort();
