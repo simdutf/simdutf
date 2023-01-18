@@ -1892,19 +1892,22 @@ private:
 #endif
 };
 
+class detect_best_supported_implementation_on_first_use;
+
 } // namespace internal
 
 /**
- * The list of available implementations compiled into simdutf.
+ * The list of available implementations compiled into simdjson.
  */
-extern SIMDUTF_DLLIMPORTEXPORT const internal::available_implementation_list available_implementations;
+extern SIMDUTF_DLLIMPORTEXPORT const internal::available_implementation_list& get_available_implementations();
 
 /**
   * The active implementation.
   *
   * Automatically initialized on first use to the most advanced implementation supported by this hardware.
   */
-extern SIMDUTF_DLLIMPORTEXPORT internal::atomic_ptr<const implementation> active_implementation;
+extern SIMDUTF_DLLIMPORTEXPORT internal::atomic_ptr<const implementation>& get_active_implementation();
+
 
 } // namespace simdutf
 
