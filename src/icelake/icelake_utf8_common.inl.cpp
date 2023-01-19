@@ -19,12 +19,13 @@ template <block_processing_mode tail, endianness big_endian>
 simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap) {
   // constants
   __m512i mask_identity = _mm512_set_epi8(63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
-  __m512i mask_c0c0c0c0 = _mm512_set1_epi32(0xc0c0c0c0);
-  __m512i mask_80808080 = _mm512_set1_epi32(0x80808080);
   __m512i mask_f0f0f0f0 = _mm512_set1_epi32(0xf0f0f0f0);
   __m512i mask_dfdfdfdf_tail = _mm512_set_epi64(0xffffdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf);
   __m512i mask_c2c2c2c2 = _mm512_set1_epi32(0xc2c2c2c2);
-  __m512i mask_ffffffff = _mm512_set1_epi32(0xffffffff);
+  // http://0x80.pl/notesen/2023-01-15-avx512-consts.html#powers-of-two-0x2-0x4-0x8
+  __m512i mask_ffffffff = _mm512_ternarylogic_epi32(_mm512_undefined_epi32(),_mm512_undefined_epi32(),_mm512_undefined_epi32(), 0xff);
+  __m512i mask_80808080 = _mm512_avg_epu8(mask_ffffffff, _mm512_setzero_epi32());//_mm512_set1_epi32(0x80808080);
+  __m512i mask_c0c0c0c0 = _mm512_set1_epi32(0xc0c0c0c0);
   __m512i mask_d7c0d7c0 = _mm512_set1_epi32(0xd7c0d7c0);
   __m512i mask_dc00dc00 = _mm512_set1_epi32(0xdc00dc00);
   __m512i byteflip = _mm512_setr_epi64(
