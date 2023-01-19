@@ -24,7 +24,7 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
   __m512i mask_c2c2c2c2 = _mm512_set1_epi32(0xc2c2c2c2);
   // http://0x80.pl/notesen/2023-01-15-avx512-consts.html#powers-of-two-0x2-0x4-0x8
   __m512i mask_ffffffff = _mm512_ternarylogic_epi32(_mm512_undefined_epi32(),_mm512_undefined_epi32(),_mm512_undefined_epi32(), 0xff);
-  __m512i mask_80808080 = _mm512_avg_epu8(mask_ffffffff, _mm512_setzero_epi32());//_mm512_set1_epi32(0x80808080);
+  __m512i mask_80808080 = _mm512_avg_epu8(mask_ffffffff, _mm512_setzero_epi32());
   __m512i mask_c0c0c0c0 = _mm512_set1_epi32(0xc0c0c0c0);
   __m512i mask_d7c0d7c0 = _mm512_set1_epi32(0xd7c0d7c0);
   __m512i mask_dc00dc00 = _mm512_set1_epi32(0xdc00dc00);
