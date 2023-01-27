@@ -247,7 +247,7 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf32(const char32_
 }
 
 simdutf_warn_unused size_t implementation::utf32_length_from_utf8(const char * input, size_t length) const noexcept {
-  return scalar::utf8::utf32_length_from_utf8(input, length);
+  return scalar::utf8::count_code_points(input, length);
 }
 
 } // namespace SIMDUTF_IMPLEMENTATION

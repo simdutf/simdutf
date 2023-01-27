@@ -213,12 +213,7 @@ simdutf_warn_unused result implementation::validate_utf8_with_errors(const char 
 }
 
 simdutf_warn_unused bool implementation::validate_ascii(const char *buf, size_t len) const noexcept {
-  const char* tail = icelake::validate_ascii(buf, len);
-  if (tail) {
-    return scalar::ascii::validate(tail, len - (tail - buf));
-  } else {
-    return false;
-  }
+  return icelake::validate_ascii(buf, len);
 }
 
 simdutf_warn_unused result implementation::validate_ascii_with_errors(const char *buf, size_t len) const noexcept {
