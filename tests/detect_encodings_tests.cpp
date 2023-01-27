@@ -16,6 +16,17 @@ namespace {
 std::array<size_t, 7> input_size{8, 16, 12, 64, 68, 128, 256};
 } // namespace
 
+
+TEST(boommmmm) {
+  const char* utf8_bom = "\xef\xbb\xbf"; 
+  const char* utf16be_bom = "\xfe\xff"; 
+  const char* utf16le_bom = "\xff\xfe"; 
+  ASSERT_TRUE(implementation.detect_encodings(utf8_bom, 3) == simdutf::encoding_type::UTF8);
+  ASSERT_TRUE(implementation.detect_encodings(utf16be_bom, 2) == simdutf::encoding_type::UTF16_BE);
+  ASSERT_TRUE(implementation.detect_encodings(utf16le_bom, 2) == simdutf::encoding_type::UTF16_LE);
+}
+
+
 TEST(pure_utf8_ASCII) {
   for (size_t trial = 0; trial < 10000; trial++) {
     if ((trial % 100) == 0) {
@@ -193,6 +204,10 @@ TEST(utf32_surrogates) {
 }
 #endif
 
+
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port this test for big-endian platforms.
+#else
 TEST(edge_surrogate) {
   for (size_t trial = 0; trial < 10000; trial++) {
     if ((trial % 100) == 0) {
@@ -221,6 +236,7 @@ TEST(edge_surrogate) {
     ASSERT_TRUE(actual == expected);
   }
 }
+#endif
 
 TEST(tail_utf8) {
   for (size_t trial = 0; trial < 10000; trial++) {
@@ -242,6 +258,7 @@ TEST(tail_utf8) {
     }
   }
 }
+
 
 int main(int argc, char* argv[]) {
   return simdutf::test::main(argc, argv);
