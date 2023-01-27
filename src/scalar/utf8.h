@@ -179,6 +179,10 @@ inline size_t utf16_length_from_utf8(const char* buf, size_t len) {
     return counter;
 }
 
+inline size_t utf32_length_from_utf8(const char* buf, size_t len) {
+    return count_code_points(buf, len);
+ }
+
 } // utf8 namespace
 } // unnamed namespace
 } // namespace scalar
