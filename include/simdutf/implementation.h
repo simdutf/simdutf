@@ -1897,7 +1897,7 @@ class detect_best_supported_implementation_on_first_use;
 } // namespace internal
 
 /**
- * The list of available implementations compiled into simdjson.
+ * The list of available implementations compiled into simdutf.
  */
 extern SIMDUTF_DLLIMPORTEXPORT const internal::available_implementation_list& get_available_implementations();
 
