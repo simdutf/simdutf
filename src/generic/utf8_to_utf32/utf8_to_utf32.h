@@ -213,7 +213,7 @@ using namespace simd;
             this->check_utf8_bytes(input.chunks[3], input.chunks[2]);
           }
           if (errors()) {
-            result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(in + pos, size - pos, utf32_output);
+            result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(pos, in + pos, size - pos, utf32_output);
             res.count += pos;
             return res;
           }
@@ -247,12 +247,12 @@ using namespace simd;
         }
       }
       if(errors()) {
-        result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(in + pos, size - pos, utf32_output);
+        result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(pos, in + pos, size - pos, utf32_output);
         res.count += pos;
         return res;
       }
       if(pos < size) {
-        result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(in + pos, size - pos, utf32_output);
+        result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(pos, in + pos, size - pos, utf32_output);
         if (res.error) {    // In case of error, we want the error position
           res.count += pos;
           return res;

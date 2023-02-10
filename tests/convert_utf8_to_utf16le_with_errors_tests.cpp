@@ -20,7 +20,7 @@ namespace {
 }
 
 TEST(issue_213) {
-  const char buf[] = "\x01\x9a\x84";
+  const char* buf = "\x01\x9a\x84";
   // We select the byte 0x84. It is a continuation byte so it is possible
   // that the predicted output might be zero.
   size_t expected_size = implementation.utf16_length_from_utf8(buf + 2, 1);

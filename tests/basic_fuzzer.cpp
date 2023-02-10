@@ -300,7 +300,7 @@ struct state_tracker {
   }
 };
 
-TEST(garbage_utf8_fuzz) {
+TEST(garbage_utf8_fuzz_with_errors) {
   // Here we generate fully random inputs and try transcoding from UTF-8.
   // The inputs are almost certainly *NOT* valid UTF-8.
   std::mt19937 gen(std::mt19937::result_type(123456));
@@ -344,6 +344,46 @@ TEST(garbage_utf8_fuzz) {
       ASSERT_TRUE((r.count == expected_utf32_length));
     } else {
       ASSERT_TRUE(r.count <  length);
+    }
+  }
+}
+
+TEST(garbage_utf8_fuzz) {
+  // Here we generate fully random inputs and try transcoding from UTF-8.
+  // The inputs are almost certainly *NOT* valid UTF-8.
+  std::mt19937 gen(std::mt19937::result_type(123456));
+  std::uniform_int_distribution<size_t> length_generator{1, 65};
+  std::uniform_int_distribution<uint32_t> byte_generator{0, 256};
+
+  for(size_t counter = 0; counter < 100000; counter++) {
+    if ((counter % 10000) == 0) {
+      printf("-");
+      fflush(NULL);
+    }
+    size_t length = length_generator(gen);
+    std::unique_ptr<char[]> utf8_buffer(new char[length]);
+    for(size_t i = 0; i < length; i++) { utf8_buffer.get()[i] = byte_generator(gen); }
+    size_t expected_utf16_length = implementation.utf16_length_from_utf8(utf8_buffer.get(), length);
+    std::unique_ptr<char16_t[]> utf16_buffer(new char16_t[expected_utf16_length]);
+    auto r = implementation.convert_utf8_to_utf16le(
+              utf8_buffer.get(), length,
+              utf16_buffer.get());
+    if(r != 0) {
+      ASSERT_TRUE((r == expected_utf16_length));
+    }
+    r = implementation.convert_utf8_to_utf16be(
+              utf8_buffer.get(), length,
+              utf16_buffer.get());
+    if(r != 0) {
+      ASSERT_TRUE((r == expected_utf16_length));
+    }
+    size_t expected_utf32_length = implementation.utf32_length_from_utf8(utf8_buffer.get(), length);
+    std::unique_ptr<char32_t[]> utf32_buffer(new char32_t[expected_utf32_length]);
+    r = implementation.convert_utf8_to_utf32(
+              utf8_buffer.get(), length,
+              utf32_buffer.get());
+    if(r != 0) {
+      ASSERT_TRUE((r == expected_utf32_length));
     }
   }
 }
