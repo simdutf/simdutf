@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <random>
 #include <string>
+#include <memory>
 
 #include <tests/reference/encode_utf8.h>
 #include <tests/helpers/test.h>
