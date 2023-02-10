@@ -95,6 +95,7 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <h1><a class="anchor" id="autotoc_md0"></a>
 Table of contents</h1>
 <ul>
+<li><a href="#table-of-contents">Table of contents</a></li>
 <li><a href="#simdutf-unicode-validation-and-transcoding-at-billions-of-characters-per-second">simdutf: Unicode validation and transcoding at billions of characters per second</a><ul>
 <li><a href="#how-fast-is-it">How fast is it?</a></li>
 <li><a href="#real-world-usage">Real-World Usage</a></li>
@@ -300,7 +301,7 @@ API</h2>
 <div class="line">  HEADER_BITS,  // Any byte must have fewer than 5 header bits.</div>
 <div class="line">  TOO_SHORT,    // The leading byte must be followed by N-1 continuation bytes, where N is the UTF-8 character length</div>
 <div class="line">                // This is also the error when the input is truncated.</div>
-<div class="line">  TOO_LONG,     // The leading byte must not be a continuation byte.</div>
+<div class="line">  TOO_LONG,     // We either have too many consecutive continuation bytes or the string starts with a continuation byte.</div>
 <div class="line">  OVERLONG,     // The decoded character must be above U+7F for two-byte characters, U+7FF for three-byte characters,</div>
 <div class="line">                // and U+FFFF for four-byte characters.</div>
 <div class="line">  TOO_LARGE,    // The decoded character must be less than or equal to U+10FFFF OR less than or equal than U+7F for ASCII.</div>
