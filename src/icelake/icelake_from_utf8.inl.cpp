@@ -38,7 +38,9 @@ simdutf::result fast_avx512_convert_utf8_to_utf16_with_errors(const char *in, si
     } else { break; }
   }
   if(!result) {
-    simdutf::result res = scalar::utf8_to_utf16::rewind_and_convert_with_errors<big_endian>(in, final_in - in, out);
+    // rewind_and_convert_with_errors will seek a potential error from in onward,
+    // with the ability to go back up to in - init_in bytes, and read final_in - in bytes forward.
+    simdutf::result res = scalar::utf8_to_utf16::rewind_and_convert_with_errors<big_endian>(in - init_in, in, final_in - in, out);
     res.count += (in - init_in);
     return res;
   } else {

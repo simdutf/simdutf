@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <random>
 #include <string>
+#include <memory>
 
 #include <tests/reference/encode_utf8.h>
 #include <tests/helpers/test.h>
@@ -299,6 +300,93 @@ struct state_tracker {
   }
 };
 
+TEST(garbage_utf8_fuzz_with_errors) {
+  // Here we generate fully random inputs and try transcoding from UTF-8.
+  // The inputs are almost certainly *NOT* valid UTF-8.
+  std::mt19937 gen(std::mt19937::result_type(123456));
+  std::uniform_int_distribution<size_t> length_generator{1, 65};
+  std::uniform_int_distribution<uint32_t> byte_generator{0, 256};
+
+  for(size_t counter = 0; counter < 100000; counter++) {
+    if ((counter % 10000) == 0) {
+      printf("-");
+      fflush(NULL);
+    }
+    size_t length = length_generator(gen);
+    std::unique_ptr<char[]> utf8_buffer(new char[length]);
+    for(size_t i = 0; i < length; i++) { utf8_buffer.get()[i] = byte_generator(gen); }
+    size_t expected_utf16_length = implementation.utf16_length_from_utf8(utf8_buffer.get(), length);
+    std::unique_ptr<char16_t[]> utf16_buffer(new char16_t[expected_utf16_length]);
+    auto r = implementation.convert_utf8_to_utf16le_with_errors(
+              utf8_buffer.get(), length,
+              utf16_buffer.get());
+    // r.count: In case of error, indicates the position of the error in the input.
+    // In case of success, indicates the number of words validated/written.
+    if(r.error == simdutf::SUCCESS) {
+      ASSERT_TRUE((r.count == expected_utf16_length));
+    } else {
+      ASSERT_TRUE(r.count <  length);
+    }
+    r = implementation.convert_utf8_to_utf16be_with_errors(
+              utf8_buffer.get(), length,
+              utf16_buffer.get());
+    if(r.error == simdutf::SUCCESS) {
+      ASSERT_TRUE((r.count == expected_utf16_length));
+    } else {
+      ASSERT_TRUE(r.count <  length);
+    }
+    size_t expected_utf32_length = implementation.utf32_length_from_utf8(utf8_buffer.get(), length);
+    std::unique_ptr<char32_t[]> utf32_buffer(new char32_t[expected_utf32_length]);
+    r = implementation.convert_utf8_to_utf32_with_errors(
+              utf8_buffer.get(), length,
+              utf32_buffer.get());
+    if(r.error == simdutf::SUCCESS) {
+      ASSERT_TRUE((r.count == expected_utf32_length));
+    } else {
+      ASSERT_TRUE(r.count <  length);
+    }
+  }
+}
+
+TEST(garbage_utf8_fuzz) {
+  // Here we generate fully random inputs and try transcoding from UTF-8.
+  // The inputs are almost certainly *NOT* valid UTF-8.
+  std::mt19937 gen(std::mt19937::result_type(123456));
+  std::uniform_int_distribution<size_t> length_generator{1, 65};
+  std::uniform_int_distribution<uint32_t> byte_generator{0, 256};
+
+  for(size_t counter = 0; counter < 100000; counter++) {
+    if ((counter % 10000) == 0) {
+      printf("-");
+      fflush(NULL);
+    }
+    size_t length = length_generator(gen);
+    std::unique_ptr<char[]> utf8_buffer(new char[length]);
+    for(size_t i = 0; i < length; i++) { utf8_buffer.get()[i] = byte_generator(gen); }
+    size_t expected_utf16_length = implementation.utf16_length_from_utf8(utf8_buffer.get(), length);
+    std::unique_ptr<char16_t[]> utf16_buffer(new char16_t[expected_utf16_length]);
+    auto r = implementation.convert_utf8_to_utf16le(
+              utf8_buffer.get(), length,
+              utf16_buffer.get());
+    if(r != 0) {
+      ASSERT_TRUE((r == expected_utf16_length));
+    }
+    r = implementation.convert_utf8_to_utf16be(
+              utf8_buffer.get(), length,
+              utf16_buffer.get());
+    if(r != 0) {
+      ASSERT_TRUE((r == expected_utf16_length));
+    }
+    size_t expected_utf32_length = implementation.utf32_length_from_utf8(utf8_buffer.get(), length);
+    std::unique_ptr<char32_t[]> utf32_buffer(new char32_t[expected_utf32_length]);
+    r = implementation.convert_utf8_to_utf32(
+              utf8_buffer.get(), length,
+              utf32_buffer.get());
+    if(r != 0) {
+      ASSERT_TRUE((r == expected_utf32_length));
+    }
+  }
+}
 
 TEST(overflow_fuzz) {
   size_t counter{0};
@@ -385,6 +473,105 @@ TEST(overflow_fuzz) {
           utf32_to_utf16.second = implementation.convert_utf32_to_utf16le(
               reinterpret_cast<char32_t *>(input.data()),
               input.size() / sizeof(char32_t), reinterpret_cast<char16_t *>(output.data()));
+          ASSERT_TRUE(expected_length > 0 && (expected_length * sizeof(char16_t) == output.size()) && expected_length == utf32_to_utf16.second);
+        }
+      }
+    }
+  }
+}
+
+
+TEST(overflow_with_errors_fuzz) {
+  size_t counter{0};
+  for(int i = 0; i < 6; i++) {
+    state_tracker tracker(seed, weights[i][0], weights[i][1]);
+    while (counter < 100000) {
+      for (size_t size : input_size) {
+        input.clear();
+        std::vector<char> output(4*size);
+        while (input.size() < size) {
+          tracker.next(input);
+        }
+        input.shrink_to_fit(); // make sure we don't have superfluous space
+        counter++;
+        if ((counter % 10000) == 0) {
+          printf("-");
+          fflush(NULL);
+        }
+        reset();
+        is_ok_utf8.first = true;
+        is_ok_utf8.second =
+            implementation.validate_utf8(input.data(), input.size());
+        is_ok_utf16.first = true;
+        is_ok_utf16.second = implementation.validate_utf16le(
+            reinterpret_cast<char16_t *>(input.data()),
+            input.size() / sizeof(char16_t));
+        is_ok_utf32.first = true;
+        is_ok_utf32.second = implementation.validate_utf32(
+            reinterpret_cast<char32_t *>(input.data()),
+            input.size() / sizeof(char32_t));
+        if (is_ok_utf8.second) {
+          size_t expected_length = implementation.utf16_length_from_utf8(input.data(), input.size());
+          output.resize(expected_length * sizeof(char16_t));
+          output.shrink_to_fit(); // make sure we don't have superfluous space
+          auto r = implementation.convert_utf8_to_utf16le_with_errors(
+              input.data(), input.size(),
+              reinterpret_cast<char16_t *>(output.data()));
+          utf8_to_utf16.second = r.count;
+          utf8_to_utf16.first = (r.error == simdutf::SUCCESS);
+          ASSERT_TRUE(expected_length > 0 && (expected_length * sizeof(char16_t) == output.size()) && expected_length == utf8_to_utf16.second);
+
+          expected_length = implementation.utf32_length_from_utf8(input.data(), input.size());
+          output.resize(expected_length * sizeof(char32_t));
+          output.shrink_to_fit(); // make sure we don't have superfluous space
+          r = implementation.convert_utf8_to_utf32_with_errors(
+              input.data(), input.size(),
+              reinterpret_cast<char32_t *>(output.data()));
+          utf8_to_utf32.second = r.count;
+          utf8_to_utf32.first = (r.error == simdutf::SUCCESS);
+          ASSERT_TRUE(expected_length > 0 && (expected_length * sizeof(char32_t) == output.size()) && expected_length == utf8_to_utf32.second);
+        }
+        if (is_ok_utf16.second) {
+          size_t expected_length = implementation.utf8_length_from_utf16le(reinterpret_cast<char16_t *>(input.data()), input.size() / sizeof(char16_t));
+          output.resize(expected_length);
+          output.shrink_to_fit(); // make sure we don't have superfluous space
+          auto r = implementation.convert_utf16le_to_utf8_with_errors(
+              reinterpret_cast<char16_t *>(input.data()),
+              input.size() / sizeof(char16_t), output.data());
+          utf16_to_utf8.second = r.count;
+          utf16_to_utf8.first = (r.error == simdutf::SUCCESS);
+          ASSERT_TRUE(expected_length > 0 && expected_length == output.size() && expected_length == utf16_to_utf8.second);
+
+          expected_length = implementation.utf32_length_from_utf16le(reinterpret_cast<char16_t *>(input.data()), input.size() / sizeof(char16_t));
+          output.resize(expected_length * sizeof(char32_t));
+
+          output.shrink_to_fit(); // make sure we don't have superfluous space
+          r = implementation.convert_utf16le_to_utf32_with_errors(
+              reinterpret_cast<char16_t *>(input.data()),
+              input.size() / sizeof(char16_t), reinterpret_cast<char32_t *>(output.data()));
+          utf16_to_utf32.first = true;
+          utf16_to_utf32.second = r.count;
+          ASSERT_TRUE(expected_length > 0 && (expected_length  * sizeof(char32_t) == output.size()) && expected_length == utf16_to_utf32.second);
+        }
+        if (is_ok_utf32.second) {
+          size_t expected_length = implementation.utf8_length_from_utf32(reinterpret_cast<char32_t *>(input.data()), input.size() / sizeof(char32_t));
+          output.resize(expected_length);
+          output.shrink_to_fit(); // make sure we don't have superfluous space
+          auto r = implementation.convert_utf32_to_utf8_with_errors(
+              reinterpret_cast<char32_t *>(input.data()),
+              input.size() / sizeof(char32_t), output.data());
+          utf32_to_utf8.first = (r.error == simdutf::SUCCESS);
+          utf32_to_utf8.second = r.count;
+          ASSERT_TRUE(expected_length > 0 && expected_length == output.size() && expected_length == utf32_to_utf8.second);
+
+          expected_length = implementation.utf16_length_from_utf32(reinterpret_cast<char32_t *>(input.data()), input.size() / sizeof(char32_t));
+          output.resize(expected_length * sizeof(char16_t));
+          output.shrink_to_fit(); // make sure we don't have superfluous space
+          r = implementation.convert_utf32_to_utf16le_with_errors(
+              reinterpret_cast<char32_t *>(input.data()),
+              input.size() / sizeof(char32_t), reinterpret_cast<char16_t *>(output.data()));
+          utf32_to_utf16.first = (r.error == simdutf::SUCCESS);
+          utf32_to_utf16.second = r.count;
           ASSERT_TRUE(expected_length > 0 && (expected_length * sizeof(char16_t) == output.size()) && expected_length == utf32_to_utf16.second);
         }
       }

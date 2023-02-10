@@ -587,7 +587,10 @@ simdutf_warn_unused result implementation::convert_utf8_to_utf32_with_errors(con
   uint32_t * utf32_output = reinterpret_cast<uint32_t *>(utf32);
   auto ret = icelake::validating_utf8_to_fixed_length_with_constant_checks<endianness::LITTLE, uint32_t>(buf, len, utf32_output);
   if (!std::get<2>(ret)) {
-    result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(std::get<0>(ret), len - (std::get<0>(ret) - buf), reinterpret_cast<char32_t *>(std::get<1>(ret)));
+    auto new_buf = std::get<0>(ret);
+    // rewind_and_convert_with_errors will seek a potential error from new_buf onward,
+    // with the ability to go back up to new_buf - buf bytes, and read len - (new_buf - buf) bytes forward.
+    result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(new_buf - buf, new_buf, len - (new_buf - buf), reinterpret_cast<char32_t *>(std::get<1>(ret)));
     res.count += (std::get<0>(ret) - buf);
     return res;
   }

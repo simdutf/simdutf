@@ -186,20 +186,49 @@ inline result convert_with_errors(const char* buf, size_t len, char16_t* utf16_o
   return result(error_code::SUCCESS, utf16_output - start);
 }
 
+/**
+ * When rewind_and_convert_with_errors is called, we are pointing at 'buf' and we have
+ * up to len input bytes left, and we encountered some error. It is possible that
+ * the error is at 'buf' exactly, but it could also be in the previous bytes  (up to 3 bytes back).
+ *
+ * prior_bytes indicates how many bytes, prior to 'buf' may belong to the current memory section
+ * and can be safely accessed. We prior_bytes to access safely up to three bytes before 'buf'.
+ *
+ * The caller is responsible to ensure that len > 0.
+ *
+ * If the error is believed to have occured prior to 'buf', the count value contain in the result
+ * will be SIZE_T - 1, SIZE_T - 2, or SIZE_T - 3.
+ */
 template <endianness endian>
-inline result rewind_and_convert_with_errors(const char* buf, size_t len, char16_t* utf16_output) {
+inline result rewind_and_convert_with_errors(size_t prior_bytes, const char* buf, size_t len, char16_t* utf16_output) {
   size_t extra_len{0};
-  // A leading byte cannot be further than 4 bytes away
-  for(int i = 0; i < 5; i++) {
-    unsigned char byte = *buf;
-    if ((byte & 0b11000000) != 0b10000000) {
+  // We potentially need to go back in time and find a leading byte.
+  size_t how_far_back = 3; // 3 bytes in the past + current position
+  if(how_far_back >= prior_bytes) { how_far_back = prior_bytes; }
+  bool found_leading_bytes{false};
+  // important: it is i <= how_far_back and not 'i < how_far_back'.
+  for(size_t i = 0; i <= how_far_back; i++) {
+    unsigned char byte = buf[-i];
+    found_leading_bytes = ((byte & 0b11000000) != 0b10000000);
+    if(found_leading_bytes) {
+      buf -= i;
+      extra_len = i;
       break;
-    } else {
-      buf--;
-      extra_len++;
     }
   }
-
+  //
+  // It is possible for this function to return a negative count in its result.
+  // C++ Standard Section 18.1 defines size_t is in <cstddef> which is described in C Standard as <stddef.h>.
+  // C Standard Section 4.1.5 defines size_t as an unsigned integral type of the result of the sizeof operator
+  //
+  // An unsigned type will simply wrap round arithmetically (well defined).
+  //
+  if(!found_leading_bytes) {
+    // If how_far_back == 3, we may have four consecutive continuation bytes!!!
+    // [....] [continuation] [continuation] [continuation] | [buf is continuation]
+    // Or we possibly have a stream that does not start with a leading byte.
+    return result(error_code::TOO_LONG, -how_far_back);
+  }
   result res = convert_with_errors<endian>(buf, len + extra_len, utf16_output);
   if (res.error) {
     res.count -= extra_len;
