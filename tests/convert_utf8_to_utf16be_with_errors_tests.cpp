@@ -19,6 +19,19 @@ namespace {
   constexpr size_t fix_size = 512;
 }
 
+TEST(issue_213) {
+  const char buf[] = "\x01\x9a\x84";
+  // We select the byte 0x84. It is a continuation byte so it is possible
+  // that the predicted output might be zero.
+  size_t expected_size = implementation.utf16_length_from_utf8(buf + 2, 1);
+  std::unique_ptr<char16_t[]>buffer(new char16_t[expected_size]);
+  simdutf::result r = simdutf::convert_utf8_to_utf16be_with_errors(buf + 2, 1, buffer.get());
+  ASSERT_TRUE(r.error != simdutf::SUCCESS);
+  // r.count: In case of error, indicates the position of the error in the input.
+  // In case of success, indicates the number of words validated/written.
+  ASSERT_TRUE(r.count == 0);
+}
+
 TEST(convert_pure_ASCII) {
   for(size_t trial = 0; trial < trials; trial ++) {
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
