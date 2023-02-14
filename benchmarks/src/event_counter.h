@@ -134,7 +134,7 @@ struct event_collector {
     count.event_counts[1] = diff.instructions;
     count.event_counts[2] = diff.missed_branches;
     count.event_counts[3] = 0;
-    count.event_counts[4] = diff.cachemiss;
+    count.event_counts[4] = 0;
 #endif
     count.elapsed = end_clock - start_clock;
     return count;
