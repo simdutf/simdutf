@@ -1,4 +1,4 @@
-name: VS17-clang-CI
+name: VS17-CI
 
 on: [push, pull_request]
 
@@ -13,13 +13,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {gen: Visual Studio 17 2022, arch: x64}
+          - {gen: Visual Studio 17 2022, arch: x64, shared: ON}
+          - {gen: Visual Studio 17 2022, arch: x64, shared: OFF}
     steps:
     - name: checkout
       uses: actions/checkout@v3
     - name: Configure
       run: |
-        cmake -G "${{matrix.gen}}" -A ${{matrix.arch}} -T ClangCL  -B build
+        cmake -G "${{matrix.gen}}" -A ${{matrix.arch}} -DBUILD_SHARED_LIBS=${{matrix.shared}} -B build
     - name: Build Debug
       run: cmake --build build --config Debug --verbose
     - name: Build Release
@@ -39,4 +40,3 @@ jobs:
       run: |
         cmake -G "${{matrix.gen}}" -A ${{matrix.arch}}  -B build_install_test tests/installation_tests/find
         cmake --build build_install_test --config Release
-
