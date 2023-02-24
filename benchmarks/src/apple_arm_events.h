@@ -102,8 +102,6 @@ inline performance_counters operator-(const performance_counters &a,
                               a.instructions - b.instructions);
 }
 
-
-
 typedef float f32;
 typedef double f64;
 typedef int8_t i8;
@@ -934,14 +932,14 @@ typedef struct {
 static const event_alias profile_events[] = {
     {"cycles",
      {
-         "CORE_ACTIVE_CYCLE", //was: "FIXED_CYCLES",            // Apple A7-A15
+         "CORE_ACTIVE_CYCLE", // was: "FIXED_CYCLES",            // Apple A7-A15
          "CPU_CLK_UNHALTED.THREAD", // Intel Core 1th-10th
          "CPU_CLK_UNHALTED.CORE",   // Intel Yonah, Merom
      }},
     {"instructions",
      {
-         "INST_ALL", // was:"FIXED_INSTRUCTIONS", // Apple A7-A15
-         "INST_RETIRED.ANY"    // Intel Yonah, Merom, Core 1th-10th
+         "INST_ALL",        // was:"FIXED_INSTRUCTIONS", // Apple A7-A15
+         "INST_RETIRED.ANY" // Intel Yonah, Merom, Core 1th-10th
      }},
     {"branches",
      {
@@ -971,152 +969,155 @@ static kpep_event *get_event(kpep_db *db, const event_alias *alias) {
   return NULL;
 }
 
-kpc_config_t regs[KPC_MAX_COUNTERS] = {0};
-usize counter_map[KPC_MAX_COUNTERS] = {0};
-u64 counters_0[KPC_MAX_COUNTERS] = {0};
-u64 counters_1[KPC_MAX_COUNTERS] = {0};
-const usize ev_count = sizeof(profile_events) / sizeof(profile_events[0]);
+struct AppleEvents {
+  kpc_config_t regs[KPC_MAX_COUNTERS] = {0};
+  usize counter_map[KPC_MAX_COUNTERS] = {0};
+  u64 counters_0[KPC_MAX_COUNTERS] = {0};
+  u64 counters_1[KPC_MAX_COUNTERS] = {0};
+  static constexpr usize ev_count =
+      sizeof(profile_events) / sizeof(profile_events[0]);
 
+  inline bool setup_performance_counters() {
+    static bool init = false;
+    static bool worked = false;
 
-bool setup_performance_counters() {
-  static bool init = false;
-  static bool worked = false;
+    if (init) {
+      return worked;
+    }
+    init = true;
 
-  if (init) {
-    return worked;
-  }
-  init = true;
-
-  // load dylib
-  if (!lib_init()) {
-    printf("Error: %s\n", lib_err_msg);
-    return (worked = false);
-  }
-
-  // check permission
-  int force_ctrs = 0;
-  if (kpc_force_all_ctrs_get(&force_ctrs)) {
-    printf("Permission denied, xnu/kpc requires root privileges.\n");
-    return (worked = false);
-  }
-  int ret;
-  // load pmc db
-  kpep_db *db = NULL;
-  if ((ret = kpep_db_create(NULL, &db))) {
-    printf("Error: cannot load pmc database: %d.\n", ret);
-    return (worked = false);
-  }
-  printf("loaded db: %s (%s)\n", db->name, db->marketing_name);
-  //printf("number of fixed counters: %zu\n", db->fixed_counter_count);
-  //printf("number of configurable counters: %zu\n", db->config_counter_count);
-
-  // create a config
-  kpep_config *cfg = NULL;
-  if ((ret = kpep_config_create(db, &cfg))) {
-    printf("Failed to create kpep config: %d (%s).\n", ret,
-           kpep_config_error_desc(ret));
-    return (worked = false);
-  }
-  if ((ret = kpep_config_force_counters(cfg))) {
-    printf("Failed to force counters: %d (%s).\n", ret,
-           kpep_config_error_desc(ret));
-    return (worked = false);
-  }
-
-  // get events
-  kpep_event *ev_arr[ev_count] = {0};
-  for (usize i = 0; i < ev_count; i++) {
-    const event_alias *alias = profile_events + i;
-    ev_arr[i] = get_event(db, alias);
-    if (!ev_arr[i]) {
-      printf("Cannot find event: %s.\n", alias->alias);
+    // load dylib
+    if (!lib_init()) {
+      printf("Error: %s\n", lib_err_msg);
       return (worked = false);
     }
-  }
 
-  // add event to config
-  for (usize i = 0; i < ev_count; i++) {
-    kpep_event *ev = ev_arr[i];
-    if ((ret = kpep_config_add_event(cfg, &ev, 0, NULL))) {
-      printf("Failed to add event: %d (%s).\n", ret,
+    // check permission
+    int force_ctrs = 0;
+    if (kpc_force_all_ctrs_get(&force_ctrs)) {
+      printf("Permission denied, xnu/kpc requires root privileges.\n");
+      return (worked = false);
+    }
+    int ret;
+    // load pmc db
+    kpep_db *db = NULL;
+    if ((ret = kpep_db_create(NULL, &db))) {
+      printf("Error: cannot load pmc database: %d.\n", ret);
+      return (worked = false);
+    }
+    printf("loaded db: %s (%s)\n", db->name, db->marketing_name);
+    // printf("number of fixed counters: %zu\n", db->fixed_counter_count);
+    // printf("number of configurable counters: %zu\n",
+    // db->config_counter_count);
+
+    // create a config
+    kpep_config *cfg = NULL;
+    if ((ret = kpep_config_create(db, &cfg))) {
+      printf("Failed to create kpep config: %d (%s).\n", ret,
              kpep_config_error_desc(ret));
       return (worked = false);
     }
-  }
-
-  // prepare buffer and config
-  u32 classes = 0;
-  usize reg_count = 0;
-  if ((ret = kpep_config_kpc_classes(cfg, &classes))) {
-    printf("Failed get kpc classes: %d (%s).\n", ret,
-           kpep_config_error_desc(ret));
-    return (worked = false);
-  }
-  if ((ret = kpep_config_kpc_count(cfg, &reg_count))) {
-    printf("Failed get kpc count: %d (%s).\n", ret,
-           kpep_config_error_desc(ret));
-    return (worked = false);
-  }
-  if ((ret = kpep_config_kpc_map(cfg, counter_map, sizeof(counter_map)))) {
-    printf("Failed get kpc map: %d (%s).\n", ret, kpep_config_error_desc(ret));
-    return (worked = false);
-  }
-  if ((ret = kpep_config_kpc(cfg, regs, sizeof(regs)))) {
-    printf("Failed get kpc registers: %d (%s).\n", ret,
-           kpep_config_error_desc(ret));
-    return (worked = false);
-  }
-
-  // set config to kernel
-  if ((ret = kpc_force_all_ctrs_set(1))) {
-    printf("Failed force all ctrs: %d.\n", ret);
-    return (worked = false);
-  }
-  if ((classes & KPC_CLASS_CONFIGURABLE_MASK) && reg_count) {
-    if ((ret = kpc_set_config(classes, regs))) {
-      printf("Failed set kpc config: %d.\n", ret);
+    if ((ret = kpep_config_force_counters(cfg))) {
+      printf("Failed to force counters: %d (%s).\n", ret,
+             kpep_config_error_desc(ret));
       return (worked = false);
     }
-  }
 
-  // start counting
-  if ((ret = kpc_set_counting(classes))) {
-    printf("Failed set counting: %d.\n", ret);
-    return (worked = false);
-  }
-  if ((ret = kpc_set_thread_counting(classes))) {
-    printf("Failed set thread counting: %d.\n", ret);
-    return (worked = false);
-  }
-
-  return (worked = true);
-}
-
-inline performance_counters get_counters() {
-  static bool warned = false;
-  int ret;
-  // get counters before
-  if ((ret = kpc_get_thread_counters(0, KPC_MAX_COUNTERS, counters_0))) {
-    if (!warned) {
-
-      printf("Failed get thread counters before: %d.\n", ret);
-      warned = true;
-    }
-    return 1;
-  }
-  /*
-  // We could print it out this way if we wanted to:
-  printf("counters value:\n");
-  for (usize i = 0; i < ev_count; i++) {
+    // get events
+    kpep_event *ev_arr[ev_count] = {0};
+    for (usize i = 0; i < ev_count; i++) {
       const event_alias *alias = profile_events + i;
-      usize idx = counter_map[i];
-      u64 val = counters_1[idx] - counters_0[idx];
-      printf("%14s: %llu\n", alias->alias, val);
-  }*/
-  return performance_counters{
-      counters_0[counter_map[0]], counters_0[counter_map[3]],
-      counters_0[counter_map[2]],
-      counters_0[counter_map[1]]};
-}
+      ev_arr[i] = get_event(db, alias);
+      if (!ev_arr[i]) {
+        printf("Cannot find event: %s.\n", alias->alias);
+        return (worked = false);
+      }
+    }
+
+    // add event to config
+    for (usize i = 0; i < ev_count; i++) {
+      kpep_event *ev = ev_arr[i];
+      if ((ret = kpep_config_add_event(cfg, &ev, 0, NULL))) {
+        printf("Failed to add event: %d (%s).\n", ret,
+               kpep_config_error_desc(ret));
+        return (worked = false);
+      }
+    }
+
+    // prepare buffer and config
+    u32 classes = 0;
+    usize reg_count = 0;
+    if ((ret = kpep_config_kpc_classes(cfg, &classes))) {
+      printf("Failed get kpc classes: %d (%s).\n", ret,
+             kpep_config_error_desc(ret));
+      return (worked = false);
+    }
+    if ((ret = kpep_config_kpc_count(cfg, &reg_count))) {
+      printf("Failed get kpc count: %d (%s).\n", ret,
+             kpep_config_error_desc(ret));
+      return (worked = false);
+    }
+    if ((ret = kpep_config_kpc_map(cfg, counter_map, sizeof(counter_map)))) {
+      printf("Failed get kpc map: %d (%s).\n", ret,
+             kpep_config_error_desc(ret));
+      return (worked = false);
+    }
+    if ((ret = kpep_config_kpc(cfg, regs, sizeof(regs)))) {
+      printf("Failed get kpc registers: %d (%s).\n", ret,
+             kpep_config_error_desc(ret));
+      return (worked = false);
+    }
+
+    // set config to kernel
+    if ((ret = kpc_force_all_ctrs_set(1))) {
+      printf("Failed force all ctrs: %d.\n", ret);
+      return (worked = false);
+    }
+    if ((classes & KPC_CLASS_CONFIGURABLE_MASK) && reg_count) {
+      if ((ret = kpc_set_config(classes, regs))) {
+        printf("Failed set kpc config: %d.\n", ret);
+        return (worked = false);
+      }
+    }
+
+    // start counting
+    if ((ret = kpc_set_counting(classes))) {
+      printf("Failed set counting: %d.\n", ret);
+      return (worked = false);
+    }
+    if ((ret = kpc_set_thread_counting(classes))) {
+      printf("Failed set thread counting: %d.\n", ret);
+      return (worked = false);
+    }
+
+    return (worked = true);
+  }
+
+  inline performance_counters get_counters() {
+    static bool warned = false;
+    int ret;
+    // get counters before
+    if ((ret = kpc_get_thread_counters(0, KPC_MAX_COUNTERS, counters_0))) {
+      if (!warned) {
+
+        printf("Failed get thread counters before: %d.\n", ret);
+        warned = true;
+      }
+      return 1;
+    }
+    /*
+    // We could print it out this way if we wanted to:
+    printf("counters value:\n");
+    for (usize i = 0; i < ev_count; i++) {
+        const event_alias *alias = profile_events + i;
+        usize idx = counter_map[i];
+        u64 val = counters_1[idx] - counters_0[idx];
+        printf("%14s: %llu\n", alias->alias, val);
+    }*/
+    return performance_counters{
+        counters_0[counter_map[0]], counters_0[counter_map[3]],
+        counters_0[counter_map[2]], counters_0[counter_map[1]]};
+  }
+};
 
 #endif

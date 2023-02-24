@@ -99,12 +99,13 @@ struct event_collector {
     return linux_events.is_working();
   }
 #elif __APPLE__ &&  __aarch64__
+  AppleEvents apple_events;
   performance_counters diff;
   event_collector() : diff(0) {
-    setup_performance_counters();
+    apple_events.setup_performance_counters();
   }
   bool has_events() {
-    return setup_performance_counters();
+    return apple_events.setup_performance_counters();
   }
 #else
   event_collector() {}
@@ -117,7 +118,7 @@ struct event_collector {
 #if defined(__linux)
     linux_events.start();
 #elif __APPLE__ &&  __aarch64__
-    if(has_events()) { diff = get_counters(); }
+    if(has_events()) { diff = apple_events.get_counters(); }
 #endif
     start_clock = std::chrono::steady_clock::now();
   }
@@ -127,7 +128,7 @@ struct event_collector {
     linux_events.end(count.event_counts);
 #elif __APPLE__ &&  __aarch64__
     if(has_events()) {
-      performance_counters end = get_counters();
+      performance_counters end = apple_events.get_counters();
       diff = end - diff;
     }
     count.event_counts[0] = diff.cycles;
