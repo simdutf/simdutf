@@ -4,9 +4,6 @@ on: [push, pull_request]
 
 jobs:
   ci:
-    if: >-
-      ! contains(toJSON(github.event.commits.*.message), '[skip ci]') &&
-      ! contains(toJSON(github.event.commits.*.message), '[skip github]')
     name: windows-vs17
     runs-on: windows-latest
     strategy:
