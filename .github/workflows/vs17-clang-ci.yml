@@ -1,4 +1,4 @@
-name: VS17-CI
+name: VS17-clang-CI
 
 on: [push, pull_request]
 
@@ -17,7 +17,7 @@ jobs:
       uses: actions/checkout@v3
     - name: Configure
       run: |
-        cmake -G "${{matrix.gen}}" -A ${{matrix.arch}} -DBUILD_SHARED_LIBS=${{matrix.shared}} -B build
+        cmake -G "${{matrix.gen}}" -A ${{matrix.arch}}  -T ClangCL -DBUILD_SHARED_LIBS=${{matrix.shared}} -B build
     - name: Build Debug
       run: cmake --build build --config Debug --verbose
     - name: Build Release
@@ -35,5 +35,5 @@ jobs:
         cmake --install build --config Release
     - name: Test Installation
       run: |
-        cmake -G "${{matrix.gen}}" -A ${{matrix.arch}}  -B build_install_test tests/installation_tests/find
+        cmake -G "${{matrix.gen}}" -A ${{matrix.arch}}  -T ClangCL -B build_install_test tests/installation_tests/find
         cmake --build build_install_test --config Release
