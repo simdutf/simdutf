@@ -130,6 +130,9 @@ cmake --build build
 
 Instructions are similar for Visual Studio users.
 
+To use the library as a CMake dependency in your project, please see `tests/installation_tests/from_fetch` for
+an example.
+
 Since ICU is so common and popular, we assume that you may have it already on your system. When
 it is not found, it is simply omitted from the benchmarks. Thus, to benchmark against ICU, make
 sure you have ICU installed on your machine and that cmake can find it. For macOS, you may
