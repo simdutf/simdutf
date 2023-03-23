@@ -91,6 +91,8 @@
 // POWER processors. Please see https://github.com/lemire/simdutf/issues/51
 #elif defined(__s390__)
 // s390 IBM system. Big endian.
+#elif (defined(__riscv) || defined(__riscv__)) && __riscv_xlen == 64
+// RISC-V 64-bit
 #else
 // The simdutf library is designed
 // for 64-bit processors and it seems that you are not
