@@ -9,6 +9,12 @@ add_subdirectory(reference)
 include(${PROJECT_SOURCE_DIR}/cmake/add_cpp_test.cmake)
 link_libraries(simdutf)
 
+add_cpp_test(special_tests)
+target_link_libraries(special_tests
+  PUBLIC simdutf
+         simdutf::tests::reference
+         simdutf::tests::helpers)
+
 add_cpp_test(validate_ascii_basic_tests)
 target_link_libraries(validate_ascii_basic_tests
   PUBLIC simdutf::tests::helpers
