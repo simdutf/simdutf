@@ -5,9 +5,11 @@ cd $SRC/simdutf
 cmake -B build
 cmake --build build -j$(nproc)
 
-$CXX $CFLAGS $CXXFLAGS \
+for f in fuzz/roundtrip_*.cc
+do
+  $CXX $CFLAGS $CXXFLAGS $LIB_FUZZING_ENGINE \
      -I build/singleheader \
-     -c fuzz/roundtrip.cc -o roundtrip.o
+     $f \
+     -o $OUT/$(basename ${f%.cc})  
+done
 
-$CXX $CFLAGS $CXXFLAGS $LIB_FUZZING_ENGINE roundtrip.o \
-     -o $OUT/roundtrip
