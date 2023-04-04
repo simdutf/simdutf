@@ -132,8 +132,16 @@ using namespace simd;
       // In the worst case, we have the haswell kernel which can cause an overflow of
       // 8 bytes when calling convert_masked_utf8_to_utf16. If you skip the last 16 bytes,
       // and if the data is valid, then it is entirely safe because 16 UTF-8 bytes generate
-      // much more than 8 bytes.
-      const size_t safety_margin = 16; // to avoid overruns!
+      // much more than 8 bytes. However, you cannot generally assume that you have valid
+      // UTF-8 input, so we are going to go back from the end counting 8 leading bytes,
+      // to give us a good margin.
+      size_t leading_byte = 0;
+      size_t margin = size;
+      for(; margin > 0 && leading_byte < 8; margin--) {
+        leading_byte += (int8_t(in[margin-1]) > -65);
+      }
+      // If the input is long enough, then we have that margin-1 is the eight last leading byte.
+      const size_t safety_margin = size - margin + 1; // to avoid overruns!
       while(pos + 64 + safety_margin <= size) {
         simd8x64<int8_t> input(reinterpret_cast<const int8_t *>(in + pos));
         if(input.is_ascii()) {
@@ -196,7 +204,19 @@ using namespace simd;
     simdutf_really_inline result convert_with_errors(const char* in, size_t size, char16_t* utf16_output) {
       size_t pos = 0;
       char16_t* start{utf16_output};
-      const size_t safety_margin = 16; // to avoid overruns!
+      // In the worst case, we have the haswell kernel which can cause an overflow of
+      // 8 bytes when calling convert_masked_utf8_to_utf16. If you skip the last 16 bytes,
+      // and if the data is valid, then it is entirely safe because 16 UTF-8 bytes generate
+      // much more than 8 bytes. However, you cannot generally assume that you have valid
+      // UTF-8 input, so we are going to go back from the end counting 8 leading bytes,
+      // to give us a good margin.
+      size_t leading_byte = 0;
+      size_t margin = size;
+      for(; margin > 0 && leading_byte < 8; margin--) {
+        leading_byte += (int8_t(in[margin-1]) > -65);
+      }
+      // If the input is long enough, then we have that margin-1 is the eight last leading byte.
+      const size_t safety_margin = size - margin + 1; // to avoid overruns!
       while(pos + 64 + safety_margin <= size) {
         simd8x64<int8_t> input(reinterpret_cast<const int8_t *>(in + pos));
         if(input.is_ascii()) {
