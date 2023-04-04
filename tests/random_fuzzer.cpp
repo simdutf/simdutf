@@ -1,3 +1,6 @@
+#include <memory>
+#include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <random>
@@ -189,7 +192,7 @@ bool fuzz_running(size_t N) {
   std::uniform_int_distribution<int> length_distribution{0, 2048};
 
   for (size_t i = 0; i < N; i++) {
-    if ((i % 100) == 0) {
+    if ((i % 1000) == 0) {
       printf(".");
       fflush(NULL);
     }
@@ -207,7 +210,7 @@ bool fuzz_running(size_t N) {
   return true;
 }
 
-int main() {
+int main(int argc, char*argv[]) {
   std::cout << "testing the library on 'random garbage'" << std::endl;
   for (auto &e : simdutf::get_available_implementations()) {
     if (!e->supported_by_runtime_system()) {
@@ -216,6 +219,14 @@ int main() {
     std::cout << "testing: " << e->name() << std::endl;
   }
   size_t N = 100000;
+  if (argc == 2) {
+    try {
+      N = std::stoi(argv[1]);
+    } catch (const std::exception& e) {
+        printf("%s\n", e.what());
+        return EXIT_FAILURE;
+    }
+  }
   std::cout << "Number of strings: " << N << std::endl;
   if (fuzz_running(N)) {
     std::cout << "valid UTF8 = " << valid_utf8 << std::endl;
