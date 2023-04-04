@@ -145,7 +145,7 @@ Single-header version
 You can create a single-header version of the library where
 all of the code is put into two files (`simdutf.h` and `simdutf.cpp`).
 We publish a zip archive containing these files, e.g., see
-https://github.com/simdutf/simdutf/releases/download/v3.2.4/singleheader.zip
+https://github.com/simdutf/simdutf/releases/download/v3.2.5/singleheader.zip
 
 You may generate it on your own using a Python script.
 

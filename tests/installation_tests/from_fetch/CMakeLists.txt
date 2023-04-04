@@ -12,7 +12,7 @@ FetchContent_Declare(
   simdutf
   GIT_REPOSITORY git@github.com:simdutf/simdutf.git
   GIT_SHALLOW TRUE
-  GIT_TAG tags/v3.2.4
+  GIT_TAG tags/v3.2.5
   )
 FetchContent_MakeAvailable(simdutf)
 
