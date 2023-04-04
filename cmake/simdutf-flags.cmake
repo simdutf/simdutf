@@ -5,6 +5,8 @@ if (NOT CMAKE_BUILD_TYPE)
   message(STATUS "No build type selected, default to Release")
   if(SIMDUTF_SANITIZE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
+    # SIMDUTF_SANITIZE only applies to gcc/clang:
+    set(CMAKE_CXX_FLAGS_DEBUG "-O1" CACHE STRING "" FORCE)
   else()
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
   endif()
