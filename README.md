@@ -17,6 +17,7 @@
   - [Example](#example)
   - [API](#api)
   - [The sutf command-line tool](#the-sutf-command-line-tool)
+  - [Manual implementation selection](#manual-implementation-selection)
   - [References](#references)
   - [License](#license)
 
@@ -1127,6 +1128,58 @@ during compilation. The following is an example of transcoding two input files t
 sutf -f UTF-8 -t UTF-16LE -o output_file.txt first_input_file.txt second_input_file.txt
 ```
 
+Manual implementation selection
+-------------------------------
+
+When compiling the llibrary for x64 processors, we build several implementations of each functions. At runtime, the best
+implementation is picked automatically. Advanced users may want to pick a particular implementation, thus bypassing our
+runtime detection. It is possible and even relatively convenient to do so. The following C++ program checks all the available
+implementation, and selects one as the default:
+
+```
+#include "simdutf.h"
+#include <cstdlib>
+#include <iostream>
+#include <string>
+
+int main() {
+  // This is just a demonstration, not actual testing required.
+  std::string source = "La vie est belle.";
+  std::string chosen_implementation;
+  for (auto &implementation : simdutf::get_available_implementations()) {
+    if (!implementation->supported_by_runtime_system()) {
+      continue;
+    }
+    bool validutf8 = implementation->validate_utf8(source.c_str(), source.size());
+    if (!validutf8) {
+      return EXIT_FAILURE;
+    }
+    std::cout << implementation->name() << ": " << implementation->description()
+              << std::endl;
+    chosen_implementation = implementation->name();
+  }
+  auto my_implementation =
+      simdutf::get_available_implementations()[chosen_implementation];
+  if (!my_implementation) {
+    return EXIT_FAILURE;
+  }
+  if (!my_implementation->supported_by_runtime_system()) {
+    return EXIT_FAILURE;
+  }
+  simdutf::get_active_implementation() = my_implementation;
+  bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());
+  if (!validutf8) {
+    return EXIT_FAILURE;
+  }
+  if (simdutf::get_active_implementation()->name() != chosen_implementation) {
+    return EXIT_FAILURE;
+  }
+  std::cout << "I have manually selected: " << simdutf::get_active_implementation()->name() << std::endl;
+  return EXIT_SUCCESS;
+}
+```
+
+Within the simdutf library, 
 
 References
 -----------
