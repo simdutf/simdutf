@@ -15,7 +15,7 @@ TEST(special_cases_utf8_utf16_roundtrip) {
       "\x01",
       "\x20\x20\xEF\xBB\x8A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20"
       "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20"};
-  for (const std::string source : cases) {
+  for (const std::string& source : cases) {
     bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());
     ASSERT_TRUE(validutf8);
     // We need a buffer of size where to write the UTF-16LE words.
@@ -99,7 +99,7 @@ TEST(special_cases_utf8_utf16_invalid) {
       "\xa2\xa2\xba\xba\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xba"
       "\xba\xba\xba\xa2\xa2\xba\xba\xba\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2"
       "\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2"};
-  for (std::string source : cases) {
+  for (const std::string& source : cases) {
     bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());
     ASSERT_TRUE(!validutf8);
 
@@ -169,7 +169,7 @@ TEST(special_cases_utf8_utf32_invalid) {
       "\xa2\xa2\xba\xba\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xba"
       "\xba\xba\xba\xa2\xa2\xba\xba\xba\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2"
       "\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2"};
-  for (std::string source : cases) {
+  for (const std::string& source : cases) {
     bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());
     ASSERT_TRUE(!validutf8);
 
