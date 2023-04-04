@@ -88,7 +88,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     __m128i composed = _mm_or_si128(ascii, _mm_srli_epi16(highbyte, 2));
     if (big_endian) composed = _mm_shuffle_epi8(composed, swap);
     _mm_storeu_si128((__m128i *)utf16_output, composed);
-    utf16_output += 6; // We wrote 12 bytes, 6 code points.
+    utf16_output += 6; // We wrote 12 bytes, 6 code points. There is a potential overflow of 4 bytes.
   } else if (idx < 145) {
     // FOUR (4) input code-words
     const __m128i sh =
@@ -107,7 +107,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     __m128i composed_repacked = _mm_packus_epi32(composed, composed);
     if (big_endian) composed_repacked = _mm_shuffle_epi8(composed_repacked, swap);
     _mm_storeu_si128((__m128i *)utf16_output, composed_repacked);
-    utf16_output += 4;
+    utf16_output += 4; // Here we overflow by 8 bytes.
   } else if (idx < 209) {
     // TWO (2) input code-words
     const __m128i sh =

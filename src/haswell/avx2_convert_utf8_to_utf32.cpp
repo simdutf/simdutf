@@ -78,7 +78,8 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     const __m128i highbyte = _mm_and_si128(perm, _mm_set1_epi16(0x1f00));
     const __m128i composed = _mm_or_si128(ascii, _mm_srli_epi16(highbyte, 2));
     _mm256_storeu_si256((__m256i *)utf32_output, _mm256_cvtepu16_epi32(composed));
-    utf32_output += 6; // We wrote 12 bytes, 6 code points.
+    utf32_output += 6; // We wrote 24 bytes, 6 code points. There is a potential
+    // overflow of 32 - 24 = 8 bytes.
   } else if (idx < 145) {
     // FOUR (4) input code-words
     const __m128i sh =
@@ -116,7 +117,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
         _mm_or_si128(_mm_or_si128(ascii, middlebyte_shifted),
                      _mm_or_si128(highbyte_shifted, middlehighbyte_shifted));
     _mm_storeu_si128((__m128i *)utf32_output, composed);
-    utf32_output += 3;
+    utf32_output += 3; // We wrote 3 * 4 bytes, there is a potential overflow of 4 bytes.
   } else {
     // here we know that there is an error but we do not handle errors
   }
