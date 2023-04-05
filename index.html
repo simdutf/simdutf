@@ -106,6 +106,7 @@ Table of contents</h1>
 <li><a href="#example">Example</a></li>
 <li><a href="#api">API</a></li>
 <li><a href="#the-sutf-command-line-tool">The sutf command-line tool</a></li>
+<li><a href="#manual-implementation-selection">Manual implementation selection</a></li>
 <li><a href="#references">References</a></li>
 <li><a href="#license">License</a></li>
 </ul>
@@ -1075,13 +1076,57 @@ The sutf command-line tool</h2>
 <p>We also provide a command-line tool which can be build as follows: </p><div class="fragment"><div class="line">cmake -B build &amp;&amp; cmake --build build --target sutf</div>
 </div><!-- fragment --><p> This command builds the executable in <code>./build/tool/</code> under most platforms. The sutf tool enables the user to easily transcode files from one encoding to another directly from the command line. The usage is similar to <a href="https://www.gnu.org/software/libiconv/">iconv</a> (see <code>sutf --help</code> for more details). The sutf command-line tool relies on the simdutf library functions for fast transcoding of supported formats (UTF-8, UTF-16LE, UTF-16BE and UTF-32). If iconv is found on the system and simdutf does not support a conversion, the sutf tool falls back on iconv: a message lets the user know if iconv is available during compilation. The following is an example of transcoding two input files to an output file, from UTF-8 to UTF-16LE: </p><div class="fragment"><div class="line">sutf -f UTF-8 -t UTF-16LE -o output_file.txt first_input_file.txt second_input_file.txt</div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md11"></a>
+Manual implementation selection</h2>
+<p>When compiling the llibrary for x64 processors, we build several implementations of each functions. At runtime, the best implementation is picked automatically. Advanced users may want to pick a particular implementation, thus bypassing our runtime detection. It is possible and even relatively convenient to do so. The following C++ program checks all the available implementation, and selects one as the default:</p>
+<div class="fragment"><div class="line">#include &quot;simdutf.h&quot;</div>
+<div class="line">#include &lt;cstdlib&gt;</div>
+<div class="line">#include &lt;iostream&gt;</div>
+<div class="line">#include &lt;string&gt;</div>
+<div class="line"> </div>
+<div class="line">int main() {</div>
+<div class="line">  // This is just a demonstration, not actual testing required.</div>
+<div class="line">  std::string source = &quot;La vie est belle.&quot;;</div>
+<div class="line">  std::string chosen_implementation;</div>
+<div class="line">  for (auto &amp;implementation : simdutf::get_available_implementations()) {</div>
+<div class="line">    if (!implementation-&gt;supported_by_runtime_system()) {</div>
+<div class="line">      continue;</div>
+<div class="line">    }</div>
+<div class="line">    bool validutf8 = implementation-&gt;validate_utf8(source.c_str(), source.size());</div>
+<div class="line">    if (!validutf8) {</div>
+<div class="line">      return EXIT_FAILURE;</div>
+<div class="line">    }</div>
+<div class="line">    std::cout &lt;&lt; implementation-&gt;name() &lt;&lt; &quot;: &quot; &lt;&lt; implementation-&gt;description()</div>
+<div class="line">              &lt;&lt; std::endl;</div>
+<div class="line">    chosen_implementation = implementation-&gt;name();</div>
+<div class="line">  }</div>
+<div class="line">  auto my_implementation =</div>
+<div class="line">      simdutf::get_available_implementations()[chosen_implementation];</div>
+<div class="line">  if (!my_implementation) {</div>
+<div class="line">    return EXIT_FAILURE;</div>
+<div class="line">  }</div>
+<div class="line">  if (!my_implementation-&gt;supported_by_runtime_system()) {</div>
+<div class="line">    return EXIT_FAILURE;</div>
+<div class="line">  }</div>
+<div class="line">  simdutf::get_active_implementation() = my_implementation;</div>
+<div class="line">  bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());</div>
+<div class="line">  if (!validutf8) {</div>
+<div class="line">    return EXIT_FAILURE;</div>
+<div class="line">  }</div>
+<div class="line">  if (simdutf::get_active_implementation()-&gt;name() != chosen_implementation) {</div>
+<div class="line">    return EXIT_FAILURE;</div>
+<div class="line">  }</div>
+<div class="line">  std::cout &lt;&lt; &quot;I have manually selected: &quot; &lt;&lt; simdutf::get_active_implementation()-&gt;name() &lt;&lt; std::endl;</div>
+<div class="line">  return EXIT_SUCCESS;</div>
+<div class="line">}</div>
+</div><!-- fragment --><p>Within the simdutf library,</p>
+<h2><a class="anchor" id="autotoc_md12"></a>
 References</h2>
 <ul>
 <li>Robert Clausecker, Daniel Lemire, Transcoding Unicode Characters with AVX-512 Instructions (in preparation).</li>
 <li>Daniel Lemire, Wojciech Muła, <a href="https://arxiv.org/abs/2109.10433">Transcoding Billions of Unicode Characters per Second with SIMD Instructions</a>, Software: Practice and Experience52 (2), 2022.</li>
 <li>John Keiser, Daniel Lemire, <a href="https://arxiv.org/abs/2010.03090">Validating UTF-8 In Less Than One Instruction Per Byte</a>, Software: Practice and Experience 51 (5), 2021.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md12"></a>
+<h2><a class="anchor" id="autotoc_md13"></a>
 License</h2>
 <p>This code is made available under the <a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache License 2.0</a> as well as the MIT license.</p>
 <p>We include a few competitive solutions under the benchmarks/competition directory. They are provided for research purposes only. </p>
