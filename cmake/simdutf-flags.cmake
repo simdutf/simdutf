@@ -6,6 +6,7 @@ if (NOT CMAKE_BUILD_TYPE)
   if(SIMDUTF_SANITIZE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
     # SIMDUTF_SANITIZE only applies to gcc/clang:
+    message(STATUS "Setting debug optimization flag to -O1.")
     set(CMAKE_CXX_FLAGS_DEBUG "-O1" CACHE STRING "" FORCE)
   else()
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
