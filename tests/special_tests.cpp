@@ -16,7 +16,7 @@ TEST(special_cases_utf8_utf16le_roundtrip) {
       "\x20\x20\xEF\xBB\x8A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20"
       "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20",
       "hello\xe4\xbd\xa0\xe5\xa5\xbd"};
-  for (const std::string& source : cases) {
+  for (const std::string &source : cases) {
     bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());
     ASSERT_TRUE(validutf8);
     // We need a buffer of size where to write the UTF-16LE words.
@@ -30,13 +30,14 @@ TEST(special_cases_utf8_utf16le_roundtrip) {
     bool validutf16 = simdutf::validate_utf16le(utf16_output.get(), utf16words);
     ASSERT_TRUE(validutf16);
 
-    std::unique_ptr<char16_t[]> utf16_valid_output{new char16_t[expected_utf16words]};
+    std::unique_ptr<char16_t[]> utf16_valid_output{
+        new char16_t[expected_utf16words]};
     // convert to UTF-16LE
     size_t utf16words_valid = simdutf::convert_valid_utf8_to_utf16le(
         source.c_str(), source.size(), utf16_valid_output.get());
     ASSERT_TRUE(utf16words_valid == utf16words);
-    for(size_t z = 0; z < utf16words_valid; z++) {
-      ASSERT_TRUE(utf16_valid_output.get()[z] ==  utf16_output.get()[z]);
+    for (size_t z = 0; z < utf16words_valid; z++) {
+      ASSERT_TRUE(utf16_valid_output.get()[z] == utf16_output.get()[z]);
     }
 
     // convert it back:
@@ -57,10 +58,8 @@ TEST(special_cases_utf8_utf16le_roundtrip) {
     ASSERT_TRUE(expected_utf8words == utf8words_valid);
     std::string final_string_valid(utf8_output.get(), utf8words_valid);
     ASSERT_TRUE(final_string_valid == source);
-
   }
 }
-
 
 TEST(special_cases_utf8_utf16be_roundtrip) {
   std::string cases[] = {
@@ -72,7 +71,7 @@ TEST(special_cases_utf8_utf16be_roundtrip) {
       "\x20\x20\xEF\xBB\x8A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20"
       "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20",
       "hello\xe4\xbd\xa0\xe5\xa5\xbd"};
-  for (const std::string& source : cases) {
+  for (const std::string &source : cases) {
     bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());
     ASSERT_TRUE(validutf8);
     // We need a buffer of size where to write the UTF-16LE words.
@@ -86,13 +85,14 @@ TEST(special_cases_utf8_utf16be_roundtrip) {
     bool validutf16 = simdutf::validate_utf16be(utf16_output.get(), utf16words);
     ASSERT_TRUE(validutf16);
 
-    std::unique_ptr<char16_t[]> utf16_valid_output{new char16_t[expected_utf16words]};
+    std::unique_ptr<char16_t[]> utf16_valid_output{
+        new char16_t[expected_utf16words]};
     // convert to UTF-16BE
     size_t utf16words_valid = simdutf::convert_valid_utf8_to_utf16be(
         source.c_str(), source.size(), utf16_valid_output.get());
     ASSERT_TRUE(utf16words_valid == utf16words);
-    for(size_t z = 0; z < utf16words_valid; z++) {
-      ASSERT_TRUE(utf16_valid_output.get()[z] ==  utf16_output.get()[z]);
+    for (size_t z = 0; z < utf16words_valid; z++) {
+      ASSERT_TRUE(utf16_valid_output.get()[z] == utf16_output.get()[z]);
     }
 
     // convert it back:
@@ -113,10 +113,8 @@ TEST(special_cases_utf8_utf16be_roundtrip) {
     ASSERT_TRUE(expected_utf8words == utf8words_valid);
     std::string final_string_valid(utf8_output.get(), utf8words_valid);
     ASSERT_TRUE(final_string_valid == source);
-
   }
 }
-
 
 TEST(special_cases_utf8_utf16_roundtrip) {
   std::string cases[] = {
@@ -128,7 +126,7 @@ TEST(special_cases_utf8_utf16_roundtrip) {
       "\x20\x20\xEF\xBB\x8A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20"
       "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20",
       "hello\xe4\xbd\xa0\xe5\xa5\xbd"};
-  for (const std::string& source : cases) {
+  for (const std::string &source : cases) {
     bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());
     ASSERT_TRUE(validutf8);
     // We need a buffer of size where to write the UTF-16LE words.
@@ -142,13 +140,14 @@ TEST(special_cases_utf8_utf16_roundtrip) {
     bool validutf16 = simdutf::validate_utf16(utf16_output.get(), utf16words);
     ASSERT_TRUE(validutf16);
 
-    std::unique_ptr<char16_t[]> utf16_valid_output{new char16_t[expected_utf16words]};
+    std::unique_ptr<char16_t[]> utf16_valid_output{
+        new char16_t[expected_utf16words]};
     // convert to UTF-16
     size_t utf16words_valid = simdutf::convert_valid_utf8_to_utf16(
         source.c_str(), source.size(), utf16_valid_output.get());
     ASSERT_TRUE(utf16words_valid == utf16words);
-    for(size_t z = 0; z < utf16words_valid; z++) {
-      ASSERT_TRUE(utf16_valid_output.get()[z] ==  utf16_output.get()[z]);
+    for (size_t z = 0; z < utf16words_valid; z++) {
+      ASSERT_TRUE(utf16_valid_output.get()[z] == utf16_output.get()[z]);
     }
 
     // convert it back:
@@ -173,6 +172,42 @@ TEST(special_cases_utf8_utf16_roundtrip) {
 
 TEST(special_cases_utf8_utf16_invalid) {
   std::string cases[] = {
+      "\xdf\xbb\xd1\x8a\xd3\x8a\xd3\x10\xd3\x8a\x8a\xd3\x8c\xd3\x8a\x8a\xd3\x8c"
+      "\xd4\x8a\x8a\xd3\x8c\xd3\x8a\xd3\x8c\xd4\x8a\x8a\xd3\x8c\xd3\x8a\x8a\xd3"
+      "\x2f\xd3\x8a\x8a\x8a\xd3\x8a\xd3\x8a\xc3\x8a\x8a\xd3\x8a\xd3\x8a\xd3\x8a"
+      "\xd3\x8a\xd3\x8a\xd3\x8a\xd3\xd3\x8a\x03\xb0\x1d\x00\x8a\xd3\x76\x2f\x8a"
+      "\x8c\xd3\x8a\x8a\xd3\x8c\xd3\x8a\x8a\xd3\x8c\x8a\x8a\xf4\xd3\x8c\xd3\x8a"
+      "\x8c\xd3\x8a\x8a\xd3\x8c\xd3\x8a\x8a\xd3\x8c\x8a\x8a\xf4\xd3\x8c\xd3\xd3"
+      "\x8c\xd4\x8a\x8a\xd3\x8c\xd3\x8a\x8a\xd3\x2f\xd3\x8a\x8a\xd3\x8c\xd3\x8a"
+      "\x8a\xd3\x8c\xd3\x8a\xd3\x8a\xd3\x8a\x8a\x8a\xd3\x2f\xd3\x8a\x8a\x8a\xd3"
+      "\x8a\xd3\x8a\xc3\x8a\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3\x8a"
+      "\xd3\xd3\xa9\x8a\x8a\xd3\x8a\xd3\x8a\xd3\x76\x2f\x8a\x8c\xd3\x8a\x8a\xd3"
+      "\x8c\xd3\x8a\x8a\xd3\x8c\x8a\x8a\xf4\xd3\x8c\xd3\xd3\x8c\xd4\x8a\x8a\xd3"
+      "\x8c\xd3\x8a\x8a\xd3\x2f\xd3\x8a\x8a\xd3\x8c\xd3\x8a\x8a\xd3\x8c\xd3\x8a"
+      "\xd3\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3\x8a\x8a\xd3\x8a\xd3\x8a\xd3"
+      "\x8a\xd3\xd3\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3\xd3"
+      "\x8c\xd4\x8a\x8a\xd3\x8c\xd3\x8a\x8a\xd3\x2f\xd3\x8a\x8a\xd3\x8c\xd3\x8a"
+      "\x8a\xd3\x8c\xd3\x8a\xd3\x8a\xd3\x8a\x8a\x8a\xd3\x09\x2f\xd3\x8a\x8a\x8a"
+      "\xd3\x8a\xd3\x8a\xc3\x8a\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3"
+      "\x8a\xd3\xd3\x8a\x8a\xd3\x8a\xd3\x8a\xd3\x76\x2f\x8a\x8c\xd3\x8a\x8a\xd3"
+      "\x8c\xd3\x8a\x8a\xd3\x8c\x8a\x8a\xf4\xd3\x8c\xd3\xd3\x8c\xd4\x8a\x8a\xd3"
+      "\x8c\xd3\x8a\x8a\xd3\x2f\x8c\xd3\x8a\x8c\xd3\x8a\x8a\xd3\x8c\xd3\x8a\x8a"
+      "\xd3\x8c\x8a\x8a\xf4\xd3\x8c\xd3\xd3\x8c\xd4\x8a\x8a\xd3\x8c\xd3\x8a\x8a"
+      "\xd3\x2f\xd3\x3f\x8a\xd3\x8c\xd3\x8a\x8a\xd3\x8c\xd3\x8a\xd3\x8a\xd3\x8a"
+      "\x8a\x8a\xd3\x2f\xd3\x8a\x8a\x8a\xd3\x8a\xd3\x8a\xc3\x8a\x8a\xd3\x8a\xd3"
+      "\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3\xd3\xa9\x8a\x8a\xd3\x8a\xd3\x8a"
+      "\xd3\x76\x2f\x8a\x8c\xd3\x8a\x8a\xd3\x8c\xd3\x8a\x8a\xd3\x8c\x8a\x8a\xf4"
+      "\xd3\x8c\xd3\xd3\x8c\xd4\x8a\x8a\xd3\x8c\xd3\x8a\x8a\xd3\x2f\xd3\x8a\x8a"
+      "\xd3\x8c\xd3\x8a\x8a\xd3\x8c\xd3\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3"
+      "\x8a\xd3\x8a\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3\xd3\x8a\xd3\x8a\xd3\x8a\xd3"
+      "\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3\xd3\x8c\xd4\x8a\x8a\xd3\x8c\xd3\x8a\x8a"
+      "\xd3\x2f\x8a\x8a\xd3\xd3\x8c\xd3\x8a\x8a\xd3\x8c\xd3\x8a\xd3\x8a\xd3\x8a"
+      "\x8a\x8a\xd3\x09\x2f\xd3\x8a\x8a\x8a\xd3\x8a\xd3\x8a\xc3\x8a\x8a\xd3\x8a"
+      "\xd3\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3\x8a\xd3\xd3\x8a\x8a\xd3\x8a\xd3\x8a"
+      "\xd3\x76\x2f\x8a\x8c\xd3\x8a\x8a\xd3\x8c\xd3\x8a\x8a\xd3\x8c\x8a\x8a\xf4"
+      "\xd3\x8c\xd3\xd3\x8c\xd4\xd3\x8a\x8a\xd3\x8c\xd3\x8a\x8a\xd3\x8c\xd3\x8a"
+      "\x76\x2f\x8a\xd3\x8a\xd3\x8a\xd3\x8c\xd3\x8a\xd3\x8c\xd3\x8a\x8a\xd3\x8c"
+      "\x8c\xd3\x8a\x8a\xd3\x8c\xd3\x8a\xd3\x8a\x88",
       "\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x05\x01\x01"
       "\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x05\x01\x01\x01\x01\x01\x01\x01"
       "\x01\x01\x01\x01\x01\x05\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01"
@@ -227,7 +262,7 @@ TEST(special_cases_utf8_utf16_invalid) {
       "\xa2\xa2\xba\xba\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xba"
       "\xba\xba\xba\xa2\xa2\xba\xba\xba\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2"
       "\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2"};
-  for (const std::string& source : cases) {
+  for (const std::string &source : cases) {
     bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());
     ASSERT_TRUE(!validutf8);
 
@@ -297,7 +332,7 @@ TEST(special_cases_utf8_utf32_invalid) {
       "\xa2\xa2\xba\xba\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xba"
       "\xba\xba\xba\xa2\xa2\xba\xba\xba\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2"
       "\xa2\xa2\xa2\xa2\xa2\xa2\xa2\xa2"};
-  for (const std::string& source : cases) {
+  for (const std::string &source : cases) {
     bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());
     ASSERT_TRUE(!validutf8);
 
