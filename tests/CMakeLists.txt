@@ -40,6 +40,12 @@ target_link_libraries(validate_utf8_basic_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
 
+
+add_cpp_test(select_implementation)
+target_link_libraries(select_implementation
+  PUBLIC simdutf::tests::helpers
+        simdutf::tests::reference)
+
 add_cpp_test(validate_utf8_brute_force_tests)
 target_link_libraries(validate_utf8_brute_force_tests
   PUBLIC simdutf::tests::helpers
