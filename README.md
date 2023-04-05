@@ -1136,7 +1136,7 @@ implementation is picked automatically. Advanced users may want to pick a partic
 runtime detection. It is possible and even relatively convenient to do so. The following C++ program checks all the available
 implementation, and selects one as the default:
 
-```
+```C++
 #include "simdutf.h"
 #include <cstdlib>
 #include <iostream>
