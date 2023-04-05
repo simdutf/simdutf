@@ -1078,7 +1078,8 @@ The sutf command-line tool</h2>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md11"></a>
 Manual implementation selection</h2>
 <p>When compiling the llibrary for x64 processors, we build several implementations of each functions. At runtime, the best implementation is picked automatically. Advanced users may want to pick a particular implementation, thus bypassing our runtime detection. It is possible and even relatively convenient to do so. The following C++ program checks all the available implementation, and selects one as the default:</p>
-<div class="fragment"><div class="line">#include &quot;simdutf.h&quot;</div>
+<div class="fragment"><div class="line"> {C++}</div>
+<div class="line">#include &quot;simdutf.h&quot;</div>
 <div class="line">#include &lt;cstdlib&gt;</div>
 <div class="line">#include &lt;iostream&gt;</div>
 <div class="line">#include &lt;string&gt;</div>
