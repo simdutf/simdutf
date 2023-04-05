@@ -737,7 +737,7 @@ simdutf_warn_unused result convert_utf16be_to_utf8_with_errors(const char16_t * 
   return get_active_implementation()->convert_utf16be_to_utf8_with_errors(buf, len, utf8_buffer);
 }
 simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char16_t * buf, size_t len, char* utf8_buffer) noexcept {
-  #if BIG_ENDIAN
+  #if SIMDUTF_IS_BIG_ENDIAN
   return convert_valid_utf16be_to_utf8(buf, len, utf8_buffer);
   #else
   return convert_valid_utf16le_to_utf8(buf, len, utf8_buffer);

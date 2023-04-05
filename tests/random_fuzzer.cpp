@@ -164,6 +164,7 @@ bool fuzz_this(const char *data, size_t size) {
       // convert to UTF-8
       size_t utf16words = e->convert_utf8_to_utf16le(
           utf8_output.get(), utf8words, utf16_output.get());
+      if(utf16words != size / 2) { return false; }
       for (size_t i = 0; i < size / 2; i++) {
         if (utf16_output.get()[i] != ((char16_t *)data)[i]) {
           return false;
