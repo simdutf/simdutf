@@ -1,5 +1,4 @@
 std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf, size_t len, char* utf8_output) {
-
   const char32_t* end = buf + len;
 
   const __m128i v_0000 = _mm_setzero_si128();
@@ -13,6 +12,7 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
   const size_t safety_margin = 12; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
 
   while (buf + 16 + safety_margin <= end) {
+    // We load two 16 bytes registers for a total of 32 bytes or 16 characters.
     __m128i in = _mm_loadu_si128((__m128i*)buf);
     __m128i nextin = _mm_loadu_si128((__m128i*)buf+1);
     running_max = _mm_max_epu32(_mm_max_epu32(in, running_max), nextin);
@@ -24,6 +24,10 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
 
     // Check for ASCII fast path
     if(_mm_testz_si128(in_16, v_ff80)) { // ASCII fast path!!!!
+      // We eagerly load another 32 bytes, hoping that they will be ASCII too.
+      // The intuition is that we try to collect 16 ASCII characters which requires
+      // a total of 64 bytes of input. If we fail, we just pass thirdin and fourthin
+      // as our new inputs.
       __m128i thirdin = _mm_loadu_si128((__m128i*)buf+2);
       __m128i fourthin = _mm_loadu_si128((__m128i*)buf+3);
       running_max = _mm_max_epu32(_mm_max_epu32(thirdin, running_max), fourthin);
@@ -39,6 +43,9 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
         utf8_output += 8;
         // Proceed with next input
         in_16 = nextin_16;
+        // We need to update in and nextin because they are used later.
+        in = thirdin;
+        nextin = fourthin;
       } else {
         // 1. pack the bytes
         const __m128i utf8_packed = _mm_packus_epi16(in_16, nextin_16);
@@ -100,11 +107,10 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
       continue;
     }
 
-
     // Check for overflow in packing
+
     const __m128i saturation_bytemask = _mm_cmpeq_epi32(_mm_and_si128(_mm_or_si128(in, nextin), v_ffff0000), v_0000);
     const uint32_t saturation_bitmask = static_cast<uint32_t>(_mm_movemask_epi8(saturation_bytemask));
-
     if (saturation_bitmask == 0xffff) {
       // case: words from register produce either 1, 2 or 3 UTF-8 bytes
       const __m128i v_d800 = _mm_set1_epi16((uint16_t)0xd800);
@@ -137,25 +143,25 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
        * t2 => [0ccc|cccc] [10cc|cccc]
        * s4 => [1110|aaaa] ([110b|bbbb] OR [10bb|bbbb])
        */
-#define vec(x) _mm_set1_epi16(static_cast<uint16_t>(x))
+#define simdutf_vec(x) _mm_set1_epi16(static_cast<uint16_t>(x))
       // [aaaa|bbbb|bbcc|cccc] => [bbcc|cccc|bbcc|cccc]
       const __m128i t0 = _mm_shuffle_epi8(in_16, dup_even);
       // [bbcc|cccc|bbcc|cccc] => [00cc|cccc|0bcc|cccc]
-      const __m128i t1 = _mm_and_si128(t0, vec(0b0011111101111111));
+      const __m128i t1 = _mm_and_si128(t0, simdutf_vec(0b0011111101111111));
       // [00cc|cccc|0bcc|cccc] => [10cc|cccc|0bcc|cccc]
-      const __m128i t2 = _mm_or_si128 (t1, vec(0b1000000000000000));
+      const __m128i t2 = _mm_or_si128 (t1, simdutf_vec(0b1000000000000000));
 
       // [aaaa|bbbb|bbcc|cccc] =>  [0000|aaaa|bbbb|bbcc]
       const __m128i s0 = _mm_srli_epi16(in_16, 4);
       // [0000|aaaa|bbbb|bbcc] => [0000|aaaa|bbbb|bb00]
-      const __m128i s1 = _mm_and_si128(s0, vec(0b0000111111111100));
+      const __m128i s1 = _mm_and_si128(s0, simdutf_vec(0b0000111111111100));
       // [0000|aaaa|bbbb|bb00] => [00bb|bbbb|0000|aaaa]
-      const __m128i s2 = _mm_maddubs_epi16(s1, vec(0x0140));
+      const __m128i s2 = _mm_maddubs_epi16(s1, simdutf_vec(0x0140));
       // [00bb|bbbb|0000|aaaa] => [11bb|bbbb|1110|aaaa]
-      const __m128i s3 = _mm_or_si128(s2, vec(0b1100000011100000));
-      const __m128i m0 = _mm_andnot_si128(one_or_two_bytes_bytemask, vec(0b0100000000000000));
+      const __m128i s3 = _mm_or_si128(s2, simdutf_vec(0b1100000011100000));
+      const __m128i m0 = _mm_andnot_si128(one_or_two_bytes_bytemask, simdutf_vec(0b0100000000000000));
       const __m128i s4 = _mm_xor_si128(s3, m0);
-#undef vec
+#undef simdutf_vec
 
       // 4. expand words 16-bit => 32-bit
       const __m128i out0 = _mm_unpacklo_epi16(t2, s4);
@@ -254,6 +260,7 @@ std::pair<result, char*> sse_convert_utf32_to_utf8_with_errors(const char32_t* b
   const size_t safety_margin = 12; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
 
   while (buf + 16 + safety_margin <= end) {
+    // We load two 16 bytes registers for a total of 32 bytes or 16 characters.
     __m128i in = _mm_loadu_si128((__m128i*)buf);
     __m128i nextin = _mm_loadu_si128((__m128i*)buf+1);
 
@@ -270,6 +277,10 @@ std::pair<result, char*> sse_convert_utf32_to_utf8_with_errors(const char32_t* b
 
     // Check for ASCII fast path
     if(_mm_testz_si128(in_16, v_ff80)) { // ASCII fast path!!!!
+      // We eagerly load another 32 bytes, hoping that they will be ASCII too.
+      // The intuition is that we try to collect 16 ASCII characters which requires
+      // a total of 64 bytes of input. If we fail, we just pass thirdin and fourthin
+      // as our new inputs.
       __m128i thirdin = _mm_loadu_si128((__m128i*)buf+2);
       __m128i fourthin = _mm_loadu_si128((__m128i*)buf+3);
       __m128i nextin_16 = _mm_packus_epi32(_mm_and_si128(thirdin, v_7fffffff), _mm_and_si128(fourthin, v_7fffffff));
@@ -288,6 +299,9 @@ std::pair<result, char*> sse_convert_utf32_to_utf8_with_errors(const char32_t* b
         if(static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi32(next_max_input, v_10ffff))) != 0xffff) {
           return std::make_pair(result(error_code::TOO_LARGE, buf - start), utf8_output);
         }
+        // We need to update in and nextin because they are used later.
+        in = thirdin;
+        nextin = fourthin;
       } else {
         // 1. pack the bytes
         const __m128i utf8_packed = _mm_packus_epi16(in_16, nextin_16);
@@ -391,25 +405,25 @@ std::pair<result, char*> sse_convert_utf32_to_utf8_with_errors(const char32_t* b
        * t2 => [0ccc|cccc] [10cc|cccc]
        * s4 => [1110|aaaa] ([110b|bbbb] OR [10bb|bbbb])
        */
-#define vec(x) _mm_set1_epi16(static_cast<uint16_t>(x))
+#define simdutf_vec(x) _mm_set1_epi16(static_cast<uint16_t>(x))
       // [aaaa|bbbb|bbcc|cccc] => [bbcc|cccc|bbcc|cccc]
       const __m128i t0 = _mm_shuffle_epi8(in_16, dup_even);
       // [bbcc|cccc|bbcc|cccc] => [00cc|cccc|0bcc|cccc]
-      const __m128i t1 = _mm_and_si128(t0, vec(0b0011111101111111));
+      const __m128i t1 = _mm_and_si128(t0, simdutf_vec(0b0011111101111111));
       // [00cc|cccc|0bcc|cccc] => [10cc|cccc|0bcc|cccc]
-      const __m128i t2 = _mm_or_si128 (t1, vec(0b1000000000000000));
+      const __m128i t2 = _mm_or_si128 (t1, simdutf_vec(0b1000000000000000));
 
       // [aaaa|bbbb|bbcc|cccc] =>  [0000|aaaa|bbbb|bbcc]
       const __m128i s0 = _mm_srli_epi16(in_16, 4);
       // [0000|aaaa|bbbb|bbcc] => [0000|aaaa|bbbb|bb00]
-      const __m128i s1 = _mm_and_si128(s0, vec(0b0000111111111100));
+      const __m128i s1 = _mm_and_si128(s0, simdutf_vec(0b0000111111111100));
       // [0000|aaaa|bbbb|bb00] => [00bb|bbbb|0000|aaaa]
-      const __m128i s2 = _mm_maddubs_epi16(s1, vec(0x0140));
+      const __m128i s2 = _mm_maddubs_epi16(s1, simdutf_vec(0x0140));
       // [00bb|bbbb|0000|aaaa] => [11bb|bbbb|1110|aaaa]
-      const __m128i s3 = _mm_or_si128(s2, vec(0b1100000011100000));
-      const __m128i m0 = _mm_andnot_si128(one_or_two_bytes_bytemask, vec(0b0100000000000000));
+      const __m128i s3 = _mm_or_si128(s2, simdutf_vec(0b1100000011100000));
+      const __m128i m0 = _mm_andnot_si128(one_or_two_bytes_bytemask, simdutf_vec(0b0100000000000000));
       const __m128i s4 = _mm_xor_si128(s3, m0);
-#undef vec
+#undef simdutf_vec
 
       // 4. expand words 16-bit => 32-bit
       const __m128i out0 = _mm_unpacklo_epi16(t2, s4);

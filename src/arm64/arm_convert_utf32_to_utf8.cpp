@@ -111,29 +111,29 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
            * t2 => [0ccc|cccc] [10cc|cccc]
            * s4 => [1110|aaaa] ([110b|bbbb] OR [10bb|bbbb])
            */
-  #define vec(x) vmovq_n_u16(static_cast<uint16_t>(x))
+  #define simdutf_vec(x) vmovq_n_u16(static_cast<uint16_t>(x))
           // [aaaa|bbbb|bbcc|cccc] => [bbcc|cccc|bbcc|cccc]
           const uint16x8_t t0 = vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(utf16_packed), vreinterpretq_u8_u16(dup_even)));
           // [bbcc|cccc|bbcc|cccc] => [00cc|cccc|0bcc|cccc]
-          const uint16x8_t t1 = vandq_u16(t0, vec(0b0011111101111111));
+          const uint16x8_t t1 = vandq_u16(t0, simdutf_vec(0b0011111101111111));
           // [00cc|cccc|0bcc|cccc] => [10cc|cccc|0bcc|cccc]
-          const uint16x8_t t2 = vorrq_u16 (t1, vec(0b1000000000000000));
+          const uint16x8_t t2 = vorrq_u16 (t1, simdutf_vec(0b1000000000000000));
 
           // s0: [aaaa|bbbb|bbcc|cccc] => [0000|0000|0000|aaaa]
           const uint16x8_t s0 = vshrq_n_u16(utf16_packed, 12);
           // s1: [aaaa|bbbb|bbcc|cccc] => [0000|bbbb|bb00|0000]
-          const uint16x8_t s1 = vandq_u16(utf16_packed, vec(0b0000111111000000));
+          const uint16x8_t s1 = vandq_u16(utf16_packed, simdutf_vec(0b0000111111000000));
           // [0000|bbbb|bb00|0000] => [00bb|bbbb|0000|0000]
           const uint16x8_t s1s = vshlq_n_u16(s1, 2);
           // [00bb|bbbb|0000|aaaa]
           const uint16x8_t s2 = vorrq_u16(s0, s1s);
           // s3: [00bb|bbbb|0000|aaaa] => [11bb|bbbb|1110|aaaa]
-          const uint16x8_t s3 = vorrq_u16(s2, vec(0b1100000011100000));
+          const uint16x8_t s3 = vorrq_u16(s2, simdutf_vec(0b1100000011100000));
           const uint16x8_t v_07ff = vmovq_n_u16((uint16_t)0x07FF);
           const uint16x8_t one_or_two_bytes_bytemask = vcleq_u16(utf16_packed, v_07ff);
-          const uint16x8_t m0 = vbicq_u16(vec(0b0100000000000000), one_or_two_bytes_bytemask);
+          const uint16x8_t m0 = vbicq_u16(simdutf_vec(0b0100000000000000), one_or_two_bytes_bytemask);
           const uint16x8_t s4 = veorq_u16(s3, m0);
-  #undef vec
+  #undef simdutf_vec
 
           // 4. expand words 16-bit => 32-bit
           const uint8x16_t out0 = vreinterpretq_u8_u16(vzip1q_u16(t2, s4));
@@ -177,7 +177,6 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
             continue;
           }*/
           const uint8_t mask0 = uint8_t(mask);
-
           const uint8_t* row0 = &simdutf::tables::utf16_to_utf8::pack_1_2_3_utf8_bytes[mask0][0];
           const uint8x16_t shuffle0 = vld1q_u8(row0 + 1);
           const uint8x16_t utf8_0 = vqtbl1q_u8(out0, shuffle0);
@@ -351,29 +350,29 @@ std::pair<result, char*> arm_convert_utf32_to_utf8_with_errors(const char32_t* b
            * t2 => [0ccc|cccc] [10cc|cccc]
            * s4 => [1110|aaaa] ([110b|bbbb] OR [10bb|bbbb])
            */
-  #define vec(x) vmovq_n_u16(static_cast<uint16_t>(x))
+  #define simdutf_vec(x) vmovq_n_u16(static_cast<uint16_t>(x))
           // [aaaa|bbbb|bbcc|cccc] => [bbcc|cccc|bbcc|cccc]
           const uint16x8_t t0 = vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(utf16_packed), vreinterpretq_u8_u16(dup_even)));
           // [bbcc|cccc|bbcc|cccc] => [00cc|cccc|0bcc|cccc]
-          const uint16x8_t t1 = vandq_u16(t0, vec(0b0011111101111111));
+          const uint16x8_t t1 = vandq_u16(t0, simdutf_vec(0b0011111101111111));
           // [00cc|cccc|0bcc|cccc] => [10cc|cccc|0bcc|cccc]
-          const uint16x8_t t2 = vorrq_u16 (t1, vec(0b1000000000000000));
+          const uint16x8_t t2 = vorrq_u16 (t1, simdutf_vec(0b1000000000000000));
 
           // s0: [aaaa|bbbb|bbcc|cccc] => [0000|0000|0000|aaaa]
           const uint16x8_t s0 = vshrq_n_u16(utf16_packed, 12);
           // s1: [aaaa|bbbb|bbcc|cccc] => [0000|bbbb|bb00|0000]
-          const uint16x8_t s1 = vandq_u16(utf16_packed, vec(0b0000111111000000));
+          const uint16x8_t s1 = vandq_u16(utf16_packed, simdutf_vec(0b0000111111000000));
           // [0000|bbbb|bb00|0000] => [00bb|bbbb|0000|0000]
           const uint16x8_t s1s = vshlq_n_u16(s1, 2);
           // [00bb|bbbb|0000|aaaa]
           const uint16x8_t s2 = vorrq_u16(s0, s1s);
           // s3: [00bb|bbbb|0000|aaaa] => [11bb|bbbb|1110|aaaa]
-          const uint16x8_t s3 = vorrq_u16(s2, vec(0b1100000011100000));
+          const uint16x8_t s3 = vorrq_u16(s2, simdutf_vec(0b1100000011100000));
           const uint16x8_t v_07ff = vmovq_n_u16((uint16_t)0x07FF);
           const uint16x8_t one_or_two_bytes_bytemask = vcleq_u16(utf16_packed, v_07ff);
-          const uint16x8_t m0 = vbicq_u16(vec(0b0100000000000000), one_or_two_bytes_bytemask);
+          const uint16x8_t m0 = vbicq_u16(simdutf_vec(0b0100000000000000), one_or_two_bytes_bytemask);
           const uint16x8_t s4 = veorq_u16(s3, m0);
-  #undef vec
+  #undef simdutf_vec
 
           // 4. expand words 16-bit => 32-bit
           const uint8x16_t out0 = vreinterpretq_u8_u16(vzip1q_u16(t2, s4));
