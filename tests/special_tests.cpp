@@ -6,6 +6,55 @@
 #include <memory>
 #include <tests/helpers/test.h>
 
+TEST(special_cases_utf8_utf32_roundtrip) {
+  std::string cases[] = {
+      "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\xf0\x91\x81\x80\x20\x20\x20\x20"
+      "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20"};
+  for (const std::string &source : cases) {
+    bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());
+    ASSERT_TRUE(validutf8);
+    // We need a buffer of size where to write the UTF-16LE words.
+    size_t expected_utf32words =
+        simdutf::utf32_length_from_utf8(source.c_str(), source.size());
+    std::unique_ptr<char32_t[]> utf32_output{new char32_t[expected_utf32words]};
+    // convert to UTF-32
+    size_t utf32words = simdutf::convert_utf8_to_utf32(
+        source.c_str(), source.size(), utf32_output.get());
+    // It wrote utf32words * sizeof(char32_t) bytes.
+    bool validutf32 = simdutf::validate_utf32(utf32_output.get(), utf32words);
+    ASSERT_TRUE(validutf32);
+
+    std::unique_ptr<char32_t[]> utf32_valid_output{
+        new char32_t[expected_utf32words]};
+    // convert to UTF-16LE
+    size_t utf32words_valid = simdutf::convert_valid_utf8_to_utf32(
+        source.c_str(), source.size(), utf32_valid_output.get());
+    ASSERT_TRUE(utf32words_valid == utf32words);
+    for (size_t z = 0; z < utf32words_valid; z++) {
+      ASSERT_TRUE(utf32_valid_output.get()[z] == utf32_output.get()[z]);
+    }
+
+    // convert it back:
+    // We need a buffer of size where to write the UTF-8 words.
+    size_t expected_utf8words =
+        simdutf::utf8_length_from_utf32(utf32_output.get(), utf32words);
+    ASSERT_TRUE(expected_utf8words == source.size());
+    std::unique_ptr<char[]> utf8_output{new char[expected_utf8words]};
+    // convert to UTF-8
+    size_t utf8words = simdutf::convert_utf32_to_utf8(
+        utf32_output.get(), utf32words, utf8_output.get());
+    ASSERT_TRUE(expected_utf8words == utf8words);
+    std::string final_string(utf8_output.get(), utf8words);
+    ASSERT_TRUE(final_string == source);
+
+    size_t utf8words_valid = simdutf::convert_valid_utf32_to_utf8(
+        utf32_output.get(), utf32words, utf8_output.get());
+    ASSERT_TRUE(expected_utf8words == utf8words_valid);
+    std::string final_string_valid(utf8_output.get(), utf8words_valid);
+    ASSERT_TRUE(final_string_valid == source);
+  }
+}
+
 TEST(special_cases_utf8_utf16le_roundtrip) {
   std::string cases[] = {
       "\x05\x0A\x0A\x01\x0C\x01\x01\x0A\x0C\x01\x01\x01\x01\x01\x0A\x0A\x0A\xF0"
