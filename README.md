@@ -66,7 +66,7 @@ To illustrate, we present a benchmark result with values are in billions of char
 
 <img src="doc/utf16utf8.png" width="70%" />
 
-If your system supports AVX-512, the simdutf library can provide very high perforamnce. We get the following speed results on an Ice Lake Intel processor (both AVX2 and AVX-512) are simdutf kernels:
+If your system supports AVX-512, the simdutf library can provide very high performance. We get the following speed results on an Ice Lake Intel processor (both AVX2 and AVX-512) are simdutf kernels:
 
 <img src="doc/avx512.png" width="70%" />
 
