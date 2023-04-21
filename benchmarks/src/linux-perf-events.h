@@ -1,4 +1,3 @@
-// https://github.com/WojciechMula/toys/blob/master/000helpers/linux-perf-events.h
 #pragma once
 #ifdef __linux__
 
@@ -43,13 +42,14 @@ public:
     uint32_t i = 0;
     for (auto config : config_vec) {
       attribs.config = config;
-      fd = static_cast<int>(syscall(__NR_perf_event_open, &attribs, pid, cpu, group, flags));
-      if (fd == -1) {
+      int _fd = static_cast<int>(syscall(__NR_perf_event_open, &attribs, pid, cpu, group, flags));
+      if (_fd == -1) {
         report_error("perf_event_open");
       }
-      ioctl(fd, PERF_EVENT_IOC_ID, &ids[i++]);
+      ioctl(_fd, PERF_EVENT_IOC_ID, &ids[i++]);
       if (group == -1) {
-        group = fd;
+        group = _fd;
+        fd = _fd;
       }
     }
 
@@ -81,10 +81,16 @@ public:
       }
     }
     // our actual results are in slots 1,3,5, ... of this structure
-    // we really should be checking our ids obtained earlier to be safe
     for (uint32_t i = 1; i < temp_result_vec.size(); i += 2) {
       results[i / 2] = temp_result_vec[i];
     }
+    for (uint32_t i = 2; i < temp_result_vec.size(); i += 2) {
+      if(ids[i/2-1] != temp_result_vec[i]) {
+        report_error("event mismatch");
+      }
+    }
+
+
   }
 
   bool is_working() {
