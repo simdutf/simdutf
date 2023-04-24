@@ -20,6 +20,16 @@
 	.type		utf8_to_utf16le_avx512, @function
 	.balign		16
 utf8_to_utf16le_avx512:
+#ifdef _WIN32
+	// Windows ABI adapter
+	push		%rdi
+	push		%rsi
+	mov		%rcx, %rdi
+	mov		%rdx, %rsi
+	mov		%r8, %rdx
+	mov		%r9, %rcx
+#endif
+
 	// rdi: outbuf
 	// rsi: inbuf
 	// rdx: inlen
@@ -353,6 +363,13 @@ utf8_to_utf16le_avx512:
 
 	pop		%r12
 	pop		%rbx
+
+#ifdef _WIN32
+	// Windows ABI adapter
+	pop		%rsi
+	pop		%rdi
+#endif
+
 	vzeroupper
 	ret
 
@@ -410,7 +427,11 @@ utf8_to_utf16le_avx512:
 	.globl utf8_to_utf16le_buflen_avx512
 	.type utf8_to_utf16le_buflen_avx512, @function
 utf8_to_utf16le_buflen_avx512:
+#ifndef _WIN32
 	mov		%rdi, %rax		// does not write past the end of the buffer
+#else
+	mov		%rcx, %rax		// dito, but for Windows
+#endif
 	ret
 
 	.size utf8_to_utf16le_buflen_avx512, .-utf8_to_utf16le_buflen_avx512

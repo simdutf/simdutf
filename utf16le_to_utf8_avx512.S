@@ -45,6 +45,16 @@
 	.type		utf16le_to_utf8_avx512, @function
 	.balign		16
 utf16le_to_utf8_avx512:
+#ifdef _WIN32
+	// Windows ABI adapter
+	push		%rdi
+	push		%rsi
+	mov		%rcx, %rdi
+	mov		%rdx, %rsi
+	mov		%r8, %rdx
+	mov		%r9, %rcx
+#endif
+
 	// rdi: outbuf
 	// rsi: inbuf
 	// rdx: inlen
@@ -240,6 +250,12 @@ utf16le_to_utf8_avx512:
 	mov		%rdi, (%rcx)		// deposit into *outlen
 
 	pop		%rbx
+#ifdef _WIN32
+	// Windows ABI adapter
+	pop		%rsi
+	pop		%rdi
+#endif
+
 	vzeroupper
 	ret
 
@@ -282,8 +298,11 @@ utf16le_to_utf8_avx512:
 	.type		utf16le_to_utf8_buflen_avx512, @function
 	.globl		utf16le_to_utf8_buflen_avx512
 utf16le_to_utf8_buflen_avx512:
+#ifndef _WIN32
 	lea		(%rdi,%rdi,2), %rax	// up to 3 bytes for each word
-						// plus 95 byte we might store past the end
+#else
+	lea		(%rcx,%rcx,2), %rax	// dito, but for Windows
+#endif
 	ret
 
 	.size		utf16le_to_utf8_buflen_avx512, .-utf16le_to_utf8_buflen_avx512
