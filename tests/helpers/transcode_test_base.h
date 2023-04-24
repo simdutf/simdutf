@@ -46,7 +46,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
     }
 
-    inline bool output_size() const {
+    inline size_t output_size() const {
       return reference_output_utf16.size();
     }
 
@@ -101,7 +101,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
     }
 
-    inline bool output_size() const {
+    inline size_t output_size() const {
       return reference_output_utf32.size();
     }
 
@@ -149,7 +149,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
     transcode_utf16_to_utf8_test_base(const std::vector<char16_t>& input_utf16);
 
-    inline bool output_size() const {
+    inline size_t output_size() const {
       return reference_output_utf8.size();
     }
 
@@ -203,7 +203,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
     transcode_utf32_to_utf8_test_base(const std::vector<char32_t>& input_utf32);
 
-    inline bool output_size() const {
+    inline size_t output_size() const {
       return reference_output_utf8.size();
     }
 
@@ -255,7 +255,7 @@ namespace simdutf { namespace tests { namespace helpers {
   public:
     transcode_utf32_to_utf16_test_base(GenerateCodepoint generate, size_t input_size);
 
-    inline bool output_size() const {
+    inline size_t output_size() const {
       return reference_output_utf16.size();
     }
 
@@ -310,7 +310,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
     transcode_utf16_to_utf32_test_base(const std::vector<char16_t>& input_utf16);
 
-    inline bool output_size() const {
+    inline size_t output_size() const {
       return reference_output_utf32.size();
     }
 
