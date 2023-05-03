@@ -65,9 +65,10 @@ size_t convert_masked_utf8_to_utf32(const char *input,
   /// We do not have a fast path available, so we fallback.
 
   const uint8_t idx =
-      tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][0];
+      tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask];
   const uint8_t consumed =
-      tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][1];
+      tables::utf8_to_utf16::shufutf8[idx][15] & 0xF;
+
   if (idx < 64) {
     // SIX (6) input code-words
     // this is a relatively easy scenario
