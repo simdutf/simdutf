@@ -1,3 +1,5 @@
+
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 add_library(simdutf-include-source INTERFACE)
 target_include_directories(simdutf-include-source INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 add_library(simdutf-source INTERFACE)
@@ -20,6 +22,8 @@ else(MSVC)
   endif()
   target_compile_options(simdutf PRIVATE -Wall -Wextra -Weffc++)
   target_compile_options(simdutf PRIVATE -Wfatal-errors -Wsign-compare -Wshadow -Wwrite-strings -Wpointer-arith -Winit-self -Wconversion -Wno-sign-conversion)
+  target_compile_options(simdutf PUBLIC $<$<CONFIG:RELEASE>:-ffunction-sections> $<$<CONFIG:RELEASE>:-fdata-sections>)
+  target_link_options(simdutf PUBLIC $<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:Clang,GNU>:-Wl,--gc-sections>> $<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:AppleClang>:-Wl,-dead_strip>>)
 endif(MSVC)
 
 # workaround for GNU GCC poor AVX load/store code generation
