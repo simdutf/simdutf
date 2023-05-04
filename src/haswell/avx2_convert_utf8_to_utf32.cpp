@@ -21,6 +21,8 @@ size_t convert_masked_utf8_to_utf32(const char *input,
   const __m128i in = _mm_loadu_si128((__m128i *)input);
   const uint16_t input_utf8_end_of_code_point_mask =
       utf8_end_of_code_point_mask & 0xfff;
+  const uint16_t input_utf8_length_mask =
+      utf8_end_of_code_point_mask & 0x7ff;
   if(((utf8_end_of_code_point_mask & 0xffff) == 0xffff)) {
     // We process the data in chunks of 16 bytes.
     _mm256_storeu_si256(reinterpret_cast<__m256i *>(utf32_output), _mm256_cvtepu8_epi32(in));
@@ -63,8 +65,8 @@ size_t convert_masked_utf8_to_utf32(const char *input,
 
   const uint8_t idx =
       tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask];
-  const uint8_t consumed =
-      simdutf::tables::utf8_to_utf16::shufutf8[idx][15] & 0xF;
+  uint8_t consumed =
+      tables::utf8_to_utf16::utf8lenindex[input_utf8_length_mask];
 
   if (idx < 64) {
     // SIX (6) input code-words
@@ -80,6 +82,8 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     const __m128i composed = _mm_or_si128(ascii, _mm_srli_epi16(highbyte, 2));
     _mm256_storeu_si256((__m256i *)utf32_output, _mm256_cvtepu16_epi32(composed));
     utf32_output += 6; // We wrote 24 bytes, 6 code points. There is a potential
+    // Corner case in half LUT
+    if (input_utf8_end_of_code_point_mask == 0xaaa) consumed = 12;
     // overflow of 32 - 24 = 8 bytes.
   } else if (idx < 145) {
     // FOUR (4) input code-words

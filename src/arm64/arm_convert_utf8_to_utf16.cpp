@@ -18,6 +18,9 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   uint8x16_t in = vld1q_u8(reinterpret_cast<const uint8_t*>(input));
   const uint16_t input_utf8_end_of_code_point_mask =
       utf8_end_of_code_point_mask & 0xfff;
+  const uint16_t input_utf8_length_mask =
+      utf8_end_of_code_point_mask & 0x7ff;
+
   //
   // Optimization note: our main path below is load-latency dependent. Thus it is maybe
   // beneficial to have fast paths that depend on branch prediction but have less latency.
@@ -78,9 +81,8 @@ size_t convert_masked_utf8_to_utf16(const char *input,
 
   const uint8_t idx =
       simdutf::tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask];
-  const uint8_t consumed =
-      simdutf::tables::utf8_to_utf16::shufutf8[idx][15] & 0xF;
-
+  uint8_t consumed =
+      simdutf::tables::utf8_to_utf16::utf8lenindex[input_utf8_length_mask];
 
   if (idx < 64) {
     // SIX (6) input code-words
@@ -95,6 +97,8 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     if (!match_system(big_endian)) composed = vqtbl1q_u8(composed, swap);
     vst1q_u8(reinterpret_cast<uint8_t*>(utf16_output), composed);
     utf16_output += 6; // We wrote 12 bytes, 6 code points.
+    // fix corner case with half LUT
+    if (input_utf8_end_of_code_point_mask == 0xaaa) consumed = 12;
   } else if (idx < 145) {
     // FOUR (4) input code-words
     uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t*>(simdutf::tables::utf8_to_utf16::shufutf8[idx]));
