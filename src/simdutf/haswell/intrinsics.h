@@ -52,7 +52,6 @@ SIMDUTF_POP_DISABLE_WARNINGS
 #include <tmmintrin.h>
 #include <avxintrin.h>
 #include <avx2intrin.h>
-#include <wmmintrin.h>   // for  _mm_clmulepi64_si128
 // unfortunately, we may not get _blsr_u64, but, thankfully, clang
 // has it as a macro.
 #ifndef _blsr_u64
