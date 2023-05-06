@@ -68,7 +68,7 @@
 #include <tmmintrin.h>
 #endif // SIMDUTF_CLANG_VISUAL_STUDIO
 
-#define SIMDUTF_TARGET_WESTMERE SIMDUTF_TARGET_REGION("sse4.2")
+#define SIMDUTF_TARGET_WESTMERE SIMDUTF_TARGET_REGION("sse4.2,pclmul")
 
 
 #include <x86intrin.h>

@@ -13,7 +13,7 @@ using namespace simdutf;
 
 class implementation final : public simdutf::implementation {
 public:
-  simdutf_really_inline implementation() : simdutf::implementation("westmere", "Intel/AMD SSE4.2", internal::instruction_set::SSE42) {}
+  simdutf_really_inline implementation() : simdutf::implementation("westmere", "Intel/AMD SSE4.2", internal::instruction_set::SSE42 | internal::instruction_set::PCLMULQDQ) {}
   simdutf_warn_unused int detect_encodings(const char * input, size_t length) const noexcept final;
   simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
   simdutf_warn_unused result validate_utf8_with_errors(const char *buf, size_t len) const noexcept final;
