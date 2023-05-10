@@ -1003,7 +1003,7 @@ struct AppleEvents {
       printf("Error: cannot load pmc database: %d.\n", ret);
       return (worked = false);
     }
-    printf("loaded db: %s (%s)\n", db->name, db->marketing_name);
+    // printf("loaded db: %s (%s)\n", db->name, db->marketing_name);
     // printf("number of fixed counters: %zu\n", db->fixed_counter_count);
     // printf("number of configurable counters: %zu\n",
     // db->config_counter_count);
