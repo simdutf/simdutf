@@ -976,11 +976,9 @@ struct AppleEvents {
   u64 counters_1[KPC_MAX_COUNTERS] = {0};
   static constexpr usize ev_count =
       sizeof(profile_events) / sizeof(profile_events[0]);
-
+  bool init = false;
+  bool worked = false;
   inline bool setup_performance_counters() {
-    static bool init = false;
-    static bool worked = false;
-
     if (init) {
       return worked;
     }
