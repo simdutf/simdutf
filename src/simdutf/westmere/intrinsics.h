@@ -35,7 +35,6 @@ SIMDUTF_POP_DISABLE_WARNINGS
  * from macros:
  */
 #include <smmintrin.h>  // for _mm_alignr_epi8
-#include <wmmintrin.h>  // for  _mm_clmulepi64_si128
 #endif
 
 
