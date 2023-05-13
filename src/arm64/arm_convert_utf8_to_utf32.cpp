@@ -84,35 +84,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     utf32_output += 4;
     return 12;
   }
-  if(input_utf8_end_of_code_point_mask == 0x888) {
-    // We want to take 3-4 4-byte UTF-8 words and turn them into 3-4 4-byte UTF-32 words.
-    // This uses the same method as the fixed 3 byte version, reversing and shift left insert.
-    // However, there is no need for a shuffle mask now, just rev16 and rev32.
-    size_t count = 3 + ((utf8_end_of_code_point_mask & 0xFFFF) == 0x8888);
-    // Swap pairs of bytes
-    // 10dddddd|10cccccc|10bbbbbb|11110aaa
-    // 10cccccc 10dddddd|11110aaa 10bbbbbb
-    uint16x8_t swap1 = vreinterpretq_u16_u8(vrev16q_u8(in));
-    // Shift left and insert
-    // xxxxcccc ccdddddd|xxxxxxxa aabbbbbb
-    uint16x8_t merge1 = vsliq_n_u16(swap1, vreinterpretq_u16_u8(in), 6);
-    // Swap 16-bit lanes
-    // xxxxcccc ccdddddd xxxxxxxa aabbbbbb
-    // xxxxxxxa aabbbbbb xxxxcccc ccdddddd
-    uint32x4_t swap2 = vreinterpretq_u32_u16(vrev32q_u16(merge1));
-    // Shift insert again
-    // xxxxxxxx xxxaaabb bbbbcccc ccdddddd
-    uint32x4_t merge2 = vsliq_n_u32(swap2, vreinterpretq_u32_u16(merge1), 12);
-    // Clear the garbage
-    // 00000000 000aaabb bbbbcccc ccdddddd
-    uint32x4_t composed = vandq_u32(merge2, vmovq_n_u32(0x1FFFFF));
-    // Store
-    vst1q_u32(utf32_output, composed);
-
-    utf32_output += count;
-    return count * 4;
-  }
-  /// We do not have a fast path available, so we fallback.
+  /// Either no fast path or an unimportant fast path.
 
   const uint8_t idx =
       simdutf::tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][0];
@@ -144,28 +116,70 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     utf32_output += 6; // We wrote 12 bytes, 6 code points.
   } else if (idx < 145) {
     // FOUR (4) input code-words
+    // UTF-16 does these on half size vectors, UTF-32 keeps full vectors.
     uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t*>(simdutf::tables::utf8_to_utf16::shufutf8[idx]));
     uint32x4_t perm = vreinterpretq_u32_u8(vqtbl1q_u8(in, sh));
     // Split
-    // 00000000 0ccccccc
+    // 00000000 00000000 0ccccccc
     uint32x4_t ascii = vandq_u32(perm, vmovq_n_u32(0x7F));    // 6 or 7 bits
-    // 00bbbbbb 00000000
-    uint32x4_t middle = vandq_u32(perm, vmovq_n_u32(0x3f00)); // 5 or 6 bits
     // Note: unmasked
-    // aaaaxxxx xxxxxxxx
+    // xxxxxxxx aaaaxxxx xxxxxxxx
     uint32x4_t high = vshrq_n_u32(perm, 4);                   // 4 bits
+    // Use 16 bit bic instead of and
+    // The top bits will be corrected later
+    // 00000000 10bbbbbb 00000000
+    uint32x4_t middle =
+        vreinterpretq_u32_u16(vbicq_u16(vreinterpretq_u16_u32(perm), vmovq_n_u16(0x00ff))); // 5 or 6 bits
     // Combine low and middle with shift right accumulate
-    // xxxxbbbb bbcccccc
-    uint32x4_t lowmid = VSRAQ_N_U32(ascii, middle, 2);
+    // 00000000 00xxbbbb bbcccccc
+    uint32x4_t lowmid = vsraq_n_u32(ascii, middle, 2);
     // Insert top 4 bits from high byte with bitwise select
-    // aaaabbbb bbcccccc
-    uint32x4_t composed = VBSLQ_U32(vmovq_n_u32(0xF000), high, lowmid);
+    // 00000000 aaaabbbb bbcccccc
+    uint32x4_t composed = vbslq_u32(vmovq_n_u32(0x0000F000), high, lowmid);
     vst1q_u32(utf32_output, composed);
     utf32_output += 4;
+  } else if (input_utf8_end_of_code_point_mask == 0x888) {
+    // We want to take 3-4 4-byte UTF-8 words and turn them into 3-4 4-byte UTF-32 words.
+    // This uses the same method as the fixed 3 byte version, reversing and shift left insert.
+    // However, there is no need for a shuffle mask now, just rev16 and rev32.
+    //
+    // This version does not use the LUT, but 4 byte sequences are less common and the
+    // overhead of the extra memory access is less important than the early branch overhead
+    // in shorter sequences, so it comes last.
+
+    // branchless
+    size_t count = 3 + ((utf8_end_of_code_point_mask & 0xFFFF) == 0x8888);
+    // Swap pairs of bytes
+    // 10dddddd|10cccccc|10bbbbbb|11110aaa
+    // 10cccccc 10dddddd|11110aaa 10bbbbbb
+    uint16x8_t swap1 = vreinterpretq_u16_u8(vrev16q_u8(in));
+    // Shift left and insert
+    // xxxxcccc ccdddddd|xxxxxxxa aabbbbbb
+    uint16x8_t merge1 = vsliq_n_u16(swap1, vreinterpretq_u16_u8(in), 6);
+    // Swap 16-bit lanes
+    // xxxxcccc ccdddddd xxxxxxxa aabbbbbb
+    // xxxxxxxa aabbbbbb xxxxcccc ccdddddd
+    uint32x4_t swap2 = vreinterpretq_u32_u16(vrev32q_u16(merge1));
+    // Shift insert again
+    // xxxxxxxx xxxaaabb bbbbcccc ccdddddd
+    uint32x4_t merge2 = vsliq_n_u32(swap2, vreinterpretq_u32_u16(merge1), 12);
+    // Clear the garbage
+    // 00000000 000aaabb bbbbcccc ccdddddd
+    uint32x4_t composed = vandq_u32(merge2, vmovq_n_u32(0x1FFFFF));
+    // Store
+    vst1q_u32(utf32_output, composed);
+
+    utf32_output += count;
+    return count * 4;
   } else if (idx < 209) {
     // TWO (2) input code-words
     uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t*>(simdutf::tables::utf8_to_utf16::shufutf8[idx]));
+    // 1 byte: 00000000 00000000 00000000 0ddddddd
+    // 2 byte: 00000000 00000000 110ccccc 10dddddd
+    // 3 byte: 00000000 1110bbbb 10cccccc 10dddddd
+    // 4 byte: 11110aaa 10bbbbbb 10cccccc 10dddddd
     uint32x4_t perm = vreinterpretq_u32_u8(vqtbl1q_u8(in, sh));
+    // Ascii
     uint32x4_t ascii = vandq_u32(perm, vmovq_n_u32(0x7F));
     uint32x4_t middle = vandq_u32(perm, vmovq_n_u32(0x3f00));
     // When converting the way we do, the three byte prefix will be interpreted as the
@@ -182,10 +196,15 @@ size_t convert_masked_utf8_to_utf32(const char *input,
         vreinterpretq_u8_u32(vandq_u32(perm, vmovq_n_u32(0x00400000)));
     uint32x4_t corrected =
         vreinterpretq_u32_u8(vsraq_n_u8(vreinterpretq_u8_u32(perm), correction, 1));
-    uint32x4_t cd = VSRAQ_N_U32(ascii, middle, 2);
-    uint32x4_t ab = VBSLQ_U32(vmovq_n_u32(0x01C0000), vshrq_n_u32(corrected, 6), vshrq_n_u32(corrected, 4));
-    uint32x4_t composed = VBSLQ_U32(vmovq_n_u32(0xFFE00FFF), cd, ab);
-    vst1q_u32(utf32_output, vreinterpretq_u32_u8(composed));
+    // 00000000 00000000 0000cccc ccdddddd
+    uint32x4_t cd = vsraq_n_u32(ascii, middle, 2);
+    // Insert twice
+    // xxxxxxxx xxxaaabb bbbbxxxx xxxxxxxx
+    uint32x4_t ab = vbslq_u32(vmovq_n_u32(0x01C0000), vshrq_n_u32(corrected, 6), vshrq_n_u32(corrected, 4));
+    // 00000000 000aaabb bbbbcccc ccdddddd
+    uint32x4_t composed = vbslq_u32(vmovq_n_u32(0xFFE00FFF), cd, ab);
+    // Store
+    vst1q_u32(utf32_output, composed);
     utf32_output += 3;
   } else {
     // here we know that there is an error but we do not handle errors

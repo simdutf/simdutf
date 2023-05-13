@@ -30,31 +30,6 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
     return is_third_byte ^ is_fourth_byte;
 }
 
-#if defined(__clang__) && defined(__aarch64__)
-// Clang tends to constant propagate these intrinsics into multiple instructions.
-// While it is true that BSL and SRA are slow, it is still the better option due to
-// how little time there is to wait for writeback.
-# define VBSLQ_U32(x, y, z) ({ \
-    uint32x4_t result; \
-    __asm__("bsl %0.16b, %2.16b, %3.16b" : "=w" (result) : "0" (x), "w" (y), "w" (z)); \
-    result; \
-  })
-# define VBSL_U16(x, y, z) ({ \
-    uint16x4_t result; \
-    __asm__("bsl %0.8b, %2.8b, %3.8b" : "=w" (result) : "0" (x), "w" (y), "w" (z)); \
-    result; \
-  })
-# define VSRAQ_N_U32(x, y, z) ({ \
-     uint32x4_t result; \
-     __asm__("usra %0.4s, %2.4s, %3" : "=w" (result) : "0" (x), "w" (y), "i" (z)); \
-     result; \
-   })
-#else
-#  define VBSLQ_U32(x, y, z) vbslq_u32(x,y,z)
-#  define VBSL_U16(x, y, z) vbsl_u16(x,y,z)
-#  define VSRAQ_N_U32(x, y, z) vsraq_n_u32(x,y,z)
-#endif
-
 #include "arm64/arm_detect_encodings.cpp"
 
 #include "arm64/arm_validate_utf16.cpp"
