@@ -1,40 +1,31 @@
-#ifndef SIMDUTF_VALID_UTF32_TO_UTF16_H
-#define SIMDUTF_VALID_UTF32_TO_UTF16_H
+#ifndef SIMDUTF_VALID_UTF32_TO_LATIN1_H
+#define SIMDUTF_VALID_UTF32_TO_LATIN1_H
 
 namespace simdutf {
 namespace scalar {
 namespace {
-namespace utf32_to_utf16 {
+namespace utf32_to_latin1 {
 
-template <endianness big_endian>
-inline size_t convert_valid(const char32_t* buf, size_t len, char16_t* utf16_output) {
-  const uint32_t *data = reinterpret_cast<const uint32_t *>(buf);
-  size_t pos = 0;
-  char16_t* start{utf16_output};
-  while (pos < len) {
-    uint32_t word = data[pos];
-    if((word & 0xFFFF0000)==0) {
-      // will not generate a surrogate pair
-      *utf16_output++ = !match_system(big_endian) ? char16_t(utf16::swap_bytes(uint16_t(word))) : char16_t(word);
-      pos++;
-    } else {
-      // will generate a surrogate pair
-      word -= 0x10000;
-      uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
-      uint16_t low_surrogate = uint16_t(0xDC00 + (word & 0x3FF));
-      if (!match_system(big_endian)) {
-        high_surrogate = utf16::swap_bytes(high_surrogate);
-        low_surrogate = utf16::swap_bytes(low_surrogate);
-      }
-      *utf16_output++ = char16_t(high_surrogate);
-      *utf16_output++ = char16_t(low_surrogate);
-      pos++;
+
+inline result convert_valid(const char32_t *buf, size_t len, char *latin1_output) {
+    const uint32_t *data = reinterpret_cast<const uint32_t *>(buf);
+
+    uint32_t utf32_char;
+
+    for (size_t i = 0; i < len; i++) {
+
+        utf32_char = (uint32_t)data[i]; 
+        
+        if ((utf32_char & 0xFFFFFF00) == 0){ // Check if the character can be represented in Latin-1
+            latin1_output[i] = (char)(utf32_char & 0xFF);
+        } 
     }
-  }
-  return utf16_output - start;
+  return len;
+
 }
 
-} // utf32_to_utf16 namespace
+
+} // utf32_to_latin1 namespace
 } // unnamed namespace
 } // namespace scalar
 } // namespace simdutf
