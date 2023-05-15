@@ -10,6 +10,8 @@ add_library(simdutf_tests_reference STATIC
   validate_utf16.h
   validate_utf16.cpp
   validate_utf32.h
-  validate_utf32.cpp)
+  validate_utf32.cpp
+  validate_latin1.cpp
+  validate_latin1.h)
 add_library(simdutf::tests::reference ALIAS simdutf_tests_reference)
 target_link_libraries(simdutf_tests_reference PUBLIC simdutf)
