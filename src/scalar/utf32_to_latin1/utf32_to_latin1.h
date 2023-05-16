@@ -20,13 +20,14 @@ inline size_t convert(const char32_t *buf, size_t len, char *latin1_output) {
         
         if ((utf32_char & 0xFFFFFF00) == 0){ // Check if the character can be represented in Latin-1
             latin1_output[i] = (char)(utf32_char & 0xFF);
-        } else {return 0};
+        } else {return 0;};
     }
   return latin1_output - start;
 
 }
 
-inline size_t convert_with_errors(const char32_t *buf, size_t len, char *latin1_output) {
+
+inline result convert_with_errors(const char32_t *buf, size_t len, char *latin1_output) {
     const uint32_t *data = reinterpret_cast<const uint32_t *>(buf);
     char* start{latin1_output};
 
@@ -38,7 +39,7 @@ inline size_t convert_with_errors(const char32_t *buf, size_t len, char *latin1_
         
         if ((utf32_char & 0xFFFFFF00) == 0){ // Check if the character can be represented in Latin-1
             latin1_output[i] = (char)(utf32_char & 0xFF);
-        } else {return error_code::OTHER};
+        } else {return result(error_code::OTHER, i);};
     }
   return result(error_code::SUCCESS, latin1_output - start);
 
