@@ -55,7 +55,16 @@ The library compiles down to a small library of a few hundred kilobytes. Our fun
 How fast is it?
 -----------------
 
-Over a wide range of realistic data sources, we transcode a billion characters per second or more. Our approach can be 3 to 10 times faster than the popular ICU library on difficult (non-ASCII) strings. We can be 20x faster than ICU when processing easy strings (ASCII). Our good results apply to both recent x64 and ARM processors.
+The adoption of the simdutf library by the popular Node.js JavaScript runtime lead to a significant
+performance gain:
+
+> Decoding and Encoding becomes considerably faster than in Node.js 18. With the addition of simdutf for UTF-8 parsing the observed benchmark, results improved by 364% (an extremely impressive leap) when decoding in comparison to Node.js 16. ([State of Node.js Performance 2023](https://blog.rafaelgss.dev/state-of-nodejs-performance-2023))
+
+
+<img src="doc/node2023.png" width="70%" />
+
+
+Over a wide range of realistic data sources, the simdutf library transcodes a billion characters per second or more. Our approach can be 3 to 10 times faster than the popular ICU library on difficult (non-ASCII) strings. We can be 20x faster than ICU when processing easy strings (ASCII). Our good results apply to both recent x64 and ARM processors.
 
 
 To illustrate, we present a benchmark result with values are in billions of characters processed by second. Consider the following figures.
