@@ -137,6 +137,11 @@ public:
     return set_best()->validate_utf32_with_errors(buf, len);
   }
 
+  simdutf_warn_unused size_t convert_utf32_to_latin1(const char32_t * buf, size_t len, char* latin1_output) const noexcept final override {
+    return set_best()->convert_utf32_to_latin1(buf, len,latin1_output);
+  }
+ 
+
   simdutf_warn_unused size_t convert_utf8_to_utf16le(const char * buf, size_t len, char16_t* utf16_output) const noexcept final override {
     return set_best()->convert_utf8_to_utf16le(buf, len, utf16_output);
   }
@@ -349,6 +354,13 @@ public:
     // implementation. And, when it does happen (that we have an unsupported implementation),
     // what are the chances that the programmer has a fallback? Given that *we* provide the
     // fallback, it implies that the programmer would need a fallback for our fallback.
+  }
+
+
+// simdutf_warn_unused size_t convert_utf32_to_latin1(const char32_t * buf, size_t len, char* latin1_output) const noexcept final;
+
+ simdutf_warn_unused size_t convert_utf32_to_latin1(const char32_t*, size_t, char* latin1_outpu) const noexcept final override {
+    return 0;
   }
 
   simdutf_warn_unused result validate_utf8_with_errors(const char *, size_t) const noexcept final override {

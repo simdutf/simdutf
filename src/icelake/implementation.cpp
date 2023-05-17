@@ -34,6 +34,13 @@ namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 
 
+
+simdutf_warn_unused size_t implementation::convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) const noexcept {
+  return scalar::utf32_to_latin1::convert(buf,len,latin1_output);
+}
+
+
+
 simdutf_warn_unused int
 implementation::detect_encodings(const char *input,
                                  size_t length) const noexcept {

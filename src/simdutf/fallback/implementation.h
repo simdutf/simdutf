@@ -18,6 +18,10 @@ public:
       0
   ) {}
   simdutf_warn_unused int detect_encodings(const char * input, size_t length) const noexcept final;
+
+  simdutf_warn_unused size_t convert_utf32_to_latin1(const char32_t * buf, size_t len, char* latin1_output) const noexcept final;
+
+
   simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
   simdutf_warn_unused result validate_utf8_with_errors(const char *buf, size_t len) const noexcept final;
   simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) const noexcept final;

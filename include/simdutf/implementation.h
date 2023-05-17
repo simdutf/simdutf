@@ -1577,6 +1577,14 @@ public:
    */
   simdutf_warn_unused virtual size_t convert_valid_utf32_to_utf8(const char32_t * input, size_t length, char* utf8_buffer) const noexcept = 0;
 
+
+
+  simdutf_warn_unused virtual size_t convert_utf32_to_latin1(const char32_t * input, size_t length, char* latin1_buffer) const noexcept = 0;
+/*   {
+    return 0;
+  }
+ */
+
   /**
    * Convert possibly broken UTF-32 string into UTF-16LE string.
    *
