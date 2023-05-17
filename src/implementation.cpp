@@ -357,9 +357,7 @@ public:
   }
 
 
-// simdutf_warn_unused size_t convert_utf32_to_latin1(const char32_t * buf, size_t len, char* latin1_output) const noexcept final;
-
- simdutf_warn_unused size_t convert_utf32_to_latin1(const char32_t*, size_t, char* latin1_outpu) const noexcept final override {
+ simdutf_warn_unused size_t convert_utf32_to_latin1(const char32_t*, size_t, char* latin1_output) const noexcept final override {
     return 0;
   }
 
