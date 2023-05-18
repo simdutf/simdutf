@@ -1698,6 +1698,9 @@ public:
    */
   simdutf_warn_unused virtual size_t utf8_length_from_utf32(const char32_t * input, size_t length) const noexcept = 0;
 
+
+    simdutf_warn_unused virtual size_t latin1_length_from_utf32(const char32_t * input, size_t length) const noexcept = 0;
+
   /**
    * Compute the number of two-byte words that this UTF-32 string would require in UTF-16 format.
    *
