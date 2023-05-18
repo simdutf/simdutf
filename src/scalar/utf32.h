@@ -65,7 +65,7 @@ inline size_t utf16_length_from_utf32(const char32_t* buf, size_t len) {
 
 inline size_t latin1_length_from_utf32(const char32_t* buf, size_t len) {
   // We are not BOM aware.
-  return len; // a utf32 will always represent 1 latin 1 character
+  return len; // a utf32 will always represent 1 latin1 character
 }
 
 
