@@ -20,6 +20,7 @@ namespace simdutf { namespace tests { namespace helpers {
     void encode_utf8(uint32_t codepoint, std::vector<char>& target);
     void encode_utf16(uint32_t codepoint, std::vector<char16_t>& target);
     void encode_utf32(uint32_t codepoint, std::vector<char32_t>& target);
+    void encode_latin1(uint32_t codepoint, std::vector<char>& target);
   };
 
     /**
