@@ -6,6 +6,7 @@
 #include "scalar/utf8_to_utf16/utf8_to_utf16.h"
 #include "scalar/utf8.h"
 #include "scalar/utf16.h"
+#include "scalar/latin1.h"
 
 #include "simdutf/icelake/begin.h"
 namespace simdutf {
@@ -40,6 +41,13 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_latin1(const char32_
 }
 
 simdutf_warn_unused size_t implementation::latin1_length_from_utf32(const char32_t * input, size_t length) const noexcept {
+  return length;
+  }
+
+simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(const char * buf, size_t len, char32_t* utf32_output) const noexcept {
+  return scalar::latin1_to_utf32::convert(buf,len,utf32_output);
+}
+simdutf_warn_unused size_t implementation::utf32_length_from_latin1(const char * input, size_t length) const noexcept {
   return length;
   }
 

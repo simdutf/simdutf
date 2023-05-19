@@ -9,6 +9,11 @@ add_subdirectory(reference)
 include(${PROJECT_SOURCE_DIR}/cmake/add_cpp_test.cmake)
 link_libraries(simdutf)
 
+add_cpp_test(convert_latin1_to_utf32)
+target_link_libraries(convert_latin1_to_utf32 
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)
+
 add_cpp_test(convert_utf32_to_latin1)
 target_link_libraries(convert_utf32_to_latin1 
   PUBLIC simdutf::tests::helpers

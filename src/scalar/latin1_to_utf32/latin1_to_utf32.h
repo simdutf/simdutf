@@ -12,7 +12,7 @@ inline size_t convert(const char *buf, size_t len, char32_t *utf32_output) {
   char32_t* start{utf32_output};
 
   for (size_t i = 0; i < len; i++) {
-    utf32_output[i] = (char32_t)data[i]; 
+    *utf32_output++ = (char32_t)data[i]; 
   } 
 
   return utf32_output - start;

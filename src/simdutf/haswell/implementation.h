@@ -20,6 +20,8 @@ public:
   simdutf_warn_unused size_t convert_utf32_to_latin1(const char32_t * buf, size_t len, char* latin1_output) const noexcept final;
   simdutf_warn_unused size_t latin1_length_from_utf32(const char32_t * input, size_t length) const noexcept;
 
+  simdutf_warn_unused size_t convert_latin1_to_utf32(const char * buf, size_t len, char32_t* utf32_output) const noexcept final;
+  simdutf_warn_unused size_t utf32_length_from_latin1(const char * input, size_t length) const noexcept;
 
 
   simdutf_warn_unused int detect_encodings(const char * input, size_t length) const noexcept final;

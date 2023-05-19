@@ -6,6 +6,7 @@
 #include "tables/utf16_to_utf8_tables.h"
 #include "scalar/utf8.h"
 #include "scalar/utf16.h"
+#include "scalar/latin1.h"
 
 #include "simdutf/haswell/begin.h"
 namespace simdutf {
@@ -76,8 +77,22 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_latin1(const char32_
 }
 
 simdutf_warn_unused size_t implementation::latin1_length_from_utf32(const char32_t * input, size_t length) const noexcept {
-  return latin1_length_from_utf32(input,length);
+  return scalar::utf32::latin1_length_from_utf32(input,length);
 }
+
+simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(const char* buf, size_t len, char32_t* latin1_output) const noexcept {
+  return scalar::latin1_to_utf32::convert(buf,len,latin1_output);
+}
+
+simdutf_warn_unused size_t implementation::utf32_length_from_latin1(const char * input, size_t length) const noexcept {
+  return scalar::latin1::utf32_length_from_latin1(input,length);
+}
+
+
+/* 
+simdutf_warn_unused size_t implementation::utf8_length_from_utf16le(const char16_t * input, size_t length) const noexcept {
+  return utf16::utf8_length_from_utf16<endianness::LITTLE>(input, length);
+} */
 
 simdutf_warn_unused int implementation::detect_encodings(const char * input, size_t length) const noexcept {
   // If there is a BOM, then we trust it.

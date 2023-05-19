@@ -13,6 +13,7 @@
 #include "scalar/utf8.h"
 #include "scalar/utf16.h"
 #include "scalar/utf32.h"
+#include "scalar/latin1.h"
 
 #include "scalar/utf32_to_utf8/valid_utf32_to_utf8.h"
 #include "scalar/utf32_to_utf8/utf32_to_utf8.h"
