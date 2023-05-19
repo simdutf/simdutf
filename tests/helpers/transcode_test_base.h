@@ -24,7 +24,7 @@ namespace simdutf { namespace tests { namespace helpers {
   };
 
     /**
-   * This class can be used to test UTF-32 => UTF-16LE transcoding.
+   * This class can be used to test UTF-32 => Latin1 transcoding.
    */
   class transcode_utf32_to_latin1_test_base : transcode_test_base {
   public:

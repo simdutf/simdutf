@@ -37,6 +37,28 @@ TEST(convert_latin1_only) {
   // }
 }
 
+TEST(convert_fails_if_input_too_large) {
+  uint32_t seed{1234};
+  simdutf::tests::helpers::RandomInt generator(0xFF, 0xffffffff, seed);
+
+  auto procedure = [&implementation](const char32_t* utf32, size_t size, char* latin1) -> size_t {
+    return implementation.convert_utf32_to_latin1(utf32, size, latin1);
+  };
+  const size_t size = 64;
+  simdutf::tests::helpers::transcode_utf32_to_latin1_test_base test([](){return '*';}, size+32);
+
+  for (size_t j = 0; j < 1000; j++) {
+    uint32_t wrong_value = generator();
+    for (size_t i=0; i < size; i++) {
+      auto old = test.input_utf32[i];
+      test.input_utf32[i] = wrong_value;
+      ASSERT_TRUE(test(procedure));
+      test.input_utf32[i] = old;
+    }
+  }
+}
+
+
 int main(int argc, char* argv[]) {
   return simdutf::test::main(argc, argv);
 }
