@@ -15,8 +15,8 @@ inline size_t convert(const char32_t *buf, size_t len, char *latin1_output) {
     uint32_t utf32_char;
     size_t pos = 0;
 
-            printf("This is len: %02d ",len);
-
+/*             printf("This is len: %02d ",len);
+ */
 
     while (pos < len) {
         utf32_char = (uint32_t)data[pos]; 
