@@ -71,6 +71,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
   void transcode_test_base::encode_utf32(uint32_t codepoint, std::vector<char32_t>& target) {
     ::simdutf::tests::reference::utf32::encode(codepoint, [&target](uint32_t word) {
+      // std::cout << "Word to be added to the target: " << word << std::endl;
       target.push_back(word);
     });
   }
@@ -88,7 +89,9 @@ namespace simdutf { namespace tests { namespace helpers {
    */
   transcode_latin1_to_utf32_test_base::transcode_latin1_to_utf32_test_base(GenerateCodepoint generate,
                                        size_t input_size) {
+    int size;
     while (input_latin1.size() < input_size) {
+      size = input_latin1.size();
       const uint32_t codepoint = generate();
       prepare_input(codepoint);
     }
@@ -97,10 +100,9 @@ namespace simdutf { namespace tests { namespace helpers {
   }
 
   void transcode_latin1_to_utf32_test_base::prepare_input(uint32_t codepoint) {
-      //printf("Hello world");
-      // return;
+      encode_latin1(codepoint, input_latin1); 
+
       encode_utf32(codepoint, reference_output_utf32);
-      encode_latin1(codepoint, input_latin1); //-- not applicable? All of a byte is translatable to latin1
   }
 
   bool transcode_latin1_to_utf32_test_base::is_input_valid() const {
@@ -111,13 +113,13 @@ namespace simdutf { namespace tests { namespace helpers {
   bool transcode_latin1_to_utf32_test_base::validate(size_t saved_chars) const {
     if (!is_input_valid()) {
       if (saved_chars != 0) {
-        printf("input UTF-32 string is not valid, but conversion routine returned %zu, indicating a valid input\n", saved_chars);
+        printf("input Latin1 string is not valid, but conversion routine returned %zu, indicating a valid input\n", saved_chars);
         return false;
       }
     }
     if (saved_chars == 0) {
       if (is_input_valid()) {
-        printf("input UTF-32 string is valid, but conversion routine returned 0, indicating input error");
+        printf("input Latin1 string is valid, but conversion routine returned 0, indicating input error");
         return false;
       }
 
@@ -135,6 +137,9 @@ namespace simdutf { namespace tests { namespace helpers {
     if (saved_chars != reference_output_utf32.size()) {
       printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
              size_t(saved_chars), size_t(reference_output_utf32.size()));
+
+      // printf("Size of reference output: %d\n",reference_output_utf32.size());
+
 
       dump("expected :", reference_output_utf32);
       dump("actual   :", output_utf32);

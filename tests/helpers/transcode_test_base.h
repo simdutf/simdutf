@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <cstdint>
 #include <vector>
 #include <functional>
@@ -76,7 +77,7 @@ namespace simdutf { namespace tests { namespace helpers {
    */
   class transcode_latin1_to_utf32_test_base : transcode_test_base {
   public:
-    using GenerateCodepoint = std::function<char()>;
+    using GenerateCodepoint = std::function<uint32_t()>;
 
     std::vector<char32_t> output_utf32; // what the procedure under test produced
     std::vector<char32_t> reference_output_utf32; // what we are expecting
@@ -95,6 +96,7 @@ namespace simdutf { namespace tests { namespace helpers {
       }
       output_utf32.resize(reference_output_utf32.size() + output_size_margin);
       output_utf32.shrink_to_fit(); // to help detect overruns.
+      
     }
 
     template <typename PROCEDURE>
@@ -104,10 +106,12 @@ namespace simdutf { namespace tests { namespace helpers {
     }
     template <typename PROCEDURE>
     bool check_size(PROCEDURE procedure) {
+      // std::cout << "Size of reference_output_utf32: " << reference_output_utf32.size() << std::endl;
       size_t saved_chars = procedure(input_latin1.data(), input_latin1.size());
       if (saved_chars != reference_output_utf32.size()) {
         printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
              size_t(saved_chars), size_t(reference_output_utf32.size()));
+
         return false;
       }
       return true;

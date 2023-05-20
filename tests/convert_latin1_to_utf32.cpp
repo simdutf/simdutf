@@ -16,7 +16,7 @@ namespace {
 
 TEST(convert_all_latin1) {
   size_t counter = 0;
-  auto generator = [&counter]() -> uint8_t {
+  auto generator = [&counter]() -> uint32_t {
     return counter++ & 0xFF; //0x7f;
   };
 
@@ -29,7 +29,7 @@ TEST(convert_all_latin1) {
   };
   //std::array<size_t, 4> input_size{7,16,24,67};
   // for (size_t size: input_size) {
-    simdutf::tests::helpers::transcode_latin1_to_utf32_test_base test(generator, 129);
+    simdutf::tests::helpers::transcode_latin1_to_utf32_test_base test(generator, 360);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   // }
