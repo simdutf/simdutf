@@ -1580,11 +1580,39 @@ public:
   simdutf_warn_unused virtual size_t convert_latin1_to_utf32(const char * input, size_t length, char32_t* latin1_buffer) const noexcept = 0;
 
 
+  /**
+   * Convert possibly broken UTF-32 string into Latin1 string.
+   *
+   * During the conversion also validation of the input string is done.
+   * This function is suitable to work with inputs from untrusted sources.
+   *
+   * This function is not BOM-aware.
+   *
+   * @param input         the UTF-32 string to convert
+   * @param length        the length of the string in 4-byte words (char32_t)
+   * @param latin1_buffer   the pointer to buffer that can hold conversion result
+   * @return number of written words; 0 if input is not a valid UTF-32 string
+   */
+
   simdutf_warn_unused virtual size_t convert_utf32_to_latin1(const char32_t * input, size_t length, char* latin1_buffer) const noexcept = 0;
-/*   {
-    return 0;
-  }
- */
+
+  /**
+   * Convert possibly broken UTF-32 string into Latin1 string and stop on error.
+   *
+   * During the conversion also validation of the input string is done.
+   * This function is suitable to work with inputs from untrusted sources.
+   *
+   * This function is not BOM-aware.
+   *
+   * @param input         the UTF-32 string to convert
+   * @param length        the length of the string in 4-byte words (char32_t)
+   * @param latin1_buffer   the pointer to buffer that can hold conversion result
+   * @return number of written words; 0 if input is not a valid UTF-32 string
+   */
+
+  simdutf_warn_unused virtual result convert_utf32_to_latin1_with_errors(const char32_t * input, size_t length, char* latin1_buffer) const noexcept = 0;
+
+
 
   /**
    * Convert possibly broken UTF-32 string into UTF-16LE string.
@@ -1699,8 +1727,26 @@ public:
    */
   simdutf_warn_unused virtual size_t utf8_length_from_utf32(const char32_t * input, size_t length) const noexcept = 0;
 
+  /**
+   * Return the number of bytes that this UTF-32 string would require in Latin1 format.
+   *
+   * This function does not validate the input.
+   *
+   * @param input         the UTF-32 string to convert
+   * @param length        the length of the string in 4-byte words (char32_t)
+   * @return the number of bytes required to encode the UTF-32 string as Latin1
+   */
     simdutf_warn_unused virtual size_t utf32_length_from_latin1(const char * input, size_t length) const noexcept = 0;
 
+  /**
+   * Compute the number of bytes that this Latin1 string would require in UTF-32 format.
+   *
+   * This function does not validate the input.
+   *
+   * @param input         the Latin1 string to convert
+   * @param length        the length of the string in 4-byte words (char32_t)
+   * @return the number of bytes required to encode the Latin1 string as UTF-32
+   */
     simdutf_warn_unused virtual size_t latin1_length_from_utf32(const char32_t * input, size_t length) const noexcept = 0;
 
   /**

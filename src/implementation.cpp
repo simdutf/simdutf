@@ -142,6 +142,11 @@ public:
     return set_best()->convert_utf32_to_latin1(buf, len,latin1_output);
   }
 
+    simdutf_warn_unused result convert_utf32_to_latin1_with_errors(const char32_t * buf, size_t len, char* latin1_output) const noexcept final override {
+    return set_best()->convert_utf32_to_latin1_with_errors(buf, len,latin1_output);
+  }
+
+
     simdutf_warn_unused size_t latin1_length_from_utf32(const char32_t * buf, size_t len) const noexcept override {
     return set_best()->latin1_length_from_utf32(buf, len);
   }
@@ -388,6 +393,10 @@ public:
 
    simdutf_warn_unused size_t convert_utf32_to_latin1(const char32_t *, size_t, char* ) const noexcept final override {
     return 0;
+  }
+
+  simdutf_warn_unused result convert_utf32_to_latin1_with_errors(const char32_t *, size_t, char* ) const noexcept final override {
+    return result(error_code::OTHER, 0);
   }
 
   simdutf_warn_unused result validate_utf8_with_errors(const char *, size_t) const noexcept final override {
