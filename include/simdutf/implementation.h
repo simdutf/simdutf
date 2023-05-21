@@ -1596,6 +1596,22 @@ public:
 
   simdutf_warn_unused virtual size_t convert_utf32_to_latin1(const char32_t * input, size_t length, char* latin1_buffer) const noexcept = 0;
 
+
+  /**
+   * Convert valid UTF-32 string into Latin1 string.
+   *
+   * This function assumes that the input string is valid UTF-32.
+   *
+   * This function is not BOM-aware.
+   *
+   * @param input         the UTF-32 string to convert
+   * @param length        the length of the string in 4-byte words (char32_t)
+   * @param latin1_buffer   the pointer to buffer that can hold the conversion result
+   * @return number of written words; 0 if conversion is not possible
+   */
+  simdutf_warn_unused virtual size_t convert_valid_utf32_to_latin1(const char32_t * input, size_t length, char* latin1_buffer) const noexcept = 0;
+
+
   /**
    * Convert possibly broken UTF-32 string into Latin1 string and stop on error.
    *
