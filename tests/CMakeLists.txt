@@ -19,6 +19,8 @@ target_link_libraries(convert_utf32_to_latin1_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
 
+
+
 add_cpp_test(convert_utf32_to_latin1_with_errors_tests)
 target_link_libraries(convert_utf32_to_latin1_with_errors_tests 
   PUBLIC simdutf::tests::helpers
