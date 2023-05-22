@@ -60,7 +60,7 @@ namespace simd {
     simdutf_really_inline base8() : base<simd8<T>>() {}
     simdutf_really_inline base8(const __m128i _value) : base<simd8<T>>(_value) {}
 
-    friend simdjson_really_inline Mask operator==(const simd8<T> lhs, const simd8<T> rhs) { return _mm_cmpeq_epi8(lhs, rhs); }
+    friend simdutf_really_inline Mask operator==(const simd8<T> lhs, const simd8<T> rhs) { return _mm_cmpeq_epi8(lhs, rhs); }
 
     static const int SIZE = sizeof(base<simd8<T>>::value);
 

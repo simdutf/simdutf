@@ -62,7 +62,7 @@ namespace simd {
     simdutf_really_inline base8(const __m256i _value) : base<simd8<T>>(_value) {}
     simdutf_really_inline T first() const { return _mm256_extract_epi8(*this,0); }
     simdutf_really_inline T last() const { return _mm256_extract_epi8(*this,31); }
-    friend simdjson_really_inline Mask operator==(const simd8<T> lhs, const simd8<T> rhs) { return _mm256_cmpeq_epi8(lhs, rhs); }
+    friend simdutf_really_inline Mask operator==(const simd8<T> lhs, const simd8<T> rhs) { return _mm256_cmpeq_epi8(lhs, rhs); }
 
     static const int SIZE = sizeof(base<T>::value);
 
