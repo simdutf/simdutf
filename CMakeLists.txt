@@ -65,6 +65,7 @@ else()
   message(STATUS "The benchmarks can be enabled by setting SIMDUTF_BENCHMARKS, e.g., -D SIMDUTF_BENCHMARKS=ON.")
 endif()
 
+message(STATUS "Compiling using the C++ standard:" ${CMAKE_CXX_STANDARD})
 # ---- Install rules ----
 add_library(simdutf::simdutf ALIAS simdutf)
 
