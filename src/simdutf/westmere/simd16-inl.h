@@ -11,7 +11,7 @@ struct base16: base<simd16<T>> {
   template <typename Pointer>
   simdutf_really_inline base16(const Pointer* ptr) : base16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(ptr))) {}
 
-  simdutf_really_inline Mask operator==(const simd16<T> other) const { return _mm_cmpeq_epi16(*this, other); }
+  friend simdutf_really_inline Mask operator==(const simd16<T> lhs, const simd16<T> rhs) { return _mm_cmpeq_epi16(lhs, rhs); }
 
   static const int SIZE = sizeof(base<simd16<T>>::value);
 
