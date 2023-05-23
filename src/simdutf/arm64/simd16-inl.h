@@ -39,8 +39,6 @@ struct base16: base_u16<T> {
   template <typename Pointer>
   simdutf_really_inline base16(const Pointer* ptr) : base16(vld1q_u16(ptr)) {}
 
-  friend simdutf_really_inline Mask operator==(const simd16<T> lhs, const simd16<T> rhs) { return vceqq_u16(lhs, rhs); }
-
   static const int SIZE = sizeof(base_u16<T>::value);
 
   template<int N=1>
