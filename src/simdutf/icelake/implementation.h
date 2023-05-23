@@ -17,12 +17,17 @@ public:
       "Intel AVX512 (AVX-512BW, AVX-512CD, AVX-512VL, AVX-512VBMI2 extensions)",
       internal::instruction_set::AVX2 | internal::instruction_set::BMI1 | internal::instruction_set::BMI2 | internal::instruction_set::AVX512BW | internal::instruction_set::AVX512CD | internal::instruction_set::AVX512VL | internal::instruction_set::AVX512VBMI2 ) {}
 
+
+    simdutf_warn_unused size_t convert_utf8_to_latin1(const char * buf, size_t len, char* latin1_buffer) const noexcept final;
+    simdutf_warn_unused size_t latin1_length_from_utf8(const char * input, size_t length) const noexcept;
+
+
     simdutf_warn_unused size_t convert_utf32_to_latin1(const char32_t * buf, size_t len, char* latin1_buffer) const noexcept final;
     simdutf_warn_unused size_t convert_valid_utf32_to_latin1(const char32_t * buf, size_t len, char* latin1_output) const noexcept final;
     simdutf_warn_unused result convert_utf32_to_latin1_with_errors(const char32_t * buf, size_t len, char* latin1_output) const noexcept final;
     simdutf_warn_unused size_t latin1_length_from_utf32(const char32_t * input, size_t length) const noexcept;
 
-    simdutf_warn_unused size_t convert_latin1_to_utf32(const char * buf, size_t len, char32_t* utf32_output) const noexcept final;
+  simdutf_warn_unused size_t convert_latin1_to_utf32(const char * buf, size_t len, char32_t* utf32_output) const noexcept final;
   simdutf_warn_unused size_t utf32_length_from_latin1(const char * input, size_t length) const noexcept;
 
 

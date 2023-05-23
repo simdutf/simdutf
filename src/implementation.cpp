@@ -93,6 +93,46 @@ public:
   const std::string &description() const noexcept final { return set_best()->description(); }
   uint32_t required_instruction_sets() const noexcept final { return set_best()->required_instruction_sets(); }
 
+
+
+
+  simdutf_warn_unused size_t convert_utf8_to_latin1(const char * buf, size_t len, char* latin1_output) const noexcept final override {
+    return set_best()->convert_utf8_to_latin1(buf, len,latin1_output);
+  }
+
+  simdutf_warn_unused size_t latin1_length_from_utf8(const char * buf, size_t len) const noexcept override {
+    return set_best()->latin1_length_from_utf8(buf, len);
+  }  
+
+  simdutf_warn_unused size_t convert_utf32_to_latin1(const char32_t * buf, size_t len, char* latin1_output) const noexcept final override {
+    return set_best()->convert_utf32_to_latin1(buf, len,latin1_output);
+  }
+
+  simdutf_warn_unused size_t convert_valid_utf32_to_latin1(const char32_t * buf, size_t len, char* latin1_output) const noexcept final override {
+    return set_best()->convert_utf32_to_latin1(buf, len,latin1_output);
+  }
+
+    simdutf_warn_unused result convert_utf32_to_latin1_with_errors(const char32_t * buf, size_t len, char* latin1_output) const noexcept final override {
+    return set_best()->convert_utf32_to_latin1_with_errors(buf, len,latin1_output);
+  }
+
+
+    simdutf_warn_unused size_t latin1_length_from_utf32(const char32_t * buf, size_t len) const noexcept override {
+    return set_best()->latin1_length_from_utf32(buf, len);
+  }
+ 
+
+ 
+  simdutf_warn_unused size_t convert_latin1_to_utf32(const char * buf, size_t len, char32_t * latin1_output) const noexcept final override {
+    return set_best()->convert_latin1_to_utf32(buf, len,latin1_output);
+  }
+
+    simdutf_warn_unused size_t utf32_length_from_latin1(const char * buf, size_t len) const noexcept override {
+    return set_best()->utf32_length_from_latin1(buf, len);
+  }
+
+
+
   simdutf_warn_unused int detect_encodings(const char * input, size_t length) const noexcept override {
     return set_best()->detect_encodings(input, length);
   }
@@ -138,32 +178,6 @@ public:
   }
 
 
-  simdutf_warn_unused size_t convert_utf32_to_latin1(const char32_t * buf, size_t len, char* latin1_output) const noexcept final override {
-    return set_best()->convert_utf32_to_latin1(buf, len,latin1_output);
-  }
-
-  simdutf_warn_unused size_t convert_valid_utf32_to_latin1(const char32_t * buf, size_t len, char* latin1_output) const noexcept final override {
-    return set_best()->convert_utf32_to_latin1(buf, len,latin1_output);
-  }
-
-    simdutf_warn_unused result convert_utf32_to_latin1_with_errors(const char32_t * buf, size_t len, char* latin1_output) const noexcept final override {
-    return set_best()->convert_utf32_to_latin1_with_errors(buf, len,latin1_output);
-  }
-
-
-    simdutf_warn_unused size_t latin1_length_from_utf32(const char32_t * buf, size_t len) const noexcept override {
-    return set_best()->latin1_length_from_utf32(buf, len);
-  }
- 
-
- 
-  simdutf_warn_unused size_t convert_latin1_to_utf32(const char * buf, size_t len, char32_t * latin1_output) const noexcept final override {
-    return set_best()->convert_latin1_to_utf32(buf, len,latin1_output);
-  }
-
-    simdutf_warn_unused size_t utf32_length_from_latin1(const char * buf, size_t len) const noexcept override {
-    return set_best()->utf32_length_from_latin1(buf, len);
-  }
 
 
 
@@ -383,11 +397,19 @@ public:
   }
 
 
-  simdutf_warn_unused size_t latin1_length_from_utf32(const char32_t *, size_t) const noexcept override {
+  simdutf_warn_unused size_t latin1_length_from_utf8(const char *, size_t) const noexcept override {
+    return 0;
+  }
+
+ simdutf_warn_unused size_t convert_utf8_to_latin1(const char*, size_t, char*) const noexcept final override {
     return 0;
   }
 
  simdutf_warn_unused size_t convert_latin1_to_utf32(const char*, size_t, char32_t*) const noexcept final override {
+    return 0;
+  }
+
+    simdutf_warn_unused size_t latin1_length_from_utf32(const char32_t *, size_t) const noexcept override {
     return 0;
   }
 

@@ -179,6 +179,19 @@ inline size_t utf16_length_from_utf8(const char* buf, size_t len) {
     return counter;
 }
 
+inline size_t latin1_length_from_utf8(const char *buf, size_t len) {
+  const int8_t * c = reinterpret_cast<const int8_t *>(buf);
+
+  size_t answer = 0;
+  for (size_t i = 0; i < len; i++) {
+    if ((c[i] >> 7)) {
+      answer++;
+    }
+  }
+  return answer + len;
+}
+
+
 } // utf8 namespace
 } // unnamed namespace
 } // namespace scalar

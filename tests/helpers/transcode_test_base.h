@@ -24,6 +24,56 @@ namespace simdutf { namespace tests { namespace helpers {
     void encode_latin1(uint32_t codepoint, std::vector<char>& target);
   };
 
+
+    /**
+   * This class can be used to test UTF-8 => Latin1 transcoding.
+   */
+  class transcode_utf8_to_latin1_test_base : transcode_test_base {
+  public:
+    using GenerateCodepoint = std::function<uint32_t()>;
+
+    std::vector<char> output_latin1; // what the procedure under test produced
+    std::vector<char> reference_output_latin1; // what we are expecting
+
+    std::vector<char> input_utf8; // source-encoded message: what we're going to transcode
+
+    static constexpr size_t output_size_margin = 0; // extra room for buggy procedures
+
+  public:
+    transcode_utf8_to_latin1_test_base(GenerateCodepoint generate, size_t input_size); //constructor
+
+    template <typename COLLECTION>
+    transcode_utf8_to_latin1_test_base(COLLECTION&& collection) {
+      for (const uint32_t codepoint: collection) {
+        prepare_input(codepoint);
+      }
+      output_latin1.resize(reference_output_latin1.size() + output_size_margin);
+      output_latin1.shrink_to_fit(); // to help detect overruns.
+    }
+
+    template <typename PROCEDURE>
+    bool operator()(PROCEDURE procedure) {
+      size_t saved_chars = procedure(input_utf8.data(), input_utf8.size(), output_latin1.data());
+      return validate(saved_chars);
+    }
+    template <typename PROCEDURE>
+    bool check_size(PROCEDURE procedure) {
+      size_t saved_chars = procedure(input_utf8.data(), input_utf8.size());
+      if (saved_chars != reference_output_latin1.size()) {
+        printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
+             size_t(saved_chars), size_t(reference_output_latin1.size()));
+        return false;
+      }
+      return true;
+    }
+  private:
+    void prepare_input(uint32_t codepoint);
+    bool validate(size_t procedure_result) const;
+    bool is_input_valid() const;
+  };
+
+
+
     /**
    * This class can be used to test UTF-32 => Latin1 transcoding.
    */

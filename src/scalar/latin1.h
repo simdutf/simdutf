@@ -12,6 +12,8 @@ inline size_t utf32_length_from_latin1(const char* buf, size_t len) {
 }
 
 
+
+
 } // utf32 namespace
 } // unnamed namespace
 } // namespace scalar

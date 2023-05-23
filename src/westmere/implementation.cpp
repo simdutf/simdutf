@@ -78,6 +78,16 @@ simdutf_warn_unused int implementation::detect_encodings(const char * input, siz
   }
 }
 
+
+simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
+  return scalar::utf8_to_latin1::convert(buf, len, latin1_output);
+}
+
+simdutf_warn_unused size_t implementation::latin1_length_from_utf8(const char * input, size_t length) const noexcept {
+  return scalar::utf8::latin1_length_from_utf8(input,length);
+  }
+
+
 simdutf_warn_unused size_t implementation::convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) const noexcept {
   return scalar::utf32_to_latin1::convert(buf, len, latin1_output);
 }
