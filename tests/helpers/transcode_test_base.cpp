@@ -22,12 +22,6 @@
 
 namespace simdutf { namespace tests { namespace helpers {
 
-
-
-
-
-
-
   // C++11 does not have mismatch.
   template<class InputIt1, class InputIt2>
   std::pair<InputIt1, InputIt2> our_mismatch(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2) {
@@ -80,6 +74,86 @@ namespace simdutf { namespace tests { namespace helpers {
     ::simdutf::tests::reference::latin1::encode(codepoint, [&target](uint8_t byte) {
       target.push_back(byte);
     });
+  }
+
+
+
+
+  /**
+   * transcode_utf8_to_latin1_test_base can be used to test UTF-32 => UTF-16LE transcoding.
+   */
+  transcode_utf8_to_latin1_test_base::transcode_utf8_to_latin1_test_base(GenerateCodepoint generate,
+                                       size_t input_size) {
+    while (input_utf8.size() < input_size) {
+      const uint32_t codepoint = generate();
+      prepare_input(codepoint);
+    }
+
+    output_latin1.resize(reference_output_latin1.size() + output_size_margin);
+  }
+
+  void transcode_utf8_to_latin1_test_base::prepare_input(uint32_t codepoint) {
+      encode_utf8(codepoint, input_utf8);
+      encode_latin1(codepoint, reference_output_latin1); //-- not applicable? All of a byte is translatable to latin1
+  }
+
+  bool transcode_utf8_to_latin1_test_base::is_input_valid() const {
+    return simdutf::tests::reference::validate_utf8(input_utf8.data(), input_utf8.size());
+  }
+
+  bool transcode_utf8_to_latin1_test_base::validate(size_t saved_chars) const {
+    if (!is_input_valid()) {
+      if (saved_chars != 0) {
+        printf("input UTF-8 string is not valid, but conversion routine returned %zu, indicating a valid input\n", saved_chars);
+        printf("This is input_utf8:%x\n",input_utf8.data());
+        return false;
+      }
+    }
+    if (saved_chars == 0) {
+      if (is_input_valid()) {
+        printf("input UTF-8 string is valid, but conversion routine returned 0, indicating input error");
+        return false;
+      }
+
+      return true;
+    }
+
+    auto dump = [saved_chars](const char* title, const std::vector<char>& array) {
+      printf("%s", title);
+      for (size_t i=0; i < saved_chars; i++) {
+        printf(" %02x", (char)array[i]);
+      }
+      putchar('\n');
+    };
+
+    if (saved_chars != reference_output_latin1.size()) {
+      printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
+             size_t(saved_chars), size_t(reference_output_latin1.size()));
+
+      dump("expected :", reference_output_latin1);
+      dump("actual   :", output_latin1);
+      return false;
+    }
+    // Note that, in general, output_latin1.size() will not matched saved_chars.
+
+    // At this point, we know that the lengths are the same so std::mismatch is enough
+    // to tell us whether the strings are identical.
+    auto it = our_mismatch(output_latin1.begin(), output_latin1.begin() + saved_chars,
+                                    reference_output_latin1.begin(), reference_output_latin1.end());
+    if (it.first != output_latin1.begin() + saved_chars) {
+      printf("mismatched output at %zu: actual value 0x%02x, expected 0x%02x\n",
+             size_t(std::distance(output_latin1.begin(), it.first)), uint8_t(*it.first), uint8_t(*it.second));
+
+      dump("expected :", reference_output_latin1);
+      dump("actual   :", output_latin1);
+      for(size_t i = 0; i < reference_output_latin1.size(); i++) {
+        if(reference_output_latin1[i] != output_latin1[i]) { printf(" ==> "); }
+        printf("at %zu expected 0x%04x 0x%04x\n ", i, uint8_t(reference_output_latin1[i]), uint8_t(output_latin1[i]));
+      }
+      return false;
+    }
+
+    return true;
   }
 
 

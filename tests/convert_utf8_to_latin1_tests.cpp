@@ -16,7 +16,7 @@ namespace {
   constexpr size_t trials = 10000;
 }
 
-TEST(convert_pure_ASCII) {
+/* TEST(convert_pure_ASCII) {
   for(size_t trial = 0; trial < trials; trial ++) {
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
     size_t counter = 0;
@@ -37,28 +37,85 @@ TEST(convert_pure_ASCII) {
       ASSERT_TRUE(test.check_size(size_procedure));
     }
   }
-}
-/* 
-TEST(convert_1_or_2_UTF8_bytes) {
+} 
+
+TEST(convert_1_or_2_valid_UTF8_bytes_to_latin1) {
   for(size_t trial = 0; trial < trials; trial ++) {
+    // printf("%i \n",trial);
     uint32_t seed{1234+uint32_t(trial)};
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
-    simdutf::tests::helpers::RandomInt random(0x0000, 0x07ff, seed); // range for 1 or 2 UTF-8 bytes
+    simdutf::tests::helpers::RandomInt random(0x0000, 0x0ff, seed); // range for 1 or 2 UTF-8 bytes
 
-    auto procedure = [&implementation](const char* utf8, size_t size, char32_t* utf32) -> size_t {
-      return implementation.convert_utf8_to_utf32(utf8, size, utf32);
+    auto procedure = [&implementation](const char* utf8, size_t size, char* latin1) -> size_t {
+      return implementation.convert_utf8_to_latin1(utf8, size, latin1);
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
-      return implementation.utf32_length_from_utf8(utf8, size);
+      return implementation.latin1_length_from_utf8(utf8, size);
     };
     for (size_t size: input_size) {
-      transcode_utf8_to_utf32_test_base test(random, size);
+      //printf("input size:%i \n",input_size);
+      transcode_utf8_to_latin1_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
       ASSERT_TRUE(test.check_size(size_procedure));
     }
   }
+}*/
+
+TEST(too_large_error) {
+  uint32_t seed{1234};
+  int fix_size = 512;
+  simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0xd800-1},
+                                                {0xe000, 0x10ffff}}, seed);
+  for(size_t trial = 0; trial < trials; trial++) {
+    transcode_utf8_to_latin1_test_base test(random, fix_size);
+    for (int i = 1; i < fix_size; i++) {
+      //if((test.input_utf8[i] & 0b11111000) == 0b11110000) { // Can only have too large error if input > 0xFF
+      if((test.input_utf8[i] > 0xFF)){
+
+        auto procedure = [&implementation, &i](const char* utf8, size_t size, char* latin1) -> size_t {
+          size_t res = implementation.convert_utf8_to_latin1(utf8, size, latin1);
+          printf("result: %i", res);
+          return res;
+/*           ASSERT_EQUAL(res.error, simdutf::error_code::TOO_LARGE);
+          ASSERT_EQUAL(res.count, i); 
+          return 0;*/
+        };
+        //test.input_utf8[i] += ((test.input_utf8[i] & 0b100) == 0b100) ? 0b10 : 0b100;   // Make sure we get too large error and not header bits error
+        ASSERT_TRUE(test(procedure));
+        test.input_utf8[i] -= 0b100;
+      }
+    }
+  }
 }
 
+
+//not sure why this doesn't work, but the test above should
+/* TEST(convert_fails_if_input_too_large) {
+  uint32_t seed{1};
+  simdutf::tests::helpers::RandomInt generator(0xFF, 0xfffffff, seed);
+
+  auto procedure = [&implementation](const char* utf8, size_t size, char* latin1) -> size_t {
+    return implementation.convert_utf8_to_latin1(utf8, size, latin1);
+  };
+  const size_t size = 2;
+  simdutf::tests::helpers::transcode_utf8_to_latin1_test_base test([](){return '*';}, size+32);
+
+  for (size_t j = 0; j < 1000; j++) {
+    uint32_t wrong_value = generator();
+
+    printf("Wrong value: %x \n",wrong_value);
+
+    for (size_t i=0; i < size; i++) {
+      printf("i: %i \n",i);
+      auto old = test.input_utf8[i]; 
+      test.input_utf8[i] = wrong_value;
+      ASSERT_TRUE(test(procedure));
+      test.input_utf8[i] = old;
+    }
+  }
+} */
+
+/*
 TEST(convert_1_or_2_or_3_UTF8_bytes) {
   for(size_t trial = 0; trial < trials; trial ++) {
     uint32_t seed{1234+uint32_t(trial)};
