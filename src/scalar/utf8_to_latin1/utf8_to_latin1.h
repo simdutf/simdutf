@@ -42,15 +42,15 @@ inline size_t convert(const char* buf, size_t len, char* latin_output) {
       if ((data[pos + 1] & 0b11000000) != 0b10000000) { return 0; }// checks if the next byte is a valid continuation byte in UTF-8. A valid continuation byte starts with 10.
       // range check -
       uint32_t code_point = (leading_byte & 0b00011111) << 6 | (data[pos + 1] & 0b00111111);//assembles the Unicode code point from the two bytes. It does this by discarding the leading 110 and 10 bits from the two bytes, shifting the remaining bits of the first byte, and then combining the results with a bitwise OR operation.
-      if (code_point < 0x80 || 0xFF < code_point) { return 0; } //We only care about the range 129-255 which is Non-ASCII latin1 characters
+      if ( 0xFF < code_point) { return 0; } //We only care about the range 129-255 which is Non-ASCII latin1 characters
       *latin_output++ = char(code_point); 
       pos += 2;
-    } else if ((leading_byte & 0b11110000) == 0b11100000) {
+/*     } else if ((leading_byte & 0b11110000) == 0b11100000) {
       // We have a three-byte UTF-8
       return 0;
     } else if ((leading_byte & 0b11111000) == 0b11110000) { // 0b11110000
       // we have a 4-byte UTF-8 word.
-      return 0;
+      return 0; */
     } else {
       return 0;
     }
