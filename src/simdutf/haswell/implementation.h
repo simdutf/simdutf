@@ -18,6 +18,8 @@ public:
   ) {}
 
   simdutf_warn_unused size_t convert_utf8_to_latin1(const char * buf, size_t len, char* latin1_output) const noexcept final;
+    simdutf_warn_unused result convert_utf8_to_latin1_with_errors(const char * buf, size_t len, char* latin1_output) const noexcept final;
+
   simdutf_warn_unused size_t latin1_length_from_utf8(const char * input, size_t length) const noexcept;
 
 

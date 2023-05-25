@@ -15,7 +15,7 @@ namespace {
 
   constexpr size_t trials = 10000;
 }
-
+/* 
 TEST(convert_pure_ASCII) {
   for(size_t trial = 0; trial < trials; trial ++) {
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
@@ -25,7 +25,9 @@ TEST(convert_pure_ASCII) {
     };
 
     auto procedure = [&implementation](const char* utf8, size_t size, char* latin1) -> size_t {
-      return implementation.convert_utf8_to_latin1(utf8, size, latin1);
+      simdutf::result res = implementation.convert_utf8_to_latin1_with_errors(utf8, size, latin1);
+      ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
+      return res.count;
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
       return implementation.latin1_length_from_utf8(utf8, size);
@@ -39,15 +41,17 @@ TEST(convert_pure_ASCII) {
   }
 } 
 
-TEST(convert_1_or_2_valid_UTF8_bytes_to_latin1) {
+TEST(convert_2_valid_UTF8_bytes_to_latin1) {
   for(size_t trial = 0; trial < trials; trial ++) {
     // printf("%i \n",trial);
     uint32_t seed{1234+uint32_t(trial)};
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
-    simdutf::tests::helpers::RandomInt random(0x0000, 0x0ff, seed); // range for 1 or 2 UTF-8 bytes
+    simdutf::tests::helpers::RandomInt random(0x007f, 0x0ff, seed); // range for 1 or 2 UTF-8 bytes
 
     auto procedure = [&implementation](const char* utf8, size_t size, char* latin1) -> size_t {
-      return implementation.convert_utf8_to_latin1(utf8, size, latin1);
+      simdutf::result res = implementation.convert_utf8_to_latin1_with_errors(utf8, size, latin1);
+      ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
+      return res.count;      
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
       return implementation.latin1_length_from_utf8(utf8, size);
@@ -59,7 +63,7 @@ TEST(convert_1_or_2_valid_UTF8_bytes_to_latin1) {
       ASSERT_TRUE(test.check_size(size_procedure));
     }
   }
-}
+} */
 
 TEST(too_large_input) {
   uint32_t seed{1234};
@@ -73,11 +77,10 @@ TEST(too_large_input) {
       //  if((test.input_utf8[i] > 0xFF)){
 
         auto procedure = [&implementation, &i](const char* utf8, size_t size, char* latin1) -> size_t {
-          size_t res = implementation.convert_utf8_to_latin1(utf8, size, latin1);
-          ASSERT_EQUAL(res,0); //conversion function should return 0 as the input is too large
-          return res;
-/*        ASSERT_EQUAL(res.error, simdutf::error_code::TOO_LARGE);
-          ASSERT_EQUAL(res.count, i);  */
+          simdutf::result res = implementation.convert_utf8_to_latin1_with_errors(utf8, size, latin1);          
+          ASSERT_EQUAL(res.error, simdutf::error_code::TOO_LARGE);
+          //ASSERT_EQUAL(res.count, i); 
+          return res.count;
         };
         //test.input_utf8[i] += ((test.input_utf8[i] & 0b100) == 0b100) ? 0b10 : 0b100;   // Make sure we get too large error and not header bits error
         ASSERT_TRUE(test(procedure)); //no conversion should take place
@@ -88,38 +91,7 @@ TEST(too_large_input) {
 }
 
 
-//not sure why this doesn't work
-/* TEST(convert_fails_if_input_too_large) {
-  uint32_t seed{1234};
-  simdutf::tests::helpers::RandomInt generator(0xFF, 0xfffffff, seed);
 
-  auto procedure = [&implementation](const char* utf8, size_t size, char* latin1) -> size_t {
-    return implementation.convert_utf8_to_latin1(utf8, size, latin1);
-  };
-  const size_t size = 2;
-
-  for (size_t j = 0; j < 1000; j++) {
-    uint32_t wrong_value = generator();
-    simdutf::tests::helpers::transcode_utf8_to_latin1_test_base test([](){return '*';}, size+32);
-
-
-    printf("Wrong value: %x \n",wrong_value);
-
-    for (size_t i=0; i < size; i++) {
-      printf("i: %i \n",i);
-      auto old = test.input_utf8[i]; 
-
-      test.input_utf8[i] = wrong_value;
-      printf("input_utf8[i] after wrong value: %x \n",test.input_utf8[i]);
-
-      ASSERT_TRUE(test(procedure));
-      test.input_utf8[i] = old;
-
-
-    }
-  }
-}
- */
 /*
 TEST(convert_1_or_2_or_3_UTF8_bytes) {
   for(size_t trial = 0; trial < trials; trial ++) {

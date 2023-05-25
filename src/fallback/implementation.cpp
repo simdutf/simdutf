@@ -45,9 +45,15 @@ simdutf_warn_unused int implementation::detect_encodings(const char * input, siz
 
 
 
+
 simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
   return scalar::utf8_to_latin1::convert(buf, len, latin1_output);
 }
+
+simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(const char* buf, size_t len, char* latin1_output) const noexcept {
+  return scalar::utf8_to_latin1::convert_with_errors(buf, len, latin1_output);
+}
+
 
 simdutf_warn_unused size_t implementation::latin1_length_from_utf8(const char* buf, size_t len) const noexcept {
   return scalar::utf8::latin1_length_from_utf8(buf,len);

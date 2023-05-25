@@ -105,7 +105,6 @@ namespace simdutf { namespace tests { namespace helpers {
     if (!is_input_valid()) {
       if (saved_chars != 0) {
         printf("input UTF-8 string is not valid, but conversion routine returned %zu, indicating a valid input\n", saved_chars);
-        printf("This is input_utf8:%x\n",input_utf8.data());
         return false;
       }
     }
@@ -271,7 +270,6 @@ namespace simdutf { namespace tests { namespace helpers {
     if (!is_input_valid()) {
       if (saved_chars != 0) {
         printf("input UTF-32 string is not valid, but conversion routine returned %zu, indicating a valid input\n", saved_chars);
-        printf("This is input_utf32:%x\n",input_utf32.data());
         return false;
       }
     }
