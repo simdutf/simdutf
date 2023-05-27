@@ -69,12 +69,28 @@ TEST(convert_1_or_2_valid_UTF8_bytes_to_latin1) {
   }
 }
 
-TEST(too_large_input_4_bytes) {
+TEST(too_large_input) {
   uint32_t seed{1234};
   int fix_size = 512;
   simdutf::tests::helpers::RandomIntRanges random({//{0x0000, 0xff},
                                                 {0x010000, 0x10FFFF}
                                                 }, seed);
+
+auto getUtf8SequenceLength = [](char byte) {
+    if ((byte & 0b11100000) == 0b11000000) { // 2 byte UTF-8 header
+        return 2;
+    }
+    else if ((byte & 0b11110000) == 0b11100000) { // 3 byte UTF-8 header
+        return 3;
+    }
+    else if ((byte & 0b11111000) == 0b11110000) { // 4 byte UTF-8 header
+        return 4;
+    }
+    else {
+        return 0; // 1 byte UTF-8 sequence (ASCII)
+    }
+};
+
 
   for(size_t trial = 0; trial < trials; trial++) {
     transcode_utf8_to_latin1_test_base test(random, fix_size);
@@ -83,7 +99,11 @@ TEST(too_large_input_4_bytes) {
 /*       printByteInBinary(test.input_utf8[i]);
       std::cout << i << "\n"; */
 
-      if((test.input_utf8[i] & 0b11111000) == 0b11110000) { 
+      auto header_type = getUtf8SequenceLength(test.input_utf8[i]);
+
+      //if((test.input_utf8[i] & 0b11111000) == 0b11110000) { 
+      if(header_type != 0) { 
+
 
         auto procedure = [&implementation, &i](const char* utf8, size_t size, char* latin1) -> size_t {
           simdutf::result res = implementation.convert_utf8_to_latin1_with_errors(utf8, size, latin1);
@@ -105,8 +125,8 @@ TEST(too_large_input_4_bytes) {
 
           //does the same as the conditional above: e.g. replace a 4 byte by a '*' ASCII character once its done.
           for(auto it = test.input_utf8.begin(); it != test.input_utf8.end(); ++it) {
-              if(std::distance(it, test.input_utf8.end()) >= 4) { 
-                  std::fill_n(it, 4, 0x2a);
+              if(std::distance(it, test.input_utf8.end()) >= header_type) { 
+                  std::fill_n(it, header_type, 0x2a);
               }
           }
 
