@@ -6,6 +6,9 @@
 #include "scalar/utf8_to_utf32/valid_utf8_to_utf32.h"
 #include "scalar/utf8_to_utf32/utf8_to_utf32.h"
 
+#include "scalar/utf8_to_latin1/valid_utf8_to_latin1.h"
+#include "scalar/utf8_to_latin1/utf8_to_latin1.h"
+
 #include "scalar/utf16_to_utf8/valid_utf16_to_utf8.h"
 #include "scalar/utf16_to_utf8/utf16_to_utf8.h"
 
@@ -47,6 +50,10 @@ simdutf_warn_unused int implementation::detect_encodings(const char * input, siz
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
   return scalar::utf8_to_latin1::convert(buf, len, latin1_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_valid_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
+  return scalar::utf8_to_latin1::convert_valid(buf, len, latin1_output);
 }
 
 simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(const char* buf, size_t len, char* latin1_output) const noexcept {

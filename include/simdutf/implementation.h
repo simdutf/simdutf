@@ -1623,6 +1623,19 @@ public:
    */
   simdutf_warn_unused virtual result convert_utf8_to_latin1_with_errors(const char * input, size_t length, char* latin1_output) const noexcept = 0;
 
+  /**
+   * Convert valid UTF-8 string into latin1 string.
+   *
+   * This function assumes that the input string is valid UTF-8.
+   *
+   * This function is not BOM-aware.
+   *    
+   * @param input         the UTF-8 string to convert
+   * @param length        the length of the string in bytes
+   * @param latin1_output  the pointer to buffer that can hold conversion result
+   * @return the number of written char; 0 if the input was not valid UTF-8 string
+   */
+  simdutf_warn_unused virtual size_t convert_valid_utf8_to_latin1(const char * input, size_t length, char* latin1_output) const noexcept = 0;
 
 
   /**

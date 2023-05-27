@@ -25,7 +25,7 @@ TEST(convert_pure_ASCII) {
     };
 
     auto procedure = [&implementation](const char* utf8, size_t size, char* latin1) -> size_t {
-      return implementation.convert_utf8_to_latin1(utf8, size, latin1);
+      return implementation.convert_valid_utf8_to_latin1(utf8, size, latin1);
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
       return implementation.latin1_length_from_utf8(utf8, size);
@@ -47,7 +47,7 @@ TEST(convert_1_or_2_valid_UTF8_bytes_to_latin1) {
     simdutf::tests::helpers::RandomInt random(0x0000, 0x0ff, seed); // range for 1 or 2 UTF-8 bytes
 
     auto procedure = [&implementation](const char* utf8, size_t size, char* latin1) -> size_t {
-      return implementation.convert_utf8_to_latin1(utf8, size, latin1);
+      return implementation.convert_valid_utf8_to_latin1(utf8, size, latin1);
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
       return implementation.latin1_length_from_utf8(utf8, size);
@@ -57,30 +57,6 @@ TEST(convert_1_or_2_valid_UTF8_bytes_to_latin1) {
       transcode_utf8_to_latin1_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
       ASSERT_TRUE(test.check_size(size_procedure));
-    }
-  }
-}
-
-TEST(too_large_input) {
-  uint32_t seed{1234};
-  int fix_size = 512;
-  simdutf::tests::helpers::RandomIntRanges random({//{0x0000, 0xd800-1},
-                                                {0xff, 0xffffff}}, seed);
-  for(size_t trial = 0; trial < trials; trial++) {
-    transcode_utf8_to_latin1_test_base test(random, fix_size);
-    for (int i = 1; i < fix_size; i++) {
-      //if((test.input_utf8[i] & 0b11111000) == 0b11110000) { // Can only have too large error if input > 0xFF
-      //  if((test.input_utf8[i] > 0xFF)){
-
-        auto procedure = [&implementation, &i](const char* utf8, size_t size, char* latin1) -> size_t {
-          size_t res = implementation.convert_utf8_to_latin1(utf8, size, latin1);
-          ASSERT_EQUAL(res,0); //conversion function should return 0 as the input is too large
-          return res;
-        };
-        //test.input_utf8[i] += ((test.input_utf8[i] & 0b100) == 0b100) ? 0b10 : 0b100;   // Make sure we get too large error and not header bits error
-        ASSERT_TRUE(test(procedure)); //no conversion should take place
-        // test.input_utf8[i] -= 0b100;
-      //  }
     }
   }
 }

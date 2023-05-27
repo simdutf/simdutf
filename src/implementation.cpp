@@ -100,7 +100,11 @@ public:
     return set_best()->convert_utf8_to_latin1(buf, len,latin1_output);
   }
 
-  simdutf_warn_unused result convert_utf8_to_latin1_with_errors(const char* buf, size_t len, char* latin1_output) const noexcept {
+  simdutf_warn_unused size_t convert_valid_utf8_to_latin1(const char * buf, size_t len, char* latin1_output) const noexcept final override {
+    return set_best()->convert_valid_utf8_to_latin1(buf, len,latin1_output);
+  }
+
+  simdutf_warn_unused result convert_utf8_to_latin1_with_errors(const char* buf, size_t len, char* latin1_output) const noexcept  final override{
   return set_best()->convert_utf8_to_latin1_with_errors(buf, len, latin1_output);
 }
 
@@ -409,7 +413,12 @@ public:
     return 0;
   }
 
-  simdutf_warn_unused result convert_utf8_to_latin1_with_errors(const char* buf, size_t len, char* latin1_output) const noexcept {
+  simdutf_warn_unused size_t convert_valid_utf8_to_latin1(const char*, size_t, char*) const noexcept final override {
+    return 0;
+  }
+
+
+  simdutf_warn_unused result convert_utf8_to_latin1_with_errors(const char* buf, size_t len, char* latin1_output) const noexcept final override{
     return result(error_code::OTHER, 0);
 }
 
@@ -421,7 +430,7 @@ public:
     return 0;
   }
 
-    simdutf_warn_unused size_t utf32_length_from_latin1(const char *, size_t) const noexcept override {
+  simdutf_warn_unused size_t utf32_length_from_latin1(const char *, size_t) const noexcept override {
     return 0;
   }
 
