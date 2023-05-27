@@ -72,6 +72,47 @@ namespace SIMDUTF_IMPLEMENTATION {
 
 
 
+/* size_t avx2_utf8_length_mkl(const char *input, size_t len) { //the fx takes the length in byte 
+  const uint8_t * str = reinterpret_cast<const uint8_t *>(input);
+
+  size_t answer = len / sizeof(__m256i) * sizeof(__m256i); //start with the  length?
+  size_t i = 0; 
+  __m256i four_64bits = _mm256_setzero_si256(); //set to zero
+  while (i + sizeof(__m256i) <= len) { //start with 
+
+    __m256i runner = _mm256_setzero_si256(); //running total. This is to begin with 256 bits vector set to zero 
+    size_t iterations = (len - i) / sizeof(__m256i); //divide the string into remaining 256 bits chunks to be processed. These are the iterations. 
+
+    if (iterations > 255) {
+      iterations = 255; //you can't have more than 255 iterations
+    }
+
+    size_t max_i = i + iterations * sizeof(__m256i) //
+                        - sizeof(__m256i); //
+    
+    for (; i <= max_i; i += sizeof(__m256i)) {
+      __m256i input = _mm256_loadu_si256((const __m256i *)(str + i));//loads 256 bits into input register
+      //next sequence is tricky, as its a function composed in another function: 
+      runner = _mm256_sub_epi8( //the outer function substract the chunk with comparaison (inner function)
+          runner, _mm256_cmpgt_epi8(_mm256_setzero_si256(), input));//inner function compares the input to zero and e.g. will return 0xFF for every byte that is greater than zero
+          //remember: a MSB being > 0 has significance in UTF8
+    }
+    four_64bits = _mm256_add_epi64( 
+        four_64bits, _mm256_sad_epu8(runner, _mm256_setzero_si256())); //calculates sum of absolute differences: this adds up all 
+  }
+  answer += _mm256_extract_epi64(four_64bits, 0) +
+            _mm256_extract_epi64(four_64bits, 1) +
+            _mm256_extract_epi64(four_64bits, 2) +
+            _mm256_extract_epi64(four_64bits, 3);
+  return answer; //+ scalar_utf8_length(str + i, len - i);
+}
+ */
+
+simdutf_warn_unused size_t implementation::latin1_length_from_utf8(const char* buf, size_t len) const noexcept {
+  return scalar::utf8::latin1_length_from_utf8(buf,len);
+}
+
+
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
   return scalar::utf8_to_latin1::convert(buf, len, latin1_output);
@@ -80,14 +121,6 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* bu
 simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(const char* buf, size_t len, char* latin1_output) const noexcept {
   return scalar::utf8_to_latin1::convert_with_errors(buf, len, latin1_output);
 }
-
-
-
-simdutf_warn_unused size_t implementation::latin1_length_from_utf8(const char* buf, size_t len) const noexcept {
-  return scalar::utf8::latin1_length_from_utf8(buf,len);
-}
-
-
 
 simdutf_warn_unused size_t implementation::convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) const noexcept {
   return scalar::utf32_to_latin1::convert(buf,len,latin1_output);

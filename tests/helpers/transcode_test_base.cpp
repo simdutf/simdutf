@@ -18,6 +18,7 @@
 #include <tests/reference/validate_utf8.h>
 #include <tests/reference/validate_utf16.h>
 #include <tests/reference/validate_utf32.h>
+#include <tests/reference/validate_utf8_to_latin1.h>
 
 
 namespace simdutf { namespace tests { namespace helpers {
@@ -98,7 +99,7 @@ namespace simdutf { namespace tests { namespace helpers {
   }
 
   bool transcode_utf8_to_latin1_test_base::is_input_valid() const {
-    return simdutf::tests::reference::validate_utf8(input_utf8.data(), input_utf8.size());
+    return simdutf::tests::reference::validate_utf8_to_latin1(input_utf8.data(), input_utf8.size());
   }
 
   bool transcode_utf8_to_latin1_test_base::validate(size_t saved_chars) const {

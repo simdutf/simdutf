@@ -95,14 +95,14 @@ inline result convert_with_errors(const char* buf, size_t len, char* latin_outpu
       if (code_point < 0x80 || 0xFF < code_point) { result(error_code::TOO_LARGE, pos); } //We only care about the range 129-255 which is Non-ASCII latin1 characters, Have to fix the error_codes...
       *latin_output++ = char(code_point); 
       pos += 2;
-/*     } else if ((leading_byte & 0b11110000) == 0b11100000) {
+    } else if ((leading_byte & 0b11110000) == 0b11100000) {
       // We have a three-byte UTF-8
       return result(error_code::TOO_LARGE, pos);
     } else if ((leading_byte & 0b11111000) == 0b11110000) { // 0b11110000
       // we have a 4-byte UTF-8 word.
-      return result(error_code::TOO_LARGE, pos);*/
-    }  else {
       return result(error_code::TOO_LARGE, pos);
+    } else {
+      return result(error_code::HEADER_BITS, pos);
     }
   }
   return result(error_code::SUCCESS, latin_output - start);

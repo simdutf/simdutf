@@ -7,6 +7,8 @@ add_library(simdutf_tests_reference STATIC
   encode_utf32.cpp
   encode_latin1.h
   encode_latin1.cpp
+  validate_utf8_to_latin1.h
+  validate_utf8_to_latin1.cpp
   validate_utf8.h
   validate_utf8.cpp
   validate_utf16.h

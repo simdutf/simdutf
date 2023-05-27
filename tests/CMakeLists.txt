@@ -9,10 +9,11 @@ add_subdirectory(reference)
 include(${PROJECT_SOURCE_DIR}/cmake/add_cpp_test.cmake)
 link_libraries(simdutf)
 
-add_cpp_test(convert_utf8_to_latin1_tests_with_errors)
-target_link_libraries(convert_utf8_to_latin1_tests_with_errors
+add_cpp_test(convert_utf8_to_latin1_with_errors_tests)
+target_link_libraries(convert_utf8_to_latin1_with_errors_tests 
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
+
 
 add_cpp_test(convert_utf8_to_latin1_tests)
 target_link_libraries(convert_utf8_to_latin1_tests 

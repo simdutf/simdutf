@@ -15,7 +15,15 @@ namespace {
 
   constexpr size_t trials = 10000;
 }
-/* 
+
+void printByteInBinary(const char& byte) {
+    for (int i = 7; i >= 0; --i) {
+        std::cout << ((byte >> i) & 1);
+    }
+    std::cout << std::endl;
+}
+
+
 TEST(convert_pure_ASCII) {
   for(size_t trial = 0; trial < trials; trial ++) {
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
@@ -25,9 +33,7 @@ TEST(convert_pure_ASCII) {
     };
 
     auto procedure = [&implementation](const char* utf8, size_t size, char* latin1) -> size_t {
-      simdutf::result res = implementation.convert_utf8_to_latin1_with_errors(utf8, size, latin1);
-      ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
-      return res.count;
+      return implementation.convert_utf8_to_latin1(utf8, size, latin1);
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
       return implementation.latin1_length_from_utf8(utf8, size);
@@ -41,17 +47,15 @@ TEST(convert_pure_ASCII) {
   }
 } 
 
-TEST(convert_2_valid_UTF8_bytes_to_latin1) {
+TEST(convert_1_or_2_valid_UTF8_bytes_to_latin1) {
   for(size_t trial = 0; trial < trials; trial ++) {
     // printf("%i \n",trial);
     uint32_t seed{1234+uint32_t(trial)};
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
-    simdutf::tests::helpers::RandomInt random(0x007f, 0x0ff, seed); // range for 1 or 2 UTF-8 bytes
+    simdutf::tests::helpers::RandomInt random(0x0000, 0x0ff, seed); // range for 1 or 2 UTF-8 bytes
 
     auto procedure = [&implementation](const char* utf8, size_t size, char* latin1) -> size_t {
-      simdutf::result res = implementation.convert_utf8_to_latin1_with_errors(utf8, size, latin1);
-      ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
-      return res.count;      
+      return implementation.convert_utf8_to_latin1(utf8, size, latin1);
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
       return implementation.latin1_length_from_utf8(utf8, size);
@@ -63,33 +67,53 @@ TEST(convert_2_valid_UTF8_bytes_to_latin1) {
       ASSERT_TRUE(test.check_size(size_procedure));
     }
   }
-} */
+}
 
-TEST(too_large_input) {
+TEST(too_large_input_4_bytes) {
   uint32_t seed{1234};
   int fix_size = 512;
-  simdutf::tests::helpers::RandomIntRanges random({//{0x0000, 0xd800-1},
-                                                {0xff, 0xffffff}}, seed);
+  simdutf::tests::helpers::RandomIntRanges random({//{0x0000, 0xff},
+                                                {0x010000, 0x10FFFF}
+                                                }, seed);
+
   for(size_t trial = 0; trial < trials; trial++) {
     transcode_utf8_to_latin1_test_base test(random, fix_size);
-    for (int i = 1; i < fix_size; i++) {
-      //if((test.input_utf8[i] & 0b11111000) == 0b11110000) { // Can only have too large error if input > 0xFF
-      //  if((test.input_utf8[i] > 0xFF)){
+    for (int i = 0; i < fix_size; i++) {
+
+/*       printByteInBinary(test.input_utf8[i]);
+      std::cout << i << "\n"; */
+
+      if((test.input_utf8[i] & 0b11111000) == 0b11110000) { 
 
         auto procedure = [&implementation, &i](const char* utf8, size_t size, char* latin1) -> size_t {
-          simdutf::result res = implementation.convert_utf8_to_latin1_with_errors(utf8, size, latin1);          
-          ASSERT_EQUAL(res.error, simdutf::error_code::TOO_LARGE);
-          //ASSERT_EQUAL(res.count, i); 
-          return res.count;
+          simdutf::result res = implementation.convert_utf8_to_latin1_with_errors(utf8, size, latin1);
+          ASSERT_EQUAL(res.error,simdutf::error_code::TOO_LARGE);
+          ASSERT_EQUAL(res.count,i); 
+          return 0;
         };
+
+
         //test.input_utf8[i] += ((test.input_utf8[i] & 0b100) == 0b100) ? 0b10 : 0b100;   // Make sure we get too large error and not header bits error
         ASSERT_TRUE(test(procedure)); //no conversion should take place
-        // test.input_utf8[i] -= 0b100;
-      //  }
+        //test.input_utf8[i] -= 0b100;
+/*           if (i + 3 < test.input_utf8.size()) {
+            test.input_utf8[i] = 0x2a;
+            test.input_utf8[i+1] = 0x2a;
+            test.input_utf8[i+2] = 0x2a;
+            test.input_utf8[i+3] = 0x2a;
+          } */
+
+          //does the same as the conditional above: e.g. replace a 4 byte by a '*' ASCII character once its done.
+          for(auto it = test.input_utf8.begin(); it != test.input_utf8.end(); ++it) {
+              if(std::distance(it, test.input_utf8.end()) >= 4) { 
+                  std::fill_n(it, 4, 0x2a);
+              }
+          }
+
+        }
     }
   }
 }
-
 
 
 /*
