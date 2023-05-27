@@ -152,7 +152,7 @@ TEST(header_bits_error) {
           return 0;
         };
         const unsigned char old = test.input_utf8[i];
-        test.input_utf8[i] = uint8_t(0b11111000);
+        test.input_utf8[i] = uint8_t(0b11111100);
         ASSERT_TRUE(test(procedure));
         test.input_utf8[i] = old;
       }

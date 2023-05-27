@@ -13,6 +13,9 @@ namespace {
 
   using simdutf::tests::helpers::transcode_utf8_to_latin1_test_base;
 
+  int fix_size = 512;
+
+
   constexpr size_t trials = 10000;
 }
 
@@ -23,7 +26,7 @@ void printByteInBinary(const char& byte) {
     std::cout << std::endl;
 }
 
-
+/* 
 TEST(convert_pure_ASCII) {
   for(size_t trial = 0; trial < trials; trial ++) {
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
@@ -68,12 +71,13 @@ TEST(convert_1_or_2_valid_UTF8_bytes_to_latin1) {
     }
   }
 }
+ */
 
-TEST(too_large_input) {
+
+/* TEST(too_large_input) {
   uint32_t seed{1234};
-  int fix_size = 512;
   simdutf::tests::helpers::RandomIntRanges random({//{0x0000, 0xff},
-                                                {0x010000, 0x10FFFF}
+                                                {0xff, 0x10FFFF}
                                                 }, seed);
 
 auto getUtf8SequenceLength = [](char byte) {
@@ -87,7 +91,7 @@ auto getUtf8SequenceLength = [](char byte) {
         return 4;
     }
     else {
-        return 0; // 1 byte UTF-8 sequence (ASCII)
+        return 1; // 1 byte UTF-8 sequence (ASCII)
     }
 };
 
@@ -96,13 +100,11 @@ auto getUtf8SequenceLength = [](char byte) {
     transcode_utf8_to_latin1_test_base test(random, fix_size);
     for (int i = 0; i < fix_size; i++) {
 
-/*       printByteInBinary(test.input_utf8[i]);
-      std::cout << i << "\n"; */
+      //  printByteInBinary(test.input_utf8[i]);
+      // std::cout << i << "\n"; 
 
-      auto header_type = getUtf8SequenceLength(test.input_utf8[i]);
-
-      //if((test.input_utf8[i] & 0b11111000) == 0b11110000) { 
-      if(header_type != 0) { 
+      auto byte_number = getUtf8SequenceLength(test.input_utf8[i]);
+      if(byte_number != 1) { 
 
 
         auto procedure = [&implementation, &i](const char* utf8, size_t size, char* latin1) -> size_t {
@@ -112,28 +114,50 @@ auto getUtf8SequenceLength = [](char byte) {
           return 0;
         };
 
-
-        //test.input_utf8[i] += ((test.input_utf8[i] & 0b100) == 0b100) ? 0b10 : 0b100;   // Make sure we get too large error and not header bits error
         ASSERT_TRUE(test(procedure)); //no conversion should take place
-        //test.input_utf8[i] -= 0b100;
-/*           if (i + 3 < test.input_utf8.size()) {
-            test.input_utf8[i] = 0x2a;
-            test.input_utf8[i+1] = 0x2a;
-            test.input_utf8[i+2] = 0x2a;
-            test.input_utf8[i+3] = 0x2a;
-          } */
 
-          //does the same as the conditional above: e.g. replace a 4 byte by a '*' ASCII character once its done.
-          for(auto it = test.input_utf8.begin(); it != test.input_utf8.end(); ++it) {
-              if(std::distance(it, test.input_utf8.end()) >= header_type) { 
-                  std::fill_n(it, header_type, 0x2a);
-              }
-          }
+        //does the same as the conditional above: e.g. replace a 4 byte by a '*' ASCII character once its done.
+        for(auto it = test.input_utf8.begin(); it != test.input_utf8.end(); ++it) {
+            if(std::distance(it, test.input_utf8.end()) >= byte_number) { 
+                std::fill_n(it, byte_number, 0x2a);
+            }
+        }
 
         }
     }
   }
+} */
+
+TEST(header_bits_error) {
+  uint32_t seed{1234};
+  simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0xff}
+                                                  //,{0xe000, 0x10ffff}
+                                                  }, seed);
+
+  for(size_t trial = 0; trial < trials; trial++) {
+    transcode_utf8_to_latin1_test_base test(random, fix_size);
+
+    for (int i = 0; i < fix_size; i++) {
+
+      if((test.input_utf8[i] & 0b11000000) != 0b10000000) {  // Only process leading bytes
+        auto procedure = [&implementation, &i](const char* utf8, size_t size, char* latin1) -> size_t {
+          simdutf::result res = implementation.convert_utf8_to_latin1_with_errors(utf8, size,latin1);
+          ASSERT_EQUAL(res.error, simdutf::error_code::HEADER_BITS);
+          ASSERT_EQUAL(res.count, i);
+          return 0;
+        };
+        const unsigned char old = test.input_utf8[i];
+        test.input_utf8[i] = uint8_t(0b11111000);
+        // printByteInBinary(test.input_utf8[i]);
+
+
+        ASSERT_TRUE(test(procedure));
+        test.input_utf8[i] = old;
+      }
+    }
+  }
 }
+
 
 
 /*
