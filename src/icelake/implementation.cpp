@@ -35,6 +35,13 @@ namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 
 
+simdutf_warn_unused size_t implementation::convert_utf16le_to_latin1(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
+  return scalar::utf16_to_latin1::convert<endianness::LITTLE>(buf, len, latin1_output);
+}
+
+simdutf_warn_unused size_t implementation::latin1_length_from_utf16(const char16_t * input, size_t length) const noexcept {
+  return scalar::utf16::latin1_length_from_utf16(input,length);
+  }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf8(const char * buf, size_t len, char* utf8_output) const noexcept {
   return scalar::latin1_to_utf8::convert(buf,len,utf8_output);
@@ -54,47 +61,12 @@ simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(co
   return scalar::utf8_to_latin1::convert_with_errors(buf, len, latin1_output);
 }
 
-//PLACEHOLDER
 simdutf_warn_unused size_t implementation::latin1_length_from_utf8(const char * input, size_t length) const noexcept {
-  return length;
-  }
-
-/* 
-//PLACEHOLDER
-simdutf_warn_unused size_t implementation::latin1_length_from_utf8(const char * input, size_t length) const noexcept {
-  return length;
+  //return length;
+  return scalar::utf8::latin1_length_from_utf8(input,length);
   }
 
 
-  simdutf_warn_unused size_t implementation::utf8_length_from_utf16le(const char16_t * input, size_t length) const noexcept {
-  const char16_t* end = length >= 32 ? input + length - 32 : nullptr;
-  const char16_t* ptr = input;
-
-  const __m512i v_007f = _mm512_set1_epi16((uint16_t)0x007f);
-  const __m512i v_07ff = _mm512_set1_epi16((uint16_t)0x07ff);
-  const __m512i v_dfff = _mm512_set1_epi16((uint16_t)0xdfff);
-  const __m512i v_d800 = _mm512_set1_epi16((uint16_t)0xd800);
-
-  size_t count{0};
-
-  while (ptr <= end) {
-    __m512i utf16 = _mm512_loadu_si512((const __m512i*)ptr);
-    ptr += 32;
-    __mmask32 ascii_bitmask = _mm512_cmple_epu16_mask(utf16, v_007f);
-    __mmask32 two_bytes_bitmask = _mm512_mask_cmple_epu16_mask(~ascii_bitmask, utf16, v_07ff);
-    __mmask32 not_one_two_bytes = ~(ascii_bitmask | two_bytes_bitmask);
-    __mmask32 surrogates_bitmask = _mm512_mask_cmple_epu16_mask(not_one_two_bytes, utf16, v_dfff) & _mm512_mask_cmpge_epu16_mask(not_one_two_bytes, utf16, v_d800);
-
-    size_t ascii_count = count_ones(ascii_bitmask);
-    size_t two_bytes_count = count_ones(two_bytes_bitmask);
-    size_t surrogate_bytes_count = count_ones(surrogates_bitmask);
-    size_t three_bytes_count = 32 - ascii_count - two_bytes_count - surrogate_bytes_count;
-
-    count += ascii_count + 2*two_bytes_count + 3*three_bytes_count + 2*surrogate_bytes_count;
-  }
-
-  return count + scalar::utf16::utf8_length_from_utf16<endianness::LITTLE>(ptr, length - (ptr - input));
-} */
 
 simdutf_warn_unused size_t implementation::convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) const noexcept {
   return scalar::utf32_to_latin1::convert(buf,len,latin1_output);

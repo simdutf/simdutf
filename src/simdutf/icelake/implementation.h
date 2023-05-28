@@ -18,6 +18,9 @@ public:
       internal::instruction_set::AVX2 | internal::instruction_set::BMI1 | internal::instruction_set::BMI2 | internal::instruction_set::AVX512BW | internal::instruction_set::AVX512CD | internal::instruction_set::AVX512VL | internal::instruction_set::AVX512VBMI2 ) {}
 
 
+  simdutf_warn_unused size_t convert_utf16le_to_latin1(const char16_t * buf, size_t len, char* latin1_buffer) const noexcept final;
+  simdutf_warn_unused size_t latin1_length_from_utf16(const char16_t * input, size_t length) const noexcept;
+
 
   simdutf_warn_unused size_t convert_latin1_to_utf8(const char * buf, size_t len, char* utf8_output) const noexcept final;
     simdutf_warn_unused size_t convert_utf8_to_latin1(const char * buf, size_t len, char* latin1_buffer) const noexcept final;

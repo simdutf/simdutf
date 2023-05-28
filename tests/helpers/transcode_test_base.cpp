@@ -19,6 +19,8 @@
 #include <tests/reference/validate_utf16.h>
 #include <tests/reference/validate_utf32.h>
 #include <tests/reference/validate_utf8_to_latin1.h>
+#include <tests/reference/validate_utf16_to_latin1.h>
+
 
 
 namespace simdutf { namespace tests { namespace helpers {
@@ -77,6 +79,100 @@ namespace simdutf { namespace tests { namespace helpers {
     });
   }
 
+
+
+  /**
+   * transcode_utf16_to_latin1_test_base can be used to test UTF-16 => Latin1 transcoding.
+   */
+  transcode_utf16_to_latin1_test_base::transcode_utf16_to_latin1_test_base(GenerateCodepoint generate,
+                                       size_t input_size) {
+    while (input_utf16.size() < input_size) {
+      const uint32_t codepoint = generate();
+      prepare_input(codepoint);
+    }
+
+    output_latin1.resize(reference_output_latin1.size() + output_size_margin);
+  }
+
+  transcode_utf16_to_latin1_test_base::transcode_utf16_to_latin1_test_base(const std::vector<char16_t>& input_utf16)
+    : input_utf16{input_utf16} {
+
+    auto consume = [this](const uint32_t codepoint) {
+      ::simdutf::tests::reference::latin1::encode(codepoint, [this](uint32_t byte) {
+        reference_output_latin1.push_back(byte);
+      });
+    };
+
+    auto error_handler = [](const char16_t*, const char16_t*,  simdutf::tests::reference::utf16::Error) -> bool {
+      throw std::invalid_argument("Wrong UTF-16 input");
+    };
+    simdutf::tests::reference::utf16::decode(input_utf16.data(), input_utf16.size(), consume, error_handler);
+    output_latin1.resize(reference_output_latin1.size() + output_size_margin);
+  }
+
+
+  void transcode_utf16_to_latin1_test_base::prepare_input(uint32_t codepoint) {
+      encode_utf16(codepoint, input_utf16);
+      encode_latin1(codepoint, reference_output_latin1);
+  }
+
+  bool transcode_utf16_to_latin1_test_base::is_input_valid() const {
+    return simdutf::tests::reference::validate_utf16_to_latin1(input_utf16.data(), input_utf16.size());
+  }
+
+  bool transcode_utf16_to_latin1_test_base::validate(size_t saved_chars) const {
+    if (!is_input_valid()) {
+      if (saved_chars != 0) {
+        printf("input UTF-16 string is not valid, but conversion routine returned %zu, indicating a valid input\n", saved_chars);
+        return false;
+      }
+    }
+    if (saved_chars == 0) {
+      if (is_input_valid()) {
+        printf("input UTF-16 string is valid, but conversion routine returned 0, indicating input error");
+        return false;
+      }
+
+      return true;
+    }
+
+    auto dump = [saved_chars](const char* title, const std::vector<char>& array) {
+      printf("%s", title);
+      for (size_t i=0; i < saved_chars; i++) {
+        printf(" %08x", (uint32_t)array[i]);
+      }
+      putchar('\n');
+    };
+
+    if (saved_chars != reference_output_latin1.size()) {
+      printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
+             size_t(saved_chars), size_t(reference_output_latin1.size()));
+
+      dump("expected :", reference_output_latin1);
+      dump("actual   :", output_latin1);
+      return false;
+    }
+    // Note that, in general, output_latin1.size() will not matched saved_chars.
+
+    // At this point, we know that the lengths are the same so std::mismatch is enough
+    // to tell us whether the strings are identical.
+    auto it = our_mismatch(output_latin1.begin(), output_latin1.begin() + saved_chars,
+                                    reference_output_latin1.begin(), reference_output_latin1.end());
+    if (it.first != output_latin1.begin() + saved_chars) {
+      printf("mismatched output at %zu: actual value 0x%02x, expected 0x%02x\n",
+             size_t(std::distance(output_latin1.begin(), it.first)), uint8_t(*it.first), uint8_t(*it.second));
+
+      dump("expected :", reference_output_latin1);
+      dump("actual   :", output_latin1);
+      for(size_t i = 0; i < reference_output_latin1.size(); i++) {
+        if(reference_output_latin1[i] != output_latin1[i]) { printf(" ==> "); }
+        printf("at %zu expected 0x%08x and got 0x%08x\n ", i, uint8_t(reference_output_latin1[i]), uint8_t(output_latin1[i]));
+      }
+      return false;
+    }
+
+    return true;
+  }
 
 
 

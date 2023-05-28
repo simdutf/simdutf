@@ -95,6 +95,11 @@ inline size_t utf32_length_from_utf16(const char16_t* buf, size_t len) {
   return counter;
 }
 
+
+inline size_t latin1_length_from_utf16(const char16_t* buf, size_t len) {
+  return len;
+}
+
 simdutf_really_inline void change_endianness_utf16(const char16_t* in, size_t size, char16_t* out) {
   const uint16_t * input = reinterpret_cast<const uint16_t *>(in);
   uint16_t * output = reinterpret_cast<uint16_t *>(out);

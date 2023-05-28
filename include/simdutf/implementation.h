@@ -1636,6 +1636,24 @@ public:
    */
   simdutf_warn_unused virtual result convert_utf8_to_latin1_with_errors(const char * input, size_t length, char* latin1_output) const noexcept = 0;
 
+
+
+  /**
+   * Convert possibly broken UTF-16LE string into UTF-8 string.
+   *
+   * During the conversion also validation of the input string is done.
+   * This function is suitable to work with inputs from untrusted sources.
+   *
+   * This function is not BOM-aware.
+   *
+   * @param input         the UTF-16LE string to convert
+   * @param length        the length of the string in 2-byte words (char16_t)
+   * @param utf32_buffer   the pointer to buffer that can hold conversion result
+   * @return number of written words; 0 if input is not a valid UTF-16LE string
+   */
+  simdutf_warn_unused virtual size_t convert_utf16le_to_latin1(const char16_t * input, size_t length, char* latin1_buffer) const noexcept = 0;
+
+
   /**
    * Convert valid UTF-8 string into latin1 string.
    *
@@ -1830,7 +1848,6 @@ public:
    */
     simdutf_warn_unused virtual size_t latin1_length_from_utf32(const char32_t * input, size_t length) const noexcept = 0;
 
-
   /**
    * Compute the number of bytes that this UTF-8 string would require in Latin1 format.
    *
@@ -1853,6 +1870,22 @@ public:
    * @return the number of bytes required to encode the UTF-32 string as UTF-16
    */
   simdutf_warn_unused virtual size_t utf16_length_from_utf32(const char32_t * input, size_t length) const noexcept = 0;
+
+
+
+/*
+   * Compute the number of bytes that this UTF-16LE/BE string would require in Latin1 format.
+   *
+   *
+   * This function does not validate the input.
+   *
+   * This function is not BOM-aware.
+   *
+   * @param input         the UTF-16LE string to convert
+   * @param length        the length of the string in 2-byte words (char16_t)
+   * @return the number of bytes required to encode the UTF-16LE string as UTF-32
+   */
+  simdutf_warn_unused virtual size_t latin1_length_from_utf16(const char16_t * input, size_t length) const noexcept = 0;
 
   /*
    * Compute the number of bytes that this UTF-16LE string would require in UTF-32 format.
