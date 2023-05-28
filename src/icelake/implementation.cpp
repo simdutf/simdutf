@@ -35,9 +35,16 @@ namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 
 
+
+simdutf_warn_unused size_t implementation::convert_latin1_to_utf8(const char * buf, size_t len, char* utf8_output) const noexcept {
+  return scalar::latin1_to_utf8::convert(buf,len,utf8_output);
+}
+
 simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
   return scalar::utf8_to_latin1::convert(buf, len, latin1_output);
 }
+
+
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
   return scalar::utf8_to_latin1::convert_valid(buf, len, latin1_output);
@@ -111,9 +118,12 @@ simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(const char * 
   return scalar::latin1_to_utf32::convert(buf,len,utf32_output);
 }
 simdutf_warn_unused size_t implementation::utf32_length_from_latin1(const char * input, size_t length) const noexcept {
-  return length;
+  //return length;
+    return scalar::latin1::utf32_length_from_latin1(input,length);
   }
-
+simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char * input, size_t length) const noexcept {
+  return scalar::latin1::utf8_length_from_latin1(input,length);
+  }
 
 
 simdutf_warn_unused int

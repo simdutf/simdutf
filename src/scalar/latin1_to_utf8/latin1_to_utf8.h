@@ -24,6 +24,24 @@ inline size_t convert(const char* buf, size_t len, char* utf8_output) {
         continue;
       }
     } */
+
+    // try to convert the next block of 16 ASCII bytes
+    if (pos + 16 <= len) { // if it is safe to read 16 more bytes, check that they are ascii
+      uint64_t v1;
+      ::memcpy(&v1, data + pos, sizeof(uint64_t));
+      uint64_t v2;
+      ::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
+      uint64_t v{v1 | v2}; //We're only interested in these bits: 1000 1000 1000 1000, so it makes sense to concatenate everything
+      if ((v & 0x8080808080808080) == 0) { //if NONE of these are set, e.g. all of them are zero, then everything is ASCII
+        size_t final_pos = pos + 16;
+        while(pos < final_pos) {
+          *utf8_output++ = char(buf[pos]);
+          pos++;
+        }
+        continue;
+      }
+    }
+
     unsigned char byte = data[pos];
     if((byte & 0x80)==0) { //if ASCII
       // will generate one UTF-8 bytes
@@ -41,7 +59,9 @@ inline size_t convert(const char* buf, size_t len, char* utf8_output) {
 }
 
 
-inline result convert_valid(const char* buf, size_t len, char* utf8_output) {
+//Do we have a need for this?
+
+/* inline result convert_with_errors(const char* buf, size_t len, char* utf8_output) {
   const unsigned char *data = reinterpret_cast<const unsigned char *>(buf);
   size_t pos = 0;
   char* start{utf8_output};
@@ -78,6 +98,8 @@ inline result convert_valid(const char* buf, size_t len, char* utf8_output) {
 
   return result(error_code::SUCCESS, utf8_output - start);
 }
+ */
+
 
 } // latin1_to_utf8 namespace
 } // unnamed namespace

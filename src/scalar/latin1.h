@@ -11,6 +11,14 @@ inline size_t utf32_length_from_latin1(const char* buf, size_t len) {
   return len; // a utf32 will always represent 1 latin1 character
 }
 
+inline size_t utf8_length_from_latin1(const char *c, size_t len) {
+  //const uint8_t * c = reinterpret_cast<const uint8_t *>(buf);
+  size_t answer = 0;
+  for(size_t i = 0; i<len; i++) {
+    if((c[i]>>7)) { answer++;}
+  }
+  return answer + len;
+}
 
 
 

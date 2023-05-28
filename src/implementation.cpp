@@ -96,6 +96,11 @@ public:
 
 
 
+  simdutf_warn_unused size_t convert_latin1_to_utf8(const char * buf, size_t len, char* utf8_output) const noexcept final override {
+    return set_best()->convert_latin1_to_utf8(buf, len,utf8_output);
+  }
+
+
   simdutf_warn_unused size_t convert_utf8_to_latin1(const char * buf, size_t len, char* latin1_output) const noexcept final override {
     return set_best()->convert_utf8_to_latin1(buf, len,latin1_output);
   }
@@ -139,7 +144,9 @@ public:
     return set_best()->utf32_length_from_latin1(buf, len);
   }
 
-
+    simdutf_warn_unused size_t utf8_length_from_latin1(const char * buf, size_t len) const noexcept override {
+    return set_best()->utf8_length_from_latin1(buf, len);
+  }
 
   simdutf_warn_unused int detect_encodings(const char * input, size_t length) const noexcept override {
     return set_best()->detect_encodings(input, length);
@@ -405,6 +412,12 @@ public:
   }
 
 
+
+ simdutf_warn_unused size_t convert_latin1_to_utf8(const char*, size_t, char*) const noexcept final override {
+    return 0;
+  }
+
+
   simdutf_warn_unused size_t latin1_length_from_utf8(const char *, size_t) const noexcept override {
     return 0;
   }
@@ -431,6 +444,10 @@ public:
   }
 
   simdutf_warn_unused size_t utf32_length_from_latin1(const char *, size_t) const noexcept override {
+    return 0;
+  }
+
+    simdutf_warn_unused size_t utf8_length_from_latin1(const char *, size_t) const noexcept override {
     return 0;
   }
 
@@ -751,6 +768,12 @@ simdutf_warn_unused result convert_utf8_to_utf16le_with_errors(const char * inpu
 simdutf_warn_unused result convert_utf8_to_utf16be_with_errors(const char * input, size_t length, char16_t* utf16_output) noexcept {
   return get_active_implementation()->convert_utf8_to_utf16be_with_errors(input, length, utf16_output);
 }
+
+simdutf_warn_unused size_t convert_utf32_to_latin1(const char32_t * input, size_t length, char* latin1_output) noexcept {
+  return get_active_implementation()->convert_utf32_to_latin1(input, length, latin1_output);
+}
+
+
 simdutf_warn_unused size_t convert_utf8_to_utf32(const char * input, size_t length, char32_t* utf32_output) noexcept {
   return get_active_implementation()->convert_utf8_to_utf32(input, length, utf32_output);
 }

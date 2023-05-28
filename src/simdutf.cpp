@@ -37,10 +37,6 @@
 #include "scalar/latin1_to_utf16/latin1_to_utf16.h"
 #include "scalar/latin1_to_utf32/latin1_to_utf32.h"
 
-// #include "scalar/latin1_to_utf8/valid_latin1_to_utf8.h"
-#include "scalar/latin1_to_utf16/valid_latin1_to_utf16.h"
-#include "scalar/latin1_to_utf32/valid_latin1_to_utf32.h"
-
 #include "scalar/utf8_to_latin1/utf8_to_latin1.h"
 #include "scalar/utf16_to_latin1/utf16_to_latin1.h"
 #include "scalar/utf32_to_latin1/utf32_to_latin1.h"

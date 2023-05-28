@@ -42,7 +42,7 @@ inline result convert_with_errors(const char16_t* buf, size_t len, char* latin_o
                 *latin_output++ = char(word);
             }
             else {
-                return result(error_code::OTHER, pos); // Valid UTF16 but not a Latin1 character
+                return result(error_code::TOO_LARGE, pos); // Valid UTF16 but not a Latin1 character
             }
         pos++;
     } else { return result(error_code::SURROGATE, pos);}
