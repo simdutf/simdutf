@@ -15,6 +15,7 @@ class implementation final : public simdutf::implementation {
 public:
   simdutf_really_inline implementation() : simdutf::implementation("westmere", "Intel/AMD SSE4.2", internal::instruction_set::SSE42) {}
 
+simdutf_warn_unused size_t convert_valid_utf16le_to_latin1(const char16_t * buf, size_t len, char* latin1_buffer) const noexcept final;
 simdutf_warn_unused result convert_utf16le_to_latin1_with_errors(const char16_t * buf, size_t len, char* latin1_buffer) const noexcept final;
 simdutf_warn_unused size_t convert_utf16le_to_latin1(const char16_t * buf, size_t len, char* latin1_buffer) const noexcept final;
   simdutf_warn_unused size_t latin1_length_from_utf16(const char16_t * input, size_t length) const noexcept;

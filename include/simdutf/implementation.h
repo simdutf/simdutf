@@ -1639,15 +1639,31 @@ public:
 
 
   /**
-   * Convert UTF-16LE string into UTF-8 string.
+   * Convert possibly broken UTF-16LE string into Latin1 string.
    *
-   * This function is not suitable to work with inputs from untrusted sources as it assumes a valid input.
+   * During the conversion also validation of the input string is done.
+   * This function is suitable to work with inputs from untrusted sources.
    *
    * This function is not BOM-aware.
    *
    * @param input         the UTF-16LE string to convert
    * @param length        the length of the string in 2-byte words (char16_t)
-   * @param utf32_buffer   the pointer to buffer that can hold conversion result
+   * @param latin1_buffer   the pointer to buffer that can hold conversion result
+   * @return number of written words; 0 if input is not a valid UTF-16LE string
+   */
+  simdutf_warn_unused virtual size_t convert_valid_utf16le_to_latin1(const char16_t * input, size_t length, char* latin1_buffer) const noexcept = 0;
+
+
+  /**
+   * Convert possibly broken UTF-16LE string into Latin1 string.
+   *
+   * During the conversion also validation of the input string is done.
+   * This function is suitable to work with inputs from untrusted sources.   
+   * This function is not BOM-aware.
+   *
+   * @param input         the UTF-16LE string to convert
+   * @param length        the length of the string in 2-byte words (char16_t)
+   * @param latin1_buffer   the pointer to buffer that can hold conversion result
    * @return number of written words; 0 if input is not a valid UTF-16LE string
    */
   simdutf_warn_unused virtual result convert_utf16le_to_latin1_with_errors(const char16_t * input, size_t length, char* latin1_buffer) const noexcept = 0;
@@ -1663,7 +1679,7 @@ public:
    *
    * @param input         the UTF-16LE string to convert
    * @param length        the length of the string in 2-byte words (char16_t)
-   * @param utf32_buffer   the pointer to buffer that can hold conversion result
+   * @param latin1_buffer   the pointer to buffer that can hold conversion result
    * @return number of written words; 0 if input is not a valid UTF-16LE string
    */
   simdutf_warn_unused virtual size_t convert_utf16le_to_latin1(const char16_t * input, size_t length, char* latin1_buffer) const noexcept = 0;
