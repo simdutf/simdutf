@@ -80,6 +80,12 @@ simdutf_warn_unused int implementation::detect_encodings(const char * input, siz
 
 
 
+
+
+simdutf_warn_unused result implementation::convert_utf16le_to_latin1_with_errors(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
+  return scalar::utf16_to_latin1::convert_with_errors<endianness::LITTLE>(buf, len, latin1_output);
+}
+
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf8(const char * buf, size_t len, char* utf8_output) const noexcept {
   return scalar::latin1_to_utf8::convert(buf,len,utf8_output);
 }

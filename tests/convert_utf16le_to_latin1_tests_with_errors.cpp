@@ -30,7 +30,9 @@ TEST(convert_2_UTF16_bytes) {
                                                      }, seed);
 
     auto procedure = [&implementation](const char16_t* utf16, size_t size, char* latin1) -> size_t {
-      return implementation.convert_utf16le_to_latin1(utf16, size, latin1);
+      simdutf::result res = implementation.convert_utf16le_to_latin1_with_errors(utf16, size, latin1);
+      ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
+      return res.count;
     };
     auto size_procedure = [&implementation](const char16_t* utf16, size_t size) -> size_t {
       return implementation.latin1_length_from_utf16(utf16, size);
@@ -47,15 +49,23 @@ TEST(convert_fails_if_input_too_large) {
   uint32_t seed{1234};
   simdutf::tests::helpers::RandomInt generator(0xff, 0xffff, seed); //
 
-  auto procedure = [&implementation](const char16_t* utf16, size_t size, char* latin1) -> size_t {
-    return implementation.convert_utf16le_to_latin1(utf16, size, latin1);
-  };
+
   const size_t size = 64;
   transcode_utf16_to_latin1_test_base test([](){return '*';}, size+32);
 
   for (size_t j = 0; j < 1000; j++) {
+
     uint16_t wrong_value = generator();
     for (size_t i=0; i < size; i++) {
+
+  auto procedure = [&implementation,&i](const char16_t* utf16, size_t size, char* latin1) -> size_t {
+    simdutf::result res = implementation.convert_utf16le_to_latin1_with_errors(utf16, size, latin1);
+    ASSERT_EQUAL(res.error,5);
+    ASSERT_EQUAL(res.count,i);
+    return 0;
+    
+  };
+
       auto old = test.input_utf16[i];
       test.input_utf16[i] = wrong_value;
       ASSERT_TRUE(test(procedure));
