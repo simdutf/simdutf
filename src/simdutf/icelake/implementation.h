@@ -19,6 +19,11 @@ public:
 
 
 
+  simdutf_warn_unused size_t convert_valid_utf16be_to_latin1(const char16_t * buf, size_t len, char* latin1_buffer) const noexcept final;
+  simdutf_warn_unused result convert_utf16be_to_latin1_with_errors(const char16_t * buf, size_t len, char* latin1_buffer) const noexcept final;
+  simdutf_warn_unused size_t convert_utf16be_to_latin1(const char16_t * buf, size_t len, char* latin1_buffer) const noexcept final;
+
+
   simdutf_warn_unused size_t convert_valid_utf16le_to_latin1(const char16_t * buf, size_t len, char* latin1_buffer) const noexcept final;
   simdutf_warn_unused result convert_utf16le_to_latin1_with_errors(const char16_t * buf, size_t len, char* latin1_buffer) const noexcept final;
   simdutf_warn_unused size_t convert_utf16le_to_latin1(const char16_t * buf, size_t len, char* latin1_buffer) const noexcept final;

@@ -6,6 +6,7 @@ namespace scalar {
 namespace {
 namespace utf16_to_latin1 {
 
+/* template <endianness big_endian>
 inline size_t convert_valid(const char16_t* buf, size_t len, char* latin_output) {
  const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
   size_t pos = 0;
@@ -13,7 +14,8 @@ inline size_t convert_valid(const char16_t* buf, size_t len, char* latin_output)
    uint16_t word = 0; 
   
   while (pos < len) {
-        word = data[pos];
+        word = !match_system(big_endian) ? utf16::swap_bytes(data[pos]) : data[pos];
+        //word = data[pos];
         if((word &0xF800 ) != 0xD800) { //check if the first top five bits indicate a surrogate pair
         // If none, we just need to make sure that it will fit into 8 bit:
             if((word & 0xFF00) == 0) {
@@ -23,7 +25,7 @@ inline size_t convert_valid(const char16_t* buf, size_t len, char* latin_output)
     } 
   }
   return latin_output - start;
-}
+} */
 
 
 template <endianness big_endian>

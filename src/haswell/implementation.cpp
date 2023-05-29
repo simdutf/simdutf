@@ -71,6 +71,18 @@ namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 
 
+simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_latin1(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
+  return scalar::utf16_to_latin1::convert_valid<endianness::BIG>(buf, len, latin1_output);
+}
+
+simdutf_warn_unused result implementation::convert_utf16be_to_latin1_with_errors(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
+  return scalar::utf16_to_latin1::convert_with_errors<endianness::BIG>(buf, len, latin1_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_utf16be_to_latin1(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
+  return scalar::utf16_to_latin1::convert<endianness::BIG>(buf, len, latin1_output);
+}
+
 simdutf_warn_unused size_t implementation::convert_valid_utf16le_to_latin1(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
   return scalar::utf16_to_latin1::convert_valid<endianness::LITTLE>(buf, len, latin1_output);
 }
