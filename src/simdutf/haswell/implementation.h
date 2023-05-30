@@ -17,6 +17,8 @@ public:
       internal::instruction_set::AVX2 | internal::instruction_set::BMI1 | internal::instruction_set::BMI2
   ) {}
 
+  simdutf_warn_unused size_t convert_latin1_to_utf16le(const char * buf, size_t len, char16_t* utf16_buffer) const noexcept final;
+  simdutf_warn_unused size_t convert_latin1_to_utf16be(const char * buf, size_t len, char16_t* utf16_buffer) const noexcept final;
 
 simdutf_warn_unused size_t convert_valid_utf16be_to_latin1(const char16_t * buf, size_t len, char* latin1_buffer) const noexcept final;
 simdutf_warn_unused result convert_utf16be_to_latin1_with_errors(const char16_t * buf, size_t len, char* latin1_buffer) const noexcept final;
@@ -46,6 +48,7 @@ simdutf_warn_unused size_t latin1_length_from_utf16(const char16_t * input, size
 
   simdutf_warn_unused size_t convert_latin1_to_utf32(const char * buf, size_t len, char32_t* utf32_output) const noexcept final;
   simdutf_warn_unused size_t utf32_length_from_latin1(const char * input, size_t length) const noexcept;
+  simdutf_warn_unused size_t utf16_length_from_latin1(const char * input, size_t length) const noexcept;
 simdutf_warn_unused size_t utf8_length_from_latin1(const char * input, size_t length) const noexcept;
 
   simdutf_warn_unused int detect_encodings(const char * input, size_t length) const noexcept final;

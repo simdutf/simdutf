@@ -20,7 +20,9 @@ inline size_t utf8_length_from_latin1(const char *c, size_t len) {
   return answer + len;
 }
 
-
+inline size_t utf16_length_from_latin1(const char *c, size_t len) {
+  return len;
+}
 
 } // utf32 namespace
 } // unnamed namespace
