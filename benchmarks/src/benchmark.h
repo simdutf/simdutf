@@ -69,6 +69,11 @@ namespace simdutf::benchmarks {
         void run_validate_utf32_with_errors(const simdutf::implementation& implementation, size_t iterations);
         void run_count_utf8(const simdutf::implementation& implementation, size_t iterations);
         void run_count_utf16(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_utf8_to_latin1(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_utf8_to_latin1_with_errors(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_valid_utf8_to_latin1(const simdutf::implementation& implementation, size_t iterations);
+
+
         void run_convert_utf8_to_utf16(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf8_to_utf16_with_errors(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf8_to_utf32(const simdutf::implementation& implementation, size_t iterations);
@@ -95,10 +100,13 @@ namespace simdutf::benchmarks {
 #if ICU_AVAILABLE
         void run_convert_utf8_to_utf16_icu(size_t iterations);
         void run_convert_utf16_to_utf8_icu(size_t iterations);
+        void run_convert_utf8_to_latin1_icu(size_t iterations);
 #endif
 #if ICONV_AVAILABLE
         void run_convert_utf8_to_utf16_iconv(size_t iterations);
         void run_convert_utf16_to_utf8_iconv(size_t iterations);
+        void run_convert_utf8_to_latin1_iconv(size_t iterations);
+
 #endif
 #ifdef INOUE2008
         /**
