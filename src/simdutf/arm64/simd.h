@@ -334,27 +334,61 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     static simdutf_really_inline simd8<int8_t> splat(int8_t _value) { return vmovq_n_s8(_value); }
     static simdutf_really_inline simd8<int8_t> zero() { return vdupq_n_s8(0); }
     static simdutf_really_inline simd8<int8_t> load(const int8_t values[16]) { return vld1q_s8(values); }
+
+    // Use ST2 instead of UXTL+UXTL2 to interleave zeroes. UXTL is actually a USHLL #0,
+    // and shifting in NEON is actually quite slow.
+    //
+    // While this needs the registers to be in a specific order, bigger cores can interleave
+    // these with no overhead, and it still performs decently on little cores.
+    //    movi  v1.3d, #0
+    //      mov   v0.16b, value[0]
+    //    st2   {v0.16b, v1.16b}, [ptr], #32
+    //      mov   v0.16b, value[1]
+    //    st2   {v0.16b, v1.16b}, [ptr], #32
+    //    ...
     template <endianness big_endian>
     simdutf_really_inline void store_ascii_as_utf16(char16_t * p) const {
-      uint16x8_t first = vmovl_u8(vget_low_u8 (vreinterpretq_u8_s8(this->value)));
-      uint16x8_t second = vmovl_high_u8(vreinterpretq_u8_s8(this->value));
-      if (!match_system(big_endian)) {
-        #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-        const uint8x16_t swap = make_uint8x16_t(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
-        #else
-        const uint8x16_t swap = {1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14};
-        #endif
-        first = vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(first), swap));
-        second = vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(second), swap));
-      }
-      vst1q_u16(reinterpret_cast<uint16_t*>(p), first);
-      vst1q_u16(reinterpret_cast<uint16_t*>(p + 8), second);
+      int8x16x2_t pair = match_system(big_endian)
+          ? int8x16x2_t{{this->value, vmovq_n_s8(0)}}
+          : int8x16x2_t{{vmovq_n_s8(0), this->value}};
+      vst2q_s8(reinterpret_cast<int8_t *>(p), pair);
     }
+
+    // currently unused
+    // Technically this could be done with ST4 like in store_ascii_as_utf16, but it is
+    // very much not worth it, as explicitly mentioned in the ARM Cortex-X1 Core Software
+    // Optimization Guide:
+    //   4.18 Complex ASIMD instructions
+    //     The bandwidth of [ST4 with element size less than 64b] is limited by decode
+    //     constraints and it is advisable to avoid them when high performing code is desired.
+    // Instead, it is better to use ZIP1+ZIP2 and two ST2.
     simdutf_really_inline void store_ascii_as_utf32(char32_t * p) const {
-      vst1q_u32(reinterpret_cast<uint32_t*>(p), vmovl_u16(vget_low_u16(vmovl_u8(vget_low_u8 (vreinterpretq_u8_s8(this->value))))));
-      vst1q_u32(reinterpret_cast<uint32_t*>(p + 4), vmovl_high_u16(vmovl_u8(vget_low_u8 (vreinterpretq_u8_s8(this->value)))));
-      vst1q_u32(reinterpret_cast<uint32_t*>(p + 8), vmovl_u16(vget_low_u16(vmovl_high_u8(vreinterpretq_u8_s8(this->value)))));
-      vst1q_u32(reinterpret_cast<uint32_t*>(p + 12), vmovl_high_u16(vmovl_high_u8(vreinterpretq_u8_s8(this->value))));
+      const uint16x8_t low = vreinterpretq_u16_s8(vzip1q_s8(this->value, vmovq_n_s8(0)));
+      const uint16x8_t high = vreinterpretq_u16_s8(vzip2q_s8(this->value, vmovq_n_s8(0)));
+      const uint16x8x2_t low_pair{{ low, vmovq_n_u16(0) }};
+      vst2q_u16(reinterpret_cast<uint16_t *>(p), low_pair);
+      const uint16x8x2_t high_pair{{ high, vmovq_n_u16(0) }};
+      vst2q_u16(reinterpret_cast<uint16_t *>(p + 8), high_pair);
+    }
+
+    // In places where the table can be reused, which is most uses in simdutf, it is worth it to do
+    // 4 table lookups, as there is no direct zero extension from u8 to u32.
+    simdutf_really_inline void store_ascii_as_utf32_tbl(char32_t * p) const {
+      const simd8<uint8_t> tb1{  0,255,255,255,  1,255,255,255,  2,255,255,255,  3,255,255,255 };
+      const simd8<uint8_t> tb2{  4,255,255,255,  5,255,255,255,  6,255,255,255,  7,255,255,255 };
+      const simd8<uint8_t> tb3{  8,255,255,255,  9,255,255,255, 10,255,255,255, 11,255,255,255 };
+      const simd8<uint8_t> tb4{ 12,255,255,255, 13,255,255,255, 14,255,255,255, 15,255,255,255 };
+
+      // encourage store pairing and interleaving
+      const auto shuf1 = this->apply_lookup_16_to(tb1);
+      const auto shuf2 = this->apply_lookup_16_to(tb2);
+      shuf1.store(reinterpret_cast<int8_t *>(p));
+      shuf2.store(reinterpret_cast<int8_t *>(p + 4));
+
+      const auto shuf3 = this->apply_lookup_16_to(tb3);
+      const auto shuf4 = this->apply_lookup_16_to(tb4);
+      shuf3.store(reinterpret_cast<int8_t *>(p + 8));
+      shuf4.store(reinterpret_cast<int8_t *>(p + 12));
     }
     // Conversion from/to SIMD register
     simdutf_really_inline simd8(const int8x16_t _value) : value{_value} {}
@@ -456,7 +490,7 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     }
 
     template<typename T>
-    simdutf_really_inline simd8<int8_t> apply_lookup_16_to(const simd8<T> original) {
+    simdutf_really_inline simd8<int8_t> apply_lookup_16_to(const simd8<T> original) const {
       return vqtbl1q_s8(*this, simd8<uint8_t>(original));
     }
   };
@@ -507,10 +541,10 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     }
 
     simdutf_really_inline void store_ascii_as_utf32(char32_t * ptr) const {
-      this->chunks[0].store_ascii_as_utf32(ptr+sizeof(simd8<T>)*0);
-      this->chunks[1].store_ascii_as_utf32(ptr+sizeof(simd8<T>)*1);
-      this->chunks[2].store_ascii_as_utf32(ptr+sizeof(simd8<T>)*2);
-      this->chunks[3].store_ascii_as_utf32(ptr+sizeof(simd8<T>)*3);
+      this->chunks[0].store_ascii_as_utf32_tbl(ptr+sizeof(simd8<T>)*0);
+      this->chunks[1].store_ascii_as_utf32_tbl(ptr+sizeof(simd8<T>)*1);
+      this->chunks[2].store_ascii_as_utf32_tbl(ptr+sizeof(simd8<T>)*2);
+      this->chunks[3].store_ascii_as_utf32_tbl(ptr+sizeof(simd8<T>)*3);
     }
 
     simdutf_really_inline uint64_t to_bitmask() const {
