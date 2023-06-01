@@ -835,23 +835,110 @@ void Benchmark::run_convert_utf8_to_utf32_with_dynamic_allocation(const simdutf:
 }
 
 #ifdef ICU_AVAILABLE
-void Benchmark::run_convert_utf8_to_latin1_icu(size_t iterations) {
+/* void Benchmark::run_convert_utf8_to_latin1_icu(size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
     const size_t size = input_data.size();
     volatile size_t sink{0};
     auto proc = [data, size,  &sink]() {
         UErrorCode status = U_ZERO_ERROR;
+        UConverter *conv = ucnv_open("ISO-8859-1", &status);
+
         int32_t targetCapacity = size;
         std::unique_ptr<char[]> target(new char[targetCapacity]);
-        ucnv_convert("ISO-8859-1", "UTF-8", target.get(), targetCapacity, data, size, &status);
-        sink = strlen(target.get());
+         sink = ucnv_convert("ISO-8859-1", "UTF-8", target.get(), targetCapacity, data, size, &status);
+        // sink = ucnv_fromUChars(conv, target.get(), targetCapacity, data, size, &status);
+        assert(U_SUCCESS(status));
+
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
     size_t char_count = get_active_implementation()->count_utf8(data, size);
     print_summary(result, size, char_count);
+} */
+/* void Benchmark::run_convert_utf8_to_latin1_icu(size_t iterations) {
+    const char*  data = reinterpret_cast<const char*>(input_data.data());
+    const size_t size = input_data.size();
+    volatile size_t sink{0};
+    auto proc = [data, size, &sink]() {
+        UErrorCode status = U_ZERO_ERROR;
+
+        // Open converters for source and target encodings
+        UConverter *utf8conv = ucnv_open("UTF-8", &status);
+        assert(U_SUCCESS(status));
+        UConverter *latin1conv = ucnv_open("ISO-8859-1", &status);
+        assert(U_SUCCESS(status));
+
+        // Convert from UTF-8 to UTF-16
+        int32_t utf16length = ucnv_toUChars(utf8conv, nullptr, 0, data, size, &status);
+        assert(status == U_BUFFER_OVERFLOW_ERROR);
+        status = U_ZERO_ERROR;
+        UChar* utf16data = new UChar[utf16length];
+        ucnv_toUChars(utf8conv, utf16data, utf16length, data, size, &status);
+        assert(U_SUCCESS(status));
+
+        // Convert from UTF-16 to ISO-8859-1
+        int32_t latin1length = utf16length;  // ISO-8859-1 characters are single byte
+        char* latin1data = new char[latin1length];
+        sink = ucnv_fromUChars(latin1conv, latin1data, latin1length, utf16data, utf16length, &status);
+        assert(U_SUCCESS(status));
+
+        // Clean up
+        delete[] utf16data;
+        delete[] latin1data;
+        ucnv_close(utf8conv);
+        ucnv_close(latin1conv);
+    };
+
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
+    size_t char_count = get_active_implementation()->count_utf8(data, size);
+    print_summary(result, size, char_count);
+} */
+
+void Benchmark::run_convert_utf8_to_latin1_icu(size_t iterations) {
+    const char*  data = reinterpret_cast<const char*>(input_data.data());
+    const size_t size = input_data.size();
+    volatile size_t sink{0};
+    auto proc = [data, size, &sink]() {
+        UErrorCode status = U_ZERO_ERROR;
+
+        // Open converters for source and target encodings
+        UConverter *utf8conv = ucnv_open("UTF-8", &status);
+        assert(U_SUCCESS(status));
+        UConverter *latin1conv = ucnv_open("ISO-8859-1", &status);
+        assert(U_SUCCESS(status));
+
+        // Allocate target buffer
+        int32_t targetCapacity = size;
+        std::unique_ptr<char[]> target(new char[targetCapacity]);
+
+        // Pointers for source and target
+        const char* source = data;
+        const char* sourceLimit = data + size;
+        char* targetStart = target.get();
+        char* targetLimit = target.get() + targetCapacity;
+
+        // Convert from UTF-8 to ISO-8859-1
+        ucnv_convertEx(latin1conv, utf8conv, &targetStart, targetLimit, &source, sourceLimit, nullptr, nullptr, nullptr, nullptr, true, true, &status);
+        assert(U_SUCCESS(status));
+
+        // Calculate the output size
+        sink = targetStart - target.get();
+
+        // Clean up
+        ucnv_close(utf8conv);
+        ucnv_close(latin1conv);
+    };
+
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
+    size_t char_count = get_active_implementation()->count_utf8(data, size);
+    print_summary(result, size, char_count);
 }
+
 
 void Benchmark::run_convert_utf8_to_utf16_icu(size_t iterations) {
     const char*  data = reinterpret_cast<const char*>(input_data.data());
