@@ -22,6 +22,7 @@
 #include <unicode/uconfig.h>
 #include <unicode/platform.h>
 #include <unicode/unistr.h>
+#include <unicode/ucnv.h>
 #endif
 
 #if ICONV_AVAILABLE

@@ -1,4 +1,3 @@
-#include "unicode/ucnv.h"
 #include "benchmark.h"
 #include "simdutf.h"
 
