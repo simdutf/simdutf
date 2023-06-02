@@ -393,7 +393,9 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     // Conversion from/to SIMD register
     simdutf_really_inline simd8(const int8x16_t _value) : value{_value} {}
     simdutf_really_inline operator const int8x16_t&() const { return this->value; }
+#ifndef SIMDUTF_REGULAR_VISUAL_STUDIO
     simdutf_really_inline operator const uint8x16_t() const { return vreinterpretq_u8_s8(this->value); }
+#endif
     simdutf_really_inline operator int8x16_t&() { return this->value; }
 
     // Zero constructor
