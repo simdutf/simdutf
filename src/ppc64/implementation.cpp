@@ -1,6 +1,8 @@
 #include "scalar/utf8.h"
 #include "scalar/utf16.h"
 #include "scalar/latin1.h"
+#include "scalar/utf8_to_latin1/valid_utf8_to_latin1.h"
+#include "scalar/utf8_to_latin1/utf8_to_latin1.h"
 
 #include "scalar/utf16_to_utf8/valid_utf16_to_utf8.h"
 #include "scalar/utf16_to_utf8/utf16_to_utf8.h"

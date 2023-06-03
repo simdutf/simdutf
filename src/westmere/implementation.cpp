@@ -157,21 +157,19 @@ simdutf_warn_unused result implementation::convert_utf32_to_latin1_with_errors(c
 
 simdutf_warn_unused size_t implementation::latin1_length_from_utf32(const char32_t * input, size_t length) const noexcept {
   return length;
-  }
+}
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(const char * buf, size_t len, char32_t* utf32_output) const noexcept {
   return scalar::latin1_to_utf32::convert(buf,len,utf32_output);
 }
+
 simdutf_warn_unused size_t implementation::utf32_length_from_latin1(const char * input, size_t length) const noexcept {
   return length;
-  }
+}
 
 simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char * input, size_t length) const noexcept {
   return scalar::latin1::utf8_length_from_latin1(input,length);
-  }
-
-
-
+}
 
 simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
   return westmere::utf8_validation::generic_validate_utf8(buf, len);
