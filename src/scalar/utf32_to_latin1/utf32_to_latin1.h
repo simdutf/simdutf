@@ -6,9 +6,6 @@ namespace scalar {
 namespace {
 namespace utf32_to_latin1 {
 
-
-
-
 inline size_t convert(const char32_t *buf, size_t len, char *latin1_output) {
     const uint32_t *data = reinterpret_cast<const uint32_t *>(buf);
     char* start = latin1_output;
@@ -39,8 +36,6 @@ inline size_t convert(const char32_t *buf, size_t len, char *latin1_output) {
     return latin1_output - start;
 }
 
-
-
 inline result convert_with_errors(const char32_t *buf, size_t len, char *latin1_output) {
     const uint32_t *data = reinterpret_cast<const uint32_t *>(buf);
     char* start{latin1_output};
@@ -48,9 +43,7 @@ inline result convert_with_errors(const char32_t *buf, size_t len, char *latin1_
     uint32_t utf32_char;
 
     while (pos < len) {
-
         utf32_char = (uint32_t)data[pos]; 
-
         if (pos + 2 <= len) { // if it is safe to read 8 more bytes, check that they are Latin1
             uint64_t v;
             ::memcpy(&v, data + pos, sizeof(uint64_t));
@@ -61,10 +54,6 @@ inline result convert_with_errors(const char32_t *buf, size_t len, char *latin1_
             continue;
             }
         } 
-
-        
-        
-        //The 
         if ((utf32_char & 0xFFFFFF00) == 0){ // Check if the character can be represented in Latin-1
             *latin1_output++ = (char)(utf32_char & 0xFF);
             pos++;
@@ -73,8 +62,6 @@ inline result convert_with_errors(const char32_t *buf, size_t len, char *latin1_
   return result(error_code::SUCCESS, latin1_output - start);
 
 }
-
-
 
 } // utf32_to_latin1 namespace
 } // unnamed namespace

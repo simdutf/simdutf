@@ -14,41 +14,15 @@ inline size_t convert(const char16_t* buf, size_t len, char* latin_output) {
   uint16_t word = 0;
 
   while (pos < len) {
-        word = !match_system(big_endian) ? utf16::swap_bytes(data[pos]) : data[pos];
-        //word = data[pos];
+    word = !match_system(big_endian) ? utf16::swap_bytes(data[pos]) : data[pos];
 
-/*     if((word & 0xFF00 ) == 0) { //check if the first top five bits indicate a surrogate pair
-        // If none, we just need to make sure that it will fit into 8 bit:
-
-                *latin_output++ = char(word);
-            }
-            else {
-                return 0;
-            }
-        pos++;
-    } else { return 0;} */
-
-/*     if((word & 0xF800 ) != 0xD800) { //check if the first top five bits indicate a surrogate pair
-        // If none, we just need to make sure that it will fit into 8 bit:
-            if((word & 0xFF00) == 0) {
-                *latin_output++ = char(word);
-            }
-            else {
-                return 0;
-            }
-        pos++;
-    } else { return 0;} */
-
-    if((word & 0xFF00 ) == 0) { //check if the first top five bits indicate a surrogate pair
-        // If none, we just need to make sure that it will fit into 8 bit:
-
+    if((word & 0xFF00 ) == 0) { 
         *latin_output++ = char(word);
         pos++;
     } else { return 0;}
   }
   return latin_output - start;
 }
-
 
 template <endianness big_endian>
 inline result convert_with_errors(const char16_t* buf, size_t len, char* latin_output) {
@@ -61,24 +35,10 @@ inline result convert_with_errors(const char16_t* buf, size_t len, char* latin_o
   while (pos < len) {
     word = !match_system(big_endian) ? utf16::swap_bytes(data[pos]) : data[pos];
 
-    if((word & 0xFF00 ) == 0) { //check if the first top five bits indicate a surrogate pair
-        // If none, we just need to make sure that it will fit into 8 bit:
-
+    if((word & 0xFF00 ) == 0) { 
         *latin_output++ = char(word);
         pos++;
     } else { return result(error_code::TOO_LARGE, pos);}
-
-/*         word = data[pos];
-        if((word &0xF800 ) != 0xD800) { //check if the first top five bits indicate a surrogate pair
-        // If none, we just need to make sure that it will fit into 8 bit:
-            if((word & 0xFF00) == 0) {
-                *latin_output++ = char(word);
-            }
-            else {
-                return result(error_code::TOO_LARGE, pos); // Valid UTF16 but not a Latin1 character
-            }
-        pos++;
-    } else { return result(error_code::SURROGATE, pos);} */
   }
   return result(error_code::SUCCESS,latin_output - start);
 }

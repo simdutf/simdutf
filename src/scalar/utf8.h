@@ -189,7 +189,6 @@ inline size_t latin1_length_from_utf8(const char *buf, size_t len) {
     return answer;
 }
 
-
 } // utf8 namespace
 } // unnamed namespace
 } // namespace scalar

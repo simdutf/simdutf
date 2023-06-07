@@ -8,7 +8,6 @@ namespace utf8_to_latin1 {
 
 inline size_t convert(const char* buf, size_t len, char* latin_output) {
  const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);
-
   size_t pos = 0;
   char* start{latin_output};
 
@@ -19,7 +18,7 @@ inline size_t convert(const char* buf, size_t len, char* latin_output) {
       ::memcpy(&v1, data + pos, sizeof(uint64_t));
       uint64_t v2;
       ::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
-      uint64_t v{v1 | v2}; //We're only interested in these bits: 1000 1000 1000 1000, so it makes sense to concatenate everything
+      uint64_t v{v1 | v2}; //We're only interested in these bits: 1000 1000 1000 1000 .... etc
       if ((v & 0x8080808080808080) == 0) { //if NONE of these are set, e.g. all of them are zero, then everything is ASCII
         size_t final_pos = pos + 16;
         while(pos < final_pos) {
@@ -45,12 +44,6 @@ inline size_t convert(const char* buf, size_t len, char* latin_output) {
       if ( 0xFF < code_point) { return 0; } //We only care about the range 129-255 which is Non-ASCII latin1 characters
       *latin_output++ = char(code_point); 
       pos += 2;
-/*     } else if ((leading_byte & 0b11110000) == 0b11100000) {
-      // We have a three-byte UTF-8
-      return 0;
-    } else if ((leading_byte & 0b11111000) == 0b11110000) { // 0b11110000
-      // we have a 4-byte UTF-8 word.
-      return 0; */
     } else {
       return 0;
     }
@@ -70,7 +63,7 @@ inline result convert_with_errors(const char* buf, size_t len, char* latin_outpu
       ::memcpy(&v1, data + pos, sizeof(uint64_t));
       uint64_t v2;
       ::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
-      uint64_t v{v1 | v2}; //We're only interested in these bits: 1000 1000 1000 1000, so it makes sense to concatenate everything
+      uint64_t v{v1 | v2}; //We're only interested in these bits: 1000 1000 1000 1000...etc
       if ((v & 0x8080808080808080) == 0) { //if NONE of these are set, e.g. all of them are zero, then everything is ASCII
         size_t final_pos = pos + 16;
         while(pos < final_pos) {
@@ -111,8 +104,6 @@ inline result convert_with_errors(const char* buf, size_t len, char* latin_outpu
   }
   return result(error_code::SUCCESS, latin_output - start);
 }
-
-
 
 } // utf8_to_latin1 namespace
 } // unnamed namespace
