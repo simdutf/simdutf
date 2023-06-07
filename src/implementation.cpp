@@ -331,6 +331,9 @@ private:
 
 static const std::initializer_list<const implementation *>& get_available_implementation_pointers() {
   static const std::initializer_list<const implementation *> available_implementation_pointers {
+#if SIMDUTF_IMPLEMENTATION_ICELAKE
+    get_icelake_singleton(),
+#endif
 #if SIMDUTF_IMPLEMENTATION_HASWELL
     get_haswell_singleton(),
 #endif
