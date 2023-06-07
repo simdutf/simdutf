@@ -88,7 +88,6 @@ simdutf_warn_unused size_t implementation::convert_latin1_to_utf16be(const char*
 }
 
 simdutf_warn_unused size_t implementation::utf16_length_from_latin1(const char * input, size_t length) const noexcept {
-  //return length;
     return scalar::latin1::utf16_length_from_latin1(input,length);
   }
 
