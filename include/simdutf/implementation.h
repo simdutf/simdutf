@@ -67,8 +67,6 @@ simdutf_warn_unused size_t convert_latin1_to_utf16be(const char * input, size_t 
  */
 simdutf_warn_unused size_t convert_latin1_to_utf16le(const char * input, size_t length, char16_t* utf16_output) noexcept;
 
-
-
 /**
  * Validate the UTF-8 string. This function may be best when you expect
  * the input to be almost always valid. Otherwise, consider using

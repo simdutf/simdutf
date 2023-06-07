@@ -26,11 +26,8 @@ TEST(convert_latin1_only) {
     return implementation.convert_utf32_to_latin1(utf32, size, latin1);
   };
   auto size_procedure = [&implementation](const char32_t* utf32, size_t size) -> size_t {
-    //return implementation.latin1_length_from_utf32(utf32, size); <= this causes a segfault
-    return size; //this does not
+    return size;
   };
-  //std::array<size_t, 4> input_size{7,16,24,67};
-  // for (size_t size: input_size) {
     simdutf::tests::helpers::transcode_utf32_to_latin1_test_base test(generator, 256);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
@@ -57,7 +54,6 @@ TEST(convert_fails_if_input_too_large) {
     }
   }
 }
-
 
 int main(int argc, char* argv[]) {
   return simdutf::test::main(argc, argv);
