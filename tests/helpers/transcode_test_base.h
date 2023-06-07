@@ -33,9 +33,9 @@ namespace simdutf { namespace tests { namespace helpers {
   public:
     using GenerateCodepoint = std::function<uint32_t()>;
 
-    std::vector<char> input_latin1; // source-encoded message: what we're going to transcode
-    std::vector<char16_t> output_utf16; // what the procedure under test produced
-    std::vector<char16_t> reference_output_utf16; // what we are expecting
+    std::vector<char> input_latin1; 
+    std::vector<char16_t> output_utf16;
+    std::vector<char16_t> reference_output_utf16; 
 
     static constexpr size_t output_size_margin = 0; // extra room for buggy procedures
 
@@ -75,8 +75,6 @@ namespace simdutf { namespace tests { namespace helpers {
     bool validate(size_t procedure_result) const;
     bool is_input_valid() const;
   };
-
-
 
     /**
    * This class can be used to test UTF-8 => Latin1 transcoding.

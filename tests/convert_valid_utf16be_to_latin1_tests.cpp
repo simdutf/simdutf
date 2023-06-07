@@ -9,7 +9,6 @@
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
 
-
 namespace {
   std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
 
@@ -23,11 +22,7 @@ TEST(convert_2_UTF16_bytes) {
   for(size_t trial = 0; trial < trials; trial ++) {
     if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
     // range for 1, 2 or 3 UTF-8 bytes
-    simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0x00ff},
-                                                     //{0x0080, 0x07ff},
-                                                     //{0x0800, 0xd7ff},
-                                                     //{0xe000, 0xffff}
-                                                     }, seed);
+    simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0x00ff}, }, seed);
 
     auto procedure = [&implementation](const char16_t* utf16le, size_t size, char* latin1) -> size_t {
     std::vector<char16_t> utf16be(size);
@@ -45,7 +40,6 @@ TEST(convert_2_UTF16_bytes) {
     }
   }
 }
-
 
 int main(int argc, char* argv[]) {
   return simdutf::test::main(argc, argv);

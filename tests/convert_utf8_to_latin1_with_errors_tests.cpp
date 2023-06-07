@@ -7,7 +7,6 @@
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
 
-
 namespace {
   std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
 
@@ -52,7 +51,6 @@ TEST(convert_pure_ASCII) {
 
 TEST(convert_1_or_2_valid_UTF8_bytes_to_latin1) {
   for(size_t trial = 0; trial < trials; trial ++) {
-    // printf("%i \n",trial);
     uint32_t seed{1234+uint32_t(trial)};
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
     simdutf::tests::helpers::RandomInt random(0x0000, 0x0ff, seed); // range for 1 or 2 UTF-8 bytes
@@ -64,21 +62,16 @@ TEST(convert_1_or_2_valid_UTF8_bytes_to_latin1) {
       return implementation.latin1_length_from_utf8(utf8, size);
     };
     for (size_t size: input_size) {
-      //printf("input size:%i \n",input_size);
       transcode_utf8_to_latin1_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
       ASSERT_TRUE(test.check_size(size_procedure));
     }
   }
 }
- 
-
 
  TEST(too_large_input) {
   uint32_t seed{1234};
-  simdutf::tests::helpers::RandomIntRanges random({//{0x0000, 0xff},
-                                                {0xff, 0x10FFFF}
-                                                }, seed);
+  simdutf::tests::helpers::RandomIntRanges random({{0xff, 0x10FFFF}}, seed);
 
 auto getUtf8SequenceLength = [](char byte) {
     if ((byte & 0b11100000) == 0b11000000) { // 2 byte UTF-8 header
@@ -95,17 +88,11 @@ auto getUtf8SequenceLength = [](char byte) {
     }
 };
 
-
   for(size_t trial = 0; trial < trials; trial++) {
     transcode_utf8_to_latin1_test_base test(random, fix_size);
     for (int i = 0; i < fix_size; i++) {
-
-      //  printByteInBinary(test.input_utf8[i]);
-      // std::cout << i << "\n"; 
-
       auto byte_number = getUtf8SequenceLength(test.input_utf8[i]);
       if(byte_number != 1) { 
-
 
         auto procedure = [&implementation, &i](const char* utf8, size_t size, char* latin1) -> size_t {
           simdutf::result res = implementation.convert_utf8_to_latin1_with_errors(utf8, size, latin1);
@@ -130,9 +117,7 @@ auto getUtf8SequenceLength = [](char byte) {
 
 TEST(header_bits_error) {
   uint32_t seed{1234};
-  simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0xff}
-                                                  //,{0xe000, 0x10ffff}
-                                                  }, seed);
+  simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0xff}}, seed);
 
   for(size_t trial = 0; trial < trials; trial++) {
     transcode_utf8_to_latin1_test_base test(random, fix_size);
@@ -148,9 +133,6 @@ TEST(header_bits_error) {
         };
         const unsigned char old = test.input_utf8[i];
         test.input_utf8[i] = uint8_t(0b11111000);
-        // printByteInBinary(test.input_utf8[i]);
-
-
         ASSERT_TRUE(test(procedure));
         test.input_utf8[i] = old;
       }
@@ -160,8 +142,7 @@ TEST(header_bits_error) {
 
 TEST(too_short_error) {
   uint32_t seed{1234};
-  simdutf::tests::helpers::RandomIntRanges random({//{0x0000, 0xd800-1},
-                                                {0x00, 0xff}}, seed);
+  simdutf::tests::helpers::RandomIntRanges random({{0x00, 0xff}}, seed);
   for(size_t trial = 0; trial < trials; trial++) {
     transcode_utf8_to_latin1_test_base test(random, fix_size);
     int leading_byte_pos = 0;
@@ -190,8 +171,7 @@ TEST(too_short_error) {
 
 TEST(too_long_error) {
   uint32_t seed{1234};
-  simdutf::tests::helpers::RandomIntRanges random({//{0x0000, 0xd800-1},
-                                                {0x7f, 0xff}}, seed);// in this context, conversion to latin 1 will register everything past 0xff as a TOO_LARGE error
+  simdutf::tests::helpers::RandomIntRanges random({{0x7f, 0xff}}, seed);// in this context, conversion to latin 1 will register everything past 0xff as a TOO_LARGE error
   for(size_t trial = 0; trial < trials; trial++) {
     transcode_utf8_to_latin1_test_base test(random, fix_size);
     for (int i = 1; i < fix_size; i++) {
@@ -214,8 +194,7 @@ TEST(too_long_error) {
 
 TEST(overlong_error) {
   uint32_t seed{1234};
-  simdutf::tests::helpers::RandomIntRanges random({//{0x0000, 0xd800-1},
-                                                {0x00, 0xff}}, seed);
+  simdutf::tests::helpers::RandomIntRanges random({{0x00, 0xff}}, seed);
   for(size_t trial = 0; trial < trials; trial++) {
     transcode_utf8_to_latin1_test_base test(random, fix_size);
     for (int i = 1; i < fix_size; i++) {
@@ -230,13 +209,7 @@ TEST(overlong_error) {
         const unsigned char second_old = test.input_utf8[i+1];
         if ((old & 0b11100000) == 0b11000000) { // two-bytes case, change to a value less or equal than 0x7f
           test.input_utf8[i] = char(0b11000000);
-        }/*  else if ((old & 0b11110000) == 0b11100000) {  // three-bytes case, change to a value less or equal than 0x7ff
-          test.input_utf8[i] = char(0b11100000);
-          test.input_utf8[i+1] = test.input_utf8[i+1] & 0b11011111;
-        } else {  // four-bytes case, change to a value less or equal than 0xffff
-          test.input_utf8[i] = char(0b11110000);
-          test.input_utf8[i+1] = test.input_utf8[i+1] & 0b11001111;
-        } */
+        }
         ASSERT_TRUE(test(procedure));
         test.input_utf8[i] = old;
         test.input_utf8[i+1] = second_old;
@@ -244,7 +217,6 @@ TEST(overlong_error) {
     }
   }
 }
-
 
 int main(int argc, char* argv[]) {
   return simdutf::test::main(argc, argv);

@@ -19,7 +19,7 @@ namespace {
 TEST(convert_latin1_only) {
   size_t counter = 0;
   auto generator = [&counter]() -> uint32_t {
-    return counter++ & 0xFF; //0x7f;
+    return counter++ & 0xFF; 
   };
 
   auto procedure = [&implementation](const char32_t* utf32, size_t size, char* latin1) -> size_t {
@@ -48,9 +48,9 @@ TEST(convert_fails_if_input_too_large) {
     uint32_t wrong_value = generator();
     for (size_t i=0; i < size; i++) {
       auto old = test.input_utf32[i];
-      test.input_utf32[i] = wrong_value; //switch one character in the input /w a wrong_value
+      test.input_utf32[i] = wrong_value; 
       ASSERT_TRUE(test(procedure)); //the procedure shouldn't convert anything, so its output should equal the reference string that is all 0x2a
-      test.input_utf32[i] = old; //switch back
+      test.input_utf32[i] = old; 
     }
   }
 }
