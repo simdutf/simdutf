@@ -71,9 +71,8 @@ namespace simdutf::benchmarks {
         void run_count_utf8(const simdutf::implementation& implementation, size_t iterations);
         void run_count_utf16(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_latin1_to_utf8(const simdutf::implementation& implementation, size_t iterations);
-        void run_convert_latin1_to_utf16le(const simdutf::implementation& implementation, size_t iterations);
-        // void run_convert_latin1_to_utf16be(const simdutf::implementation& implementation, size_t iterations);
-        // void run_convert_latin1_to_utf32(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_latin1_to_utf16(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_latin1_to_utf32(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf8_to_latin1(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf8_to_latin1_with_errors(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf8_to_utf16(const simdutf::implementation& implementation, size_t iterations);
