@@ -119,6 +119,10 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         {"convert_utf16_to_utf32_with_dynamic_allocation", {simdutf::encoding_type::UTF16_LE}},
         {"convert_valid_utf16_to_utf32", {simdutf::encoding_type::UTF16_LE}},
 
+        {"convert_utf32_to_latin1", {simdutf::encoding_type::UTF32_LE}},
+        {"convert_utf32_to_latin1_with_errors", {simdutf::encoding_type::UTF32_LE}},
+        {"convert_valid_utf32_to_latin1", {simdutf::encoding_type::UTF32_LE}},
+
         {"convert_utf32_to_utf8", {simdutf::encoding_type::UTF32_LE}},
         {"convert_utf32_to_utf8_with_errors", {simdutf::encoding_type::UTF32_LE}},
         {"convert_valid_utf32_to_utf8", {simdutf::encoding_type::UTF32_LE}},
@@ -543,6 +547,10 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         run_convert_valid_utf16_to_latin1(*implementation, iterations);
     } else if(name == "convert_valid_utf16_to_utf8") {
         run_convert_valid_utf16_to_utf8(*implementation, iterations);
+    } else if(name == "convert_utf32_to_latin1") {
+        run_convert_utf32_to_latin1(*implementation, iterations);
+    } else if(name == "convert_utf32_to_latin1_with_errors") {
+        run_convert_utf32_to_latin1_with_errors(*implementation, iterations);
     } else if(name == "convert_utf32_to_utf8") {
         run_convert_utf32_to_utf8(*implementation, iterations);
     } else if(name == "convert_utf32_to_utf8_with_errors") {
@@ -553,6 +561,8 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         run_convert_utf32_to_utf16(*implementation, iterations);
     } else if(name == "convert_utf32_to_utf16_with_errors") {
         run_convert_utf32_to_utf16_with_errors(*implementation, iterations);
+    } else if(name == "convert_valid_utf32_to_latin1") {
+        run_convert_valid_utf32_to_latin1(*implementation, iterations);
     } else if(name == "convert_valid_utf32_to_utf16") {
         run_convert_valid_utf32_to_utf16(*implementation, iterations);
     } else if(name == "convert_valid_utf16_to_utf32") {
@@ -960,49 +970,6 @@ void Benchmark::run_convert_utf8_to_utf16_icu(size_t iterations) {
     std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
     size_t expected = convert_utf8_to_utf16le(data, size, output_buffer.get());
     if(expected != sink) { std::cerr << "The number of UTF-16 words does not match.\n"; }
-    print_summary(result, size, char_count);
-}
-void Benchmark::run_convert_utf16_to_latin1(const simdutf::implementation& implementation, size_t iterations) {
-    const char16_t*  data = reinterpret_cast<const char16_t*>(input_data.data());
-    const size_t size = input_data.size();
-    std::unique_ptr<char[]> output_buffer{new char[size]};
-    volatile size_t sink{0};
-    auto proc = [&implementation, data, size, &output_buffer, &sink]() {
-        sink = implementation.convert_utf16le_to_latin1(data, size, output_buffer.get());
-    };
-    count_events(proc, iterations); // warming up!
-    const auto result = count_events(proc, iterations);
-    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    size_t char_count = get_active_implementation()->count_utf16le(data, size);
-    print_summary(result, size, char_count);
-}
-void Benchmark::run_convert_utf16_to_latin1_with_errors(const simdutf::implementation& implementation, size_t iterations) {
-    const char16_t*  data = reinterpret_cast<const char16_t*>(input_data.data());
-    const size_t size = input_data.size();
-    std::unique_ptr<char[]> output_buffer{new char[size]};
-    volatile bool sink{false};
-    auto proc = [&implementation, data, size, &output_buffer, &sink]() {
-        result res = implementation.convert_utf16le_to_latin1_with_errors(data, size, output_buffer.get());
-        sink = !(res.error);
-    };
-    count_events(proc, iterations); // warming up!
-    const auto result = count_events(proc, iterations);
-    if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
-    size_t char_count = get_active_implementation()->count_utf16le(data, size);
-    print_summary(result, size, char_count);
-}
-void Benchmark::run_convert_valid_utf16_to_latin1(const simdutf::implementation& implementation, size_t iterations) {
-    const char16_t*  data = reinterpret_cast<const char16_t*>(input_data.data());
-    const size_t size = input_data.size();
-    std::unique_ptr<char[]> output_buffer{new char[size]};
-    volatile size_t sink{0};
-    auto proc = [&implementation, data, size, &output_buffer, &sink]() {
-        sink = implementation.convert_valid_utf16le_to_latin1(data, size, output_buffer.get());
-    };
-    count_events(proc, iterations); // warming up!
-    const auto result = count_events(proc, iterations);
-    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
-    size_t char_count = get_active_implementation()->count_utf16le(data, size);
     print_summary(result, size, char_count);
 }
 void Benchmark::run_convert_utf16_to_utf8_icu(size_t iterations) {
@@ -1624,6 +1591,52 @@ void Benchmark::run_convert_valid_utf8_to_utf32(const simdutf::implementation& i
     print_summary(result, size, char_count);
 }
 
+void Benchmark::run_convert_utf16_to_latin1(const simdutf::implementation& implementation, size_t iterations) {
+    const char16_t*  data = reinterpret_cast<const char16_t*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char[]> output_buffer{new char[size]};
+    volatile size_t sink{0};
+    auto proc = [&implementation, data, size, &output_buffer, &sink]() {
+        sink = implementation.convert_utf16le_to_latin1(data, size, output_buffer.get());
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    size_t char_count = get_active_implementation()->count_utf16le(data, size);
+    print_summary(result, size, char_count);
+}
+
+void Benchmark::run_convert_utf16_to_latin1_with_errors(const simdutf::implementation& implementation, size_t iterations) {
+    const char16_t*  data = reinterpret_cast<const char16_t*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char[]> output_buffer{new char[size]};
+    volatile bool sink{false};
+    auto proc = [&implementation, data, size, &output_buffer, &sink]() {
+        result res = implementation.convert_utf16le_to_latin1_with_errors(data, size, output_buffer.get());
+        sink = !(res.error);
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
+    size_t char_count = get_active_implementation()->count_utf16le(data, size);
+    print_summary(result, size, char_count);
+}
+
+void Benchmark::run_convert_valid_utf16_to_latin1(const simdutf::implementation& implementation, size_t iterations) {
+    const char16_t*  data = reinterpret_cast<const char16_t*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char[]> output_buffer{new char[size]};
+    volatile size_t sink{0};
+    auto proc = [&implementation, data, size, &output_buffer, &sink]() {
+        sink = implementation.convert_valid_utf16le_to_latin1(data, size, output_buffer.get());
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    size_t char_count = get_active_implementation()->count_utf16le(data, size);
+    print_summary(result, size, char_count);
+}
+
 void Benchmark::run_convert_utf16_to_utf8(const simdutf::implementation& implementation, size_t iterations) {
     const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
     const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
@@ -1827,6 +1840,50 @@ void Benchmark::run_convert_valid_utf16_to_utf8(const simdutf::implementation& i
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
     size_t char_count = get_active_implementation()->count_utf16le(data, size);
     print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_convert_utf32_to_latin1(const simdutf::implementation& implementation, size_t iterations) {
+    const char32_t*  data = reinterpret_cast<const char32_t*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char[]> output_buffer{new char[size]};
+    volatile size_t sink{0};
+    auto proc = [&implementation, data, size, &output_buffer, &sink]() {
+        sink = implementation.convert_utf32_to_latin1(data, size, output_buffer.get());
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    size_t char_count = size;
+    print_summary(result, size, char_count);
+}
+void Benchmark::run_convert_utf32_to_latin1_with_errors(const simdutf::implementation& implementation, size_t iterations) {
+    const char32_t*  data = reinterpret_cast<const char32_t*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char[]> output_buffer{new char[size]};
+    volatile bool sink{false};
+    auto proc = [&implementation, data, size, &output_buffer, &sink]() {
+        result res = implementation.convert_utf32_to_latin1_with_errors(data, size, output_buffer.get());
+        sink = !(res.error);
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
+    size_t char_count = size;
+    print_summary(result, size, char_count);
+}
+void Benchmark::run_convert_valid_utf32_to_latin1(const simdutf::implementation& implementation, size_t iterations) {
+    const char32_t*  data = reinterpret_cast<const char32_t*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char[]> output_buffer{new char[size]};
+    volatile size_t sink{0};
+    auto proc = [&implementation, data, size, &output_buffer, &sink]() {
+        sink = implementation.convert_valid_utf32_to_latin1(data, size, output_buffer.get());
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    size_t char_count = size;
+    print_summary(result, size, char_count);
 }
 
 void Benchmark::run_convert_utf32_to_utf8(const simdutf::implementation& implementation, size_t iterations) {
