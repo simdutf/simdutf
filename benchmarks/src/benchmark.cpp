@@ -86,6 +86,8 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         {"count_utf8", {simdutf::encoding_type::UTF8}},
         {"count_utf16", {simdutf::encoding_type::UTF16_LE}},
 
+        {"convert_latin1_to_utf8", {simdutf::encoding_type::Latin1}},
+
         {"convert_utf8_to_latin1", {simdutf::encoding_type::UTF8}},
         {"convert_utf8_to_latin1_with_errors", {simdutf::encoding_type::UTF8}},
         {"convert_valid_utf8_to_latin1", {simdutf::encoding_type::UTF8}},
@@ -679,6 +681,21 @@ void Benchmark::run_validate_utf32_with_errors(const simdutf::implementation& im
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
+    size_t char_count = size;
+    print_summary(result, size, char_count);
+}
+
+void Benchmark::run_convert_latin1_to_utf8(const simdutf::implementation& implementation, size_t iterations) {
+    const char*  data = reinterpret_cast<const char*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char[]> output_buffer{new char[size]};
+    volatile size_t sink{0};
+    auto proc = [&implementation, data, size, &output_buffer, &sink]() {
+        sink = implementation.convert_latin1_to_utf8(data, size, output_buffer.get());
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
     size_t char_count = size;
     print_summary(result, size, char_count);
 }
