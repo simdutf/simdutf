@@ -13,21 +13,18 @@ simdutf_warn_unused bool validate_utf16_to_latin1(const char16_t *buf, size_t le
   const char16_t* end = buf + len;
 
   while (curr != end) {
-#if SIMDUTF_IS_BIG_ENDIAN
-      // By convention, we always take as an input an UTF-16LE.
-      const uint16_t W1 = uint16_t((uint16_t(*curr) << 8) | (uint16_t(*curr) >> 8));
-#else
-      const uint16_t W1 = *curr;
-#endif
+      #if SIMDUTF_IS_BIG_ENDIAN
+            // By convention, we always take as an input an UTF-16LE.
+            const uint16_t W1 = uint16_t((uint16_t(*curr) << 8) | (uint16_t(*curr) >> 8));
+      #else
+            const uint16_t W1 = *curr;
+      #endif
 
-      curr += 1;
-
+     curr += 1;
      if ( 0xff < W1 ) { // falls inside of surrogate range,
         return false;
       }
-
   }
-
   return true;
 }
 

@@ -1,4 +1,5 @@
 #pragma once
+
 #include <cstdint>
 
 namespace simdutf { namespace tests { namespace reference { namespace utf32 {

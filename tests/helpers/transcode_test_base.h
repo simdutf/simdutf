@@ -24,7 +24,55 @@ namespace simdutf { namespace tests { namespace helpers {
     void encode_latin1(uint32_t codepoint, std::vector<char>& target);
   };
 
+  /**
+   * This class can be used to test Latin1 => UTF-8 transcoding.
+   */
+  class transcode_latin1_to_utf8_test_base : transcode_test_base {
+  public:
+    using GenerateCodepoint = std::function<uint32_t()>;
 
+    std::vector<char> output_utf8; // what the procedure under test produced
+    std::vector<char> reference_output_utf8; // what we are expecting
+
+    std::vector<char> input_latin1; // source-encoded message: what we're going to transcode
+
+    static constexpr size_t output_size_margin = 0; // extra room for buggy procedures
+
+  public:
+    transcode_latin1_to_utf8_test_base(GenerateCodepoint generate, size_t input_size); //constructor
+
+    template <typename COLLECTION>
+    transcode_latin1_to_utf8_test_base(COLLECTION&& collection) {
+      for (const uint32_t codepoint: collection) {
+        prepare_input(codepoint);
+      }
+      output_utf8.resize(reference_output_utf8.size() + output_size_margin);
+      output_utf8.shrink_to_fit(); // to help detect overruns.
+      
+    }
+
+    template <typename PROCEDURE>
+    bool operator()(PROCEDURE procedure) {
+      size_t saved_chars = procedure(input_latin1.data(), input_latin1.size(), output_utf8.data());
+      return validate(saved_chars);
+    }
+    template <typename PROCEDURE>
+    bool check_size(PROCEDURE procedure) {
+      // std::cout << "Size of reference_output_utf8: " << reference_output_utf8.size() << std::endl;
+      size_t saved_chars = procedure(input_latin1.data(), input_latin1.size());
+      if (saved_chars != reference_output_utf8.size()) {
+        printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
+             size_t(saved_chars), size_t(reference_output_utf8.size()));
+
+        return false;
+      }
+      return true;
+    }
+  private:
+    void prepare_input(uint32_t codepoint);
+    bool validate(size_t procedure_result) const;
+    bool is_input_valid() const;
+  };
 
   /**
    * This class can be used to test Latin1 => UTF-16LE transcoding.
@@ -75,104 +123,6 @@ namespace simdutf { namespace tests { namespace helpers {
     bool validate(size_t procedure_result) const;
     bool is_input_valid() const;
   };
-
-    /**
-   * This class can be used to test UTF-8 => Latin1 transcoding.
-   */
-  class transcode_utf8_to_latin1_test_base : transcode_test_base {
-  public:
-    using GenerateCodepoint = std::function<uint32_t()>;
-
-    std::vector<char> output_latin1; // what the procedure under test produced
-    std::vector<char> reference_output_latin1; // what we are expecting
-
-    std::vector<char> input_utf8; // source-encoded message: what we're going to transcode
-
-    static constexpr size_t output_size_margin = 0; // extra room for buggy procedures
-
-  public:
-    transcode_utf8_to_latin1_test_base(GenerateCodepoint generate, size_t input_size); //constructor
-
-    template <typename COLLECTION>
-    transcode_utf8_to_latin1_test_base(COLLECTION&& collection) {
-      for (const uint32_t codepoint: collection) {
-        prepare_input(codepoint);
-      }
-      output_latin1.resize(reference_output_latin1.size() + output_size_margin);
-      output_latin1.shrink_to_fit(); // to help detect overruns.
-    }
-
-    template <typename PROCEDURE>
-    bool operator()(PROCEDURE procedure) {
-      size_t saved_chars = procedure(input_utf8.data(), input_utf8.size(), output_latin1.data());
-      return validate(saved_chars);
-    }
-    template <typename PROCEDURE>
-    bool check_size(PROCEDURE procedure) {
-      size_t saved_chars = procedure(input_utf8.data(), input_utf8.size());
-      if (saved_chars != reference_output_latin1.size()) {
-        printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
-             size_t(saved_chars), size_t(reference_output_latin1.size()));
-        return false;
-      }
-      return true;
-    }
-  private:
-    void prepare_input(uint32_t codepoint);
-    bool validate(size_t procedure_result) const;
-    bool is_input_valid() const;
-  };
-
-
-
-    /**
-   * This class can be used to test UTF-32 => Latin1 transcoding.
-   */
-  class transcode_utf32_to_latin1_test_base : transcode_test_base {
-  public:
-    using GenerateCodepoint = std::function<uint32_t()>;
-
-    std::vector<char> output_latin1; // what the procedure under test produced
-    std::vector<char> reference_output_latin1; // what we are expecting
-
-    std::vector<char32_t> input_utf32; // source-encoded message: what we're going to transcode
-
-    static constexpr size_t output_size_margin = 0; // extra room for buggy procedures
-
-  public:
-    transcode_utf32_to_latin1_test_base(GenerateCodepoint generate, size_t input_size); //constructor
-
-    template <typename COLLECTION>
-    transcode_utf32_to_latin1_test_base(COLLECTION&& collection) {
-      for (const uint32_t codepoint: collection) {
-        prepare_input(codepoint);
-      }
-      output_latin1.resize(reference_output_latin1.size() + output_size_margin);
-      output_latin1.shrink_to_fit(); // to help detect overruns.
-    }
-
-    template <typename PROCEDURE>
-    bool operator()(PROCEDURE procedure) {
-      size_t saved_chars = procedure(input_utf32.data(), input_utf32.size(), output_latin1.data());
-      return validate(saved_chars);
-    }
-    template <typename PROCEDURE>
-    bool check_size(PROCEDURE procedure) {
-      size_t saved_chars = procedure(input_utf32.data(), input_utf32.size());
-      if (saved_chars != reference_output_latin1.size()) {
-        printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
-             size_t(saved_chars), size_t(reference_output_latin1.size()));
-        return false;
-      }
-      return true;
-    }
-  private:
-    void prepare_input(uint32_t codepoint);
-    bool validate(size_t procedure_result) const;
-    bool is_input_valid() const;
-  };
-
-
 
   /**
    * This class can be used to test UTF-16LE => UTF-32 transcoding.
@@ -275,46 +225,43 @@ namespace simdutf { namespace tests { namespace helpers {
     bool is_input_valid() const;
   };
 
-      /**
-   * This class can be used to test Latin1 => UTF-8 transcoding.
+  /**
+   * This class can be used to test UTF-8 => Latin1 transcoding.
    */
-  class transcode_latin1_to_utf8_test_base : transcode_test_base {
+  class transcode_utf8_to_latin1_test_base : transcode_test_base {
   public:
     using GenerateCodepoint = std::function<uint32_t()>;
 
-    std::vector<char> output_utf8; // what the procedure under test produced
-    std::vector<char> reference_output_utf8; // what we are expecting
+    std::vector<char> output_latin1; // what the procedure under test produced
+    std::vector<char> reference_output_latin1; // what we are expecting
 
-    std::vector<char> input_latin1; // source-encoded message: what we're going to transcode
+    std::vector<char> input_utf8; // source-encoded message: what we're going to transcode
 
     static constexpr size_t output_size_margin = 0; // extra room for buggy procedures
 
   public:
-    transcode_latin1_to_utf8_test_base(GenerateCodepoint generate, size_t input_size); //constructor
+    transcode_utf8_to_latin1_test_base(GenerateCodepoint generate, size_t input_size); //constructor
 
     template <typename COLLECTION>
-    transcode_latin1_to_utf8_test_base(COLLECTION&& collection) {
+    transcode_utf8_to_latin1_test_base(COLLECTION&& collection) {
       for (const uint32_t codepoint: collection) {
         prepare_input(codepoint);
       }
-      output_utf8.resize(reference_output_utf8.size() + output_size_margin);
-      output_utf8.shrink_to_fit(); // to help detect overruns.
-      
+      output_latin1.resize(reference_output_latin1.size() + output_size_margin);
+      output_latin1.shrink_to_fit(); // to help detect overruns.
     }
 
     template <typename PROCEDURE>
     bool operator()(PROCEDURE procedure) {
-      size_t saved_chars = procedure(input_latin1.data(), input_latin1.size(), output_utf8.data());
+      size_t saved_chars = procedure(input_utf8.data(), input_utf8.size(), output_latin1.data());
       return validate(saved_chars);
     }
     template <typename PROCEDURE>
     bool check_size(PROCEDURE procedure) {
-      // std::cout << "Size of reference_output_utf8: " << reference_output_utf8.size() << std::endl;
-      size_t saved_chars = procedure(input_latin1.data(), input_latin1.size());
-      if (saved_chars != reference_output_utf8.size()) {
+      size_t saved_chars = procedure(input_utf8.data(), input_utf8.size());
+      if (saved_chars != reference_output_latin1.size()) {
         printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
-             size_t(saved_chars), size_t(reference_output_utf8.size()));
-
+             size_t(saved_chars), size_t(reference_output_latin1.size()));
         return false;
       }
       return true;
@@ -324,8 +271,6 @@ namespace simdutf { namespace tests { namespace helpers {
     bool validate(size_t procedure_result) const;
     bool is_input_valid() const;
   };
-
-
 
   /**
    * This class can be used to test UTF-8 => UTF-16LE transcoding.
@@ -468,6 +413,53 @@ namespace simdutf { namespace tests { namespace helpers {
       if (saved_chars != reference_output_utf8.size()) {
         printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
              size_t(saved_chars), size_t(reference_output_utf8.size()));
+        return false;
+      }
+      return true;
+    }
+  private:
+    void prepare_input(uint32_t codepoint);
+    bool validate(size_t procedure_result) const;
+    bool is_input_valid() const;
+  };
+
+   /**
+   * This class can be used to test UTF-32 => Latin1 transcoding.
+   */
+  class transcode_utf32_to_latin1_test_base : transcode_test_base {
+  public:
+    using GenerateCodepoint = std::function<uint32_t()>;
+
+    std::vector<char> output_latin1; // what the procedure under test produced
+    std::vector<char> reference_output_latin1; // what we are expecting
+
+    std::vector<char32_t> input_utf32; // source-encoded message: what we're going to transcode
+
+    static constexpr size_t output_size_margin = 0; // extra room for buggy procedures
+
+  public:
+    transcode_utf32_to_latin1_test_base(GenerateCodepoint generate, size_t input_size); //constructor
+
+    template <typename COLLECTION>
+    transcode_utf32_to_latin1_test_base(COLLECTION&& collection) {
+      for (const uint32_t codepoint: collection) {
+        prepare_input(codepoint);
+      }
+      output_latin1.resize(reference_output_latin1.size() + output_size_margin);
+      output_latin1.shrink_to_fit(); // to help detect overruns.
+    }
+
+    template <typename PROCEDURE>
+    bool operator()(PROCEDURE procedure) {
+      size_t saved_chars = procedure(input_utf32.data(), input_utf32.size(), output_latin1.data());
+      return validate(saved_chars);
+    }
+    template <typename PROCEDURE>
+    bool check_size(PROCEDURE procedure) {
+      size_t saved_chars = procedure(input_utf32.data(), input_utf32.size());
+      if (saved_chars != reference_output_latin1.size()) {
+        printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
+             size_t(saved_chars), size_t(reference_output_latin1.size()));
         return false;
       }
       return true;
