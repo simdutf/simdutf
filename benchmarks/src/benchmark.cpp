@@ -198,12 +198,12 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         std::string name = "convert_latin1_to_utf16+iconv";
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
-    }/* 
+    }
     {
         std::string name = "convert_latin1_to_utf32+iconv";
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
-    } */
+    }
     {
         std::string name = "convert_utf8_to_latin1+iconv";
         known_procedures.insert(name);
@@ -423,6 +423,8 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
             run_convert_latin1_to_utf8_iconv(iterations);
         } else if(name == "convert_latin1_to_utf16") {
             run_convert_latin1_to_utf16_iconv(iterations);
+        } else if(name == "convert_latin1_to_utf32") {
+            run_convert_latin1_to_utf32_iconv(iterations);
         }
         return;
     }
@@ -1116,6 +1118,39 @@ void Benchmark::run_convert_latin1_to_utf16_iconv(size_t iterations) {
             sink = 0;
         } else {
             sink = (sizeof(uint16_t) * size - outbytes) / sizeof(char);;
+        }
+    };
+    count_events(proc, iterations);//warming up!
+    const auto result = count_events(proc, iterations);
+    iconv_close(cv);
+    size_t char_count = size;
+    print_summary(result, size, char_count);
+}
+
+void Benchmark::run_convert_latin1_to_utf32_iconv(size_t iterations) {
+    iconv_t cv = iconv_open("UTF-32", "ISO-8859-1");
+    if (cv == (iconv_t)(-1)) {
+        fprintf( stderr,"[iconv] cannot initialize ISO-8859-1 to UTF-32 converter\n");
+        return;
+    }
+    char*  data = reinterpret_cast<char*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char32_t[]> output_buffer{new char32_t[size]};
+    volatile size_t sink{0};
+    auto proc = [&cv, data, size, &output_buffer, &sink]() {
+        size_t inbytes = size;
+        size_t outbytes = sizeof(uint32_t) * size;
+        #ifdef WINICONV_CONST
+            WINICONV_CONST char * inptr = reinterpret_cast<WINICONV_CONST char *>(data);
+        #else
+            char * inptr = data;
+        #endif
+        char * outptr = reinterpret_cast<char *>(output_buffer.get());
+        size_t result = iconv(cv, &inptr, &inbytes, &outptr, &outbytes);
+        if (result == static_cast<size_t>(-1)) {
+            sink = 0;
+        } else {
+            sink = (sizeof(uint32_t) * size - outbytes) / sizeof(char);;
         }
     };
     count_events(proc, iterations);//warming up!

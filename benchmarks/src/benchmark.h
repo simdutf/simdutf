@@ -118,7 +118,7 @@ namespace simdutf::benchmarks {
 #if ICONV_AVAILABLE
         void run_convert_latin1_to_utf8_iconv(size_t iterations);
         void run_convert_latin1_to_utf16_iconv(size_t iterations);
-        // void run_convert_latin1_to_utf32_iconv(size_t iterations);
+        void run_convert_latin1_to_utf32_iconv(size_t iterations);
         void run_convert_utf8_to_latin1_iconv(size_t iterations);
         void run_convert_utf8_to_utf16_iconv(size_t iterations);
         void run_convert_utf16_to_utf8_iconv(size_t iterations);
