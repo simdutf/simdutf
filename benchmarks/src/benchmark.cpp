@@ -218,18 +218,13 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         std::string name = "convert_utf16_to_utf8+iconv";
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
-    }/* 
-    {
-        std::string name = "convert_utf8_to_latin1+iconv";
-        known_procedures.insert(name);
-        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
     }
     {
         std::string name = "convert_utf16_to_latin1+iconv";
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
     }
-    {
+/*     {
         std::string name = "convert_utf32_to_latin1+iconv";
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF32_LE})));
@@ -425,6 +420,8 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
             run_convert_latin1_to_utf16_iconv(iterations);
         } else if(name == "convert_latin1_to_utf32") {
             run_convert_latin1_to_utf32_iconv(iterations);
+        } else if(name == "convert_utf16_to_latin1") {
+            run_convert_utf16_to_latin1_iconv(iterations);
         }
         return;
     }
@@ -1083,7 +1080,7 @@ void Benchmark::run_convert_latin1_to_utf8_iconv(size_t iterations) {
         if (result == static_cast<size_t>(-1)) {
             sink = 0;
         } else {
-            sink = (sizeof(uint8_t) * size - outbytes) / sizeof(char);;
+            sink = (sizeof(uint8_t) * size - outbytes) / sizeof(char);
         }
     };
     count_events(proc, iterations);//warming up!
@@ -1235,6 +1232,56 @@ void Benchmark::run_convert_utf8_to_utf16_iconv(size_t iterations) {
     size_t char_count = get_active_implementation()->count_utf8(data, size);
     print_summary(result, size, char_count);
 }
+
+void Benchmark::run_convert_utf16_to_latin1_iconv(size_t iterations) {
+    iconv_t cv = iconv_open("ISO-8859-1", "UTF-16LE");
+    if (cv == (iconv_t)(-1)) {
+        fprintf( stderr,"[iconv] cannot initialize the UTF-16LE to ISO-8859-1 converter\n");
+        return;
+    }
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    char16_t* data = reinterpret_cast<char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 2;
+
+    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    //       thus we're making safe assumption that each 16-bit word will be expanded
+    //       to four bytes.
+    std::unique_ptr<char[]> output_buffer{new char[size]};
+
+    volatile size_t sink{0};
+
+    auto proc = [cv, data, size, &output_buffer, &sink]() {
+        size_t inbytes = sizeof(uint16_t) * size;
+        size_t outbytes = size;
+#ifdef WINICONV_CONST
+        WINICONV_CONST char * inptr = reinterpret_cast<WINICONV_CONST char *>(data);
+#else
+        char * inptr = reinterpret_cast<char *>(data);
+#endif
+        char * outptr = output_buffer.get();
+        size_t result = iconv(cv, &inptr, &inbytes, &outptr, &outbytes);
+        if (result == static_cast<size_t>(-1)) {
+            sink = 0;
+        } else {
+            sink = ( size - outbytes) / sizeof(char16_t);
+        }
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    iconv_close(cv);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    size_t char_count = get_active_implementation()->count_utf16le(data, size);
+    print_summary(result, input_data.size(), char_count);
+}
+
+
 void Benchmark::run_convert_utf16_to_utf8_iconv(size_t iterations) {
     iconv_t cv = iconv_open("UTF-8", "UTF-16LE");
     if (cv == (iconv_t)(-1)) {

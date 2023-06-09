@@ -112,7 +112,7 @@ namespace simdutf::benchmarks {
         void run_convert_utf8_to_latin1_icu(size_t iterations);
         void run_convert_utf8_to_utf16_icu(size_t iterations);
         void run_convert_utf16_to_utf8_icu(size_t iterations);
-/*         void run_convert_utf16_to_latin1_icu(size_t iterations);
+/*      void run_convert_utf16_to_latin1_icu(size_t iterations);
         void run_convert_utf32_to_latin1_icu(size_t iterations); */
 #endif
 #if ICONV_AVAILABLE
@@ -122,7 +122,7 @@ namespace simdutf::benchmarks {
         void run_convert_utf8_to_latin1_iconv(size_t iterations);
         void run_convert_utf8_to_utf16_iconv(size_t iterations);
         void run_convert_utf16_to_utf8_iconv(size_t iterations);
-        // void run_convert_utf16_to_latin1_iconv(size_t iterations);
+        void run_convert_utf16_to_latin1_iconv(size_t iterations);
         // void run_convert_utf32_to_latin1_iconv(size_t iterations);
 #endif
 #ifdef INOUE2008
