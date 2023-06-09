@@ -106,9 +106,9 @@ namespace simdutf::benchmarks {
         void run_convert_valid_utf16_to_utf32(const simdutf::implementation& implementation, size_t iterations);
         void run_detect_encodings(const simdutf::implementation& implementation, size_t iterations);
 #if ICU_AVAILABLE
-/*         void run_convert_latin1_to_utf8_icu(size_t iterations);
-        void run_convert_latin1_to_utf16_icu(size_t iterations);
-        void run_convert_latin1_to_utf32_icu(size_t iterations); */
+        void run_convert_latin1_to_utf8_icu(size_t iterations);
+        // void run_convert_latin1_to_utf16_icu(size_t iterations);
+        // void run_convert_latin1_to_utf32_icu(size_t iterations);
         void run_convert_utf8_to_latin1_icu(size_t iterations);
         void run_convert_utf8_to_utf16_icu(size_t iterations);
         void run_convert_utf16_to_utf8_icu(size_t iterations);
