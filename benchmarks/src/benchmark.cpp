@@ -144,6 +144,26 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
     }
 #ifdef ICU_AVAILABLE
     std::cout << "Using ICU version " << U_ICU_VERSION << std::endl;
+/*     {
+        std::string name = "convert_latin1_to_utf8+icu";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
+    }
+    {
+        std::string name = "convert_latin1_to_utf16+icu";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
+    }
+    {
+        std::string name = "convert_latin1_to_utf32+icu";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
+    } */
+    {
+        std::string name = "convert_utf8_to_latin1+icu";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+    }
     {
         std::string name = "convert_utf8_to_utf16+icu";
         known_procedures.insert(name);
@@ -154,16 +174,41 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
     }
-    {
-        std::string name = "convert_utf8_to_latin1+icu";
+/*     {
+        std::string name = "convert_utf16_to_latin1+icu";
         known_procedures.insert(name);
-        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
     }
+    {
+        std::string name = "convert_utf32_to_latin1+icu";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF32_LE})));
+    } */
 #endif
 #ifdef ICONV_AVAILABLE
 #ifdef _LIBICONV_VERSION
     std::cout << "Using iconv version " << _LIBICONV_VERSION << std::endl;
 #endif
+    {
+        std::string name = "convert_latin1_to_utf8+iconv";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
+    }/* 
+    {
+        std::string name = "convert_latin1_to_utf16+iconv";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
+    }
+    {
+        std::string name = "convert_latin1_to_utf32+iconv";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
+    } */
+    {
+        std::string name = "convert_utf8_to_latin1+iconv";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
+    }
     {
         std::string name = "convert_utf8_to_utf16+iconv";
         known_procedures.insert(name);
@@ -173,12 +218,22 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         std::string name = "convert_utf16_to_utf8+iconv";
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
-    }
+    }/* 
     {
         std::string name = "convert_utf8_to_latin1+iconv";
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
     }
+    {
+        std::string name = "convert_utf16_to_latin1+iconv";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
+    }
+    {
+        std::string name = "convert_utf32_to_latin1+iconv";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF32_LE})));
+    }  */
 #endif
 #ifdef INOUE2008
     {
@@ -363,7 +418,9 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         } else if(name == "convert_utf16_to_utf8") {
           run_convert_utf16_to_utf8_iconv(iterations);
         } else if(name == "convert_utf8_to_latin1") {
-          run_convert_utf8_to_latin1_iconv(iterations);
+            run_convert_utf8_to_latin1_iconv(iterations);
+        } else if(name == "convert_latin1_to_utf8") {
+            run_convert_latin1_to_utf8_iconv(iterations);
         }
         return;
     }
@@ -999,6 +1056,40 @@ void Benchmark::run_convert_utf16_to_utf8_icu(size_t iterations) {
 #endif
 
 #ifdef ICONV_AVAILABLE
+void Benchmark::run_convert_latin1_to_utf8_iconv(size_t iterations) {
+    iconv_t cv = iconv_open("UTF-8", "ISO-8859-1");
+    if (cv == (iconv_t)(-1)) {
+        fprintf( stderr,"[iconv] cannot initialize ISO-8859-1 to UTF-8 converter\n");
+        return;
+    }
+    char*  data = reinterpret_cast<char*>(input_data.data());
+    const size_t size = input_data.size();
+    std::unique_ptr<char[]> output_buffer{new char[size]};
+    volatile size_t sink{0};
+    auto proc = [&cv, data, size, &output_buffer, &sink]() {
+        size_t inbytes = size;
+        size_t outbytes = sizeof(uint8_t) * size;
+        #ifdef WINICONV_CONST
+            WINICONV_CONST char * inptr = reinterpret_cast<WINICONV_CONST char *>(data);
+        #else
+            char * inptr = data;
+        #endif
+        char * outptr = reinterpret_cast<char *>(output_buffer.get());
+        size_t result = iconv(cv, &inptr, &inbytes, &outptr, &outbytes);
+        if (result == static_cast<size_t>(-1)) {
+            sink = 0;
+        } else {
+            sink = (sizeof(uint8_t) * size - outbytes) / sizeof(char);;
+        }
+    };
+    count_events(proc, iterations);//warming up!
+    const auto result = count_events(proc, iterations);
+    iconv_close(cv);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    size_t char_count = size;
+    print_summary(result, size, char_count);
+}
+
 void Benchmark::run_convert_utf8_to_latin1_iconv(size_t iterations) {
     iconv_t cv = iconv_open("ISO-8859-1", "UTF-8");
     if (cv == (iconv_t)(-1)) {
@@ -1027,6 +1118,8 @@ void Benchmark::run_convert_utf8_to_latin1_iconv(size_t iterations) {
         } else {
             sink = (sizeof(uint8_t) * size - outbytes) / sizeof(char);;
         }
+
+        
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
@@ -1035,6 +1128,7 @@ void Benchmark::run_convert_utf8_to_latin1_iconv(size_t iterations) {
     size_t char_count = get_active_implementation()->count_utf8(data, size);
     print_summary(result, size, char_count);
 }
+
 void Benchmark::run_convert_utf8_to_utf16_iconv(size_t iterations) {
     iconv_t cv = iconv_open("UTF-16LE", "UTF-8");
     if (cv == (iconv_t)(-1)) {
