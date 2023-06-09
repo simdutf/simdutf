@@ -521,8 +521,8 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         run_convert_utf8_to_utf16_with_dynamic_allocation(*implementation, iterations);
     } else if(name == "convert_utf8_to_utf32_with_dynamic_allocation") {
         run_convert_utf8_to_utf32_with_dynamic_allocation(*implementation, iterations);
-    } else if(name == "convert_utf8_to_latin1_with_errors") {
-        run_convert_utf8_to_latin1_with_errors(*implementation, iterations);
+    } else if(name == "convert_valid_utf8_to_latin1") {
+        run_convert_valid_utf8_to_latin1(*implementation, iterations);
     } else if(name == "convert_valid_utf8_to_utf16") {
         run_convert_valid_utf8_to_utf16(*implementation, iterations);
     } else if(name == "convert_valid_utf8_to_utf32") {
@@ -1592,8 +1592,16 @@ void Benchmark::run_convert_valid_utf8_to_utf32(const simdutf::implementation& i
 }
 
 void Benchmark::run_convert_utf16_to_latin1(const simdutf::implementation& implementation, size_t iterations) {
-    const char16_t*  data = reinterpret_cast<const char16_t*>(input_data.data());
-    const size_t size = input_data.size();
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 2;    
     std::unique_ptr<char[]> output_buffer{new char[size]};
     volatile size_t sink{0};
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {
@@ -1607,8 +1615,16 @@ void Benchmark::run_convert_utf16_to_latin1(const simdutf::implementation& imple
 }
 
 void Benchmark::run_convert_utf16_to_latin1_with_errors(const simdutf::implementation& implementation, size_t iterations) {
-    const char16_t*  data = reinterpret_cast<const char16_t*>(input_data.data());
-    const size_t size = input_data.size();
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 2;    
     std::unique_ptr<char[]> output_buffer{new char[size]};
     volatile bool sink{false};
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {
@@ -1623,8 +1639,16 @@ void Benchmark::run_convert_utf16_to_latin1_with_errors(const simdutf::implement
 }
 
 void Benchmark::run_convert_valid_utf16_to_latin1(const simdutf::implementation& implementation, size_t iterations) {
-    const char16_t*  data = reinterpret_cast<const char16_t*>(input_data.data());
-    const size_t size = input_data.size();
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char16_t* data = reinterpret_cast<const char16_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 2 != 0) {
+       printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 2;    
     std::unique_ptr<char[]> output_buffer{new char[size]};
     volatile size_t sink{0};
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {
@@ -1843,8 +1867,17 @@ void Benchmark::run_convert_valid_utf16_to_utf8(const simdutf::implementation& i
 }
 
 void Benchmark::run_convert_utf32_to_latin1(const simdutf::implementation& implementation, size_t iterations) {
-    const char32_t*  data = reinterpret_cast<const char32_t*>(input_data.data());
-    const size_t size = input_data.size();
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 4 != 0) {
+       printf("# The input size is not divisible by four (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 4;
+
     std::unique_ptr<char[]> output_buffer{new char[size]};
     volatile size_t sink{0};
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {
@@ -1857,8 +1890,17 @@ void Benchmark::run_convert_utf32_to_latin1(const simdutf::implementation& imple
     print_summary(result, size, char_count);
 }
 void Benchmark::run_convert_utf32_to_latin1_with_errors(const simdutf::implementation& implementation, size_t iterations) {
-    const char32_t*  data = reinterpret_cast<const char32_t*>(input_data.data());
-    const size_t size = input_data.size();
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 4 != 0) {
+       printf("# The input size is not divisible by four (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 4;
+
     std::unique_ptr<char[]> output_buffer{new char[size]};
     volatile bool sink{false};
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {
@@ -1872,8 +1914,17 @@ void Benchmark::run_convert_utf32_to_latin1_with_errors(const simdutf::implement
     print_summary(result, size, char_count);
 }
 void Benchmark::run_convert_valid_utf32_to_latin1(const simdutf::implementation& implementation, size_t iterations) {
-    const char32_t*  data = reinterpret_cast<const char32_t*>(input_data.data());
-    const size_t size = input_data.size();
+    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
+    const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data() + BOM::bom_byte_size(bom));
+    size_t size = input_data.size() - BOM::bom_byte_size(bom);
+    if (size % 4 != 0) {
+       printf("# The input size is not divisible by four (it is %zu + %zu for BOM)",
+               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+        printf(" Running function on truncated input.\n");
+    }
+
+    size /= 4;
+
     std::unique_ptr<char[]> output_buffer{new char[size]};
     volatile size_t sink{0};
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {
