@@ -1041,11 +1041,11 @@ void Benchmark::run_convert_latin1_to_utf16_icu(size_t iterations) {
         // Open converters for source and target encodings
         UConverter *latin1conv = ucnv_open("ISO-8859-1", &status);
         assert(U_SUCCESS(status));
-        UConverter *utf8conv = ucnv_open("UTF-8", &status);
+        UConverter *utf16conv = ucnv_open("UTF-16", &status);
         assert(U_SUCCESS(status));
 
         // Allocate target buffer
-        int32_t targetCapacity = size*2;
+        int32_t targetCapacity = size*4;
         std::unique_ptr<char[]> target(new char[targetCapacity]);
 
         // Pointers for source and target
@@ -1055,14 +1055,14 @@ void Benchmark::run_convert_latin1_to_utf16_icu(size_t iterations) {
         char* targetLimit = target.get() + targetCapacity;
 
         // Convert from ISO-8859-1 to UTF-8
-        ucnv_convertEx( utf8conv,latin1conv, &targetStart, targetLimit, &source, sourceLimit, nullptr, nullptr, nullptr, nullptr, true, true, &status);
+        ucnv_convertEx( utf16conv,latin1conv, &targetStart, targetLimit, &source, sourceLimit, nullptr, nullptr, nullptr, nullptr, true, true, &status);
         assert(U_SUCCESS(status));
 
         // Calculate the output size
-        sink = targetStart - target.get();
+        sink = targetStart - target.get(); //output in bytes
 
         // Clean up
-        ucnv_close(utf8conv);
+        ucnv_close(utf16conv);
         ucnv_close(latin1conv);
     };
 
@@ -1071,8 +1071,10 @@ void Benchmark::run_convert_latin1_to_utf16_icu(size_t iterations) {
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
     size_t char_count = size;
     std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
-    size_t expected = get_active_implementation()->convert_latin1_to_utf16le(data, size, output_buffer.get());
-    if(expected != sink) { std::cerr << "The number of latin1 words does not match.\n"; }
+    size_t expected = get_active_implementation()->convert_latin1_to_utf16le(data, size, output_buffer.get()); //expected char16_t units
+    if(2 * expected + 2 != sink) { std::cerr << "The number of utf16le words does not match.\n"; //+1 because ucnv_convertEX returns a BOM in addition to the UTF-16 string. Our function does not
+                            std::cerr << "Expected: " << 2*expected + 1<< ", Sink: " << sink << std::endl; // print values
+                        }
 
     print_summary(result, size, char_count);
 }
