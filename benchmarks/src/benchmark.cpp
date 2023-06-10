@@ -154,11 +154,11 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
     }
-/*     {
+    {
         std::string name = "convert_latin1_to_utf32+icu";
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
-    } */
+    }
     {
         std::string name = "convert_utf8_to_latin1+icu";
         known_procedures.insert(name);
@@ -408,9 +408,9 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
             run_convert_latin1_to_utf8_icu(iterations);
         } else if(name == "convert_latin1_to_utf16") {
             run_convert_latin1_to_utf16_icu(iterations);
-        } /* else if(name == "convert_latin1_to_utf32") {
+        } else if(name == "convert_latin1_to_utf32") {
             run_convert_latin1_to_utf32_icu(iterations);
-        } else if(name == "convert_utf16_to_latin1") {
+        } /* else if(name == "convert_utf16_to_latin1") {
             run_convert_utf16_to_latin1_icu(iterations);
         } else if(name == "convert_utf32_to_latin1") {
             run_convert_utf32_to_latin1_icu(iterations);
@@ -1075,6 +1075,55 @@ void Benchmark::run_convert_latin1_to_utf16_icu(size_t iterations) {
     if(2 * expected + 2 != sink) { std::cerr << "The number of utf16le words does not match.\n"; //+1 because ucnv_convertEX returns a BOM in addition to the UTF-16 string. Our function does not
                             std::cerr << "Expected: " << 2*expected + 1<< ", Sink: " << sink << std::endl; // print values
                         }
+
+    print_summary(result, size, char_count);
+}
+
+void Benchmark::run_convert_latin1_to_utf32_icu(size_t iterations) {
+    const char*  data = reinterpret_cast<const char*>(input_data.data());
+    const size_t size = input_data.size();
+    volatile size_t sink{0};
+
+    auto proc = [data, size, &sink]() {
+        UErrorCode status = U_ZERO_ERROR;
+
+        // Open converters for source and target encodings
+        UConverter *latin1conv = ucnv_open("ISO-8859-1", &status);
+        assert(U_SUCCESS(status));
+        UConverter *utf32conv = ucnv_open("UTF-32", &status);
+        assert(U_SUCCESS(status));
+
+        // Allocate target buffer
+        int32_t targetCapacity = size*4 + 4; //UTF-32 takes four bytes. By default, ICU outputs a 4-byte BOM. 
+        std::unique_ptr<char[]> target(new char[targetCapacity]);
+
+        // Pointers for source and target
+        const char* source = data;
+        const char* sourceLimit = data + size;
+        char* targetStart = target.get();
+        char* targetLimit = target.get() + targetCapacity;
+
+        // Convert from ISO-8859-1 to UTF-32
+        ucnv_convertEx( utf32conv,latin1conv, &targetStart, targetLimit, &source, sourceLimit, nullptr, nullptr, nullptr, nullptr, true, true, &status);
+        assert(U_SUCCESS(status));
+
+        // Calculate the output size
+        sink = targetStart - target.get();
+
+        // Clean up
+        ucnv_close(utf32conv);
+        ucnv_close(latin1conv);
+    };
+
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
+    size_t char_count = size;
+    std::unique_ptr<char32_t[]> output_buffer{new char32_t[size*4]};
+    size_t expected = get_active_implementation()->convert_latin1_to_utf32(data, size, output_buffer.get());
+    if(4 * expected + 4 != sink) { std::cerr << "The number of characters outputted does not match.\n"; 
+                            std::cout << "Expected: " << expected << ", Sink: " << sink << std::endl; // print values
+                           }
 
     print_summary(result, size, char_count);
 }
