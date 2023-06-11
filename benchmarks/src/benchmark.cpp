@@ -1578,9 +1578,9 @@ void Benchmark::run_convert_utf16_to_utf8_iconv(size_t iterations) {
 }
 
 void Benchmark::run_convert_utf32_to_latin1_iconv(size_t iterations) {
-    iconv_t cv = iconv_open("ISO-8859-1", "UTF-16LE");
+    iconv_t cv = iconv_open("ISO-8859-1", "UTF-32");
     if (cv == (iconv_t)(-1)) {
-        fprintf( stderr,"[iconv] cannot initialize the UTF-16LE to ISO-8859-1 converter\n");
+        fprintf( stderr,"[iconv] cannot initialize the UTF-32 to ISO-8859-1 converter\n");
         return;
     }
     const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
