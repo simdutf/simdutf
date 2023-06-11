@@ -85,37 +85,28 @@ inline result convert_with_errors(const char* buf, size_t len, char* latin_outpu
     } else if ((leading_byte & 0b11100000) == 0b11000000) {//the first three bits indicate:
       // We have a two-byte UTF-8
       if(pos + 1 >= len) { 
-        printf("Error: Looking for continuation byte but EOF reached.");
         return result(error_code::TOO_SHORT, pos); } // minimal bound checking
       if ((data[pos + 1] & 0b11000000) != 0b10000000) { 
-        printf("No valid continuation byte");
         return result(error_code::TOO_SHORT, pos); }// checks if the next byte is a valid continuation byte in UTF-8. A valid continuation byte starts with 10.
       // range check -
       uint32_t code_point = (leading_byte & 0b00011111) << 6 | (data[pos + 1] & 0b00111111);//assembles the Unicode code point from the two bytes. It does this by discarding the leading 110 and 10 bits from the two bytes, shifting the remaining bits of the first byte, and then combining the results with a bitwise OR operation.
       if (code_point < 0x80) { 
-        printf("Overlong error. \n");
         return result(error_code::OVERLONG, pos); }
       if ( 0xFF < code_point) { 
-          printf("Too large. Pos: %zu, Code point: %u, Bytes: %02x %02x\n", pos, code_point, data[pos], data[pos + 1]);
           return result(error_code::TOO_LARGE, pos); 
           } //We only care about the range 129-255 which is Non-ASCII latin1 characters
       *latin_output++ = char(code_point); 
       pos += 2;
     } else if ((leading_byte & 0b11110000) == 0b11100000) {
       // We have a three-byte UTF-8
-      printf("3 Byte error: not translatable to latin1. Pos: %zu, Byte: %02x\n", pos, data[pos]);
       return result(error_code::TOO_LARGE, pos);
     } else if ((leading_byte & 0b11111000) == 0b11110000) { // 0b11110000
       // we have a 4-byte UTF-8 word.
-      printf("4 Byte error: not translatable to latin1");
       return result(error_code::TOO_LARGE, pos);
     } else {
       // we either have too many continuation bytes or an invalid leading byte
       if ((leading_byte & 0b11000000) == 0b10000000) { 
-                printf("Too many continuation bytes or invalid leader byte.");
                 return result(error_code::TOO_LONG, pos); }
-
-      printf("header bits error");
 
       return result(error_code::HEADER_BITS, pos);
       
