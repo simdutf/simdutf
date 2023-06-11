@@ -1235,15 +1235,12 @@ void Benchmark::run_convert_utf16_to_latin1_icu(size_t iterations) {
         UConverter *conv = ucnv_open("ISO-8859-1", &status);  // open a converter for ISO-8859-1
         assert(U_SUCCESS(status));
 
-        int32_t targetCapacity = size + 300; // adjust as needed
+        int32_t targetCapacity = size; // adjust as needed
         std::unique_ptr<char[]> target(new char[targetCapacity]);
         char* targetStart = target.get();
 
         sink = ucnv_fromUChars(conv, targetStart, targetCapacity, reinterpret_cast<const UChar*>(data), size, &status);
         assert(U_SUCCESS(status));
-
-        // Calculate the output size
-        //sink = targetStart - target.get();
         
         // Clean up
         ucnv_close(conv);
@@ -1262,7 +1259,6 @@ void Benchmark::run_convert_utf16_to_latin1_icu(size_t iterations) {
     print_summary(result, size, char_count);
 }
 
-
 void Benchmark::run_convert_utf32_to_latin1_icu(size_t iterations) {
     const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
     const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data() + BOM::bom_byte_size(bom));
@@ -1278,33 +1274,18 @@ void Benchmark::run_convert_utf32_to_latin1_icu(size_t iterations) {
 
     auto proc = [data, size, &sink]() {
         UErrorCode status = U_ZERO_ERROR;
-
-        // Open converters for source and target encodings
-        UConverter *utf16conv = ucnv_open("UTF-16", &status);
-        assert(U_SUCCESS(status));
-        UConverter *latin1conv = ucnv_open("ISO-8859-1", &status);
+        UConverter *conv = ucnv_open("ISO-8859-1", &status);  // open a converter for ISO-8859-1
         assert(U_SUCCESS(status));
 
-        // Allocate target buffer
-        int32_t targetCapacity = size *2;
+        int32_t targetCapacity = size; // adjust as needed
         std::unique_ptr<char[]> target(new char[targetCapacity]);
-
-        // Pointers for source and target
-        const char* source = reinterpret_cast<const char*>(data);
-        const char* sourceLimit = reinterpret_cast<const char*>(data + size * 2); // Multiply by 2 to account for 2-byte size of char16_t
         char* targetStart = target.get();
-        char* targetLimit = target.get() + targetCapacity;
 
-        // Convert from UTF-32 to ISO-8859-1
-        ucnv_convertEx(latin1conv, utf16conv, &targetStart, targetLimit, &source, sourceLimit, nullptr, nullptr, nullptr, nullptr, true, true, &status);
+        sink = ucnv_fromUChars(conv, targetStart, targetCapacity, reinterpret_cast<const UChar*>(data), size, &status);
         assert(U_SUCCESS(status));
-
-        // Calculate the output size
-        sink = targetStart - target.get();
 
         // Clean up
-        ucnv_close(utf16conv);
-        ucnv_close(latin1conv);
+        ucnv_close(conv);
     };
 
     count_events(proc, iterations); // warming up!
@@ -1319,6 +1300,7 @@ void Benchmark::run_convert_utf32_to_latin1_icu(size_t iterations) {
 
     print_summary(result, size, char_count);
 }
+
 #endif
 
 #ifdef ICONV_AVAILABLE
