@@ -1937,6 +1937,8 @@ public:
  /**
    * Return the number of bytes that this Latin1 string would require in UTF-8 format.
    *   
+   *   This function does not validate the input.
+   * 
    * @param input         the Latin1 string to convert
    * @param length        the length of the string bytes
    * @return the number of bytes required to encode the Latin1 string as UTF-8
@@ -1961,6 +1963,8 @@ public:
    * Compute the number of bytes that this UTF-32 string would require in Latin1 format.
    *
    * This function does not validate the input.
+   * 
+   * This function is not BOM-aware.
    *    
    * @param input         the UTF-32 string to convert
    * @param length        the length of the string in 4-byte words (char32_t)
@@ -1973,6 +1977,8 @@ public:
    *
    * This function does not validate the input.
    *
+   * This function is not BOM-aware.
+   * 
    * @param input         the UTF-8 string to convert
    * @param length        the length of the string in byte
    * @return the number of bytes required to encode the UTF-8 string as Latin1
