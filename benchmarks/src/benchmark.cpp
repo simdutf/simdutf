@@ -1312,102 +1312,6 @@ void Benchmark::run_convert_utf16_to_latin1_icu(size_t iterations) {
     print_summary(result, size, char_count);
 }
 
-
-/* void Benchmark::run_convert_utf32_to_latin1_icu(size_t iterations) {
-    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
-    const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data() + BOM::bom_byte_size(bom));
-    size_t size = input_data.size() - BOM::bom_byte_size(bom);
-    if (size % 4 != 0) {
-       printf("# The input size is not divisible by four (it is %zu + %zu for BOM)",
-               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
-        printf(" Running function on truncated input.\n");
-    }
-
-    size /= 4;
-    volatile size_t sink{0};
-
-    auto proc = [data, size, &sink]() {
-        UErrorCode status = U_ZERO_ERROR;
-        UConverter *conv = ucnv_open("ISO-8859-1", &status);  // open a converter for ISO-8859-1
-        assert(U_SUCCESS(status));
-
-        int32_t targetCapacity = size; // adjust as needed
-        std::unique_ptr<char[]> target(new char[targetCapacity]);
-        char* targetStart = target.get();
-
-        sink = ucnv_fromUChars(conv, targetStart, targetCapacity, reinterpret_cast<const UChar*>(data), size, &status);
-        assert(U_SUCCESS(status));
-
-        // Clean up
-        ucnv_close(conv);
-    };
-
-    count_events(proc, iterations); // warming up!
-    const auto result = count_events(proc, iterations);
-    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
-    size_t char_count = size;
-    std::unique_ptr<char[]> output_buffer{new char[size]};
-    size_t expected = get_active_implementation()->convert_utf32_to_latin1(data, size, output_buffer.get());
-    if(expected != sink) { std::cerr << "The number of expected bytes does not match.\n";
-                            std::cout << "Expected: " << expected << ", Sink: " << sink << std::endl; // print values
-                            }
-
-    print_summary(result, size, char_count);
-} */
-/* 
-void Benchmark::run_convert_utf32_to_latin1_icu(size_t iterations) {
-    const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
-    const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data() + BOM::bom_byte_size(bom));
-    size_t size = input_data.size() - BOM::bom_byte_size(bom);
-    if (size % 4 != 0) {
-       printf("# The input size is not divisible by four (it is %zu + %zu for BOM)",
-               size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
-        printf(" Running function on truncated input.\n");
-    }
-
-    size /= 4;
-    volatile size_t sink{0};
-    std::unique_ptr<char[]> target;
-
-    auto proc = [&target, data, size, &sink]() {
-        UErrorCode status = U_ZERO_ERROR;
-        UConverter *conv = ucnv_open("ISO-8859-1", &status);  // open a converter for ISO-8859-1
-        assert(U_SUCCESS(status));
-
-        int32_t targetCapacity = size; // adjust as needed
-        target.reset(new char[targetCapacity]);
-        char* targetStart = target.get();
-
-        sink = ucnv_fromUChars(conv, targetStart, targetCapacity, reinterpret_cast<const UChar*>(data), size, &status);
-        assert(U_SUCCESS(status));
-
-        // Clean up
-        ucnv_close(conv);
-    };
-
-    count_events(proc, iterations); // warming up!
-    const auto result = count_events(proc, iterations);
-    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
-    size_t char_count = size;
-    std::unique_ptr<char[]> output_buffer{new char[size]};
-    size_t expected = get_active_implementation()->convert_utf32_to_latin1(data, size, output_buffer.get());
-    if(expected != sink) { std::cerr << "The number of expected bytes does not match.\n";
-                            std::cout << "Expected: " << expected << ", Sink: " << sink << std::endl; // print values
-                            }
-
-    if(memcmp(target.get(), output_buffer.get(), sink ) != 0) {
-        std::cerr << "The output data does not match.\n";
-        // compare first 20 characters and print their hexadecimal values
-        std::cout << "First 20 characters of target data: ";
-        for(size_t i=0; i<20; i++) { std::cout << std::hex << static_cast<int>(target.get()[i]) << " "; }
-        std::cout << "\nFirst 20 characters of output buffer: ";
-        for(size_t i=0; i<20; i++) { std::cout << std::hex << static_cast<int>(output_buffer[i]) << " "; }
-    } 
-
-    print_summary(result, size, char_count);
-}
- */
-
 void Benchmark::run_convert_utf32_to_latin1_icu(size_t iterations) {
     const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
     const char32_t* data = reinterpret_cast<const char32_t*>(input_data.data() + BOM::bom_byte_size(bom));
@@ -1476,7 +1380,7 @@ void Benchmark::run_convert_utf32_to_latin1_icu(size_t iterations) {
 #endif
 
 #ifdef ICONV_AVAILABLE
-void Benchmark::run_convert_latin1_to_utf8_iconv(size_t iterations) {
+ void Benchmark::run_convert_latin1_to_utf8_iconv(size_t iterations) {
     iconv_t cv = iconv_open("UTF-8", "ISO-8859-1");
     if (cv == (iconv_t)(-1)) {
         fprintf( stderr,"[iconv] cannot initialize ISO-8859-1 to UTF-8 converter\n");
@@ -1508,7 +1412,7 @@ void Benchmark::run_convert_latin1_to_utf8_iconv(size_t iterations) {
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
     size_t char_count = size;
     print_summary(result, size, char_count);
-}
+} 
 
 void Benchmark::run_convert_latin1_to_utf16_iconv(size_t iterations) {
     iconv_t cv = iconv_open("UTF-16", "ISO-8859-1");
