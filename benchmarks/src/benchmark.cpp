@@ -75,7 +75,7 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
     : BenchmarkBase(std::move(testcases)) {
 
     // the std::set<simdutf::encoding_type> value represents the *expected* encoding.
-    std::vector<std::pair<std::string,std::set<simdutf::encoding_type>>> implemented_functions{
+    std::vector<std::pair<std::string,std::set<simdutf::encoding_type>>> implemented_functions {
         {"validate_utf8", {simdutf::encoding_type::UTF8}},
         {"validate_utf8_with_errors", {simdutf::encoding_type::UTF8}},
         {"validate_utf16", {simdutf::encoding_type::UTF16_LE}},
@@ -132,7 +132,6 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         {"convert_valid_utf32_to_utf16", {simdutf::encoding_type::UTF32_LE}},
 
         {"detect_encodings", {simdutf::encoding_type::UTF8, simdutf::encoding_type::UTF16_LE, simdutf::encoding_type::UTF32_LE}}
-
     };
 
     for (const auto& implementation: simdutf::get_available_implementations()) {
