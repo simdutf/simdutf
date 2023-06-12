@@ -49,7 +49,7 @@ TEST(convert_fails_if_input_too_large) {
   simdutf::tests::helpers::RandomInt generator(0xff, 0xffff, seed);
 
   const size_t size = 64;
-  transcode_utf16_to_latin1_test_base test([](){return '*';}, size+32);
+  transcode_utf16_to_latin1_test_base test([](){ return '*'; }, size+32);
 
   for (size_t j = 0; j < 1000; j++) {
 

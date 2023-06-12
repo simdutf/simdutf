@@ -21,8 +21,7 @@ TEST(convert_all_latin) {
   for(size_t trial = 0; trial < trials; trial ++) {
     if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
     // range for 2 UTF-16 bytes
-    simdutf::tests::helpers::RandomIntRanges random({//{0x0000, 0xd7ff},
-                                                     {0x00, 0xff}}, 0);
+    simdutf::tests::helpers::RandomIntRanges random({{0x00, 0xff}}, 0);
 
     auto procedure = [&implementation](const char* latin1, size_t size, char16_t* utf16) -> size_t {
       return implementation.convert_latin1_to_utf16le(latin1, size, utf16);

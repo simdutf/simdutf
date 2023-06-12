@@ -217,7 +217,7 @@ simdutf_warn_unused result validate_utf32_with_errors(const char32_t *buf, size_
    * @return the number of written char; 0 if conversion is not possible
    */
   simdutf_warn_unused size_t convert_latin1_to_utf8(const char * input, size_t length, char* utf8_output) noexcept;
-  
+
 
     /**
    * Convert possibly Latin1 string into UTF-16LE string.
@@ -393,7 +393,7 @@ simdutf_warn_unused result convert_utf8_to_utf32_with_errors(const char * input,
    * This function assumes that the input string is valid UTF-8.
    *
    * This function is not BOM-aware.
-   *    
+   *
    * @param input         the UTF-8 string to convert
    * @param length        the length of the string in bytes
    * @param latin1_output  the pointer to buffer that can hold conversion result
@@ -453,7 +453,7 @@ simdutf_warn_unused size_t convert_valid_utf8_to_utf32(const char * input, size_
 
  /**
    * Return the number of bytes that this Latin1 string would require in UTF-8 format.
-   *   
+   *
    * @param input         the Latin1 string to convert
    * @param length        the length of the string bytes
    * @return the number of bytes required to encode the Latin1 string as UTF-8
@@ -466,7 +466,7 @@ simdutf_warn_unused size_t convert_valid_utf8_to_utf32(const char * input, size_
    * This function does not validate the input.
    *
    * This function is not BOM-aware.
-   * 
+   *
    * @param input         the UTF-8 string to convert
    * @param length        the length of the string in byte
    * @return the number of bytes required to encode the UTF-8 string as Latin1
@@ -582,7 +582,7 @@ simdutf_warn_unused size_t convert_utf16be_to_utf8(const char16_t * input, size_
    * Convert possibly broken UTF-16LE string into Latin1 string.
    *
    * During the conversion also validation of the input string is done.
-   * This function is suitable to work with inputs from untrusted sources.   
+   * This function is suitable to work with inputs from untrusted sources.
    * This function is not BOM-aware.
    *
    * @param input         the UTF-16LE string to convert
@@ -596,7 +596,7 @@ simdutf_warn_unused size_t convert_utf16be_to_utf8(const char16_t * input, size_
    * Convert possibly broken UTF-16BE string into Latin1 string.
    *
    * During the conversion also validation of the input string is done.
-   * This function is suitable to work with inputs from untrusted sources.   
+   * This function is suitable to work with inputs from untrusted sources.
    * This function is not BOM-aware.
    *
    * @param input         the UTF-16BE string to convert
@@ -605,7 +605,7 @@ simdutf_warn_unused size_t convert_utf16be_to_utf8(const char16_t * input, size_
    * @return a result pair struct with an error code and either the position of the error if any or the number of char written if successful.
    */
   simdutf_warn_unused result convert_utf16be_to_latin1_with_errors(const char16_t * input, size_t length, char* latin1_buffer) noexcept;
-  
+
 
 /**
  * Using native endianness; Convert possibly broken UTF-16 string into UTF-8 string and stop on error.
@@ -1470,7 +1470,7 @@ public:
    * @return the number of written char; 0 if conversion is not possible
    */
   simdutf_warn_unused virtual size_t convert_latin1_to_utf8(const char * input, size_t length, char* utf8_output) const noexcept = 0;
-  
+
 
     /**
    * Convert possibly Latin1 string into UTF-16LE string.
@@ -1540,7 +1540,7 @@ public:
    * This function assumes that the input string is valid UTF-8.
    *
    * This function is not BOM-aware.
-   *    
+   *
    * @param input         the UTF-8 string to convert
    * @param length        the length of the string in bytes
    * @param latin1_output  the pointer to buffer that can hold conversion result
@@ -1721,7 +1721,7 @@ public:
    * Convert possibly broken UTF-16LE string into Latin1 string.
    *
    * During the conversion also validation of the input string is done.
-   * This function is suitable to work with inputs from untrusted sources.   
+   * This function is suitable to work with inputs from untrusted sources.
    * This function is not BOM-aware.
    *
    * @param input         the UTF-16LE string to convert
@@ -1735,7 +1735,7 @@ public:
    * Convert possibly broken UTF-16BE string into Latin1 string.
    *
    * During the conversion also validation of the input string is done.
-   * This function is suitable to work with inputs from untrusted sources.   
+   * This function is suitable to work with inputs from untrusted sources.
    * This function is not BOM-aware.
    *
    * @param input         the UTF-16BE string to convert
@@ -2180,7 +2180,7 @@ public:
 
  /**
    * Return the number of bytes that this Latin1 string would require in UTF-8 format.
-   *   
+   *
    * @param input         the Latin1 string to convert
    * @param length        the length of the string bytes
    * @return the number of bytes required to encode the Latin1 string as UTF-8
@@ -2202,7 +2202,7 @@ public:
    * Compute the number of bytes that this UTF-32 string would require in Latin1 format.
    *
    * This function does not validate the input.
-   *    
+   *
    * @param input         the UTF-32 string to convert
    * @param length        the length of the string in 4-byte words (char32_t)
    * @return the number of bytes required to encode the UTF-32 string as Latin1
@@ -2255,7 +2255,7 @@ public:
    * @return the number of bytes required to encode the UTF-32 string as Latin1
    */
     simdutf_warn_unused virtual size_t utf32_length_from_latin1(const char * input, size_t length) const noexcept = 0;
-  
+
   /*
    * Compute the number of bytes that this UTF-16LE string would require in UTF-32 format.
    *

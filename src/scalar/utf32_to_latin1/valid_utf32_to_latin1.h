@@ -7,29 +7,29 @@ namespace {
 namespace utf32_to_latin1 {
 
 inline size_t convert_valid(const char32_t *buf, size_t len, char *latin1_output) {
-    const uint32_t *data = reinterpret_cast<const uint32_t *>(buf);
-    char* start = latin1_output;
-    uint32_t utf32_char;
-    size_t pos = 0;
+  const uint32_t *data = reinterpret_cast<const uint32_t *>(buf);
+  char* start = latin1_output;
+  uint32_t utf32_char;
+  size_t pos = 0;
 
-    while (pos < len) {
-        utf32_char = (uint32_t)data[pos];
-        
-        if (pos + 2 <= len) { // if it is safe to read 8 more bytes, check that they are Latin1
-            uint64_t v;
-            ::memcpy(&v, data + pos, sizeof(uint64_t));
-            if ((v & 0xFFFFFF80FFFFFF80) == 0) {
-                *latin1_output++ = char(buf[pos]);
-                *latin1_output++ = char(buf[pos+1]);
-            pos += 2;
-            continue;
-            }
-        } 
-        *latin1_output++ = (char)(utf32_char & 0xFF);
-        pos++;
+  while (pos < len) {
+  utf32_char = (uint32_t)data[pos];
 
+  if (pos + 2 <= len) { // if it is safe to read 8 more bytes, check that they are Latin1
+      uint64_t v;
+      ::memcpy(&v, data + pos, sizeof(uint64_t));
+      if ((v & 0xFFFFFF00FFFFFF00) == 0) {
+      *latin1_output++ = char(buf[pos]);
+      *latin1_output++ = char(buf[pos+1]);
+      pos += 2;
+      continue;
     }
-    return latin1_output - start;
+  }
+  *latin1_output++ = (char)(utf32_char & 0xFF);
+  pos++;
+
+  }
+  return latin1_output - start;
 }
 
 

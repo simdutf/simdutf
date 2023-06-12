@@ -101,9 +101,9 @@ auto getUtf8SequenceLength = [](char byte) {
           return 0;
         };
 
-        ASSERT_TRUE(test(procedure)); //no conversion should take place
+        ASSERT_TRUE(test(procedure)); // no conversion should take place
 
-        //does the same as the conditional above: e.g. replace a 4 byte by a '*' ASCII character once its done.
+        // does the same as the conditional above: e.g. replace a 4 byte by a '*' ASCII character once its done.
         for(auto it = test.input_utf8.begin(); it != test.input_utf8.end(); ++it) {
             if(std::distance(it, test.input_utf8.end()) >= byte_number) { 
                 std::fill_n(it, byte_number, 0x2a);
@@ -171,7 +171,7 @@ TEST(too_short_error) {
 
 TEST(too_long_error) {
   uint32_t seed{1234};
-  simdutf::tests::helpers::RandomIntRanges random({{0x7f, 0xff}}, seed);// in this context, conversion to latin 1 will register everything past 0xff as a TOO_LARGE error
+  simdutf::tests::helpers::RandomIntRanges random({{0x7f, 0xff}}, seed); // in this context, conversion to latin 1 will register everything past 0xff as a TOO_LARGE error
   for(size_t trial = 0; trial < trials; trial++) {
     transcode_utf8_to_latin1_test_base test(random, fix_size);
     for (int i = 1; i < fix_size; i++) {
