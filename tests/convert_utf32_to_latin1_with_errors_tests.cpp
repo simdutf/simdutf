@@ -43,7 +43,7 @@ TEST(convert_fails_if_input_too_large) {
 
 
   const size_t size = 64;
-  simdutf::tests::helpers::transcode_utf32_to_latin1_test_base test([](){return '*';}, size+32);
+  simdutf::tests::helpers::transcode_utf32_to_latin1_test_base test([](){ return '*'; }, size+32);
 
   for (size_t j = 0; j < 1000; j++) {
     uint32_t wrong_value = generator();

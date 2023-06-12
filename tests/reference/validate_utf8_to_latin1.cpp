@@ -12,13 +12,13 @@ simdutf_warn_unused bool validate_utf8_to_latin1(const char *buf, size_t len) no
   uint32_t code_point = 0;
   while (pos < len) {
     unsigned char byte = data[pos];
-    if (byte < 0b10000000) {//ASCII
+    if (byte < 0b10000000) { // ASCII
       pos++;
       continue;
-    } else if ((byte & 0b11100000) == 0b11000000) {//two bytes
+    } else if ((byte & 0b11100000) == 0b11000000) { // two bytes
       next_pos = pos + 2;
-      if (next_pos > len) { return false; }//EOF thus no continuation byte :(
-      if ((data[pos + 1] & 0b11000000) != 0b10000000) { //No continuation byte
+      if (next_pos > len) { return false; } // EOF thus no continuation byte :(
+      if ((data[pos + 1] & 0b11000000) != 0b10000000) { // No continuation byte
         return false;
       }
       // range check

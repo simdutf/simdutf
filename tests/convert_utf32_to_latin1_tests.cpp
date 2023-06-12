@@ -42,14 +42,14 @@ TEST(convert_fails_if_input_too_large) {
     return implementation.convert_utf32_to_latin1(utf32, size, latin1); 
   };
   const size_t size = 64;
-  simdutf::tests::helpers::transcode_utf32_to_latin1_test_base test([](){return '*';}, size+32); //create an input utf32 and reference latin1 string /w all entries = 0x2a
+  simdutf::tests::helpers::transcode_utf32_to_latin1_test_base test([](){ return '*'; }, size+32); // create an input utf32 and reference latin1 string /w all entries = 0x2a
 
   for (size_t j = 0; j < 1000; j++) {
     uint32_t wrong_value = generator();
     for (size_t i=0; i < size; i++) {
       auto old = test.input_utf32[i];
       test.input_utf32[i] = wrong_value; 
-      ASSERT_TRUE(test(procedure)); //the procedure shouldn't convert anything, so its output should equal the reference string that is all 0x2a
+      ASSERT_TRUE(test(procedure)); // the procedure should not convert anything, so its output should equal the reference string that is all 0x2a
       test.input_utf32[i] = old; 
     }
   }

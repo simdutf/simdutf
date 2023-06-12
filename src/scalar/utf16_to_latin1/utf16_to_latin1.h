@@ -12,15 +12,15 @@ inline size_t convert(const char16_t* buf, size_t len, char* latin_output) {
   size_t pos = 0;
   char* start{latin_output};
   uint16_t word = 0;
+  uint16_t too_large = 0;
 
   while (pos < len) {
     word = !match_system(big_endian) ? utf16::swap_bytes(data[pos]) : data[pos];
-
-    if((word & 0xFF00 ) == 0) { 
-        *latin_output++ = char(word);
-        pos++;
-    } else { return 0;}
+    too_large |= word;
+    *latin_output++ = char(word);
+    pos++;
   }
+  if((too_large & 0xFF00) != 0) { return 0; }
   return latin_output - start;
 }
 
@@ -29,16 +29,15 @@ inline result convert_with_errors(const char16_t* buf, size_t len, char* latin_o
  const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
   size_t pos = 0;
   char* start{latin_output};
-  uint16_t word = 0; 
-  
+  uint16_t word = 0;
 
   while (pos < len) {
     word = !match_system(big_endian) ? utf16::swap_bytes(data[pos]) : data[pos];
 
-    if((word & 0xFF00 ) == 0) { 
+    if((word & 0xFF00 ) == 0) {
         *latin_output++ = char(word);
         pos++;
-    } else { return result(error_code::TOO_LARGE, pos);}
+    } else { return result(error_code::TOO_LARGE, pos); }
   }
   return result(error_code::SUCCESS,latin_output - start);
 }

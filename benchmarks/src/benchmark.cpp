@@ -228,7 +228,7 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         std::string name = "convert_utf32_to_latin1+iconv";
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF32_LE})));
-    } 
+    }
 #endif
 #ifdef INOUE2008
     {
@@ -840,7 +840,6 @@ void Benchmark::run_convert_utf8_to_latin1(const simdutf::implementation& implem
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {
         sink = implementation.convert_utf8_to_latin1(data, size, output_buffer.get());
     };
-    count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
     size_t char_count = get_active_implementation()->count_utf8(data, size);
@@ -1029,7 +1028,7 @@ void Benchmark::run_convert_latin1_to_utf8_icu(size_t iterations) {
 
     if (memcmp(target.get(), output_buffer.get(), sink) != 0) {
         std::cerr << "The output data does not match.\n";
-    } 
+    }
 
     print_summary(result, size, char_count);
 }
@@ -1066,7 +1065,7 @@ void Benchmark::run_convert_latin1_to_utf16_icu(size_t iterations) {
     size_t char_count = size;
     std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
     size_t expected = get_active_implementation()->convert_latin1_to_utf16le(data, size, output_buffer.get()); //expected char16_t units
-    if(2 * expected != sink) { std::cerr << "The number of utf16le words does not match.\n"; 
+    if(2 * expected != sink) { std::cerr << "The number of utf16le words does not match.\n";
                             std::cerr << "Expected: " << 2*expected + 1<< ", Sink: " << sink << std::endl; // print values
                         }
 
@@ -1077,7 +1076,7 @@ void Benchmark::run_convert_latin1_to_utf16_icu(size_t iterations) {
         for(size_t i=0; i<20; i++) { std::cout << std::hex << static_cast<int>(target.get()[i]) << " "; }
         std::cout << "\nFirst 20 characters of output buffer: ";
         for(size_t i=0; i<20; i++) { std::cout << std::hex << static_cast<int>(output_buffer[i]) << " "; }
-    
+
          // compare last 20 characters and print their hexadecimal values
         size_t num_chars = sink / sizeof(UChar);
         size_t start = num_chars < 20 ? 0 : num_chars - 20;
@@ -1085,7 +1084,7 @@ void Benchmark::run_convert_latin1_to_utf16_icu(size_t iterations) {
         for(size_t i=start; i<num_chars; i++) { std::cout << std::hex << static_cast<int>(target.get()[i]) << " "; }
         std::cout << "\nLast 20 characters of output buffer: ";
         for(size_t i=start; i<num_chars; i++) { std::cout << std::hex << static_cast<int>(output_buffer[i]) << " "; }
-    } 
+    }
 
     print_summary(result, size, char_count);
 }
@@ -1096,7 +1095,7 @@ void Benchmark::run_convert_latin1_to_utf32_icu(size_t iterations) {
     volatile size_t sink{0};
 
     std::unique_ptr<char[]> target;
-  
+
     auto proc = [&target, data, size, &sink]() {
         UErrorCode status = U_ZERO_ERROR;
 
@@ -1138,14 +1137,14 @@ void Benchmark::run_convert_latin1_to_utf32_icu(size_t iterations) {
                             std::cout << "Expected: " << expected << ", Sink: " << sink << std::endl; // print values
                            }
 
-    if(memcmp(target.get(), output_buffer.get(), sink) != 0) {  
+    if(memcmp(target.get(), output_buffer.get(), sink) != 0) {
         std::cerr << "The output data does not match.\n";
         // compare first 20 characters and print their hexadecimal values
         std::cout << "First 20 characters of target data: ";
         for(size_t i=0; i<20; i++) { std::cout << std::hex << static_cast<int>(target.get()[i]) << " "; }
         std::cout << "\nFirst 20 characters of output buffer: ";
         for(size_t i=0; i<20; i++) { std::cout << std::hex << static_cast<int>(output_buffer[i]) << " "; }
-    
+
          // compare last 20 characters and print their hexadecimal values
         size_t num_chars = sink / sizeof(UChar);
         size_t start = num_chars < 20 ? 0 : num_chars - 20;
@@ -1153,7 +1152,7 @@ void Benchmark::run_convert_latin1_to_utf32_icu(size_t iterations) {
         for(size_t i=start; i<num_chars; i++) { std::cout << std::hex << static_cast<int>(target.get()[i]) << " "; }
         std::cout << "\nLast 20 characters of output buffer: ";
         for(size_t i=start; i<num_chars; i++) { std::cout << std::hex << static_cast<int>(output_buffer[i]) << " "; }
-    } 
+    }
 
     print_summary(result, size, char_count);
 }
@@ -1211,10 +1210,10 @@ void Benchmark::run_convert_utf8_to_latin1_icu(size_t iterations) {
         for(size_t i=0; i<20; i++) { std::cout << std::hex << static_cast<int>(target.get()[i]) << " "; }
         std::cout << "\nFirst 20 characters of output buffer: ";
         for(size_t i=0; i<20; i++) { std::cout << std::hex << static_cast<int>(output_buffer[i]) << " "; }
-    } 
+    }
 
     print_summary(result, size, char_count);
-} 
+}
 
 
 void Benchmark::run_convert_utf8_to_utf16_icu(size_t iterations) {
@@ -1285,7 +1284,7 @@ void Benchmark::run_convert_utf16_to_latin1_icu(size_t iterations) {
 
         sink = ucnv_fromUChars(conv, targetStart, targetCapacity, reinterpret_cast<const UChar*>(data), size, &status);
         assert(U_SUCCESS(status));
-        
+
         // Clean up
         ucnv_close(conv);
     };
@@ -1307,7 +1306,7 @@ void Benchmark::run_convert_utf16_to_latin1_icu(size_t iterations) {
         for(size_t i=0; i<20; i++) { std::cout << std::hex << static_cast<int>(target.get()[i]) << " "; }
         std::cout << "\nFirst 20 characters of output buffer: ";
         for(size_t i=0; i<20; i++) { std::cout << std::hex << static_cast<int>(output_buffer[i]) << " "; }
-    } 
+    }
 
     print_summary(result, size, char_count);
 }
@@ -1341,7 +1340,7 @@ void Benchmark::run_convert_utf32_to_latin1_icu(size_t iterations) {
 
         const char* sourceStart = reinterpret_cast<const char*>(data);
         const char* sourceEnd = sourceStart + size * sizeof(char32_t);
-        
+
         // Convert from UTF-32 to Latin1
         ucnv_convertEx(latin1conv, utf32conv, &targetStart, targetStart + targetCapacity, &sourceStart, sourceEnd, nullptr, nullptr, nullptr, nullptr, true, true, &status);
         assert(U_SUCCESS(status));
@@ -1371,7 +1370,7 @@ void Benchmark::run_convert_utf32_to_latin1_icu(size_t iterations) {
         for(size_t i=0; i<20; i++) { std::cout << std::hex << static_cast<int>(target.get()[i]) << " "; }
         std::cout << "\nFirst 20 characters of output buffer: ";
         for(size_t i=0; i<20; i++) { std::cout << std::hex << static_cast<int>(output_buffer[i]) << " "; }
-    } 
+    }
 
     print_summary(result, size, char_count);
 }
@@ -1412,7 +1411,7 @@ void Benchmark::run_convert_utf32_to_latin1_icu(size_t iterations) {
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
     size_t char_count = size;
     print_summary(result, size, char_count);
-} 
+}
 
 void Benchmark::run_convert_latin1_to_utf16_iconv(size_t iterations) {
     iconv_t cv = iconv_open("UTF-16", "ISO-8859-1");
@@ -1509,7 +1508,7 @@ void Benchmark::run_convert_utf8_to_latin1_iconv(size_t iterations) {
             sink = (sizeof(uint8_t) * size - outbytes) / sizeof(char);;
         }
 
-        
+
     };
     count_events(proc, iterations); // warming up!
     const auto result = count_events(proc, iterations);
@@ -2183,7 +2182,7 @@ void Benchmark::run_convert_utf16_to_latin1(const simdutf::implementation& imple
         printf(" Running function on truncated input.\n");
     }
 
-    size /= 2;    
+    size /= 2;
     std::unique_ptr<char[]> output_buffer{new char[size]};
     volatile size_t sink{0};
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {
@@ -2206,7 +2205,7 @@ void Benchmark::run_convert_utf16_to_latin1_with_errors(const simdutf::implement
         printf(" Running function on truncated input.\n");
     }
 
-    size /= 2;    
+    size /= 2;
     std::unique_ptr<char[]> output_buffer{new char[size]};
     volatile bool sink{false};
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {
@@ -2230,7 +2229,7 @@ void Benchmark::run_convert_valid_utf16_to_latin1(const simdutf::implementation&
         printf(" Running function on truncated input.\n");
     }
 
-    size /= 2;    
+    size /= 2;
     std::unique_ptr<char[]> output_buffer{new char[size]};
     volatile size_t sink{0};
     auto proc = [&implementation, data, size, &output_buffer, &sink]() {

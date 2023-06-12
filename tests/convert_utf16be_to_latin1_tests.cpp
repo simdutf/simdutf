@@ -46,7 +46,7 @@ TEST(convert_2_UTF16_bytes) {
 
 TEST(convert_fails_if_input_too_large) {
   uint32_t seed{1234};
-  simdutf::tests::helpers::RandomInt generator(0xff, 0xffff, seed); //
+  simdutf::tests::helpers::RandomInt generator(0xff, 0xffff, seed);
 
   auto procedure = [&implementation](const char16_t* utf16le, size_t size, char* latin1) -> size_t {
       std::vector<char16_t> utf16be(size);
@@ -54,7 +54,7 @@ TEST(convert_fails_if_input_too_large) {
       return implementation.convert_utf16be_to_latin1(utf16be.data(), size, latin1);
   };
   const size_t size = 64;
-  transcode_utf16_to_latin1_test_base test([](){return '*';}, size+32);
+  transcode_utf16_to_latin1_test_base test([](){ return '*'; }, size+32);
 
   for (size_t j = 0; j < 1000; j++) {
     uint16_t wrong_value = generator();

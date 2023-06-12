@@ -17,8 +17,8 @@ inline size_t convert_valid(const char16_t* buf, size_t len, char* latin_output)
         word = !match_system(big_endian) ? utf16::swap_bytes(data[pos]) : data[pos];
         *latin_output++ = char(word);
         pos++;
-    } 
-  
+  }
+
   return latin_output - start;
 }
 
