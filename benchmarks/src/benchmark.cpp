@@ -1103,11 +1103,11 @@ void Benchmark::run_convert_latin1_to_utf32_icu(size_t iterations) {
         // Open converters for source and target encodings
         UConverter *latin1conv = ucnv_open("ISO-8859-1", &status);
         assert(U_SUCCESS(status));
-        UConverter *utf32conv = ucnv_open("UTF-32", &status);
+        UConverter *utf32conv = ucnv_open("UTF-32LE", &status);
         assert(U_SUCCESS(status));
 
         // Allocate target buffer
-        int32_t targetCapacity = size*4 + 4; //UTF-32 takes four bytes. By default, ICU outputs a 4-byte BOM. 
+        int32_t targetCapacity = size*4; //UTF-32 takes four bytes.
         target.reset(new char[targetCapacity]);
 
         // Pointers for source and target
@@ -1132,13 +1132,13 @@ void Benchmark::run_convert_latin1_to_utf32_icu(size_t iterations) {
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate a misconfiguration.\n"; }
     size_t char_count = size;
-    std::unique_ptr<char32_t[]> output_buffer{new char32_t[size*4]};
+    std::unique_ptr<char32_t[]> output_buffer{new char32_t[size]};
     size_t expected = get_active_implementation()->convert_latin1_to_utf32(data, size, output_buffer.get()); //expected is the # of UTF32 characters
-    if(4 * expected + 4 != sink) { std::cerr << "The number of characters outputted does not match.\n";  //ICU outputs a 4-byte BOM by default and each UTF32 character takes four bytes
+    if(4 * expected != sink) { std::cerr << "The number of characters outputted does not match.\n";  // each UTF32 character takes four bytes
                             std::cout << "Expected: " << expected << ", Sink: " << sink << std::endl; // print values
                            }
 
-    if(memcmp(target.get() + 4, output_buffer.get(), sink) != 0) {  //+4 to take the BOM into account
+    if(memcmp(target.get(), output_buffer.get(), sink) != 0) {  
         std::cerr << "The output data does not match.\n";
         // compare first 20 characters and print their hexadecimal values
         std::cout << "First 20 characters of target data: ";
