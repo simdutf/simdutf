@@ -24,7 +24,7 @@ TEST(convert_all_latin1) {
     return implementation.convert_latin1_to_utf32(latin1, size, utf32);
   };
   auto size_procedure = [&implementation](const char* latin1, size_t size) -> size_t {
-    return implementation.utf32_length_from_latin1(latin1, size); 
+    return implementation.utf32_length_from_latin1(size); 
   };
     simdutf::tests::helpers::transcode_latin1_to_utf32_test_base test(generator, 256);
     ASSERT_TRUE(test(procedure));
