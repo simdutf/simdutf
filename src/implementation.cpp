@@ -713,7 +713,7 @@ public:
   simdutf_warn_unused size_t utf16_length_from_utf8(const char *, size_t) const noexcept override {
     return 0;
   }
-  simdutf_warn_unused size_t utf16_length_from_latin1(const char *, size_t) const noexcept override {
+  simdutf_warn_unused size_t utf16_length_from_latin1(size_t) const noexcept override {
     return 0;
   }
   simdutf_warn_unused size_t utf8_length_from_utf32(const char32_t *, size_t) const noexcept override {
