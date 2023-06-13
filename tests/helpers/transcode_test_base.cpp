@@ -83,9 +83,8 @@ namespace simdutf { namespace tests { namespace helpers {
    */
   transcode_latin1_to_utf8_test_base::transcode_latin1_to_utf8_test_base(GenerateCodepoint generate,
                                        size_t input_size) {
-    int size;
     while (input_latin1.size() < input_size) {
-      size = input_latin1.size();
+      size_t size = input_latin1.size();
       const uint32_t codepoint = generate();
       prepare_input(codepoint);
     }
@@ -158,9 +157,8 @@ namespace simdutf { namespace tests { namespace helpers {
    */
   transcode_latin1_to_utf16_test_base::transcode_latin1_to_utf16_test_base(GenerateCodepoint generate,
                                        size_t input_size) {
-    int size;
     while (input_latin1.size() < input_size) {
-      size = input_latin1.size();
+      size_t size = input_latin1.size();
       const uint32_t codepoint = generate();
       prepare_input(codepoint);
     }
@@ -234,9 +232,8 @@ namespace simdutf { namespace tests { namespace helpers {
    */
   transcode_latin1_to_utf32_test_base::transcode_latin1_to_utf32_test_base(GenerateCodepoint generate,
                                        size_t input_size) {
-    int size;
     while (input_latin1.size() < input_size) {
-      size = input_latin1.size();
+      size_t size = input_latin1.size();
       const uint32_t codepoint = generate();
       prepare_input(codepoint);
     }
@@ -270,7 +267,7 @@ namespace simdutf { namespace tests { namespace helpers {
     auto dump = [saved_chars](const char* title, const std::vector<char32_t>& array) {
       printf("%s", title);
       for (size_t i=0; i < saved_chars; i++) {
-        printf(" %02x", (char32_t)array[i]);
+        printf(" %02x", (unsigned int)array[i]);
       }
       putchar('\n');
     };
@@ -317,7 +314,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
   void transcode_utf8_to_latin1_test_base::prepare_input(uint32_t codepoint) {
       encode_utf8(codepoint, input_utf8);
-      encode_latin1(codepoint, reference_output_latin1); //-- not applicable? All of a byte is translatable to latin1
+      encode_latin1(codepoint, reference_output_latin1);
   }
 
   bool transcode_utf8_to_latin1_test_base::is_input_valid() const {
