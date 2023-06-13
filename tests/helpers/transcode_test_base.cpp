@@ -84,7 +84,6 @@ namespace simdutf { namespace tests { namespace helpers {
   transcode_latin1_to_utf8_test_base::transcode_latin1_to_utf8_test_base(GenerateCodepoint generate,
                                        size_t input_size) {
     while (input_latin1.size() < input_size) {
-      size_t size = input_latin1.size();
       const uint32_t codepoint = generate();
       prepare_input(codepoint);
     }
@@ -158,7 +157,6 @@ namespace simdutf { namespace tests { namespace helpers {
   transcode_latin1_to_utf16_test_base::transcode_latin1_to_utf16_test_base(GenerateCodepoint generate,
                                        size_t input_size) {
     while (input_latin1.size() < input_size) {
-      size_t size = input_latin1.size();
       const uint32_t codepoint = generate();
       prepare_input(codepoint);
     }
@@ -233,7 +231,6 @@ namespace simdutf { namespace tests { namespace helpers {
   transcode_latin1_to_utf32_test_base::transcode_latin1_to_utf32_test_base(GenerateCodepoint generate,
                                        size_t input_size) {
     while (input_latin1.size() < input_size) {
-      size_t size = input_latin1.size();
       const uint32_t codepoint = generate();
       prepare_input(codepoint);
     }
