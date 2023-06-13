@@ -11,8 +11,12 @@ size_t convert_masked_utf8_to_utf32(const char *input,
   //
   uint32_t*& utf32_output = reinterpret_cast<uint32_t*&>(utf32_out);
   uint8x16_t in = vld1q_u8(reinterpret_cast<const uint8_t*>(input));
+
   const uint16_t input_utf8_end_of_code_point_mask =
       utf8_end_of_code_point_mask & 0xFFF;
+  const uint16_t input_utf8_length_mask =
+      utf8_end_of_code_point_mask & 0x7ff;
+
   //
   // Optimization note: our main path below is load-latency dependent. Thus it is maybe
   // beneficial to have fast paths that depend on branch prediction but have less latency.
@@ -72,10 +76,9 @@ size_t convert_masked_utf8_to_utf32(const char *input,
   /// We do not have a fast path available, so we fallback.
 
   const uint8_t idx =
-      simdutf::tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][0];
-  const uint8_t consumed =
-      simdutf::tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][1];
-
+      simdutf::tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask];
+  uint8_t consumed =
+      simdutf::tables::utf8_to_utf16::utf8lenindex[input_utf8_length_mask];
 
   if (idx < 64) {
     // SIX (6) input code-words
@@ -90,6 +93,9 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     vst1q_u32(utf32_output,  vmovl_u16(vget_low_u16(vreinterpretq_u16_u8(composed))));
     vst1q_u32(utf32_output+4,  vmovl_high_u16(vreinterpretq_u16_u8(composed)));
     utf32_output += 6; // We wrote 12 bytes, 6 code points.
+    // fix corner case with half LUT
+    if (input_utf8_end_of_code_point_mask == 0xaaa) consumed = 12;
+
   } else if (idx < 145) {
     // FOUR (4) input code-words
     uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t*>(simdutf::tables::utf8_to_utf16::shufutf8[idx]));

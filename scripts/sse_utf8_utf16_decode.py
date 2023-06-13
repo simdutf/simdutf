@@ -120,8 +120,8 @@ def buildshuf1234_fourbytes(sizes):
             answer[4*i+2] = pos + 1
             answer[4*i+3] = pos
             pos += 4
-    return answer
 
+    return answer
 
 def main():
   easycase12 = set()
@@ -158,29 +158,35 @@ def main():
       index[t] = c
       c = c + 1
   arrg=[]
+  sizes_lut = []
+
   for x in range(1<<12):
     sizes = compute_code_point_size(x)
     if(easy_case12(sizes)):
         z1 = grab_easy_case12_code_point_size(sizes)
         idx = index[tuple(z1)]
-        s = sum(z1)
-        arrg.append((idx,s))
+        arrg.append(idx)
+        sizes_lut.append(sum(z1))
     elif(easy_case123(sizes)):
         z1 = grab_easy_case123_code_point_size(sizes)
         idx = index[tuple(z1)]
-        s = sum(z1)
-        arrg.append((idx,s))
+        arrg.append(idx)
+        sizes_lut.append(sum(z1))
     elif(easy_case1234(sizes)):
         z1 = grab_easy_case1234_code_point_size(sizes)
         idx = index[tuple(z1)]
-        s = sum(z1)
-        arrg.append((idx,s))
+        arrg.append(idx)
+        sizes_lut.append(sum(z1))
     else:
         # we are in error, use a bogus index
-        arrg.append((209,12))
-  print("const uint8_t utf8bigindex["+str(len(arrg))+"][2] = ")
-  print(cpp_arrayarray_initializer(arrg), end=";\n")
+        arrg.append(209)
+        sizes_lut.append(12)
+  print("const uint8_t utf8bigindex["+str(len(arrg))+"] = ")
+  print(cpp_array_initializer(arrg), end=";\n")
 
+  print("const uint8_t utf8lenindex["+str(len(sizes_lut) // 2) + "] = ")
+  print(cpp_array_initializer(sizes_lut[:len(sizes_lut)//2]), end=";\n")
 
 if __name__ == '__main__':
     main()
+

@@ -23,6 +23,8 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   const __m128i in = _mm_loadu_si128((__m128i *)input);
   const uint16_t input_utf8_end_of_code_point_mask =
       utf8_end_of_code_point_mask & 0xfff;
+  const uint16_t input_utf8_length_mask =
+      utf8_end_of_code_point_mask & 0x7ff;
   if(((utf8_end_of_code_point_mask & 0xffff) == 0xffff)) {
     // We process the data in chunks of 16 bytes.
     __m256i ascii = _mm256_cvtepu8_epi16(in);
@@ -71,9 +73,10 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   }
 
   const uint8_t idx =
-      simdutf::tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][0];
-  const uint8_t consumed =
-      simdutf::tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][1];
+      simdutf::tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask];
+  uint8_t consumed =
+      simdutf::tables::utf8_to_utf16::utf8lenindex[input_utf8_length_mask];
+
   if (idx < 64) {
     // SIX (6) input code-words
     // this is a relatively easy scenario
@@ -89,6 +92,8 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     if (big_endian) composed = _mm_shuffle_epi8(composed, swap);
     _mm_storeu_si128((__m128i *)utf16_output, composed);
     utf16_output += 6; // We wrote 12 bytes, 6 code points. There is a potential overflow of 4 bytes.
+    // Corner case in half LUT
+    if (input_utf8_end_of_code_point_mask == 0xaaa) consumed = 12;
   } else if (idx < 145) {
     // FOUR (4) input code-words
     const __m128i sh =
