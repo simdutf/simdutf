@@ -6,7 +6,7 @@ namespace scalar {
 namespace {
 namespace latin1 {
 
-inline size_t utf32_length_from_latin1(const char* , size_t len) {
+inline size_t utf32_length_from_latin1(size_t len) {
   // We are not BOM aware.
   return len; // a utf32 unit will always represent 1 latin1 character
 }
