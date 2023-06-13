@@ -2207,7 +2207,7 @@ public:
    * @param length        the length of the string in 4-byte words (char32_t)
    * @return the number of bytes required to encode the UTF-32 string as Latin1
    */
-    simdutf_warn_unused virtual size_t latin1_length_from_utf32(const char32_t * input, size_t length) const noexcept = 0;
+    simdutf_warn_unused virtual size_t latin1_length_from_utf32( size_t length) const noexcept = 0;
 
   /**
    * Compute the number of bytes that this UTF-8 string would require in Latin1 format.
