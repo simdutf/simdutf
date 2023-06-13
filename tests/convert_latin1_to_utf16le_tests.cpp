@@ -27,7 +27,7 @@ TEST(convert_all_latin) {
       return implementation.convert_latin1_to_utf16le(latin1, size, utf16);
     };
     auto size_procedure = [&implementation](const char* latin1, size_t size) -> size_t {
-      return implementation.utf16_length_from_latin1(latin1, size);
+      return implementation.utf16_length_from_latin1( size);
     };
     for (size_t size: input_size) {
       transcode_latin1_to_utf16_test_base test(random, size);

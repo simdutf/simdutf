@@ -2074,7 +2074,7 @@ public:
    * @param length        the length of the string in 2-byte words (char16_t)
    * @return the number of bytes required to encode the UTF-16 string as Latin1
    */
-    simdutf_warn_unused virtual size_t utf16_length_from_latin1(const char * input, size_t length) const noexcept = 0;
+    simdutf_warn_unused virtual size_t utf16_length_from_latin1(size_t length) const noexcept = 0;
 
   /**
    * Convert possibly broken UTF-32 string into UTF-16LE string.
