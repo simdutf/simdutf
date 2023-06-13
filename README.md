@@ -593,7 +593,7 @@ are fast and non-validating.
    * @param length        the length of the string in 2-byte words (char16_t)
    * @return the number of bytes required to encode the UTF-16LE string as Latin1
    */
-  simdutf_warn_unused size_t latin1_length_from_utf16(const char16_t * input, size_t length) noexcept;
+  simdutf_warn_unused size_t latin1_length_from_utf16(size_t length) noexcept;
 
   /**
    * Compute the number of bytes that this UTF-32 string would require in Latin1 format.

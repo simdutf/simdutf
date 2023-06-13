@@ -869,7 +869,7 @@ simdutf_warn_unused size_t convert_valid_utf16be_to_utf32(const char16_t * input
    * @param length        the length of the string in 2-byte words (char16_t)
    * @return the number of bytes required to encode the UTF-16LE string as Latin1
    */
-  simdutf_warn_unused size_t latin1_length_from_utf16(const char16_t * input, size_t length) noexcept;
+  simdutf_warn_unused size_t latin1_length_from_utf16(size_t length) noexcept;
 
 
 /**
@@ -2231,7 +2231,7 @@ public:
    * @param length        the length of the string in 2-byte words (char16_t)
    * @return the number of bytes required to encode the UTF-16LE string as Latin1
    */
-  simdutf_warn_unused virtual size_t latin1_length_from_utf16(const char16_t * input, size_t length) const noexcept = 0;
+  simdutf_warn_unused virtual size_t latin1_length_from_utf16(size_t length) const noexcept = 0;
 
   /**
    * Compute the number of two-byte words that this UTF-32 string would require in UTF-16 format.

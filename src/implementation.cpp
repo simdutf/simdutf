@@ -341,8 +341,8 @@ public:
     return set_best()->latin1_length_from_utf8(buf, len);
   }
 
-  simdutf_warn_unused size_t latin1_length_from_utf16(const char16_t * buf, size_t len) const noexcept override {
-    return set_best()->latin1_length_from_utf16(buf, len);
+  simdutf_warn_unused size_t latin1_length_from_utf16(size_t len) const noexcept override {
+    return set_best()->latin1_length_from_utf16(len);
   }
 
   simdutf_warn_unused size_t latin1_length_from_utf32(const char32_t * buf, size_t len) const noexcept override {
@@ -679,7 +679,7 @@ public:
     return 0;
   }
 
-  simdutf_warn_unused size_t latin1_length_from_utf16(const char16_t *, size_t) const noexcept override {
+  simdutf_warn_unused size_t latin1_length_from_utf16( size_t) const noexcept override {
     return 0;
   }
 

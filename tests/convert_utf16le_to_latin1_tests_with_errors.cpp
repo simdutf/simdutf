@@ -31,7 +31,7 @@ TEST(convert_2_UTF16_bytes) {
       return res.count;
     };
     auto size_procedure = [&implementation](const char16_t* utf16, size_t size) -> size_t {
-      return implementation.latin1_length_from_utf16(utf16, size);
+      return implementation.latin1_length_from_utf16(size);
     };
     for (size_t size: input_size) {
       transcode_utf16_to_latin1_test_base test(random, size);

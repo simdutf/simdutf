@@ -96,7 +96,7 @@ inline size_t utf32_length_from_utf16(const char16_t* buf, size_t len) {
 }
 
 
-inline size_t latin1_length_from_utf16(const char16_t*, size_t len) {
+inline size_t latin1_length_from_utf16(size_t len) {
   return len;
 }
 
