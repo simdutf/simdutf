@@ -20,7 +20,7 @@ inline size_t utf8_length_from_latin1(const char *buf, size_t len) {
   return answer + len;
 }
 
-inline size_t utf16_length_from_latin1(const char *, size_t len) {
+inline size_t utf16_length_from_latin1(size_t len) {
   return len;
 }
 
