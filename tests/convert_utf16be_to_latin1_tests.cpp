@@ -44,19 +44,11 @@ TEST(convert_2_UTF16_bytes) {
 TEST(convert_fails_if_input_too_large) {
   uint32_t seed{1234};
   simdutf::tests::helpers::RandomInt generator(0xff, 0xffff, seed); 
-  //starts with Little endian: LSB goes first e.g. 0xabcd. By default, C++ represents all hex values as LE
 
   auto procedure = [&implementation](const char16_t* utf16le, size_t size, char* latin1) -> size_t {
       std::vector<char16_t> utf16be(size);
-      // std::cout << "Before change_endianness_utf16: " << std::hex << *utf16le << std::endl;
-
       implementation.change_endianness_utf16(utf16le, size, utf16be.data());
-      
-      //we switch here to Big endian: MSB goes first e.g.cdab
-      // std::cout << "After change_endianness_utf16: " << std::hex << utf16be[0] << std::endl;
-      // std::cout << "Before convert_utf16be_to_latin1: " << std::hex << utf16be[0] << std::endl;
       auto result = implementation.convert_utf16be_to_latin1(utf16be.data(), size, latin1);
-      // std::cout << "After convert_utf16be_to_latin1: " << std::hex << (int)latin1[0] << std::endl;
       return result;
   };
   const size_t size = 64;
@@ -64,13 +56,10 @@ TEST(convert_fails_if_input_too_large) {
 
   for (size_t j = 0; j < 1000; j++) {
     uint16_t wrong_value = generator();
-    // std::cout << "wrong_value: " << wrong_value << std::endl;
     for (size_t i=0; i < size; i++) {
       auto old = test.input_utf16[i];
-      // std::cout << "Before: " << std::hex << test.input_utf16[i] << std::endl;
       test.input_utf16[i] = wrong_value;
       ASSERT_TRUE(test(procedure));
-      // std::cout << "After: " << std::hex << test.input_utf16[i] << std::endl;
       test.input_utf16[i] = old;
     }
   }
