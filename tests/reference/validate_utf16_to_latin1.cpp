@@ -21,7 +21,7 @@ simdutf_warn_unused bool validate_utf16_to_latin1(const char16_t *buf, size_t le
       #endif
 
      curr += 1;
-     if ( 0xff < W1 ) { // falls inside of surrogate range,
+     if ( 0xff < W1 ) {
         return false;
       }
   }

@@ -20,8 +20,7 @@
 #include <tests/reference/validate_utf32.h>
 #include <tests/reference/validate_utf8_to_latin1.h>
 #include <tests/reference/validate_utf16_to_latin1.h>
-
-
+#include <tests/reference/validate_utf32_to_latin1.h>
 
 namespace simdutf { namespace tests { namespace helpers {
 
@@ -793,7 +792,7 @@ namespace simdutf { namespace tests { namespace helpers {
   }
 
   bool transcode_utf32_to_latin1_test_base::is_input_valid() const {
-    return simdutf::tests::reference::validate_utf32(input_utf32.data(), input_utf32.size());
+    return simdutf::tests::reference::validate_utf32_to_latin1(input_utf32.data(), input_utf32.size());
   }
 
   bool transcode_utf32_to_latin1_test_base::validate(size_t saved_chars) const {

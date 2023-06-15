@@ -12,8 +12,6 @@ namespace {
   std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
 
   using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
-
-  constexpr size_t trials = 10000;
 }
 
 TEST(convert_latin1_only) {
