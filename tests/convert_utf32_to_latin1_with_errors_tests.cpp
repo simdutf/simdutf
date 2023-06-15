@@ -33,7 +33,7 @@ TEST(convert_latin1_only) {
     return size; 
   };
   for (size_t size: input_size) {
-    simdutf::tests::helpers::transcode_utf32_to_latin1_test_base test(generator, 256);
+    simdutf::tests::helpers::transcode_utf32_to_latin1_test_base test(generator, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
