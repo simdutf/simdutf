@@ -148,7 +148,7 @@ TEST(too_short_error) {
     int leading_byte_pos = 0;
     for (int i = 0; i < fix_size; i++) {
 
-      if((test.input_utf8[i] & 0b1100000) == 0b10000000) {  // Only process continuation bytes by making them leading bytes
+      if((test.input_utf8[i] & 0b11000000) == 0b10000000) {  // Only process continuation bytes by making them leading bytes
 
         auto procedure = [&implementation, &leading_byte_pos](const char* utf8, size_t size,char * latin1) -> size_t {
           simdutf::result res = implementation.convert_utf8_to_latin1_with_errors(utf8, size, latin1);
