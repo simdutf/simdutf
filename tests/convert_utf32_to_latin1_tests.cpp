@@ -37,7 +37,7 @@ TEST(convert_latin1_only) {
 
 TEST(convert_fails_if_input_too_large) {
   for (size_t j = 0; j < trials; j++) { 
-    uint32_t seed = j;
+    uint32_t seed = static_cast<uint32_t>(j);
     simdutf::tests::helpers::RandomInt generator(0xFF, 0xffffffff, seed);
 
     auto procedure = [&implementation](const char32_t* utf32, size_t size, char* latin1) -> size_t {
