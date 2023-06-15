@@ -11,6 +11,8 @@ add_library(simdutf_tests_reference STATIC
   validate_utf8_to_latin1.cpp
   validate_utf16_to_latin1.h
   validate_utf16_to_latin1.cpp
+  validate_utf32_to_latin1.h
+  validate_utf32_to_latin1.cpp
   validate_utf8.h
   validate_utf8.cpp
   validate_utf16.h
