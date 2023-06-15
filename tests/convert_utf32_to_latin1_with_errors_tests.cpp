@@ -7,7 +7,6 @@
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
 #include <memory>
-#include <chrono>
 
 namespace {
   std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
@@ -41,7 +40,7 @@ TEST(convert_latin1_only) {
 
 TEST(convert_fails_if_input_too_large) {
   for (size_t j = 0; j < trials; j++) { 
-    uint32_t seed = static_cast<uint32_t>(std::chrono::system_clock::now().time_since_epoch().count());
+    uint32_t seed = j;
     simdutf::tests::helpers::RandomInt generator(0xFF, 0xffffffff, seed);
     const size_t size = 64;
     simdutf::tests::helpers::transcode_utf32_to_latin1_test_base test([](){ return '*'; }, size+32);

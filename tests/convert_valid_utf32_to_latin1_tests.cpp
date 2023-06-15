@@ -26,7 +26,6 @@ TEST(convert_latin1_only) {
   auto size_procedure = [&implementation](const char32_t* utf32, size_t size) -> size_t {
     return implementation.latin1_length_from_utf32(size);
   };
-  std::array<size_t, 4> input_size{7,16,24,67};
   for (size_t size: input_size) {
     simdutf::tests::helpers::transcode_utf32_to_latin1_test_base test(generator, size);
     ASSERT_TRUE(test(procedure));

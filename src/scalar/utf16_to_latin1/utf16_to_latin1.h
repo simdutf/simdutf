@@ -8,6 +8,7 @@ namespace utf16_to_latin1 {
 
 template <endianness big_endian>
 inline size_t convert(const char16_t* buf, size_t len, char* latin_output) {
+  // data[pos] = cdab
   const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
   size_t pos = 0;
   char* start{latin_output};
@@ -21,6 +22,7 @@ inline size_t convert(const char16_t* buf, size_t len, char* latin_output) {
     pos++;
   }
   if((too_large & 0xFF00) != 0) { return 0; }
+
   return latin_output - start;
 }
 
