@@ -44,14 +44,23 @@ TEST(convert_2_UTF16_bytes) {
 TEST(convert_fails_if_input_too_large) {
   uint32_t seed{1234};
   simdutf::tests::helpers::RandomInt generator(0xff, 0xffff, seed);
-
-
   const size_t size = 64;
   transcode_utf16_to_latin1_test_base test([](){ return '*'; }, size+32);
 
   for (size_t j = 0; j < 1000; j++) {
 
     uint16_t wrong_value = generator();
+    #if SIMDUTF_IS_BIG_ENDIAN // Big endian systems invert the declared generator's numbers when commited to memory.
+    // Each codepoints above 255 are thus mirrored.
+    // e.g. abcd becomes cdab, and vice versa. This is for most codepoints,not a cause for concern.
+    // One case is however problematic, that of the numbers in the BE format 0xYY00 where the mirror image indicates a number beneath 255
+    // which is undesirable in this particular test. 
+    if ((wrong_value & 0xFF00) != 0){ 
+      // In this case, we swap bytes of the generated value:
+      wrong_value = uint16_t((wrong_value >> 8) | (wrong_value << 8));
+    }
+    #endif
+    
     for (size_t i=0; i < size; i++) {
 
   auto procedure = [&implementation,&i](const char16_t* utf16, size_t size, char* latin1) -> size_t {

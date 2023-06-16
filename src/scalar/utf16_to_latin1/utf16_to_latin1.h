@@ -6,24 +6,29 @@ namespace scalar {
 namespace {
 namespace utf16_to_latin1 {
 
+#include <cstring>  // for std::memcpy
+
 template <endianness big_endian>
 inline size_t convert(const char16_t* buf, size_t len, char* latin_output) {
-  // data[pos] = cdab
   const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
   size_t pos = 0;
-  char* start{latin_output};
+  char temp_output[len]; // temporary buffer
+  char* start{temp_output};
   uint16_t word = 0;
   uint16_t too_large = 0;
 
   while (pos < len) {
     word = !match_system(big_endian) ? utf16::swap_bytes(data[pos]) : data[pos];
     too_large |= word;
-    *latin_output++ = char(word & 0xFF);
+    *start++ = char(word & 0xFF);
     pos++;
   }
   if((too_large & 0xFF00) != 0) { return 0; }
 
-  return latin_output - start;
+  // Only copy to latin_output if there were no errors
+  std::memcpy(latin_output, temp_output, len);
+  
+  return start - temp_output;
 }
 
 template <endianness big_endian>
