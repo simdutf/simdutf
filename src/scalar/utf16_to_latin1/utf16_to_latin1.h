@@ -12,23 +12,23 @@ template <endianness big_endian>
 inline size_t convert(const char16_t* buf, size_t len, char* latin_output) {
   const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
   size_t pos = 0;
-  char temp_output[len]; // temporary buffer
-  char* start{temp_output};
+  std::vector<char> temp_output(len);
+  char* current_write = temp_output.data();
   uint16_t word = 0;
   uint16_t too_large = 0;
 
   while (pos < len) {
     word = !match_system(big_endian) ? utf16::swap_bytes(data[pos]) : data[pos];
     too_large |= word;
-    *start++ = char(word & 0xFF);
+    *current_write++ = char(word & 0xFF);
     pos++;
   }
   if((too_large & 0xFF00) != 0) { return 0; }
 
   // Only copy to latin_output if there were no errors
-  std::memcpy(latin_output, temp_output, len);
+  std::memcpy(latin_output, temp_output.data(), len);
   
-  return start - temp_output;
+  return current_write - temp_output.data();
 }
 
 template <endianness big_endian>
