@@ -8,6 +8,7 @@ enum encoding_type {
         UTF16_BE = 4,   // BOM 0xfe 0xff
         UTF32_LE = 8,   // BOM 0xff 0xfe 0x00 0x00
         UTF32_BE = 16,   // BOM 0x00 0x00 0xfe 0xff
+        Latin1 = 32,
 
         unspecified = 0
 };
