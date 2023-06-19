@@ -23,7 +23,7 @@ include(GNUInstallDirs)
 include(CTest)
 include(cmake/simdutf-flags.cmake)
 
-set(SIMDUTF_LIB_VERSION "3.2.9" CACHE STRING "simdutf library version")
+set(SIMDUTF_LIB_VERSION "3.2.14" CACHE STRING "simdutf library version")
 set(SIMDUTF_LIB_SOVERSION "4" CACHE STRING "simdutf library soversion")
 option(SIMDUTF_TESTS "Whether the tests are included as part of the CMake Build." ON)
 option(SIMDUTF_BENCHMARKS "Whether the benchmarks are included as part of the CMake Build." ON)
@@ -65,6 +65,7 @@ else()
   message(STATUS "The benchmarks can be enabled by setting SIMDUTF_BENCHMARKS, e.g., -D SIMDUTF_BENCHMARKS=ON.")
 endif()
 
+message(STATUS "Compiling using the C++ standard:" ${CMAKE_CXX_STANDARD})
 # ---- Install rules ----
 add_library(simdutf::simdutf ALIAS simdutf)
 

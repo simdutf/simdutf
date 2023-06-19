@@ -18,8 +18,10 @@ endif()
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tools/cmake")
 
-# We compile tools, tests, etc. with C++ 17. Override yourself if you need on a target.
-set(CMAKE_CXX_STANDARD 11)
+# We compile tools, tests, etc. with C++ 11. Override yourself if you need on a target.
+set(SIMDUTF_CXX_STANDARD 11 CACHE STRING "the C++ standard to use for simdutf")
+
+set(CMAKE_CXX_STANDARD ${SIMDUTF_CXX_STANDARD})
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_MACOSX_RPATH OFF)

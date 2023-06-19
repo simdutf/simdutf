@@ -77,7 +77,7 @@ TEST(convert_utf8_to_utf16le) {
     size_t count = implementation.convert_utf8_to_utf16le(utf8, utf8_size, buffer);
     ASSERT_EQUAL(count, utf16_size);
     for(size_t i = 0; i < utf16_size; i++) {
-        ASSERT_EQUAL(buffer[i], utf16le[i]);
+        ASSERT_EQUAL(uint16_t(buffer[i]), uint16_t(utf16le[i]));
     }
 }
 
@@ -86,7 +86,7 @@ TEST(convert_utf8_to_utf16be) {
     size_t count = implementation.convert_utf8_to_utf16be(utf8, utf8_size, buffer);
     ASSERT_EQUAL(count, utf16_size);
     for(size_t i = 0; i < utf16_size; i++) {
-        ASSERT_EQUAL(buffer[i], utf16be[i]);
+        ASSERT_EQUAL(uint16_t(buffer[i]), uint16_t(utf16be[i]));
     }
 }
 
@@ -96,7 +96,7 @@ TEST(convert_utf8_to_utf32) {
     size_t count = implementation.convert_utf8_to_utf32(utf8, utf8_size, buffer);
     ASSERT_EQUAL(count, utf32_size);
     for(size_t i = 0; i < utf32_size; i++) {
-        ASSERT_EQUAL(buffer[i], utf32[i]);
+        ASSERT_EQUAL(uint32_t(buffer[i]), uint32_t(utf32[i]));
     }
 }
 
@@ -143,7 +143,7 @@ TEST(convert_utf16le_to_utf32) {
     size_t count = implementation.convert_utf16le_to_utf32(utf16le, utf16_size, buffer);
     ASSERT_EQUAL(count, utf32_size);
     for(size_t i = 0; i < utf32_size; i++) {
-        ASSERT_EQUAL(buffer[i], utf32[i]);
+        ASSERT_EQUAL(uint32_t(buffer[i]), uint32_t(utf32[i]));
     }
 }
 
@@ -162,7 +162,7 @@ TEST(convert_utf16be_to_utf32) {
     size_t count = implementation.convert_utf16be_to_utf32(utf16be, utf16_size, buffer);
     ASSERT_EQUAL(count, utf32_size);
     for(size_t i = 0; i < utf32_size; i++) {
-        ASSERT_EQUAL(buffer[i], utf32[i]);
+        ASSERT_EQUAL(uint32_t(buffer[i]), uint32_t(utf32[i]));
     }
 }
 

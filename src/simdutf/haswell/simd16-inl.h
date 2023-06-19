@@ -16,8 +16,7 @@ struct base16: base<simd16<T>> {
   simdutf_really_inline base16(const __m256i _value) : base<simd16<T>>(_value) {}
   template <typename Pointer>
   simdutf_really_inline base16(const Pointer* ptr) : base16(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(ptr))) {}
-
-  simdutf_really_inline Mask operator==(const simd16<T> other) const { return _mm256_cmpeq_epi16(*this, other); }
+  friend simdutf_really_inline Mask operator==(const simd16<T> lhs, const simd16<T> rhs) { return _mm256_cmpeq_epi16(lhs, rhs); }
 
   /// the size of vector in bytes
   static const int SIZE = sizeof(base<simd16<T>>::value);

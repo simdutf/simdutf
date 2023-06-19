@@ -66,22 +66,40 @@ namespace internal {
 
 
 #if SIMDUTF_IMPLEMENTATION_ICELAKE
-const icelake::implementation icelake_singleton{};
+static const icelake::implementation* get_icelake_singleton() {
+  static const icelake::implementation icelake_singleton{};
+  return &icelake_singleton;
+}
 #endif
 #if SIMDUTF_IMPLEMENTATION_HASWELL
-const haswell::implementation haswell_singleton{};
+static const haswell::implementation* get_haswell_singleton() {
+  static const haswell::implementation haswell_singleton{};
+  return &haswell_singleton;
+}
 #endif
 #if SIMDUTF_IMPLEMENTATION_WESTMERE
-const westmere::implementation westmere_singleton{};
+static const westmere::implementation* get_westmere_singleton() {
+  static const westmere::implementation westmere_singleton{};
+  return &westmere_singleton;
+}
 #endif
 #if SIMDUTF_IMPLEMENTATION_ARM64
-const arm64::implementation arm64_singleton{};
+static const arm64::implementation* get_arm64_singleton() {
+  static const arm64::implementation arm64_singleton{};
+  return &arm64_singleton;
+}
 #endif
 #if SIMDUTF_IMPLEMENTATION_PPC64
-const ppc64::implementation ppc64_singleton{};
+static const ppc64::implementation* get_ppc64_singleton() {
+  static const ppc64::implementation ppc64_singleton{};
+  return &ppc64_singleton;
+}
 #endif
 #if SIMDUTF_IMPLEMENTATION_FALLBACK
-const fallback::implementation fallback_singleton{};
+static const fallback::implementation* get_fallback_singleton() {
+  static const fallback::implementation fallback_singleton{};
+  return &fallback_singleton;
+}
 #endif
 
 /**
@@ -399,27 +417,29 @@ private:
   const implementation *set_best() const noexcept;
 };
 
-
-const std::initializer_list<const implementation *> available_implementation_pointers {
+static const std::initializer_list<const implementation *>& get_available_implementation_pointers() {
+  static const std::initializer_list<const implementation *> available_implementation_pointers {
 #if SIMDUTF_IMPLEMENTATION_ICELAKE
-  &icelake_singleton,
+    get_icelake_singleton(),
 #endif
 #if SIMDUTF_IMPLEMENTATION_HASWELL
-  &haswell_singleton,
+    get_haswell_singleton(),
 #endif
 #if SIMDUTF_IMPLEMENTATION_WESTMERE
-  &westmere_singleton,
+    get_westmere_singleton(),
 #endif
 #if SIMDUTF_IMPLEMENTATION_ARM64
-  &arm64_singleton,
+    get_arm64_singleton(),
 #endif
 #if SIMDUTF_IMPLEMENTATION_PPC64
-  &ppc64_singleton,
+    get_ppc64_singleton(),
 #endif
 #if SIMDUTF_IMPLEMENTATION_FALLBACK
-  &fallback_singleton,
+    get_fallback_singleton(),
 #endif
-}; // available_implementation_pointers
+  }; // available_implementation_pointers
+  return available_implementation_pointers;
+}
 
 // So we can return UNSUPPORTED_ARCHITECTURE from the parser when there is no support
 class unsupported_implementation final : public implementation {
@@ -734,18 +754,18 @@ public:
 const unsupported_implementation unsupported_singleton{};
 
 size_t available_implementation_list::size() const noexcept {
-  return internal::available_implementation_pointers.size();
+  return internal::get_available_implementation_pointers().size();
 }
 const implementation * const *available_implementation_list::begin() const noexcept {
-  return internal::available_implementation_pointers.begin();
+  return internal::get_available_implementation_pointers().begin();
 }
 const implementation * const *available_implementation_list::end() const noexcept {
-  return internal::available_implementation_pointers.end();
+  return internal::get_available_implementation_pointers().end();
 }
 const implementation *available_implementation_list::detect_best_supported() const noexcept {
   // They are prelisted in priority order, so we just go down the list
   uint32_t supported_instruction_sets = internal::detect_supported_architectures();
-  for (const implementation *impl : internal::available_implementation_pointers) {
+  for (const implementation *impl : internal::get_available_implementation_pointers()) {
     uint32_t required_instruction_sets = impl->required_instruction_sets();
     if ((supported_instruction_sets & required_instruction_sets) == required_instruction_sets) { return impl; }
   }
