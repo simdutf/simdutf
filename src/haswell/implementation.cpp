@@ -603,9 +603,9 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char *i
           runner, input1234);
     }
     for (; i <= max_i; i += sizeof(__m256i)) {
-      __m256i input = _mm256_loadu_si256((const __m256i *)(data + i));
+      __m256i input_256_chunk = _mm256_loadu_si256((const __m256i *)(data + i));
       runner = _mm256_sub_epi8(
-          runner, _mm256_cmpgt_epi8(_mm256_setzero_si256(), input));
+          runner, _mm256_cmpgt_epi8(_mm256_setzero_si256(), input_256_chunk));
     }
     four_64bits = _mm256_add_epi64(
         four_64bits, _mm256_sad_epu8(runner, _mm256_setzero_si256()));
