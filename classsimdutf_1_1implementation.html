@@ -145,6 +145,27 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a825ad7513447a16cd12f5425e2e88431"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a825ad7513447a16cd12f5425e2e88431">validate_utf32_with_errors</a> (const char32_t *buf, size_t len) const noexcept=0</td></tr>
 <tr class="memdesc:a825ad7513447a16cd12f5425e2e88431"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validate the UTF-32 string and stop on error.  <a href="classsimdutf_1_1implementation.html#a825ad7513447a16cd12f5425e2e88431">More...</a><br /></td></tr>
 <tr class="separator:a825ad7513447a16cd12f5425e2e88431"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af79deb79661a71f145b7bc6786fe4223"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#af79deb79661a71f145b7bc6786fe4223">convert_latin1_to_utf8</a> (const char *input, size_t length, char *utf8_output) const noexcept=0</td></tr>
+<tr class="memdesc:af79deb79661a71f145b7bc6786fe4223"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert Latin1 string into UTF8 string.  <a href="classsimdutf_1_1implementation.html#af79deb79661a71f145b7bc6786fe4223">More...</a><br /></td></tr>
+<tr class="separator:af79deb79661a71f145b7bc6786fe4223"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2315da3daf654f4a7132b1751394b374"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a2315da3daf654f4a7132b1751394b374">convert_latin1_to_utf16le</a> (const char *input, size_t length, char16_t *utf16_output) const noexcept=0</td></tr>
+<tr class="memdesc:a2315da3daf654f4a7132b1751394b374"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly Latin1 string into UTF-16LE string.  <a href="classsimdutf_1_1implementation.html#a2315da3daf654f4a7132b1751394b374">More...</a><br /></td></tr>
+<tr class="separator:a2315da3daf654f4a7132b1751394b374"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f498ad9236b916e5e4859109d1df0bb"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a2f498ad9236b916e5e4859109d1df0bb">convert_latin1_to_utf16be</a> (const char *input, size_t length, char16_t *utf16_output) const noexcept=0</td></tr>
+<tr class="memdesc:a2f498ad9236b916e5e4859109d1df0bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert Latin1 string into UTF-16BE string.  <a href="classsimdutf_1_1implementation.html#a2f498ad9236b916e5e4859109d1df0bb">More...</a><br /></td></tr>
+<tr class="separator:a2f498ad9236b916e5e4859109d1df0bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5bb5a0db793a6e332711c24d9cbc14fd"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a5bb5a0db793a6e332711c24d9cbc14fd">convert_latin1_to_utf32</a> (const char *input, size_t length, char32_t *utf32_buffer) const noexcept=0</td></tr>
+<tr class="memdesc:a5bb5a0db793a6e332711c24d9cbc14fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert Latin1 string into UTF-32 string.  <a href="classsimdutf_1_1implementation.html#a5bb5a0db793a6e332711c24d9cbc14fd">More...</a><br /></td></tr>
+<tr class="separator:a5bb5a0db793a6e332711c24d9cbc14fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9c2c1418f08f84e36c22727879db307"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#ac9c2c1418f08f84e36c22727879db307">convert_utf8_to_latin1</a> (const char *input, size_t length, char *latin1_output) const noexcept=0</td></tr>
+<tr class="memdesc:ac9c2c1418f08f84e36c22727879db307"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly broken UTF-8 string into latin1 string.  <a href="classsimdutf_1_1implementation.html#ac9c2c1418f08f84e36c22727879db307">More...</a><br /></td></tr>
+<tr class="separator:ac9c2c1418f08f84e36c22727879db307"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae845d016f715c25475970c4dfcb58a8d"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#ae845d016f715c25475970c4dfcb58a8d">convert_utf8_to_latin1_with_errors</a> (const char *input, size_t length, char *latin1_output) const noexcept=0</td></tr>
+<tr class="memdesc:ae845d016f715c25475970c4dfcb58a8d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly broken UTF-8 string into latin1 string.  <a href="classsimdutf_1_1implementation.html#ae845d016f715c25475970c4dfcb58a8d">More...</a><br /></td></tr>
+<tr class="separator:ae845d016f715c25475970c4dfcb58a8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a903279159cb5f5e0e767cce6f1440889"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a903279159cb5f5e0e767cce6f1440889">convert_valid_utf8_to_latin1</a> (const char *input, size_t length, char *latin1_output) const noexcept=0</td></tr>
+<tr class="memdesc:a903279159cb5f5e0e767cce6f1440889"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert valid UTF-8 string into latin1 string.  <a href="classsimdutf_1_1implementation.html#a903279159cb5f5e0e767cce6f1440889">More...</a><br /></td></tr>
+<tr class="separator:a903279159cb5f5e0e767cce6f1440889"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a487615c5d6dc00183fdf6a904bd829dc"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a487615c5d6dc00183fdf6a904bd829dc">convert_utf8_to_utf16le</a> (const char *input, size_t length, char16_t *utf16_output) const noexcept=0</td></tr>
 <tr class="memdesc:a487615c5d6dc00183fdf6a904bd829dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly broken UTF-8 string into UTF-16LE string.  <a href="classsimdutf_1_1implementation.html#a487615c5d6dc00183fdf6a904bd829dc">More...</a><br /></td></tr>
 <tr class="separator:a487615c5d6dc00183fdf6a904bd829dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -178,6 +199,24 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a39bc047dd50ede9cd33cb7e825eb5b56"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a39bc047dd50ede9cd33cb7e825eb5b56">utf32_length_from_utf8</a> (const char *input, size_t length) const noexcept=0</td></tr>
 <tr class="memdesc:a39bc047dd50ede9cd33cb7e825eb5b56"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the number of 4-byte words that this UTF-8 string would require in UTF-32 format.  <a href="classsimdutf_1_1implementation.html#a39bc047dd50ede9cd33cb7e825eb5b56">More...</a><br /></td></tr>
 <tr class="separator:a39bc047dd50ede9cd33cb7e825eb5b56"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a75f16dc0f3bdd4457425898a17c51d45"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a75f16dc0f3bdd4457425898a17c51d45">convert_utf16le_to_latin1</a> (const char16_t *input, size_t length, char *latin1_buffer) const noexcept=0</td></tr>
+<tr class="memdesc:a75f16dc0f3bdd4457425898a17c51d45"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly broken UTF-16LE string into Latin1 string.  <a href="classsimdutf_1_1implementation.html#a75f16dc0f3bdd4457425898a17c51d45">More...</a><br /></td></tr>
+<tr class="separator:a75f16dc0f3bdd4457425898a17c51d45"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac941440407fed1518a179f1d0396720c"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#ac941440407fed1518a179f1d0396720c">convert_utf16be_to_latin1</a> (const char16_t *input, size_t length, char *latin1_buffer) const noexcept=0</td></tr>
+<tr class="memdesc:ac941440407fed1518a179f1d0396720c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly broken UTF-16BE string into Latin1 string.  <a href="classsimdutf_1_1implementation.html#ac941440407fed1518a179f1d0396720c">More...</a><br /></td></tr>
+<tr class="separator:ac941440407fed1518a179f1d0396720c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4aa4c4b831e691e623552bbf9c60b801"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a4aa4c4b831e691e623552bbf9c60b801">convert_utf16le_to_latin1_with_errors</a> (const char16_t *input, size_t length, char *latin1_buffer) const noexcept=0</td></tr>
+<tr class="memdesc:a4aa4c4b831e691e623552bbf9c60b801"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly broken UTF-16LE string into Latin1 string.  <a href="classsimdutf_1_1implementation.html#a4aa4c4b831e691e623552bbf9c60b801">More...</a><br /></td></tr>
+<tr class="separator:a4aa4c4b831e691e623552bbf9c60b801"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a29a8022ac1760f081d389cb00a4dac80"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a29a8022ac1760f081d389cb00a4dac80">convert_utf16be_to_latin1_with_errors</a> (const char16_t *input, size_t length, char *latin1_buffer) const noexcept=0</td></tr>
+<tr class="memdesc:a29a8022ac1760f081d389cb00a4dac80"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly broken UTF-16BE string into Latin1 string.  <a href="classsimdutf_1_1implementation.html#a29a8022ac1760f081d389cb00a4dac80">More...</a><br /></td></tr>
+<tr class="separator:a29a8022ac1760f081d389cb00a4dac80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a65c8a9e58f4c111d52851e4fdbca0af1"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a65c8a9e58f4c111d52851e4fdbca0af1">convert_valid_utf16le_to_latin1</a> (const char16_t *input, size_t length, char *latin1_buffer) const noexcept=0</td></tr>
+<tr class="memdesc:a65c8a9e58f4c111d52851e4fdbca0af1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert valid UTF-16LE string into Latin1 string.  <a href="classsimdutf_1_1implementation.html#a65c8a9e58f4c111d52851e4fdbca0af1">More...</a><br /></td></tr>
+<tr class="separator:a65c8a9e58f4c111d52851e4fdbca0af1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6896e27fd7fe773ba25bfaed081aafaa"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a6896e27fd7fe773ba25bfaed081aafaa">convert_valid_utf16be_to_latin1</a> (const char16_t *input, size_t length, char *latin1_buffer) const noexcept=0</td></tr>
+<tr class="memdesc:a6896e27fd7fe773ba25bfaed081aafaa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert valid UTF-16BE string into Latin1 string.  <a href="classsimdutf_1_1implementation.html#a6896e27fd7fe773ba25bfaed081aafaa">More...</a><br /></td></tr>
+<tr class="separator:a6896e27fd7fe773ba25bfaed081aafaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abca86864832acad7c1277e6675c73e58"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#abca86864832acad7c1277e6675c73e58">convert_utf16le_to_utf8</a> (const char16_t *input, size_t length, char *utf8_buffer) const noexcept=0</td></tr>
 <tr class="memdesc:abca86864832acad7c1277e6675c73e58"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly broken UTF-16LE string into UTF-8 string.  <a href="classsimdutf_1_1implementation.html#abca86864832acad7c1277e6675c73e58">More...</a><br /></td></tr>
 <tr class="separator:abca86864832acad7c1277e6675c73e58"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -220,6 +259,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:abce2ef1ff8ab5ffd3999d545f703a2fd"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#abce2ef1ff8ab5ffd3999d545f703a2fd">utf8_length_from_utf16be</a> (const char16_t *input, size_t length) const noexcept=0</td></tr>
 <tr class="memdesc:abce2ef1ff8ab5ffd3999d545f703a2fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the number of bytes that this UTF-16BE string would require in UTF-8 format.  <a href="classsimdutf_1_1implementation.html#abce2ef1ff8ab5ffd3999d545f703a2fd">More...</a><br /></td></tr>
 <tr class="separator:abce2ef1ff8ab5ffd3999d545f703a2fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66c1ec7808c2572670b540cd3ccce6b1"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a66c1ec7808c2572670b540cd3ccce6b1">convert_utf32_to_latin1</a> (const char32_t *input, size_t length, char *latin1_buffer) const noexcept=0</td></tr>
+<tr class="memdesc:a66c1ec7808c2572670b540cd3ccce6b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly broken UTF-32 string into Latin1 string.  <a href="classsimdutf_1_1implementation.html#a66c1ec7808c2572670b540cd3ccce6b1">More...</a><br /></td></tr>
+<tr class="separator:a66c1ec7808c2572670b540cd3ccce6b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d067614ecf86f2e7a6dfa2158567677"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a2d067614ecf86f2e7a6dfa2158567677">convert_utf32_to_latin1_with_errors</a> (const char32_t *input, size_t length, char *latin1_buffer) const noexcept=0</td></tr>
+<tr class="memdesc:a2d067614ecf86f2e7a6dfa2158567677"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly broken UTF-32 string into Latin1 string and stop on error.  <a href="classsimdutf_1_1implementation.html#a2d067614ecf86f2e7a6dfa2158567677">More...</a><br /></td></tr>
+<tr class="separator:a2d067614ecf86f2e7a6dfa2158567677"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00b1ec570f19982c826e2b04b501a1ac"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a00b1ec570f19982c826e2b04b501a1ac">convert_valid_utf32_to_latin1</a> (const char32_t *input, size_t length, char *latin1_buffer) const noexcept=0</td></tr>
+<tr class="memdesc:a00b1ec570f19982c826e2b04b501a1ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert valid UTF-32 string into Latin1 string.  <a href="classsimdutf_1_1implementation.html#a00b1ec570f19982c826e2b04b501a1ac">More...</a><br /></td></tr>
+<tr class="separator:a00b1ec570f19982c826e2b04b501a1ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac5ba1394d1cb70ff61ff9e10fec2b4ae"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#ac5ba1394d1cb70ff61ff9e10fec2b4ae">convert_utf32_to_utf8</a> (const char32_t *input, size_t length, char *utf8_buffer) const noexcept=0</td></tr>
 <tr class="memdesc:ac5ba1394d1cb70ff61ff9e10fec2b4ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly broken UTF-32 string into UTF-8 string.  <a href="classsimdutf_1_1implementation.html#ac5ba1394d1cb70ff61ff9e10fec2b4ae">More...</a><br /></td></tr>
 <tr class="separator:ac5ba1394d1cb70ff61ff9e10fec2b4ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -229,6 +277,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a5d859ac6b4327e3155f1accef2f42c23"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a5d859ac6b4327e3155f1accef2f42c23">convert_valid_utf32_to_utf8</a> (const char32_t *input, size_t length, char *utf8_buffer) const noexcept=0</td></tr>
 <tr class="memdesc:a5d859ac6b4327e3155f1accef2f42c23"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert valid UTF-32 string into UTF-8 string.  <a href="classsimdutf_1_1implementation.html#a5d859ac6b4327e3155f1accef2f42c23">More...</a><br /></td></tr>
 <tr class="separator:a5d859ac6b4327e3155f1accef2f42c23"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b211eefd837bfb9c080df56c408c3d4"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a4b211eefd837bfb9c080df56c408c3d4">utf16_length_from_latin1</a> (size_t length) const noexcept=0</td></tr>
+<tr class="memdesc:a4b211eefd837bfb9c080df56c408c3d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the number of bytes that this UTF-16 string would require in Latin1 format.  <a href="classsimdutf_1_1implementation.html#a4b211eefd837bfb9c080df56c408c3d4">More...</a><br /></td></tr>
+<tr class="separator:a4b211eefd837bfb9c080df56c408c3d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a342d098f7c92e8344944dfa947daa66d"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a342d098f7c92e8344944dfa947daa66d">convert_utf32_to_utf16le</a> (const char32_t *input, size_t length, char16_t *utf16_buffer) const noexcept=0</td></tr>
 <tr class="memdesc:a342d098f7c92e8344944dfa947daa66d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly broken UTF-32 string into UTF-16LE string.  <a href="classsimdutf_1_1implementation.html#a342d098f7c92e8344944dfa947daa66d">More...</a><br /></td></tr>
 <tr class="separator:a342d098f7c92e8344944dfa947daa66d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -250,12 +301,27 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a8a342c5088a3b2887485836daa92628a"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a8a342c5088a3b2887485836daa92628a">change_endianness_utf16</a> (const char16_t *input, size_t length, char16_t *output) const noexcept=0</td></tr>
 <tr class="memdesc:a8a342c5088a3b2887485836daa92628a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Change the endianness of the input.  <a href="classsimdutf_1_1implementation.html#a8a342c5088a3b2887485836daa92628a">More...</a><br /></td></tr>
 <tr class="separator:a8a342c5088a3b2887485836daa92628a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff358bb1f0b909cd1e9a6227656ee5d7"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#aff358bb1f0b909cd1e9a6227656ee5d7">utf8_length_from_latin1</a> (const char *input, size_t length) const noexcept=0</td></tr>
+<tr class="memdesc:aff358bb1f0b909cd1e9a6227656ee5d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the number of bytes that this Latin1 string would require in UTF-8 format.  <a href="classsimdutf_1_1implementation.html#aff358bb1f0b909cd1e9a6227656ee5d7">More...</a><br /></td></tr>
+<tr class="separator:aff358bb1f0b909cd1e9a6227656ee5d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2f39ff7d49c8864a9035c626825edad0"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a2f39ff7d49c8864a9035c626825edad0">utf8_length_from_utf32</a> (const char32_t *input, size_t length) const noexcept=0</td></tr>
 <tr class="memdesc:a2f39ff7d49c8864a9035c626825edad0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the number of bytes that this UTF-32 string would require in UTF-8 format.  <a href="classsimdutf_1_1implementation.html#a2f39ff7d49c8864a9035c626825edad0">More...</a><br /></td></tr>
 <tr class="separator:a2f39ff7d49c8864a9035c626825edad0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6936dace0dfd89741259cdbe49b5df2d"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a6936dace0dfd89741259cdbe49b5df2d">latin1_length_from_utf32</a> (size_t length) const noexcept=0</td></tr>
+<tr class="memdesc:a6936dace0dfd89741259cdbe49b5df2d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the number of bytes that this UTF-32 string would require in Latin1 format.  <a href="classsimdutf_1_1implementation.html#a6936dace0dfd89741259cdbe49b5df2d">More...</a><br /></td></tr>
+<tr class="separator:a6936dace0dfd89741259cdbe49b5df2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2cc04b416c87dfa742056ce5bd8033dc"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a2cc04b416c87dfa742056ce5bd8033dc">latin1_length_from_utf8</a> (const char *input, size_t length) const noexcept=0</td></tr>
+<tr class="memdesc:a2cc04b416c87dfa742056ce5bd8033dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the number of bytes that this UTF-8 string would require in Latin1 format.  <a href="classsimdutf_1_1implementation.html#a2cc04b416c87dfa742056ce5bd8033dc">More...</a><br /></td></tr>
+<tr class="separator:a2cc04b416c87dfa742056ce5bd8033dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a83aed89399b43b6f7a36172f3af38b99"><td class="memItemLeft" align="right" valign="top"><a id="a83aed89399b43b6f7a36172f3af38b99"></a>
+virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><b>latin1_length_from_utf16</b> (size_t length) const noexcept=0</td></tr>
+<tr class="separator:a83aed89399b43b6f7a36172f3af38b99"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3761299ce52ee8b2b480fcadc50b45a5"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a3761299ce52ee8b2b480fcadc50b45a5">utf16_length_from_utf32</a> (const char32_t *input, size_t length) const noexcept=0</td></tr>
 <tr class="memdesc:a3761299ce52ee8b2b480fcadc50b45a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the number of two-byte words that this UTF-32 string would require in UTF-16 format.  <a href="classsimdutf_1_1implementation.html#a3761299ce52ee8b2b480fcadc50b45a5">More...</a><br /></td></tr>
 <tr class="separator:a3761299ce52ee8b2b480fcadc50b45a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8039edd257c0f2bdf1acc5d16476992a"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a8039edd257c0f2bdf1acc5d16476992a">utf32_length_from_latin1</a> (size_t length) const noexcept=0</td></tr>
+<tr class="memdesc:a8039edd257c0f2bdf1acc5d16476992a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the number of bytes that this UTF-32 string would require in Latin1 format.  <a href="classsimdutf_1_1implementation.html#a8039edd257c0f2bdf1acc5d16476992a">More...</a><br /></td></tr>
+<tr class="separator:a8039edd257c0f2bdf1acc5d16476992a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a83b225db7024f73fdcd6f84fb10ecdfe"><td class="memItemLeft" align="right" valign="top"><a id="a83b225db7024f73fdcd6f84fb10ecdfe"></a>
 virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><b>utf32_length_from_utf16le</b> (const char16_t *input, size_t length) const noexcept=0</td></tr>
 <tr class="separator:a83b225db7024f73fdcd6f84fb10ecdfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -276,7 +342,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <div class="textblock"><p>An implementation of simdutf for a particular CPU architecture. </p>
 <p>Also used to maintain the currently active implementation. The active implementation is automatically initialized on first use to the most advanced implementation supported by the host. </p>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01009">1009</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01275">1275</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="afd306a0bc3e221964af3f31a64784b12"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afd306a0bc3e221964af3f31a64784b12">&#9670;&nbsp;</a></span>autodetect_encoding()</h2>
@@ -376,6 +442,331 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a2f498ad9236b916e5e4859109d1df0bb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2f498ad9236b916e5e4859109d1df0bb">&#9670;&nbsp;</a></span>convert_latin1_to_utf16be()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::convert_latin1_to_utf16be </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char16_t *&#160;</td>
+          <td class="paramname"><em>utf16_output</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert Latin1 string into UTF-16BE string. </p>
+<p>This function is suitable to work with inputs from untrusted sources.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the Latin1 string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
+    <tr><td class="paramname">utf16_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the number of written char16_t; 0 if conversion is not possible </dd></dl>
+
+</div>
+</div>
+<a id="a2315da3daf654f4a7132b1751394b374"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2315da3daf654f4a7132b1751394b374">&#9670;&nbsp;</a></span>convert_latin1_to_utf16le()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::convert_latin1_to_utf16le </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char16_t *&#160;</td>
+          <td class="paramname"><em>utf16_output</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert possibly Latin1 string into UTF-16LE string. </p>
+<p>This function is suitable to work with inputs from untrusted sources.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the Latin1 string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
+    <tr><td class="paramname">utf16_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the number of written char16_t; 0 if conversion is not possible </dd></dl>
+
+</div>
+</div>
+<a id="a5bb5a0db793a6e332711c24d9cbc14fd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5bb5a0db793a6e332711c24d9cbc14fd">&#9670;&nbsp;</a></span>convert_latin1_to_utf32()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::convert_latin1_to_utf32 </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char32_t *&#160;</td>
+          <td class="paramname"><em>utf32_buffer</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert Latin1 string into UTF-32 string. </p>
+<p>This function is suitable to work with inputs from untrusted sources.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the Latin1 string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
+    <tr><td class="paramname">utf32_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the number of written char32_t; 0 if conversion is not possible </dd></dl>
+
+</div>
+</div>
+<a id="af79deb79661a71f145b7bc6786fe4223"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af79deb79661a71f145b7bc6786fe4223">&#9670;&nbsp;</a></span>convert_latin1_to_utf8()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::convert_latin1_to_utf8 </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>utf8_output</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert Latin1 string into UTF8 string. </p>
+<p>This function is suitable to work with inputs from untrusted sources.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the Latin1 string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
+    <tr><td class="paramname">latin1_output</td><td>the pointer to buffer that can hold conversion result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the number of written char; 0 if conversion is not possible </dd></dl>
+
+</div>
+</div>
+<a id="ac941440407fed1518a179f1d0396720c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac941440407fed1518a179f1d0396720c">&#9670;&nbsp;</a></span>convert_utf16be_to_latin1()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::convert_utf16be_to_latin1 </td>
+          <td>(</td>
+          <td class="paramtype">const char16_t *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>latin1_buffer</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert possibly broken UTF-16BE string into Latin1 string. </p>
+<p>During the conversion also validation of the input string is done. This function is suitable to work with inputs from untrusted sources.</p>
+<p>This function is not BOM-aware.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-16BE string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of char written if successful. </dd></dl>
+
+</div>
+</div>
+<a id="a29a8022ac1760f081d389cb00a4dac80"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a29a8022ac1760f081d389cb00a4dac80">&#9670;&nbsp;</a></span>convert_utf16be_to_latin1_with_errors()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a> simdutf::implementation::convert_utf16be_to_latin1_with_errors </td>
+          <td>(</td>
+          <td class="paramtype">const char16_t *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>latin1_buffer</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert possibly broken UTF-16BE string into Latin1 string. </p>
+<p>During the conversion also validation of the input string is done. This function is suitable to work with inputs from untrusted sources. This function is not BOM-aware.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-16BE string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of char written if successful. </dd></dl>
 
 </div>
 </div>
@@ -599,6 +990,115 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 
 </div>
 </div>
+<a id="a75f16dc0f3bdd4457425898a17c51d45"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a75f16dc0f3bdd4457425898a17c51d45">&#9670;&nbsp;</a></span>convert_utf16le_to_latin1()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::convert_utf16le_to_latin1 </td>
+          <td>(</td>
+          <td class="paramtype">const char16_t *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>latin1_buffer</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert possibly broken UTF-16LE string into Latin1 string. </p>
+<p>During the conversion also validation of the input string is done. This function is suitable to work with inputs from untrusted sources.</p>
+<p>This function is not BOM-aware.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if input is not a valid UTF-16LE string </dd></dl>
+
+</div>
+</div>
+<a id="a4aa4c4b831e691e623552bbf9c60b801"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4aa4c4b831e691e623552bbf9c60b801">&#9670;&nbsp;</a></span>convert_utf16le_to_latin1_with_errors()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a> simdutf::implementation::convert_utf16le_to_latin1_with_errors </td>
+          <td>(</td>
+          <td class="paramtype">const char16_t *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>latin1_buffer</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert possibly broken UTF-16LE string into Latin1 string. </p>
+<p>During the conversion also validation of the input string is done. This function is suitable to work with inputs from untrusted sources. This function is not BOM-aware.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of char written if successful. </dd></dl>
+
+</div>
+</div>
 <a id="a0fcdaa10985d51cd8f533c41d03c7ce0"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0fcdaa10985d51cd8f533c41d03c7ce0">&#9670;&nbsp;</a></span>convert_utf16le_to_utf32()</h2>
 
@@ -812,6 +1312,116 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
     <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
     <tr><td class="paramname">utf8_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of char written if successful. </dd></dl>
+
+</div>
+</div>
+<a id="a66c1ec7808c2572670b540cd3ccce6b1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a66c1ec7808c2572670b540cd3ccce6b1">&#9670;&nbsp;</a></span>convert_utf32_to_latin1()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::convert_utf32_to_latin1 </td>
+          <td>(</td>
+          <td class="paramtype">const char32_t *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>latin1_buffer</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert possibly broken UTF-32 string into Latin1 string. </p>
+<p>During the conversion also validation of the input string is done. This function is suitable to work with inputs from untrusted sources.</p>
+<p>This function is not BOM-aware.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if input is not a valid UTF-32 string </dd></dl>
+
+</div>
+</div>
+<a id="a2d067614ecf86f2e7a6dfa2158567677"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2d067614ecf86f2e7a6dfa2158567677">&#9670;&nbsp;</a></span>convert_utf32_to_latin1_with_errors()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a> simdutf::implementation::convert_utf32_to_latin1_with_errors </td>
+          <td>(</td>
+          <td class="paramtype">const char32_t *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>latin1_buffer</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert possibly broken UTF-32 string into Latin1 string and stop on error. </p>
+<p>During the conversion also validation of the input string is done. This function is suitable to work with inputs from untrusted sources.</p>
+<p>This function is not BOM-aware.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -1149,6 +1759,115 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 
 </div>
 </div>
+<a id="ac9c2c1418f08f84e36c22727879db307"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac9c2c1418f08f84e36c22727879db307">&#9670;&nbsp;</a></span>convert_utf8_to_latin1()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::convert_utf8_to_latin1 </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>latin1_output</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert possibly broken UTF-8 string into latin1 string. </p>
+<p>During the conversion also validation of the input string is done. This function is suitable to work with inputs from untrusted sources.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-8 string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
+    <tr><td class="paramname">latin1_output</td><td>the pointer to buffer that can hold conversion result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the number of written char; 0 if the input was not valid UTF-8 string </dd></dl>
+
+</div>
+</div>
+<a id="ae845d016f715c25475970c4dfcb58a8d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae845d016f715c25475970c4dfcb58a8d">&#9670;&nbsp;</a></span>convert_utf8_to_latin1_with_errors()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a> simdutf::implementation::convert_utf8_to_latin1_with_errors </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>latin1_output</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert possibly broken UTF-8 string into latin1 string. </p>
+<p>with errors</p>
+<p>During the conversion also validation of the input string is done. This function is suitable to work with inputs from untrusted sources.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-8 string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
+    <tr><td class="paramname">latin1_output</td><td>the pointer to buffer that can hold conversion result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of words validated if successful. </dd></dl>
+
+</div>
+</div>
 <a id="a0eb08f6b1d102dd298f3d265615b21aa"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0eb08f6b1d102dd298f3d265615b21aa">&#9670;&nbsp;</a></span>convert_utf8_to_utf16be()</h2>
 
@@ -1473,6 +2192,61 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 
 </div>
 </div>
+<a id="a6896e27fd7fe773ba25bfaed081aafaa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6896e27fd7fe773ba25bfaed081aafaa">&#9670;&nbsp;</a></span>convert_valid_utf16be_to_latin1()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::convert_valid_utf16be_to_latin1 </td>
+          <td>(</td>
+          <td class="paramtype">const char16_t *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>latin1_buffer</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert valid UTF-16BE string into Latin1 string. </p>
+<p>This function assumes that the input string is valid UTF-8.</p>
+<p>This function is not BOM-aware.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-16BE string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if conversion is not possible </dd></dl>
+
+</div>
+</div>
 <a id="a15e91ad7be0d09f713283d33105a4939"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a15e91ad7be0d09f713283d33105a4939">&#9670;&nbsp;</a></span>convert_valid_utf16be_to_utf32()</h2>
 
@@ -1583,6 +2357,61 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 
 </div>
 </div>
+<a id="a65c8a9e58f4c111d52851e4fdbca0af1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a65c8a9e58f4c111d52851e4fdbca0af1">&#9670;&nbsp;</a></span>convert_valid_utf16le_to_latin1()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::convert_valid_utf16le_to_latin1 </td>
+          <td>(</td>
+          <td class="paramtype">const char16_t *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>latin1_buffer</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert valid UTF-16LE string into Latin1 string. </p>
+<p>This function assumes that the input string is valid UTF-8.</p>
+<p>This function is not BOM-aware.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if conversion is not possible </dd></dl>
+
+</div>
+</div>
 <a id="a2bd5db8c4f3f4b6055497138f8cec860"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2bd5db8c4f3f4b6055497138f8cec860">&#9670;&nbsp;</a></span>convert_valid_utf16le_to_utf32()</h2>
 
@@ -1686,6 +2515,61 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
     <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
     <tr><td class="paramname">utf8_buffer</td><td>the pointer to buffer that can hold the conversion result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if conversion is not possible </dd></dl>
+
+</div>
+</div>
+<a id="a00b1ec570f19982c826e2b04b501a1ac"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a00b1ec570f19982c826e2b04b501a1ac">&#9670;&nbsp;</a></span>convert_valid_utf32_to_latin1()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::convert_valid_utf32_to_latin1 </td>
+          <td>(</td>
+          <td class="paramtype">const char32_t *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>latin1_buffer</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert valid UTF-32 string into Latin1 string. </p>
+<p>This function assumes that the input string is valid UTF-32.</p>
+<p>This function is not BOM-aware.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -1855,6 +2739,61 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if conversion is not possible </dd></dl>
+
+</div>
+</div>
+<a id="a903279159cb5f5e0e767cce6f1440889"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a903279159cb5f5e0e767cce6f1440889">&#9670;&nbsp;</a></span>convert_valid_utf8_to_latin1()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::convert_valid_utf8_to_latin1 </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>latin1_output</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert valid UTF-8 string into latin1 string. </p>
+<p>This function assumes that the input string is valid UTF-8.</p>
+<p>This function is not BOM-aware.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-8 string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
+    <tr><td class="paramname">latin1_output</td><td>the pointer to buffer that can hold conversion result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the number of written char; 0 if the input was not valid UTF-8 string </dd></dl>
 
 </div>
 </div>
@@ -2191,7 +3130,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" &lt;&lt; impl-&gt;description() &lt;&lt; ")" &lt;&lt; endl;
 </pre> <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01030">1030</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01296">1296</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -2241,6 +3180,90 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 
 </div>
 </div>
+<a id="a6936dace0dfd89741259cdbe49b5df2d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6936dace0dfd89741259cdbe49b5df2d">&#9670;&nbsp;</a></span>latin1_length_from_utf32()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::latin1_length_from_utf32 </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Compute the number of bytes that this UTF-32 string would require in Latin1 format. </p>
+<p>This function does not validate the input.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-32 string as Latin1 </dd></dl>
+
+</div>
+</div>
+<a id="a2cc04b416c87dfa742056ce5bd8033dc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2cc04b416c87dfa742056ce5bd8033dc">&#9670;&nbsp;</a></span>latin1_length_from_utf8()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::latin1_length_from_utf8 </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Compute the number of bytes that this UTF-8 string would require in Latin1 format. </p>
+<p>This function does not validate the input.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-8 string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in byte </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-8 string as Latin1 </dd></dl>
+
+</div>
+</div>
 <a id="a3281cf45b997303c89cf2d462d85d384"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3281cf45b997303c89cf2d462d85d384">&#9670;&nbsp;</a></span>name()</h2>
 
@@ -2269,7 +3292,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" &lt;&lt; impl-&gt;description() &lt;&lt; ")" &lt;&lt; endl;
 </pre> <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01020">1020</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01286">1286</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -2291,6 +3314,42 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 <p>The instruction sets this implementation is compiled against and the current CPU match. </p>
 <p>This function may poll the current CPU/system and should therefore not be called too often if performance is a concern.</p>
 <dl class="section return"><dt>Returns</dt><dd>true if the implementation can be safely used on the current system (determined at runtime) </dd></dl>
+
+</div>
+</div>
+<a id="a4b211eefd837bfb9c080df56c408c3d4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4b211eefd837bfb9c080df56c408c3d4">&#9670;&nbsp;</a></span>utf16_length_from_latin1()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::utf16_length_from_latin1 </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Return the number of bytes that this UTF-16 string would require in Latin1 format. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-16 string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-16 string as Latin1 </dd></dl>
 
 </div>
 </div>
@@ -2388,6 +3447,43 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 
 </div>
 </div>
+<a id="a8039edd257c0f2bdf1acc5d16476992a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8039edd257c0f2bdf1acc5d16476992a">&#9670;&nbsp;</a></span>utf32_length_from_latin1()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::utf32_length_from_latin1 </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Return the number of bytes that this UTF-32 string would require in Latin1 format. </p>
+<p>This function does not validate the input.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-32 string as Latin1 </dd></dl>
+
+</div>
+</div>
 <a id="a39bc047dd50ede9cd33cb7e825eb5b56"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a39bc047dd50ede9cd33cb7e825eb5b56">&#9670;&nbsp;</a></span>utf32_length_from_utf8()</h2>
 
@@ -2433,6 +3529,52 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of char32_t words required to encode the UTF-8 string as UTF-32 </dd></dl>
+
+</div>
+</div>
+<a id="aff358bb1f0b909cd1e9a6227656ee5d7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff358bb1f0b909cd1e9a6227656ee5d7">&#9670;&nbsp;</a></span>utf8_length_from_latin1()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::utf8_length_from_latin1 </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Return the number of bytes that this Latin1 string would require in UTF-8 format. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the Latin1 string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string bytes </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the Latin1 string as UTF-8 </dd></dl>
 
 </div>
 </div>

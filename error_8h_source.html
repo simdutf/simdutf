@@ -103,24 +103,25 @@ $(document).ready(function(){initNavTree('error_8h_source.html',''); initResizab
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  TOO_LONG,     <span class="comment">// We either have too many consecutive continuation bytes or the string starts with a continuation byte.</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  OVERLONG,     <span class="comment">// The decoded character must be above U+7F for two-byte characters, U+7FF for three-byte characters,</span></div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;                <span class="comment">// and U+FFFF for four-byte characters.</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  TOO_LARGE,    <span class="comment">// The decoded character must be less than or equal to U+10FFFF OR less than or equal than U+7F for ASCII.</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  TOO_LARGE,    <span class="comment">// The decoded character must be less than or equal to U+10FFFF,less than or equal than U+7F for ASCII OR less than equal than U+FF for Latin1</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  SURROGATE,    <span class="comment">// The decoded character must be not be in U+D800...DFFF (UTF-8 or UTF-32) OR</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;                <span class="comment">// a high surrogate must be followed by a low surrogate and a low surrogate must be preceded by a high surrogate (UTF-16)</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  OTHER         <span class="comment">// Not related to validation/transcoding.</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;};</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00019"></a><span class="lineno"><a class="line" href="structsimdutf_1_1result.html">   19</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structsimdutf_1_1result.html">result</a> {</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  error_code error;</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  <span class="keywordtype">size_t</span> count;     <span class="comment">// In case of error, indicates the position of the error. In case of success, indicates the number of words validated/written.</span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  simdutf_really_inline <a class="code" href="structsimdutf_1_1result.html">result</a>();</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; </div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  simdutf_really_inline <a class="code" href="structsimdutf_1_1result.html">result</a>(error_code, <span class="keywordtype">size_t</span>);</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;};</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; </div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;}</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition:</b> <a href="error_8h_source.html#l00019">error.h:19</a></div></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;                <span class="comment">// a high surrogate must be followed by a low surrogate and a low surrogate must be preceded by a high surrogate (UTF-16) OR</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;                <span class="comment">// there must be no surrogate at all (Latin1)</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  OTHER         <span class="comment">// Not related to validation/transcoding.</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;};</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
+<div class="line"><a name="l00020"></a><span class="lineno"><a class="line" href="structsimdutf_1_1result.html">   20</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structsimdutf_1_1result.html">result</a> {</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  error_code error;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  <span class="keywordtype">size_t</span> count;     <span class="comment">// In case of error, indicates the position of the error. In case of success, indicates the number of words validated/written.</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160; </div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  simdutf_really_inline <a class="code" href="structsimdutf_1_1result.html">result</a>();</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  simdutf_really_inline <a class="code" href="structsimdutf_1_1result.html">result</a>(error_code, <span class="keywordtype">size_t</span>);</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;};</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;}</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition:</b> <a href="error_8h_source.html#l00020">error.h:20</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
