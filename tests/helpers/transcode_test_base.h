@@ -58,7 +58,6 @@ namespace simdutf { namespace tests { namespace helpers {
     }
     template <typename PROCEDURE>
     bool check_size(PROCEDURE procedure) {
-      // std::cout << "Size of reference_output_utf8: " << reference_output_utf8.size() << std::endl;
       size_t saved_chars = procedure(input_latin1.data(), input_latin1.size());
       if (saved_chars != reference_output_utf8.size()) {
         printf("wrong saved bytes value: procedure returned %zu bytes, it should be %zu\n",
