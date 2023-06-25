@@ -572,10 +572,6 @@ simdutf_warn_unused size_t implementation::utf32_length_from_latin1(size_t lengt
   return scalar::latin1::utf32_length_from_latin1(length);
 }
 
-/* simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char * input, size_t length) const noexcept {
-  return scalar::latin1::utf8_length_from_latin1(input,length);
-} */
-
 simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char *input, size_t len) const noexcept {
   const uint8_t *data = reinterpret_cast<const uint8_t *>(input);
   size_t answer = len / sizeof(__m256i) * sizeof(__m256i);
