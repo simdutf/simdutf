@@ -1414,7 +1414,7 @@ References
 License
 -------
 
-This code is made available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html) as well as the MIT license.
+This code is made available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html) as well as the MIT license. As a user, you can pick the license you prefer.
 
 We include a few competitive solutions under the benchmarks/competition directory. They are provided for
 research purposes only.
