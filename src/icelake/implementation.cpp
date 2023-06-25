@@ -1159,6 +1159,7 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char * 
   const uint8_t *str = reinterpret_cast<const uint8_t *>(input);
   size_t answer = length / sizeof(__m512i) * sizeof(__m512i);
   size_t i = 0;
+  char v_0xFF = static_cast<unsigned char>(0xFF);
   __m512i eight_64bits = _mm512_setzero_si512();
   while (i + sizeof(__m512i) <= length) {
     __m512i runner = _mm512_setzero_si512();
@@ -1180,10 +1181,10 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char * 
             __mmask64 mask3 = _mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), input3);
             __mmask64 mask4 = _mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), input4);
             // Apply the masks and subtract from the runner
-            __m512i not_ascii1 = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask1, 0xFF);
-            __m512i not_ascii2 = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask2, 0xFF);
-            __m512i not_ascii3 = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask3, 0xFF);
-            __m512i not_ascii4 = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask4, 0xFF);
+            __m512i not_ascii1 = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask1, v_0xFF);
+            __m512i not_ascii2 = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask2, v_0xFF);
+            __m512i not_ascii3 = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask3, v_0xFF);
+            __m512i not_ascii4 = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask4, v_0xFF);
 
             runner = _mm512_sub_epi8(runner, not_ascii1);
             runner = _mm512_sub_epi8(runner, not_ascii2);
@@ -1192,10 +1193,10 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char * 
     }
 
     for (; i <= max_i; i += sizeof(__m512i)) {
-      __m512i input = _mm512_loadu_si512((const __m512i *)(str + i));
+      __m512i more_input = _mm512_loadu_si512((const __m512i *)(str + i));
 
-      __mmask64 mask = _mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), input);
-      __m512i not_ascii = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask, 0xFF);
+      __mmask64 mask = _mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), more_input);
+      __m512i not_ascii = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask, v_0xFF);
       runner = _mm512_sub_epi8(runner, not_ascii);
     }
 
