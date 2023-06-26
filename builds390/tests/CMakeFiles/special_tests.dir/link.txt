@@ -1,0 +1,1 @@
+/usr/bin/c++  -O3 -DNDEBUG   CMakeFiles/special_tests.dir/special_tests.cpp.o  -o special_tests  ../src/libsimdutf.a ../src/libsimdutf.a reference/libsimdutf_tests_reference.a helpers/libsimdutf_tests_helpers.a reference/libsimdutf_tests_reference.a ../src/libsimdutf.a 

@@ -1,0 +1,1 @@
+/usr/bin/c++  -O3 -DNDEBUG   CMakeFiles/benchmark.dir/benchmark.cpp.o  -o benchmark  ../src/libsimdutf.a src/libsimdutf_benchmarks_benchmark.a /usr/lib/s390x-linux-gnu/libicuuc.so -ldl -lstdc++fs ../tests/helpers/libsimdutf_tests_helpers.a ../tests/reference/libsimdutf_tests_reference.a ../src/libsimdutf.a 

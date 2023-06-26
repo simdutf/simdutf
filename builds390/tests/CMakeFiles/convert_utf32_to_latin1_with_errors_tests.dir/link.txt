@@ -1,0 +1,1 @@
+/usr/bin/c++  -O3 -DNDEBUG   CMakeFiles/convert_utf32_to_latin1_with_errors_tests.dir/convert_utf32_to_latin1_with_errors_tests.cpp.o  -o convert_utf32_to_latin1_with_errors_tests  ../src/libsimdutf.a helpers/libsimdutf_tests_helpers.a reference/libsimdutf_tests_reference.a ../src/libsimdutf.a 

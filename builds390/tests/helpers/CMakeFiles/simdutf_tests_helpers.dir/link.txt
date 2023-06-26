@@ -1,0 +1,2 @@
+/usr/bin/ar qc libsimdutf_tests_helpers.a  CMakeFiles/simdutf_tests_helpers.dir/test.cpp.o CMakeFiles/simdutf_tests_helpers.dir/random_int.cpp.o CMakeFiles/simdutf_tests_helpers.dir/transcode_test_base.cpp.o CMakeFiles/simdutf_tests_helpers.dir/random_utf8.cpp.o CMakeFiles/simdutf_tests_helpers.dir/random_utf16.cpp.o CMakeFiles/simdutf_tests_helpers.dir/random_utf32.cpp.o
+/usr/bin/ranlib libsimdutf_tests_helpers.a

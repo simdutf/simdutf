@@ -1,0 +1,2 @@
+/usr/bin/ar qc libsimdutf.a  CMakeFiles/simdutf.dir/simdutf.cpp.o
+/usr/bin/ranlib libsimdutf.a

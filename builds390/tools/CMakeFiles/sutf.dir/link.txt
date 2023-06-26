@@ -1,0 +1,1 @@
+/usr/bin/c++  -O3 -DNDEBUG  -static-libstdc++ -Wl,--gc-sections CMakeFiles/sutf.dir/sutf.cpp.o  -o sutf  ../src/libsimdutf.a 

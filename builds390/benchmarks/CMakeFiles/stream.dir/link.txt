@@ -1,0 +1,1 @@
+/usr/bin/c++  -O3 -DNDEBUG   CMakeFiles/stream.dir/stream.cpp.o  -o stream  ../src/libsimdutf.a 

@@ -1,0 +1,1 @@
+/usr/bin/c++  -O3 -DNDEBUG   CMakeFiles/select_implementation.dir/select_implementation.cpp.o  -o select_implementation  ../src/libsimdutf.a helpers/libsimdutf_tests_helpers.a reference/libsimdutf_tests_reference.a ../src/libsimdutf.a 

@@ -1,0 +1,1 @@
+/usr/bin/c++  -O3 -DNDEBUG   CMakeFiles/convert_utf16be_to_utf8_tests.dir/convert_utf16be_to_utf8_tests.cpp.o  -o convert_utf16be_to_utf8_tests  ../src/libsimdutf.a ../src/libsimdutf.a reference/libsimdutf_tests_reference.a helpers/libsimdutf_tests_helpers.a reference/libsimdutf_tests_reference.a ../src/libsimdutf.a 

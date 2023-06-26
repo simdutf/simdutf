@@ -1,0 +1,2 @@
+/usr/bin/ar qc libsimdutf_benchmarks_benchmark.a  CMakeFiles/simdutf_benchmarks_benchmark.dir/benchmark_base.cpp.o CMakeFiles/simdutf_benchmarks_benchmark.dir/cmdline.cpp.o CMakeFiles/simdutf_benchmarks_benchmark.dir/benchmark.cpp.o
+/usr/bin/ranlib libsimdutf_benchmarks_benchmark.a
