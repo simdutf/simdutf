@@ -1042,9 +1042,29 @@ simdutf_warn_unused size_t implementation::count_utf16be(const char16_t * input,
 simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t length) const noexcept {
   const uint8_t *str = reinterpret_cast<const uint8_t *>(input);
   __m512i two_leading_bits_mask = _mm512_set1_epi8(static_cast<unsigned char>(0xC0)); // 0xC0 is 1100 0000 in binary
-  size_t answer = length / sizeof(__m512i) * sizeof(__m512i); // Number of 512-bit chunks that fits into the length.
+  size_t answer = 0; // length / sizeof(__m512i) * sizeof(__m512i); // Number of 512-bit chunks that fits into the length.
   size_t i = 0;
   __m512i eight_64bits = _mm512_setzero_si512();
+
+  auto byte_to_binary = [](uint8_t byte) {
+      std::string binary;
+      for (int i = 7; i >= 0; --i) {
+          binary.push_back((byte & (1 << i)) ? '1' : '0');
+      }
+      return binary;
+  };
+
+    auto print_m512i_in_bits = [&byte_to_binary](__m512i vec) {
+        alignas(64) uint8_t bytes[64];
+        _mm512_store_si512((__m512i*)bytes, vec);
+        for (int i = 0; i < 64; ++i) {
+            std::cout << byte_to_binary(bytes[i]) << " ";
+            if ((i + 1) % 8 == 0) {
+                std::cout << "\n";
+            }
+        }
+    };
+
   while (i + sizeof(__m512i) <= length) {
     __m512i runner = _mm512_setzero_si512();
     size_t iterations = (length - i) / sizeof(__m512i);
@@ -1097,6 +1117,14 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
  */
     for (; i <= max_i; i += sizeof(__m512i)) {
       __m512i more_input = _mm512_loadu_si512((const __m512i *)(str + i));
+      // print_m512i_in_bits(more_input);
+
+/*       __m512i test = _mm512_and_si512( // get only two first leading bits of packed byte
+                    more_input, 
+                    two_leading_bits_mask);
+      
+      std::cout << std::endl << "Two leading bits:" << std::endl;
+      print_m512i_in_bits(test); */
 
       // __mmask64 mask = _mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), more_input);
         __mmask64 mask = _mm512_cmpeq_epi8_mask( // 64-bit mask so that 1 = continuation bytes, 0 = non-continuation
@@ -1106,9 +1134,17 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
                                                             more_input, 
                                                             two_leading_bits_mask)
                                             );
+                                            
 
-      __m512i noncontinuation_bytes = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask, 0xFF); //sets 0xFF for non-continuation bytes, 0x00 otherwise
-      runner = _mm512_sub_epi8(runner, noncontinuation_bytes); //add number of non-continuation to runner
+      __m512i noncontinuation_bytes = _mm512_mask_set1_epi8( //sets 0xFF for non-continuation bytes, 0x00 otherwise
+                                                            _mm512_setzero_si512(),
+                                                             ~mask,
+                                                            0xFF); 
+
+/*       std::cout << std::endl << "noncontinuation bytes:" << std::endl;
+      print_m512i_in_bits(noncontinuation_bytes); */
+
+      runner = _mm512_sub_epi8(runner, noncontinuation_bytes); //add number of non-continuation bytes to runner
     }
 
     eight_64bits = _mm512_add_epi64(eight_64bits, _mm512_sad_epu8(runner, _mm512_setzero_si512()));
@@ -1126,7 +1162,8 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
             (size_t)_mm256_extract_epi64(second_half, 3);
   // return answer + scalar_utf8_length(str + i, length - i);
 
-  answer = answer + scalar::utf8::count_code_points(reinterpret_cast<const char *>(str + i), length - i);
+  size_t scalar = scalar::utf8::count_code_points(reinterpret_cast<const char *>(str + i), length - i);
+  answer = answer + scalar;
   return answer;
 }
 
