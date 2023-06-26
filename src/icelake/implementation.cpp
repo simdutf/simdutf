@@ -1040,21 +1040,94 @@ simdutf_warn_unused size_t implementation::count_utf16be(const char16_t * input,
 
 
 simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t length) const noexcept {
-  const char* end = length >= 64 ? input + length - 64 : nullptr;
-  const char* ptr = input;
+  const uint8_t *str = reinterpret_cast<const uint8_t *>(input);
+  __m512i two_leading_bits_mask = _mm512_set1_epi8(static_cast<unsigned char>(0xC0)); // 0xC0 is 1100 0000 in binary
+  size_t answer = length / sizeof(__m512i) * sizeof(__m512i); // Number of 512-bit chunks that fits into the length.
+  size_t i = 0;
+  __m512i eight_64bits = _mm512_setzero_si512();
+  while (i + sizeof(__m512i) <= length) {
+    __m512i runner = _mm512_setzero_si512();
+    size_t iterations = (length - i) / sizeof(__m512i);
+    if (iterations > 255) {
+      iterations = 255;
+    }
+    size_t max_i = i + iterations * sizeof(__m512i) - sizeof(__m512i);
+/*     for (; i + 4*sizeof(__m512i) <= max_i; i += 4*sizeof(__m512i)) {
+            // Load four __m512i vectors
+            __m512i input1 = _mm512_loadu_si512((const __m512i *)(str + i));
+            __m512i input2 = _mm512_loadu_si512((const __m512i *)(str + i + sizeof(__m512i)));
+            __m512i input3 = _mm512_loadu_si512((const __m512i *)(str + i + 2*sizeof(__m512i)));
+            __m512i input4 = _mm512_loadu_si512((const __m512i *)(str + i + 3*sizeof(__m512i)));
 
-  const __m512i continuation = _mm512_set1_epi8(char(0b10111111));
+            __m512i input12 = _mm512_add_epi8( // Add up the presence of continuation bytes in input 1 & 2 per byte element
+                                              _mm512_mask_set1_epi8( // 
+                                                                    _mm512_setzero_si512(),
+                                                                    _mm512_cmpeq_epi8_mask( // 64-bit mask where 1 = continuation byte, 0 = non-ASCII
+                                                                                            _mm512_set1_epi8(0x02),
+                                                                                            _mm512_srli_epi16(input1, 6)), //we want to isolate the leading first two bytes
+                                                                    0xFF),
+                                                
+                                                _mm512_mask_set1_epi8(_mm512_setzero_si512(),
+                                                                    _mm512_cmpeq_epi8_mask( // 64-bit mask where 1 = ASCII, 0 = non-ASCII
+                                                                                            _mm512_set1_epi8(0x02),
+                                                                                            _mm512_srli_epi16(input2, 6)),
+                                                                    0xFF)
+                                              );
 
-  size_t count{0};
 
-  while (ptr <= end) {
-    __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
-    ptr += 64;
-    uint64_t continuation_bitmask = static_cast<uint64_t>(_mm512_cmple_epi8_mask(utf8, continuation));
-    count += 64 - count_ones(continuation_bitmask);
+            __m512i input23 = _mm512_add_epi8( // add up the presence of ASCII bytes in input 1 & 2 per byte element
+                                              _mm512_mask_set1_epi8(_mm512_setzero_si512(),
+                                                                    _mm512_cmpeq_epi8_mask( // 64-bit mask where 1 = ASCII, 0 = non-ASCII
+                                                                                            _mm512_set1_epi8(0x02),
+                                                                                            _mm512_srli_epi16(input3, 6)),                                                                                            
+                                                                    0xFF),
+                                                
+                                                _mm512_mask_set1_epi8(_mm512_setzero_si512(),
+                                                                    _mm512_cmpeq_epi8_mask( // 64-bit mask where 1 = ASCII, 0 = non-ASCII
+                                                                                            _mm512_set1_epi8(0x02),
+                                                                                            _mm512_srli_epi16(input4, 6)),
+                                                                    0xFF)
+                                              );                                            
+
+            __m512i input1234 = _mm512_add_epi8(input12, input23);
+            runner = _mm512_sub_epi8(runner, input1234); // you have your runner
+
+
+    }
+ */
+    for (; i <= max_i; i += sizeof(__m512i)) {
+      __m512i more_input = _mm512_loadu_si512((const __m512i *)(str + i));
+
+      // __mmask64 mask = _mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), more_input);
+        __mmask64 mask = _mm512_cmpeq_epi8_mask( // 64-bit mask so that 1 = continuation bytes, 0 = non-continuation
+                                            _mm512_set1_epi8(0x80), //a packed 512-bits vector whose bytes are all 1000 0000
+                                            // _mm512_srli_epi16(more_input, 6));// shift every byte in avx512 vector six places to the right . e.g. 
+                                            _mm512_and_si512( // get only two first leading bits of packed byte
+                                                            more_input, 
+                                                            two_leading_bits_mask)
+                                            );
+
+      __m512i noncontinuation_bytes = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask, 0xFF); //sets 0xFF for non-continuation bytes, 0x00 otherwise
+      runner = _mm512_sub_epi8(runner, noncontinuation_bytes); //add number of non-continuation to runner
+    }
+
+    eight_64bits = _mm512_add_epi64(eight_64bits, _mm512_sad_epu8(runner, _mm512_setzero_si512()));
   }
 
-  return count + scalar::utf8::count_code_points(ptr, length - (ptr - input));
+  __m256i first_half = _mm512_extracti64x4_epi64(eight_64bits, 0);
+  __m256i second_half = _mm512_extracti64x4_epi64(eight_64bits, 1);
+  answer += (size_t)_mm256_extract_epi64(first_half, 0) +
+            (size_t)_mm256_extract_epi64(first_half, 1) +
+            (size_t)_mm256_extract_epi64(first_half, 2) +
+            (size_t)_mm256_extract_epi64(first_half, 3) +
+            (size_t)_mm256_extract_epi64(second_half, 0) +
+            (size_t)_mm256_extract_epi64(second_half, 1) +
+            (size_t)_mm256_extract_epi64(second_half, 2) +
+            (size_t)_mm256_extract_epi64(second_half, 3);
+  // return answer + scalar_utf8_length(str + i, length - i);
+
+  answer = answer + scalar::utf8::count_code_points(reinterpret_cast<const char *>(str + i), length - i);
+  return answer;
 }
 
 simdutf_warn_unused size_t implementation::latin1_length_from_utf8(const char* buf, size_t len) const noexcept {
