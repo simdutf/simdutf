@@ -1045,7 +1045,16 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
   size_t answer =  length / sizeof(__m512i) * sizeof(__m512i); // Number of 512-bit chunks that fits into the length.
   size_t i = 0;
   __m512i eight_64bits = _mm512_setzero_si512();
+  
   const __m512i continuation = _mm512_set1_epi8(char(0b10111111));
+  auto get_continuation_bytes = [&continuation](const __m512i& more_input) -> __m512i {
+    __mmask64 continuation_bitmask = _mm512_cmple_epi8_mask(more_input, continuation); 
+    __m512i continuation_bytes = _mm512_mask_set1_epi8(
+          _mm512_setzero_si512(),
+          continuation_bitmask,
+          0xFF); 
+    return continuation_bytes;
+  };
 
 /*   auto byte_to_binary = [](uint8_t byte) {
       std::string binary;
@@ -1073,7 +1082,7 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
       iterations = 255;
     }
     size_t max_i = i + iterations * sizeof(__m512i) - sizeof(__m512i);
-/*     for (; i + 4*sizeof(__m512i) <= max_i; i += 4*sizeof(__m512i)) {
+    for (; i + 4*sizeof(__m512i) <= max_i; i += 4*sizeof(__m512i)) {
             // Load four __m512i vectors
             __m512i input1 = _mm512_loadu_si512((const __m512i *)(str + i));
             __m512i input2 = _mm512_loadu_si512((const __m512i *)(str + i + sizeof(__m512i)));
@@ -1081,41 +1090,21 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
             __m512i input4 = _mm512_loadu_si512((const __m512i *)(str + i + 3*sizeof(__m512i)));
 
             __m512i input12 = _mm512_add_epi8( // Add up the presence of continuation bytes in input 1 & 2 per byte element
-                                              _mm512_mask_set1_epi8( // 
-                                                                    _mm512_setzero_si512(),
-                                                                    _mm512_cmpeq_epi8_mask( // 64-bit mask where 1 = continuation byte, 0 = non-ASCII
-                                                                                            _mm512_set1_epi8(0x02),
-                                                                                            _mm512_srli_epi16(input1, 6)), //we want to isolate the leading first two bytes
-                                                                    0xFF),
-                                                
-                                                _mm512_mask_set1_epi8(_mm512_setzero_si512(),
-                                                                    _mm512_cmpeq_epi8_mask( // 64-bit mask where 1 = ASCII, 0 = non-ASCII
-                                                                                            _mm512_set1_epi8(0x02),
-                                                                                            _mm512_srli_epi16(input2, 6)),
-                                                                    0xFF)
+                                              get_continuation_bytes(input1),
+                                              get_continuation_bytes(input2)
                                               );
 
 
-            __m512i input23 = _mm512_add_epi8( // add up the presence of ASCII bytes in input 1 & 2 per byte element
-                                              _mm512_mask_set1_epi8(_mm512_setzero_si512(),
-                                                                    _mm512_cmpeq_epi8_mask( // 64-bit mask where 1 = ASCII, 0 = non-ASCII
-                                                                                            _mm512_set1_epi8(0x02),
-                                                                                            _mm512_srli_epi16(input3, 6)),                                                                                            
-                                                                    0xFF),
-                                                
-                                                _mm512_mask_set1_epi8(_mm512_setzero_si512(),
-                                                                    _mm512_cmpeq_epi8_mask( // 64-bit mask where 1 = ASCII, 0 = non-ASCII
-                                                                                            _mm512_set1_epi8(0x02),
-                                                                                            _mm512_srli_epi16(input4, 6)),
-                                                                    0xFF)
-                                              );                                            
+            __m512i input23 = _mm512_add_epi8( // Add up the presence of continuation bytes in input 1 & 2 per byte element
+                                              get_continuation_bytes(input3),
+                                              get_continuation_bytes(input4)
+                                              );                                   
 
             __m512i input1234 = _mm512_add_epi8(input12, input23);
             runner = _mm512_sub_epi8(runner, input1234); // you have your runner
 
-
     }
- */
+
     for (; i <= max_i; i += sizeof(__m512i)) {
       __m512i more_input = _mm512_loadu_si512((const __m512i *)(str + i));
       // print_m512i_in_bits(more_input);
@@ -1136,17 +1125,20 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
                                                             two_leading_bits_mask)
                                             ); */
 
-    __mmask64 continuation_bitmask = _mm512_cmple_epi8_mask(more_input, continuation); // mask those bytes that are continuation masks
+
+
+    // __mmask64 continuation_bitmask = _mm512_cmple_epi8_mask(more_input, continuation); // mask those bytes that are continuation masks
                                             
-      __m512i noncontinuation_bytes = _mm512_mask_set1_epi8( //sets 0xFF for non-continuation bytes, 0x00 otherwise
+      __m512i continuation_bytes = get_continuation_bytes(more_input);
+      
+      /* _mm512_mask_set1_epi8( //sets 0xFF for continuation bytes, 0x00 otherwise
                                                             _mm512_setzero_si512(),
                                                              continuation_bitmask,
-                                                            0xFF); 
-
+                                                            0xFF); */
 /*       std::cout << std::endl << "noncontinuation bytes:" << std::endl;
       print_m512i_in_bits(noncontinuation_bytes); */
 
-      runner = _mm512_sub_epi8(runner, noncontinuation_bytes); //add number of non-continuation bytes to runner
+      runner = _mm512_sub_epi8(runner, continuation_bytes); //add number of non-continuation bytes to runner
     }
 
     eight_64bits = _mm512_add_epi64(eight_64bits, _mm512_sad_epu8(runner, _mm512_setzero_si512()));

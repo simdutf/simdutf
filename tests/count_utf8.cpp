@@ -32,6 +32,13 @@ TEST(count_pure_ASCII) {
       ASSERT_TRUE(implementation.count_utf8(
                       reinterpret_cast<const char *>(generated.first.data()),
                       size) == generated.second);
+
+/*                             auto implCount = implementation.count_utf8(
+      reinterpret_cast<const char *>(generated.first.data()),
+      size);
+      
+      std::cout << "Impl Count: " << implCount << ", Generated Count: " << generated.second << "\n";
+      ASSERT_TRUE(implCount == generated.second);  */
     }
   }
 }
@@ -48,17 +55,17 @@ TEST(count_1_or_2_UTF8_bytes) {
 
     for (size_t size : input_size) {
       auto generated = random.generate_counted(size);
-/*       ASSERT_TRUE(implementation.count_utf8(
+      ASSERT_TRUE(implementation.count_utf8(
                       reinterpret_cast<const char *>(generated.first.data()),
-                      size) == generated.second); */
+                      size) == generated.second);
 
                       
-      auto implCount = implementation.count_utf8(
+/*       auto implCount = implementation.count_utf8(
       reinterpret_cast<const char *>(generated.first.data()),
       size);
       
       std::cout << "Impl Count: " << implCount << ", Generated Count: " << generated.second << "\n";
-      ASSERT_TRUE(implCount == generated.second); 
+      ASSERT_TRUE(implCount == generated.second);  */
     }
   }
 }
