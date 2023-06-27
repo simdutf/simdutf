@@ -1045,19 +1045,16 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
   const uint8_t *str = reinterpret_cast<const uint8_t *>(input);
   size_t answer =  length / sizeof(__m512i) * sizeof(__m512i); // Number of 512-bit chunks that fits into the length.
   size_t i = 0;
-  __m512i rolled_popcount{0}; 
-
-  
+  __m512i unrolled_popcount{0}; 
   const __m512i continuation = _mm512_set1_epi8(char(0b10111111));
 
   while (i + sizeof(__m512i) <= length) {
     size_t iterations = (length - i) / sizeof(__m512i);
-    if (iterations > __UINT64_MAX__) { //iterations is no longer 255 but 
+    if (iterations > __UINT64_MAX__) { 
       iterations = __UINT64_MAX__;
     }
     size_t max_i = i + iterations * sizeof(__m512i) - sizeof(__m512i);
     for (; i + 8*sizeof(__m512i) <= max_i; i += 8*sizeof(__m512i)) {
-      // std::cout << "big 8-loop!" << std::endl;
         __m512i input1 = _mm512_loadu_si512((const __m512i *)(str + i));
         __m512i input2 = _mm512_loadu_si512((const __m512i *)(str + i + sizeof(__m512i)));
         __m512i input3 = _mm512_loadu_si512((const __m512i *)(str + i + 2*sizeof(__m512i)));
@@ -1078,21 +1075,19 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
         continuation_bitmask[7] = static_cast<uint64_t>(_mm512_cmple_epi8_mask(input8, continuation));
 
         __m512i mask_register = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(continuation_bitmask));
-        rolled_popcount += _mm512_popcnt_epi64(mask_register);
+        unrolled_popcount += _mm512_popcnt_epi64(mask_register); // Using += is faster than using __mm512_add_epi64
 
     }
 
     for (; i <= max_i; i += sizeof(__m512i)) {
       __m512i more_input = _mm512_loadu_si512((const __m512i *)(str + i));
-                                          
-
       uint64_t continuation_bitmask = static_cast<uint64_t>(_mm512_cmple_epi8_mask(more_input, continuation));
       answer -= count_ones(continuation_bitmask);
     }
   }
 
-  __m256i first_half = _mm512_extracti64x4_epi64(rolled_popcount, 0);
-  __m256i second_half = _mm512_extracti64x4_epi64(rolled_popcount, 1);
+  __m256i first_half = _mm512_extracti64x4_epi64(unrolled_popcount, 0);
+  __m256i second_half = _mm512_extracti64x4_epi64(unrolled_popcount, 1);
   answer -= (size_t)_mm256_extract_epi64(first_half, 0) +
             (size_t)_mm256_extract_epi64(first_half, 1) +
             (size_t)_mm256_extract_epi64(first_half, 2) +
@@ -1102,34 +1097,8 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
             (size_t)_mm256_extract_epi64(second_half, 2) +
             (size_t)_mm256_extract_epi64(second_half, 3);
 
-  size_t scalar = scalar::utf8::count_code_points(reinterpret_cast<const char *>(str + i), length - i);
-  
-  // std::cout << "Answer:" << answer << std::endl;
-  answer = answer + scalar;
-  // std::cout << "Scalar:" << scalar << std::endl;
-
-  return answer;
+  return answer + scalar::utf8::count_code_points(reinterpret_cast<const char *>(str + i), length - i);
 }
-
-
-
-/* simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t length) const noexcept {
-  const char* end = length >= 64 ? input + length - 64 : nullptr;
-  const char* ptr = input;
-
-  const __m512i continuation = _mm512_set1_epi8(char(0b10111111));
-
-  size_t count{0};
-
-  while (ptr <= end) {
-    __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
-    ptr += 64;
-    uint64_t continuation_bitmask = static_cast<uint64_t>(_mm512_cmple_epi8_mask(utf8, continuation));
-    count += 64 - count_ones(continuation_bitmask);
-  }
-
-  return count + scalar::utf8::count_code_points(ptr, length - (ptr - input));
-} */
 
 simdutf_warn_unused size_t implementation::latin1_length_from_utf8(const char* buf, size_t len) const noexcept {
   return scalar::utf8::latin1_length_from_utf8(buf,len);
