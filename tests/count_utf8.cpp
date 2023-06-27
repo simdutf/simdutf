@@ -52,7 +52,6 @@ TEST(count_1_or_2_UTF8_bytes) {
       ASSERT_TRUE(implementation.count_utf8(
                       reinterpret_cast<const char *>(generated.first.data()),
                       size) == generated.second);
-
     }
   }
 }
