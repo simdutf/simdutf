@@ -29,6 +29,8 @@ namespace {
 #include "icelake/icelake_utf32_validation.inl.cpp"
 #include "icelake/icelake_convert_utf16_to_utf8.inl.cpp"
 
+
+
 } // namespace
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
@@ -1041,33 +1043,21 @@ simdutf_warn_unused size_t implementation::count_utf16be(const char16_t * input,
 
 simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t length) const noexcept {
   const uint8_t *str = reinterpret_cast<const uint8_t *>(input);
-  // __m512i two_leading_bits_mask = _mm512_set1_epi8(static_cast<unsigned char>(0xC0)); // 0xC0 is 1100 0000 in binary
   size_t answer =  length / sizeof(__m512i) * sizeof(__m512i); // Number of 512-bit chunks that fits into the length.
   size_t i = 0;
-  // size_t rolled_count{0};
-  // __m512i eight_64bits = _mm512_setzero_si512();
-  __m512i rolled_popcount; // Declare the variable outside of the loop
+  __m512i rolled_popcount{0}; 
 
   
   const __m512i continuation = _mm512_set1_epi8(char(0b10111111));
-/*   auto get_continuation_bytes = [&continuation](const __m512i& more_input) -> __m512i {
-    __mmask64 continuation_bitmask = _mm512_cmple_epi8_mask(more_input, continuation); 
-    __m512i continuation_bytes = _mm512_mask_set1_epi8(
-          _mm512_setzero_si512(),
-          continuation_bitmask,
-          0xFF); 
-    return continuation_bytes;
-  }; */
 
   while (i + sizeof(__m512i) <= length) {
-    // __m512i runner = _mm512_setzero_si512();
     size_t iterations = (length - i) / sizeof(__m512i);
-    if (iterations > 255) {
-      iterations = 255;
+    if (iterations > __UINT64_MAX__) { //iterations is no longer 255 but 
+      iterations = __UINT64_MAX__;
     }
     size_t max_i = i + iterations * sizeof(__m512i) - sizeof(__m512i);
     for (; i + 8*sizeof(__m512i) <= max_i; i += 8*sizeof(__m512i)) {
-        // Load eight __m512i vectors
+      // std::cout << "big 8-loop!" << std::endl;
         __m512i input1 = _mm512_loadu_si512((const __m512i *)(str + i));
         __m512i input2 = _mm512_loadu_si512((const __m512i *)(str + i + sizeof(__m512i)));
         __m512i input3 = _mm512_loadu_si512((const __m512i *)(str + i + 2*sizeof(__m512i)));
@@ -1088,7 +1078,7 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
         continuation_bitmask[7] = static_cast<uint64_t>(_mm512_cmple_epi8_mask(input8, continuation));
 
         __m512i mask_register = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(continuation_bitmask));
-        rolled_popcount = _mm512_popcnt_epi64(mask_register);
+        rolled_popcount += _mm512_popcnt_epi64(mask_register);
 
     }
 
@@ -1116,6 +1106,8 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
   
   // std::cout << "Answer:" << answer << std::endl;
   answer = answer + scalar;
+  // std::cout << "Scalar:" << scalar << std::endl;
+
   return answer;
 }
 
