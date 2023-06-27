@@ -1044,7 +1044,9 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
   // __m512i two_leading_bits_mask = _mm512_set1_epi8(static_cast<unsigned char>(0xC0)); // 0xC0 is 1100 0000 in binary
   size_t answer =  length / sizeof(__m512i) * sizeof(__m512i); // Number of 512-bit chunks that fits into the length.
   size_t i = 0;
+  // size_t rolled_count{0};
   __m512i eight_64bits = _mm512_setzero_si512();
+
   
   const __m512i continuation = _mm512_set1_epi8(char(0b10111111));
   auto get_continuation_bytes = [&continuation](const __m512i& more_input) -> __m512i {
@@ -1056,25 +1058,6 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
     return continuation_bytes;
   };
 
-/*   auto byte_to_binary = [](uint8_t byte) {
-      std::string binary;
-      for (int i = 7; i >= 0; --i) {
-          binary.push_back((byte & (1 << i)) ? '1' : '0');
-      }
-      return binary;
-  };
-
-    auto print_m512i_in_bits = [&byte_to_binary](__m512i vec) {
-        alignas(64) uint8_t bytes[64];
-        _mm512_store_si512((__m512i*)bytes, vec);
-        for (int i = 0; i < 64; ++i) {
-            std::cout << byte_to_binary(bytes[i]) << " ";
-            if ((i + 1) % 8 == 0) {
-                std::cout << "\n";
-            }
-        }
-    }; */
-
   while (i + sizeof(__m512i) <= length) {
     __m512i runner = _mm512_setzero_si512();
     size_t iterations = (length - i) / sizeof(__m512i);
@@ -1082,12 +1065,17 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
       iterations = 255;
     }
     size_t max_i = i + iterations * sizeof(__m512i) - sizeof(__m512i);
-    for (; i + 4*sizeof(__m512i) <= max_i; i += 4*sizeof(__m512i)) {
+/*     for (; i + 4*sizeof(__m512i) <= max_i; i += 4*sizeof(__m512i)) {
             // Load four __m512i vectors
             __m512i input1 = _mm512_loadu_si512((const __m512i *)(str + i));
             __m512i input2 = _mm512_loadu_si512((const __m512i *)(str + i + sizeof(__m512i)));
             __m512i input3 = _mm512_loadu_si512((const __m512i *)(str + i + 2*sizeof(__m512i)));
             __m512i input4 = _mm512_loadu_si512((const __m512i *)(str + i + 3*sizeof(__m512i)));
+
+            uint64_t continuation_bitmask1 = static_cast<uint64_t>(_mm512_cmple_epi8_mask(input1, continuation));
+            uint64_t continuation_bitmask1 = static_cast<uint64_t>(_mm512_cmple_epi8_mask(input1, continuation));
+            uint64_t continuation_bitmask1 = static_cast<uint64_t>(_mm512_cmple_epi8_mask(input1, continuation));
+            uint64_t continuation_bitmask1 = static_cast<uint64_t>(_mm512_cmple_epi8_mask(input1, continuation));
 
             __m512i input12 = _mm512_add_epi8( // Add up the presence of continuation bytes in input 1 & 2 per byte element
                                               get_continuation_bytes(input1),
@@ -1103,48 +1091,23 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
             __m512i input1234 = _mm512_add_epi8(input12, input23);
             runner = _mm512_sub_epi8(runner, input1234); // you have your runner
 
-    }
+    } */
 
     for (; i <= max_i; i += sizeof(__m512i)) {
       __m512i more_input = _mm512_loadu_si512((const __m512i *)(str + i));
-      // print_m512i_in_bits(more_input);
-
-/*       __m512i test = _mm512_and_si512( // get only two first leading bits of packed byte
-                    more_input, 
-                    two_leading_bits_mask);
-      
-      std::cout << std::endl << "Two leading bits:" << std::endl;
-      print_m512i_in_bits(test); */
-
-      // __mmask64 mask = _mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), more_input);
-       /*  __mmask64 mask = _mm512_cmpeq_epi8_mask( // 64-bit mask so that 1 = continuation bytes, 0 = non-continuation
-                                            _mm512_set1_epi8(0x80), //a packed 512-bits vector whose bytes are all 1000 0000
-                                            // _mm512_srli_epi16(more_input, 6));// shift every byte in avx512 vector six places to the right . e.g. 
-                                            _mm512_and_si512( // get only two first leading bits of packed byte
-                                                            more_input, 
-                                                            two_leading_bits_mask)
-                                            ); */
-
-
-
-    // __mmask64 continuation_bitmask = _mm512_cmple_epi8_mask(more_input, continuation); // mask those bytes that are continuation masks
                                             
-      __m512i continuation_bytes = get_continuation_bytes(more_input);
-      
-      /* _mm512_mask_set1_epi8( //sets 0xFF for continuation bytes, 0x00 otherwise
-                                                            _mm512_setzero_si512(),
-                                                             continuation_bitmask,
-                                                            0xFF); */
-/*       std::cout << std::endl << "noncontinuation bytes:" << std::endl;
-      print_m512i_in_bits(noncontinuation_bytes); */
+      // __m512i continuation_bytes = get_continuation_bytes(more_input);
 
-      runner = _mm512_sub_epi8(runner, continuation_bytes); //add number of non-continuation bytes to runner
+      // runner = _mm512_sub_epi8(runner, continuation_bytes); //add number of non-continuation bytes to runner
+
+      uint64_t continuation_bitmask = static_cast<uint64_t>(_mm512_cmple_epi8_mask(more_input, continuation));
+      answer -= count_ones(continuation_bitmask);
     }
 
-    eight_64bits = _mm512_add_epi64(eight_64bits, _mm512_sad_epu8(runner, _mm512_setzero_si512()));
+    // eight_64bits = _mm512_add_epi64(eight_64bits, _mm512_sad_epu8(runner, _mm512_setzero_si512()));
   }
 
-  __m256i first_half = _mm512_extracti64x4_epi64(eight_64bits, 0);
+/*   __m256i first_half = _mm512_extracti64x4_epi64(eight_64bits, 0);
   __m256i second_half = _mm512_extracti64x4_epi64(eight_64bits, 1);
   answer -= (size_t)_mm256_extract_epi64(first_half, 0) +
             (size_t)_mm256_extract_epi64(first_half, 1) +
@@ -1153,8 +1116,7 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
             (size_t)_mm256_extract_epi64(second_half, 0) +
             (size_t)_mm256_extract_epi64(second_half, 1) +
             (size_t)_mm256_extract_epi64(second_half, 2) +
-            (size_t)_mm256_extract_epi64(second_half, 3);
-  // return answer + scalar_utf8_length(str + i, length - i);
+            (size_t)_mm256_extract_epi64(second_half, 3); */
 
   size_t scalar = scalar::utf8::count_code_points(reinterpret_cast<const char *>(str + i), length - i);
   answer = answer + scalar;
