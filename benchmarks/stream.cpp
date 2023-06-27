@@ -1,5 +1,5 @@
 /**
- * This simple problem is meant to simply decode substrings of a given
+ * This simple program is meant to simply decode substrings of a given
  * input file.
  */
 
