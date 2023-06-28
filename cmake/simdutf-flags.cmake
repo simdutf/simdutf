@@ -14,8 +14,8 @@ if (NOT CMAKE_BUILD_TYPE)
   endif()
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx512vpopcntdq")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx512vpopcntdq")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tools/cmake")
 
