@@ -29,7 +29,7 @@ namespace {
 #include "icelake/icelake_utf32_validation.inl.cpp"
 #include "icelake/icelake_convert_utf16_to_utf8.inl.cpp"
 
-
+#include <cstdint>
 
 } // namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -1050,8 +1050,8 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
 
   while (i + sizeof(__m512i) <= length) {
     size_t iterations = (length - i) / sizeof(__m512i);
-    if (iterations > __UINT64_MAX__) { 
-      iterations = __UINT64_MAX__;
+    if (iterations > UINT64_MAX) { 
+      iterations = UINT64_MAX;
     }
     size_t max_i = i + iterations * sizeof(__m512i) - sizeof(__m512i);
     for (; i + 8*sizeof(__m512i) <= max_i; i += 8*sizeof(__m512i)) {
@@ -1075,8 +1075,11 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
         continuation_bitmask[7] = static_cast<uint64_t>(_mm512_cmple_epi8_mask(input8, continuation));
 
         __m512i mask_register = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(continuation_bitmask));
-        unrolled_popcount += _mm512_popcnt_epi64(mask_register); // Using += is faster than using __mm512_add_epi64
-
+        #ifdef _MSC_VER
+          unrolled_popcount = _mm512_add_epi64(unrolled_popcount, _mm512_popcnt_epi64(mask_register));
+        #else
+          unrolled_popcount += _mm512_popcnt_epi64(mask_register); // Using += is slightly faster than using __mm512_add_epi64 on Linux
+        #endif
     }
 
     for (; i <= max_i; i += sizeof(__m512i)) {
