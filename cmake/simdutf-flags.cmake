@@ -14,8 +14,31 @@ if (NOT CMAKE_BUILD_TYPE)
   endif()
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
+
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -mavx512vpopcntdq")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx512vpopcntdq")
+
+include(CheckCXXSourceRuns)
+
+set(CMAKE_REQUIRED_FLAGS "-mavx512vpopcntdq")
+CHECK_CXX_SOURCE_RUNS("
+    #include <immintrin.h>
+    int main() {
+        __m512i a = _mm512_set1_epi32(42);
+        (void)a;
+        return 0;
+    }"
+    HAS_AVX512)
+
+if(HAS_AVX512)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx512vpopcntdq")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx512vpopcntdq")
+else()
+    message(STATUS "AVX512 not supported on this platform.")
+endif()
+
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tools/cmake")
 
