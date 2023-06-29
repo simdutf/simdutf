@@ -547,51 +547,8 @@ simdutf_warn_unused size_t implementation::utf32_length_from_latin1(size_t lengt
   return scalar::latin1::utf32_length_from_latin1(length);
 }
 
-simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char * input, size_t len) const noexcept {
-  const uint8_t *str = reinterpret_cast<const uint8_t *>(input);
-  size_t answer = len / sizeof(__m128i) * sizeof(__m128i);
-  size_t i = 0;
-  __m128i two_64bits = _mm_setzero_si128();
-  while (i + sizeof(__m128i) <= len) {
-    __m128i runner = _mm_setzero_si128();
-    size_t iterations = (len - i) / sizeof(__m128i);
-    if (iterations > 255) {
-      iterations = 255;
-    }
-    size_t max_i = i + iterations * sizeof(__m128i) - sizeof(__m128i);
-    for (; i + 4*sizeof(__m128i) <= max_i; i += 4*sizeof(__m128i)) {
-      __m128i input1 = _mm_loadu_si128((const __m128i *)(str + i));
-      __m128i input2 = _mm_loadu_si128((const __m128i *)(str + i + sizeof(__m128i)));
-      __m128i input3 = _mm_loadu_si128((const __m128i *)(str + i + 2*sizeof(__m128i)));
-      __m128i input4 = _mm_loadu_si128((const __m128i *)(str + i + 3*sizeof(__m128i)));
-      __m128i input12 = _mm_add_epi8(
-                                      _mm_cmpgt_epi8(
-                                                    _mm_setzero_si128(), 
-                                                    input1),
-                                      _mm_cmpgt_epi8(
-                                                    _mm_setzero_si128(),
-                                                    input2));
-      __m128i input34 = _mm_add_epi8(
-                                      _mm_cmpgt_epi8(
-                                                    _mm_setzero_si128(),
-                                                    input3),
-                                      _mm_cmpgt_epi8(
-                                                    _mm_setzero_si128(),
-                                                    input4));
-      __m128i input1234 = _mm_add_epi8(input12, input34);
-      runner = _mm_sub_epi8(runner, input1234);
-    }
-    for (; i <= max_i; i += sizeof(__m128i)) {
-      __m128i more_input = _mm_loadu_si128((const __m128i *)(str + i));
-      runner = _mm_sub_epi8(
-          runner, _mm_cmpgt_epi8(_mm_setzero_si128(), more_input));
-    }
-    two_64bits = _mm_add_epi64(
-        two_64bits, _mm_sad_epu8(runner, _mm_setzero_si128()));
-  }
-  answer += _mm_extract_epi64(two_64bits, 0) +
-            _mm_extract_epi64(two_64bits, 1);
-  return answer + scalar::latin1::utf8_length_from_latin1(reinterpret_cast<const char *>(str + i), len - i);
+simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char * input, size_t length) const noexcept {
+  return scalar::latin1::utf8_length_from_latin1(input,length);
 }
 
 simdutf_warn_unused size_t implementation::utf32_length_from_utf16le(const char16_t * input, size_t length) const noexcept {

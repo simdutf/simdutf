@@ -74,7 +74,8 @@ enum instruction_set {
   AVX512CD = 0x2000,
   AVX512BW = 0x4000,
   AVX512VL = 0x8000,
-  AVX512VBMI2 = 0x10000
+  AVX512VBMI2 = 0x10000,
+  AVX512VPOPCNTDQ = 0x2000
 };
 
 #if defined(__PPC64__)
@@ -228,6 +229,9 @@ static inline uint32_t detect_supported_architectures() {
   }
   if (ecx & cpuid_bit::ecx::avx512vbmi2) {
     host_isa |= instruction_set::AVX512VBMI2;
+  }
+  if (ecx & cpuid_bit::ecx::avx512vpopcnt) {
+    host_isa |= instruction_set::AVX512VPOPCNTDQ;
   }
   return host_isa;
 }
