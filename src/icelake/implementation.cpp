@@ -1083,8 +1083,8 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
         #ifdef _MSC_VER
           unrolled_popcount = _mm512_add_epi64(unrolled_popcount, _mm512_popcnt_epi64(mask_register));
         #else
-          // unrolled_popcount += _mm512_popcnt_epi64(mask_register); // Using += is slightly faster than using __mm512_add_epi64 on Linux
-          unrolled_popcount = _mm512_add_epi64(unrolled_popcount, _mm512_popcnt_epi64(mask_register));
+          unrolled_popcount += _mm512_popcnt_epi64(mask_register); // Using += is slightly faster than using __mm512_add_epi64 on Linux
+          // unrolled_popcount = _mm512_add_epi64(unrolled_popcount, _mm512_popcnt_epi64(mask_register));
         #endif
     }
 
