@@ -1046,8 +1046,6 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
   size_t answer =  length / sizeof(__m512i) * sizeof(__m512i); // Number of 512-bit chunks that fits into the length.
   size_t i = 0;
   __m512i unrolled_popcount{0}; 
-  // __m256i unrolled_popcount{0}; 
-  // __m128i unrolled_popcount{0}; 
 
   const __m512i continuation = _mm512_set1_epi8(char(0b10111111));
 
@@ -1080,68 +1078,8 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
         __m512i mask_register = _mm512_set_epi64(mask8, mask7, mask6, mask5, mask4, mask3, mask2, mask1);
 
 
-        #ifdef _MSC_VER
-          unrolled_popcount = _mm512_add_epi64(unrolled_popcount, _mm512_popcnt_epi64(mask_register));
-        #else
-          unrolled_popcount += _mm512_popcnt_epi64(mask_register); // Using += is slightly faster than using __mm512_add_epi64 on Linux
-          // unrolled_popcount = _mm512_add_epi64(unrolled_popcount, _mm512_popcnt_epi64(mask_register));
-        #endif
+        unrolled_popcount = _mm512_add_epi64(unrolled_popcount, _mm512_popcnt_epi64(mask_register));
     }
-
-/*     for (; i + 2*sizeof(__m512i) <= max_i; i += 2*sizeof(__m512i)) {
-    __m512i input1 = _mm512_loadu_si512((const __m512i *)(str + i));
-    __m512i input2 = _mm512_loadu_si512((const __m512i *)(str + i + sizeof(__m512i)));
-
-    __mmask64 mask1 = _mm512_cmple_epi8_mask(input1, continuation);
-    __mmask64 mask2 = _mm512_cmple_epi8_mask(input2, continuation);
-
-    answer -= _mm_popcnt_u64(mask1);
-    answer -= _mm_popcnt_u64(mask2);
-} */
-
-/*      // Lower unroll number, attempt #1 
-        for (; i + 4*sizeof(__m512i) <= max_i; i += 4*sizeof(__m512i)) {
-        __m512i input1 = _mm512_loadu_si512((const __m512i *)(str + i));
-        __m512i input2 = _mm512_loadu_si512((const __m512i *)(str + i + sizeof(__m512i)));
-        __m512i input3 = _mm512_loadu_si512((const __m512i *)(str + i + 2*sizeof(__m512i)));
-        __m512i input4 = _mm512_loadu_si512((const __m512i *)(str + i + 3*sizeof(__m512i)));
-
-        __mmask64 mask1 = _mm512_cmple_epi8_mask(input1, continuation);
-        __mmask64 mask2 = _mm512_cmple_epi8_mask(input2, continuation);
-        __mmask64 mask3 = _mm512_cmple_epi8_mask(input3, continuation);
-        __mmask64 mask4 = _mm512_cmple_epi8_mask(input4, continuation);
-
-        __m512i mask_register = _mm512_set_epi64(0, 0, 0, 0, mask4, mask3, mask2, mask1);
-
-        #ifdef _MSC_VER
-          unrolled_popcount = _mm512_add_epi64(unrolled_popcount, _mm512_popcnt_epi64(mask_register));
-        #else
-          unrolled_popcount += _mm512_popcnt_epi64(mask_register); 
-        #endif
-    } */
-
-     // Lower unroll number, attempt #2
-/*     for (; i + 4*sizeof(__m512i) <= max_i; i += 4*sizeof(__m512i)) {
-    __m512i input1 = _mm512_loadu_si512((const __m512i *)(str + i));
-    __m512i input2 = _mm512_loadu_si512((const __m512i *)(str + i + sizeof(__m512i)));
-    __m512i input3 = _mm512_loadu_si512((const __m512i *)(str + i + 2*sizeof(__m512i)));
-    __m512i input4 = _mm512_loadu_si512((const __m512i *)(str + i + 3*sizeof(__m512i)));
-
-    __mmask64 mask1 = _mm512_cmple_epi8_mask(input1, continuation);
-    __mmask64 mask2 = _mm512_cmple_epi8_mask(input2, continuation);
-    __mmask64 mask3 = _mm512_cmple_epi8_mask(input3, continuation);
-    __mmask64 mask4 = _mm512_cmple_epi8_mask(input4, continuation);
-
-    __m256i mask_register = _mm256_set_epi64x(mask4, mask3, mask2, mask1);
-
-    #ifdef _MSC_VER
-      unrolled_popcount = _mm256_add_epi64(unrolled_popcount, _mm256_popcnt_epi64(mask_register));
-    #else
-      unrolled_popcount = _mm256_add_epi64(_mm256_popcnt_epi64(mask_register),unrolled_popcount); 
-    #endif
-  } */
-
-
 
     for (; i <= max_i; i += sizeof(__m512i)) {
       __m512i more_input = _mm512_loadu_si512((const __m512i *)(str + i));
@@ -1160,23 +1098,6 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
             (size_t)_mm256_extract_epi64(second_half, 1) +
             (size_t)_mm256_extract_epi64(second_half, 2) +
             (size_t)_mm256_extract_epi64(second_half, 3);
-
-// Extract 64-bit elements from the unrolled_popcount register.
-/* __m128i first_half = _mm256_extracti64x2_epi64(unrolled_popcount, 0);
-__m128i second_half = _mm256_extracti64x2_epi64(unrolled_popcount, 1); */
-
-// Subtract the popcounts from the answer.
-/* answer -= (size_t)_mm_extract_epi64(first_half, 0) +
-          (size_t)_mm_extract_epi64(first_half, 1) +
-          (size_t)_mm_extract_epi64(second_half, 0) +
-          (size_t)_mm_extract_epi64(second_half, 1); */
-
-
-  // lower unroll number, attempt
-/*   answer -= (size_t)_mm256_extract_epi64(unrolled_popcount, 0) +
-            (size_t)_mm256_extract_epi64(unrolled_popcount, 1) +
-            (size_t)_mm256_extract_epi64(unrolled_popcount, 2) +
-            (size_t)_mm256_extract_epi64(unrolled_popcount, 3); */
 
   return answer + scalar::utf8::count_code_points(reinterpret_cast<const char *>(str + i), length - i);
 }
