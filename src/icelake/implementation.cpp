@@ -1040,56 +1040,57 @@ simdutf_warn_unused size_t implementation::count_utf16be(const char16_t * input,
   return count + scalar::utf16::count_code_points<endianness::BIG>(ptr, length - (ptr - input));
 }
 
+
 simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t length) const noexcept {
   const uint8_t *str = reinterpret_cast<const uint8_t *>(input);
   size_t answer =  length / sizeof(__m512i) * sizeof(__m512i); // Number of 512-bit chunks that fits into the length.
   size_t i = 0;
+  __m512i unrolled_popcount{0}; 
+
   const __m512i continuation = _mm512_set1_epi8(char(0b10111111));
-  unsigned char v_0xFF = 0xFF;
-  __m512i eight_64bits = _mm512_setzero_si512();
+
   while (i + sizeof(__m512i) <= length) {
-    __m512i runner = _mm512_setzero_si512();
     size_t iterations = (length - i) / sizeof(__m512i);
-    if (iterations > 255) {
-      iterations = 255;
+    if (iterations > UINT64_MAX) { 
+      iterations = UINT64_MAX;
     }
     size_t max_i = i + iterations * sizeof(__m512i) - sizeof(__m512i);
-    for (; i + 4*sizeof(__m512i) <= max_i; i += 4*sizeof(__m512i)) {
-      // Load four __m512i vectors
-      __m512i input1 = _mm512_loadu_si512((const __m512i *)(str + i));
-      __m512i input2 = _mm512_loadu_si512((const __m512i *)(str + i + sizeof(__m512i)));
-      __m512i input3 = _mm512_loadu_si512((const __m512i *)(str + i + 2*sizeof(__m512i)));
-      __m512i input4 = _mm512_loadu_si512((const __m512i *)(str + i + 3*sizeof(__m512i)));
-        
-      // Generate four masks
-      __mmask64 mask1 = _mm512_cmple_epi8_mask(input1, continuation);
-      __mmask64 mask2 = _mm512_cmple_epi8_mask(input2, continuation);
-      __mmask64 mask3 = _mm512_cmple_epi8_mask(input3, continuation);
-      __mmask64 mask4 = _mm512_cmple_epi8_mask(input4, continuation);
+    for (; i + 8*sizeof(__m512i) <= max_i; i += 8*sizeof(__m512i)) {
+        __m512i input1 = _mm512_loadu_si512((const __m512i *)(str + i));
+        __m512i input2 = _mm512_loadu_si512((const __m512i *)(str + i + sizeof(__m512i)));
+        __m512i input3 = _mm512_loadu_si512((const __m512i *)(str + i + 2*sizeof(__m512i)));
+        __m512i input4 = _mm512_loadu_si512((const __m512i *)(str + i + 3*sizeof(__m512i)));
+        __m512i input5 = _mm512_loadu_si512((const __m512i *)(str + i + 4*sizeof(__m512i)));
+        __m512i input6 = _mm512_loadu_si512((const __m512i *)(str + i + 5*sizeof(__m512i)));
+        __m512i input7 = _mm512_loadu_si512((const __m512i *)(str + i + 6*sizeof(__m512i)));
+        __m512i input8 = _mm512_loadu_si512((const __m512i *)(str + i + 7*sizeof(__m512i)));
 
-      // Apply the masks and subtract from the runner
-      __m512i not_ascii1 = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask1, v_0xFF);
-      __m512i not_ascii2 = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask2, v_0xFF);
-      __m512i not_ascii3 = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask3, v_0xFF);
-      __m512i not_ascii4 = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask4, v_0xFF);
 
-      runner = _mm512_sub_epi8(runner, not_ascii1);
-      runner = _mm512_sub_epi8(runner, not_ascii2);
-      runner = _mm512_sub_epi8(runner, not_ascii3);
-      runner = _mm512_sub_epi8(runner, not_ascii4);
+        __mmask64 mask1 = _mm512_cmple_epi8_mask(input1, continuation);
+        __mmask64 mask2 = _mm512_cmple_epi8_mask(input2, continuation);
+        __mmask64 mask3 = _mm512_cmple_epi8_mask(input3, continuation);
+        __mmask64 mask4 = _mm512_cmple_epi8_mask(input4, continuation);
+        __mmask64 mask5 = _mm512_cmple_epi8_mask(input5, continuation);
+        __mmask64 mask6 = _mm512_cmple_epi8_mask(input6, continuation);
+        __mmask64 mask7 = _mm512_cmple_epi8_mask(input7, continuation);
+        __mmask64 mask8 = _mm512_cmple_epi8_mask(input8, continuation);
+
+        __m512i mask_register = _mm512_set_epi64(mask8, mask7, mask6, mask5, mask4, mask3, mask2, mask1);
+
+
+        unrolled_popcount = _mm512_add_epi64(unrolled_popcount, _mm512_popcnt_epi64(mask_register));
     }
 
     for (; i <= max_i; i += sizeof(__m512i)) {
       __m512i more_input = _mm512_loadu_si512((const __m512i *)(str + i));
-      __mmask64 mask = _mm512_cmple_epi8_mask(more_input, continuation);
-      __m512i not_ascii = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask, v_0xFF);
-      runner = _mm512_sub_epi8(runner, not_ascii);
+      uint64_t continuation_bitmask = static_cast<uint64_t>(_mm512_cmple_epi8_mask(more_input, continuation));
+      answer -= count_ones(continuation_bitmask);
     }
-    eight_64bits = _mm512_add_epi64(eight_64bits, _mm512_sad_epu8(runner, _mm512_setzero_si512()));
   }
-  __m256i first_half = _mm512_extracti64x4_epi64(eight_64bits, 0);
-  __m256i second_half = _mm512_extracti64x4_epi64(eight_64bits, 1);
-  answer += (size_t)_mm256_extract_epi64(first_half, 0) +
+
+  __m256i first_half = _mm512_extracti64x4_epi64(unrolled_popcount, 0);
+  __m256i second_half = _mm512_extracti64x4_epi64(unrolled_popcount, 1);
+  answer -= (size_t)_mm256_extract_epi64(first_half, 0) +
             (size_t)_mm256_extract_epi64(first_half, 1) +
             (size_t)_mm256_extract_epi64(first_half, 2) +
             (size_t)_mm256_extract_epi64(first_half, 3) +
