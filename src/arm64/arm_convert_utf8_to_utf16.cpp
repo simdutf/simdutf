@@ -35,8 +35,9 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // We want to take 4 3-byte UTF-8 words and turn them into 4 2-byte UTF-16 words.
     uint16x4_t composed = convert_utf8_3_byte_to_utf16(in);
     // Byte swap if necessary
-    if (!match_system(big_endian))
+    if (!match_system(big_endian)) {
       composed = vreinterpret_u16_u8(vrev16_u8(vreinterpret_u8_u16(composed)));
+    }
     vst1_u16(reinterpret_cast<uint16_t*>(utf16_output), composed);
     utf16_output += 4; // We wrote 4 16-bit characters.
     return 12; // We consumed 12 bytes.
@@ -47,8 +48,9 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // We want to take 6 2-byte UTF-8 words and turn them into 6 2-byte UTF-16 words.
     uint16x8_t composed = convert_utf8_2_byte_to_utf16(in);
     // Byte swap if necessary
-    if (!match_system(big_endian))
+    if (!match_system(big_endian)) {
       composed = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(composed)));
+    }
     vst1q_u16(reinterpret_cast<uint16_t *>(utf16_output), composed);
 
     utf16_output += 6; // We wrote 6 16-bit characters.
@@ -67,8 +69,9 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // Convert to UTF-16
     uint16x8_t composed = convert_utf8_1_to_2_byte_to_utf16(in, idx);
     // Byte swap if necessary
-    if (!match_system(big_endian))
+    if (!match_system(big_endian)) {
       composed = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(composed)));
+    }
     // Store
     vst1q_u16(reinterpret_cast<uint16_t*>(utf16_output), composed);
     utf16_output += 6; // We wrote 6 16-bit characters.
@@ -111,8 +114,9 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // 3 byte: aaaabbbb bbcccccc
     uint16x4_t composed = vsli_n_u16(middlelow, highperm, 12);
     // Byte swap if necessary
-    if (!match_system(big_endian))
+    if (!match_system(big_endian)) {
       composed = vreinterpret_u16_u8(vrev16_u8(vreinterpret_u8_u16(composed)));
+    }
     vst1_u16(reinterpret_cast<uint16_t*>(utf16_output), composed);
 
     utf16_output += 4; // We wrote 4 16-bit codepoints
@@ -162,8 +166,9 @@ size_t convert_masked_utf8_to_utf16(const char *input,
       // 110111CC CCDDDDDD|110110AA BBBBBBCC
       uint16x8_t composed = vaddq_u16(blend, magic_with_low_2);
       // Byte swap if necessary
-      if (!match_system(big_endian))
+      if (!match_system(big_endian)) {
         composed = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(composed)));
+      }
       vst1q_u16(reinterpret_cast<uint16_t *>(utf16_output), composed);
       utf16_output += 6; // We 3 32-bit surrogate pairs.
       return 12; // We consumed 12 bytes.
@@ -225,8 +230,9 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // 4 byte: 110110AA BBBBBBCC|110111CC CCDDDDDD
     uint32x4_t selected = vbslq_u32(is_pair, surrogates, composed);
     // Byte swap if necessary
-    if (!match_system(big_endian))
+    if (!match_system(big_endian)) {
       selected = vreinterpretq_u32_u8(vrev16q_u8(vreinterpretq_u8_u32(selected)));
+    }
     // Attempting to shuffle and store would be complex, just scalarize.
     uint32_t buffer[4];
     vst1q_u32(buffer, selected);

@@ -22,6 +22,7 @@
 #include <unicode/uconfig.h>
 #include <unicode/platform.h>
 #include <unicode/unistr.h>
+#include <unicode/ucnv.h>
 #endif
 
 #if ICONV_AVAILABLE
@@ -69,23 +70,35 @@ namespace simdutf::benchmarks {
         void run_validate_utf32_with_errors(const simdutf::implementation& implementation, size_t iterations);
         void run_count_utf8(const simdutf::implementation& implementation, size_t iterations);
         void run_count_utf16(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_latin1_to_utf8(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_latin1_to_utf16(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_latin1_to_utf32(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_utf8_to_latin1(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_utf8_to_latin1_with_errors(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf8_to_utf16(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf8_to_utf16_with_errors(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf8_to_utf32(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf8_to_utf32_with_errors(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf8_to_utf16_with_dynamic_allocation(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf8_to_utf32_with_dynamic_allocation(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_valid_utf8_to_latin1(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_valid_utf8_to_utf16(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_valid_utf8_to_utf32(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_utf16_to_latin1(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_utf16_to_latin1_with_errors(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf16_to_utf8(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf16_to_utf8_with_errors(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf16_to_utf32(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf16_to_utf32_with_errors(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf16_to_utf8_with_dynamic_allocation(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf16_to_utf32_with_dynamic_allocation(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_valid_utf16_to_latin1(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_valid_utf16_to_utf8(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_utf32_to_latin1(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_utf32_to_latin1_with_errors(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf32_to_utf8(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf32_to_utf8_with_errors(const simdutf::implementation& implementation, size_t iterations);
+        void run_convert_valid_utf32_to_latin1(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_valid_utf32_to_utf8(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf32_to_utf16(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_utf32_to_utf16_with_errors(const simdutf::implementation& implementation, size_t iterations);
@@ -93,12 +106,24 @@ namespace simdutf::benchmarks {
         void run_convert_valid_utf16_to_utf32(const simdutf::implementation& implementation, size_t iterations);
         void run_detect_encodings(const simdutf::implementation& implementation, size_t iterations);
 #if ICU_AVAILABLE
+        void run_convert_latin1_to_utf8_icu(size_t iterations);
+        void run_convert_latin1_to_utf16_icu(size_t iterations);
+        void run_convert_latin1_to_utf32_icu(size_t iterations);
+        void run_convert_utf8_to_latin1_icu(size_t iterations);
         void run_convert_utf8_to_utf16_icu(size_t iterations);
         void run_convert_utf16_to_utf8_icu(size_t iterations);
+        void run_convert_utf16_to_latin1_icu(size_t iterations);
+        void run_convert_utf32_to_latin1_icu(size_t iterations);
 #endif
 #if ICONV_AVAILABLE
+        void run_convert_latin1_to_utf8_iconv(size_t iterations);
+        void run_convert_latin1_to_utf16_iconv(size_t iterations);
+        void run_convert_latin1_to_utf32_iconv(size_t iterations);
+        void run_convert_utf8_to_latin1_iconv(size_t iterations);
         void run_convert_utf8_to_utf16_iconv(size_t iterations);
         void run_convert_utf16_to_utf8_iconv(size_t iterations);
+        void run_convert_utf16_to_latin1_iconv(size_t iterations);
+        void run_convert_utf32_to_latin1_iconv(size_t iterations);
 #endif
 #ifdef INOUE2008
         /**

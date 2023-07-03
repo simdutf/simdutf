@@ -28,3 +28,22 @@ target_link_libraries(stream PUBLIC simdutf)
 
 set_property(TARGET stream PROPERTY CXX_STANDARD 17)
 set_property(TARGET stream PROPERTY CXX_STANDARD_REQUIRED ON)
+
+add_executable(alignment alignment.cpp)
+target_link_libraries(alignment PUBLIC simdutf)
+
+set_property(TARGET alignment PROPERTY CXX_STANDARD 17)
+set_property(TARGET alignment PROPERTY CXX_STANDARD_REQUIRED ON)
+
+
+
+find_package(Threads)
+
+if(Threads_FOUND)
+  add_executable(threaded threaded.cpp)
+  target_link_libraries(threaded PUBLIC simdutf)
+  target_link_libraries(threaded PUBLIC Threads::Threads)
+
+  set_property(TARGET threaded PROPERTY CXX_STANDARD 17)
+  set_property(TARGET threaded PROPERTY CXX_STANDARD_REQUIRED ON)
+endif(Threads_FOUND)

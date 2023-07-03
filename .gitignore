@@ -3,6 +3,10 @@
 build
 *-build-*
 
+# Visual Studio Code artifacts
+.vscode/*
+.history/
+
 # Python cache
 
 __pycache__

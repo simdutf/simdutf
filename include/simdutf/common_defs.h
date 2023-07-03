@@ -102,19 +102,21 @@
 
 #endif // MSC_VER
 
-#if defined(SIMDUTF_VISUAL_STUDIO)
-    /**
-     * It does not matter here whether you are using
-     * the regular visual studio or clang under visual
-     * studio.
-     */
-    #if SIMDUTF_USING_LIBRARY
-    #define SIMDUTF_DLLIMPORTEXPORT __declspec(dllimport)
+#ifndef SIMDUTF_DLLIMPORTEXPORT
+    #if defined(SIMDUTF_VISUAL_STUDIO)
+      /**
+       * It does not matter here whether you are using
+       * the regular visual studio or clang under visual
+       * studio.
+       */
+      #if SIMDUTF_USING_LIBRARY
+      #define SIMDUTF_DLLIMPORTEXPORT __declspec(dllimport)
+      #else
+      #define SIMDUTF_DLLIMPORTEXPORT __declspec(dllexport)
+      #endif
     #else
-    #define SIMDUTF_DLLIMPORTEXPORT __declspec(dllexport)
+      #define SIMDUTF_DLLIMPORTEXPORT
     #endif
-#else
-    #define SIMDUTF_DLLIMPORTEXPORT
 #endif
 
 /// If EXPR is an error, returns it.

@@ -57,7 +57,6 @@ SIMDUTF_POP_DISABLE_WARNINGS
 #include <tmmintrin.h>
 #include <avxintrin.h>
 #include <avx2intrin.h>
-#include <wmmintrin.h>   // for  _mm_clmulepi64_si128
 // Important: we need the AVX-512 headers:
 #include <avx512fintrin.h>
 #include <avx512dqintrin.h>
