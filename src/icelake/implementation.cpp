@@ -1051,9 +1051,7 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
 
   while (i + sizeof(__m512i) <= length) {
     size_t iterations = (length - i) / sizeof(__m512i);
-    if (iterations > UINT64_MAX) { 
-      iterations = UINT64_MAX;
-    }
+
     size_t max_i = i + iterations * sizeof(__m512i) - sizeof(__m512i);
     for (; i + 8*sizeof(__m512i) <= max_i; i += 8*sizeof(__m512i)) {
         __m512i input1 = _mm512_loadu_si512((const __m512i *)(str + i));
