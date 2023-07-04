@@ -1159,7 +1159,7 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char * 
   const uint8_t *str = reinterpret_cast<const uint8_t *>(input);
   size_t answer = length / sizeof(__m512i) * sizeof(__m512i);
   size_t i = 0;
-  char v_0xFF = static_cast<unsigned char>(0xFF);
+  unsigned char v_0xFF = 0xff;
   __m512i eight_64bits = _mm512_setzero_si512();
   while (i + sizeof(__m512i) <= length) {
     __m512i runner = _mm512_setzero_si512();
