@@ -16,6 +16,32 @@ namespace {
   constexpr size_t trials = 1000;
 }
 
+
+
+// For invalid inputs, we expect the conversion to fail (return 0)
+TEST(convert_random_inputs) {
+  simdutf::tests::helpers::RandomInt r(0x00, 0xffffffff, 1234);
+  for(size_t trial = 0; trial < trials; trial ++) {
+    uint32_t seed{1234+uint32_t(trial)};
+    if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+
+    for (size_t size: input_size) {
+      std::vector<char32_t> utf32(size);
+      for(size_t i = 0; i < size; i++) {
+        utf32[i] = r();
+      }
+      size_t buffer_size = implementation.latin1_length_from_utf32(size);
+      std::vector<char> latin1(buffer_size);
+      size_t actual_size = implementation.convert_utf32_to_latin1(utf32.data(), size, latin1.data());
+      if(implementation.validate_utf32(utf32.data(), size)) {
+        ASSERT_EQUAL(buffer_size, actual_size);
+      } else {
+        ASSERT_EQUAL(0, actual_size);
+      }
+    }
+  }
+}
+
 TEST(convert_latin1_only) {
   size_t counter = 0;
   auto generator = [&counter]() -> uint32_t {

@@ -15,7 +15,6 @@
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   FuzzedDataProvider fdp(data, size);
   std::string source = fdp.ConsumeRandomLengthString(1024);
-
   for (auto &e : simdutf::get_available_implementations()) {
     if (!e->supported_by_runtime_system()) {
       continue;
@@ -185,13 +184,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       }
     } else {
       // invalid input!!!
-      // We need a buffer of size where to write the UTF-16LE words.
+      // We need a buffer of size where to write the Latin 1 words.
       size_t expected_latin1words =
           e->latin1_length_from_utf8(source.c_str(), source.size());
       std::unique_ptr<char[]> latin1_output{
         new char[expected_latin1words]
       };
-      // convert to UTF-16LE
+      // convert to Latin 1
       size_t latin1words = e->convert_utf8_to_latin1(
           source.c_str(), source.size(), latin1_output.get());
       if (latin1words != 0) {
