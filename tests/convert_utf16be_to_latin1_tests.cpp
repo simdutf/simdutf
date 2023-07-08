@@ -9,6 +9,9 @@
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
 
+#include "reference/validate_utf16_to_latin1.h"
+
+
 namespace {
   std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
 
@@ -33,7 +36,7 @@ TEST(convert_random_inputs) {
       size_t buffer_size = implementation.latin1_length_from_utf16(size);
       std::vector<char> latin1(buffer_size);
       size_t actual_size = implementation.convert_utf16be_to_latin1(utf16.data(), size, latin1.data());
-      if(implementation.validate_utf16be(utf16.data(), size)) {
+      if(simdutf::tests::reference::validate_utf16_to_latin1(utf16.data(), size)) {
         ASSERT_EQUAL(buffer_size, actual_size);
       } else {
         ASSERT_EQUAL(0, actual_size);

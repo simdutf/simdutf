@@ -6,6 +6,10 @@
 #include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
+#include <sstream>
+
+#include "reference/validate_utf8_to_latin1.h"
+
 
 namespace {
   std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
@@ -30,10 +34,16 @@ TEST(convert_random_inputs) {
       size_t buffer_size = implementation.latin1_length_from_utf8(utf8.data(), size);
       std::vector<char> latin1(buffer_size);
       size_t actual_size = implementation.convert_utf8_to_latin1(utf8.data(), size, latin1.data());
-      if(implementation.validate_utf8(utf8.data(), size)) {
-        ASSERT_EQUAL(buffer_size, actual_size);
+      if(simdutf::tests::reference::validate_utf8_to_latin1(utf8.data(), size)) {
+          ASSERT_EQUAL(actual_size,buffer_size) ;
       } else {
-        ASSERT_EQUAL(0, actual_size);
+        if (0 != actual_size) {
+          std::cout << "trial failed:" << trial << " ,size:" << size << std::endl;
+          simdutf::tests::reference::validate_utf8_to_latin1(utf8.data(), size);
+          size_t dummy = implementation.convert_utf8_to_latin1(utf8.data(), size, latin1.data());
+
+        }
+        ASSERT_EQUAL(actual_size,0);
       }
     }
   }
