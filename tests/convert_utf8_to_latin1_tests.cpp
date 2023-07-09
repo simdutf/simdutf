@@ -21,9 +21,9 @@ namespace {
 
 // For invalid UTF-8, we expect the conversion to fail (return 0)
 TEST(convert_random_inputs) {
-  simdutf::tests::helpers::RandomInt r(0x00, 0xff, 1234);
   for(size_t trial = 0; trial < trials; trial ++) {
     uint32_t seed{1234+uint32_t(trial)};
+    simdutf::tests::helpers::RandomInt r(0x00, 0xff, seed);
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
 
     for (size_t size: input_size) {

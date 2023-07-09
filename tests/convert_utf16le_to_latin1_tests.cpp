@@ -24,9 +24,10 @@ namespace {
 
 // For invalid inputs, we expect the conversion to fail (return 0)
 TEST(convert_random_inputs) {
-  simdutf::tests::helpers::RandomInt r(0x00, 0xffff, 1234);
   for(size_t trial = 0; trial < trials; trial ++) {
     uint32_t seed{1234+uint32_t(trial)};
+    simdutf::tests::helpers::RandomInt r(0x00, 0xffff, seed);
+
     if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
 
     for (size_t size: input_size) {
@@ -49,7 +50,7 @@ TEST(convert_random_inputs) {
 
 TEST(convert_randoms) {
   for(size_t trial = 0; trial < trials; trial ++) {
-    int seed = {1234 + uint32_t(trial)};
+    uint32_t seed = {1234 + uint32_t(trial)};
 
     if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
     // range for 1, 2 or 3 UTF-8 bytes
