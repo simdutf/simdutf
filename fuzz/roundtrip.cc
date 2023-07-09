@@ -169,18 +169,19 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       // convert to latin1
       size_t latin1words = e->convert_utf8_to_latin1(
           source.c_str(), source.size(), latin1_output.get());
-
-      // convert it back:
-      // We need a buffer of size where to write the UTF-8 words.
-      size_t expected_utf8words =
-          e->utf8_length_from_latin1(latin1_output.get(), latin1words);
-      std::unique_ptr<char[]> utf8_output{ new char[expected_utf8words] };
-      // convert to UTF-8
-      size_t utf8words = e->convert_latin1_to_utf8(
-          latin1_output.get(), latin1words, utf8_output.get());
-      std::string final_string(utf8_output.get(), utf8words);
-      if (final_string != source) {
-        abort();
+      if(latin1words != 0) {
+        // convert it back:
+        // We need a buffer of size where to write the UTF-8 words.
+        size_t expected_utf8words =
+            e->utf8_length_from_latin1(latin1_output.get(), latin1words);
+        std::unique_ptr<char[]> utf8_output{ new char[expected_utf8words] };
+        // convert to UTF-8
+        size_t utf8words = e->convert_latin1_to_utf8(
+            latin1_output.get(), latin1words, utf8_output.get());
+        std::string final_string(utf8_output.get(), utf8words);
+        if (final_string != source) {
+          abort();
+        }
       }
     } else {
       // invalid input!!!
