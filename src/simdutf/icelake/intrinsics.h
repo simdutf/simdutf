@@ -66,6 +66,8 @@ SIMDUTF_POP_DISABLE_WARNINGS
 #include <avx512vlbwintrin.h>
 #include <avx512vbmiintrin.h>
 #include <avx512vbmi2intrin.h>
+#include <avx512vpopcntdqintrin.h>
+#include <avx512vpopcntdqvlintrin.h>
 // unfortunately, we may not get _blsr_u64, but, thankfully, clang
 // has it as a macro.
 #ifndef _blsr_u64

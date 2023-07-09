@@ -14,8 +14,6 @@ if (NOT CMAKE_BUILD_TYPE)
   endif()
 endif()
 
-
-
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tools/cmake")
 
 # We compile tools, tests, etc. with C++ 11. Override yourself if you need on a target.

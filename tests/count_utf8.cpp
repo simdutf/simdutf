@@ -11,8 +11,8 @@
 #include <tests/helpers/random_utf8.h>
 #include <tests/helpers/test.h>
 
-namespace {
-std::array<size_t, 9> input_size{7, 12, 16, 64, 67, 128, 256, 511, 1000};
+namespace { 
+std::array<size_t, 10> input_size{7, 12, 16, 64, 67, 128, 256, 511, 1000,2000};
 
 using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
 } // namespace
@@ -32,6 +32,7 @@ TEST(count_pure_ASCII) {
       ASSERT_TRUE(implementation.count_utf8(
                       reinterpret_cast<const char *>(generated.first.data()),
                       size) == generated.second);
+
     }
   }
 }

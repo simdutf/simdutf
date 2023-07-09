@@ -29,6 +29,8 @@ namespace {
 #include "icelake/icelake_utf32_validation.inl.cpp"
 #include "icelake/icelake_convert_utf16_to_utf8.inl.cpp"
 
+#include <cstdint>
+
 } // namespace
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
@@ -1040,21 +1042,62 @@ simdutf_warn_unused size_t implementation::count_utf16be(const char16_t * input,
 
 
 simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t length) const noexcept {
-  const char* end = length >= 64 ? input + length - 64 : nullptr;
-  const char* ptr = input;
+  const uint8_t *str = reinterpret_cast<const uint8_t *>(input);
+  size_t answer =  length / sizeof(__m512i) * sizeof(__m512i); // Number of 512-bit chunks that fits into the length.
+  size_t i = 0;
+  __m512i unrolled_popcount{0}; 
 
   const __m512i continuation = _mm512_set1_epi8(char(0b10111111));
 
-  size_t count{0};
+  while (i + sizeof(__m512i) <= length) {
+    size_t iterations = (length - i) / sizeof(__m512i);
 
-  while (ptr <= end) {
-    __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
-    ptr += 64;
-    uint64_t continuation_bitmask = static_cast<uint64_t>(_mm512_cmple_epi8_mask(utf8, continuation));
-    count += 64 - count_ones(continuation_bitmask);
+    size_t max_i = i + iterations * sizeof(__m512i) - sizeof(__m512i);
+    for (; i + 8*sizeof(__m512i) <= max_i; i += 8*sizeof(__m512i)) {
+        __m512i input1 = _mm512_loadu_si512((const __m512i *)(str + i));
+        __m512i input2 = _mm512_loadu_si512((const __m512i *)(str + i + sizeof(__m512i)));
+        __m512i input3 = _mm512_loadu_si512((const __m512i *)(str + i + 2*sizeof(__m512i)));
+        __m512i input4 = _mm512_loadu_si512((const __m512i *)(str + i + 3*sizeof(__m512i)));
+        __m512i input5 = _mm512_loadu_si512((const __m512i *)(str + i + 4*sizeof(__m512i)));
+        __m512i input6 = _mm512_loadu_si512((const __m512i *)(str + i + 5*sizeof(__m512i)));
+        __m512i input7 = _mm512_loadu_si512((const __m512i *)(str + i + 6*sizeof(__m512i)));
+        __m512i input8 = _mm512_loadu_si512((const __m512i *)(str + i + 7*sizeof(__m512i)));
+
+
+        __mmask64 mask1 = _mm512_cmple_epi8_mask(input1, continuation);
+        __mmask64 mask2 = _mm512_cmple_epi8_mask(input2, continuation);
+        __mmask64 mask3 = _mm512_cmple_epi8_mask(input3, continuation);
+        __mmask64 mask4 = _mm512_cmple_epi8_mask(input4, continuation);
+        __mmask64 mask5 = _mm512_cmple_epi8_mask(input5, continuation);
+        __mmask64 mask6 = _mm512_cmple_epi8_mask(input6, continuation);
+        __mmask64 mask7 = _mm512_cmple_epi8_mask(input7, continuation);
+        __mmask64 mask8 = _mm512_cmple_epi8_mask(input8, continuation);
+
+        __m512i mask_register = _mm512_set_epi64(mask8, mask7, mask6, mask5, mask4, mask3, mask2, mask1);
+
+
+        unrolled_popcount = _mm512_add_epi64(unrolled_popcount, _mm512_popcnt_epi64(mask_register));
+    }
+
+    for (; i <= max_i; i += sizeof(__m512i)) {
+      __m512i more_input = _mm512_loadu_si512((const __m512i *)(str + i));
+      uint64_t continuation_bitmask = static_cast<uint64_t>(_mm512_cmple_epi8_mask(more_input, continuation));
+      answer -= count_ones(continuation_bitmask);
+    }
   }
 
-  return count + scalar::utf8::count_code_points(ptr, length - (ptr - input));
+  __m256i first_half = _mm512_extracti64x4_epi64(unrolled_popcount, 0);
+  __m256i second_half = _mm512_extracti64x4_epi64(unrolled_popcount, 1);
+  answer -= (size_t)_mm256_extract_epi64(first_half, 0) +
+            (size_t)_mm256_extract_epi64(first_half, 1) +
+            (size_t)_mm256_extract_epi64(first_half, 2) +
+            (size_t)_mm256_extract_epi64(first_half, 3) +
+            (size_t)_mm256_extract_epi64(second_half, 0) +
+            (size_t)_mm256_extract_epi64(second_half, 1) +
+            (size_t)_mm256_extract_epi64(second_half, 2) +
+            (size_t)_mm256_extract_epi64(second_half, 3);
+
+  return answer + scalar::utf8::count_code_points(reinterpret_cast<const char *>(str + i), length - i);
 }
 
 simdutf_warn_unused size_t implementation::latin1_length_from_utf8(const char* buf, size_t len) const noexcept {
