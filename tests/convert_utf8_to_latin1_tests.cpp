@@ -35,7 +35,7 @@ TEST(convert_random_inputs) {
       std::vector<char> latin1(buffer_size);
       size_t actual_size = implementation.convert_utf8_to_latin1(utf8.data(), size, latin1.data());
       if(simdutf::tests::reference::validate_utf8_to_latin1(utf8.data(), size)) {
-          ASSERT_EQUAL(actual_size,buffer_size) ;
+        ASSERT_EQUAL(actual_size,buffer_size);
       } else {
         ASSERT_EQUAL(actual_size,0);
       }
