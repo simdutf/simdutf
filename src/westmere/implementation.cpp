@@ -59,6 +59,8 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 #include "generic/utf16.h"
 // transcoding from UTF-8 to Latin 1
 #include "generic/utf8_to_latin1/utf8_to_latin1.h"
+#include "generic/utf8_to_latin1/valid_utf8_to_latin1.h"
+
 
 //
 // Implementation-specific overrides
@@ -182,7 +184,8 @@ simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(co
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf8_to_latin1::convert_valid(buf, len, latin1_output);
+  return westmere::utf8_to_latin1::convert_valid(buf,len,latin1_output);
+  //return scalar::utf8_to_latin1::convert_valid(buf, len, latin1_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {

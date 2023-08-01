@@ -131,7 +131,7 @@ using namespace simd;
       size_t leading_byte = 0;
       size_t margin = size;
       for(; margin > 0 && leading_byte < 8; margin--) {
-        leading_byte += (int8_t(in[margin-1]) > -65);
+        leading_byte += (int8_t(in[margin-1]) > -65); //twos complement of -65 is 1011 1111 ...
       }
       // If the input is long enough, then we have that margin-1 is the eight last leading byte.
       const size_t safety_margin = size - margin + 1; // to avoid overruns!
@@ -155,7 +155,7 @@ using namespace simd;
             this->check_utf8_bytes(input.chunks[2], input.chunks[1]);
             this->check_utf8_bytes(input.chunks[3], input.chunks[2]);
           }
-          uint64_t utf8_continuation_mask = input.lt(-65 + 1);
+          uint64_t utf8_continuation_mask = input.lt(-65 + 1); // -64 is 1100 0000 in twos complement. Note: in this case, we also have ASCII to account for.
           uint64_t utf8_leading_mask = ~utf8_continuation_mask;
           uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
           // We process in blocks of up to 12 bytes except possibly
