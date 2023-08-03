@@ -8,7 +8,7 @@
 
 // https://github.com/nodejs/node/issues/48995
 TEST(node48995) {
-  const char* bad = "\x80";
+  const char bad[1] = {'\x80'};
   size_t length = 1;
   ASSERT_FALSE(implementation.validate_utf8(bad, length));
 }

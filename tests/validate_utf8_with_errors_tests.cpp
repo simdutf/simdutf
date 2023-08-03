@@ -13,10 +13,10 @@ constexpr size_t num_trials = 1000;
 
 // https://github.com/nodejs/node/issues/48995
 TEST(node48995) {
-  const char* bad = "\x80";
+  const char bad[1] = {(char)0x80};
   size_t length = 1;
   simdutf::result res = implementation.validate_utf8_with_errors(bad, length);
-  ASSERT_TRUE(result.error);
+  ASSERT_TRUE(res.error);
 }
 
 TEST(no_error) {
