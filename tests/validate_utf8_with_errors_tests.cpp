@@ -11,6 +11,14 @@
 
 constexpr size_t num_trials = 1000;
 
+// https://github.com/nodejs/node/issues/48995
+TEST(node48995) {
+  const char* bad = "\x80";
+  size_t length = 1;
+  simdutf::result res = implementation.validate_utf8_with_errors(bad, length);
+  ASSERT_TRUE(result.error);
+}
+
 TEST(no_error) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};

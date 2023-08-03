@@ -5,6 +5,14 @@
 #include <iomanip>
 #include <tests/helpers/test.h>
 
+
+// https://github.com/nodejs/node/issues/48995
+TEST(node48995) {
+  const char* bad = "\x80";
+  size_t length = 1;
+  ASSERT_FALSE(implementation.validate_utf8(bad, length));
+}
+
 TEST(good_bad_sequences) {
   // additional tests are from autobahn websocket testsuite
   // https://github.com/crossbario/autobahn-testsuite/tree/master/autobahntestsuite/autobahntestsuite/case
