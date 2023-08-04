@@ -192,7 +192,7 @@ simdutf_warn_unused result implementation::validate_utf8_with_errors(const char 
       checker.check_next_input(utf8);
       if(checker.errors()) {
         if (count != 0) { count--; } // Sometimes the error is only detected in the next chunk
-        result res = scalar::utf8::rewind_and_validate_with_errors(reinterpret_cast<const char*>(buf + count), len - count);
+        result res = scalar::utf8::rewind_and_validate_with_errors(reinterpret_cast<const char*>(buf), reinterpret_cast<const char*>(buf + count), len - count);
         res.count += count;
         return res;
       }
@@ -203,7 +203,7 @@ simdutf_warn_unused result implementation::validate_utf8_with_errors(const char 
       checker.check_next_input(utf8);
       if(checker.errors()) {
         if (count != 0) { count--; } // Sometimes the error is only detected in the next chunk
-        result res = scalar::utf8::rewind_and_validate_with_errors(reinterpret_cast<const char*>(buf + count), len - count);
+        result res = scalar::utf8::rewind_and_validate_with_errors(reinterpret_cast<const char*>(buf), reinterpret_cast<const char*>(buf + count), len - count);
         res.count += count;
         return res;
       } else {
