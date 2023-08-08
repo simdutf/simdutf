@@ -273,7 +273,7 @@ void CommandLine::run_simdutf_procedure(PROCEDURE proc) {
     if(!load_chunk(&input_size)) { printf("Could not load %s\n", input_files.front().string().c_str()); input_files.pop();  continue; }
     leftovers = input_size - proc(input_size);
     // Copy leftover bytes to the start of input_data
-    for (int i = 0; i < leftovers; i++) {
+    for (size_t i = 0; i < leftovers; i++) {
       input_data[i] = input_data[input_size-leftovers+i];
     }
   }
