@@ -5,6 +5,17 @@
 #include "simdutf.cpp"
 #include "simdutf.h"
 
+// useful for debugging
+void print_input(const std::string& s, const simdutf::implementation& e) {
+  printf("We are about to abort on the following input: ");
+  for (auto c : s) {
+    printf("%02x ", (unsigned char)c);
+  }
+  printf("\n");
+  std::cout << "string length : " << s.size() << " bytes" << std::endl;
+  std::cout << "implementation->name() = " << e->name() << std::endl;
+}
+
 /**
  * We do round trips from UTF-8 to UTF-16, from UTF-8 to UTF-32, from UTF-16 to
  * UTF-8.
@@ -25,6 +36,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     bool validutf8 = e->validate_utf8(source.c_str(), source.size());
     auto rutf8 = e->validate_utf8_with_errors(source.c_str(), source.size());
     if(validutf8 != (rutf8.error == simdutf::SUCCESS)) { // they should agree
+      print_input(source, e);
       abort();
     }
     if (validutf8) {
@@ -40,6 +52,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       // It wrote utf16words * sizeof(char16_t) bytes.
       bool validutf16 = e->validate_utf16le(utf16_output.get(), utf16words);
       if (!validutf16) {
+        print_input(source, e);
         abort();
       }
       // convert it back:
@@ -52,6 +65,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
           utf16_output.get(), utf16words, utf8_output.get());
       std::string final_string(utf8_output.get(), utf8words);
       if (final_string != source) {
+        print_input(source, e);
         abort();
       }
     } else {
@@ -66,6 +80,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       size_t utf16words = e->convert_utf8_to_utf16le(
           source.c_str(), source.size(), utf16_output.get());
       if (utf16words != 0) {
+        print_input(source, e);
         abort();
       }
     }
@@ -86,6 +101,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       // It wrote utf16words * sizeof(char16_t) bytes.
       bool validutf16 = e->validate_utf16be(utf16_output.get(), utf16words);
       if (!validutf16) {
+        print_input(source, e);
         abort();
       }
       // convert it back:
@@ -98,6 +114,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
           utf16_output.get(), utf16words, utf8_output.get());
       std::string final_string(utf8_output.get(), utf8words);
       if (final_string != source) {
+        print_input(source, e);
         abort();
       }
     } else {
@@ -112,6 +129,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       size_t utf16words = e->convert_utf8_to_utf16be(
           source.c_str(), source.size(), utf16_output.get());
       if (utf16words != 0) {
+        print_input(source, e);
         abort();
       }
     }
@@ -143,6 +161,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
           utf32_output.get(), utf32words, utf8_output.get());
       std::string final_string(utf8_output.get(), utf8words);
       if (source != final_string) {
+        print_input(source, e);
         abort();
       }
     } else {
@@ -156,6 +175,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       size_t utf32words = e->convert_utf8_to_utf32(
           source.c_str(), source.size(), utf32_output.get());
       if (utf32words != 0) {
+        print_input(source, e);
         abort();
       }
     }
@@ -184,6 +204,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
             latin1_output.get(), latin1words, utf8_output.get());
         std::string final_string(utf8_output.get(), utf8words);
         if (final_string != source) {
+          print_input(source, e);
           abort();
         }
       }
@@ -199,6 +220,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       size_t latin1words = e->convert_utf8_to_latin1(
           source.c_str(), source.size(), latin1_output.get());
       if (latin1words != 0) {
+        print_input(source, e);
         abort();
       }
     }
@@ -209,6 +231,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
         e->validate_utf16le((char16_t *)source.c_str(), source.size() / 2);
     auto rutf16le = e->validate_utf16le_with_errors((char16_t *)source.c_str(), source.size() / 2);
     if(validutf16le != (rutf16le.error == simdutf::SUCCESS)) { // they should agree
+      print_input(source, e);
       abort();
     }
     if (validutf16le) {
@@ -221,6 +244,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       // It wrote utf16words * sizeof(char16_t) bytes.
       bool validutf8 = e->validate_utf8(utf8_output.get(), utf8words);
       if (!validutf8) {
+        print_input(source, e);
         abort();
       }
       // convert it back:
@@ -235,6 +259,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
           utf8_output.get(), utf8words, utf16_output.get());
       for (size_t i = 0; i < source.size() / 2; i++) {
         if (utf16_output.get()[i] != ((char16_t *)source.c_str())[i]) {
+          print_input(source, e);
           abort();
         }
       }
@@ -247,6 +272,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       size_t utf8words = e->convert_utf16le_to_utf8(
           (char16_t *)source.c_str(), source.size() / 2, utf8_output.get());
       if (utf8words != 0) {
+        print_input(source, e);
         abort();
       }
     }
@@ -258,6 +284,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
         e->validate_utf16be((char16_t *)source.c_str(), source.size() / 2);
     auto rutf16be = e->validate_utf16be_with_errors((char16_t *)source.c_str(), source.size() / 2);
     if(validutf16be != (rutf16be.error == simdutf::SUCCESS)) { // they should agree
+      print_input(source, e);
       abort();
     }
     if (validutf16be) {
@@ -270,6 +297,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       // It wrote utf16words * sizeof(char16_t) bytes.
       bool validutf8 = e->validate_utf8(utf8_output.get(), utf8words);
       if (!validutf8) {
+        print_input(source, e);
         abort();
       }
       // convert it back:
@@ -284,6 +312,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
           utf8_output.get(), utf8words, utf16_output.get());
       for (size_t i = 0; i < source.size() / 2; i++) {
         if (utf16_output.get()[i] != ((char16_t *)source.c_str())[i]) {
+          print_input(source, e);
           abort();
         }
       }
@@ -296,6 +325,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       size_t utf8words = e->convert_utf16be_to_utf8(
           (char16_t *)source.c_str(), source.size() / 2, utf8_output.get());
       if (utf8words != 0) {
+        print_input(source, e);
         abort();
       }
     }
@@ -315,6 +345,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       // It wrote utf8words * sizeof(char) bytes.
       bool validutf8 = e->validate_utf8(utf8_output.get(), utf8words);
       if (!validutf8) {
+        print_input(source, e);
         abort();
       }
       // convert it back:
@@ -329,6 +360,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
           utf8_output.get(), utf8words, latin1_output.get());
       for (size_t i = 0; i < source.size(); i++) {
         if (latin1_output.get()[i] != (source.c_str())[i]) {
+          print_input(source, e);
           abort();
         }
       }
@@ -343,6 +375,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       // It wrote utf16words * sizeof(char16_t) bytes.
       bool validutf16 = e->validate_utf16le(utf16_output.get(), utf16words);
       if (!validutf16) {
+        print_input(source, e);
         abort();
       }
       // convert it back:
@@ -357,6 +390,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
           utf16_output.get(), utf16words, latin1_output.get());
       for (size_t i = 0; i < source.size(); i++) {
         if (latin1_output.get()[i] != (source.c_str())[i]) {
+          print_input(source, e);
           abort();
         }
       }
@@ -371,6 +405,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       // It wrote utf16words * sizeof(char16_t) bytes.
       bool validutf16 = e->validate_utf16be(utf16_output.get(), utf16words);
       if (!validutf16) {
+        print_input(source, e);
         abort();
       }
       // convert it back:
@@ -385,6 +420,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
           utf16_output.get(), utf16words, latin1_output.get());
       for (size_t i = 0; i < source.size(); i++) {
         if (latin1_output.get()[i] != (source.c_str())[i]) {
+          print_input(source, e);
           abort();
         }
       }
@@ -399,6 +435,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       // It wrote utf16words * sizeof(char16_t) bytes.
       bool validutf32 = e->validate_utf32(utf32_output.get(), utf32words);
       if (!validutf32) {
+        print_input(source, e);
         abort();
       }
       // convert it back:
@@ -413,6 +450,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
           utf32_output.get(), utf32words, latin1_output.get());
       for (size_t i = 0; i < source.size(); i++) {
         if (latin1_output.get()[i] != (source.c_str())[i]) {
+          print_input(source, e);
           abort();
         }
       }
