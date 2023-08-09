@@ -9,10 +9,10 @@ target_include_directories(simdutf PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DI
 
 if(MSVC)
   if("${MSVC_TOOLSET_VERSION}" STREQUAL "140")
-    target_compile_options(simdutf INTERFACE /W0 /sdl)
+    target_compile_options(simdutf PRIVATE /W0 /sdl)
     set(SIMDUTF_LEGACY_VISUAL_STUDIO TRUE)
   else()
-    target_compile_options(simdutf INTERFACE /WX /W3 /sdl /w34714) # https://docs.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warning-level-4-c4714?view=vs-2019
+    target_compile_options(simdutf PRIVATE /WX /W3 /sdl /w34714) # https://docs.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warning-level-4-c4714?view=vs-2019
   endif()
 else(MSVC)
   if(NOT WIN32)
