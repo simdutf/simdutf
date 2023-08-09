@@ -208,7 +208,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     bool validutf16le =
         e->validate_utf16le((char16_t *)source.c_str(), source.size() / 2);
     auto rutf16le = e->validate_utf16le_with_errors((char16_t *)source.c_str(), source.size());
-    if(validutf8 != (rutf16le.error == simdutf::SUCCESS)) { // they should agree
+    if(validutf16le != (rutf16le.error == simdutf::SUCCESS)) { // they should agree
       abort();
     }
     if (validutf16le) {
@@ -257,7 +257,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     bool validutf16be =
         e->validate_utf16be((char16_t *)source.c_str(), source.size() / 2);
     auto rutf16be = e->validate_utf16be_with_errors((char16_t *)source.c_str(), source.size());
-    if(validutf8 != (rutf16be.error == simdutf::SUCCESS)) { // they should agree
+    if(validutf16be != (rutf16be.error == simdutf::SUCCESS)) { // they should agree
       abort();
     }
     if (validutf16be) {
