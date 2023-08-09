@@ -306,7 +306,7 @@ void CommandLine::iconv_fallback(std::FILE *fpout) {
       if (errno == EINVAL) {  // Incomplete multibyte sequence error is ok
         // Copy leftover bytes to the start of input_data
         leftovers = inbytes;
-        for (int i = 0; i < leftovers; i++) {
+        for (size_t i = 0; i < leftovers; i++) {
           input_data[i] = input_data[input_size-leftovers+i];
         }
       } else {
