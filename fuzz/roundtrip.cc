@@ -6,14 +6,14 @@
 #include "simdutf.h"
 
 // useful for debugging
-void print_input(const std::string& s, const simdutf::implementation& e) {
+static void print_input(const std::string& s, const simdutf::implementation *const e) {
   printf("We are about to abort on the following input: ");
   for (auto c : s) {
     printf("%02x ", (unsigned char)c);
   }
   printf("\n");
   std::cout << "string length : " << s.size() << " bytes" << std::endl;
-  std::cout << "implementation->name() = " << e.name() << std::endl;
+  std::cout << "implementation->name() = " << e->name() << std::endl;
 }
 
 /**
