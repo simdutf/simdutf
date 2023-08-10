@@ -13,7 +13,7 @@ void print_input(const std::string& s, const simdutf::implementation& e) {
   }
   printf("\n");
   std::cout << "string length : " << s.size() << " bytes" << std::endl;
-  std::cout << "implementation->name() = " << e->name() << std::endl;
+  std::cout << "implementation->name() = " << e.name() << std::endl;
 }
 
 /**
