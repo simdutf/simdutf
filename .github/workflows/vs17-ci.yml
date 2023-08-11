@@ -12,6 +12,8 @@ jobs:
         include:
           - {gen: Visual Studio 17 2022, arch: x64, shared: ON}
           - {gen: Visual Studio 17 2022, arch: x64, shared: OFF}
+          - {gen: Visual Studio 17 2022, arch: Win32, shared: ON}
+          - {gen: Visual Studio 17 2022, arch: Win32, shared: OFF}
     steps:
     - name: checkout
       uses: actions/checkout@v3
