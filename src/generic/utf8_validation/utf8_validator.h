@@ -55,6 +55,7 @@ result generic_validate_utf8_with_errors(const uint8_t * input, size_t length) {
     reader.advance();
     c.check_eof();
     if (c.errors()) {
+      if (count != 0) { count--; } // Sometimes the error is only detected in the next chunk
       result res = scalar::utf8::rewind_and_validate_with_errors(reinterpret_cast<const char*>(input), reinterpret_cast<const char*>(input) + count, length - count);
       res.count += count;
       return res;
