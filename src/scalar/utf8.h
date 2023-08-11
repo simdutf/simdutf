@@ -139,9 +139,15 @@ inline simdutf_warn_unused result validate_with_errors(const char *buf, size_t l
   return result(error_code::SUCCESS, len);
 }
 
-// Finds the previous leading byte and validates with errors from there
+// Finds the previous leading byte starting backward from buf and validates with errors from there
 // Used to pinpoint the location of an error when an invalid chunk is detected
-inline simdutf_warn_unused result rewind_and_validate_with_errors(const char *buf, size_t len) noexcept {
+// We assume that the stream starts with a leading byte, and to check that it is the case, we
+// ask that you pass a pointer to the start of the stream (start).
+inline simdutf_warn_unused result rewind_and_validate_with_errors(const char *start, const char *buf, size_t len) noexcept {
+    // First check that we start with a leading byte
+  if ((*start & 0b11000000) == 0b10000000) {
+    return result(error_code::TOO_LONG, 0);
+  }
   size_t extra_len{0};
   // A leading byte cannot be further than 4 bytes away
   for(int i = 0; i < 5; i++) {

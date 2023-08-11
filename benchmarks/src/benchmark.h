@@ -188,9 +188,9 @@ namespace simdutf::benchmarks {
         * https://github.com/nemtrif/utfcpp/releases/tag/v3.2.2
         */
         void run_convert_utf8_to_utf16_utfcpp(size_t iterations);
-	void run_convert_utf16_to_utf8_utfcpp(size_t iterations);
-	void run_convert_utf8_to_utf32_utfcpp(size_t iterations);
-	void run_convert_utf32_to_utf8_utfcpp(size_t iterations);
+        void run_convert_utf16_to_utf8_utfcpp(size_t iterations);
+        void run_convert_utf8_to_utf32_utfcpp(size_t iterations);
+        void run_convert_utf32_to_utf8_utfcpp(size_t iterations);
     };
 
 } // namespace simdutf::benchmarks

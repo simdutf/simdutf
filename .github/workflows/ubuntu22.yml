@@ -1,4 +1,4 @@
-name: Ubuntu 22.04 Sanitized CI (GCC 11)
+name: Ubuntu 22.04 CI (GCC 11)
 
 on:
   push:
