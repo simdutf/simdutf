@@ -368,14 +368,13 @@ size_t utf8_to_latin1_avx512(const char *buf, size_t len, char *latin_output) {
 
 
 /* 
-convert_utf8_to_latin1+icelake, input size: 440052, iterations: 3000, dataset: french.utflatin8.txt
-   0.488 ins/byte,    0.183 cycle/byte,   16.932 GB/s (4.7 %),     3.099 GHz,    2.666 ins/cycle 
-   0.497 ins/char,    0.186 cycle/char,   16.634 Gc/s (4.7 %)     1.02 byte/char  */
+convert_utf8_to_latin1+icelake, input size: 440052, iterations: 3000, dataset: /home/leorio/simdutf/unicode_lipsum/wikipedia_mars/french.utflatin8.txt
+   0.478 ins/byte,    0.175 cycle/byte,   17.720 GB/s (3.7 %),     3.100 GHz,    2.735 ins/cycle 
+   0.487 ins/char,    0.178 cycle/char,   17.408 Gc/s (3.7 %)     1.02 byte/char   */
 
 simdutf_really_inline size_t process_block(const char *buf, size_t len, char *latin_output,
                      __m512i minus64, __m512i one,
-                     __mmask64 *next_leading_ptr, __mmask64 *next_bit6_ptr) {
-    __mmask64 load_mask = (len < 64) ? _bzhi_u64(~0ULL, len) : ~0ULL;
+                     __mmask64 *next_leading_ptr, __mmask64 *next_bit6_ptr,__mmask64 load_mask) {
     __m512i input = _mm512_maskz_loadu_epi8(load_mask, (__m512i *)buf);
     __mmask64 nonascii = _mm512_movepi8_mask(input);
 
@@ -420,9 +419,10 @@ size_t utf8_to_latin1_avx512(const char *buf, size_t len, char *latin_output) {
     __m512i one = _mm512_set1_epi8(1);
     __mmask64 next_leading = 0;
     __mmask64 next_bit6 = 0;
+    __mmask64 load_mask = ~0ULL;
 
     while (pos + 64 <= len) {
-        size_t written = process_block(buf + pos, 64, latin_output, minus64, one, &next_leading, &next_bit6);
+        size_t written = process_block(buf + pos, 64, latin_output, minus64, one, &next_leading, &next_bit6 , load_mask);
         if (written == 0) {
             return 0; // Indicates error
         }
@@ -430,9 +430,10 @@ size_t utf8_to_latin1_avx512(const char *buf, size_t len, char *latin_output) {
         pos += 64;
     }
 
+    load_mask = _bzhi_u64(~0ULL, len);
     if (pos < len) {
         size_t remaining = len - pos;
-        size_t written = process_block(buf + pos, remaining, latin_output, minus64, one, &next_leading, &next_bit6);
+        size_t written = process_block(buf + pos, remaining, latin_output, minus64, one, &next_leading, &next_bit6 , load_mask);
         if (written == 0) {
             return 0; // Indicates error
         }
