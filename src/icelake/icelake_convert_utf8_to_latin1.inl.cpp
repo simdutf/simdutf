@@ -2,29 +2,6 @@
 
 // File contains conversion procedure from possibly invalid UTF-8 strings.
 
-
-void printbinary(uint64_t n) {
-  for (size_t i = 0; i < 64; i++) {
-    if (n & 1)
-      printf("1");
-    else
-      printf("0");
-
-    n >>= 1;
-  }
-  printf("\n");
-}
-void print8(const char *name, __m512i x) {
-  printf("%.32s : ", name);
-  uint8_t buffer[64];
-  _mm512_storeu_si512((__m512i *)buffer, x);
-  for (size_t i = 0; i < 64; i++) {
-    printf("%02x ", buffer[i]);
-  }
-  printf("\n");
-}
-
-
 template <bool is_remaining>
 simdutf_really_inline size_t process_block(const char *buf, size_t len, char *latin_output,
                      __m512i minus64, __m512i one,
@@ -61,7 +38,7 @@ simdutf_really_inline size_t process_block(const char *buf, size_t len, char *la
 
     __mmask64 retain = ~leading & load_mask;
     __m512i output = _mm512_maskz_compress_epi8(retain, input);
-    int64_t written_out = _popcnt64(retain);
+    int64_t written_out = count_ones(retain);//_popcnt64(retain);
     __mmask64 store_mask = (1ULL << written_out) - 1;
 
     // _mm512_mask_storeu_epi8((__m512i *)latin_output, store_mask, output);
@@ -87,7 +64,7 @@ size_t utf8_to_latin1_avx512(const char *buf, size_t len, char *latin_output) {
         pos += 64;
     }
 
-    load_mask = _bzhi_u64(~0ULL, len);
+    load_mask = _bzhi_u64(~0ULL, static_cast<unsigned int>(len));
     if (pos < len) {
         size_t remaining = len - pos;
         size_t written = process_block<true>(buf + pos, remaining, latin_output, minus64, one, &next_leading, &next_bit6 , load_mask);
