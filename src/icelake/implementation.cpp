@@ -23,6 +23,7 @@ namespace {
 #include "icelake/icelake_utf8_validation.inl.cpp"
 #include "icelake/icelake_from_utf8.inl.cpp"
 #include "icelake/icelake_convert_utf8_to_latin1.inl.cpp"
+#include "icelake/icelake_convert_valid_utf8_to_latin1.inl.cpp"
 #include "icelake/icelake_convert_utf16_to_utf32.inl.cpp"
 #include "icelake/icelake_convert_utf32_to_utf8.inl.cpp"
 #include "icelake/icelake_convert_utf32_to_utf16.inl.cpp"
@@ -504,7 +505,8 @@ simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(co
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf8_to_latin1::convert_valid(buf, len, latin1_output);
+  // return scalar::utf8_to_latin1::convert_valid(buf, len, latin1_output);
+  return icelake::valid_utf8_to_latin1_avx512(buf,len,latin1_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
