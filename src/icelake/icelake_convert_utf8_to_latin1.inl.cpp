@@ -11,6 +11,7 @@ simdutf_really_inline size_t process_block(const char *buf, size_t len, char *la
     __mmask64 nonascii = _mm512_movepi8_mask(input);
 
     if (nonascii == 0) {
+        // std::cout << "This should fire" << std::endl;
         // _mm512_mask_storeu_epi8((__m512i *)latin_output, load_mask, input);
         is_remaining ? _mm512_mask_storeu_epi8((__m512i *)latin_output, load_mask, input) : _mm512_storeu_si512((__m512i *)latin_output, input);
         return len;
@@ -22,6 +23,7 @@ simdutf_really_inline size_t process_block(const char *buf, size_t len, char *la
     __mmask64 invalid_leading_bytes = _mm512_mask_cmpgt_epu8_mask(leading, highbits, one);
 
     if (invalid_leading_bytes) {
+        std::cout << "Invalid leading byte!" << std::endl;
         return 0; // Indicates error
     }
 
@@ -56,6 +58,8 @@ size_t utf8_to_latin1_avx512(const char *buf, size_t len, char *latin_output) {
     __mmask64 load_mask = ~0ULL;
 
     while (pos + 64 <= len) {
+                std::cout << "--------------" << std::endl;
+
         size_t written = process_block<false>(buf + pos, 64, latin_output, minus64, one, &next_leading, &next_bit6 , load_mask);
         if (written == 0) {
             return 0; // Indicates error
@@ -64,9 +68,9 @@ size_t utf8_to_latin1_avx512(const char *buf, size_t len, char *latin_output) {
         pos += 64;
     }
 
-    load_mask = _bzhi_u64(~0ULL, static_cast<unsigned int>(len));
     if (pos < len) {
         size_t remaining = len - pos;
+        load_mask = _bzhi_u64(~0ULL, static_cast<unsigned int>(remaining));
         size_t written = process_block<true>(buf + pos, remaining, latin_output, minus64, one, &next_leading, &next_bit6 , load_mask);
         if (written == 0) {
             return 0; // Indicates error
