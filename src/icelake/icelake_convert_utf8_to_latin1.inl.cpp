@@ -40,7 +40,7 @@ simdutf_really_inline size_t process_block(const char *buf, size_t len, char *la
 
     __mmask64 retain = ~leading & load_mask;
     __m512i output = _mm512_maskz_compress_epi8(retain, input);
-    int64_t written_out = count_ones(retain);//_popcnt64(retain);
+    int64_t written_out = count_ones(retain);
     __mmask64 store_mask = (1ULL << written_out) - 1;
 
     // _mm512_mask_storeu_epi8((__m512i *)latin_output, store_mask, output);
@@ -65,7 +65,7 @@ size_t utf8_to_latin1_avx512(const char *buf, size_t len, char *latin_output) {
             return 0; // Indicates error
         }
         latin_output += written;
-        pos += 64;
+        pos += written;
     }
 
     if (pos < len) {
