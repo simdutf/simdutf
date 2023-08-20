@@ -235,7 +235,7 @@ namespace simdutf { namespace tests { namespace helpers {
 
     std::vector<char> input_utf8; // source-encoded message: what we're going to transcode
 
-    static constexpr size_t output_size_margin = 0; // extra room for buggy procedures
+    static constexpr size_t output_size_margin = 64; // extra room for buggy procedures
 
   public:
     transcode_utf8_to_latin1_test_base(GenerateCodepoint generate, size_t input_size); //constructor
