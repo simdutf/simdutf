@@ -20,18 +20,8 @@ simdutf_really_inline size_t process_valid_block(const char *buf, size_t len, ch
     __mmask64 leading = _mm512_cmpge_epu8_mask(input, minus64);
 
     __m512i highbits = _mm512_xor_si512(input, _mm512_set1_epi8(-62));
-    __mmask64 invalid_leading_bytes = _mm512_mask_cmpgt_epu8_mask(leading, highbits, one);
 
-    if (invalid_leading_bytes) {
-        return 0; // Indicates error
-    }
-
-    __mmask64 leading_shift = (leading << 1) | *next_leading_ptr;
     *next_leading_ptr = leading >> 63;
-
-    if ((nonascii ^ leading) != leading_shift) {
-        return 0; // Indicates error
-    }
 
     __mmask64 bit6 = _mm512_cmpeq_epi8_mask(highbits, one);
     input = _mm512_mask_sub_epi8(input, (bit6 << 1) | *next_bit6_ptr, input, minus64);
