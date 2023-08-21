@@ -6,13 +6,11 @@ template <bool is_remaining>
 simdutf_really_inline size_t process_valid_block(const char *buf, size_t len, char *latin_output,
                      __m512i minus64, __m512i one,
                      __mmask64 *next_leading_ptr, __mmask64 *next_bit6_ptr) {
-    // __mmask64 load_mask = (len < 64) ? _bzhi_u64(~0ULL, len) : ~0ULL;
     __mmask64 load_mask = is_remaining ? _bzhi_u64(~0ULL, len) : ~0ULL;
     __m512i input = _mm512_maskz_loadu_epi8(load_mask, (__m512i *)buf);
     __mmask64 nonascii = _mm512_movepi8_mask(input);
 
     if (nonascii == 0) {
-        // _mm512_mask_storeu_epi8((__m512i *)latin_output, load_mask, input);
         is_remaining ? _mm512_mask_storeu_epi8((__m512i *)latin_output, load_mask, input) : _mm512_storeu_si512((__m512i *)latin_output, input);
         return len;
     }
@@ -32,7 +30,6 @@ simdutf_really_inline size_t process_valid_block(const char *buf, size_t len, ch
     int64_t written_out = count_ones(retain);
     __mmask64 store_mask = (1ULL << written_out) - 1;
 
-    // _mm512_mask_storeu_epi8((__m512i *)latin_output, store_mask, output);
     is_remaining ? _mm512_mask_storeu_epi8((__m512i *)latin_output, store_mask, output) : _mm512_storeu_si512((__m512i *)latin_output, output);
 
     return written_out;
