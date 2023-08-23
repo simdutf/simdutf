@@ -2,6 +2,7 @@
 
 // File contains conversion procedure from possibly invalid UTF-8 strings.
 
+// template <bool is_remaining, bool use_masked_store>
 template <bool is_remaining>
 simdutf_really_inline size_t process_block(const char *buf, size_t len, char *latin_output,
                      __m512i minus64, __m512i one,
@@ -43,9 +44,15 @@ simdutf_really_inline size_t process_block(const char *buf, size_t len, char *la
     //This commented out line will net 1GB/s extra but sadly it'll also write past memory bounds that is needed for only the latin1 output =>  
     //is_remaining ? _mm512_mask_storeu_epi8((__m512i *)latin_output, store_mask, output) : _mm512_storeu_si512((__m512i *)latin_output, output);
     _mm512_mask_storeu_epi8((__m512i *)latin_output, store_mask, output);
+/*     if (use_masked_store) {
+        _mm512_mask_storeu_epi8((__m512i *)latin_output, store_mask, output);
+    } else {
+        _mm512_storeu_si512((__m512i *)latin_output, output);
+    } */
 
     return written_out;
 }
+
 size_t utf8_to_latin1_avx512(const char *buf, size_t len, char *latin_output) {
     char *start = latin_output;
     size_t pos = 0;
@@ -53,6 +60,38 @@ size_t utf8_to_latin1_avx512(const char *buf, size_t len, char *latin_output) {
     __m512i one = _mm512_set1_epi8(1);
     __mmask64 next_leading = 0;
     __mmask64 next_bit6 = 0;
+
+/*      while (pos + 128 <= len) {
+         size_t written = process_block<false, false>(buf + pos, 64, latin_output, minus64, one, &next_leading, &next_bit6 );
+         if (written == 0) {
+             return 0; // Indicates error
+         }
+         latin_output += written;
+         pos += 64;
+     } */
+/*      if(pos + 64 <= len) {
+         size_t written = process_block<false, true>(buf + pos, 64, latin_output, minus64, one, &next_leading, &next_bit6 );
+         if (written == 0) {
+             return 0; // Indicates error
+         }
+         latin_output += written;
+         pos += 64;
+     }
+
+     if (pos < len) {
+         size_t remaining = len - pos;
+         size_t written = process_block<true,true>(buf + pos, remaining, latin_output, minus64, one, &next_leading, &next_bit6);
+         if (written == 0) {
+             return 0; // Indicates error
+         }
+         latin_output += written;
+     }
+
+     return (size_t)(latin_output - start); */
+
+
+
+    
 
     while (pos + 64 <= len) {
         size_t written = process_block<false>(buf + pos, 64, latin_output, minus64, one, &next_leading, &next_bit6 );
