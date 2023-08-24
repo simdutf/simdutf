@@ -6,7 +6,7 @@ template <bool is_remaining>
 simdutf_really_inline size_t process_valid_block(const char *buf, size_t len, char *latin_output,
                      __m512i minus64, __m512i one,
                      __mmask64 *next_leading_ptr, __mmask64 *next_bit6_ptr) {
-    __mmask64 load_mask = is_remaining ? _bzhi_u64(~0ULL, len) : ~0ULL;
+    __mmask64 load_mask = is_remaining ? _bzhi_u64(~0ULL, (unsigned int)len) : ~0ULL;
     __m512i input = _mm512_maskz_loadu_epi8(load_mask, (__m512i *)buf);
     __mmask64 nonascii = _mm512_movepi8_mask(input);
 
