@@ -503,7 +503,6 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* bu
 
 simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(const char* buf, size_t len, char* latin1_output) const noexcept {
   // Initialize output length and input length counters
-  size_t outlen = 0;
   size_t inlen = 0;
 
   // First, try to convert as much as possible using the SIMD implementation.
