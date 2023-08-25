@@ -1003,10 +1003,6 @@ struct AppleEvents {
       printf("Error: cannot load pmc database: %d.\n", ret);
       return (worked = false);
     }
-    // printf("loaded db: %s (%s)\n", db->name, db->marketing_name);
-    // printf("number of fixed counters: %zu\n", db->fixed_counter_count);
-    // printf("number of configurable counters: %zu\n",
-    // db->config_counter_count);
 
     // create a config
     kpep_config *cfg = NULL;
@@ -1103,15 +1099,6 @@ struct AppleEvents {
       }
       return 1;
     }
-    /*
-    // We could print it out this way if we wanted to:
-    printf("counters value:\n");
-    for (usize i = 0; i < ev_count; i++) {
-        const event_alias *alias = profile_events + i;
-        usize idx = counter_map[i];
-        u64 val = counters_1[idx] - counters_0[idx];
-        printf("%14s: %llu\n", alias->alias, val);
-    }*/
     return performance_counters {
         counters_0[counter_map[0]], counters_0[counter_map[3]],
         counters_0[counter_map[2]], counters_0[counter_map[1]]};
