@@ -52,7 +52,7 @@ TEST(convert_pure_ASCII) {
     };
 
     auto procedure = [&implementation](const char* utf8, size_t size, char* latin1) -> size_t {
-      return implementation.convert_valid_utf8_to_latin1(utf8, size, latin1);
+      return implementation.convert_utf8_to_latin1(utf8, size, latin1);
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
       return implementation.latin1_length_from_utf8(utf8, size);
@@ -73,7 +73,7 @@ TEST(convert_1_or_2_valid_UTF8_bytes_to_latin1) {
     simdutf::tests::helpers::RandomInt random(0x0000, 0x0ff, seed); // range for 1 or 2 UTF-8 bytes
 
     auto procedure = [&implementation](const char* utf8, size_t size, char* latin1) -> size_t {
-      return implementation.convert_valid_utf8_to_latin1(utf8, size, latin1);
+      return implementation.convert_utf8_to_latin1(utf8, size, latin1);
     };
     auto size_procedure = [&implementation](const char* utf8, size_t size) -> size_t {
       return implementation.latin1_length_from_utf8(utf8, size);
