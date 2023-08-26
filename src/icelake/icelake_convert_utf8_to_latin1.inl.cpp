@@ -49,7 +49,7 @@ simdutf_really_inline size_t process_block_from_utf8_to_latin1(const char *buf, 
   __mmask64 store_mask = (1ULL << written_out) - 1;
 
   // ***************************
-  //  Possible optimization?
+  //  Possible optimization? (Nick Nuon)
   //  This commented out line is 5% faster but sadly it'll also write past
   //  memory bounds for latin1_output: is_remaining ?
   //  _mm512_mask_storeu_epi8((__m512i *)latin_output, store_mask, output) :

@@ -524,7 +524,7 @@ simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(co
 
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
-  return icelake::valid_utf8_to_latin1_avx512(buf,len,latin1_output);
+  return icelake::valid_utf8_to_latin1_avx512(buf, len, latin1_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
