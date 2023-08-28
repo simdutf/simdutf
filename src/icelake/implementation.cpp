@@ -22,6 +22,8 @@ namespace {
 #include "icelake/icelake_from_valid_utf8.inl.cpp"
 #include "icelake/icelake_utf8_validation.inl.cpp"
 #include "icelake/icelake_from_utf8.inl.cpp"
+#include "icelake/icelake_convert_utf8_to_latin1.inl.cpp"
+#include "icelake/icelake_convert_valid_utf8_to_latin1.inl.cpp"
 #include "icelake/icelake_convert_utf16_to_utf32.inl.cpp"
 #include "icelake/icelake_convert_utf32_to_utf8.inl.cpp"
 #include "icelake/icelake_convert_utf32_to_utf16.inl.cpp"
@@ -494,15 +496,35 @@ simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(const char* b
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf8_to_latin1::convert(buf, len, latin1_output);
+  return icelake::utf8_to_latin1_avx512(buf, len, latin1_output);
 }
+
 
 simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(const char* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf8_to_latin1::convert_with_errors(buf, len, latin1_output);
+  // Initialize output length and input length counters
+  size_t inlen = 0;
+
+  // First, try to convert as much as possible using the SIMD implementation.
+  inlen = icelake::utf8_to_latin1_avx512(buf, len, latin1_output);
+  
+  // If we have completely converted the string
+  if(inlen == len) {
+    return {simdutf::SUCCESS, len};
+  }
+  
+  // Else if there are remaining bytes, use the scalar function to process them.
+  // Note: This is assuming scalar::utf8_to_latin1::convert_with_errors is a function that takes 
+  // the input buffer, length, and output buffer, and returns a result object with an error code 
+  // and the number of characters processed.
+  result res = scalar::utf8_to_latin1::convert_with_errors(buf + inlen, len - inlen, latin1_output + inlen);
+  res.count += inlen; // Add the number of characters processed by the SIMD implementation
+
+  return res;
 }
 
+
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf8_to_latin1::convert_valid(buf, len, latin1_output);
+  return icelake::valid_utf8_to_latin1_avx512(buf, len, latin1_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {

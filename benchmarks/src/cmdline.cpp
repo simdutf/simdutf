@@ -3,7 +3,7 @@
 #include <vector>
 #include <stdexcept>
 
-constexpr size_t DEFAULT_ITERATIONS = 3000;
+constexpr size_t DEFAULT_ITERATIONS = 30000; // Such a high number is helpful for stable measures.
 
 namespace {
 
