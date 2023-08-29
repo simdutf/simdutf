@@ -78,7 +78,7 @@ static inline size_t latin1_to_utf8_avx512_branch(__m512i input, char *utf8_outp
     return latin1_to_utf8_avx512_vec(input, 64, utf8_output, 0);
   } else {
     _mm512_storeu_si512(utf8_output, input);
-    return 64;}
+    return 64 + nonascii_count;}
 }
  
 size_t latin1_to_utf8_avx512_start(const char *buf, size_t len, char *utf8_output) {
