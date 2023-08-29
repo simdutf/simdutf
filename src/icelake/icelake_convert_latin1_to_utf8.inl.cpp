@@ -2,7 +2,7 @@
 
 static inline size_t latin1_to_utf8_avx512_vec(__m512i input, size_t input_len, char *utf8_output, int mask_output) {
   __mmask64 nonascii = _mm512_movepi8_mask(input);
-  size_t output_size = input_len + (size_t)_popcnt64(nonascii);
+  size_t output_size = input_len + (size_t)count_ones(nonascii);
   
   // Mask to denote whether the byte is a leading byte that is not ascii
   __mmask64 sixth =
@@ -50,7 +50,7 @@ We adjust for the bytes that have their two most significant bits. This takes ca
   outputB = _mm512_maskz_compress_epi8(maskB, outputB);
   
   
-  size_t output_sizeA = (size_t)_popcnt32((uint32_t)nonascii) + 32;
+  size_t output_sizeA = (size_t)count_ones((uint32_t)nonascii) + 32;
   if(mask_output) {
     if(input_len > 32) { // is the second half of the input vector used?
       __mmask64 write_mask = _bzhi_u64(~0ULL, output_sizeA);
@@ -70,10 +70,9 @@ We adjust for the bytes that have their two most significant bits. This takes ca
   return output_size;
 }
  
-// if the likelihood of non-ASCII characters is low, it may make sense to add a branch for a faster routine
 static inline size_t latin1_to_utf8_avx512_branch(__m512i input, char *utf8_output, int br) {
   __mmask64 nonascii = _mm512_movepi8_mask(input);
-  size_t nonascii_count = (size_t)_popcnt64(nonascii);
+  size_t nonascii_count = (size_t)count_ones(nonascii);
   
   if(br == 0) { // shortcut for no non-ASCII characters
     if(nonascii_count > 0)
