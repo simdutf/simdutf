@@ -71,36 +71,14 @@ We adjust for the bytes that have their two most significant bits. This takes ca
   return output_size;
 }
  
-static inline size_t latin1_to_utf8_avx512_branch(__m512i input, char *utf8_output, int br) {
+static inline size_t latin1_to_utf8_avx512_branch(__m512i input, char *utf8_output) {
   __mmask64 nonascii = _mm512_movepi8_mask(input);
   size_t nonascii_count = (size_t)count_ones(nonascii);
-  
-  if(br == 0) { // shortcut for no non-ASCII characters
-    if(nonascii_count > 0)
-      return latin1_to_utf8_avx512_vec(input, 64, utf8_output, 0);
+  if(nonascii_count > 0){
+    return latin1_to_utf8_avx512_vec(input, 64, utf8_output, 0);
+  } else {
     _mm512_storeu_si512(utf8_output, input);
-    return 64;
-    
-  } else { // shortcut for up to 1 non-ASCII characters
-    if(nonascii_count > 1)
-      return latin1_to_utf8_avx512_vec(input, 64, utf8_output, 0);
-    
-    __mmask64 sixth =
-        _mm512_cmpge_epu8_mask(input, _mm512_set1_epi8(-64));
-    input = _mm512_mask_add_epi8(input, 
-                                  sixth, 
-                                  input, _mm512_set1_epi8(-64));
-    
-    // we're writing either 64 or 65 bytes; write the last byte to cater for the latter case (the earlier bytes will get overwritten)
-    //_mm512_storeu_si512(utf8_output + 1, input);
-    utf8_output[64] = (char)_mm_extract_epi8(_mm512_extracti32x4_epi32(input, 3), 15);
-    
-    __m512i leading = _mm512_mask_blend_epi8(sixth, _mm512_set1_epi8(-62), _mm512_set1_epi8(-61));
-    input = _mm512_mask_expand_epi8(leading, ~nonascii, input);
-    _mm512_storeu_si512(utf8_output, input);
-    
-    return 64 + nonascii_count;
-  }
+    return 64;}
 }
  
 size_t latin1_to_utf8_avx512_start(const char *buf, size_t len, char *utf8_output) {
@@ -109,7 +87,7 @@ size_t latin1_to_utf8_avx512_start(const char *buf, size_t len, char *utf8_outpu
   // if there's at least 128 bytes remaining, we don't need to mask the output
   for (; pos + 128 <= len; pos += 64) {
     __m512i input = _mm512_loadu_si512((__m512i *)(buf + pos));
-    utf8_output += latin1_to_utf8_avx512_branch(input, utf8_output, 0);
+    utf8_output += latin1_to_utf8_avx512_branch(input, utf8_output);
   }
   // in the last 128 bytes, the first 64 may require masking the output
   if (pos + 64 <= len) {
@@ -125,4 +103,3 @@ size_t latin1_to_utf8_avx512_start(const char *buf, size_t len, char *utf8_outpu
   }
   return (size_t)(utf8_output - start);
 }
- 
