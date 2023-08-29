@@ -1,27 +1,5 @@
 // file included directly
 
-
-void printbinary(uint64_t n) {
-  for (size_t i = 0; i < 64; i++) {
-    if (n & 1)
-      printf("1");
-    else
-      printf("0");
-
-    n >>= 1;
-  }
-  printf("\n");
-}
-void print8(const char *name, __m512i x) {
-  printf("%.32s : ", name);
-  uint8_t buffer[64];
-  _mm512_storeu_si512((__m512i *)buffer, x);
-  for (size_t i = 0; i < 64; i++) {
-    printf("%02x ", buffer[i]);
-  }
-  printf("\n");
-}
-
 static inline size_t latin1_to_utf8_avx512_vec(__m512i input, size_t input_len, char *utf8_output, int mask_output) {
   __mmask64 nonascii = _mm512_movepi8_mask(input);
   size_t output_size = input_len + (size_t)_popcnt64(nonascii);
@@ -49,11 +27,7 @@ static inline size_t latin1_to_utf8_avx512_vec(__m512i input, size_t input_len, 
 /* 
 upscale the bytes to 16-bit value, adding the 0b11000000 leading byte in the process.
 We adjust for the bytes that have their two most significant bits. This takes care of the first 32 bytes, assuming we interleaved the bytes. */
-  // Recall: twos complement of -62 = 1100 0010 = 0xc2
-  // say we have aaAA 16 byte unit => 
-  __m512i outputA = _mm512_shldi_epi16(input_interleaved, _mm512_set1_epi8(-62), 8); //this makes C2C2aaAA => C2aaAA00 => C2aa
-  // so we'll get C2aa , C2bb , C2cc ... etc
-  //  here we set up '11' as the leading bits of the 16-bit units if said respective unit IN THE ORIGINAL INPUT is a leading byte
+  __m512i outputA = _mm512_shldi_epi16(input_interleaved, _mm512_set1_epi8(-62), 8); 
   outputA = _mm512_mask_add_epi16(
                                   outputA, 
                                  (__mmask32)sixth, 
@@ -129,30 +103,7 @@ static inline size_t latin1_to_utf8_avx512_branch(__m512i input, char *utf8_outp
   }
 }
  
-/* size_t latin1_to_utf8_avx512_my_nobranch(const char *buf, size_t len, char *utf8_output) {
-  char *start = utf8_output;
-  size_t pos = 0;
-  // if there's at least 128 bytes remaining, we don't need to mask the output
-  for (; pos + 128 <= len; pos += 64) {
-    __m512i input = _mm512_loadu_si512((__m512i *)(buf + pos));
-    utf8_output += latin1_to_utf8_avx512_vec(input, 64, utf8_output, 0);
-  }
-  // in the last 128 bytes, the first 64 may require masking the output
-  if (pos + 64 <= len) {
-    __m512i input = _mm512_loadu_si512((__m512i *)(buf + pos));
-    utf8_output += latin1_to_utf8_avx512_vec(input, 64, utf8_output, 1);
-    pos += 64;
-  }
-  // with the last 64 bytes, the input also needs to be masked
-  if (pos < len) {
-    __mmask64 load_mask = _bzhi_u64(~0ULL, (unsigned int)(len - pos));
-    __m512i input = _mm512_maskz_loadu_epi8(load_mask, (__m512i *)(buf + pos));
-    utf8_output += latin1_to_utf8_avx512_vec(input, len - pos, utf8_output, 1);
-  }
-  return (size_t)(utf8_output - start);
-} */
- 
-size_t latin1_to_utf8_avx512_my_branch0(const char *buf, size_t len, char *utf8_output) {
+size_t latin1_to_utf8_avx512_start(const char *buf, size_t len, char *utf8_output) {
   char *start = utf8_output;
   size_t pos = 0;
   // if there's at least 128 bytes remaining, we don't need to mask the output
@@ -175,25 +126,3 @@ size_t latin1_to_utf8_avx512_my_branch0(const char *buf, size_t len, char *utf8_
   return (size_t)(utf8_output - start);
 }
  
-size_t latin1_to_utf8_avx512_my_branch1(const char *buf, size_t len, char *utf8_output) {
-  char *start = utf8_output;
-  size_t pos = 0;
-  // if there's at least 128 bytes remaining, we don't need to mask the output
-  for (; pos + 128 <= len; pos += 64) {
-    __m512i input = _mm512_loadu_si512((__m512i *)(buf + pos));
-    utf8_output += latin1_to_utf8_avx512_branch(input, utf8_output, 1);
-  }
-  // in the last 128 bytes, the first 64 may require masking the output
-  if (pos + 64 <= len) {
-    __m512i input = _mm512_loadu_si512((__m512i *)(buf + pos));
-    utf8_output += latin1_to_utf8_avx512_vec(input, 64, utf8_output, 1);
-    pos += 64;
-  }
-  // with the last 64 bytes, the input also needs to be masked
-  if (pos < len) {
-    __mmask64 load_mask = _bzhi_u64(~0ULL, (unsigned int)(len - pos));
-    __m512i input = _mm512_maskz_loadu_epi8(load_mask, (__m512i *)(buf + pos));
-    utf8_output += latin1_to_utf8_avx512_vec(input, len - pos, utf8_output, 1);
-  }
-  return (size_t)(utf8_output - start);
-}
