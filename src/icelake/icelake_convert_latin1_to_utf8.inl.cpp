@@ -50,18 +50,17 @@ We adjust for the bytes that have their two most significant bits. This takes ca
   outputB = _mm512_maskz_compress_epi8(maskB, outputB);
   
   
-  // size_t output_sizeA = (size_t)count_ones((uint32_t)nonascii) + 32;
-  unsigned int output_sizeA = (unsigned int)(count_ones(static_cast<uint32_t>(nonascii))) + 32;
+  size_t output_sizeA = (size_t)count_ones((uint32_t)nonascii) + 32;
 
   if(mask_output) {
     if(input_len > 32) { // is the second half of the input vector used?
-      __mmask64 write_mask = _bzhi_u64(~0ULL, output_sizeA);
+      __mmask64 write_mask = _bzhi_u64(~0ULL, (unsigned int)output_sizeA);
       _mm512_mask_storeu_epi8(utf8_output, write_mask, outputA);
       utf8_output += output_sizeA;
-      write_mask = _bzhi_u64(~0ULL, output_size - output_sizeA);
+      write_mask = _bzhi_u64(~0ULL, (unsigned int)(output_size - output_sizeA));
       _mm512_mask_storeu_epi8(utf8_output, write_mask, outputB);
     } else {
-      __mmask64 write_mask = _bzhi_u64(~0ULL, output_size);
+      __mmask64 write_mask = _bzhi_u64(~0ULL, (unsigned int)output_size);
       _mm512_mask_storeu_epi8(utf8_output, write_mask, outputA);
     }
   } else {
