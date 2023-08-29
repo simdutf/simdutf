@@ -71,14 +71,9 @@ inline size_t utf8_length_from_utf16(const char16_t* buf, size_t len) {
   size_t counter{0};
   for(size_t i = 0; i < len; i++) {
     uint16_t word = !match_system(big_endian) ? swap_bytes(p[i]) : p[i];
-    /** ASCII **/
-    if(word <= 0x7F) { counter++; }
-    /** two-byte **/
-    else if (word <= 0x7FF) { counter += 2; }
-    /** three-byte **/
-    else if((word <= 0xD7FF) || (word >= 0xE000)) { counter += 3; }
-    /** surrogates -- 4 bytes **/
-    else { counter += 2; }
+    counter++;                                      // ASCII
+    counter += static_cast<size_t>(word > 0x7F);    // non-ASCII is at least 2 bytes, surrogates are 2*2 == 4 bytes
+    counter += static_cast<size_t>((word > 0x7FF && word <= 0xD7FF) || (word >= 0xE000));   // three-byte
   }
   return counter;
 }
