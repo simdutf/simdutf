@@ -480,10 +480,7 @@ simdutf_warn_unused result implementation::validate_utf32_with_errors(const char
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf8(const char * buf, size_t len, char* utf8_output) const noexcept {
-  // __m512i input_data = _mm512_loadu_si512((__m512i*)buf);
   return icelake::latin1_to_utf8_avx512_start(buf, len, utf8_output);
-  // return icelake::latin1_to_utf8_avx512_branch(buf,len,utf8_output);
-  // return scalar::latin1_to_utf8::convert(buf,len,utf8_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
