@@ -30,6 +30,8 @@ namespace {
 #include "icelake/icelake_ascii_validation.inl.cpp"
 #include "icelake/icelake_utf32_validation.inl.cpp"
 #include "icelake/icelake_convert_utf16_to_utf8.inl.cpp"
+#include "icelake/icelake_convert_latin1_to_utf8.inl.cpp"
+
 
 #include <cstdint>
 
@@ -480,7 +482,7 @@ simdutf_warn_unused result implementation::validate_utf32_with_errors(const char
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf8(const char * buf, size_t len, char* utf8_output) const noexcept {
-  return scalar::latin1_to_utf8::convert(buf,len,utf8_output);
+  return icelake::latin1_to_utf8_avx512_start(buf, len, utf8_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
