@@ -31,19 +31,7 @@ using namespace simd;
           latin1_output += 64;
           pos += 64;
         } else {
-/*           // you might think that a for-loop would work, but under Visual Studio, it is not good enough.
-          static_assert((simd8x64<uint8_t>::NUM_CHUNKS == 2) || (simd8x64<uint8_t>::NUM_CHUNKS == 4),
-              "We support either two or four chunks per 64-byte block.");
-          auto zero = simd8<uint8_t>{uint8_t(0)};
-          if(simd8x64<uint8_t>::NUM_CHUNKS == 2) {
-            this->check_utf8_bytes(input.chunks[0], zero);
-            this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
-          } else if(simd8x64<uint8_t>::NUM_CHUNKS == 4) {
-            this->check_utf8_bytes(input.chunks[0], zero);
-            this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
-            this->check_utf8_bytes(input.chunks[2], input.chunks[1]);
-            this->check_utf8_bytes(input.chunks[3], input.chunks[2]);
-          } */
+/*           // you might think that a for-loop would work, but under Visual Studio, it is not good enough. */
           uint64_t utf8_continuation_mask = input.lt(-65 + 1); // -64 is 1100 0000 in twos complement. Note: in this case, we also have ASCII to account for.
           uint64_t utf8_leading_mask = ~utf8_continuation_mask;
           uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
