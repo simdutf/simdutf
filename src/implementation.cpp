@@ -699,7 +699,7 @@ public:
     return 0;
   }
 
-  simdutf_warn_unused size_t latin1_length_from_utf16( size_t) const noexcept override {
+  simdutf_warn_unused size_t latin1_length_from_utf16(size_t) const noexcept override {
     return 0;
   }
 

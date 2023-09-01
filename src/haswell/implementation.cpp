@@ -537,7 +537,7 @@ simdutf_warn_unused size_t implementation::latin1_length_from_utf16(size_t lengt
   return scalar::utf16::latin1_length_from_utf16(length);
 }
 
-simdutf_warn_unused size_t implementation::latin1_length_from_utf32( size_t length) const noexcept {
+simdutf_warn_unused size_t implementation::latin1_length_from_utf32(size_t length) const noexcept {
   return scalar::utf32::latin1_length_from_utf32(length);
 }
 
