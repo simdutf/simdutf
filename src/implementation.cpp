@@ -219,11 +219,11 @@ public:
     return set_best()->convert_valid_utf8_to_utf32(buf, len, utf32_output);
   }
 
-   simdutf_warn_unused size_t convert_utf16le_to_latin1(const char16_t * buf, size_t len, char* latin1_output) const noexcept final override {
+  simdutf_warn_unused size_t convert_utf16le_to_latin1(const char16_t * buf, size_t len, char* latin1_output) const noexcept final override {
     return set_best()->convert_utf16le_to_latin1(buf, len, latin1_output);
   }
 
-     simdutf_warn_unused size_t convert_utf16be_to_latin1(const char16_t * buf, size_t len, char* latin1_output) const noexcept final override {
+  simdutf_warn_unused size_t convert_utf16be_to_latin1(const char16_t * buf, size_t len, char* latin1_output) const noexcept final override {
     return set_best()->convert_utf16be_to_latin1(buf, len, latin1_output);
   }
 
@@ -830,6 +830,27 @@ simdutf_warn_unused size_t convert_utf8_to_utf16(const char * input, size_t leng
   return convert_utf8_to_utf16le(input, length, utf16_output);
   #endif
 }
+simdutf_warn_unused size_t convert_latin1_to_utf8(const char * buf, size_t len, char* utf8_output) noexcept {
+  return get_active_implementation()->convert_latin1_to_utf8(buf, len,utf8_output);
+}
+simdutf_warn_unused size_t convert_latin1_to_utf16le(const char * buf, size_t len, char16_t* utf16_output) noexcept {
+  return get_active_implementation()->convert_latin1_to_utf16le(buf, len, utf16_output);
+}
+simdutf_warn_unused size_t convert_latin1_to_utf16be(const char * buf, size_t len, char16_t* utf16_output) noexcept{
+  return get_active_implementation()->convert_latin1_to_utf16be(buf, len, utf16_output);
+}
+simdutf_warn_unused size_t convert_latin1_to_utf32(const char * buf, size_t len, char32_t * latin1_output) noexcept {
+  return get_active_implementation()->convert_latin1_to_utf32(buf, len,latin1_output);
+}
+simdutf_warn_unused size_t convert_utf8_to_latin1(const char * buf, size_t len, char* latin1_output) noexcept {
+  return get_active_implementation()->convert_utf8_to_latin1(buf, len,latin1_output);
+}
+simdutf_warn_unused result convert_utf8_to_latin1_with_errors(const char* buf, size_t len, char* latin1_output) noexcept {
+  return get_active_implementation()->convert_utf8_to_latin1_with_errors(buf, len, latin1_output);
+}
+simdutf_warn_unused size_t convert_valid_utf8_to_latin1(const char * buf, size_t len, char* latin1_output) noexcept {
+  return get_active_implementation()->convert_valid_utf8_to_latin1(buf, len,latin1_output);
+}
 simdutf_warn_unused size_t convert_utf8_to_utf16le(const char * input, size_t length, char16_t* utf16_output) noexcept {
   return get_active_implementation()->convert_utf8_to_utf16le(input, length, utf16_output);
 }
@@ -848,12 +869,6 @@ simdutf_warn_unused result convert_utf8_to_utf16le_with_errors(const char * inpu
 }
 simdutf_warn_unused result convert_utf8_to_utf16be_with_errors(const char * input, size_t length, char16_t* utf16_output) noexcept {
   return get_active_implementation()->convert_utf8_to_utf16be_with_errors(input, length, utf16_output);
-}
-simdutf_warn_unused size_t convert_latin1_to_utf16le(const char * input, size_t length, char16_t* utf16_output) noexcept {
-  return get_active_implementation()->convert_latin1_to_utf16le(input, length, utf16_output);
-}
-simdutf_warn_unused size_t convert_latin1_to_utf16be(const char * input, size_t length, char16_t* utf16_output) noexcept {
-  return get_active_implementation()->convert_latin1_to_utf16be(input, length, utf16_output);
 }
 simdutf_warn_unused size_t convert_utf8_to_utf32(const char * input, size_t length, char32_t* utf32_output) noexcept {
   return get_active_implementation()->convert_utf8_to_utf32(input, length, utf32_output);
@@ -1069,6 +1084,19 @@ simdutf_warn_unused size_t count_utf16be(const char16_t * input, size_t length) 
 simdutf_warn_unused size_t count_utf8(const char * input, size_t length) noexcept {
   return get_active_implementation()->count_utf8(input, length);
 }
+simdutf_warn_unused size_t latin1_length_from_utf8(const char * buf, size_t len) noexcept {
+  return get_active_implementation()->latin1_length_from_utf8(buf, len);
+}
+simdutf_warn_unused size_t latin1_length_from_utf16(size_t len) noexcept {
+  return get_active_implementation()->latin1_length_from_utf16(len);
+}
+simdutf_warn_unused size_t latin1_length_from_utf32(size_t len) noexcept {
+  return get_active_implementation()->latin1_length_from_utf32(len);
+}
+simdutf_warn_unused size_t utf8_length_from_latin1(const char * buf, size_t len) noexcept {
+  return get_active_implementation()->utf8_length_from_latin1(buf, len);
+}
+
 simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t * input, size_t length) noexcept {
   #if SIMDUTF_IS_BIG_ENDIAN
   return utf8_length_from_utf16be(input, length);

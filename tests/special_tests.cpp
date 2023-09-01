@@ -332,6 +332,13 @@ TEST(special_cases_utf8_utf16_invalid) {
     size_t utf16words = simdutf::convert_utf8_to_utf16le(
         source.c_str(), source.size(), utf16_output.get());
     ASSERT_TRUE(utf16words == 0);
+
+    size_t expected_latin1words =
+        simdutf::latin1_length_from_utf8(source.c_str(), source.size());
+    std::unique_ptr<char[]> latin1_output{new char[expected_latin1words]};
+    size_t latin1words = simdutf::convert_utf8_to_latin1(
+          source.c_str(), source.size(), latin1_output.get());
+    ASSERT_TRUE(latin1words == 0);
   }
 }
 
@@ -402,8 +409,16 @@ TEST(special_cases_utf8_utf32_invalid) {
     size_t utf32words = simdutf::convert_utf8_to_utf32(
         source.c_str(), source.size(), utf32_output.get());
     ASSERT_TRUE(utf32words == 0);
+
+    size_t expected_latin1words =
+        simdutf::latin1_length_from_utf8(source.c_str(), source.size());
+    std::unique_ptr<char[]> latin1_output{new char[expected_latin1words]};
+    size_t latin1words = simdutf::convert_utf8_to_latin1(
+          source.c_str(), source.size(), latin1_output.get());
+    ASSERT_TRUE(latin1words == 0);
   }
 }
+
 
 
 TEST(special_cases_utf16_utf8_roundtrip) {
