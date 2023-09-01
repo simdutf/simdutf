@@ -190,7 +190,7 @@ inline size_t latin1_length_from_utf8(const char *buf, size_t len) {
 
     size_t answer = len;
     for(size_t i = 0; i < len; i++) {
-        if((c[i] & 0b11100000) == 0b11000000) { answer--;} //if we have a two-byte UTF8 character
+        if((c[i] & 0b11100000) == 0b11000000) { answer--; } // if we have a two-byte UTF8 character
     }
     return answer;
 }

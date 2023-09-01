@@ -39,7 +39,8 @@ inline size_t convert(const char* buf, size_t len, char* latin_output) {
     } else if ((leading_byte & 0b11100000) == 0b11000000) { // the first three bits indicate:
       // We have a two-byte UTF-8
       if(pos + 1 >= len) {
-         return 0; } // minimal bound checking
+        return 0;
+      } // minimal bound checking
       if ((data[pos + 1] & 0b11000000) != 0b10000000) { return 0; } // checks if the next byte is a valid continuation byte in UTF-8. A valid continuation byte starts with 10.
       // range check -
       uint32_t code_point = (leading_byte & 0b00011111) << 6 | (data[pos + 1] & 0b00111111); // assembles the Unicode code point from the two bytes. It does this by discarding the leading 110 and 10 bits from the two bytes, shifting the remaining bits of the first byte, and then combining the results with a bitwise OR operation.
@@ -92,10 +93,11 @@ inline result convert_with_errors(const char* buf, size_t len, char* latin_outpu
       // range check -
       uint32_t code_point = (leading_byte & 0b00011111) << 6 | (data[pos + 1] & 0b00111111); // assembles the Unicode code point from the two bytes. It does this by discarding the leading 110 and 10 bits from the two bytes, shifting the remaining bits of the first byte, and then combining the results with a bitwise OR operation.
       if (code_point < 0x80) {
-        return result(error_code::OVERLONG, pos); }
-      if ( 0xFF < code_point) {
-          return result(error_code::TOO_LARGE, pos);
-          } // We only care about the range 129-255 which is Non-ASCII latin1 characters
+        return result(error_code::OVERLONG, pos);
+      }
+      if (0xFF < code_point) {
+        return result(error_code::TOO_LARGE, pos);
+      } // We only care about the range 129-255 which is Non-ASCII latin1 characters
       *latin_output++ = char(code_point);
       pos += 2;
     } else if ((leading_byte & 0b11110000) == 0b11100000) {
@@ -107,7 +109,8 @@ inline result convert_with_errors(const char* buf, size_t len, char* latin_outpu
     } else {
       // we either have too many continuation bytes or an invalid leading byte
       if ((leading_byte & 0b11000000) == 0b10000000) {
-                return result(error_code::TOO_LONG, pos); }
+        return result(error_code::TOO_LONG, pos);
+      }
 
       return result(error_code::HEADER_BITS, pos);
 
@@ -115,6 +118,46 @@ inline result convert_with_errors(const char* buf, size_t len, char* latin_outpu
   }
   return result(error_code::SUCCESS, latin_output - start);
 }
+
+
+inline result rewind_and_convert_with_errors(size_t prior_bytes, const char* buf, size_t len, char* latin1_output) {
+  size_t extra_len{0};
+  // We potentially need to go back in time and find a leading byte.
+  // In theory '3' would be sufficient, but sometimes the error can go back quite far.
+  size_t how_far_back = prior_bytes;
+  // size_t how_far_back = 3; // 3 bytes in the past + current position
+  // if(how_far_back >= prior_bytes) { how_far_back = prior_bytes; }
+  bool found_leading_bytes{false};
+  // important: it is i <= how_far_back and not 'i < how_far_back'.
+  for(size_t i = 0; i <= how_far_back; i++) {
+    unsigned char byte = buf[0-i];
+    found_leading_bytes = ((byte & 0b11000000) != 0b10000000);
+    if(found_leading_bytes) {
+      buf -= i;
+      extra_len = i;
+      break;
+    }
+  }
+  //
+  // It is possible for this function to return a negative count in its result.
+  // C++ Standard Section 18.1 defines size_t is in <cstddef> which is described in C Standard as <stddef.h>.
+  // C Standard Section 4.1.5 defines size_t as an unsigned integral type of the result of the sizeof operator
+  //
+  // An unsigned type will simply wrap round arithmetically (well defined).
+  //
+  if(!found_leading_bytes) {
+    // If how_far_back == 3, we may have four consecutive continuation bytes!!!
+    // [....] [continuation] [continuation] [continuation] | [buf is continuation]
+    // Or we possibly have a stream that does not start with a leading byte.
+    return result(error_code::TOO_LONG, 0-how_far_back);
+  }
+  result res = convert_with_errors(buf, len + extra_len, latin1_output);
+  if (res.error) {
+    res.count -= extra_len;
+  }
+  return res;
+}
+
 
 } // utf8_to_latin1 namespace
 } // unnamed namespace

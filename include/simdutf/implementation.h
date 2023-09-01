@@ -451,27 +451,27 @@ simdutf_warn_unused size_t convert_valid_utf8_to_utf16be(const char * input, siz
 simdutf_warn_unused size_t convert_valid_utf8_to_utf32(const char * input, size_t length, char32_t* utf32_buffer) noexcept;
 
 
- /**
-   * Return the number of bytes that this Latin1 string would require in UTF-8 format.
-   *
-   * @param input         the Latin1 string to convert
-   * @param length        the length of the string bytes
-   * @return the number of bytes required to encode the Latin1 string as UTF-8
-   */
-    simdutf_warn_unused size_t utf8_length_from_latin1(const char * input, size_t length) noexcept;
+/**
+ * Return the number of bytes that this Latin1 string would require in UTF-8 format.
+ *
+ * @param input         the Latin1 string to convert
+ * @param length        the length of the string bytes
+ * @return the number of bytes required to encode the Latin1 string as UTF-8
+ */
+simdutf_warn_unused size_t utf8_length_from_latin1(const char * input, size_t length) noexcept;
 
-  /**
-   * Compute the number of bytes that this UTF-8 string would require in Latin1 format.
-   *
-   * This function does not validate the input.
-   *
-   * This function is not BOM-aware.
-   *
-   * @param input         the UTF-8 string to convert
-   * @param length        the length of the string in byte
-   * @return the number of bytes required to encode the UTF-8 string as Latin1
-   */
-    simdutf_warn_unused size_t latin1_length_from_utf8(const char * input, size_t length) noexcept;
+/**
+ * Compute the number of bytes that this UTF-8 string would require in Latin1 format.
+ *
+ * This function does not validate the input.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-8 string to convert
+ * @param length        the length of the string in byte
+ * @return the number of bytes required to encode the UTF-8 string as Latin1
+ */
+simdutf_warn_unused size_t latin1_length_from_utf8(const char * input, size_t length) noexcept;
 
 /**
  * Compute the number of 2-byte words that this UTF-8 string would require in UTF-16LE format.
@@ -859,17 +859,16 @@ simdutf_warn_unused size_t convert_valid_utf16be_to_utf32(const char16_t * input
 
 
 /*
-   * Compute the number of bytes that this UTF-16LE/BE string would require in Latin1 format.
-   *
-   * This function does not validate the input.
-   *
-   * This function is not BOM-aware.
-   *
-   * @param input         the UTF-16LE string to convert
-   * @param length        the length of the string in 2-byte words (char16_t)
-   * @return the number of bytes required to encode the UTF-16LE string as Latin1
-   */
-  simdutf_warn_unused size_t latin1_length_from_utf16(size_t length) noexcept;
+ * Compute the number of bytes that this UTF-16LE/BE string would require in Latin1 format.
+ *
+ * This function does not validate the input.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param length        the length of the string in 2-byte words (char16_t)
+ * @return the number of bytes required to encode the UTF-16LE string as Latin1
+ */
+simdutf_warn_unused size_t latin1_length_from_utf16(size_t length) noexcept;
 
 
 /**
@@ -2203,11 +2202,10 @@ public:
    *
    * This function does not validate the input.
    *
-   * @param input         the UTF-32 string to convert
    * @param length        the length of the string in 4-byte words (char32_t)
    * @return the number of bytes required to encode the UTF-32 string as Latin1
    */
-    simdutf_warn_unused virtual size_t latin1_length_from_utf32( size_t length) const noexcept = 0;
+  simdutf_warn_unused virtual size_t latin1_length_from_utf32(size_t length) const noexcept = 0;
 
   /**
    * Compute the number of bytes that this UTF-8 string would require in Latin1 format.
@@ -2218,9 +2216,9 @@ public:
    * @param length        the length of the string in byte
    * @return the number of bytes required to encode the UTF-8 string as Latin1
    */
-    simdutf_warn_unused virtual size_t latin1_length_from_utf8(const char * input, size_t length) const noexcept = 0;
+  simdutf_warn_unused virtual size_t latin1_length_from_utf8(const char * input, size_t length) const noexcept = 0;
 
-/*
+  /*
    * Compute the number of bytes that this UTF-16LE/BE string would require in Latin1 format.
    *
    * This function does not validate the input.
