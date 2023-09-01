@@ -31,7 +31,7 @@ using namespace simd;
           latin1_output += 64;
           pos += 64;
         } else {
-/*           // you might think that a for-loop would work, but under Visual Studio, it is not good enough. */
+          // you might think that a for-loop would work, but under Visual Studio, it is not good enough.
           uint64_t utf8_continuation_mask = input.lt(-65 + 1); // -64 is 1100 0000 in twos complement. Note: in this case, we also have ASCII to account for.
           uint64_t utf8_leading_mask = ~utf8_continuation_mask;
           uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
