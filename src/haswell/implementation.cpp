@@ -47,11 +47,18 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 #include "haswell/avx2_convert_utf8_to_utf16.cpp"
 #include "haswell/avx2_convert_utf8_to_utf32.cpp"
 
+
 #include "haswell/avx2_convert_utf16_to_utf8.cpp"
 #include "haswell/avx2_convert_utf16_to_utf32.cpp"
 
+
 #include "haswell/avx2_convert_utf32_to_utf8.cpp"
 #include "haswell/avx2_convert_utf32_to_utf16.cpp"
+
+#include "haswell/avx2_convert_utf8_to_latin1.cpp"
+
+
+
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
@@ -59,6 +66,8 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 #include "generic/buf_block_reader.h"
 #include "generic/utf8_validation/utf8_lookup4_algorithm.h"
 #include "generic/utf8_validation/utf8_validator.h"
+
+
 // transcoding from UTF-8 to UTF-16
 #include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
 #include "generic/utf8_to_utf16/utf8_to_utf16.h"
@@ -68,6 +77,13 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 // other functions
 #include "generic/utf8.h"
 #include "generic/utf16.h"
+
+
+// transcoding from UTF-8 to Latin 1
+#include "generic/utf8_to_latin1/utf8_to_latin1.h"
+
+
+
 
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
@@ -177,8 +193,13 @@ simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(const char* b
 }
 
 
-simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
+/* simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
   return scalar::utf8_to_latin1::convert(buf, len, latin1_output);
+}
+ */
+simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
+  utf8_to_latin1::validating_transcoder converter;
+  return converter.convert(buf, len, latin1_output);
 }
 
 simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(const char* buf, size_t len, char* latin1_output) const noexcept {
