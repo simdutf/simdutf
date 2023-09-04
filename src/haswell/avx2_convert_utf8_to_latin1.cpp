@@ -17,6 +17,12 @@
    1.760 ins/byte,    0.968 cycle/byte,    3.300 GB/s (2.3 %),     3.194 GHz,    1.819 ins/cycle 
    1.792 ins/char,    0.985 cycle/char,    3.242 Gc/s (2.3 %)     1.02 byte/char  */
 
+/* current: 
+   convert_utf8_to_latin1+haswell, input size: 440052, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin8.txt
+The output is zero which might indicate an error.
+   1.753 ins/byte,    0.975 cycle/byte,    3.275 GB/s (1.8 %),     3.194 GHz,    1.797 ins/cycle 
+   1.784 ins/char,    0.993 cycle/char,    3.218 Gc/s (1.8 %)     1.02 byte/char  */
+
 // Convert up to 12 bytes from utf8 to latin1 using a mask indicating the
 // end of the code points. Only the least significant 12 bits of the mask
 // are accessed.
@@ -113,8 +119,9 @@ auto perform_operations = [&](uint8_t idx) -> __m128i {
 };
 
 
-  const __m128i latin1_packed = perform_operations(idx);
-  const __m128i latin1_packed2 = perform_operations(idx);
+__m128i result1 = perform_operations(idx);
+__m128i result2 = perform_operations(idx2);
+__m256i latin1_packed = _mm256_set_m128i(result1, result2);
 
 
 
@@ -146,7 +153,9 @@ const uint8_t consumed = result.second;*/
 
   // writing 8 bytes even though we only care about the first 6 bytes.
   // performance note: it would be faster to use _mm_storeu_si128, we should investigate.
-  _mm_storel_epi64((__m128i *)latin1_output, latin1_packed);
-  latin1_output += 6; // We wrote 6 bytes.
-  return consumed;
+  // _mm_storel_epi64((__m128i *)latin1_output, latin1_packed);
+  _mm256_storeu_si256((__m256i*)latin1_output, latin1_packed);
+
+  latin1_output += 12; // We wrote 6 bytes.
+  return consumed + consumed2;
 }
