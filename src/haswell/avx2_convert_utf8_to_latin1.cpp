@@ -92,7 +92,17 @@ size_t convert_masked_utf8_to_latin1(const char *input,
   const __m128i latin1_packed = _mm_packus_epi16(composed,composed);
  */
 
-auto perform_operations = [&]() -> __m128i {
+/* auto perform_operations = [&]() -> __m128i {
+  const __m128i sh =
+        _mm_loadu_si128((const __m128i *)tables::utf8_to_utf16::shufutf8[idx]);
+  const __m128i perm = _mm_shuffle_epi8(in, sh);
+  const __m128i ascii = _mm_and_si128(perm, _mm_set1_epi16(0x7f));
+  const __m128i highbyte = _mm_and_si128(perm, _mm_set1_epi16(0x1f00));
+  __m128i composed = _mm_or_si128(ascii, _mm_srli_epi16(highbyte, 2));
+  return _mm_packus_epi16(composed, composed);
+}; */
+
+auto perform_operations = [&](uint8_t idx) -> __m128i {
   const __m128i sh =
         _mm_loadu_si128((const __m128i *)tables::utf8_to_utf16::shufutf8[idx]);
   const __m128i perm = _mm_shuffle_epi8(in, sh);
@@ -102,7 +112,10 @@ auto perform_operations = [&]() -> __m128i {
   return _mm_packus_epi16(composed, composed);
 };
 
-  const __m128i latin1_packed = perform_operations();
+
+  const __m128i latin1_packed = perform_operations(idx);
+  const __m128i latin1_packed2 = perform_operations(idx);
+
 
 
 /* auto handle_fallback = [&](uint16_t input_utf8_end_of_code_point_mask_lambda) -> std::pair<__m128i, uint8_t> {
