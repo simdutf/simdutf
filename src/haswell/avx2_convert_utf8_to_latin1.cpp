@@ -18,10 +18,10 @@
    1.792 ins/char,    0.985 cycle/char,    3.242 Gc/s (2.3 %)     1.02 byte/char  */
 
    /* Unrolled version:
-   convert_utf8_to_latin1+haswell, input size: 440052, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin8.txt
+convert_utf8_to_latin1+haswell, input size: 440052, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin8.txt
 The output is zero which might indicate an error.
-   1.753 ins/byte,    0.975 cycle/byte,    3.274 GB/s (1.7 %),     3.194 GHz,    1.797 ins/cycle 
-   1.784 ins/char,    0.993 cycle/char,    3.216 Gc/s (1.7 %)     1.02 byte/char  */
+   1.705 ins/byte,    0.974 cycle/byte,    3.278 GB/s (2.7 %),     3.194 GHz,    1.750 ins/cycle 
+   1.735 ins/char,    0.992 cycle/char,    3.220 Gc/s (2.7 %)     1.02 byte/char   */
 
 // Convert up to 12 bytes from utf8 to latin1 using a mask indicating the
 // end of the code points. Only the least significant 12 bits of the mask
@@ -40,14 +40,13 @@ size_t convert_masked_utf8_to_latin1(const char *input,
   // This results in more instructions but, potentially, also higher speeds.
   //
   const __m128i in = _mm_loadu_si128((__m128i *)input);
-  const __m128i in_second_half = _mm_loadu_si128((__m128i *)(input + 16));
 
   const uint16_t input_utf8_end_of_code_point_mask =
       utf8_end_of_code_point_mask & 0xfff; //we're only processing 12 bytes in case it`s not all ASCII
   const uint16_t input_utf8_end_of_code_point_mask_2 =
     (utf8_end_of_code_point_mask & 0xfff000) >> 12; //we're only processing 12 bytes in case it`s not all ASCII
 
-  if((input_utf8_end_of_code_point_mask & 0xffffffff) == 0xffffffff) {
+/*   if((input_utf8_end_of_code_point_mask & 0xffffffff) == 0xffffffff) {
     // Load the next 128 bits.
 
     // Combine the two 128-bit registers into a single 256-bit register.
@@ -58,7 +57,7 @@ size_t convert_masked_utf8_to_latin1(const char *input,
 
     latin1_output += 32; // We wrote 32 characters.
     return 32; // We consumed 32 bytes.
-  }
+  } */
 
   if(((utf8_end_of_code_point_mask & 0xffff) == 0xffff)) {
     // We process the data in chunks of 16 bytes.
@@ -71,6 +70,10 @@ size_t convert_masked_utf8_to_latin1(const char *input,
       tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][0];
   const uint8_t consumed =
       tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][1];
+
+  if(idx >= 64) { return consumed; }
+
+  const __m128i in_second_half = _mm_loadu_si128((__m128i *)(input + consumed));
   
   const uint8_t idx2 =
       tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask_2][0];
@@ -80,7 +83,7 @@ size_t convert_masked_utf8_to_latin1(const char *input,
   // this indicates an invalid input:
   // if(idx >= 64) { return consumed; }
 
-  if(idx >= 64 | idx2 >=64) { return consumed + consumed2; } //This causes a performance hit
+  if(idx2 >=64) { return consumed + consumed2; } //This causes a performance hit
 
 
   // Here we should have (idx < 64), if not, there is a bug in the validation or elsewhere.
@@ -124,7 +127,6 @@ __m128i result1 = perform_operations(idx);
 __m128i result2 = perform_operations(idx2);
 
 __m128i latin1_packed = _mm_packus_epi16(result1, result2);
-
 
 
 /* auto handle_fallback = [&](uint16_t input_utf8_end_of_code_point_mask_lambda) -> std::pair<__m128i, uint8_t> {
