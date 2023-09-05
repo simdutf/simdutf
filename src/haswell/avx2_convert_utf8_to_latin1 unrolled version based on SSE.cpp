@@ -115,15 +115,13 @@ auto perform_operations = [&](uint8_t idx) -> __m128i {
   const __m128i ascii = _mm_and_si128(perm, _mm_set1_epi16(0x7f));
   const __m128i highbyte = _mm_and_si128(perm, _mm_set1_epi16(0x1f00));
   __m128i composed = _mm_or_si128(ascii, _mm_srli_epi16(highbyte, 2));
-//   return _mm_packus_epi16(composed, composed);
-    return composed;
+  return _mm_packus_epi16(composed, composed);
 };
 
 
 __m128i result1 = perform_operations(idx);
 __m128i result2 = perform_operations(idx2);
-
-__m128i latin1_packed = _mm_packus_epi16(result1, result2);
+__m256i latin1_packed = _mm256_set_m128i(result1, result2);
 
 
 
@@ -156,8 +154,7 @@ const uint8_t consumed = result.second;*/
   // writing 8 bytes even though we only care about the first 6 bytes.
   // performance note: it would be faster to use _mm_storeu_si128, we should investigate.
   // _mm_storel_epi64((__m128i *)latin1_output, latin1_packed);
-//   _mm256_storeu_si256((__m256i*)latin1_output, latin1_packed);
-  _mm_storeu_si128((__m128i *)latin1_output, latin1_packed);
+  _mm256_storeu_si256((__m256i*)latin1_output, latin1_packed);
 
   latin1_output += 12; // We wrote 6 bytes.
   return consumed + consumed2;
