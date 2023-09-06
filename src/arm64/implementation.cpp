@@ -111,6 +111,7 @@ simdutf_really_inline uint16x8_t convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in
 
 #include "arm64/arm_convert_utf8_to_utf16.cpp"
 #include "arm64/arm_convert_utf8_to_utf32.cpp"
+#include "arm64/arm_convert_utf8_to_latin1.cpp"
 
 #include "arm64/arm_convert_utf16_to_utf8.cpp"
 #include "arm64/arm_convert_utf16_to_utf32.cpp"
@@ -132,11 +133,14 @@ simdutf_really_inline uint16x8_t convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in
 // other functions
 #include "generic/utf8.h"
 #include "generic/utf16.h"
+// transcoding from UTF-8 to Latin 1
+#include "generic/utf8_to_latin1/utf8_to_latin1.h"
+#include "generic/utf8_to_latin1/valid_utf8_to_latin1.h"
 
 // placeholder scalars
 #include "scalar/latin1.h"
-#include "scalar/utf8_to_latin1/valid_utf8_to_latin1.h"
-#include "scalar/utf8_to_latin1/utf8_to_latin1.h"
+//#include "scalar/utf8_to_latin1/valid_utf8_to_latin1.h"
+//#include "scalar/utf8_to_latin1/utf8_to_latin1.h"
 
 //
 // Implementation-specific overrides
@@ -249,15 +253,17 @@ simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(const char* b
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf8_to_latin1::convert(buf, len, latin1_output);
+  utf8_to_latin1::validating_transcoder converter;
+  return converter.convert(buf, len, latin1_output);
 }
 
 simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(const char* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf8_to_latin1::convert_with_errors(buf, len, latin1_output);
+  utf8_to_latin1::validating_transcoder converter;
+  return converter.convert_with_errors(buf, len, latin1_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf8_to_latin1::convert_valid(buf, len, latin1_output);
+  return arm64::utf8_to_latin1::convert_valid(buf,len,latin1_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
