@@ -26,11 +26,13 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
   return simd8<int8_t>(is_third_byte | is_fourth_byte) > int8_t(0);
 }
 
+#include "westmere/internal/loader.cpp"
 #include "westmere/sse_detect_encodings.cpp"
 
 #include "westmere/sse_validate_utf16.cpp"
 #include "westmere/sse_validate_utf32le.cpp"
 
+#include "westmere/sse_convert_latin1_to_utf8.cpp"
 #include "westmere/sse_convert_latin1_to_utf32.cpp"
 
 
@@ -161,7 +163,21 @@ simdutf_warn_unused result implementation::validate_utf32_with_errors(const char
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf8(const char * buf, size_t len, char* utf8_output) const noexcept {
-  return scalar::latin1_to_utf8::convert(buf,len,utf8_output);
+  #if SIMDUTF_IS_BIG_ENDIAN
+  std::pair<const char*, char*> ret = sse_convert_latin1_to_utf8<endianness::BIG>(buf, len, utf8_output);
+  #else
+  std::pair<const char*, char*> ret = sse_convert_latin1_to_utf8<endianness::LITTLE>(buf, len, utf8_output);
+  #endif
+  
+  size_t converted_chars = ret.second - utf8_output;
+
+  if (ret.first != buf + len) {
+    const size_t scalar_converted_chars = scalar::latin1_to_utf8::convert(
+      ret.first, len - (ret.first - buf), ret.second);
+    converted_chars += scalar_converted_chars;
+  }
+
+  return converted_chars;
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
