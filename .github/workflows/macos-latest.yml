@@ -26,3 +26,4 @@ jobs:
           cd build
           cmake -DCMAKE_INSTALL_PREFIX:PATH=../../../build/destination ..
           cmake --build .
+          ./repro
