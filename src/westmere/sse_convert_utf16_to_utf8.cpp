@@ -59,7 +59,6 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
   const __m128i v_0000 = _mm_setzero_si128();
   const __m128i v_f800 = _mm_set1_epi16((int16_t)0xf800);
   const __m128i v_d800 = _mm_set1_epi16((int16_t)0xd800);
-  const __m128i v_c080 = _mm_set1_epi16((int16_t)0xc080);
   const size_t safety_margin = 12; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
 
   while (buf + 16 + safety_margin <= end) {
@@ -108,44 +107,9 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
     const uint16_t one_or_two_bytes_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_or_two_bytes_bytemask));
 
     if (one_or_two_bytes_bitmask == 0xffff) {
-          // 1. prepare 2-byte values
-          // input 16-bit word : [0000|0aaa|aabb|bbbb] x 8
-          // expected output   : [110a|aaaa|10bb|bbbb] x 8
-          const __m128i v_1f00 = _mm_set1_epi16((int16_t)0x1f00);
-          const __m128i v_003f = _mm_set1_epi16((int16_t)0x003f);
-
-          // t0 = [000a|aaaa|bbbb|bb00]
-          const __m128i t0 = _mm_slli_epi16(in, 2);
-          // t1 = [000a|aaaa|0000|0000]
-          const __m128i t1 = _mm_and_si128(t0, v_1f00);
-          // t2 = [0000|0000|00bb|bbbb]
-          const __m128i t2 = _mm_and_si128(in, v_003f);
-          // t3 = [000a|aaaa|00bb|bbbb]
-          const __m128i t3 = _mm_or_si128(t1, t2);
-          // t4 = [110a|aaaa|10bb|bbbb]
-          const __m128i t4 = _mm_or_si128(t3, v_c080);
-
-          // 2. merge ASCII and 2-byte codewords
-          const __m128i utf8_unpacked = _mm_blendv_epi8(t4, in, one_byte_bytemask);
-
-          // 3. prepare bitmask for 8-bit lookup
-          //    one_byte_bitmask = hhggffeeddccbbaa -- the bits are doubled (h - MSB, a - LSB)
-          const uint16_t m0 = one_byte_bitmask & 0x5555;  // m0 = 0h0g0f0e0d0c0b0a
-          const uint16_t m1 = static_cast<uint16_t>(m0 >> 7);                    // m1 = 00000000h0g0f0e0
-          const uint8_t  m2 = static_cast<uint8_t>((m0 | m1) & 0xff);           // m2 =         hdgcfbea
-          // 4. pack the bytes
-          const uint8_t* row = &simdutf::tables::utf16_to_utf8::pack_1_2_utf8_bytes[m2][0];
-          const __m128i shuffle = _mm_loadu_si128((__m128i*)(row + 1));
-          const __m128i utf8_packed = _mm_shuffle_epi8(utf8_unpacked, shuffle);
-
-          // 5. store bytes
-          _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
-
-          // 6. adjust pointers
-          buf += 8;
-          utf8_output += row[0];
-          continue;
-
+      internal::westmere::write_v_u16_11bits_to_utf8(in, utf8_output, one_byte_bytemask, one_byte_bitmask);
+      buf += 8;
+      continue;
     }
 
     // 1. Check if there are any surrogate word in the input chunk.
@@ -299,7 +263,6 @@ std::pair<result, char*> sse_convert_utf16_to_utf8_with_errors(const char16_t* b
   const __m128i v_0000 = _mm_setzero_si128();
   const __m128i v_f800 = _mm_set1_epi16((int16_t)0xf800);
   const __m128i v_d800 = _mm_set1_epi16((int16_t)0xd800);
-  const __m128i v_c080 = _mm_set1_epi16((int16_t)0xc080);
   const size_t safety_margin = 12; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
 
   while (buf + 16 + safety_margin <= end) {
@@ -348,44 +311,9 @@ std::pair<result, char*> sse_convert_utf16_to_utf8_with_errors(const char16_t* b
     const uint16_t one_or_two_bytes_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_or_two_bytes_bytemask));
 
     if (one_or_two_bytes_bitmask == 0xffff) {
-          // 1. prepare 2-byte values
-          // input 16-bit word : [0000|0aaa|aabb|bbbb] x 8
-          // expected output   : [110a|aaaa|10bb|bbbb] x 8
-          const __m128i v_1f00 = _mm_set1_epi16((int16_t)0x1f00);
-          const __m128i v_003f = _mm_set1_epi16((int16_t)0x003f);
-
-          // t0 = [000a|aaaa|bbbb|bb00]
-          const __m128i t0 = _mm_slli_epi16(in, 2);
-          // t1 = [000a|aaaa|0000|0000]
-          const __m128i t1 = _mm_and_si128(t0, v_1f00);
-          // t2 = [0000|0000|00bb|bbbb]
-          const __m128i t2 = _mm_and_si128(in, v_003f);
-          // t3 = [000a|aaaa|00bb|bbbb]
-          const __m128i t3 = _mm_or_si128(t1, t2);
-          // t4 = [110a|aaaa|10bb|bbbb]
-          const __m128i t4 = _mm_or_si128(t3, v_c080);
-
-          // 2. merge ASCII and 2-byte codewords
-          const __m128i utf8_unpacked = _mm_blendv_epi8(t4, in, one_byte_bytemask);
-
-          // 3. prepare bitmask for 8-bit lookup
-          //    one_byte_bitmask = hhggffeeddccbbaa -- the bits are doubled (h - MSB, a - LSB)
-          const uint16_t m0 = one_byte_bitmask & 0x5555;  // m0 = 0h0g0f0e0d0c0b0a
-          const uint16_t m1 = static_cast<uint16_t>(m0 >> 7);                    // m1 = 00000000h0g0f0e0
-          const uint8_t  m2 = static_cast<uint8_t>((m0 | m1) & 0xff);           // m2 =         hdgcfbea
-          // 4. pack the bytes
-          const uint8_t* row = &simdutf::tables::utf16_to_utf8::pack_1_2_utf8_bytes[m2][0];
-          const __m128i shuffle = _mm_loadu_si128((__m128i*)(row + 1));
-          const __m128i utf8_packed = _mm_shuffle_epi8(utf8_unpacked, shuffle);
-
-          // 5. store bytes
-          _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
-
-          // 6. adjust pointers
-          buf += 8;
-          utf8_output += row[0];
-          continue;
-
+      internal::westmere::write_v_u16_11bits_to_utf8(in, utf8_output, one_byte_bytemask, one_byte_bitmask);
+      buf += 8;
+      continue;
     }
 
     // 1. Check if there are any surrogate word in the input chunk.
