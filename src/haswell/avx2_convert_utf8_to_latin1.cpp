@@ -1,26 +1,5 @@
 // depends on "tables/utf8_to_utf16_tables.h"
 
-// for reference, this is the previous version:
-
-// scalar:
-/* convert_utf8_to_latin1+haswell, input size: 440052, iterations: 3000, dataset: unicode_lipsum/wikipedia_mars/french.utflatin8.txt   
-  5.281 ins/byte,    1.872 cycle/byte,    1.706 GB/s (50.2 %),     3.193 GHz,    2.821 ins/cycle 
-   5.376 ins/char,    1.906 cycle/char,    1.676 Gc/s (50.2 %)     1.02 byte/char  */
-
-// SSE
-/* convert_utf8_to_latin1+haswell, input size: 440052, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin8.txt
-   1.760 ins/byte,    0.970 cycle/byte,    3.292 GB/s (2.2 %),     3.194 GHz,    1.814 ins/cycle 
-   1.792 ins/char,    0.988 cycle/char,    3.234 Gc/s (2.2 %)     1.02 byte/char  */
-
-// par (added 32-bit fast path)
-/* convert_utf8_to_latin1+haswell, input size: 440052, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin8.txt
-   1.760 ins/byte,    0.968 cycle/byte,    3.300 GB/s (2.3 %),     3.194 GHz,    1.819 ins/cycle 
-   1.792 ins/char,    0.985 cycle/char,    3.242 Gc/s (2.3 %)     1.02 byte/char  */
-
-
-// depends on "tables/utf8_to_utf16_tables.h"
-
-
 // Convert up to 12 bytes from utf8 to latin1 using a mask indicating the
 // end of the code points. Only the least significant 12 bits of the mask
 // are accessed.
