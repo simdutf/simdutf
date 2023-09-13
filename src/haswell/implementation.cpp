@@ -81,7 +81,7 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 
 // transcoding from UTF-8 to Latin 1
 #include "generic/utf8_to_latin1/utf8_to_latin1.h"
-
+#include "generic/utf8_to_latin1/valid_utf8_to_latin1.h"
 
 
 
@@ -193,26 +193,19 @@ simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(const char* b
 }
 
 
-/* simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf8_to_latin1::convert(buf, len, latin1_output);
-}
- */
 simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
   utf8_to_latin1::validating_transcoder converter;
   return converter.convert(buf, len, latin1_output);
 }
-
-/* simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(const char* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf8_to_latin1::convert_with_errors(buf, len, latin1_output);
-} */
 
 simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(const char* buf, size_t len, char* latin1_output) const noexcept {
   utf8_to_latin1::validating_transcoder converter;
   return converter.convert_with_errors(buf, len, latin1_output);
 }
 
-simdutf_warn_unused size_t implementation::convert_valid_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf8_to_latin1::convert_valid(buf, len, latin1_output);
+simdutf_warn_unused size_t implementation::convert_valid_utf8_to_latin1(const char* input, size_t size,
+    char* latin1_output) const noexcept {
+   return utf8_to_latin1::convert_valid(input, size,  latin1_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
