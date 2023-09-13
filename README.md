@@ -8,8 +8,8 @@
 
 - [Table of contents](#table-of-contents)
 - [simdutf: Unicode validation and transcoding at billions of characters per second](#simdutf-unicode-validation-and-transcoding-at-billions-of-characters-per-second)
-  - [How fast is it?](#how-fast-is-it)
   - [Real-World Usage](#real-world-usage)
+  - [How fast is it?](#how-fast-is-it)
   - [Requirements](#requirements)
   - [Usage (Usage)](#usage-usage)
   - [Usage (CMake)](#usage-cmake)
@@ -60,6 +60,21 @@ The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX,
 
 The library compiles down to a small library of a few hundred kilobytes. Our functions are exception-free and non allocating. We have extensive tests and extensive benchmarks.
 
+
+Real-World Usage
+-----
+
+The simdutf library is used by:
+- [Node.js](https://nodejs.org/en/) (19.4.0 or better, 20.0 or better, 18.15 or better), a standard JavaScript runtime environment,
+- [Bun](https://bun.sh), a fast JavaScript runtime environment,
+- [graaljs](https://github.com/oracle/graaljs), a JavaScript implementation by Oracle,
+- [Couchbase](https://www.couchbase.com),
+- [haskell/text](https://github.com/haskell/text), a library for fast operations over Unicode text,
+- [klogg](https://github.com/variar/klogg), a Really fast log explorer,
+- [Pixie](https://github.com/pixie-io/pixie), observability tool for Kubernetes applications.
+
+
+
 How fast is it?
 -----------------
 
@@ -91,17 +106,6 @@ If your system supports AVX-512, the simdutf library can provide very high perfo
 Datasets: https://github.com/lemire/unicode_lipsum
 
 Please refer to our benchmarking tool for a proper interpretation of the numbers. Our results are reproducible.
-
-
-Real-World Usage
------
-
-The simdutf library is used by:
-- [Node.js](https://nodejs.org/en/) (19.4.0 or better), a standard JavaScript runtime environment (e.g., `buffer.isUtf8(...)`, `buffer.isAscii(...)`, `TextDecoder` calls `simdutf`),
-- [Bun](https://bun.sh), a fast JavaScript runtime environment,
-- [haskell/text](https://github.com/haskell/text), a library for fast operations over Unicode text,
-- [klogg](https://github.com/variar/klogg), a Really fast log explorer,
-- [Pixie](https://github.com/pixie-io/pixie), observability tool for Kubernetes applications.
 
 
 
