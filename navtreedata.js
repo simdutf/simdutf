@@ -27,8 +27,8 @@ var NAVTREE =
   [ "simdutf", "index.html", [
     [ "Table of contents", "index.html#autotoc_md0", null ],
     [ "simdutf: Unicode validation and transcoding at billions of characters per second", "index.html#autotoc_md1", [
-      [ "How fast is it?", "index.html#autotoc_md2", null ],
-      [ "Real-World Usage", "index.html#autotoc_md3", null ],
+      [ "Real-World Usage", "index.html#autotoc_md2", null ],
+      [ "How fast is it?", "index.html#autotoc_md3", null ],
       [ "Requirements", "index.html#autotoc_md4", null ],
       [ "Usage (Usage)", "index.html#autotoc_md5", null ],
       [ "Usage (CMake)", "index.html#autotoc_md6", null ],

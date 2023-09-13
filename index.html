@@ -97,8 +97,8 @@ Table of contents</h1>
 <ul>
 <li><a href="#table-of-contents">Table of contents</a></li>
 <li><a href="#simdutf-unicode-validation-and-transcoding-at-billions-of-characters-per-second">simdutf: Unicode validation and transcoding at billions of characters per second</a><ul>
-<li><a href="#how-fast-is-it">How fast is it?</a></li>
 <li><a href="#real-world-usage">Real-World Usage</a></li>
+<li><a href="#how-fast-is-it">How fast is it?</a></li>
 <li><a href="#requirements">Requirements</a></li>
 <li><a href="#usage-usage">Usage (Usage)</a></li>
 <li><a href="#usage-cmake">Usage (CMake)</a></li>
@@ -144,6 +144,17 @@ simdutf: Unicode validation and transcoding at billions of characters per second
 <p>The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, AVX-512, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion characters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).</p>
 <p>The library compiles down to a small library of a few hundred kilobytes. Our functions are exception-free and non allocating. We have extensive tests and extensive benchmarks.</p>
 <h2><a class="anchor" id="autotoc_md2"></a>
+Real-World Usage</h2>
+<p>The simdutf library is used by:</p><ul>
+<li><a href="https://nodejs.org/en/">Node.js</a> (19.4.0 or better, 20.0 or better, 18.15 or better), a standard JavaScript runtime environment,</li>
+<li><a href="https://bun.sh">Bun</a>, a fast JavaScript runtime environment,</li>
+<li><a href="https://github.com/oracle/graaljs">graaljs</a>, a JavaScript implementation by Oracle,</li>
+<li><a href="https://www.couchbase.com">Couchbase</a>,</li>
+<li><a href="https://github.com/haskell/text">haskell/text</a>, a library for fast operations over Unicode text,</li>
+<li><a href="https://github.com/variar/klogg">klogg</a>, a Really fast log explorer,</li>
+<li><a href="https://github.com/pixie-io/pixie">Pixie</a>, observability tool for Kubernetes applications.</li>
+</ul>
+<h2><a class="anchor" id="autotoc_md3"></a>
 How fast is it?</h2>
 <p>The adoption of the simdutf library by the popular Node.js JavaScript runtime lead to a significant performance gain:</p>
 <blockquote class="doxtable">
@@ -158,15 +169,6 @@ How fast is it?</h2>
 <p><img src="doc/avx512.png" alt="" width="70%" class="inline"/></p>
 <p>Datasets: <a href="https://github.com/lemire/unicode_lipsum">https://github.com/lemire/unicode_lipsum</a></p>
 <p>Please refer to our benchmarking tool for a proper interpretation of the numbers. Our results are reproducible.</p>
-<h2><a class="anchor" id="autotoc_md3"></a>
-Real-World Usage</h2>
-<p>The simdutf library is used by:</p><ul>
-<li><a href="https://nodejs.org/en/">Node.js</a> (19.4.0 or better), a standard JavaScript runtime environment (e.g., <code>buffer.isUtf8(...)</code>, <code>buffer.isAscii(...)</code>, <code>TextDecoder</code> calls <code>simdutf</code>),</li>
-<li><a href="https://bun.sh">Bun</a>, a fast JavaScript runtime environment,</li>
-<li><a href="https://github.com/haskell/text">haskell/text</a>, a library for fast operations over Unicode text,</li>
-<li><a href="https://github.com/variar/klogg">klogg</a>, a Really fast log explorer,</li>
-<li><a href="https://github.com/pixie-io/pixie">Pixie</a>, observability tool for Kubernetes applications.</li>
-</ul>
 <h2><a class="anchor" id="autotoc_md4"></a>
 Requirements</h2>
 <ul>
