@@ -204,9 +204,8 @@ using namespace simd;
       // to give us a good margin.
       size_t leading_byte = 0;
       size_t margin = size;
-      // We count the leading bytes from the end
       for(; margin > 0 && leading_byte < 8; margin--) {
-        leading_byte += (int8_t(in[margin-1]) > -65); // twos complement of -65 us 1011 1111. 
+        leading_byte += (int8_t(in[margin-1]) > -65);
       }
       // If the input is long enough, then we have that margin-1 is the eight last leading byte.
       const size_t safety_margin = size - margin + 1; // to avoid overruns!
