@@ -311,8 +311,8 @@ struct result {
   // In case of success, indicates the number of words validated/written.
 };
 ```
-On error, the `error` field indicates the type of error encountered and the `position` field indicates its word position in the input string.
-We report six types of errors related to Latin1,UTF-8, UTF-16 and UTF-32 encodings:
+On error, the `error` field indicates the type of error encountered and the `count` field indicates indicates the position of the error in the input in bytes or the number of characters validated/written.
+We report six types of errors related to Latin1, UTF-8, UTF-16 and UTF-32 encodings:
 ```c++
 enum error_code {
   SUCCESS = 0,
@@ -339,7 +339,7 @@ The functions that return a boolean indicating whether or not an error has been 
 are meant to be used in an *optimistic setting*---when we expect that inputs will almost always
 be correct.
 
-You may use functions that report an error to indicate where the problem happens, as follows:
+You may use functions that report an error to indicate where the problem happens during, as follows:
 
 ```c++
   std::string bad_ascii = "\x20\x20\x20\x20\x20\xff\x20\x20\x20";
@@ -348,6 +348,22 @@ You may use functions that report an error to indicate where the problem happens
     std::cerr << "error at index " << res.count << std::endl;
   }
 ```
+
+Or as follows:
+
+```c++
+  std::string bad_utf8 = "\xc3\xa9\xc3\xa9\x20\xff\xc3\xa9";
+  simdutf::result res = implementation.validate_utf8_with_errors(bad_utf8.data(), bad_utf8.size());
+  if(res.error != simdutf::error_code::SUCCESS) {
+    std::cerr << "error at index " << res.count << std::endl;
+  }
+  res = implementation.validate_utf8_with_errors(bad_utf8.data(), res.count);
+  // will be successful in this case
+  if(res.error == simdutf::error_code::SUCCESS) {
+    std::cerr << "we have " << res.count << "valid bytes" << std::endl;
+  }
+```
+
 
 We have fast validation functions.
 
@@ -1072,7 +1088,26 @@ simdutf_warn_unused size_t convert_utf16be_to_utf32(const char16_t * input, size
 We have more advanced conversion functions which output a `simdutf::result` structure with
 an indication of the error type and a `count` entry (e.g., `convert_utf8_to_utf16le_with_errors`).
 They are well suited when you expect that there might be errors in the input that require
-further investigation.
+further investigation. The `count` field contains the location of the error in the input in bytes,
+if there is an error, or otherwise the number of words written. You may use these functions as follows:
+
+```c++
+  // this UTF-8 string has a bad byte at index 5
+  std::string bad_utf8 = "\xc3\xa9\xc3\xa9\x20\xff\xc3\xa9";
+  size_t budget_utf16 = simdutf::utf16_length_from_utf8(bad_utf8.data(), bad_utf8.size());
+  std::unique_ptr<char16_t[]> utf16{new char16_t[budget_utf16]};
+  simdutf::result res = simdutf::convert_utf8_to_utf16_with_errors(bad_utf8.data(), bad_utf8.size(), utf16.get());
+  if(res.error != simdutf::error_code::SUCCESS) {
+    std::cerr << "error at index " << res.count << std::endl;
+  }
+  // the following will be successful
+  res = simdutf::convert_utf8_to_utf16_with_errors(bad_utf8.data(), res.count, utf16.get());
+  if(res.error == simdutf::error_code::SUCCESS) {
+    std::cerr << "we have transcoded " << res.count << " characters" << std::endl;
+  }
+```
+
+We have several transcoding functions returning `simdutf::error` results:
 
 ```c++
 
