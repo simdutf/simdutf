@@ -13,9 +13,9 @@ inline simdutf_warn_unused bool validate(const char *buf, size_t len) noexcept {
   uint64_t pos = 0;
   uint32_t code_point = 0;
   while (pos < len) {
-    // check of the next 8 bytes are ascii.
+    // check of the next 16 bytes are ascii.
     uint64_t next_pos = pos + 16;
-    if (next_pos <= len) { // if it is safe to read 8 more bytes, check that they are ascii
+    if (next_pos <= len) { // if it is safe to read 16 more bytes, check that they are ascii
       uint64_t v1;
       std::memcpy(&v1, data + pos, sizeof(uint64_t));
       uint64_t v2;
@@ -79,9 +79,9 @@ inline simdutf_warn_unused result validate_with_errors(const char *buf, size_t l
   size_t pos = 0;
   uint32_t code_point = 0;
   while (pos < len) {
-    // check of the next 8 bytes are ascii.
+    // check of the next 16 bytes are ascii.
     size_t next_pos = pos + 16;
-    if (next_pos <= len) { // if it is safe to read 8 more bytes, check that they are ascii
+    if (next_pos <= len) { // if it is safe to read 16 more bytes, check that they are ascii
       uint64_t v1;
       std::memcpy(&v1, data + pos, sizeof(uint64_t));
       uint64_t v2;
