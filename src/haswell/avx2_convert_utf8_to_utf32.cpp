@@ -29,7 +29,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     return 16; // We consumed 16 bytes.
   }
   if(((utf8_end_of_code_point_mask & 0xffff) == 0xaaaa)) {
-    // We want to take 8 2-byte UTF-8 words and turn them into 8 4-byte UTF-32 words.
+    // We want to take 8 2-byte UTF-8 code units and turn them into 8 4-byte UTF-32 code units.
     // There is probably a more efficient sequence, but the following might do.
     const __m128i sh = _mm_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
     const __m128i perm = _mm_shuffle_epi8(in, sh);
@@ -41,7 +41,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     return 16;
   }
   if(input_utf8_end_of_code_point_mask == 0x924) {
-    // We want to take 4 3-byte UTF-8 words and turn them into 4 4-byte UTF-32 words.
+    // We want to take 4 3-byte UTF-8 code units and turn them into 4 4-byte UTF-32 code units.
     // There is probably a more efficient sequence, but the following might do.
     const __m128i sh = _mm_setr_epi8(2, 1, 0, -1, 5, 4, 3, -1, 8, 7, 6, -1, 11, 10, 9, -1);
     const __m128i perm = _mm_shuffle_epi8(in, sh);
@@ -66,10 +66,10 @@ size_t convert_masked_utf8_to_utf32(const char *input,
   const uint8_t consumed =
       tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][1];
   if (idx < 64) {
-    // SIX (6) input code-words
+    // SIX (6) input code-code units
     // this is a relatively easy scenario
-    // we process SIX (6) input code-words. The max length in bytes of six code
-    // words spanning between 1 and 2 bytes each is 12 bytes. On processors
+    // we process SIX (6) input code-code units. The max length in bytes of six code
+    // code units spanning between 1 and 2 bytes each is 12 bytes. On processors
     // where pdep/pext is fast, we might be able to use a small lookup table.
     const __m128i sh =
         _mm_loadu_si128((const __m128i *)tables::utf8_to_utf16::shufutf8[idx]);
@@ -81,7 +81,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     utf32_output += 6; // We wrote 24 bytes, 6 code points. There is a potential
     // overflow of 32 - 24 = 8 bytes.
   } else if (idx < 145) {
-    // FOUR (4) input code-words
+    // FOUR (4) input code-code units
     const __m128i sh =
         _mm_loadu_si128((const __m128i *)tables::utf8_to_utf16::shufutf8[idx]);
     const __m128i perm = _mm_shuffle_epi8(in, sh);
@@ -98,7 +98,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     _mm_storeu_si128((__m128i *)utf32_output, composed);
     utf32_output += 4;
   } else if (idx < 209) {
-    // TWO (2) input code-words
+    // TWO (2) input code-code units
     const __m128i sh =
         _mm_loadu_si128((const __m128i *)tables::utf8_to_utf16::shufutf8[idx]);
     const __m128i perm = _mm_shuffle_epi8(in, sh);

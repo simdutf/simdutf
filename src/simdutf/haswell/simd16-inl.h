@@ -69,7 +69,7 @@ struct base16_numeric: base16<T> {
   simdutf_really_inline simd16<T>& operator-=(const simd16<T> other) { *this = *this - other; return *static_cast<simd16<T>*>(this); }
 };
 
-// Signed words
+// Signed code units
 template<>
 struct simd16<int16_t> : base16_numeric<int16_t> {
   simdutf_really_inline simd16() : base16_numeric<int16_t>() {}
@@ -86,7 +86,7 @@ struct simd16<int16_t> : base16_numeric<int16_t> {
   simdutf_really_inline simd16<bool> operator<(const simd16<int16_t> other) const { return _mm256_cmpgt_epi16(other, *this); }
 };
 
-// Unsigned words
+// Unsigned code units
 template<>
 struct simd16<uint16_t>: base16_numeric<uint16_t>  {
   simdutf_really_inline simd16() : base16_numeric<uint16_t>() {}
@@ -140,7 +140,7 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
     return _mm256_shuffle_epi8(*this, swap);
   }
 
-  // Pack with the unsigned saturation two uint16_t words into single uint8_t vector
+  // Pack with the unsigned saturation two uint16_t code units into single uint8_t vector
   static simdutf_really_inline simd8<uint8_t> pack(const simd16<uint16_t>& v0, const simd16<uint16_t>& v1) {
     // Note: the AVX2 variant of pack operates on 128-bit lanes, thus
     //       we have to shuffle lanes in order to produce bytes in the
@@ -158,7 +158,7 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
     const __m256i t0 = _mm256_set_m128i(lo_1, lo_0);
     const __m256i t1 = _mm256_set_m128i(hi_1, hi_0);
 
-    // pack words in linear order from v0 and v1
+    // pack code units in linear order from v0 and v1
     return _mm256_packus_epi16(t0, t1);
   }
 };

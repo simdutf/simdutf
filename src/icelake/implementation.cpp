@@ -76,7 +76,7 @@ implementation::detect_encodings(const char *input,
         // be valid UTF-16LE, at least one surrogate must be in the two most
         // significant bytes of a 32-bit word since they always come in pairs in
         // UTF-16LE. Note that we always proceed in multiple of 4 before this
-        // point so there is no offset in 32-bit words.
+        // point so there is no offset in 32-bit code units.
 
         if ((surrogates & 0xaaaaaaaa) != 0) {
           is_utf32 = false;
@@ -92,7 +92,7 @@ implementation::detect_encodings(const char *input,
           if (ends_with_high) {
             buf +=
                 31 *
-                sizeof(char16_t); // advance only by 31 words so that we start
+                sizeof(char16_t); // advance only by 31 code units so that we start
                                   // with the high surrogate on the next round.
           } else {
             buf += 32 * sizeof(char16_t);
@@ -261,7 +261,7 @@ simdutf_warn_unused bool implementation::validate_utf16le(const char16_t *buf, s
         }
         bool ends_with_high = ((highsurrogates & 0x80000000) != 0);
         if(ends_with_high) {
-          buf += 31; // advance only by 31 words so that we start with the high surrogate on the next round.
+          buf += 31; // advance only by 31 code units so that we start with the high surrogate on the next round.
         } else {
           buf += 32;
         }
@@ -310,7 +310,7 @@ simdutf_warn_unused bool implementation::validate_utf16be(const char16_t *buf, s
         }
         bool ends_with_high = ((highsurrogates & 0x80000000) != 0);
         if(ends_with_high) {
-          buf += 31; // advance only by 31 words so that we start with the high surrogate on the next round.
+          buf += 31; // advance only by 31 code units so that we start with the high surrogate on the next round.
         } else {
           buf += 32;
         }
@@ -352,7 +352,7 @@ simdutf_warn_unused result implementation::validate_utf16le_with_errors(const ch
         }
         bool ends_with_high = ((highsurrogates & 0x80000000) != 0);
         if(ends_with_high) {
-          buf += 31; // advance only by 31 words so that we start with the high surrogate on the next round.
+          buf += 31; // advance only by 31 code units so that we start with the high surrogate on the next round.
         } else {
           buf += 32;
         }
@@ -406,7 +406,7 @@ simdutf_warn_unused result implementation::validate_utf16be_with_errors(const ch
         }
         bool ends_with_high = ((highsurrogates & 0x80000000) != 0);
         if(ends_with_high) {
-          buf += 31; // advance only by 31 words so that we start with the high surrogate on the next round.
+          buf += 31; // advance only by 31 code units so that we start with the high surrogate on the next round.
         } else {
           buf += 32;
         }
@@ -804,7 +804,7 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(const char32_t*
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
-  // ret.first.count is always the position in the buffer, not the number of words written even if finished
+  // ret.first.count is always the position in the buffer, not the number of code units written even if finished
   std::pair<result, char*> ret = icelake::avx512_convert_utf32_to_utf8_with_errors(buf, len, utf8_output);
   if (ret.first.count != len) {
     result scalar_res = scalar::utf32_to_utf8::convert_with_errors(
@@ -816,7 +816,7 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(con
       ret.second += scalar_res.count;
     }
   }
-  ret.first.count = ret.second - utf8_output;   // Set count to the number of 8-bit words written
+  ret.first.count = ret.second - utf8_output;   // Set count to the number of 8-bit code units written
   return ret.first;
 }
 
@@ -851,7 +851,7 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf16be(const char32
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf16le_with_errors(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-  // ret.first.count is always the position in the buffer, not the number of words written even if finished
+  // ret.first.count is always the position in the buffer, not the number of code units written even if finished
   std::pair<result, char16_t*> ret = avx512_convert_utf32_to_utf16_with_errors<endianness::LITTLE>(buf, len, utf16_output);
   if (ret.first.count != len) {
     result scalar_res = scalar::utf32_to_utf16::convert_with_errors<endianness::LITTLE>(
@@ -863,12 +863,12 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf16le_with_errors(
       ret.second += scalar_res.count;
     }
   }
-  ret.first.count = ret.second - utf16_output;   // Set count to the number of 8-bit words written
+  ret.first.count = ret.second - utf16_output;   // Set count to the number of 8-bit code units written
   return ret.first;
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf16be_with_errors(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-  // ret.first.count is always the position in the buffer, not the number of words written even if finished
+  // ret.first.count is always the position in the buffer, not the number of code units written even if finished
   std::pair<result, char16_t*> ret = avx512_convert_utf32_to_utf16_with_errors<endianness::BIG>(buf, len, utf16_output);
   if (ret.first.count != len) {
     result scalar_res = scalar::utf32_to_utf16::convert_with_errors<endianness::BIG>(
@@ -880,7 +880,7 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf16be_with_errors(
       ret.second += scalar_res.count;
     }
   }
-  ret.first.count = ret.second - utf16_output;   // Set count to the number of 8-bit words written
+  ret.first.count = ret.second - utf16_output;   // Set count to the number of 8-bit code units written
   return ret.first;
 }
 

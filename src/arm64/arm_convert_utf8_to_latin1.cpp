@@ -34,14 +34,14 @@ size_t convert_masked_utf8_to_latin1(const char *input,
   // this indicates an invalid input:
   if(idx >= 64) { return consumed; }
   // Here we should have (idx < 64), if not, there is a bug in the validation or elsewhere.
-  // SIX (6) input code-words
+  // SIX (6) input code-code units
   // this is a relatively easy scenario
-  // we process SIX (6) input code-words. The max length in bytes of six code
-  // words spanning between 1 and 2 bytes each is 12 bytes.
+  // we process SIX (6) input code-code units. The max length in bytes of six code
+  // code units spanning between 1 and 2 bytes each is 12 bytes.
   // Converts 6 1-2 byte UTF-8 characters to 6 UTF-16 characters.
   // This is a relatively easy scenario
-  // we process SIX (6) input code-words. The max length in bytes of six code
-  // words spanning between 1 and 2 bytes each is 12 bytes.
+  // we process SIX (6) input code-code units. The max length in bytes of six code
+  // code units spanning between 1 and 2 bytes each is 12 bytes.
   uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t*>(simdutf::tables::utf8_to_utf16::shufutf8[idx]));
   // Shuffle
   // 1 byte: 00000000 0bbbbbbb

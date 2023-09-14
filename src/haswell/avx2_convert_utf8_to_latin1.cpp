@@ -50,10 +50,10 @@ size_t convert_masked_utf8_to_latin1(const char *input,
   // this indicates an invalid input:
   if(idx >= 64) { return consumed; }
   // Here we should have (idx < 64), if not, there is a bug in the validation or elsewhere.
-  // SIX (6) input code-words
+  // SIX (6) input code-code units
   // this is a relatively easy scenario
-  // we process SIX (6) input code-words. The max length in bytes of six code
-  // words spanning between 1 and 2 bytes each is 12 bytes. On processors
+  // we process SIX (6) input code-code units. The max length in bytes of six code
+  // code units spanning between 1 and 2 bytes each is 12 bytes. On processors
   // where pdep/pext is fast, we might be able to use a small lookup table.
   const __m128i sh =
         _mm_loadu_si128((const __m128i *)tables::utf8_to_utf16::shufutf8[idx]);

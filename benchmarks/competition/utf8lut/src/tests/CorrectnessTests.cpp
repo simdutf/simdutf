@@ -230,11 +230,11 @@ public:
     int FindSplit(const Data &data, int pos) const {
         pos = std::max(std::min(pos, (int)data.size()), 0);
         if (format == dfUtf32) {
-            //align with 32-bit words
+            //align with 32-bit code units
             while (pos & 3) pos++;
         }
         else if (format == dfUtf16) {
-            //align with 16-bit words
+            //align with 16-bit code units
             while (pos & 1) pos++;
             //check if in the middle of surrogate pair
             if (pos + 1 < data.size()) {

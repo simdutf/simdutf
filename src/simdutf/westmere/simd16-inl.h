@@ -60,7 +60,7 @@ struct base16_numeric: base16<T> {
   simdutf_really_inline simd16<T>& operator-=(const simd16<T> other) { *this = *this - other; return *static_cast<simd16<T>*>(this); }
 };
 
-// Signed words
+// Signed code units
 template<>
 struct simd16<int16_t> : base16_numeric<int16_t> {
   simdutf_really_inline simd16() : base16_numeric<int16_t>() {}
@@ -83,7 +83,7 @@ struct simd16<int16_t> : base16_numeric<int16_t> {
   simdutf_really_inline simd16<bool> operator<(const simd16<int16_t> other) const { return _mm_cmpgt_epi16(other, *this); }
 };
 
-// Unsigned words
+// Unsigned code units
 template<>
 struct simd16<uint16_t>: base16_numeric<uint16_t>  {
   simdutf_really_inline simd16() : base16_numeric<uint16_t>() {}
@@ -146,7 +146,7 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
     return _mm_shuffle_epi8(*this, swap);
   }
 
-  // Pack with the unsigned saturation  two uint16_t words into single uint8_t vector
+  // Pack with the unsigned saturation  two uint16_t code units into single uint8_t vector
   static simdutf_really_inline simd8<uint8_t> pack(const simd16<uint16_t>& v0, const simd16<uint16_t>& v1) {
     return _mm_packus_epi16(v0, v1);
   }

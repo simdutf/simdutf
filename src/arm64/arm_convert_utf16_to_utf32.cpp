@@ -1,6 +1,6 @@
 /*
     The vectorized algorithm works on single SSE register i.e., it
-    loads eight 16-bit words.
+    loads eight 16-bit code units.
 
     We consider three cases:
     1. an input register contains no surrogates and each value
@@ -12,7 +12,7 @@
 
     Ad 1.
 
-    When values are less than 0x0800, it means that a 16-bit words
+    When values are less than 0x0800, it means that a 16-bit code units
     can be converted into: 1) single UTF8 byte (when it's an ASCII
     char) or 2) two UTF8 bytes.
 
@@ -26,7 +26,7 @@
 
     Ad 2.
 
-    When values fit in 16-bit words, but are above 0x07ff, then
+    When values fit in 16-bit code units, but are above 0x07ff, then
     a single word may produce one, two or three UTF8 bytes.
 
     We prepare data for all these three cases in two registers.
@@ -73,7 +73,7 @@ std::pair<const char16_t*, char32_t*> arm_convert_utf16_to_utf32(const char16_t*
     // It might seem like checking for surrogates_bitmask == 0xc000 could help. However,
     // it is likely an uncommon occurrence.
       if (vmaxvq_u16(surrogates_bytemask) == 0) {
-      // case: no surrogate pairs, extend all 16-bit words to 32-bit words
+      // case: no surrogate pairs, extend all 16-bit code units to 32-bit code units
       vst1q_u32(utf32_output,  vmovl_u16(vget_low_u16(in)));
       vst1q_u32(utf32_output+4,  vmovl_high_u16(in));
       utf32_output += 8;
@@ -138,7 +138,7 @@ std::pair<result, char32_t*> arm_convert_utf16_to_utf32_with_errors(const char16
     // It might seem like checking for surrogates_bitmask == 0xc000 could help. However,
     // it is likely an uncommon occurrence.
       if (vmaxvq_u16(surrogates_bytemask) == 0) {
-      // case: no surrogate pairs, extend all 16-bit words to 32-bit words
+      // case: no surrogate pairs, extend all 16-bit code units to 32-bit code units
       vst1q_u32(utf32_output,  vmovl_u16(vget_low_u16(in)));
       vst1q_u32(utf32_output+4,  vmovl_high_u16(in));
       utf32_output += 8;

@@ -75,7 +75,7 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
             continue;
 
       } else {
-        // case: words from register produce either 1, 2 or 3 UTF-8 bytes
+        // case: code units from register produce either 1, 2 or 3 UTF-8 bytes
         const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
         const uint16x8_t v_dfff = vmovq_n_u16((uint16_t)0xdfff);
         forbidden_bytemask = vorrq_u16(vandq_u16(vcleq_u16(utf16_packed, v_dfff), vcgeq_u16(utf16_packed, v_d800)), forbidden_bytemask);
@@ -92,7 +92,7 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
             2. [0000|0bbb|bbcc|cccc] => [110b|bbbb], [10cc|cccc]              - two UTF-8 bytes
             3. [aaaa|bbbb|bbcc|cccc] => [1110|aaaa], [10bb|bbbb], [10cc|cccc] - three UTF-8 bytes
 
-            We expand the input word (16-bit) into two words (32-bit), thus
+            We expand the input word (16-bit) into two code units (32-bit), thus
             we have room for four bytes. However, we need five distinct bit
             layouts. Note that the last byte in cases #2 and #3 is the same.
 
@@ -103,7 +103,7 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
             either byte 1 for case #2 or byte 2 for case #3. Note that they
             differ by exactly one bit.
 
-            Finally from these two words we build proper UTF-8 sequence, taking
+            Finally from these two code units we build proper UTF-8 sequence, taking
             into account the case (i.e, the number of bytes to write).
           */
           /**
@@ -135,11 +135,11 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
           const uint16x8_t s4 = veorq_u16(s3, m0);
   #undef simdutf_vec
 
-          // 4. expand words 16-bit => 32-bit
+          // 4. expand code units 16-bit => 32-bit
           const uint8x16_t out0 = vreinterpretq_u8_u16(vzip1q_u16(t2, s4));
           const uint8x16_t out1 = vreinterpretq_u8_u16(vzip2q_u16(t2, s4));
 
-          // 5. compress 32-bit words into 1, 2 or 3 bytes -- 2 x shuffle
+          // 5. compress 32-bit code units into 1, 2 or 3 bytes -- 2 x shuffle
           const uint16x8_t v_007f = vmovq_n_u16((uint16_t)0x007F);
           const uint16x8_t one_byte_bytemask = vcleq_u16(utf16_packed, v_007f);
   #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
@@ -165,7 +165,7 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
           const uint16_t mask = vaddvq_u16(combined);
           // The following fast path may or may not be beneficial.
           /*if(mask == 0) {
-            // We only have three-byte words. Use fast path.
+            // We only have three-byte code units. Use fast path.
             const uint8x16_t shuffle = {2,3,1,6,7,5,10,11,9,14,15,13,0,0,0,0};
             const uint8x16_t utf8_0 = vqtbl1q_u8(out0, shuffle);
             const uint8x16_t utf8_1 = vqtbl1q_u8(out1, shuffle);
@@ -309,7 +309,7 @@ std::pair<result, char*> arm_convert_utf32_to_utf8_with_errors(const char32_t* b
             continue;
 
       } else {
-        // case: words from register produce either 1, 2 or 3 UTF-8 bytes
+        // case: code units from register produce either 1, 2 or 3 UTF-8 bytes
 
         // check for invalid input
         const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
@@ -331,7 +331,7 @@ std::pair<result, char*> arm_convert_utf32_to_utf8_with_errors(const char32_t* b
             2. [0000|0bbb|bbcc|cccc] => [110b|bbbb], [10cc|cccc]              - two UTF-8 bytes
             3. [aaaa|bbbb|bbcc|cccc] => [1110|aaaa], [10bb|bbbb], [10cc|cccc] - three UTF-8 bytes
 
-            We expand the input word (16-bit) into two words (32-bit), thus
+            We expand the input word (16-bit) into two code units (32-bit), thus
             we have room for four bytes. However, we need five distinct bit
             layouts. Note that the last byte in cases #2 and #3 is the same.
 
@@ -342,7 +342,7 @@ std::pair<result, char*> arm_convert_utf32_to_utf8_with_errors(const char32_t* b
             either byte 1 for case #2 or byte 2 for case #3. Note that they
             differ by exactly one bit.
 
-            Finally from these two words we build proper UTF-8 sequence, taking
+            Finally from these two code units we build proper UTF-8 sequence, taking
             into account the case (i.e, the number of bytes to write).
           */
           /**
@@ -374,11 +374,11 @@ std::pair<result, char*> arm_convert_utf32_to_utf8_with_errors(const char32_t* b
           const uint16x8_t s4 = veorq_u16(s3, m0);
   #undef simdutf_vec
 
-          // 4. expand words 16-bit => 32-bit
+          // 4. expand code units 16-bit => 32-bit
           const uint8x16_t out0 = vreinterpretq_u8_u16(vzip1q_u16(t2, s4));
           const uint8x16_t out1 = vreinterpretq_u8_u16(vzip2q_u16(t2, s4));
 
-          // 5. compress 32-bit words into 1, 2 or 3 bytes -- 2 x shuffle
+          // 5. compress 32-bit code units into 1, 2 or 3 bytes -- 2 x shuffle
           const uint16x8_t v_007f = vmovq_n_u16((uint16_t)0x007F);
           const uint16x8_t one_byte_bytemask = vcleq_u16(utf16_packed, v_007f);
   #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
@@ -404,7 +404,7 @@ std::pair<result, char*> arm_convert_utf32_to_utf8_with_errors(const char32_t* b
           const uint16_t mask = vaddvq_u16(combined);
           // The following fast path may or may not be beneficial.
           /*if(mask == 0) {
-            // We only have three-byte words. Use fast path.
+            // We only have three-byte code units. Use fast path.
             const uint8x16_t shuffle = {2,3,1,6,7,5,10,11,9,14,15,13,0,0,0,0};
             const uint8x16_t utf8_0 = vqtbl1q_u8(out0, shuffle);
             const uint8x16_t utf8_1 = vqtbl1q_u8(out1, shuffle);

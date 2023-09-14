@@ -14,7 +14,7 @@ TEST(special_cases_utf8_utf32_roundtrip) {
   for (const std::string &source : cases) {
     bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());
     ASSERT_TRUE(validutf8);
-    // We need a buffer of size where to write the UTF-16LE words.
+    // We need a buffer where to write the UTF-16LE code units.
     size_t expected_utf32words =
         simdutf::utf32_length_from_utf8(source.c_str(), source.size());
     std::unique_ptr<char32_t[]> utf32_output{new char32_t[expected_utf32words]};
@@ -36,7 +36,7 @@ TEST(special_cases_utf8_utf32_roundtrip) {
     }
 
     // convert it back:
-    // We need a buffer of size where to write the UTF-8 words.
+    // We need a buffer where to write the UTF-8 code units.
     size_t expected_utf8words =
         simdutf::utf8_length_from_utf32(utf32_output.get(), utf32words);
     ASSERT_TRUE(expected_utf8words == source.size());
@@ -72,7 +72,7 @@ TEST(special_cases_utf8_utf16le_roundtrip) {
   for (const std::string &source : cases) {
     bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());
     ASSERT_TRUE(validutf8);
-    // We need a buffer of size where to write the UTF-16LE words.
+    // We need a buffer where to write the UTF-16LE code units.
     size_t expected_utf16words =
         simdutf::utf16_length_from_utf8(source.c_str(), source.size());
     std::unique_ptr<char16_t[]> utf16_output{new char16_t[expected_utf16words]};
@@ -94,7 +94,7 @@ TEST(special_cases_utf8_utf16le_roundtrip) {
     }
 
     // convert it back:
-    // We need a buffer of size where to write the UTF-8 words.
+    // We need a buffer where to write the UTF-8 code units.
     size_t expected_utf8words =
         simdutf::utf8_length_from_utf16le(utf16_output.get(), utf16words);
     ASSERT_TRUE(expected_utf8words == source.size());
@@ -130,7 +130,7 @@ TEST(special_cases_utf8_utf16be_roundtrip) {
   for (const std::string &source : cases) {
     bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());
     ASSERT_TRUE(validutf8);
-    // We need a buffer of size where to write the UTF-16LE words.
+    // We need a buffer where to write the UTF-16LE code units.
     size_t expected_utf16words =
         simdutf::utf16_length_from_utf8(source.c_str(), source.size());
     std::unique_ptr<char16_t[]> utf16_output{new char16_t[expected_utf16words]};
@@ -152,7 +152,7 @@ TEST(special_cases_utf8_utf16be_roundtrip) {
     }
 
     // convert it back:
-    // We need a buffer of size where to write the UTF-8 words.
+    // We need a buffer where to write the UTF-8 code units.
     size_t expected_utf8words =
         simdutf::utf8_length_from_utf16be(utf16_output.get(), utf16words);
     ASSERT_TRUE(expected_utf8words == source.size());
@@ -188,7 +188,7 @@ TEST(special_cases_utf8_utf16_roundtrip) {
   for (const std::string &source : cases) {
     bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());
     ASSERT_TRUE(validutf8);
-    // We need a buffer of size where to write the UTF-16LE words.
+    // We need a buffer where to write the UTF-16LE code units.
     size_t expected_utf16words =
         simdutf::utf16_length_from_utf8(source.c_str(), source.size());
     std::unique_ptr<char16_t[]> utf16_output{new char16_t[expected_utf16words]};
@@ -210,7 +210,7 @@ TEST(special_cases_utf8_utf16_roundtrip) {
     }
 
     // convert it back:
-    // We need a buffer of size where to write the UTF-8 words.
+    // We need a buffer where to write the UTF-8 code units.
     size_t expected_utf8words =
         simdutf::utf8_length_from_utf16(utf16_output.get(), utf16words);
     ASSERT_TRUE(expected_utf8words == source.size());

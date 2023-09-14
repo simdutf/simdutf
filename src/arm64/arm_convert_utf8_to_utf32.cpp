@@ -29,7 +29,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     return 16; // We consumed 16 bytes.
   }
   if(input_utf8_end_of_code_point_mask == 0x924) {
-    // We want to take 4 3-byte UTF-8 words and turn them into 4 4-byte UTF-32 words.
+    // We want to take 4 3-byte UTF-8 code units and turn them into 4 4-byte UTF-32 code units.
     // Convert to UTF-16
     uint16x4_t composed_utf16 = convert_utf8_3_byte_to_utf16(in);
     // Zero extend and store via ST2 with a zero.
@@ -41,7 +41,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
 
   // 2 byte sequences occur in short bursts in languages like Greek and Russian.
   if(input_utf8_end_of_code_point_mask == 0xaaa) {
-    // We want to take 6 2-byte UTF-8 words and turn them into 6 4-byte UTF-32 words.
+    // We want to take 6 2-byte UTF-8 code units and turn them into 6 4-byte UTF-32 code units.
     // Convert to UTF-16
     uint16x8_t composed_utf16 = convert_utf8_2_byte_to_utf16(in);
     // Zero extend and store via ST2 with a zero.
@@ -59,7 +59,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
 
 
   if (idx < 64) {
-    // SIX (6) input code-words
+    // SIX (6) input code-code units
     // Convert to UTF-16
     uint16x8_t composed_utf16 = convert_utf8_1_to_2_byte_to_utf16(in, idx);
     // Zero extend and store with ST2 and zero
@@ -68,7 +68,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     utf32_output += 6; // We wrote 6 32-bit characters.
     return consumed;
   } else if (idx < 145) {
-    // FOUR (4) input code-words
+    // FOUR (4) input code-code units
     // UTF-16 and UTF-32 use similar algorithms, but UTF-32 skips the narrowing.
     uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t*>(simdutf::tables::utf8_to_utf16::shufutf8[idx]));
     // Shuffle
@@ -97,9 +97,9 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     utf32_output += 4; // We wrote 4 32-bit characters.
     return consumed;
   } else if (idx < 209) {
-    // THREE (3) input code-words
+    // THREE (3) input code-code units
     if (input_utf8_end_of_code_point_mask == 0x888) {
-      // We want to take 3 4-byte UTF-8 words and turn them into 3 4-byte UTF-32 words.
+      // We want to take 3 4-byte UTF-8 code units and turn them into 3 4-byte UTF-32 code units.
       // This uses the same method as the fixed 3 byte version, reversing and shift left insert.
       // However, there is no need for a shuffle mask now, just rev16 and rev32.
       //

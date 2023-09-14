@@ -3,7 +3,7 @@
 // File contains conversion procedure from possibly invalid UTF-8 strings.
 
 /**
- * Attempts to convert up to len 1-byte words from in (in UTF-8 format) to
+ * Attempts to convert up to len 1-byte code units from in (in UTF-8 format) to
  * out.
  * Returns the position of the input and output after the processing is
  * completed. Upon error, the output is set to null.

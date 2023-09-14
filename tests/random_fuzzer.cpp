@@ -77,7 +77,7 @@ bool fuzz_this(const char *data, size_t size) {
     }
     if (validutf8) {
       valid_utf8++;
-      // We need a buffer of size where to write the UTF-16LE words.
+      // We need a buffer where to write the UTF-16LE code units.
       size_t expected_utf16words =
           e->utf16_length_from_utf8(source.c_str(), source.size());
       std::unique_ptr<char16_t[]> utf16_output{
@@ -93,7 +93,7 @@ bool fuzz_this(const char *data, size_t size) {
         return false;
       }
       // convert it back:
-      // We need a buffer of size where to write the UTF-8 words.
+      // We need a buffer where to write the UTF-8 code units.
       size_t expected_utf8words =
           e->utf8_length_from_utf16le(utf16_output.get(), utf16words);
       std::unique_ptr<char[]> utf8_output{ new char[expected_utf8words] };
@@ -107,7 +107,7 @@ bool fuzz_this(const char *data, size_t size) {
       }
     } else {
       // invalid input!!!
-      // We need a buffer of size where to write the UTF-16LE words.
+      // We need a buffer where to write the UTF-16LE code units.
       size_t expected_utf16words =
           e->utf16_length_from_utf8(source.c_str(), source.size());
       std::unique_ptr<char16_t[]> utf16_output{
@@ -126,7 +126,7 @@ bool fuzz_this(const char *data, size_t size) {
      * Transcoding from UTF-8 to UTF-16BE.
      */
     if (validutf8) {
-      // We need a buffer of size where to write the UTF-16BE words.
+      // We need a buffer where to write the UTF-16BE code units.
       size_t expected_utf16words =
           e->utf16_length_from_utf8(source.c_str(), source.size());
       std::unique_ptr<char16_t[]> utf16_output{
@@ -142,7 +142,7 @@ bool fuzz_this(const char *data, size_t size) {
         return false;
       }
       // convert it back:
-      // We need a buffer of size where to write the UTF-8 words.
+      // We need a buffer where to write the UTF-8 code units.
       size_t expected_utf8words =
           e->utf8_length_from_utf16be(utf16_output.get(), utf16words);
       std::unique_ptr<char[]> utf8_output{ new char[expected_utf8words] };
@@ -156,7 +156,7 @@ bool fuzz_this(const char *data, size_t size) {
       }
     } else {
       // invalid input!!!
-      // We need a buffer of size where to write the UTF-16BE words.
+      // We need a buffer where to write the UTF-16BE code units.
       size_t expected_utf16words =
           e->utf16_length_from_utf8(source.c_str(), source.size());
       std::unique_ptr<char16_t[]> utf16_output{
@@ -174,7 +174,7 @@ bool fuzz_this(const char *data, size_t size) {
      * Transcoding from UTF-8 to UTF-32.
      */
     if (validutf8) {
-      // We need a buffer of size where to write the UTF-32 words.
+      // We need a buffer where to write the UTF-32 code units.
       size_t expected_utf32words =
           e->utf32_length_from_utf8(source.c_str(), source.size());
       std::unique_ptr<char32_t[]> utf32_output{
@@ -189,7 +189,7 @@ bool fuzz_this(const char *data, size_t size) {
         return -1;
       }
       // convert it back:
-      // We need a buffer of size where to write the UTF-8 words.
+      // We need a buffer where to write the UTF-8 code units.
       size_t expected_utf8words =
           e->utf8_length_from_utf32(utf32_output.get(), utf32words);
       std::unique_ptr<char[]> utf8_output{ new char[expected_utf8words] };
@@ -221,7 +221,7 @@ bool fuzz_this(const char *data, size_t size) {
      * Transcoding from UTF-8 to Latin 1
      */
     if (validutf8) {
-      // We need a buffer of size where to write the UTF-16LE words.
+      // We need a buffer where to write the UTF-16LE code units.
       size_t expected_latin1words =
           e->latin1_length_from_utf8(source.c_str(), source.size());
       std::unique_ptr<char[]> latin1_output{
@@ -232,7 +232,7 @@ bool fuzz_this(const char *data, size_t size) {
           source.c_str(), source.size(), latin1_output.get());
       if(latin1words != 0) {
         // convert it back:
-        // We need a buffer of size where to write the UTF-8 words.
+        // We need a buffer where to write the UTF-8 code units.
         size_t expected_utf8words =
             e->utf8_length_from_latin1(latin1_output.get(), latin1words);
         std::unique_ptr<char[]> utf8_output{ new char[expected_utf8words] };
@@ -247,7 +247,7 @@ bool fuzz_this(const char *data, size_t size) {
       }
     } else {
       // invalid input!!!
-      // We need a buffer of size where to write the Latin 1 words.
+      // We need a buffer where to write the Latin 1 code units.
       size_t expected_latin1words =
           e->latin1_length_from_utf8(source.c_str(), source.size());
       std::unique_ptr<char[]> latin1_output{
@@ -273,7 +273,7 @@ bool fuzz_this(const char *data, size_t size) {
     }
     if (validutf16le) {
       valid_utf16le++;
-      // We need a buffer of size where to write the UTF-16 words.
+      // We need a buffer where to write the UTF-16 code units.
       size_t expected_utf8words = e->utf8_length_from_utf16le(
           (char16_t *)source.c_str(), source.size() / 2);
       std::unique_ptr<char[]> utf8_output{ new char[expected_utf8words] };
@@ -286,7 +286,7 @@ bool fuzz_this(const char *data, size_t size) {
         return false;
       }
       // convert it back:
-      // We need a buffer of size where to write the UTF-16 words.
+      // We need a buffer where to write the UTF-16 code units.
       size_t expected_utf16words =
           e->utf16_length_from_utf8(utf8_output.get(), utf8words);
       std::unique_ptr<char16_t[]> utf16_output{
@@ -303,7 +303,7 @@ bool fuzz_this(const char *data, size_t size) {
       }
     } else {
       // invalid input!!!
-      // We need a buffer of size where to write the UTF-16 words.
+      // We need a buffer where to write the UTF-16 code units.
       size_t expected_utf8words = e->utf8_length_from_utf16le(
           (char16_t *)source.c_str(), source.size() / 2);
       std::unique_ptr<char[]> utf8_output{ new char[expected_utf8words] };
@@ -327,7 +327,7 @@ bool fuzz_this(const char *data, size_t size) {
     }
     if (validutf16be) {
       valid_utf16be++;
-      // We need a buffer of size where to write the UTF-16 words.
+      // We need a buffer where to write the UTF-16 code units.
       size_t expected_utf8words = e->utf8_length_from_utf16be(
           (char16_t *)source.c_str(), source.size() / 2);
       std::unique_ptr<char[]> utf8_output{ new char[expected_utf8words] };
@@ -340,7 +340,7 @@ bool fuzz_this(const char *data, size_t size) {
         return false;
       }
       // convert it back:
-      // We need a buffer of size where to write the UTF-16 words.
+      // We need a buffer where to write the UTF-16 code units.
       size_t expected_utf16words =
           e->utf16_length_from_utf8(utf8_output.get(), utf8words);
       std::unique_ptr<char16_t[]> utf16_output{
@@ -357,7 +357,7 @@ bool fuzz_this(const char *data, size_t size) {
       }
     } else {
       // invalid input!!!
-      // We need a buffer of size where to write the UTF-16 words.
+      // We need a buffer where to write the UTF-16 code units.
       size_t expected_utf8words = e->utf8_length_from_utf16be(
           (char16_t *)source.c_str(), source.size() / 2);
       std::unique_ptr<char[]> utf8_output{ new char[expected_utf8words] };
@@ -375,7 +375,7 @@ bool fuzz_this(const char *data, size_t size) {
      */
     bool validlatin1 = true; // has to be
     if (validlatin1) {
-      // We need a buffer of size where to write the UTF-8 words.
+      // We need a buffer where to write the UTF-8 code units.
       size_t expected_utf8words = e->utf8_length_from_latin1(
           source.c_str(), source.size());
       std::unique_ptr<char[]> utf8_output{ new char[expected_utf8words] };
@@ -388,7 +388,7 @@ bool fuzz_this(const char *data, size_t size) {
         return false;
       }
       // convert it back:
-      // We need a buffer of size where to write the latin1 words.
+      // We need a buffer where to write the latin1 code units.
       size_t expected_latin1words =
           e->latin1_length_from_utf8(utf8_output.get(), utf8words);
       std::unique_ptr<char[]> latin1_output{
@@ -405,7 +405,7 @@ bool fuzz_this(const char *data, size_t size) {
       }
     }
     if (validlatin1) {
-      // We need a buffer of size where to write the UTF-16 words.
+      // We need a buffer where to write the UTF-16 code units.
       size_t expected_utf16words = e->utf16_length_from_latin1(
           source.size());
       std::unique_ptr<char16_t[]> utf16_output{ new char16_t[expected_utf16words] };
@@ -418,7 +418,7 @@ bool fuzz_this(const char *data, size_t size) {
         return false;
       }
       // convert it back:
-      // We need a buffer of size where to write the latin1 words.
+      // We need a buffer where to write the latin1 code units.
       size_t expected_latin1words =
           e->latin1_length_from_utf16(utf16words);
       std::unique_ptr<char[]> latin1_output{
@@ -435,7 +435,7 @@ bool fuzz_this(const char *data, size_t size) {
       }
     }
     if (validlatin1) {
-      // We need a buffer of size where to write the UTF-16 words.
+      // We need a buffer where to write the UTF-16 code units.
       size_t expected_utf16words = e->utf16_length_from_latin1(
           source.size());
       std::unique_ptr<char16_t[]> utf16_output{ new char16_t[expected_utf16words] };
@@ -448,7 +448,7 @@ bool fuzz_this(const char *data, size_t size) {
         return false;
       }
       // convert it back:
-      // We need a buffer of size where to write the latin1 words.
+      // We need a buffer where to write the latin1 code units.
       size_t expected_latin1words =
           e->latin1_length_from_utf16(utf16words);
       std::unique_ptr<char[]> latin1_output{
@@ -466,7 +466,7 @@ bool fuzz_this(const char *data, size_t size) {
     }
 
     if (validlatin1) {
-      // We need a buffer of size where to write the UTF-16 words.
+      // We need a buffer where to write the UTF-16 code units.
       size_t expected_utf32words = e->utf32_length_from_latin1(source.size());
       std::unique_ptr<char32_t[]> utf32_output{ new char32_t[expected_utf32words] };
       size_t utf32words = e->convert_latin1_to_utf32(
@@ -478,7 +478,7 @@ bool fuzz_this(const char *data, size_t size) {
         return false;
       }
       // convert it back:
-      // We need a buffer of size where to write the latin1 words.
+      // We need a buffer where to write the latin1 code units.
       size_t expected_latin1words =
           e->latin1_length_from_utf32(utf32words);
       std::unique_ptr<char[]> latin1_output{
