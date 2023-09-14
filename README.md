@@ -253,6 +253,8 @@ We use three types of data pointer types:
 - `char*` for UTF-8 or indeterminate Unicode formats,
 - `char16_t*` for UTF-16 (both UTF-16LE and UTF-16BE),
 - `char32_t*` for UTF-32. UTF-32 is primarily used for internal use, not data interchange. Thus, unless otherwise stated, `char32_t` refers to the native type and is typically UTF-32LE since virtually all systems are little-endian today.
+In generic terms, we refer to `char`, `char16_t`,  and `char32_t` as *words*. A *character* may use several *words*: between 1 and 4 words in UTF-8, and between
+1 and 2 words in UTF-16LE and UTF-16BE.
 
 Our functions and declarations are all in the `simdutf` namespace. Thus you should prefix our functions
 and types with `simdutf::` as required.
@@ -307,11 +309,11 @@ For validation and transcoding, we also provide functions that will stop on erro
 ```c++
 struct result {
   error_code error; // see `struct error_code`.
-  size_t count; // In case of error, indicates the position of the error in the input in bytes.
+  size_t count; // In case of error, indicates the position of the error in the input in words.
   // In case of success, indicates the number of words validated/written.
 };
 ```
-On error, the `error` field indicates the type of error encountered and the `count` field indicates indicates the position of the error in the input in bytes or the number of characters validated/written.
+On error, the `error` field indicates the type of error encountered and the `count` field indicates indicates the position of the error in the input in words or the number of characters validated/written.
 We report six types of errors related to Latin1, UTF-8, UTF-16 and UTF-32 encodings:
 ```c++
 enum error_code {
@@ -331,7 +333,7 @@ enum error_code {
 
 ```
 On success, the `error` field is set to `SUCCESS` and the `position` field indicates either the number of words validated for validation functions or the number of written
-words in the output format for transcoding functions.
+words in the output format for transcoding functions. In ASCII, Latin 1 and UTF-8, words occupy 8 bits (they are bytes); in UTF-16LE and UTF-16BE, words occupy 16 bits; in UTF-32, words occupy 32 bits.
 
 Generally speaking, functions that report errors always stop soon after an error is
 encountered and might therefore be faster on inputs where an error occurs early in the input.
@@ -386,7 +388,7 @@ simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept;
  *
  * @param buf the ASCII string to validate.
  * @param len the length of the string in bytes.
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of words validated if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of words validated if successful.
  */
 simdutf_warn_unused result validate_ascii_with_errors(const char *buf, size_t len) noexcept;
 
@@ -411,7 +413,7 @@ simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept;
  *
  * @param buf the UTF-8 string to validate.
  * @param len the length of the string in bytes.
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of words validated if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of words validated if successful.
  */
 simdutf_warn_unused result validate_utf8_with_errors(const char *buf, size_t len) noexcept;
 
@@ -470,7 +472,7 @@ simdutf_warn_unused bool validate_utf16be(const char16_t *buf, size_t len) noexc
  *
  * @param buf the UTF-16 string to validate.
  * @param len the length of the string in number of 2-byte words (char16_t).
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of words validated if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of words validated if successful.
  */
 simdutf_warn_unused result validate_utf16_with_errors(const char16_t *buf, size_t len) noexcept;
 
@@ -484,7 +486,7 @@ simdutf_warn_unused result validate_utf16_with_errors(const char16_t *buf, size_
  *
  * @param buf the UTF-16LE string to validate.
  * @param len the length of the string in number of 2-byte words (char16_t).
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of words validated if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of words validated if successful.
  */
 simdutf_warn_unused result validate_utf16le_with_errors(const char16_t *buf, size_t len) noexcept;
 
@@ -498,7 +500,7 @@ simdutf_warn_unused result validate_utf16le_with_errors(const char16_t *buf, siz
  *
  * @param buf the UTF-16BE string to validate.
  * @param len the length of the string in number of 2-byte words (char16_t).
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of words validated if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of words validated if successful.
  */
 simdutf_warn_unused result validate_utf16be_with_errors(const char16_t *buf, size_t len) noexcept;
 
@@ -524,7 +526,7 @@ simdutf_warn_unused bool validate_utf32(const char32_t *buf, size_t len) noexcep
  *
  * @param buf the UTF-32 string to validate.
  * @param len the length of the string in number of 4-byte words (char32_t).
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of words validated if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of words validated if successful.
  */
 simdutf_warn_unused result validate_utf32_with_errors(const char32_t *buf, size_t len) noexcept;
 
@@ -928,7 +930,7 @@ simdutf_warn_unused size_t convert_utf8_to_utf32(const char * input, size_t leng
    * @param input         the UTF-16BE string to convert
    * @param length        the length of the string in 2-byte words (char16_t)
    * @param latin1_buffer   the pointer to buffer that can hold conversion result
-   * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of char written if successful.
+   * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of char written if successful.
    */
   simdutf_warn_unused size_t convert_utf16be_to_latin1(const char16_t * input, size_t length, char* latin1_buffer) noexcept;
 
@@ -1088,7 +1090,7 @@ simdutf_warn_unused size_t convert_utf16be_to_utf32(const char16_t * input, size
 We have more advanced conversion functions which output a `simdutf::result` structure with
 an indication of the error type and a `count` entry (e.g., `convert_utf8_to_utf16le_with_errors`).
 They are well suited when you expect that there might be errors in the input that require
-further investigation. The `count` field contains the location of the error in the input in bytes,
+further investigation. The `count` field contains the location of the error in the input in words,
 if there is an error, or otherwise the number of words written. You may use these functions as follows:
 
 ```c++
@@ -1120,7 +1122,7 @@ We have several transcoding functions returning `simdutf::error` results:
    * @param input         the UTF-8 string to convert
    * @param length        the length of the string in bytes
    * @param latin1_output  the pointer to buffer that can hold conversion result
-   * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of words validated if successful.
+   * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of words validated if successful.
    */
   simdutf_warn_unused result convert_utf8_to_latin1_with_errors(const char * input, size_t length, char* latin1_output) noexcept;
 
@@ -1134,7 +1136,7 @@ We have several transcoding functions returning `simdutf::error` results:
    * @param input         the UTF-16LE string to convert
    * @param length        the length of the string in 2-byte words (char16_t)
    * @param latin1_buffer   the pointer to buffer that can hold conversion result
-   * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of char written if successful.
+   * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of char written if successful.
    */
   simdutf_warn_unused result convert_utf16le_to_latin1_with_errors(const char16_t * input, size_t length, char* latin1_buffer) noexcept;
 
@@ -1148,7 +1150,7 @@ We have several transcoding functions returning `simdutf::error` results:
    * @param input         the UTF-16BE string to convert
    * @param length        the length of the string in 2-byte words (char16_t)
    * @param latin1_buffer   the pointer to buffer that can hold conversion result
-   * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of char written if successful.
+   * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of char written if successful.
    */
   simdutf_warn_unused result convert_utf16be_to_latin1_with_errors(const char16_t * input, size_t length, char* latin1_buffer) noexcept;
 
@@ -1163,7 +1165,7 @@ We have several transcoding functions returning `simdutf::error` results:
  * @param input         the UTF-8 string to convert
  * @param length        the length of the string in bytes
  * @param utf16_buffer  the pointer to buffer that can hold conversion result
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of char16_t written if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of char16_t written if successful.
  */
 simdutf_warn_unused result convert_utf8_to_utf16_with_errors(const char * input, size_t length, char16_t* utf16_output) noexcept;
 
@@ -1176,7 +1178,7 @@ simdutf_warn_unused result convert_utf8_to_utf16_with_errors(const char * input,
  * @param input         the UTF-8 string to convert
  * @param length        the length of the string in bytes
  * @param utf16_buffer  the pointer to buffer that can hold conversion result
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of char16_t written if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of char16_t written if successful.
  */
 simdutf_warn_unused result convert_utf8_to_utf16le_with_errors(const char * input, size_t length, char16_t* utf16_output) noexcept;
 
@@ -1189,7 +1191,7 @@ simdutf_warn_unused result convert_utf8_to_utf16le_with_errors(const char * inpu
  * @param input         the UTF-8 string to convert
  * @param length        the length of the string in bytes
  * @param utf16_buffer  the pointer to buffer that can hold conversion result
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of char16_t written if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of char16_t written if successful.
  */
 simdutf_warn_unused result convert_utf8_to_utf16be_with_errors(const char * input, size_t length, char16_t* utf16_output) noexcept;
 
@@ -1202,7 +1204,7 @@ simdutf_warn_unused result convert_utf8_to_utf16be_with_errors(const char * inpu
  * @param input         the UTF-8 string to convert
  * @param length        the length of the string in bytes
  * @param utf32_buffer  the pointer to buffer that can hold conversion result
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of char32_t written if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of char32_t written if successful.
  */
 simdutf_warn_unused result convert_utf8_to_utf32_with_errors(const char * input, size_t length, char32_t* utf32_output) noexcept;
 
@@ -1218,7 +1220,7 @@ simdutf_warn_unused result convert_utf8_to_utf32_with_errors(const char * input,
  * @param input         the UTF-16LE string to convert
  * @param length        the length of the string in 2-byte words (char16_t)
  * @param utf8_buffer   the pointer to buffer that can hold conversion result
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of char written if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of char written if successful.
  */
 simdutf_warn_unused result convert_utf16le_to_utf8_with_errors(const char16_t * input, size_t length, char* utf8_buffer) noexcept;
 
@@ -1233,7 +1235,7 @@ simdutf_warn_unused result convert_utf16le_to_utf8_with_errors(const char16_t * 
  * @param input         the UTF-16BE string to convert
  * @param length        the length of the string in 2-byte words (char16_t)
  * @param utf8_buffer   the pointer to buffer that can hold conversion result
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of char written if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of char written if successful.
  */
 simdutf_warn_unused result convert_utf16be_to_utf8_with_errors(const char16_t * input, size_t length, char* utf8_buffer) noexcept;
 
@@ -1249,7 +1251,7 @@ simdutf_warn_unused result convert_utf16be_to_utf8_with_errors(const char16_t * 
    * @param input         the UTF-32 string to convert
    * @param length        the length of the string in 4-byte words (char32_t)
    * @param latin1_buffer   the pointer to buffer that can hold conversion result
-   * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of char written if successful.
+   * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of char written if successful.
    */
 
   simdutf_warn_unused result convert_utf32_to_latin1_with_errors(const char32_t * input, size_t length, char* latin1_buffer) noexcept;
@@ -1266,7 +1268,7 @@ simdutf_warn_unused result convert_utf16be_to_utf8_with_errors(const char16_t * 
  * @param input         the UTF-32 string to convert
  * @param length        the length of the string in 4-byte words (char32_t)
  * @param utf8_buffer   the pointer to buffer that can hold conversion result
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of char written if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of char written if successful.
  */
 simdutf_warn_unused result convert_utf32_to_utf8_with_errors(const char32_t * input, size_t length, char* utf8_buffer) noexcept;
 
@@ -1282,7 +1284,7 @@ simdutf_warn_unused result convert_utf32_to_utf8_with_errors(const char32_t * in
  * @param input         the UTF-32 string to convert
  * @param length        the length of the string in 4-byte words (char32_t)
  * @param utf16_buffer   the pointer to buffer that can hold conversion result
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of char16_t written if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of char16_t written if successful.
  */
 simdutf_warn_unused result convert_utf32_to_utf16_with_errors(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;
 
@@ -1297,7 +1299,7 @@ simdutf_warn_unused result convert_utf32_to_utf16_with_errors(const char32_t * i
  * @param input         the UTF-32 string to convert
  * @param length        the length of the string in 4-byte words (char32_t)
  * @param utf16_buffer   the pointer to buffer that can hold conversion result
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of char16_t written if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of char16_t written if successful.
  */
 simdutf_warn_unused result convert_utf32_to_utf16le_with_errors(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;
 
@@ -1312,7 +1314,7 @@ simdutf_warn_unused result convert_utf32_to_utf16le_with_errors(const char32_t *
  * @param input         the UTF-32 string to convert
  * @param length        the length of the string in 4-byte words (char32_t)
  * @param utf16_buffer   the pointer to buffer that can hold conversion result
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of char16_t written if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of char16_t written if successful.
  */
 simdutf_warn_unused result convert_utf32_to_utf16be_with_errors(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;
 
@@ -1328,7 +1330,7 @@ simdutf_warn_unused result convert_utf32_to_utf16be_with_errors(const char32_t *
  * @param input         the UTF-16 string to convert
  * @param length        the length of the string in 2-byte words (char16_t)
  * @param utf32_buffer   the pointer to buffer that can hold conversion result
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of char32_t written if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of char32_t written if successful.
  */
 simdutf_warn_unused result convert_utf16_to_utf32_with_errors(const char16_t * input, size_t length, char32_t* utf32_buffer) noexcept;
 
@@ -1343,7 +1345,7 @@ simdutf_warn_unused result convert_utf16_to_utf32_with_errors(const char16_t * i
  * @param input         the UTF-16LE string to convert
  * @param length        the length of the string in 2-byte words (char16_t)
  * @param utf32_buffer   the pointer to buffer that can hold conversion result
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of char32_t written if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of char32_t written if successful.
  */
 simdutf_warn_unused result convert_utf16le_to_utf32_with_errors(const char16_t * input, size_t length, char32_t* utf32_buffer) noexcept;
 
@@ -1358,7 +1360,7 @@ simdutf_warn_unused result convert_utf16le_to_utf32_with_errors(const char16_t *
  * @param input         the UTF-16BE string to convert
  * @param length        the length of the string in 2-byte words (char16_t)
  * @param utf32_buffer   the pointer to buffer that can hold conversion result
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of char32_t written if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in words) if any, or the number of char32_t written if successful.
  */
 simdutf_warn_unused result convert_utf16be_to_utf32_with_errors(const char16_t * input, size_t length, char32_t* utf32_buffer) noexcept;
 
