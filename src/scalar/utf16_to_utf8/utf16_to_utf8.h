@@ -12,7 +12,7 @@ inline size_t convert(const char16_t* buf, size_t len, char* utf8_output) {
   size_t pos = 0;
   char* start{utf8_output};
   while (pos < len) {
-    // try to convert the next block of 8 ASCII characters
+    // try to convert the next block of 8 bytes
     if (pos + 4 <= len) { // if it is safe to read 8 more bytes, check that they are ascii
       uint64_t v;
       ::memcpy(&v, data + pos, sizeof(uint64_t));
@@ -71,7 +71,7 @@ inline result convert_with_errors(const char16_t* buf, size_t len, char* utf8_ou
   size_t pos = 0;
   char* start{utf8_output};
   while (pos < len) {
-    // try to convert the next block of 8 ASCII characters
+    // try to convert the next block of 8 bytes
     if (pos + 4 <= len) { // if it is safe to read 8 more bytes, check that they are ascii
       uint64_t v;
       ::memcpy(&v, data + pos, sizeof(uint64_t));
