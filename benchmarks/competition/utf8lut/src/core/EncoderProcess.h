@@ -24,12 +24,12 @@ struct EncoderCore {
             __m128i reg0 = _mm_loadu_si128((const __m128i *)pSource + 0);
             __m128i reg1 = _mm_loadu_si128((const __m128i *)pSource + 1);
             __m128i shuf = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
-            //shuffle all lower 16-bit code units to lower halves of registers
+            //shuffle all lower 16-bit words to lower halves of registers
             reg0 = _mm_shuffle_epi8(reg0, shuf);
             reg1 = _mm_shuffle_epi8(reg1, shuf);
-            //get all 8 lower 16-bit code units
+            //get all 8 lower 16-bit words
             reg = _mm_unpacklo_epi64(reg0, reg1);
-            //if required, check that higher 16-bit code units are zero
+            //if required, check that higher 16-bit words are zero
             if (CheckExceed && !_mm_cmp_allone(_mm_cmpeq_epi16(_mm_unpackhi_epi64(reg0, reg1), _mm_setzero_si128())))
                 return false;
         }
