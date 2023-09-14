@@ -298,6 +298,77 @@ convert_latin1_to_utf32+westmere, input size: 271743, iterations: 30000, dataset
 } */
 
 
+/* convert_latin1_to_utf32+haswell, input size: 82168, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/esperanto.latin1.txt
+   0.628 ins/byte,    0.373 cycle/byte,    8.610 GB/s (38.3 %),     3.210 GHz,    1.684 ins/cycle 
+   0.628 ins/char,    0.373 cycle/char,    8.610 Gc/s (38.3 %)     1.00 byte/char 
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+convert_latin1_to_utf32+icelake, input size: 82168, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/esperanto.latin1.txt
+   0.255 ins/byte,    0.272 cycle/byte,   11.457 GB/s (16.6 %),     3.114 GHz,    0.938 ins/cycle 
+   0.255 ins/char,    0.272 cycle/char,   11.457 Gc/s (16.6 %)     1.00 byte/char 
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+convert_latin1_to_utf32+iconv, input size: 82168, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/esperanto.latin1.txt
+  32.031 ins/byte,    6.020 cycle/byte,    0.531 GB/s (0.4 %),     3.194 GHz,    5.321 ins/cycle 
+  32.031 ins/char,    6.020 cycle/char,    0.531 Gc/s (0.4 %)     1.00 byte/char 
+convert_latin1_to_utf32+icu, input size: 82168, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/esperanto.latin1.txt
+  54.839 ins/byte,   10.694 cycle/byte,    0.299 GB/s (7.6 %),     3.193 GHz,    5.128 ins/cycle 
+  54.839 ins/char,   10.694 cycle/char,    0.299 Gc/s (7.6 %)     1.00 byte/char 
+convert_latin1_to_utf32+westmere, input size: 82168, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/esperanto.latin1.txt
+   1.191 ins/byte,    0.253 cycle/byte,   12.723 GB/s (4.9 %),     3.217 GHz,    4.712 ins/cycle 
+   1.191 ins/char,    0.253 cycle/char,   12.723 Gc/s (4.9 %)     1.00 byte/char 
+input detected as unknown
+current system detected as icelake
+===========================
+convert_latin1_to_utf32+haswell, input size: 432305, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.latin1.txt
+   0.626 ins/byte,    0.624 cycle/byte,    5.121 GB/s (2.1 %),     3.196 GHz,    1.002 ins/cycle 
+   0.626 ins/char,    0.624 cycle/char,    5.121 Gc/s (2.1 %)     1.00 byte/char 
+convert_latin1_to_utf32+icelake, input size: 432305, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.latin1.txt
+   0.251 ins/byte,    0.529 cycle/byte,    5.852 GB/s (1.9 %),     3.098 GHz,    0.474 ins/cycle 
+   0.251 ins/char,    0.529 cycle/char,    5.852 Gc/s (1.9 %)     1.00 byte/char 
+convert_latin1_to_utf32+iconv, input size: 432305, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.latin1.txt
+  32.024 ins/byte,    6.036 cycle/byte,    0.529 GB/s (0.6 %),     3.193 GHz,    5.306 ins/cycle 
+  32.024 ins/char,    6.036 cycle/char,    0.529 Gc/s (0.6 %)     1.00 byte/char 
+convert_latin1_to_utf32+icu, input size: 432305, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.latin1.txt
+  54.797 ins/byte,   10.703 cycle/byte,    0.298 GB/s (9.1 %),     3.189 GHz,    5.120 ins/cycle 
+  54.797 ins/char,   10.703 cycle/char,    0.298 Gc/s (9.1 %)     1.00 byte/char 
+convert_latin1_to_utf32+westmere, input size: 432305, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.latin1.txt
+   1.188 ins/byte,    0.522 cycle/byte,    6.119 GB/s (1.1 %),     3.196 GHz,    2.275 ins/cycle 
+   1.188 ins/char,    0.522 cycle/char,    6.119 Gc/s (1.1 %)     1.00 byte/char 
+input detected as unknown
+current system detected as icelake
+===========================
+convert_latin1_to_utf32+haswell, input size: 199331, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/german.latin1.txt
+   0.626 ins/byte,    0.253 cycle/byte,   12.639 GB/s (2.1 %),     3.203 GHz,    2.472 ins/cycle 
+   0.626 ins/char,    0.253 cycle/char,   12.639 Gc/s (2.1 %)     1.00 byte/char 
+convert_latin1_to_utf32+icelake, input size: 199331, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/german.latin1.txt
+   0.252 ins/byte,    0.253 cycle/byte,   12.269 GB/s (1.9 %),     3.105 GHz,    0.994 ins/cycle 
+   0.252 ins/char,    0.253 cycle/char,   12.269 Gc/s (1.9 %)     1.00 byte/char 
+convert_latin1_to_utf32+iconv, input size: 199331, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/german.latin1.txt
+  32.026 ins/byte,    6.019 cycle/byte,    0.531 GB/s (0.5 %),     3.193 GHz,    5.321 ins/cycle 
+  32.026 ins/char,    6.019 cycle/char,    0.531 Gc/s (0.5 %)     1.00 byte/char 
+convert_latin1_to_utf32+icu, input size: 199331, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/german.latin1.txt
+  54.808 ins/byte,   10.697 cycle/byte,    0.298 GB/s (7.9 %),     3.193 GHz,    5.124 ins/cycle 
+  54.808 ins/char,   10.697 cycle/char,    0.298 Gc/s (7.9 %)     1.00 byte/char 
+convert_latin1_to_utf32+westmere, input size: 199331, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/german.latin1.txt
+   1.189 ins/byte,    0.272 cycle/byte,   11.778 GB/s (3.7 %),     3.208 GHz,    4.365 ins/cycle 
+   1.189 ins/char,    0.272 cycle/char,   11.778 Gc/s (3.7 %)     1.00 byte/char 
+input detected as unknown
+current system detected as icelake
+===========================
+convert_latin1_to_utf32+haswell, input size: 271743, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/portuguese.latin1.txt
+   0.626 ins/byte,    0.356 cycle/byte,    8.983 GB/s (2.2 %),     3.200 GHz,    1.757 ins/cycle 
+   0.626 ins/char,    0.356 cycle/char,    8.983 Gc/s (2.2 %)     1.00 byte/char 
+convert_latin1_to_utf32+icelake, input size: 271743, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/portuguese.latin1.txt
+   0.252 ins/byte,    0.356 cycle/byte,    8.721 GB/s (2.5 %),     3.101 GHz,    0.708 ins/cycle 
+   0.252 ins/char,    0.356 cycle/char,    8.721 Gc/s (2.5 %)     1.00 byte/char 
+convert_latin1_to_utf32+iconv, input size: 271743, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/portuguese.latin1.txt
+  32.025 ins/byte,    6.034 cycle/byte,    0.529 GB/s (0.5 %),     3.193 GHz,    5.307 ins/cycle 
+  32.025 ins/char,    6.034 cycle/char,    0.529 Gc/s (0.5 %)     1.00 byte/char 
+convert_latin1_to_utf32+icu, input size: 271743, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/portuguese.latin1.txt
+  54.803 ins/byte,   10.703 cycle/byte,    0.298 GB/s (8.7 %),     3.193 GHz,    5.120 ins/cycle 
+  54.803 ins/char,   10.703 cycle/char,    0.298 Gc/s (8.7 %)     1.00 byte/char 
+convert_latin1_to_utf32+westmere, input size: 271743, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/portuguese.latin1.txt
+   1.189 ins/byte,    0.371 cycle/byte,    8.619 GB/s (2.4 %),     3.201 GHz,    3.201 ins/cycle 
+   1.189 ins/char,    0.371 cycle/char,    8.619 Gc/s (2.4 %)     1.00 byte/char  */
 
 std::pair<const char*, char32_t*> avx512_convert_latin1_to_utf32(const char* buf, size_t len, char32_t* utf32_output) {
     size_t rounded_len = len & ~0x3F;  // Round down to nearest multiple of 64
