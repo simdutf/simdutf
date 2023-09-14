@@ -53,10 +53,10 @@ int main_demo() {
 
 
 
-TEST(error_location_badutf8) {
-  // this UTF-8 string has a bad byte at index 5
-  std::string bad_utf8 = "\x20\x20\x20\x20\x20\xff\x20\x20\x20";
-  simdutf::result res = implementation.validate_ascii_with_errors(bad_utf8.data(), bad_utf8.size());
+TEST(error_location_badascii) {
+  // this ASCII string has a bad byte at index 5
+  std::string bad_ascii = "\x20\x20\x20\x20\x20\xff\x20\x20\x20";
+  simdutf::result res = implementation.validate_ascii_with_errors(bad_ascii.data(), bad_ascii.size());
   if(res.error != simdutf::error_code::SUCCESS) {
     std::cerr << "error at index " << res.count << std::endl;
   }

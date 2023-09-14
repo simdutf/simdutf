@@ -342,7 +342,7 @@ be correct.
 You may use functions that report an error to indicate where the problem happens, as follows:
 
 ```c++
-  std::string bad_utf8 = "\x20\x20\x20\x20\x20\xff\x20\x20\x20";
+  std::string bad_ascii = "\x20\x20\x20\x20\x20\xff\x20\x20\x20";
   simdutf::result res = implementation.validate_ascii_with_errors(bad_utf8.data(), bad_utf8.size());
   if(res.error != simdutf::error_code::SUCCESS) {
     std::cerr << "error at index " << res.count << std::endl;
