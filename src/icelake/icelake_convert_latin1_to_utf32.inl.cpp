@@ -250,7 +250,7 @@ convert_latin1_to_utf32+westmere, input size: 271743, iterations: 30000, dataset
    1.189 ins/byte,    0.369 cycle/byte,    8.683 GB/s (2.0 %),     3.201 GHz,    3.224 ins/cycle 
    1.189 ins/char,    0.369 cycle/char,    8.683 Gc/s (2.0 %)     1.00 byte/char  */
 
-std::pair<const char*, char32_t*> avx512_convert_latin1_to_utf32(const char* buf, size_t len, char32_t* utf32_output) {
+/* std::pair<const char*, char32_t*> avx512_convert_latin1_to_utf32(const char* buf, size_t len, char32_t* utf32_output) {
     size_t rounded_len = len & ~0x1F;  // Round down to nearest multiple of 32
 
     for (size_t i = 0; i < rounded_len; i += 32) {
@@ -270,5 +270,62 @@ std::pair<const char*, char32_t*> avx512_convert_latin1_to_utf32(const char* buf
         _mm512_storeu_si512((__m512i*)&utf32_output[i + 16], out_high);
     }
 
+    return std::make_pair(buf + rounded_len, utf32_output + rounded_len);
+}
+ */
+
+// prefetching is just much slower.
+/* std::pair<const char*, char32_t*> avx512_convert_latin1_to_utf32(const char* buf, size_t len, char32_t* utf32_output) {
+    size_t rounded_len = len & ~0xF;  // Round down to nearest multiple of 16
+    
+    for (size_t i = 0; i < rounded_len; i += 16) {
+        // Prefetch the next chunk of data into the L1 cache
+        // You'll need to adjust the offset based on your access pattern and CPU cache latency
+        _mm_prefetch(buf + i + 16, _MM_HINT_T0); // Prefetch into L1 cache
+
+        // Load 16 Latin1 characters into a 128-bit register
+        __m128i in = _mm_loadu_si128((__m128i*)&buf[i]);
+
+        // Zero extend each set of 8 Latin1 characters to 16 32-bit integers using vpmovzxbd
+        __m512i out = _mm512_cvtepu8_epi32(in);
+        
+        // Store the results back to memory
+        _mm512_storeu_si512((__m512i*)&utf32_output[i], out);
+    }
+
+    // Return pointers pointing to where we left off
+    return std::make_pair(buf + rounded_len, utf32_output + rounded_len);
+} */
+
+
+
+std::pair<const char*, char32_t*> avx512_convert_latin1_to_utf32(const char* buf, size_t len, char32_t* utf32_output) {
+    size_t rounded_len = len & ~0x3F;  // Round down to nearest multiple of 64
+
+    for (size_t i = 0; i < rounded_len; i += 64) {
+        // Load 64 Latin1 characters into a 512-bit register
+        __m512i in = _mm512_loadu_si512((__m512i*)&buf[i]);
+
+        // Separate the data into chunks of 16 bytes (128 bits)
+        __m128i chunk1 = _mm512_extracti32x4_epi32(in, 0);
+        __m128i chunk2 = _mm512_extracti32x4_epi32(in, 1);
+        __m128i chunk3 = _mm512_extracti32x4_epi32(in, 2);
+        __m128i chunk4 = _mm512_extracti32x4_epi32(in, 3);
+
+        // Zero extend each chunk and store it
+        __m512i out1 = _mm512_cvtepu8_epi32(chunk1);
+        _mm512_storeu_si512((__m512i*)&utf32_output[i], out1);
+
+        __m512i out2 = _mm512_cvtepu8_epi32(chunk2);
+        _mm512_storeu_si512((__m512i*)&utf32_output[i + 16], out2);
+
+        __m512i out3 = _mm512_cvtepu8_epi32(chunk3);
+        _mm512_storeu_si512((__m512i*)&utf32_output[i + 32], out3);
+
+        __m512i out4 = _mm512_cvtepu8_epi32(chunk4);
+        _mm512_storeu_si512((__m512i*)&utf32_output[i + 48], out4);
+    }
+
+    // Return pointers pointing to where we left off
     return std::make_pair(buf + rounded_len, utf32_output + rounded_len);
 }
