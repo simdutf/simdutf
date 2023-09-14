@@ -70,7 +70,7 @@ convert_latin1_to_utf32+westmere, input size: 271743, iterations: 30000, dataset
    1.189 ins/byte,    0.345 cycle/byte,    9.289 GB/s (2.7 %),     3.201 GHz,    3.449 ins/cycle 
    1.189 ins/char,    0.345 cycle/char,    9.289 Gc/s (2.7 %)     1.00 byte/char  */
 
-/* std::pair<const char*, char32_t*> avx512_convert_latin1_to_utf32(const char* buf, size_t len, char32_t* utf32_output) {
+std::pair<const char*, char32_t*> avx512_convert_latin1_to_utf32(const char* buf, size_t len, char32_t* utf32_output) {
     size_t rounded_len = len & ~0xF;  // Round down to nearest multiple of 16
     
     for (size_t i = 0; i < rounded_len; i += 16) { 
@@ -87,7 +87,7 @@ convert_latin1_to_utf32+westmere, input size: 271743, iterations: 30000, dataset
     // Return pointers pointing to where we left off
     return std::make_pair(buf + rounded_len, utf32_output + rounded_len);
 }
- */
+
 
 /* convert_latin1_to_utf32+haswell, input size: 82168, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/esperanto.latin1.txt
    0.628 ins/byte,    0.373 cycle/byte,    8.613 GB/s (41.0 %),     3.210 GHz,    1.685 ins/cycle 
@@ -370,7 +370,7 @@ convert_latin1_to_utf32+westmere, input size: 271743, iterations: 30000, dataset
    1.189 ins/byte,    0.371 cycle/byte,    8.619 GB/s (2.4 %),     3.201 GHz,    3.201 ins/cycle 
    1.189 ins/char,    0.371 cycle/char,    8.619 Gc/s (2.4 %)     1.00 byte/char  */
 
-std::pair<const char*, char32_t*> avx512_convert_latin1_to_utf32(const char* buf, size_t len, char32_t* utf32_output) {
+/* std::pair<const char*, char32_t*> avx512_convert_latin1_to_utf32(const char* buf, size_t len, char32_t* utf32_output) {
     size_t rounded_len = len & ~0x3F;  // Round down to nearest multiple of 64
 
     for (size_t i = 0; i < rounded_len; i += 64) {
@@ -400,3 +400,4 @@ std::pair<const char*, char32_t*> avx512_convert_latin1_to_utf32(const char* buf
     // Return pointers pointing to where we left off
     return std::make_pair(buf + rounded_len, utf32_output + rounded_len);
 }
+ */
