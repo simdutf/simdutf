@@ -18,6 +18,18 @@ inline simdutf_warn_unused bool validate(const char32_t *buf, size_t len) noexce
   return true;
 }
 
+inline simdutf_warn_unused bool validate_as_latin1(const char32_t *buf, size_t len) noexcept {
+  const uint32_t *data = reinterpret_cast<const uint32_t *>(buf);
+  uint64_t pos = 0;
+  for(;pos < len; pos++) {
+    uint32_t word = data[pos];
+    if(word > 0xFF) {
+        return false;
+    }
+  }
+  return true;
+}
+
 inline simdutf_warn_unused result validate_with_errors(const char32_t *buf, size_t len) noexcept {
   const uint32_t *data = reinterpret_cast<const uint32_t *>(buf);
   size_t pos = 0;

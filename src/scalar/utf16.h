@@ -32,6 +32,19 @@ inline simdutf_warn_unused bool validate(const char16_t *buf, size_t len) noexce
 }
 
 template <endianness big_endian>
+inline simdutf_warn_unused bool validate_as_latin1(const char32_t *buf, size_t len) noexcept {
+  const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
+  uint64_t pos = 0;
+  while (pos < len) {
+    uint16_t word = !match_system(big_endian) ? swap_bytes(data[pos]) : data[pos];
+    if(word > 0xFF) { return false; }
+    pos++;
+  }
+  return true;
+}
+
+
+template <endianness big_endian>
 inline simdutf_warn_unused result validate_with_errors(const char16_t *buf, size_t len) noexcept {
   const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
   size_t pos = 0;

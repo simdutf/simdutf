@@ -13,7 +13,7 @@ inline simdutf_warn_unused bool validate(const char *buf, size_t len) noexcept {
   uint64_t pos = 0;
   uint32_t code_point = 0;
   while (pos < len) {
-    // check of the next 8 bytes are ascii.
+    // check of the next 16 bytes are ascii.
     uint64_t next_pos = pos + 16;
     if (next_pos <= len) { // if it is safe to read 8 more bytes, check that they are ascii
       uint64_t v1;
@@ -79,7 +79,7 @@ inline simdutf_warn_unused result validate_with_errors(const char *buf, size_t l
   size_t pos = 0;
   uint32_t code_point = 0;
   while (pos < len) {
-    // check of the next 8 bytes are ascii.
+    // check of the next 16 bytes are ascii.
     size_t next_pos = pos + 16;
     if (next_pos <= len) { // if it is safe to read 8 more bytes, check that they are ascii
       uint64_t v1;
@@ -137,6 +137,43 @@ inline simdutf_warn_unused result validate_with_errors(const char *buf, size_t l
     pos = next_pos;
   }
   return result(error_code::SUCCESS, len);
+}
+
+// returns zero in case of error, otherwise returns the number of code points.
+inline simdutf_warn_unused size_t validate_as_latin1(const char *buf, size_t len) noexcept {
+  const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);
+  size_t pos = 0;
+  uint32_t two_byte_count = 0;
+  while (pos < len) {
+    // check of the next 16 bytes are ascii.
+    size_t next_pos = pos + 16;
+    if (next_pos <= len) { // if it is safe to read 8 more bytes, check that they are ascii
+      uint64_t v1;
+      std::memcpy(&v1, data + pos, sizeof(uint64_t));
+      uint64_t v2;
+      std::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
+      uint64_t v{v1 | v2};
+      if ((v & 0x8080808080808080) == 0) {
+        pos = next_pos;        continue;
+      }
+    }
+    unsigned char byte = data[pos];
+
+    while (byte < 0b10000000) {
+      if (++pos == len) { return len - two_byte_count; }
+      byte = data[pos];
+    }
+
+    if ((byte & 0b11100000) != 0b11000000) { return 0; }
+    next_pos = pos + 2;
+    if (next_pos > len) { return 0; }
+    if ((data[pos + 1] & 0b11000000) != 0b10000000) { return 0; }
+    // range check
+    if((byte & 0b00011111) > 0b11)  { return 0; }
+    pos = next_pos;
+    two_byte_count += 1;
+  }
+  return len - two_byte_count;
 }
 
 // Finds the previous leading byte starting backward from buf and validates with errors from there

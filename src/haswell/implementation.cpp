@@ -92,6 +92,10 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
   return haswell::utf8_validation::generic_validate_utf8(buf,len);
 }
 
+simdutf_warn_unused size_t implementation::latin1_length_from_utf8_with_validation(const char *buf, size_t len) const noexcept {
+  return scalar::utf8::validate_as_latin1(buf,len);
+}
+
 simdutf_warn_unused result implementation::validate_utf8_with_errors(const char *buf, size_t len) const noexcept {
   return haswell::utf8_validation::generic_validate_utf8_with_errors(buf,len);
 }
@@ -111,6 +115,14 @@ simdutf_warn_unused bool implementation::validate_utf16le(const char16_t *buf, s
   } else {
     return false;
   }
+}
+
+simdutf_warn_unused bool implementation::validate_utf16le_as_latin1(const char16_t *buf, size_t len) const noexcept {
+  return scalar::utf16::validate_as_latin1<endianness::BIG>(buf, len);
+}
+
+simdutf_warn_unused bool implementation::validate_utf16be_as_latin1(const char16_t *buf, size_t len) const noexcept {
+  return scalar::utf16::validate_as_latin1<endianness::BIG>(buf, len);
 }
 
 simdutf_warn_unused bool implementation::validate_utf16be(const char16_t *buf, size_t len) const noexcept {
@@ -149,6 +161,10 @@ simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, siz
   } else {
     return false;
   }
+}
+
+simdutf_warn_unused bool implementation::validate_utf32_as_latin1(const char32_t *buf, size_t len) const noexcept {
+  return scalar::utf32::validate_as_latin1(buf, len);
 }
 
 simdutf_warn_unused result implementation::validate_utf32_with_errors(const char32_t *buf, size_t len) const noexcept {

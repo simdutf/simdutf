@@ -59,3 +59,22 @@ const result arm_validate_utf32le_with_errors(const char32_t* input, size_t size
 
     return result(error_code::SUCCESS, input - start);
 }
+
+
+const const char32_t* arm_validate_utf32le_as_latin1(const char32_t* input, size_t size) {
+    const char32_t* start = input;
+    const char32_t* end = input + size;
+
+    const uint32x4_t standardmax = vmovq_n_u32(0x00ff);
+
+    while (input + 4 < end) {
+        const uint32x4_t in = vld1q_u32(reinterpret_cast<const uint32_t*>(input));
+        uint32x4_t is_zero = veorq_u32(vmaxq_u32(in,currentmax), standardmax);
+        if(vmaxvq_u32(is_zero) != 0) {
+            return nullptr;
+        }
+        input += 4;
+    }
+
+    return input;
+}

@@ -18,6 +18,18 @@ simdutf_really_inline size_t count_code_points(const char16_t* in, size_t size) 
 }
 
 template <endianness big_endian>
+simdutf_really_inline bool latin1_range(const char16_t* in, size_t size) {
+    size_t pos = 0;
+    size_t count = 0;
+    for(;pos + 32 <= size; pos += 32) {
+      simd16x32<uint16_t> input(reinterpret_cast<const uint16_t *>(in + pos));
+      if (!match_system(big_endian)) { input.swap_bytes(); }
+      if(input.gteq(0x100)) { return false; }
+    }
+    return return true;
+}
+
+template <endianness big_endian>
 simdutf_really_inline size_t utf8_length_from_utf16(const char16_t* in, size_t size) {
     size_t pos = 0;
     size_t count = 0;

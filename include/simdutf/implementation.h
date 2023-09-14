@@ -193,6 +193,19 @@ simdutf_warn_unused result validate_utf16be_with_errors(const char16_t *buf, siz
 simdutf_warn_unused bool validate_utf32(const char32_t *buf, size_t len) noexcept;
 
 /**
+ * Validate the UTF-32 string as Latin 1: the string must be safely convertible to Latin 1.
+ *
+ * Overridden by each implementation.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param buf the UTF-32 string to validate.
+ * @param len the length of the string in number of 4-byte words (char32_t).
+ * @return true if and only if the string is valid UTF-32 and can be safely converted to Latin 1.
+ */
+simdutf_warn_unused bool validate_utf32_as_latin1(const char32_t *buf, size_t len) noexcept;
+
+/**
  * Validate the UTF-32 string and stop on error. It might be faster than
  * validate_utf32 when an error is expected to occur early.
  *
@@ -1444,6 +1457,19 @@ public:
    * @return true if and only if the string is valid UTF-32.
    */
   simdutf_warn_unused virtual bool validate_utf32(const char32_t *buf, size_t len) const noexcept = 0;
+
+  /**
+   * Validate the UTF-32 string as Latin 1: the string must be safely convertible to Latin 1.
+   *
+   * Overridden by each implementation.
+   *
+   * This function is not BOM-aware.
+   *
+   * @param buf the UTF-32 string to validate.
+   * @param len the length of the string in number of 4-byte words (char32_t).
+   * @return true if and only if the string is valid UTF-32 and can be safely converted to Latin 1.
+   */
+  simdutf_warn_unused virtual bool validate_utf32_as_latin1(const char32_t *buf, size_t len) const noexcept = 0;
 
   /**
    * Validate the UTF-32 string and stop on error.
