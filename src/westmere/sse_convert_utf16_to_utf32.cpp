@@ -58,7 +58,7 @@ std::pair<const char16_t*, char32_t*> sse_convert_utf16_to_utf32(const char16_t*
   const __m128i v_f800 = _mm_set1_epi16((int16_t)0xf800);
   const __m128i v_d800 = _mm_set1_epi16((int16_t)0xd800);
 
-  while (buf + 16 <= end) {
+  while (buf + 8 <= end) {
     __m128i in = _mm_loadu_si128((__m128i*)buf);
 
     if (big_endian) {
@@ -126,7 +126,7 @@ std::pair<result, char32_t*> sse_convert_utf16_to_utf32_with_errors(const char16
   const __m128i v_f800 = _mm_set1_epi16((int16_t)0xf800);
   const __m128i v_d800 = _mm_set1_epi16((int16_t)0xd800);
 
-  while (buf + 16 <= end) {
+  while (buf + 8 <= end) {
     __m128i in = _mm_loadu_si128((__m128i*)buf);
 
     if (big_endian) {

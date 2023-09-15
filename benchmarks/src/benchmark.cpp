@@ -708,7 +708,7 @@ void Benchmark::run_validate_utf16(const simdutf::implementation& implementation
     const auto result = count_events(proc, iterations);
     if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
     size_t char_count = get_active_implementation()->count_utf16le(data, size);
-    print_summary(result, size, char_count);
+    print_summary(result, input_data.size(), char_count);
 }
 
 void Benchmark::run_validate_utf16_with_errors(const simdutf::implementation& implementation, size_t iterations) {
@@ -733,7 +733,7 @@ void Benchmark::run_validate_utf16_with_errors(const simdutf::implementation& im
     const auto result = count_events(proc, iterations);
     if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
     size_t char_count = get_active_implementation()->count_utf16le(data, size);
-    print_summary(result, size, char_count);
+    print_summary(result, input_data.size(), char_count);
 }
 
 void Benchmark::run_validate_utf32(const simdutf::implementation& implementation, size_t iterations) {
@@ -757,7 +757,7 @@ void Benchmark::run_validate_utf32(const simdutf::implementation& implementation
     const auto result = count_events(proc, iterations);
     if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
     size_t char_count = size;
-    print_summary(result, size, char_count);
+    print_summary(result, input_data.size(), char_count);
 }
 
 void Benchmark::run_validate_utf32_with_errors(const simdutf::implementation& implementation, size_t iterations) {
@@ -782,7 +782,7 @@ void Benchmark::run_validate_utf32_with_errors(const simdutf::implementation& im
     const auto result = count_events(proc, iterations);
     if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
     size_t char_count = size;
-    print_summary(result, size, char_count);
+    print_summary(result, input_data.size(), char_count);
 }
 
 void Benchmark::run_convert_latin1_to_utf8(const simdutf::implementation& implementation, size_t iterations) {
@@ -1308,7 +1308,7 @@ void Benchmark::run_convert_utf16_to_latin1_icu(size_t iterations) {
         for(size_t i=0; i<20; i++) { std::cout << std::hex << static_cast<int>(output_buffer[i]) << " "; }
     }
 
-    print_summary(result, size, char_count);
+    print_summary(result, input_data.size(), char_count);
 }
 
 void Benchmark::run_convert_utf32_to_latin1_icu(size_t iterations) {
@@ -1372,7 +1372,7 @@ void Benchmark::run_convert_utf32_to_latin1_icu(size_t iterations) {
         for(size_t i=0; i<20; i++) { std::cout << std::hex << static_cast<int>(output_buffer[i]) << " "; }
     }
 
-    print_summary(result, size, char_count);
+    print_summary(result, input_data.size(), char_count);
 }
 
 
@@ -1447,7 +1447,7 @@ void Benchmark::run_convert_latin1_to_utf16_iconv(size_t iterations) {
 }
 
 void Benchmark::run_convert_latin1_to_utf32_iconv(size_t iterations) {
-    iconv_t cv = iconv_open("UTF-32", "ISO-8859-1");
+    iconv_t cv = iconv_open("UTF-32LE", "ISO-8859-1");
     if (cv == (iconv_t)(-1)) {
         fprintf( stderr,"[iconv] cannot initialize ISO-8859-1 to UTF-32 converter\n");
         return;
@@ -1653,7 +1653,7 @@ void Benchmark::run_convert_utf16_to_utf8_iconv(size_t iterations) {
 }
 
 void Benchmark::run_convert_utf32_to_latin1_iconv(size_t iterations) {
-    iconv_t cv = iconv_open("ISO-8859-1", "UTF-32");
+    iconv_t cv = iconv_open("ISO-8859-1", "UTF-32LE");
     if (cv == (iconv_t)(-1)) {
         fprintf( stderr,"[iconv] cannot initialize the UTF-32 to ISO-8859-1 converter\n");
         return;
@@ -1688,6 +1688,7 @@ void Benchmark::run_convert_utf32_to_latin1_iconv(size_t iterations) {
         size_t result = iconv(cv, &inptr, &inbytes, &outptr, &outbytes);
         if (result == static_cast<size_t>(-1)) {
             sink = 0;
+            abort();
         } else {
             sink = ( size - outbytes) / sizeof(char32_t);
         }
@@ -2192,7 +2193,7 @@ void Benchmark::run_convert_utf16_to_latin1(const simdutf::implementation& imple
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
     size_t char_count = get_active_implementation()->count_utf16le(data, size);
-    print_summary(result, size, char_count);
+    print_summary(result, input_data.size(), char_count);
 }
 
 void Benchmark::run_convert_utf16_to_latin1_with_errors(const simdutf::implementation& implementation, size_t iterations) {
@@ -2216,7 +2217,7 @@ void Benchmark::run_convert_utf16_to_latin1_with_errors(const simdutf::implement
     const auto result = count_events(proc, iterations);
     if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
     size_t char_count = get_active_implementation()->count_utf16le(data, size);
-    print_summary(result, size, char_count);
+    print_summary(result, input_data.size(), char_count);
 }
 
 void Benchmark::run_convert_valid_utf16_to_latin1(const simdutf::implementation& implementation, size_t iterations) {
@@ -2239,7 +2240,7 @@ void Benchmark::run_convert_valid_utf16_to_latin1(const simdutf::implementation&
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
     size_t char_count = get_active_implementation()->count_utf16le(data, size);
-    print_summary(result, size, char_count);
+    print_summary(result, input_data.size(), char_count);
 }
 
 void Benchmark::run_convert_utf16_to_utf8(const simdutf::implementation& implementation, size_t iterations) {
@@ -2468,7 +2469,7 @@ void Benchmark::run_convert_utf32_to_latin1(const simdutf::implementation& imple
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
     size_t char_count = size;
-    print_summary(result, size, char_count);
+    print_summary(result, input_data.size(), char_count);
 }
 void Benchmark::run_convert_utf32_to_latin1_with_errors(const simdutf::implementation& implementation, size_t iterations) {
     const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
@@ -2492,7 +2493,7 @@ void Benchmark::run_convert_utf32_to_latin1_with_errors(const simdutf::implement
     const auto result = count_events(proc, iterations);
     if((sink == false) && (iterations > 0)) { std::cerr << "The input was declared invalid.\n"; }
     size_t char_count = size;
-    print_summary(result, size, char_count);
+    print_summary(result, input_data.size(), char_count);
 }
 void Benchmark::run_convert_valid_utf32_to_latin1(const simdutf::implementation& implementation, size_t iterations) {
     const simdutf::encoding_type bom  = BOM::check_bom(input_data.data(), input_data.size());
@@ -2515,7 +2516,7 @@ void Benchmark::run_convert_valid_utf32_to_latin1(const simdutf::implementation&
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
     size_t char_count = size;
-    print_summary(result, size, char_count);
+    print_summary(result, input_data.size(), char_count);
 }
 
 void Benchmark::run_convert_utf32_to_utf8(const simdutf::implementation& implementation, size_t iterations) {

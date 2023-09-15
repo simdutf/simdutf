@@ -58,7 +58,7 @@ std::pair<const char16_t*, char32_t*> arm_convert_utf16_to_utf32(const char16_t*
   const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
   const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
 
-  while (buf + 16 <= end) {
+  while (buf + 8 <= end) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
     if (!match_system(big_endian)) {
       #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
@@ -72,7 +72,7 @@ std::pair<const char16_t*, char32_t*> arm_convert_utf16_to_utf32(const char16_t*
     const uint16x8_t surrogates_bytemask = vceqq_u16(vandq_u16(in, v_f800), v_d800);
     // It might seem like checking for surrogates_bitmask == 0xc000 could help. However,
     // it is likely an uncommon occurrence.
-      if (vmaxvq_u16(surrogates_bytemask) == 0) {
+    if (vmaxvq_u16(surrogates_bytemask) == 0) {
       // case: no surrogate pairs, extend all 16-bit code units to 32-bit code units
       vst1q_u32(utf32_output,  vmovl_u16(vget_low_u16(in)));
       vst1q_u32(utf32_output+4,  vmovl_high_u16(in));
@@ -123,7 +123,7 @@ std::pair<result, char32_t*> arm_convert_utf16_to_utf32_with_errors(const char16
   const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
   const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
 
-  while (buf + 16 <= end) {
+  while (buf + 8 <= end) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
     if (!match_system(big_endian)) {
       #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
@@ -137,7 +137,7 @@ std::pair<result, char32_t*> arm_convert_utf16_to_utf32_with_errors(const char16
     const uint16x8_t surrogates_bytemask = vceqq_u16(vandq_u16(in, v_f800), v_d800);
     // It might seem like checking for surrogates_bitmask == 0xc000 could help. However,
     // it is likely an uncommon occurrence.
-      if (vmaxvq_u16(surrogates_bytemask) == 0) {
+    if (vmaxvq_u16(surrogates_bytemask) == 0) {
       // case: no surrogate pairs, extend all 16-bit code units to 32-bit code units
       vst1q_u32(utf32_output,  vmovl_u16(vget_low_u16(in)));
       vst1q_u32(utf32_output+4,  vmovl_high_u16(in));
