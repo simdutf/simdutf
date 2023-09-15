@@ -24,7 +24,7 @@ namespace simdutf { namespace tests { namespace reference { namespace utf16 {
     return true;
   }
 
-  // Encodes the value using either one or two words (returns 1 or 2 respectively)
+  // Encodes the value using either one or two code units (returns 1 or 2 respectively)
   // Returns 0 if the value cannot be encoded
   int encode(uint32_t value, char16_t& W1, char16_t& W2) {
     if (!valid_value(value))

@@ -47,7 +47,7 @@ int arm_detect_encodings(const char * buf, size_t len) {
             // To be valid UTF-32, a surrogate cannot be in the two most significant bytes of any 32-bit word.
             // On the other hand, to be valid UTF-16LE, at least one surrogate must be in the two most significant
             // bytes of a 32-bit word since they always come in pairs in UTF-16LE.
-            // Note that we always proceed in multiple of 4 before this point so there is no offset in 32-bit words.
+            // Note that we always proceed in multiple of 4 before this point so there is no offset in 32-bit code units.
 
             if (((surrogates_wordmask0 | surrogates_wordmask1) & 0xf0f0f0f0f0f0f0f0) != 0) {
                 is_utf32 = false;

@@ -12,8 +12,8 @@ namespace helpers {
     Generates valid random UTF-16LE
 
     It might generate streams consisting:
-    - only single 16-bit words (random_utf16(..., 1, 0));
-    - only surrogate pairs, two 16-bit words (random_utf16(..., 0, 1))
+    - only single 16-bit code units (random_utf16(..., 1, 0));
+    - only surrogate pairs, two 16-bit code units (random_utf16(..., 0, 1))
     - mixed, depending on given probabilities (random_utf16(..., 1, 1))
   */
   class random_utf16 {

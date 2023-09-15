@@ -34,7 +34,7 @@ const char16_t* arm_validate_utf16(const char16_t* input, size_t size) {
             //
             //    Fact: high surrogate has 11th bit set (3rd bit in the higher word)
 
-            // V - non-surrogate words
+            // V - non-surrogate code units
             //     V = not surrogates_wordmask
             const uint64_t V = ~surrogates_wordmask;
 
@@ -54,10 +54,10 @@ const char16_t* arm_validate_utf16(const char16_t* input, size_t size) {
             const uint64_t c = V | a | b;      // Combine all the masks into the final one.
             if (c == ~0ull) {
                 // The whole input register contains valid UTF-16, i.e.,
-                // either single words or proper surrogate pairs.
+                // either single code units or proper surrogate pairs.
                 input += 16;
             } else if (c == 0xfffffffffffffffull) {
-                // The 15 lower words of the input register contains valid UTF-16.
+                // The 15 lower code units of the input register contains valid UTF-16.
                 // The 15th word may be either a low or high surrogate. It the next
                 // iteration we 1) check if the low surrogate is followed by a high
                 // one, 2) reject sole high surrogate.
@@ -110,7 +110,7 @@ const result arm_validate_utf16_with_errors(const char16_t* input, size_t size) 
             //
             //    Fact: high surrogate has 11th bit set (3rd bit in the higher word)
 
-            // V - non-surrogate words
+            // V - non-surrogate code units
             //     V = not surrogates_wordmask
             const uint64_t V = ~surrogates_wordmask;
 
@@ -130,10 +130,10 @@ const result arm_validate_utf16_with_errors(const char16_t* input, size_t size) 
             const uint64_t c = V | a | b;      // Combine all the masks into the final one.
             if (c == ~0ull) {
                 // The whole input register contains valid UTF-16, i.e.,
-                // either single words or proper surrogate pairs.
+                // either single code units or proper surrogate pairs.
                 input += 16;
             } else if (c == 0xfffffffffffffffull) {
-                // The 15 lower words of the input register contains valid UTF-16.
+                // The 15 lower code units of the input register contains valid UTF-16.
                 // The 15th word may be either a low or high surrogate. It the next
                 // iteration we 1) check if the low surrogate is followed by a high
                 // one, 2) reject sole high surrogate.

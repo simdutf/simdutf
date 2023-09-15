@@ -1065,7 +1065,7 @@ void Benchmark::run_convert_latin1_to_utf16_icu(size_t iterations) {
     size_t char_count = size;
     std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
     size_t expected = get_active_implementation()->convert_latin1_to_utf16le(data, size, output_buffer.get()); //expected char16_t units
-    if(2 * expected != sink) { std::cerr << "The number of utf16le words does not match.\n";
+    if(2 * expected != sink) { std::cerr << "The number of utf16le code units does not match.\n";
                             std::cerr << "Expected: " << 2*expected + 1<< ", Sink: " << sink << std::endl; // print values
                         }
 
@@ -1201,7 +1201,7 @@ void Benchmark::run_convert_utf8_to_latin1_icu(size_t iterations) {
     size_t char_count = get_active_implementation()->count_utf8(data, size);
     std::unique_ptr<char[]> output_buffer{new char[size]};
     size_t expected = get_active_implementation()->convert_utf8_to_latin1(data, size, output_buffer.get());
-    if(expected != sink) { std::cerr << "The number of latin1 words does not match.\n"; }
+    if(expected != sink) { std::cerr << "The number of latin1 code units does not match.\n"; }
 
     if(memcmp(target.get(), output_buffer.get(), sink ) != 0) {
         std::cerr << "The output data does not match.\n";
@@ -1231,7 +1231,7 @@ void Benchmark::run_convert_utf8_to_utf16_icu(size_t iterations) {
     // checking
     std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
     size_t expected = convert_utf8_to_utf16le(data, size, output_buffer.get());
-    if(expected != sink) { std::cerr << "The number of UTF-16 words does not match.\n"; }
+    if(expected != sink) { std::cerr << "The number of UTF-16 code units does not match.\n"; }
     print_summary(result, size, char_count);
 }
 void Benchmark::run_convert_utf16_to_utf8_icu(size_t iterations) {
@@ -1572,7 +1572,7 @@ void Benchmark::run_convert_utf16_to_latin1_iconv(size_t iterations) {
 
     size /= 2;
 
-    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    // Note: non-surrogate code units can yield up to 3 bytes, a surrogate pair yields 4 bytes,
     //       thus we're making safe assumption that each 16-bit word will be expanded
     //       to four bytes.
     std::unique_ptr<char[]> output_buffer{new char[size]};
@@ -1621,7 +1621,7 @@ void Benchmark::run_convert_utf16_to_utf8_iconv(size_t iterations) {
 
     size /= 2;
 
-    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    // Note: non-surrogate code units can yield up to 3 bytes, a surrogate pair yields 4 bytes,
     //       thus we're making safe assumption that each 16-bit word will be expanded
     //       to four bytes.
     std::unique_ptr<char[]> output_buffer{new char[size * 4]};
@@ -1669,7 +1669,7 @@ void Benchmark::run_convert_utf32_to_latin1_iconv(size_t iterations) {
 
     size /= 4;
 
-    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    // Note: non-surrogate code units can yield up to 3 bytes, a surrogate pair yields 4 bytes,
     //       thus we're making safe assumption that each 16-bit word will be expanded
     //       to four bytes.
     std::unique_ptr<char[]> output_buffer{new char[size]};
@@ -1781,7 +1781,7 @@ void Benchmark::run_convert_utf16_to_utf8_utf8lut(size_t iterations) {
 
     size /= 2;
 
-    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    // Note: non-surrogate code units can yield up to 3 bytes, a surrogate pair yields 4 bytes,
     //       thus we're making safe assumption that each 16-bit word will be expanded
     //       to four bytes.
     // utf8lut requires an extra 16 bytes of padding.
@@ -1821,7 +1821,7 @@ void Benchmark::run_convert_valid_utf16_to_utf8_utf8lut(size_t iterations) {
 
     size /= 2;
 
-    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    // Note: non-surrogate code units can yield up to 3 bytes, a surrogate pair yields 4 bytes,
     //       thus we're making safe assumption that each 16-bit word will be expanded
     //       to four bytes.
     // utf8lut requires an extra 16 bytes of padding.
@@ -2254,7 +2254,7 @@ void Benchmark::run_convert_utf16_to_utf8(const simdutf::implementation& impleme
 
     size /= 2;
 
-    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    // Note: non-surrogate code units can yield up to 3 bytes, a surrogate pair yields 4 bytes,
     //       thus we're making safe assumption that each 16-bit word will be expanded
     //       to four bytes.
     std::unique_ptr<char[]> output_buffer{new char[size * 4]};
@@ -2283,7 +2283,7 @@ void Benchmark::run_convert_utf16_to_utf8_with_errors(const simdutf::implementat
 
     size /= 2;
 
-    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    // Note: non-surrogate code units can yield up to 3 bytes, a surrogate pair yields 4 bytes,
     //       thus we're making safe assumption that each 16-bit word will be expanded
     //       to four bytes.
     std::unique_ptr<char[]> output_buffer{new char[size * 4]};
@@ -2313,8 +2313,8 @@ void Benchmark::run_convert_utf16_to_utf32(const simdutf::implementation& implem
 
     size /= 2;
 
-    // Note: all words yield 4 bytes. We are making a safe assumption that all words
-    // will be non-surrogate words so the size would get doubled (16 bits -> 32 bits).
+    // Note: all code units yield 4 bytes. We are making a safe assumption that all code units
+    // will be non-surrogate code units so the size would get doubled (16 bits -> 32 bits).
     std::unique_ptr<char32_t[]> output_buffer{new char32_t[size * 2]};
 
     volatile size_t sink{0};
@@ -2341,8 +2341,8 @@ void Benchmark::run_convert_utf16_to_utf32_with_errors(const simdutf::implementa
 
     size /= 2;
 
-    // Note: all words yield 4 bytes. We are making a safe assumption that all words
-    // will be non-surrogate words so the size would get doubled (16 bits -> 32 bits).
+    // Note: all code units yield 4 bytes. We are making a safe assumption that all code units
+    // will be non-surrogate code units so the size would get doubled (16 bits -> 32 bits).
     std::unique_ptr<char32_t[]> output_buffer{new char32_t[size * 2]};
 
     volatile bool sink{false};
@@ -2370,7 +2370,7 @@ void Benchmark::run_convert_utf16_to_utf8_with_dynamic_allocation(const simdutf:
 
     size /= 2;
 
-    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    // Note: non-surrogate code units can yield up to 3 bytes, a surrogate pair yields 4 bytes,
     //       thus we're making safe assumption that each 16-bit word will be expanded
     //       to four bytes.
 
@@ -2401,8 +2401,8 @@ void Benchmark::run_convert_utf16_to_utf32_with_dynamic_allocation(const simdutf
 
     size /= 2;
 
-    // Note: all words yield 4 bytes. We are making a safe assumption that all words
-    // will be non-surrogate words so the size would get doubled (16 bits -> 32 bits).
+    // Note: all code units yield 4 bytes. We are making a safe assumption that all code units
+    // will be non-surrogate code units so the size would get doubled (16 bits -> 32 bits).
 
     volatile size_t sink{0};
 
@@ -2430,7 +2430,7 @@ void Benchmark::run_convert_valid_utf16_to_utf8(const simdutf::implementation& i
 
     size /= 2;
 
-    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    // Note: non-surrogate code units can yield up to 3 bytes, a surrogate pair yields 4 bytes,
     //       thus we're making safe assumption that each 16-bit word will be expanded
     //       to four bytes.
     std::unique_ptr<char[]> output_buffer{new char[size * 4]};
@@ -2616,7 +2616,7 @@ void Benchmark::run_convert_valid_utf16_to_utf32(const simdutf::implementation& 
 
     size /= 2;
 
-    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    // Note: non-surrogate code units can yield up to 3 bytes, a surrogate pair yields 4 bytes,
     //       thus we're making safe assumption that each 16-bit word will be expanded
     //       to four bytes.
     std::unique_ptr<char32_t[]> output_buffer{new char32_t[size * 4]};
@@ -2645,7 +2645,7 @@ void Benchmark::run_convert_utf32_to_utf16(const simdutf::implementation& implem
 
     size /= 4;
 
-    // Note: In the "worst" case, a 32-bit word will yield two 16-bit words. So, we are making a safe
+    // Note: In the "worst" case, a 32-bit word will yield two 16-bit code units. So, we are making a safe
     // assumption that each word will produce 2 bytes.
     std::unique_ptr<char16_t[]> output_buffer{new char16_t[size * 2]};
 
@@ -2673,7 +2673,7 @@ void Benchmark::run_convert_utf32_to_utf16_with_errors(const simdutf::implementa
 
     size /= 4;
 
-    // Note: In the "worst" case, a 32-bit word will yield two 16-bit words. So, we are making a safe
+    // Note: In the "worst" case, a 32-bit word will yield two 16-bit code units. So, we are making a safe
     // assumption that each word will produce 2 bytes.
     std::unique_ptr<char16_t[]> output_buffer{new char16_t[size * 2]};
 
@@ -2702,7 +2702,7 @@ void Benchmark::run_convert_valid_utf32_to_utf16(const simdutf::implementation& 
 
     size /= 4;
 
-    // Note: In the "worst" case, a 32-bit word will yield two 16-bit words. So, we are making a safe
+    // Note: In the "worst" case, a 32-bit word will yield two 16-bit code units. So, we are making a safe
     // assumption that each word will produce 2 bytes.
     std::unique_ptr<char16_t[]> output_buffer{new char16_t[size * 2]};
 
@@ -2875,7 +2875,7 @@ void Benchmark::run_convert_utf16_to_utf8_llvm(size_t iterations) {
 
     size /= 2;
 
-    // Note: non-surrogate words can yield up to 3 bytes, a surrogate pair yields 4 bytes,
+    // Note: non-surrogate code units can yield up to 3 bytes, a surrogate pair yields 4 bytes,
     //       thus we're making safe assumption that each 16-bit word will be expanded
     //       to four bytes.
     std::unique_ptr<char[]> output_buffer{new char[size * 4]};
@@ -2952,8 +2952,8 @@ void Benchmark::run_convert_utf16_to_utf32_llvm(size_t iterations) {
 
     size /= 2;
 
-    // Note: all words yield four bytes. We make the safe assumption that all words
-    // will be non surrogate words so the size will double (16 bits -> 32 bits).
+    // Note: all code units yield four bytes. We make the safe assumption that all code units
+    // will be non surrogate code units so the size will double (16 bits -> 32 bits).
     std::unique_ptr<char32_t[]> output_buffer{new char32_t[size * 2]};
 
     volatile size_t sink{0};
@@ -2991,8 +2991,8 @@ void Benchmark::run_convert_utf32_to_utf16_llvm(size_t iterations) {
     size /= 4;
 
     // Note: a single 32-bit word can produce a surrogate pair, i.e. two
-    //       16-bit words. We are making a safe assumption that each 32-
-    //       bit word will yield two 16-bit words.
+    //       16-bit code units. We are making a safe assumption that each 32-
+    //       bit word will yield two 16-bit code units.
     std::unique_ptr<char[]> output_buffer{new char[size * 2]};
 
     volatile size_t sink{0};
@@ -3042,7 +3042,7 @@ void Benchmark::run_convert_utf8_to_utf16_utfcpp(size_t iterations) {
     // checking
     std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
     size_t expected = convert_utf8_to_utf16le(data, size, output_buffer.get());
-    if(expected != sink) { std::cerr << "The number of UTF-16 words does not match.\n"; }
+    if(expected != sink) { std::cerr << "The number of UTF-16 code units does not match.\n"; }
     print_summary(result, size, char_count);
 }
 

@@ -1,5 +1,5 @@
 /*
-    In UTF-16 words in range 0xD800 to 0xDFFF have special meaning.
+    In UTF-16 code units in range 0xD800 to 0xDFFF have special meaning.
 
     In a vectorized algorithm we want to examine the most significant
     nibble in order to select a fast path. If none of highest nibbles
@@ -35,7 +35,7 @@
       0   0   1   0   1   0   0   0   b = a << 1
       1   1   1   1   1   1   1   0   c = V | a | b
                                   ^
-                                  the last bit can be zero, we just consume 7 words
+                                  the last bit can be zero, we just consume 7 code units
                                   and recheck this word in the next iteration
 */
 
@@ -80,7 +80,7 @@ const char16_t* sse_validate_utf16(const char16_t* input, size_t size) {
             //
             //    Fact: high surrogate has 11th bit set (3rd bit in the higher word)
 
-            // V - non-surrogate words
+            // V - non-surrogate code units
             //     V = not surrogates_wordmask
             const uint16_t V = static_cast<uint16_t>(~surrogates_bitmask);
 
@@ -101,10 +101,10 @@ const char16_t* sse_validate_utf16(const char16_t* input, size_t size) {
 
             if (c == 0xffff) {
                 // The whole input register contains valid UTF-16, i.e.,
-                // either single words or proper surrogate pairs.
+                // either single code units or proper surrogate pairs.
                 input += 16;
             } else if (c == 0x7fff) {
-                // The 15 lower words of the input register contains valid UTF-16.
+                // The 15 lower code units of the input register contains valid UTF-16.
                 // The 15th word may be either a low or high surrogate. It the next
                 // iteration we 1) check if the low surrogate is followed by a high
                 // one, 2) reject sole high surrogate.
@@ -158,7 +158,7 @@ const result sse_validate_utf16_with_errors(const char16_t* input, size_t size) 
             //
             //    Fact: high surrogate has 11th bit set (3rd bit in the higher word)
 
-            // V - non-surrogate words
+            // V - non-surrogate code units
             //     V = not surrogates_wordmask
             const uint16_t V = static_cast<uint16_t>(~surrogates_bitmask);
 
@@ -179,10 +179,10 @@ const result sse_validate_utf16_with_errors(const char16_t* input, size_t size) 
 
             if (c == 0xffff) {
                 // The whole input register contains valid UTF-16, i.e.,
-                // either single words or proper surrogate pairs.
+                // either single code units or proper surrogate pairs.
                 input += 16;
             } else if (c == 0x7fff) {
-                // The 15 lower words of the input register contains valid UTF-16.
+                // The 15 lower code units of the input register contains valid UTF-16.
                 // The 15th word may be either a low or high surrogate. It the next
                 // iteration we 1) check if the low surrogate is followed by a high
                 // one, 2) reject sole high surrogate.

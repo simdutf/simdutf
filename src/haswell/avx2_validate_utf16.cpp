@@ -1,5 +1,5 @@
 /*
-    In UTF-16 words in range 0xD800 to 0xDFFF have special meaning.
+    In UTF-16 code units in range 0xD800 to 0xDFFF have special meaning.
 
     In a vectorized algorithm we want to examine the most significant
     nibble in order to select a fast path. If none of highest nibbles
@@ -35,7 +35,7 @@
       0   0   1   0   1   0   0   0   b = a << 1
       1   1   1   1   1   1   1   0   c = V | a | b
                                   ^
-                                  the last bit can be zero, we just consume 7 words
+                                  the last bit can be zero, we just consume 7 code units
                                   and recheck this word in the next iteration
 */
 
@@ -81,7 +81,7 @@ const char16_t* avx2_validate_utf16(const char16_t* input, size_t size) {
             //
             //    Fact: high surrogate has 11th bit set (3rd bit in the higher word)
 
-            // V - non-surrogate words
+            // V - non-surrogate code units
             //     V = not surrogates_wordmask
             const uint32_t V = ~surrogates_bitmask;
 
@@ -102,10 +102,10 @@ const char16_t* avx2_validate_utf16(const char16_t* input, size_t size) {
 
             if (c == 0xffffffff) {
                 // The whole input register contains valid UTF-16, i.e.,
-                // either single words or proper surrogate pairs.
+                // either single code units or proper surrogate pairs.
                 input += simd16<uint16_t>::ELEMENTS * 2;
             } else if (c == 0x7fffffff) {
-                // The 31 lower words of the input register contains valid UTF-16.
+                // The 31 lower code units of the input register contains valid UTF-16.
                 // The 31 word may be either a low or high surrogate. It the next
                 // iteration we 1) check if the low surrogate is followed by a high
                 // one, 2) reject sole high surrogate.
@@ -159,7 +159,7 @@ const result avx2_validate_utf16_with_errors(const char16_t* input, size_t size)
             //
             //    Fact: high surrogate has 11th bit set (3rd bit in the higher word)
 
-            // V - non-surrogate words
+            // V - non-surrogate code units
             //     V = not surrogates_wordmask
             const uint32_t V = ~surrogates_bitmask;
 
@@ -180,10 +180,10 @@ const result avx2_validate_utf16_with_errors(const char16_t* input, size_t size)
 
             if (c == 0xffffffff) {
                 // The whole input register contains valid UTF-16, i.e.,
-                // either single words or proper surrogate pairs.
+                // either single code units or proper surrogate pairs.
                 input += simd16<uint16_t>::ELEMENTS * 2;
             } else if (c == 0x7fffffff) {
-                // The 31 lower words of the input register contains valid UTF-16.
+                // The 31 lower code units of the input register contains valid UTF-16.
                 // The 31 word may be either a low or high surrogate. It the next
                 // iteration we 1) check if the low surrogate is followed by a high
                 // one, 2) reject sole high surrogate.

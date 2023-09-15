@@ -321,7 +321,7 @@ TEST(garbage_utf8_fuzz_with_errors) {
               utf8_buffer.get(), length,
               utf16_buffer.get());
     // r.count: In case of error, indicates the position of the error in the input.
-    // In case of success, indicates the number of words validated/written.
+    // In case of success, indicates the number of code units validated/written.
     if(r.error == simdutf::SUCCESS) {
       ASSERT_TRUE((r.count == expected_utf16_length));
     } else {

@@ -155,7 +155,7 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
       {
         // the location of 3-byte sequence start bytes in the input
         __mmask64 m3 = m34 & (b ^ m4);
-        // words in Wout corresponding to 3-byte sequences.
+        // code units in Wout corresponding to 3-byte sequences.
         __mmask32 M3 = __mmask32(_pext_u64(m3 << 2, mend));
         __m512i mask_08000800 = _mm512_set1_epi32(0x08000800);
         __mmask32 Msmall800 = _mm512_mask_cmplt_epu16_mask(M3, Wout, mask_08000800);
@@ -238,7 +238,7 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
     {
       // the location of 3-byte sequence start bytes in the input
       __mmask64 m3 = m34 & (b ^ m4);
-      // words in Wout corresponding to 3-byte sequences.
+      // code units in Wout corresponding to 3-byte sequences.
       __mmask32 M3 = __mmask32(_pext_u64(m3 << 2, mend));
       __m512i mask_08000800 = _mm512_set1_epi32(0x08000800);
       __mmask32 Msmall800 = _mm512_mask_cmplt_epu16_mask(M3, Wout, mask_08000800);
@@ -288,9 +288,9 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
     in += 64 - _lzcnt_u64(_pdep_u64(0xFFFFFFFF, continuation_or_ascii));
   }
   __m512i lead = _mm512_maskz_compress_epi8(leading, leading2byte);          // will contain zero for ascii, and the data
-  lead = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(lead));                 // ... zero extended into words
+  lead = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(lead));                 // ... zero extended into code units
   __m512i follow = _mm512_maskz_compress_epi8(continuation_or_ascii, input); // the last bytes of each sequence
-  follow = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(follow));             // ... zero extended into words
+  follow = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(follow));             // ... zero extended into code units
   lead = _mm512_slli_epi16(lead, 6);                                         // shifted into position
   __m512i final = _mm512_add_epi16(follow, lead);                            // combining lead and follow
 
@@ -313,13 +313,13 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
 
 
 /*
-    utf32_to_utf16_masked converts `count` lower UTF-32 words
+    utf32_to_utf16_masked converts `count` lower UTF-32 code units
     from input `utf32` into UTF-16. It differs from utf32_to_utf16
     in that it 'masks' the writes.
 
-    Returns how many 16-bit words were stored.
+    Returns how many 16-bit code units were stored.
 
-    byteflip is used for flipping 16-bit words, and it should be
+    byteflip is used for flipping 16-bit code units, and it should be
         __m512i byteflip = _mm512_setr_epi64(
             0x0607040502030001,
             0x0e0f0c0d0a0b0809,
@@ -352,7 +352,7 @@ simdutf_really_inline size_t utf32_to_utf16_masked(const __m512i byteflip, __m51
     }
 
     {
-        // build surrogate pair words in 32-bit lanes
+        // build surrogate pair code units in 32-bit lanes
 
         //    t0 = 8 x [000000000000aaaa|aaaaaabbbbbbbbbb]
         const __m512i v_0001_0000 = _mm512_set1_epi32(0x00010000);
@@ -373,7 +373,7 @@ simdutf_really_inline size_t utf32_to_utf16_masked(const __m512i byteflip, __m51
         const __m512i t3 = _mm512_ternarylogic_epi32(t2, v_fc00_fc00, v_d800_dc00, 0xba);
         const __m512i t4 = _mm512_mask_blend_epi32(sp_mask, utf32, t3);
         __m512i t5 = _mm512_ror_epi32(t4, 16);
-        // Here we want to trim all of the upper 16-bit words from the 2-byte
+        // Here we want to trim all of the upper 16-bit code units from the 2-byte
         // characters represented as 4-byte values. We can compute it from
         // sp_mask or the following... It can be more optimized!
         const  __mmask32 nonzero = _kor_mask32(0xaaaaaaaa,_mm512_cmpneq_epi16_mask(t5, _mm512_setzero_si512()));
@@ -389,12 +389,12 @@ simdutf_really_inline size_t utf32_to_utf16_masked(const __m512i byteflip, __m51
 }
 
 /*
-    utf32_to_utf16 converts `count` lower UTF-32 words
+    utf32_to_utf16 converts `count` lower UTF-32 code units
     from input `utf32` into UTF-16. It may overflow.
 
-    Returns how many 16-bit words were stored.
+    Returns how many 16-bit code units were stored.
 
-    byteflip is used for flipping 16-bit words, and it should be
+    byteflip is used for flipping 16-bit code units, and it should be
         __m512i byteflip = _mm512_setr_epi64(
             0x0607040502030001,
             0x0e0f0c0d0a0b0809,
@@ -425,7 +425,7 @@ simdutf_really_inline size_t utf32_to_utf16(const __m512i byteflip, __m512i utf3
     }
 
     {
-        // build surrogate pair words in 32-bit lanes
+        // build surrogate pair code units in 32-bit lanes
 
         //    t0 = 8 x [000000000000aaaa|aaaaaabbbbbbbbbb]
         const __m512i v_0001_0000 = _mm512_set1_epi32(0x00010000);
@@ -512,8 +512,8 @@ __m512i rotate_by_N_epi8(const __m512i input) {
 simdutf_really_inline __m512i expanded_utf8_to_utf32(__m512i char_class, __m512i utf8) {
     /*
         Input:
-        - utf8: bytes stored at separate 32-bit words
-        - valid: which words have valid UTF-8 characters
+        - utf8: bytes stored at separate 32-bit code units
+        - valid: which code units have valid UTF-8 characters
 
         Bit layout of single word. We show 4 cases for each possible
         UTF-8 character encoding. The `?` denotes bits we must not

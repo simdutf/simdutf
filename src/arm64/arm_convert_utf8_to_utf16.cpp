@@ -32,7 +32,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   // 3 byte sequences are the next most common, as seen in CJK, which has long sequences
   // of these.
   if (input_utf8_end_of_code_point_mask == 0x924) {
-    // We want to take 4 3-byte UTF-8 words and turn them into 4 2-byte UTF-16 words.
+    // We want to take 4 3-byte UTF-8 code units and turn them into 4 2-byte UTF-16 code units.
     uint16x4_t composed = convert_utf8_3_byte_to_utf16(in);
     // Byte swap if necessary
     if (!match_system(big_endian)) {
@@ -45,7 +45,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
 
   // 2 byte sequences occur in short bursts in languages like Greek and Russian.
   if ((utf8_end_of_code_point_mask & 0xFFF) == 0xaaa) {
-    // We want to take 6 2-byte UTF-8 words and turn them into 6 2-byte UTF-16 words.
+    // We want to take 6 2-byte UTF-8 code units and turn them into 6 2-byte UTF-16 code units.
     uint16x8_t composed = convert_utf8_2_byte_to_utf16(in);
     // Byte swap if necessary
     if (!match_system(big_endian)) {
@@ -65,7 +65,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
       simdutf::tables::utf8_to_utf16::utf8bigindex[input_utf8_end_of_code_point_mask][1];
 
   if (idx < 64) {
-    // SIX (6) input code-words
+    // SIX (6) input code-code units
     // Convert to UTF-16
     uint16x8_t composed = convert_utf8_1_to_2_byte_to_utf16(in, idx);
     // Byte swap if necessary
@@ -77,7 +77,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     utf16_output += 6; // We wrote 6 16-bit characters.
     return consumed;
   } else if (idx < 145) {
-    // FOUR (4) input code-words
+    // FOUR (4) input code-code units
     // UTF-16 and UTF-32 use similar algorithms, but UTF-32 skips the narrowing.
     uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t*>(simdutf::tables::utf8_to_utf16::shufutf8[idx]));
     // XXX: depending on the system scalar instructions might be faster.
@@ -122,9 +122,9 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     utf16_output += 4; // We wrote 4 16-bit codepoints
     return consumed;
   } else if (idx < 209) {
-    // THREE (3) input code-words
+    // THREE (3) input code-code units
     if (input_utf8_end_of_code_point_mask == 0x888) {
-      // We want to take 3 4-byte UTF-8 words and turn them into 3 4-byte UTF-16 pairs.
+      // We want to take 3 4-byte UTF-8 code units and turn them into 3 4-byte UTF-16 pairs.
       // Generating surrogate pairs is a little tricky though, but it is easier when we
       // can assume they are all pairs.
       // This version does not use the LUT, but 4 byte sequences are less common and the

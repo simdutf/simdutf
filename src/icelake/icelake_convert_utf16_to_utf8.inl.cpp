@@ -2,7 +2,7 @@
 
 /**
  * This function converts the input (inbuf, inlen), assumed to be valid
- * UTF16 (little endian) into UTF-8 (to outbuf). The number of words written
+ * UTF16 (little endian) into UTF-8 (to outbuf). The number of code units written
  * is written to 'outlen' and the function reports the number of input word
  * consumed.
  */

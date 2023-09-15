@@ -28,7 +28,7 @@ TEST(issue_213) {
   simdutf::result r = simdutf::convert_utf8_to_utf16le_with_errors(buf + 2, 1, buffer.get());
   ASSERT_TRUE(r.error != simdutf::SUCCESS);
   // r.count: In case of error, indicates the position of the error in the input.
-  // In case of success, indicates the number of words validated/written.
+  // In case of success, indicates the number of code units validated/written.
   ASSERT_TRUE(r.count == 0);
 }
 
