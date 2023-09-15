@@ -31,6 +31,7 @@ namespace {
 #include "icelake/icelake_utf32_validation.inl.cpp"
 #include "icelake/icelake_convert_utf16_to_utf8.inl.cpp"
 #include "icelake/icelake_convert_latin1_to_utf8.inl.cpp"
+#include "icelake/icelake_convert_latin1_to_utf32.inl.cpp"
 
 
 #include <cstdint>
@@ -493,8 +494,17 @@ simdutf_warn_unused size_t implementation::convert_latin1_to_utf16be(const char*
   return scalar::latin1_to_utf16::convert<endianness::BIG>(buf, len, utf16_output);
 }
 
-simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(const char* buf, size_t len, char32_t* latin1_output) const noexcept {
-  return scalar::latin1_to_utf32::convert(buf,len,latin1_output);
+simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(const char* buf, size_t len, char32_t* utf32_output) const noexcept {
+    std::pair<const char*, char32_t*> ret = avx512_convert_latin1_to_utf32(buf, len, utf32_output);
+    if (ret.first == nullptr) { return 0; }
+    size_t converted_chars = ret.second - utf32_output;
+    if (ret.first != buf + len) {
+        const size_t scalar_converted_chars = scalar::latin1_to_utf32::convert(
+                                              ret.first, len - (ret.first - buf), ret.second);
+        if (scalar_converted_chars == 0) { return 0; }
+        converted_chars += scalar_converted_chars;
+    }
+    return converted_chars;
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
