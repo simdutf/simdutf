@@ -194,10 +194,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a7566c1718e91a6d36b0c47822b0154ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert valid UTF-8 string into UTF-32 string.  <a href="classsimdutf_1_1implementation.html#a7566c1718e91a6d36b0c47822b0154ad">More...</a><br /></td></tr>
 <tr class="separator:a7566c1718e91a6d36b0c47822b0154ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae01141d4bf774c95e771924caa11efb1"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#ae01141d4bf774c95e771924caa11efb1">utf16_length_from_utf8</a> (const char *input, size_t length) const noexcept=0</td></tr>
-<tr class="memdesc:ae01141d4bf774c95e771924caa11efb1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the number of 2-byte words that this UTF-8 string would require in UTF-16LE format.  <a href="classsimdutf_1_1implementation.html#ae01141d4bf774c95e771924caa11efb1">More...</a><br /></td></tr>
+<tr class="memdesc:ae01141d4bf774c95e771924caa11efb1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the number of 2-byte code units that this UTF-8 string would require in UTF-16LE format.  <a href="classsimdutf_1_1implementation.html#ae01141d4bf774c95e771924caa11efb1">More...</a><br /></td></tr>
 <tr class="separator:ae01141d4bf774c95e771924caa11efb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a39bc047dd50ede9cd33cb7e825eb5b56"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a39bc047dd50ede9cd33cb7e825eb5b56">utf32_length_from_utf8</a> (const char *input, size_t length) const noexcept=0</td></tr>
-<tr class="memdesc:a39bc047dd50ede9cd33cb7e825eb5b56"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the number of 4-byte words that this UTF-8 string would require in UTF-32 format.  <a href="classsimdutf_1_1implementation.html#a39bc047dd50ede9cd33cb7e825eb5b56">More...</a><br /></td></tr>
+<tr class="memdesc:a39bc047dd50ede9cd33cb7e825eb5b56"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the number of 4-byte code units that this UTF-8 string would require in UTF-32 format.  <a href="classsimdutf_1_1implementation.html#a39bc047dd50ede9cd33cb7e825eb5b56">More...</a><br /></td></tr>
 <tr class="separator:a39bc047dd50ede9cd33cb7e825eb5b56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a75f16dc0f3bdd4457425898a17c51d45"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a75f16dc0f3bdd4457425898a17c51d45">convert_utf16le_to_latin1</a> (const char16_t *input, size_t length, char *latin1_buffer) const noexcept=0</td></tr>
 <tr class="memdesc:a75f16dc0f3bdd4457425898a17c51d45"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly broken UTF-16LE string into Latin1 string.  <a href="classsimdutf_1_1implementation.html#a75f16dc0f3bdd4457425898a17c51d45">More...</a><br /></td></tr>
@@ -317,7 +317,7 @@ Public Member Functions</h2></td></tr>
 virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><b>latin1_length_from_utf16</b> (size_t length) const noexcept=0</td></tr>
 <tr class="separator:a83aed89399b43b6f7a36172f3af38b99"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3761299ce52ee8b2b480fcadc50b45a5"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a3761299ce52ee8b2b480fcadc50b45a5">utf16_length_from_utf32</a> (const char32_t *input, size_t length) const noexcept=0</td></tr>
-<tr class="memdesc:a3761299ce52ee8b2b480fcadc50b45a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the number of two-byte words that this UTF-32 string would require in UTF-16 format.  <a href="classsimdutf_1_1implementation.html#a3761299ce52ee8b2b480fcadc50b45a5">More...</a><br /></td></tr>
+<tr class="memdesc:a3761299ce52ee8b2b480fcadc50b45a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the number of two-byte code units that this UTF-32 string would require in UTF-16 format.  <a href="classsimdutf_1_1implementation.html#a3761299ce52ee8b2b480fcadc50b45a5">More...</a><br /></td></tr>
 <tr class="separator:a3761299ce52ee8b2b480fcadc50b45a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8039edd257c0f2bdf1acc5d16476992a"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a8039edd257c0f2bdf1acc5d16476992a">utf32_length_from_latin1</a> (size_t length) const noexcept=0</td></tr>
 <tr class="memdesc:a8039edd257c0f2bdf1acc5d16476992a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the number of bytes that this UTF-32 string would require in Latin1 format.  <a href="classsimdutf_1_1implementation.html#a8039edd257c0f2bdf1acc5d16476992a">More...</a><br /></td></tr>
@@ -437,7 +437,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16 string to process </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">output</td><td>the pointer to buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
@@ -707,12 +707,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16BE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of char written if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char written if successful. </dd></dl>
 
 </div>
 </div>
@@ -761,12 +761,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16BE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of char written if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char written if successful. </dd></dl>
 
 </div>
 </div>
@@ -816,12 +816,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16BE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">utf32_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if input is not a valid UTF-16BE string </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if input is not a valid UTF-16BE string </dd></dl>
 
 </div>
 </div>
@@ -871,12 +871,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16BE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">utf32_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of char32_t written if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char32_t written if successful. </dd></dl>
 
 </div>
 </div>
@@ -926,12 +926,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16BE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">utf8_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if input is not a valid UTF-16BE string </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if input is not a valid UTF-16BE string </dd></dl>
 
 </div>
 </div>
@@ -981,12 +981,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16BE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">utf8_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of char written if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char written if successful. </dd></dl>
 
 </div>
 </div>
@@ -1036,12 +1036,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if input is not a valid UTF-16LE string </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if input is not a valid UTF-16LE string </dd></dl>
 
 </div>
 </div>
@@ -1090,12 +1090,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of char written if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char written if successful. </dd></dl>
 
 </div>
 </div>
@@ -1145,12 +1145,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">utf32_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if input is not a valid UTF-16LE string </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if input is not a valid UTF-16LE string </dd></dl>
 
 </div>
 </div>
@@ -1200,12 +1200,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">utf32_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of char32_t written if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char32_t written if successful. </dd></dl>
 
 </div>
 </div>
@@ -1255,12 +1255,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">utf8_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if input is not a valid UTF-16LE string </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if input is not a valid UTF-16LE string </dd></dl>
 
 </div>
 </div>
@@ -1310,12 +1310,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">utf8_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of char written if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char written if successful. </dd></dl>
 
 </div>
 </div>
@@ -1365,12 +1365,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
     <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if input is not a valid UTF-32 string </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if input is not a valid UTF-32 string </dd></dl>
 
 </div>
 </div>
@@ -1420,12 +1420,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
     <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of char written if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char written if successful. </dd></dl>
 
 </div>
 </div>
@@ -1475,12 +1475,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
     <tr><td class="paramname">utf16_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if input is not a valid UTF-32 string </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if input is not a valid UTF-32 string </dd></dl>
 
 </div>
 </div>
@@ -1530,12 +1530,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
     <tr><td class="paramname">utf16_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of char16_t written if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char16_t written if successful. </dd></dl>
 
 </div>
 </div>
@@ -1585,12 +1585,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
     <tr><td class="paramname">utf16_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if input is not a valid UTF-32 string </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if input is not a valid UTF-32 string </dd></dl>
 
 </div>
 </div>
@@ -1640,12 +1640,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
     <tr><td class="paramname">utf16_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of char16_t written if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char16_t written if successful. </dd></dl>
 
 </div>
 </div>
@@ -1695,12 +1695,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
     <tr><td class="paramname">utf8_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if input is not a valid UTF-32 string </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if input is not a valid UTF-32 string </dd></dl>
 
 </div>
 </div>
@@ -1750,12 +1750,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
     <tr><td class="paramname">utf8_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of char written if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char written if successful. </dd></dl>
 
 </div>
 </div>
@@ -1864,7 +1864,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of words validated if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of code units validated if successful. </dd></dl>
 
 </div>
 </div>
@@ -1972,7 +1972,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of words validated if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of code units validated if successful. </dd></dl>
 
 </div>
 </div>
@@ -2080,7 +2080,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of words validated if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of code units validated if successful. </dd></dl>
 
 </div>
 </div>
@@ -2188,7 +2188,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of char32_t written if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char32_t written if successful. </dd></dl>
 
 </div>
 </div>
@@ -2238,12 +2238,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16BE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if conversion is not possible </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if conversion is not possible </dd></dl>
 
 </div>
 </div>
@@ -2293,12 +2293,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16BE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">utf32_buffer</td><td>the pointer to buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if conversion is not possible </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if conversion is not possible </dd></dl>
 
 </div>
 </div>
@@ -2348,12 +2348,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16BE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">utf8_buffer</td><td>the pointer to buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if conversion is not possible </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if conversion is not possible </dd></dl>
 
 </div>
 </div>
@@ -2403,12 +2403,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if conversion is not possible </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if conversion is not possible </dd></dl>
 
 </div>
 </div>
@@ -2458,12 +2458,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">utf32_buffer</td><td>the pointer to buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if conversion is not possible </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if conversion is not possible </dd></dl>
 
 </div>
 </div>
@@ -2513,12 +2513,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
     <tr><td class="paramname">utf8_buffer</td><td>the pointer to buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if conversion is not possible </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if conversion is not possible </dd></dl>
 
 </div>
 </div>
@@ -2568,12 +2568,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
     <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if conversion is not possible </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if conversion is not possible </dd></dl>
 
 </div>
 </div>
@@ -2623,12 +2623,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
     <tr><td class="paramname">utf16_buffer</td><td>the pointer to buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if conversion is not possible </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if conversion is not possible </dd></dl>
 
 </div>
 </div>
@@ -2678,12 +2678,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
     <tr><td class="paramname">utf16_buffer</td><td>the pointer to buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if conversion is not possible </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if conversion is not possible </dd></dl>
 
 </div>
 </div>
@@ -2733,12 +2733,12 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
     <tr><td class="paramname">utf8_buffer</td><td>the pointer to buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written words; 0 if conversion is not possible </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if conversion is not possible </dd></dl>
 
 </div>
 </div>
@@ -2999,7 +2999,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16BE string to process </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
   </table>
   </dd>
 </dl>
@@ -3047,7 +3047,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16LE string to process </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
   </table>
   </dd>
 </dl>
@@ -3208,7 +3208,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 <p>This function does not validate the input.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
   </table>
   </dd>
 </dl>
@@ -3344,7 +3344,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16 string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
   </table>
   </dd>
 </dl>
@@ -3386,12 +3386,12 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </table>
 </div><div class="memdoc">
 
-<p>Compute the number of two-byte words that this UTF-32 string would require in UTF-16 format. </p>
+<p>Compute the number of two-byte code units that this UTF-32 string would require in UTF-16 format. </p>
 <p>This function does not validate the input.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
   </table>
   </dd>
 </dl>
@@ -3433,7 +3433,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </table>
 </div><div class="memdoc">
 
-<p>Compute the number of 2-byte words that this UTF-8 string would require in UTF-16LE format. </p>
+<p>Compute the number of 2-byte code units that this UTF-8 string would require in UTF-16LE format. </p>
 <p>This function does not validate the input.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -3442,7 +3442,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the number of char16_t words required to encode the UTF-8 string as UTF-16LE </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>the number of char16_t code units required to encode the UTF-8 string as UTF-16LE </dd></dl>
 
 </div>
 </div>
@@ -3475,7 +3475,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
   </table>
   </dd>
 </dl>
@@ -3517,7 +3517,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </table>
 </div><div class="memdoc">
 
-<p>Compute the number of 4-byte words that this UTF-8 string would require in UTF-32 format. </p>
+<p>Compute the number of 4-byte code units that this UTF-8 string would require in UTF-32 format. </p>
 <p>This function is equivalent to count_utf8.</p>
 <p>This function does not validate the input.</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -3527,7 +3527,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the number of char32_t words required to encode the UTF-8 string as UTF-32 </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>the number of char32_t code units required to encode the UTF-8 string as UTF-32 </dd></dl>
 
 </div>
 </div>
@@ -3617,7 +3617,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16BE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
   </table>
   </dd>
 </dl>
@@ -3665,7 +3665,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 2-byte words (char16_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
   </table>
   </dd>
 </dl>
@@ -3712,7 +3712,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
-    <tr><td class="paramname">length</td><td>the length of the string in 4-byte words (char32_t) </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
   </table>
   </dd>
 </dl>
@@ -3810,7 +3810,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of words validated if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of code units validated if successful. </dd></dl>
 
 </div>
 </div>
@@ -3855,7 +3855,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">buf</td><td>the UTF-16BE string to validate. </td></tr>
-    <tr><td class="paramname">len</td><td>the length of the string in number of 2-byte words (char16_t). </td></tr>
+    <tr><td class="paramname">len</td><td>the length of the string in number of 2-byte code units (char16_t). </td></tr>
   </table>
   </dd>
 </dl>
@@ -3904,11 +3904,11 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">buf</td><td>the UTF-16BE string to validate. </td></tr>
-    <tr><td class="paramname">len</td><td>the length of the string in number of 2-byte words (char16_t). </td></tr>
+    <tr><td class="paramname">len</td><td>the length of the string in number of 2-byte code units (char16_t). </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of words validated if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of code units validated if successful. </dd></dl>
 
 </div>
 </div>
@@ -3953,7 +3953,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">buf</td><td>the UTF-16LE string to validate. </td></tr>
-    <tr><td class="paramname">len</td><td>the length of the string in number of 2-byte words (char16_t). </td></tr>
+    <tr><td class="paramname">len</td><td>the length of the string in number of 2-byte code units (char16_t). </td></tr>
   </table>
   </dd>
 </dl>
@@ -4002,11 +4002,11 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">buf</td><td>the UTF-16LE string to validate. </td></tr>
-    <tr><td class="paramname">len</td><td>the length of the string in number of 2-byte words (char16_t). </td></tr>
+    <tr><td class="paramname">len</td><td>the length of the string in number of 2-byte code units (char16_t). </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of words validated if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of code units validated if successful. </dd></dl>
 
 </div>
 </div>
@@ -4050,7 +4050,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">buf</td><td>the UTF-32 string to validate. </td></tr>
-    <tr><td class="paramname">len</td><td>the length of the string in number of 4-byte words (char32_t). </td></tr>
+    <tr><td class="paramname">len</td><td>the length of the string in number of 4-byte code units (char32_t). </td></tr>
   </table>
   </dd>
 </dl>
@@ -4098,11 +4098,11 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">buf</td><td>the UTF-32 string to validate. </td></tr>
-    <tr><td class="paramname">len</td><td>the length of the string in number of 4-byte words (char32_t). </td></tr>
+    <tr><td class="paramname">len</td><td>the length of the string in number of 4-byte code units (char32_t). </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of words validated if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of code units validated if successful. </dd></dl>
 
 </div>
 </div>
@@ -4196,7 +4196,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct with an error code and either the position of the error if any or the number of words validated if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of code units validated if successful. </dd></dl>
 
 </div>
 </div>
