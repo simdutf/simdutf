@@ -163,12 +163,8 @@ simdutf_warn_unused result implementation::validate_utf32_with_errors(const char
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf8(const char * buf, size_t len, char* utf8_output) const noexcept {
-  #if SIMDUTF_IS_BIG_ENDIAN
-  std::pair<const char*, char*> ret = sse_convert_latin1_to_utf8<endianness::BIG>(buf, len, utf8_output);
-  #else
-  std::pair<const char*, char*> ret = sse_convert_latin1_to_utf8<endianness::LITTLE>(buf, len, utf8_output);
-  #endif
-  
+
+  std::pair<const char*, char*> ret = sse_convert_latin1_to_utf8(buf, len, utf8_output);
   size_t converted_chars = ret.second - utf8_output;
 
   if (ret.first != buf + len) {
