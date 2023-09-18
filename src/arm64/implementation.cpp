@@ -109,6 +109,10 @@ simdutf_really_inline uint16x8_t convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in
 #include "arm64/arm_validate_utf16.cpp"
 #include "arm64/arm_validate_utf32le.cpp"
 
+#include "arm64/arm_convert_latin1_to_utf8.cpp"
+#include "arm64/arm_convert_latin1_to_utf16.cpp"
+#include "arm64/arm_convert_latin1_to_utf32.cpp"
+
 #include "arm64/arm_convert_utf8_to_utf16.cpp"
 #include "arm64/arm_convert_utf8_to_utf32.cpp"
 #include "arm64/arm_convert_utf8_to_latin1.cpp"
@@ -237,19 +241,49 @@ simdutf_warn_unused result implementation::validate_utf32_with_errors(const char
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf8(const char * buf, size_t len, char* utf8_output) const noexcept {
-  return scalar::latin1_to_utf8::convert(buf,len,utf8_output);
+  std::pair<const char*, char*> ret = arm_convert_latin1_to_utf8(buf, len, utf8_output);
+  size_t converted_chars = ret.second - utf8_output;
+
+  if (ret.first != buf + len) {
+    const size_t scalar_converted_chars = scalar::latin1_to_utf8::convert(
+      ret.first, len - (ret.first - buf), ret.second);
+    converted_chars += scalar_converted_chars;
+  }
+
+  return converted_chars;
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
-  return scalar::latin1_to_utf16::convert<endianness::LITTLE>(buf, len, utf16_output);
+  std::pair<const char*, char16_t*> ret = arm_convert_latin1_to_utf16<endianness::LITTLE>(buf, len, utf16_output);
+  size_t converted_chars = ret.second - utf16_output;
+  if (ret.first != buf + len) {
+    const size_t scalar_converted_chars = scalar::latin1_to_utf16::convert<endianness::LITTLE>(
+      ret.first, len - (ret.first - buf), ret.second);
+    converted_chars += scalar_converted_chars;
+  }
+  return converted_chars;
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf16be(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
-  return scalar::latin1_to_utf16::convert<endianness::BIG>(buf, len, utf16_output);
+  std::pair<const char*, char16_t*> ret = arm_convert_latin1_to_utf16<endianness::BIG>(buf, len, utf16_output);
+  size_t converted_chars = ret.second - utf16_output;
+  if (ret.first != buf + len) {
+    const size_t scalar_converted_chars = scalar::latin1_to_utf16::convert<endianness::BIG>(
+      ret.first, len - (ret.first - buf), ret.second);
+    converted_chars += scalar_converted_chars;
+  }
+  return converted_chars;
 }
 
-simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(const char* buf, size_t len, char32_t* latin1_output) const noexcept {
-  return scalar::latin1_to_utf32::convert(buf,len,latin1_output);
+simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(const char* buf, size_t len, char32_t* utf32_output) const noexcept {
+  std::pair<const char*, char32_t*> ret = arm_convert_latin1_to_utf32(buf, len, utf32_output);
+  size_t converted_chars = ret.second - utf32_output;
+  if (ret.first != buf + len) {
+    const size_t scalar_converted_chars = scalar::latin1_to_utf32::convert(
+      ret.first, len - (ret.first - buf), ret.second);
+    converted_chars += scalar_converted_chars;
+  }
+  return converted_chars;
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
