@@ -1,4 +1,3 @@
-template <endianness big_endian>
 std::pair<const char* const, char* const> sse_convert_latin1_to_utf8(
   const char* latin_input,
   const size_t latin_input_length,
@@ -11,18 +10,7 @@ std::pair<const char* const, char* const> sse_convert_latin1_to_utf8(
   // 0b1111_1111_1000_0000
   const __m128i v_ff80 = _mm_set1_epi16((uint16_t)0xff80);
 
-  const __m128i latin_1_half_into_u16_byte_mask = big_endian
-    ? _mm_setr_epi8(
-      '\x80', 0,
-      '\x80', 1,
-      '\x80', 2,
-      '\x80', 3,
-      '\x80', 4,
-      '\x80', 5,
-      '\x80', 6,
-      '\x80', 7
-    )
-    : _mm_setr_epi8(
+  const __m128i latin_1_half_into_u16_byte_mask = _mm_setr_epi8(
       0, '\x80',
       1, '\x80',
       2, '\x80',
@@ -33,18 +21,7 @@ std::pair<const char* const, char* const> sse_convert_latin1_to_utf8(
       7, '\x80'
     );
 
-  const __m128i latin_2_half_into_u16_byte_mask = big_endian
-    ? _mm_setr_epi8(
-      '\x80', 8,
-      '\x80', 9,
-      '\x80', 10,
-      '\x80', 11,
-      '\x80', 12,
-      '\x80', 13,
-      '\x80', 14,
-      '\x80', 15
-    )
-    : _mm_setr_epi8(
+  const __m128i latin_2_half_into_u16_byte_mask = _mm_setr_epi8(
       8, '\x80',
       9, '\x80',
       10, '\x80',
