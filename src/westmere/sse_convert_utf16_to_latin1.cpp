@@ -10,7 +10,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_latin1(const char16_t* bu
       in = _mm_shuffle_epi8(in, swap);
     }
 
-    __m128i high_byte_mask = _mm_set1_epi16(0xFF00);
+    __m128i high_byte_mask = _mm_set1_epi16((int16_t)0xFF00);
     if (_mm_testz_si128(in, high_byte_mask)) {
       // Pack 16-bit characters into 8-bit and store in latin1_output
       __m128i latin1_packed = _mm_packus_epi16(in, in);
