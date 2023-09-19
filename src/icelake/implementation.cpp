@@ -24,13 +24,15 @@ namespace {
 #include "icelake/icelake_from_utf8.inl.cpp"
 #include "icelake/icelake_convert_utf8_to_latin1.inl.cpp"
 #include "icelake/icelake_convert_valid_utf8_to_latin1.inl.cpp"
+#include "icelake/icelake_convert_utf16_to_latin1.inl.cpp"
+#include "icelake/icelake_convert_utf16_to_utf8.inl.cpp"
 #include "icelake/icelake_convert_utf16_to_utf32.inl.cpp"
 #include "icelake/icelake_convert_utf32_to_utf8.inl.cpp"
 #include "icelake/icelake_convert_utf32_to_utf16.inl.cpp"
 #include "icelake/icelake_ascii_validation.inl.cpp"
 #include "icelake/icelake_utf32_validation.inl.cpp"
-#include "icelake/icelake_convert_utf16_to_utf8.inl.cpp"
 #include "icelake/icelake_convert_latin1_to_utf8.inl.cpp"
+#include "icelake/icelake_convert_latin1_to_utf16.inl.cpp"
 #include "icelake/icelake_convert_latin1_to_utf32.inl.cpp"
 
 
@@ -487,11 +489,11 @@ simdutf_warn_unused size_t implementation::convert_latin1_to_utf8(const char * b
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
-  return scalar::latin1_to_utf16::convert<endianness::LITTLE>(buf, len, utf16_output);
+  return icelake_convert_latin1_to_utf16<endianness::LITTLE>(buf, len, utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf16be(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
-  return scalar::latin1_to_utf16::convert<endianness::BIG>(buf, len, utf16_output);
+  return icelake_convert_latin1_to_utf16<endianness::BIG>(buf, len, utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(const char* buf, size_t len, char32_t* utf32_output) const noexcept {
@@ -720,19 +722,19 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(const cha
 
 
 simdutf_warn_unused size_t implementation::convert_utf16le_to_latin1(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf16_to_latin1::convert<endianness::LITTLE>(buf, len, latin1_output);
+  return icelake_convert_utf16_to_latin1<endianness::LITTLE>(buf,len,latin1_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16be_to_latin1(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf16_to_latin1::convert<endianness::BIG>(buf, len, latin1_output);
+  return icelake_convert_utf16_to_latin1<endianness::BIG>(buf,len,latin1_output);
 }
 
 simdutf_warn_unused result implementation::convert_utf16le_to_latin1_with_errors(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf16_to_latin1::convert_with_errors<endianness::LITTLE>(buf, len, latin1_output);
+  return icelake_convert_utf16_to_latin1_with_errors<endianness::LITTLE>(buf,len,latin1_output).first;
 }
 
 simdutf_warn_unused result implementation::convert_utf16be_to_latin1_with_errors(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf16_to_latin1::convert_with_errors<endianness::BIG>(buf, len, latin1_output);
+  return icelake_convert_utf16_to_latin1_with_errors<endianness::BIG>(buf,len,latin1_output).first;
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_latin1(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
