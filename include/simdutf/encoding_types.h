@@ -14,8 +14,8 @@ enum encoding_type {
 };
 
 enum endianness {
-        LITTLE,
-        BIG
+        LITTLE = 0,
+        BIG = 1
 };
 
 bool match_system(endianness e);
