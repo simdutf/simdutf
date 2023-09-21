@@ -27,6 +27,7 @@ namespace {
 #include "icelake/icelake_convert_utf16_to_latin1.inl.cpp"
 #include "icelake/icelake_convert_utf16_to_utf8.inl.cpp"
 #include "icelake/icelake_convert_utf16_to_utf32.inl.cpp"
+#include "icelake/icelake_convert_utf32_to_latin1.inl.cpp"
 #include "icelake/icelake_convert_utf32_to_utf8.inl.cpp"
 #include "icelake/icelake_convert_utf32_to_utf16.inl.cpp"
 #include "icelake/icelake_ascii_validation.inl.cpp"
@@ -790,15 +791,15 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_utf8(const c
 }
 
 simdutf_warn_unused size_t implementation::convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf32_to_latin1::convert(buf,len,latin1_output);
+  return icelake_convert_utf32_to_latin1(buf,len,latin1_output);
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_latin1_with_errors(const char32_t* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf32_to_latin1::convert_with_errors(buf,len,latin1_output);
+  return icelake_convert_utf32_to_latin1_with_errors(buf,len,latin1_output).first;
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf32_to_latin1::convert_valid(buf,len,latin1_output);
+  return icelake_convert_utf32_to_latin1(buf,len,latin1_output);
 }
 
 
