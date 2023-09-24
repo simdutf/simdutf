@@ -46,7 +46,7 @@ convert_latin1_to_utf16+icelake, input size: 432305, iterations: 30000, dataset:
    0.157 ins/char,    0.217 cycle/char,   14.287 Gc/s (2.1 %)     1.00 byte/char  */
 
 
-template <endianness big_endian>
+/* template <endianness big_endian>
 std::pair<const char*, char16_t*> avx2_convert_latin1_to_utf16(const char* latin1_input, size_t len, char16_t* utf16_output) {
     size_t rounded_len = len & ~0x1F; // Round down to nearest multiple of 32
     
@@ -71,7 +71,7 @@ std::pair<const char*, char16_t*> avx2_convert_latin1_to_utf16(const char* latin
 
     return std::make_pair(latin1_input + rounded_len, utf16_output + rounded_len);
 
-}
+} */
 
 
 /* convert_latin1_to_utf16+haswell, input size: 432305, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.latin1.txt
@@ -146,3 +146,60 @@ std::pair<const char*, char16_t*> avx2_convert_latin1_to_utf16(const char* latin
 
     return std::make_pair(latin1_input + rounded_len, utf16_output + rounded_len);
 } */
+
+
+/* convert_latin1_to_utf16+haswell, input size: 432305, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.latin1.txt
+   0.563 ins/byte,    0.184 cycle/byte,   17.426 GB/s (2.4 %),     3.204 GHz,    3.063 ins/cycle 
+   0.563 ins/char,    0.184 cycle/char,   17.426 Gc/s (2.4 %)     1.00 byte/char 
+convert_latin1_to_utf16+icelake, input size: 432305, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.latin1.txt
+   0.157 ins/byte,    0.221 cycle/byte,   14.005 GB/s (2.2 %),     3.101 GHz,    0.708 ins/cycle 
+   0.157 ins/char,    0.221 cycle/char,   14.005 Gc/s (2.2 %)     1.00 byte/char 
+convert_latin1_to_utf16+iconv, input size: 432305, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.latin1.txt
+  31.022 ins/byte,    7.011 cycle/byte,    0.455 GB/s (0.3 %),     3.193 GHz,    4.425 ins/cycle 
+  31.022 ins/char,    7.011 cycle/char,    0.455 Gc/s (0.3 %)     1.00 byte/char 
+convert_latin1_to_utf16+icu, input size: 432305, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.latin1.txt
+   2.505 ins/byte,    0.640 cycle/byte,    4.992 GB/s (0.7 %),     3.196 GHz,    3.913 ins/cycle 
+   2.505 ins/char,    0.640 cycle/char,    4.992 Gc/s (0.7 %)     1.00 byte/char 
+convert_latin1_to_utf16+westmere, input size: 432305, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.latin1.txt
+   0.563 ins/byte,    0.188 cycle/byte,   17.047 GB/s (2.1 %),     3.203 GHz,    2.997 ins/cycle 
+   0.563 ins/char,    0.188 cycle/char,   17.047 Gc/s (2.1 %)     1.00 byte/char */
+
+template <endianness big_endian>
+std::pair<const char*, char16_t*> avx2_convert_latin1_to_utf16(const char* latin1_input, size_t len, char16_t* utf16_output) {
+    size_t rounded_len = len & ~0xF; // Round down to nearest multiple of 32
+    
+    __m256i byteflip = _mm256_setr_epi64x(0x0607040502030001, 0x0e0f0c0d0a0b0809,
+                                          0x0607040502030001, 0x0e0f0c0d0a0b0809);
+    
+    size_t i = 0;
+    for (; i < rounded_len; i += 16) {
+        // Load 16 bytes from the address (input + i) into xmm0 register
+        __m128i xmm0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(latin1_input + i));
+        
+        // Zero extend each byte in xmm0 to word in xmm1
+        __m128i xmm1 = _mm_cvtepu8_epi16(xmm0);
+        
+        // Shift xmm0 to the right by 8 bytes
+        xmm0 = _mm_srli_si128(xmm0, 8);
+        
+        // Zero extend each byte in the shifted xmm0 to word in xmm0
+        xmm0 = _mm_cvtepu8_epi16(xmm0);
+        
+/*         // Shift each word in xmm1 to the left by 8 bits
+        xmm1 = _mm_slli_epi16(xmm1, 8);
+        
+        // Shift each word in xmm0 to the left by 8 bits
+        xmm0 = _mm_slli_epi16(xmm0, 8); */
+        
+        // Store the contents of xmm1 into the address pointed by (output + i)
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(utf16_output + i), xmm1);
+        
+        // Store the contents of xmm0 into the address pointed by (output + i + 8)
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(utf16_output + i + 8), xmm0);
+
+        // The rest of the assembly instructions seem to be for loop control and address calculations, which are automatically handled in C++.
+    }
+
+    return std::make_pair(latin1_input + rounded_len, utf16_output + rounded_len);
+
+}
