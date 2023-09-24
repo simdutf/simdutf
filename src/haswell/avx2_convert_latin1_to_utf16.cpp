@@ -27,8 +27,6 @@ std::pair<const char*, char16_t*> avx2_convert_latin1_to_utf16(const char* latin
         
         // Store the contents of xmm0 into the address pointed by (output + i + 8)
         _mm_storeu_si128(reinterpret_cast<__m128i*>(utf16_output + i + 8), xmm0);
-
-        // The rest of the assembly instructions seem to be for loop control and address calculations, which are automatically handled in C++.
     }
 
     return std::make_pair(latin1_input + rounded_len, utf16_output + rounded_len);
