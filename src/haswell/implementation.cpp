@@ -45,6 +45,7 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 #include "haswell/avx2_validate_utf32le.cpp"
 
 #include "haswell/avx2_convert_latin1_to_utf8.cpp"
+#include "haswell/avx2_convert_latin1_to_utf16.cpp"
 #include "haswell/avx2_convert_latin1_to_utf32.cpp"
 
 #include "haswell/avx2_convert_utf8_to_utf16.cpp"
@@ -185,11 +186,29 @@ simdutf_warn_unused size_t implementation::convert_latin1_to_utf8(const char * b
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
-  return scalar::latin1_to_utf16::convert<endianness::LITTLE>(buf, len, utf16_output);
+    std::pair<const char*, char16_t*> ret = avx2_convert_latin1_to_utf16<endianness::LITTLE>(buf, len, utf16_output);
+    if (ret.first == nullptr) { return 0; }
+    size_t converted_chars = ret.second - utf16_output;
+    if (ret.first != buf + len) {
+        const size_t scalar_converted_chars = scalar::latin1_to_utf16::convert<endianness::LITTLE>(
+                                              ret.first, len - (ret.first - buf), ret.second);
+        if (scalar_converted_chars == 0) { return 0; }
+        converted_chars += scalar_converted_chars;
+    }
+    return converted_chars;
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf16be(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
-  return scalar::latin1_to_utf16::convert<endianness::BIG>(buf, len, utf16_output);
+    std::pair<const char*, char16_t*> ret = avx2_convert_latin1_to_utf16<endianness::BIG>(buf, len, utf16_output);
+    if (ret.first == nullptr) { return 0; }
+    size_t converted_chars = ret.second - utf16_output;
+    if (ret.first != buf + len) {
+        const size_t scalar_converted_chars = scalar::latin1_to_utf16::convert<endianness::BIG>(
+                                              ret.first, len - (ret.first - buf), ret.second);
+        if (scalar_converted_chars == 0) { return 0; }
+        converted_chars += scalar_converted_chars;
+    }
+    return converted_chars;
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(const char* buf, size_t len, char32_t* utf32_output) const noexcept {
