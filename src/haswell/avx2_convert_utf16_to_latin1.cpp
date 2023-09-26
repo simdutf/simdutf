@@ -66,5 +66,5 @@ std::pair<result, char*> avx2_convert_utf16_to_latin1_with_errors(const char16_t
             buf += 16;
         }
     } // while
-    return std::make_pair(result{error_code::SUCCESS, buf - start}, latin1_output);
+    return std::make_pair(result{error_code::SUCCESS, (size_t)(buf - start)}, latin1_output);
 }
