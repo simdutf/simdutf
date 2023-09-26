@@ -299,10 +299,6 @@ simdutf_warn_unused size_t implementation::convert_utf16le_to_latin1(const char1
   return saved_bytes;
 }
 
-/* simdutf_warn_unused size_t implementation::convert_utf16be_to_latin1(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf16_to_latin1::convert<endianness::BIG>(buf, len, latin1_output);
-} */
-
 simdutf_warn_unused size_t implementation::convert_utf16be_to_latin1(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
   std::pair<const char16_t*, char*> ret = haswell::avx2_convert_utf16_to_latin1<endianness::BIG>(buf, len, latin1_output);
   if (ret.first == nullptr) { return 0; }
