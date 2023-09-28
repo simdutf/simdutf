@@ -79,9 +79,10 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_latin1(const char32_t* b
 
 
 
-std::pair<const char32_t*, char*> avx2_convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) {
+/* std::pair<const char32_t*, char*> avx2_convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) {
     const char32_t* end = buf + len;
     const size_t rounded_len = len & ~0x7;  // Round down to nearest multiple of 8
+
 
     
     __m256i v_0xFF = _mm256_set1_epi32(0xff);
@@ -89,26 +90,70 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_latin1(const char32_t* b
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 28, 24, 20, 16, 12, 8, 4, 0);
 
 
-    while (buf + rounded_len < end) {
+    while (buf + rounded_len <= end) {
         __m256i in = _mm256_loadu_si256((__m256i *)buf);
         
         __m256i high_byte_mask = _mm256_set1_epi32(0xFFFFFF00);
-        if (_mm256_testz_si256(in, high_byte_mask)) {
-            return std::make_pair(nullptr, reinterpret_cast<char*>(latin1_output));
+        if (!_mm256_testz_si256(in, high_byte_mask)) {
+            return std::make_pair(nullptr, (latin1_output));
         }
-        
+
         // Shuffle and store the packed Latin1 characters
         __m128i latin1_chars = _mm256_castsi256_si128(_mm256_shuffle_epi8(in, shufmask));
-        _mm_storel_epi64((__m128i *)latin1_output, latin1_chars);
+        // _mm_storel_epi64((__m128i *)latin1_output, latin1_chars);
+        // _mm_storel_epi64(reinterpret_cast<__m128i*>(latin1_output), latin1_chars);
+        _mm_storeu_si64(reinterpret_cast<void*>(latin1_output), latin1_chars);
         
         latin1_output += 8;
         buf += 8;
     }
     
     // Return the pointer to the last processed character and the corresponding latin1_output position
-    return std::make_pair(buf + rounded_len, latin1_output + rounded_len);
+    // return std::make_pair(buf + rounded_len, latin1_output + rounded_len);
+    return std::make_pair(buf, latin1_output);
 }
- 
+  */
+
+ #include <cstdint>
+#include <cstddef>
+#include <utility>
+#include <immintrin.h>
+
+std::pair<const char32_t*, char*> avx2_convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) {
+    const char32_t* end = buf + len;
+    const size_t rounded_len = len & ~0x7;  // Round down to nearest multiple of 8
+
+    __m256i v_0xFF = _mm256_set1_epi32(0xff);
+    __m256i shufmask = _mm256_set_epi8(
+      -1, -1, -1, -1, -1, -1, -1, -1,
+       -1, -1, -1, -1, 28, 24, 20, 16,
+        -1, -1, -1, -1, -1, -1, -1, -1, 
+       -1, -1, -1, -1,12, 8, 4, 0);
+
+    // Ensure the loop condition is correct
+    while (buf + 8 <= end) {
+        __m256i in = _mm256_loadu_si256((__m256i *)buf);
+
+        // Treat the comparisons as unsigned using _mm256_cmpgt_epu32
+        if (!_mm256_testz_si256(_mm256_and_si256(in, _mm256_set1_epi32(0xFFFFFF00)), _mm256_set1_epi32(0xFFFFFF00))) {
+            return std::make_pair(nullptr, latin1_output);
+        }
+
+        __m256i shuffled = _mm256_shuffle_epi8(in, shufmask);
+        __m128i latin1_chars = _mm256_castsi256_si128(shuffled);
+
+        _mm_storel_epi64((__m128i*)latin1_output, latin1_chars);
+
+        // __m256i packed_16bit = _mm256_packus_epi32(in, in); // Pack 32-bit integers to 16-bit integers
+
+latin1_output += 8;
+buf += 8;
+
+    }
+
+    return std::make_pair(buf, latin1_output);
+}
+
 
 /*  std::pair<const char32_t*, char*> avx2_convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) {
     const char32_t* end = buf + len;
