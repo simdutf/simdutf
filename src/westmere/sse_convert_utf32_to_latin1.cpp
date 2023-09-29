@@ -101,6 +101,40 @@ convert_utf32_to_latin1+westmere, input size: 1729220, iterations: 30000, datase
     return std::make_pair(buf, latin1_output);
 } */
 
+std::pair<const char32_t*, char*> sse_convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) {
+    const char32_t* end = buf + len;
+    const size_t rounded_len = len & ~0x7;  // Round down to nearest multiple of 8
+
+    __m128i v_0xFF = _mm_set1_epi32(0xff);
+    __m128i shufmask = _mm_set_epi8(
+      -1, -1, -1, -1,
+       -1, -1, -1, -1,
+       -1, -1, -1, -1,
+       12, 8, 4, 0);
+
+    // Ensure the loop condition is correct
+    while (buf + 8 <= end) {
+        // Unrolled Iteration 1
+        __m128i in1 = _mm_loadu_si128((__m128i *)buf);
+        __m128i in2 = _mm_loadu_si128((__m128i *)(buf + 4));
+
+        if (!_mm_testz_si128(_mm_or_si128(in1,in2), _mm_set1_epi32(0xFFFFFF00))) {
+            return std::make_pair(nullptr, latin1_output);
+        }
+
+        __m128i shuffled1 = _mm_shuffle_epi8(in1, shufmask);
+        _mm_storel_epi64((__m128i*)latin1_output, shuffled1);
+        __m128i shuffled2 = _mm_shuffle_epi8(in2, shufmask);
+        _mm_storel_epi64((__m128i*)(latin1_output + 4), shuffled2);
+
+        // Update pointers
+        latin1_output += 8;
+        buf += 8;
+    }
+
+    return std::make_pair(buf, latin1_output);
+}
+
 
 /* convert_utf32_to_latin1+haswell, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
    0.180 ins/byte,    0.126 cycle/byte,   25.385 GB/s (0.8 %),     3.197 GHz,    1.428 ins/cycle 
@@ -118,7 +152,7 @@ convert_utf32_to_latin1+icu, input size: 1729220, iterations: 30000, dataset: /h
 convert_utf32_to_latin1+westmere, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
    0.594 ins/byte,    0.154 cycle/byte,   20.758 GB/s (5.7 %),     3.196 GHz,    3.857 ins/cycle 
    2.376 ins/char,    0.616 cycle/char,    5.189 Gc/s (5.7 %)     4.00 byte/char  */
-std::pair<const char32_t*, char*> sse_convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) {
+/* std::pair<const char32_t*, char*> sse_convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) {
     const char32_t* end = buf + len;
     const size_t rounded_len = len & ~0x7;  // Round down to nearest multiple of 8
 
@@ -160,7 +194,7 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_latin1(const char32_t* bu
     }
 
     return std::make_pair(buf, latin1_output);
-}
+} */
 
 /* convert_utf32_to_latin1+haswell, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
    0.180 ins/byte,    0.126 cycle/byte,   25.326 GB/s (0.9 %),     3.197 GHz,    1.425 ins/cycle 
@@ -178,7 +212,7 @@ convert_utf32_to_latin1+icu, input size: 1729220, iterations: 30000, dataset: /h
 convert_utf32_to_latin1+westmere, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
    0.594 ins/byte,    0.154 cycle/byte,   20.804 GB/s (5.6 %),     3.196 GHz,    3.866 ins/cycle 
    2.376 ins/char,    0.614 cycle/char,    5.201 Gc/s (5.6 %)     4.00 byte/char  */
-std::pair<const char32_t*, char*> sse_convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) {
+/* std::pair<const char32_t*, char*> sse_convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) {
     const char32_t* end = buf + len;
     const size_t rounded_len = len & ~0x7;  // Round down to nearest multiple of 8
 
@@ -192,20 +226,20 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_latin1(const char32_t* bu
     while (buf + 8 <= end) {
         // Unrolled Iteration 1
         __m128i in1 = _mm_loadu_si128((__m128i *)buf);
+        __m128i in2 = _mm_loadu_si128((__m128i *)(buf + 4));
+
 
         if (!_mm_testz_si128(_mm_and_si128(in1, _mm_set1_epi32(0xFFFFFF00)), _mm_set1_epi32(0xFFFFFF00))) {
             return std::make_pair(nullptr, latin1_output);
         }
 
-        __m128i shuffled1 = _mm_shuffle_epi8(in1, shufmask);
-
         // Unrolled Iteration 2
-        __m128i in2 = _mm_loadu_si128((__m128i *)(buf + 4));
 
         if (!_mm_testz_si128(_mm_and_si128(in2, _mm_set1_epi32(0xFFFFFF00)), _mm_set1_epi32(0xFFFFFF00))) {
             return std::make_pair(nullptr, latin1_output + 4);
         }
 
+        __m128i shuffled1 = _mm_shuffle_epi8(in1, shufmask);
         __m128i shuffled2 = _mm_shuffle_epi8(in2, shufmask);
 
         // Combine shuffled1 and shuffled2 and store the result
@@ -220,7 +254,7 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_latin1(const char32_t* bu
     }
 
     return std::make_pair(buf, latin1_output);
-}
+} */
 
 
 /* convert_utf32_to_latin1+haswell, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
@@ -290,6 +324,94 @@ convert_utf32_to_latin1+westmere, input size: 1729220, iterations: 30000, datase
 
         __m128i shuffled4 = _mm_shuffle_epi8(in4, shufmask);
         _mm_storel_epi64((__m128i*)(latin1_output + 12), shuffled4);
+
+        // Update pointers
+        latin1_output += 16;
+        buf += 16;
+    }
+
+    return std::make_pair(buf, latin1_output);
+} */
+
+
+// not working but also not fast thus not promising
+/* convert_utf32_to_latin1+haswell, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+   0.180 ins/byte,    0.127 cycle/byte,   25.248 GB/s (1.2 %),     3.196 GHz,    1.421 ins/cycle 
+   0.719 ins/char,    0.506 cycle/char,    6.312 Gc/s (1.2 %)     4.00 byte/char 
+convert_utf32_to_latin1+icelake, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+   0.172 ins/byte,    0.122 cycle/byte,   25.375 GB/s (0.9 %),     3.097 GHz,    1.409 ins/cycle 
+   0.688 ins/char,    0.488 cycle/char,    6.344 Gc/s (0.9 %)     4.00 byte/char 
+convert_utf32_to_latin1+iconv, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+  10.006 ins/byte,    1.774 cycle/byte,    1.797 GB/s (19.3 %),     3.188 GHz,    5.641 ins/cycle 
+  40.023 ins/char,    7.095 cycle/char,    0.449 Gc/s (19.3 %)     4.00 byte/char 
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+convert_utf32_to_latin1+icu, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+/home/leorio/simdutf/build/benchmarks/benchmark
+  19.687 ins/byte,    3.691 cycle/byte,    0.864 GB/s (3.5 %),     3.189 GHz,    5.334 ins/cycle 
+  78.749 ins/char,   14.764 cycle/char,    0.216 Gc/s (3.5 %)     4.00 byte/char 
+convert_utf32_to_latin1+westmere, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+   0.594 ins/byte,    0.149 cycle/byte,   21.404 GB/s (2.2 %),     3.195 GHz,    3.978 ins/cycle 
+   2.376 ins/char,    0.597 cycle/char,    5.351 Gc/s (2.2 %)     4.00 byte/char  */
+/* std::pair<const char32_t*, char*> sse_convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) {
+    const char32_t* end = buf + len;
+    const size_t rounded_len = len & ~0xF;  // Round down to nearest multiple of 16
+
+    __m128i shufmask = _mm_set_epi8(
+      -1, -1, -1, -1,
+       -1, -1, -1, -1,
+       -1, -1, -1, -1,
+       12, 8, 4, 0);
+
+    // Process 16 elements at a time
+    while (buf + 16 <= end) {
+        // Unrolled Iteration 1
+        __m128i in1 = _mm_loadu_si128((__m128i *)buf);
+
+        if (!_mm_testz_si128(_mm_and_si128(in1, _mm_set1_epi32(0xFFFFFF00)), _mm_set1_epi32(0xFFFFFF00))) {
+            return std::make_pair(nullptr, latin1_output);
+        }
+
+        __m128i shuffled1 = _mm_shuffle_epi8(in1, shufmask);
+        _mm_storel_epi64((__m128i*)latin1_output, shuffled1);
+
+        // Unrolled Iteration 2
+        __m128i in2 = _mm_loadu_si128((__m128i *)(buf + 4));
+
+        if (!_mm_testz_si128(_mm_and_si128(in2, _mm_set1_epi32(0xFFFFFF00)), _mm_set1_epi32(0xFFFFFF00))) {
+            return std::make_pair(nullptr, latin1_output + 4);
+        }
+
+        __m128i shuffled2 = _mm_shuffle_epi8(in2, shufmask);
+        _mm_storel_epi64((__m128i*)(latin1_output + 4), shuffled2);
+
+        // Unrolled Iteration 3
+        __m128i in3 = _mm_loadu_si128((__m128i *)(buf + 8));
+
+        if (!_mm_testz_si128(_mm_and_si128(in3, _mm_set1_epi32(0xFFFFFF00)), _mm_set1_epi32(0xFFFFFF00))) {
+            return std::make_pair(nullptr, latin1_output + 8);
+        }
+
+        __m128i shuffled3 = _mm_shuffle_epi8(in3, shufmask);
+        _mm_storel_epi64((__m128i*)(latin1_output + 8), shuffled3);
+
+        // Unrolled Iteration 4
+        __m128i in4 = _mm_loadu_si128((__m128i *)(buf + 12));
+
+        if (!_mm_testz_si128(_mm_and_si128(in4, _mm_set1_epi32(0xFFFFFF00)), _mm_set1_epi32(0xFFFFFF00))) {
+            return std::make_pair(nullptr, latin1_output + 12);
+        }
+
+        __m128i shuffled4 = _mm_shuffle_epi8(in4, shufmask);
+
+        // Combine shuffled1 and shuffled2 and store the result
+        __m128i combined1 = _mm_unpacklo_epi32(shuffled1, shuffled2);
+        __m128i combined2 = _mm_unpacklo_epi32(shuffled3, shuffled4);
+        __m128i combined = _mm_unpacklo_epi64(combined2, combined1);
+
+        _mm_storeu_si128((__m128i*)latin1_output, combined);
+        // _mm_storel_epi64((__m128i*)latin1_output, combined);
+
+        // _mm_storel_epi64((__m128i*)(latin1_output + 12), shuffled4);
 
         // Update pointers
         latin1_output += 16;
