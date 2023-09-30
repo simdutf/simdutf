@@ -113,12 +113,7 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_latin1(const char32_t* b
     return std::make_pair(buf, latin1_output);
 }
   */
-
- #include <cstdint>
-#include <cstddef>
-#include <utility>
-#include <immintrin.h>
-
+/* 
 std::pair<const char32_t*, char*> avx2_convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) {
     const char32_t* end = buf + len;
     const size_t rounded_len = len & ~0x7;  // Round down to nearest multiple of 8
@@ -152,7 +147,7 @@ buf += 8;
     }
 
     return std::make_pair(buf, latin1_output);
-}
+} */
 
 
 /*  std::pair<const char32_t*, char*> avx2_convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) {
@@ -185,3 +180,53 @@ buf += 8;
     return std::make_pair(buf, latin1_output);
 }
  */
+
+// incorrect
+/* convert_utf32_to_latin1+haswell, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+   0.203 ins/byte,    0.121 cycle/byte,   26.366 GB/s (0.8 %),     3.197 GHz,    1.676 ins/cycle 
+   0.813 ins/char,    0.485 cycle/char,    6.592 Gc/s (0.8 %)     4.00 byte/char 
+convert_utf32_to_latin1+icelake, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+   0.172 ins/byte,    0.121 cycle/byte,   25.660 GB/s (0.8 %),     3.098 GHz,    1.425 ins/cycle 
+   0.688 ins/char,    0.483 cycle/char,    6.415 Gc/s (0.8 %)     4.00 byte/char 
+convert_utf32_to_latin1+iconv, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+  10.006 ins/byte,    1.800 cycle/byte,    1.770 GB/s (17.5 %),     3.187 GHz,    5.557 ins/cycle 
+  40.023 ins/char,    7.202 cycle/char,    0.443 Gc/s (17.5 %)     4.00 byte/char 
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+convert_utf32_to_latin1+icu, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+  19.687 ins/byte,    3.691 cycle/byte,    0.864 GB/s (4.2 %),     3.189 GHz,    5.334 ins/cycle 
+  78.748 ins/char,   14.764 cycle/char,    0.216 Gc/s (4.2 %)     4.00 byte/char 
+convert_utf32_to_latin1+westmere, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+   0.406 ins/byte,    0.129 cycle/byte,   24.797 GB/s (1.2 %),     3.197 GHz,    3.152 ins/cycle 
+   1.626 ins/char,    0.516 cycle/char,    6.199 Gc/s (1.2 %)     4.00 byte/char  */
+std::pair<const char32_t*, char*> avx2_convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) {
+    const char32_t* end = buf + len;
+    const size_t rounded_len = len & ~0xF;  // Round down to nearest multiple of 16 for AVX2
+
+    __m256i high_bytes_mask = _mm256_set1_epi32(0xFFFFFF00);
+    __m256i shufmask = _mm256_set_epi8(
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 12, 8, 4, 0,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 12, 8, 4, 0);
+
+    for (int i=0; i < rounded_len; i += 16) {
+        __m256i in1 = _mm256_loadu_si256((__m256i *)buf);
+        __m256i in2 = _mm256_loadu_si256((__m256i *)(buf + 8));
+
+        __m256i check_combined = _mm256_or_si256(in1,in2);
+        if (!_mm256_testz_si256(check_combined, high_bytes_mask)) {
+            return std::make_pair(nullptr, latin1_output);
+        }
+
+        __m256i shuffled1 = _mm256_shuffle_epi8(in1, shufmask);
+        // _mm256_alignr_epi8
+        _mm_storeu_si128((__m128i*)latin1_output, _mm256_castsi256_si128(shuffled1));
+        latin1_output += 8;
+
+        __m256i shuffled2 = _mm256_shuffle_epi8(in2, shufmask);
+        _mm_storeu_si128((__m128i*)latin1_output, _mm256_castsi256_si128(shuffled2));
+        latin1_output += 8;
+
+        buf += 16;
+    }
+
+    return std::make_pair(buf, latin1_output);
+}
