@@ -406,7 +406,8 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_latin1(const char32_
   std::pair<const char32_t*, char*> ret = sse_convert_utf32_to_latin1(buf, len, latin1_output);
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - latin1_output;
-  if (ret.first != buf + len) {
+  // if (ret.first != buf + len) {
+  if (ret.first < buf + len) {
     const size_t scalar_saved_bytes = scalar::utf32_to_latin1::convert(
                                         ret.first, len - (ret.first - buf), ret.second);
     if (scalar_saved_bytes == 0) { return 0; }
