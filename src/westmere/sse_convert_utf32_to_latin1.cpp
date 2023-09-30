@@ -9,7 +9,7 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_latin1(const char32_t* bu
        -1, -1, -1, -1,
        12, 8, 4, 0);
 
-    for (int i=0; i < rounded_len; i += 8) {
+    for (size_t i=0; i < rounded_len; i += 8) {
         __m128i in1 = _mm_loadu_si128((__m128i *)buf);
         __m128i in2 = _mm_loadu_si128((__m128i *)(buf + 4));
 
@@ -33,7 +33,6 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_latin1(const char32_t* bu
 
 std::pair<result, char*> sse_convert_utf32_to_latin1_with_errors(const char32_t* buf, size_t len, char* latin1_output) {
     const char32_t* start = buf;
-    const char32_t* end = buf + len;
     const size_t rounded_len = len & ~0x7;  // Round down to nearest multiple of 8
 
     __m128i high_bytes_mask = _mm_set1_epi32(0xFFFFFF00);
@@ -43,7 +42,7 @@ std::pair<result, char*> sse_convert_utf32_to_latin1_with_errors(const char32_t*
        -1, -1, -1, -1,
        12, 8, 4, 0);
 
-    for (int i=0; i < rounded_len; i += 8) {
+    for (size_t i=0; i < rounded_len; i += 8) {
         __m128i in1 = _mm_loadu_si128((__m128i *)buf);
         __m128i in2 = _mm_loadu_si128((__m128i *)(buf + 4));
 
