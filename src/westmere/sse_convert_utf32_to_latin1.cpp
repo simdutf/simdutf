@@ -1,5 +1,4 @@
 std::pair<const char32_t*, char*> sse_convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) {
-    const char32_t* end = buf + len;
     const size_t rounded_len = len & ~0x7;  // Round down to nearest multiple of 8
 
     __m128i high_bytes_mask = _mm_set1_epi32(0xFFFFFF00);
