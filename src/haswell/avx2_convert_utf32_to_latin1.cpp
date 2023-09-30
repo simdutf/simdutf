@@ -206,7 +206,9 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_latin1(const char32_t* b
     __m256i shufmask = _mm256_set_epi8(
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 12, 8, 4, 0,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 12, 8, 4, 0);
-
+/*         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 12, 8, 4, 0,
+        12, 8, 4, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1);
+ */
     for (int i=0; i < rounded_len; i += 16) {
         __m256i in1 = _mm256_loadu_si256((__m256i *)buf);
         __m256i in2 = _mm256_loadu_si256((__m256i *)(buf + 8));
@@ -230,3 +232,36 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_latin1(const char32_t* b
 
     return std::make_pair(buf, latin1_output);
 }
+
+
+
+/* 
+convert_utf32_to_latin1+haswell, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+   0.313 ins/byte,    0.139 cycle/byte,   23.040 GB/s (1.3 %),     3.196 GHz,    2.254 ins/cycle 
+   1.251 ins/char,    0.555 cycle/char,    5.760 Gc/s (1.3 %)     4.00 byte/char  */
+/* std::pair<const char32_t*, char*> avx2_convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) {
+    const size_t rounded_len = len & ~0x7;  // Round down to nearest multiple of 8
+
+    __m256i high_bytes_mask = _mm256_set1_epi32(0xFFFFFF00);
+    __m256i shufmask = _mm256_set_epi8(
+        -1, -1, -1, -1, -1, -1, -1, -1, 
+        -1, -1, -1, -1, 12, 8, 4, 0,
+        -1, -1, -1, -1, -1, -1, -1, -1, 
+        -1, -1, -1, -1, 12, 8, 4, 0);
+
+    for (size_t i = 0; i < rounded_len; i += 8) {
+        __m256i in = _mm256_loadu_si256((__m256i *)buf);
+
+        if (!_mm256_testz_si256(in, high_bytes_mask)) {
+            return std::make_pair(nullptr, latin1_output);
+        }
+
+        __m256i shuffled = _mm256_shuffle_epi8(in, shufmask);
+        _mm_storeu_si128((__m128i*)latin1_output, _mm256_castsi256_si128(shuffled));
+
+        latin1_output += 8;
+        buf += 8;
+    }
+
+    return std::make_pair(buf, latin1_output);
+} */
