@@ -18,13 +18,13 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_latin1(const char32_t* bu
         }
 
         __m128i shuffled1 = _mm_shuffle_epi8(in1, shufmask);
+        _mm_storel_epi64((__m128i*)latin1_output, shuffled1);
         __m128i shuffled2 = _mm_shuffle_epi8(in2, shufmask);
-
-        __m128i combined = _mm_unpacklo_epi32(shuffled1, shuffled2);
-        _mm_storeu_si128((__m128i*)latin1_output, combined);
+        latin1_output += 4;
+        _mm_storel_epi64((__m128i*)(latin1_output), shuffled2);
 
         // Update pointers
-        latin1_output += 8;
+        latin1_output += 4;
         buf += 8;
     }
 
