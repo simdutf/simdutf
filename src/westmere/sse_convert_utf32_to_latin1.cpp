@@ -1,35 +1,26 @@
-std::pair<const char32_t*, char*> sse_convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) {
-    const size_t rounded_len = len & ~0x7;  // Round down to nearest multiple of 8
-
-    __m128i high_bytes_mask = _mm_set1_epi32(0xFFFFFF00);
+ std::pair<const char32_t*, char*> sse_convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) {
+    const char32_t* end = buf + len;
+    const size_t rounded_len = len & ~0x3;  // Round down to nearest multiple of 4
+    __m128i v_0xFF = _mm_set1_epi32(0xff);
     __m128i shufmask = _mm_set_epi8(
       -1, -1, -1, -1,
        -1, -1, -1, -1,
        -1, -1, -1, -1,
        12, 8, 4, 0);
-
-    for (size_t i=0; i < rounded_len; i += 8) {
-        __m128i in1 = _mm_loadu_si128((__m128i *)buf);
-        __m128i in2 = _mm_loadu_si128((__m128i *)(buf + 4));
-
-        __m128i check_combined = _mm_or_si128(in1,in2);
-        if (!_mm_testz_si128(check_combined, high_bytes_mask)) {
+    // Ensure the loop condition is correct
+    while (buf + 4 <= end) {
+        __m128i in = _mm_loadu_si128((__m128i *)buf);
+        // Treat the comparisons as unsigned using _mm_cmpgt_epu32
+        if (!_mm_testz_si128(_mm_and_si128(in, _mm_set1_epi32(0xFFFFFF00)), _mm_set1_epi32(0xFFFFFF00))) {
             return std::make_pair(nullptr, latin1_output);
         }
-
-        __m128i shuffled1 = _mm_shuffle_epi8(in1, shufmask);
-        _mm_storel_epi64((__m128i*)latin1_output, shuffled1);
-        __m128i shuffled2 = _mm_shuffle_epi8(in2, shufmask);
+        __m128i shuffled = _mm_shuffle_epi8(in, shufmask);
+        _mm_storel_epi64((__m128i*)latin1_output, shuffled);
         latin1_output += 4;
-        _mm_storel_epi64((__m128i*)(latin1_output), shuffled2);
-
-        // Update pointers
-        latin1_output += 4;
-        buf += 8;
+        buf += 4;
     }
-
     return std::make_pair(buf, latin1_output);
-}
+} 
 
 std::pair<result, char*> sse_convert_utf32_to_latin1_with_errors(const char32_t* buf, size_t len, char* latin1_output) {
     const char32_t* start = buf;
