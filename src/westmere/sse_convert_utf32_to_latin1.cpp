@@ -429,7 +429,7 @@ std::pair<result, char*> sse_convert_utf32_to_latin1_with_errors(const char32_t*
         __m128i shuffled1 = _mm_shuffle_epi8(in1, shufmask);
         _mm_storeu_si64(latin1_output, shuffled1);
         __m128i shuffled2 = _mm_shuffle_epi8(in2, shufmask);
-        _mm_storeu_si64(latin1_output + 8, shuffled2);
+        _mm_storeu_si64(latin1_output + 4, shuffled2);
         __m128i shuffled3 = _mm_shuffle_epi8(in3, shufmask);
         _mm_storeu_si64(latin1_output + 8, shuffled3);
         __m128i shuffled4 = _mm_shuffle_epi8(in4, shufmask);
