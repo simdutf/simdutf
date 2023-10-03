@@ -393,10 +393,6 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(const char32_t*
   return saved_bytes;
 }
 
-/* simdutf_warn_unused size_t implementation::convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf32_to_latin1::convert(buf,len,latin1_output);
-} */
-
 simdutf_warn_unused size_t implementation::convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) const noexcept {
   std::pair<const char32_t*, char*> ret = avx2_convert_utf32_to_latin1(buf, len, latin1_output);
   if (ret.first == nullptr) { return 0; }
@@ -412,6 +408,20 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_latin1(const char32_
 
 simdutf_warn_unused result implementation::convert_utf32_to_latin1_with_errors(const char32_t* buf, size_t len, char* latin1_output) const noexcept {
   return scalar::utf32_to_latin1::convert_with_errors(buf,len,latin1_output);
+  // ret.first.count is always the position in the buffer, not the number of code units written even if finished
+  std::pair<result, char*> ret = avx2_convert_utf32_to_latin1_with_errors(buf, len, latin1_output);
+  if (ret.first.count != len) {
+    result scalar_res = scalar::utf32_to_latin1::convert_with_errors(
+                                        buf + ret.first.count, len - ret.first.count, ret.second);
+    if (scalar_res.error) {
+      scalar_res.count += ret.first.count;
+      return scalar_res;
+    } else {
+      ret.second += scalar_res.count;
+    }
+  }
+  ret.first.count = ret.second - latin1_output;   // Set count to the number of 8-bit code units written
+  return ret.first;
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) const noexcept {
