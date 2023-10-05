@@ -86,7 +86,7 @@ std::pair<const char32_t *, char *>
 avx2_convert_utf32_to_latin1(const char32_t *buf, size_t len,
                              char *latin1_output) {
   const size_t rounded_len =
-      len & ~0x1F; // Round down to nearest multiple of 32
+  len & ~0x1F; // Round down to nearest multiple of 32
 
   __m256i high_bytes_mask = _mm256_set1_epi32(0xFFFFFF00);
 
@@ -178,6 +178,33 @@ avx2_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
                         latin1_output);
 } */
 
+
+
+/* convert_utf32_to_latin1+haswell, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+   0.250 ins/byte,    0.134 cycle/byte,   23.845 GB/s (0.9 %),     3.197 GHz,    1.866 ins/cycle 
+   1.001 ins/char,    0.536 cycle/char,    5.961 Gc/s (0.9 %)     4.00 byte/char 
+convert_utf32_to_latin1+icelake, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+   0.172 ins/byte,    0.129 cycle/byte,   24.077 GB/s (0.9 %),     3.097 GHz,    1.337 ins/cycle 
+   0.688 ins/char,    0.515 cycle/char,    6.019 Gc/s (0.9 %)     4.00 byte/char 
+convert_utf32_to_latin1+iconv, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+  10.006 ins/byte,    1.780 cycle/byte,    1.793 GB/s (19.6 %),     3.193 GHz,    5.620 ins/cycle 
+  40.023 ins/char,    7.121 cycle/char,    0.448 Gc/s (19.6 %)     4.00 byte/char 
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+convert_utf32_to_latin1+icu, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+  19.687 ins/byte,    3.691 cycle/byte,    0.864 GB/s (3.8 %),     3.189 GHz,    5.334 ins/cycle 
+  78.749 ins/char,   14.765 cycle/char,    0.216 Gc/s (3.8 %)     4.00 byte/char 
+convert_utf32_to_latin1+westmere, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+   0.406 ins/byte,    0.139 cycle/byte,   22.985 GB/s (1.0 %),     3.196 GHz,    2.922 ins/cycle 
+   1.626 ins/char,    0.556 cycle/char,    5.746 Gc/s (1.0 %)     4.00 byte/char 
+convert_utf32_to_latin1_with_errors+haswell, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+   2.000 ins/byte,    0.376 cycle/byte,    8.493 GB/s (0.4 %),     3.194 GHz,    5.319 ins/cycle 
+   8.001 ins/char,    1.504 cycle/char,    2.123 Gc/s (0.4 %)     4.00 byte/char 
+convert_utf32_to_latin1_with_errors+icelake, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+   0.188 ins/byte,    0.129 cycle/byte,   24.011 GB/s (0.9 %),     3.097 GHz,    1.455 ins/cycle 
+   0.751 ins/char,    0.516 cycle/char,    6.003 Gc/s (0.9 %)     4.00 byte/char 
+convert_utf32_to_latin1_with_errors+westmere, input size: 1729220, iterations: 30000, dataset: /home/leorio/unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+   2.000 ins/byte,    0.376 cycle/byte,    8.494 GB/s (0.5 %),     3.194 GHz,    5.319 ins/cycle 
+   8.001 ins/char,    1.504 cycle/char,    2.123 Gc/s (0.5 %)     4.00 byte/char  */
 std::pair<result, char *>
 avx2_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
                                          char *latin1_output) {
@@ -228,3 +255,4 @@ avx2_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
 
     return std::make_pair(result(error_code::SUCCESS, buf - start), latin1_output);
 }
+

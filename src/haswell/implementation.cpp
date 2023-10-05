@@ -425,7 +425,7 @@ simdutf_warn_unused result implementation::convert_utf32_to_latin1_with_errors(c
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf32_to_latin1::convert_valid(buf,len,latin1_output);
+  return convert_utf32_to_latin1(buf,len,latin1_output);
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
