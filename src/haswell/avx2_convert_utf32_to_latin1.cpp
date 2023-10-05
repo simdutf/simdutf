@@ -24,7 +24,7 @@ avx2_convert_utf32_to_latin1(const char32_t *buf, size_t len,
     __m256i shuffled1 = _mm256_shuffle_epi8(in1, shufmask);
     __m256i shuffled2 = _mm256_shuffle_epi8(in2, shufmask);
 
-    //move UTF32 bytes to their correct spot
+    //move Latin1 bytes to their correct spot
     __m256i idx1 = _mm256_set_epi32(-1, -1,-1,-1,-1,-1,4,0);
     __m256i idx2 = _mm256_set_epi32(-1, -1,-1,-1,4,0,-1,-1);
     __m256i reshuffled1 = _mm256_permutevar8x32_epi32(shuffled1, idx1);
@@ -90,4 +90,3 @@ avx2_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
 
     return std::make_pair(result(error_code::SUCCESS, buf - start), latin1_output);
 }
-
