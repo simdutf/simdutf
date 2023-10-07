@@ -12,11 +12,11 @@ with open(filename, "rb") as file_content:
     maxv = max(array)
     minv = min(array)
     if(minv < 0): print("bug")
-    if(maxv>=240):
+    if(maxv>=0b11110000):
         print("four bytes")
-    elif(maxv>=0b11110000):
-        print("three bytes")
     elif(maxv>=0b11100000):
+        print("three bytes")
+    elif(maxv>=0b11000000):
         print("two bytes")
     else:
         print("ascii")
@@ -24,17 +24,17 @@ with open(filename, "rb") as file_content:
     for x in array:
         if(x>=0b11110000):
           counter[3] += 1
-        elif(maxv>=0b11100000):
+        elif(x>=0b11100000):
           counter[2] += 1
-        elif(maxv>=0b11000000):
+        elif(x>=0b11000000):
           counter[1] += 1
-        elif(maxv < 0b10000000):
+        elif(x < 0b10000000):
           counter[0] += 1
         else:
           #we have a continuation byte
           pass
     print("ASCII: {}  2-Bytes: {}  3-Bytes: {} 4-Bytes: {}".format(*counter))
-    l = len(array)
+    l = sum(counter)
     counter = [c * 100.0 / l for c in counter]
     print("ASCII: {}%  2-Bytes: {}%  3-Bytes: {}% 4-Bytes: {}%".format(*counter))
 
