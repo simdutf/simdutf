@@ -410,11 +410,13 @@ simdutf_warn_unused result implementation::convert_utf16be_to_latin1_with_errors
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_latin1(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf16_to_latin1::convert_valid<endianness::BIG>(buf, len, latin1_output);
+  // optimization opportunity: implement a custom function.
+  return convert_utf16be_to_latin1(buf, len, latin1_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16le_to_latin1(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf16_to_latin1::convert_valid<endianness::LITTLE>(buf, len, latin1_output);
+  // optimization opportunity: implement a custom function.
+  return convert_utf16le_to_latin1(buf, len, latin1_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16le_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
@@ -611,10 +613,12 @@ simdutf_warn_unused result implementation::convert_utf32_to_latin1_with_errors(c
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf32_to_latin1::convert_valid(buf,len,latin1_output);
+  // optimization opportunity: implement a custom function.
+  return convert_utf32_to_latin1(buf,len,latin1_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf8(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
+  // optimization opportunity: implement a custom function.
   return convert_utf32_to_utf8(buf, len, utf8_output);
 }
 
@@ -723,7 +727,27 @@ simdutf_warn_unused size_t implementation::latin1_length_from_utf32(size_t lengt
 }
 
 simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char * input, size_t length) const noexcept {
-  return scalar::latin1::utf8_length_from_latin1(input,length);
+  // See https://lemire.me/blog/2023/05/15/computing-the-utf-8-size-of-a-latin-1-string-quickly-arm-neon-edition/
+  // credit to Pete Cawley
+  const uint8_t *data = reinterpret_cast<const uint8_t *>(input);
+  uint64_t result = 0;
+  const int lanes = sizeof(uint8x16_t);
+  uint8_t rem = length % lanes;
+  const uint8_t *simd_end = data + (length / lanes) * lanes;
+  const uint8x16_t threshold = vdupq_n_u8(0x80);
+  for (; data < simd_end; data += lanes) {
+    // load 16 bytes
+    uint8x16_t input_vec = vld1q_u8(data);
+    // compare to threshold (0x80)
+    uint8x16_t withhighbit = vcgeq_u8(input_vec, threshold);
+    // vertical addition
+    result -= vaddvq_s8(vreinterpretq_s8_u8(withhighbit));
+  }
+  // scalar tail
+  for (uint8_t j = 0; j < rem; j++) {
+    result += (simd_end[j] >> 7);
+  }
+  return result + length;
 }
 
 simdutf_warn_unused size_t implementation::utf8_length_from_utf16le(const char16_t * input, size_t length) const noexcept {
