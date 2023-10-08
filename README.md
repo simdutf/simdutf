@@ -127,6 +127,31 @@ We made a video to help you get started with the library.
 [![the simdutf library](http://img.youtube.com/vi/H9NZtb7ykYs/0.jpg)](https://www.youtube.com/watch?v=H9NZtb7ykYs)<br />
 
 
+Quick Start
+-----------
+
+Linux or macOS users might follow the following instructions if they have a recent C++ compiler installed and the standard utilities (`wget`, `unzip`, etc.)
+
+
+1. Pull the library in a directory
+   ```
+   wget https://github.com/simdutf/simdutf/releases/download/v3.2.18/singleheader.zip
+   unzip singleheader.zip
+   ```
+2. Compile
+   ```
+   c++ -std=c++17 -o amalgamation_demo amalgamation_demo.cpp
+   ```
+3. `./amalgamation_demo`
+
+   ```
+   valid UTF-8
+   wrote 4 UTF-16LE words.
+   valid UTF-16LE
+   wrote 4 UTF-8 words.
+   1234
+   perfect round trip
+   ```
 
 Usage (CMake)
 -------
