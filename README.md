@@ -144,14 +144,14 @@ Linux or macOS users might follow the following instructions if they have a rece
    ```
 3. `./amalgamation_demo`
 
-  ```
-  valid UTF-8
-  wrote 4 UTF-16LE words.
-  valid UTF-16LE
-  wrote 4 UTF-8 words.
-  1234
-  perfect round trip
-  ```
+   ```
+   valid UTF-8
+   wrote 4 UTF-16LE words.
+   valid UTF-16LE
+   wrote 4 UTF-8 words.
+   1234
+   perfect round trip
+   ```
 
 Usage (CMake)
 -------
