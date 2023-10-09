@@ -183,6 +183,23 @@ Usage (Usage)</h2>
 <p><a href="https://www.youtube.com/watch?v=H9NZtb7ykYs"><img src="http://img.youtube.com/vi/H9NZtb7ykYs/0.jpg" alt="the simdutf library" class="inline"/></a><br  />
 </p>
 <h2><a class="anchor" id="autotoc_md6"></a>
+Quick Start</h2>
+<p>Linux or macOS users might follow the following instructions if they have a recent C++ compiler installed and the standard utilities (<code>wget</code>, <code>unzip</code>, etc.)</p>
+<ol type="1">
+<li>Pull the library in a directory <div class="fragment"><div class="line">wget https://github.com/simdutf/simdutf/releases/download/v3.2.18/singleheader.zip</div>
+<div class="line">unzip singleheader.zip</div>
+</div><!-- fragment --></li>
+<li>Compile <div class="fragment"><div class="line">c++ -std=c++17 -o amalgamation_demo amalgamation_demo.cpp</div>
+</div><!-- fragment --></li>
+<li><code>./amalgamation_demo</code></li>
+</ol>
+<div class="fragment"><div class="line">valid UTF-8</div>
+<div class="line">wrote 4 UTF-16LE words.</div>
+<div class="line">valid UTF-16LE</div>
+<div class="line">wrote 4 UTF-8 words.</div>
+<div class="line">1234</div>
+<div class="line">perfect round trip</div>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md7"></a>
 Usage (CMake)</h2>
 <div class="fragment"><div class="line">cmake -B build</div>
 <div class="line">cmake --build build</div>
@@ -196,7 +213,7 @@ Usage (CMake)</h2>
 </div><!-- fragment --><p>Instructions are similar for Visual Studio users.</p>
 <p>To use the library as a CMake dependency in your project, please see <code>tests/installation_tests/from_fetch</code> for an example.</p>
 <p>Since ICU is so common and popular, we assume that you may have it already on your system. When it is not found, it is simply omitted from the benchmarks. Thus, to benchmark against ICU, make sure you have ICU installed on your machine and that cmake can find it. For macOS, you may install it with brew using <code>brew install icu4c</code>. If you have ICU on your system but cmake cannot find it, you may need to provide cmake with a path to ICU, such as <code>ICU_ROOT=/usr/local/opt/icu4c cmake -B build</code>.</p>
-<h2><a class="anchor" id="autotoc_md7"></a>
+<h2><a class="anchor" id="autotoc_md8"></a>
 Single-header version</h2>
 <p>You can create a single-header version of the library where all of the code is put into two files (<code><a class="el" href="simdutf_8h_source.html">simdutf.h</a></code> and <code>simdutf.cpp</code>). We publish a zip archive containing these files, e.g., see <a href="https://github.com/simdutf/simdutf/releases/download/v3.2.15/singleheader.zip">https://github.com/simdutf/simdutf/releases/download/v3.2.15/singleheader.zip</a></p>
 <p>You may generate it on your own using a Python script.</p>
@@ -206,7 +223,7 @@ Single-header version</h2>
 <div class="fragment"><div class="line">cd singleheader</div>
 <div class="line">c++ -o amalgamation_demo amalgamation_demo.cpp -std=c++17</div>
 <div class="line">./amalgamation_demo</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md8"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md9"></a>
 Example</h2>
 <p>Using the single-header version, you could compile the following program.</p>
 <div class="fragment"><div class="line"> {C++}</div>
@@ -260,7 +277,7 @@ Example</h2>
 <div class="line">  }</div>
 <div class="line">  return EXIT_SUCCESS;</div>
 <div class="line">}</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md9"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md10"></a>
 API</h2>
 <p>Our API is made of a few non-allocating function. They typically take a pointer and a length as a parameter, and they sometimes take a pointer to an output buffer. Users are responsible for memory allocation.</p>
 <p>We use three types of data pointer types:</p><ul>
@@ -1357,11 +1374,11 @@ API</h2>
 <div class="line"> * @param output        the pointer to buffer that can hold the conversion result</div>
 <div class="line"> */</div>
 <div class="line">void change_endianness_utf16(const char16_t * input, size_t length, char16_t * output) noexcept;</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md10"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md11"></a>
 The sutf command-line tool</h2>
 <p>We also provide a command-line tool which can be build as follows: </p><div class="fragment"><div class="line">cmake -B build &amp;&amp; cmake --build build --target sutf</div>
 </div><!-- fragment --><p> This command builds the executable in <code>./build/tool/</code> under most platforms. The sutf tool enables the user to easily transcode files from one encoding to another directly from the command line. The usage is similar to <a href="https://www.gnu.org/software/libiconv/">iconv</a> (see <code>sutf --help</code> for more details). The sutf command-line tool relies on the simdutf library functions for fast transcoding of supported formats (UTF-8, UTF-16LE, UTF-16BE and UTF-32). If iconv is found on the system and simdutf does not support a conversion, the sutf tool falls back on iconv: a message lets the user know if iconv is available during compilation. The following is an example of transcoding two input files to an output file, from UTF-8 to UTF-16LE: </p><div class="fragment"><div class="line">sutf -f UTF-8 -t UTF-16LE -o output_file.txt first_input_file.txt second_input_file.txt</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md11"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md12"></a>
 Manual implementation selection</h2>
 <p>When compiling the llibrary for x64 processors, we build several implementations of each functions. At runtime, the best implementation is picked automatically. Advanced users may want to pick a particular implementation, thus bypassing our runtime detection. It is possible and even relatively convenient to do so. The following C++ program checks all the available implementation, and selects one as the default:</p>
 <div class="fragment"><div class="line"> {C++}</div>
@@ -1406,14 +1423,14 @@ Manual implementation selection</h2>
 <div class="line">  return EXIT_SUCCESS;</div>
 <div class="line">}</div>
 </div><!-- fragment --><p>Within the simdutf library,</p>
-<h2><a class="anchor" id="autotoc_md12"></a>
+<h2><a class="anchor" id="autotoc_md13"></a>
 References</h2>
 <ul>
 <li>Robert Clausecker, Daniel Lemire, <a href="https://arxiv.org/abs/2212.05098">Transcoding Unicode Characters with AVX-512 Instructions</a>, Software: Practice and Experience (to appear).</li>
 <li>Daniel Lemire, Wojciech Muła, <a href="https://arxiv.org/abs/2109.10433">Transcoding Billions of Unicode Characters per Second with SIMD Instructions</a>, Software: Practice and Experience52 (2), 2022.</li>
 <li>John Keiser, Daniel Lemire, <a href="https://arxiv.org/abs/2010.03090">Validating UTF-8 In Less Than One Instruction Per Byte</a>, Software: Practice and Experience 51 (5), 2021.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md13"></a>
+<h2><a class="anchor" id="autotoc_md14"></a>
 License</h2>
 <p>This code is made available under the <a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache License 2.0</a> as well as the MIT license. As a user, you can pick the license you prefer.</p>
 <p>We include a few competitive solutions under the benchmarks/competition directory. They are provided for research purposes only. </p>
