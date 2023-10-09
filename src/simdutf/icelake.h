@@ -13,9 +13,12 @@
 #endif
 
 #ifdef _MSC_VER
-#if _MSC_VER >= 1920
-// Visual Studio 2019 and up support VBMI2 under x64 even if the header
+#if _MSC_VER >= 1930
+// Visual Studio 2022 and up support VBMI2 under x64 even if the header
 // avx512vbmi2intrin.h is not found.
+// Visual Studio 2019 technically supports VBMI2, but the implementation
+// might be unreliable. Search for visualstudio2019icelakeissue in our
+// tests.
 #define SIMDUTF_COMPILER_SUPPORTS_VBMI2 1
 #endif
 #endif
