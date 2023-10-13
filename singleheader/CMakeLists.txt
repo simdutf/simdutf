@@ -35,14 +35,14 @@ if (Python3_Interpreter_FOUND)
       #
       DEPENDS amalgamate.py simdutf
   )
-  add_custom_target(singleheader-files DEPENDS ${SINGLEHEADER_FILES})
+  add_custom_target(simdutf-singleheader-files DEPENDS ${SINGLEHEADER_FILES})
 
   #
   # Include this if you intend to #include "simdutf.cpp" in your own .cpp files.
   #
   add_library(simdutf-singleheader-include-source INTERFACE)
   target_include_directories(simdutf-singleheader-include-source INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
-  add_dependencies(simdutf-singleheader-include-source singleheader-files)
+  add_dependencies(simdutf-singleheader-include-source simdutf-singleheader-files)
 
   add_library(simdutf-singleheader-source INTERFACE)
   target_sources(simdutf-singleheader-source INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/simdutf.cpp>)
