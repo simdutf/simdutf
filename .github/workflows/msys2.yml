@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: msys2/setup-msys2@v2
         with:
-          update: true
+          update: false
           msystem: ${{ matrix.msystem }}
           install: ${{ matrix.install }}
       - name: Build and Test
