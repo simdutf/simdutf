@@ -41,7 +41,13 @@ set_property(TARGET sutf PROPERTY CXX_STANDARD 17)
 set_property(TARGET sutf PROPERTY CXX_STANDARD_REQUIRED ON)
 
 target_link_libraries(sutf PUBLIC simdutf)
-
+if(MSVC AND BUILD_SHARED_LIBS)
+  # Copy the simdutf dll into the directory
+  add_custom_command(TARGET sutf POST_BUILD        # Adds a post-build event
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake -E copy_if_different..."
+        "$<TARGET_FILE:simdutf>"      # <--this is in-file
+        "$<TARGET_FILE_DIR:sutf>")                 # <--this is out-file path
+endif()
 install(
    TARGETS
     sutf

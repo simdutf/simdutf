@@ -18,7 +18,13 @@ add_cpp_test(random_fuzzer)
 target_link_libraries(random_fuzzer
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
-
+if(MSVC AND BUILD_SHARED_LIBS)
+  # Copy the simdutf dll into the tests directory
+  add_custom_command(TARGET random_fuzzer POST_BUILD        # Adds a post-build event
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake -E copy_if_different..."
+        "$<TARGET_FILE:simdutf>"      # <--this is in-file
+        "$<TARGET_FILE_DIR:random_fuzzer>")                 # <--this is out-file path
+endif()
 add_cpp_test(special_tests)
 target_link_libraries(special_tests
   PUBLIC simdutf
