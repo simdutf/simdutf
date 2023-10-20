@@ -44,9 +44,9 @@
 #define INOUE2008
 #include "inoue_utf8_to_utf16_tables.h"
 #include <utility>
-#ifdef __ARM_NEON
+#ifdef __aarch64__
 #include <arm_neon.h>
-#endif // __ARM_NEON
+#endif // __aarch64__
 
 #ifdef __x86_64__
 #include "simdutf.h"
@@ -77,7 +77,7 @@ SIMDUTF_TARGET_WESTMERE
 #endif // __x86_64__
 
 namespace inoue2008 {
-#ifdef __ARM_NEON
+#ifdef __aarch64__
 
 static inline uint8x16x2_t vector_load_32bytes(const uint8_t *ptr) noexcept {
   // Note that vld2q_u8 does interleave, which we do not want!
@@ -194,10 +194,10 @@ static inline void store_8_ascii_bytes_as_utf16(const uint8_t *input, char16_t *
   _mm_storeu_si128(reinterpret_cast<__m128i *>(output), _mm_cvtepu8_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i *>(input))));
 }
 
-#else // __ARM_NEON
+#else // __aarch64__
 // It is not 64-bit ARM or x64 so...?
 #undef INOUE2008
-#endif // __ARM_NEON
+#endif // __aarch64__
 
 #ifdef INOUE2008
 static inline size_t scalar_convert_valid(const char *buf, size_t len,
