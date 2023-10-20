@@ -21,9 +21,9 @@ jobs:
       run: |
         cmake -G "${{matrix.gen}}" -A ${{matrix.arch}} -DBUILD_SHARED_LIBS=${{matrix.shared}} -B build
     - name: Build Debug
-      run: cmake --build build --config Debug --verbose
+      run: cmake --build build -DSIMDUTF_BENCHMARKS=ON --config Debug --verbose
     - name: Build Release
-      run: cmake --build build --config Release --verbose
+      run: cmake --build build -DSIMDUTF_BENCHMARKS=ON --config Release --verbose
     - name: Run Release tests
       run: |
         cd build
