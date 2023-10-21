@@ -137,7 +137,7 @@ join_paths(PKGCONFIG_LIBDIR "\${prefix}" "${CMAKE_INSTALL_LIBDIR}")
 
 configure_file("simdutf.pc.in" "simdutf.pc" @ONLY)
 install(
-    FILES "${CMAKE_CURRENT_BINARY_DIR}/"simdutf.pc"
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/simdutf.pc"
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
 )
 #
