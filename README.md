@@ -135,7 +135,7 @@ Linux or macOS users might follow the following instructions if they have a rece
 
 1. Pull the library in a directory
    ```
-   wget https://github.com/simdutf/simdutf/releases/download/v4.0.0/singleheader.zip
+   wget https://github.com/simdutf/simdutf/releases/download/v4.0.1/singleheader.zip
    unzip singleheader.zip
    ```
 2. Compile
