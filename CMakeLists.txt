@@ -129,6 +129,17 @@ install(
     COMPONENT example_Development
 )
 
+
+# pkg-config
+include(cmake/JoinPaths.cmake)
+join_paths(PKGCONFIG_INCLUDEDIR "\${prefix}" "${CMAKE_INSTALL_INCLUDEDIR}")
+join_paths(PKGCONFIG_LIBDIR "\${prefix}" "${CMAKE_INSTALL_LIBDIR}")
+
+configure_file("simdutf.pc.in" "simdutf.pc" @ONLY)
+install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/simdutf.pc"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+)
 #
 # CPack
 #
