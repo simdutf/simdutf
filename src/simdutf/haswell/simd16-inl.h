@@ -243,9 +243,7 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
 
       return  simd16x32<bool>(
         (this->chunks[0] <= mask_high) & (this->chunks[0] >= mask_low),
-        (this->chunks[1] <= mask_high) & (this->chunks[1] >= mask_low),
-        (this->chunks[2] <= mask_high) & (this->chunks[2] >= mask_low),
-        (this->chunks[3] <= mask_high) & (this->chunks[3] >= mask_low)
+        (this->chunks[1] <= mask_high) & (this->chunks[1] >= mask_low)
       ).to_bitmask();
     }
     simdutf_really_inline uint64_t not_in_range(const T low, const T high) const {
