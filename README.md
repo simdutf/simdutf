@@ -338,7 +338,7 @@ struct result {
   // In case of success, indicates the number of code units validated/written.
 };
 ```
-On error, the `error` field indicates the type of error encountered and the `count` field indicates indicates the position of the error in the input in code units or the number of characters validated/written.
+On error, the `error` field indicates the type of error encountered and the `count` field indicates the position of the error in the input in code units or the number of characters validated/written.
 We report six types of errors related to Latin1, UTF-8, UTF-16 and UTF-32 encodings:
 ```c++
 enum error_code {
