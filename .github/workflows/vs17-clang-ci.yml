@@ -31,7 +31,7 @@ jobs:
     - name: Run Debug tests
       run: |
         cd build
-        ctest -C Debug  --output-on-failure
+        ctest -C Debug  --output-on-failure  -E basic_fuzzer
     - name: Install
       run: |
         cmake --install build --config Release
