@@ -279,7 +279,7 @@ Example</h2>
 <div class="line">}</div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md10"></a>
 API</h2>
-<p>Our API is made of a few non-allocating function. They typically take a pointer and a length as a parameter, and they sometimes take a pointer to an output buffer. Users are responsible for memory allocation.</p>
+<p>Our API is made of a few non-allocating functions. They typically take a pointer and a length as a parameter, and they sometimes take a pointer to an output buffer. Users are responsible for memory allocation.</p>
 <p>We use three types of data pointer types:</p><ul>
 <li><code>char*</code> for UTF-8 or indeterminate Unicode formats,</li>
 <li><code>char16_t*</code> for UTF-16 (both UTF-16LE and UTF-16BE),</li>
@@ -329,7 +329,7 @@ API</h2>
 <div class="line">  size_t count; // In case of error, indicates the position of the error in the input in code units.</div>
 <div class="line">  // In case of success, indicates the number of code units validated/written.</div>
 <div class="line">};</div>
-</div><!-- fragment --><p> On error, the <code>error</code> field indicates the type of error encountered and the <code>count</code> field indicates indicates the position of the error in the input in code units or the number of characters validated/written. We report six types of errors related to Latin1, UTF-8, UTF-16 and UTF-32 encodings: </p><div class="fragment"><div class="line"> {c++}</div>
+</div><!-- fragment --><p> On error, the <code>error</code> field indicates the type of error encountered and the <code>count</code> field indicates the position of the error in the input in code units or the number of characters validated/written. We report six types of errors related to Latin1, UTF-8, UTF-16 and UTF-32 encodings: </p><div class="fragment"><div class="line"> {c++}</div>
 <div class="line">enum error_code {</div>
 <div class="line">  SUCCESS = 0,</div>
 <div class="line">  HEADER_BITS,  // Any byte must have fewer than 5 header bits.</div>
@@ -339,7 +339,7 @@ API</h2>
 <div class="line">  OVERLONG,     // The decoded character must be above U+7F for two-byte characters, U+7FF for three-byte characters,</div>
 <div class="line">                // and U+FFFF for four-byte characters.</div>
 <div class="line">  TOO_LARGE,    // The decoded character must be less than or equal to U+10FFFF,less than or equal than U+7F for ASCII OR less than equal than U+FF for Latin1</div>
-<div class="line">  SURROGATE,    // The decoded character must be not be in U+D800...DFFF (UTF-8 or UTF-32) OR</div>
+<div class="line">  SURROGATE,    // The decoded character must not be in U+D800...DFFF (UTF-8 or UTF-32) OR</div>
 <div class="line">                // a high surrogate must be followed by a low surrogate and a low surrogate must be preceded by a high surrogate (UTF-16) OR</div>
 <div class="line">                // there must be no surrogate at all (Latin1)</div>
 <div class="line">  OTHER         // Not related to validation/transcoding.</div>
@@ -349,7 +349,7 @@ API</h2>
 <p>You may use functions that report an error to indicate where the problem happens during, as follows:</p>
 <div class="fragment"><div class="line">{c++}</div>
 <div class="line"> std::string bad_ascii = &quot;\x20\x20\x20\x20\x20\xff\x20\x20\x20&quot;;</div>
-<div class="line"> simdutf::result res = implementation.validate_ascii_with_errors(bad_utf8.data(), bad_utf8.size());</div>
+<div class="line"> simdutf::result res = implementation.validate_ascii_with_errors(bad_ascii.data(), bad_ascii.size());</div>
 <div class="line"> if(res.error != simdutf::error_code::SUCCESS) {</div>
 <div class="line">   std::cerr &lt;&lt; &quot;error at index &quot; &lt;&lt; res.count &lt;&lt; std::endl;</div>
 <div class="line"> }</div>
