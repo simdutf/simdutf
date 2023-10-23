@@ -271,7 +271,7 @@ int main(int argc, char *argv[]) {
 API
 -----
 
-Our API is made of a few non-allocating function. They typically take a pointer and a length as a parameter,
+Our API is made of a few non-allocating functions. They typically take a pointer and a length as a parameter,
 and they sometimes take a pointer to an output buffer. Users are responsible for memory allocation.
 
 We use three types of data pointer types:
@@ -338,7 +338,7 @@ struct result {
   // In case of success, indicates the number of code units validated/written.
 };
 ```
-On error, the `error` field indicates the type of error encountered and the `count` field indicates indicates the position of the error in the input in code units or the number of characters validated/written.
+On error, the `error` field indicates the type of error encountered and the `count` field indicates the position of the error in the input in code units or the number of characters validated/written.
 We report six types of errors related to Latin1, UTF-8, UTF-16 and UTF-32 encodings:
 ```c++
 enum error_code {
@@ -350,7 +350,7 @@ enum error_code {
   OVERLONG,     // The decoded character must be above U+7F for two-byte characters, U+7FF for three-byte characters,
                 // and U+FFFF for four-byte characters.
   TOO_LARGE,    // The decoded character must be less than or equal to U+10FFFF,less than or equal than U+7F for ASCII OR less than equal than U+FF for Latin1
-  SURROGATE,    // The decoded character must be not be in U+D800...DFFF (UTF-8 or UTF-32) OR
+  SURROGATE,    // The decoded character must not be in U+D800...DFFF (UTF-8 or UTF-32) OR
                 // a high surrogate must be followed by a low surrogate and a low surrogate must be preceded by a high surrogate (UTF-16) OR
                 // there must be no surrogate at all (Latin1)
   OTHER         // Not related to validation/transcoding.
@@ -370,7 +370,7 @@ You may use functions that report an error to indicate where the problem happens
 
 ```c++
   std::string bad_ascii = "\x20\x20\x20\x20\x20\xff\x20\x20\x20";
-  simdutf::result res = implementation.validate_ascii_with_errors(bad_utf8.data(), bad_utf8.size());
+  simdutf::result res = implementation.validate_ascii_with_errors(bad_ascii.data(), bad_ascii.size());
   if(res.error != simdutf::error_code::SUCCESS) {
     std::cerr << "error at index " << res.count << std::endl;
   }
