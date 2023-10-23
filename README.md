@@ -370,7 +370,7 @@ You may use functions that report an error to indicate where the problem happens
 
 ```c++
   std::string bad_ascii = "\x20\x20\x20\x20\x20\xff\x20\x20\x20";
-  simdutf::result res = implementation.validate_ascii_with_errors(bad_utf8.data(), bad_utf8.size());
+  simdutf::result res = implementation.validate_ascii_with_errors(bad_ascii.data(), bad_ascii.size());
   if(res.error != simdutf::error_code::SUCCESS) {
     std::cerr << "error at index " << res.count << std::endl;
   }
