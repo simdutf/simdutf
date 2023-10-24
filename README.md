@@ -215,7 +215,7 @@ Example
 
 Using the single-header version, you could compile the following program.
 
-```C++
+```cpp
 #include <iostream>
 #include <memory>
 
@@ -288,7 +288,7 @@ and types with `simdutf::` as required.
 We have basic functions to detect the type of an input. They return an integer defined by
 the following `enum`.
 
-```c++
+```cpp
 enum encoding_type {
         UTF8 = 1,       // BOM 0xef 0xbb 0xbf
         UTF16_LE = 2,   // BOM 0xff 0xfe
@@ -300,7 +300,7 @@ enum encoding_type {
 };
 ```
 
-```C++
+```cpp
 
 /**
  * Autodetect the encoding of the input, a single encoding is recommended.
@@ -331,7 +331,7 @@ simdutf_warn_unused int detect_encodings(const char * input, size_t length) noex
 
 
 For validation and transcoding, we also provide functions that will stop on error and return a result struct which is a pair of two fields:
-```c++
+```cpp
 struct result {
   error_code error; // see `struct error_code`.
   size_t count; // In case of error, indicates the position of the error in the input in code units.
@@ -340,7 +340,7 @@ struct result {
 ```
 On error, the `error` field indicates the type of error encountered and the `count` field indicates the position of the error in the input in code units or the number of characters validated/written.
 We report six types of errors related to Latin1, UTF-8, UTF-16 and UTF-32 encodings:
-```c++
+```cpp
 enum error_code {
   SUCCESS = 0,
   HEADER_BITS,  // Any byte must have fewer than 5 header bits.
@@ -368,7 +368,7 @@ be correct.
 
 You may use functions that report an error to indicate where the problem happens during, as follows:
 
-```c++
+```cpp
   std::string bad_ascii = "\x20\x20\x20\x20\x20\xff\x20\x20\x20";
   simdutf::result res = implementation.validate_ascii_with_errors(bad_ascii.data(), bad_ascii.size());
   if(res.error != simdutf::error_code::SUCCESS) {
@@ -378,7 +378,7 @@ You may use functions that report an error to indicate where the problem happens
 
 Or as follows:
 
-```c++
+```cpp
   std::string bad_utf8 = "\xc3\xa9\xc3\xa9\x20\xff\xc3\xa9";
   simdutf::result res = implementation.validate_utf8_with_errors(bad_utf8.data(), bad_utf8.size());
   if(res.error != simdutf::error_code::SUCCESS) {
@@ -394,7 +394,7 @@ Or as follows:
 
 We have fast validation functions.
 
-```c++
+```cpp
 /**
  * Validate the ASCII string.
  *
@@ -561,7 +561,7 @@ Given a valid UTF-8 or UTF-16 input, you may count the number Unicode characters
 fast functions. For UTF-32, there is no need for a function given that each character
 requires a flat 4 bytes. Likewise for Latin1: one byte will always equal one character.
 
-```c++
+```cpp
 /**
  * Count the number of code points (characters) in the string assuming that
  * it is valid.
@@ -624,7 +624,7 @@ are fast and non-validating.
 
 
 
-```c++
+```cpp
 
 /**
  * Return the number of bytes that this Latin1 string would require in UTF-8 format.
@@ -812,7 +812,7 @@ scenario where you expect the input to be valid most of the time.
 
 
 
-```c++
+```cpp
 /**
  * Convert Latin1 string into UTF8 string.
  *
@@ -1140,7 +1140,7 @@ They are well suited when you expect that there might be errors in the input tha
 further investigation. The `count` field contains the location of the error in the input in code units,
 if there is an error, or otherwise the number of code units written. You may use these functions as follows:
 
-```c++
+```cpp
   // this UTF-8 string has a bad byte at index 5
   std::string bad_utf8 = "\xc3\xa9\xc3\xa9\x20\xff\xc3\xa9";
   size_t budget_utf16 = simdutf::utf16_length_from_utf8(bad_utf8.data(), bad_utf8.size());
@@ -1158,7 +1158,7 @@ if there is an error, or otherwise the number of code units written. You may use
 
 We have several transcoding functions returning `simdutf::error` results:
 
-```c++
+```cpp
 /**
  * Convert possibly broken UTF-8 string into latin1 string. with errors
  *
@@ -1427,7 +1427,7 @@ simdutf_warn_unused result convert_utf16be_to_utf32_with_errors(const char16_t *
 
 If you have a UTF-16 input, you may change its endianess with a fast function.
 
-```c++
+```cpp
 /**
  * Change the endianness of the input. Can be used to go from UTF-16LE to UTF-16BE or
  * from UTF-16BE to UTF-16LE.
@@ -1467,7 +1467,7 @@ implementation is picked automatically. Advanced users may want to pick a partic
 runtime detection. It is possible and even relatively convenient to do so. The following C++ program checks all the available
 implementation, and selects one as the default:
 
-```C++
+```cpp
 #include "simdutf.h"
 #include <cstdlib>
 #include <iostream>
