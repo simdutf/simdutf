@@ -226,56 +226,55 @@ Single-header version</h2>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md9"></a>
 Example</h2>
 <p>Using the single-header version, you could compile the following program.</p>
-<div class="fragment"><div class="line"> {C++}</div>
-<div class="line">#include &lt;iostream&gt;</div>
-<div class="line">#include &lt;memory&gt;</div>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;memory&gt;</span></div>
 <div class="line"> </div>
-<div class="line">#include &quot;simdutf.cpp&quot;</div>
-<div class="line">#include &quot;simdutf.h&quot;</div>
+<div class="line"><span class="preprocessor">#include &quot;simdutf.cpp&quot;</span></div>
+<div class="line"><span class="preprocessor">#include &quot;simdutf.h&quot;</span></div>
 <div class="line"> </div>
-<div class="line">int main(int argc, char *argv[]) {</div>
-<div class="line">  const char *source = &quot;1234&quot;;</div>
-<div class="line">  // 4 == strlen(source)</div>
-<div class="line">  bool validutf8 = simdutf::validate_utf8(source, 4);</div>
-<div class="line">  if (validutf8) {</div>
-<div class="line">    std::cout &lt;&lt; &quot;valid UTF-8&quot; &lt;&lt; std::endl;</div>
-<div class="line">  } else {</div>
-<div class="line">    std::cerr &lt;&lt; &quot;invalid UTF-8&quot; &lt;&lt; std::endl;</div>
-<div class="line">    return EXIT_FAILURE;</div>
+<div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> *argv[]) {</div>
+<div class="line">  <span class="keyword">const</span> <span class="keywordtype">char</span> *source = <span class="stringliteral">&quot;1234&quot;</span>;</div>
+<div class="line">  <span class="comment">// 4 == strlen(source)</span></div>
+<div class="line">  <span class="keywordtype">bool</span> validutf8 = simdutf::validate_utf8(source, 4);</div>
+<div class="line">  <span class="keywordflow">if</span> (validutf8) {</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;valid UTF-8&quot;</span> &lt;&lt; std::endl;</div>
+<div class="line">  } <span class="keywordflow">else</span> {</div>
+<div class="line">    std::cerr &lt;&lt; <span class="stringliteral">&quot;invalid UTF-8&quot;</span> &lt;&lt; std::endl;</div>
+<div class="line">    <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">  }</div>
-<div class="line">  // We need a buffer of size where to write the UTF-16LE code units.</div>
-<div class="line">  size_t expected_utf16words = simdutf::utf16_length_from_utf8(source, 4);</div>
-<div class="line">  std::unique_ptr&lt;char16_t[]&gt; utf16_output{new char16_t[expected_utf16words]};</div>
-<div class="line">  // convert to UTF-16LE</div>
-<div class="line">  size_t utf16words =</div>
+<div class="line">  <span class="comment">// We need a buffer of size where to write the UTF-16LE code units.</span></div>
+<div class="line">  <span class="keywordtype">size_t</span> expected_utf16words = simdutf::utf16_length_from_utf8(source, 4);</div>
+<div class="line">  std::unique_ptr&lt;char16_t[]&gt; utf16_output{<span class="keyword">new</span> char16_t[expected_utf16words]};</div>
+<div class="line">  <span class="comment">// convert to UTF-16LE</span></div>
+<div class="line">  <span class="keywordtype">size_t</span> utf16words =</div>
 <div class="line">      simdutf::convert_utf8_to_utf16le(source, 4, utf16_output.get());</div>
-<div class="line">  std::cout &lt;&lt; &quot;wrote &quot; &lt;&lt; utf16words &lt;&lt; &quot; UTF-16LE code units.&quot; &lt;&lt; std::endl;</div>
-<div class="line">  // It wrote utf16words * sizeof(char16_t) bytes.</div>
-<div class="line">  bool validutf16 = simdutf::validate_utf16le(utf16_output.get(), utf16words);</div>
-<div class="line">  if (validutf16) {</div>
-<div class="line">    std::cout &lt;&lt; &quot;valid UTF-16LE&quot; &lt;&lt; std::endl;</div>
-<div class="line">  } else {</div>
-<div class="line">    std::cerr &lt;&lt; &quot;invalid UTF-16LE&quot; &lt;&lt; std::endl;</div>
-<div class="line">    return EXIT_FAILURE;</div>
+<div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;wrote &quot;</span> &lt;&lt; utf16words &lt;&lt; <span class="stringliteral">&quot; UTF-16LE code units.&quot;</span> &lt;&lt; std::endl;</div>
+<div class="line">  <span class="comment">// It wrote utf16words * sizeof(char16_t) bytes.</span></div>
+<div class="line">  <span class="keywordtype">bool</span> validutf16 = simdutf::validate_utf16le(utf16_output.get(), utf16words);</div>
+<div class="line">  <span class="keywordflow">if</span> (validutf16) {</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;valid UTF-16LE&quot;</span> &lt;&lt; std::endl;</div>
+<div class="line">  } <span class="keywordflow">else</span> {</div>
+<div class="line">    std::cerr &lt;&lt; <span class="stringliteral">&quot;invalid UTF-16LE&quot;</span> &lt;&lt; std::endl;</div>
+<div class="line">    <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">  }</div>
-<div class="line">  // convert it back:</div>
-<div class="line">  // We need a buffer of size where to write the UTF-8 code units.</div>
-<div class="line">  size_t expected_utf8words =</div>
+<div class="line">  <span class="comment">// convert it back:</span></div>
+<div class="line">  <span class="comment">// We need a buffer of size where to write the UTF-8 code units.</span></div>
+<div class="line">  <span class="keywordtype">size_t</span> expected_utf8words =</div>
 <div class="line">      simdutf::utf8_length_from_utf16le(utf16_output.get(), utf16words);</div>
-<div class="line">  std::unique_ptr&lt;char[]&gt; utf8_output{new char[expected_utf8words]};</div>
-<div class="line">  // convert to UTF-8</div>
-<div class="line">  size_t utf8words = simdutf::convert_utf16le_to_utf8(</div>
+<div class="line">  std::unique_ptr&lt;char[]&gt; utf8_output{<span class="keyword">new</span> <span class="keywordtype">char</span>[expected_utf8words]};</div>
+<div class="line">  <span class="comment">// convert to UTF-8</span></div>
+<div class="line">  <span class="keywordtype">size_t</span> utf8words = simdutf::convert_utf16le_to_utf8(</div>
 <div class="line">      utf16_output.get(), utf16words, utf8_output.get());</div>
-<div class="line">  std::cout &lt;&lt; &quot;wrote &quot; &lt;&lt; utf8words &lt;&lt; &quot; UTF-8 code units.&quot; &lt;&lt; std::endl;</div>
+<div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;wrote &quot;</span> &lt;&lt; utf8words &lt;&lt; <span class="stringliteral">&quot; UTF-8 code units.&quot;</span> &lt;&lt; std::endl;</div>
 <div class="line">  std::string final_string(utf8_output.get(), utf8words);</div>
 <div class="line">  std::cout &lt;&lt; final_string &lt;&lt; std::endl;</div>
-<div class="line">  if (final_string != source) {</div>
-<div class="line">    std::cerr &lt;&lt; &quot;bad conversion&quot; &lt;&lt; std::endl;</div>
-<div class="line">    return EXIT_FAILURE;</div>
-<div class="line">  } else {</div>
-<div class="line">    std::cerr &lt;&lt; &quot;perfect round trip&quot; &lt;&lt; std::endl;</div>
+<div class="line">  <span class="keywordflow">if</span> (final_string != source) {</div>
+<div class="line">    std::cerr &lt;&lt; <span class="stringliteral">&quot;bad conversion&quot;</span> &lt;&lt; std::endl;</div>
+<div class="line">    <span class="keywordflow">return</span> EXIT_FAILURE;</div>
+<div class="line">  } <span class="keywordflow">else</span> {</div>
+<div class="line">    std::cerr &lt;&lt; <span class="stringliteral">&quot;perfect round trip&quot;</span> &lt;&lt; std::endl;</div>
 <div class="line">  }</div>
-<div class="line">  return EXIT_SUCCESS;</div>
+<div class="line">  <span class="keywordflow">return</span> EXIT_SUCCESS;</div>
 <div class="line">}</div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md10"></a>
 API</h2>
@@ -287,1093 +286,239 @@ API</h2>
 </ul>
 <p>Our functions and declarations are all in the <code>simdutf</code> namespace. Thus you should prefix our functions and types with <code>simdutf::</code> as required.</p>
 <p>We have basic functions to detect the type of an input. They return an integer defined by the following <code>enum</code>.</p>
-<div class="fragment"><div class="line"> {c++}</div>
-<div class="line">enum encoding_type {</div>
-<div class="line">        UTF8 = 1,       // BOM 0xef 0xbb 0xbf</div>
-<div class="line">        UTF16_LE = 2,   // BOM 0xff 0xfe</div>
-<div class="line">        UTF16_BE = 4,   // BOM 0xfe 0xff</div>
-<div class="line">        UTF32_LE = 8,   // BOM 0xff 0xfe 0x00 0x00</div>
-<div class="line">        UTF32_BE = 16,   // BOM 0x00 0x00 0xfe 0xff</div>
+<div class="fragment"><div class="line"><span class="keyword">enum</span> encoding_type {</div>
+<div class="line">        UTF8 = 1,       <span class="comment">// BOM 0xef 0xbb 0xbf</span></div>
+<div class="line">        UTF16_LE = 2,   <span class="comment">// BOM 0xff 0xfe</span></div>
+<div class="line">        UTF16_BE = 4,   <span class="comment">// BOM 0xfe 0xff</span></div>
+<div class="line">        UTF32_LE = 8,   <span class="comment">// BOM 0xff 0xfe 0x00 0x00</span></div>
+<div class="line">        UTF32_BE = 16,   <span class="comment">// BOM 0x00 0x00 0xfe 0xff</span></div>
 <div class="line"> </div>
 <div class="line">        unspecified = 0</div>
 <div class="line">};</div>
-</div><!-- fragment --><div class="fragment"><div class="line"> {C++}</div>
+</div><!-- fragment --><div class="fragment"><div class="line"> </div>
+<div class="line">simdutf_warn_unused simdutf::encoding_type autodetect_encoding(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Autodetect the encoding of the input, a single encoding is recommended.</div>
-<div class="line"> * E.g., the function might return simdutf::encoding_type::UTF8,</div>
-<div class="line"> * simdutf::encoding_type::UTF16_LE, simdutf::encoding_type::UTF16_BE, or</div>
-<div class="line"> * simdutf::encoding_type::UTF32_LE.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input the string to analyze.</div>
-<div class="line"> * @param length the length of the string in bytes.</div>
-<div class="line"> * @return the detected encoding type</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const char * input, size_t length) noexcept;</div>
-<div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Autodetect the possible encodings of the input in one pass.</div>
-<div class="line"> * E.g., if the input might be UTF-16LE or UTF-8, this function returns</div>
-<div class="line"> * the value (simdutf::encoding_type::UTF8 | simdutf::encoding_type::UTF16_LE).</div>
-<div class="line"> *</div>
-<div class="line"> * Overriden by each implementation.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input the string to analyze.</div>
-<div class="line"> * @param length the length of the string in bytes.</div>
-<div class="line"> * @return the detected encoding type</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused int detect_encodings(const char * input, size_t length) noexcept;</div>
-</div><!-- fragment --><p>For validation and transcoding, we also provide functions that will stop on error and return a result struct which is a pair of two fields: </p><div class="fragment"><div class="line"> {c++}</div>
-<div class="line">struct result {</div>
-<div class="line">  error_code error; // see `struct error_code`.</div>
-<div class="line">  size_t count; // In case of error, indicates the position of the error in the input in code units.</div>
-<div class="line">  // In case of success, indicates the number of code units validated/written.</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">int</span> detect_encodings(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length) noexcept;</div>
+</div><!-- fragment --><p>For validation and transcoding, we also provide functions that will stop on error and return a result struct which is a pair of two fields: </p><div class="fragment"><div class="line"><span class="keyword">struct </span>result {</div>
+<div class="line">  error_code error; <span class="comment">// see `struct error_code`.</span></div>
+<div class="line">  <span class="keywordtype">size_t</span> count; <span class="comment">// In case of error, indicates the position of the error in the input in code units.</span></div>
+<div class="line">  <span class="comment">// In case of success, indicates the number of code units validated/written.</span></div>
 <div class="line">};</div>
-</div><!-- fragment --><p> On error, the <code>error</code> field indicates the type of error encountered and the <code>count</code> field indicates the position of the error in the input in code units or the number of characters validated/written. We report six types of errors related to Latin1, UTF-8, UTF-16 and UTF-32 encodings: </p><div class="fragment"><div class="line"> {c++}</div>
-<div class="line">enum error_code {</div>
+</div><!-- fragment --><p> On error, the <code>error</code> field indicates the type of error encountered and the <code>count</code> field indicates the position of the error in the input in code units or the number of characters validated/written. We report six types of errors related to Latin1, UTF-8, UTF-16 and UTF-32 encodings: </p><div class="fragment"><div class="line"><span class="keyword">enum</span> error_code {</div>
 <div class="line">  SUCCESS = 0,</div>
-<div class="line">  HEADER_BITS,  // Any byte must have fewer than 5 header bits.</div>
-<div class="line">  TOO_SHORT,    // The leading byte must be followed by N-1 continuation bytes, where N is the UTF-8 character length</div>
-<div class="line">                // This is also the error when the input is truncated.</div>
-<div class="line">  TOO_LONG,     // We either have too many consecutive continuation bytes or the string starts with a continuation byte.</div>
-<div class="line">  OVERLONG,     // The decoded character must be above U+7F for two-byte characters, U+7FF for three-byte characters,</div>
-<div class="line">                // and U+FFFF for four-byte characters.</div>
-<div class="line">  TOO_LARGE,    // The decoded character must be less than or equal to U+10FFFF,less than or equal than U+7F for ASCII OR less than equal than U+FF for Latin1</div>
-<div class="line">  SURROGATE,    // The decoded character must not be in U+D800...DFFF (UTF-8 or UTF-32) OR</div>
-<div class="line">                // a high surrogate must be followed by a low surrogate and a low surrogate must be preceded by a high surrogate (UTF-16) OR</div>
-<div class="line">                // there must be no surrogate at all (Latin1)</div>
-<div class="line">  OTHER         // Not related to validation/transcoding.</div>
+<div class="line">  HEADER_BITS,  <span class="comment">// Any byte must have fewer than 5 header bits.</span></div>
+<div class="line">  TOO_SHORT,    <span class="comment">// The leading byte must be followed by N-1 continuation bytes, where N is the UTF-8 character length</span></div>
+<div class="line">                <span class="comment">// This is also the error when the input is truncated.</span></div>
+<div class="line">  TOO_LONG,     <span class="comment">// We either have too many consecutive continuation bytes or the string starts with a continuation byte.</span></div>
+<div class="line">  OVERLONG,     <span class="comment">// The decoded character must be above U+7F for two-byte characters, U+7FF for three-byte characters,</span></div>
+<div class="line">                <span class="comment">// and U+FFFF for four-byte characters.</span></div>
+<div class="line">  TOO_LARGE,    <span class="comment">// The decoded character must be less than or equal to U+10FFFF,less than or equal than U+7F for ASCII OR less than equal than U+FF for Latin1</span></div>
+<div class="line">  SURROGATE,    <span class="comment">// The decoded character must not be in U+D800...DFFF (UTF-8 or UTF-32) OR</span></div>
+<div class="line">                <span class="comment">// a high surrogate must be followed by a low surrogate and a low surrogate must be preceded by a high surrogate (UTF-16) OR</span></div>
+<div class="line">                <span class="comment">// there must be no surrogate at all (Latin1)</span></div>
+<div class="line">  OTHER         <span class="comment">// Not related to validation/transcoding.</span></div>
 <div class="line">};</div>
 </div><!-- fragment --><p> On success, the <code>error</code> field is set to <code>SUCCESS</code> and the <code>position</code> field indicates either the number of code units validated for validation functions or the number of written code units in the output format for transcoding functions. In ASCII, Latin1 and UTF-8, code units occupy 8 bits (they are bytes); in UTF-16LE and UTF-16BE, code units occupy 16 bits; in UTF-32, code units occupy 32 bits.</p>
 <p>Generally speaking, functions that report errors always stop soon after an error is encountered and might therefore be faster on inputs where an error occurs early in the input. The functions that return a boolean indicating whether or not an error has been encountered are meant to be used in an <em>optimistic setting</em>&mdash;when we expect that inputs will almost always be correct.</p>
 <p>You may use functions that report an error to indicate where the problem happens during, as follows:</p>
-<div class="fragment"><div class="line">{c++}</div>
-<div class="line"> std::string bad_ascii = &quot;\x20\x20\x20\x20\x20\xff\x20\x20\x20&quot;;</div>
-<div class="line"> simdutf::result res = implementation.validate_ascii_with_errors(bad_ascii.data(), bad_ascii.size());</div>
-<div class="line"> if(res.error != simdutf::error_code::SUCCESS) {</div>
-<div class="line">   std::cerr &lt;&lt; &quot;error at index &quot; &lt;&lt; res.count &lt;&lt; std::endl;</div>
-<div class="line"> }</div>
+<div class="fragment"><div class="line">std::string bad_ascii = <span class="stringliteral">&quot;\x20\x20\x20\x20\x20\xff\x20\x20\x20&quot;</span>;</div>
+<div class="line"><a class="code" href="structsimdutf_1_1result.html">simdutf::result</a> res = implementation.validate_ascii_with_errors(bad_ascii.data(), bad_ascii.size());</div>
+<div class="line"><span class="keywordflow">if</span>(res.error != simdutf::error_code::SUCCESS) {</div>
+<div class="line">  std::cerr &lt;&lt; <span class="stringliteral">&quot;error at index &quot;</span> &lt;&lt; res.count &lt;&lt; std::endl;</div>
+<div class="line">}</div>
+<div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition:</b> <a href="error_8h_source.html#l00020">error.h:20</a></div></div>
 </div><!-- fragment --><p>Or as follows:</p>
-<div class="fragment"><div class="line">{c++}</div>
-<div class="line"> std::string bad_utf8 = &quot;\xc3\xa9\xc3\xa9\x20\xff\xc3\xa9&quot;;</div>
-<div class="line"> simdutf::result res = implementation.validate_utf8_with_errors(bad_utf8.data(), bad_utf8.size());</div>
-<div class="line"> if(res.error != simdutf::error_code::SUCCESS) {</div>
-<div class="line">   std::cerr &lt;&lt; &quot;error at index &quot; &lt;&lt; res.count &lt;&lt; std::endl;</div>
-<div class="line"> }</div>
-<div class="line"> res = implementation.validate_utf8_with_errors(bad_utf8.data(), res.count);</div>
-<div class="line"> // will be successful in this case</div>
-<div class="line"> if(res.error == simdutf::error_code::SUCCESS) {</div>
-<div class="line">   std::cerr &lt;&lt; &quot;we have &quot; &lt;&lt; res.count &lt;&lt; &quot;valid bytes&quot; &lt;&lt; std::endl;</div>
-<div class="line"> }</div>
+<div class="fragment"><div class="line">std::string bad_utf8 = <span class="stringliteral">&quot;\xc3\xa9\xc3\xa9\x20\xff\xc3\xa9&quot;</span>;</div>
+<div class="line"><a class="code" href="structsimdutf_1_1result.html">simdutf::result</a> res = implementation.validate_utf8_with_errors(bad_utf8.data(), bad_utf8.size());</div>
+<div class="line"><span class="keywordflow">if</span>(res.error != simdutf::error_code::SUCCESS) {</div>
+<div class="line">  std::cerr &lt;&lt; <span class="stringliteral">&quot;error at index &quot;</span> &lt;&lt; res.count &lt;&lt; std::endl;</div>
+<div class="line">}</div>
+<div class="line">res = implementation.validate_utf8_with_errors(bad_utf8.data(), res.count);</div>
+<div class="line"><span class="comment">// will be successful in this case</span></div>
+<div class="line"><span class="keywordflow">if</span>(res.error == simdutf::error_code::SUCCESS) {</div>
+<div class="line">  std::cerr &lt;&lt; <span class="stringliteral">&quot;we have &quot;</span> &lt;&lt; res.count &lt;&lt; <span class="stringliteral">&quot;valid bytes&quot;</span> &lt;&lt; std::endl;</div>
+<div class="line">}</div>
 </div><!-- fragment --><p>We have fast validation functions.</p>
-<div class="fragment"><div class="line"> {c++}</div>
-<div class="line">/**</div>
-<div class="line"> * Validate the ASCII string.</div>
-<div class="line"> *</div>
-<div class="line"> * Overridden by each implementation.</div>
-<div class="line"> *</div>
-<div class="line"> * @param buf the ASCII string to validate.</div>
-<div class="line"> * @param len the length of the string in bytes.</div>
-<div class="line"> * @return true if and only if the string is valid ASCII.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept;</div>
+<div class="fragment"><div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">bool</span> validate_ascii(<span class="keyword">const</span> <span class="keywordtype">char</span> *buf, <span class="keywordtype">size_t</span> len) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Validate the ASCII string and stop on error.</div>
-<div class="line"> *</div>
-<div class="line"> * Overridden by each implementation.</div>
-<div class="line"> *</div>
-<div class="line"> * @param buf the ASCII string to validate.</div>
-<div class="line"> * @param len the length of the string in bytes.</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of code units validated if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result validate_ascii_with_errors(const char *buf, size_t len) noexcept;</div>
+<div class="line">simdutf_warn_unused result validate_ascii_with_errors(<span class="keyword">const</span> <span class="keywordtype">char</span> *buf, <span class="keywordtype">size_t</span> len) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Validate the UTF-8 string. This function may be best when you expect</div>
-<div class="line"> * the input to be almost always valid. Otherwise, consider using</div>
-<div class="line"> * validate_utf8_with_errors.</div>
-<div class="line"> *</div>
-<div class="line"> * Overridden by each implementation.</div>
-<div class="line"> *</div>
-<div class="line"> * @param buf the UTF-8 string to validate.</div>
-<div class="line"> * @param len the length of the string in bytes.</div>
-<div class="line"> * @return true if and only if the string is valid UTF-8.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">bool</span> validate_utf8(<span class="keyword">const</span> <span class="keywordtype">char</span> *buf, <span class="keywordtype">size_t</span> len) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Validate the UTF-8 string and stop on error. It might be faster than</div>
-<div class="line"> * validate_utf8 when an error is expected to occur early.</div>
-<div class="line"> *</div>
-<div class="line"> * Overridden by each implementation.</div>
-<div class="line"> *</div>
-<div class="line"> * @param buf the UTF-8 string to validate.</div>
-<div class="line"> * @param len the length of the string in bytes.</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of code units validated if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result validate_utf8_with_errors(const char *buf, size_t len) noexcept;</div>
+<div class="line">simdutf_warn_unused result validate_utf8_with_errors(<span class="keyword">const</span> <span class="keywordtype">char</span> *buf, <span class="keywordtype">size_t</span> len) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Using native endianness; Validate the UTF-16 string.</div>
-<div class="line"> * This function may be best when you expect the input to be almost always valid.</div>
-<div class="line"> * Otherwise, consider using validate_utf16_with_errors.</div>
-<div class="line"> *</div>
-<div class="line"> * Overridden by each implementation.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param buf the UTF-16 string to validate.</div>
-<div class="line"> * @param len the length of the string in number of 2-byte code units (char16_t).</div>
-<div class="line"> * @return true if and only if the string is valid UTF-16.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused bool validate_utf16(const char16_t *buf, size_t len) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">bool</span> validate_utf16(<span class="keyword">const</span> char16_t *buf, <span class="keywordtype">size_t</span> len) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Validate the UTF-16LE string. This function may be best when you expect</div>
-<div class="line"> * the input to be almost always valid. Otherwise, consider using</div>
-<div class="line"> * validate_utf16le_with_errors.</div>
-<div class="line"> *</div>
-<div class="line"> * Overridden by each implementation.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param buf the UTF-16LE string to validate.</div>
-<div class="line"> * @param len the length of the string in number of 2-byte code units (char16_t).</div>
-<div class="line"> * @return true if and only if the string is valid UTF-16LE.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused bool validate_utf16le(const char16_t *buf, size_t len) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">bool</span> validate_utf16le(<span class="keyword">const</span> char16_t *buf, <span class="keywordtype">size_t</span> len) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Validate the UTF-16BE string. This function may be best when you expect</div>
-<div class="line"> * the input to be almost always valid. Otherwise, consider using</div>
-<div class="line"> * validate_utf16be_with_errors.</div>
-<div class="line"> *</div>
-<div class="line"> * Overridden by each implementation.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param buf the UTF-16BE string to validate.</div>
-<div class="line"> * @param len the length of the string in number of 2-byte code units (char16_t).</div>
-<div class="line"> * @return true if and only if the string is valid UTF-16BE.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused bool validate_utf16be(const char16_t *buf, size_t len) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">bool</span> validate_utf16be(<span class="keyword">const</span> char16_t *buf, <span class="keywordtype">size_t</span> len) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Using native endianness; Validate the UTF-16 string and stop on error.</div>
-<div class="line"> * It might be faster than validate_utf16 when an error is expected to occur early.</div>
-<div class="line"> *</div>
-<div class="line"> * Overridden by each implementation.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param buf the UTF-16 string to validate.</div>
-<div class="line"> * @param len the length of the string in number of 2-byte code units (char16_t).</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of code units validated if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result validate_utf16_with_errors(const char16_t *buf, size_t len) noexcept;</div>
+<div class="line">simdutf_warn_unused result validate_utf16_with_errors(<span class="keyword">const</span> char16_t *buf, <span class="keywordtype">size_t</span> len) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Validate the UTF-16LE string and stop on error. It might be faster than</div>
-<div class="line"> * validate_utf16le when an error is expected to occur early.</div>
-<div class="line"> *</div>
-<div class="line"> * Overridden by each implementation.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param buf the UTF-16LE string to validate.</div>
-<div class="line"> * @param len the length of the string in number of 2-byte code units (char16_t).</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of code units validated if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result validate_utf16le_with_errors(const char16_t *buf, size_t len) noexcept;</div>
+<div class="line">simdutf_warn_unused result validate_utf16le_with_errors(<span class="keyword">const</span> char16_t *buf, <span class="keywordtype">size_t</span> len) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Validate the UTF-16BE string and stop on error. It might be faster than</div>
-<div class="line"> * validate_utf16be when an error is expected to occur early.</div>
-<div class="line"> *</div>
-<div class="line"> * Overridden by each implementation.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param buf the UTF-16BE string to validate.</div>
-<div class="line"> * @param len the length of the string in number of 2-byte code units (char16_t).</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of code units validated if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result validate_utf16be_with_errors(const char16_t *buf, size_t len) noexcept;</div>
+<div class="line">simdutf_warn_unused result validate_utf16be_with_errors(<span class="keyword">const</span> char16_t *buf, <span class="keywordtype">size_t</span> len) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Validate the UTF-32 string.</div>
-<div class="line"> *</div>
-<div class="line"> * Overridden by each implementation.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param buf the UTF-32 string to validate.</div>
-<div class="line"> * @param len the length of the string in number of 4-byte code units (char32_t).</div>
-<div class="line"> * @return true if and only if the string is valid UTF-32.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused bool validate_utf32(const char32_t *buf, size_t len) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">bool</span> validate_utf32(<span class="keyword">const</span> char32_t *buf, <span class="keywordtype">size_t</span> len) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Validate the UTF-32 string and stop on error.</div>
-<div class="line"> *</div>
-<div class="line"> * Overridden by each implementation.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param buf the UTF-32 string to validate.</div>
-<div class="line"> * @param len the length of the string in number of 4-byte code units (char32_t).</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of code units validated if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result validate_utf32_with_errors(const char32_t *buf, size_t len) noexcept;</div>
+<div class="line">simdutf_warn_unused result validate_utf32_with_errors(<span class="keyword">const</span> char32_t *buf, <span class="keywordtype">size_t</span> len) noexcept;</div>
 </div><!-- fragment --><p>Given a valid UTF-8 or UTF-16 input, you may count the number Unicode characters using fast functions. For UTF-32, there is no need for a function given that each character requires a flat 4 bytes. Likewise for Latin1: one byte will always equal one character.</p>
-<div class="fragment"><div class="line"> {c++}</div>
-<div class="line">/**</div>
-<div class="line"> * Count the number of code points (characters) in the string assuming that</div>
-<div class="line"> * it is valid.</div>
-<div class="line"> *</div>
-<div class="line"> * This function assumes that the input string is valid UTF-16 (native endianness).</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16 string to process</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @return number of code points</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t count_utf16(const char16_t * input, size_t length) noexcept;</div>
+<div class="fragment"><div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> count_utf16(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Count the number of code points (characters) in the string assuming that</div>
-<div class="line"> * it is valid.</div>
-<div class="line"> *</div>
-<div class="line"> * This function assumes that the input string is valid UTF-16LE.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16LE string to process</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @return number of code points</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t count_utf16le(const char16_t * input, size_t length) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> count_utf16le(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Count the number of code points (characters) in the string assuming that</div>
-<div class="line"> * it is valid.</div>
-<div class="line"> *</div>
-<div class="line"> * This function assumes that the input string is valid UTF-16BE.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16BE string to process</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @return number of code points</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t count_utf16be(const char16_t * input, size_t length) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> count_utf16be(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Count the number of code points (characters) in the string assuming that</div>
-<div class="line"> * it is valid.</div>
-<div class="line"> *</div>
-<div class="line"> * This function assumes that the input string is valid UTF-8.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-8 string to process</div>
-<div class="line"> * @param length        the length of the string in bytes</div>
-<div class="line"> * @return number of code points</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t count_utf8(const char * input, size_t length) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> count_utf8(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length) noexcept;</div>
 </div><!-- fragment --><p>Prior to transcoding an input, you need to allocate enough memory to receive the result. We have fast function that scan the input and compute the size of the output. These functions are fast and non-validating.</p>
-<div class="fragment"><div class="line"> {c++}</div>
+<div class="fragment"><div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf8_length_from_latin1(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Return the number of bytes that this Latin1 string would require in UTF-8 format.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the Latin1 string to convert</div>
-<div class="line"> * @param length        the length of the string bytes</div>
-<div class="line"> * @return the number of bytes required to encode the Latin1 string as UTF-8</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t utf8_length_from_latin1(const char * input, size_t length) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> latin1_length_from_utf8(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Compute the number of bytes that this UTF-8 string would require in Latin1 format.</div>
-<div class="line"> *</div>
-<div class="line"> * This function does not validate the input.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-8 string to convert</div>
-<div class="line"> * @param length        the length of the string in byte</div>
-<div class="line"> * @return the number of bytes required to encode the UTF-8 string as Latin1</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t latin1_length_from_utf8(const char * input, size_t length) noexcept;</div>
+<div class="line"><span class="comment">/*</span></div>
+<div class="line"><span class="comment"> * Compute the number of bytes that this UTF-16LE/BE string would require in Latin1 format.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * This function does not validate the input.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * This function is not BOM-aware.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * @param length        the length of the string in 2-byte code units (char16_t)</span></div>
+<div class="line"><span class="comment"> * @return the number of bytes required to encode the UTF-16LE string as Latin1</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> latin1_length_from_utf16(<span class="keywordtype">size_t</span> length) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/*</div>
-<div class="line"> * Compute the number of bytes that this UTF-16LE/BE string would require in Latin1 format.</div>
-<div class="line"> *</div>
-<div class="line"> * This function does not validate the input.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @return the number of bytes required to encode the UTF-16LE string as Latin1</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t latin1_length_from_utf16(size_t length) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> latin1_length_from_utf32(<span class="keywordtype">size_t</span> length) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Compute the number of bytes that this UTF-32 string would require in Latin1 format.</div>
-<div class="line"> *</div>
-<div class="line"> * This function does not validate the input.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param length        the length of the string in 4-byte code units (char32_t)</div>
-<div class="line"> * @return the number of bytes required to encode the UTF-32 string as Latin1</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t latin1_length_from_utf32(size_t length) noexcept;</div>
-<div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Compute the number of 2-byte code units that this UTF-8 string would require in UTF-16 format.</div>
-<div class="line"> *</div>
-<div class="line"> * This function does not validate the input.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-8 string to process</div>
-<div class="line"> * @param length        the length of the string in bytes</div>
-<div class="line"> * @return the number of char16_t code units required to encode the UTF-8 string as UTF-16</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t utf16_length_from_utf8(const char * input, size_t length) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf16_length_from_utf8(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length) noexcept;</div>
 <div class="line"> </div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Compute the number of 4-byte code units that this UTF-8 string would require in UTF-32 format.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is equivalent to count_utf8</div>
-<div class="line"> *</div>
-<div class="line"> * This function does not validate the input.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-8 string to process</div>
-<div class="line"> * @param length        the length of the string in bytes</div>
-<div class="line"> * @return the number of char32_t code units required to encode the UTF-8 string as UTF-32</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t utf32_length_from_utf8(const char * input, size_t length) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf32_length_from_utf8(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Using native endianness; Compute the number of bytes that this UTF-16</div>
-<div class="line"> * string would require in UTF-8 format.</div>
-<div class="line"> *</div>
-<div class="line"> * This function does not validate the input.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16 string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @return the number of bytes required to encode the UTF-16LE string as UTF-8</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t * input, size_t length) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf8_length_from_utf16(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Compute the number of bytes that this UTF-16LE string would require in UTF-8 format.</div>
-<div class="line"> *</div>
-<div class="line"> * This function does not validate the input.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16LE string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @return the number of bytes required to encode the UTF-16LE string as UTF-8</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t utf8_length_from_utf16le(const char16_t * input, size_t length) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf8_length_from_utf16le(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Compute the number of bytes that this UTF-16BE string would require in UTF-8 format.</div>
-<div class="line"> *</div>
-<div class="line"> * This function does not validate the input.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16BE string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @return the number of bytes required to encode the UTF-16BE string as UTF-8</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t utf8_length_from_utf16be(const char16_t * input, size_t length) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf8_length_from_utf16be(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Compute the number of bytes that this UTF-32 string would require in UTF-8 format.</div>
-<div class="line"> *</div>
-<div class="line"> * This function does not validate the input.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-32 string to convert</div>
-<div class="line"> * @param length        the length of the string in 4-byte code units (char32_t)</div>
-<div class="line"> * @return the number of bytes required to encode the UTF-32 string as UTF-8</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t utf8_length_from_utf32(const char32_t * input, size_t length) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf8_length_from_utf32(<span class="keyword">const</span> char32_t * input, <span class="keywordtype">size_t</span> length) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Compute the number of two-byte code units that this UTF-32 string would require in UTF-16 format.</div>
-<div class="line"> *</div>
-<div class="line"> * This function does not validate the input.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-32 string to convert</div>
-<div class="line"> * @param length        the length of the string in 4-byte code units (char32_t)</div>
-<div class="line"> * @return the number of bytes required to encode the UTF-32 string as UTF-16</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t utf16_length_from_utf32(const char32_t * input, size_t length) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf16_length_from_utf32(<span class="keyword">const</span> char32_t * input, <span class="keywordtype">size_t</span> length) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Using native endianness; Compute the number of bytes that this UTF-16</div>
-<div class="line"> * string would require in UTF-32 format.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is equivalent to count_utf16.</div>
-<div class="line"> *</div>
-<div class="line"> * This function does not validate the input.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16 string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @return the number of bytes required to encode the UTF-16LE string as UTF-32</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t utf32_length_from_utf16(const char16_t * input, size_t length) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf32_length_from_utf16(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Compute the number of bytes that this UTF-16LE string would require in UTF-32 format.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is equivalent to count_utf16le.</div>
-<div class="line"> *</div>
-<div class="line"> * This function does not validate the input.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16LE string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @return the number of bytes required to encode the UTF-16LE string as UTF-32</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t utf32_length_from_utf16le(const char16_t * input, size_t length) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf32_length_from_utf16le(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Compute the number of bytes that this UTF-16BE string would require in UTF-32 format.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is equivalent to count_utf16be.</div>
-<div class="line"> *</div>
-<div class="line"> * This function does not validate the input.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16BE string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @return the number of bytes required to encode the UTF-16BE string as UTF-32</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t utf32_length_from_utf16be(const char16_t * input, size_t length) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf32_length_from_utf16be(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length) noexcept;</div>
 </div><!-- fragment --><p>We have a wide range of conversion between Latin1, UTF-8, UTF-16 and UTF-32. They assume that you are allocated sufficient memory for the input. The simplest conversin function output a single integer representing the size of the input, with a value of zero indicating an error (e.g., <code>convert_utf8_to_utf16le</code>). They are well suited in the scenario where you expect the input to be valid most of the time.</p>
-<div class="fragment"><div class="line"> {c++}</div>
-<div class="line">/**</div>
-<div class="line"> * Convert Latin1 string into UTF8 string.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the Latin1 string to convert</div>
-<div class="line"> * @param length        the length of the string in bytes</div>
-<div class="line"> * @param latin1_output  the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return the number of written char; 0 if conversion is not possible</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_latin1_to_utf8(const char * input, size_t length, char* utf8_output) noexcept;</div>
+<div class="fragment"><div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_latin1_to_utf8(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* utf8_output) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Using native endianness, convert a Latin1 string into a UTF-16 string.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-8 string to convert</div>
-<div class="line"> * @param length        the length of the string in bytes</div>
-<div class="line"> * @param utf16_buffer  the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return the number of written char16_t.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_latin1_to_utf16(const char * input, size_t length, char16_t* utf16_output) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_latin1_to_utf16(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, char16_t* utf16_output) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly Latin1 string into UTF-16LE string.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the Latin1  string to convert</div>
-<div class="line"> * @param length        the length of the string in bytes</div>
-<div class="line"> * @param utf16_buffer  the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return the number of written char16_t; 0 if conversion is not possible</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_latin1_to_utf16le(const char * input, size_t length, char16_t* utf16_output) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_latin1_to_utf16le(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, char16_t* utf16_output) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert Latin1 string into UTF-16BE string.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the Latin1 string to convert</div>
-<div class="line"> * @param length        the length of the string in bytes</div>
-<div class="line"> * @param utf16_buffer  the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return the number of written char16_t; 0 if conversion is not possible</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_latin1_to_utf16be(const char * input, size_t length, char16_t* utf16_output) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_latin1_to_utf16be(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, char16_t* utf16_output) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert Latin1 string into UTF-32 string.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the Latin1 string to convert</div>
-<div class="line"> * @param length        the length of the string in bytes</div>
-<div class="line"> * @param utf32_buffer  the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return the number of written char32_t; 0 if conversion is not possible</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_latin1_to_utf32(const char * input, size_t length, char32_t* utf32_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_latin1_to_utf32(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, char32_t* utf32_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-8 string into latin1 string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-8 string to convert</div>
-<div class="line"> * @param length        the length of the string in bytes</div>
-<div class="line"> * @param latin1_output  the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return the number of written char; 0 if the input was not valid UTF-8 string</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_utf8_to_latin1(const char * input, size_t length, char* latin1_output) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf8_to_latin1(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* latin1_output) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Using native endianness; Convert possibly broken UTF-8 string into a UTF-16 string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-8 string to convert</div>
-<div class="line"> * @param length        the length of the string in bytes</div>
-<div class="line"> * @param utf16_buffer  the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return the number of written char16_t; 0 if the input was not valid UTF-8 string</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_utf8_to_utf16(const char * input, size_t length, char16_t* utf16_output) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf8_to_utf16(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, char16_t* utf16_output) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-8 string into UTF-16LE string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-8 string to convert</div>
-<div class="line"> * @param length        the length of the string in bytes</div>
-<div class="line"> * @param utf16_buffer  the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return the number of written char16_t; 0 if the input was not valid UTF-8 string</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_utf8_to_utf16le(const char * input, size_t length, char16_t* utf16_output) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf8_to_utf16le(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, char16_t* utf16_output) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-8 string into UTF-16BE string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-8 string to convert</div>
-<div class="line"> * @param length        the length of the string in bytes</div>
-<div class="line"> * @param utf16_buffer  the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return the number of written char16_t; 0 if the input was not valid UTF-8 string</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_utf8_to_utf16be(const char * input, size_t length, char16_t* utf16_output) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf8_to_utf16be(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, char16_t* utf16_output) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-8 string into UTF-32 string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-8 string to convert</div>
-<div class="line"> * @param length        the length of the string in bytes</div>
-<div class="line"> * @param utf32_buffer  the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return the number of written char32_t; 0 if the input was not valid UTF-8 string</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_utf8_to_utf32(const char * input, size_t length, char32_t* utf32_output) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf8_to_utf32(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, char32_t* utf32_output) noexcept;</div>
 <div class="line"> </div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Using native endianness, convert possibly broken UTF-16 string into Latin1 string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16 string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @param latin1_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return number of written code units; 0 if input is not a valid UTF-16LE string</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_utf16_to_latin1(const char16_t * input, size_t length, char* latin1_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf16_to_latin1(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* latin1_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-16LE string into Latin1 string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16LE string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @param latin1_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return number of written code units; 0 if input is not a valid UTF-16LE string</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_utf16le_to_latin1(const char16_t * input, size_t length, char* latin1_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf16le_to_latin1(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* latin1_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-16BE string into Latin1 string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16BE string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @param latin1_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char written if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_utf16be_to_latin1(const char16_t * input, size_t length, char* latin1_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf16be_to_latin1(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* latin1_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-16LE string into UTF-8 string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16LE string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @param utf8_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return number of written code units; 0 if input is not a valid UTF-16LE string</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_utf16le_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf16le_to_utf8(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* utf8_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-16BE string into UTF-8 string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16BE string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @param utf8_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return number of written code units; 0 if input is not a valid UTF-16LE string</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_utf16be_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf16be_to_utf8(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* utf8_buffer) noexcept;</div>
 <div class="line"> </div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-32 string into Latin1 string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-32 string to convert</div>
-<div class="line"> * @param length        the length of the string in 4-byte code units (char32_t)</div>
-<div class="line"> * @param latin1_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return number of written code units; 0 if input is not a valid UTF-32 string</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_utf32_to_latin1(const char32_t * input, size_t length, char* latin1_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf32_to_latin1(<span class="keyword">const</span> char32_t * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* latin1_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-32 string into UTF-8 string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-32 string to convert</div>
-<div class="line"> * @param length        the length of the string in 4-byte code units (char32_t)</div>
-<div class="line"> * @param utf8_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return number of written code units; 0 if input is not a valid UTF-32 string</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_utf32_to_utf8(const char32_t * input, size_t length, char* utf8_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf32_to_utf8(<span class="keyword">const</span> char32_t * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* utf8_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Using native endianness; Convert possibly broken UTF-32 string into a UTF-16 string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-32 string to convert</div>
-<div class="line"> * @param length        the length of the string in 4-byte code units (char32_t)</div>
-<div class="line"> * @param utf16_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return number of written code units; 0 if input is not a valid UTF-32 string</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_utf32_to_utf16(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf32_to_utf16(<span class="keyword">const</span> char32_t * input, <span class="keywordtype">size_t</span> length, char16_t* utf16_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-32 string into UTF-16LE string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-32 string to convert</div>
-<div class="line"> * @param length        the length of the string in 4-byte code units (char32_t)</div>
-<div class="line"> * @param utf16_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return number of written code units; 0 if input is not a valid UTF-32 string</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_utf32_to_utf16le(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf32_to_utf16le(<span class="keyword">const</span> char32_t * input, <span class="keywordtype">size_t</span> length, char16_t* utf16_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-32 string into UTF-16BE string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-32 string to convert</div>
-<div class="line"> * @param length        the length of the string in 4-byte code units (char32_t)</div>
-<div class="line"> * @param utf16_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return number of written code units; 0 if input is not a valid UTF-32 string</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_utf32_to_utf16be(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf32_to_utf16be(<span class="keyword">const</span> char32_t * input, <span class="keywordtype">size_t</span> length, char16_t* utf16_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Using native endianness; Convert possibly broken UTF-16 string into UTF-32 string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16 string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @param utf32_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return number of written code units; 0 if input is not a valid UTF-16LE string</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_utf16_to_utf32(const char16_t * input, size_t length, char32_t* utf32_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf16_to_utf32(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, char32_t* utf32_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-16LE string into UTF-32 string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16LE string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @param utf32_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return number of written code units; 0 if input is not a valid UTF-16LE string</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_utf16le_to_utf32(const char16_t * input, size_t length, char32_t* utf32_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf16le_to_utf32(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, char32_t* utf32_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-16BE string into UTF-32 string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16BE string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @param utf32_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return number of written code units; 0 if input is not a valid UTF-16LE string</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused size_t convert_utf16be_to_utf32(const char16_t * input, size_t length, char32_t* utf32_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf16be_to_utf32(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, char32_t* utf32_buffer) noexcept;</div>
 </div><!-- fragment --><p>We have more advanced conversion functions which output a <code><a class="el" href="structsimdutf_1_1result.html">simdutf::result</a></code> structure with an indication of the error type and a <code>count</code> entry (e.g., <code>convert_utf8_to_utf16le_with_errors</code>). They are well suited when you expect that there might be errors in the input that require further investigation. The <code>count</code> field contains the location of the error in the input in code units, if there is an error, or otherwise the number of code units written. You may use these functions as follows:</p>
-<div class="fragment"><div class="line">{c++}</div>
-<div class="line"> // this UTF-8 string has a bad byte at index 5</div>
-<div class="line"> std::string bad_utf8 = &quot;\xc3\xa9\xc3\xa9\x20\xff\xc3\xa9&quot;;</div>
-<div class="line"> size_t budget_utf16 = simdutf::utf16_length_from_utf8(bad_utf8.data(), bad_utf8.size());</div>
-<div class="line"> std::unique_ptr&lt;char16_t[]&gt; utf16{new char16_t[budget_utf16]};</div>
-<div class="line"> simdutf::result res = simdutf::convert_utf8_to_utf16_with_errors(bad_utf8.data(), bad_utf8.size(), utf16.get());</div>
-<div class="line"> if(res.error != simdutf::error_code::SUCCESS) {</div>
-<div class="line">   std::cerr &lt;&lt; &quot;error at index &quot; &lt;&lt; res.count &lt;&lt; std::endl;</div>
-<div class="line"> }</div>
-<div class="line"> // the following will be successful</div>
-<div class="line"> res = simdutf::convert_utf8_to_utf16_with_errors(bad_utf8.data(), res.count, utf16.get());</div>
-<div class="line"> if(res.error == simdutf::error_code::SUCCESS) {</div>
-<div class="line">   std::cerr &lt;&lt; &quot;we have transcoded &quot; &lt;&lt; res.count &lt;&lt; &quot; characters&quot; &lt;&lt; std::endl;</div>
-<div class="line"> }</div>
+<div class="fragment"><div class="line"><span class="comment">// this UTF-8 string has a bad byte at index 5</span></div>
+<div class="line">std::string bad_utf8 = <span class="stringliteral">&quot;\xc3\xa9\xc3\xa9\x20\xff\xc3\xa9&quot;</span>;</div>
+<div class="line"><span class="keywordtype">size_t</span> budget_utf16 = simdutf::utf16_length_from_utf8(bad_utf8.data(), bad_utf8.size());</div>
+<div class="line">std::unique_ptr&lt;char16_t[]&gt; utf16{<span class="keyword">new</span> char16_t[budget_utf16]};</div>
+<div class="line"><a class="code" href="structsimdutf_1_1result.html">simdutf::result</a> res = simdutf::convert_utf8_to_utf16_with_errors(bad_utf8.data(), bad_utf8.size(), utf16.get());</div>
+<div class="line"><span class="keywordflow">if</span>(res.error != simdutf::error_code::SUCCESS) {</div>
+<div class="line">  std::cerr &lt;&lt; <span class="stringliteral">&quot;error at index &quot;</span> &lt;&lt; res.count &lt;&lt; std::endl;</div>
+<div class="line">}</div>
+<div class="line"><span class="comment">// the following will be successful</span></div>
+<div class="line">res = simdutf::convert_utf8_to_utf16_with_errors(bad_utf8.data(), res.count, utf16.get());</div>
+<div class="line"><span class="keywordflow">if</span>(res.error == simdutf::error_code::SUCCESS) {</div>
+<div class="line">  std::cerr &lt;&lt; <span class="stringliteral">&quot;we have transcoded &quot;</span> &lt;&lt; res.count &lt;&lt; <span class="stringliteral">&quot; characters&quot;</span> &lt;&lt; std::endl;</div>
+<div class="line">}</div>
 </div><!-- fragment --><p>We have several transcoding functions returning <code>simdutf::error</code> results:</p>
-<div class="fragment"><div class="line"> {c++}</div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-8 string into latin1 string. with errors</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-8 string to convert</div>
-<div class="line"> * @param length        the length of the string in bytes</div>
-<div class="line"> * @param latin1_output  the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of code units validated if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result convert_utf8_to_latin1_with_errors(const char * input, size_t length, char* latin1_output) noexcept;</div>
+<div class="fragment"><div class="line"> </div>
+<div class="line">simdutf_warn_unused result convert_utf8_to_latin1_with_errors(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* latin1_output) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-16LE string into Latin1 string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16LE string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @param latin1_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char written if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result convert_utf16le_to_latin1_with_errors(const char16_t * input, size_t length, char* latin1_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused result convert_utf16le_to_latin1_with_errors(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* latin1_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-16BE string into Latin1 string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16BE string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @param latin1_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char written if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result convert_utf16be_to_latin1_with_errors(const char16_t * input, size_t length, char* latin1_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused result convert_utf16be_to_latin1_with_errors(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* latin1_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Using native endianness, convert possibly broken UTF-16 string into Latin1 string.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16 string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @param latin1_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char written if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result convert_utf16_to_latin1_with_errors(const char16_t * input, size_t length, char* latin1_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused result convert_utf16_to_latin1_with_errors(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* latin1_buffer) noexcept;</div>
 <div class="line"> </div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Using native endianness; Convert possibly broken UTF-8 string into UTF-16</div>
-<div class="line"> * string and stop on error.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-8 string to convert</div>
-<div class="line"> * @param length        the length of the string in bytes</div>
-<div class="line"> * @param utf16_buffer  the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char16_t written if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result convert_utf8_to_utf16_with_errors(const char * input, size_t length, char16_t* utf16_output) noexcept;</div>
+<div class="line">simdutf_warn_unused result convert_utf8_to_utf16_with_errors(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, char16_t* utf16_output) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-8 string into UTF-16LE string and stop on error.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-8 string to convert</div>
-<div class="line"> * @param length        the length of the string in bytes</div>
-<div class="line"> * @param utf16_buffer  the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char16_t written if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result convert_utf8_to_utf16le_with_errors(const char * input, size_t length, char16_t* utf16_output) noexcept;</div>
+<div class="line">simdutf_warn_unused result convert_utf8_to_utf16le_with_errors(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, char16_t* utf16_output) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-8 string into UTF-16BE string and stop on error.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-8 string to convert</div>
-<div class="line"> * @param length        the length of the string in bytes</div>
-<div class="line"> * @param utf16_buffer  the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char16_t written if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result convert_utf8_to_utf16be_with_errors(const char * input, size_t length, char16_t* utf16_output) noexcept;</div>
+<div class="line">simdutf_warn_unused result convert_utf8_to_utf16be_with_errors(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, char16_t* utf16_output) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-8 string into UTF-32 string and stop on error.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-8 string to convert</div>
-<div class="line"> * @param length        the length of the string in bytes</div>
-<div class="line"> * @param utf32_buffer  the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char32_t written if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result convert_utf8_to_utf32_with_errors(const char * input, size_t length, char32_t* utf32_output) noexcept;</div>
+<div class="line">simdutf_warn_unused result convert_utf8_to_utf32_with_errors(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, char32_t* utf32_output) noexcept;</div>
 <div class="line"> </div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-16LE string into UTF-8 string and stop on error.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16LE string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @param utf8_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char written if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result convert_utf16le_to_utf8_with_errors(const char16_t * input, size_t length, char* utf8_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused result convert_utf16le_to_utf8_with_errors(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* utf8_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-16BE string into UTF-8 string and stop on error.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16BE string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @param utf8_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char written if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result convert_utf16be_to_utf8_with_errors(const char16_t * input, size_t length, char* utf8_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused result convert_utf16be_to_utf8_with_errors(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* utf8_buffer) noexcept;</div>
 <div class="line"> </div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-32 string into Latin1 string and stop on error.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-32 string to convert</div>
-<div class="line"> * @param length        the length of the string in 4-byte code units (char32_t)</div>
-<div class="line"> * @param latin1_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char written if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result convert_utf32_to_latin1_with_errors(const char32_t * input, size_t length, char* latin1_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused result convert_utf32_to_latin1_with_errors(<span class="keyword">const</span> char32_t * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* latin1_buffer) noexcept;</div>
 <div class="line"> </div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-32 string into UTF-8 string and stop on error.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-32 string to convert</div>
-<div class="line"> * @param length        the length of the string in 4-byte code units (char32_t)</div>
-<div class="line"> * @param utf8_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char written if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result convert_utf32_to_utf8_with_errors(const char32_t * input, size_t length, char* utf8_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused result convert_utf32_to_utf8_with_errors(<span class="keyword">const</span> char32_t * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* utf8_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Using native endianness; Convert possibly broken UTF-32 string into UTF-16</div>
-<div class="line"> * string and stop on error.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-32 string to convert</div>
-<div class="line"> * @param length        the length of the string in 4-byte code units (char32_t)</div>
-<div class="line"> * @param utf16_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char16_t written if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result convert_utf32_to_utf16_with_errors(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused result convert_utf32_to_utf16_with_errors(<span class="keyword">const</span> char32_t * input, <span class="keywordtype">size_t</span> length, char16_t* utf16_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-32 string into UTF-16LE string and stop on error.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-32 string to convert</div>
-<div class="line"> * @param length        the length of the string in 4-byte code units (char32_t)</div>
-<div class="line"> * @param utf16_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char16_t written if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result convert_utf32_to_utf16le_with_errors(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused result convert_utf32_to_utf16le_with_errors(<span class="keyword">const</span> char32_t * input, <span class="keywordtype">size_t</span> length, char16_t* utf16_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-32 string into UTF-16BE string and stop on error.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-32 string to convert</div>
-<div class="line"> * @param length        the length of the string in 4-byte code units (char32_t)</div>
-<div class="line"> * @param utf16_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char16_t written if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result convert_utf32_to_utf16be_with_errors(const char32_t * input, size_t length, char16_t* utf16_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused result convert_utf32_to_utf16be_with_errors(<span class="keyword">const</span> char32_t * input, <span class="keywordtype">size_t</span> length, char16_t* utf16_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Using native endianness; Convert possibly broken UTF-16 string into</div>
-<div class="line"> * UTF-32 string and stop on error.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16 string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @param utf32_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char32_t written if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result convert_utf16_to_utf32_with_errors(const char16_t * input, size_t length, char32_t* utf32_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused result convert_utf16_to_utf32_with_errors(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, char32_t* utf32_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-16LE string into UTF-32 string and stop on error.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16LE string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @param utf32_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char32_t written if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result convert_utf16le_to_utf32_with_errors(const char16_t * input, size_t length, char32_t* utf32_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused result convert_utf16le_to_utf32_with_errors(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, char32_t* utf32_buffer) noexcept;</div>
 <div class="line"> </div>
-<div class="line">/**</div>
-<div class="line"> * Convert possibly broken UTF-16BE string into UTF-32 string and stop on error.</div>
-<div class="line"> *</div>
-<div class="line"> * During the conversion also validation of the input string is done.</div>
-<div class="line"> * This function is suitable to work with inputs from untrusted sources.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16BE string to convert</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @param utf32_buffer   the pointer to buffer that can hold conversion result</div>
-<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char32_t written if successful.</div>
-<div class="line"> */</div>
-<div class="line">simdutf_warn_unused result convert_utf16be_to_utf32_with_errors(const char16_t * input, size_t length, char32_t* utf32_buffer) noexcept;</div>
+<div class="line">simdutf_warn_unused result convert_utf16be_to_utf32_with_errors(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, char32_t* utf32_buffer) noexcept;</div>
 </div><!-- fragment --><p>If you have a UTF-16 input, you may change its endianess with a fast function.</p>
-<div class="fragment"><div class="line"> {c++}</div>
-<div class="line">/**</div>
-<div class="line"> * Change the endianness of the input. Can be used to go from UTF-16LE to UTF-16BE or</div>
-<div class="line"> * from UTF-16BE to UTF-16LE.</div>
-<div class="line"> *</div>
-<div class="line"> * This function does not validate the input.</div>
-<div class="line"> *</div>
-<div class="line"> * This function is not BOM-aware.</div>
-<div class="line"> *</div>
-<div class="line"> * @param input         the UTF-16 string to process</div>
-<div class="line"> * @param length        the length of the string in 2-byte code units (char16_t)</div>
-<div class="line"> * @param output        the pointer to buffer that can hold the conversion result</div>
-<div class="line"> */</div>
-<div class="line">void change_endianness_utf16(const char16_t * input, size_t length, char16_t * output) noexcept;</div>
+<div class="fragment"><div class="line"> </div>
+<div class="line"><span class="keywordtype">void</span> change_endianness_utf16(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, char16_t * output) noexcept;</div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md11"></a>
 The sutf command-line tool</h2>
 <p>We also provide a command-line tool which can be build as follows: </p><div class="fragment"><div class="line">cmake -B build &amp;&amp; cmake --build build --target sutf</div>
@@ -1381,46 +526,45 @@ The sutf command-line tool</h2>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md12"></a>
 Manual implementation selection</h2>
 <p>When compiling the llibrary for x64 processors, we build several implementations of each functions. At runtime, the best implementation is picked automatically. Advanced users may want to pick a particular implementation, thus bypassing our runtime detection. It is possible and even relatively convenient to do so. The following C++ program checks all the available implementation, and selects one as the default:</p>
-<div class="fragment"><div class="line"> {C++}</div>
-<div class="line">#include &quot;simdutf.h&quot;</div>
-<div class="line">#include &lt;cstdlib&gt;</div>
-<div class="line">#include &lt;iostream&gt;</div>
-<div class="line">#include &lt;string&gt;</div>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &quot;simdutf.h&quot;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;cstdlib&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;string&gt;</span></div>
 <div class="line"> </div>
-<div class="line">int main() {</div>
-<div class="line">  // This is just a demonstration, not actual testing required.</div>
-<div class="line">  std::string source = &quot;La vie est belle.&quot;;</div>
+<div class="line"><span class="keywordtype">int</span> main() {</div>
+<div class="line">  <span class="comment">// This is just a demonstration, not actual testing required.</span></div>
+<div class="line">  std::string source = <span class="stringliteral">&quot;La vie est belle.&quot;</span>;</div>
 <div class="line">  std::string chosen_implementation;</div>
-<div class="line">  for (auto &amp;implementation : simdutf::get_available_implementations()) {</div>
-<div class="line">    if (!implementation-&gt;supported_by_runtime_system()) {</div>
-<div class="line">      continue;</div>
+<div class="line">  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;implementation : simdutf::get_available_implementations()) {</div>
+<div class="line">    <span class="keywordflow">if</span> (!implementation-&gt;supported_by_runtime_system()) {</div>
+<div class="line">      <span class="keywordflow">continue</span>;</div>
 <div class="line">    }</div>
-<div class="line">    bool validutf8 = implementation-&gt;validate_utf8(source.c_str(), source.size());</div>
-<div class="line">    if (!validutf8) {</div>
-<div class="line">      return EXIT_FAILURE;</div>
+<div class="line">    <span class="keywordtype">bool</span> validutf8 = implementation-&gt;validate_utf8(source.c_str(), source.size());</div>
+<div class="line">    <span class="keywordflow">if</span> (!validutf8) {</div>
+<div class="line">      <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">    }</div>
-<div class="line">    std::cout &lt;&lt; implementation-&gt;name() &lt;&lt; &quot;: &quot; &lt;&lt; implementation-&gt;description()</div>
+<div class="line">    std::cout &lt;&lt; implementation-&gt;name() &lt;&lt; <span class="stringliteral">&quot;: &quot;</span> &lt;&lt; implementation-&gt;description()</div>
 <div class="line">              &lt;&lt; std::endl;</div>
 <div class="line">    chosen_implementation = implementation-&gt;name();</div>
 <div class="line">  }</div>
-<div class="line">  auto my_implementation =</div>
+<div class="line">  <span class="keyword">auto</span> my_implementation =</div>
 <div class="line">      simdutf::get_available_implementations()[chosen_implementation];</div>
-<div class="line">  if (!my_implementation) {</div>
-<div class="line">    return EXIT_FAILURE;</div>
+<div class="line">  <span class="keywordflow">if</span> (!my_implementation) {</div>
+<div class="line">    <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">  }</div>
-<div class="line">  if (!my_implementation-&gt;supported_by_runtime_system()) {</div>
-<div class="line">    return EXIT_FAILURE;</div>
+<div class="line">  <span class="keywordflow">if</span> (!my_implementation-&gt;supported_by_runtime_system()) {</div>
+<div class="line">    <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">  }</div>
 <div class="line">  simdutf::get_active_implementation() = my_implementation;</div>
-<div class="line">  bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());</div>
-<div class="line">  if (!validutf8) {</div>
-<div class="line">    return EXIT_FAILURE;</div>
+<div class="line">  <span class="keywordtype">bool</span> validutf8 = simdutf::validate_utf8(source.c_str(), source.size());</div>
+<div class="line">  <span class="keywordflow">if</span> (!validutf8) {</div>
+<div class="line">    <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">  }</div>
-<div class="line">  if (simdutf::get_active_implementation()-&gt;name() != chosen_implementation) {</div>
-<div class="line">    return EXIT_FAILURE;</div>
+<div class="line">  <span class="keywordflow">if</span> (simdutf::get_active_implementation()-&gt;name() != chosen_implementation) {</div>
+<div class="line">    <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">  }</div>
-<div class="line">  std::cout &lt;&lt; &quot;I have manually selected: &quot; &lt;&lt; simdutf::get_active_implementation()-&gt;name() &lt;&lt; std::endl;</div>
-<div class="line">  return EXIT_SUCCESS;</div>
+<div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;I have manually selected: &quot;</span> &lt;&lt; simdutf::get_active_implementation()-&gt;name() &lt;&lt; std::endl;</div>
+<div class="line">  <span class="keywordflow">return</span> EXIT_SUCCESS;</div>
 <div class="line">}</div>
 </div><!-- fragment --><p>Within the simdutf library,</p>
 <h2><a class="anchor" id="autotoc_md13"></a>
