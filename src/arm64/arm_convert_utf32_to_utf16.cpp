@@ -16,7 +16,7 @@ std::pair<const char32_t*, char16_t*> arm_convert_utf32_to_utf16(const char32_t*
       const uint16x4_t v_dfff = vmov_n_u16((uint16_t)0xdfff);
       forbidden_bytemask = vorr_u16(vand_u16(vcle_u16(utf16_packed, v_dfff), vcge_u16(utf16_packed, v_d800)), forbidden_bytemask);
 
-      if (!match_system(big_endian)) { utf16_packed = vrev16_u8(utf16_packed); }
+      if (!match_system(big_endian)) { utf16_packed = vreinterpret_u16_u8(vrev16_u8(vreinterpret_u8_u16(utf16_packed))); }
       vst1_u16(utf16_output, utf16_packed);
       utf16_output += 4;
       buf += 4;
@@ -77,7 +77,7 @@ std::pair<result, char16_t*> arm_convert_utf32_to_utf16_with_errors(const char32
         return std::make_pair(result(error_code::SURROGATE, buf - start), reinterpret_cast<char16_t*>(utf16_output));
       }
 
-      if (!match_system(big_endian)) { utf16_packed = vrev16_u8(utf16_packed); }
+      if (!match_system(big_endian)) { utf16_packed = vreinterpret_u16_u8(vrev16_u8(vreinterpret_u8_u16(utf16_packed))); }
       vst1_u16(utf16_output, utf16_packed);
       utf16_output += 4;
       buf += 4;
