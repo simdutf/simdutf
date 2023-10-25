@@ -68,7 +68,7 @@ The simdutf library is used by:
 - [Node.js](https://nodejs.org/en/) (19.4.0 or better, 20.0 or better, 18.15 or better), a standard JavaScript runtime environment,
 - [Bun](https://bun.sh), a fast JavaScript runtime environment,
 - [graaljs](https://github.com/oracle/graaljs), a JavaScript implementation by Oracle,
-- [Couchbase](https://www.couchbase.com),
+- [Couchbase](https://www.couchbase.com), a popular database system,
 - [haskell/text](https://github.com/haskell/text), a library for fast operations over Unicode text,
 - [klogg](https://github.com/variar/klogg), a Really fast log explorer,
 - [Pixie](https://github.com/pixie-io/pixie), observability tool for Kubernetes applications.
@@ -135,7 +135,7 @@ Linux or macOS users might follow the following instructions if they have a rece
 
 1. Pull the library in a directory
    ```
-   wget https://github.com/simdutf/simdutf/releases/download/v4.0.1/singleheader.zip
+   wget https://github.com/simdutf/simdutf/releases/download/v4.0.3/singleheader.zip
    unzip singleheader.zip
    ```
 2. Compile
