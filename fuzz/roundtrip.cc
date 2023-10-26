@@ -25,7 +25,8 @@ static void print_input(const std::string& s, const simdutf::implementation *con
  */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   FuzzedDataProvider fdp(data, size);
-  std::string source = fdp.ConsumeRandomLengthString(1024);
+  constexpr int kMaxStringSize = 1024;
+  std::string source = fdp.ConsumeRandomLengthString(kMaxStringSize);
   for (auto &e : simdutf::get_available_implementations()) {
     if (!e->supported_by_runtime_system()) {
       continue;
@@ -227,6 +228,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     /**
      * Transcoding from UTF-16LE to UTF-8.
      */
+
+    // Get new source data here as this will allow the fuzzer to optimize it's input
+    // for UTF16-LE.
+    source = fdp.ConsumeRandomLengthString(kMaxStringSize);
     bool validutf16le =
         e->validate_utf16le((char16_t *)source.c_str(), source.size() / 2);
     auto rutf16le = e->validate_utf16le_with_errors((char16_t *)source.c_str(), source.size() / 2);
@@ -280,6 +285,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     /**
      * Transcoding from UTF-16BE to UTF-8.
      */
+    // Get new source data here as this will allow the fuzzer to optimize it's input
+    // for UTF16-BE.
+    source = fdp.ConsumeRandomLengthString(kMaxStringSize);
     bool validutf16be =
         e->validate_utf16be((char16_t *)source.c_str(), source.size() / 2);
     auto rutf16be = e->validate_utf16be_with_errors((char16_t *)source.c_str(), source.size() / 2);
@@ -334,6 +342,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     /**
      * Transcoding from latin1 to UTF-8.
      */
+    // Get new source data here as this will allow the fuzzer to optimize it's input
+    // for latin1.
+    source = fdp.ConsumeRandomLengthString(kMaxStringSize);
     bool validlatin1 = true; // has to be
     if (validlatin1) {
       // We need a buffer of size where to write the UTF-8 words.
