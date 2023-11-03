@@ -73,12 +73,12 @@ We adjust for the bytes that have their two most significant bits. This takes ca
  
 static inline size_t latin1_to_utf8_avx512_branch(__m512i input, char *utf8_output) {
   __mmask64 nonascii = _mm512_movepi8_mask(input);
-  size_t nonascii_count = (size_t)count_ones(nonascii);
-  if(nonascii_count > 0){
+  if(nonascii) {
     return latin1_to_utf8_avx512_vec(input, 64, utf8_output, 0);
   } else {
     _mm512_storeu_si512(utf8_output, input);
-    return 64 + nonascii_count;}
+    return 64;
+  }
 }
  
 size_t latin1_to_utf8_avx512_start(const char *buf, size_t len, char *utf8_output) {
