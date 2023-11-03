@@ -70,15 +70,43 @@ We adjust for the bytes that have their two most significant bits. This takes ca
   }
   return output_size;
 }
- 
-static inline size_t latin1_to_utf8_avx512_branch(__m512i input, char *utf8_output) {
+
+
+// We take 32 zero-extended Latin1 characters and we write between 32 and 64 UTF-8 bytes.
+// Returns the number of bytes written.
+static simdutf_really_inline size_t latin1_to_utf8_avx512_vec2(__m512i in, char *utf8_output, __mmask32 is2byte) {
+  const __m512i twobytes = _mm512_ternarylogic_epi32(
+        _mm512_slli_epi16(in, 8), _mm512_srli_epi16(in, 6),
+        _mm512_set1_epi16(0x3f3f), 0xa8); // (A|B)&C
+  in = _mm512_mask_add_epi16(in, is2byte, twobytes,
+                                _mm512_set1_epi16(int16_t(0x80c0)));
+  const __m512i cmpmask = _mm512_set1_epi16(0x0800);
+  // in >= cmpmask, always true for low bytes in 2-byte word.
+  //              , always false for high bytes in ASCII 2-byte word.
+  //              , always true for high bytes in UTF-8 2-byte word.
+  const __mmask64 smoosh = _mm512_cmp_epu8_mask(in, cmpmask, _MM_CMPINT_NLT);
+  const __m512i out = _mm512_maskz_compress_epi8(smoosh, in);
+  _mm512_storeu_epi8(utf8_output, out);
+  return 32 + _mm_popcnt_u32(_cvtmask32_u32(is2byte));
+}
+
+static simdutf_really_inline size_t latin1_to_utf8_avx512_branch( __m512i input, char *utf8_output) {
   __mmask64 nonascii = _mm512_movepi8_mask(input);
-  size_t nonascii_count = (size_t)count_ones(nonascii);
-  if(nonascii_count > 0){
-    return latin1_to_utf8_avx512_vec(input, 64, utf8_output, 0);
+  if(nonascii) {
+    __mmask32 nonascii0 = (__mmask32)nonascii;
+    __mmask32 nonascii1 = (__mmask32)_kshiftri_mask64(nonascii,32);
+    const __m256i h0 = _mm512_castsi512_si256(input);
+    const __m256i h1 = _mm512_extracti64x4_epi64(input, 1);
+    const __m512i input0 = _mm512_cvtepu8_epi16(h0);
+    const __m512i input1 = _mm512_cvtepu8_epi16(h1);
+    size_t written0 = latin1_to_utf8_avx512_vec2(input0, utf8_output, nonascii0);
+    utf8_output += written0;
+    size_t written1 = latin1_to_utf8_avx512_vec2(input1, utf8_output, nonascii1);
+    return written0 + written1;
   } else {
     _mm512_storeu_si512(utf8_output, input);
-    return 64 + nonascii_count;}
+    return 64;
+  }
 }
  
 size_t latin1_to_utf8_avx512_start(const char *buf, size_t len, char *utf8_output) {
