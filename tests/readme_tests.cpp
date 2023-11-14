@@ -79,24 +79,25 @@ TEST(utf8_streaming) {
 
 TEST(utf16_streaming) {
   // We have three sequences of surrogate pairs (UTF-16).
-  const char16_t unicode[] = u"\x3cd8\x10df\x3cd8\x10df\x3cd8\x10df";
+  alignas(char16_t) const char unicode_char[] = "\x3c\xd8\x10\xdf\x3c\xd8\x10\xdf\x3c\xd8\x10\xdf";
+  const char16_t * unicode = reinterpret_cast<const char16_t *>(unicode_char);
   // suppose you want to decode only the start of this string.
   size_t length = 3;
   // Picking 3 units is problematic because we might end up in the middle of a
   // surrogate pair. But we can rewind to the previous code point.
-  length = simdutf::trim_partial_utf16(unicode, length);
+  length = simdutf::trim_partial_utf16le(unicode, length);
   // Now we can transcode safely
-  size_t budget_utf8 = simdutf::utf8_length_from_utf16(unicode, length);
+  size_t budget_utf8 = simdutf::utf8_length_from_utf16le(unicode, length);
   std::unique_ptr<char[]> utf8{new char[budget_utf8]};
   size_t utf8words =
-      simdutf::convert_utf16_to_utf8(unicode, length, utf8.get());
+      simdutf::convert_utf16le_to_utf8(unicode, length, utf8.get());
   // We can then transcode the next batch
   const char16_t * next = unicode + length;
   size_t next_length = sizeof(unicode) - length;
-  size_t next_budget_utf8 = simdutf::utf8_length_from_utf16(next, next_length);
+  size_t next_budget_utf8 = simdutf::utf8_length_from_utf16le(next, next_length);
   std::unique_ptr<char[]> next_utf8{new char[next_budget_utf8]};
   size_t next_utf8words =
-      simdutf::convert_utf16_to_utf8(next, next_length, next_utf8.get());
+      simdutf::convert_utf16le_to_utf8(next, next_length, next_utf8.get());
   ASSERT_EQUAL(next_utf8words, next_budget_utf8);
   ASSERT_EQUAL(utf8words, budget_utf8);
 }
