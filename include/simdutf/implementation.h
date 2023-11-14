@@ -320,7 +320,7 @@ simdutf_warn_unused size_t convert_utf8_to_utf16be(const char * input, size_t le
 
 
   /**
-   * Convert possibly broken UTF-8 string into latin1 string. with errors
+   * Convert possibly broken UTF-8 string into latin1 string with errors.
    *
    * During the conversion also validation of the input string is done.
    * This function is suitable to work with inputs from untrusted sources.
@@ -1636,7 +1636,7 @@ public:
   simdutf_warn_unused virtual size_t convert_utf8_to_latin1(const char * input, size_t length, char* latin1_output) const noexcept = 0;
 
   /**
-   * Convert possibly broken UTF-8 string into latin1 string. with errors
+   * Convert possibly broken UTF-8 string into latin1 string with errors
    *
    * During the conversion also validation of the input string is done.
    * This function is suitable to work with inputs from untrusted sources.
