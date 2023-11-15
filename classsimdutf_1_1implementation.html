@@ -161,7 +161,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:ac9c2c1418f08f84e36c22727879db307"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly broken UTF-8 string into latin1 string.  <a href="classsimdutf_1_1implementation.html#ac9c2c1418f08f84e36c22727879db307">More...</a><br /></td></tr>
 <tr class="separator:ac9c2c1418f08f84e36c22727879db307"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae845d016f715c25475970c4dfcb58a8d"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#ae845d016f715c25475970c4dfcb58a8d">convert_utf8_to_latin1_with_errors</a> (const char *input, size_t length, char *latin1_output) const noexcept=0</td></tr>
-<tr class="memdesc:ae845d016f715c25475970c4dfcb58a8d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly broken UTF-8 string into latin1 string.  <a href="classsimdutf_1_1implementation.html#ae845d016f715c25475970c4dfcb58a8d">More...</a><br /></td></tr>
+<tr class="memdesc:ae845d016f715c25475970c4dfcb58a8d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly broken UTF-8 string into latin1 string with errors.  <a href="classsimdutf_1_1implementation.html#ae845d016f715c25475970c4dfcb58a8d">More...</a><br /></td></tr>
 <tr class="separator:ae845d016f715c25475970c4dfcb58a8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a903279159cb5f5e0e767cce6f1440889"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a903279159cb5f5e0e767cce6f1440889">convert_valid_utf8_to_latin1</a> (const char *input, size_t length, char *latin1_output) const noexcept=0</td></tr>
 <tr class="memdesc:a903279159cb5f5e0e767cce6f1440889"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert valid UTF-8 string into latin1 string.  <a href="classsimdutf_1_1implementation.html#a903279159cb5f5e0e767cce6f1440889">More...</a><br /></td></tr>
@@ -342,7 +342,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <div class="textblock"><p>An implementation of simdutf for a particular CPU architecture. </p>
 <p>Also used to maintain the currently active implementation. The active implementation is automatically initialized on first use to the most advanced implementation supported by the host. </p>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01327">1327</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01389">1389</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="afd306a0bc3e221964af3f31a64784b12"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afd306a0bc3e221964af3f31a64784b12">&#9670;&nbsp;</a></span>autodetect_encoding()</h2>
@@ -1853,8 +1853,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 </table>
 </div><div class="memdoc">
 
-<p>Convert possibly broken UTF-8 string into latin1 string. </p>
-<p>with errors</p>
+<p>Convert possibly broken UTF-8 string into latin1 string with errors. </p>
 <p>During the conversion also validation of the input string is done. This function is suitable to work with inputs from untrusted sources.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -3130,7 +3129,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" &lt;&lt; impl-&gt;description() &lt;&lt; ")" &lt;&lt; endl;
 </pre> <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01348">1348</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01410">1410</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3291,7 +3290,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" &lt;&lt; impl-&gt;description() &lt;&lt; ")" &lt;&lt; endl;
 </pre> <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01338">1338</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01400">1400</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>

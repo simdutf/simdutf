@@ -461,6 +461,54 @@ API</h2>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf16le_to_utf32(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, char32_t* utf32_buffer) noexcept;</div>
 <div class="line"> </div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf16be_to_utf32(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, char32_t* utf32_buffer) noexcept;</div>
+</div><!-- fragment --><p>In some cases, you need to transcode UTF-8 or UTF-16 inputs, but you may have a truncated string, meaning that the last character might be incomplete. In such cases, we recommend trimming the end of your input so you do not encounter an error.</p>
+<div class="fragment"><div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> trim_partial_utf8(<span class="keyword">const</span> <span class="keywordtype">char</span> *input, <span class="keywordtype">size_t</span> length);</div>
+<div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> trim_partial_utf16be(<span class="keyword">const</span> char16_t* input, <span class="keywordtype">size_t</span> length);</div>
+<div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> trim_partial_utf16le(<span class="keyword">const</span> char16_t* input, <span class="keywordtype">size_t</span> length);</div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> trim_partial_utf16(<span class="keyword">const</span> char16_t* input, <span class="keywordtype">size_t</span> length);</div>
+</div><!-- fragment --><p>You may use these <code>trim_</code> functions to decode inputs piece by piece, as in the following examples. First a case where you want to decode a UTF-8 strings in two steps:</p>
+<div class="fragment"><div class="line"><span class="keyword">const</span> <span class="keywordtype">char</span> unicode[] = <span class="stringliteral">&quot;\xc3\xa9\x63ole d&#39;\xc3\xa9t\xc3\xa9&quot;</span>;</div>
+<div class="line"><span class="comment">// suppose you want to decode only the start of this string.</span></div>
+<div class="line"><span class="keywordtype">size_t</span> length = 10;</div>
+<div class="line"><span class="comment">// Picking 10 bytes is problematic because we might end up in the middle of a</span></div>
+<div class="line"><span class="comment">// code point. But we can rewind to the previous code point.</span></div>
+<div class="line">length = simdutf::trim_partial_utf8(unicode, length);</div>
+<div class="line"><span class="comment">// Now we can transcode safely</span></div>
+<div class="line"><span class="keywordtype">size_t</span> budget_utf16 = simdutf::utf16_length_from_utf8(unicode, length);</div>
+<div class="line">std::unique_ptr&lt;char16_t[]&gt; utf16{<span class="keyword">new</span> char16_t[budget_utf16]};</div>
+<div class="line"><span class="keywordtype">size_t</span> utf16words =</div>
+<div class="line">    simdutf::convert_utf8_to_utf16le(unicode, length, utf16.get());</div>
+<div class="line"><span class="comment">// We can then transcode the next batch</span></div>
+<div class="line"><span class="keyword">const</span> <span class="keywordtype">char</span> * next = unicode + length;</div>
+<div class="line"><span class="keywordtype">size_t</span> next_length = <span class="keyword">sizeof</span>(unicode) - length;</div>
+<div class="line"><span class="keywordtype">size_t</span> next_budget_utf16 = simdutf::utf16_length_from_utf8(next, next_length);</div>
+<div class="line">std::unique_ptr&lt;char16_t[]&gt; next_utf16{<span class="keyword">new</span> char16_t[next_budget_utf16]};</div>
+<div class="line"><span class="keywordtype">size_t</span> next_utf16words =</div>
+<div class="line">    simdutf::convert_utf8_to_utf16le(next, next_length, next_utf16.get());</div>
+</div><!-- fragment --><p>You can use the same approach with UTF-16:</p>
+<div class="fragment"><div class="line"><span class="keyword">const</span> char16_t unicode[] = u<span class="stringliteral">&quot;\x3cd8\x10df\x3cd8\x10df\x3cd8\x10df&quot;</span>;</div>
+<div class="line"><span class="comment">// suppose you want to decode only the start of this string.</span></div>
+<div class="line"><span class="keywordtype">size_t</span> length = 3;</div>
+<div class="line"><span class="comment">// Picking 3 units is problematic because we might end up in the middle of a</span></div>
+<div class="line"><span class="comment">// surrogate pair. But we can rewind to the previous code point.</span></div>
+<div class="line">length = simdutf::trim_partial_utf16(unicode, length);</div>
+<div class="line"><span class="comment">// Now we can transcode safely</span></div>
+<div class="line"><span class="keywordtype">size_t</span> budget_utf8 = simdutf::utf8_length_from_utf16(unicode, length);</div>
+<div class="line">std::unique_ptr&lt;char[]&gt; utf8{<span class="keyword">new</span> <span class="keywordtype">char</span>[budget_utf8]};</div>
+<div class="line"><span class="keywordtype">size_t</span> utf8words =</div>
+<div class="line">    simdutf::convert_utf16_to_utf8(unicode, length, utf8.get());</div>
+<div class="line"><span class="comment">// We can then transcode the next batch</span></div>
+<div class="line"><span class="keyword">const</span> char16_t * next = unicode + length;</div>
+<div class="line"><span class="keywordtype">size_t</span> next_length = 6 - length;</div>
+<div class="line"><span class="keywordtype">size_t</span> next_budget_utf8 = simdutf::utf8_length_from_utf16(next, next_length);</div>
+<div class="line">std::unique_ptr&lt;char[]&gt; next_utf8{<span class="keyword">new</span> <span class="keywordtype">char</span>[next_budget_utf8]};</div>
+<div class="line"><span class="keywordtype">size_t</span> next_utf8words =</div>
+<div class="line">    simdutf::convert_utf16_to_utf8(next, next_length, next_utf8.get());</div>
 </div><!-- fragment --><p>We have more advanced conversion functions which output a <code><a class="el" href="structsimdutf_1_1result.html">simdutf::result</a></code> structure with an indication of the error type and a <code>count</code> entry (e.g., <code>convert_utf8_to_utf16le_with_errors</code>). They are well suited when you expect that there might be errors in the input that require further investigation. The <code>count</code> field contains the location of the error in the input in code units, if there is an error, or otherwise the number of code units written. You may use these functions as follows:</p>
 <div class="fragment"><div class="line"><span class="comment">// this UTF-8 string has a bad byte at index 5</span></div>
 <div class="line">std::string bad_utf8 = <span class="stringliteral">&quot;\xc3\xa9\xc3\xa9\x20\xff\xc3\xa9&quot;</span>;</div>
