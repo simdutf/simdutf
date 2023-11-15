@@ -34,7 +34,7 @@ void test_impl_##name(const simdutf::implementation& impl); \
 void name(const simdutf::implementation& impl) {            \
   std::string title = #name;                                \
   std::replace(title.begin(), title.end(), '_', ' ');       \
-  printf("%s...", title.c_str()); fflush(stdout);           \
+  printf("Running '%s'... ", title.c_str()); fflush(stdout);\
   test_impl_##name(impl);                                   \
   puts(" OK");                                              \
 }                                                           \

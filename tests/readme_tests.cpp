@@ -93,7 +93,7 @@ TEST(utf16_streaming) {
       simdutf::convert_utf16le_to_utf8(unicode, length, utf8.get());
   // We can then transcode the next batch
   const char16_t * next = unicode + length;
-  size_t next_length = sizeof(unicode) - length;
+  size_t next_length = sizeof(unicode)/sizeof(char16_t) - length;
   size_t next_budget_utf8 = simdutf::utf8_length_from_utf16le(next, next_length);
   std::unique_ptr<char[]> next_utf8{new char[next_budget_utf8]};
   size_t next_utf8words =
