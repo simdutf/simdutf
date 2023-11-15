@@ -4,7 +4,7 @@ std::pair<const char16_t*, char*> arm_convert_utf16_to_latin1(const char16_t* bu
   const char16_t* end = buf + len;
   while (buf + 8 <= end) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
-    if (!match_system(big_endian)) { in = vrev16q_u8(in); }
+    if (!match_system(big_endian)) { in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in))); }
     if (vmaxvq_u16(in) <= 0xff) {
         // 1. pack the bytes
         uint8x8_t latin1_packed = vmovn_u16(in);
@@ -26,7 +26,7 @@ std::pair<result, char*> arm_convert_utf16_to_latin1_with_errors(const char16_t*
   const char16_t* end = buf + len;
   while (buf + 8 <= end) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
-    if (!match_system(big_endian)) { in = vrev16q_u8(in); }
+    if (!match_system(big_endian)) { in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in))); }
     if (vmaxvq_u16(in) <= 0xff) {
         // 1. pack the bytes
         uint8x8_t latin1_packed = vmovn_u16(in);
