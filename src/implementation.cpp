@@ -28,6 +28,9 @@ std::string toBinaryString(T b) {
 #include "simdutf/ppc64.h"
 #include "simdutf/fallback.h" // have it always last.
 
+#include "scalar/utf8.h"
+#include "scalar/utf16.h"
+
 namespace simdutf {
 bool implementation::supported_by_runtime_system() const {
   uint32_t required_instruction_sets = this->required_instruction_sets();
@@ -1182,6 +1185,25 @@ const implementation * builtin_implementation() {
   return builtin_impl;
 }
 
+simdutf_warn_unused size_t trim_partial_utf8(const char *input, size_t length) {
+  return scalar::utf8::trim_partial_utf8(input, length);
+}
+
+simdutf_warn_unused size_t trim_partial_utf16be(const char16_t* input, size_t length) {
+  return scalar::utf16::trim_partial_utf16<BIG>(input, length);
+}
+
+simdutf_warn_unused size_t trim_partial_utf16le(const char16_t* input, size_t length) {
+  return scalar::utf16::trim_partial_utf16<LITTLE>(input, length);
+}
+
+simdutf_warn_unused size_t trim_partial_utf16(const char16_t* input, size_t length) {
+  #if SIMDUTF_IS_BIG_ENDIAN
+  return trim_partial_utf16be(input, length);
+  #else
+  return trim_partial_utf16le(input, length);
+  #endif
+}
 
 } // namespace simdutf
 

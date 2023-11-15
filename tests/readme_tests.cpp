@@ -53,7 +53,54 @@ int main_demo() {
   return EXIT_SUCCESS;
 }
 
+TEST(utf8_streaming) {
+  const char unicode[] = "\xc3\xa9\x63ole d'\xc3\xa9t\xc3\xa9";
+  // suppose you want to decode only the start of this string.
+  size_t length = 10;
+  // Picking 10 bytes is problematic because we might end up in the middle of a
+  // code point. But we can rewind to the previous code point.
+  length = simdutf::trim_partial_utf8(unicode, length);
+  // Now we can transcode safely
+  size_t budget_utf16 = simdutf::utf16_length_from_utf8(unicode, length);
+  std::unique_ptr<char16_t[]> utf16{new char16_t[budget_utf16]};
+  size_t utf16words =
+      simdutf::convert_utf8_to_utf16le(unicode, length, utf16.get());
+  // We can then transcode the next batch
+  const char * next = unicode + length;
+  size_t next_length = sizeof(unicode) - length;
+  size_t next_budget_utf16 = simdutf::utf16_length_from_utf8(next, next_length);
+  std::unique_ptr<char16_t[]> next_utf16{new char16_t[next_budget_utf16]};
+  size_t next_utf16words =
+      simdutf::convert_utf8_to_utf16le(next, next_length, next_utf16.get());
+  ASSERT_EQUAL(next_utf16words, next_budget_utf16);
+  ASSERT_EQUAL(utf16words, budget_utf16);
+}
 
+
+TEST(utf16_streaming) {
+  // We have three sequences of surrogate pairs (UTF-16).
+  alignas(char16_t) const char unicode_char[] = "\x3c\xd8\x10\xdf\x3c\xd8\x10\xdf\x3c\xd8\x10\xdf";
+  const char16_t * unicode = reinterpret_cast<const char16_t *>(unicode_char);
+  // suppose you want to decode only the start of this string.
+  size_t length = 3;
+  // Picking 3 units is problematic because we might end up in the middle of a
+  // surrogate pair. But we can rewind to the previous code point.
+  length = simdutf::trim_partial_utf16le(unicode, length);
+  // Now we can transcode safely
+  size_t budget_utf8 = simdutf::utf8_length_from_utf16le(unicode, length);
+  std::unique_ptr<char[]> utf8{new char[budget_utf8]};
+  size_t utf8words =
+      simdutf::convert_utf16le_to_utf8(unicode, length, utf8.get());
+  // We can then transcode the next batch
+  const char16_t * next = unicode + length;
+  size_t next_length = 6 - length;
+  size_t next_budget_utf8 = simdutf::utf8_length_from_utf16le(next, next_length);
+  std::unique_ptr<char[]> next_utf8{new char[next_budget_utf8]};
+  size_t next_utf8words =
+      simdutf::convert_utf16le_to_utf8(next, next_length, next_utf8.get());
+  ASSERT_EQUAL(next_utf8words, next_budget_utf8);
+  ASSERT_EQUAL(utf8words, budget_utf8);
+}
 
 TEST(error_location_badascii) {
   // this ASCII string has a bad byte at index 5

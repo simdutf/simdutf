@@ -103,6 +103,18 @@ simdutf_really_inline void change_endianness_utf16(const char16_t* in, size_t si
   }
 }
 
+
+template <endianness big_endian>
+simdutf_warn_unused inline size_t trim_partial_utf16(const char16_t* input, size_t length) {
+  if (length <= 1) {
+    return length;
+  }
+  uint16_t last_word = uint16_t(input[length-1]);
+  last_word = !match_system(big_endian) ? swap_bytes(last_word) : last_word;
+  length -= ((last_word & 0xFC00) == 0xD800);
+  return length;
+}
+
 } // utf16 namespace
 } // unnamed namespace
 } // namespace scalar

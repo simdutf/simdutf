@@ -19,11 +19,11 @@ jobs:
           cd build &&
           cmake -DSIMDUTF_SANITIZE=ON ..  &&
           cmake --build .   &&
-          ctest -j --output-on-failure
+          ctest --output-on-failure
       - name: Use cmake with undefined behavior sanitizer
         run: |
           mkdir buildundef &&
           cd buildundef &&
           cmake -DSIMDUTF_SANITIZE_UNDEFINED=ON ..  &&
           cmake --build .   &&
-          ctest -j --output-on-failure
+          ctest --output-on-failure
