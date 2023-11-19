@@ -35,7 +35,7 @@ simdutf_really_inline uint16x4_t convert_utf8_3_byte_to_utf16(uint8x16_t in) {
   // Low half contains  10cccccc|1110aaaa
   // High half contains 10bbbbbb|10bbbbbb
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-  const uint8x16_t sh = make_uint8x16_t(0, 2, 3, 5, 6, 8, 9, 11, 1, 1, 4, 4, 7, 7, 10, 10);
+  const uint8x16_t sh = simdutf_make_uint8x16_t(0, 2, 3, 5, 6, 8, 9, 11, 1, 1, 4, 4, 7, 7, 10, 10);
 #else
   const uint8x16_t sh = {0, 2, 3, 5, 6, 8, 9, 11, 1, 1, 4, 4, 7, 7, 10, 10};
 #endif
