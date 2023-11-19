@@ -1,5 +1,5 @@
-#ifndef ERROR_H
-#define ERROR_H
+#ifndef SIMDUTF_ERROR_H
+#define SIMDUTF_ERROR_H
 namespace simdutf {
 
 enum error_code {
