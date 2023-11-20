@@ -384,7 +384,7 @@ std::pair<result, char*> arm_convert_utf32_to_utf8_with_errors(const char32_t* b
                                       0x0010, 0x0040,
                                       0x0100, 0x0400,
                                       0x1000, 0x4000 );
-          const uint16x8_t twomask = simdutf_16x8_t(0x0002, 0x0008,
+          const uint16x8_t twomask = simdutf_make_uint16x8_t(0x0002, 0x0008,
                                       0x0020, 0x0080,
                                       0x0200, 0x0800,
                                       0x2000, 0x8000 );
