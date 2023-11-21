@@ -289,7 +289,7 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
 }
 
 simdutf_warn_unused size_t implementation::latin1_length_from_utf8(const char* buf, size_t len) const noexcept {
-  return scalar::utf8::latin1_length_from_utf8(buf,len);
+  return scalar::utf8::count_code_points(buf,len);
 }
 
 simdutf_warn_unused size_t implementation::latin1_length_from_utf16(size_t length) const noexcept {

@@ -62,8 +62,7 @@ using namespace simd;
         }
       }
       if(pos < size) {
-        size_t howmany  = scalar::utf8_to_latin1::convert(in + pos, size - pos, latin1_output);
-        if(howmany == 0) { return 0; }
+        size_t howmany  = scalar::utf8_to_latin1::convert_valid(in + pos, size - pos, latin1_output);
         latin1_output += howmany;
       }
       return latin1_output - start;

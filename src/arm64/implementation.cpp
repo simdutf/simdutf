@@ -145,8 +145,6 @@ simdutf_really_inline uint16x8_t convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in
 
 // placeholder scalars
 #include "scalar/latin1.h"
-//#include "scalar/utf8_to_latin1/valid_utf8_to_latin1.h"
-//#include "scalar/utf8_to_latin1/utf8_to_latin1.h"
 
 //
 // Implementation-specific overrides
@@ -251,7 +249,6 @@ simdutf_warn_unused size_t implementation::convert_latin1_to_utf8(const char * b
       ret.first, len - (ret.first - buf), ret.second);
     converted_chars += scalar_converted_chars;
   }
-
   return converted_chars;
 }
 
@@ -613,8 +610,16 @@ simdutf_warn_unused result implementation::convert_utf32_to_latin1_with_errors(c
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) const noexcept {
-  // optimization opportunity: implement a custom function.
-  return convert_utf32_to_latin1(buf,len,latin1_output);
+  std::pair<const char32_t*, char*> ret = arm_convert_utf32_to_latin1(buf, len, latin1_output);
+  if (ret.first == nullptr) { return 0; }
+  size_t saved_bytes = ret.second - latin1_output;
+
+  if (ret.first != buf + len) {
+    const size_t scalar_saved_bytes = scalar::utf32_to_latin1::convert_valid(
+                                        ret.first, len - (ret.first - buf), ret.second);
+    saved_bytes += scalar_saved_bytes;
+  }
+  return saved_bytes;
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf8(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
@@ -743,11 +748,7 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char * 
     // vertical addition
     result -= vaddvq_s8(vreinterpretq_s8_u8(withhighbit));
   }
-  // scalar tail
-  for (uint8_t j = 0; j < rem; j++) {
-    result += (simd_end[j] >> 7);
-  }
-  return result + length;
+  return result + (length / lanes) * lanes + scalar::latin1::utf8_length_from_latin1((const char*)simd_end, rem);
 }
 
 simdutf_warn_unused size_t implementation::utf8_length_from_utf16le(const char16_t * input, size_t length) const noexcept {
