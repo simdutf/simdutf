@@ -29,9 +29,9 @@ TEST(convert_all_latin1) {
         return implementation.utf8_length_from_latin1(latin1, size); 
       };
         
-        simdutf::tests::helpers::transcode_latin1_to_utf8_test_base test(generator, 256);
-        ASSERT_TRUE(test(procedure));
-        ASSERT_TRUE(test.check_size(size_procedure));
+      simdutf::tests::helpers::transcode_latin1_to_utf8_test_base test(generator, 256);
+      ASSERT_TRUE(test(procedure));
+      ASSERT_TRUE(test.check_size(size_procedure));
   }
 }
 

@@ -16,15 +16,6 @@ inline size_t convert(const char *buf, size_t len, char32_t *utf32_output) {
   return utf32_output - start;
 }
 
-inline result convert_with_errors(const char32_t *buf, size_t len, char32_t *utf32_output) {
-  const uint32_t *data = reinterpret_cast<const uint32_t *>(buf);
-  char32_t* start{utf32_output};
-  for (size_t i = 0; i < len; i++) {
-    *utf32_output++ = (char32_t)data[i];
-  }
-  return result(error_code::SUCCESS, utf32_output - start);
-}
-
 } // latin1_to_utf32 namespace
 } // unnamed namespace
 } // namespace scalar

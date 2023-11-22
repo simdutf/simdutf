@@ -185,16 +185,6 @@ inline size_t utf16_length_from_utf8(const char* buf, size_t len) {
     return counter;
 }
 
-inline size_t latin1_length_from_utf8(const char *buf, size_t len) {
-  const uint8_t * c = reinterpret_cast<const uint8_t *>(buf);
-
-    size_t answer = len;
-    for(size_t i = 0; i < len; i++) {
-        if((c[i] & 0b11100000) == 0b11000000) { answer--; } // if we have a two-byte UTF8 character
-    }
-    return answer;
-}
-
 simdutf_warn_unused inline size_t trim_partial_utf8(const char *input, size_t length) {
   if (length < 3) {
     switch (length) {
