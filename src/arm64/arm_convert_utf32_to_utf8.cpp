@@ -50,7 +50,7 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
         const uint8x16_t utf8_unpacked = vreinterpretq_u8_u16(vbslq_u16(one_byte_bytemask, utf16_packed, t4));
         // 3. prepare bitmask for 8-bit lookup
   #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-        const uint16x8_t mask = make_uint16x8_t(0x0001, 0x0004,
+        const uint16x8_t mask = simdutf_make_uint16x8_t(0x0001, 0x0004,
                                   0x0010, 0x0040,
                                   0x0002, 0x0008,
                                   0x0020, 0x0080);
@@ -80,7 +80,7 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
         forbidden_bytemask = vorrq_u16(vandq_u16(vcleq_u16(utf16_packed, v_dfff), vcgeq_u16(utf16_packed, v_d800)), forbidden_bytemask);
 
   #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-          const uint16x8_t dup_even = make_uint16x8_t(0x0000, 0x0202, 0x0404, 0x0606,
+          const uint16x8_t dup_even = simdutf_make_uint16x8_t(0x0000, 0x0202, 0x0404, 0x0606,
                                       0x0808, 0x0a0a, 0x0c0c, 0x0e0e);
   #else
           const uint16x8_t dup_even = {0x0000, 0x0202, 0x0404, 0x0606,
@@ -142,11 +142,11 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
           const uint16x8_t v_007f = vmovq_n_u16((uint16_t)0x007F);
           const uint16x8_t one_byte_bytemask = vcleq_u16(utf16_packed, v_007f);
   #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-          const uint16x8_t onemask = make_uint16x8_t(0x0001, 0x0004,
+          const uint16x8_t onemask = simdutf_make_uint16x8_t(0x0001, 0x0004,
                                       0x0010, 0x0040,
                                       0x0100, 0x0400,
                                       0x1000, 0x4000 );
-          const uint16x8_t twomask = make_uint16x8_t(0x0002, 0x0008,
+          const uint16x8_t twomask = simdutf_make_uint16x8_t(0x0002, 0x0008,
                                       0x0020, 0x0080,
                                       0x0200, 0x0800,
                                       0x2000, 0x8000 );
@@ -283,7 +283,7 @@ std::pair<result, char*> arm_convert_utf32_to_utf8_with_errors(const char32_t* b
         const uint8x16_t utf8_unpacked = vreinterpretq_u8_u16(vbslq_u16(one_byte_bytemask, utf16_packed, t4));
         // 3. prepare bitmask for 8-bit lookup
   #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-        const uint16x8_t mask = make_uint16x8_t(0x0001, 0x0004,
+        const uint16x8_t mask = simdutf_make_uint16x8_t(0x0001, 0x0004,
                                   0x0010, 0x0040,
                                   0x0002, 0x0008,
                                   0x0020, 0x0080);
@@ -318,7 +318,7 @@ std::pair<result, char*> arm_convert_utf32_to_utf8_with_errors(const char32_t* b
         }
 
   #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-          const uint16x8_t dup_even = make_uint16x8_t(0x0000, 0x0202, 0x0404, 0x0606,
+          const uint16x8_t dup_even = simdutf_make_uint16x8_t(0x0000, 0x0202, 0x0404, 0x0606,
                                       0x0808, 0x0a0a, 0x0c0c, 0x0e0e);
   #else
           const uint16x8_t dup_even = {0x0000, 0x0202, 0x0404, 0x0606,
@@ -380,11 +380,11 @@ std::pair<result, char*> arm_convert_utf32_to_utf8_with_errors(const char32_t* b
           const uint16x8_t v_007f = vmovq_n_u16((uint16_t)0x007F);
           const uint16x8_t one_byte_bytemask = vcleq_u16(utf16_packed, v_007f);
   #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-          const uint16x8_t onemask = make_uint16x8_t(0x0001, 0x0004,
+          const uint16x8_t onemask = simdutf_make_uint16x8_t(0x0001, 0x0004,
                                       0x0010, 0x0040,
                                       0x0100, 0x0400,
                                       0x1000, 0x4000 );
-          const uint16x8_t twomask = make_uint16x8_t(0x0002, 0x0008,
+          const uint16x8_t twomask = simdutf_make_uint16x8_t(0x0002, 0x0008,
                                       0x0020, 0x0080,
                                       0x0200, 0x0800,
                                       0x2000, 0x8000 );
