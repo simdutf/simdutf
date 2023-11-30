@@ -454,7 +454,6 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_latin1(const char32_
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_latin1_with_errors(const char32_t* buf, size_t len, char* latin1_output) const noexcept {
-  return scalar::utf32_to_latin1::convert_with_errors(buf,len,latin1_output);
   // ret.first.count is always the position in the buffer, not the number of code units written even if finished
   std::pair<result, char*> ret = avx2_convert_utf32_to_latin1_with_errors(buf, len, latin1_output);
   if (ret.first.count != len) {
