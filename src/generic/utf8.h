@@ -33,11 +33,6 @@ simdutf_really_inline size_t utf16_length_from_utf8(const char* in, size_t size)
     }
     return count + scalar::utf8::utf16_length_from_utf8(in + pos, size - pos);
 }
-
-
-simdutf_really_inline size_t utf32_length_from_utf8(const char* in, size_t size) {
-    return count_code_points(in, size);
-}
 } // utf8 namespace
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
