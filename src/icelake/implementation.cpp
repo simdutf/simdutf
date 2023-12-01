@@ -123,7 +123,6 @@ implementation::detect_encodings(const char *input,
           }
           return simdutf::encoding_type::unspecified;
         }
-        break;
       }
       // If no surrogate, validate under other encodings as well
 

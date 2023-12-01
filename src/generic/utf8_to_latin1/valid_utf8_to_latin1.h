@@ -68,7 +68,7 @@ using namespace simd;
       return latin1_output - start;
     }
 
-  }; 
+  }
 }   // utf8_to_latin1 namespace
 }   // unnamed namespace
 }   // namespace SIMDUTF_IMPLEMENTATION

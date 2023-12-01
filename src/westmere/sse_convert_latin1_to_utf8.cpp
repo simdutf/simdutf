@@ -79,4 +79,4 @@ std::pair<const char* const, char* const> sse_convert_latin1_to_utf8(
   }
 
   return std::make_pair(latin_input, utf8_output);
-};
+}
