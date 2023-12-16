@@ -22,4 +22,4 @@ add_library(simdutf_tests_reference STATIC
   validate_latin1.cpp
   validate_latin1.h)
 add_library(simdutf::tests::reference ALIAS simdutf_tests_reference)
-target_link_libraries(simdutf_tests_reference PUBLIC simdutf)
+target_link_libraries(simdutf_tests_reference PRIVATE simdutf)
