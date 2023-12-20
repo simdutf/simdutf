@@ -105,12 +105,12 @@ TEST(convert_fails_if_input_too_large) {
 
   for (size_t j = 0; j < 1000; j++) {
     uint16_t wrong_value = generator();
-    #if SIMDUTF_IS_BIG_ENDIAN // Big endian systems invert the declared generator's numbers when commited to memory.
+    #if SIMDUTF_IS_BIG_ENDIAN // Big endian systems invert the declared generator's numbers when committed to memory.
     // Each codepoints above 255 are thus mirrored.
     // e.g. abcd becomes cdab, and vice versa. This is for most codepoints,not a cause for concern.
     // One case is however problematic, that of the numbers in the BE format 0xYY00 where the mirror image indicates a number beneath 255
-    // which is undesirable in this particular test. 
-    if ((wrong_value & 0xFF00) != 0){ 
+    // which is undesirable in this particular test.
+    if ((wrong_value & 0xFF00) != 0){
       // In this case, we swap bytes of the generated value:
       wrong_value = uint16_t((wrong_value >> 8) | (wrong_value << 8));
     }

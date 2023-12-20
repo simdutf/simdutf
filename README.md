@@ -1542,7 +1542,7 @@ simdutf_warn_unused result convert_utf16be_to_utf32_with_errors(const char16_t *
 
 ```
 
-If you have a UTF-16 input, you may change its endianess with a fast function.
+If you have a UTF-16 input, you may change its endianness with a fast function.
 
 ```cpp
 /**

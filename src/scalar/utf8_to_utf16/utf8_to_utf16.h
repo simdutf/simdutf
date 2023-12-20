@@ -196,7 +196,7 @@ inline result convert_with_errors(const char* buf, size_t len, char16_t* utf16_o
  *
  * The caller is responsible to ensure that len > 0.
  *
- * If the error is believed to have occured prior to 'buf', the count value contain in the result
+ * If the error is believed to have occurred prior to 'buf', the count value contain in the result
  * will be SIZE_T - 1, SIZE_T - 2, or SIZE_T - 3.
  */
 template <endianness endian>
