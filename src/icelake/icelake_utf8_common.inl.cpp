@@ -140,7 +140,7 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
       __m512i indexofthirdlastbytes = _mm512_add_epi16(mask_ffffffff,
                                                        indexofsecondlastbytes); // indices of the second last bytes
       __m512i thirdlastbyte = _mm512_maskz_mov_epi8(m34,
-                                                    clearedbytes); // only those that are the third last byte of a sequece
+                                                    clearedbytes); // only those that are the third last byte of a sequence
       __m512i thirdlastbytes = _mm512_maskz_permutexvar_epi8(0x5555555555555555, indexofthirdlastbytes,
                                                              thirdlastbyte); // the third last bytes (of three byte sequences, hi
                                                                              // surrogate)
@@ -202,7 +202,7 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
     __m512i indexofthirdlastbytes = _mm512_add_epi16(mask_ffffffff,
                                                      indexofsecondlastbytes); // indices of the second last bytes
     __m512i thirdlastbyte = _mm512_maskz_mov_epi8(m34,
-                                                  clearedbytes); // only those that are the third last byte of a sequece
+                                                  clearedbytes); // only those that are the third last byte of a sequence
     __m512i thirdlastbytes = _mm512_maskz_permutexvar_epi8(0x5555555555555555, indexofthirdlastbytes,
                                                            thirdlastbyte); // the third last bytes (of three byte sequences, hi
                                                                            // surrogate)
@@ -258,7 +258,7 @@ simdutf_really_inline bool process_block_utf8_to_utf16(const char *&in, char16_t
   }
   // Fast path 2: all ASCII or 2 byte
   __mmask64 continuation_or_ascii = (tail == SIMDUTF_FULL) ? _knot_mask64(m234) : _kand_mask64(_knot_mask64(m234), b);
-  // on top of -0xc0 we substract -2 which we get back later of the
+  // on top of -0xc0 we subtract -2 which we get back later of the
   // continuation byte tags
   __m512i leading2byte = _mm512_maskz_sub_epi8(m234, input, mask_c2c2c2c2);
   __mmask64 leading = tail == (tail == SIMDUTF_FULL) ? _kor_mask64(m1, m234) : _kand_mask64(_kor_mask64(m1, m234), b); // first bytes of each sequence
@@ -506,7 +506,7 @@ __m512i rotate_by_N_epi8(const __m512i input) {
     stored at separate 32-bit lanes.
 
     For each lane we have also a character class (`char_class), given in form
-    0x8080800N, where N is 4 higest bits from the leading byte; 0x80 resets
+    0x8080800N, where N is 4 highest bits from the leading byte; 0x80 resets
     corresponding bytes during pshufb.
 */
 simdutf_really_inline __m512i expanded_utf8_to_utf32(__m512i char_class, __m512i utf8) {

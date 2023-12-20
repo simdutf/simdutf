@@ -56,7 +56,7 @@ simdutf_really_inline size_t process_block_from_utf8_to_latin1(const char *buf, 
   //  _mm512_storeu_si512((__m512i *)latin_output, output); I tried using
   //  _mm512_storeu_si512 and have the next process_block start from the
   //  "written_out" point but the compiler shuffles memory in such a way that it
-  //  is signifcantly slower...
+  //  is significantly slower...
   // ****************************
   _mm512_mask_storeu_epi8((__m512i *)latin_output, store_mask, output);
 
