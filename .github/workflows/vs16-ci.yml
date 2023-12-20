@@ -16,7 +16,7 @@ jobs:
           - {gen: Visual Studio 16 2019, arch: Win32, shared: OFF}
     steps:
     - name: checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Configure
       run: |
         cmake -G "${{matrix.gen}}" -DSIMDUTF_BENCHMARKS=ON -A ${{matrix.arch}} -DBUILD_SHARED_LIBS=${{matrix.shared}} -B build
