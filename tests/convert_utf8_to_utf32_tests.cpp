@@ -2,7 +2,8 @@
 
 #include <array>
 #include <iostream>
-
+#include <memory>
+#include <string>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
 #include <tests/helpers/transcode_test_base.h>
@@ -145,7 +146,7 @@ TEST(convert_null_4_UTF8_bytes) {
 }
 
 TEST(convert_invalid_special_cases) {
-  std::string source =
+  std::string source(
       "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
       "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
       "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -202,11 +203,13 @@ TEST(convert_invalid_special_cases) {
       "\x00\x14\x00\x0a\x02\x6c\x6f\x73\x74\x2b\x66\x6f\x75\x6e\x64\x00\x00\x0c"
       "\x00\x00\x00\x14\x00\x0b\x02\x61\x5f\x64\x69\x72\x65\x63\x74\x6f\x72\x79"
       "\x00\x0e\x00\x00\x00\x18\x00\x0d\x01\x70\x61\x73\x73\x77\x6f\x72\x64\x73"
-      "\x2e\x74\x78\x74\x00\x00\x00\x10\x00\x00\x00\x9c\x03\x06\x07\x61";
+      "\x2e\x74\x78\x74\x00\x00\x00\x10\x00\x00\x00\x9c\x03\x06\x07\x61",
+      1024);
 
   // invalid input!!!
   size_t expected_utf32words =
       implementation.utf32_length_from_utf8(source.data(), source.size());
+  std::cout << "expected output " << expected_utf32words << std::endl;
   std::unique_ptr<char32_t[]> utf32_output{new char32_t[expected_utf32words]};
   size_t utf32words = implementation.convert_utf8_to_utf32(
       source.c_str(), source.size(), utf32_output.get());
