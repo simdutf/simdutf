@@ -33,10 +33,9 @@ simdutf_unused simdutf_really_inline simd8<bool> must_be_continuation(const simd
 }
 
 simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> prev2, const simd8<uint8_t> prev3) {
-  simd8<uint8_t> is_third_byte  = prev2.saturating_sub(0b11100000u-1); // Only 111_____ will be > 0
-  simd8<uint8_t> is_fourth_byte = prev3.saturating_sub(0b11110000u-1); // Only 1111____ will be > 0
-  // Caller requires a bool (all 1's). All values resulting from the subtraction will be <= 64, so signed comparison is fine.
-  return simd8<int8_t>(is_third_byte | is_fourth_byte) > int8_t(0);
+  simd8<uint8_t> is_third_byte  = prev2.saturating_sub(0xe0u-0x80); // Only 111_____ will be > 0x80
+  simd8<uint8_t> is_fourth_byte = prev3.saturating_sub(0xf0u-0x80); // Only 1111____ will be > 0x80
+  return simd8<bool>(is_third_byte | is_fourth_byte);
 }
 
 #include "haswell/avx2_detect_encodings.cpp"
