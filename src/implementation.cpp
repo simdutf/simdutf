@@ -858,7 +858,7 @@ const implementation * get_default_implementation() {
 }
 #else
 internal::atomic_ptr<const implementation>& get_default_implementation() {
-  return internal::get_active_implementation();
+  return get_active_implementation();
 }
 #endif
 #define SIMDUTF_GET_CURRENT_IMPLEMENTION
