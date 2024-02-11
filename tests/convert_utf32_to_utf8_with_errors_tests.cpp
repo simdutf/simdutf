@@ -2,6 +2,7 @@
 
 #include <array>
 #include <iostream>
+#include <memory>
 
 #include <tests/reference/validate_utf32.h>
 #include <tests/reference/decode_utf32.h>
