@@ -5,8 +5,9 @@ std::pair<const char32_t*, char*> arm_convert_utf32_to_utf8(const char32_t* buf,
   const uint16x8_t v_c080 = vmovq_n_u16((uint16_t)0xc080);
 
   uint16x8_t forbidden_bytemask = vmovq_n_u16(0x0);
+  const size_t safety_margin = 12; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
 
-  while (buf + 8 < end) {
+  while (buf + 16 + safety_margin < end) {
     uint32x4_t in = vld1q_u32(reinterpret_cast<const uint32_t *>(buf));
     uint32x4_t nextin = vld1q_u32(reinterpret_cast<const uint32_t *>(buf+4));
 
@@ -238,8 +239,9 @@ std::pair<result, char*> arm_convert_utf32_to_utf8_with_errors(const char32_t* b
   const char32_t* end = buf + len;
 
   const uint16x8_t v_c080 = vmovq_n_u16((uint16_t)0xc080);
+  const size_t safety_margin = 12; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
 
-  while (buf + 8 < end) {
+  while (buf + 16 + safety_margin < end) {
     uint32x4_t in = vld1q_u32(reinterpret_cast<const uint32_t *>(buf));
     uint32x4_t nextin = vld1q_u32(reinterpret_cast<const uint32_t *>(buf+4));
 

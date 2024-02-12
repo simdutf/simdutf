@@ -2,6 +2,7 @@
 
 #include <array>
 #include <iostream>
+#include <memory>
 
 #include <tests/reference/validate_utf32.h>
 #include <tests/reference/decode_utf32.h>
@@ -154,6 +155,19 @@ TEST(convert_fails_if_input_too_large) {
   }
 }
 
+TEST(special_cases) {
+  const uint32_t utf32[] = {0x0000, 0x0054, 0x0001, 0x0000, 0x0000, 0x0007, 0x005d, 0x027f, 0x001a};
+  const char expected[] = "\x00\x54\x01\x00\x00\x07\x5d\xc9\xbf\x1a";
+  size_t utf8len = implementation.utf8_length_from_utf32((const char32_t*)utf32, 9);
+  std::unique_ptr<char[]> utf8(new char[utf8len]);
+  simdutf::result res = implementation.convert_utf32_to_utf8_with_errors((const char32_t*)utf32, 9, utf8.get());
+  ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
+  size_t utf8size = res.count;
+  for(size_t i = 0; i < utf8len; i++) {
+    ASSERT_TRUE(utf8[i] == expected[i]);
+  }
+  ASSERT_TRUE(utf8size == utf8len);
+}
 int main(int argc, char* argv[]) {
   return simdutf::test::main(argc, argv);
 }
