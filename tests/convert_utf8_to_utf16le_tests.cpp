@@ -245,6 +245,17 @@ TEST(issue111) {
 }
 #endif
 
+TEST(special_cases) {
+  const uint8_t utf8[] = {0xC2, 0xA9}; // copyright sign
+  const uint8_t expected[] = {0xA9, 0x00}; // expected UTF-16LE
+  size_t utf16len = implementation.utf16_length_from_utf8((const char*)utf8, 2);
+  ASSERT_TRUE(utf16len == 1);
+  std::unique_ptr<char16_t[]> utf16(new char16_t[utf16len]);
+  size_t utf16size = implementation.convert_utf8_to_utf16le((const char*)utf8, 2, utf16.get());
+  ASSERT_TRUE(utf16size == utf16len);
+  memcmp((const char*)utf16.get(), expected, 2);
+}
+
 int main(int argc, char* argv[]) {
   return simdutf::test::main(argc, argv);
 }
