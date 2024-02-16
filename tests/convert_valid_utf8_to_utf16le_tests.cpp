@@ -163,7 +163,7 @@ TEST(special_cases) {
   std::unique_ptr<char16_t[]> utf16(new char16_t[utf16len]);
   size_t utf16size = implementation.convert_valid_utf8_to_utf16le((const char*)utf8, 2, utf16.get());
   ASSERT_TRUE(utf16size == utf16len);
-  memcmp((const char*)utf16.get(), expected, 2);
+  ASSERT_TRUE(memcmp((const char*)utf16.get(), expected, 2) == 0);
 }
 
 int main(int argc, char* argv[]) {
