@@ -13,6 +13,12 @@ TEST(node48995) {
   ASSERT_FALSE(implementation.validate_utf8(bad, length));
 }
 
+TEST(copyright) {
+  const char good[2] = {'\xC2', '\xA9'};
+  size_t length = 2;
+  ASSERT_TRUE(implementation.validate_utf8(good, length));
+}
+
 TEST(good_bad_sequences) {
   // additional tests are from autobahn websocket testsuite
   // https://github.com/crossbario/autobahn-testsuite/tree/master/autobahntestsuite/autobahntestsuite/case
