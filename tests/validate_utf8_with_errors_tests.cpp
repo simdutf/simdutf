@@ -19,6 +19,14 @@ TEST(node48995) {
   ASSERT_TRUE(res.error);
 }
 
+TEST(copyright) {
+  const char good[2] = {'\xC2', '\xA9'};
+  size_t length = 2;
+  simdutf::result res = implementation.validate_utf8_with_errors(good, length);
+  ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
+}
+
+
 TEST(no_error) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
