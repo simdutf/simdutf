@@ -93,6 +93,8 @@
 // s390 IBM system. Big endian.
 #elif (defined(__riscv) || defined(__riscv__)) && __riscv_xlen == 64
 // RISC-V 64-bit
+#elif defined(__loongarch_lp64)
+// LoongArch 64-bit
 #else
 // The simdutf library is designed
 // for 64-bit processors and it seems that you are not
