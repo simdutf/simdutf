@@ -23,6 +23,24 @@ TEST(decode_base64_cases) {
   }
 }
 
+TEST(encode_base64_cases) {
+  std::vector<std::pair<std::string,std::string>> cases = {
+    {"Hello, World!", "SGVsbG8sIFdvcmxkIQ=="},
+    {"GeeksforGeeks", "R2Vla3Nmb3JHZWVrcw=="},
+    {"123456", "MTIzNDU2"},
+    {"Base64 Encoding", "QmFzZTY0IEVuY29kaW5n"}};
+  std::vector<simdutf::error_code> codes = {simdutf::error_code::SUCCESS};
+  std::vector<size_t> counts = {1};
+
+  for(std::pair<std::string,std::string> p : cases) {
+    std::vector<char> buffer(implementation.base64_length_from_binary(p.first.size()));
+    ASSERT_EQUAL(buffer.size(), p.second.size());
+    size_t s = implementation.binary_to_base64(p.first.data(),p.first.size(), buffer.data());
+    ASSERT_EQUAL(s, p.second.size());
+    ASSERT_TRUE(std::string(buffer.data(), buffer.size()) == p.second);
+  }
+}
+
 TEST(roundtrip_base64) {
   for (size_t len = 0; len < 2048; len++) {
     std::vector<char> source(len, 0);
@@ -42,6 +60,19 @@ TEST(roundtrip_base64) {
           implementation.base64_to_binary(buffer.data(), size, back.data());
       ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
       ASSERT_EQUAL(r.count, len);
+      if(back != source) {
+        printf("=====input size %zu\n", len);
+        for(size_t i = 0; i < len; i++) {
+          if(back[i] != source[i]) {
+            std::cerr << "Mismatch at position " << i << " trial " << trial << std::endl;
+          }
+          printf("%zu: %02x %02x\n", i, uint8_t(back[i]), uint8_t(source[i]));
+        }
+        printf("=====base64 size %zu\n", size);
+        for(size_t i = 0; i < size; i++) {
+          printf("%zu: %02x %c\n", i, uint8_t(buffer[i]), buffer[i]);
+        }
+      }
       ASSERT_TRUE(back == source);
     }
   }

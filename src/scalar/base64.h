@@ -24,6 +24,9 @@ result base64_tail_decode(char *dst, const char *src, size_t length) {
     while (src + 4 <= srcend &&
            (x = tables::base64::d0[uint8_t(src[0])] | tables::base64::d1[uint8_t(src[1])] |
                 tables::base64::d2[uint8_t(src[2])] | tables::base64::d3[uint8_t(src[3])]) < 0x01FFFFFF) {
+      if(match_system(endianness::BIG)) {
+        x = scalar::utf32::swap_bytes(x);
+      }
       std::memcpy(dst, &x, 3); // optimization opportunity: copy 4 bytes
       dst += 3;
       src += 4;
@@ -45,20 +48,28 @@ result base64_tail_decode(char *dst, const char *src, size_t length) {
       if (idx == 2) {
         uint32_t triple =
             (uint32_t(buffer[0]) << 3 * 6) + (uint32_t(buffer[1]) << 2 * 6);
-        triple = !match_system(endianness::BIG) ? scalar::utf32::swap_bytes(triple) : triple;
-
-        triple >>= 8;
-
-        std::memcpy(dst, &triple, 1);
+        if(match_system(endianness::BIG)) {
+          triple <<= 8;
+          std::memcpy(dst, &triple, 1);
+        } else {
+          triple = scalar::utf32::swap_bytes(triple);
+          triple >>= 8;
+          std::memcpy(dst, &triple, 1);
+        }
         dst += 1;
 
       } else if (idx == 3) {
         uint32_t triple = (uint32_t(buffer[0]) << 3 * 6) +
                           (uint32_t(buffer[1]) << 2 * 6) +
                           (uint32_t(buffer[2]) << 1 * 6);
-        triple = !match_system(endianness::BIG) ? scalar::utf32::swap_bytes(triple) : triple;
-        triple >>= 8;
-        std::memcpy(dst, &triple, 2);
+        if(match_system(endianness::BIG)) {
+          triple <<= 8;
+          std::memcpy(dst, &triple, 2);
+        } else {
+          triple = scalar::utf32::swap_bytes(triple);
+          triple >>= 8;
+          std::memcpy(dst, &triple, 2);
+        }
         dst += 2;
       } else if (idx == 1) {
         return {BASE64_INPUT_REMAINDER, size_t(dst - dstinit)};
@@ -69,9 +80,14 @@ result base64_tail_decode(char *dst, const char *src, size_t length) {
     uint32_t triple =
         (uint32_t(buffer[0]) << 3 * 6) + (uint32_t(buffer[1]) << 2 * 6) +
         (uint32_t(buffer[2]) << 1 * 6) + (uint32_t(buffer[3]) << 0 * 6);
-    triple = !match_system(endianness::BIG) ? scalar::utf32::swap_bytes(triple) : triple;
-    triple >>= 8;
-    std::memcpy(dst, &triple, 3);
+    if(match_system(endianness::BIG)) {
+      triple <<= 8;
+      std::memcpy(dst, &triple, 3);
+    } else {
+      triple = scalar::utf32::swap_bytes(triple);
+      triple >>= 8;
+      std::memcpy(dst, &triple, 3);
+    }
     dst += 3;
   }
 }

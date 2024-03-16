@@ -250,7 +250,7 @@ result compress_decode_base64(char *dst, const char *src, size_t srclen) {
       block64 b;
       load_block(&b, src);
       src += 64;
-      bool error;
+      bool error = false;
       uint64_t badcharmask = to_base64_mask(&b, &error);
       if (error) {
         src -= 64;
@@ -314,9 +314,7 @@ result compress_decode_base64(char *dst, const char *src, size_t srclen) {
                          (uint32_t(uint8_t(buffer_start[2])) << 1 * 6) +
                          (uint32_t(uint8_t(buffer_start[3])) << 0 * 6))
                         << 8;
-      triple = !match_system(endianness::BIG)
-                   ? scalar::utf32::swap_bytes(triple)
-                   : triple;
+      triple = scalar::utf32::swap_bytes(triple);
       std::memcpy(dst, &triple, 4);
 
       dst += 3;
@@ -328,9 +326,7 @@ result compress_decode_base64(char *dst, const char *src, size_t srclen) {
                          (uint32_t(uint8_t(buffer_start[2])) << 1 * 6) +
                          (uint32_t(uint8_t(buffer_start[3])) << 0 * 6))
                         << 8;
-      triple = !match_system(endianness::BIG)
-                   ? scalar::utf32::swap_bytes(triple)
-                   : triple;
+      triple = scalar::utf32::swap_bytes(triple);
       std::memcpy(dst, &triple, 3);
 
       dst += 3;
@@ -356,9 +352,7 @@ result compress_decode_base64(char *dst, const char *src, size_t srclen) {
       if (leftover == 2) {
         uint32_t triple = (uint32_t(buffer_start[0]) << 3 * 6) +
                           (uint32_t(buffer_start[1]) << 2 * 6);
-        triple = !match_system(endianness::BIG)
-                     ? scalar::utf32::swap_bytes(triple)
-                     : triple;
+        triple = scalar::utf32::swap_bytes(triple);
         triple >>= 8;
         std::memcpy(dst, &triple, 1);
         dst += 1;
@@ -366,10 +360,7 @@ result compress_decode_base64(char *dst, const char *src, size_t srclen) {
         uint32_t triple = (uint32_t(buffer_start[0]) << 3 * 6) +
                           (uint32_t(buffer_start[1]) << 2 * 6) +
                           (uint32_t(buffer_start[2]) << 1 * 6);
-        triple = !match_system(endianness::BIG)
-                     ? scalar::utf32::swap_bytes(triple)
-                     : triple;
-
+        triple = scalar::utf32::swap_bytes(triple);
         triple >>= 8;
 
         std::memcpy(dst, &triple, 2);
@@ -380,9 +371,7 @@ result compress_decode_base64(char *dst, const char *src, size_t srclen) {
                            (uint32_t(uint8_t(buffer_start[2])) << 1 * 6) +
                            (uint32_t(uint8_t(buffer_start[3])) << 0 * 6))
                           << 8;
-        triple = !match_system(endianness::BIG)
-                     ? scalar::utf32::swap_bytes(triple)
-                     : triple;
+        triple = scalar::utf32::swap_bytes(triple);
         std::memcpy(dst, &triple, 3);
         dst += 3;
       }
