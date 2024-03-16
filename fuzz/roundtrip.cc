@@ -470,9 +470,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     /// Base64 tests. We begin by trying to decode the input, even if we
     /// expect it to fail.
     {
-      source = fdp.ConsumeRandomLengthString(kMaxStringSize);
-      std::vector<char> back(e->maximal_binary_length_from_base64(
-          source.data(), source.size()));
+      size_t max_length_needed = e->maximal_binary_length_from_base64(source.data(), source.size());
+      std::vector<char> back(max_length_needed);
       simdutf::result r = e->base64_to_binary(source.data(), source.size(), back.data());
       if (r.error == simdutf::error_code::SUCCESS) {
         // We expect failure but if we succeed, then we should have a roundtrip.
@@ -480,11 +479,20 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
         std::vector<char> back2(e->base64_length_from_binary(back.size()));
         size_t base64size = e->binary_to_base64(back.data(), back.size(), back2.data());
         back2.resize(base64size);
-        for (size_t i = 0; i < source.size(); i++) {
-          if (back2[i] != (source.c_str())[i]) {
-            print_input(source, e);
-            abort();
-          }
+        std::vector<char> back3(e->maximal_binary_length_from_base64(
+            back2.data(), back2.size()));
+        simdutf::result r2 = e->base64_to_binary(back2.data(), back2.size(), back3.data());
+        if (r2.error != simdutf::error_code::SUCCESS) {
+          print_input(source, e);
+          return false;
+        }
+        if(r2.count != back.size()) {
+          print_input(source, e);
+          return false;
+        }
+        if(back3.size() != back.size()) {
+          print_input(source, e);
+          return false;
         }
       }
     }
@@ -494,7 +502,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       source = fdp.ConsumeRandomLengthString(kMaxStringSize);
       std::vector<char> base64buffer(e->base64_length_from_binary(source.size()));
       size_t base64size = e->binary_to_base64(source.data(), source.size(), base64buffer.data());
-      if(base64size == base64buffer.size()) {
+      if(base64size != base64buffer.size()) {
         print_input(source, e);
         abort();
       }
