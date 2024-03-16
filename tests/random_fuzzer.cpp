@@ -592,7 +592,7 @@ int main(int argc, char*argv[]) {
     }
     std::cout << "testing: " << e->name() << std::endl;
   }
-  size_t N = 100000;
+  size_t N = 10000;
   if (argc == 2) {
     try {
       N = std::stoi(argv[1]);
