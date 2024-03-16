@@ -35,6 +35,7 @@ namespace {
 #include "icelake/icelake_convert_latin1_to_utf8.inl.cpp"
 #include "icelake/icelake_convert_latin1_to_utf16.inl.cpp"
 #include "icelake/icelake_convert_latin1_to_utf32.inl.cpp"
+#include "icelake/icelake_base64.inl.cpp"
 
 
 #include <cstdint>
@@ -520,15 +521,15 @@ simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(co
 
   // First, try to convert as much as possible using the SIMD implementation.
   inlen = icelake::utf8_to_latin1_avx512(buf, len, latin1_output);
-  
+
   // If we have completely converted the string
   if(inlen == len) {
     return {simdutf::SUCCESS, len};
   }
-  
+
   // Else if there are remaining bytes, use the scalar function to process them.
-  // Note: This is assuming scalar::utf8_to_latin1::convert_with_errors is a function that takes 
-  // the input buffer, length, and output buffer, and returns a result object with an error code 
+  // Note: This is assuming scalar::utf8_to_latin1::convert_with_errors is a function that takes
+  // the input buffer, length, and output buffer, and returns a result object with an error code
   // and the number of characters processed.
   result res = scalar::utf8_to_latin1::convert_with_errors(buf + inlen, len - inlen, latin1_output + inlen);
   res.count += inlen; // Add the number of characters processed by the SIMD implementation
@@ -1083,7 +1084,7 @@ simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t
   const uint8_t *str = reinterpret_cast<const uint8_t *>(input);
   size_t answer =  length / sizeof(__m512i) * sizeof(__m512i); // Number of 512-bit chunks that fits into the length.
   size_t i = 0;
-  __m512i unrolled_popcount{0}; 
+  __m512i unrolled_popcount{0};
 
   const __m512i continuation = _mm512_set1_epi8(char(0b10111111));
 
@@ -1361,6 +1362,22 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf32(const char32_
 
 simdutf_warn_unused size_t implementation::utf32_length_from_utf8(const char * input, size_t length) const noexcept {
   return implementation::count_utf8(input, length);
+}
+
+simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(const char * input, size_t length) const noexcept {
+  return scalar::base64::maximal_binary_length_from_base64(input, length);
+}
+
+simdutf_warn_unused result implementation::base64_to_binary(const char * input, size_t length, char* output) const noexcept {
+  return compress_decode_base64(output, input, length);
+}
+
+simdutf_warn_unused size_t implementation::base64_length_from_binary(size_t length) const noexcept {
+  return scalar::base64::base64_length_from_binary(length);
+}
+
+size_t implementation::binary_to_base64(const char * input, size_t length, char* output) const noexcept {
+  return encode_base64(output, input, length);
 }
 
 } // namespace SIMDUTF_IMPLEMENTATION

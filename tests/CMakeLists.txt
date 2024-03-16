@@ -367,3 +367,8 @@ add_cpp_test(basic_fuzzer)
 target_link_libraries(basic_fuzzer
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
+
+add_cpp_test(base64_tests)
+target_link_libraries(base64_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)

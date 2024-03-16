@@ -445,6 +445,22 @@ public:
     return set_best()->utf32_length_from_utf8(buf, len);
   }
 
+  simdutf_warn_unused size_t maximal_binary_length_from_base64(const char * input, size_t length) const noexcept override {
+    return set_best()->maximal_binary_length_from_base64(input, length);
+  }
+
+  simdutf_warn_unused result base64_to_binary(const char * input, size_t length, char* output) const noexcept override {
+    return set_best()->base64_to_binary(input, length, output);
+  }
+
+  simdutf_warn_unused size_t base64_length_from_binary(size_t length) const noexcept override {
+    return set_best()->base64_length_from_binary(length);
+  }
+
+  size_t binary_to_base64(const char * input, size_t length, char* output) const noexcept override {
+    return set_best()->binary_to_base64(input, length, output);
+  }
+
   simdutf_really_inline detect_best_supported_implementation_on_first_use() noexcept : implementation("best_supported_detector", "Detects the best supported implementation and sets it", 0) {}
 
 private:
@@ -760,7 +776,7 @@ public:
     return 0;
   }
 
-    simdutf_warn_unused size_t utf32_length_from_latin1(size_t) const noexcept override {
+  simdutf_warn_unused size_t utf32_length_from_latin1(size_t) const noexcept override {
     return 0;
   }
 
@@ -779,6 +795,22 @@ public:
   }
 
   simdutf_warn_unused size_t utf32_length_from_utf8(const char *, size_t) const noexcept override {
+    return 0;
+  }
+
+  simdutf_warn_unused size_t maximal_binary_length_from_base64(const char *, size_t) const noexcept override {
+    return 0;
+  }
+
+  simdutf_warn_unused result base64_to_binary(const char *, size_t, char*) const noexcept override {
+    return result(error_code::OTHER, 0);
+  }
+
+  simdutf_warn_unused size_t base64_length_from_binary(size_t) const noexcept override {
+    return 0;
+  }
+
+  size_t binary_to_base64(const char *, size_t, char*) const noexcept override {
     return 0;
   }
 
@@ -1223,6 +1255,23 @@ simdutf_warn_unused size_t utf16_length_from_utf32(const char32_t * input, size_
 simdutf_warn_unused size_t utf32_length_from_utf8(const char * input, size_t length) noexcept {
   return get_default_implementation()->utf32_length_from_utf8(input, length);
 }
+
+simdutf_warn_unused size_t maximal_binary_length_from_base64(const char * input, size_t length) noexcept {
+  return get_default_implementation()->maximal_binary_length_from_base64(input, length);
+}
+
+simdutf_warn_unused result base64_to_binary(const char * input, size_t length, char* output) noexcept {
+  return get_default_implementation()->base64_to_binary(input, length, output);
+}
+
+simdutf_warn_unused size_t base64_length_from_binary(size_t length) noexcept {
+  return get_default_implementation()->base64_length_from_binary(length);
+}
+
+size_t binary_to_base64(const char * input, size_t length, char* output) noexcept {
+  return get_default_implementation()->binary_to_base64(input, length, output);
+}
+
 simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const char * buf, size_t length) noexcept {
   return get_default_implementation()->autodetect_encoding(buf, length);
 }

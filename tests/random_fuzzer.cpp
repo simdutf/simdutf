@@ -294,7 +294,7 @@ bool fuzz_this(const char *data, size_t size) {
       };
       // convert to UTF-8
       size_t utf16words = e->convert_utf8_to_utf16le(
-          utf8_output.get(), utf8words, utf16_output.get());
+          utf8_output.get(), utf8words, utf16_output.get()); (void)utf16words;
       for (size_t i = 0; i < source.size() / 2; i++) {
         if (utf16_output.get()[i] != ((char16_t *)source.c_str())[i]) {
           print_input(source, e);
@@ -348,7 +348,7 @@ bool fuzz_this(const char *data, size_t size) {
       };
       // convert to UTF-8
       size_t utf16words = e->convert_utf8_to_utf16be(
-          utf8_output.get(), utf8words, utf16_output.get());
+          utf8_output.get(), utf8words, utf16_output.get()); (void)utf16words;
       for (size_t i = 0; i < source.size() / 2; i++) {
         if (utf16_output.get()[i] != ((char16_t *)source.c_str())[i]) {
           print_input(source, e);
@@ -396,7 +396,7 @@ bool fuzz_this(const char *data, size_t size) {
       };
       // convert to latin1
       size_t latin1words = e->convert_utf8_to_latin1(
-          utf8_output.get(), utf8words, latin1_output.get());
+          utf8_output.get(), utf8words, latin1_output.get()); (void)latin1words;
       for (size_t i = 0; i < source.size(); i++) {
         if (latin1_output.get()[i] != (source.c_str())[i]) {
           print_input(source, e);
@@ -426,7 +426,7 @@ bool fuzz_this(const char *data, size_t size) {
       };
       // convert to latin1
       size_t latin1words = e->convert_utf16le_to_latin1(
-          utf16_output.get(), utf16words, latin1_output.get());
+          utf16_output.get(), utf16words, latin1_output.get()); (void)latin1words;
       for (size_t i = 0; i < source.size(); i++) {
         if (latin1_output.get()[i] != (source.c_str())[i]) {
           print_input(source, e);
@@ -456,7 +456,7 @@ bool fuzz_this(const char *data, size_t size) {
       };
       // convert to latin1
       size_t latin1words = e->convert_utf16be_to_latin1(
-          utf16_output.get(), utf16words, latin1_output.get());
+          utf16_output.get(), utf16words, latin1_output.get()); (void) latin1words;
       for (size_t i = 0; i < source.size(); i++) {
         if (latin1_output.get()[i] != (source.c_str())[i]) {
           print_input(source, e);
@@ -486,9 +486,57 @@ bool fuzz_this(const char *data, size_t size) {
       };
       // convert to latin1
       size_t latin1words = e->convert_utf32_to_latin1(
-          utf32_output.get(), utf32words, latin1_output.get());
+          utf32_output.get(), utf32words, latin1_output.get()); (void)latin1words;
       for (size_t i = 0; i < source.size(); i++) {
         if (latin1_output.get()[i] != (source.c_str())[i]) {
+          print_input(source, e);
+          return false;
+        }
+      }
+    }
+
+    /// Base64 tests. We begin by trying to decode the input, even if we
+    /// expect it to fail.
+    {
+      std::vector<char> back(e->maximal_binary_length_from_base64(
+          source.data(), source.size()));
+      simdutf::result r = e->base64_to_binary(source.data(), source.size(), back.data());
+      if (r.error == simdutf::error_code::SUCCESS) {
+        // We expect failure but if we succeed, then we should have a roundtrip.
+        back.resize(r.count);
+        std::vector<char> back2(e->base64_length_from_binary(back.size()));
+        size_t base64size = e->binary_to_base64(back.data(), back.size(), back2.data());
+        back2.resize(base64size);
+        for (size_t i = 0; i < source.size(); i++) {
+          if (back2[i] != (source.c_str())[i]) {
+            print_input(source, e);
+            return false;
+          }
+        }
+      }
+    }
+    /// Base64 tests. We encode the content as binary in base64 and we decode it,
+    /// it should always succeed.
+    {
+      std::vector<char> base64buffer(e->base64_length_from_binary(source.size()));
+      size_t base64size = e->binary_to_base64(source.data(), source.size(), base64buffer.data());
+      if(base64size == base64buffer.size()) {
+        print_input(source, e);
+        return false;
+      }
+      std::vector<char> back(e->maximal_binary_length_from_base64(
+          base64buffer.data(), base64buffer.size()));
+      simdutf::result r = e->base64_to_binary(base64buffer.data(), base64buffer.size(), back.data());
+      if (r.error != simdutf::error_code::SUCCESS) {
+        print_input(source, e);
+        return false;
+      }
+      if(r.count != source.size()) {
+        print_input(source, e);
+        return false;
+      }
+      for (size_t i = 0; i < source.size(); i++) {
+        if (back[i] != (source.c_str())[i]) {
           print_input(source, e);
           return false;
         }

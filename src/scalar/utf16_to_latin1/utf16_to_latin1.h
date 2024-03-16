@@ -27,7 +27,7 @@ inline size_t convert(const char16_t* buf, size_t len, char* latin_output) {
 
   // Only copy to latin_output if there were no errors
   std::memcpy(latin_output, temp_output.data(), len);
-  
+
   return current_write - temp_output.data();
 }
 

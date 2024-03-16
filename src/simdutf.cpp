@@ -4,6 +4,7 @@
 #include "error.cpp"
 // The large tables should be included once and they
 // should not depend on a kernel.
+#include "tables/base64_tables.h"
 #include "tables/utf8_to_utf16_tables.h"
 #include "tables/utf16_to_utf8_tables.h"
 // End of tables.
@@ -14,6 +15,7 @@
 #include "scalar/utf16.h"
 #include "scalar/utf32.h"
 #include "scalar/latin1.h"
+#include "scalar/base64.h"
 
 #include "scalar/utf32_to_utf8/valid_utf32_to_utf8.h"
 #include "scalar/utf32_to_utf8/utf32_to_utf8.h"
