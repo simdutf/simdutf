@@ -1,6 +1,7 @@
 #include "simdutf.h"
 
 #include <array>
+#include <cerrno>
 #include <filesystem>
 
 class CommandLine {
@@ -49,7 +50,8 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[]) {
       if (cmdline.current_file == NULL) {
         cmdline.current_file = std::fopen(a.c_str(), "rb");
         if (cmdline.current_file == NULL) {
-          throw std::runtime_error("Could not open file: " + a);
+          throw std::runtime_error("Could not open file: " + a + ":" +
+                                   std::string(strerror(errno)));
         }
       } else if (cmdline.output_file.empty()) {
         cmdline.output_file = a;
@@ -73,18 +75,16 @@ bool CommandLine::run() {
     std::FILE *fp = std::fopen(output_file.string().c_str(), "wb");
     SIMDUTF_POP_DISABLE_WARNINGS
     if (fp == NULL) {
-      printf("Could not open %s\n", output_file.string().c_str());
+      fprintf(stderr, "Could not open %s: %s\n", output_file.string().c_str(), strerror(errno));
       return false;
     }
     bool success = run_procedure(fp);
-    if (!success) {
-      return false;
-    }
+    // Let us first try to close the file.
     if (fclose(fp) != 0) {
-      printf("Failed to close %s\n", output_file.string().c_str());
+      fprintf(stderr, "Failed to close %s: %s\n", output_file.string().c_str(), strerror(errno));
       return false;
     }
-    return true;
+    return success;
   }
 }
 
@@ -104,7 +104,8 @@ CommandLine::load_chunk(char *input_data, size_t chunk_size, size_t offset) {
       std::fread(input_data + offset, 1, chunk_size - offset, current_file);
   if (std::ferror(current_file)) {
     std::fclose(current_file);
-    throw std::runtime_error("Error while reading.");
+    throw std::runtime_error("Error while reading:" +
+                             std::string(strerror(errno)));
   }
   if (std::feof(current_file)) { // Check if current_file is done
     std::fclose(current_file);   // best effort
@@ -121,7 +122,7 @@ bool CommandLine::write_to_file_descriptor(std::FILE *fp, const char *data,
   }
   size_t bytes_written = std::fwrite(data, 1, length, fp);
   if (bytes_written != length) {
-    throw std::runtime_error("Failed to write.");
+    throw std::runtime_error("Failed to write:" + std::string(strerror(errno)));
   }
   return true;
 }
@@ -239,7 +240,7 @@ int main(int argc, char *argv[]) {
     CommandLine cmdline = CommandLine::parse_and_validate_arguments(argc, argv);
     return cmdline.run() ? EXIT_SUCCESS : EXIT_FAILURE;
   } catch (const std::exception &e) {
-    printf("%s\n", e.what());
+    fprintf(stderr, "%s\n", e.what());
     CommandLine::show_help();
     return EXIT_FAILURE;
   }

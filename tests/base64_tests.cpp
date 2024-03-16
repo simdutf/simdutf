@@ -8,7 +8,7 @@
 #include <tests/helpers/test.h>
 #include <tests/helpers/transcode_test_base.h>
 
-
+static int seed = 42;
 
 TEST(decode_base64_cases) {
   std::vector<std::vector<char>> cases = {{0x53, 0x53}};
@@ -47,7 +47,7 @@ TEST(roundtrip_base64) {
     std::vector<char> buffer;
     buffer.resize(implementation.base64_length_from_binary(len));
     std::vector<char> back(len);
-    std::mt19937 gen(std::mt19937::result_type(123456));
+    std::mt19937 gen((std::mt19937::result_type)(seed));
     std::uniform_int_distribution<int> byte_generator{0, 255};
     for (size_t trial = 0; trial < 10; trial++) {
       for (size_t i = 0; i < len; i++) {
@@ -124,8 +124,8 @@ size_t add_garbage(std::vector<char> &v, std::mt19937 &gen) {
   }
   std::uniform_int_distribution<size_t> index_dist(0, v.size() - padding);
   size_t i = index_dist(gen);
-  std::uniform_int_distribution<int> char_dist(0, 255);
-  char c = char_dist(gen);
+  std::uniform_int_distribution<uint8_t> char_dist(0, 255);
+  uint8_t c = char_dist(gen);
   while(to_base64_value[uint8_t(c)] != 255) {
     c = char_dist(gen);
   }
@@ -138,7 +138,7 @@ TEST(doomed_base64_roundtrip) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     buffer.resize(implementation.base64_length_from_binary(len));
-    std::mt19937 gen(std::mt19937::result_type(123456));
+    std::mt19937 gen((std::mt19937::result_type)(seed));
     std::uniform_int_distribution<int> byte_generator{0, 255};
     for (size_t trial = 0; trial < 10; trial++) {
       for (size_t i = 0; i < len; i++) {
@@ -163,7 +163,7 @@ TEST(doomed_truncated_base64_roundtrip) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     buffer.resize(implementation.base64_length_from_binary(len));
-    std::mt19937 gen(std::mt19937::result_type(123456));
+    std::mt19937 gen((std::mt19937::result_type)(seed));
     std::uniform_int_distribution<int> byte_generator{0, 255};
     for (size_t trial = 0; trial < 10; trial++) {
       for (size_t i = 0; i < len; i++) {
@@ -187,7 +187,7 @@ TEST(roundtrip_base64_with_spaces) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     buffer.resize(implementation.base64_length_from_binary(len));
-    std::mt19937 gen(std::mt19937::result_type(123456));
+    std::mt19937 gen((std::mt19937::result_type)(seed));
     std::uniform_int_distribution<int> byte_generator{0, 255};
     for (size_t trial = 0; trial < 10; trial++) {
       for (size_t i = 0; i < len; i++) {
@@ -220,7 +220,7 @@ TEST(streaming_base64_roundtrip) {
   std::vector<char> source(len, 0);
   std::vector<char> buffer;
   buffer.resize(implementation.base64_length_from_binary(len));
-  std::mt19937 gen(std::mt19937::result_type(123456));
+  std::mt19937 gen((std::mt19937::result_type)(seed));
   std::uniform_int_distribution<int> byte_generator{0, 255};
   for (size_t i = 0; i < len; i++) {
     source[i] = byte_generator(gen);
@@ -295,4 +295,14 @@ TEST(readme_test) {
   back.resize(outpos);
 }
 
-int main(int argc, char *argv[]) { return simdutf::test::main(argc, argv); }
+int main(int argc, char *argv[]) {
+  if (argc == 2) {
+    try {
+      seed = std::stoi(argv[1]);
+    } catch (const std::exception& e) {
+        printf("%s\n", e.what());
+        return EXIT_FAILURE;
+    }
+  }
+  return simdutf::test::main(argc, argv);
+}

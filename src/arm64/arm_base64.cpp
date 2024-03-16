@@ -26,11 +26,6 @@
  * https://www.codeproject.com/Articles/276993/Base-Encoding-on-a-GPU. (2013).
  */
 
-/*static simdutf_really_inline uint8x16_t lookup(const uint8x16_t input) {
-
-  return vqtbl4q_u8(table, input);
-}*/
-
 size_t encode_base64(char *dst, const char *src, size_t srclen) {
   // credit: Wojciech Muła
   uint8_t *out = (uint8_t *)dst;

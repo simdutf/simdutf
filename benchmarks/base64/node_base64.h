@@ -1,4 +1,6 @@
 // Taken from Node.js, for benchmarking purposes.
+// See https://github.com/nodejs/node/blob/dafe004703f4f0a878558090ab3dd8ef0624037d/src/base64.h#L15
+// and https://github.com/nodejs/node/blob/dafe004703f4f0a878558090ab3dd8ef0624037d/src/base64-inl.h
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
