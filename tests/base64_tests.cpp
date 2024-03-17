@@ -8,7 +8,8 @@
 #include <tests/helpers/test.h>
 #include <tests/helpers/transcode_test_base.h>
 
-static int seed = 42;
+using random_generator = std::mt19937;
+static random_generator::result_type seed = 42;
 
 TEST(decode_base64_cases) {
   std::vector<std::vector<char>> cases = {{0x53, 0x53}};
