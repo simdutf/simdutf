@@ -49,7 +49,11 @@ TEST(roundtrip_base64) {
     buffer.resize(implementation.base64_length_from_binary(len));
     std::vector<char> back(len);
     std::mt19937 gen((std::mt19937::result_type)(seed));
-    std::uniform_int_distribution<int> byte_generator{0, 255};
+static std::uniform_int_distribution<uint8_t> mkbytegen() {
+   return std::uniform_int_distribution<uint8_t>{0, 255};
+}
+...
+    byte_generator = mkbytegen();
     for (size_t trial = 0; trial < 10; trial++) {
       for (size_t i = 0; i < len; i++) {
         source[i] = byte_generator(gen);
