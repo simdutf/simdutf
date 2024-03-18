@@ -26,6 +26,7 @@ std::string toBinaryString(T b) {
 #include "simdutf/haswell.h"
 #include "simdutf/westmere.h"
 #include "simdutf/ppc64.h"
+#include "simdutf/rvv.h"
 #include "simdutf/fallback.h" // have it always last.
 
 #include "scalar/utf8.h"
@@ -103,6 +104,12 @@ static const arm64::implementation* get_arm64_singleton() {
 static const ppc64::implementation* get_ppc64_singleton() {
   static const ppc64::implementation ppc64_singleton{};
   return &ppc64_singleton;
+}
+#endif
+#if SIMDUTF_IMPLEMENTATION_RVV
+static const rvv::implementation* get_rvv_singleton() {
+  static const rvv::implementation rvv_singleton{};
+  return &rvv_singleton;
 }
 #endif
 #if SIMDUTF_IMPLEMENTATION_FALLBACK
@@ -483,6 +490,9 @@ static const std::initializer_list<const implementation *>& get_available_implem
 #endif
 #if SIMDUTF_IMPLEMENTATION_PPC64
     get_ppc64_singleton(),
+#endif
+#if SIMDUTF_IMPLEMENTATION_RVV
+    get_rvv_singleton(),
 #endif
 #if SIMDUTF_IMPLEMENTATION_FALLBACK
     get_fallback_singleton(),
