@@ -88,9 +88,9 @@ def dofile(fid, prepath, filename):
     RELFILE = os.path.relpath(file, PROJECTPATH)
     # Last lines are always ignored. Files should end by an empty lines.
     print(f"/* begin file {RELFILE} */", file=fid)
-    includepattern = re.compile('\s*#\s*include "(.*)"')
-    redefines_simdutf_implementation = re.compile('^#define\s+SIMDUTF_IMPLEMENTATION\s+(.*)')
-    undefines_simdutf_implementation = re.compile('^#undef\s+SIMDUTF_IMPLEMENTATION\s*$')
+    includepattern = re.compile(r'\s*#\s*include "(.*)"')
+    redefines_simdutf_implementation = re.compile(r'^#define\s+SIMDUTF_IMPLEMENTATION\s+(.*)')
+    undefines_simdutf_implementation = re.compile(r'^#undef\s+SIMDUTF_IMPLEMENTATION\s*$')
     uses_simdutf_implementation = re.compile('SIMDUTF_IMPLEMENTATION([^_a-zA-Z0-9]|$)')
     with open(file, 'r') as fid2:
         for line in fid2:

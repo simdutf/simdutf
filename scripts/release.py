@@ -16,7 +16,7 @@ def colored(r, g, b, text):
     return "\033[38;2;{};{};{}m{} \033[38;2;255;255;255m".format(r, g, b, text)
 
 def extractnumbers(s):
-    return tuple(map(int,re.findall("(\d+)\.(\d+)\.(\d+)",str(s))[0]))
+    return tuple(map(int,re.findall(r"(\d+)\.(\d+)\.(\d+)",str(s))[0]))
 
 def toversionstring(major, minor, rev):
     return str(major)+"."+str(minor)+"."+str(rev)
@@ -120,7 +120,7 @@ newrevversionstring = str(newversion[2])
 newversionstring = str(newversion[0]) + "." + str(newversion[1]) + "." + str(newversion[2])
 cmakefile = maindir + os.sep + "CMakeLists.txt"
 sonumber = None
-pattern = re.compile("set\(SIMDUTF_LIB_SOVERSION \"(\d+)\" CACHE STRING \"simdutf library soversion\"\)")
+pattern = re.compile(r"""set\(SIMDUTF_LIB_SOVERSION "(\d+)" CACHE STRING "simdutf library soversion"\)""")
 with open (cmakefile, 'rt') as myfile:
     for line in myfile:
         m = pattern.search(line)
@@ -134,9 +134,9 @@ if(atleastminor):
     sonumber += 1
 
 for line in fileinput.input(cmakefile, inplace=1, backup='.bak'):
-    line = re.sub('  VERSION \d+\.\d+\.\d+','  VERSION '+newmajorversionstring+'.'+mewminorversionstring+'.'+newrevversionstring, line.rstrip())
-    line = re.sub('SIMDUTF_LIB_VERSION "\d+\.\d+\.\d+','SIMDUTF_LIB_VERSION "'+str(sonumber)+".0.0", line)
-    line = re.sub('set\(SIMDUTF_LIB_SOVERSION \"\d+\"','set(SIMDUTF_LIB_SOVERSION \"'+str(sonumber)+'\"', line)
+    line = re.sub(r'  VERSION \d+\.\d+\.\d+','  VERSION '+newmajorversionstring+'.'+mewminorversionstring+'.'+newrevversionstring, line.rstrip())
+    line = re.sub(r'SIMDUTF_LIB_VERSION "\d+\.\d+\.\d+','SIMDUTF_LIB_VERSION "'+str(sonumber)+".0.0", line)
+    line = re.sub(r'set\(SIMDUTF_LIB_SOVERSION "\d+"','set(SIMDUTF_LIB_SOVERSION \"'+str(sonumber)+'\"', line)
     print(line)
 
 print("modified "+cmakefile+", a backup was made")
@@ -144,7 +144,7 @@ print("modified "+cmakefile+", a backup was made")
 
 doxyfile = maindir + os.sep + "Doxyfile"
 for line in fileinput.input(doxyfile, inplace=1, backup='.bak'):
-    line = re.sub('PROJECT_NUMBER         = "\d+\.\d+\.\d+','PROJECT_NUMBER         = "'+newversionstring, line.rstrip())
+    line = re.sub(r'PROJECT_NUMBER         = "\d+\.\d+\.\d+','PROJECT_NUMBER         = "'+newversionstring, line.rstrip())
     print(line)
 print("modified "+doxyfile+", a backup was made")
 
@@ -166,13 +166,13 @@ readmefile = maindir + os.sep + "README.md"
 
 
 for line in fileinput.input(readmefile, inplace=1, backup='.bak'):
-    line = re.sub('   wget https://github.com/simdutf/simdutf/releases/download/v\d+\.\d+\.\d+/singleheader.zip','   wget https://github.com/simdutf/simdutf/releases/download/v'+newmajorversionstring+'.'+mewminorversionstring+'.'+newrevversionstring+'/singleheader.zip', line.rstrip())
-    line = re.sub('https://github.com/simdutf/simdutf/releases/download/v\d+\.\d+\.\d+/singleheader.zip','https://github.com/simdutf/simdutf/releases/download/v'+newmajorversionstring+'.'+mewminorversionstring+'.'+newrevversionstring+'/singleheader.zip', line.rstrip())
+    line = re.sub(r'   wget https://github.com/simdutf/simdutf/releases/download/v\d+\.\d+\.\d+/singleheader.zip','   wget https://github.com/simdutf/simdutf/releases/download/v'+newmajorversionstring+'.'+mewminorversionstring+'.'+newrevversionstring+'/singleheader.zip', line.rstrip())
+    line = re.sub(r'https://github.com/simdutf/simdutf/releases/download/v\d+\.\d+\.\d+/singleheader.zip','https://github.com/simdutf/simdutf/releases/download/v'+newmajorversionstring+'.'+mewminorversionstring+'.'+newrevversionstring+'/singleheader.zip', line.rstrip())
     print(line)
 
 print("modified "+readmefile+", a backup was made")
 
-pattern = re.compile("https://simdutf.org/api/(\d+\.\d+\.\d+)/index.html")
+pattern = re.compile(r"https://simdutf.org/api/(\d+\.\d+\.\d+)/index.html")
 readmedata = open(readmefile).read()
 m = pattern.search(readmedata)
 if m == None:
