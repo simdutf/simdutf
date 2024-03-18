@@ -2,6 +2,9 @@ var classsimdutf_1_1implementation =
 [
     [ "~implementation", "classsimdutf_1_1implementation.html#a5b82d70f2836bfd1e7f21b44ba9426d5", null ],
     [ "autodetect_encoding", "classsimdutf_1_1implementation.html#afd306a0bc3e221964af3f31a64784b12", null ],
+    [ "base64_length_from_binary", "classsimdutf_1_1implementation.html#a74dd85eb6ea2ef6aa76faa537c2ac49e", null ],
+    [ "base64_to_binary", "classsimdutf_1_1implementation.html#ac04f8fb32ad66cc4e5c0d13d4f9461ea", null ],
+    [ "binary_to_base64", "classsimdutf_1_1implementation.html#acf529607eb82bef95b548289af5d36ef", null ],
     [ "change_endianness_utf16", "classsimdutf_1_1implementation.html#a8a342c5088a3b2887485836daa92628a", null ],
     [ "convert_latin1_to_utf16be", "classsimdutf_1_1implementation.html#a2f498ad9236b916e5e4859109d1df0bb", null ],
     [ "convert_latin1_to_utf16le", "classsimdutf_1_1implementation.html#a2315da3daf654f4a7132b1751394b374", null ],
@@ -57,6 +60,7 @@ var classsimdutf_1_1implementation =
     [ "latin1_length_from_utf16", "classsimdutf_1_1implementation.html#a83aed89399b43b6f7a36172f3af38b99", null ],
     [ "latin1_length_from_utf32", "classsimdutf_1_1implementation.html#a6936dace0dfd89741259cdbe49b5df2d", null ],
     [ "latin1_length_from_utf8", "classsimdutf_1_1implementation.html#a2cc04b416c87dfa742056ce5bd8033dc", null ],
+    [ "maximal_binary_length_from_base64", "classsimdutf_1_1implementation.html#af46e9e7192004051687186ac956262f3", null ],
     [ "name", "classsimdutf_1_1implementation.html#a3281cf45b997303c89cf2d462d85d384", null ],
     [ "supported_by_runtime_system", "classsimdutf_1_1implementation.html#a6cd8f7d8787c76e690ed9c4151abb7a9", null ],
     [ "utf16_length_from_latin1", "classsimdutf_1_1implementation.html#a4b211eefd837bfb9c080df56c408c3d4", null ],

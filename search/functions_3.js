@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['latin1_5flength_5ffrom_5futf32_133',['latin1_length_from_utf32',['../classsimdutf_1_1implementation.html#a6936dace0dfd89741259cdbe49b5df2d',1,'simdutf::implementation']]],
-  ['latin1_5flength_5ffrom_5futf8_134',['latin1_length_from_utf8',['../classsimdutf_1_1implementation.html#a2cc04b416c87dfa742056ce5bd8033dc',1,'simdutf::implementation']]]
+  ['description_138',['description',['../classsimdutf_1_1implementation.html#a147dfc3a2a525074a863374ea9ea8c09',1,'simdutf::implementation']]],
+  ['detect_5fencodings_139',['detect_encodings',['../classsimdutf_1_1implementation.html#ad4a7dbe2fbc9d03da2542c07a88cdddb',1,'simdutf::implementation']]]
 ];

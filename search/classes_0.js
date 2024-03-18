@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['implementation_78',['implementation',['../classsimdutf_1_1implementation.html',1,'simdutf']]]
+  ['implementation_82',['implementation',['../classsimdutf_1_1implementation.html',1,'simdutf']]]
 ];

@@ -36,10 +36,11 @@ var NAVTREE =
       [ "Single-header version", "index.html#autotoc_md8", null ],
       [ "Example", "index.html#autotoc_md9", null ],
       [ "API", "index.html#autotoc_md10", null ],
-      [ "The sutf command-line tool", "index.html#autotoc_md11", null ],
-      [ "Manual implementation selection", "index.html#autotoc_md12", null ],
-      [ "References", "index.html#autotoc_md13", null ],
-      [ "License", "index.html#autotoc_md14", null ]
+      [ "Base64", "index.html#autotoc_md11", null ],
+      [ "The sutf command-line tool", "index.html#autotoc_md12", null ],
+      [ "Manual implementation selection", "index.html#autotoc_md13", null ],
+      [ "References", "index.html#autotoc_md14", null ],
+      [ "License", "index.html#autotoc_md15", null ]
     ] ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],

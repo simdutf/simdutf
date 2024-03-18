@@ -105,6 +105,7 @@ Table of contents</h1>
 <li><a href="#single-header-version">Single-header version</a></li>
 <li><a href="#example">Example</a></li>
 <li><a href="#api">API</a></li>
+<li><a href="#base64">Base64</a></li>
 <li><a href="#the-sutf-command-line-tool">The sutf command-line tool</a></li>
 <li><a href="#manual-implementation-selection">Manual implementation selection</a></li>
 <li><a href="#references">References</a></li>
@@ -138,10 +139,12 @@ simdutf: Unicode validation and transcoding at billions of characters per second
 <li>From an UTF-16LE/BE string, compute the size of the UTF-8 equivalent string,</li>
 <li>From an UTF-32 string, compute the size of the UTF-8 or UTF-16LE equivalent string,</li>
 <li>From an UTF-16LE/BE string, compute the size of the UTF-32 equivalent string (equivalent to UTF-16 character counting),</li>
-<li>UTF-8 and UTF-16LE/BE character counting.</li>
-<li>UTF-16 endianness change (UTF16-LE/BE to UTF-16-BE/LE)</li>
+<li>UTF-8 and UTF-16LE/BE character counting,</li>
+<li>UTF-16 endianness change (UTF16-LE/BE to UTF-16-BE/LE),</li>
+<li><a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">WHATWG forgiving-base64</a> to binary,</li>
+<li>Binary to base64.</li>
 </ul>
-<p>The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, AVX-512, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion characters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).</p>
+<p>The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, AVX-512, RISC-V Vector Extension, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion characters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).</p>
 <p>The library compiles down to a small library of a few hundred kilobytes. Our functions are exception-free and non allocating. We have extensive tests and extensive benchmarks.</p>
 <h2><a class="anchor" id="autotoc_md2"></a>
 Real-World Usage</h2>
@@ -176,6 +179,7 @@ Requirements</h2>
 <li>For high speed, you should have a recent 64-bit system (e.g., ARM or x64).</li>
 <li>If you rely on CMake, you should use a recent CMake (at least 3.15) ; otherwise you may use the <a href="#single-header-version">single header version</a>. The library is also available from Microsoft's vcpkg.</li>
 <li>AVX-512 support require a processor with AVX512-VBMI2 (Ice Lake or better) and a recent compiler (GCC 8 or better, Visual Studio 2022 or better, LLVM clang 6 or better). You need a correspondingly recent assembler such as gas (2.30+) or nasm (2.14+): recent compilers usually come with recent assemblers. If you mix a recent compiler with an incompatible/old assembler (e.g., when using a recent compiler with an old Linux distribution), you may get errors at build time because the compiler produces instructions that the assembler does not recognize: you should update your assembler to match your compiler (e.g., upgrade binutils to version 2.30 or better under Linux) or use an older compiler matching the capabilities of your assembler.</li>
+<li>To benefit from RISC-V Vector Extensions on RISC-V systems, you should compile specifically for the desired architecture. E.g., add <code>-march=rv64gcv</code> as a compiler flag when using a version of GCC or LLVM which supports these extensions (such as GCC 14 or better). The command <code>CXXFLAGS=-march=rv64gcv cmake -B build</code> may suffice.</li>
 </ul>
 <h2><a class="anchor" id="autotoc_md5"></a>
 Usage (Usage)</h2>
@@ -326,7 +330,7 @@ API</h2>
 <div class="line"><span class="keywordflow">if</span>(res.error != simdutf::error_code::SUCCESS) {</div>
 <div class="line">  std::cerr &lt;&lt; <span class="stringliteral">&quot;error at index &quot;</span> &lt;&lt; res.count &lt;&lt; std::endl;</div>
 <div class="line">}</div>
-<div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition:</b> <a href="error_8h_source.html#l00020">error.h:20</a></div></div>
+<div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition:</b> <a href="error_8h_source.html#l00022">error.h:22</a></div></div>
 </div><!-- fragment --><p>Or as follows:</p>
 <div class="fragment"><div class="line">std::string bad_utf8 = <span class="stringliteral">&quot;\xc3\xa9\xc3\xa9\x20\xff\xc3\xa9&quot;</span>;</div>
 <div class="line"><a class="code" href="structsimdutf_1_1result.html">simdutf::result</a> res = implementation.validate_utf8_with_errors(bad_utf8.data(), bad_utf8.size());</div>
@@ -568,10 +572,83 @@ API</h2>
 <div class="fragment"><div class="line"> </div>
 <div class="line"><span class="keywordtype">void</span> change_endianness_utf16(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, char16_t * output) noexcept;</div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md11"></a>
+Base64</h2>
+<p>We also support converting from <a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">WHATWG forgiving-base64</a> to binary, and back. In particular, you can convert base64 inputs which contain ASCII spaces to binary.</p>
+<p>Converting binary data to base64 always succeeds and is relatively simple: </p><div class="fragment"><div class="line"> {C++}</div>
+<div class="line">std::vector&lt;char&gt; buffer(simdutf::base64_length_from_binary(source.size()));</div>
+<div class="line">simdutf::binary_to_base64(source.data(), source.size(), buffer.data());</div>
+</div><!-- fragment --><p>Decoding base64 requires validation and, thus, error handling. Furthermore, because we prune spaces, we may need to adjust the result size afterword.</p>
+<div class="fragment"><div class="line"> {C++}</div>
+<div class="line">std::vector&lt;char&gt; buffer(simdutf::maximal_binary_length_from_base64(base64.data(), base64.size()));</div>
+<div class="line">simdutf::result r = simdutf::base64_to_binary(base64.data(), base64.size(), buffer.data());</div>
+<div class="line">if(r.error) {</div>
+<div class="line">  // We have some error, r.count tells you where the error was encountered in the input</div>
+<div class="line">} else {</div>
+<div class="line">  buffer.resize(r.count); // resize the buffer according to actual number of bytes</div>
+<div class="line">}</div>
+</div><!-- fragment --><p>Some users may want to decode the base64 inputs in chunks, especially when doing file or networking programming. These users should see <code>tools/fastbase64.cpp</code>, a command-line utility designed for as an example. It reads and writes base64 files using chunks of at most a few tens of kilobytes.</p>
+<p>The specification of our base64 functions is as follows:</p>
+<div class="fragment"><div class="line"> {C++}</div>
+<div class="line">/**</div>
+<div class="line"> * Provide the maximal binary length in bytes given the base64 input.</div>
+<div class="line"> * In general, if the input contains ASCII spaces, the result will be less than</div>
+<div class="line"> * the maximum length.</div>
+<div class="line"> *</div>
+<div class="line"> * @param input         the base64 input to process</div>
+<div class="line"> * @param length        the length of the base64 input in bytes</div>
+<div class="line"> * @return number of base64 bytes</div>
+<div class="line"> */</div>
+<div class="line">simdutf_warn_unused size_t maximal_binary_length_from_base64(const char * input, size_t length) noexcept;</div>
+<div class="line"> </div>
+<div class="line">/**</div>
+<div class="line"> * Convert a base64 input to a binary ouput.</div>
+<div class="line"> *</div>
+<div class="line"> * This function follows the WHATWG forgiving-base64 format, which means that it will</div>
+<div class="line"> * ignore any ASCII spaces in the input. You may provide a padded input (with one or two</div>
+<div class="line"> * equal signs at the end) or an unpadded input (without any equal signs at the end).</div>
+<div class="line"> *</div>
+<div class="line"> * See https://infra.spec.whatwg.org/#forgiving-base64-decode</div>
+<div class="line"> *</div>
+<div class="line"> * This function will fail in case of invalid input. There are two possible reasons for</div>
+<div class="line"> * failure: the input is contains a number of base64 characters that when divided by 4, leaves</div>
+<div class="line"> * a singler remainder character (BASE64_INPUT_REMAINDER), or the input contains a character</div>
+<div class="line"> * that is not a valid base64 character (INVALID_BASE64_CHARACTER).</div>
+<div class="line"> *</div>
+<div class="line"> * You should call this function with a buffer that is at least maximal_binary_length_from_base64(input, length) bytes long.</div>
+<div class="line"> * If you fail to provide that much space, the function may cause a buffer overflow.</div>
+<div class="line"> *</div>
+<div class="line"> * @param input         the base64 string to process</div>
+<div class="line"> * @param length        the length of the string in bytes</div>
+<div class="line"> * @param output        the pointer to buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long).</div>
+<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of bytes written if successful.</div>
+<div class="line"> */</div>
+<div class="line">simdutf_warn_unused result base64_to_binary(const char * input, size_t length, char* output) noexcept;</div>
+<div class="line"> </div>
+<div class="line">/**</div>
+<div class="line"> * Provide the base64 length in bytes given the length of a binary input.</div>
+<div class="line"> *</div>
+<div class="line"> * @param length        the length of the input in bytes</div>
+<div class="line"> * @return number of base64 bytes</div>
+<div class="line"> */</div>
+<div class="line">simdutf_warn_unused size_t base64_length_from_binary(size_t length) noexcept;</div>
+<div class="line"> </div>
+<div class="line">/**</div>
+<div class="line"> * Convert a binary input to a base64 ouput. The output is always padded with equal signs so that it is</div>
+<div class="line"> * a multiple of 4 bytes long.</div>
+<div class="line"> *</div>
+<div class="line"> * This function always succeeds.</div>
+<div class="line"> *</div>
+<div class="line"> * @param input         the binary to process</div>
+<div class="line"> * @param length        the length of the input in bytes</div>
+<div class="line"> * @param output        the pointer to buffer that can hold the conversion result (should be at least base64_length_from_binary(length) bytes long)</div>
+<div class="line"> * @return number of written bytes, will be equal to base64_length_from_binary(length)</div>
+<div class="line"> */</div>
+<div class="line">size_t binary_to_base64(const char * input, size_t length, char* output) noexcept;</div>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md12"></a>
 The sutf command-line tool</h2>
 <p>We also provide a command-line tool which can be build as follows: </p><div class="fragment"><div class="line">cmake -B build &amp;&amp; cmake --build build --target sutf</div>
 </div><!-- fragment --><p> This command builds the executable in <code>./build/tool/</code> under most platforms. The sutf tool enables the user to easily transcode files from one encoding to another directly from the command line. The usage is similar to <a href="https://www.gnu.org/software/libiconv/">iconv</a> (see <code>sutf --help</code> for more details). The sutf command-line tool relies on the simdutf library functions for fast transcoding of supported formats (UTF-8, UTF-16LE, UTF-16BE and UTF-32). If iconv is found on the system and simdutf does not support a conversion, the sutf tool falls back on iconv: a message lets the user know if iconv is available during compilation. The following is an example of transcoding two input files to an output file, from UTF-8 to UTF-16LE: </p><div class="fragment"><div class="line">sutf -f UTF-8 -t UTF-16LE -o output_file.txt first_input_file.txt second_input_file.txt</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md12"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md13"></a>
 Manual implementation selection</h2>
 <p>When compiling the llibrary for x64 processors, we build several implementations of each functions. At runtime, the best implementation is picked automatically. Advanced users may want to pick a particular implementation, thus bypassing our runtime detection. It is possible and even relatively convenient to do so. The following C++ program checks all the available implementation, and selects one as the default:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &quot;simdutf.h&quot;</span></div>
@@ -615,14 +692,16 @@ Manual implementation selection</h2>
 <div class="line">  <span class="keywordflow">return</span> EXIT_SUCCESS;</div>
 <div class="line">}</div>
 </div><!-- fragment --><p>Within the simdutf library,</p>
-<h2><a class="anchor" id="autotoc_md13"></a>
+<h2><a class="anchor" id="autotoc_md14"></a>
 References</h2>
 <ul>
 <li>Robert Clausecker, Daniel Lemire, <a href="https://arxiv.org/abs/2212.05098">Transcoding Unicode Characters with AVX-512 Instructions</a>, Software: Practice and Experience (to appear).</li>
 <li>Daniel Lemire, Wojciech Muła, <a href="https://arxiv.org/abs/2109.10433">Transcoding Billions of Unicode Characters per Second with SIMD Instructions</a>, Software: Practice and Experience52 (2), 2022.</li>
 <li>John Keiser, Daniel Lemire, <a href="https://arxiv.org/abs/2010.03090">Validating UTF-8 In Less Than One Instruction Per Byte</a>, Software: Practice and Experience 51 (5), 2021.</li>
+<li>Wojciech Muła, Daniel Lemire, <a href="https://arxiv.org/abs/1910.05109">Base64 encoding and decoding at almost the speed of a memory copy</a>, Software: Practice and Experience 50 (2), 2020.</li>
+<li>Wojciech Muła, Daniel Lemire, <a href="https://arxiv.org/abs/1704.00605">Faster Base64 Encoding and Decoding using AVX2 Instructions</a>, ACM Transactions on the Web 12 (3), 2018.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md14"></a>
+<h2><a class="anchor" id="autotoc_md15"></a>
 License</h2>
 <p>This code is made available under the <a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache License 2.0</a> as well as the MIT license. As a user, you can pick the license you prefer.</p>
 <p>We include a few competitive solutions under the benchmarks/competition directory. They are provided for research purposes only. </p>

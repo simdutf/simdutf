@@ -337,12 +337,24 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <tr class="memitem:a380f5ef4b282ef66210a84ebc84bce51"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a380f5ef4b282ef66210a84ebc84bce51">count_utf8</a> (const char *input, size_t length) const noexcept=0</td></tr>
 <tr class="memdesc:a380f5ef4b282ef66210a84ebc84bce51"><td class="mdescLeft">&#160;</td><td class="mdescRight">Count the number of code points (characters) in the string assuming that it is valid.  <a href="classsimdutf_1_1implementation.html#a380f5ef4b282ef66210a84ebc84bce51">More...</a><br /></td></tr>
 <tr class="separator:a380f5ef4b282ef66210a84ebc84bce51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af46e9e7192004051687186ac956262f3"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#af46e9e7192004051687186ac956262f3">maximal_binary_length_from_base64</a> (const char *input, size_t length) const noexcept=0</td></tr>
+<tr class="memdesc:af46e9e7192004051687186ac956262f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provide the maximal binary length in bytes given the base64 input.  <a href="classsimdutf_1_1implementation.html#af46e9e7192004051687186ac956262f3">More...</a><br /></td></tr>
+<tr class="separator:af46e9e7192004051687186ac956262f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac04f8fb32ad66cc4e5c0d13d4f9461ea"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#ac04f8fb32ad66cc4e5c0d13d4f9461ea">base64_to_binary</a> (const char *input, size_t length, char *output) const noexcept=0</td></tr>
+<tr class="memdesc:ac04f8fb32ad66cc4e5c0d13d4f9461ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a base64 input to a binary ouput.  <a href="classsimdutf_1_1implementation.html#ac04f8fb32ad66cc4e5c0d13d4f9461ea">More...</a><br /></td></tr>
+<tr class="separator:ac04f8fb32ad66cc4e5c0d13d4f9461ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74dd85eb6ea2ef6aa76faa537c2ac49e"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a74dd85eb6ea2ef6aa76faa537c2ac49e">base64_length_from_binary</a> (size_t length) const noexcept=0</td></tr>
+<tr class="memdesc:a74dd85eb6ea2ef6aa76faa537c2ac49e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provide the base64 length in bytes given the length of a binary input.  <a href="classsimdutf_1_1implementation.html#a74dd85eb6ea2ef6aa76faa537c2ac49e">More...</a><br /></td></tr>
+<tr class="separator:a74dd85eb6ea2ef6aa76faa537c2ac49e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf529607eb82bef95b548289af5d36ef"><td class="memItemLeft" align="right" valign="top">virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#acf529607eb82bef95b548289af5d36ef">binary_to_base64</a> (const char *input, size_t length, char *output) const noexcept=0</td></tr>
+<tr class="memdesc:acf529607eb82bef95b548289af5d36ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a binary input to a base64 ouput.  <a href="classsimdutf_1_1implementation.html#acf529607eb82bef95b548289af5d36ef">More...</a><br /></td></tr>
+<tr class="separator:acf529607eb82bef95b548289af5d36ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>An implementation of simdutf for a particular CPU architecture. </p>
 <p>Also used to maintain the currently active implementation. The active implementation is automatically initialized on first use to the most advanced implementation supported by the host. </p>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01389">1389</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01446">1446</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="afd306a0bc3e221964af3f31a64784b12"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afd306a0bc3e221964af3f31a64784b12">&#9670;&nbsp;</a></span>autodetect_encoding()</h2>
@@ -387,6 +399,153 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the encoding type detected </dd></dl>
+
+</div>
+</div>
+<a id="a74dd85eb6ea2ef6aa76faa537c2ac49e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a74dd85eb6ea2ef6aa76faa537c2ac49e">&#9670;&nbsp;</a></span>base64_length_from_binary()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::base64_length_from_binary </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Provide the base64 length in bytes given the length of a binary input. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">length</td><td>the length of the input in bytes </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>number of base64 bytes </dd></dl>
+
+</div>
+</div>
+<a id="ac04f8fb32ad66cc4e5c0d13d4f9461ea"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac04f8fb32ad66cc4e5c0d13d4f9461ea">&#9670;&nbsp;</a></span>base64_to_binary()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a> simdutf::implementation::base64_to_binary </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>output</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert a base64 input to a binary ouput. </p>
+<p>This function follows the WHATWG forgiving-base64 format, which means that it will ignore any ASCII spaces in the input. You may provide a padded input (with one or two equal signs at the end) or an unpadded input (without any equal signs at the end).</p>
+<p>See <a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">https://infra.spec.whatwg.org/#forgiving-base64-decode</a></p>
+<p>This function will fail in case of invalid input. There are two possible reasons for failure: the input is contains a number of base64 characters that when divided by 4, leaves a singler remainder character (BASE64_INPUT_REMAINDER), or the input contains a character that is not a valid base64 character (INVALID_BASE64_CHARACTER).</p>
+<p>You should call this function with a buffer that is at least maximal_binary_length_from_base64(input, length) bytes long. If you fail to provide that much space, the function may cause a buffer overflow.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the base64 string to process </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
+    <tr><td class="paramname">output</td><td>the pointer to buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of bytes written if successful. </dd></dl>
+
+</div>
+</div>
+<a id="acf529607eb82bef95b548289af5d36ef"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acf529607eb82bef95b548289af5d36ef">&#9670;&nbsp;</a></span>binary_to_base64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual size_t simdutf::implementation::binary_to_base64 </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>output</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert a binary input to a base64 ouput. </p>
+<p>The output is always padded with equal signs so that it is a multiple of 4 bytes long.</p>
+<p>This function always succeeds.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the binary to process </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the input in bytes </td></tr>
+    <tr><td class="paramname">output</td><td>the pointer to buffer that can hold the conversion result (should be at least base64_length_from_binary(length) bytes long) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written bytes, will be equal to base64_length_from_binary(length) </dd></dl>
 
 </div>
 </div>
@@ -3129,7 +3288,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" &lt;&lt; impl-&gt;description() &lt;&lt; ")" &lt;&lt; endl;
 </pre> <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01410">1410</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01467">1467</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3262,6 +3421,53 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 
 </div>
 </div>
+<a id="af46e9e7192004051687186ac956262f3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af46e9e7192004051687186ac956262f3">&#9670;&nbsp;</a></span>maximal_binary_length_from_base64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::maximal_binary_length_from_base64 </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Provide the maximal binary length in bytes given the base64 input. </p>
+<p>In general, if the input contains ASCII spaces, the result will be less than the maximum length.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the base64 input to process </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the base64 input in bytes </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>number of base64 bytes </dd></dl>
+
+</div>
+</div>
 <a id="a3281cf45b997303c89cf2d462d85d384"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3281cf45b997303c89cf2d462d85d384">&#9670;&nbsp;</a></span>name()</h2>
 
@@ -3290,7 +3496,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" &lt;&lt; impl-&gt;description() &lt;&lt; ")" &lt;&lt; endl;
 </pre> <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01400">1400</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01457">1457</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
