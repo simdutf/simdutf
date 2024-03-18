@@ -5,7 +5,7 @@ namespace simdutf {
 namespace scalar {
 namespace {
 namespace utf8 {
-#if SIMDUTF_IMPLEMENTATION_FALLBACK
+#if SIMDUTF_IMPLEMENTATION_FALLBACK || SIMDUTF_IMPLEMENTATION_RVV
 // only used by the fallback kernel.
 // credit: based on code from Google Fuchsia (Apache Licensed)
 inline simdutf_warn_unused bool validate(const char *buf, size_t len) noexcept {

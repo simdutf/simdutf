@@ -66,6 +66,9 @@ SIMDUTF_DISABLE_UNDESIRED_WARNINGS
 #if SIMDUTF_IMPLEMENTATION_PPC64
 #include "ppc64/implementation.cpp"
 #endif
+#if SIMDUTF_IMPLEMENTATION_RVV
+#include "rvv/implementation.cpp"
+#endif
 #if SIMDUTF_IMPLEMENTATION_WESTMERE
 #include "westmere/implementation.cpp"
 #endif

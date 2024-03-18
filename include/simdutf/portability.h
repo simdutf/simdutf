@@ -93,6 +93,28 @@
 // s390 IBM system. Big endian.
 #elif (defined(__riscv) || defined(__riscv__)) && __riscv_xlen == 64
 // RISC-V 64-bit
+#define SIMDUTF_IS_RISCV64 1
+
+#if __clang_major__ >= 19
+// Does the compiler support target regions for RISC-V
+#define SIMDUTF_HAS_RVV_TARGET_REGION 1
+#endif
+
+#if __riscv_v_intrinsic >= 11000 && !(__GNUC__ == 13 && __GNUC_MINOR__ == 2 && __GNUC_PATCHLEVEL__ == 0)
+#define SIMDUTF_HAS_RVV_INTRINSICS 1
+#endif
+
+#define SIMDUTF_HAS_ZVBB_INTRINSICS 0 // there is currently no way to detect this
+
+#if SIMDUTF_HAS_RVV_INTRINSICS && __riscv_vector && __riscv_v_min_vlen >= 128 && __riscv_v_elen >= 64
+// RISC-V V extension
+#define SIMDUTF_IS_RVV 1
+#if SIMDUTF_HAS_ZVBB_INTRINSICS && __riscv_zvbb >= 1000000
+// RISC-V Vector Basic Bit-manipulation
+#define SIMDUTF_IS_ZVBB 1
+#endif
+#endif
+
 #elif defined(__loongarch_lp64)
 // LoongArch 64-bit
 #else

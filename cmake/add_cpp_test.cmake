@@ -30,7 +30,11 @@ function(add_cpp_test TEST_NAME)
     )
     set_target_properties(${TEST_NAME} PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
   else()
-    add_test(${TEST_NAME} ${TEST_NAME})
+    if (QEMU)
+      add_test(${TEST_NAME} ${QEMU} ${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME})
+    else()
+      add_test(${TEST_NAME} ${TEST_NAME})
+    endif()
 
     # Add to <label>_tests make targets
     foreach(label ${ARGS_LABELS})
