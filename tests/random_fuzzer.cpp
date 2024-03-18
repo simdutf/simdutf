@@ -186,7 +186,7 @@ bool fuzz_this(const char *data, size_t size) {
       // It wrote utf32words * sizeof(char32_t) bytes.
       bool validutf32 = e->validate_utf32(utf32_output.get(), utf32words);
       if (!validutf32) {
-        return -1;
+        return false;
       }
       // convert it back:
       // We need a buffer where to write the UTF-8 code units.

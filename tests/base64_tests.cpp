@@ -49,7 +49,7 @@ TEST(roundtrip_base64) {
     buffer.resize(implementation.base64_length_from_binary(len));
     std::vector<char> back(len);
     std::mt19937 gen((std::mt19937::result_type)(seed));
-    std::uniform_int_distribution<uint8_t> byte_generator{0, 255};
+    std::uniform_int_distribution<int> byte_generator{0, 255};
     for (size_t trial = 0; trial < 10; trial++) {
       for (size_t i = 0; i < len; i++) {
         source[i] = byte_generator(gen);
@@ -108,7 +108,7 @@ size_t add_space(std::vector<char> &v, std::mt19937 &gen) {
       padding++;
     }
   }
-  std::uniform_int_distribution<size_t> index_dist(0, v.size() - padding);
+  std::uniform_int_distribution<int> index_dist(0, v.size() - padding);
   size_t i = index_dist(gen);
   std::uniform_int_distribution<int> char_dist(0, 3);
   v.insert(v.begin() + i, space[char_dist(gen)]);
@@ -123,9 +123,9 @@ size_t add_garbage(std::vector<char> &v, std::mt19937 &gen) {
       padding++;
     }
   }
-  std::uniform_int_distribution<size_t> index_dist(0, v.size() - padding);
+  std::uniform_int_distribution<int> index_dist(0, v.size() - padding);
   size_t i = index_dist(gen);
-  std::uniform_int_distribution<uint8_t> char_dist(0, 255);
+  std::uniform_int_distribution<int> char_dist(0, 255);
   uint8_t c = char_dist(gen);
   while(to_base64_value[uint8_t(c)] != 255) {
     c = char_dist(gen);
