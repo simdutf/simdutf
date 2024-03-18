@@ -16,6 +16,7 @@
   - [Single-header version](#single-header-version)
   - [Example](#example)
   - [API](#api)
+  - [Base64](#base64)
   - [The sutf command-line tool](#the-sutf-command-line-tool)
   - [Manual implementation selection](#manual-implementation-selection)
   - [References](#references)
@@ -53,10 +54,12 @@ This library provide fast Unicode functions such as
 - From an UTF-16LE/BE string, compute the size of the UTF-8 equivalent string,
 - From an UTF-32 string, compute the size of the UTF-8 or UTF-16LE equivalent string,
 - From an UTF-16LE/BE string, compute the size of the UTF-32 equivalent string (equivalent to UTF-16 character counting),
-- UTF-8 and UTF-16LE/BE character counting.
-- UTF-16 endianness change (UTF16-LE/BE to UTF-16-BE/LE)
+- UTF-8 and UTF-16LE/BE character counting,
+- UTF-16 endianness change (UTF16-LE/BE to UTF-16-BE/LE),
+- [WHATWG forgiving-base64](https://infra.spec.whatwg.org/#forgiving-base64-decode) to binary,
+- Binary to base64.
 
-The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, AVX-512, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion characters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).
+The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, AVX-512, RISC-V Vector Extension, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion characters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).
 
 The library compiles down to a small library of a few hundred kilobytes. Our functions are exception-free and non allocating. We have extensive tests and extensive benchmarks.
 
@@ -117,6 +120,7 @@ Requirements
 - For high speed, you should have a recent 64-bit system (e.g., ARM or x64).
 - If you rely on CMake, you should use a recent CMake (at least 3.15) ; otherwise you may use the [single header version](#single-header-version). The library is also available from Microsoft's vcpkg.
 - AVX-512 support require a processor with AVX512-VBMI2 (Ice Lake or better) and a recent compiler (GCC 8 or better, Visual Studio 2022 or better, LLVM clang 6 or better). You need a correspondingly recent assembler such as gas (2.30+) or nasm (2.14+): recent compilers usually come with recent assemblers. If you mix a recent compiler with an incompatible/old assembler (e.g., when using a recent compiler with an old Linux distribution), you may get errors at build time because the compiler produces instructions that the assembler does not recognize: you should update your assembler to match your compiler (e.g., upgrade binutils to version 2.30 or better under Linux) or use an older compiler matching the capabilities of your assembler.
+- To benefit from RISC-V Vector Extensions on RISC-V systems, you should compile specifically for the desired architecture. E.g., add `-march=rv64gcv` as a compiler flag when using a version of GCC or LLVM which supports these extensions (such as GCC 14 or better). The command `CXXFLAGS=-march=rv64gcv cmake -B build` may suffice.
 
 Usage (Usage)
 -------
@@ -1561,6 +1565,96 @@ void change_endianness_utf16(const char16_t * input, size_t length, char16_t * o
 
 ```
 
+Base64
+-----
+
+We also support converting from [WHATWG forgiving-base64](https://infra.spec.whatwg.org/#forgiving-base64-decode) to binary, and back. In particular, you can convert base64 inputs which contain ASCII spaces to binary.
+
+Converting binary data to base64 always succeeds and is relatively simple:
+```C++
+std::vector<char> buffer(simdutf::base64_length_from_binary(source.size()));
+simdutf::binary_to_base64(source.data(), source.size(), buffer.data());
+```
+
+Decoding base64 requires validation and, thus, error handling. Furthermore, because
+we prune spaces, we may need to adjust the result size afterword.
+
+```C++
+std::vector<char> buffer(simdutf::maximal_binary_length_from_base64(base64.data(), base64.size()));
+simdutf::result r = simdutf::base64_to_binary(base64.data(), base64.size(), buffer.data());
+if(r.error) {
+  // We have some error, r.count tells you where the error was encountered in the input
+} else {
+  buffer.resize(r.count); // resize the buffer according to actual number of bytes
+}
+```
+
+Some users may want to decode the base64 inputs in chunks, especially when doing
+file or networking programming. These users should see `tools/fastbase64.cpp`, a command-line
+utility designed for as an example. It reads and writes base64 files using chunks of at most
+a few tens of kilobytes.
+
+The specification of our base64 functions is as follows:
+
+```C++
+/**
+ * Provide the maximal binary length in bytes given the base64 input.
+ * In general, if the input contains ASCII spaces, the result will be less than
+ * the maximum length.
+ *
+ * @param input         the base64 input to process
+ * @param length        the length of the base64 input in bytes
+ * @return number of base64 bytes
+ */
+simdutf_warn_unused size_t maximal_binary_length_from_base64(const char * input, size_t length) noexcept;
+
+/**
+ * Convert a base64 input to a binary ouput.
+ *
+ * This function follows the WHATWG forgiving-base64 format, which means that it will
+ * ignore any ASCII spaces in the input. You may provide a padded input (with one or two
+ * equal signs at the end) or an unpadded input (without any equal signs at the end).
+ *
+ * See https://infra.spec.whatwg.org/#forgiving-base64-decode
+ *
+ * This function will fail in case of invalid input. There are two possible reasons for
+ * failure: the input is contains a number of base64 characters that when divided by 4, leaves
+ * a singler remainder character (BASE64_INPUT_REMAINDER), or the input contains a character
+ * that is not a valid base64 character (INVALID_BASE64_CHARACTER).
+ *
+ * You should call this function with a buffer that is at least maximal_binary_length_from_base64(input, length) bytes long.
+ * If you fail to provide that much space, the function may cause a buffer overflow.
+ *
+ * @param input         the base64 string to process
+ * @param length        the length of the string in bytes
+ * @param output        the pointer to buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long).
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of bytes written if successful.
+ */
+simdutf_warn_unused result base64_to_binary(const char * input, size_t length, char* output) noexcept;
+
+/**
+ * Provide the base64 length in bytes given the length of a binary input.
+ *
+ * @param length        the length of the input in bytes
+ * @return number of base64 bytes
+ */
+simdutf_warn_unused size_t base64_length_from_binary(size_t length) noexcept;
+
+/**
+ * Convert a binary input to a base64 ouput. The output is always padded with equal signs so that it is
+ * a multiple of 4 bytes long.
+ *
+ * This function always succeeds.
+ *
+ * @param input         the binary to process
+ * @param length        the length of the input in bytes
+ * @param output        the pointer to buffer that can hold the conversion result (should be at least base64_length_from_binary(length) bytes long)
+ * @return number of written bytes, will be equal to base64_length_from_binary(length)
+ */
+size_t binary_to_base64(const char * input, size_t length, char* output) noexcept;
+
+```
+
 
 The sutf command-line tool
 ------
@@ -1635,6 +1729,9 @@ References
 * Robert Clausecker, Daniel Lemire, [Transcoding Unicode Characters with AVX-512 Instructions](https://arxiv.org/abs/2212.05098),  Software: Practice and Experience (to appear).
 * Daniel Lemire, Wojciech Muła,  [Transcoding Billions of Unicode Characters per Second with SIMD Instructions](https://arxiv.org/abs/2109.10433), Software: Practice and Experience52 (2), 2022.
 * John Keiser, Daniel Lemire, [Validating UTF-8 In Less Than One Instruction Per Byte](https://arxiv.org/abs/2010.03090), Software: Practice and Experience 51 (5), 2021.
+* Wojciech Muła, Daniel Lemire, [Base64 encoding and decoding at almost the speed of a memory copy](https://arxiv.org/abs/1910.05109), Software: Practice and Experience 50 (2), 2020.
+* Wojciech Muła, Daniel Lemire, [Faster Base64 Encoding and Decoding using AVX2 Instructions](https://arxiv.org/abs/1704.00605), ACM Transactions on the Web 12 (3), 2018.
+
 
 License
 -------

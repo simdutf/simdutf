@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 add_executable(sutf sutf.cpp)
+add_executable(fastbase64 fastbase64.cpp)
 
 if(SIMDUTF_ICONV)
 find_package(Iconv)
@@ -30,17 +31,23 @@ if((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Cl
   if(LIBSTDCPP)
     message(STATUS "libstdc++.a found")
     target_link_options(sutf PRIVATE "-static-libstdc++")
+    target_link_options(fastbase64 PRIVATE "-static-libstdc++")
   else()
     message(STATUS "libstdc++.a not found")
   endif()
   target_link_options(sutf PRIVATE "-Wl,--gc-sections")
+  target_link_options(fastbase64 PRIVATE "-Wl,--gc-sections")
 endif()
 endif()
 
 set_property(TARGET sutf PROPERTY CXX_STANDARD 17)
 set_property(TARGET sutf PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET fastbase64 PROPERTY CXX_STANDARD 17)
+set_property(TARGET fastbase64 PROPERTY CXX_STANDARD_REQUIRED ON)
 
 target_link_libraries(sutf PUBLIC simdutf)
+target_link_libraries(fastbase64 PUBLIC simdutf)
+
 if(MSVC AND BUILD_SHARED_LIBS)
   # Copy the simdutf dll into the directory
   add_custom_command(TARGET sutf POST_BUILD        # Adds a post-build event
@@ -51,6 +58,14 @@ endif()
 install(
    TARGETS
     sutf
+   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(
+   TARGETS
+    fastbase64
    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

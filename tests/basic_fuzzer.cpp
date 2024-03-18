@@ -11,7 +11,7 @@
 #include <tests/reference/encode_utf8.h>
 #include <tests/helpers/test.h>
 
-uint32_t seed = 123;
+static uint32_t seed = 123;
 const size_t MAX_SIZE = 1025;
 
 std::vector<char> input;
@@ -303,7 +303,7 @@ struct state_tracker {
 TEST(garbage_utf8_fuzz_with_errors) {
   // Here we generate fully random inputs and try transcoding from UTF-8.
   // The inputs are almost certainly *NOT* valid UTF-8.
-  std::mt19937 gen(std::mt19937::result_type(123456));
+  std::mt19937 gen((std::mt19937::result_type)(seed));
   std::uniform_int_distribution<size_t> length_generator{1, 65};
   std::uniform_int_distribution<uint32_t> byte_generator{0, 256};
 
@@ -351,7 +351,7 @@ TEST(garbage_utf8_fuzz_with_errors) {
 TEST(garbage_utf8_fuzz) {
   // Here we generate fully random inputs and try transcoding from UTF-8.
   // The inputs are almost certainly *NOT* valid UTF-8.
-  std::mt19937 gen(std::mt19937::result_type(123456));
+  std::mt19937 gen((std::mt19937::result_type)(seed));
   std::uniform_int_distribution<size_t> length_generator{1, 65};
   std::uniform_int_distribution<uint32_t> byte_generator{0, 256};
 

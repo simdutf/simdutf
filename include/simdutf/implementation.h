@@ -1380,6 +1380,63 @@ simdutf_warn_unused size_t trim_partial_utf16le(const char16_t* input, size_t le
  */
 simdutf_warn_unused size_t trim_partial_utf16(const char16_t* input, size_t length);
 
+
+/**
+ * Provide the maximal binary length in bytes given the base64 input.
+ * In general, if the input contains ASCII spaces, the result will be less than
+ * the maximum length.
+ *
+ * @param input         the base64 input to process
+ * @param length        the length of the base64 input in bytes
+ * @return number of base64 bytes
+ */
+simdutf_warn_unused size_t maximal_binary_length_from_base64(const char * input, size_t length) noexcept;
+
+/**
+ * Convert a base64 input to a binary ouput.
+ *
+ * This function follows the WHATWG forgiving-base64 format, which means that it will
+ * ignore any ASCII spaces in the input. You may provide a padded input (with one or two
+ * equal signs at the end) or an unpadded input (without any equal signs at the end).
+ *
+ * See https://infra.spec.whatwg.org/#forgiving-base64-decode
+ *
+ * This function will fail in case of invalid input. There are two possible reasons for
+ * failure: the input is contains a number of base64 characters that when divided by 4, leaves
+ * a singler remainder character (BASE64_INPUT_REMAINDER), or the input contains a character
+ * that is not a valid base64 character (INVALID_BASE64_CHARACTER).
+ *
+ * You should call this function with a buffer that is at least maximal_binary_length_from_base64(input, length) bytes long.
+ * If you fail to provide that much space, the function may cause a buffer overflow.
+ *
+ * @param input         the base64 string to process
+ * @param length        the length of the string in bytes
+ * @param output        the pointer to buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long).
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of bytes written if successful.
+ */
+simdutf_warn_unused result base64_to_binary(const char * input, size_t length, char* output) noexcept;
+
+/**
+ * Provide the base64 length in bytes given the length of a binary input.
+ *
+ * @param length        the length of the input in bytes
+ * @return number of base64 bytes
+ */
+simdutf_warn_unused size_t base64_length_from_binary(size_t length) noexcept;
+
+/**
+ * Convert a binary input to a base64 ouput. The output is always padded with equal signs so that it is
+ * a multiple of 4 bytes long.
+ *
+ * This function always succeeds.
+ *
+ * @param input         the binary to process
+ * @param length        the length of the input in bytes
+ * @param output        the pointer to buffer that can hold the conversion result (should be at least base64_length_from_binary(length) bytes long)
+ * @return number of written bytes, will be equal to base64_length_from_binary(length)
+ */
+size_t binary_to_base64(const char * input, size_t length, char* output) noexcept;
+
 /**
  * An implementation of simdutf for a particular CPU architecture.
  *
@@ -2440,6 +2497,61 @@ public:
    */
   simdutf_warn_unused virtual size_t count_utf8(const char * input, size_t length) const noexcept = 0;
 
+  /**
+   * Provide the maximal binary length in bytes given the base64 input.
+   * In general, if the input contains ASCII spaces, the result will be less than
+   * the maximum length.
+   *
+   * @param input         the base64 input to process
+   * @param length        the length of the base64 input in bytes
+   * @return number of base64 bytes
+   */
+  simdutf_warn_unused virtual size_t maximal_binary_length_from_base64(const char * input, size_t length) const noexcept = 0;
+
+  /**
+   * Convert a base64 input to a binary ouput.
+   *
+   * This function follows the WHATWG forgiving-base64 format, which means that it will
+   * ignore any ASCII spaces in the input. You may provide a padded input (with one or two
+   * equal signs at the end) or an unpadded input (without any equal signs at the end).
+   *
+   * See https://infra.spec.whatwg.org/#forgiving-base64-decode
+   *
+   * This function will fail in case of invalid input. There are two possible reasons for
+   * failure: the input is contains a number of base64 characters that when divided by 4, leaves
+   * a singler remainder character (BASE64_INPUT_REMAINDER), or the input contains a character
+   * that is not a valid base64 character (INVALID_BASE64_CHARACTER).
+   *
+   * You should call this function with a buffer that is at least maximal_binary_length_from_base64(input, length) bytes long.
+   * If you fail to provide that much space, the function may cause a buffer overflow.
+   *
+   * @param input         the base64 string to process
+   * @param length        the length of the string in bytes
+   * @param output        the pointer to buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long).
+   * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of bytes written if successful.
+   */
+  simdutf_warn_unused virtual result base64_to_binary(const char * input, size_t length, char* output) const noexcept = 0;
+
+  /**
+   * Provide the base64 length in bytes given the length of a binary input.
+   *
+   * @param length        the length of the input in bytes
+   * @return number of base64 bytes
+   */
+  simdutf_warn_unused virtual size_t base64_length_from_binary(size_t length) const noexcept = 0;
+
+  /**
+   * Convert a binary input to a base64 ouput. The output is always padded with equal signs so that it is
+   * a multiple of 4 bytes long.
+   *
+   * This function always succeeds.
+   *
+   * @param input         the binary to process
+   * @param length        the length of the input in bytes
+   * @param output        the pointer to buffer that can hold the conversion result (should be at least base64_length_from_binary(length) bytes long)
+   * @return number of written bytes, will be equal to base64_length_from_binary(length)
+   */
+  virtual size_t binary_to_base64(const char * input, size_t length, char* output) const noexcept = 0;
 
 
 protected:

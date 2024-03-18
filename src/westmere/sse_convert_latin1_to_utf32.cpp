@@ -10,7 +10,7 @@ std::pair<const char*, char32_t*> sse_convert_latin1_to_utf32(const char* buf, s
         __m128i in_shifted2 = _mm_srli_si128(in, 8);
         __m128i in_shifted3 = _mm_srli_si128(in, 12);
 
-        // expand 8-bit to 32-bit unit      
+        // expand 8-bit to 32-bit unit
         __m128i out1 = _mm_cvtepu8_epi32(in);
         __m128i out2 = _mm_cvtepu8_epi32(in_shifted1);
         __m128i out3 = _mm_cvtepu8_epi32(in_shifted2);

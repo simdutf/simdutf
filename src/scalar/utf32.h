@@ -63,7 +63,12 @@ inline size_t latin1_length_from_utf32(size_t len) {
   return len; // a utf32 codepoint will always represent 1 latin1 character
 }
 
-
+inline simdutf_warn_unused uint32_t swap_bytes(const uint32_t word) {
+  return ((word >> 24) & 0xff) |      // move byte 3 to byte 0
+         ((word << 8) & 0xff0000) |   // move byte 1 to byte 2
+         ((word >> 8) & 0xff00) |     // move byte 2 to byte 1
+         ((word << 24) & 0xff000000); // byte 0 to byte 3
+}
 
 } // utf32 namespace
 } // unnamed namespace

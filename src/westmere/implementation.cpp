@@ -47,6 +47,7 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 #include "westmere/sse_convert_utf32_to_latin1.cpp"
 #include "westmere/sse_convert_utf32_to_utf8.cpp"
 #include "westmere/sse_convert_utf32_to_utf16.cpp"
+#include "westmere/sse_base64.cpp"
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -693,7 +694,7 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char * 
       __m128i input4 = _mm_loadu_si128((const __m128i *)(str + i + 3*sizeof(__m128i)));
       __m128i input12 = _mm_add_epi8(
                                       _mm_cmpgt_epi8(
-                                                    _mm_setzero_si128(), 
+                                                    _mm_setzero_si128(),
                                                     input1),
                                       _mm_cmpgt_epi8(
                                                     _mm_setzero_si128(),
@@ -778,6 +779,21 @@ simdutf_warn_unused size_t implementation::utf32_length_from_utf8(const char * i
   return utf8::count_code_points(input, length);
 }
 
+simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(const char * input, size_t length) const noexcept {
+  return scalar::base64::maximal_binary_length_from_base64(input, length);
+}
+
+simdutf_warn_unused result implementation::base64_to_binary(const char * input, size_t length, char* output) const noexcept {
+  return compress_decode_base64(output, input, length);
+}
+
+simdutf_warn_unused size_t implementation::base64_length_from_binary(size_t length) const noexcept {
+  return scalar::base64::base64_length_from_binary(length);
+}
+
+size_t implementation::binary_to_base64(const char * input, size_t length, char* output) const noexcept {
+  return encode_base64(output, input, length);
+}
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
 

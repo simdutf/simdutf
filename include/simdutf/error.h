@@ -14,6 +14,8 @@ enum error_code {
   SURROGATE,    // The decoded character must be not be in U+D800...DFFF (UTF-8 or UTF-32) OR
                 // a high surrogate must be followed by a low surrogate and a low surrogate must be preceded by a high surrogate (UTF-16) OR
                 // there must be no surrogate at all (Latin1)
+  INVALID_BASE64_CHARACTER, // Found a character that cannot be part of a valid base64 string.
+  BASE64_INPUT_REMAINDER, // The base64 input terminates with a single character, excluding padding (=).
   OTHER         // Not related to validation/transcoding.
 };
 
