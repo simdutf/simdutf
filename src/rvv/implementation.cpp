@@ -78,6 +78,21 @@ void implementation::change_endianness_utf16(const char16_t *src, size_t len, ch
     return rvv_change_endianness_utf16<simdutf_ByteFlip::V>(src, len, dst);
 }
 
+simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(const char * input, size_t length) const noexcept {
+  return scalar::base64::maximal_binary_length_from_base64(input, length);
+}
+
+simdutf_warn_unused result implementation::base64_to_binary(const char * input, size_t length, char* output) const noexcept {
+  return scalar::base64::base64_to_binary(input, length, output);
+}
+
+simdutf_warn_unused size_t implementation::base64_length_from_binary(size_t length) const noexcept {
+  return scalar::base64::base64_length_from_binary(length);
+}
+
+size_t implementation::binary_to_base64(const char * input, size_t length, char* output) const noexcept {
+  return scalar::base64::binary_to_base64(input, length, output);
+}
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
 
