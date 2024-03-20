@@ -147,26 +147,10 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char * input,
   return  actual_length / 4 * 3 + (actual_length %4)  - 1;
 }
 
-simdutf_warn_unused simdutf_really_inline result base64_to_binary(const char * input, size_t length, char* output) noexcept {
-  if(length > 0 && input[length - 1] == '=') {
-    length -= 1;
-    if(length > 0 && input[length - 1] == '=') {
-      length -= 1;
-    }
-  }
-  if(length == 0) {
-    return {SUCCESS, 0};
-  }
-  return base64_tail_decode(output, input, length);
-}
-
 simdutf_warn_unused size_t base64_length_from_binary(size_t length) noexcept {
   return (length + 2)/3 * 4; // We use padding to make the length a multiple of 4.
 }
 
-simdutf_really_inline size_t binary_to_base64(const char * input, size_t length, char* output) noexcept {
-  return tail_encode_base64(output, input, length);
-}
 } // namespace base64
 } // unnamed namespace
 } // namespace scalar
