@@ -156,7 +156,7 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
   simdutf_really_inline simd16<uint16_t> operator&(const simd16<uint16_t> other) const { return vandq_u16(*this, other); }
   simdutf_really_inline simd16<uint16_t> operator^(const simd16<uint16_t> other) const { return veorq_u16(*this, other); }
 
-  // Pack with the unsigned saturation  two uint16_t code units into single uint8_t vector
+  // Pack with the unsigned saturation of two uint16_t code units into single uint8_t vector
   static simdutf_really_inline simd8<uint8_t> pack(const simd16<uint16_t>& v0, const simd16<uint16_t>& v1) {
     return vqmovn_high_u16(vqmovn_u16(v0), v1);
   }

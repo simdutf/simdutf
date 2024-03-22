@@ -210,11 +210,17 @@ void load_block(block64 *b, const char *src) {
   b->chunks[3] = vld1q_u8(reinterpret_cast<const uint8_t *>(src) + 48);
 }
 
+inline uint8x16_t load_satured(const uint16_t * data) {
+    uint16x8_t in1 = vld1q_u16(data);
+    uint16x8_t in2 = vld1q_u16(data+8);
+    return vqmovn_high_u16(vqmovn_u16(in1), in2);
+}
+
 void load_block(block64 *b, const char16_t *src) {
-  b->chunks[0] = vld2q_u8(reinterpret_cast<const uint8_t *>(src)).val[0];
-  b->chunks[1] = vld2q_u8(reinterpret_cast<const uint8_t *>(src) + 16).val[0];
-  b->chunks[2] = vld2q_u8(reinterpret_cast<const uint8_t *>(src) + 32).val[0];
-  b->chunks[3] = vld2q_u8(reinterpret_cast<const uint8_t *>(src) + 48).val[0];
+  b->chunks[0] = load_satured(reinterpret_cast<const uint16_t *>(src));
+  b->chunks[1] = load_satured(reinterpret_cast<const uint16_t *>(src) + 16);
+  b->chunks[2] = load_satured(reinterpret_cast<const uint16_t *>(src) + 32);
+  b->chunks[3] = load_satured(reinterpret_cast<const uint16_t *>(src) + 48);
 }
 
 // decode 64 bytes and output 48 bytes
