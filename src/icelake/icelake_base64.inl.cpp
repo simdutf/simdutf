@@ -106,6 +106,10 @@ static inline void load_block(block64 *b, const char *src) {
   b->chunks[0] = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(src));
 }
 
+static inline void load_block(block64 *b, const char16_t *src) {
+  b->chunks[0] = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(src));
+}shit
+
 static inline void base64_decode(char *out, __m512i str) {
   const __m512i merge_ab_and_bc =
       _mm512_maddubs_epi16(str, _mm512_set1_epi32(0x01400140));
@@ -130,7 +134,8 @@ static inline void base64_decode_block(char *out, block64 *b) {
   base64_decode(out, b->chunks[0]);
 }
 
-result compress_decode_base64(char *dst, const char *src, size_t srclen) {
+template <typename chartype>
+result compress_decode_base64(char *dst, const chartype *src, size_t srclen) {
   size_t equalsigns = 0;
   if (srclen > 0 && src[srclen - 1] == '=') {
     srclen--;
@@ -140,16 +145,16 @@ result compress_decode_base64(char *dst, const char *src, size_t srclen) {
       equalsigns = 2;
     }
   }
-  const char *const srcinit = src;
+  const chartype *const srcinit = src;
   const char *const dstinit = dst;
-  const char *const srcend = src + srclen;
+  const chartype *const srcend = src + srclen;
 
   // figure out why block_size == 2 is sometimes best???
   constexpr size_t block_size = 6;
   char buffer[block_size * 64];
   char *bufferptr = buffer;
   if (srclen >= 64) {
-    const char *const srcend64 = src + srclen - 64;
+    const chartype *const srcend64 = src + srclen - 64;
     while (src <= srcend64) {
       block64 b;
       load_block(&b, src);
