@@ -140,7 +140,7 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
     return _mm256_shuffle_epi8(*this, swap);
   }
 
-  // Pack with the unsigned saturation two uint16_t code units into single uint8_t vector
+  // Pack with the unsigned saturation of two uint16_t code units into single uint8_t vector
   static simdutf_really_inline simd8<uint8_t> pack(const simd16<uint16_t>& v0, const simd16<uint16_t>& v1) {
     // Note: the AVX2 variant of pack operates on 128-bit lanes, thus
     //       we have to shuffle lanes in order to produce bytes in the
