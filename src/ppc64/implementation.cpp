@@ -299,6 +299,23 @@ simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(con
 }
 
 simdutf_warn_unused result implementation::base64_to_binary(const char * input, size_t length, char* output) const noexcept {
+  if(length > 0 && input[length - 1] == '=') {
+    length -= 1;
+    if(length > 0 && input[length - 1] == '=') {
+      length -= 1;
+    }
+  }
+  if(length == 0) {
+    return {SUCCESS, 0};
+  }
+  return scalar::base64::base64_tail_decode(output, input, length);
+}
+
+simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(const char16_t * input, size_t length) const noexcept {
+  return scalar::base64::maximal_binary_length_from_base64(input, length);
+}
+
+simdutf_warn_unused result implementation::base64_to_binary(const char16_t * input, size_t length, char* output) const noexcept {
   return scalar::base64::base64_to_binary(input, length, output);
 }
 

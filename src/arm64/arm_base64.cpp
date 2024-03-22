@@ -210,6 +210,13 @@ void load_block(block64 *b, const char *src) {
   b->chunks[3] = vld1q_u8(reinterpret_cast<const uint8_t *>(src) + 48);
 }
 
+void load_block(block64 *b, const char16_t *src) {
+  b->chunks[0] = vld2q_u8(reinterpret_cast<const uint8_t *>(src)).val[0];
+  b->chunks[1] = vld2q_u8(reinterpret_cast<const uint8_t *>(src) + 16).val[0];
+  b->chunks[2] = vld2q_u8(reinterpret_cast<const uint8_t *>(src) + 32).val[0];
+  b->chunks[3] = vld2q_u8(reinterpret_cast<const uint8_t *>(src) + 48).val[0];
+}
+
 // decode 64 bytes and output 48 bytes
 void base64_decode_block(char *out, const char *src) {
   uint8x16x4_t str = vld4q_u8((uint8_t *)src);
@@ -222,7 +229,8 @@ void base64_decode_block(char *out, const char *src) {
   vst3q_u8((uint8_t *)out, outvec);
 }
 
-result compress_decode_base64(char *dst, const char *src, size_t srclen) {
+template <typename char_type>
+result compress_decode_base64(char *dst, const char_type *src, size_t srclen) {
   size_t equalsigns = 0;
   if (srclen > 0 && src[srclen - 1] == '=') {
     srclen--;
@@ -232,15 +240,15 @@ result compress_decode_base64(char *dst, const char *src, size_t srclen) {
       equalsigns = 2;
     }
   }
-  const char *const srcinit = src;
+  const char_type *const srcinit = src;
   const char *const dstinit = dst;
-  const char *const srcend = src + srclen;
+  const char_type *const srcend = src + srclen;
 
   constexpr size_t block_size = 10;
   char buffer[block_size * 64];
   char *bufferptr = buffer;
   if (srclen >= 64) {
-    const char *const srcend64 = src + srclen - 64;
+    const char_type *const srcend64 = src + srclen - 64;
     while (src <= srcend64) {
       block64 b;
       load_block(&b, src);

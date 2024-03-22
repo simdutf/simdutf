@@ -1,10 +1,11 @@
 #include "simdutf.h"
+// We include base64_tables once.
+#include "tables/base64_tables.h"
 #include "implementation.cpp"
 #include "encoding_types.cpp"
 #include "error.cpp"
 // The large tables should be included once and they
 // should not depend on a kernel.
-#include "tables/base64_tables.h"
 #include "tables/utf8_to_utf16_tables.h"
 #include "tables/utf16_to_utf8_tables.h"
 // End of tables.
