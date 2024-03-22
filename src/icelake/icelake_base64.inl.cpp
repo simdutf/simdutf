@@ -107,8 +107,11 @@ static inline void load_block(block64 *b, const char *src) {
 }
 
 static inline void load_block(block64 *b, const char16_t *src) {
-  b->chunks[0] = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(src));
-}shit
+  __m512i m1 = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(src));
+  __m512i m2 = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(src + 64));
+  __m512i p = _mm512_packus_epi16(m1, m2);
+  b->chunks[0] = _mm512_permutexvar_epi64(_mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7), p);
+}
 
 static inline void base64_decode(char *out, __m512i str) {
   const __m512i merge_ab_and_bc =
