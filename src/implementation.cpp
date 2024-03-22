@@ -1,6 +1,7 @@
 #include "simdutf.h"
 #include <initializer_list>
 #include <climits>
+#include <type_traits>
 
 // Useful for debugging purposes
 namespace simdutf {
@@ -1303,7 +1304,7 @@ simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t lengt
 
 template <typename chartype>
 simdutf_warn_unused result base64_to_binary_safe(const chartype * input, size_t length, char* output, size_t& outlen) noexcept {
-  static_assert(std::is_same_v<chartype, char> || std::is_same_v<chartype, char16_t>, "Only char and char16_t are supported.");
+  static_assert(std::is_same<chartype, char>::value || std::is_same<chartype, char16_t>::value, "Only char and char16_t are supported.");
   // The implementation could be nicer, but we expect that most times, the user
   // will provide us with a buffer that is large enough.
   size_t max_length = maximal_binary_length_from_base64(input, length);

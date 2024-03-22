@@ -323,7 +323,8 @@ static inline void base64_decode_block_safe(char *out, block64 *b) {
   std::memcpy(out + 36, buffer, 12);
 }
 
-result compress_decode_base64(char *dst, const char *src, size_t srclen) {
+template <typename chartype>
+result compress_decode_base64(char *dst, const chartype *src, size_t srclen) {
   size_t equalsigns = 0;
   if (srclen > 0 && src[srclen - 1] == '=') {
     srclen--;
