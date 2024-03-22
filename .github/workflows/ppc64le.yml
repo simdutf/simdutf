@@ -17,7 +17,7 @@ jobs:
         name: Test
         id: runcmd
         with:
-          arch: aarch64
+          arch: ppc64le
           githubToken: ${{ github.token }}
           distro: ubuntu_latest
           install: |
