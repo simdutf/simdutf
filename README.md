@@ -1591,10 +1591,18 @@ if(r.error) {
 }
 ```
 
+In some instances, you may want to limit the size of the output further when decoding base64.
+For this purpose, you may use the `base64_to_binary_safe` functions.
+
+In other instances, you may receive your base64 inputs in 16-bit units (e.g., from UTF-16 strings):
+we have function overloads for these cases as well.
+
 Some users may want to decode the base64 inputs in chunks, especially when doing
 file or networking programming. These users should see `tools/fastbase64.cpp`, a command-line
 utility designed for as an example. It reads and writes base64 files using chunks of at most
 a few tens of kilobytes.
+
+
 
 The specification of our base64 functions is as follows:
 
@@ -1615,7 +1623,7 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char * input,
  * In general, if the input contains ASCII spaces, the result will be less than
  * the maximum length.
  *
- * @param input         the base64 input to process in UTF-16 (native endianess)
+ * @param input         the base64 input to process in 16-bit units
  * @param length        the length of the base64 input in 16-bit units
  * @return maximal number of binary bytes
  */
@@ -1696,7 +1704,41 @@ size_t binary_to_base64(const char * input, size_t length, char* output) noexcep
  * @param output        the pointer to buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long).
  * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in 16-bit units) if any, or the number of bytes written if successful.
  */
-simdutf_warn_unused result utf16_base64_to_binary(const char16_t * input, size_t length, char* output)  noexcept;
+simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t length, char* output)  noexcept;
+
+
+/**
+ * Convert a base64 input to a binary ouput.
+ *
+ * This function follows the WHATWG forgiving-base64 format, which means that it will
+ * ignore any ASCII spaces in the input. You may provide a padded input (with one or two
+ * equal signs at the end) or an unpadded input (without any equal signs at the end).
+ *
+ * See https://infra.spec.whatwg.org/#forgiving-base64-decode
+ *
+ * This function will fail in case of invalid input. There are three possible reasons for
+ * failure: the input contains a number of base64 characters that when divided by 4, leaves
+ * a singler remainder character (BASE64_INPUT_REMAINDER), the input contains a character
+ * that is not a valid base64 character (INVALID_BASE64_CHARACTER), or the output buffer is too small (OUTPUT_BUFFER_TOO_SMALL).
+ *
+ * When the error is INVALID_BASE64_CHARACTER, r.count contains the index in the input
+ * where the invalid character was found. When the error is BASE64_INPUT_REMAINDER, then
+ * r.count contains the number of bytes decoded.
+ *
+ * When the error is OUTPUT_BUFFER_TOO_SMALL, then r.count contains the location in the input
+ * where we stopped decoding.
+ *
+ * In all case, the outlen parameter is modified to contain the number of bytes
+ * that have been written/decoded.
+ *
+ * @param input         the base64 string to process, in ASCII stored as 8-bit or 16-bit units
+ * @param length        the length of the string in 8-bit or 16-bit units
+ * @param output        the pointer to buffer that can hold the conversion result.
+ * @param outlen        the number of bytes that can be written in the output buffer. Upon return, it is modified to reflect how mnay bytes were written.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in 16-bit units) if any, or the number of bytes written if successful.
+ */
+simdutf_warn_unused result base64_to_binary_safe(const char * input, size_t length, char* output, size_t& outlen) noexcept;
+simdutf_warn_unused result base64_to_binary_safe(const char16_t * input, size_t length, char* output, size_t& outlen) noexcept;
 
 ```
 

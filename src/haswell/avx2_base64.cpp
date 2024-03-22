@@ -276,6 +276,19 @@ static inline void load_block(block64 *b, const char *src) {
       _mm256_loadu_si256(reinterpret_cast<const __m256i *>(src + 32));
 }
 
+static inline void load_block(block64 *b, const char16_t *src) {
+  __m256i m1 = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(src));
+  __m256i m2 = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(src + 16));
+  __m256i m3 = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(src + 32));
+  __m256i m4 = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(src + 48));
+  __m256i m1p = _mm256_permute2x128_si256(m1, m2, 0x20);
+  __m256i m2p = _mm256_permute2x128_si256(m1, m2, 0x13);
+  __m256i m3p = _mm256_permute2x128_si256(m3, m4, 0x20);
+  __m256i m4p = _mm256_permute2x128_si256(m3, m4, 0x13);
+  b->chunks[0] = _mm256_packus_epi16(m1p, m2p);
+  b->chunks[1] = _mm256_packus_epi16(m3p, m4p);
+}
+
 static inline void base64_decode(char *out, __m256i str) {
   // credit: aqrit
   const __m256i pack_shuffle =
@@ -329,16 +342,16 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen) {
   char *end_of_safe_64byte_zone =
       (srclen + 3) / 4 * 3 >= 63 ? dst + (srclen + 3) / 4 * 3 - 63 : dst;
 
-  const char *const srcinit = src;
+  const chartype *const srcinit = src;
   const char *const dstinit = dst;
-  const char *const srcend = src + srclen;
+  const chartype *const srcend = src + srclen;
 
   constexpr size_t block_size = 6;
   static_assert(block_size >= 2, "block_size must be at least two");
   char buffer[block_size * 64];
   char *bufferptr = buffer;
   if (srclen >= 64) {
-    const char *const srcend64 = src + srclen - 64;
+    const chartype *const srcend64 = src + srclen - 64;
     while (src <= srcend64) {
       block64 b;
       load_block(&b, src);

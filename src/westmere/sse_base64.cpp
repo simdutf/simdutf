@@ -274,6 +274,21 @@ static inline void load_block(block64 *b, const char *src) {
   b->chunks[3] = _mm_loadu_si128(reinterpret_cast<const __m128i *>(src + 48));
 }
 
+static inline void load_block(block64 *b, const char16_t *src) {
+  __m128i m1 = _mm_loadu_si128(reinterpret_cast<const __m128i *>(src));
+  __m128i m2 = _mm_loadu_si128(reinterpret_cast<const __m128i *>(src + 8));
+  __m128i m3 = _mm_loadu_si128(reinterpret_cast<const __m128i *>(src + 16));
+  __m128i m4 = _mm_loadu_si128(reinterpret_cast<const __m128i *>(src + 24));
+  __m128i m5 = _mm_loadu_si128(reinterpret_cast<const __m128i *>(src + 32));
+  __m128i m6 = _mm_loadu_si128(reinterpret_cast<const __m128i *>(src + 40));
+  __m128i m7 = _mm_loadu_si128(reinterpret_cast<const __m128i *>(src + 48));
+  __m128i m8 = _mm_loadu_si128(reinterpret_cast<const __m128i *>(src + 56));
+  b->chunks[0] = _mm_packus_epi16(m1, m2);
+  b->chunks[1] = _mm_packus_epi16(m3, m4);
+  b->chunks[2] = _mm_packus_epi16(m5, m6);
+  b->chunks[3] = _mm_packus_epi16(m7, m8);
+}
+
 static inline void base64_decode(char *out, __m128i str) {
   // credit: aqrit
 
@@ -337,16 +352,16 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen) {
   char *end_of_safe_64byte_zone =
       (srclen + 3) / 4 * 3 >= 63 ? dst + (srclen + 3) / 4 * 3 - 63 : dst;
 
-  const char *const srcinit = src;
+  const chartype *const srcinit = src;
   const char *const dstinit = dst;
-  const char *const srcend = src + srclen;
+  const chartype *const srcend = src + srclen;
 
   constexpr size_t block_size = 6;
   static_assert(block_size >= 2, "block should of size 2 or more");
   char buffer[block_size * 64];
   char *bufferptr = buffer;
   if (srclen >= 64) {
-    const char *const srcend64 = src + srclen - 64;
+    const chartype *const srcend64 = src + srclen - 64;
     while (src <= srcend64) {
       block64 b;
       load_block(&b, src);
