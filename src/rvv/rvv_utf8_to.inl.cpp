@@ -28,18 +28,18 @@ simdutf_really_inline static size_t rvv_utf8_to_common(char const *src, size_t l
                 : scalar::utf8_to_utf32::convert(in, count, (char32_t*)out);
   };
 
-  size_t tail = 32; // the minimum value is 3
-  if (len < tail) return scalar(src, len, dst);
+  if (len < 32) return scalar(src, len, dst);
 
   /* validate first three bytes */
   if (validate) {
-    size_t idx = tail;
+    size_t idx = 3;
     while (idx < len && (src[idx] >> 6) == 0b10)
       ++idx;
-    if (idx > tail + 3 || !scalar::utf8::validate(src, idx))
+    if (idx > 3+3 || !scalar::utf8::validate(src, idx))
       return 0;
   }
 
+  size_t tail = 3;
   size_t n = len - tail;
   Tdst *beg = dst;
 
@@ -60,8 +60,12 @@ simdutf_really_inline static size_t rvv_utf8_to_common(char const *src, size_t l
     vuint8m2_t v0 = __riscv_vle8_v_u8m2((uint8_t const*)src, vl);
     uint64_t max = __riscv_vmv_x_s_u8m1_u8(__riscv_vredmaxu_vs_u8m2_u8m1(v0, __riscv_vmv_s_x_u8m1(0, vl), vl));
 
+    uint8_t next0 = src[vl+0];
+    uint8_t next1 = src[vl+1];
+    uint8_t next2 = src[vl+2];
+
     /* fast path: ASCII */
-    if (max < 0b10000000) {
+    if ((max|next0|next1|next2) < 0b10000000) {
       vlOut = vl;
       if (is16) __riscv_vse16_v_u16m4((uint16_t*)dst, simdutf_byteflip<bflip>(__riscv_vzext_vf2_u16m4(v0, vlOut), vlOut), vlOut);
       else      __riscv_vse32_v_u32m8((uint32_t*)dst, __riscv_vzext_vf4_u32m8(v0, vlOut), vlOut);
@@ -70,9 +74,9 @@ simdutf_really_inline static size_t rvv_utf8_to_common(char const *src, size_t l
 
     /* see "Validating UTF-8 In Less Than One Instruction Per Byte"
      * https://arxiv.org/abs/2010.03090 */
-    vuint8m2_t v1 = __riscv_vslide1down_vx_u8m2(v0, src[vl+0], vl);
-    vuint8m2_t v2 = __riscv_vslide1down_vx_u8m2(v1, src[vl+1], vl);
-    vuint8m2_t v3 = __riscv_vslide1down_vx_u8m2(v2, src[vl+2], vl);
+    vuint8m2_t v1 = __riscv_vslide1down_vx_u8m2(v0, next0, vl);
+    vuint8m2_t v2 = __riscv_vslide1down_vx_u8m2(v1, next1, vl);
+    vuint8m2_t v3 = __riscv_vslide1down_vx_u8m2(v2, next2, vl);
 
     if (validate) {
       vuint8m2_t s1 = __riscv_vreinterpret_v_u16m2_u8m2(__riscv_vsrl_vx_u16m2(__riscv_vreinterpret_v_u8m2_u16m2(v2), 4, __riscv_vsetvlmax_e16m2()));
