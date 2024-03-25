@@ -256,6 +256,55 @@ TEST(special_cases) {
   ASSERT_TRUE(memcmp((const char*)utf16.get(), expected, 2) == 0);
 }
 
+
+template<typename T>
+static void test_corrupt(T &implementation, uint32_t seed, simdutf::tests::helpers::random_utf8 gen_utf8) {
+  std::mt19937 gen(seed);
+  for (size_t i = 0; i < 10; i++) {
+    auto UTF8 = gen_utf8.generate(1000);
+    if (!implementation.validate_utf8((const char *)UTF8.data(), UTF8.size())) {
+      std::cerr << "bug" << std::endl;
+      ASSERT_TRUE(false);
+    }
+    std::unique_ptr<char16_t[]> buffer(new char16_t[UTF8.size()]);
+    std::uniform_int_distribution<size_t> distIdx{0, UTF8.size()-1};
+    for (size_t j = 0; j < 1000; ++j) {
+      const size_t corrupt = distIdx(gen);
+      uint8_t restore = UTF8[corrupt];
+      UTF8[corrupt] = uint8_t(gen());
+      bool is_ok =
+          (implementation.convert_utf8_to_utf16le((const char *)UTF8.data(), UTF8.size(), buffer.get()) > 0);
+      bool is_ok_basic =
+          simdutf::tests::reference::validate_utf8((const char *)UTF8.data(), UTF8.size());
+      if (is_ok != is_ok_basic) {
+        std::cerr << "bug" << std::endl;
+        ASSERT_TRUE(false);
+      }
+      UTF8[corrupt] = restore;
+    }
+  }
+}
+
+TEST(corrupt_1byte) {
+  uint32_t seed{1234};
+  test_corrupt(implementation, seed, simdutf::tests::helpers::random_utf8(seed, 1, 0, 0, 0));
+}
+
+TEST(corrupt_12byte) {
+  uint32_t seed{1234};
+  test_corrupt(implementation, seed, simdutf::tests::helpers::random_utf8(seed, 0, 1, 0, 0));
+  test_corrupt(implementation, seed, simdutf::tests::helpers::random_utf8(seed, 1, 1, 0, 0));
+}
+
+TEST(corrupt_123byte) {
+  uint32_t seed{1234};
+  test_corrupt(implementation, seed, simdutf::tests::helpers::random_utf8(seed, 0, 0, 1, 0));
+  test_corrupt(implementation, seed, simdutf::tests::helpers::random_utf8(seed, 0, 1, 1, 0));
+  test_corrupt(implementation, seed, simdutf::tests::helpers::random_utf8(seed, 1, 0, 1, 0));
+  test_corrupt(implementation, seed, simdutf::tests::helpers::random_utf8(seed, 1, 1, 1, 0));
+}
+
+
 int main(int argc, char* argv[]) {
   return simdutf::test::main(argc, argv);
 }

@@ -26,15 +26,14 @@ simdutf_warn_unused result implementation::validate_ascii_with_errors(const char
  * first invalid one, but never overestimating. */
 simdutf_really_inline static size_t rvv_count_valid_utf8(const char *src, size_t len) {
   const char *beg = src;
-  size_t tail = 32; // minimum of 3
-  if (len < tail) return 0;
+  if (len < 32) return 0;
 
   /* validate first three bytes */
   {
-    size_t idx = tail;
+    size_t idx = 3;
     while (idx < len && (src[idx] >> 6) == 0b10)
       ++idx;
-    if (idx > tail + 3 || !scalar::utf8::validate(src, idx))
+    if (idx > 3+3 || !scalar::utf8::validate(src, idx))
       return 0;
   }
 
@@ -46,21 +45,26 @@ simdutf_really_inline static size_t rvv_count_valid_utf8(const char *src, size_t
   const vuint8m1_t err2tbl = __riscv_vreinterpret_v_u64m1_u8m1(__riscv_vle64_v_u64m1(err2m, 2));
   const vuint8m1_t err3tbl = __riscv_vreinterpret_v_u64m1_u8m1(__riscv_vle64_v_u64m1(err3m, 2));
 
+  size_t tail = 3;
   size_t n = len - tail;
 
   for (size_t vl; n > 0; n -= vl, src += vl) {
     vl = __riscv_vsetvl_e8m4(n);
     vuint8m4_t v0 = __riscv_vle8_v_u8m4((uint8_t const*)src, vl);
 
+    uint8_t next0 = src[vl+0];
+    uint8_t next1 = src[vl+1];
+    uint8_t next2 = src[vl+2];
+
     /* fast path: ASCII */
-    if (__riscv_vfirst(__riscv_vmsgtu(v0, 0b01111111, vl), vl) < 0)
+    if (__riscv_vfirst_m_b2(__riscv_vmsgtu_vx_u8m4_b2(v0, 0b01111111, vl), vl) < 0 && (next0|next1|next2) < 0b10000000)
       continue;
 
     /* see "Validating UTF-8 In Less Than One Instruction Per Byte"
      * https://arxiv.org/abs/2010.03090 */
-    vuint8m4_t v1 = __riscv_vslide1down_vx_u8m4(v0, src[vl+0], vl);
-    vuint8m4_t v2 = __riscv_vslide1down_vx_u8m4(v1, src[vl+1], vl);
-    vuint8m4_t v3 = __riscv_vslide1down_vx_u8m4(v2, src[vl+2], vl);
+    vuint8m4_t v1 = __riscv_vslide1down_vx_u8m4(v0, next0, vl);
+    vuint8m4_t v2 = __riscv_vslide1down_vx_u8m4(v1, next1, vl);
+    vuint8m4_t v3 = __riscv_vslide1down_vx_u8m4(v2, next2, vl);
 
     vuint8m4_t s1 = __riscv_vreinterpret_v_u16m4_u8m4(__riscv_vsrl_vx_u16m4(__riscv_vreinterpret_v_u8m4_u16m4(v2), 4, __riscv_vsetvlmax_e16m4()));
     vuint8m4_t s3 = __riscv_vreinterpret_v_u16m4_u8m4(__riscv_vsrl_vx_u16m4(__riscv_vreinterpret_v_u8m4_u16m4(v3), 4, __riscv_vsetvlmax_e16m4()));
