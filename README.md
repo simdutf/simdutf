@@ -1592,7 +1592,9 @@ if(r.error) {
 ```
 
 In some instances, you may want to limit the size of the output further when decoding base64.
-For this purpose, you may use the `base64_to_binary_safe` functions.
+For this purpose, you may use the `base64_to_binary_safe` functions. The functions may also
+be useful if you seek to decode the input into segments having a maximal capacity.
+See our function specifications for more details.
 
 In other instances, you may receive your base64 inputs in 16-bit units (e.g., from UTF-16 strings):
 we have function overloads for these cases as well.
@@ -1601,8 +1603,6 @@ Some users may want to decode the base64 inputs in chunks, especially when doing
 file or networking programming. These users should see `tools/fastbase64.cpp`, a command-line
 utility designed for as an example. It reads and writes base64 files using chunks of at most
 a few tens of kilobytes.
-
-
 
 The specification of our base64 functions is as follows:
 
@@ -1732,10 +1732,10 @@ simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t lengt
  * that have been written/decoded.
  *
  * @param input         the base64 string to process, in ASCII stored as 8-bit or 16-bit units
- * @param length        the length of the string in 8-bit or 16-bit units
+ * @param length        the length of the string in 8-bit or 16-bit units.
  * @param output        the pointer to buffer that can hold the conversion result.
- * @param outlen        the number of bytes that can be written in the output buffer. Upon return, it is modified to reflect how mnay bytes were written.
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in 16-bit units) if any, or the number of bytes written if successful.
+ * @param outlen        the number of bytes that can be written in the output buffer. Upon return, it is modified to reflect how many bytes were written.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in 16-bit units) if any, or the number of units processed if successful. Note that the return convention of base64_to_binary_safe differs from base64_to_binary.
  */
 simdutf_warn_unused result base64_to_binary_safe(const char * input, size_t length, char* output, size_t& outlen) noexcept;
 simdutf_warn_unused result base64_to_binary_safe(const char16_t * input, size_t length, char* output, size_t& outlen) noexcept;

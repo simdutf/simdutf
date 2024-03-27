@@ -41,11 +41,12 @@ void name(const simdutf::implementation& impl) {            \
 static simdutf::test::register_test test_register_##name(#name, name); \
 void test_impl_##name(const simdutf::implementation& implementation)
 
-#define ASSERT_EQUAL(a, b) {                                      \
-  const auto expr = (a);                                          \
-  if (expr != b) {                                                \
-    std::cout << "\nExpected " << expr << " to be " << b << ".\n";\
-    printf("%s \n",#a);                                           \
+#define ASSERT_EQUAL(a, b) {                                                   \
+  const auto expr = (a);                                                       \
+  if (expr != b) {                                                             \
+    std::cout << "\nExpected " << expr << " to be " << b << ".\n";             \
+    printf("%s \n",#a);                                                        \
+    printf("file %s:%d, function %s  \n", __FILE__, __LINE__, __func__); \
     exit(1);                                                      \
   }                                                               \
 }
@@ -54,6 +55,7 @@ void test_impl_##name(const simdutf::implementation& implementation)
   const bool expr = (cond);                                 \
   if (!expr) {                                              \
     printf("expected %s to be true, it's false\n", #cond);  \
+    printf("file %s:%d, function %s  \n", __FILE__, __LINE__, __func__); \
     exit(1);                                                \
   }                                                         \
 }
@@ -62,6 +64,7 @@ void test_impl_##name(const simdutf::implementation& implementation)
   const bool expr = !(cond);                                \
   if (!expr) {                                              \
     printf("expected %s to be false, it's true\n", #cond);  \
+    printf("file %s:%d, function %s  \n", __FILE__, __LINE__, __func__); \
     exit(1);                                                \
   }                                                         \
 }
