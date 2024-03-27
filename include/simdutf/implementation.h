@@ -1497,17 +1497,12 @@ simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t lengt
  * where the invalid character was found. When the error is BASE64_INPUT_REMAINDER, then
  * r.count contains the number of bytes decoded.
  *
- * When the error is OUTPUT_BUFFER_TOO_SMALL, then r.count contains the location in the input
- * where we stopped decoding.
- *
- * In all case, the outlen parameter is modified to contain the number of bytes
- * that have been written/decoded.
  *
  * @param input         the base64 string to process, in ASCII stored as 8-bit or 16-bit units
- * @param length        the length of the string in 8-bit or 16-bit units
+ * @param length        the length of the string in 8-bit or 16-bit units.
  * @param output        the pointer to buffer that can hold the conversion result.
- * @param outlen        the number of bytes that can be written in the output buffer. Upon return, it is modified to reflect how mnay bytes were written.
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in 16-bit units) if any, or the number of bytes written if successful.
+ * @param outlen        the number of bytes that can be written in the output buffer. Upon return, it is modified to reflect how many bytes were written.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in 16-bit units) if any, or the number of units processed if successful.
  */
 simdutf_warn_unused result base64_to_binary_safe(const char * input, size_t length, char* output, size_t& outlen) noexcept;
 simdutf_warn_unused result base64_to_binary_safe(const char16_t * input, size_t length, char* output, size_t& outlen) noexcept;

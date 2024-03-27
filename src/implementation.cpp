@@ -1303,13 +1303,16 @@ simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t lengt
 }
 
 template <typename chartype>
-simdutf_warn_unused result base64_to_binary_safe(const chartype * input, size_t length, char* output, size_t& outlen) noexcept {
+simdutf_warn_unused result base64_to_binary_safe_impl(const chartype * input, size_t length, char* output, size_t& outlen) noexcept {
   static_assert(std::is_same<chartype, char>::value || std::is_same<chartype, char16_t>::value, "Only char and char16_t are supported.");
   // The implementation could be nicer, but we expect that most times, the user
   // will provide us with a buffer that is large enough.
   size_t max_length = maximal_binary_length_from_base64(input, length);
   if(outlen >= max_length) {
-    return base64_to_binary(input, length, output);
+    // fast path
+    result r = base64_to_binary(input, length, output);
+    if(r.error != error_code::INVALID_BASE64_CHARACTER) { outlen = r.count; r.count = length; }
+    return r;
   }
   // The output buffer is maybe too small. We will decode a truncated version of the input.
   size_t outlen3 = outlen / 3 * 3; // round down to multiple of 3
@@ -1320,21 +1323,35 @@ simdutf_warn_unused result base64_to_binary_safe(const chartype * input, size_t 
     ((r.count % 3) == 0 ? 0 : (r.count % 3) + 1);
   size_t output_index = r.count - (r.count % 3);
   size_t input_index = safe_input;
-  while(offset > 0) {
-    char c = input[--input_index];
+  while(offset > 0 && input_index > 0) {
+    chartype c = input[--input_index];
     if(c == '=' || c == '\n' || c == '\r' || c == '\t' || c == ' ') {
+      // skipping
+    } else {
       offset--;
     }
   }
   size_t remaining_out = outlen - output_index;
-  r = scalar::base64::base64_tail_decode_safe(output + output_index, remaining_out, input + input_index, length - input_index);
-  outlen = output_index + remaining_out;
-  if(r.error == error_code::INVALID_BASE64_CHARACTER) {
-    r.count += input_index;
-  } else {
-    r.count = output_index;
+  const chartype * tail_input = input + input_index;
+  size_t tail_length = length - input_index;
+  if(tail_length > 0 && tail_input[tail_length - 1] == '=') {
+    tail_length--;
+    if(tail_length > 0 && tail_input[tail_length - 1] == '=') {
+      tail_length--;
+    }
   }
+  r = scalar::base64::base64_tail_decode_safe(output + output_index, remaining_out, tail_input, tail_length);
+  outlen = output_index + remaining_out;
+  r.count += input_index;
   return r;
+}
+
+
+simdutf_warn_unused result base64_to_binary_safe(const char * input, size_t length, char* output, size_t& outlen) noexcept {
+  return base64_to_binary_safe_impl<char>(input, length, output, outlen);
+}
+simdutf_warn_unused result base64_to_binary_safe(const char16_t * input, size_t length, char* output, size_t& outlen) noexcept {
+  return base64_to_binary_safe_impl<char16_t>(input, length, output, outlen);
 }
 
 simdutf_warn_unused size_t base64_length_from_binary(size_t length) noexcept {

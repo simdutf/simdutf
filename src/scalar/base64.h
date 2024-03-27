@@ -41,6 +41,8 @@ result base64_tail_decode(char *dst, const char_type *src, size_t length) {
         idx++;
       } else if (code > 64) {
         return {INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
+      } else {
+        // We have a space or a newline. We ignore it.
       }
       src++;
     }
@@ -94,6 +96,7 @@ result base64_tail_decode(char *dst, const char_type *src, size_t length) {
 
 // like base64_tail_decode, but it will not write past the end of the ouput buffer.
 // outlen is modified to reflect the number of bytes written.
+// This functions assumes that the padding (=) has been removed.
 template <class char_type>
 result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, size_t length) {
   const char_type *srcend = src + length;
@@ -120,9 +123,11 @@ result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, 
       src += 4;
     }
     idx = 0;
+    const char_type *srccur = src;
+
     // we need at least four characters.
     while (idx < 4 && src < srcend) {
-      char c = *src;
+      char_type c = *src;
       uint8_t code = tables::base64::to_base64_value[uint8_t(c)];
       buffer[idx] = uint8_t(code);
       if (code <= 63) {
@@ -130,6 +135,8 @@ result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, 
       } else if (code > 64) {
         outlen = size_t(dst - dstinit);
         return {INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
+      } else {
+        // We have a space or a newline. We ignore it.
       }
       src++;
     }
@@ -137,7 +144,7 @@ result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, 
       if (idx == 2) {
         if(dst == dstend) {
           outlen = size_t(dst - dstinit);
-          return {OUTPUT_BUFFER_TOO_SMALL, size_t(src - srcinit)};
+          return {OUTPUT_BUFFER_TOO_SMALL, size_t(srccur - srcinit)};
         }
         uint32_t triple =
             (uint32_t(buffer[0]) << 3 * 6) + (uint32_t(buffer[1]) << 2 * 6);
@@ -154,7 +161,7 @@ result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, 
       } else if (idx == 3) {
         if(dst + 2 >= dstend) {
           outlen = size_t(dst - dstinit);
-          return {OUTPUT_BUFFER_TOO_SMALL, size_t(src - srcinit)};
+          return {OUTPUT_BUFFER_TOO_SMALL, size_t(srccur - srcinit)};
         }
         uint32_t triple = (uint32_t(buffer[0]) << 3 * 6) +
                           (uint32_t(buffer[1]) << 2 * 6) +
@@ -177,7 +184,7 @@ result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, 
     }
     if(dst + 3 >= dstend) {
       outlen = size_t(dst - dstinit);
-      return {OUTPUT_BUFFER_TOO_SMALL, size_t(src - srcinit)};
+      return {OUTPUT_BUFFER_TOO_SMALL, size_t(srccur - srcinit)};
     }
     uint32_t triple =
         (uint32_t(buffer[0]) << 3 * 6) + (uint32_t(buffer[1]) << 2 * 6) +

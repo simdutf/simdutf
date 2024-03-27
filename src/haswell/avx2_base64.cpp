@@ -282,9 +282,9 @@ static inline void load_block(block64 *b, const char16_t *src) {
   __m256i m3 = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(src + 32));
   __m256i m4 = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(src + 48));
   __m256i m1p = _mm256_permute2x128_si256(m1, m2, 0x20);
-  __m256i m2p = _mm256_permute2x128_si256(m1, m2, 0x13);
+  __m256i m2p = _mm256_permute2x128_si256(m1, m2, 0x31);
   __m256i m3p = _mm256_permute2x128_si256(m3, m4, 0x20);
-  __m256i m4p = _mm256_permute2x128_si256(m3, m4, 0x13);
+  __m256i m4p = _mm256_permute2x128_si256(m3, m4, 0x31);
   b->chunks[0] = _mm256_packus_epi16(m1p, m2p);
   b->chunks[1] = _mm256_packus_epi16(m3p, m4p);
 }
