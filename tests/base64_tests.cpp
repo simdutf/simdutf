@@ -472,7 +472,7 @@ TEST(aborted_safe_roundtrip_base64) {
                                            buffer.size() - input_index,
                                            back.data(), second_length);
         ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
-        back.resize(r.count);
+        back.resize(second_length);
         ASSERT_EQUAL(second_length + limited_length, len);
 
         for (size_t i = 0; i < second_length; i++) {
@@ -524,7 +524,7 @@ TEST(aborted_safe_roundtrip_base64_16) {
                                            buffer.size() - input_index,
                                            back.data(), second_length);
         ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
-        back.resize(r.count);
+        back.resize(second_length);
         ASSERT_EQUAL(second_length + limited_length, len);
         for (size_t i = 0; i < second_length; i++) {
           ASSERT_EQUAL(source[i + limited_length], back[i]);
@@ -572,9 +572,8 @@ TEST(aborted_safe_roundtrip_base64_with_spaces) {
                                            buffer.size() - input_index,
                                            back.data(), second_length);
         ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
-        back.resize(r.count);
+        back.resize(second_length);
         ASSERT_EQUAL(second_length + limited_length, len);
-
         for (size_t i = 0; i < second_length; i++) {
           ASSERT_EQUAL(source[i + limited_length], back[i]);
         }
@@ -627,7 +626,7 @@ TEST(aborted_safe_roundtrip_base64_16_with_spaces) {
                                            buffer.size() - input_index,
                                            back.data(), second_length);
         ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
-        back.resize(r.count);
+        back.resize(second_length);
         ASSERT_EQUAL(second_length + limited_length, len);
         for (size_t i = 0; i < second_length; i++) {
           ASSERT_EQUAL(source[i + limited_length], back[i]);
@@ -718,6 +717,27 @@ TEST(readme_test) {
   }
   // At then end, we resize the buffer to the actual number of bytes decoded.
   back.resize(outpos);
+}
+
+TEST(readme_safe) {
+  size_t len = 72;
+  std::vector<char> base64(len, 'a');
+  std::vector<char> back((len + 3) / 4 * 3);
+  size_t limited_length = back.size() / 2; // Intentionally too small
+  simdutf::result r = simdutf::base64_to_binary_safe(
+            base64.data(), base64.size(), back.data(), limited_length);
+  ASSERT_EQUAL(r.error, simdutf::error_code::OUTPUT_BUFFER_TOO_SMALL);
+
+  // We decoded 'limited_length' bytes to back.
+  // Now let us decode the rest !!!
+  size_t input_index = r.count;
+  size_t limited_length2 = back.size();
+  r = simdutf::base64_to_binary_safe(base64.data() + input_index,
+                                           base64.size() - input_index,
+                                           back.data(), limited_length2);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  back.resize(limited_length2);
+  ASSERT_EQUAL(limited_length2 + limited_length, (len + 3) / 4 * 3);
 }
 
 int main(int argc, char *argv[]) {
