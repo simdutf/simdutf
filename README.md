@@ -1594,6 +1594,30 @@ if(r.error) {
 In some instances, you may want to limit the size of the output further when decoding base64.
 For this purpose, you may use the `base64_to_binary_safe` functions. The functions may also
 be useful if you seek to decode the input into segments having a maximal capacity.
+
+
+```C++
+  size_t len = 72; // for simplicity we chose len divisible by 3
+  std::vector<char> base64(len, 'a'); // we want to decode 'aaaaa....'
+  std::vector<char> back((len + 3) / 4 * 3);
+  size_t limited_length = back.size() / 2; // Intentionally too small
+  // We proceed to decode half:
+  simdutf::result r = simdutf::base64_to_binary_safe(
+            base64.data(), base64.size(), back.data(), limited_length);
+  assert(r.error == simdutf::error_code::OUTPUT_BUFFER_TOO_SMALL);
+  // We decoded r.count base64 bytes to limited_length bytes
+  // Now let us decode the rest !!!
+  size_t input_index = r.count;
+  size_t limited_length2 = back.size();
+  r = simdutf::base64_to_binary_safe(base64.data() + input_index,
+                                           base64.size() - input_index,
+                                           back.data(), limited_length2);
+  assert(r.error == simdutf::error_code::SUCCESS);
+  // We decoded r.count base64 bytes to limited_length2 bytes
+  // We are done
+  assert(limited_length2 + limited_length == (len + 3) / 4 * 3);
+```
+
 See our function specifications for more details.
 
 In other instances, you may receive your base64 inputs in 16-bit units (e.g., from UTF-16 strings):
