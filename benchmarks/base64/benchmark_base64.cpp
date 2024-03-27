@@ -110,10 +110,12 @@ std::vector<char> read_file(const char *filename,
 void show_help() {
   printf("Usage: benchmark_base64 [options] file1 [file2 ...]\n");
   printf("Options:\n");
-  printf("  -h, --help     Show this help message and exit\n");
-  printf("  -d, --decode   Decode the input file\n");
-  printf("  -e, --encode   Encode the input file\n");
+  printf("  -h, --help        Show this help message and exit\n");
+  printf("  -d, --decode      Decode the input file\n");
+  printf("  -e, --encode      Encode the input file\n");
   printf("  -r, --roundtrip   Roundtrip the input file\n");
+  printf("  -b, --bun         Bun benchmark\n");
+
   printf(" See https://github.com/lemire/base64data for test data.\n");
 }
 void pretty_print(size_t, size_t bytes, std::string name, event_aggregate agg) {
