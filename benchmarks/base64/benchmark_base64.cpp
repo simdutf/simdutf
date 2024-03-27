@@ -10,7 +10,9 @@
 #include <vector>
 
 #include "libbase64.h"
+#include "libbase64_spaces.h"
 #include "node_base64.h"
+
 #include "simdutf.h"
 
 #include "event_counter.h"
@@ -261,7 +263,7 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
     bool spaces = contains_spaces(data);
     if (spaces) {
       printf("# the base64 data contains spaces, so we cannot use straigth "
-             "libbase64::base64_decode\n");
+             "libbase64::base64_decode directly\n");
     } else {
       pretty_print(data.size(), volume, "libbase64",
                    bench([&data, &buffer1, &buffer2]() {
@@ -279,6 +281,21 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
                      }
                    }));
     }
+    pretty_print(
+        data.size(), volume, "libbase64_space_decode",
+        bench([&data, &buffer1, &buffer2]() {
+          for (const std::vector<char> &source : data) {
+
+            size_t outlen;
+            bool ok = libbase64_space_decode(source.data(), source.size(),
+                                             buffer1.data(), &outlen);
+            if (!ok) {
+              std::cerr << "Error: "
+                        << " failed to decode base64 " << std::endl;
+              throw std::runtime_error("Error: failed to decode base64 ");
+            }
+          }
+        }));
     pretty_print(
         data.size(), volume, "node", bench([&data, &buffer1, &buffer2]() {
           for (const std::vector<char> &source : data) {
@@ -373,11 +390,12 @@ int bench_bun() {
   std::vector<std::pair<std::string, std::string>> tests = {
       {"big hello world", bigBuffer}, {"random 16 bytes", crypto}};
   // Could be nicer with C++20
-  for (auto & i : tests) {
+  for (auto &i : tests) {
     printf("# %s\n", i.first.c_str());
     std::string source = i.second;
     volatile size_t base64_size;
-    std::vector<char> buffer1(simdutf::base64_length_from_binary(source.size()));
+    std::vector<char> buffer1(
+        simdutf::base64_length_from_binary(source.size()));
     pretty_print(1, source.size(), "libbase64",
                  bench([&source, &buffer1, &base64_size]() {
                    size_t outlen;
