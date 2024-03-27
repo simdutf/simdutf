@@ -425,7 +425,7 @@ int main(int argc, char **argv) {
       arguments.push_back(std::move(arg));
     }
   }
-  if (bun) {
+  if (mode == bun) {
     return bench_bun();
   }
   auto return_value = EXIT_SUCCESS;
