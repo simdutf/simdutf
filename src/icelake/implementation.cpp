@@ -1369,7 +1369,7 @@ simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(con
 }
 
 simdutf_warn_unused result implementation::base64_to_binary(const char * input, size_t length, char* output, base64_options options) const noexcept {
-  return compress_decode_base64(output, input, length, options);
+  return (options & base64_url) ? compress_decode_base64<true>(output, input, length, options) : compress_decode_base64<false>(output, input, length, options);
 }
 
 simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(const char16_t * input, size_t length) const noexcept {
@@ -1377,7 +1377,7 @@ simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(con
 }
 
 simdutf_warn_unused result implementation::base64_to_binary(const char16_t * input, size_t length, char* output, base64_options options) const noexcept {
-  return compress_decode_base64(output, input, length, options);
+  return (options & base64_url) ? compress_decode_base64<true>(output, input, length, options) : compress_decode_base64<false>(output, input, length, options);
 }
 
 
