@@ -58,7 +58,7 @@ size_t encode_base64(char *dst, const char *src, size_t srclen) {
     out += 64;
   }
   return i / 3 * 4 +
-         scalar::base64::tail_encode_base64((char *)out, src + i, srclen - i);
+         scalar::base64::tail_encode_base64((char *)out, src + i, srclen - i, options);
 }
 
 static inline uint64_t to_base64_mask(block64 *b, bool *error) {
@@ -138,7 +138,8 @@ static inline void base64_decode_block(char *out, block64 *b) {
 }
 
 template <typename chartype>
-result compress_decode_base64(char *dst, const chartype *src, size_t srclen) {
+result compress_decode_base64(char *dst, const chartype *src, size_t srclen, base64_options options) {
+  const uint8_t *to_base64 = (options & base64_url) ? tables::base64::to_base64_url_value : tables::base64::to_base64_value;
   size_t equalsigns = 0;
   if (srclen > 0 && src[srclen - 1] == '=') {
     srclen--;
@@ -167,7 +168,7 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen) {
       if (error) {
         src -= 64;
         while (src < srcend &&
-               tables::base64::to_base64_value[uint8_t(*src)] <= 64) {
+               to_base64[uint8_t(*src)] <= 64) {
           src++;
         }
         return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
@@ -203,7 +204,7 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen) {
   if (last_block != 0 && srcend - src + last_block >= 64) {
 
     while ((bufferptr - buffer_start) % 64 != 0 && src < srcend) {
-      uint8_t val = tables::base64::to_base64_value[uint8_t(*src)];
+      uint8_t val = to_base64[uint8_t(*src)];
       *bufferptr = char(val);
       if (val > 64) {
         return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
@@ -245,7 +246,7 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen) {
     int leftover = int(bufferptr - buffer_start);
     if (leftover > 0) {
       while (leftover < 4 && src < srcend) {
-        uint8_t val = tables::base64::to_base64_value[uint8_t(*src)];
+        uint8_t val = to_base64[uint8_t(*src)];
         if (val > 64) {
           return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
         }
@@ -286,7 +287,7 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen) {
     }
   }
   if (src < srcend + equalsigns) {
-    result r = scalar::base64::base64_tail_decode(dst, src, srcend - src);
+    result r = scalar::base64::base64_tail_decode(dst, src, srcend - src, options);
     if (r.error == error_code::INVALID_BASE64_CHARACTER) {
       r.count += size_t(src - srcinit);
       return r;

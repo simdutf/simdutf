@@ -12,7 +12,13 @@ namespace base64 {
 // Returns true upon success. The destination buffer must be large enough.
 // This functions assumes that the padding (=) has been removed.
 template <class char_type>
-result base64_tail_decode(char *dst, const char_type *src, size_t length) {
+result base64_tail_decode(char *dst, const char_type *src, size_t length, base64_options options) {
+  const uint8_t *to_base64 = (options & base64_url) ? tables::base64::to_base64_url_value : tables::base64::to_base64_value;
+  const uint32_t *d0 = (options & base64_url) ? tables::base64::base64_url::d0 : tables::base64::base64_default::d0;
+  const uint32_t *d1 = (options & base64_url) ? tables::base64::base64_url::d1 : tables::base64::base64_default::d1;
+  const uint32_t *d2 = (options & base64_url) ? tables::base64::base64_url::d2 : tables::base64::base64_default::d2;
+  const uint32_t *d3 = (options & base64_url) ? tables::base64::base64_url::d3 : tables::base64::base64_default::d3;
+
   const char_type *srcend = src + length;
   const char_type *srcinit = src;
   const char *dstinit = dst;
@@ -22,8 +28,8 @@ result base64_tail_decode(char *dst, const char_type *src, size_t length) {
   uint8_t buffer[4];
   while (true) {
     while (src + 4 <= srcend &&
-           (x = tables::base64::d0[uint8_t(src[0])] | tables::base64::d1[uint8_t(src[1])] |
-                tables::base64::d2[uint8_t(src[2])] | tables::base64::d3[uint8_t(src[3])]) < 0x01FFFFFF) {
+           (x = d0[uint8_t(src[0])] | d1[uint8_t(src[1])] |
+                d2[uint8_t(src[2])] | d3[uint8_t(src[3])]) < 0x01FFFFFF) {
       if(match_system(endianness::BIG)) {
         x = scalar::utf32::swap_bytes(x);
       }
@@ -35,7 +41,7 @@ result base64_tail_decode(char *dst, const char_type *src, size_t length) {
     // we need at least four characters.
     while (idx < 4 && src < srcend) {
       char_type c = *src;
-      uint8_t code = tables::base64::to_base64_value[uint8_t(c)];
+      uint8_t code = to_base64[uint8_t(c)];
       buffer[idx] = uint8_t(code);
       if (code <= 63) {
         idx++;
@@ -98,7 +104,13 @@ result base64_tail_decode(char *dst, const char_type *src, size_t length) {
 // outlen is modified to reflect the number of bytes written.
 // This functions assumes that the padding (=) has been removed.
 template <class char_type>
-result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, size_t length) {
+result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, size_t length, base64_options options) {
+  const uint8_t *to_base64 = (options & base64_url) ? tables::base64::to_base64_url_value : tables::base64::to_base64_value;
+  const uint32_t *d0 = (options & base64_url) ? tables::base64::base64_url::d0 : tables::base64::base64_default::d0;
+  const uint32_t *d1 = (options & base64_url) ? tables::base64::base64_url::d1 : tables::base64::base64_default::d1;
+  const uint32_t *d2 = (options & base64_url) ? tables::base64::base64_url::d2 : tables::base64::base64_default::d2;
+  const uint32_t *d3 = (options & base64_url) ? tables::base64::base64_url::d3 : tables::base64::base64_default::d3;
+
   const char_type *srcend = src + length;
   const char_type *srcinit = src;
   const char *dstinit = dst;
@@ -109,8 +121,8 @@ result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, 
   uint8_t buffer[4];
   while (true) {
     while (src + 4 <= srcend &&
-           (x = tables::base64::d0[uint8_t(src[0])] | tables::base64::d1[uint8_t(src[1])] |
-                tables::base64::d2[uint8_t(src[2])] | tables::base64::d3[uint8_t(src[3])]) < 0x01FFFFFF) {
+           (x = d0[uint8_t(src[0])] | d1[uint8_t(src[1])] |
+                d2[uint8_t(src[2])] | d3[uint8_t(src[3])]) < 0x01FFFFFF) {
       if(match_system(endianness::BIG)) {
         x = scalar::utf32::swap_bytes(x);
       }
@@ -128,7 +140,7 @@ result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, 
     // we need at least four characters.
     while (idx < 4 && src < srcend) {
       char_type c = *src;
-      uint8_t code = tables::base64::to_base64_value[uint8_t(c)];
+      uint8_t code = to_base64[uint8_t(c)];
       buffer[idx] = uint8_t(code);
       if (code <= 63) {
         idx++;
@@ -203,35 +215,38 @@ result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, 
 
 // Returns the number of bytes written. The destination buffer must be large
 // enough. It will add padding (=) if needed.
-size_t tail_encode_base64(char *dst, const char *src, size_t srclen) {
+size_t tail_encode_base64(char *dst, const char *src, size_t srclen, base64_options options) {
+  const char *e0 = (options & base64_url) ? tables::base64::base64_url::e0 : tables::base64::base64_default::e0;
+  const char *e1 = (options & base64_url) ? tables::base64::base64_url::e1 : tables::base64::base64_default::e1;
+  const char *e2 = (options & base64_url) ? tables::base64::base64_url::e2 : tables::base64::base64_default::e2;
   char *out = dst;
   size_t i = 0;
   uint8_t t1, t2, t3;
   for (; i + 2 < srclen; i += 3) {
-    t1 = (uint8_t)src[i];
-    t2 = (uint8_t)src[i + 1];
-    t3 = (uint8_t)src[i + 2];
-    *out++ = tables::base64::e0[t1];
-    *out++ = tables::base64::e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
-    *out++ = tables::base64::e1[((t2 & 0x0F) << 2) | ((t3 >> 6) & 0x03)];
-    *out++ = tables::base64::e2[t3];
+    t1 = uint8_t(src[i]);
+    t2 = uint8_t(src[i + 1]);
+    t3 = uint8_t(src[i + 2]);
+    *out++ = e0[t1];
+    *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
+    *out++ = e1[((t2 & 0x0F) << 2) | ((t3 >> 6) & 0x03)];
+    *out++ = e2[t3];
   }
   switch (srclen - i) {
   case 0:
     break;
   case 1:
-    t1 = (uint8_t)src[i];
-    *out++ = tables::base64::e0[t1];
-    *out++ = tables::base64::e1[(t1 & 0x03) << 4];
+    t1 = uint8_t(src[i]);
+    *out++ = e0[t1];
+    *out++ = e1[(t1 & 0x03) << 4];
     *out++ = '=';
     *out++ = '=';
     break;
   default: /* case 2 */
-    t1 = (uint8_t)src[i];
-    t2 = (uint8_t)src[i + 1];
-    *out++ = tables::base64::e0[t1];
-    *out++ = tables::base64::e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
-    *out++ = tables::base64::e2[(t2 & 0x0F) << 2];
+    t1 = uint8_t(src[i]);
+    t2 = uint8_t(src[i + 1]);
+    *out++ = e0[t1];
+    *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
+    *out++ = e2[(t2 & 0x0F) << 2];
     *out++ = '=';
   }
   return (size_t)(out - dst);
