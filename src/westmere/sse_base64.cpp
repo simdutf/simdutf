@@ -338,9 +338,9 @@ static inline void base64_decode_block_safe(char *out, block64 *b) {
   std::memcpy(out + 36, buffer, 12);
 }
 
-template <typename chartype>
+template <bool base64_url, typename chartype>
 result compress_decode_base64(char *dst, const chartype *src, size_t srclen, base64_options options) {
-  const uint8_t *to_base64 = (options & base64_url) ? tables::base64::to_base64_url_value : tables::base64::to_base64_value;
+  const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value : tables::base64::to_base64_value;
   size_t equalsigns = 0;
   if (srclen > 0 && src[srclen - 1] == '=') {
     srclen--;

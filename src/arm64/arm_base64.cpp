@@ -36,8 +36,15 @@ size_t encode_base64(char *dst, const char *src, size_t srclen, base64_options o
       '5', 'K', 'a', 'q', '6', 'L', 'b', 'r', '7', 'M', 'c', 's', '8',
       'N', 'd', 't', '9', 'O', 'e', 'u', '+', 'P', 'f', 'v', '/',
   };
+  constexpr static uint8_t source_table_url[64] = {
+      'A', 'Q', 'g', 'w', 'B', 'R', 'h', 'x', 'C', 'S', 'i', 'y', 'D',
+      'T', 'j', 'z', 'E', 'U', 'k', '0', 'F', 'V', 'l', '1', 'G', 'W',
+      'm', '2', 'H', 'X', 'n', '3', 'I', 'Y', 'o', '4', 'J', 'Z', 'p',
+      '5', 'K', 'a', 'q', '6', 'L', 'b', 'r', '7', 'M', 'c', 's', '8',
+      'N', 'd', 't', '9', 'O', 'e', 'u', '-', 'P', 'f', 'v', '_',
+  };
   const uint8x16_t v3f = vdupq_n_u8(0x3f);
-  const uint8x16x4_t table = vld4q_u8(source_table);
+  const uint8x16x4_t table = vld4q_u8((options&base64_url) ? source_table_url : source_table);
   size_t i = 0;
   for (; i + 16 * 3 <= srclen; i += 16 * 3) {
     const uint8x16x3_t in = vld3q_u8((const uint8_t *)src + i);
@@ -94,6 +101,7 @@ struct block64 {
   uint8x16_t chunks[4];
 };
 static_assert(sizeof(block64) == 64, "block64 is not 64 bytes");
+template <bool base64_url>
 uint64_t to_base64_mask(block64 *b, bool *error) {
   uint8x16_t v0f = vdupq_n_u8(0xf);
 
@@ -235,9 +243,9 @@ void base64_decode_block(char *out, const char *src) {
   vst3q_u8((uint8_t *)out, outvec);
 }
 
-template <typename char_type>
+template <bool base64_url, typename char_type>
 result compress_decode_base64(char *dst, const char_type *src, size_t srclen, base64_options options) {
-  const uint8_t *to_base64 = (options & base64_url) ? tables::base64::to_base64_url_value : tables::base64::to_base64_value;
+  const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value : tables::base64::to_base64_value;
   size_t equalsigns = 0;
   if (srclen > 0 && src[srclen - 1] == '=') {
     srclen--;
@@ -261,7 +269,7 @@ result compress_decode_base64(char *dst, const char_type *src, size_t srclen, ba
       load_block(&b, src);
       src += 64;
       bool error = false;
-      uint64_t badcharmask = to_base64_mask(&b, &error);
+      uint64_t badcharmask = to_base64_mask<base64_url>(&b, &error);
       if (error) {
         src -= 64;
 
