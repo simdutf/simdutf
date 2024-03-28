@@ -1631,6 +1631,14 @@ a few tens of kilobytes.
 The specification of our base64 functions is as follows:
 
 ```C++
+
+// base64_options are used to specify the base64 encoding options.
+using base64_options = uint64_t;
+enum : base64_options {
+  base64_default = 0, /* standard base64 format */
+  base64_url = 1 /* base64url format*/
+};
+
 /**
  * Provide the maximal binary length in bytes given the base64 input.
  * In general, if the input contains ASCII spaces, the result will be less than
@@ -1647,7 +1655,7 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char * input,
  * In general, if the input contains ASCII spaces, the result will be less than
  * the maximum length.
  *
- * @param input         the base64 input to process in 16-bit units
+ * @param input         the base64 input to process, in ASCII stored as 16-bit units
  * @param length        the length of the base64 input in 16-bit units
  * @return maximal number of binary bytes
  */
@@ -1677,9 +1685,10 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char16_t * in
  * @param input         the base64 string to process
  * @param length        the length of the string in bytes
  * @param output        the pointer to buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long).
+ * @param options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.
  * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of bytes written if successful.
  */
-simdutf_warn_unused result base64_to_binary(const char * input, size_t length, char* output) noexcept;
+simdutf_warn_unused result base64_to_binary(const char * input, size_t length, char* output, base64_options options = base64_default) noexcept;
 
 /**
  * Provide the base64 length in bytes given the length of a binary input.
@@ -1698,9 +1707,10 @@ simdutf_warn_unused size_t base64_length_from_binary(size_t length) noexcept;
  * @param input         the binary to process
  * @param length        the length of the input in bytes
  * @param output        the pointer to buffer that can hold the conversion result (should be at least base64_length_from_binary(length) bytes long)
+ * @param options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.
  * @return number of written bytes, will be equal to base64_length_from_binary(length)
  */
-size_t binary_to_base64(const char * input, size_t length, char* output) noexcept;
+size_t binary_to_base64(const char * input, size_t length, char* output, base64_options options = base64_default) noexcept;
 
 /**
  * Convert a base64 input to a binary ouput.
@@ -1723,13 +1733,13 @@ size_t binary_to_base64(const char * input, size_t length, char* output) noexcep
  * You should call this function with a buffer that is at least maximal_binary_length_from_utf6_base64(input, length) bytes long.
  * If you fail to provide that much space, the function may cause a buffer overflow.
  *
- * @param input         the base64 string to process in UTF-16 (native endianess)
+ * @param input         the base64 string to process, in ASCII stored as 16-bit units
  * @param length        the length of the string in 16-bit units
  * @param output        the pointer to buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long).
+ * @param options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.
  * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in 16-bit units) if any, or the number of bytes written if successful.
  */
-simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t length, char* output)  noexcept;
-
+simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t length, char* output, base64_options options = base64_default)  noexcept;
 
 /**
  * Convert a base64 input to a binary ouput.
@@ -1749,20 +1759,16 @@ simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t lengt
  * where the invalid character was found. When the error is BASE64_INPUT_REMAINDER, then
  * r.count contains the number of bytes decoded.
  *
- * When the error is OUTPUT_BUFFER_TOO_SMALL, then r.count contains the location in the input
- * where we stopped decoding.
- *
- * In all case, the outlen parameter is modified to contain the number of bytes
- * that have been written/decoded.
  *
  * @param input         the base64 string to process, in ASCII stored as 8-bit or 16-bit units
  * @param length        the length of the string in 8-bit or 16-bit units.
  * @param output        the pointer to buffer that can hold the conversion result.
  * @param outlen        the number of bytes that can be written in the output buffer. Upon return, it is modified to reflect how many bytes were written.
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in 16-bit units) if any, or the number of units processed if successful. Note that the return convention of base64_to_binary_safe differs from base64_to_binary.
+ * @param options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in 16-bit units) if any, or the number of units processed if successful.
  */
-simdutf_warn_unused result base64_to_binary_safe(const char * input, size_t length, char* output, size_t& outlen) noexcept;
-simdutf_warn_unused result base64_to_binary_safe(const char16_t * input, size_t length, char* output, size_t& outlen) noexcept;
+simdutf_warn_unused result base64_to_binary_safe(const char * input, size_t length, char* output, size_t& outlen, base64_options options = base64_default) noexcept;
+simdutf_warn_unused result base64_to_binary_safe(const char16_t * input, size_t length, char* output, size_t& outlen, base64_options options = base64_default) noexcept;
 
 ```
 
