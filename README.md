@@ -56,8 +56,8 @@ This library provide fast Unicode functions such as
 - From an UTF-16LE/BE string, compute the size of the UTF-32 equivalent string (equivalent to UTF-16 character counting),
 - UTF-8 and UTF-16LE/BE character counting,
 - UTF-16 endianness change (UTF16-LE/BE to UTF-16-BE/LE),
-- [WHATWG forgiving-base64](https://infra.spec.whatwg.org/#forgiving-base64-decode) to binary,
-- Binary to base64.
+- [WHATWG forgiving-base64](https://infra.spec.whatwg.org/#forgiving-base64-decode) (with or without URL encoding) to binary,
+- Binary to base64 (with or without URL encoding).
 
 The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, AVX-512, RISC-V Vector Extension, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion characters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).
 
@@ -1568,7 +1568,7 @@ void change_endianness_utf16(const char16_t * input, size_t length, char16_t * o
 Base64
 -----
 
-We also support converting from [WHATWG forgiving-base64](https://infra.spec.whatwg.org/#forgiving-base64-decode) to binary, and back. In particular, you can convert base64 inputs which contain ASCII spaces to binary.
+We also support converting from [WHATWG forgiving-base64](https://infra.spec.whatwg.org/#forgiving-base64-decode) to binary, and back. In particular, you can convert base64 inputs which contain ASCII spaces to binary. We also support the base64 URL encoding alternative.
 
 Converting binary data to base64 always succeeds and is relatively simple:
 ```C++
