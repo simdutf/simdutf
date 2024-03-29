@@ -26,7 +26,8 @@
  * https://www.codeproject.com/Articles/276993/Base-Encoding-on-a-GPU. (2013).
  */
 
-size_t encode_base64(char *dst, const char *src, size_t srclen, base64_options options) {
+size_t encode_base64(char *dst, const char *src, size_t srclen,
+                     base64_options options) {
   // credit: Wojciech Muła
   uint8_t *out = (uint8_t *)dst;
   constexpr static uint8_t source_table[64] = {
@@ -44,7 +45,8 @@ size_t encode_base64(char *dst, const char *src, size_t srclen, base64_options o
       'N', 'd', 't', '9', 'O', 'e', 'u', '-', 'P', 'f', 'v', '_',
   };
   const uint8x16_t v3f = vdupq_n_u8(0x3f);
-  const uint8x16x4_t table = vld4q_u8((options&base64_url) ? source_table_url : source_table);
+  const uint8x16x4_t table =
+      vld4q_u8((options & base64_url) ? source_table_url : source_table);
   size_t i = 0;
   for (; i + 16 * 3 <= srclen; i += 16 * 3) {
     const uint8x16x3_t in = vld3q_u8((const uint8_t *)src + i);
@@ -62,7 +64,8 @@ size_t encode_base64(char *dst, const char *src, size_t srclen, base64_options o
     vst4q_u8(out, result);
     out += 64;
   }
-  out += scalar::base64::tail_encode_base64((char *)out, src + i, srclen - i, options);
+  out += scalar::base64::tail_encode_base64((char *)out, src + i, srclen - i,
+                                            options);
 
   return size_t((char *)out - dst);
 }
@@ -101,9 +104,21 @@ struct block64 {
   uint8x16_t chunks[4];
 };
 static_assert(sizeof(block64) == 64, "block64 is not 64 bytes");
-template <bool base64_url>
-uint64_t to_base64_mask(block64 *b, bool *error) {
+template <bool base64_url> uint64_t to_base64_mask(block64 *b, bool *error) {
   uint8x16_t v0f = vdupq_n_u8(0xf);
+
+  uint8x16_t underscore0, underscore1, underscore2, underscore3;
+  if (base64_url) {
+    underscore0 = vceqq_u8(b->chunks[0], vdupq_n_u8(0x5f));
+    underscore1 = vceqq_u8(b->chunks[1], vdupq_n_u8(0x5f));
+    underscore2 = vceqq_u8(b->chunks[2], vdupq_n_u8(0x5f));
+    underscore3 = vceqq_u8(b->chunks[3], vdupq_n_u8(0x5f));
+  } else {
+    (void)underscore0;
+    (void)underscore1;
+    (void)underscore2;
+    (void)underscore3;
+  }
 
   uint8x16_t lo_nibbles0 = vandq_u8(b->chunks[0], v0f);
   uint8x16_t lo_nibbles1 = vandq_u8(b->chunks[1], v0f);
@@ -114,30 +129,61 @@ uint64_t to_base64_mask(block64 *b, bool *error) {
   uint8x16_t hi_nibbles1 = vshrq_n_u8(b->chunks[1], 4);
   uint8x16_t hi_nibbles2 = vshrq_n_u8(b->chunks[2], 4);
   uint8x16_t hi_nibbles3 = vshrq_n_u8(b->chunks[3], 4);
+  uint8x16_t lut_lo;
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-  const uint8x16_t lut_lo =
-      simdutf_make_uint8x16_t(0x3a, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70,
-                              0x70, 0x61, 0xe1, 0xb4, 0xf4, 0xe5, 0xf4, 0xb4);
+  if (base64_url) {
+    lut_lo =
+        simdutf_make_uint8x16_t(0x3a, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70,
+                                0x70, 0x61, 0xe1, 0xf4, 0xf4, 0xa5, 0xf4, 0xf4);
+  } else {
+    lut_lo =
+        simdutf_make_uint8x16_t(0x3a, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70,
+                                0x70, 0x61, 0xe1, 0xb4, 0xf4, 0xe5, 0xf4, 0xb4);
+  }
 #else
-  const uint8x16_t lut_lo = {0x3a, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70,
-                             0x70, 0x61, 0xe1, 0xb4, 0xf4, 0xe5, 0xf4, 0xb4};
+  if (base64_url) {
+    lut_lo = {0x3a, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70,
+              0x70, 0x61, 0xe1, 0xf4, 0xf4, 0xa5, 0xf4, 0xf4};
+  } else {
+    lut_lo = {0x3a, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70,
+              0x70, 0x61, 0xe1, 0xb4, 0xf4, 0xe5, 0xf4, 0xb4};
+  }
 #endif
   uint8x16_t lo0 = vqtbl1q_u8(lut_lo, lo_nibbles0);
   uint8x16_t lo1 = vqtbl1q_u8(lut_lo, lo_nibbles1);
   uint8x16_t lo2 = vqtbl1q_u8(lut_lo, lo_nibbles2);
   uint8x16_t lo3 = vqtbl1q_u8(lut_lo, lo_nibbles3);
+  uint8x16_t lut_hi;
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-  const uint8x16_t lut_hi =
-      simdutf_make_uint8x16_t(0x11, 0x20, 0x42, 0x80, 0x8, 0x4, 0x8, 0x4, 0x20,
-                              0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20);
+  if (base64_url) {
+    lut_hi =
+        simdutf_make_uint8x16_t(0x11, 0x20, 0x42, 0x80, 0x8, 0x4, 0x8, 0x4,
+                                0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20);
+  } else {
+    lut_hi =
+        simdutf_make_uint8x16_t(0x11, 0x20, 0x42, 0x80, 0x8, 0x4, 0x8, 0x4,
+                                0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20);
+  }
 #else
-  const uint8x16_t lut_hi = {0x11, 0x20, 0x42, 0x80, 0x8,  0x4,  0x8,  0x4,
-                             0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20};
+  if (base64_url) {
+    lut_hi = {0x11, 0x20, 0x42, 0x80, 0x8,  0x4,  0x8,  0x4,
+              0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20};
+  } else {
+    lut_hi = {0x11, 0x20, 0x42, 0x80, 0x8,  0x4,  0x8,  0x4,
+              0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20};
+  }
 #endif
   uint8x16_t hi0 = vqtbl1q_u8(lut_hi, hi_nibbles0);
   uint8x16_t hi1 = vqtbl1q_u8(lut_hi, hi_nibbles1);
   uint8x16_t hi2 = vqtbl1q_u8(lut_hi, hi_nibbles2);
   uint8x16_t hi3 = vqtbl1q_u8(lut_hi, hi_nibbles3);
+
+  if (base64_url) {
+    hi0 = vbicq_u8(hi0, underscore0);
+    hi1 = vbicq_u8(hi1, underscore1);
+    hi2 = vbicq_u8(hi2, underscore2);
+    hi3 = vbicq_u8(hi3, underscore3);
+  }
 
   uint8_t checks =
       vmaxvq_u8(vorrq_u8(vorrq_u8(vandq_u8(lo0, hi0), vandq_u8(lo1, hi1)),
@@ -169,23 +215,41 @@ uint64_t to_base64_mask(block64 *b, bool *error) {
   }
   // This is the transformation step that can be done while we are waiting for
   // sum0
+  uint8x16_t roll_lut;
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-  const uint8x16_t roll_lut =
-      simdutf_make_uint8x16_t(0x0, 0x10, 0x13, 0x4, 0xbf, 0xbf, 0xb9, 0xb9, 0x0,
-                              0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0);
+  if (base64_url) {
+    roll_lut =
+        simdutf_make_uint8x16_t(0xe0, 0x11, 0x13, 0x4, 0xbf, 0xbf, 0xb9, 0xb9,
+                                0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0);
+  } else {
+    roll_lut =
+        simdutf_make_uint8x16_t(0x0, 0x10, 0x13, 0x4, 0xbf, 0xbf, 0xb9, 0xb9,
+                                0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0);
+  }
 #else
-  const uint8x16_t roll_lut = {0x0, 0x10, 0x13, 0x4, 0xbf, 0xbf, 0xb9, 0xb9,
-                               0x0, 0x0,  0x0,  0x0, 0x0,  0x0,  0x0,  0x0};
+  if (base64_url) {
+    roll_lut = {0xe0, 0x11, 0x13, 0x4, 0xbf, 0xbf, 0xb9, 0xb9,
+                0x0,  0x0,  0x0,  0x0, 0x0,  0x0,  0x0,  0x0};
+  } else {
+    roll_lut = {0x0, 0x10, 0x13, 0x4, 0xbf, 0xbf, 0xb9, 0xb9,
+                0x0, 0x0,  0x0,  0x0, 0x0,  0x0,  0x0,  0x0};
+  }
 #endif
-  uint8x16_t v2f = vdupq_n_u8(0x2f);
-  uint8x16_t roll0 =
-      vqtbl1q_u8(roll_lut, vaddq_u8(vceqq_u8(b->chunks[0], v2f), hi_nibbles0));
-  uint8x16_t roll1 =
-      vqtbl1q_u8(roll_lut, vaddq_u8(vceqq_u8(b->chunks[1], v2f), hi_nibbles1));
-  uint8x16_t roll2 =
-      vqtbl1q_u8(roll_lut, vaddq_u8(vceqq_u8(b->chunks[2], v2f), hi_nibbles2));
-  uint8x16_t roll3 =
-      vqtbl1q_u8(roll_lut, vaddq_u8(vceqq_u8(b->chunks[3], v2f), hi_nibbles3));
+  uint8x16_t vsecond_last = base64_url ? vdupq_n_u8(0x2d) : vdupq_n_u8(0x2f);
+  if (base64_url) {
+    hi_nibbles0 = vbicq_u8(hi_nibbles0, underscore0);
+    hi_nibbles1 = vbicq_u8(hi_nibbles1, underscore1);
+    hi_nibbles2 = vbicq_u8(hi_nibbles2, underscore2);
+    hi_nibbles3 = vbicq_u8(hi_nibbles3, underscore3);
+  }
+  uint8x16_t roll0 = vqtbl1q_u8(
+      roll_lut, vaddq_u8(vceqq_u8(b->chunks[0], vsecond_last), hi_nibbles0));
+  uint8x16_t roll1 = vqtbl1q_u8(
+      roll_lut, vaddq_u8(vceqq_u8(b->chunks[1], vsecond_last), hi_nibbles1));
+  uint8x16_t roll2 = vqtbl1q_u8(
+      roll_lut, vaddq_u8(vceqq_u8(b->chunks[2], vsecond_last), hi_nibbles2));
+  uint8x16_t roll3 = vqtbl1q_u8(
+      roll_lut, vaddq_u8(vceqq_u8(b->chunks[3], vsecond_last), hi_nibbles3));
   b->chunks[0] = vaddq_u8(b->chunks[0], roll0);
   b->chunks[1] = vaddq_u8(b->chunks[1], roll1);
   b->chunks[2] = vaddq_u8(b->chunks[2], roll2);
@@ -218,10 +282,10 @@ void load_block(block64 *b, const char *src) {
   b->chunks[3] = vld1q_u8(reinterpret_cast<const uint8_t *>(src) + 48);
 }
 
-inline uint8x16_t load_satured(const uint16_t * data) {
-    uint16x8_t in1 = vld1q_u16(data);
-    uint16x8_t in2 = vld1q_u16(data+8);
-    return vqmovn_high_u16(vqmovn_u16(in1), in2);
+inline uint8x16_t load_satured(const uint16_t *data) {
+  uint16x8_t in1 = vld1q_u16(data);
+  uint16x8_t in2 = vld1q_u16(data + 8);
+  return vqmovn_high_u16(vqmovn_u16(in1), in2);
 }
 
 void load_block(block64 *b, const char16_t *src) {
@@ -244,8 +308,10 @@ void base64_decode_block(char *out, const char *src) {
 }
 
 template <bool base64_url, typename char_type>
-result compress_decode_base64(char *dst, const char_type *src, size_t srclen, base64_options options) {
-  const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value : tables::base64::to_base64_value;
+result compress_decode_base64(char *dst, const char_type *src, size_t srclen,
+                              base64_options options) {
+  const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value
+                                        : tables::base64::to_base64_value;
   size_t equalsigns = 0;
   if (srclen > 0 && src[srclen - 1] == '=') {
     srclen--;
@@ -270,11 +336,11 @@ result compress_decode_base64(char *dst, const char_type *src, size_t srclen, ba
       src += 64;
       bool error = false;
       uint64_t badcharmask = to_base64_mask<base64_url>(&b, &error);
+      if(badcharmask)
       if (error) {
         src -= 64;
 
-        while (src < srcend &&
-               to_base64[uint8_t(*src)] <= 64) {
+        while (src < srcend && to_base64[uint8_t(*src)] <= 64) {
           src++;
         }
         return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
@@ -396,7 +462,8 @@ result compress_decode_base64(char *dst, const char_type *src, size_t srclen, ba
     }
   }
   if (src < srcend + equalsigns) {
-    result r = scalar::base64::base64_tail_decode(dst, src, srcend - src, options);
+    result r =
+        scalar::base64::base64_tail_decode(dst, src, srcend - src, options);
     if (r.error == error_code::INVALID_BASE64_CHARACTER) {
       r.count += size_t(src - srcinit);
       return r;
