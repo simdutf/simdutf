@@ -67,7 +67,7 @@ int base64_decode_skip_spaces(const char *src, size_t srclen, char *out,
   return !state.bytes;
 }
 
-enum : uint8_t { roundtrip = 0, decode = 1, encode = 2, bun = 3 };
+enum : uint8_t { roundtrip = 0, decode = 1, encode = 2, bun = 3, roundtripurl = 4 };
 
 event_collector collector;
 
@@ -116,6 +116,7 @@ void show_help() {
   printf("  -d, --decode      Decode the input file\n");
   printf("  -e, --encode      Encode the input file\n");
   printf("  -r, --roundtrip   Roundtrip the input file\n");
+  printf("  --roundtripurl    Roundtrip the input file (URL)\n");
   printf("  -b, --bun         Bun benchmark\n");
 
   printf(" See https://github.com/lemire/base64data for test data.\n");
@@ -212,6 +213,33 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
   printf("# number of inputs: %zu\n", data.size());
 
   switch (mode) {
+
+  case roundtripurl: {
+    printf("# roundtrip (url)\n");
+    for (auto &e : simdutf::get_available_implementations()) {
+      if (!e->supported_by_runtime_system()) {
+        continue;
+      }
+      pretty_print(data.size(), volume, "simdutf::" + e->name(),
+                   bench([&data, &buffer1, &buffer2, &e]() {
+                     for (const std::vector<char> &source : data) {
+                       size_t base64_size = e->binary_to_base64(
+                           source.data(), source.size(), buffer1.data(), simdutf::base64_url);
+                       auto err = e->base64_to_binary(
+                           buffer1.data(), base64_size, buffer2.data(), simdutf::base64_url);
+                       if (err.error) {
+                         std::cerr << "Error:  at position " << err.count
+                                   << std::endl;
+                       } else if (err.count != source.size()) {
+                         std::cerr << "Error: " << err.count
+                                   << " bytes decoded, expected "
+                                   << source.size() << std::endl;
+                       }
+                     }
+                   }));
+    }
+    break;
+  }
   case roundtrip: {
     printf("# roundtrip\n");
     pretty_print(
@@ -439,6 +467,8 @@ int main(int argc, char **argv) {
       mode = encode;
     } else if ((arg == "-r") || (arg == "--roundtrip")) {
       mode = roundtrip;
+    } else if (arg == "--roundtripurl") {
+      mode = roundtripurl;
     } else if ((arg == "-b") || (arg == "--bun")) {
       mode = bun;
     } else {
