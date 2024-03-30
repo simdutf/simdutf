@@ -217,12 +217,6 @@ for c in valid:
 
 
 
-delta_asso = [0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00,0x00, 0x00, 0x00, 0x0F, 0x00, 0x0F]
-check_asso = [0x0D, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x03, 0x07, 0x0B, 0x0B, 0x0B, 0x0F]
-
-delta_values =[(0x00), (0x00), (0x00), (0x13), (0x04), (0xBF), (0xBF), (0xB9), (0xB9), (0x00), (0x10), (0xC3), (0xBF), (0xBF), (0xB9), (0xB9)]
-check_values = [(0x80), (0x80), (0x80), (0x80), (0xCF), (0xBF), (0xD5), (0xA6), (0xB5), (0x86), (0xD1), (0x80), (0xB1), (0x80), (0x91), (0x80)]
-
 def casthex(v):
     if(v >= 0x80):
         return "uint8_t("+"0x{:X}".format(v)+")"
@@ -237,3 +231,22 @@ print("delta_values")
 printme(delta_values)
 print("check_values")
 printme(check_values)
+
+def processverbose(src):
+    print("processing ", hex(src))
+    shifted = (src >> 3)%256
+    print("shifted ", hex(shifted))
+    delta_hash = (lookup(delta_asso,src) + shifted + 1) >> 1
+    print("delta_hash ", hex(delta_hash))
+    check_hash = (lookup(check_asso,src) + shifted + 1) >> 1
+    print("check_hash ", hex(check_hash))
+    out = sat(lookup(delta_values,delta_hash), src)
+    print("out ", hex(out))
+    chk = sat(lookup(check_values,check_hash), src)
+    print("chk ", hex(chk))
+
+    mask = chk & 0x80
+    return (out, mask)
+processverbose(ord('-'))
+
+print(computestring()+ " "+str(len(computestring())))
