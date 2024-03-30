@@ -236,10 +236,10 @@ static inline uint32_t to_base64_mask(__m256i *src, bool *error) {
   if (base64_url) {
     delta_values = _mm256_setr_epi8(
         0x0, 0x0, 0x0, 0x13, 0x4, uint8_t(0xBF), uint8_t(0xBF), uint8_t(0xB9),
-        uint8_t(0xB9), 0x0, 0x10, uint8_t(0xC3), uint8_t(0xBF), uint8_t(0xBF),
+        uint8_t(0xB9), 0x0, 0x11, uint8_t(0xC3), uint8_t(0xBF), uint8_t(0xE0),
         uint8_t(0xB9), uint8_t(0xB9), 0x0, 0x0, 0x0, 0x13, 0x4, uint8_t(0xBF),
-        uint8_t(0xBF), uint8_t(0xB9), uint8_t(0xB9), 0x0, 0x10, uint8_t(0xC3),
-        uint8_t(0xBF), uint8_t(0xBF), uint8_t(0xB9), uint8_t(0xB9));
+        uint8_t(0xBF), uint8_t(0xB9), uint8_t(0xB9), 0x0, 0x11, uint8_t(0xC3),
+        uint8_t(0xBF), uint8_t(0xE0), uint8_t(0xB9), uint8_t(0xB9));
   } else {
     delta_values = _mm256_setr_epi8(
         int8_t(0x00), int8_t(0x00), int8_t(0x00), int8_t(0x13), int8_t(0x04),
@@ -255,8 +255,8 @@ static inline uint32_t to_base64_mask(__m256i *src, bool *error) {
   if (base64_url) {
     check_asso =
         _mm256_setr_epi8(0xD, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x3,
-                         0x7, 0xB, 0xB, 0xB, 0xF, 0xD, 0x1, 0x1, 0x1, 0x1, 0x1,
-                         0x1, 0x1, 0x1, 0x1, 0x3, 0x7, 0xB, 0xB, 0xB, 0xF);
+                         0x7, 0xB, 0x6, 0xB, 0x12, 0xD, 0x1, 0x1, 0x1, 0x1, 0x1,
+                         0x1, 0x1, 0x1, 0x1, 0x3, 0x7, 0xB, 0x6, 0xB, 0x12);
   } else {
 
     check_asso = _mm256_setr_epi8(
@@ -267,14 +267,13 @@ static inline uint32_t to_base64_mask(__m256i *src, bool *error) {
   __m256i check_values;
   if (base64_url) {
     check_values = _mm256_setr_epi8(
-        uint8_t(0x80), uint8_t(0x80), uint8_t(0x80), uint8_t(0x80),
-        uint8_t(0xCF), uint8_t(0xBF), uint8_t(0xD5), uint8_t(0xA6),
-        uint8_t(0xB5), uint8_t(0x86), uint8_t(0xD1), uint8_t(0x80),
-        uint8_t(0xB1), uint8_t(0x80), uint8_t(0x91), uint8_t(0x80),
-        uint8_t(0x80), uint8_t(0x80), uint8_t(0x80), uint8_t(0x80),
-        uint8_t(0xCF), uint8_t(0xBF), uint8_t(0xD5), uint8_t(0xA6),
-        uint8_t(0xB5), uint8_t(0x86), uint8_t(0xD1), uint8_t(0x80),
-        uint8_t(0xB1), uint8_t(0x80), uint8_t(0x91), uint8_t(0x80));
+        0x0, uint8_t(0x80), uint8_t(0x80), uint8_t(0x80), uint8_t(0xCF),
+        uint8_t(0xBF), uint8_t(0xD3), uint8_t(0xA6), uint8_t(0xB5),
+        uint8_t(0x86), uint8_t(0xD0), uint8_t(0x80), uint8_t(0xB0),
+        uint8_t(0x80), 0x0, 0x0, 0x0, uint8_t(0x80), uint8_t(0x80),
+        uint8_t(0x80), uint8_t(0xCF), uint8_t(0xBF), uint8_t(0xD3),
+        uint8_t(0xA6), uint8_t(0xB5), uint8_t(0x86), uint8_t(0xD0),
+        uint8_t(0x80), uint8_t(0xB0), uint8_t(0x80), 0x0, 0x0);
   } else {
     check_values = _mm256_setr_epi8(
         int8_t(0x80), int8_t(0x80), int8_t(0x80), int8_t(0x80), int8_t(0xCF),
@@ -286,12 +285,10 @@ static inline uint32_t to_base64_mask(__m256i *src, bool *error) {
         int8_t(0x91), int8_t(0x80));
   }
   const __m256i shifted = _mm256_srli_epi32(*src, 3);
-
   const __m256i delta_hash =
       _mm256_avg_epu8(_mm256_shuffle_epi8(delta_asso, *src), shifted);
   const __m256i check_hash =
       _mm256_avg_epu8(_mm256_shuffle_epi8(check_asso, *src), shifted);
-
   const __m256i out =
       _mm256_adds_epi8(_mm256_shuffle_epi8(delta_values, delta_hash), *src);
   const __m256i chk =
@@ -420,6 +417,7 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       uint64_t badcharmask = to_base64_mask<base64_url>(&b, &error);
       if (error) {
         src -= 64;
+        printf("ERROOOROOROROR\n");
         while (src < srcend && to_base64[uint8_t(*src)] <= 64) {
           src++;
         }

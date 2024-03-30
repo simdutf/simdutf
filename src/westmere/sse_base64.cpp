@@ -224,8 +224,8 @@ static inline uint16_t to_base64_mask(__m128i *src, bool *error) {
   if (base64_url) {
     delta_values = _mm_setr_epi8(0x0, 0x0, 0x0, 0x13, 0x4, uint8_t(0xBF),
                                  uint8_t(0xBF), uint8_t(0xB9), uint8_t(0xB9),
-                                 0x0, 0x10, uint8_t(0xC3), uint8_t(0xBF),
-                                 uint8_t(0xBF), uint8_t(0xB9), uint8_t(0xB9));
+                                 0x0, 0x11, uint8_t(0xC3), uint8_t(0xBF),
+                                 uint8_t(0xE0), uint8_t(0xB9), uint8_t(0xB9));
   } else {
 
     delta_values =
@@ -237,7 +237,7 @@ static inline uint16_t to_base64_mask(__m128i *src, bool *error) {
   __m128i check_asso;
   if (base64_url) {
     check_asso = _mm_setr_epi8(0xD, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1,
-                               0x3, 0x7, 0xB, 0xB, 0xB, 0xF);
+                               0x3, 0x7, 0xB, 0x6, 0xB, 0x12);
   } else {
 
     check_asso = _mm_setr_epi8(0x0D, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
@@ -245,11 +245,11 @@ static inline uint16_t to_base64_mask(__m128i *src, bool *error) {
   }
   __m128i check_values;
   if (base64_url) {
-    check_values = _mm_setr_epi8(
-        uint8_t(0x80), uint8_t(0x80), uint8_t(0x80), uint8_t(0x80),
-        uint8_t(0xCF), uint8_t(0xBF), uint8_t(0xD5), uint8_t(0xA6),
-        uint8_t(0xB5), uint8_t(0x86), uint8_t(0xD1), uint8_t(0x80),
-        uint8_t(0xB1), uint8_t(0x80), uint8_t(0x91), uint8_t(0x80));
+    check_values = _mm_setr_epi8(0x0, uint8_t(0x80), uint8_t(0x80),
+                                 uint8_t(0x80), uint8_t(0xCF), uint8_t(0xBF),
+                                 uint8_t(0xD3), uint8_t(0xA6), uint8_t(0xB5),
+                                 uint8_t(0x86), uint8_t(0xD0), uint8_t(0x80),
+                                 uint8_t(0xB0), uint8_t(0x80), 0x0, 0x0);
   } else {
 
     check_values =
