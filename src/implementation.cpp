@@ -1358,8 +1358,8 @@ simdutf_warn_unused size_t base64_length_from_binary(size_t length) noexcept {
   return get_default_implementation()->base64_length_from_binary(length);
 }
 
-size_t binary_to_base64(const char * input, size_t length, char* output) noexcept {
-  return get_default_implementation()->binary_to_base64(input, length, output);
+size_t binary_to_base64(const char * input, size_t length, char* output, base64_options options) noexcept {
+  return get_default_implementation()->binary_to_base64(input, length, output, options);
 }
 
 simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const char * buf, size_t length) noexcept {
