@@ -25,17 +25,17 @@ print("lookup0:")
 print(", ".join([str(sign8(i)) for i in lookup_0]))
 print("lookup1:")
 print(", ".join([str(sign8(i)) for i in lookup_1]))
-lookup = [0 for i in range(64)]
+lookupn = [0 for i in range(64)]
 output = 0
 for ifrom in range(16):
-    lookup[ifrom*4 + 0] = output + 3
-    lookup[ifrom*4 + 1] = output + 2
-    lookup[ifrom*4 + 2] = output + 1
-    lookup[ifrom*4 + 3] = output + 0
+    lookupn[ifrom*4 + 0] = output + 3
+    lookupn[ifrom*4 + 1] = output + 2
+    lookupn[ifrom*4 + 2] = output + 1
+    lookupn[ifrom*4 + 3] = output + 0
     output += 4
-lookup.reverse()
+lookupn.reverse()
 print("reverse:")
-print(", ".join([str(i) for i in lookup]))
+print(", ".join([str(i) for i in lookupn]))
 
 print("====")
 
@@ -56,24 +56,21 @@ for i in range(64):
 allowed = "\0\t\r\n "
 for z in allowed:
     lookup_0[ord(z)] = 0xff
-def sign8(x):
-    if x >= 128:
-        return x - 256
-    return x
+
 lookup_0.reverse()
 lookup_1.reverse()
 print("lookup0:")
 print(", ".join([str(sign8(i)) for i in lookup_0]))
 print("lookup1:")
 print(", ".join([str(sign8(i)) for i in lookup_1]))
-lookup = [0 for i in range(64)]
+lookupn = [0 for i in range(64)]
 output = 0
 for ifrom in range(16):
-    lookup[ifrom*4 + 0] = output + 3
-    lookup[ifrom*4 + 1] = output + 2
-    lookup[ifrom*4 + 2] = output + 1
-    lookup[ifrom*4 + 3] = output + 0
+    lookupn[ifrom*4 + 0] = output + 3
+    lookupn[ifrom*4 + 1] = output + 2
+    lookupn[ifrom*4 + 2] = output + 1
+    lookupn[ifrom*4 + 3] = output + 0
     output += 4
-lookup.reverse()
+lookupn.reverse()
 print("reverse:")
-print(", ".join([str(i) for i in lookup]))
+print(", ".join([str(i) for i in lookupn]))

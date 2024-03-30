@@ -124,16 +124,19 @@ pattern = re.compile(r"""set\(SIMDUTF_LIB_SOVERSION "(\d+)" CACHE STRING "simdut
 with open (cmakefile, 'rt') as myfile:
     for line in myfile:
         m = pattern.search(line)
-        if m != None:
+        if m is not None:
             sonumber = int(m.group(1))
             break
 print("so library number "+str(sonumber))
 
 if(atleastminor):
     print("Given that we have a minor revision, it seems necessary to bump the so library number")
+    if sonumber is None:
+        print("I cannot find the so library number in the CMakeLists.txt file")
+        sys.exit(-1)
     sonumber += 1
 
-for line in fileinput.input(cmakefile, inplace=1, backup='.bak'):
+for line in fileinput.input(cmakefile, inplace=True, backup='.bak'):
     line = re.sub(r'  VERSION \d+\.\d+\.\d+','  VERSION '+newmajorversionstring+'.'+mewminorversionstring+'.'+newrevversionstring, line.rstrip())
     line = re.sub(r'SIMDUTF_LIB_VERSION "\d+\.\d+\.\d+','SIMDUTF_LIB_VERSION "'+str(sonumber)+".0.0", line)
     line = re.sub(r'set\(SIMDUTF_LIB_SOVERSION "\d+"','set(SIMDUTF_LIB_SOVERSION \"'+str(sonumber)+'\"', line)
@@ -143,7 +146,7 @@ print("modified "+cmakefile+", a backup was made")
 
 
 doxyfile = maindir + os.sep + "Doxyfile"
-for line in fileinput.input(doxyfile, inplace=1, backup='.bak'):
+for line in fileinput.input(doxyfile, inplace=True, backup='.bak'):
     line = re.sub(r'PROJECT_NUMBER         = "\d+\.\d+\.\d+','PROJECT_NUMBER         = "'+newversionstring, line.rstrip())
     print(line)
 print("modified "+doxyfile+", a backup was made")
@@ -165,7 +168,7 @@ if(cp.returncode != 0):
 readmefile = maindir + os.sep + "README.md"
 
 
-for line in fileinput.input(readmefile, inplace=1, backup='.bak'):
+for line in fileinput.input(readmefile, inplace=True, backup='.bak'):
     line = re.sub(r'   wget https://github.com/simdutf/simdutf/releases/download/v\d+\.\d+\.\d+/singleheader.zip','   wget https://github.com/simdutf/simdutf/releases/download/v'+newmajorversionstring+'.'+mewminorversionstring+'.'+newrevversionstring+'/singleheader.zip', line.rstrip())
     line = re.sub(r'https://github.com/simdutf/simdutf/releases/download/v\d+\.\d+\.\d+/singleheader.zip','https://github.com/simdutf/simdutf/releases/download/v'+newmajorversionstring+'.'+mewminorversionstring+'.'+newrevversionstring+'/singleheader.zip', line.rstrip())
     print(line)
@@ -178,11 +181,12 @@ m = pattern.search(readmedata)
 if m == None:
     print('I cannot find a link to the API documentation in your README')
 else:
-    detectedreadme = m.group(1)
-    print("found a link to your API documentation in the README file: "+detectedreadme+" ("+toversionstring(*newversion)+")")
-    if(atleastminor):
-       if(detectedreadme != toversionstring(*newversion)):
-           print(colored(255, 0, 0, "Consider updating the readme link to "+toversionstring(*newversion)))
+    if m is not None:
+        detectedreadme = m.group(1)
+        print("found a link to your API documentation in the README file: "+detectedreadme+" ("+toversionstring(*newversion)+")")
+        if(atleastminor):
+            if(detectedreadme != toversionstring(*newversion)):
+                print(colored(255, 0, 0, "Consider updating the readme link to "+toversionstring(*newversion)))
 
 
 

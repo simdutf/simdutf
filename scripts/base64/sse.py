@@ -162,7 +162,7 @@ def adjust(array, start, end, check_hash):
     chk = sat(quietlookup(check_values,check_hash), src)
     mask = chk & 0x80
 
-def process():
+def process_explicit():
     t={}
     for i in range(256):
         src = i
@@ -187,7 +187,7 @@ def process():
             continue
     return True
 print("process")
-process()
+process_explicit()
 print("string")
 print(computestring()+ " "+str(len(computestring())))
 

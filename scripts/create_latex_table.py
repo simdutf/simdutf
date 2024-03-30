@@ -23,13 +23,16 @@ codecs = set()
 for line in content:
 
     if line.startswith("convert"):
-        codec = re.search(r"\+(\w+)",line).group(1)
-        rfile = re.search(r"/(\w+)[\.-]",line).group(1)
-        currentrow["codec"] = codec
-        currentrow["dataset"] = rfile
-        datasets.add(rfile)
-        codecs.add(codec)
-
+        m = re.search(r"\+(\w+)",line)
+        if m is not None:
+            codec = m.group(1)
+            currentrow["codec"] = codec
+            codecs.add(codec)
+        m = re.search(r"/(\w+)[\.-]",line)
+        if m is not None:
+            rfile = m.group(1)
+            currentrow["dataset"] = rfile
+            datasets.add(rfile)
     m = re.search(r"\s([\.0-9]+) Gc/s",line)
     if m:
         v = float(m.group(1))
@@ -50,8 +53,8 @@ def get(d, k):
     for x in table:
         if(x['codec'] == k) and (x['dataset'] == d):
             return x["result"]
-datasets=sorted(datasets)
-for dataset in datasets:
+datasetsorted=sorted(datasets)
+for dataset in datasetsorted:
     s = dataset
     for k in kernels:
       s +=  " & " + get(dataset, k)

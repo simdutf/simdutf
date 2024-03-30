@@ -275,6 +275,8 @@ uint64_t compress_block(block64 *b, uint64_t mask, char *output) {
   return offsets >> 56;
 }
 
+// The caller of this function is responsible to ensure that there are 64 bytes available
+// from reading at src. The data is read into a block64 structure.
 void load_block(block64 *b, const char *src) {
   b->chunks[0] = vld1q_u8(reinterpret_cast<const uint8_t *>(src));
   b->chunks[1] = vld1q_u8(reinterpret_cast<const uint8_t *>(src) + 16);
@@ -282,12 +284,16 @@ void load_block(block64 *b, const char *src) {
   b->chunks[3] = vld1q_u8(reinterpret_cast<const uint8_t *>(src) + 48);
 }
 
+// The caller of this function is responsible to ensure that there are 32 bytes available
+// from reading at data. It returns a 16-byte value, narrowing with saturation the 16-bit words.
 inline uint8x16_t load_satured(const uint16_t *data) {
   uint16x8_t in1 = vld1q_u16(data);
   uint16x8_t in2 = vld1q_u16(data + 8);
   return vqmovn_high_u16(vqmovn_u16(in1), in2);
 }
 
+// The caller of this function is responsible to ensure that there are 128 bytes available
+// from reading at src. The data is read into a block64 structure.
 void load_block(block64 *b, const char16_t *src) {
   b->chunks[0] = load_satured(reinterpret_cast<const uint16_t *>(src));
   b->chunks[1] = load_satured(reinterpret_cast<const uint16_t *>(src) + 16);

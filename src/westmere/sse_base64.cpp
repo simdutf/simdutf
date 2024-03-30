@@ -308,6 +308,8 @@ static inline uint64_t compress_block(block64 *b, uint64_t mask, char *output) {
   return _mm_popcnt_u64(nmask);
 }
 
+// The caller of this function is responsible to ensure that there are 64 bytes available
+// from reading at src. The data is read into a block64 structure.
 static inline void load_block(block64 *b, const char *src) {
   b->chunks[0] = _mm_loadu_si128(reinterpret_cast<const __m128i *>(src));
   b->chunks[1] = _mm_loadu_si128(reinterpret_cast<const __m128i *>(src + 16));
@@ -315,6 +317,8 @@ static inline void load_block(block64 *b, const char *src) {
   b->chunks[3] = _mm_loadu_si128(reinterpret_cast<const __m128i *>(src + 48));
 }
 
+// The caller of this function is responsible to ensure that there are 128 bytes available
+// from reading at src. The data is read into a block64 structure.
 static inline void load_block(block64 *b, const char16_t *src) {
   __m128i m1 = _mm_loadu_si128(reinterpret_cast<const __m128i *>(src));
   __m128i m2 = _mm_loadu_si128(reinterpret_cast<const __m128i *>(src + 8));

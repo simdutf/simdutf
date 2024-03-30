@@ -13,6 +13,7 @@ namespace base64 {
 // This functions assumes that the padding (=) has been removed.
 template <class char_type>
 result base64_tail_decode(char *dst, const char_type *src, size_t length, base64_options options) {
+  // This looks like 5 branches, but we expect the compiler to resolve this to a single branch:
   const uint8_t *to_base64 = (options & base64_url) ? tables::base64::to_base64_url_value : tables::base64::to_base64_value;
   const uint32_t *d0 = (options & base64_url) ? tables::base64::base64_url::d0 : tables::base64::base64_default::d0;
   const uint32_t *d1 = (options & base64_url) ? tables::base64::base64_url::d1 : tables::base64::base64_default::d1;
@@ -105,6 +106,7 @@ result base64_tail_decode(char *dst, const char_type *src, size_t length, base64
 // This functions assumes that the padding (=) has been removed.
 template <class char_type>
 result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, size_t length, base64_options options) {
+  // This looks like 5 branches, but we expect the compiler to resolve this to a single branch:
   const uint8_t *to_base64 = (options & base64_url) ? tables::base64::to_base64_url_value : tables::base64::to_base64_value;
   const uint32_t *d0 = (options & base64_url) ? tables::base64::base64_url::d0 : tables::base64::base64_default::d0;
   const uint32_t *d1 = (options & base64_url) ? tables::base64::base64_url::d1 : tables::base64::base64_default::d1;
@@ -216,6 +218,7 @@ result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, 
 // Returns the number of bytes written. The destination buffer must be large
 // enough. It will add padding (=) if needed.
 size_t tail_encode_base64(char *dst, const char *src, size_t srclen, base64_options options) {
+  // This looks like 3 branches, but we expect the compiler to resolve this to a single branch:
   const char *e0 = (options & base64_url) ? tables::base64::base64_url::e0 : tables::base64::base64_default::e0;
   const char *e1 = (options & base64_url) ? tables::base64::base64_url::e1 : tables::base64::base64_default::e1;
   const char *e2 = (options & base64_url) ? tables::base64::base64_url::e2 : tables::base64::base64_default::e2;
