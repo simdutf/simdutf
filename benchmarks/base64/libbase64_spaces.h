@@ -12,7 +12,6 @@ static inline size_t libbase64_find_space(const char *p, const size_t avail) {
 
 // Inspired by
 // https://github.com/aklomp/base64/blob/b20a31a997e0b48274fa09e58b65ee9202531e4f/bin/base64.c#L405
-
 static bool libbase64_space_decode(const char *start, size_t avail, char *outbuf,
                    size_t *outlen) {
   struct base64_state state;
