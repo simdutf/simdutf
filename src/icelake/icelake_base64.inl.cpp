@@ -31,14 +31,17 @@ struct block64 {
   __m512i chunks[1];
 };
 
-size_t encode_base64(char *dst, const char *src, size_t srclen) {
+template <bool base64_url>
+size_t encode_base64(char *dst, const char *src, size_t srclen,
+                     base64_options options) {
   // credit: Wojciech Muła
-
   const uint8_t *input = (const uint8_t *)src;
 
   uint8_t *out = (uint8_t *)dst;
   static const char *lookup_tbl =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+      base64_url
+          ? "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+          : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
   const __m512i shuffle_input = _mm512_setr_epi32(
       0x01020001, 0x04050304, 0x07080607, 0x0a0b090a, 0x0d0e0c0d, 0x10110f10,
@@ -57,27 +60,48 @@ size_t encode_base64(char *dst, const char *src, size_t srclen) {
     _mm512_storeu_si512(reinterpret_cast<__m512i *>(out), result);
     out += 64;
   }
-  return i / 3 * 4 +
-         scalar::base64::tail_encode_base64((char *)out, src + i, srclen - i, options);
+  return i / 3 * 4 + scalar::base64::tail_encode_base64((char *)out, src + i,
+                                                        srclen - i, options);
 }
 
+template <bool base64_url>
 static inline uint64_t to_base64_mask(block64 *b, bool *error) {
   __m512i input = b->chunks[0];
   const __m512i ascii_space_tbl = _mm512_set_epi8(
       0, 0, 13, 0, 0, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 13, 0, 0, 10, 9,
       0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 13, 0, 0, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0,
       32, 0, 0, 13, 0, 0, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0, 32);
-  __m512i lookup0 = _mm512_set_epi8(
-      -128, -128, -128, -128, -128, -128, 61, 60, 59, 58, 57, 56, 55, 54, 53,
-      52, 63, -128, -128, -128, 62, -128, -128, -128, -128, -128, -128, -128,
-      -128, -128, -128, -64, -128, -128, -128, -128, -128, -128, -128, -128,
-      -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -64, -128,
-      -128, -64, -64, -128, -128, -128, -128, -128, -128, -128, -128, -64);
-  __m512i lookup1 = _mm512_set_epi8(
-      -128, -128, -128, -128, -128, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41,
-      40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, -128, -128,
-      -128, -128, -128, -128, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14,
-      13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -128);
+  __m512i lookup0;
+  if (base64_url) {
+    lookup0 = _mm512_set_epi8(
+        -128, -128, -128, -128, -128, -128, 61, 60, 59, 58, 57, 56, 55, 54, 53,
+        52, -128, -128, 62, -128, -128, -128, -128, -128, -128, -128, -128,
+        -128, -128, -128, -128, -1, -128, -128, -128, -128, -128, -128, -128,
+        -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -1,
+        -128, -128, -1, -1, -128, -128, -128, -128, -128, -128, -128, -128, -1);
+  } else {
+    lookup0 = _mm512_set_epi8(
+        -128, -128, -128, -128, -128, -128, 61, 60, 59, 58, 57, 56, 55, 54, 53,
+        52, 63, -128, -128, -128, 62, -128, -128, -128, -128, -128, -128, -128,
+        -128, -128, -128, -1, -128, -128, -128, -128, -128, -128, -128, -128,
+        -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -1, -128,
+        -128, -1, -1, -128, -128, -128, -128, -128, -128, -128, -128, -128);
+  }
+  __m512i lookup1;
+  if (base64_url) {
+    lookup1 = _mm512_set_epi8(
+        -128, -128, -128, -128, -128, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42,
+        41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, -128,
+        63, -128, -128, -128, -128, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15,
+        14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -128);
+  } else {
+    lookup1 = _mm512_set_epi8(
+        -128, -128, -128, -128, -128, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42,
+        41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, -128,
+        -128, -128, -128, -128, -128, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16,
+        15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -128);
+  }
+
   const __m512i translated = _mm512_permutex2var_epi8(lookup0, input, lookup1);
   const __m512i combined = _mm512_or_si512(translated, input);
   const __mmask64 mask = _mm512_movepi8_mask(combined);
@@ -110,7 +134,8 @@ static inline void load_block(block64 *b, const char16_t *src) {
   __m512i m1 = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(src));
   __m512i m2 = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(src + 32));
   __m512i p = _mm512_packus_epi16(m1, m2);
-  b->chunks[0] = _mm512_permutexvar_epi64(_mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7), p);
+  b->chunks[0] =
+      _mm512_permutexvar_epi64(_mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7), p);
 }
 
 static inline void base64_decode(char *out, __m512i str) {
@@ -138,8 +163,10 @@ static inline void base64_decode_block(char *out, block64 *b) {
 }
 
 template <bool base64_url, typename chartype>
-result compress_decode_base64(char *dst, const chartype *src, size_t srclen, base64_options options) {
-  const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value : tables::base64::to_base64_value;
+result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
+                              base64_options options) {
+  const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value
+                                        : tables::base64::to_base64_value;
   size_t equalsigns = 0;
   if (srclen > 0 && src[srclen - 1] == '=') {
     srclen--;
@@ -164,11 +191,10 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen, bas
       load_block(&b, src);
       src += 64;
       bool error = false;
-      uint64_t badcharmask = to_base64_mask(&b, &error);
+      uint64_t badcharmask = to_base64_mask<base64_url>(&b, &error);
       if (error) {
         src -= 64;
-        while (src < srcend &&
-               to_base64[uint8_t(*src)] <= 64) {
+        while (src < srcend && to_base64[uint8_t(*src)] <= 64) {
           src++;
         }
         return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
@@ -287,7 +313,8 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen, bas
     }
   }
   if (src < srcend + equalsigns) {
-    result r = scalar::base64::base64_tail_decode(dst, src, srcend - src, options);
+    result r =
+        scalar::base64::base64_tail_decode(dst, src, srcend - src, options);
     if (r.error == error_code::INVALID_BASE64_CHARACTER) {
       r.count += size_t(src - srcinit);
       return r;
