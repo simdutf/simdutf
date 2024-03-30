@@ -1,12 +1,13 @@
 name: Ubuntu rvv VLEN=128 (clang 17)
 
-on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+# Fails due to the inability to install packages
+#on:
+#  push:
+#    branches:
+#      - master
+#  pull_request:
+#    branches:
+#      - master
 
 jobs:
   build:

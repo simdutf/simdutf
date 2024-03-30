@@ -1605,15 +1605,19 @@ be useful if you seek to decode the input into segments having a maximal capacit
   simdutf::result r = simdutf::base64_to_binary_safe(
             base64.data(), base64.size(), back.data(), limited_length);
   assert(r.error == simdutf::error_code::OUTPUT_BUFFER_TOO_SMALL);
-  // We decoded r.count base64 bytes to limited_length bytes
+  // We decoded r.count base64 8-bit units to limited_length bytes
   // Now let us decode the rest !!!
+  //
+  // We have read up to r.count in the input buffer and we have
+  // produced limited_length bytes.
+  //
   size_t input_index = r.count;
   size_t limited_length2 = back.size();
   r = simdutf::base64_to_binary_safe(base64.data() + input_index,
                                            base64.size() - input_index,
                                            back.data(), limited_length2);
   assert(r.error == simdutf::error_code::SUCCESS);
-  // We decoded r.count base64 bytes to limited_length2 bytes
+  // We decoded r.count base64 8-bit units to limited_length2 bytes
   // We are done
   assert(limited_length2 + limited_length == (len + 3) / 4 * 3);
 ```
@@ -1672,8 +1676,11 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char16_t * in
  *
  * This function will fail in case of invalid input. There are two possible reasons for
  * failure: the input contains a number of base64 characters that when divided by 4, leaves
- * a singler remainder character (BASE64_INPUT_REMAINDER), or the input contains a character
+ * a single remainder character (BASE64_INPUT_REMAINDER), or the input contains a character
  * that is not a valid base64 character (INVALID_BASE64_CHARACTER).
+ *
+ * The INVALID_BASE64_CHARACTER cases are considered fatal and you are expected to discard
+ * the output.
  *
  * When the error is INVALID_BASE64_CHARACTER, r.count contains the index in the input
  * where the invalid character was found. When the error is BASE64_INPUT_REMAINDER, then
@@ -1723,7 +1730,7 @@ size_t binary_to_base64(const char * input, size_t length, char* output, base64_
  *
  * This function will fail in case of invalid input. There are two possible reasons for
  * failure: the input contains a number of base64 characters that when divided by 4, leaves
- * a singler remainder character (BASE64_INPUT_REMAINDER), or the input contains a character
+ * a single remainder character (BASE64_INPUT_REMAINDER), or the input contains a character
  * that is not a valid base64 character (INVALID_BASE64_CHARACTER).
  *
  * When the error is INVALID_BASE64_CHARACTER, r.count contains the index in the input
@@ -1737,7 +1744,7 @@ size_t binary_to_base64(const char * input, size_t length, char* output, base64_
  * @param length        the length of the string in 16-bit units
  * @param output        the pointer to buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long).
  * @param options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in 16-bit units) if any, or the number of bytes written if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the INVALID_BASE64_CHARACTER error (in the input in units) if any, or the number of bytes written if successful.
  */
 simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t length, char* output, base64_options options = base64_default)  noexcept;
 
@@ -1752,20 +1759,26 @@ simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t lengt
  *
  * This function will fail in case of invalid input. There are three possible reasons for
  * failure: the input contains a number of base64 characters that when divided by 4, leaves
- * a singler remainder character (BASE64_INPUT_REMAINDER), the input contains a character
- * that is not a valid base64 character (INVALID_BASE64_CHARACTER), or the output buffer is too small (OUTPUT_BUFFER_TOO_SMALL).
+ * a single remainder character (BASE64_INPUT_REMAINDER), the input contains a character
+ * that is not a valid base64 character (INVALID_BASE64_CHARACTER), or the output buffer 
+ * is too small (OUTPUT_BUFFER_TOO_SMALL).
+ *
+ * When OUTPUT_BUFFER_TOO_SMALL, we return both the number of bytes written
+ * and the number of units processed, see description of the parameters and returned value.
  *
  * When the error is INVALID_BASE64_CHARACTER, r.count contains the index in the input
  * where the invalid character was found. When the error is BASE64_INPUT_REMAINDER, then
  * r.count contains the number of bytes decoded.
  *
+ * The INVALID_BASE64_CHARACTER cases are considered fatal and you are expected to discard
+ * the output.
  *
  * @param input         the base64 string to process, in ASCII stored as 8-bit or 16-bit units
  * @param length        the length of the string in 8-bit or 16-bit units.
  * @param output        the pointer to buffer that can hold the conversion result.
  * @param outlen        the number of bytes that can be written in the output buffer. Upon return, it is modified to reflect how many bytes were written.
  * @param options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.
- * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in 16-bit units) if any, or the number of units processed if successful.
+ * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and position of the INVALID_BASE64_CHARACTER error (in the input in units) if any, or the number of units processed if successful.
  */
 simdutf_warn_unused result base64_to_binary_safe(const char * input, size_t length, char* output, size_t& outlen, base64_options options = base64_default) noexcept;
 simdutf_warn_unused result base64_to_binary_safe(const char16_t * input, size_t length, char* output, size_t& outlen, base64_options options = base64_default) noexcept;
