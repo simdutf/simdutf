@@ -417,7 +417,6 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       uint64_t badcharmask = to_base64_mask<base64_url>(&b, &error);
       if (error) {
         src -= 64;
-        printf("ERROOOROOROROR\n");
         while (src < srcend && to_base64[uint8_t(*src)] <= 64) {
           src++;
         }
