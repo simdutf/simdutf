@@ -1394,7 +1394,7 @@ enum : base64_options {
  *
  * @param input         the base64 input to process
  * @param length        the length of the base64 input in bytes
- * @return maximal number of binary bytes
+ * @return maximum number of binary bytes
  */
 simdutf_warn_unused size_t maximal_binary_length_from_base64(const char * input, size_t length) noexcept;
 
