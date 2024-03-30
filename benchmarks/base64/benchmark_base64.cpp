@@ -112,12 +112,12 @@ std::vector<char> read_file(const char *filename,
 void show_help() {
   printf("Usage: benchmark_base64 [options] file1 [file2 ...]\n");
   printf("Options:\n");
-  printf("  -h, --help        Show this help message and exit\n");
-  printf("  -d, --decode      Decode the input file\n");
-  printf("  -e, --encode      Encode the input file\n");
-  printf("  -r, --roundtrip   Roundtrip the input file\n");
+  printf("  -h, --help         Show this help message and exit\n");
+  printf("  -d, --decode       Decode the input file\n");
+  printf("  -e, --encode       Encode the input file\n");
+  printf("  -r, --roundtrip    Roundtrip the input file\n");
   printf("  --roundtrip-url    Roundtrip the input file (URL)\n");
-  printf("  -b, --bench-bun         Bun benchmark\n");
+  printf("  -b, --bench-bun    Bun benchmark\n");
 
   printf(" See https://github.com/lemire/base64data for test data.\n");
 }
@@ -467,7 +467,7 @@ int main(int argc, char **argv) {
       mode = encode;
     } else if ((arg == "-r") || (arg == "--roundtrip")) {
       mode = roundtrip;
-    } else if (arg == "--roundtripurl") {
+    } else if (arg == "--roundtrip-url") {
       mode = roundtripurl;
     } else if ((arg == "-b") || (arg == "--bun")) {
       mode = bun;
