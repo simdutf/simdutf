@@ -8,6 +8,9 @@
 #include <tests/helpers/test.h>
 #include <tests/helpers/transcode_test_base.h>
 
+// We may disable base64url tests by commenting out this next line.
+#define SIMDUTF_BASE64URL_TESTS 1
+
 using random_generator = std::mt19937;
 static random_generator::result_type seed = 42;
 
@@ -153,6 +156,7 @@ TEST(encode_base64_cases) {
   }
 }
 
+#if SIMDUTF_BASE64URL_TESTS
 
 TEST(encode_base64url_cases) {
   std::vector<std::pair<std::string, std::string>> cases = {
@@ -171,6 +175,11 @@ TEST(encode_base64url_cases) {
     size_t s = implementation.binary_to_base64(p.first.data(), p.first.size(),
                                                buffer.data(), simdutf::base64_url);
     ASSERT_EQUAL(s, p.second.size());
+    if(std::string(buffer.data(), buffer.size()) != p.second) {
+      printf("difference:\n");
+      printf(" %.*s\n", (int)s, buffer.data());
+      printf(" %.*s\n", (int)s, p.second.data());
+    }
     ASSERT_TRUE(std::string(buffer.data(), buffer.size()) == p.second);
   }
   printf(" -- ");
@@ -202,6 +211,8 @@ TEST(encode_base64url_cases) {
     }
   }
 }
+
+#endif
 
 TEST(encode_base64_cases_16) {
   std::vector<std::pair<std::string, std::u16string>> cases = {
@@ -243,6 +254,7 @@ TEST(encode_base64_cases_16) {
   }
 }
 
+#if SIMDUTF_BASE64URL_TESTS
 
 TEST(encode_base64url_cases_16) {
   std::vector<std::pair<std::string, std::u16string>> cases = {
@@ -283,6 +295,8 @@ TEST(encode_base64url_cases_16) {
     }
   }
 }
+
+#endif
 
 TEST(roundtrip_base64) {
   for (size_t len = 0; len < 2048; len++) {
@@ -368,6 +382,7 @@ TEST(roundtrip_base64_16) {
 }
 
 
+#if SIMDUTF_BASE64URL_TESTS
 
 TEST(roundtrip_base64url) {
   for (size_t len = 0; len < 2048; len++) {
@@ -451,6 +466,7 @@ TEST(roundtrip_base64url_16) {
     }
   }
 }
+#endif
 
 TEST(doomed_base64_roundtrip) {
   for (size_t len = 0; len < 2048; len++) {

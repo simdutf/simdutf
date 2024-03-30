@@ -799,7 +799,11 @@ simdutf_warn_unused size_t implementation::base64_length_from_binary(size_t leng
 }
 
 size_t implementation::binary_to_base64(const char * input, size_t length, char* output, base64_options options) const noexcept {
-  return encode_base64(output, input, length, options);
+  if(options & base64_url) {
+    return encode_base64<base64_url>(output, input, length);
+  } else {
+    return encode_base64<base64_default>(output, input, length);
+  }
 }
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
