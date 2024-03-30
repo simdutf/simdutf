@@ -117,7 +117,7 @@ void show_help() {
   printf("  -e, --encode      Encode the input file\n");
   printf("  -r, --roundtrip   Roundtrip the input file\n");
   printf("  --roundtrip-url    Roundtrip the input file (URL)\n");
-  printf("  -b, --bun         Bun benchmark\n");
+  printf("  -b, --bench-bun         Bun benchmark\n");
 
   printf(" See https://github.com/lemire/base64data for test data.\n");
 }
