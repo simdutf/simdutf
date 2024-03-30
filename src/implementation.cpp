@@ -1323,6 +1323,11 @@ simdutf_warn_unused result base64_to_binary_safe_impl(const chartype * input, si
     ((r.count % 3) == 0 ? 0 : (r.count % 3) + 1);
   size_t output_index = r.count - (r.count % 3);
   size_t input_index = safe_input;
+  // offset is a value that is no larger than 3. We backtrack
+  // by up to offset characters + an undetermined number of
+  // white space characters. It is expected that the next loop
+  // runs at most 3 times + the number of white space characters
+  // in between them, so we are not worried about performance.
   while(offset > 0 && input_index > 0) {
     chartype c = input[--input_index];
     if(c == '=' || c == '\n' || c == '\r' || c == '\t' || c == ' ') {
