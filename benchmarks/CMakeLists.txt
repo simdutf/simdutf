@@ -53,6 +53,9 @@ if(Threads_FOUND)
   set_property(TARGET threaded PROPERTY CXX_STANDARD 17)
   set_property(TARGET threaded PROPERTY CXX_STANDARD_REQUIRED ON)
 endif(Threads_FOUND)
+
+option(SIMDUTF_BENCHMARK_BASE64 "Whether the base64 benchmarks are included as part of the CMake Build (requires C++17 or better)." ON)
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL Clang AND "x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
   message(STATUS "Not building base64 benchmarks when using clang-cl due to build errors with the aklomp/base64 dependency.")
 else()

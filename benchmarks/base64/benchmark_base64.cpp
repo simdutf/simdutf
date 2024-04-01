@@ -10,8 +10,10 @@
 #include <vector>
 
 #include "libbase64.h"
-#include "simdutf.h"
+#include "libbase64_spaces.h"
 #include "node_base64.h"
+
+#include "simdutf.h"
 
 #include "event_counter.h"
 #include <atomic>
@@ -34,7 +36,7 @@ bool is_space(char c) {
 // This is for reference only, do not use this function in production
 // system.
 int base64_decode_skip_spaces(const char *src, size_t srclen, char *out,
-                                     size_t *outlen) {
+                              size_t *outlen) {
   struct base64_state state;
   base64_stream_decode_init(&state, 0);
   const char *srcend = src + srclen;
@@ -65,7 +67,7 @@ int base64_decode_skip_spaces(const char *src, size_t srclen, char *out,
   return !state.bytes;
 }
 
-enum : uint8_t { roundtrip = 0, decode = 1, encode = 2 };
+enum : uint8_t { roundtrip = 0, decode = 1, encode = 2, bun = 3, roundtripurl = 4 };
 
 event_collector collector;
 
@@ -110,10 +112,13 @@ std::vector<char> read_file(const char *filename,
 void show_help() {
   printf("Usage: benchmark_base64 [options] file1 [file2 ...]\n");
   printf("Options:\n");
-  printf("  -h, --help     Show this help message and exit\n");
-  printf("  -d, --decode   Decode the input file\n");
-  printf("  -e, --encode   Encode the input file\n");
-  printf("  -r, --roundtrip   Roundtrip the input file\n");
+  printf("  -h, --help         Show this help message and exit\n");
+  printf("  -d, --decode       Decode the input file\n");
+  printf("  -e, --encode       Encode the input file\n");
+  printf("  -r, --roundtrip    Roundtrip the input file\n");
+  printf("  --roundtrip-url    Roundtrip the input file (URL)\n");
+  printf("  -b, --bench-bun    Bun benchmark\n");
+
   printf(" See https://github.com/lemire/base64data for test data.\n");
 }
 void pretty_print(size_t, size_t bytes, std::string name, event_aggregate agg) {
@@ -208,6 +213,33 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
   printf("# number of inputs: %zu\n", data.size());
 
   switch (mode) {
+
+  case roundtripurl: {
+    printf("# roundtrip (url)\n");
+    for (auto &e : simdutf::get_available_implementations()) {
+      if (!e->supported_by_runtime_system()) {
+        continue;
+      }
+      pretty_print(data.size(), volume, "simdutf::" + e->name(),
+                   bench([&data, &buffer1, &buffer2, &e]() {
+                     for (const std::vector<char> &source : data) {
+                       size_t base64_size = e->binary_to_base64(
+                           source.data(), source.size(), buffer1.data(), simdutf::base64_url);
+                       auto err = e->base64_to_binary(
+                           buffer1.data(), base64_size, buffer2.data(), simdutf::base64_url);
+                       if (err.error) {
+                         std::cerr << "Error:  at position " << err.count
+                                   << std::endl;
+                       } else if (err.count != source.size()) {
+                         std::cerr << "Error: " << err.count
+                                   << " bytes decoded, expected "
+                                   << source.size() << std::endl;
+                       }
+                     }
+                   }));
+    }
+    break;
+  }
   case roundtrip: {
     printf("# roundtrip\n");
     pretty_print(
@@ -259,7 +291,7 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
     bool spaces = contains_spaces(data);
     if (spaces) {
       printf("# the base64 data contains spaces, so we cannot use straigth "
-             "libbase64::base64_decode\n");
+             "libbase64::base64_decode directly\n");
     } else {
       pretty_print(data.size(), volume, "libbase64",
                    bench([&data, &buffer1, &buffer2]() {
@@ -277,14 +309,29 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
                      }
                    }));
     }
-    pretty_print(data.size(), volume, "node",
-                 bench([&data, &buffer1, &buffer2]() {
-                   for (const std::vector<char> &source : data) {
-                     int result = node::base64_decode(buffer1.data(), buffer1.size(),
-                                    source.data(), source.size());
-                     (void) result;
-                   }
-                 }));
+    pretty_print(
+        data.size(), volume, "libbase64_space_decode",
+        bench([&data, &buffer1, &buffer2]() {
+          for (const std::vector<char> &source : data) {
+
+            size_t outlen;
+            bool ok = libbase64_space_decode(source.data(), source.size(),
+                                             buffer1.data(), &outlen);
+            if (!ok) {
+              std::cerr << "Error: "
+                        << " failed to decode base64 " << std::endl;
+              throw std::runtime_error("Error: failed to decode base64 ");
+            }
+          }
+        }));
+    pretty_print(
+        data.size(), volume, "node", bench([&data, &buffer1, &buffer2]() {
+          for (const std::vector<char> &source : data) {
+            int result = node::base64_decode(buffer1.data(), buffer1.size(),
+                                             source.data(), source.size());
+            (void)result;
+          }
+        }));
     for (auto &e : simdutf::get_available_implementations()) {
       if (!e->supported_by_runtime_system()) {
         continue;
@@ -316,7 +363,7 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
     printf("# encode\n");
     volatile size_t base64_size;
     pretty_print(data.size(), volume, "libbase64",
-                 bench([&data, &buffer1, &buffer2, &base64_size]() {
+                 bench([&data, &buffer1, &base64_size]() {
                    for (const std::vector<char> &source : data) {
                      size_t outlen;
                      base64_encode(source.data(), source.size(), buffer1.data(),
@@ -329,7 +376,7 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
         continue;
       }
       pretty_print(data.size(), volume, "simdutf::" + e->name(),
-                   bench([&data, &buffer1, &buffer2, &e, &base64_size]() {
+                   bench([&data, &buffer1, &e, &base64_size]() {
                      for (const std::vector<char> &source : data) {
                        base64_size = e->binary_to_base64(
                            source.data(), source.size(), buffer1.data());
@@ -339,6 +386,63 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
     break;
   }
   }
+}
+
+int bench_bun() {
+  /**
+   * See
+   * https://github.com/oven-sh/bun/blob/main/bench/snippets/buffer-to-string.mjs
+   *
+   * const bigBuffer = Buffer.from("hello world".repeat(10000));
+   * const converted = bigBuffer.toString("base64");
+   * const uuid = crypto.randomBytes(16);
+   *
+   * bench(`Buffer(${bigBuffer.byteLength}).toString('base64')`, () => {
+   * return bigBuffer.toString("base64");
+   * });
+   *
+   * bench(`Buffer(${uuid.byteLength}).toString('base64')`, () => {
+   *  return uuid.toString("base64");
+   * });
+   */
+  printf("# benching bun (essentially an encoding bench)\n");
+  std::string bigBuffer = "hello world";
+  bigBuffer.reserve(10000 * bigBuffer.size());
+  for (size_t i = 1; i < 10000; i++) {
+    bigBuffer += "hello world";
+  }
+  std::string crypto;
+  for (size_t i = 0; i < 16; i++) {
+    crypto += rand();
+  }
+  std::vector<std::pair<std::string, std::string>> tests = {
+      {"big hello world", bigBuffer}, {"random 16 bytes", crypto}};
+  // Could be nicer with C++20
+  for (auto &i : tests) {
+    printf("# %s\n", i.first.c_str());
+    std::string source = i.second;
+    volatile size_t base64_size;
+    std::vector<char> buffer1(
+        simdutf::base64_length_from_binary(source.size()));
+    pretty_print(1, source.size(), "libbase64",
+                 bench([&source, &buffer1, &base64_size]() {
+                   size_t outlen;
+                   base64_encode(source.data(), source.size(), buffer1.data(),
+                                 &outlen, 0);
+                   base64_size = outlen;
+                 }));
+    for (auto &e : simdutf::get_available_implementations()) {
+      if (!e->supported_by_runtime_system()) {
+        continue;
+      }
+      pretty_print(1, source.size(), "simdutf::" + e->name(),
+                   bench([&source, &buffer1, &e, &base64_size]() {
+                     base64_size = e->binary_to_base64(
+                         source.data(), source.size(), buffer1.data());
+                   }));
+    }
+  }
+  return EXIT_SUCCESS;
 }
 
 int main(int argc, char **argv) {
@@ -363,9 +467,16 @@ int main(int argc, char **argv) {
       mode = encode;
     } else if ((arg == "-r") || (arg == "--roundtrip")) {
       mode = roundtrip;
+    } else if (arg == "--roundtrip-url") {
+      mode = roundtripurl;
+    } else if ((arg == "-b") || (arg == "--bun")) {
+      mode = bun;
     } else {
       arguments.push_back(std::move(arg));
     }
+  }
+  if (mode == bun) {
+    return bench_bun();
   }
   auto return_value = EXIT_SUCCESS;
   std::vector<std::vector<char>> input;

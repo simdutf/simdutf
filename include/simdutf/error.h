@@ -16,6 +16,7 @@ enum error_code {
                 // there must be no surrogate at all (Latin1)
   INVALID_BASE64_CHARACTER, // Found a character that cannot be part of a valid base64 string.
   BASE64_INPUT_REMAINDER, // The base64 input terminates with a single character, excluding padding (=).
+  OUTPUT_BUFFER_TOO_SMALL, // The provided buffer is too small.
   OTHER         // Not related to validation/transcoding.
 };
 
