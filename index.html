@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">simdutf
-   &#160;<span id="projectnumber">5.0.0</span>
+   &#160;<span id="projectnumber">5.1.0</span>
    </div>
    <div id="projectbrief">Unicode at GB/s.</div>
   </td>
@@ -190,7 +190,7 @@ Usage (Usage)</h2>
 Quick Start</h2>
 <p>Linux or macOS users might follow the following instructions if they have a recent C++ compiler installed and the standard utilities (<code>wget</code>, <code>unzip</code>, etc.)</p>
 <ol type="1">
-<li>Pull the library in a directory <div class="fragment"><div class="line">wget https://github.com/simdutf/simdutf/releases/download/v5.0.0/singleheader.zip</div>
+<li>Pull the library in a directory <div class="fragment"><div class="line">wget https://github.com/simdutf/simdutf/releases/download/v5.1.0/singleheader.zip</div>
 <div class="line">unzip singleheader.zip</div>
 </div><!-- fragment --></li>
 <li>Compile <div class="fragment"><div class="line">c++ -std=c++17 -o amalgamation_demo amalgamation_demo.cpp</div>
@@ -219,7 +219,7 @@ Usage (CMake)</h2>
 <p>Since ICU is so common and popular, we assume that you may have it already on your system. When it is not found, it is simply omitted from the benchmarks. Thus, to benchmark against ICU, make sure you have ICU installed on your machine and that cmake can find it. For macOS, you may install it with brew using <code>brew install icu4c</code>. If you have ICU on your system but cmake cannot find it, you may need to provide cmake with a path to ICU, such as <code>ICU_ROOT=/usr/local/opt/icu4c cmake -B build</code>.</p>
 <h2><a class="anchor" id="autotoc_md8"></a>
 Single-header version</h2>
-<p>You can create a single-header version of the library where all of the code is put into two files (<code><a class="el" href="simdutf_8h_source.html">simdutf.h</a></code> and <code>simdutf.cpp</code>). We publish a zip archive containing these files, e.g., see <a href="https://github.com/simdutf/simdutf/releases/download/v5.0.0/singleheader.zip">https://github.com/simdutf/simdutf/releases/download/v5.0.0/singleheader.zip</a></p>
+<p>You can create a single-header version of the library where all of the code is put into two files (<code><a class="el" href="simdutf_8h_source.html">simdutf.h</a></code> and <code>simdutf.cpp</code>). We publish a zip archive containing these files, e.g., see <a href="https://github.com/simdutf/simdutf/releases/download/v5.1.0/singleheader.zip">https://github.com/simdutf/simdutf/releases/download/v5.1.0/singleheader.zip</a></p>
 <p>You may generate it on your own using a Python script.</p>
 <div class="fragment"><div class="line">python3 ./singleheader/amalgamate.py</div>
 </div><!-- fragment --><p>We require Python 3 or better.</p>
@@ -743,7 +743,7 @@ Base64</h2>
 <div class="line"> * This function will fail in case of invalid input. There are three possible reasons for</div>
 <div class="line"> * failure: the input contains a number of base64 characters that when divided by 4, leaves</div>
 <div class="line"> * a single remainder character (BASE64_INPUT_REMAINDER), the input contains a character</div>
-<div class="line"> * that is not a valid base64 character (INVALID_BASE64_CHARACTER), or the output buffer </div>
+<div class="line"> * that is not a valid base64 character (INVALID_BASE64_CHARACTER), or the output buffer</div>
 <div class="line"> * is too small (OUTPUT_BUFFER_TOO_SMALL).</div>
 <div class="line"> *</div>
 <div class="line"> * When OUTPUT_BUFFER_TOO_SMALL, we return both the number of bytes written</div>
