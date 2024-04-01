@@ -349,9 +349,9 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <tr class="memitem:ab209f124bfae37db124194317450f88a"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#ab209f124bfae37db124194317450f88a">base64_to_binary</a> (const char16_t *input, size_t length, char *output, base64_options options=base64_default) const noexcept=0</td></tr>
 <tr class="memdesc:ab209f124bfae37db124194317450f88a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a base64 input to a binary ouput.  <a href="classsimdutf_1_1implementation.html#ab209f124bfae37db124194317450f88a">More...</a><br /></td></tr>
 <tr class="separator:ab209f124bfae37db124194317450f88a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a74dd85eb6ea2ef6aa76faa537c2ac49e"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a74dd85eb6ea2ef6aa76faa537c2ac49e">base64_length_from_binary</a> (size_t length) const noexcept=0</td></tr>
-<tr class="memdesc:a74dd85eb6ea2ef6aa76faa537c2ac49e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provide the base64 length in bytes given the length of a binary input.  <a href="classsimdutf_1_1implementation.html#a74dd85eb6ea2ef6aa76faa537c2ac49e">More...</a><br /></td></tr>
-<tr class="separator:a74dd85eb6ea2ef6aa76faa537c2ac49e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7935750344384cc0130094cb6c440826"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a7935750344384cc0130094cb6c440826">base64_length_from_binary</a> (size_t length, base64_options options=base64_default) const noexcept=0</td></tr>
+<tr class="memdesc:a7935750344384cc0130094cb6c440826"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provide the base64 length in bytes given the length of a binary input.  <a href="classsimdutf_1_1implementation.html#a7935750344384cc0130094cb6c440826">More...</a><br /></td></tr>
+<tr class="separator:a7935750344384cc0130094cb6c440826"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5823f6a86315f4404a4f437977abf9df"><td class="memItemLeft" align="right" valign="top">virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a5823f6a86315f4404a4f437977abf9df">binary_to_base64</a> (const char *input, size_t length, char *output, base64_options options=base64_default) const noexcept=0</td></tr>
 <tr class="memdesc:a5823f6a86315f4404a4f437977abf9df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a binary input to a base64 ouput.  <a href="classsimdutf_1_1implementation.html#a5823f6a86315f4404a4f437977abf9df">More...</a><br /></td></tr>
 <tr class="separator:a5823f6a86315f4404a4f437977abf9df"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -408,8 +408,8 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 
 </div>
 </div>
-<a id="a74dd85eb6ea2ef6aa76faa537c2ac49e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a74dd85eb6ea2ef6aa76faa537c2ac49e">&#9670;&nbsp;</a></span>base64_length_from_binary()</h2>
+<a id="a7935750344384cc0130094cb6c440826"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7935750344384cc0130094cb6c440826">&#9670;&nbsp;</a></span>base64_length_from_binary()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -421,8 +421,18 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
           <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::base64_length_from_binary </td>
           <td>(</td>
           <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>length</em></td><td>)</td>
-          <td> const</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">base64_options&#160;</td>
+          <td class="paramname"><em>options</em> = <code>base64_default</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
         </tr>
       </table>
   </td>
@@ -435,7 +445,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <p>Provide the base64 length in bytes given the length of a binary input. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">length</td><td>the length of the input in bytes </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the input in bytes @parem options the base64 options to use, can be base64_default or base64_url, is base64_default by default. </td></tr>
   </table>
   </dd>
 </dl>

@@ -2,7 +2,7 @@ var classsimdutf_1_1implementation =
 [
     [ "~implementation", "classsimdutf_1_1implementation.html#a5b82d70f2836bfd1e7f21b44ba9426d5", null ],
     [ "autodetect_encoding", "classsimdutf_1_1implementation.html#afd306a0bc3e221964af3f31a64784b12", null ],
-    [ "base64_length_from_binary", "classsimdutf_1_1implementation.html#a74dd85eb6ea2ef6aa76faa537c2ac49e", null ],
+    [ "base64_length_from_binary", "classsimdutf_1_1implementation.html#a7935750344384cc0130094cb6c440826", null ],
     [ "base64_to_binary", "classsimdutf_1_1implementation.html#a73d3db16d1520bb7ee958692f8ac6bc9", null ],
     [ "base64_to_binary", "classsimdutf_1_1implementation.html#ab209f124bfae37db124194317450f88a", null ],
     [ "binary_to_base64", "classsimdutf_1_1implementation.html#a5823f6a86315f4404a4f437977abf9df", null ],

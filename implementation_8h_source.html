@@ -345,7 +345,7 @@ $(document).ready(function(){initNavTree('implementation_8h_source.html',''); in
 <div class="line"><a name="l01411"></a><span class="lineno"> 1411</span>&#160; </div>
 <div class="line"><a name="l01439"></a><span class="lineno"> 1439</span>&#160;simdutf_warn_unused result base64_to_binary(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* output, base64_options options = base64_default) noexcept;</div>
 <div class="line"><a name="l01440"></a><span class="lineno"> 1440</span>&#160; </div>
-<div class="line"><a name="l01447"></a><span class="lineno"> 1447</span>&#160;simdutf_warn_unused <span class="keywordtype">size_t</span> base64_length_from_binary(<span class="keywordtype">size_t</span> length) noexcept;</div>
+<div class="line"><a name="l01447"></a><span class="lineno"> 1447</span>&#160;simdutf_warn_unused <span class="keywordtype">size_t</span> base64_length_from_binary(<span class="keywordtype">size_t</span> length, base64_options options = base64_default) noexcept;</div>
 <div class="line"><a name="l01448"></a><span class="lineno"> 1448</span>&#160; </div>
 <div class="line"><a name="l01461"></a><span class="lineno"> 1461</span>&#160;<span class="keywordtype">size_t</span> binary_to_base64(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* output, base64_options options = base64_default) noexcept;</div>
 <div class="line"><a name="l01462"></a><span class="lineno"> 1462</span>&#160; </div>
@@ -568,98 +568,98 @@ $(document).ready(function(){initNavTree('implementation_8h_source.html',''); in
 <div class="line"><a name="l02633"></a><span class="lineno"> 2633</span>&#160; </div>
 <div class="line"><a name="l02657"></a><span class="lineno"><a class="line" href="classsimdutf_1_1implementation.html#ab209f124bfae37db124194317450f88a"> 2657</a></span>&#160;  simdutf_warn_unused <span class="keyword">virtual</span> <a class="code" href="structsimdutf_1_1result.html">result</a> <a class="code" href="classsimdutf_1_1implementation.html#ab209f124bfae37db124194317450f88a">base64_to_binary</a>(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* output, base64_options options = base64_default) <span class="keyword">const</span> noexcept = 0;</div>
 <div class="line"><a name="l02658"></a><span class="lineno"> 2658</span>&#160; </div>
-<div class="line"><a name="l02665"></a><span class="lineno"><a class="line" href="classsimdutf_1_1implementation.html#a74dd85eb6ea2ef6aa76faa537c2ac49e"> 2665</a></span>&#160;  simdutf_warn_unused <span class="keyword">virtual</span> <span class="keywordtype">size_t</span> <a class="code" href="classsimdutf_1_1implementation.html#a74dd85eb6ea2ef6aa76faa537c2ac49e">base64_length_from_binary</a>(<span class="keywordtype">size_t</span> length) <span class="keyword">const</span> noexcept = 0;</div>
-<div class="line"><a name="l02666"></a><span class="lineno"> 2666</span>&#160; </div>
-<div class="line"><a name="l02679"></a><span class="lineno"><a class="line" href="classsimdutf_1_1implementation.html#a5823f6a86315f4404a4f437977abf9df"> 2679</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">size_t</span> <a class="code" href="classsimdutf_1_1implementation.html#a5823f6a86315f4404a4f437977abf9df">binary_to_base64</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* output, base64_options options = base64_default) <span class="keyword">const</span> noexcept = 0;</div>
-<div class="line"><a name="l02680"></a><span class="lineno"> 2680</span>&#160; </div>
+<div class="line"><a name="l02666"></a><span class="lineno"><a class="line" href="classsimdutf_1_1implementation.html#a7935750344384cc0130094cb6c440826"> 2666</a></span>&#160;  simdutf_warn_unused <span class="keyword">virtual</span> <span class="keywordtype">size_t</span> <a class="code" href="classsimdutf_1_1implementation.html#a7935750344384cc0130094cb6c440826">base64_length_from_binary</a>(<span class="keywordtype">size_t</span> length, base64_options options = base64_default) <span class="keyword">const</span> noexcept = 0;</div>
+<div class="line"><a name="l02667"></a><span class="lineno"> 2667</span>&#160; </div>
+<div class="line"><a name="l02680"></a><span class="lineno"><a class="line" href="classsimdutf_1_1implementation.html#a5823f6a86315f4404a4f437977abf9df"> 2680</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">size_t</span> <a class="code" href="classsimdutf_1_1implementation.html#a5823f6a86315f4404a4f437977abf9df">binary_to_base64</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* output, base64_options options = base64_default) <span class="keyword">const</span> noexcept = 0;</div>
 <div class="line"><a name="l02681"></a><span class="lineno"> 2681</span>&#160; </div>
-<div class="line"><a name="l02682"></a><span class="lineno"> 2682</span>&#160;<span class="keyword">protected</span>:</div>
-<div class="line"><a name="l02684"></a><span class="lineno"> 2684</span>&#160;  simdutf_really_inline <a class="code" href="classsimdutf_1_1implementation.html">implementation</a>(</div>
-<div class="line"><a name="l02685"></a><span class="lineno"> 2685</span>&#160;    std::string <a class="code" href="classsimdutf_1_1implementation.html#a3281cf45b997303c89cf2d462d85d384">name</a>,</div>
-<div class="line"><a name="l02686"></a><span class="lineno"> 2686</span>&#160;    std::string <a class="code" href="classsimdutf_1_1implementation.html#a147dfc3a2a525074a863374ea9ea8c09">description</a>,</div>
-<div class="line"><a name="l02687"></a><span class="lineno"> 2687</span>&#160;    uint32_t required_instruction_sets</div>
-<div class="line"><a name="l02688"></a><span class="lineno"> 2688</span>&#160;  ) :</div>
-<div class="line"><a name="l02689"></a><span class="lineno"> 2689</span>&#160;    _name(<a class="code" href="classsimdutf_1_1implementation.html#a3281cf45b997303c89cf2d462d85d384">name</a>),</div>
-<div class="line"><a name="l02690"></a><span class="lineno"> 2690</span>&#160;    _description(<a class="code" href="classsimdutf_1_1implementation.html#a147dfc3a2a525074a863374ea9ea8c09">description</a>),</div>
-<div class="line"><a name="l02691"></a><span class="lineno"> 2691</span>&#160;    _required_instruction_sets(required_instruction_sets)</div>
-<div class="line"><a name="l02692"></a><span class="lineno"> 2692</span>&#160;  {</div>
-<div class="line"><a name="l02693"></a><span class="lineno"> 2693</span>&#160;  }</div>
-<div class="line"><a name="l02694"></a><span class="lineno"> 2694</span>&#160;  <span class="keyword">virtual</span> ~<a class="code" href="classsimdutf_1_1implementation.html">implementation</a>()=<span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l02695"></a><span class="lineno"> 2695</span>&#160; </div>
-<div class="line"><a name="l02696"></a><span class="lineno"> 2696</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l02700"></a><span class="lineno"> 2700</span>&#160;  <span class="keyword">const</span> std::string _name;</div>
-<div class="line"><a name="l02701"></a><span class="lineno"> 2701</span>&#160; </div>
-<div class="line"><a name="l02705"></a><span class="lineno"> 2705</span>&#160;  <span class="keyword">const</span> std::string _description;</div>
-<div class="line"><a name="l02706"></a><span class="lineno"> 2706</span>&#160; </div>
-<div class="line"><a name="l02710"></a><span class="lineno"> 2710</span>&#160;  <span class="keyword">const</span> uint32_t _required_instruction_sets;</div>
-<div class="line"><a name="l02711"></a><span class="lineno"> 2711</span>&#160;};</div>
-<div class="line"><a name="l02712"></a><span class="lineno"> 2712</span>&#160; </div>
-<div class="line"><a name="l02714"></a><span class="lineno"> 2714</span>&#160;<span class="keyword">namespace </span>internal {</div>
-<div class="line"><a name="l02715"></a><span class="lineno"> 2715</span>&#160; </div>
-<div class="line"><a name="l02719"></a><span class="lineno"> 2719</span>&#160;<span class="keyword">class </span>available_implementation_list {</div>
-<div class="line"><a name="l02720"></a><span class="lineno"> 2720</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l02722"></a><span class="lineno"> 2722</span>&#160;  simdutf_really_inline available_implementation_list() {}</div>
-<div class="line"><a name="l02724"></a><span class="lineno"> 2724</span>&#160;  <span class="keywordtype">size_t</span> size() const noexcept;</div>
-<div class="line"><a name="l02726"></a><span class="lineno"> 2726</span>&#160;  const implementation * const *begin() const noexcept;</div>
-<div class="line"><a name="l02728"></a><span class="lineno"> 2728</span>&#160;  const implementation * const *end() const noexcept;</div>
-<div class="line"><a name="l02729"></a><span class="lineno"> 2729</span>&#160; </div>
-<div class="line"><a name="l02743"></a><span class="lineno"> 2743</span>&#160;  const implementation * operator[](const std::<span class="keywordtype">string</span> &amp;name) const noexcept {</div>
-<div class="line"><a name="l02744"></a><span class="lineno"> 2744</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">const</span> implementation * impl : *<span class="keyword">this</span>) {</div>
-<div class="line"><a name="l02745"></a><span class="lineno"> 2745</span>&#160;      <span class="keywordflow">if</span> (impl-&gt;name() == name) { <span class="keywordflow">return</span> impl; }</div>
-<div class="line"><a name="l02746"></a><span class="lineno"> 2746</span>&#160;    }</div>
-<div class="line"><a name="l02747"></a><span class="lineno"> 2747</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
-<div class="line"><a name="l02748"></a><span class="lineno"> 2748</span>&#160;  }</div>
-<div class="line"><a name="l02749"></a><span class="lineno"> 2749</span>&#160; </div>
-<div class="line"><a name="l02762"></a><span class="lineno"> 2762</span>&#160;  <span class="keyword">const</span> implementation *detect_best_supported() const noexcept;</div>
-<div class="line"><a name="l02763"></a><span class="lineno"> 2763</span>&#160;};</div>
-<div class="line"><a name="l02764"></a><span class="lineno"> 2764</span>&#160; </div>
-<div class="line"><a name="l02765"></a><span class="lineno"> 2765</span>&#160;template&lt;typename T&gt;</div>
-<div class="line"><a name="l02766"></a><span class="lineno"> 2766</span>&#160;class atomic_ptr {</div>
-<div class="line"><a name="l02767"></a><span class="lineno"> 2767</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l02768"></a><span class="lineno"> 2768</span>&#160;  atomic_ptr(T *_ptr) : ptr{_ptr} {}</div>
-<div class="line"><a name="l02769"></a><span class="lineno"> 2769</span>&#160; </div>
-<div class="line"><a name="l02770"></a><span class="lineno"> 2770</span>&#160;<span class="preprocessor">#if defined(SIMDUTF_NO_THREADS)</span></div>
-<div class="line"><a name="l02771"></a><span class="lineno"> 2771</span>&#160;  <span class="keyword">operator</span> <span class="keyword">const</span> T*() <span class="keyword">const</span> { <span class="keywordflow">return</span> ptr; }</div>
-<div class="line"><a name="l02772"></a><span class="lineno"> 2772</span>&#160;  <span class="keyword">const</span> T&amp; operator*()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> *ptr; }</div>
-<div class="line"><a name="l02773"></a><span class="lineno"> 2773</span>&#160;  <span class="keyword">const</span> T* operator-&gt;()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> ptr; }</div>
-<div class="line"><a name="l02774"></a><span class="lineno"> 2774</span>&#160; </div>
-<div class="line"><a name="l02775"></a><span class="lineno"> 2775</span>&#160;  <span class="keyword">operator</span> T*() { <span class="keywordflow">return</span> ptr; }</div>
-<div class="line"><a name="l02776"></a><span class="lineno"> 2776</span>&#160;  T&amp; operator*() { <span class="keywordflow">return</span> *ptr; }</div>
-<div class="line"><a name="l02777"></a><span class="lineno"> 2777</span>&#160;  T* operator-&gt;() { <span class="keywordflow">return</span> ptr; }</div>
-<div class="line"><a name="l02778"></a><span class="lineno"> 2778</span>&#160;  atomic_ptr&amp; operator=(T *_ptr) { ptr = _ptr; <span class="keywordflow">return</span> *<span class="keyword">this</span>; }</div>
-<div class="line"><a name="l02779"></a><span class="lineno"> 2779</span>&#160; </div>
-<div class="line"><a name="l02780"></a><span class="lineno"> 2780</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l02781"></a><span class="lineno"> 2781</span>&#160;  <span class="keyword">operator</span> <span class="keyword">const</span> T*() <span class="keyword">const</span> { <span class="keywordflow">return</span> ptr.load(); }</div>
-<div class="line"><a name="l02782"></a><span class="lineno"> 2782</span>&#160;  <span class="keyword">const</span> T&amp; operator*()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> *ptr; }</div>
-<div class="line"><a name="l02783"></a><span class="lineno"> 2783</span>&#160;  <span class="keyword">const</span> T* operator-&gt;()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> ptr.load(); }</div>
-<div class="line"><a name="l02784"></a><span class="lineno"> 2784</span>&#160; </div>
-<div class="line"><a name="l02785"></a><span class="lineno"> 2785</span>&#160;  <span class="keyword">operator</span> T*() { <span class="keywordflow">return</span> ptr.load(); }</div>
-<div class="line"><a name="l02786"></a><span class="lineno"> 2786</span>&#160;  T&amp; operator*() { <span class="keywordflow">return</span> *ptr; }</div>
-<div class="line"><a name="l02787"></a><span class="lineno"> 2787</span>&#160;  T* operator-&gt;() { <span class="keywordflow">return</span> ptr.load(); }</div>
-<div class="line"><a name="l02788"></a><span class="lineno"> 2788</span>&#160;  atomic_ptr&amp; operator=(T *_ptr) { ptr = _ptr; <span class="keywordflow">return</span> *<span class="keyword">this</span>; }</div>
-<div class="line"><a name="l02789"></a><span class="lineno"> 2789</span>&#160; </div>
-<div class="line"><a name="l02790"></a><span class="lineno"> 2790</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l02791"></a><span class="lineno"> 2791</span>&#160; </div>
-<div class="line"><a name="l02792"></a><span class="lineno"> 2792</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l02793"></a><span class="lineno"> 2793</span>&#160;<span class="preprocessor">#if defined(SIMDUTF_NO_THREADS)</span></div>
-<div class="line"><a name="l02794"></a><span class="lineno"> 2794</span>&#160;  T* ptr;</div>
-<div class="line"><a name="l02795"></a><span class="lineno"> 2795</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l02796"></a><span class="lineno"> 2796</span>&#160;  std::atomic&lt;T*&gt; ptr;</div>
-<div class="line"><a name="l02797"></a><span class="lineno"> 2797</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l02798"></a><span class="lineno"> 2798</span>&#160;};</div>
-<div class="line"><a name="l02799"></a><span class="lineno"> 2799</span>&#160; </div>
-<div class="line"><a name="l02800"></a><span class="lineno"> 2800</span>&#160;<span class="keyword">class </span>detect_best_supported_implementation_on_first_use;</div>
-<div class="line"><a name="l02801"></a><span class="lineno"> 2801</span>&#160; </div>
-<div class="line"><a name="l02802"></a><span class="lineno"> 2802</span>&#160;} <span class="comment">// namespace internal</span></div>
-<div class="line"><a name="l02803"></a><span class="lineno"> 2803</span>&#160; </div>
-<div class="line"><a name="l02807"></a><span class="lineno"> 2807</span>&#160;<span class="keyword">extern</span> SIMDUTF_DLLIMPORTEXPORT <span class="keyword">const</span> internal::available_implementation_list&amp; get_available_implementations();</div>
-<div class="line"><a name="l02808"></a><span class="lineno"> 2808</span>&#160; </div>
-<div class="line"><a name="l02814"></a><span class="lineno"> 2814</span>&#160;<span class="keyword">extern</span> SIMDUTF_DLLIMPORTEXPORT internal::atomic_ptr&lt;const implementation&gt;&amp; get_active_implementation();</div>
-<div class="line"><a name="l02815"></a><span class="lineno"> 2815</span>&#160; </div>
+<div class="line"><a name="l02682"></a><span class="lineno"> 2682</span>&#160; </div>
+<div class="line"><a name="l02683"></a><span class="lineno"> 2683</span>&#160;<span class="keyword">protected</span>:</div>
+<div class="line"><a name="l02685"></a><span class="lineno"> 2685</span>&#160;  simdutf_really_inline <a class="code" href="classsimdutf_1_1implementation.html">implementation</a>(</div>
+<div class="line"><a name="l02686"></a><span class="lineno"> 2686</span>&#160;    std::string <a class="code" href="classsimdutf_1_1implementation.html#a3281cf45b997303c89cf2d462d85d384">name</a>,</div>
+<div class="line"><a name="l02687"></a><span class="lineno"> 2687</span>&#160;    std::string <a class="code" href="classsimdutf_1_1implementation.html#a147dfc3a2a525074a863374ea9ea8c09">description</a>,</div>
+<div class="line"><a name="l02688"></a><span class="lineno"> 2688</span>&#160;    uint32_t required_instruction_sets</div>
+<div class="line"><a name="l02689"></a><span class="lineno"> 2689</span>&#160;  ) :</div>
+<div class="line"><a name="l02690"></a><span class="lineno"> 2690</span>&#160;    _name(<a class="code" href="classsimdutf_1_1implementation.html#a3281cf45b997303c89cf2d462d85d384">name</a>),</div>
+<div class="line"><a name="l02691"></a><span class="lineno"> 2691</span>&#160;    _description(<a class="code" href="classsimdutf_1_1implementation.html#a147dfc3a2a525074a863374ea9ea8c09">description</a>),</div>
+<div class="line"><a name="l02692"></a><span class="lineno"> 2692</span>&#160;    _required_instruction_sets(required_instruction_sets)</div>
+<div class="line"><a name="l02693"></a><span class="lineno"> 2693</span>&#160;  {</div>
+<div class="line"><a name="l02694"></a><span class="lineno"> 2694</span>&#160;  }</div>
+<div class="line"><a name="l02695"></a><span class="lineno"> 2695</span>&#160;  <span class="keyword">virtual</span> ~<a class="code" href="classsimdutf_1_1implementation.html">implementation</a>()=<span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l02696"></a><span class="lineno"> 2696</span>&#160; </div>
+<div class="line"><a name="l02697"></a><span class="lineno"> 2697</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l02701"></a><span class="lineno"> 2701</span>&#160;  <span class="keyword">const</span> std::string _name;</div>
+<div class="line"><a name="l02702"></a><span class="lineno"> 2702</span>&#160; </div>
+<div class="line"><a name="l02706"></a><span class="lineno"> 2706</span>&#160;  <span class="keyword">const</span> std::string _description;</div>
+<div class="line"><a name="l02707"></a><span class="lineno"> 2707</span>&#160; </div>
+<div class="line"><a name="l02711"></a><span class="lineno"> 2711</span>&#160;  <span class="keyword">const</span> uint32_t _required_instruction_sets;</div>
+<div class="line"><a name="l02712"></a><span class="lineno"> 2712</span>&#160;};</div>
+<div class="line"><a name="l02713"></a><span class="lineno"> 2713</span>&#160; </div>
+<div class="line"><a name="l02715"></a><span class="lineno"> 2715</span>&#160;<span class="keyword">namespace </span>internal {</div>
+<div class="line"><a name="l02716"></a><span class="lineno"> 2716</span>&#160; </div>
+<div class="line"><a name="l02720"></a><span class="lineno"> 2720</span>&#160;<span class="keyword">class </span>available_implementation_list {</div>
+<div class="line"><a name="l02721"></a><span class="lineno"> 2721</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l02723"></a><span class="lineno"> 2723</span>&#160;  simdutf_really_inline available_implementation_list() {}</div>
+<div class="line"><a name="l02725"></a><span class="lineno"> 2725</span>&#160;  <span class="keywordtype">size_t</span> size() const noexcept;</div>
+<div class="line"><a name="l02727"></a><span class="lineno"> 2727</span>&#160;  const implementation * const *begin() const noexcept;</div>
+<div class="line"><a name="l02729"></a><span class="lineno"> 2729</span>&#160;  const implementation * const *end() const noexcept;</div>
+<div class="line"><a name="l02730"></a><span class="lineno"> 2730</span>&#160; </div>
+<div class="line"><a name="l02744"></a><span class="lineno"> 2744</span>&#160;  const implementation * operator[](const std::<span class="keywordtype">string</span> &amp;name) const noexcept {</div>
+<div class="line"><a name="l02745"></a><span class="lineno"> 2745</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">const</span> implementation * impl : *<span class="keyword">this</span>) {</div>
+<div class="line"><a name="l02746"></a><span class="lineno"> 2746</span>&#160;      <span class="keywordflow">if</span> (impl-&gt;name() == name) { <span class="keywordflow">return</span> impl; }</div>
+<div class="line"><a name="l02747"></a><span class="lineno"> 2747</span>&#160;    }</div>
+<div class="line"><a name="l02748"></a><span class="lineno"> 2748</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
+<div class="line"><a name="l02749"></a><span class="lineno"> 2749</span>&#160;  }</div>
+<div class="line"><a name="l02750"></a><span class="lineno"> 2750</span>&#160; </div>
+<div class="line"><a name="l02763"></a><span class="lineno"> 2763</span>&#160;  <span class="keyword">const</span> implementation *detect_best_supported() const noexcept;</div>
+<div class="line"><a name="l02764"></a><span class="lineno"> 2764</span>&#160;};</div>
+<div class="line"><a name="l02765"></a><span class="lineno"> 2765</span>&#160; </div>
+<div class="line"><a name="l02766"></a><span class="lineno"> 2766</span>&#160;template&lt;typename T&gt;</div>
+<div class="line"><a name="l02767"></a><span class="lineno"> 2767</span>&#160;class atomic_ptr {</div>
+<div class="line"><a name="l02768"></a><span class="lineno"> 2768</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l02769"></a><span class="lineno"> 2769</span>&#160;  atomic_ptr(T *_ptr) : ptr{_ptr} {}</div>
+<div class="line"><a name="l02770"></a><span class="lineno"> 2770</span>&#160; </div>
+<div class="line"><a name="l02771"></a><span class="lineno"> 2771</span>&#160;<span class="preprocessor">#if defined(SIMDUTF_NO_THREADS)</span></div>
+<div class="line"><a name="l02772"></a><span class="lineno"> 2772</span>&#160;  <span class="keyword">operator</span> <span class="keyword">const</span> T*() <span class="keyword">const</span> { <span class="keywordflow">return</span> ptr; }</div>
+<div class="line"><a name="l02773"></a><span class="lineno"> 2773</span>&#160;  <span class="keyword">const</span> T&amp; operator*()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> *ptr; }</div>
+<div class="line"><a name="l02774"></a><span class="lineno"> 2774</span>&#160;  <span class="keyword">const</span> T* operator-&gt;()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> ptr; }</div>
+<div class="line"><a name="l02775"></a><span class="lineno"> 2775</span>&#160; </div>
+<div class="line"><a name="l02776"></a><span class="lineno"> 2776</span>&#160;  <span class="keyword">operator</span> T*() { <span class="keywordflow">return</span> ptr; }</div>
+<div class="line"><a name="l02777"></a><span class="lineno"> 2777</span>&#160;  T&amp; operator*() { <span class="keywordflow">return</span> *ptr; }</div>
+<div class="line"><a name="l02778"></a><span class="lineno"> 2778</span>&#160;  T* operator-&gt;() { <span class="keywordflow">return</span> ptr; }</div>
+<div class="line"><a name="l02779"></a><span class="lineno"> 2779</span>&#160;  atomic_ptr&amp; operator=(T *_ptr) { ptr = _ptr; <span class="keywordflow">return</span> *<span class="keyword">this</span>; }</div>
+<div class="line"><a name="l02780"></a><span class="lineno"> 2780</span>&#160; </div>
+<div class="line"><a name="l02781"></a><span class="lineno"> 2781</span>&#160;<span class="preprocessor">#else</span></div>
+<div class="line"><a name="l02782"></a><span class="lineno"> 2782</span>&#160;  <span class="keyword">operator</span> <span class="keyword">const</span> T*() <span class="keyword">const</span> { <span class="keywordflow">return</span> ptr.load(); }</div>
+<div class="line"><a name="l02783"></a><span class="lineno"> 2783</span>&#160;  <span class="keyword">const</span> T&amp; operator*()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> *ptr; }</div>
+<div class="line"><a name="l02784"></a><span class="lineno"> 2784</span>&#160;  <span class="keyword">const</span> T* operator-&gt;()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> ptr.load(); }</div>
+<div class="line"><a name="l02785"></a><span class="lineno"> 2785</span>&#160; </div>
+<div class="line"><a name="l02786"></a><span class="lineno"> 2786</span>&#160;  <span class="keyword">operator</span> T*() { <span class="keywordflow">return</span> ptr.load(); }</div>
+<div class="line"><a name="l02787"></a><span class="lineno"> 2787</span>&#160;  T&amp; operator*() { <span class="keywordflow">return</span> *ptr; }</div>
+<div class="line"><a name="l02788"></a><span class="lineno"> 2788</span>&#160;  T* operator-&gt;() { <span class="keywordflow">return</span> ptr.load(); }</div>
+<div class="line"><a name="l02789"></a><span class="lineno"> 2789</span>&#160;  atomic_ptr&amp; operator=(T *_ptr) { ptr = _ptr; <span class="keywordflow">return</span> *<span class="keyword">this</span>; }</div>
+<div class="line"><a name="l02790"></a><span class="lineno"> 2790</span>&#160; </div>
+<div class="line"><a name="l02791"></a><span class="lineno"> 2791</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l02792"></a><span class="lineno"> 2792</span>&#160; </div>
+<div class="line"><a name="l02793"></a><span class="lineno"> 2793</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l02794"></a><span class="lineno"> 2794</span>&#160;<span class="preprocessor">#if defined(SIMDUTF_NO_THREADS)</span></div>
+<div class="line"><a name="l02795"></a><span class="lineno"> 2795</span>&#160;  T* ptr;</div>
+<div class="line"><a name="l02796"></a><span class="lineno"> 2796</span>&#160;<span class="preprocessor">#else</span></div>
+<div class="line"><a name="l02797"></a><span class="lineno"> 2797</span>&#160;  std::atomic&lt;T*&gt; ptr;</div>
+<div class="line"><a name="l02798"></a><span class="lineno"> 2798</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l02799"></a><span class="lineno"> 2799</span>&#160;};</div>
+<div class="line"><a name="l02800"></a><span class="lineno"> 2800</span>&#160; </div>
+<div class="line"><a name="l02801"></a><span class="lineno"> 2801</span>&#160;<span class="keyword">class </span>detect_best_supported_implementation_on_first_use;</div>
+<div class="line"><a name="l02802"></a><span class="lineno"> 2802</span>&#160; </div>
+<div class="line"><a name="l02803"></a><span class="lineno"> 2803</span>&#160;} <span class="comment">// namespace internal</span></div>
+<div class="line"><a name="l02804"></a><span class="lineno"> 2804</span>&#160; </div>
+<div class="line"><a name="l02808"></a><span class="lineno"> 2808</span>&#160;<span class="keyword">extern</span> SIMDUTF_DLLIMPORTEXPORT <span class="keyword">const</span> internal::available_implementation_list&amp; get_available_implementations();</div>
+<div class="line"><a name="l02809"></a><span class="lineno"> 2809</span>&#160; </div>
+<div class="line"><a name="l02815"></a><span class="lineno"> 2815</span>&#160;<span class="keyword">extern</span> SIMDUTF_DLLIMPORTEXPORT internal::atomic_ptr&lt;const implementation&gt;&amp; get_active_implementation();</div>
 <div class="line"><a name="l02816"></a><span class="lineno"> 2816</span>&#160; </div>
-<div class="line"><a name="l02817"></a><span class="lineno"> 2817</span>&#160;} <span class="comment">// namespace simdutf</span></div>
-<div class="line"><a name="l02818"></a><span class="lineno"> 2818</span>&#160; </div>
-<div class="line"><a name="l02819"></a><span class="lineno"> 2819</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// SIMDUTF_IMPLEMENTATION_H</span></div>
+<div class="line"><a name="l02817"></a><span class="lineno"> 2817</span>&#160; </div>
+<div class="line"><a name="l02818"></a><span class="lineno"> 2818</span>&#160;} <span class="comment">// namespace simdutf</span></div>
+<div class="line"><a name="l02819"></a><span class="lineno"> 2819</span>&#160; </div>
+<div class="line"><a name="l02820"></a><span class="lineno"> 2820</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// SIMDUTF_IMPLEMENTATION_H</span></div>
 <div class="ttc" id="aclasssimdutf_1_1implementation_html"><div class="ttname"><a href="classsimdutf_1_1implementation.html">simdutf::implementation</a></div><div class="ttdoc">An implementation of simdutf for a particular CPU architecture.</div><div class="ttdef"><b>Definition:</b> <a href="implementation_8h_source.html#l01533">implementation.h:1533</a></div></div>
 <div class="ttc" id="aclasssimdutf_1_1implementation_html_a00b1ec570f19982c826e2b04b501a1ac"><div class="ttname"><a href="classsimdutf_1_1implementation.html#a00b1ec570f19982c826e2b04b501a1ac">simdutf::implementation::convert_valid_utf32_to_latin1</a></div><div class="ttdeci">virtual simdutf_warn_unused size_t convert_valid_utf32_to_latin1(const char32_t *input, size_t length, char *latin1_buffer) const noexcept=0</div><div class="ttdoc">Convert valid UTF-32 string into Latin1 string.</div></div>
 <div class="ttc" id="aclasssimdutf_1_1implementation_html_a08870586c80a46861a25c715323402c1"><div class="ttname"><a href="classsimdutf_1_1implementation.html#a08870586c80a46861a25c715323402c1">simdutf::implementation::convert_valid_utf8_to_utf16le</a></div><div class="ttdeci">virtual simdutf_warn_unused size_t convert_valid_utf8_to_utf16le(const char *input, size_t length, char16_t *utf16_buffer) const noexcept=0</div><div class="ttdoc">Convert valid UTF-8 string into UTF-16LE string.</div></div>
@@ -706,12 +706,12 @@ $(document).ready(function(){initNavTree('implementation_8h_source.html',''); in
 <div class="ttc" id="aclasssimdutf_1_1implementation_html_a6936dace0dfd89741259cdbe49b5df2d"><div class="ttname"><a href="classsimdutf_1_1implementation.html#a6936dace0dfd89741259cdbe49b5df2d">simdutf::implementation::latin1_length_from_utf32</a></div><div class="ttdeci">virtual simdutf_warn_unused size_t latin1_length_from_utf32(size_t length) const noexcept=0</div><div class="ttdoc">Compute the number of bytes that this UTF-32 string would require in Latin1 format.</div></div>
 <div class="ttc" id="aclasssimdutf_1_1implementation_html_a6cd8f7d8787c76e690ed9c4151abb7a9"><div class="ttname"><a href="classsimdutf_1_1implementation.html#a6cd8f7d8787c76e690ed9c4151abb7a9">simdutf::implementation::supported_by_runtime_system</a></div><div class="ttdeci">bool supported_by_runtime_system() const</div><div class="ttdoc">The instruction sets this implementation is compiled against and the current CPU match.</div></div>
 <div class="ttc" id="aclasssimdutf_1_1implementation_html_a73d3db16d1520bb7ee958692f8ac6bc9"><div class="ttname"><a href="classsimdutf_1_1implementation.html#a73d3db16d1520bb7ee958692f8ac6bc9">simdutf::implementation::base64_to_binary</a></div><div class="ttdeci">virtual simdutf_warn_unused result base64_to_binary(const char *input, size_t length, char *output, base64_options options=base64_default) const noexcept=0</div><div class="ttdoc">Convert a base64 input to a binary ouput.</div></div>
-<div class="ttc" id="aclasssimdutf_1_1implementation_html_a74dd85eb6ea2ef6aa76faa537c2ac49e"><div class="ttname"><a href="classsimdutf_1_1implementation.html#a74dd85eb6ea2ef6aa76faa537c2ac49e">simdutf::implementation::base64_length_from_binary</a></div><div class="ttdeci">virtual simdutf_warn_unused size_t base64_length_from_binary(size_t length) const noexcept=0</div><div class="ttdoc">Provide the base64 length in bytes given the length of a binary input.</div></div>
 <div class="ttc" id="aclasssimdutf_1_1implementation_html_a7566c1718e91a6d36b0c47822b0154ad"><div class="ttname"><a href="classsimdutf_1_1implementation.html#a7566c1718e91a6d36b0c47822b0154ad">simdutf::implementation::convert_valid_utf8_to_utf32</a></div><div class="ttdeci">virtual simdutf_warn_unused size_t convert_valid_utf8_to_utf32(const char *input, size_t length, char32_t *utf32_buffer) const noexcept=0</div><div class="ttdoc">Convert valid UTF-8 string into UTF-32 string.</div></div>
 <div class="ttc" id="aclasssimdutf_1_1implementation_html_a75f16dc0f3bdd4457425898a17c51d45"><div class="ttname"><a href="classsimdutf_1_1implementation.html#a75f16dc0f3bdd4457425898a17c51d45">simdutf::implementation::convert_utf16le_to_latin1</a></div><div class="ttdeci">virtual simdutf_warn_unused size_t convert_utf16le_to_latin1(const char16_t *input, size_t length, char *latin1_buffer) const noexcept=0</div><div class="ttdoc">Convert possibly broken UTF-16LE string into Latin1 string.</div></div>
 <div class="ttc" id="aclasssimdutf_1_1implementation_html_a7632c87e825c7f268cbb787612e940bf"><div class="ttname"><a href="classsimdutf_1_1implementation.html#a7632c87e825c7f268cbb787612e940bf">simdutf::implementation::validate_utf16be_with_errors</a></div><div class="ttdeci">virtual simdutf_warn_unused result validate_utf16be_with_errors(const char16_t *buf, size_t len) const noexcept=0</div><div class="ttdoc">Validate the UTF-16BE string and stop on error.</div></div>
 <div class="ttc" id="aclasssimdutf_1_1implementation_html_a77cb2f67aadb85bb3c64789f3d501d8b"><div class="ttname"><a href="classsimdutf_1_1implementation.html#a77cb2f67aadb85bb3c64789f3d501d8b">simdutf::implementation::convert_utf16le_to_utf8_with_errors</a></div><div class="ttdeci">virtual simdutf_warn_unused result convert_utf16le_to_utf8_with_errors(const char16_t *input, size_t length, char *utf8_buffer) const noexcept=0</div><div class="ttdoc">Convert possibly broken UTF-16LE string into UTF-8 string and stop on error.</div></div>
 <div class="ttc" id="aclasssimdutf_1_1implementation_html_a78f306f07f9b0c88646629efc7672bfd"><div class="ttname"><a href="classsimdutf_1_1implementation.html#a78f306f07f9b0c88646629efc7672bfd">simdutf::implementation::convert_utf16be_to_utf32_with_errors</a></div><div class="ttdeci">virtual simdutf_warn_unused result convert_utf16be_to_utf32_with_errors(const char16_t *input, size_t length, char32_t *utf32_buffer) const noexcept=0</div><div class="ttdoc">Convert possibly broken UTF-16BE string into UTF-32 string and stop on error.</div></div>
+<div class="ttc" id="aclasssimdutf_1_1implementation_html_a7935750344384cc0130094cb6c440826"><div class="ttname"><a href="classsimdutf_1_1implementation.html#a7935750344384cc0130094cb6c440826">simdutf::implementation::base64_length_from_binary</a></div><div class="ttdeci">virtual simdutf_warn_unused size_t base64_length_from_binary(size_t length, base64_options options=base64_default) const noexcept=0</div><div class="ttdoc">Provide the base64 length in bytes given the length of a binary input.</div></div>
 <div class="ttc" id="aclasssimdutf_1_1implementation_html_a7f90a3a4b12a2e361618fb3e9e4b5cbd"><div class="ttname"><a href="classsimdutf_1_1implementation.html#a7f90a3a4b12a2e361618fb3e9e4b5cbd">simdutf::implementation::convert_utf32_to_utf16be</a></div><div class="ttdeci">virtual simdutf_warn_unused size_t convert_utf32_to_utf16be(const char32_t *input, size_t length, char16_t *utf16_buffer) const noexcept=0</div><div class="ttdoc">Convert possibly broken UTF-32 string into UTF-16BE string.</div></div>
 <div class="ttc" id="aclasssimdutf_1_1implementation_html_a8039edd257c0f2bdf1acc5d16476992a"><div class="ttname"><a href="classsimdutf_1_1implementation.html#a8039edd257c0f2bdf1acc5d16476992a">simdutf::implementation::utf32_length_from_latin1</a></div><div class="ttdeci">virtual simdutf_warn_unused size_t utf32_length_from_latin1(size_t length) const noexcept=0</div><div class="ttdoc">Return the number of bytes that this UTF-32 string would require in Latin1 format.</div></div>
 <div class="ttc" id="aclasssimdutf_1_1implementation_html_a825ad7513447a16cd12f5425e2e88431"><div class="ttname"><a href="classsimdutf_1_1implementation.html#a825ad7513447a16cd12f5425e2e88431">simdutf::implementation::validate_utf32_with_errors</a></div><div class="ttdeci">virtual simdutf_warn_unused result validate_utf32_with_errors(const char32_t *buf, size_t len) const noexcept=0</div><div class="ttdoc">Validate the UTF-32 string and stop on error.</div></div>
