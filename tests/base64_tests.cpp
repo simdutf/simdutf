@@ -160,8 +160,8 @@ TEST(encode_base64_cases) {
 
 TEST(encode_base64url_cases) {
   std::vector<std::pair<std::string, std::string>> cases = {
-      {"Hello, World!", "SGVsbG8sIFdvcmxkIQ=="},
-      {"GeeksforGeeks", "R2Vla3Nmb3JHZWVrcw=="},
+      {"Hello, World!", "SGVsbG8sIFdvcmxkIQ"},
+      {"GeeksforGeeks", "R2Vla3Nmb3JHZWVrcw"},
       {"123456", "MTIzNDU2"},
       {"Base64 Encoding", "QmFzZTY0IEVuY29kaW5n"},
       {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k", "IVJ-SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c-fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNTktWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
@@ -170,7 +170,7 @@ TEST(encode_base64url_cases) {
   printf(" -- ");
   for (std::pair<std::string, std::string> p : cases) {
     std::vector<char> buffer(
-        implementation.base64_length_from_binary(p.first.size()));
+        implementation.base64_length_from_binary(p.first.size(), simdutf::base64_url));
     ASSERT_EQUAL(buffer.size(), p.second.size());
     size_t s = implementation.binary_to_base64(p.first.data(), p.first.size(),
                                                buffer.data(), simdutf::base64_url);
@@ -258,8 +258,8 @@ TEST(encode_base64_cases_16) {
 
 TEST(encode_base64url_cases_16) {
   std::vector<std::pair<std::string, std::u16string>> cases = {
-      {"Hello, World!", u"SGVsbG8sIFdvcmxkIQ=="},
-      {"GeeksforGeeks", u"R2Vla3Nmb3JHZWVrcw=="},
+      {"Hello, World!", u"SGVsbG8sIFdvcmxkIQ"},
+      {"GeeksforGeeks", u"R2Vla3Nmb3JHZWVrcw"},
       {"123456", u"MTIzNDU2"},
       {"Base64 Encoding", u"QmFzZTY0IEVuY29kaW5n"},
       {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k", u"IVJ-SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c-fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNTktWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
@@ -388,7 +388,7 @@ TEST(roundtrip_base64url) {
   for (size_t len = 0; len < 2048; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
-    buffer.resize(implementation.base64_length_from_binary(len));
+    buffer.resize(implementation.base64_length_from_binary(len, simdutf::base64_url));
     std::vector<char> back(len);
     std::mt19937 gen((std::mt19937::result_type)(seed));
     std::uniform_int_distribution<int> byte_generator{0, 255};
@@ -398,7 +398,7 @@ TEST(roundtrip_base64url) {
       }
       size_t size = implementation.binary_to_base64(
           source.data(), source.size(), buffer.data(), simdutf::base64_url);
-      ASSERT_TRUE(size == implementation.base64_length_from_binary(len));
+      ASSERT_TRUE(size == implementation.base64_length_from_binary(len, simdutf::base64_url));
       simdutf::result r =
           implementation.base64_to_binary(buffer.data(), size, back.data(), simdutf::base64_url);
       ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
@@ -428,7 +428,7 @@ TEST(roundtrip_base64url_16) {
     std::vector<char> buffer;
     std::vector<char16_t> buffer16;
 
-    buffer.resize(implementation.base64_length_from_binary(len));
+    buffer.resize(implementation.base64_length_from_binary(len, simdutf::base64_url));
     std::vector<char> back(len);
     std::mt19937 gen((std::mt19937::result_type)(seed));
     std::uniform_int_distribution<int> byte_generator{0, 255};
@@ -443,7 +443,7 @@ TEST(roundtrip_base64url_16) {
       for (size_t i = 0; i < buffer.size(); i++) {
         buffer16[i] = buffer[i];
       }
-      ASSERT_TRUE(size == implementation.base64_length_from_binary(len));
+      ASSERT_TRUE(size == implementation.base64_length_from_binary(len, simdutf::base64_url));
       simdutf::result r =
           implementation.base64_to_binary(buffer16.data(), size, back.data(), simdutf::base64_url);
       ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);

@@ -241,8 +241,10 @@ size_t tail_encode_base64(char *dst, const char *src, size_t srclen, base64_opti
     t1 = uint8_t(src[i]);
     *out++ = e0[t1];
     *out++ = e1[(t1 & 0x03) << 4];
-    *out++ = '=';
-    *out++ = '=';
+    if((options & base64_url) == 0) {
+      *out++ = '=';
+      *out++ = '=';
+    }
     break;
   default: /* case 2 */
     t1 = uint8_t(src[i]);
@@ -250,7 +252,9 @@ size_t tail_encode_base64(char *dst, const char *src, size_t srclen, base64_opti
     *out++ = e0[t1];
     *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
     *out++ = e2[(t2 & 0x0F) << 2];
-    *out++ = '=';
+    if((options & base64_url) == 0) {
+      *out++ = '=';
+    }
   }
   return (size_t)(out - dst);
 }
@@ -275,7 +279,10 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char_type * i
   return  actual_length / 4 * 3 + (actual_length %4)  - 1;
 }
 
-simdutf_warn_unused size_t base64_length_from_binary(size_t length) noexcept {
+simdutf_warn_unused size_t base64_length_from_binary(size_t length, base64_options options) noexcept {
+  if(options & base64_url) {
+    return length/3 * 4 + ((length % 3) ? (length % 3) + 1 : 0);
+  }
   return (length + 2)/3 * 4; // We use padding to make the length a multiple of 4.
 }
 
