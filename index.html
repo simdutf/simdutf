@@ -141,8 +141,8 @@ simdutf: Unicode validation and transcoding at billions of characters per second
 <li>From an UTF-16LE/BE string, compute the size of the UTF-32 equivalent string (equivalent to UTF-16 character counting),</li>
 <li>UTF-8 and UTF-16LE/BE character counting,</li>
 <li>UTF-16 endianness change (UTF16-LE/BE to UTF-16-BE/LE),</li>
-<li><a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">WHATWG forgiving-base64</a> to binary,</li>
-<li>Binary to base64.</li>
+<li><a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">WHATWG forgiving-base64</a> (with or without URL encoding) to binary,</li>
+<li>Binary to base64 (with or without URL encoding).</li>
 </ul>
 <p>The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, AVX-512, RISC-V Vector Extension, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion characters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).</p>
 <p>The library compiles down to a small library of a few hundred kilobytes. Our functions are exception-free and non allocating. We have extensive tests and extensive benchmarks.</p>
@@ -330,7 +330,7 @@ API</h2>
 <div class="line"><span class="keywordflow">if</span>(res.error != simdutf::error_code::SUCCESS) {</div>
 <div class="line">  std::cerr &lt;&lt; <span class="stringliteral">&quot;error at index &quot;</span> &lt;&lt; res.count &lt;&lt; std::endl;</div>
 <div class="line">}</div>
-<div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition:</b> <a href="error_8h_source.html#l00022">error.h:22</a></div></div>
+<div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition:</b> <a href="error_8h_source.html#l00023">error.h:23</a></div></div>
 </div><!-- fragment --><p>Or as follows:</p>
 <div class="fragment"><div class="line">std::string bad_utf8 = <span class="stringliteral">&quot;\xc3\xa9\xc3\xa9\x20\xff\xc3\xa9&quot;</span>;</div>
 <div class="line"><a class="code" href="structsimdutf_1_1result.html">simdutf::result</a> res = implementation.validate_utf8_with_errors(bad_utf8.data(), bad_utf8.size());</div>
@@ -573,7 +573,7 @@ API</h2>
 <div class="line"><span class="keywordtype">void</span> change_endianness_utf16(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, char16_t * output) noexcept;</div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md11"></a>
 Base64</h2>
-<p>We also support converting from <a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">WHATWG forgiving-base64</a> to binary, and back. In particular, you can convert base64 inputs which contain ASCII spaces to binary.</p>
+<p>We also support converting from <a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">WHATWG forgiving-base64</a> to binary, and back. In particular, you can convert base64 inputs which contain ASCII spaces to binary. We also support the base64 URL encoding alternative.</p>
 <p>Converting binary data to base64 always succeeds and is relatively simple: </p><div class="fragment"><div class="line"> {C++}</div>
 <div class="line">std::vector&lt;char&gt; buffer(simdutf::base64_length_from_binary(source.size()));</div>
 <div class="line">simdutf::binary_to_base64(source.data(), source.size(), buffer.data());</div>
@@ -582,13 +582,50 @@ Base64</h2>
 <div class="line">std::vector&lt;char&gt; buffer(simdutf::maximal_binary_length_from_base64(base64.data(), base64.size()));</div>
 <div class="line">simdutf::result r = simdutf::base64_to_binary(base64.data(), base64.size(), buffer.data());</div>
 <div class="line">if(r.error) {</div>
-<div class="line">  // We have some error, r.count tells you where the error was encountered in the input</div>
+<div class="line">  // We have some error, r.count tells you where the error was encountered in the input if</div>
+<div class="line">  // the error is INVALID_BASE64_CHARACTER. If the error is BASE64_INPUT_REMAINDER, then</div>
+<div class="line">  // a single valid base64 remained, and r.count contains the number of bytes decoded.</div>
 <div class="line">} else {</div>
 <div class="line">  buffer.resize(r.count); // resize the buffer according to actual number of bytes</div>
 <div class="line">}</div>
-</div><!-- fragment --><p>Some users may want to decode the base64 inputs in chunks, especially when doing file or networking programming. These users should see <code>tools/fastbase64.cpp</code>, a command-line utility designed for as an example. It reads and writes base64 files using chunks of at most a few tens of kilobytes.</p>
+</div><!-- fragment --><p>In some instances, you may want to limit the size of the output further when decoding base64. For this purpose, you may use the <code>base64_to_binary_safe</code> functions. The functions may also be useful if you seek to decode the input into segments having a maximal capacity.</p>
+<div class="fragment"><div class="line">{C++}</div>
+<div class="line"> size_t len = 72; // for simplicity we chose len divisible by 3</div>
+<div class="line"> std::vector&lt;char&gt; base64(len, &#39;a&#39;); // we want to decode &#39;aaaaa....&#39;</div>
+<div class="line"> std::vector&lt;char&gt; back((len + 3) / 4 * 3);</div>
+<div class="line"> size_t limited_length = back.size() / 2; // Intentionally too small</div>
+<div class="line"> // We proceed to decode half:</div>
+<div class="line"> simdutf::result r = simdutf::base64_to_binary_safe(</div>
+<div class="line">           base64.data(), base64.size(), back.data(), limited_length);</div>
+<div class="line"> assert(r.error == simdutf::error_code::OUTPUT_BUFFER_TOO_SMALL);</div>
+<div class="line"> // We decoded r.count base64 8-bit units to limited_length bytes</div>
+<div class="line"> // Now let us decode the rest !!!</div>
+<div class="line"> //</div>
+<div class="line"> // We have read up to r.count in the input buffer and we have</div>
+<div class="line"> // produced limited_length bytes.</div>
+<div class="line"> //</div>
+<div class="line"> size_t input_index = r.count;</div>
+<div class="line"> size_t limited_length2 = back.size();</div>
+<div class="line"> r = simdutf::base64_to_binary_safe(base64.data() + input_index,</div>
+<div class="line">                                          base64.size() - input_index,</div>
+<div class="line">                                          back.data(), limited_length2);</div>
+<div class="line"> assert(r.error == simdutf::error_code::SUCCESS);</div>
+<div class="line"> // We decoded r.count base64 8-bit units to limited_length2 bytes</div>
+<div class="line"> // We are done</div>
+<div class="line"> assert(limited_length2 + limited_length == (len + 3) / 4 * 3);</div>
+</div><!-- fragment --><p>See our function specifications for more details.</p>
+<p>In other instances, you may receive your base64 inputs in 16-bit units (e.g., from UTF-16 strings): we have function overloads for these cases as well.</p>
+<p>Some users may want to decode the base64 inputs in chunks, especially when doing file or networking programming. These users should see <code>tools/fastbase64.cpp</code>, a command-line utility designed for as an example. It reads and writes base64 files using chunks of at most a few tens of kilobytes.</p>
 <p>The specification of our base64 functions is as follows:</p>
 <div class="fragment"><div class="line"> {C++}</div>
+<div class="line"> </div>
+<div class="line">// base64_options are used to specify the base64 encoding options.</div>
+<div class="line">using base64_options = uint64_t;</div>
+<div class="line">enum : base64_options {</div>
+<div class="line">  base64_default = 0, /* standard base64 format */</div>
+<div class="line">  base64_url = 1 /* base64url format*/</div>
+<div class="line">};</div>
+<div class="line"> </div>
 <div class="line">/**</div>
 <div class="line"> * Provide the maximal binary length in bytes given the base64 input.</div>
 <div class="line"> * In general, if the input contains ASCII spaces, the result will be less than</div>
@@ -596,9 +633,20 @@ Base64</h2>
 <div class="line"> *</div>
 <div class="line"> * @param input         the base64 input to process</div>
 <div class="line"> * @param length        the length of the base64 input in bytes</div>
-<div class="line"> * @return number of base64 bytes</div>
+<div class="line"> * @return maximal number of binary bytes</div>
 <div class="line"> */</div>
 <div class="line">simdutf_warn_unused size_t maximal_binary_length_from_base64(const char * input, size_t length) noexcept;</div>
+<div class="line"> </div>
+<div class="line">/**</div>
+<div class="line"> * Provide the maximal binary length in bytes given the base64 input.</div>
+<div class="line"> * In general, if the input contains ASCII spaces, the result will be less than</div>
+<div class="line"> * the maximum length.</div>
+<div class="line"> *</div>
+<div class="line"> * @param input         the base64 input to process, in ASCII stored as 16-bit units</div>
+<div class="line"> * @param length        the length of the base64 input in 16-bit units</div>
+<div class="line"> * @return maximal number of binary bytes</div>
+<div class="line"> */</div>
+<div class="line">simdutf_warn_unused size_t maximal_binary_length_from_base64(const char16_t * input, size_t length) noexcept;</div>
 <div class="line"> </div>
 <div class="line">/**</div>
 <div class="line"> * Convert a base64 input to a binary ouput.</div>
@@ -610,9 +658,16 @@ Base64</h2>
 <div class="line"> * See https://infra.spec.whatwg.org/#forgiving-base64-decode</div>
 <div class="line"> *</div>
 <div class="line"> * This function will fail in case of invalid input. There are two possible reasons for</div>
-<div class="line"> * failure: the input is contains a number of base64 characters that when divided by 4, leaves</div>
-<div class="line"> * a singler remainder character (BASE64_INPUT_REMAINDER), or the input contains a character</div>
+<div class="line"> * failure: the input contains a number of base64 characters that when divided by 4, leaves</div>
+<div class="line"> * a single remainder character (BASE64_INPUT_REMAINDER), or the input contains a character</div>
 <div class="line"> * that is not a valid base64 character (INVALID_BASE64_CHARACTER).</div>
+<div class="line"> *</div>
+<div class="line"> * The INVALID_BASE64_CHARACTER cases are considered fatal and you are expected to discard</div>
+<div class="line"> * the output.</div>
+<div class="line"> *</div>
+<div class="line"> * When the error is INVALID_BASE64_CHARACTER, r.count contains the index in the input</div>
+<div class="line"> * where the invalid character was found. When the error is BASE64_INPUT_REMAINDER, then</div>
+<div class="line"> * r.count contains the number of bytes decoded.</div>
 <div class="line"> *</div>
 <div class="line"> * You should call this function with a buffer that is at least maximal_binary_length_from_base64(input, length) bytes long.</div>
 <div class="line"> * If you fail to provide that much space, the function may cause a buffer overflow.</div>
@@ -620,9 +675,10 @@ Base64</h2>
 <div class="line"> * @param input         the base64 string to process</div>
 <div class="line"> * @param length        the length of the string in bytes</div>
 <div class="line"> * @param output        the pointer to buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long).</div>
+<div class="line"> * @param options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.</div>
 <div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in bytes) if any, or the number of bytes written if successful.</div>
 <div class="line"> */</div>
-<div class="line">simdutf_warn_unused result base64_to_binary(const char * input, size_t length, char* output) noexcept;</div>
+<div class="line">simdutf_warn_unused result base64_to_binary(const char * input, size_t length, char* output, base64_options options = base64_default) noexcept;</div>
 <div class="line"> </div>
 <div class="line">/**</div>
 <div class="line"> * Provide the base64 length in bytes given the length of a binary input.</div>
@@ -641,9 +697,74 @@ Base64</h2>
 <div class="line"> * @param input         the binary to process</div>
 <div class="line"> * @param length        the length of the input in bytes</div>
 <div class="line"> * @param output        the pointer to buffer that can hold the conversion result (should be at least base64_length_from_binary(length) bytes long)</div>
+<div class="line"> * @param options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.</div>
 <div class="line"> * @return number of written bytes, will be equal to base64_length_from_binary(length)</div>
 <div class="line"> */</div>
-<div class="line">size_t binary_to_base64(const char * input, size_t length, char* output) noexcept;</div>
+<div class="line">size_t binary_to_base64(const char * input, size_t length, char* output, base64_options options = base64_default) noexcept;</div>
+<div class="line"> </div>
+<div class="line">/**</div>
+<div class="line"> * Convert a base64 input to a binary ouput.</div>
+<div class="line"> *</div>
+<div class="line"> * This function follows the WHATWG forgiving-base64 format, which means that it will</div>
+<div class="line"> * ignore any ASCII spaces in the input. You may provide a padded input (with one or two</div>
+<div class="line"> * equal signs at the end) or an unpadded input (without any equal signs at the end).</div>
+<div class="line"> *</div>
+<div class="line"> * See https://infra.spec.whatwg.org/#forgiving-base64-decode</div>
+<div class="line"> *</div>
+<div class="line"> * This function will fail in case of invalid input. There are two possible reasons for</div>
+<div class="line"> * failure: the input contains a number of base64 characters that when divided by 4, leaves</div>
+<div class="line"> * a single remainder character (BASE64_INPUT_REMAINDER), or the input contains a character</div>
+<div class="line"> * that is not a valid base64 character (INVALID_BASE64_CHARACTER).</div>
+<div class="line"> *</div>
+<div class="line"> * When the error is INVALID_BASE64_CHARACTER, r.count contains the index in the input</div>
+<div class="line"> * where the invalid character was found. When the error is BASE64_INPUT_REMAINDER, then</div>
+<div class="line"> * r.count contains the number of bytes decoded.</div>
+<div class="line"> *</div>
+<div class="line"> * You should call this function with a buffer that is at least maximal_binary_length_from_utf6_base64(input, length) bytes long.</div>
+<div class="line"> * If you fail to provide that much space, the function may cause a buffer overflow.</div>
+<div class="line"> *</div>
+<div class="line"> * @param input         the base64 string to process, in ASCII stored as 16-bit units</div>
+<div class="line"> * @param length        the length of the string in 16-bit units</div>
+<div class="line"> * @param output        the pointer to buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long).</div>
+<div class="line"> * @param options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.</div>
+<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the INVALID_BASE64_CHARACTER error (in the input in units) if any, or the number of bytes written if successful.</div>
+<div class="line"> */</div>
+<div class="line">simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t length, char* output, base64_options options = base64_default)  noexcept;</div>
+<div class="line"> </div>
+<div class="line">/**</div>
+<div class="line"> * Convert a base64 input to a binary ouput.</div>
+<div class="line"> *</div>
+<div class="line"> * This function follows the WHATWG forgiving-base64 format, which means that it will</div>
+<div class="line"> * ignore any ASCII spaces in the input. You may provide a padded input (with one or two</div>
+<div class="line"> * equal signs at the end) or an unpadded input (without any equal signs at the end).</div>
+<div class="line"> *</div>
+<div class="line"> * See https://infra.spec.whatwg.org/#forgiving-base64-decode</div>
+<div class="line"> *</div>
+<div class="line"> * This function will fail in case of invalid input. There are three possible reasons for</div>
+<div class="line"> * failure: the input contains a number of base64 characters that when divided by 4, leaves</div>
+<div class="line"> * a single remainder character (BASE64_INPUT_REMAINDER), the input contains a character</div>
+<div class="line"> * that is not a valid base64 character (INVALID_BASE64_CHARACTER), or the output buffer </div>
+<div class="line"> * is too small (OUTPUT_BUFFER_TOO_SMALL).</div>
+<div class="line"> *</div>
+<div class="line"> * When OUTPUT_BUFFER_TOO_SMALL, we return both the number of bytes written</div>
+<div class="line"> * and the number of units processed, see description of the parameters and returned value.</div>
+<div class="line"> *</div>
+<div class="line"> * When the error is INVALID_BASE64_CHARACTER, r.count contains the index in the input</div>
+<div class="line"> * where the invalid character was found. When the error is BASE64_INPUT_REMAINDER, then</div>
+<div class="line"> * r.count contains the number of bytes decoded.</div>
+<div class="line"> *</div>
+<div class="line"> * The INVALID_BASE64_CHARACTER cases are considered fatal and you are expected to discard</div>
+<div class="line"> * the output.</div>
+<div class="line"> *</div>
+<div class="line"> * @param input         the base64 string to process, in ASCII stored as 8-bit or 16-bit units</div>
+<div class="line"> * @param length        the length of the string in 8-bit or 16-bit units.</div>
+<div class="line"> * @param output        the pointer to buffer that can hold the conversion result.</div>
+<div class="line"> * @param outlen        the number of bytes that can be written in the output buffer. Upon return, it is modified to reflect how many bytes were written.</div>
+<div class="line"> * @param options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.</div>
+<div class="line"> * @return a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and position of the INVALID_BASE64_CHARACTER error (in the input in units) if any, or the number of units processed if successful.</div>
+<div class="line"> */</div>
+<div class="line">simdutf_warn_unused result base64_to_binary_safe(const char * input, size_t length, char* output, size_t&amp; outlen, base64_options options = base64_default) noexcept;</div>
+<div class="line">simdutf_warn_unused result base64_to_binary_safe(const char16_t * input, size_t length, char* output, size_t&amp; outlen, base64_options options = base64_default) noexcept;</div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md12"></a>
 The sutf command-line tool</h2>
 <p>We also provide a command-line tool which can be build as follows: </p><div class="fragment"><div class="line">cmake -B build &amp;&amp; cmake --build build --target sutf</div>

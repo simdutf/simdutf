@@ -109,21 +109,22 @@ $(document).ready(function(){initNavTree('error_8h_source.html',''); initResizab
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;                <span class="comment">// there must be no surrogate at all (Latin1)</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  INVALID_BASE64_CHARACTER, <span class="comment">// Found a character that cannot be part of a valid base64 string.</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  BASE64_INPUT_REMAINDER, <span class="comment">// The base64 input terminates with a single character, excluding padding (=).</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  OTHER         <span class="comment">// Not related to validation/transcoding.</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;};</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
-<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="structsimdutf_1_1result.html">   22</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structsimdutf_1_1result.html">result</a> {</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  error_code error;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  <span class="keywordtype">size_t</span> count;     <span class="comment">// In case of error, indicates the position of the error. In case of success, indicates the number of code units validated/written.</span></div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  simdutf_really_inline <a class="code" href="structsimdutf_1_1result.html">result</a>();</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; </div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  simdutf_really_inline <a class="code" href="structsimdutf_1_1result.html">result</a>(error_code, <span class="keywordtype">size_t</span>);</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;};</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;}</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition:</b> <a href="error_8h_source.html#l00022">error.h:22</a></div></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  OUTPUT_BUFFER_TOO_SMALL, <span class="comment">// The provided buffer is too small.</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  OTHER         <span class="comment">// Not related to validation/transcoding.</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;};</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
+<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="structsimdutf_1_1result.html">   23</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structsimdutf_1_1result.html">result</a> {</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  error_code error;</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <span class="keywordtype">size_t</span> count;     <span class="comment">// In case of error, indicates the position of the error. In case of success, indicates the number of code units validated/written.</span></div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  simdutf_really_inline <a class="code" href="structsimdutf_1_1result.html">result</a>();</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  simdutf_really_inline <a class="code" href="structsimdutf_1_1result.html">result</a>(error_code, <span class="keywordtype">size_t</span>);</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;};</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;}</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition:</b> <a href="error_8h_source.html#l00023">error.h:23</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
