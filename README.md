@@ -139,7 +139,7 @@ Linux or macOS users might follow the following instructions if they have a rece
 
 1. Pull the library in a directory
    ```
-   wget https://github.com/simdutf/simdutf/releases/download/v5.0.0/singleheader.zip
+   wget https://github.com/simdutf/simdutf/releases/download/v5.1.0/singleheader.zip
    unzip singleheader.zip
    ```
 2. Compile
@@ -196,7 +196,7 @@ Single-header version
 You can create a single-header version of the library where
 all of the code is put into two files (`simdutf.h` and `simdutf.cpp`).
 We publish a zip archive containing these files, e.g., see
-https://github.com/simdutf/simdutf/releases/download/v5.0.0/singleheader.zip
+https://github.com/simdutf/simdutf/releases/download/v5.1.0/singleheader.zip
 
 You may generate it on your own using a Python script.
 
@@ -1760,7 +1760,7 @@ simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t lengt
  * This function will fail in case of invalid input. There are three possible reasons for
  * failure: the input contains a number of base64 characters that when divided by 4, leaves
  * a single remainder character (BASE64_INPUT_REMAINDER), the input contains a character
- * that is not a valid base64 character (INVALID_BASE64_CHARACTER), or the output buffer 
+ * that is not a valid base64 character (INVALID_BASE64_CHARACTER), or the output buffer
  * is too small (OUTPUT_BUFFER_TOO_SMALL).
  *
  * When OUTPUT_BUFFER_TOO_SMALL, we return both the number of bytes written
