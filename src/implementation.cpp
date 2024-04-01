@@ -471,8 +471,8 @@ public:
     return set_best()->base64_to_binary(input, length, output, options);
   }
 
-  simdutf_warn_unused size_t base64_length_from_binary(size_t length) const noexcept override {
-    return set_best()->base64_length_from_binary(length);
+  simdutf_warn_unused size_t base64_length_from_binary(size_t length, base64_options options) const noexcept override {
+    return set_best()->base64_length_from_binary(length, options);
   }
 
   size_t binary_to_base64(const char * input, size_t length, char* output, base64_options options) const noexcept override {
@@ -836,7 +836,7 @@ public:
   }
 
 
-  simdutf_warn_unused size_t base64_length_from_binary(size_t) const noexcept override {
+  simdutf_warn_unused size_t base64_length_from_binary(size_t, base64_options) const noexcept override {
     return 0;
   }
 
@@ -1316,7 +1316,7 @@ simdutf_warn_unused result base64_to_binary_safe_impl(const chartype * input, si
   }
   // The output buffer is maybe too small. We will decode a truncated version of the input.
   size_t outlen3 = outlen / 3 * 3; // round down to multiple of 3
-  size_t safe_input = base64_length_from_binary(outlen3);
+  size_t safe_input = base64_length_from_binary(outlen3, options);
   result r = base64_to_binary(input, safe_input, output, options);
   if(r.error == error_code::INVALID_BASE64_CHARACTER) { return r; }
   size_t offset = (r.error == error_code::BASE64_INPUT_REMAINDER) ? 1 :
@@ -1359,8 +1359,8 @@ simdutf_warn_unused result base64_to_binary_safe(const char16_t * input, size_t 
   return base64_to_binary_safe_impl<char16_t>(input, length, output, outlen, options);
 }
 
-simdutf_warn_unused size_t base64_length_from_binary(size_t length) noexcept {
-  return get_default_implementation()->base64_length_from_binary(length);
+simdutf_warn_unused size_t base64_length_from_binary(size_t length, base64_options options) noexcept {
+  return get_default_implementation()->base64_length_from_binary(length, options);
 }
 
 size_t binary_to_base64(const char * input, size_t length, char* output, base64_options options) noexcept {
