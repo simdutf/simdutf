@@ -1330,7 +1330,7 @@ simdutf_warn_unused result base64_to_binary_safe_impl(const chartype * input, si
   // in between them, so we are not worried about performance.
   while(offset > 0 && input_index > 0) {
     chartype c = input[--input_index];
-    if(c == '=' || c == '\n' || c == '\r' || c == '\t' || c == ' ') {
+    if(scalar::base64::is_ascii_white_space(c)){
       // skipping
     } else {
       offset--;
@@ -1339,8 +1339,14 @@ simdutf_warn_unused result base64_to_binary_safe_impl(const chartype * input, si
   size_t remaining_out = outlen - output_index;
   const chartype * tail_input = input + input_index;
   size_t tail_length = length - input_index;
+  while(tail_length > 0 && scalar::base64::is_ascii_white_space(tail_input[tail_length - 1])) {
+    tail_length--;
+  }
   if(tail_length > 0 && tail_input[tail_length - 1] == '=') {
     tail_length--;
+    while(tail_length > 0 && scalar::base64::is_ascii_white_space(tail_input[tail_length - 1])) {
+      tail_length--;
+    }
     if(tail_length > 0 && tail_input[tail_length - 1] == '=') {
       tail_length--;
     }

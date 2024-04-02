@@ -68,9 +68,9 @@ template <bool base64_url>
 static inline uint64_t to_base64_mask(block64 *b, bool *error) {
   __m512i input = b->chunks[0];
   const __m512i ascii_space_tbl = _mm512_set_epi8(
-      0, 0, 13, 0, 0, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 13, 0, 0, 10, 9,
-      0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 13, 0, 0, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0,
-      32, 0, 0, 13, 0, 0, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0, 32);
+      0, 0, 13, 12, 0, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 13, 12, 0, 10, 9,
+      0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 13, 12, 0, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0,
+      32, 0, 0, 13, 12, 0, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0, 32);
   __m512i lookup0;
   if (base64_url) {
     lookup0 = _mm512_set_epi8(
@@ -172,9 +172,17 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value
                                         : tables::base64::to_base64_value;
   size_t equalsigns = 0;
+  // skip trailing spaces
+  while (srclen > 0 && to_base64[uint8_t(src[srclen - 1])] == 64) {
+    srclen--;
+  }
   if (srclen > 0 && src[srclen - 1] == '=') {
     srclen--;
     equalsigns = 1;
+    // skip trailing spaces
+    while (srclen > 0 && to_base64[uint8_t(src[srclen - 1])] == 64) {
+      srclen--;
+    }
     if (srclen > 0 && src[srclen - 1] == '=') {
       srclen--;
       equalsigns = 2;

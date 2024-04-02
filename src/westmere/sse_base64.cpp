@@ -209,7 +209,7 @@ template <bool base64_url>
 static inline uint16_t to_base64_mask(__m128i *src, bool *error) {
   const __m128i ascii_space_tbl =
       _mm_setr_epi8(0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x9, 0xa, 0x0,
-                    0x0, 0xd, 0x0, 0x0);
+                    0xc, 0xd, 0x0, 0x0);
   // credit: aqrit
   __m128i delta_asso;
   if (base64_url) {
@@ -388,10 +388,18 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                               base64_options options) {
   const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value
                                         : tables::base64::to_base64_value;
+  // skip trailing spaces
+  while (srclen > 0 && to_base64[uint8_t(src[srclen - 1])] == 64) {
+    srclen--;
+  }
   size_t equalsigns = 0;
   if (srclen > 0 && src[srclen - 1] == '=') {
     srclen--;
     equalsigns = 1;
+    // skip trailing spaces
+    while (srclen > 0 && to_base64[uint8_t(src[srclen - 1])] == 64) {
+      srclen--;
+    }
     if (srclen > 0 && src[srclen - 1] == '=') {
       srclen--;
       equalsigns = 2;

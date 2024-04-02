@@ -299,8 +299,15 @@ simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(con
 }
 
 simdutf_warn_unused result implementation::base64_to_binary(const char * input, size_t length, char* output, base64_options options) const noexcept {
+  // skip trailing spaces
+  while(length > 0 && scalar::base64::is_ascii_white_space(input[length - 1])) {
+    length--;
+  }
   if(length > 0 && input[length - 1] == '=') {
     length -= 1;
+    while(length > 0 && scalar::base64::is_ascii_white_space(input[length - 1])) {
+      length--;
+    }
     if(length > 0 && input[length - 1] == '=') {
       length -= 1;
     }
