@@ -459,6 +459,77 @@ TEST(roundtrip_base64url_16) {
 }
 #endif
 
+TEST(bad_padding_base64) {
+  for (size_t len = 0; len < 2048; len++) {
+    std::vector<char> source(len, 0);
+    std::vector<char> buffer;
+    buffer.resize(implementation.base64_length_from_binary(len)+1);
+    std::mt19937 gen((std::mt19937::result_type)(seed));
+    std::uniform_int_distribution<int> byte_generator{0, 255};
+    for (size_t trial = 0; trial < 10; trial++) {
+      for (size_t i = 0; i < len; i++) {
+        source[i] = byte_generator(gen);
+      }
+      size_t size = implementation.binary_to_base64(
+          source.data(), source.size(), buffer.data());
+      size_t padding = 0;
+      if(size > 0 && buffer[size - 1] == '=') {
+        padding++;
+        if(size > 1 && buffer[size - 2] == '=') {
+          padding++;
+        }
+      }
+      buffer.resize(size);; // in case we need
+      std::vector<char> back(simdutf::maximal_binary_length_from_base64(
+          buffer.data(), buffer.size()));
+      if(padding == 1) {
+        // adding padding should break
+        buffer.push_back('=');
+        for (size_t i = 0; i < 5; i++) {
+          add_space(buffer, gen);
+        }
+        simdutf::result r =
+            simdutf::base64_to_binary(buffer.data(), buffer.size(), back.data());
+        ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+      } else if(padding == 2) {
+        // adding padding should break
+        {
+          auto copy = buffer;
+          copy.push_back('=');
+          for (size_t i = 0; i < 5; i++) {
+            add_space(copy, gen);
+          }
+          simdutf::result r =
+              simdutf::base64_to_binary(copy.data(), copy.size(), back.data());
+          ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+        }
+        // removing padding should break
+        {
+          auto copy = buffer;
+          copy.resize(copy.size() - 1);
+          for (size_t i = 0; i < 5; i++) {
+            add_space(copy, gen);
+          }
+          simdutf::result r =
+              simdutf::base64_to_binary(copy.data(), copy.size(), back.data());
+          ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+        }
+
+      } else {
+        {
+          auto copy = buffer;
+          copy.push_back('=');
+          for (size_t i = 0; i < 5; i++) {
+            add_space(copy, gen);
+          }
+          simdutf::result r =
+              simdutf::base64_to_binary(copy.data(), copy.size(), back.data());
+          ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+        }
+      }
+    }
+  }
+}
 TEST(doomed_base64_roundtrip) {
   for (size_t len = 0; len < 2048; len++) {
     std::vector<char> source(len, 0);
