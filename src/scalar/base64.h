@@ -9,6 +9,12 @@ namespace scalar {
 namespace {
 namespace base64 {
 
+// This function is not expected to be fast. Do not use in long loops.
+template <class char_type>
+bool is_ascii_white_space(char_type c) {
+  return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f';
+}
+
 // Returns true upon success. The destination buffer must be large enough.
 // This functions assumes that the padding (=) has been removed.
 template <class char_type>

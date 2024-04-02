@@ -57,14 +57,7 @@ const uint8_t to_base64url_value[] = {
 template <typename char_type>
 size_t add_space(std::vector<char_type> &v, std::mt19937 &gen) {
   const static std::array<char_type, 4> space = {' ', '\t', '\n', '\r'};
-  int padding = 0;
-  if (v.size() > 0 && v[v.size() - 1] == '=') {
-    padding++;
-    if (v.size() > 0 && v[v.size() - 1] == '=') {
-      padding++;
-    }
-  }
-  std::uniform_int_distribution<int> index_dist(0, v.size() - padding);
+  std::uniform_int_distribution<int> index_dist(0, v.size());
   size_t i = index_dist(gen);
   std::uniform_int_distribution<int> char_dist(0, 3);
   v.insert(v.begin() + i, space[char_dist(gen)]);
@@ -73,14 +66,7 @@ size_t add_space(std::vector<char_type> &v, std::mt19937 &gen) {
 
 template <typename char_type>
 size_t add_garbage(std::vector<char_type> &v, std::mt19937 &gen) {
-  int padding = 0;
-  if (v.size() > 0 && v[v.size() - 1] == '=') {
-    padding++;
-    if (v.size() > 0 && v[v.size() - 1] == '=') {
-      padding++;
-    }
-  }
-  std::uniform_int_distribution<int> index_dist(0, v.size() - padding);
+  std::uniform_int_distribution<int> index_dist(0, v.size());
   size_t i = index_dist(gen);
   std::uniform_int_distribution<int> char_dist(
       0, (1 << (sizeof(char_type) * 8)) - 1);
