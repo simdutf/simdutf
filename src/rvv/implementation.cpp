@@ -108,6 +108,7 @@ simdutf_warn_unused result implementation::base64_to_binary(const char * input, 
       r.error = error_code::INVALID_BASE64_CHARACTER;
     }
   }
+  return r;
 }
 
 
@@ -141,6 +142,7 @@ simdutf_warn_unused result implementation::base64_to_binary(const char16_t * inp
       r.error = error_code::INVALID_BASE64_CHARACTER;
     }
   }
+  return r;
 }
 
 simdutf_warn_unused size_t implementation::base64_length_from_binary(size_t length, base64_options options) const noexcept {
