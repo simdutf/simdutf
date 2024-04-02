@@ -27,6 +27,11 @@ if ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") AND (CMAKE_SYSTEM_PROCESSOR MATCHES "
   target_compile_options(simdutf PRIVATE -mno-avx256-split-unaligned-load -mno-avx256-split-unaligned-store)
 endif()
 
+if(SIMDUTF_ALWAYS_INCLUDE_FALLBACK)
+  message(STATUS "SIMDUTF_ALWAYS_INCLUDE_FALLBACK is set to ${SIMDUTF_ALWAYS_INCLUDE_FALLBACK}")
+  target_compile_definitions(simdutf PRIVATE SIMDUTF_IMPLEMENTATION_FALLBACK=1)
+endif()
+
 if(SIMDUTF_SANITIZE)
   target_compile_options(simdutf INTERFACE -fsanitize=address  -fno-omit-frame-pointer -fno-sanitize-recover=all)
   target_compile_definitions(simdutf INTERFACE ASAN_OPTIONS=detect_leaks=1)

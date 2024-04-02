@@ -353,21 +353,34 @@ simdutf_warn_unused result implementation::base64_to_binary(const char * input, 
   while(length > 0 && scalar::base64::is_ascii_white_space(input[length - 1])) {
     length--;
   }
+  size_t equallocation = length; // location of the first padding character if any
+  size_t equalsigns = 0;
   if(length > 0 && input[length - 1] == '=') {
     length -= 1;
+    equalsigns++;
     while(length > 0 && scalar::base64::is_ascii_white_space(input[length - 1])) {
       length--;
     }
     if(length > 0 && input[length - 1] == '=') {
+      equalsigns++;
       length -= 1;
     }
   }
   if(length == 0) {
+    if(equalsigns > 0) {
+      return {INVALID_BASE64_CHARACTER, equallocation};
+    }
     return {SUCCESS, 0};
   }
-  return scalar::base64::base64_tail_decode(output, input, length, options);
+  result r = scalar::base64::base64_tail_decode(output, input, length, options);
+  if(r.error == error_code::SUCCESS && equalsigns > 0) {
+    // additional checks
+    if((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
+      return {INVALID_BASE64_CHARACTER, equallocation};
+    }
+  }
+  return r;
 }
-
 
 simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(const char16_t * input, size_t length) const noexcept {
   return scalar::base64::maximal_binary_length_from_base64(input, length);
@@ -377,19 +390,33 @@ simdutf_warn_unused result implementation::base64_to_binary(const char16_t * inp
   while(length > 0 && scalar::base64::is_ascii_white_space(input[length - 1])) {
     length--;
   }
+  size_t equallocation = length; // location of the first padding character if any
+  size_t equalsigns = 0;
   if(length > 0 && input[length - 1] == '=') {
     length -= 1;
+    equalsigns++;
     while(length > 0 && scalar::base64::is_ascii_white_space(input[length - 1])) {
       length--;
     }
     if(length > 0 && input[length - 1] == '=') {
+      equalsigns++;
       length -= 1;
     }
   }
   if(length == 0) {
+    if(equalsigns > 0) {
+      return {INVALID_BASE64_CHARACTER, equallocation};
+    }
     return {SUCCESS, 0};
   }
-  return scalar::base64::base64_tail_decode(output, input, length, options);
+  result r = scalar::base64::base64_tail_decode(output, input, length, options);
+  if(r.error == error_code::SUCCESS && equalsigns > 0) {
+    // additional checks
+    if((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
+      return {INVALID_BASE64_CHARACTER, equallocation};
+    }
+  }
+  return r;
 }
 
 simdutf_warn_unused size_t implementation::base64_length_from_binary(size_t length, base64_options options) const noexcept {

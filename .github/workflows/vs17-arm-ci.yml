@@ -16,5 +16,5 @@ jobs:
         uses: actions/checkout@v4
       - name: Use cmake
         run: |
-          cmake -G "${{matrix.gen}}" -A ${{ matrix.arch }} -DCMAKE_CROSSCOMPILING=1 -DSIMDUTF_ICONV=OFF -B build  &&
+          cmake -G "${{matrix.gen}}" -A ${{ matrix.arch }} -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DCMAKE_CROSSCOMPILING=1 -DSIMDUTF_ICONV=OFF -B build  &&
           cmake --build build --verbose

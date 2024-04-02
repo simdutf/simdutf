@@ -1342,17 +1342,26 @@ simdutf_warn_unused result base64_to_binary_safe_impl(const chartype * input, si
   while(tail_length > 0 && scalar::base64::is_ascii_white_space(tail_input[tail_length - 1])) {
     tail_length--;
   }
+  size_t padding_characts = 0;
   if(tail_length > 0 && tail_input[tail_length - 1] == '=') {
     tail_length--;
+    padding_characts++;
     while(tail_length > 0 && scalar::base64::is_ascii_white_space(tail_input[tail_length - 1])) {
       tail_length--;
     }
     if(tail_length > 0 && tail_input[tail_length - 1] == '=') {
       tail_length--;
+      padding_characts++;
     }
   }
   r = scalar::base64::base64_tail_decode_safe(output + output_index, remaining_out, tail_input, tail_length, options);
   outlen = output_index + remaining_out;
+  if(r.error == error_code::SUCCESS && padding_characts > 0) {
+    // additional checks
+    if((outlen % 3 == 0) || ((outlen % 3) + 1 + padding_characts != 4)) {
+      r.error = error_code::INVALID_BASE64_CHARACTER;
+    }
+  }
   r.count += input_index;
   return r;
 }

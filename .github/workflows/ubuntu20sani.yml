@@ -24,6 +24,6 @@ jobs:
         run: |
           mkdir buildundef &&
           cd buildundef &&
-          cmake -DSIMDUTF_SANITIZE_UNDEFINED=ON ..  &&
+          cmake -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DSIMDUTF_SANITIZE_UNDEFINED=ON ..  &&
           cmake --build .   &&
           ctest -j --output-on-failure
