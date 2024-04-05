@@ -8,6 +8,11 @@
 #include <tests/helpers/test.h>
 
 // this is a compile test
+void check_simdutf_result() {
+  simdutf::result r;
+}
+
+// this is a compile test
 int main_demo() {
   const char *source = "1234";
   // 4 == strlen(source)
