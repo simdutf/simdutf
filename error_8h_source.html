@@ -117,9 +117,9 @@ $(document).ready(function(){initNavTree('error_8h_source.html',''); initResizab
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  error_code error;</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <span class="keywordtype">size_t</span> count;     <span class="comment">// In case of error, indicates the position of the error. In case of success, indicates the number of code units validated/written.</span></div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  simdutf_really_inline <a class="code" href="structsimdutf_1_1result.html">result</a>();</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  simdutf_really_inline <a class="code" href="structsimdutf_1_1result.html">result</a>() : error{error_code::SUCCESS}, count{0} {}</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  simdutf_really_inline <a class="code" href="structsimdutf_1_1result.html">result</a>(error_code, <span class="keywordtype">size_t</span>);</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  simdutf_really_inline <a class="code" href="structsimdutf_1_1result.html">result</a>(error_code _err, <span class="keywordtype">size_t</span> _pos) : error{_err}, count{_pos} {}</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;};</div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;}</div>
