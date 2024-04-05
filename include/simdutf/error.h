@@ -24,9 +24,9 @@ struct result {
   error_code error;
   size_t count;     // In case of error, indicates the position of the error. In case of success, indicates the number of code units validated/written.
 
-  simdutf_really_inline result();
+  simdutf_really_inline result() : error{error_code::SUCCESS}, count{0} {}
 
-  simdutf_really_inline result(error_code, size_t);
+  simdutf_really_inline result(error_code _err, size_t _pos) : error{_err}, count{_pos} {}
 };
 
 }
