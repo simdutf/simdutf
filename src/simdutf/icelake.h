@@ -30,10 +30,14 @@
 
 // To see why  (__BMI__) && (__LZCNT__) are not part of this next line, see
 // https://github.com/simdutf/simdutf/issues/1247
-#define SIMDUTF_CAN_ALWAYS_RUN_ICELAKE ((SIMDUTF_IMPLEMENTATION_ICELAKE) && (SIMDUTF_IS_X86_64) && (__AVX2__) && (SIMDUTF_HAS_AVX512F && \
+#if ((SIMDUTF_IMPLEMENTATION_ICELAKE) && (SIMDUTF_IS_X86_64) && (__AVX2__) && (SIMDUTF_HAS_AVX512F && \
                                          SIMDUTF_HAS_AVX512DQ && \
                                          SIMDUTF_HAS_AVX512VL && \
                                            SIMDUTF_HAS_AVX512VBMI2) && (!SIMDUTF_IS_32BITS))
+#define SIMDUTF_CAN_ALWAYS_RUN_ICELAKE 1
+#else
+#define SIMDUTF_CAN_ALWAYS_RUN_ICELAKE 0
+#endif
 
 #if SIMDUTF_IMPLEMENTATION_ICELAKE
 #if SIMDUTF_CAN_ALWAYS_RUN_ICELAKE
