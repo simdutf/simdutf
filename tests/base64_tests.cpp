@@ -98,6 +98,68 @@ TEST(decode_base64_cases) {
   }
 }
 
+TEST(complete_decode_base64_cases) {
+  std::vector<std::pair<std::string, std::string>> cases = {
+      {"abcd", " Y\fW\tJ\njZ A=\r= "},
+  };
+  for (std::pair<std::string, std::string> p : cases) {
+    std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
+        p.second.data(), p.second.size()));
+    simdutf::result r = implementation.base64_to_binary(
+        p.second.data(), p.second.size(), buffer.data());
+    ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+    ASSERT_EQUAL(r.count, p.first.size());
+    for (size_t i = 0; i < r.count; i++) {
+      ASSERT_EQUAL(buffer[i], p.first[i]);
+    }
+  }
+  printf(" --  ");
+  for (std::pair<std::string, std::string> p : cases) {
+    std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
+        p.second.data(), p.second.size()));
+    size_t bufsize = buffer.size();
+    simdutf::result r = simdutf::base64_to_binary_safe(
+        p.second.data(), p.second.size(), buffer.data(), bufsize);
+    ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+    ASSERT_EQUAL(bufsize, p.first.size());
+    for (size_t i = 0; i < bufsize; i++) {
+      ASSERT_EQUAL(buffer[i], p.first[i]);
+    }
+  }
+}
+
+TEST(complete_decode_base64url_cases) {
+  std::vector<std::pair<std::string, std::string>> cases = {
+      {"abcd", " Y\fW\tJ\njZ A=\r= "},
+  };
+  for (std::pair<std::string, std::string> p : cases) {
+    std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
+        p.second.data(), p.second.size()));
+    simdutf::result r = implementation.base64_to_binary(
+        p.second.data(), p.second.size(), buffer.data(), simdutf::base64_url);
+    ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+    ASSERT_EQUAL(r.count, p.first.size());
+    for (size_t i = 0; i < r.count; i++) {
+      ASSERT_EQUAL(buffer[i], p.first[i]);
+    }
+  }
+  printf(" --  ");
+  for (std::pair<std::string, std::string> p : cases) {
+    std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
+        p.second.data(), p.second.size()));
+    size_t bufsize = buffer.size();
+    simdutf::result r = simdutf::base64_to_binary_safe(
+        p.second.data(), p.second.size(), buffer.data(), bufsize, simdutf::base64_url);
+    ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+    ASSERT_EQUAL(bufsize, p.first.size());
+    for (size_t i = 0; i < bufsize; i++) {
+      ASSERT_EQUAL(buffer[i], p.first[i]);
+    }
+  }
+}
+
+
+
 TEST(encode_base64_cases) {
   std::vector<std::pair<std::string, std::string>> cases = {
       {"Hello, World!", "SGVsbG8sIFdvcmxkIQ=="},
