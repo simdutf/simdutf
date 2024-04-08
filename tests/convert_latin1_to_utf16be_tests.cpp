@@ -18,12 +18,9 @@ namespace {
   constexpr int trials = 1000;
 }
 
-TEST(convert_all_latin) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_all_latin) {
     // range for 2 UTF-16 bytes
-    simdutf::tests::helpers::RandomIntRanges random({
-                                                     {0x00, 0xff}}, 0);
+    simdutf::tests::helpers::RandomIntRanges random({{0x00, 0xff}}, seed);
 
     auto procedure = [&implementation](const char* latin1, size_t size, char16_t* utf16le) -> size_t {
       std::vector<char16_t> utf16be(size);  
@@ -39,9 +36,6 @@ TEST(convert_all_latin) {
       ASSERT_TRUE(test(procedure));
       ASSERT_TRUE(test.check_size(size_procedure));
     }
-  }
 }
 
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN

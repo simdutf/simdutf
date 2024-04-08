@@ -41,6 +41,26 @@ void name(const simdutf::implementation& impl) {            \
 static simdutf::test::register_test test_register_##name(#name, name); \
 void test_impl_##name(const simdutf::implementation& implementation)
 
+#define TEST_LOOP(trials, name)                             \
+void test_impl_##name(const simdutf::implementation& impl, uint32_t seed); \
+void name(const simdutf::implementation& impl) {            \
+  std::string title = #name;                                \
+  std::replace(title.begin(), title.end(), '_', ' ');       \
+  printf("Running '%s'... ", title.c_str()); fflush(stdout);\
+  for (size_t trial=0; trial < (trials); trial++) {         \
+    const uint32_t seed{1234 + uint32_t(trial)};            \
+    if ((trial % 100) == 0) {                               \
+      putchar('.');                                         \
+      fflush(stdout);                                       \
+    }                                                       \
+    test_impl_##name(impl, seed);                           \
+  }                                                         \
+  puts(" OK");                                              \
+}                                                           \
+static simdutf::test::register_test test_register_##name(#name, name); \
+void test_impl_##name(const simdutf::implementation& implementation, uint32_t seed)
+
+
 #define ASSERT_EQUAL(a, b) {                                                   \
   const auto expr = (a);                                                       \
   if (expr != b) {                                                             \
@@ -67,4 +87,9 @@ void test_impl_##name(const simdutf::implementation& implementation)
     printf("file %s:%d, function %s  \n", __FILE__, __LINE__, __func__); \
     exit(1);                                                \
   }                                                         \
+}
+
+#define TEST_MAIN                           \
+int main(int argc, char* argv[]) {          \
+  return simdutf::test::main(argc, argv);   \
 }

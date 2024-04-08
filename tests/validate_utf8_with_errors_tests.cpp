@@ -27,22 +27,17 @@ TEST(copyright) {
 }
 
 
-TEST(no_error) {
-  uint32_t seed{1234};
-  simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
-  for(size_t trial = 0; trial < num_trials; trial++) {
+TEST_LOOP(num_trials, no_error) {
+    simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
     const auto utf8{generator.generate(512, seed)};
     simdutf::result res = implementation.validate_utf8_with_errors(reinterpret_cast<const char*>(utf8.data()), utf8.size());
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
     ASSERT_EQUAL(res.count, utf8.size());
-  }
 }
 
 
-TEST(header_bits_error) {
-  uint32_t seed{1234};
-  simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
-  for(size_t trial = 0; trial < num_trials; trial++) {
+TEST_LOOP(num_trials, header_bits_error) {
+    simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
     auto utf8{generator.generate(512, seed)};
 
     for (int i = 0; i < 512; i++) {
@@ -55,13 +50,10 @@ TEST(header_bits_error) {
         utf8[i] = old;
       }
     }
-  }
 }
 
-TEST(too_short_error) {
-  uint32_t seed{1234};
-  simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
-  for(size_t trial = 0; trial < num_trials; trial++) {
+TEST_LOOP(num_trials, too_short_error) {
+    simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
     auto utf8{generator.generate(512, seed)};
     int leading_byte_pos = 0;
     for (int i = 0; i < 512; i++) {
@@ -76,13 +68,10 @@ TEST(too_short_error) {
         leading_byte_pos = i;
       }
     }
-  }
 }
 
-TEST(too_long_error) {
-  uint32_t seed{1234};
-  simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
-  for(size_t trial = 0; trial < num_trials; trial++) {
+TEST_LOOP(num_trials, too_long_error) {
+    simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
     auto utf8{generator.generate(512, seed)};
     for (int i = 1; i < 512; i++) {
       if(((utf8[i] & 0b11000000) != 0b10000000)) {  // Only process leading bytes by making them continuation bytes
@@ -94,13 +83,10 @@ TEST(too_long_error) {
         utf8[i] = old;
       }
     }
-  }
 }
 
-TEST(overlong_error) {
-  uint32_t seed{1234};
-  simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
-  for(size_t trial = 0; trial < num_trials; trial++) {
+TEST_LOOP(num_trials, overlong_error) {
+    simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
     auto utf8{generator.generate(512, seed)};
     for (int i = 1; i < 512; i++) {
       if(utf8[i] >= 0b11000000) { // Only non-ASCII leading bytes can be overlong
@@ -122,13 +108,10 @@ TEST(overlong_error) {
         utf8[i+1] = second_old;
       }
     }
-  }
 }
 
-TEST(too_large_error) {
-  uint32_t seed{1234};
-  simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
-  for(size_t trial = 0; trial < num_trials; trial++) {
+TEST_LOOP(num_trials, too_large_error) {
+    simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
     auto utf8{generator.generate(512, seed)};
     for (int i = 1; i < 512; i++) {
       if((utf8[i] & 0b11111000) == 0b11110000) { // Can only have too large error in 4-bytes case
@@ -139,13 +122,10 @@ TEST(too_large_error) {
         utf8[i] -= 0b100;
       }
     }
-  }
 }
 
-TEST(surrogate_error) {
-  uint32_t seed{1234};
-  simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
-  for(size_t trial = 0; trial < num_trials; trial++) {
+TEST_LOOP(num_trials, surrogate_error) {
+    simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
     auto utf8{generator.generate(512, seed)};
     for (int i = 1; i < 512; i++) {
       if((utf8[i] & 0b11110000) == 0b11100000) { // Can only have surrogate error in 3-bytes case
@@ -162,10 +142,6 @@ TEST(surrogate_error) {
         utf8[i+1] = second_old;
       }
     }
-  }
 }
 
-
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN

@@ -21,14 +21,9 @@ namespace {
 }
 
 
-
 // For invalid inputs, we expect the conversion to fail (return 0)
-TEST(convert_random_inputs) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    uint32_t seed{1234+uint32_t(trial)};
+TEST_LOOP(trials, convert_random_inputs) {
     simdutf::tests::helpers::RandomInt r(0x00, 0xffff, seed);
-
-    if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
 
     for (size_t size: input_size) {
       std::vector<char16_t> utf16(size);
@@ -44,18 +39,12 @@ TEST(convert_random_inputs) {
         ASSERT_EQUAL(actual_size,0);
       }
     }
-  }
 }
 
 
-TEST(convert_randoms) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    uint32_t seed = {1234 + uint32_t(trial)};
-
-    if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_randoms) {
     // range for 1, 2 or 3 UTF-8 bytes
-    simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0x00ff},
-                                                     }, seed);
+    simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0x00ff}}, seed);
 
     auto procedure = [&implementation](const char16_t* utf16, size_t size, char* latin1) -> size_t {
       return implementation.convert_utf16le_to_latin1(utf16, size, latin1);
@@ -68,16 +57,11 @@ TEST(convert_randoms) {
       ASSERT_TRUE(test(procedure));
       ASSERT_TRUE(test.check_size(size_procedure));
     }
-  }
 }
 
-TEST(convert_1_or_2_UTF16_bytes) {
-  int seed = {1234};
-  for(size_t trial = 0; trial < trials; trial ++) {
-    if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_1_or_2_UTF16_bytes) {
     // range for 1, 2 or 3 UTF-8 bytes
-    simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0x00ff},
-                                                     }, seed);
+    simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0x00ff}}, seed);
 
     auto procedure = [&implementation](const char16_t* utf16, size_t size, char* latin1) -> size_t {
       return implementation.convert_utf16le_to_latin1(utf16, size, latin1);
@@ -90,7 +74,6 @@ TEST(convert_1_or_2_UTF16_bytes) {
       ASSERT_TRUE(test(procedure));
       ASSERT_TRUE(test.check_size(size_procedure));
     }
-  }
 }
 
 TEST(convert_fails_if_input_too_large) {
@@ -124,6 +107,4 @@ TEST(convert_fails_if_input_too_large) {
   }
 }
 
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN

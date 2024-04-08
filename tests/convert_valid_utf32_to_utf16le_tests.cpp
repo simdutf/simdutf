@@ -18,12 +18,10 @@ namespace {
   constexpr int trials = 1000;
 }
 
-TEST(convert_into_2_UTF16_bytes) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_into_2_UTF16_bytes) {
     // range for 2 UTF-16 bytes
     simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0xd7ff},
-                                                     {0xe000, 0xffff}}, 0);
+                                                     {0xe000, 0xffff}}, seed);
 
     auto procedure = [&implementation](const char32_t* utf32, size_t size, char16_t* utf16) -> size_t {
       return implementation.convert_utf32_to_utf16le(utf32, size, utf16);
@@ -32,14 +30,11 @@ TEST(convert_into_2_UTF16_bytes) {
       transcode_utf32_to_utf16_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
     }
-  }
 }
 
-TEST(convert_into_4_UTF16_bytes) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_into_4_UTF16_bytes) {
     // range for 4 UTF-16 bytes
-    simdutf::tests::helpers::RandomIntRanges random({{0x10000, 0x10ffff}}, 0);
+    simdutf::tests::helpers::RandomIntRanges random({{0x10000, 0x10ffff}}, seed);
 
     auto procedure = [&implementation](const char32_t* utf32, size_t size, char16_t* utf16) -> size_t {
       return implementation.convert_utf32_to_utf16le(utf32, size, utf16);
@@ -48,16 +43,13 @@ TEST(convert_into_4_UTF16_bytes) {
       transcode_utf32_to_utf16_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
     }
-  }
 }
 
-TEST(convert_into_2_or_4_UTF16_bytes) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_into_2_or_4_UTF16_bytes) {
     // range for 2 or 4 UTF-16 bytes (all codepoints)
     simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0xd7ff},
                                                      {0xe000, 0xffff},
-                                                     {0x10000, 0x10ffff}}, 0);
+                                                     {0x10000, 0x10ffff}}, seed);
 
     auto procedure = [&implementation](const char32_t* utf32, size_t size, char16_t* utf16) -> size_t {
       return implementation.convert_utf32_to_utf16le(utf32, size, utf16);
@@ -66,9 +58,6 @@ TEST(convert_into_2_or_4_UTF16_bytes) {
       transcode_utf32_to_utf16_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
     }
-  }
 }
 
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN
