@@ -155,9 +155,9 @@ $(document).ready(function(){initNavTree('portability_8h_source.html',''); initR
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="preprocessor">#include &lt;iso646.h&gt;</span></div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160; </div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="preprocessor">#if defined(__x86_64__) || defined(_M_AMD64)</span></div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="preprocessor">#if (defined(__x86_64__) || defined(_M_AMD64)) &amp;&amp; !defined(_M_ARM64EC)</span></div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="preprocessor">#define SIMDUTF_IS_X86_64 1</span></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="preprocessor">#elif defined(__aarch64__) || defined(_M_ARM64)</span></div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="preprocessor">#elif defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC)</span></div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="preprocessor">#define SIMDUTF_IS_ARM64 1</span></div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="preprocessor">#elif defined(__PPC64__) || defined(_M_PPC64)</span></div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="comment">//#define SIMDUTF_IS_PPC64 1</span></div>
