@@ -79,9 +79,9 @@ TEST(issue_a73) {
       "\xad";
   size_t utf8size =
       implementation.convert_valid_utf16le_to_utf8(utf16, len, output.data());
-  ASSERT_TRUE(utf8size == expected_length);
+  ASSERT_EQUAL(utf8size, expected_length);
   for (size_t i = 0; i < expected_length; i++) {
-    ASSERT_TRUE(output[i] == expected[i]);
+    ASSERT_EQUAL(output[i], expected[i]);
   }
 }
 #endif
@@ -103,9 +103,9 @@ TEST(issue_a72) {
       "\xe9\x93\xa1\xe9\x87\xbf";
   char utf8[96];
   size_t utf8size = implementation.convert_valid_utf16le_to_utf8(utf16, 32, utf8);
-  ASSERT_TRUE(utf8size == 96);
+  ASSERT_EQUAL(utf8size, 96);
   for (size_t i = 0; i < 96; i++) {
-    ASSERT_TRUE(utf8[i] == expected[i]);
+    ASSERT_EQUAL(utf8[i], expected[i]);
   }
 }
 #endif

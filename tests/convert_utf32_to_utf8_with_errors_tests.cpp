@@ -154,9 +154,9 @@ TEST(special_cases) {
   ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
   size_t utf8size = res.count;
   for(size_t i = 0; i < utf8len; i++) {
-    ASSERT_TRUE(utf8[i] == expected[i]);
+    ASSERT_EQUAL(utf8[i], expected[i]);
   }
-  ASSERT_TRUE(utf8size == utf8len);
+  ASSERT_EQUAL(utf8size, utf8len);
 }
 
 TEST_MAIN

@@ -323,7 +323,7 @@ TEST(garbage_utf8_fuzz_with_errors) {
     // r.count: In case of error, indicates the position of the error in the input.
     // In case of success, indicates the number of code units validated/written.
     if(r.error == simdutf::SUCCESS) {
-      ASSERT_TRUE((r.count == expected_utf16_length));
+      ASSERT_EQUAL(r.count, expected_utf16_length);
     } else {
       ASSERT_TRUE(r.count <  length);
     }
@@ -331,7 +331,7 @@ TEST(garbage_utf8_fuzz_with_errors) {
               utf8_buffer.get(), length,
               utf16_buffer.get());
     if(r.error == simdutf::SUCCESS) {
-      ASSERT_TRUE((r.count == expected_utf16_length));
+      ASSERT_EQUAL(r.count, expected_utf16_length);
     } else {
       ASSERT_TRUE(r.count <  length);
     }
@@ -341,7 +341,7 @@ TEST(garbage_utf8_fuzz_with_errors) {
               utf8_buffer.get(), length,
               utf32_buffer.get());
     if(r.error == simdutf::SUCCESS) {
-      ASSERT_TRUE((r.count == expected_utf32_length));
+      ASSERT_EQUAL(r.count, expected_utf32_length);
     } else {
       ASSERT_TRUE(r.count <  length);
     }
@@ -369,13 +369,13 @@ TEST(garbage_utf8_fuzz) {
               utf8_buffer.get(), length,
               utf16_buffer.get());
     if(r != 0) {
-      ASSERT_TRUE((r == expected_utf16_length));
+      ASSERT_EQUAL(r, expected_utf16_length);
     }
     r = implementation.convert_utf8_to_utf16be(
               utf8_buffer.get(), length,
               utf16_buffer.get());
     if(r != 0) {
-      ASSERT_TRUE((r == expected_utf16_length));
+      ASSERT_EQUAL(r, expected_utf16_length);
     }
     size_t expected_utf32_length = implementation.utf32_length_from_utf8(utf8_buffer.get(), length);
     std::unique_ptr<char32_t[]> utf32_buffer(new char32_t[expected_utf32_length]);
@@ -383,7 +383,7 @@ TEST(garbage_utf8_fuzz) {
               utf8_buffer.get(), length,
               utf32_buffer.get());
     if(r != 0) {
-      ASSERT_TRUE((r == expected_utf32_length));
+      ASSERT_EQUAL(r, expected_utf32_length);
     }
   }
 }

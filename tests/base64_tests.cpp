@@ -177,7 +177,7 @@ TEST(encode_base64_cases) {
     size_t s = implementation.binary_to_base64(p.first.data(), p.first.size(),
                                                buffer.data());
     ASSERT_EQUAL(s, p.second.size());
-    ASSERT_TRUE(std::string(buffer.data(), buffer.size()) == p.second);
+    ASSERT_EQUAL(std::string(buffer.data(), buffer.size()), p.second);
   }
   printf(" -- ");
   for (std::pair<std::string, std::string> p : cases) {
@@ -233,7 +233,7 @@ TEST(encode_base64url_cases) {
       printf(" %.*s\n", (int)s, buffer.data());
       printf(" %.*s\n", (int)s, p.second.data());
     }
-    ASSERT_TRUE(std::string(buffer.data(), buffer.size()) == p.second);
+    ASSERT_EQUAL(std::string(buffer.data(), buffer.size()), p.second);
   }
   printf(" -- ");
   for (std::pair<std::string, std::string> p : cases) {
@@ -365,7 +365,7 @@ TEST(roundtrip_base64) {
       }
       size_t size = implementation.binary_to_base64(
           source.data(), source.size(), buffer.data());
-      ASSERT_TRUE(size == implementation.base64_length_from_binary(len));
+      ASSERT_EQUAL(size, implementation.base64_length_from_binary(len));
       simdutf::result r =
           implementation.base64_to_binary(buffer.data(), size, back.data());
       ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
@@ -410,7 +410,7 @@ TEST(roundtrip_base64_16) {
       for (size_t i = 0; i < buffer.size(); i++) {
         buffer16[i] = buffer[i];
       }
-      ASSERT_TRUE(size == implementation.base64_length_from_binary(len));
+      ASSERT_EQUAL(size, implementation.base64_length_from_binary(len));
       simdutf::result r =
           implementation.base64_to_binary(buffer16.data(), size, back.data());
       ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
@@ -451,7 +451,7 @@ TEST(roundtrip_base64url) {
       }
       size_t size = implementation.binary_to_base64(
           source.data(), source.size(), buffer.data(), simdutf::base64_url);
-      ASSERT_TRUE(size == implementation.base64_length_from_binary(len, simdutf::base64_url));
+      ASSERT_EQUAL(size, implementation.base64_length_from_binary(len, simdutf::base64_url));
       simdutf::result r =
           implementation.base64_to_binary(buffer.data(), size, back.data(), simdutf::base64_url);
       ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
@@ -496,7 +496,7 @@ TEST(roundtrip_base64url_16) {
       for (size_t i = 0; i < buffer.size(); i++) {
         buffer16[i] = buffer[i];
       }
-      ASSERT_TRUE(size == implementation.base64_length_from_binary(len, simdutf::base64_url));
+      ASSERT_EQUAL(size, implementation.base64_length_from_binary(len, simdutf::base64_url));
       simdutf::result r =
           implementation.base64_to_binary(buffer16.data(), size, back.data(), simdutf::base64_url);
       ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
@@ -751,7 +751,7 @@ TEST(roundtrip_base64_16_with_spaces) {
       for (size_t i = 0; i < buffer.size(); i++) {
         buffer16[i] = buffer[i];
       }
-      ASSERT_TRUE(size == implementation.base64_length_from_binary(len));
+      ASSERT_EQUAL(size, implementation.base64_length_from_binary(len));
       simdutf::result r = implementation.base64_to_binary(
           buffer16.data(), buffer16.size(), back.data());
       ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
@@ -843,7 +843,7 @@ TEST(aborted_safe_roundtrip_base64_16) {
         for (size_t i = 0; i < buffer.size(); i++) {
           buffer16[i] = buffer[i];
         }
-        ASSERT_TRUE(size == implementation.base64_length_from_binary(len));
+        ASSERT_EQUAL(size, implementation.base64_length_from_binary(len));
         size_t limited_length = len - offset; // intentionally too little
         back.resize(limited_length);
         back.shrink_to_fit();
@@ -945,7 +945,7 @@ TEST(aborted_safe_roundtrip_base64_16_with_spaces) {
         for (size_t i = 0; i < buffer.size(); i++) {
           buffer16[i] = buffer[i];
         }
-        ASSERT_TRUE(size == implementation.base64_length_from_binary(len));
+        ASSERT_EQUAL(size, implementation.base64_length_from_binary(len));
         size_t limited_length = len - offset; // intentionally too little
         back.resize(limited_length);
         back.shrink_to_fit();
