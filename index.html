@@ -573,7 +573,7 @@ API</h2>
 <div class="line"><span class="keywordtype">void</span> change_endianness_utf16(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, char16_t * output) noexcept;</div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md11"></a>
 Base64</h2>
-<p>We also support converting from <a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">WHATWG forgiving-base64</a> to binary, and back. In particular, you can convert base64 inputs which contain ASCII spaces to binary. We also support the base64 URL encoding alternative.</p>
+<p>We also support converting from <a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">WHATWG forgiving-base64</a> to binary, and back. In particular, you can convert base64 inputs which contain ASCII spaces to binary. We also support the base64 URL encoding alternative. These functions are part of the Node.js JavaScript runtime: in particular <code>atob</code> in Node.js relies on simdutf.</p>
 <p>Converting binary data to base64 always succeeds and is relatively simple: </p><div class="fragment"><div class="line"> {C++}</div>
 <div class="line">std::vector&lt;char&gt; buffer(simdutf::base64_length_from_binary(source.size()));</div>
 <div class="line">simdutf::binary_to_base64(source.data(), source.size(), buffer.data());</div>
