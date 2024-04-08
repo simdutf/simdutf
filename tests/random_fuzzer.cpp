@@ -2,7 +2,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
-#include <iostream>
 #include <random>
 #include <string>
 
@@ -17,8 +16,8 @@ static void print_input(const std::string& s, const simdutf::implementation *con
     printf("%02x ", (unsigned char)c);
   }
   printf("\n");
-  std::cout << "string length : " << s.size() << " bytes" << std::endl;
-  std::cout << "implementation->name() = " << e->name() << std::endl;
+  printf("string length: %llu\n", s.size());
+  printf("implementation->name() = %s", e->name().c_str());
 }
 
 extern "C" {
@@ -29,7 +28,7 @@ void dump_case() {
   }
   printf("\n");
   std::string name = "random_fuzzer_log.txt";
-  std::cout << "Dumping to: " << name << std::endl;
+  printf("Dumping to: %s\n", name.c_str());
   std::fstream log;
   log.open(name, std::ios::app);
   const size_t buf_size = 4 * input.size() + 3;
@@ -44,7 +43,7 @@ void dump_case() {
   buffer[buf_size - 2] = '"';
   buffer[buf_size - 1] = '\0';
   log << buffer;
-  log << std::endl;
+  log << '\n';
   delete[] buffer;
   log.close();
 }
@@ -585,12 +584,12 @@ bool fuzz_running(size_t N) {
 }
 
 int main(int argc, char*argv[]) {
-  std::cout << "testing the library on 'random garbage'" << std::endl;
+  puts("testing the library on 'random garbage'");
   for (auto &e : simdutf::get_available_implementations()) {
     if (!e->supported_by_runtime_system()) {
       continue;
     }
-    std::cout << "testing: " << e->name() << std::endl;
+    printf("testing: %s\n", e->name().c_str());
   }
   size_t N = 10000;
   if (argc == 2) {
@@ -601,11 +600,11 @@ int main(int argc, char*argv[]) {
         return EXIT_FAILURE;
     }
   }
-  std::cout << "Number of strings: " << N << std::endl;
+  printf("Number of strings: %llu\n", N);
   if (fuzz_running(N)) {
-    std::cout << "valid UTF8 = " << valid_utf8 << std::endl;
-    std::cout << "valid UTF16-BE = " << valid_utf16be << std::endl;
-    std::cout << "valid UTF16-LE = " << valid_utf16be << std::endl;
+    printf("valid UTF8 = %llu\n", valid_utf8);
+    printf("valid UTF16-BE = %llu\n", valid_utf16be);
+    printf("valid UTF16-LE = %llu\n", valid_utf16be);
     return EXIT_SUCCESS;
   } else {
     return EXIT_FAILURE;

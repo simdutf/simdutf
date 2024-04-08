@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <string>
 #include <list>
-#include <iostream>
 
 
 namespace simdutf { namespace test {
@@ -64,7 +63,7 @@ void test_impl_##name(const simdutf::implementation& implementation, uint32_t se
 #define ASSERT_EQUAL(a, b) {                                                   \
   const auto expr = (a);                                                       \
   if (expr != b) {                                                             \
-    std::cout << "\nExpected " << expr << " to be " << b << ".\n";             \
+    /*std::cout << "\nExpected " << expr << " to be " << b << ".\n";*/             \
     printf("%s \n",#a);                                                        \
     printf("file %s:%d, function %s  \n", __FILE__, __LINE__, __func__); \
     exit(1);                                                      \

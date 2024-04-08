@@ -6,7 +6,6 @@
 #include <tests/helpers/random_utf8.h>
 #include <tests/helpers/test.h>
 #include <fstream>
-#include <iostream>
 #include <memory>
 
 constexpr size_t num_trials = 1000;

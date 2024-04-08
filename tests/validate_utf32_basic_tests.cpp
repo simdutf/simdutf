@@ -6,7 +6,6 @@
 #include "helpers/random_utf32.h"
 #include <tests/helpers/test.h>
 #include <fstream>
-#include <iostream>
 #include <memory>
 
 TEST(validate_utf32__returns_true_for_valid_input) {

@@ -1,7 +1,6 @@
 #include "simdutf.h"
 
 #include <array>
-#include <iostream>
 
 #include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_int.h>
@@ -238,7 +237,6 @@ static void test_corrupt(T &implementation, uint32_t seed, simdutf::tests::helpe
   for (size_t i = 0; i < 10; i++) {
     auto UTF8 = gen_utf8.generate(1000);
     if (!implementation.validate_utf8((const char *)UTF8.data(), UTF8.size())) {
-      std::cerr << "bug" << std::endl;
       ASSERT_TRUE(false);
     }
     std::unique_ptr<char16_t[]> buffer(new char16_t[UTF8.size()]);
@@ -252,7 +250,6 @@ static void test_corrupt(T &implementation, uint32_t seed, simdutf::tests::helpe
       bool is_ok_basic =
           simdutf::tests::reference::validate_utf8((const char *)UTF8.data(), UTF8.size());
       if (is_ok != is_ok_basic) {
-        std::cerr << "bug" << std::endl;
         ASSERT_TRUE(false);
       }
       UTF8[corrupt] = restore;

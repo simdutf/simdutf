@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
 #include <random>
 #include <stdexcept>
 
@@ -14,6 +13,8 @@
 
 namespace {
 std::array<size_t, 7> input_size{8, 16, 12, 64, 68, 128, 256};
+
+constexpr size_t trials = 10000;
 } // namespace
 
 
@@ -26,15 +27,7 @@ TEST(boommmmm) {
   ASSERT_TRUE(implementation.detect_encodings(utf16le_bom, 2) == simdutf::encoding_type::UTF16_LE);
 }
 
-
-TEST(pure_utf8_ASCII) {
-  for (size_t trial = 0; trial < 10000; trial++) {
-    if ((trial % 100) == 0) {
-      std::cout << ".";
-      std::cout.flush();
-    }
-    uint32_t seed{1234};
-
+TEST_LOOP(trials, pure_utf8_ASCII) {
     simdutf::tests::helpers::random_utf8 random(seed, 1, 0, 0, 0);
 
     for (size_t size : input_size) {
@@ -45,17 +38,9 @@ TEST(pure_utf8_ASCII) {
                       size);
       ASSERT_TRUE(actual == expected);
     }
-  }
 }
 
-TEST(pure_utf16_ASCII) {
-  for (size_t trial = 0; trial < 10000; trial++) {
-    if ((trial % 100) == 0) {
-      std::cout << ".";
-      std::cout.flush();
-    }
-    uint32_t seed{1234};
-
+TEST_LOOP(trials, pure_utf16_ASCII) {
     simdutf::tests::helpers::RandomInt random(0,127, seed);
 
     for (size_t size : input_size) {
@@ -69,17 +54,9 @@ TEST(pure_utf16_ASCII) {
                       size);
       ASSERT_TRUE(actual == expected);
     }
-  }
 }
 
-TEST(pure_utf32_ASCII) {
-  for (size_t trial = 0; trial < 10000; trial++) {
-    if ((trial % 100) == 0) {
-      std::cout << ".";
-      std::cout.flush();
-    }
-    uint32_t seed{1234};
-
+TEST_LOOP(trials, pure_utf32_ASCII) {
     simdutf::tests::helpers::RandomInt random(0,0x7f, seed);
 
     for (size_t size : input_size) {
@@ -93,20 +70,12 @@ TEST(pure_utf32_ASCII) {
                       size);
       ASSERT_TRUE(actual == expected);
     }
-  }
 }
 
 #if SIMDUTF_IS_BIG_ENDIAN
 // todo: port this test for big-endian platforms.
 #else
-TEST(no_utf8_bytes_no_surrogates) {
-  for (size_t trial = 0; trial < 10000; trial++) {
-    if ((trial % 100) == 0) {
-      std::cout << ".";
-      std::cout.flush();
-    }
-    uint32_t seed{1234};
-
+TEST_LOOP(trials, no_utf8_bytes_no_surrogates) {
     simdutf::tests::helpers::RandomIntRanges random({{0x007f, 0xd800-1},
                                                      {0xe000, 0xffff}}, seed);
 
@@ -121,18 +90,10 @@ TEST(no_utf8_bytes_no_surrogates) {
                       size);
       ASSERT_TRUE(actual == expected);
     }
-  }
 }
 #endif
 
-TEST(two_utf8_bytes) {
-  for (size_t trial = 0; trial < 10000; trial++) {
-    if ((trial % 100) == 0) {
-      std::cout << ".";
-      std::cout.flush();
-    }
-    uint32_t seed{1234};
-
+TEST_LOOP(trials, two_utf8_bytes) {
     simdutf::tests::helpers::random_utf8 random(seed, 0, 1, 0, 0);
 
     for (size_t size : input_size) {
@@ -141,27 +102,19 @@ TEST(two_utf8_bytes) {
       auto actual = implementation.detect_encodings(
                       reinterpret_cast<const char *>(generated.first.data()),
                       size);
-      if(actual != expected) {
-        if((actual & simdutf::encoding_type::UTF8) == 0) {
-          std::cout << "failed to detect valid UTF-8." << std::endl;
+      if (actual != expected) {
+        if ((actual & simdutf::encoding_type::UTF8) == 0) {
+          puts("failed to detect valid UTF-8.");
         }
-        if((actual & simdutf::encoding_type::UTF16_LE) == 0) {
-          std::cout << "failed to detect valid UTF-16LE." << std::endl;
+        if ((actual & simdutf::encoding_type::UTF16_LE) == 0) {
+          puts("failed to detect valid UTF-16LE.");
         }
       }
-      ASSERT_TRUE(actual == expected);
+      ASSERT_EQUAL(actual, expected);
     }
-  }
 }
 
-TEST(utf_16_surrogates) {
-  for (size_t trial = 0; trial < 10000; trial++) {
-    if ((trial % 100) == 0) {
-      std::cout << ".";
-      std::cout.flush();
-    }
-    uint32_t seed{1234};
-
+TEST_LOOP(trials, utf_16_surrogates) {
     simdutf::tests::helpers::random_utf16 random(seed, 0, 1);
 
     for (size_t size : input_size) {
@@ -172,20 +125,12 @@ TEST(utf_16_surrogates) {
                       size);
       ASSERT_TRUE(actual == expected);
     }
-  }
 }
 
 #if SIMDUTF_IS_BIG_ENDIAN
 // todo: port this test for big-endian platforms.
 #else
-TEST(utf32_surrogates) {
-  for (size_t trial = 0; trial < 10000; trial++) {
-    if ((trial % 100) == 0) {
-      std::cout << ".";
-      std::cout.flush();
-    }
-    uint32_t seed{1234};
-
+TEST_LOOP(trials, utf32_surrogates) {
     simdutf::tests::helpers::RandomInt random_prefix(0x10000, 0x10ffff, seed);
     simdutf::tests::helpers::RandomInt random_suffix(0xd800, 0xdfff, seed);
 
@@ -200,7 +145,6 @@ TEST(utf32_surrogates) {
                       size);
       ASSERT_TRUE(actual == expected);
     }
-  }
 }
 #endif
 
@@ -208,14 +152,7 @@ TEST(utf32_surrogates) {
 #if SIMDUTF_IS_BIG_ENDIAN
 // todo: port this test for big-endian platforms.
 #else
-TEST(edge_surrogate) {
-  for (size_t trial = 0; trial < 10000; trial++) {
-    if ((trial % 100) == 0) {
-      std::cout << ".";
-      std::cout.flush();
-    }
-    uint32_t seed{1234};
-
+TEST_LOOP(trials, edge_surrogate) {
     simdutf::tests::helpers::RandomInt random(0x10000, 0x10ffff, seed);
 
     const size_t size = 512;
@@ -234,18 +171,10 @@ TEST(edge_surrogate) {
                     reinterpret_cast<const char *>(generated.data()),
                     size);
     ASSERT_TRUE(actual == expected);
-  }
 }
 #endif
 
-TEST(tail_utf8) {
-  for (size_t trial = 0; trial < 10000; trial++) {
-    if ((trial % 100) == 0) {
-      std::cout << ".";
-      std::cout.flush();
-    }
-    uint32_t seed{1234};
-
+TEST_LOOP(trials, tail_utf8) {
     simdutf::tests::helpers::random_utf8 random(seed, 0, 0, 1, 0);
     std::array<size_t, 5> multiples_three{12, 54, 66, 126, 252};
     for (size_t size : multiples_three) {
@@ -256,10 +185,6 @@ TEST(tail_utf8) {
                       size);
       ASSERT_TRUE(actual == expected);
     }
-  }
 }
 
-
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN

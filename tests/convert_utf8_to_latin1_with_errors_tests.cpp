@@ -1,7 +1,6 @@
 #include "simdutf.h"
 
 #include <array>
-#include <iostream>
 
 #include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_int.h>
@@ -19,9 +18,9 @@ namespace {
 
 void printByteInBinary(const char& byte) {
     for (int i = 7; i >= 0; --i) {
-        std::cout << ((byte >> i) & 1);
+        putchar(((byte >> i) & 1) ? '1' : '0');
     }
-    std::cout << std::endl;
+    putchar('\n');
 }
 
 

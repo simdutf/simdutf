@@ -2,7 +2,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <random>
-#include <iostream>
 #include <iomanip>
 
 #include <tests/helpers/random_utf8.h>
@@ -15,7 +14,7 @@ static void test_corrupt(T &implementation, uint32_t seed, simdutf::tests::helpe
   for (size_t i = 0; i < 10; i++) {
     auto UTF8 = gen_utf8.generate(1000);
     if (!implementation.validate_utf8((const char *)UTF8.data(), UTF8.size())) {
-      std::cerr << "bug" << std::endl;
+      puts("bug");
       ASSERT_TRUE(false);
     }
     std::uniform_int_distribution<size_t> distIdx{0, UTF8.size()-1};
@@ -28,7 +27,7 @@ static void test_corrupt(T &implementation, uint32_t seed, simdutf::tests::helpe
       bool is_ok_basic =
           simdutf::tests::reference::validate_utf8((const char *)UTF8.data(), UTF8.size());
       if (is_ok != is_ok_basic) {
-        std::cerr << "bug" << std::endl;
+        puts("bug");
         ASSERT_TRUE(false);
       }
       UTF8[corrupt] = restore;
@@ -63,7 +62,7 @@ TEST(brute_force) {
 
     auto UTF8 = gen_1_2_3_4.generate(rand() % 256);
     if (!implementation.validate_utf8((const char *)UTF8.data(), UTF8.size())) {
-      std::cerr << "bug" << std::endl;
+      puts("bug");
       ASSERT_TRUE(false);
     }
     for (size_t flip = 0; flip < 1000; ++flip) {
@@ -75,7 +74,7 @@ TEST(brute_force) {
       bool is_ok_basic =
           simdutf::tests::reference::validate_utf8((const char *)UTF8.data(), UTF8.size());
       if (is_ok != is_ok_basic) {
-        std::cerr << "bug" << std::endl;
+        puts("bug");
         ASSERT_TRUE(false);
       }
     }

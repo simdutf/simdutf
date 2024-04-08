@@ -1,7 +1,6 @@
 #include "simdutf.h"
 
 #include <array>
-#include <iostream>
 
 #include <tests/reference/validate_utf16.h>
 #include <tests/reference/decode_utf16.h>

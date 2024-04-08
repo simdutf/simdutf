@@ -10,14 +10,13 @@
 #include "helpers/random_utf16.h"
 #include <tests/helpers/test.h>
 #include <fstream>
-#include <iostream>
 #include <memory>
 
 TEST(issue92) {
   char16_t input[] = u"\u5d00\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041";
   size_t strlen = sizeof(input)/sizeof(char16_t)-1;
 #if SIMDUTF_IS_BIG_ENDIAN
-  std::cout << "Flipping bytes because you have big endian system." << std::endl;
+  puts("Flipping bytes because you have big endian system.");
   simdutf::change_endianness_utf16(input, strlen, input);
 #endif
   ASSERT_TRUE(implementation.validate_utf16le(input, strlen));
@@ -26,8 +25,7 @@ TEST(issue92) {
   size_t size = implementation.utf8_length_from_utf16le(input, strlen); // should be 26.
   std::unique_ptr<char[]> output_buffer{new char[size]};
   size_t  measured_size = implementation.convert_valid_utf16le_to_utf8(input, strlen, output_buffer.get());
-  std::cout << "Expect " << size << " got " << measured_size << std::endl;
-  ASSERT_TRUE(measured_size == size);
+  ASSERT_EQUAL(measured_size, size);
 }
 
 TEST(validate_utf16le__returns_true_for_valid_input__single_words) {
