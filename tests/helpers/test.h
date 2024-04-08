@@ -2,6 +2,7 @@
 
 #include "simdutf.h"
 #include <algorithm>
+#include <sstream>
 #include <string>
 #include <list>
 
@@ -60,14 +61,20 @@ static simdutf::test::register_test test_register_##name(#name, name); \
 void test_impl_##name(const simdutf::implementation& implementation, uint32_t seed)
 
 
-#define ASSERT_EQUAL(a, b) {                                                   \
-  const auto expr = (a);                                                       \
-  if (expr != b) {                                                             \
-    /*std::cout << "\nExpected " << expr << " to be " << b << ".\n";*/             \
-    printf("%s \n",#a);                                                        \
-    printf("file %s:%d, function %s  \n", __FILE__, __LINE__, __func__); \
-    exit(1);                                                      \
-  }                                                               \
+#define ASSERT_EQUAL(a, b) {                                                \
+  const auto lhs = (a);                                                     \
+  const auto rhs = (b);                                                     \
+  if (lhs != rhs) {                                                         \
+    std::stringstream lhs_str;                                              \
+    lhs_str << lhs;                                                         \
+    std::stringstream rhs_str;                                              \
+    rhs_str << rhs;                                                         \
+    printf("lhs: %s = %s\n", #a, lhs_str.str());                            \
+    printf("rhs: %s = %s\n", #b, rhs_str.str());                            \
+    printf("%s \n",#a);                                                     \
+    printf("file %s:%d, function %s  \n", __FILE__, __LINE__, __func__);    \
+    exit(1);                                                                \
+  }                                                                         \
 }
 
 #define ASSERT_TRUE(cond) {                                 \
