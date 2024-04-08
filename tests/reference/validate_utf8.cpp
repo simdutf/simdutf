@@ -47,7 +47,7 @@ simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept {
       code_point =
           (byte & 0b00000111) << 18 | (data[pos + 1] & 0b00111111) << 12 |
           (data[pos + 2] & 0b00111111) << 6 | (data[pos + 3] & 0b00111111);
-      if (code_point < 0xffff || 0x10ffff < code_point) {
+      if (code_point <= 0xffff || 0x10ffff < code_point) {
         return false;
       }
     } else {
