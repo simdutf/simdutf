@@ -1,11 +1,12 @@
 #include "simdutf.h"
 
 #include <array>
+#include <memory>
 
+#include <tests/reference/validate_utf8.h>
 #include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
-#include <memory>
 #include <tests/helpers/random_utf8.h>
 
 namespace {
@@ -15,9 +16,6 @@ namespace {
 
   constexpr size_t trials = 10000;
 }
-
-
-#include "reference/validate_utf8.h"
 
 TEST(convert_check_validation) {
   fflush(NULL);

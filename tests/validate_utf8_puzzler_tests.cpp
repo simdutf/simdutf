@@ -1,8 +1,5 @@
 #include "simdutf.h"
-#include <cstddef>
-#include <cstdint>
-#include <random>
-#include <iomanip>
+
 #include <tests/helpers/test.h>
 
 // This is an attempt at reproducing an issue with the utf8 fuzzer
@@ -22,6 +19,4 @@ TEST(puzzler2) {
   ASSERT_EQUAL(r.count, 62);
 }
 
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN

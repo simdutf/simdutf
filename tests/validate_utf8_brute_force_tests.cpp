@@ -1,8 +1,4 @@
 #include "simdutf.h"
-#include <cstddef>
-#include <cstdint>
-#include <random>
-#include <iomanip>
 
 #include <tests/helpers/random_utf8.h>
 #include <tests/reference/validate_utf8.h>
@@ -81,6 +77,4 @@ TEST(brute_force) {
   }
 }
 
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN

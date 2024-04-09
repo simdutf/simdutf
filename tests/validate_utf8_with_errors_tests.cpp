@@ -1,12 +1,7 @@
 #include "simdutf.h"
 
-#include <array>
-#include <algorithm>
-
 #include <tests/helpers/random_utf8.h>
 #include <tests/helpers/test.h>
-#include <fstream>
-#include <memory>
 
 constexpr size_t num_trials = 1000;
 
@@ -33,7 +28,6 @@ TEST_LOOP(num_trials, no_error) {
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
     ASSERT_EQUAL(res.count, utf8.size());
 }
-
 
 TEST_LOOP(num_trials, header_bits_error) {
     simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};

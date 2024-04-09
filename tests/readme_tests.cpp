@@ -157,5 +157,4 @@ TEST(error_location_badutf8_transcoding) {
   ASSERT_EQUAL(res.count, 3);
 }
 
-
-int main(int argc, char *argv[]) { return simdutf::test::main(argc, argv); }
+TEST_MAIN

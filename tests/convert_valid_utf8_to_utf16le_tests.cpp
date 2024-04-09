@@ -5,11 +5,11 @@
 #endif
 
 #include <array>
+#include <memory>
 
 #include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
-#include <memory>
 
 namespace {
   std::array<size_t, 9> input_size{7, 12, 16, 64, 67, 128, 256, 511, 1000};

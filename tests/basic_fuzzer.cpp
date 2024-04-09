@@ -1,10 +1,7 @@
 #include "simdutf.h"
 
-#include <array>
 #include <fstream>
-#include <stdexcept>
 #include <random>
-#include <string>
 #include <memory>
 
 #include <tests/reference/encode_utf8.h>

@@ -5,17 +5,14 @@
 #endif
 
 #include <array>
-#include <algorithm>
 
-#include "helpers/random_utf16.h"
+#include <tests/helpers/random_utf16.h>
 #include <tests/helpers/test.h>
-#include <fstream>
-#include <memory>
 
-TEST(validate_utf16be__returns_true_for_valid_input__single_words) {
-  uint32_t seed{1234};
-  simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
-  for(size_t trial = 0; trial < 1000; trial++) {
+constexpr size_t trials = 1000;
+
+TEST_LOOP(trials, validate_utf16be__returns_true_for_valid_input__single_words) {
+    simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
     const auto utf16{generator.generate(512, seed)};
     std::vector<char16_t> flipped(utf16.size());
     implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
@@ -23,13 +20,10 @@ TEST(validate_utf16be__returns_true_for_valid_input__single_words) {
     simdutf::result res = implementation.validate_utf16be_with_errors(reinterpret_cast<const char16_t*>(flipped.data()), flipped.size());
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
     ASSERT_EQUAL(res.count, utf16.size());
-  }
 }
 
-TEST(validate_utf16be__returns_true_for_valid_input__surrogate_pairs_short) {
-  uint32_t seed{1234};
-  simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
-  for(size_t trial = 0; trial < 1000; trial++) {
+TEST_LOOP(trials, validate_utf16be__returns_true_for_valid_input__surrogate_pairs_short) {
+    simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
     const auto utf16{generator.generate(8)};
     std::vector<char16_t> flipped(utf16.size());
     implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
@@ -37,14 +31,11 @@ TEST(validate_utf16be__returns_true_for_valid_input__surrogate_pairs_short) {
     simdutf::result res = implementation.validate_utf16be_with_errors(reinterpret_cast<const char16_t*>(flipped.data()), flipped.size());
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
     ASSERT_EQUAL(res.count, utf16.size());
-  }
 }
 
 
-TEST(validate_utf16be__returns_true_for_valid_input__surrogate_pairs) {
-  uint32_t seed{1234};
-  simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
-  for(size_t trial = 0; trial < 1000; trial++) {
+TEST_LOOP(trials, validate_utf16be__returns_true_for_valid_input__surrogate_pairs) {
+    simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
     const auto utf16{generator.generate(512)};
     std::vector<char16_t> flipped(utf16.size());
     implementation.change_endianness_utf16(utf16.data(), utf16.size(), flipped.data());
@@ -52,7 +43,6 @@ TEST(validate_utf16be__returns_true_for_valid_input__surrogate_pairs) {
     simdutf::result res = implementation.validate_utf16be_with_errors(reinterpret_cast<const char16_t*>(flipped.data()), flipped.size());
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
     ASSERT_EQUAL(res.count, utf16.size());
-  }
 }
 
 // mixed = either 16-bit or 32-bit codewords
@@ -91,10 +81,8 @@ TEST(validate_utf16be__returns_true_for_empty_string) {
 #if SIMDUTF_IS_BIG_ENDIAN
 // todo: port this test for big-endian platforms.
 #else
-TEST(validate_utf16be__returns_false_when_input_has_wrong_first_word_value) {
-  uint32_t seed{1234};
-  simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
-  for(size_t trial = 0; trial < 10; trial++) {
+TEST_LOOP(10, validate_utf16be__returns_false_when_input_has_wrong_first_word_value) {
+    simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
     auto utf16{generator.generate(128)};
     const size_t len = utf16.size();
 
@@ -113,7 +101,6 @@ TEST(validate_utf16be__returns_false_when_input_has_wrong_first_word_value) {
         flipped[i] = old;
       }
     }
-  }
 }
 #endif
 
@@ -188,6 +175,4 @@ TEST(validate_utf16be__returns_false_when_input_is_truncated) {
 }
 #endif
 
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN

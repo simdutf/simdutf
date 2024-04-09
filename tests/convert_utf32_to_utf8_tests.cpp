@@ -3,8 +3,6 @@
 #include <array>
 #include <memory>
 
-#include <tests/reference/validate_utf32.h>
-#include <tests/reference/decode_utf32.h>
 #include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>

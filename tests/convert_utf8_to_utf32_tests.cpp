@@ -2,7 +2,7 @@
 
 #include <array>
 #include <memory>
-#include <string>
+
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
 #include <tests/helpers/transcode_test_base.h>

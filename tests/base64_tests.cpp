@@ -2,10 +2,8 @@
 
 #include <array>
 
-#include <memory>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
-#include <tests/helpers/transcode_test_base.h>
 
 // We may disable base64url tests by commenting out this next line.
 #define SIMDUTF_BASE64URL_TESTS 1
