@@ -33,3 +33,5 @@ set(CMAKE_CROSSCOMPILING_EMULATOR "${RISCV_SPIKE};--isa=${RISCV_ISA};${RISCV_PK}
 
 # Reason: pk expects static linkage
 set(CMAKE_EXE_LINKER_FLAGS "-static")
+
+add_compile_definitions(RUN_IN_SPIKE_SIMULATOR)

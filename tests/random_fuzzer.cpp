@@ -584,6 +584,10 @@ bool fuzz_running(size_t N) {
 }
 
 int main(int argc, char*argv[]) {
+#ifdef RUN_IN_SPIKE_SIMULATOR
+  puts("Skipping, fuzzer cannot be run under Spike simulator.");
+  return EXIT_FAILURE;
+#endif
   puts("testing the library on 'random garbage'");
   for (auto &e : simdutf::get_available_implementations()) {
     if (!e->supported_by_runtime_system()) {

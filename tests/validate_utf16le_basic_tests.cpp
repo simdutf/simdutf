@@ -179,10 +179,14 @@ TEST(validate_utf16le__returns_false_when_input_is_truncated) {
 //t odo: port this test for big-endian platforms.
 #else
 TEST(validate_utf16le__extensive_tests) {
+#ifdef RUN_IN_SPIKE_SIMULATOR
+  printf("skipping, cannot be run under Spike");
+  return;
+#endif
   const std::string path{"validate_utf16_testcases.txt"};
   std::ifstream file{path};
   if (not file) {
-    printf("File '%s' cannot be open, skipping test\n", path.c_str());
+    printf("skipping, file '%s' cannot be open", path.c_str());
     return;
   }
 
