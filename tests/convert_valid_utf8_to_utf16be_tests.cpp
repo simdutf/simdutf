@@ -16,9 +16,7 @@ namespace {
   constexpr size_t trials = 10000;
 }
 
-TEST(convert_pure_ASCII) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_pure_ASCII) {
     size_t counter = 0;
     auto generator = [&counter]() -> uint32_t {
       return counter++ & 0x7f;
@@ -35,13 +33,9 @@ TEST(convert_pure_ASCII) {
       transcode_utf8_to_utf16_test_base test(generator, size);
       ASSERT_TRUE(test(procedure));
     }
-  }
 }
 
-TEST(convert_1_or_2_UTF8_bytes) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    uint32_t seed{1234+uint32_t(trial)};
-    if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_1_or_2_UTF8_bytes) {
     simdutf::tests::helpers::RandomInt random(0x0000, 0x07ff, seed); // range for 1 or 2 UTF-8 bytes
 
     auto procedure = [&implementation](const char* utf8, size_t size, char16_t* utf16le) -> size_t {
@@ -55,13 +49,9 @@ TEST(convert_1_or_2_UTF8_bytes) {
       transcode_utf8_to_utf16_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
     }
-  }
 }
 
-TEST(convert_1_or_2_or_3_UTF8_bytes) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    uint32_t seed{1234+uint32_t(trial)};
-    if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_1_or_2_or_3_UTF8_bytes) {
     // range for 1, 2 or 3 UTF-8 bytes
     simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0xd7ff},
                                                      {0xe000, 0xffff}}, seed);
@@ -77,13 +67,9 @@ TEST(convert_1_or_2_or_3_UTF8_bytes) {
       transcode_utf8_to_utf16_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
     }
-  }
 }
 
-TEST(convert_3_or_4_UTF8_bytes) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    uint32_t seed{1234+uint32_t(trial)};
-    if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_3_or_4_UTF8_bytes) {
     simdutf::tests::helpers::RandomIntRanges random({{0x0800, 0xd800-1},
                                                      {0xe000, 0x10ffff}}, seed); // range for 3 or 4 UTF-8 bytes
 
@@ -98,7 +84,6 @@ TEST(convert_3_or_4_UTF8_bytes) {
       transcode_utf8_to_utf16_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
     }
-  }
 }
 
 TEST(special_cases) {
@@ -112,6 +97,4 @@ TEST(special_cases) {
   ASSERT_TRUE(memcmp((const char*)utf16.get(), expected, 2) == 0);
 }
 
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN

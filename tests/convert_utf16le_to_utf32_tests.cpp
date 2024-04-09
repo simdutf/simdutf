@@ -18,14 +18,12 @@ namespace {
   constexpr int trials = 1000;
 }
 
-TEST(convert_2_UTF16_bytes) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_2_UTF16_bytes) {
     // range for 1, 2 or 3 UTF-8 bytes
     simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0x007f},
                                                      {0x0080, 0x07ff},
                                                      {0x0800, 0xd7ff},
-                                                     {0xe000, 0xffff}}, 0);
+                                                     {0xe000, 0xffff}}, seed);
 
     auto procedure = [&implementation](const char16_t* utf16, size_t size, char32_t* utf32) -> size_t {
       return implementation.convert_utf16le_to_utf32(utf16, size, utf32);
@@ -38,14 +36,11 @@ TEST(convert_2_UTF16_bytes) {
       ASSERT_TRUE(test(procedure));
       ASSERT_TRUE(test.check_size(size_procedure));
     }
-  }
 }
 
-TEST(convert_with_surrogates) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_with_surrogates) {
     simdutf::tests::helpers::RandomIntRanges random({{0x0800, 0xd800-1},
-                                                     {0xe000, 0x10ffff}}, 0);
+                                                     {0xe000, 0x10ffff}}, seed);
 
     auto procedure = [&implementation](const char16_t* utf16, size_t size, char32_t* utf32) -> size_t {
       return implementation.convert_utf16le_to_utf32(utf16, size, utf32);
@@ -58,7 +53,6 @@ TEST(convert_with_surrogates) {
       ASSERT_TRUE(test(procedure));
       ASSERT_TRUE(test.check_size(size_procedure));
     }
-  }
 }
 
 #if SIMDUTF_IS_BIG_ENDIAN
@@ -255,6 +249,4 @@ TEST(all_possible_8_codepoint_combinations) {
 }
 #endif
 
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN

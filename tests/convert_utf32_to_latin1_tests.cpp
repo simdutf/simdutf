@@ -17,14 +17,9 @@ namespace {
 }
 
 
-
 // For invalid inputs, we expect the conversion to fail (return 0)
-TEST(convert_random_inputs) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    uint32_t seed{1234+uint32_t(trial)};
+TEST_LOOP(trials, convert_random_inputs) {
     simdutf::tests::helpers::RandomInt r(0x00, 0xffffffff, seed);
-
-    if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
 
     for (size_t size: input_size) {
       std::vector<char32_t> utf32(size);
@@ -40,7 +35,6 @@ TEST(convert_random_inputs) {
         ASSERT_EQUAL(0, actual_size);
       }
     }
-  }
 }
 
 TEST(convert_latin1_only) {
@@ -62,9 +56,7 @@ TEST(convert_latin1_only) {
   }
 }
 
-TEST(convert_fails_if_input_too_large) {
-  for (size_t j = 0; j < trials; j++) { 
-    uint32_t seed = static_cast<uint32_t>(j);
+TEST_LOOP(trials, convert_fails_if_input_too_large) {
     simdutf::tests::helpers::RandomInt generator(0xFF, 0xffffffff, seed);
 
     auto procedure = [&implementation](const char32_t* utf32, size_t size, char* latin1) -> size_t {
@@ -82,10 +74,6 @@ TEST(convert_fails_if_input_too_large) {
         test.input_utf32[i] = old; 
       }
     }
-    
-  }
 }
 
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN

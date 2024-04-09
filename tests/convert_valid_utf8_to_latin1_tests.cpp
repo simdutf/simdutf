@@ -16,9 +16,7 @@ namespace {
   constexpr size_t trials = 10000;
 }
 
-TEST(convert_pure_ASCII) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_pure_ASCII) {
     size_t counter = 0;
     auto generator = [&counter]() -> uint8_t {
       return counter++ & 0x7f;
@@ -36,13 +34,9 @@ TEST(convert_pure_ASCII) {
       ASSERT_TRUE(test(procedure));
       ASSERT_TRUE(test.check_size(size_procedure));
     }
-  }
 } 
 
-TEST(convert_1_or_2_valid_UTF8_bytes_to_latin1) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    uint32_t seed{1234+uint32_t(trial)};
-    if((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_1_or_2_valid_UTF8_bytes_to_latin1) {
     simdutf::tests::helpers::RandomInt random(0x0000, 0x0ff, seed); // range for 1 or 2 UTF-8 bytes
 
     auto procedure = [&implementation](const char* utf8, size_t size, char* latin1) -> size_t {
@@ -56,9 +50,6 @@ TEST(convert_1_or_2_valid_UTF8_bytes_to_latin1) {
       ASSERT_TRUE(test(procedure));
       ASSERT_TRUE(test.check_size(size_procedure));
     }
-  }
 }
 
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN
