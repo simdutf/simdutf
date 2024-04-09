@@ -154,3 +154,46 @@ if(is_top_project)
 endif()
 
 # ----
+
+
+
+if(NOT SIMDUTF_SANITIZE)
+  find_program(GREP grep)
+  find_program(NM nm)
+  if((NOT GREP) OR (NOT NM))
+    message("grep and nm are unavailable on this system.")
+  else()
+    add_test(
+      NAME "avoid_abort"
+      # Under FreeBSD, the __cxa_guard_abort symbol may appear but it is fine.
+      # So we want to look for <space><possibly _>abort as a test.
+      COMMAND sh -c "${NM}  $<TARGET_FILE_NAME:simdutf> |  ${GREP} ' _*abort' || exit 0  && exit 1"
+      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    )
+    add_test(
+      NAME "avoid_cout"
+      COMMAND sh -c "${NM}  $<TARGET_FILE_NAME:simdutf> |  ${GREP} ' _*cout' || exit 0  && exit 1"
+      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    )
+    add_test(
+      NAME "avoid_cerr"
+      COMMAND sh -c "${NM}  $<TARGET_FILE_NAME:simdutf> |  ${GREP} ' _*cerr' || exit 0  && exit 1"
+      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    )
+    add_test(
+      NAME "avoid_printf"
+      COMMAND sh -c "${NM}  $<TARGET_FILE_NAME:simdutf> |  ${GREP} ' _*printf' || exit 0  && exit 1"
+      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    )
+    add_test(
+      NAME "avoid_stdout"
+      COMMAND sh -c "${NM}  $<TARGET_FILE_NAME:simdutf> |  ${GREP} stdout || exit 0 && exit 1"
+      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    )
+    add_test(
+      NAME "avoid_stderr"
+      COMMAND sh -c "${NM}  $<TARGET_FILE_NAME:simdutf> |  ${GREP} stderr || exit 0 && exit 1"
+      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    )
+  endif()
+endif()
