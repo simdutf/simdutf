@@ -360,7 +360,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <div class="textblock"><p>An implementation of simdutf for a particular CPU architecture. </p>
 <p>Also used to maintain the currently active implementation. The active implementation is automatically initialized on first use to the most advanced implementation supported by the host. </p>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01533">1533</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01540">1540</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="afd306a0bc3e221964af3f31a64784b12"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afd306a0bc3e221964af3f31a64784b12">&#9670;&nbsp;</a></span>autodetect_encoding()</h2>
@@ -965,7 +965,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type simdutf::error containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char written if successful. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if input is not a valid UTF-16BE string or if it cannot be represented as Latin1 </dd></dl>
 
 </div>
 </div>
@@ -1010,6 +1010,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 </div><div class="memdoc">
 
 <p>Convert possibly broken UTF-16BE string into Latin1 string. </p>
+<p>If the string cannot be represented as Latin1, an error is returned.</p>
 <p>During the conversion also validation of the input string is done. This function is suitable to work with inputs from untrusted sources. This function is not BOM-aware.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -1294,7 +1295,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if input is not a valid UTF-16LE string </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written code units; 0 if input is not a valid UTF-16LE string or if it cannot be represented as Latin1 </dd></dl>
 
 </div>
 </div>
@@ -1339,6 +1340,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 </div><div class="memdoc">
 
 <p>Convert possibly broken UTF-16LE string into Latin1 string. </p>
+<p>If the string cannot be represented as Latin1, an error is returned.</p>
 <p>During the conversion also validation of the input string is done. This function is suitable to work with inputs from untrusted sources. This function is not BOM-aware.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -1668,6 +1670,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 </div><div class="memdoc">
 
 <p>Convert possibly broken UTF-32 string into Latin1 string and stop on error. </p>
+<p>If the string cannot be represented as Latin1, an error is returned.</p>
 <p>During the conversion also validation of the input string is done. This function is suitable to work with inputs from untrusted sources.</p>
 <p>This function is not BOM-aware.</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -2062,7 +2065,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the number of written char; 0 if the input was not valid UTF-8 string </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>the number of written char; 0 if the input was not valid UTF-8 string or if it cannot be represented as Latin1 </dd></dl>
 
 </div>
 </div>
@@ -2107,6 +2110,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 </div><div class="memdoc">
 
 <p>Convert possibly broken UTF-8 string into latin1 string with errors. </p>
+<p>If the string cannot be represented as Latin1, an error code is returned.</p>
 <p>During the conversion also validation of the input string is done. This function is suitable to work with inputs from untrusted sources.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -3382,7 +3386,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" &lt;&lt; impl-&gt;description() &lt;&lt; ")" &lt;&lt; endl;
 </pre> <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01554">1554</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01561">1561</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3637,7 +3641,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" &lt;&lt; impl-&gt;description() &lt;&lt; ")" &lt;&lt; endl;
 </pre> <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01544">1544</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01551">1551</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
