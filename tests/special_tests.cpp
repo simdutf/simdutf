@@ -83,7 +83,7 @@ TEST(special_cases_utf8_utf32_roundtrip) {
         source.c_str(), source.size(), utf32_valid_output.get());
     ASSERT_EQUAL(utf32words_valid, utf32words);
     for (size_t z = 0; z < utf32words_valid; z++) {
-      ASSERT_EQUAL(utf32_valid_output.get()[z], utf32_output.get()[z]);
+      ASSERT_EQUAL(uint32_t(utf32_valid_output.get()[z]), uint32_t (utf32_output.get()[z]));
     }
 
     // convert it back:
