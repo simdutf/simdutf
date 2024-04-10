@@ -1,7 +1,6 @@
 #include "simdutf.h"
 
 #include <array>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <tests/helpers/random_int.h>
@@ -173,9 +172,7 @@ TEST(convert_invalid_special_cases) {
       1024);
 
   // invalid input!!!
-  size_t expected_utf32words =
-      implementation.utf32_length_from_utf8(source.data(), source.size());
-  std::cout << "expected output " << expected_utf32words << std::endl;
+  size_t expected_utf32words = implementation.utf32_length_from_utf8(source.data(), source.size());
   std::unique_ptr<char32_t[]> utf32_output{new char32_t[expected_utf32words]};
   size_t utf32words = implementation.convert_utf8_to_utf32(
       source.c_str(), source.size(), utf32_output.get());

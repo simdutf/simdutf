@@ -2,7 +2,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <random>
-#include <iostream>
 #include <iomanip>
 #include <tests/helpers/test.h>
 

@@ -10,7 +10,6 @@
 #include "helpers/random_utf16.h"
 #include <tests/helpers/test.h>
 #include <fstream>
-#include <iostream>
 #include <memory>
 
 TEST(validate_utf16be__returns_true_for_valid_input__single_words) {

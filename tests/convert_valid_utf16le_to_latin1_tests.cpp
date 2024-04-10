@@ -1,7 +1,6 @@
 #include "simdutf.h"
 
 #include <array>
-#include <iostream>
 
 #include <tests/reference/validate_utf16.h>
 #include <tests/reference/decode_utf16.h>
@@ -34,6 +33,5 @@ TEST_LOOP(trials, convert_2_UTF16_bytes) {
       ASSERT_TRUE(test.check_size(size_procedure));
     }
 }
-
 
 TEST_MAIN

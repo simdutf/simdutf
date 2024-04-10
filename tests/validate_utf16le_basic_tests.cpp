@@ -10,14 +10,13 @@
 #include "helpers/random_utf16.h"
 #include <tests/helpers/test.h>
 #include <fstream>
-#include <iostream>
 #include <memory>
 
 TEST(issue92) {
   char16_t input[] = u"\u5d00\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041\u0041";
   size_t strlen = sizeof(input)/sizeof(char16_t)-1;
 #if SIMDUTF_IS_BIG_ENDIAN
-  std::cout << "Flipping bytes because you have big endian system." << std::endl;
+  puts("Flipping bytes because you have big endian system.");
   simdutf::change_endianness_utf16(input, strlen, input);
 #endif
   ASSERT_TRUE(implementation.validate_utf16le(input, strlen));
@@ -179,10 +178,14 @@ TEST(validate_utf16le__returns_false_when_input_is_truncated) {
 //t odo: port this test for big-endian platforms.
 #else
 TEST(validate_utf16le__extensive_tests) {
+#ifdef RUN_IN_SPIKE_SIMULATOR
+  printf("skipping, cannot be run under Spike");
+  return;
+#endif
   const std::string path{"validate_utf16_testcases.txt"};
   std::ifstream file{path};
   if (not file) {
-    printf("File '%s' cannot be open, skipping test\n", path.c_str());
+    printf("skipping, file '%s' cannot be open", path.c_str());
     return;
   }
 

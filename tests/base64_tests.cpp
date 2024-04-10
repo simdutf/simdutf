@@ -1,7 +1,6 @@
 #include "simdutf.h"
 
 #include <array>
-#include <iostream>
 
 #include <memory>
 #include <tests/helpers/random_int.h>
@@ -374,8 +373,7 @@ TEST(roundtrip_base64) {
         printf("=====input size %zu\n", len);
         for (size_t i = 0; i < len; i++) {
           if (back[i] != source[i]) {
-            std::cerr << "Mismatch at position " << i << " trial " << trial
-                      << std::endl;
+            printf("Mismatch at position %llu trial %llu\n", i, trial);
           }
           printf("%zu: %02x %02x\n", i, uint8_t(back[i]), uint8_t(source[i]));
         }
@@ -419,8 +417,7 @@ TEST(roundtrip_base64_16) {
         printf("=====input size %zu\n", len);
         for (size_t i = 0; i < len; i++) {
           if (back[i] != source[i]) {
-            std::cerr << "Mismatch at position " << i << " trial " << trial
-                      << std::endl;
+            printf("Mismatch at position %llu trial %llu\n", i, trial);
           }
           printf("%zu: %02x %02x\n", i, uint8_t(back[i]), uint8_t(source[i]));
         }
@@ -460,8 +457,7 @@ TEST(roundtrip_base64url) {
         printf("=====input size %zu\n", len);
         for (size_t i = 0; i < len; i++) {
           if (back[i] != source[i]) {
-            std::cerr << "Mismatch at position " << i << " trial " << trial
-                      << std::endl;
+            printf("Mismatch at position %llu trial %llu\n", i, trial);
           }
           printf("%zu: %02x %02x\n", i, uint8_t(back[i]), uint8_t(source[i]));
         }
@@ -505,8 +501,7 @@ TEST(roundtrip_base64url_16) {
         printf("=====input size %zu\n", len);
         for (size_t i = 0; i < len; i++) {
           if (back[i] != source[i]) {
-            std::cerr << "Mismatch at position " << i << " trial " << trial
-                      << std::endl;
+            printf("Mismatch at position %llu trial %llu\n", i, trial);
           }
           printf("%zu: %02x %02x\n", i, uint8_t(back[i]), uint8_t(source[i]));
         }
@@ -760,8 +755,7 @@ TEST(roundtrip_base64_16_with_spaces) {
         printf("=====input size %zu\n", len);
         for (size_t i = 0; i < len; i++) {
           if (back[i] != source[i]) {
-            std::cerr << "Mismatch at position " << i << " trial " << trial
-                      << std::endl;
+            printf("Mismatch at position %llu trial %llu\n", i, trial);
           }
           printf("%zu: %02x %02x\n", i, uint8_t(back[i]), uint8_t(source[i]));
         }
@@ -1029,8 +1023,7 @@ TEST(readme_test) {
     simdutf::result r = simdutf::base64_to_binary(base64.data() + pos, count,
                                                   back.data() + outpos);
     if (r.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {
-      std::cerr << "Invalid base64 character at position " << pos + r.count
-                << std::endl;
+      printf("Invalid base64 character at position %llu\n", pos + r.count);
       return;
     }
     // If we arrived at the end of the base64 input, we must check that the
@@ -1038,8 +1031,7 @@ TEST(readme_test) {
     // remainder of 0, 2 or 3.
     if (count + pos == base64.size() &&
         r.error == simdutf::error_code::BASE64_INPUT_REMAINDER) {
-      std::cerr << "The base64 input contained an invalid number of characters "
-                << std::endl;
+      puts("The base64 input contained an invalid number of characters");
     }
     // If we are not at then end, we may have to reprocess either 1, 2 or 3
     // bytes, and to drop the last 0, 2 or 3 bytes decoded.

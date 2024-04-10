@@ -5,7 +5,6 @@
 #endif
 
 #include <array>
-#include <iostream>
 
 #include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_int.h>

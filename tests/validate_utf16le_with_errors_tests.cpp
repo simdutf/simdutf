@@ -10,7 +10,6 @@
 #include "helpers/random_utf16.h"
 #include <tests/helpers/test.h>
 #include <fstream>
-#include <iostream>
 #include <memory>
 
 
@@ -188,6 +187,10 @@ TEST(validate_utf16le_with_errors__returns_error_when_input_is_truncated) {
 // todo: port this test for big-endian platforms.
 #else
 TEST(validate_utf16le_with_errors__extensive_tests) {
+#ifdef RUN_IN_SPIKE_SIMULATOR
+  printf("skipping, cannot be run under Spike");
+  return;
+#endif
   const std::string path{"validate_utf16_testcases.txt"};
   std::ifstream file{path};
   if (not file) {

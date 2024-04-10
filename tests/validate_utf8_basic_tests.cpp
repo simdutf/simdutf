@@ -1,7 +1,6 @@
 #include "simdutf.h"
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <iomanip>
 #include <tests/helpers/test.h>
 
