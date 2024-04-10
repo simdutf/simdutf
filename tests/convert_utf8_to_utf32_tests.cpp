@@ -179,7 +179,7 @@ TEST(convert_invalid_special_cases) {
   std::unique_ptr<char32_t[]> utf32_output{new char32_t[expected_utf32words]};
   size_t utf32words = implementation.convert_utf8_to_utf32(
       source.c_str(), source.size(), utf32_output.get());
-  ASSERT_TRUE(utf32words == 0);
+  ASSERT_EQUAL(utf32words, 0);
 }
 
 TEST_MAIN

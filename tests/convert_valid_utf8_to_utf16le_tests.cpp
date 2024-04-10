@@ -114,19 +114,16 @@ TEST(issue111) {
   char16_t input[] = u"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\u30b3aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
   size_t utf16_len = sizeof(input) / sizeof(char16_t) - 1;
   ASSERT_TRUE(implementation.validate_utf16le(input, utf16_len));
-  ASSERT_TRUE(implementation.utf8_length_from_utf16le(input, utf16_len)
-              == 2 + utf16_len);
+  ASSERT_EQUAL(implementation.utf8_length_from_utf16le(input, utf16_len), 2 + utf16_len);
   size_t utf8_len = implementation.utf8_length_from_utf16le(input, utf16_len);
   std::unique_ptr<char[]> utf8_buffer{new char[utf8_len]};
-  ASSERT_TRUE(implementation.convert_valid_utf16le_to_utf8(input, utf16_len, utf8_buffer.get())
-              == utf8_len);
+  ASSERT_EQUAL(implementation.convert_valid_utf16le_to_utf8(input, utf16_len, utf8_buffer.get()), utf8_len);
 
   std::unique_ptr<char16_t[]> utf16_buffer{new char16_t[utf16_len]};
 
-  ASSERT_TRUE(implementation.convert_valid_utf8_to_utf16le(utf8_buffer.get(), utf8_len, utf16_buffer.get())
-              == utf16_len);
+  ASSERT_EQUAL(implementation.convert_valid_utf8_to_utf16le(utf8_buffer.get(), utf8_len, utf16_buffer.get()), utf16_len);
 
-  ASSERT_TRUE(std::char_traits<char16_t>::compare(input, utf16_buffer.get(), utf16_len) == 0);
+  ASSERT_EQUAL(std::char_traits<char16_t>::compare(input, utf16_buffer.get(), utf16_len), 0);
 }
 #endif
 
@@ -135,11 +132,11 @@ TEST(special_cases) {
   const uint8_t utf8[] = {0xC2, 0xA9}; // copyright sign
   const uint8_t expected[] = {0xA9, 0x00}; // expected UTF-16LE
   size_t utf16len = implementation.utf16_length_from_utf8((const char*)utf8, 2);
-  ASSERT_TRUE(utf16len == 1);
+  ASSERT_EQUAL(utf16len, 1);
   std::unique_ptr<char16_t[]> utf16(new char16_t[utf16len]);
   size_t utf16size = implementation.convert_valid_utf8_to_utf16le((const char*)utf8, 2, utf16.get());
-  ASSERT_TRUE(utf16size == utf16len);
-  ASSERT_TRUE(memcmp((const char*)utf16.get(), expected, 2) == 0);
+  ASSERT_EQUAL(utf16size, utf16len);
+  ASSERT_EQUAL(memcmp((const char*)utf16.get(), expected, 2), 0);
 }
 
 TEST_MAIN

@@ -54,7 +54,7 @@ TEST(visualstudio2019icelakeissue) {
   size_t out_size =
       implementation.convert_utf16le_to_utf8(source, length, buffer.get());
   std::string final_string(buffer.get(), out_size);
-  ASSERT_TRUE(expected_size == out_size);
+  ASSERT_EQUAL(expected_size, out_size);
 }
 
 TEST(special_cases_utf8_utf32_roundtrip) {
@@ -81,29 +81,29 @@ TEST(special_cases_utf8_utf32_roundtrip) {
     // convert to UTF-16LE
     size_t utf32words_valid = simdutf::convert_valid_utf8_to_utf32(
         source.c_str(), source.size(), utf32_valid_output.get());
-    ASSERT_TRUE(utf32words_valid == utf32words);
+    ASSERT_EQUAL(utf32words_valid, utf32words);
     for (size_t z = 0; z < utf32words_valid; z++) {
-      ASSERT_TRUE(utf32_valid_output.get()[z] == utf32_output.get()[z]);
+      ASSERT_EQUAL(uint32_t(utf32_valid_output.get()[z]), uint32_t (utf32_output.get()[z]));
     }
 
     // convert it back:
     // We need a buffer where to write the UTF-8 code units.
     size_t expected_utf8words =
         simdutf::utf8_length_from_utf32(utf32_output.get(), utf32words);
-    ASSERT_TRUE(expected_utf8words == source.size());
+    ASSERT_EQUAL(expected_utf8words, source.size());
     std::unique_ptr<char[]> utf8_output{new char[expected_utf8words]};
     // convert to UTF-8
     size_t utf8words = simdutf::convert_utf32_to_utf8(
         utf32_output.get(), utf32words, utf8_output.get());
-    ASSERT_TRUE(expected_utf8words == utf8words);
+    ASSERT_EQUAL(expected_utf8words, utf8words);
     std::string final_string(utf8_output.get(), utf8words);
-    ASSERT_TRUE(final_string == source);
+    ASSERT_EQUAL(final_string, source);
 
     size_t utf8words_valid = simdutf::convert_valid_utf32_to_utf8(
         utf32_output.get(), utf32words, utf8_output.get());
-    ASSERT_TRUE(expected_utf8words == utf8words_valid);
-    std::string final_string_valid(utf8_output.get(), utf8words_valid);
-    ASSERT_TRUE(final_string_valid == source);
+    ASSERT_EQUAL(expected_utf8words, utf8words_valid);
+    const std::string final_string_valid(utf8_output.get(), utf8words_valid);
+    ASSERT_EQUAL(final_string_valid, source);
   }
 }
 
@@ -139,29 +139,29 @@ TEST(special_cases_utf8_utf16le_roundtrip) {
     // convert to UTF-16LE
     size_t utf16words_valid = simdutf::convert_valid_utf8_to_utf16le(
         source.c_str(), source.size(), utf16_valid_output.get());
-    ASSERT_TRUE(utf16words_valid == utf16words);
+    ASSERT_EQUAL(utf16words_valid, utf16words);
     for (size_t z = 0; z < utf16words_valid; z++) {
-      ASSERT_TRUE(utf16_valid_output.get()[z] == utf16_output.get()[z]);
+      ASSERT_EQUAL(uint16_t(utf16_valid_output.get()[z]), uint16_t(utf16_output.get()[z]));
     }
 
     // convert it back:
     // We need a buffer where to write the UTF-8 code units.
     size_t expected_utf8words =
         simdutf::utf8_length_from_utf16le(utf16_output.get(), utf16words);
-    ASSERT_TRUE(expected_utf8words == source.size());
+    ASSERT_EQUAL(expected_utf8words, source.size());
     std::unique_ptr<char[]> utf8_output{new char[expected_utf8words]};
     // convert to UTF-8
     size_t utf8words = simdutf::convert_utf16le_to_utf8(
         utf16_output.get(), utf16words, utf8_output.get());
-    ASSERT_TRUE(expected_utf8words == utf8words);
+    ASSERT_EQUAL(expected_utf8words, utf8words);
     std::string final_string(utf8_output.get(), utf8words);
-    ASSERT_TRUE(final_string == source);
+    ASSERT_EQUAL(final_string, source);
 
     size_t utf8words_valid = simdutf::convert_valid_utf16le_to_utf8(
         utf16_output.get(), utf16words, utf8_output.get());
-    ASSERT_TRUE(expected_utf8words == utf8words_valid);
-    std::string final_string_valid(utf8_output.get(), utf8words_valid);
-    ASSERT_TRUE(final_string_valid == source);
+    ASSERT_EQUAL(expected_utf8words, utf8words_valid);
+    const std::string final_string_valid(utf8_output.get(), utf8words_valid);
+    ASSERT_EQUAL(final_string_valid, source);
   }
 }
 
@@ -197,29 +197,30 @@ TEST(special_cases_utf8_utf16be_roundtrip) {
     // convert to UTF-16BE
     size_t utf16words_valid = simdutf::convert_valid_utf8_to_utf16be(
         source.c_str(), source.size(), utf16_valid_output.get());
-    ASSERT_TRUE(utf16words_valid == utf16words);
+    ASSERT_EQUAL(utf16words_valid, utf16words);
     for (size_t z = 0; z < utf16words_valid; z++) {
-      ASSERT_TRUE(utf16_valid_output.get()[z] == utf16_output.get()[z]);
+      // Note: casting due to Visual Studio's lack of operator<< for char16_t.
+      ASSERT_EQUAL(uint16_t(utf16_valid_output.get()[z]), uint16_t(utf16_output.get()[z]));
     }
 
     // convert it back:
     // We need a buffer where to write the UTF-8 code units.
     size_t expected_utf8words =
         simdutf::utf8_length_from_utf16be(utf16_output.get(), utf16words);
-    ASSERT_TRUE(expected_utf8words == source.size());
+    ASSERT_EQUAL(expected_utf8words, source.size());
     std::unique_ptr<char[]> utf8_output{new char[expected_utf8words]};
     // convert to UTF-8
-    size_t utf8words = simdutf::convert_utf16be_to_utf8(
+    const size_t utf8words = simdutf::convert_utf16be_to_utf8(
         utf16_output.get(), utf16words, utf8_output.get());
-    ASSERT_TRUE(expected_utf8words == utf8words);
-    std::string final_string(utf8_output.get(), utf8words);
-    ASSERT_TRUE(final_string == source);
+    ASSERT_EQUAL(expected_utf8words, utf8words);
+    const std::string final_string(utf8_output.get(), utf8words);
+    ASSERT_EQUAL(final_string, source);
 
-    size_t utf8words_valid = simdutf::convert_valid_utf16be_to_utf8(
+    const size_t utf8words_valid = simdutf::convert_valid_utf16be_to_utf8(
         utf16_output.get(), utf16words, utf8_output.get());
-    ASSERT_TRUE(expected_utf8words == utf8words_valid);
-    std::string final_string_valid(utf8_output.get(), utf8words_valid);
-    ASSERT_TRUE(final_string_valid == source);
+    ASSERT_EQUAL(expected_utf8words, utf8words_valid);
+    const std::string final_string_valid(utf8_output.get(), utf8words_valid);
+    ASSERT_EQUAL(final_string_valid, source);
   }
 }
 
@@ -255,28 +256,29 @@ TEST(special_cases_utf8_utf16_roundtrip) {
     // convert to UTF-16
     size_t utf16words_valid = simdutf::convert_valid_utf8_to_utf16(
         source.c_str(), source.size(), utf16_valid_output.get());
-    ASSERT_TRUE(utf16words_valid == utf16words);
+    ASSERT_EQUAL(utf16words_valid, utf16words);
     for (size_t z = 0; z < utf16words_valid; z++) {
-      ASSERT_TRUE(utf16_valid_output.get()[z] == utf16_output.get()[z]);
+      // Note: casting due to Visual Studio's lack of operator<< for char16_t.
+      ASSERT_EQUAL(uint16_t(utf16_valid_output.get()[z]), uint16_t(utf16_output.get()[z]));
     }
 
     // convert it back:
     // We need a buffer where to write the UTF-8 code units.
     size_t expected_utf8words =
         simdutf::utf8_length_from_utf16(utf16_output.get(), utf16words);
-    ASSERT_TRUE(expected_utf8words == source.size());
+    ASSERT_EQUAL(expected_utf8words, source.size());
     std::unique_ptr<char[]> utf8_output{new char[expected_utf8words]};
     // convert to UTF-8
     size_t utf8words = simdutf::convert_utf16_to_utf8(
         utf16_output.get(), utf16words, utf8_output.get());
-    ASSERT_TRUE(expected_utf8words == utf8words);
+    ASSERT_EQUAL(expected_utf8words, utf8words);
     std::string final_string(utf8_output.get(), utf8words);
-    ASSERT_TRUE(final_string == source);
+    ASSERT_EQUAL(final_string, source);
     size_t utf8words_valid = simdutf::convert_valid_utf16_to_utf8(
         utf16_output.get(), utf16words, utf8_output.get());
-    ASSERT_TRUE(expected_utf8words == utf8words_valid);
+    ASSERT_EQUAL(expected_utf8words, utf8words_valid);
     std::string final_string_valid(utf8_output.get(), utf8words_valid);
-    ASSERT_TRUE(final_string_valid == source);
+    ASSERT_EQUAL(final_string_valid, source);
   }
 }
 
@@ -382,14 +384,14 @@ TEST(special_cases_utf8_utf16_invalid) {
     // convert to UTF-16LE, this will fail!!! (on purpose)
     size_t utf16words = simdutf::convert_utf8_to_utf16le(
         source.c_str(), source.size(), utf16_output.get());
-    ASSERT_TRUE(utf16words == 0);
+    ASSERT_EQUAL(utf16words, 0);
 
     size_t expected_latin1words =
         simdutf::latin1_length_from_utf8(source.c_str(), source.size());
     std::unique_ptr<char[]> latin1_output{new char[expected_latin1words]};
     size_t latin1words = simdutf::convert_utf8_to_latin1(
           source.c_str(), source.size(), latin1_output.get());
-    ASSERT_TRUE(latin1words == 0);
+    ASSERT_EQUAL(latin1words, 0);
   }
 }
 
@@ -459,14 +461,14 @@ TEST(special_cases_utf8_utf32_invalid) {
     // convert to UTF-16LE, this will fail!!! (on purpose)
     size_t utf32words = simdutf::convert_utf8_to_utf32(
         source.c_str(), source.size(), utf32_output.get());
-    ASSERT_TRUE(utf32words == 0);
+    ASSERT_EQUAL(utf32words, 0);
 
     size_t expected_latin1words =
         simdutf::latin1_length_from_utf8(source.c_str(), source.size());
     std::unique_ptr<char[]> latin1_output{new char[expected_latin1words]};
     size_t latin1words = simdutf::convert_utf8_to_latin1(
           source.c_str(), source.size(), latin1_output.get());
-    ASSERT_TRUE(latin1words == 0);
+    ASSERT_EQUAL(latin1words, 0);
   }
 }
 
@@ -525,7 +527,7 @@ TEST(special_cases_utf16_utf8_roundtrip) {
     ASSERT_EQUAL(utf16words, expected_utf16words);
     ASSERT_EQUAL(source.size(), expected_utf16words);
     for (size_t z = 0; z < utf16words; z++) {
-      ASSERT_TRUE(utf16_output.get()[z] == utf16_input.get()[z]);
+      ASSERT_EQUAL(uint16_t(utf16_output.get()[z]), uint16_t(utf16_input.get()[z]));
     }
   }
 }

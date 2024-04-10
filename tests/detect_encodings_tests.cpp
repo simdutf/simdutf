@@ -21,9 +21,9 @@ TEST(boommmmm) {
   const char* utf8_bom = "\xef\xbb\xbf"; 
   const char* utf16be_bom = "\xfe\xff"; 
   const char* utf16le_bom = "\xff\xfe"; 
-  ASSERT_TRUE(implementation.detect_encodings(utf8_bom, 3) == simdutf::encoding_type::UTF8);
-  ASSERT_TRUE(implementation.detect_encodings(utf16be_bom, 2) == simdutf::encoding_type::UTF16_BE);
-  ASSERT_TRUE(implementation.detect_encodings(utf16le_bom, 2) == simdutf::encoding_type::UTF16_LE);
+  ASSERT_EQUAL(implementation.detect_encodings(utf8_bom, 3), simdutf::encoding_type::UTF8);
+  ASSERT_EQUAL(implementation.detect_encodings(utf16be_bom, 2), simdutf::encoding_type::UTF16_BE);
+  ASSERT_EQUAL(implementation.detect_encodings(utf16le_bom, 2), simdutf::encoding_type::UTF16_LE);
 }
 
 
@@ -43,7 +43,7 @@ TEST(pure_utf8_ASCII) {
       auto actual = implementation.detect_encodings(
                       reinterpret_cast<const char *>(generated.first.data()),
                       size);
-      ASSERT_TRUE(actual == expected);
+      ASSERT_EQUAL(actual, expected);
     }
   }
 }
