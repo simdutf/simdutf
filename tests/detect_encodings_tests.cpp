@@ -84,6 +84,9 @@ TEST_LOOP(trials, no_utf8_bytes_no_surrogates) {
       for (int i = 0; i < size/4; i++) {
         generated.push_back(random());
       }
+      if(simdutf::BOM::check_bom(reinterpret_cast<const char *>(generated.data()), size) != simdutf::encoding_type::unspecified) {
+        continue;
+      }
       auto expected = simdutf::encoding_type::UTF16_LE | simdutf::encoding_type::UTF32_LE;
       auto actual = implementation.detect_encodings(
                       reinterpret_cast<const char *>(generated.data()),
@@ -179,6 +182,9 @@ TEST_LOOP(trials, tail_utf8) {
     std::array<size_t, 5> multiples_three{12, 54, 66, 126, 252};
     for (size_t size : multiples_three) {
       auto generated = random.generate_counted(size);
+      if(simdutf::BOM::check_bom(reinterpret_cast<const char *>(generated.first.data()), size) != simdutf::encoding_type::unspecified) {
+        continue;
+      }
       auto expected = simdutf::encoding_type::UTF8 | simdutf::encoding_type::UTF16_LE;
       auto actual = implementation.detect_encodings(
                       reinterpret_cast<const char *>(generated.first.data()),
