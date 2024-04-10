@@ -141,7 +141,7 @@ TEST(special_cases_utf8_utf16le_roundtrip) {
         source.c_str(), source.size(), utf16_valid_output.get());
     ASSERT_EQUAL(utf16words_valid, utf16words);
     for (size_t z = 0; z < utf16words_valid; z++) {
-      ASSERT_EQUAL(utf16_valid_output.get()[z], utf16_output.get()[z]);
+      ASSERT_EQUAL(uint16_t(utf16_valid_output.get()[z]), uint16_t(utf16_output.get()[z]));
     }
 
     // convert it back:
