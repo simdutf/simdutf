@@ -373,7 +373,7 @@ TEST(roundtrip_base64) {
         printf("=====input size %zu\n", len);
         for (size_t i = 0; i < len; i++) {
           if (back[i] != source[i]) {
-            printf("Mismatch at position %llu trial %llu\n", i, trial);
+            printf("Mismatch at position %zu trial %zu\n", i, trial);
           }
           printf("%zu: %02x %02x\n", i, uint8_t(back[i]), uint8_t(source[i]));
         }
@@ -417,7 +417,7 @@ TEST(roundtrip_base64_16) {
         printf("=====input size %zu\n", len);
         for (size_t i = 0; i < len; i++) {
           if (back[i] != source[i]) {
-            printf("Mismatch at position %llu trial %llu\n", i, trial);
+            printf("Mismatch at position %zu trial %zu\n", i, trial);
           }
           printf("%zu: %02x %02x\n", i, uint8_t(back[i]), uint8_t(source[i]));
         }
@@ -457,7 +457,7 @@ TEST(roundtrip_base64url) {
         printf("=====input size %zu\n", len);
         for (size_t i = 0; i < len; i++) {
           if (back[i] != source[i]) {
-            printf("Mismatch at position %llu trial %llu\n", i, trial);
+            printf("Mismatch at position %zu trial %zu\n", i, trial);
           }
           printf("%zu: %02x %02x\n", i, uint8_t(back[i]), uint8_t(source[i]));
         }
@@ -501,7 +501,7 @@ TEST(roundtrip_base64url_16) {
         printf("=====input size %zu\n", len);
         for (size_t i = 0; i < len; i++) {
           if (back[i] != source[i]) {
-            printf("Mismatch at position %llu trial %llu\n", i, trial);
+            printf("Mismatch at position %zu trial %zu\n", i, trial);
           }
           printf("%zu: %02x %02x\n", i, uint8_t(back[i]), uint8_t(source[i]));
         }
@@ -755,7 +755,7 @@ TEST(roundtrip_base64_16_with_spaces) {
         printf("=====input size %zu\n", len);
         for (size_t i = 0; i < len; i++) {
           if (back[i] != source[i]) {
-            printf("Mismatch at position %llu trial %llu\n", i, trial);
+            printf("Mismatch at position %zu trial %zu\n", i, trial);
           }
           printf("%zu: %02x %02x\n", i, uint8_t(back[i]), uint8_t(source[i]));
         }
@@ -1023,7 +1023,7 @@ TEST(readme_test) {
     simdutf::result r = simdutf::base64_to_binary(base64.data() + pos, count,
                                                   back.data() + outpos);
     if (r.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {
-      printf("Invalid base64 character at position %llu\n", pos + r.count);
+      printf("Invalid base64 character at position %zu\n", pos + r.count);
       return;
     }
     // If we arrived at the end of the base64 input, we must check that the

@@ -633,23 +633,23 @@ TEST(basic_fuzz) {
             input.size() / sizeof(char32_t), reinterpret_cast<char16_t *>(output.data()));
         if(is_ok_utf8.second ? (utf8_to_utf16.second == 0 || utf8_to_utf32.second == 0) : (utf8_to_utf16.second > 0 || utf8_to_utf32.second > 0)) {
           printf("%s\n", (is_ok_utf8.second ? "UTF-8 is ok" : "UTF-8 is not ok"));
-          printf(" size = %llu\n", input.size());
-          printf("  implementation.convert_utf8_to_utf16.second return %llu\n", utf8_to_utf16.second);
-          printf("  implementation.convert_utf8_to_utf32.second return %lli\n", utf8_to_utf32.second);
+          printf(" size = %zu\n", input.size());
+          printf("  implementation.convert_utf8_to_utf16.second return %zu\n", utf8_to_utf16.second);
+          printf("  implementation.convert_utf8_to_utf32.second return %zu\n", utf8_to_utf32.second);
         }
         ASSERT_TRUE(is_ok_utf8.second ? (utf8_to_utf16.second > 0 && utf8_to_utf32.second > 0) : (utf8_to_utf16.second == 0 && utf8_to_utf32.second == 0));
         if(is_ok_utf16.second ? (utf16_to_utf8.second == 0 || utf16_to_utf32.second == 0) : (utf16_to_utf8.second > 0 || utf16_to_utf32.second > 0)) {
           printf("%s\n", (is_ok_utf16.second ? "UTF-16 is ok" : "UTF-16 is not ok"));
-          printf(" size = %llu\n", input.size() / sizeof(char16_t));
-          printf("  implementation.convert_utf16_to_utf8.second return %llu\n", utf16_to_utf8.second);
-          printf("  implementation.convert_utf16_to_utf32.second return %llu\n",utf16_to_utf32.second);
+          printf(" size = %zu\n", input.size() / sizeof(char16_t));
+          printf("  implementation.convert_utf16_to_utf8.second return %zu\n", utf16_to_utf8.second);
+          printf("  implementation.convert_utf16_to_utf32.second return %zu\n",utf16_to_utf32.second);
         }
         ASSERT_TRUE(is_ok_utf16.second ? (utf16_to_utf8.second > 0 && utf16_to_utf32.second > 0) : (utf16_to_utf8.second == 0 && utf16_to_utf32.second == 0));
         if(is_ok_utf32.second ? (utf32_to_utf8.second == 0 || utf32_to_utf16.second == 0) : (utf32_to_utf8.second > 0 || utf32_to_utf16.second > 0)) {
           printf("%s\n", (is_ok_utf32.second ? "UTF-32 is ok" : "UTF-32 is not ok"));
-          printf(" size = %llu\n", input.size() / sizeof(char32_t));
-          printf("  implementation.convert_utf32_to_utf8.second return %llu\n", utf32_to_utf8.second);
-          printf("  implementation.convert_utf32_to_utf16.second return %llu\n", utf32_to_utf16.second);
+          printf(" size = %zu\n", input.size() / sizeof(char32_t));
+          printf("  implementation.convert_utf32_to_utf8.second return %zu\n", utf32_to_utf8.second);
+          printf("  implementation.convert_utf32_to_utf16.second return %zu\n", utf32_to_utf16.second);
         }
         ASSERT_TRUE(is_ok_utf32.second ? (utf32_to_utf8.second > 0 && utf32_to_utf16.second > 0) : (utf32_to_utf8.second == 0 && utf32_to_utf16.second == 0));
       }

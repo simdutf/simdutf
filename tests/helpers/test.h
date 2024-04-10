@@ -69,8 +69,8 @@ void test_impl_##name(const simdutf::implementation& implementation, uint32_t se
     lhs_str << lhs;                                                         \
     std::stringstream rhs_str;                                              \
     rhs_str << rhs;                                                         \
-    printf("lhs: %s = %s\n", #a, lhs_str.str());                            \
-    printf("rhs: %s = %s\n", #b, rhs_str.str());                            \
+    printf("lhs: %s = %s\n", #a, lhs_str.str().c_str());                            \
+    printf("rhs: %s = %s\n", #b, rhs_str.str().c_str());                            \
     printf("%s \n",#a);                                                     \
     printf("file %s:%d, function %s  \n", __FILE__, __LINE__, __func__);    \
     exit(1);                                                                \

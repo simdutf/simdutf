@@ -16,7 +16,7 @@ static void print_input(const std::string& s, const simdutf::implementation *con
     printf("%02x ", (unsigned char)c);
   }
   printf("\n");
-  printf("string length: %llu\n", s.size());
+  printf("string length: %zu\n", s.size());
   printf("implementation->name() = %s", e->name().c_str());
 }
 
@@ -604,11 +604,11 @@ int main(int argc, char*argv[]) {
         return EXIT_FAILURE;
     }
   }
-  printf("Number of strings: %llu\n", N);
+  printf("Number of strings: %zu\n", N);
   if (fuzz_running(N)) {
-    printf("valid UTF8 = %llu\n", valid_utf8);
-    printf("valid UTF16-BE = %llu\n", valid_utf16be);
-    printf("valid UTF16-LE = %llu\n", valid_utf16be);
+    printf("valid UTF8 = %zu\n", valid_utf8);
+    printf("valid UTF16-BE = %zu\n", valid_utf16be);
+    printf("valid UTF16-LE = %zu\n", valid_utf16be);
     return EXIT_SUCCESS;
   } else {
     return EXIT_FAILURE;

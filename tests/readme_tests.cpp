@@ -28,7 +28,7 @@ int main_demo() {
   // convert to UTF-16LE
   size_t utf16words =
       simdutf::convert_utf8_to_utf16le(source, 4, utf16_output.get());
-  printf("wrote %llu UTF-16LE code units.", utf16words);
+  printf("wrote %zu UTF-16LE code units.", utf16words);
   // It wrote utf16words * sizeof(char16_t) bytes.
   bool validutf16 = simdutf::validate_utf16le(utf16_output.get(), utf16words);
   if (validutf16) {
@@ -45,7 +45,7 @@ int main_demo() {
   // convert to UTF-8
   size_t utf8words = simdutf::convert_utf16le_to_utf8(
       utf16_output.get(), utf16words, utf8_output.get());
-  printf("wrote %llu UTF-8 code units.", utf8words);
+  printf("wrote %zu UTF-8 code units.", utf8words);
   std::string final_string(utf8_output.get(), utf8words);
   puts(final_string.c_str());
   if (final_string != source) {
@@ -111,7 +111,7 @@ TEST(error_location_badascii) {
   std::string bad_ascii = "\x20\x20\x20\x20\x20\xff\x20\x20\x20";
   simdutf::result res = implementation.validate_ascii_with_errors(bad_ascii.data(), bad_ascii.size());
   if (res.error != simdutf::error_code::SUCCESS) {
-    printf("error at index %llu\n", res.count);
+    printf("error at index %zu\n", res.count);
   }
   ASSERT_EQUAL(res.error, simdutf::error_code::TOO_LARGE);
   ASSERT_EQUAL(res.count, 5);
@@ -123,13 +123,13 @@ TEST(error_location_badutf8) {
   std::string bad_utf8 = "\xc3\xa9\xc3\xa9\x20\xff\xc3\xa9";
   simdutf::result res = implementation.validate_utf8_with_errors(bad_utf8.data(), bad_utf8.size());
   if(res.error != simdutf::error_code::SUCCESS) {
-    printf("error at index %llu\n", res.count);
+    printf("error at index %zu\n", res.count);
   }
   ASSERT_EQUAL(res.error, simdutf::error_code::HEADER_BITS);
   ASSERT_EQUAL(res.count, 5);
   res = implementation.validate_utf8_with_errors(bad_utf8.data(), res.count);
   if(res.error == simdutf::error_code::SUCCESS) {
-    printf("we have transcoded %llu valud bytes", res.count);
+    printf("we have transcoded %zu valud bytes", res.count);
   }
   ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
   ASSERT_EQUAL(res.count, 5);
@@ -145,13 +145,13 @@ TEST(error_location_badutf8_transcoding) {
   simdutf::result res = simdutf::convert_utf8_to_utf16_with_errors(bad_utf8.data(), bad_utf8.size(), utf16.get());
 
   if(res.error != simdutf::error_code::SUCCESS) {
-    printf("error at index %llu\n", res.count);
+    printf("error at index %zu\n", res.count);
   }
   ASSERT_EQUAL(res.error, simdutf::error_code::HEADER_BITS);
   ASSERT_EQUAL(res.count, 5);
   res = simdutf::convert_utf8_to_utf16_with_errors(bad_utf8.data(), res.count, utf16.get());
   if(res.error == simdutf::error_code::SUCCESS) {
-    printf("we have transcoded %llu characters", res.count);
+    printf("we have transcoded %zu characters", res.count);
   }
   ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
   ASSERT_EQUAL(res.count, 3);
