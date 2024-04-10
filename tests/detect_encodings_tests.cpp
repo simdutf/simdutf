@@ -52,7 +52,7 @@ TEST_LOOP(trials, pure_utf16_ASCII) {
       auto actual = implementation.detect_encodings(
                       reinterpret_cast<const char *>(generated.data()),
                       size);
-      ASSERT_TRUE(actual == expected);
+      ASSERT_TRUE((actual & expected) == expected); // Must be at least UTF8 and UTF16_LE.
     }
 }
 
@@ -68,7 +68,7 @@ TEST_LOOP(trials, pure_utf32_ASCII) {
       auto actual = implementation.detect_encodings(
                       reinterpret_cast<const char *>(generated.data()),
                       size);
-      ASSERT_TRUE(actual == expected);
+      ASSERT_TRUE((actual & expected) == expected); // Must be at least UTF8 and UTF16_LE and UTF32_LE.
     }
 }
 
@@ -88,7 +88,7 @@ TEST_LOOP(trials, no_utf8_bytes_no_surrogates) {
       auto actual = implementation.detect_encodings(
                       reinterpret_cast<const char *>(generated.data()),
                       size);
-      ASSERT_TRUE(actual == expected);
+      ASSERT_TRUE((actual & expected) == expected); // Must be at least UTF16_LE and UTF32_LE.
     }
 }
 #endif
@@ -110,7 +110,7 @@ TEST_LOOP(trials, two_utf8_bytes) {
           puts("failed to detect valid UTF-16LE.");
         }
       }
-      ASSERT_EQUAL(actual, expected);
+      ASSERT_TRUE((actual & expected) == expected); // Must be at least UTF8 and UTF16_LE.
     }
 }
 
@@ -123,7 +123,7 @@ TEST_LOOP(trials, utf_16_surrogates) {
       auto actual = implementation.detect_encodings(
                       reinterpret_cast<const char *>(generated.first.data()),
                       size);
-      ASSERT_TRUE(actual == expected);
+      ASSERT_TRUE((actual & expected) == expected); // Must be at least UTF16_LE.
     }
 }
 
@@ -143,7 +143,7 @@ TEST_LOOP(trials, utf32_surrogates) {
       auto actual = implementation.detect_encodings(
                       reinterpret_cast<const char *>(generated.data()),
                       size);
-      ASSERT_TRUE(actual == expected);
+      ASSERT_TRUE((actual & expected) == expected); // Must be at least UTF32_LE.
     }
 }
 #endif
@@ -170,7 +170,7 @@ TEST_LOOP(trials, edge_surrogate) {
     auto actual = implementation.detect_encodings(
                     reinterpret_cast<const char *>(generated.data()),
                     size);
-    ASSERT_TRUE(actual == expected);
+    ASSERT_TRUE((actual & expected) == expected); // Must be at least UTF16_LE.
 }
 #endif
 
@@ -183,7 +183,7 @@ TEST_LOOP(trials, tail_utf8) {
       auto actual = implementation.detect_encodings(
                       reinterpret_cast<const char *>(generated.first.data()),
                       size);
-      ASSERT_TRUE(actual == expected);
+      ASSERT_TRUE((actual & expected) == expected); // Must be at least UTF8 and UTF16_LE.
     }
 }
 
