@@ -527,7 +527,7 @@ TEST(special_cases_utf16_utf8_roundtrip) {
     ASSERT_EQUAL(utf16words, expected_utf16words);
     ASSERT_EQUAL(source.size(), expected_utf16words);
     for (size_t z = 0; z < utf16words; z++) {
-      ASSERT_EQUAL(utf16_output.get()[z], utf16_input.get()[z]);
+      ASSERT_EQUAL(uint16_t(utf16_output.get()[z]), uint16_t(utf16_input.get()[z]));
     }
   }
 }
