@@ -198,7 +198,7 @@ bool contains_spaces(std::vector<std::vector<char>> &data) {
 
 void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
   size_t volume = std::accumulate(
-      data.begin(), data.end(), 0,
+      data.begin(), data.end(), size_t(0),
       [](size_t a, const std::vector<char> &b) { return a + b.size(); });
   size_t max_size = std::max_element(data.begin(), data.end(),
                                      [](const std::vector<char> &a,
