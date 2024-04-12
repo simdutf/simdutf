@@ -153,7 +153,6 @@ TEST(convert_utf16be_to_utf8) {
     }
 }
 
-
 TEST(convert_utf16be_to_utf32) {
     char32_t buffer[utf32_size];
     size_t count = implementation.convert_utf16be_to_utf32(utf16be, utf16_size, buffer);
@@ -163,6 +162,4 @@ TEST(convert_utf16be_to_utf32) {
     }
 }
 
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN

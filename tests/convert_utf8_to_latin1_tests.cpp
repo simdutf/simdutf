@@ -2,13 +2,10 @@
 
 #include <array>
 
+#include <tests/reference/validate_utf8_to_latin1.h>
 #include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
-#include <sstream>
-
-#include "reference/validate_utf8_to_latin1.h"
-
 
 namespace {
   std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};

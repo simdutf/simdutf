@@ -1,9 +1,7 @@
 #include "simdutf.h"
 
-#include <algorithm>
 #include <array>
 #include <random>
-#include <stdexcept>
 
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/transcode_test_base.h>

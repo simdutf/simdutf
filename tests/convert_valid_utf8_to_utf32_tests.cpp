@@ -1,11 +1,9 @@
 #include "simdutf.h"
 
 #include <array>
-#include <queue>
 
 #include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_int.h>
-#include <tests/reference/encode_utf8.h>
 #include <tests/helpers/test.h>
 
 namespace {

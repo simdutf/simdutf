@@ -1,7 +1,5 @@
 #include "simdutf.h"
-#include <cstddef>
-#include <cstdint>
-#include <iomanip>
+
 #include <tests/helpers/test.h>
 
 
@@ -77,7 +75,4 @@ TEST(good_bad_sequences) {
   puts("OK");
 }
 
-
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN

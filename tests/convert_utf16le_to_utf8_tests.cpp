@@ -3,7 +3,6 @@
 #include <array>
 
 #include <tests/reference/validate_utf16.h>
-#include <tests/reference/decode_utf16.h>
 #include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
@@ -376,6 +375,4 @@ TEST(all_possible_8_codepoint_combinations) {
 }
 #endif
 
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN

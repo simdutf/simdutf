@@ -3,9 +3,7 @@
 #include <array>
 
 #include <tests/helpers/transcode_test_base.h>
-#include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
-#include <memory>
 
 namespace {
   using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;

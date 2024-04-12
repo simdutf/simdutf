@@ -532,4 +532,4 @@ TEST(special_cases_utf16_utf8_roundtrip) {
   }
 }
 
-int main(int argc, char *argv[]) { return simdutf::test::main(argc, argv); }
+TEST_MAIN

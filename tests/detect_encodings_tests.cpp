@@ -1,15 +1,12 @@
 #include "simdutf.h"
 
-#include <algorithm>
 #include <array>
-#include <random>
-#include <stdexcept>
 
+#include <tests/reference/encode_utf16.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/random_utf8.h>
 #include <tests/helpers/random_utf16.h>
 #include <tests/helpers/test.h>
-#include <tests/reference/encode_utf16.h>
 
 namespace {
 std::array<size_t, 7> input_size{8, 16, 12, 64, 68, 128, 256};
@@ -149,7 +146,7 @@ TEST_LOOP(trials, pure_utf32_ASCII) {
 #if SIMDUTF_IS_BIG_ENDIAN
 // todo: port this test for big-endian platforms.
 #else
-TEST_LOOP(1001, no_utf8_bytes_no_surrogates) {
+TEST_LOOP(trials, no_utf8_bytes_no_surrogates) {
     simdutf::tests::helpers::RandomIntRanges random({{0x007f, 0xd800-1},
                                                      {0xe000, 0xffff}}, seed);
 
