@@ -288,6 +288,12 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
   }
   case decode: {
     printf("# decode\n");
+    pretty_print(
+        data.size(), volume, "memcpy", bench([&data, &buffer1, &buffer2]() {
+          for (const std::vector<char> &source : data) {
+            memcpy(buffer1.data(), source.data(), source.size());
+          }
+        }));
     bool spaces = contains_spaces(data);
     if (spaces) {
       printf("# the base64 data contains spaces, so we cannot use straigth "
@@ -361,6 +367,12 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
   }
   case encode: {
     printf("# encode\n");
+    pretty_print(
+        data.size(), volume, "memcpy", bench([&data, &buffer1, &buffer2]() {
+          for (const std::vector<char> &source : data) {
+            memcpy(buffer1.data(), source.data(), source.size());
+          }
+        }));
     volatile size_t base64_size;
     pretty_print(data.size(), volume, "libbase64",
                  bench([&data, &buffer1, &base64_size]() {
