@@ -26,7 +26,7 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 find_file(RISCV_SPIKE "spike" REQUIRED
           DOC "Spike, a RISC-V ISA Simulator (https://github.com/riscv-software-src/riscv-isa-sim)")
 find_file(RISCV_PK "pk" REQUIRED
-          DOC "RISC-V Proxy Kernel  (https://github.com/riscv-software-src/riscv-pk)")
+          DOC "RISC-V Proxy Kernel (https://github.com/riscv-software-src/riscv-pk)")
 
 set(RISCV_ISA "rv64gcv")
 set(CMAKE_CROSSCOMPILING_EMULATOR "${RISCV_SPIKE};--isa=${RISCV_ISA};${RISCV_PK}")
@@ -34,4 +34,5 @@ set(CMAKE_CROSSCOMPILING_EMULATOR "${RISCV_SPIKE};--isa=${RISCV_ISA};${RISCV_PK}
 # Reason: pk expects static linkage
 set(CMAKE_EXE_LINKER_FLAGS "-static")
 
+add_compile_options(-march=rv64gcv)
 add_compile_definitions(RUN_IN_SPIKE_SIMULATOR)

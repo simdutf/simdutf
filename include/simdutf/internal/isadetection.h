@@ -91,6 +91,7 @@ static inline uint32_t detect_supported_architectures() {
 #elif SIMDUTF_IS_RISCV64
 
 #if defined(__linux__)
+
 #include <unistd.h>
 // We define these our selfs, for backwards compatibility
 struct simdutf_riscv_hwprobe { int64_t key; uint64_t value; };
@@ -118,6 +119,10 @@ static inline uint32_t detect_supported_architectures() {
     if (extensions & SIMDUTF_RISCV_HWPROBE_EXT_ZVBB)
       host_isa |= instruction_set::ZVBB;
   }
+#endif
+#if defined(RUN_IN_SPIKE_SIMULATOR)
+  // Proxy Kernel does not implement yet hwprobe syscall
+  host_isa |= instruction_set::RVV;
 #endif
   return host_isa;
 }
