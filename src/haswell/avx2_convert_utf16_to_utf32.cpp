@@ -6,7 +6,7 @@
     1. an input register contains no surrogates and each value
        is in range 0x0000 .. 0x07ff.
     2. an input register contains no surrogates and values are
-       is in range 0x0000 .. 0xffff.
+       in range 0x0000 .. 0xffff.
     3. an input register contains surrogates --- i.e. codepoints
        can have 16 or 32 bits.
 
