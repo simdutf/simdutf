@@ -240,7 +240,7 @@ simdutf_really_inline static result rvv_utf16_to_utf32_with_errors(const char16_
         }
     }
 
-    if ((src[0] & LO_SURROGATE_MASK) == LO_SURROGATE_VALUE) {
+    if ((simdutf_byteflip<bflip>(src[0]) & LO_SURROGATE_MASK) == LO_SURROGATE_VALUE) {
       return result(error_code::SURROGATE, src - srcBeg);
     }
 
