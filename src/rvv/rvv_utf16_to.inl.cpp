@@ -247,6 +247,9 @@ simdutf_really_inline static result rvv_utf16_to_utf32_with_errors(const char16_
     // decode surrogates
     vuint16m2_t v1 = __riscv_vslide1down_vx_u16m2(v0, 0, vl);
     vl = __riscv_vsetvl_e16m2(vl - 1);
+    if (vl == 0) {
+        return result(error_code::SURROGATE, src - srcBeg);
+    }
 
     const vbool8_t surhi  = __riscv_vmseq_vx_u16m2_b8(__riscv_vand_vx_u16m2(v0, HI_SURROGATE_MASK, vl), HI_SURROGATE_VALUE, vl);
     const vbool8_t surlo  = __riscv_vmseq_vx_u16m2_b8(__riscv_vand_vx_u16m2(v1, LO_SURROGATE_MASK, vl), LO_SURROGATE_VALUE, vl);
@@ -256,9 +259,9 @@ simdutf_really_inline static result rvv_utf16_to_utf32_with_errors(const char16_
 
     {
         const vbool8_t diff = __riscv_vmxor_mm_b8(surhi, surlo, vl);
-        if (__riscv_vfirst_m_b8(diff, vl) >= 0) {
-          const size_t idx = 0; // XXX: calculate it properly
-          return result(error_code::SURROGATE, src - srcBeg + idx);
+        const long idx = __riscv_vfirst_m_b8(diff, vl);
+        if (idx >= 0) {
+          return result(error_code::SURROGATE, src - srcBeg + idx + 1);
         }
     }
 
