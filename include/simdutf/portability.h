@@ -100,7 +100,7 @@
 #define SIMDUTF_HAS_RVV_TARGET_REGION 1
 #endif
 
-#if __riscv_v_intrinsic >= 11000 && !(__GNUC__ == 13 && __GNUC_MINOR__ == 2 && __GNUC_PATCHLEVEL__ == 0)
+#if __riscv_v_intrinsic >= 11000
 #define SIMDUTF_HAS_RVV_INTRINSICS 1
 #endif
 

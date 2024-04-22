@@ -85,7 +85,7 @@ TEST(convert_fails_if_there_is_sole_high_surrogate) {
   const size_t size = 64;
   transcode_utf16_to_utf32_test_base test([](){return '*';}, size + 32);
 
-  for (char16_t high_surrogate = 0xdc00; high_surrogate <= 0xdfff; high_surrogate++) {
+  for (char16_t high_surrogate = 0xd800; high_surrogate <= 0xdbff; high_surrogate++) {
     for (size_t i=0; i < size; i++) {
 
       const auto old = test.input_utf16[i];
