@@ -151,8 +151,8 @@ static const implementation* get_single_implementation() {
  */
 class detect_best_supported_implementation_on_first_use final : public implementation {
 public:
-  const std::string &name() const noexcept final { return set_best()->name(); }
-  const std::string &description() const noexcept final { return set_best()->description(); }
+  std::string name() const noexcept final { return set_best()->name(); }
+  std::string description() const noexcept final { return set_best()->description(); }
   uint32_t required_instruction_sets() const noexcept final { return set_best()->required_instruction_sets(); }
 
   simdutf_warn_unused int detect_encodings(const char * input, size_t length) const noexcept override {
@@ -484,6 +484,9 @@ public:
 private:
   const implementation *set_best() const noexcept;
 };
+
+static_assert(std::is_trivially_destructible<detect_best_supported_implementation_on_first_use>::value, "detect_best_supported_implementation_on_first_use should be trivially destructible");
+
 
 static const std::initializer_list<const implementation *>& get_available_implementation_pointers() {
   static const std::initializer_list<const implementation *> available_implementation_pointers {
@@ -848,6 +851,7 @@ public:
 };
 
 const unsupported_implementation unsupported_singleton{};
+static_assert(std::is_trivially_destructible<unsupported_implementation>::value, "unsupported_singleton should be trivially destructible");
 
 size_t available_implementation_list::size() const noexcept {
   return internal::get_available_implementation_pointers().size();
