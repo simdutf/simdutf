@@ -1548,7 +1548,7 @@ public:
    *
    * @return the name of the implementation, e.g. "haswell", "westmere", "arm64"
    */
-  virtual const std::string &name() const { return _name; }
+  virtual std::string name() const { return std::string(_name); }
 
   /**
    * The description of this implementation.
@@ -1558,7 +1558,7 @@ public:
    *
    * @return the name of the implementation, e.g. "haswell", "westmere", "arm64"
    */
-  virtual const std::string &description() const { return _description; }
+  virtual std::string description() const { return std::string(_description); }
 
   /**
    * The instruction sets this implementation is compiled against
@@ -2696,8 +2696,8 @@ public:
 protected:
   /** @private Construct an implementation with the given name and description. For subclasses. */
   simdutf_really_inline implementation(
-    std::string name,
-    std::string description,
+    const char* name,
+    const char* description,
     uint32_t required_instruction_sets
   ) :
     _name(name),
@@ -2705,18 +2705,18 @@ protected:
     _required_instruction_sets(required_instruction_sets)
   {
   }
-  virtual ~implementation()=default;
-
+protected:
+  ~implementation() = default;
 private:
   /**
    * The name of this implementation.
    */
-  const std::string _name;
+  const char* _name;
 
   /**
    * The description of this implementation.
    */
-  const std::string _description;
+  const char* _description;
 
   /**
    * Instruction sets required for this implementation.

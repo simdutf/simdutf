@@ -151,8 +151,8 @@ static const implementation* get_single_implementation() {
  */
 class detect_best_supported_implementation_on_first_use final : public implementation {
 public:
-  const std::string &name() const noexcept final { return set_best()->name(); }
-  const std::string &description() const noexcept final { return set_best()->description(); }
+  std::string name() const noexcept final { return set_best()->name(); }
+  std::string description() const noexcept final { return set_best()->description(); }
   uint32_t required_instruction_sets() const noexcept final { return set_best()->required_instruction_sets(); }
 
   simdutf_warn_unused int detect_encodings(const char * input, size_t length) const noexcept override {
@@ -484,6 +484,8 @@ public:
 private:
   const implementation *set_best() const noexcept;
 };
+
+static_assert(std::is_trivially_destructible<detect_best_supported_implementation_on_first_use>::value, "detect_best_supported_implementation_on_first_use should be trivially destructible");
 
 static const std::initializer_list<const implementation *>& get_available_implementation_pointers() {
   static const std::initializer_list<const implementation *> available_implementation_pointers {
@@ -847,7 +849,11 @@ public:
   unsupported_implementation() : implementation("unsupported", "Unsupported CPU (no detected SIMD instructions)", 0) {}
 };
 
-const unsupported_implementation unsupported_singleton{};
+const unsupported_implementation* get_unsupported_singleton() {
+    static const unsupported_implementation unsupported_singleton{};
+    return &unsupported_singleton;
+}
+static_assert(std::is_trivially_destructible<unsupported_implementation>::value, "unsupported_singleton should be trivially destructible");
 
 size_t available_implementation_list::size() const noexcept {
   return internal::get_available_implementation_pointers().size();
@@ -865,7 +871,7 @@ const implementation *available_implementation_list::detect_best_supported() con
     uint32_t required_instruction_sets = impl->required_instruction_sets();
     if ((supported_instruction_sets & required_instruction_sets) == required_instruction_sets) { return impl; }
   }
-  return &unsupported_singleton; // this should never happen?
+  return get_unsupported_singleton(); // this should never happen?
 }
 
 const implementation *detect_best_supported_implementation_on_first_use::set_best() const noexcept {
@@ -880,7 +886,7 @@ const implementation *detect_best_supported_implementation_on_first_use::set_bes
       return get_active_implementation() = force_implementation;
     } else {
       // Note: abort() and stderr usage within the library is forbidden.
-      return get_active_implementation() = &unsupported_singleton;
+      return get_active_implementation() = get_unsupported_singleton();
     }
   }
   return get_active_implementation() = get_available_implementations().detect_best_supported();
@@ -899,8 +905,8 @@ SIMDUTF_DLLIMPORTEXPORT const internal::available_implementation_list& get_avail
 }
 
 /**
-  * The active implementation.
-  */
+ * The active implementation.
+ */
 SIMDUTF_DLLIMPORTEXPORT internal::atomic_ptr<const implementation>& get_active_implementation() {
 #if SIMDUTF_SINGLE_IMPLEMENTATION
     // skip runtime detection
