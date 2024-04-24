@@ -2711,12 +2711,12 @@ private:
   /**
    * The name of this implementation.
    */
-  std::string_view _name;
+  const char* _name;
 
   /**
    * The description of this implementation.
    */
-  std::string_view _description;
+  const char* _description;
 
   /**
    * Instruction sets required for this implementation.
