@@ -2696,8 +2696,8 @@ public:
 protected:
   /** @private Construct an implementation with the given name and description. For subclasses. */
   simdutf_really_inline implementation(
-    std::string name,
-    std::string description,
+    const char* name,
+    const char* description,
     uint32_t required_instruction_sets
   ) :
     _name(name),
