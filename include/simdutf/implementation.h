@@ -1463,7 +1463,7 @@ simdutf_warn_unused size_t base64_length_from_binary(size_t length, base64_optio
  * @param length        the length of the input in bytes
  * @param output        the pointer to buffer that can hold the conversion result (should be at least base64_length_from_binary(length) bytes long)
  * @param options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.
- * @return number of written bytes, will be equal to base64_length_from_binary(length)
+ * @return number of written bytes, will be equal to base64_length_from_binary(length, options)
  */
 size_t binary_to_base64(const char * input, size_t length, char* output, base64_options options = base64_default) noexcept;
 
@@ -2688,7 +2688,7 @@ public:
    * @param length        the length of the input in bytes
    * @param output        the pointer to buffer that can hold the conversion result (should be at least base64_length_from_binary(length) bytes long)
    * @param options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.
-   * @return number of written bytes, will be equal to base64_length_from_binary(length)
+   * @return number of written bytes, will be equal to base64_length_from_binary(length, options)
    */
   virtual size_t binary_to_base64(const char * input, size_t length, char* output, base64_options options = base64_default) const noexcept = 0;
 
