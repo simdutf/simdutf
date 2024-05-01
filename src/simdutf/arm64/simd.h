@@ -146,9 +146,9 @@ namespace {
       return vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(*this), 4)), 0);
     }
 
-    simdutf_really_inline bool any() const { return vmaxvq_u8(*this) != 0; }
-    simdutf_really_inline bool none() const { return vmaxvq_u8(*this) == 0; }
-    simdutf_really_inline bool all() const { return vminvq_u8(*this) == 0xFF; }
+    simdutf_really_inline bool any() const { return vmaxvq_u32(vreinterpretq_u32_u8(*this)) != 0; }
+    simdutf_really_inline bool none() const { return vmaxvq_u32(vreinterpretq_u32_u8(*this)) == 0; }
+    simdutf_really_inline bool all() const { return vminvq_u32(vreinterpretq_u32_u8(*this)) == 0xFFFFF; }
 
 
   };
