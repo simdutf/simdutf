@@ -54,7 +54,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <cpuid.h>
 #endif
 
-if SIMDUTF_IS_RISCV64 && defined(__linux__)
+#if SIMDUTF_IS_RISCV64 && defined(__linux__)
 #include <unistd.h>
 #endif
 
