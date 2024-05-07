@@ -95,11 +95,11 @@ template <> struct simd8<bool> : base8<bool> {
     return (__m128i)vec_splats((unsigned char)(-(!!_value)));
   }
 
-  simdutf_really_inline simd8<bool>() : base8() {}
-  simdutf_really_inline simd8<bool>(const __m128i _value)
+  simdutf_really_inline simd8() : base8() {}
+  simdutf_really_inline simd8(const __m128i _value)
       : base8<bool>(_value) {}
   // Splat constructor
-  simdutf_really_inline simd8<bool>(bool _value)
+  simdutf_really_inline simd8(bool _value)
       : base8<bool>(splat(_value)) {}
 
   simdutf_really_inline int to_bitmask() const {

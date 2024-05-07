@@ -77,10 +77,10 @@ namespace simd {
   struct simd8<bool>: base8<bool> {
     static simdutf_really_inline simd8<bool> splat(bool _value) { return _mm256_set1_epi8(uint8_t(-(!!_value))); }
 
-    simdutf_really_inline simd8<bool>() : base8() {}
-    simdutf_really_inline simd8<bool>(const __m256i _value) : base8<bool>(_value) {}
+    simdutf_really_inline simd8() : base8() {}
+    simdutf_really_inline simd8(const __m256i _value) : base8<bool>(_value) {}
     // Splat constructor
-    simdutf_really_inline simd8<bool>(bool _value) : base8<bool>(splat(_value)) {}
+    simdutf_really_inline simd8(bool _value) : base8<bool>(splat(_value)) {}
 
     simdutf_really_inline uint32_t to_bitmask() const { return uint32_t(_mm256_movemask_epi8(*this)); }
     simdutf_really_inline bool any() const { return !_mm256_testz_si256(*this, *this); }
