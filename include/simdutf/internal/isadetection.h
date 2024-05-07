@@ -54,6 +54,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <cpuid.h>
 #endif
 
+if SIMDUTF_IS_RISCV64 && defined(__linux__)
+#include <unistd.h>
+#endif
+
 #include "simdutf/portability.h"
 
 namespace simdutf {
@@ -91,8 +95,6 @@ static inline uint32_t detect_supported_architectures() {
 #elif SIMDUTF_IS_RISCV64
 
 #if defined(__linux__)
-
-#include <unistd.h>
 // We define these our selfs, for backwards compatibility
 struct simdutf_riscv_hwprobe { int64_t key; uint64_t value; };
 #define simdutf_riscv_hwprobe(...) syscall(258, __VA_ARGS__)
