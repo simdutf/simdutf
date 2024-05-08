@@ -149,50 +149,50 @@ $(document).ready(function(){initNavTree('isadetection_8h_source.html',''); init
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160; </div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="preprocessor">#include &quot;simdutf/portability.h&quot;</span></div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160; </div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="keyword">namespace </span>simdutf {</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="keyword">namespace </span>internal {</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160; </div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="keyword">enum</span> instruction_set {</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  DEFAULT = 0x0,</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  NEON = 0x1,</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  AVX2 = 0x4,</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  SSE42 = 0x8,</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  PCLMULQDQ = 0x10,</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  BMI1 = 0x20,</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  BMI2 = 0x40,</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  ALTIVEC = 0x80,</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  AVX512F = 0x100,</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  AVX512DQ = 0x200,</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  AVX512IFMA = 0x400,</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  AVX512PF = 0x800,</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  AVX512ER = 0x1000,</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  AVX512CD = 0x2000,</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  AVX512BW = 0x4000,</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  AVX512VL = 0x8000,</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  AVX512VBMI2 = 0x10000,</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  AVX512VPOPCNTDQ = 0x2000,</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  RVV = 0x4000,</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  ZVBB = 0x8000,</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;};</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160; </div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="preprocessor">#if defined(__PPC64__)</span></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160; </div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> uint32_t detect_supported_architectures() {</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <span class="keywordflow">return</span> instruction_set::ALTIVEC;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;}</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160; </div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="preprocessor">#elif SIMDUTF_IS_RISCV64</span></div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160; </div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="preprocessor">#if defined(__linux__)</span></div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160; </div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="preprocessor">#include &lt;unistd.h&gt;</span></div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="comment">// We define these our selfs, for backwards compatibility</span></div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="keyword">struct </span>simdutf_riscv_hwprobe { int64_t key; uint64_t value; };</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="preprocessor">#define simdutf_riscv_hwprobe(...) syscall(258, __VA_ARGS__)</span></div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="preprocessor">#define SIMDUTF_RISCV_HWPROBE_KEY_IMA_EXT_0 4</span></div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="preprocessor">#define SIMDUTF_RISCV_HWPROBE_IMA_V    (1 &lt;&lt; 2)</span></div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<span class="preprocessor">#define SIMDUTF_RISCV_HWPROBE_EXT_ZVBB (1 &lt;&lt; 17)</span></div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="comment">// RISC-V ISA detection utilities</span></div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="preprocessor">#if SIMDUTF_IS_RISCV64 &amp;&amp; defined(__linux__)</span></div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="preprocessor">#include &lt;unistd.h&gt;</span> <span class="comment">// for syscall</span></div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="comment">// We define these ourselves, for backwards compatibility</span></div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="keyword">struct </span>simdutf_riscv_hwprobe { int64_t key; uint64_t value; };</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="preprocessor">#define simdutf_riscv_hwprobe(...) syscall(258, __VA_ARGS__)</span></div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="preprocessor">#define SIMDUTF_RISCV_HWPROBE_KEY_IMA_EXT_0 4</span></div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="preprocessor">#define SIMDUTF_RISCV_HWPROBE_IMA_V    (1 &lt;&lt; 2)</span></div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="preprocessor">#define SIMDUTF_RISCV_HWPROBE_EXT_ZVBB (1 &lt;&lt; 17)</span></div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// SIMDUTF_IS_RISCV64 &amp;&amp; defined(__linux__)</span></div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160; </div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="keyword">namespace </span>simdutf {</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="keyword">namespace </span>internal {</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160; </div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="keyword">enum</span> instruction_set {</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  DEFAULT = 0x0,</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  NEON = 0x1,</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  AVX2 = 0x4,</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  SSE42 = 0x8,</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  PCLMULQDQ = 0x10,</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  BMI1 = 0x20,</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  BMI2 = 0x40,</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  ALTIVEC = 0x80,</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  AVX512F = 0x100,</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  AVX512DQ = 0x200,</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  AVX512IFMA = 0x400,</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  AVX512PF = 0x800,</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  AVX512ER = 0x1000,</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  AVX512CD = 0x2000,</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  AVX512BW = 0x4000,</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  AVX512VL = 0x8000,</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  AVX512VBMI2 = 0x10000,</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  AVX512VPOPCNTDQ = 0x2000,</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  RVV = 0x4000,</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  ZVBB = 0x8000,</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;};</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160; </div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="preprocessor">#if defined(__PPC64__)</span></div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160; </div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> uint32_t detect_supported_architectures() {</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="keywordflow">return</span> instruction_set::ALTIVEC;</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;}</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160; </div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;<span class="preprocessor">#elif SIMDUTF_IS_RISCV64</span></div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160; </div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> uint32_t detect_supported_architectures() {</div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  uint32_t host_isa = instruction_set::DEFAULT;</div>
