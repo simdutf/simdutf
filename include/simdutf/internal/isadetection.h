@@ -56,6 +56,17 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "simdutf/portability.h"
 
+// RISC-V ISA detection utilities
+#if SIMDUTF_IS_RISCV64 && defined(__linux__)
+#include <unistd.h> // for syscall
+// We define these ourselves, for backwards compatibility
+struct simdutf_riscv_hwprobe { int64_t key; uint64_t value; };
+#define simdutf_riscv_hwprobe(...) syscall(258, __VA_ARGS__)
+#define SIMDUTF_RISCV_HWPROBE_KEY_IMA_EXT_0 4
+#define SIMDUTF_RISCV_HWPROBE_IMA_V    (1 << 2)
+#define SIMDUTF_RISCV_HWPROBE_EXT_ZVBB (1 << 17)
+#endif // SIMDUTF_IS_RISCV64 && defined(__linux__)
+
 namespace simdutf {
 namespace internal {
 
@@ -89,17 +100,6 @@ static inline uint32_t detect_supported_architectures() {
 }
 
 #elif SIMDUTF_IS_RISCV64
-
-#if defined(__linux__)
-
-#include <unistd.h>
-// We define these our selfs, for backwards compatibility
-struct simdutf_riscv_hwprobe { int64_t key; uint64_t value; };
-#define simdutf_riscv_hwprobe(...) syscall(258, __VA_ARGS__)
-#define SIMDUTF_RISCV_HWPROBE_KEY_IMA_EXT_0 4
-#define SIMDUTF_RISCV_HWPROBE_IMA_V    (1 << 2)
-#define SIMDUTF_RISCV_HWPROBE_EXT_ZVBB (1 << 17)
-#endif
 
 static inline uint32_t detect_supported_architectures() {
   uint32_t host_isa = instruction_set::DEFAULT;
