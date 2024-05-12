@@ -52,10 +52,10 @@ template<>
 struct simd16<bool>: base16<bool> {
   static simdutf_really_inline simd16<bool> splat(bool _value) { return vmovq_n_u16(uint16_t(-(!!_value))); }
 
-  simdutf_really_inline simd16<bool>() : base16() {}
-  simdutf_really_inline simd16<bool>(const uint16x8_t _value) : base16<bool>(_value) {}
+  simdutf_really_inline simd16() : base16() {}
+  simdutf_really_inline simd16(const uint16x8_t _value) : base16<bool>(_value) {}
   // Splat constructor
-  simdutf_really_inline simd16<bool>(bool _value) : base16<bool>(splat(_value)) {}
+  simdutf_really_inline simd16(bool _value) : base16<bool>(splat(_value)) {}
 
 };
 
