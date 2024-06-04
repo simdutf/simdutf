@@ -1,9 +1,5 @@
 #include "simdutf.h"
-#include <cstddef>
-#include <cstdint>
-#include <random>
-#include <iostream>
-#include <iomanip>
+
 #include <tests/helpers/test.h>
 
 // This is an attempt at reproducing an issue with the utf8 fuzzer
@@ -13,7 +9,14 @@ TEST(puzzler) {
   ASSERT_FALSE(implementation.validate_utf8(bad64, length));
 }
 
-
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
+TEST(puzzler2) {
+  // Interesting case where the error occurs in the first 64 bytes but is only detected in the next 64 bytes.
+  const char* bad102 = "\x0a\x04\x00\x00\xdb\xa1\xdd\xa1\xf1\xa0\xb6\x95\xe4\xb5\x89\xe7\x8f\x95\xe4\xa2\x83\xe7\x95\x89\xe7\x95\x91\xe7\x95\x89\x00\x01\x01\x1a\x20\x28\x00\x00\x60\x00\x00\x23\x00\xf1\xa0\xb6\x95\xe4\xb5\x89\xe7\x8f\x95\xe4\xa2\x83\xe7\x95\x89\xe7\x95\x91\xe7\x81\x00\x00\x01\x01\x1a\x20\x28\x00\x00\x60\x00\x00\x23\x00\x2f\x00\x00\x00\x00\x07\x04\x75\xc2\xa0\x34\x2f\x00\x00\x00\x00\x07\x04\x75\xc2\xa0\x33\x53\x2b";
+  size_t length = 102;
+  ASSERT_FALSE(implementation.validate_utf8(bad102, length));
+  auto r = implementation.validate_utf8_with_errors(bad102, length);
+  ASSERT_EQUAL(r.error, simdutf::TOO_SHORT);
+  ASSERT_EQUAL(r.count, 62);
 }
+
+TEST_MAIN

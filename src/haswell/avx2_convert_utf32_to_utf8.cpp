@@ -16,7 +16,7 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf
     __m256i nextin = _mm256_loadu_si256((__m256i*)buf+1);
     running_max = _mm256_max_epu32(_mm256_max_epu32(in, running_max), nextin);
 
-    // Pack 32-bit UTF-32 words to 16-bit UTF-16 words with unsigned saturation
+    // Pack 32-bit UTF-32 code units to 16-bit UTF-16 code units with unsigned saturation
     __m256i in_16 = _mm256_packus_epi32(_mm256_and_si256(in, v_7fffffff), _mm256_and_si256(nextin, v_7fffffff));
     in_16 = _mm256_permute4x64_epi64(in_16, 0b11011000);
 
@@ -87,7 +87,7 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf
     const __m256i saturation_bytemask = _mm256_cmpeq_epi32(_mm256_and_si256(_mm256_or_si256(in, nextin), v_ffff0000), v_0000);
     const uint32_t saturation_bitmask = static_cast<uint32_t>(_mm256_movemask_epi8(saturation_bytemask));
     if (saturation_bitmask == 0xffffffff) {
-      // case: words from register produce either 1, 2 or 3 UTF-8 bytes
+      // case: code units from register produce either 1, 2 or 3 UTF-8 bytes
       const __m256i v_d800 = _mm256_set1_epi16((uint16_t)0xd800);
       forbidden_bytemask = _mm256_or_si256(forbidden_bytemask, _mm256_cmpeq_epi16(_mm256_and_si256(in_16, v_f800), v_d800));
 
@@ -101,7 +101,7 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf
         2. [0000|0bbb|bbcc|cccc] => [110b|bbbb], [10cc|cccc]              - two UTF-8 bytes
         3. [aaaa|bbbb|bbcc|cccc] => [1110|aaaa], [10bb|bbbb], [10cc|cccc] - three UTF-8 bytes
 
-        We expand the input word (16-bit) into two words (32-bit), thus
+        We expand the input word (16-bit) into two code units (32-bit), thus
         we have room for four bytes. However, we need five distinct bit
         layouts. Note that the last byte in cases #2 and #3 is the same.
 
@@ -112,7 +112,7 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf
         either byte 1 for case #2 or byte 2 for case #3. Note that they
         differ by exactly one bit.
 
-        Finally from these two words we build proper UTF-8 sequence, taking
+        Finally from these two code units we build proper UTF-8 sequence, taking
         into account the case (i.e, the number of bytes to write).
       */
       /**
@@ -140,16 +140,16 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf
       const __m256i s4 = _mm256_xor_si256(s3, m0);
 #undef simdutf_vec
 
-      // 4. expand words 16-bit => 32-bit
+      // 4. expand code units 16-bit => 32-bit
       const __m256i out0 = _mm256_unpacklo_epi16(t2, s4);
       const __m256i out1 = _mm256_unpackhi_epi16(t2, s4);
 
-      // 5. compress 32-bit words into 1, 2 or 3 bytes -- 2 x shuffle
+      // 5. compress 32-bit code units into 1, 2 or 3 bytes -- 2 x shuffle
       const uint32_t mask = (one_byte_bitmask & 0x55555555) |
                             (one_or_two_bytes_bitmask & 0xaaaaaaaa);
       // Due to the wider registers, the following path is less likely to be useful.
       /*if(mask == 0) {
-        // We only have three-byte words. Use fast path.
+        // We only have three-byte code units. Use fast path.
         const __m256i shuffle = _mm256_setr_epi8(2,3,1,6,7,5,10,11,9,14,15,13,-1,-1,-1,-1, 2,3,1,6,7,5,10,11,9,14,15,13,-1,-1,-1,-1);
         const __m256i utf8_0 = _mm256_shuffle_epi8(out0, shuffle);
         const __m256i utf8_1 = _mm256_shuffle_epi8(out1, shuffle);
@@ -261,7 +261,7 @@ std::pair<result, char*> avx2_convert_utf32_to_utf8_with_errors(const char32_t* 
       return std::make_pair(result(error_code::TOO_LARGE, buf - start), utf8_output);
     }
 
-    // Pack 32-bit UTF-32 words to 16-bit UTF-16 words with unsigned saturation
+    // Pack 32-bit UTF-32 code units to 16-bit UTF-16 code units with unsigned saturation
     __m256i in_16 = _mm256_packus_epi32(_mm256_and_si256(in, v_7fffffff), _mm256_and_si256(nextin, v_7fffffff));
     in_16 = _mm256_permute4x64_epi64(in_16, 0b11011000);
 
@@ -332,9 +332,9 @@ std::pair<result, char*> avx2_convert_utf32_to_utf8_with_errors(const char32_t* 
     const __m256i saturation_bytemask = _mm256_cmpeq_epi32(_mm256_and_si256(_mm256_or_si256(in, nextin), v_ffff0000), v_0000);
     const uint32_t saturation_bitmask = static_cast<uint32_t>(_mm256_movemask_epi8(saturation_bytemask));
     if (saturation_bitmask == 0xffffffff) {
-      // case: words from register produce either 1, 2 or 3 UTF-8 bytes
+      // case: code units from register produce either 1, 2 or 3 UTF-8 bytes
 
-      // Check for illegal surrogate words
+      // Check for illegal surrogate code units
       const __m256i v_d800 = _mm256_set1_epi16((uint16_t)0xd800);
       const __m256i forbidden_bytemask = _mm256_cmpeq_epi16(_mm256_and_si256(in_16, v_f800), v_d800);
       if (static_cast<uint32_t>(_mm256_movemask_epi8(forbidden_bytemask)) != 0x0) {
@@ -351,7 +351,7 @@ std::pair<result, char*> avx2_convert_utf32_to_utf8_with_errors(const char32_t* 
         2. [0000|0bbb|bbcc|cccc] => [110b|bbbb], [10cc|cccc]              - two UTF-8 bytes
         3. [aaaa|bbbb|bbcc|cccc] => [1110|aaaa], [10bb|bbbb], [10cc|cccc] - three UTF-8 bytes
 
-        We expand the input word (16-bit) into two words (32-bit), thus
+        We expand the input word (16-bit) into two code units (32-bit), thus
         we have room for four bytes. However, we need five distinct bit
         layouts. Note that the last byte in cases #2 and #3 is the same.
 
@@ -362,7 +362,7 @@ std::pair<result, char*> avx2_convert_utf32_to_utf8_with_errors(const char32_t* 
         either byte 1 for case #2 or byte 2 for case #3. Note that they
         differ by exactly one bit.
 
-        Finally from these two words we build proper UTF-8 sequence, taking
+        Finally from these two code units we build proper UTF-8 sequence, taking
         into account the case (i.e, the number of bytes to write).
       */
       /**
@@ -390,16 +390,16 @@ std::pair<result, char*> avx2_convert_utf32_to_utf8_with_errors(const char32_t* 
       const __m256i s4 = _mm256_xor_si256(s3, m0);
 #undef simdutf_vec
 
-      // 4. expand words 16-bit => 32-bit
+      // 4. expand code units 16-bit => 32-bit
       const __m256i out0 = _mm256_unpacklo_epi16(t2, s4);
       const __m256i out1 = _mm256_unpackhi_epi16(t2, s4);
 
-      // 5. compress 32-bit words into 1, 2 or 3 bytes -- 2 x shuffle
+      // 5. compress 32-bit code units into 1, 2 or 3 bytes -- 2 x shuffle
       const uint32_t mask = (one_byte_bitmask & 0x55555555) |
                             (one_or_two_bytes_bitmask & 0xaaaaaaaa);
       // Due to the wider registers, the following path is less likely to be useful.
       /*if(mask == 0) {
-        // We only have three-byte words. Use fast path.
+        // We only have three-byte code units. Use fast path.
         const __m256i shuffle = _mm256_setr_epi8(2,3,1,6,7,5,10,11,9,14,15,13,-1,-1,-1,-1, 2,3,1,6,7,5,10,11,9,14,15,13,-1,-1,-1,-1);
         const __m256i utf8_0 = _mm256_shuffle_epi8(out0, shuffle);
         const __m256i utf8_1 = _mm256_shuffle_epi8(out1, shuffle);

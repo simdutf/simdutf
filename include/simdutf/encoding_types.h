@@ -8,13 +8,14 @@ enum encoding_type {
         UTF16_BE = 4,   // BOM 0xfe 0xff
         UTF32_LE = 8,   // BOM 0xff 0xfe 0x00 0x00
         UTF32_BE = 16,   // BOM 0x00 0x00 0xfe 0xff
+        Latin1 = 32,
 
         unspecified = 0
 };
 
 enum endianness {
-        LITTLE,
-        BIG
+        LITTLE = 0,
+        BIG = 1
 };
 
 bool match_system(endianness e);
@@ -27,7 +28,7 @@ namespace BOM {
 /**
  * Checks for a BOM. If not, returns unspecified
  * @param input         the string to process
- * @param length        the length of the string in words
+ * @param length        the length of the string in code units
  * @return the corresponding encoding
  */
 

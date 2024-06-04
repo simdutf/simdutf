@@ -1,9 +1,20 @@
 #include "simdutf.h"
-#include <cstddef>
-#include <cstdint>
-#include <iostream>
-#include <iomanip>
+
 #include <tests/helpers/test.h>
+
+
+// https://github.com/nodejs/node/issues/48995
+TEST(node48995) {
+  const char bad[1] = {'\x80'};
+  size_t length = 1;
+  ASSERT_FALSE(implementation.validate_utf8(bad, length));
+}
+
+TEST(copyright) {
+  const char good[2] = {'\xC2', '\xA9'};
+  size_t length = 2;
+  ASSERT_TRUE(implementation.validate_utf8(good, length));
+}
 
 TEST(good_bad_sequences) {
   // additional tests are from autobahn websocket testsuite
@@ -64,7 +75,4 @@ TEST(good_bad_sequences) {
   puts("OK");
 }
 
-
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN

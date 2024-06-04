@@ -16,14 +16,14 @@ def colored(r, g, b, text):
     return "\033[38;2;{};{};{}m{} \033[38;2;255;255;255m".format(r, g, b, text)
 
 def extractnumbers(s):
-    return tuple(map(int,re.findall("(\d+)\.(\d+)\.(\d+)",str(s))[0]))
+    return tuple(map(int,re.findall(r"(\d+)\.(\d+)\.(\d+)",str(s))[0]))
 
 def toversionstring(major, minor, rev):
     return str(major)+"."+str(minor)+"."+str(rev)
 
 def topaddedversionstring(major, minor, rev):
     return str(major)+str(minor).zfill(3)+str(rev).zfill(3)
-
+print("Calling git rev-parse --abbrev-ref HEAD")
 pipe = subprocess.Popen(["git", "rev-parse", "--abbrev-ref", "HEAD"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 branchresult = pipe.communicate()[0].decode().strip()
 
@@ -34,7 +34,7 @@ ret = subprocess.call(["git", "remote", "update"])
 
 if(ret != 0):
     sys.exit(ret)
-
+print("Calling git log HEAD.. --oneline")
 pipe = subprocess.Popen(["git", "log", "HEAD..", "--oneline"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 uptodateresult = pipe.communicate()[0].decode().strip()
 
@@ -62,12 +62,12 @@ if(len(sys.argv) != 2):
     sys.exit(-1)
 try:
     newversion = extractnumbers(sys.argv[1])
+    print(newversion)
 except:
     print("can't parse version number "+sys.argv[1])
     sys.exit(-1)
 
 print("checking that new version is valid")
-
 if(newversion[0] !=  currentv[0]):
     assert newversion[0] ==  currentv[0] + 1
     assert newversion[1] == 0
@@ -80,15 +80,6 @@ else :
 
 atleastminor= (currentv[0] != newversion[0]) or (currentv[1] != newversion[1])
 
-if(atleastminor):
-    print(colored(0, 255, 0, "This is more than a revision."))
-    releasefile = maindir + os.sep + "RELEASES.md"
-    releasedata = open(releasefile).read()
-    pattern = re.compile("#\s+\d+\.\d+")
-    m = pattern.search(releasedata)
-    if(m == None):
-        print(colored(255, 0, 0, "You are preparing a new minor release and you have not yet updated RELEASES.md."))
-        sys.exit(-1)
 
 versionfilerel = os.sep + "include" + os.sep + "simdutf" + os.sep + "simdutf_version.h"
 versionfile = maindir + versionfilerel
@@ -128,54 +119,74 @@ mewminorversionstring = str(newversion[1])
 newrevversionstring = str(newversion[2])
 newversionstring = str(newversion[0]) + "." + str(newversion[1]) + "." + str(newversion[2])
 cmakefile = maindir + os.sep + "CMakeLists.txt"
-
 sonumber = None
-pattern = re.compile("set\(SIMDUTF_LIB_SOVERSION \"(\d+)\" CACHE STRING \"simdutf library soversion\"\)")
+pattern = re.compile(r"""set\(SIMDUTF_LIB_SOVERSION "(\d+)" CACHE STRING "simdutf library soversion"\)""")
 with open (cmakefile, 'rt') as myfile:
     for line in myfile:
         m = pattern.search(line)
-        if m != None:
+        if m is not None:
             sonumber = int(m.group(1))
             break
 print("so library number "+str(sonumber))
 
 if(atleastminor):
     print("Given that we have a minor revision, it seems necessary to bump the so library number")
+    if sonumber is None:
+        print("I cannot find the so library number in the CMakeLists.txt file")
+        sys.exit(-1)
     sonumber += 1
 
-for line in fileinput.input(cmakefile, inplace=1, backup='.bak'):
-    line = re.sub('    VERSION \d+\.\d+\.\d+','    VERSION '+newmajorversionstring+'.'+mewminorversionstring+'.'+newrevversionstring, line.rstrip())
-    line = re.sub('SIMDUTF_LIB_VERSION "\d+\.\d+\.\d+','SIMDUTF_LIB_VERSION "'+newversionstring, line)
-    line = re.sub('set\(SIMDUTF_LIB_SOVERSION \"\d+\"','set(SIMDUTF_LIB_SOVERSION \"'+str(sonumber)+'\"', line)
+for line in fileinput.input(cmakefile, inplace=True, backup='.bak'):
+    line = re.sub(r'  VERSION \d+\.\d+\.\d+','  VERSION '+newmajorversionstring+'.'+mewminorversionstring+'.'+newrevversionstring, line.rstrip())
+    line = re.sub(r'SIMDUTF_LIB_VERSION "\d+\.\d+\.\d+','SIMDUTF_LIB_VERSION "'+str(sonumber)+".0.0", line)
+    line = re.sub(r'set\(SIMDUTF_LIB_SOVERSION "\d+"','set(SIMDUTF_LIB_SOVERSION \"'+str(sonumber)+'\"', line)
     print(line)
 
 print("modified "+cmakefile+", a backup was made")
 
 
 doxyfile = maindir + os.sep + "Doxyfile"
-for line in fileinput.input(doxyfile, inplace=1, backup='.bak'):
-    line = re.sub('PROJECT_NUMBER         = "\d+\.\d+\.\d+','PROJECT_NUMBER         = "'+newversionstring, line.rstrip())
+for line in fileinput.input(doxyfile, inplace=True, backup='.bak'):
+    line = re.sub(r'PROJECT_NUMBER         = "\d+\.\d+\.\d+','PROJECT_NUMBER         = "'+newversionstring, line.rstrip())
     print(line)
 print("modified "+doxyfile+", a backup was made")
 
 
+print("running amalgamate.py")
+cp = subprocess.run(["python3", maindir+ os.sep + "singleheader/amalgamate.py"], stdout=subprocess.DEVNULL)  # doesn't capture output
 
-cp = subprocess.run([sys.executable, "amalgamate.py"], stdout=subprocess.DEVNULL, cwd=maindir+ os.sep + "singleheader")  # doesn't capture output
 if(cp.returncode != 0):
     print("Failed to run amalgamate")
-else:
-    print("The singleheader/singleheader.zip file has been updated.")
 
+print("running doxygen")
 cp = subprocess.run(["doxygen"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=maindir)  # doesn't capture output
+
 if(cp.returncode != 0):
     print("Failed to run doxygen")
 
 
 readmefile = maindir + os.sep + "README.md"
-for line in fileinput.input(readmefile, inplace=1, backup='.bak'):
-    line = re.sub('\s*https://github.com/simdutf/simdutf/releases/download/v(\d+\.\d+\.\d+)/singleheader.zip\s*','https://github.com/simdutf/simdutf/releases/download/v'+newversionstring+'/singleheader.zip', line.rstrip())
+
+
+for line in fileinput.input(readmefile, inplace=True, backup='.bak'):
+    line = re.sub(r'   wget https://github.com/simdutf/simdutf/releases/download/v\d+\.\d+\.\d+/singleheader.zip','   wget https://github.com/simdutf/simdutf/releases/download/v'+newmajorversionstring+'.'+mewminorversionstring+'.'+newrevversionstring+'/singleheader.zip', line.rstrip())
+    line = re.sub(r'https://github.com/simdutf/simdutf/releases/download/v\d+\.\d+\.\d+/singleheader.zip','https://github.com/simdutf/simdutf/releases/download/v'+newmajorversionstring+'.'+mewminorversionstring+'.'+newrevversionstring+'/singleheader.zip', line.rstrip())
     print(line)
+
 print("modified "+readmefile+", a backup was made")
+
+pattern = re.compile(r"https://simdutf.org/api/(\d+\.\d+\.\d+)/index.html")
+readmedata = open(readmefile).read()
+m = pattern.search(readmedata)
+if m == None:
+    print('I cannot find a link to the API documentation in your README')
+else:
+    if m is not None:
+        detectedreadme = m.group(1)
+        print("found a link to your API documentation in the README file: "+detectedreadme+" ("+toversionstring(*newversion)+")")
+        if(atleastminor):
+            if(detectedreadme != toversionstring(*newversion)):
+                print(colored(255, 0, 0, "Consider updating the readme link to "+toversionstring(*newversion)))
 
 
 

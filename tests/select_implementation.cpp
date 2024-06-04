@@ -1,6 +1,7 @@
 #include "simdutf.h"
+
 #include <cstdlib>
-#include <iostream>
+#include <cstdio>
 #include <string>
 
 int main() {
@@ -15,8 +16,7 @@ int main() {
     if (!validutf8) {
       return EXIT_FAILURE;
     }
-    std::cout << implementation->name() << ": " << implementation->description()
-              << std::endl;
+    printf("%s: %s\n", implementation->name().c_str(), implementation->description().c_str());
     chosen_implementation = implementation->name();
   }
   auto my_implementation =
@@ -35,6 +35,6 @@ int main() {
   if (simdutf::get_active_implementation()->name() != chosen_implementation) {
     return EXIT_FAILURE;
   }
-  std::cout << "I have manually selected: " << simdutf::get_active_implementation()->name() << std::endl;
+  printf("Manually selected: %s\n", simdutf::get_active_implementation()->name().c_str());
   return EXIT_SUCCESS;
 }

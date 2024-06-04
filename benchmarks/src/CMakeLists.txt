@@ -6,6 +6,8 @@ add_library(simdutf_benchmarks_benchmark STATIC
     benchmark.cpp
     benchmark.h
 )
+target_include_directories(simdutf_benchmarks_benchmark PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   # People who run macOS often use brew.
   list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/icu4c/include")
@@ -56,6 +58,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT MINGW)
   target_link_libraries(simdutf_benchmarks_benchmark PUBLIC stdc++fs)
 endif()
 
-target_link_libraries(simdutf_benchmarks_benchmark PUBLIC simdutf simdutf::tests::helpers) 
+target_link_libraries(simdutf_benchmarks_benchmark PUBLIC simdutf simdutf::tests::helpers)
 
 add_library(simdutf::benchmarks::benchmark ALIAS simdutf_benchmarks_benchmark)

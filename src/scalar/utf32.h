@@ -38,14 +38,11 @@ inline size_t utf8_length_from_utf32(const char32_t* buf, size_t len) {
   const uint32_t * p = reinterpret_cast<const uint32_t *>(buf);
   size_t counter{0};
   for(size_t i = 0; i < len; i++) {
-    /** ASCII **/
-    if(p[i] <= 0x7F) { counter++; }
-    /** two-byte **/
-    else if(p[i] <= 0x7FF) { counter += 2; }
-    /** three-byte **/
-    else if(p[i] <= 0xFFFF) { counter += 3; }
-    /** four-bytes **/
-    else { counter += 4; }
+    // credit: @ttsugriy  for the vectorizable approach
+    counter++;                                      // ASCII
+    counter += static_cast<size_t>(p[i] > 0x7F);    // two-byte
+    counter += static_cast<size_t>(p[i] > 0x7FF);   // three-byte
+    counter += static_cast<size_t>(p[i] > 0xFFFF);  // four-bytes
   }
   return counter;
 }
@@ -55,12 +52,22 @@ inline size_t utf16_length_from_utf32(const char32_t* buf, size_t len) {
   const uint32_t * p = reinterpret_cast<const uint32_t *>(buf);
   size_t counter{0};
   for(size_t i = 0; i < len; i++) {
-    /** non-surrogate word **/
-    if(p[i] <= 0xFFFF) { counter++; }
-    /** surrogate pair **/
-    else { counter += 2; }
+    counter++;                                      // non-surrogate word
+    counter += static_cast<size_t>(p[i] > 0xFFFF);  // surrogate pair
   }
   return counter;
+}
+
+inline size_t latin1_length_from_utf32(size_t len) {
+  // We are not BOM aware.
+  return len; // a utf32 codepoint will always represent 1 latin1 character
+}
+
+inline simdutf_warn_unused uint32_t swap_bytes(const uint32_t word) {
+  return ((word >> 24) & 0xff) |      // move byte 3 to byte 0
+         ((word << 8) & 0xff0000) |   // move byte 1 to byte 2
+         ((word >> 8) & 0xff00) |     // move byte 2 to byte 1
+         ((word << 24) & 0xff000000); // byte 0 to byte 3
 }
 
 } // utf32 namespace

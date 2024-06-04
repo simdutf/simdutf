@@ -6,6 +6,9 @@
 #include "scalar/utf8_to_utf16/utf8_to_utf16.h"
 #include "scalar/utf8.h"
 #include "scalar/utf16.h"
+#include "scalar/latin1.h"
+#include "scalar/utf8_to_latin1/valid_utf8_to_latin1.h"
+#include "scalar/utf8_to_latin1/utf8_to_latin1.h"
 
 #include "simdutf/icelake/begin.h"
 namespace simdutf {
@@ -19,12 +22,23 @@ namespace {
 #include "icelake/icelake_from_valid_utf8.inl.cpp"
 #include "icelake/icelake_utf8_validation.inl.cpp"
 #include "icelake/icelake_from_utf8.inl.cpp"
+#include "icelake/icelake_convert_utf8_to_latin1.inl.cpp"
+#include "icelake/icelake_convert_valid_utf8_to_latin1.inl.cpp"
+#include "icelake/icelake_convert_utf16_to_latin1.inl.cpp"
+#include "icelake/icelake_convert_utf16_to_utf8.inl.cpp"
 #include "icelake/icelake_convert_utf16_to_utf32.inl.cpp"
+#include "icelake/icelake_convert_utf32_to_latin1.inl.cpp"
 #include "icelake/icelake_convert_utf32_to_utf8.inl.cpp"
 #include "icelake/icelake_convert_utf32_to_utf16.inl.cpp"
 #include "icelake/icelake_ascii_validation.inl.cpp"
 #include "icelake/icelake_utf32_validation.inl.cpp"
-#include "icelake/icelake_convert_utf16_to_utf8.inl.cpp"
+#include "icelake/icelake_convert_latin1_to_utf8.inl.cpp"
+#include "icelake/icelake_convert_latin1_to_utf16.inl.cpp"
+#include "icelake/icelake_convert_latin1_to_utf32.inl.cpp"
+#include "icelake/icelake_base64.inl.cpp"
+
+
+#include <cstdint>
 
 } // namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -32,7 +46,6 @@ namespace {
 
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
-
 
 simdutf_warn_unused int
 implementation::detect_encodings(const char *input,
@@ -68,7 +81,7 @@ implementation::detect_encodings(const char *input,
         // be valid UTF-16LE, at least one surrogate must be in the two most
         // significant bytes of a 32-bit word since they always come in pairs in
         // UTF-16LE. Note that we always proceed in multiple of 4 before this
-        // point so there is no offset in 32-bit words.
+        // point so there is no offset in 32-bit code units.
 
         if ((surrogates & 0xaaaaaaaa) != 0) {
           is_utf32 = false;
@@ -84,7 +97,7 @@ implementation::detect_encodings(const char *input,
           if (ends_with_high) {
             buf +=
                 31 *
-                sizeof(char16_t); // advance only by 31 words so that we start
+                sizeof(char16_t); // advance only by 31 code units so that we start
                                   // with the high surrogate on the next round.
           } else {
             buf += 32 * sizeof(char16_t);
@@ -111,7 +124,6 @@ implementation::detect_encodings(const char *input,
           }
           return simdutf::encoding_type::unspecified;
         }
-        break;
       }
       // If no surrogate, validate under other encodings as well
 
@@ -192,7 +204,7 @@ simdutf_warn_unused result implementation::validate_utf8_with_errors(const char 
       checker.check_next_input(utf8);
       if(checker.errors()) {
         if (count != 0) { count--; } // Sometimes the error is only detected in the next chunk
-        result res = scalar::utf8::rewind_and_validate_with_errors(reinterpret_cast<const char*>(buf + count), len - count);
+        result res = scalar::utf8::rewind_and_validate_with_errors(reinterpret_cast<const char*>(buf), reinterpret_cast<const char*>(buf + count), len - count);
         res.count += count;
         return res;
       }
@@ -203,7 +215,7 @@ simdutf_warn_unused result implementation::validate_utf8_with_errors(const char 
       checker.check_next_input(utf8);
       if(checker.errors()) {
         if (count != 0) { count--; } // Sometimes the error is only detected in the next chunk
-        result res = scalar::utf8::rewind_and_validate_with_errors(reinterpret_cast<const char*>(buf + count), len - count);
+        result res = scalar::utf8::rewind_and_validate_with_errors(reinterpret_cast<const char*>(buf), reinterpret_cast<const char*>(buf + count), len - count);
         res.count += count;
         return res;
       } else {
@@ -253,7 +265,7 @@ simdutf_warn_unused bool implementation::validate_utf16le(const char16_t *buf, s
         }
         bool ends_with_high = ((highsurrogates & 0x80000000) != 0);
         if(ends_with_high) {
-          buf += 31; // advance only by 31 words so that we start with the high surrogate on the next round.
+          buf += 31; // advance only by 31 code units so that we start with the high surrogate on the next round.
         } else {
           buf += 32;
         }
@@ -302,7 +314,7 @@ simdutf_warn_unused bool implementation::validate_utf16be(const char16_t *buf, s
         }
         bool ends_with_high = ((highsurrogates & 0x80000000) != 0);
         if(ends_with_high) {
-          buf += 31; // advance only by 31 words so that we start with the high surrogate on the next round.
+          buf += 31; // advance only by 31 code units so that we start with the high surrogate on the next round.
         } else {
           buf += 32;
         }
@@ -344,7 +356,7 @@ simdutf_warn_unused result implementation::validate_utf16le_with_errors(const ch
         }
         bool ends_with_high = ((highsurrogates & 0x80000000) != 0);
         if(ends_with_high) {
-          buf += 31; // advance only by 31 words so that we start with the high surrogate on the next round.
+          buf += 31; // advance only by 31 code units so that we start with the high surrogate on the next round.
         } else {
           buf += 32;
         }
@@ -398,7 +410,7 @@ simdutf_warn_unused result implementation::validate_utf16be_with_errors(const ch
         }
         bool ends_with_high = ((highsurrogates & 0x80000000) != 0);
         if(ends_with_high) {
-          buf += 31; // advance only by 31 words so that we start with the high surrogate on the next round.
+          buf += 31; // advance only by 31 code units so that we start with the high surrogate on the next round.
         } else {
           buf += 32;
         }
@@ -471,6 +483,63 @@ simdutf_warn_unused result implementation::validate_utf32_with_errors(const char
     }
 
     return result(error_code::SUCCESS, len);
+}
+
+simdutf_warn_unused size_t implementation::convert_latin1_to_utf8(const char * buf, size_t len, char* utf8_output) const noexcept {
+  return icelake::latin1_to_utf8_avx512_start(buf, len, utf8_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_latin1_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
+  return icelake_convert_latin1_to_utf16<endianness::LITTLE>(buf, len, utf16_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_latin1_to_utf16be(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
+  return icelake_convert_latin1_to_utf16<endianness::BIG>(buf, len, utf16_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(const char* buf, size_t len, char32_t* utf32_output) const noexcept {
+    std::pair<const char*, char32_t*> ret = avx512_convert_latin1_to_utf32(buf, len, utf32_output);
+    if (ret.first == nullptr) { return 0; }
+    size_t converted_chars = ret.second - utf32_output;
+    if (ret.first != buf + len) {
+        const size_t scalar_converted_chars = scalar::latin1_to_utf32::convert(
+                                              ret.first, len - (ret.first - buf), ret.second);
+        if (scalar_converted_chars == 0) { return 0; }
+        converted_chars += scalar_converted_chars;
+    }
+    return converted_chars;
+}
+
+simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
+  return icelake::utf8_to_latin1_avx512(buf, len, latin1_output);
+}
+
+
+simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(const char* buf, size_t len, char* latin1_output) const noexcept {
+  // Initialize output length and input length counters
+  size_t inlen = 0;
+
+  // First, try to convert as much as possible using the SIMD implementation.
+  inlen = icelake::utf8_to_latin1_avx512(buf, len, latin1_output);
+
+  // If we have completely converted the string
+  if(inlen == len) {
+    return {simdutf::SUCCESS, len};
+  }
+
+  // Else if there are remaining bytes, use the scalar function to process them.
+  // Note: This is assuming scalar::utf8_to_latin1::convert_with_errors is a function that takes
+  // the input buffer, length, and output buffer, and returns a result object with an error code
+  // and the number of characters processed.
+  result res = scalar::utf8_to_latin1::convert_with_errors(buf + inlen, len - inlen, latin1_output + inlen);
+  res.count += inlen; // Add the number of characters processed by the SIMD implementation
+
+  return res;
+}
+
+
+simdutf_warn_unused size_t implementation::convert_valid_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
+  return icelake::valid_utf8_to_latin1_avx512(buf, len, latin1_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
@@ -652,6 +721,33 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(const cha
   return saved_bytes;
 }
 
+
+simdutf_warn_unused size_t implementation::convert_utf16le_to_latin1(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
+  return icelake_convert_utf16_to_latin1<endianness::LITTLE>(buf,len,latin1_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_utf16be_to_latin1(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
+  return icelake_convert_utf16_to_latin1<endianness::BIG>(buf,len,latin1_output);
+}
+
+simdutf_warn_unused result implementation::convert_utf16le_to_latin1_with_errors(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
+  return icelake_convert_utf16_to_latin1_with_errors<endianness::LITTLE>(buf,len,latin1_output).first;
+}
+
+simdutf_warn_unused result implementation::convert_utf16be_to_latin1_with_errors(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
+  return icelake_convert_utf16_to_latin1_with_errors<endianness::BIG>(buf,len,latin1_output).first;
+}
+
+simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_latin1(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
+  // optimization opportunity: implement custom function
+  return convert_utf16be_to_latin1(buf, len, latin1_output);
+}
+
+simdutf_warn_unused size_t implementation::convert_valid_utf16le_to_latin1(const char16_t* buf, size_t len, char* latin1_output) const noexcept {
+  // optimization opportunity: implement custom function
+  return convert_utf16le_to_latin1(buf, len, latin1_output);
+}
+
 simdutf_warn_unused size_t implementation::convert_utf16le_to_utf8(const char16_t* buf, size_t len, char* utf8_output) const noexcept {
   size_t outlen;
   size_t inlen = utf16_to_utf8_avx512i<endianness::LITTLE>(buf, len, (unsigned char*)utf8_output, &outlen);
@@ -696,6 +792,18 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_utf8(const c
   return convert_utf16be_to_utf8(buf, len, utf8_output);
 }
 
+simdutf_warn_unused size_t implementation::convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) const noexcept {
+  return icelake_convert_utf32_to_latin1(buf,len,latin1_output);
+}
+
+simdutf_warn_unused result implementation::convert_utf32_to_latin1_with_errors(const char32_t* buf, size_t len, char* latin1_output) const noexcept {
+  return icelake_convert_utf32_to_latin1_with_errors(buf,len,latin1_output).first;
+}
+
+simdutf_warn_unused size_t implementation::convert_valid_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) const noexcept {
+  return icelake_convert_utf32_to_latin1(buf,len,latin1_output);
+}
+
 
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
   std::pair<const char32_t*, char*> ret = avx512_convert_utf32_to_utf8(buf, len, utf8_output);
@@ -711,7 +819,7 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(const char32_t*
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
-  // ret.first.count is always the position in the buffer, not the number of words written even if finished
+  // ret.first.count is always the position in the buffer, not the number of code units written even if finished
   std::pair<result, char*> ret = icelake::avx512_convert_utf32_to_utf8_with_errors(buf, len, utf8_output);
   if (ret.first.count != len) {
     result scalar_res = scalar::utf32_to_utf8::convert_with_errors(
@@ -723,7 +831,7 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(con
       ret.second += scalar_res.count;
     }
   }
-  ret.first.count = ret.second - utf8_output;   // Set count to the number of 8-bit words written
+  ret.first.count = ret.second - utf8_output;   // Set count to the number of 8-bit code units written
   return ret.first;
 }
 
@@ -758,7 +866,7 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf16be(const char32
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf16le_with_errors(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-  // ret.first.count is always the position in the buffer, not the number of words written even if finished
+  // ret.first.count is always the position in the buffer, not the number of code units written even if finished
   std::pair<result, char16_t*> ret = avx512_convert_utf32_to_utf16_with_errors<endianness::LITTLE>(buf, len, utf16_output);
   if (ret.first.count != len) {
     result scalar_res = scalar::utf32_to_utf16::convert_with_errors<endianness::LITTLE>(
@@ -770,12 +878,12 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf16le_with_errors(
       ret.second += scalar_res.count;
     }
   }
-  ret.first.count = ret.second - utf16_output;   // Set count to the number of 8-bit words written
+  ret.first.count = ret.second - utf16_output;   // Set count to the number of 8-bit code units written
   return ret.first;
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf16be_with_errors(const char32_t* buf, size_t len, char16_t* utf16_output) const noexcept {
-  // ret.first.count is always the position in the buffer, not the number of words written even if finished
+  // ret.first.count is always the position in the buffer, not the number of code units written even if finished
   std::pair<result, char16_t*> ret = avx512_convert_utf32_to_utf16_with_errors<endianness::BIG>(buf, len, utf16_output);
   if (ret.first.count != len) {
     result scalar_res = scalar::utf32_to_utf16::convert_with_errors<endianness::BIG>(
@@ -787,7 +895,7 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf16be_with_errors(
       ret.second += scalar_res.count;
     }
   }
-  ret.first.count = ret.second - utf16_output;   // Set count to the number of 8-bit words written
+  ret.first.count = ret.second - utf16_output;   // Set count to the number of 8-bit code units written
   return ret.first;
 }
 
@@ -973,23 +1081,75 @@ simdutf_warn_unused size_t implementation::count_utf16be(const char16_t * input,
 
 
 simdutf_warn_unused size_t implementation::count_utf8(const char * input, size_t length) const noexcept {
-  const char* end = length >= 64 ? input + length - 64 : nullptr;
-  const char* ptr = input;
+  const uint8_t *str = reinterpret_cast<const uint8_t *>(input);
+  size_t answer =  length / sizeof(__m512i) * sizeof(__m512i); // Number of 512-bit chunks that fits into the length.
+  size_t i = 0;
+  __m512i unrolled_popcount{0};
 
   const __m512i continuation = _mm512_set1_epi8(char(0b10111111));
 
-  size_t count{0};
+  while (i + sizeof(__m512i) <= length) {
+    size_t iterations = (length - i) / sizeof(__m512i);
 
-  while (ptr <= end) {
-    __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
-    ptr += 64;
-    uint64_t continuation_bitmask = static_cast<uint64_t>(_mm512_cmple_epi8_mask(utf8, continuation));
-    count += 64 - count_ones(continuation_bitmask);
+    size_t max_i = i + iterations * sizeof(__m512i) - sizeof(__m512i);
+    for (; i + 8*sizeof(__m512i) <= max_i; i += 8*sizeof(__m512i)) {
+        __m512i input1 = _mm512_loadu_si512((const __m512i *)(str + i));
+        __m512i input2 = _mm512_loadu_si512((const __m512i *)(str + i + sizeof(__m512i)));
+        __m512i input3 = _mm512_loadu_si512((const __m512i *)(str + i + 2*sizeof(__m512i)));
+        __m512i input4 = _mm512_loadu_si512((const __m512i *)(str + i + 3*sizeof(__m512i)));
+        __m512i input5 = _mm512_loadu_si512((const __m512i *)(str + i + 4*sizeof(__m512i)));
+        __m512i input6 = _mm512_loadu_si512((const __m512i *)(str + i + 5*sizeof(__m512i)));
+        __m512i input7 = _mm512_loadu_si512((const __m512i *)(str + i + 6*sizeof(__m512i)));
+        __m512i input8 = _mm512_loadu_si512((const __m512i *)(str + i + 7*sizeof(__m512i)));
+
+
+        __mmask64 mask1 = _mm512_cmple_epi8_mask(input1, continuation);
+        __mmask64 mask2 = _mm512_cmple_epi8_mask(input2, continuation);
+        __mmask64 mask3 = _mm512_cmple_epi8_mask(input3, continuation);
+        __mmask64 mask4 = _mm512_cmple_epi8_mask(input4, continuation);
+        __mmask64 mask5 = _mm512_cmple_epi8_mask(input5, continuation);
+        __mmask64 mask6 = _mm512_cmple_epi8_mask(input6, continuation);
+        __mmask64 mask7 = _mm512_cmple_epi8_mask(input7, continuation);
+        __mmask64 mask8 = _mm512_cmple_epi8_mask(input8, continuation);
+
+        __m512i mask_register = _mm512_set_epi64(mask8, mask7, mask6, mask5, mask4, mask3, mask2, mask1);
+
+
+        unrolled_popcount = _mm512_add_epi64(unrolled_popcount, _mm512_popcnt_epi64(mask_register));
+    }
+
+    for (; i <= max_i; i += sizeof(__m512i)) {
+      __m512i more_input = _mm512_loadu_si512((const __m512i *)(str + i));
+      uint64_t continuation_bitmask = static_cast<uint64_t>(_mm512_cmple_epi8_mask(more_input, continuation));
+      answer -= count_ones(continuation_bitmask);
+    }
   }
 
-  return count + scalar::utf8::count_code_points(ptr, length - (ptr - input));
+  __m256i first_half = _mm512_extracti64x4_epi64(unrolled_popcount, 0);
+  __m256i second_half = _mm512_extracti64x4_epi64(unrolled_popcount, 1);
+  answer -= (size_t)_mm256_extract_epi64(first_half, 0) +
+            (size_t)_mm256_extract_epi64(first_half, 1) +
+            (size_t)_mm256_extract_epi64(first_half, 2) +
+            (size_t)_mm256_extract_epi64(first_half, 3) +
+            (size_t)_mm256_extract_epi64(second_half, 0) +
+            (size_t)_mm256_extract_epi64(second_half, 1) +
+            (size_t)_mm256_extract_epi64(second_half, 2) +
+            (size_t)_mm256_extract_epi64(second_half, 3);
+
+  return answer + scalar::utf8::count_code_points(reinterpret_cast<const char *>(str + i), length - i);
 }
 
+simdutf_warn_unused size_t implementation::latin1_length_from_utf8(const char* buf, size_t len) const noexcept {
+  return count_utf8(buf,len);
+}
+
+simdutf_warn_unused size_t implementation::latin1_length_from_utf16(size_t length) const noexcept {
+  return scalar::utf16::latin1_length_from_utf16(length);
+}
+
+simdutf_warn_unused size_t implementation::latin1_length_from_utf32(size_t length) const noexcept {
+  return scalar::utf32::latin1_length_from_utf32(length);
+}
 
 simdutf_warn_unused size_t implementation::utf8_length_from_utf16le(const char16_t * input, size_t length) const noexcept {
   const char16_t* end = length >= 32 ? input + length - 32 : nullptr;
@@ -1068,6 +1228,76 @@ simdutf_warn_unused size_t implementation::utf32_length_from_utf16be(const char1
   return implementation::count_utf16be(input, length);
 }
 
+simdutf_warn_unused size_t implementation::utf16_length_from_latin1(size_t length) const noexcept {
+  return scalar::latin1::utf16_length_from_latin1(length);
+}
+
+
+simdutf_warn_unused size_t implementation::utf32_length_from_latin1(size_t length) const noexcept {
+  return scalar::latin1::utf32_length_from_latin1(length);
+}
+
+simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char * input, size_t length) const noexcept {
+  const uint8_t *str = reinterpret_cast<const uint8_t *>(input);
+  size_t answer = length / sizeof(__m512i) * sizeof(__m512i);
+  size_t i = 0;
+  unsigned char v_0xFF = 0xff;
+  __m512i eight_64bits = _mm512_setzero_si512();
+  while (i + sizeof(__m512i) <= length) {
+    __m512i runner = _mm512_setzero_si512();
+    size_t iterations = (length - i) / sizeof(__m512i);
+    if (iterations > 255) {
+      iterations = 255;
+    }
+    size_t max_i = i + iterations * sizeof(__m512i) - sizeof(__m512i);
+    for (; i + 4*sizeof(__m512i) <= max_i; i += 4*sizeof(__m512i)) {
+            // Load four __m512i vectors
+            __m512i input1 = _mm512_loadu_si512((const __m512i *)(str + i));
+            __m512i input2 = _mm512_loadu_si512((const __m512i *)(str + i + sizeof(__m512i)));
+            __m512i input3 = _mm512_loadu_si512((const __m512i *)(str + i + 2*sizeof(__m512i)));
+            __m512i input4 = _mm512_loadu_si512((const __m512i *)(str + i + 3*sizeof(__m512i)));
+
+            // Generate four masks
+            __mmask64 mask1 = _mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), input1);
+            __mmask64 mask2 = _mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), input2);
+            __mmask64 mask3 = _mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), input3);
+            __mmask64 mask4 = _mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), input4);
+            // Apply the masks and subtract from the runner
+            __m512i not_ascii1 = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask1, v_0xFF);
+            __m512i not_ascii2 = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask2, v_0xFF);
+            __m512i not_ascii3 = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask3, v_0xFF);
+            __m512i not_ascii4 = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask4, v_0xFF);
+
+            runner = _mm512_sub_epi8(runner, not_ascii1);
+            runner = _mm512_sub_epi8(runner, not_ascii2);
+            runner = _mm512_sub_epi8(runner, not_ascii3);
+            runner = _mm512_sub_epi8(runner, not_ascii4);
+    }
+
+    for (; i <= max_i; i += sizeof(__m512i)) {
+      __m512i more_input = _mm512_loadu_si512((const __m512i *)(str + i));
+
+      __mmask64 mask = _mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), more_input);
+      __m512i not_ascii = _mm512_mask_set1_epi8(_mm512_setzero_si512(), mask, v_0xFF);
+      runner = _mm512_sub_epi8(runner, not_ascii);
+    }
+
+    eight_64bits = _mm512_add_epi64(eight_64bits, _mm512_sad_epu8(runner, _mm512_setzero_si512()));
+  }
+
+  __m256i first_half = _mm512_extracti64x4_epi64(eight_64bits, 0);
+  __m256i second_half = _mm512_extracti64x4_epi64(eight_64bits, 1);
+  answer += (size_t)_mm256_extract_epi64(first_half, 0) +
+            (size_t)_mm256_extract_epi64(first_half, 1) +
+            (size_t)_mm256_extract_epi64(first_half, 2) +
+            (size_t)_mm256_extract_epi64(first_half, 3) +
+            (size_t)_mm256_extract_epi64(second_half, 0) +
+            (size_t)_mm256_extract_epi64(second_half, 1) +
+            (size_t)_mm256_extract_epi64(second_half, 2) +
+            (size_t)_mm256_extract_epi64(second_half, 3);
+  return answer + scalar::latin1::utf8_length_from_latin1(reinterpret_cast<const char *>(str + i), length - i);
+}
+
 simdutf_warn_unused size_t implementation::utf16_length_from_utf8(const char * input, size_t length) const noexcept {
     size_t pos = 0;
     size_t count = 0;
@@ -1132,6 +1362,35 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf32(const char32_
 
 simdutf_warn_unused size_t implementation::utf32_length_from_utf8(const char * input, size_t length) const noexcept {
   return implementation::count_utf8(input, length);
+}
+
+simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(const char * input, size_t length) const noexcept {
+  return scalar::base64::maximal_binary_length_from_base64(input, length);
+}
+
+simdutf_warn_unused result implementation::base64_to_binary(const char * input, size_t length, char* output, base64_options options) const noexcept {
+  return (options & base64_url) ? compress_decode_base64<true>(output, input, length, options) : compress_decode_base64<false>(output, input, length, options);
+}
+
+simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(const char16_t * input, size_t length) const noexcept {
+  return scalar::base64::maximal_binary_length_from_base64(input, length);
+}
+
+simdutf_warn_unused result implementation::base64_to_binary(const char16_t * input, size_t length, char* output, base64_options options) const noexcept {
+  return (options & base64_url) ? compress_decode_base64<true>(output, input, length, options) : compress_decode_base64<false>(output, input, length, options);
+}
+
+
+simdutf_warn_unused size_t implementation::base64_length_from_binary(size_t length, base64_options options) const noexcept {
+  return scalar::base64::base64_length_from_binary(length, options);
+}
+
+size_t implementation::binary_to_base64(const char * input, size_t length, char* output, base64_options options) const noexcept {
+  if(options & base64_url) {
+    return encode_base64<true>(output, input, length, options);
+  } else {
+    return encode_base64<false>(output, input, length, options);
+  }
 }
 
 } // namespace SIMDUTF_IMPLEMENTATION

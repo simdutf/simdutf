@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.15)
 project(simdutf
   DESCRIPTION "Fast Unicode validation, transcoding and processing"
   LANGUAGES CXX
-  VERSION 3.2.7
+  VERSION 5.2.8
 )
 
 include (TestBigEndian)
@@ -23,11 +23,11 @@ include(GNUInstallDirs)
 include(CTest)
 include(cmake/simdutf-flags.cmake)
 
-set(SIMDUTF_LIB_VERSION "3.2.8" CACHE STRING "simdutf library version")
-set(SIMDUTF_LIB_SOVERSION "4" CACHE STRING "simdutf library soversion")
+set(SIMDUTF_LIB_VERSION "8.0.0" CACHE STRING "simdutf library version")
+set(SIMDUTF_LIB_SOVERSION "8" CACHE STRING "simdutf library soversion")
 option(SIMDUTF_TESTS "Whether the tests are included as part of the CMake Build." ON)
-option(SIMDUTF_BENCHMARKS "Whether the benchmarks are included as part of the CMake Build." ON)
-option(SIMDUTF_TOOLS "Whether the tools are included as part of the CMake build." ON)
+option(SIMDUTF_BENCHMARKS "Whether the benchmarks are included as part of the CMake Build." OFF)
+option(SIMDUTF_TOOLS "Whether the tools are included as part of the CMake build. Requires C++17 or better." ON)
 option(SIMDUTF_ICONV "Whether to use iconv as part of the CMake build if available." ON)
 
 set(SIMDUTF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
@@ -65,6 +65,7 @@ else()
   message(STATUS "The benchmarks can be enabled by setting SIMDUTF_BENCHMARKS, e.g., -D SIMDUTF_BENCHMARKS=ON.")
 endif()
 
+message(STATUS "Compiling using the C++ standard:" ${CMAKE_CXX_STANDARD})
 # ---- Install rules ----
 add_library(simdutf::simdutf ALIAS simdutf)
 
@@ -128,6 +129,17 @@ install(
     COMPONENT example_Development
 )
 
+
+# pkg-config
+include(cmake/JoinPaths.cmake)
+join_paths(PKGCONFIG_INCLUDEDIR "\${prefix}" "${CMAKE_INSTALL_INCLUDEDIR}")
+join_paths(PKGCONFIG_LIBDIR "\${prefix}" "${CMAKE_INSTALL_LIBDIR}")
+
+configure_file("simdutf.pc.in" "simdutf.pc" @ONLY)
+install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/simdutf.pc"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+)
 #
 # CPack
 #
@@ -142,3 +154,46 @@ if(is_top_project)
 endif()
 
 # ----
+
+
+
+if(NOT SIMDUTF_SANITIZE)
+  find_program(GREP grep)
+  find_program(NM nm)
+  if((NOT GREP) OR (NOT NM))
+    message("grep and nm are unavailable on this system.")
+  else()
+    add_test(
+      NAME "avoid_abort"
+      # Under FreeBSD, the __cxa_guard_abort symbol may appear but it is fine.
+      # So we want to look for <space><possibly _>abort as a test.
+      COMMAND sh -c "${NM}  $<TARGET_FILE_NAME:simdutf> |  ${GREP} ' _*abort' || exit 0  && exit 1"
+      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    )
+    add_test(
+      NAME "avoid_cout"
+      COMMAND sh -c "${NM}  $<TARGET_FILE_NAME:simdutf> |  ${GREP} ' _*cout' || exit 0  && exit 1"
+      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    )
+    add_test(
+      NAME "avoid_cerr"
+      COMMAND sh -c "${NM}  $<TARGET_FILE_NAME:simdutf> |  ${GREP} ' _*cerr' || exit 0  && exit 1"
+      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    )
+    add_test(
+      NAME "avoid_printf"
+      COMMAND sh -c "${NM}  $<TARGET_FILE_NAME:simdutf> |  ${GREP} ' _*printf' || exit 0  && exit 1"
+      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    )
+    add_test(
+      NAME "avoid_stdout"
+      COMMAND sh -c "${NM}  $<TARGET_FILE_NAME:simdutf> |  ${GREP} stdout || exit 0 && exit 1"
+      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    )
+    add_test(
+      NAME "avoid_stderr"
+      COMMAND sh -c "${NM}  $<TARGET_FILE_NAME:simdutf> |  ${GREP} stderr || exit 0 && exit 1"
+      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    )
+  endif()
+endif()

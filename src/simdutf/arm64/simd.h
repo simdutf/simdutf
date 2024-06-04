@@ -15,118 +15,53 @@ namespace simd {
 namespace {
 // Start of private section with Visual Studio workaround
 
+#ifndef simdutf_make_uint8x16_t
+#define simdutf_make_uint8x16_t(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, \
+                             x13, x14, x15, x16)                                   \
+   ([=]() {                                                                        \
+     uint8_t array[16] = {x1, x2,  x3,  x4,  x5,  x6,  x7,  x8,                    \
+                                 x9, x10, x11, x12, x13, x14, x15, x16};           \
+     return vld1q_u8(array);                                                       \
+   }())
+#endif
+#ifndef simdutf_make_int8x16_t
+#define simdutf_make_int8x16_t(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, \
+                             x13, x14, x15, x16)                                  \
+   ([=]() {                                                                       \
+     int8_t array[16] = {x1, x2,  x3,  x4,  x5,  x6,  x7,  x8,                    \
+                                 x9, x10, x11, x12, x13, x14, x15, x16};          \
+     return vld1q_s8(array);                                                      \
+   }())
+#endif
 
-/**
- * make_uint8x16_t initializes a SIMD register (uint8x16_t).
- * This is needed because, incredibly, the syntax uint8x16_t x = {1,2,3...}
- * is not recognized under Visual Studio! This is a workaround.
- * Using a std::initializer_list<uint8_t>  as a parameter resulted in
- * inefficient code. With the current approach, if the parameters are
- * compile-time constants,
- * GNU GCC compiles it to ldr, the same as uint8x16_t x = {1,2,3...}.
- * You should not use this function except for compile-time constants:
- * it is not efficient.
- */
-simdutf_really_inline uint8x16_t make_uint8x16_t(uint8_t x1,  uint8_t x2,  uint8_t x3,  uint8_t x4,
-                                         uint8_t x5,  uint8_t x6,  uint8_t x7,  uint8_t x8,
-                                         uint8_t x9,  uint8_t x10, uint8_t x11, uint8_t x12,
-                                         uint8_t x13, uint8_t x14, uint8_t x15, uint8_t x16) {
-  // Doing a load like so end ups generating worse code.
-  // uint8_t array[16] = {x1, x2, x3, x4, x5, x6, x7, x8,
-  //                     x9, x10,x11,x12,x13,x14,x15,x16};
-  // return vld1q_u8(array);
-  uint8x16_t x{};
-  // incredibly, Visual Studio does not allow x[0] = x1
-  x = vsetq_lane_u8(x1, x, 0);
-  x = vsetq_lane_u8(x2, x, 1);
-  x = vsetq_lane_u8(x3, x, 2);
-  x = vsetq_lane_u8(x4, x, 3);
-  x = vsetq_lane_u8(x5, x, 4);
-  x = vsetq_lane_u8(x6, x, 5);
-  x = vsetq_lane_u8(x7, x, 6);
-  x = vsetq_lane_u8(x8, x, 7);
-  x = vsetq_lane_u8(x9, x, 8);
-  x = vsetq_lane_u8(x10, x, 9);
-  x = vsetq_lane_u8(x11, x, 10);
-  x = vsetq_lane_u8(x12, x, 11);
-  x = vsetq_lane_u8(x13, x, 12);
-  x = vsetq_lane_u8(x14, x, 13);
-  x = vsetq_lane_u8(x15, x, 14);
-  x = vsetq_lane_u8(x16, x, 15);
-  return x;
-}
-
-// We have to do the same work for make_int8x16_t
-simdutf_really_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3,  int8_t x4,
-                                       int8_t x5,  int8_t x6,  int8_t x7,  int8_t x8,
-                                       int8_t x9,  int8_t x10, int8_t x11, int8_t x12,
-                                       int8_t x13, int8_t x14, int8_t x15, int8_t x16) {
-  // Doing a load like so end ups generating worse code.
-  // int8_t array[16] = {x1, x2, x3, x4, x5, x6, x7, x8,
-  //                     x9, x10,x11,x12,x13,x14,x15,x16};
-  // return vld1q_s8(array);
-  int8x16_t x{};
-  // incredibly, Visual Studio does not allow x[0] = x1
-  x = vsetq_lane_s8(x1, x, 0);
-  x = vsetq_lane_s8(x2, x, 1);
-  x = vsetq_lane_s8(x3, x, 2);
-  x = vsetq_lane_s8(x4, x, 3);
-  x = vsetq_lane_s8(x5, x, 4);
-  x = vsetq_lane_s8(x6, x, 5);
-  x = vsetq_lane_s8(x7, x, 6);
-  x = vsetq_lane_s8(x8, x, 7);
-  x = vsetq_lane_s8(x9, x, 8);
-  x = vsetq_lane_s8(x10, x, 9);
-  x = vsetq_lane_s8(x11, x, 10);
-  x = vsetq_lane_s8(x12, x, 11);
-  x = vsetq_lane_s8(x13, x, 12);
-  x = vsetq_lane_s8(x14, x, 13);
-  x = vsetq_lane_s8(x15, x, 14);
-  x = vsetq_lane_s8(x16, x, 15);
-  return x;
-}
-
-simdutf_really_inline uint8x8_t make_uint8x8_t(uint8_t x1,  uint8_t x2,  uint8_t x3,  uint8_t x4,
-                                         uint8_t x5,  uint8_t x6,  uint8_t x7,  uint8_t x8) {
-  uint8x8_t x{};
-  x = vset_lane_u8(x1, x, 0);
-  x = vset_lane_u8(x2, x, 1);
-  x = vset_lane_u8(x3, x, 2);
-  x = vset_lane_u8(x4, x, 3);
-  x = vset_lane_u8(x5, x, 4);
-  x = vset_lane_u8(x6, x, 5);
-  x = vset_lane_u8(x7, x, 6);
-  x = vset_lane_u8(x8, x, 7);
-  return x;
-}
-
-simdutf_really_inline uint16x8_t make_uint16x8_t(uint16_t x1,  uint16_t x2,  uint16_t x3,  uint16_t x4,
-                                       uint16_t x5,  uint16_t x6,  uint16_t x7,  uint16_t x8) {
-  uint16x8_t x{};
-  x = vsetq_lane_u16(x1, x, 0);
-  x = vsetq_lane_u16(x2, x, 1);
-  x = vsetq_lane_u16(x3, x, 2);
-  x = vsetq_lane_u16(x4, x, 3);
-  x = vsetq_lane_u16(x5, x, 4);
-  x = vsetq_lane_u16(x6, x, 5);
-  x = vsetq_lane_u16(x7, x, 6);
-  x = vsetq_lane_u16(x8, x, 7);;
-  return x;
-}
-
-simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t x3,  int16_t x4,
-                                       int16_t x5,  int16_t x6,  int16_t x7,  int16_t x8) {
-  uint16x8_t x{};
-  x = vsetq_lane_s16(x1, x, 0);
-  x = vsetq_lane_s16(x2, x, 1);
-  x = vsetq_lane_s16(x3, x, 2);
-  x = vsetq_lane_s16(x4, x, 3);
-  x = vsetq_lane_s16(x5, x, 4);
-  x = vsetq_lane_s16(x6, x, 5);
-  x = vsetq_lane_s16(x7, x, 6);
-  x = vsetq_lane_s16(x8, x, 7);;
-  return x;
-}
+#ifndef simdutf_make_uint8x8_t
+#define simdutf_make_uint8x8_t(x1, x2, x3, x4, x5, x6, x7, x8)                \
+   ([=]() {                                                                   \
+     uint8_t array[8] = {x1, x2,  x3,  x4,  x5,  x6,  x7,  x8};               \
+     return vld1_u8(array);                                                   \
+   }())
+#endif
+#ifndef simdutf_make_int8x8_t
+#define simdutf_make_int8x8_t(x1, x2, x3, x4, x5, x6, x7, x8)                 \
+   ([=]() {                                                                   \
+     int8_t array[8] = {x1, x2,  x3,  x4,  x5,  x6,  x7,  x8};                \
+     return vld1_s8(array);                                                   \
+   }())
+#endif
+#ifndef simdutf_make_uint16x8_t
+#define simdutf_make_uint16x8_t(x1, x2, x3, x4, x5, x6, x7, x8)                \
+   ([=]() {                                                                    \
+     uint16_t array[8] = {x1, x2,  x3,  x4,  x5,  x6,  x7,  x8};               \
+     return vld1q_u16(array);                                                  \
+   }())
+#endif
+#ifndef simdutf_make_int16x8_t
+#define simdutf_make_int16x8_t(x1, x2, x3, x4, x5, x6, x7, x8)                 \
+   ([=]() {                                                                    \
+     int16_t array[8] = {x1, x2,  x3,  x4,  x5,  x6,  x7,  x8};                \
+     return vld1q_s16(array);                                                  \
+   }())
+#endif
 
 
 // End of private section with Visual Studio workaround
@@ -162,7 +97,7 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     simdutf_really_inline simd8<T>& operator&=(const simd8<T> other) { auto this_cast = static_cast<simd8<T>*>(this); *this_cast = *this_cast & other; return *this_cast; }
     simdutf_really_inline simd8<T>& operator^=(const simd8<T> other) { auto this_cast = static_cast<simd8<T>*>(this); *this_cast = *this_cast ^ other; return *this_cast; }
 
-    simdutf_really_inline Mask operator==(const simd8<T> other) const { return vceqq_u8(*this, other); }
+    friend simdutf_really_inline Mask operator==(const simd8<T> lhs, const simd8<T> rhs) { return vceqq_u8(lhs, rhs); }
 
     template<int N=1>
     simdutf_really_inline simd8<T> prev(const simd8<T> prev_chunk) const {
@@ -189,7 +124,7 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     // purposes (cutting it down to uint16_t costs performance in some compilers).
     simdutf_really_inline uint32_t to_bitmask() const {
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-      const uint8x16_t bit_mask =  make_uint8x16_t(0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
+      const uint8x16_t bit_mask =  simdutf_make_uint8x16_t(0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
                                                    0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80);
 #else
       const uint8x16_t bit_mask =  {0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
@@ -211,9 +146,9 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
       return vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(*this), 4)), 0);
     }
 
-    simdutf_really_inline bool any() const { return vmaxvq_u8(*this) != 0; }
-    simdutf_really_inline bool none() const { return vmaxvq_u8(*this) == 0; }
-    simdutf_really_inline bool all() const { return vminvq_u8(*this) == 0xFF; }
+    simdutf_really_inline bool any() const { return vmaxvq_u32(vreinterpretq_u32_u8(*this)) != 0; }
+    simdutf_really_inline bool none() const { return vmaxvq_u32(vreinterpretq_u32_u8(*this)) == 0; }
+    simdutf_really_inline bool all() const { return vminvq_u32(vreinterpretq_u32_u8(*this)) == 0xFFFFF; }
 
 
   };
@@ -236,7 +171,7 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     simdutf_really_inline simd8(
       uint8_t v0,  uint8_t v1,  uint8_t v2,  uint8_t v3,  uint8_t v4,  uint8_t v5,  uint8_t v6,  uint8_t v7,
       uint8_t v8,  uint8_t v9,  uint8_t v10, uint8_t v11, uint8_t v12, uint8_t v13, uint8_t v14, uint8_t v15
-    ) : simd8(make_uint8x16_t(
+    ) : simd8(simdutf_make_uint8x16_t(
       v0, v1, v2, v3, v4, v5, v6, v7,
       v8, v9, v10,v11,v12,v13,v14,v15
     )) {}
@@ -334,32 +269,68 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     static simdutf_really_inline simd8<int8_t> splat(int8_t _value) { return vmovq_n_s8(_value); }
     static simdutf_really_inline simd8<int8_t> zero() { return vdupq_n_s8(0); }
     static simdutf_really_inline simd8<int8_t> load(const int8_t values[16]) { return vld1q_s8(values); }
+
+    // Use ST2 instead of UXTL+UXTL2 to interleave zeroes. UXTL is actually a USHLL #0,
+    // and shifting in NEON is actually quite slow.
+    //
+    // While this needs the registers to be in a specific order, bigger cores can interleave
+    // these with no overhead, and it still performs decently on little cores.
+    //    movi  v1.3d, #0
+    //      mov   v0.16b, value[0]
+    //    st2   {v0.16b, v1.16b}, [ptr], #32
+    //      mov   v0.16b, value[1]
+    //    st2   {v0.16b, v1.16b}, [ptr], #32
+    //    ...
     template <endianness big_endian>
     simdutf_really_inline void store_ascii_as_utf16(char16_t * p) const {
-      uint16x8_t first = vmovl_u8(vget_low_u8 (vreinterpretq_u8_s8(this->value)));
-      uint16x8_t second = vmovl_high_u8(vreinterpretq_u8_s8(this->value));
-      if (!match_system(big_endian)) {
-        #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-        const uint8x16_t swap = make_uint8x16_t(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
-        #else
-        const uint8x16_t swap = {1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14};
-        #endif
-        first = vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(first), swap));
-        second = vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(second), swap));
-      }
-      vst1q_u16(reinterpret_cast<uint16_t*>(p), first);
-      vst1q_u16(reinterpret_cast<uint16_t*>(p + 8), second);
+      int8x16x2_t pair = match_system(big_endian)
+          ? int8x16x2_t{{this->value, vmovq_n_s8(0)}}
+          : int8x16x2_t{{vmovq_n_s8(0), this->value}};
+      vst2q_s8(reinterpret_cast<int8_t *>(p), pair);
     }
+
+    // currently unused
+    // Technically this could be done with ST4 like in store_ascii_as_utf16, but it is
+    // very much not worth it, as explicitly mentioned in the ARM Cortex-X1 Core Software
+    // Optimization Guide:
+    //   4.18 Complex ASIMD instructions
+    //     The bandwidth of [ST4 with element size less than 64b] is limited by decode
+    //     constraints and it is advisable to avoid them when high performing code is desired.
+    // Instead, it is better to use ZIP1+ZIP2 and two ST2.
     simdutf_really_inline void store_ascii_as_utf32(char32_t * p) const {
-      vst1q_u32(reinterpret_cast<uint32_t*>(p), vmovl_u16(vget_low_u16(vmovl_u8(vget_low_u8 (vreinterpretq_u8_s8(this->value))))));
-      vst1q_u32(reinterpret_cast<uint32_t*>(p + 4), vmovl_high_u16(vmovl_u8(vget_low_u8 (vreinterpretq_u8_s8(this->value)))));
-      vst1q_u32(reinterpret_cast<uint32_t*>(p + 8), vmovl_u16(vget_low_u16(vmovl_high_u8(vreinterpretq_u8_s8(this->value)))));
-      vst1q_u32(reinterpret_cast<uint32_t*>(p + 12), vmovl_high_u16(vmovl_high_u8(vreinterpretq_u8_s8(this->value))));
+      const uint16x8_t low = vreinterpretq_u16_s8(vzip1q_s8(this->value, vmovq_n_s8(0)));
+      const uint16x8_t high = vreinterpretq_u16_s8(vzip2q_s8(this->value, vmovq_n_s8(0)));
+      const uint16x8x2_t low_pair{{ low, vmovq_n_u16(0) }};
+      vst2q_u16(reinterpret_cast<uint16_t *>(p), low_pair);
+      const uint16x8x2_t high_pair{{ high, vmovq_n_u16(0) }};
+      vst2q_u16(reinterpret_cast<uint16_t *>(p + 8), high_pair);
+    }
+
+    // In places where the table can be reused, which is most uses in simdutf, it is worth it to do
+    // 4 table lookups, as there is no direct zero extension from u8 to u32.
+    simdutf_really_inline void store_ascii_as_utf32_tbl(char32_t * p) const {
+      const simd8<uint8_t> tb1{  0,255,255,255,  1,255,255,255,  2,255,255,255,  3,255,255,255 };
+      const simd8<uint8_t> tb2{  4,255,255,255,  5,255,255,255,  6,255,255,255,  7,255,255,255 };
+      const simd8<uint8_t> tb3{  8,255,255,255,  9,255,255,255, 10,255,255,255, 11,255,255,255 };
+      const simd8<uint8_t> tb4{ 12,255,255,255, 13,255,255,255, 14,255,255,255, 15,255,255,255 };
+
+      // encourage store pairing and interleaving
+      const auto shuf1 = this->apply_lookup_16_to(tb1);
+      const auto shuf2 = this->apply_lookup_16_to(tb2);
+      shuf1.store(reinterpret_cast<int8_t *>(p));
+      shuf2.store(reinterpret_cast<int8_t *>(p + 4));
+
+      const auto shuf3 = this->apply_lookup_16_to(tb3);
+      const auto shuf4 = this->apply_lookup_16_to(tb4);
+      shuf3.store(reinterpret_cast<int8_t *>(p + 8));
+      shuf4.store(reinterpret_cast<int8_t *>(p + 12));
     }
     // Conversion from/to SIMD register
     simdutf_really_inline simd8(const int8x16_t _value) : value{_value} {}
     simdutf_really_inline operator const int8x16_t&() const { return this->value; }
+#ifndef SIMDUTF_REGULAR_VISUAL_STUDIO
     simdutf_really_inline operator const uint8x16_t() const { return vreinterpretq_u8_s8(this->value); }
+#endif
     simdutf_really_inline operator int8x16_t&() { return this->value; }
 
     // Zero constructor
@@ -373,7 +344,7 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     simdutf_really_inline simd8(
       int8_t v0,  int8_t v1,  int8_t v2,  int8_t v3, int8_t v4,  int8_t v5,  int8_t v6,  int8_t v7,
       int8_t v8,  int8_t v9,  int8_t v10, int8_t v11, int8_t v12, int8_t v13, int8_t v14, int8_t v15
-    ) : simd8(make_int8x16_t(
+    ) : simd8(simdutf_make_int8x16_t(
       v0, v1, v2, v3, v4, v5, v6, v7,
       v8, v9, v10,v11,v12,v13,v14,v15
     )) {}
@@ -456,7 +427,7 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     }
 
     template<typename T>
-    simdutf_really_inline simd8<int8_t> apply_lookup_16_to(const simd8<T> original) {
+    simdutf_really_inline simd8<int8_t> apply_lookup_16_to(const simd8<T> original) const {
       return vqtbl1q_s8(*this, simd8<uint8_t>(original));
     }
   };
@@ -507,15 +478,15 @@ simdutf_really_inline int16x8_t make_int16x8_t(int16_t x1,  int16_t x2,  int16_t
     }
 
     simdutf_really_inline void store_ascii_as_utf32(char32_t * ptr) const {
-      this->chunks[0].store_ascii_as_utf32(ptr+sizeof(simd8<T>)*0);
-      this->chunks[1].store_ascii_as_utf32(ptr+sizeof(simd8<T>)*1);
-      this->chunks[2].store_ascii_as_utf32(ptr+sizeof(simd8<T>)*2);
-      this->chunks[3].store_ascii_as_utf32(ptr+sizeof(simd8<T>)*3);
+      this->chunks[0].store_ascii_as_utf32_tbl(ptr+sizeof(simd8<T>)*0);
+      this->chunks[1].store_ascii_as_utf32_tbl(ptr+sizeof(simd8<T>)*1);
+      this->chunks[2].store_ascii_as_utf32_tbl(ptr+sizeof(simd8<T>)*2);
+      this->chunks[3].store_ascii_as_utf32_tbl(ptr+sizeof(simd8<T>)*3);
     }
 
     simdutf_really_inline uint64_t to_bitmask() const {
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-      const uint8x16_t bit_mask = make_uint8x16_t(
+      const uint8x16_t bit_mask = simdutf_make_uint8x16_t(
         0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
         0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80
       );

@@ -21,7 +21,7 @@ std::tuple<const char16_t*, char32_t*, bool> convert_utf16_to_utf32(const char16
             0x0607040502030001,
             0x0e0f0c0d0a0b0809
         );
-  while (buf + 32 <= end) {
+  while (std::distance(buf,end) >= 32) {
     // Always safe because buf + 32 <= end so that end - buf >= 32 bytes:
     __m512i in = _mm512_loadu_si512((__m512i*)buf);
     if(big_endian) { in = _mm512_shuffle_epi8(in, byteflip); }
@@ -43,7 +43,7 @@ std::tuple<const char16_t*, char32_t*, bool> convert_utf16_to_utf32(const char16
             |1101.11aa.aaaa.aaaa|1101.10bb.bbbb.bbbb|
                 low surrogate      high surrogate
         */
-        /*  1. Expand all words to 32-bit words
+        /*  1. Expand all code units to 32-bit code units
             in  |0000.0000.0000.0000.1101.11aa.aaaa.aaaa|0000.0000.0000.0000.1101.10bb.bbbb.bbbb|
         */
         const __m512i first = _mm512_cvtepu16_epi32(_mm512_castsi512_si256(in));
@@ -74,7 +74,7 @@ std::tuple<const char16_t*, char32_t*, bool> convert_utf16_to_utf32(const char16
         const __m512i added_second = _mm512_mask_add_epi32(aligned_second, (__mmask16)(H>>16), aligned_second, shifted_second);
         const __m512i utf32_second = _mm512_mask_add_epi32(added_second, (__mmask16)(H>>16), added_second, constant);
 
-        //  5. Store all valid UTF-32 words (low surrogate positions and 32nd word are invalid)
+        //  5. Store all valid UTF-32 code units (low surrogate positions and 32nd word are invalid)
         const __mmask32 valid = ~L & 0x7fffffff;
         // We deliberately do a _mm512_maskz_compress_epi32 followed by storeu_epi32
         // to ease performance portability to Zen 4.
@@ -88,7 +88,7 @@ std::tuple<const char16_t*, char32_t*, bool> convert_utf16_to_utf32(const char16
         //_mm512_storeu_epi32((__m512i *) utf32_output, compressed_second);
         _mm512_mask_storeu_epi32((__m512i *) utf32_output, __mmask16((1<<howmany2)-1), compressed_second);
         utf32_output += howmany2;
-        // Only process 31 words, but keep track if the 31st word is a high surrogate as a carry
+        // Only process 31 code units, but keep track if the 31st word is a high surrogate as a carry
         buf += 31;
         carry = (H >> 30) & 0x1;
       } else {
@@ -97,7 +97,7 @@ std::tuple<const char16_t*, char32_t*, bool> convert_utf16_to_utf32(const char16
       }
     } else {
       // no surrogates
-      // extend all thirty-two 16-bit words to thirty-two 32-bit words
+      // extend all thirty-two 16-bit code units to thirty-two 32-bit code units
       _mm512_storeu_si512((__m512i *)(utf32_output), _mm512_cvtepu16_epi32(_mm512_castsi512_si256(in)));
       _mm512_storeu_si512((__m512i *)(utf32_output) + 1, _mm512_cvtepu16_epi32(_mm512_extracti32x8_epi32(in,1)));
       utf32_output += 32;

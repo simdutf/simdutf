@@ -1,10 +1,7 @@
 #include "simdutf.h"
 
 #include <array>
-#include <iostream>
 
-#include <tests/reference/validate_utf16.h>
-#include <tests/reference/decode_utf16.h>
 #include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
@@ -18,14 +15,12 @@ namespace {
   constexpr int trials = 1000;
 }
 
-TEST(convert_2_UTF16_bytes) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_2_UTF16_bytes) {
     // range for 1, 2 or 3 UTF-8 bytes
     simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0x007f},
                                                      {0x0080, 0x07ff},
                                                      {0x0800, 0xd7ff},
-                                                     {0xe000, 0xffff}}, 0);
+                                                     {0xe000, 0xffff}}, seed);
 
     auto procedure = [&implementation](const char16_t* utf16le, size_t size, char32_t* utf32) -> size_t {
       std::vector<char16_t> utf16be(size);
@@ -42,14 +37,11 @@ TEST(convert_2_UTF16_bytes) {
       ASSERT_TRUE(test(procedure));
       ASSERT_TRUE(test.check_size(size_procedure));
     }
-  }
 }
 
-TEST(convert_with_surrogates) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_with_surrogates) {
     simdutf::tests::helpers::RandomIntRanges random({{0x0800, 0xd800-1},
-                                                     {0xe000, 0x10ffff}}, 0);
+                                                     {0xe000, 0x10ffff}}, seed);
 
     auto procedure = [&implementation](const char16_t* utf16le, size_t size, char32_t* utf32) -> size_t {
       std::vector<char16_t> utf16be(size);
@@ -66,7 +58,6 @@ TEST(convert_with_surrogates) {
       ASSERT_TRUE(test(procedure));
       ASSERT_TRUE(test.check_size(size_procedure));
     }
-  }
 }
 
 #if SIMDUTF_IS_BIG_ENDIAN
@@ -182,6 +173,4 @@ TEST(convert_fails_if_there_is_surrogate_pair_is_followed_by_high_surrogate) {
 }
 #endif
 
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN

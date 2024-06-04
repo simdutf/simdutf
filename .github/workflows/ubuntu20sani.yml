@@ -12,7 +12,7 @@ jobs:
   ubuntu-build:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Use cmake with address sanitizer
         run: |
           mkdir build &&
@@ -24,6 +24,6 @@ jobs:
         run: |
           mkdir buildundef &&
           cd buildundef &&
-          cmake -DSIMDUTF_SANITIZE_UNDEFINED=ON ..  &&
+          cmake -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DSIMDUTF_SANITIZE_UNDEFINED=ON ..  &&
           cmake --build .   &&
           ctest -j --output-on-failure

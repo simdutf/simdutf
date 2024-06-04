@@ -71,14 +71,9 @@ inline size_t utf8_length_from_utf16(const char16_t* buf, size_t len) {
   size_t counter{0};
   for(size_t i = 0; i < len; i++) {
     uint16_t word = !match_system(big_endian) ? swap_bytes(p[i]) : p[i];
-    /** ASCII **/
-    if(word <= 0x7F) { counter++; }
-    /** two-byte **/
-    else if (word <= 0x7FF) { counter += 2; }
-    /** three-byte **/
-    else if((word <= 0xD7FF) || (word >= 0xE000)) { counter += 3; }
-    /** surrogates -- 4 bytes **/
-    else { counter += 2; }
+    counter++;                                      // ASCII
+    counter += static_cast<size_t>(word > 0x7F);    // non-ASCII is at least 2 bytes, surrogates are 2*2 == 4 bytes
+    counter += static_cast<size_t>((word > 0x7FF && word <= 0xD7FF) || (word >= 0xE000));   // three-byte
   }
   return counter;
 }
@@ -95,12 +90,29 @@ inline size_t utf32_length_from_utf16(const char16_t* buf, size_t len) {
   return counter;
 }
 
+
+inline size_t latin1_length_from_utf16(size_t len) {
+  return len;
+}
+
 simdutf_really_inline void change_endianness_utf16(const char16_t* in, size_t size, char16_t* out) {
   const uint16_t * input = reinterpret_cast<const uint16_t *>(in);
   uint16_t * output = reinterpret_cast<uint16_t *>(out);
   for (size_t i = 0; i < size; i++) {
     *output++ = uint16_t(input[i] >> 8 | input[i] << 8);
   }
+}
+
+
+template <endianness big_endian>
+simdutf_warn_unused inline size_t trim_partial_utf16(const char16_t* input, size_t length) {
+  if (length <= 1) {
+    return length;
+  }
+  uint16_t last_word = uint16_t(input[length-1]);
+  last_word = !match_system(big_endian) ? swap_bytes(last_word) : last_word;
+  length -= ((last_word & 0xFC00) == 0xD800);
+  return length;
 }
 
 } // utf16 namespace

@@ -21,7 +21,7 @@ struct simd16;
     simdutf_really_inline simd16<T>& operator&=(const simd16<T> other) { auto this_cast = static_cast<simd16<T>*>(this); *this_cast = *this_cast & other; return *this_cast; }
     simdutf_really_inline simd16<T>& operator^=(const simd16<T> other) { auto this_cast = static_cast<simd16<T>*>(this); *this_cast = *this_cast ^ other; return *this_cast; }
 
-    simdutf_really_inline Mask operator==(const simd16<T> other) const { return vceqq_u16(*this, other); }
+    friend simdutf_really_inline Mask operator==(const simd16<T> lhs, const simd16<T> rhs) { return vceqq_u16(lhs, rhs); }
 
     template<int N=1>
     simdutf_really_inline simd16<T> prev(const simd16<T> prev_chunk) const {
@@ -39,8 +39,6 @@ struct base16: base_u16<T> {
   template <typename Pointer>
   simdutf_really_inline base16(const Pointer* ptr) : base16(vld1q_u16(ptr)) {}
 
-  simdutf_really_inline Mask operator==(const simd16<T> other) const { return vceqq_u16(*this, other); }
-
   static const int SIZE = sizeof(base_u16<T>::value);
 
   template<int N=1>
@@ -54,10 +52,10 @@ template<>
 struct simd16<bool>: base16<bool> {
   static simdutf_really_inline simd16<bool> splat(bool _value) { return vmovq_n_u16(uint16_t(-(!!_value))); }
 
-  simdutf_really_inline simd16<bool>() : base16() {}
-  simdutf_really_inline simd16<bool>(const uint16x8_t _value) : base16<bool>(_value) {}
+  simdutf_really_inline simd16() : base16() {}
+  simdutf_really_inline simd16(const uint16x8_t _value) : base16<bool>(_value) {}
   // Splat constructor
-  simdutf_really_inline simd16<bool>(bool _value) : base16<bool>(splat(_value)) {}
+  simdutf_really_inline simd16(bool _value) : base16<bool>(splat(_value)) {}
 
 };
 
@@ -85,7 +83,7 @@ struct base16_numeric: base16<T> {
   simdutf_really_inline simd16<T>& operator-=(const simd16<T> other) { *this = *this - other; return *static_cast<simd16<T>*>(this); }
 };
 
-// Signed words
+// Signed code units
 template<>
 struct simd16<int16_t> : base16_numeric<int16_t> {
   simdutf_really_inline simd16() : base16_numeric<int16_t>() {}
@@ -115,7 +113,7 @@ struct simd16<int16_t> : base16_numeric<int16_t> {
 
 
 
-// Unsigned words
+// Unsigned code units
 template<>
 struct simd16<uint16_t>: base16_numeric<uint16_t>  {
   simdutf_really_inline simd16() : base16_numeric<uint16_t>() {}
@@ -158,19 +156,14 @@ struct simd16<uint16_t>: base16_numeric<uint16_t>  {
   simdutf_really_inline simd16<uint16_t> operator&(const simd16<uint16_t> other) const { return vandq_u16(*this, other); }
   simdutf_really_inline simd16<uint16_t> operator^(const simd16<uint16_t> other) const { return veorq_u16(*this, other); }
 
-  // Pack with the unsigned saturation  two uint16_t words into single uint8_t vector
+  // Pack with the unsigned saturation of two uint16_t code units into single uint8_t vector
   static simdutf_really_inline simd8<uint8_t> pack(const simd16<uint16_t>& v0, const simd16<uint16_t>& v1) {
     return vqmovn_high_u16(vqmovn_u16(v0), v1);
   }
 
   // Change the endianness
   simdutf_really_inline simd16<uint16_t> swap_bytes() const {
-    #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-    const uint8x16_t swap = make_uint8x16_t(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
-    #else
-    const uint8x16_t swap = {1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14};
-    #endif
-    return vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(*this), swap));
+    return vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(*this)));
   }
 };
 simdutf_really_inline simd16<int16_t>::operator simd16<uint16_t>() const { return this->value; }
@@ -213,7 +206,7 @@ simdutf_really_inline simd16<int16_t>::operator simd16<uint16_t>() const { retur
 
     simdutf_really_inline uint64_t to_bitmask() const {
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-      const uint8x16_t bit_mask = make_uint8x16_t(
+      const uint8x16_t bit_mask = simdutf_make_uint8x16_t(
         0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
         0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80
       );

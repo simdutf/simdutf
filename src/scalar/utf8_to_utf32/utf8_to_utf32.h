@@ -161,7 +161,7 @@ inline result convert_with_errors(const char* buf, size_t len, char32_t* utf32_o
  *
  * The caller is responsible to ensure that len > 0.
  *
- * If the error is believed to have occured prior to 'buf', the count value contain in the result
+ * If the error is believed to have occurred prior to 'buf', the count value contain in the result
  * will be SIZE_T - 1, SIZE_T - 2, or SIZE_T - 3.
  */
 inline result rewind_and_convert_with_errors(size_t prior_bytes, const char* buf, size_t len, char32_t* utf32_output) {
@@ -172,7 +172,7 @@ inline result rewind_and_convert_with_errors(size_t prior_bytes, const char* buf
   bool found_leading_bytes{false};
   // important: it is i <= how_far_back and not 'i < how_far_back'.
   for(size_t i = 0; i <= how_far_back; i++) {
-    unsigned char byte = buf[-i];
+    unsigned char byte = buf[0-i];
     found_leading_bytes = ((byte & 0b11000000) != 0b10000000);
     if(found_leading_bytes) {
       buf -= i;
@@ -191,7 +191,7 @@ inline result rewind_and_convert_with_errors(size_t prior_bytes, const char* buf
     // If how_far_back == 3, we may have four consecutive continuation bytes!!!
     // [....] [continuation] [continuation] [continuation] | [buf is continuation]
     // Or we possibly have a stream that does not start with a leading byte.
-    return result(error_code::TOO_LONG, -how_far_back);
+    return result(error_code::TOO_LONG, 0-how_far_back);
   }
 
   result res = convert_with_errors(buf, len + extra_len, utf32_output);

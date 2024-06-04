@@ -13,9 +13,12 @@
 #endif
 
 #ifdef _MSC_VER
-#if _MSC_VER >= 1920
-// Visual Studio 2019 and up support VBMI2 under x64 even if the header
+#if _MSC_VER >= 1930
+// Visual Studio 2022 and up support VBMI2 under x64 even if the header
 // avx512vbmi2intrin.h is not found.
+// Visual Studio 2019 technically supports VBMI2, but the implementation
+// might be unreliable. Search for visualstudio2019icelakeissue in our
+// tests.
 #define SIMDUTF_COMPILER_SUPPORTS_VBMI2 1
 #endif
 #endif
@@ -25,18 +28,22 @@
 #define SIMDUTF_IMPLEMENTATION_ICELAKE ((SIMDUTF_IS_X86_64) && (SIMDUTF_COMPILER_SUPPORTS_VBMI2))
 #endif
 
-// To see why  (__BMI__) && (__PCLMUL__) && (__LZCNT__) are not part of this next line, see
+// To see why  (__BMI__) && (__LZCNT__) are not part of this next line, see
 // https://github.com/simdutf/simdutf/issues/1247
-#define SIMDUTF_CAN_ALWAYS_RUN_ICELAKE ((SIMDUTF_IMPLEMENTATION_ICELAKE) && (SIMDUTF_IS_X86_64) && (__AVX2__) && (SIMDUTF_HAS_AVX512F && \
+#if ((SIMDUTF_IMPLEMENTATION_ICELAKE) && (SIMDUTF_IS_X86_64) && (__AVX2__) && (SIMDUTF_HAS_AVX512F && \
                                          SIMDUTF_HAS_AVX512DQ && \
                                          SIMDUTF_HAS_AVX512VL && \
                                            SIMDUTF_HAS_AVX512VBMI2) && (!SIMDUTF_IS_32BITS))
+#define SIMDUTF_CAN_ALWAYS_RUN_ICELAKE 1
+#else
+#define SIMDUTF_CAN_ALWAYS_RUN_ICELAKE 0
+#endif
 
 #if SIMDUTF_IMPLEMENTATION_ICELAKE
 #if SIMDUTF_CAN_ALWAYS_RUN_ICELAKE
 #define SIMDUTF_TARGET_ICELAKE
 #else
-#define SIMDUTF_TARGET_ICELAKE SIMDUTF_TARGET_REGION("avx512f,avx512dq,avx512cd,avx512bw,avx512vbmi,avx512vbmi2,avx512vl,avx2,bmi,bmi2,pclmul,lzcnt")
+#define SIMDUTF_TARGET_ICELAKE SIMDUTF_TARGET_REGION("avx512f,avx512dq,avx512cd,avx512bw,avx512vbmi,avx512vbmi2,avx512vl,avx2,bmi,bmi2,pclmul,lzcnt,popcnt,avx512vpopcntdq")
 #endif
 
 namespace simdutf {

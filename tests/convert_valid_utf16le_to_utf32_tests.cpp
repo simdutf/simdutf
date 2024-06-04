@@ -1,14 +1,11 @@
 #include "simdutf.h"
 
 #include <array>
-#include <iostream>
 
 #include <tests/reference/validate_utf16.h>
-#include <tests/reference/decode_utf16.h>
 #include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
-
 
 namespace {
   std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
@@ -18,14 +15,12 @@ namespace {
   constexpr int trials = 1000;
 }
 
-TEST(convert_2_UTF16_bytes) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_2_UTF16_bytes) {
     // range for 2-byte UTF-16 (no surrogate pairs)
     simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0x007f},
                                                      {0x0080, 0x07ff},
                                                      {0x0800, 0xd7ff},
-                                                     {0xe000, 0xffff}}, 0);
+                                                     {0xe000, 0xffff}}, seed);
 
     auto procedure = [&implementation](const char16_t* utf16, size_t size, char32_t* utf32) -> size_t {
       return implementation.convert_valid_utf16le_to_utf32(utf16, size, utf32);
@@ -35,15 +30,12 @@ TEST(convert_2_UTF16_bytes) {
       transcode_utf16_to_utf32_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
     }
-  }
 }
 
-TEST(convert_with_surrogate_pairs) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_with_surrogate_pairs) {
     // some surrogate pairs
     simdutf::tests::helpers::RandomIntRanges random({{0x0800, 0xd800-1},
-                                                     {0xe000, 0x10ffff}}, 0);
+                                                     {0xe000, 0x10ffff}}, seed);
 
     auto procedure = [&implementation](const char16_t* utf16, size_t size, char32_t* utf32) -> size_t {
       return implementation.convert_valid_utf16le_to_utf32(utf16, size, utf32);
@@ -53,7 +45,6 @@ TEST(convert_with_surrogate_pairs) {
       transcode_utf16_to_utf32_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
     }
-  }
 }
 
 #if SIMDUTF_IS_BIG_ENDIAN
@@ -148,6 +139,4 @@ TEST(all_possible_8_codepoint_combinations) {
 }
 #endif
 
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN

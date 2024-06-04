@@ -1,14 +1,11 @@
 #include "simdutf.h"
 
 #include <array>
-#include <iostream>
 
 #include <tests/reference/validate_utf16.h>
-#include <tests/reference/decode_utf16.h>
 #include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
-
 
 namespace {
   std::array<size_t, 9> input_size{7, 12, 16, 64, 67, 128, 256, 511, 1000};
@@ -79,9 +76,9 @@ TEST(issue_a73) {
       "\xad";
   size_t utf8size =
       implementation.convert_valid_utf16le_to_utf8(utf16, len, output.data());
-  ASSERT_TRUE(utf8size == expected_length);
+  ASSERT_EQUAL(utf8size, expected_length);
   for (size_t i = 0; i < expected_length; i++) {
-    ASSERT_TRUE(output[i] == expected[i]);
+    ASSERT_EQUAL(output[i], expected[i]);
   }
 }
 #endif
@@ -103,9 +100,9 @@ TEST(issue_a72) {
       "\xe9\x93\xa1\xe9\x87\xbf";
   char utf8[96];
   size_t utf8size = implementation.convert_valid_utf16le_to_utf8(utf16, 32, utf8);
-  ASSERT_TRUE(utf8size == 96);
+  ASSERT_EQUAL(utf8size, 96);
   for (size_t i = 0; i < 96; i++) {
-    ASSERT_TRUE(utf8[i] == expected[i]);
+    ASSERT_EQUAL(utf8[i], expected[i]);
   }
 }
 #endif
@@ -127,10 +124,7 @@ TEST(convert_pure_ASCII) {
   }
 }
 
-TEST(convert_into_1_or_2_UTF8_bytes) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    uint32_t seed{1234+uint32_t(trial)};
-    if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_into_1_or_2_UTF8_bytes) {
     simdutf::tests::helpers::RandomInt random(0x0000, 0x07ff, seed); // range for 1 or 2 UTF-8 bytes
 
     auto procedure = [&implementation](const char16_t* utf16, size_t size, char* utf8) -> size_t {
@@ -141,17 +135,14 @@ TEST(convert_into_1_or_2_UTF8_bytes) {
       transcode_utf16_to_utf8_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
     }
-  }
 }
 
-TEST(convert_into_1_or_2_or_3_UTF8_bytes) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_into_1_or_2_or_3_UTF8_bytes) {
     // range for 1, 2 or 3 UTF-8 bytes
     simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0x007f},
                                                      {0x0080, 0x07ff},
                                                      {0x0800, 0xd7ff},
-                                                     {0xe000, 0xffff}}, 0);
+                                                     {0xe000, 0xffff}}, seed);
 
     auto procedure = [&implementation](const char16_t* utf16, size_t size, char* utf8) -> size_t {
       return implementation.convert_valid_utf16le_to_utf8(utf16, size, utf8);
@@ -161,15 +152,12 @@ TEST(convert_into_1_or_2_or_3_UTF8_bytes) {
       transcode_utf16_to_utf8_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
     }
-  }
 }
 
-TEST(convert_into_3_or_4_UTF8_bytes) {
-  for(size_t trial = 0; trial < trials; trial ++) {
-    if ((trial % 100) == 0) { std::cout << "."; std::cout.flush(); }
+TEST_LOOP(trials, convert_into_3_or_4_UTF8_bytes) {
     // range for 3 or 4 UTF-8 bytes
     simdutf::tests::helpers::RandomIntRanges random({{0x0800, 0xd800-1},
-                                                     {0xe000, 0x10ffff}}, 0);
+                                                     {0xe000, 0x10ffff}}, seed);
 
     auto procedure = [&implementation](const char16_t* utf16, size_t size, char* utf8) -> size_t {
       return implementation.convert_valid_utf16le_to_utf8(utf16, size, utf8);
@@ -179,7 +167,6 @@ TEST(convert_into_3_or_4_UTF8_bytes) {
       transcode_utf16_to_utf8_test_base test(random, size);
       ASSERT_TRUE(test(procedure));
     }
-  }
 }
 
 #if SIMDUTF_IS_BIG_ENDIAN
@@ -274,6 +261,4 @@ TEST(all_possible_8_codepoint_combinations) {
 }
 #endif
 
-int main(int argc, char* argv[]) {
-  return simdutf::test::main(argc, argv);
-}
+TEST_MAIN

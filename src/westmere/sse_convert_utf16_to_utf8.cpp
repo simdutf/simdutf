@@ -1,6 +1,6 @@
 /*
     The vectorized algorithm works on single SSE register i.e., it
-    loads eight 16-bit words.
+    loads eight 16-bit code units.
 
     We consider three cases:
     1. an input register contains no surrogates and each value
@@ -12,7 +12,7 @@
 
     Ad 1.
 
-    When values are less than 0x0800, it means that a 16-bit words
+    When values are less than 0x0800, it means that a 16-bit code unit
     can be converted into: 1) single UTF8 byte (when it's an ASCII
     char) or 2) two UTF8 bytes.
 
@@ -26,7 +26,7 @@
 
     Ad 2.
 
-    When values fit in 16-bit words, but are above 0x07ff, then
+    When values fit in 16-bit code units, but are above 0x07ff, then
     a single word may produce one, two or three UTF8 bytes.
 
     We prepare data for all these three cases in two registers.
@@ -59,7 +59,6 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
   const __m128i v_0000 = _mm_setzero_si128();
   const __m128i v_f800 = _mm_set1_epi16((int16_t)0xf800);
   const __m128i v_d800 = _mm_set1_epi16((int16_t)0xd800);
-  const __m128i v_c080 = _mm_set1_epi16((int16_t)0xc080);
   const size_t safety_margin = 12; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
 
   while (buf + 16 + safety_margin <= end) {
@@ -108,44 +107,9 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
     const uint16_t one_or_two_bytes_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_or_two_bytes_bytemask));
 
     if (one_or_two_bytes_bitmask == 0xffff) {
-          // 1. prepare 2-byte values
-          // input 16-bit word : [0000|0aaa|aabb|bbbb] x 8
-          // expected output   : [110a|aaaa|10bb|bbbb] x 8
-          const __m128i v_1f00 = _mm_set1_epi16((int16_t)0x1f00);
-          const __m128i v_003f = _mm_set1_epi16((int16_t)0x003f);
-
-          // t0 = [000a|aaaa|bbbb|bb00]
-          const __m128i t0 = _mm_slli_epi16(in, 2);
-          // t1 = [000a|aaaa|0000|0000]
-          const __m128i t1 = _mm_and_si128(t0, v_1f00);
-          // t2 = [0000|0000|00bb|bbbb]
-          const __m128i t2 = _mm_and_si128(in, v_003f);
-          // t3 = [000a|aaaa|00bb|bbbb]
-          const __m128i t3 = _mm_or_si128(t1, t2);
-          // t4 = [110a|aaaa|10bb|bbbb]
-          const __m128i t4 = _mm_or_si128(t3, v_c080);
-
-          // 2. merge ASCII and 2-byte codewords
-          const __m128i utf8_unpacked = _mm_blendv_epi8(t4, in, one_byte_bytemask);
-
-          // 3. prepare bitmask for 8-bit lookup
-          //    one_byte_bitmask = hhggffeeddccbbaa -- the bits are doubled (h - MSB, a - LSB)
-          const uint16_t m0 = one_byte_bitmask & 0x5555;  // m0 = 0h0g0f0e0d0c0b0a
-          const uint16_t m1 = static_cast<uint16_t>(m0 >> 7);                    // m1 = 00000000h0g0f0e0
-          const uint8_t  m2 = static_cast<uint8_t>((m0 | m1) & 0xff);           // m2 =         hdgcfbea
-          // 4. pack the bytes
-          const uint8_t* row = &simdutf::tables::utf16_to_utf8::pack_1_2_utf8_bytes[m2][0];
-          const __m128i shuffle = _mm_loadu_si128((__m128i*)(row + 1));
-          const __m128i utf8_packed = _mm_shuffle_epi8(utf8_unpacked, shuffle);
-
-          // 5. store bytes
-          _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
-
-          // 6. adjust pointers
-          buf += 8;
-          utf8_output += row[0];
-          continue;
-
+      internal::westmere::write_v_u16_11bits_to_utf8(in, utf8_output, one_byte_bytemask, one_byte_bitmask);
+      buf += 8;
+      continue;
     }
 
     // 1. Check if there are any surrogate word in the input chunk.
@@ -159,7 +123,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
     // It might seem like checking for surrogates_bitmask == 0xc000 could help. However,
     // it is likely an uncommon occurrence.
     if (surrogates_bitmask == 0x0000) {
-      // case: words from register produce either 1, 2 or 3 UTF-8 bytes
+      // case: code units from register produce either 1, 2 or 3 UTF-8 bytes
         const __m128i dup_even = _mm_setr_epi16(0x0000, 0x0202, 0x0404, 0x0606,
                                                 0x0808, 0x0a0a, 0x0c0c, 0x0e0e);
 
@@ -168,7 +132,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
            2. [0000|0bbb|bbcc|cccc] => [110b|bbbb], [10cc|cccc]              - two UTF-8 bytes
            3. [aaaa|bbbb|bbcc|cccc] => [1110|aaaa], [10bb|bbbb], [10cc|cccc] - three UTF-8 bytes
 
-          We expand the input word (16-bit) into two words (32-bit), thus
+          We expand the input word (16-bit) into two code units (32-bit), thus
           we have room for four bytes. However, we need five distinct bit
           layouts. Note that the last byte in cases #2 and #3 is the same.
 
@@ -179,7 +143,7 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
           either byte 1 for case #2 or byte 2 for case #3. Note that they
           differ by exactly one bit.
 
-          Finally from these two words we build proper UTF-8 sequence, taking
+          Finally from these two code units we build proper UTF-8 sequence, taking
           into account the case (i.e, the number of bytes to write).
         */
         /**
@@ -207,15 +171,15 @@ std::pair<const char16_t*, char*> sse_convert_utf16_to_utf8(const char16_t* buf,
         const __m128i s4 = _mm_xor_si128(s3, m0);
 #undef simdutf_vec
 
-        // 4. expand words 16-bit => 32-bit
+        // 4. expand code units 16-bit => 32-bit
         const __m128i out0 = _mm_unpacklo_epi16(t2, s4);
         const __m128i out1 = _mm_unpackhi_epi16(t2, s4);
 
-        // 5. compress 32-bit words into 1, 2 or 3 bytes -- 2 x shuffle
+        // 5. compress 32-bit code units into 1, 2 or 3 bytes -- 2 x shuffle
         const uint16_t mask = (one_byte_bitmask & 0x5555) |
                               (one_or_two_bytes_bitmask & 0xaaaa);
         if(mask == 0) {
-          // We only have three-byte words. Use fast path.
+          // We only have three-byte code units. Use fast path.
           const __m128i shuffle = _mm_setr_epi8(2,3,1,6,7,5,10,11,9,14,15,13,-1,-1,-1,-1);
           const __m128i utf8_0 = _mm_shuffle_epi8(out0, shuffle);
           const __m128i utf8_1 = _mm_shuffle_epi8(out1, shuffle);
@@ -299,7 +263,6 @@ std::pair<result, char*> sse_convert_utf16_to_utf8_with_errors(const char16_t* b
   const __m128i v_0000 = _mm_setzero_si128();
   const __m128i v_f800 = _mm_set1_epi16((int16_t)0xf800);
   const __m128i v_d800 = _mm_set1_epi16((int16_t)0xd800);
-  const __m128i v_c080 = _mm_set1_epi16((int16_t)0xc080);
   const size_t safety_margin = 12; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
 
   while (buf + 16 + safety_margin <= end) {
@@ -348,44 +311,9 @@ std::pair<result, char*> sse_convert_utf16_to_utf8_with_errors(const char16_t* b
     const uint16_t one_or_two_bytes_bitmask = static_cast<uint16_t>(_mm_movemask_epi8(one_or_two_bytes_bytemask));
 
     if (one_or_two_bytes_bitmask == 0xffff) {
-          // 1. prepare 2-byte values
-          // input 16-bit word : [0000|0aaa|aabb|bbbb] x 8
-          // expected output   : [110a|aaaa|10bb|bbbb] x 8
-          const __m128i v_1f00 = _mm_set1_epi16((int16_t)0x1f00);
-          const __m128i v_003f = _mm_set1_epi16((int16_t)0x003f);
-
-          // t0 = [000a|aaaa|bbbb|bb00]
-          const __m128i t0 = _mm_slli_epi16(in, 2);
-          // t1 = [000a|aaaa|0000|0000]
-          const __m128i t1 = _mm_and_si128(t0, v_1f00);
-          // t2 = [0000|0000|00bb|bbbb]
-          const __m128i t2 = _mm_and_si128(in, v_003f);
-          // t3 = [000a|aaaa|00bb|bbbb]
-          const __m128i t3 = _mm_or_si128(t1, t2);
-          // t4 = [110a|aaaa|10bb|bbbb]
-          const __m128i t4 = _mm_or_si128(t3, v_c080);
-
-          // 2. merge ASCII and 2-byte codewords
-          const __m128i utf8_unpacked = _mm_blendv_epi8(t4, in, one_byte_bytemask);
-
-          // 3. prepare bitmask for 8-bit lookup
-          //    one_byte_bitmask = hhggffeeddccbbaa -- the bits are doubled (h - MSB, a - LSB)
-          const uint16_t m0 = one_byte_bitmask & 0x5555;  // m0 = 0h0g0f0e0d0c0b0a
-          const uint16_t m1 = static_cast<uint16_t>(m0 >> 7);                    // m1 = 00000000h0g0f0e0
-          const uint8_t  m2 = static_cast<uint8_t>((m0 | m1) & 0xff);           // m2 =         hdgcfbea
-          // 4. pack the bytes
-          const uint8_t* row = &simdutf::tables::utf16_to_utf8::pack_1_2_utf8_bytes[m2][0];
-          const __m128i shuffle = _mm_loadu_si128((__m128i*)(row + 1));
-          const __m128i utf8_packed = _mm_shuffle_epi8(utf8_unpacked, shuffle);
-
-          // 5. store bytes
-          _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
-
-          // 6. adjust pointers
-          buf += 8;
-          utf8_output += row[0];
-          continue;
-
+      internal::westmere::write_v_u16_11bits_to_utf8(in, utf8_output, one_byte_bytemask, one_byte_bitmask);
+      buf += 8;
+      continue;
     }
 
     // 1. Check if there are any surrogate word in the input chunk.
@@ -399,7 +327,7 @@ std::pair<result, char*> sse_convert_utf16_to_utf8_with_errors(const char16_t* b
     // It might seem like checking for surrogates_bitmask == 0xc000 could help. However,
     // it is likely an uncommon occurrence.
     if (surrogates_bitmask == 0x0000) {
-      // case: words from register produce either 1, 2 or 3 UTF-8 bytes
+      // case: code units from register produce either 1, 2 or 3 UTF-8 bytes
         const __m128i dup_even = _mm_setr_epi16(0x0000, 0x0202, 0x0404, 0x0606,
                                                 0x0808, 0x0a0a, 0x0c0c, 0x0e0e);
 
@@ -408,7 +336,7 @@ std::pair<result, char*> sse_convert_utf16_to_utf8_with_errors(const char16_t* b
            2. [0000|0bbb|bbcc|cccc] => [110b|bbbb], [10cc|cccc]              - two UTF-8 bytes
            3. [aaaa|bbbb|bbcc|cccc] => [1110|aaaa], [10bb|bbbb], [10cc|cccc] - three UTF-8 bytes
 
-          We expand the input word (16-bit) into two words (32-bit), thus
+          We expand the input word (16-bit) into two code units (32-bit), thus
           we have room for four bytes. However, we need five distinct bit
           layouts. Note that the last byte in cases #2 and #3 is the same.
 
@@ -419,7 +347,7 @@ std::pair<result, char*> sse_convert_utf16_to_utf8_with_errors(const char16_t* b
           either byte 1 for case #2 or byte 2 for case #3. Note that they
           differ by exactly one bit.
 
-          Finally from these two words we build proper UTF-8 sequence, taking
+          Finally from these two code units we build proper UTF-8 sequence, taking
           into account the case (i.e, the number of bytes to write).
         */
         /**
@@ -447,15 +375,15 @@ std::pair<result, char*> sse_convert_utf16_to_utf8_with_errors(const char16_t* b
         const __m128i s4 = _mm_xor_si128(s3, m0);
 #undef simdutf_vec
 
-        // 4. expand words 16-bit => 32-bit
+        // 4. expand code units 16-bit => 32-bit
         const __m128i out0 = _mm_unpacklo_epi16(t2, s4);
         const __m128i out1 = _mm_unpackhi_epi16(t2, s4);
 
-        // 5. compress 32-bit words into 1, 2 or 3 bytes -- 2 x shuffle
+        // 5. compress 32-bit code units into 1, 2 or 3 bytes -- 2 x shuffle
         const uint16_t mask = (one_byte_bitmask & 0x5555) |
                               (one_or_two_bytes_bitmask & 0xaaaa);
         if(mask == 0) {
-          // We only have three-byte words. Use fast path.
+          // We only have three-byte code units. Use fast path.
           const __m128i shuffle = _mm_setr_epi8(2,3,1,6,7,5,10,11,9,14,15,13,-1,-1,-1,-1);
           const __m128i utf8_0 = _mm_shuffle_epi8(out0, shuffle);
           const __m128i utf8_1 = _mm_shuffle_epi8(out1, shuffle);

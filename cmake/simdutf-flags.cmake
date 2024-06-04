@@ -1,6 +1,7 @@
 
 option(SIMDUTF_SANITIZE "Sanitize addresses" OFF)
 option(SIMDUTF_SANITIZE_UNDEFINED "Sanitize undefined behavior" OFF)
+option(SIMDUTF_ALWAYS_INCLUDE_FALLBACK "Sanitize addresses" OFF)
 
 if (NOT CMAKE_BUILD_TYPE)
   message(STATUS "No build type selected, default to Release")
@@ -14,12 +15,11 @@ if (NOT CMAKE_BUILD_TYPE)
   endif()
 endif()
 
-
-
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tools/cmake")
 
-# We compile tools, tests, etc. with C++ 17. Override yourself if you need on a target.
-set(CMAKE_CXX_STANDARD 11)
+# We compile tools, tests, etc. with C++ 11. Override yourself if you need on a target.
+set(SIMDUTF_CXX_STANDARD 11 CACHE STRING "the C++ standard to use for simdutf")
+
+set(CMAKE_CXX_STANDARD ${SIMDUTF_CXX_STANDARD})
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_MACOSX_RPATH OFF)

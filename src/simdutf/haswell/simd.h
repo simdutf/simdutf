@@ -62,7 +62,7 @@ namespace simd {
     simdutf_really_inline base8(const __m256i _value) : base<simd8<T>>(_value) {}
     simdutf_really_inline T first() const { return _mm256_extract_epi8(*this,0); }
     simdutf_really_inline T last() const { return _mm256_extract_epi8(*this,31); }
-    simdutf_really_inline Mask operator==(const simd8<T> other) const { return _mm256_cmpeq_epi8(*this, other); }
+    friend simdutf_really_inline Mask operator==(const simd8<T> lhs, const simd8<T> rhs) { return _mm256_cmpeq_epi8(lhs, rhs); }
 
     static const int SIZE = sizeof(base<T>::value);
 
@@ -77,10 +77,10 @@ namespace simd {
   struct simd8<bool>: base8<bool> {
     static simdutf_really_inline simd8<bool> splat(bool _value) { return _mm256_set1_epi8(uint8_t(-(!!_value))); }
 
-    simdutf_really_inline simd8<bool>() : base8() {}
-    simdutf_really_inline simd8<bool>(const __m256i _value) : base8<bool>(_value) {}
+    simdutf_really_inline simd8() : base8() {}
+    simdutf_really_inline simd8(const __m256i _value) : base8<bool>(_value) {}
     // Splat constructor
-    simdutf_really_inline simd8<bool>(bool _value) : base8<bool>(splat(_value)) {}
+    simdutf_really_inline simd8(bool _value) : base8<bool>(splat(_value)) {}
 
     simdutf_really_inline uint32_t to_bitmask() const { return uint32_t(_mm256_movemask_epi8(*this)); }
     simdutf_really_inline bool any() const { return !_mm256_testz_si256(*this, *this); }
@@ -348,9 +348,7 @@ namespace simd {
 
       return  simd8x64<bool>(
         (this->chunks[0] <= mask_high) & (this->chunks[0] >= mask_low),
-        (this->chunks[1] <= mask_high) & (this->chunks[1] >= mask_low),
-        (this->chunks[2] <= mask_high) & (this->chunks[2] >= mask_low),
-        (this->chunks[3] <= mask_high) & (this->chunks[3] >= mask_low)
+        (this->chunks[1] <= mask_high) & (this->chunks[1] >= mask_low)
       ).to_bitmask();
     }
     simdutf_really_inline uint64_t not_in_range(const T low, const T high) const {

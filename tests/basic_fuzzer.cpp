@@ -1,17 +1,13 @@
 #include "simdutf.h"
 
-#include <array>
-#include <iostream>
 #include <fstream>
-#include <stdexcept>
 #include <random>
-#include <string>
 #include <memory>
 
 #include <tests/reference/encode_utf8.h>
 #include <tests/helpers/test.h>
 
-uint32_t seed = 123;
+static uint32_t seed = 123;
 const size_t MAX_SIZE = 1025;
 
 std::vector<char> input;
@@ -55,17 +51,17 @@ SIMDUTF_POP_DISABLE_WARNINGS
   buffer[buf_size - 2] = '"';
   buffer[buf_size - 1] = '\0';
   log << std::boolalpha;
-  log << "Input: " << buffer << std::endl;
-  if (is_ok_utf8.first) { log << "validate_utf8:" << is_ok_utf8.second << std::endl; }
-  if (is_ok_utf16.first) { log << "validate_utf16le:" << is_ok_utf16.second << std::endl; }
-  if (is_ok_utf32.first) { log << "validate_utf32:" << is_ok_utf32.second << std::endl; }
-  if (utf8_to_utf16.first) { log << "convert_utf8_to_utf16le:" << utf8_to_utf16.second << std::endl; }
-  if (utf8_to_utf32.first) { log << "convert_utf8_to_utf32:" << utf8_to_utf32.second << std::endl; }
-  if (utf16_to_utf8.first) { log << "convert_utf16le_to_utf8:" << utf16_to_utf8.second << std::endl; }
-  if (utf16_to_utf32.first) { log << "convert_utf16le_to_utf32:" << utf16_to_utf32.second << std::endl; }
-  if (utf32_to_utf8.first) { log << "convert_utf32_to_utf8:" << utf32_to_utf8.second << std::endl; }
-  if (utf32_to_utf16.first) { log << "convert_utf32_to_utf16le:" << utf32_to_utf16.second << std::endl; }
-  log << std::endl;
+  log << "Input: " << buffer << '\n';
+  if (is_ok_utf8.first) { log << "validate_utf8:" << is_ok_utf8.second << '\n'; }
+  if (is_ok_utf16.first) { log << "validate_utf16le:" << is_ok_utf16.second << '\n'; }
+  if (is_ok_utf32.first) { log << "validate_utf32:" << is_ok_utf32.second << '\n'; }
+  if (utf8_to_utf16.first) { log << "convert_utf8_to_utf16le:" << utf8_to_utf16.second << '\n'; }
+  if (utf8_to_utf32.first) { log << "convert_utf8_to_utf32:" << utf8_to_utf32.second << '\n'; }
+  if (utf16_to_utf8.first) { log << "convert_utf16le_to_utf8:" << utf16_to_utf8.second << '\n'; }
+  if (utf16_to_utf32.first) { log << "convert_utf16le_to_utf32:" << utf16_to_utf32.second << '\n'; }
+  if (utf32_to_utf8.first) { log << "convert_utf32_to_utf8:" << utf32_to_utf8.second << '\n'; }
+  if (utf32_to_utf16.first) { log << "convert_utf32_to_utf16le:" << utf32_to_utf16.second << '\n'; }
+  log << '\n';
   log.close();
 }
 }
@@ -303,7 +299,7 @@ struct state_tracker {
 TEST(garbage_utf8_fuzz_with_errors) {
   // Here we generate fully random inputs and try transcoding from UTF-8.
   // The inputs are almost certainly *NOT* valid UTF-8.
-  std::mt19937 gen(std::mt19937::result_type(123456));
+  std::mt19937 gen((std::mt19937::result_type)(seed));
   std::uniform_int_distribution<size_t> length_generator{1, 65};
   std::uniform_int_distribution<uint32_t> byte_generator{0, 256};
 
@@ -321,9 +317,9 @@ TEST(garbage_utf8_fuzz_with_errors) {
               utf8_buffer.get(), length,
               utf16_buffer.get());
     // r.count: In case of error, indicates the position of the error in the input.
-    // In case of success, indicates the number of words validated/written.
+    // In case of success, indicates the number of code units validated/written.
     if(r.error == simdutf::SUCCESS) {
-      ASSERT_TRUE((r.count == expected_utf16_length));
+      ASSERT_EQUAL(r.count, expected_utf16_length);
     } else {
       ASSERT_TRUE(r.count <  length);
     }
@@ -331,7 +327,7 @@ TEST(garbage_utf8_fuzz_with_errors) {
               utf8_buffer.get(), length,
               utf16_buffer.get());
     if(r.error == simdutf::SUCCESS) {
-      ASSERT_TRUE((r.count == expected_utf16_length));
+      ASSERT_EQUAL(r.count, expected_utf16_length);
     } else {
       ASSERT_TRUE(r.count <  length);
     }
@@ -341,7 +337,7 @@ TEST(garbage_utf8_fuzz_with_errors) {
               utf8_buffer.get(), length,
               utf32_buffer.get());
     if(r.error == simdutf::SUCCESS) {
-      ASSERT_TRUE((r.count == expected_utf32_length));
+      ASSERT_EQUAL(r.count, expected_utf32_length);
     } else {
       ASSERT_TRUE(r.count <  length);
     }
@@ -351,7 +347,7 @@ TEST(garbage_utf8_fuzz_with_errors) {
 TEST(garbage_utf8_fuzz) {
   // Here we generate fully random inputs and try transcoding from UTF-8.
   // The inputs are almost certainly *NOT* valid UTF-8.
-  std::mt19937 gen(std::mt19937::result_type(123456));
+  std::mt19937 gen((std::mt19937::result_type)(seed));
   std::uniform_int_distribution<size_t> length_generator{1, 65};
   std::uniform_int_distribution<uint32_t> byte_generator{0, 256};
 
@@ -369,13 +365,13 @@ TEST(garbage_utf8_fuzz) {
               utf8_buffer.get(), length,
               utf16_buffer.get());
     if(r != 0) {
-      ASSERT_TRUE((r == expected_utf16_length));
+      ASSERT_EQUAL(r, expected_utf16_length);
     }
     r = implementation.convert_utf8_to_utf16be(
               utf8_buffer.get(), length,
               utf16_buffer.get());
     if(r != 0) {
-      ASSERT_TRUE((r == expected_utf16_length));
+      ASSERT_EQUAL(r, expected_utf16_length);
     }
     size_t expected_utf32_length = implementation.utf32_length_from_utf8(utf8_buffer.get(), length);
     std::unique_ptr<char32_t[]> utf32_buffer(new char32_t[expected_utf32_length]);
@@ -383,7 +379,7 @@ TEST(garbage_utf8_fuzz) {
               utf8_buffer.get(), length,
               utf32_buffer.get());
     if(r != 0) {
-      ASSERT_TRUE((r == expected_utf32_length));
+      ASSERT_EQUAL(r, expected_utf32_length);
     }
   }
 }
@@ -633,24 +629,24 @@ TEST(basic_fuzz) {
             reinterpret_cast<char32_t *>(input.data()),
             input.size() / sizeof(char32_t), reinterpret_cast<char16_t *>(output.data()));
         if(is_ok_utf8.second ? (utf8_to_utf16.second == 0 || utf8_to_utf32.second == 0) : (utf8_to_utf16.second > 0 || utf8_to_utf32.second > 0)) {
-          std::cout << (is_ok_utf8.second ? "UTF-8 is ok" : "UTF-8 is not ok") << std::endl;
-          std::cout << " size = " << input.size() << std::endl;
-          std::cout << "  implementation.convert_utf8_to_utf16.second return " << utf8_to_utf16.second << std::endl;
-          std::cout << "  implementation.convert_utf8_to_utf32.second return " << utf8_to_utf32.second << std::endl;
+          printf("%s\n", (is_ok_utf8.second ? "UTF-8 is ok" : "UTF-8 is not ok"));
+          printf(" size = %zu\n", input.size());
+          printf("  implementation.convert_utf8_to_utf16.second return %zu\n", utf8_to_utf16.second);
+          printf("  implementation.convert_utf8_to_utf32.second return %zu\n", utf8_to_utf32.second);
         }
         ASSERT_TRUE(is_ok_utf8.second ? (utf8_to_utf16.second > 0 && utf8_to_utf32.second > 0) : (utf8_to_utf16.second == 0 && utf8_to_utf32.second == 0));
         if(is_ok_utf16.second ? (utf16_to_utf8.second == 0 || utf16_to_utf32.second == 0) : (utf16_to_utf8.second > 0 || utf16_to_utf32.second > 0)) {
-          std::cout << (is_ok_utf16.second ? "UTF-16 is ok" : "UTF-16 is not ok") << std::endl;
-          std::cout << " size = " << input.size() / sizeof(char16_t) << std::endl;
-          std::cout << "  implementation.convert_utf16_to_utf8.second return " << utf16_to_utf8.second << std::endl;
-          std::cout << "  implementation.convert_utf16_to_utf32.second return " << utf16_to_utf32.second << std::endl;
+          printf("%s\n", (is_ok_utf16.second ? "UTF-16 is ok" : "UTF-16 is not ok"));
+          printf(" size = %zu\n", input.size() / sizeof(char16_t));
+          printf("  implementation.convert_utf16_to_utf8.second return %zu\n", utf16_to_utf8.second);
+          printf("  implementation.convert_utf16_to_utf32.second return %zu\n",utf16_to_utf32.second);
         }
         ASSERT_TRUE(is_ok_utf16.second ? (utf16_to_utf8.second > 0 && utf16_to_utf32.second > 0) : (utf16_to_utf8.second == 0 && utf16_to_utf32.second == 0));
         if(is_ok_utf32.second ? (utf32_to_utf8.second == 0 || utf32_to_utf16.second == 0) : (utf32_to_utf8.second > 0 || utf32_to_utf16.second > 0)) {
-          std::cout << (is_ok_utf32.second ? "UTF-32 is ok" : "UTF-32 is not ok") << std::endl;
-          std::cout << " size = " << input.size() / sizeof(char32_t) << std::endl;
-          std::cout << "  implementation.convert_utf32_to_utf8.second return " << utf32_to_utf8.second << std::endl;
-          std::cout << "  implementation.convert_utf32_to_utf16.second return " << utf32_to_utf16.second << std::endl;
+          printf("%s\n", (is_ok_utf32.second ? "UTF-32 is ok" : "UTF-32 is not ok"));
+          printf(" size = %zu\n", input.size() / sizeof(char32_t));
+          printf("  implementation.convert_utf32_to_utf8.second return %zu\n", utf32_to_utf8.second);
+          printf("  implementation.convert_utf32_to_utf16.second return %zu\n", utf32_to_utf16.second);
         }
         ASSERT_TRUE(is_ok_utf32.second ? (utf32_to_utf8.second > 0 && utf32_to_utf16.second > 0) : (utf32_to_utf8.second == 0 && utf32_to_utf16.second == 0));
       }

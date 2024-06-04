@@ -11,7 +11,7 @@ inline simdutf_warn_unused bool validate(const char *buf, size_t len) noexcept {
     const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);
     uint64_t pos = 0;
     // process in blocks of 16 bytes when possible
-    for (;pos + 16 < len; pos += 16) {
+    for (;pos + 16 <= len; pos += 16) {
         uint64_t v1;
         std::memcpy(&v1, data + pos, sizeof(uint64_t));
         uint64_t v2;
@@ -31,7 +31,7 @@ inline simdutf_warn_unused result validate_with_errors(const char *buf, size_t l
     const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);
     size_t pos = 0;
     // process in blocks of 16 bytes when possible
-    for (;pos + 16 < len; pos += 16) {
+    for (;pos + 16 <= len; pos += 16) {
         uint64_t v1;
         std::memcpy(&v1, data + pos, sizeof(uint64_t));
         uint64_t v2;

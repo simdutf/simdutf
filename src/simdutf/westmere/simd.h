@@ -60,7 +60,7 @@ namespace simd {
     simdutf_really_inline base8() : base<simd8<T>>() {}
     simdutf_really_inline base8(const __m128i _value) : base<simd8<T>>(_value) {}
 
-    simdutf_really_inline Mask operator==(const simd8<T> other) const { return _mm_cmpeq_epi8(*this, other); }
+    friend simdutf_really_inline Mask operator==(const simd8<T> lhs, const simd8<T> rhs) { return _mm_cmpeq_epi8(lhs, rhs); }
 
     static const int SIZE = sizeof(base<simd8<T>>::value);
 
@@ -75,10 +75,10 @@ namespace simd {
   struct simd8<bool>: base8<bool> {
     static simdutf_really_inline simd8<bool> splat(bool _value) { return _mm_set1_epi8(uint8_t(-(!!_value))); }
 
-    simdutf_really_inline simd8<bool>() : base8() {}
-    simdutf_really_inline simd8<bool>(const __m128i _value) : base8<bool>(_value) {}
+    simdutf_really_inline simd8() : base8() {}
+    simdutf_really_inline simd8(const __m128i _value) : base8<bool>(_value) {}
     // Splat constructor
-    simdutf_really_inline simd8<bool>(bool _value) : base8<bool>(splat(_value)) {}
+    simdutf_really_inline simd8(bool _value) : base8<bool>(splat(_value)) {}
 
     simdutf_really_inline int to_bitmask() const { return _mm_movemask_epi8(*this); }
     simdutf_really_inline bool any() const { return !_mm_testz_si128(*this, *this); }
@@ -344,10 +344,10 @@ namespace simd {
     }
 
     simdutf_really_inline uint64_t to_bitmask() const {
-      uint64_t r0 = uint32_t(this->chunks[0].to_bitmask() );
-      uint64_t r1 =          this->chunks[1].to_bitmask() ;
-      uint64_t r2 =          this->chunks[2].to_bitmask() ;
-      uint64_t r3 =          this->chunks[3].to_bitmask() ;
+      uint64_t r0 = uint32_t(this->chunks[0].to_bitmask());
+      uint64_t r1 =          this->chunks[1].to_bitmask();
+      uint64_t r2 =          this->chunks[2].to_bitmask();
+      uint64_t r3 =          this->chunks[3].to_bitmask();
       return r0 | (r1 << 16) | (r2 << 32) | (r3 << 48);
     }
 

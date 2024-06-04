@@ -12,12 +12,14 @@ jobs:
         include:
           - {gen: Visual Studio 17 2022, arch: x64, shared: ON}
           - {gen: Visual Studio 17 2022, arch: x64, shared: OFF}
+          - {gen: Visual Studio 17 2022, arch: Win32, shared: ON}
+          - {gen: Visual Studio 17 2022, arch: Win32, shared: OFF}
     steps:
     - name: checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Configure
       run: |
-        cmake -G "${{matrix.gen}}" -A ${{matrix.arch}} -DBUILD_SHARED_LIBS=${{matrix.shared}} -B build
+        cmake -G "${{matrix.gen}}" -A ${{matrix.arch}} -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DSIMDUTF_BENCHMARKS=ON -DBUILD_SHARED_LIBS=${{matrix.shared}} -B build
     - name: Build Debug
       run: cmake --build build --config Debug --verbose
     - name: Build Release
@@ -29,7 +31,7 @@ jobs:
     - name: Run Debug tests
       run: |
         cd build
-        ctest -C Debug  --output-on-failure
+        ctest -C Debug  --output-on-failure  -E basic_fuzzer
     - name: Install
       run: |
         cmake --install build --config Release

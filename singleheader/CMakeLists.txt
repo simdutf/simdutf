@@ -35,22 +35,29 @@ if (Python3_Interpreter_FOUND)
       #
       DEPENDS amalgamate.py simdutf
   )
-  add_custom_target(singleheader-files DEPENDS ${SINGLEHEADER_FILES})
+  add_custom_target(simdutf-singleheader-files DEPENDS ${SINGLEHEADER_FILES})
 
   #
   # Include this if you intend to #include "simdutf.cpp" in your own .cpp files.
   #
   add_library(simdutf-singleheader-include-source INTERFACE)
   target_include_directories(simdutf-singleheader-include-source INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
-  add_dependencies(simdutf-singleheader-include-source singleheader-files)
+  add_dependencies(simdutf-singleheader-include-source simdutf-singleheader-files)
 
   add_library(simdutf-singleheader-source INTERFACE)
   target_sources(simdutf-singleheader-source INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/simdutf.cpp>)
   target_link_libraries(simdutf-singleheader-source INTERFACE simdutf-singleheader-include-source)
-  if (BUILD_TESTING)
+  if (SIMDUTF_TESTS)
     add_executable(amalgamation_demo $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/amalgamation_demo.cpp>)
     target_link_libraries(amalgamation_demo simdutf-singleheader-include-source)
-    add_test(amalgamation_demo amalgamation_demo)
+    if (CMAKE_CROSSCOMPILING_EMULATOR)
+      add_test(amalgamation_demo ${CMAKE_CROSSCOMPILING_EMULATOR} amalgamation_demo)
+    else()
+      add_test(amalgamation_demo amalgamation_demo)
+    endif()
+    if(NOT MSVC)
+      set_source_files_properties($<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/simdutf.cpp> PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Weffc++;-Wfatal-errors;-Wsign-compare;-Wshadow;-Wwrite-strings;-Wpointer-arith;-Winit-self;-Wconversion;-Wno-sign-conversion;-Wunused-function")
+    endif()
   endif()
 else()
   MESSAGE( STATUS "Python not found, we are unable to test amalgamate.py." )

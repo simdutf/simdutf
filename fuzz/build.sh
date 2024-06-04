@@ -3,7 +3,7 @@
 cd $SRC/simdutf
 
 cmake -B build
-cmake --build build --target singleheader-files -j$(nproc)
+cmake --build build --target simdutf-singleheader-files -j$(nproc)
 
 $CXX $CFLAGS $CXXFLAGS \
      -I build/singleheader \

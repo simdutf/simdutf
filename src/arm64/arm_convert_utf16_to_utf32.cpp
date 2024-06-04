@@ -1,6 +1,6 @@
 /*
     The vectorized algorithm works on single SSE register i.e., it
-    loads eight 16-bit words.
+    loads eight 16-bit code units.
 
     We consider three cases:
     1. an input register contains no surrogates and each value
@@ -12,7 +12,7 @@
 
     Ad 1.
 
-    When values are less than 0x0800, it means that a 16-bit words
+    When values are less than 0x0800, it means that a 16-bit code unit
     can be converted into: 1) single UTF8 byte (when it's an ASCII
     char) or 2) two UTF8 bytes.
 
@@ -26,7 +26,7 @@
 
     Ad 2.
 
-    When values fit in 16-bit words, but are above 0x07ff, then
+    When values fit in 16-bit code units, but are above 0x07ff, then
     a single word may produce one, two or three UTF8 bytes.
 
     We prepare data for all these three cases in two registers.
@@ -58,22 +58,15 @@ std::pair<const char16_t*, char32_t*> arm_convert_utf16_to_utf32(const char16_t*
   const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
   const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
 
-  while (buf + 16 <= end) {
+  while (buf + 8 <= end) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
-    if (!match_system(big_endian)) {
-      #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-      const uint8x16_t swap = make_uint8x16_t(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
-      #else
-      const uint8x16_t swap = {1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14};
-      #endif
-      in = vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(in), swap));
-    }
+    if (!match_system(big_endian)) { in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in))); }
 
     const uint16x8_t surrogates_bytemask = vceqq_u16(vandq_u16(in, v_f800), v_d800);
     // It might seem like checking for surrogates_bitmask == 0xc000 could help. However,
     // it is likely an uncommon occurrence.
-      if (vmaxvq_u16(surrogates_bytemask) == 0) {
-      // case: no surrogate pairs, extend all 16-bit words to 32-bit words
+    if (vmaxvq_u16(surrogates_bytemask) == 0) {
+      // case: no surrogate pairs, extend all 16-bit code units to 32-bit code units
       vst1q_u32(utf32_output,  vmovl_u16(vget_low_u16(in)));
       vst1q_u32(utf32_output+4,  vmovl_high_u16(in));
       utf32_output += 8;
@@ -123,22 +116,15 @@ std::pair<result, char32_t*> arm_convert_utf16_to_utf32_with_errors(const char16
   const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
   const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
 
-  while (buf + 16 <= end) {
+  while (buf + 8 <= end) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
-    if (!match_system(big_endian)) {
-      #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-      const uint8x16_t swap = make_uint8x16_t(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
-      #else
-      const uint8x16_t swap = {1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14};
-      #endif
-      in = vreinterpretq_u16_u8(vqtbl1q_u8(vreinterpretq_u8_u16(in), swap));
-    }
+    if (!match_system(big_endian)) { in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in))); }
 
     const uint16x8_t surrogates_bytemask = vceqq_u16(vandq_u16(in, v_f800), v_d800);
     // It might seem like checking for surrogates_bitmask == 0xc000 could help. However,
     // it is likely an uncommon occurrence.
-      if (vmaxvq_u16(surrogates_bytemask) == 0) {
-      // case: no surrogate pairs, extend all 16-bit words to 32-bit words
+    if (vmaxvq_u16(surrogates_bytemask) == 0) {
+      // case: no surrogate pairs, extend all 16-bit code units to 32-bit code units
       vst1q_u32(utf32_output,  vmovl_u16(vget_low_u16(in)));
       vst1q_u32(utf32_output+4,  vmovl_high_u16(in));
       utf32_output += 8;
