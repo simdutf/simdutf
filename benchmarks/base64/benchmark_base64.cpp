@@ -12,6 +12,7 @@
 #include "libbase64.h"
 #include "libbase64_spaces.h"
 #include "node_base64.h"
+#include "openssl3_base64.h"
 
 #include "simdutf.h"
 
@@ -328,6 +329,14 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
                         << " failed to decode base64 " << std::endl;
               throw std::runtime_error("Error: failed to decode base64 ");
             }
+          }
+        }));
+    pretty_print(
+        data.size(), volume, "openssl3.3.x", bench([&data, &buffer1, &buffer2]() {
+          for (const std::vector<char> &source : data) {
+            int result = openssl3::base64_decode(buffer1.data(), buffer1.size(),
+                                             source.data(), source.size());
+            (void)result;
           }
         }));
     pretty_print(
