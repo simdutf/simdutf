@@ -380,8 +380,6 @@ result compress_decode_base64(char *dst, const char_type *src, size_t srclen,
         // can avoid the call to compress_block and decode directly.
         copy_block(&b, bufferptr);
         bufferptr += 64;
-        //          base64_decode_block(dst, &b);
-        // dst += 48;
       }
       if (bufferptr >= (block_size - 1) * 64 + buffer) {
         for (size_t i = 0; i < (block_size - 1); i++) {
