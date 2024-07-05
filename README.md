@@ -1718,6 +1718,12 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char16_t * in
  * where the invalid character was found. When the error is BASE64_INPUT_REMAINDER, then
  * r.count contains the number of bytes decoded.
  *
+ * The default option (simdutf::base64_default) expects the characters `+` and `/` as part of its alphabet.
+ * The URL option (simdutf::base64_url) expects the characters `-` and `_` as part of its alphabet.
+ *
+ * The padding (`=`) is validated if present. There may be at most two padding characters at the end of the input.
+ * If there are any padding characters, the total number of characters (excluding spaces but including padding characters) must be divisible by four.
+ *
  * You should call this function with a buffer that is at least maximal_binary_length_from_base64(input, length) bytes long.
  * If you fail to provide that much space, the function may cause a buffer overflow.
  *
@@ -1740,8 +1746,13 @@ simdutf_warn_unused result base64_to_binary(const char * input, size_t length, c
 
 
 /**
- * Convert a binary input to a base64 ouput. The output is always padded with equal signs so that it is
- * a multiple of 4 bytes long.
+ * Convert a binary input to a base64 ouput.
+ *
+ * The default option (simdutf::base64_default) uses the characters `+` and `/` as part of its alphabet.
+ * Further, it adds padding (`=`) at the end of the output to ensure that the output length is a multiple of four.
+ *
+ * The URL option (simdutf::base64_url) uses the characters `-` and `_` as part of its alphabet. No padding
+ * is added at the end of the output.
  *
  * This function always succeeds.
  *
@@ -1803,6 +1814,12 @@ simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t lengt
  * When the error is INVALID_BASE64_CHARACTER, r.count contains the index in the input
  * where the invalid character was found. When the error is BASE64_INPUT_REMAINDER, then
  * r.count contains the number of bytes decoded.
+ *
+ * The default option (simdutf::base64_default) expects the characters `+` and `/` as part of its alphabet.
+ * The URL option (simdutf::base64_url) expects the characters `-` and `_` as part of its alphabet.
+ *
+ * The padding (`=`) is validated if present. There may be at most two padding characters at the end of the input.
+ * If there are any padding characters, the total number of characters (excluding spaces but including padding characters) must be divisible by four.
  *
  * The INVALID_BASE64_CHARACTER cases are considered fatal and you are expected to discard
  * the output.
