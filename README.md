@@ -1649,6 +1649,21 @@ file or networking programming. These users should see `tools/fastbase64.cpp`, a
 utility designed for as an example. It reads and writes base64 files using chunks of at most
 a few tens of kilobytes.
 
+
+We support two conventions: `base64_default` and `base64_url`:
+* The default (`base64_default`) includes the characters `+` and `/` as part of its alphabet. It also
+  pads the output with the padding character (`=`) so that the output is divisible by 4. Thus, we have
+  that the string `"Hello, World!"` is encoded to `"SGVsbG8sIFdvcmxkIQ=="` with an expression such as
+  `simdutf::binary_to_base64(source, size, out, simdutf::base64_default)`.
+  When using the default, you can omit the option parameter for simplicity:
+  `simdutf::binary_to_base64(source, size, out, buffer.data())`. When decoding, white space
+  characters are omitted as per the [WHATWG forgiving-base64](https://infra.spec.whatwg.org/#forgiving-base64-decode) standard. Further, if padding characters are present at the end of the
+  stream, there must be no more than two, and if there are any, the total number of characters (excluding
+  spaces but including padding characters) must be divisible by four.
+* The URL convention (`base64_url`) uses the characters `-` and `_` as part of its alphabet. It does
+  not pad its output. Thus, we have that the string `"Hello, World!"` is encoded to `"SGVsbG8sIFdvcmxkIQ"`.
+  To specify the URL convention, you can pass the appropriate option to our decoding and encoding functions: e.g., `simdutf::base64_to_binary(source, size, out, simdutf::base64_url)`.
+
 The specification of our base64 functions is as follows:
 
 ```C++
@@ -1703,6 +1718,12 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char16_t * in
  * where the invalid character was found. When the error is BASE64_INPUT_REMAINDER, then
  * r.count contains the number of bytes decoded.
  *
+ * The default option (simdutf::base64_default) expects the characters `+` and `/` as part of its alphabet.
+ * The URL option (simdutf::base64_url) expects the characters `-` and `_` as part of its alphabet.
+ *
+ * The padding (`=`) is validated if present. There may be at most two padding characters at the end of the input.
+ * If there are any padding characters, the total number of characters (excluding spaces but including padding characters) must be divisible by four.
+ *
  * You should call this function with a buffer that is at least maximal_binary_length_from_base64(input, length) bytes long.
  * If you fail to provide that much space, the function may cause a buffer overflow.
  *
@@ -1725,8 +1746,13 @@ simdutf_warn_unused result base64_to_binary(const char * input, size_t length, c
 
 
 /**
- * Convert a binary input to a base64 ouput. The output is always padded with equal signs so that it is
- * a multiple of 4 bytes long.
+ * Convert a binary input to a base64 ouput.
+ *
+ * The default option (simdutf::base64_default) uses the characters `+` and `/` as part of its alphabet.
+ * Further, it adds padding (`=`) at the end of the output to ensure that the output length is a multiple of four.
+ *
+ * The URL option (simdutf::base64_url) uses the characters `-` and `_` as part of its alphabet. No padding
+ * is added at the end of the output.
  *
  * This function always succeeds.
  *
@@ -1788,6 +1814,12 @@ simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t lengt
  * When the error is INVALID_BASE64_CHARACTER, r.count contains the index in the input
  * where the invalid character was found. When the error is BASE64_INPUT_REMAINDER, then
  * r.count contains the number of bytes decoded.
+ *
+ * The default option (simdutf::base64_default) expects the characters `+` and `/` as part of its alphabet.
+ * The URL option (simdutf::base64_url) expects the characters `-` and `_` as part of its alphabet.
+ *
+ * The padding (`=`) is validated if present. There may be at most two padding characters at the end of the input.
+ * If there are any padding characters, the total number of characters (excluding spaces but including padding characters) must be divisible by four.
  *
  * The INVALID_BASE64_CHARACTER cases are considered fatal and you are expected to discard
  * the output.
