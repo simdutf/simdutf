@@ -360,7 +360,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <div class="textblock"><p>An implementation of simdutf for a particular CPU architecture. </p>
 <p>Also used to maintain the currently active implementation. The active implementation is automatically initialized on first use to the most advanced implementation supported by the host. </p>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01540">1540</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01563">1563</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="afd306a0bc3e221964af3f31a64784b12"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afd306a0bc3e221964af3f31a64784b12">&#9670;&nbsp;</a></span>autodetect_encoding()</h2>
@@ -628,7 +628,8 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 </div><div class="memdoc">
 
 <p>Convert a binary input to a base64 ouput. </p>
-<p>The output is always padded with equal signs so that it is a multiple of 4 bytes long.</p>
+<p>The default option (simdutf::base64_default) uses the characters <code>+</code> and <code>/</code> as part of its alphabet. Further, it adds padding (<code>=</code>) at the end of the output to ensure that the output length is a multiple of four.</p>
+<p>The URL option (simdutf::base64_url) uses the characters <code>-</code> and <code>_</code> as part of its alphabet. No padding is added at the end of the output.</p>
 <p>This function always succeeds.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -3386,7 +3387,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" &lt;&lt; impl-&gt;description() &lt;&lt; ")" &lt;&lt; endl;
 </pre> <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01561">1561</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01584">1584</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3641,7 +3642,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" &lt;&lt; impl-&gt;description() &lt;&lt; ")" &lt;&lt; endl;
 </pre> <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01551">1551</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01574">1574</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>

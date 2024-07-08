@@ -618,6 +618,10 @@ Base64</h2>
 </div><!-- fragment --><p>See our function specifications for more details.</p>
 <p>In other instances, you may receive your base64 inputs in 16-bit units (e.g., from UTF-16 strings): we have function overloads for these cases as well.</p>
 <p>Some users may want to decode the base64 inputs in chunks, especially when doing file or networking programming. These users should see <code>tools/fastbase64.cpp</code>, a command-line utility designed for as an example. It reads and writes base64 files using chunks of at most a few tens of kilobytes.</p>
+<p>We support two conventions: <code>base64_default</code> and <code>base64_url</code>:</p><ul>
+<li>The default (<code>base64_default</code>) includes the characters <code>+</code> and <code>/</code> as part of its alphabet. It also pads the output with the padding character (<code>=</code>) so that the output is divisible by 4. Thus, we have that the string <code>"Hello, World!"</code> is encoded to <code>"SGVsbG8sIFdvcmxkIQ=="</code> with an expression such as <code>simdutf::binary_to_base64(source, size, out, simdutf::base64_default)</code>. When using the default, you can omit the option parameter for simplicity: <code>simdutf::binary_to_base64(source, size, out, buffer.data())</code>. When decoding, white space characters are omitted as per the <a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">WHATWG forgiving-base64</a> standard. Further, if padding characters are present at the end of the stream, there must be no more than two, and if there are any, the total number of characters (excluding spaces but including padding characters) must be divisible by four.</li>
+<li>The URL convention (<code>base64_url</code>) uses the characters <code>-</code> and <code>_</code> as part of its alphabet. It does not pad its output. Thus, we have that the string <code>"Hello, World!"</code> is encoded to <code>"SGVsbG8sIFdvcmxkIQ"</code>. To specify the URL convention, you can pass the appropriate option to our decoding and encoding functions: e.g., <code>simdutf::base64_to_binary(source, size, out, simdutf::base64_url)</code>.</li>
+</ul>
 <p>The specification of our base64 functions is as follows:</p>
 <div class="fragment"><div class="line"> {C++}</div>
 <div class="line"> </div>
@@ -671,6 +675,12 @@ Base64</h2>
 <div class="line"> * where the invalid character was found. When the error is BASE64_INPUT_REMAINDER, then</div>
 <div class="line"> * r.count contains the number of bytes decoded.</div>
 <div class="line"> *</div>
+<div class="line"> * The default option (simdutf::base64_default) expects the characters `+` and `/` as part of its alphabet.</div>
+<div class="line"> * The URL option (simdutf::base64_url) expects the characters `-` and `_` as part of its alphabet.</div>
+<div class="line"> *</div>
+<div class="line"> * The padding (`=`) is validated if present. There may be at most two padding characters at the end of the input.</div>
+<div class="line"> * If there are any padding characters, the total number of characters (excluding spaces but including padding characters) must be divisible by four.</div>
+<div class="line"> *</div>
 <div class="line"> * You should call this function with a buffer that is at least maximal_binary_length_from_base64(input, length) bytes long.</div>
 <div class="line"> * If you fail to provide that much space, the function may cause a buffer overflow.</div>
 <div class="line"> *</div>
@@ -693,8 +703,13 @@ Base64</h2>
 <div class="line"> </div>
 <div class="line"> </div>
 <div class="line">/**</div>
-<div class="line"> * Convert a binary input to a base64 ouput. The output is always padded with equal signs so that it is</div>
-<div class="line"> * a multiple of 4 bytes long.</div>
+<div class="line"> * Convert a binary input to a base64 ouput.</div>
+<div class="line"> *</div>
+<div class="line"> * The default option (simdutf::base64_default) uses the characters `+` and `/` as part of its alphabet.</div>
+<div class="line"> * Further, it adds padding (`=`) at the end of the output to ensure that the output length is a multiple of four.</div>
+<div class="line"> *</div>
+<div class="line"> * The URL option (simdutf::base64_url) uses the characters `-` and `_` as part of its alphabet. No padding</div>
+<div class="line"> * is added at the end of the output.</div>
 <div class="line"> *</div>
 <div class="line"> * This function always succeeds.</div>
 <div class="line"> *</div>
@@ -756,6 +771,12 @@ Base64</h2>
 <div class="line"> * When the error is INVALID_BASE64_CHARACTER, r.count contains the index in the input</div>
 <div class="line"> * where the invalid character was found. When the error is BASE64_INPUT_REMAINDER, then</div>
 <div class="line"> * r.count contains the number of bytes decoded.</div>
+<div class="line"> *</div>
+<div class="line"> * The default option (simdutf::base64_default) expects the characters `+` and `/` as part of its alphabet.</div>
+<div class="line"> * The URL option (simdutf::base64_url) expects the characters `-` and `_` as part of its alphabet.</div>
+<div class="line"> *</div>
+<div class="line"> * The padding (`=`) is validated if present. There may be at most two padding characters at the end of the input.</div>
+<div class="line"> * If there are any padding characters, the total number of characters (excluding spaces but including padding characters) must be divisible by four.</div>
 <div class="line"> *</div>
 <div class="line"> * The INVALID_BASE64_CHARACTER cases are considered fatal and you are expected to discard</div>
 <div class="line"> * the output.</div>
