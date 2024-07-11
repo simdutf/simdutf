@@ -206,6 +206,28 @@ TEST(encode_base64_cases) {
   }
 }
 
+
+TEST(encode_base64_cases_no_padding) {
+  std::vector<std::pair<std::string, std::string>> cases = {
+      {"Hello, World!", "SGVsbG8sIFdvcmxkIQ"},
+      {"GeeksforGeeks", "R2Vla3Nmb3JHZWVrcw"},
+      {"123456", "MTIzNDU2"},
+      {"Base64 Encoding", "QmFzZTY0IEVuY29kaW5n"},
+      {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k", "IVJ+SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c+fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNTktWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
+  std::vector<simdutf::error_code> codes = {simdutf::error_code::SUCCESS};
+  std::vector<size_t> counts = {1};
+  printf(" -- ");
+  for (std::pair<std::string, std::string> p : cases) {
+    std::vector<char> buffer(
+        implementation.base64_length_from_binary(p.first.size(), simdutf::base64_default_no_padding));
+    ASSERT_EQUAL(buffer.size(), p.second.size());
+    size_t s = implementation.binary_to_base64(p.first.data(), p.first.size(),
+                                               buffer.data(), simdutf::base64_default_no_padding);
+    ASSERT_EQUAL(s, p.second.size());
+    ASSERT_EQUAL(std::string(buffer.data(), buffer.size()), p.second);
+  }
+}
+
 #if SIMDUTF_BASE64URL_TESTS
 
 TEST(encode_base64url_cases) {
@@ -259,6 +281,33 @@ TEST(encode_base64url_cases) {
     for (size_t i = 0; i < buffer.size(); i++) {
       ASSERT_EQUAL(buffer[i], p.first[i]);
     }
+  }
+}
+
+
+TEST(encode_base64url_with_padding_cases) {
+  std::vector<std::pair<std::string, std::string>> cases = {
+      {"Hello, World!", "SGVsbG8sIFdvcmxkIQ=="},
+      {"GeeksforGeeks", "R2Vla3Nmb3JHZWVrcw=="},
+      {"123456", "MTIzNDU2"},
+      {"Base64 Encoding", "QmFzZTY0IEVuY29kaW5n"},
+      {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k", "IVJ-SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c-fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNTktWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
+  std::vector<simdutf::error_code> codes = {simdutf::error_code::SUCCESS};
+  std::vector<size_t> counts = {1};
+  printf(" -- ");
+  for (std::pair<std::string, std::string> p : cases) {
+    std::vector<char> buffer(
+        implementation.base64_length_from_binary(p.first.size(), simdutf::base64_url_with_padding));
+    ASSERT_EQUAL(buffer.size(), p.second.size());
+    size_t s = implementation.binary_to_base64(p.first.data(), p.first.size(),
+                                               buffer.data(), simdutf::base64_url_with_padding);
+    ASSERT_EQUAL(s, p.second.size());
+    if(std::string(buffer.data(), buffer.size()) != p.second) {
+      printf("difference:\n");
+      printf(" %.*s\n", (int)s, buffer.data());
+      printf(" %.*s\n", (int)s, p.second.data());
+    }
+    ASSERT_EQUAL(std::string(buffer.data(), buffer.size()), p.second);
   }
 }
 

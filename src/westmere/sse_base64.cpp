@@ -56,8 +56,8 @@ template <bool base64_url> __m128i lookup_pshufb_improved(const __m128i input) {
   return _mm_add_epi8(result, input);
 }
 
-template <base64_options options>
-size_t encode_base64(char *dst, const char *src, size_t srclen) {
+template <bool isbase64url>
+size_t encode_base64(char *dst, const char *src, size_t srclen, base64_options options) {
   // credit: Wojciech Muła
   // SSE (lookup: pshufb improved unrolled)
   const uint8_t *input = (const uint8_t *)src;
@@ -108,19 +108,19 @@ size_t encode_base64(char *dst, const char *src, size_t srclen) {
     const __m128i input3 = _mm_or_si128(t1_3, t3_3);
 
     _mm_storeu_si128(reinterpret_cast<__m128i *>(out),
-                     lookup_pshufb_improved<options & base64_url>(input0));
+                     lookup_pshufb_improved<isbase64url>(input0));
     out += 16;
 
     _mm_storeu_si128(reinterpret_cast<__m128i *>(out),
-                     lookup_pshufb_improved<options & base64_url>(input1));
+                     lookup_pshufb_improved<isbase64url>(input1));
     out += 16;
 
     _mm_storeu_si128(reinterpret_cast<__m128i *>(out),
-                     lookup_pshufb_improved<options & base64_url>(input2));
+                     lookup_pshufb_improved<isbase64url>(input2));
     out += 16;
 
     _mm_storeu_si128(reinterpret_cast<__m128i *>(out),
-                     lookup_pshufb_improved<options & base64_url>(input3));
+                     lookup_pshufb_improved<isbase64url>(input3));
     out += 16;
   }
   for (; i + 16 <= srclen; i += 12) {
@@ -160,7 +160,7 @@ size_t encode_base64(char *dst, const char *src, size_t srclen) {
     const __m128i indices = _mm_or_si128(t1, t3);
 
     _mm_storeu_si128(reinterpret_cast<__m128i *>(out),
-                     lookup_pshufb_improved<options & base64_url>(indices));
+                     lookup_pshufb_improved<isbase64url>(indices));
     out += 16;
   }
 

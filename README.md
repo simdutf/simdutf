@@ -1664,6 +1664,27 @@ We support two conventions: `base64_default` and `base64_url`:
   not pad its output. Thus, we have that the string `"Hello, World!"` is encoded to `"SGVsbG8sIFdvcmxkIQ"`.
   To specify the URL convention, you can pass the appropriate option to our decoding and encoding functions: e.g., `simdutf::base64_to_binary(source, size, out, simdutf::base64_url)`.
 
+Thus we follow the convention of systems such as the Node or Bun JavaScript runtimes with respect to padding. The
+default base64 uses padding whereas the URL variant does not.
+
+```JavaScript
+> console.log(Buffer.from("Hello World").toString('base64'));
+SGVsbG8gV29ybGQ=
+undefined
+> console.log(Buffer.from("Hello World").toString('base64url'));
+SGVsbG8gV29ybGQ
+```
+
+This is justified as per [RFC 4648](https://www.rfc-editor.org/rfc/rfc4648):
+
+> The pad character "=" is typically percent-encoded when used in an URI, but if the data length is known implicitly, this can be avoided by skipping the padding; see section 3.2.
+
+Nevertheless, some users may want to use padding with the URL variant
+and omit it with the default variant. These users can
+'reverse' the convention by using `simdutf::base64_url |  simdutf::base64_reverse_padding` or `simdutf::base64_default | simdutf::base64_reverse_padding`.
+For greater convenience, you may use `simdutf::base64_default_no_padding` and
+`simdutf::base64_url_with_padding`, as shorthands.
+
 The specification of our base64 functions is as follows:
 
 ```C++
@@ -1671,10 +1692,12 @@ The specification of our base64 functions is as follows:
 // base64_options are used to specify the base64 encoding options.
 using base64_options = uint64_t;
 enum : base64_options {
-  base64_default = 0, /* standard base64 format */
-  base64_url = 1 /* base64url format*/
+  base64_default = 0, /* standard base64 format (with padding) */
+  base64_url = 1, /* base64url format (no padding) */
+  base64_reverse_padding = 2, /* modifier for base64_default and base64_url */
+  base64_default_no_padding = base64_default | base64_reverse_padding, /* standard base64 format without padding */
+  base64_url_with_padding = base64_url | base64_reverse_padding, /* base64url with padding */
 };
-
 /**
  * Provide the maximal binary length in bytes given the base64 input.
  * In general, if the input contains ASCII spaces, the result will be less than

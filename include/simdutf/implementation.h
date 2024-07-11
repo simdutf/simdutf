@@ -1389,9 +1389,13 @@ simdutf_warn_unused size_t trim_partial_utf16(const char16_t* input, size_t leng
 
 // base64_options are used to specify the base64 encoding options.
 using base64_options = uint64_t;
+using base64_options = uint64_t;
 enum : base64_options {
-  base64_default = 0, /* standard base64 format */
-  base64_url = 1 /* base64url format*/
+  base64_default = 0, /* standard base64 format (with padding) */
+  base64_url = 1, /* base64url format (no padding) */
+  base64_reverse_padding = 2, /* modifier for base64_default and base64_url */
+  base64_default_no_padding = base64_default | base64_reverse_padding, /* standard base64 format without padding */
+  base64_url_with_padding = base64_url | base64_reverse_padding, /* base64url with padding */
 };
 
 /**
