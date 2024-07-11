@@ -29,7 +29,7 @@ simdutf: Unicode validation and transcoding at billions of characters per second
 Most modern software relies on the [Unicode standard](https://en.wikipedia.org/wiki/Unicode).
 In memory, Unicode strings are represented using either
 UTF-8 or UTF-16. The UTF-8 format is the de facto standard on the web (JSON, HTML, etc.) and it has been adopted as the default in many popular
-programming languages (Go, Rust, Swift, etc.). The UTF-16 format is standard in Java, C# and in many Windows technologies.
+programming languages (Go, Zig, Rust, Swift, etc.). The UTF-16 format is standard in Java, C# and in many Windows technologies.
 
 Not all sequences of bytes are valid Unicode strings. It is unsafe to use Unicode strings in UTF-8 and UTF-16LE without first validating them. Furthermore, we often need to convert strings from one encoding to another, by a process called [transcoding](https://en.wikipedia.org/wiki/Transcoding). For security purposes, such transcoding should be validating: it should refuse to transcode incorrect strings.
 
