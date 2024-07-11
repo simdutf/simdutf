@@ -219,7 +219,7 @@ TEST(encode_base64_cases_no_padding) {
   printf(" -- ");
   for (std::pair<std::string, std::string> p : cases) {
     std::vector<char> buffer(
-        implementation.base64_length_from_binary(p.first.size()));
+        implementation.base64_length_from_binary(p.first.size()), simdutf::base64_default_no_padding);
     ASSERT_EQUAL(buffer.size(), p.second.size());
     size_t s = implementation.binary_to_base64(p.first.data(), p.first.size(),
                                                buffer.data(), simdutf::base64_default_no_padding);
@@ -297,7 +297,7 @@ TEST(encode_base64url_with_padding_cases) {
   printf(" -- ");
   for (std::pair<std::string, std::string> p : cases) {
     std::vector<char> buffer(
-        implementation.base64_length_from_binary(p.first.size(), simdutf::base64_url));
+        implementation.base64_length_from_binary(p.first.size(), simdutf::base64_url_with_padding));
     ASSERT_EQUAL(buffer.size(), p.second.size());
     size_t s = implementation.binary_to_base64(p.first.data(), p.first.size(),
                                                buffer.data(), simdutf::base64_url_with_padding);
