@@ -224,6 +224,13 @@ result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, 
 // Returns the number of bytes written. The destination buffer must be large
 // enough. It will add padding (=) if needed.
 size_t tail_encode_base64(char *dst, const char *src, size_t srclen, base64_options options) {
+  // By default, we use padding if we are not using the URL variant.
+  // This is check with ((options & base64_url) == 0) which returns true if we are not using the URL variant.
+  // However, we also allow 'inversion' of the convention with the base64_reverse_padding option.
+  // If the base64_reverse_padding option is set, we use padding if we are using the URL variant,
+  // and we omit it if we are not using the URL variant. This is checked with
+  // ((options & base64_reverse_padding) == base64_reverse_padding).
+  bool use_padding = ((options & base64_url) == 0) ^ ((options & base64_reverse_padding) == base64_reverse_padding);
   // This looks like 3 branches, but we expect the compiler to resolve this to a single branch:
   const char *e0 = (options & base64_url) ? tables::base64::base64_url::e0 : tables::base64::base64_default::e0;
   const char *e1 = (options & base64_url) ? tables::base64::base64_url::e1 : tables::base64::base64_default::e1;
@@ -247,7 +254,7 @@ size_t tail_encode_base64(char *dst, const char *src, size_t srclen, base64_opti
     t1 = uint8_t(src[i]);
     *out++ = e0[t1];
     *out++ = e1[(t1 & 0x03) << 4];
-    if((options & base64_url) == 0) {
+    if(use_padding) {
       *out++ = '=';
       *out++ = '=';
     }
@@ -258,7 +265,7 @@ size_t tail_encode_base64(char *dst, const char *src, size_t srclen, base64_opti
     *out++ = e0[t1];
     *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
     *out++ = e2[(t2 & 0x0F) << 2];
-    if((options & base64_url) == 0) {
+    if(use_padding) {
       *out++ = '=';
     }
   }
