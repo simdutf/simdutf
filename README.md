@@ -1758,14 +1758,14 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char16_t * in
  */
 simdutf_warn_unused result base64_to_binary(const char * input, size_t length, char* output, base64_options options = base64_default) noexcept;
 
-  /**
-   * Provide the base64 length in bytes given the length of a binary input.
-   *
-   * @param length        the length of the input in bytes
-   * @parem options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.
-   * @return number of base64 bytes
-   */
-  simdutf_warn_unused size_t base64_length_from_binary(size_t length, base64_options options = base64_default) noexcept;
+/**
+ * Provide the base64 length in bytes given the length of a binary input.
+ *
+ * @param length        the length of the input in bytes
+ * @parem options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.
+ * @return number of base64 bytes
+ */
+simdutf_warn_unused size_t base64_length_from_binary(size_t length, base64_options options = base64_default) noexcept;
 
 
 /**
