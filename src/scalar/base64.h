@@ -300,7 +300,7 @@ simdutf_warn_unused size_t base64_length_from_binary(size_t length, base64_optio
   // and we omit it if we are not using the URL variant. This is checked with
   // ((options & base64_reverse_padding) == base64_reverse_padding).
   bool use_padding = ((options & base64_url) == 0) ^ ((options & base64_reverse_padding) == base64_reverse_padding);
-  if(use_padding) {
+  if(!use_padding) {
     return length/3 * 4 + ((length % 3) ? (length % 3) + 1 : 0);
   }
   return (length + 2)/3 * 4; // We use padding to make the length a multiple of 4.
