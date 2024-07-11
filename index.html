@@ -116,7 +116,7 @@ Table of contents</h1>
 </ul>
 <h1><a class="anchor" id="autotoc_md1"></a>
 simdutf: Unicode validation and transcoding at billions of characters per second</h1>
-<p>Most modern software relies on the <a href="https://en.wikipedia.org/wiki/Unicode">Unicode standard</a>. In memory, Unicode strings are represented using either UTF-8 or UTF-16. The UTF-8 format is the de facto standard on the web (JSON, HTML, etc.) and it has been adopted as the default in many popular programming languages (Go, Rust, Swift, etc.). The UTF-16 format is standard in Java, C# and in many Windows technologies.</p>
+<p>Most modern software relies on the <a href="https://en.wikipedia.org/wiki/Unicode">Unicode standard</a>. In memory, Unicode strings are represented using either UTF-8 or UTF-16. The UTF-8 format is the de facto standard on the web (JSON, HTML, etc.) and it has been adopted as the default in many popular programming languages (Go, Zig, Rust, Swift, etc.). The UTF-16 format is standard in Java, C# and in many Windows technologies.</p>
 <p>Not all sequences of bytes are valid Unicode strings. It is unsafe to use Unicode strings in UTF-8 and UTF-16LE without first validating them. Furthermore, we often need to convert strings from one encoding to another, by a process called <a href="https://en.wikipedia.org/wiki/Transcoding">transcoding</a>. For security purposes, such transcoding should be validating: it should refuse to transcode incorrect strings.</p>
 <p>This library provide fast Unicode functions such as</p>
 <ul>
