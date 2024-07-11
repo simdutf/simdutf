@@ -293,7 +293,14 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char_type * i
 }
 
 simdutf_warn_unused size_t base64_length_from_binary(size_t length, base64_options options) noexcept {
-  if(options & base64_url) {
+  // By default, we use padding if we are not using the URL variant.
+  // This is check with ((options & base64_url) == 0) which returns true if we are not using the URL variant.
+  // However, we also allow 'inversion' of the convention with the base64_reverse_padding option.
+  // If the base64_reverse_padding option is set, we use padding if we are using the URL variant,
+  // and we omit it if we are not using the URL variant. This is checked with
+  // ((options & base64_reverse_padding) == base64_reverse_padding).
+  bool use_padding = ((options & base64_url) == 0) ^ ((options & base64_reverse_padding) == base64_reverse_padding);
+  if(use_padding) {
     return length/3 * 4 + ((length % 3) ? (length % 3) + 1 : 0);
   }
   return (length + 2)/3 * 4; // We use padding to make the length a multiple of 4.
