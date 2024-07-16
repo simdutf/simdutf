@@ -71,6 +71,7 @@ Real-World Usage
 The simdutf library is used by:
 - [Node.js](https://nodejs.org/en/) (19.4.0 or better, 20.0 or better, 18.15 or better), a standard JavaScript runtime environment,
 - [Bun](https://bun.sh), a fast JavaScript runtime environment,
+- [WebKit](https://github.com/WebKit/WebKit/pull/9990), the Web engine behind the Safari browser (iOS, macOS),
 - [StarRocks](https://www.starrocks.io), an Open-Source, High-Performance Analytical Database,
 - [Oracle GraalVM JavaScript](https://github.com/oracle/graaljs), a JavaScript implementation by Oracle,
 - [Couchbase](https://www.couchbase.com), a popular database system,
