@@ -218,6 +218,7 @@ Usage (CMake)</h2>
 <div class="fragment"><div class="line">cmake -B build</div>
 <div class="line">cmake --build build</div>
 <div class="line">./build/benchmarks/benchmark --help</div>
+<div class="line">./build/benchmarks/base64/base64_benchmark --help</div>
 </div><!-- fragment --><p>Instructions are similar for Visual Studio users.</p>
 <p>To use the library as a CMake dependency in your project, please see <code>tests/installation_tests/from_fetch</code> for an example.</p>
 <p>Since ICU is so common and popular, we assume that you may have it already on your system. When it is not found, it is simply omitted from the benchmarks. Thus, to benchmark against ICU, make sure you have ICU installed on your machine and that cmake can find it. For macOS, you may install it with brew using <code>brew install icu4c</code>. If you have ICU on your system but cmake cannot find it, you may need to provide cmake with a path to ICU, such as <code>ICU_ROOT=/usr/local/opt/icu4c cmake -B build</code>.</p>
