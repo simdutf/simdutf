@@ -181,6 +181,7 @@ E.g., under Linux you may do the following:
 cmake -B build
 cmake --build build
 ./build/benchmarks/benchmark --help
+./build/benchmarks/base64/base64_benchmark --help
 ```
 
 Instructions are similar for Visual Studio users.
