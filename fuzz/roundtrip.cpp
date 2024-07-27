@@ -3,7 +3,6 @@
 #include <string>
 #include <iostream>
 
-#include "simdutf.cpp"
 #include "simdutf.h"
 
 // useful for debugging
