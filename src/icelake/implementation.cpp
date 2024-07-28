@@ -365,7 +365,7 @@ simdutf_warn_unused result implementation::validate_utf16le_with_errors(const ch
       }
     }
     if(buf < end) {
-      __m512i in = _mm512_maskz_loadu_epi16((1<<(end-buf))-1,(__m512i*)buf);
+      __m512i in = _mm512_maskz_loadu_epi16((1U<<(end-buf))-1,(__m512i*)buf);
       __m512i diff = _mm512_sub_epi16(in, _mm512_set1_epi16(uint16_t(0xD800)));
       __mmask32 surrogates = _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0800)));
       if(surrogates) {
@@ -419,7 +419,7 @@ simdutf_warn_unused result implementation::validate_utf16be_with_errors(const ch
       }
     }
     if(buf < end) {
-      __m512i in = _mm512_shuffle_epi8(_mm512_maskz_loadu_epi16((1<<(end-buf))-1,(__m512i*)buf), byteflip);
+      __m512i in = _mm512_shuffle_epi8(_mm512_maskz_loadu_epi16((1U<<(end-buf))-1,(__m512i*)buf), byteflip);
       __m512i diff = _mm512_sub_epi16(in, _mm512_set1_epi16(uint16_t(0xD800)));
       __mmask32 surrogates = _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0800)));
       if(surrogates) {
