@@ -44,6 +44,24 @@ TEST_LOOP(trials, validate_utf16le_with_errors__returns_success_for_valid_input_
     ASSERT_EQUAL(res.count, utf16.size());
 }
 
+TEST(provoke_integer_wraparound_in_icelake)
+{
+    // this is to prove signed integer wraparound in the icelake implementation
+    unsigned char cleaned_crash[] = {0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                     0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                     0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                     0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                     0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                     0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                     0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20};
+    unsigned int cleaned_crash_len = 62;
+    assert(reinterpret_cast<std::uintptr_t>(cleaned_crash) % alignof(char16_t) == 0);
+
+    const auto size = cleaned_crash_len / sizeof(char16_t);
+
+    simdutf::validate_utf16le_with_errors((const char16_t *) cleaned_crash, size);
+}
+
 // mixed = either 16-bit or 32-bit codewords
 TEST(validate_utf16le_with_errors__returns_success_for_valid_input__mixed) {
   uint32_t seed{1234};
