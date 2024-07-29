@@ -112,6 +112,10 @@ result base64_tail_decode(char *dst, const char_type *src, size_t length, base64
 // This functions assumes that the padding (=) has been removed.
 template <class char_type>
 result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, size_t length, base64_options options) {
+  if(length == 0) {
+    outlen = 0;
+    return {SUCCESS, 0};
+  }
   // This looks like 5 branches, but we expect the compiler to resolve this to a single branch:
   const uint8_t *to_base64 = (options & base64_url) ? tables::base64::to_base64_url_value : tables::base64::to_base64_value;
   const uint32_t *d0 = (options & base64_url) ? tables::base64::base64_url::d0 : tables::base64::base64_default::d0;
@@ -134,7 +138,7 @@ result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, 
       if(match_system(endianness::BIG)) {
         x = scalar::utf32::swap_bytes(x);
       }
-      if(dst + 3 > dstend) {
+      if(dstend - dst < 3) {
         outlen = size_t(dst - dstinit);
         return {OUTPUT_BUFFER_TOO_SMALL, size_t(src - srcinit)};
       }
@@ -202,7 +206,7 @@ result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, 
       outlen = size_t(dst - dstinit);
       return {SUCCESS, size_t(dst - dstinit)};
     }
-    if(dst + 3 >= dstend) {
+    if(dstend - dst <= 3) {
       outlen = size_t(dst - dstinit);
       return {OUTPUT_BUFFER_TOO_SMALL, size_t(srccur - srcinit)};
     }
