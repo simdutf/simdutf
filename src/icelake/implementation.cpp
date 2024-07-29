@@ -274,7 +274,7 @@ simdutf_warn_unused bool implementation::validate_utf16le(const char16_t *buf, s
       }
     }
     if(buf < end) {
-      __m512i in = _mm512_maskz_loadu_epi16((1<<(end-buf))-1,(__m512i*)buf);
+      __m512i in = _mm512_maskz_loadu_epi16((1U<<(end-buf))-1,(__m512i*)buf);
       __m512i diff = _mm512_sub_epi16(in, _mm512_set1_epi16(uint16_t(0xD800)));
       __mmask32 surrogates = _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0800)));
       if(surrogates) {
@@ -323,7 +323,7 @@ simdutf_warn_unused bool implementation::validate_utf16be(const char16_t *buf, s
       }
     }
     if(buf < end) {
-      __m512i in = _mm512_shuffle_epi8(_mm512_maskz_loadu_epi16((1<<(end-buf))-1,(__m512i*)buf), byteflip);
+      __m512i in = _mm512_shuffle_epi8(_mm512_maskz_loadu_epi16((1U<<(end-buf))-1,(__m512i*)buf), byteflip);
       __m512i diff = _mm512_sub_epi16(in, _mm512_set1_epi16(uint16_t(0xD800)));
       __mmask32 surrogates = _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0800)));
       if(surrogates) {
@@ -467,7 +467,7 @@ simdutf_warn_unused result implementation::validate_utf32_with_errors(const char
       buf += 16;
     }
     if(buf < buf_orig + len) {
-      __m512i utf32 = _mm512_maskz_loadu_epi32(__mmask16((1<<(buf_orig + len - buf))-1),(const __m512i*)buf);
+      __m512i utf32 = _mm512_maskz_loadu_epi32(__mmask16((1U<<(buf_orig + len - buf))-1),(const __m512i*)buf);
       __mmask16 outside_range = _mm512_cmp_epu32_mask(utf32, _mm512_set1_epi32(0x10ffff),
                                 _MM_CMPINT_GT);
       if (outside_range) {
@@ -1024,7 +1024,7 @@ void implementation::change_endianness_utf16(const char16_t * input, size_t leng
     pos += 32;
   }
   if(pos < length) {
-    __mmask32 m((1<< (length - pos))-1);
+    __mmask32 m((1U<< (length - pos))-1);
     __m512i utf16 = _mm512_maskz_loadu_epi16(m, (const __m512i*)(input + pos));
     utf16 = _mm512_shuffle_epi8(utf16, byteflip);
     _mm512_mask_storeu_epi16(output + pos, m, utf16);

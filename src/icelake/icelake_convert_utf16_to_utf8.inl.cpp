@@ -119,7 +119,7 @@ size_t utf16_to_utf8_avx512i(const char16_t *inbuf, size_t inlen,
         const uint32_t lonohi = l & ~(h + h + carry);
         const uint32_t hinolo = h & ~(l >> 1);
         inlen = _tzcnt_u32(hinolo | lonohi);
-        inmask = __mmask32(0x7fffffff & ((1 << inlen) - 1));
+        inmask = __mmask32(0x7fffffff & ((1U << inlen) - 1));
         in = _mm512_maskz_mov_epi16(inmask, in);
         adjust = (int)inlen - 31;
         inlen = 0;
@@ -185,7 +185,7 @@ size_t utf16_to_utf8_avx512i(const char16_t *inbuf, size_t inlen,
 tail:
   if (inlen != 0) {
     // We must have inlen < 31.
-    inmask = _cvtu32_mask32((1 << inlen) - 1);
+    inmask = _cvtu32_mask32((1U << inlen) - 1);
     in = _mm512_maskz_loadu_epi16(inmask, inbuf);
     if(big_endian) { in = _mm512_shuffle_epi8(in, byteflip); }
     adjust = inlen - 31;
