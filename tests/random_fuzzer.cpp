@@ -56,7 +56,7 @@ int validate_tests(const char *databytes, size_t size_in_bytes) {
     const T *data = reinterpret_cast<const T *>(databytes);
     const auto size = size_in_bytes / sizeof(T);
 
-    simdutf::result* reference_result = nullptr;
+    simdutf::result reference_result{};
     const simdutf::implementation *reference_impl{};
 
     for (auto &e : simdutf::get_available_implementations()) {
@@ -76,21 +76,21 @@ int validate_tests(const char *databytes, size_t size_in_bytes) {
         if (std::is_same<T, char32_t>::value == true) {
             result = e->validate_utf32_with_errors(reinterpret_cast<const char32_t *>(data), size);
         }
-        if (reference_result != nullptr) {
-            if (result.error != reference_result->error) {
+        if (reference_impl != nullptr) {
+            if (result.error != reference_result.error) {
                 std::cerr << "result.error differed for " << e->name() << ": " << +result.error
                           << " vs reference " << reference_impl->name() << ": "
-                          << +reference_result->error << "\n";
+                          << +reference_result.error << "\n";
                 return false;
             }
-            if (result.count != reference_result->count) {
+            if (result.count != reference_result.count) {
                 std::cerr << "result.count differed for " << e->name() << ": " << result.count
                           << " vs reference " << reference_impl->name() << ": "
-                          << reference_result->count << "\n";
+                          << reference_result.count << "\n";
                 return false;
             }
         } else {
-            reference_result = &result;
+            reference_result = result;
             reference_impl = e;
         }
     }
@@ -607,31 +607,23 @@ bool fuzz_this(const char *data, size_t size) {
 
 
 bool run_test(const char *data, size_t size) {
-  if (!fuzz_this(input.data(), size)) {
+  if (!fuzz_this(data, size)) {
     dump_case();
     return false;
   }
-  if (!validate_tests<char>(input.data(), size)) {
+  if (!validate_tests<char>(data, size)) {
     dump_case();
     return false;
   }
-  if (!validate_tests<char16_t>(input.data(), size)) {
+  if (!validate_tests<char16_t, false>(data, size)) {
     dump_case();
     return false;
   }
-  if (!validate_tests<char32_t>(input.data(), size)) {
+  if (!validate_tests<char16_t, true>(data, size)) {
     dump_case();
     return false;
   }
-  if (!validate_tests<char, true>(input.data(), size)) {
-    dump_case();
-    return false;
-  }
-  if (!validate_tests<char16_t, true>(input.data(), size)) {
-    dump_case();
-    return false;
-  }
-  if (!validate_tests<char32_t, true>(input.data(), size)) {
+  if (!validate_tests<char32_t>(data, size)) {
     dump_case();
     return false;
   }
