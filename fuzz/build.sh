@@ -39,7 +39,7 @@ cmake --install build --prefix $WORK
 
 CXXFLAGSEXTRA=-std=c++20
 
-for fuzzersrc in $(ls fuzz/*.cpp) ; do
+for fuzzersrc in $(ls fuzz/*.cpp|grep -v fuzz/reproducer.) ; do
     fuzzer=$(basename $fuzzersrc .cpp)
 
     $CXX $CXXFLAGS $CXXFLAGSEXTRA\
