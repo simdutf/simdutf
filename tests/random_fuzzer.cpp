@@ -2,6 +2,8 @@
 #include <fstream>
 #include <random>
 #include <string>
+#include <type_traits>
+#include <iostream>
 
 #include "simdutf.h"
 
@@ -47,6 +49,52 @@ void dump_case() {
 }
 
 void __asan_on_error() { dump_case(); }
+}
+
+template<typename T, bool bigendian = false>
+int validate_tests(const char *databytes, size_t size_in_bytes) {
+    const T *data = reinterpret_cast<const T *>(databytes);
+    const auto size = size_in_bytes / sizeof(T);
+
+    simdutf::result reference_result{};
+    const simdutf::implementation *reference_impl{};
+
+    for (auto &e : simdutf::get_available_implementations()) {
+        if (!e->supported_by_runtime_system()) {
+            continue;
+        }
+        simdutf::result result{};
+        if (std::is_same<T, char>::value == true) {
+            result = e->validate_utf8_with_errors(reinterpret_cast<const char *>(data), size);
+        }
+        if (std::is_same<T, char16_t>::value == true && bigendian) {
+            result = e->validate_utf16be_with_errors(reinterpret_cast<const char16_t *>(data), size);
+        }
+        if (std::is_same<T, char16_t>::value == true && !bigendian) {
+            result = e->validate_utf16le_with_errors(reinterpret_cast<const char16_t *>(data), size);
+        }
+        if (std::is_same<T, char32_t>::value == true) {
+            result = e->validate_utf32_with_errors(reinterpret_cast<const char32_t *>(data), size);
+        }
+        if (reference_impl != nullptr) {
+            if (result.error != reference_result.error) {
+                std::cerr << "result.error differed for " << e->name() << ": " << +result.error
+                          << " vs reference " << reference_impl->name() << ": "
+                          << +reference_result.error << "\n";
+                return false;
+            }
+            if (result.count != reference_result.count) {
+                std::cerr << "result.count differed for " << e->name() << ": " << result.count
+                          << " vs reference " << reference_impl->name() << ": "
+                          << reference_result.count << "\n";
+                return false;
+            }
+        } else {
+            reference_result = result;
+            reference_impl = e;
+        }
+    }
+    return true;
 }
 
 size_t valid_utf8 = 0;
@@ -557,6 +605,30 @@ bool fuzz_this(const char *data, size_t size) {
   return true;
 } // extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
+
+bool run_test(const char *data, size_t size) {
+  if (!fuzz_this(data, size)) {
+    dump_case();
+    return false;
+  }
+  if (!validate_tests<char>(data, size)) {
+    dump_case();
+    return false;
+  }
+  if (!validate_tests<char16_t, false>(data, size)) {
+    dump_case();
+    return false;
+  }
+  if (!validate_tests<char16_t, true>(data, size)) {
+    dump_case();
+    return false;
+  }
+  if (!validate_tests<char32_t>(data, size)) {
+    dump_case();
+    return false;
+  }
+  return true;
+}
 bool fuzz_running(size_t N) {
   std::mt19937 generator{std::random_device{}()};
   std::uniform_int_distribution<int> distribution{0, 255};
@@ -572,13 +644,16 @@ bool fuzz_running(size_t N) {
     for (size_t k = 0; k < size; k++) {
       input[k] = char(distribution(generator));
     }
-    if (!fuzz_this(input.data(), size)) {
-      dump_case();
+    if(!run_test(input.data(), size)) {
       return false;
     }
   }
   printf("\n");
   return true;
+}
+
+bool precomputed() {
+  return run_test("\x06\xd8\x00\x00\x0a\x00\x3f\x00", 8);
 }
 
 int main(int argc, char*argv[]) {
@@ -592,6 +667,12 @@ int main(int argc, char*argv[]) {
       continue;
     }
     printf("testing: %s\n", e->name().c_str());
+  }
+  if(!precomputed()) {
+    printf("Precomputed failure\n");
+    return EXIT_FAILURE;
+  } else {
+    printf("Precomputed success\n");
   }
   size_t N = 10000;
   if (argc == 2) {
@@ -609,6 +690,7 @@ int main(int argc, char*argv[]) {
     printf("valid UTF16-LE = %zu\n", valid_utf16be);
     return EXIT_SUCCESS;
   } else {
+    printf("Failure\n");
     return EXIT_FAILURE;
   }
 }
