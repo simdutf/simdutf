@@ -18,7 +18,7 @@
     - there must not be two consecutive high surrogates (0xdc00 .. 0xdfff)
     - there must not be sole low surrogate nor high surrogate
 
-    We're going to build three bitmasks based on the 3rd nibble:
+    We are going to build three bitmasks based on the 3rd nibble:
     - V = valid word,
     - L = low surrogate (0xd800 .. 0xdbff)
     - H = high surrogate (0xdc00 .. 0xdfff)

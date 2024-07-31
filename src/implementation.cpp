@@ -75,7 +75,7 @@ namespace internal {
               + SIMDUTF_IMPLEMENTATION_ARM64 + SIMDUTF_IMPLEMENTATION_PPC64 \
               + SIMDUTF_IMPLEMENTATION_FALLBACK == 1)
 
-// Static array of known implementations. We're hoping these get baked into the executable
+// Static array of known implementations. We are hoping these get baked into the executable
 // without requiring a static initializer.
 
 

@@ -24,7 +24,7 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
                                       _mm_and_si128(in, v_7fffffff),
                                       _mm_and_si128(nextin, v_7fffffff)
                                       );//in this context pack the two __m128 into a single
-    //By ensuring the highest bit is set to 0(&v_7fffffff), we're making sure all values are interpreted as non-negative, or specifically, the values are within the range of valid Unicode code points.
+    //By ensuring the highest bit is set to 0(&v_7fffffff), we are making sure all values are interpreted as non-negative, or specifically, the values are within the range of valid Unicode code points.
     //remember : having leading byte 0 means a positive number by the two complements system. Unicode is well beneath the range where you'll start getting issues so that's OK.
 
     // Try to apply UTF-16 => UTF-8 from ./sse_convert_utf16_to_utf8.cpp
