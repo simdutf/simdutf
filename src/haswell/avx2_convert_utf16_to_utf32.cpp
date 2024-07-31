@@ -13,7 +13,7 @@
     Ad 1.
 
     When values are less than 0x0800, it means that a 16-bit code unit
-    can be converted into: 1) single UTF8 byte (when it's an ASCII
+    can be converted into: 1) single UTF8 byte (when it is an ASCII
     char) or 2) two UTF8 bytes.
 
     For this case we do only some shuffle to obtain these 2-byte

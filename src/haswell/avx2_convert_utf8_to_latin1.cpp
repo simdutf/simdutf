@@ -17,24 +17,9 @@ size_t convert_masked_utf8_to_latin1(const char *input,
   // This results in more instructions but, potentially, also higher speeds.
   //
   const __m128i in = _mm_loadu_si128((__m128i *)input);
-  const __m128i in_second_half = _mm_loadu_si128((__m128i *)(input + 16));
 
   const uint16_t input_utf8_end_of_code_point_mask =
-      utf8_end_of_code_point_mask & 0xfff; //we're only processing 12 bytes in case it`s not all ASCII
-
-  if((input_utf8_end_of_code_point_mask & 0xffffffff) == 0xffffffff) {
-    // Load the next 128 bits.
-
-    // Combine the two 128-bit registers into a single 256-bit register.
-    __m256i in_combined = _mm256_set_m128i(in_second_half, in);
-
-    // We process the data in chunks of 32 bytes.
-    _mm256_storeu_si256(reinterpret_cast<__m256i *>(latin1_output), in_combined);
-
-    latin1_output += 32; // We wrote 32 characters.
-    return 32; // We consumed 32 bytes.
-  }
-
+      utf8_end_of_code_point_mask & 0xfff; // we are only processing 12 bytes in case it is not all ASCII
 
   if(((utf8_end_of_code_point_mask & 0xffff) == 0xffff)) {
     // We process the data in chunks of 16 bytes.

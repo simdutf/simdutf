@@ -106,7 +106,7 @@ using namespace simd;
 
   //
   // Return nonzero if there are incomplete multibyte characters at the end of the block:
-  // e.g. if there is a 4-byte character, but it's 3 bytes from the end.
+  // e.g. if there is a 4-byte character, but it is 3 bytes from the end.
   //
   simdutf_really_inline simd8<uint8_t> is_incomplete(const simd8<uint8_t> input) {
     // If the previous input's last 3 bytes match this, they're too short (they ended at EOF):

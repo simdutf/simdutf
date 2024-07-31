@@ -10,7 +10,7 @@
 
 #include "simdutf/portability.h"
 
-// Default Haswell to on if this is x86-64. Even if we're not compiled for it, it could be selected
+// Default Haswell to on if this is x86-64. Even if we are not compiled for it, it could be selected
 // at runtime.
 #ifndef SIMDUTF_IMPLEMENTATION_HASWELL
 //
