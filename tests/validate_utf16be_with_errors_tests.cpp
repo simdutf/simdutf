@@ -81,7 +81,8 @@ TEST(provoke_integer_wraparound_in_icelake)
 
   const auto size = cleaned_crash_len / sizeof(char16_t);
 
-  (void)simdutf::validate_utf16be_with_errors((const char16_t *) cleaned_crash, size);
+  auto r = simdutf::validate_utf16be_with_errors((const char16_t *) cleaned_crash, size);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
 }
 
 // The first word must not be in range [0xDC00 .. 0xDFFF]
