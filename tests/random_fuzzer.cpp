@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <memory>
 #include <fstream>
 #include <random>
@@ -63,31 +64,39 @@ int validate_tests(const char *databytes, size_t size_in_bytes) {
         if (!e->supported_by_runtime_system()) {
             continue;
         }
+        const char * message = "unknown";
         simdutf::result result{};
         if (std::is_same<T, char>::value == true) {
-            result = e->validate_utf8_with_errors(reinterpret_cast<const char *>(data), size);
+          message = "utf8";
+          result = e->validate_utf8_with_errors(reinterpret_cast<const char *>(data), size);
         }
         if (std::is_same<T, char16_t>::value == true && bigendian) {
-            result = e->validate_utf16be_with_errors(reinterpret_cast<const char16_t *>(data), size);
+          message = "utf16be";
+          result = e->validate_utf16be_with_errors(reinterpret_cast<const char16_t *>(data), size);
         }
         if (std::is_same<T, char16_t>::value == true && !bigendian) {
-            result = e->validate_utf16le_with_errors(reinterpret_cast<const char16_t *>(data), size);
+          message = "utf16le";
+          result = e->validate_utf16le_with_errors(reinterpret_cast<const char16_t *>(data), size);
         }
         if (std::is_same<T, char32_t>::value == true) {
-            result = e->validate_utf32_with_errors(reinterpret_cast<const char32_t *>(data), size);
+          message = "utf32";
+          result = e->validate_utf32_with_errors(reinterpret_cast<const char32_t *>(data), size);
         }
         if (reference_impl != nullptr) {
-            if (result.error != reference_result.error) {
-                std::cerr << "result.error differed for " << e->name() << ": " << +result.error
-                          << " vs reference " << reference_impl->name() << ": "
-                          << +reference_result.error << "\n";
-                return false;
-            }
             if (result.count != reference_result.count) {
-                std::cerr << "result.count differed for " << e->name() << ": " << result.count
+              std::cerr << message << std::endl;
+              std::cerr << "result.count differed for " << e->name() << ": " << result.count
                           << " vs reference " << reference_impl->name() << ": "
                           << reference_result.count << "\n";
-                return false;
+              return false;
+            }
+            if (result.error != reference_result.error) {
+              std::cerr << message << std::endl;
+
+              std::cerr << "result.error differed for " << e->name() << ": " << +result.error
+                          << " vs reference " << reference_impl->name() << ": "
+                          << +reference_result.error << "\n";
+              return false;
             }
         } else {
             reference_result = result;
@@ -606,27 +615,35 @@ bool fuzz_this(const char *data, size_t size) {
 } // extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
 
-bool run_test(const char *data, size_t size) {
+bool run_test(const char *rdata, size_t size) {
+  char *data = (char*)aligned_alloc(4, (size+3)/4*4);
+  std::memcpy(data, rdata, size);
   if (!fuzz_this(data, size)) {
     dump_case();
+    free(data);
     return false;
   }
   if (!validate_tests<char>(data, size)) {
     dump_case();
+    free(data);
     return false;
   }
   if (!validate_tests<char16_t, false>(data, size)) {
     dump_case();
+    free(data);
     return false;
   }
   if (!validate_tests<char16_t, true>(data, size)) {
     dump_case();
+    free(data);
     return false;
   }
   if (!validate_tests<char32_t>(data, size)) {
     dump_case();
+    free(data);
     return false;
   }
+  free(data);
   return true;
 }
 bool fuzz_running(size_t N) {
@@ -653,7 +670,12 @@ bool fuzz_running(size_t N) {
 }
 
 bool precomputed() {
-  return run_test("\x06\xd8\x00\x00\x0a\x00\x3f\x00", 8);
+  char *data;
+  data = (char*)aligned_alloc(4, 8);
+  std::memcpy(data, "\x06\xd8\x00\x00\x0a\x00\x3f\x00", 8);
+  bool v = run_test(data, 8);
+  free(data);
+  return v;
 }
 
 int main(int argc, char*argv[]) {

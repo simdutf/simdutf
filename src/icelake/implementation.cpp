@@ -446,43 +446,52 @@ simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, siz
 }
 
 simdutf_warn_unused result implementation::validate_utf32_with_errors(const char32_t *buf, size_t len) const noexcept {
+  const char32_t* end = len >= 16 ? buf + len - 16 : nullptr;
+  const char32_t* buf_orig = buf;
+  while (buf <= end) {
+    __m512i utf32 = _mm512_loadu_si512((const __m512i*)buf);
+    __mmask16 outside_range = _mm512_cmp_epu32_mask(utf32, _mm512_set1_epi32(0x10ffff),
+                              _MM_CMPINT_GT);
 
-    const char32_t* end = len >= 16 ? buf + len - 16 : nullptr;
-    const char32_t* buf_orig = buf;
-    while (buf <= end) {
-      __m512i utf32 = _mm512_loadu_si512((const __m512i*)buf);
-      __mmask16 outside_range = _mm512_cmp_epu32_mask(utf32, _mm512_set1_epi32(0x10ffff),
-                                _MM_CMPINT_GT);
-      if (outside_range) {
-        return result(error_code::TOO_LARGE, buf - buf_orig + _tzcnt_u32(outside_range));
+    __m512i utf32_off = _mm512_add_epi32(utf32, _mm512_set1_epi32(0xffff2000));
+
+    __mmask16 surrogate_range = _mm512_cmp_epu32_mask(utf32_off, _mm512_set1_epi32(0xfffff7ff),
+                              _MM_CMPINT_GT);
+    if((outside_range | surrogate_range)) {
+      auto outside_idx = _tzcnt_u32(outside_range);
+      auto surrogate_idx = _tzcnt_u32(surrogate_range);
+
+      if (outside_idx < surrogate_idx) {
+        return result(error_code::TOO_LARGE, buf - buf_orig + outside_idx);
       }
 
-      __m512i utf32_off = _mm512_add_epi32(utf32, _mm512_set1_epi32(0xffff2000));
-
-      __mmask16 surrogate_range = _mm512_cmp_epu32_mask(utf32_off, _mm512_set1_epi32(0xfffff7ff),
-                                _MM_CMPINT_GT);
-      if (surrogate_range) {
-        return result(error_code::SURROGATE, buf - buf_orig + _tzcnt_u32(surrogate_range));
-      }
-      buf += 16;
-    }
-    if(buf < buf_orig + len) {
-      __m512i utf32 = _mm512_maskz_loadu_epi32(__mmask16((1U<<(buf_orig + len - buf))-1),(const __m512i*)buf);
-      __mmask16 outside_range = _mm512_cmp_epu32_mask(utf32, _mm512_set1_epi32(0x10ffff),
-                                _MM_CMPINT_GT);
-      if (outside_range) {
-        return result(error_code::TOO_LARGE, buf - buf_orig + _tzcnt_u32(outside_range));
-      }
-      __m512i utf32_off = _mm512_add_epi32(utf32, _mm512_set1_epi32(0xffff2000));
-
-      __mmask16 surrogate_range = _mm512_cmp_epu32_mask(utf32_off, _mm512_set1_epi32(0xfffff7ff),
-                                _MM_CMPINT_GT);
-      if (surrogate_range) {
-        return result(error_code::SURROGATE, buf - buf_orig + _tzcnt_u32(surrogate_range));
-      }
+      return result(error_code::SURROGATE, buf - buf_orig + surrogate_idx);
     }
 
-    return result(error_code::SUCCESS, len);
+    buf += 16;
+  }
+  if(buf < buf_orig + len) {
+    __m512i utf32 = _mm512_maskz_loadu_epi32(__mmask16((1U<<(buf_orig + len - buf))-1),(const __m512i*)buf);
+    __mmask16 outside_range = _mm512_cmp_epu32_mask(utf32, _mm512_set1_epi32(0x10ffff),
+                              _MM_CMPINT_GT);
+    __m512i utf32_off = _mm512_add_epi32(utf32, _mm512_set1_epi32(0xffff2000));
+
+    __mmask16 surrogate_range = _mm512_cmp_epu32_mask(utf32_off, _mm512_set1_epi32(0xfffff7ff),
+                              _MM_CMPINT_GT);
+    if((outside_range | surrogate_range)) {
+      auto outside_idx = _tzcnt_u32(outside_range);
+      auto surrogate_idx = _tzcnt_u32(surrogate_range);
+
+      if (outside_idx < surrogate_idx) {
+        return result(error_code::TOO_LARGE, buf - buf_orig + outside_idx);
+      }
+
+      return result(error_code::SURROGATE, buf - buf_orig + surrogate_idx);
+    }
+
+  }
+
+  return result(error_code::SUCCESS, len);
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf8(const char * buf, size_t len, char* utf8_output) const noexcept {
