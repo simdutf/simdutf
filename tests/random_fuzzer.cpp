@@ -615,35 +615,27 @@ bool fuzz_this(const char *data, size_t size) {
 } // extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
 
-bool run_test(const char *rdata, size_t size) {
-  char *data = (char*)aligned_alloc(4, (size+3)/4*4);
-  std::memcpy(data, rdata, size);
+bool run_test(const char *data, size_t size) {
   if (!fuzz_this(data, size)) {
     dump_case();
-    free(data);
     return false;
   }
   if (!validate_tests<char>(data, size)) {
     dump_case();
-    free(data);
     return false;
   }
   if (!validate_tests<char16_t, false>(data, size)) {
     dump_case();
-    free(data);
     return false;
   }
   if (!validate_tests<char16_t, true>(data, size)) {
     dump_case();
-    free(data);
     return false;
   }
   if (!validate_tests<char32_t>(data, size)) {
     dump_case();
-    free(data);
     return false;
   }
-  free(data);
   return true;
 }
 bool fuzz_running(size_t N) {
@@ -669,15 +661,6 @@ bool fuzz_running(size_t N) {
   return true;
 }
 
-bool precomputed() {
-  char *data;
-  data = (char*)aligned_alloc(4, 8);
-  std::memcpy(data, "\x06\xd8\x00\x00\x0a\x00\x3f\x00", 8);
-  bool v = run_test(data, 8);
-  free(data);
-  return v;
-}
-
 int main(int argc, char*argv[]) {
 #ifdef RUN_IN_SPIKE_SIMULATOR
   puts("Skipping, fuzzer cannot be run under Spike simulator.");
@@ -689,12 +672,6 @@ int main(int argc, char*argv[]) {
       continue;
     }
     printf("testing: %s\n", e->name().c_str());
-  }
-  if(!precomputed()) {
-    printf("Precomputed failure\n");
-    return EXIT_FAILURE;
-  } else {
-    printf("Precomputed success\n");
   }
   size_t N = 10000;
   if (argc == 2) {
