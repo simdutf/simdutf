@@ -212,7 +212,7 @@ TEST_LOOP(trials, issue_446) {
     const auto r = simdutf::convert_utf8_to_latin1_with_errors((const char *) crash,
                                                                crash_len,
                                                                output.data());
-    ASSERT_EQUAL(r.count, 128);
+    ASSERT_EQUAL(r.count, 127); // because of the sequence 0xc2, 0xa2
     ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
 }
 
