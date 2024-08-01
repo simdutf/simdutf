@@ -46,18 +46,11 @@ simdutf_really_inline size_t process_block_from_utf8_to_latin1(const char *buf, 
   __mmask64 retain = ~leading & load_mask;
   __m512i output = _mm512_maskz_compress_epi8(retain, input);
   int64_t written_out = count_ones(retain);
-  __mmask64 store_mask = (1ULL << written_out) - 1;
+  if(written_out == 0) {
+    return 0; // Indicates error
+  }
+  __mmask64 store_mask = ~UINT64_C(0) >> (64 - written_out);
 
-  // ***************************
-  //  Possible optimization? (Nick Nuon)
-  //  This commented out line is 5% faster but sadly it'll also write past
-  //  memory bounds for latin1_output: is_remaining ?
-  //  _mm512_mask_storeu_epi8((__m512i *)latin_output, store_mask, output) :
-  //  _mm512_storeu_si512((__m512i *)latin_output, output); I tried using
-  //  _mm512_storeu_si512 and have the next process_block start from the
-  //  "written_out" point but the compiler shuffles memory in such a way that it
-  //  is significantly slower...
-  // ****************************
   _mm512_mask_storeu_epi8((__m512i *)latin_output, store_mask, output);
 
   return written_out;

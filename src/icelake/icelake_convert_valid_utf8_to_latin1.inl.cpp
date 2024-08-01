@@ -34,7 +34,10 @@ simdutf_really_inline size_t process_valid_block_from_utf8_to_latin1(const char 
   __mmask64 retain = ~leading & load_mask;
   __m512i output = _mm512_maskz_compress_epi8(retain, input);
   int64_t written_out = count_ones(retain);
-  __mmask64 store_mask = (1ULL << written_out) - 1;
+  if(written_out == 0) {
+    return 0; // Indicates error
+  }
+  __mmask64 store_mask = ~UINT64_C(0) >> (64 - written_out);
   // Optimization opportunity: sometimes, masked writes are not needed.
   _mm512_mask_storeu_epi8((__m512i *)latin_output, store_mask, output);
   return written_out;

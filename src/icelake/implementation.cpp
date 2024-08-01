@@ -141,8 +141,8 @@ implementation::detect_encodings(const char *input,
     if (is_utf8) {
       size_t current_length = static_cast<size_t>(buf - start);
       if (current_length != length) {
-        const __m512i utf8 = _mm512_maskz_loadu_epi8(
-            (1ULL << (length - current_length)) - 1, (const __m512i *)buf);
+                const __m512i utf8 = _mm512_maskz_loadu_epi8(
+            (UINT64_C(1) << (length - current_length)) - 1, (const __m512i *)buf);
         checker.check_next_input(utf8);
       }
       checker.check_eof();
@@ -158,16 +158,22 @@ implementation::detect_encodings(const char *input,
     }
 
     if (is_utf32 && (length % 4 == 0)) {
+      size_t leftover = length - static_cast<size_t>(buf - start);
       currentmax = _mm512_max_epu32(
           _mm512_maskz_loadu_epi8(
-              (1ULL << (length - static_cast<size_t>(buf - start))) - 1,
+              (UINT64_C(1) << leftover) - 1,
               (const __m512i *)buf),
           currentmax);
       __mmask16 outside_range = _mm512_cmp_epu32_mask(currentmax, _mm512_set1_epi32(0x10ffff),
                                 _MM_CMPINT_GT);
       if (outside_range == 0) {
+          out |= simdutf::encoding_type::UTF32_LE;
+        } else {
+        }
+        //}
+      /*} else {
         out |= simdutf::encoding_type::UTF32_LE;
-      }
+      }*/
     }
 
     return out;
@@ -186,8 +192,8 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
         checker.check_next_input(utf8);
     }
-    {
-       const __m512i utf8 = _mm512_maskz_loadu_epi8((1ULL<<(end - ptr))-1, (const __m512i*)ptr);
+    if(end != ptr) {
+       const __m512i utf8 = _mm512_maskz_loadu_epi8(~UINT64_C(0) >> (64 - (end - ptr)), (const __m512i*)ptr);
        checker.check_next_input(utf8);
     }
     checker.check_eof();
@@ -210,18 +216,17 @@ simdutf_warn_unused result implementation::validate_utf8_with_errors(const char 
       }
       count += 64;
     }
-    {
-      const __m512i utf8 = _mm512_maskz_loadu_epi8((1ULL<<(end - ptr))-1, (const __m512i*)ptr);
+    if (end != ptr) {
+      const __m512i utf8 = _mm512_maskz_loadu_epi8(~UINT64_C(0) >> (64 - (end - ptr)), (const __m512i*)ptr);
       checker.check_next_input(utf8);
-      if(checker.errors()) {
-        if (count != 0) { count--; } // Sometimes the error is only detected in the next chunk
-        result res = scalar::utf8::rewind_and_validate_with_errors(reinterpret_cast<const char*>(buf), reinterpret_cast<const char*>(buf + count), len - count);
-        res.count += count;
-        return res;
-      } else {
-        return result(error_code::SUCCESS, len);
-      }
     }
+    if(checker.errors()) {
+      if (count != 0) { count--; } // Sometimes the error is only detected in the next chunk
+      result res = scalar::utf8::rewind_and_validate_with_errors(reinterpret_cast<const char*>(buf), reinterpret_cast<const char*>(buf + count), len - count);
+      res.count += count;
+      return res;
+    }
+    return result(error_code::SUCCESS, len);
 }
 
 simdutf_warn_unused bool implementation::validate_ascii(const char *buf, size_t len) const noexcept {
@@ -239,8 +244,8 @@ simdutf_warn_unused result implementation::validate_ascii_with_errors(const char
       return result(error_code::TOO_LARGE, buf - buf_orig + _tzcnt_u64(notascii));
     }
   }
-  {
-    const __m512i input = _mm512_maskz_loadu_epi8((1ULL<<(end - buf))-1, (const __m512i*)buf);
+  if (end != buf) {
+    const __m512i input = _mm512_maskz_loadu_epi8(~UINT64_C(0) >> (64 - (end - buf)), (const __m512i*)buf);
     __mmask64 notascii = _mm512_cmp_epu8_mask(input, ascii, _MM_CMPINT_NLT);
     if(notascii) {
       return result(error_code::TOO_LARGE, buf - buf_orig + _tzcnt_u64(notascii));
