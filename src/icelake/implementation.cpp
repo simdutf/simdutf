@@ -780,7 +780,7 @@ simdutf_warn_unused result implementation::convert_utf16le_to_utf8_with_errors(c
   size_t outlen;
   size_t inlen = utf16_to_utf8_avx512i<endianness::LITTLE>(buf, len, (unsigned char*)utf8_output, &outlen);
   if(inlen != len) {
-    result res = scalar::utf16_to_utf8::convert_with_errors<endianness::LITTLE>(buf + inlen, len - outlen, utf8_output + outlen);
+    result res = scalar::utf16_to_utf8::convert_with_errors<endianness::LITTLE>(buf + inlen, len - inlen, utf8_output + outlen);
     res.count += inlen;
     return res;
   }
@@ -791,7 +791,7 @@ simdutf_warn_unused result implementation::convert_utf16be_to_utf8_with_errors(c
   size_t outlen;
   size_t inlen = utf16_to_utf8_avx512i<endianness::BIG>(buf, len, (unsigned char*)utf8_output, &outlen);
   if(inlen != len) {
-    result res = scalar::utf16_to_utf8::convert_with_errors<endianness::BIG>(buf + inlen, len - outlen, utf8_output + outlen);
+    result res = scalar::utf16_to_utf8::convert_with_errors<endianness::BIG>(buf + inlen, len - inlen, utf8_output + outlen);
     res.count += inlen;
     return res;
   }
