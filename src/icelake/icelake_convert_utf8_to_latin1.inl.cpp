@@ -12,8 +12,10 @@ simdutf_really_inline size_t process_block_from_utf8_to_latin1(const char *buf, 
       is_remaining ? _bzhi_u64(~0ULL, (unsigned int)len) : ~0ULL;
   __m512i input = _mm512_maskz_loadu_epi8(load_mask, (__m512i *)buf);
   __mmask64 nonascii = _mm512_movepi8_mask(input);
-
   if (nonascii == 0) {
+    if(*next_leading_ptr) { // If we ended with a leading byte, it is an error.
+      return 0; // Indicates error
+    }
     is_remaining
         ? _mm512_mask_storeu_epi8((__m512i *)latin_output, load_mask, input)
         : _mm512_storeu_si512((__m512i *)latin_output, input);
@@ -55,7 +57,9 @@ simdutf_really_inline size_t process_block_from_utf8_to_latin1(const char *buf, 
   return written_out;
 }
 
-size_t utf8_to_latin1_avx512(const char *buf, size_t len, char *latin_output) {
+size_t utf8_to_latin1_avx512(const char *&inbuf, size_t len, char *&inlatin_output) {
+  const char *buf = inbuf;
+  char *latin_output = inlatin_output;
   char *start = latin_output;
   size_t pos = 0;
   __m512i minus64 = _mm512_set1_epi8(-64); // 11111111111 ... 1100 0000
@@ -67,8 +71,11 @@ size_t utf8_to_latin1_avx512(const char *buf, size_t len, char *latin_output) {
     size_t written = process_block_from_utf8_to_latin1<false>(buf + pos, 64, latin_output, minus64,
                                           one, &next_leading, &next_bit6);
     if (written == 0) {
-      return 0; // Indicates error
+      inlatin_output = latin_output;
+      inbuf = buf + pos;
+      return 0; // Indicates error at pos or after, or just before pos (too short error)
     }
+
     latin_output += written;
     pos += 64;
   }
@@ -79,10 +86,13 @@ size_t utf8_to_latin1_avx512(const char *buf, size_t len, char *latin_output) {
         process_block_from_utf8_to_latin1<true>(buf + pos, remaining, latin_output, minus64, one,
                             &next_leading, &next_bit6);
     if (written == 0) {
-      return 0; // Indicates error
+      inbuf = buf + pos;
+      inlatin_output = latin_output;
+      return 0; // Indicates error at pos or after, or just before pos (too short error)
     }
     latin_output += written;
   }
-
-  return (size_t)(latin_output - start);
+  inlatin_output = latin_output;
+  inbuf += len;
+  return size_t(latin_output - start);
 }

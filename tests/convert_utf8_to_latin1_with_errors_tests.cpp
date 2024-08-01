@@ -111,8 +111,8 @@ TEST_LOOP(trials, header_bits_error) {
       if((test.input_utf8[i] & 0b11000000) != 0b10000000) {  // Only process leading bytes
         auto procedure = [&implementation, &i](const char* utf8, size_t size, char* latin1) -> size_t {
           simdutf::result res = implementation.convert_utf8_to_latin1_with_errors(utf8, size,latin1);
-          ASSERT_EQUAL(res.error, simdutf::error_code::HEADER_BITS);
           ASSERT_EQUAL(res.count, i);
+          ASSERT_EQUAL(res.error, simdutf::error_code::HEADER_BITS);
           return 0;
         };
         const unsigned char old = test.input_utf8[i];
@@ -133,8 +133,8 @@ TEST_LOOP(trials, too_short_error) {
 
         auto procedure = [&implementation, &leading_byte_pos](const char* utf8, size_t size,char * latin1) -> size_t {
           simdutf::result res = implementation.convert_utf8_to_latin1_with_errors(utf8, size, latin1);
-          ASSERT_EQUAL(res.error, simdutf::error_code::TOO_SHORT);
           ASSERT_EQUAL(res.count, leading_byte_pos);
+          ASSERT_EQUAL(res.error, simdutf::error_code::TOO_SHORT);
           return 0;
         };
 

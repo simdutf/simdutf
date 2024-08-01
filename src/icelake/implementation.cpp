@@ -530,25 +530,18 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* bu
 
 
 simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(const char* buf, size_t len, char* latin1_output) const noexcept {
-  // Initialize output length and input length counters
-  size_t inlen = 0;
-
   // First, try to convert as much as possible using the SIMD implementation.
-  inlen = icelake::utf8_to_latin1_avx512(buf, len, latin1_output);
+  const char * obuf = buf;
+  char * olatin1_output = latin1_output;
+  size_t written = icelake::utf8_to_latin1_avx512(obuf, len, olatin1_output);
 
   // If we have completely converted the string
-  if(inlen == len) {
-    return {simdutf::SUCCESS, len};
+  if(obuf == buf + len) {
+    return {simdutf::SUCCESS, written};
   }
-
-  // Else if there are remaining bytes, use the scalar function to process them.
-  // Note: This is assuming scalar::utf8_to_latin1::convert_with_errors is a function that takes
-  // the input buffer, length, and output buffer, and returns a result object with an error code
-  // and the number of characters processed.
-  result res = scalar::utf8_to_latin1::convert_with_errors(buf + inlen, len - inlen, latin1_output + inlen);
-  res.count += inlen; // Add the number of characters processed by the SIMD implementation
-
-  return res;
+  // We have an error. Reprocess using scalar.
+  // Todo: optimize so we start at obuf.
+  return scalar::utf8_to_latin1::convert_with_errors(buf, len, latin1_output);
 }
 
 
