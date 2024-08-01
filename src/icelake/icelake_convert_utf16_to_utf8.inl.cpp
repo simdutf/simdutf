@@ -23,7 +23,7 @@ size_t utf16_to_utf8_avx512i(const char16_t *inbuf, size_t inlen,
         );
   const char16_t * const inbuf_orig = inbuf;
   const unsigned char * const outbuf_orig = outbuf;
-  size_t adjust = 0;
+  int adjust = 0;
   int carry = 0;
 
   while (inlen >= 32) {
@@ -180,7 +180,7 @@ size_t utf16_to_utf8_avx512i(const char16_t *inbuf, size_t inlen,
     _mm512_mask_storeu_epi8(outbuf + advlo, _cvtu64_mask64(_pext_u64(wanthi_uint64, wanthi_uint64)), outhi);
     outbuf += advlo + advhi;
   }
-  outbuf -= adjust;
+  outbuf += -adjust;
 
 tail:
   if (inlen != 0) {
@@ -188,7 +188,7 @@ tail:
     inmask = _cvtu32_mask32((1U << inlen) - 1);
     in = _mm512_maskz_loadu_epi16(inmask, inbuf);
     if(big_endian) { in = _mm512_shuffle_epi8(in, byteflip); }
-    adjust = inlen - 31;
+    adjust = (int)inlen - 31;
     inlen = 0;
     goto lastiteration;
   }

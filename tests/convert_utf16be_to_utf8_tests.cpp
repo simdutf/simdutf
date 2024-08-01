@@ -310,4 +310,14 @@ TEST(all_possible_8_codepoint_combinations) {
 }
 #endif
 
+
+TEST_LOOP(trials, issue_443) {
+  const unsigned char crash[] = {0x20, 0x20};
+  const unsigned int crash_len = 2;
+  std::vector<char> output(4 * crash_len);
+  const auto r = simdutf::convert_utf16be_to_utf8((const char16_t *) crash,
+                                                  crash_len / sizeof(char16_t),
+                                                  output.data());
+  ASSERT_EQUAL(r, 3); // becomes 3 bytes \xe2\x80\x80
+}
 TEST_MAIN
