@@ -40,7 +40,7 @@ TEST_LOOP(trials, issue_441)
                                  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20};
   const unsigned int crash_len = 73;
   std::vector<char32_t> output(crash_len);
-  const auto r = simdutf::convert_utf8_to_utf32_with_errors((const char *) crash,
+  const auto r = implementation.convert_utf8_to_utf32_with_errors((const char *) crash,
                                                             crash_len,
                                                             output.data());
   ASSERT_TRUE(r.error != simdutf::SUCCESS);
