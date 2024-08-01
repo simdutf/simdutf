@@ -2,7 +2,6 @@
 
 // File contains conversion procedure from possibly invalid UTF-8 strings.
 
-// template <bool is_remaining, bool use_masked_store>
 template <bool is_remaining>
 simdutf_really_inline size_t process_block_from_utf8_to_latin1(const char *buf, size_t len,
                                            char *latin_output, __m512i minus64,
