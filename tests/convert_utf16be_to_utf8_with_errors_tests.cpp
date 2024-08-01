@@ -221,7 +221,7 @@ TEST_LOOP(trials, issue_445) {
   const unsigned char crash[] = {0x20, 0x20, 0xdd, 0x20};
   const unsigned int crash_len = 4;
   std::vector<char> output(4 * crash_len);
-  const auto r = simdutf::convert_utf16be_to_utf8_with_errors((const char16_t *) crash,
+  const auto r = implementation.convert_utf16be_to_utf8_with_errors((const char16_t *) crash,
                                                               crash_len / sizeof(char16_t),
                                                               output.data());
   ASSERT_EQUAL(r.count, 1);
