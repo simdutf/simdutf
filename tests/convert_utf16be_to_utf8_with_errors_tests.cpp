@@ -217,7 +217,7 @@ TEST(convert_fails_if_there_is_surrogate_pair_is_followed_by_high_surrogate) {
   }
 }
 #endif
-TEST_LOOP(trials, issue_445) {
+TEST(issue_445) {
   const unsigned char crash[] = {0x20, 0x20, 0xdd, 0x20};
   const unsigned int crash_len = 4;
   std::vector<char> output(4 * crash_len);
