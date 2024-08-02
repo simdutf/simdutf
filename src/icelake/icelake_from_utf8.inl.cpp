@@ -160,8 +160,8 @@ std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str,
         }
         validatedptr += 4*16;
     }
-    {
-       const __m512i utf8 = _mm512_maskz_loadu_epi8((1ULL<<(end - validatedptr))-1, (const __m512i*)validatedptr);
+    if (end != validatedptr) {
+       const __m512i utf8 = _mm512_maskz_loadu_epi8(~UINT64_C(0) >> (64 - (end - validatedptr)), (const __m512i*)validatedptr);
        checker.check_next_input(utf8);
     }
     checker.check_eof();
@@ -288,8 +288,8 @@ std::tuple<const char*, OUTPUT*, bool> validating_utf8_to_fixed_length_with_cons
         }
         validatedptr += 4*16;
     }
-    {
-       const __m512i utf8 = _mm512_maskz_loadu_epi8((1ULL<<(end - validatedptr))-1, (const __m512i*)validatedptr);
+    if (end != validatedptr) {
+       const __m512i utf8 = _mm512_maskz_loadu_epi8(~UINT64_C(0) >> (64 - (end - validatedptr)), (const __m512i*)validatedptr);
        checker.check_next_input(utf8);
     }
     checker.check_eof();
