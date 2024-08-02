@@ -16,7 +16,6 @@ namespace {
   constexpr int trials = 1000;
 }
 
-
 // For invalid inputs, we expect the conversion to fail (return 0)
 TEST_LOOP(trials, convert_random_inputs) {
     simdutf::tests::helpers::RandomInt r(0x00, 0xffff, seed);
