@@ -1611,6 +1611,37 @@ if(r.error) {
 }
 ```
 
+Let us consider a more interesting example.  Take the following strings:
+`"  A  A  "`, `"  A  A  G  A  /  v  8  "`, `"  A  A  G  A  /  v  8  =  "`, `"  A  A  G  A  /  v  8  =  =  "`.
+They are all valid WHATWG base64 inputs, except for the last one. The first string decodes to a single
+byte value (0) while the second and third decode to the byte sequence `0, 0x1, 0x80, 0xfe, 0xff`.
+
+
+```C++
+  std::vector<std::string> sources = {
+      "  A  A  ", "  A  A  G  A  /  v  8  ", "  A  A  G  A  /  v  8  =  ", "  A  A  G  A  /  v  8  =  =  "};
+  std::vector<std::vector<uint8_t>> expected = {
+      {0}, {0, 0x1, 0x80, 0xfe, 0xff}, {0, 0x1, 0x80, 0xfe, 0xff}, {}}; // last one is in error
+  for(size_t i = 0; i < sources.size(); i++) {
+    const std::string &source = sources[i];
+    std::cout << "source: '" << source << "'" << std::endl;
+    // allocate enough memory for the maximal binary length
+    std::vector<uint8_t> buffer(implementation.maximal_binary_length_from_base64(
+       source.data(), source.size()));
+    // convert to binary and check for errors
+    simdutf::result r = implementation.base64_to_binary(
+        source.data(), source.size(), (char*)buffer.data());
+    if( r.error != simdutf::error_code::SUCCESS) {
+      // We have that expected[i].empty().
+      std::cout << "output: error" << std::endl;
+    } else {
+      buffer.resize(r.count); // in case of success, r.count contains the output length
+      // We have that buffer == expected[i]
+      std::cout << "output: " << r.count << " bytes" << std::endl;
+    }
+  }
+```
+
 In some instances, you may want to limit the size of the output further when decoding base64.
 For this purpose, you may use the `base64_to_binary_safe` functions. The functions may also
 be useful if you seek to decode the input into segments having a maximal capacity.
