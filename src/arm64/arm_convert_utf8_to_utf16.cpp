@@ -169,8 +169,10 @@ size_t convert_masked_utf8_to_utf16(const char *input,
       if (!match_system(big_endian)) {
         composed = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(composed)));
       }
-      vst1q_u16(reinterpret_cast<uint16_t *>(utf16_output), composed);
-      utf16_output += 6; // We 3 32-bit surrogate pairs.
+      uint16_t buffer[8];
+      vst1q_u16(reinterpret_cast<uint16_t *>(buffer), composed);
+      for(int k = 0; k < 6; k++) { utf16_output[k] = buffer[k]; } // the loop might compiler to a couple of instructions.
+      utf16_output += 6; // We wrote 3 32-bit surrogate pairs.
       return 12; // We consumed 12 bytes.
     }
     // 3 1-4 byte sequences
