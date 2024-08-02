@@ -311,7 +311,7 @@ TEST(all_possible_8_codepoint_combinations) {
 #endif
 
 
-TEST_LOOP(trials, issue_443) {
+TEST(issue_443) {
   const unsigned char crash[] = {0x20, 0x20};
   const unsigned int crash_len = 2;
   std::vector<char> output(4 * crash_len);
