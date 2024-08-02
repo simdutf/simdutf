@@ -593,6 +593,30 @@ Base64</h2>
 <div class="line">} else {</div>
 <div class="line">  buffer.resize(r.count); // resize the buffer according to actual number of bytes</div>
 <div class="line">}</div>
+</div><!-- fragment --><p>Let us consider a more interesting example. Take the following strings: <code>"  A  A  "</code>, <code>"  A  A  G  A  /  v  8  "</code>, <code>"  A  A  G  A  /  v  8  =  "</code>, <code>"  A  A  G  A  /  v  8  =  =  "</code>. They are all valid WHATWG base64 inputs, except for the last one. The first string decodes to a single byte value (0) while the second and third decode to the byte sequence <code>0, 0x1, 0x80, 0xfe, 0xff</code>.</p>
+<div class="fragment"><div class="line">{C++}</div>
+<div class="line"> std::vector&lt;std::string&gt; sources = {</div>
+<div class="line">     &quot;  A  A  &quot;, &quot;  A  A  G  A  /  v  8  &quot;, &quot;  A  A  G  A  /  v  8  =  &quot;, &quot;  A  A  G  A  /  v  8  =  =  &quot;};</div>
+<div class="line"> std::vector&lt;std::vector&lt;uint8_t&gt;&gt; expected = {</div>
+<div class="line">     {0}, {0, 0x1, 0x80, 0xfe, 0xff}, {0, 0x1, 0x80, 0xfe, 0xff}, {}}; // last one is in error</div>
+<div class="line"> for(size_t i = 0; i &lt; sources.size(); i++) {</div>
+<div class="line">   const std::string &amp;source = sources[i];</div>
+<div class="line">   std::cout &lt;&lt; &quot;source: &#39;&quot; &lt;&lt; source &lt;&lt; &quot;&#39;&quot; &lt;&lt; std::endl;</div>
+<div class="line">   // allocate enough memory for the maximal binary length</div>
+<div class="line">   std::vector&lt;uint8_t&gt; buffer(implementation.maximal_binary_length_from_base64(</div>
+<div class="line">      source.data(), source.size()));</div>
+<div class="line">   // convert to binary and check for errors</div>
+<div class="line">   simdutf::result r = implementation.base64_to_binary(</div>
+<div class="line">       source.data(), source.size(), (char*)buffer.data());</div>
+<div class="line">   if( r.error != simdutf::error_code::SUCCESS) {</div>
+<div class="line">     // We have that expected[i].empty().</div>
+<div class="line">     std::cout &lt;&lt; &quot;output: error&quot; &lt;&lt; std::endl;</div>
+<div class="line">   } else {</div>
+<div class="line">     buffer.resize(r.count); // in case of success, r.count contains the output length</div>
+<div class="line">     // We have that buffer == expected[i]</div>
+<div class="line">     std::cout &lt;&lt; &quot;output: &quot; &lt;&lt; r.count &lt;&lt; &quot; bytes&quot; &lt;&lt; std::endl;</div>
+<div class="line">   }</div>
+<div class="line"> }</div>
 </div><!-- fragment --><p>In some instances, you may want to limit the size of the output further when decoding base64. For this purpose, you may use the <code>base64_to_binary_safe</code> functions. The functions may also be useful if you seek to decode the input into segments having a maximal capacity.</p>
 <div class="fragment"><div class="line">{C++}</div>
 <div class="line"> size_t len = 72; // for simplicity we chose len divisible by 3</div>
