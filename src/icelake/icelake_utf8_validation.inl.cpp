@@ -123,5 +123,4 @@ simdutf_really_inline __m512i check_special_cases(__m512i input, const __m512i p
     simdutf_really_inline bool errors() const {
         return _mm512_test_epi8_mask(this->error, this->error) != 0;
     }
-
   }; // struct avx512_utf8_checker

@@ -664,9 +664,15 @@ simdutf_warn_unused result implementation::convert_utf8_to_utf32_with_errors(con
   auto ret = icelake::validating_utf8_to_fixed_length_with_constant_checks<endianness::LITTLE, uint32_t>(buf, len, utf32_output);
 
   if (!std::get<2>(ret)) {
-    // fallback on scalar.
-    // todo: optimize
-    return scalar::utf8_to_utf32::convert_with_errors(buf, len, utf32);
+    size_t pos = std::get<0>(ret) - buf;
+    // We might have an error that occurs right before  pos.
+    // This is only a concern if buf[pos] is not a continuation byte.
+    if((buf[pos] & 0xc0) != 0x80 && pos > 0) {
+      pos -= 1;
+    }
+    result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(pos, buf + pos, len - pos, (char32_t*)std::get<1>(ret));
+      res.count += pos;
+      return res;
   }
   size_t saved_bytes = std::get<1>(ret) - utf32_output;
   const char* end = buf + len;

@@ -22,7 +22,7 @@ simdutf_really_inline size_t process_block_from_utf8_to_latin1(const char *buf, 
     return len;
   }
 
-  __mmask64 leading = _mm512_cmpge_epu8_mask(input, minus64);
+  const __mmask64 leading = _mm512_cmpge_epu8_mask(input, minus64);
 
   __m512i highbits = _mm512_xor_si512(input, _mm512_set1_epi8(-62));
   __mmask64 invalid_leading_bytes =
@@ -33,16 +33,14 @@ simdutf_really_inline size_t process_block_from_utf8_to_latin1(const char *buf, 
   }
 
   __mmask64 leading_shift = (leading << 1) | *next_leading_ptr;
-  *next_leading_ptr = leading >> 63;
 
   if ((nonascii ^ leading) != leading_shift) {
     return 0; // Indicates error
   }
 
-  __mmask64 bit6 = _mm512_cmpeq_epi8_mask(highbits, one);
+  const __mmask64 bit6 = _mm512_cmpeq_epi8_mask(highbits, one);
   input =
       _mm512_mask_sub_epi8(input, (bit6 << 1) | *next_bit6_ptr, input, minus64);
-  *next_bit6_ptr = bit6 >> 63;
 
   __mmask64 retain = ~leading & load_mask;
   __m512i output = _mm512_maskz_compress_epi8(retain, input);
@@ -50,6 +48,9 @@ simdutf_really_inline size_t process_block_from_utf8_to_latin1(const char *buf, 
   if(written_out == 0) {
     return 0; // Indicates error
   }
+  *next_bit6_ptr = bit6 >> 63;
+  *next_leading_ptr = leading >> 63;
+
   __mmask64 store_mask = ~UINT64_C(0) >> (64 - written_out);
 
   _mm512_mask_storeu_epi8((__m512i *)latin_output, store_mask, output);

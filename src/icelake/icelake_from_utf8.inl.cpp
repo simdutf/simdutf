@@ -201,14 +201,15 @@ std::tuple<const char*, OUTPUT*, bool> validating_utf8_to_fixed_length_with_cons
      */
     while (ptr + 64 + 64 <= end) {
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
-        if(checker.check_next_input(utf8)) {
+        bool ascii = checker.check_next_input(utf8);
+        if(checker.errors()) {
+            return {ptr, output, false}; // We found an error.
+        }
+        if(ascii) {
             SIMDUTF_ICELAKE_STORE_ASCII(UTF32, utf8, output)
             output += 64;
             ptr += 64;
             continue;
-        }
-        if(checker.errors()) {
-            return {ptr, output, false}; // We found an error.
         }
         const __m512i lane0 = broadcast_epi128<0>(utf8);
         const __m512i lane1 = broadcast_epi128<1>(utf8);
@@ -255,12 +256,14 @@ std::tuple<const char*, OUTPUT*, bool> validating_utf8_to_fixed_length_with_cons
     // 3*16 bytes, so we may end up double-validating 16 bytes.
     if (ptr + 64 <= end) {
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
-        if(checker.check_next_input(utf8)) {
+        bool ascii = checker.check_next_input(utf8);
+        if(checker.errors()) {        
+            return {ptr, output, false}; // We found an error.
+        }
+        if(ascii) {
             SIMDUTF_ICELAKE_STORE_ASCII(UTF32, utf8, output)
             output += 64;
             ptr += 64;
-        } else if(checker.errors()) {
-            return {ptr, output, false}; // We found an error.
         } else {
             const __m512i lane0 = broadcast_epi128<0>(utf8);
             const __m512i lane1 = broadcast_epi128<1>(utf8);
