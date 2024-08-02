@@ -23,6 +23,28 @@ void printByteInBinary(const char& byte) {
     putchar('\n');
 }
 
+TEST(issue_convert_utf8_to_latin1_with_errors_cbf29ce4842223ed) {
+   const unsigned char data[] = {0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0xc2};
+   constexpr std::size_t data_len_bytes = sizeof(data);
+   constexpr std::size_t data_len = data_len_bytes / sizeof(char);
+   std::vector<char> output(4 * data_len);
+   const auto r = implementation.convert_utf8_to_latin1_with_errors((const char *) data,
+                                                                    data_len,
+                                                                    output.data());
+   /*
+   got return [count=63, error=SUCCESS] from implementation icelake
+   got return [count=63, error=TOO_SHORT] from implementation haswell
+   got return [count=63, error=TOO_SHORT] from implementation westmere
+   got return [count=63, error=TOO_SHORT] from implementation fallback
+   */
+   ASSERT_EQUAL(r.count, 63);
+   ASSERT_EQUAL(r.error, simdutf::error_code::TOO_SHORT);
+}
 
 TEST_LOOP(trials, convert_pure_ASCII) {
     size_t counter = 0;

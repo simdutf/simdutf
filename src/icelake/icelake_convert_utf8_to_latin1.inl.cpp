@@ -92,6 +92,11 @@ size_t utf8_to_latin1_avx512(const char *&inbuf, size_t len, char *&inlatin_outp
     }
     latin_output += written;
   }
+  if(next_leading) {
+    inbuf = buf + len - next_leading;
+    inlatin_output = latin_output;
+    return 0; // Indicates error at end of buffer
+  }
   inlatin_output = latin_output;
   inbuf += len;
   return size_t(latin_output - start);
