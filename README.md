@@ -1642,6 +1642,21 @@ byte value (0) while the second and third decode to the byte sequence `0, 0x1, 0
   }
 ```
 
+This code should print the following:
+
+```
+source: '  A  A  '
+output: 1 bytes
+source: '  A  A  G  A  /  v  8  '
+output: 5 bytes
+source: '  A  A  G  A  /  v  8  =  '
+output: 5 bytes
+source: '  A  A  G  A  /  v  8  =  =  '
+output: error
+```
+
+As you can see, the result is as expected.
+
 In some instances, you may want to limit the size of the output further when decoding base64.
 For this purpose, you may use the `base64_to_binary_safe` functions. The functions may also
 be useful if you seek to decode the input into segments having a maximal capacity.
