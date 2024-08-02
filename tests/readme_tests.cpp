@@ -17,18 +17,47 @@ TEST(base64_fun) {
     const std::string &source = sources[i];
     std::cout << "source: '" << source << "'" << std::endl;
     // allocate enough memory for the maximal binary length
-    std::vector<uint8_t> buffer(implementation.maximal_binary_length_from_base64(
+    std::vector<uint8_t> buffer(simdutf::maximal_binary_length_from_base64(
        source.data(), source.size()));
     // convert to binary and check for errors
-    simdutf::result r = implementation.base64_to_binary(
+    simdutf::result r = simdutf::base64_to_binary(
         source.data(), source.size(), (char*)buffer.data());
-    if( r.error != simdutf::error_code::SUCCESS) {
+    if(r.error != simdutf::error_code::SUCCESS) {
       ASSERT_TRUE(expected[i].empty());
       std::cout << "output: error" << std::endl;
     } else {
       buffer.resize(r.count); // in case of success, r.count contains the output length
       ASSERT_TRUE(buffer == expected[i]);
       std::cout << "output: " << r.count << " bytes" << std::endl;
+    }
+  }
+}
+
+
+TEST(base64_fun_safe) {
+  std::cout << "==== base64_fun ====\n" << std::endl;
+  std::vector<std::string> sources = {
+      "  A  A  ", "  A  A  G  A  /  v  8  ", "  A  A  G  A  /  v  8  =  ", "  A  A  G  A  /  v  8  =  =  "};
+  std::vector<std::vector<uint8_t>> expected = {
+      {0}, {0, 0x1, 0x80, 0xfe, 0xff}, {0, 0x1, 0x80, 0xfe, 0xff}, {}}; // last one is in error
+  for(size_t i = 0; i < sources.size(); i++) {
+    const std::string &source = sources[i];
+    std::cout << "source: '" << source << "'" << std::endl;
+    // allocate enough memory for the maximal binary length
+    std::vector<uint8_t> buffer(simdutf::maximal_binary_length_from_base64(
+       source.data(), source.size()));
+    // convert to binary and check for errors
+    size_t output_length = buffer.size();
+    simdutf::result r = simdutf::base64_to_binary_safe(
+        source.data(), source.size(), (char*)buffer.data(), output_length);
+    if(r.error != simdutf::error_code::SUCCESS) {
+      ASSERT_TRUE(expected[i].empty());
+      std::cout << "output: error" << std::endl;
+    } else {
+      buffer.resize(output_length); // in case of success, output_length contains the output length
+      ASSERT_TRUE(buffer == expected[i]);
+      std::cout << "ouput: " << output_length << " bytes" << std::endl;
+      std::cout << "input (consumed): " << r.count << " bytes" << std::endl;
     }
   }
 }

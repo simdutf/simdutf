@@ -1626,12 +1626,12 @@ byte value (0) while the second and third decode to the byte sequence `0, 0x1, 0
     const std::string &source = sources[i];
     std::cout << "source: '" << source << "'" << std::endl;
     // allocate enough memory for the maximal binary length
-    std::vector<uint8_t> buffer(implementation.maximal_binary_length_from_base64(
+    std::vector<uint8_t> buffer(simdutf::maximal_binary_length_from_base64(
        source.data(), source.size()));
     // convert to binary and check for errors
-    simdutf::result r = implementation.base64_to_binary(
+    simdutf::result r = simdutf::base64_to_binary(
         source.data(), source.size(), (char*)buffer.data());
-    if( r.error != simdutf::error_code::SUCCESS) {
+    if(r.error != simdutf::error_code::SUCCESS) {
       // We have that expected[i].empty().
       std::cout << "output: error" << std::endl;
     } else {
@@ -1686,6 +1686,54 @@ be useful if you seek to decode the input into segments having a maximal capacit
   // We decoded r.count base64 8-bit units to limited_length2 bytes
   // We are done
   assert(limited_length2 + limited_length == (len + 3) / 4 * 3);
+```
+
+We can repeat our previous examples with the various spaced strings using
+`base64_to_binary_safe`. It works much the same except that the convention
+for the content of `result.count` differs. The output size is stored
+by reference in the output length parameter.
+
+```cpp
+
+ std::vector<std::string> sources = {
+      "  A  A  ", "  A  A  G  A  /  v  8  ", "  A  A  G  A  /  v  8  =  ", "  A  A  G  A  /  v  8  =  =  "};
+  std::vector<std::vector<uint8_t>> expected = {
+      {0}, {0, 0x1, 0x80, 0xfe, 0xff}, {0, 0x1, 0x80, 0xfe, 0xff}, {}}; // last one is in error
+  for(size_t i = 0; i < sources.size(); i++) {
+    const std::string &source = sources[i];
+    std::cout << "source: '" << source << "'" << std::endl;
+    // allocate enough memory for the maximal binary length
+    std::vector<uint8_t> buffer(simdutf::maximal_binary_length_from_base64(
+       source.data(), source.size()));
+    // convert to binary and check for errors
+    size_t output_length = buffer.size();
+    simdutf::result r = simdutf::base64_to_binary_safe(
+        source.data(), source.size(), (char*)buffer.data(), output_length);
+    if(r.error != simdutf::error_code::SUCCESS) {
+      // We have expected[i].empty()
+      std::cout << "output: error" << std::endl;
+    } else {
+      buffer.resize(output_length); // in case of success, output_length contains the output length
+      // We have buffer == expected[i])
+      std::cout << "ouput: " << output_length << " bytes" << std::endl;
+      std::cout << "input (consumed): " << r.count << " bytes" << std::endl;
+    }
+```
+
+This code should output the following:
+
+```
+source: '  A  A  '
+ouput: 1 bytes
+input (consumed): 8 bytes
+source: '  A  A  G  A  /  v  8  '
+ouput: 5 bytes
+input (consumed): 23 bytes
+source: '  A  A  G  A  /  v  8  =  '
+ouput: 5 bytes
+input (consumed): 26 bytes
+source: '  A  A  G  A  /  v  8  =  =  '
+output: error
 ```
 
 See our function specifications for more details.
