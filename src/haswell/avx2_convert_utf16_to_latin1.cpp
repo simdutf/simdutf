@@ -44,7 +44,7 @@ avx2_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
   while (buf + 16 <= end) {
     __m256i in = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(buf));
 
-    if (!big_endian) {
+    if (!match_system(big_endian)) {
       const __m256i swap = _mm256_setr_epi8(
           1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14, 17, 16, 19, 18,
           21, 20, 23, 22, 25, 24, 27, 26, 29, 28, 31, 30);

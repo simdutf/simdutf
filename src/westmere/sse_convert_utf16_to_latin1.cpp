@@ -32,7 +32,7 @@ std::pair<result, char*> sse_convert_utf16_to_latin1_with_errors(const char16_t*
   while (buf + 8 <= end) {
     __m128i in = _mm_loadu_si128(reinterpret_cast<const __m128i*>(buf));
 
-    if (!big_endian) {
+    if (!match_system(big_endian)) {
       const __m128i swap = _mm_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
       in = _mm_shuffle_epi8(in, swap);
     }

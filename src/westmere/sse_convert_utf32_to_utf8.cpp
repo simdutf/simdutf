@@ -258,7 +258,6 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
 
 
 std::pair<result, char*> sse_convert_utf32_to_utf8_with_errors(const char32_t* buf, size_t len, char* utf8_output) {
-
   const char32_t* end = buf + len;
   const char32_t* start = buf;
 
@@ -273,10 +272,9 @@ std::pair<result, char*> sse_convert_utf32_to_utf8_with_errors(const char32_t* b
   const size_t safety_margin = 12; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
 
   while (buf + 16 + safety_margin <= end) {
-    // We load two 16 bytes registers for a total of 32 bytes or 16 characters.
+    // We load two 16 bytes registers for a total of 32 bytes or 8 characters.
     __m128i in = _mm_loadu_si128((__m128i*)buf);
     __m128i nextin = _mm_loadu_si128((__m128i*)buf+1);
-
     // Check for too large input
     __m128i max_input = _mm_max_epu32(_mm_max_epu32(in, nextin), v_10ffff);
     if(static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi32(max_input, v_10ffff))) != 0xffff) {
@@ -290,14 +288,6 @@ std::pair<result, char*> sse_convert_utf32_to_utf8_with_errors(const char32_t* b
 
     // Check for ASCII fast path
     if(_mm_testz_si128(in_16, v_ff80)) { // ASCII fast path!!!!
-      // We eagerly load another 32 bytes, hoping that they will be ASCII too.
-      // The intuition is that we try to collect 16 ASCII characters which requires
-      // a total of 64 bytes of input. If we fail, we just pass thirdin and fourthin
-      // as our new inputs.
-      __m128i thirdin = _mm_loadu_si128((__m128i*)buf+2);
-      __m128i fourthin = _mm_loadu_si128((__m128i*)buf+3);
-      __m128i nextin_16 = _mm_packus_epi32(_mm_and_si128(thirdin, v_7fffffff), _mm_and_si128(fourthin, v_7fffffff));
-      if(!_mm_testz_si128(nextin_16, v_ff80)) {
         // 1. pack the bytes
         // obviously suboptimal.
         const __m128i utf8_packed = _mm_packus_epi16(in_16,in_16);
@@ -306,25 +296,7 @@ std::pair<result, char*> sse_convert_utf32_to_utf8_with_errors(const char32_t* b
         // 3. adjust pointers
         buf += 8;
         utf8_output += 8;
-        // Proceed with next input
-        in_16 = nextin_16;
-        __m128i next_max_input = _mm_max_epu32(_mm_max_epu32(thirdin, fourthin), v_10ffff);
-        if(static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi32(next_max_input, v_10ffff))) != 0xffff) {
-          return std::make_pair(result(error_code::TOO_LARGE, buf - start), utf8_output);
-        }
-        // We need to update in and nextin because they are used later.
-        in = thirdin;
-        nextin = fourthin;
-      } else {
-        // 1. pack the bytes
-        const __m128i utf8_packed = _mm_packus_epi16(in_16, nextin_16);
-        // 2. store (16 bytes)
-        _mm_storeu_si128((__m128i*)utf8_output, utf8_packed);
-        // 3. adjust pointers
-        buf += 16;
-        utf8_output += 16;
-        continue; // we are done for this round!
-      }
+        continue;
     }
 
     // no bits set above 7th bit
@@ -506,6 +478,5 @@ std::pair<result, char*> sse_convert_utf32_to_utf8_with_errors(const char32_t* b
       buf += k;
     }
   } // while
-
   return std::make_pair(result(error_code::SUCCESS, buf - start), utf8_output);
 }
