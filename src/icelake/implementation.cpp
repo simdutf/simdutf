@@ -220,6 +220,7 @@ simdutf_warn_unused result implementation::validate_utf8_with_errors(const char 
       const __m512i utf8 = _mm512_maskz_loadu_epi8(~UINT64_C(0) >> (64 - (end - ptr)), (const __m512i*)ptr);
       checker.check_next_input(utf8);
     }
+    checker.check_eof();
     if(checker.errors()) {
       if (count != 0) { count--; } // Sometimes the error is only detected in the next chunk
       result res = scalar::utf8::rewind_and_validate_with_errors(reinterpret_cast<const char*>(buf), reinterpret_cast<const char*>(buf + count), len - count);

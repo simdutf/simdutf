@@ -5,6 +5,27 @@
 
 constexpr size_t num_trials = 1000;
 
+TEST(validate_utf8_with_errors_cbf29ce4842223f0) {
+   const unsigned char data[] = {0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0xff};
+   constexpr std::size_t data_len_bytes = sizeof(data);
+   constexpr std::size_t data_len = data_len_bytes / sizeof(char);
+   const auto validation1 = implementation.validate_utf8_with_errors((const char *) data, data_len);
+   /*
+   got return [count=64, error=SUCCESS] from implementation icelake
+   got return [count=63, error=HEADER_BITS] from implementation haswell
+   got return [count=63, error=HEADER_BITS] from implementation westmere
+   got return [count=63, error=HEADER_BITS] from implementation fallback
+   */
+   ASSERT_EQUAL(validation1.count, 63);
+   ASSERT_EQUAL(validation1.error, simdutf::error_code::HEADER_BITS);
+}
+
+
 // https://github.com/nodejs/node/issues/48995
 TEST(node48995) {
   const char bad[1] = {(char)0x80};
