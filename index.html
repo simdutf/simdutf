@@ -617,7 +617,17 @@ Base64</h2>
 <div class="line">     std::cout &lt;&lt; &quot;output: &quot; &lt;&lt; r.count &lt;&lt; &quot; bytes&quot; &lt;&lt; std::endl;</div>
 <div class="line">   }</div>
 <div class="line"> }</div>
-</div><!-- fragment --><p>In some instances, you may want to limit the size of the output further when decoding base64. For this purpose, you may use the <code>base64_to_binary_safe</code> functions. The functions may also be useful if you seek to decode the input into segments having a maximal capacity.</p>
+</div><!-- fragment --><p>This code should print the following:</p>
+<div class="fragment"><div class="line">source: &#39;  A  A  &#39;</div>
+<div class="line">output: 1 bytes</div>
+<div class="line">source: &#39;  A  A  G  A  /  v  8  &#39;</div>
+<div class="line">output: 5 bytes</div>
+<div class="line">source: &#39;  A  A  G  A  /  v  8  =  &#39;</div>
+<div class="line">output: 5 bytes</div>
+<div class="line">source: &#39;  A  A  G  A  /  v  8  =  =  &#39;</div>
+<div class="line">output: error</div>
+</div><!-- fragment --><p>As you can see, the result is as expected.</p>
+<p>In some instances, you may want to limit the size of the output further when decoding base64. For this purpose, you may use the <code>base64_to_binary_safe</code> functions. The functions may also be useful if you seek to decode the input into segments having a maximal capacity.</p>
 <div class="fragment"><div class="line">{C++}</div>
 <div class="line"> size_t len = 72; // for simplicity we chose len divisible by 3</div>
 <div class="line"> std::vector&lt;char&gt; base64(len, &#39;a&#39;); // we want to decode &#39;aaaaa....&#39;</div>
