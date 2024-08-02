@@ -668,13 +668,13 @@ TEST(doomed_truncated_base64_roundtrip) {
   for (size_t len = 1; len < 2048; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
-    buffer.resize(implementation.base64_length_from_binary(len));
     std::mt19937 gen((std::mt19937::result_type)(seed));
     std::uniform_int_distribution<int> byte_generator{0, 255};
     for (size_t trial = 0; trial < 10; trial++) {
       for (size_t i = 0; i < len; i++) {
         source[i] = byte_generator(gen);
       }
+      buffer.resize(implementation.base64_length_from_binary(len));
       size_t size = implementation.binary_to_base64(
           source.data(), source.size(), buffer.data());
       buffer.resize(size - 3);
@@ -698,13 +698,13 @@ TEST(doomed_truncated_base64_roundtrip_16) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     std::vector<char16_t> buffer16;
-    buffer.resize(implementation.base64_length_from_binary(len));
     std::mt19937 gen((std::mt19937::result_type)(seed));
     std::uniform_int_distribution<int> byte_generator{0, 255};
     for (size_t trial = 0; trial < 10; trial++) {
       for (size_t i = 0; i < len; i++) {
         source[i] = byte_generator(gen);
       }
+      buffer.resize(implementation.base64_length_from_binary(len));
       size_t size = implementation.binary_to_base64(
           source.data(), source.size(), buffer.data());
       buffer.resize(size - 3);
