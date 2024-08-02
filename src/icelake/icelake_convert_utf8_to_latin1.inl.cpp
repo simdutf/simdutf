@@ -72,10 +72,9 @@ size_t utf8_to_latin1_avx512(const char *&inbuf, size_t len, char *&inlatin_outp
                                           one, &next_leading, &next_bit6);
     if (written == 0) {
       inlatin_output = latin_output;
-      inbuf = buf + pos;
+      inbuf = buf + pos - next_leading;
       return 0; // Indicates error at pos or after, or just before pos (too short error)
     }
-
     latin_output += written;
     pos += 64;
   }
@@ -86,7 +85,7 @@ size_t utf8_to_latin1_avx512(const char *&inbuf, size_t len, char *&inlatin_outp
         process_block_from_utf8_to_latin1<true>(buf + pos, remaining, latin_output, minus64, one,
                             &next_leading, &next_bit6);
     if (written == 0) {
-      inbuf = buf + pos;
+      inbuf = buf + pos - next_leading;
       inlatin_output = latin_output;
       return 0; // Indicates error at pos or after, or just before pos (too short error)
     }

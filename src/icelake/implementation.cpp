@@ -539,9 +539,10 @@ simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(co
   if(obuf == buf + len) {
     return {simdutf::SUCCESS, written};
   }
-  // We have an error. Reprocess using scalar.
-  // Todo: optimize so we start at obuf.
-  return scalar::utf8_to_latin1::convert_with_errors(buf, len, latin1_output);
+  size_t pos = obuf - buf;
+  result res = scalar::utf8_to_latin1::rewind_and_convert_with_errors(pos, buf + pos, len - pos, olatin1_output);
+  res.count += pos;
+  return res;
 }
 
 
