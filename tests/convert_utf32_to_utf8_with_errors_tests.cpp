@@ -16,6 +16,9 @@ namespace {
   constexpr int trials = 1000;
 }
 
+#if SIMDUTF_IS_BIG_ENDIAN
+//
+#else
 TEST(issue_convert_utf32_to_utf8_with_errors_cbf29ce484222315) {
    const unsigned char data[] = {0x20, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00,
                                  0x00, 0x20, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x20, 0x00,
@@ -43,6 +46,7 @@ TEST(issue_convert_utf32_to_utf8_with_errors_cbf29ce484222315) {
    ASSERT_EQUAL(r.count, 10);
    ASSERT_EQUAL(r.error, simdutf::error_code::TOO_LARGE);
 }
+#endif
 
 TEST(convert_pure_ASCII) {
   size_t counter = 0;
