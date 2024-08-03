@@ -183,7 +183,7 @@ result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, 
         dst += 1;
 
       } else if (idx == 3) {
-        if(dst + 2 >= dstend) {
+        if(dstend - dst < 2) {
           outlen = size_t(dst - dstinit);
           return {OUTPUT_BUFFER_TOO_SMALL, size_t(srccur - srcinit)};
         }
@@ -206,7 +206,7 @@ result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, 
       outlen = size_t(dst - dstinit);
       return {SUCCESS, size_t(dst - dstinit)};
     }
-    if(dstend - dst <= 3) {
+    if(dstend - dst < 3) {
       outlen = size_t(dst - dstinit);
       return {OUTPUT_BUFFER_TOO_SMALL, size_t(srccur - srcinit)};
     }
