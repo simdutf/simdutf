@@ -603,12 +603,12 @@ Base64</h2>
 <div class="line">   const std::string &amp;source = sources[i];</div>
 <div class="line">   std::cout &lt;&lt; &quot;source: &#39;&quot; &lt;&lt; source &lt;&lt; &quot;&#39;&quot; &lt;&lt; std::endl;</div>
 <div class="line">   // allocate enough memory for the maximal binary length</div>
-<div class="line">   std::vector&lt;uint8_t&gt; buffer(implementation.maximal_binary_length_from_base64(</div>
+<div class="line">   std::vector&lt;uint8_t&gt; buffer(simdutf::maximal_binary_length_from_base64(</div>
 <div class="line">      source.data(), source.size()));</div>
 <div class="line">   // convert to binary and check for errors</div>
-<div class="line">   simdutf::result r = implementation.base64_to_binary(</div>
+<div class="line">   simdutf::result r = simdutf::base64_to_binary(</div>
 <div class="line">       source.data(), source.size(), (char*)buffer.data());</div>
-<div class="line">   if( r.error != simdutf::error_code::SUCCESS) {</div>
+<div class="line">   if(r.error != simdutf::error_code::SUCCESS) {</div>
 <div class="line">     // We have that expected[i].empty().</div>
 <div class="line">     std::cout &lt;&lt; &quot;output: error&quot; &lt;&lt; std::endl;</div>
 <div class="line">   } else {</div>
@@ -652,6 +652,42 @@ Base64</h2>
 <div class="line"> // We decoded r.count base64 8-bit units to limited_length2 bytes</div>
 <div class="line"> // We are done</div>
 <div class="line"> assert(limited_length2 + limited_length == (len + 3) / 4 * 3);</div>
+</div><!-- fragment --><p>We can repeat our previous examples with the various spaced strings using <code>base64_to_binary_safe</code>. It works much the same except that the convention for the content of <code>result.count</code> differs. The output size is stored by reference in the output length parameter.</p>
+<div class="fragment"><div class="line">std::vector&lt;std::string&gt; sources = {</div>
+<div class="line">     <span class="stringliteral">&quot;  A  A  &quot;</span>, <span class="stringliteral">&quot;  A  A  G  A  /  v  8  &quot;</span>, <span class="stringliteral">&quot;  A  A  G  A  /  v  8  =  &quot;</span>, <span class="stringliteral">&quot;  A  A  G  A  /  v  8  =  =  &quot;</span>};</div>
+<div class="line"> std::vector&lt;std::vector&lt;uint8_t&gt;&gt; expected = {</div>
+<div class="line">     {0}, {0, 0x1, 0x80, 0xfe, 0xff}, {0, 0x1, 0x80, 0xfe, 0xff}, {}}; <span class="comment">// last one is in error</span></div>
+<div class="line"> <span class="keywordflow">for</span>(<span class="keywordtype">size_t</span> i = 0; i &lt; sources.size(); i++) {</div>
+<div class="line">   <span class="keyword">const</span> std::string &amp;source = sources[i];</div>
+<div class="line">   std::cout &lt;&lt; <span class="stringliteral">&quot;source: &#39;&quot;</span> &lt;&lt; source &lt;&lt; <span class="stringliteral">&quot;&#39;&quot;</span> &lt;&lt; std::endl;</div>
+<div class="line">   <span class="comment">// allocate enough memory for the maximal binary length</span></div>
+<div class="line">   std::vector&lt;uint8_t&gt; buffer(simdutf::maximal_binary_length_from_base64(</div>
+<div class="line">      source.data(), source.size()));</div>
+<div class="line">   <span class="comment">// convert to binary and check for errors</span></div>
+<div class="line">   <span class="keywordtype">size_t</span> output_length = buffer.size();</div>
+<div class="line">   <a class="code" href="structsimdutf_1_1result.html">simdutf::result</a> r = simdutf::base64_to_binary_safe(</div>
+<div class="line">       source.data(), source.size(), (<span class="keywordtype">char</span>*)buffer.data(), output_length);</div>
+<div class="line">   <span class="keywordflow">if</span>(r.error != simdutf::error_code::SUCCESS) {</div>
+<div class="line">     <span class="comment">// We have expected[i].empty()</span></div>
+<div class="line">     std::cout &lt;&lt; <span class="stringliteral">&quot;output: error&quot;</span> &lt;&lt; std::endl;</div>
+<div class="line">   } <span class="keywordflow">else</span> {</div>
+<div class="line">     buffer.resize(output_length); <span class="comment">// in case of success, output_length contains the output length</span></div>
+<div class="line">     <span class="comment">// We have buffer == expected[i])</span></div>
+<div class="line">     std::cout &lt;&lt; <span class="stringliteral">&quot;ouput: &quot;</span> &lt;&lt; output_length &lt;&lt; <span class="stringliteral">&quot; bytes&quot;</span> &lt;&lt; std::endl;</div>
+<div class="line">     std::cout &lt;&lt; <span class="stringliteral">&quot;input (consumed): &quot;</span> &lt;&lt; r.count &lt;&lt; <span class="stringliteral">&quot; bytes&quot;</span> &lt;&lt; std::endl;</div>
+<div class="line">   }</div>
+</div><!-- fragment --><p>This code should output the following:</p>
+<div class="fragment"><div class="line">source: &#39;  A  A  &#39;</div>
+<div class="line">ouput: 1 bytes</div>
+<div class="line">input (consumed): 8 bytes</div>
+<div class="line">source: &#39;  A  A  G  A  /  v  8  &#39;</div>
+<div class="line">ouput: 5 bytes</div>
+<div class="line">input (consumed): 23 bytes</div>
+<div class="line">source: &#39;  A  A  G  A  /  v  8  =  &#39;</div>
+<div class="line">ouput: 5 bytes</div>
+<div class="line">input (consumed): 26 bytes</div>
+<div class="line">source: &#39;  A  A  G  A  /  v  8  =  =  &#39;</div>
+<div class="line">output: error</div>
 </div><!-- fragment --><p>See our function specifications for more details.</p>
 <p>In other instances, you may receive your base64 inputs in 16-bit units (e.g., from UTF-16 strings): we have function overloads for these cases as well.</p>
 <p>Some users may want to decode the base64 inputs in chunks, especially when doing file or networking programming. These users should see <code>tools/fastbase64.cpp</code>, a command-line utility designed for as an example. It reads and writes base64 files using chunks of at most a few tens of kilobytes.</p>
