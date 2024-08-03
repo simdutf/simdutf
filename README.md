@@ -881,7 +881,7 @@ simdutf_warn_unused size_t convert_latin1_to_utf16be(const char * input, size_t 
 simdutf_warn_unused size_t convert_latin1_to_utf32(const char * input, size_t length, char32_t* utf32_buffer) noexcept;
 
 /**
- * Convert possibly broken UTF-8 string into latin1 string.
+ * Convert possibly broken UTF-8 string into Latin1 string.
  * If the string cannot be represented as Latin1, an error
  * code is returned.
  *
@@ -1292,7 +1292,7 @@ We have several transcoding functions returning `simdutf::error` results:
 
 ```cpp
 /**
- * Convert possibly broken UTF-8 string into latin1 string with errors.
+ * Convert possibly broken UTF-8 string into Latin1 string with errors.
  * If the string cannot be represented as Latin1, an error
  * code is returned.
  *
