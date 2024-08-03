@@ -15,6 +15,16 @@ namespace {
   constexpr int trials = 1000;
 }
 
+TEST(allow_empty_input) {
+    std::vector<char16_t> emptydata;
+    std::vector<char32_t> output(10);
+
+    auto ret = implementation.convert_utf16le_to_utf32_with_errors(emptydata.data(),
+                                                                   emptydata.size(),
+                                                                   output.data());
+    ASSERT_EQUAL(ret.error, simdutf::error_code::SUCCESS);
+}
+
 TEST_LOOP(trials, convert_2_UTF16_bytes) {
     // range for 1, 2 or 3 UTF-8 bytes
     simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0x007f},
