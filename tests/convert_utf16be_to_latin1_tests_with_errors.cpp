@@ -15,6 +15,29 @@ namespace {
 
   constexpr int trials = 1000;
 }
+#if SIMDUTF_IS_BIG_ENDIAN
+// guarding little endian tests
+#else
+TEST(issue_convert_utf16be_to_latin1_with_errors_461)
+{
+    const unsigned char data[] = {0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00,
+                                  0x20, 0x00, 0x20, 0x00, 0x20, 0x00, 0x20, 0x00, 0x20, 0x00, 0x20,
+                                  0x00, 0x20, 0x00, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20};
+    constexpr std::size_t data_len_bytes = sizeof(data);
+    constexpr std::size_t data_len = data_len_bytes / sizeof(char16_t);
+    std::vector<char> output(4 * data_len);
+    const auto r = implementation.convert_utf16be_to_latin1_with_errors((const char16_t *) data,
+                                                                        data_len,
+                                                                        output.data());
+    /*
+    got return [count=13, error=TOO_LARGE] from implementation icelake
+    got return [count=13, error=TOO_LARGE] from implementation haswell
+    got return [count=13, error=TOO_LARGE] from implementation westmere
+    got return [count=16, error=SUCCESS] from implementation fallback
+    */
+    ASSERT_EQUAL(r.count, 13);
+    ASSERT_EQUAL(r.error, simdutf::error_code::TOO_LARGE);
+}
 
 TEST(issue_convert_utf16be_to_latin1_with_errors_cbf29ce484222384)
 {
@@ -50,6 +73,7 @@ TEST(issue_convert_utf16be_to_latin1_with_errors_cbf29ce484222384)
    ASSERT_EQUAL(r.count, 0);
    ASSERT_EQUAL(r.error, simdutf::error_code::TOO_LARGE);
 }
+#endif
 
 TEST_LOOP(trials, convert_2_UTF16_bytes) {
     // range for 1, 2 or 3 UTF-8 bytes
