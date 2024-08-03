@@ -43,14 +43,8 @@ TEST(issue_convert_utf8_to_latin1_with_errors_a8ec246845d4878e) {
     const auto r = implementation.convert_utf8_to_latin1_with_errors((const char *) data,
                                                                     data_len,
                                                                     output.data());
-    /*
-    got return [count=61, error=TOO_LONG] from implementation icelake
-    got return [count=64, error=TOO_LONG] from implementation haswell
-    got return [count=64, error=TOO_LONG] from implementation westmere
-    got return [count=64, error=TOO_LONG] from implementation fallback
-    */
-    ASSERT_EQUAL(r.count, 64);
-    ASSERT_EQUAL(r.error, simdutf::error_code::TOO_LONG);
+    ASSERT_EQUAL(r.count, 13);
+    ASSERT_EQUAL(r.error, simdutf::error_code::TOO_LARGE);
 }
 
 TEST(issue_convert_utf8_to_latin1_with_errors_cbf29ce4842223ed) {
