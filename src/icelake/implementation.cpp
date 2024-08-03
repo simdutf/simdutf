@@ -668,8 +668,16 @@ simdutf_warn_unused result implementation::convert_utf8_to_utf32_with_errors(con
     size_t pos = std::get<0>(ret) - buf;
     // We might have an error that occurs right before  pos.
     // This is only a concern if buf[pos] is not a continuation byte.
-    if((buf[pos] & 0xc0) != 0x80 && pos > 0) {
+    if((buf[pos] & 0xc0) != 0x80 && pos >= 64) {
       pos -= 1;
+    } else if ((buf[pos] & 0xc0) == 0x80 && pos >= 64) {
+      // We must check whether we are the fourth continuation byte
+      bool c1 = (buf[pos - 1] & 0xc0) == 0x80;
+      bool c2 = (buf[pos - 2] & 0xc0) == 0x80;
+      bool c3 = (buf[pos - 3] & 0xc0) == 0x80;
+      if(c1 && c2 && c3) {
+        return {simdutf::TOO_LONG, pos};
+      }
     }
     result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(pos, buf + pos, len - pos, (char32_t*)std::get<1>(ret));
       res.count += pos;
