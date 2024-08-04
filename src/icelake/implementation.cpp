@@ -1324,7 +1324,7 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf8(const char * i
     // This algorithm could no doubt be improved!
     for(;pos + 64 <= length; pos += 64) {
       __m512i utf8 = _mm512_loadu_si512((const __m512i*)(input+pos));
-      uint64_t utf8_continuation_mask = _mm512_cmple_epi8_mask(utf8, _mm512_set1_epi8(-65+1));
+      uint64_t utf8_continuation_mask = _mm512_cmplt_epi8_mask(utf8, _mm512_set1_epi8(-65+1));
       // We count one word for anything that is not a continuation (so
       // leading bytes).
       count += 64 - count_ones(utf8_continuation_mask);
