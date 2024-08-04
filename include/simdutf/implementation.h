@@ -403,7 +403,7 @@ simdutf_warn_unused result convert_utf8_to_utf32_with_errors(const char * input,
     /**
    * Convert valid UTF-8 string into latin1 string.
    *
-   * This function assumes that the input string is valid UTF-8.
+   * This function assumes that the input string is valid UTF-8 and that it can be represented as Latin1.
    *
    * This function is not BOM-aware.
    *
@@ -717,7 +717,7 @@ simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char16_t * input, s
 /**
  * Using native endianness, convert UTF-16 string into Latin1 string.
  *
- * This function assumes that the input string is valid UTF-8.
+ * This function assumes that the input string is valid UTF-16 and that it can be represented as Latin1.
  *
  * This function is not BOM-aware.
  *
@@ -731,7 +731,7 @@ simdutf_warn_unused size_t convert_valid_utf16_to_latin1(const char16_t * input,
 /**
  * Convert valid UTF-16LE string into Latin1 string.
  *
- * This function assumes that the input string is valid UTF-16LE.
+ * This function assumes that the input string is valid UTF-16LE and that it can be represented as Latin1.
  *
  * This function is not BOM-aware.
  *
@@ -745,7 +745,7 @@ simdutf_warn_unused size_t convert_valid_utf16le_to_latin1(const char16_t * inpu
 /**
  * Convert valid UTF-16BE string into Latin1 string.
  *
- * This function assumes that the input string is valid UTF-16BE.
+ * This function assumes that the input string is valid UTF-16BE and that it can be represented as Latin1.
  *
  * This function is not BOM-aware.
  *
@@ -760,7 +760,7 @@ simdutf_warn_unused size_t convert_valid_utf16be_to_latin1(const char16_t * inpu
 /**
  * Convert valid UTF-16LE string into UTF-8 string.
  *
- * This function assumes that the input string is valid UTF-16LE.
+ * This function assumes that the input string is valid UTF-16LE and that it can be represented as Latin1.
  *
  * This function is not BOM-aware.
  *
@@ -1075,7 +1075,7 @@ simdutf_warn_unused result convert_utf32_to_latin1_with_errors(const char32_t * 
 /**
  * Convert valid UTF-32 string into Latin1 string.
  *
- * This function assumes that the input string is valid UTF-32.
+ * This function assumes that the input string is valid UTF-32 and that it can be represented as Latin1.
  *
  * This function is not BOM-aware.
  *
@@ -1828,10 +1828,10 @@ public:
    */
   simdutf_warn_unused virtual result convert_utf8_to_latin1_with_errors(const char * input, size_t length, char* latin1_output) const noexcept = 0;
 
-    /**
+  /**
    * Convert valid UTF-8 string into latin1 string.
    *
-   * This function assumes that the input string is valid UTF-8.
+   * This function assumes that the input string is valid UTF-8 and that it can be represented as Latin1.
    *
    * This function is not BOM-aware.
    *
@@ -2046,7 +2046,7 @@ public:
   /**
    * Convert valid UTF-16LE string into Latin1 string.
    *
-   * This function assumes that the input string is valid UTF-8.
+   * This function assumes that the input string is valid UTF-L16LE and that it can be represented as Latin1.
 
    * This function is not BOM-aware.
    *
@@ -2060,7 +2060,7 @@ public:
   /**
    * Convert valid UTF-16BE string into Latin1 string.
    *
-   * This function assumes that the input string is valid UTF-8.
+   * This function assumes that the input string is valid UTF16-BE and that it can be represented as Latin1.
    *
    * This function is not BOM-aware.
    *
