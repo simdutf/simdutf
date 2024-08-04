@@ -1,6 +1,6 @@
 std::pair<const char32_t*, char*> arm_convert_utf32_to_latin1(const char32_t* buf, size_t len, char* latin1_output) {
   const char32_t* end = buf + len;
-  while (buf + 8 <= end) {
+  while (end - buf >= 8) {
     uint32x4_t in1 = vld1q_u32(reinterpret_cast<const uint32_t *>(buf));
     uint32x4_t in2 = vld1q_u32(reinterpret_cast<const uint32_t *>(buf+4));
 
@@ -25,7 +25,7 @@ std::pair<result, char*> arm_convert_utf32_to_latin1_with_errors(const char32_t*
   const char32_t* start = buf;
   const char32_t* end = buf + len;
 
-  while (buf + 8 <= end) {
+  while (end - buf >= 8) {
     uint32x4_t in1 = vld1q_u32(reinterpret_cast<const uint32_t *>(buf));
     uint32x4_t in2 = vld1q_u32(reinterpret_cast<const uint32_t *>(buf+4));
 

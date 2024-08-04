@@ -7,7 +7,7 @@ size_t icelake_convert_utf32_to_latin1(const char32_t *buf, size_t len,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 60,
       56, 52, 48, 44, 40, 36, 32, 28, 24, 20, 16, 12, 8, 4, 0);
-  while (buf + 16 <= end) {
+  while (end - buf >= 16) {
     __m512i in = _mm512_loadu_si512((__m512i *)buf);
     if (_mm512_cmpgt_epu32_mask(in, v_0xFF)) {
       return 0;
@@ -40,7 +40,7 @@ icelake_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 60,
       56, 52, 48, 44, 40, 36, 32, 28, 24, 20, 16, 12, 8, 4, 0);
-  while (buf + 16 <= end) {
+  while (end - buf >= 16) {
     __m512i in = _mm512_loadu_si512((__m512i *)buf);
     if (_mm512_cmpgt_epu32_mask(in, v_0xFF)) {
       while (uint32_t(*buf) <= 0xff) {

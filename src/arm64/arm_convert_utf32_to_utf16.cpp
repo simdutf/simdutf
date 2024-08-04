@@ -5,7 +5,7 @@ std::pair<const char32_t*, char16_t*> arm_convert_utf32_to_utf16(const char32_t*
 
   uint16x4_t forbidden_bytemask = vmov_n_u16(0x0);
 
-  while(buf + 4 <= end) {
+  while(end - buf >= 4) {
     uint32x4_t in = vld1q_u32(reinterpret_cast<const uint32_t *>(buf));
 
     // Check if no bits set above 16th
@@ -63,7 +63,7 @@ std::pair<result, char16_t*> arm_convert_utf32_to_utf16_with_errors(const char32
   const char32_t* start = buf;
   const char32_t* end = buf + len;
 
-  while(buf + 4 <= end) {
+  while(end - buf >= 4) {
     uint32x4_t in = vld1q_u32(reinterpret_cast<const uint32_t *>(buf));
 
     // Check if no bits set above 16th

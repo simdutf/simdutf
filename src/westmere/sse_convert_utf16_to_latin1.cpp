@@ -1,7 +1,7 @@
 template <endianness big_endian>
 std::pair<const char16_t*, char*> sse_convert_utf16_to_latin1(const char16_t* buf, size_t len, char* latin1_output) {
   const char16_t* end = buf + len;
-  while (buf + 8 <= end) {
+  while (end - buf >= 8) {
     // Load 8 UTF-16 characters into 128-bit SSE register
     __m128i in = _mm_loadu_si128(reinterpret_cast<const __m128i*>(buf));
 
@@ -29,7 +29,7 @@ template <endianness big_endian>
 std::pair<result, char*> sse_convert_utf16_to_latin1_with_errors(const char16_t* buf, size_t len, char* latin1_output) {
   const char16_t* start = buf;
   const char16_t* end = buf + len;
-  while (buf + 8 <= end) {
+  while (end - buf >= 8) {
     __m128i in = _mm_loadu_si128(reinterpret_cast<const __m128i*>(buf));
 
     if (!match_system(big_endian)) {

@@ -17,7 +17,7 @@ int avx2_detect_encodings(const char * buf, size_t len) {
 
     checker check{};
 
-    while(buf + 64 <= end) {
+    while(end - buf >= 64) {
         __m256i in = _mm256_loadu_si256((__m256i*)buf);
         __m256i nextin = _mm256_loadu_si256((__m256i*)buf+1);
 

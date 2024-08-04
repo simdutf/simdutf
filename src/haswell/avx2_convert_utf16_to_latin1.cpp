@@ -3,7 +3,7 @@ std::pair<const char16_t *, char *>
 avx2_convert_utf16_to_latin1(const char16_t *buf, size_t len,
                              char *latin1_output) {
   const char16_t *end = buf + len;
-  while (buf + 16 <= end) {
+  while (end - buf >= 16) {
     // Load 16 UTF-16 characters into 256-bit AVX2 register
     __m256i in = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(buf));
 
@@ -41,7 +41,7 @@ avx2_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
                                          char *latin1_output) {
   const char16_t *start = buf;
   const char16_t *end = buf + len;
-  while (buf + 16 <= end) {
+  while (end - buf >= 16) {
     __m256i in = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(buf));
 
     if (!match_system(big_endian)) {

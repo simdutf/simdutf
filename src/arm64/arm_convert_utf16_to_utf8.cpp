@@ -59,7 +59,7 @@ std::pair<const char16_t*, char*> arm_convert_utf16_to_utf8(const char16_t* buf,
   const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
   const uint16x8_t v_c080 = vmovq_n_u16((uint16_t)0xc080);
   const size_t safety_margin = 12; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
-  while (buf + 16 + safety_margin <= end) {
+  while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
     if (!match_system(big_endian)) { in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in))); }
     if(vmaxvq_u16(in) <= 0x7F) { // ASCII fast path!!!!
@@ -313,7 +313,7 @@ std::pair<result, char*> arm_convert_utf16_to_utf8_with_errors(const char16_t* b
   const uint16x8_t v_c080 = vmovq_n_u16((uint16_t)0xc080);
   const size_t safety_margin = 12; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
 
-  while (buf + 16 + safety_margin <= end) {
+  while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
     if (!match_system(big_endian)) { in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in))); }
     if(vmaxvq_u16(in) <= 0x7F) { // ASCII fast path!!!!

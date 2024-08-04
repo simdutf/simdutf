@@ -17,7 +17,7 @@ int arm_detect_encodings(const char * buf, size_t len) {
 
     checker check{};
 
-    while(buf + 64 <= end) {
+    while(end - buf >= 64) {
         uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t*>(buf));
         uint16x8_t secondin = vld1q_u16(reinterpret_cast<const uint16_t*>(buf) + simd16<uint16_t>::SIZE / sizeof(char16_t));
         uint16x8_t thirdin = vld1q_u16(reinterpret_cast<const uint16_t*>(buf) + 2*simd16<uint16_t>::SIZE / sizeof(char16_t));
