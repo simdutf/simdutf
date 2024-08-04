@@ -11,7 +11,7 @@ std::pair<const char32_t*, char*> avx2_convert_utf32_to_utf8(const char32_t* buf
 
   const size_t safety_margin = 12; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
 
-  while (end - buf >= 16 + safety_margin) {
+  while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     __m256i in = _mm256_loadu_si256((__m256i*)buf);
     __m256i nextin = _mm256_loadu_si256((__m256i*)buf+1);
     running_max = _mm256_max_epu32(_mm256_max_epu32(in, running_max), nextin);
@@ -252,7 +252,7 @@ std::pair<result, char*> avx2_convert_utf32_to_utf8_with_errors(const char32_t* 
 
   const size_t safety_margin = 12; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
 
-  while (end - buf >= 16 + safety_margin) {
+  while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     __m256i in = _mm256_loadu_si256((__m256i*)buf);
     __m256i nextin = _mm256_loadu_si256((__m256i*)buf+1);
     // Check for too large input
