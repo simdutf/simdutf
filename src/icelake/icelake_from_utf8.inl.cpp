@@ -73,11 +73,9 @@ std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str,
     /**
      * In the main loop, we consume 64 bytes per iteration,
      * but we access 64 + 4 bytes.
-     * We check for ptr + 64 + 64 <= end because
-     * we want to be do maskless writes without overruns.
-     * + 1 because of https://github.com/simdutf/simdutf/issues/471
+     * We use masked writes to avoid overruns, see https://github.com/simdutf/simdutf/issues/471
      */
-    while (ptr + 64 + 64 + 1 <= end) {
+    while (ptr + 64 + 4 <= end) {
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
         if(checker.check_next_input(utf8)) {
             SIMDUTF_ICELAKE_STORE_ASCII(UTF32, utf8, output)
@@ -96,12 +94,12 @@ std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str,
             vec0 = _mm512_mask_expand_epi32(vec0, __mmask16(((1<<valid_count1)-1)<<valid_count0), vec1);
             valid_count0 += valid_count1;
             vec0 = expand_utf8_to_utf32(vec0);
-            SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec0, valid_count0, false)
+            SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec0, valid_count0, true)
         } else {
             vec0 = expand_utf8_to_utf32(vec0);
             vec1 = expand_utf8_to_utf32(vec1);
-            SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec0, valid_count0, false)
-            SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec1, valid_count1, false)
+            SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec0, valid_count0, true)
+            SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec1, valid_count1, true)
         }
         const __m512i lane3 = broadcast_epi128<3>(utf8);
         int valid_count2;
@@ -115,12 +113,12 @@ std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str,
             vec2 = _mm512_mask_expand_epi32(vec2, __mmask16(((1<<valid_count3)-1)<<valid_count2), vec3);
             valid_count2 += valid_count3;
             vec2 = expand_utf8_to_utf32(vec2);
-            SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec2, valid_count2, false)
+            SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec2, valid_count2, true)
         } else {
             vec2 = expand_utf8_to_utf32(vec2);
             vec3 = expand_utf8_to_utf32(vec3);
-            SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec2, valid_count2, false)
-            SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec3, valid_count3, false)
+            SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec2, valid_count2, true)
+            SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec3, valid_count3, true)
         }
         ptr += 4*16;
     }
