@@ -75,8 +75,9 @@ std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str,
      * but we access 64 + 4 bytes.
      * We check for ptr + 64 + 64 <= end because
      * we want to be do maskless writes without overruns.
+     * + 1 because of https://github.com/simdutf/simdutf/issues/471
      */
-    while (ptr + 64 + 64 <= end) {
+    while (ptr + 64 + 64 + 1 <= end) {
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
         if(checker.check_next_input(utf8)) {
             SIMDUTF_ICELAKE_STORE_ASCII(UTF32, utf8, output)
