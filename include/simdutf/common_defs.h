@@ -59,8 +59,11 @@
   #define SIMDUTF_POP_DISABLE_WARNINGS __pragma(warning( pop ))
 
 #else // SIMDUTF_REGULAR_VISUAL_STUDIO
-
+#if defined(__OPTIMIZE__) || defined(NDEBUG)
   #define simdutf_really_inline inline __attribute__((always_inline))
+#else
+  #define simdutf_really_inline inline
+#endif
   #define simdutf_never_inline inline __attribute__((noinline))
 
   #define simdutf_unused __attribute__((unused))
