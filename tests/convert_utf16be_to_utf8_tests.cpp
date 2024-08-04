@@ -312,7 +312,7 @@ TEST(all_possible_8_codepoint_combinations) {
 
 
 TEST(issue_443) {
-  const unsigned char crash[] = {0x20, 0x20};
+  alignas(2) const unsigned char crash[] = {0x20, 0x20};
   const unsigned int crash_len = 2;
   std::vector<char> output(4 * crash_len);
   const auto r = implementation.convert_utf16be_to_utf8((const char16_t *) crash,
