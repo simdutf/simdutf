@@ -15,6 +15,14 @@ bool is_ascii_white_space(char_type c) {
   return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f';
 }
 
+template <class char_type>
+bool is_eight_byte(char_type c) {
+  if(sizeof(char_type) == 1) {
+    return true;
+  }
+  return uint8_t(c) == c;
+}
+
 // Returns true upon success. The destination buffer must be large enough.
 // This functions assumes that the padding (=) has been removed.
 template <class char_type>
@@ -34,7 +42,7 @@ result base64_tail_decode(char *dst, const char_type *src, size_t length, base64
   size_t idx;
   uint8_t buffer[4];
   while (true) {
-    while (src + 4 <= srcend &&
+    while (src + 4 <= srcend && is_eight_byte(src[0]) && is_eight_byte(src[1]) && is_eight_byte(src[2]) && is_eight_byte(src[3]) &&
            (x = d0[uint8_t(src[0])] | d1[uint8_t(src[1])] |
                 d2[uint8_t(src[2])] | d3[uint8_t(src[3])]) < 0x01FFFFFF) {
       if(match_system(endianness::BIG)) {
@@ -50,9 +58,9 @@ result base64_tail_decode(char *dst, const char_type *src, size_t length, base64
       char_type c = *src;
       uint8_t code = to_base64[uint8_t(c)];
       buffer[idx] = uint8_t(code);
-      if (code <= 63) {
+      if (is_eight_byte(c) && code <= 63) {
         idx++;
-      } else if (code > 64) {
+      } else if (code > 64 || !is_eight_byte(c)) {
         return {INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
       } else {
         // We have a space or a newline. We ignore it.
@@ -132,7 +140,7 @@ result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, 
   size_t idx;
   uint8_t buffer[4];
   while (true) {
-    while (src + 4 <= srcend &&
+    while (src + 4 <= srcend && is_eight_byte(src[0]) && is_eight_byte(src[1]) && is_eight_byte(src[2]) && is_eight_byte(src[3]) &&
            (x = d0[uint8_t(src[0])] | d1[uint8_t(src[1])] |
                 d2[uint8_t(src[2])] | d3[uint8_t(src[3])]) < 0x01FFFFFF) {
       if(match_system(endianness::BIG)) {
@@ -154,9 +162,9 @@ result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, 
       char_type c = *src;
       uint8_t code = to_base64[uint8_t(c)];
       buffer[idx] = uint8_t(code);
-      if (code <= 63) {
+      if (is_eight_byte(c) && code <= 63) {
         idx++;
-      } else if (code > 64) {
+      } else if (code > 64 || !is_eight_byte(c)) {
         outlen = size_t(dst - dstinit);
         return {INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
       } else {

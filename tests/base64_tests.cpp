@@ -80,6 +80,26 @@ size_t add_garbage(std::vector<char_type> &v, std::mt19937 &gen) {
   return i;
 }
 
+TEST(decode_non_ascii_utf16) {
+  std::vector<std::u16string> cases = {u"Zg\u2009=="};
+  std::vector<simdutf::error_code> codes = {simdutf::error_code::INVALID_BASE64_CHARACTER};
+  std::vector<size_t> counts = {2};
+
+  for (size_t i = 0; i < cases.size(); i++) {
+    std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
+        cases[i].data(), cases[i].size()));
+    simdutf::result r = implementation.base64_to_binary(
+        cases[i].data(), cases[i].size(), buffer.data());
+    ASSERT_EQUAL(r.error, codes[i]);
+    ASSERT_EQUAL(r.count, counts[i]);
+    size_t len = buffer.size();
+    r = simdutf::base64_to_binary_safe(
+        cases[i].data(), cases[i].size(), buffer.data(), len);
+    ASSERT_EQUAL(r.error, codes[i]);
+    ASSERT_EQUAL(r.count, counts[i]);
+  }
+}
+
 TEST(decode_non_ascii) {
   std::vector<std::string> cases = {"Zg\u2009=="};
   std::vector<simdutf::error_code> codes = {simdutf::error_code::INVALID_BASE64_CHARACTER};
