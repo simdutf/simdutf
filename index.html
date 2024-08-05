@@ -390,7 +390,8 @@ API</h2>
 <div class="line"><span class="comment">/*</span></div>
 <div class="line"><span class="comment"> * Compute the number of bytes that this UTF-16LE/BE string would require in Latin1 format.</span></div>
 <div class="line"><span class="comment"> *</span></div>
-<div class="line"><span class="comment"> * This function does not validate the input.</span></div>
+<div class="line"><span class="comment"> * This function does not validate the input.  It is acceptable to pass invalid UTF-16 strings but in such cases</span></div>
+<div class="line"><span class="comment"> * the result is implementation defined.</span></div>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> * This function is not BOM-aware.</span></div>
 <div class="line"><span class="comment"> *</span></div>
