@@ -1,7 +1,7 @@
 std::pair<const char*, char32_t*> sse_convert_latin1_to_utf32(const char* buf, size_t len, char32_t* utf32_output) {
     const char* end = buf + len;
 
-    while (buf + 16 <= end) {
+    while (end - buf >= 16) {
         // Load 16 Latin1 characters (16 bytes) into a 128-bit register
         __m128i in = _mm_loadu_si128((__m128i*)buf);
 

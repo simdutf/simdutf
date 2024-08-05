@@ -7,7 +7,7 @@ std::pair<const char32_t*, char16_t*> sse_convert_utf32_to_utf16(const char32_t*
   const __m128i v_ffff0000 = _mm_set1_epi32((int32_t)0xffff0000);
   __m128i forbidden_bytemask = _mm_setzero_si128();
 
-  while (buf + 8 <= end) {
+  while (end - buf >= 8) {
     __m128i in = _mm_loadu_si128((__m128i*)buf);
     __m128i nextin = _mm_loadu_si128((__m128i*)buf+1);
     const __m128i saturation_bytemask = _mm_cmpeq_epi32(_mm_and_si128(_mm_or_si128(in, nextin), v_ffff0000), v_0000);
@@ -73,7 +73,7 @@ std::pair<result, char16_t*> sse_convert_utf32_to_utf16_with_errors(const char32
   const __m128i v_0000 = _mm_setzero_si128();
   const __m128i v_ffff0000 = _mm_set1_epi32((int32_t)0xffff0000);
 
-  while (buf + 8 <= end) {
+  while (end - buf >= 8) {
     __m128i in = _mm_loadu_si128((__m128i*)buf);
     __m128i nextin = _mm_loadu_si128((__m128i*)buf+1);
     const __m128i saturation_bytemask = _mm_cmpeq_epi32(_mm_and_si128(_mm_or_si128(in, nextin), v_ffff0000), v_0000);

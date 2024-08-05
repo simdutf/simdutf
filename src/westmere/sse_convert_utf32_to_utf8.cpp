@@ -11,7 +11,7 @@ std::pair<const char32_t*, char*> sse_convert_utf32_to_utf8(const char32_t* buf,
   __m128i forbidden_bytemask = _mm_setzero_si128();
   const size_t safety_margin = 12; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
 
-  while (buf + 16 + safety_margin <= end) { //buf is a char32_t pointer, each char32_t has 4 bytes or 32 bits, thus buf + 16 * char_32t = 512 bits = 64 bytes
+  while (end - buf >= std::ptrdiff_t(16 + safety_margin)) { // buf is a char32_t pointer, each char32_t has 4 bytes or 32 bits, thus buf + 16 * char_32t = 512 bits = 64 bytes
     // We load two 16 bytes registers for a total of 32 bytes or 16 characters.
     __m128i in = _mm_loadu_si128((__m128i*)buf);
     __m128i nextin = _mm_loadu_si128((__m128i*)buf+1);//These two values can hold only 8 UTF32 chars
@@ -271,7 +271,7 @@ std::pair<result, char*> sse_convert_utf32_to_utf8_with_errors(const char32_t* b
 
   const size_t safety_margin = 12; // to avoid overruns, see issue https://github.com/simdutf/simdutf/issues/92
 
-  while (buf + 16 + safety_margin <= end) {
+  while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     // We load two 16 bytes registers for a total of 32 bytes or 8 characters.
     __m128i in = _mm_loadu_si128((__m128i*)buf);
     __m128i nextin = _mm_loadu_si128((__m128i*)buf+1);

@@ -67,7 +67,7 @@ implementation::detect_encodings(const char *input,
 
     avx512_utf8_checker checker{};
     __m512i currentmax = _mm512_setzero_si512();
-    while (buf + 64 <= end) {
+    while (end - buf >= 64) {
       __m512i in = _mm512_loadu_si512((__m512i *)buf);
       __m512i diff = _mm512_sub_epi16(in, _mm512_set1_epi16(uint16_t(0xD800)));
       __mmask32 surrogates =
@@ -238,7 +238,7 @@ simdutf_warn_unused result implementation::validate_ascii_with_errors(const char
   const char* buf_orig = buf;
   const char* end = buf + len;
   const __m512i ascii = _mm512_set1_epi8((uint8_t)0x80);
-  for (; buf + 64 <= end; buf += 64) {
+  for (; end - buf >= 64 ; buf += 64) {
     const __m512i input = _mm512_loadu_si512((const __m512i*)buf);
     __mmask64 notascii = _mm512_cmp_epu8_mask(input, ascii, _MM_CMPINT_NLT);
     if(notascii) {
@@ -258,7 +258,7 @@ simdutf_warn_unused result implementation::validate_ascii_with_errors(const char
 simdutf_warn_unused bool implementation::validate_utf16le(const char16_t *buf, size_t len) const noexcept {
     const char16_t *end = buf + len;
 
-    for(;buf + 32 <= end; ) {
+    for(;end - buf >= 32; ) {
       __m512i in = _mm512_loadu_si512((__m512i*)buf);
       __m512i diff = _mm512_sub_epi16(in, _mm512_set1_epi16(uint16_t(0xD800)));
       __mmask32 surrogates = _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0800)));
@@ -307,7 +307,7 @@ simdutf_warn_unused bool implementation::validate_utf16be(const char16_t *buf, s
             0x0607040502030001,
             0x0e0f0c0d0a0b0809
         );
-    for(;buf + 32 <= end; ) {
+    for(;end - buf >= 32; ) {
       __m512i in = _mm512_shuffle_epi8(_mm512_loadu_si512((__m512i*)buf), byteflip);
       __m512i diff = _mm512_sub_epi16(in, _mm512_set1_epi16(uint16_t(0xD800)));
       __mmask32 surrogates = _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0800)));
@@ -347,7 +347,7 @@ simdutf_warn_unused bool implementation::validate_utf16be(const char16_t *buf, s
 simdutf_warn_unused result implementation::validate_utf16le_with_errors(const char16_t *buf, size_t len) const noexcept {
     const char16_t *start_buf = buf;
     const char16_t *end = buf + len;
-    for(;buf + 32 <= end; ) {
+    for(;end - buf >= 32; ) {
       __m512i in = _mm512_loadu_si512((__m512i*)buf);
       __m512i diff = _mm512_sub_epi16(in, _mm512_set1_epi16(uint16_t(0xD800)));
       __mmask32 surrogates = _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0800)));
@@ -401,7 +401,7 @@ simdutf_warn_unused result implementation::validate_utf16be_with_errors(const ch
             0x0607040502030001,
             0x0e0f0c0d0a0b0809
         );
-    for(;buf + 32 <= end; ) {
+    for(;end - buf >= 32; ) {
       __m512i in = _mm512_shuffle_epi8(_mm512_loadu_si512((__m512i*)buf), byteflip);
       __m512i diff = _mm512_sub_epi16(in, _mm512_set1_epi16(uint16_t(0xD800)));
       __mmask32 surrogates = _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0800)));

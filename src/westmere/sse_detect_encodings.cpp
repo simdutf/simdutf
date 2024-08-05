@@ -17,7 +17,7 @@ int sse_detect_encodings(const char * buf, size_t len) {
 
     checker check{};
 
-    while(buf + 64 <= end) {
+    while(end - buf >= 64) {
         __m128i in = _mm_loadu_si128((__m128i*)buf);
         __m128i secondin = _mm_loadu_si128((__m128i*)buf+1);
         __m128i thirdin = _mm_loadu_si128((__m128i*)buf+2);

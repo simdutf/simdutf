@@ -15,6 +15,16 @@ namespace {
   constexpr int trials = 1000;
 }
 
+TEST(allow_empty_input) {
+    std::vector<char16_t> emptydata;
+    std::vector<char32_t> output(10);
+
+    auto ret = implementation.convert_utf16be_to_utf32_with_errors(emptydata.data(),
+                                                                   emptydata.size(),
+                                                                   output.data());
+    ASSERT_EQUAL(ret.error, simdutf::error_code::SUCCESS);
+}
+
 TEST(convert_pure_ASCII) {
   size_t counter = 0;
   auto generator = [&counter]() -> uint32_t {

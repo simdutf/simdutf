@@ -58,7 +58,7 @@ std::pair<const char16_t*, char32_t*> arm_convert_utf16_to_utf32(const char16_t*
   const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
   const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
 
-  while (buf + 8 <= end) {
+  while (end - buf >= 8) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
     if (!match_system(big_endian)) { in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in))); }
 
@@ -116,7 +116,7 @@ std::pair<result, char32_t*> arm_convert_utf16_to_utf32_with_errors(const char16
   const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
   const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
 
-  while (buf + 8 <= end) {
+  while ((end - buf) >= 8) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
     if (!match_system(big_endian)) { in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in))); }
 

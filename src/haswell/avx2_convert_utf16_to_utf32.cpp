@@ -58,7 +58,7 @@ std::pair<const char16_t*, char32_t*> avx2_convert_utf16_to_utf32(const char16_t
   const __m256i v_f800 = _mm256_set1_epi16((int16_t)0xf800);
   const __m256i v_d800 = _mm256_set1_epi16((int16_t)0xd800);
 
-  while (buf + 16 <= end) {
+  while (end - buf >= 16) {
     __m256i in = _mm256_loadu_si256((__m256i*)buf);
     if (big_endian) {
       const __m256i swap = _mm256_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14,
@@ -126,7 +126,7 @@ std::pair<result, char32_t*> avx2_convert_utf16_to_utf32_with_errors(const char1
   const __m256i v_f800 = _mm256_set1_epi16((int16_t)0xf800);
   const __m256i v_d800 = _mm256_set1_epi16((int16_t)0xd800);
 
-  while (buf + 16 <= end) {
+  while (end - buf >= 16) {
     __m256i in = _mm256_loadu_si256((__m256i*)buf);
     if (big_endian) {
       const __m256i swap = _mm256_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14,

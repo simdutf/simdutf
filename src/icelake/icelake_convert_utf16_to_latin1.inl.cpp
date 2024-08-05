@@ -12,7 +12,7 @@ size_t icelake_convert_utf16_to_latin1(const char16_t *buf, size_t len,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 62, 60, 58, 56, 54, 52, 50, 48, 46, 44, 42, 40, 38,
       36, 34, 32, 30, 28, 26, 24, 22, 20, 18, 16, 14, 12, 10, 8, 6, 4, 2, 0);
-  while (buf + 32 <= end) {
+  while (end - buf >= 32) {
     __m512i in = _mm512_loadu_si512((__m512i *)buf);
     if (big_endian) {
       in = _mm512_shuffle_epi8(in, byteflip);
@@ -57,7 +57,7 @@ icelake_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 62, 60, 58, 56, 54, 52, 50, 48, 46, 44, 42, 40, 38,
       36, 34, 32, 30, 28, 26, 24, 22, 20, 18, 16, 14, 12, 10, 8, 6, 4, 2, 0);
-  while (buf + 32 <= end) {
+  while (end - buf >= 32) {
     __m512i in = _mm512_loadu_si512((__m512i *)buf);
     if (big_endian) {
       in = _mm512_shuffle_epi8(in, byteflip);
