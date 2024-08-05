@@ -8,6 +8,11 @@ add_subdirectory(reference)
 
 include(${PROJECT_SOURCE_DIR}/cmake/add_cpp_test.cmake)
 
+add_cpp_test(null_safety_tests)
+target_link_libraries(null_safety_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)
+
 add_cpp_test(readme_tests)
 target_link_libraries(readme_tests
   PUBLIC simdutf::tests::helpers
