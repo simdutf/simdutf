@@ -15,6 +15,23 @@ namespace {
   constexpr size_t trials = 10000;
 }
 
+TEST(issue_convert_valid_utf8_to_utf16le_91498ee0f0fe77dd) {
+    const unsigned char data[] = {0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                  0x20, 0x20, 0xc0, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20};
+    constexpr std::size_t data_len_bytes = sizeof(data);
+    constexpr std::size_t data_len = data_len_bytes / sizeof(char);
+    const auto validation1 = implementation.validate_utf8_with_errors((const char *) data, data_len);
+    ASSERT_EQUAL(validation1.count, 46);
+    ASSERT_EQUAL(validation1.error, simdutf::error_code::TOO_SHORT);
+    // strictly speaking, utf16_length_from_utf8 is not defined for invalid UTF-8
+    const auto outlen = implementation.utf16_length_from_utf8((const char *) data, data_len);
+    ASSERT_EQUAL(outlen, 64);
+}
+
 TEST_LOOP(trials, convert_pure_ASCII) {
     size_t counter = 0;
     auto generator = [&counter]() -> uint32_t {
