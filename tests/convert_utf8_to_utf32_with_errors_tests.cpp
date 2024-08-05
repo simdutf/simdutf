@@ -16,6 +16,16 @@ namespace {
   constexpr size_t fix_size = 512;
 }
 
+TEST(issue_convert_utf8_to_utf32_with_errors_3fa5955f57c6b0a0) {
+    std::vector<char> input;
+    std::vector<char32_t> output(4);
+    const auto r = implementation.convert_utf8_to_utf32_with_errors(input.data(),
+                                                                    input.size(),
+                                                                    output.data());
+    ASSERT_EQUAL(r.count, 0);
+    ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+}
+
 TEST(issue_convert_utf8_to_utf32_with_errors_a8ec246845d4878e) {
     const unsigned char data[] = {0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
                                   0x20, 0x20, 0xf2, 0xa8, 0xa4, 0x8b, 0x20, 0x20, 0x20, 0x20, 0x20,
