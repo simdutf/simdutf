@@ -1,7 +1,8 @@
 // file included directly
 
 const char32_t* validate_utf32(const char32_t* buf, size_t len) {
-    const char32_t* end = len >= 16 ? buf + len - 16 : nullptr;
+    if(len < 16) { return buf; }
+    const char32_t* end = buf + len - 16;
 
     const __m512i offset = _mm512_set1_epi32((uint32_t)0xffff2000);
     __m512i currentmax = _mm512_setzero_si512();
