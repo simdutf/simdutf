@@ -681,7 +681,10 @@ simdutf_warn_unused result implementation::convert_utf8_to_utf32_with_errors(con
         return {simdutf::TOO_LONG, pos};
       }
     }
-    result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(pos, buf + pos, len - pos, (char32_t*)std::get<1>(ret));
+    // todo: we reset the output to utf32 instead of using std::get<2.(ret) as you'd expect.
+    // that is because validating_utf8_to_fixed_length_with_constant_checks may have processed
+    // data beyond the error.
+    result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(pos, buf + pos, len - pos, utf32);
       res.count += pos;
       return res;
   }
