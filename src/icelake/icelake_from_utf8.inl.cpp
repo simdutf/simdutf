@@ -14,7 +14,7 @@ utf8_to_utf16_result fast_avx512_convert_utf8_to_utf16(const char *in, size_t le
   const char *const final_in = in + len;
   bool result = true;
   while (result) {
-    if (in + 64 <= final_in) {
+    if (final_in - in >= 64 ) {
         result = process_block_utf8_to_utf16<SIMDUTF_FULL, big_endian>(in, out, final_in - in);
     } else if(in < final_in) {
         result = process_block_utf8_to_utf16<SIMDUTF_TAIL, big_endian>(in, out, final_in - in);
@@ -31,13 +31,23 @@ simdutf::result fast_avx512_convert_utf8_to_utf16_with_errors(const char *in, si
   const char *const final_in = in + len;
   bool  result = true;
   while (result) {
-    if (in + 64 <= final_in) {
+    if (final_in - in >= 64 ) {
         result = process_block_utf8_to_utf16<SIMDUTF_FULL, big_endian>(in, out, final_in - in);
     } else if(in < final_in) {
         result = process_block_utf8_to_utf16<SIMDUTF_TAIL, big_endian>(in, out, final_in - in);
     } else { break; }
   }
   if(!result) {
+    size_t pos = size_t(in - init_in);
+    if (pos < len && (init_in[pos] & 0xc0) == 0x80 && pos >= 64) {
+      // We must check whether we are the fourth continuation byte
+      bool c1 = (init_in[pos - 1] & 0xc0) == 0x80;
+      bool c2 = (init_in[pos - 2] & 0xc0) == 0x80;
+      bool c3 = (init_in[pos - 3] & 0xc0) == 0x80;
+      if(c1 && c2 && c3) {
+        return {simdutf::TOO_LONG, pos};
+      }
+    }
     // rewind_and_convert_with_errors will seek a potential error from in onward,
     // with the ability to go back up to in - init_in bytes, and read final_in - in bytes forward.
     simdutf::result res = scalar::utf8_to_utf16::rewind_and_convert_with_errors<big_endian>(in - init_in, in, final_in - in, out);
