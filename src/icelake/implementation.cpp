@@ -452,31 +452,33 @@ simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, siz
 }
 
 simdutf_warn_unused result implementation::validate_utf32_with_errors(const char32_t *buf, size_t len) const noexcept {
-  const char32_t* end = len >= 16 ? buf + len - 16 : nullptr;
   const char32_t* buf_orig = buf;
-  while (buf <= end) {
-    __m512i utf32 = _mm512_loadu_si512((const __m512i*)buf);
-    __mmask16 outside_range = _mm512_cmp_epu32_mask(utf32, _mm512_set1_epi32(0x10ffff),
-                              _MM_CMPINT_GT);
+  if(len >= 16) {
+    const char32_t* end = buf + len - 16;
+    while (buf <= end) {
+      __m512i utf32 = _mm512_loadu_si512((const __m512i*)buf);
+      __mmask16 outside_range = _mm512_cmp_epu32_mask(utf32, _mm512_set1_epi32(0x10ffff),
+                                _MM_CMPINT_GT);
 
-    __m512i utf32_off = _mm512_add_epi32(utf32, _mm512_set1_epi32(0xffff2000));
+      __m512i utf32_off = _mm512_add_epi32(utf32, _mm512_set1_epi32(0xffff2000));
 
-    __mmask16 surrogate_range = _mm512_cmp_epu32_mask(utf32_off, _mm512_set1_epi32(0xfffff7ff),
-                              _MM_CMPINT_GT);
-    if((outside_range | surrogate_range)) {
-      auto outside_idx = _tzcnt_u32(outside_range);
-      auto surrogate_idx = _tzcnt_u32(surrogate_range);
+      __mmask16 surrogate_range = _mm512_cmp_epu32_mask(utf32_off, _mm512_set1_epi32(0xfffff7ff),
+                                _MM_CMPINT_GT);
+      if((outside_range | surrogate_range)) {
+        auto outside_idx = _tzcnt_u32(outside_range);
+        auto surrogate_idx = _tzcnt_u32(surrogate_range);
 
-      if (outside_idx < surrogate_idx) {
-        return result(error_code::TOO_LARGE, buf - buf_orig + outside_idx);
+        if (outside_idx < surrogate_idx) {
+          return result(error_code::TOO_LARGE, buf - buf_orig + outside_idx);
+        }
+
+        return result(error_code::SURROGATE, buf - buf_orig + surrogate_idx);
       }
 
-      return result(error_code::SURROGATE, buf - buf_orig + surrogate_idx);
+      buf += 16;
     }
-
-    buf += 16;
   }
-  if(buf < buf_orig + len) {
+  if(len > 0) {
     __m512i utf32 = _mm512_maskz_loadu_epi32(__mmask16((1U<<(buf_orig + len - buf))-1),(const __m512i*)buf);
     __mmask16 outside_range = _mm512_cmp_epu32_mask(utf32, _mm512_set1_epi32(0x10ffff),
                               _MM_CMPINT_GT);
@@ -679,7 +681,10 @@ simdutf_warn_unused result implementation::convert_utf8_to_utf32_with_errors(con
         return {simdutf::TOO_LONG, pos};
       }
     }
-    result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(pos, buf + pos, len - pos, (char32_t*)std::get<1>(ret));
+    // todo: we reset the output to utf32 instead of using std::get<2.(ret) as you'd expect.
+    // that is because validating_utf8_to_fixed_length_with_constant_checks may have processed
+    // data beyond the error.
+    result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(pos, buf + pos, len - pos, utf32);
       res.count += pos;
       return res;
   }
@@ -1053,47 +1058,53 @@ void implementation::change_endianness_utf16(const char16_t * input, size_t leng
 
 
 simdutf_warn_unused size_t implementation::count_utf16le(const char16_t * input, size_t length) const noexcept {
-  const char16_t* end = length >= 32 ? input + length - 32 : nullptr;
   const char16_t* ptr = input;
-
-  const __m512i low = _mm512_set1_epi16((uint16_t)0xdc00);
-  const __m512i high = _mm512_set1_epi16((uint16_t)0xdfff);
-
   size_t count{0};
 
-  while (ptr <= end) {
-    __m512i utf16 = _mm512_loadu_si512((const __m512i*)ptr);
-    ptr += 32;
-    uint64_t not_high_surrogate = static_cast<uint64_t>(_mm512_cmpgt_epu16_mask(utf16, high) | _mm512_cmplt_epu16_mask(utf16, low));
-    count += count_ones(not_high_surrogate);
+  if(length >= 32) {
+    const char16_t* end = input + length - 32;
+
+    const __m512i low = _mm512_set1_epi16((uint16_t)0xdc00);
+    const __m512i high = _mm512_set1_epi16((uint16_t)0xdfff);
+
+
+    while (ptr <= end) {
+      __m512i utf16 = _mm512_loadu_si512((const __m512i*)ptr);
+      ptr += 32;
+      uint64_t not_high_surrogate = static_cast<uint64_t>(_mm512_cmpgt_epu16_mask(utf16, high) | _mm512_cmplt_epu16_mask(utf16, low));
+      count += count_ones(not_high_surrogate);
+    }
   }
 
   return count + scalar::utf16::count_code_points<endianness::LITTLE>(ptr, length - (ptr - input));
 }
 
 simdutf_warn_unused size_t implementation::count_utf16be(const char16_t * input, size_t length) const noexcept {
-  const char16_t* end = length >= 32 ? input + length - 32 : nullptr;
   const char16_t* ptr = input;
-
-  const __m512i low = _mm512_set1_epi16((uint16_t)0xdc00);
-  const __m512i high = _mm512_set1_epi16((uint16_t)0xdfff);
-
   size_t count{0};
-  const __m512i byteflip = _mm512_setr_epi64(
-            0x0607040502030001,
-            0x0e0f0c0d0a0b0809,
-            0x0607040502030001,
-            0x0e0f0c0d0a0b0809,
-            0x0607040502030001,
-            0x0e0f0c0d0a0b0809,
-            0x0607040502030001,
-            0x0e0f0c0d0a0b0809
-        );
-  while (ptr <= end) {
-    __m512i utf16 = _mm512_shuffle_epi8(_mm512_loadu_si512((__m512i*)ptr), byteflip);
-    ptr += 32;
-    uint64_t not_high_surrogate = static_cast<uint64_t>(_mm512_cmpgt_epu16_mask(utf16, high) | _mm512_cmplt_epu16_mask(utf16, low));
-    count += count_ones(not_high_surrogate);
+  if(length >= 32) {
+
+    const char16_t* end = input + length - 32;
+
+    const __m512i low = _mm512_set1_epi16((uint16_t)0xdc00);
+    const __m512i high = _mm512_set1_epi16((uint16_t)0xdfff);
+
+    const __m512i byteflip = _mm512_setr_epi64(
+              0x0607040502030001,
+              0x0e0f0c0d0a0b0809,
+              0x0607040502030001,
+              0x0e0f0c0d0a0b0809,
+              0x0607040502030001,
+              0x0e0f0c0d0a0b0809,
+              0x0607040502030001,
+              0x0e0f0c0d0a0b0809
+          );
+    while (ptr <= end) {
+      __m512i utf16 = _mm512_shuffle_epi8(_mm512_loadu_si512((__m512i*)ptr), byteflip);
+      ptr += 32;
+      uint64_t not_high_surrogate = static_cast<uint64_t>(_mm512_cmpgt_epu16_mask(utf16, high) | _mm512_cmplt_epu16_mask(utf16, low));
+      count += count_ones(not_high_surrogate);
+    }
   }
 
   return count + scalar::utf16::count_code_points<endianness::BIG>(ptr, length - (ptr - input));
@@ -1172,69 +1183,74 @@ simdutf_warn_unused size_t implementation::latin1_length_from_utf32(size_t lengt
 }
 
 simdutf_warn_unused size_t implementation::utf8_length_from_utf16le(const char16_t * input, size_t length) const noexcept {
-  const char16_t* end = length >= 32 ? input + length - 32 : nullptr;
   const char16_t* ptr = input;
-
-  const __m512i v_007f = _mm512_set1_epi16((uint16_t)0x007f);
-  const __m512i v_07ff = _mm512_set1_epi16((uint16_t)0x07ff);
-  const __m512i v_dfff = _mm512_set1_epi16((uint16_t)0xdfff);
-  const __m512i v_d800 = _mm512_set1_epi16((uint16_t)0xd800);
-
   size_t count{0};
+  if(length >= 32) {
+    const char16_t* end = input + length - 32;
 
-  while (ptr <= end) {
-    __m512i utf16 = _mm512_loadu_si512((const __m512i*)ptr);
-    ptr += 32;
-    __mmask32 ascii_bitmask = _mm512_cmple_epu16_mask(utf16, v_007f);
-    __mmask32 two_bytes_bitmask = _mm512_mask_cmple_epu16_mask(~ascii_bitmask, utf16, v_07ff);
-    __mmask32 not_one_two_bytes = ~(ascii_bitmask | two_bytes_bitmask);
-    __mmask32 surrogates_bitmask = _mm512_mask_cmple_epu16_mask(not_one_two_bytes, utf16, v_dfff) & _mm512_mask_cmpge_epu16_mask(not_one_two_bytes, utf16, v_d800);
+    const __m512i v_007f = _mm512_set1_epi16((uint16_t)0x007f);
+    const __m512i v_07ff = _mm512_set1_epi16((uint16_t)0x07ff);
+    const __m512i v_dfff = _mm512_set1_epi16((uint16_t)0xdfff);
+    const __m512i v_d800 = _mm512_set1_epi16((uint16_t)0xd800);
 
-    size_t ascii_count = count_ones(ascii_bitmask);
-    size_t two_bytes_count = count_ones(two_bytes_bitmask);
-    size_t surrogate_bytes_count = count_ones(surrogates_bitmask);
-    size_t three_bytes_count = 32 - ascii_count - two_bytes_count - surrogate_bytes_count;
 
-    count += ascii_count + 2*two_bytes_count + 3*three_bytes_count + 2*surrogate_bytes_count;
+    while (ptr <= end) {
+      __m512i utf16 = _mm512_loadu_si512((const __m512i*)ptr);
+      ptr += 32;
+      __mmask32 ascii_bitmask = _mm512_cmple_epu16_mask(utf16, v_007f);
+      __mmask32 two_bytes_bitmask = _mm512_mask_cmple_epu16_mask(~ascii_bitmask, utf16, v_07ff);
+      __mmask32 not_one_two_bytes = ~(ascii_bitmask | two_bytes_bitmask);
+      __mmask32 surrogates_bitmask = _mm512_mask_cmple_epu16_mask(not_one_two_bytes, utf16, v_dfff) & _mm512_mask_cmpge_epu16_mask(not_one_two_bytes, utf16, v_d800);
+
+      size_t ascii_count = count_ones(ascii_bitmask);
+      size_t two_bytes_count = count_ones(two_bytes_bitmask);
+      size_t surrogate_bytes_count = count_ones(surrogates_bitmask);
+      size_t three_bytes_count = 32 - ascii_count - two_bytes_count - surrogate_bytes_count;
+
+      count += ascii_count + 2*two_bytes_count + 3*three_bytes_count + 2*surrogate_bytes_count;
+    }
   }
 
   return count + scalar::utf16::utf8_length_from_utf16<endianness::LITTLE>(ptr, length - (ptr - input));
 }
 
 simdutf_warn_unused size_t implementation::utf8_length_from_utf16be(const char16_t * input, size_t length) const noexcept {
-  const char16_t* end = length >= 32 ? input + length - 32 : nullptr;
   const char16_t* ptr = input;
-
-  const __m512i v_007f = _mm512_set1_epi16((uint16_t)0x007f);
-  const __m512i v_07ff = _mm512_set1_epi16((uint16_t)0x07ff);
-  const __m512i v_dfff = _mm512_set1_epi16((uint16_t)0xdfff);
-  const __m512i v_d800 = _mm512_set1_epi16((uint16_t)0xd800);
-
   size_t count{0};
-  const __m512i byteflip = _mm512_setr_epi64(
-            0x0607040502030001,
-            0x0e0f0c0d0a0b0809,
-            0x0607040502030001,
-            0x0e0f0c0d0a0b0809,
-            0x0607040502030001,
-            0x0e0f0c0d0a0b0809,
-            0x0607040502030001,
-            0x0e0f0c0d0a0b0809
-        );
-  while (ptr <= end) {
-    __m512i utf16 = _mm512_loadu_si512((const __m512i*)ptr);
-    utf16 = _mm512_shuffle_epi8(utf16, byteflip);
-    ptr += 32;
-    __mmask32 ascii_bitmask = _mm512_cmple_epu16_mask(utf16, v_007f);
-    __mmask32 two_bytes_bitmask = _mm512_mask_cmple_epu16_mask(~ascii_bitmask, utf16, v_07ff);
-    __mmask32 not_one_two_bytes = ~(ascii_bitmask | two_bytes_bitmask);
-    __mmask32 surrogates_bitmask = _mm512_mask_cmple_epu16_mask(not_one_two_bytes, utf16, v_dfff) & _mm512_mask_cmpge_epu16_mask(not_one_two_bytes, utf16, v_d800);
 
-    size_t ascii_count = count_ones(ascii_bitmask);
-    size_t two_bytes_count = count_ones(two_bytes_bitmask);
-    size_t surrogate_bytes_count = count_ones(surrogates_bitmask);
-    size_t three_bytes_count = 32 - ascii_count - two_bytes_count - surrogate_bytes_count;
-    count += ascii_count + 2*two_bytes_count + 3*three_bytes_count + 2*surrogate_bytes_count;
+  if(length >= 32) {
+    const char16_t* end = input + length - 32;
+
+    const __m512i v_007f = _mm512_set1_epi16((uint16_t)0x007f);
+    const __m512i v_07ff = _mm512_set1_epi16((uint16_t)0x07ff);
+    const __m512i v_dfff = _mm512_set1_epi16((uint16_t)0xdfff);
+    const __m512i v_d800 = _mm512_set1_epi16((uint16_t)0xd800);
+
+    const __m512i byteflip = _mm512_setr_epi64(
+              0x0607040502030001,
+              0x0e0f0c0d0a0b0809,
+              0x0607040502030001,
+              0x0e0f0c0d0a0b0809,
+              0x0607040502030001,
+              0x0e0f0c0d0a0b0809,
+              0x0607040502030001,
+              0x0e0f0c0d0a0b0809
+          );
+    while (ptr <= end) {
+      __m512i utf16 = _mm512_loadu_si512((const __m512i*)ptr);
+      utf16 = _mm512_shuffle_epi8(utf16, byteflip);
+      ptr += 32;
+      __mmask32 ascii_bitmask = _mm512_cmple_epu16_mask(utf16, v_007f);
+      __mmask32 two_bytes_bitmask = _mm512_mask_cmple_epu16_mask(~ascii_bitmask, utf16, v_07ff);
+      __mmask32 not_one_two_bytes = ~(ascii_bitmask | two_bytes_bitmask);
+      __mmask32 surrogates_bitmask = _mm512_mask_cmple_epu16_mask(not_one_two_bytes, utf16, v_dfff) & _mm512_mask_cmpge_epu16_mask(not_one_two_bytes, utf16, v_d800);
+
+      size_t ascii_count = count_ones(ascii_bitmask);
+      size_t two_bytes_count = count_ones(two_bytes_bitmask);
+      size_t surrogate_bytes_count = count_ones(surrogates_bitmask);
+      size_t three_bytes_count = 32 - ascii_count - two_bytes_count - surrogate_bytes_count;
+      count += ascii_count + 2*two_bytes_count + 3*three_bytes_count + 2*surrogate_bytes_count;
+    }
   }
 
   return count + scalar::utf16::utf8_length_from_utf16<endianness::BIG>(ptr, length - (ptr - input));
@@ -1335,46 +1351,52 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf8(const char * i
 }
 
 simdutf_warn_unused size_t implementation::utf8_length_from_utf32(const char32_t * input, size_t length) const noexcept {
-  const char32_t* end = length >= 16 ? input + length - 16 : nullptr;
   const char32_t* ptr = input;
-
-  const __m512i v_0000_007f = _mm512_set1_epi32((uint32_t)0x7f);
-  const __m512i v_0000_07ff = _mm512_set1_epi32((uint32_t)0x7ff);
-  const __m512i v_0000_ffff = _mm512_set1_epi32((uint32_t)0x0000ffff);
-
   size_t count{0};
 
-  while (ptr <= end) {
-    __m512i utf32 = _mm512_loadu_si512((const __m512i*)ptr);
-    ptr += 16;
-    __mmask16 ascii_bitmask = _mm512_cmple_epu32_mask(utf32, v_0000_007f);
-    __mmask16 two_bytes_bitmask = _mm512_mask_cmple_epu32_mask(_knot_mask16(ascii_bitmask), utf32, v_0000_07ff);
-    __mmask16 three_bytes_bitmask = _mm512_mask_cmple_epu32_mask(_knot_mask16(_mm512_kor(ascii_bitmask, two_bytes_bitmask)), utf32, v_0000_ffff);
+  if(length >= 16) {
+    const char32_t* end = input + length - 16;
 
-    size_t ascii_count = count_ones(ascii_bitmask);
-    size_t two_bytes_count = count_ones(two_bytes_bitmask);
-    size_t three_bytes_count = count_ones(three_bytes_bitmask);
-    size_t four_bytes_count = 16 - ascii_count - two_bytes_count - three_bytes_count;
-    count += ascii_count + 2*two_bytes_count + 3*three_bytes_count + 4*four_bytes_count;
+    const __m512i v_0000_007f = _mm512_set1_epi32((uint32_t)0x7f);
+    const __m512i v_0000_07ff = _mm512_set1_epi32((uint32_t)0x7ff);
+    const __m512i v_0000_ffff = _mm512_set1_epi32((uint32_t)0x0000ffff);
+
+
+    while (ptr <= end) {
+      __m512i utf32 = _mm512_loadu_si512((const __m512i*)ptr);
+      ptr += 16;
+      __mmask16 ascii_bitmask = _mm512_cmple_epu32_mask(utf32, v_0000_007f);
+      __mmask16 two_bytes_bitmask = _mm512_mask_cmple_epu32_mask(_knot_mask16(ascii_bitmask), utf32, v_0000_07ff);
+      __mmask16 three_bytes_bitmask = _mm512_mask_cmple_epu32_mask(_knot_mask16(_mm512_kor(ascii_bitmask, two_bytes_bitmask)), utf32, v_0000_ffff);
+
+      size_t ascii_count = count_ones(ascii_bitmask);
+      size_t two_bytes_count = count_ones(two_bytes_bitmask);
+      size_t three_bytes_count = count_ones(three_bytes_bitmask);
+      size_t four_bytes_count = 16 - ascii_count - two_bytes_count - three_bytes_count;
+      count += ascii_count + 2*two_bytes_count + 3*three_bytes_count + 4*four_bytes_count;
+    }
   }
 
   return count + scalar::utf32::utf8_length_from_utf32(ptr, length - (ptr - input));
 }
 
 simdutf_warn_unused size_t implementation::utf16_length_from_utf32(const char32_t * input, size_t length) const noexcept {
-  const char32_t* end = length >= 16 ? input + length - 16 : nullptr;
   const char32_t* ptr = input;
-
-  const __m512i v_0000_ffff = _mm512_set1_epi32((uint32_t)0x0000ffff);
-
   size_t count{0};
 
-  while (ptr <= end) {
-    __m512i utf32 = _mm512_loadu_si512((const __m512i*)ptr);
-    ptr += 16;
-    __mmask16 surrogates_bitmask = _mm512_cmpgt_epu32_mask(utf32, v_0000_ffff);
+  if(length >= 16) {
+    const char32_t* end = input + length - 16;
 
-    count += 16 + count_ones(surrogates_bitmask);
+    const __m512i v_0000_ffff = _mm512_set1_epi32((uint32_t)0x0000ffff);
+
+
+    while (ptr <= end) {
+      __m512i utf32 = _mm512_loadu_si512((const __m512i*)ptr);
+      ptr += 16;
+      __mmask16 surrogates_bitmask = _mm512_cmpgt_epu32_mask(utf32, v_0000_ffff);
+
+      count += 16 + count_ones(surrogates_bitmask);
+    }
   }
 
   return count + scalar::utf32::utf16_length_from_utf32(ptr, length - (ptr - input));

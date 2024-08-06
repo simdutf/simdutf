@@ -37,13 +37,8 @@ TEST(issue_479) {
     const auto r = implementation.convert_utf8_to_utf16be_with_errors((const char *) data,
                                                                       data_len,
                                                                       output.data());
-    ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
-    ASSERT_EQUAL(r.count, 1234);
-    const std::vector<char16_t> expected_out{};
-    ASSERT_TRUE(output.size() == expected_out.size());
-    for (std::size_t i = 0; i < output.size(); ++i) {
-        ASSERT_EQUAL(+output.at(i), +expected_out.at(i));
-    };
+    ASSERT_EQUAL(r.error, simdutf::error_code::TOO_LONG);
+    ASSERT_EQUAL(r.count, 64);
 }
 
 
