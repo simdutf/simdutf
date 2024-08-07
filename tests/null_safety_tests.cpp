@@ -9,9 +9,9 @@ TEST(test_empty) {
     const std::vector<char16_t> i16data;
     const std::vector<char32_t> i32data;
     //outputs
-    std::vector<char> o8data(4);
-    std::vector<char16_t> o16data(4);
-    std::vector<char32_t> o32data(4);
+    std::vector<char> o8data;
+    std::vector<char16_t> o16data;
+    std::vector<char32_t> o32data;
 
     const auto *i8 = i8data.data();
     const auto *i16 = i16data.data();
@@ -20,6 +20,7 @@ TEST(test_empty) {
     auto *o16 = o16data.data();
     auto *o32 = o32data.data();
 
+    std::ignore = implementation.autodetect_encoding(i8, 0);
     std::ignore = implementation.base64_length_from_binary(0);
     std::ignore = implementation.base64_to_binary(i16, 0, o8);
     std::ignore = implementation.base64_to_binary(i8, 0, o8);
