@@ -132,6 +132,11 @@ inline result rewind_and_convert_with_errors(size_t prior_bytes, const char* buf
     unsigned char byte = buf[-static_cast<std::ptrdiff_t>(i)];
     found_leading_bytes = ((byte & 0b11000000) != 0b10000000);
     if(found_leading_bytes) {
+      if(i > 0 && byte < 128) {
+        // If we had to go back and the leading byte is ascii
+        // then we can stop right away.
+        return result(error_code::TOO_LONG, 0-i+1);
+      }
       buf -= i;
       extra_len = i;
       break;

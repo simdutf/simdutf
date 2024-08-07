@@ -23,6 +23,29 @@ void printByteInBinary(const char& byte) {
     putchar('\n');
 }
 
+TEST(issue_483) {
+    const unsigned char data[] = {0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0xa9};
+    constexpr std::size_t data_len_bytes = sizeof(data);
+    constexpr std::size_t data_len = data_len_bytes / sizeof(char);
+    const auto validation1 = implementation.validate_utf8_with_errors((const char *) data, data_len);
+    ASSERT_EQUAL(validation1.count, 64);
+    ASSERT_EQUAL(validation1.error, simdutf::error_code::TOO_LONG);
+
+    const auto outlen = implementation.latin1_length_from_utf8((const char *) data, data_len);
+    ASSERT_EQUAL(outlen, 64);
+    std::vector<char> output(outlen);
+    const auto r = implementation.convert_utf8_to_latin1_with_errors((const char *) data,
+                                                                      data_len,
+                                                                      output.data());
+    ASSERT_EQUAL(r.error, simdutf::error_code::TOO_LONG);
+    ASSERT_EQUAL(r.count, 64);
+}
+
 
 TEST(issue_convert_utf8_to_latin1_with_errors_a8ec246845d4878e) {
     const unsigned char data[] = {0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
