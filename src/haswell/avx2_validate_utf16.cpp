@@ -45,6 +45,9 @@
 */
 template <endianness big_endian>
 const char16_t* avx2_validate_utf16(const char16_t* input, size_t size) {
+    if (simdutf_unlikely(size == 0)) {
+        return input;
+    }
     const char16_t* end = input + size;
 
     const auto v_d8 = simd8<uint8_t>::splat(0xd8);
@@ -122,7 +125,10 @@ const char16_t* avx2_validate_utf16(const char16_t* input, size_t size) {
 
 template <endianness big_endian>
 const result avx2_validate_utf16_with_errors(const char16_t* input, size_t size) {
-    const char16_t* start = input;
+    if (simdutf_unlikely(size == 0)) {
+        return result(error_code::SUCCESS, 0);
+    }
+    const char16_t *start = input;
     const char16_t* end = input + size;
 
     const auto v_d8 = simd8<uint8_t>::splat(0xd8);
