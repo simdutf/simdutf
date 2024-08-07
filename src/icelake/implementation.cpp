@@ -185,6 +185,9 @@ implementation::detect_encodings(const char *input,
 }
 
 simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
+  if (simdutf_unlikely(len == 0)) {
+    return true;
+  }
     avx512_utf8_checker checker{};
     const char* ptr = buf;
     const char* end = ptr + len;
@@ -201,6 +204,9 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
 }
 
 simdutf_warn_unused result implementation::validate_utf8_with_errors(const char *buf, size_t len) const noexcept {
+    if (simdutf_unlikely(len == 0)) {
+       return result(error_code::SUCCESS, len);
+    }
     avx512_utf8_checker checker{};
     const char* ptr = buf;
     const char* end = ptr + len;
@@ -663,6 +669,9 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf32(const char* buf
 }
 
 simdutf_warn_unused result implementation::convert_utf8_to_utf32_with_errors(const char* buf, size_t len, char32_t* utf32) const noexcept {
+  if (simdutf_unlikely(len == 0)) {
+    return {error_code::SUCCESS, 0};
+  }
   uint32_t * utf32_output = reinterpret_cast<uint32_t *>(utf32);
   auto ret = icelake::validating_utf8_to_fixed_length_with_constant_checks<endianness::LITTLE, uint32_t>(buf, len, utf32_output);
 
