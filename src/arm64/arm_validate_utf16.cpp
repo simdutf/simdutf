@@ -5,7 +5,7 @@ const char16_t* arm_validate_utf16(const char16_t* input, size_t size) {
     const auto v_f8 = simd8<uint8_t>::splat(0xf8);
     const auto v_fc = simd8<uint8_t>::splat(0xfc);
     const auto v_dc = simd8<uint8_t>::splat(0xdc);
-    while (input + 16 < end) {
+    while (end - input >= 16) {
         // 0. Load data: since the validation takes into account only higher
         //    byte of each word, we compress the two vectors into one which
         //    consists only the higher bytes.

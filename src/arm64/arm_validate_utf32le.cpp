@@ -8,7 +8,7 @@ const char32_t* arm_validate_utf32le(const char32_t* input, size_t size) {
     uint32x4_t currentmax = vmovq_n_u32(0x0);
     uint32x4_t currentoffsetmax = vmovq_n_u32(0x0);
 
-    while (input + 4 < end) {
+    while (end - input >= 4) {
         const uint32x4_t in = vld1q_u32(reinterpret_cast<const uint32_t*>(input));
         currentmax = vmaxq_u32(in,currentmax);
         currentoffsetmax = vmaxq_u32(vaddq_u32(in, offset), currentoffsetmax);
@@ -39,7 +39,7 @@ const result arm_validate_utf32le_with_errors(const char32_t* input, size_t size
     uint32x4_t currentmax = vmovq_n_u32(0x0);
     uint32x4_t currentoffsetmax = vmovq_n_u32(0x0);
 
-    while (input + 4 < end) {
+    while (end - input >= 4) {
         const uint32x4_t in = vld1q_u32(reinterpret_cast<const uint32_t*>(input));
         currentmax = vmaxq_u32(in,currentmax);
         currentoffsetmax = vmaxq_u32(vaddq_u32(in, offset), currentoffsetmax);

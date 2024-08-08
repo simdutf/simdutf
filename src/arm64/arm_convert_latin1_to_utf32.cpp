@@ -1,7 +1,7 @@
 std::pair<const char*, char32_t*> arm_convert_latin1_to_utf32(const char* buf, size_t len, char32_t* utf32_output) {
     const char* end = buf + len;
 
-    while (end- buf >= 16) {
+    while (end - buf >= 16) {
         uint8x16_t in8 = vld1q_u8(reinterpret_cast<const uint8_t *>(buf));
         uint16x8_t in8low = vmovl_u8(vget_low_u8(in8));
         uint32x4_t in16lowlow = vmovl_u16(vget_low_u16(in8low));

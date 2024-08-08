@@ -191,7 +191,7 @@ simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t l
     avx512_utf8_checker checker{};
     const char* ptr = buf;
     const char* end = ptr + len;
-    for (; ptr + 64 <= end; ptr += 64) {
+    for (; end - ptr >= 64 ; ptr += 64) {
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
         checker.check_next_input(utf8);
     }
@@ -211,7 +211,7 @@ simdutf_warn_unused result implementation::validate_utf8_with_errors(const char 
     const char* ptr = buf;
     const char* end = ptr + len;
     size_t count{0};
-    for (; ptr + 64 <= end; ptr += 64) {
+    for (; end - ptr >= 64 ; ptr += 64) {
       const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
       checker.check_next_input(utf8);
       if(checker.errors()) {

@@ -86,7 +86,7 @@ std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str,
      * but we access 64 + 4 bytes.
      * We use masked writes to avoid overruns, see https://github.com/simdutf/simdutf/issues/471
      */
-    while (ptr + 64 + 4 <= end) {
+    while (end - ptr >= 64 + 4) {
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
         if(checker.check_next_input(utf8)) {
             SIMDUTF_ICELAKE_STORE_ASCII(UTF32, utf8, output)
@@ -137,7 +137,7 @@ std::pair<const char*, OUTPUT*> validating_utf8_to_fixed_length(const char* str,
 
     // For the final pass, we validate 64 bytes, but we only transcode
     // 3*16 bytes, so we may end up double-validating 16 bytes.
-    if (ptr + 64 <= end) {
+    if (end - ptr >= 64) {
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
         if(checker.check_next_input(utf8)) {
             SIMDUTF_ICELAKE_STORE_ASCII(UTF32, utf8, output)
@@ -263,7 +263,7 @@ std::tuple<const char*, OUTPUT*, bool> validating_utf8_to_fixed_length_with_cons
 
     // For the final pass, we validate 64 bytes, but we only transcode
     // 3*16 bytes, so we may end up double-validating 16 bytes.
-    if (ptr + 64 <= end) {
+    if (end - ptr => 64) {
         const __m512i utf8 = _mm512_loadu_si512((const __m512i*)ptr);
         bool ascii = checker.check_next_input(utf8);
         if(checker.errors()) {        
