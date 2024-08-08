@@ -204,6 +204,9 @@ simdutf_warn_unused bool implementation::validate_utf16be(const char16_t *buf, s
 }
 
 simdutf_warn_unused result implementation::validate_utf16le_with_errors(const char16_t *buf, size_t len) const noexcept {
+  if (simdutf_unlikely(len == 0)) {
+    return result(error_code::SUCCESS, 0);
+  }
   result res = arm_validate_utf16_with_errors<endianness::LITTLE>(buf, len);
   if (res.count != len) {
     result scalar_res = scalar::utf16::validate_with_errors<endianness::LITTLE>(buf + res.count, len - res.count);
@@ -214,6 +217,9 @@ simdutf_warn_unused result implementation::validate_utf16le_with_errors(const ch
 }
 
 simdutf_warn_unused result implementation::validate_utf16be_with_errors(const char16_t *buf, size_t len) const noexcept {
+  if (simdutf_unlikely(len == 0)) {
+    return result(error_code::SUCCESS, 0);
+  }
   result res = arm_validate_utf16_with_errors<endianness::BIG>(buf, len);
   if (res.count != len) {
     result scalar_res = scalar::utf16::validate_with_errors<endianness::BIG>(buf + res.count, len - res.count);
@@ -233,6 +239,9 @@ simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, siz
 }
 
 simdutf_warn_unused result implementation::validate_utf32_with_errors(const char32_t *buf, size_t len) const noexcept {
+  if (simdutf_unlikely(len == 0)) {
+    return result(error_code::SUCCESS, 0);
+  }
   result res = arm_validate_utf32le_with_errors(buf, len);
   if (res.count != len) {
     result scalar_res = scalar::utf32::validate_with_errors(buf + res.count, len - res.count);
@@ -489,6 +498,9 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_utf8(const c
 }
 
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
+  if (simdutf_unlikely(len == 0)) {
+    return 0;
+  }
   std::pair<const char32_t*, char*> ret = arm_convert_utf32_to_utf8(buf, len, utf8_output);
   if (ret.first == nullptr) { return 0; }
   size_t saved_bytes = ret.second - utf8_output;
@@ -502,6 +514,9 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(const char32_t*
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(const char32_t* buf, size_t len, char* utf8_output) const noexcept {
+  if (simdutf_unlikely(len == 0)) {
+    return result(error_code::SUCCESS, 0);
+  }
   // ret.first.count is always the position in the buffer, not the number of code units written even if finished
   std::pair<result, char*> ret = arm_convert_utf32_to_utf8_with_errors(buf, len, utf8_output);
   if (ret.first.count != len) {
