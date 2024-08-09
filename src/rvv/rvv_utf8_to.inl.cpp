@@ -149,6 +149,25 @@ simdutf_really_inline static size_t rvv_utf8_to_common(char const *src, size_t l
     vuint8m2_t b3 = __riscv_vcompress_vm_u8m2(v2, m, vl);
     vuint8m2_t b4 = __riscv_vcompress_vm_u8m2(v3, m, vl);
 
+     /* remove prefix from leading bytes
+      *
+      * We could also use vrgather here, but it increases register pressure,
+      * and its performance varies widely on current platforms. It might be
+      * worth reconsidering, though, once there is more hardware available.
+      * Same goes for the __riscv_vsrl_vv_u32m4 correction step.
+      *
+      * We shift left and then right by the number of bytes in the prefix,
+      * which can be calculated as follows:
+      *         x                                max(x-10, 0)
+      * 0xxx -> 0000-0111 -> sift by 0 or 1   -> 0
+      * 10xx -> 1000-1011 -> don't care
+      * 110x -> 1100,1101 -> sift by 3        -> 2,3
+      * 1110 -> 1110      -> sift by 4        -> 4
+      * 1111 -> 1111      -> sift by 5        -> 5
+      *
+      * vssubu.vx v, 10, (max(x-10, 0)) almost gives us what we want, we
+      * just need to manually detect and handle the one special case:
+      */
     #define SIMDUTF_RVV_UTF8_TO_COMMON_M1(idx) \
       vuint8m1_t c1 = __riscv_vget_v_u8m2_u8m1(b1, idx); \
       vuint8m1_t c2 = __riscv_vget_v_u8m2_u8m1(b2, idx); \
@@ -157,26 +176,7 @@ simdutf_really_inline static size_t rvv_utf8_to_common(char const *src, size_t l
       /* remove prefix from trailing bytes */ \
       c2 = __riscv_vand_vx_u8m1(c2, 0b00111111, vlOut); \
       c3 = __riscv_vand_vx_u8m1(c3, 0b00111111, vlOut); \
-      c4 = __riscv_vand_vx_u8m1(c4, 0b00111111, vlOut); \
-      /* remove prefix from leading bytes
-       *
-       * We could also use vrgather here, but it increases register pressure,
-       * and its performance varies widely on current platforms. It might be
-       * worth reconsidering, though, once there is more hardware available.
-       * Same goes for the __riscv_vsrl_vv_u32m4 correction step.
-       *
-       * We shift left and then right by the number of bytes in the prefix,
-       * which can be calculated as follows:
-       *         x                                max(x-10, 0)
-       * 0xxx -> 0000-0111 -> sift by 0 or 1   -> 0
-       * 10xx -> 1000-1011 -> don't care
-       * 110x -> 1100,1101 -> sift by 3        -> 2,3
-       * 1110 -> 1110      -> sift by 4        -> 4
-       * 1111 -> 1111      -> sift by 5        -> 5
-       *
-       * vssubu.vx v, 10, (max(x-10, 0)) almost gives us what we want, we
-       * just need to manually detect and handle the one special case:
-       */ \
+      c4 = __riscv_vand_vx_u8m1(c4, 0b00111111, vlOut);  \
       vuint8m1_t shift = __riscv_vsrl_vx_u8m1(c1, 4, vlOut); \
       shift = __riscv_vmerge_vxm_u8m1(__riscv_vssubu_vx_u8m1(shift, 10, vlOut), 3, __riscv_vmseq_vx_u8m1_b8(shift, 12, vlOut), vlOut); \
       c1 = __riscv_vsll_vv_u8m1(c1, shift, vlOut); \
@@ -236,23 +236,41 @@ simdutf_really_inline static size_t rvv_utf8_to_common(char const *src, size_t l
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char *src, size_t len, char *dst) const noexcept {
   const char *beg = dst;
-  uint8_t last = 0b10000000;
+  uint8_t last = 0;
   for (size_t vl, vlOut; len > 0; len -= vl, src += vl, dst += vlOut, last = src[-1]) {
     vl = __riscv_vsetvl_e8m2(len);
     vuint8m2_t v1 = __riscv_vle8_v_u8m2((uint8_t*)src, vl);
-    vbool4_t m = __riscv_vmsltu_vx_u8m2_b4(v1, 0b11000000, vl);
-    vlOut = __riscv_vcpop_m_b4(m, vl);
-    if (vlOut != vl || last > 0b01111111) {
+    // check which bytes are ASCII
+    vbool4_t ascii = __riscv_vmsltu_vx_u8m2_b4(v1, 0b10000000, vl);
+    // count ASCII bytes
+    vlOut = __riscv_vcpop_m_b4(ascii, vl);
+    // The original code would only enter the next block after this check:
+    //   vbool4_t m = __riscv_vmsltu_vx_u8m2_b4(v1, 0b11000000, vl);
+    //   vlOut = __riscv_vcpop_m_b4(m, vl);
+    //   if (vlOut != vl || last > 0b01111111) {...}q
+    // So that everything is ASCII or continuation bytes, we just proceeded
+    // without any processing, going straight to __riscv_vse8_v_u8m2.
+    // But you need the __riscv_vslide1up_vx_u8m2 whenever there is a non-ASCII byte.
+    if (vlOut != vl) { // If not pure ASCII
+      // Non-ASCII characters
+      // We now want to mark the ascii and continuation bytes
+      vbool4_t m = __riscv_vmsltu_vx_u8m2_b4(v1, 0b11000000, vl);
+      // We count them, that's our new vlOut (output vector length)
+      vlOut = __riscv_vcpop_m_b4(m, vl);
+
       vuint8m2_t v0 = __riscv_vslide1up_vx_u8m2(v1, last, vl);
 
       vbool4_t leading0  = __riscv_vmsgtu_vx_u8m2_b4(v0, 0b10111111, vl);
       vbool4_t trailing1 = __riscv_vmslt_vx_i8m2_b4(__riscv_vreinterpret_v_u8m2_i8m2(v1), (uint8_t)0b11000000, vl);
+      // -62 i 0b11000010, so we check whether any of v0 is too big
       vbool4_t tobig = __riscv_vmand_mm_b4(leading0, __riscv_vmsgtu_vx_u8m2_b4(__riscv_vxor_vx_u8m2(v0, (uint8_t)-62, vl), 1, vl), vl);
       if (__riscv_vfirst_m_b4(__riscv_vmor_mm_b4(tobig, __riscv_vmxor_mm_b4(leading0, trailing1, vl), vl), vl) >= 0)
         return 0;
 
       v1 = __riscv_vor_vx_u8m2_mu(__riscv_vmseq_vx_u8m2_b4(v0, 0b11000011, vl), v1, v1, 0b01000000, vl);
       v1 = __riscv_vcompress_vm_u8m2(v1, m, vl);
+    } else if (last >= 0b11000000) { // If last byte is a leading  byte and we got only ASCII, error!
+      return 0;
     }
     __riscv_vse8_v_u8m2((uint8_t*)dst, v1, vlOut);
   }
@@ -269,13 +287,15 @@ simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(co
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_latin1(const char *src, size_t len, char *dst) const noexcept {
   const char *beg = dst;
-  uint8_t last = 0b11000000;
+  uint8_t last = 0;
   for (size_t vl, vlOut; len > 0; len -= vl, src += vl, dst += vlOut, last = src[-1]) {
     vl = __riscv_vsetvl_e8m2(len);
     vuint8m2_t v1 = __riscv_vle8_v_u8m2((uint8_t*)src, vl);
-    vbool4_t m = __riscv_vmsltu_vx_u8m2_b4(v1, 0b11000000, vl);
-    vlOut = __riscv_vcpop_m_b4(m, vl);
-    if (vlOut != vl || last > 0b01111111) {
+    vbool4_t ascii = __riscv_vmsltu_vx_u8m2_b4(v1, 0b10000000, vl);
+    vlOut = __riscv_vcpop_m_b4(ascii, vl);
+    if (vlOut != vl) { // If not pure ASCII
+      vbool4_t m = __riscv_vmsltu_vx_u8m2_b4(v1, 0b11000000, vl);
+      vlOut = __riscv_vcpop_m_b4(m, vl);
       vuint8m2_t v0 = __riscv_vslide1up_vx_u8m2(v1, last, vl);
       v1 = __riscv_vor_vx_u8m2_mu(__riscv_vmseq_vx_u8m2_b4(v0, 0b11000011, vl), v1, v1, 0b01000000, vl);
       v1 = __riscv_vcompress_vm_u8m2(v1, m, vl);
