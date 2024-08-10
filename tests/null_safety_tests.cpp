@@ -55,17 +55,17 @@ TEST(test_empty) {
         std::ignore = implementation.latin1_length_from_utf32(0);
         std::ignore = implementation.latin1_length_from_utf8(i8, 0);
         std::ignore = implementation.maximal_binary_length_from_base64(i16, 0);
-        std::ignore = implementation.utf16_length_from_latin1(0);
-        std::ignore = implementation.utf16_length_from_utf32(i32, 0);
-        std::ignore = implementation.utf16_length_from_utf8(i8, 0);
-        std::ignore = implementation.utf32_length_from_latin1(0);
-        std::ignore = implementation.utf32_length_from_utf16be(i16, 0);
-        std::ignore = implementation.utf32_length_from_utf16le(i16, 0);
-        std::ignore = implementation.utf32_length_from_utf8(i8, 0);
-        std::ignore = implementation.utf8_length_from_latin1(i8, 0);
-        std::ignore = implementation.utf8_length_from_utf16be(i16, 0);
-        std::ignore = implementation.utf8_length_from_utf16le(i16, 0);
-        std::ignore = implementation.utf8_length_from_utf32(i32, 0);
+        ASSERT_EQUAL(0, implementation.utf16_length_from_latin1(0));
+        ASSERT_EQUAL(0, implementation.utf16_length_from_utf32(i32, 0));
+        ASSERT_EQUAL(0, implementation.utf16_length_from_utf8(i8, 0));
+        ASSERT_EQUAL(0, implementation.utf32_length_from_latin1(0));
+        ASSERT_EQUAL(0, implementation.utf32_length_from_utf16be(i16, 0));
+        ASSERT_EQUAL(0, implementation.utf32_length_from_utf16le(i16, 0));
+        ASSERT_EQUAL(0, implementation.utf32_length_from_utf8(i8, 0));
+        ASSERT_EQUAL(0, implementation.utf8_length_from_latin1(i8, 0));
+        ASSERT_EQUAL(0, implementation.utf8_length_from_utf16be(i16, 0));
+        ASSERT_EQUAL(0, implementation.utf8_length_from_utf16le(i16, 0));
+        ASSERT_EQUAL(0, implementation.utf8_length_from_utf32(i32, 0));
 
         auto is_valid = [](const simdutf::result &r) {
             return r.count == 0 && r.error == simdutf::error_code::SUCCESS;
