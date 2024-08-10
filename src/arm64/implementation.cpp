@@ -186,6 +186,10 @@ simdutf_warn_unused result implementation::validate_ascii_with_errors(const char
 }
 
 simdutf_warn_unused bool implementation::validate_utf16le(const char16_t *buf, size_t len) const noexcept {
+  if (simdutf_unlikely(len == 0)) {
+    // empty input is valid. protected the implementation from nullptr.
+    return true;
+  }
   const char16_t* tail = arm_validate_utf16<endianness::LITTLE>(buf, len);
   if (tail) {
     return scalar::utf16::validate<endianness::LITTLE>(tail, len - (tail - buf));
@@ -195,7 +199,11 @@ simdutf_warn_unused bool implementation::validate_utf16le(const char16_t *buf, s
 }
 
 simdutf_warn_unused bool implementation::validate_utf16be(const char16_t *buf, size_t len) const noexcept {
-  const char16_t* tail = arm_validate_utf16<endianness::BIG>(buf, len);
+  if (simdutf_unlikely(len == 0)) {
+    // empty input is valid. protected the implementation from nullptr.
+    return true;
+  }
+  const char16_t *tail = arm_validate_utf16<endianness::BIG>(buf, len);
   if (tail) {
     return scalar::utf16::validate<endianness::BIG>(tail, len - (tail - buf));
   } else {
@@ -230,6 +238,10 @@ simdutf_warn_unused result implementation::validate_utf16be_with_errors(const ch
 }
 
 simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, size_t len) const noexcept {
+  if (simdutf_unlikely(len == 0)) {
+    // empty input is valid. protected the implementation from nullptr.
+    return true;
+  }
   const char32_t* tail = arm_validate_utf32le(buf, len);
   if (tail) {
     return scalar::utf32::validate(tail, len - (tail - buf));
