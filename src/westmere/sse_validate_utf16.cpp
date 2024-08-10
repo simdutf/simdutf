@@ -45,9 +45,6 @@
 */
 template <endianness big_endian>
 const char16_t* sse_validate_utf16(const char16_t* input, size_t size) {
-    if (simdutf_unlikely(size == 0)) {
-        return input;
-    }
     const char16_t* end = input + size;
 
     const auto v_d8 = simd8<uint8_t>::splat(0xd8);
