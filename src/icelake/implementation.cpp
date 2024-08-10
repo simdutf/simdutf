@@ -453,7 +453,8 @@ simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, siz
   if (tail) {
     return scalar::utf32::validate(tail, len - (tail - buf));
   } else {
-    return false;
+    // we come here if there was an error, or buf was nullptr which may happen for empty input.
+    return len == 0;
   }
 }
 
