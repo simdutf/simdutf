@@ -3,9 +3,6 @@
    - nullptr if an error was detected.
 */
 const char32_t* avx2_validate_utf32le(const char32_t* input, size_t size) {
-    if (simdutf_unlikely(size == 0)) {
-        return input;
-    }
     const char32_t* end = input + size;
 
     const __m256i standardmax = _mm256_set1_epi32(0x10ffff);
@@ -35,9 +32,6 @@ const char32_t* avx2_validate_utf32le(const char32_t* input, size_t size) {
 
 
 const result avx2_validate_utf32le_with_errors(const char32_t* input, size_t size) {
-    if (simdutf_unlikely(size == 0)) {
-        return result(error_code::SUCCESS, 0);
-    }
     const char32_t* start = input;
     const char32_t* end = input + size;
 

@@ -147,7 +147,12 @@ simdutf_warn_unused result implementation::validate_utf16be_with_errors(const ch
 }
 
 simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, size_t len) const noexcept {
-  const char32_t* tail = sse_validate_utf32le(buf, len);
+  if (simdutf_unlikely(len == 0)) {
+    // empty input is valid UTF-32. protect the implementation from
+    // handling nullptr
+    return true;
+  }
+  const char32_t *tail = sse_validate_utf32le(buf, len);
   if (tail) {
     return scalar::utf32::validate(tail, len - (tail - buf));
   } else {
@@ -156,6 +161,11 @@ simdutf_warn_unused bool implementation::validate_utf32(const char32_t *buf, siz
 }
 
 simdutf_warn_unused result implementation::validate_utf32_with_errors(const char32_t *buf, size_t len) const noexcept {
+  if (len == 0) {
+    // empty input is valid UTF-32. protect the implementation from
+    // handling nullptr
+    return result(error_code::SUCCESS, 0);
+  }
   result res = sse_validate_utf32le_with_errors(buf, len);
   if (res.count != len) {
     result scalar_res = scalar::utf32::validate_with_errors(buf + res.count, len - res.count);
