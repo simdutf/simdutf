@@ -14,7 +14,11 @@ namespace {
 
 TEST(issue_convert_valid_utf32_to_latin1_2104d5a31440e3ed)
 {
+#if SIMDUTF_IS_BIG_ENDIAN
+    alignas(4) const unsigned char data[] = {0x00, 0x05, 0x20, 0x20};
+#else
     alignas(4) const unsigned char data[] = {0x20, 0x20, 0x05, 0x00};
+#endif
     constexpr std::size_t data_len_bytes = sizeof(data);
     constexpr std::size_t data_len = data_len_bytes / sizeof(char32_t);
     const auto validation1 = implementation.validate_utf32_with_errors((const char32_t *) data,
