@@ -16,6 +16,12 @@ namespace {
   constexpr int trials = 1000;
 }
 
+TEST(valid_but_out_of_range_input)
+{
+    const char16_t input = 0x2020;
+    char out;
+    ASSERT_EQUAL(0, implementation.convert_valid_utf16le_to_latin1(&input, 1, &out));
+}
 
 TEST(convert_pure_ASCII) {
   size_t counter = 0;
