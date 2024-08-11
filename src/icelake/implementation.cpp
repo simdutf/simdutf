@@ -550,7 +550,7 @@ simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(co
     return {simdutf::SUCCESS, written};
   }
   size_t pos = obuf - buf;
-  result res = scalar::utf8_to_latin1::rewind_and_convert_with_errors(pos, buf + pos, len - pos, olatin1_output);
+  result res = scalar::utf8_to_latin1::rewind_and_convert_with_errors(pos, buf + pos, len - pos, latin1_output);
   res.count += pos;
   return res;
 }
