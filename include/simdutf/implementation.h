@@ -407,6 +407,7 @@ simdutf_warn_unused result convert_utf8_to_utf32_with_errors(const char * input,
  * If you violate this assumption, the result is implementation defined and may include system-dependent behavior such as crashes.
  *
  * This function is for expert users only and not part of our public API. Use convert_utf8_to_latin1 instead.
+ * The function may be removed from the library in the future.
  *
  * This function is not BOM-aware.
  *
@@ -415,7 +416,7 @@ simdutf_warn_unused result convert_utf8_to_utf32_with_errors(const char * input,
  * @param latin1_output  the pointer to buffer that can hold conversion result
  * @return the number of written char; 0 if the input was not valid UTF-8 string
  */
-SIMDUTF_DEPRECATED simdutf_warn_unused size_t convert_valid_utf8_to_latin1(const char * input, size_t length, char* latin1_output) noexcept;
+simdutf_warn_unused size_t convert_valid_utf8_to_latin1(const char * input, size_t length, char* latin1_output) noexcept;
 
 
 /**
@@ -727,6 +728,7 @@ simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char16_t * input, s
  * If you violate this assumption, the result is implementation defined and may include system-dependent behavior such as crashes.
  *
  * This function is for expert users only and not part of our public API. Use convert_utf16_to_latin1 instead.
+ * The function may be removed from the library in the future.
  *
  * This function is not BOM-aware.
  *
@@ -735,7 +737,7 @@ simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char16_t * input, s
  * @param latin1_buffer   the pointer to buffer that can hold conversion result
  * @return number of written code units; 0 if conversion is not possible
  */
-SIMDUTF_DEPRECATED simdutf_warn_unused size_t convert_valid_utf16_to_latin1(const char16_t * input, size_t length, char* latin1_buffer) noexcept;
+simdutf_warn_unused size_t convert_valid_utf16_to_latin1(const char16_t * input, size_t length, char* latin1_buffer) noexcept;
 
 /**
  * Convert valid UTF-16LE string into Latin1 string.
@@ -744,6 +746,7 @@ SIMDUTF_DEPRECATED simdutf_warn_unused size_t convert_valid_utf16_to_latin1(cons
  * If you violate this assumption, the result is implementation defined and may include system-dependent behavior such as crashes.
  *
  * This function is for expert users only and not part of our public API. Use convert_utf16le_to_latin1 instead.
+ * The function may be removed from the library in the future.
  *
  * This function is not BOM-aware.
  *
@@ -752,7 +755,7 @@ SIMDUTF_DEPRECATED simdutf_warn_unused size_t convert_valid_utf16_to_latin1(cons
  * @param latin1_buffer   the pointer to buffer that can hold conversion result
  * @return number of written code units; 0 if conversion is not possible
  */
-SIMDUTF_DEPRECATED simdutf_warn_unused size_t convert_valid_utf16le_to_latin1(const char16_t * input, size_t length, char* latin1_buffer) noexcept;
+simdutf_warn_unused size_t convert_valid_utf16le_to_latin1(const char16_t * input, size_t length, char* latin1_buffer) noexcept;
 
 /**
  * Convert valid UTF-16BE string into Latin1 string.
@@ -761,6 +764,7 @@ SIMDUTF_DEPRECATED simdutf_warn_unused size_t convert_valid_utf16le_to_latin1(co
  * If you violate this assumption, the result is implementation defined and may include system-dependent behavior such as crashes.
  *
  * This function is for expert users only and not part of our public API. Use convert_utf16be_to_latin1 instead.
+ * The function may be removed from the library in the future.
  *
  * This function is not BOM-aware.
  *
@@ -769,7 +773,7 @@ SIMDUTF_DEPRECATED simdutf_warn_unused size_t convert_valid_utf16le_to_latin1(co
  * @param latin1_buffer   the pointer to buffer that can hold conversion result
  * @return number of written code units; 0 if conversion is not possible
  */
-SIMDUTF_DEPRECATED simdutf_warn_unused size_t convert_valid_utf16be_to_latin1(const char16_t * input, size_t length, char* latin1_buffer) noexcept;
+simdutf_warn_unused size_t convert_valid_utf16be_to_latin1(const char16_t * input, size_t length, char* latin1_buffer) noexcept;
 
 
 /**
@@ -1098,6 +1102,7 @@ simdutf_warn_unused result convert_utf32_to_latin1_with_errors(const char32_t * 
  * If you violate this assumption, the result is implementation defined and may include system-dependent behavior such as crashes.
  *
  * This function is for expert users only and not part of our public API. Use convert_utf32_to_latin1 instead.
+ * The function may be removed from the library in the future.
  *
  * This function is not BOM-aware.
  *
@@ -1106,7 +1111,7 @@ simdutf_warn_unused result convert_utf32_to_latin1_with_errors(const char32_t * 
  * @param latin1_buffer   the pointer to buffer that can hold the conversion result
  * @return number of written code units; 0 if conversion is not possible
  */
-SIMDUTF_DEPRECATED simdutf_warn_unused size_t convert_valid_utf32_to_latin1(const char32_t * input, size_t length, char* latin1_buffer) noexcept;
+simdutf_warn_unused size_t convert_valid_utf32_to_latin1(const char32_t * input, size_t length, char* latin1_buffer) noexcept;
 
 /**
  * Convert possibly broken UTF-32 string into UTF-16BE string.
