@@ -23,6 +23,33 @@ void printByteInBinary(const char& byte) {
     putchar('\n');
 }
 
+TEST(issue_convert_utf8_to_latin1_with_errors_01f0c43ba5b92120)
+{
+    alignas(1) const unsigned char data[] = {0xc3, 0x81, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                             0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                             0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                             0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                             0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                             0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                                             0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0xc3,
+                                             0xb9, 0xb9};
+    constexpr std::size_t data_len_bytes = sizeof(data);
+    constexpr std::size_t data_len = data_len_bytes / sizeof(char);
+    const auto validation1 = implementation.validate_utf8_with_errors((const char *) data, data_len);
+    ASSERT_EQUAL(validation1.count, 64);
+    ASSERT_EQUAL(validation1.error, simdutf::error_code::TOO_LONG);
+
+    const bool validation2 = implementation.validate_utf8((const char *) data, data_len);
+    ASSERT_EQUAL(validation1.error == simdutf::error_code::SUCCESS, validation2);
+
+    const auto outlen = implementation.latin1_length_from_utf8((const char *) data, data_len);
+    ASSERT_EQUAL(outlen, 62);
+    std::vector<char> output(outlen);
+    const auto r = implementation.convert_utf8_to_latin1_with_errors((const char *) data,
+                                                                     data_len,
+                                                                     output.data());
+}
+
 TEST(issue_483) {
     const unsigned char data[] = {0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
                                   0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
