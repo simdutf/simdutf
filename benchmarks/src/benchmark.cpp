@@ -86,6 +86,7 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
         {"count_utf8", {simdutf::encoding_type::UTF8}},
         {"count_utf16", {simdutf::encoding_type::UTF16_LE}},
 
+        {"utf8_length_from_latin1", {simdutf::encoding_type::Latin1}},
         {"convert_latin1_to_utf8", {simdutf::encoding_type::Latin1}},
         {"convert_latin1_to_utf16", {simdutf::encoding_type::Latin1}},
         {"convert_latin1_to_utf32", {simdutf::encoding_type::Latin1}},
@@ -150,6 +151,11 @@ Benchmark::Benchmark(std::vector<input::Testcase>&& testcases)
     }
     {
         std::string name = "convert_latin1_to_utf16+icu";
+        known_procedures.insert(name);
+        expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
+    }
+    {
+        std::string name = "utf8_length_from_latin1+node";
         known_procedures.insert(name);
         expected_input_encoding.insert(std::make_pair(name,std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
     }
@@ -393,6 +399,12 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         return;
     }
 #endif
+    if(impl == "node") {
+        if(name == "utf8_length_from_latin1") {
+            run_utf8_length_from_latin1_node(iterations);
+        }
+        return;
+    }
 #ifdef ICU_AVAILABLE
     if(impl == "icu") {
         if(name == "convert_utf8_to_utf16") {
@@ -576,6 +588,8 @@ void Benchmark::run(const std::string& procedure_name, size_t iterations) {
         run_convert_latin1_to_utf16(*implementation, iterations);
     } else if(name == "convert_latin1_to_utf32") {
         run_convert_latin1_to_utf32(*implementation, iterations);
+    } else if(name == "utf8_length_from_latin1") {
+        run_utf8_length_from_latin1(*implementation, iterations);
     } else if(name == "convert_utf8_to_latin1") {
         run_convert_utf8_to_latin1(*implementation, iterations);
     } else if(name == "convert_utf8_to_latin1_with_errors") {
@@ -827,6 +841,64 @@ void Benchmark::run_convert_latin1_to_utf32(const simdutf::implementation& imple
     const auto result = count_events(proc, iterations);
     if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
     size_t char_count = size;
+    print_summary(result, size, char_count);
+}
+
+void Benchmark::run_utf8_length_from_latin1(const simdutf::implementation& implementation, size_t iterations) {
+    const char*  data = reinterpret_cast<const char*>(input_data.data());
+    const size_t size = input_data.size();
+    volatile size_t sink{0};
+
+    auto proc = [&implementation, data, size, &sink]() {
+        sink = implementation.utf8_length_from_latin1(data, size);
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    size_t char_count = get_active_implementation()->count_utf8(data, size);
+    print_summary(result, size, char_count);
+}
+
+static inline uint32_t portable_popcount(uint64_t v) {
+#ifdef __GNUC__
+  return static_cast<uint32_t>(__builtin_popcountll(v));
+#elif defined(_WIN64) && defined(_MSC_VER) && _MSC_VER >= 1400 && !defined(_M_ARM64)
+  return static_cast<uint32_t>(__popcnt64(static_cast<__int64>(v)));
+#else
+  v = v - ((v >> 1) & 0x5555555555555555);
+  v = (v & 0x3333333333333333) + ((v >> 2) & 0x3333333333333333);
+  v = ((v + (v >> 4)) & 0x0F0F0F0F0F0F0F0F);
+  return static_cast<uint32_t>((v * (0x0101010101010101)) >> 56);
+#endif
+}
+
+
+void Benchmark::run_utf8_length_from_latin1_node(size_t iterations) {
+    const char*  data = reinterpret_cast<const char*>(input_data.data());
+    const size_t size = input_data.size();
+    volatile size_t sink{0};
+
+    auto proc = [data, size, &sink]() {
+        // from https://github.com/nodejs/node/pull/54345
+        uint32_t length = size;
+        uint32_t result = length;
+        uint32_t i = 0;
+        const auto length8 = length & ~0x7;
+        while (i < length8) {
+            // Original PR used std::popcount, but it is not available pre-C++20.
+            result += portable_popcount(*reinterpret_cast<const uint64_t*>(data + i) & 0x8080808080808080);
+            i += 8;
+        }
+        while (i < length) {
+            result += (data[i] >> 7);
+            i++;
+        }
+        sink = result;
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    if((sink == 0) && (size != 0) && (iterations > 0)) { std::cerr << "The output is zero which might indicate an error.\n"; }
+    size_t char_count = get_active_implementation()->count_utf8(data, size);
     print_summary(result, size, char_count);
 }
 

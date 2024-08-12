@@ -63,14 +63,26 @@ namespace simdutf::benchmarks {
     event_aggregate BenchmarkBase::count_events(PROCEDURE procedure, size_t iterations) {
         event_collector collector;
         event_aggregate all{};
+        // Some inputs are just too small to measure accurately, so we need to scale them up.
+        size_t multiplier = 1;
+        while(true) {
+          event_aggregate test{};
+          collector.start();
+          for(size_t i = 0; i < multiplier; i++) { procedure(); }
+          event_count allocate_count = collector.end();
+          test << allocate_count;
+          if(test.best.elapsed_ns() < 4000) {
+            multiplier *= 2;
+          } else {
+            break;
+          }
+        }
         for(size_t i = 0; i < iterations; i++) {
           collector.start();
-          procedure();
+          for(size_t i = 0; i < multiplier; i++) { procedure(); }
           event_count allocate_count = collector.end();
-          all << allocate_count;
+          all << allocate_count / multiplier;
         }
-
-        all.has_events = collector.has_events();
         return all;
     }
 }

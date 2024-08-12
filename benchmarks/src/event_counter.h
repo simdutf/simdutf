@@ -55,7 +55,15 @@ struct event_count {
       event_counts[4]+other.event_counts[4],
     });
   }
-
+  event_count operator/(size_t multiplier) const {
+    return event_count(elapsed/multiplier, {
+      event_counts[0]/multiplier,
+      event_counts[1]/multiplier,
+      event_counts[2]/multiplier,
+      event_counts[3]/multiplier,
+      event_counts[4]/multiplier,
+    });
+  }
   void operator+=(const event_count& other) {
     *this = *this + other;
   }

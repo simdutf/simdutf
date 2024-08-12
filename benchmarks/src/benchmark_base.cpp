@@ -118,10 +118,10 @@ namespace simdutf::benchmarks {
             const double insperchar = all.best.instructions() / character_count;
             const double cycleperchar = all.best.cycles() / character_count;
 
-            printf("%8.3f ins/char, %8.3f cycle/char, %8.3f Gc/s (%.1f %%) %8.2f byte/char \n", insperchar, cycleperchar, gcs, error_margin, byte_per_char);
+            printf("%8.3f ins/char, %8.3f cycle/char, %8.3f Gc/s (%.1f %%) %8.2f byte/char %8.1f ns\n", insperchar, cycleperchar, gcs, error_margin, byte_per_char, best_time);
 
         } else {
-            printf("%8.3f GB/s (%.1f %%) %8.3f Gc/s %8.2f byte/char \n", gbs, error_margin, gcs, byte_per_char);
+            printf("%8.3f GB/s (%.1f %%) %8.3f Gc/s %8.2f byte/char %8.1f ns\n", gbs, error_margin, gcs, byte_per_char, best_time);
         }
         if(error_margin>10) { printf("WARNING: Measurements are noisy, try increasing iteration count (-I).\n"); }
     }

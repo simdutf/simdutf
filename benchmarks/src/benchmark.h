@@ -2,6 +2,7 @@
 #include "benchmark_base.h"
 #include "cmdline.h"
 #include "simdutf.h"
+#include <cstddef>
 
 /**
  * ICU is a standard library that is often already present on the system.
@@ -70,6 +71,7 @@ namespace simdutf::benchmarks {
         void run_validate_utf32_with_errors(const simdutf::implementation& implementation, size_t iterations);
         void run_count_utf8(const simdutf::implementation& implementation, size_t iterations);
         void run_count_utf16(const simdutf::implementation& implementation, size_t iterations);
+        void run_utf8_length_from_latin1(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_latin1_to_utf8(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_latin1_to_utf16(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_latin1_to_utf32(const simdutf::implementation& implementation, size_t iterations);
@@ -105,6 +107,7 @@ namespace simdutf::benchmarks {
         void run_convert_valid_utf32_to_utf16(const simdutf::implementation& implementation, size_t iterations);
         void run_convert_valid_utf16_to_utf32(const simdutf::implementation& implementation, size_t iterations);
         void run_detect_encodings(const simdutf::implementation& implementation, size_t iterations);
+        void run_utf8_length_from_latin1_node(size_t iterations);
 #if ICU_AVAILABLE
         void run_convert_latin1_to_utf8_icu(size_t iterations);
         void run_convert_latin1_to_utf16_icu(size_t iterations);
