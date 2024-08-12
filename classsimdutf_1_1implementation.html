@@ -360,7 +360,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <div class="textblock"><p>An implementation of simdutf for a particular CPU architecture. </p>
 <p>Also used to maintain the currently active implementation. The active implementation is automatically initialized on first use to the most advanced implementation supported by the host. </p>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01586">1586</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01606">1606</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="afd306a0bc3e221964af3f31a64784b12"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afd306a0bc3e221964af3f31a64784b12">&#9670;&nbsp;</a></span>autodetect_encoding()</h2>
@@ -2490,7 +2490,8 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 </div><div class="memdoc">
 
 <p>Convert valid UTF-16BE string into Latin1 string. </p>
-<p>This function assumes that the input string is valid UTF16-BE and that it can be represented as Latin1.</p>
+<p>This function assumes that the input string is valid UTF16-BE and that it can be represented as Latin1. If you violate this assumption, the result is implementation defined and may include system-dependent behavior such as crashes.</p>
+<p>This function is for expert users only and not part of our public API. Use convert_utf16be_to_latin1 instead.</p>
 <p>This function is not BOM-aware.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -2655,7 +2656,8 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 </div><div class="memdoc">
 
 <p>Convert valid UTF-16LE string into Latin1 string. </p>
-<p>This function assumes that the input string is valid UTF-L16LE and that it can be represented as Latin1.</p>
+<p>This function assumes that the input string is valid UTF-L16LE and that it can be represented as Latin1. If you violate this assumption, the result is implementation defined and may include system-dependent behavior such as crashes.</p>
+<p>This function is for expert users only and not part of our public API. Use convert_utf16le_to_latin1 instead.</p>
 <p>This function is not BOM-aware.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -2820,7 +2822,8 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 </div><div class="memdoc">
 
 <p>Convert valid UTF-32 string into Latin1 string. </p>
-<p>This function assumes that the input string is valid UTF-32.</p>
+<p>This function assumes that the input string is valid UTF-32 and can be represented as Latin1. If you violate this assumption, the result is implementation defined and may include system-dependent behavior such as crashes.</p>
+<p>This function is for expert users only and not part of our public API. Use convert_utf32_to_latin1 instead.</p>
 <p>This function is not BOM-aware.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -3040,7 +3043,8 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 </div><div class="memdoc">
 
 <p>Convert valid UTF-8 string into latin1 string. </p>
-<p>This function assumes that the input string is valid UTF-8 and that it can be represented as Latin1.</p>
+<p>This function assumes that the input string is valid UTF-8 and that it can be represented as Latin1. If you violate this assumption, the result is implementation defined and may include system-dependent behavior such as crashes.</p>
+<p>This function is for expert users only and not part of our public API. Use convert_utf8_to_latin1 instead.</p>
 <p>This function is not BOM-aware.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -3387,7 +3391,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" &lt;&lt; impl-&gt;description() &lt;&lt; ")" &lt;&lt; endl;
 </pre> <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01607">1607</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01627">1627</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3642,7 +3646,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" &lt;&lt; impl-&gt;description() &lt;&lt; ")" &lt;&lt; endl;
 </pre> <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01597">1597</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01617">1617</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
