@@ -38,6 +38,11 @@ if [ ! -e cleaned_crash ] ; then
     cp minimized_crash cleaned_crash
 fi
 
+if ! which xxd >/dev/null ; then
+   echo "please install xxd (sudo apt install xxd)"
+   exit 1
+fi
+
 # create a reproducer
 echo '#include <cstddef>
 #include <cstdint>

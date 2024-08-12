@@ -30,6 +30,7 @@ fi
 cmake -B build -S . \
       -DSIMDUTF_TESTS=Off \
       -DSIMDUTF_TOOLS=Off \
+      -DSIMDUTF_FUZZERS=Off \
       -DCMAKE_BUILD_TYPE=Debug \
       -DSIMDUTF_CXX_STANDARD=20 \
       -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=On
@@ -39,7 +40,7 @@ cmake --install build --prefix $WORK
 
 CXXFLAGSEXTRA=-std=c++20
 
-for fuzzersrc in $(ls fuzz/*.cpp|grep -v fuzz/reproducer.) ; do
+for fuzzersrc in $(ls fuzz/*.cpp|grep -v -E "fuzz/(reproducer.|main)") ; do
     fuzzer=$(basename $fuzzersrc .cpp)
 
     $CXX $CXXFLAGS $CXXFLAGSEXTRA\
