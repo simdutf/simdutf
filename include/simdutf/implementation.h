@@ -400,19 +400,23 @@ simdutf_warn_unused size_t convert_utf8_to_utf32(const char * input, size_t leng
  */
 simdutf_warn_unused result convert_utf8_to_utf32_with_errors(const char * input, size_t length, char32_t* utf32_output) noexcept;
 
-    /**
-   * Convert valid UTF-8 string into latin1 string.
-   *
-   * This function assumes that the input string is valid UTF-8 and that it can be represented as Latin1.
-   *
-   * This function is not BOM-aware.
-   *
-   * @param input         the UTF-8 string to convert
-   * @param length        the length of the string in bytes
-   * @param latin1_output  the pointer to buffer that can hold conversion result
-   * @return the number of written char; 0 if the input was not valid UTF-8 string
-   */
-  simdutf_warn_unused size_t convert_valid_utf8_to_latin1(const char * input, size_t length, char* latin1_output) noexcept;
+/**
+ * Convert valid UTF-8 string into latin1 string.
+ *
+ * This function assumes that the input string is valid UTF-8 and that it can be represented as Latin1.
+ * If you violate this assumption, the result is implementation defined and may include system-dependent behavior such as crashes.
+ *
+ * This function is for expert users only and not part of our public API. Use convert_utf8_to_latin1 instead.
+ * The function may be removed from the library in the future.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-8 string to convert
+ * @param length        the length of the string in bytes
+ * @param latin1_output  the pointer to buffer that can hold conversion result
+ * @return the number of written char; 0 if the input was not valid UTF-8 string
+ */
+simdutf_warn_unused size_t convert_valid_utf8_to_latin1(const char * input, size_t length, char* latin1_output) noexcept;
 
 
 /**
@@ -721,6 +725,10 @@ simdutf_warn_unused size_t convert_valid_utf16_to_utf8(const char16_t * input, s
  * Using native endianness, convert UTF-16 string into Latin1 string.
  *
  * This function assumes that the input string is valid UTF-16 and that it can be represented as Latin1.
+ * If you violate this assumption, the result is implementation defined and may include system-dependent behavior such as crashes.
+ *
+ * This function is for expert users only and not part of our public API. Use convert_utf16_to_latin1 instead.
+ * The function may be removed from the library in the future.
  *
  * This function is not BOM-aware.
  *
@@ -735,6 +743,10 @@ simdutf_warn_unused size_t convert_valid_utf16_to_latin1(const char16_t * input,
  * Convert valid UTF-16LE string into Latin1 string.
  *
  * This function assumes that the input string is valid UTF-16LE and that it can be represented as Latin1.
+ * If you violate this assumption, the result is implementation defined and may include system-dependent behavior such as crashes.
+ *
+ * This function is for expert users only and not part of our public API. Use convert_utf16le_to_latin1 instead.
+ * The function may be removed from the library in the future.
  *
  * This function is not BOM-aware.
  *
@@ -749,6 +761,10 @@ simdutf_warn_unused size_t convert_valid_utf16le_to_latin1(const char16_t * inpu
  * Convert valid UTF-16BE string into Latin1 string.
  *
  * This function assumes that the input string is valid UTF-16BE and that it can be represented as Latin1.
+ * If you violate this assumption, the result is implementation defined and may include system-dependent behavior such as crashes.
+ *
+ * This function is for expert users only and not part of our public API. Use convert_utf16be_to_latin1 instead.
+ * The function may be removed from the library in the future.
  *
  * This function is not BOM-aware.
  *
@@ -1083,6 +1099,10 @@ simdutf_warn_unused result convert_utf32_to_latin1_with_errors(const char32_t * 
  * Convert valid UTF-32 string into Latin1 string.
  *
  * This function assumes that the input string is valid UTF-32 and that it can be represented as Latin1.
+ * If you violate this assumption, the result is implementation defined and may include system-dependent behavior such as crashes.
+ *
+ * This function is for expert users only and not part of our public API. Use convert_utf32_to_latin1 instead.
+ * The function may be removed from the library in the future.
  *
  * This function is not BOM-aware.
  *
@@ -1851,6 +1871,9 @@ public:
    * Convert valid UTF-8 string into latin1 string.
    *
    * This function assumes that the input string is valid UTF-8 and that it can be represented as Latin1.
+   * If you violate this assumption, the result is implementation defined and may include system-dependent behavior such as crashes.
+   *
+   * This function is for expert users only and not part of our public API. Use convert_utf8_to_latin1 instead.
    *
    * This function is not BOM-aware.
    *
@@ -2068,7 +2091,10 @@ public:
    * Convert valid UTF-16LE string into Latin1 string.
    *
    * This function assumes that the input string is valid UTF-L16LE and that it can be represented as Latin1.
-
+   * If you violate this assumption, the result is implementation defined and may include system-dependent behavior such as crashes.
+   *
+   * This function is for expert users only and not part of our public API. Use convert_utf16le_to_latin1 instead.
+   *
    * This function is not BOM-aware.
    *
    * @param input         the UTF-16LE string to convert
@@ -2082,6 +2108,9 @@ public:
    * Convert valid UTF-16BE string into Latin1 string.
    *
    * This function assumes that the input string is valid UTF16-BE and that it can be represented as Latin1.
+   * If you violate this assumption, the result is implementation defined and may include system-dependent behavior such as crashes.
+   *
+   * This function is for expert users only and not part of our public API. Use convert_utf16be_to_latin1 instead.
    *
    * This function is not BOM-aware.
    *
@@ -2331,7 +2360,10 @@ public:
   /**
    * Convert valid UTF-32 string into Latin1 string.
    *
-   * This function assumes that the input string is valid UTF-32.
+   * This function assumes that the input string is valid UTF-32 and can be represented as Latin1.
+   * If you violate this assumption, the result is implementation defined and may include system-dependent behavior such as crashes.
+   *
+   * This function is for expert users only and not part of our public API. Use convert_utf32_to_latin1 instead.
    *
    * This function is not BOM-aware.
    *

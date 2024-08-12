@@ -24,6 +24,8 @@
 #define SIMDUTF_ISALIGNED_N(ptr, n) (((uintptr_t)(ptr) & ((n)-1)) == 0)
 
 #if defined(SIMDUTF_REGULAR_VISUAL_STUDIO)
+  #define SIMDUTF_DEPRECATED __declspec(deprecated)
+
 
   #define simdutf_really_inline __forceinline
   #define simdutf_never_inline __declspec(noinline)
@@ -64,6 +66,8 @@
 #else
   #define simdutf_really_inline inline
 #endif
+
+  #define SIMDUTF_DEPRECATED __attribute__((deprecated))
   #define simdutf_never_inline inline __attribute__((noinline))
 
   #define simdutf_unused __attribute__((unused))
