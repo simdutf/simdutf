@@ -60,7 +60,7 @@ result base64_tail_decode(char *dst, const char_type *src, size_t length, base64
       buffer[idx] = uint8_t(code);
       if (is_eight_byte(c) && code <= 63) {
         idx++;
-      } else if (code > 64 || !is_eight_byte(c)) {
+      } else if (code > 64 || !scalar::base64::is_eight_byte(c)) {
         return {INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
       } else {
         // We have a space or a newline. We ignore it.
@@ -164,7 +164,7 @@ result base64_tail_decode_safe(char *dst, size_t& outlen, const char_type *src, 
       buffer[idx] = uint8_t(code);
       if (is_eight_byte(c) && code <= 63) {
         idx++;
-      } else if (code > 64 || !is_eight_byte(c)) {
+      } else if (code > 64 || !scalar::base64::is_eight_byte(c)) {
         outlen = size_t(dst - dstinit);
         return {INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
       } else {
