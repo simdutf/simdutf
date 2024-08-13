@@ -83,6 +83,7 @@ namespace simdutf::benchmarks {
           event_count allocate_count = collector.end();
           all << allocate_count / multiplier;
         }
+        all.has_events = collector.has_events();
         return all;
     }
 }
