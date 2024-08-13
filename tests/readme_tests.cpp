@@ -56,7 +56,7 @@ TEST(base64_fun_safe) {
     } else {
       buffer.resize(output_length); // in case of success, output_length contains the output length
       ASSERT_TRUE(buffer == expected[i]);
-      std::cout << "ouput: " << output_length << " bytes" << std::endl;
+      std::cout << "output: " << output_length << " bytes" << std::endl;
       std::cout << "input (consumed): " << r.count << " bytes" << std::endl;
     }
   }
