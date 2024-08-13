@@ -1735,7 +1735,7 @@ by reference in the output length parameter.
     } else {
       buffer.resize(output_length); // in case of success, output_length contains the output length
       // We have buffer == expected[i])
-      std::cout << "ouput: " << output_length << " bytes" << std::endl;
+      std::cout << "output: " << output_length << " bytes" << std::endl;
       std::cout << "input (consumed): " << r.count << " bytes" << std::endl;
     }
 ```
@@ -1744,13 +1744,13 @@ This code should output the following:
 
 ```
 source: '  A  A  '
-ouput: 1 bytes
+output: 1 bytes
 input (consumed): 8 bytes
 source: '  A  A  G  A  /  v  8  '
-ouput: 5 bytes
+output: 5 bytes
 input (consumed): 23 bytes
 source: '  A  A  G  A  /  v  8  =  '
-ouput: 5 bytes
+output: 5 bytes
 input (consumed): 26 bytes
 source: '  A  A  G  A  /  v  8  =  =  '
 output: error
@@ -1838,7 +1838,7 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char * input,
 simdutf_warn_unused size_t maximal_binary_length_from_base64(const char16_t * input, size_t length) noexcept;
 
 /**
- * Convert a base64 input to a binary ouput.
+ * Convert a base64 input to a binary output.
  *
  * This function follows the WHATWG forgiving-base64 format, which means that it will
  * ignore any ASCII spaces in the input. You may provide a padded input (with one or two
@@ -1886,7 +1886,7 @@ simdutf_warn_unused size_t base64_length_from_binary(size_t length, base64_optio
 
 
 /**
- * Convert a binary input to a base64 ouput.
+ * Convert a binary input to a base64 output.
  *
  * The default option (simdutf::base64_default) uses the characters `+` and `/` as part of its alphabet.
  * Further, it adds padding (`=`) at the end of the output to ensure that the output length is a multiple of four.
@@ -1905,7 +1905,7 @@ simdutf_warn_unused size_t base64_length_from_binary(size_t length, base64_optio
 size_t binary_to_base64(const char * input, size_t length, char* output, base64_options options = base64_default) noexcept;
 
 /**
- * Convert a base64 input to a binary ouput.
+ * Convert a base64 input to a binary output.
  *
  * This function follows the WHATWG forgiving-base64 format, which means that it will
  * ignore any ASCII spaces in the input. You may provide a padded input (with one or two
@@ -1934,7 +1934,7 @@ size_t binary_to_base64(const char * input, size_t length, char* output, base64_
 simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t length, char* output, base64_options options = base64_default)  noexcept;
 
 /**
- * Convert a base64 input to a binary ouput.
+ * Convert a base64 input to a binary output.
  *
  * This function follows the WHATWG forgiving-base64 format, which means that it will
  * ignore any ASCII spaces in the input. You may provide a padded input (with one or two
