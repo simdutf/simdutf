@@ -344,16 +344,16 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <tr class="memdesc:a9c8897b131c52d703cb2c5d032c29ff6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provide the maximal binary length in bytes given the base64 input.  <a href="classsimdutf_1_1implementation.html#a9c8897b131c52d703cb2c5d032c29ff6">More...</a><br /></td></tr>
 <tr class="separator:a9c8897b131c52d703cb2c5d032c29ff6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a73d3db16d1520bb7ee958692f8ac6bc9"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a73d3db16d1520bb7ee958692f8ac6bc9">base64_to_binary</a> (const char *input, size_t length, char *output, base64_options options=base64_default) const noexcept=0</td></tr>
-<tr class="memdesc:a73d3db16d1520bb7ee958692f8ac6bc9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a base64 input to a binary ouput.  <a href="classsimdutf_1_1implementation.html#a73d3db16d1520bb7ee958692f8ac6bc9">More...</a><br /></td></tr>
+<tr class="memdesc:a73d3db16d1520bb7ee958692f8ac6bc9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a base64 input to a binary output.  <a href="classsimdutf_1_1implementation.html#a73d3db16d1520bb7ee958692f8ac6bc9">More...</a><br /></td></tr>
 <tr class="separator:a73d3db16d1520bb7ee958692f8ac6bc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab209f124bfae37db124194317450f88a"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#ab209f124bfae37db124194317450f88a">base64_to_binary</a> (const char16_t *input, size_t length, char *output, base64_options options=base64_default) const noexcept=0</td></tr>
-<tr class="memdesc:ab209f124bfae37db124194317450f88a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a base64 input to a binary ouput.  <a href="classsimdutf_1_1implementation.html#ab209f124bfae37db124194317450f88a">More...</a><br /></td></tr>
+<tr class="memdesc:ab209f124bfae37db124194317450f88a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a base64 input to a binary output.  <a href="classsimdutf_1_1implementation.html#ab209f124bfae37db124194317450f88a">More...</a><br /></td></tr>
 <tr class="separator:ab209f124bfae37db124194317450f88a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7935750344384cc0130094cb6c440826"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a7935750344384cc0130094cb6c440826">base64_length_from_binary</a> (size_t length, base64_options options=base64_default) const noexcept=0</td></tr>
 <tr class="memdesc:a7935750344384cc0130094cb6c440826"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provide the base64 length in bytes given the length of a binary input.  <a href="classsimdutf_1_1implementation.html#a7935750344384cc0130094cb6c440826">More...</a><br /></td></tr>
 <tr class="separator:a7935750344384cc0130094cb6c440826"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5823f6a86315f4404a4f437977abf9df"><td class="memItemLeft" align="right" valign="top">virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a5823f6a86315f4404a4f437977abf9df">binary_to_base64</a> (const char *input, size_t length, char *output, base64_options options=base64_default) const noexcept=0</td></tr>
-<tr class="memdesc:a5823f6a86315f4404a4f437977abf9df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a binary input to a base64 ouput.  <a href="classsimdutf_1_1implementation.html#a5823f6a86315f4404a4f437977abf9df">More...</a><br /></td></tr>
+<tr class="memdesc:a5823f6a86315f4404a4f437977abf9df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a binary input to a base64 output.  <a href="classsimdutf_1_1implementation.html#a5823f6a86315f4404a4f437977abf9df">More...</a><br /></td></tr>
 <tr class="separator:a5823f6a86315f4404a4f437977abf9df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -499,7 +499,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 </table>
 </div><div class="memdoc">
 
-<p>Convert a base64 input to a binary ouput. </p>
+<p>Convert a base64 input to a binary output. </p>
 <p>This function follows the WHATWG forgiving-base64 format, which means that it will ignore any ASCII spaces in the input. You may provide a padded input (with one or two equal signs at the end) or an unpadded input (without any equal signs at the end).</p>
 <p>See <a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">https://infra.spec.whatwg.org/#forgiving-base64-decode</a></p>
 <p>This function will fail in case of invalid input. There are two possible reasons for failure: the input contains a number of base64 characters that when divided by 4, leaves a single remainder character (BASE64_INPUT_REMAINDER), or the input contains a character that is not a valid base64 character (INVALID_BASE64_CHARACTER).</p>
@@ -563,7 +563,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 </table>
 </div><div class="memdoc">
 
-<p>Convert a base64 input to a binary ouput. </p>
+<p>Convert a base64 input to a binary output. </p>
 <p>This function follows the WHATWG forgiving-base64 format, which means that it will ignore any ASCII spaces in the input. You may provide a padded input (with one or two equal signs at the end) or an unpadded input (without any equal signs at the end).</p>
 <p>See <a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">https://infra.spec.whatwg.org/#forgiving-base64-decode</a></p>
 <p>This function will fail in case of invalid input. There are two possible reasons for failure: the input contains a number of base64 characters that when divided by 4, leaves a single remainder character (BASE64_INPUT_REMAINDER), or the input contains a character that is not a valid base64 character (INVALID_BASE64_CHARACTER).</p>
@@ -627,7 +627,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 </table>
 </div><div class="memdoc">
 
-<p>Convert a binary input to a base64 ouput. </p>
+<p>Convert a binary input to a base64 output. </p>
 <p>The default option (simdutf::base64_default) uses the characters <code>+</code> and <code>/</code> as part of its alphabet. Further, it adds padding (<code>=</code>) at the end of the output to ensure that the output length is a multiple of four.</p>
 <p>The URL option (simdutf::base64_url) uses the characters <code>-</code> and <code>_</code> as part of its alphabet. No padding is added at the end of the output.</p>
 <p>This function always succeeds.</p>

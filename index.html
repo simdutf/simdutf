@@ -674,18 +674,18 @@ Base64</h2>
 <div class="line">   } <span class="keywordflow">else</span> {</div>
 <div class="line">     buffer.resize(output_length); <span class="comment">// in case of success, output_length contains the output length</span></div>
 <div class="line">     <span class="comment">// We have buffer == expected[i])</span></div>
-<div class="line">     std::cout &lt;&lt; <span class="stringliteral">&quot;ouput: &quot;</span> &lt;&lt; output_length &lt;&lt; <span class="stringliteral">&quot; bytes&quot;</span> &lt;&lt; std::endl;</div>
+<div class="line">     std::cout &lt;&lt; <span class="stringliteral">&quot;output: &quot;</span> &lt;&lt; output_length &lt;&lt; <span class="stringliteral">&quot; bytes&quot;</span> &lt;&lt; std::endl;</div>
 <div class="line">     std::cout &lt;&lt; <span class="stringliteral">&quot;input (consumed): &quot;</span> &lt;&lt; r.count &lt;&lt; <span class="stringliteral">&quot; bytes&quot;</span> &lt;&lt; std::endl;</div>
 <div class="line">   }</div>
 </div><!-- fragment --><p>This code should output the following:</p>
 <div class="fragment"><div class="line">source: &#39;  A  A  &#39;</div>
-<div class="line">ouput: 1 bytes</div>
+<div class="line">output: 1 bytes</div>
 <div class="line">input (consumed): 8 bytes</div>
 <div class="line">source: &#39;  A  A  G  A  /  v  8  &#39;</div>
-<div class="line">ouput: 5 bytes</div>
+<div class="line">output: 5 bytes</div>
 <div class="line">input (consumed): 23 bytes</div>
 <div class="line">source: &#39;  A  A  G  A  /  v  8  =  &#39;</div>
-<div class="line">ouput: 5 bytes</div>
+<div class="line">output: 5 bytes</div>
 <div class="line">input (consumed): 26 bytes</div>
 <div class="line">source: &#39;  A  A  G  A  /  v  8  =  =  &#39;</div>
 <div class="line">output: error</div>
@@ -742,7 +742,7 @@ Base64</h2>
 <div class="line">simdutf_warn_unused size_t maximal_binary_length_from_base64(const char16_t * input, size_t length) noexcept;</div>
 <div class="line"> </div>
 <div class="line">/**</div>
-<div class="line"> * Convert a base64 input to a binary ouput.</div>
+<div class="line"> * Convert a base64 input to a binary output.</div>
 <div class="line"> *</div>
 <div class="line"> * This function follows the WHATWG forgiving-base64 format, which means that it will</div>
 <div class="line"> * ignore any ASCII spaces in the input. You may provide a padded input (with one or two</div>
@@ -790,7 +790,7 @@ Base64</h2>
 <div class="line"> </div>
 <div class="line"> </div>
 <div class="line">/**</div>
-<div class="line"> * Convert a binary input to a base64 ouput.</div>
+<div class="line"> * Convert a binary input to a base64 output.</div>
 <div class="line"> *</div>
 <div class="line"> * The default option (simdutf::base64_default) uses the characters `+` and `/` as part of its alphabet.</div>
 <div class="line"> * Further, it adds padding (`=`) at the end of the output to ensure that the output length is a multiple of four.</div>
@@ -809,7 +809,7 @@ Base64</h2>
 <div class="line">size_t binary_to_base64(const char * input, size_t length, char* output, base64_options options = base64_default) noexcept;</div>
 <div class="line"> </div>
 <div class="line">/**</div>
-<div class="line"> * Convert a base64 input to a binary ouput.</div>
+<div class="line"> * Convert a base64 input to a binary output.</div>
 <div class="line"> *</div>
 <div class="line"> * This function follows the WHATWG forgiving-base64 format, which means that it will</div>
 <div class="line"> * ignore any ASCII spaces in the input. You may provide a padded input (with one or two</div>
@@ -838,7 +838,7 @@ Base64</h2>
 <div class="line">simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t length, char* output, base64_options options = base64_default)  noexcept;</div>
 <div class="line"> </div>
 <div class="line">/**</div>
-<div class="line"> * Convert a base64 input to a binary ouput.</div>
+<div class="line"> * Convert a base64 input to a binary output.</div>
 <div class="line"> *</div>
 <div class="line"> * This function follows the WHATWG forgiving-base64 format, which means that it will</div>
 <div class="line"> * ignore any ASCII spaces in the input. You may provide a padded input (with one or two</div>
