@@ -326,7 +326,7 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char * 
     answer += pop(v);
   }
   for(; i + 1 <= length; i += 1) {
-      answer += ((uint8_t)input[i] >> 7);
+      answer += static_cast<uint8_t>(input[i]) >> 7;
   }
   return answer;
 }
