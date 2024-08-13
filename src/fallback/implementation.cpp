@@ -307,7 +307,7 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char * 
   size_t answer = length;
   size_t i = 0;
   auto pop = [](uint64_t v) {
-    return ((v>>7) & UINT64_C(0x0101010101010101)) * UINT64_C(0x0101010101010101) >> 56;
+    return (size_t)(((v>>7) & UINT64_C(0x0101010101010101)) * UINT64_C(0x0101010101010101) >> 56);
   };
   for(; i + 32 <= length; i += 32) {
     uint64_t v;
