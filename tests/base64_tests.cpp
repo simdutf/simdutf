@@ -102,6 +102,17 @@ TEST(issue_504_8bit) {
     ASSERT_EQUAL(r.count, 0);
 }
 
+TEST(issue_502) {
+    std::array<char, 1> data{'='};
+    std::vector<char> out(1);
+    const auto r = implementation.base64_to_binary(data.data(),
+                                                   data.size(),
+                                                   out.data(),
+                                                   simdutf::base64_default);
+    ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+    ASSERT_EQUAL(r.count, 0);
+}
+
 TEST(issue_503) {
   std::array<char16_t, 1> data{15626}; // 0x3D0A
   std::vector<char> out(1);
