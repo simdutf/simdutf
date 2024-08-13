@@ -311,7 +311,7 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char * 
   };
   for(; i + 32 <= length; i += 32) {
     uint64_t v;
-    memcpy(&v, input + i, sizeof(v));
+    memcpy(&v, input + i, 8);
     answer += pop(v);
     memcpy(&v, input + i + 8, sizeof(v));
     answer += pop(v);
