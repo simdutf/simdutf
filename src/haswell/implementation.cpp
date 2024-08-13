@@ -716,40 +716,48 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(const char *i
   const uint8_t *data = reinterpret_cast<const uint8_t *>(input);
   size_t answer = len / sizeof(__m256i) * sizeof(__m256i);
   size_t i = 0;
-  __m256i four_64bits = _mm256_setzero_si256();
-  while (i + sizeof(__m256i) <= len) {
-    __m256i runner = _mm256_setzero_si256();
-    // We can do up to 255 loops without overflow.
-    size_t iterations = (len - i) / sizeof(__m256i);
-    if (iterations > 255) {
-      iterations = 255;
+  if(answer >= 2048) { // long strings optimization
+    __m256i four_64bits = _mm256_setzero_si256();
+    while (i + sizeof(__m256i) <= len) {
+      __m256i runner = _mm256_setzero_si256();
+      // We can do up to 255 loops without overflow.
+      size_t iterations = (len - i) / sizeof(__m256i);
+      if (iterations > 255) {
+        iterations = 255;
+      }
+      size_t max_i = i + iterations * sizeof(__m256i) - sizeof(__m256i);
+      for (; i + 4*sizeof(__m256i) <= max_i; i += 4*sizeof(__m256i)) {
+        __m256i input1 = _mm256_loadu_si256((const __m256i *)(data + i));
+        __m256i input2 = _mm256_loadu_si256((const __m256i *)(data + i + sizeof(__m256i)));
+        __m256i input3 = _mm256_loadu_si256((const __m256i *)(data + i + 2*sizeof(__m256i)));
+        __m256i input4 = _mm256_loadu_si256((const __m256i *)(data + i + 3*sizeof(__m256i)));
+        __m256i input12 = _mm256_add_epi8(_mm256_cmpgt_epi8(_mm256_setzero_si256(), input1),
+                _mm256_cmpgt_epi8(_mm256_setzero_si256(), input2));
+        __m256i input23 = _mm256_add_epi8(_mm256_cmpgt_epi8(_mm256_setzero_si256(), input3),
+                _mm256_cmpgt_epi8(_mm256_setzero_si256(), input4));
+        __m256i input1234 = _mm256_add_epi8(input12, input23);
+        runner = _mm256_sub_epi8(
+            runner, input1234);
+      }
+      for (; i <= max_i; i += sizeof(__m256i)) {
+        __m256i input_256_chunk = _mm256_loadu_si256((const __m256i *)(data + i));
+        runner = _mm256_sub_epi8(
+            runner, _mm256_cmpgt_epi8(_mm256_setzero_si256(), input_256_chunk));
+      }
+      four_64bits = _mm256_add_epi64(
+          four_64bits, _mm256_sad_epu8(runner, _mm256_setzero_si256()));
     }
-    size_t max_i = i + iterations * sizeof(__m256i) - sizeof(__m256i);
-    for (; i + 4*sizeof(__m256i) <= max_i; i += 4*sizeof(__m256i)) {
-      __m256i input1 = _mm256_loadu_si256((const __m256i *)(data + i));
-      __m256i input2 = _mm256_loadu_si256((const __m256i *)(data + i + sizeof(__m256i)));
-      __m256i input3 = _mm256_loadu_si256((const __m256i *)(data + i + 2*sizeof(__m256i)));
-      __m256i input4 = _mm256_loadu_si256((const __m256i *)(data + i + 3*sizeof(__m256i)));
-      __m256i input12 = _mm256_add_epi8(_mm256_cmpgt_epi8(_mm256_setzero_si256(), input1),
-              _mm256_cmpgt_epi8(_mm256_setzero_si256(), input2));
-      __m256i input23 = _mm256_add_epi8(_mm256_cmpgt_epi8(_mm256_setzero_si256(), input3),
-              _mm256_cmpgt_epi8(_mm256_setzero_si256(), input4));
-      __m256i input1234 = _mm256_add_epi8(input12, input23);
-      runner = _mm256_sub_epi8(
-          runner, input1234);
+    answer += _mm256_extract_epi64(four_64bits, 0) +
+              _mm256_extract_epi64(four_64bits, 1) +
+              _mm256_extract_epi64(four_64bits, 2) +
+              _mm256_extract_epi64(four_64bits, 3);
+  } else if (answer > 0) {
+    for(; i + sizeof(__m256i) <= len; i += sizeof(__m256i)) {
+      __m256i latin = _mm256_loadu_si256((const __m256i*)(data + i));
+      uint32_t non_ascii = _mm256_movemask_epi8(latin);
+      answer += count_ones(non_ascii);
     }
-    for (; i <= max_i; i += sizeof(__m256i)) {
-      __m256i input_256_chunk = _mm256_loadu_si256((const __m256i *)(data + i));
-      runner = _mm256_sub_epi8(
-          runner, _mm256_cmpgt_epi8(_mm256_setzero_si256(), input_256_chunk));
-    }
-    four_64bits = _mm256_add_epi64(
-        four_64bits, _mm256_sad_epu8(runner, _mm256_setzero_si256()));
   }
-  answer += _mm256_extract_epi64(four_64bits, 0) +
-            _mm256_extract_epi64(four_64bits, 1) +
-            _mm256_extract_epi64(four_64bits, 2) +
-            _mm256_extract_epi64(four_64bits, 3);
   return answer + scalar::latin1::utf8_length_from_latin1(reinterpret_cast<const char *>(data + i), len - i);
 }
 
