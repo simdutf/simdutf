@@ -173,14 +173,14 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                                         : tables::base64::to_base64_value;
   size_t equalsigns = 0;
   // skip trailing spaces
-  while (srclen > 0 && to_base64[uint8_t(src[srclen - 1])] == 64) {
+  while (srclen > 0 && scalar::base64::is_eight_byte(src[srclen - 1]) && to_base64[uint8_t(src[srclen - 1])] == 64) {
     srclen--;
   }
   if (srclen > 0 && src[srclen - 1] == '=') {
     srclen--;
     equalsigns = 1;
     // skip trailing spaces
-    while (srclen > 0 && to_base64[uint8_t(src[srclen - 1])] == 64) {
+    while (srclen > 0 && scalar::base64::is_eight_byte(src[srclen - 1]) && to_base64[uint8_t(src[srclen - 1])] == 64) {
       srclen--;
     }
     if (srclen > 0 && src[srclen - 1] == '=') {
@@ -206,7 +206,7 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       uint64_t badcharmask = to_base64_mask<base64_url>(&b, &error);
       if (error) {
         src -= 64;
-        while (src < srcend && to_base64[uint8_t(*src)] <= 64) {
+        while (src < srcend && s_eight_byte(*src) && to_base64[uint8_t(*src)] <= 64) {
           src++;
         }
         return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
@@ -244,7 +244,7 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     while ((bufferptr - buffer_start) % 64 != 0 && src < srcend) {
       uint8_t val = to_base64[uint8_t(*src)];
       *bufferptr = char(val);
-      if (val > 64) {
+      if (!scalar::base64::is_eight_byte(*src) || val > 64) {
         return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
       }
       bufferptr += (val <= 63);
@@ -285,7 +285,7 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     if (leftover > 0) {
       while (leftover < 4 && src < srcend) {
         uint8_t val = to_base64[uint8_t(*src)];
-        if (val > 64) {
+        if (!scalar::base64::is_eight_byte(*src) || val > 64) {
           return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
         }
         buffer_start[leftover] = char(val);
