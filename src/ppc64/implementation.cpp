@@ -306,12 +306,14 @@ simdutf_warn_unused result implementation::base64_to_binary(const char * input, 
   size_t equallocation = length; // location of the first padding character if any
   size_t equalsigns = 0;
   if(length > 0 && input[length - 1] == '=') {
+    equallocation = length - 1;
     length -= 1;
     equalsigns++;
     while(length > 0 && scalar::base64::is_ascii_white_space(input[length - 1])) {
       length--;
     }
     if(length > 0 && input[length - 1] == '=') {
+      equallocation = length - 1;
       equalsigns++;
       length -= 1;
     }
@@ -344,12 +346,14 @@ simdutf_warn_unused result implementation::base64_to_binary(const char16_t * inp
   size_t equallocation = length; // location of the first padding character if any
   size_t equalsigns = 0;
   if(length > 0 && input[length - 1] == '=') {
+    equallocation = length - 1;
     length -= 1;
     equalsigns++;
     while(length > 0 && scalar::base64::is_ascii_white_space(input[length - 1])) {
       length--;
     }
     if(length > 0 && input[length - 1] == '=') {
+      equallocation = length - 1;
       equalsigns++;
       length -= 1;
     }
