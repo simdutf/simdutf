@@ -313,7 +313,6 @@ simdutf_warn_unused result implementation::base64_to_binary(const char * input, 
       length--;
     }
     if(length > 0 && input[length - 1] == '=') {
-      equallocation = length - 1;
       equalsigns++;
       length -= 1;
     }
@@ -353,7 +352,6 @@ simdutf_warn_unused result implementation::base64_to_binary(const char16_t * inp
       length--;
     }
     if(length > 0 && input[length - 1] == '=') {
-      equallocation = length - 1;
       equalsigns++;
       length -= 1;
     }

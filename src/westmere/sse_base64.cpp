@@ -388,12 +388,14 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                               base64_options options) {
   const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value
                                         : tables::base64::to_base64_value;
+  size_t equallocation = srclen; // location of the first padding character if any
   // skip trailing spaces
   while (srclen > 0 && scalar::base64::is_eight_byte(src[srclen - 1]) && to_base64[uint8_t(src[srclen - 1])] == 64) {
     srclen--;
   }
   size_t equalsigns = 0;
   if (srclen > 0 && src[srclen - 1] == '=') {
+    equallocation = srclen - 1;
     srclen--;
     equalsigns = 1;
     // skip trailing spaces
@@ -573,13 +575,14 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       // additional checks
       if((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
         r.error = error_code::INVALID_BASE64_CHARACTER;
+        r.count = equallocation;
       }
     }
     return r;
   }
   if(equalsigns > 0) {
     if((size_t(dst - dstinit) % 3 == 0) || ((size_t(dst - dstinit) % 3) + 1 + equalsigns != 4)) {
-      return {INVALID_BASE64_CHARACTER, size_t(dst - dstinit)};
+      return {INVALID_BASE64_CHARACTER, equallocation};
     }
   }
   return {SUCCESS, size_t(dst - dstinit)};
