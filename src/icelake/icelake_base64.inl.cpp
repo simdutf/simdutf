@@ -339,13 +339,14 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       // additional checks
       if((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
         r.error = error_code::INVALID_BASE64_CHARACTER;
+        r.count = equallocation;
       }
     }
     return r;
   }
   if(equalsigns > 0) {
     if((size_t(dst - dstinit) % 3 == 0) || ((size_t(dst - dstinit) % 3) + 1 + equalsigns != 4)) {
-      return {INVALID_BASE64_CHARACTER, size_t(dst - dstinit)};
+      return {INVALID_BASE64_CHARACTER, equallocation};
     }
   }
   return {SUCCESS, size_t(dst - dstinit)};
