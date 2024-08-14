@@ -26,3 +26,4 @@ jobs:
           run: |
             cmake -DCMAKE_BUILD_TYPE=Release -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -B build
             cmake --build build -j=2
+            ctest --output-on-failure --test-dir build
