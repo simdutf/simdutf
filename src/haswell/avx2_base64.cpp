@@ -284,7 +284,7 @@ static inline uint32_t to_base64_mask(__m256i *src, bool *error) {
         int8_t(0x86), int8_t(0xD1), int8_t(0x80), int8_t(0xB1), int8_t(0x80),
         int8_t(0x91), int8_t(0x80));
   }
-  const __m256i shifted = _mm256_srli_epi32(*src, 3);
+  const __m256i shifted =_mm256_srli_epi32(_mm256_and_si256(*src, _mm256_set1_epi32(0xf8f8f8f8)), 3);
   const __m256i delta_hash =
       _mm256_avg_epu8(_mm256_shuffle_epi8(delta_asso, *src), shifted);
   const __m256i check_hash =

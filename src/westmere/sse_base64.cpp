@@ -258,7 +258,7 @@ static inline uint16_t to_base64_mask(__m128i *src, bool *error) {
                       int8_t(0xB5), int8_t(0x86), int8_t(0xD1), int8_t(0x80),
                       int8_t(0xB1), int8_t(0x80), int8_t(0x91), int8_t(0x80));
   }
-  const __m128i shifted = _mm_srli_epi32(*src, 3);
+  const __m128i shifted =_mm_srli_epi32(_mm_and_si128(*src, _mm_set1_epi32(0xf8f8f8f8)), 3);
 
   const __m128i delta_hash =
       _mm_avg_epu8(_mm_shuffle_epi8(delta_asso, *src), shifted);
