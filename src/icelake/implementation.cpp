@@ -67,6 +67,9 @@ implementation::detect_encodings(const char *input,
 
     avx512_utf8_checker checker{};
     __m512i currentmax = _mm512_setzero_si512();
+    const __m512i offset = _mm512_set1_epi32((uint32_t)0xffff2000);
+    __m512i currentoffsetmax = _mm512_setzero_si512();
+
     while (end - buf >= 64) {
       __m512i in = _mm512_loadu_si512((__m512i *)buf);
       __m512i diff = _mm512_sub_epi16(in, _mm512_set1_epi16(uint16_t(0xD800)));
@@ -129,7 +132,7 @@ implementation::detect_encodings(const char *input,
 
       // UTF-32 validation
       currentmax = _mm512_max_epu32(in, currentmax);
-
+      currentoffsetmax = _mm512_max_epu32(_mm512_add_epi32(in, offset), currentoffsetmax);
       // UTF-8 validation
       checker.check_next_input(in);
 
@@ -158,17 +161,22 @@ implementation::detect_encodings(const char *input,
     }
 
     if (is_utf32 && (length % 4 == 0)) {
+      const __m512i standardmax = _mm512_set1_epi32((uint32_t)0x10ffff);
+      const __m512i standardoffsetmax = _mm512_set1_epi32((uint32_t)0xfffff7ff);
+      __m512i is_zero = _mm512_xor_si512(_mm512_max_epu32(currentmax, standardmax), standardmax);
+      if (_mm512_test_epi8_mask(is_zero, is_zero) != 0) {
+        is_utf32 = false;
+      }
+      is_zero = _mm512_xor_si512(_mm512_max_epu32(currentoffsetmax, standardoffsetmax), standardoffsetmax);
+      if (_mm512_test_epi8_mask(is_zero, is_zero) != 0) {
+        is_utf32 = false;
+      }
       size_t leftover = length - static_cast<size_t>(buf - start);
-      currentmax = _mm512_max_epu32(
-          _mm512_maskz_loadu_epi8(
-              (UINT64_C(1) << leftover) - 1,
-              (const __m512i *)buf),
-          currentmax);
-      __mmask16 outside_range = _mm512_cmp_epu32_mask(currentmax, _mm512_set1_epi32(0x10ffff),
-                                _MM_CMPINT_GT);
-      if (outside_range == 0) {
-          out |= simdutf::encoding_type::UTF32_LE;
-        }
+      is_utf32 &= scalar::utf32::validate(reinterpret_cast<const char32_t *>(start), leftover / 4);
+
+      if (is_utf32) {
+        out |= simdutf::encoding_type::UTF32_LE;
+      }
     }
 
     return out;
