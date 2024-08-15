@@ -168,12 +168,7 @@ implementation::detect_encodings(const char *input,
                                 _MM_CMPINT_GT);
       if (outside_range == 0) {
           out |= simdutf::encoding_type::UTF32_LE;
-        } else {
         }
-        //}
-      /*} else {
-        out |= simdutf::encoding_type::UTF32_LE;
-      }*/
     }
 
     return out;
