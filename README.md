@@ -315,6 +315,10 @@ enum encoding_type {
  * E.g., the function might return simdutf::encoding_type::UTF8,
  * simdutf::encoding_type::UTF16_LE, simdutf::encoding_type::UTF16_BE, or
  * simdutf::encoding_type::UTF32_LE.
+ * If a BOM is available, the function may trust it. The library may
+ * change its heuristics over time.
+ *
+ * You should view the result of this function as a hint.
  *
  * @param input the string to analyze.
  * @param length the length of the string in bytes.
@@ -326,8 +330,14 @@ simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const char * inpu
  * Autodetect the possible encodings of the input in one pass.
  * E.g., if the input might be UTF-16LE or UTF-8, this function returns
  * the value (simdutf::encoding_type::UTF8 | simdutf::encoding_type::UTF16_LE).
+ * Hence, if the following is true, then the input might be
+ * valid UTF-16LE:
+ *   (detect_encodings(input, length) & encoding_type::UTF16_LE)  == encoding_type::UTF16_LE
  *
- * Overridden by each implementation.
+ * Not all encodings are necessarily checked. The result may differ depending on the underlying
+ * implementation (CPU features). The library may change its heuristics over time.
+ *
+ * You should view the result of this function as a hint.
  *
  * @param input the string to analyze.
  * @param length the length of the string in bytes.
