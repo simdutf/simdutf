@@ -183,6 +183,12 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // 3 byte: 00000000 1110bbbb 10cccccc 10dddddd
     // 4 byte: 11110aaa 10bbbbbb 10cccccc 10dddddd
     uint32x4_t perm = vreinterpretq_u32_u8(vqtbl1q_u8(in, sh));
+    // added to fix issue https://github.com/simdutf/simdutf/issues/514
+    // We only want to write 2 * 16-bit code units when that is actually what we have.
+    // Unfortunately, we cannot trust the input. So it is possible to get 0xff as an input byte
+    // and it should not result in a surrogate pair. We need to check for that.
+    uint32_t permbuffer[4];
+    vst1q_u32(permbuffer, perm);
     // Mask the low and middle bytes
     // 00000000 00000000 00000000 0ddddddd
     uint32x4_t ascii = vandq_u32(perm, vmovq_n_u32(0x7f));
@@ -238,11 +244,14 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // Attempting to shuffle and store would be complex, just scalarize.
     uint32_t buffer[4];
     vst1q_u32(buffer, selected);
-    // Test for the top bit of the surrogate mask.
-    const uint32_t SURROGATE_MASK = match_system(big_endian) ? 0x80000000 : 0x00800000;
+    // Test for the top bit of the surrogate mask. Remove due to issue 514
+    // const uint32_t SURROGATE_MASK = match_system(big_endian) ? 0x80000000 : 0x00800000;
     for (size_t i = 0; i < 3; i++) {
       // Surrogate
-      if (buffer[i] & SURROGATE_MASK) {
+      // Used to be if (buffer[i] & SURROGATE_MASK) {
+      // See discussion above.
+      // patch for issue https://github.com/simdutf/simdutf/issues/514
+      if((permbuffer[i] & 0xf8000000) == 0xf0000000) {
         utf16_output[0] = uint16_t(buffer[i] >> 16);
         utf16_output[1] = uint16_t(buffer[i] & 0xFFFF);
         utf16_output += 2;
