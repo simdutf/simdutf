@@ -342,6 +342,7 @@ result compress_decode_base64(char *dst, const char_type *src, size_t srclen,
       srclen--;
     }
     if (srclen > 0 && src[srclen - 1] == '=') {
+      equallocation = srclen - 1;
       srclen--;
       equalsigns = 2;
     }

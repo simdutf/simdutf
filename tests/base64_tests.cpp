@@ -91,6 +91,20 @@ TEST(issue_509) {
     ASSERT_EQUAL(r.count, 1);
 }
 
+
+TEST(issue_502_alt) {
+    for (std::size_t nof_equals = 1; nof_equals < 100; ++nof_equals) {
+        std::vector<char> data(nof_equals, '=');
+        std::vector<char> out(1);
+        const auto r = implementation.base64_to_binary(data.data(),
+                                                       data.size(),
+                                                       out.data(),
+                                                       simdutf::base64_default);
+        ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+        ASSERT_EQUAL(r.count, 0);
+    }
+}
+
 TEST(issue_504) {
     std::array<char16_t, 1> data{61}; // 61 is the ASCII code for '='
     std::vector<char> out(1);
