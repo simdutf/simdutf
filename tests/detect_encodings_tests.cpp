@@ -94,6 +94,12 @@ std::vector<uint32_t> generate_u32(RandomGenerator& random, size_t count) {
 
 } // namespace
 
+TEST(issue_516)
+{
+    std::vector<unsigned char> data{0x20, 0xd8, 0x00, 0x00};
+    const auto r = implementation.detect_encodings((const char *) data.data(), data.size());
+    ASSERT_EQUAL(r, 0);
+}
 
 TEST(boommmmm) {
   const char* utf8_bom = "\xef\xbb\xbf"; 
