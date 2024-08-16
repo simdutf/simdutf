@@ -62,6 +62,8 @@ The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX,
 
 The library compiles down to a small library of a few hundred kilobytes. Our functions are exception-free and non allocating. We have extensive tests and extensive benchmarks.
 
+We have exhaustive tests, including an elaborate fuzzing setup. The library has been used in production systems for years.
+
 
 Real-World Usage
 -----
