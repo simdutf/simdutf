@@ -73,6 +73,7 @@ simdutf_warn_unused int implementation::detect_encodings(const char * input, siz
   // If there is a BOM, then we trust it.
   auto bom_encoding = simdutf::BOM::check_bom(input, length);
   if(bom_encoding != encoding_type::unspecified) { return bom_encoding; }
+  // todo: reimplement as a one-pass algorithm.
   int out = 0;
   if(validate_utf8(input, length)) { out |= encoding_type::UTF8; }
   if((length % 2) == 0) {
