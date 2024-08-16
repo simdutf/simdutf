@@ -26,7 +26,6 @@ simdutf_really_inline simd8<bool> must_be_2_3_continuation(const simd8<uint8_t> 
 }
 
 #include "westmere/internal/loader.cpp"
-#include "westmere/sse_detect_encodings.cpp"
 
 #include "westmere/sse_validate_utf16.cpp"
 #include "westmere/sse_validate_utf32le.cpp"
@@ -80,16 +79,17 @@ namespace SIMDUTF_IMPLEMENTATION {
 simdutf_warn_unused int implementation::detect_encodings(const char * input, size_t length) const noexcept {
   // If there is a BOM, then we trust it.
   auto bom_encoding = simdutf::BOM::check_bom(input, length);
+  // todo: reimplement as a one-pass algorithm.
   if(bom_encoding != encoding_type::unspecified) { return bom_encoding; }
-  if (length % 2 == 0) {
-    return sse_detect_encodings<utf8_validation::utf8_checker>(input, length);
-  } else {
-    if (implementation::validate_utf8(input, length)) {
-      return simdutf::encoding_type::UTF8;
-    } else {
-      return simdutf::encoding_type::unspecified;
-    }
+  int out = 0;
+  if(validate_utf8(input, length)) { out |= encoding_type::UTF8; }
+  if((length % 2) == 0) {
+    if(validate_utf16le(reinterpret_cast<const char16_t*>(input), length/2)) { out |= encoding_type::UTF16_LE; }
   }
+  if((length % 4) == 0) {
+    if(validate_utf32(reinterpret_cast<const char32_t*>(input), length/4)) { out |= encoding_type::UTF32_LE; }
+  }
+  return out;
 }
 
 simdutf_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
