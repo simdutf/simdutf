@@ -112,6 +112,7 @@ static inline void compress(uint8x16_t data, uint16_t mask, char *output) {
 struct block64 {
   uint8x16_t chunks[4];
 };
+
 static_assert(sizeof(block64) == 64, "block64 is not 64 bytes");
 template <bool base64_url> uint64_t to_base64_mask(block64 *b, bool *error) {
   uint8x16_t v0f = vdupq_n_u8(0xf);
@@ -133,6 +134,7 @@ template <bool base64_url> uint64_t to_base64_mask(block64 *b, bool *error) {
   uint8x16_t lo_nibbles1 = vandq_u8(b->chunks[1], v0f);
   uint8x16_t lo_nibbles2 = vandq_u8(b->chunks[2], v0f);
   uint8x16_t lo_nibbles3 = vandq_u8(b->chunks[3], v0f);
+
   // Needed by the decoding step.
   uint8x16_t hi_nibbles0 = vshrq_n_u8(b->chunks[0], 4);
   uint8x16_t hi_nibbles1 = vshrq_n_u8(b->chunks[1], 4);
@@ -142,20 +144,16 @@ template <bool base64_url> uint64_t to_base64_mask(block64 *b, bool *error) {
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
   if (base64_url) {
     lut_lo =
-        simdutf_make_uint8x16_t(0x3a, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70,
-                                0x70, 0x61, 0xe1, 0xf4, 0xf5, 0xa5, 0xf4, 0xf4);
+        simdutf_make_uint8x16_t(0x3a,0x70,0x70,0x70,0x70,0x70,0x70,0x70,0x70,0x61,0xe1,0xf4,0xe5,0xa5,0xf4,0xf4);
   } else {
     lut_lo =
-        simdutf_make_uint8x16_t(0x3a, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70,
-                                0x70, 0x61, 0xe1, 0xb4, 0xf5, 0xe5, 0xf4, 0xb4);
+        simdutf_make_uint8x16_t(0x3a,0x70,0x70,0x70,0x70,0x70,0x70,0x70,0x70,0x61,0xe1,0xb4,0xe5,0xe5,0xf4,0xb4);
   }
 #else
   if (base64_url) {
-    lut_lo = uint8x16_t{0x3a, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70,
-              0x70, 0x61, 0xe1, 0xf4, 0xf5, 0xa5, 0xf4, 0xf4};
+    lut_lo = uint8x16_t{0x3a,0x70,0x70,0x70,0x70,0x70,0x70,0x70,0x70,0x61,0xe1,0xf4,0xe5,0xa5,0xf4,0xf4};
   } else {
-    lut_lo = uint8x16_t{0x3a, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70,
-              0x70, 0x61, 0xe1, 0xb4, 0xf5, 0xe5, 0xf4, 0xb4};
+    lut_lo = uint8x16_t{0x3a,0x70,0x70,0x70,0x70,0x70,0x70,0x70,0x70,0x61,0xe1,0xb4,0xe5,0xe5,0xf4,0xb4};
   }
 #endif
   uint8x16_t lo0 = vqtbl1q_u8(lut_lo, lo_nibbles0);
@@ -362,21 +360,23 @@ result compress_decode_base64(char *dst, const char_type *src, size_t srclen,
       src += 64;
       bool error = false;
       uint64_t badcharmask = to_base64_mask<base64_url>(&b, &error);
-      if(badcharmask)
-      if (error) {
-        src -= 64;
-
-        while (src < srcend && scalar::base64::is_eight_byte(*src) && to_base64[uint8_t(*src)] <= 64) {
-          src++;
+      if(badcharmask){
+        if (error) {
+          src -= 64;
+          while (src < srcend && scalar::base64::is_eight_byte(*src) && to_base64[uint8_t(*src)] <= 64) {
+            src++;
+          }
+          if(src < srcend){
+            // should never happen
+          }
+          return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
         }
-        return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
       }
 
       if (badcharmask != 0) {
         // optimization opportunity: check for simple masks like those made of
         // continuous 1s followed by continuous 0s. And masks containing a
         // single bad character.
-
         bufferptr += compress_block(&b, badcharmask, bufferptr);
       } else {
         // optimization opportunity: if bufferptr == buffer and mask == 0, we
