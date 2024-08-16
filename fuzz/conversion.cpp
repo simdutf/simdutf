@@ -537,32 +537,24 @@ struct Conversion {
 };
 
 const auto populate_functions() {
-  // build a tuple containing function pointers to everything we want to fuzz
   using I = simdutf::implementation;
+  using FuzzSignature = void (*)(std::span<const char>);
 
 #define ADD(lenfunc, conversionfunc)                                           \
-  Conversion<ENCODING_FROM_CONVERSION_NAME(&I::conversionfunc),                \
-             ENCODING_TO_CONVERSION_NAME(&I::conversionfunc),                  \
-             decltype(&I::lenfunc), decltype(&I::conversionfunc)> {            \
-    &I::lenfunc, &I::conversionfunc, std::string{NAMEOF(&I::lenfunc)},         \
-        std::string {                                                          \
-      NAMEOF(&I::conversionfunc)                                               \
+  FuzzSignature {                                                              \
+    +[](std::span<const char> chardata) {                                      \
+      const auto c =                                                           \
+          Conversion<ENCODING_FROM_CONVERSION_NAME(&I::conversionfunc),        \
+                     ENCODING_TO_CONVERSION_NAME(&I::conversionfunc),          \
+                     decltype(&I::lenfunc), decltype(&I::conversionfunc)>{     \
+              &I::lenfunc, &I::conversionfunc,                                 \
+              std::string{NAMEOF(&I::lenfunc)},                                \
+              std::string{NAMEOF(&I::conversionfunc)}};                        \
+      c.fuzz(chardata);                                                        \
     }                                                                          \
   }
 
-// useful during development to disable fuzzers that found something so fuzzing
-// can continue on the others, without making the corpus useless because the
-// action taken from the first element means something else when the elements
-// shift around
-#define IGNORE(len, x)                                                         \
-  Conversion<ENCODING_FROM_CONVERSION_NAME(&I::x),                             \
-             ENCODING_TO_CONVERSION_NAME(&I::x), decltype(&I::len),            \
-             decltype(&I::x)> {                                                \
-    nullptr, nullptr, std::string{NAMEOF(&I::len)}, std::string {              \
-      NAMEOF(&I::x)                                                            \
-    }                                                                          \
-  }
-  std::tuple cases_requiring_valid_data(
+  return std::array{
       // all these cases require valid input for invoking the convert function
 
       // see #493
@@ -585,9 +577,8 @@ const auto populate_functions() {
       // IGNORE(latin1_length_from_utf8, convert_valid_utf8_to_latin1),
       ADD(utf16_length_from_utf8, convert_valid_utf8_to_utf16be),
       ADD(utf16_length_from_utf8, convert_valid_utf8_to_utf16le),
-      ADD(utf32_length_from_utf8, convert_valid_utf8_to_utf32));
+      ADD(utf32_length_from_utf8, convert_valid_utf8_to_utf32),
 
-  std::tuple cases_no_requirements(
       // all these cases operate on arbitrary data
       ADD(latin1_length_from_utf16, convert_utf16be_to_latin1),
       ADD(utf32_length_from_utf16be, convert_utf16be_to_utf32),
@@ -605,9 +596,8 @@ const auto populate_functions() {
       ADD(latin1_length_from_utf8, convert_utf8_to_latin1),
       ADD(utf16_length_from_utf8, convert_utf8_to_utf16be),
       ADD(utf16_length_from_utf8, convert_utf8_to_utf16le),
-      ADD(utf32_length_from_utf8, convert_utf8_to_utf32));
+      ADD(utf32_length_from_utf8, convert_utf8_to_utf32),
 
-  std::tuple cases_no_requirements_with_errors(
       // all these cases operate on arbitrary data and use the _with_errors
       // variant
       ADD(latin1_length_from_utf16, convert_utf16be_to_latin1_with_errors),
@@ -626,66 +616,20 @@ const auto populate_functions() {
       ADD(latin1_length_from_utf8, convert_utf8_to_latin1_with_errors),
       ADD(utf16_length_from_utf8, convert_utf8_to_utf16be_with_errors),
       ADD(utf16_length_from_utf8, convert_utf8_to_utf16le_with_errors),
-      ADD(utf32_length_from_utf8, convert_utf8_to_utf32_with_errors));
+      ADD(utf32_length_from_utf8, convert_utf8_to_utf32_with_errors),
 
-  std::tuple cases_from_latin1(
       // these are a bit special since all input is valid
       ADD(utf32_length_from_latin1, convert_latin1_to_utf32),
       ADD(utf16_length_from_latin1, convert_latin1_to_utf16be),
       ADD(utf16_length_from_latin1, convert_latin1_to_utf16le),
-      ADD(utf8_length_from_latin1, convert_latin1_to_utf8));
+      ADD(utf8_length_from_latin1, convert_latin1_to_utf8)};
 
 #undef ADD
-#undef IGNORE
-  return std::tuple_cat(cases_requiring_valid_data, cases_no_requirements,
-                        cases_no_requirements_with_errors, cases_from_latin1);
-}
-
-/*
- * this invokes the fuzzer in the ith: element of t, but not any others
- */
-template <std::size_t... Indices, UtfEncodings... From, UtfEncodings... To,
-          member_function_pointer... LengthFunction,
-          member_function_pointer... ConversionFunction>
-void pickfromtupleimpl(std::size_t i, std::index_sequence<Indices...>,
-                       const std::tuple<Conversion<From, To, LengthFunction,
-                                                   ConversionFunction>...>& t,
-                       std::span<const char> chardata)
-  requires(sizeof...(Indices) == sizeof...(ConversionFunction))
-{
-  (
-      [&]() {
-        if (i == Indices) {
-          const auto& c = std::get<Indices>(t);
-          if (c.conversion != nullptr) {
-            c.fuzz(chardata);
-          }
-        };
-      }(),
-      ...);
-}
-
-/**
- * given a dynamic index i, picks the i:th element from the tuple t and
- * passes it on for fuzzing using the provided data in chardata
- */
-template <UtfEncodings... From, UtfEncodings... To,
-          member_function_pointer... LengthFunction,
-          member_function_pointer... ConversionFunction>
-  requires(member_function_pointer<ConversionFunction> && ...)
-void pickfromtuple(std::size_t i,
-                   const std::tuple<Conversion<From, To, LengthFunction,
-                                               ConversionFunction>...>& t,
-                   std::span<const char> chardata) {
-  constexpr std::size_t N = sizeof...(From);
-  if (i < N) {
-    pickfromtupleimpl(i, std::make_index_sequence<N>(), t, chardata);
-  }
 }
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
-  const auto fptrs = populate_functions();
-  constexpr std::size_t Ncases = std::tuple_size_v<decltype(fptrs)>;
+  static const auto fptrs = populate_functions();
+  constexpr std::size_t Ncases = fptrs.size();
 
   // pick one of the function pointers, based on the fuzz data
   // the first byte is which action to take. step forward
@@ -699,13 +643,17 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   data += 4;
   size -= 4;
 
+  if (action >= Ncases) {
+    return 0;
+  }
+
   if constexpr (use_separate_allocation) {
     // this is better at excercising null input and catch buffer underflows
     const std::vector<char> separate{data, data + size};
-    pickfromtuple(action, fptrs, std::span(separate));
+    fptrs[action](std::span(separate));
   } else {
     std::span<const char> chardata{(const char*)data, size};
-    pickfromtuple(action, fptrs, chardata);
+    fptrs[action](chardata);
   }
 
   return 0;
