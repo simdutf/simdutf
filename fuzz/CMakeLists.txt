@@ -36,3 +36,4 @@ endmacro()
 
 create_fuzztest(conversion)
 create_fuzztest(roundtrip)
+create_fuzztest(base64)
