@@ -44,6 +44,9 @@ inline bool operator!=(const simdutf::result& a, const simdutf::result& b) {
 inline bool operator==(const simdutf::result& a, const simdutf::result& b) {
   return a.count == b.count && a.error == b.error;
 }
+auto operator<=>(const simdutf::result& a, const simdutf::result& b) {
+  return std::tie(a.error, a.count) <=> std::tie(b.error, a.count);
+}
 
 inline std::ostream& operator<<(std::ostream& os, const simdutf::result& a) {
   os << "[count=" << a.count << ", error=" << NAMEOF_ENUM(a.error) << "]";
