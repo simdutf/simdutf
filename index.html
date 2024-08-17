@@ -147,6 +147,7 @@ simdutf: Unicode validation and transcoding at billions of characters per second
 </ul>
 <p>The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, AVX-512, RISC-V Vector Extension, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion characters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).</p>
 <p>The library compiles down to a small library of a few hundred kilobytes. Our functions are exception-free and non allocating. We have extensive tests and extensive benchmarks.</p>
+<p>We have exhaustive tests, including an elaborate fuzzing setup. The library has been used in production systems for years.</p>
 <h2><a class="anchor" id="autotoc_md2"></a>
 Real-World Usage</h2>
 <p>The simdutf library is used by:</p><ul>
