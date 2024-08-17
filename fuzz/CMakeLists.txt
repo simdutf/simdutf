@@ -35,5 +35,6 @@ macro(create_fuzztest testname)
 endmacro()
 
 create_fuzztest(conversion)
+create_fuzztest(misc)
 create_fuzztest(roundtrip)
 create_fuzztest(base64)
