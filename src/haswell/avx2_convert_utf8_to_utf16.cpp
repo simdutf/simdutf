@@ -23,8 +23,8 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   const __m128i in = _mm_loadu_si128((__m128i *)input);
   const uint16_t input_utf8_end_of_code_point_mask =
       utf8_end_of_code_point_mask & 0xfff;
-  if((utf8_end_of_code_point_mask  == 0xfff)) {
-    // We process the data in chunks of 16 bytes.
+  if(utf8_end_of_code_point_mask  == 0xfff) {
+    // We process the data in chunks of 12 bytes.
     __m256i ascii = _mm256_cvtepu8_epi16(in);
     if (big_endian) {
       const __m256i swap256 = _mm256_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14,
@@ -32,8 +32,8 @@ size_t convert_masked_utf8_to_utf16(const char *input,
       ascii = _mm256_shuffle_epi8(ascii, swap256);
     }
     _mm256_storeu_si256(reinterpret_cast<__m256i *>(utf16_output), ascii);
-    utf16_output += 12; // We wrote 16 16-bit characters.
-    return 12; // We consumed 16 bytes.
+    utf16_output += 12; // We wrote 12 16-bit characters.
+    return 12; // We consumed 12 bytes.
   }
   if(((utf8_end_of_code_point_mask & 0xffff) == 0xaaaa)) {
     // We want to take 8 2-byte UTF-8 code units and turn them into 8 2-byte UTF-16 code units.

@@ -23,7 +23,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   const __m128i in = _mm_loadu_si128((__m128i *)input);
   const uint16_t input_utf8_end_of_code_point_mask =
       utf8_end_of_code_point_mask & 0xfff;
-  if((utf8_end_of_code_point_mask == 0xfff)) {
+  if(utf8_end_of_code_point_mask == 0xfff) {
     // We process the data in chunks of 12 bytes.
     // Note: using 16 bytes is unsafe, see issue_ossfuzz_71218
     __m128i ascii_first = _mm_cvtepu8_epi16(in);
