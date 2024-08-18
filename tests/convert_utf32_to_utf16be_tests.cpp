@@ -15,6 +15,27 @@ namespace {
   constexpr int trials = 1000;
 }
 
+TEST(issue_531)
+{
+    alignas(4) const unsigned char data[] = {0xdb, 0xdb, 0x00, 0x00, 0x00, 0x00, 0x38, 0xff, 0xff,
+                                             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00,
+                                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    constexpr std::size_t data_len_bytes = sizeof(data);
+    constexpr std::size_t data_len = data_len_bytes / sizeof(char32_t);
+    const auto validation1 = implementation.validate_utf32_with_errors((const char32_t *) data,
+                                                                       data_len);
+    // got return [count=1, error=TOO_LARGE] from implementation rvv
+    // got return [count=0, error=SURROGATE] from implementation fallback
+    ASSERT_EQUAL(validation1.error, simdutf::error_code::SURROGATE);
+    ASSERT_EQUAL(validation1.count, 0);
+}
+
 TEST_LOOP(trials, convert_into_2_UTF16_bytes) {
     // range for 2 UTF-16 bytes
     simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0xd7ff},
