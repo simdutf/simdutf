@@ -72,7 +72,8 @@ TEST(issue_532)
         0xc8ab, 0xc8b1, 0xc8ab, 0xc8b1, 0xc8ab, 0xc8b1, 0xc8ab, 0xc8ab, 0xc8ab, 0xc8b1, 0xc8ab, 0x1000, 0xc8b1, 
         0xc8ab, 0xc8b1, 0xb1ab, 0xabc8, 0xb1c8, 0xabc8, 0xabc8, 0x00ab, 0x0000, 0x0000, 0x0000, 0xc8ff, 0xabc8, 
         0xb1c8, 0xabc8, 0xb1c8, 0xabc8, 0xb1c8, 0xabc8, 0xabc8, 0xabc8, 0xb1c8, 0x26c8};
-    constexpr std::size_t data_len = sizeof(data);
+    constexpr std::size_t data_len = 660;
+
     const auto validation1 = implementation.validate_utf16le_with_errors(data,
                                                                          data_len);
     ASSERT_EQUAL(validation1.count, 137);
@@ -80,6 +81,7 @@ TEST(issue_532)
 
     const bool validation2 = implementation.validate_utf16le(data, data_len);
     ASSERT_EQUAL(validation1.error == simdutf::error_code::SUCCESS, validation2);
+    
     const auto outlen = implementation.utf32_length_from_utf16le(data, data_len);
     std::vector<char32_t> output(outlen);
     const auto r = implementation.convert_utf16le_to_utf32_with_errors((const char16_t *) data,
