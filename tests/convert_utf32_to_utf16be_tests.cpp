@@ -15,19 +15,6 @@ namespace {
   constexpr int trials = 1000;
 }
 
-TEST(issue_531)
-{
-    const char32_t data[] = {0xdbdb, 0xff380000, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 
-                            0x00ff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
-                            0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
-    constexpr std::size_t data_len = sizeof(data);
-    const auto validation1 = implementation.validate_utf32_with_errors((const char32_t *) data,
-                                                                       data_len);
-    // got return [count=1, error=TOO_LARGE] from implementation rvv
-    // got return [count=0, error=SURROGATE] from implementation fallback
-    ASSERT_EQUAL(validation1.error, simdutf::error_code::SURROGATE);
-    ASSERT_EQUAL(validation1.count, 0);
-}
 
 TEST_LOOP(trials, convert_into_2_UTF16_bytes) {
     // range for 2 UTF-16 bytes

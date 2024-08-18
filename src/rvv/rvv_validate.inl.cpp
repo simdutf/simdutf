@@ -170,11 +170,14 @@ simdutf_warn_unused result implementation::validate_utf32_with_errors(const char
     vl = __riscv_vsetvl_e32m8(len);
     vuint32m8_t v = __riscv_vle32_v_u32m8((uint32_t*)src, vl);
     vuint32m8_t off = __riscv_vadd_vx_u32m8(v, 0xFFFF2000, vl);
-    long idx;
-    idx = __riscv_vfirst_m_b4(__riscv_vmsgtu_vx_u32m8_b4(v, 0x10FFFF, vl), vl);
-    if (idx >= 0) return result(error_code::TOO_LARGE, src - beg + idx);
-    idx = __riscv_vfirst_m_b4(__riscv_vmsgtu_vx_u32m8_b4(off, 0xFFFFF7FF, vl), vl);
-    if (idx >= 0) return result(error_code::SURROGATE, src - beg + idx);
+    long idx1 = __riscv_vfirst_m_b4(__riscv_vmsgtu_vx_u32m8_b4(v, 0x10FFFF, vl), vl);
+    long idx2 = __riscv_vfirst_m_b4(__riscv_vmsgtu_vx_u32m8_b4(off, 0xFFFFF7FF, vl), vl);
+    if(idx1 >= 0 && idx2 >= 0) {
+      if(idx1 <= idx2) { return result(error_code::TOO_LARGE, src - beg + idx1); }
+      else { return result(error_code::SURROGATE, src - beg + idx2); }
+    }
+    if (idx1 >= 0) { return result(error_code::TOO_LARGE, src - beg + idx1); }
+    if (idx2 >= 0) { return result(error_code::SURROGATE, src - beg + idx2); }
   }
   return result(error_code::SUCCESS, src - beg);
 }

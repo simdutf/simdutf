@@ -14,6 +14,7 @@ namespace {
 
   constexpr int trials = 1000;
 }
+
 #if SIMDUTF_IS_BIG_ENDIAN
 // todo: port the next test.
 #else
