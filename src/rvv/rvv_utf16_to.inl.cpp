@@ -9,7 +9,7 @@ simdutf_really_inline static result rvv_utf16_to_latin1_with_errors(const char16
     v = simdutf_byteflip<bflip>(v, vl);
     long idx = __riscv_vfirst_m_b2(__riscv_vmsgtu_vx_u16m8_b2(v, 255, vl), vl);
     if (idx >= 0)
-      return result(error_code::TOO_LARGE, beg - src + idx);
+      return result(error_code::TOO_LARGE, src - beg + idx);
     __riscv_vse8_v_u8m4((uint8_t*)dst, __riscv_vncvt_x_x_w_u8m4(v, vl), vl);
   }
   return result(error_code::SUCCESS, src - beg);
