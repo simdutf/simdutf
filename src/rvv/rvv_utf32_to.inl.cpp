@@ -74,10 +74,15 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(con
       n -= vl, src += vl, dst += vlOut;
       continue;
     }
-
+    long idx1 = __riscv_vfirst_m_b8(__riscv_vmsgtu_vx_u32m4_b8(v, 0x10FFFF, vl), vl);
     vbool8_t sur = __riscv_vmseq_vx_u32m4_b8(__riscv_vand_vx_u32m4(v, 0xFFFFF800, vl), 0xD800, vl);
-    long idx = __riscv_vfirst_m_b8(sur, vl);
-    if (idx >= 0) return result(error_code::SURROGATE, src - srcBeg + idx);
+    long idx2 = __riscv_vfirst_m_b8(sur, vl);
+    if(idx1 >= 0 && idx2 >= 0) {
+      if(idx1 <= idx2) { return result(error_code::TOO_LARGE, src - srcBeg + idx1); }
+      else { return result(error_code::SURROGATE, src - srcBeg + idx2); }
+    }
+    if (idx1 >= 0) { return result(error_code::TOO_LARGE, src - srcBeg + idx1); }
+    if (idx2 >= 0) { return result(error_code::SURROGATE, src - srcBeg + idx2); }
 
     vbool8_t m4 = __riscv_vmsgtu_vx_u32m4_b8(v, 0x10000-1, vl);
     long first = __riscv_vfirst_m_b8(m4, vl);
