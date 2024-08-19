@@ -21,11 +21,11 @@ size_t convert_masked_utf8_to_latin1(const char *input,
   const uint16_t input_utf8_end_of_code_point_mask =
       utf8_end_of_code_point_mask & 0xfff; // we are only processing 12 bytes in case it is not all ASCII
 
-  if(((utf8_end_of_code_point_mask & 0xffff) == 0xffff)) {
-    // We process the data in chunks of 16 bytes.
+  if(utf8_end_of_code_point_mask == 0xfff) {
+    // We process the data in chunks of 12 bytes.
     _mm_storeu_si128(reinterpret_cast<__m128i *>(latin1_output), in);
-    latin1_output += 16; // We wrote 16 characters.
-    return 16; // We consumed 16 bytes.
+    latin1_output += 12; // We wrote 12 characters.
+    return 12; // We consumed 1 bytes.
   }
   /// We do not have a fast path available, so we fallback.
   const uint8_t idx =
