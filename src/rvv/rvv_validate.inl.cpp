@@ -131,10 +131,11 @@ simdutf_really_inline static result rvv_validate_utf16_with_errors(const char16_
       break;
     }
   }
-  if (last - 0xD800u < 0x400u)
+  if (last - 0xD800u < 0x400u) {
     return result(error_code::SURROGATE, src - beg - 1); /* end on high surrogate */
-  else
+  } else {
     return result(error_code::SUCCESS, src - beg);
+  }
 }
 
 simdutf_warn_unused result implementation::validate_utf16le_with_errors(const char16_t *src, size_t len) const noexcept {

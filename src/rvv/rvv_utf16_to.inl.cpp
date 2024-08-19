@@ -261,7 +261,8 @@ simdutf_really_inline static result rvv_utf16_to_utf32_with_errors(const char16_
         const vbool8_t diff = __riscv_vmxor_mm_b8(surhi, surlo, vl);
         const long idx = __riscv_vfirst_m_b8(diff, vl);
         if (idx >= 0) {
-          if(src[idx] < 0xD800 || src[idx] > 0xDBFF) {
+          uint16_t word = simdutf_byteflip<bflip>(src[idx]);
+          if(word < 0xD800 || word > 0xDBFF) {
             return result(error_code::SURROGATE, src - srcBeg + idx + 1);
           }
           return result(error_code::SURROGATE, src - srcBeg + idx);
