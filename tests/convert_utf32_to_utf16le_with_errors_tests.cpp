@@ -14,6 +14,32 @@ namespace {
 
   constexpr int trials = 1000;
 }
+#if SIMDUTF_IS_BIG_ENDIAN
+//
+#else
+TEST(issue_convert_utf32_to_utf16le_with_errors_97798701a75ebb21) {
+ alignas(4) const unsigned char data[]={0xfa, 0x04, 0x03, 0x03, 0x00, 0xef, 0xa1, 0xa5, 0x20, 0xef, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x96, 0x96, 0x96, 0x04, 0x03, 0x03, 0x96, 0x96, 0x96, 0x96, 0x31, 0x31, 0x31, 0xd8, 0xa1, 0xa1, 0xdb, 0x00, 0x00};
+ constexpr std::size_t data_len_bytes=sizeof(data);
+ constexpr std::size_t data_len=data_len_bytes/sizeof(char32_t);
+const auto validation1=implementation.validate_utf32_with_errors((const char32_t*) data,
+ data_len);
+   ASSERT_EQUAL(validation1.count, 0);
+   ASSERT_EQUAL(validation1.error, simdutf::error_code::TOO_LARGE);
+
+const bool validation2=implementation.validate_utf32((const char32_t*) data,
+ data_len);
+   ASSERT_EQUAL(validation1.error==simdutf::error_code::SUCCESS,validation2);
+
+const auto outlen=implementation.utf16_length_from_utf32((const char32_t*) data,
+ data_len);
+std::vector<char16_t> output(outlen);
+const auto r = implementation.convert_utf32_to_utf16le_with_errors((const char32_t*) data
+, data_len
+, output.data());
+ ASSERT_EQUAL(r.error,simdutf::error_code::TOO_LARGE);
+ ASSERT_EQUAL(r.count,0);
+}
+#endif
 
 TEST_LOOP(trials, convert_into_2_UTF16_bytes) {
     // range for 2 UTF-16 bytes
