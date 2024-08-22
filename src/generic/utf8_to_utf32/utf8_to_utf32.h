@@ -137,7 +137,7 @@ using namespace simd;
       // to give us a good margin.
       size_t leading_byte = 0;
       size_t margin = size;
-      for(; margin > 0 && leading_byte < 10; margin--) {
+      for(; margin > 0 && leading_byte < 12; margin--) {
         leading_byte += (int8_t(in[margin-1]) > -65);
       }
       // If the input is long enough, then we have that margin-1 is the fourth last leading byte.
