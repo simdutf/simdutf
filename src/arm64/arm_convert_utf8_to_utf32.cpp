@@ -19,14 +19,14 @@ size_t convert_masked_utf8_to_utf32(const char *input,
   // This results in more instructions but, potentially, also higher speeds.
   //
   // We first try a few fast paths.
-  if((utf8_end_of_code_point_mask & 0xffff) == 0xffff) {
-    // We process in chunks of 16 bytes.
+  if(utf8_end_of_code_point_mask == 0xfff) {
+    // We process in chunks of 12 bytes.
     // use fast implementation in src/simdutf/arm64/simd.h
     // Ideally the compiler can keep the tables in registers.
     simd8<int8_t> temp{vreinterpretq_s8_u8(in)};
     temp.store_ascii_as_utf32_tbl(utf32_out);
-    utf32_output += 16; // We wrote 16 32-bit characters.
-    return 16; // We consumed 16 bytes.
+    utf32_output += 12; // We wrote 12 32-bit characters.
+    return 12; // We consumed 12 bytes.
   }
   if(input_utf8_end_of_code_point_mask == 0x924) {
     // We want to take 4 3-byte UTF-8 code units and turn them into 4 4-byte UTF-32 code units.

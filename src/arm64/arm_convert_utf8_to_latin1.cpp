@@ -19,11 +19,11 @@ size_t convert_masked_utf8_to_latin1(const char *input,
 
   // We first try a few fast paths.
   // The obvious first test is ASCII, which actually consumes the full 16.
-  if((utf8_end_of_code_point_mask & 0xFFFF) == 0xffff) {
-    // We process in chunks of 16 bytes
+  if(utf8_end_of_code_point_mask == 0xfff) {
+    // We process in chunks of 12 bytes
     vst1q_u8(reinterpret_cast<uint8_t*>(latin1_output), in);
-    latin1_output += 16; // We wrote 16 18-bit characters.
-    return 16; // We consumed 16 bytes.
+    latin1_output += 12; // We wrote 12 18-bit characters.
+    return 12; // We consumed 12 bytes.
   }
   /// We do not have a fast path available, or the fast path is unimportant, so we fallback.
   const uint8_t idx =

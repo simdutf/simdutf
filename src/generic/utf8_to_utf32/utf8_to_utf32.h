@@ -130,10 +130,10 @@ using namespace simd;
       size_t pos = 0;
       char32_t* start{utf32_output};
       // In the worst case, we have the haswell kernel which can cause an overflow of
-      // 8 bytes when calling convert_masked_utf8_to_utf32. If you skip the last 16 bytes,
+      // 8 words when calling convert_masked_utf8_to_utf32. If you skip the last 16 bytes,
       // and if the data is valid, then it is entirely safe because 16 UTF-8 bytes generate
       // much more than 8 bytes. However, you cannot generally assume that you have valid
-      // UTF-8 input, so we are going to go back from the end counting 8 leading bytes,
+      // UTF-8 input, so we are going to go back from the end counting 16 leading bytes,
       // to give us a good margin.
       size_t leading_byte = 0;
       size_t margin = size;

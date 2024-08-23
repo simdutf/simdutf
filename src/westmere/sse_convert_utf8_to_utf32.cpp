@@ -21,14 +21,14 @@ size_t convert_masked_utf8_to_utf32(const char *input,
   const __m128i in = _mm_loadu_si128((__m128i *)input);
   const uint16_t input_utf8_end_of_code_point_mask =
       utf8_end_of_code_point_mask & 0xfff;
-  if(((utf8_end_of_code_point_mask & 0xffff) == 0xffff)) {
-    // We process the data in chunks of 16 bytes.
+  if(utf8_end_of_code_point_mask == 0xfff) {
+    // We process the data in chunks of 12 bytes.
     _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output), _mm_cvtepu8_epi32(in));
     _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output+4), _mm_cvtepu8_epi32(_mm_srli_si128(in,4)));
     _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output+8), _mm_cvtepu8_epi32(_mm_srli_si128(in,8)));
     _mm_storeu_si128(reinterpret_cast<__m128i *>(utf32_output+12), _mm_cvtepu8_epi32(_mm_srli_si128(in,12)));
-    utf32_output += 16; // We wrote 16 32-bit characters.
-    return 16; // We consumed 16 bytes.
+    utf32_output += 12; // We wrote 12 32-bit characters.
+    return 12; // We consumed 12 bytes.
   }
   if(((utf8_end_of_code_point_mask & 0xffff) == 0xaaaa)) {
     // We want to take 8 2-byte UTF-8 code units and turn them into 8 4-byte UTF-32 code units.
