@@ -137,7 +137,7 @@ using namespace simd;
       // to give us a good margin.
       size_t leading_byte = 0;
       size_t margin = size;
-      for(; margin > 0 && leading_byte < 16; margin--) {
+      for(; margin > 0 && leading_byte < 8; margin--) {
         leading_byte += (int8_t(in[margin-1]) > -65);
       }
       // If the input is long enough, then we have that margin-1 is the fourth last leading byte.
@@ -163,6 +163,9 @@ using namespace simd;
             this->check_utf8_bytes(input.chunks[3], input.chunks[2]);
           }
           uint64_t utf8_continuation_mask = input.lt(-65 + 1);
+          if(utf8_continuation_mask & 1) {
+            return 0; // we have an error
+          }
           uint64_t utf8_leading_mask = ~utf8_continuation_mask;
           uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
           // We process in blocks of up to 12 bytes except possibly
@@ -211,7 +214,7 @@ using namespace simd;
       // to give us a good margin.
       size_t leading_byte = 0;
       size_t margin = size;
-      for(; margin > 0 && leading_byte < 9; margin--) {
+      for(; margin > 0 && leading_byte < 8; margin--) {
         leading_byte += (int8_t(in[margin-1]) > -65);
       }
       // If the input is long enough, then we have that margin-1 is the fourth last leading byte.
@@ -236,12 +239,12 @@ using namespace simd;
             this->check_utf8_bytes(input.chunks[2], input.chunks[1]);
             this->check_utf8_bytes(input.chunks[3], input.chunks[2]);
           }
-          if (errors()) {
+          uint64_t utf8_continuation_mask = input.lt(-65 + 1);
+          if (errors() || (utf8_continuation_mask & 1)) {
             result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(pos, in + pos, size - pos, utf32_output);
             res.count += pos;
             return res;
           }
-          uint64_t utf8_continuation_mask = input.lt(-65 + 1);
           uint64_t utf8_leading_mask = ~utf8_continuation_mask;
           uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
           // We process in blocks of up to 12 bytes except possibly

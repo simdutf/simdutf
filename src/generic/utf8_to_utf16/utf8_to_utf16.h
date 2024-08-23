@@ -163,6 +163,9 @@ using namespace simd;
             this->check_utf8_bytes(input.chunks[3], input.chunks[2]);
           }
           uint64_t utf8_continuation_mask = input.lt(-65 + 1);
+          if(utf8_continuation_mask & 1) {
+            return 0; // error
+          }
           uint64_t utf8_leading_mask = ~utf8_continuation_mask;
           uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
           // We process in blocks of up to 12 bytes except possibly
@@ -237,14 +240,14 @@ using namespace simd;
             this->check_utf8_bytes(input.chunks[2], input.chunks[1]);
             this->check_utf8_bytes(input.chunks[3], input.chunks[2]);
           }
-          if (errors()) {
+          uint64_t utf8_continuation_mask = input.lt(-65 + 1);
+          if (errors() || (utf8_continuation_mask & 1)) {
             // rewind_and_convert_with_errors will seek a potential error from in+pos onward,
             // with the ability to go back up to pos bytes, and read size-pos bytes forward.
             result res = scalar::utf8_to_utf16::rewind_and_convert_with_errors<endian>(pos, in + pos, size - pos, utf16_output);
             res.count += pos;
             return res;
           }
-          uint64_t utf8_continuation_mask = input.lt(-65 + 1);
           uint64_t utf8_leading_mask = ~utf8_continuation_mask;
           uint64_t utf8_end_of_code_point_mask = utf8_leading_mask>>1;
           // We process in blocks of up to 12 bytes except possibly
