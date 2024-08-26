@@ -12,7 +12,7 @@ inline size_t convert(const char* buf, size_t len, char* utf8_output) {
   char* start{utf8_output};
   while (pos < len) {
     // try to convert the next block of 16 ASCII bytes
-    if (pos + 16 <= len) { // if it is safe to read 16 more bytes, check that they are ascii
+    if (pos + 16 < len) { // if it is safe to read 16 more bytes, check that they are ascii
       uint64_t v1;
       ::memcpy(&v1, data + pos, sizeof(uint64_t));
       uint64_t v2;
