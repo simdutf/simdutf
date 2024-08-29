@@ -34,6 +34,7 @@ std::string toBinaryString(T b) {
 #include "scalar/utf16.h"
 #include "scalar/utf32.h"
 #include "scalar/base64.h"
+#include "scalar/latin1_to_utf8/latin1_to_utf8.h"
 
 namespace simdutf {
 bool implementation::supported_by_runtime_system() const {
@@ -200,7 +201,30 @@ public:
   }
 
   simdutf_warn_unused size_t convert_latin1_to_utf8(const char * buf, size_t len, char* utf8_output) const noexcept final override {
-    return set_best()->convert_latin1_to_utf8(buf, len,utf8_output);
+    return set_best()->convert_latin1_to_utf8(buf, len, utf8_output);
+  }
+
+  simdutf_warn_unused size_t convert_latin1_to_utf8_s(const char * buf, size_t len, char* utf8_output, size_t utf8_len) const noexcept final override {
+    const auto start{utf8_output};
+
+    while (true) {
+      // convert_latin1_to_utf8 will never write more than input length * 2
+      auto read_len = std::min(len, utf8_len >> 1);
+      if (read_len <= 16) {
+        break;
+      }
+
+      const auto write_len = set_best()->convert_latin1_to_utf8(buf, read_len, utf8_output);
+
+      utf8_output += write_len;
+      utf8_len -= write_len;
+      buf += read_len;
+      len -= read_len;
+    }
+
+    utf8_output += scalar::latin1_to_utf8::convert_s(buf, len, utf8_output, utf8_len);
+
+    return utf8_output - start;
   }
 
   simdutf_warn_unused size_t convert_latin1_to_utf16le(const char * buf, size_t len, char16_t* utf16_output) const noexcept final override {

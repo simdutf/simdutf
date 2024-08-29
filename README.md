@@ -856,6 +856,19 @@ scenario where you expect the input to be valid most of the time.
 simdutf_warn_unused size_t convert_latin1_to_utf8(const char * input, size_t length, char* utf8_output) noexcept;
 
 /**
+ * Convert Latin1 string into UTF8 string with output limit.
+ *
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * @param input         the Latin1 string to convert
+ * @param length        the length of the string in bytes
+ * @param utf8_output  	the pointer to buffer that can hold conversion result
+ * @param utf8_len  the maximum output length
+ * @return the number of written char; 0 if conversion is not possible
+ */
+simdutf_warn_unused size_t convert_latin1_to_utf8(const char * input, size_t length, char* utf8_output, utf8_len) noexcept;
+
+/**
  * Using native endianness, convert a Latin1 string into a UTF-16 string.
  *
  * @param input         the UTF-8 string to convert
