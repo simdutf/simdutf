@@ -7,6 +7,8 @@
 
 set -e
 
+fuzzer_src_files=
+
 if [ -z $SRC ] ; then
     echo "development mode"
     set -ux
@@ -23,8 +25,16 @@ if [ -z $SRC ] ; then
 else
     # invoked from oss fuzz
     cd $SRC/simdutf
+    if [ "$ARCHITECTURE" = "aarch64" -a $(clang++ --version |head -n1 |cut -f3 -d' ' |cut -f1 -d.) -le 14 ]; then
+	# the compiler and stdlib is clang 14 which does not
+	# support ranges well enough to compile the newer fuzzers
+	fuzzer_src_files=fuzz/roundtrip.cpp
+    fi
 fi
 
+if [ -z "$fuzzer_src_files" ] ; then
+  fuzzer_src_files=$(ls fuzz/*.cpp|grep -v -E "fuzz/(reproducer.|main)")
+fi
 
 
 cmake -B build -S . \
@@ -40,7 +50,7 @@ cmake --install build --prefix $WORK
 
 CXXFLAGSEXTRA=-std=c++20
 
-for fuzzersrc in $(ls fuzz/*.cpp|grep -v -E "fuzz/(reproducer.|main)") ; do
+for fuzzersrc in $fuzzer_src_files ; do
     fuzzer=$(basename $fuzzersrc .cpp)
 
     $CXX $CXXFLAGS $CXXFLAGSEXTRA\
