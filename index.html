@@ -427,6 +427,8 @@ API</h2>
 <div class="fragment"><div class="line"> </div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_latin1_to_utf8(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* utf8_output) noexcept;</div>
 <div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_latin1_to_utf8_safe(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* utf8_output, <span class="keywordtype">size_t</span> utf8_len) noexcept;</div>
+<div class="line"> </div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_latin1_to_utf16(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, char16_t* utf16_output) noexcept;</div>
 <div class="line"> </div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_latin1_to_utf16le(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, char16_t* utf16_output) noexcept;</div>
