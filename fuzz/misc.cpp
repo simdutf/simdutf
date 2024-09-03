@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <array>
 #include <functional>
+#include <ranges>
 
 #include "helpers/common.h"
 #include "simdutf.h"
@@ -121,16 +122,51 @@ void utf16_endianess(std::span<const char16_t> data) {
   }
 }
 
+void convert_latin1_to_utf8_safe(std::span<const char> chardata,
+                                 const std::size_t outputsize) {
+  // convert with a limited output buffer
+  std::vector<char> limited_output(outputsize);
+  const auto limited_ret = simdutf::convert_latin1_to_utf8_safe(
+      chardata.data(), chardata.size(), limited_output.data(), outputsize);
+
+  // convert with a sufficiently large output buffer
+  std::vector<char> large_output(2 * chardata.size());
+  const auto large_ret = simdutf::convert_latin1_to_utf8(
+      chardata.data(), chardata.size(), large_output.data());
+
+  if (large_ret != 0) {
+    // conversion was possible with a large buffer.
+    if (large_ret <= outputsize) {
+      // the limited buffer was large enough, ensure we got the same result
+      assert(limited_ret == large_ret);
+      assert(std::ranges::equal(limited_output | std::views::take(large_ret),
+                                large_output | std::views::take(large_ret)));
+    } else {
+      // the number of written bytes for a limited buffer must not exceed what
+      // the large buffer got.
+      assert(limited_ret <= large_ret);
+      // the written data should be equal
+      assert(std::ranges::equal(limited_output | std::views::take(limited_ret),
+                                large_output | std::views::take(limited_ret)));
+    }
+  } else {
+    // conversion with a big buffer failed - is there anything we can check or
+    // assert for the limited buffer? I don't think so.
+  }
+}
+
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
-  // pick one of the function pointers, based on the fuzz data
+  // pick one of the functions, based on the fuzz data.
   // the first byte is which action to take. step forward
   // several bytes so the input is aligned.
   if (size < 4) {
     return 0;
   }
-  constexpr auto Ncases = 8u;
+  constexpr auto Ncases = 9u;
   constexpr auto actionmask = std::bit_ceil(Ncases) - 1;
   const auto action = data[0] & actionmask;
+
+  const std::uint16_t u16 = data[1] + (data[2] << 8);
 
   data += 4;
   size -= 4;
@@ -174,6 +210,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
       std::abort();
     }
   } break;
+  case 8:
+    convert_latin1_to_utf8_safe(chardata, u16);
+    break;
   }
   return 0;
 }
