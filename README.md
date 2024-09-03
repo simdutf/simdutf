@@ -850,7 +850,7 @@ scenario where you expect the input to be valid most of the time.
  *
  * @param input         the Latin1 string to convert
  * @param length        the length of the string in bytes
- * @param latin1_output  the pointer to buffer that can hold conversion result
+ * @param utf8_output  the pointer to buffer that can hold conversion result
  * @return the number of written char; 0 if conversion is not possible
  */
 simdutf_warn_unused size_t convert_latin1_to_utf8(const char * input, size_t length, char* utf8_output) noexcept;
@@ -866,7 +866,7 @@ simdutf_warn_unused size_t convert_latin1_to_utf8(const char * input, size_t len
  * @param utf8_len  the maximum output length
  * @return the number of written char; 0 if conversion is not possible
  */
-simdutf_warn_unused size_t convert_latin1_to_utf8(const char * input, size_t length, char* utf8_output, utf8_len) noexcept;
+simdutf_warn_unused size_t convert_latin1_to_utf8_safe(const char * input, size_t length, char* utf8_output, size_t utf8_len) noexcept;
 
 /**
  * Using native endianness, convert a Latin1 string into a UTF-16 string.

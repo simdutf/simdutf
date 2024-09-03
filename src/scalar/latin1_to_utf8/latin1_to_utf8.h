@@ -43,7 +43,7 @@ inline size_t convert(const char* buf, size_t len, char* utf8_output) {
   return utf8_pos;
 }
 
-inline size_t convert_s(const char* buf, size_t len, char* utf8_output, size_t utf8_len) {
+inline size_t convert_safe(const char* buf, size_t len, char* utf8_output, size_t utf8_len) {
   const unsigned char *data = reinterpret_cast<const unsigned char *>(buf);
   size_t pos = 0;
   size_t skip_pos = 0;

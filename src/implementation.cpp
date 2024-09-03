@@ -204,29 +204,6 @@ public:
     return set_best()->convert_latin1_to_utf8(buf, len, utf8_output);
   }
 
-  simdutf_warn_unused size_t convert_latin1_to_utf8_s(const char * buf, size_t len, char* utf8_output, size_t utf8_len) const noexcept final override {
-    const auto start{utf8_output};
-
-    while (true) {
-      // convert_latin1_to_utf8 will never write more than input length * 2
-      auto read_len = std::min(len, utf8_len >> 1);
-      if (read_len <= 16) {
-        break;
-      }
-
-      const auto write_len = set_best()->convert_latin1_to_utf8(buf, read_len, utf8_output);
-
-      utf8_output += write_len;
-      utf8_len -= write_len;
-      buf += read_len;
-      len -= read_len;
-    }
-
-    utf8_output += scalar::latin1_to_utf8::convert_s(buf, len, utf8_output, utf8_len);
-
-    return utf8_output - start;
-  }
-
   simdutf_warn_unused size_t convert_latin1_to_utf16le(const char * buf, size_t len, char16_t* utf16_output) const noexcept final override {
     return set_best()->convert_latin1_to_utf16le(buf, len, utf16_output);
   }
@@ -1395,6 +1372,31 @@ simdutf_warn_unused result base64_to_binary_safe_impl(const chartype * input, si
   r.count += input_index;
   return r;
 }
+
+
+
+  simdutf_warn_unused size_t convert_latin1_to_utf8_safe(const char * buf, size_t len, char* utf8_output, size_t utf8_len) noexcept {
+    const auto start{utf8_output};
+
+    while (true) {
+      // convert_latin1_to_utf8 will never write more than input length * 2
+      auto read_len = std::min(len, utf8_len >> 1);
+      if (read_len <= 16) {
+        break;
+      }
+
+      const auto write_len = simdutf::convert_latin1_to_utf8(buf, read_len, utf8_output);
+
+      utf8_output += write_len;
+      utf8_len -= write_len;
+      buf += read_len;
+      len -= read_len;
+    }
+
+    utf8_output += scalar::latin1_to_utf8::convert_safe(buf, len, utf8_output, utf8_len);
+
+    return utf8_output - start;
+  }
 
 
 simdutf_warn_unused result base64_to_binary_safe(const char * input, size_t length, char* output, size_t& outlen, base64_options options) noexcept {
