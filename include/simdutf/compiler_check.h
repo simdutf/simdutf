@@ -13,6 +13,18 @@
 #endif
 #endif
 
+
+// C++ 23
+#if !defined(SIMDUTF_CPLUSPLUS23) && (SIMDUTF_CPLUSPLUS >= 202302L)
+#define SIMDUTF_CPLUSPLUS23 1
+#endif
+
+// C++ 20
+#if !defined(SIMDUTF_CPLUSPLUS20) && (SIMDUTF_CPLUSPLUS >= 202002L)
+#define SIMDUTF_CPLUSPLUS20 1
+#endif
+
+
 // C++ 17
 #if !defined(SIMDUTF_CPLUSPLUS17) && (SIMDUTF_CPLUSPLUS >= 201703L)
 #define SIMDUTF_CPLUSPLUS17 1
