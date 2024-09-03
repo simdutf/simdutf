@@ -7,11 +7,46 @@
 #include <tuple>
 #include <vector>
 #include "simdutf/common_defs.h"
+#include "simdutf/compiler_check.h"
 #include "simdutf/encoding_types.h"
 #include "simdutf/error.h"
 #include "simdutf/internal/isadetection.h"
 
+#if SIMDUTF_CPLUSPLUS20
+  #include <type_traits>
+  #include <concepts>
+#endif
+
 namespace simdutf {
+
+#if SIMDUTF_CPLUSPLUS20
+/// helpers placed in namespace detail are not a part of the public API
+namespace detail {
+template <typename T>
+concept byte_like = std::is_same_v<T, std::byte> ||   //
+                    std::is_same_v<T, char> ||        //
+                    std::is_same_v<T, signed char> || //
+                    std::is_same_v<T, unsigned char>;
+
+template <typename T>
+concept is_byte_like = byte_like<std::remove_cvref_t<T>>;
+
+template <typename T>
+concept is_pointer = std::is_pointer_v<T>;
+
+/**
+ * matches anything that behaves like std::span and points to character-like
+ * data such as: std::byte, char, unsigned char, signed char, std::int8_t,
+ * std::uint8_t
+ */
+template <typename T>
+concept span_of_byte_like = requires(const T &t) {
+  { t.size() } noexcept -> std::convertible_to<std::size_t>;
+  { t.data() } noexcept -> is_pointer;
+  { *t.data() } noexcept -> is_byte_like;
+};
+} // namespace detail
+#endif
 
 /**
  * Autodetect the encoding of the input, a single encoding is recommended.
@@ -29,6 +64,26 @@ simdutf_really_inline simdutf_warn_unused simdutf::encoding_type
 autodetect_encoding(const uint8_t *input, size_t length) noexcept {
   return autodetect_encoding(reinterpret_cast<const char *>(input), length);
 }
+#if SIMDUTF_CPLUSPLUS20
+/**
+ * Autodetect the encoding of the input, a single encoding is recommended.
+ * E.g., the function might return simdutf::encoding_type::UTF8,
+ * simdutf::encoding_type::UTF16_LE, simdutf::encoding_type::UTF16_BE, or
+ * simdutf::encoding_type::UTF32_LE.
+ *
+ * @param input the string to analyze. can be a anything span-like that has a
+ * data() and size() that points to character data: std::string,
+ * std::string_view, std::vector<char>, std::span<const std::byte> etc.
+ * @return the detected encoding type
+ */
+template <typename Span>
+  requires detail::span_of_byte_like<Span>
+simdutf_really_inline simdutf_warn_unused simdutf::encoding_type
+autodetect_encoding(const Span &input) noexcept {
+  return autodetect_encoding(reinterpret_cast<const char *>(input.data()),
+                             input.size());
+}
+#endif
 
 /**
  * Autodetect the possible encodings of the input in one pass.
