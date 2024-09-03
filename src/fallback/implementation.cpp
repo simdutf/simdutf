@@ -91,7 +91,7 @@ simdutf_warn_unused result implementation::validate_utf32_with_errors(const char
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf8(const char * buf, size_t len, char* utf8_output) const noexcept {
-  return scalar::latin1_to_utf8::convert(buf,len,utf8_output);
+  return scalar::latin1_to_utf8::convert(buf, len, utf8_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf16le(const char* buf, size_t len, char16_t* utf16_output) const noexcept {
@@ -103,7 +103,7 @@ simdutf_warn_unused size_t implementation::convert_latin1_to_utf16be(const char*
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(const char * buf, size_t len, char32_t* utf32_output) const noexcept {
-  return scalar::latin1_to_utf32::convert(buf,len,utf32_output);
+  return scalar::latin1_to_utf32::convert(buf, len, utf32_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(const char* buf, size_t len, char* latin1_output) const noexcept {
