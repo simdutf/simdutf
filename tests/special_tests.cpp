@@ -7,7 +7,7 @@
 #include <tests/helpers/test.h>
 
 // Visual Studio 2019 fails this test (with high probability) on the
-// icelake kernel. Visual Studio 2022 works fine. 
+// icelake kernel. Visual Studio 2022 works fine.
 TEST(visualstudio2019icelakeissue) {
   const uint16_t buf[] = {
       123,   34,    105,   100,   34,    58,    49,    44,    34,    109,
@@ -48,8 +48,9 @@ TEST(visualstudio2019icelakeissue) {
       105,   109,   101,   111,   117,   116,   34,    58,    51,    51,
       51,    125,   125};
   const char16_t *source = reinterpret_cast<const char16_t *>(buf);
-  const size_t length = sizeof(buf)/sizeof(char16_t); // 74 is enough
-  size_t expected_size = implementation.utf8_length_from_utf16le(source, length);
+  const size_t length = sizeof(buf) / sizeof(char16_t); // 74 is enough
+  size_t expected_size =
+      implementation.utf8_length_from_utf16le(source, length);
   std::unique_ptr<char[]> buffer(new char[expected_size]);
   size_t out_size =
       implementation.convert_utf16le_to_utf8(source, length, buffer.get());
@@ -61,7 +62,8 @@ TEST(special_cases_utf8_utf32_roundtrip) {
   std::string cases[] = {
       "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\xf0\x91\x81\x80\x20\x20\x20\x20"
       "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20"
-      "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20"};
+      "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20"
+      "\x20"};
   for (const std::string &source : cases) {
     bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());
     ASSERT_TRUE(validutf8);
@@ -83,7 +85,8 @@ TEST(special_cases_utf8_utf32_roundtrip) {
         source.c_str(), source.size(), utf32_valid_output.get());
     ASSERT_EQUAL(utf32words_valid, utf32words);
     for (size_t z = 0; z < utf32words_valid; z++) {
-      ASSERT_EQUAL(uint32_t(utf32_valid_output.get()[z]), uint32_t (utf32_output.get()[z]));
+      ASSERT_EQUAL(uint32_t(utf32_valid_output.get()[z]),
+                   uint32_t(utf32_output.get()[z]));
     }
 
     // convert it back:
@@ -119,7 +122,8 @@ TEST(special_cases_utf8_utf16le_roundtrip) {
       "hello\xe4\xbd\xa0\xe5\xa5\xbd",
       "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\xf0\x91\x81\x80\x20\x20\x20\x20"
       "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20"
-      "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20"};
+      "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20"
+      "\x20"};
   for (const std::string &source : cases) {
     bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());
     ASSERT_TRUE(validutf8);
@@ -141,7 +145,8 @@ TEST(special_cases_utf8_utf16le_roundtrip) {
         source.c_str(), source.size(), utf16_valid_output.get());
     ASSERT_EQUAL(utf16words_valid, utf16words);
     for (size_t z = 0; z < utf16words_valid; z++) {
-      ASSERT_EQUAL(uint16_t(utf16_valid_output.get()[z]), uint16_t(utf16_output.get()[z]));
+      ASSERT_EQUAL(uint16_t(utf16_valid_output.get()[z]),
+                   uint16_t(utf16_output.get()[z]));
     }
 
     // convert it back:
@@ -177,7 +182,8 @@ TEST(special_cases_utf8_utf16be_roundtrip) {
       "hello\xe4\xbd\xa0\xe5\xa5\xbd",
       "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\xf0\x91\x81\x80\x20\x20\x20\x20"
       "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20"
-      "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20"};
+      "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20"
+      "\x20"};
   for (const std::string &source : cases) {
     bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());
     ASSERT_TRUE(validutf8);
@@ -200,7 +206,8 @@ TEST(special_cases_utf8_utf16be_roundtrip) {
     ASSERT_EQUAL(utf16words_valid, utf16words);
     for (size_t z = 0; z < utf16words_valid; z++) {
       // Note: casting due to Visual Studio's lack of operator<< for char16_t.
-      ASSERT_EQUAL(uint16_t(utf16_valid_output.get()[z]), uint16_t(utf16_output.get()[z]));
+      ASSERT_EQUAL(uint16_t(utf16_valid_output.get()[z]),
+                   uint16_t(utf16_output.get()[z]));
     }
 
     // convert it back:
@@ -236,7 +243,8 @@ TEST(special_cases_utf8_utf16_roundtrip) {
       "hello\xe4\xbd\xa0\xe5\xa5\xbd",
       "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\xf0\x91\x81\x80\x20\x20\x20\x20"
       "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20"
-      "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20"};
+      "\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20"
+      "\x20"};
   for (const std::string &source : cases) {
     bool validutf8 = simdutf::validate_utf8(source.c_str(), source.size());
     ASSERT_TRUE(validutf8);
@@ -259,7 +267,8 @@ TEST(special_cases_utf8_utf16_roundtrip) {
     ASSERT_EQUAL(utf16words_valid, utf16words);
     for (size_t z = 0; z < utf16words_valid; z++) {
       // Note: casting due to Visual Studio's lack of operator<< for char16_t.
-      ASSERT_EQUAL(uint16_t(utf16_valid_output.get()[z]), uint16_t(utf16_output.get()[z]));
+      ASSERT_EQUAL(uint16_t(utf16_valid_output.get()[z]),
+                   uint16_t(utf16_output.get()[z]));
     }
 
     // convert it back:
@@ -390,7 +399,7 @@ TEST(special_cases_utf8_utf16_invalid) {
         simdutf::latin1_length_from_utf8(source.c_str(), source.size());
     std::unique_ptr<char[]> latin1_output{new char[expected_latin1words]};
     size_t latin1words = simdutf::convert_utf8_to_latin1(
-          source.c_str(), source.size(), latin1_output.get());
+        source.c_str(), source.size(), latin1_output.get());
     ASSERT_EQUAL(latin1words, 0);
   }
 }
@@ -467,44 +476,56 @@ TEST(special_cases_utf8_utf32_invalid) {
         simdutf::latin1_length_from_utf8(source.c_str(), source.size());
     std::unique_ptr<char[]> latin1_output{new char[expected_latin1words]};
     size_t latin1words = simdutf::convert_utf8_to_latin1(
-          source.c_str(), source.size(), latin1_output.get());
+        source.c_str(), source.size(), latin1_output.get());
     ASSERT_EQUAL(latin1words, 0);
   }
 }
 
-
-
 TEST(special_cases_utf16_utf8_roundtrip) {
   std::vector<char16_t> cases[] = {
-    {105, 109, 112, 111, 114, 116, 32, 34, 47, 118, 97, 114, 47, 102, 111, 108,
-    100, 101, 114, 115, 47, 104, 100, 47, 107, 95, 99, 120, 108, 57, 102, 53, 53,
-    52, 55, 53, 113, 54, 50, 109, 56, 95, 102, 95, 57, 107, 95, 99, 48, 48, 48,
-    48, 103, 110, 47, 84, 47, 98, 117, 110, 45, 116, 101, 115, 116, 45, 110, 111,
-    110, 45, 101, 110, 103, 108, 105, 115, 104, 45, 105, 109, 112, 111, 114, 116,
-    45, 105, 109, 112, 111, 114, 116, 115, 47, 55357, 56832, 55357, 56832, 55357,
-    56832, 55357, 56832, 45, 117, 116, 102, 49, 54, 45, 112, 114, 101, 102, 105,
-    120, 46, 106, 115, 34, 59, 10, 105, 109, 112, 111, 114, 116, 32, 34, 47, 118,
-    97, 114, 47, 102, 111, 108, 100, 101, 114, 115, 47, 104, 100, 47, 107, 95, 99,
-    120, 108, 57, 102, 53, 53, 52, 55, 53, 113, 54, 50, 109, 56, 95, 102, 95, 57,
-    107, 95, 99, 48, 48, 48, 48, 103, 110, 47, 84, 47, 98, 117, 110, 45, 116, 101,
-    115, 116, 45, 110, 111, 110, 45, 101, 110, 103, 108, 105, 115, 104, 45, 105,
-    109, 112, 111, 114, 116, 45, 105, 109, 112, 111, 114, 116, 115, 47, 117, 116,
-    102, 49, 54, 45, 115, 117, 102, 102, 105, 120, 45, 55357, 56832, 55357, 56832,
-    55357, 56832, 55357, 56832, 46, 106, 115, 34, 59, 10, 105, 109, 112, 111, 114,
-    116, 32, 34, 47, 118, 97, 114, 47, 102, 111, 108, 100, 101, 114, 115, 47, 104,
-    100, 47, 107, 95, 99, 120, 108, 57, 102, 53, 53, 52, 55, 53, 113, 54, 50, 109,
-    56, 95, 102, 95, 57, 107, 95, 99, 48, 48, 48, 48, 103, 110, 47, 84, 47, 98,
-    117, 110, 45, 116, 101, 115, 116, 45, 110, 111, 110, 45, 101, 110, 103, 108,
-    105, 115, 104, 45, 105, 109, 112, 111, 114, 116, 45, 105, 109, 112, 111, 114,
-    116, 115, 47, 199, 199, 199, 199, 45, 108, 97, 116, 105, 110, 49, 45, 112,
-    114, 101, 102, 105, 120, 46, 106, 115, 34, 59, 10, 105, 109, 112, 111, 114,
-    116, 32, 34, 47, 118, 97, 114, 47, 102, 111, 108, 100, 101, 114, 115, 47, 104,
-    100, 47, 107, 95, 99, 120, 108, 57, 102, 53, 53, 52, 55, 53, 113, 54, 50, 109,
-    56, 95, 102, 95, 57, 107, 95, 99, 48, 48, 48, 48, 103, 110, 47, 84, 47, 98,
-    117, 110, 45, 116, 101, 115, 116, 45, 110, 111, 110, 45, 101, 110, 103, 108,
-    105, 115, 104, 45, 105, 109, 112, 111, 114, 116, 45, 105, 109, 112, 111, 114,
-    116, 115, 47, 108, 97, 116, 105, 110, 49, 45, 115, 117, 102, 102, 105, 120,
-    45, 199, 199, 199, 199, 46, 106, 115, 34, 59}};
+      {105,   109,   112,   111, 114, 116,   32,    34,    47,    118,   97,
+       114,   47,    102,   111, 108, 100,   101,   114,   115,   47,    104,
+       100,   47,    107,   95,  99,  120,   108,   57,    102,   53,    53,
+       52,    55,    53,    113, 54,  50,    109,   56,    95,    102,   95,
+       57,    107,   95,    99,  48,  48,    48,    48,    103,   110,   47,
+       84,    47,    98,    117, 110, 45,    116,   101,   115,   116,   45,
+       110,   111,   110,   45,  101, 110,   103,   108,   105,   115,   104,
+       45,    105,   109,   112, 111, 114,   116,   45,    105,   109,   112,
+       111,   114,   116,   115, 47,  55357, 56832, 55357, 56832, 55357, 56832,
+       55357, 56832, 45,    117, 116, 102,   49,    54,    45,    112,   114,
+       101,   102,   105,   120, 46,  106,   115,   34,    59,    10,    105,
+       109,   112,   111,   114, 116, 32,    34,    47,    118,   97,    114,
+       47,    102,   111,   108, 100, 101,   114,   115,   47,    104,   100,
+       47,    107,   95,    99,  120, 108,   57,    102,   53,    53,    52,
+       55,    53,    113,   54,  50,  109,   56,    95,    102,   95,    57,
+       107,   95,    99,    48,  48,  48,    48,    103,   110,   47,    84,
+       47,    98,    117,   110, 45,  116,   101,   115,   116,   45,    110,
+       111,   110,   45,    101, 110, 103,   108,   105,   115,   104,   45,
+       105,   109,   112,   111, 114, 116,   45,    105,   109,   112,   111,
+       114,   116,   115,   47,  117, 116,   102,   49,    54,    45,    115,
+       117,   102,   102,   105, 120, 45,    55357, 56832, 55357, 56832, 55357,
+       56832, 55357, 56832, 46,  106, 115,   34,    59,    10,    105,   109,
+       112,   111,   114,   116, 32,  34,    47,    118,   97,    114,   47,
+       102,   111,   108,   100, 101, 114,   115,   47,    104,   100,   47,
+       107,   95,    99,    120, 108, 57,    102,   53,    53,    52,    55,
+       53,    113,   54,    50,  109, 56,    95,    102,   95,    57,    107,
+       95,    99,    48,    48,  48,  48,    103,   110,   47,    84,    47,
+       98,    117,   110,   45,  116, 101,   115,   116,   45,    110,   111,
+       110,   45,    101,   110, 103, 108,   105,   115,   104,   45,    105,
+       109,   112,   111,   114, 116, 45,    105,   109,   112,   111,   114,
+       116,   115,   47,    199, 199, 199,   199,   45,    108,   97,    116,
+       105,   110,   49,    45,  112, 114,   101,   102,   105,   120,   46,
+       106,   115,   34,    59,  10,  105,   109,   112,   111,   114,   116,
+       32,    34,    47,    118, 97,  114,   47,    102,   111,   108,   100,
+       101,   114,   115,   47,  104, 100,   47,    107,   95,    99,    120,
+       108,   57,    102,   53,  53,  52,    55,    53,    113,   54,    50,
+       109,   56,    95,    102, 95,  57,    107,   95,    99,    48,    48,
+       48,    48,    103,   110, 47,  84,    47,    98,    117,   110,   45,
+       116,   101,   115,   116, 45,  110,   111,   110,   45,    101,   110,
+       103,   108,   105,   115, 104, 45,    105,   109,   112,   111,   114,
+       116,   45,    105,   109, 112, 111,   114,   116,   115,   47,    108,
+       97,    116,   105,   110, 49,  45,    115,   117,   102,   102,   105,
+       120,   45,    199,   199, 199, 199,   46,    106,   115,   34,    59}};
   for (std::vector<char16_t> &source : cases) {
     // make sure to copy so that we can detect overruns.
     std::unique_ptr<char16_t[]> utf16_input{new char16_t[source.size()]};
@@ -527,7 +548,8 @@ TEST(special_cases_utf16_utf8_roundtrip) {
     ASSERT_EQUAL(utf16words, expected_utf16words);
     ASSERT_EQUAL(source.size(), expected_utf16words);
     for (size_t z = 0; z < utf16words; z++) {
-      ASSERT_EQUAL(uint16_t(utf16_output.get()[z]), uint16_t(utf16_input.get()[z]));
+      ASSERT_EQUAL(uint16_t(utf16_output.get()[z]),
+                   uint16_t(utf16_input.get()[z]));
     }
   }
 }

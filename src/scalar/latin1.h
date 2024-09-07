@@ -12,19 +12,19 @@ inline size_t utf32_length_from_latin1(size_t len) {
 }
 
 inline size_t utf8_length_from_latin1(const char *buf, size_t len) {
-  const uint8_t * c = reinterpret_cast<const uint8_t *>(buf);
+  const uint8_t *c = reinterpret_cast<const uint8_t *>(buf);
   size_t answer = 0;
-  for(size_t i = 0; i<len; i++) {
-    if((c[i]>>7)) { answer++; }
+  for (size_t i = 0; i < len; i++) {
+    if ((c[i] >> 7)) {
+      answer++;
+    }
   }
   return answer + len;
 }
 
-inline size_t utf16_length_from_latin1(size_t len) {
-  return len;
-}
+inline size_t utf16_length_from_latin1(size_t len) { return len; }
 
-} // utf32 namespace
+} // namespace latin1
 } // unnamed namespace
 } // namespace scalar
 } // namespace simdutf

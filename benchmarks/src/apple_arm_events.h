@@ -614,10 +614,7 @@ typedef struct {
 } lib_symbol;
 
 #define lib_nelems(x) (sizeof(x) / sizeof((x)[0]))
-#define lib_symbol_def(name)                                                   \
-  {                                                                            \
-#name, (void **)&name                                                      \
-  }
+#define lib_symbol_def(name) {#name, (void **)&name}
 
 static const lib_symbol lib_symbols_kperf[] = {
     lib_symbol_def(kpc_pmu_version),
@@ -932,14 +929,14 @@ typedef struct {
 static const event_alias profile_events[] = {
     {"cycles",
      {
-         "FIXED_CYCLES", // Apple A7-A15
+         "FIXED_CYCLES",            // Apple A7-A15
          "CPU_CLK_UNHALTED.THREAD", // Intel Core 1th-10th
          "CPU_CLK_UNHALTED.CORE",   // Intel Yonah, Merom
      }},
     {"instructions",
      {
          "FIXED_INSTRUCTIONS", // Apple A7-A15
-         "INST_RETIRED.ANY" // Intel Yonah, Merom, Core 1th-10th
+         "INST_RETIRED.ANY"    // Intel Yonah, Merom, Core 1th-10th
      }},
     {"branches",
      {
@@ -1098,7 +1095,7 @@ struct AppleEvents {
       }
       return 1;
     }
-    return performance_counters {
+    return performance_counters{
         counters_0[counter_map[0]], counters_0[counter_map[2]],
         counters_0[counter_map[3]], counters_0[counter_map[1]]};
   }

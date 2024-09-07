@@ -1,6 +1,8 @@
 // Taken from Node.js, for benchmarking purposes.
-// See https://github.com/nodejs/node/blob/dafe004703f4f0a878558090ab3dd8ef0624037d/src/base64.h#L15
-// and https://github.com/nodejs/node/blob/dafe004703f4f0a878558090ab3dd8ef0624037d/src/base64-inl.h
+// See
+// https://github.com/nodejs/node/blob/dafe004703f4f0a878558090ab3dd8ef0624037d/src/base64.h#L15
+// and
+// https://github.com/nodejs/node/blob/dafe004703f4f0a878558090ab3dd8ef0624037d/src/base64-inl.h
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -62,9 +64,9 @@ inline uint32_t ReadUint32BE(const unsigned char *p) {
 }
 
 #ifdef _MSC_VER
-#pragma warning(push)
-// MSVC C4003: not enough actual parameters for macro 'identifier'
-#pragma warning(disable : 4003)
+  #pragma warning(push)
+  // MSVC C4003: not enough actual parameters for macro 'identifier'
+  #pragma warning(disable : 4003)
 #endif
 template <typename TypeName>
 bool base64_decode_group_slow(char *const dst, const size_t dstlen,
@@ -97,7 +99,7 @@ bool base64_decode_group_slow(char *const dst, const size_t dstlen,
 }
 
 #ifdef _MSC_VER
-#pragma warning(pop)
+  #pragma warning(pop)
 #endif
 
 template <typename TypeName>
