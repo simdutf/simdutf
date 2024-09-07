@@ -76,13 +76,13 @@ void run_from_utf8(const std::vector<char> &input_data) {
             << std::endl;
 }
 
-
 void run_from_utf8_output(const std::vector<char> &input_data) {
   std::cout << "# aligning output" << std::endl;
   std::cout << "# input size = " << input_data.size() << " bytes" << std::endl;
 
   std::vector<char16_t> buffer(
-      simdutf::utf16_length_from_utf8(input_data.data(), input_data.size()) + 512);
+      simdutf::utf16_length_from_utf8(input_data.data(), input_data.size()) +
+      512);
   size_t utf8count = simdutf::count_utf8(input_data.data(), input_data.size());
   // Let us warm up:
   bench(
@@ -98,10 +98,9 @@ void run_from_utf8_output(const std::vector<char> &input_data) {
   for (size_t offset = 0; offset < 512; offset += 1) {
 
     std::cout << offset << ",\t";
-    auto size_procedure = [&input_data, offset,
-                           &buffer]() -> size_t {
-      return simdutf::convert_utf8_to_utf16le(input_data.data(),
-                                              input_data.size(), buffer.data() + offset);
+    auto size_procedure = [&input_data, offset, &buffer]() -> size_t {
+      return simdutf::convert_utf8_to_utf16le(
+          input_data.data(), input_data.size(), buffer.data() + offset);
     };
     double speed = utf8count / bench(size_procedure);
     if (speed > best_speed) {

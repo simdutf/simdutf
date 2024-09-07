@@ -68,9 +68,9 @@ template <bool base64_url>
 static inline uint64_t to_base64_mask(block64 *b, bool *error) {
   __m512i input = b->chunks[0];
   const __m512i ascii_space_tbl = _mm512_set_epi8(
-      0, 0, 13, 12, 0, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 13, 12, 0, 10, 9,
-      0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 13, 12, 0, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0,
-      32, 0, 0, 13, 12, 0, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0, 32);
+      0, 0, 13, 12, 0, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 13, 12, 0, 10,
+      9, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 13, 12, 0, 10, 9, 0, 0, 0, 0, 0, 0,
+      0, 0, 32, 0, 0, 13, 12, 0, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0, 32);
   __m512i lookup0;
   if (base64_url) {
     lookup0 = _mm512_set_epi8(
@@ -126,14 +126,14 @@ static inline uint64_t compress_block(block64 *b, uint64_t mask, char *output) {
   return _mm_popcnt_u64(nmask);
 }
 
-// The caller of this function is responsible to ensure that there are 64 bytes available
-// from reading at src. The data is read into a block64 structure.
+// The caller of this function is responsible to ensure that there are 64 bytes
+// available from reading at src. The data is read into a block64 structure.
 static inline void load_block(block64 *b, const char *src) {
   b->chunks[0] = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(src));
 }
 
-// The caller of this function is responsible to ensure that there are 128 bytes available
-// from reading at src. The data is read into a block64 structure.
+// The caller of this function is responsible to ensure that there are 128 bytes
+// available from reading at src. The data is read into a block64 structure.
 static inline void load_block(block64 *b, const char16_t *src) {
   __m512i m1 = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(src));
   __m512i m2 = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(src + 32));
@@ -171,10 +171,12 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                               base64_options options) {
   const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value
                                         : tables::base64::to_base64_value;
-  size_t equallocation = srclen; // location of the first padding character if any
+  size_t equallocation =
+      srclen; // location of the first padding character if any
   size_t equalsigns = 0;
   // skip trailing spaces
-  while (srclen > 0 && scalar::base64::is_eight_byte(src[srclen - 1]) && to_base64[uint8_t(src[srclen - 1])] == 64) {
+  while (srclen > 0 && scalar::base64::is_eight_byte(src[srclen - 1]) &&
+         to_base64[uint8_t(src[srclen - 1])] == 64) {
     srclen--;
   }
   if (srclen > 0 && src[srclen - 1] == '=') {
@@ -182,7 +184,8 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     srclen--;
     equalsigns = 1;
     // skip trailing spaces
-    while (srclen > 0 && scalar::base64::is_eight_byte(src[srclen - 1]) && to_base64[uint8_t(src[srclen - 1])] == 64) {
+    while (srclen > 0 && scalar::base64::is_eight_byte(src[srclen - 1]) &&
+           to_base64[uint8_t(src[srclen - 1])] == 64) {
       srclen--;
     }
     if (srclen > 0 && src[srclen - 1] == '=') {
@@ -209,7 +212,8 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       uint64_t badcharmask = to_base64_mask<base64_url>(&b, &error);
       if (error) {
         src -= 64;
-        while (src < srcend && scalar::base64::is_eight_byte(*src) && to_base64[uint8_t(*src)] <= 64) {
+        while (src < srcend && scalar::base64::is_eight_byte(*src) &&
+               to_base64[uint8_t(*src)] <= 64) {
           src++;
         }
         return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
@@ -336,17 +340,18 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     } else {
       r.count += size_t(dst - dstinit);
     }
-    if(r.error == error_code::SUCCESS && equalsigns > 0) {
+    if (r.error == error_code::SUCCESS && equalsigns > 0) {
       // additional checks
-      if((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
+      if ((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
         r.error = error_code::INVALID_BASE64_CHARACTER;
         r.count = equallocation;
       }
     }
     return r;
   }
-  if(equalsigns > 0) {
-    if((size_t(dst - dstinit) % 3 == 0) || ((size_t(dst - dstinit) % 3) + 1 + equalsigns != 4)) {
+  if (equalsigns > 0) {
+    if ((size_t(dst - dstinit) % 3 == 0) ||
+        ((size_t(dst - dstinit) % 3) + 1 + equalsigns != 4)) {
       return {INVALID_BASE64_CHARACTER, equallocation};
     }
   }

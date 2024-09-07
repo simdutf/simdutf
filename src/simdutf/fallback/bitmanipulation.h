@@ -6,9 +6,7 @@
 
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
-namespace {
-
-} // unnamed namespace
+namespace {} // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
 

@@ -68,7 +68,13 @@ int base64_decode_skip_spaces(const char *src, size_t srclen, char *out,
   return !state.bytes;
 }
 
-enum : uint8_t { roundtrip = 0, decode = 1, encode = 2, bun = 3, roundtripurl = 4 };
+enum : uint8_t {
+  roundtrip = 0,
+  decode = 1,
+  encode = 2,
+  bun = 3,
+  roundtripurl = 4
+};
 
 event_collector collector;
 
@@ -221,23 +227,25 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
       if (!e->supported_by_runtime_system()) {
         continue;
       }
-      pretty_print(data.size(), volume, "simdutf::" + e->name(),
-                   bench([&data, &buffer1, &buffer2, &e]() {
-                     for (const std::vector<char> &source : data) {
-                       size_t base64_size = e->binary_to_base64(
-                           source.data(), source.size(), buffer1.data(), simdutf::base64_url);
-                       auto err = e->base64_to_binary(
-                           buffer1.data(), base64_size, buffer2.data(), simdutf::base64_url);
-                       if (err.error) {
-                         std::cerr << "Error:  at position " << err.count
-                                   << std::endl;
-                       } else if (err.count != source.size()) {
-                         std::cerr << "Error: " << err.count
-                                   << " bytes decoded, expected "
-                                   << source.size() << std::endl;
-                       }
-                     }
-                   }));
+      pretty_print(
+          data.size(), volume, "simdutf::" + e->name(),
+          bench([&data, &buffer1, &buffer2, &e]() {
+            for (const std::vector<char> &source : data) {
+              size_t base64_size =
+                  e->binary_to_base64(source.data(), source.size(),
+                                      buffer1.data(), simdutf::base64_url);
+              auto err =
+                  e->base64_to_binary(buffer1.data(), base64_size,
+                                      buffer2.data(), simdutf::base64_url);
+              if (err.error) {
+                std::cerr << "Error:  at position " << err.count << std::endl;
+              } else if (err.count != source.size()) {
+                std::cerr << "Error: " << err.count
+                          << " bytes decoded, expected " << source.size()
+                          << std::endl;
+              }
+            }
+          }));
     }
     break;
   }
@@ -289,12 +297,12 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
   }
   case decode: {
     printf("# decode\n");
-    pretty_print(
-        data.size(), volume, "memcpy", bench([&data, &buffer1, &buffer2]() {
-          for (const std::vector<char> &source : data) {
-            memcpy(buffer1.data(), source.data(), source.size());
-          }
-        }));
+    pretty_print(data.size(), volume, "memcpy",
+                 bench([&data, &buffer1, &buffer2]() {
+                   for (const std::vector<char> &source : data) {
+                     memcpy(buffer1.data(), source.data(), source.size());
+                   }
+                 }));
     bool spaces = contains_spaces(data);
     if (spaces) {
       printf("# the base64 data contains spaces, so we cannot use straigth "
@@ -331,14 +339,15 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
             }
           }
         }));
-    pretty_print(
-        data.size(), volume, "openssl3.3.x", bench([&data, &buffer1, &buffer2]() {
-          for (const std::vector<char> &source : data) {
-            int result = openssl3::base64_decode(buffer1.data(), buffer1.size(),
-                                             source.data(), source.size());
-            (void)result;
-          }
-        }));
+    pretty_print(data.size(), volume, "openssl3.3.x",
+                 bench([&data, &buffer1, &buffer2]() {
+                   for (const std::vector<char> &source : data) {
+                     int result =
+                         openssl3::base64_decode(buffer1.data(), buffer1.size(),
+                                                 source.data(), source.size());
+                     (void)result;
+                   }
+                 }));
     pretty_print(
         data.size(), volume, "node", bench([&data, &buffer1, &buffer2]() {
           for (const std::vector<char> &source : data) {
@@ -376,12 +385,12 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
   }
   case encode: {
     printf("# encode\n");
-    pretty_print(
-        data.size(), volume, "memcpy", bench([&data, &buffer1, &buffer2]() {
-          for (const std::vector<char> &source : data) {
-            memcpy(buffer1.data(), source.data(), source.size());
-          }
-        }));
+    pretty_print(data.size(), volume, "memcpy",
+                 bench([&data, &buffer1, &buffer2]() {
+                   for (const std::vector<char> &source : data) {
+                     memcpy(buffer1.data(), source.data(), source.size());
+                   }
+                 }));
     volatile size_t base64_size;
     pretty_print(data.size(), volume, "libbase64",
                  bench([&data, &buffer1, &base64_size]() {

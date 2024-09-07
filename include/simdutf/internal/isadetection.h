@@ -49,22 +49,25 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <cstdint>
 #include <cstdlib>
 #if defined(_MSC_VER)
-#include <intrin.h>
+  #include <intrin.h>
 #elif defined(HAVE_GCC_GET_CPUID) && defined(USE_GCC_GET_CPUID)
-#include <cpuid.h>
+  #include <cpuid.h>
 #endif
 
 #include "simdutf/portability.h"
 
 // RISC-V ISA detection utilities
 #if SIMDUTF_IS_RISCV64 && defined(__linux__)
-#include <unistd.h> // for syscall
+  #include <unistd.h> // for syscall
 // We define these ourselves, for backwards compatibility
-struct simdutf_riscv_hwprobe { int64_t key; uint64_t value; };
-#define simdutf_riscv_hwprobe(...) syscall(258, __VA_ARGS__)
-#define SIMDUTF_RISCV_HWPROBE_KEY_IMA_EXT_0 4
-#define SIMDUTF_RISCV_HWPROBE_IMA_V    (1 << 2)
-#define SIMDUTF_RISCV_HWPROBE_EXT_ZVBB (1 << 17)
+struct simdutf_riscv_hwprobe {
+  int64_t key;
+  uint64_t value;
+};
+  #define simdutf_riscv_hwprobe(...) syscall(258, __VA_ARGS__)
+  #define SIMDUTF_RISCV_HWPROBE_KEY_IMA_EXT_0 4
+  #define SIMDUTF_RISCV_HWPROBE_IMA_V (1 << 2)
+  #define SIMDUTF_RISCV_HWPROBE_EXT_ZVBB (1 << 17)
 #endif // SIMDUTF_IS_RISCV64 && defined(__linux__)
 
 namespace simdutf {
@@ -103,15 +106,16 @@ static inline uint32_t detect_supported_architectures() {
 
 static inline uint32_t detect_supported_architectures() {
   uint32_t host_isa = instruction_set::DEFAULT;
-#if SIMDUTF_IS_RVV
+  #if SIMDUTF_IS_RVV
   host_isa |= instruction_set::RVV;
-#endif
-#if SIMDUTF_IS_ZVBB
+  #endif
+  #if SIMDUTF_IS_ZVBB
   host_isa |= instruction_set::ZVBB;
-#endif
-#if defined(__linux__)
-  simdutf_riscv_hwprobe probes[] = { { SIMDUTF_RISCV_HWPROBE_KEY_IMA_EXT_0, 0 } };
-  long ret = simdutf_riscv_hwprobe(&probes, sizeof probes/sizeof *probes, 0, nullptr, 0);
+  #endif
+  #if defined(__linux__)
+  simdutf_riscv_hwprobe probes[] = {{SIMDUTF_RISCV_HWPROBE_KEY_IMA_EXT_0, 0}};
+  long ret = simdutf_riscv_hwprobe(&probes, sizeof probes / sizeof *probes, 0,
+                                   nullptr, 0);
   if (ret == 0) {
     uint64_t extensions = probes[0].value;
     if (extensions & SIMDUTF_RISCV_HWPROBE_IMA_V)
@@ -119,11 +123,11 @@ static inline uint32_t detect_supported_architectures() {
     if (extensions & SIMDUTF_RISCV_HWPROBE_EXT_ZVBB)
       host_isa |= instruction_set::ZVBB;
   }
-#endif
-#if defined(RUN_IN_SPIKE_SIMULATOR)
+  #endif
+  #if defined(RUN_IN_SPIKE_SIMULATOR)
   // Proxy Kernel does not implement yet hwprobe syscall
   host_isa |= instruction_set::RVV;
-#endif
+  #endif
   return host_isa;
 }
 
@@ -135,80 +139,82 @@ static inline uint32_t detect_supported_architectures() {
 
 #elif defined(__x86_64__) || defined(_M_AMD64) // x64
 
-
 namespace {
 namespace cpuid_bit {
-    // Can be found on Intel ISA Reference for CPUID
+// Can be found on Intel ISA Reference for CPUID
 
-    // EAX = 0x01
-    constexpr uint32_t pclmulqdq = uint32_t(1) << 1; ///< @private bit  1 of ECX for EAX=0x1
-    constexpr uint32_t sse42 = uint32_t(1) << 20;    ///< @private bit 20 of ECX for EAX=0x1
-    constexpr uint32_t osxsave = (uint32_t(1) << 26) | (uint32_t(1) << 27); ///< @private bits 26+27 of ECX for EAX=0x1
+// EAX = 0x01
+constexpr uint32_t pclmulqdq = uint32_t(1)
+                               << 1; ///< @private bit  1 of ECX for EAX=0x1
+constexpr uint32_t sse42 = uint32_t(1)
+                           << 20; ///< @private bit 20 of ECX for EAX=0x1
+constexpr uint32_t osxsave =
+    (uint32_t(1) << 26) |
+    (uint32_t(1) << 27); ///< @private bits 26+27 of ECX for EAX=0x1
 
-    // EAX = 0x7f (Structured Extended Feature Flags), ECX = 0x00 (Sub-leaf)
-    // See: "Table 3-8. Information Returned by CPUID Instruction"
-    namespace ebx {
-      constexpr uint32_t bmi1 = uint32_t(1) << 3;
-      constexpr uint32_t avx2 = uint32_t(1) << 5;
-      constexpr uint32_t bmi2 = uint32_t(1) << 8;
-      constexpr uint32_t avx512f = uint32_t(1) << 16;
-      constexpr uint32_t avx512dq = uint32_t(1) << 17;
-      constexpr uint32_t avx512ifma = uint32_t(1) << 21;
-      constexpr uint32_t avx512cd = uint32_t(1) << 28;
-      constexpr uint32_t avx512bw = uint32_t(1) << 30;
-      constexpr uint32_t avx512vl = uint32_t(1) << 31;
-    }
+// EAX = 0x7f (Structured Extended Feature Flags), ECX = 0x00 (Sub-leaf)
+// See: "Table 3-8. Information Returned by CPUID Instruction"
+namespace ebx {
+constexpr uint32_t bmi1 = uint32_t(1) << 3;
+constexpr uint32_t avx2 = uint32_t(1) << 5;
+constexpr uint32_t bmi2 = uint32_t(1) << 8;
+constexpr uint32_t avx512f = uint32_t(1) << 16;
+constexpr uint32_t avx512dq = uint32_t(1) << 17;
+constexpr uint32_t avx512ifma = uint32_t(1) << 21;
+constexpr uint32_t avx512cd = uint32_t(1) << 28;
+constexpr uint32_t avx512bw = uint32_t(1) << 30;
+constexpr uint32_t avx512vl = uint32_t(1) << 31;
+} // namespace ebx
 
-    namespace ecx {
-      constexpr uint32_t avx512vbmi = uint32_t(1) << 1;
-      constexpr uint32_t avx512vbmi2 = uint32_t(1) << 6;
-      constexpr uint32_t avx512vnni = uint32_t(1) << 11;
-      constexpr uint32_t avx512bitalg = uint32_t(1) << 12;
-      constexpr uint32_t avx512vpopcnt = uint32_t(1) << 14;
-    }
-    namespace edx {
-      constexpr uint32_t avx512vp2intersect = uint32_t(1) << 8;
-    }
-    namespace xcr0_bit {
-     constexpr uint64_t avx256_saved = uint64_t(1) << 2; ///< @private bit 2 = AVX
-     constexpr uint64_t avx512_saved = uint64_t(7) << 5; ///< @private bits 5,6,7 = opmask, ZMM_hi256, hi16_ZMM
-   }
-  }
+namespace ecx {
+constexpr uint32_t avx512vbmi = uint32_t(1) << 1;
+constexpr uint32_t avx512vbmi2 = uint32_t(1) << 6;
+constexpr uint32_t avx512vnni = uint32_t(1) << 11;
+constexpr uint32_t avx512bitalg = uint32_t(1) << 12;
+constexpr uint32_t avx512vpopcnt = uint32_t(1) << 14;
+} // namespace ecx
+namespace edx {
+constexpr uint32_t avx512vp2intersect = uint32_t(1) << 8;
 }
-
-
+namespace xcr0_bit {
+constexpr uint64_t avx256_saved = uint64_t(1) << 2; ///< @private bit 2 = AVX
+constexpr uint64_t avx512_saved =
+    uint64_t(7) << 5; ///< @private bits 5,6,7 = opmask, ZMM_hi256, hi16_ZMM
+} // namespace xcr0_bit
+} // namespace cpuid_bit
+} // namespace
 
 static inline void cpuid(uint32_t *eax, uint32_t *ebx, uint32_t *ecx,
                          uint32_t *edx) {
-#if defined(_MSC_VER)
+  #if defined(_MSC_VER)
   int cpu_info[4];
   __cpuidex(cpu_info, *eax, *ecx);
   *eax = cpu_info[0];
   *ebx = cpu_info[1];
   *ecx = cpu_info[2];
   *edx = cpu_info[3];
-#elif defined(HAVE_GCC_GET_CPUID) && defined(USE_GCC_GET_CPUID)
+  #elif defined(HAVE_GCC_GET_CPUID) && defined(USE_GCC_GET_CPUID)
   uint32_t level = *eax;
   __get_cpuid(level, eax, ebx, ecx, edx);
-#else
+  #else
   uint32_t a = *eax, b, c = *ecx, d;
   asm volatile("cpuid\n\t" : "+a"(a), "=b"(b), "+c"(c), "=d"(d));
   *eax = a;
   *ebx = b;
   *ecx = c;
   *edx = d;
-#endif
+  #endif
 }
 
 static inline uint64_t xgetbv() {
- #if defined(_MSC_VER)
-   return _xgetbv(0);
- #else
-   uint32_t xcr0_lo, xcr0_hi;
-   asm volatile("xgetbv\n\t" : "=a" (xcr0_lo), "=d" (xcr0_hi) : "c" (0));
-   return xcr0_lo | ((uint64_t)xcr0_hi << 32);
- #endif
- }
+  #if defined(_MSC_VER)
+  return _xgetbv(0);
+  #else
+  uint32_t xcr0_lo, xcr0_hi;
+  asm volatile("xgetbv\n\t" : "=a"(xcr0_lo), "=d"(xcr0_hi) : "c"(0));
+  return xcr0_lo | ((uint64_t)xcr0_hi << 32);
+  #endif
+}
 
 static inline uint32_t detect_supported_architectures() {
   uint32_t eax;
@@ -252,7 +258,8 @@ static inline uint32_t detect_supported_architectures() {
   if (ebx & cpuid_bit::ebx::bmi2) {
     host_isa |= instruction_set::BMI2;
   }
-  if (!((xcr0 & cpuid_bit::xcr0_bit::avx512_saved) == cpuid_bit::xcr0_bit::avx512_saved)) {
+  if (!((xcr0 & cpuid_bit::xcr0_bit::avx512_saved) ==
+        cpuid_bit::xcr0_bit::avx512_saved)) {
     return host_isa;
   }
   if (ebx & cpuid_bit::ebx::avx512f) {
@@ -284,7 +291,6 @@ static inline uint32_t detect_supported_architectures() {
 static inline uint32_t detect_supported_architectures() {
   return instruction_set::DEFAULT;
 }
-
 
 #endif // end SIMD extension detection code
 

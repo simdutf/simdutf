@@ -5,11 +5,12 @@ namespace tests {
 namespace helpers {
 
 random_utf8::random_utf8(uint32_t seed, int prob_1byte, int prob_2bytes,
-                       int prob_3bytes, int prob_4bytes)
+                         int prob_3bytes, int prob_4bytes)
     : gen(seed), bytes_count({double(prob_1byte), double(prob_2bytes),
                               double(prob_3bytes), double(prob_4bytes)}) {}
 
-std::pair<std::vector<uint8_t>,size_t> random_utf8::generate_counted(size_t output_bytes) {
+std::pair<std::vector<uint8_t>, size_t>
+random_utf8::generate_counted(size_t output_bytes) {
   std::vector<uint8_t> result;
   result.reserve(output_bytes);
   uint8_t candidate, head;
@@ -73,7 +74,7 @@ std::pair<std::vector<uint8_t>,size_t> random_utf8::generate_counted(size_t outp
   }
   result.push_back(0); // EOS for scalar code
 
-  return make_pair(result,count);
+  return make_pair(result, count);
 }
 
 std::vector<uint8_t> random_utf8::generate(size_t output_bytes) {

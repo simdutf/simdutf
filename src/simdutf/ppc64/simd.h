@@ -22,9 +22,7 @@ template <typename Child> struct base {
   simdutf_really_inline base(const __m128i _value) : value(_value) {}
 
   // Conversion to SIMD register
-  simdutf_really_inline operator const __m128i &() const {
-    return this->value;
-  }
+  simdutf_really_inline operator const __m128i &() const { return this->value; }
   simdutf_really_inline operator __m128i &() { return this->value; }
 
   // Bit operations
@@ -41,17 +39,17 @@ template <typename Child> struct base {
     return vec_andc(this->value, (__m128i)other);
   }
   simdutf_really_inline Child &operator|=(const Child other) {
-    auto this_cast = static_cast<Child*>(this);
+    auto this_cast = static_cast<Child *>(this);
     *this_cast = *this_cast | other;
     return *this_cast;
   }
   simdutf_really_inline Child &operator&=(const Child other) {
-    auto this_cast = static_cast<Child*>(this);
+    auto this_cast = static_cast<Child *>(this);
     *this_cast = *this_cast & other;
     return *this_cast;
   }
   simdutf_really_inline Child &operator^=(const Child other) {
-    auto this_cast = static_cast<Child*>(this);
+    auto this_cast = static_cast<Child *>(this);
     *this_cast = *this_cast ^ other;
     return *this_cast;
   }
@@ -68,7 +66,8 @@ struct base8 : base<simd8<T>> {
   simdutf_really_inline base8() : base<simd8<T>>() {}
   simdutf_really_inline base8(const __m128i _value) : base<simd8<T>>(_value) {}
 
-  friend simdutf_really_inline Mask operator==(const simd8<T> lhs, const simd8<T> rhs) {
+  friend simdutf_really_inline Mask operator==(const simd8<T> lhs,
+                                               const simd8<T> rhs) {
     return (__m128i)vec_cmpeq(lhs.value, (__m128i)rhs);
   }
 
@@ -96,11 +95,9 @@ template <> struct simd8<bool> : base8<bool> {
   }
 
   simdutf_really_inline simd8() : base8() {}
-  simdutf_really_inline simd8(const __m128i _value)
-      : base8<bool>(_value) {}
+  simdutf_really_inline simd8(const __m128i _value) : base8<bool>(_value) {}
   // Splat constructor
-  simdutf_really_inline simd8(bool _value)
-      : base8<bool>(splat(_value)) {}
+  simdutf_really_inline simd8(bool _value) : base8<bool>(splat(_value)) {}
 
   simdutf_really_inline int to_bitmask() const {
     __vector unsigned long long result;
@@ -134,9 +131,9 @@ template <typename T> struct base8_numeric : base8<T> {
   }
   // Repeat 16 values as many times as necessary (usually for lookup tables)
   static simdutf_really_inline simd8<T> repeat_16(T v0, T v1, T v2, T v3, T v4,
-                                                   T v5, T v6, T v7, T v8, T v9,
-                                                   T v10, T v11, T v12, T v13,
-                                                   T v14, T v15) {
+                                                  T v5, T v6, T v7, T v8, T v9,
+                                                  T v10, T v11, T v12, T v13,
+                                                  T v14, T v15) {
     return simd8<T>(v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13,
                     v14, v15);
   }
@@ -173,7 +170,8 @@ template <typename T> struct base8_numeric : base8<T> {
   // for out of range values)
   template <typename L>
   simdutf_really_inline simd8<L> lookup_16(simd8<L> lookup_table) const {
-    return (__m128i)vec_perm((__m128i)lookup_table, (__m128i)lookup_table, this->value);
+    return (__m128i)vec_perm((__m128i)lookup_table, (__m128i)lookup_table,
+                             this->value);
   }
 
   template <typename L>
@@ -201,9 +199,9 @@ template <> struct simd8<int8_t> : base8_numeric<int8_t> {
   simdutf_really_inline simd8(const int8_t *values) : simd8(load(values)) {}
   // Member-by-member initialization
   simdutf_really_inline simd8(int8_t v0, int8_t v1, int8_t v2, int8_t v3,
-                               int8_t v4, int8_t v5, int8_t v6, int8_t v7,
-                               int8_t v8, int8_t v9, int8_t v10, int8_t v11,
-                               int8_t v12, int8_t v13, int8_t v14, int8_t v15)
+                              int8_t v4, int8_t v5, int8_t v6, int8_t v7,
+                              int8_t v8, int8_t v9, int8_t v10, int8_t v11,
+                              int8_t v12, int8_t v13, int8_t v14, int8_t v15)
       : simd8((__m128i)(__vector signed char){v0, v1, v2, v3, v4, v5, v6, v7,
                                               v8, v9, v10, v11, v12, v13, v14,
                                               v15}) {}
@@ -217,23 +215,19 @@ template <> struct simd8<int8_t> : base8_numeric<int8_t> {
   }
 
   // Order-sensitive comparisons
-  simdutf_really_inline simd8<int8_t>
-  max_val(const simd8<int8_t> other) const {
+  simdutf_really_inline simd8<int8_t> max_val(const simd8<int8_t> other) const {
     return (__m128i)vec_max((__vector signed char)this->value,
                             (__vector signed char)(__m128i)other);
   }
-  simdutf_really_inline simd8<int8_t>
-  min_val(const simd8<int8_t> other) const {
+  simdutf_really_inline simd8<int8_t> min_val(const simd8<int8_t> other) const {
     return (__m128i)vec_min((__vector signed char)this->value,
                             (__vector signed char)(__m128i)other);
   }
-  simdutf_really_inline simd8<bool>
-  operator>(const simd8<int8_t> other) const {
+  simdutf_really_inline simd8<bool> operator>(const simd8<int8_t> other) const {
     return (__m128i)vec_cmpgt((__vector signed char)this->value,
                               (__vector signed char)(__m128i)other);
   }
-  simdutf_really_inline simd8<bool>
-  operator<(const simd8<int8_t> other) const {
+  simdutf_really_inline simd8<bool> operator<(const simd8<int8_t> other) const {
     return (__m128i)vec_cmplt((__vector signed char)this->value,
                               (__vector signed char)(__m128i)other);
   }
@@ -326,7 +320,7 @@ template <> struct simd8<uint8_t> : base8_numeric<uint8_t> {
   }
 
   simdutf_really_inline bool is_ascii() const {
-      return this->saturating_sub(0b01111111u).bits_not_set_anywhere();
+    return this->saturating_sub(0b01111111u).bits_not_set_anywhere();
   }
 
   simdutf_really_inline bool bits_not_set_anywhere() const {
@@ -364,32 +358,34 @@ template <typename T> struct simd8x64 {
   simd8x64() = delete;                      // no default constructor allowed
 
   simdutf_really_inline simd8x64(const simd8<T> chunk0, const simd8<T> chunk1,
-                                  const simd8<T> chunk2, const simd8<T> chunk3)
+                                 const simd8<T> chunk2, const simd8<T> chunk3)
       : chunks{chunk0, chunk1, chunk2, chunk3} {}
 
-  simdutf_really_inline simd8x64(const T* ptr) : chunks{simd8<T>::load(ptr), simd8<T>::load(ptr+sizeof(simd8<T>)/sizeof(T)), simd8<T>::load(ptr+2*sizeof(simd8<T>)/sizeof(T)), simd8<T>::load(ptr+3*sizeof(simd8<T>)/sizeof(T))} {}
+  simdutf_really_inline simd8x64(const T *ptr)
+      : chunks{simd8<T>::load(ptr),
+               simd8<T>::load(ptr + sizeof(simd8<T>) / sizeof(T)),
+               simd8<T>::load(ptr + 2 * sizeof(simd8<T>) / sizeof(T)),
+               simd8<T>::load(ptr + 3 * sizeof(simd8<T>) / sizeof(T))} {}
 
-  simdutf_really_inline void store(T* ptr) const {
-    this->chunks[0].store(ptr + sizeof(simd8<T>) * 0/sizeof(T));
-    this->chunks[1].store(ptr + sizeof(simd8<T>) * 1/sizeof(T));
-    this->chunks[2].store(ptr + sizeof(simd8<T>) * 2/sizeof(T));
-    this->chunks[3].store(ptr + sizeof(simd8<T>) * 3/sizeof(T));
+  simdutf_really_inline void store(T *ptr) const {
+    this->chunks[0].store(ptr + sizeof(simd8<T>) * 0 / sizeof(T));
+    this->chunks[1].store(ptr + sizeof(simd8<T>) * 1 / sizeof(T));
+    this->chunks[2].store(ptr + sizeof(simd8<T>) * 2 / sizeof(T));
+    this->chunks[3].store(ptr + sizeof(simd8<T>) * 3 / sizeof(T));
   }
 
-
-  simdutf_really_inline simd8x64<T>& operator |=(const simd8x64<T> &other) {
-      this->chunks[0] |= other.chunks[0];
-      this->chunks[1] |= other.chunks[1];
-      this->chunks[2] |= other.chunks[2];
-      this->chunks[3] |= other.chunks[3];
-      return *this;
-    }
+  simdutf_really_inline simd8x64<T> &operator|=(const simd8x64<T> &other) {
+    this->chunks[0] |= other.chunks[0];
+    this->chunks[1] |= other.chunks[1];
+    this->chunks[2] |= other.chunks[2];
+    this->chunks[3] |= other.chunks[3];
+    return *this;
+  }
 
   simdutf_really_inline simd8<T> reduce_or() const {
     return (this->chunks[0] | this->chunks[1]) |
            (this->chunks[2] | this->chunks[3]);
   }
-
 
   simdutf_really_inline bool is_ascii() const {
     return input.reduce_or().is_ascii();
@@ -426,25 +422,25 @@ template <typename T> struct simd8x64 {
   }
 
   simdutf_really_inline uint64_t in_range(const T low, const T high) const {
-      const simd8<T> mask_low = simd8<T>::splat(low);
-      const simd8<T> mask_high = simd8<T>::splat(high);
+    const simd8<T> mask_low = simd8<T>::splat(low);
+    const simd8<T> mask_high = simd8<T>::splat(high);
 
-      return  simd8x64<bool>(
-        (this->chunks[0] <= mask_high) & (this->chunks[0] >= mask_low),
-        (this->chunks[1] <= mask_high) & (this->chunks[1] >= mask_low),
-        (this->chunks[2] <= mask_high) & (this->chunks[2] >= mask_low),
-        (this->chunks[3] <= mask_high) & (this->chunks[3] >= mask_low)
-      ).to_bitmask();
+    return simd8x64<bool>(
+               (this->chunks[0] <= mask_high) & (this->chunks[0] >= mask_low),
+               (this->chunks[1] <= mask_high) & (this->chunks[1] >= mask_low),
+               (this->chunks[2] <= mask_high) & (this->chunks[2] >= mask_low),
+               (this->chunks[3] <= mask_high) & (this->chunks[3] >= mask_low))
+        .to_bitmask();
   }
   simdutf_really_inline uint64_t not_in_range(const T low, const T high) const {
-      const simd8<T> mask_low = simd8<T>::splat(low);
-      const simd8<T> mask_high = simd8<T>::splat(high);
-      return  simd8x64<bool>(
-        (this->chunks[0] > mask_high) | (this->chunks[0] < mask_low),
-        (this->chunks[1] > mask_high) | (this->chunks[1] < mask_low),
-        (this->chunks[2] > mask_high) | (this->chunks[2] < mask_low),
-        (this->chunks[3] > mask_high) | (this->chunks[3] < mask_low)
-      ).to_bitmask();
+    const simd8<T> mask_low = simd8<T>::splat(low);
+    const simd8<T> mask_high = simd8<T>::splat(high);
+    return simd8x64<bool>(
+               (this->chunks[0] > mask_high) | (this->chunks[0] < mask_low),
+               (this->chunks[1] > mask_high) | (this->chunks[1] < mask_low),
+               (this->chunks[2] > mask_high) | (this->chunks[2] < mask_low),
+               (this->chunks[3] > mask_high) | (this->chunks[3] < mask_low))
+        .to_bitmask();
   }
   simdutf_really_inline uint64_t lt(const T m) const {
     const simd8<T> mask = simd8<T>::splat(m);
@@ -454,31 +450,24 @@ template <typename T> struct simd8x64 {
   }
 
   simdutf_really_inline uint64_t gt(const T m) const {
-      const simd8<T> mask = simd8<T>::splat(m);
-      return  simd8x64<bool>(
-        this->chunks[0] > mask,
-        this->chunks[1] > mask,
-        this->chunks[2] > mask,
-        this->chunks[3] > mask
-      ).to_bitmask();
+    const simd8<T> mask = simd8<T>::splat(m);
+    return simd8x64<bool>(this->chunks[0] > mask, this->chunks[1] > mask,
+                          this->chunks[2] > mask, this->chunks[3] > mask)
+        .to_bitmask();
   }
   simdutf_really_inline uint64_t gteq(const T m) const {
-      const simd8<T> mask = simd8<T>::splat(m);
-      return  simd8x64<bool>(
-        this->chunks[0] >= mask,
-        this->chunks[1] >= mask,
-        this->chunks[2] >= mask,
-        this->chunks[3] >= mask
-      ).to_bitmask();
+    const simd8<T> mask = simd8<T>::splat(m);
+    return simd8x64<bool>(this->chunks[0] >= mask, this->chunks[1] >= mask,
+                          this->chunks[2] >= mask, this->chunks[3] >= mask)
+        .to_bitmask();
   }
   simdutf_really_inline uint64_t gteq_unsigned(const uint8_t m) const {
-      const simd8<uint8_t> mask = simd8<uint8_t>::splat(m);
-      return  simd8x64<bool>(
-        simd8<uint8_t>(this->chunks[0]) >= mask,
-        simd8<uint8_t>(this->chunks[1]) >= mask,
-        simd8<uint8_t>(this->chunks[2]) >= mask,
-        simd8<uint8_t>(this->chunks[3]) >= mask
-      ).to_bitmask();
+    const simd8<uint8_t> mask = simd8<uint8_t>::splat(m);
+    return simd8x64<bool>(simd8<uint8_t>(this->chunks[0]) >= mask,
+                          simd8<uint8_t>(this->chunks[1]) >= mask,
+                          simd8<uint8_t>(this->chunks[2]) >= mask,
+                          simd8<uint8_t>(this->chunks[3]) >= mask)
+        .to_bitmask();
   }
 }; // struct simd8x64<T>
 

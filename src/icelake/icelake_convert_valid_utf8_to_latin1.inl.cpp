@@ -3,11 +3,9 @@
 // File contains conversion procedure from valid UTF-8 strings.
 
 template <bool is_remaining>
-simdutf_really_inline size_t process_valid_block_from_utf8_to_latin1(const char *buf, size_t len,
-                                                 char *latin_output,
-                                                 __m512i minus64, __m512i one,
-                                                 __mmask64 *next_leading_ptr,
-                                                 __mmask64 *next_bit6_ptr) {
+simdutf_really_inline size_t process_valid_block_from_utf8_to_latin1(
+    const char *buf, size_t len, char *latin_output, __m512i minus64,
+    __m512i one, __mmask64 *next_leading_ptr, __mmask64 *next_bit6_ptr) {
   __mmask64 load_mask =
       is_remaining ? _bzhi_u64(~0ULL, (unsigned int)len) : ~0ULL;
   __m512i input = _mm512_maskz_loadu_epi8(load_mask, (__m512i *)buf);
@@ -34,7 +32,7 @@ simdutf_really_inline size_t process_valid_block_from_utf8_to_latin1(const char 
   __mmask64 retain = ~leading & load_mask;
   __m512i output = _mm512_maskz_compress_epi8(retain, input);
   int64_t written_out = count_ones(retain);
-  if(written_out == 0) {
+  if (written_out == 0) {
     return 0; // Indicates error
   }
   __mmask64 store_mask = ~UINT64_C(0) >> (64 - written_out);
@@ -61,9 +59,9 @@ size_t valid_utf8_to_latin1_avx512(const char *buf, size_t len,
 
   if (pos < len) {
     size_t remaining = len - pos;
-    size_t written =
-        process_valid_block_from_utf8_to_latin1<true>(buf + pos, remaining, latin_output, minus64,
-                                  one, &next_leading, &next_bit6);
+    size_t written = process_valid_block_from_utf8_to_latin1<true>(
+        buf + pos, remaining, latin_output, minus64, one, &next_leading,
+        &next_bit6);
     latin_output += written;
   }
 
