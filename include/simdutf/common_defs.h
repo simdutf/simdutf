@@ -80,32 +80,38 @@
   #define simdutf_unlikely(x) __builtin_expect(!!(x), 0)
   #endif
 
+  // clang-format off
   #define SIMDUTF_PUSH_DISABLE_WARNINGS _Pragma("GCC diagnostic push")
-  // gcc doesn't seem to disable all warnings with all and extra, add warnings here as necessary
-  #define SIMDUTF_PUSH_DISABLE_ALL_WARNINGS SIMDUTF_PUSH_DISABLE_WARNINGS \
-    SIMDUTF_DISABLE_GCC_WARNING(-Weffc++) \
-    SIMDUTF_DISABLE_GCC_WARNING(-Wall) \
-    SIMDUTF_DISABLE_GCC_WARNING(-Wconversion) \
-    SIMDUTF_DISABLE_GCC_WARNING(-Wextra) \
-    SIMDUTF_DISABLE_GCC_WARNING(-Wattributes) \
-    SIMDUTF_DISABLE_GCC_WARNING(-Wimplicit-fallthrough) \
-    SIMDUTF_DISABLE_GCC_WARNING(-Wnon-virtual-dtor) \
-    SIMDUTF_DISABLE_GCC_WARNING(-Wreturn-type) \
-    SIMDUTF_DISABLE_GCC_WARNING(-Wshadow) \
-    SIMDUTF_DISABLE_GCC_WARNING(-Wunused-parameter) \
+  // gcc doesn't seem to disable all warnings with all and extra, add warnings
+  // here as necessary
+  #define SIMDUTF_PUSH_DISABLE_ALL_WARNINGS                                    \
+    SIMDUTF_PUSH_DISABLE_WARNINGS                                              \
+    SIMDUTF_DISABLE_GCC_WARNING(-Weffc++)                                      \
+    SIMDUTF_DISABLE_GCC_WARNING(-Wall)                                         \
+    SIMDUTF_DISABLE_GCC_WARNING(-Wconversion)                                  \
+    SIMDUTF_DISABLE_GCC_WARNING(-Wextra)                                       \
+    SIMDUTF_DISABLE_GCC_WARNING(-Wattributes)                                  \
+    SIMDUTF_DISABLE_GCC_WARNING(-Wimplicit-fallthrough)                        \
+    SIMDUTF_DISABLE_GCC_WARNING(-Wnon-virtual-dtor)                            \
+    SIMDUTF_DISABLE_GCC_WARNING(-Wreturn-type)                                 \
+    SIMDUTF_DISABLE_GCC_WARNING(-Wshadow)                                      \
+    SIMDUTF_DISABLE_GCC_WARNING(-Wunused-parameter)                            \
     SIMDUTF_DISABLE_GCC_WARNING(-Wunused-variable)
   #define SIMDUTF_PRAGMA(P) _Pragma(#P)
-  #define SIMDUTF_DISABLE_GCC_WARNING(WARNING) SIMDUTF_PRAGMA(GCC diagnostic ignored #WARNING)
+  #define SIMDUTF_DISABLE_GCC_WARNING(WARNING)                                 \
+    SIMDUTF_PRAGMA(GCC diagnostic ignored #WARNING)
   #if defined(SIMDUTF_CLANG_VISUAL_STUDIO)
-  #define SIMDUTF_DISABLE_UNDESIRED_WARNINGS SIMDUTF_DISABLE_GCC_WARNING(-Wmicrosoft-include)
+    #define SIMDUTF_DISABLE_UNDESIRED_WARNINGS                                 \
+      SIMDUTF_DISABLE_GCC_WARNING(-Wmicrosoft-include)
   #else
-  #define SIMDUTF_DISABLE_UNDESIRED_WARNINGS
+    #define SIMDUTF_DISABLE_UNDESIRED_WARNINGS
   #endif
-  #define SIMDUTF_DISABLE_DEPRECATED_WARNING SIMDUTF_DISABLE_GCC_WARNING(-Wdeprecated-declarations)
-  #define SIMDUTF_DISABLE_STRICT_OVERFLOW_WARNING SIMDUTF_DISABLE_GCC_WARNING(-Wstrict-overflow)
+  #define SIMDUTF_DISABLE_DEPRECATED_WARNING                                   \
+    SIMDUTF_DISABLE_GCC_WARNING(-Wdeprecated-declarations)
+  #define SIMDUTF_DISABLE_STRICT_OVERFLOW_WARNING                              \
+    SIMDUTF_DISABLE_GCC_WARNING(-Wstrict-overflow)
   #define SIMDUTF_POP_DISABLE_WARNINGS _Pragma("GCC diagnostic pop")
-
-
+  // clang-format on
 
 #endif // MSC_VER
 
