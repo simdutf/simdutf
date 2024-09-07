@@ -19,3 +19,4 @@ singleheader/singleheader.zip
 
 # clangd cache folder
 .cache/clangd/
+corpus/
