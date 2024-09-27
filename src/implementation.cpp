@@ -176,6 +176,10 @@ public:
     return set_best()->validate_ascii_with_errors(buf, len);
   }
 
+  simdutf_warn_unused result validate_base64(const char * buf, size_t len) const noexcept final override {
+    return set_best()->validate_base64(buf, len);
+  }
+
   simdutf_warn_unused bool validate_utf16le(const char16_t * buf, size_t len) const noexcept final override {
     return set_best()->validate_utf16le(buf, len);
   }
@@ -1446,4 +1450,3 @@ simdutf_warn_unused size_t trim_partial_utf16(const char16_t* input, size_t leng
 }
 
 } // namespace simdutf
-

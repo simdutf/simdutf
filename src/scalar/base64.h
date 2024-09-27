@@ -318,6 +318,47 @@ simdutf_warn_unused size_t base64_length_from_binary(size_t length, base64_optio
   return (length + 2)/3 * 4; // We use padding to make the length a multiple of 4.
 }
 
+// Lookup table for valid base64 characters.
+constexpr uint8_t base64_lookup[256] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+simdutf_warn_unused bool validate_base64(const char* input, size_t size) noexcept {
+  if (simdutf_unlikely(size == 0)) {
+    return false;
+  }
+
+  size_t padding = 0;
+  for (size_t i = 0; i < size; ++i) {
+    auto c = static_cast<unsigned char>(input[i]);
+    if (simdutf_unlikely(c == '=')) {
+      padding++;
+      if (padding > 2 || i < size - 2) {
+          return false;
+      }
+    } else if (base64_lookup[c] == 0 && c != 'A') {
+        return false;
+    }
+  }
+
+  return true;
+}
+
 } // namespace base64
 } // unnamed namespace
 } // namespace scalar

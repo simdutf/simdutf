@@ -48,6 +48,30 @@ void detect(std::span<const char> chardata) {
   }
 }
 
+void validate_base64(std::span<const char> chardata) {
+    // use int, not bool to avoid vector<bool>
+    std::vector<int> results;
+    const auto implementations = get_supported_implementations();
+    for (const simdutf::implementation* impl : implementations) {
+      results.push_back(+impl->validate_base64(chardata.data(), chardata.size()));
+    }
+    auto neq = [](const auto& a, const auto& b) { return a != b; };
+    if (std::ranges::adjacent_find(results, neq) != results.end()) {
+      std::cerr << "in validate_base64(const char*, std::size_t):\n";
+      std::cerr << "output differs between implementations\n";
+      for (std::size_t i = 0; i < implementations.size(); ++i) {
+        std::cerr << "implementation " << implementations[i]->name() << " gave "
+                  << results.at(i) << '\n';
+      }
+      std::cerr << " std::vector<unsigned char> data{";
+      for (unsigned char x : chardata) {
+        std::cerr << +x << ", ";
+      };
+      std::cerr << "};\n";
+      std::abort();
+    }
+}
+
 void validate_ascii(std::span<const char> chardata) {
   // use int, not bool to avoid vector<bool>
   std::vector<int> results;
@@ -212,6 +236,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   } break;
   case 8:
     convert_latin1_to_utf8_safe(chardata, u16);
+    break;
+  case 9:
+    validate_base64(chardata);
     break;
   }
   return 0;
