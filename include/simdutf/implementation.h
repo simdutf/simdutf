@@ -1735,7 +1735,7 @@ public:
    * @param len the length of the string in bytes.
    * @return true if and only if the string is valid base64.
    */
-  simdutf_warn_unused virtual result validate_base64(const char *buf, size_t len) const noexcept = 0;
+  simdutf_warn_unused virtual bool validate_base64(const char *buf, size_t len) const noexcept = 0;
 
   /**
    * Validate the UTF-16LE string.This function may be best when you expect

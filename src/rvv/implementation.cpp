@@ -165,6 +165,10 @@ simdutf_warn_unused size_t implementation::base64_length_from_binary(size_t leng
 size_t implementation::binary_to_base64(const char * input, size_t length, char* output, base64_options options) const noexcept {
   return scalar::base64::tail_encode_base64(output, input, length, options);
 }
+
+bool implementation::validate_base64(const char * input, size_t length) const noexcept {
+  return scalar::base64::validate_base64(input, length);
+}
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
 
