@@ -176,7 +176,7 @@ public:
     return set_best()->validate_ascii_with_errors(buf, len);
   }
 
-  simdutf_warn_unused result validate_base64(const char * buf, size_t len) const noexcept final override {
+  simdutf_warn_unused bool validate_base64(const char * buf, size_t len) const noexcept final override {
     return set_best()->validate_base64(buf, len);
   }
 
@@ -849,6 +849,10 @@ public:
 
   size_t binary_to_base64(const char *, size_t, char*, base64_options) const noexcept override {
     return 0;
+  }
+
+  bool validate_base64(const char *, size_t) const noexcept override {
+    return false;
   }
 
   unsupported_implementation() : implementation("unsupported", "Unsupported CPU (no detected SIMD instructions)", 0) {}

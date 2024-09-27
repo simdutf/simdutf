@@ -97,6 +97,7 @@ public:
   simdutf_warn_unused virtual result base64_to_binary(const char16_t * input, size_t length, char* output, base64_options options) const noexcept;
   simdutf_warn_unused virtual size_t base64_length_from_binary(size_t length, base64_options options) const noexcept;
   size_t binary_to_base64(const char * input, size_t length, char* output, base64_options options) const noexcept;
+  bool validate_base64(const char * input, size_t length) const noexcept;
 };
 
 } // namespace haswell

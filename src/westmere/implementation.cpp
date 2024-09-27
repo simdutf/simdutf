@@ -842,6 +842,11 @@ size_t implementation::binary_to_base64(const char * input, size_t length, char*
     return encode_base64<false>(output, input, length, options);
   }
 }
+
+bool implementation::validate_base64(const char * input, size_t length) const noexcept {
+  return scalar::base64::validate_base64(input, length);
+}
+
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
 
