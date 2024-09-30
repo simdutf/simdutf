@@ -7,19 +7,25 @@ namespace {
 namespace utf32_to_utf16 {
 
 template <endianness big_endian>
-inline size_t convert(const char32_t* buf, size_t len, char16_t* utf16_output) {
+inline size_t convert(const char32_t *buf, size_t len, char16_t *utf16_output) {
   const uint32_t *data = reinterpret_cast<const uint32_t *>(buf);
   size_t pos = 0;
-  char16_t* start{utf16_output};
+  char16_t *start{utf16_output};
   while (pos < len) {
     uint32_t word = data[pos];
-    if((word & 0xFFFF0000)==0) {
-      if (word >= 0xD800 && word <= 0xDFFF) { return 0; }
+    if ((word & 0xFFFF0000) == 0) {
+      if (word >= 0xD800 && word <= 0xDFFF) {
+        return 0;
+      }
       // will not generate a surrogate pair
-      *utf16_output++ = !match_system(big_endian) ? char16_t(utf16::swap_bytes(uint16_t(word))) : char16_t(word);
+      *utf16_output++ = !match_system(big_endian)
+                            ? char16_t(utf16::swap_bytes(uint16_t(word)))
+                            : char16_t(word);
     } else {
       // will generate a surrogate pair
-      if (word > 0x10FFFF) { return 0; }
+      if (word > 0x10FFFF) {
+        return 0;
+      }
       word -= 0x10000;
       uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
       uint16_t low_surrogate = uint16_t(0xDC00 + (word & 0x3FF));
@@ -36,19 +42,26 @@ inline size_t convert(const char32_t* buf, size_t len, char16_t* utf16_output) {
 }
 
 template <endianness big_endian>
-inline result convert_with_errors(const char32_t* buf, size_t len, char16_t* utf16_output) {
+inline result convert_with_errors(const char32_t *buf, size_t len,
+                                  char16_t *utf16_output) {
   const uint32_t *data = reinterpret_cast<const uint32_t *>(buf);
   size_t pos = 0;
-  char16_t* start{utf16_output};
+  char16_t *start{utf16_output};
   while (pos < len) {
     uint32_t word = data[pos];
-    if((word & 0xFFFF0000)==0) {
-      if (word >= 0xD800 && word <= 0xDFFF) { return result(error_code::SURROGATE, pos); }
+    if ((word & 0xFFFF0000) == 0) {
+      if (word >= 0xD800 && word <= 0xDFFF) {
+        return result(error_code::SURROGATE, pos);
+      }
       // will not generate a surrogate pair
-      *utf16_output++ = !match_system(big_endian) ? char16_t(utf16::swap_bytes(uint16_t(word))) : char16_t(word);
+      *utf16_output++ = !match_system(big_endian)
+                            ? char16_t(utf16::swap_bytes(uint16_t(word)))
+                            : char16_t(word);
     } else {
       // will generate a surrogate pair
-      if (word > 0x10FFFF) { return result(error_code::TOO_LARGE, pos); }
+      if (word > 0x10FFFF) {
+        return result(error_code::TOO_LARGE, pos);
+      }
       word -= 0x10000;
       uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
       uint16_t low_surrogate = uint16_t(0xDC00 + (word & 0x3FF));
@@ -64,7 +77,7 @@ inline result convert_with_errors(const char32_t* buf, size_t len, char16_t* utf
   return result(error_code::SUCCESS, utf16_output - start);
 }
 
-} // utf32_to_utf16 namespace
+} // namespace utf32_to_utf16
 } // unnamed namespace
 } // namespace scalar
 } // namespace simdutf

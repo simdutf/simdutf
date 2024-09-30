@@ -12,11 +12,13 @@ int main() {
     if (!implementation->supported_by_runtime_system()) {
       continue;
     }
-    bool validutf8 = implementation->validate_utf8(source.c_str(), source.size());
+    bool validutf8 =
+        implementation->validate_utf8(source.c_str(), source.size());
     if (!validutf8) {
       return EXIT_FAILURE;
     }
-    printf("%s: %s\n", implementation->name().c_str(), implementation->description().c_str());
+    printf("%s: %s\n", implementation->name().c_str(),
+           implementation->description().c_str());
     chosen_implementation = implementation->name();
   }
   auto my_implementation =
@@ -35,6 +37,7 @@ int main() {
   if (simdutf::get_active_implementation()->name() != chosen_implementation) {
     return EXIT_FAILURE;
   }
-  printf("Manually selected: %s\n", simdutf::get_active_implementation()->name().c_str());
+  printf("Manually selected: %s\n",
+         simdutf::get_active_implementation()->name().c_str());
   return EXIT_SUCCESS;
 }

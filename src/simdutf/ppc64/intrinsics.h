@@ -9,11 +9,11 @@
 
 // These are defined by altivec.h in GCC toolchain, it is safe to undef them.
 #ifdef bool
-#undef bool
+  #undef bool
 #endif
 
 #ifdef vector
-#undef vector
+  #undef vector
 #endif
 
 #endif //  SIMDUTF_PPC64_INTRINSICS_H

@@ -610,7 +610,7 @@ const unsigned char BitsSetTable256mul2[256] = {
     14, 10, 12, 12, 14, 12, 14, 14, 16};
 
 constexpr uint8_t to_base64_value[] = {
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 64,  64,  255, 64, 64,  255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 64,  64,  255, 64,  64,  255,
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
     255, 255, 64,  255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 62,  255,
     255, 255, 63,  52,  53,  54,  55,  56,  57,  58,  59,  60,  61,  255, 255,
@@ -630,7 +630,7 @@ constexpr uint8_t to_base64_value[] = {
     255};
 
 constexpr uint8_t to_base64_url_value[] = {
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 64,  64,  255, 64, 64,  255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 64,  64,  255, 64,  64,  255,
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
     255, 255, 64,  255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
     62,  255, 255, 52,  53,  54,  55,  56,  57,  58,  59,  60,  61,  255, 255,
@@ -648,22 +648,38 @@ constexpr uint8_t to_base64_url_value[] = {
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
     255};
-static_assert(sizeof(to_base64_value) == 256, "to_base64_value must have 256 elements");
-static_assert(sizeof(to_base64_url_value) == 256, "to_base64_url_value must have 256 elements");
-static_assert(to_base64_value[uint8_t(' ')] == 64, "space must be == 64 in to_base64_value");
-static_assert(to_base64_url_value[uint8_t(' ')] == 64, "space must be == 64 in to_base64_url_value");
-static_assert(to_base64_value[uint8_t('\t')] == 64, "tab must be == 64 in to_base64_value");
-static_assert(to_base64_url_value[uint8_t('\t')] == 64, "tab must be == 64 in to_base64_url_value");
-static_assert(to_base64_value[uint8_t('\r')] == 64, "cr must be == 64 in to_base64_value");
-static_assert(to_base64_url_value[uint8_t('\r')] == 64, "cr must be == 64 in to_base64_url_value");
-static_assert(to_base64_value[uint8_t('\n')] == 64, "lf must be == 64 in to_base64_value");
-static_assert(to_base64_url_value[uint8_t('\n')] == 64, "lf must be == 64 in to_base64_url_value");
-static_assert(to_base64_value[uint8_t('\f')] == 64, "ff must be == 64 in to_base64_value");
-static_assert(to_base64_url_value[uint8_t('\f')] == 64, "ff must be == 64 in to_base64_url_value");
-static_assert(to_base64_value[uint8_t('+')] == 62, "+ must be == 62 in to_base64_value");
-static_assert(to_base64_url_value[uint8_t('-')] == 62, "- must be == 62 in to_base64_url_value");
-static_assert(to_base64_value[uint8_t('/')] == 63, "/ must be == 62 in to_base64_value");
-static_assert(to_base64_url_value[uint8_t('_')] == 63, "_ must be == 62 in to_base64_url_value");
+static_assert(sizeof(to_base64_value) == 256,
+              "to_base64_value must have 256 elements");
+static_assert(sizeof(to_base64_url_value) == 256,
+              "to_base64_url_value must have 256 elements");
+static_assert(to_base64_value[uint8_t(' ')] == 64,
+              "space must be == 64 in to_base64_value");
+static_assert(to_base64_url_value[uint8_t(' ')] == 64,
+              "space must be == 64 in to_base64_url_value");
+static_assert(to_base64_value[uint8_t('\t')] == 64,
+              "tab must be == 64 in to_base64_value");
+static_assert(to_base64_url_value[uint8_t('\t')] == 64,
+              "tab must be == 64 in to_base64_url_value");
+static_assert(to_base64_value[uint8_t('\r')] == 64,
+              "cr must be == 64 in to_base64_value");
+static_assert(to_base64_url_value[uint8_t('\r')] == 64,
+              "cr must be == 64 in to_base64_url_value");
+static_assert(to_base64_value[uint8_t('\n')] == 64,
+              "lf must be == 64 in to_base64_value");
+static_assert(to_base64_url_value[uint8_t('\n')] == 64,
+              "lf must be == 64 in to_base64_url_value");
+static_assert(to_base64_value[uint8_t('\f')] == 64,
+              "ff must be == 64 in to_base64_value");
+static_assert(to_base64_url_value[uint8_t('\f')] == 64,
+              "ff must be == 64 in to_base64_url_value");
+static_assert(to_base64_value[uint8_t('+')] == 62,
+              "+ must be == 62 in to_base64_value");
+static_assert(to_base64_url_value[uint8_t('-')] == 62,
+              "- must be == 62 in to_base64_url_value");
+static_assert(to_base64_value[uint8_t('/')] == 63,
+              "/ must be == 62 in to_base64_value");
+static_assert(to_base64_url_value[uint8_t('_')] == 63,
+              "_ must be == 62 in to_base64_url_value");
 } // namespace base64
 } // namespace tables
 } // unnamed namespace

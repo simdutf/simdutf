@@ -10,12 +10,12 @@ namespace helpers {
 
 class random_utf8 final {
 public:
-  random_utf8(uint32_t seed, int prob_1byte, int prob_2bytes,
-             int prob_3bytes, int prob_4bytes);
+  random_utf8(uint32_t seed, int prob_1byte, int prob_2bytes, int prob_3bytes,
+              int prob_4bytes);
 
   std::vector<uint8_t> generate(size_t output_bytes);
   // include the number of code points
-  std::pair<std::vector<uint8_t>,size_t> generate_counted(size_t output_bytes);
+  std::pair<std::vector<uint8_t>, size_t> generate_counted(size_t output_bytes);
   std::vector<uint8_t> generate(size_t output_bytes, long seed);
 
 private:

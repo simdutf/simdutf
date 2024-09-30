@@ -75,13 +75,15 @@ bool CommandLine::run() {
     std::FILE *fp = std::fopen(output_file.string().c_str(), "wb");
     SIMDUTF_POP_DISABLE_WARNINGS
     if (fp == NULL) {
-      fprintf(stderr, "Could not open %s: %s\n", output_file.string().c_str(), strerror(errno));
+      fprintf(stderr, "Could not open %s: %s\n", output_file.string().c_str(),
+              strerror(errno));
       return false;
     }
     bool success = run_procedure(fp);
     // Let us first try to close the file.
     if (fclose(fp) != 0) {
-      fprintf(stderr, "Failed to close %s: %s\n", output_file.string().c_str(), strerror(errno));
+      fprintf(stderr, "Failed to close %s: %s\n", output_file.string().c_str(),
+              strerror(errno));
       return false;
     }
     return success;

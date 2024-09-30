@@ -7,10 +7,11 @@ namespace {
 namespace utf16_to_latin1 {
 
 template <endianness big_endian>
-inline size_t convert_valid(const char16_t* buf, size_t len, char* latin_output) {
- const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
+inline size_t convert_valid(const char16_t *buf, size_t len,
+                            char *latin_output) {
+  const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
   size_t pos = 0;
-  char* start{latin_output};
+  char *start{latin_output};
   uint16_t word = 0;
 
   while (pos < len) {
@@ -22,7 +23,7 @@ inline size_t convert_valid(const char16_t* buf, size_t len, char* latin_output)
   return latin_output - start;
 }
 
-} // utf16_to_latin1 namespace
+} // namespace utf16_to_latin1
 } // unnamed namespace
 } // namespace scalar
 } // namespace simdutf

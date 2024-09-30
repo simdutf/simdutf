@@ -1,0 +1,36 @@
+name: clang format
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: run clang format in docker
+        run: |
+          scripts/clang_format_docker.sh
+      - name: check for differences
+        run: |
+          git diff >clang-format.patch
+          if [ $(wc -c <clang-format.patch) -ne 0 ] ; then
+             echo "there was a formatting issue."
+             cat /etc/os-release
+             echo "you may download the artifact and apply it with git apply"
+             cat clang-format.patch
+             exit 1
+          else
+             rm clang-format.patch
+          fi
+      - name: store patch as artifact if there is one
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: clang-format.patch
+          path: clang-format.patch
+          if-no-files-found: ignore

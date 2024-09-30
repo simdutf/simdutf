@@ -20,8 +20,10 @@ sse_convert_utf32_to_latin1(const char32_t *buf, size_t len,
     if (!_mm_testz_si128(check_combined, high_bytes_mask)) {
       return std::make_pair(nullptr, latin1_output);
     }
-    __m128i pack1 = _mm_unpacklo_epi32(_mm_shuffle_epi8(in1, shufmask), _mm_shuffle_epi8(in2, shufmask));
-    __m128i pack2 = _mm_unpacklo_epi32(_mm_shuffle_epi8(in3, shufmask), _mm_shuffle_epi8(in4, shufmask));
+    __m128i pack1 = _mm_unpacklo_epi32(_mm_shuffle_epi8(in1, shufmask),
+                                       _mm_shuffle_epi8(in2, shufmask));
+    __m128i pack2 = _mm_unpacklo_epi32(_mm_shuffle_epi8(in3, shufmask),
+                                       _mm_shuffle_epi8(in4, shufmask));
     __m128i pack = _mm_unpacklo_epi64(pack1, pack2);
     _mm_storeu_si128((__m128i *)latin1_output, pack);
     latin1_output += 16;
@@ -65,8 +67,10 @@ sse_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
       buf += 16;
       continue;
     }
-    __m128i pack1 = _mm_unpacklo_epi32(_mm_shuffle_epi8(in1, shufmask), _mm_shuffle_epi8(in2, shufmask));
-    __m128i pack2 = _mm_unpacklo_epi32(_mm_shuffle_epi8(in3, shufmask), _mm_shuffle_epi8(in4, shufmask));
+    __m128i pack1 = _mm_unpacklo_epi32(_mm_shuffle_epi8(in1, shufmask),
+                                       _mm_shuffle_epi8(in2, shufmask));
+    __m128i pack2 = _mm_unpacklo_epi32(_mm_shuffle_epi8(in3, shufmask),
+                                       _mm_shuffle_epi8(in4, shufmask));
     __m128i pack = _mm_unpacklo_epi64(pack1, pack2);
     _mm_storeu_si128((__m128i *)latin1_output, pack);
     latin1_output += 16;
