@@ -97,34 +97,45 @@ $(document).ready(function(){initNavTree('error_8h_source.html',''); initResizab
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160; </div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="keyword">enum</span> error_code {</div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;  SUCCESS = 0,</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;  HEADER_BITS,  <span class="comment">// Any byte must have fewer than 5 header bits.</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;  TOO_SHORT,    <span class="comment">// The leading byte must be followed by N-1 continuation bytes, where N is the UTF-8 character length</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;                <span class="comment">// This is also the error when the input is truncated.</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  TOO_LONG,     <span class="comment">// We either have too many consecutive continuation bytes or the string starts with a continuation byte.</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  OVERLONG,     <span class="comment">// The decoded character must be above U+7F for two-byte characters, U+7FF for three-byte characters,</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;                <span class="comment">// and U+FFFF for four-byte characters.</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  TOO_LARGE,    <span class="comment">// The decoded character must be less than or equal to U+10FFFF,less than or equal than U+7F for ASCII OR less than equal than U+FF for Latin1</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  SURROGATE,    <span class="comment">// The decoded character must be not be in U+D800...DFFF (UTF-8 or UTF-32) OR</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;                <span class="comment">// a high surrogate must be followed by a low surrogate and a low surrogate must be preceded by a high surrogate (UTF-16) OR</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;                <span class="comment">// there must be no surrogate at all (Latin1)</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  INVALID_BASE64_CHARACTER, <span class="comment">// Found a character that cannot be part of a valid base64 string.</span></div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  BASE64_INPUT_REMAINDER, <span class="comment">// The base64 input terminates with a single character, excluding padding (=).</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  OUTPUT_BUFFER_TOO_SMALL, <span class="comment">// The provided buffer is too small.</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  OTHER         <span class="comment">// Not related to validation/transcoding.</span></div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;};</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
-<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="structsimdutf_1_1result.html">   23</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structsimdutf_1_1result.html">result</a> {</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  error_code error;</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <span class="keywordtype">size_t</span> count;     <span class="comment">// In case of error, indicates the position of the error. In case of success, indicates the number of code units validated/written.</span></div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  simdutf_really_inline <a class="code" href="structsimdutf_1_1result.html">result</a>() : error{error_code::SUCCESS}, count{0} {}</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  simdutf_really_inline <a class="code" href="structsimdutf_1_1result.html">result</a>(error_code _err, <span class="keywordtype">size_t</span> _pos) : error{_err}, count{_pos} {}</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;};</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;}</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition:</b> <a href="error_8h_source.html#l00023">error.h:23</a></div></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;  HEADER_BITS, <span class="comment">// Any byte must have fewer than 5 header bits.</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;  TOO_SHORT,   <span class="comment">// The leading byte must be followed by N-1 continuation bytes,</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;               <span class="comment">// where N is the UTF-8 character length This is also the error</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;               <span class="comment">// when the input is truncated.</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  TOO_LONG,    <span class="comment">// We either have too many consecutive continuation bytes or the</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;               <span class="comment">// string starts with a continuation byte.</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  OVERLONG, <span class="comment">// The decoded character must be above U+7F for two-byte characters,</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;            <span class="comment">// U+7FF for three-byte characters, and U+FFFF for four-byte</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;            <span class="comment">// characters.</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  TOO_LARGE, <span class="comment">// The decoded character must be less than or equal to</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;             <span class="comment">// U+10FFFF,less than or equal than U+7F for ASCII OR less than</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;             <span class="comment">// equal than U+FF for Latin1</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  SURROGATE, <span class="comment">// The decoded character must be not be in U+D800...DFFF (UTF-8 or</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;             <span class="comment">// UTF-32) OR a high surrogate must be followed by a low surrogate</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;             <span class="comment">// and a low surrogate must be preceded by a high surrogate</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;             <span class="comment">// (UTF-16) OR there must be no surrogate at all (Latin1)</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  INVALID_BASE64_CHARACTER, <span class="comment">// Found a character that cannot be part of a valid</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;                            <span class="comment">// base64 string.</span></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  BASE64_INPUT_REMAINDER,   <span class="comment">// The base64 input terminates with a single</span></div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;                            <span class="comment">// character, excluding padding (=).</span></div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  OUTPUT_BUFFER_TOO_SMALL,  <span class="comment">// The provided buffer is too small.</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  OTHER                     <span class="comment">// Not related to validation/transcoding.</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;};</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
+<div class="line"><a name="l00031"></a><span class="lineno"><a class="line" href="structsimdutf_1_1result.html">   31</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structsimdutf_1_1result.html">result</a> {</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  error_code error;</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  <span class="keywordtype">size_t</span> count; <span class="comment">// In case of error, indicates the position of the error. In</span></div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;                <span class="comment">// case of success, indicates the number of code units</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;                <span class="comment">// validated/written.</span></div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  simdutf_really_inline <a class="code" href="structsimdutf_1_1result.html">result</a>() : error{error_code::SUCCESS}, count{0} {}</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160; </div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  simdutf_really_inline <a class="code" href="structsimdutf_1_1result.html">result</a>(error_code _err, <span class="keywordtype">size_t</span> _pos)</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;      : error{_err}, count{_pos} {}</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;};</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160; </div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;} <span class="comment">// namespace simdutf</span></div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition:</b> <a href="error_8h_source.html#l00031">error.h:31</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

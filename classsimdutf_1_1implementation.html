@@ -360,7 +360,7 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 <div class="textblock"><p>An implementation of simdutf for a particular CPU architecture. </p>
 <p>Also used to maintain the currently active implementation. The active implementation is automatically initialized on first use to the most advanced implementation supported by the host. </p>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01617">1617</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01916">1916</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="afd306a0bc3e221964af3f31a64784b12"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afd306a0bc3e221964af3f31a64784b12">&#9670;&nbsp;</a></span>autodetect_encoding()</h2>
@@ -3388,10 +3388,11 @@ virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bo
 
 <p>The description of this implementation. </p>
 <pre class="fragment">const implementation *impl = simdutf::active_implementation;
-cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" &lt;&lt; impl-&gt;description() &lt;&lt; ")" &lt;&lt; endl;
-</pre> <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
+cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" &lt;&lt;
+</pre><p> impl-&gt;<a class="el" href="classsimdutf_1_1implementation.html#af48e75e8d6d25c3c3d66334a8849cbc7" title="The description of this implementation.">description()</a> &lt;&lt; ")" &lt;&lt; endl;</p>
+<dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01638">1638</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01938">1938</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3643,10 +3644,11 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 
 <p>The name of this implementation. </p>
 <pre class="fragment">const implementation *impl = simdutf::active_implementation;
-cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" &lt;&lt; impl-&gt;description() &lt;&lt; ")" &lt;&lt; endl;
-</pre> <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
+cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" &lt;&lt;
+</pre><p> impl-&gt;<a class="el" href="classsimdutf_1_1implementation.html#af48e75e8d6d25c3c3d66334a8849cbc7" title="The description of this implementation.">description()</a> &lt;&lt; ")" &lt;&lt; endl;</p>
+<dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01628">1628</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01927">1927</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
