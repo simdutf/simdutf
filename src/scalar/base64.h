@@ -25,7 +25,7 @@ template <class char_type> bool is_eight_byte(char_type c) {
 // This functions assumes that the padding (=) has been removed.
 template <class char_type>
 result base64_tail_decode(char *dst, const char_type *src, size_t length,
-                          base64_options options, last_chunk_handling_options last_chunk_options) {
+                          base64_options options, last_chunk_handling_options last_chunk_options = last_chunk_handling_options::loose) {
   // This looks like 5 branches, but we expect the compiler to resolve this to a
   // single branch:
   const uint8_t *to_base64 = (options & base64_url)
