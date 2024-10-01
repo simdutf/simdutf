@@ -76,6 +76,7 @@ The simdutf library is used by:
 - [Oracle GraalVM JavaScript](https://github.com/oracle/graaljs), a JavaScript implementation by Oracle,
 - [Couchbase](https://www.couchbase.com), a popular database system,
 - [Ladybird](https://ladybird.org), an independent Web browser,
+- [Cloudflare workerd](https://github.com/cloudflare/workerd), a JavaScript/Wasm Runtime,
 - [haskell/text](https://github.com/haskell/text), a library for fast operations over Unicode text,
 - [klogg](https://github.com/variar/klogg), a Really fast log explorer,
 - [Pixie](https://github.com/pixie-io/pixie), observability tool for Kubernetes applications.
