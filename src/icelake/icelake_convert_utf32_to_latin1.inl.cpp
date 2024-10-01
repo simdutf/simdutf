@@ -12,8 +12,9 @@ size_t icelake_convert_utf32_to_latin1(const char32_t *buf, size_t len,
     if (_mm512_cmpgt_epu32_mask(in, v_0xFF)) {
       return 0;
     }
-    _mm_storeu_si128((__m128i *)latin1_output,
-                     _mm512_castsi512_si128(_mm512_permutexvar_epi8(shufmask, in)));
+    _mm_storeu_si128(
+        (__m128i *)latin1_output,
+        _mm512_castsi512_si128(_mm512_permutexvar_epi8(shufmask, in)));
     latin1_output += 16;
     buf += 16;
   }
@@ -49,8 +50,9 @@ icelake_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
       return std::make_pair(result(error_code::TOO_LARGE, buf - start),
                             latin1_output);
     }
-    _mm_storeu_si128((__m128i *)latin1_output,
-                     _mm512_castsi512_si128(_mm512_permutexvar_epi8(shufmask, in)));
+    _mm_storeu_si128(
+        (__m128i *)latin1_output,
+        _mm512_castsi512_si128(_mm512_permutexvar_epi8(shufmask, in)));
     latin1_output += 16;
     buf += 16;
   }

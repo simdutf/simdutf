@@ -11,9 +11,12 @@ namespace base64 {
 
 // This function is not expected to be fast. Do not use in long loops.
 template <class char_type> bool is_ascii_white_space(char_type c) {
+template <class char_type> bool is_ascii_white_space(char_type c) {
   return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f';
 }
 
+template <class char_type> bool is_eight_byte(char_type c) {
+  if (sizeof(char_type) == 1) {
 template <class char_type> bool is_eight_byte(char_type c) {
   if (sizeof(char_type) == 1) {
     return true;
@@ -55,8 +58,12 @@ result base64_tail_decode(char *dst, const char_type *src, size_t length,
     while (src + 4 <= srcend && is_eight_byte(src[0]) &&
            is_eight_byte(src[1]) && is_eight_byte(src[2]) &&
            is_eight_byte(src[3]) &&
+    while (src + 4 <= srcend && is_eight_byte(src[0]) &&
+           is_eight_byte(src[1]) && is_eight_byte(src[2]) &&
+           is_eight_byte(src[3]) &&
            (x = d0[uint8_t(src[0])] | d1[uint8_t(src[1])] |
                 d2[uint8_t(src[2])] | d3[uint8_t(src[3])]) < 0x01FFFFFF) {
+      if (match_system(endianness::BIG)) {
       if (match_system(endianness::BIG)) {
         x = scalar::utf32::swap_bytes(x);
       }
@@ -125,6 +132,7 @@ result base64_tail_decode(char *dst, const char_type *src, size_t length,
         (uint32_t(buffer[0]) << 3 * 6) + (uint32_t(buffer[1]) << 2 * 6) +
         (uint32_t(buffer[2]) << 1 * 6) + (uint32_t(buffer[3]) << 0 * 6);
     if (match_system(endianness::BIG)) {
+    if (match_system(endianness::BIG)) {
       triple <<= 8;
       std::memcpy(dst, &triple, 3);
     } else {
@@ -139,13 +147,36 @@ result base64_tail_decode(char *dst, const char_type *src, size_t length,
 // like base64_tail_decode, but it will not write past the end of the output
 // buffer. outlen is modified to reflect the number of bytes written. This
 // functions assumes that the padding (=) has been removed.
+// like base64_tail_decode, but it will not write past the end of the output
+// buffer. outlen is modified to reflect the number of bytes written. This
+// functions assumes that the padding (=) has been removed.
 template <class char_type>
+result base64_tail_decode_safe(char *dst, size_t &outlen, const char_type *src,
+                               size_t length, base64_options options) {
+  if (length == 0) {
 result base64_tail_decode_safe(char *dst, size_t &outlen, const char_type *src,
                                size_t length, base64_options options) {
   if (length == 0) {
     outlen = 0;
     return {SUCCESS, 0};
   }
+  // This looks like 5 branches, but we expect the compiler to resolve this to a
+  // single branch:
+  const uint8_t *to_base64 = (options & base64_url)
+                                 ? tables::base64::to_base64_url_value
+                                 : tables::base64::to_base64_value;
+  const uint32_t *d0 = (options & base64_url)
+                           ? tables::base64::base64_url::d0
+                           : tables::base64::base64_default::d0;
+  const uint32_t *d1 = (options & base64_url)
+                           ? tables::base64::base64_url::d1
+                           : tables::base64::base64_default::d1;
+  const uint32_t *d2 = (options & base64_url)
+                           ? tables::base64::base64_url::d2
+                           : tables::base64::base64_default::d2;
+  const uint32_t *d3 = (options & base64_url)
+                           ? tables::base64::base64_url::d3
+                           : tables::base64::base64_default::d3;
   // This looks like 5 branches, but we expect the compiler to resolve this to a
   // single branch:
   const uint8_t *to_base64 = (options & base64_url)
@@ -173,6 +204,9 @@ result base64_tail_decode_safe(char *dst, size_t &outlen, const char_type *src,
   size_t idx;
   uint8_t buffer[4];
   while (true) {
+    while (src + 4 <= srcend && is_eight_byte(src[0]) &&
+           is_eight_byte(src[1]) && is_eight_byte(src[2]) &&
+           is_eight_byte(src[3]) &&
     while (src + 4 <= srcend && is_eight_byte(src[0]) &&
            is_eight_byte(src[1]) && is_eight_byte(src[2]) &&
            is_eight_byte(src[3]) &&
@@ -215,6 +249,7 @@ result base64_tail_decode_safe(char *dst, size_t &outlen, const char_type *src,
         }
         uint32_t triple =
             (uint32_t(buffer[0]) << 3 * 6) + (uint32_t(buffer[1]) << 2 * 6);
+        if (match_system(endianness::BIG)) {
         if (match_system(endianness::BIG)) {
           triple <<= 8;
           std::memcpy(dst, &triple, 1);
