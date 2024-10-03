@@ -126,6 +126,69 @@ TEST(base64_decode_complete_input) {
   }
 }
 
+TEST(base64_decode_strict_mode) {
+  std::vector<std::pair<std::string, std::string>> test_cases = {
+    {"TQ", "M"},             // Length 2 (not multiple of 4)
+    {"TWE", "Ma"},           // Length 3 (not multiple of 4)
+    {"TWFu", "Man"},         // Length 4 (multiple of 4)
+    {"TWF1", "Mau"},         // Length 4 (multiple of 4)
+    {"TWFubWFu", "Manman"},  // Length 8 (multiple of 4)
+  };
+
+  for (const auto& [input_data, expected_output] : test_cases) {
+    std::vector<char> output_buffer(expected_output.size() + 3); // Add extra space for safety
+
+    auto result = implementation.base64_to_binary(
+        input_data.data(),
+        input_data.size(),
+        output_buffer.data(),
+        simdutf::base64_default,
+        simdutf::last_chunk_handling_options::strict
+    );
+
+    if (input_data.size() % 4 == 0) {
+      // Input length is a multiple of 4, expect success
+      ASSERT_EQUAL(result.error, simdutf::SUCCESS);
+      ASSERT_EQUAL(result.count, expected_output.size());
+      ASSERT_TRUE(std::equal(output_buffer.begin(),
+                             output_buffer.begin() + result.count,
+                             expected_output.begin()));
+    } else {
+      // Input length is not a multiple of 4, expect failure in strict mode
+      ASSERT_EQUAL(result.error, simdutf::BASE64_INPUT_REMAINDER);
+    }
+  }
+}
+
+TEST(base64_decode_stop_before_partial) {
+  std::vector<std::pair<std::string, std::string>> test_cases = {
+    {"TQ", ""},             // Length 2 (no complete blocks)
+    {"TWE", ""},            // Length 3 (no complete blocks)
+    {"TWFu", "Man"},        // Length 4 (1 complete block)
+    {"TWFuTQ", "Man"},      // Length 6 (1 complete block)
+    {"TWFuTW", "Man"},      // Length 7 (1 complete block)
+    {"TWFuTWFu", "ManMan"}, // Length 8 (2 complete blocks)
+  };
+
+  for (const auto& [input_data, expected_output] : test_cases) {
+    std::vector<char> output_buffer(expected_output.size() + 3); // Extra space
+
+    auto result = implementation.base64_to_binary(
+        input_data.data(),
+        input_data.size(),
+        output_buffer.data(),
+        simdutf::base64_default,
+        simdutf::last_chunk_handling_options::stop_before_partial
+    );
+
+    ASSERT_EQUAL(result.error, simdutf::SUCCESS);
+    ASSERT_EQUAL(result.count, expected_output.size());
+    ASSERT_TRUE(std::equal(output_buffer.begin(),
+                           output_buffer.begin() + result.count,
+                           expected_output.begin()));
+  }
+}
+
 TEST(issue_520_url) {
   // output differs between implementations for decode
   // impl arm64 got maxbinarylength=48 convertresult=[count=64,
