@@ -4,7 +4,6 @@
 #if !defined(SIMDUTF_NO_THREADS)
   #include <atomic>
 #endif
-#include <vector>
 #include <tuple>
 #include "simdutf/common_defs.h"
 #include "simdutf/internal/isadetection.h"
