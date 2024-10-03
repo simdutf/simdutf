@@ -118,11 +118,11 @@ TEST(base64_decode_complete_input) {
         option
     );
 
-    ASSERT_EQUAL(result.error, simdutf::SUCCESS);
+    ASSERT_EQUAL(result.error, simdutf::error_code::SUCCESS);
     ASSERT_EQUAL(result.count, expected_output.size());
-    ASSERT_TRUE(std::equal(output_buffer.begin(),
+    ASSERT_TRUE((std::equal(output_buffer.begin(),
                            output_buffer.begin() + result.count,
-                           expected_output.begin()));
+                           expected_output.begin())));
   }
 }
 
@@ -148,14 +148,14 @@ TEST(base64_decode_strict_mode) {
 
     if (input_data.size() % 4 == 0) {
       // Input length is a multiple of 4, expect success
-      ASSERT_EQUAL(result.error, simdutf::SUCCESS);
+      ASSERT_EQUAL(result.error, simdutf::error_code::SUCCESS);
       ASSERT_EQUAL(result.count, expected_output.size());
-      ASSERT_TRUE(std::equal(output_buffer.begin(),
+      ASSERT_TRUE((std::equal(output_buffer.begin(),
                              output_buffer.begin() + result.count,
-                             expected_output.begin()));
+                             expected_output.begin())));
     } else {
       // Input length is not a multiple of 4, expect failure in strict mode
-      ASSERT_EQUAL(result.error, simdutf::BASE64_INPUT_REMAINDER);
+      ASSERT_EQUAL(result.error, simdutf::error_code::BASE64_INPUT_REMAINDER);
     }
   }
 }
@@ -181,11 +181,11 @@ TEST(base64_decode_stop_before_partial) {
         simdutf::last_chunk_handling_options::stop_before_partial
     );
 
-    ASSERT_EQUAL(result.error, simdutf::SUCCESS);
+    ASSERT_EQUAL(result.error, simdutf::error_code::SUCCESS);
     ASSERT_EQUAL(result.count, expected_output.size());
-    ASSERT_TRUE(std::equal(output_buffer.begin(),
+    ASSERT_TRUE((std::equal(output_buffer.begin(),
                            output_buffer.begin() + result.count,
-                           expected_output.begin()));
+                           expected_output.begin())));
   }
 }
 
