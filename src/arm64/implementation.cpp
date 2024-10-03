@@ -1,9 +1,10 @@
 #include "simdutf/arm64/begin.h"
+#include "simdutf/implementation.h"
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
 #ifndef SIMDUTF_ARM64_H
-  #error "arm64.h must be included"
+#error "arm64.h must be included"
 #endif
 using namespace simd;
 
@@ -115,22 +116,22 @@ convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in, size_t shufutf8_idx) {
 #include "arm64/arm_validate_utf16.cpp"
 #include "arm64/arm_validate_utf32le.cpp"
 
-#include "arm64/arm_convert_latin1_to_utf8.cpp"
 #include "arm64/arm_convert_latin1_to_utf16.cpp"
 #include "arm64/arm_convert_latin1_to_utf32.cpp"
+#include "arm64/arm_convert_latin1_to_utf8.cpp"
 
+#include "arm64/arm_convert_utf8_to_latin1.cpp"
 #include "arm64/arm_convert_utf8_to_utf16.cpp"
 #include "arm64/arm_convert_utf8_to_utf32.cpp"
-#include "arm64/arm_convert_utf8_to_latin1.cpp"
 
 #include "arm64/arm_convert_utf16_to_latin1.cpp"
-#include "arm64/arm_convert_utf16_to_utf8.cpp"
 #include "arm64/arm_convert_utf16_to_utf32.cpp"
+#include "arm64/arm_convert_utf16_to_utf8.cpp"
 
-#include "arm64/arm_convert_utf32_to_latin1.cpp"
-#include "arm64/arm_convert_utf32_to_utf8.cpp"
-#include "arm64/arm_convert_utf32_to_utf16.cpp"
 #include "arm64/arm_base64.cpp"
+#include "arm64/arm_convert_utf32_to_latin1.cpp"
+#include "arm64/arm_convert_utf32_to_utf16.cpp"
+#include "arm64/arm_convert_utf32_to_utf8.cpp"
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -139,14 +140,14 @@ convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in, size_t shufutf8_idx) {
 #include "generic/utf8_validation/utf8_lookup4_algorithm.h"
 #include "generic/utf8_validation/utf8_validator.h"
 // transcoding from UTF-8 to UTF-16
-#include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
 #include "generic/utf8_to_utf16/utf8_to_utf16.h"
+#include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
 // transcoding from UTF-8 to UTF-32
-#include "generic/utf8_to_utf32/valid_utf8_to_utf32.h"
 #include "generic/utf8_to_utf32/utf8_to_utf32.h"
+#include "generic/utf8_to_utf32/valid_utf8_to_utf32.h"
 // other functions
-#include "generic/utf8.h"
 #include "generic/utf16.h"
+#include "generic/utf8.h"
 // transcoding from UTF-8 to Latin 1
 #include "generic/utf8_to_latin1/utf8_to_latin1.h"
 #include "generic/utf8_to_latin1/valid_utf8_to_latin1.h"
@@ -1122,12 +1123,13 @@ simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
   return scalar::base64::maximal_binary_length_from_base64(input, length);
 }
 
-simdutf_warn_unused result
-implementation::base64_to_binary(const char *input, size_t length, char *output,
-                                 base64_options options) const noexcept {
+simdutf_warn_unused result implementation::base64_to_binary(
+    const char *input, size_t length, char *output, base64_options options,
+    last_chunk_handling_options last_chunk_options =
+        last_chunk_handling_options::loose) const noexcept {
   return (options & base64_url)
-             ? compress_decode_base64<true>(output, input, length, options)
-             : compress_decode_base64<false>(output, input, length, options);
+             ? compress_decode_base64<true>(output, input, length, options, last_chunk_options)
+             : compress_decode_base64<false>(output, input, length, options, last_chunk_options);
 }
 
 simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
@@ -1136,11 +1138,12 @@ simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
 }
 
 simdutf_warn_unused result implementation::base64_to_binary(
-    const char16_t *input, size_t length, char *output,
-    base64_options options) const noexcept {
+    const char16_t *input, size_t length, char *output, base64_options options,
+    last_chunk_handling_options last_chunk_options =
+        last_chunk_handling_options::loose) const noexcept {
   return (options & base64_url)
-             ? compress_decode_base64<true>(output, input, length, options)
-             : compress_decode_base64<false>(output, input, length, options);
+             ? compress_decode_base64<true>(output, input, length, options, last_chunk_options)
+             : compress_decode_base64<false>(output, input, length, options, last_chunk_options);
 }
 
 simdutf_warn_unused size_t implementation::base64_length_from_binary(

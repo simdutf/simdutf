@@ -1,27 +1,27 @@
-#include "scalar/utf8.h"
-#include "scalar/utf16.h"
 #include "scalar/latin1.h"
-#include "scalar/utf8_to_latin1/valid_utf8_to_latin1.h"
+#include "scalar/utf16.h"
+#include "scalar/utf8.h"
 #include "scalar/utf8_to_latin1/utf8_to_latin1.h"
+#include "scalar/utf8_to_latin1/valid_utf8_to_latin1.h"
 
-#include "scalar/utf16_to_utf8/valid_utf16_to_utf8.h"
 #include "scalar/utf16_to_utf8/utf16_to_utf8.h"
+#include "scalar/utf16_to_utf8/valid_utf16_to_utf8.h"
 
-#include "scalar/utf16_to_utf32/valid_utf16_to_utf32.h"
 #include "scalar/utf16_to_utf32/utf16_to_utf32.h"
+#include "scalar/utf16_to_utf32/valid_utf16_to_utf32.h"
 
-#include "scalar/utf32_to_utf8/valid_utf32_to_utf8.h"
 #include "scalar/utf32_to_utf8/utf32_to_utf8.h"
+#include "scalar/utf32_to_utf8/valid_utf32_to_utf8.h"
 
-#include "scalar/utf32_to_utf16/valid_utf32_to_utf16.h"
 #include "scalar/utf32_to_utf16/utf32_to_utf16.h"
+#include "scalar/utf32_to_utf16/valid_utf32_to_utf16.h"
 
 #include "simdutf/rvv/begin.h"
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
 #ifndef SIMDUTF_RVV_H
-  #error "rvv.h must be included"
+#error "rvv.h must be included"
 #endif
 
 } // unnamed namespace
@@ -38,9 +38,9 @@ namespace SIMDUTF_IMPLEMENTATION {
 #include "rvv/rvv_validate.inl.cpp"
 
 #include "rvv/rvv_latin1_to.inl.cpp"
-#include "rvv/rvv_utf8_to.inl.cpp"
 #include "rvv/rvv_utf16_to.inl.cpp"
 #include "rvv/rvv_utf32_to.inl.cpp"
+#include "rvv/rvv_utf8_to.inl.cpp"
 
 simdutf_warn_unused int
 implementation::detect_encodings(const char *input,
@@ -88,9 +88,10 @@ simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
   return scalar::base64::maximal_binary_length_from_base64(input, length);
 }
 
-simdutf_warn_unused result
-implementation::base64_to_binary(const char *input, size_t length, char *output,
-                                 base64_options options) const noexcept {
+simdutf_warn_unused result implementation::base64_to_binary(
+    const char *input, size_t length, char *output, base64_options options,
+    last_chunk_handling_options last_chunk_options =
+        last_chunk_handling_options::loose) const noexcept {
   while (length > 0 &&
          scalar::base64::is_ascii_white_space(input[length - 1])) {
     length--;
@@ -118,7 +119,8 @@ implementation::base64_to_binary(const char *input, size_t length, char *output,
     }
     return {SUCCESS, 0};
   }
-  result r = scalar::base64::base64_tail_decode(output, input, length, options);
+  result r = scalar::base64::base64_tail_decode(output, input, length, options,
+                                                last_chunk_options);
   if (r.error == error_code::SUCCESS && equalsigns > 0) {
     // additional checks
     if ((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
@@ -134,8 +136,9 @@ simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
 }
 
 simdutf_warn_unused result implementation::base64_to_binary(
-    const char16_t *input, size_t length, char *output,
-    base64_options options) const noexcept {
+    const char16_t *input, size_t length, char *output, base64_options options,
+    last_chunk_handling_options last_chunk_options =
+        last_chunk_handling_options::loose) const noexcept {
   while (length > 0 &&
          scalar::base64::is_ascii_white_space(input[length - 1])) {
     length--;
@@ -163,7 +166,8 @@ simdutf_warn_unused result implementation::base64_to_binary(
     }
     return {SUCCESS, 0};
   }
-  result r = scalar::base64::base64_tail_decode(output, input, length, options);
+  result r = scalar::base64::base64_tail_decode(output, input, length, options,
+                                                last_chunk_options);
   if (r.error == error_code::SUCCESS && equalsigns > 0) {
     // additional checks
     if ((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {

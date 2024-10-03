@@ -327,7 +327,8 @@ void base64_decode_block(char *out, const char *src) {
 
 template <bool base64_url, typename char_type>
 result compress_decode_base64(char *dst, const char_type *src, size_t srclen,
-                              base64_options options) {
+                              base64_options options,
+                              last_chunk_handling_options last_chunk_options) {
   const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value
                                         : tables::base64::to_base64_value;
   size_t equallocation =
@@ -496,7 +497,7 @@ result compress_decode_base64(char *dst, const char_type *src, size_t srclen,
   }
   if (src < srcend + equalsigns) {
     result r =
-        scalar::base64::base64_tail_decode(dst, src, srcend - src, options);
+        scalar::base64::base64_tail_decode(dst, src, srcend - src, options, last_chunk_options);
     if (r.error == error_code::INVALID_BASE64_CHARACTER) {
       r.count += size_t(src - srcinit);
       return r;

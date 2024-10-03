@@ -1,6 +1,7 @@
 #include "simdutf.h"
 
 #include <array>
+#include <iostream>
 
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
@@ -100,6 +101,31 @@ TEST(issue_520) {
   ASSERT_EQUAL(r.count, 0);
 }
 
+TEST(base64_decode_complete_input) {
+  std::vector<unsigned char> input_data = {0x54, 0x57, 0x46, 0x75}; // "TWFu" Base64 for "Man"
+  std::vector<char> expected_output = {'M', 'a', 'n'};
+  std::vector<char> output_buffer(expected_output.size());
+
+  // Test with all last_chunk_handling_options
+  for (auto option : {simdutf::last_chunk_handling_options::strict,
+                      simdutf::last_chunk_handling_options::loose,
+                      simdutf::last_chunk_handling_options::stop_before_partial}) {
+    auto result = implementation.base64_to_binary(
+        reinterpret_cast<const char*>(input_data.data()),
+        input_data.size(),
+        output_buffer.data(),
+        simdutf::base64_default,
+        option
+    );
+
+    ASSERT_EQUAL(result.error, simdutf::SUCCESS);
+    ASSERT_EQUAL(result.count, expected_output.size());
+    ASSERT_TRUE(std::equal(output_buffer.begin(),
+                           output_buffer.begin() + result.count,
+                           expected_output.begin()));
+  }
+}
+
 TEST(issue_520_url) {
   // output differs between implementations for decode
   // impl arm64 got maxbinarylength=48 convertresult=[count=64,
@@ -142,7 +168,7 @@ TEST(issue_511) {
       (const char *)data.data(), data.size(), out.data(), simdutf::base64_url);
   ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
   ASSERT_EQUAL(r.count, 12);
-};
+}
 
 TEST(issue_509) {
   std::vector<char> data{' ', '='};
