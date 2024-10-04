@@ -1695,13 +1695,11 @@ enum : base64_options {
 
 // last_chunk_handling_options are used to specify the handling of the last
 // chunk in base64 decoding.
-// TODO(franciscogthiesen) - Verify if we want to keep this as a separate option
-// or add it to base64_options. For more details, see:
 // https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
 enum last_chunk_handling_options : uint64_t {
-  loose = 0,               /* standard base64 format (with padding) */
-  strict = 1,              /* ignore the last chunk if it is not a full chunk */
-  stop_before_partial = 2, /* pad the last chunk if it is not a full chunk */
+  loose = 0,               /* standard base64 format, decode partial final chunk */
+  strict = 1,              /* error when the last chunk is partial, 2 or 3 chars, and unpadded */
+  stop_before_partial = 2, /* if the last chunk is partial (2 or 3 chars), ignore it (no error) */
 };
 
 /**
