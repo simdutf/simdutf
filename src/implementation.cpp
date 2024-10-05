@@ -1753,7 +1753,7 @@ base64_to_binary_safe_impl(const chartype *input, size_t length, char *output,
   // the input.
   size_t outlen3 = outlen / 3 * 3; // round down to multiple of 3
   size_t safe_input = base64_length_from_binary(outlen3, options);
-  result r = base64_to_binary(input, safe_input, output, options, last_chunk_handling_options);
+  result r = base64_to_binary(input, safe_input, output, options, loose);
   if (r.error == error_code::INVALID_BASE64_CHARACTER) {
     return r;
   }
@@ -1796,7 +1796,7 @@ base64_to_binary_safe_impl(const chartype *input, size_t length, char *output,
     }
   }
   r = scalar::base64::base64_tail_decode_safe(
-      output + output_index, remaining_out, tail_input, tail_length, options);
+      output + output_index, remaining_out, tail_input, tail_length, padding_characts, options, last_chunk_handling_options);
   outlen = output_index + remaining_out;
   if (r.error == error_code::SUCCESS && padding_characts > 0) {
     // additional checks

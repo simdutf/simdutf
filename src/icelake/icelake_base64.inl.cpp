@@ -305,13 +305,29 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         return {BASE64_INPUT_REMAINDER, size_t(dst - dstinit)};
       }
       if (leftover == 2) {
+        for (;src < srcend; src++) {
+          uint8_t val = to_base64[uint8_t(*src)];
+          if (!scalar::base64::is_eight_byte(*src) || val > 64) {
+            return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
+          }
+        }
         uint32_t triple = (uint32_t(buffer_start[0]) << 3 * 6) +
                           (uint32_t(buffer_start[1]) << 2 * 6);
         triple = scalar::utf32::swap_bytes(triple);
         triple >>= 8;
         std::memcpy(dst, &triple, 1);
         dst += 1;
+        if (equalsigns == 1) {
+          return {INVALID_BASE64_CHARACTER, equallocation};
+        }
+        return {SUCCESS, size_t(dst - dstinit)};
       } else if (leftover == 3) {
+        for (;src < srcend; src++) {
+          uint8_t val = to_base64[uint8_t(*src)];
+          if (!scalar::base64::is_eight_byte(*src) || val > 64) {
+            return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
+          }
+        }
         uint32_t triple = (uint32_t(buffer_start[0]) << 3 * 6) +
                           (uint32_t(buffer_start[1]) << 2 * 6) +
                           (uint32_t(buffer_start[2]) << 1 * 6);
@@ -320,6 +336,10 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
 
         std::memcpy(dst, &triple, 2);
         dst += 2;
+        if (equalsigns == 2) {
+          return {INVALID_BASE64_CHARACTER, equallocation};
+        }
+        return {SUCCESS, size_t(dst - dstinit)};
       } else {
         uint32_t triple = ((uint32_t(uint8_t(buffer_start[0])) << 3 * 6) +
                            (uint32_t(uint8_t(buffer_start[1])) << 2 * 6) +
@@ -334,7 +354,7 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   }
   if (src < srcend + equalsigns) {
     result r =
-        scalar::base64::base64_tail_decode(dst, src, srcend - src, options, last_chunk_options);
+        scalar::base64::base64_tail_decode(dst, src, srcend - src, equalsigns, options, last_chunk_options);
     if (r.error == error_code::INVALID_BASE64_CHARACTER) {
       r.count += size_t(src - srcinit);
       return r;

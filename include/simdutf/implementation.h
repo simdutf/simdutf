@@ -1760,13 +1760,23 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(
  * maximal_binary_length_from_base64(input, length) bytes long. If you fail to
  * provide that much space, the function may cause a buffer overflow.
  *
+ * Advanced users may want to taylor how the last chunk is handled. By default,
+ * we use a loose (forgiving) approach but we also support a strict approach
+ * as well as a stop_before_partial approach, as per the following proposal:
+ *
+ * https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
+ *
  * @param input         the base64 string to process
  * @param length        the length of the string in bytes
  * @param output        the pointer to buffer that can hold the conversion
  * result (should be at least maximal_binary_length_from_base64(input, length)
  * bytes long).
- * @param options       the base64 options to use, can be base64_default or
- * base64_url, is base64_default by default.
+ * @param options       the base64 options to use, usually base64_default or
+ * base64_url, and base64_default by default.
+ * @param last_chunk_options the last chunk handling options,
+ * last_chunk_handling_options::loose by default
+ * but can also be last_chunk_handling_options::strict or
+ * last_chunk_handling_options::stop_before_partial.
  * @return a result pair struct (of type simdutf::error containing the two
  * fields error and count) with an error code and either position of the error
  * (in the input in bytes) if any, or the number of bytes written if successful.
@@ -1774,8 +1784,7 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(
 simdutf_warn_unused result
 base64_to_binary(const char *input, size_t length, char *output,
                  base64_options options = base64_default,
-                 last_chunk_handling_options last_chunk_options =
-                     last_chunk_handling_options::loose) noexcept;
+                 last_chunk_handling_options last_chunk_options = loose) noexcept;
 
 /**
  * Provide the base64 length in bytes given the length of a binary input.
@@ -1843,6 +1852,12 @@ size_t binary_to_base64(const char *input, size_t length, char *output,
  * maximal_binary_length_from_utf6_base64(input, length) bytes long. If you fail
  * to provide that much space, the function may cause a buffer overflow.
  *
+ * Advanced users may want to taylor how the last chunk is handled. By default,
+ * we use a loose (forgiving) approach but we also support a strict approach
+ * as well as a stop_before_partial approach, as per the following proposal:
+ *
+ * https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
+ *
  * @param input         the base64 string to process, in ASCII stored as 16-bit
  * units
  * @param length        the length of the string in 16-bit units
@@ -1851,6 +1866,10 @@ size_t binary_to_base64(const char *input, size_t length, char *output,
  * bytes long).
  * @param options       the base64 options to use, can be base64_default or
  * base64_url, is base64_default by default.
+ * @param last_chunk_options the last chunk handling options,
+ * last_chunk_handling_options::loose by default
+ * but can also be last_chunk_handling_options::strict or
+ * last_chunk_handling_options::stop_before_partial.
  * @return a result pair struct (of type simdutf::error containing the two
  * fields error and count) with an error code and position of the
  * INVALID_BASE64_CHARACTER error (in the input in units) if any, or the number
@@ -1899,6 +1918,12 @@ base64_to_binary(const char16_t *input, size_t length, char *output,
  * The INVALID_BASE64_CHARACTER cases are considered fatal and you are expected
  * to discard the output.
  *
+ * Advanced users may want to taylor how the last chunk is handled. By default,
+ * we use a loose (forgiving) approach but we also support a strict approach
+ * as well as a stop_before_partial approach, as per the following proposal:
+ *
+ * https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
+ *
  * @param input         the base64 string to process, in ASCII stored as 8-bit
  * or 16-bit units
  * @param length        the length of the string in 8-bit or 16-bit units.
@@ -1908,6 +1933,10 @@ base64_to_binary(const char16_t *input, size_t length, char *output,
  * buffer. Upon return, it is modified to reflect how many bytes were written.
  * @param options       the base64 options to use, can be base64_default or
  * base64_url, is base64_default by default.
+ * @param last_chunk_options the last chunk handling options,
+ * last_chunk_handling_options::loose by default
+ * but can also be last_chunk_handling_options::strict or
+ * last_chunk_handling_options::stop_before_partial.
  * @return a result pair struct (of type simdutf::error containing the two
  * fields error and count) with an error code and position of the
  * INVALID_BASE64_CHARACTER error (in the input in units) if any, or the number
