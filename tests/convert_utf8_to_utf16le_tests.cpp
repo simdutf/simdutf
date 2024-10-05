@@ -2,6 +2,7 @@
 
 #include <array>
 #include <memory>
+#include <vector>
 
 #include <tests/reference/validate_utf8.h>
 #include <tests/helpers/transcode_test_base.h>

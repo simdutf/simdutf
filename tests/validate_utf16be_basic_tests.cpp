@@ -5,6 +5,7 @@
 #endif
 
 #include <array>
+#include <vector>
 
 #include <tests/helpers/random_utf16.h>
 #include <tests/helpers/test.h>

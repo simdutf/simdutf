@@ -3,6 +3,7 @@
 #include <array>
 #include <cerrno>
 #include <filesystem>
+#include <vector>
 
 class CommandLine {
 public:

@@ -3,6 +3,7 @@
 #include <fstream>
 #include <random>
 #include <memory>
+#include <vector>
 
 #include <tests/reference/encode_utf8.h>
 #include <tests/helpers/test.h>

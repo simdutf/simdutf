@@ -1,6 +1,7 @@
 #include "simdutf.h"
 
 #include <array>
+#include <vector>
 
 #include <tests/reference/validate_utf8_to_latin1.h>
 #include <tests/helpers/transcode_test_base.h>

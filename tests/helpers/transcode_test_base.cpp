@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <string>
+#include <vector>
 
 #include <tests/reference/encode_utf8.h>
 #include <tests/reference/encode_utf16.h>

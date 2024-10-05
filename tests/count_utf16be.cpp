@@ -2,6 +2,7 @@
 
 #include <array>
 #include <random>
+#include <vector>
 
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/transcode_test_base.h>
