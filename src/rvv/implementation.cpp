@@ -119,7 +119,7 @@ simdutf_warn_unused result implementation::base64_to_binary(
     }
     return {SUCCESS, 0};
   }
-  result r = scalar::base64::base64_tail_decode(output, input, length, options,
+  result r = scalar::base64::base64_tail_decode(output, input, length, equalsigns, options,
                                                 last_chunk_options);
   if (r.error == error_code::SUCCESS && equalsigns > 0) {
     // additional checks
@@ -166,7 +166,7 @@ simdutf_warn_unused result implementation::base64_to_binary(
     }
     return {SUCCESS, 0};
   }
-  result r = scalar::base64::base64_tail_decode(output, input, length, options,
+  result r = scalar::base64::base64_tail_decode(output, input, length, equalsigns, options,
                                                 last_chunk_options);
   if (r.error == error_code::SUCCESS && equalsigns > 0) {
     // additional checks
