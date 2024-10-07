@@ -1,6 +1,7 @@
 #include "simdutf.h"
 
 #include <array>
+#include <vector>
 
 #include <tests/reference/encode_utf16.h>
 #include <tests/helpers/random_int.h>

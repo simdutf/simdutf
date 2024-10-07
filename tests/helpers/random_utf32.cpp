@@ -1,6 +1,7 @@
 #include "random_utf32.h"
 
 #include <stdexcept>
+#include <vector>
 
 namespace simdutf {
 namespace tests {
