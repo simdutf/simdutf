@@ -1148,11 +1148,15 @@ TEST(doomed_base64_roundtrip) {
           simdutf::base64_to_binary(buffer.data(), buffer.size(), back.data());
       ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
       ASSERT_EQUAL(r.count, location);
-      size_t back_length = back.size();
-      r = simdutf::base64_to_binary_safe(buffer.data(), buffer.size(),
-                                         back.data(), back_length);
-      ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
-      ASSERT_EQUAL(r.count, location);
+      for (auto option : {simdutf::last_chunk_handling_options::strict,
+                      simdutf::last_chunk_handling_options::loose,
+                      simdutf::last_chunk_handling_options::stop_before_partial}) {
+        size_t back_length = back.size();
+        r = simdutf::base64_to_binary_safe(buffer.data(), buffer.size(),
+                                          back.data(), back_length, simdutf::base64_default, option);
+        ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+        ASSERT_EQUAL(r.count, location);
+      }
     }
   }
 }
@@ -1173,15 +1177,23 @@ TEST(doomed_truncated_base64_roundtrip) {
       buffer.resize(size - 3);
       std::vector<char> back(simdutf::maximal_binary_length_from_base64(
           buffer.data(), buffer.size()));
-      simdutf::result r =
-          simdutf::base64_to_binary(buffer.data(), buffer.size(), back.data());
-      ASSERT_EQUAL(r.error, simdutf::error_code::BASE64_INPUT_REMAINDER);
-      ASSERT_EQUAL(r.count, (size - 4) / 4 * 3);
-      size_t back_length = back.size();
-      r = simdutf::base64_to_binary_safe(buffer.data(), buffer.size(),
-                                         back.data(), back_length);
-      ASSERT_EQUAL(r.error, simdutf::error_code::BASE64_INPUT_REMAINDER);
-      ASSERT_EQUAL(r.count, buffer.size());
+      printf("--------------  %.*s\n", (int)buffer.size(), buffer.data());
+      for (auto option : {simdutf::last_chunk_handling_options::loose,
+                      simdutf::last_chunk_handling_options::strict,
+                      simdutf::last_chunk_handling_options::stop_before_partial}) {
+                        printf("option %d\n", option);
+        simdutf::result r =
+            implementation.base64_to_binary(buffer.data(), buffer.size(), back.data(), simdutf::base64_default, option);
+        printf("r.error %d\n", r.error);
+        printf("r.count %d\n", r.count);
+        ASSERT_EQUAL(r.error, simdutf::error_code::BASE64_INPUT_REMAINDER);
+        ASSERT_EQUAL(r.count, (size - 4) / 4 * 3);
+        size_t back_length = back.size();
+        r = simdutf::base64_to_binary_safe(buffer.data(), buffer.size(),
+                                          back.data(), back_length);
+        ASSERT_EQUAL(r.error, simdutf::error_code::BASE64_INPUT_REMAINDER);
+        ASSERT_EQUAL(r.count, buffer.size());
+      }
     }
   }
 }
@@ -1205,9 +1217,9 @@ TEST(doomed_truncated_base64_roundtrip_16) {
       for (size_t i = 0; i < buffer.size(); i++) {
         buffer16[i] = buffer[i];
       }
-      std::vector<char> back(simdutf::maximal_binary_length_from_base64(
+      std::vector<char> back(implementation.maximal_binary_length_from_base64(
           buffer16.data(), buffer16.size()));
-      simdutf::result r = simdutf::base64_to_binary(
+      simdutf::result r = implementation.base64_to_binary(
           buffer16.data(), buffer16.size(), back.data());
       ASSERT_EQUAL(r.error, simdutf::error_code::BASE64_INPUT_REMAINDER);
       ASSERT_EQUAL(r.count, (size - 4) / 4 * 3);
@@ -1243,7 +1255,7 @@ TEST(roundtrip_base64_with_spaces) {
                       simdutf::last_chunk_handling_options::loose,
                       simdutf::last_chunk_handling_options::stop_before_partial}) {
         simdutf::result r =
-            simdutf::base64_to_binary(buffer.data(), buffer.size(), back.data(), simdutf::base64_default , option);
+            implementation.base64_to_binary(buffer.data(), buffer.size(), back.data(), simdutf::base64_default , option);
         ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
         ASSERT_EQUAL(r.count, len);
         ASSERT_TRUE(std::equal(back.begin(), back.begin() + len, source.begin()));
@@ -1528,7 +1540,7 @@ TEST(streaming_base64_roundtrip) {
     size_t outpos = 0;
     for (size_t pos = 0; pos < buffer.size(); pos += window) {
       size_t count = std::min(window, buffer.size() - pos);
-      simdutf::result r = simdutf::base64_to_binary(buffer.data() + pos, count,
+      simdutf::result r = implementation.base64_to_binary(buffer.data() + pos, count,
                                                     back.data() + outpos);
       ASSERT_TRUE(r.error != simdutf::error_code::INVALID_BASE64_CHARACTER);
       if (count + pos == buffer.size()) {
