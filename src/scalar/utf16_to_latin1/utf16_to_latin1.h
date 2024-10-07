@@ -15,8 +15,7 @@ inline size_t convert(const char16_t *buf, size_t len, char *latin_output) {
   }
   const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
   size_t pos = 0;
-  std::vector<char> temp_output(len);
-  char *current_write = temp_output.data();
+  char *current_write = latin_output;
   uint16_t word = 0;
   uint16_t too_large = 0;
 
@@ -30,10 +29,7 @@ inline size_t convert(const char16_t *buf, size_t len, char *latin_output) {
     return 0;
   }
 
-  // Only copy to latin_output if there were no errors
-  std::memcpy(latin_output, temp_output.data(), len);
-
-  return current_write - temp_output.data();
+  return current_write - latin_output;
 }
 
 template <endianness big_endian>

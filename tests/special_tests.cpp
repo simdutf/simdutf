@@ -4,6 +4,8 @@
 #include "simdutf.h"
 
 #include <memory>
+#include <vector>
+
 #include <tests/helpers/test.h>
 
 // Visual Studio 2019 fails this test (with high probability) on the

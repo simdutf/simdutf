@@ -1,5 +1,7 @@
 #include "random_utf8.h"
 
+#include <vector>
+
 namespace simdutf {
 namespace tests {
 namespace helpers {

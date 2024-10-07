@@ -3,6 +3,7 @@
 #include "../reference/encode_utf16.h"
 
 #include <stdexcept>
+#include <vector>
 
 namespace simdutf {
 namespace tests {
