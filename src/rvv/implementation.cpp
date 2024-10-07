@@ -33,6 +33,7 @@ namespace {
 //
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
+#include "rvv/rvv_helpers.inl.cpp"
 
 #include "rvv/rvv_length_from.inl.cpp"
 #include "rvv/rvv_validate.inl.cpp"
@@ -90,8 +91,7 @@ simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
 
 simdutf_warn_unused result implementation::base64_to_binary(
     const char *input, size_t length, char *output, base64_options options,
-    last_chunk_handling_options last_chunk_options =
-        last_chunk_handling_options::loose) const noexcept {
+    last_chunk_handling_options last_chunk_options) const noexcept {
   while (length > 0 &&
          scalar::base64::is_ascii_white_space(input[length - 1])) {
     length--;
