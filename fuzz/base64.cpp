@@ -6,8 +6,9 @@
 #include "simdutf.h"
 
 constexpr std::array options = {
-    simdutf::base64_default,          simdutf::base64_url,
-    simdutf::base64_reverse_padding,  simdutf::base64_default_no_padding,
+    simdutf::base64_default,
+    simdutf::base64_url,
+    simdutf::base64_default_no_padding,
     simdutf::base64_url_with_padding,
 };
 
@@ -135,7 +136,6 @@ void roundtrip(std::span<const char> binary, const auto selected_option,
     r.convertbackresult =
         impl->base64_to_binary(output.data(), output.size(), restored.data(),
                                selected_option, last_chunk_option);
-
     if (const auto restoredhash = FNV1A_hash::as_str(restored);
         inputhash != restoredhash) {
       std::abort();
@@ -175,13 +175,17 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
       return options[index];
     }
   }(data[1] & (std::bit_ceil(options.size()) - 1));
-  const auto selected_last_chunk = [](auto index) {
-    if (index >= last_chunk.size())
-      return last_chunk[0];
-    else {
-      return last_chunk[index];
-    }
-  }(data[2] & (std::bit_ceil(last_chunk.size()) - 1));
+  const auto selected_last_chunk =
+      (selected_option == simdutf::base64_url ||
+       selected_option == simdutf::base64_default_no_padding)
+          ? simdutf::last_chunk_handling_options::loose
+          : [](auto index) {
+              if (index >= last_chunk.size())
+                return last_chunk[0];
+              else {
+                return last_chunk[index];
+              }
+            }(data[2] & (std::bit_ceil(last_chunk.size()) - 1));
 
   // decode buffer size
   const std::size_t decode_buffer_size = (data[4] << 8) + data[3];
