@@ -64,6 +64,7 @@ size_t add_space(std::vector<char_type> &v, std::mt19937 &gen) {
   return i;
 }
 
+// consider using add_simple_spaces for better performance.
 template <typename char_type>
 size_t add_simple_space(std::vector<char_type> &v, std::mt19937 &gen) {
   std::uniform_int_distribution<int> index_dist(0, v.size());
