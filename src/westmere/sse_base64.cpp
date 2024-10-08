@@ -526,8 +526,8 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     // we may have 1, 2 or 3 bytes left and we need to decode them so let us
     // backtrack
     int leftover = int(bufferptr - buffer_start);
-    while(leftover > 0) {
-      while(to_base64[uint8_t(*(src-1))] == 64) {
+    while (leftover > 0) {
+      while (to_base64[uint8_t(*(src - 1))] == 64) {
         src--;
       }
       src--;
@@ -535,15 +535,16 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     }
   }
   if (src < srcend + equalsigns) {
-    result r =
-        scalar::base64::base64_tail_decode(dst, src, srcend - src, equalsigns, options, last_chunk_options);
+    result r = scalar::base64::base64_tail_decode(
+        dst, src, srcend - src, equalsigns, options, last_chunk_options);
     if (r.error == error_code::INVALID_BASE64_CHARACTER) {
       r.count += size_t(src - srcinit);
       return r;
     } else {
       r.count += size_t(dst - dstinit);
     }
-    if (last_chunk_options != stop_before_partial && r.error == error_code::SUCCESS && equalsigns > 0) {
+    if (last_chunk_options != stop_before_partial &&
+        r.error == error_code::SUCCESS && equalsigns > 0) {
       // additional checks
       if ((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
         r.error = error_code::INVALID_BASE64_CHARACTER;

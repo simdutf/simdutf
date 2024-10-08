@@ -21,7 +21,7 @@ namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
 #ifndef SIMDUTF_PPC64_H
-#error "ppc64.h must be included"
+  #error "ppc64.h must be included"
 #endif
 using namespace simd;
 
@@ -435,9 +435,10 @@ simdutf_warn_unused result implementation::base64_to_binary(
     }
     return {SUCCESS, 0};
   }
-  result r = scalar::base64::base64_tail_decode(output, input, length, equalsigns, options,
-                                                last_chunk_options);
-  if (last_chunk_options != stop_before_partial && r.error == error_code::SUCCESS && equalsigns > 0) {
+  result r = scalar::base64::base64_tail_decode(
+      output, input, length, equalsigns, options, last_chunk_options);
+  if (last_chunk_options != stop_before_partial &&
+      r.error == error_code::SUCCESS && equalsigns > 0) {
     // additional checks
     if ((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
       return {INVALID_BASE64_CHARACTER, equallocation};
@@ -482,9 +483,10 @@ simdutf_warn_unused result implementation::base64_to_binary(
     }
     return {SUCCESS, 0};
   }
-  result r = scalar::base64::base64_tail_decode(output, input, length, equalsigns, options,
-                                                last_chunk_options);
-  if (last_chunk_options != stop_before_partial && r.error == error_code::SUCCESS && equalsigns > 0) {
+  result r = scalar::base64::base64_tail_decode(
+      output, input, length, equalsigns, options, last_chunk_options);
+  if (last_chunk_options != stop_before_partial &&
+      r.error == error_code::SUCCESS && equalsigns > 0) {
     // additional checks
     if ((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
       return {INVALID_BASE64_CHARACTER, equallocation};

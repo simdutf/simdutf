@@ -26,10 +26,12 @@ template <class char_type> bool is_eight_byte(char_type c) {
 // Returns true upon success. The destination buffer must be large enough.
 // This functions assumes that the padding (=) has been removed.
 template <class char_type>
-result base64_tail_decode(char *dst, const char_type *src, size_t length,
-                          size_t padded_characters, // number of padding characters '=', typically 0, 1, 2.
-                          base64_options options,
-                          last_chunk_handling_options last_chunk_options) {
+result
+base64_tail_decode(char *dst, const char_type *src, size_t length,
+                   size_t padded_characters, // number of padding characters
+                                             // '=', typically 0, 1, 2.
+                   base64_options options,
+                   last_chunk_handling_options last_chunk_options) {
   // This looks like 5 branches, but we expect the compiler to resolve this to a
   // single branch:
   const uint8_t *to_base64 = (options & base64_url)
@@ -84,12 +86,14 @@ result base64_tail_decode(char *dst, const char_type *src, size_t length,
       src++;
     }
     if (idx != 4) {
-      if (last_chunk_options == last_chunk_handling_options::strict && (idx != 1) && ((idx + padded_characters) & 3) != 0) {
+      if (last_chunk_options == last_chunk_handling_options::strict &&
+          (idx != 1) && ((idx + padded_characters) & 3) != 0) {
         // Rewind src to before partial chunk
         src -= idx;
         return {BASE64_INPUT_REMAINDER, size_t(src - srcinit)};
       } else if (last_chunk_options ==
-                 last_chunk_handling_options::stop_before_partial && (idx != 1) && ((idx + padded_characters) & 3) != 0) {
+                     last_chunk_handling_options::stop_before_partial &&
+                 (idx != 1) && ((idx + padded_characters) & 3) != 0) {
         // Rewind src to before partial chunk
         src -= idx;
         return {SUCCESS, size_t(dst - dstinit)};
@@ -148,11 +152,11 @@ result base64_tail_decode(char *dst, const char_type *src, size_t length,
 // buffer. outlen is modified to reflect the number of bytes written. This
 // functions assumes that the padding (=) has been removed.
 template <class char_type>
-result base64_tail_decode_safe(char *dst, size_t &outlen, const char_type *src,
-                               size_t length,
-                               size_t padded_characters, // number of padding characters '=', typically 0, 1, 2.
-                               base64_options options,
-                               last_chunk_handling_options last_chunk_options) {
+result base64_tail_decode_safe(
+    char *dst, size_t &outlen, const char_type *src, size_t length,
+    size_t padded_characters, // number of padding characters '=', typically 0,
+                              // 1, 2.
+    base64_options options, last_chunk_handling_options last_chunk_options) {
   if (length == 0) {
     outlen = 0;
     return {SUCCESS, 0};
@@ -219,11 +223,13 @@ result base64_tail_decode_safe(char *dst, size_t &outlen, const char_type *src,
       src++;
     }
     if (idx != 4) {
-      if (last_chunk_options == last_chunk_handling_options::strict && ((idx + padded_characters) & 3) != 0) {
+      if (last_chunk_options == last_chunk_handling_options::strict &&
+          ((idx + padded_characters) & 3) != 0) {
         outlen = size_t(dst - dstinit);
         return {BASE64_INPUT_REMAINDER, size_t(src - srcinit)};
       } else if (last_chunk_options ==
-                 last_chunk_handling_options::stop_before_partial && ((idx + padded_characters) & 3) != 0) {
+                     last_chunk_handling_options::stop_before_partial &&
+                 ((idx + padded_characters) & 3) != 0) {
         // Rewind src to before partial chunk
         src = srccur;
         outlen = size_t(dst - dstinit);

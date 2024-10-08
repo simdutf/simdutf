@@ -5,7 +5,6 @@
 #include "helpers/common.h"
 #include "simdutf.h"
 
-
 constexpr std::array options = {
     simdutf::base64_default,          simdutf::base64_url,
     simdutf::base64_reverse_padding,  simdutf::base64_default_no_padding,
@@ -15,8 +14,7 @@ constexpr std::array options = {
 constexpr std::array last_chunk = {
     simdutf::last_chunk_handling_options::loose,
     simdutf::last_chunk_handling_options::strict,
-    simdutf::last_chunk_handling_options::stop_before_partial
-};
+    simdutf::last_chunk_handling_options::stop_before_partial};
 
 struct decoderesult {
   std::size_t maxbinarylength{};
@@ -25,7 +23,8 @@ struct decoderesult {
 };
 
 template <typename FromChar>
-void decode(std::span<const FromChar> base64_, const auto selected_option, const auto last_chunk_option) {
+void decode(std::span<const FromChar> base64_, const auto selected_option,
+            const auto last_chunk_option) {
   std::vector<FromChar> base64(begin(base64_), end(base64_));
   const auto implementations = get_supported_implementations();
   std::vector<decoderesult> results;
@@ -35,8 +34,9 @@ void decode(std::span<const FromChar> base64_, const auto selected_option, const
     r.maxbinarylength =
         impl->maximal_binary_length_from_base64(base64.data(), base64.size());
     std::vector<char> output(r.maxbinarylength);
-    r.convertresult = impl->base64_to_binary(base64.data(), base64.size(),
-                                             output.data(), selected_option, last_chunk_option);
+    r.convertresult =
+        impl->base64_to_binary(base64.data(), base64.size(), output.data(),
+                               selected_option, last_chunk_option);
   }
   auto neq = [](const auto& a, const auto& b) { return a != b; };
   if (std::ranges::adjacent_find(results, neq) != results.end()) {
@@ -62,12 +62,14 @@ void decode(std::span<const FromChar> base64_, const auto selected_option, const
 
 template <typename FromChar>
 void decode_safe(std::span<const FromChar> base64_, const auto selected_option,
-                 const std::size_t decode_buf_size, const auto last_chunk_option) {
+                 const std::size_t decode_buf_size,
+                 const auto last_chunk_option) {
   std::vector<FromChar> base64(begin(base64_), end(base64_));
   std::vector<char> output(decode_buf_size);
   std::size_t outlen = decode_buf_size;
   const auto convertresult = simdutf::base64_to_binary_safe(
-      base64.data(), base64.size(), output.data(), outlen, selected_option, last_chunk_option);
+      base64.data(), base64.size(), output.data(), outlen, selected_option,
+      last_chunk_option);
 
   // the number of written bytes must always be less than the supplied buffer
   assert(outlen <= decode_buf_size);
@@ -109,7 +111,8 @@ struct roundtripresult {
   auto operator<=>(const roundtripresult&) const = default;
 };
 
-void roundtrip(std::span<const char> binary, const auto selected_option, const auto last_chunk_option) {
+void roundtrip(std::span<const char> binary, const auto selected_option,
+               const auto last_chunk_option) {
 
   const auto inputhash = FNV1A_hash::as_str(binary);
   const auto implementations = get_supported_implementations();
@@ -129,8 +132,9 @@ void roundtrip(std::span<const char> binary, const auto selected_option, const a
     r.maxbinarylength =
         impl->maximal_binary_length_from_base64(output.data(), output.size());
     std::vector<char> restored(r.maxbinarylength);
-    r.convertbackresult = impl->base64_to_binary(
-        output.data(), output.size(), restored.data(), selected_option, last_chunk_option);
+    r.convertbackresult =
+        impl->base64_to_binary(output.data(), output.size(), restored.data(),
+                               selected_option, last_chunk_option);
 
     if (const auto restoredhash = FNV1A_hash::as_str(restored);
         inputhash != restoredhash) {
@@ -200,11 +204,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   } break;
   case 3: {
     const std::span<const char> chardata{(const char*)data, size};
-    decode_safe(chardata, selected_option, decode_buffer_size, selected_last_chunk);
+    decode_safe(chardata, selected_option, decode_buffer_size,
+                selected_last_chunk);
   } break;
   case 4: {
     const std::span<const char16_t> chardata{(const char16_t*)data, size / 2};
-    decode_safe(chardata, selected_option, decode_buffer_size, selected_last_chunk);
+    decode_safe(chardata, selected_option, decode_buffer_size,
+                selected_last_chunk);
   } break;
   }
 
