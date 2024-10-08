@@ -2,13 +2,12 @@
 #define SIMDUTF_IMPLEMENTATION_H
 #include <string>
 #if !defined(SIMDUTF_NO_THREADS)
-#include <atomic>
+  #include <atomic>
 #endif
 #include <tuple>
 #include <vector>
 #include "simdutf/common_defs.h"
 #include "simdutf/internal/isadetection.h"
-
 
 namespace simdutf {
 
@@ -1697,9 +1696,11 @@ enum : base64_options {
 // chunk in base64 decoding.
 // https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
 enum last_chunk_handling_options : uint64_t {
-  loose = 0,               /* standard base64 format, decode partial final chunk */
-  strict = 1,              /* error when the last chunk is partial, 2 or 3 chars, and unpadded */
-  stop_before_partial = 2, /* if the last chunk is partial (2 or 3 chars), ignore it (no error) */
+  loose = 0, /* standard base64 format, decode partial final chunk */
+  strict =
+      1, /* error when the last chunk is partial, 2 or 3 chars, and unpadded */
+  stop_before_partial =
+      2, /* if the last chunk is partial (2 or 3 chars), ignore it (no error) */
 };
 
 /**
@@ -1781,10 +1782,10 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(
  * fields error and count) with an error code and either position of the error
  * (in the input in bytes) if any, or the number of bytes written if successful.
  */
-simdutf_warn_unused result
-base64_to_binary(const char *input, size_t length, char *output,
-                 base64_options options = base64_default,
-                 last_chunk_handling_options last_chunk_options = loose) noexcept;
+simdutf_warn_unused result base64_to_binary(
+    const char *input, size_t length, char *output,
+    base64_options options = base64_default,
+    last_chunk_handling_options last_chunk_options = loose) noexcept;
 
 /**
  * Provide the base64 length in bytes given the length of a binary input.
