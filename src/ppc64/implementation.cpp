@@ -405,8 +405,7 @@ simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
 
 simdutf_warn_unused result implementation::base64_to_binary(
     const char *input, size_t length, char *output, base64_options options,
-    last_chunk_handling_options last_chunk_options =
-        last_chunk_handling_options::loose) const noexcept {
+    last_chunk_handling_options last_chunk_options) const noexcept {
   // skip trailing spaces
   while (length > 0 &&
          scalar::base64::is_ascii_white_space(input[length - 1])) {
@@ -454,8 +453,7 @@ simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
 
 simdutf_warn_unused result implementation::base64_to_binary(
     const char16_t *input, size_t length, char *output, base64_options options,
-    last_chunk_handling_options last_chunk_options =
-        last_chunk_handling_options::loose) const noexcept {
+    last_chunk_handling_options last_chunk_options) const noexcept {
   // skip trailing spaces
   while (length > 0 &&
          scalar::base64::is_ascii_white_space(input[length - 1])) {
