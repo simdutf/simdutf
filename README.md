@@ -1846,6 +1846,16 @@ enum : base64_options {
   base64_default_no_padding = base64_default | base64_reverse_padding, /* standard base64 format without padding */
   base64_url_with_padding = base64_url | base64_reverse_padding, /* base64url with padding */
 };
+
+// last_chunk_handling_options are used to specify the handling of the last
+// chunk in base64 decoding.
+// https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
+enum last_chunk_handling_options : uint64_t {
+  loose = 0,               /* standard base64 format, decode partial final chunk */
+  strict = 1,              /* error when the last chunk is partial, 2 or 3 chars, and unpadded */
+  stop_before_partial = 2, /* if the last chunk is partial (2 or 3 chars), ignore it (no error) */
+};
+
 /**
  * Provide the maximal binary length in bytes given the base64 input.
  * In general, if the input contains ASCII spaces, the result will be less than

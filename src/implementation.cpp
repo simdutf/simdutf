@@ -1798,7 +1798,7 @@ base64_to_binary_safe_impl(const chartype *input, size_t length, char *output,
   r = scalar::base64::base64_tail_decode_safe(
       output + output_index, remaining_out, tail_input, tail_length, padding_characts, options, last_chunk_handling_options);
   outlen = output_index + remaining_out;
-  if (r.error == error_code::SUCCESS && padding_characts > 0) {
+  if (last_chunk_handling_options != stop_before_partial && r.error == error_code::SUCCESS && padding_characts > 0) {
     // additional checks
     if ((outlen % 3 == 0) || ((outlen % 3) + 1 + padding_characts != 4)) {
       r.error = error_code::INVALID_BASE64_CHARACTER;
