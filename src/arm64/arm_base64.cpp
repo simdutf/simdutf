@@ -524,11 +524,11 @@ result compress_decode_base64(char *dst, const char_type *src, size_t srclen,
     } else {
       r.count += size_t(dst - dstinit);
     }
-    if (r.error == error_code::SUCCESS && equalsigns > 0) {
+    if (last_chunk_options != stop_before_partial && r.error == error_code::SUCCESS && equalsigns > 0) {
       // additional checks
       if ((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
-        r.error = error_code::INVALID_BASE64_CHARACTER;
-        r.count = equallocation;
+          r.error = error_code::INVALID_BASE64_CHARACTER;
+          r.count = equallocation;
       }
     }
     return r;
