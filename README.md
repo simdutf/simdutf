@@ -147,6 +147,7 @@ Linux or macOS users might follow the following instructions if they have a rece
    wget https://github.com/simdutf/simdutf/releases/download/v5.5.0/singleheader.zip
    unzip singleheader.zip
    ```
+   You can replace `wget` by `curl -OL https://...` if you prefer.
 2. Compile
    ```
    c++ -std=c++17 -o amalgamation_demo amalgamation_demo.cpp
