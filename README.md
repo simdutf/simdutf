@@ -197,6 +197,9 @@ sure you have ICU installed on your machine and that cmake can find it. For macO
 install it with brew using `brew install icu4c`. If you have ICU on your system but cmake cannot
 find it, you may need to provide cmake with a path to ICU, such as `ICU_ROOT=/usr/local/opt/icu4c cmake -B build`.
 
+You may also use a package manager. E.g.,  [we have a complete example using vcpkg](https://github.com/simdutf/simdutf-vcpkg).
+
+
 Single-header version
 ----------------------
 
