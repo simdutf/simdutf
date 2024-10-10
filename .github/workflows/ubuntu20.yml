@@ -14,15 +14,17 @@ jobs:
     strategy:
       matrix:
         include:
-          - {shared: ON}
-          - {shared: OFF}
+          - {shared: ON, type : Debug}
+          - {shared: OFF, type : Debug}
+          - {shared: ON, type : Release}
+          - {shared: OFF, type : Release}
     steps:
       - uses: actions/checkout@v4
       - name: Use cmake
         run: |
           mkdir build &&
           cd build &&
-          cmake -DCMAKE_CXX_FLAGS=-Werror -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DSIMDUTF_BENCHMARKS=ON  -DCMAKE_INSTALL_PREFIX:PATH=destination -DBUILD_SHARED_LIBS=${{matrix.shared}} ..  -DSIMDUTF_BENCHMARKS=OFF &&
+          cmake -DCMAKE_CXX_FLAGS=-Werror -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DSIMDUTF_BENCHMARKS=ON  -DCMAKE_INSTALL_PREFIX:PATH=destination -DBUILD_SHARED_LIBS=${{matrix.shared}} -D CMAKE_BUILD_TYPE=${{matrix.type}} ..  -DSIMDUTF_BENCHMARKS=OFF &&
           cmake --build .   &&
           ctest -j --output-on-failure &&
           cmake --install . &&

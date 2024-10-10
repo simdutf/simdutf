@@ -91,7 +91,7 @@ struct base8 : base<simd8<T>> {
   simdutf_really_inline T last() const {
     return _mm256_extract_epi8(*this, 31);
   }
-  friend simdutf_really_inline Mask operator==(const simd8<T> lhs,
+  friend simdutf_always_inline Mask operator==(const simd8<T> lhs,
                                                const simd8<T> rhs) {
     return _mm256_cmpeq_epi8(lhs, rhs);
   }
