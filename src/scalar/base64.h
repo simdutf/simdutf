@@ -88,9 +88,8 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
     if (idx != 4) {
       if (last_chunk_options == last_chunk_handling_options::strict &&
           (idx != 1) && ((idx + padded_characters) & 3) != 0) {
-        // Rewind src to before partial chunk
-        src -= idx;
-        return {BASE64_INPUT_REMAINDER, size_t(src - srcinit)};
+        // The partial chunk was at src - idx
+        return {BASE64_INPUT_REMAINDER, size_t(dst - dstinit)};
       } else if (last_chunk_options ==
                      last_chunk_handling_options::stop_before_partial &&
                  (idx != 1) && ((idx + padded_characters) & 3) != 0) {
