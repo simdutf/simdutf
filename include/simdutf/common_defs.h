@@ -72,7 +72,8 @@
   #else
     #define simdutf_really_inline inline
   #endif
-  #define simdutf_always_inline inline __attribute__((always_inline)) // always inline, no matter what
+  #define simdutf_always_inline                                                \
+    inline __attribute__((always_inline)) // always inline, no matter what
   #define SIMDUTF_DEPRECATED __attribute__((deprecated))
   #define simdutf_never_inline inline __attribute__((noinline))
 
