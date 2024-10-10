@@ -21,7 +21,7 @@ struct base16 : base<simd16<T>> {
   template <typename Pointer>
   simdutf_really_inline base16(const Pointer *ptr)
       : base16(_mm256_loadu_si256(reinterpret_cast<const __m256i *>(ptr))) {}
-  friend simdutf_really_inline Mask operator==(const simd16<T> lhs,
+  friend simdutf_always_inline Mask operator==(const simd16<T> lhs,
                                                const simd16<T> rhs) {
     return _mm256_cmpeq_epi16(lhs, rhs);
   }

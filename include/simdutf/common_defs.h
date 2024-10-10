@@ -29,7 +29,8 @@
 #if defined(SIMDUTF_REGULAR_VISUAL_STUDIO)
   #define SIMDUTF_DEPRECATED __declspec(deprecated)
 
-  #define simdutf_really_inline __forceinline
+  #define simdutf_really_inline __forceinline // really inline in release mode
+  #define simdutf_always_inline __forceinline // always inline, no matter what
   #define simdutf_never_inline __declspec(noinline)
 
   #define simdutf_unused
@@ -71,7 +72,7 @@
   #else
     #define simdutf_really_inline inline
   #endif
-
+  #define simdutf_always_inline inline __attribute__((always_inline)) // always inline, no matter what
   #define SIMDUTF_DEPRECATED __attribute__((deprecated))
   #define simdutf_never_inline inline __attribute__((noinline))
 
