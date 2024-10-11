@@ -124,6 +124,21 @@ size_t add_garbage(std::vector<char_type> &v, std::mt19937 &gen) {
   return i;
 }
 
+TEST(issue_single_bad16) {
+  std::vector<char16_t> data = {0x3d};
+  ASSERT_EQUAL(data.size(), 1);
+  size_t outlen = implementation.maximal_binary_length_from_base64(data.data(),
+                                                                   data.size());
+  std::vector<char> out(outlen);
+  const auto r = implementation.base64_to_binary(
+      (const char *)data.data(), data.size(), out.data(),
+      simdutf::base64_url_with_padding,
+      simdutf::last_chunk_handling_options::strict);
+  ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+  ASSERT_EQUAL(r.count, 0);
+}
+
+
 TEST(issue_kkk) {
   std::vector<char> data = {
       0x20, 0x20, 0x20, 0x20, 0x20, 0x4b, 0x4b, 0x4b, 0x4b, 0x4b, 0x4b, 0x4b,

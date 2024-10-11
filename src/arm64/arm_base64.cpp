@@ -354,6 +354,12 @@ result compress_decode_base64(char *dst, const char_type *src, size_t srclen,
       equalsigns = 2;
     }
   }
+  if (srclen == 0) {
+    if (equalsigns > 0) {
+      return {INVALID_BASE64_CHARACTER, equallocation};
+    }
+    return {SUCCESS, 0};
+  }
   const char_type *const srcinit = src;
   const char *const dstinit = dst;
   const char_type *const srcend = src + srclen;
