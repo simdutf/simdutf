@@ -386,7 +386,8 @@ static inline void base64_decode_block_safe(char *out, block64 *b) {
 
 template <bool base64_url, typename chartype>
 result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
-                              base64_options options) {
+                              base64_options options,
+                              last_chunk_handling_options last_chunk_options) {
   const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value
                                         : tables::base64::to_base64_value;
   size_t equallocation =
@@ -411,6 +412,12 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       srclen--;
       equalsigns = 2;
     }
+  }
+  if (srclen == 0) {
+    if (equalsigns > 0) {
+      return {INVALID_BASE64_CHARACTER, equallocation};
+    }
+    return {SUCCESS, 0};
   }
   char *end_of_safe_64byte_zone =
       (srclen + 3) / 4 * 3 >= 63 ? dst + (srclen + 3) / 4 * 3 - 63 : dst;
@@ -523,61 +530,27 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       buffer_start += 4;
     }
     // we may have 1, 2 or 3 bytes left and we need to decode them so let us
-    // bring in src content
+    // backtrack
     int leftover = int(bufferptr - buffer_start);
-    if (leftover > 0) {
-      while (leftover < 4 && src < srcend) {
-        uint8_t val = to_base64[uint8_t(*src)];
-        if (!scalar::base64::is_eight_byte(*src) || val > 64) {
-          return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
-        }
-        buffer_start[leftover] = char(val);
-        leftover += (val <= 63);
-        src++;
+    while (leftover > 0) {
+      while (to_base64[uint8_t(*(src - 1))] == 64) {
+        src--;
       }
-
-      if (leftover == 1) {
-        return {BASE64_INPUT_REMAINDER, size_t(dst - dstinit)};
-      }
-      if (leftover == 2) {
-        uint32_t triple = (uint32_t(buffer_start[0]) << 3 * 6) +
-                          (uint32_t(buffer_start[1]) << 2 * 6);
-        triple = scalar::utf32::swap_bytes(triple);
-        triple >>= 8;
-        std::memcpy(dst, &triple, 1);
-        dst += 1;
-      } else if (leftover == 3) {
-        uint32_t triple = (uint32_t(buffer_start[0]) << 3 * 6) +
-                          (uint32_t(buffer_start[1]) << 2 * 6) +
-                          (uint32_t(buffer_start[2]) << 1 * 6);
-        triple = scalar::utf32::swap_bytes(triple);
-
-        triple >>= 8;
-
-        std::memcpy(dst, &triple, 2);
-        dst += 2;
-      } else {
-        uint32_t triple = ((uint32_t(uint8_t(buffer_start[0])) << 3 * 6) +
-                           (uint32_t(uint8_t(buffer_start[1])) << 2 * 6) +
-                           (uint32_t(uint8_t(buffer_start[2])) << 1 * 6) +
-                           (uint32_t(uint8_t(buffer_start[3])) << 0 * 6))
-                          << 8;
-        triple = scalar::utf32::swap_bytes(triple);
-        std::memcpy(dst, &triple, 3);
-        dst += 3;
-      }
+      src--;
+      leftover--;
     }
   }
   if (src < srcend + equalsigns) {
-    result r =
-        scalar::base64::base64_tail_decode(dst, src, srcend - src, options);
+    result r = scalar::base64::base64_tail_decode(
+        dst, src, srcend - src, equalsigns, options, last_chunk_options);
     if (r.error == error_code::INVALID_BASE64_CHARACTER) {
       r.count += size_t(src - srcinit);
       return r;
     } else {
       r.count += size_t(dst - dstinit);
     }
-    if (r.error == error_code::SUCCESS && equalsigns > 0) {
+    if (last_chunk_options != stop_before_partial &&
+        r.error == error_code::SUCCESS && equalsigns > 0) {
       // additional checks
       if ((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
         r.error = error_code::INVALID_BASE64_CHARACTER;

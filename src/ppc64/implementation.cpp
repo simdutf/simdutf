@@ -1,20 +1,20 @@
-#include "scalar/utf8.h"
-#include "scalar/utf16.h"
 #include "scalar/latin1.h"
-#include "scalar/utf8_to_latin1/valid_utf8_to_latin1.h"
+#include "scalar/utf16.h"
+#include "scalar/utf8.h"
 #include "scalar/utf8_to_latin1/utf8_to_latin1.h"
+#include "scalar/utf8_to_latin1/valid_utf8_to_latin1.h"
 
-#include "scalar/utf16_to_utf8/valid_utf16_to_utf8.h"
 #include "scalar/utf16_to_utf8/utf16_to_utf8.h"
+#include "scalar/utf16_to_utf8/valid_utf16_to_utf8.h"
 
-#include "scalar/utf16_to_utf32/valid_utf16_to_utf32.h"
 #include "scalar/utf16_to_utf32/utf16_to_utf32.h"
+#include "scalar/utf16_to_utf32/valid_utf16_to_utf32.h"
 
-#include "scalar/utf32_to_utf8/valid_utf32_to_utf8.h"
 #include "scalar/utf32_to_utf8/utf32_to_utf8.h"
+#include "scalar/utf32_to_utf8/valid_utf32_to_utf8.h"
 
-#include "scalar/utf32_to_utf16/valid_utf32_to_utf16.h"
 #include "scalar/utf32_to_utf16/utf32_to_utf16.h"
+#include "scalar/utf32_to_utf16/valid_utf32_to_utf16.h"
 
 #include "simdutf/ppc64/begin.h"
 namespace simdutf {
@@ -65,14 +65,14 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 #include "generic/utf8_validation/utf8_lookup4_algorithm.h"
 #include "generic/utf8_validation/utf8_validator.h"
 // transcoding from UTF-8 to UTF-16
-#include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
 #include "generic/utf8_to_utf16/utf8_to_utf16.h"
+#include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
 // transcoding from UTF-8 to UTF-32
-#include "generic/utf8_to_utf32/valid_utf8_to_utf32.h"
 #include "generic/utf8_to_utf32/utf8_to_utf32.h"
+#include "generic/utf8_to_utf32/valid_utf8_to_utf32.h"
 // other functions
-#include "generic/utf8.h"
 #include "generic/utf16.h"
+#include "generic/utf8.h"
 
 //
 // Implementation-specific overrides
@@ -403,9 +403,9 @@ simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
   return scalar::base64::maximal_binary_length_from_base64(input, length);
 }
 
-simdutf_warn_unused result
-implementation::base64_to_binary(const char *input, size_t length, char *output,
-                                 base64_options options) const noexcept {
+simdutf_warn_unused result implementation::base64_to_binary(
+    const char *input, size_t length, char *output, base64_options options,
+    last_chunk_handling_options last_chunk_options) const noexcept {
   // skip trailing spaces
   while (length > 0 &&
          scalar::base64::is_ascii_white_space(input[length - 1])) {
@@ -431,12 +431,13 @@ implementation::base64_to_binary(const char *input, size_t length, char *output,
   if (length == 0) {
     if (equalsigns > 0) {
       return {INVALID_BASE64_CHARACTER, equallocation};
-      ;
     }
     return {SUCCESS, 0};
   }
-  result r = scalar::base64::base64_tail_decode(output, input, length, options);
-  if (r.error == error_code::SUCCESS && equalsigns > 0) {
+  result r = scalar::base64::base64_tail_decode(
+      output, input, length, equalsigns, options, last_chunk_options);
+  if (last_chunk_options != stop_before_partial &&
+      r.error == error_code::SUCCESS && equalsigns > 0) {
     // additional checks
     if ((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
       return {INVALID_BASE64_CHARACTER, equallocation};
@@ -451,8 +452,8 @@ simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
 }
 
 simdutf_warn_unused result implementation::base64_to_binary(
-    const char16_t *input, size_t length, char *output,
-    base64_options options) const noexcept {
+    const char16_t *input, size_t length, char *output, base64_options options,
+    last_chunk_handling_options last_chunk_options) const noexcept {
   // skip trailing spaces
   while (length > 0 &&
          scalar::base64::is_ascii_white_space(input[length - 1])) {
@@ -481,8 +482,10 @@ simdutf_warn_unused result implementation::base64_to_binary(
     }
     return {SUCCESS, 0};
   }
-  result r = scalar::base64::base64_tail_decode(output, input, length, options);
-  if (r.error == error_code::SUCCESS && equalsigns > 0) {
+  result r = scalar::base64::base64_tail_decode(
+      output, input, length, equalsigns, options, last_chunk_options);
+  if (last_chunk_options != stop_before_partial &&
+      r.error == error_code::SUCCESS && equalsigns > 0) {
     // additional checks
     if ((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
       return {INVALID_BASE64_CHARACTER, equallocation};

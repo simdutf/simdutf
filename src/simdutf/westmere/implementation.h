@@ -190,14 +190,17 @@ public:
   utf8_length_from_latin1(const char *input, size_t length) const noexcept;
   simdutf_warn_unused size_t maximal_binary_length_from_base64(
       const char *input, size_t length) const noexcept;
-  simdutf_warn_unused result
-  base64_to_binary(const char *input, size_t length, char *output,
-                   base64_options options) const noexcept;
+  simdutf_warn_unused result base64_to_binary(
+      const char *input, size_t length, char *output, base64_options options,
+      last_chunk_handling_options last_chunk_options =
+          last_chunk_handling_options::loose) const noexcept;
   simdutf_warn_unused size_t maximal_binary_length_from_base64(
       const char16_t *input, size_t length) const noexcept;
   simdutf_warn_unused result
   base64_to_binary(const char16_t *input, size_t length, char *output,
-                   base64_options options) const noexcept;
+                   base64_options options,
+                   last_chunk_handling_options last_chunk_options =
+                       last_chunk_handling_options::loose) const noexcept;
   simdutf_warn_unused size_t base64_length_from_binary(
       size_t length, base64_options options) const noexcept;
   size_t binary_to_base64(const char *input, size_t length, char *output,
