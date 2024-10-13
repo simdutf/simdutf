@@ -1836,6 +1836,9 @@ When decoding, by default we use a loose approach: the padding character may be 
 Advanced users may use the `last_chunk_options` parameter to use either a strict approach,
 where precise padding must be used or an error is generated, or the stop_before_partial
 option which simply discards leftover base64 characters when the padding is not appropriate.
+The stop_before_partial option might be useful for streaming: given a stream of base64 
+characters over the network, you may want to be able to decode them without first waiting
+for the whole stream to come in.
 
 The specification of our base64 functions is as follows:
 
