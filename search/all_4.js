@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['implementation_56',['implementation',['../classsimdutf_1_1implementation.html',1,'simdutf']]]
+  ['example_0',['Example',['../index.html#autotoc_md9',1,'']]]
 ];
