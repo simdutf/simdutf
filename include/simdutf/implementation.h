@@ -7,7 +7,13 @@
 #include <tuple>
 #include <vector>
 #include "simdutf/common_defs.h"
+#include "simdutf/compiler_check.h"
+#include "simdutf/encoding_types.h"
 #include "simdutf/internal/isadetection.h"
+
+#if SIMDUTF_CPLUSPLUS20
+  #include <span>
+#endif
 
 namespace simdutf {
 
@@ -27,6 +33,12 @@ simdutf_really_inline simdutf_warn_unused simdutf::encoding_type
 autodetect_encoding(const uint8_t *input, size_t length) noexcept {
   return autodetect_encoding(reinterpret_cast<const char *>(input), length);
 }
+#if SIMDUTF_CPLUSPLUS20
+simdutf_really_inline simdutf_warn_unused simdutf::encoding_type
+autodetect_encoding(std::span<const char> input) noexcept {
+  return autodetect_encoding(input.data(), input.size());
+}
+#endif
 
 /**
  * Autodetect the possible encodings of the input in one pass.
