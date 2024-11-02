@@ -50,18 +50,41 @@ size_t encode_base64(char *dst, const char *src, size_t srclen,
   const __m512i lookup =
       _mm512_loadu_si512(reinterpret_cast<const __m512i *>(lookup_tbl));
   const __m512i multi_shifts = _mm512_set1_epi64(UINT64_C(0x3036242a1016040a));
-  size_t i = 0;
-  for (; i + 64 <= srclen; i += 48) {
-    const __m512i v =
-        _mm512_loadu_si512(reinterpret_cast<const __m512i *>(input + i));
+  size_t size = srclen;
+  __mmask64 input_mask = 0xffffffffffff; // (1 << 48) - 1
+  while (size >= 48) {
+    const __m512i v = _mm512_maskz_loadu_epi8(
+        input_mask, reinterpret_cast<const __m512i *>(input));
     const __m512i in = _mm512_permutexvar_epi8(shuffle_input, v);
     const __m512i indices = _mm512_multishift_epi64_epi8(multi_shifts, in);
     const __m512i result = _mm512_permutexvar_epi8(indices, lookup);
     _mm512_storeu_si512(reinterpret_cast<__m512i *>(out), result);
     out += 64;
+    input += 48;
+    size -= 48;
   }
-  return i / 3 * 4 + scalar::base64::tail_encode_base64((char *)out, src + i,
-                                                        srclen - i, options);
+  input_mask = ((__mmask64)1 << size) - 1;
+  const __m512i v = _mm512_maskz_loadu_epi8(
+      input_mask, reinterpret_cast<const __m512i *>(input));
+  const __m512i in = _mm512_permutexvar_epi8(shuffle_input, v);
+  const __m512i indices = _mm512_multishift_epi64_epi8(multi_shifts, in);
+  bool padding_needed =
+      (((options & base64_url) == 0) ^
+       ((options & base64_reverse_padding) == base64_reverse_padding));
+  size_t padding_amount = ((size % 3) > 0) ? (3 - (size % 3)) : 0;
+  size_t output_len = ((size + 2) / 3) * 4;
+  size_t non_padded_output_len = output_len - padding_amount;
+  if (!padding_needed) {
+    output_len = non_padded_output_len;
+  }
+  __mmask64 output_mask = output_len == 64 ? (__mmask64)UINT64_MAX
+                                           : ((__mmask64)1 << output_len) - 1;
+  __m512i result = _mm512_mask_permutexvar_epi8(
+      _mm512_set1_epi8('='), ((__mmask64)1 << non_padded_output_len) - 1,
+      indices, lookup);
+  _mm512_mask_storeu_epi8(reinterpret_cast<__m512i *>(out), output_mask,
+                          result);
+  return (size_t)(out - (uint8_t *)dst) + output_len;
 }
 
 template <bool base64_url>
