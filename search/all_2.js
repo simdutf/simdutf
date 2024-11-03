@@ -1,10 +1,6 @@
 var searchData=
 [
-  ['change_5fendianness_5futf16_0',['change_endianness_utf16',['../classsimdutf_1_1implementation.html#a8a342c5088a3b2887485836daa92628a',1,'simdutf::implementation']]],
-  ['characters_20per_20second_1',['simdutf: Unicode validation and transcoding at billions of characters per second',['../index.html#autotoc_md1',1,'']]],
-  ['cmake_2',['Usage (CMake)',['../index.html#autotoc_md7',1,'']]],
-  ['command_20line_20tool_3',['The sutf command-line tool',['../index.html#autotoc_md12',1,'']]],
-  ['contents_4',['Table of contents',['../index.html#autotoc_md0',1,'']]],
+  ['change_5fendianness_5futf16_4',['change_endianness_utf16',['../classsimdutf_1_1implementation.html#a8a342c5088a3b2887485836daa92628a',1,'simdutf::implementation']]],
   ['convert_5flatin1_5fto_5futf16be_5',['convert_latin1_to_utf16be',['../classsimdutf_1_1implementation.html#a2f498ad9236b916e5e4859109d1df0bb',1,'simdutf::implementation']]],
   ['convert_5flatin1_5fto_5futf16le_6',['convert_latin1_to_utf16le',['../classsimdutf_1_1implementation.html#a2315da3daf654f4a7132b1751394b374',1,'simdutf::implementation']]],
   ['convert_5flatin1_5fto_5futf32_7',['convert_latin1_to_utf32',['../classsimdutf_1_1implementation.html#a5bb5a0db793a6e332711c24d9cbc14fd',1,'simdutf::implementation']]],

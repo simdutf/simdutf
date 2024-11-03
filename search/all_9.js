@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['manual_20implementation_20selection_0',['Manual implementation selection',['../index.html#autotoc_md13',1,'']]],
-  ['maximal_5fbinary_5flength_5ffrom_5fbase64_1',['maximal_binary_length_from_base64',['../classsimdutf_1_1implementation.html#af46e9e7192004051687186ac956262f3',1,'simdutf::implementation::maximal_binary_length_from_base64(const char *input, size_t length) const noexcept=0'],['../classsimdutf_1_1implementation.html#a9c8897b131c52d703cb2c5d032c29ff6',1,'simdutf::implementation::maximal_binary_length_from_base64(const char16_t *input, size_t length) const noexcept=0']]]
+  ['supported_5fby_5fruntime_5fsystem_62',['supported_by_runtime_system',['../classsimdutf_1_1implementation.html#a6cd8f7d8787c76e690ed9c4151abb7a9',1,'simdutf::implementation']]]
 ];

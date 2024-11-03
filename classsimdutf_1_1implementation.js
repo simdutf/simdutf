@@ -1,5 +1,6 @@
 var classsimdutf_1_1implementation =
 [
+    [ "~implementation", "classsimdutf_1_1implementation.html#af690ad4d24f797ec89c2674c7544d607", null ],
     [ "autodetect_encoding", "classsimdutf_1_1implementation.html#afd306a0bc3e221964af3f31a64784b12", null ],
     [ "base64_length_from_binary", "classsimdutf_1_1implementation.html#a7935750344384cc0130094cb6c440826", null ],
     [ "base64_to_binary", "classsimdutf_1_1implementation.html#a7a23d6e9c3c006b78fe5d5f158206139", null ],
@@ -57,6 +58,7 @@ var classsimdutf_1_1implementation =
     [ "count_utf8", "classsimdutf_1_1implementation.html#a380f5ef4b282ef66210a84ebc84bce51", null ],
     [ "description", "classsimdutf_1_1implementation.html#af48e75e8d6d25c3c3d66334a8849cbc7", null ],
     [ "detect_encodings", "classsimdutf_1_1implementation.html#ad4a7dbe2fbc9d03da2542c07a88cdddb", null ],
+    [ "latin1_length_from_utf16", "classsimdutf_1_1implementation.html#a83aed89399b43b6f7a36172f3af38b99", null ],
     [ "latin1_length_from_utf32", "classsimdutf_1_1implementation.html#a6936dace0dfd89741259cdbe49b5df2d", null ],
     [ "latin1_length_from_utf8", "classsimdutf_1_1implementation.html#a2cc04b416c87dfa742056ce5bd8033dc", null ],
     [ "maximal_binary_length_from_base64", "classsimdutf_1_1implementation.html#af46e9e7192004051687186ac956262f3", null ],
@@ -67,6 +69,8 @@ var classsimdutf_1_1implementation =
     [ "utf16_length_from_utf32", "classsimdutf_1_1implementation.html#a3761299ce52ee8b2b480fcadc50b45a5", null ],
     [ "utf16_length_from_utf8", "classsimdutf_1_1implementation.html#ae01141d4bf774c95e771924caa11efb1", null ],
     [ "utf32_length_from_latin1", "classsimdutf_1_1implementation.html#a8039edd257c0f2bdf1acc5d16476992a", null ],
+    [ "utf32_length_from_utf16be", "classsimdutf_1_1implementation.html#a0df5efd699e928178cb569ee2b9b0711", null ],
+    [ "utf32_length_from_utf16le", "classsimdutf_1_1implementation.html#a83b225db7024f73fdcd6f84fb10ecdfe", null ],
     [ "utf32_length_from_utf8", "classsimdutf_1_1implementation.html#a39bc047dd50ede9cd33cb7e825eb5b56", null ],
     [ "utf8_length_from_latin1", "classsimdutf_1_1implementation.html#aff358bb1f0b909cd1e9a6227656ee5d7", null ],
     [ "utf8_length_from_utf16be", "classsimdutf_1_1implementation.html#abce2ef1ff8ab5ffd3999d545f703a2fd", null ],
