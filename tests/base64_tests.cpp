@@ -154,8 +154,9 @@ TEST(base64_decode_strict_cases) {
 
 TEST(base64_decode_strict_cases_length) {
   std::vector<std::pair<std::string, simdutf::result>> test_cases = {
-      {"ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddzzz=", 
-      {simdutf::error_code::BASE64_EXTRA_BITS, 131}},
+      {"ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+       "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddzzz=",
+       {simdutf::error_code::BASE64_EXTRA_BITS, 131}},
   };
   std::vector<char> buffer(1024);
   for (auto &p : test_cases) {
