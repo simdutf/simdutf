@@ -1696,9 +1696,9 @@ enum : base64_options {
 // chunk in base64 decoding.
 // https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
 enum last_chunk_handling_options : uint64_t {
-  loose = 0, /* standard base64 format, decode partial final chunk */
-  strict =
-      1, /* error when the last chunk is partial, 2 or 3 chars, and unpadded, or non-zero bit padding */
+  loose = 0,  /* standard base64 format, decode partial final chunk */
+  strict = 1, /* error when the last chunk is partial, 2 or 3 chars, and
+                 unpadded, or non-zero bit padding */
   stop_before_partial =
       2, /* if the last chunk is partial (2 or 3 chars), ignore it (no error) */
 };
@@ -1738,11 +1738,11 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(
  *
  * See https://infra.spec.whatwg.org/#forgiving-base64-decode
  *
- * This function will fail in case of invalid input. When last_chunk_options = loose,
- * there are two possible reasons for failure: the input contains a number of
- * base64 characters that when divided by 4, leaves a single remainder character
- * (BASE64_INPUT_REMAINDER), or the input contains a character that is not a
- * valid base64 character (INVALID_BASE64_CHARACTER).
+ * This function will fail in case of invalid input. When last_chunk_options =
+ * loose, there are two possible reasons for failure: the input contains a
+ * number of base64 characters that when divided by 4, leaves a single remainder
+ * character (BASE64_INPUT_REMAINDER), or the input contains a character that is
+ * not a valid base64 character (INVALID_BASE64_CHARACTER).
  *
  * When the error is INVALID_BASE64_CHARACTER, r.count contains the index in the
  * input where the invalid character was found. When the error is
@@ -1830,11 +1830,11 @@ size_t binary_to_base64(const char *input, size_t length, char *output,
  *
  * See https://infra.spec.whatwg.org/#forgiving-base64-decode
  *
- * This function will fail in case of invalid input. When last_chunk_options = loose,
- * there are two possible reasons for failure: the input contains a number of
- * base64 characters that when divided by 4, leaves a single remainder character
- * (BASE64_INPUT_REMAINDER), or the input contains a character that is not a
- * valid base64 character (INVALID_BASE64_CHARACTER).
+ * This function will fail in case of invalid input. When last_chunk_options =
+ * loose, there are two possible reasons for failure: the input contains a
+ * number of base64 characters that when divided by 4, leaves a single remainder
+ * character (BASE64_INPUT_REMAINDER), or the input contains a character that is
+ * not a valid base64 character (INVALID_BASE64_CHARACTER).
  *
  * When the error is INVALID_BASE64_CHARACTER, r.count contains the index in the
  * input where the invalid character was found. When the error is
@@ -1892,12 +1892,12 @@ base64_to_binary(const char16_t *input, size_t length, char *output,
  *
  * See https://infra.spec.whatwg.org/#forgiving-base64-decode
  *
- * This function will fail in case of invalid input. When last_chunk_options = loose,
- * there are three possible reasons for failure: the input contains a number of base64
- * characters that when divided by 4, leaves a single remainder character
- * (BASE64_INPUT_REMAINDER), the input contains a character that is not a valid
- * base64 character (INVALID_BASE64_CHARACTER), or the output buffer is too
- * small (OUTPUT_BUFFER_TOO_SMALL).
+ * This function will fail in case of invalid input. When last_chunk_options =
+ * loose, there are three possible reasons for failure: the input contains a
+ * number of base64 characters that when divided by 4, leaves a single remainder
+ * character (BASE64_INPUT_REMAINDER), the input contains a character that is
+ * not a valid base64 character (INVALID_BASE64_CHARACTER), or the output buffer
+ * is too small (OUTPUT_BUFFER_TOO_SMALL).
  *
  * When OUTPUT_BUFFER_TOO_SMALL, we return both the number of bytes written
  * and the number of units processed, see description of the parameters and
@@ -3393,11 +3393,11 @@ public:
    *
    * See https://infra.spec.whatwg.org/#forgiving-base64-decode
    *
-   * This function will fail in case of invalid input. When last_chunk_options = loose,
-   * there are two possible reasons for failure: the input contains a number of
-   * base64 characters that when divided by 4, leaves a single remainder character
-   * (BASE64_INPUT_REMAINDER), or the input contains a character that is not a
-   * valid base64 character (INVALID_BASE64_CHARACTER).
+   * This function will fail in case of invalid input. When last_chunk_options =
+   * loose, there are two possible reasons for failure: the input contains a
+   * number of base64 characters that when divided by 4, leaves a single
+   * remainder character (BASE64_INPUT_REMAINDER), or the input contains a
+   * character that is not a valid base64 character (INVALID_BASE64_CHARACTER).
    *
    * You should call this function with a buffer that is at least
    * maximal_binary_length_from_base64(input, length) bytes long. If you fail to
@@ -3431,11 +3431,11 @@ public:
    *
    * See https://infra.spec.whatwg.org/#forgiving-base64-decode
    *
-   * This function will fail in case of invalid input. When last_chunk_options = loose,
-   * there are two possible reasons for failure: the input contains a number of
-   * base64 characters that when divided by 4, leaves a single remainder character
-   * (BASE64_INPUT_REMAINDER), or the input contains a character that is not a
-   * valid base64 character (INVALID_BASE64_CHARACTER).
+   * This function will fail in case of invalid input. When last_chunk_options =
+   * loose, there are two possible reasons for failure: the input contains a
+   * number of base64 characters that when divided by 4, leaves a single
+   * remainder character (BASE64_INPUT_REMAINDER), or the input contains a
+   * character that is not a valid base64 character (INVALID_BASE64_CHARACTER).
    *
    * You should call this function with a buffer that is at least
    * maximal_binary_length_from_utf6_base64(input, length) bytes long. If you

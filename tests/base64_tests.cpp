@@ -124,7 +124,6 @@ size_t add_garbage(std::vector<char_type> &v, std::mt19937 &gen) {
   return i;
 }
 
-
 TEST(base64_decode_strict_cases) {
   std::vector<std::pair<std::string, uint64_t>> test_cases = {
       {"ZXhhZg==", simdutf::error_code::SUCCESS},
@@ -136,23 +135,22 @@ TEST(base64_decode_strict_cases) {
       {"Z   X  h  h   Z h =   =", simdutf::error_code::BASE64_EXTRA_BITS},
       {"ZX  h  hZg", simdutf::error_code::BASE64_INPUT_REMAINDER},
       {"ZXh  hZ  h", simdutf::error_code::BASE64_INPUT_REMAINDER},
-      };
+  };
   std::vector<char> buffer(1024);
   for (auto &p : test_cases) {
     auto input = p.first;
     auto expected_error = p.second;
-    simdutf::result result = implementation.base64_to_binary(input.data(), 
-      input.size(), buffer.data(), simdutf::base64_default, simdutf::last_chunk_handling_options::strict);
+    simdutf::result result = implementation.base64_to_binary(
+        input.data(), input.size(), buffer.data(), simdutf::base64_default,
+        simdutf::last_chunk_handling_options::strict);
     ASSERT_EQUAL(result.error, expected_error);
     size_t written = buffer.size();
     result = simdutf::base64_to_binary_safe(
-          input.data(), input.size(),
-          buffer.data(), written,
-          simdutf::base64_default, simdutf::last_chunk_handling_options::strict);
+        input.data(), input.size(), buffer.data(), written,
+        simdutf::base64_default, simdutf::last_chunk_handling_options::strict);
     ASSERT_EQUAL(result.error, expected_error);
   }
 }
-
 
 TEST(issue_single_bad16) {
   std::vector<char16_t> data = {0x3d};
