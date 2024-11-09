@@ -1746,7 +1746,7 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
     // fast path
     result r = base64_to_binary(input, length, output, options,
                                 last_chunk_handling_options);
-    if (r.error != error_code::INVALID_BASE64_CHARACTER) {
+    if (r.error != error_code::INVALID_BASE64_CHARACTER && r.error != error_code::BASE64_EXTRA_BITS) {
       outlen = r.count;
       r.count = length;
     }

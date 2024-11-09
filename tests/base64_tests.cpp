@@ -152,6 +152,29 @@ TEST(base64_decode_strict_cases) {
   }
 }
 
+TEST(base64_decode_strict_cases_length) {
+  std::vector<std::pair<std::string, simdutf::result>> test_cases = {
+      {"ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddzzz=", 
+      {simdutf::error_code::BASE64_EXTRA_BITS, 131}},
+  };
+  std::vector<char> buffer(1024);
+  for (auto &p : test_cases) {
+    auto input = p.first;
+    auto expected_result = p.second;
+    simdutf::result result = implementation.base64_to_binary(
+        input.data(), input.size(), buffer.data(), simdutf::base64_default,
+        simdutf::last_chunk_handling_options::strict);
+    ASSERT_EQUAL(result.error, expected_result.error);
+    ASSERT_EQUAL(result.count, expected_result.count);
+    size_t written = buffer.size();
+    result = simdutf::base64_to_binary_safe(
+        input.data(), input.size(), buffer.data(), written,
+        simdutf::base64_default, simdutf::last_chunk_handling_options::strict);
+    ASSERT_EQUAL(result.error, expected_result.error);
+    ASSERT_EQUAL(result.count, expected_result.count);
+  }
+}
+
 TEST(issue_single_bad16) {
   std::vector<char16_t> data = {0x3d};
   ASSERT_EQUAL(data.size(), 1);
