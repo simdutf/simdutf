@@ -223,6 +223,8 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
 
   case roundtripurl: {
     printf("# roundtrip (url)\n");
+    printf("# roundtrip considers the input as binary data, not as text.\n");
+    printf("# We convert it to base64 and then decode it back.\n");
     for (auto &e : simdutf::get_available_implementations()) {
       if (!e->supported_by_runtime_system()) {
         continue;
@@ -251,6 +253,8 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
   }
   case roundtrip: {
     printf("# roundtrip\n");
+    printf("# roundtrip considers the input as binary data, not as text.\n");
+    printf("# We convert it to base64 and then decode it back.\n");
     pretty_print(
         data.size(), volume, "libbase64", bench([&data, &buffer1, &buffer2]() {
           for (const std::vector<char> &source : data) {

@@ -24,6 +24,8 @@ enum error_code {
                             // base64 string.
   BASE64_INPUT_REMAINDER,   // The base64 input terminates with a single
                             // character, excluding padding (=).
+  BASE64_EXTRA_BITS,        // The base64 input terminates with non-zero
+                            // padding bits.
   OUTPUT_BUFFER_TOO_SMALL,  // The provided buffer is too small.
   OTHER                     // Not related to validation/transcoding.
 };

@@ -100,6 +100,9 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
         if (idx == 2) {
           uint32_t triple =
               (uint32_t(buffer[0]) << 3 * 6) + (uint32_t(buffer[1]) << 2 * 6);
+          if((last_chunk_options == last_chunk_handling_options::strict) && (triple&0xffff)) {
+            return {BASE64_EXTRA_BITS, size_t(src - srcinit)};
+          }
           if (match_system(endianness::BIG)) {
             triple <<= 8;
             std::memcpy(dst, &triple, 1);
@@ -113,6 +116,9 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
           uint32_t triple = (uint32_t(buffer[0]) << 3 * 6) +
                             (uint32_t(buffer[1]) << 2 * 6) +
                             (uint32_t(buffer[2]) << 1 * 6);
+          if((last_chunk_options == last_chunk_handling_options::strict) && (triple&0xff)) {
+            return {BASE64_EXTRA_BITS, size_t(src - srcinit)};
+          }
           if (match_system(endianness::BIG)) {
             triple <<= 8;
             std::memcpy(dst, &triple, 2);
@@ -252,6 +258,9 @@ result base64_tail_decode_safe(
           uint32_t triple = 0;
           if (idx == 2) {
             triple = (uint32_t(buffer[0]) << 18) + (uint32_t(buffer[1]) << 12);
+            if((last_chunk_options == last_chunk_handling_options::strict) && (triple&0xffff)) {
+              return {BASE64_EXTRA_BITS, size_t(src - srcinit)};
+            }
             // Extract the first byte
             triple >>= 16;
             dst[0] = static_cast<char>(triple & 0xFF);
@@ -259,6 +268,9 @@ result base64_tail_decode_safe(
           } else if (idx == 3) {
             triple = (uint32_t(buffer[0]) << 18) + (uint32_t(buffer[1]) << 12) +
                      (uint32_t(buffer[2]) << 6);
+            if((last_chunk_options == last_chunk_handling_options::strict) && (triple&0xff)) {
+              return {BASE64_EXTRA_BITS, size_t(src - srcinit)};
+            }
             // Extract the first two bytes
             triple >>= 8;
             dst[0] = static_cast<char>((triple >> 8) & 0xFF);

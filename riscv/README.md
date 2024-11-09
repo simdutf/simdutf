@@ -1,4 +1,4 @@
-# RISC-V 
+# RISC-V
 
 We assume that you have a docker or docker-like system.
 

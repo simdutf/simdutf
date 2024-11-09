@@ -377,6 +377,8 @@ enum error_code {
                             // base64 string.
   BASE64_INPUT_REMAINDER,   // The base64 input terminates with a single
                             // character, excluding padding (=).
+  BASE64_EXTRA_BITS,        // The base64 input terminates with non-zero
+                            // padding bits.
   OUTPUT_BUFFER_TOO_SMALL,  // The provided buffer is too small.
   OTHER                     // Not related to validation/transcoding.
 };
@@ -1836,9 +1838,15 @@ When decoding, by default we use a loose approach: the padding character may be 
 Advanced users may use the `last_chunk_options` parameter to use either a strict approach,
 where precise padding must be used or an error is generated, or the stop_before_partial
 option which simply discards leftover base64 characters when the padding is not appropriate.
-The stop_before_partial option might be useful for streaming: given a stream of base64 
+The stop_before_partial option might be useful for streaming: given a stream of base64
 characters over the network, you may want to be able to decode them without first waiting
 for the whole stream to come in.
+The strict approach is useful if you want to have one-to-one correspondance between
+the base64 code and the binary data. In the defaut setting is used (`last_chunk_handling_options::loose`),
+then `"ZXhhZg=="`, `"ZXhhZg"`, `"ZXhhZh=="` all decode to the same binary content.
+If `last_chunk_options` is set to `last_chunk_handling_options::strict`, then
+decoding `"ZXhhZg=="` succeeds, but decoding `"ZXhhZg"` fails with `simdutf::error_code::BASE64_INPUT_REMAINDER` while `"ZXhhZh=="` fails with 
+`simdutf::error_code::BASE64_EXTRA_BITS`.
 
 The specification of our base64 functions is as follows:
 
@@ -1859,7 +1867,7 @@ enum : base64_options {
 // https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
 enum last_chunk_handling_options : uint64_t {
   loose = 0,               /* standard base64 format, decode partial final chunk */
-  strict = 1,              /* error when the last chunk is partial, 2 or 3 chars, and unpadded */
+  strict = 1,              /* error when the last chunk is partial, 2 or 3 chars, and unpadded, or non-zero bit padding */
   stop_before_partial = 2, /* if the last chunk is partial (2 or 3 chars), ignore it (no error) */
 };
 
@@ -1896,9 +1904,9 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char16_t * in
  *
  * See https://infra.spec.whatwg.org/#forgiving-base64-decode
  *
- * This function will fail in case of invalid input. There are two possible
- * reasons for failure: the input contains a number of base64 characters that
- * when divided by 4, leaves a single remainder character
+ * This function will fail in case of invalid input. When last_chunk_options = loose,
+ * there are two possible reasons for failure: the input contains a number of
+ * base64 characters that when divided by 4, leaves a single remainder character
  * (BASE64_INPUT_REMAINDER), or the input contains a character that is not a
  * valid base64 character (INVALID_BASE64_CHARACTER).
  *
@@ -1983,10 +1991,11 @@ size_t binary_to_base64(const char * input, size_t length, char* output, base64_
  *
  * See https://infra.spec.whatwg.org/#forgiving-base64-decode
  *
- * This function will fail in case of invalid input. There are two possible reasons for
- * failure: the input contains a number of base64 characters that when divided by 4, leaves
- * a single remainder character (BASE64_INPUT_REMAINDER), or the input contains a character
- * that is not a valid base64 character (INVALID_BASE64_CHARACTER).
+ * This function will fail in case of invalid input. When last_chunk_options = loose,
+ * there are two possible reasons for failure: the input contains a number of
+ * base64 characters that when divided by 4, leaves a single remainder character
+ * (BASE64_INPUT_REMAINDER), or the input contains a character that is not a
+ * valid base64 character (INVALID_BASE64_CHARACTER).
  *
  * When the error is INVALID_BASE64_CHARACTER, r.count contains the index in the input
  * where the invalid character was found. When the error is BASE64_INPUT_REMAINDER, then
@@ -2024,9 +2033,9 @@ simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t lengt
  *
  * See https://infra.spec.whatwg.org/#forgiving-base64-decode
  *
- * This function will fail in case of invalid input. There are three possible
- * reasons for failure: the input contains a number of base64 characters that
- * when divided by 4, leaves a single remainder character
+ * This function will fail in case of invalid input. When last_chunk_options = loose,
+ * there are three possible reasons for failure: the input contains a number of base64
+ * characters that when divided by 4, leaves a single remainder character
  * (BASE64_INPUT_REMAINDER), the input contains a character that is not a valid
  * base64 character (INVALID_BASE64_CHARACTER), or the output buffer is too
  * small (OUTPUT_BUFFER_TOO_SMALL).
