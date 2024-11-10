@@ -194,6 +194,10 @@ public:
       const char *input, size_t length, char *output, base64_options options,
       last_chunk_handling_options last_chunk_options =
           last_chunk_handling_options::loose) const noexcept;
+  simdutf_warn_unused full_result base64_to_binary_details(
+      const char *input, size_t length, char *output, base64_options options,
+      last_chunk_handling_options last_chunk_options =
+          last_chunk_handling_options::loose) const noexcept;
   simdutf_warn_unused size_t maximal_binary_length_from_base64(
       const char16_t *input, size_t length) const noexcept;
   simdutf_warn_unused result
