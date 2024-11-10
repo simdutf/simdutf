@@ -38,8 +38,27 @@ struct result {
 
   simdutf_really_inline result() : error{error_code::SUCCESS}, count{0} {}
 
-  simdutf_really_inline result(error_code _err, size_t _pos)
-      : error{_err}, count{_pos} {}
+  simdutf_really_inline result(error_code err, size_t pos)
+      : error{err}, count{pos} {}
+};
+
+struct full_result {
+  error_code error;
+  size_t input_count;
+  size_t output_count;
+
+  simdutf_really_inline full_result() : error{error_code::SUCCESS}, input_count{0}, output_count{0} {}
+
+  simdutf_really_inline full_result(error_code err, size_t pos_in, size_t pos_out)
+      : error{err}, input_count{pos_in}, output_count{pos_out} {}
+  
+  simdutf_really_inline operator result() const noexcept {
+    if(error == error_code::SUCCESS || error == error_code::BASE64_INPUT_REMAINDER) {
+      return result{error, output_count};
+    } else {
+      return result{error, input_count};
+    }
+  }
 };
 
 } // namespace simdutf

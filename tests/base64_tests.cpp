@@ -124,6 +124,25 @@ size_t add_garbage(std::vector<char_type> &v, std::mt19937 &gen) {
   return i;
 }
 
+TEST(base64_decode_partial_cases) {
+  std::vector<std::pair<std::string, simdutf::result>> test_cases = {
+      {"ZXhhZg",
+       {simdutf::error_code::SUCCESS, 4}},
+  };
+  std::vector<char> buffer(1024);
+  for (auto &p : test_cases) {
+    auto input = p.first;
+    auto expected_result = p.second;
+    size_t written = buffer.size();
+    auto result = simdutf::base64_to_binary_safe(
+        input.data(), input.size(), buffer.data(), written,
+        simdutf::base64_default, simdutf::last_chunk_handling_options::stop_before_partial);
+    ASSERT_EQUAL(result.error, expected_result.error);
+//    ASSERT_EQUAL(result.count, expected_result.count);
+  }
+}
+
+
 TEST(base64_decode_strict_cases) {
   std::vector<std::pair<std::string, uint64_t>> test_cases = {
       {"ZXhhZg==", simdutf::error_code::SUCCESS},

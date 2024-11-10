@@ -1657,7 +1657,7 @@ simdutf::result r = simdutf::base64_to_binary(base64.data(), base64.size(), buff
 if(r.error) {
   // We have some error, r.count tells you where the error was encountered in the input if
   // the error is INVALID_BASE64_CHARACTER. If the error is BASE64_INPUT_REMAINDER, then
-  // a single valid base64 remained, and r.count contains the number of bytes decoded.
+  // a single valid base64 character remained, and r.count contains the number of bytes decoded.
 } else {
   buffer.resize(r.count); // resize the buffer according to actual number of bytes
 }
