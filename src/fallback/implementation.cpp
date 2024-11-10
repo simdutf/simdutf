@@ -577,7 +577,8 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
   if (last_chunk_options != stop_before_partial &&
       r.error == error_code::SUCCESS && equalsigns > 0) {
     // additional checks
-    if ((r.output_count % 3 == 0) || ((r.output_count % 3) + 1 + equalsigns != 4)) {
+    if ((r.output_count % 3 == 0) ||
+        ((r.output_count % 3) + 1 + equalsigns != 4)) {
       return {INVALID_BASE64_CHARACTER, equallocation, r.output_count};
     }
   }
@@ -666,7 +667,8 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
   if (last_chunk_options != stop_before_partial &&
       r.error == error_code::SUCCESS && equalsigns > 0) {
     // additional checks
-    if ((r.output_count % 3 == 0) || ((r.output_count % 3) + 1 + equalsigns != 4)) {
+    if ((r.output_count % 3 == 0) ||
+        ((r.output_count % 3) + 1 + equalsigns != 4)) {
       return {INVALID_BASE64_CHARACTER, equallocation, r.output_count};
     }
   }
