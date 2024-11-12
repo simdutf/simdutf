@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['result_61',['result',['../structsimdutf_1_1result.html',1,'simdutf']]]
+  ['name_62',['name',['../classsimdutf_1_1implementation.html#aa5bf5083338ae14df38af6661041e53b',1,'simdutf::implementation']]]
 ];

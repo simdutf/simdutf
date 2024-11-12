@@ -5,6 +5,8 @@ var classsimdutf_1_1implementation =
     [ "base64_length_from_binary", "classsimdutf_1_1implementation.html#a7935750344384cc0130094cb6c440826", null ],
     [ "base64_to_binary", "classsimdutf_1_1implementation.html#a7a23d6e9c3c006b78fe5d5f158206139", null ],
     [ "base64_to_binary", "classsimdutf_1_1implementation.html#acbe53ca34467a8421415162dff690d3b", null ],
+    [ "base64_to_binary_details", "classsimdutf_1_1implementation.html#a2bbe68f7c647d85ae9368dc7a2672479", null ],
+    [ "base64_to_binary_details", "classsimdutf_1_1implementation.html#a31993b9463fb0a4724353e928962ebbe", null ],
     [ "binary_to_base64", "classsimdutf_1_1implementation.html#a5823f6a86315f4404a4f437977abf9df", null ],
     [ "change_endianness_utf16", "classsimdutf_1_1implementation.html#a8a342c5088a3b2887485836daa92628a", null ],
     [ "convert_latin1_to_utf16be", "classsimdutf_1_1implementation.html#a2f498ad9236b916e5e4859109d1df0bb", null ],
