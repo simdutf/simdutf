@@ -144,7 +144,7 @@ Linux or macOS users might follow the following instructions if they have a rece
 
 1. Pull the library in a directory
    ```
-   wget https://github.com/simdutf/simdutf/releases/download/v5.6.0/singleheader.zip
+   wget https://github.com/simdutf/simdutf/releases/download/v5.6.1/singleheader.zip
    unzip singleheader.zip
    ```
    You can replace `wget` by `curl -OL https://...` if you prefer.
@@ -206,7 +206,7 @@ Single-header version
 You can create a single-header version of the library where
 all of the code is put into two files (`simdutf.h` and `simdutf.cpp`).
 We publish a zip archive containing these files, e.g., see
-https://github.com/simdutf/simdutf/releases/download/v5.6.0/singleheader.zip
+https://github.com/simdutf/simdutf/releases/download/v5.6.1/singleheader.zip
 
 You may generate it on your own using a Python script.
 
@@ -1845,7 +1845,7 @@ The strict approach is useful if you want to have one-to-one correspondance betw
 the base64 code and the binary data. In the defaut setting is used (`last_chunk_handling_options::loose`),
 then `"ZXhhZg=="`, `"ZXhhZg"`, `"ZXhhZh=="` all decode to the same binary content.
 If `last_chunk_options` is set to `last_chunk_handling_options::strict`, then
-decoding `"ZXhhZg=="` succeeds, but decoding `"ZXhhZg"` fails with `simdutf::error_code::BASE64_INPUT_REMAINDER` while `"ZXhhZh=="` fails with 
+decoding `"ZXhhZg=="` succeeds, but decoding `"ZXhhZg"` fails with `simdutf::error_code::BASE64_INPUT_REMAINDER` while `"ZXhhZh=="` fails with
 `simdutf::error_code::BASE64_EXTRA_BITS`.
 
 The specification of our base64 functions is as follows:
