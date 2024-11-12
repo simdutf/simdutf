@@ -388,9 +388,10 @@ static inline void base64_decode_block_safe(char *out, block64 *b) {
 }
 
 template <bool base64_url, typename chartype>
-result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
-                              base64_options options,
-                              last_chunk_handling_options last_chunk_options) {
+full_result
+compress_decode_base64(char *dst, const chartype *src, size_t srclen,
+                       base64_options options,
+                       last_chunk_handling_options last_chunk_options) {
   const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value
                                         : tables::base64::to_base64_value;
   size_t equallocation =
@@ -418,9 +419,9 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   }
   if (srclen == 0) {
     if (equalsigns > 0) {
-      return {INVALID_BASE64_CHARACTER, equallocation};
+      return {INVALID_BASE64_CHARACTER, equallocation, 0};
     }
-    return {SUCCESS, 0};
+    return {SUCCESS, 0, 0};
   }
   char *end_of_safe_64byte_zone =
       (srclen + 3) / 4 * 3 >= 63 ? dst + (srclen + 3) / 4 * 3 - 63 : dst;
@@ -447,7 +448,8 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                to_base64[uint8_t(*src)] <= 64) {
           src++;
         }
-        return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
+        return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit),
+                size_t(dst - dstinit)};
       }
       if (badcharmask != 0) {
         // optimization opportunity: check for simple masks like those made of
@@ -493,7 +495,8 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       uint8_t val = to_base64[uint8_t(*src)];
       *bufferptr = char(val);
       if (!scalar::base64::is_eight_byte(*src) || val > 64) {
-        return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
+        return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit),
+                size_t(dst - dstinit)};
       }
       bufferptr += (val <= 63);
       src++;
@@ -545,20 +548,22 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     }
   }
   if (src < srcend + equalsigns) {
-    result r = scalar::base64::base64_tail_decode(
+    full_result r = scalar::base64::base64_tail_decode(
         dst, src, srcend - src, equalsigns, options, last_chunk_options);
-    if (r.error == error_code::INVALID_BASE64_CHARACTER) {
-      r.count += size_t(src - srcinit);
+    if (r.error == error_code::INVALID_BASE64_CHARACTER ||
+        r.error == error_code::BASE64_EXTRA_BITS) {
+      r.input_count += size_t(src - srcinit);
       return r;
     } else {
-      r.count += size_t(dst - dstinit);
+      r.output_count += size_t(dst - dstinit);
     }
     if (last_chunk_options != stop_before_partial &&
         r.error == error_code::SUCCESS && equalsigns > 0) {
       // additional checks
-      if ((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
+      if ((r.output_count % 3 == 0) ||
+          ((r.output_count % 3) + 1 + equalsigns != 4)) {
         r.error = error_code::INVALID_BASE64_CHARACTER;
-        r.count = equallocation;
+        r.input_count = equallocation;
       }
     }
     return r;
@@ -566,8 +571,8 @@ result compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   if (equalsigns > 0) {
     if ((size_t(dst - dstinit) % 3 == 0) ||
         ((size_t(dst - dstinit) % 3) + 1 + equalsigns != 4)) {
-      return {INVALID_BASE64_CHARACTER, equallocation};
+      return {INVALID_BASE64_CHARACTER, equallocation, size_t(dst - dstinit)};
     }
   }
-  return {SUCCESS, size_t(dst - dstinit)};
+  return {SUCCESS, srclen, size_t(dst - dstinit)};
 }

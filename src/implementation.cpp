@@ -622,6 +622,14 @@ public:
                                         last_chunk_handling_options);
   }
 
+  simdutf_warn_unused full_result base64_to_binary_details(
+      const char *input, size_t length, char *output, base64_options options,
+      last_chunk_handling_options last_chunk_handling_options =
+          last_chunk_handling_options::loose) const noexcept override {
+    return set_best()->base64_to_binary_details(input, length, output, options,
+                                                last_chunk_handling_options);
+  }
+
   simdutf_warn_unused size_t maximal_binary_length_from_base64(
       const char16_t *input, size_t length) const noexcept override {
     return set_best()->maximal_binary_length_from_base64(input, length);
@@ -634,6 +642,15 @@ public:
           last_chunk_handling_options::loose) const noexcept override {
     return set_best()->base64_to_binary(input, length, output, options,
                                         last_chunk_handling_options);
+  }
+
+  simdutf_warn_unused full_result base64_to_binary_details(
+      const char16_t *input, size_t length, char *output,
+      base64_options options,
+      last_chunk_handling_options last_chunk_handling_options =
+          last_chunk_handling_options::loose) const noexcept override {
+    return set_best()->base64_to_binary_details(input, length, output, options,
+                                                last_chunk_handling_options);
   }
 
   simdutf_warn_unused size_t base64_length_from_binary(
@@ -1085,6 +1102,12 @@ public:
     return result(error_code::OTHER, 0);
   }
 
+  simdutf_warn_unused full_result base64_to_binary_details(
+      const char *, size_t, char *, base64_options,
+      last_chunk_handling_options) const noexcept override {
+    return full_result(error_code::OTHER, 0, 0);
+  }
+
   simdutf_warn_unused size_t maximal_binary_length_from_base64(
       const char16_t *, size_t) const noexcept override {
     return 0;
@@ -1094,6 +1117,12 @@ public:
   base64_to_binary(const char16_t *, size_t, char *, base64_options,
                    last_chunk_handling_options) const noexcept override {
     return result(error_code::OTHER, 0);
+  }
+
+  simdutf_warn_unused full_result base64_to_binary_details(
+      const char16_t *, size_t, char *, base64_options,
+      last_chunk_handling_options) const noexcept override {
+    return full_result(error_code::OTHER, 0, 0);
   }
 
   simdutf_warn_unused size_t
@@ -1744,11 +1773,12 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   size_t max_length = maximal_binary_length_from_base64(input, length);
   if (outlen >= max_length) {
     // fast path
-    result r = base64_to_binary(input, length, output, options,
-                                last_chunk_handling_options);
-    if (r.error != error_code::INVALID_BASE64_CHARACTER) {
-      outlen = r.count;
-      r.count = length;
+    full_result r = get_default_implementation()->base64_to_binary_details(
+        input, length, output, options, last_chunk_handling_options);
+    if (r.error != error_code::INVALID_BASE64_CHARACTER &&
+        r.error != error_code::BASE64_EXTRA_BITS) {
+      outlen = r.output_count;
+      return {r.error, length};
     }
     return r;
   }
@@ -1756,14 +1786,16 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   // the input.
   size_t outlen3 = outlen / 3 * 3; // round down to multiple of 3
   size_t safe_input = base64_length_from_binary(outlen3, options);
-  result r = base64_to_binary(input, safe_input, output, options, loose);
+  full_result r = get_default_implementation()->base64_to_binary_details(
+      input, safe_input, output, options, loose);
   if (r.error == error_code::INVALID_BASE64_CHARACTER) {
     return r;
   }
-  size_t offset = (r.error == error_code::BASE64_INPUT_REMAINDER)
-                      ? 1
-                      : ((r.count % 3) == 0 ? 0 : (r.count % 3) + 1);
-  size_t output_index = r.count - (r.count % 3);
+  size_t offset =
+      (r.error == error_code::BASE64_INPUT_REMAINDER)
+          ? 1
+          : ((r.output_count % 3) == 0 ? 0 : (r.output_count % 3) + 1);
+  size_t output_index = r.output_count - (r.output_count % 3);
   size_t input_index = safe_input;
   // offset is a value that is no larger than 3. We backtrack
   // by up to offset characters + an undetermined number of
@@ -1798,19 +1830,25 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
       padding_characts++;
     }
   }
-  r = scalar::base64::base64_tail_decode_safe(
+  // this will advance tail_input and tail_length
+  result rr = scalar::base64::base64_tail_decode_safe(
       output + output_index, remaining_out, tail_input, tail_length,
       padding_characts, options, last_chunk_handling_options);
   outlen = output_index + remaining_out;
   if (last_chunk_handling_options != stop_before_partial &&
-      r.error == error_code::SUCCESS && padding_characts > 0) {
+      rr.error == error_code::SUCCESS && padding_characts > 0) {
     // additional checks
     if ((outlen % 3 == 0) || ((outlen % 3) + 1 + padding_characts != 4)) {
-      r.error = error_code::INVALID_BASE64_CHARACTER;
+      rr.error = error_code::INVALID_BASE64_CHARACTER;
     }
   }
-  r.count += input_index;
-  return r;
+  if (rr.error == error_code::SUCCESS &&
+      last_chunk_handling_options == stop_before_partial) {
+    rr.count = tail_input - input;
+    return rr;
+  }
+  rr.count += input_index;
+  return rr;
 }
 
 simdutf_warn_unused size_t convert_latin1_to_utf8_safe(

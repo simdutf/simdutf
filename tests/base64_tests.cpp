@@ -124,6 +124,142 @@ size_t add_garbage(std::vector<char_type> &v, std::mt19937 &gen) {
   return i;
 }
 
+// loose decoding will fail when there is a single leftover padding character.
+TEST(base64_decode_just_one_padding_loose) {
+  std::vector<std::pair<std::string, simdutf::result>> test_cases = {
+      {"uuuu             =",
+       {simdutf::error_code::INVALID_BASE64_CHARACTER, 17}}};
+  std::vector<char> buffer(3);
+  for (auto &p : test_cases) {
+    auto input = p.first;
+    auto expected_result = p.second;
+    for (auto option : {simdutf::base64_options::base64_default,
+                        simdutf::base64_options::base64_url}) {
+      for (auto chunk_option : {simdutf::last_chunk_handling_options::loose}) {
+        auto result = implementation.base64_to_binary(
+            input.data(), input.size(), buffer.data(), option, chunk_option);
+        ASSERT_EQUAL(result.error, expected_result.error);
+        ASSERT_EQUAL(result.count, expected_result.count);
+      }
+    }
+  }
+}
+
+// strict decoding will fail with a pointer to the last valid character.
+TEST(base64_decode_just_one_padding_strict) {
+  std::vector<std::pair<std::string, simdutf::result>> test_cases = {
+      {"uuuu             =", {simdutf::error_code::BASE64_INPUT_REMAINDER, 3}}};
+  std::vector<char> buffer(3);
+  for (auto &p : test_cases) {
+    auto input = p.first;
+    auto expected_result = p.second;
+    for (auto option : {simdutf::base64_options::base64_default,
+                        simdutf::base64_options::base64_url}) {
+      for (auto chunk_option : {simdutf::last_chunk_handling_options::strict}) {
+        auto result = implementation.base64_to_binary(
+            input.data(), input.size(), buffer.data(), option, chunk_option);
+        ASSERT_EQUAL(result.error, expected_result.error);
+        ASSERT_EQUAL(result.count, expected_result.count);
+      }
+    }
+  }
+}
+
+// partial decoding will succeed and just decode the first 3 bytes.
+TEST(base64_decode_just_one_padding_partial) {
+  std::vector<std::pair<std::string, simdutf::result>> test_cases = {
+      {"uuuu             =", {simdutf::error_code::SUCCESS, 3}}};
+  std::vector<char> buffer(3);
+  for (auto &p : test_cases) {
+    auto input = p.first;
+    auto expected_result = p.second;
+    for (auto option : {simdutf::base64_options::base64_default,
+                        simdutf::base64_options::base64_url}) {
+      for (auto chunk_option :
+           {simdutf::last_chunk_handling_options::stop_before_partial}) {
+        auto result = implementation.base64_to_binary(
+            input.data(), input.size(), buffer.data(), option, chunk_option);
+        ASSERT_EQUAL(result.error, expected_result.error);
+        ASSERT_EQUAL(result.count, expected_result.count);
+      }
+    }
+  }
+}
+
+TEST(base64_decode_partial_cases) {
+  std::vector<std::pair<std::string, simdutf::result>> test_cases = {
+      {"ZXhhZg", {simdutf::error_code::SUCCESS, 4}},
+      {"ZXhhZg                                                                ",
+       {simdutf::error_code::SUCCESS, 4}},
+      {"                                                                ZXhhZg",
+       {simdutf::error_code::SUCCESS, 68}},
+  };
+  std::vector<char> buffer(3);
+  for (auto &p : test_cases) {
+    auto input = p.first;
+    auto expected_result = p.second;
+    size_t written = buffer.size();
+    auto result = simdutf::base64_to_binary_safe(
+        input.data(), input.size(), buffer.data(), written,
+        simdutf::base64_default,
+        simdutf::last_chunk_handling_options::stop_before_partial);
+    ASSERT_EQUAL(result.error, expected_result.error);
+    ASSERT_EQUAL(result.count, expected_result.count);
+  }
+}
+
+TEST(base64_decode_strict_cases) {
+  std::vector<std::pair<std::string, uint64_t>> test_cases = {
+      {"ZXhhZg==", simdutf::error_code::SUCCESS},
+      {"YWE=", simdutf::error_code::SUCCESS},
+      {"YWF=", simdutf::error_code::BASE64_EXTRA_BITS},
+      {"ZXhhZh==", simdutf::error_code::BASE64_EXTRA_BITS},
+      {"ZXhhZg", simdutf::error_code::BASE64_INPUT_REMAINDER},
+      {"ZXhhZh", simdutf::error_code::BASE64_INPUT_REMAINDER},
+      {"Z   X  h  h   Z h =   =", simdutf::error_code::BASE64_EXTRA_BITS},
+      {"ZX  h  hZg", simdutf::error_code::BASE64_INPUT_REMAINDER},
+      {"ZXh  hZ  h", simdutf::error_code::BASE64_INPUT_REMAINDER},
+  };
+  std::vector<char> buffer(1024);
+  for (auto &p : test_cases) {
+    auto input = p.first;
+    auto expected_error = p.second;
+    simdutf::result result = implementation.base64_to_binary(
+        input.data(), input.size(), buffer.data(), simdutf::base64_default,
+        simdutf::last_chunk_handling_options::strict);
+    ASSERT_EQUAL(result.error, expected_error);
+    size_t written = buffer.size();
+    result = simdutf::base64_to_binary_safe(
+        input.data(), input.size(), buffer.data(), written,
+        simdutf::base64_default, simdutf::last_chunk_handling_options::strict);
+    ASSERT_EQUAL(result.error, expected_error);
+  }
+}
+
+TEST(base64_decode_strict_cases_length) {
+  std::vector<std::pair<std::string, simdutf::result>> test_cases = {
+      {"ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+       "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddzzz=",
+       {simdutf::error_code::BASE64_EXTRA_BITS, 131}},
+  };
+  std::vector<char> buffer(1024);
+  for (auto &p : test_cases) {
+    auto input = p.first;
+    auto expected_result = p.second;
+    simdutf::result result = implementation.base64_to_binary(
+        input.data(), input.size(), buffer.data(), simdutf::base64_default,
+        simdutf::last_chunk_handling_options::strict);
+    ASSERT_EQUAL(result.error, expected_result.error);
+    ASSERT_EQUAL(result.count, expected_result.count);
+    size_t written = buffer.size();
+    result = simdutf::base64_to_binary_safe(
+        input.data(), input.size(), buffer.data(), written,
+        simdutf::base64_default, simdutf::last_chunk_handling_options::strict);
+    ASSERT_EQUAL(result.error, expected_result.error);
+    ASSERT_EQUAL(result.count, expected_result.count);
+  }
+}
+
 TEST(issue_single_bad16) {
   std::vector<char16_t> data = {0x3d};
   ASSERT_EQUAL(data.size(), 1);
