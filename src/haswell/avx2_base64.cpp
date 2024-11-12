@@ -563,7 +563,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       if ((r.output_count % 3 == 0) ||
           ((r.output_count % 3) + 1 + equalsigns != 4)) {
         r.error = error_code::INVALID_BASE64_CHARACTER;
-        r.output_count = equallocation;
+        r.input_count = equallocation;
       }
     }
     return r;
