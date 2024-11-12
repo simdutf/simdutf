@@ -127,45 +127,37 @@ size_t add_garbage(std::vector<char_type> &v, std::mt19937 &gen) {
 // loose decoding will fail when there is a single leftover padding character.
 TEST(base64_decode_just_one_padding_loose) {
   std::vector<std::pair<std::string, simdutf::result>> test_cases = {
-      {"uuuu             =", {simdutf::error_code::INVALID_BASE64_CHARACTER, 17}}
-  };
+      {"uuuu             =",
+       {simdutf::error_code::INVALID_BASE64_CHARACTER, 17}}};
   std::vector<char> buffer(3);
   for (auto &p : test_cases) {
     auto input = p.first;
     auto expected_result = p.second;
-    for (auto option :
-           {simdutf::base64_options::base64_default,
-            simdutf::base64_options::base64_url}) {
-      for (auto chunk_option :
-            {simdutf::last_chunk_handling_options::loose}) {
+    for (auto option : {simdutf::base64_options::base64_default,
+                        simdutf::base64_options::base64_url}) {
+      for (auto chunk_option : {simdutf::last_chunk_handling_options::loose}) {
         auto result = implementation.base64_to_binary(
-          input.data(), input.size(), buffer.data(),
-          option, chunk_option);
-          ASSERT_EQUAL(result.error, expected_result.error);
-          ASSERT_EQUAL(result.count, expected_result.count);
+            input.data(), input.size(), buffer.data(), option, chunk_option);
+        ASSERT_EQUAL(result.error, expected_result.error);
+        ASSERT_EQUAL(result.count, expected_result.count);
       }
     }
   }
 }
 
-
 // strict decoding will fail with a pointer to the last valid character.
 TEST(base64_decode_just_one_padding_strict) {
   std::vector<std::pair<std::string, simdutf::result>> test_cases = {
-      {"uuuu             =", {simdutf::error_code::BASE64_INPUT_REMAINDER, 3}}
-  };
+      {"uuuu             =", {simdutf::error_code::BASE64_INPUT_REMAINDER, 3}}};
   std::vector<char> buffer(3);
   for (auto &p : test_cases) {
     auto input = p.first;
     auto expected_result = p.second;
-    for (auto option :
-           {simdutf::base64_options::base64_default,
-            simdutf::base64_options::base64_url}) {
-      for (auto chunk_option :
-           {simdutf::last_chunk_handling_options::strict}) {
+    for (auto option : {simdutf::base64_options::base64_default,
+                        simdutf::base64_options::base64_url}) {
+      for (auto chunk_option : {simdutf::last_chunk_handling_options::strict}) {
         auto result = implementation.base64_to_binary(
-          input.data(), input.size(), buffer.data(),
-          option, chunk_option);
+            input.data(), input.size(), buffer.data(), option, chunk_option);
         ASSERT_EQUAL(result.error, expected_result.error);
         ASSERT_EQUAL(result.count, expected_result.count);
       }
@@ -176,27 +168,23 @@ TEST(base64_decode_just_one_padding_strict) {
 // partial decoding will succeed and just decode the first 3 bytes.
 TEST(base64_decode_just_one_padding_partial) {
   std::vector<std::pair<std::string, simdutf::result>> test_cases = {
-      {"uuuu             =", {simdutf::error_code::SUCCESS, 3}}
-  };
+      {"uuuu             =", {simdutf::error_code::SUCCESS, 3}}};
   std::vector<char> buffer(3);
   for (auto &p : test_cases) {
     auto input = p.first;
     auto expected_result = p.second;
-    for (auto option :
-           {simdutf::base64_options::base64_default,
-            simdutf::base64_options::base64_url}) {
+    for (auto option : {simdutf::base64_options::base64_default,
+                        simdutf::base64_options::base64_url}) {
       for (auto chunk_option :
            {simdutf::last_chunk_handling_options::stop_before_partial}) {
         auto result = implementation.base64_to_binary(
-          input.data(), input.size(), buffer.data(),
-          option, chunk_option);
+            input.data(), input.size(), buffer.data(), option, chunk_option);
         ASSERT_EQUAL(result.error, expected_result.error);
         ASSERT_EQUAL(result.count, expected_result.count);
       }
     }
   }
 }
-
 
 TEST(base64_decode_partial_cases) {
   std::vector<std::pair<std::string, simdutf::result>> test_cases = {

@@ -221,8 +221,6 @@ simdutf_warn_unused result implementation::base64_to_binary(
   return r;
 }
 
-
-
 simdutf_warn_unused full_result implementation::base64_to_binary_details(
     const char16_t *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
