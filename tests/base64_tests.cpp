@@ -55,9 +55,7 @@ constexpr uint8_t to_base64url_value[] = {
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
     255};
 
-
-template <typename char_type>
-bool is_space(char_type c) {
+template <typename char_type> bool is_space(char_type c) {
   const static std::array<char_type, 4> space = {' ', '\t', '\n', '\r'};
   return std::find(space.begin(), space.end(), c) != space.end();
 }
@@ -173,8 +171,9 @@ TEST(roundtrip_base64_with_spaces) {
             simdutf::base64_default, option);
 
         ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
-        if(option == simdutf::last_chunk_handling_options::stop_before_partial) {
-          for(size_t i = r.count; i < buffer.size(); i++) {
+        if (option ==
+            simdutf::last_chunk_handling_options::stop_before_partial) {
+          for (size_t i = r.count; i < buffer.size(); i++) {
             ASSERT_TRUE(is_space(buffer[i]));
           }
         } else {
@@ -225,11 +224,12 @@ TEST(roundtrip_base64_with_lots_of_spaces) {
             buffer.data(), buffer.size(), back.data(), back_length,
             simdutf::base64_default, option);
         ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
-        if(option == simdutf::last_chunk_handling_options::stop_before_partial) {
-          for(size_t i = r.count; i < buffer.size(); i++) {
+        if (option ==
+            simdutf::last_chunk_handling_options::stop_before_partial) {
+          for (size_t i = r.count; i < buffer.size(); i++) {
             ASSERT_TRUE(is_space(buffer[i]));
           }
-          if(r.count > 0) {
+          if (r.count > 0) {
             ASSERT_TRUE(!is_space(buffer[r.count - 1]));
           }
         } else {
@@ -242,8 +242,8 @@ TEST(roundtrip_base64_with_lots_of_spaces) {
   }
 }
 
-// partial decoding with 'safe' will succeed and just decode the first 3 bytes, even if we have
-// ample output memory. It should consume only 4 bytes.
+// partial decoding with 'safe' will succeed and just decode the first 3 bytes,
+// even if we have ample output memory. It should consume only 4 bytes.
 TEST(base64_decode_just_one_padding_partial_safe) {
   std::vector<std::tuple<std::string, simdutf::result, size_t>> test_cases = {
       {"uuuu             =", {simdutf::error_code::SUCCESS, 4}, 3}};
@@ -257,10 +257,11 @@ TEST(base64_decode_just_one_padding_partial_safe) {
                         simdutf::base64_options::base64_url}) {
       for (auto chunk_option :
            {simdutf::last_chunk_handling_options::stop_before_partial}) {
-        for(size_t output = 3; output < buffer.size(); output++) {
+        for (size_t output = 3; output < buffer.size(); output++) {
           size_t written = output;
           auto result = simdutf::base64_to_binary_safe(
-              input.data(), input.size(), buffer.data(), written, option, chunk_option);
+              input.data(), input.size(), buffer.data(), written, option,
+              chunk_option);
           ASSERT_EQUAL(result.error, expected_result.error);
           ASSERT_EQUAL(result.count, expected_result.count);
           ASSERT_EQUAL(written, expected_output);
@@ -270,9 +271,8 @@ TEST(base64_decode_just_one_padding_partial_safe) {
   }
 }
 
-
-// partial decoding will succeed and just decode the first 3 bytes, even if we have
-// ample output memory.
+// partial decoding will succeed and just decode the first 3 bytes, even if we
+// have ample output memory.
 TEST(base64_decode_just_one_padding_partial_generous) {
   std::vector<std::pair<std::string, simdutf::result>> test_cases = {
       {"uuuu             =", {simdutf::error_code::SUCCESS, 3}}};
@@ -292,7 +292,6 @@ TEST(base64_decode_just_one_padding_partial_generous) {
     }
   }
 }
-
 
 // loose decoding will fail when there is a single leftover padding character.
 TEST(base64_decode_just_one_padding_loose) {

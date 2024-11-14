@@ -30,6 +30,7 @@ struct register_test {
 #define TEST(name)                                                             \
   void test_impl_##name(const simdutf::implementation &impl);                  \
   void name(const simdutf::implementation &impl) {                             \
+    simdutf::get_active_implementation() = &impl;                              \
     std::string title = #name;                                                 \
     std::replace(title.begin(), title.end(), '_', ' ');                        \
     printf("Running '%s'... ", title.c_str());                                 \
