@@ -473,9 +473,9 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
   if (src < srcend + equalsigns) {
     full_result r = scalar::base64::base64_tail_decode(
         dst, src, srcend - src, equalsigns, options, last_chunk_options);
+    r.input_count += size_t(src - srcinit);
     if (r.error == error_code::INVALID_BASE64_CHARACTER ||
         r.error == error_code::BASE64_EXTRA_BITS) {
-      r.input_count += size_t(src - srcinit);
       return r;
     } else {
       r.output_count += size_t(dst - dstinit);

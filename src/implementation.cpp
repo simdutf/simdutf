@@ -1778,6 +1778,21 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
     if (r.error != error_code::INVALID_BASE64_CHARACTER &&
         r.error != error_code::BASE64_EXTRA_BITS) {
       outlen = r.output_count;
+      if(last_chunk_handling_options == stop_before_partial) {
+        if((r.output_count % 3) != 0) {
+          bool empty_trail = true;
+          for(size_t i = r.input_count; i < length; i++) {
+            if(!scalar::base64::is_ascii_white_space_or_padding(input[i])) {
+              empty_trail = false;
+              break;
+            }
+          }
+          if(empty_trail) {
+            r.input_count = length;
+          }
+        }
+        return {r.error, r.input_count};
+      }
       return {r.error, length};
     }
     return r;
@@ -1835,6 +1850,7 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
       output + output_index, remaining_out, tail_input, tail_length,
       padding_characts, options, last_chunk_handling_options);
   outlen = output_index + remaining_out;
+  size_t final_offset = tail_input - input;
   if (last_chunk_handling_options != stop_before_partial &&
       rr.error == error_code::SUCCESS && padding_characts > 0) {
     // additional checks
@@ -1844,7 +1860,11 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   }
   if (rr.error == error_code::SUCCESS &&
       last_chunk_handling_options == stop_before_partial) {
-    rr.count = tail_input - input;
+    if(tail_input > input + input_index) {
+      rr.count = tail_input - input;
+    } else if(r.input_count > 0) {
+      rr.count = r.input_count + rr.count;
+    }
     return rr;
   }
   rr.count += input_index;
