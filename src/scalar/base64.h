@@ -16,6 +16,11 @@ template <class char_type> bool is_ascii_white_space(char_type c) {
   return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f';
 }
 
+template <class char_type> bool is_ascii_white_space_or_padding(char_type c) {
+  return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' ||
+         c == '=';
+}
+
 template <class char_type> bool is_eight_byte(char_type c) {
   if (sizeof(char_type) == 1) {
     return true;
