@@ -9,9 +9,12 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+
 #ifdef __has_include
 #if __has_include(<iconv.h>)
+#ifndef ICONV_AVAILABLE
 #define ICONV_AVAILABLE 1
+#endif
 #include <iconv.h>
 #endif //__has_include (<iconv.h>)
 #endif // defined __has_include
