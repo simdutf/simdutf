@@ -602,7 +602,7 @@ Base64</h2>
 <p>Converting binary data to base64 always succeeds and is relatively simple: </p><div class="fragment"><div class="line"> {C++}</div>
 <div class="line">std::vector&lt;char&gt; buffer(simdutf::base64_length_from_binary(source.size()));</div>
 <div class="line">simdutf::binary_to_base64(source.data(), source.size(), buffer.data());</div>
-</div><!-- fragment --><p>Decoding base64 requires validation and, thus, error handling. Furthermore, because we prune spaces, we may need to adjust the result size afterword.</p>
+</div><!-- fragment --><p>Decoding base64 requires validation and, thus, error handling. Furthermore, because we prune spaces, we may need to adjust the result size afterward.</p>
 <div class="fragment"><div class="line"> {C++}</div>
 <div class="line">std::vector&lt;char&gt; buffer(simdutf::maximal_binary_length_from_base64(base64.data(), base64.size()));</div>
 <div class="line">simdutf::result r = simdutf::base64_to_binary(base64.data(), base64.size(), buffer.data());</div>
