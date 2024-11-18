@@ -1792,7 +1792,6 @@ void Benchmark::run_convert_latin1_to_utf16_iconv(size_t iterations) {
       sink = 0;
     } else {
       sink = (sizeof(uint16_t) * size - outbytes) / sizeof(char);
-      ;
     }
   };
   count_events(proc, iterations); // warming up!
