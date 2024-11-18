@@ -1650,7 +1650,7 @@ simdutf::binary_to_base64(source.data(), source.size(), buffer.data());
 ```
 
 Decoding base64 requires validation and, thus, error handling. Furthermore, because
-we prune spaces, we may need to adjust the result size afterword.
+we prune spaces, we may need to adjust the result size afterward.
 
 ```C++
 std::vector<char> buffer(simdutf::maximal_binary_length_from_base64(base64.data(), base64.size()));
