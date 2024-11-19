@@ -170,11 +170,11 @@ $(document).ready(function(){initNavTree('portability_8h_source.html',''); initR
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  <span class="comment">// RISC-V 64-bit</span></div>
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="preprocessor">  #define SIMDUTF_IS_RISCV64 1</span></div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160; </div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="preprocessor">  #if __clang_major__ &gt;= 19</span></div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    <span class="comment">// Does the compiler support target regions for RISC-V</span></div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<span class="preprocessor">    #define SIMDUTF_HAS_RVV_TARGET_REGION 1</span></div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;<span class="preprocessor">  #endif</span></div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160; </div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="comment">//#if __riscv_v_intrinsic &gt;= 1000000</span></div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  <span class="comment">//  #define SIMDUTF_HAS_RVV_INTRINSICS 1</span></div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="comment">//  #define SIMDUTF_HAS_RVV_TARGET_REGION 1</span></div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  <span class="comment">//#elif ...</span></div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  <span class="comment">// Check for special compiler versions that implement pre v1.0 intrinsics</span></div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;<span class="preprocessor">  #if __riscv_v_intrinsic &gt;= 11000</span></div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;<span class="preprocessor">    #define SIMDUTF_HAS_RVV_INTRINSICS 1</span></div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;<span class="preprocessor">  #endif</span></div>
