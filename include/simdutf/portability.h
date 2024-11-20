@@ -119,9 +119,12 @@
   #endif
 
 #elif defined(__loongarch_lp64)
-#if defined(__loongarch_sx)
-#define SIMDUTF_IS_LSX 1
-#endif
+  #if defined(__loongarch_sx) && defined(__loongarch_asx)
+    #define SIMDUTF_IS_LSX 1
+    #define SIMDUTF_IS_LASX 1
+  #elif defined(__loongarch_sx)
+    #define SIMDUTF_IS_LSX 1
+  #endif
 #else
   // The simdutf library is designed
   // for 64-bit processors and it seems that you are not

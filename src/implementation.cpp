@@ -28,6 +28,7 @@ template <typename T> std::string toBinaryString(T b) {
 #include "simdutf/ppc64.h"
 #include "simdutf/rvv.h"
 #include "simdutf/lsx.h"
+#include "simdutf/lasx.h"
 #include "simdutf/fallback.h" // have it always last.
 
 #include "scalar/utf8.h"
@@ -87,7 +88,7 @@ namespace internal {
   (SIMDUTF_IMPLEMENTATION_ICELAKE + SIMDUTF_IMPLEMENTATION_HASWELL +           \
        SIMDUTF_IMPLEMENTATION_WESTMERE + SIMDUTF_IMPLEMENTATION_ARM64 +        \
        SIMDUTF_IMPLEMENTATION_PPC64 + SIMDUTF_IMPLEMENTATION_LSX +             \
-       SIMDUTF_IMPLEMENTATION_FALLBACK ==                                      \
+       SIMDUTF_IMPLEMENTATION_LASX + SIMDUTF_IMPLEMENTATION_FALLBACK ==        \
    1)
 
 // Static array of known implementations. We are hoping these get baked into the
@@ -130,9 +131,15 @@ static const rvv::implementation *get_rvv_singleton() {
 }
 #endif
 #if SIMDUTF_IMPLEMENTATION_LSX
-static const lsx::implementation* get_lsx_singleton() {
+static const lsx::implementation *get_lsx_singleton() {
   static const lsx::implementation lsx_singleton{};
   return &lsx_singleton;
+}
+#endif
+#if SIMDUTF_IMPLEMENTATION_LASX
+static const lasx::implementation *get_lasx_singleton() {
+  static const lasx::implementation lasx_singleton{};
+  return &lasx_singleton;
 }
 #endif
 #if SIMDUTF_IMPLEMENTATION_FALLBACK
@@ -162,6 +169,9 @@ static const implementation *get_single_implementation() {
   #endif
   #if SIMDUTF_IMPLEMENTATION_LSX
   get_lsx_singleton();
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_LASX
+  get_lasx_singleton();
   #endif
   #if SIMDUTF_IMPLEMENTATION_FALLBACK
   get_fallback_singleton();
@@ -713,6 +723,9 @@ get_available_implementation_pointers() {
 #endif
 #if SIMDUTF_IMPLEMENTATION_LSX
           get_lsx_singleton(),
+#endif
+#if SIMDUTF_IMPLEMENTATION_LASX
+          get_lasx_singleton(),
 #endif
 #if SIMDUTF_IMPLEMENTATION_FALLBACK
           get_fallback_singleton(),
