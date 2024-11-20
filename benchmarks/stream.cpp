@@ -11,14 +11,13 @@
 #include <cmath>
 
 #ifdef __has_include
-#if __has_include(<iconv.h>)
-#ifndef ICONV_AVAILABLE
-#define ICONV_AVAILABLE 1
-#endif
-#include <iconv.h>
-#endif //__has_include (<iconv.h>)
-#endif // defined __has_include
-
+  #if __has_include(<iconv.h>)
+    #ifndef ICONV_AVAILABLE
+      #define ICONV_AVAILABLE 1
+    #endif
+    #include <iconv.h>
+  #endif //__has_include (<iconv.h>)
+#endif   // defined __has_include
 
 #if ICU_AVAILABLE
   #include <unicode/uconfig.h>
@@ -106,7 +105,7 @@ void run_from_utf8(const std::vector<char> &input_data,
     fprintf(stderr,
             "[iconv] cannot initialize ISO-8859-1 to UTF-16 converter\n");
   } else {
-    std::cout <<"# [iconv] initialized ISO-8859-1 to UTF-16 converter\n";
+    std::cout << "# [iconv] initialized ISO-8859-1 to UTF-16 converter\n";
   }
   std::cout << "n,\tsimdutf-speed\ticonv-speed\n";
 #else
@@ -126,20 +125,23 @@ void run_from_utf8(const std::vector<char> &input_data,
     };
 
 #if ICONV_AVAILABLE
-    auto iconv_size_procedure = [&cv,effective_length, &input_data, &buffer]() -> size_t {
+    auto iconv_size_procedure = [&cv, effective_length, &input_data,
+                                 &buffer]() -> size_t {
       size_t inbytes = effective_length;
       size_t outbytes = buffer.size();
-#ifdef WINICONV_CONST
-      WINICONV_CONST char *inptr = reinterpret_cast<WINICONV_CONST char *>(input_data.data());
-#else
+  #ifdef WINICONV_CONST
+      WINICONV_CONST char *inptr =
+          reinterpret_cast<WINICONV_CONST char *>(input_data.data());
+  #else
       char *inptr = const_cast<char *>(input_data.data());
-#endif
+  #endif
       char *outptr = reinterpret_cast<char *>(buffer.data());
       size_t result = iconv(cv, &inptr, &inbytes, &outptr, &outbytes);
       (void)result;
       return outbytes;
     };
-    std::cout << utf8count / bench(size_procedure) << "\t" << utf8count / bench(iconv_size_procedure) << "\n";
+    std::cout << utf8count / bench(size_procedure) << "\t"
+              << utf8count / bench(iconv_size_procedure) << "\n";
 #else
     std::cout << utf8count / bench(size_procedure) << "\n";
 #endif
@@ -180,7 +182,8 @@ int main(int argc, char **argv) {
          simdutf::get_active_implementation()->name().c_str());
   if (argc < 2) {
     std::cerr << "Please provide a file argument." << std::endl;
-    std::cerr << "The file should contain either UTF-8 or UTF-16 text." << std::endl;
+    std::cerr << "The file should contain either UTF-8 or UTF-16 text."
+              << std::endl;
     std::cerr << "We then process prefixes of increasing length." << std::endl;
     return EXIT_FAILURE;
   }
