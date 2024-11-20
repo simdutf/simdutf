@@ -16,3 +16,6 @@ __pycache__
 singleheader/simdutf.cpp
 singleheader/simdutf.h
 singleheader/singleheader.zip
+
+# clangd cache folder
+.cache/clangd/

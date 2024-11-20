@@ -88,7 +88,7 @@ size_t encode_base64(char *dst, const char *src, size_t srclen,
 }
 
 template <bool base64_url>
-static inline uint64_t to_base64_mask(block64 *b, bool *error) {
+static inline uint64_t to_base64_mask(block64 *b, uint64_t *error) {
   __m512i input = b->chunks[0];
   const __m512i ascii_space_tbl = _mm512_set_epi8(
       0, 0, 13, 12, 0, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 13, 12, 0, 10,
@@ -131,7 +131,7 @@ static inline uint64_t to_base64_mask(block64 *b, bool *error) {
   if (mask) {
     const __mmask64 spaces = _mm512_cmpeq_epi8_mask(
         _mm512_shuffle_epi8(ascii_space_tbl, input), input);
-    *error |= (mask != spaces);
+    *error = (mask ^ spaces);
   }
   b->chunks[0] = translated;
 
@@ -239,16 +239,13 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       block64 b;
       load_block(&b, src);
       src += 64;
-      bool error = false;
+      uint64_t error = 0;
       uint64_t badcharmask = to_base64_mask<base64_url>(&b, &error);
       if (error) {
         src -= 64;
-        while (src < srcend && scalar::base64::is_eight_byte(*src) &&
-               to_base64[uint8_t(*src)] <= 64) {
-          src++;
-        }
-        return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit),
-                size_t(dst - dstinit)};
+        size_t error_offset = _tzcnt_u64(error);
+        return {error_code::INVALID_BASE64_CHARACTER,
+                size_t(src - srcinit + error_offset), size_t(dst - dstinit)};
       }
       if (badcharmask != 0) {
         // optimization opportunity: check for simple masks like those made of
