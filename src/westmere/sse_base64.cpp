@@ -207,7 +207,7 @@ struct block64 {
 };
 
 template <bool base64_url>
-static inline uint16_t to_base64_mask(__m128i *src, bool *error) {
+static inline uint16_t to_base64_mask(__m128i *src, uint32_t *error) {
   const __m128i ascii_space_tbl =
       _mm_setr_epi8(0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x9, 0xa, 0x0,
                     0xc, 0xd, 0x0, 0x0);
@@ -274,21 +274,41 @@ static inline uint16_t to_base64_mask(__m128i *src, bool *error) {
   if (mask) {
     __m128i ascii_space =
         _mm_cmpeq_epi8(_mm_shuffle_epi8(ascii_space_tbl, *src), *src);
-    *error |= (mask != _mm_movemask_epi8(ascii_space));
+    *error = (mask ^ _mm_movemask_epi8(ascii_space));
   }
   *src = out;
   return (uint16_t)mask;
 }
 
 template <bool base64_url>
-static inline uint64_t to_base64_mask(block64 *b, bool *error) {
-  *error = 0;
-  uint64_t m0 = to_base64_mask<base64_url>(&b->chunks[0], error);
-  uint64_t m1 = to_base64_mask<base64_url>(&b->chunks[1], error);
-  uint64_t m2 = to_base64_mask<base64_url>(&b->chunks[2], error);
-  uint64_t m3 = to_base64_mask<base64_url>(&b->chunks[3], error);
+static inline uint64_t to_base64_mask(block64 *b, uint64_t *error) {
+  uint32_t err0 = 0;
+  uint32_t err1 = 0;
+  uint32_t err2 = 0;
+  uint32_t err3 = 0;
+  uint64_t m0 = to_base64_mask<base64_url>(&b->chunks[0], &err0);
+  uint64_t m1 = to_base64_mask<base64_url>(&b->chunks[1], &err1);
+  uint64_t m2 = to_base64_mask<base64_url>(&b->chunks[2], &err2);
+  uint64_t m3 = to_base64_mask<base64_url>(&b->chunks[3], &err3);
+  *error = (err0) | ((uint64_t)err1 << 16) | ((uint64_t)err2 << 32) |
+           ((uint64_t)err3 << 48);
   return m0 | (m1 << 16) | (m2 << 32) | (m3 << 48);
 }
+
+#if defined(_MSC_VER) && !defined(__clang__)
+static inline size_t simdutf_tzcnt_u64(uint64_t num) {
+  unsigned long ret;
+  if (num == 0) {
+    return 64;
+  }
+  _BitScanForward64(&ret, num);
+  return ret;
+}
+#else // GCC or Clang
+static inline size_t simdutf_tzcnt_u64(uint64_t num) {
+  return num ? __builtin_ctzll(num) : 64;
+}
+#endif
 
 static inline void copy_block(block64 *b, char *output) {
   _mm_storeu_si128(reinterpret_cast<__m128i *>(output), b->chunks[0]);
@@ -437,16 +457,13 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       block64 b;
       load_block(&b, src);
       src += 64;
-      bool error = false;
+      uint64_t error = 0;
       uint64_t badcharmask = to_base64_mask<base64_url>(&b, &error);
       if (error) {
         src -= 64;
-        while (src < srcend && scalar::base64::is_eight_byte(*src) &&
-               to_base64[uint8_t(*src)] <= 64) {
-          src++;
-        }
-        return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit),
-                size_t(dst - dstinit)};
+        size_t error_offset = simdutf_tzcnt_u64(error);
+        return {error_code::INVALID_BASE64_CHARACTER,
+                size_t(src - srcinit + error_offset), size_t(dst - dstinit)};
       }
       if (badcharmask != 0) {
         // optimization opportunity: check for simple masks like those made of
