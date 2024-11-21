@@ -1,3 +1,5 @@
+#ifndef SIMDUTF_ENCODING_TYPES_H
+#define SIMDUTF_ENCODING_TYPES_H
 #include <string>
 
 namespace simdutf {
@@ -41,3 +43,4 @@ size_t bom_byte_size(encoding_type bom);
 
 } // namespace BOM
 } // namespace simdutf
+#endif
