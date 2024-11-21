@@ -214,7 +214,7 @@ struct block64 {
 };
 
 template <bool base64_url>
-static inline uint32_t to_base64_mask(__m256i *src, bool *error) {
+static inline uint32_t to_base64_mask(__m256i *src, uint32_t *error) {
   const __m256i ascii_space_tbl =
       _mm256_setr_epi8(0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x9, 0xa,
                        0x0, 0xc, 0xd, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x0, 0x0,
@@ -298,17 +298,19 @@ static inline uint32_t to_base64_mask(__m256i *src, bool *error) {
   if (mask) {
     __m256i ascii_space =
         _mm256_cmpeq_epi8(_mm256_shuffle_epi8(ascii_space_tbl, *src), *src);
-    *error |= (mask != _mm256_movemask_epi8(ascii_space));
+    *error = (mask ^ _mm256_movemask_epi8(ascii_space));
   }
   *src = out;
   return (uint32_t)mask;
 }
 
 template <bool base64_url>
-static inline uint64_t to_base64_mask(block64 *b, bool *error) {
-  *error = 0;
-  uint64_t m0 = to_base64_mask<base64_url>(&b->chunks[0], error);
-  uint64_t m1 = to_base64_mask<base64_url>(&b->chunks[1], error);
+static inline uint64_t to_base64_mask(block64 *b, uint64_t *error) {
+  uint32_t err0 = 0;
+  uint32_t err1 = 0;
+  uint64_t m0 = to_base64_mask<base64_url>(&b->chunks[0], &err0);
+  uint64_t m1 = to_base64_mask<base64_url>(&b->chunks[1], &err1);
+  *error = err0 | ((uint64_t)err1 << 32);
   return m0 | (m1 << 32);
 }
 
@@ -440,16 +442,13 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       block64 b;
       load_block(&b, src);
       src += 64;
-      bool error = false;
+      uint64_t error = 0;
       uint64_t badcharmask = to_base64_mask<base64_url>(&b, &error);
       if (error) {
         src -= 64;
-        while (src < srcend && scalar::base64::is_eight_byte(*src) &&
-               to_base64[uint8_t(*src)] <= 64) {
-          src++;
-        }
-        return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit),
-                size_t(dst - dstinit)};
+        size_t error_offset = _tzcnt_u64(error);
+        return {error_code::INVALID_BASE64_CHARACTER,
+                size_t(src - srcinit + error_offset), size_t(dst - dstinit)};
       }
       if (badcharmask != 0) {
         // optimization opportunity: check for simple masks like those made of
