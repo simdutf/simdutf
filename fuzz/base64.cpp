@@ -160,7 +160,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   // pick one of the function pointers, based on the fuzz data
   // the first byte is which action to take. step forward
   // several bytes so the input is aligned.
-  if (size < 5) {
+  constexpr auto optionbytes = 6u;
+  static_assert(optionbytes % 2 == 0,
+                "optionbytes must be even to avoid misaligned char16 pointers");
+
+  if (size < optionbytes) {
     return 0;
   }
   constexpr auto Ncases = 5u;
@@ -190,8 +194,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   // decode buffer size
   const std::size_t decode_buffer_size = (data[4] << 8) + data[3];
 
-  data += 5;
-  size -= 5;
+  data += optionbytes;
+  size -= optionbytes;
 
   switch (action) {
   case 0: {
