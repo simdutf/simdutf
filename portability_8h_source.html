@@ -193,142 +193,147 @@ $(document).ready(function(){initNavTree('portability_8h_source.html',''); initR
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;<span class="preprocessor">  #endif</span></div>
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160; </div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;<span class="preprocessor">#elif defined(__loongarch_lp64)</span></div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;<span class="comment">// LoongArch 64-bit</span></div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;  <span class="comment">// The simdutf library is designed</span></div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;  <span class="comment">// for 64-bit processors and it seems that you are not</span></div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;  <span class="comment">// compiling for a known 64-bit platform. Please</span></div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;  <span class="comment">// use a 64-bit target such as x64 or 64-bit ARM for best performance.</span></div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;<span class="preprocessor">  #define SIMDUTF_IS_32BITS 1</span></div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160; </div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;  <span class="comment">// We do not support 32-bit platforms, but it can be</span></div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;  <span class="comment">// handy to identify them.</span></div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;<span class="preprocessor">  #if defined(_M_IX86) || defined(__i386__)</span></div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;<span class="preprocessor">    #define SIMDUTF_IS_X86_32BITS 1</span></div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;<span class="preprocessor">  #elif defined(__arm__) || defined(_M_ARM)</span></div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;<span class="preprocessor">    #define SIMDUTF_IS_ARM_32BITS 1</span></div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;<span class="preprocessor">  #elif defined(__PPC__) || defined(_M_PPC)</span></div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;<span class="preprocessor">    #define SIMDUTF_IS_PPC_32BITS 1</span></div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;<span class="preprocessor">  #endif</span></div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160; </div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// defined(__x86_64__) || defined(_M_AMD64)</span></div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160; </div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;<span class="preprocessor">#ifdef SIMDUTF_IS_32BITS</span></div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;<span class="preprocessor">  #ifndef SIMDUTF_NO_PORTABILITY_WARNING</span></div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;  <span class="comment">// In the future, we may want to warn users of 32-bit systems that</span></div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;  <span class="comment">// the simdutf does not support accelerated kernels for such systems.</span></div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;<span class="preprocessor">  #endif </span><span class="comment">// SIMDUTF_NO_PORTABILITY_WARNING</span></div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;<span class="preprocessor">#endif   </span><span class="comment">// SIMDUTF_IS_32BITS</span></div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160; </div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;<span class="comment">// this is almost standard?</span></div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;<span class="preprocessor">#define SIMDUTF_STRINGIFY_IMPLEMENTATION_(a) #a</span></div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;<span class="preprocessor">#define SIMDUTF_STRINGIFY(a) SIMDUTF_STRINGIFY_IMPLEMENTATION_(a)</span></div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160; </div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;<span class="comment">// Our fast kernels require 64-bit systems.</span></div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;<span class="comment">//</span></div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;<span class="comment">// On 32-bit x86, we lack 64-bit popcnt, lzcnt, blsr instructions.</span></div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;<span class="comment">// Furthermore, the number of SIMD registers is reduced.</span></div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;<span class="comment">//</span></div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;<span class="comment">// On 32-bit ARM, we would have smaller registers.</span></div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;<span class="preprocessor">  #if defined(__loongarch_sx) &amp;&amp; defined(__loongarch_asx)</span></div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;<span class="preprocessor">    #define SIMDUTF_IS_LSX 1</span></div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;<span class="preprocessor">    #define SIMDUTF_IS_LASX 1</span></div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;<span class="preprocessor">  #elif defined(__loongarch_sx)</span></div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;<span class="preprocessor">    #define SIMDUTF_IS_LSX 1</span></div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;<span class="preprocessor">  #endif</span></div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;<span class="preprocessor">#else</span></div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;  <span class="comment">// The simdutf library is designed</span></div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;  <span class="comment">// for 64-bit processors and it seems that you are not</span></div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;  <span class="comment">// compiling for a known 64-bit platform. Please</span></div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;  <span class="comment">// use a 64-bit target such as x64 or 64-bit ARM for best performance.</span></div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;<span class="preprocessor">  #define SIMDUTF_IS_32BITS 1</span></div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160; </div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  <span class="comment">// We do not support 32-bit platforms, but it can be</span></div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;  <span class="comment">// handy to identify them.</span></div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;<span class="preprocessor">  #if defined(_M_IX86) || defined(__i386__)</span></div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;<span class="preprocessor">    #define SIMDUTF_IS_X86_32BITS 1</span></div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;<span class="preprocessor">  #elif defined(__arm__) || defined(_M_ARM)</span></div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;<span class="preprocessor">    #define SIMDUTF_IS_ARM_32BITS 1</span></div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;<span class="preprocessor">  #elif defined(__PPC__) || defined(_M_PPC)</span></div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;<span class="preprocessor">    #define SIMDUTF_IS_PPC_32BITS 1</span></div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;<span class="preprocessor">  #endif</span></div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160; </div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// defined(__x86_64__) || defined(_M_AMD64)</span></div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160; </div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;<span class="preprocessor">#ifdef SIMDUTF_IS_32BITS</span></div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;<span class="preprocessor">  #ifndef SIMDUTF_NO_PORTABILITY_WARNING</span></div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;  <span class="comment">// In the future, we may want to warn users of 32-bit systems that</span></div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;  <span class="comment">// the simdutf does not support accelerated kernels for such systems.</span></div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;<span class="preprocessor">  #endif </span><span class="comment">// SIMDUTF_NO_PORTABILITY_WARNING</span></div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;<span class="preprocessor">#endif   </span><span class="comment">// SIMDUTF_IS_32BITS</span></div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160; </div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;<span class="comment">// this is almost standard?</span></div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;<span class="preprocessor">#define SIMDUTF_STRINGIFY_IMPLEMENTATION_(a) #a</span></div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;<span class="preprocessor">#define SIMDUTF_STRINGIFY(a) SIMDUTF_STRINGIFY_IMPLEMENTATION_(a)</span></div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160; </div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;<span class="comment">// Our fast kernels require 64-bit systems.</span></div>
 <div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;<span class="comment">//</span></div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;<span class="comment">// The simdutf users should still have the fallback kernel. It is</span></div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;<span class="comment">// slower, but it should run everywhere.</span></div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160; </div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;<span class="comment">//</span></div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;<span class="comment">// Enable valid runtime implementations, and select</span></div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;<span class="comment">// SIMDUTF_BUILTIN_IMPLEMENTATION</span></div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;<span class="comment">//</span></div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;<span class="comment">// On 32-bit x86, we lack 64-bit popcnt, lzcnt, blsr instructions.</span></div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;<span class="comment">// Furthermore, the number of SIMD registers is reduced.</span></div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;<span class="comment">//</span></div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;<span class="comment">// On 32-bit ARM, we would have smaller registers.</span></div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;<span class="comment">//</span></div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;<span class="comment">// The simdutf users should still have the fallback kernel. It is</span></div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;<span class="comment">// slower, but it should run everywhere.</span></div>
 <div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160; </div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;<span class="comment">// We are going to use runtime dispatch.</span></div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;<span class="preprocessor">#ifdef SIMDUTF_IS_X86_64</span></div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;<span class="preprocessor">  #ifdef __clang__</span></div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;    <span class="comment">// clang does not have GCC push pop</span></div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;    <span class="comment">// warning: clang attribute push can&#39;t be used within a namespace in clang</span></div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;    <span class="comment">// up til 8.0 so SIMDUTF_TARGET_REGION and SIMDUTF_UNTARGET_REGION must be</span></div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;    <span class="comment">// *outside* of a namespace.</span></div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;<span class="preprocessor">    #define SIMDUTF_TARGET_REGION(T)                                           \</span></div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;<span class="preprocessor">      _Pragma(SIMDUTF_STRINGIFY(clang attribute push(                          \</span></div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;<span class="preprocessor">          __attribute__((target(T))), apply_to = function)))</span></div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;<span class="preprocessor">    #define SIMDUTF_UNTARGET_REGION _Pragma(&quot;clang attribute pop&quot;</span>)</div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;<span class="preprocessor">  #elif defined(__GNUC__)</span></div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;    <span class="comment">// GCC is easier</span></div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;<span class="preprocessor">    #define SIMDUTF_TARGET_REGION(T)                                           \</span></div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;<span class="preprocessor">      _Pragma(&quot;GCC push_options&quot;</span>) _Pragma(SIMDUTF_STRINGIFY(GCC target(T)))</div>
-<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;<span class="preprocessor">    #define SIMDUTF_UNTARGET_REGION _Pragma(&quot;GCC pop_options&quot;</span>)</div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;<span class="preprocessor">  #endif </span><span class="comment">// clang then gcc</span></div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160; </div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// x86</span></div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160; </div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<span class="comment">// Default target region macros don&#39;t do anything.</span></div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;<span class="preprocessor">#ifndef SIMDUTF_TARGET_REGION</span></div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;<span class="preprocessor">  #define SIMDUTF_TARGET_REGION(T)</span></div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;<span class="preprocessor">  #define SIMDUTF_UNTARGET_REGION</span></div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160; </div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;<span class="comment">// Is threading enabled?</span></div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;<span class="preprocessor">#if defined(_REENTRANT) || defined(_MT)</span></div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;<span class="preprocessor">  #ifndef SIMDUTF_THREADS_ENABLED</span></div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;<span class="preprocessor">    #define SIMDUTF_THREADS_ENABLED</span></div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;<span class="preprocessor">  #endif</span></div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160; </div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;<span class="comment">// workaround for large stack sizes under -O0.</span></div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;<span class="comment">// https://github.com/simdutf/simdutf/issues/691</span></div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;<span class="preprocessor">#ifdef __APPLE__</span></div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;<span class="preprocessor">  #ifndef __OPTIMIZE__</span></div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;    <span class="comment">// Apple systems have small stack sizes in secondary threads.</span></div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;    <span class="comment">// Lack of compiler optimization may generate high stack usage.</span></div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;    <span class="comment">// Users may want to disable threads for safety, but only when</span></div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;    <span class="comment">// in debug mode which we detect by the fact that the __OPTIMIZE__</span></div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;    <span class="comment">// macro is not defined.</span></div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;<span class="preprocessor">    #undef SIMDUTF_THREADS_ENABLED</span></div>
-<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;<span class="preprocessor">  #endif</span></div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160; </div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;<span class="preprocessor">#ifdef SIMDUTF_VISUAL_STUDIO</span></div>
-<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;  <span class="comment">// This is one case where we do not distinguish between</span></div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;  <span class="comment">// regular visual studio and clang under visual studio.</span></div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;  <span class="comment">// clang under Windows has _stricmp (like visual studio) but not strcasecmp</span></div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;  <span class="comment">// (as clang normally has)</span></div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;<span class="preprocessor">  #define simdutf_strcasecmp _stricmp</span></div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;<span class="preprocessor">  #define simdutf_strncasecmp _strnicmp</span></div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;  <span class="comment">// The strcasecmp, strncasecmp, and strcasestr functions do not work with</span></div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;  <span class="comment">// multibyte strings (e.g. UTF-8). So they are only useful for ASCII in our</span></div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;  <span class="comment">// context.</span></div>
-<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;  <span class="comment">// https://www.gnu.org/software/libunistring/manual/libunistring.html#char-_002a-strings</span></div>
-<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;<span class="preprocessor">  #define simdutf_strcasecmp strcasecmp</span></div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;<span class="preprocessor">  #define simdutf_strncasecmp strncasecmp</span></div>
-<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160; </div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;<span class="preprocessor">#ifdef NDEBUG</span></div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160; </div>
-<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;<span class="preprocessor">  #ifdef SIMDUTF_VISUAL_STUDIO</span></div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;<span class="preprocessor">    #define SIMDUTF_UNREACHABLE() __assume(0)</span></div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;<span class="preprocessor">    #define SIMDUTF_ASSUME(COND) __assume(COND)</span></div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;<span class="preprocessor">  #else</span></div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;<span class="preprocessor">    #define SIMDUTF_UNREACHABLE() __builtin_unreachable();</span></div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;<span class="preprocessor">    #define SIMDUTF_ASSUME(COND)                                               \</span></div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;<span class="preprocessor">      do {                                                                     \</span></div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;<span class="preprocessor">        if (!(COND))                                                           \</span></div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;<span class="preprocessor">          __builtin_unreachable();                                             \</span></div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;<span class="preprocessor">      } while (0)</span></div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;<span class="preprocessor">  #endif</span></div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160; </div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;<span class="preprocessor">#else </span><span class="comment">// NDEBUG</span></div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160; </div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;<span class="preprocessor">  #define SIMDUTF_UNREACHABLE() assert(0);</span></div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;<span class="preprocessor">  #define SIMDUTF_ASSUME(COND) assert(COND)</span></div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;<span class="comment">//</span></div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;<span class="comment">// Enable valid runtime implementations, and select</span></div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;<span class="comment">// SIMDUTF_BUILTIN_IMPLEMENTATION</span></div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;<span class="comment">//</span></div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160; </div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;<span class="comment">// We are going to use runtime dispatch.</span></div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;<span class="preprocessor">#ifdef SIMDUTF_IS_X86_64</span></div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;<span class="preprocessor">  #ifdef __clang__</span></div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;    <span class="comment">// clang does not have GCC push pop</span></div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;    <span class="comment">// warning: clang attribute push can&#39;t be used within a namespace in clang</span></div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;    <span class="comment">// up til 8.0 so SIMDUTF_TARGET_REGION and SIMDUTF_UNTARGET_REGION must be</span></div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;    <span class="comment">// *outside* of a namespace.</span></div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;<span class="preprocessor">    #define SIMDUTF_TARGET_REGION(T)                                           \</span></div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;<span class="preprocessor">      _Pragma(SIMDUTF_STRINGIFY(clang attribute push(                          \</span></div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;<span class="preprocessor">          __attribute__((target(T))), apply_to = function)))</span></div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;<span class="preprocessor">    #define SIMDUTF_UNTARGET_REGION _Pragma(&quot;clang attribute pop&quot;</span>)</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;<span class="preprocessor">  #elif defined(__GNUC__)</span></div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;    <span class="comment">// GCC is easier</span></div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;<span class="preprocessor">    #define SIMDUTF_TARGET_REGION(T)                                           \</span></div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;<span class="preprocessor">      _Pragma(&quot;GCC push_options&quot;</span>) _Pragma(SIMDUTF_STRINGIFY(GCC target(T)))</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<span class="preprocessor">    #define SIMDUTF_UNTARGET_REGION _Pragma(&quot;GCC pop_options&quot;</span>)</div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;<span class="preprocessor">  #endif </span><span class="comment">// clang then gcc</span></div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160; </div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// x86</span></div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160; </div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;<span class="comment">// Default target region macros don&#39;t do anything.</span></div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;<span class="preprocessor">#ifndef SIMDUTF_TARGET_REGION</span></div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;<span class="preprocessor">  #define SIMDUTF_TARGET_REGION(T)</span></div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;<span class="preprocessor">  #define SIMDUTF_UNTARGET_REGION</span></div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160; </div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;<span class="comment">// Is threading enabled?</span></div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;<span class="preprocessor">#if defined(_REENTRANT) || defined(_MT)</span></div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;<span class="preprocessor">  #ifndef SIMDUTF_THREADS_ENABLED</span></div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;<span class="preprocessor">    #define SIMDUTF_THREADS_ENABLED</span></div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;<span class="preprocessor">  #endif</span></div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160; </div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;<span class="comment">// workaround for large stack sizes under -O0.</span></div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;<span class="comment">// https://github.com/simdutf/simdutf/issues/691</span></div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;<span class="preprocessor">#ifdef __APPLE__</span></div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;<span class="preprocessor">  #ifndef __OPTIMIZE__</span></div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;    <span class="comment">// Apple systems have small stack sizes in secondary threads.</span></div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;    <span class="comment">// Lack of compiler optimization may generate high stack usage.</span></div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;    <span class="comment">// Users may want to disable threads for safety, but only when</span></div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;    <span class="comment">// in debug mode which we detect by the fact that the __OPTIMIZE__</span></div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;    <span class="comment">// macro is not defined.</span></div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;<span class="preprocessor">    #undef SIMDUTF_THREADS_ENABLED</span></div>
+<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;<span class="preprocessor">  #endif</span></div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160; </div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;<span class="preprocessor">#ifdef SIMDUTF_VISUAL_STUDIO</span></div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;  <span class="comment">// This is one case where we do not distinguish between</span></div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;  <span class="comment">// regular visual studio and clang under visual studio.</span></div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;  <span class="comment">// clang under Windows has _stricmp (like visual studio) but not strcasecmp</span></div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;  <span class="comment">// (as clang normally has)</span></div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;<span class="preprocessor">  #define simdutf_strcasecmp _stricmp</span></div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;<span class="preprocessor">  #define simdutf_strncasecmp _strnicmp</span></div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;<span class="preprocessor">#else</span></div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;  <span class="comment">// The strcasecmp, strncasecmp, and strcasestr functions do not work with</span></div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;  <span class="comment">// multibyte strings (e.g. UTF-8). So they are only useful for ASCII in our</span></div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;  <span class="comment">// context.</span></div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;  <span class="comment">// https://www.gnu.org/software/libunistring/manual/libunistring.html#char-_002a-strings</span></div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;<span class="preprocessor">  #define simdutf_strcasecmp strcasecmp</span></div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;<span class="preprocessor">  #define simdutf_strncasecmp strncasecmp</span></div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160; </div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;<span class="preprocessor">#ifdef NDEBUG</span></div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160; </div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;<span class="preprocessor">  #ifdef SIMDUTF_VISUAL_STUDIO</span></div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;<span class="preprocessor">    #define SIMDUTF_UNREACHABLE() __assume(0)</span></div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;<span class="preprocessor">    #define SIMDUTF_ASSUME(COND) __assume(COND)</span></div>
+<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;<span class="preprocessor">  #else</span></div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;<span class="preprocessor">    #define SIMDUTF_UNREACHABLE() __builtin_unreachable();</span></div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;<span class="preprocessor">    #define SIMDUTF_ASSUME(COND)                                               \</span></div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;<span class="preprocessor">      do {                                                                     \</span></div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;<span class="preprocessor">        if (!(COND))                                                           \</span></div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;<span class="preprocessor">          __builtin_unreachable();                                             \</span></div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;<span class="preprocessor">      } while (0)</span></div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;<span class="preprocessor">  #endif</span></div>
 <div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160; </div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;<span class="preprocessor">#else </span><span class="comment">// NDEBUG</span></div>
 <div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160; </div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;<span class="preprocessor">#if defined(__GNUC__) &amp;&amp; !defined(__clang__)</span></div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;<span class="preprocessor">  #if __GNUC__ &gt;= 11</span></div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;<span class="preprocessor">    #define SIMDUTF_GCC11ORMORE 1</span></div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;<span class="preprocessor">  #endif </span><span class="comment">//  __GNUC__ &gt;= 11</span></div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;<span class="preprocessor">#endif   </span><span class="comment">// defined(__GNUC__) &amp;&amp; !defined(__clang__)</span></div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160; </div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// SIMDUTF_PORTABILITY_H</span></div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;<span class="preprocessor">  #define SIMDUTF_UNREACHABLE() assert(0);</span></div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;<span class="preprocessor">  #define SIMDUTF_ASSUME(COND) assert(COND)</span></div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160; </div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160; </div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;<span class="preprocessor">#if defined(__GNUC__) &amp;&amp; !defined(__clang__)</span></div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;<span class="preprocessor">  #if __GNUC__ &gt;= 11</span></div>
+<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;<span class="preprocessor">    #define SIMDUTF_GCC11ORMORE 1</span></div>
+<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;<span class="preprocessor">  #endif </span><span class="comment">//  __GNUC__ &gt;= 11</span></div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;<span class="preprocessor">#endif   </span><span class="comment">// defined(__GNUC__) &amp;&amp; !defined(__clang__)</span></div>
+<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160; </div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// SIMDUTF_PORTABILITY_H</span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
