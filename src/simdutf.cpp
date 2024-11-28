@@ -72,5 +72,11 @@ SIMDUTF_DISABLE_UNDESIRED_WARNINGS
 #if SIMDUTF_IMPLEMENTATION_WESTMERE
   #include "westmere/implementation.cpp"
 #endif
+#if SIMDUTF_IMPLEMENTATION_LSX
+  #include "lsx/implementation.cpp"
+#endif
+#if SIMDUTF_IMPLEMENTATION_LASX
+  #include "lasx/implementation.cpp"
+#endif
 
 SIMDUTF_POP_DISABLE_WARNINGS

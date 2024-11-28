@@ -27,7 +27,7 @@ extern "C" {
 void dump_case() {
   printf("Found a problem: ");
   for (size_t i = 0; i < input.size(); i++) {
-    printf("\\x%02x", input[0] & 0xFF);
+    printf("\\x%02x", input[i] & 0xFF);
   }
   printf("\n");
   std::string name = "random_fuzzer_log.txt";
