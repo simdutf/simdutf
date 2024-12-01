@@ -103,6 +103,7 @@ Table of contents</h1>
 <li><a href="#usage-usage">Usage (Usage)</a></li>
 <li><a href="#usage-cmake">Usage (CMake)</a></li>
 <li><a href="#single-header-version">Single-header version</a></li>
+<li><a href="#packages">Packages</a></li>
 <li><a href="#example">Example</a></li>
 <li><a href="#api">API</a></li>
 <li><a href="#base64">Base64</a></li>
@@ -237,6 +238,9 @@ Single-header version</h2>
 <div class="line">c++ -o amalgamation_demo amalgamation_demo.cpp -std=c++17</div>
 <div class="line">./amalgamation_demo</div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md9"></a>
+Packages</h2>
+<p><a href="https://repology.org/project/simdutf/versions"><img src="https://repology.org/badge/vertical-allrepos/simdutf.svg" alt="Packaging status" style="pointer-events: none;" class="inline"/></a></p>
+<h2><a class="anchor" id="autotoc_md10"></a>
 Example</h2>
 <p>Using the single-header version, you could compile the following program.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
@@ -289,7 +293,7 @@ Example</h2>
 <div class="line">  }</div>
 <div class="line">  <span class="keywordflow">return</span> EXIT_SUCCESS;</div>
 <div class="line">}</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md10"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md11"></a>
 API</h2>
 <p>Our API is made of a few non-allocating functions. They typically take a pointer and a length as a parameter, and they sometimes take a pointer to an output buffer. Users are responsible for memory allocation.</p>
 <p>We use three types of data pointer types:</p><ul>
@@ -596,7 +600,7 @@ API</h2>
 </div><!-- fragment --><p>If you have a UTF-16 input, you may change its endianness with a fast function.</p>
 <div class="fragment"><div class="line"> </div>
 <div class="line"><span class="keywordtype">void</span> change_endianness_utf16(<span class="keyword">const</span> char16_t * input, <span class="keywordtype">size_t</span> length, char16_t * output) noexcept;</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md11"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md12"></a>
 Base64</h2>
 <p>We also support converting from <a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">WHATWG forgiving-base64</a> to binary, and back. In particular, you can convert base64 inputs which contain ASCII spaces to binary. We also support the base64 URL encoding alternative. These functions are part of the Node.js JavaScript runtime: in particular <code>atob</code> in Node.js relies on simdutf.</p>
 <p>Converting binary data to base64 always succeeds and is relatively simple: </p><div class="fragment"><div class="line"> {C++}</div>
@@ -966,11 +970,11 @@ Base64</h2>
 <div class="line">      last_chunk_handling_options last_chunk_options = loose) noexcept;</div>
 <div class="line">simdutf_warn_unused result base64_to_binary_safe(const char16_t * input, size_t length, char* output, size_t&amp; outlen, base64_options options = base64_default,</div>
 <div class="line">      last_chunk_handling_options last_chunk_options = loose) noexcept;</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md12"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md13"></a>
 The sutf command-line tool</h2>
 <p>We also provide a command-line tool which can be build as follows: </p><div class="fragment"><div class="line">cmake -B build &amp;&amp; cmake --build build --target sutf</div>
 </div><!-- fragment --><p> This command builds the executable in <code>./build/tool/</code> under most platforms. The sutf tool enables the user to easily transcode files from one encoding to another directly from the command line. The usage is similar to <a href="https://www.gnu.org/software/libiconv/">iconv</a> (see <code>sutf --help</code> for more details). The sutf command-line tool relies on the simdutf library functions for fast transcoding of supported formats (UTF-8, UTF-16LE, UTF-16BE and UTF-32). If iconv is found on the system and simdutf does not support a conversion, the sutf tool falls back on iconv: a message lets the user know if iconv is available during compilation. The following is an example of transcoding two input files to an output file, from UTF-8 to UTF-16LE: </p><div class="fragment"><div class="line">sutf -f UTF-8 -t UTF-16LE -o output_file.txt first_input_file.txt second_input_file.txt</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md13"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md14"></a>
 Manual implementation selection</h2>
 <p>When compiling the llibrary for x64 processors, we build several implementations of each functions. At runtime, the best implementation is picked automatically. Advanced users may want to pick a particular implementation, thus bypassing our runtime detection. It is possible and even relatively convenient to do so. The following C++ program checks all the available implementation, and selects one as the default:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &quot;simdutf.h&quot;</span></div>
@@ -1013,10 +1017,10 @@ Manual implementation selection</h2>
 <div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;I have manually selected: &quot;</span> &lt;&lt; simdutf::get_active_implementation()-&gt;name() &lt;&lt; std::endl;</div>
 <div class="line">  <span class="keywordflow">return</span> EXIT_SUCCESS;</div>
 <div class="line">}</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md14"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md15"></a>
 Thread safety</h2>
 <p>We built simdutf with thread safety in mind. The simdutf library is single-threaded throughout. The CPU detection, which runs the first time parsing is attempted and switches to the fastest parser for your CPU, is transparent and thread-safe. Our runtime dispatching is based on global objects that are instantiated at the beginning of the main thread and may be discarded at the end of the main thread. If you have multiple threads running and some threads use the library while the main thread is cleaning up ressources, you may encounter issues. If you expect such problems, you may consider using <a href="https://en.cppreference.com/w/cpp/utility/program/quick_exit">std::quick_exit</a>.</p>
-<h2><a class="anchor" id="autotoc_md15"></a>
+<h2><a class="anchor" id="autotoc_md16"></a>
 References</h2>
 <ul>
 <li>Robert Clausecker, Daniel Lemire, <a href="https://arxiv.org/abs/2212.05098">Transcoding Unicode Characters with AVX-512 Instructions</a>, Software: Practice and Experience 53 (12), 2023.</li>
@@ -1025,7 +1029,7 @@ References</h2>
 <li>Wojciech Muła, Daniel Lemire, <a href="https://arxiv.org/abs/1910.05109">Base64 encoding and decoding at almost the speed of a memory copy</a>, Software: Practice and Experience 50 (2), 2020.</li>
 <li>Wojciech Muła, Daniel Lemire, <a href="https://arxiv.org/abs/1704.00605">Faster Base64 Encoding and Decoding using AVX2 Instructions</a>, ACM Transactions on the Web 12 (3), 2018.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md16"></a>
+<h2><a class="anchor" id="autotoc_md17"></a>
 License</h2>
 <p>This code is made available under the <a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache License 2.0</a> as well as the MIT license. As a user, you can pick the license you prefer.</p>
 <p>We include a few competitive solutions under the benchmarks/competition directory. They are provided for research purposes only. </p>

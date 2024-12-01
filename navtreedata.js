@@ -34,14 +34,15 @@ var NAVTREE =
       [ "Quick Start", "index.html#autotoc_md6", null ],
       [ "Usage (CMake)", "index.html#autotoc_md7", null ],
       [ "Single-header version", "index.html#autotoc_md8", null ],
-      [ "Example", "index.html#autotoc_md9", null ],
-      [ "API", "index.html#autotoc_md10", null ],
-      [ "Base64", "index.html#autotoc_md11", null ],
-      [ "The sutf command-line tool", "index.html#autotoc_md12", null ],
-      [ "Manual implementation selection", "index.html#autotoc_md13", null ],
-      [ "Thread safety", "index.html#autotoc_md14", null ],
-      [ "References", "index.html#autotoc_md15", null ],
-      [ "License", "index.html#autotoc_md16", null ]
+      [ "Packages", "index.html#autotoc_md9", null ],
+      [ "Example", "index.html#autotoc_md10", null ],
+      [ "API", "index.html#autotoc_md11", null ],
+      [ "Base64", "index.html#autotoc_md12", null ],
+      [ "The sutf command-line tool", "index.html#autotoc_md13", null ],
+      [ "Manual implementation selection", "index.html#autotoc_md14", null ],
+      [ "Thread safety", "index.html#autotoc_md15", null ],
+      [ "References", "index.html#autotoc_md16", null ],
+      [ "License", "index.html#autotoc_md17", null ]
     ] ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
