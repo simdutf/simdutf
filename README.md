@@ -1,7 +1,7 @@
 [![Alpine Linux](https://github.com/simdutf/simdutf/actions/workflows/alpine.yml/badge.svg)](https://github.com/simdutf/simdutf/actions/workflows/alpine.yml)
 [![MSYS2-CI](https://github.com/simdutf/simdutf/actions/workflows/msys2.yml/badge.svg)](https://github.com/simdutf/simdutf/actions/workflows/msys2.yml)
 [![MSYS2-CLANG-CI](https://github.com/simdutf/simdutf/actions/workflows/msys2-clang.yml/badge.svg)](https://github.com/simdutf/simdutf/actions/workflows/msys2-clang.yml)
-[![Ubuntu 22.04 Sanitized CI (GCC 12, CXX 20)](https://github.com/simdutf/simdutf/actions/workflows/ubuntu22-cxx20.yml/badge.svg)](https://github.com/simdutf/simdutf/actions/workflows/ubuntu22-cxx20.yml)
+[![Ubuntu 22.04 Sanitized CI (GCC 12, CXX 20)](https://github.com/simdutf/simdutf/actions/workflows/ubuntu22-cxx20.yml/badge.svg)](https://github.com/simdutf/simdutf/actions/workflows/ubuntu22-cxx20.yml) 
 # Table of contents
 
 - [Table of contents](#table-of-contents)
@@ -12,6 +12,7 @@
   - [Usage (Usage)](#usage-usage)
   - [Usage (CMake)](#usage-cmake)
   - [Single-header version](#single-header-version)
+  - [Packages](#packages)
   - [Example](#example)
   - [API](#api)
   - [Base64](#base64)
@@ -224,6 +225,12 @@ cd singleheader
 c++ -o amalgamation_demo amalgamation_demo.cpp -std=c++17
 ./amalgamation_demo
 ```
+
+Packages
+------
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/simdutf.svg)](https://repology.org/project/simdutf/versions)
+
 
 Example
 ---------
