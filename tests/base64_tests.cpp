@@ -56,13 +56,13 @@ constexpr uint8_t to_base64url_value[] = {
     255};
 
 template <typename char_type> bool is_space(char_type c) {
-  const static std::array<char_type, 4> space = {' ', '\t', '\n', '\r'};
+  const static std::array<char_type, 5> space = {' ', '\t', '\n', '\r', '\f'};
   return std::find(space.begin(), space.end(), c) != space.end();
 }
 
 template <typename char_type>
 size_t add_space(std::vector<char_type> &v, std::mt19937 &gen) {
-  const static std::array<char_type, 4> space = {' ', '\t', '\n', '\r'};
+  const static std::array<char_type, 5> space = {' ', '\t', '\n', '\r', '\f'};
   std::uniform_int_distribution<int> index_dist(0, v.size());
   size_t i = index_dist(gen);
   std::uniform_int_distribution<int> char_dist(0, 3);
