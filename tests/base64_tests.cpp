@@ -65,7 +65,7 @@ size_t add_space(std::vector<char_type> &v, std::mt19937 &gen) {
   const static std::array<char_type, 5> space = {' ', '\t', '\n', '\r', '\f'};
   std::uniform_int_distribution<int> index_dist(0, v.size());
   size_t i = index_dist(gen);
-  std::uniform_int_distribution<int> char_dist(0, 3);
+  std::uniform_int_distribution<int> char_dist(0, space.size() - 1);
   v.insert(v.begin() + i, space[char_dist(gen)]);
   return i;
 }
