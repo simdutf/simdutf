@@ -61,6 +61,15 @@ template <typename char_type> bool is_space(char_type c) {
   return std::find(space.begin(), space.end(), c) != space.end();
 }
 
+
+template <typename char_type> bool is_non_base64_space(char_type c) {
+  return uint8_t(c) >= 128 || to_base64_value[uint8_t(c)] == 255;
+}
+
+template <typename char_type> bool is_non_base64_url_space(char_type c) {
+  return uint8_t(c) >= 128 || to_base64url_value[uint8_t(c)] == 255;
+}
+
 template <typename char_type>
 size_t add_space(std::vector<char_type> &v, std::mt19937 &gen) {
   const static std::array<char_type, 5> space = {' ', '\t', '\n', '\r', '\f'};
@@ -232,7 +241,7 @@ TEST(roundtrip_base64_with_garbage) {
         if (option ==
             simdutf::last_chunk_handling_options::stop_before_partial) {
           for (size_t i = r.count; i < buffer.size(); i++) {
-            ASSERT_TRUE(is_space(buffer[i]));
+            ASSERT_TRUE(is_non_base64_space(buffer[i]));
           }
         } else {
           ASSERT_EQUAL(r.count, buffer.size());
@@ -289,7 +298,7 @@ TEST(roundtrip_base64_url_with_garbage) {
         if (option ==
             simdutf::last_chunk_handling_options::stop_before_partial) {
           for (size_t i = r.count; i < buffer.size(); i++) {
-            ASSERT_TRUE(is_space(buffer[i]));
+            ASSERT_TRUE(is_non_base64_url_space(buffer[i]));
           }
         } else {
           ASSERT_EQUAL(r.count, buffer.size());
