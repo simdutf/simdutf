@@ -503,6 +503,9 @@ simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
 simdutf_warn_unused result implementation::base64_to_binary(
     const char *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
+  const bool ignore_garbage =
+      (options == base64_options::base64_url_accept_garbage) ||
+      (options == base64_options::base64_default_accept_garbage);
   while (length > 0 &&
          scalar::base64::is_ascii_white_space(input[length - 1])) {
     length--;
@@ -525,7 +528,7 @@ simdutf_warn_unused result implementation::base64_to_binary(
     }
   }
   if (length == 0) {
-    if (equalsigns > 0) {
+    if (!ignore_garbage && equalsigns > 0) {
       return {INVALID_BASE64_CHARACTER, equallocation};
     }
     return {SUCCESS, 0};
@@ -533,7 +536,7 @@ simdutf_warn_unused result implementation::base64_to_binary(
   result r = scalar::base64::base64_tail_decode(
       output, input, length, equalsigns, options, last_chunk_options);
   if (last_chunk_options != stop_before_partial &&
-      r.error == error_code::SUCCESS && equalsigns > 0) {
+      r.error == error_code::SUCCESS && equalsigns > 0 && !ignore_garbage) {
     // additional checks
     if ((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
       return {INVALID_BASE64_CHARACTER, equallocation};
@@ -545,6 +548,9 @@ simdutf_warn_unused result implementation::base64_to_binary(
 simdutf_warn_unused full_result implementation::base64_to_binary_details(
     const char *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
+  const bool ignore_garbage =
+      (options == base64_options::base64_url_accept_garbage) ||
+      (options == base64_options::base64_default_accept_garbage);
   while (length > 0 &&
          scalar::base64::is_ascii_white_space(input[length - 1])) {
     length--;
@@ -567,7 +573,7 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
     }
   }
   if (length == 0) {
-    if (equalsigns > 0) {
+    if (!ignore_garbage && equalsigns > 0) {
       return {INVALID_BASE64_CHARACTER, equallocation, 0};
     }
     return {SUCCESS, 0, 0};
@@ -575,7 +581,7 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
   full_result r = scalar::base64::base64_tail_decode(
       output, input, length, equalsigns, options, last_chunk_options);
   if (last_chunk_options != stop_before_partial &&
-      r.error == error_code::SUCCESS && equalsigns > 0) {
+      r.error == error_code::SUCCESS && equalsigns > 0 && !ignore_garbage) {
     // additional checks
     if ((r.output_count % 3 == 0) ||
         ((r.output_count % 3) + 1 + equalsigns != 4)) {
@@ -593,6 +599,9 @@ simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
 simdutf_warn_unused result implementation::base64_to_binary(
     const char16_t *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
+  const bool ignore_garbage =
+      (options == base64_options::base64_url_accept_garbage) ||
+      (options == base64_options::base64_default_accept_garbage);
   while (length > 0 &&
          scalar::base64::is_ascii_white_space(input[length - 1])) {
     length--;
@@ -615,7 +624,7 @@ simdutf_warn_unused result implementation::base64_to_binary(
     }
   }
   if (length == 0) {
-    if (equalsigns > 0) {
+    if (!ignore_garbage && equalsigns > 0) {
       return {INVALID_BASE64_CHARACTER, equallocation};
     }
     return {SUCCESS, 0};
@@ -623,7 +632,7 @@ simdutf_warn_unused result implementation::base64_to_binary(
   result r = scalar::base64::base64_tail_decode(
       output, input, length, equalsigns, options, last_chunk_options);
   if (last_chunk_options != stop_before_partial &&
-      r.error == error_code::SUCCESS && equalsigns > 0) {
+      r.error == error_code::SUCCESS && equalsigns > 0 && !ignore_garbage) {
     // additional checks
     if ((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
       return {INVALID_BASE64_CHARACTER, equallocation};
@@ -635,6 +644,9 @@ simdutf_warn_unused result implementation::base64_to_binary(
 simdutf_warn_unused full_result implementation::base64_to_binary_details(
     const char16_t *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
+  const bool ignore_garbage =
+      (options == base64_options::base64_url_accept_garbage) ||
+      (options == base64_options::base64_default_accept_garbage);
   while (length > 0 &&
          scalar::base64::is_ascii_white_space(input[length - 1])) {
     length--;
@@ -657,7 +669,7 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
     }
   }
   if (length == 0) {
-    if (equalsigns > 0) {
+    if (!ignore_garbage && equalsigns > 0) {
       return {INVALID_BASE64_CHARACTER, equallocation, 0};
     }
     return {SUCCESS, 0, 0};
@@ -665,7 +677,7 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
   full_result r = scalar::base64::base64_tail_decode(
       output, input, length, equalsigns, options, last_chunk_options);
   if (last_chunk_options != stop_before_partial &&
-      r.error == error_code::SUCCESS && equalsigns > 0) {
+      r.error == error_code::SUCCESS && equalsigns > 0 && !ignore_garbage) {
     // additional checks
     if ((r.output_count % 3 == 0) ||
         ((r.output_count % 3) + 1 + equalsigns != 4)) {

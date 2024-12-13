@@ -218,6 +218,9 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   (void)options;
   const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value
                                         : tables::base64::to_base64_value;
+  const bool ignore_garbage =
+      (options == base64_options::base64_url_accept_garbage) ||
+      (options == base64_options::base64_default_accept_garbage);
   size_t equallocation =
       srclen; // location of the first padding character if any
   size_t equalsigns = 0;
@@ -242,7 +245,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     }
   }
   if (srclen == 0) {
-    if (equalsigns > 0) {
+    if (!ignore_garbage && equalsigns > 0) {
       return {INVALID_BASE64_CHARACTER, equallocation, 0};
     }
     return {SUCCESS, 0, 0};
@@ -263,7 +266,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       src += 64;
       uint64_t error = 0;
       uint64_t badcharmask = to_base64_mask<base64_url>(&b, &error);
-      if (error) {
+      if (error && !ignore_garbage) {
         src -= 64;
         size_t error_offset = _tzcnt_u64(error);
         return {error_code::INVALID_BASE64_CHARACTER,
@@ -300,7 +303,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     load_block_partial(&b, src, input_mask);
     uint64_t error = 0;
     uint64_t badcharmask = to_base64_mask<base64_url>(&b, &error, input_mask);
-    if (error) {
+    if (error && !ignore_garbage) {
       size_t error_offset = _tzcnt_u64(error);
       return {error_code::INVALID_BASE64_CHARACTER,
               size_t(src - srcinit + error_offset), size_t(dst - dstinit)};
@@ -333,14 +336,16 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         5, 6, 0, 1, 2);
     const __m512i shuffled = _mm512_permutexvar_epi8(pack, merged);
 
-    if (last_chunk_options == last_chunk_handling_options::strict &&
+    if (!ignore_garbage &&
+        last_chunk_options == last_chunk_handling_options::strict &&
         (idx != 1) && ((idx + equalsigns) & 3) != 0) {
       // The partial chunk was at src - idx
       _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
       dst += output_len;
       return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
               size_t(dst - dstinit)};
-    } else if (last_chunk_options ==
+    } else if (!ignore_garbage &&
+               last_chunk_options ==
                    last_chunk_handling_options::stop_before_partial &&
                (idx != 1) && ((idx + equalsigns) & 3) != 0) {
       // Rewind src to before partial chunk
@@ -349,7 +354,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       src -= idx;
     } else {
       if (idx == 2) {
-        if (last_chunk_options == last_chunk_handling_options::strict) {
+        if (!ignore_garbage &&
+            last_chunk_options == last_chunk_handling_options::strict) {
           uint32_t triple = (uint32_t(bufferptr[-2]) << 3 * 6) +
                             (uint32_t(bufferptr[-1]) << 2 * 6);
           if (triple & 0xffff) {
@@ -364,7 +370,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
         dst += output_len;
       } else if (idx == 3) {
-        if (last_chunk_options == last_chunk_handling_options::strict) {
+        if (!ignore_garbage &&
+            last_chunk_options == last_chunk_handling_options::strict) {
           uint32_t triple = (uint32_t(bufferptr[-3]) << 3 * 6) +
                             (uint32_t(bufferptr[-2]) << 2 * 6) +
                             (uint32_t(bufferptr[-1]) << 1 * 6);
@@ -379,7 +386,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         output_len += 2;
         _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
         dst += output_len;
-      } else if (idx == 1) {
+      } else if (!ignore_garbage && idx == 1) {
         _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
         dst += output_len;
         return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
@@ -390,7 +397,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       }
     }
 
-    if (last_chunk_options != stop_before_partial && equalsigns > 0) {
+    if (!ignore_garbage && last_chunk_options != stop_before_partial &&
+        equalsigns > 0) {
       size_t output_count = size_t(dst - dstinit);
       if ((output_count % 3 == 0) ||
           ((output_count % 3) + 1 + equalsigns != 4)) {
@@ -401,7 +409,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     return {SUCCESS, srclen, size_t(dst - dstinit)};
   }
 
-  if (equalsigns > 0) {
+  if (!ignore_garbage && equalsigns > 0) {
     if ((size_t(dst - dstinit) % 3 == 0) ||
         ((size_t(dst - dstinit) % 3) + 1 + equalsigns != 4)) {
       return {INVALID_BASE64_CHARACTER, equallocation, size_t(dst - dstinit)};
