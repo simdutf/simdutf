@@ -61,7 +61,6 @@ template <typename char_type> bool is_space(char_type c) {
   return std::find(space.begin(), space.end(), c) != space.end();
 }
 
-
 template <typename char_type> bool is_non_base64_space(char_type c) {
   return uint8_t(c) >= 128 || to_base64_value[uint8_t(c)] == 255;
 }
@@ -122,7 +121,8 @@ std::vector<char_type> add_simple_spaces(std::vector<char_type> &v,
 }
 
 template <typename char_type>
-size_t add_garbage(std::vector<char_type> &v, std::mt19937 &gen, const uint8_t *table) {
+size_t add_garbage(std::vector<char_type> &v, std::mt19937 &gen,
+                   const uint8_t *table) {
   auto equal_sign = std::find(v.begin(), v.end(), '=');
   size_t len = v.size();
   if (equal_sign != v.end()) {
@@ -196,7 +196,6 @@ TEST(roundtrip_base64_with_spaces) {
   }
 }
 
-
 TEST(roundtrip_base64_with_garbage) {
   for (size_t len = 0; len < 2048; len++) {
     std::vector<char> source(len, 0);
@@ -221,8 +220,8 @@ TEST(roundtrip_base64_with_garbage) {
             simdutf::last_chunk_handling_options::loose,
             simdutf::last_chunk_handling_options::stop_before_partial}) {
         simdutf::result r = implementation.base64_to_binary(
-            buffer.data(), buffer.size(), back.data(), simdutf::base64_default_accept_garbage,
-            option);
+            buffer.data(), buffer.size(), back.data(),
+            simdutf::base64_default_accept_garbage, option);
         ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
         ASSERT_EQUAL(r.count, len);
         ASSERT_TRUE(
@@ -253,7 +252,6 @@ TEST(roundtrip_base64_with_garbage) {
   }
 }
 
-
 TEST(roundtrip_base64_url_with_garbage) {
   for (size_t len = 0; len < 2048; len++) {
     std::vector<char> source(len, 0);
@@ -269,7 +267,7 @@ TEST(roundtrip_base64_url_with_garbage) {
           source.data(), source.size(), buffer.data(), simdutf::base64_url);
       buffer.resize(size);
       for (size_t i = 0; i < 5; i++) {
-        add_garbage(buffer, gen, to_base64_value);
+        add_garbage(buffer, gen, to_base64url_value);
       }
       std::vector<char> back(simdutf::maximal_binary_length_from_base64(
           buffer.data(), buffer.size()));
@@ -278,8 +276,8 @@ TEST(roundtrip_base64_url_with_garbage) {
             simdutf::last_chunk_handling_options::loose,
             simdutf::last_chunk_handling_options::stop_before_partial}) {
         simdutf::result r = implementation.base64_to_binary(
-            buffer.data(), buffer.size(), back.data(), simdutf::base64_url_accept_garbage,
-            option);
+            buffer.data(), buffer.size(), back.data(),
+            simdutf::base64_url_accept_garbage, option);
         ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
         ASSERT_EQUAL(r.count, len);
         ASSERT_TRUE(
@@ -309,7 +307,6 @@ TEST(roundtrip_base64_url_with_garbage) {
     }
   }
 }
-
 
 TEST(roundtrip_base64_with_lots_of_spaces) {
   for (size_t len = 0; len < 2048; len++) {
@@ -1884,7 +1881,6 @@ TEST(roundtrip_base64_16_with_spaces) {
   }
 }
 
-
 TEST(roundtrip_base64_16_with_garbage) {
   for (size_t len = 0; len < 2048; len++) {
     std::vector<char> source(len, 0);
@@ -1911,7 +1907,8 @@ TEST(roundtrip_base64_16_with_garbage) {
       }
       ASSERT_EQUAL(size, implementation.base64_length_from_binary(len));
       simdutf::result r = implementation.base64_to_binary(
-          buffer16.data(), buffer16.size(), back.data(), simdutf::base64_default_accept_garbage);
+          buffer16.data(), buffer16.size(), back.data(),
+          simdutf::base64_default_accept_garbage);
       ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
       ASSERT_EQUAL(r.count, len);
       if (back != source) {
@@ -1932,7 +1929,6 @@ TEST(roundtrip_base64_16_with_garbage) {
   }
 }
 
-
 TEST(roundtrip_base64_url_16_with_garbage) {
   for (size_t len = 0; len < 2048; len++) {
     std::vector<char> source(len, 0);
@@ -1951,15 +1947,17 @@ TEST(roundtrip_base64_url_16_with_garbage) {
           source.data(), source.size(), buffer.data(), simdutf::base64_url);
       buffer.resize(size);
       for (size_t i = 0; i < 5; i++) {
-        add_garbage(buffer, gen, to_base64_value);
+        add_garbage(buffer, gen, to_base64url_value);
       }
       buffer16.resize(buffer.size());
       for (size_t i = 0; i < buffer.size(); i++) {
         buffer16[i] = buffer[i];
       }
-      ASSERT_EQUAL(size, implementation.base64_length_from_binary(len));
+      ASSERT_EQUAL(size, implementation.base64_length_from_binary(
+                             len, simdutf::base64_url));
       simdutf::result r = implementation.base64_to_binary(
-          buffer16.data(), buffer16.size(), back.data(), simdutf::base64_url_accept_garbage);
+          buffer16.data(), buffer16.size(), back.data(),
+          simdutf::base64_url_accept_garbage);
       ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
       ASSERT_EQUAL(r.count, len);
       if (back != source) {
