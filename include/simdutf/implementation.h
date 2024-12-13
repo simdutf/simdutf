@@ -1689,8 +1689,8 @@ enum base64_options : uint64_t {
       base64_reverse_padding, /* standard base64 format without padding */
   base64_url_with_padding =
       base64_url | base64_reverse_padding, /* base64url with padding */
-  base64_default_accept_garbage = 4, /* accept garbage characters */
-  base64_url_accept_garbage = 5,     /* accept garbage characters */
+  base64_default_accept_garbage = 4,       /* accept garbage characters */
+  base64_url_accept_garbage = 5,           /* accept garbage characters */
 };
 
 // last_chunk_handling_options are used to specify the handling of the last
