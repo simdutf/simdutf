@@ -180,16 +180,25 @@ ctest .
 
 Visual Studio users must specify whether they want to build the Release or Debug version.
 
-To run benchmarks, execute the `benchmark` command. You can get help on its
+To run transcoding benchmarks, execute the `benchmark` command. You can get help on its
 usage by first building it and then calling it with the `--help` flag.
 E.g., under Linux you may do the following:
 
 ```
-cmake -B build
+cmake -B build -D SIMDUTF_BENCHMARKS=ON
 cmake --build build
 ./build/benchmarks/benchmark --help
 ./build/benchmarks/base64/base64_benchmark --help
 ```
+
+E.g., to run base64 decoding benchmarks on DNS data (short inputs), do
+
+```
+./build/benchmarks/base64/benchmark_base64 -d pathto/base64data/dns/*.txt
+```
+
+where pathto/base64data should contain the path to a clone of
+the repository https://github.com/lemire/base64data.
 
 Instructions are similar for Visual Studio users.
 
