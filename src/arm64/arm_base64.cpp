@@ -325,16 +325,13 @@ void base64_decode_block(char *out, const char *src) {
   vst3q_u8((uint8_t *)out, outvec);
 }
 
-template <bool base64_url, typename char_type>
+template <bool base64_url, bool ignore_garbage, typename char_type>
 full_result
 compress_decode_base64(char *dst, const char_type *src, size_t srclen,
                        base64_options options,
                        last_chunk_handling_options last_chunk_options) {
   const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value
                                         : tables::base64::to_base64_value;
-  const bool ignore_garbage =
-      (options == base64_options::base64_url_accept_garbage) ||
-      (options == base64_options::base64_default_accept_garbage);
   size_t equallocation =
       srclen; // location of the first padding character if any
   // skip trailing spaces
