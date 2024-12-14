@@ -210,7 +210,7 @@ static inline void base64_decode_block(char *out, block64 *b) {
   base64_decode(out, b->chunks[0]);
 }
 
-template <bool base64_url, typename chartype>
+template <bool base64_url, bool ignore_garbage, typename chartype>
 full_result
 compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                        base64_options options,
@@ -218,9 +218,6 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   (void)options;
   const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value
                                         : tables::base64::to_base64_value;
-  const bool ignore_garbage =
-      (options == base64_options::base64_url_accept_garbage) ||
-      (options == base64_options::base64_default_accept_garbage);
   size_t equallocation =
       srclen; // location of the first padding character if any
   size_t equalsigns = 0;
