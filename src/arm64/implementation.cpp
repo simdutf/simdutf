@@ -1126,21 +1126,45 @@ simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
 simdutf_warn_unused result implementation::base64_to_binary(
     const char *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
-  return (options & base64_url)
-             ? compress_decode_base64<true>(output, input, length, options,
-                                            last_chunk_options)
-             : compress_decode_base64<false>(output, input, length, options,
-                                             last_chunk_options);
+  if (options & base64_url) {
+    if (options == base64_options::base64_url_accept_garbage) {
+      return compress_decode_base64<true, true>(output, input, length, options,
+                                                last_chunk_options);
+    } else {
+      return compress_decode_base64<true, false>(output, input, length, options,
+                                                 last_chunk_options);
+    }
+  } else {
+    if (options == base64_options::base64_default_accept_garbage) {
+      return compress_decode_base64<false, true>(output, input, length, options,
+                                                 last_chunk_options);
+    } else {
+      return compress_decode_base64<false, false>(output, input, length,
+                                                  options, last_chunk_options);
+    }
+  }
 }
 
 simdutf_warn_unused full_result implementation::base64_to_binary_details(
     const char *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
-  return (options & base64_url)
-             ? compress_decode_base64<true>(output, input, length, options,
-                                            last_chunk_options)
-             : compress_decode_base64<false>(output, input, length, options,
-                                             last_chunk_options);
+  if (options & base64_url) {
+    if (options == base64_options::base64_url_accept_garbage) {
+      return compress_decode_base64<true, true>(output, input, length, options,
+                                                last_chunk_options);
+    } else {
+      return compress_decode_base64<true, false>(output, input, length, options,
+                                                 last_chunk_options);
+    }
+  } else {
+    if (options == base64_options::base64_default_accept_garbage) {
+      return compress_decode_base64<false, true>(output, input, length, options,
+                                                 last_chunk_options);
+    } else {
+      return compress_decode_base64<false, false>(output, input, length,
+                                                  options, last_chunk_options);
+    }
+  }
 }
 
 simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
@@ -1151,21 +1175,45 @@ simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
 simdutf_warn_unused result implementation::base64_to_binary(
     const char16_t *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
-  return (options & base64_url)
-             ? compress_decode_base64<true>(output, input, length, options,
-                                            last_chunk_options)
-             : compress_decode_base64<false>(output, input, length, options,
-                                             last_chunk_options);
+  if (options & base64_url) {
+    if (options == base64_options::base64_url_accept_garbage) {
+      return compress_decode_base64<true, true>(output, input, length, options,
+                                                last_chunk_options);
+    } else {
+      return compress_decode_base64<true, false>(output, input, length, options,
+                                                 last_chunk_options);
+    }
+  } else {
+    if (options == base64_options::base64_default_accept_garbage) {
+      return compress_decode_base64<false, true>(output, input, length, options,
+                                                 last_chunk_options);
+    } else {
+      return compress_decode_base64<false, false>(output, input, length,
+                                                  options, last_chunk_options);
+    }
+  }
 }
 
 simdutf_warn_unused full_result implementation::base64_to_binary_details(
     const char16_t *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
-  return (options & base64_url)
-             ? compress_decode_base64<true>(output, input, length, options,
-                                            last_chunk_options)
-             : compress_decode_base64<false>(output, input, length, options,
-                                             last_chunk_options);
+  if (options & base64_url) {
+    if (options == base64_options::base64_url_accept_garbage) {
+      return compress_decode_base64<true, true>(output, input, length, options,
+                                                last_chunk_options);
+    } else {
+      return compress_decode_base64<true, false>(output, input, length, options,
+                                                 last_chunk_options);
+    }
+  } else {
+    if (options == base64_options::base64_default_accept_garbage) {
+      return compress_decode_base64<false, true>(output, input, length, options,
+                                                 last_chunk_options);
+    } else {
+      return compress_decode_base64<false, false>(output, input, length,
+                                                  options, last_chunk_options);
+    }
+  }
 }
 
 simdutf_warn_unused size_t implementation::base64_length_from_binary(
