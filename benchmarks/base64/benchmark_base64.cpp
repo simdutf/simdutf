@@ -384,6 +384,26 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
               }
             }
           }));
+      pretty_print(
+          data.size(), volume, "simdutf::" + e->name() + " (accept garbage)",
+          bench([&data, &buffer1, &buffer2, &e]() {
+            for (const std::vector<char> &source : data) {
+              auto err = e->base64_to_binary(source.data(), source.size(),
+                                             buffer1.data(), simdutf::base64_url_accept_garbage);
+              if (err.error) {
+                std::cerr << "Error: at position " << err.count << " out of "
+                          << source.size() << std::endl;
+                for (size_t i = err.count; i < source.size(); i++) {
+                  printf("0x%02x (%c) ", uint8_t(source[i]), source[i]);
+                }
+                printf("\n");
+                throw std::runtime_error("Error: is input valid base64? " +
+                                         std::to_string(err.error) +
+                                         " at position " +
+                                         std::to_string(err.count));
+              }
+            }
+          }));
     }
     break;
   }

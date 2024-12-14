@@ -149,7 +149,7 @@ Linux or macOS users might follow the following instructions if they have a rece
 
 1. Pull the library in a directory
    ```
-   wget https://github.com/simdutf/simdutf/releases/download/v5.6.4/singleheader.zip
+   wget https://github.com/simdutf/simdutf/releases/download/v5.7.0/singleheader.zip
    unzip singleheader.zip
    ```
    You can replace `wget` by `curl -OL https://...` if you prefer.
@@ -220,7 +220,7 @@ Single-header version
 You can create a single-header version of the library where
 all of the code is put into two files (`simdutf.h` and `simdutf.cpp`).
 We publish a zip archive containing these files, e.g., see
-https://github.com/simdutf/simdutf/releases/download/v5.6.4/singleheader.zip
+https://github.com/simdutf/simdutf/releases/download/v5.7.0/singleheader.zip
 
 You may generate it on your own using a Python script.
 
@@ -1660,7 +1660,7 @@ void change_endianness_utf16(const char16_t * input, size_t length, char16_t * o
 Base64
 -----
 
-We also support converting from [WHATWG forgiving-base64](https://infra.spec.whatwg.org/#forgiving-base64-decode) to binary, and back. In particular, you can convert base64 inputs which contain ASCII spaces to binary. We also support the base64 URL encoding alternative. These functions are part of the Node.js JavaScript runtime: in particular `atob` in Node.js relies on simdutf.
+We also support converting from [WHATWG forgiving-base64](https://infra.spec.whatwg.org/#forgiving-base64-decode) to binary, and back. In particular, you can convert base64 inputs which contain ASCII spaces (' ', '\t', '\n', '\r', '\f') to binary. We also support the base64 URL encoding alternative. These functions are part of the Node.js JavaScript runtime: in particular `atob` in Node.js relies on simdutf.
 
 Converting binary data to base64 always succeeds and is relatively simple:
 ```C++
@@ -1669,7 +1669,7 @@ simdutf::binary_to_base64(source.data(), source.size(), buffer.data());
 ```
 
 Decoding base64 requires validation and, thus, error handling. Furthermore, because
-we prune spaces, we may need to adjust the result size afterward.
+we prune ASCII spaces, we may need to adjust the result size afterward.
 
 ```C++
 std::vector<char> buffer(simdutf::maximal_binary_length_from_base64(base64.data(), base64.size()));
@@ -1828,10 +1828,12 @@ We support two conventions: `base64_default` and `base64_url`:
   `simdutf::binary_to_base64(source, size, out, buffer.data())`. When decoding, white space
   characters are omitted as per the [WHATWG forgiving-base64](https://infra.spec.whatwg.org/#forgiving-base64-decode) standard. Further, if padding characters are present at the end of the
   stream, there must be no more than two, and if there are any, the total number of characters (excluding
-  spaces but including padding characters) must be divisible by four.
+  ASCII spaces ' ', '\t', '\n', '\r', '\f' but including padding characters) must be divisible by four.
 * The URL convention (`base64_url`) uses the characters `-` and `_` as part of its alphabet. It does
   not pad its output. Thus, we have that the string `"Hello, World!"` is encoded to `"SGVsbG8sIFdvcmxkIQ"`.
   To specify the URL convention, you can pass the appropriate option to our decoding and encoding functions: e.g., `simdutf::base64_to_binary(source, size, out, simdutf::base64_url)`.
+
+When we encounter a character that is neither an ASCII space nor a base64 character (a garbage character), we detect an error. To tolerate 'garbage' characters, you can use `base64_default_accept_garbage` or `base64_url_accept_garbage` instead of `base64_default` or `base64_url`.
 
 Thus we follow the convention of systems such as the Node or Bun JavaScript runtimes with respect to padding. The
 default base64 uses padding whereas the URL variant does not.
@@ -1873,13 +1875,20 @@ The specification of our base64 functions is as follows:
 ```C++
 
 // base64_options are used to specify the base64 encoding options.
+// ASCII spaces are ' ', '\t', '\n', '\r', '\f'
+// garbage characters are characters that are not part of the base64 alphabet nor ASCII spaces.
 using base64_options = uint64_t;
-enum : base64_options {
-  base64_default = 0, /* standard base64 format (with padding) */
-  base64_url = 1, /* base64url format (no padding) */
+enum base64_options : uint64_t {
+  base64_default = 0,         /* standard base64 format (with padding) */
+  base64_url = 1,             /* base64url format (no padding) */
   base64_reverse_padding = 2, /* modifier for base64_default and base64_url */
-  base64_default_no_padding = base64_default | base64_reverse_padding, /* standard base64 format without padding */
-  base64_url_with_padding = base64_url | base64_reverse_padding, /* base64url with padding */
+  base64_default_no_padding =
+      base64_default |
+      base64_reverse_padding, /* standard base64 format without padding */
+  base64_url_with_padding =
+      base64_url | base64_reverse_padding, /* base64url with padding */
+  base64_default_accept_garbage = 4,       /* standard base64 format accepting garbage characters */
+  base64_url_accept_garbage = 5,           /* base64url format accepting garbage characters */
 };
 
 // last_chunk_handling_options are used to specify the handling of the last

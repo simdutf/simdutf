@@ -1680,6 +1680,9 @@ simdutf_warn_unused size_t trim_partial_utf16(const char16_t *input,
                                               size_t length);
 
 // base64_options are used to specify the base64 encoding options.
+// ASCII spaces are ' ', '\t', '\n', '\r', '\f'
+// garbage characters are characters that are not part of the base64 alphabet
+// nor ASCII spaces.
 enum base64_options : uint64_t {
   base64_default = 0,         /* standard base64 format (with padding) */
   base64_url = 1,             /* base64url format (no padding) */
@@ -1689,8 +1692,10 @@ enum base64_options : uint64_t {
       base64_reverse_padding, /* standard base64 format without padding */
   base64_url_with_padding =
       base64_url | base64_reverse_padding, /* base64url with padding */
-  base64_default_accept_garbage = 4,       /* accept garbage characters */
-  base64_url_accept_garbage = 5,           /* accept garbage characters */
+  base64_default_accept_garbage =
+      4, /* standard base64 format accepting garbage characters */
+  base64_url_accept_garbage =
+      5, /* base64url format accepting garbage characters */
 };
 
 // last_chunk_handling_options are used to specify the handling of the last
