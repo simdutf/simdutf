@@ -87,7 +87,7 @@ size_t encode_base64(char *dst, const char *src, size_t srclen,
   return (size_t)(out - (uint8_t *)dst) + output_len;
 }
 
-template <bool base64_url>
+template <bool base64_url, bool ignore_garbage>
 static inline uint64_t to_base64_mask(block64 *b, uint64_t *error,
                                       uint64_t input_mask = UINT64_MAX) {
   __m512i input = b->chunks[0];
@@ -129,7 +129,7 @@ static inline uint64_t to_base64_mask(block64 *b, uint64_t *error,
   const __m512i translated = _mm512_permutex2var_epi8(lookup0, input, lookup1);
   const __m512i combined = _mm512_or_si512(translated, input);
   const __mmask64 mask = _mm512_movepi8_mask(combined) & input_mask;
-  if (mask) {
+  if (!ignore_garbage && mask) {
     const __mmask64 spaces =
         _mm512_cmpeq_epi8_mask(_mm512_shuffle_epi8(ascii_space_tbl, input),
                                input) &
@@ -263,8 +263,9 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       load_block(&b, src);
       src += 64;
       uint64_t error = 0;
-      uint64_t badcharmask = to_base64_mask<base64_url>(&b, &error);
-      if (error && !ignore_garbage) {
+      uint64_t badcharmask =
+          to_base64_mask<base64_url, ignore_garbage>(&b, &error);
+      if (!ignore_garbage && error) {
         src -= 64;
         size_t error_offset = _tzcnt_u64(error);
         return {error_code::INVALID_BASE64_CHARACTER,
@@ -300,8 +301,9 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     block64 b;
     load_block_partial(&b, src, input_mask);
     uint64_t error = 0;
-    uint64_t badcharmask = to_base64_mask<base64_url>(&b, &error, input_mask);
-    if (error && !ignore_garbage) {
+    uint64_t badcharmask =
+        to_base64_mask<base64_url, ignore_garbage>(&b, &error, input_mask);
+    if (!ignore_garbage && error) {
       size_t error_offset = _tzcnt_u64(error);
       return {error_code::INVALID_BASE64_CHARACTER,
               size_t(src - srcinit + error_offset), size_t(dst - dstinit)};
