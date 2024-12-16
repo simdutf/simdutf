@@ -388,8 +388,9 @@ void bench(std::vector<std::vector<char>> &data, uint8_t mode) {
           data.size(), volume, "simdutf::" + e->name() + " (accept garbage)",
           bench([&data, &buffer1, &buffer2, &e]() {
             for (const std::vector<char> &source : data) {
-              auto err = e->base64_to_binary(source.data(), source.size(),
-                                             buffer1.data(), simdutf::base64_url_accept_garbage);
+              auto err = e->base64_to_binary(
+                  source.data(), source.size(), buffer1.data(),
+                  simdutf::base64_default_accept_garbage);
               if (err.error) {
                 std::cerr << "Error: at position " << err.count << " out of "
                           << source.size() << std::endl;
