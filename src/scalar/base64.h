@@ -256,7 +256,7 @@ result base64_tail_decode_safe(
     idx = 0;
     const char_type *srccur = src;
     // We need at least four characters.
-#ifdef  __clang__
+#ifdef __clang__
     // If possible, we read four characters at a time. (It is an optimization.)
     if (ignore_garbage && src + 4 <= srcend) {
       char_type c0 = src[0];
