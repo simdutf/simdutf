@@ -80,6 +80,7 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
     }
     idx = 0;
     // we need at least four characters.
+#ifdef __clang__
     // If possible, we read four characters at a time. (It is an optimization.)
     if (ignore_garbage && src + 4 <= srcend) {
       char_type c0 = src[0];
@@ -100,6 +101,7 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
       idx += (is_eight_byte(c3) && code3 <= 63);
       src += 4;
     }
+#endif
     while ((idx < 4) && (src < srcend)) {
       char_type c = *src;
       uint8_t code = to_base64[uint8_t(c)];
@@ -254,6 +256,7 @@ result base64_tail_decode_safe(
     idx = 0;
     const char_type *srccur = src;
     // We need at least four characters.
+#ifdef __clang__
     // If possible, we read four characters at a time. (It is an optimization.)
     if (ignore_garbage && src + 4 <= srcend) {
       char_type c0 = src[0];
@@ -274,6 +277,7 @@ result base64_tail_decode_safe(
       idx += (is_eight_byte(c3) && code3 <= 63);
       src += 4;
     }
+#endif
     while (idx < 4 && src < srcend) {
       char_type c = *src;
       uint8_t code = to_base64[uint8_t(c)];
