@@ -66,7 +66,7 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
   size_t idx;
   uint8_t buffer[4];
   while (true) {
-      while (src + 4 <= srcend && is_eight_byte(src[0]) &&
+    while (src + 4 <= srcend && is_eight_byte(src[0]) &&
            is_eight_byte(src[1]) && is_eight_byte(src[2]) &&
            is_eight_byte(src[3]) &&
            (x = d0[uint8_t(src[0])] | d1[uint8_t(src[1])] |
@@ -81,26 +81,26 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
     idx = 0;
     // we need at least four characters.
     // If possible, we read four characters at a time. (It is an optimization.)
-    if(ignore_garbage && src + 4 <= srcend) {
-        char_type c0 = src[0];
-        char_type c1 = src[1];
-        char_type c2 = src[2];
-        char_type c3 = src[3];
-        uint8_t code0 = to_base64[uint8_t(c0)];
-        uint8_t code1 = to_base64[uint8_t(c1)];
-        uint8_t code2 = to_base64[uint8_t(c2)];
-        uint8_t code3 = to_base64[uint8_t(c3)];
-        buffer[idx] = code0;
-        idx += (is_eight_byte(c0) && code0 <= 63);
-        buffer[idx] = code1;
-        idx += (is_eight_byte(c1) && code1 <= 63);
-        buffer[idx] = code2;
-        idx += (is_eight_byte(c2) && code2 <= 63);
-        buffer[idx] = code3;
-        idx += (is_eight_byte(c3) && code3 <= 63);
-	src += 4;
+    if (ignore_garbage && src + 4 <= srcend) {
+      char_type c0 = src[0];
+      char_type c1 = src[1];
+      char_type c2 = src[2];
+      char_type c3 = src[3];
+      uint8_t code0 = to_base64[uint8_t(c0)];
+      uint8_t code1 = to_base64[uint8_t(c1)];
+      uint8_t code2 = to_base64[uint8_t(c2)];
+      uint8_t code3 = to_base64[uint8_t(c3)];
+      buffer[idx] = code0;
+      idx += (is_eight_byte(c0) && code0 <= 63);
+      buffer[idx] = code1;
+      idx += (is_eight_byte(c1) && code1 <= 63);
+      buffer[idx] = code2;
+      idx += (is_eight_byte(c2) && code2 <= 63);
+      buffer[idx] = code3;
+      idx += (is_eight_byte(c3) && code3 <= 63);
+      src += 4;
     }
-    while ((idx < 4) & (src < srcend)) {
+    while ((idx < 4) && (src < srcend)) {
       char_type c = *src;
       uint8_t code = to_base64[uint8_t(c)];
       buffer[idx] = uint8_t(code);
@@ -255,24 +255,24 @@ result base64_tail_decode_safe(
     const char_type *srccur = src;
     // We need at least four characters.
     // If possible, we read four characters at a time. (It is an optimization.)
-    if(ignore_garbage && src + 4 <= srcend) {
-        char_type c0 = src[0];
-        char_type c1 = src[1];
-        char_type c2 = src[2];
-        char_type c3 = src[3];
-        uint8_t code0 = to_base64[uint8_t(c0)];
-        uint8_t code1 = to_base64[uint8_t(c1)];
-        uint8_t code2 = to_base64[uint8_t(c2)];
-        uint8_t code3 = to_base64[uint8_t(c3)];
-        buffer[idx] = code0;
-        idx += (is_eight_byte(c0) && code0 <= 63);
-        buffer[idx] = code1;
-        idx += (is_eight_byte(c1) && code1 <= 63);
-        buffer[idx] = code2;
-        idx += (is_eight_byte(c2) && code2 <= 63);
-        buffer[idx] = code3;
-        idx += (is_eight_byte(c3) && code3 <= 63);
-	src += 4;
+    if (ignore_garbage && src + 4 <= srcend) {
+      char_type c0 = src[0];
+      char_type c1 = src[1];
+      char_type c2 = src[2];
+      char_type c3 = src[3];
+      uint8_t code0 = to_base64[uint8_t(c0)];
+      uint8_t code1 = to_base64[uint8_t(c1)];
+      uint8_t code2 = to_base64[uint8_t(c2)];
+      uint8_t code3 = to_base64[uint8_t(c3)];
+      buffer[idx] = code0;
+      idx += (is_eight_byte(c0) && code0 <= 63);
+      buffer[idx] = code1;
+      idx += (is_eight_byte(c1) && code1 <= 63);
+      buffer[idx] = code2;
+      idx += (is_eight_byte(c2) && code2 <= 63);
+      buffer[idx] = code3;
+      idx += (is_eight_byte(c3) && code3 <= 63);
+      src += 4;
     }
     while (idx < 4 && src < srcend) {
       char_type c = *src;
