@@ -205,14 +205,6 @@ TEST(ossfuzz_385406635) {
   const auto outlen =
       implementation.latin1_length_from_utf8((const char *)data, data_len);
   ASSERT_EQUAL(outlen, 2005);
-
-  // to make this test pass under address sanitizer, uncomment the next:
-  /*
-  if (implementation.name() == "haswell")
-    return;
-  if (implementation.name() == "westmere")
-    return;
-  */
   std::vector<char> output(outlen);
   const auto r = implementation.convert_utf8_to_latin1((const char *)data,
                                                        data_len, output.data());
