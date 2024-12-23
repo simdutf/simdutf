@@ -213,8 +213,8 @@ TEST(ossfuzz_385406635) {
       implementation.latin1_length_from_utf8((const char *)data, data_len);
   ASSERT_EQUAL(outlen, 2005);
   std::vector<char> output(outlen);
-  const auto r = implementation.convert_utf8_to_latin1_with_errors((const char *)data,
-                                                       data_len, output.data());
+  const auto r = implementation.convert_utf8_to_latin1_with_errors(
+      (const char *)data, data_len, output.data());
   ASSERT_EQUAL(r.error, simdutf::error_code::TOO_LONG);
   ASSERT_EQUAL(r.count, 0);
 }
