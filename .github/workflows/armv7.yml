@@ -23,10 +23,10 @@ jobs:
           install: |
             apt-get update -q -y
             apt-get install -y cmake make g++
-            run: |
-              cmake -B build
-              cmake --build build -j=2
-              ctest --output-on-failure --test-dir build
-              cmake -DCMAKE_CXX_FLAGS="-fstack-protector-strong -fno-strict-aliasing" -B buildprotected
-              cmake --build buildprotected -j=2
-              ctest --output-on-failure --test-dir buildprotected
+          run: |
+            cmake -B build
+            cmake --build build -j=2
+            ctest --output-on-failure --test-dir build
+            cmake -DCMAKE_CXX_FLAGS="-fstack-protector-strong -fno-strict-aliasing" -B buildprotected
+            cmake --build buildprotected -j=2
+            ctest --output-on-failure --test-dir buildprotected
