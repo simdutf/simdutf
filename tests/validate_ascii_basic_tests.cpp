@@ -91,7 +91,7 @@ TEST(hard_coded) {
       "\xc3",
       "\xd4",
       "\xe5",
-      "\xf6"
+      "\xf6",
       "\xc3\xb1",
       "\xe2\x82\xa1",
       "\xf0\x90\x8c\xbc",
