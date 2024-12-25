@@ -372,7 +372,7 @@ TEST_LOOP(trials, too_large_input) {
 
   simdutf::tests::helpers::RandomIntRanges random({{0xff, 0x10FFFF}}, seed);
   transcode_utf8_to_latin1_test_base test(random, fix_size);
-  for (int i = 0; i < fix_size; i++) {
+  for (unsigned int i = 0; i < fix_size; i++) {
     auto byte_number = getUtf8SequenceLength(test.input_utf8[i]);
     if (byte_number != 1) {
 
@@ -403,7 +403,7 @@ TEST_LOOP(trials, header_bits_error) {
   simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0xff}}, seed);
   transcode_utf8_to_latin1_test_base test(random, fix_size);
 
-  for (int i = 0; i < fix_size; i++) {
+  for (unsigned int i = 0; i < fix_size; i++) {
 
     if ((test.input_utf8[i] & 0b11000000) !=
         0b10000000) { // Only process leading bytes
@@ -426,8 +426,8 @@ TEST_LOOP(trials, header_bits_error) {
 TEST_LOOP(trials, too_short_error) {
   simdutf::tests::helpers::RandomIntRanges random({{0x00, 0xff}}, seed);
   transcode_utf8_to_latin1_test_base test(random, fix_size);
-  int leading_byte_pos = 0;
-  for (int i = 0; i < fix_size; i++) {
+  unsigned int leading_byte_pos = 0;
+  for (unsigned int i = 0; i < fix_size; i++) {
 
     if ((test.input_utf8[i] & 0b11000000) ==
         0b10000000) { // Only process continuation bytes by making them leading
@@ -459,7 +459,7 @@ TEST_LOOP(trials, too_long_error) {
       seed); // in this context, conversion to latin 1 will register everything
              // past 0xff as a TOO_LARGE error
   transcode_utf8_to_latin1_test_base test(random, fix_size);
-  for (int i = 1; i < fix_size; i++) {
+  for (unsigned int i = 1; i < fix_size; i++) {
     if (((test.input_utf8[i] & 0b11000000) !=
          0b10000000)) { // Only process leading bytes by making them
                         // continuation bytes
@@ -482,7 +482,7 @@ TEST_LOOP(trials, too_long_error) {
 TEST_LOOP(trials, overlong_error) {
   simdutf::tests::helpers::RandomIntRanges random({{0x00, 0xff}}, seed);
   transcode_utf8_to_latin1_test_base test(random, fix_size);
-  for (int i = 1; i < fix_size; i++) {
+  for (unsigned int i = 1; i < fix_size; i++) {
     if ((unsigned char)test.input_utf8[i] >=
         (unsigned char)0b11000000) { // Only non-ASCII leading bytes can be
                                      // overlong
