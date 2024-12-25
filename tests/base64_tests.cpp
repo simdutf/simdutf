@@ -761,7 +761,7 @@ TEST(base64_decode_webkit_like_but_random_more_cases) {
       for (size_t i = 0; i < len; i++) {
         source[i] = byte_generator(gen);
       }
-      size_t size = implementation.binary_to_base64(
+      [[maybe_unused]] const size_t size = implementation.binary_to_base64(
           source.data(), source.size(), buffer.data());
       for (size_t removed = 1; !buffer.empty() && removed <= 2; removed++) {
         buffer.pop_back();
@@ -818,7 +818,7 @@ TEST(base64_decode_webkit_like_but_random_with_spaces_more_cases) {
       for (size_t i = 0; i < len; i++) {
         source[i] = byte_generator(gen);
       }
-      size_t size = implementation.binary_to_base64(
+      [[maybe_unused]] const size_t size = implementation.binary_to_base64(
           source.data(), source.size(), buffer.data());
       buffer = add_simple_spaces(buffer, gen, 5 + len / 4);
       auto is_space = [](char c) {

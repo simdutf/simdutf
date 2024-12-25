@@ -18,7 +18,7 @@ TEST_LOOP(trials, convert_all_latin1) {
                                      char32_t *utf32) -> size_t {
     return implementation.convert_latin1_to_utf32(latin1, size, utf32);
   };
-  auto size_procedure = [&implementation](const char *latin1,
+  auto size_procedure = [&implementation]([[maybe_unused]] const char *latin1,
                                           size_t size) -> size_t {
     return implementation.utf32_length_from_latin1(size);
   };

@@ -15,7 +15,6 @@ std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
 using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
 
 constexpr size_t trials = 10000;
-constexpr size_t num_trials = 1000;
 constexpr size_t fix_size = 512;
 } // namespace
 TEST(issue_483) {
@@ -244,8 +243,9 @@ TEST_LOOP(trials, header_bits_error) {
   for (int i = 0; i < fix_size; i++) {
     if ((test.input_utf8[i] & 0b11000000) !=
         0b10000000) { // Only process leading bytes
-      auto procedure = [&implementation, &i](const char *utf8, size_t size,
-                                             char16_t *utf16le) -> size_t {
+      auto procedure = [&implementation,
+                        &i](const char *utf8, size_t size,
+                            [[maybe_unused]] char16_t *utf16le) -> size_t {
         std::vector<char16_t> utf16be(
             2 *
             size); // Assume each UTF-8 byte is converted into two UTF-16 bytes
@@ -273,9 +273,9 @@ TEST_LOOP(trials, too_short_error) {
     if ((test.input_utf8[i] & 0b11000000) ==
         0b10000000) { // Only process continuation bytes by making them leading
                       // bytes
-      auto procedure = [&implementation,
-                        &leading_byte_pos](const char *utf8, size_t size,
-                                           char16_t *utf16le) -> size_t {
+      auto procedure = [&implementation, &leading_byte_pos](
+                           const char *utf8, size_t size,
+                           [[maybe_unused]] char16_t *utf16le) -> size_t {
         std::vector<char16_t> utf16be(
             2 *
             size); // Assume each UTF-8 byte is converted into two UTF-16 bytes
@@ -304,8 +304,9 @@ TEST_LOOP(trials, too_long_error) {
     if (((test.input_utf8[i] & 0b11000000) !=
          0b10000000)) { // Only process leading bytes by making them
                         // continuation bytes
-      auto procedure = [&implementation, &i](const char *utf8, size_t size,
-                                             char16_t *utf16) -> size_t {
+      auto procedure = [&implementation,
+                        &i](const char *utf8, size_t size,
+                            [[maybe_unused]] char16_t *utf16) -> size_t {
         std::vector<char16_t> utf16be(
             2 *
             size); // Assume each UTF-8 byte is converted into two UTF-16 bytes
@@ -332,8 +333,9 @@ TEST_LOOP(trials, overlong_error) {
     if ((unsigned char)test.input_utf8[i] >=
         (unsigned char)0b11000000) { // Only non-ASCII leading bytes can be
                                      // overlong
-      auto procedure = [&implementation, &i](const char *utf8, size_t size,
-                                             char16_t *utf16le) -> size_t {
+      auto procedure = [&implementation,
+                        &i](const char *utf8, size_t size,
+                            [[maybe_unused]] char16_t *utf16le) -> size_t {
         std::vector<char16_t> utf16be(
             2 *
             size); // Assume each UTF-8 byte is converted into two UTF-16 bytes
@@ -372,8 +374,9 @@ TEST_LOOP(trials, too_large_error) {
   for (int i = 1; i < fix_size; i++) {
     if ((test.input_utf8[i] & 0b11111000) ==
         0b11110000) { // Can only have too large error in 4-bytes case
-      auto procedure = [&implementation, &i](const char *utf8, size_t size,
-                                             char16_t *utf16le) -> size_t {
+      auto procedure = [&implementation,
+                        &i](const char *utf8, size_t size,
+                            [[maybe_unused]] char16_t *utf16le) -> size_t {
         std::vector<char16_t> utf16be(
             2 *
             size); // Assume each UTF-8 byte is converted into two UTF-16 bytes
@@ -401,8 +404,9 @@ TEST_LOOP(trials, surrogate_error) {
   for (int i = 1; i < fix_size; i++) {
     if ((test.input_utf8[i] & 0b11110000) ==
         0b11100000) { // Can only have surrogate error in 3-bytes case
-      auto procedure = [&implementation, &i](const char *utf8, size_t size,
-                                             char16_t *utf16le) -> size_t {
+      auto procedure = [&implementation,
+                        &i](const char *utf8, size_t size,
+                            [[maybe_unused]] char16_t *utf16le) -> size_t {
         std::vector<char16_t> utf16be(
             2 *
             size); // Assume each UTF-8 byte is converted into two UTF-16 bytes

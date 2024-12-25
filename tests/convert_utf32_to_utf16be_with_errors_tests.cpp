@@ -95,8 +95,9 @@ TEST(convert_fails_if_there_is_surrogate) {
 
   for (char32_t surrogate = 0xd800; surrogate <= 0xdfff; surrogate++) {
     for (size_t i = 0; i < size; i++) {
-      auto procedure = [&implementation, &i](const char32_t *utf32, size_t size,
-                                             char16_t *utf16le) -> size_t {
+      auto procedure = [&implementation,
+                        &i](const char32_t *utf32, size_t size,
+                            [[maybe_unused]] char16_t *utf16le) -> size_t {
         std::vector<char16_t> utf16be(2 * size);
         simdutf::result res =
             implementation.convert_utf32_to_utf16be_with_errors(utf32, size,
@@ -123,8 +124,9 @@ TEST(convert_fails_if_input_too_large) {
   for (size_t j = 0; j < 1000; j++) {
     uint32_t wrong_value = generator();
     for (size_t i = 0; i < size; i++) {
-      auto procedure = [&implementation, &i](const char32_t *utf32, size_t size,
-                                             char16_t *utf16le) -> size_t {
+      auto procedure = [&implementation,
+                        &i](const char32_t *utf32, size_t size,
+                            [[maybe_unused]] char16_t *utf16le) -> size_t {
         std::vector<char16_t> utf16be(2 * size);
         simdutf::result res =
             implementation.convert_utf32_to_utf16be_with_errors(utf32, size,

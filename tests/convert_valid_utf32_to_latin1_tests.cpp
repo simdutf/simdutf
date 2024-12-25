@@ -48,8 +48,9 @@ TEST(convert_latin1_only) {
                                      char *latin1) -> size_t {
     return implementation.convert_valid_utf32_to_latin1(utf32, size, latin1);
   };
-  auto size_procedure = [&implementation](const char32_t *utf32,
-                                          size_t size) -> size_t {
+  auto size_procedure =
+      [&implementation]([[maybe_unused]] const char32_t *utf32,
+                        size_t size) -> size_t {
     return implementation.latin1_length_from_utf32(size);
   };
   for (size_t size : input_size) {

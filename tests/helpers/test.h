@@ -39,7 +39,8 @@ struct register_test {
     puts(" OK");                                                               \
   }                                                                            \
   static simdutf::test::register_test test_register_##name(#name, name);       \
-  void test_impl_##name(const simdutf::implementation &implementation)
+  void test_impl_##name(                                                       \
+      [[maybe_unused]] const simdutf::implementation &implementation)
 
 #define TEST_LOOP(trials, name)                                                \
   void test_impl_##name(const simdutf::implementation &impl, uint32_t seed);   \
@@ -60,7 +61,7 @@ struct register_test {
   }                                                                            \
   static simdutf::test::register_test test_register_##name(#name, name);       \
   void test_impl_##name(const simdutf::implementation &implementation,         \
-                        uint32_t seed)
+                        [[maybe_unused]] uint32_t seed)
 
 #define ASSERT_EQUAL(a, b)                                                     \
   {                                                                            \
