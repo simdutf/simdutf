@@ -27,7 +27,7 @@ TEST_LOOP(trials, convert_all_latin) {
     implementation.change_endianness_utf16(utf16be.data(), size, utf16le);
     return len;
   };
-  auto size_procedure = [&implementation](const char *latin1,
+  auto size_procedure = [&implementation]([[maybe_unused]] const char *latin1,
                                           size_t size) -> size_t {
     return implementation.utf16_length_from_latin1(size);
   };

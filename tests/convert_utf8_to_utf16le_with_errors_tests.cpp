@@ -227,7 +227,7 @@ TEST_LOOP(trials, header_bits_error) {
 
   transcode_utf8_to_utf16_test_base test(random, fix_size);
 
-  for (int i = 0; i < fix_size; i++) {
+  for (unsigned int i = 0; i < fix_size; i++) {
     if ((test.input_utf8[i] & 0b11000000) !=
         0b10000000) { // Only process leading bytes
       auto procedure = [&implementation, &i](const char *utf8, size_t size,
@@ -251,8 +251,8 @@ TEST_LOOP(trials, too_short_error) {
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x0000, 0xd800 - 1}, {0xe000, 0x10ffff}}, seed);
   transcode_utf8_to_utf16_test_base test(random, fix_size);
-  int leading_byte_pos = 0;
-  for (int i = 0; i < fix_size; i++) {
+  unsigned int leading_byte_pos = 0;
+  for (unsigned int i = 0; i < fix_size; i++) {
     if ((test.input_utf8[i] & 0b11000000) ==
         0b10000000) { // Only process continuation bytes by making them leading
                       // bytes
@@ -280,7 +280,7 @@ TEST_LOOP(trials, too_long_error) {
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x0000, 0xd800 - 1}, {0xe000, 0x10ffff}}, seed);
   transcode_utf8_to_utf16_test_base test(random, fix_size);
-  for (int i = 1; i < fix_size; i++) {
+  for (unsigned int i = 1; i < fix_size; i++) {
     if (((test.input_utf8[i] & 0b11000000) !=
          0b10000000)) { // Only process leading bytes by making them
                         // continuation bytes
@@ -305,7 +305,7 @@ TEST_LOOP(trials, overlong_error) {
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x0000, 0xd800 - 1}, {0xe000, 0x10ffff}}, seed);
   transcode_utf8_to_utf16_test_base test(random, fix_size);
-  for (int i = 1; i < fix_size; i++) {
+  for (unsigned int i = 1; i < fix_size; i++) {
     if ((unsigned char)test.input_utf8[i] >=
         (unsigned char)0b11000000) { // Only non-ASCII leading bytes can be
                                      // overlong
@@ -343,7 +343,7 @@ TEST_LOOP(trials, too_large_error) {
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x0000, 0xd800 - 1}, {0xe000, 0x10ffff}}, seed);
   transcode_utf8_to_utf16_test_base test(random, fix_size);
-  for (int i = 1; i < fix_size; i++) {
+  for (unsigned int i = 1; i < fix_size; i++) {
     if ((test.input_utf8[i] & 0b11111000) ==
         0b11110000) { // Can only have too large error in 4-bytes case
       auto procedure = [&implementation, &i](const char *utf8, size_t size,
@@ -369,7 +369,7 @@ TEST_LOOP(trials, surrogate_error) {
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x0000, 0xd800 - 1}, {0xe000, 0x10ffff}}, seed);
   transcode_utf8_to_utf16_test_base test(random, fix_size);
-  for (int i = 1; i < fix_size; i++) {
+  for (unsigned int i = 1; i < fix_size; i++) {
     if ((test.input_utf8[i] & 0b11110000) ==
         0b11100000) { // Can only have surrogate error in 3-bytes case
       auto procedure = [&implementation, &i](const char *utf8, size_t size,

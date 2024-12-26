@@ -23,7 +23,7 @@ TEST_LOOP(trials, error_ASCII) {
 
   auto ascii{generator.generate(512)};
 
-  for (int i = 0; i < ascii.size(); i++) {
+  for (unsigned int i = 0; i < ascii.size(); i++) {
     ascii[i] += 0b10000000;
 
     simdutf::result res = implementation.validate_ascii_with_errors(

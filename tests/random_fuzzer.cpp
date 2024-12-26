@@ -36,7 +36,7 @@ void dump_case() {
   log.open(name, std::ios::app);
   const size_t buf_size = 4 * input.size() + 3;
   char *buffer = new char[buf_size];
-  for (int i = 0; i < input.size(); i++) {
+  for (unsigned int i = 0; i < input.size(); i++) {
     SIMDUTF_PUSH_DISABLE_WARNINGS
     SIMDUTF_DISABLE_DEPRECATED_WARNING
     sprintf(buffer + 4 * i + 1, "\\x%02x", input[i]);

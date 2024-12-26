@@ -235,7 +235,7 @@ TEST_LOOP(trials, utf32_surrogates) {
 
   for (size_t size : input_size) {
     std::vector<uint32_t> generated;
-    for (int i = 0; i < size / 4; i++) {
+    for (unsigned int i = 0; i < size / 4; i++) {
       generated.push_back((random_prefix() & 0xffff0000) + random_suffix());
     }
     auto expected = simdutf::encoding_type::UTF32_LE;
@@ -254,7 +254,7 @@ TEST_LOOP(trials, edge_surrogate) {
 
   const size_t size = 512;
   std::vector<uint16_t> generated(size / 2, 0);
-  int i = 31;
+  unsigned int i = 31;
   while (i + 32 < (size / 2) - 1) {
     char16_t W1;
     char16_t W2;

@@ -87,8 +87,9 @@ TEST_LOOP(trials, convert_2_UTF16_bytes) {
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
     return res.count;
   };
-  auto size_procedure = [&implementation](const char16_t *utf16,
-                                          size_t size) -> size_t {
+  auto size_procedure =
+      [&implementation]([[maybe_unused]] const char16_t *utf16,
+                        size_t size) -> size_t {
     return implementation.latin1_length_from_utf16(size);
   };
   for (size_t size : input_size) {

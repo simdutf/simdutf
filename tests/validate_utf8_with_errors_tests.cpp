@@ -55,7 +55,7 @@ TEST_LOOP(num_trials, header_bits_error) {
   simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
   auto utf8{generator.generate(512, seed)};
 
-  for (int i = 0; i < 512; i++) {
+  for (unsigned int i = 0; i < 512; i++) {
     if ((utf8[i] & 0b11000000) != 0b10000000) { // Only process leading bytes
       const unsigned char old = utf8[i];
       utf8[i] = uint8_t(0b11111000);
@@ -81,7 +81,7 @@ TEST_LOOP(num_trials, too_short_error) {
       simdutf::result res = implementation.validate_utf8_with_errors(
           reinterpret_cast<const char *>(utf8.data()), utf8.size());
       ASSERT_EQUAL(res.error, simdutf::error_code::TOO_SHORT);
-      ASSERT_EQUAL(res.count, leading_byte_pos);
+      ASSERT_EQUAL(res.count, static_cast<unsigned>(leading_byte_pos));
       utf8[i] = old;
     } else {
       leading_byte_pos = i;
@@ -92,7 +92,7 @@ TEST_LOOP(num_trials, too_short_error) {
 TEST_LOOP(num_trials, too_long_error) {
   simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
   auto utf8{generator.generate(512, seed)};
-  for (int i = 1; i < 512; i++) {
+  for (unsigned int i = 1; i < 512; i++) {
     if (((utf8[i] & 0b11000000) !=
          0b10000000)) { // Only process leading bytes by making them
                         // continuation bytes
@@ -110,7 +110,7 @@ TEST_LOOP(num_trials, too_long_error) {
 TEST_LOOP(num_trials, overlong_error) {
   simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
   auto utf8{generator.generate(512, seed)};
-  for (int i = 1; i < 512; i++) {
+  for (unsigned int i = 1; i < 512; i++) {
     if (utf8[i] >= 0b11000000) { // Only non-ASCII leading bytes can be overlong
       const unsigned char old = utf8[i];
       const unsigned char second_old = utf8[i + 1];
@@ -139,7 +139,7 @@ TEST_LOOP(num_trials, overlong_error) {
 TEST_LOOP(num_trials, too_large_error) {
   simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
   auto utf8{generator.generate(512, seed)};
-  for (int i = 1; i < 512; i++) {
+  for (unsigned int i = 1; i < 512; i++) {
     if ((utf8[i] & 0b11111000) ==
         0b11110000) { // Can only have too large error in 4-bytes case
       utf8[i] += ((utf8[i] & 0b100) == 0b100)
@@ -158,7 +158,7 @@ TEST_LOOP(num_trials, too_large_error) {
 TEST_LOOP(num_trials, surrogate_error) {
   simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
   auto utf8{generator.generate(512, seed)};
-  for (int i = 1; i < 512; i++) {
+  for (unsigned int i = 1; i < 512; i++) {
     if ((utf8[i] & 0b11110000) ==
         0b11100000) { // Can only have surrogate error in 3-bytes case
       const unsigned char old = utf8[i];
