@@ -3,6 +3,15 @@
 #include <climits>
 #include <type_traits>
 
+static_assert(sizeof(uint8_t) == sizeof(char),
+              "simdutf requires that uint8_t be a char");
+static_assert(sizeof(uint16_t) == sizeof(char16_t),
+              "simdutf requires that char16_t be 16 bits");
+static_assert(sizeof(uint32_t) == sizeof(char32_t),
+              "simdutf requires that char32_t be 32 bits");
+// next line is redundant, but it is kept to catch defective systems.
+static_assert(CHAR_BIT == 8, "simdutf requires 8-bit bytes");
+
 // Useful for debugging purposes
 namespace simdutf {
 namespace {

@@ -11,24 +11,23 @@ inline simdutf_warn_unused uint16_t swap_bytes(const uint16_t word) {
 }
 
 template <endianness big_endian>
-inline simdutf_warn_unused bool validate(const char16_t *buf,
+inline simdutf_warn_unused bool validate(const char16_t *data,
                                          size_t len) noexcept {
-  const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
   uint64_t pos = 0;
   while (pos < len) {
-    uint16_t word =
+    char16_t word =
         !match_system(big_endian) ? swap_bytes(data[pos]) : data[pos];
     if ((word & 0xF800) == 0xD800) {
       if (pos + 1 >= len) {
         return false;
       }
-      uint16_t diff = uint16_t(word - 0xD800);
+      char16_t diff = char16_t(word - 0xD800);
       if (diff > 0x3FF) {
         return false;
       }
-      uint16_t next_word =
+      char16_t next_word =
           !match_system(big_endian) ? swap_bytes(data[pos + 1]) : data[pos + 1];
-      uint16_t diff2 = uint16_t(next_word - 0xDC00);
+      char16_t diff2 = char16_t(next_word - 0xDC00);
       if (diff2 > 0x3FF) {
         return false;
       }
@@ -41,24 +40,23 @@ inline simdutf_warn_unused bool validate(const char16_t *buf,
 }
 
 template <endianness big_endian>
-inline simdutf_warn_unused result validate_with_errors(const char16_t *buf,
+inline simdutf_warn_unused result validate_with_errors(const char16_t *data,
                                                        size_t len) noexcept {
-  const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
   size_t pos = 0;
   while (pos < len) {
-    uint16_t word =
+    char16_t word =
         !match_system(big_endian) ? swap_bytes(data[pos]) : data[pos];
     if ((word & 0xF800) == 0xD800) {
       if (pos + 1 >= len) {
         return result(error_code::SURROGATE, pos);
       }
-      uint16_t diff = uint16_t(word - 0xD800);
+      char16_t diff = char16_t(word - 0xD800);
       if (diff > 0x3FF) {
         return result(error_code::SURROGATE, pos);
       }
-      uint16_t next_word =
+      char16_t next_word =
           !match_system(big_endian) ? swap_bytes(data[pos + 1]) : data[pos + 1];
-      uint16_t diff2 = uint16_t(next_word - 0xDC00);
+      char16_t diff2 = uint16_t(next_word - 0xDC00);
       if (diff2 > 0x3FF) {
         return result(error_code::SURROGATE, pos);
       }
@@ -71,24 +69,22 @@ inline simdutf_warn_unused result validate_with_errors(const char16_t *buf,
 }
 
 template <endianness big_endian>
-inline size_t count_code_points(const char16_t *buf, size_t len) {
+inline size_t count_code_points(const char16_t *p, size_t len) {
   // We are not BOM aware.
-  const uint16_t *p = reinterpret_cast<const uint16_t *>(buf);
   size_t counter{0};
   for (size_t i = 0; i < len; i++) {
-    uint16_t word = !match_system(big_endian) ? swap_bytes(p[i]) : p[i];
+    char16_t word = !match_system(big_endian) ? swap_bytes(p[i]) : p[i];
     counter += ((word & 0xFC00) != 0xDC00);
   }
   return counter;
 }
 
 template <endianness big_endian>
-inline size_t utf8_length_from_utf16(const char16_t *buf, size_t len) {
+inline size_t utf8_length_from_utf16(const char16_t *p, size_t len) {
   // We are not BOM aware.
-  const uint16_t *p = reinterpret_cast<const uint16_t *>(buf);
   size_t counter{0};
   for (size_t i = 0; i < len; i++) {
-    uint16_t word = !match_system(big_endian) ? swap_bytes(p[i]) : p[i];
+    char16_t word = !match_system(big_endian) ? swap_bytes(p[i]) : p[i];
     counter++; // ASCII
     counter += static_cast<size_t>(
         word >
@@ -100,12 +96,11 @@ inline size_t utf8_length_from_utf16(const char16_t *buf, size_t len) {
 }
 
 template <endianness big_endian>
-inline size_t utf32_length_from_utf16(const char16_t *buf, size_t len) {
+inline size_t utf32_length_from_utf16(const char16_t *p, size_t len) {
   // We are not BOM aware.
-  const uint16_t *p = reinterpret_cast<const uint16_t *>(buf);
   size_t counter{0};
   for (size_t i = 0; i < len; i++) {
-    uint16_t word = !match_system(big_endian) ? swap_bytes(p[i]) : p[i];
+    char16_t word = !match_system(big_endian) ? swap_bytes(p[i]) : p[i];
     counter += ((word & 0xFC00) != 0xDC00);
   }
   return counter;
@@ -113,12 +108,10 @@ inline size_t utf32_length_from_utf16(const char16_t *buf, size_t len) {
 
 inline size_t latin1_length_from_utf16(size_t len) { return len; }
 
-simdutf_really_inline void change_endianness_utf16(const char16_t *in,
-                                                   size_t size, char16_t *out) {
-  const uint16_t *input = reinterpret_cast<const uint16_t *>(in);
-  uint16_t *output = reinterpret_cast<uint16_t *>(out);
+simdutf_really_inline void
+change_endianness_utf16(const char16_t *input, size_t size, char16_t *output) {
   for (size_t i = 0; i < size; i++) {
-    *output++ = uint16_t(input[i] >> 8 | input[i] << 8);
+    *output++ = char16_t(input[i] >> 8 | input[i] << 8);
   }
 }
 
