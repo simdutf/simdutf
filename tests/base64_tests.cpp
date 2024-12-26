@@ -565,6 +565,21 @@ TEST(issue_single_bad16) {
   ASSERT_EQUAL(r.count, 0);
 }
 
+TEST(issue_icelake_fuzz_615) {
+  const std::vector<char> data{' ', '=', '='};
+  std::vector<char> output(100);
+  const auto r =
+      implementation.base64_to_binary(data.data(), data.size(), output.data(),
+                                      simdutf::base64_default, simdutf::strict);
+  ASSERT_EQUAL(r.error, simdutf::error_code::BASE64_INPUT_REMAINDER);
+  ASSERT_EQUAL(r.count, 0);
+  const auto r_ = implementation.base64_to_binary(
+      data.data() + 1, data.size() - 1, output.data(), simdutf::base64_default,
+      simdutf::strict);
+  ASSERT_EQUAL(r_.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+  ASSERT_EQUAL(r_.count, 0);
+}
+
 TEST(issue_kkk) {
   std::vector<char> data = {
       0x20, 0x20, 0x20, 0x20, 0x20, 0x4b, 0x4b, 0x4b, 0x4b, 0x4b, 0x4b, 0x4b,

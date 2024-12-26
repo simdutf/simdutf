@@ -410,6 +410,10 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   }
 
   if (!ignore_garbage && equalsigns > 0) {
+    if (last_chunk_options == last_chunk_handling_options::strict) {
+      return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
+              size_t(dst - dstinit)};
+    }
     if ((size_t(dst - dstinit) % 3 == 0) ||
         ((size_t(dst - dstinit) % 3) + 1 + equalsigns != 4)) {
       return {INVALID_BASE64_CHARACTER, equallocation, size_t(dst - dstinit)};
