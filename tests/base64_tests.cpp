@@ -565,24 +565,24 @@ TEST(issue_single_bad16) {
   ASSERT_EQUAL(r.count, 0);
 }
 
-TEST(issue_icelake_fuzz_615) {
+TEST(issue_615) {
   const std::vector<char> data{' ', '=', '='};
   std::vector<char> output(100);
-  auto r =
+  const auto r1 =
       implementation.base64_to_binary(data.data(), data.size(), output.data(),
                                       simdutf::base64_default, simdutf::strict);
-  ASSERT_EQUAL(r.error, simdutf::error_code::BASE64_INPUT_REMAINDER);
-  ASSERT_EQUAL(r.count, 0);
-  r = implementation.base64_to_binary(data.data() + 1, data.size() - 1,
-                                      output.data(), simdutf::base64_default,
-                                      simdutf::strict);
-  ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
-  ASSERT_EQUAL(r.count, 0);
-  r = implementation.base64_to_binary(data.data(), data.size(), output.data(),
-                                      simdutf::base64_default,
-                                      simdutf::stop_before_partial);
-  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
-  ASSERT_EQUAL(r.count, 0);
+  ASSERT_EQUAL(r1.error, simdutf::error_code::BASE64_INPUT_REMAINDER);
+  ASSERT_EQUAL(r1.count, 0);
+  const auto r2 = implementation.base64_to_binary(
+      data.data() + 1, data.size() - 1, output.data(), simdutf::base64_default,
+      simdutf::strict);
+  ASSERT_EQUAL(r2.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+  ASSERT_EQUAL(r2.count, 0);
+  const auto r3 = implementation.base64_to_binary(
+      data.data(), data.size(), output.data(), simdutf::base64_default,
+      simdutf::stop_before_partial);
+  ASSERT_EQUAL(r3.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r3.count, 0);
 }
 
 TEST(issue_kkk) {
