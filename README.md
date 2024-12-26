@@ -126,11 +126,12 @@ Please refer to our benchmarking tool for a proper interpretation of the numbers
 Requirements
 -------
 
-- C++11 compatible compiler. We support LLVM clang, GCC, Visual Studio. (Our optional benchmark tool requires C++17.)
-- For high speed, you should have a recent 64-bit system (e.g., ARM or x64).
-- If you rely on CMake, you should use a recent CMake (at least 3.15) ; otherwise you may use the [single header version](#single-header-version). The library is also available from Microsoft's vcpkg.
-- AVX-512 support require a processor with AVX512-VBMI2 (Ice Lake or better) and a recent compiler (GCC 8 or better, Visual Studio 2022 or better, LLVM clang 6 or better). You need a correspondingly recent assembler such as gas (2.30+) or nasm (2.14+): recent compilers usually come with recent assemblers. If you mix a recent compiler with an incompatible/old assembler (e.g., when using a recent compiler with an old Linux distribution), you may get errors at build time because the compiler produces instructions that the assembler does not recognize: you should update your assembler to match your compiler (e.g., upgrade binutils to version 2.30 or better under Linux) or use an older compiler matching the capabilities of your assembler.
+- C++11 compatible compiler. We support LLVM clang, GCC, Visual Studio. (Our tests and benchmark tools requires C++17.)
+- For high speed, you should have a recent 64-bit system (e.g., ARM, x64, RISC-V with vector extensions, Loongson).
+- If you rely on CMake, you should use a recent CMake (at least 3.15); otherwise you may use the [single header version](#single-header-version). The library is also available from [Microsoft's vcpkg](https://github.com/simdutf/simdutf-vcpkg), from [conan](https://conan.io/center/recipes/simdutf), from [FreeBSD's port](https://cgit.freebsd.org/ports/tree/converters/simdutf), from [brew](https://formulae.brew.sh/formula/simdutf), and many other systems.
+- AVX-512 support require a processor with AVX512-VBMI2 (Ice Lake or better, AMD Zen 4 or better) and a recent compiler (GCC 8 or better, Visual Studio 2022 or better, LLVM clang 6 or better). You need a correspondingly recent assembler such as gas (2.30+) or nasm (2.14+): recent compilers usually come with recent assemblers. If you mix a recent compiler with an incompatible/old assembler (e.g., when using a recent compiler with an old Linux distribution), you may get errors at build time because the compiler produces instructions that the assembler does not recognize: you should update your assembler to match your compiler (e.g., upgrade binutils to version 2.30 or better under Linux) or use an older compiler matching the capabilities of your assembler.
 - To benefit from RISC-V Vector Extensions on RISC-V systems, you should compile specifically for the desired architecture. E.g., add `-march=rv64gcv` as a compiler flag when using a version of GCC or LLVM which supports these extensions (such as GCC 14 or better). The command `CXXFLAGS=-march=rv64gcv cmake -B build` may suffice.
+- We recommend that Visual Studio users compile with LLVM (ClangCL). Using LLVM as a front-end inside Visual Studio provides faster release builds and better runtime performance.
 
 Usage (Usage)
 -------
@@ -149,7 +150,7 @@ Linux or macOS users might follow the following instructions if they have a rece
 
 1. Pull the library in a directory
    ```
-   wget https://github.com/simdutf/simdutf/releases/download/v5.7.1/singleheader.zip
+   wget https://github.com/simdutf/simdutf/releases/download/v5.7.2/singleheader.zip
    unzip singleheader.zip
    ```
    You can replace `wget` by `curl -OL https://...` if you prefer.
@@ -220,7 +221,7 @@ Single-header version
 You can create a single-header version of the library where
 all of the code is put into two files (`simdutf.h` and `simdutf.cpp`).
 We publish a zip archive containing these files, e.g., see
-https://github.com/simdutf/simdutf/releases/download/v5.7.1/singleheader.zip
+https://github.com/simdutf/simdutf/releases/download/v5.7.2/singleheader.zip
 
 You may generate it on your own using a Python script.
 
