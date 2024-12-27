@@ -18,7 +18,7 @@ TEST(issue_531) {
   ASSERT_EQUAL(validation1.count, 0);
 }
 
-TEST_LOOP(1000, validate_utf32_with_errors__returns_success_for_valid_input) {
+TEST_LOOP(1000, validate_utf32_with_errors_returns_success_for_valid_input) {
   simdutf::tests::helpers::random_utf32 generator{seed};
   const auto utf32{generator.generate(256, seed)};
 
@@ -29,7 +29,7 @@ TEST_LOOP(1000, validate_utf32_with_errors__returns_success_for_valid_input) {
   ASSERT_EQUAL(res.count, utf32.size());
 }
 
-TEST(validate_utf32_with_errors__returns_success_for_empty_string) {
+TEST(validate_utf32_with_errors_returns_success_for_empty_string) {
   const char32_t *buf = (char32_t *)"";
 
   simdutf::result res = implementation.validate_utf32_with_errors(buf, 0);
@@ -40,7 +40,7 @@ TEST(validate_utf32_with_errors__returns_success_for_empty_string) {
 
 TEST_LOOP(
     10,
-    validate_utf32_with_errors__returns_error_when_input_in_forbidden_range) {
+    validate_utf32_with_errors_returns_error_when_input_in_forbidden_range) {
   simdutf::tests::helpers::random_utf32 generator{seed};
 
   auto utf32{generator.generate(128)};
@@ -62,7 +62,7 @@ TEST_LOOP(
   }
 }
 
-TEST_LOOP(10, validate_utf32_with_errors__returns_error_when_input_too_large) {
+TEST_LOOP(10, validate_utf32_with_errors_returns_error_when_input_too_large) {
   simdutf::tests::helpers::random_utf32 generator{seed};
 
   std::uniform_int_distribution<uint32_t> bad_range{0x110000, 0xffffffff};

@@ -15,7 +15,7 @@ constexpr size_t trials = 1000;
 
 TEST_LOOP(
     trials,
-    validate_utf16le_with_errors__returns_success_for_valid_input__single_words) {
+    validate_utf16le_with_errors_returns_success_for_valid_input_single_words) {
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
   const auto utf16{generator.generate(512, seed)};
 
@@ -28,7 +28,7 @@ TEST_LOOP(
 
 TEST_LOOP(
     trials,
-    validate_utf16le_with_errors__returns_success_for_valid_input__surrogate_pairs_short) {
+    validate_utf16le_with_errors_returns_success_for_valid_input_surrogate_pairs_short) {
   simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
   const auto utf16{generator.generate(8)};
 
@@ -41,7 +41,7 @@ TEST_LOOP(
 
 TEST_LOOP(
     trials,
-    validate_utf16le_with_errors__returns_success_for_valid_input__surrogate_pairs) {
+    validate_utf16le_with_errors_returns_success_for_valid_input_surrogate_pairs) {
   simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
   const auto utf16{generator.generate(512)};
 
@@ -73,7 +73,7 @@ TEST(provoke_integer_wraparound_in_icelake) {
 }
 
 // mixed = either 16-bit or 32-bit codewords
-TEST(validate_utf16le_with_errors__returns_success_for_valid_input__mixed) {
+TEST(validate_utf16le_with_errors_returns_success_for_valid_input_mixed) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 1};
   const auto utf16{generator.generate(512)};
@@ -85,7 +85,7 @@ TEST(validate_utf16le_with_errors__returns_success_for_valid_input__mixed) {
   ASSERT_EQUAL(res.count, utf16.size());
 }
 
-TEST(validate_utf16le_with_errors__returns_success_for_empty_string) {
+TEST(validate_utf16le_with_errors_returns_success_for_empty_string) {
   const char16_t *buf = (char16_t *)"";
 
   simdutf::result res = implementation.validate_utf16le_with_errors(
@@ -112,7 +112,7 @@ TEST(validate_utf16le_with_errors__returns_success_for_empty_string) {
 #else
 TEST_LOOP(
     10,
-    validate_utf16le_with_errors__returns_error_when_input_has_wrong_first_word_value) {
+    validate_utf16le_with_errors_returns_error_when_input_has_wrong_first_word_value) {
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
 
   auto utf16{generator.generate(128)};
@@ -146,7 +146,7 @@ TEST_LOOP(
 // todo: port this test for big-endian platforms.
 #else
 TEST(
-    validate_utf16le_with_errors__returns_error_when_input_has_wrong_second_word_value) {
+    validate_utf16le_with_errors_returns_error_when_input_has_wrong_second_word_value) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
   auto utf16{generator.generate(128)};
@@ -187,7 +187,7 @@ TEST(
 #if SIMDUTF_IS_BIG_ENDIAN
 // todo: port this test for big-endian platforms.
 #else
-TEST(validate_utf16le_with_errors__returns_error_when_input_is_truncated) {
+TEST(validate_utf16le_with_errors_returns_error_when_input_is_truncated) {
   const char16_t valid_surrogate_W1 = 0xd800;
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
@@ -210,7 +210,7 @@ TEST(validate_utf16le_with_errors__returns_error_when_input_is_truncated) {
 #if SIMDUTF_IS_BIG_ENDIAN
 // todo: port this test for big-endian platforms.
 #else
-TEST(validate_utf16le_with_errors__extensive_tests) {
+TEST(validate_utf16le_with_errors_extensive_tests) {
   #ifdef RUN_IN_SPIKE_SIMULATOR
   printf("skipping, cannot be run under Spike");
   return;
