@@ -5,7 +5,7 @@
 #include <tests/helpers/random_utf32.h>
 #include <tests/helpers/test.h>
 
-TEST_LOOP(1000, validate_utf32__returns_true_for_valid_input) {
+TEST_LOOP(1000, validate_utf32_returns_true_for_valid_input) {
   simdutf::tests::helpers::random_utf32 generator{seed};
   const auto utf32{generator.generate(256, seed)};
 
@@ -13,13 +13,13 @@ TEST_LOOP(1000, validate_utf32__returns_true_for_valid_input) {
       reinterpret_cast<const char32_t *>(utf32.data()), utf32.size()));
 }
 
-TEST(validate_utf32__returns_true_for_empty_string) {
+TEST(validate_utf32_returns_true_for_empty_string) {
   const char32_t *buf = (char32_t *)"";
 
   ASSERT_TRUE(implementation.validate_utf32(buf, 0));
 }
 
-TEST_LOOP(10, validate_utf32__returns_false_when_input_in_forbidden_range) {
+TEST_LOOP(10, validate_utf32_returns_false_when_input_in_forbidden_range) {
   simdutf::tests::helpers::random_utf32 generator{seed};
   auto utf32{generator.generate(128)};
   const char32_t *buf = reinterpret_cast<const char32_t *>(utf32.data());
@@ -37,7 +37,7 @@ TEST_LOOP(10, validate_utf32__returns_false_when_input_in_forbidden_range) {
   }
 }
 
-TEST_LOOP(1000, validate_utf32__returns_false_when_input_too_large) {
+TEST_LOOP(1000, validate_utf32_returns_false_when_input_too_large) {
   simdutf::tests::helpers::random_utf32 generator{seed};
 
   std::uniform_int_distribution<uint32_t> bad_range{0x110000, 0xffffffff};
