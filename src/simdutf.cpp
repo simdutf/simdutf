@@ -13,7 +13,7 @@ inline simdutf_warn_unused uint16_t swap_bytes(const uint16_t word) {
   return uint16_t((word >> 8) | (word << 8));
 }
 template <temporary::endianness big_endian>
-inline simdutf_warn_unused simdutf::result
+inline simdutf_warn_unused temporary::result
 validate_with_errors(const char16_t *data, size_t len) noexcept {
   size_t pos = 0;
   while (pos < len) {
@@ -21,27 +21,27 @@ validate_with_errors(const char16_t *data, size_t len) noexcept {
         !match_system2(big_endian) ? swap_bytes(data[pos]) : data[pos];
     if ((word & 0xF800) == 0xD800) {
       if (pos + 1 >= len) {
-        return simdutf::result(simdutf::error_code::SURROGATE, pos);
+        return temporary::result(temporary::error_code::SURROGATE, pos);
       }
       char16_t diff = char16_t(word - 0xD800);
       if (diff > 0x3FF) {
-        return simdutf::result(simdutf::error_code::SURROGATE, pos);
+        return temporary::result(temporary::error_code::SURROGATE, pos);
       }
       char16_t next_word = !match_system2(big_endian)
                                ? swap_bytes(data[pos + 1])
                                : data[pos + 1];
       char16_t diff2 = uint16_t(next_word - 0xDC00);
       if (diff2 > 0x3FF) {
-        return simdutf::result(simdutf::error_code::SURROGATE, pos);
+        return temporary::result(temporary::error_code::SURROGATE, pos);
       }
       pos += 2;
     } else {
       pos++;
     }
   }
-  return simdutf::result(simdutf::error_code::SUCCESS, pos);
+  return temporary::result(temporary::error_code::SUCCESS, pos);
 }
-simdutf_warn_unused simdutf::result
+simdutf_warn_unused temporary::result
 validate_utf16le_with_errors(const char16_t *buf, size_t len) noexcept {
   return validate_with_errors<temporary::endianness::LITTLE>(buf, len);
 }
