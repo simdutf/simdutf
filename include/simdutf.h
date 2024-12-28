@@ -9,6 +9,9 @@
 
 
 namespace temporary {
+
+enum endianness { LITTLE = 0, BIG = 1 };
+
 simdutf::result validate_utf16le_with_errors(
     const char16_t * buf, std::size_t len) noexcept;
 }
