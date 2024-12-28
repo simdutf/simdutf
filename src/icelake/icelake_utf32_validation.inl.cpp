@@ -10,7 +10,7 @@ bool validate_utf32(const char32_t *buf, size_t len) {
   __m512i currentmax = _mm512_setzero_si512();
   __m512i currentoffsetmax = _mm512_setzero_si512();
 
-  while (buf <= end - 16) {
+  while (buf < end - 16) {
     __m512i utf32 = _mm512_loadu_si512((const __m512i *)buf);
     buf += 16;
     currentoffsetmax =
@@ -18,7 +18,8 @@ bool validate_utf32(const char32_t *buf, size_t len) {
     currentmax = _mm512_max_epu32(utf32, currentmax);
   }
 
-  __m512i utf32 = _mm512_maskz_loadu_epi32((__mmask16)1 << (end - buf), buf);
+  __m512i utf32 =
+      _mm512_maskz_loadu_epi32(__mmask16((1 << (end - buf)) - 1), buf);
   currentoffsetmax =
       _mm512_max_epu32(_mm512_add_epi32(utf32, offset), currentoffsetmax);
   currentmax = _mm512_max_epu32(utf32, currentmax);
