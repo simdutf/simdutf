@@ -1271,16 +1271,7 @@ implementation::count_utf8(const char *input, size_t length) const noexcept {
     }
   }
 
-  __m256i first_half = _mm512_extracti64x4_epi64(unrolled_popcount, 0);
-  __m256i second_half = _mm512_extracti64x4_epi64(unrolled_popcount, 1);
-  answer -= (size_t)_mm256_extract_epi64(first_half, 0) +
-            (size_t)_mm256_extract_epi64(first_half, 1) +
-            (size_t)_mm256_extract_epi64(first_half, 2) +
-            (size_t)_mm256_extract_epi64(first_half, 3) +
-            (size_t)_mm256_extract_epi64(second_half, 0) +
-            (size_t)_mm256_extract_epi64(second_half, 1) +
-            (size_t)_mm256_extract_epi64(second_half, 2) +
-            (size_t)_mm256_extract_epi64(second_half, 3);
+  answer -= _mm512_reduce_add_epi64(unrolled_popcount);
 
   return answer + scalar::utf8::count_code_points(
                       reinterpret_cast<const char *>(str + i), length - i);
@@ -1466,16 +1457,7 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(
           eight_64bits, _mm512_sad_epu8(runner, _mm512_setzero_si512()));
     }
 
-    __m256i first_half = _mm512_extracti64x4_epi64(eight_64bits, 0);
-    __m256i second_half = _mm512_extracti64x4_epi64(eight_64bits, 1);
-    answer += (size_t)_mm256_extract_epi64(first_half, 0) +
-              (size_t)_mm256_extract_epi64(first_half, 1) +
-              (size_t)_mm256_extract_epi64(first_half, 2) +
-              (size_t)_mm256_extract_epi64(first_half, 3) +
-              (size_t)_mm256_extract_epi64(second_half, 0) +
-              (size_t)_mm256_extract_epi64(second_half, 1) +
-              (size_t)_mm256_extract_epi64(second_half, 2) +
-              (size_t)_mm256_extract_epi64(second_half, 3);
+    answer += _mm512_reduce_add_epi64(eight_64bits);
   } else if (answer > 0) {
     for (; i + sizeof(__m512i) <= length; i += sizeof(__m512i)) {
       __m512i latin = _mm512_loadu_si512((const __m512i *)(str + i));
