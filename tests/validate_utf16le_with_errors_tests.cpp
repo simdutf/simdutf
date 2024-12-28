@@ -19,6 +19,10 @@ int main(int argc, char *argv[]) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
   auto utf16{generator.generate(128)};
+  for (auto u : utf16) {
+    std::printf("%d, ", u);
+  }
+  std::printf("\n");
   const char16_t *buf = reinterpret_cast<const char16_t *>(utf16.data());
   const size_t len = utf16.size();
 
