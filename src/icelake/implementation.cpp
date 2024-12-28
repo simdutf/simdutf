@@ -390,14 +390,7 @@ simdutf_warn_unused result implementation::validate_utf16be_with_errors(
 
 simdutf_warn_unused bool
 implementation::validate_utf32(const char32_t *buf, size_t len) const noexcept {
-  const char32_t *tail = icelake::validate_utf32(buf, len);
-  if (tail) {
-    return scalar::utf32::validate(tail, len - (tail - buf));
-  } else {
-    // we come here if there was an error, or buf was nullptr which may happen
-    // for empty input.
-    return len == 0;
-  }
+  return icelake::validate_utf32(buf, len);
 }
 
 simdutf_warn_unused result implementation::validate_utf32_with_errors(
