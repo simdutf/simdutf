@@ -1,6 +1,7 @@
 #ifndef SIMDUTF_H
 #define SIMDUTF_H
 #include <cstring>
+#include <vector>
 
 // #include "simdutf/compiler_check.h"
 // #include "simdutf/common_defs.h"
@@ -55,6 +56,9 @@ struct result {
 
 temporary::result validate_utf16le_with_errors(
     const char16_t * buf, std::size_t len) noexcept;
+
+std::vector<char16_t> get_test_data();
 }
+
 
 #endif // SIMDUTF_H
