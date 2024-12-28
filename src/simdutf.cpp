@@ -1,20 +1,23 @@
 #include "simdutf.h"
 
+#include <cstdint>
+
 namespace temporary {
 
 bool match_system2(temporary::endianness e) {
+#define SIMDUTF_IS_BIG_ENDIAN (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
 #if SIMDUTF_IS_BIG_ENDIAN
   return e == endianness::BIG;
 #else
   return e == temporary::endianness::LITTLE;
 #endif
 }
-inline simdutf_warn_unused uint16_t swap_bytes(const uint16_t word) {
+inline uint16_t swap_bytes(const uint16_t word) {
   return uint16_t((word >> 8) | (word << 8));
 }
 template <temporary::endianness big_endian>
-inline simdutf_warn_unused temporary::result
-validate_with_errors(const char16_t *data, size_t len) noexcept {
+inline temporary::result validate_with_errors(const char16_t *data,
+                                              size_t len) noexcept {
   size_t pos = 0;
   while (pos < len) {
     char16_t word =
@@ -41,8 +44,8 @@ validate_with_errors(const char16_t *data, size_t len) noexcept {
   }
   return temporary::result(temporary::error_code::SUCCESS, pos);
 }
-simdutf_warn_unused temporary::result
-validate_utf16le_with_errors(const char16_t *buf, size_t len) noexcept {
+temporary::result validate_utf16le_with_errors(const char16_t *buf,
+                                               size_t len) noexcept {
   return validate_with_errors<temporary::endianness::LITTLE>(buf, len);
 }
 } // namespace temporary

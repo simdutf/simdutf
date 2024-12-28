@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <vector>
 
+#define SIMDUTF_IS_BIG_ENDIAN (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+
 namespace simdutf {
 namespace tests {
 namespace helpers {

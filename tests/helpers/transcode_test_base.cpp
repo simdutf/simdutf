@@ -1,6 +1,8 @@
 #include "transcode_test_base.h"
 #include "simdutf.h"
 
+#define SIMDUTF_IS_BIG_ENDIAN (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+
 #ifndef SIMDUTF_IS_BIG_ENDIAN
   #error "SIMDUTF_IS_BIG_ENDIAN should be defined."
 #endif

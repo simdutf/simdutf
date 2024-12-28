@@ -2,10 +2,10 @@
 #define SIMDUTF_H
 #include <cstring>
 
-#include "simdutf/compiler_check.h"
-#include "simdutf/common_defs.h"
-#include "simdutf/encoding_types.h"
-#include "simdutf/error.h"
+// #include "simdutf/compiler_check.h"
+// #include "simdutf/common_defs.h"
+// #include "simdutf/encoding_types.h"
+// #include "simdutf/error.h"
 
 
 namespace temporary {
@@ -47,9 +47,9 @@ struct result {
                 // case of success, indicates the number of code units
                 // validated/written.
 
-  simdutf_really_inline result() : error{error_code::SUCCESS}, count{0} {}
+   result() : error{error_code::SUCCESS}, count{0} {}
 
-  simdutf_really_inline result(error_code err, size_t pos)
+   result(error_code err, size_t pos)
       : error{err}, count{pos} {}
 };
 
