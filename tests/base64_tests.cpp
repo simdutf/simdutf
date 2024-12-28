@@ -552,7 +552,7 @@ TEST(base64_decode_strict_cases_length) {
 }
 
 TEST(issue_single_bad16) {
-  std::vector<char16_t> data = {0x3d};
+  std::vector<char16_t> data = {0x3f};
   ASSERT_EQUAL(data.size(), 1);
   size_t outlen = implementation.maximal_binary_length_from_base64(data.data(),
                                                                    data.size());
@@ -576,13 +576,18 @@ TEST(issue_615) {
   const auto r2 = implementation.base64_to_binary(
       data.data() + 1, data.size() - 1, output.data(), simdutf::base64_default,
       simdutf::strict);
-  ASSERT_EQUAL(r2.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+  ASSERT_EQUAL(r2.error, simdutf::error_code::BASE64_INPUT_REMAINDER);
   ASSERT_EQUAL(r2.count, 0);
   const auto r3 = implementation.base64_to_binary(
       data.data(), data.size(), output.data(), simdutf::base64_default,
       simdutf::stop_before_partial);
   ASSERT_EQUAL(r3.error, simdutf::error_code::SUCCESS);
   ASSERT_EQUAL(r3.count, 0);
+  const auto r4 = implementation.base64_to_binary(
+      data.data() + 1, data.size() - 1, output.data(), simdutf::base64_default,
+      simdutf::stop_before_partial);
+  ASSERT_EQUAL(r4.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r4.count, 0);
 }
 
 TEST(issue_kkk) {
