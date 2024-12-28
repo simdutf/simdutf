@@ -94,7 +94,6 @@ TEST_LOOP(
     10, validate_utf16le_returns_false_when_input_has_wrong_first_word_value) {
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
   auto utf16{generator.generate(128)};
-  const char16_t *buf = reinterpret_cast<const char16_t *>(utf16.data());
   const size_t len = utf16.size();
 
   for (char16_t wrong_value = 0xdc00; wrong_value <= 0xdfff; wrong_value++) {
@@ -102,7 +101,7 @@ TEST_LOOP(
       const char16_t old = utf16[i];
       utf16[i] = wrong_value;
 
-      ASSERT_FALSE(implementation.validate_utf16le(buf, len));
+      ASSERT_FALSE(implementation.validate_utf16le(utf16.data(), len));
 
       utf16[i] = old;
     }
@@ -123,7 +122,6 @@ TEST(validate_utf16le_returns_false_when_input_has_wrong_second_word_value) {
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
   auto utf16{generator.generate(128)};
-  const char16_t *buf = reinterpret_cast<const char16_t *>(utf16.data());
   const size_t len = utf16.size();
   const std::array<char16_t, 5> sample_wrong_second_word{0x0000, 0x1000, 0xdbff,
                                                          0xe000, 0xffff};
@@ -135,7 +133,7 @@ TEST(validate_utf16le_returns_false_when_input_has_wrong_second_word_value) {
 
       utf16[i + 0] = valid_surrogate_W1;
       utf16[i + 1] = W2;
-      ASSERT_FALSE(implementation.validate_utf16le(buf, len));
+      ASSERT_FALSE(implementation.validate_utf16le(utf16.data(), len));
 
       utf16[i + 0] = old_W1;
       utf16[i + 1] = old_W2;
@@ -159,12 +157,11 @@ TEST(validate_utf16le_returns_false_when_input_is_truncated) {
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
   for (size_t size = 1; size < 128; size++) {
     auto utf16{generator.generate(128)};
-    const char16_t *buf = reinterpret_cast<const char16_t *>(utf16.data());
     const size_t len = utf16.size();
 
     utf16[size - 1] = valid_surrogate_W1;
 
-    ASSERT_FALSE(implementation.validate_utf16le(buf, len));
+    ASSERT_FALSE(implementation.validate_utf16le(utf16.data(), len));
   }
 }
 #endif

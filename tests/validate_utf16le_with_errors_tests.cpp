@@ -116,7 +116,6 @@ TEST_LOOP(
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
 
   auto utf16{generator.generate(128)};
-  const char16_t *buf = reinterpret_cast<const char16_t *>(utf16.data());
   const size_t len = utf16.size();
 
   for (char16_t wrong_value = 0xdc00; wrong_value <= 0xdfff; wrong_value++) {
@@ -124,8 +123,8 @@ TEST_LOOP(
       const char16_t old = utf16[i];
       utf16[i] = wrong_value;
 
-      simdutf::result res = implementation.validate_utf16le_with_errors(
-          reinterpret_cast<const char16_t *>(buf), len);
+      simdutf::result res =
+          implementation.validate_utf16le_with_errors(utf16.data(), len);
 
       ASSERT_EQUAL(res.error, simdutf::error_code::SURROGATE);
       ASSERT_EQUAL(res.count, i);
@@ -150,7 +149,6 @@ TEST(
   uint32_t seed{1234};
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
   auto utf16{generator.generate(128)};
-  const char16_t *buf = reinterpret_cast<const char16_t *>(utf16.data());
   const size_t len = utf16.size();
 
   const std::array<char16_t, 5> sample_wrong_second_word{0x0000, 0x1000, 0xdbff,
@@ -165,8 +163,8 @@ TEST(
       utf16[i + 0] = valid_surrogate_W1;
       utf16[i + 1] = W2;
 
-      simdutf::result res = implementation.validate_utf16le_with_errors(
-          reinterpret_cast<const char16_t *>(buf), len);
+      simdutf::result res =
+          implementation.validate_utf16le_with_errors(utf16.data(), len);
 
       ASSERT_EQUAL(res.error, simdutf::error_code::SURROGATE);
       ASSERT_EQUAL(res.count, i);
@@ -193,13 +191,12 @@ TEST(validate_utf16le_with_errors_returns_error_when_input_is_truncated) {
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
   for (size_t size = 1; size < 128; size++) {
     auto utf16{generator.generate(128)};
-    const char16_t *buf = reinterpret_cast<const char16_t *>(utf16.data());
     const size_t len = utf16.size();
 
     utf16[size - 1] = valid_surrogate_W1;
 
-    simdutf::result res = implementation.validate_utf16le_with_errors(
-        reinterpret_cast<const char16_t *>(buf), len);
+    simdutf::result res =
+        implementation.validate_utf16le_with_errors(utf16.data(), len);
 
     ASSERT_EQUAL(res.error, simdutf::error_code::SURROGATE);
     ASSERT_EQUAL(res.count, size - 1);
