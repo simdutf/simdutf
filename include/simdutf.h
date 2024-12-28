@@ -3,11 +3,6 @@
 #include <cstring>
 #include <vector>
 
-// #include "simdutf/compiler_check.h"
-// #include "simdutf/common_defs.h"
-// #include "simdutf/encoding_types.h"
-// #include "simdutf/error.h"
-
 
 namespace temporary {
 

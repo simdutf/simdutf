@@ -7,10 +7,25 @@
 #endif
 
 #include <array>
-#include <fstream>
-#include <memory>
+#include <cstdio>
+#include <sstream>
 
-#include <tests/helpers/test.h>
+#define ASSERT_EQUAL(a, b)                                                     \
+  {                                                                            \
+    const auto lhs = (a);                                                      \
+    const auto rhs = (b);                                                      \
+    if (lhs != rhs) {                                                          \
+      std::stringstream lhs_str;                                               \
+      lhs_str << lhs;                                                          \
+      std::stringstream rhs_str;                                               \
+      rhs_str << rhs;                                                          \
+      printf("lhs: %s = %s\n", #a, lhs_str.str().c_str());                     \
+      printf("rhs: %s = %s\n", #b, rhs_str.str().c_str());                     \
+      printf("%s \n", #a);                                                     \
+      printf("file %s:%d, function %s  \n", __FILE__, __LINE__, __func__);     \
+      exit(1);                                                                 \
+    }                                                                          \
+  }
 
 constexpr size_t trials = 1000;
 
