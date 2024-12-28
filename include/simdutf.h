@@ -23,4 +23,10 @@ SIMDUTF_DISABLE_UNDESIRED_WARNINGS
 
 SIMDUTF_POP_DISABLE_WARNINGS
 
+
+namespace temporary {
+simdutf::result validate_utf16le_with_errors(
+    const char16_t * buf, std::size_t len) noexcept;
+}
+
 #endif // SIMDUTF_H

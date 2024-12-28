@@ -165,10 +165,15 @@ TEST(
       utf16[i + 0] = valid_surrogate_W1;
       utf16[i + 1] = W2;
 
-      simdutf::result res = implementation.validate_utf16le_with_errors(
+      simdutf::result res = temporary::validate_utf16le_with_errors(
           reinterpret_cast<const char16_t *>(buf), len);
 
       ASSERT_EQUAL(res.error, simdutf::error_code::SURROGATE);
+      if (res.count != i) {
+        // for (int j = 0; j < static_cast<int>(utf16.size()); ++j) {
+        //   std::printf("oops! utf16[%d]=%d\n", j, +utf16.at(j));
+        // }
+      }
       ASSERT_EQUAL(res.count, i);
 
       utf16[i + 0] = old_W1;
