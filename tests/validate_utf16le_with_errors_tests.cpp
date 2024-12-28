@@ -10,16 +10,11 @@
 #include <fstream>
 #include <memory>
 
-#include <tests/helpers/random_utf16.h>
 #include <tests/helpers/test.h>
 
 constexpr size_t trials = 1000;
 
 int main(int argc, char *argv[]) {
-  uint32_t seed{1234};
-  simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
-  // auto utf16{generator.generate(128)};
-
   auto utf16 = temporary::get_test_data();
 
   for (auto u : utf16) {
