@@ -9,20 +9,20 @@
 namespace simdutf {
 namespace test {
 
-int main(int argc, char *argv[]);
-using test_procedure = void (*)(const simdutf::implementation &impl);
-struct test_entry {
-  std::string name;
-  test_procedure procedure;
+// int main(int argc, char *argv[]);
+// using test_procedure = void (*)(const simdutf::implementation &impl);
+// struct test_entry {
+//   std::string name;
+//   test_procedure procedure;
 
-  void operator()(const simdutf::implementation &impl) { procedure(impl); }
-};
+//   void operator()(const simdutf::implementation &impl) { procedure(impl); }
+// };
 
-std::list<test_entry> &test_procedures();
+// std::list<test_entry> &test_procedures();
 
-struct register_test {
-  register_test(const char *name, test_procedure proc);
-};
+// struct register_test {
+//   register_test(const char *name, test_procedure proc);
+// };
 
 } // namespace test
 } // namespace simdutf
