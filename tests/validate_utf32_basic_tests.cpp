@@ -9,6 +9,10 @@ TEST_LOOP(1000, validate_utf32_returns_true_for_valid_input) {
   simdutf::tests::helpers::random_utf32 generator{seed};
   const auto utf32{generator.generate(256, seed)};
 
+  for (size_t i = 0; i < utf32.size(); i++) {
+    ASSERT_TRUE(implementation.validate_utf32(
+        reinterpret_cast<const char32_t *>(utf32.data()), i + 1));
+  }
   ASSERT_TRUE(implementation.validate_utf32(
       reinterpret_cast<const char32_t *>(utf32.data()), utf32.size()));
 }
@@ -31,6 +35,7 @@ TEST_LOOP(10, validate_utf32_returns_false_when_input_in_forbidden_range) {
       utf32[i] = wrong_value;
 
       ASSERT_FALSE(implementation.validate_utf32(buf, len));
+      ASSERT_FALSE(implementation.validate_utf32(buf, i + 1));
 
       utf32[i] = old;
     }
@@ -54,6 +59,7 @@ TEST_LOOP(1000, validate_utf32_returns_false_when_input_too_large) {
       utf32[i] = wrong_value;
 
       ASSERT_FALSE(implementation.validate_utf32(buf, len));
+      ASSERT_FALSE(implementation.validate_utf32(buf, i + 1));
 
       utf32[i] = old;
     }
