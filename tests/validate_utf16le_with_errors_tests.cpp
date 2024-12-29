@@ -18,13 +18,10 @@ int main(int argc, char *argv[]) {
         temporary::validate_utf16le_with_errors(utf16.data(), utf16.size());
 
     if (res != i) {
-      // for (int j = 0; j < static_cast<int>(utf16.size()); ++j) {
-      //   std::printf("oops! utf16[%d]=%d\n", j, +utf16.at(j));
+      // for (auto u : utf16) {
+      //   std::printf("%d, ", u);
       // }
-      for (auto u : utf16) {
-        std::printf("%d, ", u);
-      }
-      std::printf("\n");
+      // std::printf("\n");
 
       std::printf("FAILED!!\n");
     }
