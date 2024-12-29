@@ -5,11 +5,6 @@
 int main(int argc, char *argv[]) {
   auto utf16 = temporary::get_test_data();
 
-  for (auto u : utf16) {
-    std::printf("%d, ", u);
-  }
-  std::printf("\n");
-
   const char16_t valid_surrogate_W1 = 0xd800;
   const char16_t W2 = 0;
   for (size_t i = 0; i < utf16.size() - 1; i++) {
@@ -26,6 +21,11 @@ int main(int argc, char *argv[]) {
       // for (int j = 0; j < static_cast<int>(utf16.size()); ++j) {
       //   std::printf("oops! utf16[%d]=%d\n", j, +utf16.at(j));
       // }
+      for (auto u : utf16) {
+        std::printf("%d, ", u);
+      }
+      std::printf("\n");
+
       std::printf("FAILED!!\n");
     }
 
