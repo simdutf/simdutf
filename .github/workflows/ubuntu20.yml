@@ -24,7 +24,7 @@ jobs:
         run: |
           mkdir build &&
           cd build &&
-          cmake -DCMAKE_CXX_FLAGS=-Werror -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DSIMDUTF_BENCHMARKS=ON  -DCMAKE_INSTALL_PREFIX:PATH=destination -DBUILD_SHARED_LIBS=${{matrix.shared}} -D CMAKE_BUILD_TYPE=${{matrix.type}} ..  -DSIMDUTF_BENCHMARKS=OFF &&
+          cmake -DCMAKE_CXX_FLAGS=-Werror -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DSIMDUTF_BENCHMARKS=OFF -DCMAKE_INSTALL_PREFIX:PATH=destination -DBUILD_SHARED_LIBS=${{matrix.shared}} -D CMAKE_BUILD_TYPE=${{matrix.type}} .. &&
           cmake --build .   &&
           ctest -j --output-on-failure &&
           cmake --install . &&
