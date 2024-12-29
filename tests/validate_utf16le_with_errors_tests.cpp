@@ -31,12 +31,6 @@ int main(int argc, char *argv[]) {
   }
   std::printf("\n");
 
-  const char16_t *buf = reinterpret_cast<const char16_t *>(utf16.data());
-  const size_t len = utf16.size();
-
-  const std::array<char16_t, 5> sample_wrong_second_word{0x0000, 0x1000, 0xdbff,
-                                                         0xe000, 0xffff};
-
   const char16_t valid_surrogate_W1 = 0xd800;
   const char16_t W2 = 0;
   for (size_t i = 0; i < utf16.size() - 1; i++) {
@@ -46,8 +40,8 @@ int main(int argc, char *argv[]) {
     utf16[i + 0] = valid_surrogate_W1;
     utf16[i + 1] = W2;
 
-    temporary::result res = temporary::validate_utf16le_with_errors(
-        reinterpret_cast<const char16_t *>(buf), len);
+    temporary::result res =
+        temporary::validate_utf16le_with_errors(utf16.data(), utf16.size());
 
     ASSERT_EQUAL(res.error, temporary::error_code::SURROGATE);
     if (res.count != i) {
