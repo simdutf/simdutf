@@ -49,7 +49,7 @@ struct result {
       : error{err}, count{pos} {}
 };
 
-temporary::result validate_utf16le_with_errors(
+std::size_t validate_utf16le_with_errors(
     const char16_t * buf, std::size_t len) noexcept;
 
 std::vector<char16_t> get_test_data();

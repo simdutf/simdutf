@@ -19,10 +19,10 @@ int main(int argc, char *argv[]) {
     utf16[i + 0] = valid_surrogate_W1;
     utf16[i + 1] = W2;
 
-    temporary::result res =
+    auto res =
         temporary::validate_utf16le_with_errors(utf16.data(), utf16.size());
 
-    if (res.count != i) {
+    if (res != i) {
       // for (int j = 0; j < static_cast<int>(utf16.size()); ++j) {
       //   std::printf("oops! utf16[%d]=%d\n", j, +utf16.at(j));
       // }
