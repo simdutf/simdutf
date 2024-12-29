@@ -38,27 +38,26 @@ int main(int argc, char *argv[]) {
                                                          0xe000, 0xffff};
 
   const char16_t valid_surrogate_W1 = 0xd800;
-  for (char16_t W2 : sample_wrong_second_word) {
-    for (size_t i = 0; i < utf16.size() - 1; i++) {
-      const char16_t old_W1 = utf16[i + 0];
-      const char16_t old_W2 = utf16[i + 1];
+  const char16_t W2 = 0;
+  for (size_t i = 0; i < utf16.size() - 1; i++) {
+    const char16_t old_W1 = utf16[i + 0];
+    const char16_t old_W2 = utf16[i + 1];
 
-      utf16[i + 0] = valid_surrogate_W1;
-      utf16[i + 1] = W2;
+    utf16[i + 0] = valid_surrogate_W1;
+    utf16[i + 1] = W2;
 
-      temporary::result res = temporary::validate_utf16le_with_errors(
-          reinterpret_cast<const char16_t *>(buf), len);
+    temporary::result res = temporary::validate_utf16le_with_errors(
+        reinterpret_cast<const char16_t *>(buf), len);
 
-      ASSERT_EQUAL(res.error, temporary::error_code::SURROGATE);
-      if (res.count != i) {
-        // for (int j = 0; j < static_cast<int>(utf16.size()); ++j) {
-        //   std::printf("oops! utf16[%d]=%d\n", j, +utf16.at(j));
-        // }
-      }
-      ASSERT_EQUAL(res.count, i);
-
-      utf16[i + 0] = old_W1;
-      utf16[i + 1] = old_W2;
+    ASSERT_EQUAL(res.error, temporary::error_code::SURROGATE);
+    if (res.count != i) {
+      // for (int j = 0; j < static_cast<int>(utf16.size()); ++j) {
+      //   std::printf("oops! utf16[%d]=%d\n", j, +utf16.at(j));
+      // }
     }
+    ASSERT_EQUAL(res.count, i);
+
+    utf16[i + 0] = old_W1;
+    utf16[i + 1] = old_W2;
   }
 }
