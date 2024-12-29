@@ -1,4 +1,4 @@
-name: Ubuntu 20.04 Sanitized CI (GCC 9)
+name: Ubuntu 20.04 (GCC 9)
 
 on:
   push:
