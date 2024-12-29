@@ -20,8 +20,7 @@ inline std::size_t validate_with_errors(const char16_t *data,
                                         size_t len) noexcept {
   size_t pos = 0;
   while (pos < len) {
-    char16_t word =
-        !match_system2(big_endian) ? swap_bytes(data[pos]) : data[pos];
+    char16_t word = data[pos];
     if ((word & 0xF800) == 0xD800) {
       if (pos + 1 >= len) {
         return pos;
@@ -30,9 +29,7 @@ inline std::size_t validate_with_errors(const char16_t *data,
       if (diff > 0x3FF) {
         return pos;
       }
-      char16_t next_word = !match_system2(big_endian)
-                               ? swap_bytes(data[pos + 1])
-                               : data[pos + 1];
+      char16_t next_word = data[pos + 1];
       char16_t diff2 = uint16_t(next_word - 0xDC00);
       if (diff2 > 0x3FF) {
         return pos;
