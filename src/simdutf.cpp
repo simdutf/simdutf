@@ -4,8 +4,7 @@
 
 namespace temporary {
 
-std::size_t validate_utf16le_with_errors(const char16_t *data,
-                                         size_t len) noexcept {
+std::size_t validate_utf16le_with_errors(const char16_t *data, size_t len) {
   size_t pos = 0;
   while (pos < len) {
     char16_t word = data[pos];
