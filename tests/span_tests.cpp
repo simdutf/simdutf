@@ -111,5 +111,23 @@ TEST(validate_utf16_handles_various_sources) {
   static_assert(!is_validate_utf16_invokable<std::vector<std::uint16_t>>);
 }
 
+/// this is used to show failure to compile
+template <typename T>
+concept is_validate_utf32_invokable =
+    requires(T &input) { simdutf::validate_utf32(input); };
+
+TEST(validate_utf32_handles_various_sources) {
+  std::vector<char32_t> data{1, 2, 3, 4, 5};
+  auto r1a = simdutf::validate_utf32(data);
+  auto r1b = simdutf::validate_utf32(std::span{data});
+  auto r1c = simdutf::validate_utf32(std::span{std::as_const(data)});
+  auto r1d = simdutf::validate_utf32(std::as_const(data));
+  auto r1e = simdutf::validate_utf32(std::move(data));
+
+  static_assert(is_validate_utf32_invokable<std::vector<char32_t>>);
+  static_assert(!is_validate_utf32_invokable<std::vector<char>>);
+  static_assert(!is_validate_utf32_invokable<std::vector<std::uint32_t>>);
+}
+
 #endif
 TEST_MAIN

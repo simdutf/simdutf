@@ -58,6 +58,20 @@ concept span_of_char16 = requires(const T &t) {
   { t.data() } noexcept -> is_pointer;
   { *t.data() } noexcept -> is_char16;
 };
+
+template <typename T>
+concept is_char32 = std::is_same_v<char32_t, std::remove_cvref_t<T>>;
+
+/**
+ * matches anything that behaves like std::span and points to char32_t
+ */
+template <typename T>
+concept span_of_char32 = requires(const T &t) {
+  { t.size() } noexcept -> std::convertible_to<std::size_t>;
+  { t.data() } noexcept -> is_pointer;
+  { *t.data() } noexcept -> is_char32;
+};
+
 } // namespace detail
 #endif
 
@@ -389,6 +403,14 @@ validate_utf16be_with_errors(const Span &input) noexcept {
  */
 simdutf_warn_unused bool validate_utf32(const char32_t *buf,
                                         size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_char32<Span>
+simdutf_really_inline simdutf_warn_unused bool
+validate_utf32(const Span &input) noexcept {
+  return validate_utf32(input.data(), input.size());
+}
+#endif
 
 /**
  * Validate the UTF-32 string and stop on error. It might be faster than
