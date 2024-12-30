@@ -257,6 +257,14 @@ validate_utf16(const Span &input) noexcept {
  */
 simdutf_warn_unused bool validate_utf16le(const char16_t *buf,
                                           size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_char16<Span>
+simdutf_really_inline simdutf_warn_unused bool
+validate_utf16le(const Span &input) noexcept {
+  return validate_utf16le(input.data(), input.size());
+}
+#endif
 
 /**
  * Validate the UTF-16BE string. This function may be best when you expect
