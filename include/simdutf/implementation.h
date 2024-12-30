@@ -7,6 +7,8 @@
 #include <tuple>
 #include <vector>
 #include "simdutf/common_defs.h"
+#include "simdutf/encoding_types.h"
+#include "simdutf/error.h"
 #include "simdutf/internal/isadetection.h"
 
 namespace simdutf {
@@ -1125,7 +1127,7 @@ simdutf_warn_unused size_t convert_valid_utf16le_to_utf32(
 simdutf_warn_unused size_t convert_valid_utf16be_to_utf32(
     const char16_t *input, size_t length, char32_t *utf32_buffer) noexcept;
 
-/*
+/**
  * Compute the number of bytes that this UTF-16LE/BE string would require in
  * Latin1 format.
  *
@@ -3221,7 +3223,7 @@ public:
   simdutf_warn_unused virtual size_t
   latin1_length_from_utf8(const char *input, size_t length) const noexcept = 0;
 
-  /*
+  /**
    * Compute the number of bytes that this UTF-16LE/BE string would require in
    * Latin1 format.
    *
@@ -3267,7 +3269,7 @@ public:
   simdutf_warn_unused virtual size_t
   utf32_length_from_latin1(size_t length) const noexcept = 0;
 
-  /*
+  /**
    * Compute the number of bytes that this UTF-16LE string would require in
    * UTF-32 format.
    *
@@ -3288,7 +3290,7 @@ public:
   utf32_length_from_utf16le(const char16_t *input,
                             size_t length) const noexcept = 0;
 
-  /*
+  /**
    * Compute the number of bytes that this UTF-16BE string would require in
    * UTF-32 format.
    *

@@ -1,4 +1,4 @@
-name: Ubuntu 20.04 (GCC 9)
+name: Ubuntu 20.04 C++11 (GCC 9)
 
 on:
   push:
@@ -11,20 +11,13 @@ on:
 jobs:
   ubuntu-build:
     runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        include:
-          - {shared: ON, type : Debug}
-          - {shared: OFF, type : Debug}
-          - {shared: ON, type : Release}
-          - {shared: OFF, type : Release}
     steps:
       - uses: actions/checkout@v4
       - name: Use cmake
         run: |
           mkdir build &&
           cd build &&
-          cmake -DCMAKE_CXX_FLAGS=-Werror -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DSIMDUTF_BENCHMARKS=OFF -DCMAKE_INSTALL_PREFIX:PATH=destination -DBUILD_SHARED_LIBS=${{matrix.shared}} -D CMAKE_BUILD_TYPE=${{matrix.type}} .. &&
+          cmake -DCMAKE_CXX_FLAGS=-Werror -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DCMAKE_INSTALL_PREFIX:PATH=destination -DCMAKE_CXX_STANDARD=11 -DSIMDUTF_BENCHMARKS=OFF .. &&
           cmake --build .   &&
           ctest -j --output-on-failure &&
           cmake --install . &&
