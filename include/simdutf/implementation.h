@@ -364,6 +364,14 @@ validate_utf16le_with_errors(const Span &input) noexcept {
  */
 simdutf_warn_unused result validate_utf16be_with_errors(const char16_t *buf,
                                                         size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_char16<Span>
+simdutf_really_inline simdutf_warn_unused result
+validate_utf16be_with_errors(const Span &input) noexcept {
+  return validate_utf16be_with_errors(input.data(), input.size());
+}
+#endif
 
 /**
  * Validate the UTF-32 string. This function may be best when you expect
