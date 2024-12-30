@@ -148,6 +148,15 @@ validate_utf8(const Span &input) noexcept {
  */
 simdutf_warn_unused result validate_utf8_with_errors(const char *buf,
                                                      size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_byte_like<Span>
+simdutf_really_inline simdutf_warn_unused result
+validate_utf8_with_errors(const Span &input) noexcept {
+  return validate_utf8_with_errors(reinterpret_cast<const char *>(input.data()),
+                                   input.size());
+}
+#endif
 
 /**
  * Validate the ASCII string.
