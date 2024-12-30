@@ -124,6 +124,15 @@ detect_encodings(const Span &input) noexcept {
  * @return true if and only if the string is valid UTF-8.
  */
 simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_byte_like<Span>
+simdutf_really_inline simdutf_warn_unused bool
+validate_utf8(const Span &input) noexcept {
+  return validate_utf8(reinterpret_cast<const char *>(input.data()),
+                       input.size());
+}
+#endif
 
 /**
  * Validate the UTF-8 string and stop on error.
