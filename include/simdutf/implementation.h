@@ -102,6 +102,15 @@ simdutf_really_inline simdutf_warn_unused int
 detect_encodings(const uint8_t *input, size_t length) noexcept {
   return detect_encodings(reinterpret_cast<const char *>(input), length);
 }
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_byte_like<Span>
+simdutf_really_inline simdutf_warn_unused int
+detect_encodings(const Span &input) noexcept {
+  return autodetect_encoding(reinterpret_cast<const char *>(input.data()),
+                             input.size());
+}
+#endif
 
 /**
  * Validate the UTF-8 string. This function may be best when you expect
