@@ -430,6 +430,14 @@ validate_utf32(const Span &input) noexcept {
  */
 simdutf_warn_unused result validate_utf32_with_errors(const char32_t *buf,
                                                       size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_char32<Span>
+simdutf_really_inline simdutf_warn_unused result
+validate_utf32_with_errors(const Span &input) noexcept {
+  return validate_utf32_with_errors(input.data(), input.size());
+}
+#endif
 
 /**
  * Convert Latin1 string into UTF8 string.
