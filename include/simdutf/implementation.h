@@ -193,6 +193,15 @@ validate_ascii(const Span &input) noexcept {
  */
 simdutf_warn_unused result validate_ascii_with_errors(const char *buf,
                                                       size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_byte_like<Span>
+simdutf_really_inline simdutf_warn_unused result
+validate_ascii_with_errors(const Span &input) noexcept {
+  return validate_ascii_with_errors(
+      reinterpret_cast<const char *>(input.data()), input.size());
+}
+#endif
 
 /**
  * Using native endianness; Validate the UTF-16 string.
