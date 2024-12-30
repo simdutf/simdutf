@@ -129,5 +129,69 @@ TEST(validate_utf32_handles_various_sources) {
   static_assert(!is_validate_utf32_invokable<std::vector<std::uint32_t>>);
 }
 
+/// this is used to show failure to compile
+template <typename T, typename U>
+concept is_convert_latin1_to_utf8_safe_invokable =
+    requires(T &input, U &output) {
+      simdutf::convert_latin1_to_utf8_safe(input, output);
+    };
+
+// this is used to prove that no copying takes place in the output parameter
+struct NonMovableCopyableMutableSpan {
+  NonMovableCopyableMutableSpan &
+  operator=(NonMovableCopyableMutableSpan &&) = delete;
+  auto data() noexcept { return m_data; }
+  auto data() const noexcept { return m_data; }
+  auto size() const noexcept { return m_size; }
+  char *m_data{};
+  std::size_t m_size{};
+};
+static_assert(!std::movable<NonMovableCopyableMutableSpan>);
+static_assert(!std::copyable<NonMovableCopyableMutableSpan>);
+
+TEST(convert_latin1_to_utf8_safe) {
+  const std::vector<char> input{1, 2, 3, 4, 5};
+  std::vector<char> output(input.size());
+  auto r1a = simdutf::convert_latin1_to_utf8_safe(input, output);
+  auto r1b = simdutf::convert_latin1_to_utf8_safe(input, std::span{output});
+  auto r1c =
+      simdutf::convert_latin1_to_utf8_safe(std::move(input), std::span{output});
+
+  // we handle const, mutable and rvalues for the output parameter
+  const std::span s1{output};
+  auto r1d = simdutf::convert_latin1_to_utf8_safe(input, s1);
+  std::span s2{output};
+  auto r1e = simdutf::convert_latin1_to_utf8_safe(input, s2);
+  auto r1f = simdutf::convert_latin1_to_utf8_safe(input, std::move(s2));
+
+  // make sure no copying or move happens in the output parameter
+  const NonMovableCopyableMutableSpan nmcms{.m_data = output.data(),
+                                            .m_size = output.size()};
+  auto r2a = simdutf::convert_latin1_to_utf8_safe(input, nmcms);
+  auto r2b = simdutf::convert_latin1_to_utf8_safe(
+      input, NonMovableCopyableMutableSpan{.m_data = output.data(),
+                                           .m_size = output.size()});
+
+  // the output can be anything byte like
+  std::vector<unsigned char> output3(input.size());
+  auto r3a = simdutf::convert_latin1_to_utf8_safe(input, output3);
+  //... but not compile if it is anything else
+  static_assert(
+      !is_convert_latin1_to_utf8_safe_invokable<std::vector<char>,
+                                                std::vector<char16_t>>);
+
+  // writing to a const object should not be possible
+  static_assert(
+      !is_convert_latin1_to_utf8_safe_invokable<std::vector<char>,
+                                                const std::vector<char>>);
+
+  // writing to a std::string through .data() is ok since C++17
+  static_assert(
+      is_convert_latin1_to_utf8_safe_invokable<std::vector<char>, std::string>);
+  static_assert(
+      is_convert_latin1_to_utf8_safe_invokable<std::string, std::vector<char>>);
+  static_assert(is_convert_latin1_to_utf8_safe_invokable<std::string_view,
+                                                         std::vector<char>>);
+}
 #endif
 TEST_MAIN

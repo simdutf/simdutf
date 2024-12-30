@@ -47,6 +47,20 @@ concept span_of_byte_like = requires(const T &t) {
 };
 
 template <typename T>
+concept is_mutable = !std::is_const_v<std::remove_reference_t<T>>;
+
+/**
+ * like span_of_byte_like, but for an output span (intended to be written to)
+ */
+template <typename T>
+concept output_span_of_byte_like = requires(T &t) {
+  { t.size() } noexcept -> std::convertible_to<std::size_t>;
+  { t.data() } noexcept -> is_pointer;
+  { *t.data() } noexcept -> is_byte_like;
+  { *t.data() } noexcept -> is_mutable;
+};
+
+template <typename T>
 concept is_char16 = std::is_same_v<char16_t, std::remove_cvref_t<T>>;
 
 /**
@@ -475,6 +489,25 @@ convert_latin1_to_utf8(const Span &input, char *utf8_output) noexcept {
 simdutf_warn_unused size_t
 convert_latin1_to_utf8_safe(const char *input, size_t length, char *utf8_output,
                             size_t utf8_len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename InputSpan, typename OutputSpan>
+  requires detail::span_of_byte_like<InputSpan> &&
+           detail::output_span_of_byte_like<OutputSpan>
+simdutf_really_inline simdutf_warn_unused size_t convert_latin1_to_utf8_safe(
+    const InputSpan &input, OutputSpan &&utf8_output) noexcept {
+  // implementation note: outputspan is a forwarding ref to avoid copying and
+  // allow both lvalues and rvalues. std::span can be copied without problems,
+  // but std::vector should not, and this function should accept both. it will
+  // allow using an owning rvalue ref (example: passing a temporary std::string)
+  // as output, but the user will quickly find out that he has no way of getting
+  // the data out of the object in that case.
+  static_assert(
+      std::is_reference_v<decltype(std::forward<OutputSpan>(utf8_output))>);
+  return convert_latin1_to_utf8_safe(
+      input.data(), input.size(), reinterpret_cast<char *>(utf8_output.data()),
+      utf8_output.size());
+}
+#endif
 
 /**
  * Convert possibly Latin1 string into UTF-16LE string.
