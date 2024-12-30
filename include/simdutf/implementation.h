@@ -168,6 +168,15 @@ validate_utf8_with_errors(const Span &input) noexcept {
  * @return true if and only if the string is valid ASCII.
  */
 simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_byte_like<Span>
+simdutf_really_inline simdutf_warn_unused bool
+validate_ascii(const Span &input) noexcept {
+  return validate_ascii(reinterpret_cast<const char *>(input.data()),
+                        input.size());
+}
+#endif
 
 /**
  * Validate the ASCII string and stop on error. It might be faster than
