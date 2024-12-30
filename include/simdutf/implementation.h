@@ -45,6 +45,19 @@ concept span_of_byte_like = requires(const T &t) {
   { t.data() } noexcept -> is_pointer;
   { *t.data() } noexcept -> is_byte_like;
 };
+
+template <typename T>
+concept is_char16 = std::is_same_v<char16_t, std::remove_cvref_t<T>>;
+
+/**
+ * matches anything that behaves like std::span and points to char16_t
+ */
+template <typename T>
+concept span_of_char16 = requires(const T &t) {
+  { t.size() } noexcept -> std::convertible_to<std::size_t>;
+  { t.data() } noexcept -> is_pointer;
+  { *t.data() } noexcept -> is_char16;
+};
 } // namespace detail
 #endif
 
@@ -219,6 +232,14 @@ validate_ascii_with_errors(const Span &input) noexcept {
  */
 simdutf_warn_unused bool validate_utf16(const char16_t *buf,
                                         size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_char16<Span>
+simdutf_really_inline simdutf_warn_unused bool
+validate_utf16(const Span &input) noexcept {
+  return validate_utf16(input.data(), input.size());
+}
+#endif
 
 /**
  * Validate the UTF-16LE string. This function may be best when you expect

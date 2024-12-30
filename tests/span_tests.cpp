@@ -92,5 +92,24 @@ TEST(autodetect_should_not_be_invokable_on_non_pointer_like_spans) {
   // simdutf::autodetect_encoding(CustomSpan2{});
   static_assert(!is_autodetect_invokable<CustomSpan2>);
 }
+
+/// this is used to show failure to compile
+template <typename T>
+concept is_validate_utf16_invokable =
+    requires(T &input) { simdutf::validate_utf16(input); };
+
+TEST(validate_utf16_handles_various_sources) {
+  std::vector<char16_t> data{1, 2, 3, 4, 5};
+  auto r1a = simdutf::validate_utf16(data);
+  auto r1b = simdutf::validate_utf16(std::span{data});
+  auto r1c = simdutf::validate_utf16(std::span{std::as_const(data)});
+  auto r1d = simdutf::validate_utf16(std::as_const(data));
+  auto r1e = simdutf::validate_utf16(std::move(data));
+
+  static_assert(is_validate_utf16_invokable<std::vector<char16_t>>);
+  static_assert(!is_validate_utf16_invokable<std::vector<char>>);
+  static_assert(!is_validate_utf16_invokable<std::vector<std::uint16_t>>);
+}
+
 #endif
 TEST_MAIN
