@@ -51,24 +51,74 @@ implementation::detect_encodings(const char *input,
                                  size_t length) const noexcept {
   // If there is a BOM, then we trust it.
   auto bom_encoding = simdutf::BOM::check_bom(input, length);
-  // todo: convert to a one-pass algorithm
   if (bom_encoding != encoding_type::unspecified) {
     return bom_encoding;
   }
+
   int out = 0;
-  if (validate_utf8(input, length)) {
+  uint32_t utf16_err = (length % 2);
+  uint32_t utf32_err = (length % 4);
+  uint32_t ends_with_high = 0;
+  avx512_utf8_checker checker{};
+  const __m512i offset = _mm512_set1_epi32((uint32_t)0xffff2000);
+  __m512i currentmax = _mm512_setzero_si512();
+  __m512i currentoffsetmax = _mm512_setzero_si512();
+  const char *ptr = input;
+  const char *end = ptr + length;
+  for (; end - ptr > 64; ptr += 64) {
+    // utf8 checks
+    const __m512i data = _mm512_loadu_si512((const __m512i *)ptr);
+    checker.check_next_input(data);
+
+    // utf16le_checks
+    __m512i diff = _mm512_sub_epi16(data, _mm512_set1_epi16(uint16_t(0xD800)));
+    __mmask32 surrogates =
+        _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0800)));
+    __mmask32 highsurrogates =
+        _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0400)));
+    __mmask32 lowsurrogates = surrogates ^ highsurrogates;
+    utf16_err |= (((highsurrogates << 1) | ends_with_high) != lowsurrogates);
+    ends_with_high = ((highsurrogates & 0x80000000) != 0);
+
+    // utf32le checks
+    currentoffsetmax =
+        _mm512_max_epu32(_mm512_add_epi32(data, offset), currentoffsetmax);
+    currentmax = _mm512_max_epu32(data, currentmax);
+  }
+
+  // last block with 0 < len <= 64
+  const __m512i data = _mm512_maskz_loadu_epi8(
+      ~UINT64_C(0) >> (64 - (end - ptr)), (const __m512i *)ptr);
+  checker.check_next_input(data);
+  __m512i diff = _mm512_sub_epi16(data, _mm512_set1_epi16(uint16_t(0xD800)));
+  __mmask32 surrogates =
+      _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0800)));
+  __mmask32 highsurrogates =
+      _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0400)));
+  __mmask32 lowsurrogates = surrogates ^ highsurrogates;
+  utf16_err |= (((highsurrogates << 1) | ends_with_high) != lowsurrogates);
+  currentoffsetmax =
+      _mm512_max_epu32(_mm512_add_epi32(data, offset), currentoffsetmax);
+  currentmax = _mm512_max_epu32(data, currentmax);
+
+  const __m512i standardmax = _mm512_set1_epi32((uint32_t)0x10ffff);
+  const __m512i standardoffsetmax = _mm512_set1_epi32((uint32_t)0xfffff7ff);
+  __m512i is_zero =
+      _mm512_xor_si512(_mm512_max_epu32(currentmax, standardmax), standardmax);
+  utf32_err |= (_mm512_test_epi8_mask(is_zero, is_zero) != 0);
+  is_zero = _mm512_xor_si512(
+      _mm512_max_epu32(currentoffsetmax, standardoffsetmax), standardoffsetmax);
+  utf32_err |= (_mm512_test_epi8_mask(is_zero, is_zero) != 0);
+  checker.check_eof();
+  bool is_valid_utf8 = !checker.errors();
+  if (is_valid_utf8) {
     out |= encoding_type::UTF8;
   }
-  if ((length % 2) == 0) {
-    if (validate_utf16le(reinterpret_cast<const char16_t *>(input),
-                         length / 2)) {
-      out |= encoding_type::UTF16_LE;
-    }
+  if (utf16_err == 0) {
+    out |= encoding_type::UTF16_LE;
   }
-  if ((length % 4) == 0) {
-    if (validate_utf32(reinterpret_cast<const char32_t *>(input), length / 4)) {
-      out |= encoding_type::UTF32_LE;
-    }
+  if (utf32_err == 0) {
+    out |= encoding_type::UTF32_LE;
   }
   return out;
 }
