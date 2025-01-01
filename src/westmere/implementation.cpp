@@ -90,7 +90,6 @@ implementation::detect_encodings(const char *input,
                                  size_t length) const noexcept {
   // If there is a BOM, then we trust it.
   auto bom_encoding = simdutf::BOM::check_bom(input, length);
-  // todo: reimplement as a one-pass algorithm.
   if (bom_encoding != encoding_type::unspecified) {
     return bom_encoding;
   }
@@ -161,6 +160,9 @@ implementation::detect_encodings(const char *input,
   size_t idx = reader.block_index();
   if (idx == length) {
     c.check_eof();
+    // this is required to check for last byte ending in high and end of input
+    // is reached
+    utf16_err |= ends_with_high;
     bool is_valid_utf8 = !c.errors();
     __m128i is_zero =
         _mm_xor_si128(_mm_max_epu32(currentmax, standardmax), standardmax);
@@ -206,10 +208,6 @@ implementation::detect_encodings(const char *input,
   const uint32_t L = (vL_hi.to_bitmask() << 16) | vL_lo.to_bitmask();
   const uint32_t H = L ^ surrogates_bitmask;
   utf16_err |= (((H << 1) | ends_with_high) != L);
-  ends_with_high = (H & 0x80000000) != 0;
-  // might not be strictly required as len < 64 in this last block
-  ends_with_high = (H & 0x80000000) != 0;
-  utf16_err |= ends_with_high;
 
   // utf32le last block check
   currentmax = _mm_max_epu32(in.chunks[0], currentmax);
