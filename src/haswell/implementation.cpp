@@ -151,31 +151,6 @@ implementation::detect_encodings(const char *input,
 
   uint8_t block[64]{};
   size_t idx = reader.block_index();
-  if (idx == length) {
-    c.check_eof();
-    bool is_valid_utf8 = !c.errors();
-    // this is required to check for last byte ending in high and end of input
-    // is reached
-    utf16_err |= ends_with_high;
-    __m256i is_zero = _mm256_xor_si256(
-        _mm256_max_epu32(currentmax, standardmax), standardmax);
-    utf32_err |= (_mm256_testz_si256(is_zero, is_zero) == 0);
-
-    is_zero =
-        _mm256_xor_si256(_mm256_max_epu32(currentoffsetmax, standardoffsetmax),
-                         standardoffsetmax);
-    utf32_err |= (_mm256_testz_si256(is_zero, is_zero) == 0);
-    if (is_valid_utf8) {
-      out |= encoding_type::UTF8;
-    }
-    if (utf16_err == 0) {
-      out |= encoding_type::UTF16_LE;
-    }
-    if (utf32_err == 0) {
-      out |= encoding_type::UTF32_LE;
-    }
-    return out;
-  }
   std::memcpy(block, &input[idx], length - idx);
   simd::simd8x64<uint8_t> in(block);
   c.check_next_input(in);
@@ -192,6 +167,10 @@ implementation::detect_encodings(const char *input,
   const uint32_t L = vL.to_bitmask();
   const uint32_t H = L ^ surrogates_bitmask;
   utf16_err |= (((H << 1) | ends_with_high) != L);
+  // this is required to check for last byte ending in high and end of input
+  // is reached
+  ends_with_high = (H & 0x80000000) != 0;
+  utf16_err |= ends_with_high;
 
   // utf32le last block check
   currentmax = _mm256_max_epu32(in.chunks[0], currentmax);
