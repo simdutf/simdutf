@@ -131,6 +131,32 @@ TEST(boommmmm) {
                simdutf::encoding_type::UTF16_LE);
 }
 
+#if SIMDUTF_IS_BIG_ENDIAN
+// todo: port this test for big-endian platforms.
+#else
+TEST(issue_627) {
+  std::vector<unsigned char> data{
+      251, 219, 37,  222, 0,   199, 218, 0,   157, 0,   0, 255, 8,   8,
+      8,   8,   227, 8,   8,   8,   8,   8,   8,   255, 0, 0,   248, 0,
+      255, 8,   8,   8,   8,   10,  8,   8,   8,   8,   8, 8,   8,   0,
+      219, 0,   0,   122, 0,   255, 0,   5,   0,   0,   0, 0,   0,   0,
+      0,   255, 243, 159, 129, 172, 1,   219, 37,  222,
+  };
+  const auto r1 =
+      implementation.detect_encodings((const char *)data.data(), data.size());
+  ASSERT_EQUAL(r1, 2);
+
+  std::vector<unsigned char> data2{
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 219,
+  };
+  const auto r2 =
+      implementation.detect_encodings((const char *)data2.data(), data2.size());
+  ASSERT_EQUAL(r2, 0);
+}
+#endif
+
 TEST_LOOP(trials, pure_utf8_ASCII) {
   simdutf::tests::helpers::random_utf8 random(seed, 1, 0, 0, 0);
 

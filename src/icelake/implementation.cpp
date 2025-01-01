@@ -65,7 +65,7 @@ implementation::detect_encodings(const char *input,
   __m512i currentoffsetmax = _mm512_setzero_si512();
   const char *ptr = input;
   const char *end = ptr + length;
-  for (; end - ptr > 64; ptr += 64) {
+  for (; end - ptr >= 64; ptr += 64) {
     // utf8 checks
     const __m512i data = _mm512_loadu_si512((const __m512i *)ptr);
     checker.check_next_input(data);
@@ -86,10 +86,11 @@ implementation::detect_encodings(const char *input,
     currentmax = _mm512_max_epu32(data, currentmax);
   }
 
-  // last block with 0 < len <= 64
-  const __m512i data = _mm512_maskz_loadu_epi8(
-      ~UINT64_C(0) >> (64 - (end - ptr)), (const __m512i *)ptr);
+  // last block with 0 <= len < 64
+  __mmask64 read_mask = (__mmask64(1) << (end - ptr)) - 1;
+  const __m512i data = _mm512_maskz_loadu_epi8(read_mask, (const __m512i *)ptr);
   checker.check_next_input(data);
+
   __m512i diff = _mm512_sub_epi16(data, _mm512_set1_epi16(uint16_t(0xD800)));
   __mmask32 surrogates =
       _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0800)));
@@ -97,6 +98,7 @@ implementation::detect_encodings(const char *input,
       _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0400)));
   __mmask32 lowsurrogates = surrogates ^ highsurrogates;
   utf16_err |= (((highsurrogates << 1) | ends_with_high) != lowsurrogates);
+
   currentoffsetmax =
       _mm512_max_epu32(_mm512_add_epi32(data, offset), currentoffsetmax);
   currentmax = _mm512_max_epu32(data, currentmax);

@@ -90,24 +90,138 @@ implementation::detect_encodings(const char *input,
                                  size_t length) const noexcept {
   // If there is a BOM, then we trust it.
   auto bom_encoding = simdutf::BOM::check_bom(input, length);
-  // todo: reimplement as a one-pass algorithm.
   if (bom_encoding != encoding_type::unspecified) {
     return bom_encoding;
   }
+
   int out = 0;
-  if (validate_utf8(input, length)) {
+  uint32_t utf16_err = (length % 2);
+  uint32_t utf32_err = (length % 4);
+  uint32_t ends_with_high = 0;
+  const auto v_d8 = simd8<uint8_t>::splat(0xd8);
+  const auto v_f8 = simd8<uint8_t>::splat(0xf8);
+  const auto v_fc = simd8<uint8_t>::splat(0xfc);
+  const auto v_dc = simd8<uint8_t>::splat(0xdc);
+  const __m128i standardmax = _mm_set1_epi32(0x10ffff);
+  const __m128i offset = _mm_set1_epi32(0xffff2000);
+  const __m128i standardoffsetmax = _mm_set1_epi32(0xfffff7ff);
+  __m128i currentmax = _mm_setzero_si128();
+  __m128i currentoffsetmax = _mm_setzero_si128();
+
+  utf8_checker c{};
+  buf_block_reader<64> reader(reinterpret_cast<const uint8_t *>(input), length);
+  while (reader.has_full_block()) {
+    simd::simd8x64<uint8_t> in(reader.full_block());
+    // utf8 checks
+    c.check_next_input(in);
+
+    // utf16le checks
+    auto in0 = simd16<uint16_t>(in.chunks[0]);
+    auto in1 = simd16<uint16_t>(in.chunks[1]);
+    const auto t0 = in0.shr<8>();
+    const auto t1 = in1.shr<8>();
+    const auto packed1 = simd16<uint16_t>::pack(t0, t1);
+    auto in2 = simd16<uint16_t>(in.chunks[2]);
+    auto in3 = simd16<uint16_t>(in.chunks[3]);
+    const auto t2 = in2.shr<8>();
+    const auto t3 = in3.shr<8>();
+    const auto packed2 = simd16<uint16_t>::pack(t2, t3);
+
+    const auto surrogates_wordmask_lo = (packed1 & v_f8) == v_d8;
+    const auto surrogates_wordmask_hi = (packed2 & v_f8) == v_d8;
+    const uint32_t surrogates_bitmask =
+        (surrogates_wordmask_hi.to_bitmask() << 16) |
+        surrogates_wordmask_lo.to_bitmask();
+    const auto vL_lo = (packed1 & v_fc) == v_dc;
+    const auto vL_hi = (packed2 & v_fc) == v_dc;
+    const uint32_t L = (vL_hi.to_bitmask() << 16) | vL_lo.to_bitmask();
+    const uint32_t H = L ^ surrogates_bitmask;
+    utf16_err |= (((H << 1) | ends_with_high) != L);
+    ends_with_high = (H & 0x80000000) != 0;
+
+    // utf32le checks
+    currentmax = _mm_max_epu32(in.chunks[0], currentmax);
+    currentoffsetmax =
+        _mm_max_epu32(_mm_add_epi32(in.chunks[0], offset), currentoffsetmax);
+    currentmax = _mm_max_epu32(in.chunks[1], currentmax);
+    currentoffsetmax =
+        _mm_max_epu32(_mm_add_epi32(in.chunks[1], offset), currentoffsetmax);
+    currentmax = _mm_max_epu32(in.chunks[2], currentmax);
+    currentoffsetmax =
+        _mm_max_epu32(_mm_add_epi32(in.chunks[2], offset), currentoffsetmax);
+    currentmax = _mm_max_epu32(in.chunks[3], currentmax);
+    currentoffsetmax =
+        _mm_max_epu32(_mm_add_epi32(in.chunks[3], offset), currentoffsetmax);
+
+    reader.advance();
+  }
+
+  uint8_t block[64]{};
+  size_t idx = reader.block_index();
+  std::memcpy(block, &input[idx], length - idx);
+  simd::simd8x64<uint8_t> in(block);
+  c.check_next_input(in);
+
+  // utf16le last block check
+  auto in0 = simd16<uint16_t>(in.chunks[0]);
+  auto in1 = simd16<uint16_t>(in.chunks[1]);
+  const auto t0 = in0.shr<8>();
+  const auto t1 = in1.shr<8>();
+  const auto packed1 = simd16<uint16_t>::pack(t0, t1);
+  auto in2 = simd16<uint16_t>(in.chunks[2]);
+  auto in3 = simd16<uint16_t>(in.chunks[3]);
+  const auto t2 = in2.shr<8>();
+  const auto t3 = in3.shr<8>();
+  const auto packed2 = simd16<uint16_t>::pack(t2, t3);
+
+  const auto surrogates_wordmask_lo = (packed1 & v_f8) == v_d8;
+  const auto surrogates_wordmask_hi = (packed2 & v_f8) == v_d8;
+  const uint32_t surrogates_bitmask =
+      (surrogates_wordmask_hi.to_bitmask() << 16) |
+      surrogates_wordmask_lo.to_bitmask();
+  const auto vL_lo = (packed1 & v_fc) == v_dc;
+  const auto vL_hi = (packed2 & v_fc) == v_dc;
+  const uint32_t L = (vL_hi.to_bitmask() << 16) | vL_lo.to_bitmask();
+  const uint32_t H = L ^ surrogates_bitmask;
+  utf16_err |= (((H << 1) | ends_with_high) != L);
+  // this is required to check for last byte ending in high and end of input
+  // is reached
+  ends_with_high = (H & 0x80000000) != 0;
+  utf16_err |= ends_with_high;
+
+  // utf32le last block check
+  currentmax = _mm_max_epu32(in.chunks[0], currentmax);
+  currentoffsetmax =
+      _mm_max_epu32(_mm_add_epi32(in.chunks[0], offset), currentoffsetmax);
+  currentmax = _mm_max_epu32(in.chunks[1], currentmax);
+  currentoffsetmax =
+      _mm_max_epu32(_mm_add_epi32(in.chunks[1], offset), currentoffsetmax);
+  currentmax = _mm_max_epu32(in.chunks[2], currentmax);
+  currentoffsetmax =
+      _mm_max_epu32(_mm_add_epi32(in.chunks[2], offset), currentoffsetmax);
+  currentmax = _mm_max_epu32(in.chunks[3], currentmax);
+  currentoffsetmax =
+      _mm_max_epu32(_mm_add_epi32(in.chunks[3], offset), currentoffsetmax);
+
+  reader.advance();
+
+  c.check_eof();
+  bool is_valid_utf8 = !c.errors();
+  __m128i is_zero =
+      _mm_xor_si128(_mm_max_epu32(currentmax, standardmax), standardmax);
+  utf32_err |= (_mm_test_all_zeros(is_zero, is_zero) == 0);
+
+  is_zero = _mm_xor_si128(_mm_max_epu32(currentoffsetmax, standardoffsetmax),
+                          standardoffsetmax);
+  utf32_err |= (_mm_test_all_zeros(is_zero, is_zero) == 0);
+  if (is_valid_utf8) {
     out |= encoding_type::UTF8;
   }
-  if ((length % 2) == 0) {
-    if (validate_utf16le(reinterpret_cast<const char16_t *>(input),
-                         length / 2)) {
-      out |= encoding_type::UTF16_LE;
-    }
+  if (utf16_err == 0) {
+    out |= encoding_type::UTF16_LE;
   }
-  if ((length % 4) == 0) {
-    if (validate_utf32(reinterpret_cast<const char32_t *>(input), length / 4)) {
-      out |= encoding_type::UTF32_LE;
-    }
+  if (utf32_err == 0) {
+    out |= encoding_type::UTF32_LE;
   }
   return out;
 }
