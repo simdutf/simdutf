@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # this is the entry point for oss-fuzz.
 #
