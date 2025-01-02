@@ -79,3 +79,27 @@ This is easiest shown with an example:
 
 Some of the fuzzers support printing out a reproducer, which makes it easy to
 convert the fuzz finding into a unit test.
+
+## Continuous fuzzing
+
+There is a script in `random_fuzz.sh` which is useful to do ad-hoc fuzzing.
+It selects a random compiler optimization level, sanitizer setup and runs the
+fuzzers for a limited time. Then it pulls from git and repeats. This way, it is
+easy to take a system and run some fuzzing. It is recommended to run it in tmux
+or gnu screen, to avoid having it interrupt in case the network goes down.
+
+The script has so far been tested on
+ - debian bookworm (amd64/icelake, aarch64)
+ - rocky linux 9 (amd64/icelake)
+ - freebsd (aarch64)
+
+We are happy to get some testing on architectures which are not fuzzed already.
+If you have a power, riscv or lsx system, it would be great if you can run this
+for a few days and report back.
+
+Assuming clang and cmake are available, testing this should be as easy as:
+```shell
+git clone https://github.com/simdutf/simdutf
+simdutf/fuzz/random_fuzz.sh
+# let it run as long as you wish for
+```
