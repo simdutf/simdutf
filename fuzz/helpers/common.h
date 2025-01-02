@@ -121,8 +121,11 @@ static_assert(FNV1A_hash::fnv1ahash_impl(std::string_view{""}) ==
               0xcbf29ce484222325);
 static_assert(FNV1A_hash::fnv1ahash_impl(std::string_view{"xyz"}) ==
               0xbff4aa198026f420);
+#if !defined(_GLIBCXX_RELEASE) || _GLIBCXX_RELEASE > 12
+// work around https://gcc.gnu.org/bugzilla/show_bug.cgi?id=113294
 static_assert(FNV1A_hash::fnv1ahash_impl(std::string{"xyz"}) ==
               0xbff4aa198026f420);
+#endif
 static_assert(FNV1A_hash::fnv1ahash_impl(std::string_view{"\xFF"}) ==
               0xaf64724c8602eb6e);
 static_assert(FNV1A_hash::fnv1ahash_impl(std::string_view{
