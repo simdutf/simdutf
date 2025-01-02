@@ -25,16 +25,10 @@ if [ -z $SRC ] ; then
 else
     # invoked from oss fuzz
     cd $SRC/simdutf
-    if [ "$ARCHITECTURE" = "aarch64" -a $(clang++ --version |head -n1 |cut -f3 -d' ' |cut -f1 -d.) -le 14 ]; then
-	# the compiler and stdlib is clang 14 which does not
-	# support ranges well enough to compile the newer fuzzers
-	fuzzer_src_files=fuzz/roundtrip.cpp
-    fi
 fi
 
-if [ -z "$fuzzer_src_files" ] ; then
-  fuzzer_src_files=$(ls fuzz/*.cpp|grep -v -E "fuzz/(reproducer.|main)")
-fi
+fuzzer_src_files=$(ls fuzz/*.cpp|grep -v -E "fuzz/(reproducer.|main)")
+
 
 
 cmake -B build -S . \
