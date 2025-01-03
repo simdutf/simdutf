@@ -130,7 +130,11 @@ void show_help() {
 }
 void pretty_print(size_t, size_t bytes, std::string name, event_aggregate agg) {
   printf("%-40s : ", name.c_str());
-  printf(" %5.2f GB/s ", bytes / agg.elapsed_ns());
+  double avgspeed = bytes / agg.elapsed_ns();
+  double bestspeed = bytes / agg.best.elapsed_ns();
+  printf(" %5.2f GB/s ", avgspeed);
+  printf(" %2.2f %% ", 100.0 * (bestspeed - avgspeed) / avgspeed);
+
   if (collector.has_events()) {
     printf(" %5.2f GHz ", agg.cycles() / agg.elapsed_ns());
     printf(" %5.2f c/b ", agg.cycles() / bytes);
