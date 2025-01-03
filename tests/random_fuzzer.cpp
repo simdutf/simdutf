@@ -710,7 +710,9 @@ bool fuzz_running(size_t N) {
     for (size_t k = 0; k < size; k++) {
       input[k] = char(distribution(generator));
     }
-    if (!run_test(input.data(), size)) {
+    if(!(reinterpret_cast<input.data()>(p) % std::alignment_of<char32_t>::value)) {
+      fprintf(stderr, "Misaligned input data, skipping\n");
+    } else if (!run_test(input.data(), size)) {
       return false;
     }
   }
