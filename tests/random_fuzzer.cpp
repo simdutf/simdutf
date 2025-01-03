@@ -54,7 +54,8 @@ void dump_case() {
 void __asan_on_error() { dump_case(); }
 }
 
-bool check_alignment(void* ptr, std::size_t alignment) {
+template <typename T>
+bool check_alignment(T* ptr, size_t alignment) {
   uintptr_t address = reinterpret_cast<uintptr_t>(ptr);
   return (address % alignment == 0);
 }
