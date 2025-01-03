@@ -222,7 +222,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
      */
     // We copy to avoid alignment issues.
     std::unique_ptr<char16_t[]> utf16_source{new char16_t[source.size() / 2]};
-    if(source.data() != nullptr) {
+    if (source.data() != nullptr) {
       std::memcpy(utf16_source.get(), source.data(), source.size() / 2 * 2);
     }
 
