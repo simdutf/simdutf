@@ -376,3 +376,8 @@ add_cpp_test(base64_tests)
 target_link_libraries(base64_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
+
+add_cpp_test(span_tests)
+target_link_libraries(span_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)

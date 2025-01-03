@@ -7,11 +7,87 @@
 #include <tuple>
 #include <vector>
 #include "simdutf/common_defs.h"
+#include "simdutf/compiler_check.h"
 #include "simdutf/encoding_types.h"
 #include "simdutf/error.h"
 #include "simdutf/internal/isadetection.h"
 
+#if SIMDUTF_CPLUSPLUS20
+  #include <type_traits>
+  #include <concepts>
+#endif
+
 namespace simdutf {
+
+#if SIMDUTF_CPLUSPLUS20
+/// helpers placed in namespace detail are not a part of the public API
+namespace detail {
+template <typename T>
+concept byte_like = std::is_same_v<T, std::byte> ||   //
+                    std::is_same_v<T, char> ||        //
+                    std::is_same_v<T, signed char> || //
+                    std::is_same_v<T, unsigned char>;
+
+template <typename T>
+concept is_byte_like = byte_like<std::remove_cvref_t<T>>;
+
+template <typename T>
+concept is_pointer = std::is_pointer_v<T>;
+
+/**
+ * matches anything that behaves like std::span and points to character-like
+ * data such as: std::byte, char, unsigned char, signed char, std::int8_t,
+ * std::uint8_t
+ */
+template <typename T>
+concept span_of_byte_like = requires(const T &t) {
+  { t.size() } noexcept -> std::convertible_to<std::size_t>;
+  { t.data() } noexcept -> is_pointer;
+  { *t.data() } noexcept -> is_byte_like;
+};
+
+template <typename T>
+concept is_mutable = !std::is_const_v<std::remove_reference_t<T>>;
+
+/**
+ * like span_of_byte_like, but for an output span (intended to be written to)
+ */
+template <typename T>
+concept output_span_of_byte_like = requires(T &t) {
+  { t.size() } noexcept -> std::convertible_to<std::size_t>;
+  { t.data() } noexcept -> is_pointer;
+  { *t.data() } noexcept -> is_byte_like;
+  { *t.data() } noexcept -> is_mutable;
+};
+
+template <typename T>
+concept is_char16 = std::is_same_v<char16_t, std::remove_cvref_t<T>>;
+
+/**
+ * matches anything that behaves like std::span and points to char16_t
+ */
+template <typename T>
+concept span_of_char16 = requires(const T &t) {
+  { t.size() } noexcept -> std::convertible_to<std::size_t>;
+  { t.data() } noexcept -> is_pointer;
+  { *t.data() } noexcept -> is_char16;
+};
+
+template <typename T>
+concept is_char32 = std::is_same_v<char32_t, std::remove_cvref_t<T>>;
+
+/**
+ * matches anything that behaves like std::span and points to char32_t
+ */
+template <typename T>
+concept span_of_char32 = requires(const T &t) {
+  { t.size() } noexcept -> std::convertible_to<std::size_t>;
+  { t.data() } noexcept -> is_pointer;
+  { *t.data() } noexcept -> is_char32;
+};
+
+} // namespace detail
+#endif
 
 /**
  * Autodetect the encoding of the input, a single encoding is recommended.
@@ -29,6 +105,26 @@ simdutf_really_inline simdutf_warn_unused simdutf::encoding_type
 autodetect_encoding(const uint8_t *input, size_t length) noexcept {
   return autodetect_encoding(reinterpret_cast<const char *>(input), length);
 }
+#if SIMDUTF_CPLUSPLUS20
+/**
+ * Autodetect the encoding of the input, a single encoding is recommended.
+ * E.g., the function might return simdutf::encoding_type::UTF8,
+ * simdutf::encoding_type::UTF16_LE, simdutf::encoding_type::UTF16_BE, or
+ * simdutf::encoding_type::UTF32_LE.
+ *
+ * @param input the string to analyze. can be a anything span-like that has a
+ * data() and size() that points to character data: std::string,
+ * std::string_view, std::vector<char>, std::span<const std::byte> etc.
+ * @return the detected encoding type
+ */
+template <typename Span>
+  requires detail::span_of_byte_like<Span>
+simdutf_really_inline simdutf_warn_unused simdutf::encoding_type
+autodetect_encoding(const Span &input) noexcept {
+  return autodetect_encoding(reinterpret_cast<const char *>(input.data()),
+                             input.size());
+}
+#endif
 
 /**
  * Autodetect the possible encodings of the input in one pass.
@@ -47,6 +143,15 @@ simdutf_really_inline simdutf_warn_unused int
 detect_encodings(const uint8_t *input, size_t length) noexcept {
   return detect_encodings(reinterpret_cast<const char *>(input), length);
 }
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_byte_like<Span>
+simdutf_really_inline simdutf_warn_unused int
+detect_encodings(const Span &input) noexcept {
+  return autodetect_encoding(reinterpret_cast<const char *>(input.data()),
+                             input.size());
+}
+#endif
 
 /**
  * Validate the UTF-8 string. This function may be best when you expect
@@ -60,6 +165,15 @@ detect_encodings(const uint8_t *input, size_t length) noexcept {
  * @return true if and only if the string is valid UTF-8.
  */
 simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_byte_like<Span>
+simdutf_really_inline simdutf_warn_unused bool
+validate_utf8(const Span &input) noexcept {
+  return validate_utf8(reinterpret_cast<const char *>(input.data()),
+                       input.size());
+}
+#endif
 
 /**
  * Validate the UTF-8 string and stop on error.
@@ -75,6 +189,15 @@ simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept;
  */
 simdutf_warn_unused result validate_utf8_with_errors(const char *buf,
                                                      size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_byte_like<Span>
+simdutf_really_inline simdutf_warn_unused result
+validate_utf8_with_errors(const Span &input) noexcept {
+  return validate_utf8_with_errors(reinterpret_cast<const char *>(input.data()),
+                                   input.size());
+}
+#endif
 
 /**
  * Validate the ASCII string.
@@ -86,6 +209,15 @@ simdutf_warn_unused result validate_utf8_with_errors(const char *buf,
  * @return true if and only if the string is valid ASCII.
  */
 simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_byte_like<Span>
+simdutf_really_inline simdutf_warn_unused bool
+validate_ascii(const Span &input) noexcept {
+  return validate_ascii(reinterpret_cast<const char *>(input.data()),
+                        input.size());
+}
+#endif
 
 /**
  * Validate the ASCII string and stop on error. It might be faster than
@@ -102,6 +234,15 @@ simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept;
  */
 simdutf_warn_unused result validate_ascii_with_errors(const char *buf,
                                                       size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_byte_like<Span>
+simdutf_really_inline simdutf_warn_unused result
+validate_ascii_with_errors(const Span &input) noexcept {
+  return validate_ascii_with_errors(
+      reinterpret_cast<const char *>(input.data()), input.size());
+}
+#endif
 
 /**
  * Using native endianness; Validate the UTF-16 string.
@@ -119,6 +260,14 @@ simdutf_warn_unused result validate_ascii_with_errors(const char *buf,
  */
 simdutf_warn_unused bool validate_utf16(const char16_t *buf,
                                         size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_char16<Span>
+simdutf_really_inline simdutf_warn_unused bool
+validate_utf16(const Span &input) noexcept {
+  return validate_utf16(input.data(), input.size());
+}
+#endif
 
 /**
  * Validate the UTF-16LE string. This function may be best when you expect
@@ -136,6 +285,14 @@ simdutf_warn_unused bool validate_utf16(const char16_t *buf,
  */
 simdutf_warn_unused bool validate_utf16le(const char16_t *buf,
                                           size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_char16<Span>
+simdutf_really_inline simdutf_warn_unused bool
+validate_utf16le(const Span &input) noexcept {
+  return validate_utf16le(input.data(), input.size());
+}
+#endif
 
 /**
  * Validate the UTF-16BE string. This function may be best when you expect
@@ -153,6 +310,14 @@ simdutf_warn_unused bool validate_utf16le(const char16_t *buf,
  */
 simdutf_warn_unused bool validate_utf16be(const char16_t *buf,
                                           size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_char16<Span>
+simdutf_really_inline simdutf_warn_unused bool
+validate_utf16be(const Span &input) noexcept {
+  return validate_utf16be(input.data(), input.size());
+}
+#endif
 
 /**
  * Using native endianness; Validate the UTF-16 string and stop on error.
@@ -173,6 +338,14 @@ simdutf_warn_unused bool validate_utf16be(const char16_t *buf,
  */
 simdutf_warn_unused result validate_utf16_with_errors(const char16_t *buf,
                                                       size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_char16<Span>
+simdutf_really_inline simdutf_warn_unused result
+validate_utf16_with_errors(const Span &input) noexcept {
+  return validate_utf16_with_errors(input.data(), input.size());
+}
+#endif
 
 /**
  * Validate the UTF-16LE string and stop on error. It might be faster than
@@ -192,6 +365,14 @@ simdutf_warn_unused result validate_utf16_with_errors(const char16_t *buf,
  */
 simdutf_warn_unused result validate_utf16le_with_errors(const char16_t *buf,
                                                         size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_char16<Span>
+simdutf_really_inline simdutf_warn_unused result
+validate_utf16le_with_errors(const Span &input) noexcept {
+  return validate_utf16le_with_errors(input.data(), input.size());
+}
+#endif
 
 /**
  * Validate the UTF-16BE string and stop on error. It might be faster than
@@ -211,6 +392,14 @@ simdutf_warn_unused result validate_utf16le_with_errors(const char16_t *buf,
  */
 simdutf_warn_unused result validate_utf16be_with_errors(const char16_t *buf,
                                                         size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_char16<Span>
+simdutf_really_inline simdutf_warn_unused result
+validate_utf16be_with_errors(const Span &input) noexcept {
+  return validate_utf16be_with_errors(input.data(), input.size());
+}
+#endif
 
 /**
  * Validate the UTF-32 string. This function may be best when you expect
@@ -228,6 +417,14 @@ simdutf_warn_unused result validate_utf16be_with_errors(const char16_t *buf,
  */
 simdutf_warn_unused bool validate_utf32(const char32_t *buf,
                                         size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_char32<Span>
+simdutf_really_inline simdutf_warn_unused bool
+validate_utf32(const Span &input) noexcept {
+  return validate_utf32(input.data(), input.size());
+}
+#endif
 
 /**
  * Validate the UTF-32 string and stop on error. It might be faster than
@@ -247,6 +444,14 @@ simdutf_warn_unused bool validate_utf32(const char32_t *buf,
  */
 simdutf_warn_unused result validate_utf32_with_errors(const char32_t *buf,
                                                       size_t len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_char32<Span>
+simdutf_really_inline simdutf_warn_unused result
+validate_utf32_with_errors(const Span &input) noexcept {
+  return validate_utf32_with_errors(input.data(), input.size());
+}
+#endif
 
 /**
  * Convert Latin1 string into UTF8 string.
@@ -261,6 +466,14 @@ simdutf_warn_unused result validate_utf32_with_errors(const char32_t *buf,
 simdutf_warn_unused size_t convert_latin1_to_utf8(const char *input,
                                                   size_t length,
                                                   char *utf8_output) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename Span>
+  requires detail::span_of_byte_like<Span>
+simdutf_really_inline simdutf_warn_unused size_t
+convert_latin1_to_utf8(const Span &input, char *utf8_output) noexcept {
+  return convert_latin1_to_utf8(input.data(), input.size(), utf8_output);
+}
+#endif
 
 /**
  * Convert Latin1 string into UTF8 string with output limit.
@@ -276,6 +489,25 @@ simdutf_warn_unused size_t convert_latin1_to_utf8(const char *input,
 simdutf_warn_unused size_t
 convert_latin1_to_utf8_safe(const char *input, size_t length, char *utf8_output,
                             size_t utf8_len) noexcept;
+#if SIMDUTF_CPLUSPLUS20
+template <typename InputSpan, typename OutputSpan>
+  requires detail::span_of_byte_like<InputSpan> &&
+           detail::output_span_of_byte_like<OutputSpan>
+simdutf_really_inline simdutf_warn_unused size_t convert_latin1_to_utf8_safe(
+    const InputSpan &input, OutputSpan &&utf8_output) noexcept {
+  // implementation note: outputspan is a forwarding ref to avoid copying and
+  // allow both lvalues and rvalues. std::span can be copied without problems,
+  // but std::vector should not, and this function should accept both. it will
+  // allow using an owning rvalue ref (example: passing a temporary std::string)
+  // as output, but the user will quickly find out that he has no way of getting
+  // the data out of the object in that case.
+  static_assert(
+      std::is_reference_v<decltype(std::forward<OutputSpan>(utf8_output))>);
+  return convert_latin1_to_utf8_safe(
+      input.data(), input.size(), reinterpret_cast<char *>(utf8_output.data()),
+      utf8_output.size());
+}
+#endif
 
 /**
  * Convert possibly Latin1 string into UTF-16LE string.
