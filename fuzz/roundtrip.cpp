@@ -229,8 +229,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     source = fdp.ConsumeRandomLengthString(kMaxStringSize);
     bool validutf16le =
         e->validate_utf16le(utf16_source.get(), source.size() / 2);
-    auto rutf16le = e->validate_utf16le_with_errors(utf16_source.get(),
-                                                    source.size() / 2);
+    auto rutf16le =
+        e->validate_utf16le_with_errors(utf16_source.get(), source.size() / 2);
     if (validutf16le !=
         (rutf16le.error == simdutf::SUCCESS)) { // they should agree
       print_input(source, e);
@@ -238,8 +238,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     }
     if (validutf16le) {
       // We need a buffer of size where to write the UTF-16 words.
-      size_t expected_utf8words = e->utf8_length_from_utf16le(
-          utf16_source.get(), source.size() / 2);
+      size_t expected_utf8words =
+          e->utf8_length_from_utf16le(utf16_source.get(), source.size() / 2);
       std::unique_ptr<char[]> utf8_output{new char[expected_utf8words]};
       size_t utf8words = e->convert_utf16le_to_utf8(
           utf16_source.get(), source.size() / 2, utf8_output.get());
@@ -267,8 +267,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     } else {
       // invalid input!!!
       // We need a buffer of size where to write the UTF-16 words.
-      size_t expected_utf8words = e->utf8_length_from_utf16le(
-          utf16_source.get(), source.size() / 2);
+      size_t expected_utf8words =
+          e->utf8_length_from_utf16le(utf16_source.get(), source.size() / 2);
       std::unique_ptr<char[]> utf8_output{new char[expected_utf8words]};
       size_t utf8words = e->convert_utf16le_to_utf8(
           utf16_source.get(), source.size() / 2, utf8_output.get());
@@ -286,8 +286,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     source = fdp.ConsumeRandomLengthString(kMaxStringSize);
     bool validutf16be =
         e->validate_utf16be(utf16_source.get(), source.size() / 2);
-    auto rutf16be = e->validate_utf16be_with_errors(utf16_source.get(),
-                                                    source.size() / 2);
+    auto rutf16be =
+        e->validate_utf16be_with_errors(utf16_source.get(), source.size() / 2);
     if (validutf16be !=
         (rutf16be.error == simdutf::SUCCESS)) { // they should agree
       print_input(source, e);
@@ -295,8 +295,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     }
     if (validutf16be) {
       // We need a buffer of size where to write the UTF-16 words.
-      size_t expected_utf8words = e->utf8_length_from_utf16be(
-          utf16_source.get(), source.size() / 2);
+      size_t expected_utf8words =
+          e->utf8_length_from_utf16be(utf16_source.get(), source.size() / 2);
       std::unique_ptr<char[]> utf8_output{new char[expected_utf8words]};
       size_t utf8words = e->convert_utf16be_to_utf8(
           utf16_source.get(), source.size() / 2, utf8_output.get());
@@ -324,8 +324,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     } else {
       // invalid input!!!
       // We need a buffer of size where to write the UTF-16 words.
-      size_t expected_utf8words = e->utf8_length_from_utf16be(
-          utf16_source.get(), source.size() / 2);
+      size_t expected_utf8words =
+          e->utf8_length_from_utf16be(utf16_source.get(), source.size() / 2);
       std::unique_ptr<char[]> utf8_output{new char[expected_utf8words]};
       size_t utf8words = e->convert_utf16be_to_utf8(
           utf16_source.get(), source.size() / 2, utf8_output.get());
