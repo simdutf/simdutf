@@ -221,8 +221,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
      * Transcoding from UTF-16LE to UTF-8.
      */
     // We copy to avoid alignment issues.
-    std::unique_ptr<char16_t> utf16_source{new char16_t[source.size() / 2]};
-    std::memcpy(utf16_source.get(), source.c_str(), source.size());
+    std::unique_ptr<char16_t[]> utf16_source{new char16_t[source.size() / 2]};
+    if(source.data() != nullptr) {
+      std::memcpy(utf16_source.get(), source.data(), source.size() / 2 * 2);
+    }
 
     // Get new source data here as this will allow the fuzzer to optimize it's
     // input for UTF16-LE.
