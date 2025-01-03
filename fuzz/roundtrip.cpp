@@ -1,3 +1,4 @@
+#include <cstring>
 #include <fuzzer/FuzzedDataProvider.h>
 #include <memory>
 #include <string>
@@ -219,115 +220,127 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     /**
      * Transcoding from UTF-16LE to UTF-8.
      */
-
-    // Get new source data here as this will allow the fuzzer to optimize it's
-    // input for UTF16-LE.
-    source = fdp.ConsumeRandomLengthString(kMaxStringSize);
-    bool validutf16le =
-        e->validate_utf16le((char16_t*)source.c_str(), source.size() / 2);
-    auto rutf16le = e->validate_utf16le_with_errors((char16_t*)source.c_str(),
-                                                    source.size() / 2);
-    if (validutf16le !=
-        (rutf16le.error == simdutf::SUCCESS)) { // they should agree
-      print_input(source, e);
-      abort();
-    }
-    if (validutf16le) {
-      // We need a buffer of size where to write the UTF-16 words.
-      size_t expected_utf8words = e->utf8_length_from_utf16le(
-          (char16_t*)source.c_str(), source.size() / 2);
-      std::unique_ptr<char[]> utf8_output{new char[expected_utf8words]};
-      size_t utf8words = e->convert_utf16le_to_utf8(
-          (char16_t*)source.c_str(), source.size() / 2, utf8_output.get());
-      // It wrote utf16words * sizeof(char16_t) bytes.
-      bool validutf8 = e->validate_utf8(utf8_output.get(), utf8words);
-      if (!validutf8) {
+    {
+      // Get new source data here as this will allow the fuzzer to optimize it's
+      // input for UTF16-LE.
+      source = fdp.ConsumeRandomLengthString(kMaxStringSize);
+      // We copy to avoid alignment issues.
+      std::unique_ptr<char16_t[]> utf16_source{new char16_t[source.size() / 2]};
+      if (source.data() != nullptr) {
+        std::memcpy(utf16_source.get(), source.data(), source.size() / 2 * 2);
+      }
+      bool validutf16le =
+          e->validate_utf16le(utf16_source.get(), source.size() / 2);
+      auto rutf16le = e->validate_utf16le_with_errors(utf16_source.get(),
+                                                      source.size() / 2);
+      if (validutf16le !=
+          (rutf16le.error == simdutf::SUCCESS)) { // they should agree
         print_input(source, e);
         abort();
       }
-      // convert it back:
-      // We need a buffer of size where to write the UTF-16 words.
-      size_t expected_utf16words =
-          e->utf16_length_from_utf8(utf8_output.get(), utf8words);
-      std::unique_ptr<char16_t[]> utf16_output{
-          new char16_t[expected_utf16words]};
-      // convert to UTF-8
-      size_t utf16words = e->convert_utf8_to_utf16le(
-          utf8_output.get(), utf8words, utf16_output.get());
-      for (size_t i = 0; i < source.size() / 2; i++) {
-        if (utf16_output.get()[i] != ((char16_t*)source.c_str())[i]) {
+      if (validutf16le) {
+        // We need a buffer of size where to write the UTF-16 words.
+        size_t expected_utf8words =
+            e->utf8_length_from_utf16le(utf16_source.get(), source.size() / 2);
+        std::unique_ptr<char[]> utf8_output{new char[expected_utf8words]};
+        size_t utf8words = e->convert_utf16le_to_utf8(
+            utf16_source.get(), source.size() / 2, utf8_output.get());
+        // It wrote utf16words * sizeof(char16_t) bytes.
+        bool validutf8 = e->validate_utf8(utf8_output.get(), utf8words);
+        if (!validutf8) {
           print_input(source, e);
           abort();
         }
-      }
-    } else {
-      // invalid input!!!
-      // We need a buffer of size where to write the UTF-16 words.
-      size_t expected_utf8words = e->utf8_length_from_utf16le(
-          (char16_t*)source.c_str(), source.size() / 2);
-      std::unique_ptr<char[]> utf8_output{new char[expected_utf8words]};
-      size_t utf8words = e->convert_utf16le_to_utf8(
-          (char16_t*)source.c_str(), source.size() / 2, utf8_output.get());
-      if (utf8words != 0) {
-        print_input(source, e);
-        abort();
+        // convert it back:
+        // We need a buffer of size where to write the UTF-16 words.
+        size_t expected_utf16words =
+            e->utf16_length_from_utf8(utf8_output.get(), utf8words);
+        std::unique_ptr<char16_t[]> utf16_output{
+            new char16_t[expected_utf16words]};
+        // convert to UTF-8
+        size_t utf16words = e->convert_utf8_to_utf16le(
+            utf8_output.get(), utf8words, utf16_output.get());
+        for (size_t i = 0; i < source.size() / 2; i++) {
+          if (utf16_output.get()[i] != (utf16_source.get())[i]) {
+            print_input(source, e);
+            abort();
+          }
+        }
+      } else {
+        // invalid input!!!
+        // We need a buffer of size where to write the UTF-16 words.
+        size_t expected_utf8words =
+            e->utf8_length_from_utf16le(utf16_source.get(), source.size() / 2);
+        std::unique_ptr<char[]> utf8_output{new char[expected_utf8words]};
+        size_t utf8words = e->convert_utf16le_to_utf8(
+            utf16_source.get(), source.size() / 2, utf8_output.get());
+        if (utf8words != 0) {
+          print_input(source, e);
+          abort();
+        }
       }
     }
 
     /**
      * Transcoding from UTF-16BE to UTF-8.
      */
-    // Get new source data here as this will allow the fuzzer to optimize it's
-    // input for UTF16-BE.
-    source = fdp.ConsumeRandomLengthString(kMaxStringSize);
-    bool validutf16be =
-        e->validate_utf16be((char16_t*)source.c_str(), source.size() / 2);
-    auto rutf16be = e->validate_utf16be_with_errors((char16_t*)source.c_str(),
-                                                    source.size() / 2);
-    if (validutf16be !=
-        (rutf16be.error == simdutf::SUCCESS)) { // they should agree
-      print_input(source, e);
-      abort();
-    }
-    if (validutf16be) {
-      // We need a buffer of size where to write the UTF-16 words.
-      size_t expected_utf8words = e->utf8_length_from_utf16be(
-          (char16_t*)source.c_str(), source.size() / 2);
-      std::unique_ptr<char[]> utf8_output{new char[expected_utf8words]};
-      size_t utf8words = e->convert_utf16be_to_utf8(
-          (char16_t*)source.c_str(), source.size() / 2, utf8_output.get());
-      // It wrote utf16words * sizeof(char16_t) bytes.
-      bool validutf8 = e->validate_utf8(utf8_output.get(), utf8words);
-      if (!validutf8) {
+    {
+      // Get new source data here as this will allow the fuzzer to optimize it's
+      // input for UTF16-BE.
+      source = fdp.ConsumeRandomLengthString(kMaxStringSize);
+      std::unique_ptr<char16_t[]> utf16_source{new char16_t[source.size() / 2]};
+      if (source.data() != nullptr) {
+        std::memcpy(utf16_source.get(), source.data(), source.size() / 2 * 2);
+      }
+      bool validutf16be =
+          e->validate_utf16be(utf16_source.get(), source.size() / 2);
+      auto rutf16be = e->validate_utf16be_with_errors(utf16_source.get(),
+                                                      source.size() / 2);
+      if (validutf16be !=
+          (rutf16be.error == simdutf::SUCCESS)) { // they should agree
         print_input(source, e);
         abort();
       }
-      // convert it back:
-      // We need a buffer of size where to write the UTF-16 words.
-      size_t expected_utf16words =
-          e->utf16_length_from_utf8(utf8_output.get(), utf8words);
-      std::unique_ptr<char16_t[]> utf16_output{
-          new char16_t[expected_utf16words]};
-      // convert to UTF-8
-      size_t utf16words = e->convert_utf8_to_utf16be(
-          utf8_output.get(), utf8words, utf16_output.get());
-      for (size_t i = 0; i < source.size() / 2; i++) {
-        if (utf16_output.get()[i] != ((char16_t*)source.c_str())[i]) {
+      if (validutf16be) {
+        // We need a buffer of size where to write the UTF-16 words.
+        size_t expected_utf8words =
+            e->utf8_length_from_utf16be(utf16_source.get(), source.size() / 2);
+        std::unique_ptr<char[]> utf8_output{new char[expected_utf8words]};
+        size_t utf8words = e->convert_utf16be_to_utf8(
+            utf16_source.get(), source.size() / 2, utf8_output.get());
+        // It wrote utf16words * sizeof(char16_t) bytes.
+        bool validutf8 = e->validate_utf8(utf8_output.get(), utf8words);
+        if (!validutf8) {
           print_input(source, e);
           abort();
         }
-      }
-    } else {
-      // invalid input!!!
-      // We need a buffer of size where to write the UTF-16 words.
-      size_t expected_utf8words = e->utf8_length_from_utf16be(
-          (char16_t*)source.c_str(), source.size() / 2);
-      std::unique_ptr<char[]> utf8_output{new char[expected_utf8words]};
-      size_t utf8words = e->convert_utf16be_to_utf8(
-          (char16_t*)source.c_str(), source.size() / 2, utf8_output.get());
-      if (utf8words != 0) {
-        print_input(source, e);
-        abort();
+        // convert it back:
+        // We need a buffer of size where to write the UTF-16 words.
+        size_t expected_utf16words =
+            e->utf16_length_from_utf8(utf8_output.get(), utf8words);
+        std::unique_ptr<char16_t[]> utf16_output{
+            new char16_t[expected_utf16words]};
+        // convert to UTF-8
+        size_t utf16words = e->convert_utf8_to_utf16be(
+            utf8_output.get(), utf8words, utf16_output.get());
+        for (size_t i = 0; i < source.size() / 2; i++) {
+          if (utf16_output.get()[i] != (utf16_source.get())[i]) {
+            print_input(source, e);
+            abort();
+          }
+        }
+      } else {
+        // invalid input!!!
+        // We need a buffer of size where to write the UTF-16 words.
+        size_t expected_utf8words =
+            e->utf8_length_from_utf16be(utf16_source.get(), source.size() / 2);
+        std::unique_ptr<char[]> utf8_output{new char[expected_utf8words]};
+        size_t utf8words = e->convert_utf16be_to_utf8(
+            utf16_source.get(), source.size() / 2, utf8_output.get());
+        if (utf8words != 0) {
+          print_input(source, e);
+          abort();
+        }
       }
     }
 
