@@ -187,18 +187,31 @@ size_t convert_masked_utf8_to_utf16(const char *input,
       } // the loop might compiler to a couple of instructions.
       // We need some validation. See
       // https://github.com/simdutf/simdutf/pull/631
-      uint8x16_t expected_mask = {0xf8, 0xc0, 0xc0, 0xc0, 0xf8, 0xc0, 0xc0, 0xc0,
-                             0xf8, 0xc0, 0xc0, 0xc0, 0x0, 0x0, 0x0, 0x0};
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+      uint8x16_t expected_mask = simdutf_make_uint8x16_t(
+          0xf8, 0xc0, 0xc0, 0xc0, 0xf8, 0xc0, 0xc0, 0xc0, 0xf8, 0xc0, 0xc0,
+          0xc0, 0x0, 0x0, 0x0, 0x0);
+#else
+      uint8x16_t expected_mask = {0xf8, 0xc0, 0xc0, 0xc0, 0xf8, 0xc0,
+                                  0xc0, 0xc0, 0xf8, 0xc0, 0xc0, 0xc0,
+                                  0x0,  0x0,  0x0,  0x0};
+#endif
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+      uint8x16_t expected = simdutf_make_uint8x16_t(
+          0xf0, 0x80, 0x80, 0x80, 0xf0, 0x80, 0x80, 0x80, 0xf0, 0x80, 0x80,
+          0x80, 0x0, 0x0, 0x0, 0x0);
+#else
       uint8x16_t expected = {0xf0, 0x80, 0x80, 0x80, 0xf0, 0x80, 0x80, 0x80,
-                             0xf0, 0x80, 0x80, 0x80, 0x0, 0x0, 0x0, 0x0};
+                             0xf0, 0x80, 0x80, 0x80, 0x0,  0x0,  0x0,  0x0};
+#endif
       uint8x16_t check = vceqq_u8(vandq_u8(in, expected_mask), expected);
       bool correct = (vminvq_u32(vreinterpretq_u32_u8(check)) == 0xFFFFFFFF);
       // The validation is just three instructions and it is not on a critical
       // path.
-      if(correct) {
+      if (correct) {
         utf16_output += 6; // We wrote 3 32-bit surrogate pairs.
       }
-      return 12;         // We consumed 12 bytes.
+      return 12; // We consumed 12 bytes.
     }
     // 3 1-4 byte sequences
     uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t *>(

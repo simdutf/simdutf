@@ -16,7 +16,6 @@ using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
 constexpr size_t trials = 10000;
 } // namespace
 
-
 TEST(issue_631) {
   // this test case caused an out of bounds write on arm64
   alignas(1) const unsigned char data[] = {
