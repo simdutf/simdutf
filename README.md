@@ -319,6 +319,25 @@ In generic terms, we refer to `char`, `char16_t`,  and `char32_t` as *code units
 Our functions and declarations are all in the `simdutf` namespace. Thus you should prefix our functions
 and types with `simdutf::` as required.
 
+If using C++20, all functions which take a pointer and a size (which is almost all of them)
+also have a span overload. Here is an example:
+
+```cpp
+std::vector<char> data{1, 2, 3, 4, 5};
+// C++11 API
+auto cpp11 = simdutf::autodetect_encoding(data.data(), data.size());
+// C++20 API
+auto cpp20 = simdutf::autodetect_encoding(data);
+```
+
+The span overloads use std::span for UTF-16 and UTF-32. For latin1, UTF-8,
+"binary" (used by the base64 functions) anything that has a `.size()` and `.data()
+that returns a pointer to a byte-like type will be accepted as a span. This
+makes it possible to directly pass std::string, std::string_view, std::vector,
+std::array and std::span to the functions. The reason for allowing all
+byte-like types in the api (as opposed to only `std::span<char>`) is to make it
+easy to interface with whatever data the user may have, without having to
+resort to casting.
 
 We have basic functions to detect the type of an input. They return an integer defined by
 the following `enum`.
