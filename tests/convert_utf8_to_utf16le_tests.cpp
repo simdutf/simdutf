@@ -18,6 +18,37 @@ using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
 constexpr size_t trials = 10000;
 } // namespace
 
+
+TEST(issue_631) {
+  // this test case caused an out of bounds write on arm64
+  alignas(1) const unsigned char data[] = {
+      0x20, 0xbf, 0xbf, 0xb0, 0x20, 0xb2, 0xb2, 0xb2, 0x20, 0xbf, 0x86,
+      0x9b, 0x20, 0x20, 0x20, 0x20, 0xff, 0x20, 0x20, 0x20, 0x20, 0x20,
+      0xb0, 0xb0, 0xb0, 0x20, 0xb2, 0xb2, 0xb2, 0x20, 0xbf, 0x86, 0x9b,
+      0x20, 0xb0, 0xb0, 0xb0, 0x20, 0xb2, 0xb2, 0xb2, 0x20, 0xbf, 0x86,
+      0x9b, 0x20, 0x20, 0x20, 0x20, 0x20, 0xb2, 0xb2, 0xb2, 0x20, 0xbf,
+      0x86, 0x9b, 0x20, 0xb2, 0xb2, 0xb2, 0x20, 0x20, 0x86, 0x9b, 0x20,
+      0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20};
+  constexpr std::size_t data_len_bytes = sizeof(data);
+  constexpr std::size_t data_len = data_len_bytes / sizeof(char);
+  const auto validation1 =
+      implementation.validate_utf8_with_errors((const char *)data, data_len);
+  ASSERT_EQUAL(validation1.count, 1);
+  ASSERT_EQUAL(validation1.error, simdutf::error_code::TOO_LONG);
+
+  const bool validation2 =
+      implementation.validate_utf8((const char *)data, data_len);
+  ASSERT_EQUAL(validation1.error == simdutf::error_code::SUCCESS, validation2);
+
+  const auto outlen =
+      implementation.utf16_length_from_utf8((const char *)data, data_len);
+  ASSERT_EQUAL(outlen, 36);
+  std::vector<char16_t> output(outlen);
+  const auto r = implementation.convert_utf8_to_utf16le(
+      (const char *)data, data_len, output.data());
+  ASSERT_EQUAL(r, 0);
+}
+
 TEST(issue_537) {
   alignas(1) const unsigned char data[] = {
       0x93, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
