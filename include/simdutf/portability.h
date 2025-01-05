@@ -1,14 +1,23 @@
 #ifndef SIMDUTF_PORTABILITY_H
 #define SIMDUTF_PORTABILITY_H
 
+#include "simdutf/compiler_check.h"
+
+#include <cassert>
+#include <cfloat>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <cfloat>
-#include <cassert>
 #ifndef _WIN32
   // strcasecmp, strncasecmp
   #include <strings.h>
+#endif
+
+#if SIMDUTF_CPLUSPLUS20
+  #include <version>
+  #if __cpp_concepts >= 201907L && __cpp_lib_span >= 202002L
+    #define SIMDUTF_SPAN 1
+  #endif
 #endif
 
 /**
