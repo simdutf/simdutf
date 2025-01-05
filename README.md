@@ -331,13 +331,13 @@ auto cpp20 = simdutf::autodetect_encoding(data);
 ```
 
 The span overloads use std::span for UTF-16 and UTF-32. For latin1, UTF-8,
-"binary" (used by the base64 functions) anything that has a `.size()` and `.data()
-that returns a pointer to a byte-like type will be accepted as a span. This
-makes it possible to directly pass std::string, std::string_view, std::vector,
-std::array and std::span to the functions. The reason for allowing all
-byte-like types in the api (as opposed to only `std::span<char>`) is to make it
-easy to interface with whatever data the user may have, without having to
-resort to casting.
+"binary" (used by the base64 functions) anything that has a `.size()` and
+`.data()` that returns a pointer to a byte-like type will be accepted as a
+span. This makes it possible to directly pass std::string, std::string_view,
+std::vector, std::array and std::span to the functions. The reason for allowing
+all byte-like types in the api (as opposed to only `std::span<char>`) is to
+make it easy to interface with whatever data the user may have, without having
+to resort to casting.
 
 We have basic functions to detect the type of an input. They return an integer defined by
 the following `enum`.
@@ -348,7 +348,7 @@ enum encoding_type {
         UTF16_LE = 2,   // BOM 0xff 0xfe
         UTF16_BE = 4,   // BOM 0xfe 0xff
         UTF32_LE = 8,   // BOM 0xff 0xfe 0x00 0x00
-        UTF32_BE = 16,   // BOM 0x00 0x00 0xfe 0xff
+        UTF32_BE = 16,  // BOM 0x00 0x00 0xfe 0xff
 
         unspecified = 0
 };
@@ -366,7 +366,7 @@ enum encoding_type {
  * @param length the length of the string in bytes.
  * @return the detected encoding type
  */
-simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const char * input, size_t length) noexcept;
+simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const char *input, size_t length) noexcept;
 
 /**
  * Autodetect the possible encodings of the input in one pass.
@@ -379,7 +379,7 @@ simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const char * inpu
  * @param length the length of the string in bytes.
  * @return the detected encoding type
  */
-simdutf_warn_unused int detect_encodings(const char * input, size_t length) noexcept;
+simdutf_warn_unused int detect_encodings(const char *input, size_t length) noexcept;
 ```
 
 
