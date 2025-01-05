@@ -4,21 +4,6 @@
 #include "simdutf/portability.h"
 #include "simdutf/avx512.h"
 
-#if defined(__GNUC__)
-  // Marks a block with a name so that MCA analysis can see it.
-  #define SIMDUTF_BEGIN_DEBUG_BLOCK(name)                                      \
-    __asm volatile("# LLVM-MCA-BEGIN " #name);
-  #define SIMDUTF_END_DEBUG_BLOCK(name) __asm volatile("# LLVM-MCA-END " #name);
-  #define SIMDUTF_DEBUG_BLOCK(name, block)                                     \
-    BEGIN_DEBUG_BLOCK(name);                                                   \
-    block;                                                                     \
-    END_DEBUG_BLOCK(name);
-#else
-  #define SIMDUTF_BEGIN_DEBUG_BLOCK(name)
-  #define SIMDUTF_END_DEBUG_BLOCK(name)
-  #define SIMDUTF_DEBUG_BLOCK(name, block)
-#endif
-
 #if defined(SIMDUTF_REGULAR_VISUAL_STUDIO)
   #define SIMDUTF_DEPRECATED __declspec(deprecated)
 
