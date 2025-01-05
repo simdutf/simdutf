@@ -12,7 +12,7 @@ struct CustomSpan1 {
   const char *data() const noexcept { return "hej"; }
 };
 
-#if SIMDUTF_CPLUSPLUS20
+#if SIMDUTF_SPAN
   #include <span>
 TEST(autodect_can_use_containers_and_views) {
   std::vector<char> data{1, 2, 3, 4, 5};
