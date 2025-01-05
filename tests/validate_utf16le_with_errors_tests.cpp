@@ -5,6 +5,7 @@
 #endif
 
 #include <array>
+#include <cassert>
 #include <fstream>
 #include <memory>
 
