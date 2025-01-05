@@ -19,12 +19,6 @@
   #define SIMDUTF_DEBUG_BLOCK(name, block)
 #endif
 
-// Align to N-byte boundary
-#define SIMDUTF_ROUNDUP_N(a, n) (((a) + ((n) - 1)) & ~((n) - 1))
-#define SIMDUTF_ROUNDDOWN_N(a, n) ((a) & ~((n) - 1))
-
-#define SIMDUTF_ISALIGNED_N(ptr, n) (((uintptr_t)(ptr) & ((n) - 1)) == 0)
-
 #if defined(SIMDUTF_REGULAR_VISUAL_STUDIO)
   #define SIMDUTF_DEPRECATED __declspec(deprecated)
 
