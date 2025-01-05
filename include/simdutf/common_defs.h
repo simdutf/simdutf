@@ -117,13 +117,4 @@
   #endif
 #endif
 
-/// If EXPR is an error, returns it.
-#define SIMDUTF_TRY(EXPR)                                                      \
-  {                                                                            \
-    auto _err = (EXPR);                                                        \
-    if (_err) {                                                                \
-      return _err;                                                             \
-    }                                                                          \
-  }
-
 #endif // SIMDUTF_COMMON_DEFS_H
