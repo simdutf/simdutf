@@ -1,3 +1,4 @@
+#include <tuple>
 #include "simdutf/icelake/intrinsics.h"
 
 #include "scalar/utf16_to_utf8/valid_utf16_to_utf8.h"
