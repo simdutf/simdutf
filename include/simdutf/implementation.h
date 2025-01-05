@@ -1,10 +1,9 @@
 #ifndef SIMDUTF_IMPLEMENTATION_H
 #define SIMDUTF_IMPLEMENTATION_H
-#include <string>
 #if !defined(SIMDUTF_NO_THREADS)
   #include <atomic>
 #endif
-#include <tuple>
+#include <string>
 #include <vector>
 #include "simdutf/common_defs.h"
 #include "simdutf/compiler_check.h"
