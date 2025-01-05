@@ -9,6 +9,7 @@
 #include <iostream>
 #include <span>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <vector>
 
