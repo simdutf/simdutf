@@ -108,6 +108,18 @@ while true ; do
 
     fuzzers="base64 conversion misc roundtrip"
     for fuzzer in $(echo $fuzzers|tr ' ' '\n' |sort --random-sort); do
+	if [ ! -d  "$corpusdir/$fuzzer" ] ; then
+	    # populate with the backup corpus from oss-fuzz
+	    mkdir -p $TMPWORKDIR/ossfuzzcorpus/$fuzzer
+	    cd $TMPWORKDIR/ossfuzzcorpus/$fuzzer
+	    # in case this fails, keep going.
+	    if wget "https://storage.googleapis.com/simdutf-backup.clusterfuzz-external.appspot.com/corpus/libFuzzer/simdutf_${fuzzer}/public.zip" ;then
+		mkdir -p "$corpusdir/$fuzzer"
+		unzip -q public.zip -d "$corpusdir/$fuzzer"
+		rm public.zip
+	    fi
+	    cd $src
+	fi
 	mkdir -p "$corpusdir/$fuzzer"
 	$BENICE fuzz/out/$fuzzer -timeout=100 -max_total_time=3600 -jobs=$(nproc) -workers=$(nproc) "$corpusdir/$fuzzer"
     done
