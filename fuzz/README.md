@@ -103,3 +103,51 @@ git clone https://github.com/simdutf/simdutf
 simdutf/fuzz/random_fuzz.sh
 # let it run as long as you wish for
 ```
+
+## Fuzzing using qemu
+
+It is useful to use virtualization for fuzzing on architectures when it
+is for some reason difficult or impractical to run on matching hardware.
+
+The [qemu project](https://www.qemu.org/) is very capable and already used for
+CI in this project.
+
+### Fuzzing on emulated riscv64 with vector extensions
+
+Debian is used, which provides a clang version with sanitizers enabled. There
+is a [project providing prebuilt qemu images](https://people.debian.org/~gio/dqib/)
+which are easy to use.
+
+This shows how to get the fuzzers running on a debian system (tested on
+Debian Trixie running amd64):
+
+ - install qemu: `apt install qemu-system-riscv`
+ - download the qemu image: `wget https://gitlab.com/api/v4/projects/giomasce%2Fdqib/jobs/artifacts/master/download?job=convert_riscv64-virt`
+ - unpack it: `unzip "download?job=convert_riscv64-virt"`
+
+Some adoption is needed for the provided readme.txt in the unpacked
+folder:
+
+ - set the number of cpus and memory
+ - remove the `-bios` argument
+ - specify vector extensions by adding to the `-cpu` flag
+
+The following commandlines worked successfully (pick one of them):
+```
+# 128 bit simd
+qemu-system-riscv64 -machine 'virt' -cpu 'rv64,v=on,vlen=128,rvv_ta_all_1s=on,rvv_ma_all_1s=on' -m 8G -smp 5 -device virtio-blk-device,drive=hd -drive file=image.qcow2,if=none,id=hd -device virtio-net-device,netdev=net -netdev user,id=net -kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf -object rng-random,filename=/dev/urandom,id=rng -device virtio-rng-device,rng=rng -nographic -append "root=LABEL=rootfs console=ttyS0"
+# 256 bit simd
+qemu-system-riscv64 -machine 'virt' -cpu 'rv64,v=on,zvbb=on,vlen=256,rvv_ta_all_1s=on,rvv_ma_all_1s=on' -m 8G -smp 5 -device virtio-blk-device,drive=hd -drive file=image.qcow2,if=none,id=hd -device virtio-net-device,netdev=net -netdev user,id=net -kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf -object rng-random,filename=/dev/urandom,id=rng -device virtio-rng-device,rng=rng -nographic -append "root=LABEL=rootfs console=ttyS0"
+" 1024 bit simd
+qemu-system-riscv64 -machine 'virt' -cpu 'rv64,v=on,zvbb=on,vlen=1024,rvv_ta_all_1s=on,rvv_ma_all_1s=on' -m 8G -smp 5 -device virtio-blk-device,drive=hd -drive file=image.qcow2,if=none,id=hd -device virtio-net-device,netdev=net -netdev user,id=net -kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf -object rng-random,filename=/dev/urandom,id=rng -device virtio-rng-device,rng=rng -nographic -append "root=LABEL=rootfs console=ttyS0"
+```
+
+Once the machine has booted, login with root/root. Update the machine with `apt
+update && apt dist-upgrade` and reboot it with ctrl-x ctrl-a, then login again.
+Install necessary packages with `apt install cmake clang-19 wget unzip`
+
+Inside the machine, follow the instructions in "Continuous fuzzing" above.
+
+The speed of emulation is pretty good. The conversion fuzzer currently reaches
+about 3300 executions/second per core on real hardware (Banana Pi BPI-F3) while
+emulation with 256 bit SIMD gives roughly 2/3 of that speed.
