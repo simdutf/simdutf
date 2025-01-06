@@ -86,6 +86,31 @@ else
     BENICE=""
 fi
 
+# to get vector support on riscv64, we need to specify the arch
+MARCHFLAGS=
+case $(uname -m) in
+    x86_64)
+    # debian and rocky linux amd64
+    ;;
+    amd64)
+    # freebsd amd64
+    ;;
+    aarch64)
+    # debian arm64
+    ;;
+    arm64)
+    # freebsd arm64
+    ;;
+    arm)
+    # freebsd armv7
+    ;;
+    riscv64)
+	MARCHFLAGS="-march=rv64gcv"
+	;;
+    *)
+	;;
+esac
+
 while true ; do
 
     echo "pulling the latest changes"
@@ -94,7 +119,7 @@ while true ; do
     
     export CXX=$(selectrandomclang)
     optlevel=$(selectrandomoptlevel)
-    export CXXFLAGS="$(selectsanitizerflags) -g -O${optlevel}"
+    export CXXFLAGS="$(selectsanitizerflags) -g -O${optlevel} ${MARCHFLAGS}"
     export LIB_FUZZING_ENGINE="-fsanitize=fuzzer"
     export OUT=fuzz/out
     export WORK=fuzz/work
