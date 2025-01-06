@@ -36,7 +36,6 @@ TEST(issue633) {
       (const char*)data, data_len, dataout);
   ASSERT_EQUAL(r.count, 0);
   ASSERT_EQUAL(r.error, simdutf::error_code::TOO_LONG);
-  ASSERT_EQUAL(1,2);
 }
 // triggered by https://oss-fuzz.com/testcase-detail/4942454003924992,
 // see https://issues.oss-fuzz.com/issues/385406635
