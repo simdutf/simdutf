@@ -12,9 +12,15 @@
   #include <strings.h>
 #endif
 
+#if defined(__APPLE__) && defined(__clang__)
+#if __clang_major__ <= 13
+#define SIMDUTF_SPAN_DISABLED 1 // apple-clang/13 doesn't support std::convertible_to
+#endif
+#endif
+
 #if SIMDUTF_CPLUSPLUS20
   #include <version>
-  #if __cpp_concepts >= 201907L && __cpp_lib_span >= 202002L
+  #if __cpp_concepts >= 201907L && __cpp_lib_span >= 202002L && !defined(SIMDUTF_SPAN_DISABLED)
     #define SIMDUTF_SPAN 1
   #endif
 #endif
