@@ -12,8 +12,8 @@
   #include <strings.h>
 #endif
 
-#if defined(__APPLE__) && defined(__clang__)
-#if __clang_major__ <= 13
+#if defined(__apple_build_version__)
+#if __apple_build_version__ < 14000000
 #define SIMDUTF_SPAN_DISABLED 1 // apple-clang/13 doesn't support std::convertible_to
 #endif
 #endif
