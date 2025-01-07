@@ -102,7 +102,7 @@ test_case(const char *impl, utf16fix *func, const char16_t *input, size_t n)
 	assert(n <= MAXLEN);
 
 	ref_out[0] = input[0];
-	utf16fix_generic(ref_out + 1, input + 1, n - 2);
+	utf16fix_reference(ref_out + 1, input + 1, n - 2);
 	ref_out[n - 1] = input[n - 1];
 
 	/* out of place test */

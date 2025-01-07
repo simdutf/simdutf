@@ -11,7 +11,7 @@
  */
 typedef void utf16fix(char16_t *, const char16_t *, size_t);
 
-utf16fix utf16fix_generic;
+utf16fix utf16fix_generic, utf16fix_reference;
 #ifdef __SSE2__
 utf16fix utf16fix_sse;
 #endif
