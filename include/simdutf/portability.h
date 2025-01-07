@@ -13,14 +13,16 @@
 #endif
 
 #if defined(__apple_build_version__)
-#if __apple_build_version__ < 14000000
-#define SIMDUTF_SPAN_DISABLED 1 // apple-clang/13 doesn't support std::convertible_to
-#endif
+  #if __apple_build_version__ < 14000000
+    #define SIMDUTF_SPAN_DISABLED                                              \
+      1 // apple-clang/13 doesn't support std::convertible_to
+  #endif
 #endif
 
 #if SIMDUTF_CPLUSPLUS20
   #include <version>
-  #if __cpp_concepts >= 201907L && __cpp_lib_span >= 202002L && !defined(SIMDUTF_SPAN_DISABLED)
+  #if __cpp_concepts >= 201907L && __cpp_lib_span >= 202002L &&                \
+      !defined(SIMDUTF_SPAN_DISABLED)
     #define SIMDUTF_SPAN 1
   #endif
 #endif
