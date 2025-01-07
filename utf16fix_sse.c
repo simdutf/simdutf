@@ -59,7 +59,6 @@ void
 utf16fix_sse(char16_t *out, const char16_t *in, size_t n)
 {
 	size_t i;
-	bool in_place;
 
 	if (n < 9) {
 		utf16fix_generic(out, in, n);

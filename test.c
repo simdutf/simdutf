@@ -94,9 +94,8 @@ random_testcase(char16_t *buf, size_t n)
 static int
 test_case(const char *impl, utf16fix *func, const char16_t *input, size_t n)
 {
-	size_t i;
 	char16_t ref_out[MAXLEN], oop_out[MAXLEN], ip_out[MAXLEN];
-	bool out_of_place_failed = false, in_place_failed = false, failed;
+	bool out_of_place_failed = false, in_place_failed = false;
 
 	assert(2 <= n);
 	assert(n <= MAXLEN);
