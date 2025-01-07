@@ -142,6 +142,10 @@ qemu-system-riscv64 -machine 'virt' -cpu 'rv64,v=on,zvbb=on,vlen=256,rvv_ta_all_
 qemu-system-riscv64 -machine 'virt' -cpu 'rv64,v=on,zvbb=on,vlen=1024,rvv_ta_all_1s=on,rvv_ma_all_1s=on' -m 8G -smp 5 -device virtio-blk-device,drive=hd -drive file=image.qcow2,if=none,id=hd -device virtio-net-device,netdev=net -netdev user,id=net -kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf -object rng-random,filename=/dev/urandom,id=rng -device virtio-rng-device,rng=rng -nographic -append "root=LABEL=rootfs console=ttyS0"
 ```
 
+Note: with a recent qemu (9.2.0 works fine), it is possible to append
+`,rvv_vl_half_avl=on` to the back of the -cpu option and exercise the code
+somewhat differently.
+
 Once the machine has booted, login with root/root. Update the machine with `apt
 update && apt dist-upgrade` and reboot it with ctrl-x ctrl-a, then login again.
 Install necessary packages with `apt install cmake clang-19 wget unzip`
