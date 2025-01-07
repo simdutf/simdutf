@@ -25,5 +25,4 @@ utf16fix_impls.o: utf16fix.h
 utf16fix_ref.o: utf16fix.h
 utf16fix_sse.o: utf16fix.h
 
-.PHONY:
-	clean
+.PHONY: all clean
