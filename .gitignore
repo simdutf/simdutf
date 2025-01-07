@@ -1,0 +1,4 @@
+*.o
+*.s
+benchmark
+test
