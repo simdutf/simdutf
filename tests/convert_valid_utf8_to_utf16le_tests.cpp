@@ -19,6 +19,58 @@ using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
 constexpr size_t trials = 10000;
 } // namespace
 
+TEST(issue_641) {
+  alignas(1) const unsigned char data[] = {
+      0x20, 0x20, 0x20, 0x20, 0x20, 0xe4, 0xac, 0xa4, 0x20, 0x20, 0x20,
+      0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0xe4, 0xac,
+      0xa4, 0x20, 0x20, 0x20, 0xf2, 0x81, 0xaa, 0xa5, 0x20, 0x20};
+  constexpr std::size_t data_len_bytes = sizeof(data);
+  constexpr std::size_t data_len = data_len_bytes / sizeof(char);
+  const auto validation1 =
+      implementation.validate_utf8_with_errors((const char *)data, data_len);
+  ASSERT_EQUAL(validation1.count, 32);
+  ASSERT_EQUAL(validation1.error, simdutf::error_code::SUCCESS);
+
+  const bool validation2 =
+      implementation.validate_utf8((const char *)data, data_len);
+  ASSERT_EQUAL(validation1.error == simdutf::error_code::SUCCESS, validation2);
+
+  if (validation1.error != simdutf::error_code::SUCCESS) {
+    return;
+  }
+  const auto outlen =
+      implementation.utf16_length_from_utf8((const char *)data, data_len);
+  ASSERT_EQUAL(outlen, 26);
+  std::vector<char16_t> output(outlen);
+  const auto r = implementation.convert_valid_utf8_to_utf16le(
+      (const char *)data, data_len, output.data());
+  ASSERT_EQUAL(r, 26);
+  const std::vector<char16_t> expected_out{
+#if SIMDUTF_IS_BIG_ENDIAN
+      0x2000, 0x2000, 0x2000, 0x2000, 0x2000, 0x244B, 0x2000, 0x2000, // 0-7
+      0x2000, 0x2000, 0x2000, 0x2000, 0x2000, 0x2000, 0x2000, 0x2000, // 8-15
+      0x2000, 0x2000, 0x244B, 0x2000, 0x2000, 0x2000, 0xC6D9, 0xA5DE, // 16-23
+      0x2000, 0x2000                                                  // 24-25
+#else
+      0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x4B24, 0x0020, 0x0020, // 0-7
+      0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, // 8-15
+      0x0020, 0x0020, 0x4B24, 0x0020, 0x0020, 0x0020, 0xD9C6, 0xDEA5, // 16-23
+      0x0020, 0x0020                                                  // 24-25
+#endif
+  };
+  ASSERT_EQUAL(output.size(), expected_out.size());
+  bool good = true;
+  for (std::size_t i = 0; i < output.size(); ++i) {
+    if (output.at(i) != expected_out.at(i)) {
+      std::printf("pos %ld %ld!=%ld (actual vs expected)\n",
+                  static_cast<long>(i), static_cast<long>(output.at(i)),
+                  static_cast<long>(expected_out.at(i)));
+      good = false;
+    }
+  };
+  ASSERT_TRUE(good);
+}
+
 TEST_LOOP(trials, convert_pure_ASCII) {
   size_t counter = 0;
   auto generator = [&counter]() -> uint32_t { return counter++ & 0x7f; };
