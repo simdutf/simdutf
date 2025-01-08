@@ -15,6 +15,9 @@ utf16fix utf16fix_generic, utf16fix_reference;
 #ifdef __AVX2__
 utf16fix utf16fix_avx;
 #endif
+#ifdef __AVX512BW__
+utf16fix utf16fix_avx512;
+#endif
 #ifdef __ARM_NEON
 utf16fix utf16fix_neon;
 #endif

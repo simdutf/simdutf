@@ -3,6 +3,7 @@ RM=		rm -f
 UTF16FIXOBJ=	utf16fix_generic.o \
 		utf16fix_impls.o \
 		utf16fix_avx.o \
+		utf16fix_avx512.o \
 		utf16fix_neon.o \
 		utf16fix_ref.o \
 		utf16fix_sse.o
@@ -25,6 +26,7 @@ utf16fix_generic.o: utf16fix.h
 utf16fix_impls.o: utf16fix.h
 utf16fix_ref.o: utf16fix.h
 utf16fix_avx.o: utf16fix.h
+utf16fix_avx512.o: utf16fix.h
 utf16fix_neon.o: utf16fix.h
 utf16fix_sse.o: utf16fix.h
 
