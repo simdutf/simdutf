@@ -155,3 +155,14 @@ Inside the machine, follow the instructions in "Continuous fuzzing" above.
 The speed of emulation is pretty good. The conversion fuzzer currently reaches
 about 3300 executions/second per core on real hardware (Banana Pi BPI-F3) while
 emulation with 256 bit SIMD gives roughly 2/3 of that speed.
+
+### Fuzzing on emulated s390x
+
+Use the same approach as described in the riscv64 section above, but use the 390x image instead. Boot with the following line instead of what is proposed in the readme.txt (tune memory and number of cores flags to your liking):
+
+```
+wget 'https://gitlab.com/api/v4/projects/giomasce%2Fdqib/jobs/artifacts/master/download?job=convert_s390x-virt'
+unzip 'download?job=convert_s390x-virt'
+cd dqib_s390x-virt
+qemu-system-s390x -machine s390-ccw-virtio -cpu max,zpci=on -m 4G -smp 2 -drive file=image.qcow2 -device virtio-net-ccw,netdev=net -netdev user,id=net,hostfwd=tcp::2222-:22 -kernel kernel -initrd initrd -nographic -append root=LABEL=rootfs console=ttyAMA0
+```
