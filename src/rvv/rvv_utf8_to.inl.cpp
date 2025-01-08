@@ -40,6 +40,7 @@ simdutf_really_inline static size_t rvv_utf8_to_common(char const *src,
   const vuint8m1_t err3tbl =
       __riscv_vreinterpret_v_u64m1_u8m1(__riscv_vle64_v_u64m1(err3m, 2));
 
+  size_t vl8m1 = __riscv_vsetvlmax_e8m1();
   size_t vl8m2 = __riscv_vsetvlmax_e8m2();
   vbool4_t m4even = __riscv_vmseq_vx_u8m2_b4(
       __riscv_vand_vx_u8m2(__riscv_vid_v_u8m2(vl8m2), 1, vl8m2), 0, vl8m2);
@@ -232,7 +233,7 @@ simdutf_really_inline static size_t rvv_utf8_to_common(char const *src,
      * us to terminate early. */
     {
       size_t vlOutm2 = vlOut, vlDst;
-      vlOut = __riscv_vsetvl_e8m1(vlOut);
+      vlOut = __riscv_vsetvl_e8m1(vlOut < vl8m1 ? vlOut : vl8m1);
       SIMDUTF_RVV_UTF8_TO_COMMON_M1(0)
       if (vlOutm2 == vlOut) {
         vlOut = vlDst;
