@@ -12,6 +12,9 @@
 typedef void utf16fix(char16_t *, const char16_t *, size_t);
 
 utf16fix utf16fix_generic, utf16fix_reference;
+#ifdef __AVX2__
+utf16fix utf16fix_avx;
+#endif
 #ifdef __ARM_NEON
 utf16fix utf16fix_neon;
 #endif

@@ -2,6 +2,7 @@ CFLAGS+=	-Wall -Wno-parentheses -Wno-missing-braces -O3 -g -DNDEBUG
 RM=		rm -f
 UTF16FIXOBJ=	utf16fix_generic.o \
 		utf16fix_impls.o \
+		utf16fix_avx.o \
 		utf16fix_neon.o \
 		utf16fix_ref.o \
 		utf16fix_sse.o
@@ -23,6 +24,8 @@ test.o: utf16fix.h
 utf16fix_generic.o: utf16fix.h
 utf16fix_impls.o: utf16fix.h
 utf16fix_ref.o: utf16fix.h
+utf16fix_avx.o: utf16fix.h
+utf16fix_neon.o: utf16fix.h
 utf16fix_sse.o: utf16fix.h
 
 .PHONY: all clean
