@@ -122,8 +122,8 @@ detect_encodings(const uint8_t *input, size_t length) noexcept {
 #if SIMDUTF_SPAN
 simdutf_really_inline simdutf_warn_unused int
 detect_encodings(const detail::input_span_of_byte_like auto &input) noexcept {
-  return autodetect_encoding(reinterpret_cast<const char *>(input.data()),
-                             input.size());
+  return detect_encodings(reinterpret_cast<const char *>(input.data()),
+                          input.size());
 }
 #endif
 
