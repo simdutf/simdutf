@@ -150,7 +150,7 @@ Linux or macOS users might follow the following instructions if they have a rece
 
 1. Pull the library in a directory
    ```
-   wget https://github.com/simdutf/simdutf/releases/download/v6.0.2/singleheader.zip
+   wget https://github.com/simdutf/simdutf/releases/download/v6.0.3/singleheader.zip
    unzip singleheader.zip
    ```
    You can replace `wget` by `curl -OL https://...` if you prefer.
@@ -221,7 +221,7 @@ Single-header version
 You can create a single-header version of the library where
 all of the code is put into two files (`simdutf.h` and `simdutf.cpp`).
 We publish a zip archive containing these files, e.g., see
-https://github.com/simdutf/simdutf/releases/download/v6.0.2/singleheader.zip
+https://github.com/simdutf/simdutf/releases/download/v6.0.3/singleheader.zip
 
 You may generate it on your own using a Python script.
 
