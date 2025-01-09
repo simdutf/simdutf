@@ -139,6 +139,7 @@ convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in, size_t shufutf8_idx) {
 #include "generic/buf_block_reader.h"
 #include "generic/utf8_validation/utf8_lookup4_algorithm.h"
 #include "generic/utf8_validation/utf8_validator.h"
+#include "generic/ascii_validation.h"
 // transcoding from UTF-8 to UTF-16
 #include "generic/utf8_to_utf16/utf8_to_utf16.h"
 #include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
@@ -200,12 +201,12 @@ simdutf_warn_unused result implementation::validate_utf8_with_errors(
 
 simdutf_warn_unused bool
 implementation::validate_ascii(const char *buf, size_t len) const noexcept {
-  return arm64::utf8_validation::generic_validate_ascii(buf, len);
+  return arm64::ascii_validation::generic_validate_ascii(buf, len);
 }
 
 simdutf_warn_unused result implementation::validate_ascii_with_errors(
     const char *buf, size_t len) const noexcept {
-  return arm64::utf8_validation::generic_validate_ascii_with_errors(buf, len);
+  return arm64::ascii_validation::generic_validate_ascii_with_errors(buf, len);
 }
 
 simdutf_warn_unused bool
