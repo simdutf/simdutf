@@ -12,13 +12,19 @@
 static int
 veq_zero(uint8x16_t v)
 {
-	uint8x8_t narrowed;
+#ifdef __arm__
+	union { uint8x8_t v; double d; } narrowed;
 
 	/* narrow each byte to a nibble */
-	narrowed = vshrn_n_u16(vreinterpretq_u16_u8(v), 4);
+	narrowed.v = vshrn_n_u16(vreinterpretq_u16_u8(v), 4);
+
+	return (narrowed.d == 0.0);
+#else /* AArch64 */
+	uint8x8_t narrowed;
 
 	/* check if that vector is all zero */
 	return (vdupd_lane_f64(vreinterpret_f64_u16(narrowed), 0) == 0.0);
+#endif
 }
 
 /*
@@ -29,7 +35,7 @@ veq_zero(uint8x16_t v)
  * character before the beginning of the buffer as a lookback.
  * If that character is illsequenced, it too is overwritten.
  */
-static void
+static inline void
 utf16fix_block(char16_t *out, const char16_t *in, bool inplace)
 {
 	uint8x16x2_t lb, block;
