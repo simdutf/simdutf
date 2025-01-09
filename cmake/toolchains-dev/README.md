@@ -3,6 +3,9 @@ You can now build and run the LoongArch64 code as needed:
 GCC >= 14.1
 Binutils >= 2.41
 
+Note that the compiler may be named `loongarch64-linux-gnu-g++`, without the `unknown` part.
+Please adjust to your system.
+
 ```
 $ mkdir build && cd build
 $ cmake -DCMAKE_CXX_COMPILER="loongarch64-unknown-linux-gnu-g++" \
@@ -15,7 +18,7 @@ $ make
 or
 ```
 $ mkdir build && cd build
-$ cmake -DCMAKE_TOOLCHAIN_FILE=../loongarch/toolchain-loongarch64.cmake ../
+$ cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-dev/loongarch64.cmake ../
 $ make
 ```
 

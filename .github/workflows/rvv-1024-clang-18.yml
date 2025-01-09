@@ -20,7 +20,7 @@ jobs:
     - name: Build
       run: |
         CXX=clang++-18 CXXFLAGS="--target=riscv64-linux-gnu -march=rv64gcv_zvbb" \
-        cmake --toolchain=cmake/Toolchains/riscv64-linux-gnu.cmake -DCMAKE_BUILD_TYPE=Release -B build
+        cmake --toolchain=cmake/toolchains-ci/riscv64-linux-gnu.cmake -DCMAKE_BUILD_TYPE=Release -B build
         cmake --build build/ -j$(nproc)
     - name: Test VLEN=1024
       run: |

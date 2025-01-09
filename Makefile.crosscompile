@@ -1,0 +1,46 @@
+ALL=aarch64     \
+    loongarch64 \
+    powerpc64   \
+    riscv64
+
+.PHONY: help
+help:
+	@echo "Build simdutf using the installed crosscompilers"
+	@echo "Known crosscompilers:"
+	@echo "- make aarch64"
+	@echo "- make loongarch64"
+	@echo "- make powerpc64"
+	@echo "- make riscv64"
+	@echo ""
+	@echo "To run all above use:"
+	@echo "- make all"
+
+.PHONY: all
+all: $(ALL)
+
+.PHONY: aarch64
+aarch64:
+	cmake -B $@build -GNinja --toolchain cmake/toolchains-dev/$@.cmake
+	cmake --build $@build
+
+.PHONY: loongarch64
+loongarch64:
+	cmake -B $@build -GNinja --toolchain cmake/toolchains-dev/$@.cmake
+	cmake --build $@build
+
+.PHONY: powerpc64
+powerpc64:
+	cmake -B $@build -GNinja --toolchain cmake/toolchains-dev/$@.cmake
+	cmake --build $@build
+
+.PHONY: riscv64
+riscv64:
+	cmake -B $@build -GNinja --toolchain cmake/toolchains-dev/$@.cmake
+	cmake --build $@build
+
+.PHONY: clean
+clean:
+	rm -rf aarch64build
+	rm -rf loongarch64build
+	rm -rf powerpc64build
+	rm -rf riscv64build
