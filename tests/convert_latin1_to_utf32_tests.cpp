@@ -22,10 +22,13 @@ TEST_LOOP(trials, convert_all_latin1) {
                                           size_t size) -> size_t {
     return implementation.utf32_length_from_latin1(size);
   };
-  simdutf::tests::helpers::transcode_latin1_to_utf32_test_base test(generator,
-                                                                    256);
-  ASSERT_TRUE(test(procedure));
-  ASSERT_TRUE(test.check_size(size_procedure));
+  // Check varying length inputs for upto 16 bytes
+  for (size_t i = 240; i <= 256; i++) {
+    simdutf::tests::helpers::transcode_latin1_to_utf32_test_base test(generator,
+                                                                      i);
+    ASSERT_TRUE(test(procedure));
+    ASSERT_TRUE(test.check_size(size_procedure));
+  }
 }
 
 TEST_MAIN
