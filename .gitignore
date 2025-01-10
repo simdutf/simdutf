@@ -2,6 +2,7 @@
 
 build
 *-build-*
+*build
 
 # Visual Studio Code artifacts
 .vscode/*
