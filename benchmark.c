@@ -11,6 +11,29 @@ typedef uint16_t char16_t;
 #include "benchmark.h"
 #include "utf16fix.h"
 
+#if (defined __FreeBSD__ && __FreeBSD__ >= 9) || \
+    (defined __NetBSD__  && __NetBSD_Version__ >= 600000000) || \
+    (defined OpenBSD && OpenBSD >= 200805) || \
+    (defined __APPLE__ && defined __MACH__ && MAC_OS_X_VERSION_MIN_REQUIRED >= 1070)
+#define HAVE_ARC4RANDOM_BUF
+#endif
+
+#ifndef HAVE_ARC4RANDOM_BUF
+uint32_t arc4random(void) {
+    static uint32_t state = 123456789;
+    state ^= state << 13;
+    state ^= state >> 17;
+    state ^= state << 5;
+    return state;
+}
+void arc4random_buf(void *buf, size_t nbytes) {
+    unsigned char *buffer = (unsigned char *)buf;
+    for (size_t i = 0; i < nbytes; ++i) {
+        buffer[i] = (unsigned char)arc4random();
+    }
+}
+#endif	/* HAVE_ARC4RANDOM_BUF */
+
 static size_t nparam = 1000;
 static char16_t *input, *output;
 

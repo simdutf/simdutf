@@ -1,4 +1,4 @@
-CFLAGS+=	-Wall -Wno-parentheses -Wno-missing-braces -O3 -g -DNDEBUG
+CFLAGS+=	-Wall -Wno-parentheses -Wno-missing-braces -O3 -g -DNDEBUG -march=native
 RM=		rm -f
 UTF16FIXOBJ=	utf16fix_generic.o \
 		utf16fix_impls.o \
