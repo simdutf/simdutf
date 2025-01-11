@@ -33,7 +33,7 @@ TEST(issue633) {
   ASSERT_EQUAL(outlen, 0);
   char dataout[1] = {};
   const auto r = implementation.convert_utf8_to_latin1_with_errors(
-      (const char*)data, data_len, dataout);
+      (const char *)data, data_len, dataout);
   ASSERT_EQUAL(r.count, 0);
   ASSERT_EQUAL(r.error, simdutf::error_code::TOO_LONG);
 }
