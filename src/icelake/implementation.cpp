@@ -952,15 +952,6 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf16le(
     return 0;
   }
   size_t saved_bytes = ret.second - utf16_output;
-  if (ret.first != buf + len) {
-    const size_t scalar_saved_bytes =
-        scalar::utf32_to_utf16::convert<endianness::LITTLE>(
-            ret.first, len - (ret.first - buf), ret.second);
-    if (scalar_saved_bytes == 0) {
-      return 0;
-    }
-    saved_bytes += scalar_saved_bytes;
-  }
   return saved_bytes;
 }
 
@@ -972,15 +963,6 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf16be(
     return 0;
   }
   size_t saved_bytes = ret.second - utf16_output;
-  if (ret.first != buf + len) {
-    const size_t scalar_saved_bytes =
-        scalar::utf32_to_utf16::convert<endianness::BIG>(
-            ret.first, len - (ret.first - buf), ret.second);
-    if (scalar_saved_bytes == 0) {
-      return 0;
-    }
-    saved_bytes += scalar_saved_bytes;
-  }
   return saved_bytes;
 }
 
