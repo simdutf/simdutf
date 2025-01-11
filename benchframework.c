@@ -159,14 +159,14 @@ printresult(struct B *b)
 	double ns;
 
 	ns = elapsed(b);
-
-	if (b->bytes > 0)
-		printf("Benchmark%c%s\t%ld\t%.8g ns/op\t%.8g MB/s\n",
-		    toupper(b->name[0]), b->name + 1, b->n, ns / b->n,
-		    (double)b->n * b->bytes * 1e3 / ns); /* 1e3 = 1e9/1e6 */
-	else
-		printf("Benchmark%c%s\t%ld\t%.8g ns/op\n",
-		    toupper(b->name[0]), b->name + 1, b->n, ns / b->n);
+	if (b->bytes > 0) {
+		printf("Benchmark%c%-20.20s\t%10ld\t%10.8g ns/op\t%10.8g MB/s\n",
+			toupper(b->name[0]), b->name + 1, b->n, ns / b->n,
+			(double)b->n * b->bytes * 1e3 / ns); /* 1e3 = 1e9/1e6 */
+	} else {
+		printf("Benchmark%c%-20.20s\t%10ld\t%10.8g ns/op\t%10s\n",
+			toupper(b->name[0]), b->name + 1, b->n, ns / b->n, "-");
+	}
 }
 
 /*

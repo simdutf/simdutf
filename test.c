@@ -3,7 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if defined(__APPLE__)
+typedef uint16_t char16_t;
+#else
 #include <uchar.h>
+#endif
 
 #include "utf16fix.h"
 

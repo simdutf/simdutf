@@ -1,6 +1,12 @@
 #include <stdbool.h>
-#include <uchar.h>
+#include <stddef.h>
+#include <stdint.h>
 
+#if defined(__APPLE__)
+typedef uint16_t char16_t;
+#else
+#include <uchar.h>
+#endif
 /*
  * Copy UTF-16 encoded text in the native byte order from the second
  * argument to the first argument, replacing illegally sequenced

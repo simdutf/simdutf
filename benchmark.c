@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#if defined(__APPLE__)
+typedef uint16_t char16_t;
+#else
 #include <uchar.h>
+#endif
 #include <unistd.h>
 
 #include "benchmark.h"

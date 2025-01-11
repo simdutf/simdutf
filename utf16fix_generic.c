@@ -1,6 +1,10 @@
 #include <stdbool.h>
 #include <stdint.h>
+#if defined(__APPLE__)
+typedef uint16_t char16_t;
+#else
 #include <uchar.h>
+#endif
 
 #include "utf16fix.h"
 

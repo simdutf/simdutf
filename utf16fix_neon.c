@@ -6,25 +6,17 @@
 
 /*
  * Returns if a vector of type uint8x16_t is all zero.
- * Note that this only works reliably for vectors where each
- * byte is either 0 or -1.
  */
 static int
-veq_zero(uint8x16_t v)
+veq_non_zero(uint8x16_t v)
 {
-#ifdef __arm__
-	union { uint8x8_t v; double d; } narrowed;
-
-	/* narrow each byte to a nibble */
-	narrowed.v = vshrn_n_u16(vreinterpretq_u16_u8(v), 4);
-
-	return (narrowed.d == 0.0);
-#else /* AArch64 */
-	uint8x8_t narrowed;
-
-	/* check if that vector is all zero */
-	return (vdupd_lane_f64(vreinterpret_f64_u16(narrowed), 0) == 0.0);
-#endif
+	// might compile to two instructions:
+	//    umaxv   s0, v0.4s
+	//    fmov    w0, s0
+	// On Apple hardware, they both have a latency of 3 cycles, with a throughput of 
+	// four instructions per cycle. So that's 6 cycles of latency (!!!) for the two
+	// instructions. A narrowing shift has the same latency and throughput.
+	return vmaxvq_u32(vreinterpretq_u32_u8(v));
 }
 
 /*
@@ -51,7 +43,7 @@ utf16fix_block(char16_t *out, const char16_t *in, bool inplace)
 	block_is_low = vceqq_u8(block_masked, vdupq_n_u8(0xdc));
 
 	illseq = veorq_u8(lb_is_high, block_is_low);
-	if (!veq_zero(illseq)) {
+	if (veq_non_zero(illseq)) {
 		uint8x16_t lb_illseq, block_illseq;
 		char16_t lb;
 		int ill;
