@@ -31,12 +31,13 @@ TEST(issue633) {
   const auto outlen =
       implementation.latin1_length_from_utf8((const char *)data, data_len);
   ASSERT_EQUAL(outlen, 0);
-  char dataout[] = {};
+  char dataout[1] = {};
   const auto r = implementation.convert_utf8_to_latin1_with_errors(
       (const char*)data, data_len, dataout);
   ASSERT_EQUAL(r.count, 0);
   ASSERT_EQUAL(r.error, simdutf::error_code::TOO_LONG);
 }
+
 // triggered by https://oss-fuzz.com/testcase-detail/4942454003924992,
 // see https://issues.oss-fuzz.com/issues/385406635
 TEST(ossfuzz_385406635) {
