@@ -5,12 +5,16 @@ std::pair<const char32_t *, char16_t *>
 avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
                               char16_t *utf16_output) {
   const char32_t *end = buf + len;
-  __mmask16 forbidden_bytemask = 0;
+  __mmask32 forbidden_bytemask = 0;
   const __m512i v_00000000 = _mm512_setzero_si512();
   const __m512i v_ffff0000 = _mm512_set1_epi32((int32_t)0xffff0000);
   const __m512i v_f800 = _mm512_set1_epi32((uint32_t)0xf800);
   const __m512i v_d800 = _mm512_set1_epi32((uint32_t)0xd800);
   const __m512i v_10ffff = _mm512_set1_epi32(0x10FFFF);
+  const __m512i v_10000 = _mm512_set1_epi32(0x10000);
+  const __m512i v_3ff0000 = _mm512_set1_epi32(0x3FF0000);
+  const __m512i v_3ff = _mm512_set1_epi32(0x3FF);
+  const __m512i v_dc00d800 = _mm512_set1_epi32((int32_t)0xDC00D800);
 
   while (end - buf >= std::ptrdiff_t(16)) {
     __m512i in = _mm512_loadu_si512((__m512i *)buf);
@@ -39,8 +43,8 @@ avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
       // no errors. Thus we need a output_mask which has the structure b_i = 1,
       // b_i+1 = !saturation_bitmask_i
       const __mmask32 output_mask = ~_pdep_u32(saturation_bitmask, 0xAAAAAAAA);
-      const __mmask16 surrogate_bitmask = ~saturation_bitmask;
-      __mmask16 error = _mm512_mask_cmpeq_epi32_mask(
+      const __mmask16 surrogate_bitmask = __mmask16(~saturation_bitmask);
+      __mmask32 error = _mm512_mask_cmpeq_epi32_mask(
           saturation_bitmask, _mm512_and_si512(in, v_f800), v_d800);
       error |= _mm512_mask_cmpgt_epu32_mask(surrogate_bitmask, in, v_10ffff);
       if (simdutf_unlikely(error)) {
@@ -51,17 +55,13 @@ avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
       // into two 16 bit words corresponding to high_surrogate and
       // low_surrogate. Once the bits are unpacked and merged, the output will
       // be compressed as per output_mask.
-      in = _mm512_mask_sub_epi32(in, surrogate_bitmask, in,
-                                 _mm512_set1_epi32(0x10000));
+      in = _mm512_mask_sub_epi32(in, surrogate_bitmask, in, v_10000);
       v1 = _mm512_mask_slli_epi32(in, surrogate_bitmask, in, 16);
-      v1 = _mm512_mask_and_epi32(in, surrogate_bitmask, v1,
-                                 _mm512_set1_epi32(0x3FF0000));
+      v1 = _mm512_mask_and_epi32(in, surrogate_bitmask, v1, v_3ff0000);
       v2 = _mm512_mask_srli_epi32(in, surrogate_bitmask, in, 10);
-      v2 = _mm512_mask_and_epi32(in, surrogate_bitmask, v2,
-                                 _mm512_set1_epi32(0x3FF));
+      v2 = _mm512_mask_and_epi32(in, surrogate_bitmask, v2, v_3ff);
       v = _mm512_or_si512(v1, v2);
-      in = _mm512_mask_add_epi32(in, surrogate_bitmask, v,
-                                 _mm512_set1_epi32(0xDC00D800));
+      in = _mm512_mask_add_epi32(in, surrogate_bitmask, v, v_dc00d800);
       if (big_endian) {
         const __m512i swap_512 = _mm512_set_epi8(
             14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1, 14, 15, 12,
@@ -103,25 +103,22 @@ avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
       const __mmask32 output_max_mask = (1 << (remaining_len * 2)) - 1;
       const __mmask32 output_mask =
           (~_pdep_u32(saturation_bitmask, 0xAAAAAAAA)) & output_max_mask;
-      const __mmask16 surrogate_bitmask = (~saturation_bitmask) & input_mask;
-      __mmask16 error = _mm512_mask_cmpeq_epi32_mask(
+      const __mmask16 surrogate_bitmask =
+          __mmask16(~saturation_bitmask) & input_mask;
+      __mmask32 error = _mm512_mask_cmpeq_epi32_mask(
           saturation_bitmask, _mm512_and_si512(in, v_f800), v_d800);
       error |= _mm512_mask_cmpgt_epu32_mask(surrogate_bitmask, in, v_10ffff);
       if (simdutf_unlikely(error)) {
         return std::make_pair(nullptr, utf16_output);
       }
       __m512i v1, v2, v;
-      in = _mm512_mask_sub_epi32(in, surrogate_bitmask, in,
-                                 _mm512_set1_epi32(0x10000));
+      in = _mm512_mask_sub_epi32(in, surrogate_bitmask, in, v_10000);
       v1 = _mm512_mask_slli_epi32(in, surrogate_bitmask, in, 16);
-      v1 = _mm512_mask_and_epi32(in, surrogate_bitmask, v1,
-                                 _mm512_set1_epi32(0x3FF0000));
+      v1 = _mm512_mask_and_epi32(in, surrogate_bitmask, v1, v_3ff0000);
       v2 = _mm512_mask_srli_epi32(in, surrogate_bitmask, in, 10);
-      v2 = _mm512_mask_and_epi32(in, surrogate_bitmask, v2,
-                                 _mm512_set1_epi32(0x3FF));
+      v2 = _mm512_mask_and_epi32(in, surrogate_bitmask, v2, v_3ff);
       v = _mm512_or_si512(v1, v2);
-      in = _mm512_mask_add_epi32(in, surrogate_bitmask, v,
-                                 _mm512_set1_epi32(0xDC00D800));
+      in = _mm512_mask_add_epi32(in, surrogate_bitmask, v, v_dc00d800);
       if (big_endian) {
         const __m512i swap_512 = _mm512_set_epi8(
             14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1, 14, 15, 12,
