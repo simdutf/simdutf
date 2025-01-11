@@ -16,11 +16,14 @@ veq_zero(uint8x16_t v)
 	union { uint8x8_t v; double d; } narrowed;
 
 	/* narrow each byte to a nibble */
-	narrowed.v = vshrn_n_u16(vreinterpretq_u16_u8(v), 4);
+	narrowed.v = vshrnnarrowed.v = vshrn_n_u16(vreinterpretq_u16_u8(v), 4);
 
 	return (narrowed.d == 0.0);
 #else /* AArch64 */
 	uint8x8_t narrowed;
+
+	/* narrow each byte to a nibble */
+	narrowed = vshrn_n_u16(vreinterpretq_u16_u8(v), 4);
 
 	/* check if that vector is all zero */
 	return (vdupd_lane_f64(vreinterpret_f64_u16(narrowed), 0) == 0.0);
