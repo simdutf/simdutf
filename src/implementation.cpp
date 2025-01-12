@@ -28,24 +28,6 @@ template <typename T> std::string toBinaryString(T b) {
 } // namespace
 } // namespace simdutf
 
-// Implementations
-// The best choice should always come first!
-#include "simdutf/arm64.h"
-#include "simdutf/icelake.h"
-#include "simdutf/haswell.h"
-#include "simdutf/westmere.h"
-#include "simdutf/ppc64.h"
-#include "simdutf/rvv.h"
-#include "simdutf/lsx.h"
-#include "simdutf/lasx.h"
-#include "simdutf/fallback.h" // have it always last.
-
-#include "scalar/utf8.h"
-#include "scalar/utf16.h"
-#include "scalar/utf32.h"
-#include "scalar/base64.h"
-#include "scalar/latin1_to_utf8/latin1_to_utf8.h"
-
 namespace simdutf {
 bool implementation::supported_by_runtime_system() const {
   uint32_t required_instruction_sets = this->required_instruction_sets();

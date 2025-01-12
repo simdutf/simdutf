@@ -1,15 +1,3 @@
-#include "tables/utf8_to_utf16_tables.h"
-#include "scalar/utf8_to_utf16/valid_utf8_to_utf16.h"
-#include "scalar/utf8_to_utf16/utf8_to_utf16.h"
-#include "scalar/utf8_to_utf32/valid_utf8_to_utf32.h"
-#include "scalar/utf8_to_utf32/utf8_to_utf32.h"
-#include "tables/utf16_to_utf8_tables.h"
-#include "scalar/utf8.h"
-#include "scalar/utf16.h"
-#include "scalar/latin1.h"
-#include "scalar/utf8_to_latin1/valid_utf8_to_latin1.h"
-#include "scalar/utf8_to_latin1/utf8_to_latin1.h"
-
 #include "simdutf/haswell/begin.h"
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {

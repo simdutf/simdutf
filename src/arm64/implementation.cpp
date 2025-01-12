@@ -152,9 +152,6 @@ convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in, size_t shufutf8_idx) {
 #include "generic/utf8_to_latin1/utf8_to_latin1.h"
 #include "generic/utf8_to_latin1/valid_utf8_to_latin1.h"
 
-// placeholder scalars
-#include "scalar/latin1.h"
-
 //
 // Implementation-specific overrides
 //
