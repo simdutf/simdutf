@@ -17,7 +17,7 @@ avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
   const __m512i v_dc00d800 = _mm512_set1_epi32((int32_t)0xDC00D800);
 
   while (end - buf >= std::ptrdiff_t(16)) {
-    __m512i in = _mm512_loadu_si512((__m512i *)buf);
+    __m512i in = _mm512_loadu_si512(buf);
 
     // no bits set above 16th bit <=> can pack to UTF16 without surrogate pairs
     const __mmask16 saturation_bitmask =
@@ -40,8 +40,8 @@ avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
     } else {
       // saturation_bitmask == 1 words will generate 1 utf16 char,
       // and saturation_bitmask == 0 words will generate 2 utf16 chars assuming
-      // no errors. Thus we need a output_mask which has the structure b_i = 1,
-      // b_i+1 = !saturation_bitmask_i
+      // no errors. Thus we need a output_mask which has the structure b_2i = 1,
+      // b_2i+1 = !saturation_bitmask_i
       const __mmask32 output_mask = ~_pdep_u32(saturation_bitmask, 0xAAAAAAAA);
       const __mmask16 surrogate_bitmask = __mmask16(~saturation_bitmask);
       __mmask32 error = _mm512_mask_cmpeq_epi32_mask(
@@ -70,8 +70,7 @@ avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
             2, 3, 0, 1);
         in = _mm512_shuffle_epi8(in, swap_512);
       }
-      _mm512_mask_compressstoreu_epi16((__m512i *)utf16_output, output_mask,
-                                       in);
+      _mm512_mask_compressstoreu_epi16(utf16_output, output_mask, in);
       utf16_output += _mm_popcnt_u32(output_mask);
       buf += 16;
     }
@@ -80,7 +79,7 @@ avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
   size_t remaining_len = size_t(end - buf);
   if (remaining_len) {
     __mmask16 input_mask = __mmask16((1 << remaining_len) - 1);
-    __m512i in = _mm512_maskz_loadu_epi32(input_mask, (__m512i *)buf);
+    __m512i in = _mm512_maskz_loadu_epi32(input_mask, buf);
     const __mmask16 saturation_bitmask =
         _mm512_cmpeq_epi32_mask(_mm512_and_si512(in, v_ffff0000), v_00000000) &
         input_mask;
@@ -95,8 +94,7 @@ avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
             4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
         utf16_packed = _mm256_shuffle_epi8(utf16_packed, swap);
       }
-      _mm256_mask_storeu_epi16((__m256i *)utf16_output, input_mask,
-                               utf16_packed);
+      _mm256_mask_storeu_epi16(utf16_output, input_mask, utf16_packed);
       utf16_output += remaining_len;
       buf += remaining_len;
     } else {
@@ -127,8 +125,7 @@ avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
             2, 3, 0, 1);
         in = _mm512_shuffle_epi8(in, swap_512);
       }
-      _mm512_mask_compressstoreu_epi16((__m512i *)utf16_output, output_mask,
-                                       in);
+      _mm512_mask_compressstoreu_epi16(utf16_output, output_mask, in);
       utf16_output += _mm_popcnt_u32(output_mask);
       buf += remaining_len;
     }
