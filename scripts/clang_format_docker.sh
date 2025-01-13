@@ -17,7 +17,7 @@ then
 fi
 
 # Check if Git is installed
-if ! command -v git &> /dev/null
+if ! command -v git 2>&1 >/dev/null
 then
     echo "Error: Git not found. Please install Git to use this script."
     echo "You can get Git from:"
