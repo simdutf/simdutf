@@ -19,26 +19,6 @@ simdutf_warn_unused size_t implementation::latin1_length_from_utf8(
   return utf32_length_from_utf8(src, len);
 }
 
-simdutf_warn_unused size_t
-implementation::latin1_length_from_utf16(size_t len) const noexcept {
-  return len;
-}
-
-simdutf_warn_unused size_t
-implementation::latin1_length_from_utf32(size_t len) const noexcept {
-  return len;
-}
-
-simdutf_warn_unused size_t
-implementation::utf16_length_from_latin1(size_t len) const noexcept {
-  return len;
-}
-
-simdutf_warn_unused size_t
-implementation::utf32_length_from_latin1(size_t len) const noexcept {
-  return len;
-}
-
 simdutf_warn_unused size_t implementation::utf32_length_from_utf8(
     const char *src, size_t len) const noexcept {
   size_t count = 0;
