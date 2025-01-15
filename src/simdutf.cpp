@@ -1,7 +1,6 @@
 #include "simdutf.h"
 // We include base64_tables once.
 #include "tables/base64_tables.h"
-#include "implementation.cpp"
 #include "encoding_types.cpp"
 #include "error.cpp"
 // The large tables should be included once and they
@@ -9,6 +8,21 @@
 #include "tables/utf8_to_utf16_tables.h"
 #include "tables/utf16_to_utf8_tables.h"
 // End of tables.
+
+// Implementations: they need to be setup before including
+// scalar/* code, as the scalar code is sometimes enabled
+// only for peculiar build targets.
+
+// The best choice should always come first!
+#include "simdutf/arm64.h"
+#include "simdutf/icelake.h"
+#include "simdutf/haswell.h"
+#include "simdutf/westmere.h"
+#include "simdutf/ppc64.h"
+#include "simdutf/rvv.h"
+#include "simdutf/lsx.h"
+#include "simdutf/lasx.h"
+#include "simdutf/fallback.h" // have it always last.
 
 // The scalar routines should be included once.
 #include "scalar/ascii.h"
@@ -47,6 +61,8 @@
 #include "scalar/utf8_to_latin1/valid_utf8_to_latin1.h"
 #include "scalar/utf16_to_latin1/valid_utf16_to_latin1.h"
 #include "scalar/utf32_to_latin1/valid_utf32_to_latin1.h"
+
+#include "implementation.cpp"
 
 SIMDUTF_PUSH_DISABLE_WARNINGS
 SIMDUTF_DISABLE_UNDESIRED_WARNINGS

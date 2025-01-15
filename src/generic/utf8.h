@@ -1,5 +1,3 @@
-#include "scalar/utf8.h"
-
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
