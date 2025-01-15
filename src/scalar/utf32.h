@@ -60,11 +60,6 @@ inline size_t utf16_length_from_utf32(const char32_t *buf, size_t len) {
   return counter;
 }
 
-inline size_t latin1_length_from_utf32(size_t len) {
-  // We are not BOM aware.
-  return len; // a utf32 codepoint will always represent 1 latin1 character
-}
-
 inline simdutf_warn_unused uint32_t swap_bytes(const uint32_t word) {
   return ((word >> 24) & 0xff) |      // move byte 3 to byte 0
          ((word << 8) & 0xff0000) |   // move byte 1 to byte 2

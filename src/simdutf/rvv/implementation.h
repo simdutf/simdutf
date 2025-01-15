@@ -179,14 +179,6 @@ public:
                                                     size_t len) const noexcept;
   simdutf_warn_unused size_t latin1_length_from_utf8(const char *buf,
                                                      size_t len) const noexcept;
-  simdutf_warn_unused size_t
-  latin1_length_from_utf16(size_t len) const noexcept;
-  simdutf_warn_unused size_t
-  latin1_length_from_utf32(size_t len) const noexcept;
-  simdutf_warn_unused size_t
-  utf32_length_from_latin1(size_t len) const noexcept;
-  simdutf_warn_unused size_t
-  utf16_length_from_latin1(size_t len) const noexcept;
   simdutf_warn_unused size_t utf8_length_from_latin1(const char *buf,
                                                      size_t len) const noexcept;
   simdutf_warn_unused size_t maximal_binary_length_from_base64(

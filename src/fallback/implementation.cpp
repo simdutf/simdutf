@@ -371,16 +371,6 @@ simdutf_warn_unused size_t implementation::latin1_length_from_utf8(
   return scalar::utf8::count_code_points(buf, len);
 }
 
-simdutf_warn_unused size_t
-implementation::latin1_length_from_utf16(size_t length) const noexcept {
-  return scalar::utf16::latin1_length_from_utf16(length);
-}
-
-simdutf_warn_unused size_t
-implementation::latin1_length_from_utf32(size_t length) const noexcept {
-  return length;
-}
-
 simdutf_warn_unused size_t implementation::utf8_length_from_latin1(
     const char *input, size_t length) const noexcept {
   size_t answer = length;
@@ -434,11 +424,6 @@ simdutf_warn_unused size_t implementation::utf32_length_from_utf16be(
   return scalar::utf16::utf32_length_from_utf16<endianness::BIG>(input, length);
 }
 
-simdutf_warn_unused size_t
-implementation::utf16_length_from_latin1(size_t length) const noexcept {
-  return scalar::latin1::utf16_length_from_latin1(length);
-}
-
 simdutf_warn_unused size_t implementation::utf16_length_from_utf8(
     const char *input, size_t length) const noexcept {
   return scalar::utf8::utf16_length_from_utf8(input, length);
@@ -452,11 +437,6 @@ simdutf_warn_unused size_t implementation::utf8_length_from_utf32(
 simdutf_warn_unused size_t implementation::utf16_length_from_utf32(
     const char32_t *input, size_t length) const noexcept {
   return scalar::utf32::utf16_length_from_utf32(input, length);
-}
-
-simdutf_warn_unused size_t
-implementation::utf32_length_from_latin1(size_t length) const noexcept {
-  return scalar::latin1::utf32_length_from_latin1(length);
 }
 
 simdutf_warn_unused size_t implementation::utf32_length_from_utf8(

@@ -3980,7 +3980,9 @@ public:
    * @return the number of bytes required to encode the UTF-16 string as Latin1
    */
   simdutf_warn_unused virtual size_t
-  utf16_length_from_latin1(size_t length) const noexcept = 0;
+  utf16_length_from_latin1(size_t length) const noexcept {
+    return length;
+  }
 
   /**
    * Convert possibly broken UTF-32 string into UTF-16LE string.
@@ -4156,7 +4158,9 @@ public:
    * @return the number of bytes required to encode the UTF-32 string as Latin1
    */
   simdutf_warn_unused virtual size_t
-  latin1_length_from_utf32(size_t length) const noexcept = 0;
+  latin1_length_from_utf32(size_t length) const noexcept {
+    return length;
+  }
 
   /**
    * Compute the number of bytes that this UTF-8 string would require in Latin1
@@ -4188,7 +4192,9 @@ public:
    * Latin1
    */
   simdutf_warn_unused virtual size_t
-  latin1_length_from_utf16(size_t length) const noexcept = 0;
+  latin1_length_from_utf16(size_t length) const noexcept {
+    return length;
+  }
 
   /**
    * Compute the number of two-byte code units that this UTF-32 string would
@@ -4216,7 +4222,9 @@ public:
    * @return the number of bytes required to encode the UTF-32 string as Latin1
    */
   simdutf_warn_unused virtual size_t
-  utf32_length_from_latin1(size_t length) const noexcept = 0;
+  utf32_length_from_latin1(size_t length) const noexcept {
+    return length;
+  }
 
   /**
    * Compute the number of bytes that this UTF-16LE string would require in
