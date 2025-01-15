@@ -53,13 +53,53 @@ utf16fix_block(char16_t *out, const char16_t *in, bool in_place)
 		_mm512_storeu_si512((void *)out, block);
 }
 
+/*
+ * Special case for inputs of 0--32 bytes.  Works for both in-place and out-of-place
+ * operation.
+ */
+void
+utf16fix_runt(char16_t *out, const char16_t *in, size_t n)
+{
+	__m512i lookback, block, lb_masked, block_masked;
+	__mmask32 lb_is_high, block_is_low, illseq;
+	unsigned long long mask;
+
+	mask = (1ULL << n) - 1;
+	lookback = _mm512_maskz_loadu_epi16(_cvtmask32_u32(mask << 1), (const void *)(in - 1));
+	block = _mm512_maskz_loadu_epi16(_cvtmask32_u32(mask), (const void *)in);
+	lb_masked = _mm512_and_epi32(lookback, _mm512_set1_epi16(0xfc00));
+	block_masked = _mm512_and_epi32(block, _mm512_set1_epi16(0xfc00));
+
+	lb_is_high = _mm512_cmpeq_epi16_mask(lb_masked, _mm512_set1_epi16(0xd800));
+	block_is_low = _mm512_cmpeq_epi16_mask(block_masked, _mm512_set1_epi16(0xdc00));
+	illseq = _kxor_mask32(lb_is_high, block_is_low);
+	if (!_ktestz_mask32_u8(illseq, illseq)) {
+		__mmask32 lb_illseq, block_illseq;
+
+		/* compute the cause of the illegal sequencing */
+		lb_illseq = _kandn_mask32(block_is_low, lb_is_high);
+		block_illseq = _kor_mask32(
+			_kandn_mask32(lb_is_high, block_is_low),
+			_kshiftri_mask32(lb_illseq, 1));
+
+		/* fix illegal sequencing in the main block */
+		_mm512_mask_storeu_epi16((void *)out, _cvtmask32_u32(mask),
+			_mm512_mask_blend_epi16(block_illseq, block, _mm512_set1_epi16(0xfffd)));
+	} else
+		_mm512_mask_storeu_epi16((void *)out, _cvtmask32_u32(mask), block);
+
+	out[n - 1] = is_high_surrogate(out[n - 1]) ? 0xfffd : out[n - 1];
+}
+
 void
 utf16fix_avx512(char16_t *out, const char16_t *in, size_t n)
 {
 	size_t i;
 
-	if (n < 33) {
-		utf16fix_generic(out, in, n);
+	if (n == 0)
+		return;
+	else if (n < 33) {
+		utf16fix_runt(out, in, n);
 		return;
 	}
 
