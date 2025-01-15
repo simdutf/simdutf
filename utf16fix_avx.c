@@ -61,7 +61,7 @@ utf16fix_avx(char16_t *out, const char16_t *in, size_t n)
 	size_t i;
 
 	if (n < 17) {
-		utf16fix_generic(out, in, n);
+		utf16fix_sse(out, in, n);
 		return;
 	}
 
