@@ -55,7 +55,7 @@ sse_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
       // Fallback to scalar code for handling errors
       for (int k = 0; k < 8; k++) {
         uint16_t word = !match_system(big_endian)
-                            ? scalar::utf16::swap_bytes(buf[k])
+                            ? scalar::u16_swap_bytes(buf[k])
                             : buf[k];
         if (word <= 0xff) {
           *latin1_output++ = char(word);

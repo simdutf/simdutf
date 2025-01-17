@@ -448,7 +448,7 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
                          (uint32_t(uint8_t(buffer_start[2])) << 1 * 6) +
                          (uint32_t(uint8_t(buffer_start[3])) << 0 * 6))
                         << 8;
-      triple = scalar::utf32::swap_bytes(triple);
+      triple = scalar::u32_swap_bytes(triple);
       std::memcpy(dst, &triple, 4);
 
       dst += 3;
@@ -460,7 +460,7 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
                          (uint32_t(uint8_t(buffer_start[2])) << 1 * 6) +
                          (uint32_t(uint8_t(buffer_start[3])) << 0 * 6))
                         << 8;
-      triple = scalar::utf32::swap_bytes(triple);
+      triple = scalar::u32_swap_bytes(triple);
       std::memcpy(dst, &triple, 3);
 
       dst += 3;

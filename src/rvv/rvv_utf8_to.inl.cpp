@@ -1,3 +1,4 @@
+#if SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_UTF32)
 template <typename Tdst, simdutf_ByteFlip bflip, bool validate = true>
 simdutf_really_inline static size_t rvv_utf8_to_common(char const *src,
                                                        size_t len, Tdst *dst) {
@@ -270,7 +271,9 @@ simdutf_really_inline static size_t rvv_utf8_to_common(char const *src,
     return 0;
   return (size_t)(dst - beg) + ret;
 }
+#endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_UTF32)
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(
     const char *src, size_t len, char *dst) const noexcept {
   const char *beg = dst;
@@ -359,7 +362,9 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_latin1(
   }
   return dst - beg;
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16le(
     const char *src, size_t len, char16_t *dst) const noexcept {
   return rvv_utf8_to_common<uint16_t, simdutf_ByteFlip::NONE>(src, len,
@@ -409,7 +414,9 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16be(
     return rvv_utf8_to_common<uint16_t, simdutf_ByteFlip::V, false>(
         src, len, (uint16_t *)dst);
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf32(
     const char *src, size_t len, char32_t *dst) const noexcept {
   return rvv_utf8_to_common<uint32_t, simdutf_ByteFlip::NONE>(src, len,
@@ -429,3 +436,4 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(
   return rvv_utf8_to_common<uint32_t, simdutf_ByteFlip::NONE, false>(
       src, len, (uint32_t *)dst);
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32

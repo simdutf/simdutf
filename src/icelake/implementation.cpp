@@ -9,25 +9,69 @@ namespace {
 #ifndef SIMDUTF_ICELAKE_H
   #error "icelake.h must be included"
 #endif
-#include "icelake/icelake_utf8_common.inl.cpp"
 #include "icelake/icelake_macros.inl.cpp"
-#include "icelake/icelake_from_valid_utf8.inl.cpp"
+#include "icelake/icelake_common.inl.cpp"
+#if SIMDUTF_FEATURE_UTF8
+#include "icelake/icelake_utf8_common.inl.cpp"
+#endif // SIMDUTF_FEATURE_UTF8
+
+#if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 #include "icelake/icelake_utf8_validation.inl.cpp"
+#endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
+
+#if SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_LATIN1)
+#include "icelake/icelake_from_valid_utf8.inl.cpp"
 #include "icelake/icelake_from_utf8.inl.cpp"
+#endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_LATIN1)
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 #include "icelake/icelake_convert_utf8_to_latin1.inl.cpp"
 #include "icelake/icelake_convert_valid_utf8_to_latin1.inl.cpp"
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
+
+#if SIMDUTF_FEATURE_UTF16
 #include "icelake/icelake_convert_utf16_to_latin1.inl.cpp"
+#endif // SIMDUTF_FEATURE_UTF16
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 #include "icelake/icelake_convert_utf16_to_utf8.inl.cpp"
+#include "icelake/icelake_convert_utf8_to_utf16.inl.cpp"
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
+
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 #include "icelake/icelake_convert_utf16_to_utf32.inl.cpp"
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
+
+#if SIMDUTF_FEATURE_UTF32
 #include "icelake/icelake_convert_utf32_to_latin1.inl.cpp"
+#endif // SIMDUTF_FEATURE_UTF32
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 #include "icelake/icelake_convert_utf32_to_utf8.inl.cpp"
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
+
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 #include "icelake/icelake_convert_utf32_to_utf16.inl.cpp"
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
+
+#if SIMDUTF_FEATURE_ASCII
 #include "icelake/icelake_ascii_validation.inl.cpp"
+#endif // SIMDUTF_FEATURE_ASCII
+#if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 #include "icelake/icelake_utf32_validation.inl.cpp"
+#endif // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
+#if SIMDUTF_FEATURE_UTF8
 #include "icelake/icelake_convert_latin1_to_utf8.inl.cpp"
+#endif // SIMDUTF_FEATURE_UTF8
+#if SIMDUTF_FEATURE_UTF16
 #include "icelake/icelake_convert_latin1_to_utf16.inl.cpp"
+#endif // SIMDUTF_FEATURE_UTF16
+#if SIMDUTF_FEATURE_UTF32
 #include "icelake/icelake_convert_latin1_to_utf32.inl.cpp"
+#endif // SIMDUTF_FEATURE_UTF32
+#if SIMDUTF_FEATURE_BASE64
 #include "icelake/icelake_base64.inl.cpp"
+#endif // SIMDUTF_FEATURE_BASE64
 
 #include <cstdint>
 
@@ -38,6 +82,7 @@ namespace {
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 
+#if SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_warn_unused int
 implementation::detect_encodings(const char *input,
                                  size_t length) const noexcept {
@@ -116,7 +161,9 @@ implementation::detect_encodings(const char *input,
   }
   return out;
 }
+#endif // SIMDUTF_FEATURE_DETECT_ENCODING
 
+#if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_warn_unused bool
 implementation::validate_utf8(const char *buf, size_t len) const noexcept {
   if (simdutf_unlikely(len == 0)) {
@@ -137,7 +184,9 @@ implementation::validate_utf8(const char *buf, size_t len) const noexcept {
   checker.check_eof();
   return !checker.errors();
 }
+#endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
+#if SIMDUTF_FEATURE_UTF8
 simdutf_warn_unused result implementation::validate_utf8_with_errors(
     const char *buf, size_t len) const noexcept {
   if (simdutf_unlikely(len == 0)) {
@@ -180,7 +229,9 @@ simdutf_warn_unused result implementation::validate_utf8_with_errors(
   }
   return result(error_code::SUCCESS, len);
 }
+#endif // SIMDUTF_FEATURE_UTF8
 
+#if SIMDUTF_FEATURE_ASCII
 simdutf_warn_unused bool
 implementation::validate_ascii(const char *buf, size_t len) const noexcept {
   return icelake::validate_ascii(buf, len);
@@ -210,7 +261,9 @@ simdutf_warn_unused result implementation::validate_ascii_with_errors(
   }
   return result(error_code::SUCCESS, len);
 }
+#endif // SIMDUTF_FEATURE_ASCII
 
+#if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_warn_unused bool
 implementation::validate_utf16le(const char16_t *buf,
                                  size_t len) const noexcept {
@@ -258,7 +311,9 @@ implementation::validate_utf16le(const char16_t *buf,
   }
   return true;
 }
+#endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
+#if SIMDUTF_FEATURE_UTF16
 simdutf_warn_unused bool
 implementation::validate_utf16be(const char16_t *buf,
                                  size_t len) const noexcept {
@@ -431,12 +486,16 @@ simdutf_warn_unused result implementation::validate_utf16be_with_errors(
   }
   return result(error_code::SUCCESS, len);
 }
+#endif // SIMDUTF_FEATURE_UTF16
 
+#if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_warn_unused bool
 implementation::validate_utf32(const char32_t *buf, size_t len) const noexcept {
   return icelake::validate_utf32(buf, len);
 }
+#endif // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 
+#if SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused result implementation::validate_utf32_with_errors(
     const char32_t *buf, size_t len) const noexcept {
   const char32_t *buf_orig = buf;
@@ -489,12 +548,16 @@ simdutf_warn_unused result implementation::validate_utf32_with_errors(
 
   return result(error_code::SUCCESS, len);
 }
+#endif // SIMDUTF_FEATURE_UTF32
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf8(
     const char *buf, size_t len, char *utf8_output) const noexcept {
   return icelake::latin1_to_utf8_avx512_start(buf, len, utf8_output);
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf16le(
     const char *buf, size_t len, char16_t *utf16_output) const noexcept {
   return icelake_convert_latin1_to_utf16<endianness::LITTLE>(buf, len,
@@ -506,13 +569,17 @@ simdutf_warn_unused size_t implementation::convert_latin1_to_utf16be(
   return icelake_convert_latin1_to_utf16<endianness::BIG>(buf, len,
                                                           utf16_output);
 }
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 
+#if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(
     const char *buf, size_t len, char32_t *utf32_output) const noexcept {
   avx512_convert_latin1_to_utf32(buf, len, utf32_output);
   return len;
 }
+#endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(
     const char *buf, size_t len, char *latin1_output) const noexcept {
   return icelake::utf8_to_latin1_avx512(buf, len, latin1_output);
@@ -540,7 +607,9 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_latin1(
     const char *buf, size_t len, char *latin1_output) const noexcept {
   return icelake::valid_utf8_to_latin1_avx512(buf, len, latin1_output);
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16le(
     const char *buf, size_t len, char16_t *utf16_output) const noexcept {
   utf8_to_utf16_result ret =
@@ -639,7 +708,9 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16be(
 
   return saved_bytes;
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf32(
     const char *buf, size_t len, char32_t *utf32_out) const noexcept {
   uint32_t *utf32_output = reinterpret_cast<uint32_t *>(utf32_out);
@@ -771,7 +842,9 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(
 
   return saved_bytes;
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::convert_utf16le_to_latin1(
     const char16_t *buf, size_t len, char *latin1_output) const noexcept {
   return icelake_convert_utf16_to_latin1<endianness::LITTLE>(buf, len,
@@ -811,7 +884,9 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16le_to_latin1(
   // optimization opportunity: implement custom function
   return convert_utf16le_to_latin1(buf, len, latin1_output);
 }
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 simdutf_warn_unused size_t implementation::convert_utf16le_to_utf8(
     const char16_t *buf, size_t len, char *utf8_output) const noexcept {
   size_t outlen;
@@ -871,7 +946,9 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_utf8(
     const char16_t *buf, size_t len, char *utf8_output) const noexcept {
   return convert_utf16be_to_utf8(buf, len, utf8_output);
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
+#if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::convert_utf32_to_latin1(
     const char32_t *buf, size_t len, char *latin1_output) const noexcept {
   return icelake_convert_utf32_to_latin1(buf, len, latin1_output);
@@ -887,7 +964,9 @@ simdutf_warn_unused size_t implementation::convert_valid_utf32_to_latin1(
     const char32_t *buf, size_t len, char *latin1_output) const noexcept {
   return icelake_convert_utf32_to_latin1(buf, len, latin1_output);
 }
+#endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(
     const char32_t *buf, size_t len, char *utf8_output) const noexcept {
   std::pair<const char32_t *, char *> ret =
@@ -933,7 +1012,9 @@ simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf8(
     const char32_t *buf, size_t len, char *utf8_output) const noexcept {
   return convert_utf32_to_utf8(buf, len, utf8_output);
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf16le(
     const char32_t *buf, size_t len, char16_t *utf16_output) const noexcept {
   std::pair<const char32_t *, char16_t *> ret =
@@ -1168,7 +1249,9 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_utf32(
   }
   return saved_bytes;
 }
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
+#if SIMDUTF_FEATURE_UTF16
 void implementation::change_endianness_utf16(const char16_t *input,
                                              size_t length,
                                              char16_t *output) const noexcept {
@@ -1245,7 +1328,9 @@ simdutf_warn_unused size_t implementation::count_utf16be(
   return count + scalar::utf16::count_code_points<endianness::BIG>(
                      ptr, length - (ptr - input));
 }
+#endif // SIMDUTF_FEATURE_UTF16
 
+#if SIMDUTF_FEATURE_UTF8
 simdutf_warn_unused size_t
 implementation::count_utf8(const char *input, size_t length) const noexcept {
   const uint8_t *str = reinterpret_cast<const uint8_t *>(input);
@@ -1307,12 +1392,16 @@ implementation::count_utf8(const char *input, size_t length) const noexcept {
   return answer + scalar::utf8::count_code_points(
                       reinterpret_cast<const char *>(str + i), length - i);
 }
+#endif // SIMDUTF_FEATURE_UTF8
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::latin1_length_from_utf8(
     const char *buf, size_t len) const noexcept {
   return count_utf8(buf, len);
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 simdutf_warn_unused size_t implementation::utf8_length_from_utf16le(
     const char16_t *input, size_t length) const noexcept {
   const char16_t *ptr = input;
@@ -1393,7 +1482,9 @@ simdutf_warn_unused size_t implementation::utf8_length_from_utf16be(
   return count + scalar::utf16::utf8_length_from_utf16<endianness::BIG>(
                      ptr, length - (ptr - input));
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::utf32_length_from_utf16le(
     const char16_t *input, size_t length) const noexcept {
   return implementation::count_utf16le(input, length);
@@ -1403,7 +1494,9 @@ simdutf_warn_unused size_t implementation::utf32_length_from_utf16be(
     const char16_t *input, size_t length) const noexcept {
   return implementation::count_utf16be(input, length);
 }
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::utf8_length_from_latin1(
     const char *input, size_t length) const noexcept {
   const uint8_t *str = reinterpret_cast<const uint8_t *>(input);
@@ -1479,7 +1572,9 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(
   return answer + scalar::latin1::utf8_length_from_latin1(
                       reinterpret_cast<const char *>(str + i), length - i);
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 simdutf_warn_unused size_t implementation::utf16_length_from_utf8(
     const char *input, size_t length) const noexcept {
   size_t pos = 0;
@@ -1499,7 +1594,9 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf8(
   return count +
          scalar::utf8::utf16_length_from_utf8(input + pos, length - pos);
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::utf8_length_from_utf32(
     const char32_t *input, size_t length) const noexcept {
   const char32_t *ptr = input;
@@ -1535,7 +1632,9 @@ simdutf_warn_unused size_t implementation::utf8_length_from_utf32(
   return count +
          scalar::utf32::utf8_length_from_utf32(ptr, length - (ptr - input));
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::utf16_length_from_utf32(
     const char32_t *input, size_t length) const noexcept {
   const char32_t *ptr = input;
@@ -1559,12 +1658,16 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf32(
   return count +
          scalar::utf32::utf16_length_from_utf32(ptr, length - (ptr - input));
 }
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::utf32_length_from_utf8(
     const char *input, size_t length) const noexcept {
   return implementation::count_utf8(input, length);
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
+#if SIMDUTF_FEATURE_BASE64
 simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
     const char *input, size_t length) const noexcept {
   return scalar::base64::maximal_binary_length_from_base64(input, length);
@@ -1677,6 +1780,7 @@ size_t implementation::binary_to_base64(const char *input, size_t length,
     return encode_base64<false>(output, input, length, options);
   }
 }
+#endif // SIMDUTF_FEATURE_BASE64
 
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
