@@ -13,6 +13,8 @@ struct utf16fix_impl utf16fix_impls[] = {
 #endif
 #ifdef __ARM_NEON
 	"neon", utf16fix_neon,
+	"neon64bits", utf16fix_neon_64bits,
+
 #endif
 #ifdef __SSE2__
 	"sse", utf16fix_sse,

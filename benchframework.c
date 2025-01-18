@@ -160,7 +160,7 @@ printresult(struct B *b)
 
 	ns = elapsed(b);
 	if (b->bytes > 0) {
-		printf("Benchmark%c%-20.20s\t%10ld\t%10.8g ns/op\t%10.8g MB/s\n",
+		printf("Benchmark%c%-20.20s\t%10ld\t%10.8g ns/op\t%10.2f MB/s\n",
 			toupper(b->name[0]), b->name + 1, b->n, ns / b->n,
 			(double)b->n * b->bytes * 1e3 / ns); /* 1e3 = 1e9/1e6 */
 	} else {
