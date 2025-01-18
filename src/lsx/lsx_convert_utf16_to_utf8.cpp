@@ -245,9 +245,8 @@ lsx_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
         forward = size_t(end - buf - 1);
       }
       for (; k < forward; k++) {
-        uint16_t word = !match_system(big_endian)
-                            ? scalar::u16_swap_bytes(buf[k])
-                            : buf[k];
+        uint16_t word =
+            !match_system(big_endian) ? scalar::u16_swap_bytes(buf[k]) : buf[k];
         if ((word & 0xFF80) == 0) {
           *utf8_output++ = char(word);
         } else if ((word & 0xF800) == 0) {
@@ -485,9 +484,8 @@ lsx_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
         forward = size_t(end - buf - 1);
       }
       for (; k < forward; k++) {
-        uint16_t word = !match_system(big_endian)
-                            ? scalar::u16_swap_bytes(buf[k])
-                            : buf[k];
+        uint16_t word =
+            !match_system(big_endian) ? scalar::u16_swap_bytes(buf[k]) : buf[k];
         if ((word & 0xFF80) == 0) {
           *utf8_output++ = char(word);
         } else if ((word & 0xF800) == 0) {

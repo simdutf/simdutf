@@ -8,12 +8,14 @@ namespace {
 #endif
 using namespace simd;
 
-#if SIMDUTF_FEATURE_ASCII || SIMDUTF_FEATURE_DETECT_ENCODING || SIMDUTF_FEATURE_UTF8
+#if SIMDUTF_FEATURE_ASCII || SIMDUTF_FEATURE_DETECT_ENCODING ||                \
+    SIMDUTF_FEATURE_UTF8
 simdutf_really_inline bool is_ascii(const simd8x64<uint8_t> &input) {
   simd8<uint8_t> bits = input.reduce_or();
   return bits.max_val() < 0b10000000u;
 }
-#endif // SIMDUTF_FEATURE_ASCII || SIMDUTF_FEATURE_DETECT_ENCODING || SIMDUTF_FEATURE_UTF8
+#endif // SIMDUTF_FEATURE_ASCII || SIMDUTF_FEATURE_DETECT_ENCODING ||
+       // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_unused simdutf_really_inline simd8<bool>
@@ -45,12 +47,12 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 simdutf_really_inline uint16x4_t convert_utf8_3_byte_to_utf16(uint8x16_t in) {
   // Low half contains  10cccccc|1110aaaa
   // High half contains 10bbbbbb|10bbbbbb
-#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+  #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
   const uint8x16_t sh = simdutf_make_uint8x16_t(0, 2, 3, 5, 6, 8, 9, 11, 1, 1,
                                                 4, 4, 7, 7, 10, 10);
-#else
+  #else
   const uint8x16_t sh = {0, 2, 3, 5, 6, 8, 9, 11, 1, 1, 4, 4, 7, 7, 10, 10};
-#endif
+  #endif
   uint8x16_t perm = vqtbl1q_u8(in, sh);
   // Split into half vectors.
   // 10cccccc|1110aaaa
@@ -117,56 +119,57 @@ convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in, size_t shufutf8_idx) {
   uint16x8_t composed = vsraq_n_u16(ascii, highbyte, 2);
   return composed;
 }
-#endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_UTF32)
+#endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_UTF16 ||
+       // SIMDUTF_FEATURE_UTF32)
 
 #if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
-#include "arm64/arm_validate_utf16.cpp"
+  #include "arm64/arm_validate_utf16.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 #if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
-#include "arm64/arm_validate_utf32le.cpp"
+  #include "arm64/arm_validate_utf32le.cpp"
 #endif // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
-#include "arm64/arm_convert_latin1_to_utf16.cpp"
+  #include "arm64/arm_convert_latin1_to_utf16.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
-#include "arm64/arm_convert_latin1_to_utf32.cpp"
+  #include "arm64/arm_convert_latin1_to_utf32.cpp"
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
-#include "arm64/arm_convert_latin1_to_utf8.cpp"
+  #include "arm64/arm_convert_latin1_to_utf8.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
-#include "arm64/arm_convert_utf8_to_latin1.cpp"
+  #include "arm64/arm_convert_utf8_to_latin1.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
-#include "arm64/arm_convert_utf8_to_utf16.cpp"
+  #include "arm64/arm_convert_utf8_to_utf16.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
-#include "arm64/arm_convert_utf8_to_utf32.cpp"
+  #include "arm64/arm_convert_utf8_to_utf32.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
-#include "arm64/arm_convert_utf16_to_latin1.cpp"
+  #include "arm64/arm_convert_utf16_to_latin1.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
-#include "arm64/arm_convert_utf16_to_utf32.cpp"
+  #include "arm64/arm_convert_utf16_to_utf32.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF8
-#include "arm64/arm_convert_utf16_to_utf8.cpp"
+  #include "arm64/arm_convert_utf16_to_utf8.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_BASE64
-#include "arm64/arm_base64.cpp"
+  #include "arm64/arm_base64.cpp"
 #endif // SIMDUTF_FEATURE_BASE64
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
-#include "arm64/arm_convert_utf32_to_latin1.cpp"
+  #include "arm64/arm_convert_utf32_to_latin1.cpp"
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF16
-#include "arm64/arm_convert_utf32_to_utf16.cpp"
+  #include "arm64/arm_convert_utf32_to_utf16.cpp"
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF16
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF8
-#include "arm64/arm_convert_utf32_to_utf8.cpp"
+  #include "arm64/arm_convert_utf32_to_utf8.cpp"
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF8
 
 } // unnamed namespace
@@ -175,34 +178,34 @@ convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in, size_t shufutf8_idx) {
 
 #include "generic/buf_block_reader.h"
 #if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
-#include "generic/utf8_validation/utf8_lookup4_algorithm.h"
-#include "generic/utf8_validation/utf8_validator.h"
+  #include "generic/utf8_validation/utf8_lookup4_algorithm.h"
+  #include "generic/utf8_validation/utf8_validator.h"
 #endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_ASCII
-#include "generic/ascii_validation.h"
+  #include "generic/ascii_validation.h"
 #endif // SIMDUTF_FEATURE_ASCII
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
-// transcoding from UTF-8 to UTF-16
-#include "generic/utf8_to_utf16/utf8_to_utf16.h"
-#include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
+  // transcoding from UTF-8 to UTF-16
+  #include "generic/utf8_to_utf16/utf8_to_utf16.h"
+  #include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
-// transcoding from UTF-8 to UTF-32
-#include "generic/utf8_to_utf32/utf8_to_utf32.h"
-#include "generic/utf8_to_utf32/valid_utf8_to_utf32.h"
+  // transcoding from UTF-8 to UTF-32
+  #include "generic/utf8_to_utf32/utf8_to_utf32.h"
+  #include "generic/utf8_to_utf32/valid_utf8_to_utf32.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 // other functions
 #if SIMDUTF_FEATURE_UTF16
-#include "generic/utf16.h"
+  #include "generic/utf16.h"
 #endif // SIMDUTF_FEATURE_UTF16
 #if SIMDUTF_FEATURE_UTF8
-#include "generic/utf8.h"
+  #include "generic/utf8.h"
 #endif // SIMDUTF_FEATURE_UTF8
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
-// transcoding from UTF-8 to Latin 1
-#include "generic/utf8_to_latin1/utf8_to_latin1.h"
-#include "generic/utf8_to_latin1/valid_utf8_to_latin1.h"
+  // transcoding from UTF-8 to Latin 1
+  #include "generic/utf8_to_latin1/utf8_to_latin1.h"
+  #include "generic/utf8_to_latin1/valid_utf8_to_latin1.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 //

@@ -165,7 +165,8 @@ rvv_validate_utf16_with_errors(const char16_t *src, size_t len) {
 simdutf_warn_unused bool
 implementation::validate_utf16le(const char16_t *src,
                                  size_t len) const noexcept {
-  return rvv_validate_utf16_with_errors<simdutf_ByteFlip::NONE>(src, len).error == error_code::SUCCESS;
+  return rvv_validate_utf16_with_errors<simdutf_ByteFlip::NONE>(src, len)
+             .error == error_code::SUCCESS;
 }
 #endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 

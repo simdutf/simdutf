@@ -88,9 +88,8 @@ arm_convert_utf16_to_utf32(const char16_t *buf, size_t len,
         forward = size_t(end - buf - 1);
       }
       for (; k < forward; k++) {
-        uint16_t word = !match_system(big_endian)
-                            ? scalar::u16_swap_bytes(buf[k])
-                            : buf[k];
+        uint16_t word =
+            !match_system(big_endian) ? scalar::u16_swap_bytes(buf[k]) : buf[k];
         if ((word & 0xF800) != 0xD800) {
           *utf32_output++ = char32_t(word);
         } else {
@@ -161,9 +160,8 @@ arm_convert_utf16_to_utf32_with_errors(const char16_t *buf, size_t len,
         forward = size_t(end - buf - 1);
       }
       for (; k < forward; k++) {
-        uint16_t word = !match_system(big_endian)
-                            ? scalar::u16_swap_bytes(buf[k])
-                            : buf[k];
+        uint16_t word =
+            !match_system(big_endian) ? scalar::u16_swap_bytes(buf[k]) : buf[k];
         if ((word & 0xF800) != 0xD800) {
           *utf32_output++ = char32_t(word);
         } else {

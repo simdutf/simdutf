@@ -7,11 +7,13 @@ namespace {
 #endif
 using namespace simd;
 
-#if SIMDUTF_FEATURE_ASCII || SIMDUTF_FEATURE_DETECT_ENCODING || SIMDUTF_FEATURE_UTF8
+#if SIMDUTF_FEATURE_ASCII || SIMDUTF_FEATURE_DETECT_ENCODING ||                \
+    SIMDUTF_FEATURE_UTF8
 simdutf_really_inline bool is_ascii(const simd8x64<uint8_t> &input) {
   return input.reduce_or().is_ascii();
 }
-#endif // SIMDUTF_FEATURE_ASCII || SIMDUTF_FEATURE_DETECT_ENCODING || SIMDUTF_FEATURE_UTF8
+#endif // SIMDUTF_FEATURE_ASCII || SIMDUTF_FEATURE_DETECT_ENCODING ||
+       // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF8
 simdutf_unused simdutf_really_inline simd8<bool>
@@ -43,63 +45,63 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 #endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
-#include "haswell/avx2_validate_utf16.cpp"
+  #include "haswell/avx2_validate_utf16.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
-#include "haswell/avx2_validate_utf32le.cpp"
+  #include "haswell/avx2_validate_utf32le.cpp"
 #endif // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
-#include "haswell/avx2_convert_latin1_to_utf8.cpp"
+  #include "haswell/avx2_convert_latin1_to_utf8.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
-#include "haswell/avx2_convert_latin1_to_utf16.cpp"
+  #include "haswell/avx2_convert_latin1_to_utf16.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
-#include "haswell/avx2_convert_latin1_to_utf32.cpp"
+  #include "haswell/avx2_convert_latin1_to_utf32.cpp"
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
-#include "haswell/avx2_convert_utf8_to_utf16.cpp"
+  #include "haswell/avx2_convert_utf8_to_utf16.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
-#include "haswell/avx2_convert_utf8_to_utf32.cpp"
+  #include "haswell/avx2_convert_utf8_to_utf32.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
-#include "haswell/avx2_convert_utf16_to_latin1.cpp"
+  #include "haswell/avx2_convert_utf16_to_latin1.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
-#include "haswell/avx2_convert_utf16_to_utf8.cpp"
+  #include "haswell/avx2_convert_utf16_to_utf8.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
-#include "haswell/avx2_convert_utf16_to_utf32.cpp"
+  #include "haswell/avx2_convert_utf16_to_utf32.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
-#include "haswell/avx2_convert_utf32_to_latin1.cpp"
+  #include "haswell/avx2_convert_utf32_to_latin1.cpp"
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
-#include "haswell/avx2_convert_utf32_to_utf8.cpp"
+  #include "haswell/avx2_convert_utf32_to_utf8.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
-#include "haswell/avx2_convert_utf32_to_utf16.cpp"
+  #include "haswell/avx2_convert_utf32_to_utf16.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
-#include "haswell/avx2_convert_utf8_to_latin1.cpp"
+  #include "haswell/avx2_convert_utf8_to_latin1.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_BASE64
-#include "haswell/avx2_base64.cpp"
+  #include "haswell/avx2_base64.cpp"
 #endif // SIMDUTF_FEATURE_BASE64
 
 } // unnamed namespace
@@ -108,38 +110,38 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 
 #include "generic/buf_block_reader.h"
 #if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
-#include "generic/utf8_validation/utf8_lookup4_algorithm.h"
-#include "generic/utf8_validation/utf8_validator.h"
+  #include "generic/utf8_validation/utf8_lookup4_algorithm.h"
+  #include "generic/utf8_validation/utf8_validator.h"
 #endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_ASCII
-#include "generic/ascii_validation.h"
+  #include "generic/ascii_validation.h"
 #endif // SIMDUTF_FEATURE_ASCII
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
-// transcoding from UTF-8 to UTF-16
-#include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
-#include "generic/utf8_to_utf16/utf8_to_utf16.h"
+  // transcoding from UTF-8 to UTF-16
+  #include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
+  #include "generic/utf8_to_utf16/utf8_to_utf16.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
-// transcoding from UTF-8 to UTF-32
-#include "generic/utf8_to_utf32/valid_utf8_to_utf32.h"
-#include "generic/utf8_to_utf32/utf8_to_utf32.h"
+  // transcoding from UTF-8 to UTF-32
+  #include "generic/utf8_to_utf32/valid_utf8_to_utf32.h"
+  #include "generic/utf8_to_utf32/utf8_to_utf32.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 // other functions
 #if SIMDUTF_FEATURE_UTF8
-#include "generic/utf8.h"
+  #include "generic/utf8.h"
 #endif // SIMDUTF_FEATURE_UTF8
 #if SIMDUTF_FEATURE_UTF16
-#include "generic/utf16.h"
+  #include "generic/utf16.h"
 #endif // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
-// transcoding from UTF-8 to Latin 1
-#include "generic/utf8_to_latin1/utf8_to_latin1.h"
-#include "generic/utf8_to_latin1/valid_utf8_to_latin1.h"
+  // transcoding from UTF-8 to Latin 1
+  #include "generic/utf8_to_latin1/utf8_to_latin1.h"
+  #include "generic/utf8_to_latin1/valid_utf8_to_latin1.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 namespace simdutf {

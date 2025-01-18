@@ -4,7 +4,7 @@ namespace {
 namespace ascii_validation {
 
 bool generic_validate_ascii(const char *input, size_t length) {
-  buf_block_reader<64> reader(reinterpret_cast<const uint8_t*>(input), length);
+  buf_block_reader<64> reader(reinterpret_cast<const uint8_t *>(input), length);
   uint8_t blocks[64]{};
   simd::simd8x64<uint8_t> running_or(blocks);
   while (reader.has_full_block()) {
@@ -20,7 +20,7 @@ bool generic_validate_ascii(const char *input, size_t length) {
 }
 
 result generic_validate_ascii_with_errors(const char *input, size_t length) {
-  buf_block_reader<64> reader(reinterpret_cast<const uint8_t*>(input), length);
+  buf_block_reader<64> reader(reinterpret_cast<const uint8_t *>(input), length);
   size_t count{0};
   while (reader.has_full_block()) {
     simd::simd8x64<uint8_t> in(reader.full_block());

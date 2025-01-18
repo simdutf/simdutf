@@ -44,7 +44,7 @@ simdutf_warn_unused result implementation::validate_utf8_with_errors(
     const char *buf, size_t len) const noexcept {
   return scalar::utf8::validate_with_errors(buf, len);
 }
-#endif // SIMDUTF_FEATURE_UTF8 
+#endif // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_ASCII
 simdutf_warn_unused bool

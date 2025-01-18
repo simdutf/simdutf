@@ -21,8 +21,9 @@ inline simdutf_warn_unused bool validate(const char16_t *data,
       if (diff > 0x3FF) {
         return false;
       }
-      char16_t next_word =
-          !match_system(big_endian) ? u16_swap_bytes(data[pos + 1]) : data[pos + 1];
+      char16_t next_word = !match_system(big_endian)
+                               ? u16_swap_bytes(data[pos + 1])
+                               : data[pos + 1];
       char16_t diff2 = char16_t(next_word - 0xDC00);
       if (diff2 > 0x3FF) {
         return false;
@@ -50,8 +51,9 @@ inline simdutf_warn_unused result validate_with_errors(const char16_t *data,
       if (diff > 0x3FF) {
         return result(error_code::SURROGATE, pos);
       }
-      char16_t next_word =
-          !match_system(big_endian) ? u16_swap_bytes(data[pos + 1]) : data[pos + 1];
+      char16_t next_word = !match_system(big_endian)
+                               ? u16_swap_bytes(data[pos + 1])
+                               : data[pos + 1];
       char16_t diff2 = uint16_t(next_word - 0xDC00);
       if (diff2 > 0x3FF) {
         return result(error_code::SURROGATE, pos);

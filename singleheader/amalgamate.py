@@ -38,6 +38,11 @@ def main():
     context.enabled_features = enabled_features
     context.zipname          = 'singleheader.zip'
     context.timestamp        = get_timestamp()
+    if enabled_features != known_features:
+        context.read_file = filter_features
+    else:
+        context.read_file = read_file
+
     print(f"timestamp is {context.timestamp}")
 
     create_files()
@@ -188,7 +193,7 @@ def dofile(prepath, filename):
     redefines_simdutf_implementation = re.compile(r'^#define\s+SIMDUTF_IMPLEMENTATION\s+(.*)')
     undefines_simdutf_implementation = re.compile(r'^#undef\s+SIMDUTF_IMPLEMENTATION\s*$')
     uses_simdutf_implementation = re.compile('SIMDUTF_IMPLEMENTATION([^_a-zA-Z0-9]|$)')
-    for line in filter_features(file):
+    for line in context.read_file(file):
         s = includepattern.search(line)
         if s:
             includedfile = s.group(1)
@@ -296,6 +301,12 @@ def print_instructions():
     print()
 
 
+def read_file(file):
+    with open(file, 'r') as f:
+        for line in f:
+            yield line.rstrip()
+
+
 def filter_features(file):
     """
     Design:
@@ -311,8 +322,11 @@ def filter_features(file):
     root_header = file.endswith("/implementation.h")
 
     with open(file, 'r') as f:
-        for (lineno, line) in enumerate(f, 1):
-            line = line.rstrip()
+        lines = [line.rstrip() for line in f.readlines()]
+        for (lineno, line) in enumerate(lines, 1):
+            if line is None:
+                continue
+
             if root_header and line.startswith('#define SIMDUTF_FEATURE'):
                 # '#define SIMDUTF_FEATURE_FOO 1'
                 tmp = line.split()
@@ -329,14 +343,31 @@ def filter_features(file):
                 if start_if_line is not None:
                     raise ValueError(f"{file}:{lineno}: feature block already opened at line {start_if_line}")
 
-                current_features = get_features(file, lineno, line[len('#if '):])
+                prefix_len = len('#if ')
+                if line.endswith('\\'):
+                    nextline = lines[lineno]
+                    lines[lineno] = None
+
+                    expr = line[prefix_len:-1] + nextline
+                else:
+                    expr = line[prefix_len:]
+
+                current_features = get_features(file, lineno, expr)
                 start_if_line = lineno
                 enabled = current_features.evaluate(context.enabled_features)
             elif line.startswith('#endif // SIMDUTF_FEATURE'):
                 if start_if_line is None:
                     raise ValueError(f"{file}:{lineno}: feature block not opened, orphan #endif found")
 
-                features = get_features(line, lineno, line[len('#endif // '):])
+                prefix_len = len('#endif // ')
+                expr = line[prefix_len:]
+                if lineno < len(lines):
+                    nextline = lines[lineno]
+                    if nextline.startswith('       // '):
+                        expr += nextline[prefix_len:]
+                        lines[lineno] = None
+
+                features = get_features(line, lineno, expr)
                 if str(features) != str(current_features):
                     raise ValueError(f"{file}:{lineno}: feature #endif condition different than opening #if at {start_if_line}")
 
