@@ -16,6 +16,7 @@ simdutf: Unicode validation and transcoding at billions of characters per second
   - [Usage (Usage)](#usage-usage)
   - [Usage (CMake)](#usage-cmake)
   - [Single-header version](#single-header-version)
+  - [Single-header version with limited features](#single-header-version-with-limited-features)
   - [Packages](#packages)
   - [Example](#example)
   - [API](#api)
@@ -238,6 +239,46 @@ cd singleheader
 c++ -o amalgamation_demo amalgamation_demo.cpp -std=c++17
 ./amalgamation_demo
 ```
+
+Single-header version with limited features
+-------------------------------------------
+
+When creating a single-header version, it is possible to limit which
+features are enabled. Then the API of library is limited too and the
+amalgamated sources do not include code related to disabled features.
+
+The script `singleheader/amalgamate.py` accepts the following parameters:
+
+* `--with-utf8` - procedures related only to UTF-8 encoding (like string validation);
+* `--with-utf16` - likewise: only UTF-16 encoding;
+* `--with-utf32` - likewise: only UTF-32 encoding;
+* `--with-ascii` - procedures related to ASCII encoding;
+* `--with-latin1` - convert between selected UTF encodings and Latin1;
+* `--with-base64` - procedures related to Base64 encoding;
+* `--with-detect-enc` - enable detect encoding.
+
+If we need conversion between different encodings, like UTF-8 and UTF-32, then
+these two features have to be enabled.
+
+The amalgamated sources set to 1 the following preprocesor defines:
+
+* `SIMDUTF_FEATURE_UTF8`,
+* `SIMDUTF_FEATURE_UTF16`,
+* `SIMDUTF_FEATURE_UTF32`,
+* `SIMDUTF_FEATURE_ASCII`,
+* `SIMDUTF_FEATURE_LATIN1`,
+* `SIMDUTF_FEATURE_BASE64`,
+* `SIMDUTF_FEATURE_DETECT_ENCODING`.
+
+Thus, when it is needed to make sure the correct set of features are
+enabled, we may test it using preprocessor:
+
+```cpp
+#if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_UTF32
+    #error "Please amalagamate simdutf without UTF-16 and UTF-32"
+#endif
+```
+
 
 Packages
 ------

@@ -24,7 +24,7 @@ inline size_t convert(const char16_t *buf, size_t len, char *utf8_output) {
         size_t final_pos = pos + 4;
         while (pos < final_pos) {
           *utf8_output++ = !match_system(big_endian)
-                               ? char(utf16::swap_bytes(buf[pos]))
+                               ? char(u16_swap_bytes(buf[pos]))
                                : char(buf[pos]);
           pos++;
         }
@@ -32,7 +32,7 @@ inline size_t convert(const char16_t *buf, size_t len, char *utf8_output) {
       }
     }
     uint16_t word =
-        !match_system(big_endian) ? utf16::swap_bytes(data[pos]) : data[pos];
+        !match_system(big_endian) ? u16_swap_bytes(data[pos]) : data[pos];
     if ((word & 0xFF80) == 0) {
       // will generate one UTF-8 bytes
       *utf8_output++ = char(word);
@@ -60,7 +60,7 @@ inline size_t convert(const char16_t *buf, size_t len, char *utf8_output) {
         return 0;
       }
       uint16_t next_word = !match_system(big_endian)
-                               ? utf16::swap_bytes(data[pos + 1])
+                               ? u16_swap_bytes(data[pos + 1])
                                : data[pos + 1];
       uint16_t diff2 = uint16_t(next_word - 0xDC00);
       if (diff2 > 0x3FF) {
@@ -97,7 +97,7 @@ inline result convert_with_errors(const char16_t *buf, size_t len,
         size_t final_pos = pos + 4;
         while (pos < final_pos) {
           *utf8_output++ = !match_system(big_endian)
-                               ? char(utf16::swap_bytes(buf[pos]))
+                               ? char(u16_swap_bytes(buf[pos]))
                                : char(buf[pos]);
           pos++;
         }
@@ -105,7 +105,7 @@ inline result convert_with_errors(const char16_t *buf, size_t len,
       }
     }
     uint16_t word =
-        !match_system(big_endian) ? utf16::swap_bytes(data[pos]) : data[pos];
+        !match_system(big_endian) ? u16_swap_bytes(data[pos]) : data[pos];
     if ((word & 0xFF80) == 0) {
       // will generate one UTF-8 bytes
       *utf8_output++ = char(word);
@@ -133,7 +133,7 @@ inline result convert_with_errors(const char16_t *buf, size_t len,
         return result(error_code::SURROGATE, pos);
       }
       uint16_t next_word = !match_system(big_endian)
-                               ? utf16::swap_bytes(data[pos + 1])
+                               ? u16_swap_bytes(data[pos + 1])
                                : data[pos + 1];
       uint16_t diff2 = uint16_t(next_word - 0xDC00);
       if (diff2 > 0x3FF) {

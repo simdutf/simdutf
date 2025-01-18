@@ -64,7 +64,7 @@ icelake_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
     }
     if (_mm512_cmpgt_epu16_mask(in, v_0xFF)) {
       uint16_t word;
-      while ((word = (big_endian ? scalar::utf16::swap_bytes(uint16_t(*buf))
+      while ((word = (big_endian ? scalar::u16_swap_bytes(uint16_t(*buf))
                                  : uint16_t(*buf))) <= 0xff) {
         *latin1_output++ = uint8_t(word);
         buf++;
@@ -87,7 +87,7 @@ icelake_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
     if (_mm512_cmpgt_epu16_mask(in, v_0xFF)) {
 
       uint16_t word;
-      while ((word = (big_endian ? scalar::utf16::swap_bytes(uint16_t(*buf))
+      while ((word = (big_endian ? scalar::u16_swap_bytes(uint16_t(*buf))
                                  : uint16_t(*buf))) <= 0xff) {
         *latin1_output++ = uint8_t(word);
         buf++;

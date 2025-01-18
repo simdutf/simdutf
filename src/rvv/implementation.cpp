@@ -22,9 +22,11 @@ namespace SIMDUTF_IMPLEMENTATION {
 
 #include "rvv/rvv_latin1_to.inl.cpp"
 #include "rvv/rvv_utf16_to.inl.cpp"
+
 #include "rvv/rvv_utf32_to.inl.cpp"
 #include "rvv/rvv_utf8_to.inl.cpp"
 
+#if SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_warn_unused int
 implementation::detect_encodings(const char *input,
                                  size_t length) const noexcept {
@@ -37,7 +39,7 @@ implementation::detect_encodings(const char *input,
   if (validate_utf8(input, length))
     out |= encoding_type::UTF8;
   if (length % 2 == 0) {
-    if (validate_utf16(reinterpret_cast<const char16_t *>(input), length / 2))
+    if (validate_utf16le(reinterpret_cast<const char16_t *>(input), length / 2))
       out |= encoding_type::UTF16_LE;
   }
   if (length % 4 == 0) {
@@ -47,7 +49,9 @@ implementation::detect_encodings(const char *input,
 
   return out;
 }
+#endif // SIMDUTF_FEATURE_DETECT_ENCODING
 
+#if SIMDUTF_FEATURE_UTF16
 template <simdutf_ByteFlip bflip>
 simdutf_really_inline static void
 rvv_change_endianness_utf16(const char16_t *src, size_t len, char16_t *dst) {
@@ -65,7 +69,9 @@ void implementation::change_endianness_utf16(const char16_t *src, size_t len,
   else
     return rvv_change_endianness_utf16<simdutf_ByteFlip::V>(src, len, dst);
 }
+#endif // SIMDUTF_FEATURE_UTF16
 
+#if SIMDUTF_FEATURE_BASE64
 simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
     const char *input, size_t length) const noexcept {
   return scalar::base64::maximal_binary_length_from_base64(input, length);
@@ -292,6 +298,8 @@ size_t implementation::binary_to_base64(const char *input, size_t length,
                                         base64_options options) const noexcept {
   return scalar::base64::tail_encode_base64(output, input, length, options);
 }
+#endif // SIMDUTF_FEATURE_BASE64
+
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
 

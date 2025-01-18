@@ -72,7 +72,7 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
            (x = d0[uint8_t(src[0])] | d1[uint8_t(src[1])] |
                 d2[uint8_t(src[2])] | d3[uint8_t(src[3])]) < 0x01FFFFFF) {
       if (match_system(endianness::BIG)) {
-        x = scalar::utf32::swap_bytes(x);
+        x = scalar::u32_swap_bytes(x);
       }
       std::memcpy(dst, &x, 3); // optimization opportunity: copy 4 bytes
       dst += 3;
@@ -145,7 +145,7 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
             triple <<= 8;
             std::memcpy(dst, &triple, 1);
           } else {
-            triple = scalar::utf32::swap_bytes(triple);
+            triple = scalar::u32_swap_bytes(triple);
             triple >>= 8;
             std::memcpy(dst, &triple, 1);
           }
@@ -164,7 +164,7 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
             triple <<= 8;
             std::memcpy(dst, &triple, 2);
           } else {
-            triple = scalar::utf32::swap_bytes(triple);
+            triple = scalar::u32_swap_bytes(triple);
             triple >>= 8;
             std::memcpy(dst, &triple, 2);
           }
@@ -184,7 +184,7 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
       triple <<= 8;
       std::memcpy(dst, &triple, 3);
     } else {
-      triple = scalar::utf32::swap_bytes(triple);
+      triple = scalar::u32_swap_bytes(triple);
       triple >>= 8;
       std::memcpy(dst, &triple, 3);
     }
@@ -247,7 +247,7 @@ result base64_tail_decode_safe(
         return {OUTPUT_BUFFER_TOO_SMALL, size_t(src - srcinit)};
       }
       if (match_system(endianness::BIG)) {
-        x = scalar::utf32::swap_bytes(x);
+        x = scalar::u32_swap_bytes(x);
       }
       std::memcpy(dst, &x, 3); // optimization opportunity: copy 4 bytes
       dst += 3;
@@ -376,7 +376,7 @@ result base64_tail_decode_safe(
       triple <<= 8;
       std::memcpy(dst, &triple, 3);
     } else {
-      triple = scalar::utf32::swap_bytes(triple);
+      triple = scalar::u32_swap_bytes(triple);
       triple >>= 8;
       std::memcpy(dst, &triple, 3);
     }

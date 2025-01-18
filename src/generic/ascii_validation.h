@@ -3,9 +3,8 @@ namespace SIMDUTF_IMPLEMENTATION {
 namespace {
 namespace ascii_validation {
 
-template <class checker>
-bool generic_validate_ascii(const uint8_t *input, size_t length) {
-  buf_block_reader<64> reader(input, length);
+bool generic_validate_ascii(const char *input, size_t length) {
+  buf_block_reader<64> reader(reinterpret_cast<const uint8_t *>(input), length);
   uint8_t blocks[64]{};
   simd::simd8x64<uint8_t> running_or(blocks);
   while (reader.has_full_block()) {
@@ -20,14 +19,8 @@ bool generic_validate_ascii(const uint8_t *input, size_t length) {
   return running_or.is_ascii();
 }
 
-bool generic_validate_ascii(const char *input, size_t length) {
-  return generic_validate_ascii<utf8_checker>(
-      reinterpret_cast<const uint8_t *>(input), length);
-}
-
-template <class checker>
-result generic_validate_ascii_with_errors(const uint8_t *input, size_t length) {
-  buf_block_reader<64> reader(input, length);
+result generic_validate_ascii_with_errors(const char *input, size_t length) {
+  buf_block_reader<64> reader(reinterpret_cast<const uint8_t *>(input), length);
   size_t count{0};
   while (reader.has_full_block()) {
     simd::simd8x64<uint8_t> in(reader.full_block());
@@ -50,11 +43,6 @@ result generic_validate_ascii_with_errors(const uint8_t *input, size_t length) {
   } else {
     return result(error_code::SUCCESS, length);
   }
-}
-
-result generic_validate_ascii_with_errors(const char *input, size_t length) {
-  return generic_validate_ascii_with_errors<utf8_checker>(
-      reinterpret_cast<const uint8_t *>(input), length);
 }
 
 } // namespace ascii_validation

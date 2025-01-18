@@ -20,7 +20,7 @@ inline size_t convert(const char16_t *buf, size_t len, char *latin_output) {
   uint16_t too_large = 0;
 
   while (pos < len) {
-    word = !match_system(big_endian) ? utf16::swap_bytes(data[pos]) : data[pos];
+    word = !match_system(big_endian) ? u16_swap_bytes(data[pos]) : data[pos];
     too_large |= word;
     *current_write++ = char(word & 0xFF);
     pos++;
@@ -69,14 +69,14 @@ inline result convert_with_errors(const char16_t *buf, size_t len,
         size_t final_pos = pos + 16;
         while (pos < final_pos) {
           *latin_output++ = !match_system(big_endian)
-                                ? char(utf16::swap_bytes(data[pos]))
+                                ? char(u16_swap_bytes(data[pos]))
                                 : char(data[pos]);
           pos++;
         }
         continue;
       }
     }
-    word = !match_system(big_endian) ? utf16::swap_bytes(data[pos]) : data[pos];
+    word = !match_system(big_endian) ? u16_swap_bytes(data[pos]) : data[pos];
     if ((word & 0xFF00) == 0) {
       *latin_output++ = char(word & 0xFF);
       pos++;

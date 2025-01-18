@@ -1,5 +1,4 @@
-
-
+#if SIMDUTF_FEATURE_ASCII
 simdutf_warn_unused bool
 implementation::validate_ascii(const char *src, size_t len) const noexcept {
   size_t vlmax = __riscv_vsetvlmax_e8m8();
@@ -25,7 +24,9 @@ simdutf_warn_unused result implementation::validate_ascii_with_errors(
   }
   return result(error_code::SUCCESS, src - beg);
 }
+#endif // SIMDUTF_FEATURE_ASCII
 
+#if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 /* Returns a close estimation of the number of valid UTF-8 bytes up to the
  * first invalid one, but never overestimating. */
 simdutf_really_inline static size_t rvv_count_valid_utf8(const char *src,
@@ -114,26 +115,18 @@ implementation::validate_utf8(const char *src, size_t len) const noexcept {
   size_t count = rvv_count_valid_utf8(src, len);
   return scalar::utf8::validate(src + count, len - count);
 }
+#endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
+#if SIMDUTF_FEATURE_UTF8
 simdutf_warn_unused result implementation::validate_utf8_with_errors(
     const char *src, size_t len) const noexcept {
   size_t count = rvv_count_valid_utf8(src, len);
   result res = scalar::utf8::validate_with_errors(src + count, len - count);
   return result(res.error, count + res.count);
 }
+#endif // SIMDUTF_FEATURE_UTF8
 
-simdutf_warn_unused bool
-implementation::validate_utf16le(const char16_t *src,
-                                 size_t len) const noexcept {
-  return validate_utf16le_with_errors(src, len).error == error_code::SUCCESS;
-}
-
-simdutf_warn_unused bool
-implementation::validate_utf16be(const char16_t *src,
-                                 size_t len) const noexcept {
-  return validate_utf16be_with_errors(src, len).error == error_code::SUCCESS;
-}
-
+#if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 template <simdutf_ByteFlip bflip>
 simdutf_really_inline static result
 rvv_validate_utf16_with_errors(const char16_t *src, size_t len) {
@@ -166,7 +159,26 @@ rvv_validate_utf16_with_errors(const char16_t *src, size_t len) {
     return result(error_code::SUCCESS, src - beg);
   }
 }
+#endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
+#if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
+simdutf_warn_unused bool
+implementation::validate_utf16le(const char16_t *src,
+                                 size_t len) const noexcept {
+  return rvv_validate_utf16_with_errors<simdutf_ByteFlip::NONE>(src, len)
+             .error == error_code::SUCCESS;
+}
+#endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
+
+#if SIMDUTF_FEATURE_UTF16
+simdutf_warn_unused bool
+implementation::validate_utf16be(const char16_t *src,
+                                 size_t len) const noexcept {
+  return validate_utf16be_with_errors(src, len).error == error_code::SUCCESS;
+}
+#endif // SIMDUTF_FEATURE_UTF16
+
+#if SIMDUTF_FEATURE_UTF16
 simdutf_warn_unused result implementation::validate_utf16le_with_errors(
     const char16_t *src, size_t len) const noexcept {
   return rvv_validate_utf16_with_errors<simdutf_ByteFlip::NONE>(src, len);
@@ -179,7 +191,9 @@ simdutf_warn_unused result implementation::validate_utf16be_with_errors(
   else
     return rvv_validate_utf16_with_errors<simdutf_ByteFlip::V>(src, len);
 }
+#endif // SIMDUTF_FEATURE_UTF16
 
+#if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_warn_unused bool
 implementation::validate_utf32(const char32_t *src, size_t len) const noexcept {
   size_t vlmax = __riscv_vsetvlmax_e32m8();
@@ -198,7 +212,9 @@ implementation::validate_utf32(const char32_t *src, size_t len) const noexcept {
                  __riscv_vmsne_vx_u32m8_b4(maxOff, 0xFFFFF7FF, vlmax), vlmax),
              vlmax) < 0;
 }
+#endif // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 
+#if SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused result implementation::validate_utf32_with_errors(
     const char32_t *src, size_t len) const noexcept {
   const char32_t *beg = src;
@@ -226,3 +242,4 @@ simdutf_warn_unused result implementation::validate_utf32_with_errors(
   }
   return result(error_code::SUCCESS, src - beg);
 }
+#endif // SIMDUTF_FEATURE_UTF32

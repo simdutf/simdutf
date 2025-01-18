@@ -24,7 +24,7 @@ inline size_t convert(const char *buf, size_t len, char16_t *utf16_output) {
         size_t final_pos = pos + 16;
         while (pos < final_pos) {
           *utf16_output++ = !match_system(big_endian)
-                                ? char16_t(utf16::swap_bytes(buf[pos]))
+                                ? char16_t(u16_swap_bytes(buf[pos]))
                                 : char16_t(buf[pos]);
           pos++;
         }
@@ -36,7 +36,7 @@ inline size_t convert(const char *buf, size_t len, char16_t *utf16_output) {
     if (leading_byte < 0b10000000) {
       // converting one ASCII byte !!!
       *utf16_output++ = !match_system(big_endian)
-                            ? char16_t(utf16::swap_bytes(leading_byte))
+                            ? char16_t(u16_swap_bytes(leading_byte))
                             : char16_t(leading_byte);
       pos++;
     } else if ((leading_byte & 0b11100000) == 0b11000000) {
@@ -55,7 +55,7 @@ inline size_t convert(const char *buf, size_t len, char16_t *utf16_output) {
         return 0;
       }
       if (!match_system(big_endian)) {
-        code_point = uint32_t(utf16::swap_bytes(uint16_t(code_point)));
+        code_point = uint32_t(u16_swap_bytes(uint16_t(code_point)));
       }
       *utf16_output++ = char16_t(code_point);
       pos += 2;
@@ -81,7 +81,7 @@ inline size_t convert(const char *buf, size_t len, char16_t *utf16_output) {
         return 0;
       }
       if (!match_system(big_endian)) {
-        code_point = uint32_t(utf16::swap_bytes(uint16_t(code_point)));
+        code_point = uint32_t(u16_swap_bytes(uint16_t(code_point)));
       }
       *utf16_output++ = char16_t(code_point);
       pos += 3;
@@ -112,8 +112,8 @@ inline size_t convert(const char *buf, size_t len, char16_t *utf16_output) {
       uint16_t high_surrogate = uint16_t(0xD800 + (code_point >> 10));
       uint16_t low_surrogate = uint16_t(0xDC00 + (code_point & 0x3FF));
       if (!match_system(big_endian)) {
-        high_surrogate = utf16::swap_bytes(high_surrogate);
-        low_surrogate = utf16::swap_bytes(low_surrogate);
+        high_surrogate = u16_swap_bytes(high_surrogate);
+        low_surrogate = u16_swap_bytes(low_surrogate);
       }
       *utf16_output++ = char16_t(high_surrogate);
       *utf16_output++ = char16_t(low_surrogate);
@@ -144,7 +144,7 @@ inline result convert_with_errors(const char *buf, size_t len,
         size_t final_pos = pos + 16;
         while (pos < final_pos) {
           *utf16_output++ = !match_system(big_endian)
-                                ? char16_t(utf16::swap_bytes(buf[pos]))
+                                ? char16_t(u16_swap_bytes(buf[pos]))
                                 : char16_t(buf[pos]);
           pos++;
         }
@@ -155,7 +155,7 @@ inline result convert_with_errors(const char *buf, size_t len,
     if (leading_byte < 0b10000000) {
       // converting one ASCII byte !!!
       *utf16_output++ = !match_system(big_endian)
-                            ? char16_t(utf16::swap_bytes(leading_byte))
+                            ? char16_t(u16_swap_bytes(leading_byte))
                             : char16_t(leading_byte);
       pos++;
     } else if ((leading_byte & 0b11100000) == 0b11000000) {
@@ -174,7 +174,7 @@ inline result convert_with_errors(const char *buf, size_t len,
         return result(error_code::OVERLONG, pos);
       }
       if (!match_system(big_endian)) {
-        code_point = uint32_t(utf16::swap_bytes(uint16_t(code_point)));
+        code_point = uint32_t(u16_swap_bytes(uint16_t(code_point)));
       }
       *utf16_output++ = char16_t(code_point);
       pos += 2;
@@ -202,7 +202,7 @@ inline result convert_with_errors(const char *buf, size_t len,
         return result(error_code::SURROGATE, pos);
       }
       if (!match_system(big_endian)) {
-        code_point = uint32_t(utf16::swap_bytes(uint16_t(code_point)));
+        code_point = uint32_t(u16_swap_bytes(uint16_t(code_point)));
       }
       *utf16_output++ = char16_t(code_point);
       pos += 3;
@@ -236,8 +236,8 @@ inline result convert_with_errors(const char *buf, size_t len,
       uint16_t high_surrogate = uint16_t(0xD800 + (code_point >> 10));
       uint16_t low_surrogate = uint16_t(0xDC00 + (code_point & 0x3FF));
       if (!match_system(big_endian)) {
-        high_surrogate = utf16::swap_bytes(high_surrogate);
-        low_surrogate = utf16::swap_bytes(low_surrogate);
+        high_surrogate = u16_swap_bytes(high_surrogate);
+        low_surrogate = u16_swap_bytes(low_surrogate);
       }
       *utf16_output++ = char16_t(high_surrogate);
       *utf16_output++ = char16_t(low_surrogate);

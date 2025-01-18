@@ -1,3 +1,4 @@
+#if SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_UTF32)
 template <typename Tdst, simdutf_ByteFlip bflip, bool validate = true>
 simdutf_really_inline static size_t rvv_utf8_to_common(char const *src,
                                                        size_t len, Tdst *dst) {
@@ -189,45 +190,45 @@ simdutf_really_inline static size_t rvv_utf8_to_common(char const *src,
      * vssubu.vx v, 10, (max(x-10, 0)) almost gives us what we want, we
      * just need to manually detect and handle the one special case:
      */
-#define SIMDUTF_RVV_UTF8_TO_COMMON_M1(idx)                                     \
-  vuint8m1_t c1 = __riscv_vget_v_u8m2_u8m1(b1, idx);                           \
-  vuint8m1_t c2 = __riscv_vget_v_u8m2_u8m1(b2, idx);                           \
-  vuint8m1_t c3 = __riscv_vget_v_u8m2_u8m1(b3, idx);                           \
-  vuint8m1_t c4 = __riscv_vget_v_u8m2_u8m1(b4, idx);                           \
-  /* remove prefix from trailing bytes */                                      \
-  c2 = __riscv_vand_vx_u8m1(c2, 0b00111111, vlOut);                            \
-  c3 = __riscv_vand_vx_u8m1(c3, 0b00111111, vlOut);                            \
-  c4 = __riscv_vand_vx_u8m1(c4, 0b00111111, vlOut);                            \
-  vuint8m1_t shift = __riscv_vsrl_vx_u8m1(c1, 4, vlOut);                       \
-  shift = __riscv_vmerge_vxm_u8m1(__riscv_vssubu_vx_u8m1(shift, 10, vlOut), 3, \
-                                  __riscv_vmseq_vx_u8m1_b8(shift, 12, vlOut),  \
-                                  vlOut);                                      \
-  c1 = __riscv_vsll_vv_u8m1(c1, shift, vlOut);                                 \
-  c1 = __riscv_vsrl_vv_u8m1(c1, shift, vlOut);                                 \
-  /* unconditionally widen and combine to c1234 */                             \
-  vuint16m2_t c34 = __riscv_vwaddu_wv_u16m2(                                   \
-      __riscv_vwmulu_vx_u16m2(c3, 1 << 6, vlOut), c4, vlOut);                  \
-  vuint16m2_t c12 = __riscv_vwaddu_wv_u16m2(                                   \
-      __riscv_vwmulu_vx_u16m2(c1, 1 << 6, vlOut), c2, vlOut);                  \
-  vuint32m4_t c1234 = __riscv_vwaddu_wv_u32m4(                                 \
-      __riscv_vwmulu_vx_u32m4(c12, 1 << 12, vlOut), c34, vlOut);               \
-  /* derive required right-shift amount from `shift` to reduce                 \
-   * c1234 to the required number of bytes */                                  \
-  c1234 = __riscv_vsrl_vv_u32m4(                                               \
-      c1234,                                                                   \
-      __riscv_vzext_vf4_u32m4(                                                 \
-          __riscv_vmul_vx_u8m1(                                                \
-              __riscv_vrsub_vx_u8m1(__riscv_vssubu_vx_u8m1(shift, 2, vlOut),   \
-                                    3, vlOut),                                 \
-              6, vlOut),                                                       \
-          vlOut),                                                              \
-      vlOut);                                                                  \
-  /* store result in desired format */                                         \
-  if (is16)                                                                    \
-    vlDst = rvv_utf32_store_utf16_m4<bflip>((uint16_t *)dst, c1234, vlOut,     \
-                                            m4even);                           \
-  else                                                                         \
-    vlDst = vlOut, __riscv_vse32_v_u32m4((uint32_t *)dst, c1234, vlOut);
+  #define SIMDUTF_RVV_UTF8_TO_COMMON_M1(idx)                                   \
+    vuint8m1_t c1 = __riscv_vget_v_u8m2_u8m1(b1, idx);                         \
+    vuint8m1_t c2 = __riscv_vget_v_u8m2_u8m1(b2, idx);                         \
+    vuint8m1_t c3 = __riscv_vget_v_u8m2_u8m1(b3, idx);                         \
+    vuint8m1_t c4 = __riscv_vget_v_u8m2_u8m1(b4, idx);                         \
+    /* remove prefix from trailing bytes */                                    \
+    c2 = __riscv_vand_vx_u8m1(c2, 0b00111111, vlOut);                          \
+    c3 = __riscv_vand_vx_u8m1(c3, 0b00111111, vlOut);                          \
+    c4 = __riscv_vand_vx_u8m1(c4, 0b00111111, vlOut);                          \
+    vuint8m1_t shift = __riscv_vsrl_vx_u8m1(c1, 4, vlOut);                     \
+    shift = __riscv_vmerge_vxm_u8m1(                                           \
+        __riscv_vssubu_vx_u8m1(shift, 10, vlOut), 3,                           \
+        __riscv_vmseq_vx_u8m1_b8(shift, 12, vlOut), vlOut);                    \
+    c1 = __riscv_vsll_vv_u8m1(c1, shift, vlOut);                               \
+    c1 = __riscv_vsrl_vv_u8m1(c1, shift, vlOut);                               \
+    /* unconditionally widen and combine to c1234 */                           \
+    vuint16m2_t c34 = __riscv_vwaddu_wv_u16m2(                                 \
+        __riscv_vwmulu_vx_u16m2(c3, 1 << 6, vlOut), c4, vlOut);                \
+    vuint16m2_t c12 = __riscv_vwaddu_wv_u16m2(                                 \
+        __riscv_vwmulu_vx_u16m2(c1, 1 << 6, vlOut), c2, vlOut);                \
+    vuint32m4_t c1234 = __riscv_vwaddu_wv_u32m4(                               \
+        __riscv_vwmulu_vx_u32m4(c12, 1 << 12, vlOut), c34, vlOut);             \
+    /* derive required right-shift amount from `shift` to reduce               \
+     * c1234 to the required number of bytes */                                \
+    c1234 = __riscv_vsrl_vv_u32m4(                                             \
+        c1234,                                                                 \
+        __riscv_vzext_vf4_u32m4(                                               \
+            __riscv_vmul_vx_u8m1(                                              \
+                __riscv_vrsub_vx_u8m1(__riscv_vssubu_vx_u8m1(shift, 2, vlOut), \
+                                      3, vlOut),                               \
+                6, vlOut),                                                     \
+            vlOut),                                                            \
+        vlOut);                                                                \
+    /* store result in desired format */                                       \
+    if (is16)                                                                  \
+      vlDst = rvv_utf32_store_utf16_m4<bflip>((uint16_t *)dst, c1234, vlOut,   \
+                                              m4even);                         \
+    else                                                                       \
+      vlDst = vlOut, __riscv_vse32_v_u32m4((uint32_t *)dst, c1234, vlOut);
 
     /* Unrolling this manually reduces register pressure and allows
      * us to terminate early. */
@@ -249,7 +250,7 @@ simdutf_really_inline static size_t rvv_utf8_to_common(char const *src,
       vlOut = vlDst;
     }
 
-#undef SIMDUTF_RVV_UTF8_TO_COMMON_M1
+  #undef SIMDUTF_RVV_UTF8_TO_COMMON_M1
   }
 
   /* validate the last character and reparse it + tail */
@@ -270,7 +271,10 @@ simdutf_really_inline static size_t rvv_utf8_to_common(char const *src,
     return 0;
   return (size_t)(dst - beg) + ret;
 }
+#endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_UTF16 ||
+       // SIMDUTF_FEATURE_UTF32)
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(
     const char *src, size_t len, char *dst) const noexcept {
   const char *beg = dst;
@@ -359,7 +363,9 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_latin1(
   }
   return dst - beg;
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16le(
     const char *src, size_t len, char16_t *dst) const noexcept {
   return rvv_utf8_to_common<uint16_t, simdutf_ByteFlip::NONE>(src, len,
@@ -409,7 +415,9 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16be(
     return rvv_utf8_to_common<uint16_t, simdutf_ByteFlip::V, false>(
         src, len, (uint16_t *)dst);
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf32(
     const char *src, size_t len, char32_t *dst) const noexcept {
   return rvv_utf8_to_common<uint32_t, simdutf_ByteFlip::NONE>(src, len,
@@ -429,3 +437,4 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(
   return rvv_utf8_to_common<uint32_t, simdutf_ByteFlip::NONE, false>(
       src, len, (uint32_t *)dst);
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32

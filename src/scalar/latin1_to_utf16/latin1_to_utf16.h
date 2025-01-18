@@ -16,7 +16,7 @@ inline size_t convert(const char *buf, size_t len, char16_t *utf16_output) {
     uint16_t word =
         uint16_t(data[pos]); // extend Latin-1 char to 16-bit Unicode code point
     *utf16_output++ =
-        char16_t(match_system(big_endian) ? word : utf16::swap_bytes(word));
+        char16_t(match_system(big_endian) ? word : u16_swap_bytes(word));
     pos++;
   }
 
@@ -34,7 +34,7 @@ inline result convert_with_errors(const char *buf, size_t len,
     uint16_t word =
         uint16_t(data[pos]); // extend Latin-1 char to 16-bit Unicode code point
     *utf16_output++ =
-        char16_t(match_system(big_endian) ? word : utf16::swap_bytes(word));
+        char16_t(match_system(big_endian) ? word : u16_swap_bytes(word));
     pos++;
   }
 

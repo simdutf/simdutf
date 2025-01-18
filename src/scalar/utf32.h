@@ -60,13 +60,6 @@ inline size_t utf16_length_from_utf32(const char32_t *buf, size_t len) {
   return counter;
 }
 
-inline simdutf_warn_unused uint32_t swap_bytes(const uint32_t word) {
-  return ((word >> 24) & 0xff) |      // move byte 3 to byte 0
-         ((word << 8) & 0xff0000) |   // move byte 1 to byte 2
-         ((word >> 8) & 0xff00) |     // move byte 2 to byte 1
-         ((word << 24) & 0xff000000); // byte 0 to byte 3
-}
-
 } // namespace utf32
 } // unnamed namespace
 } // namespace scalar

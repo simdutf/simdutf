@@ -13,7 +13,7 @@ inline size_t convert(const char16_t *buf, size_t len, char32_t *utf32_output) {
   char32_t *start{utf32_output};
   while (pos < len) {
     uint16_t word =
-        !match_system(big_endian) ? utf16::swap_bytes(data[pos]) : data[pos];
+        !match_system(big_endian) ? u16_swap_bytes(data[pos]) : data[pos];
     if ((word & 0xF800) != 0xD800) {
       // No surrogate pair, extend 16-bit word to 32-bit word
       *utf32_output++ = char32_t(word);
@@ -28,7 +28,7 @@ inline size_t convert(const char16_t *buf, size_t len, char32_t *utf32_output) {
         return 0;
       } // minimal bound checking
       uint16_t next_word = !match_system(big_endian)
-                               ? utf16::swap_bytes(data[pos + 1])
+                               ? u16_swap_bytes(data[pos + 1])
                                : data[pos + 1];
       uint16_t diff2 = uint16_t(next_word - 0xDC00);
       if (diff2 > 0x3FF) {
@@ -50,7 +50,7 @@ inline result convert_with_errors(const char16_t *buf, size_t len,
   char32_t *start{utf32_output};
   while (pos < len) {
     uint16_t word =
-        !match_system(big_endian) ? utf16::swap_bytes(data[pos]) : data[pos];
+        !match_system(big_endian) ? u16_swap_bytes(data[pos]) : data[pos];
     if ((word & 0xF800) != 0xD800) {
       // No surrogate pair, extend 16-bit word to 32-bit word
       *utf32_output++ = char32_t(word);
@@ -65,7 +65,7 @@ inline result convert_with_errors(const char16_t *buf, size_t len,
         return result(error_code::SURROGATE, pos);
       } // minimal bound checking
       uint16_t next_word = !match_system(big_endian)
-                               ? utf16::swap_bytes(data[pos + 1])
+                               ? u16_swap_bytes(data[pos + 1])
                                : data[pos + 1];
       uint16_t diff2 = uint16_t(next_word - 0xDC00);
       if (diff2 > 0x3FF) {
