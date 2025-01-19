@@ -209,7 +209,8 @@ int main(int argc, char *argv[])
 {
 	size_t i;
 	int failed = 0;
-
+	for (i = 1; utf16fix_impls[i].name != NULL; i++)
+	    printf("%s\n", utf16fix_impls[i].name);
 	for (i = 1; utf16fix_impls[i].name != NULL; i++)
 		failed |= run_tests(utf16fix_impls[i].name, utf16fix_impls[i].impl);
 

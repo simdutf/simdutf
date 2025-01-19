@@ -27,6 +27,7 @@ utf16fix utf16fix_avx512;
 #ifdef __ARM_NEON
 utf16fix utf16fix_neon;
 utf16fix utf16fix_neon_64bits;
+utf16fix utf16fix_neon_64bits_simple;
 #endif
 #ifdef __SSE2__
 utf16fix utf16fix_sse;
