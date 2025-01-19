@@ -145,6 +145,7 @@ utf16fix_block64(char16_t *out, const char16_t *in, bool inplace)
 		//
 		// We might also proceed in reverse to reduce the RAW hazard,
 		// but it might require more instructions.
+#if defined(__has_builtin) && __has_builtin(__builtin_bitreverse64)
 		matches = __builtin_bitreverse64(matches); // rbit
 		while (matches != 0) {
 			int r = __builtin_clzll(matches); //clz
@@ -157,6 +158,20 @@ utf16fix_block64(char16_t *out, const char16_t *in, bool inplace)
 			}
 			matches ^= (0x8000000000000000ULL >> r); // lsr + eor
 		}
+#else
+		while (matches != 0) {
+			uint64_t t = matches & (~matches + 1);
+			int r = __builtin_ctzll(matches); // generates rbit + clz
+			bool is_high = is_high_surrogate(in[r-1]);
+			bool is_low = is_low_surrogate(in[r]);
+			if(is_high && !is_low) {
+				out[r - 1] = 0xfffd;
+			} else if(!is_high && is_low){
+				out[r] = 0xfffd;
+			}
+			matches ^= t;
+		}
+#endif
 		return false;
 	}
 	return true;
