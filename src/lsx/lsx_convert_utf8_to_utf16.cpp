@@ -138,6 +138,15 @@ size_t convert_masked_utf8_to_utf16(const char *input,
       // of the extra memory access is less important than the early branch
       // overhead in shorter sequences.
 
+      __m128i expected_mask =
+          (__m128i)v16u8{0xf8, 0xc0, 0xc0, 0xc0, 0xf8, 0xc0, 0xc0, 0xc0,
+                         0xf8, 0xc0, 0xc0, 0xc0, 0x0,  0x0,  0x0,  0x0};
+      __m128i expected =
+          (__m128i)v16u8{0xf0, 0x80, 0x80, 0x80, 0xf0, 0x80, 0x80, 0x80,
+                         0xf0, 0x80, 0x80, 0x80, 0x0,  0x0,  0x0,  0x0};
+      __m128i check = __lsx_vseq_b(__lsx_vand_v(in, expected_mask), expected);
+      if (__lsx_bz_b(check))
+        return 12;
       // Swap byte pairs
       // 10dddddd 10cccccc|10bbbbbb 11110aaa
       // 10cccccc 10dddddd|11110aaa 10bbbbbb
