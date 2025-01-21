@@ -9,7 +9,7 @@ lasx_convert_latin1_to_utf16le(const char *buf, size_t len,
     buf++;
   }
 
-  while (buf + 32 <= end) {
+  while (end - buf >= 32) {
     __m256i in8 = __lasx_xvld(reinterpret_cast<const uint8_t *>(buf), 0);
 
     __m256i inlow = __lasx_vext2xv_hu_bu(in8);

@@ -53,7 +53,7 @@ const char16_t *lasx_validate_utf16(const char16_t *input, size_t size) {
   const auto v_fc = simd8<uint8_t>::splat(0xfc);
   const auto v_dc = simd8<uint8_t>::splat(0xdc);
 
-  while (input + simd16<uint16_t>::ELEMENTS * 2 < end) {
+  while (end - input > simd16<uint16_t>::ELEMENTS * 2) {
     // 0. Load data: since the validation takes into account only higher
     //    byte of each word, we compress the two vectors into one which
     //    consists only the higher bytes.
@@ -134,7 +134,7 @@ const result lasx_validate_utf16_with_errors(const char16_t *input,
   const auto v_fc = simd8<uint8_t>::splat(0xfc);
   const auto v_dc = simd8<uint8_t>::splat(0xdc);
 
-  while (input + simd16<uint16_t>::ELEMENTS * 2 < end) {
+  while (end - input > simd16<uint16_t>::ELEMENTS * 2) {
     // 0. Load data: since the validation takes into account only higher
     //    byte of each word, we compress the two vectors into one which
     //    consists only the higher bytes.

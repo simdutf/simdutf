@@ -4,7 +4,7 @@ lsx_convert_latin1_to_utf16le(const char *buf, size_t len,
   const char *end = buf + len;
 
   __m128i zero = __lsx_vldi(0);
-  while (buf + 16 <= end) {
+  while (end - buf >= 16) {
     __m128i in8 = __lsx_vld(reinterpret_cast<const uint8_t *>(buf), 0);
 
     __m128i inlow = __lsx_vilvl_b(zero, in8);
@@ -24,7 +24,7 @@ lsx_convert_latin1_to_utf16be(const char *buf, size_t len,
                               char16_t *utf16_output) {
   const char *end = buf + len;
   __m128i zero = __lsx_vldi(0);
-  while (buf + 16 <= end) {
+  while (end - buf >= 16) {
     __m128i in8 = __lsx_vld(reinterpret_cast<const uint8_t *>(buf), 0);
 
     __m128i inlow = __lsx_vilvl_b(in8, zero);

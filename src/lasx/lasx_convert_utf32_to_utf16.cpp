@@ -40,7 +40,7 @@ lasx_convert_utf32_to_utf16(const char32_t *buf, size_t len,
   __m256i forbidden_bytemask = __lasx_xvrepli_h(0);
   __m256i v_d800 = __lasx_xvldi(-2600); /*0xD800*/
   __m256i v_dfff = __lasx_xvreplgr2vr_h(uint16_t(0xdfff));
-  while (buf + 16 <= end) {
+  while (end - buf >= 16) {
     __m256i in0 = __lasx_xvld(reinterpret_cast<const uint32_t *>(buf), 0);
     __m256i in1 = __lasx_xvld(reinterpret_cast<const uint32_t *>(buf), 32);
 
@@ -147,7 +147,7 @@ lasx_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
   __m256i forbidden_bytemask = __lasx_xvrepli_h(0);
   __m256i v_d800 = __lasx_xvldi(-2600); /*0xD800*/
   __m256i v_dfff = __lasx_xvreplgr2vr_h(uint16_t(0xdfff));
-  while (buf + 16 <= end) {
+  while (end - buf >= 16) {
     __m256i in0 = __lasx_xvld(reinterpret_cast<const uint32_t *>(buf), 0);
     __m256i in1 = __lasx_xvld(reinterpret_cast<const uint32_t *>(buf), 32);
 

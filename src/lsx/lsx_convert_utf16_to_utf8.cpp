@@ -61,7 +61,7 @@ lsx_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
           // https://github.com/simdutf/simdutf/issues/92
 
   __m128i v_07ff = __lsx_vreplgr2vr_h(uint16_t(0x7ff));
-  while (buf + 16 + safety_margin <= end) {
+  while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     __m128i in = __lsx_vld(reinterpret_cast<const uint16_t *>(buf), 0);
     if (!match_system(big_endian)) {
       in = lsx_swap_bytes(in);
@@ -300,7 +300,7 @@ lsx_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
   const size_t safety_margin =
       12; // to avoid overruns, see issue
           // https://github.com/simdutf/simdutf/issues/92
-  while (buf + 16 + safety_margin <= end) {
+  while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     __m128i in = __lsx_vld(reinterpret_cast<const uint16_t *>(buf), 0);
     if (!match_system(big_endian)) {
       in = lsx_swap_bytes(in);

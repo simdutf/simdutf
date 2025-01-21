@@ -6,7 +6,7 @@ lasx_convert_utf32_to_latin1(const char32_t *buf, size_t len,
       (__m128i)v16u8{0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0});
   __m256i v_ff = __lasx_xvrepli_w(0xFF);
 
-  while (buf + 16 <= end) {
+  while (end - buf >= 16) {
     __m256i in1 = __lasx_xvld(reinterpret_cast<const uint32_t *>(buf), 0);
     __m256i in2 = __lasx_xvld(reinterpret_cast<const uint32_t *>(buf), 32);
 
@@ -39,7 +39,7 @@ lasx_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
       (__m128i)v16u8{0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0});
   __m256i v_ff = __lasx_xvrepli_w(0xFF);
 
-  while (buf + 16 <= end) {
+  while (end - buf >= 16) {
     __m256i in1 = __lasx_xvld(reinterpret_cast<const uint32_t *>(buf), 0);
     __m256i in2 = __lasx_xvld(reinterpret_cast<const uint32_t *>(buf), 32);
 
