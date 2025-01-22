@@ -1,4 +1,4 @@
-
+#if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::convert_utf32_to_latin1(
     const char32_t *src, size_t len, char *dst) const noexcept {
   result res = convert_utf32_to_latin1_with_errors(src, len, dst);
@@ -28,7 +28,9 @@ simdutf_warn_unused size_t implementation::convert_valid_utf32_to_latin1(
     const char32_t *src, size_t len, char *dst) const noexcept {
   return convert_utf32_to_latin1(src, len, dst);
 }
+#endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(
     const char32_t *src, size_t len, char *dst) const noexcept {
   size_t n = len;
@@ -180,7 +182,9 @@ simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf8(
     const char32_t *src, size_t len, char *dst) const noexcept {
   return convert_utf32_to_utf8(src, len, dst);
 }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 template <simdutf_ByteFlip bflip>
 simdutf_really_inline static result
 rvv_convert_utf32_to_utf16_with_errors(const char32_t *src, size_t len,
@@ -287,3 +291,4 @@ simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf16be(
   else
     return rvv_convert_valid_utf32_to_utf16<simdutf_ByteFlip::V>(src, len, dst);
 }
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32

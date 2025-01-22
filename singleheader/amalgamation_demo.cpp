@@ -4,6 +4,7 @@
 #include "simdutf.h"
 
 int main(int, char *[]) {
+#if SIMDUTF_FEATURE_UTF8
   const char *source = "1234";
   // 4 == strlen(source)
   bool validutf8 = simdutf::validate_utf8(source, 4);
@@ -13,6 +14,9 @@ int main(int, char *[]) {
     puts("invalid UTF-8");
     return EXIT_FAILURE;
   }
+#endif
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
   // We need a buffer of size where to write the UTF-16LE words.
   size_t expected_utf16words = simdutf::utf16_length_from_utf8(source, 4);
   std::unique_ptr<char16_t[]> utf16_output{new char16_t[expected_utf16words]};
@@ -45,5 +49,6 @@ int main(int, char *[]) {
   } else {
     puts("perfect round trip");
   }
+#endif
   return EXIT_SUCCESS;
 }

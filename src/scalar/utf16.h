@@ -6,17 +6,13 @@ namespace scalar {
 namespace {
 namespace utf16 {
 
-inline simdutf_warn_unused uint16_t swap_bytes(const uint16_t word) {
-  return uint16_t((word >> 8) | (word << 8));
-}
-
 template <endianness big_endian>
 inline simdutf_warn_unused bool validate(const char16_t *data,
                                          size_t len) noexcept {
   uint64_t pos = 0;
   while (pos < len) {
     char16_t word =
-        !match_system(big_endian) ? swap_bytes(data[pos]) : data[pos];
+        !match_system(big_endian) ? u16_swap_bytes(data[pos]) : data[pos];
     if ((word & 0xF800) == 0xD800) {
       if (pos + 1 >= len) {
         return false;
@@ -25,8 +21,9 @@ inline simdutf_warn_unused bool validate(const char16_t *data,
       if (diff > 0x3FF) {
         return false;
       }
-      char16_t next_word =
-          !match_system(big_endian) ? swap_bytes(data[pos + 1]) : data[pos + 1];
+      char16_t next_word = !match_system(big_endian)
+                               ? u16_swap_bytes(data[pos + 1])
+                               : data[pos + 1];
       char16_t diff2 = char16_t(next_word - 0xDC00);
       if (diff2 > 0x3FF) {
         return false;
@@ -45,7 +42,7 @@ inline simdutf_warn_unused result validate_with_errors(const char16_t *data,
   size_t pos = 0;
   while (pos < len) {
     char16_t word =
-        !match_system(big_endian) ? swap_bytes(data[pos]) : data[pos];
+        !match_system(big_endian) ? u16_swap_bytes(data[pos]) : data[pos];
     if ((word & 0xF800) == 0xD800) {
       if (pos + 1 >= len) {
         return result(error_code::SURROGATE, pos);
@@ -54,8 +51,9 @@ inline simdutf_warn_unused result validate_with_errors(const char16_t *data,
       if (diff > 0x3FF) {
         return result(error_code::SURROGATE, pos);
       }
-      char16_t next_word =
-          !match_system(big_endian) ? swap_bytes(data[pos + 1]) : data[pos + 1];
+      char16_t next_word = !match_system(big_endian)
+                               ? u16_swap_bytes(data[pos + 1])
+                               : data[pos + 1];
       char16_t diff2 = uint16_t(next_word - 0xDC00);
       if (diff2 > 0x3FF) {
         return result(error_code::SURROGATE, pos);
@@ -73,7 +71,7 @@ inline size_t count_code_points(const char16_t *p, size_t len) {
   // We are not BOM aware.
   size_t counter{0};
   for (size_t i = 0; i < len; i++) {
-    char16_t word = !match_system(big_endian) ? swap_bytes(p[i]) : p[i];
+    char16_t word = !match_system(big_endian) ? u16_swap_bytes(p[i]) : p[i];
     counter += ((word & 0xFC00) != 0xDC00);
   }
   return counter;
@@ -84,7 +82,7 @@ inline size_t utf8_length_from_utf16(const char16_t *p, size_t len) {
   // We are not BOM aware.
   size_t counter{0};
   for (size_t i = 0; i < len; i++) {
-    char16_t word = !match_system(big_endian) ? swap_bytes(p[i]) : p[i];
+    char16_t word = !match_system(big_endian) ? u16_swap_bytes(p[i]) : p[i];
     counter++; // ASCII
     counter += static_cast<size_t>(
         word >
@@ -100,7 +98,7 @@ inline size_t utf32_length_from_utf16(const char16_t *p, size_t len) {
   // We are not BOM aware.
   size_t counter{0};
   for (size_t i = 0; i < len; i++) {
-    char16_t word = !match_system(big_endian) ? swap_bytes(p[i]) : p[i];
+    char16_t word = !match_system(big_endian) ? u16_swap_bytes(p[i]) : p[i];
     counter += ((word & 0xFC00) != 0xDC00);
   }
   return counter;
@@ -120,7 +118,7 @@ simdutf_warn_unused inline size_t trim_partial_utf16(const char16_t *input,
     return length;
   }
   uint16_t last_word = uint16_t(input[length - 1]);
-  last_word = !match_system(big_endian) ? swap_bytes(last_word) : last_word;
+  last_word = !match_system(big_endian) ? u16_swap_bytes(last_word) : last_word;
   length -= ((last_word & 0xFC00) == 0xD800);
   return length;
 }
