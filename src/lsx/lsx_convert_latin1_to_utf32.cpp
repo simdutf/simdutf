@@ -3,7 +3,7 @@ lsx_convert_latin1_to_utf32(const char *buf, size_t len,
                             char32_t *utf32_output) {
   const char *end = buf + len;
 
-  while (buf + 16 <= end) {
+  while (end - buf >= 16) {
     __m128i in8 = __lsx_vld(reinterpret_cast<const uint8_t *>(buf), 0);
 
     __m128i zero = __lsx_vldi(0);

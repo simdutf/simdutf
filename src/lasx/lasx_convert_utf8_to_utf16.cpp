@@ -138,6 +138,15 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   } else if (idx < 209) {
     // THREE (3) input code-code units
     if (input_utf8_end_of_code_point_mask == 0x888) {
+      __m128i expected_mask =
+          (__m128i)v16u8{0xf8, 0xc0, 0xc0, 0xc0, 0xf8, 0xc0, 0xc0, 0xc0,
+                         0xf8, 0xc0, 0xc0, 0xc0, 0x0,  0x0,  0x0,  0x0};
+      __m128i expected =
+          (__m128i)v16u8{0xf0, 0x80, 0x80, 0x80, 0xf0, 0x80, 0x80, 0x80,
+                         0xf0, 0x80, 0x80, 0x80, 0x0,  0x0,  0x0,  0x0};
+      __m128i check = __lsx_vseq_b(__lsx_vand_v(in, expected_mask), expected);
+      if (__lsx_bz_b(check))
+        return 12;
       // We want to take 3 4-byte UTF-8 code units and turn them into 3 4-byte
       // UTF-16 pairs. Generating surrogate pairs is a little tricky though, but
       // it is easier when we can assume they are all pairs. This version does

@@ -9,7 +9,7 @@ lasx_convert_latin1_to_utf32(const char *buf, size_t len,
     buf++;
   }
 
-  while (buf + 32 <= end) {
+  while (end - buf >= 32) {
     __m256i in8 = __lasx_xvld(reinterpret_cast<const uint8_t *>(buf), 0);
 
     __m256i in32_0 = __lasx_vext2xv_wu_bu(in8);
@@ -31,7 +31,7 @@ lasx_convert_latin1_to_utf32(const char *buf, size_t len,
     buf += 32;
   }
 
-  if (buf + 16 <= end) {
+  if (end - buf >= 16) {
     __m128i in8 = __lsx_vld(reinterpret_cast<const uint8_t *>(buf), 0);
 
     __m128i zero = __lsx_vldi(0);

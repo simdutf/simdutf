@@ -1111,7 +1111,7 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(
   const uint8_t *data = reinterpret_cast<const uint8_t *>(input);
   const uint8_t *data_end = data + length;
   uint64_t result = 0;
-  while (data + 16 < data_end) {
+  while (data_end - data > 16) {
     uint64_t two_bytes = 0;
     __m128i input_vec = __lsx_vld(data, 0);
     two_bytes =

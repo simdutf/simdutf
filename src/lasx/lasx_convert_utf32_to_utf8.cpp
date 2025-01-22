@@ -42,7 +42,7 @@ lasx_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
       12; // to avoid overruns, see issue
           // https://github.com/simdutf/simdutf/issues/92
 
-  while (buf + 16 + safety_margin < end) {
+  while (end - buf > std::ptrdiff_t(16 + safety_margin)) {
     __m256i in = __lasx_xvld(reinterpret_cast<const uint32_t *>(buf), 0);
     __m256i nextin = __lasx_xvld(reinterpret_cast<const uint32_t *>(buf), 32);
 
@@ -337,7 +337,7 @@ lasx_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
       12; // to avoid overruns, see issue
           // https://github.com/simdutf/simdutf/issues/92
 
-  while (buf + 16 + safety_margin < end) {
+  while (end - buf > std::ptrdiff_t(16 + safety_margin)) {
     __m256i in = __lasx_xvld(reinterpret_cast<const uint32_t *>(buf), 0);
     __m256i nextin = __lasx_xvld(reinterpret_cast<const uint32_t *>(buf), 32);
 

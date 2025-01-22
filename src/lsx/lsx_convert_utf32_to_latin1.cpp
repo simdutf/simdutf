@@ -5,7 +5,7 @@ lsx_convert_utf32_to_latin1(const char32_t *buf, size_t len,
   const v16u8 shuf_mask = {0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0};
   __m128i v_ff = __lsx_vrepli_w(0xFF);
 
-  while (buf + 16 <= end) {
+  while (end - buf >= 16) {
     __m128i in1 = __lsx_vld(reinterpret_cast<const uint32_t *>(buf), 0);
     __m128i in2 = __lsx_vld(reinterpret_cast<const uint32_t *>(buf), 16);
 
@@ -34,7 +34,7 @@ lsx_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
   const v16u8 shuf_mask = {0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0};
   __m128i v_ff = __lsx_vrepli_w(0xFF);
 
-  while (buf + 16 <= end) {
+  while (end - buf >= 16) {
     __m128i in1 = __lsx_vld(reinterpret_cast<const uint32_t *>(buf), 0);
     __m128i in2 = __lsx_vld(reinterpret_cast<const uint32_t *>(buf), 16);
 

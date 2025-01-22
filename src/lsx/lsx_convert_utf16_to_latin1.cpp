@@ -3,7 +3,7 @@ std::pair<const char16_t *, char *>
 lsx_convert_utf16_to_latin1(const char16_t *buf, size_t len,
                             char *latin1_output) {
   const char16_t *end = buf + len;
-  while (buf + 16 <= end) {
+  while (end - buf >= 16) {
     __m128i in = __lsx_vld(reinterpret_cast<const uint16_t *>(buf), 0);
     __m128i in1 = __lsx_vld(reinterpret_cast<const uint16_t *>(buf), 16);
     if (!match_system(big_endian)) {
@@ -31,7 +31,7 @@ lsx_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
                                         char *latin1_output) {
   const char16_t *start = buf;
   const char16_t *end = buf + len;
-  while (buf + 16 <= end) {
+  while (end - buf >= 16) {
     __m128i in = __lsx_vld(reinterpret_cast<const uint16_t *>(buf), 0);
     __m128i in1 = __lsx_vld(reinterpret_cast<const uint16_t *>(buf), 16);
     if (!match_system(big_endian)) {

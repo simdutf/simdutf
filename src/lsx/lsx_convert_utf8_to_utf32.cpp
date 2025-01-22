@@ -156,8 +156,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     __m128i ascii = __lsx_vand_v(perm, __lsx_vrepli_w(0x7F));
     __m128i middle = __lsx_vand_v(perm, __lsx_vldi(-3777 /*0x00003f00*/));
     // 00000000 00000000 0000cccc ccdddddd
-    __m128i cd =
-        __lsx_vbitsel_v(__lsx_vsrli_w(middle, 2), ascii, __lsx_vrepli_w(0x3f));
+    __m128i cd = __lsx_vor_v(__lsx_vsrli_w(middle, 2), ascii);
 
     __m128i correction = __lsx_vand_v(perm, __lsx_vldi(-3520 /*0x00400000*/));
     __m128i corrected = __lsx_vadd_b(perm, __lsx_vsrli_w(correction, 1));

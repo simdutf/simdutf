@@ -12,7 +12,7 @@ lasx_convert_latin1_to_utf8(const char *latin1_input, size_t len,
 
   // We always write 16 bytes, of which more than the first 8 bytes
   // are valid. A safety margin of 8 is more than sufficient.
-  while (latin1_input + 16 <= end) {
+  while (end - latin1_input >= 16) {
     __m128i in8 = __lsx_vld(reinterpret_cast<const uint8_t *>(latin1_input), 0);
     uint32_t ascii_mask = __lsx_vpickve2gr_wu(__lsx_vmskgez_b(in8), 0);
     if (ascii_mask == 0xFFFF) {
