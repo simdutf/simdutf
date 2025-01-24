@@ -233,11 +233,13 @@ def get_timestamp():
                              stdout=subprocess.PIPE)
 
         if ret.returncode != 0:
-            raise ValueError(f"non-zero exit code {ret.returncode}")
+            print(f"git called resulted in non-zero exit code {ret.returncode}")
+            print("timestamp based on current time")
+            return str(datetime.datetime.now())
 
         return ret.stdout.decode('utf-8').strip()
     except (UnicodeDecodeError, FileNotFoundError):
-        print("git not found, timestamp based on current time")
+        print("UnicodeDecodeError or FileNotFoundError, timestamp based on current time")
         return str(datetime.datetime.now())
 
 
