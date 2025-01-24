@@ -229,7 +229,7 @@ def get_timestamp():
     # Forcing it to be UTC is difficult, because it needs to be portable
     # between gnu date and busybox date.
     try:
-        ret = subprocess.run(['git', 'show', '-s', '--format=%ci', 'HEAD'],
+        ret = subprocess.run(['git', '-C', SCRIPTPATH, 'show', '-s', '--format=%ci', 'HEAD'],
                              stdout=subprocess.PIPE)
 
         if ret.returncode != 0:
