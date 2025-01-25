@@ -7,6 +7,7 @@ import sys
 import os.path
 import subprocess
 import os
+import pathlib
 import re
 import shutil
 import datetime
@@ -229,15 +230,24 @@ def get_timestamp():
     # Forcing it to be UTC is difficult, because it needs to be portable
     # between gnu date and busybox date.
     try:
-        ret = subprocess.run(['git', 'show', '-s', '--format=%ci', 'HEAD'],
-                             stdout=subprocess.PIPE)
+        # avoid git going outside simdutf, which could happen when
+        # unpacking a release tarball inside a subdirectory of an unrelated
+        # git repository. that would lead to picking up the timestamp of the
+        # unrelated git repository.
+        parent = pathlib.Path(SCRIPTPATH).absolute().parent
+        GIT_CEILING_DIRECTORIES = str(parent)
+        ret = subprocess.run(['git', '-C', SCRIPTPATH, 'show', '-s', '--format=%ci', 'HEAD'],
+                             stdout=subprocess.PIPE,
+                             env=dict(os.environ, GIT_CEILING_DIRECTORIES=GIT_CEILING_DIRECTORIES))
 
         if ret.returncode != 0:
-            raise ValueError(f"non-zero exit code {ret.returncode}")
+            print(f"git called resulted in non-zero exit code {ret.returncode}")
+            print("timestamp based on current time")
+            return str(datetime.datetime.now())
 
         return ret.stdout.decode('utf-8').strip()
     except (UnicodeDecodeError, FileNotFoundError):
-        print("git not found, timestamp based on current time")
+        print("UnicodeDecodeError or FileNotFoundError, timestamp based on current time")
         return str(datetime.datetime.now())
 
 
