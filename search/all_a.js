@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['supported_5fby_5fruntime_5fsystem_64',['supported_by_runtime_system',['../classsimdutf_1_1implementation.html#a6cd8f7d8787c76e690ed9c4151abb7a9',1,'simdutf::implementation']]]
+  ['name_0',['name',['../classsimdutf_1_1implementation.html#aa5bf5083338ae14df38af6661041e53b',1,'simdutf::implementation']]]
 ];
