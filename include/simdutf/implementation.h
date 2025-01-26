@@ -545,6 +545,7 @@ convert_latin1_to_utf16be(const detail::input_span_of_byte_like auto &input,
  * encode the UTF-16 string as Latin1
  */
 simdutf_warn_unused size_t latin1_length_from_utf16(size_t length) noexcept;
+
 /**
  * Compute the number of code units that this Latin1 string would require in
  * UTF-16 format.
