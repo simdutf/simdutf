@@ -19,7 +19,7 @@ jobs:
         with:
           arch: s390x
           githubToken: ${{ github.token }}
-          distro: ubuntu_latest
+          distro: ubuntu22.04
           install: |
             apt-get update -q -y
             apt-get install -y cmake make g++
