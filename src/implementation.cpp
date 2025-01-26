@@ -1399,6 +1399,12 @@ simdutf_warn_unused size_t convert_latin1_to_utf32(
   return get_default_implementation()->convert_latin1_to_utf32(buf, len,
                                                                latin1_output);
 }
+simdutf_warn_unused size_t latin1_length_from_utf32(size_t length) noexcept {
+  return length;
+}
+simdutf_warn_unused size_t utf32_length_from_latin1(size_t length) noexcept {
+  return length;
+}
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
@@ -1602,6 +1608,12 @@ simdutf_warn_unused result convert_utf16be_to_latin1_with_errors(
     const char16_t *buf, size_t len, char *latin1_buffer) noexcept {
   return get_default_implementation()->convert_utf16be_to_latin1_with_errors(
       buf, len, latin1_buffer);
+}
+simdutf_warn_unused size_t latin1_length_from_utf16(size_t length) noexcept {
+  return length;
+}
+simdutf_warn_unused size_t utf16_length_from_latin1(size_t length) noexcept {
+  return length;
 }
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 

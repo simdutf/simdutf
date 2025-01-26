@@ -765,6 +765,14 @@ simdutf_warn_unused size_t utf8_length_from_latin1(const char * input, size_t le
  */
 simdutf_warn_unused size_t latin1_length_from_utf8(const char * input, size_t length) noexcept;
 
+/**
+ * Compute the number of bytes that this UTF-16 string would require in Latin1 format.
+ *
+ * @param length        the length of the string in Latin1 code units (char)
+ * @return the length of the string in Latin1 code units (char) required to encode the UTF-16 string as Latin1
+ */
+simdutf_warn_unused size_t latin1_length_from_utf16(size_t length) noexcept;
+
 /*
  * Compute the number of bytes that this UTF-16LE/BE string would require in Latin1 format.
  *
@@ -882,6 +890,14 @@ simdutf_warn_unused size_t utf8_length_from_utf32(const char32_t * input, size_t
 simdutf_warn_unused size_t utf16_length_from_utf32(const char32_t * input, size_t length) noexcept;
 
 /**
+ * Compute the number of code units that this Latin1 string would require in UTF-16 format.
+ *
+ * @param length        the length of the string in Latin1 code units (char)
+ * @return the length of the string in 2-byte code units (char16_t) required to encode the Latin1 string as UTF-16
+ */
+simdutf_warn_unused size_t utf16_length_from_latin1(size_t length) noexcept;
+
+/**
  * Using native endianness; Compute the number of bytes that this UTF-16
  * string would require in UTF-32 format.
  *
@@ -929,6 +945,14 @@ simdutf_warn_unused size_t utf32_length_from_utf16le(const char16_t * input, siz
  * @return the number of bytes required to encode the UTF-16BE string as UTF-32
  */
 simdutf_warn_unused size_t utf32_length_from_utf16be(const char16_t * input, size_t length) noexcept;
+
+/**
+ * Compute the number of bytes that this Latin1 string would require in UTF-32 format.
+ *
+ * @param length        the length of the string in Latin1 code units (char)
+ * @return the length of the string in 4-byte code units (char32_t) required to encode the Latin1 string as UTF-32
+ */
+simdutf_warn_unused size_t utf32_length_from_latin1(size_t length) noexcept;
 ```
 
 

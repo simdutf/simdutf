@@ -536,6 +536,20 @@ convert_latin1_to_utf16be(const detail::input_span_of_byte_like auto &input,
                                    input.size(), output.data());
 }
   #endif // SIMDUTF_SPAN
+/**
+ * Compute the number of bytes that this UTF-16 string would require in Latin1 format.
+ *
+ * @param length        the length of the string in Latin1 code units (char)
+ * @return the length of the string in Latin1 code units (char) required to encode the UTF-16 string as Latin1
+ */
+simdutf_warn_unused size_t latin1_length_from_utf16(size_t length) noexcept;
+/**
+ * Compute the number of code units that this Latin1 string would require in UTF-16 format.
+ *
+ * @param length        the length of the string in Latin1 code units (char)
+ * @return the length of the string in 2-byte code units (char16_t) required to encode the Latin1 string as UTF-16
+ */
+simdutf_warn_unused size_t utf16_length_from_latin1(size_t length) noexcept;
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
@@ -2135,6 +2149,28 @@ simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf32_to_latin1(
       reinterpret_cast<char *>(latin1_output.data()));
 }
   #endif // SIMDUTF_SPAN
+
+
+/**
+ * Compute the number of bytes that this UTF-32 string would require in Latin1 format.
+ *
+ * This function does not validate the input. It is acceptable to pass invalid UTF-32 strings but in such cases
+ * the result is implementation defined.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param length        the length of the string in 4-byte code units (char32_t)
+ * @return the number of bytes required to encode the UTF-32 string as Latin1
+ */
+simdutf_warn_unused size_t latin1_length_from_utf32(size_t length) noexcept;
+
+/**
+ * Compute the number of bytes that this Latin1 string would require in UTF-32 format.
+ *
+ * @param length        the length of the string in Latin1 code units (char)
+ * @return the length of the string in 4-byte code units (char32_t) required to encode the Latin1 string as UTF-32
+ */
+simdutf_warn_unused size_t utf32_length_from_latin1(size_t length) noexcept;
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
@@ -4393,7 +4429,6 @@ public:
    * Return the number of bytes that this UTF-32 string would require in Latin1
    * format.
    *
-   * @param input         the UTF-32 string to convert
    * @param length        the length of the string in 4-byte code units
    * (char32_t)
    * @return the number of bytes required to encode the UTF-32 string as Latin1
