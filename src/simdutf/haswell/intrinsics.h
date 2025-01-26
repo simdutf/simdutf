@@ -57,6 +57,10 @@ SIMDUTF_POP_DISABLE_WARNINGS
     // we roll our own
     #define _blsr_u64(n) ((n - 1) & n)
   #endif //  _blsr_u64
+  #ifndef _blsmsk_u32
+    // we roll our own
+    #define _blsmsk_u32(n) ((n - 1) ^ n)
+  #endif //  _blsmsk_u32
 #endif   // SIMDUTF_CLANG_VISUAL_STUDIO
 
 #endif // SIMDUTF_HASWELL_INTRINSICS_H
