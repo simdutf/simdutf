@@ -1046,6 +1046,9 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf16le_with_errors(
   std::pair<result, char16_t *> ret =
       avx512_convert_utf32_to_utf16_with_errors<endianness::LITTLE>(
           buf, len, utf16_output);
+  if (ret.first.error) {
+    return ret.first;
+  }
   ret.first.count =
       ret.second -
       utf16_output; // Set count to the number of 8-bit code units written
@@ -1059,6 +1062,9 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf16be_with_errors(
   std::pair<result, char16_t *> ret =
       avx512_convert_utf32_to_utf16_with_errors<endianness::BIG>(buf, len,
                                                                  utf16_output);
+  if (ret.first.error) {
+    return ret.first;
+  }
   ret.first.count =
       ret.second -
       utf16_output; // Set count to the number of 8-bit code units written
