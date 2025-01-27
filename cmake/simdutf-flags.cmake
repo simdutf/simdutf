@@ -1,6 +1,7 @@
 
 option(SIMDUTF_SANITIZE "Sanitize addresses" OFF)
 option(SIMDUTF_SANITIZE_UNDEFINED "Sanitize undefined behavior" OFF)
+option(SIMDUTF_SANITIZE_THREAD "Sanitize threads" OFF)
 option(SIMDUTF_ALWAYS_INCLUDE_FALLBACK "Always include fallback" OFF)
 
 if (NOT CMAKE_BUILD_TYPE)

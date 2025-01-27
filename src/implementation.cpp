@@ -2083,6 +2083,37 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   rr.count += input_index;
   return rr;
 }
+
+  #if SIMDUTF_SPAN
+simdutf_warn_unused size_t
+binary_to_base64(std::span<std::atomic<char>> binary_input,
+                 std::span<std::atomic<char>> base64_output,
+                 const base64_options options) noexcept {
+  std::size_t retval = 0;
+  constexpr std::size_t input_block_size = 4096 * 3;
+  constexpr std::size_t output_block_size = input_block_size * 4 / 3;
+  std::array<char, input_block_size> inbuf;
+  std::array<char, output_block_size> outbuf;
+
+  for (std::size_t i = 0; i < binary_input.size(); i += input_block_size) {
+    const auto Nprocess = std::min(input_block_size, binary_input.size() - i);
+    // copy to inbuf
+    for (std::size_t j = 0; j < Nprocess; ++j) {
+      inbuf[j] = binary_input[i + j].load(std::memory_order_relaxed);
+    }
+    // convert
+    const auto written =
+        binary_to_base64(inbuf.data(), Nprocess, outbuf.data(), options);
+    // copy to outbuf
+    for (std::size_t j = 0; j < written; ++j) {
+      base64_output[retval + j].store(outbuf[j], std::memory_order_relaxed);
+    }
+    retval += written;
+  }
+  return retval;
+}
+  #endif
+
 #endif // SIMDUTF_FEATURE_BASE64
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1

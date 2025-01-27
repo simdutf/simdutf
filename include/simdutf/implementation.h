@@ -2885,6 +2885,21 @@ binary_to_base64(const detail::input_span_of_byte_like auto &input,
 }
   #endif // SIMDUTF_SPAN
 
+  /**
+   * Convert a binary input to a base64 output, using atomic buffers.
+   * @brief binary_to_base64
+   * @param binary_input
+   * @param base64_output
+   * @param options
+   * @return
+   */
+  #if SIMDUTF_SPAN
+simdutf_warn_unused size_t
+binary_to_base64(std::span<std::atomic<char>> binary_input,
+                 std::span<std::atomic<char>> base64_output,
+                 base64_options options = base64_default) noexcept;
+  #endif
+
 /**
  * Convert a base64 input to a binary output.
  *

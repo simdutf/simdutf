@@ -27,3 +27,10 @@ jobs:
           cmake -DSIMDUTF_SANITIZE_UNDEFINED=ON ..  &&
           cmake --build .   &&
           ctest --output-on-failure
+      - name: Use cmake with thread sanitizer
+        run: |
+          mkdir buildthread &&
+          cd buildthread &&
+          cmake -DSIMDUTF_SANITIZE_THREAD=ON ..  &&
+          cmake --build .   &&
+          ctest --output-on-failure
