@@ -1046,16 +1046,8 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf16le_with_errors(
   std::pair<result, char16_t *> ret =
       avx512_convert_utf32_to_utf16_with_errors<endianness::LITTLE>(
           buf, len, utf16_output);
-  if (ret.first.count != len) {
-    result scalar_res =
-        scalar::utf32_to_utf16::convert_with_errors<endianness::LITTLE>(
-            buf + ret.first.count, len - ret.first.count, ret.second);
-    if (scalar_res.error) {
-      scalar_res.count += ret.first.count;
-      return scalar_res;
-    } else {
-      ret.second += scalar_res.count;
-    }
+  if (ret.first.error) {
+    return ret.first;
   }
   ret.first.count =
       ret.second -
@@ -1070,16 +1062,8 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf16be_with_errors(
   std::pair<result, char16_t *> ret =
       avx512_convert_utf32_to_utf16_with_errors<endianness::BIG>(buf, len,
                                                                  utf16_output);
-  if (ret.first.count != len) {
-    result scalar_res =
-        scalar::utf32_to_utf16::convert_with_errors<endianness::BIG>(
-            buf + ret.first.count, len - ret.first.count, ret.second);
-    if (scalar_res.error) {
-      scalar_res.count += ret.first.count;
-      return scalar_res;
-    } else {
-      ret.second += scalar_res.count;
-    }
+  if (ret.first.error) {
+    return ret.first;
   }
   ret.first.count =
       ret.second -
