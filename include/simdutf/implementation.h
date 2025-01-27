@@ -118,7 +118,7 @@ autodetect_encoding(
   return autodetect_encoding(reinterpret_cast<const char *>(input.data()),
                              input.size());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Autodetect the possible encodings of the input in one pass.
@@ -143,8 +143,8 @@ detect_encodings(const detail::input_span_of_byte_like auto &input) noexcept {
   return detect_encodings(reinterpret_cast<const char *>(input.data()),
                           input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_DETECT_ENCODING
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 /**
@@ -165,8 +165,8 @@ validate_utf8(const detail::input_span_of_byte_like auto &input) noexcept {
   return validate_utf8(reinterpret_cast<const char *>(input.data()),
                        input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF8
 /**
@@ -189,8 +189,8 @@ simdutf_really_inline simdutf_warn_unused result validate_utf8_with_errors(
   return validate_utf8_with_errors(reinterpret_cast<const char *>(input.data()),
                                    input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_ASCII
 /**
@@ -209,7 +209,7 @@ validate_ascii(const detail::input_span_of_byte_like auto &input) noexcept {
   return validate_ascii(reinterpret_cast<const char *>(input.data()),
                         input.size());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Validate the ASCII string and stop on error. It might be faster than
@@ -232,8 +232,8 @@ simdutf_really_inline simdutf_warn_unused result validate_ascii_with_errors(
   return validate_ascii_with_errors(
       reinterpret_cast<const char *>(input.data()), input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_ASCII
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_ASCII
 
 #if SIMDUTF_FEATURE_UTF16
 /**
@@ -257,8 +257,8 @@ simdutf_really_inline simdutf_warn_unused bool
 validate_utf16(std::span<const char16_t> input) noexcept {
   return validate_utf16(input.data(), input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF16
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 /**
@@ -282,8 +282,8 @@ simdutf_really_inline simdutf_warn_unused bool
 validate_utf16le(std::span<const char16_t> input) noexcept {
   return validate_utf16le(input.data(), input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF16
 /**
@@ -307,7 +307,7 @@ simdutf_really_inline simdutf_warn_unused bool
 validate_utf16be(std::span<const char16_t> input) noexcept {
   return validate_utf16be(input.data(), input.size());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Using native endianness; Validate the UTF-16 string and stop on error.
@@ -333,7 +333,7 @@ simdutf_really_inline simdutf_warn_unused result
 validate_utf16_with_errors(std::span<const char16_t> input) noexcept {
   return validate_utf16_with_errors(input.data(), input.size());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Validate the UTF-16LE string and stop on error. It might be faster than
@@ -358,7 +358,7 @@ simdutf_really_inline simdutf_warn_unused result
 validate_utf16le_with_errors(std::span<const char16_t> input) noexcept {
   return validate_utf16le_with_errors(input.data(), input.size());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Validate the UTF-16BE string and stop on error. It might be faster than
@@ -383,8 +383,8 @@ simdutf_really_inline simdutf_warn_unused result
 validate_utf16be_with_errors(std::span<const char16_t> input) noexcept {
   return validate_utf16be_with_errors(input.data(), input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF16
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 /**
@@ -408,8 +408,8 @@ simdutf_really_inline simdutf_warn_unused bool
 validate_utf32(std::span<const char32_t> input) noexcept {
   return validate_utf32(input.data(), input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF32
 /**
@@ -435,8 +435,8 @@ simdutf_really_inline simdutf_warn_unused result
 validate_utf32_with_errors(std::span<const char32_t> input) noexcept {
   return validate_utf32_with_errors(input.data(), input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF32
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 /**
@@ -460,7 +460,7 @@ simdutf_really_inline simdutf_warn_unused size_t convert_latin1_to_utf8(
       reinterpret_cast<const char *>(latin1_input.data()), latin1_input.size(),
       utf8_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert Latin1 string into UTF8 string with output limit.
@@ -490,8 +490,8 @@ simdutf_really_inline simdutf_warn_unused size_t convert_latin1_to_utf8_safe(
       input.data(), input.size(), reinterpret_cast<char *>(utf8_output.data()),
       utf8_output.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 /**
@@ -514,7 +514,7 @@ simdutf_really_inline simdutf_warn_unused size_t convert_latin1_to_utf16le(
       reinterpret_cast<const char *>(latin1_input.data()), latin1_input.size(),
       utf16_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert Latin1 string into UTF-16BE string.
@@ -535,7 +535,26 @@ convert_latin1_to_utf16be(const detail::input_span_of_byte_like auto &input,
   return convert_latin1_to_utf16be(reinterpret_cast<const char *>(input.data()),
                                    input.size(), output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
+/**
+ * Compute the number of bytes that this UTF-16 string would require in Latin1
+ * format.
+ *
+ * @param length        the length of the string in Latin1 code units (char)
+ * @return the length of the string in Latin1 code units (char) required to
+ * encode the UTF-16 string as Latin1
+ */
+simdutf_warn_unused size_t latin1_length_from_utf16(size_t length) noexcept;
+
+/**
+ * Compute the number of code units that this Latin1 string would require in
+ * UTF-16 format.
+ *
+ * @param length        the length of the string in Latin1 code units (char)
+ * @return the length of the string in 2-byte code units (char16_t) required to
+ * encode the Latin1 string as UTF-16
+ */
+simdutf_warn_unused size_t utf16_length_from_latin1(size_t length) noexcept;
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
@@ -559,8 +578,8 @@ simdutf_really_inline simdutf_warn_unused size_t convert_latin1_to_utf32(
       reinterpret_cast<const char *>(latin1_input.data()), latin1_input.size(),
       utf32_output.data());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 /**
@@ -586,8 +605,8 @@ simdutf_really_inline simdutf_warn_unused size_t convert_utf8_to_latin1(
                                 input.size(),
                                 reinterpret_cast<char *>(output.data()));
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 /**
@@ -612,8 +631,8 @@ convert_utf8_to_utf16(const detail::input_span_of_byte_like auto &input,
   return convert_utf8_to_utf16(reinterpret_cast<const char *>(input.data()),
                                input.size(), output.data());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 /**
@@ -633,8 +652,8 @@ convert_latin1_to_utf16(const detail::input_span_of_byte_like auto &input,
   return convert_latin1_to_utf16(reinterpret_cast<const char *>(input.data()),
                                  input.size(), output.data());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 /**
@@ -659,7 +678,7 @@ convert_utf8_to_utf16le(const detail::input_span_of_byte_like auto &utf8_input,
       reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
       utf16_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-8 string into UTF-16BE string.
@@ -683,8 +702,8 @@ convert_utf8_to_utf16be(const detail::input_span_of_byte_like auto &utf8_input,
       reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
       utf16_output.data());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 /**
@@ -714,8 +733,8 @@ convert_utf8_to_latin1_with_errors(
       reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
       reinterpret_cast<char *>(latin1_output.data()));
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 /**
@@ -744,7 +763,7 @@ convert_utf8_to_utf16_with_errors(
       reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
       utf16_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-8 string into UTF-16LE string and stop on error.
@@ -771,7 +790,7 @@ convert_utf8_to_utf16le_with_errors(
       reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
       utf16_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-8 string into UTF-16BE string and stop on error.
@@ -798,8 +817,8 @@ convert_utf8_to_utf16be_with_errors(
       reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
       utf16_output.data());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 /**
@@ -824,7 +843,7 @@ convert_utf8_to_utf32(const detail::input_span_of_byte_like auto &utf8_input,
       reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
       utf32_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-8 string into UTF-32 string and stop on error.
@@ -851,8 +870,8 @@ convert_utf8_to_utf32_with_errors(
       reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
       utf32_output.data());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 /**
@@ -884,8 +903,8 @@ simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf8_to_latin1(
       reinterpret_cast<const char *>(valid_utf8_input.data()),
       valid_utf8_input.size(), latin1_output.data());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 /**
@@ -908,7 +927,7 @@ simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf8_to_utf16(
       reinterpret_cast<const char *>(valid_utf8_input.data()),
       valid_utf8_input.size(), utf16_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert valid UTF-8 string into UTF-16LE string.
@@ -930,7 +949,7 @@ simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf8_to_utf16le(
       reinterpret_cast<const char *>(valid_utf8_input.data()),
       valid_utf8_input.size(), utf16_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert valid UTF-8 string into UTF-16BE string.
@@ -952,8 +971,8 @@ simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf8_to_utf16be(
       reinterpret_cast<const char *>(valid_utf8_input.data()),
       valid_utf8_input.size(), utf16_output.data());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 /**
@@ -976,8 +995,8 @@ simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf8_to_utf32(
       reinterpret_cast<const char *>(valid_utf8_input.data()),
       valid_utf8_input.size(), utf32_output.data());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 /**
@@ -996,7 +1015,7 @@ simdutf_really_inline simdutf_warn_unused size_t utf8_length_from_latin1(
   return utf8_length_from_latin1(
       reinterpret_cast<const char *>(latin1_input.data()), latin1_input.size());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Compute the number of bytes that this UTF-8 string would require in Latin1
@@ -1020,8 +1039,8 @@ simdutf_really_inline simdutf_warn_unused size_t latin1_length_from_utf8(
       reinterpret_cast<const char *>(valid_utf8_input.data()),
       valid_utf8_input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 /**
@@ -1047,8 +1066,8 @@ simdutf_really_inline simdutf_warn_unused size_t utf16_length_from_utf8(
       reinterpret_cast<const char *>(valid_utf8_input.data()),
       valid_utf8_input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 /**
@@ -1076,8 +1095,8 @@ simdutf_really_inline simdutf_warn_unused size_t utf32_length_from_utf8(
       reinterpret_cast<const char *>(valid_utf8_input.data()),
       valid_utf8_input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 /**
@@ -1105,8 +1124,8 @@ simdutf_really_inline simdutf_warn_unused size_t convert_utf16_to_utf8(
   return convert_utf16_to_utf8(utf16_input.data(), utf16_input.size(),
                                reinterpret_cast<char *>(utf8_output.data()));
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 /**
@@ -1134,7 +1153,7 @@ simdutf_really_inline simdutf_warn_unused size_t convert_utf16_to_latin1(
       utf16_input.data(), utf16_input.size(),
       reinterpret_cast<char *>(latin1_output.data()));
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-16LE string into Latin1 string.
@@ -1162,7 +1181,7 @@ simdutf_really_inline simdutf_warn_unused size_t convert_utf16le_to_latin1(
       utf16_input.data(), utf16_input.size(),
       reinterpret_cast<char *>(latin1_output.data()));
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-16BE string into Latin1 string.
@@ -1188,8 +1207,8 @@ simdutf_really_inline simdutf_warn_unused size_t convert_utf16be_to_latin1(
       utf16_input.data(), utf16_input.size(),
       reinterpret_cast<char *>(latin1_output.data()));
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 /**
@@ -1216,7 +1235,7 @@ simdutf_really_inline simdutf_warn_unused size_t convert_utf16le_to_utf8(
   return convert_utf16le_to_utf8(utf16_input.data(), utf16_input.size(),
                                  reinterpret_cast<char *>(utf8_output.data()));
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-16BE string into UTF-8 string.
@@ -1242,8 +1261,8 @@ simdutf_really_inline simdutf_warn_unused size_t convert_utf16be_to_utf8(
   return convert_utf16be_to_utf8(utf16_input.data(), utf16_input.size(),
                                  reinterpret_cast<char *>(utf8_output.data()));
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 /**
@@ -1273,7 +1292,7 @@ convert_utf16_to_latin1_with_errors(
       utf16_input.data(), utf16_input.size(),
       reinterpret_cast<char *>(latin1_output.data()));
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-16LE string into Latin1 string.
@@ -1301,7 +1320,7 @@ convert_utf16le_to_latin1_with_errors(
       utf16_input.data(), utf16_input.size(),
       reinterpret_cast<char *>(latin1_output.data()));
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-16BE string into Latin1 string.
@@ -1331,8 +1350,8 @@ convert_utf16be_to_latin1_with_errors(
       utf16_input.data(), utf16_input.size(),
       reinterpret_cast<char *>(latin1_output.data()));
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 /**
@@ -1363,7 +1382,7 @@ convert_utf16_to_utf8_with_errors(
       utf16_input.data(), utf16_input.size(),
       reinterpret_cast<char *>(utf8_output.data()));
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-16LE string into UTF-8 string and stop on error.
@@ -1392,7 +1411,7 @@ convert_utf16le_to_utf8_with_errors(
       utf16_input.data(), utf16_input.size(),
       reinterpret_cast<char *>(utf8_output.data()));
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-16BE string into UTF-8 string and stop on error.
@@ -1421,7 +1440,7 @@ convert_utf16be_to_utf8_with_errors(
       utf16_input.data(), utf16_input.size(),
       reinterpret_cast<char *>(utf8_output.data()));
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Using native endianness, convert valid UTF-16 string into UTF-8 string.
@@ -1446,8 +1465,8 @@ simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf16_to_utf8(
       valid_utf16_input.data(), valid_utf16_input.size(),
       reinterpret_cast<char *>(utf8_output.data()));
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 /**
@@ -1479,7 +1498,7 @@ simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf16_to_latin1(
       valid_utf16_input.data(), valid_utf16_input.size(),
       reinterpret_cast<char *>(latin1_output.data()));
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert valid UTF-16LE string into Latin1 string.
@@ -1511,7 +1530,7 @@ convert_valid_utf16le_to_latin1(
       valid_utf16_input.data(), valid_utf16_input.size(),
       reinterpret_cast<char *>(latin1_output.data()));
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert valid UTF-16BE string into Latin1 string.
@@ -1543,8 +1562,8 @@ convert_valid_utf16be_to_latin1(
       valid_utf16_input.data(), valid_utf16_input.size(),
       reinterpret_cast<char *>(latin1_output.data()));
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 /**
@@ -1571,7 +1590,7 @@ simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf16le_to_utf8(
       valid_utf16_input.data(), valid_utf16_input.size(),
       reinterpret_cast<char *>(utf8_output.data()));
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert valid UTF-16BE string into UTF-8 string.
@@ -1596,8 +1615,8 @@ simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf16be_to_utf8(
       valid_utf16_input.data(), valid_utf16_input.size(),
       reinterpret_cast<char *>(utf8_output.data()));
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 /**
@@ -1624,7 +1643,7 @@ convert_utf16_to_utf32(std::span<const char16_t> utf16_input,
   return convert_utf16_to_utf32(utf16_input.data(), utf16_input.size(),
                                 utf32_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-16LE string into UTF-32 string.
@@ -1649,7 +1668,7 @@ convert_utf16le_to_utf32(std::span<const char16_t> utf16_input,
   return convert_utf16le_to_utf32(utf16_input.data(), utf16_input.size(),
                                   utf32_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-16BE string into UTF-32 string.
@@ -1674,7 +1693,7 @@ convert_utf16be_to_utf32(std::span<const char16_t> utf16_input,
   return convert_utf16be_to_utf32(utf16_input.data(), utf16_input.size(),
                                   utf32_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Using native endianness, convert possibly broken UTF-16 string into
@@ -1702,7 +1721,7 @@ convert_utf16_to_utf32_with_errors(std::span<const char16_t> utf16_input,
   return convert_utf16_to_utf32_with_errors(
       utf16_input.data(), utf16_input.size(), utf32_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-16LE string into UTF-32 string and stop on error.
@@ -1730,7 +1749,7 @@ convert_utf16le_to_utf32_with_errors(
   return convert_utf16le_to_utf32_with_errors(
       utf16_input.data(), utf16_input.size(), utf32_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-16BE string into UTF-32 string and stop on error.
@@ -1758,7 +1777,7 @@ convert_utf16be_to_utf32_with_errors(
   return convert_utf16be_to_utf32_with_errors(
       utf16_input.data(), utf16_input.size(), utf32_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Using native endianness, convert valid UTF-16 string into UTF-32 string.
@@ -1783,7 +1802,7 @@ convert_valid_utf16_to_utf32(std::span<const char16_t> valid_utf16_input,
   return convert_valid_utf16_to_utf32(
       valid_utf16_input.data(), valid_utf16_input.size(), utf32_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert valid UTF-16LE string into UTF-32 string.
@@ -1807,7 +1826,7 @@ convert_valid_utf16le_to_utf32(std::span<const char16_t> valid_utf16_input,
   return convert_valid_utf16le_to_utf32(
       valid_utf16_input.data(), valid_utf16_input.size(), utf32_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert valid UTF-16BE string into UTF-32 string.
@@ -1831,8 +1850,8 @@ convert_valid_utf16be_to_utf32(std::span<const char16_t> valid_utf16_input,
   return convert_valid_utf16be_to_utf32(
       valid_utf16_input.data(), valid_utf16_input.size(), utf32_output.data());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 /**
@@ -1868,8 +1887,8 @@ utf8_length_from_utf16(std::span<const char16_t> valid_utf16_input) noexcept {
   return utf8_length_from_utf16(valid_utf16_input.data(),
                                 valid_utf16_input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 /**
@@ -1891,7 +1910,7 @@ utf8_length_from_utf16le(std::span<const char16_t> valid_utf16_input) noexcept {
   return utf8_length_from_utf16le(valid_utf16_input.data(),
                                   valid_utf16_input.size());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Compute the number of bytes that this UTF-16BE string would require in UTF-8
@@ -1912,8 +1931,8 @@ utf8_length_from_utf16be(std::span<const char16_t> valid_utf16_input) noexcept {
   return utf8_length_from_utf16be(valid_utf16_input.data(),
                                   valid_utf16_input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 /**
@@ -1939,7 +1958,7 @@ simdutf_really_inline simdutf_warn_unused size_t convert_utf32_to_utf8(
   return convert_utf32_to_utf8(utf32_input.data(), utf32_input.size(),
                                reinterpret_cast<char *>(utf8_output.data()));
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-32 string into UTF-8 string and stop on error.
@@ -1968,7 +1987,7 @@ convert_utf32_to_utf8_with_errors(
       utf32_input.data(), utf32_input.size(),
       reinterpret_cast<char *>(utf8_output.data()));
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert valid UTF-32 string into UTF-8 string.
@@ -1993,8 +2012,8 @@ simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf32_to_utf8(
       valid_utf32_input.data(), valid_utf32_input.size(),
       reinterpret_cast<char *>(utf8_output.data()));
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 /**
@@ -2020,7 +2039,7 @@ convert_utf32_to_utf16(std::span<const char32_t> utf32_input,
   return convert_utf32_to_utf16(utf32_input.data(), utf32_input.size(),
                                 utf16_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-32 string into UTF-16LE string.
@@ -2044,8 +2063,8 @@ convert_utf32_to_utf16le(std::span<const char32_t> utf32_input,
   return convert_utf32_to_utf16le(utf32_input.data(), utf32_input.size(),
                                   utf16_output.data());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 /**
@@ -2072,7 +2091,7 @@ simdutf_really_inline simdutf_warn_unused size_t convert_utf32_to_latin1(
       utf32_input.data(), utf32_input.size(),
       reinterpret_cast<char *>(latin1_output.data()));
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-32 string into Latin1 string and stop on error.
@@ -2102,7 +2121,7 @@ convert_utf32_to_latin1_with_errors(
       utf32_input.data(), utf32_input.size(),
       reinterpret_cast<char *>(latin1_output.data()));
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert valid UTF-32 string into Latin1 string.
@@ -2134,7 +2153,31 @@ simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf32_to_latin1(
       valid_utf32_input.data(), valid_utf32_input.size(),
       reinterpret_cast<char *>(latin1_output.data()));
 }
-  #endif
+  #endif // SIMDUTF_SPAN
+
+/**
+ * Compute the number of bytes that this UTF-32 string would require in Latin1
+ * format.
+ *
+ * This function does not validate the input. It is acceptable to pass invalid
+ * UTF-32 strings but in such cases the result is implementation defined.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param length        the length of the string in 4-byte code units (char32_t)
+ * @return the number of bytes required to encode the UTF-32 string as Latin1
+ */
+simdutf_warn_unused size_t latin1_length_from_utf32(size_t length) noexcept;
+
+/**
+ * Compute the number of bytes that this Latin1 string would require in UTF-32
+ * format.
+ *
+ * @param length        the length of the string in Latin1 code units (char)
+ * @return the length of the string in 4-byte code units (char32_t) required to
+ * encode the Latin1 string as UTF-32
+ */
+simdutf_warn_unused size_t utf32_length_from_latin1(size_t length) noexcept;
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
@@ -2160,7 +2203,7 @@ convert_utf32_to_utf16be(std::span<const char32_t> utf32_input,
   return convert_utf32_to_utf16be(utf32_input.data(), utf32_input.size(),
                                   utf16_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Using native endianness, convert possibly broken UTF-32 string into UTF-16
@@ -2188,7 +2231,7 @@ convert_utf32_to_utf16_with_errors(std::span<const char32_t> utf32_input,
   return convert_utf32_to_utf16_with_errors(
       utf32_input.data(), utf32_input.size(), utf16_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-32 string into UTF-16LE string and stop on error.
@@ -2216,7 +2259,7 @@ convert_utf32_to_utf16le_with_errors(
   return convert_utf32_to_utf16le_with_errors(
       utf32_input.data(), utf32_input.size(), utf16_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert possibly broken UTF-32 string into UTF-16BE string and stop on error.
@@ -2244,7 +2287,7 @@ convert_utf32_to_utf16be_with_errors(
   return convert_utf32_to_utf16be_with_errors(
       utf32_input.data(), utf32_input.size(), utf16_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Using native endianness, convert valid UTF-32 string into a UTF-16 string.
@@ -2268,7 +2311,7 @@ convert_valid_utf32_to_utf16(std::span<const char32_t> valid_utf32_input,
   return convert_valid_utf32_to_utf16(
       valid_utf32_input.data(), valid_utf32_input.size(), utf16_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert valid UTF-32 string into UTF-16LE string.
@@ -2292,7 +2335,7 @@ convert_valid_utf32_to_utf16le(std::span<const char32_t> valid_utf32_input,
   return convert_valid_utf32_to_utf16le(
       valid_utf32_input.data(), valid_utf32_input.size(), utf16_output.data());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert valid UTF-32 string into UTF-16BE string.
@@ -2316,8 +2359,8 @@ convert_valid_utf32_to_utf16be(std::span<const char32_t> valid_utf32_input,
   return convert_valid_utf32_to_utf16be(
       valid_utf32_input.data(), valid_utf32_input.size(), utf16_output.data());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF16
 /**
@@ -2342,8 +2385,8 @@ change_endianness_utf16(std::span<const char16_t> utf16_input,
   return change_endianness_utf16(utf16_input.data(), utf16_input.size(),
                                  utf16_output.data());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF16
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 /**
@@ -2365,8 +2408,8 @@ utf8_length_from_utf32(std::span<const char32_t> valid_utf32_input) noexcept {
   return utf8_length_from_utf32(valid_utf32_input.data(),
                                 valid_utf32_input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 /**
@@ -2388,7 +2431,7 @@ utf16_length_from_utf32(std::span<const char32_t> valid_utf32_input) noexcept {
   return utf16_length_from_utf32(valid_utf32_input.data(),
                                  valid_utf32_input.size());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Using native endianness; Compute the number of bytes that this UTF-16
@@ -2413,7 +2456,7 @@ utf32_length_from_utf16(std::span<const char16_t> valid_utf16_input) noexcept {
   return utf32_length_from_utf16(valid_utf16_input.data(),
                                  valid_utf16_input.size());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Compute the number of bytes that this UTF-16LE string would require in UTF-32
@@ -2438,7 +2481,7 @@ simdutf_really_inline simdutf_warn_unused size_t utf32_length_from_utf16le(
   return utf32_length_from_utf16le(valid_utf16_input.data(),
                                    valid_utf16_input.size());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Compute the number of bytes that this UTF-16BE string would require in UTF-32
@@ -2463,8 +2506,8 @@ simdutf_really_inline simdutf_warn_unused size_t utf32_length_from_utf16be(
   return utf32_length_from_utf16be(valid_utf16_input.data(),
                                    valid_utf16_input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF16
 /**
@@ -2488,7 +2531,7 @@ simdutf_really_inline simdutf_warn_unused size_t
 count_utf16(std::span<const char16_t> valid_utf16_input) noexcept {
   return count_utf16(valid_utf16_input.data(), valid_utf16_input.size());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Count the number of code points (characters) in the string assuming that
@@ -2511,7 +2554,7 @@ simdutf_really_inline simdutf_warn_unused size_t
 count_utf16le(std::span<const char16_t> valid_utf16_input) noexcept {
   return count_utf16le(valid_utf16_input.data(), valid_utf16_input.size());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Count the number of code points (characters) in the string assuming that
@@ -2534,8 +2577,8 @@ simdutf_really_inline simdutf_warn_unused size_t
 count_utf16be(std::span<const char16_t> valid_utf16_input) noexcept {
   return count_utf16be(valid_utf16_input.data(), valid_utf16_input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF16
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8
 /**
@@ -2558,7 +2601,7 @@ simdutf_really_inline simdutf_warn_unused size_t count_utf8(
   return count_utf8(reinterpret_cast<const char *>(valid_utf8_input.data()),
                     valid_utf8_input.size());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Given a valid UTF-8 string having a possibly truncated last character,
@@ -2582,8 +2625,8 @@ simdutf_really_inline simdutf_warn_unused size_t trim_partial_utf8(
       reinterpret_cast<const char *>(valid_utf8_input.data()),
       valid_utf8_input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF8
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF16
 /**
@@ -2608,7 +2651,7 @@ trim_partial_utf16be(std::span<const char16_t> valid_utf16_input) noexcept {
   return trim_partial_utf16be(valid_utf16_input.data(),
                               valid_utf16_input.size());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Given a valid UTF-16LE string having a possibly truncated last character,
@@ -2632,7 +2675,7 @@ trim_partial_utf16le(std::span<const char16_t> valid_utf16_input) noexcept {
   return trim_partial_utf16le(valid_utf16_input.data(),
                               valid_utf16_input.size());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Given a valid UTF-16 string having a possibly truncated last character,
@@ -2655,8 +2698,8 @@ simdutf_really_inline simdutf_warn_unused size_t
 trim_partial_utf16(std::span<const char16_t> valid_utf16_input) noexcept {
   return trim_partial_utf16(valid_utf16_input.data(), valid_utf16_input.size());
 }
-  #endif
-#endif // SIMDUTF_FEATURE_UTF16
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_BASE64
 // base64_options are used to specify the base64 encoding options.
@@ -2707,7 +2750,7 @@ maximal_binary_length_from_base64(
   return maximal_binary_length_from_base64(
       reinterpret_cast<const char *>(input.data()), input.size());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Provide the maximal binary length in bytes given the base64 input.
@@ -2726,7 +2769,7 @@ simdutf_really_inline simdutf_warn_unused size_t
 maximal_binary_length_from_base64(std::span<const char16_t> input) noexcept {
   return maximal_binary_length_from_base64(input.data(), input.size());
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert a base64 input to a binary output.
@@ -2797,7 +2840,7 @@ simdutf_really_inline simdutf_warn_unused result base64_to_binary(
                           reinterpret_cast<char *>(binary_output.data()),
                           options, last_chunk_options);
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Provide the base64 length in bytes given the length of a binary input.
@@ -2840,7 +2883,7 @@ binary_to_base64(const detail::input_span_of_byte_like auto &input,
       reinterpret_cast<const char *>(input.data()), input.size(),
       reinterpret_cast<char *>(binary_output.data()), options);
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert a base64 input to a binary output.
@@ -2913,7 +2956,7 @@ simdutf_really_inline simdutf_warn_unused result base64_to_binary(
                           reinterpret_cast<char *>(binary_output.data()),
                           options, last_chunk_options);
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert a base64 input to a binary output.
@@ -2996,7 +3039,7 @@ simdutf_really_inline simdutf_warn_unused result base64_to_binary_safe(
                                reinterpret_cast<char *>(binary_output.data()),
                                outlen, options, last_chunk_options);
 }
-  #endif
+  #endif // SIMDUTF_SPAN
 
 simdutf_warn_unused result
 base64_to_binary_safe(const char16_t *input, size_t length, char *output,
@@ -3017,8 +3060,8 @@ simdutf_really_inline simdutf_warn_unused result base64_to_binary_safe(
                                reinterpret_cast<char *>(binary_output.data()),
                                outlen, options, last_chunk_options);
 }
-  #endif
-#endif // SIMDUTF_FEATURE_BASE64
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_BASE64
 
 /**
  * An implementation of simdutf for a particular CPU architecture.
@@ -4393,7 +4436,6 @@ public:
    * Return the number of bytes that this UTF-32 string would require in Latin1
    * format.
    *
-   * @param input         the UTF-32 string to convert
    * @param length        the length of the string in 4-byte code units
    * (char32_t)
    * @return the number of bytes required to encode the UTF-32 string as Latin1
