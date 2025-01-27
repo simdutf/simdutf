@@ -19,11 +19,11 @@ jobs:
         with:
           arch: ppc64le
           githubToken: ${{ github.token }}
-          distro: ubuntu_latest
+          distro: ubuntu22.04
           install: |
             apt-get update -q -y
             apt-get install -y cmake make g++
           run: |
             cmake -DCMAKE_BUILD_TYPE=Release -B build
-            cmake --build build -j=2
+            cmake --build build
             ctest --output-on-failure --test-dir build
