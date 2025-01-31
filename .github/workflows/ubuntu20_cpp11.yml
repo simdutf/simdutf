@@ -17,7 +17,7 @@ jobs:
         run: |
           mkdir build &&
           cd build &&
-          cmake -DCMAKE_CXX_FLAGS=-Werror -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DCMAKE_INSTALL_PREFIX:PATH=destination -DCMAKE_CXX_STANDARD=11 -DSIMDUTF_BENCHMARKS=OFF .. &&
+          cmake -DCMAKE_CXX_FLAGS=-Werror -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DCMAKE_INSTALL_PREFIX:PATH=destination -DSIMDUTF_BENCHMARKS=OFF .. &&
           cmake --build .   &&
           ctest -j --output-on-failure &&
           cmake --install . &&
