@@ -2884,21 +2884,36 @@ binary_to_base64(const detail::input_span_of_byte_like auto &input,
       reinterpret_cast<char *>(binary_output.data()), options);
 }
   #endif // SIMDUTF_SPAN
-
-  /**
-   * Convert a binary input to a base64 output, using atomic buffers.
-   * @brief binary_to_base64
-   * @param binary_input
-   * @param base64_output
-   * @param options
-   * @return
-   */
-  #if SIMDUTF_SPAN
-simdutf_warn_unused size_t
-binary_to_base64(std::span<std::atomic<char>> binary_input,
-                 std::span<std::atomic<char>> base64_output,
-                 base64_options options = base64_default) noexcept;
-  #endif
+  #if !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF
+/**
+ * Convert a binary input to a base64 output, using atomic buffers.
+ * This function comes with a potentially significant performance
+ * penalty, but it may be useful in some cases where the input and
+ * output buffers are shared between threads, to avoid undefined
+ * behavior in case of data races.
+ *
+ * This function is only available when simdutf is compiled with
+ * C++20 support and __cpp_lib_atomic_ref >= 201806L.
+ *
+ * When simdutf is compiled with the macro SIMDUTF_NO_THREADS defined,
+ * this function is omitted. Note that SIMDUTF_NO_THREADS is only defined
+ * if you wish to disable threading support.
+ *
+ * @brief atomic_binary_to_base64
+ * @param binary_input
+ * @param base64_output
+ * @param options
+ * @return
+ */
+size_t
+atomic_binary_to_base64(const char *input, size_t length, char *output,
+                        base64_options options = base64_default) noexcept;
+    #if SIMDUTF_SPAN
+simdutf_warn_unused size_t atomic_binary_to_base64(
+    std::span<char> binary_input, std::span<char> base64_output,
+    base64_options options = base64_default) noexcept;
+    #endif // SIMDUTF_SPAN
+  #endif   // !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF
 
 /**
  * Convert a base64 input to a binary output.
