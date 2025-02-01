@@ -2084,7 +2084,7 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   return rr;
 }
 
-  #if !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF
+  #if SIMDUTF_ATOMIC_REF
 size_t atomic_binary_to_base64(const char *input, size_t length, char *output,
                                base64_options options) noexcept {
   static_assert(std::atomic_ref<char>::required_alignment == 1);
@@ -2116,7 +2116,7 @@ size_t atomic_binary_to_base64(const char *input, size_t length, char *output,
   }
   return retval;
 }
-  #endif // !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF
+  #endif // SIMDUTF_ATOMIC_REF
 
 #endif // SIMDUTF_FEATURE_BASE64
 
