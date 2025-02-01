@@ -2083,6 +2083,7 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   rr.count += input_index;
   return rr;
 }
+
   #if !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF
 size_t atomic_binary_to_base64(const char *input, size_t length, char *output,
                                base64_options options) noexcept {
@@ -2095,7 +2096,7 @@ size_t atomic_binary_to_base64(const char *input, size_t length, char *output,
   std::array<char, output_block_size> outbuf;
 
   for (size_t i = 0; i < length; i += input_block_size) {
-    size_t current_block_size = std::min(input_block_size, length - i);
+    const size_t current_block_size = std::min(input_block_size, length - i);
     // This copy is inefficient.
     // Under x64, we could use 16-byte aligned loads.
     // Note that we warn users that the performance might be poor.
@@ -2103,7 +2104,7 @@ size_t atomic_binary_to_base64(const char *input, size_t length, char *output,
       inbuf[j] =
           std::atomic_ref<const char>(input[i + j]).load(std::memory_order_relaxed);
     }
-    size_t written = binary_to_base64(inbuf.data(), current_block_size,
+    const size_t written = binary_to_base64(inbuf.data(), current_block_size,
                                       outbuf.data(), options);
     // This copy is inefficient.
     // Under x64, we could use 16-byte aligned stores.
@@ -2115,15 +2116,6 @@ size_t atomic_binary_to_base64(const char *input, size_t length, char *output,
   }
   return retval;
 }
-    #if SIMDUTF_SPAN
-
-simdutf_warn_unused size_t atomic_binary_to_base64(
-    std::span<char> binary_input, std::span<char> base64_output,
-    base64_options options) noexcept {
-  return atomic_binary_to_base64(binary_input.data(), binary_input.size(),
-                                 base64_output.data(), options);
-}
-    #endif // SIMDUTF_SPAN
   #endif   // !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF
 
 #endif // SIMDUTF_FEATURE_BASE64

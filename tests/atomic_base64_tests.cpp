@@ -3,79 +3,61 @@
 #if SIMDUTF_CPLUSPLUS20
   #include <barrier>
 #endif
-#include <memory>
 #include <random>
 #include <thread>
 #include <vector>
 
 #include <tests/helpers/test.h>
 
-#if SIMDUTF_SPAN
-  #include <span>
-TEST(empty_input_gives_empty_output) {
-  std::vector<std::atomic<char>> input;
-  std::vector<std::atomic<char>> output;
+#if !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF && SIMDUTF_SPAN
 
-  const auto ret = simdutf::binary_to_base64(input, output);
+TEST(empty_input_gives_empty_output) {
+  std::vector<char> input;
+  std::vector<char> output;
+
+  const auto ret = simdutf::atomic_binary_to_base64(input, output);
   ASSERT_EQUAL(ret, 0);
 }
 
-TEST(easy_test_case) {
-  const std::string non_atomic_input{"Abracadabra!"};
+TEST(small_input) {
+  const std::string input{"Abracadabra!"};
   const std::string expected_output{"QWJyYWNhZGFicmEh"};
-  std::vector<std::atomic<char>> input{begin(non_atomic_input),
-                                       end(non_atomic_input)};
-  // std::atomic is noncopyable and nonmovable
-  std::unique_ptr<std::atomic<char>[]> output(
-      new std::atomic<char>[expected_output.size()]);
+  std::string output(expected_output.size(), '\0');
 
-  const auto ret = simdutf::binary_to_base64(
-      input, std::span(output.get(), expected_output.size()));
+  const auto ret = simdutf::atomic_binary_to_base64(input, output);
   ASSERT_EQUAL(ret, expected_output.size());
-  const std::string actual_output{output.get(),
-                                  output.get() + expected_output.size()};
-  ASSERT_EQUAL(actual_output, expected_output);
+  ASSERT_EQUAL(output, expected_output);
 }
 
 TEST(large_input) {
   // large means larger than one internal block of data
   const std::size_t N_input = 1'000'000;
-  std::string non_atomic_input, expected_output;
+  std::string input, expected_output;
   for (std::size_t i = 0; i < N_input; ++i) {
-    non_atomic_input.append("abc");
+    input.append("abc");
     expected_output.append("YWJj");
   }
-  std::vector<std::atomic<char>> input{begin(non_atomic_input),
-                                       end(non_atomic_input)};
-  // std::atomic is noncopyable and nonmovable
-  std::unique_ptr<std::atomic<char>[]> output(
-      new std::atomic<char>[expected_output.size()]);
-
-  const auto ret = simdutf::binary_to_base64(
-      input, std::span(output.get(), expected_output.size()));
+  std::string output(expected_output.size(), '\0');
+  const auto ret = simdutf::atomic_binary_to_base64(input, output);
   ASSERT_EQUAL(ret, expected_output.size());
-  const std::string actual_output{output.get(),
-                                  output.get() + expected_output.size()};
-  ASSERT_EQUAL(actual_output, expected_output);
+  ASSERT_EQUAL(output, expected_output);
 }
+
+  #if SIMDUTF_CPLUSPLUS20
 
 TEST(threaded) {
   // large means larger than one internal block of data
   const std::size_t N_input = 1'000'000;
-  std::string non_atomic_input, expected_output;
+  std::string input, expected_output;
   for (std::size_t i = 0; i < N_input; ++i) {
-    non_atomic_input.append("abc");
+    input.append("abc");
     expected_output.append("YWJj");
   }
-  std::vector<std::atomic<char>> input{begin(non_atomic_input),
-                                       end(non_atomic_input)};
-  // std::atomic is noncopyable and nonmovable
-  std::unique_ptr<std::atomic<char>[]> output(
-      new std::atomic<char>[expected_output.size()]);
+  std::string output(expected_output.size(), '\0');
 
   constexpr auto nthreads = 4;
 
-  std::barrier sync_point(nthreads + 1, [&]() noexcept {
+  std::barrier sync_point(nthreads + 1, [nthreads]() noexcept {
     std::printf("all %u threads reached the barrier\n", nthreads);
   });
 
@@ -91,8 +73,8 @@ TEST(threaded) {
           0, expected_output.size() - 1};
       sync_point.arrive_and_wait();
       while (keep_running) {
-        input[input_index_dist(gen)].fetch_add(dist(gen));
-        output.get()[output_index_dist(gen)] = dist(gen);
+        std::atomic_ref(input[input_index_dist(gen)]).fetch_add(dist(gen));
+        std::atomic_ref(output[output_index_dist(gen)]).store(dist(gen));
       }
     });
   }
@@ -102,12 +84,14 @@ TEST(threaded) {
   for (int i = 0; i < 10; ++i) {
     // don't bother to look at the output, it can fail or succeed depending
     // on the thread scheduling
-    [[maybe_unused]] const auto ret = simdutf::binary_to_base64(
-        input, std::span(output.get(), expected_output.size()));
+    [[maybe_unused]] const auto ret =
+        simdutf::atomic_binary_to_base64(input, output);
   }
 
   keep_running = false;
 }
+  #endif // SIMDUTF_CPLUSPLUS20
 
-#endif
+#endif // #if !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF && SIMDUTF_SPAN
+
 TEST_MAIN
