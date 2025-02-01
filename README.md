@@ -1736,7 +1736,7 @@ If you have a UTF-16 input, you may change its endianness with a fast function.
  *
  * @param input         the UTF-16 string to process
  * @param length        the length of the string in 2-byte code units (char16_t)
- * @param output        the pointer to buffer that can hold the conversion result
+ * @param output        the pointer to a buffer that can hold the conversion result
  */
 void change_endianness_utf16(const char16_t * input, size_t length, char16_t * output) noexcept;
 
@@ -2049,7 +2049,7 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char16_t * in
  *
  * @param input         the base64 string to process
  * @param length        the length of the string in bytes
- * @param output        the pointer to buffer that can hold the conversion
+ * @param output        the pointer to a buffer that can hold the conversion
  * result (should be at least maximal_binary_length_from_base64(input, length)
  * bytes long).
  * @param options       the base64 options to use, usually base64_default or
@@ -2090,7 +2090,7 @@ simdutf_warn_unused size_t base64_length_from_binary(size_t length, base64_optio
  *
  * @param input         the binary to process
  * @param length        the length of the input in bytes
- * @param output        the pointer to buffer that can hold the conversion result (should be at least base64_length_from_binary(length) bytes long)
+ * @param output        the pointer to a buffer that can hold the conversion result (should be at least base64_length_from_binary(length) bytes long)
  * @param options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.
  * @return number of written bytes, will be equal to base64_length_from_binary(length, options)
  */
@@ -2126,7 +2126,7 @@ size_t binary_to_base64(const char * input, size_t length, char* output, base64_
  *
  * @param input         the base64 string to process, in ASCII stored as 16-bit units
  * @param length        the length of the string in 16-bit units
- * @param output        the pointer to buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long).
+ * @param output        the pointer to a buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long).
  * @param options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.
  * @param last_chunk_options the last chunk handling options,
  * last_chunk_handling_options::loose by default
@@ -2183,7 +2183,7 @@ simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t lengt
  * @param input         the base64 string to process, in ASCII stored as 8-bit
  * or 16-bit units
  * @param length        the length of the string in 8-bit or 16-bit units.
- * @param output        the pointer to buffer that can hold the conversion
+ * @param output        the pointer to a buffer that can hold the conversion
  * result.
  * @param outlen        the number of bytes that can be written in the output
  * buffer. Upon return, it is modified to reflect how many bytes were written.
