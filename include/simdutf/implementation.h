@@ -2911,8 +2911,8 @@ atomic_binary_to_base64(const char *input, size_t length, char *output,
     #if SIMDUTF_SPAN
 simdutf_really_inline simdutf_warn_unused size_t
 atomic_binary_to_base64(const detail::input_span_of_byte_like auto &input,
-                 detail::output_span_of_byte_like auto &&binary_output,
-                 base64_options options = base64_default) noexcept {
+                        detail::output_span_of_byte_like auto &&binary_output,
+                        base64_options options = base64_default) noexcept {
   return atomic_binary_to_base64(
       reinterpret_cast<const char *>(input.data()), input.size(),
       reinterpret_cast<char *>(binary_output.data()), options);
