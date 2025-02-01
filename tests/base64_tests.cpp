@@ -2316,3 +2316,104 @@ int main(int argc, char *argv[]) {
   }
   return simdutf::test::main(argc, argv);
 }
+
+#if !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF
+TEST(atomic_roundtrip_base64) {
+  for (size_t len = 0; len < 2048; len++) {
+    std::vector<char> source(len, 0);
+    std::vector<char> buffer;
+    buffer.resize(implementation.base64_length_from_binary(len));
+    std::vector<char> back(len);
+    std::mt19937 gen((std::mt19937::result_type)(seed));
+    std::uniform_int_distribution<int> byte_generator{0, 255};
+    for (size_t trial = 0; trial < 10; trial++) {
+      for (size_t i = 0; i < len; i++) {
+        source[i] = byte_generator(gen);
+      }
+      size_t size = simdutf::atomic_binary_to_base64(
+          source.data(), source.size(), buffer.data());
+      ASSERT_EQUAL(size, implementation.base64_length_from_binary(len));
+      simdutf::result r =
+          implementation.base64_to_binary(buffer.data(), size, back.data());
+      ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+      ASSERT_EQUAL(r.count, len);
+      if (back != source) {
+        printf("=====input size %zu\n", len);
+        for (size_t i = 0; i < len; i++) {
+          if (back[i] != source[i]) {
+            printf("Mismatch at position %zu trial %zu\n", i, trial);
+          }
+          printf("%zu: %02x %02x\n", i, uint8_t(back[i]), uint8_t(source[i]));
+        }
+        printf("=====base64 size %zu\n", size);
+        for (size_t i = 0; i < size; i++) {
+          printf("%zu: %02x %c\n", i, uint8_t(buffer[i]), buffer[i]);
+        }
+      }
+      ASSERT_TRUE(back == source);
+
+      // Test with all last_chunk_handling_options
+      for (auto option :
+           {simdutf::last_chunk_handling_options::strict,
+            simdutf::last_chunk_handling_options::loose,
+            simdutf::last_chunk_handling_options::stop_before_partial}) {
+        r = implementation.base64_to_binary(buffer.data(), size, back.data(),
+                                            simdutf::base64_default, option);
+        ASSERT_TRUE((size % 4) == 0);
+        ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+        ASSERT_EQUAL(r.count, len);
+        ASSERT_TRUE(back == source);
+      }
+    }
+  }
+}
+
+TEST(atomic_span_roundtrip_base64) {
+  for (size_t len = 0; len < 2048; len++) {
+    std::vector<char> source(len, 0);
+    std::vector<char> buffer;
+    buffer.resize(implementation.base64_length_from_binary(len));
+    std::vector<char> back(len);
+    std::mt19937 gen((std::mt19937::result_type)(seed));
+    std::uniform_int_distribution<int> byte_generator{0, 255};
+    for (size_t trial = 0; trial < 10; trial++) {
+      for (size_t i = 0; i < len; i++) {
+        source[i] = byte_generator(gen);
+      }
+      size_t size = simdutf::atomic_binary_to_base64(source, buffer);
+      ASSERT_EQUAL(size, implementation.base64_length_from_binary(len));
+      simdutf::result r =
+          implementation.base64_to_binary(buffer.data(), size, back.data());
+      ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+      ASSERT_EQUAL(r.count, len);
+      if (back != source) {
+        printf("=====input size %zu\n", len);
+        for (size_t i = 0; i < len; i++) {
+          if (back[i] != source[i]) {
+            printf("Mismatch at position %zu trial %zu\n", i, trial);
+          }
+          printf("%zu: %02x %02x\n", i, uint8_t(back[i]), uint8_t(source[i]));
+        }
+        printf("=====base64 size %zu\n", size);
+        for (size_t i = 0; i < size; i++) {
+          printf("%zu: %02x %c\n", i, uint8_t(buffer[i]), buffer[i]);
+        }
+      }
+      ASSERT_TRUE(back == source);
+
+      // Test with all last_chunk_handling_options
+      for (auto option :
+           {simdutf::last_chunk_handling_options::strict,
+            simdutf::last_chunk_handling_options::loose,
+            simdutf::last_chunk_handling_options::stop_before_partial}) {
+        r = implementation.base64_to_binary(buffer.data(), size, back.data(),
+                                            simdutf::base64_default, option);
+        ASSERT_TRUE((size % 4) == 0);
+        ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+        ASSERT_EQUAL(r.count, len);
+        ASSERT_TRUE(back == source);
+      }
+    }
+  }
+}
+#endif // !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF

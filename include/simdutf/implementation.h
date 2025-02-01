@@ -1451,7 +1451,7 @@ convert_utf16be_to_utf8_with_errors(
  *
  * @param input         the UTF-16 string to convert
  * @param length        the length of the string in 2-byte code units (char16_t)
- * @param utf8_buffer   the pointer to buffer that can hold the conversion
+ * @param utf8_buffer   the pointer to a buffer that can hold the conversion
  * result
  * @return number of written code units; 0 if conversion is not possible
  */
@@ -1576,7 +1576,7 @@ convert_valid_utf16be_to_latin1(
  *
  * @param input         the UTF-16LE string to convert
  * @param length        the length of the string in 2-byte code units (char16_t)
- * @param utf8_buffer   the pointer to buffer that can hold the conversion
+ * @param utf8_buffer   the pointer to a buffer that can hold the conversion
  * result
  * @return number of written code units; 0 if conversion is not possible
  */
@@ -1601,7 +1601,7 @@ simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf16le_to_utf8(
  *
  * @param input         the UTF-16BE string to convert
  * @param length        the length of the string in 2-byte code units (char16_t)
- * @param utf8_buffer   the pointer to buffer that can hold the conversion
+ * @param utf8_buffer   the pointer to a buffer that can hold the conversion
  * result
  * @return number of written code units; 0 if conversion is not possible
  */
@@ -1789,7 +1789,7 @@ convert_utf16be_to_utf32_with_errors(
  *
  * @param input         the UTF-16 string to convert
  * @param length        the length of the string in 2-byte code units (char16_t)
- * @param utf32_buffer   the pointer to buffer that can hold the conversion
+ * @param utf32_buffer   the pointer to a buffer that can hold the conversion
  * result
  * @return number of written code units; 0 if conversion is not possible
  */
@@ -1813,7 +1813,7 @@ convert_valid_utf16_to_utf32(std::span<const char16_t> valid_utf16_input,
  *
  * @param input         the UTF-16LE string to convert
  * @param length        the length of the string in 2-byte code units (char16_t)
- * @param utf32_buffer   the pointer to buffer that can hold the conversion
+ * @param utf32_buffer   the pointer to a buffer that can hold the conversion
  * result
  * @return number of written code units; 0 if conversion is not possible
  */
@@ -1837,7 +1837,7 @@ convert_valid_utf16le_to_utf32(std::span<const char16_t> valid_utf16_input,
  *
  * @param input         the UTF-16BE string to convert
  * @param length        the length of the string in 2-byte code units (char16_t)
- * @param utf32_buffer   the pointer to buffer that can hold the conversion
+ * @param utf32_buffer   the pointer to a buffer that can hold the conversion
  * result
  * @return number of written code units; 0 if conversion is not possible
  */
@@ -1998,7 +1998,7 @@ convert_utf32_to_utf8_with_errors(
  *
  * @param input         the UTF-32 string to convert
  * @param length        the length of the string in 4-byte code units (char32_t)
- * @param utf8_buffer   the pointer to buffer that can hold the conversion
+ * @param utf8_buffer   the pointer to a buffer that can hold the conversion
  * result
  * @return number of written code units; 0 if conversion is not possible
  */
@@ -2139,7 +2139,7 @@ convert_utf32_to_latin1_with_errors(
  *
  * @param input         the UTF-32 string to convert
  * @param length        the length of the string in 4-byte code units (char32_t)
- * @param latin1_buffer   the pointer to buffer that can hold the conversion
+ * @param latin1_buffer   the pointer to a buffer that can hold the conversion
  * result
  * @return number of written code units; 0 if conversion is not possible
  */
@@ -2298,7 +2298,7 @@ convert_utf32_to_utf16be_with_errors(
  *
  * @param input         the UTF-32 string to convert
  * @param length        the length of the string in 4-byte code units (char32_t)
- * @param utf16_buffer   the pointer to buffer that can hold the conversion
+ * @param utf16_buffer   the pointer to a buffer that can hold the conversion
  * result
  * @return number of written code units; 0 if conversion is not possible
  */
@@ -2322,7 +2322,7 @@ convert_valid_utf32_to_utf16(std::span<const char32_t> valid_utf32_input,
  *
  * @param input         the UTF-32 string to convert
  * @param length        the length of the string in 4-byte code units (char32_t)
- * @param utf16_buffer   the pointer to buffer that can hold the conversion
+ * @param utf16_buffer   the pointer to a buffer that can hold the conversion
  * result
  * @return number of written code units; 0 if conversion is not possible
  */
@@ -2346,7 +2346,7 @@ convert_valid_utf32_to_utf16le(std::span<const char32_t> valid_utf32_input,
  *
  * @param input         the UTF-32 string to convert
  * @param length        the length of the string in 4-byte code units (char32_t)
- * @param utf16_buffer   the pointer to buffer that can hold the conversion
+ * @param utf16_buffer   the pointer to a buffer that can hold the conversion
  * result
  * @return number of written code units; 0 if conversion is not possible
  */
@@ -2373,7 +2373,7 @@ convert_valid_utf32_to_utf16be(std::span<const char32_t> valid_utf32_input,
  *
  * @param input         the UTF-16 string to process
  * @param length        the length of the string in 2-byte code units (char16_t)
- * @param output        the pointer to buffer that can hold the conversion
+ * @param output        the pointer to a buffer that can hold the conversion
  * result
  */
 void change_endianness_utf16(const char16_t *input, size_t length,
@@ -2812,7 +2812,7 @@ maximal_binary_length_from_base64(std::span<const char16_t> input) noexcept {
  *
  * @param input         the base64 string to process
  * @param length        the length of the string in bytes
- * @param output        the pointer to buffer that can hold the conversion
+ * @param output        the pointer to a buffer that can hold the conversion
  * result (should be at least maximal_binary_length_from_base64(input, length)
  * bytes long).
  * @param options       the base64 options to use, usually base64_default or
@@ -2865,7 +2865,7 @@ simdutf_warn_unused size_t base64_length_from_binary(
  *
  * @param input         the binary to process
  * @param length        the length of the input in bytes
- * @param output        the pointer to buffer that can hold the conversion
+ * @param output        the pointer to a buffer that can hold the conversion
  * result (should be at least base64_length_from_binary(length) bytes long)
  * @param options       the base64 options to use, can be base64_default or
  * base64_url, is base64_default by default.
@@ -2884,6 +2884,57 @@ binary_to_base64(const detail::input_span_of_byte_like auto &input,
       reinterpret_cast<char *>(binary_output.data()), options);
 }
   #endif // SIMDUTF_SPAN
+
+  #if SIMDUTF_ATOMIC_REF
+/**
+ * Convert a binary input to a base64 output, using atomic accesses.
+ * This function comes with a potentially significant performance
+ * penalty, but it may be useful in some cases where the input and
+ * output buffers are shared between threads, to avoid undefined
+ * behavior in case of data races.
+ *
+ * The function is for advanced users. Its main use case is when
+ * to silence sanitizer warnings. We have no documented use case
+ * where this function is actually necessary in terms of practical correctness.
+ *
+ * This function is only available when simdutf is compiled with
+ * C++20 support and __cpp_lib_atomic_ref >= 201806L. You may check
+ * the availability of this function by checking the macro
+ * SIMDUTF_ATOMIC_REF.
+ *
+ * The default option (simdutf::base64_default) uses the characters `+` and `/`
+ * as part of its alphabet. Further, it adds padding (`=`) at the end of the
+ * output to ensure that the output length is a multiple of four.
+ *
+ * The URL option (simdutf::base64_url) uses the characters `-` and `_` as part
+ * of its alphabet. No padding is added at the end of the output.
+ *
+ * This function always succeeds.
+ *
+ * @brief atomic_binary_to_base64
+ * @param input         the binary to process
+ * @param length        the length of the input in bytes
+ * @param output        the pointer to a buffer that can hold the conversion
+ * result (should be at least base64_length_from_binary(length) bytes long)
+ * @param options       the base64 options to use, can be base64_default or
+ * base64_url, is base64_default by default.
+ * @return number of written bytes, will be equal to
+ * base64_length_from_binary(length, options)
+ */
+size_t
+atomic_binary_to_base64(const char *input, size_t length, char *output,
+                        base64_options options = base64_default) noexcept;
+    #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused size_t
+atomic_binary_to_base64(const detail::input_span_of_byte_like auto &input,
+                        detail::output_span_of_byte_like auto &&binary_output,
+                        base64_options options = base64_default) noexcept {
+  return atomic_binary_to_base64(
+      reinterpret_cast<const char *>(input.data()), input.size(),
+      reinterpret_cast<char *>(binary_output.data()), options);
+}
+    #endif // SIMDUTF_SPAN
+  #endif   // SIMDUTF_ATOMIC_REF
 
 /**
  * Convert a base64 input to a binary output.
@@ -2927,7 +2978,7 @@ binary_to_base64(const detail::input_span_of_byte_like auto &input,
  * @param input         the base64 string to process, in ASCII stored as 16-bit
  * units
  * @param length        the length of the string in 16-bit units
- * @param output        the pointer to buffer that can hold the conversion
+ * @param output        the pointer to a buffer that can hold the conversion
  * result (should be at least maximal_binary_length_from_base64(input, length)
  * bytes long).
  * @param options       the base64 options to use, can be base64_default or
@@ -3004,7 +3055,7 @@ simdutf_really_inline simdutf_warn_unused result base64_to_binary(
  * @param input         the base64 string to process, in ASCII stored as 8-bit
  * or 16-bit units
  * @param length        the length of the string in 8-bit or 16-bit units.
- * @param output        the pointer to buffer that can hold the conversion
+ * @param output        the pointer to a buffer that can hold the conversion
  * result.
  * @param outlen        the number of bytes that can be written in the output
  * buffer. Upon return, it is modified to reflect how many bytes were written.
@@ -3854,7 +3905,7 @@ public:
    * @param input         the UTF-16LE string to convert
    * @param length        the length of the string in 2-byte code units
    * (char16_t)
-   * @param utf8_buffer   the pointer to buffer that can hold the conversion
+   * @param utf8_buffer   the pointer to a buffer that can hold the conversion
    * result
    * @return number of written code units; 0 if conversion is not possible
    */
@@ -3872,7 +3923,7 @@ public:
    * @param input         the UTF-16BE string to convert
    * @param length        the length of the string in 2-byte code units
    * (char16_t)
-   * @param utf8_buffer   the pointer to buffer that can hold the conversion
+   * @param utf8_buffer   the pointer to a buffer that can hold the conversion
    * result
    * @return number of written code units; 0 if conversion is not possible
    */
@@ -3974,7 +4025,7 @@ public:
    * @param input         the UTF-16LE string to convert
    * @param length        the length of the string in 2-byte code units
    * (char16_t)
-   * @param utf32_buffer   the pointer to buffer that can hold the conversion
+   * @param utf32_buffer   the pointer to a buffer that can hold the conversion
    * result
    * @return number of written code units; 0 if conversion is not possible
    */
@@ -3992,7 +4043,7 @@ public:
    * @param input         the UTF-16BE string to convert
    * @param length        the length of the string in 2-byte code units
    * (char16_t)
-   * @param utf32_buffer   the pointer to buffer that can hold the conversion
+   * @param utf32_buffer   the pointer to a buffer that can hold the conversion
    * result
    * @return number of written code units; 0 if conversion is not possible
    */
@@ -4101,7 +4152,7 @@ public:
    * @param input         the UTF-32 string to convert
    * @param length        the length of the string in 4-byte code units
    * (char32_t)
-   * @param latin1_buffer   the pointer to buffer that can hold the conversion
+   * @param latin1_buffer   the pointer to a buffer that can hold the conversion
    * result
    * @return number of written code units; 0 if conversion is not possible
    */
@@ -4161,7 +4212,7 @@ public:
    * @param input         the UTF-32 string to convert
    * @param length        the length of the string in 4-byte code units
    * (char32_t)
-   * @param utf8_buffer   the pointer to buffer that can hold the conversion
+   * @param utf8_buffer   the pointer to a buffer that can hold the conversion
    * result
    * @return number of written code units; 0 if conversion is not possible
    */
@@ -4280,7 +4331,7 @@ public:
    * @param input         the UTF-32 string to convert
    * @param length        the length of the string in 4-byte code units
    * (char32_t)
-   * @param utf16_buffer   the pointer to buffer that can hold the conversion
+   * @param utf16_buffer   the pointer to a buffer that can hold the conversion
    * result
    * @return number of written code units; 0 if conversion is not possible
    */
@@ -4298,7 +4349,7 @@ public:
    * @param input         the UTF-32 string to convert
    * @param length        the length of the string in 4-byte code units
    * (char32_t)
-   * @param utf16_buffer   the pointer to buffer that can hold the conversion
+   * @param utf16_buffer   the pointer to a buffer that can hold the conversion
    * result
    * @return number of written code units; 0 if conversion is not possible
    */
@@ -4319,7 +4370,7 @@ public:
    * @param input         the UTF-16 string to process
    * @param length        the length of the string in 2-byte code units
    * (char16_t)
-   * @param output        the pointer to buffer that can hold the conversion
+   * @param output        the pointer to a buffer that can hold the conversion
    * result
    */
   virtual void change_endianness_utf16(const char16_t *input, size_t length,
@@ -4597,7 +4648,7 @@ public:
    *
    * @param input         the base64 string to process
    * @param length        the length of the string in bytes
-   * @param output        the pointer to buffer that can hold the conversion
+   * @param output        the pointer to a buffer that can hold the conversion
    * result (should be at least maximal_binary_length_from_base64(input, length)
    * bytes long).
    * @param options       the base64 options to use, can be base64_default or
@@ -4636,7 +4687,7 @@ public:
    *
    * @param input         the base64 string to process
    * @param length        the length of the string in bytes
-   * @param output        the pointer to buffer that can hold the conversion
+   * @param output        the pointer to a buffer that can hold the conversion
    * result (should be at least maximal_binary_length_from_base64(input, length)
    * bytes long).
    * @param options       the base64 options to use, can be base64_default or
@@ -4672,7 +4723,7 @@ public:
    * @param input         the base64 string to process, in ASCII stored as
    * 16-bit units
    * @param length        the length of the string in 16-bit units
-   * @param output        the pointer to buffer that can hold the conversion
+   * @param output        the pointer to a buffer that can hold the conversion
    * result (should be at least maximal_binary_length_from_base64(input, length)
    * bytes long).
    * @param options       the base64 options to use, can be base64_default or
@@ -4711,7 +4762,7 @@ public:
    *
    * @param input         the base64 string to process
    * @param length        the length of the string in bytes
-   * @param output        the pointer to buffer that can hold the conversion
+   * @param output        the pointer to a buffer that can hold the conversion
    * result (should be at least maximal_binary_length_from_base64(input, length)
    * bytes long).
    * @param options       the base64 options to use, can be base64_default or
@@ -4750,7 +4801,7 @@ public:
    *
    * @param input         the binary to process
    * @param length        the length of the input in bytes
-   * @param output        the pointer to buffer that can hold the conversion
+   * @param output        the pointer to a buffer that can hold the conversion
    * result (should be at least base64_length_from_binary(length) bytes long)
    * @param options       the base64 options to use, can be base64_default or
    * base64_url, is base64_default by default.

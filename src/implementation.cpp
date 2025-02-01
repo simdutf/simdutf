@@ -2083,6 +2083,41 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   rr.count += input_index;
   return rr;
 }
+
+  #if SIMDUTF_ATOMIC_REF
+size_t atomic_binary_to_base64(const char *input, size_t length, char *output,
+                               base64_options options) noexcept {
+  static_assert(std::atomic_ref<char>::required_alignment == 1);
+  size_t retval = 0;
+  // Arbitrary block sizes: 3KB for input, 4KB for output. Total is 7KB.
+  constexpr size_t input_block_size = 1024 * 3;
+  constexpr size_t output_block_size = input_block_size * 4 / 3;
+  std::array<char, input_block_size> inbuf;
+  std::array<char, output_block_size> outbuf;
+
+  for (size_t i = 0; i < length; i += input_block_size) {
+    const size_t current_block_size = std::min(input_block_size, length - i);
+    // This copy is inefficient.
+    // Under x64, we could use 16-byte aligned loads.
+    // Note that we warn users that the performance might be poor.
+    for (size_t j = 0; j < current_block_size; ++j) {
+      inbuf[j] = std::atomic_ref<const char>(input[i + j])
+                     .load(std::memory_order_relaxed);
+    }
+    const size_t written = binary_to_base64(inbuf.data(), current_block_size,
+                                            outbuf.data(), options);
+    // This copy is inefficient.
+    // Under x64, we could use 16-byte aligned stores.
+    for (size_t j = 0; j < written; ++j) {
+      std::atomic_ref<char>(output[retval + j])
+          .store(outbuf[j], std::memory_order_relaxed);
+    }
+    retval += written;
+  }
+  return retval;
+}
+  #endif // SIMDUTF_ATOMIC_REF
+
 #endif // SIMDUTF_FEATURE_BASE64
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
