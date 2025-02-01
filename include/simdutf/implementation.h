@@ -2884,26 +2884,42 @@ binary_to_base64(const detail::input_span_of_byte_like auto &input,
       reinterpret_cast<char *>(binary_output.data()), options);
 }
   #endif // SIMDUTF_SPAN
-  #if !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF
+
+  #if SIMDUTF_ATOMIC_REF
 /**
- * Convert a binary input to a base64 output, using atomic buffers.
+ * Convert a binary input to a base64 output, using atomic accesses.
  * This function comes with a potentially significant performance
  * penalty, but it may be useful in some cases where the input and
  * output buffers are shared between threads, to avoid undefined
  * behavior in case of data races.
  *
- * This function is only available when simdutf is compiled with
- * C++20 support and __cpp_lib_atomic_ref >= 201806L.
+ * The function is for advanced users. Its main use case is when
+ * to silence sanitizer warnings. We have no documented use case
+ * where this function is actually necessary in terms of practical correctness.
  *
- * When simdutf is compiled with the macro SIMDUTF_NO_THREADS defined,
- * this function is omitted. Note that SIMDUTF_NO_THREADS is only defined
- * if you wish to disable threading support.
+ * This function is only available when simdutf is compiled with
+ * C++20 support and __cpp_lib_atomic_ref >= 201806L. You may check
+ * the availability of this function by checking the macro
+ * SIMDUTF_ATOMIC_REF.
+ *
+ * The default option (simdutf::base64_default) uses the characters `+` and `/`
+ * as part of its alphabet. Further, it adds padding (`=`) at the end of the
+ * output to ensure that the output length is a multiple of four.
+ *
+ * The URL option (simdutf::base64_url) uses the characters `-` and `_` as part
+ * of its alphabet. No padding is added at the end of the output.
+ *
+ * This function always succeeds.
  *
  * @brief atomic_binary_to_base64
- * @param binary_input
- * @param base64_output
- * @param options
- * @return
+ * @param input         the binary to process
+ * @param length        the length of the input in bytes
+ * @param output        the pointer to a buffer that can hold the conversion
+ * result (should be at least base64_length_from_binary(length) bytes long)
+ * @param options       the base64 options to use, can be base64_default or
+ * base64_url, is base64_default by default.
+ * @return number of written bytes, will be equal to
+ * base64_length_from_binary(length, options)
  */
 size_t
 atomic_binary_to_base64(const char *input, size_t length, char *output,
@@ -2918,7 +2934,7 @@ atomic_binary_to_base64(const detail::input_span_of_byte_like auto &input,
       reinterpret_cast<char *>(binary_output.data()), options);
 }
     #endif // SIMDUTF_SPAN
-  #endif   // !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF
+  #endif   // SIMDUTF_ATOMIC_REF
 
 /**
  * Convert a base64 input to a binary output.
