@@ -234,8 +234,8 @@ def get_timestamp():
         # unpacking a release tarball inside a subdirectory of an unrelated
         # git repository. that would lead to picking up the timestamp of the
         # unrelated git repository.
-        parent = pathlib.Path(SCRIPTPATH).absolute().parent
-        GIT_CEILING_DIRECTORIES = str(parent)
+        simdroot = pathlib.Path(SCRIPTPATH).absolute().parent
+        GIT_CEILING_DIRECTORIES = str(simdroot.parent)
         ret = subprocess.run(['git', '-C', SCRIPTPATH, 'show', '-s', '--format=%ci', 'HEAD'],
                              stdout=subprocess.PIPE,
                              env=dict(os.environ, GIT_CEILING_DIRECTORIES=GIT_CEILING_DIRECTORIES))
