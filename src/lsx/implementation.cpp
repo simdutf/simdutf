@@ -49,21 +49,6 @@ simdutf_really_inline bool is_ascii(const simd8x64<uint8_t> &input) {
        // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
-simdutf_unused simdutf_really_inline simd8<bool>
-must_be_continuation(const simd8<uint8_t> prev1, const simd8<uint8_t> prev2,
-                     const simd8<uint8_t> prev3) {
-  simd8<bool> is_second_byte = prev1 >= uint8_t(0b11000000u);
-  simd8<bool> is_third_byte = prev2 >= uint8_t(0b11100000u);
-  simd8<bool> is_fourth_byte = prev3 >= uint8_t(0b11110000u);
-  // Use ^ instead of | for is_*_byte, because ^ is commutative, and the caller
-  // is using ^ as well. This will work fine because we only have to report
-  // errors for cases with 0-1 lead bytes. Multiple lead bytes implies 2
-  // overlapping multibyte characters, and if that happens, there is guaranteed
-  // to be at least *one* lead byte that is part of only 1 other multibyte
-  // character. The error will be detected there.
-  return is_second_byte ^ is_third_byte ^ is_fourth_byte;
-}
-
 simdutf_really_inline simd8<bool>
 must_be_2_3_continuation(const simd8<uint8_t> prev2,
                          const simd8<uint8_t> prev3) {
