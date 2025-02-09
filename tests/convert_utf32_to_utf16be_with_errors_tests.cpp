@@ -17,8 +17,7 @@ constexpr int trials = 1000;
 
 TEST(issue_convert_utf32_to_utf16be_with_errors_fb5c30a7d5815504) {
   const char32_t data[] = {0x001000ef, 0x335e0200};
-  constexpr std::size_t data_len_bytes = sizeof(data) * sizeof(char32_t);
-  constexpr std::size_t data_len = sizeof(data);
+  constexpr std::size_t data_len = 2;
   const auto validation1 =
       implementation.validate_utf32_with_errors(data, data_len);
   ASSERT_EQUAL(validation1.count, 1);
