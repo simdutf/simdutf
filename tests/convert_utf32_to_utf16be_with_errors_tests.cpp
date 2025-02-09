@@ -16,12 +16,10 @@ constexpr int trials = 1000;
 } // namespace
 
 TEST(issue_convert_utf32_to_utf16be_with_errors_fb5c30a7d5815504) {
-  alignas(4) const unsigned char data[] = {0xef, 0x00, 0x10, 0x00,
-                                           0x00, 0x02, 0x5e, 0x33};
-  constexpr std::size_t data_len_bytes = sizeof(data);
-  constexpr std::size_t data_len = data_len_bytes / sizeof(char32_t);
-  const auto validation1 = implementation.validate_utf32_with_errors(
-      (const char32_t *)data, data_len);
+  const char32_t data[] = {0x001000ef, 0x335e0200};
+  constexpr std::size_t data_len = 2;
+  const auto validation1 =
+      implementation.validate_utf32_with_errors(data, data_len);
   ASSERT_EQUAL(validation1.count, 1);
   ASSERT_EQUAL(validation1.error, simdutf::error_code::TOO_LARGE);
 
