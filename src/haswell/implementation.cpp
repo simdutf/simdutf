@@ -45,7 +45,9 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 #endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
+namespace utf16 {
   #include "haswell/avx2_validate_utf16.cpp"
+}
 #endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
@@ -136,6 +138,7 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 #endif // SIMDUTF_FEATURE_UTF8
 #if SIMDUTF_FEATURE_UTF16
   #include "generic/utf16.h"
+  #include "generic/validate_utf16.h"
 #endif // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
@@ -294,13 +297,18 @@ implementation::validate_utf16le(const char16_t *buf,
     // handling nullptr
     return true;
   }
-  const char16_t *tail = avx2_validate_utf16<endianness::LITTLE>(buf, len);
-  if (tail) {
-    return scalar::utf16::validate<endianness::LITTLE>(tail,
-                                                       len - (tail - buf));
-  } else {
+  const auto res =
+      haswell::utf16::validate_utf16_with_errors<endianness::LITTLE>(buf, len);
+  if (res.is_err()) {
     return false;
   }
+
+  if (res.count == len) {
+    return true;
+  }
+
+  return scalar::utf16::validate<endianness::LITTLE>(buf + res.count,
+                                                     len - res.count);
 }
 #endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
@@ -313,20 +321,29 @@ implementation::validate_utf16be(const char16_t *buf,
     // handling nullptr
     return true;
   }
-  const char16_t *tail = avx2_validate_utf16<endianness::BIG>(buf, len);
-  if (tail) {
-    return scalar::utf16::validate<endianness::BIG>(tail, len - (tail - buf));
-  } else {
+  const auto res =
+      haswell::utf16::validate_utf16_with_errors<endianness::BIG>(buf, len);
+  if (res.is_err()) {
     return false;
   }
+
+  if (res.count == len) {
+    return true;
+  }
+
+  return scalar::utf16::validate<endianness::BIG>(buf + res.count,
+                                                  len - res.count);
 }
 
 simdutf_warn_unused result implementation::validate_utf16le_with_errors(
     const char16_t *buf, size_t len) const noexcept {
-  result res = avx2_validate_utf16_with_errors<endianness::LITTLE>(buf, len);
+
+  const result res =
+      haswell::utf16::validate_utf16_with_errors<endianness::LITTLE>(buf, len);
   if (res.count != len) {
-    result scalar_res = scalar::utf16::validate_with_errors<endianness::LITTLE>(
-        buf + res.count, len - res.count);
+    const result scalar_res =
+        scalar::utf16::validate_with_errors<endianness::LITTLE>(
+            buf + res.count, len - res.count);
     return result(scalar_res.error, res.count + scalar_res.count);
   } else {
     return res;
@@ -335,10 +352,12 @@ simdutf_warn_unused result implementation::validate_utf16le_with_errors(
 
 simdutf_warn_unused result implementation::validate_utf16be_with_errors(
     const char16_t *buf, size_t len) const noexcept {
-  result res = avx2_validate_utf16_with_errors<endianness::BIG>(buf, len);
+  const result res =
+      haswell::utf16::validate_utf16_with_errors<endianness::BIG>(buf, len);
   if (res.count != len) {
-    result scalar_res = scalar::utf16::validate_with_errors<endianness::BIG>(
-        buf + res.count, len - res.count);
+    const result scalar_res =
+        scalar::utf16::validate_with_errors<endianness::BIG>(buf + res.count,
+                                                             len - res.count);
     return result(scalar_res.error, res.count + scalar_res.count);
   } else {
     return res;
