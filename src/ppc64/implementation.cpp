@@ -26,6 +26,7 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 
 #include "ppc64_convert_utf8_to_utf16.cpp"
 #include "ppc64_convert_utf8_to_utf32.cpp"
+#include "ppc64_validate_utf16.cpp"
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -42,6 +43,7 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 #include "generic/utf8_to_utf32/valid_utf8_to_utf32.h"
 // other functions
 #include "generic/utf16.h"
+#include "generic/validate_utf16.h"
 #include "generic/utf8.h"
 #include "generic/ascii_validation.h"
 
@@ -110,7 +112,18 @@ simdutf_warn_unused result implementation::validate_ascii_with_errors(
 simdutf_warn_unused bool
 implementation::validate_utf16le(const char16_t *buf,
                                  size_t len) const noexcept {
-  return scalar::utf16::validate<endianness::LITTLE>(buf, len);
+  const auto res =
+      ppc64::utf16::validate_utf16_with_errors<endianness::LITTLE>(buf, len);
+  if (res.is_err()) {
+    return false;
+  }
+
+  if (res.count != len) {
+    return scalar::utf16::validate<endianness::LITTLE>(buf + res.count,
+                                                       len - res.count);
+  }
+
+  return true;
 }
 #endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
@@ -118,17 +131,35 @@ implementation::validate_utf16le(const char16_t *buf,
 simdutf_warn_unused bool
 implementation::validate_utf16be(const char16_t *buf,
                                  size_t len) const noexcept {
-  return scalar::utf16::validate<endianness::BIG>(buf, len);
+  return validate_utf16be_with_errors(buf, len).is_ok();
 }
 
 simdutf_warn_unused result implementation::validate_utf16le_with_errors(
     const char16_t *buf, size_t len) const noexcept {
-  return scalar::utf16::validate_with_errors<endianness::LITTLE>(buf, len);
+  const auto res =
+      ppc64::utf16::validate_utf16_with_errors<endianness::LITTLE>(buf, len);
+  if (res.is_ok() and res.count != len) {
+    auto scalar = scalar::utf16::validate_with_errors<endianness::LITTLE>(
+        buf + res.count, len - res.count);
+    scalar.count += res.count;
+    return scalar;
+  }
+
+  return res;
 }
 
 simdutf_warn_unused result implementation::validate_utf16be_with_errors(
     const char16_t *buf, size_t len) const noexcept {
-  return scalar::utf16::validate_with_errors<endianness::BIG>(buf, len);
+  const auto res =
+      ppc64::utf16::validate_utf16_with_errors<endianness::BIG>(buf, len);
+  if (res.is_ok() and res.count != len) {
+    auto scalar = scalar::utf16::validate_with_errors<endianness::BIG>(
+        buf + res.count, len - res.count);
+    scalar.count += res.count;
+    return scalar;
+  }
+
+  return res;
 }
 #endif // SIMDUTF_FEATURE_UTF16
 
