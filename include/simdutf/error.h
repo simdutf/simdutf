@@ -41,6 +41,14 @@ struct result {
 
   simdutf_really_inline result(error_code err, size_t pos)
       : error{err}, count{pos} {}
+
+  simdutf_really_inline bool is_ok() const {
+    return error == error_code::SUCCESS;
+  }
+
+  simdutf_really_inline bool is_err() const {
+    return error != error_code::SUCCESS;
+  }
 };
 
 struct full_result {
