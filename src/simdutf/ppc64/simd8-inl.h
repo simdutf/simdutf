@@ -108,16 +108,16 @@ template <> struct simd8<bool> : base8<bool> {
   simdutf_really_inline simd8(simd8<T> other)
       : simd8(vector_type(other.value)) {}
 
-  simdutf_really_inline int to_bitmask() const {
+  simdutf_really_inline uint16_t to_bitmask() const {
     const vec_u8_t perm_mask = {0x78, 0x70, 0x68, 0x60, 0x58, 0x50, 0x48, 0x40,
                                 0x38, 0x30, 0x28, 0x20, 0x18, 0x10, 0x08, 0x00};
 
     const vec_u64_t result =
         (vec_u64_t)vec_vbpermq((vec_u8_t)this->value, perm_mask);
 #ifdef __LITTLE_ENDIAN__
-    return static_cast<int>(result[1]);
+    return static_cast<uint16_t>(result[1]);
 #else
-    return static_cast<int>(result[0]);
+    return static_cast<uint16_t>(result[0]);
 #endif
   }
 
@@ -238,19 +238,19 @@ template <> struct simd8<uint8_t> : base8_numeric<uint8_t> {
     return move_mask_u8(this->value) == 0;
   }
 
+  template <typename T>
+  simdutf_really_inline simd8(simd8<T> other)
+      : simd8(vector_type(other.value)) {}
+
   template <int N>
   simdutf_really_inline Self prev(const Self prev_chunk) const {
     return prev_aux<N>(prev_chunk.value);
   }
 
-  template <typename T>
-  simdutf_really_inline simd8(simd8<T> other)
-      : simd8(vector_type(other.value)) {}
-
   // Saturated math
   simdutf_really_inline simd8<uint8_t>
   saturating_add(const simd8<uint8_t> other) const {
-    return (vector_type)vec_adds(this->value, (vector_type)other);
+    return (vector_type)vec_adds(this->value, other.value);
   }
   simdutf_really_inline simd8<uint8_t>
   saturating_sub(const simd8<uint8_t> other) const {
@@ -336,9 +336,9 @@ template <> struct simd8<uint8_t> : base8_numeric<uint8_t> {
       if (i == 0) {
         printf("[%02x", tmp[i]);
       } else if (i == 15) {
-        printf("%02x]", tmp[i]);
+        printf(" %02x]", tmp[i]);
       } else {
-        printf("%02x", tmp[i]);
+        printf(" %02x", tmp[i]);
       }
     }
     putchar('\n');

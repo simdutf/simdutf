@@ -5,6 +5,7 @@ template <typename T> struct simd16;
 template <typename T> struct base16 {
   using vector_type = vector_u16_type_for_element<T>;
   static const int SIZE = sizeof(vector_type);
+  static const int ELEMENTS = sizeof(vector_type) / sizeof(T);
 
   vector_type value;
 
@@ -19,6 +20,26 @@ template <typename T> struct base16 {
 
   template <typename Pointer>
   simdutf_really_inline base16(const Pointer *ptr) : base16(vec_xl(0, ptr)) {}
+
+  // Conversion to SIMD register
+  simdutf_really_inline operator const vector_type() const {
+    return this->value;
+  }
+
+  void dump() const {
+    uint16_t tmp[ELEMENTS];
+    vec_xst(value, 0, reinterpret_cast<vector_type *>(tmp));
+    for (int i = 0; i < ELEMENTS; i++) {
+      if (i == 0) {
+        printf("[%04x", tmp[i]);
+      } else if (i == ELEMENTS - 1) {
+        printf(" %04x]", tmp[i]);
+      } else {
+        printf(" %04x", tmp[i]);
+      }
+    }
+    putchar('\n');
+  }
 };
 
 // Forward declaration
@@ -49,7 +70,7 @@ template <> struct simd16<bool> : base16<bool> {
   // Splat constructor
   simdutf_really_inline simd16(bool _value) : base16<bool>(splat(_value)) {}
 
-  simdutf_really_inline int to_bitmask() const {
+  simdutf_really_inline uint16_t to_bitmask() const {
     const vec_u8_t perm_mask = {15 * 8 + 7, 14 * 8 + 7, 13 * 8 + 7, 12 * 8 + 7,
                                 11 * 8 + 7, 10 * 8 + 7, 9 * 8 + 7,  8 * 8 + 7,
                                 7 * 8 + 7,  6 * 8 + 7,  5 * 8 + 7,  4 * 8 + 7,
@@ -58,9 +79,9 @@ template <> struct simd16<bool> : base16<bool> {
     const vec_u64_t result =
         (vec_u64_t)vec_vbpermq((vec_u8_t)this->value, perm_mask);
 #ifdef __LITTLE_ENDIAN__
-    return static_cast<int>(result[1]);
+    return static_cast<uint16_t>(result[1]);
 #else
-    return static_cast<int>(result[0]);
+    return static_cast<uint16_t>(result[0]);
 #endif
   }
   simdutf_really_inline bool any() const {
@@ -288,6 +309,11 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
   static simdutf_really_inline simd8<uint8_t> pack(const simd16<uint16_t> &v0,
                                                    const simd16<uint16_t> &v1) {
     return vec_packs(v0.value, v1.value);
+  }
+
+  // Change the endianness
+  simdutf_really_inline simd16<uint16_t> swap_bytes() {
+    return vec_reve(value);
   }
 };
 

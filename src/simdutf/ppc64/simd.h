@@ -76,6 +76,11 @@ template <typename T> bool move_mask_u8(T vec) {
 #endif
 }
 
+template <typename T>
+T select(const T cond, const T val_true, const T val_false) {
+  return vec_sel(val_false.value, val_true.value, cond.value);
+}
+
 #include "simd8-inl.h"
 #include "simd16-inl.h"
 #include "simd32-inl.h"
