@@ -28,6 +28,7 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 #include "ppc64_convert_utf8_to_utf32.cpp"
 #include "ppc64_validate_utf16.cpp"
 #include "ppc64_convert_latin1_to_utf8.cpp"
+#include "ppc64_convert_latin1_to_utf16.cpp"
 #include "ppc64_convert_latin1_to_utf32.cpp"
 
 } // unnamed namespace
@@ -212,14 +213,26 @@ simdutf_warn_unused size_t implementation::convert_latin1_to_utf8(
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf16le(
     const char *buf, size_t len, char16_t *utf16_output) const noexcept {
-  return scalar::latin1_to_utf16::convert<endianness::LITTLE>(buf, len,
-                                                              utf16_output);
+  size_t n =
+      ppc64_convert_latin1_to_utf16<endianness::LITTLE>(buf, len, utf16_output);
+  if (n < len) {
+    n += scalar::latin1_to_utf16::convert<endianness::LITTLE>(buf + n, len - n,
+                                                              utf16_output + n);
+  }
+
+  return n;
 }
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf16be(
     const char *buf, size_t len, char16_t *utf16_output) const noexcept {
-  return scalar::latin1_to_utf16::convert<endianness::BIG>(buf, len,
-                                                           utf16_output);
+  size_t n =
+      ppc64_convert_latin1_to_utf16<endianness::BIG>(buf, len, utf16_output);
+  if (n < len) {
+    n += scalar::latin1_to_utf16::convert<endianness::BIG>(buf + n, len - n,
+                                                           utf16_output + n);
+  }
+
+  return n;
 }
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 

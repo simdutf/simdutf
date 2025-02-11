@@ -47,6 +47,35 @@ template <typename T> struct base8 {
   }
 
   template <endianness big_endian>
+  simdutf_really_inline void store_bytes_as_utf16(char16_t *p) const {
+    if (big_endian) {
+      const vec_u8_t perm_lo = {16, 0, 16, 1, 16, 2, 16, 3,
+                                16, 4, 16, 5, 16, 6, 16, 7};
+      const vec_u8_t perm_hi = {16, 8,  16, 9,  16, 10, 16, 11,
+                                16, 12, 16, 13, 16, 14, 16, 15};
+      const vec_u8_t zero = vec_splats(uint8_t(0));
+
+      const vec_u8_t v0 = vec_perm(value, zero, perm_lo);
+      const vec_u8_t v1 = vec_perm(value, zero, perm_hi);
+
+      vec_xst(v0, 0, reinterpret_cast<vec_u8_t *>(p));
+      vec_xst(v1, 16, reinterpret_cast<vec_u8_t *>(p));
+    } else {
+      const vec_u8_t perm_lo = {0, 16, 1, 16, 2, 16, 3, 16,
+                                4, 16, 5, 16, 6, 16, 7, 16};
+      const vec_u8_t perm_hi = {8,  16, 9,  16, 10, 16, 11, 16,
+                                12, 16, 13, 16, 14, 16, 15, 16};
+      const vec_u8_t zero = vec_splats(uint8_t(0));
+
+      const vec_u8_t v0 = vec_perm(value, zero, perm_lo);
+      const vec_u8_t v1 = vec_perm(value, zero, perm_hi);
+
+      vec_xst(v0, 0, reinterpret_cast<vec_u8_t *>(p));
+      vec_xst(v1, 16, reinterpret_cast<vec_u8_t *>(p));
+    }
+  }
+
+  template <endianness big_endian>
   simdutf_really_inline void store_ascii_as_utf16(char16_t *p) const {
     if (big_endian) {
       const vec_u16_t v0 = vec_unpackh(this->value);
@@ -324,6 +353,7 @@ template <> struct simd8<uint8_t> : base8_numeric<uint8_t> {
     return simd8<uint8_t>(
         (vector_type)vec_sr(this->value, (vector_type)vec_splat_u8(N)));
   }
+
   template <int N> simdutf_really_inline simd8<uint8_t> shl() const {
     return simd8<uint8_t>(
         (vector_type)vec_sl(this->value, (vector_type)vec_splat_u8(N)));

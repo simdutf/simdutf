@@ -1,4 +1,5 @@
-// Note: this is a direct translation of westmere implementation, no AltiVec-specific code
+// Note: this is a direct translation of westmere implementation, no
+// AltiVec-specific code
 
 /*
  * reads a vector of uint16 values
@@ -7,11 +8,12 @@
  * !important! utf8_output must have at least 16 writable bytes
  */
 using vector_u16 = simd16<uint16_t>;
-using vector_u8  = simd8<uint8_t>;
+using vector_u8 = simd8<uint8_t>;
 
-simdutf_really_inline void write_v_u16_11bits_to_utf8(const vector_u16 v_u16, char *&utf8_output,
-                                       const vector_u8 one_byte_bytemask,
-                                       const uint16_t one_byte_bitmask) {
+simdutf_really_inline void
+write_v_u16_11bits_to_utf8(const vector_u16 v_u16, char *&utf8_output,
+                           const vector_u8 one_byte_bytemask,
+                           const uint16_t one_byte_bitmask) {
 
   // 0b1100_0000_1000_0000
   const auto v_c080 = vector_u16(0xc080);
@@ -36,7 +38,9 @@ simdutf_really_inline void write_v_u16_11bits_to_utf8(const vector_u16 v_u16, ch
   const auto t4 = t3 | v_c080;
 
   // 2. merge ASCII and 2-byte codewords
-  vector_u8 utf8_unpacked = select(one_byte_bytemask, vector_u8(vector_u8::vector_type(v_u16.value)), vector_u8(vector_u8::vector_type(t4.value)));
+  vector_u8 utf8_unpacked =
+      select(one_byte_bytemask, vector_u8(vector_u8::vector_type(v_u16.value)),
+             vector_u8(vector_u8::vector_type(t4.value)));
 
   const auto tmp = vec_revb(vec_u16_t(utf8_unpacked.value));
   utf8_unpacked.value = vec_u8_t(tmp);
@@ -48,7 +52,8 @@ simdutf_really_inline void write_v_u16_11bits_to_utf8(const vector_u16 v_u16, ch
   const uint16_t m1 = static_cast<uint16_t>(m0 >> 7); // m1 = 00000000h0g0f0e0
   const uint8_t m2 = static_cast<uint8_t>((m0 | m1) & 0xff); // m2 = hdgcfbea
   // 4. pack the bytes
-  const uint8_t *row = &simdutf::tables::utf16_to_utf8::pack_1_2_utf8_bytes[m2][0];
+  const uint8_t *row =
+      &simdutf::tables::utf16_to_utf8::pack_1_2_utf8_bytes[m2][0];
   const auto shuffle = vector_u8::load(row + 1);
   const auto utf8_packed = shuffle.lookup_16(utf8_unpacked);
 
@@ -59,20 +64,23 @@ simdutf_really_inline void write_v_u16_11bits_to_utf8(const vector_u16 v_u16, ch
   utf8_output += row[0];
 }
 
-inline void write_v_u16_11bits_to_utf8(const vector_u16 v_u16, char *&utf8_output,
+inline void write_v_u16_11bits_to_utf8(const vector_u16 v_u16,
+                                       char *&utf8_output,
                                        const vector_u16 v_0000,
                                        const vector_u16 v_ff80) {
   // no bits set above 7th bit
   const auto one_byte_bytemask = (v_u16 & v_ff80) == v_0000;
   const uint16_t one_byte_bitmask = one_byte_bytemask.to_bitmask();
 
-  write_v_u16_11bits_to_utf8(v_u16, utf8_output, vector_u8::vector_type(one_byte_bytemask.value),
+  write_v_u16_11bits_to_utf8(v_u16, utf8_output,
+                             vector_u8::vector_type(one_byte_bytemask.value),
                              one_byte_bitmask);
 }
 
 std::pair<const char *const, char *const>
 ppc64_convert_latin1_to_utf8(const char *latin_input,
-                           const size_t latin_input_length, char *utf8_output) {
+                             const size_t latin_input_length,
+                             char *utf8_output) {
   const char *end = latin_input + latin_input_length;
 
   const auto v_0000 = vector_u16::zero();
@@ -81,8 +89,10 @@ ppc64_convert_latin1_to_utf8(const char *latin_input,
   // 0b1111_1111_1000_0000
   const auto v_ff80 = vector_u16(0xff80);
 
-  const auto latin_1_half_into_u16_byte_mask = vector_u8(16, 0, 16, 1, 16, 2, 16, 3, 16, 4, 16, 5, 16, 6, 16, 7);
-  const auto latin_2_half_into_u16_byte_mask = vector_u8(16, 8, 16, 9, 16, 10, 16, 11, 16, 12, 16, 13, 16, 14, 16, 15);
+  const auto latin_1_half_into_u16_byte_mask =
+      vector_u8(16, 0, 16, 1, 16, 2, 16, 3, 16, 4, 16, 5, 16, 6, 16, 7);
+  const auto latin_2_half_into_u16_byte_mask =
+      vector_u8(16, 8, 16, 9, 16, 10, 16, 11, 16, 12, 16, 13, 16, 14, 16, 15);
 
   // each latin1 takes 1-2 utf8 bytes
   // slow path writes useful 8-15 bytes twice (eagerly writes 16 bytes and then
@@ -102,11 +112,12 @@ ppc64_convert_latin1_to_utf8(const char *latin_input,
 
     // assuming a/b are bytes and A/B are uint16 of the same value
     // aaaa_aaaa_bbbb_bbbb -> AAAA_AAAA
-    const vector_u16 v_u16_latin_1_half = vector_u16::vector_type(latin_1_half_into_u16_byte_mask.lookup_32(v_latin, v_00).value);
+    const vector_u16 v_u16_latin_1_half = vector_u16::vector_type(
+        latin_1_half_into_u16_byte_mask.lookup_32(v_latin, v_00).value);
 
-                                                                                                                  
-    // aaaa_aaaa_bbbb_bbbb -> BBBB_BBBB                                                                           
-    const vector_u16 v_u16_latin_2_half = vector_u16::vector_type(latin_2_half_into_u16_byte_mask.lookup_32(v_latin, v_00).value);
+    // aaaa_aaaa_bbbb_bbbb -> BBBB_BBBB
+    const vector_u16 v_u16_latin_2_half = vector_u16::vector_type(
+        latin_2_half_into_u16_byte_mask.lookup_32(v_latin, v_00).value);
 
     write_v_u16_11bits_to_utf8(v_u16_latin_1_half, utf8_output, v_0000, v_ff80);
     write_v_u16_11bits_to_utf8(v_u16_latin_2_half, utf8_output, v_0000, v_ff80);
@@ -124,13 +135,14 @@ ppc64_convert_latin1_to_utf8(const char *latin_input,
     } else {
       // assuming a/b are bytes and A/B are uint16 of the same value
       // aaaa_aaaa_bbbb_bbbb -> AAAA_AAAA
-    const auto v_u16_latin_1_half = vector_u16::vector_type(latin_1_half_into_u16_byte_mask.lookup_32(v_latin, v_00).value);
+      const auto v_u16_latin_1_half = vector_u16::vector_type(
+          latin_1_half_into_u16_byte_mask.lookup_32(v_latin, v_00).value);
 
-    write_v_u16_11bits_to_utf8(v_u16_latin_1_half, utf8_output, v_0000, v_ff80);
+      write_v_u16_11bits_to_utf8(v_u16_latin_1_half, utf8_output, v_0000,
+                                 v_ff80);
       latin_input += 8;
     }
   }
 
   return std::make_pair(latin_input, utf8_output);
 }
-
