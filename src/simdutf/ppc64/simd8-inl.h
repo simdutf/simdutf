@@ -4,6 +4,7 @@ template <typename T> struct base8 {
   using vector_type = vector_u8_type_for_element<T>;
   vector_type value;
   static const int SIZE = sizeof(vector_type);
+  static const int ELEMENTS = sizeof(vector_type) / sizeof(T);
 
   // Zero constructor
   simdutf_really_inline base8() : value{vec_splats(T(0))} {}
@@ -18,7 +19,10 @@ template <typename T> struct base8 {
   simdutf_really_inline operator const vector_type &() const {
     return this->value;
   }
-  simdutf_really_inline operator vector_type &() { return this->value; }
+
+  template <typename U> simdutf_really_inline void store(U *ptr) const {
+    vec_xst(value, 0, reinterpret_cast<T *>(ptr));
+  }
 
   template <typename SIMD8> void operator|=(const SIMD8 other) {
     this->value = vec_or(this->value, other.value);
@@ -135,9 +139,12 @@ template <typename T> struct base8_numeric : base8<T> {
   }
 
   static simdutf_really_inline simd8<T> zero() { return splat(0); }
-  static simdutf_really_inline simd8<T> load(const T values[16]) {
+
+  template <typename U>
+  static simdutf_really_inline simd8<T> load(const U *values) {
     return vec_xl(0, reinterpret_cast<const T *>(values));
   }
+
   // Repeat 16 values as many times as necessary (usually for lookup tables)
   static simdutf_really_inline simd8<T> repeat_16(T v0, T v1, T v2, T v3, T v4,
                                                   T v5, T v6, T v7, T v8, T v9,
@@ -150,11 +157,6 @@ template <typename T> struct base8_numeric : base8<T> {
   simdutf_really_inline base8_numeric() : base8<T>() {}
   simdutf_really_inline base8_numeric(const vector_type _value)
       : base8<T>(_value) {}
-
-  // Store to array
-  simdutf_really_inline void store(T dst[16]) const {
-    vec_vsx_st(this->value, 0, reinterpret_cast<vector_type *>(dst));
-  }
 
   // Override to distinguish from bool version
   simdutf_really_inline simd8<T> operator~() const { return *this ^ 0xFFu; }
@@ -181,6 +183,14 @@ template <typename T> struct base8_numeric : base8<T> {
   simdutf_really_inline simd8<L> lookup_16(simd8<L> lookup_table) const {
     return (vector_type)vec_perm((vector_type)lookup_table,
                                  (vector_type)lookup_table, this->value);
+  }
+
+  template <typename L>
+  simdutf_really_inline simd8<L>
+  lookup_32(const simd8<L> lookup_table_lo,
+            const simd8<L> lookup_table_hi) const {
+    return (vector_type)vec_perm(lookup_table_lo.value, lookup_table_hi.value,
+                                 this->value);
   }
 
   template <typename L>

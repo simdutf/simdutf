@@ -27,6 +27,7 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 #include "ppc64_convert_utf8_to_utf16.cpp"
 #include "ppc64_convert_utf8_to_utf32.cpp"
 #include "ppc64_validate_utf16.cpp"
+#include "ppc64_convert_latin1_to_utf32.cpp"
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -215,7 +216,13 @@ simdutf_warn_unused size_t implementation::convert_latin1_to_utf16be(
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(
     const char *buf, size_t len, char32_t *utf32_output) const noexcept {
-  return scalar::latin1_to_utf32::convert(buf, len, utf32_output);
+  const auto ret = ppc64_convert_latin1_to_utf32(buf, len, utf32_output);
+  if (ret.first != buf + len) {
+    const size_t processed = ret.first - buf;
+    scalar::latin1_to_utf32::convert(ret.first, len - processed, ret.second);
+  }
+
+  return len;
 }
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 

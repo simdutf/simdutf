@@ -3,8 +3,8 @@ namespace SIMDUTF_IMPLEMENTATION {
 namespace {
 namespace utf32 {
 
-simdutf_really_inline
-const char32_t *validate_utf32(const char32_t *input, size_t size) {
+simdutf_really_inline const char32_t *validate_utf32(const char32_t *input,
+                                                     size_t size) {
   const char32_t *end = input + size;
 
   using Vector = simd32<uint32_t>;
@@ -20,7 +20,7 @@ const char32_t *validate_utf32(const char32_t *input, size_t size) {
   while (input + N < end) {
     auto in = Vector(input);
     if (!match_system(endianness::BIG)) {
-        in.swap_bytes();
+      in.swap_bytes();
     }
 
     currentmax = max_val(currentmax, in);
@@ -41,8 +41,8 @@ const char32_t *validate_utf32(const char32_t *input, size_t size) {
   return input;
 }
 
-simdutf_really_inline
-result validate_utf32_with_errors(const char32_t *input, size_t size) {
+simdutf_really_inline result validate_utf32_with_errors(const char32_t *input,
+                                                        size_t size) {
   const char32_t *start = input;
   const char32_t *end = input + size;
 
@@ -57,7 +57,7 @@ result validate_utf32_with_errors(const char32_t *input, size_t size) {
   while (input + N < end) {
     auto in = Vector(input);
     if (!match_system(endianness::BIG)) {
-        in.swap_bytes();
+      in.swap_bytes();
     }
 
     const auto too_large = in > standardmax;

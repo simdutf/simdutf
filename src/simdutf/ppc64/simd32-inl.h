@@ -19,7 +19,8 @@ template <typename T> struct base32 {
   simdutf_really_inline base32(T scalar) : value{vec_splats(scalar)} {}
 
   template <typename Pointer>
-  simdutf_really_inline base32(const Pointer *ptr) : base32(vec_xl(0, reinterpret_cast<const T*>(ptr))) {}
+  simdutf_really_inline base32(const Pointer *ptr)
+      : base32(vec_xl(0, reinterpret_cast<const T *>(ptr))) {}
 
   // Store to array
   simdutf_really_inline void store(T dst[base32<T>::ELEMENTS]) const {
@@ -28,7 +29,7 @@ template <typename T> struct base32 {
 
   void dump() const {
     uint32_t tmp[4];
-    vec_xst(value, 0, reinterpret_cast<vector_type*>(tmp));
+    vec_xst(value, 0, reinterpret_cast<vector_type *>(tmp));
     for (int i = 0; i < 4; i++) {
       if (i == 0) {
         printf("[%08x", tmp[i]);
@@ -51,7 +52,8 @@ template <typename T> struct base32_numeric : base32<T> {
   }
   static simdutf_really_inline simd32<T> zero() { return splat(0); }
 
-  static simdutf_really_inline simd32<T> load(const T values[base32<T>::ELEMENTS]) {
+  static simdutf_really_inline simd32<T>
+  load(const T values[base32<T>::ELEMENTS]) {
     return vec_xl(0, reinterpret_cast<const T *>(values));
   }
 
@@ -59,9 +61,10 @@ template <typename T> struct base32_numeric : base32<T> {
   simdutf_really_inline base32_numeric(const vector_type _value)
       : base32<T>(_value) {}
 
-
   // Override to distinguish from bool version
-  simdutf_really_inline simd32<T> operator~() const { return *this ^ 0xffffffffffu; }
+  simdutf_really_inline simd32<T> operator~() const {
+    return *this ^ 0xffffffffffu;
+  }
 
   // Addition/subtraction are the same for signed and unsigned
   simdutf_really_inline simd32<T> operator+(const simd32<T> other) const {
@@ -116,9 +119,8 @@ template <> struct simd32<bool> : base32<bool> {
   simdutf_really_inline simd32(bool _value) : base32<bool>(splat(_value)) {}
 
   simdutf_really_inline int to_bitmask() const {
-    const vec_u8_t perm_mask = {15 * 8, 14 * 8, 13 * 8, 12 * 8,
-                                11 * 8, 10 * 8, 9 * 8,  8 * 8,
-                                7 * 8,  6 * 8,  5 * 8,  4 * 8,
+    const vec_u8_t perm_mask = {15 * 8, 14 * 8, 13 * 8, 12 * 8, 11 * 8, 10 * 8,
+                                9 * 8,  8 * 8,  7 * 8,  6 * 8,  5 * 8,  4 * 8,
                                 3 * 8,  2 * 8,  1 * 8,  0 * 8};
 
     const vec_u64_t result =
@@ -140,7 +142,6 @@ template <> struct simd32<bool> : base32<bool> {
     return (vec_bool32_t)vec_xor(this->value, vec_splats(uint32_t(0xffffffff)));
   }
 };
-
 
 // Unsigned code units
 template <> struct simd32<uint32_t> : base32_numeric<uint32_t> {
@@ -291,7 +292,6 @@ template <typename T, typename U> simd32<T> operator^(const simd32<T> a, U b) {
   return vec_xor(a.value, vec_splats(T(b)));
 }
 
-template <typename T>
-simd32<T> max_val(const simd32<T> a, const simd32<T> b) {
- return vec_max(a.value, b.value);
+template <typename T> simd32<T> max_val(const simd32<T> a, const simd32<T> b) {
+  return vec_max(a.value, b.value);
 }
