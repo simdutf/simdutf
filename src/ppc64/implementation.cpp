@@ -45,6 +45,7 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 #include "generic/utf16.h"
 #include "generic/validate_utf16.h"
 #include "generic/utf8.h"
+#include "generic/validate_utf32.h"
 #include "generic/ascii_validation.h"
 
 //
@@ -166,14 +167,27 @@ simdutf_warn_unused result implementation::validate_utf16be_with_errors(
 #if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_warn_unused bool
 implementation::validate_utf32(const char32_t *buf, size_t len) const noexcept {
-  return scalar::utf32::validate(buf, len);
+  const char32_t *ptr = ppc64::utf32::validate_utf32(buf, len);
+  if (ptr == nullptr) {
+    return false;
+  }
+
+  return scalar::utf32::validate(ptr, len - (ptr - buf));
 }
 #endif // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused result implementation::validate_utf32_with_errors(
     const char32_t *buf, size_t len) const noexcept {
-  return scalar::utf32::validate_with_errors(buf, len);
+  const auto res = ppc64::utf32::validate_utf32_with_errors(buf, len);
+  if (res.is_err() or res.count != len) {
+    auto scalar =
+        scalar::utf32::validate_with_errors(buf + res.count, len - res.count);
+    scalar.count += res.count;
+    return scalar;
+  }
+
+  return res;
 }
 #endif // SIMDUTF_FEATURE_UTF32
 

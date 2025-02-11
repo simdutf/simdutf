@@ -12,6 +12,7 @@ namespace simd {
 
 using vec_bool_t = __vector __bool char;
 using vec_bool16_t = __vector __bool short;
+using vec_bool32_t = __vector __bool int;
 using vec_u8_t = __vector unsigned char;
 using vec_i8_t = __vector signed char;
 using vec_u16_t = __vector unsigned short;
@@ -21,29 +22,34 @@ using vec_i32_t = __vector signed int;
 using vec_u64_t = __vector unsigned long long;
 using vec_i64_t = __vector signed long long;
 
+// clang-format off
 template <typename T> struct vector_u8_type_for_element_aux {
-  using type = typename std::conditional<
-      std::is_same<T, bool>::value, vec_bool_t,
-      typename std::conditional<
-          std::is_same<T, uint8_t>::value, vec_u8_t,
-          typename std::conditional<std::is_same<T, int8_t>::value, vec_i8_t,
-                                    void>::type>::type>::type;
+  using type = typename std::conditional<std::is_same<T, bool>::value,    vec_bool_t,
+               typename std::conditional<std::is_same<T, uint8_t>::value, vec_u8_t,
+               typename std::conditional<std::is_same<T, int8_t>::value,  vec_i8_t, void>::type>::type>::type;
 
   static_assert(not std::is_same<type, void>::value,
                 "accepted element types are 8 bit integers or bool");
 };
 
 template <typename T> struct vector_u16_type_for_element_aux {
-  using type = typename std::conditional<
-      std::is_same<T, bool>::value, vec_bool16_t,
-      typename std::conditional<
-          std::is_same<T, uint16_t>::value, vec_u16_t,
-          typename std::conditional<std::is_same<T, int16_t>::value, vec_i16_t,
-                                    void>::type>::type>::type;
+  using type = typename std::conditional<std::is_same<T, bool>::value,     vec_bool16_t,
+               typename std::conditional<std::is_same<T, uint16_t>::value, vec_u16_t,
+               typename std::conditional<std::is_same<T, int16_t>::value,  vec_i16_t, void>::type>::type>::type;
 
   static_assert(not std::is_same<type, void>::value,
                 "accepted element types are 16 bit integers or bool");
 };
+
+template <typename T> struct vector_u32_type_for_element_aux {
+  using type = typename std::conditional<std::is_same<T, bool>::value,     vec_bool32_t,
+               typename std::conditional<std::is_same<T, uint32_t>::value, vec_u32_t,
+               typename std::conditional<std::is_same<T, int32_t>::value,  vec_i32_t, void>::type>::type>::type;
+
+  static_assert(not std::is_same<type, void>::value,
+                "accepted element types are 32 bit integers or bool");
+};
+// clang-format on
 
 template <typename T>
 using vector_u8_type_for_element =
@@ -52,6 +58,10 @@ using vector_u8_type_for_element =
 template <typename T>
 using vector_u16_type_for_element =
     typename vector_u16_type_for_element_aux<T>::type;
+
+template <typename T>
+using vector_u32_type_for_element =
+    typename vector_u32_type_for_element_aux<T>::type;
 
 template <typename T> bool move_mask_u8(T vec) {
   const vec_u8_t perm_mask = {15 * 8, 14 * 8, 13 * 8, 12 * 8, 11 * 8, 10 * 8,
@@ -68,6 +78,7 @@ template <typename T> bool move_mask_u8(T vec) {
 
 #include "simd8-inl.h"
 #include "simd16-inl.h"
+#include "simd32-inl.h"
 
 } // namespace simd
 } // unnamed namespace

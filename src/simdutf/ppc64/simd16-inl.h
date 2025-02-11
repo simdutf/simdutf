@@ -307,7 +307,7 @@ template <typename T, typename U> simd16<T> operator&(const simd16<T> a, U b) {
 
 template <typename T>
 simd16<T> operator|(const simd16<T> a, const simd16<T> b) {
-  return vec_and(a.value, b.value);
+  return vec_or(a.value, b.value);
 }
 
 template <typename T>
