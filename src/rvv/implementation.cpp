@@ -52,6 +52,19 @@ implementation::detect_encodings(const char *input,
 #endif // SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF16
+
+void implementation::to_well_formed_utf16le(const char16_t *input, size_t len,
+                                            char16_t *output) const noexcept {
+  return scalar::utf16::to_well_formed_utf16<endianness::LITTLE>(input, len,
+                                                                 output);
+}
+
+void implementation::to_well_formed_utf16be(const char16_t *input, size_t len,
+                                            char16_t *output) const noexcept {
+  return scalar::utf16::to_well_formed_utf16<endianness::BIG>(input, len,
+                                                              output);
+}
+
 template <simdutf_ByteFlip bflip>
 simdutf_really_inline static void
 rvv_change_endianness_utf16(const char16_t *src, size_t len, char16_t *dst) {
