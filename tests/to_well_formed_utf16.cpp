@@ -97,12 +97,12 @@ TEST_LOOP(trials, to_well_formed_utf16be_for_valid_input_mixed_long_self) {
 }
 
 std::vector<char16_t> random_testcase(size_t n, std::mt19937 &rng) {
-  std::uniform_int_distribution<uint16_t> dist(0, 0xFFFF);
-  std::uniform_int_distribution<uint8_t> disthl(0, 3);
+  std::uniform_int_distribution<int> dist(0, 0xFFFF);
+  std::uniform_int_distribution<int> disthl(0, 3);
   std::vector<char16_t> buf(n);
   for (size_t i = 0; i < n; ++i) {
-    uint16_t random_value = dist(rng);
-    uint8_t random_hl = disthl(rng);
+    uint16_t random_value(dist(rng));
+    uint8_t random_hl(disthl(rng));
     if (random_hl == 0) { // 25% for low surrogate
       buf[i] = 0xD800 | (random_value & 0x07FF);
     } else if (random_hl == 1) { // Another 25% for high surrogate
