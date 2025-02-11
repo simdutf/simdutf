@@ -123,6 +123,45 @@ simdutf_warn_unused inline size_t trim_partial_utf16(const char16_t *input,
   return length;
 }
 
+template <endianness big_endian>
+void to_well_formed_utf16(const char16_t *input, size_t len, char16_t *output) {
+  auto is_high_surrogate = [](char16_t c) -> bool {
+    return (0xd800 <= c && c <= 0xdbff);
+  };
+
+  auto is_low_surrogate = [](char16_t c) -> bool {
+    return (0xdc00 <= c && c <= 0xdfff);
+  };
+  const char16_t replacement =
+      !match_system(big_endian) ? u16_swap_bytes(0xfffd) : 0xfffd;
+  bool high_surrogate_prev = false, high_surrogate, low_surrogate;
+  size_t i = 0;
+  for (; i < len; i++) {
+    char16_t c = input[i];
+    c = !match_system(big_endian) ? u16_swap_bytes(c) : c;
+    high_surrogate = is_high_surrogate(c);
+    low_surrogate = is_low_surrogate(c);
+    // printf("c: %x, high_surrogate: %d, low_surrogate: %d\n", c,
+    // high_surrogate, low_surrogate);
+
+    if (high_surrogate_prev && !low_surrogate) {
+      output[i - 1] = replacement;
+    }
+
+    if (!high_surrogate_prev && low_surrogate) {
+      output[i] = replacement;
+    } else {
+      output[i] = input[i];
+    }
+    high_surrogate_prev = high_surrogate;
+  }
+
+  /* string may not end with high surrogate */
+  if (high_surrogate_prev) {
+    output[i - 1] = replacement;
+  }
+}
+
 } // namespace utf16
 } // unnamed namespace
 } // namespace scalar
