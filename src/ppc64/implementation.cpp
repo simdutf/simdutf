@@ -24,12 +24,13 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
   return simd8<bool>(is_third_byte | is_fourth_byte);
 }
 
-#include "ppc64_convert_utf8_to_utf16.cpp"
-#include "ppc64_convert_utf8_to_utf32.cpp"
 #include "ppc64_validate_utf16.cpp"
 #include "ppc64_convert_latin1_to_utf8.cpp"
 #include "ppc64_convert_latin1_to_utf16.cpp"
 #include "ppc64_convert_latin1_to_utf32.cpp"
+#include "ppc64_convert_utf8_to_latin1.cpp"
+#include "ppc64_convert_utf8_to_utf16.cpp"
+#include "ppc64_convert_utf8_to_utf32.cpp"
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -50,6 +51,10 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 #include "generic/utf8.h"
 #include "generic/validate_utf32.h"
 #include "generic/ascii_validation.h"
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
+  #include "generic/utf8_to_latin1/utf8_to_latin1.h"
+  #include "generic/utf8_to_latin1/valid_utf8_to_latin1.h"
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 //
 // Implementation-specific overrides
@@ -252,7 +257,8 @@ simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::convert_utf8_to_latin1(
     const char *buf, size_t len, char *latin1_output) const noexcept {
-  return scalar::utf8_to_latin1::convert(buf, len, latin1_output);
+  utf8_to_latin1::validating_transcoder converter;
+  return converter.convert(buf, len, latin1_output);
 }
 
 simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(

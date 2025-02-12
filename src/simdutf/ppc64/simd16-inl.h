@@ -313,7 +313,7 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
 
   // Change the endianness
   simdutf_really_inline simd16<uint16_t> swap_bytes() {
-    return vec_reve(value);
+    return vec_revb(value);
   }
 };
 
