@@ -1,4 +1,7 @@
+#!/usr/bin/env python3
+
 import sys
+import warnings
 from pathlib import Path
 from table import Table
 
@@ -27,17 +30,37 @@ class Input:
 class Result:
     def __init__(self):
         self.instruction_per_byte = None
+        self.instruction_per_char = None
         self.instruction_per_cycle = None
-        self.speed_gbs = None
-        self.branch_misses = None
-        self.cache_misses = None
+        self.cycle_per_byte = None
+        self.cycle_per_char = None
+        self.bytes_per_char = None
+        self.speed_gigabytes = None
+        self.speed_gigachars = None
+        self.freq = None
+        self.time = None
 
-    def __str__(self):
-        return '<Result: %f ins/byte, %f ins/cycle, %f GB, %f b.misses/byte %f c.misses/byte>' % \
-                (self.instruction_per_byte, self.instruction_per_cycle,
-                 self.speed_gbs, self.branch_misses, self.cache_misses)
+    def update_from_dict(self, D):
+        while D:
+            unit, value = D.popitem()
+            field = unit2field[unit]
+            if field is not None:
+                setattr(self, field, value)
 
-    __repr__ = __str__
+
+unit2field = {
+    'ins/byte'      : 'instruction_per_byte',
+    'ins/char'      : 'instruction_per_char',
+    'ins/cycle'     : 'instruction_per_cycle',
+    'cycle/byte'    : 'cycle_per_byte',
+    'cycle/char'    : 'cycle_per_byte',
+    'byte/char'     : 'byte_per_char',
+    'GHz'           : 'freq',
+    'GB/s'          : 'speed_gigabytes',
+    'Gc/s'          : 'speed_gigachars',
+    'ns'            : 'time',
+    '%'             : None,
+}
 
 
 def parse(file):
@@ -45,10 +68,10 @@ def parse(file):
     for line in file:
         for item in parse_line(line):
             if isinstance(item, Input):
-                result.append(item)
+                result.append((item, Result()))
             else:
-                assert isinstance(result[-1], Input)
-                result[-1] = (result[-1], item)
+                assert isinstance(item, dict)
+                result[-1][1].update_from_dict(item)
 
     return result
 
@@ -56,8 +79,8 @@ def parse(file):
 def parse_line(line):
     if 'input size' in line:
         yield parse_input(normalize_line(line))
-    elif 'ins/byte' in line:
-        yield parse_result(normalize_line(line))
+    elif 'ins/byte' in line or 'ins/char' in line:
+        yield parse_results(normalize_line(line))
 
 
 def normalize_line(line):
@@ -89,31 +112,23 @@ def parse_input(fields):
     return input
 
 
-def parse_result(fields):
-    result = Result()
+def try_float(s):
+    try:
+        return float(s)
+    except ValueError:
+        return
 
-    result.instruction_per_byte = float(fields.pop(0))
-    assert fields.pop(0) == 'ins/byte'
 
-    fields.pop(0)
-    fields.pop(0)
+def parse_results(fields):
+    """Consumes pairs "number unit" from the list"""
+    D = {}
 
-    result.speed_gbs = float(fields.pop(0))
-    assert fields.pop(0) == 'GB/s'
+    while fields:
+        value = try_float(fields.pop(0));
+        if value is not None and fields:
+            D[fields.pop(0)] = value
 
-    fields.pop(0)
-    fields.pop(0)
-
-    result.instruction_per_cycle = float(fields.pop(0))
-    assert fields.pop(0) == 'ins/cycle'
-
-    result.branch_misses = float(fields.pop(0))
-    assert fields.pop(0) == 'b.misses/byte'
-
-    result.cache_misses = float(fields.pop(0))
-    assert fields.pop(0) == 'c.mis/byte'
-
-    return result
+    return D
 
 
 def print_speed_comparison(data):
@@ -157,7 +172,7 @@ def print_speed_comparison(data):
             for procedure in procedures:
                 try:
                     result = results[(procedure, dataset)]
-                    row.append('%0.3f GB/s' % (result.speed_gbs))
+                    row.append('%0.3f GB/s' % (result.speed_gigabytes))
                 except KeyError:
                     row.append('--')
 
