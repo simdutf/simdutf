@@ -255,7 +255,12 @@ template <> struct simd32<uint32_t> : base32_numeric<uint32_t> {
 
   // Change the endianness
   simdutf_really_inline simd32<uint32_t> swap_bytes() const {
-    return vec_reve(value);
+    return vec_revb(value);
+  }
+
+  static simdutf_really_inline simd16<uint16_t>
+  pack(const simd32<uint32_t> &v0, const simd32<uint32_t> &v1) {
+    return vec_packs(v0.value, v1.value);
   }
 };
 

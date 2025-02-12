@@ -48,48 +48,36 @@ template <typename T> struct base8 {
 
   template <endianness big_endian>
   simdutf_really_inline void store_bytes_as_utf16(char16_t *p) const {
+    const vector_type zero = vec_splats(T(0));
+
     if (big_endian) {
       const vec_u8_t perm_lo = {16, 0, 16, 1, 16, 2, 16, 3,
                                 16, 4, 16, 5, 16, 6, 16, 7};
       const vec_u8_t perm_hi = {16, 8,  16, 9,  16, 10, 16, 11,
                                 16, 12, 16, 13, 16, 14, 16, 15};
-      const vec_u8_t zero = vec_splats(uint8_t(0));
 
-      const vec_u8_t v0 = vec_perm(value, zero, perm_lo);
-      const vec_u8_t v1 = vec_perm(value, zero, perm_hi);
+      const vector_type v0 = vec_perm(value, zero, perm_lo);
+      const vector_type v1 = vec_perm(value, zero, perm_hi);
 
-      vec_xst(v0, 0, reinterpret_cast<vec_u8_t *>(p));
-      vec_xst(v1, 16, reinterpret_cast<vec_u8_t *>(p));
+      vec_xst(v0, 0, reinterpret_cast<vector_type *>(p));
+      vec_xst(v1, 16, reinterpret_cast<vector_type *>(p));
     } else {
       const vec_u8_t perm_lo = {0, 16, 1, 16, 2, 16, 3, 16,
                                 4, 16, 5, 16, 6, 16, 7, 16};
       const vec_u8_t perm_hi = {8,  16, 9,  16, 10, 16, 11, 16,
                                 12, 16, 13, 16, 14, 16, 15, 16};
-      const vec_u8_t zero = vec_splats(uint8_t(0));
 
-      const vec_u8_t v0 = vec_perm(value, zero, perm_lo);
-      const vec_u8_t v1 = vec_perm(value, zero, perm_hi);
+      const vector_type v0 = vec_perm(value, zero, perm_lo);
+      const vector_type v1 = vec_perm(value, zero, perm_hi);
 
-      vec_xst(v0, 0, reinterpret_cast<vec_u8_t *>(p));
-      vec_xst(v1, 16, reinterpret_cast<vec_u8_t *>(p));
+      vec_xst(v0, 0, reinterpret_cast<vector_type *>(p));
+      vec_xst(v1, 16, reinterpret_cast<vector_type *>(p));
     }
   }
 
   template <endianness big_endian>
   simdutf_really_inline void store_ascii_as_utf16(char16_t *p) const {
-    if (big_endian) {
-      const vec_u16_t v0 = vec_unpackh(this->value);
-      const vec_u16_t v1 = vec_unpackl(this->value);
-
-      vec_xst(v0, 0, reinterpret_cast<vector_type *>(p));
-      vec_xst(v1, 16, reinterpret_cast<vector_type *>(p));
-    } else {
-      const vec_u16_t v0 = vec_unpackl(this->value);
-      const vec_u16_t v1 = vec_unpackh(this->value);
-
-      vec_xst(v0, 0, reinterpret_cast<vector_type *>(p));
-      vec_xst(v1, 16, reinterpret_cast<vector_type *>(p));
-    }
+    store_bytes_as_utf16<big_endian>(p);
   }
 
   simdutf_really_inline void store_ascii_as_utf32(char32_t *p) const {

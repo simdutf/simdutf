@@ -93,6 +93,10 @@ simdutf_really_inline vector_u16 as_vector_u16(const vector_u8 v) {
   return vector_u16::vector_type(v.value);
 }
 
+simdutf_really_inline vector_u32 as_vector_u32(const vector_u8 v) {
+  return vector_u32::vector_type(v.value);
+}
+
 } // namespace simd
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION

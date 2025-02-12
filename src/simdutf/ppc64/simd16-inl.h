@@ -112,7 +112,7 @@ template <typename T> struct base16_numeric : base16<T> {
       : base16<T>(_value) {}
 
   // Store to array
-  simdutf_really_inline void store(T dst[8]) const {
+  template <typename U> simdutf_really_inline void store(U *dst) const {
     return vec_xst(this->value, 0, reinterpret_cast<vector_type *>(dst));
   }
 

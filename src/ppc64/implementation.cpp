@@ -276,38 +276,38 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_latin1(
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16le(
     const char *buf, size_t len, char16_t *utf16_output) const noexcept {
-  return scalar::utf8_to_utf16::convert<endianness::LITTLE>(buf, len,
-                                                            utf16_output);
+  utf8_to_utf16::validating_transcoder converter;
+  return converter.convert<endianness::LITTLE>(buf, len, utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf8_to_utf16be(
     const char *buf, size_t len, char16_t *utf16_output) const noexcept {
-  return scalar::utf8_to_utf16::convert<endianness::BIG>(buf, len,
-                                                         utf16_output);
+  utf8_to_utf16::validating_transcoder converter;
+  return converter.convert<endianness::BIG>(buf, len, utf16_output);
 }
 
 simdutf_warn_unused result implementation::convert_utf8_to_utf16le_with_errors(
     const char *buf, size_t len, char16_t *utf16_output) const noexcept {
-  return scalar::utf8_to_utf16::convert_with_errors<endianness::LITTLE>(
-      buf, len, utf16_output);
+  utf8_to_utf16::validating_transcoder converter;
+  return converter.convert_with_errors<endianness::LITTLE>(buf, len,
+                                                           utf16_output);
 }
 
 simdutf_warn_unused result implementation::convert_utf8_to_utf16be_with_errors(
     const char *buf, size_t len, char16_t *utf16_output) const noexcept {
-  return scalar::utf8_to_utf16::convert_with_errors<endianness::BIG>(
-      buf, len, utf16_output);
+  utf8_to_utf16::validating_transcoder converter;
+  return converter.convert_with_errors<endianness::BIG>(buf, len, utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16le(
     const char *buf, size_t len, char16_t *utf16_output) const noexcept {
-  return scalar::utf8_to_utf16::convert_valid<endianness::LITTLE>(buf, len,
-                                                                  utf16_output);
+  return utf8_to_utf16::convert_valid<endianness::LITTLE>(buf, len,
+                                                          utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16be(
     const char *buf, size_t len, char16_t *utf16_output) const noexcept {
-  return scalar::utf8_to_utf16::convert_valid<endianness::BIG>(buf, len,
-                                                               utf16_output);
+  return utf8_to_utf16::convert_valid<endianness::BIG>(buf, len, utf16_output);
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
