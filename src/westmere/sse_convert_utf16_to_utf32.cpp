@@ -49,7 +49,7 @@
 
 /*
   Returns a pair: the first unprocessed byte from buf and utf8_output
-  A scalar routing should carry on the conversion of the tail.
+  A scalar routine should carry on the conversion of the tail.
 */
 template <endianness big_endian>
 std::pair<const char16_t *, char32_t *>
