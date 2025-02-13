@@ -186,16 +186,122 @@ def print_speed_comparison(data):
         print(by_dataset())
 
 
+def compare(old, new):
+    collate = {}
+    for input, result in old:
+        key = str(input)
+        collate[key] = [input, result, None]
+
+    for input, result in new:
+        key = str(input)
+        if key not in collate:
+            collate[key] = [input, None, result]
+        else:
+            collate[key][-1] = result
+
+    grouped = {}
+    for _, (input, old, new) in collate.items():
+        if input.procedure not in grouped:
+            grouped[input.procedure] = []
+
+        grouped[input.procedure].append((input, old, new))
+
+    NA = '--'
+    table = Table()
+    table.add_header(["dataset", "size [B]", "iterations", "old GB/s", "new GB/s", "speedup"])
+    for procedure, values in grouped.items():
+        table.add_row([(procedure, 6)])
+        for input, old, new in values:
+            old_speed = old.speed_gigabytes
+            new_speed = new.speed_gigabytes
+            if old_speed is None or new_speed is None:
+                speedup = NA
+            else:
+                speedup = new_speed / old_speed
+
+            if old_speed is None:
+                old_speed = NA
+            else:
+                old_speed = '%0.2f' % old_speed
+
+            if new_speed is None:
+                new_speed = NA
+            else:
+                new_speed = '%0.2f' % new_speed
+
+            table.add_row([
+                input.dataset.stem,
+                '%s' % input.input_size,
+                '%s' % input.iterations,
+                old_speed,
+                new_speed,
+                '%0.2fx' % speedup,
+            ])
+
+    print(table)
+
+
+HELP = """Format output of the benchmark utility
+
+When running a benchmark redirect its output to file (with > or `tee`), like:
+
+$ cd build/benchmarks
+$ ./benchamark [...] > results.txt
+$ ./benchamark [...] | tee results.txt
+
+To summarize results, use:
+
+$ ./benchmark_print.py results.txt
++-----------------------+---------------------------------+
+|        dataset        | convert_utf32_to_latin1+haswell |
++=======================+=================================+
+| esperanto.utflatin32  | 88.806 GB/s                     |
++-----------------------+---------------------------------+
+| french.utflatin32     | 92.388 GB/s                     |
++-----------------------+---------------------------------+
+| german.utflatin32     | 79.836 GB/s                     |
++-----------------------+---------------------------------+
+| portuguese.utflatin32 | 92.642 GB/s                     |
++-----------------------+---------------------------------+
+
+To compare results, use:
+
+$ ./benchmark_print.py old.txt new.txt
++-----------------------+----------+------------+----------+----------+---------+
+|        dataset        | size [B] | iterations | old GB/s | new GB/s | speedup |
++=======================+==========+============+==========+==========+=========+
+| convert_utf32_to_latin1+haswell                                               |
++-----------------------+----------+------------+----------+----------+---------+
+| esperanto.utflatin32  |   328672 |      30000 |    77.14 |    88.81 | 1.15x   |
++-----------------------+----------+------------+----------+----------+---------+
+| french.utflatin32     |  1729220 |      30000 |    75.26 |    92.39 | 1.23x   |
++-----------------------+----------+------------+----------+----------+---------+
+| german.utflatin32     |   797324 |      30000 |    76.11 |    79.84 | 1.05x   |
++-----------------------+----------+------------+----------+----------+---------+
+| portuguese.utflatin32 |  1086972 |      30000 |    84.12 |    92.64 | 1.10x   |
++-----------------------+----------+------------+----------+----------+---------+"""
+
+
 def main():
-    if len(sys.argv) < 2:
-        print("No input files")
-        print("Provide output from the benchmark utility")
+    script = sys.argv[0]
+    args = sys.argv[1:]
+    n = len(args)
+    if "-h" in args or "--help" in args or (n not in (1, 2)):
+        print(HELP)
         return
 
-    for path in sys.argv[1:]:
-        with open(path, 'rt') as f:
+    if n == 1:
+        with open(args[0]) as f:
             data = parse(f)
-            print_speed_comparison(data)
+
+        print_speed_comparison(data)
+    elif n == 2:
+        with open(args[0]) as f:
+            old = parse(f)
+        with open(args[1]) as f:
+            new = parse(f)
+
+        compare(old, new)
 
 
 if __name__ == '__main__':
