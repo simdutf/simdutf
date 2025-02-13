@@ -3,31 +3,31 @@ std::pair<const char16_t *, char *>
 avx2_convert_utf16_to_latin1(const char16_t *buf, size_t len,
                              char *latin1_output) {
   const char16_t *end = buf + len;
-  while (end - buf >= 16) {
+  while (end - buf >= 32) {
     // Load 16 UTF-16 characters into 256-bit AVX2 register
-    __m256i in = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(buf));
+    __m256i in0 = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(buf));
+    __m256i in1 =
+        _mm256_loadu_si256(reinterpret_cast<const __m256i *>(buf + 16));
 
     if (!match_system(big_endian)) {
       const __m256i swap = _mm256_setr_epi8(
           1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14, 17, 16, 19, 18,
           21, 20, 23, 22, 25, 24, 27, 26, 29, 28, 31, 30);
-      in = _mm256_shuffle_epi8(in, swap);
+      in0 = _mm256_shuffle_epi8(in0, swap);
+      in1 = _mm256_shuffle_epi8(in1, swap);
     }
 
     __m256i high_byte_mask = _mm256_set1_epi16((int16_t)0xFF00);
-    if (_mm256_testz_si256(in, high_byte_mask)) {
+    if (_mm256_testz_si256(_mm256_or_si256(in0, in1), high_byte_mask)) {
       // Pack 16-bit characters into 8-bit and store in latin1_output
-      __m128i lo = _mm256_extractf128_si256(in, 0);
-      __m128i hi = _mm256_extractf128_si256(in, 1);
-      __m128i latin1_packed_lo = _mm_packus_epi16(lo, lo);
-      __m128i latin1_packed_hi = _mm_packus_epi16(hi, hi);
-      _mm_storel_epi64(reinterpret_cast<__m128i *>(latin1_output),
-                       latin1_packed_lo);
-      _mm_storel_epi64(reinterpret_cast<__m128i *>(latin1_output + 8),
-                       latin1_packed_hi);
-      // Adjust pointers for next iteration
-      buf += 16;
-      latin1_output += 16;
+      const __m256i packed = _mm256_packus_epi16(in0, in1);
+
+      const __m256i result = _mm256_permute4x64_epi64(packed, 0b11011000);
+
+      _mm256_storeu_si256(reinterpret_cast<__m256i *>(latin1_output), result);
+      // Adjust pointers for the next iteration
+      buf += 32;
+      latin1_output += 32;
     } else {
       return std::make_pair(nullptr, reinterpret_cast<char *>(latin1_output));
     }
