@@ -80,20 +80,53 @@ template <typename T> struct base8 {
     store_bytes_as_utf16<big_endian>(p);
   }
 
-  simdutf_really_inline void store_ascii_as_utf32(char32_t *p) const {
-    /*
-    const vec_u16_t v0 = vec_unpackh(this->value);
-    const vec_u32_t v00 = vec_unpackh(v0);
-    const vec_u32_t v01 = vec_unpackl(v0);
-    const vec_u16_t v1 = vec_unpackl(this->value);
-    const vec_u32_t v10 = vec_unpackh(v1);
-    const vec_u32_t v11 = vec_unpackl(v1);
+  simdutf_really_inline void store_bytes_as_utf32(char32_t *p) const {
+    const vector_type zero = vec_splats(T(0));
 
-    vec_xst(v00, 0*16, reinterpret_cast<vec_u32_t*>(p));
-    vec_xst(v01, 1*16, reinterpret_cast<vec_u32_t*>(p));
-    vec_xst(v10, 2*16, reinterpret_cast<vec_u32_t*>(p));
-    vec_xst(v11, 3*16, reinterpret_cast<vec_u32_t*>(p));
-    */
+    const vec_u8_t perm0 = {16, 16, 16, 0, 16, 16, 16, 1,
+                            16, 16, 16, 2, 16, 16, 16, 3};
+
+    const vec_u8_t perm1 = {16, 16, 16, 4, 16, 16, 16, 5,
+                            16, 16, 16, 6, 16, 16, 16, 7};
+
+    const vec_u8_t perm2 = {16, 16, 16, 8,  16, 16, 16, 9,
+                            16, 16, 16, 10, 16, 16, 16, 11};
+
+    const vec_u8_t perm3 = {16, 16, 16, 12, 16, 16, 16, 13,
+                            16, 16, 16, 14, 16, 16, 16, 15};
+
+    const vector_type v0 = vec_perm(value, zero, perm0);
+    const vector_type v1 = vec_perm(value, zero, perm1);
+    const vector_type v2 = vec_perm(value, zero, perm2);
+    const vector_type v3 = vec_perm(value, zero, perm3);
+
+    constexpr size_t n = base8<T>::SIZE;
+
+    vec_xst(v0, 0 * n, reinterpret_cast<vector_type *>(p));
+    vec_xst(v1, 1 * n, reinterpret_cast<vector_type *>(p));
+    vec_xst(v2, 2 * n, reinterpret_cast<vector_type *>(p));
+    vec_xst(v3, 3 * n, reinterpret_cast<vector_type *>(p));
+  }
+
+  simdutf_really_inline void store_words_as_utf32(char32_t *p) const {
+    const vector_type zero = vec_splats(T(0));
+
+    const vec_u8_t perm0 = {16, 16, 0, 1, 16, 16, 2, 3,
+                            16, 16, 4, 5, 16, 16, 6, 7};
+    const vec_u8_t perm1 = {16, 16, 8,  9,  16, 16, 10, 11,
+                            16, 16, 12, 13, 16, 16, 14, 15};
+
+    const vector_type v0 = vec_perm(value, zero, perm0);
+    const vector_type v1 = vec_perm(value, zero, perm1);
+
+    constexpr size_t n = base8<T>::SIZE;
+
+    vec_xst(v0, 0 * n, reinterpret_cast<vector_type *>(p));
+    vec_xst(v1, 1 * n, reinterpret_cast<vector_type *>(p));
+  }
+
+  simdutf_really_inline void store_ascii_as_utf32(char32_t *p) const {
+    store_bytes_as_utf32(p);
   }
 };
 

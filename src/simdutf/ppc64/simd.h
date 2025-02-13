@@ -89,6 +89,10 @@ using vector_u8 = simd8<uint8_t>;
 using vector_u16 = simd16<uint16_t>;
 using vector_u32 = simd32<uint32_t>;
 
+simdutf_really_inline vector_u8 as_vector_u8(const vector_u16 v) {
+  return vector_u8::vector_type(v.value);
+}
+
 simdutf_really_inline vector_u16 as_vector_u16(const vector_u8 v) {
   return vector_u16::vector_type(v.value);
 }

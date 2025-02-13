@@ -23,7 +23,7 @@ template <typename T> struct base32 {
       : base32(vec_xl(0, reinterpret_cast<const T *>(ptr))) {}
 
   // Store to array
-  simdutf_really_inline void store(T dst[base32<T>::ELEMENTS]) const {
+  template <typename U> simdutf_really_inline void store(U *dst) const {
     return vec_xst(this->value, 0, reinterpret_cast<vector_type *>(dst));
   }
 
