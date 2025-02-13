@@ -90,7 +90,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // processors where pdep/pext is fast, we might be able to use a small
     // lookup table.
     const auto sh =
-        vector_u8::load(&tables::utf8_to_utf16::shufutf8[idx]) & uint8_t(0x1f);
+        vector_u8::load(&tables::utf8_to_utf16::shufutf8[idx]);
     const auto perm =
         as_vector_u16(sh.lookup_32(in, vector_u8::zero())).swap_bytes();
     const auto b0 = perm & uint16_t(0x007f);
@@ -135,7 +135,6 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // only leading bytes at least as large as 0xf0 generate surrogate pairs. We
     // do as at the cost of an extra mask.
     /////////////
-    puts("HRE");
     const auto sh = vector_u8::load(&tables::utf8_to_utf16::shufutf8[idx]);
     const auto perm =
         as_vector_u32(sh.lookup_32(in, vector_u8::zero())).swap_bytes();
@@ -164,25 +163,36 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     const auto lowtenbits = composedminus & uint32_t(0x3ff);
     // Notice the 0x3ff mask:
     const auto hightenbits = composedminus.shr<10>() & uint32_t(0x3ff);
-    const auto lowtenbitsadd = lowtenbits & uint32_t(0xDC00);
-    const auto hightenbitsadd = hightenbits & uint32_t(0xD800);
+    const auto lowtenbitsadd = lowtenbits + uint32_t(0xDC00);
+    const auto hightenbitsadd = hightenbits + uint32_t(0xD800);
     const auto lowtenbitsaddshifted = lowtenbitsadd.shl<16>();
     auto surrogates = hightenbitsadd | lowtenbitsaddshifted;
 
     uint32_t basic_buffer[4];
-    uint32_t basic_buffer_swap[4];
-
     composed.store(basic_buffer);
     uint32_t surrogate_buffer[4];
-    surrogates.store(surrogate_buffer);
+    surrogates.swap_bytes().store(surrogate_buffer);
+
     for (size_t i = 0; i < 3; i++) {
       if (basic_buffer[i] > 0x3c00000) {
-        utf16_output[1] = uint16_t(surrogate_buffer[i] & 0xffff);
-        utf16_output[1] = uint16_t(surrogate_buffer[i] >> 16);
+        const auto ch0 = uint16_t(surrogate_buffer[i] & 0xffff);
+        const auto ch1 = uint16_t(surrogate_buffer[i] >> 16);
+        if (match_system(big_endian)) {
+          utf16_output[1] = scalar::u16_swap_bytes(ch0);
+          utf16_output[0] = scalar::u16_swap_bytes(ch1);
+        } else {
+          utf16_output[1] = ch0;
+          utf16_output[0] = ch1;
+        }
         utf16_output += 2;
       } else {
-        utf16_output[0] = big_endian ? uint16_t(basic_buffer_swap[i])
-                                     : uint16_t(basic_buffer[i]);
+        const auto chr = uint16_t(basic_buffer[i]);
+        if (match_system(big_endian)) {
+          utf16_output[0] = chr;
+        } else {
+          utf16_output[0] = scalar::u16_swap_bytes(chr);
+        }
+
         utf16_output++;
       }
     }

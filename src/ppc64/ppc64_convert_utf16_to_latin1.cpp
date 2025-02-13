@@ -1,7 +1,7 @@
 template <endianness big_endian>
 std::pair<const char16_t *, char *>
 ppc64_convert_utf16_to_latin1(const char16_t *buf, size_t len,
-                            char *latin1_output) {
+                              char *latin1_output) {
   const char16_t *end = buf + len;
   while (end - buf >= 8) {
     // Load 8 x UTF-16 characters
@@ -10,10 +10,12 @@ ppc64_convert_utf16_to_latin1(const char16_t *buf, size_t len,
     // Move low bytes of UTF-16 chars to lower half of `in`
     // and upper bytes to upper half of `in`.
     if (!match_system(big_endian)) {
-      const auto perm = vector_u8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
+      const auto perm =
+          vector_u8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
       in = perm.lookup_16(in);
     } else {
-      const auto perm = vector_u8(1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12, 14);
+      const auto perm =
+          vector_u8(1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12, 14);
       in = perm.lookup_16(in);
     }
 
@@ -37,7 +39,7 @@ ppc64_convert_utf16_to_latin1(const char16_t *buf, size_t len,
 template <endianness big_endian>
 std::pair<result, char *>
 ppc64_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
-                                        char *latin1_output) {
+                                          char *latin1_output) {
   const char16_t *start = buf;
   const char16_t *end = buf + len;
   while (end - buf >= 8) {
@@ -47,10 +49,12 @@ ppc64_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
     // Move low bytes of UTF-16 chars to lower half of `in`
     // and upper bytes to upper half of `in`.
     if (!match_system(big_endian)) {
-      const auto perm = vector_u8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
+      const auto perm =
+          vector_u8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
       in = perm.lookup_16(in);
     } else {
-      const auto perm = vector_u8(1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12, 14);
+      const auto perm =
+          vector_u8(1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12, 14);
       in = perm.lookup_16(in);
     }
 
@@ -62,7 +66,7 @@ ppc64_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
     if (simdutf_unlikely(tmp[1] != 0)) {
       uint8_t bytes[8];
       memcpy(bytes, &tmp[1], 8);
-      for (size_t k=0; k < 8; k++) {
+      for (size_t k = 0; k < 8; k++) {
         if (bytes[k] != 0) {
           return std::make_pair(result(error_code::TOO_LARGE, buf - start + k),
                                 latin1_output);
