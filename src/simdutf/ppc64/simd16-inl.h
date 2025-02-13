@@ -84,10 +84,17 @@ template <> struct simd16<bool> : base16<bool> {
     return static_cast<uint16_t>(result[0]);
 #endif
   }
+
   simdutf_really_inline bool any() const {
-    const vec_u64_t tmp = (vec_u64_t)value;
+    const auto tmp = vec_u64_t(value);
 
     return tmp[0] || tmp[1]; // Note: logical or, not binary one
+  }
+
+  simdutf_really_inline bool is_zero() const {
+    const auto tmp = vec_u64_t(value);
+
+    return (tmp[0] | tmp[1]) == 0;
   }
 
   simdutf_really_inline simd16<bool> operator~() const {
@@ -103,8 +110,10 @@ template <typename T> struct base16_numeric : base16<T> {
     return vec_splats(_value);
   }
   static simdutf_really_inline simd16<T> zero() { return splat(0); }
-  static simdutf_really_inline simd16<T> load(const T values[8]) {
-    return vec_xl(0, reinterpret_cast<const T *>(values));
+
+  template <typename U>
+  static simdutf_really_inline simd16<T> load(const U *ptr) {
+    return vec_xl(0, reinterpret_cast<const T *>(ptr));
   }
 
   simdutf_really_inline base16_numeric() : base16<T>() {}
@@ -320,6 +329,11 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
 template <typename T>
 simd16<bool> operator==(const simd16<T> a, const simd16<T> b) {
   return vec_cmpeq(a.value, b.value);
+}
+
+template <typename T, typename U>
+simd16<bool> operator==(const simd16<T> a, U b) {
+  return vec_cmpeq(a.value, vec_splats(T(b)));
 }
 
 template <typename T>
