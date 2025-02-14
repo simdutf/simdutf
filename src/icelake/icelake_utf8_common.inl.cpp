@@ -512,11 +512,10 @@ simdutf_really_inline size_t utf32_to_utf16_masked(const __m512i byteflip,
       t5 = _mm512_shuffle_epi8(t5, byteflip);
     }
     // we deliberately avoid _mm512_mask_compressstoreu_epi16 for portability
-    // (zen4)
+    // (AMD Zen4 has terrible performance with it, it is effectively broken)
     __m512i compressed = _mm512_maskz_compress_epi16(nonzero_masked, t5);
     _mm512_mask_storeu_epi16(
-        output,
-        (1 << (count + static_cast<unsigned int>(count_ones(sp_mask)))) - 1,
+        output, _bzhi_u32(0xFFFFFFFF, count + _mm_popcnt_u32(sp_mask)),
         compressed);
     //_mm512_mask_compressstoreu_epi16(output, nonzero_masked, t5);
   }
