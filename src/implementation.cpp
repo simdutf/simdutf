@@ -73,6 +73,23 @@ simdutf_warn_unused encoding_type implementation::autodetect_encoding(
 }
 #endif // SIMDUTF_FEATURE_DETECT_ENCODING
 
+#ifdef SIMDUTF_FEATURE_BASE64
+simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
+    const char *input, size_t length) const noexcept {
+  return scalar::base64::maximal_binary_length_from_base64(input, length);
+}
+
+simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
+    const char16_t *input, size_t length) const noexcept {
+  return scalar::base64::maximal_binary_length_from_base64(input, length);
+}
+
+simdutf_warn_unused size_t implementation::base64_length_from_binary(
+    size_t length, base64_options options) const noexcept {
+  return scalar::base64::base64_length_from_binary(length, options);
+}
+#endif // SIMDUTF_FEATURE_BASE64
+
 namespace internal {
 // When there is a single implementation, we should not pay a price
 // for dispatching to the best implementation. We should just use the
@@ -662,11 +679,6 @@ public:
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_BASE64
-  simdutf_warn_unused size_t maximal_binary_length_from_base64(
-      const char *input, size_t length) const noexcept override {
-    return set_best()->maximal_binary_length_from_base64(input, length);
-  }
-
   simdutf_warn_unused result base64_to_binary(
       const char *input, size_t length, char *output, base64_options options,
       last_chunk_handling_options last_chunk_handling_options =
@@ -681,11 +693,6 @@ public:
           last_chunk_handling_options::loose) const noexcept override {
     return set_best()->base64_to_binary_details(input, length, output, options,
                                                 last_chunk_handling_options);
-  }
-
-  simdutf_warn_unused size_t maximal_binary_length_from_base64(
-      const char16_t *input, size_t length) const noexcept override {
-    return set_best()->maximal_binary_length_from_base64(input, length);
   }
 
   simdutf_warn_unused result base64_to_binary(
@@ -704,11 +711,6 @@ public:
           last_chunk_handling_options::loose) const noexcept override {
     return set_best()->base64_to_binary_details(input, length, output, options,
                                                 last_chunk_handling_options);
-  }
-
-  simdutf_warn_unused size_t base64_length_from_binary(
-      size_t length, base64_options options) const noexcept override {
-    return set_best()->base64_length_from_binary(length, options);
   }
 
   size_t binary_to_base64(const char *input, size_t length, char *output,
@@ -1193,11 +1195,6 @@ public:
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_BASE64
-  simdutf_warn_unused size_t maximal_binary_length_from_base64(
-      const char *, size_t) const noexcept override {
-    return 0;
-  }
-
   simdutf_warn_unused result
   base64_to_binary(const char *, size_t, char *, base64_options,
                    last_chunk_handling_options) const noexcept override {
@@ -1210,11 +1207,6 @@ public:
     return full_result(error_code::OTHER, 0, 0);
   }
 
-  simdutf_warn_unused size_t maximal_binary_length_from_base64(
-      const char16_t *, size_t) const noexcept override {
-    return 0;
-  }
-
   simdutf_warn_unused result
   base64_to_binary(const char16_t *, size_t, char *, base64_options,
                    last_chunk_handling_options) const noexcept override {
@@ -1225,11 +1217,6 @@ public:
       const char16_t *, size_t, char *, base64_options,
       last_chunk_handling_options) const noexcept override {
     return full_result(error_code::OTHER, 0, 0);
-  }
-
-  simdutf_warn_unused size_t
-  base64_length_from_binary(size_t, base64_options) const noexcept override {
-    return 0;
   }
 
   size_t binary_to_base64(const char *, size_t, char *,
