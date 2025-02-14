@@ -43,11 +43,7 @@ size_t convert_masked_utf8_to_latin1(const char *input,
   // processors where pdep/pext is fast, we might be able to use a small lookup
   // table.
 
-  // PPC64 note: table `utf8_to_utf16::shufutf8` has 0xff for zero element,
-  //             this is why we bit-anding with mask 0x1f and shuffling with
-  //             a zero vector
-  const auto reshuffle =
-      vector_u8::load(&tables::utf8_to_utf16::shufutf8[idx]) & uint16_t(0x001f);
+  const auto reshuffle = vector_u8::load(&tables::utf8_to_utf16::shufutf8[idx]);
   const auto perm8 = reshuffle.lookup_32(in, vector_u8::zero());
   const auto perm16 = as_vector_u16(perm8).swap_bytes();
   const auto ascii = perm16 & uint16_t(0x7f);

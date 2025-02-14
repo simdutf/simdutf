@@ -38,9 +38,8 @@ write_v_u16_11bits_to_utf8(const vector_u16 v_u16, char *&utf8_output,
   const auto t4 = t3 | v_c080;
 
   // 2. merge ASCII and 2-byte codewords
-  vector_u8 utf8_unpacked =
-      select(one_byte_bytemask, vector_u8(vector_u8::vector_type(v_u16.value)),
-             vector_u8(vector_u8::vector_type(t4.value)));
+  auto utf8_unpacked =
+      select(one_byte_bytemask, as_vector_u8(v_u16), as_vector_u8(t4.value));
 
   const auto tmp = vec_revb(vec_u16_t(utf8_unpacked.value));
   utf8_unpacked.value = vec_u8_t(tmp);

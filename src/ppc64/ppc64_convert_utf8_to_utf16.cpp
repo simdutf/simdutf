@@ -89,8 +89,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // code code units spanning between 1 and 2 bytes each is 12 bytes. On
     // processors where pdep/pext is fast, we might be able to use a small
     // lookup table.
-    const auto sh =
-        vector_u8::load(&tables::utf8_to_utf16::shufutf8[idx]);
+    const auto sh = vector_u8::load(&tables::utf8_to_utf16::shufutf8[idx]);
     const auto perm =
         as_vector_u16(sh.lookup_32(in, vector_u8::zero())).swap_bytes();
     const auto b0 = perm & uint16_t(0x007f);
@@ -106,8 +105,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     utf16_output += 6; // We wrote 12 bytes, 6 code points.
   } else if (idx < 145) {
     // FOUR (4) input code-code units
-    const auto sh =
-        vector_u8::load(&tables::utf8_to_utf16::shufutf8[idx]) & uint8_t(0x1f);
+    const auto sh = vector_u8::load(&tables::utf8_to_utf16::shufutf8[idx]);
     const auto perm =
         as_vector_u32(sh.lookup_32(in, vector_u8::zero())).swap_bytes();
     const auto b0 = perm & uint32_t(0x0000007f);
