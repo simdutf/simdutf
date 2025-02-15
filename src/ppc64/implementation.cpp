@@ -37,6 +37,7 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 #include "ppc64_convert_utf16_to_latin1.cpp"
 #include "ppc64_convert_utf16_to_utf8.cpp"
 #include "ppc64_convert_utf16_to_utf32.cpp"
+#include "ppc64_convert_utf32_to_latin1.cpp"
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -555,20 +556,53 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_utf8(
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
+template <ErrorChecking ec>
+size_t convert_utf32_to_latin1_impl(const char32_t *buf, size_t len,
+                                    char *latin1_output) {
+  const auto ret = ppc64_convert_utf32_to_latin1<ec>(buf, len, latin1_output);
+
+  const size_t consumed = ret.first - buf;
+  if (consumed == len) {
+    return consumed; // Note: we have 1:1 mapping
+  }
+
+  const size_t scalar_consumed =
+      scalar::utf32_to_latin1::convert(ret.first, len - consumed, ret.second);
+  if (scalar_consumed == 0) {
+    return 0;
+  }
+
+  return scalar_consumed + consumed;
+}
+
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::convert_utf32_to_latin1(
     const char32_t *buf, size_t len, char *latin1_output) const noexcept {
-  return scalar::utf32_to_latin1::convert(buf, len, latin1_output);
+  return convert_utf32_to_latin1_impl<ErrorChecking::enabled>(buf, len,
+                                                              latin1_output);
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_latin1_with_errors(
     const char32_t *buf, size_t len, char *latin1_output) const noexcept {
-  return scalar::utf32_to_latin1::convert_with_errors(buf, len, latin1_output);
+  const auto ret = ppc64_convert_utf32_to_latin1<ErrorChecking::enabled>(
+      buf, len, latin1_output);
+
+  const size_t consumed = ret.first - buf;
+  if (consumed == len) {
+    return result(error_code::SUCCESS, consumed);
+  }
+
+  auto scalar_ret = scalar::utf32_to_latin1::convert_with_errors(
+      ret.first, len - consumed, ret.second);
+  scalar_ret.count += consumed;
+
+  return scalar_ret;
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_latin1(
     const char32_t *buf, size_t len, char *latin1_output) const noexcept {
-  return scalar::utf32_to_latin1::convert_valid(buf, len, latin1_output);
+  return convert_utf32_to_latin1_impl<ErrorChecking::disabled>(buf, len,
+                                                               latin1_output);
 }
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 

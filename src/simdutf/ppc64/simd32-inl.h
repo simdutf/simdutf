@@ -52,8 +52,8 @@ template <typename T> struct base32_numeric : base32<T> {
   }
   static simdutf_really_inline simd32<T> zero() { return splat(0); }
 
-  static simdutf_really_inline simd32<T>
-  load(const T values[base32<T>::ELEMENTS]) {
+  template <typename U>
+  static simdutf_really_inline simd32<T> load(const U *values) {
     return vec_xl(0, reinterpret_cast<const T *>(values));
   }
 
@@ -93,10 +93,14 @@ template <typename T>
 simd32<bool> operator==(const simd32<T> a, const simd32<T> b);
 
 template <typename T>
+simd32<bool> operator!=(const simd32<T> a, const simd32<T> b);
+
+template <typename T>
 simd32<bool> operator>(const simd32<T> a, const simd32<T> b);
 
-template <typename T, typename U>
-simd32<bool> operator==(const simd32<T> a, U b);
+template <typename T> simd32<bool> operator==(const simd32<T> a, T b);
+
+template <typename T> simd32<bool> operator!=(const simd32<T> a, T b);
 
 template <typename T> simd32<T> operator&(const simd32<T> a, const simd32<T> b);
 
@@ -197,7 +201,9 @@ template <> struct simd32<uint32_t> : base32_numeric<uint32_t> {
   }
 
   // Bit-specific operations
-  simdutf_really_inline simd32<bool> bits_not_set() const { return *this == 0; }
+  simdutf_really_inline simd32<bool> bits_not_set() const {
+    return *this == uint32_t(0);
+  }
   simdutf_really_inline simd32<bool> bits_not_set(simd32<uint32_t> bits) const {
     return (*this & bits).bits_not_set();
   }
@@ -267,6 +273,19 @@ template <> struct simd32<uint32_t> : base32_numeric<uint32_t> {
 template <typename T>
 simd32<bool> operator==(const simd32<T> a, const simd32<T> b) {
   return vec_cmpeq(a.value, b.value);
+}
+
+template <typename T>
+simd32<bool> operator!=(const simd32<T> a, const simd32<T> b) {
+  return vec_cmpne(a.value, b.value);
+}
+
+template <typename T> simd32<bool> operator==(const simd32<T> a, T b) {
+  return vec_cmpeq(a.value, vec_splats(b));
+}
+
+template <typename T> simd32<bool> operator!=(const simd32<T> a, T b) {
+  return vec_cmpne(a.value, vec_splats(b));
 }
 
 template <typename T>
