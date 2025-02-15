@@ -712,31 +712,31 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_utf32(
 void implementation::change_endianness_utf16(const char16_t *input,
                                              size_t length,
                                              char16_t *output) const noexcept {
-  scalar::utf16::change_endianness_utf16(input, length, output);
+  utf16::change_endianness_utf16(input, length, output);
 }
 
 simdutf_warn_unused size_t implementation::count_utf16le(
     const char16_t *input, size_t length) const noexcept {
-  return scalar::utf16::count_code_points<endianness::LITTLE>(input, length);
+  return utf16::count_code_points<endianness::LITTLE>(input, length);
 }
 
 simdutf_warn_unused size_t implementation::count_utf16be(
     const char16_t *input, size_t length) const noexcept {
-  return scalar::utf16::count_code_points<endianness::BIG>(input, length);
+  return utf16::count_code_points<endianness::BIG>(input, length);
 }
 #endif // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8
 simdutf_warn_unused size_t
 implementation::count_utf8(const char *input, size_t length) const noexcept {
-  return scalar::utf8::count_code_points(input, length);
+  return utf8::count_code_points(input, length);
 }
 #endif // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::latin1_length_from_utf8(
     const char *buf, size_t len) const noexcept {
-  return scalar::utf8::count_code_points(buf, len);
+  return count_utf8(buf, len);
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
@@ -776,33 +776,31 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 simdutf_warn_unused size_t implementation::utf8_length_from_utf16le(
     const char16_t *input, size_t length) const noexcept {
-  return scalar::utf16::utf8_length_from_utf16<endianness::LITTLE>(input,
-                                                                   length);
+  return utf16::utf8_length_from_utf16<endianness::LITTLE>(input, length);
 }
 
 simdutf_warn_unused size_t implementation::utf8_length_from_utf16be(
     const char16_t *input, size_t length) const noexcept {
-  return scalar::utf16::utf8_length_from_utf16<endianness::BIG>(input, length);
+  return utf16::utf8_length_from_utf16<endianness::BIG>(input, length);
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::utf32_length_from_utf16le(
     const char16_t *input, size_t length) const noexcept {
-  return scalar::utf16::utf32_length_from_utf16<endianness::LITTLE>(input,
-                                                                    length);
+  return utf16::utf32_length_from_utf16<endianness::LITTLE>(input, length);
 }
 
 simdutf_warn_unused size_t implementation::utf32_length_from_utf16be(
     const char16_t *input, size_t length) const noexcept {
-  return scalar::utf16::utf32_length_from_utf16<endianness::BIG>(input, length);
+  return utf16::utf32_length_from_utf16<endianness::BIG>(input, length);
 }
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 simdutf_warn_unused size_t implementation::utf16_length_from_utf8(
     const char *input, size_t length) const noexcept {
-  return scalar::utf8::utf16_length_from_utf8(input, length);
+  return utf8::utf16_length_from_utf8(input, length);
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
@@ -823,7 +821,7 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf32(
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::utf32_length_from_utf8(
     const char *input, size_t length) const noexcept {
-  return scalar::utf8::count_code_points(input, length);
+  return utf8::count_code_points(input, length);
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
