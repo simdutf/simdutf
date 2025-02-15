@@ -142,6 +142,8 @@ template <typename T> simd8<T> operator|(const simd8<T> a, const simd8<T> b);
 
 template <typename T> simd8<T> operator^(const simd8<T> a, const simd8<T> b);
 
+template <typename T> simd8<T> operator+(const simd8<T> a, const simd8<T> b);
+
 // SIMD byte mask type (returned by things like eq and gt)
 template <> struct simd8<bool> : base8<bool> {
   using super = base8<bool>;
@@ -159,16 +161,7 @@ template <> struct simd8<bool> : base8<bool> {
       : simd8(vector_type(other.value)) {}
 
   simdutf_really_inline uint16_t to_bitmask() const {
-    const vec_u8_t perm_mask = {0x78, 0x70, 0x68, 0x60, 0x58, 0x50, 0x48, 0x40,
-                                0x38, 0x30, 0x28, 0x20, 0x18, 0x10, 0x08, 0x00};
-
-    const vec_u64_t result =
-        (vec_u64_t)vec_vbpermq((vec_u8_t)this->value, perm_mask);
-#ifdef __LITTLE_ENDIAN__
-    return static_cast<uint16_t>(result[1]);
-#else
-    return static_cast<uint16_t>(result[0]);
-#endif
+    return move_mask_u8(value);
   }
 
   simdutf_really_inline bool any() const {
@@ -484,6 +477,14 @@ template <typename T> simd8<T> operator^(const simd8<T> a, const simd8<T> b) {
 
 template <typename T, typename U> simd8<T> operator^(const simd8<T> a, U b) {
   return vec_xor(a.value, vec_splats(T(b)));
+}
+
+template <typename T> simd8<T> operator+(const simd8<T> a, const simd8<T> b) {
+  return vec_add(a.value, b.value);
+}
+
+template <typename T, typename U> simd8<T> operator+(const simd8<T> a, U b) {
+  return vec_add(a.value, vec_splats(T(b)));
 }
 
 simdutf_really_inline simd8<int8_t>::operator simd8<uint8_t>() const {

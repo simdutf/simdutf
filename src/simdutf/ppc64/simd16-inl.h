@@ -27,12 +27,12 @@ template <typename T> struct base16 {
   }
 
   void dump() const {
-    uint16_t tmp[ELEMENTS];
+    uint16_t tmp[8];
     vec_xst(value, 0, reinterpret_cast<vector_type *>(tmp));
-    for (int i = 0; i < ELEMENTS; i++) {
+    for (int i = 0; i < 8; i++) {
       if (i == 0) {
         printf("[%04x", tmp[i]);
-      } else if (i == ELEMENTS - 1) {
+      } else if (i == 8 - 1) {
         printf(" %04x]", tmp[i]);
       } else {
         printf(" %04x", tmp[i]);
@@ -55,7 +55,9 @@ template <typename T> simd16<T> operator&(const simd16<T> a, const simd16<T> b);
 
 template <typename T> simd16<T> operator|(const simd16<T> a, const simd16<T> b);
 
-template <typename T> simd16<T> operator^(const simd16<T> a, const simd16<T> b);
+template <typename T, typename U> simd16<T> operator|(const simd16<T> a, U b);
+
+template <typename T, typename U> simd16<T> operator^(const simd16<T> a, U b);
 
 // SIMD byte mask type (returned by things like eq and gt)
 template <> struct simd16<bool> : base16<bool> {
@@ -71,18 +73,7 @@ template <> struct simd16<bool> : base16<bool> {
   simdutf_really_inline simd16(bool _value) : base16<bool>(splat(_value)) {}
 
   simdutf_really_inline uint16_t to_bitmask() const {
-    const vec_u8_t perm_mask = {15 * 8 + 7, 14 * 8 + 7, 13 * 8 + 7, 12 * 8 + 7,
-                                11 * 8 + 7, 10 * 8 + 7, 9 * 8 + 7,  8 * 8 + 7,
-                                7 * 8 + 7,  6 * 8 + 7,  5 * 8 + 7,  4 * 8 + 7,
-                                3 * 8 + 7,  2 * 8 + 7,  1 * 8 + 7,  0 * 8 + 7};
-
-    const vec_u64_t result =
-        (vec_u64_t)vec_vbpermq((vec_u8_t)this->value, perm_mask);
-#ifdef __LITTLE_ENDIAN__
-    return static_cast<uint16_t>(result[1]);
-#else
-    return static_cast<uint16_t>(result[0]);
-#endif
+    return move_mask_u8(value);
   }
 
   simdutf_really_inline bool any() const {
@@ -116,6 +107,31 @@ template <typename T> struct base16_numeric : base16<T> {
     return vec_xl(0, reinterpret_cast<const T *>(ptr));
   }
 
+#define interleave_perm(S1, S2)                                                \
+  {                                                                            \
+    0 + (S1), 1 + (S1), 0 + (S2), 1 + S2, 2 + (S1), 3 + (S1), 2 + (S2),        \
+        3 + S2, 4 + (S1), 5 + (S1), 4 + (S2), 5 + S2, 6 + (S1), 7 + (S1),      \
+        6 + (S2), 7 + S2                                                       \
+  }
+
+  static simdutf_really_inline simd16<T> unpacklo(const simd16<T> v0,
+                                                  const simd16<T> v1) {
+    const vec_u8_t perm = interleave_perm(0, 16);
+    using vt = typename simd16<T>::vector_type;
+
+    return vt(vec_perm(vec_u8_t(v0.value), vec_u8_t(v1.value), perm));
+  }
+
+  static simdutf_really_inline simd16<T> unpackhi(const simd16<T> v0,
+                                                  const simd16<T> v1) {
+    const vec_u8_t perm = interleave_perm(0 + 8, 16 + 8);
+    using vt = typename simd16<T>::vector_type;
+
+    return vt(vec_perm(vec_u8_t(v0.value), vec_u8_t(v1.value), perm));
+  }
+
+#undef interleave_perm
+
   simdutf_really_inline base16_numeric() : base16<T>() {}
   simdutf_really_inline base16_numeric(const vector_type _value)
       : base16<T>(_value) {}
@@ -126,7 +142,9 @@ template <typename T> struct base16_numeric : base16<T> {
   }
 
   // Override to distinguish from bool version
-  simdutf_really_inline simd16<T> operator~() const { return *this ^ 0xffff; }
+  simdutf_really_inline simd16<T> operator~() const {
+    return vec_xor(this->value, vec_splats(T(0xffff)));
+  }
 
   // Addition/subtraction are the same for signed and unsigned
   simdutf_really_inline simd16<T> operator+(const simd16<T> other) const {
@@ -205,6 +223,10 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
     return simd16<uint16_t>(v0, v1, v2, v3, v4, v5, v6, v7);
   }
 
+  simdutf_really_inline bool is_ascii() const {
+    return vec_all_lt(value, vec_splats(uint16_t(128)));
+  }
+
   // Saturated math
   simdutf_really_inline simd16<uint16_t>
   saturating_add(const simd16<uint16_t> other) const {
@@ -248,7 +270,7 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
   }
   simdutf_really_inline simd16<bool>
   operator<(const simd16<uint16_t> other) const {
-    return this->gt_bits(other).any_bits_set();
+    return vec_cmplt(value, other.value);
   }
 
   // Bit-specific operations
@@ -310,7 +332,7 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
 
   // Change the endianness
   simdutf_really_inline simd16<uint16_t> swap_bytes() const {
-    return vec_reve(value);
+    return vec_revb(value);
   }
 
   // Pack with the unsigned saturation of two uint16_t code units into single
@@ -348,6 +370,10 @@ template <typename T, typename U> simd16<T> operator&(const simd16<T> a, U b) {
 template <typename T>
 simd16<T> operator|(const simd16<T> a, const simd16<T> b) {
   return vec_or(a.value, b.value);
+}
+
+template <typename T, typename U> simd16<T> operator|(const simd16<T> a, U b) {
+  return vec_or(a.value, vec_splats(T(b)));
 }
 
 template <typename T>

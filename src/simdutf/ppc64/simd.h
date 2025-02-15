@@ -63,16 +63,16 @@ template <typename T>
 using vector_u32_type_for_element =
     typename vector_u32_type_for_element_aux<T>::type;
 
-template <typename T> bool move_mask_u8(T vec) {
+template <typename T> uint16_t move_mask_u8(T vec) {
   const vec_u8_t perm_mask = {15 * 8, 14 * 8, 13 * 8, 12 * 8, 11 * 8, 10 * 8,
                               9 * 8,  8 * 8,  7 * 8,  6 * 8,  5 * 8,  4 * 8,
                               3 * 8,  2 * 8,  1 * 8,  0 * 8};
 
   const auto result = (vec_u64_t)vec_vbpermq((vec_u8_t)vec, perm_mask);
 #ifdef __LITTLE_ENDIAN__
-  return static_cast<int>(result[1]);
+  return static_cast<uint16_t>(result[1]);
 #else
-  return static_cast<int>(result[0]);
+  return static_cast<uint16_t>(result[0]);
 #endif
 }
 
@@ -93,11 +93,27 @@ simdutf_really_inline vector_u8 as_vector_u8(const vector_u16 v) {
   return vector_u8::vector_type(v.value);
 }
 
+simdutf_really_inline vector_u8 as_vector_u8(const vector_u32 v) {
+  return vector_u8::vector_type(v.value);
+}
+
+simdutf_really_inline vector_u8 as_vector_u8(const simd16<bool> v) {
+  return vector_u8::vector_type(v.value);
+}
+
 simdutf_really_inline vector_u16 as_vector_u16(const vector_u8 v) {
   return vector_u16::vector_type(v.value);
 }
 
+simdutf_really_inline vector_u16 as_vector_u16(const simd16<bool> v) {
+  return vector_u16::vector_type(v.value);
+}
+
 simdutf_really_inline vector_u32 as_vector_u32(const vector_u8 v) {
+  return vector_u32::vector_type(v.value);
+}
+
+simdutf_really_inline vector_u32 as_vector_u32(const vector_u16 v) {
   return vector_u32::vector_type(v.value);
 }
 
