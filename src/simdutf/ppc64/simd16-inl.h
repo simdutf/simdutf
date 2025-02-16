@@ -91,6 +91,11 @@ template <> struct simd16<bool> : base16<bool> {
   simdutf_really_inline simd16<bool> operator~() const {
     return (vec_bool16_t)vec_xor(this->value, vec_splats(uint16_t(0xffff)));
   }
+
+  simdutf_really_inline simd16<bool> &operator|=(const simd16<bool> rhs) {
+    value = vec_or(this->value, rhs.value);
+    return *this;
+  }
 };
 
 template <typename T> struct base16_numeric : base16<T> {

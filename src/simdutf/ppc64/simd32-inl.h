@@ -142,6 +142,12 @@ template <> struct simd32<bool> : base32<bool> {
     return tmp[0] || tmp[1]; // Note: logical or, not binary one
   }
 
+  simdutf_really_inline bool is_zero() const {
+    const vec_u64_t tmp = (vec_u64_t)value;
+
+    return (tmp[0] | tmp[1]) == 0;
+  }
+
   simdutf_really_inline simd32<bool> operator~() const {
     return (vec_bool32_t)vec_xor(this->value, vec_splats(uint32_t(0xffffffff)));
   }

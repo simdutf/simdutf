@@ -38,6 +38,7 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 #include "ppc64_convert_utf16_to_utf8.cpp"
 #include "ppc64_convert_utf16_to_utf32.cpp"
 #include "ppc64_convert_utf32_to_latin1.cpp"
+#include "ppc64_convert_utf32_to_utf16.cpp"
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -624,16 +625,67 @@ simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf8(
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
+template <endianness endian, ErrorReporting er>
+size_t convert_utf32_to_utf16_impl(const char32_t *buf, size_t len,
+                                   char16_t *utf16_output) {
+  const auto ret =
+      ppc64_convert_utf32_to_utf16<endian, er>(buf, len, utf16_output);
+
+  const size_t consumed = ret.input - buf;
+  const size_t written = ret.output - utf16_output;
+  if (er == ErrorReporting::at_the_end and ret.err != error_code::SUCCESS) {
+    return 0;
+  }
+
+  if (consumed == len) {
+    return written; // no error detected
+  }
+
+  const auto scalar_written = scalar::utf32_to_utf16::convert<endian>(
+      ret.input, len - consumed, ret.output);
+  if (scalar_written == 0) {
+    return 0;
+  }
+
+  return scalar_written + written;
+}
+
+template <endianness endian>
+result convert_utf32_to_utf16_with_errors_impl(const char32_t *buf, size_t len,
+                                               char16_t *utf16_output) {
+  const auto ret =
+      ppc64_convert_utf32_to_utf16<endian, ErrorReporting::precise>(
+          buf, len, utf16_output);
+
+  const size_t consumed = ret.input - buf;
+  const size_t written = ret.output - utf16_output;
+  if (consumed == len) {
+    return result(error_code::SUCCESS, consumed);
+  }
+
+  auto scalar_ret = scalar::utf32_to_utf16::convert_with_errors<endian>(
+      ret.input, len - consumed, ret.output);
+  if (ret.is_ok()) {
+    scalar_ret.count += written;
+  } else {
+    scalar_ret.count += consumed;
+  }
+
+  return scalar_ret;
+}
+
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf16le(
     const char32_t *buf, size_t len, char16_t *utf16_output) const noexcept {
-  return scalar::utf32_to_utf16::convert<endianness::LITTLE>(buf, len,
-                                                             utf16_output);
+  return convert_utf32_to_utf16_impl<endianness::LITTLE,
+                                     ErrorReporting::at_the_end>(buf, len,
+                                                                 utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf16be(
     const char32_t *buf, size_t len, char16_t *utf16_output) const noexcept {
-  return scalar::utf32_to_utf16::convert<endianness::BIG>(buf, len,
-                                                          utf16_output);
+  return convert_utf32_to_utf16_impl<endianness::BIG,
+                                     ErrorReporting::at_the_end>(buf, len,
+                                                                 utf16_output);
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf16le_with_errors(
@@ -650,12 +702,14 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf16be_with_errors(
 
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf16le(
     const char32_t *buf, size_t len, char16_t *utf16_output) const noexcept {
-  return scalar::utf32_to_utf16::convert_valid<endianness::LITTLE>(
+  return convert_utf32_to_utf16_impl<endianness::LITTLE, ErrorReporting::none>(
       buf, len, utf16_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf16be(
     const char32_t *buf, size_t len, char16_t *utf16_output) const noexcept {
+  return convert_utf32_to_utf16_impl<endianness::BIG, ErrorReporting::none>(
+      buf, len, utf16_output);
   return scalar::utf32_to_utf16::convert_valid<endianness::BIG>(buf, len,
                                                                 utf16_output);
 }
