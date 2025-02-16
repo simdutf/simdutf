@@ -88,12 +88,17 @@ T select(const T cond, const T val_true, const T val_false) {
 using vector_u8 = simd8<uint8_t>;
 using vector_u16 = simd16<uint16_t>;
 using vector_u32 = simd32<uint32_t>;
+using vector_i8 = simd8<int8_t>;
 
 simdutf_really_inline vector_u8 as_vector_u8(const vector_u16 v) {
   return vector_u8::vector_type(v.value);
 }
 
 simdutf_really_inline vector_u8 as_vector_u8(const vector_u32 v) {
+  return vector_u8::vector_type(v.value);
+}
+
+simdutf_really_inline vector_u8 as_vector_u8(const vector_i8 v) {
   return vector_u8::vector_type(v.value);
 }
 
@@ -123,6 +128,10 @@ simdutf_really_inline vector_u32 max(vector_u32 a, vector_u32 b) {
 
 simdutf_really_inline vector_u32 max(vector_u32 a, vector_u32 b, vector_u32 c) {
   return max(max(a, b), c);
+}
+
+simdutf_really_inline vector_u32 sum4bytes(vector_u8 bytes, vector_u32 acc) {
+  return vec_sum4s(bytes.value, acc.value);
 }
 
 } // namespace simd

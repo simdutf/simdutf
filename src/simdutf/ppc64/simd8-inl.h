@@ -204,19 +204,8 @@ template <typename T> struct base8_numeric : base8<T> {
   // Override to distinguish from bool version
   simdutf_really_inline simd8<T> operator~() const { return *this ^ 0xFFu; }
 
-  // Addition/subtraction are the same for signed and unsigned
-  simdutf_really_inline simd8<T> operator+(const simd8<T> other) const {
-    return this->value + other;
-  }
-  simdutf_really_inline simd8<T> operator-(const simd8<T> other) const {
-    return (vector_type)((vector_type)this->value - (vector_type)other);
-  }
-  simdutf_really_inline simd8<T> &operator+=(const simd8<T> other) {
-    *this = *this + other;
-    return *static_cast<simd8<T> *>(this);
-  }
   simdutf_really_inline simd8<T> &operator-=(const simd8<T> other) {
-    *this = *this - other;
+    this->value = vec_sub(this->value, other.value);
     return *static_cast<simd8<T> *>(this);
   }
 
