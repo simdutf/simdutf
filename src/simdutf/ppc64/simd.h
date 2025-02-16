@@ -117,6 +117,14 @@ simdutf_really_inline vector_u32 as_vector_u32(const vector_u16 v) {
   return vector_u32::vector_type(v.value);
 }
 
+simdutf_really_inline vector_u32 max(vector_u32 a, vector_u32 b) {
+  return vec_max(a.value, b.value);
+}
+
+simdutf_really_inline vector_u32 max(vector_u32 a, vector_u32 b, vector_u32 c) {
+  return max(max(a, b), c);
+}
+
 } // namespace simd
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION

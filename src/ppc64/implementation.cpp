@@ -39,6 +39,7 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 #include "ppc64_convert_utf16_to_utf32.cpp"
 #include "ppc64_convert_utf32_to_latin1.cpp"
 #include "ppc64_convert_utf32_to_utf16.cpp"
+#include "ppc64_convert_utf32_to_utf8.cpp"
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -608,19 +609,73 @@ simdutf_warn_unused size_t implementation::convert_valid_utf32_to_latin1(
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
+template <typename VectorizedConvert, typename ScalarConvert, typename Source,
+          typename Destination>
+size_t convert_impl(VectorizedConvert vectorized_convert,
+                    ScalarConvert scalar_convert, const Source *buf, size_t len,
+                    Destination *output) {
+  const auto vr = vectorized_convert(buf, len, output);
+  const size_t consumed = vr.input - buf;
+  const size_t written = vr.output - output;
+  if (vr.err != error_code::SUCCESS) {
+    return 0;
+  }
+
+  if (consumed == len) {
+    return written;
+  }
+
+  const auto ret = scalar_convert(vr.input, len - consumed, vr.output);
+  if (ret == 0) {
+    return 0;
+  }
+
+  return written + ret;
+}
+
+template <typename VectorizedConvert, typename ScalarConvert, typename Source,
+          typename Destination>
+result convert_with_errors_impl(VectorizedConvert vectorized_convert,
+                                ScalarConvert scalar_convert, const Source *buf,
+                                size_t len, Destination *output) {
+  const auto vr = vectorized_convert(buf, len, output);
+  const size_t consumed = vr.input - buf;
+  const size_t written = vr.output - output;
+  if (vr.err != error_code::SUCCESS) {
+    return result(vr.err, consumed);
+  }
+
+  if (consumed == len) {
+    return result(error_code::SUCCESS, written);
+  }
+
+  result sr = scalar_convert(vr.input, len - consumed, vr.output);
+  if (sr.is_ok()) {
+    sr.count += written;
+  } else {
+    sr.count += consumed;
+  }
+
+  return sr;
+}
+
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(
     const char32_t *buf, size_t len, char *utf8_output) const noexcept {
-  return scalar::utf32_to_utf8::convert(buf, len, utf8_output);
+  return convert_impl(ppc64_convert_utf32_to_utf8<ErrorReporting::at_the_end>,
+                      scalar::utf32_to_utf8::convert, buf, len, utf8_output);
 }
 
 simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(
     const char32_t *buf, size_t len, char *utf8_output) const noexcept {
-  return scalar::utf32_to_utf8::convert_with_errors(buf, len, utf8_output);
+  return convert_with_errors_impl(
+      ppc64_convert_utf32_to_utf8<ErrorReporting::precise>,
+      scalar::utf32_to_utf8::convert_with_errors, buf, len, utf8_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf8(
     const char32_t *buf, size_t len, char *utf8_output) const noexcept {
-  return scalar::utf32_to_utf8::convert_valid(buf, len, utf8_output);
+  return convert_impl(ppc64_convert_utf32_to_utf8<ErrorReporting::none>,
+                      scalar::utf32_to_utf8::convert, buf, len, utf8_output);
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 

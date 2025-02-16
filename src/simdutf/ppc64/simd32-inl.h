@@ -122,18 +122,8 @@ template <> struct simd32<bool> : base32<bool> {
   // Splat constructor
   simdutf_really_inline simd32(bool _value) : base32<bool>(splat(_value)) {}
 
-  simdutf_really_inline int to_bitmask() const {
-    const vec_u8_t perm_mask = {15 * 8, 14 * 8, 13 * 8, 12 * 8, 11 * 8, 10 * 8,
-                                9 * 8,  8 * 8,  7 * 8,  6 * 8,  5 * 8,  4 * 8,
-                                3 * 8,  2 * 8,  1 * 8,  0 * 8};
-
-    const vec_u64_t result =
-        (vec_u64_t)vec_vbpermq((vec_u8_t)this->value, perm_mask);
-#ifdef __LITTLE_ENDIAN__
-    return static_cast<int>(result[1]);
-#else
-    return static_cast<int>(result[0]);
-#endif
+  simdutf_really_inline uint16_t to_bitmask() const {
+    return move_mask_u8(value);
   }
 
   simdutf_really_inline bool any() const {
