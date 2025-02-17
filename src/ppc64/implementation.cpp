@@ -41,6 +41,7 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 #include "ppc64_convert_utf32_to_utf16.cpp"
 #include "ppc64_convert_utf32_to_utf8.cpp"
 #include "ppc64_utf8_length_from_latin1.cpp"
+#include "ppc64_base64.cpp"
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION

@@ -630,3 +630,8 @@ template <typename T> struct simd8x64 {
     }
   }
 }; // struct simd8x64<T>
+
+// Subtract with saturation
+simdutf_really_inline simd8<uint8_t> subs(const simd8<uint8_t> a, const simd8<uint8_t> b) {
+    return vec_subs(a.value, b.value);
+}

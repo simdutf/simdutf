@@ -503,3 +503,11 @@ template <typename T> struct simd16x32 {
         .to_bitmask();
   }
 }; // struct simd16x32<T>
+
+simdutf_really_inline simd16<uint16_t> variable_shift_right(const simd16<uint16_t> a, const simd16<uint16_t> b) {
+    return vec_sr(a.value, b.value);
+}
+
+simdutf_really_inline simd16<uint16_t> variable_shift_left(const simd16<uint16_t> a, const simd16<uint16_t> b) {
+    return vec_sl(a.value, b.value);
+}
