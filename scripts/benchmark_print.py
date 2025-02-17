@@ -53,7 +53,7 @@ unit2field = {
     'ins/char'      : 'instruction_per_char',
     'ins/cycle'     : 'instruction_per_cycle',
     'cycle/byte'    : 'cycle_per_byte',
-    'cycle/char'    : 'cycle_per_byte',
+    'cycle/char'    : 'cycle_per_char',
     'byte/char'     : 'byte_per_char',
     'GHz'           : 'freq',
     'GB/s'          : 'speed_gigabytes',
@@ -217,7 +217,7 @@ def compare(old, new):
             if old_speed is None or new_speed is None:
                 speedup = NA
             else:
-                speedup = new_speed / old_speed
+                speedup = '%0.2fx' % (new_speed / old_speed)
 
             if old_speed is None:
                 old_speed = NA
@@ -235,7 +235,7 @@ def compare(old, new):
                 '%s' % input.iterations,
                 old_speed,
                 new_speed,
-                '%0.2fx' % speedup,
+                speedup,
             ])
 
     print(table)
