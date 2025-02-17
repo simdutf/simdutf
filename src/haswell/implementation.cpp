@@ -113,6 +113,7 @@ namespace utf16 {
   // transcoding from UTF-8 to UTF-32
   #include "generic/utf8_to_utf32/valid_utf8_to_utf32.h"
   #include "generic/utf8_to_utf32/utf8_to_utf32.h"
+  #include "generic/utf32.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 // other functions
@@ -1195,38 +1196,7 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::utf8_length_from_utf32(
     const char32_t *input, size_t length) const noexcept {
-  const __m256i v_00000000 = _mm256_setzero_si256();
-  const __m256i v_ffffff80 = _mm256_set1_epi32((uint32_t)0xffffff80);
-  const __m256i v_fffff800 = _mm256_set1_epi32((uint32_t)0xfffff800);
-  const __m256i v_ffff0000 = _mm256_set1_epi32((uint32_t)0xffff0000);
-  size_t pos = 0;
-  size_t count = 0;
-  for (; pos + 8 <= length; pos += 8) {
-    __m256i in = _mm256_loadu_si256((__m256i *)(input + pos));
-    const __m256i ascii_bytes_bytemask =
-        _mm256_cmpeq_epi32(_mm256_and_si256(in, v_ffffff80), v_00000000);
-    const __m256i one_two_bytes_bytemask =
-        _mm256_cmpeq_epi32(_mm256_and_si256(in, v_fffff800), v_00000000);
-    const __m256i two_bytes_bytemask =
-        _mm256_xor_si256(one_two_bytes_bytemask, ascii_bytes_bytemask);
-    const __m256i one_two_three_bytes_bytemask =
-        _mm256_cmpeq_epi32(_mm256_and_si256(in, v_ffff0000), v_00000000);
-    const __m256i three_bytes_bytemask =
-        _mm256_xor_si256(one_two_three_bytes_bytemask, one_two_bytes_bytemask);
-    const uint32_t ascii_bytes_bitmask =
-        static_cast<uint32_t>(_mm256_movemask_epi8(ascii_bytes_bytemask));
-    const uint32_t two_bytes_bitmask =
-        static_cast<uint32_t>(_mm256_movemask_epi8(two_bytes_bytemask));
-    const uint32_t three_bytes_bitmask =
-        static_cast<uint32_t>(_mm256_movemask_epi8(three_bytes_bytemask));
-
-    size_t ascii_count = count_ones(ascii_bytes_bitmask) / 4;
-    size_t two_bytes_count = count_ones(two_bytes_bitmask) / 4;
-    size_t three_bytes_count = count_ones(three_bytes_bitmask) / 4;
-    count += 32 - 3 * ascii_count - 2 * two_bytes_count - three_bytes_count;
-  }
-  return count +
-         scalar::utf32::utf8_length_from_utf32(input + pos, length - pos);
+  return utf32::utf8_length_from_utf32(input, length);
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 

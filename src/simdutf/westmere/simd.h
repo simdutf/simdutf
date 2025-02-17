@@ -584,6 +584,7 @@ template <typename T> struct simd8x64 {
 }; // struct simd8x64<T>
 
 #include "simdutf/westmere/simd16-inl.h"
+#include "simdutf/westmere/simd32-inl.h"
 
 } // namespace simd
 } // unnamed namespace
