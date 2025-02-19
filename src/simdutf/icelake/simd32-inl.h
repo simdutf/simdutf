@@ -12,22 +12,7 @@ template <> struct simd32<uint32_t> {
   simdutf_really_inline simd32(const Pointer *ptr)
       : value(_mm512_loadu_si512(reinterpret_cast<const __m512i *>(ptr))) {}
 
-  uint64_t sum() const {
-    const __m512i mask = _mm512_set1_epi64(0xffffffff);
-    const __m512i t0 = _mm512_and_si512(value, mask);
-    const __m512i t1 = _mm512_srli_epi64(value, 32);
-    const __m512i t2 = _mm512_add_epi64(t0, t1); // uint64_t
-
-    const __m256i lo = _mm512_extracti64x4_epi64(t2, 0);
-    const __m256i hi = _mm512_extracti64x4_epi64(t2, 1);
-
-    const __m256i t3 = _mm256_add_epi64(lo, hi);
-
-    return uint64_t(_mm256_extract_epi64(t3, 0)) +
-           uint64_t(_mm256_extract_epi64(t3, 1)) +
-           uint64_t(_mm256_extract_epi64(t3, 2)) +
-           uint64_t(_mm256_extract_epi64(t3, 3));
-  }
+  uint64_t sum() const { return _mm512_reduce_add_epi64(value); }
 
   // operators
   simdutf_really_inline simd32 &operator+=(const simd32 other) {
