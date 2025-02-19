@@ -13,7 +13,6 @@ sse_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_output) {
       (uint32_t)0xffff0000); // 1111 1111 1111 1111 0000 0000 0000 0000
   const __m128i v_7fffffff = _mm_set1_epi32(
       (uint32_t)0x7fffffff); // 0111 1111 1111 1111 1111 1111 1111 1111
-  __m128i running_max = _mm_setzero_si128();
   __m128i forbidden_bytemask = _mm_setzero_si128();
   const size_t safety_margin =
       12; // to avoid overruns, see issue
@@ -28,11 +27,6 @@ sse_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_output) {
     __m128i in = _mm_loadu_si128((__m128i *)buf);
     __m128i nextin = _mm_loadu_si128(
         (__m128i *)buf + 1); // These two values can hold only 8 UTF32 chars
-    running_max = _mm_max_epu32(
-        _mm_max_epu32(in, running_max), // take element-wise max char32_t from
-                                        // in and running_max vector
-        nextin); // and take element-wise max element from nextin and
-                 // running_max vector
 
     // Pack 32-bit UTF-32 code units to 16-bit UTF-16 code units with unsigned
     // saturation
@@ -60,9 +54,6 @@ sse_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_output) {
     if (_mm_testz_si128(in_16, v_ff80)) { // if the first two blocks are ASCII
       __m128i thirdin = _mm_loadu_si128((__m128i *)buf + 2);
       __m128i fourthin = _mm_loadu_si128((__m128i *)buf + 3);
-      running_max = _mm_max_epu32(
-          _mm_max_epu32(thirdin, running_max),
-          fourthin); // take the running max of all 4 vectors thus far
       __m128i nextin_16 = _mm_packus_epi32(
           _mm_and_si128(thirdin, v_7fffffff),
           _mm_and_si128(fourthin,
@@ -316,12 +307,6 @@ sse_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_output) {
   } // while
 
   // check for invalid input
-  const __m128i v_10ffff = _mm_set1_epi32((uint32_t)0x10ffff);
-  if (static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi32(
-          _mm_max_epu32(running_max, v_10ffff), v_10ffff))) != 0xffff) {
-    return std::make_pair(nullptr, utf8_output);
-  }
-
   if (static_cast<uint32_t>(_mm_movemask_epi8(forbidden_bytemask)) != 0) {
     return std::make_pair(nullptr, utf8_output);
   }
