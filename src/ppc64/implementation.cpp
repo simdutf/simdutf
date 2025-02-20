@@ -106,6 +106,18 @@ implementation::validate_utf16be(const char16_t *buf,
   return scalar::utf16::validate<endianness::BIG>(buf, len);
 }
 
+void implementation::to_well_formed_utf16le(const char16_t *input, size_t len,
+                                            char16_t *output) const noexcept {
+  return scalar::utf16::to_well_formed_utf16<endianness::LITTLE>(input, len,
+                                                                 output);
+}
+
+void implementation::to_well_formed_utf16be(const char16_t *input, size_t len,
+                                            char16_t *output) const noexcept {
+  return scalar::utf16::to_well_formed_utf16<endianness::BIG>(input, len,
+                                                              output);
+}
+
 simdutf_warn_unused result implementation::validate_utf16le_with_errors(
     const char16_t *buf, size_t len) const noexcept {
   return scalar::utf16::validate_with_errors<endianness::LITTLE>(buf, len);
