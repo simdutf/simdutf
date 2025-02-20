@@ -53,7 +53,7 @@ unit2field = {
     'ins/char'      : 'instruction_per_char',
     'ins/cycle'     : 'instruction_per_cycle',
     'cycle/byte'    : 'cycle_per_byte',
-    'cycle/char'    : 'cycle_per_byte',
+    'cycle/char'    : 'cycle_per_char',
     'byte/char'     : 'byte_per_char',
     'GHz'           : 'freq',
     'GB/s'          : 'speed_gigabytes',
@@ -68,12 +68,15 @@ def parse(file):
     for line in file:
         for item in parse_line(line):
             if isinstance(item, Input):
-                result.append((item, Result()))
+                result.append([item, None])
             else:
                 assert isinstance(item, dict)
+                if result[-1][1] is None:
+                    result[-1][1] = Result()
+
                 result[-1][1].update_from_dict(item)
 
-    return result
+    return [(input, result) for (input, result) in result if result is not None]
 
 
 def parse_line(line):
@@ -131,7 +134,7 @@ def parse_results(fields):
     return D
 
 
-def print_speed_comparison(data):
+def speed_comparison(data):
     procedures = set()
     datasets = set()
     results = {}
@@ -181,9 +184,9 @@ def print_speed_comparison(data):
         return table
 
     if len(procedures) >= len(datasets):
-        print(by_procedure())
+        return by_procedure()
     else:
-        print(by_dataset())
+        return by_dataset()
 
 
 def compare(old, new):
@@ -217,7 +220,7 @@ def compare(old, new):
             if old_speed is None or new_speed is None:
                 speedup = NA
             else:
-                speedup = new_speed / old_speed
+                speedup = '%0.2fx' % (new_speed / old_speed)
 
             if old_speed is None:
                 old_speed = NA
@@ -235,10 +238,10 @@ def compare(old, new):
                 '%s' % input.iterations,
                 old_speed,
                 new_speed,
-                '%0.2fx' % speedup,
+                speedup,
             ])
 
-    print(table)
+    return table
 
 
 HELP = """Format output of the benchmark utility
@@ -282,6 +285,23 @@ $ ./benchmark_print.py old.txt new.txt
 +-----------------------+----------+------------+----------+----------+---------+"""
 
 
+def parse_file(path):
+    with open(path, 'r') as f:
+        return parse(f)
+
+
+def self_test():
+    rootdir = Path(__file__).parent / 'tests'
+
+    data = parse_file(rootdir / 'results.txt')
+    speed_comparison(data)
+
+    old = parse_file(rootdir / 'old.txt')
+    new = parse_file(rootdir / 'old.txt')
+    compare(new, old)
+
+
+
 def main():
     script = sys.argv[0]
     args = sys.argv[1:]
@@ -290,18 +310,21 @@ def main():
         print(HELP)
         return
 
+    if "--test" in args:
+        print("running tests...")
+        self_test();
+        print("all OK")
+        return
+
     if n == 1:
-        with open(args[0]) as f:
-            data = parse(f)
+        data = parse_file(args[0])
 
-        print_speed_comparison(data)
+        print(speed_comparison(data))
     elif n == 2:
-        with open(args[0]) as f:
-            old = parse(f)
-        with open(args[1]) as f:
-            new = parse(f)
+        old = parse_file(args[0])
+        new = parse_file(args[1])
 
-        compare(old, new)
+        print(compare(old, new))
 
 
 if __name__ == '__main__':

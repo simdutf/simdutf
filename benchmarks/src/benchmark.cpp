@@ -90,6 +90,7 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
           {"count_utf16", {simdutf::encoding_type::UTF16_LE}},
 
           {"utf8_length_from_latin1", {simdutf::encoding_type::Latin1}},
+          {"utf8_length_from_utf32", {simdutf::encoding_type::UTF32_LE}},
           {"convert_latin1_to_utf8", {simdutf::encoding_type::Latin1}},
           {"convert_latin1_to_utf16", {simdutf::encoding_type::Latin1}},
           {"convert_latin1_to_utf32", {simdutf::encoding_type::Latin1}},
@@ -173,7 +174,7 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
         std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
   }
   {
-    std::string name = "utf8_length_from_latin1+node";
+    std::string name = "utf8_length_from_latin1+icu";
     known_procedures.insert(name);
     expected_input_encoding.insert(std::make_pair(
         name,
@@ -691,6 +692,8 @@ void Benchmark::run(const std::string &procedure_name, size_t iterations) {
     run_convert_latin1_to_utf32(*implementation, iterations);
   } else if (name == "utf8_length_from_latin1") {
     run_utf8_length_from_latin1(*implementation, iterations);
+  } else if (name == "utf8_length_from_utf32") {
+    run_utf8_length_from_utf32(*implementation, iterations);
   } else if (name == "convert_utf8_to_latin1") {
     run_convert_utf8_to_latin1(*implementation, iterations);
   } else if (name == "convert_utf8_to_latin1_with_errors") {
@@ -1003,6 +1006,20 @@ void Benchmark::run_utf8_length_from_latin1(
   }
   size_t char_count = get_active_implementation()->count_utf8(data, size);
   print_summary(result, size, char_count);
+}
+
+void Benchmark::run_utf8_length_from_utf32(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char32_t *data = reinterpret_cast<const char32_t *>(input_data.data());
+  const size_t size = input_data.size() / 4;
+  volatile size_t sink{0};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    sink = implementation.utf8_length_from_utf32(data, size);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  print_summary(result, size, size);
 }
 
 static inline uint32_t portable_popcount(uint64_t v) {
