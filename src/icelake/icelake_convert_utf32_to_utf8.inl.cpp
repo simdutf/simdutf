@@ -1,5 +1,13 @@
 // file included directly
 
+simdutf_really_inline static __m256i _mm256_packus_epu32(__m256i a, __m256i b) {
+  const __m256i v_1_0000 = _mm256_set1_epi32(0x00010000);
+  const __m256i a0 = _mm256_min_epu32(a, v_1_0000);
+  const __m256i b0 = _mm256_min_epu32(b, v_1_0000);
+
+  return _mm256_packus_epi32(a0, b0);
+}
+
 // Todo: currently, this is just the haswell code, optimize for icelake kernel.
 std::pair<const char32_t *, char *>
 avx512_convert_utf32_to_utf8(const char32_t *buf, size_t len,
@@ -10,8 +18,6 @@ avx512_convert_utf32_to_utf8(const char32_t *buf, size_t len,
   const __m256i v_ff80 = _mm256_set1_epi16((uint16_t)0xff80);
   const __m256i v_f800 = _mm256_set1_epi16((uint16_t)0xf800);
   const __m256i v_c080 = _mm256_set1_epi16((uint16_t)0xc080);
-  const __m256i v_7fffffff = _mm256_set1_epi32((uint32_t)0x7fffffff);
-  __m256i running_max = _mm256_setzero_si256();
   __m256i forbidden_bytemask = _mm256_setzero_si256();
 
   const size_t safety_margin =
@@ -21,12 +27,10 @@ avx512_convert_utf32_to_utf8(const char32_t *buf, size_t len,
   while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     __m256i in = _mm256_loadu_si256((__m256i *)buf);
     __m256i nextin = _mm256_loadu_si256((__m256i *)buf + 1);
-    running_max = _mm256_max_epu32(_mm256_max_epu32(in, running_max), nextin);
 
     // Pack 32-bit UTF-32 code units to 16-bit UTF-16 code units with unsigned
     // saturation
-    __m256i in_16 = _mm256_packus_epi32(_mm256_and_si256(in, v_7fffffff),
-                                        _mm256_and_si256(nextin, v_7fffffff));
+    __m256i in_16 = _mm256_packus_epu32(in, nextin);
     in_16 = _mm256_permute4x64_epi64(in_16, 0b11011000);
 
     // Try to apply UTF-16 => UTF-8 routine on 256 bits
@@ -271,12 +275,6 @@ avx512_convert_utf32_to_utf8(const char32_t *buf, size_t len,
   } // while
 
   // check for invalid input
-  const __m256i v_10ffff = _mm256_set1_epi32((uint32_t)0x10ffff);
-  if (static_cast<uint32_t>(_mm256_movemask_epi8(_mm256_cmpeq_epi32(
-          _mm256_max_epu32(running_max, v_10ffff), v_10ffff))) != 0xffffffff) {
-    return std::make_pair(nullptr, utf8_output);
-  }
-
   if (static_cast<uint32_t>(_mm256_movemask_epi8(forbidden_bytemask)) != 0) {
     return std::make_pair(nullptr, utf8_output);
   }

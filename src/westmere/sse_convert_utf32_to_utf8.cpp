@@ -1,3 +1,13 @@
+// file included directly
+
+simdutf_really_inline static __m128i _mm_packus_epu32(__m128i a, __m128i b) {
+  const __m128i v_1_0000 = _mm_set1_epi32(0x00010000);
+  const __m128i a0 = _mm_min_epu32(a, v_1_0000);
+  const __m128i b0 = _mm_min_epu32(b, v_1_0000);
+
+  return _mm_packus_epi32(a0, b0);
+}
+
 std::pair<const char32_t *, char *>
 sse_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_output) {
   const char32_t *end = buf + len;
@@ -9,11 +19,7 @@ sse_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_output) {
                                                            // 0000
   const __m128i v_ff80 = _mm_set1_epi16((uint16_t)0xff80); // 1111 1111 1000
                                                            // 0000
-  const __m128i v_ffff0000 = _mm_set1_epi32(
-      (uint32_t)0xffff0000); // 1111 1111 1111 1111 0000 0000 0000 0000
-  const __m128i v_7fffffff = _mm_set1_epi32(
-      (uint32_t)0x7fffffff); // 0111 1111 1111 1111 1111 1111 1111 1111
-  __m128i running_max = _mm_setzero_si128();
+  const __m128i v_ffff0000 = _mm_set1_epi32((uint32_t)0xffff0000);
   __m128i forbidden_bytemask = _mm_setzero_si128();
   const size_t safety_margin =
       12; // to avoid overruns, see issue
@@ -28,25 +34,10 @@ sse_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_output) {
     __m128i in = _mm_loadu_si128((__m128i *)buf);
     __m128i nextin = _mm_loadu_si128(
         (__m128i *)buf + 1); // These two values can hold only 8 UTF32 chars
-    running_max = _mm_max_epu32(
-        _mm_max_epu32(in, running_max), // take element-wise max char32_t from
-                                        // in and running_max vector
-        nextin); // and take element-wise max element from nextin and
-                 // running_max vector
 
     // Pack 32-bit UTF-32 code units to 16-bit UTF-16 code units with unsigned
     // saturation
-    __m128i in_16 = _mm_packus_epi32(
-        _mm_and_si128(in, v_7fffffff),
-        _mm_and_si128(
-            nextin,
-            v_7fffffff)); // in this context pack the two __m128 into a single
-    // By ensuring the highest bit is set to 0(&v_7fffffff), we are making sure
-    // all values are interpreted as non-negative, or specifically, the values
-    // are within the range of valid Unicode code points. remember : having
-    // leading byte 0 means a positive number by the two complements system.
-    // Unicode is well beneath the range where you'll start getting issues so
-    // that's OK.
+    __m128i in_16 = _mm_packus_epu32(in, nextin);
 
     // Try to apply UTF-16 => UTF-8 from ./sse_convert_utf16_to_utf8.cpp
 
@@ -60,13 +51,9 @@ sse_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_output) {
     if (_mm_testz_si128(in_16, v_ff80)) { // if the first two blocks are ASCII
       __m128i thirdin = _mm_loadu_si128((__m128i *)buf + 2);
       __m128i fourthin = _mm_loadu_si128((__m128i *)buf + 3);
-      running_max = _mm_max_epu32(
-          _mm_max_epu32(thirdin, running_max),
-          fourthin); // take the running max of all 4 vectors thus far
-      __m128i nextin_16 = _mm_packus_epi32(
-          _mm_and_si128(thirdin, v_7fffffff),
-          _mm_and_si128(fourthin,
-                        v_7fffffff)); // pack into 1 vector, now you have two
+      __m128i nextin_16 =
+          _mm_packus_epu32(thirdin,
+                           fourthin); // pack into 1 vector, now you have two
       if (!_mm_testz_si128(
               nextin_16,
               v_ff80)) { // checks if the second packed vector is ASCII, if not:
@@ -303,6 +290,7 @@ sse_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_output) {
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else {
           if (word > 0x10FFFF) {
+            puts("HERE");
             return std::make_pair(nullptr, utf8_output);
           }
           *utf8_output++ = char((word >> 18) | 0b11110000);
@@ -316,12 +304,6 @@ sse_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_output) {
   } // while
 
   // check for invalid input
-  const __m128i v_10ffff = _mm_set1_epi32((uint32_t)0x10ffff);
-  if (static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi32(
-          _mm_max_epu32(running_max, v_10ffff), v_10ffff))) != 0xffff) {
-    return std::make_pair(nullptr, utf8_output);
-  }
-
   if (static_cast<uint32_t>(_mm_movemask_epi8(forbidden_bytemask)) != 0) {
     return std::make_pair(nullptr, utf8_output);
   }
@@ -340,7 +322,6 @@ sse_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
   const __m128i v_c080 = _mm_set1_epi16((uint16_t)0xc080);
   const __m128i v_ff80 = _mm_set1_epi16((uint16_t)0xff80);
   const __m128i v_ffff0000 = _mm_set1_epi32((uint32_t)0xffff0000);
-  const __m128i v_7fffffff = _mm_set1_epi32((uint32_t)0x7fffffff);
   const __m128i v_10ffff = _mm_set1_epi32((uint32_t)0x10ffff);
 
   const size_t safety_margin =
@@ -360,9 +341,9 @@ sse_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
     }
 
     // Pack 32-bit UTF-32 code units to 16-bit UTF-16 code units with unsigned
-    // saturation
-    __m128i in_16 = _mm_packus_epi32(_mm_and_si128(in, v_7fffffff),
-                                     _mm_and_si128(nextin, v_7fffffff));
+    // saturation (note: all 32-bit words are unsigned numbers that's assured by
+    // the above check)
+    __m128i in_16 = _mm_packus_epi32(in, nextin);
 
     // Try to apply UTF-16 => UTF-8 from ./sse_convert_utf16_to_utf8.cpp
 
