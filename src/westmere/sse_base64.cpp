@@ -361,6 +361,8 @@ static inline void load_block(block64 *b, const char16_t *src) {
   b->chunks[3] = _mm_packus_epi16(m7, m8);
 }
 
+template <typename T> bool is_power_of_two(T x) { return (x & (x - 1)) == 0; }
+
 static inline void base64_decode(char *out, __m128i str) {
   // credit: aqrit
 
@@ -408,6 +410,71 @@ static inline void base64_decode_block_safe(char *out, block64 *b) {
   char buffer[16];
   base64_decode(buffer, b->chunks[3]);
   std::memcpy(out + 36, buffer, 12);
+}
+
+simdutf_really_inline static size_t
+compress_block_single(block64 *b, uint64_t mask, char *output) {
+  const size_t pos64 = simdutf_tzcnt_u64(mask);
+  const int8_t pos = pos64 & 0xf;
+  switch (pos64 >> 4) {
+  case 0b00: {
+    const __m128i v0 = _mm_set1_epi8(char(pos - 1));
+    const __m128i v1 =
+        _mm_setr_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+    const __m128i v2 = _mm_cmpgt_epi8(v1, v0);
+    const __m128i sh = _mm_sub_epi8(v1, v2);
+    const __m128i compressed = _mm_shuffle_epi8(b->chunks[0], sh);
+
+    _mm_storeu_si128((__m128i *)(output + 0 * 16), compressed);
+    _mm_storeu_si128((__m128i *)(output + 1 * 16 - 1), b->chunks[1]);
+    _mm_storeu_si128((__m128i *)(output + 2 * 16 - 1), b->chunks[2]);
+    _mm_storeu_si128((__m128i *)(output + 3 * 16 - 1), b->chunks[3]);
+  } break;
+  case 0b01: {
+    _mm_storeu_si128((__m128i *)(output + 0 * 16), b->chunks[0]);
+
+    const __m128i v0 = _mm_set1_epi8(char(pos - 1));
+    const __m128i v1 =
+        _mm_setr_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+    const __m128i v2 = _mm_cmpgt_epi8(v1, v0);
+    const __m128i sh = _mm_sub_epi8(v1, v2);
+    const __m128i compressed = _mm_shuffle_epi8(b->chunks[1], sh);
+
+    _mm_storeu_si128((__m128i *)(output + 1 * 16), compressed);
+    _mm_storeu_si128((__m128i *)(output + 2 * 16 - 1), b->chunks[2]);
+    _mm_storeu_si128((__m128i *)(output + 3 * 16 - 1), b->chunks[3]);
+  } break;
+  case 0b10: {
+    _mm_storeu_si128((__m128i *)(output + 0 * 16), b->chunks[0]);
+    _mm_storeu_si128((__m128i *)(output + 1 * 16), b->chunks[1]);
+
+    const __m128i v0 = _mm_set1_epi8(char(pos - 1));
+    const __m128i v1 =
+        _mm_setr_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+    const __m128i v2 = _mm_cmpgt_epi8(v1, v0);
+    const __m128i sh = _mm_sub_epi8(v1, v2);
+    const __m128i compressed = _mm_shuffle_epi8(b->chunks[2], sh);
+
+    _mm_storeu_si128((__m128i *)(output + 2 * 16), compressed);
+    _mm_storeu_si128((__m128i *)(output + 3 * 16 - 1), b->chunks[3]);
+  } break;
+  case 0b11: {
+    _mm_storeu_si128((__m128i *)(output + 0 * 16), b->chunks[0]);
+    _mm_storeu_si128((__m128i *)(output + 1 * 16), b->chunks[1]);
+    _mm_storeu_si128((__m128i *)(output + 2 * 16), b->chunks[2]);
+
+    const __m128i v0 = _mm_set1_epi8(char(pos - 1));
+    const __m128i v1 =
+        _mm_setr_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+    const __m128i v2 = _mm_cmpgt_epi8(v1, v0);
+    const __m128i sh = _mm_sub_epi8(v1, v2);
+    const __m128i compressed = _mm_shuffle_epi8(b->chunks[3], sh);
+
+    _mm_storeu_si128((__m128i *)(output + 3 * 16), compressed);
+  } break;
+  }
+
+  return 63;
 }
 
 template <bool base64_url, bool ignore_garbage, typename chartype>
@@ -480,10 +547,14 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                 size_t(src - srcinit + error_offset), size_t(dst - dstinit)};
       }
       if (badcharmask != 0) {
-        // optimization opportunity: check for simple masks like those made of
-        // continuous 1s followed by continuous 0s. And masks containing a
-        // single bad character.
-        bufferptr += compress_block(&b, badcharmask, bufferptr);
+        if (is_power_of_two(badcharmask)) {
+          bufferptr += compress_block_single(&b, badcharmask, bufferptr);
+        } else {
+          // optimization opportunity: check for simple masks like those made of
+          // continuous 1s followed by continuous 0s. And masks containing a
+          // single bad character.
+          bufferptr += compress_block(&b, badcharmask, bufferptr);
+        }
       } else if (bufferptr != buffer) {
         copy_block(&b, bufferptr);
         bufferptr += 64;

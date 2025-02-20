@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys
-import warnings
 from pathlib import Path
 from table import Table
 

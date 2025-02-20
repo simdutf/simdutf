@@ -20,7 +20,7 @@ else(MSVC)
   endif()
   target_compile_options(simdutf PRIVATE -Wall -Wextra -Weffc++)
   target_compile_options(simdutf PRIVATE -Wsign-compare -Wshadow -Wwrite-strings -Wpointer-arith -Winit-self -Wconversion -Wno-sign-conversion -Wunused-function)
-  #target_compile_options(simdutf PRIVATE -Wfatal-errors)
+  target_compile_options(simdutf PRIVATE -Wfatal-errors)
 endif(MSVC)
 
 # workaround for GNU GCC poor AVX load/store code generation
