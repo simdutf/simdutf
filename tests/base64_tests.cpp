@@ -2305,18 +2305,6 @@ TEST(readme_safe) {
   ASSERT_EQUAL(limited_length2 + limited_length, (len + 3) / 4 * 3);
 }
 
-int main(int argc, char *argv[]) {
-  if (argc == 2) {
-    try {
-      seed = std::stoi(argv[1]);
-    } catch (const std::exception &e) {
-      printf("%s\n", e.what());
-      return EXIT_FAILURE;
-    }
-  }
-  return simdutf::test::main(argc, argv);
-}
-
 #if !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF
 TEST(atomic_roundtrip_base64) {
   for (size_t len = 0; len < 2048; len++) {
@@ -2417,3 +2405,5 @@ TEST(atomic_span_roundtrip_base64) {
   }
 }
 #endif // !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF
+
+TEST_MAIN
