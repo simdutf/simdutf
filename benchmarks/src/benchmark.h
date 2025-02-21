@@ -89,6 +89,8 @@ private:
   void
   run_utf8_length_from_latin1(const simdutf::implementation &implementation,
                               size_t iterations);
+  void run_utf8_length_from_utf32(const simdutf::implementation &implementation,
+                                  size_t iterations);
   void run_convert_latin1_to_utf8(const simdutf::implementation &implementation,
                                   size_t iterations);
   void

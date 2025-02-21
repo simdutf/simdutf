@@ -65,6 +65,8 @@ namespace icelake {} // namespace icelake
   #include "simdutf/icelake/begin.h"
   // Declarations
   #include "simdutf/icelake/bitmanipulation.h"
+  #include "simdutf/icelake/simd.h"
+
   #include "simdutf/icelake/end.h"
 
 #endif // SIMDUTF_IMPLEMENTATION_ICELAKE
