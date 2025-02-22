@@ -27,7 +27,11 @@ template <typename T> struct base32 {
     return vec_xst(this->value, 0, reinterpret_cast<vector_type *>(dst));
   }
 
-  void dump() const {
+  void dump(const char *name = nullptr) const {
+    if (name != nullptr) {
+      printf("%-10s = ", name);
+    }
+
     uint32_t tmp[4];
     vec_xst(value, 0, reinterpret_cast<vector_type *>(tmp));
     for (int i = 0; i < 4; i++) {

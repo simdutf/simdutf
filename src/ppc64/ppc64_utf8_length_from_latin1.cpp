@@ -22,7 +22,7 @@ std::pair<const char *, size_t> ppc64_utf8_length_from_latin1(const char *input,
         const auto in = vector_i8::load(input);
         input += N;
 
-        local -= as_vector_u8(in < int8_t(0));
+        local -= as_vector_u8(in < vector_i8::splat(0));
       }
 
       partial = sum4bytes(local, partial);

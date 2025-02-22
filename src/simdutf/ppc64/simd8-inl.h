@@ -12,8 +12,8 @@ template <typename T> struct base8 {
   // Conversion from SIMD register
   simdutf_really_inline base8(const vector_type _value) : value{_value} {}
 
-  // Splat from scalar value
-  simdutf_really_inline base8(T scalar) : value{vec_splats(scalar)} {}
+  // Splat scalar
+  simdutf_really_inline base8(T v) : value{vec_splats(v)} {}
 
   // Conversion to SIMD register
   simdutf_really_inline operator const vector_type &() const {
@@ -148,6 +148,8 @@ template <typename T> simd8<T> operator^(const simd8<T> a, const simd8<T> b);
 
 template <typename T> simd8<T> operator+(const simd8<T> a, const simd8<T> b);
 
+template <typename T> simd8<bool> operator<(const simd8<T> a, const simd8<T> b);
+
 // SIMD byte mask type (returned by things like eq and gt)
 template <> struct simd8<bool> : base8<bool> {
   using super = base8<bool>;
@@ -171,6 +173,8 @@ template <> struct simd8<bool> : base8<bool> {
   simdutf_really_inline bool any() const {
     return !vec_all_eq(this->value, (vector_type)vec_splats(0));
   }
+
+  simdutf_really_inline bool all() const { return to_bitmask() == 0xffff; }
 
   simdutf_really_inline simd8<bool> operator~() const {
     return this->value ^ (vector_type)splat(true);
@@ -320,14 +324,6 @@ template <> struct simd8<uint8_t> : base8_numeric<uint8_t> {
   operator>=(const simd8<uint8_t> other) const {
     return other.min_val(*this) == other;
   }
-  simdutf_really_inline simd8<bool>
-  operator>(const simd8<uint8_t> other) const {
-    return this->gt_bits(other).any_bits_set();
-  }
-  simdutf_really_inline simd8<bool>
-  operator<(const simd8<uint8_t> other) const {
-    return this->gt_bits(other).any_bits_set();
-  }
 
   // Bit-specific operations
   simdutf_really_inline simd8<bool> bits_not_set() const {
@@ -427,9 +423,6 @@ template <> struct simd8<int8_t> : base8_numeric<int8_t> {
   simdutf_really_inline simd8<bool> operator>(const simd8<int8_t> other) const {
     return vec_cmpgt(this->value, other.value);
   }
-  simdutf_really_inline simd8<bool> operator<(const simd8<int8_t> other) const {
-    return vec_cmplt(this->value, other.value);
-  }
 
   void dump() const {
     int8_t tmp[16];
@@ -482,6 +475,11 @@ template <typename T, typename U> simd8<T> operator+(const simd8<T> a, U b) {
 
 simdutf_really_inline simd8<int8_t>::operator simd8<uint8_t>() const {
   return (simd8<uint8_t>::vector_type)value;
+}
+
+template <typename T>
+simd8<bool> operator<(const simd8<T> a, const simd8<T> b) {
+  return vec_cmplt(a.value, b.value);
 }
 
 template <typename T> struct simd8x64 {

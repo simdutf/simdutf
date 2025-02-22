@@ -24,6 +24,11 @@
  *
  * Nick Kopp. 2013. Base64 Encoding on a GPU.
  * https://www.codeproject.com/Articles/276993/Base-Encoding-on-a-GPU. (2013).
+ *
+ * AMD XOP specific: http://0x80.pl/notesen/2016-01-12-sse-base64-encoding.html
+ * Altivec has capabilites of AMD XOP (or vice versa): shuffle using 2 vectors
+ * and variable shifts, thus this implementation shares some code solution
+ * (modulo intrisic function names).
  */
 template <bool base64_url>
 vector_u8 lookup_pshufb_improved(const vector_u8 input) {
@@ -33,13 +38,12 @@ vector_u8 lookup_pshufb_improved(const vector_u8 input) {
   //            62 -> 11
   //            63 -> 12
   auto result = input.saturating_sub(vector_u8::splat(51));
-  result.dump();
 
   // distinguish between ranges 0..25 and 26..51:
-  //         0 .. 25 -> remains 0
-  //        26 .. 51 -> becomes 13
-  const auto gt = input > uint8_t(25);
-  result = select(as_vector_u8(gt), vector_u8::splat(13), result);
+  //         0 .. 25 -> remains 13
+  //        26 .. 51 -> becomes 0
+  const auto lt = input < vector_u8::splat(26);
+  result = select(as_vector_u8(lt), vector_u8::splat(13), result);
 
   const auto shift_LUT =
       base64_url ? vector_u8('a' - 26, '0' - 52, '0' - 52, '0' - 52, '0' - 52,
@@ -54,9 +58,43 @@ vector_u8 lookup_pshufb_improved(const vector_u8 input) {
   return input + result;
 }
 
+/*
+   Procedure expands 12 bytes (4*3 bytes) into 16 bytes,
+   each byte stores 6 bits of data
+*/
+template <typename = void>
+simdutf_really_inline vector_u8 expand_6bit_fields(vector_u8 input) {
+  const auto expand_3_to_4 = vector_u8(
+      1 + 0 * 3, 0 + 0 * 3, 2 + 0 * 3, 1 + 0 * 3, 1 + 1 * 3, 0 + 1 * 3,
+      2 + 1 * 3, 1 + 1 * 3, 1 + 2 * 3, 0 + 2 * 3, 2 + 2 * 3, 1 + 2 * 3,
+      1 + 3 * 3, 0 + 3 * 3, 2 + 3 * 3, 1 + 3 * 3);
+
+  // input = [ffeeeeee|ddddddcc|ccccbbbb|bbaaaaaa] as uint8_t
+  //              3        2        1        0
+  //
+  // in'   = [00000000|ddddddcc|ccccbbbb|bbaaaaaa] as uint8_t
+  //              1        2        0        1
+  //       = [ccccbbbb|bbaaaaaa|ddddddcc|ccccbbbb] as uint32_t
+  //              1        0        2        1
+  const auto in = as_vector_u32(expand_3_to_4.lookup_16(input));
+
+  const auto a = in.shl<8>() & uint32_t(0x3f000000);
+  const auto b = in.shr<6>() & uint32_t(0x003f0000);
+  const auto c = in.shl<4>() & uint32_t(0x00003f00);
+  const auto d = in.shr<10>() & uint32_t(0x0000003f);
+
+  return as_vector_u8(a | b | c | d);
+}
+
+#include "ppc64_base64_internal_tests.cpp"
+
 template <bool isbase64url>
 size_t encode_base64(char *dst, const char *src, size_t srclen,
                      base64_options options) {
+
+  unittest_implementation();
+  puts("All OK");
+  exit(0);
 
   // credit: Wojciech Muła
   // SSE (lookup: pshufb improved unrolled)
