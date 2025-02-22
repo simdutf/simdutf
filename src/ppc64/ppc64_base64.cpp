@@ -30,8 +30,13 @@
  * and variable shifts, thus this implementation shares some code solution
  * (modulo intrisic function names).
  */
+
+/*
+    Procedure translates vector of bytes having 6-bit values
+    into ASCII counterparts.
+*/
 template <bool base64_url>
-vector_u8 lookup_pshufb_improved(const vector_u8 input) {
+vector_u8 encoding_translate_6bit_values(const vector_u8 input) {
   // credit: Wojciech Muła
   // reduce  0..51 -> 0
   //        52..61 -> 1 .. 10
@@ -63,7 +68,7 @@ vector_u8 lookup_pshufb_improved(const vector_u8 input) {
    each byte stores 6 bits of data
 */
 template <typename = void>
-simdutf_really_inline vector_u8 expand_6bit_fields(vector_u8 input) {
+simdutf_really_inline vector_u8 encoding_expand_6bit_fields(vector_u8 input) {
   const auto expand_3_to_4 = vector_u8(
       1 + 0 * 3, 0 + 0 * 3, 2 + 0 * 3, 1 + 0 * 3, 1 + 1 * 3, 0 + 1 * 3,
       2 + 1 * 3, 1 + 1 * 3, 1 + 2 * 3, 0 + 2 * 3, 2 + 2 * 3, 1 + 2 * 3,
@@ -93,16 +98,11 @@ size_t encode_base64(char *dst, const char *src, size_t srclen,
                      base64_options options) {
 
   unittest_implementation();
-  puts("All OK");
   exit(0);
 
-  // credit: Wojciech Muła
-  // SSE (lookup: pshufb improved unrolled)
   const uint8_t *input = (const uint8_t *)src;
 
   uint8_t *out = (uint8_t *)dst;
-  const auto shuf =
-      vector_u8(10, 11, 9, 10, 7, 8, 6, 7, 4, 5, 3, 4, 1, 2, 0, 1);
 
   size_t i = 0;
   /*for (; i + 52 <= srclen; i += 48) {
@@ -162,22 +162,19 @@ size_t encode_base64(char *dst, const char *src, size_t srclen,
     out += 16;
   }*/
   for (; i + 16 <= srclen; i += 12) {
-    auto in = vector_u8::load(input + i);
+    const auto in = vector_u8::load(input + i);
+    const auto expanded = encoding_expand_6bit_fields(in);
+    const auto base64 = encoding_translate_6bit_values<isbase64url>(expanded);
 
-    // bytes from groups A, B and C are needed in separate 32-bit lanes
-    // in = [DDDD|CCCC|BBBB|AAAA]
-    //
-    //      an input triplet has layout
-    //      [????????|ccdddddd|bbbbcccc|aaaaaabb]
-    //        byte 3   byte 2   byte 1   byte 0    -- byte 3 comes from the next
-    //        triplet
-    //
-    //      shuffling changes the order of bytes: 1, 0, 2, 1
-    //      [bbbbcccc|ccdddddd|aaaaaabb|bbbbcccc]
-    //           ^^^^ ^^^^^^^^ ^^^^^^^^ ^^^^
-    //                  processed bits
-    in = shuf.lookup_16(in);
+    base64.store(out);
+    out += 16;
+  }
 
+  return i / 3 * 4 + scalar::base64::tail_encode_base64((char *)out, src + i,
+                                                        srclen - i, options);
+}
+
+#if 0
     // unpacking
     // this is an AltiVec implementation of the AMD XOP method from:
     // http://0x80.pl/notesen/2016-01-12-sse-base64-encoding.html#xop-version
@@ -198,15 +195,8 @@ size_t encode_base64(char *dst, const char *src, size_t srclen,
     // into `ca` vector
     const auto mask_db = vector_u16::splat(0x3f00);
     const auto indices = select(mask_db, db, ca);
+#endif
 
-    const auto tmp = lookup_pshufb_improved<isbase64url>(as_vector_u8(indices));
-    tmp.store(out);
-    out += 16;
-  }
-
-  return i / 3 * 4 + scalar::base64::tail_encode_base64((char *)out, src + i,
-                                                        srclen - i, options);
-}
 static inline void compress(const vector_u8 data, uint16_t mask, char *output) {
   if (mask == 0) {
     data.store(output);
