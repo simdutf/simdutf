@@ -41,7 +41,7 @@ static void unittest_encoding_translate_6bit_values() {
 
 static void unittest_encoding_expand_6bit_fields() {
   for (size_t position = 0; position < 10; position++) {
-    for (uint64_t value = 0; value < 64; value++) {
+    for (uint64_t value = 63; value < 64; value++) {
       const uint64_t v = value << (6 * position);
 
       const vector_u8 input(

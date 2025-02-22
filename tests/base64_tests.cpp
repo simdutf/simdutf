@@ -1092,7 +1092,7 @@ TEST(decode_non_ascii) {
   }
 }
 
-TEST(decode_base64_cases) {
+TEST(decode_base64_cases2) {
   std::vector<std::vector<char>> cases = {{0x53, 0x53}};
   std::vector<simdutf::error_code> codes = {simdutf::error_code::SUCCESS};
   std::vector<size_t> counts = {1};
@@ -1168,8 +1168,8 @@ TEST(complete_decode_base64url_cases) {
   }
 }
 
-TEST(encode_base64_cases) {
-  std::vector<std::pair<std::string, std::string>> cases = {
+namespace cases {
+  std::vector<std::pair<std::string, std::string>> with_padding = {
       {"Hello, World!", "SGVsbG8sIFdvcmxkIQ=="},
       {"GeeksforGeeks", "R2Vla3Nmb3JHZWVrcw=="},
       {"123456", "MTIzNDU2"},
@@ -1179,10 +1179,21 @@ TEST(encode_base64_cases) {
        "IVJ+SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c+"
        "fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNTk"
        "tWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
-  std::vector<simdutf::error_code> codes = {simdutf::error_code::SUCCESS};
-  std::vector<size_t> counts = {1};
-  printf(" -- ");
-  for (std::pair<std::string, std::string> p : cases) {
+
+  std::vector<std::pair<std::string, std::string>> without_padding = {
+      {"Hello, World!", "SGVsbG8sIFdvcmxkIQ"},
+      {"GeeksforGeeks", "R2Vla3Nmb3JHZWVrcw"},
+      {"123456", "MTIzNDU2"},
+      {"Base64 Encoding", "QmFzZTY0IEVuY29kaW5n"},
+      {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ "
+       "PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k",
+       "IVJ-SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c-"
+       "fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNTk"
+       "tWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
+} // namespace cases
+
+TEST(encode_base64_cases) {
+  for (const auto& p : cases::with_padding) {
     std::vector<char> buffer(
         implementation.base64_length_from_binary(p.first.size()));
     ASSERT_EQUAL(buffer.size(), p.second.size());
@@ -1191,8 +1202,10 @@ TEST(encode_base64_cases) {
     ASSERT_EQUAL(s, p.second.size());
     ASSERT_EQUAL(std::string(buffer.data(), buffer.size()), p.second);
   }
-  printf(" -- ");
-  for (std::pair<std::string, std::string> p : cases) {
+}
+
+TEST(decode_base64_cases) {
+  for (std::pair<std::string, std::string> p : cases::with_padding) {
     std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
         p.second.data(), p.second.size()));
     ASSERT_EQUAL(buffer.size(), p.first.size());
@@ -1204,8 +1217,10 @@ TEST(encode_base64_cases) {
       ASSERT_EQUAL(buffer[i], p.first[i]);
     }
   }
-  printf(" --  ");
-  for (std::pair<std::string, std::string> p : cases) {
+}
+
+TEST(base64_to_binary_safe) {
+  for (std::pair<std::string, std::string> p : cases::with_padding) {
     std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
         p.second.data(), p.second.size()));
     ASSERT_EQUAL(buffer.size(), p.first.size());
@@ -1222,20 +1237,7 @@ TEST(encode_base64_cases) {
 }
 
 TEST(encode_base64_cases_no_padding) {
-  std::vector<std::pair<std::string, std::string>> cases = {
-      {"Hello, World!", "SGVsbG8sIFdvcmxkIQ"},
-      {"GeeksforGeeks", "R2Vla3Nmb3JHZWVrcw"},
-      {"123456", "MTIzNDU2"},
-      {"Base64 Encoding", "QmFzZTY0IEVuY29kaW5n"},
-      {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ "
-       "PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k",
-       "IVJ+SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c+"
-       "fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNTk"
-       "tWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
-  std::vector<simdutf::error_code> codes = {simdutf::error_code::SUCCESS};
-  std::vector<size_t> counts = {1};
-  printf(" -- ");
-  for (std::pair<std::string, std::string> p : cases) {
+  for (std::pair<std::string, std::string> p : cases::without_padding) {
     std::vector<char> buffer(implementation.base64_length_from_binary(
         p.first.size(), simdutf::base64_default_no_padding));
     ASSERT_EQUAL(buffer.size(), p.second.size());
@@ -1250,20 +1252,10 @@ TEST(encode_base64_cases_no_padding) {
 #if SIMDUTF_BASE64URL_TESTS
 
 TEST(encode_base64url_cases) {
-  std::vector<std::pair<std::string, std::string>> cases = {
-      {"Hello, World!", "SGVsbG8sIFdvcmxkIQ"},
-      {"GeeksforGeeks", "R2Vla3Nmb3JHZWVrcw"},
-      {"123456", "MTIzNDU2"},
-      {"Base64 Encoding", "QmFzZTY0IEVuY29kaW5n"},
-      {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ "
-       "PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k",
-       "IVJ-SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c-"
-       "fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNTk"
-       "tWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
   std::vector<simdutf::error_code> codes = {simdutf::error_code::SUCCESS};
   std::vector<size_t> counts = {1};
   printf(" -- ");
-  for (std::pair<std::string, std::string> p : cases) {
+  for (std::pair<std::string, std::string> p : cases::with_padding) {
     std::vector<char> buffer(implementation.base64_length_from_binary(
         p.first.size(), simdutf::base64_url));
     ASSERT_EQUAL(buffer.size(), p.second.size());

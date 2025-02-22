@@ -69,26 +69,70 @@ vector_u8 encoding_translate_6bit_values(const vector_u8 input) {
 */
 template <typename = void>
 simdutf_really_inline vector_u8 encoding_expand_6bit_fields(vector_u8 input) {
+#if 1
+#define indices4(dx) (dx + 1), (dx + 2), (dx + 0), (dx + 1)
   const auto expand_3_to_4 = vector_u8(
-      1 + 0 * 3, 0 + 0 * 3, 2 + 0 * 3, 1 + 0 * 3, 1 + 1 * 3, 0 + 1 * 3,
-      2 + 1 * 3, 1 + 1 * 3, 1 + 2 * 3, 0 + 2 * 3, 2 + 2 * 3, 1 + 2 * 3,
-      1 + 3 * 3, 0 + 3 * 3, 2 + 3 * 3, 1 + 3 * 3);
+    indices4(0*3),
+    indices4(1*3),
+    indices4(2*3),
+    indices4(3*3));
+#undef indices4
+
+  // input = [........|ccdddddd|bbbbcccc|aaaaaabb] as uint8_t
+  //              3        2        1        0
+  //
+  // in'   = [bbbbcccc|ccdddddd|aaaaaabb|bbbbcccc] as uint32_t
+  //              1        2        0        1
+  const auto in = as_vector_u32(expand_3_to_4.lookup_16(input));
+
+  const auto a = in.shr<10>() & uint32_t(0x0000003f);
+  const auto b = in.shl<4>() & uint32_t(0x00003f00);
+  const auto c = in.shr<6>() & uint32_t(0x003f0000);
+  const auto d = in.shl<8>() & uint32_t(0x3f000000);
+
+  const auto tmp = a | b | c | d;
+
+  return as_vector_u8(tmp.swap_bytes());
+#else
+
+#define indices4(dx, b0, b1, b2, b3) (dx + b0), (dx + b1), (dx + b2), (dx + b3)
+  const auto expand_3_to_4 = vector_u8(
+    indices4(0*3, 1, 0, 2, 1),
+    indices4(1*3, 1, 0, 2, 1),
+    indices4(2*3, 1, 0, 2, 1),
+    indices4(3*3, 1, 0, 2, 1));
+#undef indices4
 
   // input = [ffeeeeee|ddddddcc|ccccbbbb|bbaaaaaa] as uint8_t
   //              3        2        1        0
   //
-  // in'   = [00000000|ddddddcc|ccccbbbb|bbaaaaaa] as uint8_t
+  // in'   = [ccccbbbb|bbaaaaaa|ddddddcc|ccccbbbb] as uint8_t
   //              1        2        0        1
-  //       = [ccccbbbb|bbaaaaaa|ddddddcc|ccccbbbb] as uint32_t
+  //       = [ccccbbbb|bbaaaaaa|ddddddcc|ccccbbbb] as uint16_t
   //              1        0        2        1
-  const auto in = as_vector_u32(expand_3_to_4.lookup_16(input));
+  const auto in = as_vector_u16(expand_3_to_4.lookup_16(input));
 
-  const auto a = in.shl<8>() & uint32_t(0x3f000000);
-  const auto b = in.shr<6>() & uint32_t(0x003f0000);
-  const auto c = in.shl<4>() & uint32_t(0x00003f00);
-  const auto d = in.shr<10>() & uint32_t(0x0000003f);
+    // unpacking
+    // this is an AltiVec implementation of the AMD XOP method from:
+    // http://0x80.pl/notesen/2016-01-12-sse-base64-encoding.html#xop-version
 
-  return as_vector_u8(a | b | c | d);
+    // in    = [bbbbcccc|ccdddddd|aaaaaabb|bbbbcccc] >> (6, 10)
+    // t0    = [000000bb|bbcccccc|00000000|00aaaaaa]
+    const auto t0 = variable_shift_right(
+        in, vector_u16(6, 10, 6, 10, 6, 10, 6, 10));
+    // ca    = [00000000|00cccccc|00000000|00aaaaaa]
+    const auto ca = t0 & uint16_t(0x003f);
+
+    // in    = [bbbbcccc|ccdddddd|aaaaaabb|bbbbcccc] << (8, 4)
+    // db    = [ccdddddd|00000000|aabbbbbb|cccc0000]
+    const auto db = variable_shift_left(in,
+                                        vector_u16(8, 4, 8, 4, 8, 4, 8, 4));
+
+    // res   = [00dddddd|00cccccc|00bbbbbb|00aaaaaa] -- merge `d` and `d` bits
+    // into `ca` vector
+    const auto mask_db = vector_u16::splat(0x3f00);
+    return as_vector_u8(select(mask_db, db, ca));
+#endif
 }
 
 #include "ppc64_base64_internal_tests.cpp"
@@ -97,8 +141,8 @@ template <bool isbase64url>
 size_t encode_base64(char *dst, const char *src, size_t srclen,
                      base64_options options) {
 
-  unittest_implementation();
-  exit(0);
+  //unittest_implementation();
+  //exit(0);
 
   const uint8_t *input = (const uint8_t *)src;
 
@@ -174,28 +218,6 @@ size_t encode_base64(char *dst, const char *src, size_t srclen,
                                                         srclen - i, options);
 }
 
-#if 0
-    // unpacking
-    // this is an AltiVec implementation of the AMD XOP method from:
-    // http://0x80.pl/notesen/2016-01-12-sse-base64-encoding.html#xop-version
-
-    // in    = [bbbbcccc|ccdddddd|aaaaaabb|bbbbcccc] >> (6, 10)
-    // t0    = [000000bb|bbcccccc|00000000|00aaaaaa]
-    const auto t0 = variable_shift_right(
-        as_vector_u16(in), vector_u16(6, 10, 6, 10, 6, 10, 6, 10));
-    // ca    = [00000000|00cccccc|00000000|00aaaaaa]
-    const auto ca = t0 & uint16_t(0x003f);
-
-    // in    = [bbbbcccc|ccdddddd|aaaaaabb|bbbbcccc] << (8, 4)
-    // db    = [ccdddddd|00000000|aabbbbbb|cccc0000]
-    const auto db = variable_shift_left(as_vector_u16(in),
-                                        vector_u16(8, 4, 8, 4, 8, 4, 8, 4));
-
-    // res   = [00dddddd|00cccccc|00bbbbbb|00aaaaaa] -- merge `d` and `d` bits
-    // into `ca` vector
-    const auto mask_db = vector_u16::splat(0x3f00);
-    const auto indices = select(mask_db, db, ca);
-#endif
 
 static inline void compress(const vector_u8 data, uint16_t mask, char *output) {
   if (mask == 0) {
