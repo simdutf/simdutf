@@ -5,11 +5,26 @@
 #include <sstream>
 #include <string>
 #include <list>
+#include <set>
+#include <vector>
 
 namespace simdutf {
 namespace test {
 
+struct CommandLine {
+  bool show_help{false};
+  bool show_tests{false};
+  bool show_architectures{false};
+  std::set<std::string> architectures;
+  std::vector<std::string> tests;
+  uint64_t seed;
+
+  static CommandLine parse(int argc, char *argv[]);
+};
+
 int main(int argc, char *argv[]);
+void run(const CommandLine &cmdline);
+
 using test_procedure = void (*)(const simdutf::implementation &impl);
 struct test_entry {
   std::string name;
