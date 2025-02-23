@@ -2,6 +2,7 @@
 #include "benchmark_base.h"
 #include "cmdline.h"
 #include "simdutf.h"
+#include <variant>
 #include <cstddef>
 
 /**
@@ -53,7 +54,7 @@ public:
   Benchmark(std::vector<input::Testcase> &&testcases);
 
   static Benchmark create(const CommandLine &cmdline);
-  virtual const std::set<std::string> &all_procedures() const override;
+  virtual const std::set<std::string> all_procedures() const override;
   virtual std::set<simdutf::encoding_type>
   expected_encodings(const std::string &procedure) override;
 
@@ -62,9 +63,29 @@ protected:
                    size_t iterations) override;
 
 private:
-  std::set<std::string> known_procedures;
-  std::map<std::string, std::set<simdutf::encoding_type>>
-      expected_input_encoding;
+  using simdutf_fn = void (Benchmark::*)(const simdutf::implementation &,
+                                         size_t);
+  using thirdparty_fn = void (Benchmark::*)(size_t);
+
+  std::map<std::string, std::pair<std::variant<simdutf_fn, thirdparty_fn>,
+                                  std::set<simdutf::encoding_type>>>
+      benchmarks;
+
+  template <typename Fn>
+  void register_function(std::string name, Fn function,
+                         std::set<simdutf::encoding_type> set);
+
+  template <typename Fn>
+  void register_function(std::string name, Fn function,
+                         simdutf::encoding_type enc1);
+  template <typename Fn>
+  void register_function(std::string name, Fn function,
+                         simdutf::encoding_type enc1,
+                         simdutf::encoding_type enc2);
+  template <typename Fn>
+  void
+  register_function(std::string name, Fn function, simdutf::encoding_type enc1,
+                    simdutf::encoding_type enc2, simdutf::encoding_type enc3);
 
 private:
   void run_validate_utf8(const simdutf::implementation &implementation,
