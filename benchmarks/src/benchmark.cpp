@@ -72,398 +72,340 @@ SIMDUTF_UNTARGET_REGION
 
 namespace simdutf::benchmarks {
 
+template <typename Fn>
+void Benchmark::register_function(std::string name, Fn function,
+                                  std::set<simdutf::encoding_type> set) {
+
+  if (name.find('+') == std::string::npos) {
+    // adding simdutf benchmark, populate for all known architectures
+    for (const auto &impl : simdutf::get_available_implementations()) {
+      const auto full_name = name + '+' + impl->name();
+      benchmarks.insert({full_name, std::make_pair(function, set)});
+    }
+  } else {
+    benchmarks.insert({name, std::make_pair(function, set)});
+  }
+}
+
+template <typename Fn>
+void Benchmark::register_function(std::string name, Fn function,
+                                  simdutf::encoding_type enc1) {
+  std::set<simdutf::encoding_type> set{enc1};
+  register_function(name, function, set);
+}
+
+template <typename Fn>
+void Benchmark::register_function(std::string name, Fn function,
+                                  simdutf::encoding_type enc1,
+                                  simdutf::encoding_type enc2) {
+  std::set<simdutf::encoding_type> set{enc1, enc2};
+  register_function(name, function, set);
+}
+
+template <typename Fn>
+void Benchmark::register_function(std::string name, Fn function,
+                                  simdutf::encoding_type enc1,
+                                  simdutf::encoding_type enc2,
+                                  simdutf::encoding_type enc3) {
+  std::set<simdutf::encoding_type> set{enc1, enc2, enc3};
+  register_function(name, function, set);
+}
+
 Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
     : BenchmarkBase(std::move(testcases)) {
 
-  // the std::set<simdutf::encoding_type> value represents the *expected*
-  // encoding.
-  std::vector<std::pair<std::string, std::set<simdutf::encoding_type>>>
-      implemented_functions{
-          {"validate_utf8", {simdutf::encoding_type::UTF8}},
-          {"validate_utf8_with_errors", {simdutf::encoding_type::UTF8}},
-          {"validate_utf16", {simdutf::encoding_type::UTF16_LE}},
-          {"validate_utf16_with_errors", {simdutf::encoding_type::UTF16_LE}},
-          {"validate_utf32", {simdutf::encoding_type::UTF32_LE}},
-          {"validate_utf32_with_errors", {simdutf::encoding_type::UTF32_LE}},
+  register_function("validate_utf8", &Benchmark::run_validate_utf8,
+                    simdutf::encoding_type::UTF8);
+  register_function("validate_utf8_with_errors",
+                    &Benchmark::run_validate_utf8_with_errors,
+                    simdutf::encoding_type::UTF8);
+  register_function("validate_utf16", &Benchmark::run_validate_utf16,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("validate_utf16_with_errors",
+                    &Benchmark::run_validate_utf16_with_errors,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("validate_utf32", &Benchmark::run_validate_utf32,
+                    simdutf::encoding_type::UTF32_LE);
+  register_function("validate_utf32_with_errors",
+                    &Benchmark::run_validate_utf32_with_errors,
+                    simdutf::encoding_type::UTF32_LE);
 
-          {"count_utf8", {simdutf::encoding_type::UTF8}},
-          {"count_utf16", {simdutf::encoding_type::UTF16_LE}},
+  register_function("count_utf8", &Benchmark::run_count_utf8,
+                    simdutf::encoding_type::UTF8);
+  register_function("count_utf16", &Benchmark::run_count_utf16,
+                    simdutf::encoding_type::UTF16_LE);
 
-          {"utf8_length_from_latin1", {simdutf::encoding_type::Latin1}},
-          {"utf8_length_from_utf32", {simdutf::encoding_type::UTF32_LE}},
-          {"convert_latin1_to_utf8", {simdutf::encoding_type::Latin1}},
-          {"convert_latin1_to_utf16", {simdutf::encoding_type::Latin1}},
-          {"convert_latin1_to_utf32", {simdutf::encoding_type::Latin1}},
+  register_function("utf8_length_from_latin1",
+                    &Benchmark::run_utf8_length_from_latin1,
+                    simdutf::encoding_type::Latin1);
+  register_function("utf8_length_from_utf32",
+                    &Benchmark::run_utf8_length_from_utf32,
+                    simdutf::encoding_type::UTF32_LE);
+  register_function("convert_latin1_to_utf8",
+                    &Benchmark::run_convert_latin1_to_utf8,
+                    simdutf::encoding_type::Latin1);
+  register_function("convert_latin1_to_utf16",
+                    &Benchmark::run_convert_latin1_to_utf16,
+                    simdutf::encoding_type::Latin1);
+  register_function("convert_latin1_to_utf32",
+                    &Benchmark::run_convert_latin1_to_utf32,
+                    simdutf::encoding_type::Latin1);
 
-          {"convert_utf8_to_latin1", {simdutf::encoding_type::UTF8}},
-          {"convert_utf8_to_latin1_with_errors",
-           {simdutf::encoding_type::UTF8}},
-          {"convert_valid_utf8_to_latin1", {simdutf::encoding_type::UTF8}},
+  register_function("convert_utf8_to_latin1",
+                    &Benchmark::run_convert_utf8_to_latin1,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_utf8_to_latin1_with_errors",
+                    &Benchmark::run_convert_utf8_to_latin1_with_errors,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_valid_utf8_to_latin1",
+                    &Benchmark::run_convert_valid_utf8_to_latin1,
+                    simdutf::encoding_type::UTF8);
 
-          {"convert_utf8_to_utf16", {simdutf::encoding_type::UTF8}},
-          {"convert_utf8_to_utf16_with_errors", {simdutf::encoding_type::UTF8}},
-          {"convert_utf8_to_utf16_with_dynamic_allocation",
-           {simdutf::encoding_type::UTF8}},
-          {"convert_valid_utf8_to_utf16", {simdutf::encoding_type::UTF8}},
+  register_function("convert_utf8_to_utf16",
+                    &Benchmark::run_convert_utf8_to_utf16,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_utf8_to_utf16_with_errors",
+                    &Benchmark::run_convert_utf8_to_utf16_with_errors,
+                    simdutf::encoding_type::UTF8);
+  register_function(
+      "convert_utf8_to_utf16_with_dynamic_allocation",
+      &Benchmark::run_convert_utf8_to_utf16_with_dynamic_allocation,
+      simdutf::encoding_type::UTF8);
+  register_function("convert_valid_utf8_to_utf16",
+                    &Benchmark::run_convert_valid_utf8_to_utf16,
+                    simdutf::encoding_type::UTF8);
 
-          {"convert_utf8_to_utf32", {simdutf::encoding_type::UTF8}},
-          {"convert_utf8_to_utf32_with_errors", {simdutf::encoding_type::UTF8}},
-          {"convert_utf8_to_utf32_with_dynamic_allocation",
-           {simdutf::encoding_type::UTF8}},
-          {"convert_valid_utf8_to_utf32", {simdutf::encoding_type::UTF8}},
+  register_function("convert_utf8_to_utf32",
+                    &Benchmark::run_convert_utf8_to_utf32,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_utf8_to_utf32_with_errors",
+                    &Benchmark::run_convert_utf8_to_utf32_with_errors,
+                    simdutf::encoding_type::UTF8);
+  register_function(
+      "convert_utf8_to_utf32_with_dynamic_allocation",
+      &Benchmark::run_convert_utf8_to_utf32_with_dynamic_allocation,
+      simdutf::encoding_type::UTF8);
+  register_function("convert_valid_utf8_to_utf32",
+                    &Benchmark::run_convert_valid_utf8_to_utf32,
+                    simdutf::encoding_type::UTF8);
 
-          {"convert_utf16_to_latin1", {simdutf::encoding_type::UTF16_LE}},
-          {"convert_utf16_to_latin1_with_errors",
-           {simdutf::encoding_type::UTF16_LE}},
-          {"convert_valid_utf16_to_latin1", {simdutf::encoding_type::UTF16_LE}},
+  register_function("convert_utf16_to_latin1",
+                    &Benchmark::run_convert_utf16_to_latin1,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("convert_utf16_to_latin1_with_errors",
+                    &Benchmark::run_convert_utf16_to_latin1_with_errors,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("convert_valid_utf16_to_latin1",
+                    &Benchmark::run_convert_valid_utf16_to_latin1,
+                    simdutf::encoding_type::UTF16_LE);
 
-          {"convert_utf16_to_utf8", {simdutf::encoding_type::UTF16_LE}},
-          {"convert_utf16_to_utf8_with_errors",
-           {simdutf::encoding_type::UTF16_LE}},
-          {"convert_utf16_to_utf8_with_dynamic_allocation",
-           {simdutf::encoding_type::UTF16_LE}},
-          {"convert_valid_utf16_to_utf8", {simdutf::encoding_type::UTF16_LE}},
+  register_function("convert_utf16_to_utf8",
+                    &Benchmark::run_convert_utf16_to_utf8,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("convert_utf16_to_utf8_with_errors",
+                    &Benchmark::run_convert_utf16_to_utf8_with_errors,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function(
+      "convert_utf16_to_utf8_with_dynamic_allocation",
+      &Benchmark::run_convert_utf16_to_utf8_with_dynamic_allocation,
+      simdutf::encoding_type::UTF16_LE);
+  register_function("convert_valid_utf16_to_utf8",
+                    &Benchmark::run_convert_valid_utf16_to_utf8,
+                    simdutf::encoding_type::UTF16_LE);
 
-          {"convert_utf16_to_utf32", {simdutf::encoding_type::UTF16_LE}},
-          {"convert_utf16_to_utf32_with_errors",
-           {simdutf::encoding_type::UTF16_LE}},
-          {"convert_utf16_to_utf32_with_dynamic_allocation",
-           {simdutf::encoding_type::UTF16_LE}},
-          {"convert_valid_utf16_to_utf32", {simdutf::encoding_type::UTF16_LE}},
+  register_function("convert_utf16_to_utf32",
+                    &Benchmark::run_convert_utf16_to_utf32,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("convert_utf16_to_utf32_with_errors",
+                    &Benchmark::run_convert_utf16_to_utf32_with_errors,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function(
+      "convert_utf16_to_utf32_with_dynamic_allocation",
+      &Benchmark::run_convert_utf16_to_utf32_with_dynamic_allocation,
+      simdutf::encoding_type::UTF16_LE);
+  register_function("convert_valid_utf16_to_utf32",
+                    &Benchmark::run_convert_valid_utf16_to_utf32,
+                    simdutf::encoding_type::UTF16_LE);
 
-          {"convert_utf32_to_latin1", {simdutf::encoding_type::UTF32_LE}},
-          {"convert_utf32_to_latin1_with_errors",
-           {simdutf::encoding_type::UTF32_LE}},
-          {"convert_valid_utf32_to_latin1", {simdutf::encoding_type::UTF32_LE}},
+  register_function("convert_utf32_to_latin1",
+                    &Benchmark::run_convert_utf32_to_latin1,
+                    simdutf::encoding_type::UTF32_LE);
+  register_function("convert_utf32_to_latin1_with_errors",
+                    &Benchmark::run_convert_utf32_to_latin1_with_errors,
+                    simdutf::encoding_type::UTF32_LE);
+  register_function("convert_valid_utf32_to_latin1",
+                    &Benchmark::run_convert_valid_utf32_to_latin1,
+                    simdutf::encoding_type::UTF32_LE);
 
-          {"convert_utf32_to_utf8", {simdutf::encoding_type::UTF32_LE}},
-          {"convert_utf32_to_utf8_with_errors",
-           {simdutf::encoding_type::UTF32_LE}},
-          {"convert_valid_utf32_to_utf8", {simdutf::encoding_type::UTF32_LE}},
+  register_function("convert_utf32_to_utf8",
+                    &Benchmark::run_convert_utf32_to_utf8,
+                    simdutf::encoding_type::UTF32_LE);
+  register_function("convert_utf32_to_utf8_with_errors",
+                    &Benchmark::run_convert_utf32_to_utf8_with_errors,
+                    simdutf::encoding_type::UTF32_LE);
+  register_function("convert_valid_utf32_to_utf8",
+                    &Benchmark::run_convert_valid_utf32_to_utf8,
+                    simdutf::encoding_type::UTF32_LE);
 
-          {"convert_utf32_to_utf16", {simdutf::encoding_type::UTF32_LE}},
-          {"convert_utf32_to_utf16_with_errors",
-           {simdutf::encoding_type::UTF32_LE}},
-          {"convert_valid_utf32_to_utf16", {simdutf::encoding_type::UTF32_LE}},
+  register_function("convert_utf32_to_utf16",
+                    &Benchmark::run_convert_utf32_to_utf16,
+                    simdutf::encoding_type::UTF32_LE);
+  register_function("convert_utf32_to_utf16_with_errors",
+                    &Benchmark::run_convert_utf32_to_utf16_with_errors,
+                    simdutf::encoding_type::UTF32_LE);
+  register_function("convert_valid_utf32_to_utf16",
+                    &Benchmark::run_convert_valid_utf32_to_utf16,
+                    simdutf::encoding_type::UTF32_LE);
 
-          {"detect_encodings",
-           {simdutf::encoding_type::UTF8, simdutf::encoding_type::UTF16_LE,
-            simdutf::encoding_type::UTF32_LE}}};
+  register_function("detect_encodings", &Benchmark::run_detect_encodings,
+                    simdutf::encoding_type::UTF8,
+                    simdutf::encoding_type::UTF16_LE,
+                    simdutf::encoding_type::UTF32_LE);
 
-  for (const auto &implementation : simdutf::get_available_implementations()) {
-    for (const auto &function : implemented_functions) {
-      std::string name = function.first + "+" + implementation->name();
-      known_procedures.insert(name);
-      expected_input_encoding.insert(make_pair(name, function.second));
-    }
-  }
 #ifdef ICU_AVAILABLE
   std::cout << "Using ICU version " << U_ICU_VERSION << std::endl;
-  {
-    std::string name = "convert_latin1_to_utf8+icu";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
-  }
-  {
-    std::string name = "convert_latin1_to_utf16+icu";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
-  }
-  {
-    std::string name = "utf8_length_from_latin1+icu";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
-  }
-  {
-    std::string name = "convert_latin1_to_utf32+icu";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
-  }
-  {
-    std::string name = "convert_utf8_to_latin1+icu";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
-  {
-    std::string name = "convert_utf8_to_utf16+icu";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
-  {
-    std::string name = "convert_utf16_to_utf8+icu";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
-  }
-  {
-    std::string name = "convert_utf16_to_latin1+icu";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
-  }
-  {
-    std::string name = "convert_utf32_to_latin1+icu";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF32_LE})));
-  }
+  register_function("convert_latin1_to_utf8+icu",
+                    &Benchmark::run_convert_latin1_to_utf8_icu,
+                    simdutf::encoding_type::Latin1);
+  register_function("convert_latin1_to_utf16+icu",
+                    &Benchmark::run_convert_latin1_to_utf16_icu,
+                    simdutf::encoding_type::Latin1);
+  register_function("convert_latin1_to_utf32+icu",
+                    &Benchmark::run_convert_latin1_to_utf32_icu,
+                    simdutf::encoding_type::Latin1);
+  register_function("convert_utf8_to_latin1+icu",
+                    &Benchmark::run_convert_utf8_to_latin1_icu,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_utf8_to_utf16+icu",
+                    &Benchmark::run_convert_utf8_to_utf16_icu,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_utf16_to_utf8+icu",
+                    &Benchmark::run_convert_utf16_to_utf8_icu,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("convert_utf16_to_latin1+icu",
+                    &Benchmark::run_convert_utf16_to_latin1_icu,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("convert_utf32_to_latin1+icu",
+                    &Benchmark::run_convert_utf32_to_latin1_icu,
+                    simdutf::encoding_type::UTF32_LE);
 #endif
 #ifdef ICONV_AVAILABLE
   #ifdef _LIBICONV_VERSION
   std::cout << "Using iconv version " << _LIBICONV_VERSION << std::endl;
   #endif
-  {
-    std::string name = "convert_latin1_to_utf8+iconv";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
-  }
-  {
-    std::string name = "convert_latin1_to_utf16+iconv";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
-  }
-  {
-    std::string name = "convert_latin1_to_utf32+iconv";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::Latin1})));
-  }
-  {
-    std::string name = "convert_utf8_to_latin1+iconv";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
-  {
-    std::string name = "convert_utf8_to_utf16+iconv";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
-  {
-    std::string name = "convert_utf16_to_utf8+iconv";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
-  }
-  {
-    std::string name = "convert_utf16_to_latin1+iconv";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
-  }
-  {
-    std::string name = "convert_utf32_to_latin1+iconv";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF32_LE})));
-  }
+
+  register_function("convert_latin1_to_utf8+iconv",
+                    &Benchmark::run_convert_latin1_to_utf8_iconv,
+                    simdutf::encoding_type::Latin1);
+  register_function("convert_latin1_to_utf16+iconv",
+                    &Benchmark::run_convert_latin1_to_utf16_iconv,
+                    simdutf::encoding_type::Latin1);
+  register_function("convert_latin1_to_utf32+iconv",
+                    &Benchmark::run_convert_latin1_to_utf32_iconv,
+                    simdutf::encoding_type::Latin1);
+  register_function("convert_utf8_to_latin1+iconv",
+                    &Benchmark::run_convert_utf8_to_latin1_iconv,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_utf8_to_utf16+iconv",
+                    &Benchmark::run_convert_utf8_to_utf16_iconv,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_utf16_to_utf8+iconv",
+                    &Benchmark::run_convert_utf16_to_utf8_iconv,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("convert_utf16_to_latin1+iconv",
+                    &Benchmark::run_convert_utf16_to_latin1_iconv,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("convert_utf32_to_latin1+iconv",
+                    &Benchmark::run_convert_utf32_to_latin1_iconv,
+                    simdutf::encoding_type::UTF32_LE);
 #endif
 #ifdef INOUE2008
-  {
-    std::string name = "convert_valid_utf8_to_utf16+inoue2008";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
+  register_function("convert_valid_utf8_to_utf16+inoue2008",
+                    &Benchmark::run_convert_valid_utf8_to_utf16_inoue2008,
+                    simdutf::encoding_type::UTF8);
 #endif
 #ifdef __x86_64__
-  {
-    std::string name = "convert_utf8_to_utf16+u8u16";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
-  {
-    std::string name = "convert_utf16_to_utf8+utf8lut";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
-  }
-  {
-    std::string name = "convert_valid_utf16_to_utf8+utf8lut";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
-  }
-  {
-    std::string name = "convert_utf8_to_utf16+utf8lut";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
-  {
-    std::string name = "convert_utf8_to_utf32+utf8lut";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
-  {
-    std::string name = "convert_valid_utf8_to_utf16+utf8lut";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
-  {
-    std::string name = "convert_utf32_to_utf8+utf8lut";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF32_LE})));
-  }
-  {
-    std::string name = "convert_valid_utf32_to_utf8+utf8lut";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF32_BE})));
-  }
-  {
-    std::string name = "convert_valid_utf8_to_utf32+utf8lut";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
-  {
-    std::string name = "convert_utf8_to_utf16+utf8sse4";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
-  {
-    std::string name = "convert_utf8_to_utf16+cppcon2018";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
-  {
-    std::string name = "convert_utf8_to_utf32+cppcon2018";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
+  register_function("convert_utf8_to_utf16+u8u16",
+                    &Benchmark::run_convert_utf8_to_utf16_u8u16,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_utf16_to_utf8+utf8lut",
+                    &Benchmark::run_convert_valid_utf8_to_utf16_utf8lut,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("convert_valid_utf16_to_utf8+utf8lut",
+                    &Benchmark::run_convert_valid_utf16_to_utf8_utf8lut,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("convert_utf8_to_utf16+utf8lut",
+                    &Benchmark::run_convert_valid_utf8_to_utf16_utf8lut,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_utf8_to_utf32+utf8lut",
+                    &Benchmark::run_convert_utf8_to_utf32_utf8lut,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_valid_utf8_to_utf16+utf8lut",
+                    &Benchmark::run_convert_valid_utf8_to_utf16_utf8lut,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_utf32_to_utf8+utf8lut",
+                    &Benchmark::run_convert_valid_utf32_to_utf8_utf8lut,
+                    simdutf::encoding_type::UTF32_LE);
+  register_function("convert_valid_utf32_to_utf8+utf8lut",
+                    &Benchmark::run_convert_valid_utf32_to_utf8_utf8lut,
+                    simdutf::encoding_type::UTF32_BE);
+  register_function("convert_valid_utf8_to_utf32+utf8lut",
+                    &Benchmark::run_convert_utf8_to_utf32_utf8lut,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_utf8_to_utf16+utf8sse4",
+                    &Benchmark::run_convert_utf8_to_utf16_utf8sse4,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_utf8_to_utf16+cppcon2018",
+                    &Benchmark::run_convert_utf8_to_utf16_cppcon2018,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_utf8_to_utf32+cppcon2018",
+                    &Benchmark::run_convert_utf8_to_utf32_cppcon2018,
+                    simdutf::encoding_type::UTF8);
 #endif
-  {
-    std::string name = "convert_utf8_to_utf16+hoehrmann";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
-  {
-    std::string name = "convert_utf8_to_utf32+hoehrmann";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
-  {
-    std::string name = "convert_utf8_to_utf16+llvm";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
-  {
-    std::string name = "convert_utf8_to_utf32+llvm";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
-  {
-    std::string name = "convert_utf16_to_utf8+llvm";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
-  }
-  {
-    std::string name = "convert_utf32_to_utf8+llvm";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF32_LE})));
-  }
-  {
-    std::string name = "convert_utf32_to_utf16+llvm";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF32_LE})));
-  }
-  {
-    std::string name = "convert_valid_utf16_to_utf32+llvm";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
-  }
-  {
-    std::string name = "convert_utf8_to_utf16+utfcpp";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
-  {
-    std::string name = "convert_utf8_to_utf32+utfcpp";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF8})));
-  }
-  {
-    std::string name = "convert_utf16_to_utf8+utfcpp";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF16_LE})));
-  }
-  {
-    std::string name = "convert_utf32_to_utf8+utfcpp";
-    known_procedures.insert(name);
-    expected_input_encoding.insert(std::make_pair(
-        name,
-        std::set<simdutf::encoding_type>({simdutf::encoding_type::UTF32_LE})));
-  }
+  register_function("convert_utf8_to_utf16+hoehrmann",
+                    &Benchmark::run_convert_utf8_to_utf16_hoehrmann,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_utf8_to_utf32+hoehrmann",
+                    &Benchmark::run_convert_utf8_to_utf32_hoehrmann,
+                    simdutf::encoding_type::UTF8);
+
+  register_function("convert_utf8_to_utf16+llvm",
+                    &Benchmark::run_convert_utf8_to_utf16_llvm,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_utf8_to_utf32+llvm",
+                    &Benchmark::run_convert_utf8_to_utf32_llvm,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_utf16_to_utf8+llvm",
+                    &Benchmark::run_convert_utf16_to_utf8_llvm,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("convert_utf32_to_utf8+llvm",
+                    &Benchmark::run_convert_utf32_to_utf8_llvm,
+                    simdutf::encoding_type::UTF32_LE);
+  register_function("convert_utf32_to_utf16+llvm",
+                    &Benchmark::run_convert_utf32_to_utf16_llvm,
+                    simdutf::encoding_type::UTF32_LE);
+  register_function("convert_utf16_to_utf32+llvm",
+                    &Benchmark::run_convert_utf16_to_utf32_llvm,
+                    simdutf::encoding_type::UTF16_LE);
+
+  register_function("convert_utf8_to_utf16+utfcpp",
+                    &Benchmark::run_convert_utf8_to_utf16_utfcpp,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_utf8_to_utf32+utfcpp",
+                    &Benchmark::run_convert_utf8_to_utf32_utfcpp,
+                    simdutf::encoding_type::UTF8);
+  register_function("convert_utf16_to_utf8+utfcpp",
+                    &Benchmark::run_convert_utf16_to_utf8_utfcpp,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("convert_utf32_to_utf8+utfcpp",
+                    &Benchmark::run_convert_utf32_to_utf8_utfcpp,
+                    simdutf::encoding_type::UTF32_LE);
+
+  register_function("utf8_length_from_latin1+node",
+                    &Benchmark::run_utf8_length_from_latin1_node,
+                    simdutf::encoding_type::Latin1);
 }
+
 // static
 Benchmark Benchmark::create(const CommandLine &cmdline) {
   std::vector<input::Testcase> testcases;
@@ -488,286 +430,49 @@ Benchmark Benchmark::create(const CommandLine &cmdline) {
 }
 
 void Benchmark::run(const std::string &procedure_name, size_t iterations) {
-  const size_t p = procedure_name.find('+');
-  assert(p != std::string::npos);
-
-  const std::string name{procedure_name.substr(0, p)};
-  const std::string impl{procedure_name.substr(p + 1)};
-#ifdef INOUE2008
-  if (impl == "inoue2008") {
-    // this is a special case
-    run_convert_valid_utf8_to_utf16_inoue2008(iterations);
-    return;
-  }
-#endif
-  if (impl == "node") {
-    if (name == "utf8_length_from_latin1") {
-      run_utf8_length_from_latin1_node(iterations);
-    }
-    return;
-  }
-#ifdef ICU_AVAILABLE
-  if (impl == "icu") {
-    if (name == "convert_utf8_to_utf16") {
-      run_convert_utf8_to_utf16_icu(iterations);
-    } else if (name == "convert_utf16_to_utf8") {
-      run_convert_utf16_to_utf8_icu(iterations);
-    } else if (name == "convert_utf8_to_latin1") {
-      run_convert_utf8_to_latin1_icu(iterations);
-    } else if (name == "convert_utf8_to_latin1") {
-      run_convert_utf8_to_latin1_icu(iterations);
-    } else if (name == "convert_latin1_to_utf8") {
-      run_convert_latin1_to_utf8_icu(iterations);
-    } else if (name == "convert_latin1_to_utf16") {
-      run_convert_latin1_to_utf16_icu(iterations);
-    } else if (name == "convert_latin1_to_utf32") {
-      run_convert_latin1_to_utf32_icu(iterations);
-    } else if (name == "convert_utf16_to_latin1") {
-      run_convert_utf16_to_latin1_icu(iterations);
-    } else if (name == "convert_utf32_to_latin1") {
-      run_convert_utf32_to_latin1_icu(iterations);
-    }
-    return;
-  }
-#endif
-#ifdef ICONV_AVAILABLE
-  if (impl == "iconv") {
-    if (name == "convert_utf8_to_utf16") {
-      run_convert_utf8_to_utf16_iconv(iterations);
-    } else if (name == "convert_utf16_to_utf8") {
-      run_convert_utf16_to_utf8_iconv(iterations);
-    } else if (name == "convert_utf8_to_latin1") {
-      run_convert_utf8_to_latin1_iconv(iterations);
-    } else if (name == "convert_latin1_to_utf8") {
-      run_convert_latin1_to_utf8_iconv(iterations);
-    } else if (name == "convert_latin1_to_utf16") {
-      run_convert_latin1_to_utf16_iconv(iterations);
-    } else if (name == "convert_latin1_to_utf32") {
-      run_convert_latin1_to_utf32_iconv(iterations);
-    } else if (name == "convert_utf16_to_latin1") {
-      run_convert_utf16_to_latin1_iconv(iterations);
-    } else if (name == "convert_utf32_to_latin1") {
-      run_convert_utf32_to_latin1_iconv(iterations);
-    }
-    return;
-  }
-#endif
-#ifdef __x86_64__
-  if (impl == "cppcon2018") {
-    // this is a special case
-    if (name == "convert_utf8_to_utf16") {
-      run_convert_utf8_to_utf16_cppcon2018(iterations);
-    } else if (name == "convert_utf8_to_utf32") {
-      run_convert_utf8_to_utf16_cppcon2018(iterations);
-    } else {
-      std::cerr << "unrecognized:" << procedure_name << "\n";
-    }
-    return;
-  }
-  if (impl == "u8u16") {
-    // this is a special case
-    if (name == "convert_utf8_to_utf16") {
-      run_convert_utf8_to_utf16_u8u16(iterations);
-    } else {
-      std::cerr << "unrecognized:" << procedure_name << "\n";
-    }
-    return;
-  }
-  if (impl == "utf8sse4") {
-    // this is a special case
-    if (name == "convert_utf8_to_utf16") {
-      run_convert_utf8_to_utf16_utf8sse4(iterations);
-    } else {
-      std::cerr << "unrecognized:" << procedure_name << "\n";
-    }
-    return;
-  }
-  if (impl == "utf8lut") {
-    // this is a special case
-    if (name == "convert_valid_utf8_to_utf16") {
-      run_convert_valid_utf8_to_utf16_utf8lut(iterations);
-    } else if (name == "convert_valid_utf8_to_utf32") {
-      run_convert_valid_utf8_to_utf32_utf8lut(iterations);
-    } else if (name == "convert_utf8_to_utf16") {
-      run_convert_utf8_to_utf16_utf8lut(iterations);
-    } else if (name == "convert_utf8_to_utf32") {
-      run_convert_utf8_to_utf32_utf8lut(iterations);
-    } else if (name == "convert_utf16_to_utf8") {
-      run_convert_utf16_to_utf8_utf8lut(iterations);
-    } else if (name == "convert_valid_utf16_to_utf8") {
-      run_convert_valid_utf16_to_utf8_utf8lut(iterations);
-    } else if (name == "convert_utf32_to_utf8") {
-      run_convert_utf32_to_utf8_utf8lut(iterations);
-    } else if (name == "convert_valid_utf32_to_utf8") {
-      run_convert_valid_utf32_to_utf8_utf8lut(iterations);
-    } else {
-      std::cerr << "unrecognized:" << procedure_name << "\n";
-    }
-    return;
-  }
-#endif
-  if (impl == "hoehrmann") {
-    // this is a special case
-    if (name == "convert_utf8_to_utf16") {
-      run_convert_utf8_to_utf16_hoehrmann(iterations);
-    } else if (name == "convert_utf8_to_utf32") {
-      run_convert_utf8_to_utf32_hoehrmann(iterations);
-    } else {
-      std::cerr << "unrecognized:" << procedure_name << "\n";
-    }
-    return;
-  }
-  if (impl == "llvm") {
-    // this is a special case
-    if (name == "convert_utf8_to_utf16") {
-      run_convert_utf8_to_utf16_llvm(iterations);
-    } else if (name == "convert_utf8_to_utf32") {
-      run_convert_utf8_to_utf32_llvm(iterations);
-    } else if (name == "convert_utf16_to_utf8") {
-      run_convert_utf16_to_utf8_llvm(iterations);
-    } else if (name == "convert_utf32_to_utf8") {
-      run_convert_utf32_to_utf8_llvm(iterations);
-    } else if (name == "convert_utf32_to_utf16") {
-      run_convert_utf32_to_utf16_llvm(iterations);
-    } else if (name == "convert_utf16_to_utf32") {
-      run_convert_utf16_to_utf32_llvm(iterations);
-    } else {
-      std::cerr << "unrecognized:" << procedure_name << "\n";
-    }
-    return;
-  }
-  if (impl == "utfcpp") {
-    // this is a special case
-    if (name == "convert_utf8_to_utf16") {
-      run_convert_utf8_to_utf16_utfcpp(iterations);
-    } else if (name == "convert_utf8_to_utf32") {
-      run_convert_utf8_to_utf32_utfcpp(iterations);
-    } else if (name == "convert_utf16_to_utf8") {
-      run_convert_utf16_to_utf8_utfcpp(iterations);
-    } else if (name == "convert_utf32_to_utf8") {
-      run_convert_utf32_to_utf8_utfcpp(iterations);
-    } else {
-      std::cerr << "unrecognized:" << procedure_name << "\n";
-    }
-    return;
-  }
-  auto implementation = simdutf::get_available_implementations()[impl];
-  if (implementation == nullptr) {
-    throw std::runtime_error("Wrong implementation " + impl);
-  }
-  // If you want to skip the CPU feature checks, you can set
-  // a variable when calling the benchmark program. E.g.,
-  // SIMDUTF_SKIP_CPU_CHECK=ON benchmark -F myfile.txt
-  // This might result in a crash (E.g., Illegal instruction).
-  SIMDUTF_PUSH_DISABLE_WARNINGS
-  SIMDUTF_DISABLE_DEPRECATED_WARNING // Disable CRT_SECURE warning on MSVC:
-                                     // manually verified this is safe
-      static const char *skip_check = getenv("SIMDUTF_SKIP_CPU_CHECK");
-  SIMDUTF_POP_DISABLE_WARNINGS
-  if (!skip_check && !implementation->supported_by_runtime_system()) {
-    std::cout << procedure_name << ": unsupported by the system\n";
-    return;
-  }
-  if (name == "validate_utf8") {
-    run_validate_utf8(*implementation, iterations);
-  } else if (name == "validate_utf8_with_errors") {
-    run_validate_utf8_with_errors(*implementation, iterations);
-  } else if (name == "validate_utf16") {
-    run_validate_utf16(*implementation, iterations);
-  } else if (name == "validate_utf16_with_errors") {
-    run_validate_utf16_with_errors(*implementation, iterations);
-  } else if (name == "validate_utf32") {
-    run_validate_utf32(*implementation, iterations);
-  } else if (name == "validate_utf32_with_errors") {
-    run_validate_utf32_with_errors(*implementation, iterations);
-  } else if (name == "count_utf8") {
-    run_count_utf8(*implementation, iterations);
-  } else if (name == "count_utf16") {
-    run_count_utf16(*implementation, iterations);
-  } else if (name == "convert_latin1_to_utf8") {
-    run_convert_latin1_to_utf8(*implementation, iterations);
-  } else if (name == "convert_latin1_to_utf16") {
-    run_convert_latin1_to_utf16(*implementation, iterations);
-  } else if (name == "convert_latin1_to_utf32") {
-    run_convert_latin1_to_utf32(*implementation, iterations);
-  } else if (name == "utf8_length_from_latin1") {
-    run_utf8_length_from_latin1(*implementation, iterations);
-  } else if (name == "utf8_length_from_utf32") {
-    run_utf8_length_from_utf32(*implementation, iterations);
-  } else if (name == "convert_utf8_to_latin1") {
-    run_convert_utf8_to_latin1(*implementation, iterations);
-  } else if (name == "convert_utf8_to_latin1_with_errors") {
-    run_convert_utf8_to_latin1_with_errors(*implementation, iterations);
-  } else if (name == "convert_utf8_to_utf16") {
-    run_convert_utf8_to_utf16(*implementation, iterations);
-  } else if (name == "convert_utf8_to_utf16_with_errors") {
-    run_convert_utf8_to_utf16_with_errors(*implementation, iterations);
-  } else if (name == "convert_utf8_to_utf32") {
-    run_convert_utf8_to_utf32(*implementation, iterations);
-  } else if (name == "convert_utf8_to_utf32_with_errors") {
-    run_convert_utf8_to_utf32_with_errors(*implementation, iterations);
-  } else if (name == "convert_utf8_to_utf16_with_dynamic_allocation") {
-    run_convert_utf8_to_utf16_with_dynamic_allocation(*implementation,
-                                                      iterations);
-  } else if (name == "convert_utf8_to_utf32_with_dynamic_allocation") {
-    run_convert_utf8_to_utf32_with_dynamic_allocation(*implementation,
-                                                      iterations);
-  } else if (name == "convert_valid_utf8_to_latin1") {
-    run_convert_valid_utf8_to_latin1(*implementation, iterations);
-  } else if (name == "convert_valid_utf8_to_utf16") {
-    run_convert_valid_utf8_to_utf16(*implementation, iterations);
-  } else if (name == "convert_valid_utf8_to_utf32") {
-    run_convert_valid_utf8_to_utf32(*implementation, iterations);
-  } else if (name == "convert_utf16_to_latin1") {
-    run_convert_utf16_to_latin1(*implementation, iterations);
-  } else if (name == "convert_utf16_to_latin1_with_errors") {
-    run_convert_utf16_to_latin1_with_errors(*implementation, iterations);
-  } else if (name == "convert_utf16_to_utf8") {
-    run_convert_utf16_to_utf8(*implementation, iterations);
-  } else if (name == "convert_utf16_to_utf8_with_errors") {
-    run_convert_utf16_to_utf8_with_errors(*implementation, iterations);
-  } else if (name == "convert_utf16_to_utf32") {
-    run_convert_utf16_to_utf32(*implementation, iterations);
-  } else if (name == "convert_utf16_to_utf32_with_errors") {
-    run_convert_utf16_to_utf32_with_errors(*implementation, iterations);
-  } else if (name == "convert_utf16_to_utf8_with_dynamic_allocation") {
-    run_convert_utf16_to_utf8_with_dynamic_allocation(*implementation,
-                                                      iterations);
-  } else if (name == "convert_utf16_to_utf32_with_dynamic_allocation") {
-    run_convert_utf16_to_utf32_with_dynamic_allocation(*implementation,
-                                                       iterations);
-  } else if (name == "convert_valid_utf16_to_latin1") {
-    run_convert_valid_utf16_to_latin1(*implementation, iterations);
-  } else if (name == "convert_valid_utf16_to_utf8") {
-    run_convert_valid_utf16_to_utf8(*implementation, iterations);
-  } else if (name == "convert_utf32_to_latin1") {
-    run_convert_utf32_to_latin1(*implementation, iterations);
-  } else if (name == "convert_utf32_to_latin1_with_errors") {
-    run_convert_utf32_to_latin1_with_errors(*implementation, iterations);
-  } else if (name == "convert_utf32_to_utf8") {
-    run_convert_utf32_to_utf8(*implementation, iterations);
-  } else if (name == "convert_utf32_to_utf8_with_errors") {
-    run_convert_utf32_to_utf8_with_errors(*implementation, iterations);
-  } else if (name == "convert_valid_utf32_to_utf8") {
-    run_convert_valid_utf32_to_utf8(*implementation, iterations);
-  } else if (name == "convert_utf32_to_utf16") {
-    run_convert_utf32_to_utf16(*implementation, iterations);
-  } else if (name == "convert_utf32_to_utf16_with_errors") {
-    run_convert_utf32_to_utf16_with_errors(*implementation, iterations);
-  } else if (name == "convert_valid_utf32_to_latin1") {
-    run_convert_valid_utf32_to_latin1(*implementation, iterations);
-  } else if (name == "convert_valid_utf32_to_utf16") {
-    run_convert_valid_utf32_to_utf16(*implementation, iterations);
-  } else if (name == "convert_valid_utf16_to_utf32") {
-    run_convert_valid_utf16_to_utf32(*implementation, iterations);
-  } else if (name == "detect_encodings") {
-    run_detect_encodings(*implementation, iterations);
-  } else {
-    std::cerr << "Unsupported procedure: " << name << '\n';
+  const auto item = benchmarks.find(procedure_name);
+  if (item == benchmarks.end()) {
+    std::cerr << "Unsupported procedure: " << procedure_name << '\n';
     std::cerr << "Report the issue.\n";
-    std::cerr << " Aborting ! " << std::endl;
-    abort();
+    std::cerr << " Aborting ! " << '\n';
+    exit(1);
   }
+
+  const auto &entry = item->second;
+  if (std::holds_alternative<thirdparty_fn>(entry.first)) {
+    const auto fn = std::get<thirdparty_fn>(entry.first);
+
+    (this->*fn)(iterations);
+  } else if (std::holds_alternative<simdutf_fn>(entry.first)) {
+    const auto p = procedure_name.find('+');
+    const std::string name{procedure_name.substr(0, p)};
+    const std::string impl{procedure_name.substr(p + 1)};
+
+    auto implementation = simdutf::get_available_implementations()[impl];
+    if (implementation == nullptr) {
+      throw std::runtime_error("Wrong implementation " + impl);
+    }
+    // If you want to skip the CPU feature checks, you can set
+    // a variable when calling the benchmark program. E.g.,
+    // SIMDUTF_SKIP_CPU_CHECK=ON benchmark -F myfile.txt
+    // This might result in a crash (E.g., Illegal instruction).
+    SIMDUTF_PUSH_DISABLE_WARNINGS
+    SIMDUTF_DISABLE_DEPRECATED_WARNING // Disable CRT_SECURE warning on MSVC:
+                                       // manually verified this is safe
+        static const char *skip_check = getenv("SIMDUTF_SKIP_CPU_CHECK");
+    SIMDUTF_POP_DISABLE_WARNINGS
+    if (!skip_check && !implementation->supported_by_runtime_system()) {
+      std::cout << procedure_name << ": unsupported by the system\n";
+      return;
+    }
+
+    const auto fn = std::get<simdutf_fn>(entry.first);
+    (this->*fn)(*implementation, iterations);
+  } else {
+    throw std::logic_error("The entry for '" + procedure_name +
+                           "' is not valid. Please report an issue.");
+  }
+
   // We pause after each call to make sure
   // that other benchmarks are not affected by frequency throttling.
   // This was initially introduced for AVX-512 only, but it is probably
@@ -3438,13 +3143,18 @@ void Benchmark::run_detect_encodings(
   print_summary(result, size, char_count);
 }
 
-const std::set<std::string> &Benchmark::all_procedures() const {
-  return known_procedures;
+const std::set<std::string> Benchmark::all_procedures() const {
+  std::set<std::string> result;
+  for (const auto &item : benchmarks) {
+    result.insert(item.first);
+  }
+
+  return result;
 }
 
 std::set<simdutf::encoding_type>
 Benchmark::expected_encodings(const std::string &procedure) {
-  return expected_input_encoding[procedure];
+  return benchmarks[procedure].second;
 }
 
 /**

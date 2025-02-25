@@ -42,7 +42,7 @@ protected:
 public:
   BenchmarkBase(std::vector<input::Testcase> &&testcases);
   bool run();
-  virtual const std::set<std::string> &all_procedures() const = 0;
+  virtual const std::set<std::string> all_procedures() const = 0;
   virtual std::set<simdutf::encoding_type>
   expected_encodings(const std::string &procedure) = 0;
 
