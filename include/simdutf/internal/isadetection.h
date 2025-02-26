@@ -70,6 +70,13 @@ struct simdutf_riscv_hwprobe {
   #define SIMDUTF_RISCV_HWPROBE_EXT_ZVBB (1 << 17)
 #endif // SIMDUTF_IS_RISCV64 && defined(__linux__)
 
+#if defined(__loongarch__) && defined(__linux__)
+  #include <sys/auxv.h>
+// bits/hwcap.h
+// #define HWCAP_LOONGARCH_LSX             (1 << 4)
+// #define HWCAP_LOONGARCH_LASX            (1 << 5)
+#endif
+
 namespace simdutf {
 namespace internal {
 
@@ -288,12 +295,6 @@ static inline uint32_t detect_supported_architectures() {
   return host_isa;
 }
 #elif defined(__loongarch__)
-  #if defined(__linux__)
-    #include <sys/auxv.h>
-  // bits/hwcap.h
-  // #define HWCAP_LOONGARCH_LSX             (1 << 4)
-  // #define HWCAP_LOONGARCH_LASX            (1 << 5)
-  #endif
 
 static inline uint32_t detect_supported_architectures() {
   uint32_t host_isa = instruction_set::DEFAULT;
