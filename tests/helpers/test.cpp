@@ -1,5 +1,7 @@
 #include "test.h"
 
+#include <thread>
+#include <mutex>
 #include <stdexcept>
 #include <cstdio>
 
@@ -62,6 +64,17 @@ auto simdutf::test::CommandLine::parse(int argc, char *argv[])
         throw std::invalid_argument("Wrong number after " + arg);
       }
       args.pop_front();
+    } else if (arg == "--threads") {
+      if (args.empty()) {
+        throw std::invalid_argument("Expected thread count " + arg);
+      }
+
+      try {
+        cmdline.thread_count = std::stoi(args.front());
+      } catch (const std::exception &e) {
+        throw std::invalid_argument("Wrong thread count " + arg);
+      }
+      args.pop_front();
     } else {
       throw std::invalid_argument("Unknown argument '" + arg + "'");
     }
@@ -82,6 +95,7 @@ Usage:
     -a [ARCH], --arch [ARCH]        run tests only for selected architecture(s)
     -t [TEST], --test [TEST]        run tests matching all given strings
     -s [SEED], --seed [SEED]        set the random seed
+    --threads [COUNT]               number of threads [default: 1]
 
 Examples:
 
@@ -128,6 +142,40 @@ void print_tests(FILE *file) {
 
 void print_tests() { print_tests(stdout); }
 
+struct TestProcedure {
+  const simdutf::implementation *impl;
+  simdutf::test::test_entry *entry;
+};
+
+struct MatchedList {
+  std::list<TestProcedure> list;
+  std::mutex mutex;
+
+  bool next(TestProcedure &tp) {
+    std::unique_lock<std::mutex> lock{mutex};
+    if (list.empty()) {
+      return false;
+    }
+
+    tp = list.front();
+    list.pop_front();
+    return true;
+  }
+};
+
+void test_thread(MatchedList &matched) {
+  TestProcedure tp{nullptr, nullptr};
+  while (true) {
+    if (not matched.next(tp)) {
+      return;
+    }
+
+    printf("'%s' ... starting\n", tp.entry->title.c_str());
+    tp.entry->procedure(*(tp.impl));
+    printf("'%s' ... OK\n", tp.entry->title.c_str());
+  }
+}
+
 namespace simdutf {
 namespace test {
 
@@ -146,7 +194,10 @@ void run(const CommandLine &cmdline) {
     print_tests();
     return;
   }
+
   size_t matching_implementation{0};
+
+  MatchedList matched;
 
   for (const auto &implementation : simdutf::get_available_implementations()) {
     if (implementation == nullptr) {
@@ -179,15 +230,34 @@ void run(const CommandLine &cmdline) {
       return false;
     };
 
-    for (auto test : simdutf::test::test_procedures()) {
+    for (auto &test : simdutf::test::test_procedures()) {
       if (filter(test)) {
-        test(*implementation);
+        if (cmdline.thread_count > 1) {
+          matched.list.push_back(TestProcedure{implementation, &test});
+        } else {
+          printf("Running %s...", test.title.c_str());
+          fflush(stdout);
+          test(*implementation);
+          puts(" OK");
+        }
       }
     }
   }
+
   if (matching_implementation == 0) {
     puts("not a single compatible implementation found, this is an error");
     abort();
+  }
+
+  if (cmdline.thread_count > 1) {
+    std::vector<std::thread> threads;
+    threads.reserve(cmdline.thread_count);
+    for (int i = 0; i < cmdline.thread_count; i++) {
+      threads.emplace_back(std::thread{test_thread, std::ref(matched)});
+    }
+    for (int i = 0; i < cmdline.thread_count; i++) {
+      threads[i].join();
+    }
   }
 }
 
@@ -198,11 +268,28 @@ std::list<test_entry> &test_procedures() {
 }
 
 register_test::register_test(const char *name, test_procedure proc) {
-  test_procedures().push_back({name, proc});
+  std::string title = name;
+  std::replace(title.begin(), title.end(), '_', ' ');
+  test_procedures().push_back({name, title, proc});
 }
 
-int main(int argc, char *argv[]) {
-  const auto cmdline = CommandLine::parse(argc, argv);
+int main(int argc, char *argv[], bool use_threads) {
+  auto cmdline = CommandLine::parse(argc, argv);
+
+  if (use_threads) {
+    char *threads_str = std::getenv("SIMDUTF_TEST_THREADS");
+    if (threads_str) {
+      printf("Setting thread count from `SIMDUTF_TEST_THREADS` env var: %s",
+             threads_str);
+      try {
+        cmdline.thread_count = std::stoi(threads_str);
+      } catch (const std::exception &e) {
+        throw std::invalid_argument("`SIMDUTF_TEST_THREADS` is not a number");
+      }
+    }
+  } else {
+    cmdline.thread_count = 1;
+  }
 
   run(cmdline);
 
