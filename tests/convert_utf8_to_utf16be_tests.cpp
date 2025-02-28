@@ -336,7 +336,11 @@ TEST_LOOP(trials, convert_2_UTF8_bytes) {
 
   auto procedure = [&implementation](const char *utf8, size_t size,
                                      char16_t *utf16) -> size_t {
-    return implementation.convert_utf8_to_utf16be(utf8, size, utf16);
+    auto result = implementation.convert_utf8_to_utf16be(utf8, size, utf16);
+#if !SIMDUTF_IS_BIG_ENDIAN
+    implementation.change_endianness_utf16(utf16, result, utf16);
+#endif // !SIMDUTF_IS_BIG_ENDIAN
+    return result;
   };
   auto size_procedure = [&implementation](const char *utf8,
                                           size_t size) -> size_t {
@@ -355,7 +359,11 @@ TEST_LOOP(trials, convert_3_UTF8_bytes) {
 
   auto procedure = [&implementation](const char *utf8, size_t size,
                                      char16_t *utf16) -> size_t {
-    return implementation.convert_utf8_to_utf16be(utf8, size, utf16);
+    auto result = implementation.convert_utf8_to_utf16be(utf8, size, utf16);
+#if !SIMDUTF_IS_BIG_ENDIAN
+    implementation.change_endianness_utf16(utf16, result, utf16);
+#endif // !SIMDUTF_IS_BIG_ENDIAN
+    return result;
   };
   auto size_procedure = [&implementation](const char *utf8,
                                           size_t size) -> size_t {
