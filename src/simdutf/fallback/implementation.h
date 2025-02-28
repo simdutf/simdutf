@@ -50,6 +50,10 @@ public:
       const char16_t *buf, size_t len) const noexcept final;
   simdutf_warn_unused result validate_utf16be_with_errors(
       const char16_t *buf, size_t len) const noexcept final;
+  void to_well_formed_utf16be(const char16_t *input, size_t len,
+                              char16_t *output) const noexcept final;
+  void to_well_formed_utf16le(const char16_t *input, size_t len,
+                              char16_t *output) const noexcept final;
 #endif // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
