@@ -1,14 +1,50 @@
 #include "test.h"
 
-#include <thread>
-#include <mutex>
 #include <stdexcept>
 #include <cstdio>
+
+bool starts_with(const std::string &s, const std::string &prefix) {
+  if (s.size() < prefix.size()) {
+    return false;
+  }
+
+  for (size_t i = 0; i < prefix.size(); i++) {
+    if (s[i] != prefix[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+struct split_result_t {
+  bool valid;
+  std::string before;
+  std::string after;
+};
+
+split_result_t split(const std::string &s, char ch) {
+  const auto pos = s.find(ch);
+
+  if (pos == std::string::npos) {
+    return {false, s, ""};
+  }
+
+  return {true, s.substr(0, pos), s.substr(pos + 1)};
+}
 
 auto simdutf::test::CommandLine::parse(int argc, char *argv[])
     -> simdutf::test::CommandLine {
   CommandLine cmdline;
   cmdline.seed = 42;
+
+  cmdline.exe_name = argv[0];
+  {
+    const auto pos = cmdline.exe_name.rfind('/');
+    if (pos != std::string::npos) {
+      cmdline.exe_name = cmdline.exe_name.substr(pos + 1);
+    }
+  }
 
   std::list<std::string> args;
   for (int i = 1; i < argc; i++) {
@@ -25,6 +61,15 @@ auto simdutf::test::CommandLine::parse(int argc, char *argv[])
 
     if ((arg == "--show-tests") or (arg == "-l")) {
       cmdline.show_tests = true;
+      continue;
+    }
+
+    if (arg == "--gtest_list_tests") {
+      cmdline.gtest_list_tests = true;
+      continue;
+    }
+
+    if (arg == "--gtest_also_run_disabled_tests") {
       continue;
     }
 
@@ -64,17 +109,19 @@ auto simdutf::test::CommandLine::parse(int argc, char *argv[])
         throw std::invalid_argument("Wrong number after " + arg);
       }
       args.pop_front();
-    } else if (arg == "--threads") {
-      if (args.empty()) {
-        throw std::invalid_argument("Expected thread count " + arg);
+    } else if (starts_with(arg, "--gtest_filter=")) {
+      const auto s1 = split(arg, '=');
+      const auto s2 = split(s1.after, '.');
+      if (not s2.valid) {
+        std::invalid_argument("Missing test suite name '" + arg + "'");
       }
 
-      try {
-        cmdline.thread_count = std::stoi(args.front());
-      } catch (const std::exception &e) {
-        throw std::invalid_argument("Wrong thread count " + arg);
+      if (s2.before != cmdline.exe_name) {
+        std::invalid_argument("Expected suite name '" + cmdline.exe_name +
+                              "', got '" + s2.before + "'");
       }
-      args.pop_front();
+
+      cmdline.tests.push_back(s2.after);
     } else {
       throw std::invalid_argument("Unknown argument '" + arg + "'");
     }
@@ -95,7 +142,6 @@ Usage:
     -a [ARCH], --arch [ARCH]        run tests only for selected architecture(s)
     -t [TEST], --test [TEST]        run tests matching all given strings
     -s [SEED], --seed [SEED]        set the random seed
-    --threads [COUNT]               number of threads [default: 1]
 
 Examples:
 
@@ -142,37 +188,10 @@ void print_tests(FILE *file) {
 
 void print_tests() { print_tests(stdout); }
 
-struct TestProcedure {
-  const simdutf::implementation *impl;
-  simdutf::test::test_entry *entry;
-};
-
-struct MatchedList {
-  std::list<TestProcedure> list;
-  std::mutex mutex;
-
-  bool next(TestProcedure &tp) {
-    std::unique_lock<std::mutex> lock{mutex};
-    if (list.empty()) {
-      return false;
-    }
-
-    tp = list.front();
-    list.pop_front();
-    return true;
-  }
-};
-
-void test_thread(MatchedList &matched) {
-  TestProcedure tp{nullptr, nullptr};
-  while (true) {
-    if (not matched.next(tp)) {
-      return;
-    }
-
-    printf("'%s' ... starting\n", tp.entry->title.c_str());
-    tp.entry->procedure(*(tp.impl));
-    printf("'%s' ... OK\n", tp.entry->title.c_str());
+void gtest_list_tests(const std::string &exe_name) {
+  printf("%s.\n", exe_name.c_str());
+  for (const auto &test : simdutf::test::test_procedures()) {
+    printf("  %s\n", test.name.c_str());
   }
 }
 
@@ -195,9 +214,12 @@ void run(const CommandLine &cmdline) {
     return;
   }
 
-  size_t matching_implementation{0};
+  if (cmdline.gtest_list_tests) {
+    gtest_list_tests(cmdline.exe_name);
+    return;
+  }
 
-  MatchedList matched;
+  size_t matching_implementation{0};
 
   for (const auto &implementation : simdutf::get_available_implementations()) {
     if (implementation == nullptr) {
@@ -232,14 +254,10 @@ void run(const CommandLine &cmdline) {
 
     for (auto &test : simdutf::test::test_procedures()) {
       if (filter(test)) {
-        if (cmdline.thread_count > 1) {
-          matched.list.push_back(TestProcedure{implementation, &test});
-        } else {
-          printf("Running %s...", test.title.c_str());
-          fflush(stdout);
-          test(*implementation);
-          puts(" OK");
-        }
+        printf("Running %s...", test.title.c_str());
+        fflush(stdout);
+        test(*implementation);
+        puts(" OK");
       }
     }
   }
@@ -247,17 +265,6 @@ void run(const CommandLine &cmdline) {
   if (matching_implementation == 0) {
     puts("not a single compatible implementation found, this is an error");
     abort();
-  }
-
-  if (cmdline.thread_count > 1) {
-    std::vector<std::thread> threads;
-    threads.reserve(cmdline.thread_count);
-    for (int i = 0; i < cmdline.thread_count; i++) {
-      threads.emplace_back(std::thread{test_thread, std::ref(matched)});
-    }
-    for (int i = 0; i < cmdline.thread_count; i++) {
-      threads[i].join();
-    }
   }
 }
 
@@ -275,21 +282,6 @@ register_test::register_test(const char *name, test_procedure proc) {
 
 int main(int argc, char *argv[], bool use_threads) {
   auto cmdline = CommandLine::parse(argc, argv);
-
-  if (use_threads) {
-    char *threads_str = std::getenv("SIMDUTF_TEST_THREADS");
-    if (threads_str) {
-      printf("Setting thread count from `SIMDUTF_TEST_THREADS` env var: %s",
-             threads_str);
-      try {
-        cmdline.thread_count = std::stoi(threads_str);
-      } catch (const std::exception &e) {
-        throw std::invalid_argument("`SIMDUTF_TEST_THREADS` is not a number");
-      }
-    }
-  } else {
-    cmdline.thread_count = 1;
-  }
 
   run(cmdline);
 

@@ -12,12 +12,13 @@ namespace simdutf {
 namespace test {
 
 struct CommandLine {
+  std::string exe_name;
   bool show_help{false};
   bool show_tests{false};
+  bool gtest_list_tests{false};
   bool show_architectures{false};
   std::set<std::string> architectures;
   std::vector<std::string> tests;
-  int thread_count{1};
   uint64_t seed;
 
   static CommandLine parse(int argc, char *argv[]);
