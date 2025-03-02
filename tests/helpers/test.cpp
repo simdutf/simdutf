@@ -131,6 +131,15 @@ void print_tests() { print_tests(stdout); }
 namespace simdutf {
 namespace test {
 
+void test_entry::operator()(const simdutf::implementation &impl) {
+  std::string title = name;
+  std::replace(title.begin(), title.end(), '_', ' ');
+  printf("Running '%s'... ", title.c_str());
+  fflush(stdout);
+  procedure(impl);
+  puts(" OK");
+}
+
 void run(const CommandLine &cmdline) {
   if (cmdline.show_help) {
     print_help();

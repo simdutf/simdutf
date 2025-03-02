@@ -4813,6 +4813,25 @@ public:
                    base64_options options = base64_default) const noexcept = 0;
 #endif // SIMDUTF_FEATURE_BASE64
 
+#ifdef SIMDUTF_INTERNAL_TESTS
+  // This method is exported only in developer mode, its purpose
+  // is to expose some internal test procedures from the given
+  // implementation and them use them through standard test framework.
+  //
+  // Regular users should not use it, the tests of the public
+  // API are enough.
+
+  struct TestProcedure {
+    // display name
+    std::string name;
+
+    // procedure should return whether given point is
+    void (*procedure)(const implementation &);
+  };
+
+  virtual std::vector<TestProcedure> internal_tests() const;
+#endif
+
 protected:
   /** @private Construct an implementation with the given name and description.
    * For subclasses. */
