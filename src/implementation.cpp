@@ -71,9 +71,16 @@ simdutf_warn_unused encoding_type implementation::autodetect_encoding(
   }
   return encoding_type::unspecified;
 }
+
+  #ifdef SIMDUTF_INTERNAL_TESTS
+std::vector<implementation::TestProcedure>
+implementation::internal_tests() const {
+  return {};
+}
+  #endif
 #endif // SIMDUTF_FEATURE_DETECT_ENCODING
 
-#ifdef SIMDUTF_FEATURE_BASE64
+#if SIMDUTF_FEATURE_BASE64
 simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
     const char *input, size_t length) const noexcept {
   return scalar::base64::maximal_binary_length_from_base64(input, length);

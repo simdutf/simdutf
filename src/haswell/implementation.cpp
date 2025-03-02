@@ -120,10 +120,13 @@ namespace utf16 {
 #if SIMDUTF_FEATURE_UTF8
   #include "generic/utf8.h"
 #endif // SIMDUTF_FEATURE_UTF8
+
 #if SIMDUTF_FEATURE_UTF16
   #include "generic/utf16.h"
-  #include "generic/validate_utf16.h"
 #endif // SIMDUTF_FEATURE_UTF16
+#if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
+  #include "generic/validate_utf16.h"
+#endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
   // transcoding from UTF-8 to Latin 1

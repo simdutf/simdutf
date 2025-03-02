@@ -29,8 +29,8 @@ option(SIMDUTF_TESTS "Whether the tests are included as part of the CMake Build.
 option(SIMDUTF_BENCHMARKS "Whether the benchmarks are included as part of the CMake Build." OFF)
 option(SIMDUTF_TOOLS "Whether the tools are included as part of the CMake build. Requires C++17 or better." ON)
 option(SIMDUTF_ICONV "Whether to use iconv as part of the CMake build if available." ON)
-option(SIMDUTF_FUZZERS "Whether to build the fuzzers." Off)
-
+option(SIMDUTF_FUZZERS "Whether to build the fuzzers." OFF)
+option(SIMDUTF_INTERNAL_TESTS "Whether to test also internal procedures. Useful mostly for developers, not users." OFF)
 
 set(SIMDUTF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
