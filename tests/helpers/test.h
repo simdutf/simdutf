@@ -30,7 +30,7 @@ struct test_entry {
   std::string name;
   test_procedure procedure;
 
-  void operator()(const simdutf::implementation &impl) { procedure(impl); }
+  void operator()(const simdutf::implementation &impl);
 };
 
 std::list<test_entry> &test_procedures();
@@ -42,16 +42,48 @@ struct register_test {
 } // namespace test
 } // namespace simdutf
 
+template <typename T> void dump_ascii(const T &values) {
+  for (size_t i = 0; i < values.size(); i++) {
+    const uint8_t b = values[i];
+    if (b >= 32 and b < 128) {
+      printf(" %c ", b);
+    } else {
+      printf("   ");
+    }
+  }
+  putchar('\n');
+}
+
+template <typename T> void dump_hex(const T &values) {
+  for (size_t i = 0; i < values.size(); i++) {
+    const uint8_t b = values[i];
+    printf(" %02x", b);
+  }
+  putchar('\n');
+}
+
+template <typename T, typename U>
+void dump_diff_hex(const T &lhs, const U &rhs) {
+  const size_t ls = lhs.size();
+  const size_t rs = rhs.size();
+  const size_t size = (ls <= rs) ? ls : rs;
+  for (size_t i = 0; i < size; i++) {
+    const uint8_t l = lhs[i];
+    const uint8_t r = rhs[i];
+    if (l != r) {
+      printf(" %02x", l);
+    } else {
+      printf("   ");
+    }
+  }
+  putchar('\n');
+}
+
 #define TEST(name)                                                             \
   void test_impl_##name(const simdutf::implementation &impl);                  \
   void name(const simdutf::implementation &impl) {                             \
     simdutf::get_active_implementation() = &impl;                              \
-    std::string title = #name;                                                 \
-    std::replace(title.begin(), title.end(), '_', ' ');                        \
-    printf("Running '%s'... ", title.c_str());                                 \
-    fflush(stdout);                                                            \
     test_impl_##name(impl);                                                    \
-    puts(" OK");                                                               \
   }                                                                            \
   static simdutf::test::register_test test_register_##name(#name, name);       \
   void test_impl_##name(                                                       \
@@ -60,10 +92,6 @@ struct register_test {
 #define TEST_LOOP(trials, name)                                                \
   void test_impl_##name(const simdutf::implementation &impl, uint32_t seed);   \
   void name(const simdutf::implementation &impl) {                             \
-    std::string title = #name;                                                 \
-    std::replace(title.begin(), title.end(), '_', ' ');                        \
-    printf("Running '%s'... ", title.c_str());                                 \
-    fflush(stdout);                                                            \
     for (size_t trial = 0; trial < (trials); trial++) {                        \
       const uint32_t seed{1234 + uint32_t(trial)};                             \
       if ((trial % 100) == 0) {                                                \
@@ -72,7 +100,6 @@ struct register_test {
       }                                                                        \
       test_impl_##name(impl, seed);                                            \
     }                                                                          \
-    puts(" OK");                                                               \
   }                                                                            \
   static simdutf::test::register_test test_register_##name(#name, name);       \
   void test_impl_##name(const simdutf::implementation &implementation,         \
@@ -91,6 +118,28 @@ struct register_test {
       printf("rhs: %s = %s\n", #b, rhs_str.str().c_str());                     \
       printf("%s \n", #a);                                                     \
       printf("file %s:%d, function %s  \n", __FILE__, __LINE__, __func__);     \
+      exit(1);                                                                 \
+    }                                                                          \
+  }
+
+#define ASSERT_BYTES_EQUAL(a, b, len)                                          \
+  {                                                                            \
+    const auto lhs = (a);                                                      \
+    const auto rhs = (b);                                                      \
+    if (!std::equal(lhs.begin(), lhs.begin() + len, rhs.begin())) {            \
+      printf("lhs = `%s`\n", #a);                                              \
+      printf(" ascii: ");                                                      \
+      dump_ascii(lhs);                                                         \
+      printf("   hex: ");                                                      \
+      dump_hex(lhs);                                                           \
+      printf("rhs = `%s`\n", #b);                                              \
+      printf(" ascii: ");                                                      \
+      dump_ascii(rhs);                                                         \
+      printf("   hex: ");                                                      \
+      dump_hex(rhs);                                                           \
+      printf("  diff: ");                                                      \
+      dump_diff_hex(lhs, rhs);                                                 \
+      printf("file %s:%d, function %s\n", __FILE__, __LINE__, __func__);       \
       exit(1);                                                                 \
     }                                                                          \
   }
