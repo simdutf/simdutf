@@ -81,7 +81,7 @@ def parse(file):
 def parse_line(line):
     if 'input size' in line:
         yield parse_input(normalize_line(line))
-    elif 'ins/byte' in line or 'ins/char' in line:
+    elif 'GB/s' in line or 'ins/byte' in line or 'ins/char' in line:
         yield parse_results(normalize_line(line))
 
 

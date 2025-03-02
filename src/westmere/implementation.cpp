@@ -35,10 +35,6 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
   #include "westmere/sse_validate_utf16.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
-#if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
-  #include "westmere/sse_validate_utf32le.cpp"
-#endif // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
-
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
   #include "westmere/sse_convert_latin1_to_utf8.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
@@ -127,6 +123,10 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
   #include "generic/utf8_to_latin1/utf8_to_latin1.h"
   #include "generic/utf8_to_latin1/valid_utf8_to_latin1.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
+
+#if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
+  #include "generic/validate_utf32.h"
+#endif // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 //
 // Implementation-specific overrides
@@ -383,36 +383,14 @@ simdutf_warn_unused result implementation::validate_utf16be_with_errors(
 #if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_warn_unused bool
 implementation::validate_utf32(const char32_t *buf, size_t len) const noexcept {
-  if (simdutf_unlikely(len == 0)) {
-    // empty input is valid UTF-32. protect the implementation from
-    // handling nullptr
-    return true;
-  }
-  const char32_t *tail = sse_validate_utf32le(buf, len);
-  if (tail) {
-    return scalar::utf32::validate(tail, len - (tail - buf));
-  } else {
-    return false;
-  }
+  return utf32::validate(buf, len);
 }
 #endif // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused result implementation::validate_utf32_with_errors(
     const char32_t *buf, size_t len) const noexcept {
-  if (len == 0) {
-    // empty input is valid UTF-32. protect the implementation from
-    // handling nullptr
-    return result(error_code::SUCCESS, 0);
-  }
-  result res = sse_validate_utf32le_with_errors(buf, len);
-  if (res.count != len) {
-    result scalar_res =
-        scalar::utf32::validate_with_errors(buf + res.count, len - res.count);
-    return result(scalar_res.error, res.count + scalar_res.count);
-  } else {
-    return res;
-  }
+  return utf32::validate_with_errors(buf, len);
 }
 #endif // SIMDUTF_FEATURE_UTF32
 
