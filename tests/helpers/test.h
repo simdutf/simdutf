@@ -12,8 +12,10 @@ namespace simdutf {
 namespace test {
 
 struct CommandLine {
+  std::string exe_name;
   bool show_help{false};
   bool show_tests{false};
+  bool gtest_list_tests{false};
   bool show_architectures{false};
   std::set<std::string> architectures;
   std::vector<std::string> tests;
@@ -22,12 +24,13 @@ struct CommandLine {
   static CommandLine parse(int argc, char *argv[]);
 };
 
-int main(int argc, char *argv[]);
+int main(int argc, char *argv[], bool use_threads);
 void run(const CommandLine &cmdline);
 
 using test_procedure = void (*)(const simdutf::implementation &impl);
 struct test_entry {
   std::string name;
+  std::string title;
   test_procedure procedure;
 
   void operator()(const simdutf::implementation &impl) { procedure(impl); }
@@ -46,12 +49,7 @@ struct register_test {
   void test_impl_##name(const simdutf::implementation &impl);                  \
   void name(const simdutf::implementation &impl) {                             \
     simdutf::get_active_implementation() = &impl;                              \
-    std::string title = #name;                                                 \
-    std::replace(title.begin(), title.end(), '_', ' ');                        \
-    printf("Running '%s'... ", title.c_str());                                 \
-    fflush(stdout);                                                            \
     test_impl_##name(impl);                                                    \
-    puts(" OK");                                                               \
   }                                                                            \
   static simdutf::test::register_test test_register_##name(#name, name);       \
   void test_impl_##name(                                                       \
@@ -60,10 +58,6 @@ struct register_test {
 #define TEST_LOOP(trials, name)                                                \
   void test_impl_##name(const simdutf::implementation &impl, uint32_t seed);   \
   void name(const simdutf::implementation &impl) {                             \
-    std::string title = #name;                                                 \
-    std::replace(title.begin(), title.end(), '_', ' ');                        \
-    printf("Running '%s'... ", title.c_str());                                 \
-    fflush(stdout);                                                            \
     for (size_t trial = 0; trial < (trials); trial++) {                        \
       const uint32_t seed{1234 + uint32_t(trial)};                             \
       if ((trial % 100) == 0) {                                                \
@@ -72,7 +66,6 @@ struct register_test {
       }                                                                        \
       test_impl_##name(impl, seed);                                            \
     }                                                                          \
-    puts(" OK");                                                               \
   }                                                                            \
   static simdutf::test::register_test test_register_##name(#name, name);       \
   void test_impl_##name(const simdutf::implementation &implementation,         \
@@ -116,4 +109,6 @@ struct register_test {
   }
 
 #define TEST_MAIN                                                              \
-  int main(int argc, char *argv[]) { return simdutf::test::main(argc, argv); }
+  int main(int argc, char *argv[]) {                                           \
+    return simdutf::test::main(argc, argv, true);                              \
+  }
