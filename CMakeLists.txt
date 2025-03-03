@@ -29,8 +29,8 @@ option(SIMDUTF_TESTS "Whether the tests are included as part of the CMake Build.
 option(SIMDUTF_BENCHMARKS "Whether the benchmarks are included as part of the CMake Build." OFF)
 option(SIMDUTF_TOOLS "Whether the tools are included as part of the CMake build. Requires C++17 or better." ON)
 option(SIMDUTF_ICONV "Whether to use iconv as part of the CMake build if available." ON)
-option(SIMDUTF_FUZZERS "Whether to build the fuzzers." Off)
-
+option(SIMDUTF_FUZZERS "Whether to build the fuzzers." OFF)
+option(SIMDUTF_COVERAGE "Enable code coverage collection during tests (only GCC and Clang)." OFF)
 
 set(SIMDUTF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -65,6 +65,16 @@ if (SIMDUTF_BENCHMARKS)
   endif()
 else()
   message(STATUS "The benchmarks can be enabled by setting SIMDUTF_BENCHMARKS, e.g., -D SIMDUTF_BENCHMARKS=ON.")
+endif()
+
+if (SIMDUTF_COVERAGE)
+  if (NOT SIMDUTF_TESTS)
+    message(FATAL_ERROR "Cannot enable code coverage without tests (enable SIMDUTF_TESTS option)")
+  endif()
+  if (NOT ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang")))
+    message(FATAL_ERROR "Code coverage is supported only by GCC and Clang")
+  endif()
+  message(STATUS "Code coverage enabled; use `ctest -T Test -T Coverage` to gather coverage details")
 endif()
 
 message(STATUS "Compiling using the C++ standard:" ${CMAKE_CXX_STANDARD})
