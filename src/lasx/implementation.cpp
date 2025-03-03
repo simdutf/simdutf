@@ -199,13 +199,16 @@ convert_utf8_1_to_2_byte_to_utf16(__m128i in, size_t shufutf8_idx) {
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF8
-  // other functions
   #include "generic/utf8.h"
 #endif // SIMDUTF_FEATURE_UTF8
+
 #if SIMDUTF_FEATURE_UTF16
   #include "generic/utf16.h"
-  #include "generic/validate_utf16.h"
 #endif // SIMDUTF_FEATURE_UTF16
+
+#if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
+  #include "generic/validate_utf16.h"
+#endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 //
 // Implementation-specific overrides
