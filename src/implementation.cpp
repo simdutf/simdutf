@@ -2088,8 +2088,8 @@ size_t atomic_binary_to_base64(const char *input, size_t length, char *output,
     // Under x64, we could use 16-byte aligned loads.
     // Note that we warn users that the performance might be poor.
     for (size_t j = 0; j < current_block_size; ++j) {
-      inbuf[j] = std::atomic_ref<char>(input[i + j])
-                     .load(std::memory_order_relaxed);
+      inbuf[j] = 
+          std::atomic_ref<char>(input[i + j]).load(std::memory_order_relaxed);
     }
     const size_t written = binary_to_base64(inbuf.data(), current_block_size,
                                             outbuf.data(), options);
