@@ -20,9 +20,10 @@ TEST_LOOP(trials, count_pure_ASCII) {
 
   for (size_t size : input_size) {
     auto generated = random.generate_counted(size);
-    ASSERT_TRUE(implementation.count_utf8(
-                    reinterpret_cast<const char *>(generated.first.data()),
-                    size) == generated.second);
+    ASSERT_EQUAL(
+        implementation.count_utf8(
+            reinterpret_cast<const char *>(generated.first.data()), size),
+        generated.second);
   }
 }
 
@@ -31,9 +32,10 @@ TEST_LOOP(trials, count_1_or_2_UTF8_bytes) {
 
   for (size_t size : input_size) {
     auto generated = random.generate_counted(size);
-    ASSERT_TRUE(implementation.count_utf8(
-                    reinterpret_cast<const char *>(generated.first.data()),
-                    size) == generated.second);
+    ASSERT_EQUAL(
+        implementation.count_utf8(
+            reinterpret_cast<const char *>(generated.first.data()), size),
+        generated.second);
   }
 }
 
@@ -42,9 +44,10 @@ TEST_LOOP(trials, count_1_or_2_or_3_UTF8_bytes) {
 
   for (size_t size : input_size) {
     auto generated = random.generate_counted(size);
-    ASSERT_TRUE(implementation.count_utf8(
-                    reinterpret_cast<const char *>(generated.first.data()),
-                    size) == generated.second);
+    ASSERT_EQUAL(
+        implementation.count_utf8(
+            reinterpret_cast<const char *>(generated.first.data()), size),
+        generated.second);
   }
 }
 
@@ -53,9 +56,10 @@ TEST_LOOP(trials, count_1_2_3_or_4_UTF8_bytes) {
 
   for (size_t size : input_size) {
     auto generated = random.generate_counted(size);
-    ASSERT_TRUE(implementation.count_utf8(
-                    reinterpret_cast<const char *>(generated.first.data()),
-                    size) == generated.second);
+    ASSERT_EQUAL(
+        implementation.count_utf8(
+            reinterpret_cast<const char *>(generated.first.data()), size),
+        generated.second);
   }
 }
 

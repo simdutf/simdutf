@@ -343,7 +343,14 @@ template <> struct simd8<uint8_t> : base8_numeric<uint8_t> {
   template <int N> simdutf_really_inline int get_bit() const {
     return _mm_movemask_epi8(_mm_slli_epi16(*this, 7 - N));
   }
+
+  simdutf_really_inline uint64_t sum_bytes() const {
+    const auto tmp = _mm_sad_epu8(value, _mm_setzero_si128());
+
+    return _mm_extract_epi64(tmp, 0) + _mm_extract_epi64(tmp, 1);
+  }
 };
+
 simdutf_really_inline simd8<int8_t>::operator simd8<uint8_t>() const {
   return this->value;
 }
@@ -493,6 +500,11 @@ template <typename T> struct simd8x64 {
 
 #include "simdutf/westmere/simd16-inl.h"
 #include "simdutf/westmere/simd32-inl.h"
+#include "simdutf/westmere/simd64-inl.h"
+
+simdutf_really_inline simd64<uint64_t> sum_8bytes(const simd8<uint8_t> v) {
+  return _mm_sad_epu8(v.value, simd8<uint8_t>::zero());
+}
 
 } // namespace simd
 } // unnamed namespace
