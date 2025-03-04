@@ -330,6 +330,52 @@ TEST_LOOP(trials, convert_3_or_4_UTF8_bytes) {
   }
 }
 
+TEST_LOOP(trials, convert_2_UTF8_bytes) {
+  simdutf::tests::helpers::RandomInt random(0x0080, 0x07ff,
+                                            seed); // range for 2 UTF-8 bytes
+
+  auto procedure = [&implementation](const char *utf8, size_t size,
+                                     char16_t *utf16) -> size_t {
+    auto result = implementation.convert_utf8_to_utf16be(utf8, size, utf16);
+#if !SIMDUTF_IS_BIG_ENDIAN
+    implementation.change_endianness_utf16(utf16, result, utf16);
+#endif // !SIMDUTF_IS_BIG_ENDIAN
+    return result;
+  };
+  auto size_procedure = [&implementation](const char *utf8,
+                                          size_t size) -> size_t {
+    return implementation.utf16_length_from_utf8(utf8, size);
+  };
+  for (size_t size : input_size) {
+    transcode_utf8_to_utf16_test_base test(random, size);
+    ASSERT_TRUE(test(procedure));
+    ASSERT_TRUE(test.check_size(size_procedure));
+  }
+}
+
+TEST_LOOP(trials, convert_3_UTF8_bytes) {
+  simdutf::tests::helpers::RandomInt random(0x0800, 0xd800 - 1,
+                                            seed); // range for 3 UTF-8 bytes
+
+  auto procedure = [&implementation](const char *utf8, size_t size,
+                                     char16_t *utf16) -> size_t {
+    auto result = implementation.convert_utf8_to_utf16be(utf8, size, utf16);
+#if !SIMDUTF_IS_BIG_ENDIAN
+    implementation.change_endianness_utf16(utf16, result, utf16);
+#endif // !SIMDUTF_IS_BIG_ENDIAN
+    return result;
+  };
+  auto size_procedure = [&implementation](const char *utf8,
+                                          size_t size) -> size_t {
+    return implementation.utf16_length_from_utf8(utf8, size);
+  };
+  for (size_t size : input_size) {
+    transcode_utf8_to_utf16_test_base test(random, size);
+    ASSERT_TRUE(test(procedure));
+    ASSERT_TRUE(test.check_size(size_procedure));
+  }
+}
+
 TEST(special_cases) {
   const uint8_t utf8[] = {0xC2, 0xA9};     // copyright sign
   const uint8_t expected[] = {0x00, 0xA9}; // expected UTF-16BE
