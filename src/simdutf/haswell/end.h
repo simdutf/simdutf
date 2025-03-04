@@ -5,6 +5,7 @@ SIMDUTF_UNTARGET_REGION
 #endif
 
 #undef SIMDUTF_IMPLEMENTATION
+#undef SIMDUTF_SIMD_HAS_BYTEMASK
 
 #if SIMDUTF_GCC11ORMORE // workaround for
                         // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105593
