@@ -2082,13 +2082,19 @@ size_t atomic_binary_to_base64(const char *input, size_t length, char *output,
   std::array<char, input_block_size> inbuf;
   std::array<char, output_block_size> outbuf;
 
+  // std::atomic_ref<T> must not have a const T, see
+  // https://cplusplus.github.io/LWG/issue3508
+  // we instead provide a mutable input, which is ok since we are only reading
+  // from it.
+  char *mutable_input = const_cast<char *>(input);
+
   for (size_t i = 0; i < length; i += input_block_size) {
     const size_t current_block_size = std::min(input_block_size, length - i);
     // This copy is inefficient.
     // Under x64, we could use 16-byte aligned loads.
     // Note that we warn users that the performance might be poor.
     for (size_t j = 0; j < current_block_size; ++j) {
-      inbuf[j] = std::atomic_ref<const char>(input[i + j])
+      inbuf[j] = std::atomic_ref<char>(mutable_input[i + j])
                      .load(std::memory_order_relaxed);
     }
     const size_t written = binary_to_base64(inbuf.data(), current_block_size,
