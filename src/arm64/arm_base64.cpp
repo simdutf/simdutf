@@ -325,23 +325,8 @@ void base64_decode_block(char *out, const char *src) {
   vst3q_u8((uint8_t *)out, outvec);
 }
 
-#if defined(_MSC_VER) && !defined(__clang__)
-static inline size_t simdutf_tzcnt_u64(uint64_t num) {
-  unsigned long ret;
-  if (num == 0) {
-    return 64;
-  }
-  _BitScanForward64(&ret, num);
-  return ret;
-}
-#else // GCC or Clang
-static inline size_t simdutf_tzcnt_u64(uint64_t num) {
-  return num ? __builtin_ctzll(num) : 64;
-}
-#endif
-
 static size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
-  const size_t pos64 = simdutf_tzcnt_u64(mask);
+  const size_t pos64 = trailing_zeroes(mask);
   const int8_t pos = pos64 & 0xf;
 
   // Predefine the index vector
