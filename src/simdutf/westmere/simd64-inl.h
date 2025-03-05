@@ -28,6 +28,6 @@ template <> struct simd64<uint64_t> {
   }
 
   simdutf_really_inline static simd64<uint64_t> splat(uint64_t v) {
-    return _mm_set1_epi64(__m64(v));
+    return _mm_set1_epi64x(v);
   }
 };
