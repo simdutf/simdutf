@@ -442,6 +442,28 @@ Benchmark Benchmark::create(const CommandLine &cmdline) {
   return Benchmark{std::move(testcases)};
 }
 
+void Benchmark::list_procedures(ListingMode lm) const {
+  switch (lm) {
+  case ListingMode::None:
+    break;
+
+  case ListingMode::HumanReadable: {
+    const auto &known_procedures = all_procedures();
+    printf("Available procedures (%zu)\n", size_t(known_procedures.size()));
+    for (const auto &name : known_procedures) {
+      printf("- %s\n", name.c_str());
+    }
+  } break;
+
+  case ListingMode::PlainLines: {
+    const auto &known_procedures = all_procedures();
+    for (const auto &name : known_procedures) {
+      puts(name.c_str());
+    }
+  }
+  }
+}
+
 void Benchmark::run(const std::string &procedure_name, size_t iterations) {
   const auto item = benchmarks.find(procedure_name);
   if (item == benchmarks.end()) {

@@ -12,7 +12,6 @@ void info_message() {
 }
 
 int main(int argc, char *argv[]) {
-  info_message();
 #ifdef INOUE2008
   inoue2008::inoue_test(); // minimal testing
 #endif
@@ -23,7 +22,9 @@ int main(int argc, char *argv[]) {
     if (cmdline.show_help) {
       CommandLine::print_help();
       return EXIT_SUCCESS;
-    } else if (cmdline.empty()) {
+    }
+
+    if (cmdline.empty()) {
       CommandLine::print_help();
       return EXIT_FAILURE;
     }
@@ -33,16 +34,14 @@ int main(int argc, char *argv[]) {
   }
 
   using simdutf::benchmarks::Benchmark;
+  using simdutf::benchmarks::ListingMode;
 
   Benchmark benchmark{Benchmark::create(cmdline)};
-  if (cmdline.show_procedures) {
-    const auto &known_procedures = benchmark.all_procedures();
-    printf("Available procedures (%zu)\n", size_t(known_procedures.size()));
-    for (const auto &name : known_procedures) {
-      printf("- %s\n", name.c_str());
-    }
+  if (cmdline.show_procedures != ListingMode::None) {
+    benchmark.list_procedures(cmdline.show_procedures);
     return EXIT_SUCCESS;
-  } else {
-    return benchmark.run() ? EXIT_SUCCESS : EXIT_FAILURE;
   }
+
+  info_message();
+  return benchmark.run() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
