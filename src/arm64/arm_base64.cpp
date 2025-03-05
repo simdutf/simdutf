@@ -350,9 +350,9 @@ static size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
   switch (pos64 >> 4) {
   case 0b00: {
     const uint8x16_t v0 = vmovq_n_u8((uint8_t)(pos - 1));
-    const uint8x16_t v2 = vreinterpretq_u8_s8(
+    const uint8x16_t v2 =
         vcgtq_s8(vreinterpretq_s8_u8(v1),
-                 vreinterpretq_s8_u8(v0))); // Compare greater than
+                 vreinterpretq_s8_u8(v0));  // Compare greater than
     const uint8x16_t sh = vsubq_u8(v1, v2); // Subtract
     const uint8x16_t compressed =
         vqtbl1q_u8(b->chunks[0], sh); // Table lookup (shuffle)
@@ -367,8 +367,8 @@ static size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
     vst1q_u8((uint8_t *)(output + 0 * 16), b->chunks[0]);
 
     const uint8x16_t v0 = vmovq_n_u8((uint8_t)(pos - 1));
-    const uint8x16_t v2 = vreinterpretq_u8_s8(
-        vcgtq_s8(vreinterpretq_s8_u8(v1), vreinterpretq_s8_u8(v0)));
+    const uint8x16_t v2 =
+        vcgtq_s8(vreinterpretq_s8_u8(v1), vreinterpretq_s8_u8(v0));
     const uint8x16_t sh = vsubq_u8(v1, v2);
     const uint8x16_t compressed = vqtbl1q_u8(b->chunks[1], sh);
 
@@ -382,8 +382,8 @@ static size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
     vst1q_u8((uint8_t *)(output + 1 * 16), b->chunks[1]);
 
     const uint8x16_t v0 = vmovq_n_u8((uint8_t)(pos - 1));
-    const uint8x16_t v2 = vreinterpretq_u8_s8(
-        vcgtq_s8(vreinterpretq_s8_u8(v1), vreinterpretq_s8_u8(v0)));
+    const uint8x16_t v2 =
+        vcgtq_s8(vreinterpretq_s8_u8(v1), vreinterpretq_s8_u8(v0));
     const uint8x16_t sh = vsubq_u8(v1, v2);
     const uint8x16_t compressed = vqtbl1q_u8(b->chunks[2], sh);
 
@@ -397,8 +397,8 @@ static size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
     vst1q_u8((uint8_t *)(output + 2 * 16), b->chunks[2]);
 
     const uint8x16_t v0 = vmovq_n_u8((uint8_t)(pos - 1));
-    const uint8x16_t v2 = vreinterpretq_u8_s8(
-        vcgtq_s8(vreinterpretq_s8_u8(v1), vreinterpretq_s8_u8(v0)));
+    const uint8x16_t v2 =
+        vcgtq_s8(vreinterpretq_s8_u8(v1), vreinterpretq_s8_u8(v0));
     const uint8x16_t sh = vsubq_u8(v1, v2);
     const uint8x16_t compressed = vqtbl1q_u8(b->chunks[3], sh);
 
