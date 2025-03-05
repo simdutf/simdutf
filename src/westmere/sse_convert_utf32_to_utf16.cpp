@@ -5,21 +5,16 @@ sse_convert_utf32_to_utf16(const char32_t *buf, size_t len,
 
   const char32_t *end = buf + len;
 
-  const __m128i v_0000 = _mm_setzero_si128();
   const __m128i v_ffff0000 = _mm_set1_epi32((int32_t)0xffff0000);
   __m128i forbidden_bytemask = _mm_setzero_si128();
 
   while (end - buf >= 8) {
-    __m128i in = _mm_loadu_si128((__m128i *)buf);
-    __m128i nextin = _mm_loadu_si128((__m128i *)buf + 1);
-    const __m128i saturation_bytemask = _mm_cmpeq_epi32(
-        _mm_and_si128(_mm_or_si128(in, nextin), v_ffff0000), v_0000);
-    const uint32_t saturation_bitmask =
-        static_cast<uint32_t>(_mm_movemask_epi8(saturation_bytemask));
+    const __m128i in = _mm_loadu_si128((__m128i *)buf);
+    const __m128i nextin = _mm_loadu_si128((__m128i *)buf + 1);
 
-    // Check if no bits set above 16th
-    if (saturation_bitmask == 0xffff) {
-      // Pack UTF-32 to UTF-16
+    const __m128i combined = _mm_or_si128(in, nextin);
+    if (simdutf_likely(_mm_testz_si128(combined, v_ffff0000))) {
+      // No bits set above 16th, directly pack UTF-32 to UTF-16
       __m128i utf16_packed = _mm_packus_epi32(in, nextin);
 
       const __m128i v_f800 = _mm_set1_epi16((uint16_t)0xf800);
@@ -91,20 +86,15 @@ sse_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
   const char32_t *start = buf;
   const char32_t *end = buf + len;
 
-  const __m128i v_0000 = _mm_setzero_si128();
   const __m128i v_ffff0000 = _mm_set1_epi32((int32_t)0xffff0000);
 
   while (end - buf >= 8) {
-    __m128i in = _mm_loadu_si128((__m128i *)buf);
-    __m128i nextin = _mm_loadu_si128((__m128i *)buf + 1);
-    const __m128i saturation_bytemask = _mm_cmpeq_epi32(
-        _mm_and_si128(_mm_or_si128(in, nextin), v_ffff0000), v_0000);
-    const uint32_t saturation_bitmask =
-        static_cast<uint32_t>(_mm_movemask_epi8(saturation_bytemask));
+    const __m128i in = _mm_loadu_si128((__m128i *)buf);
+    const __m128i nextin = _mm_loadu_si128((__m128i *)buf + 1);
 
-    // Check if no bits set above 16th
-    if (saturation_bitmask == 0xffff) {
-      // Pack UTF-32 to UTF-16
+    const __m128i combined = _mm_or_si128(in, nextin);
+    if (simdutf_likely(_mm_testz_si128(combined, v_ffff0000))) {
+      // No bits set above 16th, directly pack UTF-32 to UTF-16
       __m128i utf16_packed = _mm_packus_epi32(in, nextin);
 
       const __m128i v_f800 = _mm_set1_epi16((uint16_t)0xf800);
