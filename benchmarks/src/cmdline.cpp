@@ -16,10 +16,10 @@ CommandLine parse_arguments(int argc, char *argv[]) {
   std::vector<std::string> arguments;
   for (int i = 1; i < argc; i++) {
     std::string arg{argv[i]};
-    if ((arg == "--help") || (arg == "-h")) {
+    if ((arg == "--help") or (arg == "-h")) {
       cmdline.show_help = true;
       return cmdline;
-    } else if (arg == "--show-procedures") {
+    } else if ((arg == "--show-procedures") or (arg == "-l")) {
       cmdline.show_procedures = true;
     } else {
       arguments.push_back(std::move(arg));
@@ -33,7 +33,7 @@ CommandLine parse_arguments(int argc, char *argv[]) {
   for (size_t i = 0; i < arguments.size(); /**/) {
     const std::string &arg = arguments[i];
 
-    if ((arg == "-F") || (arg == "--input-file")) {
+    if ((arg == "-F") or (arg == "--input-file")) {
       const std::string &value = arguments.at(i + 1);
       cmdline.files.insert(value);
       i += 2;
@@ -125,7 +125,7 @@ Usage:
     -P [NAME], --procedure [NAME]   choose procedure(s) to test (may be used many times, a substring match suffices)
     -I --iterations                 number of iterations (default: 3000)
     --random-utf8 [size]            use random UTF8 data of given size
-    --show-procedures               prints all known procedures for -P/--procedure
+    -l, --show-procedures           prints all known procedures for -P/--procedure
 
 Examples:
 
