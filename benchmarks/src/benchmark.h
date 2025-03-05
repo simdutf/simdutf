@@ -58,6 +58,8 @@ public:
   virtual std::set<simdutf::encoding_type>
   expected_encodings(const std::string &procedure) override;
 
+  void list_procedures(ListingMode) const;
+
 protected:
   virtual void run(const std::string &procedure_name,
                    size_t iterations) override;
