@@ -397,7 +397,7 @@ static inline void base64_decode_block_safe(char *out, block64 *b) {
 
 simdutf_really_inline static size_t
 compress_block_single(block64 *b, uint64_t mask, char *output) {
-  const size_t pos64 = _tzcnt_u64(mask);
+  const size_t pos64 = trailing_zeroes(mask);
   const int8_t pos = pos64 & 0xf;
   switch (pos64 >> 4) {
   case 0b00: {
