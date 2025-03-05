@@ -126,7 +126,7 @@ def parse_results(fields):
     D = {}
 
     while fields:
-        value = try_float(fields.pop(0));
+        value = try_float(fields.pop(0))
         if value is not None and fields:
             D[fields.pop(0)] = value
 
@@ -210,7 +210,7 @@ def compare(old, new):
 
     NA = '--'
     table = Table()
-    table.add_header(["dataset", "size [B]", "iterations", "old GB/s", "new GB/s", "speedup"])
+    table.set_header(["dataset", "size [B]", "iterations", "old GB/s", "new GB/s", "speedup"])
     for procedure, values in grouped.items():
         table.add_row([(procedure, 6)])
         for input, old, new in values:
@@ -254,34 +254,27 @@ $ ./benchamark [...] | tee results.txt
 To summarize results, use:
 
 $ ./benchmark_print.py results.txt
-+-----------------------+---------------------------------+
-|        dataset        | convert_utf32_to_latin1+haswell |
-+=======================+=================================+
-| esperanto.utflatin32  | 88.806 GB/s                     |
-+-----------------------+---------------------------------+
-| french.utflatin32     | 92.388 GB/s                     |
-+-----------------------+---------------------------------+
-| german.utflatin32     | 79.836 GB/s                     |
-+-----------------------+---------------------------------+
-| portuguese.utflatin32 | 92.642 GB/s                     |
-+-----------------------+---------------------------------+
+|     dataset      | utf8_length_from_utf32+fallback | utf8_length_from_utf32+haswell | utf8_length_from_utf32+westmere |
+| ---------------- | ------------------------------- | ------------------------------ | ------------------------------- |
+| arabic.utf32     | 3.190 GB/s                      | 15.638 GB/s                    | 7.879 GB/s                      |
+| chinese.utf32    | 3.179 GB/s                      | 15.349 GB/s                    | 7.644 GB/s                      |
+| czech.utf32      | 3.178 GB/s                      | 15.721 GB/s                    | 7.801 GB/s                      |
+...
+| thai.utf32       | 3.191 GB/s                      | 15.455 GB/s                    | 7.842 GB/s                      |
+| turkish.utf32    | 3.191 GB/s                      | 15.086 GB/s                    | 7.809 GB/s                      |
+| vietnamese.utf32 | 3.182 GB/s                      | 15.317 GB/s                    | 7.807 GB/s                      |
 
 To compare results, use:
 
 $ ./benchmark_print.py old.txt new.txt
-+-----------------------+----------+------------+----------+----------+---------+
-|        dataset        | size [B] | iterations | old GB/s | new GB/s | speedup |
-+=======================+==========+============+==========+==========+=========+
-| convert_utf32_to_latin1+haswell                                               |
-+-----------------------+----------+------------+----------+----------+---------+
-| esperanto.utflatin32  |   328672 |      30000 |    77.14 |    88.81 | 1.15x   |
-+-----------------------+----------+------------+----------+----------+---------+
-| french.utflatin32     |  1729220 |      30000 |    75.26 |    92.39 | 1.23x   |
-+-----------------------+----------+------------+----------+----------+---------+
-| german.utflatin32     |   797324 |      30000 |    76.11 |    79.84 | 1.05x   |
-+-----------------------+----------+------------+----------+----------+---------+
-| portuguese.utflatin32 |  1086972 |      30000 |    84.12 |    92.64 | 1.10x   |
-+-----------------------+----------+------------+----------+----------+---------+"""
+|             dataset             | size [B] | iterations | old GB/s | new GB/s | speedup |
+| ------------------------------- | -------- | ---------- | -------- | -------- | ------- |
+| convert_utf32_to_latin1+haswell                                                         |
+| esperanto.utflatin32            |   328672 |      30000 |    77.14 |    88.81 | 1.15x   |
+| french.utflatin32               |  1729220 |      30000 |    75.26 |    92.39 | 1.23x   |
+| german.utflatin32               |   797324 |      30000 |    76.11 |    79.84 | 1.05x   |
+| portuguese.utflatin32           |  1086972 |      30000 |    84.12 |    92.64 | 1.10x   |
+"""
 
 
 def parse_file(path):
@@ -300,20 +293,19 @@ def self_test():
     compare(new, old)
 
 
-
 def main():
-    script = sys.argv[0]
     args = sys.argv[1:]
-    n = len(args)
-    if "-h" in args or "--help" in args or (n not in (1, 2)):
+    if "-h" in args or "--help" in args:
         print(HELP)
         return
 
     if "--test" in args:
         print("running tests...")
-        self_test();
+        self_test()
         print("all OK")
         return
+
+    n = len(args)
 
     if n == 1:
         data = parse_file(args[0])
@@ -324,6 +316,8 @@ def main():
         new = parse_file(args[1])
 
         print(compare(old, new))
+    else:
+        print(HELP)
 
 
 if __name__ == '__main__':
