@@ -40,8 +40,7 @@ def compare(old, new):
     title = '%s of %d bytes from %d input(s)' % (mi.mode, mi.volume, mi.inputs_count)
 
     table = Table()
-    table.add_header([(title, 4)])
-    table.add_header(["implementation", "old [GB/s]", "new [GB/s]", "speedup"])
+    table.set_header(["implementation", "old [GB/s]", "new [GB/s]", "speedup"])
     for impl in all:
         try:
             old_speed = old.measurements[impl]
