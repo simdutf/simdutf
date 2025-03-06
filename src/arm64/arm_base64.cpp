@@ -330,7 +330,12 @@ static size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
   const int8_t pos = pos64 & 0xf;
 
   // Predefine the index vector
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+  const uint8x16_t v1 = simdutf_make_uint8x16_t(0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+                                                10, 11, 12, 13, 14, 15);
+#else  // SIMDUTF_REGULAR_VISUAL_STUDIO
   const uint8x16_t v1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+#endif // SIMDUTF_REGULAR_VISUAL_STUDIO
 
   switch (pos64 >> 4) {
   case 0b00: {
