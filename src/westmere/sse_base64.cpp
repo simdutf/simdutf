@@ -527,7 +527,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
           to_base64_mask<base64_url, ignore_garbage>(&b, &error);
       if (error && !ignore_garbage) {
         src -= 64;
-        size_t error_offset = simdutf_tzcnt_u64(error);
+        size_t error_offset = trailing_zeroes(error);
         return {error_code::INVALID_BASE64_CHARACTER,
                 size_t(src - srcinit + error_offset), size_t(dst - dstinit)};
       }
