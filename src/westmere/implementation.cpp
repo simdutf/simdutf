@@ -1102,7 +1102,7 @@ simdutf_warn_unused size_t implementation::count_utf16be(
 #if SIMDUTF_FEATURE_UTF8
 simdutf_warn_unused size_t
 implementation::count_utf8(const char *input, size_t length) const noexcept {
-  return utf8::count_code_points(input, length);
+  return utf8::count_code_points_bytemask(input, length);
 }
 #endif // SIMDUTF_FEATURE_UTF8
 

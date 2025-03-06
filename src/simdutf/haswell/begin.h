@@ -1,4 +1,5 @@
 #define SIMDUTF_IMPLEMENTATION haswell
+#define SIMDUTF_SIMD_HAS_BYTEMASK
 
 #if SIMDUTF_CAN_ALWAYS_RUN_HASWELL
 // nothing needed.
