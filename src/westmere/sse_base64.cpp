@@ -301,21 +301,6 @@ static inline uint64_t to_base64_mask(block64 *b, uint64_t *error) {
   return m0 | (m1 << 16) | (m2 << 32) | (m3 << 48);
 }
 
-#if defined(_MSC_VER) && !defined(__clang__)
-static inline size_t simdutf_tzcnt_u64(uint64_t num) {
-  unsigned long ret;
-  if (num == 0) {
-    return 64;
-  }
-  _BitScanForward64(&ret, num);
-  return ret;
-}
-#else // GCC or Clang
-static inline size_t simdutf_tzcnt_u64(uint64_t num) {
-  return num ? __builtin_ctzll(num) : 64;
-}
-#endif
-
 static inline void copy_block(block64 *b, char *output) {
   _mm_storeu_si128(reinterpret_cast<__m128i *>(output), b->chunks[0]);
   _mm_storeu_si128(reinterpret_cast<__m128i *>(output + 16), b->chunks[1]);
@@ -414,7 +399,7 @@ static inline void base64_decode_block_safe(char *out, block64 *b) {
 
 simdutf_really_inline static size_t
 compress_block_single(block64 *b, uint64_t mask, char *output) {
-  const size_t pos64 = simdutf_tzcnt_u64(mask);
+  const size_t pos64 = trailing_zeroes(mask);
   const int8_t pos = pos64 & 0xf;
   switch (pos64 >> 4) {
   case 0b00: {
@@ -542,7 +527,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
           to_base64_mask<base64_url, ignore_garbage>(&b, &error);
       if (error && !ignore_garbage) {
         src -= 64;
-        size_t error_offset = simdutf_tzcnt_u64(error);
+        size_t error_offset = trailing_zeroes(error);
         return {error_code::INVALID_BASE64_CHARACTER,
                 size_t(src - srcinit + error_offset), size_t(dst - dstinit)};
       }

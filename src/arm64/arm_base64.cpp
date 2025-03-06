@@ -325,6 +325,81 @@ void base64_decode_block(char *out, const char *src) {
   vst3q_u8((uint8_t *)out, outvec);
 }
 
+static size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
+  const size_t pos64 = trailing_zeroes(mask);
+  const int8_t pos = pos64 & 0xf;
+
+  // Predefine the index vector
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+  const uint8x16_t v1 = simdutf_make_uint8x16_t(0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+                                                10, 11, 12, 13, 14, 15);
+#else  // SIMDUTF_REGULAR_VISUAL_STUDIO
+  const uint8x16_t v1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+#endif // SIMDUTF_REGULAR_VISUAL_STUDIO
+
+  switch (pos64 >> 4) {
+  case 0b00: {
+    const uint8x16_t v0 = vmovq_n_u8((uint8_t)(pos - 1));
+    const uint8x16_t v2 =
+        vcgtq_s8(vreinterpretq_s8_u8(v1),
+                 vreinterpretq_s8_u8(v0));  // Compare greater than
+    const uint8x16_t sh = vsubq_u8(v1, v2); // Subtract
+    const uint8x16_t compressed =
+        vqtbl1q_u8(b->chunks[0], sh); // Table lookup (shuffle)
+
+    vst1q_u8((uint8_t *)(output + 0 * 16), compressed);
+    vst1q_u8((uint8_t *)(output + 1 * 16 - 1), b->chunks[1]);
+    vst1q_u8((uint8_t *)(output + 2 * 16 - 1), b->chunks[2]);
+    vst1q_u8((uint8_t *)(output + 3 * 16 - 1), b->chunks[3]);
+  } break;
+
+  case 0b01: {
+    vst1q_u8((uint8_t *)(output + 0 * 16), b->chunks[0]);
+
+    const uint8x16_t v0 = vmovq_n_u8((uint8_t)(pos - 1));
+    const uint8x16_t v2 =
+        vcgtq_s8(vreinterpretq_s8_u8(v1), vreinterpretq_s8_u8(v0));
+    const uint8x16_t sh = vsubq_u8(v1, v2);
+    const uint8x16_t compressed = vqtbl1q_u8(b->chunks[1], sh);
+
+    vst1q_u8((uint8_t *)(output + 1 * 16), compressed);
+    vst1q_u8((uint8_t *)(output + 2 * 16 - 1), b->chunks[2]);
+    vst1q_u8((uint8_t *)(output + 3 * 16 - 1), b->chunks[3]);
+  } break;
+
+  case 0b10: {
+    vst1q_u8((uint8_t *)(output + 0 * 16), b->chunks[0]);
+    vst1q_u8((uint8_t *)(output + 1 * 16), b->chunks[1]);
+
+    const uint8x16_t v0 = vmovq_n_u8((uint8_t)(pos - 1));
+    const uint8x16_t v2 =
+        vcgtq_s8(vreinterpretq_s8_u8(v1), vreinterpretq_s8_u8(v0));
+    const uint8x16_t sh = vsubq_u8(v1, v2);
+    const uint8x16_t compressed = vqtbl1q_u8(b->chunks[2], sh);
+
+    vst1q_u8((uint8_t *)(output + 2 * 16), compressed);
+    vst1q_u8((uint8_t *)(output + 3 * 16 - 1), b->chunks[3]);
+  } break;
+
+  case 0b11: {
+    vst1q_u8((uint8_t *)(output + 0 * 16), b->chunks[0]);
+    vst1q_u8((uint8_t *)(output + 1 * 16), b->chunks[1]);
+    vst1q_u8((uint8_t *)(output + 2 * 16), b->chunks[2]);
+
+    const uint8x16_t v0 = vmovq_n_u8((uint8_t)(pos - 1));
+    const uint8x16_t v2 =
+        vcgtq_s8(vreinterpretq_s8_u8(v1), vreinterpretq_s8_u8(v0));
+    const uint8x16_t sh = vsubq_u8(v1, v2);
+    const uint8x16_t compressed = vqtbl1q_u8(b->chunks[3], sh);
+
+    vst1q_u8((uint8_t *)(output + 3 * 16), compressed);
+  } break;
+  }
+  return 63;
+}
+
+template <typename T> bool is_power_of_two(T x) { return (x & (x - 1)) == 0; }
+
 template <bool base64_url, bool ignore_garbage, typename char_type>
 full_result
 compress_decode_base64(char *dst, const char_type *src, size_t srclen,
@@ -401,7 +476,11 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
         // optimization opportunity: check for simple masks like those made of
         // continuous 1s followed by continuous 0s. And masks containing a
         // single bad character.
-        bufferptr += compress_block(&b, badcharmask, bufferptr);
+        if (is_power_of_two(badcharmask)) {
+          bufferptr += compress_block_single(&b, badcharmask, bufferptr);
+        } else {
+          bufferptr += compress_block(&b, badcharmask, bufferptr);
+        }
       } else {
         // optimization opportunity: if bufferptr == buffer and mask == 0, we
         // can avoid the call to compress_block and decode directly.

@@ -2702,6 +2702,9 @@ trim_partial_utf16(std::span<const char16_t> valid_utf16_input) noexcept {
 #endif   // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_BASE64
+  #ifndef SIMDUTF_NEED_TRAILING_ZEROES
+    #define SIMDUTF_NEED_TRAILING_ZEROES 1
+  #endif
 // base64_options are used to specify the base64 encoding options.
 // ASCII spaces are ' ', '\t', '\n', '\r', '\f'
 // garbage characters are characters that are not part of the base64 alphabet
