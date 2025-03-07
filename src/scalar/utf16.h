@@ -141,8 +141,6 @@ void to_well_formed_utf16(const char16_t *input, size_t len, char16_t *output) {
     c = !match_system(big_endian) ? u16_swap_bytes(c) : c;
     high_surrogate = is_high_surrogate(c);
     low_surrogate = is_low_surrogate(c);
-    // printf("c: %x, high_surrogate: %d, low_surrogate: %d\n", c,
-    // high_surrogate, low_surrogate);
 
     if (high_surrogate_prev && !low_surrogate) {
       output[i - 1] = replacement;
