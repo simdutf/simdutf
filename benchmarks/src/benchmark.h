@@ -58,6 +58,8 @@ public:
   virtual std::set<simdutf::encoding_type>
   expected_encodings(const std::string &procedure) override;
 
+  void list_procedures(ListingMode) const;
+
 protected:
   virtual void run(const std::string &procedure_name,
                    size_t iterations) override;
@@ -180,12 +182,18 @@ private:
   void
   run_convert_valid_utf32_to_utf8(const simdutf::implementation &implementation,
                                   size_t iterations);
+
+  template <endianness byte_order>
   void run_convert_utf32_to_utf16(const simdutf::implementation &implementation,
                                   size_t iterations);
+  template <endianness byte_order>
   void run_convert_utf32_to_utf16_with_errors(
       const simdutf::implementation &implementation, size_t iterations);
+
+  template <endianness byte_order>
   void run_convert_valid_utf32_to_utf16(
       const simdutf::implementation &implementation, size_t iterations);
+
   void run_convert_valid_utf16_to_utf32(
       const simdutf::implementation &implementation, size_t iterations);
   void run_detect_encodings(const simdutf::implementation &implementation,

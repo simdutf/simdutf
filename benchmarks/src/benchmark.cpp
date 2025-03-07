@@ -247,15 +247,28 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
                     &Benchmark::run_convert_valid_utf32_to_utf8,
                     simdutf::encoding_type::UTF32_LE);
 
-  register_function("convert_utf32_to_utf16",
-                    &Benchmark::run_convert_utf32_to_utf16,
+  register_function("convert_utf32_to_utf16le",
+                    &Benchmark::run_convert_utf32_to_utf16<endianness::LITTLE>,
                     simdutf::encoding_type::UTF32_LE);
-  register_function("convert_utf32_to_utf16_with_errors",
-                    &Benchmark::run_convert_utf32_to_utf16_with_errors,
+  register_function("convert_utf32_to_utf16be",
+                    &Benchmark::run_convert_utf32_to_utf16<endianness::BIG>,
                     simdutf::encoding_type::UTF32_LE);
-  register_function("convert_valid_utf32_to_utf16",
-                    &Benchmark::run_convert_valid_utf32_to_utf16,
-                    simdutf::encoding_type::UTF32_LE);
+  register_function(
+      "convert_utf32_to_utf16le_with_errors",
+      &Benchmark::run_convert_utf32_to_utf16_with_errors<endianness::LITTLE>,
+      simdutf::encoding_type::UTF32_LE);
+  register_function(
+      "convert_utf32_to_utf16be_with_errors",
+      &Benchmark::run_convert_utf32_to_utf16_with_errors<endianness::BIG>,
+      simdutf::encoding_type::UTF32_LE);
+  register_function(
+      "convert_valid_utf32_to_utf16le",
+      &Benchmark::run_convert_valid_utf32_to_utf16<endianness::LITTLE>,
+      simdutf::encoding_type::UTF32_LE);
+  register_function(
+      "convert_valid_utf32_to_utf16be",
+      &Benchmark::run_convert_valid_utf32_to_utf16<endianness::BIG>,
+      simdutf::encoding_type::UTF32_LE);
 
   register_function("detect_encodings", &Benchmark::run_detect_encodings,
                     simdutf::encoding_type::UTF8,
@@ -427,6 +440,28 @@ Benchmark Benchmark::create(const CommandLine &cmdline) {
   }
 
   return Benchmark{std::move(testcases)};
+}
+
+void Benchmark::list_procedures(ListingMode lm) const {
+  switch (lm) {
+  case ListingMode::None:
+    break;
+
+  case ListingMode::HumanReadable: {
+    const auto &known_procedures = all_procedures();
+    printf("Available procedures (%zu)\n", size_t(known_procedures.size()));
+    for (const auto &name : known_procedures) {
+      printf("- %s\n", name.c_str());
+    }
+  } break;
+
+  case ListingMode::PlainLines: {
+    const auto &known_procedures = all_procedures();
+    for (const auto &name : known_procedures) {
+      puts(name.c_str());
+    }
+  }
+  }
 }
 
 void Benchmark::run(const std::string &procedure_name, size_t iterations) {
@@ -2943,6 +2978,7 @@ void Benchmark::run_convert_valid_utf16_to_utf32(
   print_summary(result, input_data.size(), char_count);
 }
 
+template <endianness byte_order>
 void Benchmark::run_convert_utf32_to_utf16(
     const simdutf::implementation &implementation, size_t iterations) {
   const simdutf::encoding_type bom =
@@ -2966,8 +3002,13 @@ void Benchmark::run_convert_utf32_to_utf16(
   volatile size_t sink{0};
 
   auto proc = [&implementation, data, size, &output_buffer, &sink]() {
-    sink = implementation.convert_utf32_to_utf16le(data, size,
-                                                   output_buffer.get());
+    if (byte_order == endianness::LITTLE) {
+      sink = implementation.convert_utf32_to_utf16le(data, size,
+                                                     output_buffer.get());
+    } else {
+      sink = implementation.convert_utf32_to_utf16be(data, size,
+                                                     output_buffer.get());
+    }
   };
   count_events(proc, iterations); // warming up!
   const auto result = count_events(proc, iterations);
@@ -2978,6 +3019,7 @@ void Benchmark::run_convert_utf32_to_utf16(
   print_summary(result, input_data.size(), char_count);
 }
 
+template <endianness byte_order>
 void Benchmark::run_convert_utf32_to_utf16_with_errors(
     const simdutf::implementation &implementation, size_t iterations) {
   const simdutf::encoding_type bom =
@@ -3001,9 +3043,15 @@ void Benchmark::run_convert_utf32_to_utf16_with_errors(
   volatile bool sink{false};
 
   auto proc = [&implementation, data, size, &output_buffer, &sink]() {
-    result res = implementation.convert_utf32_to_utf16le_with_errors(
-        data, size, output_buffer.get());
-    sink = !(res.error);
+    if (byte_order == endianness::LITTLE) {
+      result res = implementation.convert_utf32_to_utf16le_with_errors(
+          data, size, output_buffer.get());
+      sink = !(res.error);
+    } else {
+      result res = implementation.convert_utf32_to_utf16be_with_errors(
+          data, size, output_buffer.get());
+      sink = !(res.error);
+    }
   };
   count_events(proc, iterations); // warming up!
   const auto result = count_events(proc, iterations);
@@ -3014,6 +3062,7 @@ void Benchmark::run_convert_utf32_to_utf16_with_errors(
   print_summary(result, input_data.size(), char_count);
 }
 
+template <endianness byte_order>
 void Benchmark::run_convert_valid_utf32_to_utf16(
     const simdutf::implementation &implementation, size_t iterations) {
   const simdutf::encoding_type bom =
@@ -3037,8 +3086,13 @@ void Benchmark::run_convert_valid_utf32_to_utf16(
   volatile size_t sink{0};
 
   auto proc = [&implementation, data, size, &output_buffer, &sink]() {
-    sink = implementation.convert_valid_utf32_to_utf16le(data, size,
-                                                         output_buffer.get());
+    if (byte_order == endianness::LITTLE) {
+      sink = implementation.convert_valid_utf32_to_utf16le(data, size,
+                                                           output_buffer.get());
+    } else {
+      sink = implementation.convert_valid_utf32_to_utf16be(data, size,
+                                                           output_buffer.get());
+    }
   };
   count_events(proc, iterations); // warming up!
   const auto result = count_events(proc, iterations);
