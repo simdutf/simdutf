@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.15)
 project(simdutf
   DESCRIPTION "Fast Unicode validation, transcoding and processing"
   LANGUAGES CXX
-  VERSION 6.2.0
+  VERSION 6.3.1
 )
 
 include (TestBigEndian)
@@ -23,14 +23,14 @@ include(GNUInstallDirs)
 include(CTest)
 include(cmake/simdutf-flags.cmake)
 
-set(SIMDUTF_LIB_VERSION "16.0.0" CACHE STRING "simdutf library version")
-set(SIMDUTF_LIB_SOVERSION "16" CACHE STRING "simdutf library soversion")
+set(SIMDUTF_LIB_VERSION "18.0.0" CACHE STRING "simdutf library version")
+set(SIMDUTF_LIB_SOVERSION "18" CACHE STRING "simdutf library soversion")
 option(SIMDUTF_TESTS "Whether the tests are included as part of the CMake Build." ON)
 option(SIMDUTF_BENCHMARKS "Whether the benchmarks are included as part of the CMake Build." OFF)
 option(SIMDUTF_TOOLS "Whether the tools are included as part of the CMake build. Requires C++17 or better." ON)
 option(SIMDUTF_ICONV "Whether to use iconv as part of the CMake build if available." ON)
-option(SIMDUTF_FUZZERS "Whether to build the fuzzers." Off)
-
+option(SIMDUTF_FUZZERS "Whether to build the fuzzers." OFF)
+option(SIMDUTF_COVERAGE "Enable code coverage collection during tests (only GCC and Clang)." OFF)
 
 set(SIMDUTF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -57,7 +57,7 @@ endif()
 if (SIMDUTF_BENCHMARKS)
   if(NOT SIMDUTF_TESTS)
     message(STATUS "You have enabled the benchmarks, but not the tests. We don't allow running the benchmarks without the tests.")
-  elif((CMAKE_CXX_COMPILER_ID MATCHES GNU) AND (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0"))
+  elseif((CMAKE_CXX_COMPILER_ID MATCHES GNU) AND (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0"))
     message(STATUS "The benchmark tool requires GCC 8.0 or better.")
   else()
     message(STATUS "The benchmarks can be disabled by setting SIMDUTF_BENCHMARKS, e.g., -D SIMDUTF_BENCHMARKS=OFF.")
@@ -65,6 +65,16 @@ if (SIMDUTF_BENCHMARKS)
   endif()
 else()
   message(STATUS "The benchmarks can be enabled by setting SIMDUTF_BENCHMARKS, e.g., -D SIMDUTF_BENCHMARKS=ON.")
+endif()
+
+if (SIMDUTF_COVERAGE)
+  if (NOT SIMDUTF_TESTS)
+    message(FATAL_ERROR "Cannot enable code coverage without tests (enable SIMDUTF_TESTS option)")
+  endif()
+  if (NOT ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang")))
+    message(FATAL_ERROR "Code coverage is supported only by GCC and Clang")
+  endif()
+  message(STATUS "Code coverage enabled; use `ctest -T Test -T Coverage` to gather coverage details")
 endif()
 
 message(STATUS "Compiling using the C++ standard:" ${CMAKE_CXX_STANDARD})

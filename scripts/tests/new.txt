@@ -1,0 +1,33 @@
+We define the number of bytes to be the number of *input* bytes.
+We define a 'char' to be a code point (between 1 and 4 bytes).
+===========================
+Using ICU version 72.1
+testcases: 4
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+convert_utf32_to_latin1+haswell, input size: 328672, iterations: 30000, dataset: unicode_lipsum/wikipedia_mars/esperanto.utflatin32.txt
+   0.149 ins/byte,    0.051 cycle/byte,   88.806 GB/s (38.6 %),     4.504 GHz,    2.944 ins/cycle 
+   0.597 ins/char,    0.203 cycle/char,   22.202 Gc/s (38.6 %)     4.00 byte/char   3701.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+convert_utf32_to_latin1+haswell, input size: 1729220, iterations: 30000, dataset: unicode_lipsum/wikipedia_mars/french.utflatin32.txt
+   0.149 ins/byte,    0.048 cycle/byte,   92.388 GB/s (43.9 %),     4.430 GHz,    3.099 ins/cycle 
+   0.594 ins/char,    0.192 cycle/char,   23.097 Gc/s (43.9 %)     4.00 byte/char  18717.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+convert_utf32_to_latin1+haswell, input size: 797324, iterations: 30000, dataset: unicode_lipsum/wikipedia_mars/german.utflatin32.txt
+   0.149 ins/byte,    0.050 cycle/byte,   79.836 GB/s (49.2 %),     4.020 GHz,    2.953 ins/cycle 
+   0.595 ins/char,    0.201 cycle/char,   19.959 Gc/s (49.2 %)     4.00 byte/char   9987.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+convert_utf32_to_latin1+haswell, input size: 1086972, iterations: 30000, dataset: unicode_lipsum/wikipedia_mars/portuguese.utflatin32.txt
+   0.149 ins/byte,    0.049 cycle/byte,   92.642 GB/s (17.6 %),     4.569 GHz,    3.016 ins/cycle 
+   0.595 ins/char,    0.197 cycle/char,   23.161 Gc/s (17.6 %)     4.00 byte/char  11733.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).

@@ -1,7 +1,7 @@
 // file included directly
 
 bool validate_utf32(const char32_t *buf, size_t len) {
-  if (len == 0) {
+  if (simdutf_unlikely(len == 0)) {
     return true;
   }
   const char32_t *end = buf + len;
@@ -26,14 +26,14 @@ bool validate_utf32(const char32_t *buf, size_t len) {
 
   const __m512i standardmax = _mm512_set1_epi32((uint32_t)0x10ffff);
   const __m512i standardoffsetmax = _mm512_set1_epi32((uint32_t)0xfffff7ff);
-  __m512i is_zero =
-      _mm512_xor_si512(_mm512_max_epu32(currentmax, standardmax), standardmax);
-  if (_mm512_test_epi8_mask(is_zero, is_zero) != 0) {
+  const auto outside_range = _mm512_cmpgt_epu32_mask(currentmax, standardmax);
+  if (outside_range != 0) {
     return false;
   }
-  is_zero = _mm512_xor_si512(
-      _mm512_max_epu32(currentoffsetmax, standardoffsetmax), standardoffsetmax);
-  if (_mm512_test_epi8_mask(is_zero, is_zero) != 0) {
+
+  const auto surrogate =
+      _mm512_cmpgt_epu32_mask(currentoffsetmax, standardoffsetmax);
+  if (surrogate != 0) {
     return false;
   }
 

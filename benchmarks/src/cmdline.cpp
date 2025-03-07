@@ -9,6 +9,7 @@ constexpr size_t DEFAULT_ITERATIONS =
 namespace {
 
 using simdutf::benchmarks::CommandLine;
+using simdutf::benchmarks::ListingMode;
 
 CommandLine parse_arguments(int argc, char *argv[]) {
   CommandLine cmdline;
@@ -20,41 +21,43 @@ CommandLine parse_arguments(int argc, char *argv[]) {
       cmdline.show_help = true;
       return cmdline;
     } else if (arg == "--show-procedures") {
-      cmdline.show_procedures = true;
+      cmdline.show_procedures = ListingMode::HumanReadable;
+    } else if (arg == "-l") {
+      cmdline.show_procedures = ListingMode::PlainLines;
     } else {
       arguments.push_back(std::move(arg));
     }
   }
 
-  if (cmdline.show_procedures) {
+  if (cmdline.show_procedures != ListingMode::None || cmdline.show_help) {
     return cmdline;
   }
+
+  enum class Target {
+    None,
+    Procedure,
+    File,
+  };
+
+  auto target = Target::None;
+
+  // the presence of '--', so we can have files/names started with '-'
+  bool seen_arg_escape = false;
 
   for (size_t i = 0; i < arguments.size(); /**/) {
     const std::string &arg = arguments[i];
 
     if ((arg == "-F") || (arg == "--input-file")) {
-      const std::string &value = arguments.at(i + 1);
-      cmdline.files.insert(value);
-      i += 2;
-
-      try {
-        while (true) {
-          const std::string &value = arguments.at(i);
-          if (!value.empty() && value[0] != '-') {
-            cmdline.files.insert(value);
-            i += 1;
-          } else
-            break;
-        }
-      } catch (const std::out_of_range &) {
-        /* that's fine */;
-      }
+      target = Target::File;
+      seen_arg_escape = false;
+      i += 1;
     } else if ((arg == "-P") || (arg == "--procedure")) {
-      const std::string &value = arguments.at(i + 1);
-      cmdline.procedures.insert(value);
-      i += 2;
+      seen_arg_escape = false;
+      target = Target::Procedure;
+      i += 1;
     } else if ((arg == "-I") || (arg == "--iterations")) {
+      seen_arg_escape = false;
+      target = Target::None;
       const std::string &value = arguments.at(i + 1);
       const long iterations = std::stoi(value);
       if (iterations <= 0) {
@@ -65,6 +68,8 @@ CommandLine parse_arguments(int argc, char *argv[]) {
 
       i += 2;
     } else if (arg == "--random-utf8") {
+      seen_arg_escape = false;
+      target = Target::None;
       const std::string &value = arguments.at(i + 1);
       const long size = std::stoi(value);
       if (size <= 0) {
@@ -73,8 +78,32 @@ CommandLine parse_arguments(int argc, char *argv[]) {
       cmdline.random_size.insert(size);
 
       i += 2;
-    } else
-      throw std::invalid_argument("Unknown argument '" + arg + "'");
+    } else {
+      if (arg == "--") {
+        seen_arg_escape = true;
+        i += 1;
+        continue;
+      }
+
+      if (!seen_arg_escape && !arg.empty() && arg[0] == '-') {
+        throw std::invalid_argument("Unknown option '" + arg + "'");
+      }
+
+      switch (target) {
+      case Target::None:
+        throw std::invalid_argument("Unexpected argument '" + arg + "'");
+
+      case Target::Procedure:
+        cmdline.procedures.insert(arg);
+        i += 1;
+        break;
+
+      case Target::File:
+        cmdline.files.insert(arg);
+        i += 1;
+        break;
+      }
+    }
   } // for
 
   return cmdline;
@@ -109,7 +138,7 @@ CommandLine CommandLine::parse_arguments(int argc, char *argv[]) {
 
 bool CommandLine::empty() const {
   return procedures.empty() && random_size.empty() && files.empty() &&
-         iterations.empty() && (show_procedures == false);
+         iterations.empty() && (show_procedures == ListingMode::None);
 }
 
 void CommandLine::print_help() { print_help(stdout); }
@@ -125,7 +154,8 @@ Usage:
     -P [NAME], --procedure [NAME]   choose procedure(s) to test (may be used many times, a substring match suffices)
     -I --iterations                 number of iterations (default: 3000)
     --random-utf8 [size]            use random UTF8 data of given size
-    --show-procedures               prints all known procedures for -P/--procedure
+    --show-procedures               list all known procedures in a human-readable way
+    -l                              list all known procedures in a machine-friendly format
 
 Examples:
 
@@ -135,10 +165,8 @@ Examples:
     # test procedures implemented with the haswell kernel against two custom files
     $ benchmark -P haswell -F ~/plain_ascii.txt -F ~/chinese_huge.txt
 
-
-    # test two procedures (convert_utf8_to_utf16+llvm and ) implemented with the
-    # haswell kernel against all files matching a pattern (POSIX)
-    $ benchmark -P convert_utf8_to_utf16+llvm -P convert_utf8_to_utf16+u8u16 -F *.utf8.txt
+    # test two selected procedures against all files matching a pattern (POSIX)
+    $ benchmark -P convert_utf8_to_utf16+llvm convert_utf8_to_utf16+u8u16 -F *.utf8.txt
 )txt",
         file);
 }

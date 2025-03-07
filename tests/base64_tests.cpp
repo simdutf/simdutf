@@ -1107,11 +1107,84 @@ TEST(decode_base64_cases) {
   }
 }
 
+namespace cases {
+const std::vector<std::pair<std::string, std::string>> whitespaces = {
+    {"abcd", " Y\fW\tJ\njZ A=\r= "},
+};
+
+const std::vector<std::pair<std::string, std::string>> simple = {
+    {"Hello, World!", "SGVsbG8sIFdvcmxkIQ=="},
+    {"GeeksforGeeks", "R2Vla3Nmb3JHZWVrcw=="},
+    {"123456", "MTIzNDU2"},
+    {"Base64 Encoding", "QmFzZTY0IEVuY29kaW5n"},
+    {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ "
+     "PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k",
+     "IVJ+SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c+"
+     "fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNTk"
+     "tWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
+
+const std::vector<std::pair<std::string, std::string>> no_padding = {
+    {"Hello, World!", "SGVsbG8sIFdvcmxkIQ"},
+    {"GeeksforGeeks", "R2Vla3Nmb3JHZWVrcw"},
+    {"123456", "MTIzNDU2"},
+    {"Base64 Encoding", "QmFzZTY0IEVuY29kaW5n"},
+    {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ "
+     "PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k",
+     "IVJ+SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c+"
+     "fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNTk"
+     "tWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
+
+const std::vector<std::pair<std::string, std::string>> simple_url = {
+    {"Hello, World!", "SGVsbG8sIFdvcmxkIQ"},
+    {"GeeksforGeeks", "R2Vla3Nmb3JHZWVrcw"},
+    {"123456", "MTIzNDU2"},
+    {"Base64 Encoding", "QmFzZTY0IEVuY29kaW5n"},
+    {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ "
+     "PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k",
+     "IVJ-SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c-"
+     "fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNTk"
+     "tWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
+
+const std::vector<std::pair<std::string, std::string>> simple_url_with_padding =
+    {{"Hello, World!", "SGVsbG8sIFdvcmxkIQ=="},
+     {"GeeksforGeeks", "R2Vla3Nmb3JHZWVrcw=="},
+     {"123456", "MTIzNDU2"},
+     {"Base64 Encoding", "QmFzZTY0IEVuY29kaW5n"},
+     {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ "
+      "PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k",
+      "IVJ-SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c-"
+      "fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNTk"
+      "tWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
+} // namespace cases
+
+namespace cases16 {
+const std::vector<std::pair<std::string, std::u16string>> simple_with_padding =
+    {{"Hello, World!", u"SGVsbG8sIFdvcmxkIQ=="},
+     {"GeeksforGeeks", u"R2Vla3Nmb3JHZWVrcw=="},
+     {"123456", u"MTIzNDU2"},
+     {"Base64 Encoding", u"QmFzZTY0IEVuY29kaW5n"},
+     {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ "
+      "PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k",
+      u"IVJ+SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c+"
+      u"fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNT"
+      u"ktWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
+
+const std::vector<std::pair<std::string, std::u16string>>
+    simple_url_without_padding = {
+        {"Hello, World!", u"SGVsbG8sIFdvcmxkIQ"},
+        {"GeeksforGeeks", u"R2Vla3Nmb3JHZWVrcw"},
+        {"123456", u"MTIzNDU2"},
+        {"Base64 Encoding", u"QmFzZTY0IEVuY29kaW5n"},
+        {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ "
+         "PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k",
+         u"IVJ-SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c-"
+         u"fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVy"
+         u"NT"
+         u"ktWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
+} // namespace cases16
+
 TEST(complete_decode_base64_cases) {
-  std::vector<std::pair<std::string, std::string>> cases = {
-      {"abcd", " Y\fW\tJ\njZ A=\r= "},
-  };
-  for (std::pair<std::string, std::string> p : cases) {
+  for (const auto &p : cases::whitespaces) {
     std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
         p.second.data(), p.second.size()));
     simdutf::result r = implementation.base64_to_binary(
@@ -1122,8 +1195,10 @@ TEST(complete_decode_base64_cases) {
       ASSERT_EQUAL(buffer[i], p.first[i]);
     }
   }
-  printf(" --  ");
-  for (std::pair<std::string, std::string> p : cases) {
+}
+
+TEST(complete_safe_decode_base64_cases) {
+  for (const auto &p : cases::whitespaces) {
     std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
         p.second.data(), p.second.size()));
     size_t bufsize = buffer.size();
@@ -1138,10 +1213,7 @@ TEST(complete_decode_base64_cases) {
 }
 
 TEST(complete_decode_base64url_cases) {
-  std::vector<std::pair<std::string, std::string>> cases = {
-      {"abcd", " Y\fW\tJ\njZ A=\r= "},
-  };
-  for (std::pair<std::string, std::string> p : cases) {
+  for (const auto &p : cases::whitespaces) {
     std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
         p.second.data(), p.second.size()));
     simdutf::result r = implementation.base64_to_binary(
@@ -1152,8 +1224,10 @@ TEST(complete_decode_base64url_cases) {
       ASSERT_EQUAL(buffer[i], p.first[i]);
     }
   }
-  printf(" --  ");
-  for (std::pair<std::string, std::string> p : cases) {
+}
+
+TEST(complete_safe_decode_base64url_cases) {
+  for (const auto &p : cases::whitespaces) {
     std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
         p.second.data(), p.second.size()));
     size_t bufsize = buffer.size();
@@ -1169,20 +1243,7 @@ TEST(complete_decode_base64url_cases) {
 }
 
 TEST(encode_base64_cases) {
-  std::vector<std::pair<std::string, std::string>> cases = {
-      {"Hello, World!", "SGVsbG8sIFdvcmxkIQ=="},
-      {"GeeksforGeeks", "R2Vla3Nmb3JHZWVrcw=="},
-      {"123456", "MTIzNDU2"},
-      {"Base64 Encoding", "QmFzZTY0IEVuY29kaW5n"},
-      {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ "
-       "PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k",
-       "IVJ+SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c+"
-       "fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNTk"
-       "tWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
-  std::vector<simdutf::error_code> codes = {simdutf::error_code::SUCCESS};
-  std::vector<size_t> counts = {1};
-  printf(" -- ");
-  for (std::pair<std::string, std::string> p : cases) {
+  for (const auto &p : cases::simple) {
     std::vector<char> buffer(
         implementation.base64_length_from_binary(p.first.size()));
     ASSERT_EQUAL(buffer.size(), p.second.size());
@@ -1191,8 +1252,10 @@ TEST(encode_base64_cases) {
     ASSERT_EQUAL(s, p.second.size());
     ASSERT_EQUAL(std::string(buffer.data(), buffer.size()), p.second);
   }
-  printf(" -- ");
-  for (std::pair<std::string, std::string> p : cases) {
+}
+
+TEST(decode_base64_simple) {
+  for (const auto &p : cases::simple) {
     std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
         p.second.data(), p.second.size()));
     ASSERT_EQUAL(buffer.size(), p.first.size());
@@ -1204,8 +1267,10 @@ TEST(encode_base64_cases) {
       ASSERT_EQUAL(buffer[i], p.first[i]);
     }
   }
-  printf(" --  ");
-  for (std::pair<std::string, std::string> p : cases) {
+}
+
+TEST(safe_decode_base64_simple) {
+  for (const auto &p : cases::simple) {
     std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
         p.second.data(), p.second.size()));
     ASSERT_EQUAL(buffer.size(), p.first.size());
@@ -1222,20 +1287,7 @@ TEST(encode_base64_cases) {
 }
 
 TEST(encode_base64_cases_no_padding) {
-  std::vector<std::pair<std::string, std::string>> cases = {
-      {"Hello, World!", "SGVsbG8sIFdvcmxkIQ"},
-      {"GeeksforGeeks", "R2Vla3Nmb3JHZWVrcw"},
-      {"123456", "MTIzNDU2"},
-      {"Base64 Encoding", "QmFzZTY0IEVuY29kaW5n"},
-      {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ "
-       "PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k",
-       "IVJ+SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c+"
-       "fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNTk"
-       "tWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
-  std::vector<simdutf::error_code> codes = {simdutf::error_code::SUCCESS};
-  std::vector<size_t> counts = {1};
-  printf(" -- ");
-  for (std::pair<std::string, std::string> p : cases) {
+  for (const auto &p : cases::no_padding) {
     std::vector<char> buffer(implementation.base64_length_from_binary(
         p.first.size(), simdutf::base64_default_no_padding));
     ASSERT_EQUAL(buffer.size(), p.second.size());
@@ -1249,21 +1301,8 @@ TEST(encode_base64_cases_no_padding) {
 
 #if SIMDUTF_BASE64URL_TESTS
 
-TEST(encode_base64url_cases) {
-  std::vector<std::pair<std::string, std::string>> cases = {
-      {"Hello, World!", "SGVsbG8sIFdvcmxkIQ"},
-      {"GeeksforGeeks", "R2Vla3Nmb3JHZWVrcw"},
-      {"123456", "MTIzNDU2"},
-      {"Base64 Encoding", "QmFzZTY0IEVuY29kaW5n"},
-      {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ "
-       "PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k",
-       "IVJ-SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c-"
-       "fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNTk"
-       "tWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
-  std::vector<simdutf::error_code> codes = {simdutf::error_code::SUCCESS};
-  std::vector<size_t> counts = {1};
-  printf(" -- ");
-  for (std::pair<std::string, std::string> p : cases) {
+TEST(encode_base64url_simple) {
+  for (const auto &p : cases::simple_url) {
     std::vector<char> buffer(implementation.base64_length_from_binary(
         p.first.size(), simdutf::base64_url));
     ASSERT_EQUAL(buffer.size(), p.second.size());
@@ -1277,8 +1316,10 @@ TEST(encode_base64url_cases) {
     }
     ASSERT_EQUAL(std::string(buffer.data(), buffer.size()), p.second);
   }
-  printf(" -- ");
-  for (std::pair<std::string, std::string> p : cases) {
+}
+
+TEST(decode_base64url) {
+  for (const auto &p : cases::simple_url) {
     std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
         p.second.data(), p.second.size()));
     ASSERT_EQUAL(buffer.size(), p.first.size());
@@ -1290,8 +1331,10 @@ TEST(encode_base64url_cases) {
       ASSERT_EQUAL(buffer[i], p.first[i]);
     }
   }
-  printf(" --  ");
-  for (std::pair<std::string, std::string> p : cases) {
+}
+
+TEST(safe_decode_base64url) {
+  for (const auto &p : cases::simple_url) {
     std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
         p.second.data(), p.second.size()));
     ASSERT_EQUAL(buffer.size(), p.first.size());
@@ -1309,20 +1352,7 @@ TEST(encode_base64url_cases) {
 }
 
 TEST(encode_base64url_with_padding_cases) {
-  std::vector<std::pair<std::string, std::string>> cases = {
-      {"Hello, World!", "SGVsbG8sIFdvcmxkIQ=="},
-      {"GeeksforGeeks", "R2Vla3Nmb3JHZWVrcw=="},
-      {"123456", "MTIzNDU2"},
-      {"Base64 Encoding", "QmFzZTY0IEVuY29kaW5n"},
-      {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ "
-       "PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k",
-       "IVJ-SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c-"
-       "fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNTk"
-       "tWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
-  std::vector<simdutf::error_code> codes = {simdutf::error_code::SUCCESS};
-  std::vector<size_t> counts = {1};
-  printf(" -- ");
-  for (std::pair<std::string, std::string> p : cases) {
+  for (const auto &p : cases::simple_url_with_padding) {
     std::vector<char> buffer(implementation.base64_length_from_binary(
         p.first.size(), simdutf::base64_url_with_padding));
     ASSERT_EQUAL(buffer.size(), p.second.size());
@@ -1341,22 +1371,8 @@ TEST(encode_base64url_with_padding_cases) {
 
 #endif
 
-TEST(encode_base64_cases_16) {
-  std::vector<std::pair<std::string, std::u16string>> cases = {
-      {"Hello, World!", u"SGVsbG8sIFdvcmxkIQ=="},
-      {"GeeksforGeeks", u"R2Vla3Nmb3JHZWVrcw=="},
-      {"123456", u"MTIzNDU2"},
-      {"Base64 Encoding", u"QmFzZTY0IEVuY29kaW5n"},
-      {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ "
-       "PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k",
-       u"IVJ+SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c+"
-       u"fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNT"
-       u"ktWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
-  std::vector<simdutf::error_code> codes = {simdutf::error_code::SUCCESS};
-  std::vector<size_t> counts = {1};
-  printf(" -- ");
-
-  for (std::pair<std::string, std::u16string> p : cases) {
+TEST(decode_base64_cases_16) {
+  for (const auto &p : cases16::simple_with_padding) {
     std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
         p.second.data(), p.second.size()));
     ASSERT_EQUAL(buffer.size(), p.first.size());
@@ -1368,8 +1384,10 @@ TEST(encode_base64_cases_16) {
       ASSERT_EQUAL(buffer[i], p.first[i]);
     }
   }
-  printf(" -- ");
-  for (std::pair<std::string, std::u16string> p : cases) {
+}
+
+TEST(safe_decode_base64_cases_16) {
+  for (const auto &p : cases16::simple_with_padding) {
     std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
         p.second.data(), p.second.size()));
     ASSERT_EQUAL(buffer.size(), p.first.size());
@@ -1387,22 +1405,8 @@ TEST(encode_base64_cases_16) {
 
 #if SIMDUTF_BASE64URL_TESTS
 
-TEST(encode_base64url_cases_16) {
-  std::vector<std::pair<std::string, std::u16string>> cases = {
-      {"Hello, World!", u"SGVsbG8sIFdvcmxkIQ"},
-      {"GeeksforGeeks", u"R2Vla3Nmb3JHZWVrcw"},
-      {"123456", u"MTIzNDU2"},
-      {"Base64 Encoding", u"QmFzZTY0IEVuY29kaW5n"},
-      {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ "
-       "PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k",
-       u"IVJ-SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c-"
-       u"fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNT"
-       u"ktWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
-  std::vector<simdutf::error_code> codes = {simdutf::error_code::SUCCESS};
-  std::vector<size_t> counts = {1};
-  printf(" -- ");
-
-  for (std::pair<std::string, std::u16string> p : cases) {
+TEST(decode_base64url_cases_16) {
+  for (const auto &p : cases16::simple_url_without_padding) {
     std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
         p.second.data(), p.second.size()));
     ASSERT_EQUAL(buffer.size(), p.first.size());
@@ -1414,8 +1418,10 @@ TEST(encode_base64url_cases_16) {
       ASSERT_EQUAL(buffer[i], p.first[i]);
     }
   }
-  printf(" -- ");
-  for (std::pair<std::string, std::u16string> p : cases) {
+}
+
+TEST(safe_decode_base64url_cases_16) {
+  for (const auto &p : cases16::simple_url_without_padding) {
     std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
         p.second.data(), p.second.size()));
     ASSERT_EQUAL(buffer.size(), p.first.size());
@@ -2305,18 +2311,6 @@ TEST(readme_safe) {
   ASSERT_EQUAL(limited_length2 + limited_length, (len + 3) / 4 * 3);
 }
 
-int main(int argc, char *argv[]) {
-  if (argc == 2) {
-    try {
-      seed = std::stoi(argv[1]);
-    } catch (const std::exception &e) {
-      printf("%s\n", e.what());
-      return EXIT_FAILURE;
-    }
-  }
-  return simdutf::test::main(argc, argv);
-}
-
 #if !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF
 TEST(atomic_roundtrip_base64) {
   for (size_t len = 0; len < 2048; len++) {
@@ -2417,3 +2411,12 @@ TEST(atomic_span_roundtrip_base64) {
   }
 }
 #endif // !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF
+
+int main(int argc, char *argv[]) {
+  const auto cmdline = simdutf::test::CommandLine::parse(argc, argv);
+  seed = cmdline.seed;
+
+  simdutf::test::run(cmdline);
+
+  return 0;
+}

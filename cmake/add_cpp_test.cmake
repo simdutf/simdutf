@@ -33,6 +33,10 @@ function(add_cpp_test TEST_NAME)
     if (CMAKE_CROSSCOMPILING_EMULATOR)
       add_test(${TEST_NAME} ${CMAKE_CROSSCOMPILING_EMULATOR} ${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME})
     else()
+      if (SIMDUTF_COVERAGE)
+        target_compile_options(${TEST_NAME} PRIVATE -coverage)
+        target_link_options(${TEST_NAME} PRIVATE -coverage)
+      endif()
       add_test(${TEST_NAME} ${TEST_NAME})
     endif()
 
@@ -41,6 +45,7 @@ function(add_cpp_test TEST_NAME)
       list(APPEND ARGS_DEPENDENCY_OF ${label})
     endforeach(label ${ARGS_LABELS})
   endif()
+
 
   # Add to test labels
   if (ARGS_LABELS)

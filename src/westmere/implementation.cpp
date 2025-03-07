@@ -35,10 +35,6 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
   #include "westmere/sse_validate_utf16.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
-#if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
-  #include "westmere/sse_validate_utf32le.cpp"
-#endif // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
-
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
   #include "westmere/sse_convert_latin1_to_utf8.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
@@ -113,6 +109,7 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
   #include "generic/utf8_to_utf32/valid_utf8_to_utf32.h"
   #include "generic/utf8_to_utf32/utf8_to_utf32.h"
+  #include "generic/utf32.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF8
@@ -121,10 +118,17 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 #if SIMDUTF_FEATURE_UTF16
   #include "generic/utf16.h"
 #endif // SIMDUTF_FEATURE_UTF16
+#if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
+  #include "generic/validate_utf16.h"
+#endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
   #include "generic/utf8_to_latin1/utf8_to_latin1.h"
   #include "generic/utf8_to_latin1/valid_utf8_to_latin1.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
+
+#if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
+  #include "generic/validate_utf32.h"
+#endif // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 //
 // Implementation-specific overrides
@@ -314,13 +318,17 @@ implementation::validate_utf16le(const char16_t *buf,
     // handling nullptr
     return true;
   }
-  const char16_t *tail = sse_validate_utf16<endianness::LITTLE>(buf, len);
-  if (tail) {
-    return scalar::utf16::validate<endianness::LITTLE>(tail,
-                                                       len - (tail - buf));
-  } else {
+  const auto res =
+      westmere::utf16::validate_utf16_with_errors<endianness::LITTLE>(buf, len);
+  if (res.is_err()) {
     return false;
   }
+
+  if (res.count == len)
+    return true;
+
+  return scalar::utf16::validate<endianness::LITTLE>(buf + res.count,
+                                                     len - res.count);
 }
 #endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
@@ -333,20 +341,27 @@ implementation::validate_utf16be(const char16_t *buf,
     // handling nullptr
     return true;
   }
-  const char16_t *tail = sse_validate_utf16<endianness::BIG>(buf, len);
-  if (tail) {
-    return scalar::utf16::validate<endianness::BIG>(tail, len - (tail - buf));
-  } else {
+  const auto res =
+      westmere::utf16::validate_utf16_with_errors<endianness::BIG>(buf, len);
+  if (res.is_err()) {
     return false;
   }
+
+  if (res.count == len)
+    return true;
+
+  return scalar::utf16::validate<endianness::BIG>(buf + res.count,
+                                                  len - res.count);
 }
 
 simdutf_warn_unused result implementation::validate_utf16le_with_errors(
     const char16_t *buf, size_t len) const noexcept {
-  result res = sse_validate_utf16_with_errors<endianness::LITTLE>(buf, len);
+  const result res =
+      westmere::utf16::validate_utf16_with_errors<endianness::LITTLE>(buf, len);
   if (res.count != len) {
-    result scalar_res = scalar::utf16::validate_with_errors<endianness::LITTLE>(
-        buf + res.count, len - res.count);
+    const result scalar_res =
+        scalar::utf16::validate_with_errors<endianness::LITTLE>(
+            buf + res.count, len - res.count);
     return result(scalar_res.error, res.count + scalar_res.count);
   } else {
     return res;
@@ -355,7 +370,8 @@ simdutf_warn_unused result implementation::validate_utf16le_with_errors(
 
 simdutf_warn_unused result implementation::validate_utf16be_with_errors(
     const char16_t *buf, size_t len) const noexcept {
-  result res = sse_validate_utf16_with_errors<endianness::BIG>(buf, len);
+  const result res =
+      westmere::utf16::validate_utf16_with_errors<endianness::BIG>(buf, len);
   if (res.count != len) {
     result scalar_res = scalar::utf16::validate_with_errors<endianness::BIG>(
         buf + res.count, len - res.count);
@@ -381,36 +397,14 @@ void implementation::to_well_formed_utf16be(const char16_t *input, size_t len,
 #if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_warn_unused bool
 implementation::validate_utf32(const char32_t *buf, size_t len) const noexcept {
-  if (simdutf_unlikely(len == 0)) {
-    // empty input is valid UTF-32. protect the implementation from
-    // handling nullptr
-    return true;
-  }
-  const char32_t *tail = sse_validate_utf32le(buf, len);
-  if (tail) {
-    return scalar::utf32::validate(tail, len - (tail - buf));
-  } else {
-    return false;
-  }
+  return utf32::validate(buf, len);
 }
 #endif // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused result implementation::validate_utf32_with_errors(
     const char32_t *buf, size_t len) const noexcept {
-  if (len == 0) {
-    // empty input is valid UTF-32. protect the implementation from
-    // handling nullptr
-    return result(error_code::SUCCESS, 0);
-  }
-  result res = sse_validate_utf32le_with_errors(buf, len);
-  if (res.count != len) {
-    result scalar_res =
-        scalar::utf32::validate_with_errors(buf + res.count, len - res.count);
-    return result(scalar_res.error, res.count + scalar_res.count);
-  } else {
-    return res;
-  }
+  return utf32::validate_with_errors(buf, len);
 }
 #endif // SIMDUTF_FEATURE_UTF32
 
@@ -1120,7 +1114,7 @@ simdutf_warn_unused size_t implementation::count_utf16be(
 #if SIMDUTF_FEATURE_UTF8
 simdutf_warn_unused size_t
 implementation::count_utf8(const char *input, size_t length) const noexcept {
-  return utf8::count_code_points(input, length);
+  return utf8::count_code_points_bytemask(input, length);
 }
 #endif // SIMDUTF_FEATURE_UTF8
 
@@ -1227,38 +1221,7 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf8(
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::utf8_length_from_utf32(
     const char32_t *input, size_t length) const noexcept {
-  const __m128i v_00000000 = _mm_setzero_si128();
-  const __m128i v_ffffff80 = _mm_set1_epi32((uint32_t)0xffffff80);
-  const __m128i v_fffff800 = _mm_set1_epi32((uint32_t)0xfffff800);
-  const __m128i v_ffff0000 = _mm_set1_epi32((uint32_t)0xffff0000);
-  size_t pos = 0;
-  size_t count = 0;
-  for (; pos + 4 <= length; pos += 4) {
-    __m128i in = _mm_loadu_si128((__m128i *)(input + pos));
-    const __m128i ascii_bytes_bytemask =
-        _mm_cmpeq_epi32(_mm_and_si128(in, v_ffffff80), v_00000000);
-    const __m128i one_two_bytes_bytemask =
-        _mm_cmpeq_epi32(_mm_and_si128(in, v_fffff800), v_00000000);
-    const __m128i two_bytes_bytemask =
-        _mm_xor_si128(one_two_bytes_bytemask, ascii_bytes_bytemask);
-    const __m128i one_two_three_bytes_bytemask =
-        _mm_cmpeq_epi32(_mm_and_si128(in, v_ffff0000), v_00000000);
-    const __m128i three_bytes_bytemask =
-        _mm_xor_si128(one_two_three_bytes_bytemask, one_two_bytes_bytemask);
-    const uint16_t ascii_bytes_bitmask =
-        static_cast<uint16_t>(_mm_movemask_epi8(ascii_bytes_bytemask));
-    const uint16_t two_bytes_bitmask =
-        static_cast<uint16_t>(_mm_movemask_epi8(two_bytes_bytemask));
-    const uint16_t three_bytes_bitmask =
-        static_cast<uint16_t>(_mm_movemask_epi8(three_bytes_bytemask));
-
-    size_t ascii_count = count_ones(ascii_bytes_bitmask) / 4;
-    size_t two_bytes_count = count_ones(two_bytes_bitmask) / 4;
-    size_t three_bytes_count = count_ones(three_bytes_bitmask) / 4;
-    count += 16 - 3 * ascii_count - 2 * two_bytes_count - three_bytes_count;
-  }
-  return count +
-         scalar::utf32::utf8_length_from_utf32(input + pos, length - pos);
+  return utf32::utf8_length_from_utf32(input, length);
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
@@ -1291,11 +1254,6 @@ simdutf_warn_unused size_t implementation::utf32_length_from_utf8(
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_BASE64
-simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
-    const char *input, size_t length) const noexcept {
-  return scalar::base64::maximal_binary_length_from_base64(input, length);
-}
-
 simdutf_warn_unused result implementation::base64_to_binary(
     const char *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
@@ -1340,11 +1298,6 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
   }
 }
 
-simdutf_warn_unused size_t implementation::maximal_binary_length_from_base64(
-    const char16_t *input, size_t length) const noexcept {
-  return scalar::base64::maximal_binary_length_from_base64(input, length);
-}
-
 simdutf_warn_unused result implementation::base64_to_binary(
     const char16_t *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
@@ -1387,11 +1340,6 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
                                                   options, last_chunk_options);
     }
   }
-}
-
-simdutf_warn_unused size_t implementation::base64_length_from_binary(
-    size_t length, base64_options options) const noexcept {
-  return scalar::base64::base64_length_from_binary(length, options);
 }
 
 size_t implementation::binary_to_base64(const char *input, size_t length,

@@ -1,0 +1,272 @@
+We define the number of bytes to be the number of *input* bytes.
+We define a 'char' to be a code point (between 1 and 4 bytes).
+===========================
+Using ICU version 72.1
+testcases: 18
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+utf8_length_from_utf32+fallback, input size: 1699376, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/arabic.utf32.txt
+   7.501 ins/byte,    1.411 cycle/byte,    3.190 GB/s (4.6 %),     4.502 GHz,    5.315 ins/cycle 
+   7.501 ins/char,    1.411 cycle/char,    3.190 Gc/s (4.6 %)     1.00 byte/char 133187.0 ns
+utf8_length_from_utf32+haswell, input size: 1699376, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/arabic.utf32.txt
+   1.376 ins/byte,    0.288 cycle/byte,   15.638 GB/s (6.6 %),     4.505 GHz,    4.776 ins/cycle 
+   1.376 ins/char,    0.288 cycle/char,   15.638 Gc/s (6.6 %)     1.00 byte/char  27168.0 ns
+utf8_length_from_utf32+icelake, input size: 1699376, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/arabic.utf32.txt
+utf8_length_from_utf32+icelake: unsupported by the system
+utf8_length_from_utf32+westmere, input size: 1699376, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/arabic.utf32.txt
+   3.251 ins/byte,    0.568 cycle/byte,    7.879 GB/s (3.7 %),     4.473 GHz,    5.726 ins/cycle 
+   3.251 ins/char,    0.568 cycle/char,    7.879 Gc/s (3.7 %)     1.00 byte/char  53918.0 ns
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+utf8_length_from_utf32+fallback, input size: 548832, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/chinese.utf32.txt
+   7.502 ins/byte,    1.414 cycle/byte,    3.179 GB/s (3.8 %),     4.495 GHz,    5.305 ins/cycle 
+   7.502 ins/char,    1.414 cycle/char,    3.179 Gc/s (3.8 %)     1.00 byte/char  43162.0 ns
+utf8_length_from_utf32+haswell, input size: 548832, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/chinese.utf32.txt
+   1.377 ins/byte,    0.291 cycle/byte,   15.349 GB/s (15.2 %),     4.464 GHz,    4.736 ins/cycle 
+   1.377 ins/char,    0.291 cycle/char,   15.349 Gc/s (15.2 %)     1.00 byte/char   8939.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+utf8_length_from_utf32+icelake, input size: 548832, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/chinese.utf32.txt
+utf8_length_from_utf32+icelake: unsupported by the system
+utf8_length_from_utf32+westmere, input size: 548832, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/chinese.utf32.txt
+   3.252 ins/byte,    0.568 cycle/byte,    7.644 GB/s (4.6 %),     4.343 GHz,    5.724 ins/cycle 
+   3.252 ins/char,    0.568 cycle/char,    7.644 Gc/s (4.6 %)     1.00 byte/char  17950.0 ns
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+utf8_length_from_utf32+fallback, input size: 575328, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/czech.utf32.txt
+   7.502 ins/byte,    1.415 cycle/byte,    3.178 GB/s (4.2 %),     4.498 GHz,    5.301 ins/cycle 
+   7.502 ins/char,    1.415 cycle/char,    3.178 Gc/s (4.2 %)     1.00 byte/char  45257.0 ns
+utf8_length_from_utf32+haswell, input size: 575328, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/czech.utf32.txt
+   1.377 ins/byte,    0.288 cycle/byte,   15.721 GB/s (19.1 %),     4.531 GHz,    4.778 ins/cycle 
+   1.377 ins/char,    0.288 cycle/char,   15.721 Gc/s (19.1 %)     1.00 byte/char   9149.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+utf8_length_from_utf32+icelake, input size: 575328, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/czech.utf32.txt
+utf8_length_from_utf32+icelake: unsupported by the system
+utf8_length_from_utf32+westmere, input size: 575328, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/czech.utf32.txt
+   3.252 ins/byte,    0.572 cycle/byte,    7.801 GB/s (7.6 %),     4.464 GHz,    5.683 ins/cycle 
+   3.252 ins/char,    0.572 cycle/char,    7.801 Gc/s (7.6 %)     1.00 byte/char  18438.0 ns
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+utf8_length_from_utf32+fallback, input size: 1550036, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/english.utf32.txt
+   7.501 ins/byte,    1.411 cycle/byte,    3.189 GB/s (4.5 %),     4.500 GHz,    5.315 ins/cycle 
+   7.501 ins/char,    1.411 cycle/char,    3.189 Gc/s (4.5 %)     1.00 byte/char 121523.0 ns
+utf8_length_from_utf32+haswell, input size: 1550036, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/english.utf32.txt
+   1.376 ins/byte,    0.289 cycle/byte,   15.585 GB/s (7.7 %),     4.500 GHz,    4.765 ins/cycle 
+   1.376 ins/char,    0.289 cycle/char,   15.585 Gc/s (7.7 %)     1.00 byte/char  24864.0 ns
+utf8_length_from_utf32+icelake, input size: 1550036, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/english.utf32.txt
+utf8_length_from_utf32+icelake: unsupported by the system
+utf8_length_from_utf32+westmere, input size: 1550036, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/english.utf32.txt
+   3.251 ins/byte,    0.568 cycle/byte,    7.837 GB/s (3.1 %),     4.453 GHz,    5.721 ins/cycle 
+   3.251 ins/char,    0.568 cycle/char,    7.837 Gc/s (3.1 %)     1.00 byte/char  49447.0 ns
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+utf8_length_from_utf32+fallback, input size: 336500, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/esperanto.utf32.txt
+   7.503 ins/byte,    1.411 cycle/byte,    3.212 GB/s (6.4 %),     4.532 GHz,    5.317 ins/cycle 
+   7.503 ins/char,    1.411 cycle/char,    3.212 Gc/s (6.4 %)     1.00 byte/char  26190.0 ns
+utf8_length_from_utf32+haswell, input size: 336500, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/esperanto.utf32.txt
+   1.379 ins/byte,    0.288 cycle/byte,   14.689 GB/s (18.2 %),     4.234 GHz,    4.786 ins/cycle 
+   1.379 ins/char,    0.288 cycle/char,   14.689 Gc/s (18.2 %)     1.00 byte/char   5727.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+utf8_length_from_utf32+icelake, input size: 336500, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/esperanto.utf32.txt
+utf8_length_from_utf32+icelake: unsupported by the system
+utf8_length_from_utf32+westmere, input size: 336500, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/esperanto.utf32.txt
+   3.254 ins/byte,    0.569 cycle/byte,    7.924 GB/s (13.1 %),     4.513 GHz,    5.714 ins/cycle 
+   3.254 ins/char,    0.569 cycle/char,    7.924 Gc/s (13.1 %)     1.00 byte/char  10616.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+utf8_length_from_utf32+fallback, input size: 1739468, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/french.utf32.txt
+   7.501 ins/byte,    1.413 cycle/byte,    3.200 GB/s (4.5 %),     4.522 GHz,    5.307 ins/cycle 
+   7.501 ins/char,    1.413 cycle/char,    3.200 Gc/s (4.5 %)     1.00 byte/char 135911.0 ns
+utf8_length_from_utf32+haswell, input size: 1739468, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/french.utf32.txt
+   1.376 ins/byte,    0.289 cycle/byte,   15.724 GB/s (8.7 %),     4.543 GHz,    4.762 ins/cycle 
+   1.376 ins/char,    0.289 cycle/char,   15.724 Gc/s (8.7 %)     1.00 byte/char  27657.0 ns
+utf8_length_from_utf32+icelake, input size: 1739468, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/french.utf32.txt
+utf8_length_from_utf32+icelake: unsupported by the system
+utf8_length_from_utf32+westmere, input size: 1739468, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/french.utf32.txt
+   3.251 ins/byte,    0.569 cycle/byte,    7.803 GB/s (12.0 %),     4.437 GHz,    5.717 ins/cycle 
+   3.251 ins/char,    0.569 cycle/char,    7.803 Gc/s (12.0 %)     1.00 byte/char  55734.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+utf8_length_from_utf32+fallback, input size: 804860, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/german.utf32.txt
+   7.501 ins/byte,    1.408 cycle/byte,    3.173 GB/s (3.0 %),     4.467 GHz,    5.328 ins/cycle 
+   7.501 ins/char,    1.408 cycle/char,    3.173 Gc/s (3.0 %)     1.00 byte/char  63415.0 ns
+utf8_length_from_utf32+haswell, input size: 804860, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/german.utf32.txt
+   1.377 ins/byte,    0.293 cycle/byte,   15.244 GB/s (13.2 %),     4.459 GHz,    4.707 ins/cycle 
+   1.377 ins/char,    0.293 cycle/char,   15.244 Gc/s (13.2 %)     1.00 byte/char  13200.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+utf8_length_from_utf32+icelake, input size: 804860, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/german.utf32.txt
+utf8_length_from_utf32+icelake: unsupported by the system
+utf8_length_from_utf32+westmere, input size: 804860, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/german.utf32.txt
+   3.252 ins/byte,    0.569 cycle/byte,    7.937 GB/s (6.7 %),     4.520 GHz,    5.710 ins/cycle 
+   3.252 ins/char,    0.569 cycle/char,    7.937 Gc/s (6.7 %)     1.00 byte/char  25352.0 ns
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+utf8_length_from_utf32+fallback, input size: 571996, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/greek.utf32.txt
+   7.502 ins/byte,    1.411 cycle/byte,    3.155 GB/s (3.0 %),     4.451 GHz,    5.317 ins/cycle 
+   7.502 ins/char,    1.411 cycle/char,    3.155 Gc/s (3.0 %)     1.00 byte/char  45326.0 ns
+utf8_length_from_utf32+haswell, input size: 571996, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/greek.utf32.txt
+   1.378 ins/byte,    0.290 cycle/byte,   15.511 GB/s (20.9 %),     4.491 GHz,    4.759 ins/cycle 
+   1.378 ins/char,    0.290 cycle/char,   15.511 Gc/s (20.9 %)     1.00 byte/char   9219.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+utf8_length_from_utf32+icelake, input size: 571996, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/greek.utf32.txt
+utf8_length_from_utf32+icelake: unsupported by the system
+utf8_length_from_utf32+westmere, input size: 571996, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/greek.utf32.txt
+   3.252 ins/byte,    0.569 cycle/byte,    7.815 GB/s (15.3 %),     4.444 GHz,    5.719 ins/cycle 
+   3.252 ins/char,    0.569 cycle/char,    7.815 Gc/s (15.3 %)     1.00 byte/char  18298.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+utf8_length_from_utf32+fallback, input size: 585404, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/hebrew.utf32.txt
+   7.502 ins/byte,    1.426 cycle/byte,    3.165 GB/s (3.9 %),     4.514 GHz,    5.261 ins/cycle 
+   7.502 ins/char,    1.426 cycle/char,    3.165 Gc/s (3.9 %)     1.00 byte/char  46235.0 ns
+utf8_length_from_utf32+haswell, input size: 585404, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/hebrew.utf32.txt
+   1.378 ins/byte,    0.288 cycle/byte,   15.409 GB/s (18.4 %),     4.433 GHz,    4.788 ins/cycle 
+   1.378 ins/char,    0.288 cycle/char,   15.409 Gc/s (18.4 %)     1.00 byte/char   9498.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+utf8_length_from_utf32+icelake, input size: 585404, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/hebrew.utf32.txt
+utf8_length_from_utf32+icelake: unsupported by the system
+utf8_length_from_utf32+westmere, input size: 585404, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/hebrew.utf32.txt
+   3.252 ins/byte,    0.570 cycle/byte,    7.819 GB/s (9.7 %),     4.459 GHz,    5.703 ins/cycle 
+   3.252 ins/char,    0.570 cycle/char,    7.819 Gc/s (9.7 %)     1.00 byte/char  18718.0 ns
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+utf8_length_from_utf32+fallback, input size: 1095832, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/hindi.utf32.txt
+   7.501 ins/byte,    1.417 cycle/byte,    3.184 GB/s (2.9 %),     4.512 GHz,    5.294 ins/cycle 
+   7.501 ins/char,    1.417 cycle/char,    3.184 Gc/s (2.9 %)     1.00 byte/char  86044.0 ns
+utf8_length_from_utf32+haswell, input size: 1095832, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/hindi.utf32.txt
+   1.376 ins/byte,    0.290 cycle/byte,   15.030 GB/s (6.4 %),     4.361 GHz,    4.743 ins/cycle 
+   1.376 ins/char,    0.290 cycle/char,   15.030 Gc/s (6.4 %)     1.00 byte/char  18228.0 ns
+utf8_length_from_utf32+icelake, input size: 1095832, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/hindi.utf32.txt
+utf8_length_from_utf32+icelake: unsupported by the system
+utf8_length_from_utf32+westmere, input size: 1095832, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/hindi.utf32.txt
+   3.251 ins/byte,    0.570 cycle/byte,    7.783 GB/s (4.5 %),     4.434 GHz,    5.707 ins/cycle 
+   3.251 ins/char,    0.570 cycle/char,    7.783 Gc/s (4.5 %)     1.00 byte/char  35200.0 ns
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+utf8_length_from_utf32+fallback, input size: 475564, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/japanese.utf32.txt
+   7.502 ins/byte,    1.417 cycle/byte,    3.158 GB/s (4.7 %),     4.474 GHz,    5.296 ins/cycle 
+   7.502 ins/char,    1.417 cycle/char,    3.158 Gc/s (4.7 %)     1.00 byte/char  37644.0 ns
+utf8_length_from_utf32+haswell, input size: 475564, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/japanese.utf32.txt
+   1.378 ins/byte,    0.289 cycle/byte,   15.762 GB/s (20.9 %),     4.554 GHz,    4.769 ins/cycle 
+   1.378 ins/char,    0.289 cycle/char,   15.762 Gc/s (20.9 %)     1.00 byte/char   7543.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+utf8_length_from_utf32+icelake, input size: 475564, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/japanese.utf32.txt
+utf8_length_from_utf32+icelake: unsupported by the system
+utf8_length_from_utf32+westmere, input size: 475564, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/japanese.utf32.txt
+   3.253 ins/byte,    0.570 cycle/byte,    7.955 GB/s (14.0 %),     4.534 GHz,    5.707 ins/cycle 
+   3.253 ins/char,    0.570 cycle/char,    7.955 Gc/s (14.0 %)     1.00 byte/char  14946.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+utf8_length_from_utf32+fallback, input size: 291672, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/korean.utf32.txt
+   7.503 ins/byte,    1.411 cycle/byte,    3.183 GB/s (6.3 %),     4.492 GHz,    5.316 ins/cycle 
+   7.503 ins/char,    1.411 cycle/char,    3.183 Gc/s (6.3 %)     1.00 byte/char  22908.0 ns
+utf8_length_from_utf32+haswell, input size: 291672, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/korean.utf32.txt
+   1.380 ins/byte,    0.290 cycle/byte,   15.131 GB/s (24.5 %),     4.392 GHz,    4.755 ins/cycle 
+   1.380 ins/char,    0.290 cycle/char,   15.131 Gc/s (24.5 %)     1.00 byte/char   4819.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+utf8_length_from_utf32+icelake, input size: 291672, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/korean.utf32.txt
+utf8_length_from_utf32+icelake: unsupported by the system
+utf8_length_from_utf32+westmere, input size: 291672, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/korean.utf32.txt
+   3.254 ins/byte,    0.570 cycle/byte,    7.970 GB/s (16.2 %),     4.546 GHz,    5.705 ins/cycle 
+   3.254 ins/char,    0.570 cycle/char,    7.970 Gc/s (16.2 %)     1.00 byte/char   9149.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+utf8_length_from_utf32+fallback, input size: 498776, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/persan.utf32.txt
+   7.502 ins/byte,    1.416 cycle/byte,    3.183 GB/s (4.6 %),     4.506 GHz,    5.299 ins/cycle 
+   7.502 ins/char,    1.416 cycle/char,    3.183 Gc/s (4.6 %)     1.00 byte/char  39181.0 ns
+utf8_length_from_utf32+haswell, input size: 498776, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/persan.utf32.txt
+   1.378 ins/byte,    0.292 cycle/byte,   14.058 GB/s (5.7 %),     4.108 GHz,    4.716 ins/cycle 
+   1.378 ins/char,    0.292 cycle/char,   14.058 Gc/s (5.7 %)     1.00 byte/char   8870.0 ns
+utf8_length_from_utf32+icelake, input size: 498776, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/persan.utf32.txt
+utf8_length_from_utf32+icelake: unsupported by the system
+utf8_length_from_utf32+westmere, input size: 498776, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/persan.utf32.txt
+   3.253 ins/byte,    0.571 cycle/byte,    7.797 GB/s (9.8 %),     4.455 GHz,    5.693 ins/cycle 
+   3.253 ins/char,    0.571 cycle/char,    7.797 Gc/s (9.8 %)     1.00 byte/char  15993.0 ns
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+utf8_length_from_utf32+fallback, input size: 1094456, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/portuguese.utf32.txt
+   7.501 ins/byte,    1.411 cycle/byte,    3.177 GB/s (2.6 %),     4.483 GHz,    5.316 ins/cycle 
+   7.501 ins/char,    1.411 cycle/char,    3.177 Gc/s (2.6 %)     1.00 byte/char  86114.0 ns
+utf8_length_from_utf32+haswell, input size: 1094456, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/portuguese.utf32.txt
+   1.376 ins/byte,    0.290 cycle/byte,   15.424 GB/s (15.5 %),     4.470 GHz,    4.749 ins/cycle 
+   1.376 ins/char,    0.290 cycle/char,   15.424 Gc/s (15.5 %)     1.00 byte/char  17739.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+utf8_length_from_utf32+icelake, input size: 1094456, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/portuguese.utf32.txt
+utf8_length_from_utf32+icelake: unsupported by the system
+utf8_length_from_utf32+westmere, input size: 1094456, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/portuguese.utf32.txt
+   3.251 ins/byte,    0.569 cycle/byte,    7.947 GB/s (6.4 %),     4.526 GHz,    5.709 ins/cycle 
+   3.251 ins/char,    0.569 cycle/char,    7.947 Gc/s (6.4 %)     1.00 byte/char  34431.0 ns
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+utf8_length_from_utf32+fallback, input size: 1248148, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/russian.utf32.txt
+   7.501 ins/byte,    1.417 cycle/byte,    3.207 GB/s (5.4 %),     4.544 GHz,    5.294 ins/cycle 
+   7.501 ins/char,    1.417 cycle/char,    3.207 Gc/s (5.4 %)     1.00 byte/char  97288.0 ns
+utf8_length_from_utf32+haswell, input size: 1248148, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/russian.utf32.txt
+   1.376 ins/byte,    0.291 cycle/byte,   15.406 GB/s (9.6 %),     4.483 GHz,    4.729 ins/cycle 
+   1.376 ins/char,    0.291 cycle/char,   15.406 Gc/s (9.6 %)     1.00 byte/char  20254.0 ns
+utf8_length_from_utf32+icelake, input size: 1248148, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/russian.utf32.txt
+utf8_length_from_utf32+icelake: unsupported by the system
+utf8_length_from_utf32+westmere, input size: 1248148, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/russian.utf32.txt
+   3.251 ins/byte,    0.568 cycle/byte,    7.797 GB/s (7.0 %),     4.425 GHz,    5.728 ins/cycle 
+   3.251 ins/char,    0.568 cycle/char,    7.797 Gc/s (7.0 %)     1.00 byte/char  40019.0 ns
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+utf8_length_from_utf32+fallback, input size: 1619032, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/thai.utf32.txt
+   7.501 ins/byte,    1.410 cycle/byte,    3.191 GB/s (5.2 %),     4.499 GHz,    5.320 ins/cycle 
+   7.501 ins/char,    1.410 cycle/char,    3.191 Gc/s (5.2 %)     1.00 byte/char 126831.0 ns
+utf8_length_from_utf32+haswell, input size: 1619032, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/thai.utf32.txt
+   1.376 ins/byte,    0.290 cycle/byte,   15.455 GB/s (7.4 %),     4.479 GHz,    4.748 ins/cycle 
+   1.376 ins/char,    0.290 cycle/char,   15.455 Gc/s (7.4 %)     1.00 byte/char  26190.0 ns
+utf8_length_from_utf32+icelake, input size: 1619032, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/thai.utf32.txt
+utf8_length_from_utf32+icelake: unsupported by the system
+utf8_length_from_utf32+westmere, input size: 1619032, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/thai.utf32.txt
+   3.251 ins/byte,    0.569 cycle/byte,    7.842 GB/s (3.6 %),     4.460 GHz,    5.716 ins/cycle 
+   3.251 ins/char,    0.569 cycle/char,    7.842 Gc/s (3.6 %)     1.00 byte/char  51612.0 ns
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+utf8_length_from_utf32+fallback, input size: 741768, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/turkish.utf32.txt
+   7.501 ins/byte,    1.413 cycle/byte,    3.191 GB/s (4.2 %),     4.510 GHz,    5.308 ins/cycle 
+   7.501 ins/char,    1.413 cycle/char,    3.191 Gc/s (4.2 %)     1.00 byte/char  58108.0 ns
+utf8_length_from_utf32+haswell, input size: 741768, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/turkish.utf32.txt
+   1.377 ins/byte,    0.301 cycle/byte,   15.086 GB/s (18.4 %),     4.541 GHz,    4.573 ins/cycle 
+   1.377 ins/char,    0.301 cycle/char,   15.086 Gc/s (18.4 %)     1.00 byte/char  12292.0 ns
+WARNING: Measurements are noisy, try increasing iteration count (-I).
+utf8_length_from_utf32+icelake, input size: 741768, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/turkish.utf32.txt
+utf8_length_from_utf32+icelake: unsupported by the system
+utf8_length_from_utf32+westmere, input size: 741768, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/turkish.utf32.txt
+   3.251 ins/byte,    0.568 cycle/byte,    7.809 GB/s (6.6 %),     4.438 GHz,    5.721 ins/cycle 
+   3.251 ins/char,    0.568 cycle/char,    7.809 Gc/s (6.6 %)     1.00 byte/char  23746.0 ns
+input detected as UTF16 little-endian
+current system detected as haswell
+===========================
+utf8_length_from_utf32+fallback, input size: 1129676, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/vietnamese.utf32.txt
+   7.501 ins/byte,    1.425 cycle/byte,    3.182 GB/s (3.3 %),     4.534 GHz,    5.263 ins/cycle 
+   7.501 ins/char,    1.425 cycle/char,    3.182 Gc/s (3.3 %)     1.00 byte/char  88767.0 ns
+utf8_length_from_utf32+haswell, input size: 1129676, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/vietnamese.utf32.txt
+   1.376 ins/byte,    0.291 cycle/byte,   15.317 GB/s (8.0 %),     4.453 GHz,    4.734 ins/cycle 
+   1.376 ins/char,    0.291 cycle/char,   15.317 Gc/s (8.0 %)     1.00 byte/char  18438.0 ns
+utf8_length_from_utf32+icelake, input size: 1129676, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/vietnamese.utf32.txt
+utf8_length_from_utf32+icelake: unsupported by the system
+utf8_length_from_utf32+westmere, input size: 1129676, iterations: 1000, dataset: unicode_lipsum/wikipedia_mars/vietnamese.utf32.txt
+   3.251 ins/byte,    0.569 cycle/byte,    7.807 GB/s (4.4 %),     4.445 GHz,    5.710 ins/cycle 
+   3.251 ins/char,    0.569 cycle/char,    7.807 Gc/s (4.4 %)     1.00 byte/char  36177.0 ns

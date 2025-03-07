@@ -1,22 +1,12 @@
 #include "test.h"
 
-#include <set>
-#include <vector>
 #include <stdexcept>
 #include <cstdio>
 
-namespace {
-
-struct CommandLine {
-  bool show_help{false};
-  bool show_tests{false};
-  bool show_architectures{false};
-  std::set<std::string> architectures;
-  std::vector<std::string> tests;
-};
-
-CommandLine parse(int argc, char *argv[]) {
+auto simdutf::test::CommandLine::parse(int argc, char *argv[])
+    -> simdutf::test::CommandLine {
   CommandLine cmdline;
+  cmdline.seed = 42;
 
   std::list<std::string> args;
   for (int i = 1; i < argc; i++) {
@@ -26,12 +16,12 @@ CommandLine parse(int argc, char *argv[]) {
       return cmdline;
     }
 
-    if (arg == "--show-architectures") {
+    if ((arg == "--show-architectures") or (arg == "-A")) {
       cmdline.show_architectures = true;
       continue;
     }
 
-    if (arg == "--show-tests") {
+    if ((arg == "--show-tests") or (arg == "-l")) {
       cmdline.show_tests = true;
       continue;
     }
@@ -61,6 +51,17 @@ CommandLine parse(int argc, char *argv[]) {
 
       cmdline.tests.push_back(args.front());
       args.pop_front();
+    } else if ((arg == "-s") or (arg == "--seed")) {
+      if (args.empty()) {
+        throw std::invalid_argument("Expected seed value " + arg);
+      }
+
+      try {
+        cmdline.seed = std::stoi(args.front());
+      } catch (const std::exception &e) {
+        throw std::invalid_argument("Wrong number after " + arg);
+      }
+      args.pop_front();
     } else {
       throw std::invalid_argument("Unknown argument '" + arg + "'");
     }
@@ -76,10 +77,11 @@ Test utility for simdutf
 Usage:
 
     -h, --help                      show help
-    --show-architectures            show available architectures
-    --show-tests                    show name of available tests
+    -A, --show-architectures        show available architectures
+    -l, --show-tests                show name of available tests
     -a [ARCH], --arch [ARCH]        run tests only for selected architecture(s)
     -t [TEST], --test [TEST]        run tests matching all given strings
+    -s [SEED], --seed [SEED]        set the random seed
 
 Examples:
 
@@ -125,6 +127,9 @@ void print_tests(FILE *file) {
 }
 
 void print_tests() { print_tests(stdout); }
+
+namespace simdutf {
+namespace test {
 
 void run(const CommandLine &cmdline) {
   if (cmdline.show_help) {
@@ -186,11 +191,6 @@ void run(const CommandLine &cmdline) {
   }
 }
 
-} // namespace
-
-namespace simdutf {
-namespace test {
-
 std::list<test_entry> &test_procedures() {
   static std::list<test_entry> singleton;
 
@@ -202,7 +202,7 @@ register_test::register_test(const char *name, test_procedure proc) {
 }
 
 int main(int argc, char *argv[]) {
-  const auto cmdline = parse(argc, argv);
+  const auto cmdline = CommandLine::parse(argc, argv);
 
   run(cmdline);
 

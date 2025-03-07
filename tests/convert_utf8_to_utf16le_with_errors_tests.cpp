@@ -221,6 +221,28 @@ TEST_LOOP(trials, convert_3_or_4_UTF8_bytes) {
   }
 }
 
+TEST_LOOP(trials, convert_3_UTF8_bytes) {
+  simdutf::tests::helpers::RandomInt random(0x0800, 0xd800 - 1,
+                                            seed); // range for 3 UTF-8 bytes
+
+  auto procedure = [&implementation](const char *utf8, size_t size,
+                                     char16_t *utf16) -> size_t {
+    simdutf::result res =
+        implementation.convert_utf8_to_utf16le_with_errors(utf8, size, utf16);
+    ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
+    return res.count;
+  };
+  auto size_procedure = [&implementation](const char *utf8,
+                                          size_t size) -> size_t {
+    return implementation.utf16_length_from_utf8(utf8, size);
+  };
+  for (size_t size : input_size) {
+    transcode_utf8_to_utf16_test_base test(random, size);
+    ASSERT_TRUE(test(procedure));
+    ASSERT_TRUE(test.check_size(size_procedure));
+  }
+}
+
 TEST_LOOP(trials, header_bits_error) {
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x0000, 0xd800 - 1}, {0xe000, 0x10ffff}}, seed);

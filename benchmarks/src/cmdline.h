@@ -8,10 +8,16 @@
 
 namespace simdutf::benchmarks {
 
+enum class ListingMode {
+  None,
+  HumanReadable,
+  PlainLines,
+};
+
 class CommandLine {
 public:
   bool show_help = false;
-  bool show_procedures = false;
+  ListingMode show_procedures = ListingMode::None;
   std::set<std::string> procedures;
   std::set<size_t> random_size;
   std::set<std::filesystem::path> files;

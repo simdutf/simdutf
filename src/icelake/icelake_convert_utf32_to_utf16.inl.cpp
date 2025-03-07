@@ -70,8 +70,14 @@ avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
             2, 3, 0, 1);
         in = _mm512_shuffle_epi8(in, swap_512);
       }
-      _mm512_mask_compressstoreu_epi16(utf16_output, output_mask, in);
-      utf16_output += _mm_popcnt_u32(output_mask);
+      // we deliberately avoid _mm512_mask_compressstoreu_epi16 for portability
+      // (AMD Zen4 has terrible performance with it, it is effectively broken)
+      __m512i compressed = _mm512_maskz_compress_epi16(output_mask, in);
+      auto written_out = _mm_popcnt_u32(output_mask);
+      _mm512_mask_storeu_epi16(utf16_output, _bzhi_u32(0xFFFFFFFF, written_out),
+                               compressed);
+      //_mm512_mask_compressstoreu_epi16(utf16_output, output_mask, in);
+      utf16_output += written_out;
       buf += 16;
     }
   }
@@ -125,8 +131,14 @@ avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
             2, 3, 0, 1);
         in = _mm512_shuffle_epi8(in, swap_512);
       }
-      _mm512_mask_compressstoreu_epi16(utf16_output, output_mask, in);
-      utf16_output += _mm_popcnt_u32(output_mask);
+      // we deliberately avoid _mm512_mask_compressstoreu_epi16 for portability
+      // (AMD Zen4 has terrible performance with it, it is effectively broken)
+      __m512i compressed = _mm512_maskz_compress_epi16(output_mask, in);
+      auto written_out = _mm_popcnt_u32(output_mask);
+      _mm512_mask_storeu_epi16(utf16_output, _bzhi_u32(0xFFFFFFFF, written_out),
+                               compressed);
+      //_mm512_mask_compressstoreu_epi16(utf16_output, output_mask, in);
+      utf16_output += written_out;
       buf += remaining_len;
     }
   }
@@ -224,8 +236,14 @@ avx512_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
             2, 3, 0, 1);
         in = _mm512_shuffle_epi8(in, swap_512);
       }
-      _mm512_mask_compressstoreu_epi16(utf16_output, output_mask, in);
-      utf16_output += _mm_popcnt_u32(output_mask);
+      // we deliberately avoid _mm512_mask_compressstoreu_epi16 for portability
+      // (AMD Zen4 has terrible performance with it, it is effectively broken)
+      __m512i compressed = _mm512_maskz_compress_epi16(output_mask, in);
+      auto written_out = _mm_popcnt_u32(output_mask);
+      _mm512_mask_storeu_epi16(utf16_output, _bzhi_u32(0xFFFFFFFF, written_out),
+                               compressed);
+      //_mm512_mask_compressstoreu_epi16(utf16_output, output_mask, in);
+      utf16_output += written_out;
       if (simdutf_unlikely(err)) {
         return std::make_pair(result(code, buf - start + error_idx),
                               utf16_output);
@@ -300,8 +318,14 @@ avx512_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
             2, 3, 0, 1);
         in = _mm512_shuffle_epi8(in, swap_512);
       }
-      _mm512_mask_compressstoreu_epi16(utf16_output, output_mask, in);
-      utf16_output += _mm_popcnt_u32(output_mask);
+      // we deliberately avoid _mm512_mask_compressstoreu_epi16 for portability
+      // (AMD Zen4 has terrible performance with it, it is effectively broken)
+      __m512i compressed = _mm512_maskz_compress_epi16(output_mask, in);
+      auto written_out = _mm_popcnt_u32(output_mask);
+      _mm512_mask_storeu_epi16(utf16_output, _bzhi_u32(0xFFFFFFFF, written_out),
+                               compressed);
+      //_mm512_mask_compressstoreu_epi16(utf16_output, output_mask, in);
+      utf16_output += written_out;
       if (simdutf_unlikely(err)) {
         return std::make_pair(result(code, buf - start + error_idx),
                               utf16_output);

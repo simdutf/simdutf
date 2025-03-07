@@ -2763,6 +2763,9 @@ trim_partial_utf16(std::span<const char16_t> valid_utf16_input) noexcept {
 #endif   // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_BASE64
+  #ifndef SIMDUTF_NEED_TRAILING_ZEROES
+    #define SIMDUTF_NEED_TRAILING_ZEROES 1
+  #endif
 // base64_options are used to specify the base64 encoding options.
 // ASCII spaces are ' ', '\t', '\n', '\r', '\f'
 // garbage characters are characters that are not part of the base64 alphabet
@@ -4696,9 +4699,8 @@ public:
    * @param length        the length of the base64 input in bytes
    * @return maximal number of binary bytes
    */
-  simdutf_warn_unused virtual size_t
-  maximal_binary_length_from_base64(const char *input,
-                                    size_t length) const noexcept = 0;
+  simdutf_warn_unused size_t maximal_binary_length_from_base64(
+      const char *input, size_t length) const noexcept;
 
   /**
    * Provide the maximal binary length in bytes given the base64 input.
@@ -4711,9 +4713,8 @@ public:
    * @param length        the length of the base64 input in 16-bit units
    * @return maximal number of binary bytes
    */
-  simdutf_warn_unused virtual size_t
-  maximal_binary_length_from_base64(const char16_t *input,
-                                    size_t length) const noexcept = 0;
+  simdutf_warn_unused size_t maximal_binary_length_from_base64(
+      const char16_t *input, size_t length) const noexcept;
 
   /**
    * Convert a base64 input to a binary output.
@@ -4872,9 +4873,8 @@ public:
    * base64_url, is base64_default by default.
    * @return number of base64 bytes
    */
-  simdutf_warn_unused virtual size_t base64_length_from_binary(
-      size_t length,
-      base64_options options = base64_default) const noexcept = 0;
+  simdutf_warn_unused size_t base64_length_from_binary(
+      size_t length, base64_options options = base64_default) const noexcept;
 
   /**
    * Convert a binary input to a base64 output.
