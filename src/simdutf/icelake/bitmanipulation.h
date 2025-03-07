@@ -17,13 +17,13 @@ simdutf_really_inline long long int count_ones(uint64_t input_num) {
 #endif
 
 #if SIMDUTF_NEED_TRAILING_ZEROES
-simdutf_really_inline int trailing_zeroes(uint64_t input_num) {
-  #if SIMDUTF_REGULAR_VISUAL_STUDIO
-  return (int)_tzcnt_u64(input_num);
-  #else  // SIMDUTF_REGULAR_VISUAL_STUDIO
-  return __builtin_ctzll(input_num);
-  #endif // SIMDUTF_REGULAR_VISUAL_STUDIO
-}
+// simdutf_really_inline int trailing_zeroes(uint64_t input_num) {
+//   #if SIMDUTF_REGULAR_VISUAL_STUDIO
+//   return (int)_tzcnt_u64(input_num);
+//   #else  // SIMDUTF_REGULAR_VISUAL_STUDIO
+//   return __builtin_ctzll(input_num);
+//   #endif // SIMDUTF_REGULAR_VISUAL_STUDIO
+// }
 #endif
 
 } // unnamed namespace

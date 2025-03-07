@@ -51,8 +51,8 @@ template <> struct simd32<uint32_t> {
 //----------------------------------------------------------------------
 
 template <> struct simd32<bool> {
-  static const size_t SIZE = sizeof(__m128i);
-  static const size_t ELEMENTS = SIZE / sizeof(uint32_t);
+  // static const size_t SIZE = sizeof(__m128i);
+  // static const size_t ELEMENTS = SIZE / sizeof(uint32_t);
 
   __m256i value;
 

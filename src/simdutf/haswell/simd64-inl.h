@@ -1,8 +1,8 @@
 template <typename T> struct simd64;
 
 template <> struct simd64<uint64_t> {
-  static const size_t SIZE = sizeof(__m256i);
-  static const size_t ELEMENTS = SIZE / sizeof(uint64_t);
+  // static const size_t SIZE = sizeof(__m256i);
+  // static const size_t ELEMENTS = SIZE / sizeof(uint64_t);
 
   __m256i value;
 
