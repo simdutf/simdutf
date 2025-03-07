@@ -1,9 +1,6 @@
 template <typename T> struct simd32;
 
 template <> struct simd32<uint32_t> {
-  static const size_t SIZE = sizeof(__m128i);
-  static const size_t ELEMENTS = SIZE / sizeof(uint32_t);
-
   __m128i value;
 
   simdutf_really_inline simd32(const __m128i v) : value(v) {}
@@ -52,9 +49,6 @@ template <> struct simd32<uint32_t> {
 //----------------------------------------------------------------------
 
 template <> struct simd32<bool> {
-  static const size_t SIZE = sizeof(__m128i);
-  static const size_t ELEMENTS = SIZE / sizeof(uint32_t);
-
   __m128i value;
 
   simdutf_really_inline simd32(const __m128i v) : value(v) {}
