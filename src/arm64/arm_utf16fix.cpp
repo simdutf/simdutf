@@ -92,7 +92,7 @@ static inline uint64_t get_mask(uint8x16_t illse0, uint8x16_t illse1,
                                 uint8x16_t illse2, uint8x16_t illse3) {
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
   uint8x16_t bit_mask =
-      simdutf_make_uint16x8_t(0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
+      simdutf_make_uint8x16_t(0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
                               0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80);
 #else
   uint8x16_t bit_mask = {0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
@@ -126,7 +126,8 @@ static inline bool utf16fix_block64(char16_t *out, const char16_t *in,
     return (0xd800 <= c && c <= 0xdbff);
   };
   // this branch could be marked as unlikely:
-  if (veq_non_zero(illse0 | illse1 | illse2 | illse3)) {
+  if (veq_non_zero(
+          vorrq_u8(vorrq_u8(illse0, illse1), vorrq_u8(illse2, illse3)))) {
     uint64_t matches = get_mask(illse0, illse1, illse2, illse3);
     // Given that ARM has a fast bitreverse instruction, we can
     // reverse once and then use clz to find the first bit set.
