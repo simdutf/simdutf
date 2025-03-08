@@ -90,10 +90,18 @@ static inline uint8x16_t get_mismatch_copy(const char16_t *in, char16_t *out,
 
 static inline uint64_t get_mask(uint8x16_t illse0, uint8x16_t illse1,
                                 uint8x16_t illse2, uint8x16_t illse3) {
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+  uint8x16_t bit_mask =
+      simdutf_make_uint16x8_t(0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
+                              0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80);
+#else
   uint8x16_t bit_mask = {0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
                          0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80};
-  uint8x16_t sum0 = vpaddq_u8(illse0 & bit_mask, illse1 & bit_mask);
-  uint8x16_t sum1 = vpaddq_u8(illse2 & bit_mask, illse3 & bit_mask);
+#endif
+  uint8x16_t sum0 =
+      vpaddq_u8(vandq_u8(illse0, bit_mask), vandq_u8(illse1, bit_mask));
+  uint8x16_t sum1 =
+      vpaddq_u8(vandq_u8(illse2, bit_mask), vandq_u8(illse3, bit_mask));
   sum0 = vpaddq_u8(sum0, sum1);
   sum0 = vpaddq_u8(sum0, sum0);
   return vgetq_lane_u64(vreinterpretq_u64_u8(sum0), 0);
