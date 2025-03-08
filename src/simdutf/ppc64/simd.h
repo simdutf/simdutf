@@ -76,9 +76,9 @@ template <typename T> uint16_t move_mask_u8(T vec) {
 #endif
 }
 
-#include "simd8-inl.h"
-#include "simd16-inl.h"
-#include "simd32-inl.h"
+#include "simdutf/ppc64/simd8-inl.h"
+#include "simdutf/ppc64/simd16-inl.h"
+#include "simdutf/ppc64/simd32-inl.h"
 
 template <typename T>
 simd8<T> select(const simd8<T> cond, const simd8<T> val_true,
