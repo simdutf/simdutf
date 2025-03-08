@@ -238,7 +238,7 @@ simdutf_warn_unused result implementation::validate_utf16le_with_errors(
     const char16_t *buf, size_t len) const noexcept {
   const auto res =
       ppc64::utf16::validate_utf16_with_errors<endianness::LITTLE>(buf, len);
-  if (res.is_ok() and res.count != len) {
+  if (res.count != len) {
     auto scalar = scalar::utf16::validate_with_errors<endianness::LITTLE>(
         buf + res.count, len - res.count);
     scalar.count += res.count;
@@ -252,7 +252,7 @@ simdutf_warn_unused result implementation::validate_utf16be_with_errors(
     const char16_t *buf, size_t len) const noexcept {
   const auto res =
       ppc64::utf16::validate_utf16_with_errors<endianness::BIG>(buf, len);
-  if (res.is_ok() and res.count != len) {
+  if (res.count != len) {
     auto scalar = scalar::utf16::validate_with_errors<endianness::BIG>(
         buf + res.count, len - res.count);
     scalar.count += res.count;

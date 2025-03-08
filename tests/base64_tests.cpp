@@ -1379,9 +1379,7 @@ TEST(decode_base64_cases_16) {
         p.second.data(), p.second.size(), buffer.data());
     ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
     ASSERT_EQUAL(r.count, p.first.size());
-    for (size_t i = 0; i < buffer.size(); i++) {
-      ASSERT_EQUAL(buffer[i], p.first[i]);
-    }
+    ASSERT_BYTES_EQUAL(buffer, p.first, r.count);
   }
 }
 
