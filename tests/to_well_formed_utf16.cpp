@@ -9,6 +9,28 @@
 
 constexpr size_t trials = 1000;
 
+TEST_LOOP(trials, to_well_formed_utf16le_single_surrogate) {
+  for (size_t j = 0; j < 40; j++) {
+    std::vector<uint16_t> utf16(40);
+    utf16[j] = 0xD800;
+    const auto len = utf16.size();
+    std::vector<char16_t> output(len);
+    implementation.to_well_formed_utf16le((const char16_t *)utf16.data(), len,
+                                          output.data());
+    ASSERT_TRUE(output[j] == 0xFFFD);
+  }
+}
+TEST_LOOP(trials, to_well_formed_utf16be_single_surrogate) {
+  for (size_t j = 0; j < 40; j++) {
+    std::vector<uint16_t> utf16(40);
+    utf16[j] = 0x00D8;
+    const auto len = utf16.size();
+    std::vector<char16_t> output(len);
+    implementation.to_well_formed_utf16be((const char16_t *)utf16.data(), len,
+                                          output.data());
+    ASSERT_TRUE(output[j] == 0xFDFF);
+  }
+}
 // Should be the identity on valid input
 TEST_LOOP(trials,
           to_well_formed_utf16le_for_valid_input_surrogate_pairs_short) {

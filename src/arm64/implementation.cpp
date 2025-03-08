@@ -108,7 +108,7 @@ convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in, size_t shufutf8_idx) {
        // SIMDUTF_FEATURE_UTF32)
 
 #if SIMDUTF_FEATURE_UTF16
-#include "arm64/arm_utf16fix.cpp"
+  #include "arm64/arm_utf16fix.cpp"
 #endif // SIMDUTF_FEATURE_UTF16
 #if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
   #include "arm64/arm_validate_utf16.cpp"
@@ -323,14 +323,12 @@ simdutf_warn_unused result implementation::validate_utf16be_with_errors(
 
 void implementation::to_well_formed_utf16le(const char16_t *input, size_t len,
                                             char16_t *output) const noexcept {
-  return scalar::utf16::to_well_formed_utf16<endianness::LITTLE>(input, len,
-                                                                 output);
+  return utf16fix_neon_64bits<endianness::LITTLE>(input, len, output);
 }
 
 void implementation::to_well_formed_utf16be(const char16_t *input, size_t len,
                                             char16_t *output) const noexcept {
-  return scalar::utf16::to_well_formed_utf16<endianness::BIG>(input, len,
-                                                              output);
+  return utf16fix_neon_64bits<endianness::BIG>(input, len, output);
 }
 #endif // SIMDUTF_FEATURE_UTF16
 

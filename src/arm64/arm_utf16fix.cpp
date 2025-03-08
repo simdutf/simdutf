@@ -2,7 +2,7 @@
 /*
  * Returns if a vector of type uint8x16_t is all zero.
  */
-static int veq_non_zero(uint8x16_t v) {
+static inline int veq_non_zero(uint8x16_t v) {
   // might compile to two instructions:
   //	umaxv   s0, v0.4s
   //	fmov	w0, s0
@@ -114,6 +114,7 @@ static inline bool utf16fix_block64(char16_t *out, const char16_t *in,
   uint8x16_t illse2 = get_mismatch_copy<big_endian>(in + 32, out + 32, inplace);
   uint8x16_t illse3 = get_mismatch_copy<big_endian>(in + 48, out + 48, inplace);
   auto is_high_surrogate = [](char16_t c) -> bool {
+    c = !match_system(big_endian) ? scalar::u16_swap_bytes(c) : c;
     return (0xd800 <= c && c <= 0xdbff);
   };
   // this branch could be marked as unlikely:
@@ -141,15 +142,15 @@ static inline bool utf16fix_block64(char16_t *out, const char16_t *in,
 }
 
 template <endianness big_endian>
-void utf16fix_neon_64bits(char16_t *out, const char16_t *in, size_t n) {
+void utf16fix_neon_64bits(const char16_t *in, size_t n, char16_t *out) {
   size_t i;
   const char16_t replacement =
-      !match_system(big_endian) ? u16_swap_bytes(0xfffd) : 0xfffd;
+      !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
   if (n < 17) {
-    scalar::utf16::to_well_formed_utf16<big_endian>(out, in, n);
-    return;
+    return scalar::utf16::to_well_formed_utf16<big_endian>(in, n, out);
   }
   auto is_low_surrogate = [](char16_t c) -> bool {
+    c = !match_system(big_endian) ? scalar::u16_swap_bytes(c) : c;
     return (0xdc00 <= c && c <= 0xdfff);
   };
   out[0] = is_low_surrogate(in[0]) ? replacement : in[0];
@@ -157,23 +158,28 @@ void utf16fix_neon_64bits(char16_t *out, const char16_t *in, size_t n) {
 
   /* duplicate code to have the compiler specialise utf16fix_block() */
   if (in == out) {
-    for (i = 1; i + 64 < n; i += 64)
-      utf16fix_block64(out + i, in + i, true);
+    for (i = 1; i + 64 < n; i += 64) {
+      utf16fix_block64<big_endian>(out + i, in + i, true);
+    }
 
-    for (; i + 16 < n; i += 16)
-      utf16fix_block(out + i, in + i, true);
+    for (; i + 16 < n; i += 16) {
+      utf16fix_block<big_endian>(out + i, in + i, true);
+    }
 
     /* tbd: find carry */
-    utf16fix_block(out + n - 16, in + n - 16, true);
+    utf16fix_block<big_endian>(out + n - 16, in + n - 16, true);
   } else {
-    for (i = 1; i + 64 < n; i += 64)
-      utf16fix_block64(out + i, in + i, false);
-    for (; i + 16 < n; i += 16)
-      utf16fix_block(out + i, in + i, false);
+    for (i = 1; i + 64 < n; i += 64) {
+      utf16fix_block64<big_endian>(out + i, in + i, false);
+    }
+    for (; i + 16 < n; i += 16) {
+      utf16fix_block<big_endian>(out + i, in + i, false);
+    }
 
-    utf16fix_block(out + n - 16, in + n - 16, false);
+    utf16fix_block<big_endian>(out + n - 16, in + n - 16, false);
   }
   auto is_high_surrogate = [](char16_t c) -> bool {
+    c = !match_system(big_endian) ? scalar::u16_swap_bytes(c) : c;
     return (0xd800 <= c && c <= 0xdbff);
   };
   out[n - 1] = is_high_surrogate(out[n - 1]) ? replacement : out[n - 1];
