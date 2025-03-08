@@ -609,8 +609,6 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   return {SUCCESS, srclen, size_t(dst - dstinit)};
 }
 
-#include "ppc64_base64_internal_tests.cpp"
-
 template <bool isbase64url>
 size_t encode_base64(char *dst, const char *src, size_t srclen,
                      base64_options options) {

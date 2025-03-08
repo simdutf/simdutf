@@ -1,6 +1,6 @@
 #include "simdutf/ppc64/begin.h"
 
-#include "ppc64_utf16_to_utf8_tables.h"
+#include "ppc64/ppc64_utf16_to_utf8_tables.h"
 
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
@@ -38,63 +38,63 @@ enum class ErrorReporting {
 };
 
 #if SIMDUTF_FEATURE_UTF16
-  #include "ppc64_validate_utf16.cpp"
+  #include "ppc64/ppc64_validate_utf16.cpp"
 #endif // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_UTF8
-  #include "ppc64_convert_latin1_to_utf8.cpp"
+  #include "ppc64/ppc64_convert_latin1_to_utf8.cpp"
 #endif // SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_UTF16
-  #include "ppc64_convert_latin1_to_utf16.cpp"
+  #include "ppc64/ppc64_convert_latin1_to_utf16.cpp"
 #endif // SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_UTF32
-  #include "ppc64_convert_latin1_to_utf32.cpp"
+  #include "ppc64/ppc64_convert_latin1_to_utf32.cpp"
 #endif // SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
-  #include "ppc64_convert_utf8_to_latin1.cpp"
+  #include "ppc64/ppc64_convert_utf8_to_latin1.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
-  #include "ppc64_convert_utf8_to_utf16.cpp"
+  #include "ppc64/ppc64_convert_utf8_to_utf16.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
-  #include "ppc64_convert_utf8_to_utf32.cpp"
+  #include "ppc64/ppc64_convert_utf8_to_utf32.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
-  #include "ppc64_convert_utf16_to_latin1.cpp"
+  #include "ppc64/ppc64_convert_utf16_to_latin1.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF8
-  #include "ppc64_convert_utf16_to_utf8.cpp"
+  #include "ppc64/ppc64_convert_utf16_to_utf8.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
-  #include "ppc64_convert_utf16_to_utf32.cpp"
+  #include "ppc64/ppc64_convert_utf16_to_utf32.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
-  #include "ppc64_convert_utf32_to_latin1.cpp"
+  #include "ppc64/ppc64_convert_utf32_to_latin1.cpp"
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF16
-  #include "ppc64_convert_utf32_to_utf16.cpp"
+  #include "ppc64/ppc64_convert_utf32_to_utf16.cpp"
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF32
-  #include "ppc64_convert_utf32_to_utf8.cpp"
+  #include "ppc64/ppc64_convert_utf32_to_utf8.cpp"
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
-  #include "ppc64_utf8_length_from_latin1.cpp"
+  #include "ppc64/ppc64_utf8_length_from_latin1.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_BASE64
-  #include "ppc64_base64.cpp"
+  #include "ppc64/ppc64_base64.cpp"
 #endif // SIMDUTF_FEATURE_BASE64
 
 } // unnamed namespace
@@ -140,7 +140,7 @@ enum class ErrorReporting {
   #include "generic/utf8_to_latin1/valid_utf8_to_latin1.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
-#include "templates.cpp"
+#include "ppc64/templates.cpp"
 
 #ifdef SIMDUTF_INTERNAL_TESTS
   #if SIMDUTF_FEATURE_BASE64
