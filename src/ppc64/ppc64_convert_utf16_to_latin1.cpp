@@ -26,12 +26,18 @@ utf16_to_latin1_t ppc64_convert_utf16_to_latin1(const char16_t *buf, size_t len,
 
     // AltiVec-specific
     const auto tmp = vec_u64_t(in.value);
+#if __LITTLE_ENDIAN__
+    memcpy(latin1_output, &tmp[1], 8);
+    const uint64_t upper = tmp[0];
+#else
     memcpy(latin1_output, &tmp[0], 8);
+    const uint64_t upper = tmp[1];
+#endif // __LITTLE_ENDIAN__
     // AltiVec
 
-    if (simdutf_unlikely(tmp[1] != 0)) {
+    if (simdutf_unlikely(upper)) {
       uint8_t bytes[8];
-      memcpy(bytes, &tmp[1], 8);
+      memcpy(bytes, &upper, 8);
       for (size_t k = 0; k < 8; k++) {
         if (bytes[k] != 0) {
           return utf16_to_latin1_t{error_code::TOO_LARGE, buf + k,

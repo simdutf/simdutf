@@ -31,10 +31,17 @@ utf16_to_utf32_t ppc64_convert_utf16_to_utf32(const char16_t *buf, size_t len,
     // However, it is likely an uncommon occurrence.
     if (surrogates_bitmask == 0x0000) {
       // case: no surrogate pairs, extend 16-bit code units to 32-bit code units
+#if __LITTLE_ENDIAN__
+      const auto lo =
+          vector_u8(0, 1, 16, 16, 2, 3, 16, 16, 4, 5, 16, 16, 6, 7, 16, 16);
+      const auto hi = vector_u8(8 + 0, 8 + 1, 16, 16, 8 + 2, 8 + 3, 16, 16,
+                                8 + 4, 8 + 5, 16, 16, 8 + 6, 8 + 7, 16, 16);
+#else
       const auto lo =
           vector_u8(16, 16, 0, 1, 16, 16, 2, 3, 16, 16, 4, 5, 16, 16, 6, 7);
       const auto hi = vector_u8(16, 16, 8 + 0, 8 + 1, 16, 16, 8 + 2, 8 + 3, 16,
                                 16, 8 + 4, 8 + 5, 16, 16, 8 + 6, 8 + 7);
+#endif // __LITTLE_ENDIAN__
 
       const auto utf32_0 = lo.lookup_32(as_vector_u8(in), zero);
       const auto utf32_1 = hi.lookup_32(as_vector_u8(in), zero);
@@ -68,7 +75,7 @@ utf16_to_utf32_t ppc64_convert_utf16_to_utf32(const char16_t *buf, size_t len,
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
           if ((diff | diff2) > 0x3FF) {
-            return utf16_to_utf32_t{error_code::SURROGATE, buf + k,
+            return utf16_to_utf32_t{error_code::SURROGATE, buf + k - 1,
                                     utf32_output};
           }
           uint32_t value = (diff << 10) + diff2 + 0x10000;

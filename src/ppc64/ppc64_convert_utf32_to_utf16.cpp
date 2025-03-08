@@ -24,18 +24,31 @@ utf32_to_utf16_t ppc64_convert_utf32_to_utf16(const char32_t *buf, size_t len,
     // Check if no bits set above 15th
     if (any_surrogate.is_zero()) {
       // Pack UTF-32 to UTF-16
+#if __LITTLE_ENDIAN__
+      const auto sh = big_endian ? vector_u8(1, 0, 5, 4, 9, 8, 13, 12, 17, 16,
+                                             21, 20, 25, 24, 29, 28)
+                                 : vector_u8(0, 1, 4, 5, 8, 9, 12, 13, 16, 17,
+                                             20, 21, 24, 25, 28, 29);
+#else
       const auto sh = big_endian ? vector_u8(2, 3, 6, 7, 10, 11, 14, 15, 18, 19,
                                              22, 23, 26, 27, 30, 31)
                                  : vector_u8(3, 2, 7, 6, 11, 10, 15, 14, 19, 18,
                                              23, 22, 27, 26, 31, 30);
-
+#endif // __LITTLE_ENDIAN__
       const auto packed0 = sh.lookup_32(as_vector_u8(in0), as_vector_u8(in1));
       const auto packed = as_vector_u16(packed0);
 
+#if __LITTLE_ENDIAN__
+      const auto v_f800 =
+          big_endian ? vector_u16::splat(0x00f8) : vector_u16::splat(0xf800);
+      const auto v_d800 =
+          big_endian ? vector_u16::splat(0x00d8) : vector_u16::splat(0xd800);
+#else
       const auto v_f800 =
           big_endian ? vector_u16::splat(0xf800) : vector_u16::splat(0x00f8);
       const auto v_d800 =
           big_endian ? vector_u16::splat(0xd800) : vector_u16::splat(0x00d8);
+#endif // __LITTLE_ENDIAN__
       const auto forbidden = (packed & v_f800) == v_d800;
 
       switch (er) {
@@ -70,7 +83,7 @@ utf32_to_utf16_t ppc64_convert_utf32_to_utf16(const char32_t *buf, size_t len,
             return utf32_to_utf16_t{error_code::SURROGATE, buf + k,
                                     utf16_output};
           }
-          *utf16_output++ = not big_endian
+          *utf16_output++ = not match_system(big_endian)
                                 ? scalar::u16_swap_bytes(uint16_t(word))
                                 : uint16_t(word);
         } else {
@@ -82,7 +95,7 @@ utf32_to_utf16_t ppc64_convert_utf32_to_utf16(const char32_t *buf, size_t len,
           word -= 0x10000;
           uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
           uint16_t low_surrogate = uint16_t(0xDC00 + (word & 0x3FF));
-          if (not big_endian) {
+          if (not match_system(big_endian)) {
             high_surrogate = scalar::u16_swap_bytes(high_surrogate);
             low_surrogate = scalar::u16_swap_bytes(low_surrogate);
           }
