@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <array>
 
 #include <tests/reference/encode_utf8.h>
 #include <tests/reference/encode_utf16.h>
@@ -49,18 +50,18 @@ void transcode_test_base::encode_utf16(uint32_t codepoint,
   char16_t W2;
   switch (::simdutf::tests::reference::utf16::encode(codepoint, W1, W2)) {
   case 1:
-#if SIMDUTF_IS_BIG_ENDIAN
-    W1 = char16_t((uint16_t(W1) << 8) | (uint16_t(W1) >> 8));
+    if (!match_system(utf16_endianness)) {
+      W1 = char16_t((uint16_t(W1) << 8) | (uint16_t(W1) >> 8));
+    }
 
-#endif
     target.push_back(W1);
     break;
 
   case 2:
-#if SIMDUTF_IS_BIG_ENDIAN
-    W1 = char16_t((uint16_t(W1) << 8) | (uint16_t(W1) >> 8));
-    W2 = char16_t((uint16_t(W2) << 8) | (uint16_t(W2) >> 8));
-#endif
+    if (!match_system(utf16_endianness)) {
+      W1 = char16_t((uint16_t(W1) << 8) | (uint16_t(W1) >> 8));
+      W2 = char16_t((uint16_t(W2) << 8) | (uint16_t(W2) >> 8));
+    }
     target.push_back(W1);
     target.push_back(W2);
     break;
@@ -172,7 +173,8 @@ bool transcode_latin1_to_utf8_test_base::validate(size_t saved_chars) const {
  * transcoding.
  */
 transcode_latin1_to_utf16_test_base::transcode_latin1_to_utf16_test_base(
-    GenerateCodepoint generate, size_t input_size) {
+    endianness utf16_endianness, GenerateCodepoint generate, size_t input_size)
+    : transcode_test_base{utf16_endianness} {
   while (input_latin1.size() < input_size) {
     const uint32_t codepoint = generate();
     prepare_input(codepoint);
@@ -428,7 +430,8 @@ bool transcode_utf8_to_latin1_test_base::validate(size_t saved_chars) const {
  * transcoding.
  */
 transcode_utf16_to_latin1_test_base::transcode_utf16_to_latin1_test_base(
-    GenerateCodepoint generate, size_t input_size) {
+    endianness utf16_endianness, GenerateCodepoint generate, size_t input_size)
+    : transcode_test_base{utf16_endianness} {
   while (input_utf16.size() < input_size) {
     const uint32_t codepoint = generate();
     prepare_input(codepoint);
@@ -437,8 +440,8 @@ transcode_utf16_to_latin1_test_base::transcode_utf16_to_latin1_test_base(
 }
 
 transcode_utf16_to_latin1_test_base::transcode_utf16_to_latin1_test_base(
-    const std::vector<char16_t> &input_utf16)
-    : input_utf16{input_utf16} {
+    endianness utf16_endianness, const std::vector<char16_t> &input_utf16)
+    : transcode_test_base{utf16_endianness}, input_utf16{input_utf16} {
   auto consume = [this](const uint32_t codepoint) {
     ::simdutf::tests::reference::latin1::encode(
         codepoint,
@@ -449,8 +452,9 @@ transcode_utf16_to_latin1_test_base::transcode_utf16_to_latin1_test_base(
                           simdutf::tests::reference::utf16::Error) -> bool {
     throw std::invalid_argument("Wrong UTF-16 input");
   };
-  simdutf::tests::reference::utf16::decode(
-      input_utf16.data(), input_utf16.size(), consume, error_handler);
+  simdutf::tests::reference::utf16::decode(utf16_endianness, input_utf16.data(),
+                                           input_utf16.size(), consume,
+                                           error_handler);
   output_latin1.resize(reference_output_latin1.size() + output_size_margin);
 }
 
@@ -461,7 +465,7 @@ void transcode_utf16_to_latin1_test_base::prepare_input(uint32_t codepoint) {
 
 bool transcode_utf16_to_latin1_test_base::is_input_valid() const {
   return simdutf::tests::reference::validate_utf16_to_latin1(
-      input_utf16.data(), input_utf16.size());
+      utf16_endianness, input_utf16.data(), input_utf16.size());
 }
 
 bool transcode_utf16_to_latin1_test_base::validate(size_t saved_chars) const {
@@ -531,7 +535,8 @@ bool transcode_utf16_to_latin1_test_base::validate(size_t saved_chars) const {
  * transcoding.
  */
 transcode_utf8_to_utf16_test_base::transcode_utf8_to_utf16_test_base(
-    GenerateCodepoint generate, size_t input_size) {
+    endianness utf16_endianness, GenerateCodepoint generate, size_t input_size)
+    : transcode_test_base{utf16_endianness} {
   while (input_utf8.size() < input_size) {
     const uint32_t codepoint = generate();
     prepare_input(codepoint);
@@ -680,7 +685,8 @@ bool transcode_utf8_to_utf32_test_base::validate(size_t saved_chars) const {
  * transcoding.
  */
 transcode_utf16_to_utf8_test_base::transcode_utf16_to_utf8_test_base(
-    GenerateCodepoint generate, size_t input_size) {
+    endianness utf16_endianness, GenerateCodepoint generate, size_t input_size)
+    : transcode_test_base{utf16_endianness} {
   while (input_utf16.size() < input_size) {
     const uint32_t codepoint = generate();
     prepare_input(codepoint);
@@ -690,8 +696,8 @@ transcode_utf16_to_utf8_test_base::transcode_utf16_to_utf8_test_base(
 }
 
 transcode_utf16_to_utf8_test_base::transcode_utf16_to_utf8_test_base(
-    const std::vector<char16_t> &input_utf16)
-    : input_utf16{input_utf16} {
+    endianness utf16_endianness, const std::vector<char16_t> &input_utf16)
+    : transcode_test_base{utf16_endianness}, input_utf16{input_utf16} {
 
   auto consume = [this](const uint32_t codepoint) {
     ::simdutf::tests::reference::utf8::encode(codepoint, [this](uint8_t byte) {
@@ -703,8 +709,9 @@ transcode_utf16_to_utf8_test_base::transcode_utf16_to_utf8_test_base(
                           simdutf::tests::reference::utf16::Error) -> bool {
     throw std::invalid_argument("Wrong UTF-16 input");
   };
-  simdutf::tests::reference::utf16::decode(
-      input_utf16.data(), input_utf16.size(), consume, error_handler);
+  simdutf::tests::reference::utf16::decode(utf16_endianness, input_utf16.data(),
+                                           input_utf16.size(), consume,
+                                           error_handler);
   output_utf8.resize(reference_output_utf8.size() + output_size_margin);
 }
 
@@ -714,8 +721,8 @@ void transcode_utf16_to_utf8_test_base::prepare_input(uint32_t codepoint) {
 }
 
 bool transcode_utf16_to_utf8_test_base::is_input_valid() const {
-  return simdutf::tests::reference::validate_utf16(input_utf16.data(),
-                                                   input_utf16.size());
+  return simdutf::tests::reference::validate_utf16(
+      utf16_endianness, input_utf16.data(), input_utf16.size());
 }
 
 bool transcode_utf16_to_utf8_test_base::validate(size_t saved_chars) const {
@@ -786,7 +793,8 @@ bool transcode_utf16_to_utf8_test_base::validate(size_t saved_chars) const {
  * transcoding.
  */
 transcode_utf16_to_utf32_test_base::transcode_utf16_to_utf32_test_base(
-    GenerateCodepoint generate, size_t input_size) {
+    endianness utf16_endianness, GenerateCodepoint generate, size_t input_size)
+    : transcode_test_base{utf16_endianness} {
   while (input_utf16.size() < input_size) {
     const uint32_t codepoint = generate();
     prepare_input(codepoint);
@@ -796,8 +804,8 @@ transcode_utf16_to_utf32_test_base::transcode_utf16_to_utf32_test_base(
 }
 
 transcode_utf16_to_utf32_test_base::transcode_utf16_to_utf32_test_base(
-    const std::vector<char16_t> &input_utf16)
-    : input_utf16{input_utf16} {
+    endianness utf16_endianness, const std::vector<char16_t> &input_utf16)
+    : transcode_test_base{utf16_endianness}, input_utf16{input_utf16} {
 
   auto consume = [this](const uint32_t codepoint) {
     ::simdutf::tests::reference::utf32::encode(
@@ -809,8 +817,9 @@ transcode_utf16_to_utf32_test_base::transcode_utf16_to_utf32_test_base(
                           simdutf::tests::reference::utf16::Error) -> bool {
     throw std::invalid_argument("Wrong UTF-16 input");
   };
-  simdutf::tests::reference::utf16::decode(
-      input_utf16.data(), input_utf16.size(), consume, error_handler);
+  simdutf::tests::reference::utf16::decode(utf16_endianness, input_utf16.data(),
+                                           input_utf16.size(), consume,
+                                           error_handler);
   output_utf32.resize(reference_output_utf32.size() + output_size_margin);
 }
 
@@ -820,8 +829,8 @@ void transcode_utf16_to_utf32_test_base::prepare_input(uint32_t codepoint) {
 }
 
 bool transcode_utf16_to_utf32_test_base::is_input_valid() const {
-  return simdutf::tests::reference::validate_utf16(input_utf16.data(),
-                                                   input_utf16.size());
+  return simdutf::tests::reference::validate_utf16(
+      utf16_endianness, input_utf16.data(), input_utf16.size());
 }
 
 bool transcode_utf16_to_utf32_test_base::validate(size_t saved_chars) const {
@@ -1085,7 +1094,8 @@ bool transcode_utf32_to_utf8_test_base::validate(size_t saved_chars) const {
  * transcoding.
  */
 transcode_utf32_to_utf16_test_base::transcode_utf32_to_utf16_test_base(
-    GenerateCodepoint generate, size_t input_size) {
+    endianness utf16_endianness, GenerateCodepoint generate, size_t input_size)
+    : transcode_test_base{utf16_endianness} {
   while (input_utf32.size() < input_size) {
     const uint32_t codepoint = generate();
     prepare_input(codepoint);
@@ -1171,3 +1181,78 @@ bool transcode_utf32_to_utf16_test_base::validate(size_t saved_chars) const {
 } // namespace helpers
 } // namespace tests
 } // namespace simdutf
+
+//------------------------------------------------------------
+
+std::vector<std::vector<char16_t>>
+all_utf16_combinations(simdutf::endianness byte_order) {
+  // non-surrogate word that yields 1 UTF-8 byte
+  const char16_t V_1byte_start = 0x0042;
+  // non-surrogate word that yields 2 UTF-8 bytes
+  const char16_t V_2bytes_start = 0x017f;
+  // non-surrogate word the yields 3 UTF-8 bytes
+  const char16_t V_3bytes_start = 0xefff;
+  const char16_t L = to_utf16(byte_order, 0xd9ca); // low surrogate
+  const char16_t H = to_utf16(byte_order, 0xde42); // high surrogate
+
+  std::vector<std::vector<char16_t>> result;
+  std::vector<char16_t> row(32, to_utf16(byte_order, '*'));
+
+  std::array<int, 8> pattern{0};
+  while (true) {
+    // 1. produce output
+    char16_t V_1byte = V_1byte_start;
+    char16_t V_2bytes = V_2bytes_start;
+    char16_t V_3bytes = V_3bytes_start;
+    for (int i = 0; i < 8; i++) {
+      switch (pattern[i]) {
+      case 0:
+        row[i] = to_utf16(byte_order, V_1byte++);
+        break;
+      case 1:
+        row[i] = to_utf16(byte_order, V_2bytes++);
+        break;
+      case 2:
+        row[i] = to_utf16(byte_order, V_3bytes++);
+        break;
+      case 3:
+        row[i] = L;
+        break;
+      case 4:
+        row[i] = H;
+        break;
+      default:
+        abort();
+      }
+    } // for
+
+    if (row[7] == L) {
+      row[8] = H; // make input valid
+      result.push_back(row);
+
+      row[8] = to_utf16(byte_order, V_1byte); // broken input
+      result.push_back(row);
+    } else {
+      row[8] = to_utf16(byte_order, V_1byte);
+      result.push_back(row);
+    }
+
+    // next pattern
+    int i = 0;
+    int carry = 1;
+    for (; i < 8 && carry; i++) {
+      pattern[i] += carry;
+      if (pattern[i] == 5) {
+        pattern[i] = 0;
+        carry = 1;
+      } else
+        carry = 0;
+    }
+
+    if (carry == 1 and i == 8)
+      break;
+
+  } // while
+
+  return result;
+}

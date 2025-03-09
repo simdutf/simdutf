@@ -10,7 +10,8 @@
 #include <tests/helpers/test.h>
 
 namespace {
-std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
+constexpr std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
+constexpr simdutf::endianness BE = simdutf::endianness::BIG;
 
 using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
 
@@ -137,12 +138,9 @@ TEST_LOOP(trials, convert_pure_ASCII) {
   auto generator = [&counter]() -> uint32_t { return counter++ & 0x7f; };
 
   auto procedure = [&implementation](const char *utf8, size_t size,
-                                     char16_t *utf16le) -> size_t {
-    std::vector<char16_t> utf16be(
-        2 * size); // Assume each UTF-8 byte is converted into two UTF-16 bytes
-    simdutf::result res = implementation.convert_utf8_to_utf16be_with_errors(
-        utf8, size, utf16be.data());
-    implementation.change_endianness_utf16(utf16be.data(), res.count, utf16le);
+                                     char16_t *utf16be) -> size_t {
+    const simdutf::result res =
+        implementation.convert_utf8_to_utf16be_with_errors(utf8, size, utf16be);
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
     return res.count;
   };
@@ -152,7 +150,7 @@ TEST_LOOP(trials, convert_pure_ASCII) {
   };
 
   for (size_t size : input_size) {
-    transcode_utf8_to_utf16_test_base test(generator, size);
+    transcode_utf8_to_utf16_test_base test(BE, generator, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
@@ -163,21 +161,20 @@ TEST_LOOP(trials, convert_1_or_2_UTF8_bytes) {
       0x0000, 0x07ff, seed); // range for 1 or 2 UTF-8 bytes
 
   auto procedure = [&implementation](const char *utf8, size_t size,
-                                     char16_t *utf16le) -> size_t {
-    std::vector<char16_t> utf16be(
-        2 * size); // Assume each UTF-8 byte is converted into two UTF-16 bytes
-    simdutf::result res = implementation.convert_utf8_to_utf16be_with_errors(
-        utf8, size, utf16be.data());
-    implementation.change_endianness_utf16(utf16be.data(), res.count, utf16le);
+                                     char16_t *utf16be) -> size_t {
+    const simdutf::result res =
+        implementation.convert_utf8_to_utf16be_with_errors(utf8, size, utf16be);
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
     return res.count;
   };
+
   auto size_procedure = [&implementation](const char *utf8,
                                           size_t size) -> size_t {
     return implementation.utf16_length_from_utf8(utf8, size);
   };
+
   for (size_t size : input_size) {
-    transcode_utf8_to_utf16_test_base test(random, size);
+    transcode_utf8_to_utf16_test_base test(BE, random, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
@@ -189,21 +186,20 @@ TEST_LOOP(trials, convert_1_or_2_or_3_UTF8_bytes) {
       {{0x0000, 0xd7ff}, {0xe000, 0xffff}}, seed);
 
   auto procedure = [&implementation](const char *utf8, size_t size,
-                                     char16_t *utf16le) -> size_t {
-    std::vector<char16_t> utf16be(
-        2 * size); // Assume each UTF-8 byte is converted into two UTF-16 bytes
-    simdutf::result res = implementation.convert_utf8_to_utf16be_with_errors(
-        utf8, size, utf16be.data());
-    implementation.change_endianness_utf16(utf16be.data(), res.count, utf16le);
+                                     char16_t *utf16be) -> size_t {
+    const simdutf::result res =
+        implementation.convert_utf8_to_utf16be_with_errors(utf8, size, utf16be);
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
     return res.count;
   };
+
   auto size_procedure = [&implementation](const char *utf8,
                                           size_t size) -> size_t {
     return implementation.utf16_length_from_utf8(utf8, size);
   };
+
   for (size_t size : input_size) {
-    transcode_utf8_to_utf16_test_base test(random, size);
+    transcode_utf8_to_utf16_test_base test(BE, random, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
@@ -215,21 +211,20 @@ TEST_LOOP(trials, convert_3_or_4_UTF8_bytes) {
       seed); // range for 3 or 4 UTF-8 bytes
 
   auto procedure = [&implementation](const char *utf8, size_t size,
-                                     char16_t *utf16le) -> size_t {
-    std::vector<char16_t> utf16be(
-        2 * size); // Assume each UTF-8 byte is converted into two UTF-16 bytes
-    simdutf::result res = implementation.convert_utf8_to_utf16be_with_errors(
-        utf8, size, utf16be.data());
-    implementation.change_endianness_utf16(utf16be.data(), res.count, utf16le);
+                                     char16_t *utf16be) -> size_t {
+    const simdutf::result res =
+        implementation.convert_utf8_to_utf16be_with_errors(utf8, size, utf16be);
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
     return res.count;
   };
+
   auto size_procedure = [&implementation](const char *utf8,
                                           size_t size) -> size_t {
     return implementation.utf16_length_from_utf8(utf8, size);
   };
+
   for (size_t size : input_size) {
-    transcode_utf8_to_utf16_test_base test(random, size);
+    transcode_utf8_to_utf16_test_base test(BE, random, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
@@ -240,21 +235,20 @@ TEST_LOOP(trials, convert_3_UTF8_bytes) {
                                             seed); // range for 3 UTF-8 bytes
 
   auto procedure = [&implementation](const char *utf8, size_t size,
-                                     char16_t *utf16le) -> size_t {
-    std::vector<char16_t> utf16be(
-        2 * size); // Assume each UTF-8 byte is converted into two UTF-16 bytes
-    simdutf::result res = implementation.convert_utf8_to_utf16be_with_errors(
-        utf8, size, utf16be.data());
-    implementation.change_endianness_utf16(utf16be.data(), res.count, utf16le);
+                                     char16_t *utf16be) -> size_t {
+    const simdutf::result res =
+        implementation.convert_utf8_to_utf16be_with_errors(utf8, size, utf16be);
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
     return res.count;
   };
+
   auto size_procedure = [&implementation](const char *utf8,
                                           size_t size) -> size_t {
     return implementation.utf16_length_from_utf8(utf8, size);
   };
+
   for (size_t size : input_size) {
-    transcode_utf8_to_utf16_test_base test(random, size);
+    transcode_utf8_to_utf16_test_base test(BE, random, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
@@ -265,21 +259,20 @@ TEST_LOOP(trials, convert_2_UTF8_bytes) {
                                             seed); // range for 2 UTF-8 bytes
 
   auto procedure = [&implementation](const char *utf8, size_t size,
-                                     char16_t *utf16le) -> size_t {
-    std::vector<char16_t> utf16be(
-        2 * size); // Assume each UTF-8 byte is converted into two UTF-16 bytes
-    simdutf::result res = implementation.convert_utf8_to_utf16be_with_errors(
-        utf8, size, utf16be.data());
-    implementation.change_endianness_utf16(utf16be.data(), res.count, utf16le);
+                                     char16_t *utf16be) -> size_t {
+    const simdutf::result res =
+        implementation.convert_utf8_to_utf16be_with_errors(utf8, size, utf16be);
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
     return res.count;
   };
+
   auto size_procedure = [&implementation](const char *utf8,
                                           size_t size) -> size_t {
     return implementation.utf16_length_from_utf8(utf8, size);
   };
+
   for (size_t size : input_size) {
-    transcode_utf8_to_utf16_test_base test(random, size);
+    transcode_utf8_to_utf16_test_base test(BE, random, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
@@ -289,20 +282,16 @@ TEST_LOOP(trials, header_bits_error) {
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x0000, 0xd800 - 1}, {0xe000, 0x10ffff}}, seed);
 
-  transcode_utf8_to_utf16_test_base test(random, fix_size);
+  transcode_utf8_to_utf16_test_base test(BE, random, fix_size);
 
   for (unsigned int i = 0; i < fix_size; i++) {
     if ((test.input_utf8[i] & 0b11000000) !=
         0b10000000) { // Only process leading bytes
-      auto procedure = [&implementation,
-                        &i](const char *utf8, size_t size,
-                            [[maybe_unused]] char16_t *utf16le) -> size_t {
-        std::vector<char16_t> utf16be(
-            2 *
-            size); // Assume each UTF-8 byte is converted into two UTF-16 bytes
-        simdutf::result res =
+      auto procedure = [&implementation, &i](const char *utf8, size_t size,
+                                             char16_t *utf16be) -> size_t {
+        const simdutf::result res =
             implementation.convert_utf8_to_utf16be_with_errors(utf8, size,
-                                                               utf16be.data());
+                                                               utf16be);
         ASSERT_EQUAL(res.error, simdutf::error_code::HEADER_BITS);
         ASSERT_EQUAL(res.count, i);
         return 0;
@@ -318,21 +307,18 @@ TEST_LOOP(trials, header_bits_error) {
 TEST_LOOP(trials, too_short_error) {
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x0000, 0xd800 - 1}, {0xe000, 0x10ffff}}, seed);
-  transcode_utf8_to_utf16_test_base test(random, fix_size);
+  transcode_utf8_to_utf16_test_base test(BE, random, fix_size);
   unsigned int leading_byte_pos = 0;
   for (unsigned int i = 0; i < fix_size; i++) {
     if ((test.input_utf8[i] & 0b11000000) ==
         0b10000000) { // Only process continuation bytes by making them leading
                       // bytes
-      auto procedure = [&implementation, &leading_byte_pos](
-                           const char *utf8, size_t size,
-                           [[maybe_unused]] char16_t *utf16le) -> size_t {
-        std::vector<char16_t> utf16be(
-            2 *
-            size); // Assume each UTF-8 byte is converted into two UTF-16 bytes
-        simdutf::result res =
+      auto procedure = [&implementation,
+                        &leading_byte_pos](const char *utf8, size_t size,
+                                           char16_t *utf16be) -> size_t {
+        const simdutf::result res =
             implementation.convert_utf8_to_utf16be_with_errors(utf8, size,
-                                                               utf16be.data());
+                                                               utf16be);
         ASSERT_EQUAL(res.error, simdutf::error_code::TOO_SHORT);
         ASSERT_EQUAL(res.count, leading_byte_pos);
         return 0;
@@ -350,20 +336,18 @@ TEST_LOOP(trials, too_short_error) {
 TEST_LOOP(trials, too_long_error) {
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x0000, 0xd800 - 1}, {0xe000, 0x10ffff}}, seed);
-  transcode_utf8_to_utf16_test_base test(random, fix_size);
+
+  transcode_utf8_to_utf16_test_base test(BE, random, fix_size);
+
   for (unsigned int i = 1; i < fix_size; i++) {
     if (((test.input_utf8[i] & 0b11000000) !=
          0b10000000)) { // Only process leading bytes by making them
                         // continuation bytes
-      auto procedure = [&implementation,
-                        &i](const char *utf8, size_t size,
-                            [[maybe_unused]] char16_t *utf16) -> size_t {
-        std::vector<char16_t> utf16be(
-            2 *
-            size); // Assume each UTF-8 byte is converted into two UTF-16 bytes
-        simdutf::result res =
+      auto procedure = [&implementation, &i](const char *utf8, size_t size,
+                                             char16_t *utf16be) -> size_t {
+        const simdutf::result res =
             implementation.convert_utf8_to_utf16be_with_errors(utf8, size,
-                                                               utf16be.data());
+                                                               utf16be);
         ASSERT_EQUAL(res.error, simdutf::error_code::TOO_LONG);
         ASSERT_EQUAL(res.count, i);
         return 0;
@@ -379,20 +363,18 @@ TEST_LOOP(trials, too_long_error) {
 TEST_LOOP(trials, overlong_error) {
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x0000, 0xd800 - 1}, {0xe000, 0x10ffff}}, seed);
-  transcode_utf8_to_utf16_test_base test(random, fix_size);
+
+  transcode_utf8_to_utf16_test_base test(BE, random, fix_size);
+
   for (unsigned int i = 1; i < fix_size; i++) {
     if ((unsigned char)test.input_utf8[i] >=
         (unsigned char)0b11000000) { // Only non-ASCII leading bytes can be
                                      // overlong
-      auto procedure = [&implementation,
-                        &i](const char *utf8, size_t size,
-                            [[maybe_unused]] char16_t *utf16le) -> size_t {
-        std::vector<char16_t> utf16be(
-            2 *
-            size); // Assume each UTF-8 byte is converted into two UTF-16 bytes
-        simdutf::result res =
+      auto procedure = [&implementation, &i](const char *utf8, size_t size,
+                                             char16_t *utf16be) -> size_t {
+        const simdutf::result res =
             implementation.convert_utf8_to_utf16be_with_errors(utf8, size,
-                                                               utf16be.data());
+                                                               utf16be);
         ASSERT_EQUAL(res.error, simdutf::error_code::OVERLONG);
         ASSERT_EQUAL(res.count, i);
         return 0;
@@ -421,19 +403,17 @@ TEST_LOOP(trials, overlong_error) {
 TEST_LOOP(trials, too_large_error) {
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x0000, 0xd800 - 1}, {0xe000, 0x10ffff}}, seed);
-  transcode_utf8_to_utf16_test_base test(random, fix_size);
+
+  transcode_utf8_to_utf16_test_base test(BE, random, fix_size);
+
   for (unsigned int i = 1; i < fix_size; i++) {
     if ((test.input_utf8[i] & 0b11111000) ==
         0b11110000) { // Can only have too large error in 4-bytes case
-      auto procedure = [&implementation,
-                        &i](const char *utf8, size_t size,
-                            [[maybe_unused]] char16_t *utf16le) -> size_t {
-        std::vector<char16_t> utf16be(
-            2 *
-            size); // Assume each UTF-8 byte is converted into two UTF-16 bytes
-        simdutf::result res =
+      auto procedure = [&implementation, &i](const char *utf8, size_t size,
+                                             char16_t *utf16be) -> size_t {
+        const simdutf::result res =
             implementation.convert_utf8_to_utf16be_with_errors(utf8, size,
-                                                               utf16be.data());
+                                                               utf16be);
         ASSERT_EQUAL(res.error, simdutf::error_code::TOO_LARGE);
         ASSERT_EQUAL(res.count, i);
         return 0;
@@ -451,19 +431,17 @@ TEST_LOOP(trials, too_large_error) {
 TEST_LOOP(trials, surrogate_error) {
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x0000, 0xd800 - 1}, {0xe000, 0x10ffff}}, seed);
-  transcode_utf8_to_utf16_test_base test(random, fix_size);
+
+  transcode_utf8_to_utf16_test_base test(BE, random, fix_size);
+
   for (unsigned int i = 1; i < fix_size; i++) {
     if ((test.input_utf8[i] & 0b11110000) ==
         0b11100000) { // Can only have surrogate error in 3-bytes case
-      auto procedure = [&implementation,
-                        &i](const char *utf8, size_t size,
-                            [[maybe_unused]] char16_t *utf16le) -> size_t {
-        std::vector<char16_t> utf16be(
-            2 *
-            size); // Assume each UTF-8 byte is converted into two UTF-16 bytes
-        simdutf::result res =
+      auto procedure = [&implementation, &i](const char *utf8, size_t size,
+                                             char16_t *utf16be) -> size_t {
+        const simdutf::result res =
             implementation.convert_utf8_to_utf16be_with_errors(utf8, size,
-                                                               utf16be.data());
+                                                               utf16be);
         ASSERT_EQUAL(res.error, simdutf::error_code::SURROGATE);
         ASSERT_EQUAL(res.count, i);
         return 0;

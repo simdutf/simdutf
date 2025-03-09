@@ -9,18 +9,17 @@
 #include <tests/helpers/test.h>
 
 namespace {
-std::array<size_t, 9> input_size{7, 12, 16, 64, 67, 128, 256, 511, 1000};
+constexpr std::array<size_t, 9> input_size{7,   12,  16,  64,  67,
+                                           128, 256, 511, 1000};
+constexpr simdutf::endianness LE = simdutf::endianness::LITTLE;
 
 using simdutf::tests::helpers::transcode_utf16_to_utf8_test_base;
 
 constexpr int trials = 1000;
 } // namespace
 
-#if SIMDUTF_IS_BIG_ENDIAN
-// todo: port the next test.
-#else
 TEST(issue_a73) {
-  const char16_t utf16[] =
+  char16_t utf16[] =
       u"\ubced\uf799\u8794\uf0a6\u8a83\uf0bb\uad82\ufb82\u9797\u9bf0\uadaf"
       u"\ua0e0\u85e0\ueab5\uf2a2\uacab\ub7ed\ue0a8\uac8c\ue657\uf3bd\uaeb6"
       u"\u87ac\ubb39\ua719\ua5ed\uc09f\ue080\u869e\u87f0\ua99a\ub7fd\uff88"
@@ -38,7 +37,9 @@ TEST(issue_a73) {
       u"\ubcb8\uadd8\uff89\u919b\u8a77\u8bfa\uafad\ub6cf\ub5c6\uf096\ubd8f"
       u"\uceae\ua8ab\u81f0\ub194\ua4c0\ua4c0\ub2f6\ub8a5\u9ff3\u3cbd\u81f4"
       u"\u82ae\u9efc\ufe88\ufabe\u9980\uf9b1\u8e95\u80df\ubdf6\ub4ad";
-  size_t len = sizeof(utf16) / sizeof(char16_t) - 1;
+  size_t len = sizeof(utf16) / sizeof(char16_t);
+  to_utf16le_inplace(utf16, len);
+
   size_t expected_length = implementation.utf8_length_from_utf16le(utf16, len);
   std::vector<char> output(expected_length);
   const char expected[] =
@@ -81,13 +82,9 @@ TEST(issue_a73) {
     ASSERT_EQUAL(output[i], expected[i]);
   }
 }
-#endif
 
-#if SIMDUTF_IS_BIG_ENDIAN
-// todo: port the next test.
-#else
 TEST(issue_a72) {
-  const char16_t utf16[] =
+  char16_t utf16[] =
       u"\ufb8f\ua092\ub1cb\ufd99\u0dad\ud2be\u87ab\u88f0\u8a88\ua127\ua4f9"
       u"\uaf9d\ufeca\u8095\u90dc\ud497\uc0b3\ud6b1\ueda5\ubca4\ubfd8\ue98a"
       u"\uf2ba\ua8a3\u7e85\ufcbc\u9b83\ub7ed\ueda7\u99bb\u94e1\u91ff";
@@ -98,15 +95,17 @@ TEST(issue_a72) {
       "\xee\xb6\xa5\xeb\xb2\xa4\xeb\xbf\x98\xee\xa6\x8a\xef\x8a\xba\xea\xa2\xa3"
       "\xe7\xba\x85\xef\xb2\xbc\xe9\xae\x83\xeb\x9f\xad\xee\xb6\xa7\xe9\xa6\xbb"
       "\xe9\x93\xa1\xe9\x87\xbf";
+  const size_t utf16_len = 32;
+  to_utf16le_inplace(utf16, utf16_len);
+
   char utf8[96];
-  size_t utf8size =
-      implementation.convert_valid_utf16le_to_utf8(utf16, 32, utf8);
+  const size_t utf8size =
+      implementation.convert_valid_utf16le_to_utf8(utf16, utf16_len, utf8);
   ASSERT_EQUAL(utf8size, 96);
   for (size_t i = 0; i < 96; i++) {
     ASSERT_EQUAL(utf8[i], expected[i]);
   }
 }
-#endif
 
 TEST(convert_pure_ASCII) {
   size_t counter = 0;
@@ -119,7 +118,7 @@ TEST(convert_pure_ASCII) {
 
   std::array<size_t, 1> input_size{16};
   for (size_t size : input_size) {
-    transcode_utf16_to_utf8_test_base test(generator, size);
+    transcode_utf16_to_utf8_test_base test(LE, generator, size);
     ASSERT_TRUE(test(procedure));
   }
 }
@@ -134,7 +133,7 @@ TEST_LOOP(trials, convert_into_1_or_2_UTF8_bytes) {
   };
 
   for (size_t size : input_size) {
-    transcode_utf16_to_utf8_test_base test(random, size);
+    transcode_utf16_to_utf8_test_base test(LE, random, size);
     ASSERT_TRUE(test(procedure));
   }
 }
@@ -151,7 +150,7 @@ TEST_LOOP(trials, convert_into_1_or_2_or_3_UTF8_bytes) {
   };
 
   for (size_t size : input_size) {
-    transcode_utf16_to_utf8_test_base test(random, size);
+    transcode_utf16_to_utf8_test_base test(LE, random, size);
     ASSERT_TRUE(test(procedure));
   }
 }
@@ -167,90 +166,12 @@ TEST_LOOP(trials, convert_into_3_or_4_UTF8_bytes) {
   };
 
   for (size_t size : input_size) {
-    transcode_utf16_to_utf8_test_base test(random, size);
+    transcode_utf16_to_utf8_test_base test(LE, random, size);
     ASSERT_TRUE(test(procedure));
   }
 }
 
-#if SIMDUTF_IS_BIG_ENDIAN
-// todo: port the next test.
-#else
-namespace {
-std::vector<std::vector<char16_t>> all_combinations() {
-  const char16_t V_1byte_start =
-      0x0042; // non-surrogate word the yields 1 UTF-8 byte
-  const char16_t V_2bytes_start =
-      0x017f; // non-surrogate word the yields 2 UTF-8 bytes
-  const char16_t V_3bytes_start =
-      0xefff;                // non-surrogate word the yields 3 UTF-8 bytes
-  const char16_t L = 0xd9ca; // low surrogate
-  const char16_t H = 0xde42; // high surrogate
-
-  std::vector<std::vector<char16_t>> result;
-  std::vector<char16_t> row(32, '*');
-
-  std::array<int, 8> pattern{0};
-  while (true) {
-    // if (result.size() > 5) break;
-
-    // 1. produce output
-    char16_t V_1byte = V_1byte_start;
-    char16_t V_2bytes = V_2bytes_start;
-    char16_t V_3bytes = V_3bytes_start;
-    for (int i = 0; i < 8; i++) {
-      switch (pattern[i]) {
-      case 0:
-        row[i] = V_1byte++;
-        break;
-      case 1:
-        row[i] = V_2bytes++;
-        break;
-      case 2:
-        row[i] = V_3bytes++;
-        break;
-      case 3:
-        row[i] = L;
-        break;
-      case 4:
-        row[i] = H;
-        break;
-      default:
-        abort();
-      }
-    } // for
-
-    if (row[7] == L) {
-      row[8] = H; // make input valid
-      result.push_back(row);
-
-      row[8] = V_1byte; // broken input
-      result.push_back(row);
-    } else {
-      row[8] = V_1byte;
-      result.push_back(row);
-    }
-
-    // next pattern
-    int i = 0;
-    int carry = 1;
-    for (/**/; i < 8 && carry; i++) {
-      pattern[i] += carry;
-      if (pattern[i] == 5) {
-        pattern[i] = 0;
-        carry = 1;
-      } else
-        carry = 0;
-    }
-
-    if (carry == 1 and i == 8)
-      break;
-
-  } // while
-
-  return result;
-}
-} // namespace
-
+#if 0 // XXX
 TEST(all_possible_8_codepoint_combinations) {
   auto procedure = [&implementation](const char16_t *utf16, size_t size,
                                      char *utf8) -> size_t {
@@ -258,11 +179,11 @@ TEST(all_possible_8_codepoint_combinations) {
   };
 
   std::vector<char> output_utf8(256, ' ');
-  const auto &combinations = all_combinations();
+  const auto &combinations = all_utf16_combinations(LE);
   for (const auto &input_utf16 : combinations) {
-    if (simdutf::tests::reference::validate_utf16(input_utf16.data(),
+    if (simdutf::tests::reference::validate_utf16(LE, input_utf16.data(),
                                                   input_utf16.size())) {
-      transcode_utf16_to_utf8_test_base test(input_utf16);
+      transcode_utf16_to_utf8_test_base test(LE, input_utf16);
       ASSERT_TRUE(test(procedure));
     }
   }

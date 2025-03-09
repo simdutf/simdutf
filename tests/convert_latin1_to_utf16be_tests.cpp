@@ -8,7 +8,8 @@
 #include <tests/helpers/test.h>
 
 namespace {
-std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
+constexpr std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
+constexpr simdutf::endianness BE = simdutf::endianness::BIG;
 
 using simdutf::tests::helpers::transcode_latin1_to_utf16_test_base;
 
@@ -20,19 +21,15 @@ TEST_LOOP(trials, convert_all_latin) {
   simdutf::tests::helpers::RandomIntRanges random({{0x00, 0xff}}, seed);
 
   auto procedure = [&implementation](const char *latin1, size_t size,
-                                     char16_t *utf16le) -> size_t {
-    std::vector<char16_t> utf16be(size);
-    size_t len =
-        implementation.convert_latin1_to_utf16be(latin1, size, utf16be.data());
-    implementation.change_endianness_utf16(utf16be.data(), size, utf16le);
-    return len;
+                                     char16_t *utf16) -> size_t {
+    return implementation.convert_latin1_to_utf16be(latin1, size, utf16);
   };
   auto size_procedure = [&implementation]([[maybe_unused]] const char *latin1,
                                           size_t size) -> size_t {
     return implementation.utf16_length_from_latin1(size);
   };
   for (size_t size : input_size) {
-    transcode_latin1_to_utf16_test_base test(random, size);
+    transcode_latin1_to_utf16_test_base test(BE, random, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }

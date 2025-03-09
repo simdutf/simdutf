@@ -7,7 +7,8 @@
 #include <tests/helpers/test.h>
 
 namespace {
-std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
+constexpr std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
+constexpr simdutf::endianness LE = simdutf::endianness::LITTLE;
 
 using simdutf::tests::helpers::transcode_latin1_to_utf16_test_base;
 
@@ -27,7 +28,7 @@ TEST_LOOP(trials, convert_all_latin) {
     return implementation.utf16_length_from_latin1(size);
   };
   for (size_t size : input_size) {
-    transcode_latin1_to_utf16_test_base test(random, size);
+    transcode_latin1_to_utf16_test_base test(LE, random, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
