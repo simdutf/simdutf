@@ -8,15 +8,14 @@
 #include <tests/helpers/test.h>
 
 namespace {
-std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
+const std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
+constexpr simdutf::endianness LE = simdutf::endianness::LITTLE;
 
 using simdutf::tests::helpers::transcode_utf32_to_utf16_test_base;
 
 constexpr int trials = 1000;
 } // namespace
-#if SIMDUTF_IS_BIG_ENDIAN
-//
-#else
+
 TEST(issue_convert_utf32_to_utf16le_with_errors_97798701a75ebb21) {
   alignas(4) const unsigned char data[] = {
       0xfa, 0x04, 0x03, 0x03, 0x00, 0xef, 0xa1, 0xa5, 0x20, 0xef,
@@ -42,7 +41,6 @@ TEST(issue_convert_utf32_to_utf16le_with_errors_97798701a75ebb21) {
   ASSERT_EQUAL(r.error, simdutf::error_code::TOO_LARGE);
   ASSERT_EQUAL(r.count, 0);
 }
-#endif
 
 TEST_LOOP(trials, convert_into_2_UTF16_bytes) {
   // range for 2 UTF-16 bytes
@@ -61,7 +59,7 @@ TEST_LOOP(trials, convert_into_2_UTF16_bytes) {
     return implementation.utf16_length_from_utf32(utf32, size);
   };
   for (size_t size : input_size) {
-    transcode_utf32_to_utf16_test_base test(random, size);
+    transcode_utf32_to_utf16_test_base test(LE, random, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
@@ -83,7 +81,7 @@ TEST_LOOP(trials, convert_into_4_UTF16_bytes) {
     return implementation.utf16_length_from_utf32(utf32, size);
   };
   for (size_t size : input_size) {
-    transcode_utf32_to_utf16_test_base test(random, size);
+    transcode_utf32_to_utf16_test_base test(LE, random, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
@@ -106,7 +104,7 @@ TEST_LOOP(trials, convert_into_2_or_4_UTF16_bytes) {
     return implementation.utf16_length_from_utf32(utf32, size);
   };
   for (size_t size : input_size) {
-    transcode_utf32_to_utf16_test_base test(random, size);
+    transcode_utf32_to_utf16_test_base test(LE, random, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
@@ -114,7 +112,7 @@ TEST_LOOP(trials, convert_into_2_or_4_UTF16_bytes) {
 
 TEST(convert_fails_if_there_is_surrogate) {
   const size_t size = 64;
-  transcode_utf32_to_utf16_test_base test([]() { return '*'; }, size + 32);
+  transcode_utf32_to_utf16_test_base test(LE, []() { return '*'; }, size + 32);
 
   for (char32_t surrogate = 0xd800; surrogate <= 0xdfff; surrogate++) {
     for (size_t i = 0; i < size; i++) {
@@ -140,7 +138,7 @@ TEST(convert_fails_if_input_too_large) {
   simdutf::tests::helpers::RandomInt generator(0x110000, 0xffffffff, seed);
 
   const size_t size = 64;
-  transcode_utf32_to_utf16_test_base test([]() { return '*'; }, size + 32);
+  transcode_utf32_to_utf16_test_base test(LE, []() { return '*'; }, size + 32);
 
   for (size_t j = 0; j < 1000; j++) {
     uint32_t wrong_value = generator();

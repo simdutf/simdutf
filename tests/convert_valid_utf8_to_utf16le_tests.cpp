@@ -1,9 +1,5 @@
 #include "simdutf.h"
 
-#ifndef SIMDUTF_IS_BIG_ENDIAN
-  #error "SIMDUTF_IS_BIG_ENDIAN should be defined."
-#endif
-
 #include <array>
 #include <memory>
 
@@ -12,7 +8,9 @@
 #include <tests/helpers/test.h>
 
 namespace {
-std::array<size_t, 9> input_size{7, 12, 16, 64, 67, 128, 256, 511, 1000};
+constexpr std::array<size_t, 9> input_size{7,   12,  16,  64,  67,
+                                           128, 256, 511, 1000};
+constexpr simdutf::endianness LE = simdutf::endianness::LITTLE;
 
 using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
 
@@ -81,7 +79,7 @@ TEST_LOOP(trials, convert_pure_ASCII) {
   };
 
   for (size_t size : input_size) {
-    transcode_utf8_to_utf16_test_base test(generator, size);
+    transcode_utf8_to_utf16_test_base test(LE, generator, size);
     ASSERT_TRUE(test(procedure));
   }
 }
@@ -96,7 +94,7 @@ TEST_LOOP(trials, convert_1_or_2_UTF8_bytes) {
   };
 
   for (size_t size : input_size) {
-    transcode_utf8_to_utf16_test_base test(random, size);
+    transcode_utf8_to_utf16_test_base test(LE, random, size);
     ASSERT_TRUE(test(procedure));
   }
 }
@@ -112,7 +110,7 @@ TEST_LOOP(trials, convert_1_or_2_or_3_UTF8_bytes) {
   };
 
   for (size_t size : input_size) {
-    transcode_utf8_to_utf16_test_base test(random, size);
+    transcode_utf8_to_utf16_test_base test(LE, random, size);
     ASSERT_TRUE(test(procedure));
   }
 }
@@ -127,7 +125,7 @@ TEST_LOOP(trials, convert_3_UTF8_bytes) {
   };
 
   for (size_t size : input_size) {
-    transcode_utf8_to_utf16_test_base test(random, size);
+    transcode_utf8_to_utf16_test_base test(LE, random, size);
     ASSERT_TRUE(test(procedure));
   }
 }
@@ -143,7 +141,7 @@ TEST_LOOP(trials, convert_3_or_4_UTF8_bytes) {
   };
 
   for (size_t size : input_size) {
-    transcode_utf8_to_utf16_test_base test(random, size);
+    transcode_utf8_to_utf16_test_base test(LE, random, size);
     ASSERT_TRUE(test(procedure));
   }
 }
@@ -159,21 +157,19 @@ TEST_LOOP(trials, convert_null_4_UTF8_bytes) {
   };
 
   for (size_t size : input_size) {
-    transcode_utf8_to_utf16_test_base test(random, size);
+    transcode_utf8_to_utf16_test_base test(LE, random, size);
     ASSERT_TRUE(test(procedure));
   }
 }
 
-#if SIMDUTF_IS_BIG_ENDIAN
-// todo: port this test for big-endian platforms.
-#else
 TEST(issue111) {
   // We stick to ASCII for our source code given that there is no universal way
   // to specify the character encoding of the source files.
   char16_t input[] =
       u"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\u30b3aa"
       u"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-  size_t utf16_len = sizeof(input) / sizeof(char16_t) - 1;
+  const size_t utf16_len = sizeof(input) / sizeof(char16_t);
+  to_utf16le_inplace(input, utf16_len);
   ASSERT_TRUE(implementation.validate_utf16le(input, utf16_len));
   ASSERT_EQUAL(implementation.utf8_length_from_utf16le(input, utf16_len),
                2 + utf16_len);
@@ -193,7 +189,6 @@ TEST(issue111) {
       std::char_traits<char16_t>::compare(input, utf16_buffer.get(), utf16_len),
       0);
 }
-#endif
 
 TEST(special_cases) {
   const uint8_t utf8[] = {0xC2, 0xA9};     // copyright sign
