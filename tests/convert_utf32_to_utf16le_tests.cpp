@@ -7,7 +7,8 @@
 #include <tests/helpers/test.h>
 
 namespace {
-std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
+constexpr std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
+constexpr simdutf::endianness LE = simdutf::endianness::LITTLE;
 
 using simdutf::tests::helpers::transcode_utf32_to_utf16_test_base;
 
@@ -28,7 +29,7 @@ TEST_LOOP(trials, convert_into_2_UTF16_bytes) {
     return implementation.utf16_length_from_utf32(utf32, size);
   };
   for (size_t size : input_size) {
-    transcode_utf32_to_utf16_test_base test(random, size);
+    transcode_utf32_to_utf16_test_base test(LE, random, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
@@ -47,7 +48,7 @@ TEST_LOOP(trials, convert_into_4_UTF16_bytes) {
     return implementation.utf16_length_from_utf32(utf32, size);
   };
   for (size_t size : input_size) {
-    transcode_utf32_to_utf16_test_base test(random, size);
+    transcode_utf32_to_utf16_test_base test(LE, random, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
@@ -67,7 +68,7 @@ TEST_LOOP(trials, convert_into_2_or_4_UTF16_bytes) {
     return implementation.utf16_length_from_utf32(utf32, size);
   };
   for (size_t size : input_size) {
-    transcode_utf32_to_utf16_test_base test(random, size);
+    transcode_utf32_to_utf16_test_base test(LE, random, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
@@ -79,7 +80,7 @@ TEST(convert_fails_if_there_is_surrogate) {
     return implementation.convert_utf32_to_utf16le(utf32, size, utf16);
   };
   const size_t size = 64;
-  transcode_utf32_to_utf16_test_base test([]() { return '*'; }, size + 32);
+  transcode_utf32_to_utf16_test_base test(LE, []() { return '*'; }, size + 32);
 
   for (char32_t surrogate = 0xd800; surrogate <= 0xdfff; surrogate++) {
     for (size_t i = 0; i < size; i++) {
@@ -100,7 +101,7 @@ TEST(convert_fails_if_input_too_large) {
     return implementation.convert_utf32_to_utf16le(utf32, size, utf16);
   };
   const size_t size = 64;
-  transcode_utf32_to_utf16_test_base test([]() { return '*'; }, size + 32);
+  transcode_utf32_to_utf16_test_base test(LE, []() { return '*'; }, size + 32);
 
   for (size_t j = 0; j < 1000; j++) {
     uint32_t wrong_value = generator();

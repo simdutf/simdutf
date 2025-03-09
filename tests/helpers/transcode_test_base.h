@@ -4,6 +4,11 @@
 #include <vector>
 #include <functional>
 #include <cstdio>
+#include "utf16.h"
+#include "simdutf/encoding_types.h"
+
+std::vector<std::vector<char16_t>>
+all_utf16_combinations(simdutf::endianness byte_order);
 
 namespace simdutf {
 namespace tests {
@@ -16,6 +21,12 @@ namespace helpers {
  */
 class transcode_test_base {
 protected:
+  endianness utf16_endianness;
+
+protected:
+  transcode_test_base() : utf16_endianness{endianness::LITTLE} {}
+  transcode_test_base(endianness utf16) : utf16_endianness{utf16} {}
+
   void encode_utf8(uint32_t codepoint, std::vector<char> &target);
   void encode_utf16(uint32_t codepoint, std::vector<char16_t> &target);
   void encode_utf32(uint32_t codepoint, std::vector<char32_t> &target);
@@ -40,7 +51,7 @@ public:
 
 public:
   transcode_latin1_to_utf8_test_base(GenerateCodepoint generate,
-                                     size_t input_size); // constructor
+                                     size_t input_size);
 
   template <typename COLLECTION>
   transcode_latin1_to_utf8_test_base(COLLECTION &&collection) {
@@ -52,10 +63,11 @@ public:
   }
 
   template <typename PROCEDURE> bool operator()(PROCEDURE procedure) {
-    size_t saved_chars =
+    const size_t saved_chars =
         procedure(input_latin1.data(), input_latin1.size(), output_utf8.data());
     return validate(saved_chars);
   }
+
   template <typename PROCEDURE> bool check_size(PROCEDURE procedure) {
     size_t saved_chars = procedure(input_latin1.data(), input_latin1.size());
     if (saved_chars != reference_output_utf8.size()) {
@@ -89,11 +101,14 @@ public:
       0; // extra room for buggy procedures
 
 public:
-  transcode_latin1_to_utf16_test_base(GenerateCodepoint generate,
+  transcode_latin1_to_utf16_test_base(endianness utf16_endianness,
+                                      GenerateCodepoint generate,
                                       size_t input_size);
 
   template <typename COLLECTION>
-  transcode_latin1_to_utf16_test_base(COLLECTION &&collection) {
+  transcode_latin1_to_utf16_test_base(endianness utf16_endianness,
+                                      COLLECTION &&collection)
+      : transcode_test_base{utf16_endianness} {
     for (const uint32_t codepoint : collection) {
       prepare_input(codepoint);
     }
@@ -141,13 +156,17 @@ public:
       16; // extra room for buggy procedures
 
 public:
-  transcode_utf16_to_latin1_test_base(GenerateCodepoint generate,
+  transcode_utf16_to_latin1_test_base(endianness utf16_endianness,
+                                      GenerateCodepoint generate,
                                       size_t input_size);
 
-  transcode_utf16_to_latin1_test_base(const std::vector<char16_t> &input_utf16);
+  transcode_utf16_to_latin1_test_base(endianness utf16_endianness,
+                                      const std::vector<char16_t> &input_utf16);
 
   template <typename COLLECTION>
-  transcode_utf16_to_latin1_test_base(COLLECTION &&collection) {
+  transcode_utf16_to_latin1_test_base(endianness utf16_endianness,
+                                      COLLECTION &&collection)
+      : transcode_test_base{utf16_endianness} {
     for (const uint32_t codepoint : collection) {
       prepare_input(codepoint);
     }
@@ -160,6 +179,7 @@ public:
         procedure(input_utf16.data(), input_utf16.size(), output_latin1.data());
     return validate(saved_chars);
   }
+
   template <typename PROCEDURE> bool check_size(PROCEDURE procedure) {
     size_t saved_chars = procedure(input_utf16.data(), input_utf16.size());
     if (saved_chars != reference_output_latin1.size()) {
@@ -296,11 +316,14 @@ public:
       0; // extra room for buggy procedures
 
 public:
-  transcode_utf8_to_utf16_test_base(GenerateCodepoint generate,
+  transcode_utf8_to_utf16_test_base(endianness utf16_endianness,
+                                    GenerateCodepoint generate,
                                     size_t input_size);
 
   template <typename COLLECTION>
-  transcode_utf8_to_utf16_test_base(COLLECTION &&collection) {
+  transcode_utf8_to_utf16_test_base(endianness utf16_endianness,
+                                    COLLECTION &&collection)
+      : transcode_test_base{utf16_endianness} {
     for (const uint32_t codepoint : collection) {
       prepare_input(codepoint);
     }
@@ -399,13 +422,17 @@ public:
       0; // extra room for buggy procedures
 
 public:
-  transcode_utf16_to_utf8_test_base(GenerateCodepoint generate,
+  transcode_utf16_to_utf8_test_base(endianness utf16_endianness,
+                                    GenerateCodepoint generate,
                                     size_t input_size);
 
-  transcode_utf16_to_utf8_test_base(const std::vector<char16_t> &input_utf16);
+  transcode_utf16_to_utf8_test_base(endianness utf16_endianness,
+                                    const std::vector<char16_t> &input_utf16);
 
   template <typename COLLECTION>
-  transcode_utf16_to_utf8_test_base(COLLECTION &&collection) {
+  transcode_utf16_to_utf8_test_base(endianness utf16_endianness,
+                                    COLLECTION &&collection)
+      : transcode_test_base{utf16_endianness} {
     for (const uint32_t codepoint : collection) {
       prepare_input(codepoint);
     }
@@ -418,6 +445,7 @@ public:
         procedure(input_utf16.data(), input_utf16.size(), output_utf8.data());
     return validate(saved_chars);
   }
+
   template <typename PROCEDURE> bool check_size(PROCEDURE procedure) {
     size_t saved_chars = procedure(input_utf16.data(), input_utf16.size());
     if (saved_chars != reference_output_utf8.size()) {
@@ -556,11 +584,14 @@ public:
       0; // extra room for buggy procedures
 
 public:
-  transcode_utf32_to_utf16_test_base(GenerateCodepoint generate,
+  transcode_utf32_to_utf16_test_base(endianness utf16_endianness,
+                                     GenerateCodepoint generate,
                                      size_t input_size);
 
   template <typename COLLECTION>
-  transcode_utf32_to_utf16_test_base(COLLECTION &&collection) {
+  transcode_utf32_to_utf16_test_base(endianness utf16_endianness,
+                                     COLLECTION &&collection)
+      : transcode_test_base{utf16_endianness} {
     for (const uint32_t codepoint : collection) {
       prepare_input(codepoint);
     }
@@ -607,13 +638,17 @@ public:
       16; // extra room for buggy procedures
 
 public:
-  transcode_utf16_to_utf32_test_base(GenerateCodepoint generate,
+  transcode_utf16_to_utf32_test_base(endianness utf16_endianness,
+                                     GenerateCodepoint generate,
                                      size_t input_size);
 
-  transcode_utf16_to_utf32_test_base(const std::vector<char16_t> &input_utf16);
+  transcode_utf16_to_utf32_test_base(endianness utf16_endianness,
+                                     const std::vector<char16_t> &input_utf16);
 
   template <typename COLLECTION>
-  transcode_utf16_to_utf32_test_base(COLLECTION &&collection) {
+  transcode_utf16_to_utf32_test_base(endianness utf16_endianness,
+                                     COLLECTION &&collection)
+      : transcode_test_base{utf16_endianness} {
     for (const uint32_t codepoint : collection) {
       prepare_input(codepoint);
     }

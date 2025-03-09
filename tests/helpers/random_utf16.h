@@ -26,8 +26,14 @@ public:
         utf16_length({double(single_word_prob), double(single_word_prob),
                       double(2 * two_words_probability)}) {}
 
-  std::vector<char16_t> generate(size_t size);
-  std::vector<char16_t> generate(size_t size, long seed);
+  std::vector<char16_t> generate_le(size_t size);
+  std::vector<char16_t> generate_be(size_t size);
+  std::vector<char16_t> generate_le(size_t size, long seed);
+  std::vector<char16_t> generate_be(size_t size, long seed);
+  std::pair<std::vector<char16_t>, size_t> generate_counted_le(size_t size);
+  std::pair<std::vector<char16_t>, size_t> generate_counted_be(size_t size);
+
+private:
   std::pair<std::vector<char16_t>, size_t> generate_counted(size_t size);
 
 private:

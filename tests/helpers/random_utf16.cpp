@@ -9,8 +9,54 @@ namespace simdutf {
 namespace tests {
 namespace helpers {
 
-std::vector<char16_t> random_utf16::generate(size_t size) {
-  return generate_counted(size).first;
+std::vector<char16_t> random_utf16::generate_le(size_t size) {
+  auto result = generate_counted(size).first;
+  if (!match_system(endianness::LITTLE)) {
+    change_endianness_utf16(result.data(), result.size(), result.data());
+  }
+
+  return result;
+}
+
+std::vector<char16_t> random_utf16::generate_be(size_t size) {
+  auto result = generate_counted(size).first;
+  if (!match_system(endianness::BIG)) {
+    change_endianness_utf16(result.data(), result.size(), result.data());
+  }
+
+  return result;
+}
+
+std::vector<char16_t> random_utf16::generate_le(size_t size, long seed) {
+  gen.seed(seed);
+  return generate_le(size);
+}
+
+std::vector<char16_t> random_utf16::generate_be(size_t size, long seed) {
+  gen.seed(seed);
+  return generate_be(size);
+}
+
+std::pair<std::vector<char16_t>, size_t>
+random_utf16::generate_counted_le(size_t size) {
+  auto res = generate_counted(size);
+  if (!match_system(endianness::LITTLE)) {
+    change_endianness_utf16(res.first.data(), res.first.size(),
+                            res.first.data());
+  }
+
+  return res;
+}
+
+std::pair<std::vector<char16_t>, size_t>
+random_utf16::generate_counted_be(size_t size) {
+  auto res = generate_counted(size);
+  if (!match_system(endianness::BIG)) {
+    change_endianness_utf16(res.first.data(), res.first.size(),
+                            res.first.data());
+  }
+
+  return res;
 }
 
 std::pair<std::vector<char16_t>, size_t>
@@ -36,18 +82,7 @@ random_utf16::generate_counted(size_t size) {
       break;
     }
   }
-#ifndef SIMDUTF_IS_BIG_ENDIAN
-  #error "SIMDUTF_IS_BIG_ENDIAN should be defined."
-#endif
-#if SIMDUTF_IS_BIG_ENDIAN
-  change_endianness_utf16(result.data(), result.size(), result.data());
-#endif
   return make_pair(result, count);
-}
-
-std::vector<char16_t> random_utf16::generate(size_t size, long seed) {
-  gen.seed(seed);
-  return generate(size);
 }
 
 uint32_t random_utf16::generate() {
