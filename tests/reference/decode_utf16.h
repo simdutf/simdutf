@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdio>
+#include "simdutf/encoding_types.h"
 
 namespace simdutf {
 namespace tests {
@@ -14,14 +15,20 @@ enum class Error {
 };
 
 template <typename CONSUMER, typename ERROR_HANDLER>
-bool decode(const char16_t *codepoints, size_t size, CONSUMER consumer,
-            ERROR_HANDLER error_handler) {
+bool decode(endianness utf16_endianness, const char16_t *codepoints,
+            size_t size, CONSUMER consumer, ERROR_HANDLER error_handler) {
   const char16_t *curr = codepoints;
   const char16_t *end = codepoints + size;
 
   // RFC2781, chapter 2.2
   while (curr != end) {
-    const uint16_t W1 = *curr;
+    uint16_t W1;
+    if (!match_system(utf16_endianness)) {
+      W1 = char16_t((uint16_t(*curr) << 8) | (uint16_t(*curr) >> 8));
+    } else {
+      W1 = *curr;
+    }
+
     curr += 1;
 
     if (W1 < 0xd800 ||
@@ -45,7 +52,12 @@ bool decode(const char16_t *codepoints, size_t size, CONSUMER consumer,
       break;
     }
 
-    const uint16_t W2 = *curr;
+    uint16_t W2;
+    if (!match_system(utf16_endianness)) {
+      W2 = char16_t((uint16_t(*curr) << 8) | (uint16_t(*curr) >> 8));
+    } else {
+      W2 = *curr;
+    }
     if (W2 < 0xdc00 || W2 > 0xdfff) { // W2 = 0xdc00 .. 0xdfff
       if (!error_handler(codepoints, curr, Error::low_surrogate_out_of_range))
         return false;

@@ -8,19 +8,19 @@ namespace simdutf {
 namespace tests {
 namespace reference {
 
-simdutf_warn_unused bool validate_utf16_to_latin1(const char16_t *buf,
-                                                  size_t len) noexcept {
+simdutf_warn_unused bool
+validate_utf16_to_latin1(simdutf::endianness utf16_endianness,
+                         const char16_t *buf, size_t len) noexcept {
   const char16_t *curr = buf;
   const char16_t *end = buf + len;
 
   while (curr != end) {
-#if SIMDUTF_IS_BIG_ENDIAN
-    // By convention, we always take as an input an UTF-16LE.
-    const uint16_t W1 =
-        uint16_t((uint16_t(*curr) << 8) | (uint16_t(*curr) >> 8));
-#else
-    const uint16_t W1 = *curr;
-#endif
+    uint16_t W1;
+    if (!match_system(utf16_endianness)) {
+      W1 = (uint16_t(*curr) << 8) | (uint16_t(*curr) >> 8);
+    } else {
+      W1 = *curr;
+    }
 
     curr += 1;
     if (0xff < W1) {
