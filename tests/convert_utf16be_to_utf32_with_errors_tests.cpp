@@ -8,16 +8,14 @@
 #include <tests/helpers/test.h>
 
 namespace {
-std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
+constexpr std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
+constexpr simdutf::endianness BE = simdutf::endianness::BIG;
 
 using simdutf::tests::helpers::transcode_utf16_to_utf32_test_base;
 
 constexpr int trials = 1000;
 } // namespace
 
-#if SIMDUTF_IS_BIG_ENDIAN
-// todo: port the next test.
-#else
 TEST(issue_convert_utf16be_to_utf32_with_errors_7f6091b746e6e764) {
   alignas(2) const unsigned char data[] = {
       0xc2, 0x90, 0x00, 0x00, 0x00, 0x00, 0x53, 0x53, 0x00, 0x00, 0x00, 0x00,
@@ -204,7 +202,6 @@ TEST(issue_convert_utf16be_to_utf32_with_errors_7f6091b746e6e764) {
   ASSERT_EQUAL(r.error, simdutf::error_code::SURROGATE);
   ASSERT_EQUAL(r.count, 945);
 }
-#endif
 
 TEST_LOOP(trials, convert_2_UTF16_bytes) {
   // range for 1, 2 or 3 UTF-8 bytes
@@ -212,21 +209,19 @@ TEST_LOOP(trials, convert_2_UTF16_bytes) {
       {{0x0000, 0x007f}, {0x0080, 0x07ff}, {0x0800, 0xd7ff}, {0xe000, 0xffff}},
       seed);
 
-  auto procedure = [&implementation](const char16_t *utf16le, size_t size,
+  auto procedure = [&implementation](const char16_t *utf16, size_t size,
                                      char32_t *utf32) -> size_t {
-    std::vector<char16_t> utf16be(size);
-    implementation.change_endianness_utf16(utf16le, size, utf16be.data());
-    simdutf::result res = implementation.convert_utf16be_to_utf32_with_errors(
-        utf16be.data(), size, utf32);
+    const simdutf::result res =
+        implementation.convert_utf16be_to_utf32_with_errors(utf16, size, utf32);
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
     return res.count;
   };
   auto size_procedure = [&implementation](const char16_t *utf16,
                                           size_t size) -> size_t {
-    return implementation.utf32_length_from_utf16le(utf16, size);
+    return implementation.utf32_length_from_utf16be(utf16, size);
   };
   for (size_t size : input_size) {
-    transcode_utf16_to_utf32_test_base test(random, size);
+    transcode_utf16_to_utf32_test_base test(BE, random, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
@@ -236,139 +231,112 @@ TEST_LOOP(trials, convert_with_surrogates) {
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x0800, 0xd800 - 1}, {0xe000, 0x10ffff}}, seed);
 
-  auto procedure = [&implementation](const char16_t *utf16le, size_t size,
+  auto procedure = [&implementation](const char16_t *utf16, size_t size,
                                      char32_t *utf32) -> size_t {
-    std::vector<char16_t> utf16be(size);
-    implementation.change_endianness_utf16(utf16le, size, utf16be.data());
-    simdutf::result res = implementation.convert_utf16be_to_utf32_with_errors(
-        utf16be.data(), size, utf32);
+    const simdutf::result res =
+        implementation.convert_utf16be_to_utf32_with_errors(utf16, size, utf32);
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
     return res.count;
   };
   auto size_procedure = [&implementation](const char16_t *utf16,
                                           size_t size) -> size_t {
-    return implementation.utf32_length_from_utf16le(utf16, size);
+    return implementation.utf32_length_from_utf16be(utf16, size);
   };
   for (size_t size : input_size) {
-    transcode_utf16_to_utf32_test_base test(random, size);
+    transcode_utf16_to_utf32_test_base test(BE, random, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
 }
 
-#if SIMDUTF_IS_BIG_ENDIAN
-// todo: port the next test.
-#else
 TEST(convert_fails_if_there_is_sole_low_surrogate) {
   const size_t size = 64;
-  transcode_utf16_to_utf32_test_base test([]() { return '*'; }, size + 32);
+  transcode_utf16_to_utf32_test_base test(BE, []() { return '*'; }, size + 32);
 
   for (char16_t low_surrogate = 0xdc00; low_surrogate <= 0xdfff;
        low_surrogate++) {
     for (size_t i = 0; i < size; i++) {
-      auto procedure = [&implementation, &i](const char16_t *utf16le,
-                                             size_t size,
+      auto procedure = [&implementation, &i](const char16_t *utf16, size_t size,
                                              char32_t *utf32) -> size_t {
-        std::vector<char16_t> utf16be(size);
-        implementation.change_endianness_utf16(utf16le, size, utf16be.data());
-        simdutf::result res =
-            implementation.convert_utf16be_to_utf32_with_errors(utf16be.data(),
-                                                                size, utf32);
+        const simdutf::result res =
+            implementation.convert_utf16be_to_utf32_with_errors(utf16, size,
+                                                                utf32);
         ASSERT_EQUAL(res.error, simdutf::error_code::SURROGATE);
         ASSERT_EQUAL(res.count, i);
         return 0;
       };
       const auto old = test.input_utf16[i];
-      test.input_utf16[i] = low_surrogate;
+      test.input_utf16[i] = to_utf16be(low_surrogate);
       ASSERT_TRUE(test(procedure));
       test.input_utf16[i] = old;
     }
   }
 }
-#endif
 
-#if SIMDUTF_IS_BIG_ENDIAN
-// todo: port the next test.
-#else
 TEST(convert_fails_if_there_is_sole_high_surrogate) {
   const size_t size = 64;
-  transcode_utf16_to_utf32_test_base test([]() { return '*'; }, size + 32);
+  transcode_utf16_to_utf32_test_base test(BE, []() { return '*'; }, size + 32);
 
   for (char16_t high_surrogate = 0xdc00; high_surrogate <= 0xdfff;
        high_surrogate++) {
     for (size_t i = 0; i < size; i++) {
-      auto procedure = [&implementation, &i](const char16_t *utf16le,
-                                             size_t size,
+      auto procedure = [&implementation, &i](const char16_t *utf16, size_t size,
                                              char32_t *utf32) -> size_t {
-        std::vector<char16_t> utf16be(size);
-        implementation.change_endianness_utf16(utf16le, size, utf16be.data());
-        simdutf::result res =
-            implementation.convert_utf16be_to_utf32_with_errors(utf16be.data(),
-                                                                size, utf32);
+        const simdutf::result res =
+            implementation.convert_utf16be_to_utf32_with_errors(utf16, size,
+                                                                utf32);
         ASSERT_EQUAL(res.error, simdutf::error_code::SURROGATE);
         ASSERT_EQUAL(res.count, i);
         return 0;
       };
       const auto old = test.input_utf16[i];
-      test.input_utf16[i] = high_surrogate;
+      test.input_utf16[i] = to_utf16be(high_surrogate);
       ASSERT_TRUE(test(procedure));
       test.input_utf16[i] = old;
     }
   }
 }
-#endif
 
-#if SIMDUTF_IS_BIG_ENDIAN
-// todo: port the next test.
-#else
 TEST(
     convert_fails_if_there_is_low_surrogate_is_followed_by_another_low_surrogate) {
   const size_t size = 64;
-  transcode_utf16_to_utf32_test_base test([]() { return '*'; }, size + 32);
+  transcode_utf16_to_utf32_test_base test(BE, []() { return '*'; }, size + 32);
 
   for (char16_t low_surrogate = 0xdc00; low_surrogate <= 0xdfff;
        low_surrogate++) {
     for (size_t i = 0; i < size - 1; i++) {
-      auto procedure = [&implementation, &i](const char16_t *utf16le,
-                                             size_t size,
+      auto procedure = [&implementation, &i](const char16_t *utf16, size_t size,
                                              char32_t *utf32) -> size_t {
-        std::vector<char16_t> utf16be(size);
-        implementation.change_endianness_utf16(utf16le, size, utf16be.data());
-        simdutf::result res =
-            implementation.convert_utf16be_to_utf32_with_errors(utf16be.data(),
-                                                                size, utf32);
+        const simdutf::result res =
+            implementation.convert_utf16be_to_utf32_with_errors(utf16, size,
+                                                                utf32);
         ASSERT_EQUAL(res.error, simdutf::error_code::SURROGATE);
         ASSERT_EQUAL(res.count, i);
         return 0;
       };
       const auto old0 = test.input_utf16[i + 0];
       const auto old1 = test.input_utf16[i + 1];
-      test.input_utf16[i + 0] = low_surrogate;
-      test.input_utf16[i + 1] = low_surrogate;
+      test.input_utf16[i + 0] = to_utf16be(low_surrogate);
+      test.input_utf16[i + 1] = to_utf16be(low_surrogate);
       ASSERT_TRUE(test(procedure));
       test.input_utf16[i + 0] = old0;
       test.input_utf16[i + 1] = old1;
     }
   }
 }
-#endif
 
-#if SIMDUTF_IS_BIG_ENDIAN
-// todo: port the next test.
-#else
 TEST(convert_fails_if_there_is_surrogate_pair_is_followed_by_high_surrogate) {
   const size_t size = 64;
-  transcode_utf16_to_utf32_test_base test([]() { return '*'; }, size + 32);
+  transcode_utf16_to_utf32_test_base test(BE, []() { return '*'; }, size + 32);
 
-  const char16_t low_surrogate = 0xd801;
-  const char16_t high_surrogate = 0xdc02;
+  const char16_t low_surrogate = to_utf16be(0xd801);
+  const char16_t high_surrogate = to_utf16be(0xdc02);
   for (size_t i = 0; i < size - 2; i++) {
-    auto procedure = [&implementation, &i](const char16_t *utf16le, size_t size,
+    auto procedure = [&implementation, &i](const char16_t *utf16, size_t size,
                                            char32_t *utf32) -> size_t {
-      std::vector<char16_t> utf16be(size);
-      implementation.change_endianness_utf16(utf16le, size, utf16be.data());
-      simdutf::result res = implementation.convert_utf16be_to_utf32_with_errors(
-          utf16be.data(), size, utf32);
+      const simdutf::result res =
+          implementation.convert_utf16be_to_utf32_with_errors(utf16, size,
+                                                              utf32);
       ASSERT_EQUAL(res.error, simdutf::error_code::SURROGATE);
       ASSERT_EQUAL(res.count, i + 2);
       return 0;
@@ -385,6 +353,5 @@ TEST(convert_fails_if_there_is_surrogate_pair_is_followed_by_high_surrogate) {
     test.input_utf16[i + 2] = old2;
   }
 }
-#endif
 
 TEST_MAIN

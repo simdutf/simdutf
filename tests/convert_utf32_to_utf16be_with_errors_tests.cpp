@@ -8,7 +8,8 @@
 #include <tests/helpers/test.h>
 
 namespace {
-std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
+constexpr std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
+constexpr simdutf::endianness BE = simdutf::endianness::BIG;
 
 using simdutf::tests::helpers::transcode_utf32_to_utf16_test_base;
 
@@ -43,12 +44,10 @@ TEST_LOOP(trials, convert_into_2_UTF16_bytes) {
       {{0x0000, 0xd7ff}, {0xe000, 0xffff}}, seed);
 
   auto procedure = [&implementation](const char32_t *utf32, size_t size,
-                                     char16_t *utf16le) -> size_t {
-    std::vector<char16_t> utf16be(size);
+                                     char16_t *utf16be) -> size_t {
     simdutf::result res = implementation.convert_utf32_to_utf16be_with_errors(
-        utf32, size, utf16be.data());
+        utf32, size, utf16be);
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
-    implementation.change_endianness_utf16(utf16be.data(), res.count, utf16le);
     return res.count;
   };
   auto size_procedure = [&implementation](const char32_t *utf32,
@@ -56,7 +55,7 @@ TEST_LOOP(trials, convert_into_2_UTF16_bytes) {
     return implementation.utf16_length_from_utf32(utf32, size);
   };
   for (size_t size : input_size) {
-    transcode_utf32_to_utf16_test_base test(random, size);
+    transcode_utf32_to_utf16_test_base test(BE, random, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
@@ -67,12 +66,11 @@ TEST_LOOP(trials, convert_into_4_UTF16_bytes) {
   simdutf::tests::helpers::RandomIntRanges random({{0x10000, 0x10ffff}}, seed);
 
   auto procedure = [&implementation](const char32_t *utf32, size_t size,
-                                     char16_t *utf16le) -> size_t {
-    std::vector<char16_t> utf16be(2 * size);
-    simdutf::result res = implementation.convert_utf32_to_utf16be_with_errors(
-        utf32, size, utf16be.data());
+                                     char16_t *utf16be) -> size_t {
+    const simdutf::result res =
+        implementation.convert_utf32_to_utf16be_with_errors(utf32, size,
+                                                            utf16be);
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
-    implementation.change_endianness_utf16(utf16be.data(), res.count, utf16le);
     return res.count;
   };
   auto size_procedure = [&implementation](const char32_t *utf32,
@@ -80,7 +78,7 @@ TEST_LOOP(trials, convert_into_4_UTF16_bytes) {
     return implementation.utf16_length_from_utf32(utf32, size);
   };
   for (size_t size : input_size) {
-    transcode_utf32_to_utf16_test_base test(random, size);
+    transcode_utf32_to_utf16_test_base test(BE, random, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
@@ -92,12 +90,11 @@ TEST_LOOP(trials, convert_into_2_or_4_UTF16_bytes) {
       {{0x0000, 0xd7ff}, {0xe000, 0xffff}, {0x10000, 0x10ffff}}, seed);
 
   auto procedure = [&implementation](const char32_t *utf32, size_t size,
-                                     char16_t *utf16le) -> size_t {
-    std::vector<char16_t> utf16be(2 * size);
-    simdutf::result res = implementation.convert_utf32_to_utf16be_with_errors(
-        utf32, size, utf16be.data());
+                                     char16_t *utf16be) -> size_t {
+    const simdutf::result res =
+        implementation.convert_utf32_to_utf16be_with_errors(utf32, size,
+                                                            utf16be);
     ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
-    implementation.change_endianness_utf16(utf16be.data(), res.count, utf16le);
     return res.count;
   };
   auto size_procedure = [&implementation](const char32_t *utf32,
@@ -105,7 +102,7 @@ TEST_LOOP(trials, convert_into_2_or_4_UTF16_bytes) {
     return implementation.utf16_length_from_utf32(utf32, size);
   };
   for (size_t size : input_size) {
-    transcode_utf32_to_utf16_test_base test(random, size);
+    transcode_utf32_to_utf16_test_base test(BE, random, size);
     ASSERT_TRUE(test(procedure));
     ASSERT_TRUE(test.check_size(size_procedure));
   }
@@ -113,17 +110,15 @@ TEST_LOOP(trials, convert_into_2_or_4_UTF16_bytes) {
 
 TEST(convert_fails_if_there_is_surrogate) {
   const size_t size = 64;
-  transcode_utf32_to_utf16_test_base test([]() { return '*'; }, size + 32);
+  transcode_utf32_to_utf16_test_base test(BE, []() { return '*'; }, size + 32);
 
   for (char32_t surrogate = 0xd800; surrogate <= 0xdfff; surrogate++) {
     for (size_t i = 0; i < size; i++) {
-      auto procedure = [&implementation,
-                        &i](const char32_t *utf32, size_t size,
-                            [[maybe_unused]] char16_t *utf16le) -> size_t {
-        std::vector<char16_t> utf16be(2 * size);
-        simdutf::result res =
+      auto procedure = [&implementation, &i](const char32_t *utf32, size_t size,
+                                             char16_t *utf16be) -> size_t {
+        const simdutf::result res =
             implementation.convert_utf32_to_utf16be_with_errors(utf32, size,
-                                                                utf16be.data());
+                                                                utf16be);
         ASSERT_EQUAL(res.error, simdutf::error_code::SURROGATE);
         ASSERT_EQUAL(res.count, i);
         return 0;
@@ -141,18 +136,16 @@ TEST(convert_fails_if_input_too_large) {
   simdutf::tests::helpers::RandomInt generator(0x110000, 0xffffffff, seed);
 
   const size_t size = 64;
-  transcode_utf32_to_utf16_test_base test([]() { return '*'; }, size + 32);
+  transcode_utf32_to_utf16_test_base test(BE, []() { return '*'; }, size + 32);
 
   for (size_t j = 0; j < 1000; j++) {
     uint32_t wrong_value = generator();
     for (size_t i = 0; i < size; i++) {
-      auto procedure = [&implementation,
-                        &i](const char32_t *utf32, size_t size,
-                            [[maybe_unused]] char16_t *utf16le) -> size_t {
-        std::vector<char16_t> utf16be(2 * size);
-        simdutf::result res =
+      auto procedure = [&implementation, &i](const char32_t *utf32, size_t size,
+                                             char16_t *utf16be) -> size_t {
+        const simdutf::result res =
             implementation.convert_utf32_to_utf16be_with_errors(utf32, size,
-                                                                utf16be.data());
+                                                                utf16be);
         ASSERT_EQUAL(res.error, simdutf::error_code::TOO_LARGE);
         ASSERT_EQUAL(res.count, i);
         return 0;
