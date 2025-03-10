@@ -26,6 +26,8 @@ simdutf_really_inline int trailing_zeroes(uint64_t input_num) {
 }
 #endif
 
+template <typename T> bool is_power_of_two(T x) { return (x & (x - 1)) == 0; }
+
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
