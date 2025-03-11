@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""
+Script is used to produce file `ppc64_utf16_to_utf8_tables.h`, that
+contains lookup tables used in UTF-16 -> UTF-8 translation. Lookup
+tables provide shuffle pattern for packing words into 1, 2, or 3-byte
+UTF-8 characters.
+"""
 
 import sys
 from os.path import normpath

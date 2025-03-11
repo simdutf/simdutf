@@ -4816,7 +4816,8 @@ public:
 #ifdef SIMDUTF_INTERNAL_TESTS
   // This method is exported only in developer mode, its purpose
   // is to expose some internal test procedures from the given
-  // implementation and them use them through standard test framework.
+  // implementation and then use them through our standard test
+  // framework.
   //
   // Regular users should not use it, the tests of the public
   // API are enough.
@@ -4825,7 +4826,7 @@ public:
     // display name
     std::string name;
 
-    // procedure should return whether given point is
+    // procedure should return whether given test pass or not
     void (*procedure)(const implementation &);
   };
 

@@ -1,4 +1,4 @@
-/**
+/*
  * References and further reading:
  *
  * Wojciech Muła, Daniel Lemire, Base64 encoding and decoding at almost the
