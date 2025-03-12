@@ -24,7 +24,11 @@ template <typename T> struct base32 {
 
   // Store to array
   template <typename U> simdutf_really_inline void store(U *dst) const {
+#if defined(__clang__)
+    return vec_xst(this->value, 0, reinterpret_cast<T *>(dst));
+#else
     return vec_xst(this->value, 0, reinterpret_cast<vector_type *>(dst));
+#endif // defined(__clang__)
   }
 
   void dump(const char *name = nullptr) const {

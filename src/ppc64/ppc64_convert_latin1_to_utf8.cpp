@@ -4,9 +4,6 @@
  * first 11 bits are encoded into utf8
  * !important! utf8_output must have at least 16 writable bytes
  */
-using vector_u16 = simd16<uint16_t>;
-using vector_u8 = simd8<uint8_t>;
-
 simdutf_really_inline void
 write_v_u16_11bits_to_utf8(const vector_u16 v_u16, char *&utf8_output,
                            const vector_u8 one_byte_bytemask,

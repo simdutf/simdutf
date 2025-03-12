@@ -63,8 +63,13 @@ template <typename T> struct base8 {
       const vector_type v0 = vec_perm(value, zero, perm_lo);
       const vector_type v1 = vec_perm(value, zero, perm_hi);
 
+#if defined(__clang__)
+      vec_xst(v0, 0, reinterpret_cast<T *>(p));
+      vec_xst(v1, 16, reinterpret_cast<T *>(p));
+#else
       vec_xst(v0, 0, reinterpret_cast<vector_type *>(p));
       vec_xst(v1, 16, reinterpret_cast<vector_type *>(p));
+#endif // defined(__clang__)
     } else {
       const vec_u8_t perm_lo = {0, 16, 1, 16, 2, 16, 3, 16,
                                 4, 16, 5, 16, 6, 16, 7, 16};
@@ -74,8 +79,13 @@ template <typename T> struct base8 {
       const vector_type v0 = vec_perm(value, zero, perm_lo);
       const vector_type v1 = vec_perm(value, zero, perm_hi);
 
+#if defined(__clang__)
+      vec_xst(v0, 0, reinterpret_cast<T *>(p));
+      vec_xst(v1, 16, reinterpret_cast<T *>(p));
+#else
       vec_xst(v0, 0, reinterpret_cast<vector_type *>(p));
       vec_xst(v1, 16, reinterpret_cast<vector_type *>(p));
+#endif // defined(__clang__)
     }
   }
 
@@ -120,10 +130,17 @@ template <typename T> struct base8 {
 
     constexpr size_t n = base8<T>::SIZE;
 
+#if defined(__clang__)
+    vec_xst(v0, 0 * n, reinterpret_cast<T *>(p));
+    vec_xst(v1, 1 * n, reinterpret_cast<T *>(p));
+    vec_xst(v2, 2 * n, reinterpret_cast<T *>(p));
+    vec_xst(v3, 3 * n, reinterpret_cast<T *>(p));
+#else
     vec_xst(v0, 0 * n, reinterpret_cast<vector_type *>(p));
     vec_xst(v1, 1 * n, reinterpret_cast<vector_type *>(p));
     vec_xst(v2, 2 * n, reinterpret_cast<vector_type *>(p));
     vec_xst(v3, 3 * n, reinterpret_cast<vector_type *>(p));
+#endif // defined(__clang__)
   }
 
   simdutf_really_inline void store_words_as_utf32(char32_t *p) const {
@@ -146,8 +163,13 @@ template <typename T> struct base8 {
 
     constexpr size_t n = base8<T>::SIZE;
 
+#if defined(__clang__)
+    vec_xst(v0, 0 * n, reinterpret_cast<T *>(p));
+    vec_xst(v1, 1 * n, reinterpret_cast<T *>(p));
+#else
     vec_xst(v0, 0 * n, reinterpret_cast<vector_type *>(p));
     vec_xst(v1, 1 * n, reinterpret_cast<vector_type *>(p));
+#endif // defined(__clang__)
   }
 
   simdutf_really_inline void store_ascii_as_utf32(char32_t *p) const {
