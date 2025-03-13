@@ -37,7 +37,7 @@ TEST(issue_a73) {
       u"\ubcb8\uadd8\uff89\u919b\u8a77\u8bfa\uafad\ub6cf\ub5c6\uf096\ubd8f"
       u"\uceae\ua8ab\u81f0\ub194\ua4c0\ua4c0\ub2f6\ub8a5\u9ff3\u3cbd\u81f4"
       u"\u82ae\u9efc\ufe88\ufabe\u9980\uf9b1\u8e95\u80df\ubdf6\ub4ad";
-  const size_t len = sizeof(utf16) / sizeof(char16_t);
+  const size_t len = sizeof(utf16) / sizeof(char16_t) - 1;
   to_utf16le_inplace(utf16, len);
 
   const size_t expected_length =
