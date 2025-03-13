@@ -796,5 +796,5 @@ int main(int argc, char *argv[]) {
     input_size.push_back(std::uniform_int_distribution<uint32_t>{50, 800}(
         gen)); // Range must be less than max_size
   }
-  return simdutf::test::main((argc == 2) ? 1 : argc, argv);
+  return simdutf::test::main((argc == 2) ? 1 : argc, argv, false);
 }

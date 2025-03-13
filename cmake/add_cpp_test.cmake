@@ -1,9 +1,11 @@
+include(GoogleTest)
+
 # Helper so we don't have to repeat ourselves so much
 # Usage: add_cpp_test(testname [COMPILE_ONLY] [SOURCES a.cpp b.cpp ...] [LABELS acceptance per_implementation ...])
 # SOURCES defaults to testname.cpp if not specified.
 function(add_cpp_test TEST_NAME)
   # Parse arguments
-  cmake_parse_arguments(PARSE_ARGV 1 ARGS "COMPILE_ONLY;LIBRARY;WILL_FAIL" "" "SOURCES;LABELS;DEPENDENCY_OF")
+  cmake_parse_arguments(PARSE_ARGV 1 ARGS "COMPILE_ONLY;LIBRARY;WILL_FAIL;NO_TEST_LIST" "" "SOURCES;LABELS;DEPENDENCY_OF")
   if (NOT ARGS_SOURCES)
     list(APPEND ARGS_SOURCES ${TEST_NAME}.cpp)
   endif()
@@ -37,7 +39,11 @@ function(add_cpp_test TEST_NAME)
         target_compile_options(${TEST_NAME} PRIVATE -coverage)
         target_link_options(${TEST_NAME} PRIVATE -coverage)
       endif()
-      add_test(${TEST_NAME} ${TEST_NAME})
+      if (ARGS_NO_TEST_LIST)
+        add_test(${TEST_NAME} ${TEST_NAME})
+      else()
+        gtest_discover_tests(${TEST_NAME})
+      endif()
     endif()
 
     # Add to <label>_tests make targets
