@@ -33,11 +33,11 @@ write_v_u16_11bits_to_utf8(const vector_u16 v_u16, char *&utf8_output,
   const auto utf8_unpacked1 =
       select(one_byte_bytemask, as_vector_u8(v_u16), as_vector_u8(t3));
 
-#if __LITTLE_ENDIAN__
-  const auto tmp = as_vector_u16(utf8_unpacked1);
-#else
+#if SIMDUTF_IS_BIG_ENDIAN
   const auto tmp = as_vector_u16(utf8_unpacked1).swap_bytes();
-#endif
+#else
+  const auto tmp = as_vector_u16(utf8_unpacked1);
+#endif // SIMDUTF_IS_BIG_ENDIAN
   const auto utf8_unpacked = as_vector_u8(tmp);
 
   // 3. prepare bitmask for 8-bit lookup
@@ -83,17 +83,17 @@ ppc64_convert_latin1_to_utf8(const char *latin_input,
   // 0b1111_1111_1000_0000
   const auto v_ff80 = vector_u16(0xff80);
 
-#if __LITTLE_ENDIAN__
-  const auto latin_1_half_into_u16_byte_mask =
-      vector_u8(0, 16, 1, 16, 2, 16, 3, 16, 4, 16, 5, 16, 6, 16, 7, 16);
-  const auto latin_2_half_into_u16_byte_mask =
-      vector_u8(8, 16, 9, 16, 10, 16, 11, 16, 12, 16, 13, 16, 14, 16, 15, 16);
-#else
+#if SIMDUTF_IS_BIG_ENDIAN
   const auto latin_1_half_into_u16_byte_mask =
       vector_u8(16, 0, 16, 1, 16, 2, 16, 3, 16, 4, 16, 5, 16, 6, 16, 7);
   const auto latin_2_half_into_u16_byte_mask =
       vector_u8(16, 8, 16, 9, 16, 10, 16, 11, 16, 12, 16, 13, 16, 14, 16, 15);
-#endif // __LITTLE_ENDIAN__
+#else
+  const auto latin_1_half_into_u16_byte_mask =
+      vector_u8(0, 16, 1, 16, 2, 16, 3, 16, 4, 16, 5, 16, 6, 16, 7, 16);
+  const auto latin_2_half_into_u16_byte_mask =
+      vector_u8(8, 16, 9, 16, 10, 16, 11, 16, 12, 16, 13, 16, 14, 16, 15, 16);
+#endif // SIMDUTF_IS_BIG_ENDIAN
 
   // each latin1 takes 1-2 utf8 bytes
   // slow path writes useful 8-15 bytes twice (eagerly writes 16 bytes and then

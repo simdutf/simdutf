@@ -55,13 +55,13 @@ simdutf_really_inline void ppc64_convert_utf16_to_1_2_3_bytes_of_utf8(
     const T one_or_two_bytes_bytemask, uint16_t one_or_two_bytes_bitmask,
     char *&utf8_output) {
   // case: code units from register produce either 1, 2 or 3 UTF-8 bytes
-#if __LITTLE_ENDIAN__
-  const auto dup_lsb =
-      vector_u8(0, 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 12, 14, 14);
-#else
+#if SIMDUTF_IS_BIG_ENDIAN
   const auto dup_lsb =
       vector_u8(1, 1, 3, 3, 5, 5, 7, 7, 9, 9, 11, 11, 13, 13, 15, 15);
-#endif // __LITTLE_ENDIAN__
+#else
+  const auto dup_lsb =
+      vector_u8(0, 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 12, 14, 14);
+#endif // SIMDUTF_IS_BIG_ENDIAN
 
   /* In this branch we handle three cases:
      1. [0000|0000|0ccc|cccc] => [0ccc|cccc]                           -
@@ -118,18 +118,18 @@ simdutf_really_inline void ppc64_convert_utf16_to_1_2_3_bytes_of_utf8(
       (one_byte_bitmask & 0x5555) | (one_or_two_bytes_bitmask & 0xaaaa);
   if (mask == 0) {
     // We only have three-byte code units. Use fast path.
-#if __LITTLE_ENDIAN__
-    const auto shuffle0 =
-        vector_u8(0, 1, 17, 2, 3, 19, 4, 5, 21, 6, 7, 23, 8, 9, 25, 10);
-    const auto shuffle1 = vector_u8(11, 27, 12, 13, 29, 14, 15, 31, -1, -1, -1,
-                                    -1, -1, -1, -1, -1);
-#else
+#if SIMDUTF_IS_BIG_ENDIAN
     // Lookups produced by scripts/ppc64_convert_utf16_to_utf8.py
     const auto shuffle0 =
         vector_u8(1, 0, 16, 3, 2, 18, 5, 4, 20, 7, 6, 22, 9, 8, 24, 11);
     const auto shuffle1 = vector_u8(10, 26, 13, 12, 28, 15, 14, 30, -1, -1, -1,
                                     -1, -1, -1, -1, -1);
-#endif // __LITTLE_ENDIAN__
+#else
+    const auto shuffle0 =
+        vector_u8(0, 1, 17, 2, 3, 19, 4, 5, 21, 6, 7, 23, 8, 9, 25, 10);
+    const auto shuffle1 = vector_u8(11, 27, 12, 13, 29, 14, 15, 31, -1, -1, -1,
+                                    -1, -1, -1, -1, -1);
+#endif // SIMDUTF_IS_BIG_ENDIAN
     const auto utf8_0 = shuffle0.lookup_32(as_vector_u8(s4), as_vector_u8(t2));
     const auto utf8_1 = shuffle1.lookup_32(as_vector_u8(s4), as_vector_u8(t2));
 

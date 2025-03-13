@@ -37,13 +37,13 @@ utf16_to_latin1_t ppc64_convert_utf16_to_latin1(const char16_t *buf, size_t len,
   #endif // SIMDUTF_IS_BIG_ENDIAN
 #else
     const auto tmp = vec_u64_t(in.value);
-  #if __LITTLE_ENDIAN__
-    memcpy(latin1_output, &tmp[1], 8);
-    const uint64_t upper = tmp[0];
-  #else
+  #if SIMDUTF_IS_BIG_ENDIAN
     memcpy(latin1_output, &tmp[0], 8);
     const uint64_t upper = tmp[1];
-  #endif // __LITTLE_ENDIAN__
+  #else
+    memcpy(latin1_output, &tmp[1], 8);
+    const uint64_t upper = tmp[0];
+  #endif // SIMDUTF_IS_BIG_ENDIAN
 #endif   // defined(__clang__)
     // AltiVec
 

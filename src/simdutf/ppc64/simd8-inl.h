@@ -30,13 +30,13 @@ template <typename T> struct base8 {
 
   template <int N = 1> vector_type prev_aux(vector_type prev_chunk) const {
     vector_type chunk = this->value;
-#ifdef __LITTLE_ENDIAN__
+#if !SIMDUTF_IS_BIG_ENDIAN
     chunk = (vector_type)vec_reve(this->value);
     prev_chunk = (vector_type)vec_reve((vector_type)prev_chunk);
 #endif
     chunk = (vector_type)vec_sld((vector_type)prev_chunk, (vector_type)chunk,
                                  16 - N);
-#ifdef __LITTLE_ENDIAN__
+#if !SIMDUTF_IS_BIG_ENDIAN
     chunk = (vector_type)vec_reve((vector_type)chunk);
 #endif
     return chunk;
@@ -97,19 +97,7 @@ template <typename T> struct base8 {
   simdutf_really_inline void store_bytes_as_utf32(char32_t *p) const {
     const vector_type zero = vec_splats(T(0));
 
-#if __LITTLE_ENDIAN__
-    const vec_u8_t perm0 = {0, 16, 16, 16, 1, 16, 16, 16,
-                            2, 16, 16, 16, 3, 16, 16, 16};
-
-    const vec_u8_t perm1 = {4, 16, 16, 16, 5, 16, 16, 16,
-                            6, 16, 16, 16, 7, 16, 16, 16};
-
-    const vec_u8_t perm2 = {8,  16, 16, 16, 9,  16, 16, 16,
-                            10, 16, 16, 16, 11, 16, 16, 16};
-
-    const vec_u8_t perm3 = {12, 16, 16, 16, 13, 16, 16, 16,
-                            14, 16, 16, 16, 15, 16, 16, 16};
-#else
+#if SIMDUTF_IS_BIG_ENDIAN
     const vec_u8_t perm0 = {16, 16, 16, 0, 16, 16, 16, 1,
                             16, 16, 16, 2, 16, 16, 16, 3};
 
@@ -121,7 +109,19 @@ template <typename T> struct base8 {
 
     const vec_u8_t perm3 = {16, 16, 16, 12, 16, 16, 16, 13,
                             16, 16, 16, 14, 16, 16, 16, 15};
-#endif // __LITTLE_ENDIAN__
+#else
+    const vec_u8_t perm0 = {0, 16, 16, 16, 1, 16, 16, 16,
+                            2, 16, 16, 16, 3, 16, 16, 16};
+
+    const vec_u8_t perm1 = {4, 16, 16, 16, 5, 16, 16, 16,
+                            6, 16, 16, 16, 7, 16, 16, 16};
+
+    const vec_u8_t perm2 = {8,  16, 16, 16, 9,  16, 16, 16,
+                            10, 16, 16, 16, 11, 16, 16, 16};
+
+    const vec_u8_t perm3 = {12, 16, 16, 16, 13, 16, 16, 16,
+                            14, 16, 16, 16, 15, 16, 16, 16};
+#endif // SIMDUTF_IS_BIG_ENDIAN
 
     const vector_type v0 = vec_perm(value, zero, perm0);
     const vector_type v1 = vec_perm(value, zero, perm1);
@@ -146,17 +146,17 @@ template <typename T> struct base8 {
   simdutf_really_inline void store_words_as_utf32(char32_t *p) const {
     const vector_type zero = vec_splats(T(0));
 
-#if __LITTLE_ENDIAN__
-    const vec_u8_t perm0 = {0, 1, 16, 16, 2, 3, 16, 16,
-                            4, 5, 16, 16, 6, 7, 16, 16};
-    const vec_u8_t perm1 = {8,  9,  16, 16, 10, 11, 16, 16,
-                            12, 13, 16, 16, 14, 15, 16, 16};
-#else
+#if SIMDUTF_IS_BIG_ENDIAN
     const vec_u8_t perm0 = {16, 16, 0, 1, 16, 16, 2, 3,
                             16, 16, 4, 5, 16, 16, 6, 7};
     const vec_u8_t perm1 = {16, 16, 8,  9,  16, 16, 10, 11,
                             16, 16, 12, 13, 16, 16, 14, 15};
-#endif // __LITTLE_ENDIAN__
+#else
+    const vec_u8_t perm0 = {0, 1, 16, 16, 2, 3, 16, 16,
+                            4, 5, 16, 16, 6, 7, 16, 16};
+    const vec_u8_t perm1 = {8,  9,  16, 16, 10, 11, 16, 16,
+                            12, 13, 16, 16, 14, 15, 16, 16};
+#endif // SIMDUTF_IS_BIG_ENDIAN
 
     const vector_type v0 = vec_perm(value, zero, perm0);
     const vector_type v1 = vec_perm(value, zero, perm1);

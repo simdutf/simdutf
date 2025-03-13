@@ -75,33 +75,7 @@ vector_u8 encoding_translate_6bit_values(const vector_u8 input) {
 */
 template <typename = void>
 simdutf_really_inline vector_u8 encoding_expand_6bit_fields(vector_u8 input) {
-#if __LITTLE_ENDIAN__
-  #define indices4(dx) (dx + 1), (dx + 0), (dx + 2), (dx + 1)
-  const auto expand_3_to_4 = vector_u8(indices4(0 * 3), indices4(1 * 3),
-                                       indices4(2 * 3), indices4(3 * 3));
-  #undef indices4
-
-  // input = [........|ccdddddd|bbbbcccc|aaaaaabb] as uint8_t
-  //              3        2        1        0
-  //
-  // in'   = [bbbbcccc|ccdddddd|aaaaaabb|bbbbcccc] as uint32_t
-  //              1        2        0        1
-  const auto in = as_vector_u32(expand_3_to_4.lookup_16(input));
-
-  // t0    = [00dddddd|00000000|00000000|00000000]
-  const auto t0 = in.shl<8>() & uint32_t(0x3f000000);
-
-  // t1    = [00dddddd|00cccccc|00000000|00000000]
-  const auto t1 = select(uint32_t(0x003f0000), in.shr<6>(), t0);
-
-  // t2    = [00dddddd|00cccccc|00bbbbbb|00000000]
-  const auto t2 = select(uint32_t(0x00003f00), in.shl<4>(), t1);
-
-  // t3    = [00dddddd|00cccccc|00bbbbbb|00aaaaaa]
-  const auto t3 = select(uint32_t(0x0000003f), in.shr<10>(), t2);
-
-  return as_vector_u8(t3);
-#else
+#if SIMDUTF_IS_BIG_ENDIAN
   #define indices4(dx) (dx + 0), (dx + 1), (dx + 1), (dx + 2)
   const auto expand_3_to_4 = vector_u8(indices4(0 * 3), indices4(1 * 3),
                                        indices4(2 * 3), indices4(3 * 3));
@@ -127,7 +101,33 @@ simdutf_really_inline vector_u8 encoding_expand_6bit_fields(vector_u8 input) {
   const auto t3 = select(uint32_t(0x3f000000), in.shr<2>(), t2);
 
   return as_vector_u8(t3);
-#endif
+#else
+  #define indices4(dx) (dx + 1), (dx + 0), (dx + 2), (dx + 1)
+  const auto expand_3_to_4 = vector_u8(indices4(0 * 3), indices4(1 * 3),
+                                       indices4(2 * 3), indices4(3 * 3));
+  #undef indices4
+
+  // input = [........|ccdddddd|bbbbcccc|aaaaaabb] as uint8_t
+  //              3        2        1        0
+  //
+  // in'   = [bbbbcccc|ccdddddd|aaaaaabb|bbbbcccc] as uint32_t
+  //              1        2        0        1
+  const auto in = as_vector_u32(expand_3_to_4.lookup_16(input));
+
+  // t0    = [00dddddd|00000000|00000000|00000000]
+  const auto t0 = in.shl<8>() & uint32_t(0x3f000000);
+
+  // t1    = [00dddddd|00cccccc|00000000|00000000]
+  const auto t1 = select(uint32_t(0x003f0000), in.shr<6>(), t0);
+
+  // t2    = [00dddddd|00cccccc|00bbbbbb|00000000]
+  const auto t2 = select(uint32_t(0x00003f00), in.shl<4>(), t1);
+
+  // t3    = [00dddddd|00cccccc|00bbbbbb|00aaaaaa]
+  const auto t3 = select(uint32_t(0x0000003f), in.shr<10>(), t2);
+
+  return as_vector_u8(t3);
+#endif // SIMDUTF_IS_BIG_ENDIAN
 }
 
 static inline void compress(const vector_u8 data, uint16_t mask, char *output) {
@@ -144,18 +144,7 @@ static inline void compress(const vector_u8 data, uint16_t mask, char *output) {
   // thintable_epi8[mask2] into a 128-bit register, using only
   // two instructions on most compilers.
 
-#if __LITTLE_ENDIAN__
-  vec_u64_t tmp = {
-      tables::base64::thintable_epi8[mask1],
-      tables::base64::thintable_epi8[mask2],
-  };
-
-  auto shufmask = vector_u8(vec_u8_t(tmp));
-
-  // we increment by 0x08 the second half of the mask
-  shufmask =
-      shufmask + vector_u8(0, 0, 0, 0, 0, 0, 0, 0, 8, 8, 8, 8, 8, 8, 8, 8);
-#else
+#if SIMDUTF_IS_BIG_ENDIAN
   vec_u64_t tmp = {
       tables::base64::thintable_epi8[mask2],
       tables::base64::thintable_epi8[mask1],
@@ -166,7 +155,18 @@ static inline void compress(const vector_u8 data, uint16_t mask, char *output) {
   // we increment by 0x08 the second half of the mask
   shufmask =
       shufmask + vector_u8(0, 0, 0, 0, 0, 0, 0, 0, 8, 8, 8, 8, 8, 8, 8, 8);
-#endif // __LITTLE_ENDIAN__
+#else
+  vec_u64_t tmp = {
+      tables::base64::thintable_epi8[mask1],
+      tables::base64::thintable_epi8[mask2],
+  };
+
+  auto shufmask = vector_u8(vec_u8_t(tmp));
+
+  // we increment by 0x08 the second half of the mask
+  shufmask =
+      shufmask + vector_u8(0, 0, 0, 0, 0, 0, 0, 0, 8, 8, 8, 8, 8, 8, 8, 8);
+#endif // SIMDUTF_IS_BIG_ENDIAN
 
   // this is the version "nearly pruned"
   const auto pruned = shufmask.lookup_16(data);
@@ -317,7 +317,29 @@ static inline block64 load_block(const char16_t *src) {
 }
 
 static simdutf_really_inline vector_u8 decoding_pack(vector_u8 input) {
-#if __LITTLE_ENDIAN__
+#if SIMDUTF_IS_BIG_ENDIAN
+  // in   = [00aaaaaa|00bbbbbb|00cccccc|00dddddd]
+  // want = [00000000|aaaaaabb|bbbbcccc|ccdddddd]
+
+  auto in = as_vector_u16(input);
+  // t0   = [00??aaaa|aabbbbbb|00??cccc|ccdddddd]
+  const auto t0 = in.shr<2>();
+  const auto t1 = select(uint16_t(0x0fc0), t0, in);
+
+  // t0   = [00??????|aaaaaabb|bbbbcccc|ccdddddd]
+  const auto t2 = as_vector_u32(t1);
+  const auto t3 = t2.shr<4>();
+  const auto t4 = select(uint32_t(0x00fff000), t3, t2);
+
+  const auto tmp = as_vector_u8(t4);
+
+  const auto shuffle =
+      vector_u8(1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15, 0, 0, 0, 0);
+
+  const auto t = shuffle.lookup_16(tmp);
+
+  return t;
+#else
   // in   = [00dddddd|00cccccc|00bbbbbb|00aaaaaa]
   // want = [00000000|aaaaaabb|bbbbcccc|ccdddddd]
 
@@ -341,29 +363,7 @@ static simdutf_really_inline vector_u8 decoding_pack(vector_u8 input) {
   const auto t = shuffle.lookup_16(tmp);
 
   return t;
-#else
-  // in   = [00aaaaaa|00bbbbbb|00cccccc|00dddddd]
-  // want = [00000000|aaaaaabb|bbbbcccc|ccdddddd]
-
-  auto in = as_vector_u16(input);
-  // t0   = [00??aaaa|aabbbbbb|00??cccc|ccdddddd]
-  const auto t0 = in.shr<2>();
-  const auto t1 = select(uint16_t(0x0fc0), t0, in);
-
-  // t0   = [00??????|aaaaaabb|bbbbcccc|ccdddddd]
-  const auto t2 = as_vector_u32(t1);
-  const auto t3 = t2.shr<4>();
-  const auto t4 = select(uint32_t(0x00fff000), t3, t2);
-
-  const auto tmp = as_vector_u8(t4);
-
-  const auto shuffle =
-      vector_u8(1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15, 0, 0, 0, 0);
-
-  const auto t = shuffle.lookup_16(tmp);
-
-  return t;
-#endif // __LITTLE_ENDIAN__
+#endif // SIMDUTF_IS_BIG_ENDIAN
 }
 
 static inline void base64_decode(char *out, vector_u8 input) {
@@ -540,7 +540,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                          (uint32_t(uint8_t(buffer_start[2])) << 1 * 6) +
                          (uint32_t(uint8_t(buffer_start[3])) << 0 * 6))
                         << 8;
-#if __LITTLE_ENDIAN__
+#if !SIMDUTF_IS_BIG_ENDIAN
       triple = scalar::u32_swap_bytes(triple);
 #endif
       std::memcpy(dst, &triple, 4);
@@ -554,7 +554,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                          (uint32_t(uint8_t(buffer_start[2])) << 1 * 6) +
                          (uint32_t(uint8_t(buffer_start[3])) << 0 * 6))
                         << 8;
-#if __LITTLE_ENDIAN__
+#if !SIMDUTF_IS_BIG_ENDIAN
       triple = scalar::u32_swap_bytes(triple);
 #endif
       std::memcpy(dst, &triple, 3);

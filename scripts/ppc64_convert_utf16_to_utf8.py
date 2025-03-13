@@ -134,19 +134,19 @@ def main():
         with redirect_stdout(f):
             print(CPP_HEADER)
 
-            print("#if __LITTLE_ENDIAN__")
-            print("// 1 byte for length, 16 bytes for mask")
-            print("const uint8_t pack_1_2_3_utf8_bytes[256][17] = {")
-            for shuffle, size in shuffle_for_conversion_1_2_3_utf8_bytes(LE):
-                print("  {%s}," % format_array([size] + shuffle))
-            print("};")
-            print("#else")
+            print("#if SIMDUTF_IS_BIG_ENDIAN")
             print("// 1 byte for length, 16 bytes for mask")
             print("const uint8_t pack_1_2_3_utf8_bytes[256][17] = {")
             for shuffle, size in shuffle_for_conversion_1_2_3_utf8_bytes(BE):
                 print("  {%s}," % format_array([size] + shuffle))
             print("};")
-            print("#endif // __LITTLE_ENDIAN__")
+            print("#else")
+            print("// 1 byte for length, 16 bytes for mask")
+            print("const uint8_t pack_1_2_3_utf8_bytes[256][17] = {")
+            for shuffle, size in shuffle_for_conversion_1_2_3_utf8_bytes(LE):
+                print("  {%s}," % format_array([size] + shuffle))
+            print("};")
+            print("#endif // SIMDUTF_IS_BIG_ENDIAN")
 
             print(CPP_FOOTER)
 

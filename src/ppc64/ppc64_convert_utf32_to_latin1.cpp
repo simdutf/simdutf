@@ -32,17 +32,17 @@ utf32_to_latin1_t simdutf_really_inline ppc64_convert_utf32_to_latin1(
     }
 
     // Note: element #1 contains 0, and is used to mask-out elements
-#if __LITTLE_ENDIAN__
-    const auto shlo =
-        vector_u8(0, 4, 8, 12, 16, 20, 24, 28, 1, 1, 1, 1, 1, 1, 1, 1);
-    const auto shhi =
-        vector_u8(1, 1, 1, 1, 1, 1, 1, 1, 0, 4, 8, 12, 16, 20, 24, 28);
-#else
+#if SIMDUTF_IS_BIG_ENDIAN
     const auto shlo = vector_u8(0 + 3, 4 + 3, 8 + 3, 12 + 3, 16 + 3, 20 + 3,
                                 24 + 3, 28 + 3, 1, 1, 1, 1, 1, 1, 1, 1);
     const auto shhi = vector_u8(1, 1, 1, 1, 1, 1, 1, 1, 0 + 3, 4 + 3, 8 + 3,
                                 12 + 3, 16 + 3, 20 + 3, 24 + 3, 28 + 3);
-#endif // __LITTLE_ENDIAN__
+#else
+    const auto shlo =
+        vector_u8(0, 4, 8, 12, 16, 20, 24, 28, 1, 1, 1, 1, 1, 1, 1, 1);
+    const auto shhi =
+        vector_u8(1, 1, 1, 1, 1, 1, 1, 1, 0, 4, 8, 12, 16, 20, 24, 28);
+#endif // SIMDUTF_IS_BIG_ENDIAN
     const auto lo = shlo.lookup_32(as_vector_u8(in1), as_vector_u8(in2));
     const auto hi = shhi.lookup_32(as_vector_u8(in3), as_vector_u8(in4));
 

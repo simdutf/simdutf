@@ -69,10 +69,10 @@ template <typename T> uint16_t move_mask_u8(T vec) {
                               3 * 8,  2 * 8,  1 * 8,  0 * 8};
 
   const auto result = (vec_u64_t)vec_vbpermq((vec_u8_t)vec, perm_mask);
-#ifdef __LITTLE_ENDIAN__
-  return static_cast<uint16_t>(result[1]);
-#else
+#if SIMDUTF_IS_BIG_ENDIAN
   return static_cast<uint16_t>(result[0]);
+#else
+  return static_cast<uint16_t>(result[1]);
 #endif
 }
 
