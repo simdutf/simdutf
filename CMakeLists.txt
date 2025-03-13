@@ -31,6 +31,7 @@ option(SIMDUTF_TOOLS "Whether the tools are included as part of the CMake build.
 option(SIMDUTF_ICONV "Whether to use iconv as part of the CMake build if available." ON)
 option(SIMDUTF_FUZZERS "Whether to build the fuzzers." OFF)
 option(SIMDUTF_COVERAGE "Enable code coverage collection during tests (only GCC and Clang)." OFF)
+option(SIMDUTF_INTERNAL_TESTS "Whether to test also internal procedures. Useful mostly for developers, not users." OFF)
 
 set(SIMDUTF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
