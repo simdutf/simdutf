@@ -98,7 +98,7 @@ base64_encoding_expand_6bit_fields(const simdutf::implementation &) {
 
 [[maybe_unused]] static void
 base64_decoding_valid(const simdutf::implementation &) {
-  using simdutf::ppc64::to_base64_mask;
+  using simdutf::ppc64::block64;
   using simdutf::ppc64::vector_u8;
   using simdutf::ppc64::with_base64_std;
   using simdutf::ppc64::with_base64_url;
@@ -108,7 +108,8 @@ base64_decoding_valid(const simdutf::implementation &) {
     auto ascii = vector_u8::splat(base64tests::base64_std[i]);
     uint16_t error = 0;
     const auto mask =
-        to_base64_mask<with_base64_std, with_ignore_errors>(ascii, error);
+        block64::to_base64_mask<with_base64_std, with_ignore_errors>(ascii,
+                                                                     error);
 
     const auto err =
         (mask != 0) || (error != 0) || (ascii != vector_u8::splat(i)).any();
@@ -127,7 +128,8 @@ base64_decoding_valid(const simdutf::implementation &) {
     auto ascii = vector_u8::splat(base64tests::base64_url[i]);
     uint16_t error = 0;
     const auto mask =
-        to_base64_mask<with_base64_url, with_ignore_errors>(ascii, error);
+        block64::to_base64_mask<with_base64_url, with_ignore_errors>(ascii,
+                                                                     error);
 
     const auto err =
         (mask != 0) || (error != 0) || (ascii != vector_u8::splat(i)).any();
@@ -145,7 +147,7 @@ base64_decoding_valid(const simdutf::implementation &) {
 
 template <bool base64_url>
 static void unittest_decoding_invalid_ignore_errors(const char *base64) {
-  using simdutf::ppc64::to_base64_mask;
+  using simdutf::ppc64::block64;
   using simdutf::ppc64::vector_u8;
   using simdutf::ppc64::with_ignore_errors;
 
@@ -173,7 +175,7 @@ static void unittest_decoding_invalid_ignore_errors(const char *base64) {
     auto ascii = vector_u8::splat(b);
     uint16_t error = 0;
     const auto mask =
-        to_base64_mask<base64_url, with_ignore_errors>(ascii, error);
+        block64::to_base64_mask<base64_url, with_ignore_errors>(ascii, error);
 
     if (map[i] == invalid or map[i] == whitespace) {
       if (mask != 0xffff or error != 0x0000) {
@@ -199,7 +201,7 @@ static void unittest_decoding_invalid_ignore_errors(const char *base64) {
 
 template <bool base64_url>
 static void unittest_decoding_invalid_strict_errors(const char *base64) {
-  using simdutf::ppc64::to_base64_mask;
+  using simdutf::ppc64::block64;
   using simdutf::ppc64::vector_u8;
   using simdutf::ppc64::with_strict_checking;
 
@@ -225,7 +227,7 @@ static void unittest_decoding_invalid_strict_errors(const char *base64) {
     auto ascii = vector_u8::splat(b);
     uint16_t error = 0;
     const auto mask =
-        to_base64_mask<base64_url, with_strict_checking>(ascii, error);
+        block64::to_base64_mask<base64_url, with_strict_checking>(ascii, error);
 
     if (map[i] == invalid) {
       if (mask != 0xffff or error != 0xffff) {
