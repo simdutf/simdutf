@@ -1,3 +1,57 @@
+struct expansion_result_t {
+  size_t u16count;
+  __m128i compressed;
+};
+
+// Function sse_expand_surrogate takes four **valid** UTF-32 characters
+// having at least one code-point producing a surrogate pair.
+template <endianness byte_order>
+expansion_result_t sse_expand_surrogate(const __m128i x) {
+  using vector_u32 = simd32<uint32_t>;
+  using vector_u8 = simd8<uint8_t>;
+
+  const auto in = vector_u32(x);
+
+  const auto non_surrogate_mask = (in & uint32_t(0xffff0000)) == uint32_t(0);
+  const auto mask = (~non_surrogate_mask.to_4bit_bitmask()) & 0xf;
+
+  const auto t0 = in - uint32_t(0x00010000);
+  const auto hi = t0.shr<10>() & uint32_t(0x000003ff);
+  const auto lo = t0.shl<16>() & uint32_t(0x03ff0000);
+  const auto surrogates = (lo | hi) | uint32_t(0xdc00d800);
+
+  const auto merged = as_vector_u8(select(non_surrogate_mask, in, surrogates));
+
+  const auto shuffle = vector_u8::load(
+      (byte_order == endianness::LITTLE)
+          ? tables::utf32_to_utf16::pack_utf32_to_utf16le[mask]
+          : tables::utf32_to_utf16::pack_utf32_to_utf16be[mask]);
+
+  const size_t u16count = (4 + _mm_popcnt_u32(mask));
+  const auto compressed = shuffle.lookup_16(merged);
+
+  return {u16count, compressed};
+}
+
+// Function `validate_utf32` checks 2 x 4 UTF-32 characters for their validity.
+simdutf_really_inline bool validate_utf32(const __m128i a, const __m128i b) {
+  using vector_u32 = simd32<uint32_t>;
+
+  const auto in0 = vector_u32(a);
+  const auto in1 = vector_u32(b);
+
+  const auto standardmax = vector_u32::splat(0x10ffff);
+  const auto offset = vector_u32::splat(0xffff2000);
+  const auto standardoffsetmax = vector_u32::splat(0xfffff7ff);
+
+  const auto too_large = max(in0, in1) > standardmax;
+  const auto surrogate0 = (in0 + offset) > standardoffsetmax;
+  const auto surrogate1 = (in1 + offset) > standardoffsetmax;
+
+  const auto combined = too_large | surrogate0 | surrogate1;
+  return !combined.any();
+}
+
 template <endianness big_endian>
 std::pair<const char32_t *, char16_t *>
 sse_convert_utf32_to_utf16(const char32_t *buf, size_t len,
@@ -8,7 +62,7 @@ sse_convert_utf32_to_utf16(const char32_t *buf, size_t len,
   const __m128i v_ffff0000 = _mm_set1_epi32((int32_t)0xffff0000);
   __m128i forbidden_bytemask = _mm_setzero_si128();
 
-  while (end - buf >= 8) {
+  while (end - buf >= 16) {
     const __m128i in = _mm_loadu_si128((__m128i *)buf);
     const __m128i nextin = _mm_loadu_si128((__m128i *)buf + 1);
 
@@ -33,41 +87,47 @@ sse_convert_utf32_to_utf16(const char32_t *buf, size_t len,
       utf16_output += 8;
       buf += 8;
     } else {
-      size_t forward = 7;
-      size_t k = 0;
-      if (size_t(end - buf) < forward + 1) {
-        forward = size_t(end - buf - 1);
+      if (simdutf_unlikely(!validate_utf32(in, nextin))) {
+        return std::make_pair(nullptr, utf16_output);
       }
-      for (; k < forward; k++) {
-        uint32_t word = buf[k];
-        if ((word & 0xFFFF0000) == 0) {
-          // will not generate a surrogate pair
-          if (word >= 0xD800 && word <= 0xDFFF) {
-            return std::make_pair(nullptr, utf16_output);
-          }
-          *utf16_output++ =
-              big_endian
-                  ? char16_t((uint16_t(word) >> 8) | (uint16_t(word) << 8))
-                  : char16_t(word);
-        } else {
-          // will generate a surrogate pair
-          if (word > 0x10FFFF) {
-            return std::make_pair(nullptr, utf16_output);
-          }
-          word -= 0x10000;
-          uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
-          uint16_t low_surrogate = uint16_t(0xDC00 + (word & 0x3FF));
-          if (big_endian) {
-            high_surrogate =
-                uint16_t((high_surrogate >> 8) | (high_surrogate << 8));
-            low_surrogate =
-                uint16_t((low_surrogate >> 8) | (low_surrogate << 8));
-          }
-          *utf16_output++ = char16_t(high_surrogate);
-          *utf16_output++ = char16_t(low_surrogate);
-        }
+
+      const auto ret0 = sse_expand_surrogate<big_endian>(in);
+      _mm_storeu_si128((__m128i *)utf16_output, ret0.compressed);
+      utf16_output += ret0.u16count;
+
+      const auto ret1 = sse_expand_surrogate<big_endian>(nextin);
+      _mm_storeu_si128((__m128i *)utf16_output, ret1.compressed);
+      utf16_output += ret1.u16count;
+
+      buf += 8;
+    }
+  }
+
+  while (buf < end) {
+    uint32_t word = *buf++;
+    if (simdutf_likely((word & 0xFFFF0000) == 0)) {
+      // will not generate a surrogate pair
+      if (word >= 0xD800 && word <= 0xDFFF) {
+        return std::make_pair(nullptr, utf16_output);
       }
-      buf += k;
+      *utf16_output++ =
+          big_endian ? char16_t((uint16_t(word) >> 8) | (uint16_t(word) << 8))
+                     : char16_t(word);
+    } else {
+      // will generate a surrogate pair
+      if (word > 0x10FFFF) {
+        return std::make_pair(nullptr, utf16_output);
+      }
+      word -= 0x10000;
+      uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
+      uint16_t low_surrogate = uint16_t(0xDC00 + (word & 0x3FF));
+      if (big_endian) {
+        high_surrogate =
+            uint16_t((high_surrogate >> 8) | (high_surrogate << 8));
+        low_surrogate = uint16_t((low_surrogate >> 8) | (low_surrogate << 8));
+      }
+      *utf16_output++ = char16_t(high_surrogate);
+      *utf16_output++ = char16_t(low_surrogate);
     }
   }
 
