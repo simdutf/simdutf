@@ -17,7 +17,11 @@ struct base16 : base<simd16<T>> {
     return _mm_cmpeq_epi16(lhs, rhs);
   }
 
+  /// the size of vector in bytes
   static const int SIZE = sizeof(base<simd16<T>>::value);
+
+  /// the number of elements of type T a vector can hold
+  static const int ELEMENTS = SIZE / sizeof(T);
 
   template <int N = 1>
   simdutf_really_inline simd16<T> prev(const simd16<T> prev_chunk) const {
@@ -131,6 +135,7 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
   simdutf_really_inline simd16(const uint16_t *values) : simd16(load(values)) {}
   simdutf_really_inline simd16(const char16_t *values)
       : simd16(load(reinterpret_cast<const uint16_t *>(values))) {}
+  simdutf_really_inline simd16(const simd16<bool> bm) : simd16(bm.value) {}
   // Member-by-member initialization
   simdutf_really_inline simd16(uint16_t v0, uint16_t v1, uint16_t v2,
                                uint16_t v3, uint16_t v4, uint16_t v5,
@@ -242,7 +247,21 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
                                                    const simd16<uint16_t> &v1) {
     return _mm_packus_epi16(v0, v1);
   }
+
+  simdutf_really_inline uint64_t sum() const {
+    const auto lo_u16 = _mm_and_si128(value, _mm_set1_epi32(0x0000ffff));
+    const auto hi_u16 = _mm_srli_epi32(value, 16);
+    const auto sum_u32 = _mm_add_epi32(lo_u16, hi_u16);
+
+    const auto lo_u32 = _mm_and_si128(sum_u32, _mm_set1_epi64x(0xffffffff));
+    const auto hi_u32 = _mm_srli_epi64(sum_u32, 32);
+    const auto sum_u64 = _mm_add_epi64(lo_u32, hi_u32);
+
+    return uint64_t(_mm_extract_epi64(sum_u64, 0)) +
+           uint64_t(_mm_extract_epi64(sum_u64, 1));
+  }
 };
+
 simdutf_really_inline simd16<int16_t>::operator simd16<uint16_t>() const {
   return this->value;
 }
@@ -356,3 +375,7 @@ template <typename T> struct simd16x32 {
         .to_bitmask();
   }
 }; // struct simd16x32<T>
+
+simd16<uint16_t> min(const simd16<uint16_t> a, simd16<uint16_t> b) {
+  return _mm_min_epu16(a.value, b.value);
+}
