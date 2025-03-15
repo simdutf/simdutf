@@ -138,6 +138,12 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
   register_function("utf8_length_from_latin1",
                     &Benchmark::run_utf8_length_from_latin1,
                     simdutf::encoding_type::Latin1);
+  register_function("utf8_length_from_utf16le",
+                    &Benchmark::run_utf8_length_from_utf16le,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("utf8_length_from_utf16be",
+                    &Benchmark::run_utf8_length_from_utf16be,
+                    simdutf::encoding_type::UTF16_BE);
   register_function("utf8_length_from_utf32",
                     &Benchmark::run_utf8_length_from_utf32,
                     simdutf::encoding_type::UTF32_LE);
@@ -746,6 +752,34 @@ void Benchmark::run_utf8_length_from_latin1(
   }
   size_t char_count = get_active_implementation()->count_utf8(data, size);
   print_summary(result, size, char_count);
+}
+
+void Benchmark::run_utf8_length_from_utf16le(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char16_t *data = reinterpret_cast<const char16_t *>(input_data.data());
+  const size_t size = input_data.size() / 2;
+  volatile size_t sink{0};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    sink = implementation.utf8_length_from_utf16le(data, size);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  print_summary(result, size, size);
+}
+
+void Benchmark::run_utf8_length_from_utf16be(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char16_t *data = reinterpret_cast<const char16_t *>(input_data.data());
+  const size_t size = input_data.size() / 2;
+  volatile size_t sink{0};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    sink = implementation.utf8_length_from_utf16be(data, size);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  print_summary(result, size, size);
 }
 
 void Benchmark::run_utf8_length_from_utf32(

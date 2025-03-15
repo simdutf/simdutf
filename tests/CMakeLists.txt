@@ -388,3 +388,7 @@ add_cpp_test(atomic_base64_tests)
 target_link_libraries(atomic_base64_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
+
+add_cpp_test(utf8_length_from_utf16_tests)
+target_link_libraries(utf8_length_from_utf16_tests
+    PUBLIC simdutf::tests::helpers)
