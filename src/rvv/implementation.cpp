@@ -1,3 +1,6 @@
+#include "simdutf/internal/isadetection.h"
+#include <cassert>
+
 #include "simdutf/rvv/begin.h"
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
@@ -25,6 +28,11 @@ namespace SIMDUTF_IMPLEMENTATION {
 
 #include "rvv/rvv_utf32_to.inl.cpp"
 #include "rvv/rvv_utf8_to.inl.cpp"
+
+#if SIMDUTF_FEATURE_BASE64
+  #include "rvv/rvv_templates.inl.cpp"
+  #include "rvv/rvv_base64_encode.inl.cpp"
+#endif
 
 #if SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_warn_unused int
@@ -281,7 +289,9 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
 size_t implementation::binary_to_base64(const char *input, size_t length,
                                         char *output,
                                         base64_options options) const noexcept {
-  return scalar::base64::tail_encode_base64(output, input, length, options);
+  return base64_encoding.perform(reinterpret_cast<const uint8_t *>(input),
+                                 length, reinterpret_cast<uint8_t *>(output),
+                                 options);
 }
 #endif // SIMDUTF_FEATURE_BASE64
 
