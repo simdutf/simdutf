@@ -244,12 +244,19 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
     return __lasx_xvshuf4i_b(this->value, 0b10110001);
   }
 
+  template <unsigned N>
+  static simdutf_really_inline simd8<uint8_t>
+  pack_shifted_right(const simd16<uint16_t> &v0, const simd16<uint16_t> &v1) {
+    return __lasx_xvpermi_d(__lasx_xvssrlni_bu_h(v1.value, v0.value, N),
+                            0b11011000);
+  }
+
   // Pack with the unsigned saturation of two uint16_t code units into single
   // uint8_t vector
   static simdutf_really_inline simd8<uint8_t> pack(const simd16<uint16_t> &v0,
                                                    const simd16<uint16_t> &v1) {
-    return __lasx_xvpermi_d(__lasx_xvssrlni_bu_h(v1.value, v0.value, 0),
-                            0b11011000);
+
+    return pack_shifted_right<0>(v0, v1);
   }
 };
 
