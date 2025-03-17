@@ -44,7 +44,7 @@ TEST(issue_a73) {
       implementation.utf8_length_from_utf16le(utf16, len);
 
   std::vector<char> output(expected_length);
-  const char expected[] =
+  const std::string expected =
       "\xeb\xb3\xad\xef\x9e\x99\xe8\x9e\x94\xef\x82\xa6\xe8\xaa\x83\xef\x82\xbb"
       "\xea\xb6\x82\xef\xae\x82\xe9\x9e\x97\xe9\xaf\xb0\xea\xb6\xaf\xea\x83\xa0"
       "\xe8\x97\xa0\xee\xaa\xb5\xef\x8a\xa2\xea\xb2\xab\xeb\x9f\xad\xee\x82\xa8"
@@ -80,9 +80,7 @@ TEST(issue_a73) {
   const size_t utf8size =
       implementation.convert_utf16le_to_utf8(utf16, len, output.data());
   ASSERT_EQUAL(utf8size, expected_length);
-  for (size_t i = 0; i < expected_length; i++) {
-    ASSERT_EQUAL(output[i], expected[i]);
-  }
+  ASSERT_BYTES_EQUAL(output, expected, expected_length);
 }
 
 TEST(issue_a72) {

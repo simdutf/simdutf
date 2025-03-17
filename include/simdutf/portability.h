@@ -106,9 +106,9 @@
 #elif defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC)
   #define SIMDUTF_IS_ARM64 1
 #elif defined(__PPC64__) || defined(_M_PPC64)
-// #define SIMDUTF_IS_PPC64 1
-//  The simdutf library does yet support SIMD acceleration under
-//  POWER processors. Please see https://github.com/lemire/simdutf/issues/51
+  #if defined(__VEC__) && defined(__ALTIVEC__)
+    #define SIMDUTF_IS_PPC64 1
+  #endif
 #elif defined(__s390__)
 // s390 IBM system. Big endian.
 #elif (defined(__riscv) || defined(__riscv__)) && __riscv_xlen == 64

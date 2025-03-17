@@ -1,6 +1,7 @@
 ALL=aarch64     \
     loongarch64 \
     powerpc64   \
+    powerpc64le \
     riscv64
 
 .PHONY: help
@@ -10,6 +11,7 @@ help:
 	@echo "- make aarch64"
 	@echo "- make loongarch64"
 	@echo "- make powerpc64"
+	@echo "- make powerpc64le"
 	@echo "- make riscv64"
 	@echo ""
 	@echo "To run all above use:"
@@ -33,6 +35,11 @@ powerpc64:
 	cmake -B $@build -GNinja --toolchain cmake/toolchains-dev/$@.cmake
 	cmake --build $@build
 
+.PHONY: powerpc64le
+powerpc64le:
+	cmake -B $@build -GNinja --toolchain cmake/toolchains-dev/$@.cmake -D SIMDUTF_AMALGAMATION=OFF -D SIMDUTF_INTERNAL_TESTS=ON
+	cmake --build $@build
+
 .PHONY: riscv64
 riscv64:
 	cmake -B $@build -GNinja --toolchain cmake/toolchains-dev/$@.cmake
@@ -43,4 +50,5 @@ clean:
 	rm -rf aarch64build
 	rm -rf loongarch64build
 	rm -rf powerpc64build
+	rm -rf powerpc64lebuild
 	rm -rf riscv64build
