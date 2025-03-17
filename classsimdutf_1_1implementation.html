@@ -29,7 +29,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">simdutf<span id="projectnumber">&#160;6.1.1</span>
+   <div id="projectname">simdutf<span id="projectnumber">&#160;6.4.0</span>
    </div>
    <div id="projectbrief">Unicode at GB/s.</div>
   </td>
@@ -345,12 +345,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a380f5ef4b282ef66210a84ebc84bce51" id="r_a380f5ef4b282ef66210a84ebc84bce51"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a380f5ef4b282ef66210a84ebc84bce51">count_utf8</a> (const char *input, size_t length) const noexcept=0</td></tr>
 <tr class="memdesc:a380f5ef4b282ef66210a84ebc84bce51"><td class="mdescLeft">&#160;</td><td class="mdescRight">Count the number of code points (characters) in the string assuming that it is valid.  <br /></td></tr>
 <tr class="separator:a380f5ef4b282ef66210a84ebc84bce51"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af46e9e7192004051687186ac956262f3" id="r_af46e9e7192004051687186ac956262f3"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#af46e9e7192004051687186ac956262f3">maximal_binary_length_from_base64</a> (const char *input, size_t length) const noexcept=0</td></tr>
-<tr class="memdesc:af46e9e7192004051687186ac956262f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provide the maximal binary length in bytes given the base64 input.  <br /></td></tr>
-<tr class="separator:af46e9e7192004051687186ac956262f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9c8897b131c52d703cb2c5d032c29ff6" id="r_a9c8897b131c52d703cb2c5d032c29ff6"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a9c8897b131c52d703cb2c5d032c29ff6">maximal_binary_length_from_base64</a> (const char16_t *input, size_t length) const noexcept=0</td></tr>
-<tr class="memdesc:a9c8897b131c52d703cb2c5d032c29ff6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provide the maximal binary length in bytes given the base64 input.  <br /></td></tr>
-<tr class="separator:a9c8897b131c52d703cb2c5d032c29ff6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a98579327df6c99c6bfab0394174363ee" id="r_a98579327df6c99c6bfab0394174363ee"><td class="memItemLeft" align="right" valign="top">simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a98579327df6c99c6bfab0394174363ee">maximal_binary_length_from_base64</a> (const char *input, size_t length) const noexcept</td></tr>
+<tr class="memdesc:a98579327df6c99c6bfab0394174363ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provide the maximal binary length in bytes given the base64 input.  <br /></td></tr>
+<tr class="separator:a98579327df6c99c6bfab0394174363ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab3185b3c751048d78d91df45523deeef" id="r_ab3185b3c751048d78d91df45523deeef"><td class="memItemLeft" align="right" valign="top">simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#ab3185b3c751048d78d91df45523deeef">maximal_binary_length_from_base64</a> (const char16_t *input, size_t length) const noexcept</td></tr>
+<tr class="memdesc:ab3185b3c751048d78d91df45523deeef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provide the maximal binary length in bytes given the base64 input.  <br /></td></tr>
+<tr class="separator:ab3185b3c751048d78d91df45523deeef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7a23d6e9c3c006b78fe5d5f158206139" id="r_a7a23d6e9c3c006b78fe5d5f158206139"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a7a23d6e9c3c006b78fe5d5f158206139">base64_to_binary</a> (const char *input, size_t length, char *output, base64_options options=base64_default, last_chunk_handling_options last_chunk_options=last_chunk_handling_options::loose) const noexcept=0</td></tr>
 <tr class="memdesc:a7a23d6e9c3c006b78fe5d5f158206139"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a base64 input to a binary output.  <br /></td></tr>
 <tr class="separator:a7a23d6e9c3c006b78fe5d5f158206139"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -363,9 +363,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a31993b9463fb0a4724353e928962ebbe" id="r_a31993b9463fb0a4724353e928962ebbe"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1full__result.html">full_result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a31993b9463fb0a4724353e928962ebbe">base64_to_binary_details</a> (const char16_t *input, size_t length, char *output, base64_options options=base64_default, last_chunk_handling_options last_chunk_options=last_chunk_handling_options::loose) const noexcept=0</td></tr>
 <tr class="memdesc:a31993b9463fb0a4724353e928962ebbe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a base64 input to a binary output while returning more details than base64_to_binary.  <br /></td></tr>
 <tr class="separator:a31993b9463fb0a4724353e928962ebbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7935750344384cc0130094cb6c440826" id="r_a7935750344384cc0130094cb6c440826"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a7935750344384cc0130094cb6c440826">base64_length_from_binary</a> (size_t length, base64_options options=base64_default) const noexcept=0</td></tr>
-<tr class="memdesc:a7935750344384cc0130094cb6c440826"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provide the base64 length in bytes given the length of a binary input.  <br /></td></tr>
-<tr class="separator:a7935750344384cc0130094cb6c440826"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad29569bd4700b3e7bedce1d0c5eec236" id="r_ad29569bd4700b3e7bedce1d0c5eec236"><td class="memItemLeft" align="right" valign="top">simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#ad29569bd4700b3e7bedce1d0c5eec236">base64_length_from_binary</a> (size_t length, base64_options options=base64_default) const noexcept</td></tr>
+<tr class="memdesc:ad29569bd4700b3e7bedce1d0c5eec236"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provide the base64 length in bytes given the length of a binary input.  <br /></td></tr>
+<tr class="separator:ad29569bd4700b3e7bedce1d0c5eec236"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5823f6a86315f4404a4f437977abf9df" id="r_a5823f6a86315f4404a4f437977abf9df"><td class="memItemLeft" align="right" valign="top">virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a5823f6a86315f4404a4f437977abf9df">binary_to_base64</a> (const char *input, size_t length, char *output, base64_options options=base64_default) const noexcept=0</td></tr>
 <tr class="memdesc:a5823f6a86315f4404a4f437977abf9df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a binary input to a base64 output.  <br /></td></tr>
 <tr class="separator:a5823f6a86315f4404a4f437977abf9df"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -374,7 +374,7 @@ Public Member Functions</h2></td></tr>
 <div class="textblock"><p>An implementation of simdutf for a particular CPU architecture. </p>
 <p>Also used to maintain the currently active implementation. The active implementation is automatically initialized on first use to the most advanced implementation supported by the host. </p>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03030">3030</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03127">3127</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="afd306a0bc3e221964af3f31a64784b12" name="afd306a0bc3e221964af3f31a64784b12"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afd306a0bc3e221964af3f31a64784b12">&#9670;&#160;</a></span>autodetect_encoding()</h2>
@@ -422,8 +422,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a7935750344384cc0130094cb6c440826" name="a7935750344384cc0130094cb6c440826"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7935750344384cc0130094cb6c440826">&#9670;&#160;</a></span>base64_length_from_binary()</h2>
+<a id="ad29569bd4700b3e7bedce1d0c5eec236" name="ad29569bd4700b3e7bedce1d0c5eec236"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad29569bd4700b3e7bedce1d0c5eec236">&#9670;&#160;</a></span>base64_length_from_binary()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -432,7 +432,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::base64_length_from_binary </td>
+          <td class="memname">simdutf_warn_unused size_t simdutf::implementation::base64_length_from_binary </td>
           <td>(</td>
           <td class="paramtype">size_t&#160;</td>
           <td class="paramname"><em>length</em>, </td>
@@ -451,7 +451,7 @@ Public Member Functions</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -528,7 +528,7 @@ Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the base64 string to process </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
-    <tr><td class="paramname">output</td><td>the pointer to buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long). </td></tr>
+    <tr><td class="paramname">output</td><td>the pointer to a buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long). </td></tr>
     <tr><td class="paramname">options</td><td>the base64 options to use, can be base64_default or base64_url, is base64_default by default. </td></tr>
   </table>
   </dd>
@@ -598,7 +598,7 @@ Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the base64 string to process, in ASCII stored as 16-bit units </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in 16-bit units </td></tr>
-    <tr><td class="paramname">output</td><td>the pointer to buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long). </td></tr>
+    <tr><td class="paramname">output</td><td>the pointer to a buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long). </td></tr>
     <tr><td class="paramname">options</td><td>the base64 options to use, can be base64_default or base64_url, is base64_default by default. </td></tr>
   </table>
   </dd>
@@ -668,7 +668,7 @@ Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the base64 string to process </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
-    <tr><td class="paramname">output</td><td>the pointer to buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long). </td></tr>
+    <tr><td class="paramname">output</td><td>the pointer to a buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long). </td></tr>
     <tr><td class="paramname">options</td><td>the base64 options to use, can be base64_default or base64_url, is base64_default by default. </td></tr>
   </table>
   </dd>
@@ -738,7 +738,7 @@ Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the base64 string to process </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
-    <tr><td class="paramname">output</td><td>the pointer to buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long). </td></tr>
+    <tr><td class="paramname">output</td><td>the pointer to a buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long). </td></tr>
     <tr><td class="paramname">options</td><td>the base64 options to use, can be base64_default or base64_url, is base64_default by default. </td></tr>
   </table>
   </dd>
@@ -801,7 +801,7 @@ Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the binary to process </td></tr>
     <tr><td class="paramname">length</td><td>the length of the input in bytes </td></tr>
-    <tr><td class="paramname">output</td><td>the pointer to buffer that can hold the conversion result (should be at least base64_length_from_binary(length) bytes long) </td></tr>
+    <tr><td class="paramname">output</td><td>the pointer to a buffer that can hold the conversion result (should be at least base64_length_from_binary(length) bytes long) </td></tr>
     <tr><td class="paramname">options</td><td>the base64 options to use, can be base64_default or base64_url, is base64_default by default. </td></tr>
   </table>
   </dd>
@@ -858,7 +858,7 @@ Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16 string to process </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
-    <tr><td class="paramname">output</td><td>the pointer to buffer that can hold the conversion result </td></tr>
+    <tr><td class="paramname">output</td><td>the pointer to a buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -2718,7 +2718,7 @@ Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16BE string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
-    <tr><td class="paramname">utf32_buffer</td><td>the pointer to buffer that can hold the conversion result </td></tr>
+    <tr><td class="paramname">utf32_buffer</td><td>the pointer to a buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -2773,7 +2773,7 @@ Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16BE string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
-    <tr><td class="paramname">utf8_buffer</td><td>the pointer to buffer that can hold the conversion result </td></tr>
+    <tr><td class="paramname">utf8_buffer</td><td>the pointer to a buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -2884,7 +2884,7 @@ Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
-    <tr><td class="paramname">utf32_buffer</td><td>the pointer to buffer that can hold the conversion result </td></tr>
+    <tr><td class="paramname">utf32_buffer</td><td>the pointer to a buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -2939,7 +2939,7 @@ Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
-    <tr><td class="paramname">utf8_buffer</td><td>the pointer to buffer that can hold the conversion result </td></tr>
+    <tr><td class="paramname">utf8_buffer</td><td>the pointer to a buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -2995,7 +2995,7 @@ Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
-    <tr><td class="paramname">latin1_buffer</td><td>the pointer to buffer that can hold the conversion result </td></tr>
+    <tr><td class="paramname">latin1_buffer</td><td>the pointer to a buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -3050,7 +3050,7 @@ Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
-    <tr><td class="paramname">utf16_buffer</td><td>the pointer to buffer that can hold the conversion result </td></tr>
+    <tr><td class="paramname">utf16_buffer</td><td>the pointer to a buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -3105,7 +3105,7 @@ Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
-    <tr><td class="paramname">utf16_buffer</td><td>the pointer to buffer that can hold the conversion result </td></tr>
+    <tr><td class="paramname">utf16_buffer</td><td>the pointer to a buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -3160,7 +3160,7 @@ Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
-    <tr><td class="paramname">utf8_buffer</td><td>the pointer to buffer that can hold the conversion result </td></tr>
+    <tr><td class="paramname">utf8_buffer</td><td>the pointer to a buffer that can hold the conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -3558,7 +3558,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </pre><p> impl-&gt;<a class="el" href="classsimdutf_1_1implementation.html#af48e75e8d6d25c3c3d66334a8849cbc7" title="The description of this implementation.">description()</a> &lt;&lt; ")" &lt;&lt; endl;</p>
 <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03052">3052</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03149">3149</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3644,7 +3644,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-16LE string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04368">4368</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04465">4465</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3682,7 +3682,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-32 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04330">4330</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04427">4427</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3733,8 +3733,8 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 
 </div>
 </div>
-<a id="af46e9e7192004051687186ac956262f3" name="af46e9e7192004051687186ac956262f3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af46e9e7192004051687186ac956262f3">&#9670;&#160;</a></span>maximal_binary_length_from_base64() <span class="overload">[1/2]</span></h2>
+<a id="a98579327df6c99c6bfab0394174363ee" name="a98579327df6c99c6bfab0394174363ee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a98579327df6c99c6bfab0394174363ee">&#9670;&#160;</a></span>maximal_binary_length_from_base64() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -3743,7 +3743,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::maximal_binary_length_from_base64 </td>
+          <td class="memname">simdutf_warn_unused size_t simdutf::implementation::maximal_binary_length_from_base64 </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>input</em>, </td>
@@ -3762,7 +3762,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -3780,8 +3780,8 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 
 </div>
 </div>
-<a id="a9c8897b131c52d703cb2c5d032c29ff6" name="a9c8897b131c52d703cb2c5d032c29ff6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9c8897b131c52d703cb2c5d032c29ff6">&#9670;&#160;</a></span>maximal_binary_length_from_base64() <span class="overload">[2/2]</span></h2>
+<a id="ab3185b3c751048d78d91df45523deeef" name="ab3185b3c751048d78d91df45523deeef"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab3185b3c751048d78d91df45523deeef">&#9670;&#160;</a></span>maximal_binary_length_from_base64() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -3790,7 +3790,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual simdutf_warn_unused size_t simdutf::implementation::maximal_binary_length_from_base64 </td>
+          <td class="memname">simdutf_warn_unused size_t simdutf::implementation::maximal_binary_length_from_base64 </td>
           <td>(</td>
           <td class="paramtype">const char16_t *&#160;</td>
           <td class="paramname"><em>input</em>, </td>
@@ -3809,7 +3809,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -3856,7 +3856,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </pre><p> impl-&gt;<a class="el" href="classsimdutf_1_1implementation.html#af48e75e8d6d25c3c3d66334a8849cbc7" title="The description of this implementation.">description()</a> &lt;&lt; ")" &lt;&lt; endl;</p>
 <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03041">3041</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03138">3138</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3915,7 +3915,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-16 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04142">4142</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04239">4239</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -4040,14 +4040,13 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 <p>Return the number of bytes that this UTF-32 string would require in Latin1 format. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">input</td><td>the UTF-32 string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in 4-byte code units (char32_t) </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-32 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04402">4402</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04498">4498</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>

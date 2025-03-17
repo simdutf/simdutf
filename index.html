@@ -29,7 +29,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">simdutf<span id="projectnumber">&#160;6.1.1</span>
+   <div id="projectname">simdutf<span id="projectnumber">&#160;6.4.0</span>
    </div>
    <div id="projectbrief">Unicode at GB/s.</div>
   </td>
@@ -152,7 +152,7 @@ Table of contents</h1>
 <li><a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">WHATWG forgiving-base64</a> (with or without URL encoding) to binary,</li>
 <li>Binary to base64 (with or without URL encoding).</li>
 </ul>
-<p>The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, AVX-512, RISC-V Vector Extension, LoongSon, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion characters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).</p>
+<p>The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, AVX-512, RISC-V Vector Extension, LoongSon, POWER, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion characters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).</p>
 <p>The library compiles down to a small library of a few hundred kilobytes. Our functions are exception-free and non allocating. We have extensive tests and extensive benchmarks.</p>
 <p>We have exhaustive tests, including an elaborate fuzzing setup. The library has been used in production systems for years.</p>
 <h2><a class="anchor" id="autotoc_md1"></a>
@@ -191,7 +191,7 @@ How fast is it?</h2>
 Requirements</h2>
 <ul>
 <li>C++11 compatible compiler. We support LLVM clang, GCC, Visual Studio. (Our tests and benchmark tools requires C++17.)</li>
-<li>For high speed, you should have a recent 64-bit system (e.g., ARM, x64, RISC-V with vector extensions, Loongson).</li>
+<li>For high speed, you should have a recent 64-bit system (e.g., ARM, x64, RISC-V with vector extensions, Loongson, POWER).</li>
 <li>If you rely on CMake, you should use a recent CMake (at least 3.15); otherwise you may use the single header version. The library is also available from <a href="https://github.com/simdutf/simdutf-vcpkg">Microsoft's vcpkg</a>, from <a href="https://conan.io/center/recipes/simdutf">conan</a>, from <a href="https://cgit.freebsd.org/ports/tree/converters/simdutf">FreeBSD's port</a>, from <a href="https://formulae.brew.sh/formula/simdutf">brew</a>, and many other systems.</li>
 <li>AVX-512 support require a processor with AVX512-VBMI2 (Ice Lake or better, AMD Zen 4 or better) and a recent compiler (GCC 8 or better, Visual Studio 2022 or better, LLVM clang 6 or better). You need a correspondingly recent assembler such as gas (2.30+) or nasm (2.14+): recent compilers usually come with recent assemblers. If you mix a recent compiler with an incompatible/old assembler (e.g., when using a recent compiler with an old Linux distribution), you may get errors at build time because the compiler produces instructions that the assembler does not recognize: you should update your assembler to match your compiler (e.g., upgrade binutils to version 2.30 or better under Linux) or use an older compiler matching the capabilities of your assembler.</li>
 <li>To benefit from RISC-V Vector Extensions on RISC-V systems, you should compile specifically for the desired architecture. E.g., add <code>-march=rv64gcv</code> as a compiler flag when using a version of GCC or LLVM which supports these extensions (such as GCC 14 or better). The command <code>CXXFLAGS=-march=rv64gcv cmake -B build</code> may suffice.</li>
@@ -206,7 +206,7 @@ Usage (Usage)</h2>
 Quick Start</h2>
 <p>Linux or macOS users might follow the following instructions if they have a recent C++ compiler installed and the standard utilities (<code>wget</code>, <code>unzip</code>, etc.)</p>
 <ol type="1">
-<li>Pull the library in a directory <div class="fragment"><div class="line">wget https://github.com/simdutf/simdutf/releases/download/v6.1.1/singleheader.zip</div>
+<li>Pull the library in a directory <div class="fragment"><div class="line">wget https://github.com/simdutf/simdutf/releases/download/v6.4.0/singleheader.zip</div>
 <div class="line">unzip singleheader.zip</div>
 </div><!-- fragment --> You can replace <code>wget</code> by <code>curl -OL <a href="https://..">https://..</a>.</code> if you prefer.</li>
 <li>Compile <div class="fragment"><div class="line">c++ -std=c++17 -o amalgamation_demo amalgamation_demo.cpp</div>
@@ -241,7 +241,7 @@ Usage (CMake)</h2>
 <p>You may also use a package manager. E.g., <a href="https://github.com/simdutf/simdutf-vcpkg">we have a complete example using vcpkg</a>.</p>
 <h2><a class="anchor" id="autotoc_md7"></a>
 Single-header version</h2>
-<p>You can create a single-header version of the library where all of the code is put into two files (<code><a class="el" href="simdutf_8h_source.html">simdutf.h</a></code> and <code>simdutf.cpp</code>). We publish a zip archive containing these files, e.g., see <a href="https://github.com/simdutf/simdutf/releases/download/v6.1.1/singleheader.zip">https://github.com/simdutf/simdutf/releases/download/v6.1.1/singleheader.zip</a></p>
+<p>You can create a single-header version of the library where all of the code is put into two files (<code><a class="el" href="simdutf_8h_source.html">simdutf.h</a></code> and <code>simdutf.cpp</code>). We publish a zip archive containing these files, e.g., see <a href="https://github.com/simdutf/simdutf/releases/download/v6.4.0/singleheader.zip">https://github.com/simdutf/simdutf/releases/download/v6.4.0/singleheader.zip</a></p>
 <p>You may generate it on your own using a Python script.</p>
 <div class="fragment"><div class="line">python3 ./singleheader/amalgamate.py</div>
 </div><!-- fragment --><p>We require Python 3 or better.</p>
@@ -455,6 +455,8 @@ API</h2>
 <div class="line"> </div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> latin1_length_from_utf8(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
 <div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> latin1_length_from_utf16(<span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
+<div class="line"> </div>
 <div class="line"><span class="comment">/*</span></div>
 <div class="line"><span class="comment"> * Compute the number of bytes that this UTF-16LE/BE string would require in Latin1 format.</span></div>
 <div class="line"><span class="comment"> *</span></div>
@@ -485,11 +487,15 @@ API</h2>
 <div class="line"> </div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf16_length_from_utf32(<span class="keyword">const</span> <span class="keywordtype">char32_t</span> * input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
 <div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf16_length_from_latin1(<span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
+<div class="line"> </div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf32_length_from_utf16(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
 <div class="line"> </div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf32_length_from_utf16le(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
 <div class="line"> </div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf32_length_from_utf16be(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
+<div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf32_length_from_latin1(<span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
 </div><!-- fragment --><p>We have a wide range of conversion between Latin1, UTF-8, UTF-16 and UTF-32. They assume that you are allocated sufficient memory for the input. The simplest conversin function output a single integer representing the size of the input, with a value of zero indicating an error (e.g., <code>convert_utf8_to_utf16le</code>). They are well suited in the scenario where you expect the input to be valid most of the time.</p>
 <div class="fragment"><div class="line"> </div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_latin1_to_utf8(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* utf8_output) <span class="keyword">noexcept</span>;</div>

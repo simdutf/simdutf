@@ -1,7 +1,7 @@
 var classsimdutf_1_1implementation =
 [
     [ "autodetect_encoding", "classsimdutf_1_1implementation.html#afd306a0bc3e221964af3f31a64784b12", null ],
-    [ "base64_length_from_binary", "classsimdutf_1_1implementation.html#a7935750344384cc0130094cb6c440826", null ],
+    [ "base64_length_from_binary", "classsimdutf_1_1implementation.html#ad29569bd4700b3e7bedce1d0c5eec236", null ],
     [ "base64_to_binary", "classsimdutf_1_1implementation.html#a7a23d6e9c3c006b78fe5d5f158206139", null ],
     [ "base64_to_binary", "classsimdutf_1_1implementation.html#acbe53ca34467a8421415162dff690d3b", null ],
     [ "base64_to_binary_details", "classsimdutf_1_1implementation.html#a2bbe68f7c647d85ae9368dc7a2672479", null ],
@@ -62,8 +62,8 @@ var classsimdutf_1_1implementation =
     [ "latin1_length_from_utf16", "classsimdutf_1_1implementation.html#a099704e55511390542f01b57957e9d36", null ],
     [ "latin1_length_from_utf32", "classsimdutf_1_1implementation.html#a2f951db4813c86b3eb8ea77ad7d2e144", null ],
     [ "latin1_length_from_utf8", "classsimdutf_1_1implementation.html#a2cc04b416c87dfa742056ce5bd8033dc", null ],
-    [ "maximal_binary_length_from_base64", "classsimdutf_1_1implementation.html#af46e9e7192004051687186ac956262f3", null ],
-    [ "maximal_binary_length_from_base64", "classsimdutf_1_1implementation.html#a9c8897b131c52d703cb2c5d032c29ff6", null ],
+    [ "maximal_binary_length_from_base64", "classsimdutf_1_1implementation.html#a98579327df6c99c6bfab0394174363ee", null ],
+    [ "maximal_binary_length_from_base64", "classsimdutf_1_1implementation.html#ab3185b3c751048d78d91df45523deeef", null ],
     [ "name", "classsimdutf_1_1implementation.html#aa5bf5083338ae14df38af6661041e53b", null ],
     [ "supported_by_runtime_system", "classsimdutf_1_1implementation.html#a6cd8f7d8787c76e690ed9c4151abb7a9", null ],
     [ "utf16_length_from_latin1", "classsimdutf_1_1implementation.html#af5253692b2a0e1f15881b1fa393a2f42", null ],

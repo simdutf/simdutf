@@ -29,7 +29,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">simdutf<span id="projectnumber">&#160;6.1.1</span>
+   <div id="projectname">simdutf<span id="projectnumber">&#160;6.4.0</span>
    </div>
    <div id="projectbrief">Unicode at GB/s.</div>
   </td>
@@ -146,36 +146,44 @@ $(document).ready(function(){initNavTree('error_8h_source.html',''); initResizab
 <div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
 <div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>  simdutf_really_inline <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a>(error_code err, <span class="keywordtype">size_t</span> pos)</div>
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>      : error{err}, count{pos} {}</div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>};</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>  simdutf_really_inline <span class="keywordtype">bool</span> is_ok()<span class="keyword"> const </span>{</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <span class="keywordflow">return</span> error == error_code::SUCCESS;</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>  }</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span> </div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>  simdutf_really_inline <span class="keywordtype">bool</span> is_err()<span class="keyword"> const </span>{</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    <span class="keywordflow">return</span> error != error_code::SUCCESS;</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>  }</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>};</div>
 </div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
-<div class="foldopen" id="foldopen00046" data-start="{" data-end="};">
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno"><a class="line" href="structsimdutf_1_1full__result.html">   46</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structsimdutf_1_1full__result.html">full_result</a> {</div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>  error_code error;</div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>  <span class="keywordtype">size_t</span> input_count;</div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>  <span class="keywordtype">size_t</span> output_count;</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span> </div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>  simdutf_really_inline <a class="code hl_struct" href="structsimdutf_1_1full__result.html">full_result</a>()</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>      : error{error_code::SUCCESS}, input_count{0}, output_count{0} {}</div>
 <div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>  simdutf_really_inline <a class="code hl_struct" href="structsimdutf_1_1full__result.html">full_result</a>(error_code err, <span class="keywordtype">size_t</span> pos_in,</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>                                    <span class="keywordtype">size_t</span> pos_out)</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>      : error{err}, input_count{pos_in}, output_count{pos_out} {}</div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>  simdutf_really_inline <span class="keyword">operator</span> <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a>() <span class="keyword">const</span> <span class="keyword">noexcept</span> {</div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    <span class="keywordflow">if</span> (error == error_code::SUCCESS ||</div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>        error == error_code::BASE64_INPUT_REMAINDER) {</div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>      <span class="keywordflow">return</span> <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a>{error, output_count};</div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>      <span class="keywordflow">return</span> <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a>{error, input_count};</div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>    }</div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>  }</div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>};</div>
+<div class="foldopen" id="foldopen00054" data-start="{" data-end="};">
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno"><a class="line" href="structsimdutf_1_1full__result.html">   54</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structsimdutf_1_1full__result.html">full_result</a> {</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>  error_code error;</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>  <span class="keywordtype">size_t</span> input_count;</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>  <span class="keywordtype">size_t</span> output_count;</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>  simdutf_really_inline <a class="code hl_struct" href="structsimdutf_1_1full__result.html">full_result</a>()</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>      : error{error_code::SUCCESS}, input_count{0}, output_count{0} {}</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>  simdutf_really_inline <a class="code hl_struct" href="structsimdutf_1_1full__result.html">full_result</a>(error_code err, <span class="keywordtype">size_t</span> pos_in,</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>                                    <span class="keywordtype">size_t</span> pos_out)</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>      : error{err}, input_count{pos_in}, output_count{pos_out} {}</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span> </div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>  simdutf_really_inline <span class="keyword">operator</span> <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a>() <span class="keyword">const</span> <span class="keyword">noexcept</span> {</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    <span class="keywordflow">if</span> (error == error_code::SUCCESS ||</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>        error == error_code::BASE64_INPUT_REMAINDER) {</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>      <span class="keywordflow">return</span> <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a>{error, output_count};</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>      <span class="keywordflow">return</span> <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a>{error, input_count};</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    }</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>  }</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>};</div>
 </div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span> </div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>} <span class="comment">// namespace simdutf</span></div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span><span class="preprocessor">#endif</span></div>
-<div class="ttc" id="astructsimdutf_1_1full__result_html"><div class="ttname"><a href="structsimdutf_1_1full__result.html">simdutf::full_result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00046">error.h:46</a></div></div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>} <span class="comment">// namespace simdutf</span></div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="astructsimdutf_1_1full__result_html"><div class="ttname"><a href="structsimdutf_1_1full__result.html">simdutf::full_result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00054">error.h:54</a></div></div>
 <div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00034">error.h:34</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
