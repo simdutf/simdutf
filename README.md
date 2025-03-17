@@ -62,7 +62,7 @@ This library provide fast Unicode functions such as
 - [WHATWG forgiving-base64](https://infra.spec.whatwg.org/#forgiving-base64-decode) (with or without URL encoding) to binary,
 - Binary to base64 (with or without URL encoding).
 
-The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, AVX-512, RISC-V Vector Extension, LoongSon, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion characters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).
+The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, AVX-512, RISC-V Vector Extension, LoongSon, POWER, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion characters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).
 
 The library compiles down to a small library of a few hundred kilobytes. Our functions are exception-free and non allocating. We have extensive tests and extensive benchmarks.
 
@@ -128,7 +128,7 @@ Requirements
 -------
 
 - C++11 compatible compiler. We support LLVM clang, GCC, Visual Studio. (Our tests and benchmark tools requires C++17.)
-- For high speed, you should have a recent 64-bit system (e.g., ARM, x64, RISC-V with vector extensions, Loongson).
+- For high speed, you should have a recent 64-bit system (e.g., ARM, x64, RISC-V with vector extensions, Loongson, POWER).
 - If you rely on CMake, you should use a recent CMake (at least 3.15); otherwise you may use the [single header version](#single-header-version). The library is also available from [Microsoft's vcpkg](https://github.com/simdutf/simdutf-vcpkg), from [conan](https://conan.io/center/recipes/simdutf), from [FreeBSD's port](https://cgit.freebsd.org/ports/tree/converters/simdutf), from [brew](https://formulae.brew.sh/formula/simdutf), and many other systems.
 - AVX-512 support require a processor with AVX512-VBMI2 (Ice Lake or better, AMD Zen 4 or better) and a recent compiler (GCC 8 or better, Visual Studio 2022 or better, LLVM clang 6 or better). You need a correspondingly recent assembler such as gas (2.30+) or nasm (2.14+): recent compilers usually come with recent assemblers. If you mix a recent compiler with an incompatible/old assembler (e.g., when using a recent compiler with an old Linux distribution), you may get errors at build time because the compiler produces instructions that the assembler does not recognize: you should update your assembler to match your compiler (e.g., upgrade binutils to version 2.30 or better under Linux) or use an older compiler matching the capabilities of your assembler.
 - To benefit from RISC-V Vector Extensions on RISC-V systems, you should compile specifically for the desired architecture. E.g., add `-march=rv64gcv` as a compiler flag when using a version of GCC or LLVM which supports these extensions (such as GCC 14 or better). The command `CXXFLAGS=-march=rv64gcv cmake -B build` may suffice.
