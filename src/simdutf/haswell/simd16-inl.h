@@ -140,6 +140,7 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
   simdutf_really_inline simd16(const uint16_t *values) : simd16(load(values)) {}
   simdutf_really_inline simd16(const char16_t *values)
       : simd16(load(reinterpret_cast<const uint16_t *>(values))) {}
+  simdutf_really_inline simd16(const simd16<bool> bm) : simd16(bm.value) {}
 
   // Saturated math
   simdutf_really_inline simd16<uint16_t>
@@ -258,6 +259,22 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
     // pack code units in linear order from v0 and v1
     return _mm256_packus_epi16(t0, t1);
   }
+
+  simdutf_really_inline uint64_t sum() const {
+    const auto lo_u16 = _mm256_and_si256(value, _mm256_set1_epi32(0x0000ffff));
+    const auto hi_u16 = _mm256_srli_epi32(value, 16);
+    const auto sum_u32 = _mm256_add_epi32(lo_u16, hi_u16);
+
+    const auto lo_u32 =
+        _mm256_and_si256(sum_u32, _mm256_set1_epi64x(0xffffffff));
+    const auto hi_u32 = _mm256_srli_epi64(sum_u32, 32);
+    const auto sum_u64 = _mm256_add_epi64(lo_u32, hi_u32);
+
+    return uint64_t(_mm256_extract_epi64(sum_u64, 0)) +
+           uint64_t(_mm256_extract_epi64(sum_u64, 1)) +
+           uint64_t(_mm256_extract_epi64(sum_u64, 2)) +
+           uint64_t(_mm256_extract_epi64(sum_u64, 3));
+  }
 };
 
 template <typename T> struct simd16x32 {
@@ -353,3 +370,7 @@ template <typename T> struct simd16x32 {
         .to_bitmask();
   }
 }; // struct simd16x32<T>
+
+simd16<uint16_t> min(const simd16<uint16_t> a, simd16<uint16_t> b) {
+  return _mm256_min_epu16(a.value, b.value);
+}
