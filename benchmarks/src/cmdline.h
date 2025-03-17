@@ -12,6 +12,7 @@ enum class ListingMode {
   None,
   HumanReadable,
   PlainLines,
+  Json,
 };
 
 class CommandLine {
