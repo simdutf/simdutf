@@ -282,7 +282,6 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
                     simdutf::encoding_type::UTF32_LE);
 
 #ifdef ICU_AVAILABLE
-  std::cout << "Using ICU version " << U_ICU_VERSION << std::endl;
   register_function("convert_latin1_to_utf8+icu",
                     &Benchmark::run_convert_latin1_to_utf8_icu,
                     simdutf::encoding_type::Latin1);
@@ -309,10 +308,6 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
                     simdutf::encoding_type::UTF32_LE);
 #endif
 #ifdef ICONV_AVAILABLE
-  #ifdef _LIBICONV_VERSION
-  std::cout << "Using iconv version " << _LIBICONV_VERSION << std::endl;
-  #endif
-
   register_function("convert_latin1_to_utf8+iconv",
                     &Benchmark::run_convert_latin1_to_utf8_iconv,
                     simdutf::encoding_type::Latin1);
@@ -466,6 +461,64 @@ void Benchmark::list_procedures(ListingMode lm) const {
     for (const auto &name : known_procedures) {
       puts(name.c_str());
     }
+    break;
+  }
+
+  case ListingMode::Json: {
+    printf("[\n");
+    auto first = true;
+    for (const auto &item : benchmarks) {
+      const auto &name = item.first;
+      const auto &entry = item.second;
+      if (!first) {
+        putchar(',');
+      }
+      first = false;
+
+      printf(" {\n");
+      printf("    \"name\": \"%s\",\n", name.c_str());
+      if (std::holds_alternative<thirdparty_fn>(entry.first)) {
+        printf("    \"simdutf\": false,\n");
+      } else if (std::holds_alternative<simdutf_fn>(entry.first)) {
+        printf("    \"simdutf\": true,\n");
+      }
+
+      {
+        printf("    \"encodings\": [");
+        bool first = true;
+        for (const auto &enc : entry.second) {
+          if (!first) {
+            putchar(',');
+          }
+          first = false;
+
+          switch (enc) {
+          case simdutf::UTF8:
+            printf("\"utf8\"");
+            break;
+          case simdutf::UTF16_LE:
+            printf("\"utf16le\"");
+            break;
+          case simdutf::UTF16_BE:
+            printf("\"utf16be\"");
+            break;
+          case simdutf::UTF32_LE:
+            printf("\"utf32le\"");
+            break;
+          case simdutf::UTF32_BE:
+            printf("\"utf32be\"");
+            break;
+          case simdutf::Latin1:
+            printf("\"latin1\"");
+            break;
+          }
+        }
+        printf("]\n");
+      } // encodings
+      printf(" }");
+    } // for
+    printf("]\n");
+    break;
   }
   }
 }
@@ -478,6 +531,19 @@ void Benchmark::run(const std::string &procedure_name, size_t iterations) {
     std::cerr << " Aborting ! " << '\n';
     exit(1);
   }
+
+#ifdef ICU_AVAILABLE
+  if (icu_show_version) {
+    std::cout << "Using ICU version " << U_ICU_VERSION << std::endl;
+    icu_show_version = false;
+  }
+#endif
+#ifdef _LIBICONV_VERSION
+  if (iconv_show_version) {
+    std::cout << "Using iconv version " << _LIBICONV_VERSION << std::endl;
+    iconv_show_version = false;
+  }
+#endif
 
   const auto &entry = item->second;
   if (std::holds_alternative<thirdparty_fn>(entry.first)) {

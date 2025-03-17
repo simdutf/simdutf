@@ -24,6 +24,8 @@ CommandLine parse_arguments(int argc, char *argv[]) {
       cmdline.show_procedures = ListingMode::HumanReadable;
     } else if (arg == "-l") {
       cmdline.show_procedures = ListingMode::PlainLines;
+    } else if (arg == "--json") {
+      cmdline.show_procedures = ListingMode::Json;
     } else {
       arguments.push_back(std::move(arg));
     }
