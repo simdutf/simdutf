@@ -6,6 +6,7 @@ namespace SIMDUTF_IMPLEMENTATION {
 namespace {
 namespace simd {
 
+#include "simdutf/icelake/simd16-inl.h"
 #include "simdutf/icelake/simd32-inl.h"
 
 } // namespace simd
