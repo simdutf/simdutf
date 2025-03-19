@@ -158,7 +158,7 @@ public:
 // by bug https://gitlab.com/qemu-project/qemu/-/issues/2865
 // Versions <= 9.2.2 are affected, likely anything newer is correct.
 #ifndef QEMU_VLDI_BUG
- #define QEMU_VLDI_BUG 1
+// #define QEMU_VLDI_BUG 1
 #endif
 
 #ifdef QEMU_VLDI_BUG

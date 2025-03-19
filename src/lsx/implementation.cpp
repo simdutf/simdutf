@@ -33,10 +33,7 @@ const uint8_t lsx_1_2_utf8_bytes_mask[] = {
 
 #if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_UTF32
 simdutf_really_inline __m128i lsx_swap_bytes(__m128i vec) {
-  // const v16u8 shuf = {1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14};
-  // return __lsx_vshuf_b(__lsx_vldi(0), vec, shuf);
   return __lsx_vshuf4i_b(vec, 0b10110001);
-  // return __lsx_vor_v(__lsx_vslli_h(vec, 8), __lsx_vsrli_h(vec, 8));
 }
 #endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_UTF32
 
@@ -108,7 +105,7 @@ convert_utf8_1_to_2_byte_to_utf16(__m128i in, size_t shufutf8_idx) {
   __m128i ascii = __lsx_vand_v(perm, __lsx_vrepli_h(0x7f)); // 6 or 7 bits
   // 1 byte: 00000000 00000000
   // 2 byte: 00000aaa aa000000
-  const __m128i v1f00 = __lsx_vldi(-2785); // -2785(13bit) => 151f
+  const __m128i v1f00 = lsx_splat_u16(0x1f00);
   __m128i composed = __lsx_vsrli_h(__lsx_vand_v(perm, v1f00), 2); // 5 bits
   // Combine with a shift right accumulate
   // 1 byte: 00000000 0bbbbbbb
@@ -1158,9 +1155,10 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf8(
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::utf8_length_from_utf32(
     const char32_t *input, size_t length) const noexcept {
-  const __m128i v_80 = __lsx_vrepli_w(0x80); /*0x00000080*/
-  const __m128i v_800 = __lsx_vldi(-3832);   /*0x00000800*/
-  const __m128i v_10000 = __lsx_vldi(-3583); /*0x00010000*/
+  const __m128i v_80 = lsx_splat_u32(0x00000080);
+  const __m128i v_800 = lsx_splat_u32(0x00000800);
+  const __m128i v_10000 = lsx_splat_u32(0x00010000);
+
   size_t pos = 0;
   size_t count = 0;
   for (; pos + 4 <= length; pos += 4) {
@@ -1190,7 +1188,7 @@ simdutf_warn_unused size_t implementation::utf8_length_from_utf32(
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::utf16_length_from_utf32(
     const char32_t *input, size_t length) const noexcept {
-  const __m128i v_ffff = __lsx_vldi(-2304); /*0x0000ffff*/
+  const __m128i v_ffff = lsx_splat_u32(0x0000ffff);
   size_t pos = 0;
   size_t count = 0;
   for (; pos + 4 <= length; pos += 4) {

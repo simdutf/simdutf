@@ -30,10 +30,10 @@ lasx_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
     buf++;
   }
 
-  __m256i v_c080 = __lasx_xvreplgr2vr_h(uint16_t(0xC080));
-  __m256i v_07ff = __lasx_xvreplgr2vr_h(uint16_t(0x7FF));
-  __m256i v_dfff = __lasx_xvreplgr2vr_h(uint16_t(0xDFFF));
-  __m256i v_d800 = __lasx_xvldi(-2600); /*0xD800*/
+  __m256i v_c080 = lasx_splat_u16(0xc080);
+  __m256i v_07ff = lasx_splat_u16(0x07ff);
+  __m256i v_dfff = lasx_splat_u16(0xdfff);
+  __m256i v_d800 = lasx_splat_u16(0xd800);
   __m256i zero = __lasx_xvldi(0);
   __m128i zero_128 = __lsx_vldi(0);
   __m256i forbidden_bytemask = __lasx_xvldi(0x0);
@@ -75,7 +75,7 @@ lasx_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
         // t0 = [000a|aaaa|bbbb|bb00]
         const __m256i t0 = __lasx_xvslli_h(utf16_packed, 2);
         // t1 = [000a|aaaa|0000|0000]
-        const __m256i t1 = __lasx_xvand_v(t0, __lasx_xvldi(-2785 /*0x1f00*/));
+        const __m256i t1 = __lasx_xvand_v(t0, lasx_splat_u16(0x1f00));
         // t2 = [0000|0000|00bb|bbbb]
         const __m256i t2 = __lasx_xvand_v(utf16_packed, __lasx_xvrepli_h(0x3f));
         // t3 = [000a|aaaa|00bb|bbbb]
@@ -155,14 +155,14 @@ lasx_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
         __m256i v_3f7f = __lasx_xvreplgr2vr_h(uint16_t(0x3F7F));
         __m256i t1 = __lasx_xvand_v(t0, v_3f7f);
         // [00cc|cccc|0bcc|cccc] => [10cc|cccc|0bcc|cccc]
-        __m256i t2 = __lasx_xvor_v(t1, __lasx_xvldi(-2688 /*0x8000*/));
+        __m256i t2 = __lasx_xvor_v(t1, lasx_splat_u16(0x8000));
 
         // s0: [aaaa|bbbb|bbcc|cccc] => [0000|0000|0000|aaaa]
         __m256i s0 = __lasx_xvsrli_h(utf16_packed, 12);
         // s1: [aaaa|bbbb|bbcc|cccc] => [0000|bbbb|bb00|0000]
         __m256i s1 = __lasx_xvslli_h(utf16_packed, 2);
         // [0000|bbbb|bb00|0000] => [00bb|bbbb|0000|0000]
-        s1 = __lasx_xvand_v(s1, __lasx_xvldi(-2753 /*0x3F00*/));
+        s1 = __lasx_xvand_v(s1, lasx_splat_u16(0x3f00));
         // [00bb|bbbb|0000|aaaa]
         __m256i s2 = __lasx_xvor_v(s0, s1);
         // s3: [00bb|bbbb|0000|aaaa] => [11bb|bbbb|1110|aaaa]
@@ -171,8 +171,8 @@ lasx_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
         // __m256i v_07ff = vmovq_n_u16((uint16_t)0x07FF);
         __m256i one_or_two_bytes_bytemask =
             __lasx_xvsle_hu(utf16_packed, v_07ff);
-        __m256i m0 = __lasx_xvandn_v(one_or_two_bytes_bytemask,
-                                     __lasx_xvldi(-2752 /*0x4000*/));
+        __m256i m0 =
+            __lasx_xvandn_v(one_or_two_bytes_bytemask, lasx_splat_u16(0x4000));
         __m256i s4 = __lasx_xvxor_v(s3, m0);
 
         // 4. expand code units 16-bit => 32-bit
@@ -326,10 +326,10 @@ lasx_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
     buf++;
   }
 
-  __m256i v_c080 = __lasx_xvreplgr2vr_h(uint16_t(0xC080));
-  __m256i v_07ff = __lasx_xvreplgr2vr_h(uint16_t(0x7FF));
-  __m256i v_dfff = __lasx_xvreplgr2vr_h(uint16_t(0xDFFF));
-  __m256i v_d800 = __lasx_xvldi(-2600); /*0xD800*/
+  __m256i v_c080 = lasx_splat_u16(0xc080);
+  __m256i v_07ff = lasx_splat_u16(0x07ff);
+  __m256i v_dfff = lasx_splat_u16(0xdfff);
+  __m256i v_d800 = lasx_splat_u16(0xd800);
   __m256i zero = __lasx_xvldi(0);
   __m128i zero_128 = __lsx_vldi(0);
   __m256i forbidden_bytemask = __lasx_xvldi(0x0);
@@ -370,7 +370,7 @@ lasx_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
         // t0 = [000a|aaaa|bbbb|bb00]
         const __m256i t0 = __lasx_xvslli_h(utf16_packed, 2);
         // t1 = [000a|aaaa|0000|0000]
-        const __m256i t1 = __lasx_xvand_v(t0, __lasx_xvldi(-2785 /*0x1f00*/));
+        const __m256i t1 = __lasx_xvand_v(t0, lasx_splat_u16(0x1f00));
         // t2 = [0000|0000|00bb|bbbb]
         const __m256i t2 = __lasx_xvand_v(utf16_packed, __lasx_xvrepli_h(0x3f));
         // t3 = [000a|aaaa|00bb|bbbb]
@@ -454,14 +454,14 @@ lasx_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
         __m256i v_3f7f = __lasx_xvreplgr2vr_h(uint16_t(0x3F7F));
         __m256i t1 = __lasx_xvand_v(t0, v_3f7f);
         // [00cc|cccc|0bcc|cccc] => [10cc|cccc|0bcc|cccc]
-        __m256i t2 = __lasx_xvor_v(t1, __lasx_xvldi(-2688 /*0x8000*/));
+        __m256i t2 = __lasx_xvor_v(t1, lasx_splat_u16(0x8000));
 
         // s0: [aaaa|bbbb|bbcc|cccc] => [0000|0000|0000|aaaa]
         __m256i s0 = __lasx_xvsrli_h(utf16_packed, 12);
         // s1: [aaaa|bbbb|bbcc|cccc] => [0000|bbbb|bb00|0000]
         __m256i s1 = __lasx_xvslli_h(utf16_packed, 2);
         // [0000|bbbb|bb00|0000] => [00bb|bbbb|0000|0000]
-        s1 = __lasx_xvand_v(s1, __lasx_xvldi(-2753 /*0x3F00*/));
+        s1 = __lasx_xvand_v(s1, lasx_splat_u16(0x3F00));
         // [00bb|bbbb|0000|aaaa]
         __m256i s2 = __lasx_xvor_v(s0, s1);
         // s3: [00bb|bbbb|0000|aaaa] => [11bb|bbbb|1110|aaaa]
@@ -470,8 +470,8 @@ lasx_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
         // __m256i v_07ff = vmovq_n_u16((uint16_t)0x07FF);
         __m256i one_or_two_bytes_bytemask =
             __lasx_xvsle_hu(utf16_packed, v_07ff);
-        __m256i m0 = __lasx_xvandn_v(one_or_two_bytes_bytemask,
-                                     __lasx_xvldi(-2752 /*0x4000*/));
+        __m256i m0 =
+            __lasx_xvandn_v(one_or_two_bytes_bytemask, lasx_splat_u16(0x4000));
         __m256i s4 = __lasx_xvxor_v(s3, m0);
 
         // 4. expand code units 16-bit => 32-bit

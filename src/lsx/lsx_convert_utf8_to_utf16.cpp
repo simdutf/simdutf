@@ -111,7 +111,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // 1 byte: 00000000 00000000
     // 2 byte: xx0bbbbb 00000000
     // 3 byte: xxbbbbbb 00000000
-    __m128i middlebyte = __lsx_vand_v(lowperm, __lsx_vldi(-2561) /*0xFF00*/);
+    __m128i middlebyte = __lsx_vand_v(lowperm, lsx_splat_u16(0xFF00));
     // 1 byte: 00000000 0ccccccc
     // 2 byte: 0010bbbb bbcccccc
     // 3 byte: 0010bbbb bbcccccc
@@ -163,10 +163,8 @@ size_t convert_masked_utf8_to_utf16(const char *input,
       //                   = +0xDC00|0xE7C0
       __m128i magic = __lsx_vreplgr2vr_w(uint32_t(0xDC00E7C0));
       // Generate unadjusted trail surrogate minus lowest 2 bits
-      // vec(0000FF00) = __lsx_vldi(-1758)
       // xxxxxxxx xxxxxxxx|11110aaa bbbbbb00
-      __m128i trail =
-          __lsx_vbitsel_v(shift, swap, __lsx_vldi(-1758 /*0000FF00*/));
+      __m128i trail = __lsx_vbitsel_v(shift, swap, lsx_splat_u32(0x0000ff00));
       // Insert low 2 bits of trail surrogate to magic number for later
       // 11011100 00000000 11100111 110000cc
       __m128i magic_with_low_2 = __lsx_vor_v(__lsx_vsrli_w(shift, 30), magic);
@@ -179,10 +177,8 @@ size_t convert_masked_utf8_to_utf16(const char *input,
           __lsx_vrepli_h(0x3f /* 0x003f*/));
 
       // Blend pairs
-      // __lsx_vldi(-1741) => vec(0x0000FFFF)
       // 000000cc ccdddddd|11110aaa bbbbbb00
-      __m128i blend =
-          __lsx_vbitsel_v(lead, trail, __lsx_vldi(-1741) /* (0x0000FFFF)*4 */);
+      __m128i blend = __lsx_vbitsel_v(lead, trail, lsx_splat_u32(0x0000FFFF));
 
       // Add magic number to finish the result
       // 110111CC CCDDDDDD|110110AA BBBBBBCC
@@ -221,13 +217,12 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // first.
     __m128i middlehigh = __lsx_vslli_w(perm, 2);
     // 00000000 00000000 00cccccc 00000000
-    __m128i middlebyte = __lsx_vand_v(perm, __lsx_vldi(-3777) /* 0x00003F00 */);
+    __m128i middlebyte = __lsx_vand_v(perm, lsx_splat_u32(0x00003F00));
     // Start assembling the sequence. Since the 4th byte is in the same position
     // as it would be in a surrogate and there is no dependency, shift left
     // instead of right. 3 byte: 00000000 10bbbbxx xxxxxxxx xxxxxxxx 4 byte:
     // 11110aaa bbbbbbxx xxxxxxxx xxxxxxxx
-    __m128i ab =
-        __lsx_vbitsel_v(middlehigh, perm, __lsx_vldi(-1656) /*0xFF000000*/);
+    __m128i ab = __lsx_vbitsel_v(middlehigh, perm, lsx_splat_u32(0xFF000000));
     // Top 16 bits contains the high ten bits of the surrogate pair before
     // correction 3 byte: 00000000 10bbbbcc|cccc0000 00000000 4 byte: 11110aaa
     // bbbbbbcc|cccc0000 00000000 - high 10 bits correct w/o correction
@@ -241,8 +236,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // After this is for surrogates
     // Blend the low and high surrogates
     // 4 byte: 11110aaa bbbbbbcc|bbbbcccc ccdddddd
-    __m128i mixed =
-        __lsx_vbitsel_v(abc, composed, __lsx_vldi(-1741) /*0x0000FFFF*/);
+    __m128i mixed = __lsx_vbitsel_v(abc, composed, lsx_splat_u32(0x0000FFFF));
     // Clear the upper 6 bits of the low surrogate. Don't clear the upper bits
     // yet as 0x10000 was not subtracted from the codepoint yet. 4 byte:
     // 11110aaa bbbbbbcc|000000cc ccdddddd

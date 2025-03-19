@@ -365,10 +365,9 @@ static inline void load_block(block64 *b, const char16_t *src) {
 static inline void base64_decode(char *out, __m256i str) {
   __m256i t0 = __lasx_xvor_v(
       __lasx_xvslli_w(str, 26),
-      __lasx_xvslli_w(__lasx_xvand_v(str, __lasx_xvldi(-1758 /*0x0000FF00*/)),
-                      12));
-  __m256i t1 = __lasx_xvsrli_w(
-      __lasx_xvand_v(str, __lasx_xvldi(-3521 /*0x003F0000*/)), 2);
+      __lasx_xvslli_w(__lasx_xvand_v(str, lasx_splat_u32(0x0000ff00)), 12));
+  __m256i t1 =
+      __lasx_xvsrli_w(__lasx_xvand_v(str, lasx_splat_u32(0x003f0000)), 2);
   __m256i t2 = __lasx_xvor_v(t0, t1);
   __m256i t3 = __lasx_xvor_v(t2, __lasx_xvsrli_w(str, 16));
   __m256i pack_shuffle = ____m256i(

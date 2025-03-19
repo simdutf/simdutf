@@ -367,9 +367,8 @@ static inline void load_block(block64 *b, const char16_t *src) {
 static inline void base64_decode(char *out, __m128i str) {
   __m128i t0 = __lsx_vor_v(
       __lsx_vslli_w(str, 26),
-      __lsx_vslli_w(__lsx_vand_v(str, __lsx_vldi(-1758 /*0x0000FF00*/)), 12));
-  __m128i t1 =
-      __lsx_vsrli_w(__lsx_vand_v(str, __lsx_vldi(-3521 /*0x003F0000*/)), 2);
+      __lsx_vslli_w(__lsx_vand_v(str, lsx_splat_u32(0x0000FF00)), 12));
+  __m128i t1 = __lsx_vsrli_w(__lsx_vand_v(str, lsx_splat_u32(0x003F0000)), 2);
   __m128i t2 = __lsx_vor_v(t0, t1);
   __m128i t3 = __lsx_vor_v(t2, __lsx_vsrli_w(str, 16));
   const v16u8 pack_shuffle = {3, 2,  1,  7,  6, 5, 11, 10,

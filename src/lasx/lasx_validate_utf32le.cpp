@@ -1,4 +1,3 @@
-
 const char32_t *lasx_validate_utf32le(const char32_t *input, size_t size) {
   const char32_t *end = input + size;
 
@@ -10,9 +9,9 @@ const char32_t *lasx_validate_utf32le(const char32_t *input, size_t size) {
     }
   }
 
-  __m256i offset = __lasx_xvreplgr2vr_w(uint32_t(0xffff2000));
-  __m256i standardoffsetmax = __lasx_xvreplgr2vr_w(uint32_t(0xfffff7ff));
-  __m256i standardmax = __lasx_xvldi(-2288); /*0x10ffff*/
+  __m256i offset = lasx_splat_u32(0xffff2000);
+  __m256i standardoffsetmax = lasx_splat_u32(0xfffff7ff);
+  __m256i standardmax = lasx_splat_u32(0x10ffff);
   __m256i currentmax = __lasx_xvldi(0x0);
   __m256i currentoffsetmax = __lasx_xvldi(0x0);
 
@@ -55,9 +54,9 @@ const result lasx_validate_utf32le_with_errors(const char32_t *input,
     input++;
   }
 
-  __m256i offset = __lasx_xvreplgr2vr_w(uint32_t(0xffff2000));
-  __m256i standardoffsetmax = __lasx_xvreplgr2vr_w(uint32_t(0xfffff7ff));
-  __m256i standardmax = __lasx_xvldi(-2288); /*0x10ffff*/
+  __m256i offset = lasx_splat_u32(0xffff2000);
+  __m256i standardoffsetmax = lasx_splat_u32(0xfffff7ff);
+  __m256i standardmax = lasx_splat_u32(0x10ffff);
   __m256i currentmax = __lasx_xvldi(0x0);
   __m256i currentoffsetmax = __lasx_xvldi(0x0);
 

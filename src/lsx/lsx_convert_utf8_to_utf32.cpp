@@ -95,14 +95,13 @@ size_t convert_masked_utf8_to_utf32(const char *input,
     // The top bits will be corrected later in the bsl
     // 00000000 10bbbbbb 00000000
     __m128i middle =
-        __lsx_vand_v(perm, __lsx_vldi(-1758 /*0x0000FF00*/)); // 5 or 6 bits
+        __lsx_vand_v(perm, lsx_splat_u32(0x0000FF00)); // 5 or 6 bits
     // Combine low and middle with shift right accumulate
     // 00000000 00xxbbbb bbcccccc
     __m128i lowmid = __lsx_vor_v(ascii, __lsx_vsrli_w(middle, 2));
     // Insert top 4 bits from high byte with bitwise select
     // 00000000 aaaabbbb bbcccccc
-    __m128i composed =
-        __lsx_vbitsel_v(lowmid, high, __lsx_vldi(-3600 /*0x0000F000*/));
+    __m128i composed = __lsx_vbitsel_v(lowmid, high, lsx_splat_u32(0x0000F000));
     __lsx_vst(composed, utf32_output, 0);
     utf32_output += 4; // We wrote 4 32-bit characters.
     return consumed;
@@ -131,10 +130,10 @@ size_t convert_masked_utf8_to_utf32(const char *input,
       __m128i merge2 =
           __lsx_vbitsel_v(__lsx_vslli_w(merge1, 12), /* merge1 << 12 */
                           __lsx_vsrli_w(merge1, 16), /* merge1 >> 16 */
-                          __lsx_vldi(-2545));        /*0x00000FFF*/
+                          lsx_splat_u32(0x00000FFF));
       // Clear the garbage
       // 00000000 000aaabb bbbbcccc ccdddddd
-      __m128i composed = __lsx_vand_v(merge2, __lsx_vldi(-2273 /*0x1FFFFF*/));
+      __m128i composed = __lsx_vand_v(merge2, lsx_splat_u32(0x1FFFFF));
       // Store
       __lsx_vst(composed, utf32_output, 0);
       utf32_output += 3; // We wrote 3 32-bit characters.
@@ -154,11 +153,11 @@ size_t convert_masked_utf8_to_utf32(const char *input,
 
     // Ascii
     __m128i ascii = __lsx_vand_v(perm, __lsx_vrepli_w(0x7F));
-    __m128i middle = __lsx_vand_v(perm, __lsx_vldi(-3777 /*0x00003f00*/));
+    __m128i middle = __lsx_vand_v(perm, lsx_splat_u32(0x00003f00));
     // 00000000 00000000 0000cccc ccdddddd
     __m128i cd = __lsx_vor_v(__lsx_vsrli_w(middle, 2), ascii);
 
-    __m128i correction = __lsx_vand_v(perm, __lsx_vldi(-3520 /*0x00400000*/));
+    __m128i correction = __lsx_vand_v(perm, lsx_splat_u32(0x00400000));
     __m128i corrected = __lsx_vadd_b(perm, __lsx_vsrli_w(correction, 1));
     // Insert twice
     // 00000000 000aaabb bbbbxxxx xxxxxxxx
@@ -168,8 +167,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
         __lsx_vbitsel_v(corrected_srli2, corrected, __lsx_vrepli_h(0x3f));
     ab = __lsx_vsrli_w(ab, 4);
     // 00000000 000aaabb bbbbcccc ccdddddd
-    __m128i composed =
-        __lsx_vbitsel_v(ab, cd, __lsx_vldi(-2545 /*0x00000FFF*/));
+    __m128i composed = __lsx_vbitsel_v(ab, cd, lsx_splat_u32(0x00000FFF));
     // Store
     __lsx_vst(composed, utf32_output, 0);
     utf32_output += 3; // We wrote 3 32-bit characters.

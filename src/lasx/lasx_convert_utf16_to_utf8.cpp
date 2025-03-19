@@ -89,7 +89,7 @@ lasx_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
       // t0 = [000a|aaaa|bbbb|bb00]
       __m256i t0 = __lasx_xvslli_h(in, 2);
       // t1 = [000a|aaaa|0000|0000]
-      __m256i t1 = __lasx_xvand_v(t0, __lasx_xvldi(-2785 /*0x1f00*/));
+      __m256i t1 = __lasx_xvand_v(t0, lasx_splat_u16(0x1f00));
       // t2 = [0000|0000|00bb|bbbb]
       __m256i t2 = __lasx_xvand_v(in, __lasx_xvrepli_h(0x3f));
       // t3 = [000a|aaaa|00bb|bbbb]
@@ -127,9 +127,8 @@ lasx_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
       buf += 16;
       continue;
     }
-    __m256i surrogates_bytemask =
-        __lasx_xvseq_h(__lasx_xvand_v(in, __lasx_xvldi(-2568 /*0xF800*/)),
-                       __lasx_xvldi(-2600 /*0xD800*/));
+    __m256i surrogates_bytemask = __lasx_xvseq_h(
+        __lasx_xvand_v(in, lasx_splat_u16(0xf800)), lasx_splat_u16(0xd800));
     // It might seem like checking for surrogates_bitmask == 0xc000 could help.
     // However, it is likely an uncommon occurrence.
     if (__lasx_xbz_v(surrogates_bytemask)) {
@@ -169,14 +168,14 @@ lasx_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
       __m256i v_3f7f = __lasx_xvreplgr2vr_h(uint16_t(0x3F7F));
       __m256i t1 = __lasx_xvand_v(t0, v_3f7f);
       // [00cc|cccc|0bcc|cccc] => [10cc|cccc|0bcc|cccc]
-      __m256i t2 = __lasx_xvor_v(t1, __lasx_xvldi(-2688));
+      __m256i t2 = __lasx_xvor_v(t1, lasx_splat_u16(0x8000));
 
       // s0: [aaaa|bbbb|bbcc|cccc] => [0000|0000|0000|aaaa]
       __m256i s0 = __lasx_xvsrli_h(in, 12);
       // s1: [aaaa|bbbb|bbcc|cccc] => [0000|bbbb|bb00|0000]
       __m256i s1 = __lasx_xvslli_h(in, 2);
       // s1: [aabb|bbbb|cccc|cc00] => [00bb|bbbb|0000|0000]
-      s1 = __lasx_xvand_v(s1, __lasx_xvldi(-2753 /*0x3F00*/));
+      s1 = __lasx_xvand_v(s1, lasx_splat_u16(0x3f00));
 
       // [00bb|bbbb|0000|aaaa]
       __m256i s2 = __lasx_xvor_v(s0, s1);
@@ -184,8 +183,8 @@ lasx_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
       __m256i v_c0e0 = __lasx_xvreplgr2vr_h(uint16_t(0xC0E0));
       __m256i s3 = __lasx_xvor_v(s2, v_c0e0);
       __m256i one_or_two_bytes_bytemask = __lasx_xvsle_hu(in, v_07ff);
-      __m256i m0 = __lasx_xvandn_v(one_or_two_bytes_bytemask,
-                                   __lasx_xvldi(-2752 /*0x4000*/));
+      __m256i m0 =
+          __lasx_xvandn_v(one_or_two_bytes_bytemask, lasx_splat_u16(0x4000));
       __m256i s4 = __lasx_xvxor_v(s3, m0);
 
       // 4. expand code units 16-bit => 32-bit
@@ -344,7 +343,7 @@ lasx_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
       // t0 = [000a|aaaa|bbbb|bb00]
       __m256i t0 = __lasx_xvslli_h(in, 2);
       // t1 = [000a|aaaa|0000|0000]
-      __m256i t1 = __lasx_xvand_v(t0, __lasx_xvldi(-2785 /*0x1f00*/));
+      __m256i t1 = __lasx_xvand_v(t0, lasx_splat_u16(0x1f00));
       // t2 = [0000|0000|00bb|bbbb]
       __m256i t2 = __lasx_xvand_v(in, __lasx_xvrepli_h(0x3f));
       // t3 = [000a|aaaa|00bb|bbbb]
@@ -382,9 +381,8 @@ lasx_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
       buf += 16;
       continue;
     }
-    __m256i surrogates_bytemask =
-        __lasx_xvseq_h(__lasx_xvand_v(in, __lasx_xvldi(-2568 /*0xF800*/)),
-                       __lasx_xvldi(-2600 /*0xD800*/));
+    __m256i surrogates_bytemask = __lasx_xvseq_h(
+        __lasx_xvand_v(in, lasx_splat_u16(0xf800)), lasx_splat_u16(0xd800));
     // It might seem like checking for surrogates_bitmask == 0xc000 could help.
     // However, it is likely an uncommon occurrence.
     if (__lasx_xbz_v(surrogates_bytemask)) {
@@ -424,14 +422,14 @@ lasx_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
       __m256i v_3f7f = __lasx_xvreplgr2vr_h(uint16_t(0x3F7F));
       __m256i t1 = __lasx_xvand_v(t0, v_3f7f);
       // [00cc|cccc|0bcc|cccc] => [10cc|cccc|0bcc|cccc]
-      __m256i t2 = __lasx_xvor_v(t1, __lasx_xvldi(-2688));
+      __m256i t2 = __lasx_xvor_v(t1, lasx_splat_u16(0x8000));
 
       // s0: [aaaa|bbbb|bbcc|cccc] => [0000|0000|0000|aaaa]
       __m256i s0 = __lasx_xvsrli_h(in, 12);
       // s1: [aaaa|bbbb|bbcc|cccc] => [0000|bbbb|bb00|0000]
       __m256i s1 = __lasx_xvslli_h(in, 2);
       // s1: [aabb|bbbb|cccc|cc00] => [00bb|bbbb|0000|0000]
-      s1 = __lasx_xvand_v(s1, __lasx_xvldi(-2753 /*0x3F00*/));
+      s1 = __lasx_xvand_v(s1, lasx_splat_u16(0x3f00));
 
       // [00bb|bbbb|0000|aaaa]
       __m256i s2 = __lasx_xvor_v(s0, s1);
@@ -439,8 +437,8 @@ lasx_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
       __m256i v_c0e0 = __lasx_xvreplgr2vr_h(uint16_t(0xC0E0));
       __m256i s3 = __lasx_xvor_v(s2, v_c0e0);
       __m256i one_or_two_bytes_bytemask = __lasx_xvsle_hu(in, v_07ff);
-      __m256i m0 = __lasx_xvandn_v(one_or_two_bytes_bytemask,
-                                   __lasx_xvldi(-2752 /*0x4000*/));
+      __m256i m0 =
+          __lasx_xvandn_v(one_or_two_bytes_bytemask, lasx_splat_u16(0x4000));
       __m256i s4 = __lasx_xvxor_v(s3, m0);
 
       // 4. expand code units 16-bit => 32-bit
