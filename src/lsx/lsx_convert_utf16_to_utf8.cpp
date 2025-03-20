@@ -105,7 +105,7 @@ lsx_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
       // t0 = [000a|aaaa|bbbb|bb00]
       __m128i t0 = __lsx_vslli_h(in, 2);
       // t1 = [000a|aaaa|0000|0000]
-      __m128i t1 = __lsx_vand_v(t0, __lsx_vldi(-2785 /*0x1f00*/));
+      __m128i t1 = __lsx_vand_v(t0, lsx_splat_u16(0x1f00));
       // t2 = [0000|0000|00bb|bbbb]
       __m128i t2 = __lsx_vand_v(in, __lsx_vrepli_h(0x3f));
       // t3 = [000a|aaaa|00bb|bbbb]
@@ -131,9 +131,8 @@ lsx_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
       utf8_output += row[0];
       continue;
     }
-    __m128i surrogates_bytemask =
-        __lsx_vseq_h(__lsx_vand_v(in, __lsx_vldi(-2568 /*0xF800*/)),
-                     __lsx_vldi(-2600 /*0xD800*/));
+    __m128i surrogates_bytemask = __lsx_vseq_h(
+        __lsx_vand_v(in, lsx_splat_u16(0xf800)), lsx_splat_u16(0xd800));
     // It might seem like checking for surrogates_bitmask == 0xc000 could help.
     // However, it is likely an uncommon occurrence.
     if (__lsx_bz_v(surrogates_bytemask)) {
@@ -173,14 +172,14 @@ lsx_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
       __m128i v_3f7f = __lsx_vreplgr2vr_h(uint16_t(0x3F7F));
       __m128i t1 = __lsx_vand_v(t0, v_3f7f);
       // [00cc|cccc|0bcc|cccc] => [10cc|cccc|0bcc|cccc]
-      __m128i t2 = __lsx_vor_v(t1, __lsx_vldi(-2688 /*0x8000*/));
+      __m128i t2 = __lsx_vor_v(t1, lsx_splat_u16(0x8000));
 
       // s0: [aaaa|bbbb|bbcc|cccc] => [0000|0000|0000|aaaa]
       __m128i s0 = __lsx_vsrli_h(in, 12);
       // s1: [aaaa|bbbb|bbcc|cccc] => [0000|bbbb|bb00|0000]
       __m128i s1 = __lsx_vslli_h(in, 2);
       // s1: [aabb|bbbb|cccc|cc00] => [00bb|bbbb|0000|0000]
-      s1 = __lsx_vand_v(s1, __lsx_vldi(-2753 /*0x3F00*/));
+      s1 = __lsx_vand_v(s1, lsx_splat_u16(0x3f00));
 
       // [00bb|bbbb|0000|aaaa]
       __m128i s2 = __lsx_vor_v(s0, s1);
@@ -188,8 +187,8 @@ lsx_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
       __m128i v_c0e0 = __lsx_vreplgr2vr_h(uint16_t(0xC0E0));
       __m128i s3 = __lsx_vor_v(s2, v_c0e0);
       __m128i one_or_two_bytes_bytemask = __lsx_vsle_hu(in, v_07ff);
-      __m128i m0 = __lsx_vandn_v(one_or_two_bytes_bytemask,
-                                 __lsx_vldi(-2752 /*0x4000*/));
+      __m128i m0 =
+          __lsx_vandn_v(one_or_two_bytes_bytemask, lsx_splat_u16(0x4000));
       __m128i s4 = __lsx_vxor_v(s3, m0);
 
       // 4. expand code units 16-bit => 32-bit
@@ -344,7 +343,7 @@ lsx_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
       // t0 = [000a|aaaa|bbbb|bb00]
       __m128i t0 = __lsx_vslli_h(in, 2);
       // t1 = [000a|aaaa|0000|0000]
-      __m128i t1 = __lsx_vand_v(t0, __lsx_vldi(-2785 /*0x1f00*/));
+      __m128i t1 = __lsx_vand_v(t0, lsx_splat_u16(0x1f00));
       // t2 = [0000|0000|00bb|bbbb]
       __m128i t2 = __lsx_vand_v(in, __lsx_vrepli_h(0x3f));
       // t3 = [000a|aaaa|00bb|bbbb]
@@ -370,9 +369,8 @@ lsx_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
       utf8_output += row[0];
       continue;
     }
-    __m128i surrogates_bytemask =
-        __lsx_vseq_h(__lsx_vand_v(in, __lsx_vldi(-2568 /*0xF800*/)),
-                     __lsx_vldi(-2600 /*0xD800*/));
+    __m128i surrogates_bytemask = __lsx_vseq_h(
+        __lsx_vand_v(in, lsx_splat_u16(0xf800)), lsx_splat_u16(0xd800));
     // It might seem like checking for surrogates_bitmask == 0xc000 could help.
     // However, it is likely an uncommon occurrence.
     if (__lsx_bz_v(surrogates_bytemask)) {
@@ -412,14 +410,14 @@ lsx_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
       __m128i v_3f7f = __lsx_vreplgr2vr_h(uint16_t(0x3F7F));
       __m128i t1 = __lsx_vand_v(t0, v_3f7f);
       // [00cc|cccc|0bcc|cccc] => [10cc|cccc|0bcc|cccc]
-      __m128i t2 = __lsx_vor_v(t1, __lsx_vldi(-2688));
+      __m128i t2 = __lsx_vor_v(t1, lsx_splat_u16(0x8000));
 
       // s0: [aaaa|bbbb|bbcc|cccc] => [0000|0000|0000|aaaa]
       __m128i s0 = __lsx_vsrli_h(in, 12);
       // s1: [aaaa|bbbb|bbcc|cccc] => [0000|bbbb|bb00|0000]
       __m128i s1 = __lsx_vslli_h(in, 2);
       // s1: [aabb|bbbb|cccc|cc00] => [00bb|bbbb|0000|0000]
-      s1 = __lsx_vand_v(s1, __lsx_vldi(-2753 /*0x3F00*/));
+      s1 = __lsx_vand_v(s1, lsx_splat_u16(0x3f00));
 
       // [00bb|bbbb|0000|aaaa]
       __m128i s2 = __lsx_vor_v(s0, s1);
@@ -427,8 +425,8 @@ lsx_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
       __m128i v_c0e0 = __lsx_vreplgr2vr_h(uint16_t(0xC0E0));
       __m128i s3 = __lsx_vor_v(s2, v_c0e0);
       __m128i one_or_two_bytes_bytemask = __lsx_vsle_hu(in, v_07ff);
-      __m128i m0 = __lsx_vandn_v(one_or_two_bytes_bytemask,
-                                 __lsx_vldi(-2752 /*0x4000*/));
+      __m128i m0 =
+          __lsx_vandn_v(one_or_two_bytes_bytemask, lsx_splat_u16(0x4000));
       __m128i s4 = __lsx_vxor_v(s3, m0);
 
       // 4. expand code units 16-bit => 32-bit

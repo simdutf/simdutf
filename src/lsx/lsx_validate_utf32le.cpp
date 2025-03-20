@@ -1,12 +1,11 @@
-
 const char32_t *lsx_validate_utf32le(const char32_t *input, size_t size) {
   const char32_t *end = input + size;
 
-  __m128i offset = __lsx_vreplgr2vr_w(uint32_t(0xffff2000));
-  __m128i standardoffsetmax = __lsx_vreplgr2vr_w(uint32_t(0xfffff7ff));
-  __m128i standardmax = __lsx_vldi(-2288); /*0x10ffff*/
-  __m128i currentmax = __lsx_vldi(0x0);
-  __m128i currentoffsetmax = __lsx_vldi(0x0);
+  __m128i offset = lsx_splat_u32(0xffff2000);
+  __m128i standardoffsetmax = lsx_splat_u32(0xfffff7ff);
+  __m128i standardmax = lsx_splat_u32(0x10ffff);
+  __m128i currentmax = lsx_splat_u32(0);
+  __m128i currentoffsetmax = lsx_splat_u32(0);
 
   while (input + 4 < end) {
     __m128i in = __lsx_vld(reinterpret_cast<const uint32_t *>(input), 0);
@@ -38,11 +37,11 @@ const result lsx_validate_utf32le_with_errors(const char32_t *input,
   const char32_t *start = input;
   const char32_t *end = input + size;
 
-  __m128i offset = __lsx_vreplgr2vr_w(uint32_t(0xffff2000));
-  __m128i standardoffsetmax = __lsx_vreplgr2vr_w(uint32_t(0xfffff7ff));
-  __m128i standardmax = __lsx_vldi(-2288); /*0x10ffff*/
-  __m128i currentmax = __lsx_vldi(0x0);
-  __m128i currentoffsetmax = __lsx_vldi(0x0);
+  __m128i offset = lsx_splat_u32(0xffff2000);
+  __m128i standardoffsetmax = lsx_splat_u32(0xfffff7ff);
+  __m128i standardmax = lsx_splat_u32(0x10ffff);
+  __m128i currentmax = lsx_splat_u32(0);
+  __m128i currentoffsetmax = lsx_splat_u32(0);
 
   while (input + 4 < end) {
     __m128i in = __lsx_vld(reinterpret_cast<const uint32_t *>(input), 0);

@@ -32,8 +32,8 @@ lasx_convert_utf16_to_utf32(const char16_t *buf, size_t len,
     }
   }
 
-  __m256i v_f800 = __lasx_xvldi(-2568); /*0xF800*/
-  __m256i v_d800 = __lasx_xvldi(-2600); /*0xD800*/
+  __m256i v_f800 = lasx_splat_u16(0xf800);
+  __m256i v_d800 = lasx_splat_u16(0xd800);
 
   while (end - buf >= 16) {
     __m256i in = __lasx_xvld(reinterpret_cast<const uint16_t *>(buf), 0);
@@ -131,8 +131,8 @@ lasx_convert_utf16_to_utf32_with_errors(const char16_t *buf, size_t len,
     }
   }
 
-  __m256i v_f800 = __lasx_xvldi(-2568); /*0xF800*/
-  __m256i v_d800 = __lasx_xvldi(-2600); /*0xD800*/
+  __m256i v_f800 = lasx_splat_u16(0xf800);
+  __m256i v_d800 = lasx_splat_u16(0xd800);
   while (end - buf >= 16) {
     __m256i in = __lasx_xvld(reinterpret_cast<const uint16_t *>(buf), 0);
     if (!match_system(big_endian)) {

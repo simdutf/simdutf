@@ -30,7 +30,7 @@ lasx_convert_latin1_to_utf8(const char *latin1_input, size_t len,
     // t0 = [0000|00aa|bbbb|bb00]
     __m256i t0 = __lasx_xvslli_h(in16, 2);
     // t1 = [0000|00aa|0000|0000]
-    __m256i t1 = __lasx_xvand_v(t0, __lasx_xvldi(-2785));
+    __m256i t1 = __lasx_xvand_v(t0, lasx_splat_u16(0x300));
     // t3 = [0000|00aa|00bb|bbbb]
     __m256i t2 = __lasx_xvbitsel_v(t1, in16, __lasx_xvrepli_h(0x3f));
     // t4 = [1100|00aa|10bb|bbbb]

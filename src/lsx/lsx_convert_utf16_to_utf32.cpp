@@ -6,8 +6,8 @@ lsx_convert_utf16_to_utf32(const char16_t *buf, size_t len,
   const char16_t *end = buf + len;
 
   __m128i zero = __lsx_vldi(0);
-  __m128i v_f800 = __lsx_vldi(-2568); /*0xF800*/
-  __m128i v_d800 = __lsx_vldi(-2600); /*0xD800*/
+  __m128i v_f800 = lsx_splat_u16(0xf800);
+  __m128i v_d800 = lsx_splat_u16(0xd800);
 
   while (end - buf >= 8) {
     __m128i in = __lsx_vld(reinterpret_cast<const uint16_t *>(buf), 0);
@@ -79,8 +79,8 @@ lsx_convert_utf16_to_utf32_with_errors(const char16_t *buf, size_t len,
   const char16_t *end = buf + len;
 
   __m128i zero = __lsx_vldi(0);
-  __m128i v_f800 = __lsx_vldi(-2568); /*0xF800*/
-  __m128i v_d800 = __lsx_vldi(-2600); /*0xD800*/
+  __m128i v_f800 = lsx_splat_u16(0xf800);
+  __m128i v_d800 = lsx_splat_u16(0xd800);
 
   while (end - buf >= 8) {
     __m128i in = __lsx_vld(reinterpret_cast<const uint16_t *>(buf), 0);
