@@ -2,7 +2,6 @@ std::pair<const char32_t *, char *>
 lsx_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
   uint8_t *utf8_output = reinterpret_cast<uint8_t *>(utf8_out);
   const char32_t *end = buf + len;
-  const char32_t *start = buf;
 
   __m128i v_c080 = lsx_splat_u16(0xc080);
   __m128i v_07ff = lsx_splat_u16(0x07ff);

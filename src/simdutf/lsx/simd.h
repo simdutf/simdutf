@@ -591,7 +591,10 @@ template <typename T> struct simd8x64 {
         .to_bitmask();
   }
 }; // struct simd8x64<T>
+
 #include "simdutf/lsx/simd16-inl.h"
+#include "simdutf/lsx/simd32-inl.h"
+
 } // namespace simd
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
