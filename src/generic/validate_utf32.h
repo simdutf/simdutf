@@ -59,9 +59,9 @@ simdutf_really_inline result validate_with_errors(const char32_t *input,
 
   using vector_u32 = simd32<uint32_t>;
 
-  const auto standardmax = vector_u32::splat(0x10ffff);
-  const auto offset = vector_u32::splat(0xffff2000);
-  const auto standardoffsetmax = vector_u32::splat(0xfffff7ff);
+  const auto standardmax = vector_u32::splat(0x10ffff + 1);
+  const auto surrogate_mask = vector_u32::splat(0xfffff800);
+  const auto surrogate_byte = vector_u32::splat(0x0000d800);
 
   constexpr size_t N = vector_u32::ELEMENTS;
 
@@ -71,8 +71,8 @@ simdutf_really_inline result validate_with_errors(const char32_t *input,
       in.swap_bytes();
     }
 
-    const auto too_large = in > standardmax;
-    const auto surrogate = (in + offset) > standardoffsetmax;
+    const auto too_large = in >= standardmax;
+    const auto surrogate = (in & surrogate_mask) == surrogate_byte;
 
     const auto combined = too_large | surrogate;
     if (simdutf_unlikely(combined.any())) {
