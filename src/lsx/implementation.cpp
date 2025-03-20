@@ -209,6 +209,10 @@ convert_utf8_1_to_2_byte_to_utf16(__m128i in, size_t shufutf8_idx) {
   #include "generic/validate_utf16.h"
 #endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
+#if SIMDUTF_FEATURE_UTF32
+  #include "generic/utf32.h"
+#endif // SIMDUTF_FEATURE_UTF32
+
 //
 // Implementation-specific overrides
 //
@@ -1155,33 +1159,7 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf8(
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::utf8_length_from_utf32(
     const char32_t *input, size_t length) const noexcept {
-  const __m128i v_80 = lsx_splat_u32(0x00000080);
-  const __m128i v_800 = lsx_splat_u32(0x00000800);
-  const __m128i v_10000 = lsx_splat_u32(0x00010000);
-
-  size_t pos = 0;
-  size_t count = 0;
-  for (; pos + 4 <= length; pos += 4) {
-    __m128i in = __lsx_vld(reinterpret_cast<const uint32_t *>(input + pos), 0);
-    const __m128i ascii_bytes_bytemask = __lsx_vslt_w(in, v_80);
-    const __m128i one_two_bytes_bytemask = __lsx_vslt_w(in, v_800);
-    const __m128i two_bytes_bytemask =
-        __lsx_vxor_v(one_two_bytes_bytemask, ascii_bytes_bytemask);
-    const __m128i three_bytes_bytemask =
-        __lsx_vxor_v(__lsx_vslt_w(in, v_10000), one_two_bytes_bytemask);
-
-    const uint32_t ascii_bytes_count = __lsx_vpickve2gr_bu(
-        __lsx_vpcnt_b(__lsx_vmskltz_w(ascii_bytes_bytemask)), 0);
-    const uint32_t two_bytes_count = __lsx_vpickve2gr_bu(
-        __lsx_vpcnt_b(__lsx_vmskltz_w(two_bytes_bytemask)), 0);
-    const uint32_t three_bytes_count = __lsx_vpickve2gr_bu(
-        __lsx_vpcnt_b(__lsx_vmskltz_w(three_bytes_bytemask)), 0);
-
-    count +=
-        16 - 3 * ascii_bytes_count - 2 * two_bytes_count - three_bytes_count;
-  }
-  return count +
-         scalar::utf32::utf8_length_from_utf32(input + pos, length - pos);
+  return utf32::utf8_length_from_utf32(input, length);
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 

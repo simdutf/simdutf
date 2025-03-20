@@ -699,6 +699,8 @@ template <typename T> struct simd8x64 {
 }; // struct simd8x64<T>
 
 #include "simdutf/lasx/simd16-inl.h"
+#include "simdutf/lasx/simd32-inl.h"
+
 } // namespace simd
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
