@@ -26,6 +26,14 @@ template <> struct simd32<uint32_t> {
     return _mm_shuffle_epi8(value, shuffle);
   }
 
+  template <int N> simdutf_really_inline simd32<uint32_t> shr() const {
+    return _mm_srli_epi32(value, N);
+  }
+
+  template <int N> simdutf_really_inline simd32<uint32_t> shl() const {
+    return _mm_slli_epi32(value, N);
+  }
+
   void dump() const {
     printf("[%08x, %08x, %08x, %08x]\n", uint32_t(_mm_extract_epi32(value, 0)),
            uint32_t(_mm_extract_epi32(value, 1)),
@@ -62,6 +70,10 @@ template <> struct simd32<bool> {
   simdutf_really_inline bool any() const {
     return _mm_movemask_epi8(value) != 0;
   }
+
+  simdutf_really_inline uint8_t to_4bit_bitmask() const {
+    return uint8_t(_mm_movemask_ps(_mm_castsi128_ps(value)));
+  }
 };
 
 //----------------------------------------------------------------------
@@ -82,14 +94,34 @@ simdutf_really_inline simd32<uint32_t> max(const simd32<uint32_t> a,
   return _mm_max_epu32(a.value, b.value);
 }
 
+simdutf_really_inline simd32<bool> operator==(const simd32<uint32_t> a,
+                                              uint32_t b) {
+  return _mm_cmpeq_epi32(a.value, _mm_set1_epi32(b));
+}
+
 simdutf_really_inline simd32<uint32_t> operator&(const simd32<uint32_t> a,
                                                  const simd32<uint32_t> b) {
   return _mm_and_si128(a.value, b.value);
 }
 
+simdutf_really_inline simd32<uint32_t> operator&(const simd32<uint32_t> a,
+                                                 uint32_t b) {
+  return _mm_and_si128(a.value, _mm_set1_epi32(b));
+}
+
+simdutf_really_inline simd32<uint32_t> operator|(const simd32<uint32_t> a,
+                                                 uint32_t b) {
+  return _mm_or_si128(a.value, _mm_set1_epi32(b));
+}
+
 simdutf_really_inline simd32<uint32_t> operator+(const simd32<uint32_t> a,
                                                  const simd32<uint32_t> b) {
   return _mm_add_epi32(a.value, b.value);
+}
+
+simdutf_really_inline simd32<uint32_t> operator-(const simd32<uint32_t> a,
+                                                 uint32_t b) {
+  return _mm_sub_epi32(a.value, _mm_set1_epi32(b));
 }
 
 simdutf_really_inline simd32<bool> operator>=(const simd32<uint32_t> a,
@@ -104,4 +136,10 @@ simdutf_really_inline simd32<bool> operator!(const simd32<bool> v) {
 simdutf_really_inline simd32<bool> operator>(const simd32<uint32_t> a,
                                              const simd32<uint32_t> b) {
   return !(b >= a);
+}
+
+simdutf_really_inline simd32<uint32_t> select(const simd32<bool> cond,
+                                              const simd32<uint32_t> v_true,
+                                              const simd32<uint32_t> v_false) {
+  return _mm_blendv_epi8(v_false.value, v_true.value, cond.value);
 }
