@@ -506,6 +506,10 @@ simdutf_really_inline simd64<uint64_t> sum_8bytes(const simd8<uint8_t> v) {
   return _mm_sad_epu8(v.value, simd8<uint8_t>::zero());
 }
 
+simdutf_really_inline simd8<uint8_t> as_vector_u8(const simd32<uint32_t> v) {
+  return simd8<uint8_t>(v.value);
+}
+
 } // namespace simd
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
