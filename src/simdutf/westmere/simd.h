@@ -346,7 +346,6 @@ template <> struct simd8<uint8_t> : base8_numeric<uint8_t> {
 
   simdutf_really_inline uint64_t sum_bytes() const {
     const auto tmp = _mm_sad_epu8(value, _mm_setzero_si128());
-
     return _mm_extract_epi64(tmp, 0) + _mm_extract_epi64(tmp, 1);
   }
 };

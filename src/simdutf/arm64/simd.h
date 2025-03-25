@@ -75,7 +75,15 @@ template <typename T> struct simd8;
 template <typename T, typename Mask = simd8<bool>> struct base_u8 {
   uint8x16_t value;
   static const int SIZE = sizeof(value);
-
+  void dump() const {
+    uint8_t temp[16];
+    vst1q_u8(temp, *this);
+    printf("[%04x, %04x, %04x, %04x, %04x, %04x, %04x, %04x,%04x, %04x, %04x, %04x, %04x, %04x, %04x, %04x]\n", 
+      temp[0], temp[1], temp[2], temp[3],
+      temp[4], temp[5], temp[6], temp[7],
+      temp[8], temp[9], temp[10], temp[11],
+      temp[12], temp[13], temp[14], temp[15]);
+  }
   // Conversion from/to SIMD register
   simdutf_really_inline base_u8(const uint8x16_t _value) : value(_value) {}
   simdutf_really_inline operator const uint8x16_t &() const {
@@ -321,6 +329,9 @@ template <> struct simd8<uint8_t> : base_u8<uint8_t> {
   template <int N> simdutf_really_inline simd8<uint8_t> shl() const {
     return vshlq_n_u8(*this, N);
   }
+  simdutf_really_inline uint16_t sum_bytes() const {
+    return vaddvq_u8(*this);
+  }
 
   // Perform a lookup assuming the value is between 0 and 16 (undefined behavior
   // for out of range values)
@@ -351,6 +362,7 @@ template <> struct simd8<uint8_t> : base_u8<uint8_t> {
 // Signed bytes
 template <> struct simd8<int8_t> {
   int8x16_t value;
+  static const int SIZE = sizeof(value);
 
   static simdutf_really_inline simd8<int8_t> splat(int8_t _value) {
     return vmovq_n_s8(_value);
@@ -717,6 +729,17 @@ template <typename T> struct simd8x64 {
   }
 }; // struct simd8x64<T>
 #include "simdutf/arm64/simd16-inl.h"
+#include "simdutf/arm64/simd32-inl.h"
+#include "simdutf/arm64/simd64-inl.h"
+
+simdutf_really_inline simd64<uint64_t> sum_8bytes(const simd8<uint8_t> v) {
+  // We do it as 3 instructions. There might be a faster way.
+  // We hope that these 3 instructions are cheap.
+  uint16x8_t first_sum = vpaddlq_u8(v);
+  uint32x4_t second_sum = vpaddlq_u16(first_sum);
+  return vpaddlq_u32(second_sum);
+}
+
 } // namespace simd
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION

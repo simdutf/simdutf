@@ -72,7 +72,6 @@ simdutf_really_inline size_t utf8_length_from_utf16_bytemask(const char16_t *in,
     if (!match_system(big_endian)) {
       input = input.swap_bytes();
     }
-
     // 0xd800 .. 0xdbff - low surrogate
     // 0xdc00 .. 0xdfff - high surrogate
     const auto is_surrogate = ((input & uint16_t(0xf800)) == uint16_t(0xd800));
@@ -115,7 +114,6 @@ simdutf_really_inline size_t utf8_length_from_utf16_bytemask(const char16_t *in,
     if (iteration == 0) {
       count += v_count.sum();
       v_count = vector_u16::zero();
-
       iteration = max_iterations;
     }
   }
