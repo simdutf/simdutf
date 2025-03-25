@@ -9,9 +9,7 @@ template <> struct simd64<uint64_t> {
   simdutf_really_inline simd64(const Pointer *ptr)
       : value(vld1q_u64(reinterpret_cast<const uint64_t *>(ptr))) {}
 
-  simdutf_really_inline uint64_t sum() const {
-    return vaddvq_u64(value);
-  }
+  simdutf_really_inline uint64_t sum() const { return vaddvq_u64(value); }
 
   // operators
   simdutf_really_inline simd64 &operator+=(const simd64 other) {

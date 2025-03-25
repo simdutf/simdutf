@@ -584,17 +584,15 @@ arm_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
                         reinterpret_cast<char *>(utf8_output));
 }
 
-
 template <endianness big_endian>
-simdutf_really_inline size_t arm64_utf8_length_from_utf16_bytemask(const char16_t *in,
-                                                             size_t size) {
+simdutf_really_inline size_t
+arm64_utf8_length_from_utf16_bytemask(const char16_t *in, size_t size) {
   size_t pos = 0;
 
   constexpr size_t N = 8;
   const auto one = vmovq_n_u16(1);
   // each char16 yields at least one byte
   size_t count = size / N * N;
-
 
   for (; pos < size / N * N; pos += N) {
     auto input = vld1q_u16(reinterpret_cast<const uint16_t *>(in + pos));
@@ -603,7 +601,8 @@ simdutf_really_inline size_t arm64_utf8_length_from_utf16_bytemask(const char16_
     }
     // 0xd800 .. 0xdbff - low surrogate
     // 0xdc00 .. 0xdfff - high surrogate
-    const auto is_surrogate = vceqq_u16(vandq_u16(input, vmovq_n_u16(0xf800)), vmovq_n_u16(0xd800));
+    const auto is_surrogate =
+        vceqq_u16(vandq_u16(input, vmovq_n_u16(0xf800)), vmovq_n_u16(0xd800));
 
     // c0 - chars that yield 2- or 3-byte UTF-8 codes
     const auto c0 = vminq_u16(vandq_u16(input, vmovq_n_u16(0xff80)), one);
@@ -635,8 +634,8 @@ simdutf_really_inline size_t arm64_utf8_length_from_utf16_bytemask(const char16_
         the described approach, thanks to that for valid UTF-16
         strings it always count correctly.
     */
-    auto v_count = vaddq_u16(c1,c0);
-    v_count = vaddq_u16(v_count,is_surrogate);
+    auto v_count = vaddq_u16(c1, c0);
+    v_count = vaddq_u16(v_count, is_surrogate);
     count += vaddlvq_u16(v_count);
   }
   return count + scalar::utf16::utf8_length_from_utf16<big_endian>(in + pos,

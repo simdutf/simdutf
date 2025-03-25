@@ -78,11 +78,11 @@ template <typename T, typename Mask = simd8<bool>> struct base_u8 {
   void dump() const {
     uint8_t temp[16];
     vst1q_u8(temp, *this);
-    printf("[%04x, %04x, %04x, %04x, %04x, %04x, %04x, %04x,%04x, %04x, %04x, %04x, %04x, %04x, %04x, %04x]\n", 
-      temp[0], temp[1], temp[2], temp[3],
-      temp[4], temp[5], temp[6], temp[7],
-      temp[8], temp[9], temp[10], temp[11],
-      temp[12], temp[13], temp[14], temp[15]);
+    printf("[%04x, %04x, %04x, %04x, %04x, %04x, %04x, %04x,%04x, %04x, %04x, "
+           "%04x, %04x, %04x, %04x, %04x]\n",
+           temp[0], temp[1], temp[2], temp[3], temp[4], temp[5], temp[6],
+           temp[7], temp[8], temp[9], temp[10], temp[11], temp[12], temp[13],
+           temp[14], temp[15]);
   }
   // Conversion from/to SIMD register
   simdutf_really_inline base_u8(const uint8x16_t _value) : value(_value) {}
@@ -329,9 +329,7 @@ template <> struct simd8<uint8_t> : base_u8<uint8_t> {
   template <int N> simdutf_really_inline simd8<uint8_t> shl() const {
     return vshlq_n_u8(*this, N);
   }
-  simdutf_really_inline uint16_t sum_bytes() const {
-    return vaddvq_u8(*this);
-  }
+  simdutf_really_inline uint16_t sum_bytes() const { return vaddvq_u8(*this); }
 
   // Perform a lookup assuming the value is between 0 and 16 (undefined behavior
   // for out of range values)

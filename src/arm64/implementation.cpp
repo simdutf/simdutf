@@ -1100,7 +1100,8 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 simdutf_warn_unused size_t implementation::utf8_length_from_utf16le(
     const char16_t *input, size_t length) const noexcept {
-  return arm64_utf8_length_from_utf16_bytemask<endianness::LITTLE>(input, length);
+  return arm64_utf8_length_from_utf16_bytemask<endianness::LITTLE>(input,
+                                                                   length);
 }
 
 simdutf_warn_unused size_t implementation::utf8_length_from_utf16be(
