@@ -426,6 +426,6 @@ simdutf_really_inline uint64_t simd16x32<uint16_t>::not_in_range(
   return x.to_bitmask();
 }
 
-simd16<uint16_t> min(const simd16<uint16_t> a, simd16<uint16_t> b) {
+simdutf_really_inline simd16<uint16_t> min(const simd16<uint16_t> a, simd16<uint16_t> b) {
   return vminq_u16(a.value, b.value);
 }
