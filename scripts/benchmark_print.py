@@ -248,8 +248,8 @@ HELP = """Format output of the benchmark utility
 When running a benchmark redirect its output to file (with > or `tee`), like:
 
 $ cd build/benchmarks
-$ ./benchamark [...] > results.txt
-$ ./benchamark [...] | tee results.txt
+$ ./benchmark [...] > results.txt
+$ ./benchmark [...] | tee results.txt
 
 To summarize results, use:
 

@@ -2,8 +2,10 @@ template <typename T> struct simd16;
 
 template <typename T, typename Mask = simd16<bool>> struct base_u16 {
   uint16x8_t value;
+  /// the size of vector in bytes
   static const int SIZE = sizeof(value);
-
+  /// the number of elements of type T a vector can hold
+  static const int ELEMENTS = SIZE / sizeof(T);
   // Conversion from/to SIMD register
   simdutf_really_inline base_u16() = default;
   simdutf_really_inline base_u16(const uint16x8_t _value) : value(_value) {}
@@ -63,7 +65,12 @@ struct base16 : base_u16<T> {
   simdutf_really_inline base16(const Pointer *ptr) : base16(vld1q_u16(ptr)) {}
 
   static const int SIZE = sizeof(base_u16<T>::value);
-
+  void dump() const {
+    uint16_t temp[8];
+    vst1q_u16(temp, *this);
+    printf("[%04x, %04x, %04x, %04x, %04x, %04x, %04x, %04x]\n", temp[0],
+           temp[1], temp[2], temp[3], temp[4], temp[5], temp[6], temp[7]);
+  }
   template <int N = 1>
   simdutf_really_inline simd16<T> prev(const simd16<T> prev_chunk) const {
     return vextq_u18(prev_chunk, *this, 8 - N);
@@ -106,10 +113,10 @@ template <typename T> struct base16_numeric : base16<T> {
 
   // Addition/subtraction are the same for signed and unsigned
   simdutf_really_inline simd16<T> operator+(const simd16<T> other) const {
-    return vaddq_u8(*this, other);
+    return vaddq_u16(*this, other);
   }
   simdutf_really_inline simd16<T> operator-(const simd16<T> other) const {
-    return vsubq_u8(*this, other);
+    return vsubq_u16(*this, other);
   }
   simdutf_really_inline simd16<T> &operator+=(const simd16<T> other) {
     *this = *this + other;
@@ -271,6 +278,14 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
   simdutf_really_inline simd16<uint16_t> swap_bytes() const {
     return vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(*this)));
   }
+  void dump() const {
+    uint16_t temp[8];
+    vst1q_u16(temp, *this);
+    printf("[%04x, %04x, %04x, %04x, %04x, %04x, %04x, %04x]\n", temp[0],
+           temp[1], temp[2], temp[3], temp[4], temp[5], temp[6], temp[7]);
+  }
+
+  simdutf_really_inline uint32_t sum() const { return vaddlvq_u16(value); }
 };
 simdutf_really_inline simd16<int16_t>::operator simd16<uint16_t>() const {
   return this->value;
@@ -404,4 +419,9 @@ simdutf_really_inline uint64_t simd16x32<uint16_t>::not_in_range(
                         simd16<uint16_t>((this->chunks[3] > mask_high) |
                                          (this->chunks[3] < mask_low)));
   return x.to_bitmask();
+}
+
+simdutf_really_inline simd16<uint16_t> min(const simd16<uint16_t> a,
+                                           simd16<uint16_t> b) {
+  return vminq_u16(a.value, b.value);
 }
