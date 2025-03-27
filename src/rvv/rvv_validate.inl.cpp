@@ -38,7 +38,7 @@ simdutf_really_inline static size_t rvv_count_valid_utf8(const char *src,
   /* validate first three bytes */
   {
     size_t idx = 3;
-    while (idx < len && (src[idx] >> 6) == 0b10)
+    while (idx < len && (uint8_t(src[idx]) >> 6) == 0b10)
       ++idx;
     if (idx > 3 + 3 || !scalar::utf8::validate(src, idx))
       return 0;
@@ -105,7 +105,7 @@ simdutf_really_inline static size_t rvv_count_valid_utf8(const char *src,
   }
 
   /* we need to validate the last character */
-  while (tail < len && (src[0] >> 6) == 0b10)
+  while (tail < len && (uint8_t(src[0]) >> 6) == 0b10)
     --src, ++tail;
   return src - beg;
 }
