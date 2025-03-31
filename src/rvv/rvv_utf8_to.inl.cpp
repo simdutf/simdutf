@@ -20,7 +20,7 @@ simdutf_really_inline static size_t rvv_utf8_to_common(char const *src,
   /* validate first three bytes */
   if (validate) {
     size_t idx = 3;
-    while (idx < len && (src[idx] >> 6) == 0b10)
+    while (idx < len && (uint8_t(src[idx]) >> 6) == 0b10)
       ++idx;
     if (idx > 3 + 3 || !scalar::utf8::validate(src, idx))
       return 0;
@@ -255,9 +255,9 @@ simdutf_really_inline static size_t rvv_utf8_to_common(char const *src,
 
   /* validate the last character and reparse it + tail */
   if (len > tail) {
-    if ((src[0] >> 6) == 0b10)
+    if ((uint8_t(src[0]) >> 6) == 0b10)
       --dst;
-    while ((src[0] >> 6) == 0b10 && tail < len)
+    while ((uint8_t(src[0]) >> 6) == 0b10 && tail < len)
       --src, ++tail;
     if (is16) {
       /* go back one more, when on high surrogate */
