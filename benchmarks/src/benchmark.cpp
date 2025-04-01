@@ -511,6 +511,9 @@ void Benchmark::list_procedures(ListingMode lm) const {
           case simdutf::Latin1:
             printf("\"latin1\"");
             break;
+          default:
+            printf("\"unknown\"");
+            break;
           }
         }
         printf("]\n");
