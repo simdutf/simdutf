@@ -107,6 +107,9 @@ case $(uname -m) in
     riscv64)
 	MARCHFLAGS="-march=rv64gcv"
 	;;
+    loongarch64)
+	MARCHFLAGS="-mlsx -mlasx"
+	;;
     *)
 	;;
 esac

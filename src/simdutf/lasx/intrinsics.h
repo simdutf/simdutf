@@ -259,19 +259,23 @@ public:
 #else
 template <uint16_t x> constexpr __m256i lasx_splat_u16_aux() {
   constexpr bool is_imm10 = (int16_t(x) < 512) && (int16_t(x) > -512);
+  constexpr uint16_t imm10 = is_imm10 ? x : 0;
   constexpr bool is_vldi = lasx_vldi::const_u16<x>::valid;
+  constexpr int vldi_imm = is_vldi ? lasx_vldi::const_u16<x>::value : 0;
 
-  return is_imm10  ? __lasx_xvrepli_h(int16_t(x))
-         : is_vldi ? __lasx_xvldi(lasx_vldi::const_u16<x>::value)
+  return is_imm10  ? __lasx_xvrepli_h(int16_t(imm10))
+         : is_vldi ? __lasx_xvldi(vldi_imm)
                    : __lasx_xvreplgr2vr_h(x);
 }
 
 template <uint32_t x> constexpr __m256i lasx_splat_u32_aux() {
   constexpr bool is_imm10 = (int32_t(x) < 512) && (int32_t(x) > -512);
+  constexpr uint32_t imm10 = is_imm10 ? x : 0;
   constexpr bool is_vldi = lasx_vldi::const_u32<x>::valid;
+  constexpr int vldi_imm = is_vldi ? lasx_vldi::const_u32<x>::value : 0;
 
-  return is_imm10  ? __lasx_xvrepli_w(int32_t(x))
-         : is_vldi ? __lasx_xvldi(lasx_vldi::const_u32<x>::value)
+  return is_imm10  ? __lasx_xvrepli_w(int32_t(imm10))
+         : is_vldi ? __lasx_xvldi(vldi_imm)
                    : __lasx_xvreplgr2vr_w(x);
 }
 
