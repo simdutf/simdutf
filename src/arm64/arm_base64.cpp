@@ -317,11 +317,9 @@ void load_block(block64 *b, const char16_t *src) {
 void base64_decode_block(char *out, const char *src) {
   uint8x16x4_t str = vld4q_u8((uint8_t *)src);
   uint8x16x3_t outvec;
-  outvec.val[0] =
-      vorrq_u8(vshlq_n_u8(str.val[0], 2), vshrq_n_u8(str.val[1], 4));
-  outvec.val[1] =
-      vorrq_u8(vshlq_n_u8(str.val[1], 4), vshrq_n_u8(str.val[2], 2));
-  outvec.val[2] = vorrq_u8(vshlq_n_u8(str.val[2], 6), str.val[3]);
+  outvec.val[0] = vsliq_n_u8(vshrq_n_u8(str.val[1], 4), str.val[0], 2);
+  outvec.val[1] = vsliq_n_u8(vshrq_n_u8(str.val[2], 2), str.val[1], 4);
+  outvec.val[2] = vsliq_n_u8(str.val[3], str.val[2], 6);
   vst3q_u8((uint8_t *)out, outvec);
 }
 
