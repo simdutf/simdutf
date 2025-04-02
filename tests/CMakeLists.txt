@@ -20,7 +20,7 @@ target_link_libraries(readme_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
 
-add_cpp_test(random_fuzzer)
+add_cpp_test(random_fuzzer NO_TEST_LIST)
 target_link_libraries(random_fuzzer
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
@@ -369,7 +369,7 @@ target_link_libraries(detect_encodings_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
 
-add_cpp_test(basic_fuzzer)
+add_cpp_test(basic_fuzzer NO_TEST_LIST)
 target_link_libraries(basic_fuzzer
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)

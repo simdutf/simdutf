@@ -3,10 +3,48 @@
 #include <stdexcept>
 #include <cstdio>
 
+bool starts_with(const std::string &s, const std::string &prefix) {
+  if (s.size() < prefix.size()) {
+    return false;
+  }
+
+  for (size_t i = 0; i < prefix.size(); i++) {
+    if (s[i] != prefix[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+struct split_result_t {
+  bool valid;
+  std::string before;
+  std::string after;
+};
+
+split_result_t split(const std::string &s, char ch) {
+  const auto pos = s.find(ch);
+
+  if (pos == std::string::npos) {
+    return {false, s, ""};
+  }
+
+  return {true, s.substr(0, pos), s.substr(pos + 1)};
+}
+
 auto simdutf::test::CommandLine::parse(int argc, char *argv[])
     -> simdutf::test::CommandLine {
   CommandLine cmdline;
   cmdline.seed = 42;
+
+  cmdline.exe_name = argv[0];
+  {
+    const auto pos = cmdline.exe_name.rfind('/');
+    if (pos != std::string::npos) {
+      cmdline.exe_name = cmdline.exe_name.substr(pos + 1);
+    }
+  }
 
   std::list<std::string> args;
   for (int i = 1; i < argc; i++) {
@@ -23,6 +61,15 @@ auto simdutf::test::CommandLine::parse(int argc, char *argv[])
 
     if ((arg == "--show-tests") or (arg == "-l")) {
       cmdline.show_tests = true;
+      continue;
+    }
+
+    if (arg == "--gtest_list_tests") {
+      cmdline.gtest_list_tests = true;
+      continue;
+    }
+
+    if (arg == "--gtest_also_run_disabled_tests") {
       continue;
     }
 
@@ -62,6 +109,19 @@ auto simdutf::test::CommandLine::parse(int argc, char *argv[])
         throw std::invalid_argument("Wrong number after " + arg);
       }
       args.pop_front();
+    } else if (starts_with(arg, "--gtest_filter=")) {
+      const auto s1 = split(arg, '=');
+      const auto s2 = split(s1.after, '.');
+      if (not s2.valid) {
+        std::invalid_argument("Missing test suite name '" + arg + "'");
+      }
+
+      if (s2.before != cmdline.exe_name) {
+        std::invalid_argument("Expected suite name '" + cmdline.exe_name +
+                              "', got '" + s2.before + "'");
+      }
+
+      cmdline.tests.push_back(s2.after);
     } else {
       throw std::invalid_argument("Unknown argument '" + arg + "'");
     }
@@ -128,6 +188,13 @@ void print_tests(FILE *file) {
 
 void print_tests() { print_tests(stdout); }
 
+void gtest_list_tests(const std::string &exe_name) {
+  printf("%s.\n", exe_name.c_str());
+  for (const auto &test : simdutf::test::test_procedures()) {
+    printf("  %s\n", test.name.c_str());
+  }
+}
+
 namespace simdutf {
 namespace test {
 
@@ -155,6 +222,12 @@ void run(const CommandLine &cmdline) {
     print_tests();
     return;
   }
+
+  if (cmdline.gtest_list_tests) {
+    gtest_list_tests(cmdline.exe_name);
+    return;
+  }
+
   size_t matching_implementation{0};
 
   for (const auto &implementation : simdutf::get_available_implementations()) {
@@ -188,12 +261,16 @@ void run(const CommandLine &cmdline) {
       return false;
     };
 
-    for (auto test : simdutf::test::test_procedures()) {
+    for (auto &test : simdutf::test::test_procedures()) {
       if (filter(test)) {
+        printf("Running %s...", test.title.c_str());
+        fflush(stdout);
         test(*implementation);
+        puts(" OK");
       }
     }
   }
+
   if (matching_implementation == 0) {
     puts("not a single compatible implementation found, this is an error");
     abort();
@@ -207,11 +284,13 @@ std::list<test_entry> &test_procedures() {
 }
 
 register_test::register_test(const char *name, test_procedure proc) {
-  test_procedures().push_back({name, proc});
+  std::string title = name;
+  std::replace(title.begin(), title.end(), '_', ' ');
+  test_procedures().push_back({name, title, proc});
 }
 
-int main(int argc, char *argv[]) {
-  const auto cmdline = CommandLine::parse(argc, argv);
+int main(int argc, char *argv[], bool use_threads) {
+  auto cmdline = CommandLine::parse(argc, argv);
 
   run(cmdline);
 
