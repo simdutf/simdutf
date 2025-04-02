@@ -73,6 +73,26 @@ size_t encode_base64(char *dst, const char *src, size_t srclen,
     vst4q_u8(out, result);
     out += 64;
   }
+
+  if (i + 24 <= srclen) {
+    const uint8x8_t v3f_d = vdup_n_u8(0x3f);
+    const uint8x8x3_t in = vld3_u8((const uint8_t *)src + i);
+    uint8x8x4_t result;
+    result.val[0] = vshr_n_u8(in.val[0], 2);
+    result.val[1] =
+        vand_u8(vsli_n_u8(vshr_n_u8(in.val[1], 4), in.val[0], 4), v3f_d);
+    result.val[2] =
+        vand_u8(vsli_n_u8(vshr_n_u8(in.val[2], 6), in.val[1], 2), v3f_d);
+    result.val[3] = vand_u8(in.val[2], v3f_d);
+    result.val[0] = vqtbl4_u8(table, result.val[0]);
+    result.val[1] = vqtbl4_u8(table, result.val[1]);
+    result.val[2] = vqtbl4_u8(table, result.val[2]);
+    result.val[3] = vqtbl4_u8(table, result.val[3]);
+    vst4_u8(out, result);
+    out += 32;
+    i += 24;
+  }
+
   out += scalar::base64::tail_encode_base64((char *)out, src + i, srclen - i,
                                             options);
 
