@@ -551,7 +551,6 @@ TEST(base64_decode_strict_cases_length) {
   }
 }
 
-
 // https://bugs.webkit.org/show_bug.cgi?id=290829
 TEST(issue_webkit_290829) {
   std::string data = "MjYyZg===";
@@ -559,33 +558,33 @@ TEST(issue_webkit_290829) {
   std::vector<uint8_t> expected = {0x32, 0x36, 0x32};
 
   for (auto option :
-    {simdutf::last_chunk_handling_options::strict,
-     simdutf::last_chunk_handling_options::loose,
-     simdutf::last_chunk_handling_options::stop_before_partial}) {
+       {simdutf::last_chunk_handling_options::strict,
+        simdutf::last_chunk_handling_options::loose,
+        simdutf::last_chunk_handling_options::stop_before_partial}) {
     std::fill(output.begin(), output.end(), 0);
-    const auto r1 = implementation.base64_to_binary(
-        data.data(), data.size(), output.data(), simdutf::base64_default,
-        option);
+    const auto r1 =
+        implementation.base64_to_binary(data.data(), data.size(), output.data(),
+                                        simdutf::base64_default, option);
     ASSERT_EQUAL(r1.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
     ASSERT_EQUAL(r1.count, 6);
     ASSERT_BYTES_EQUAL(output, expected, 3);
   }
 
   for (auto option :
-    {simdutf::last_chunk_handling_options::strict,
-     simdutf::last_chunk_handling_options::loose,
-     simdutf::last_chunk_handling_options::stop_before_partial}) {
-      std::fill(output.begin(), output.end(), 0);
-      size_t back_length = output.size();
-      auto r = simdutf::base64_to_binary_safe(
-        data.data(), data.size(), output.data(), back_length,
-          simdutf::base64_default, option);
+       {simdutf::last_chunk_handling_options::strict,
+        simdutf::last_chunk_handling_options::loose,
+        simdutf::last_chunk_handling_options::stop_before_partial}) {
+    std::fill(output.begin(), output.end(), 0);
+    size_t back_length = output.size();
+    auto r = simdutf::base64_to_binary_safe(data.data(), data.size(),
+                                            output.data(), back_length,
+                                            simdutf::base64_default, option);
 
-      ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
-      ASSERT_EQUAL(r.count, 6);
-      ASSERT_EQUAL(back_length, 3);
-      ASSERT_BYTES_EQUAL(output, expected, 3);
-    }
+    ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+    ASSERT_EQUAL(r.count, 6);
+    ASSERT_EQUAL(back_length, 3);
+    ASSERT_BYTES_EQUAL(output, expected, 3);
+  }
 }
 
 TEST(issue_single_bad16) {
