@@ -2969,7 +2969,7 @@ atomic_binary_to_base64(const detail::input_span_of_byte_like auto &input,
  * characters) must be divisible by four.
  *
  * You should call this function with a buffer that is at least
- * maximal_binary_length_from_utf6_base64(input, length) bytes long. If you fail
+ * maximal_binary_length_from_base64(input, length) bytes long. If you fail
  * to provide that much space, the function may cause a buffer overflow.
  *
  * Advanced users may want to taylor how the last chunk is handled. By default,
@@ -4718,7 +4718,7 @@ public:
    * character that is not a valid base64 character (INVALID_BASE64_CHARACTER).
    *
    * You should call this function with a buffer that is at least
-   * maximal_binary_length_from_utf6_base64(input, length) bytes long. If you
+   * maximal_binary_length_from_base64(input, length) bytes long. If you
    * fail to provide that much space, the function may cause a buffer overflow.
    *
    * @param input         the base64 string to process, in ASCII stored as
