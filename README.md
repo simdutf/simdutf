@@ -1817,6 +1817,9 @@ As you can see, the result is as expected.
 In some instances, you may want to limit the size of the output further when decoding base64.
 For this purpose, you may use the `base64_to_binary_safe` functions. The functions may also
 be useful if you seek to decode the input into segments having a maximal capacity.
+Another benefit of the `base64_to_binary_safe` functions is that they inform you
+about how much data was written to the output buffer, even when there is a fatal
+error.
 
 
 ```C++

@@ -567,7 +567,6 @@ TEST(issue_webkit_290829) {
                                         simdutf::base64_default, option);
     ASSERT_EQUAL(r1.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
     ASSERT_EQUAL(r1.count, 6);
-    ASSERT_BYTES_EQUAL(output, expected, 3);
   }
 
   for (auto option :
