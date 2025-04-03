@@ -11,6 +11,23 @@
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
 
+
+// https://bugs.webkit.org/show_bug.cgi?id=290829
+TEST(issue_webkit_290829) {
+  std::string data = "MjYyZg===";
+  std::vector<char> output(100);
+  for (auto option :
+    {simdutf::last_chunk_handling_options::strict,
+     simdutf::last_chunk_handling_options::loose,
+     simdutf::last_chunk_handling_options::stop_before_partial}) {
+    const auto r1 = implementation.base64_to_binary(
+        data.data(), data.size(), output.data(), simdutf::base64_default,
+        option);
+    ASSERT_EQUAL(r1.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+    ASSERT_EQUAL(r1.count, 6);
+  }
+}
+
 // We may disable base64url tests by commenting out this next line.
 #define SIMDUTF_BASE64URL_TESTS 1
 
