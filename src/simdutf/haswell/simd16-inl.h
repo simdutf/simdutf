@@ -21,6 +21,7 @@ struct base16 : base<simd16<T>> {
   template <typename Pointer>
   simdutf_really_inline base16(const Pointer *ptr)
       : base16(_mm256_loadu_si256(reinterpret_cast<const __m256i *>(ptr))) {}
+
   friend simdutf_always_inline Mask operator==(const simd16<T> lhs,
                                                const simd16<T> rhs) {
     return _mm256_cmpeq_epi16(lhs, rhs);
@@ -31,11 +32,6 @@ struct base16 : base<simd16<T>> {
 
   /// the number of elements of type T a vector can hold
   static const int ELEMENTS = SIZE / sizeof(T);
-
-  template <int N = 1>
-  simdutf_really_inline simd16<T> prev(const simd16<T> prev_chunk) const {
-    return _mm256_alignr_epi8(*this, prev_chunk, 16 - N);
-  }
 };
 
 // SIMD byte mask type (returned by things like eq and gt)
@@ -45,16 +41,16 @@ template <> struct simd16<bool> : base16<bool> {
   }
 
   simdutf_really_inline simd16() : base16() {}
+
   simdutf_really_inline simd16(const __m256i _value) : base16<bool>(_value) {}
+
   // Splat constructor
   simdutf_really_inline simd16(bool _value) : base16<bool>(splat(_value)) {}
 
   simdutf_really_inline bitmask_type to_bitmask() const {
     return _mm256_movemask_epi8(*this);
   }
-  simdutf_really_inline bool any() const {
-    return !_mm256_testz_si256(*this, *this);
-  }
+
   simdutf_really_inline simd16<bool> operator~() const { return *this ^ true; }
 };
 
@@ -62,14 +58,17 @@ template <typename T> struct base16_numeric : base16<T> {
   static simdutf_really_inline simd16<T> splat(T _value) {
     return _mm256_set1_epi16(_value);
   }
+
   static simdutf_really_inline simd16<T> zero() {
     return _mm256_setzero_si256();
   }
+
   static simdutf_really_inline simd16<T> load(const T values[8]) {
     return _mm256_loadu_si256(reinterpret_cast<const __m256i *>(values));
   }
 
   simdutf_really_inline base16_numeric() : base16<T>() {}
+
   simdutf_really_inline base16_numeric(const __m256i _value)
       : base16<T>(_value) {}
 
@@ -85,46 +84,9 @@ template <typename T> struct base16_numeric : base16<T> {
   simdutf_really_inline simd16<T> operator+(const simd16<T> other) const {
     return _mm256_add_epi16(*this, other);
   }
-  simdutf_really_inline simd16<T> operator-(const simd16<T> other) const {
-    return _mm256_sub_epi16(*this, other);
-  }
   simdutf_really_inline simd16<T> &operator+=(const simd16<T> other) {
     *this = *this + other;
     return *static_cast<simd16<T> *>(this);
-  }
-  simdutf_really_inline simd16<T> &operator-=(const simd16<T> other) {
-    *this = *this - other;
-    return *static_cast<simd16<T> *>(this);
-  }
-};
-
-// Signed code units
-template <> struct simd16<int16_t> : base16_numeric<int16_t> {
-  simdutf_really_inline simd16() : base16_numeric<int16_t>() {}
-  simdutf_really_inline simd16(const __m256i _value)
-      : base16_numeric<int16_t>(_value) {}
-  // Splat constructor
-  simdutf_really_inline simd16(int16_t _value) : simd16(splat(_value)) {}
-  // Array constructor
-  simdutf_really_inline simd16(const int16_t *values) : simd16(load(values)) {}
-  simdutf_really_inline simd16(const char16_t *values)
-      : simd16(load(reinterpret_cast<const int16_t *>(values))) {}
-  // Order-sensitive comparisons
-  simdutf_really_inline simd16<int16_t>
-  max_val(const simd16<int16_t> other) const {
-    return _mm256_max_epi16(*this, other);
-  }
-  simdutf_really_inline simd16<int16_t>
-  min_val(const simd16<int16_t> other) const {
-    return _mm256_min_epi16(*this, other);
-  }
-  simdutf_really_inline simd16<bool>
-  operator>(const simd16<int16_t> other) const {
-    return _mm256_cmpgt_epi16(*this, other);
-  }
-  simdutf_really_inline simd16<bool>
-  operator<(const simd16<int16_t> other) const {
-    return _mm256_cmpgt_epi16(other, *this);
   }
 };
 
@@ -140,17 +102,6 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
   simdutf_really_inline simd16(const uint16_t *values) : simd16(load(values)) {}
   simdutf_really_inline simd16(const char16_t *values)
       : simd16(load(reinterpret_cast<const uint16_t *>(values))) {}
-  simdutf_really_inline simd16(const simd16<bool> bm) : simd16(bm.value) {}
-
-  // Saturated math
-  simdutf_really_inline simd16<uint16_t>
-  saturating_add(const simd16<uint16_t> other) const {
-    return _mm256_adds_epu16(*this, other);
-  }
-  simdutf_really_inline simd16<uint16_t>
-  saturating_sub(const simd16<uint16_t> other) const {
-    return _mm256_subs_epu16(*this, other);
-  }
 
   // Order-specific operations
   simdutf_really_inline simd16<uint16_t>
@@ -161,16 +112,7 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
   min_val(const simd16<uint16_t> other) const {
     return _mm256_min_epu16(*this, other);
   }
-  // Same as >, but only guarantees true is nonzero (< guarantees true = -1)
-  simdutf_really_inline simd16<uint16_t>
-  gt_bits(const simd16<uint16_t> other) const {
-    return this->saturating_sub(other);
-  }
   // Same as <, but only guarantees true is nonzero (< guarantees true = -1)
-  simdutf_really_inline simd16<uint16_t>
-  lt_bits(const simd16<uint16_t> other) const {
-    return other.saturating_sub(*this);
-  }
   simdutf_really_inline simd16<bool>
   operator<=(const simd16<uint16_t> other) const {
     return other.max_val(*this) == other;
@@ -179,53 +121,18 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
   operator>=(const simd16<uint16_t> other) const {
     return other.min_val(*this) == other;
   }
-  simdutf_really_inline simd16<bool>
-  operator>(const simd16<uint16_t> other) const {
-    return this->gt_bits(other).any_bits_set();
-  }
-  simdutf_really_inline simd16<bool>
-  operator<(const simd16<uint16_t> other) const {
-    return this->gt_bits(other).any_bits_set();
-  }
 
   // Bit-specific operations
   simdutf_really_inline simd16<bool> bits_not_set() const {
     return *this == uint16_t(0);
   }
-  simdutf_really_inline simd16<bool> bits_not_set(simd16<uint16_t> bits) const {
-    return (*this & bits).bits_not_set();
-  }
+
   simdutf_really_inline simd16<bool> any_bits_set() const {
     return ~this->bits_not_set();
   }
-  simdutf_really_inline simd16<bool> any_bits_set(simd16<uint16_t> bits) const {
-    return ~this->bits_not_set(bits);
-  }
 
-  simdutf_really_inline bool bits_not_set_anywhere() const {
-    return _mm256_testz_si256(*this, *this);
-  }
-  simdutf_really_inline bool any_bits_set_anywhere() const {
-    return !bits_not_set_anywhere();
-  }
-  simdutf_really_inline bool
-  bits_not_set_anywhere(simd16<uint16_t> bits) const {
-    return _mm256_testz_si256(*this, bits);
-  }
-  simdutf_really_inline bool
-  any_bits_set_anywhere(simd16<uint16_t> bits) const {
-    return !bits_not_set_anywhere(bits);
-  }
   template <int N> simdutf_really_inline simd16<uint16_t> shr() const {
     return simd16<uint16_t>(_mm256_srli_epi16(*this, N));
-  }
-  template <int N> simdutf_really_inline simd16<uint16_t> shl() const {
-    return simd16<uint16_t>(_mm256_slli_epi16(*this, N));
-  }
-  // Get one of the bits and make a bitmask out of it.
-  // e.g. value.get_bit<7>() gets the high bit
-  template <int N> simdutf_really_inline int get_bit() const {
-    return _mm256_movemask_epi8(_mm256_slli_epi16(*this, 15 - N));
   }
 
   // Change the endianness
@@ -319,26 +226,9 @@ template <typename T> struct simd16x32 {
     this->chunks[1].store_ascii_as_utf16(ptr + sizeof(simd16<T>));
   }
 
-  simdutf_really_inline simd16x32<T> bit_or(const T m) const {
-    const simd16<T> mask = simd16<T>::splat(m);
-    return simd16x32<T>(this->chunks[0] | mask, this->chunks[1] | mask);
-  }
-
   simdutf_really_inline void swap_bytes() {
     this->chunks[0] = this->chunks[0].swap_bytes();
     this->chunks[1] = this->chunks[1].swap_bytes();
-  }
-
-  simdutf_really_inline uint64_t eq(const T m) const {
-    const simd16<T> mask = simd16<T>::splat(m);
-    return simd16x32<bool>(this->chunks[0] == mask, this->chunks[1] == mask)
-        .to_bitmask();
-  }
-
-  simdutf_really_inline uint64_t eq(const simd16x32<uint16_t> &other) const {
-    return simd16x32<bool>(this->chunks[0] == other.chunks[0],
-                           this->chunks[1] == other.chunks[1])
-        .to_bitmask();
   }
 
   simdutf_really_inline uint64_t lteq(const T m) const {
@@ -347,26 +237,12 @@ template <typename T> struct simd16x32 {
         .to_bitmask();
   }
 
-  simdutf_really_inline uint64_t in_range(const T low, const T high) const {
-    const simd16<T> mask_low = simd16<T>::splat(low);
-    const simd16<T> mask_high = simd16<T>::splat(high);
-
-    return simd16x32<bool>(
-               (this->chunks[0] <= mask_high) & (this->chunks[0] >= mask_low),
-               (this->chunks[1] <= mask_high) & (this->chunks[1] >= mask_low))
-        .to_bitmask();
-  }
   simdutf_really_inline uint64_t not_in_range(const T low, const T high) const {
     const simd16<T> mask_low = simd16<T>::splat(static_cast<T>(low - 1));
     const simd16<T> mask_high = simd16<T>::splat(static_cast<T>(high + 1));
     return simd16x32<bool>(
                (this->chunks[0] >= mask_high) | (this->chunks[0] <= mask_low),
                (this->chunks[1] >= mask_high) | (this->chunks[1] <= mask_low))
-        .to_bitmask();
-  }
-  simdutf_really_inline uint64_t lt(const T m) const {
-    const simd16<T> mask = simd16<T>::splat(m);
-    return simd16x32<bool>(this->chunks[0] < mask, this->chunks[1] < mask)
         .to_bitmask();
   }
 }; // struct simd16x32<T>
