@@ -16,13 +16,13 @@ arm_convert_utf32_to_utf16(const char32_t *buf, size_t len,
 
       const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
       const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
-      forbidden_bytemask = vorrq_u16(vceqq_u16(vandq_u16(utf16_packed, v_f800),
-                                              v_d800),
-                                     forbidden_bytemask);
+      forbidden_bytemask =
+          vorrq_u16(vceqq_u16(vandq_u16(utf16_packed, v_f800), v_d800),
+                    forbidden_bytemask);
 
       if (!match_system(big_endian)) {
-        utf16_packed =
-            vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(utf16_packed)));
+        utf16_packed = vreinterpretq_u16_u8(
+            vrev16q_u8(vreinterpretq_u8_u16(utf16_packed)));
       }
       vst1q_u16(utf16_output, utf16_packed);
       utf16_output += 8;
@@ -91,15 +91,16 @@ arm_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
 
       const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
       const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
-      const uint16x8_t forbidden_bytemask = vceqq_u16(vandq_u16(utf16_packed, v_f800), v_d800);
+      const uint16x8_t forbidden_bytemask =
+          vceqq_u16(vandq_u16(utf16_packed, v_f800), v_d800);
       if (vmaxvq_u16(forbidden_bytemask) != 0) {
         return std::make_pair(result(error_code::SURROGATE, buf - start),
                               reinterpret_cast<char16_t *>(utf16_output));
       }
 
       if (!match_system(big_endian)) {
-        utf16_packed =
-            vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(utf16_packed)));
+        utf16_packed = vreinterpretq_u16_u8(
+            vrev16q_u8(vreinterpretq_u8_u16(utf16_packed)));
       }
       vst1q_u16(utf16_output, utf16_packed);
       utf16_output += 8;
