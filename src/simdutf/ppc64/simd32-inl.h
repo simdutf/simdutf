@@ -209,6 +209,11 @@ simd32<bool> operator>(const simd32<T> a, const simd32<T> b) {
 }
 
 template <typename T>
+simd32<bool> operator>=(const simd32<T> a, const simd32<T> b) {
+  return vec_cmpge(a.value, b.value);
+}
+
+template <typename T>
 simd32<T> operator&(const simd32<T> a, const simd32<T> b) {
   return vec_and(a.value, b.value);
 }
