@@ -12,7 +12,8 @@ arm_convert_utf32_to_utf16(const char32_t *buf, size_t len,
 
     // Check if no bits set above 16th
     if (vmaxvq_u32(vorrq_u32(in.val[0], in.val[1])) <= 0xFFFF) {
-      uint16x8_t utf16_packed = vuzp1q_u16(in.val[0], in.val[1]);
+      uint16x8_t utf16_packed = vuzp1q_u16(vreinterpretq_u16_u32(in.val[0]),
+                                           vreinterpretq_u16_u32(in.val[1]));
 
       const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
       const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
@@ -87,7 +88,8 @@ arm_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
 
     // Check if no bits set above 16th
     if (vmaxvq_u32(vorrq_u32(in.val[0], in.val[1])) <= 0xFFFF) {
-      uint16x8_t utf16_packed = vuzp1q_u16(in.val[0], in.val[1]);
+      uint16x8_t utf16_packed = vuzp1q_u16(vreinterpretq_u16_u32(in.val[0]),
+                                           vreinterpretq_u16_u32(in.val[1]));
 
       const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
       const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
