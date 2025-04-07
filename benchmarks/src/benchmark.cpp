@@ -147,6 +147,9 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
   register_function("utf8_length_from_utf32",
                     &Benchmark::run_utf8_length_from_utf32,
                     simdutf::encoding_type::UTF32_LE);
+  register_function("utf16_length_from_utf8",
+                    &Benchmark::run_utf16_length_from_utf8,
+                    simdutf::encoding_type::UTF8);
   register_function("convert_latin1_to_utf8",
                     &Benchmark::run_convert_latin1_to_utf8,
                     simdutf::encoding_type::Latin1);
@@ -859,6 +862,20 @@ void Benchmark::run_utf8_length_from_utf32(
 
   auto proc = [&implementation, data, size, &sink]() {
     sink = implementation.utf8_length_from_utf32(data, size);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  print_summary(result, size, size);
+}
+
+void Benchmark::run_utf16_length_from_utf8(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char *data = reinterpret_cast<const char *>(input_data.data());
+  const size_t size = input_data.size() / 4;
+  volatile size_t sink{0};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    sink = implementation.utf16_length_from_utf8(data, size);
   };
   count_events(proc, iterations); // warming up!
   const auto result = count_events(proc, iterations);
