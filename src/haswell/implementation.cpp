@@ -104,6 +104,7 @@ namespace utf16 {
   // transcoding from UTF-8 to UTF-16
   #include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
   #include "generic/utf8_to_utf16/utf8_to_utf16.h"
+  #include "generic/utf8/utf16_length_from_utf8_bytemask.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
@@ -1118,7 +1119,7 @@ simdutf_warn_unused size_t implementation::utf32_length_from_utf16be(
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 simdutf_warn_unused size_t implementation::utf16_length_from_utf8(
     const char *input, size_t length) const noexcept {
-  return utf8::utf16_length_from_utf8(input, length);
+  return utf8::utf16_length_from_utf8_bytemask(input, length);
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
