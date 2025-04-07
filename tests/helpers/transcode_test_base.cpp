@@ -216,9 +216,7 @@ bool transcode_latin1_to_utf16_test_base::validate(size_t saved_chars) const {
                             const std::vector<char16_t> &array) {
     printf("%s", title);
     for (size_t i = 0; i < saved_chars; i++) {
-      printf(
-          " %04x",
-          (uint16_t)array[i]); // Use %04x to print 16-bit hexadecimal numbers
+      printf(" %04x", (uint16_t)array[i]);
     }
     putchar('\n');
   };
@@ -300,7 +298,7 @@ bool transcode_latin1_to_utf32_test_base::validate(size_t saved_chars) const {
                             const std::vector<char32_t> &array) {
     printf("%s", title);
     for (size_t i = 0; i < saved_chars; i++) {
-      printf(" %02x", (unsigned int)array[i]);
+      printf(" %08x", (uint32_t)array[i]);
     }
     putchar('\n');
   };
@@ -384,7 +382,7 @@ bool transcode_utf8_to_latin1_test_base::validate(size_t saved_chars) const {
   auto dump = [saved_chars](const char *title, const std::vector<char> &array) {
     printf("%s", title);
     for (size_t i = 0; i < saved_chars; i++) {
-      printf(" %02x", (char)array[i]);
+      printf(" %02x", (uint8_t)array[i]);
     }
     putchar('\n');
   };
@@ -490,7 +488,7 @@ bool transcode_utf16_to_latin1_test_base::validate(size_t saved_chars) const {
   auto dump = [saved_chars](const char *title, const std::vector<char> &array) {
     printf("%s", title);
     for (size_t i = 0; i < saved_chars; i++) {
-      printf(" %08x", (uint32_t)array[i]);
+      printf(" %02x", (uint8_t)array[i]);
     }
     putchar('\n');
   };
@@ -943,7 +941,7 @@ bool transcode_utf32_to_latin1_test_base::validate(size_t saved_chars) const {
   auto dump = [saved_chars](const char *title, const std::vector<char> &array) {
     printf("%s", title);
     for (size_t i = 0; i < saved_chars; i++) {
-      printf(" %02x", (char)array[i]);
+      printf(" %02x", (uint8_t)array[i]);
     }
     putchar('\n');
   };
@@ -1137,7 +1135,7 @@ bool transcode_utf32_to_utf16_test_base::validate(size_t saved_chars) const {
                             const std::vector<char16_t> &array) {
     printf("%s", title);
     for (size_t i = 0; i < saved_chars; i++) {
-      printf(" %02x", (uint16_t)array[i]);
+      printf(" %04x", (uint16_t)array[i]);
     }
     putchar('\n');
   };
