@@ -91,6 +91,11 @@ simdutf_really_inline simd32<uint32_t> operator+(const simd32<uint32_t> a,
   return _mm256_add_epi32(a.value, b.value);
 }
 
+simdutf_really_inline simd32<bool> operator==(const simd32<uint32_t> a,
+                                              const simd32<uint32_t> b) {
+  return _mm256_cmpeq_epi32(a.value, b.value);
+}
+
 simdutf_really_inline simd32<bool> operator>=(const simd32<uint32_t> a,
                                               const simd32<uint32_t> b) {
   return _mm256_cmpeq_epi32(_mm256_max_epu32(a.value, b.value), a.value);
