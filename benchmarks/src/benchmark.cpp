@@ -538,19 +538,6 @@ void Benchmark::run(const std::string &procedure_name, size_t iterations) {
     exit(1);
   }
 
-#ifdef ICU_AVAILABLE
-  if (icu_show_version) {
-    std::cout << "Using ICU version " << U_ICU_VERSION << std::endl;
-    icu_show_version = false;
-  }
-#endif
-#ifdef _LIBICONV_VERSION
-  if (iconv_show_version) {
-    std::cout << "Using iconv version " << _LIBICONV_VERSION << std::endl;
-    iconv_show_version = false;
-  }
-#endif
-
   const auto &entry = item->second;
   if (std::holds_alternative<thirdparty_fn>(entry.first)) {
     const auto fn = std::get<thirdparty_fn>(entry.first);
