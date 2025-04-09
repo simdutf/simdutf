@@ -35,7 +35,7 @@ TEST_LOOP(trials, to_well_formed_utf16be_single_surrogate) {
 TEST_LOOP(trials,
           to_well_formed_utf16le_for_valid_input_surrogate_pairs_short) {
   simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
-  const auto utf16{generator.generate(8)};
+  const auto utf16{generator.generate_le(8)};
   const auto len = utf16.size();
   std::vector<char16_t> output(len);
   implementation.to_well_formed_utf16le(utf16.data(), len, output.data());
@@ -45,19 +45,16 @@ TEST_LOOP(trials,
 TEST_LOOP(trials,
           to_well_formed_utf16be_for_valid_input_surrogate_pairs_short) {
   simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
-  const auto utf16{generator.generate(8)};
+  const auto utf16{generator.generate_be(8)};
   const auto len = utf16.size();
   std::vector<char16_t> output(len);
-  std::vector<char16_t> flipped(utf16.size());
-  implementation.change_endianness_utf16(utf16.data(), utf16.size(),
-                                         flipped.data());
-  implementation.to_well_formed_utf16be(flipped.data(), len, output.data());
-  ASSERT_TRUE(output == flipped);
+  implementation.to_well_formed_utf16be(utf16.data(), len, output.data());
+  ASSERT_TRUE(output == utf16);
 }
 
 TEST_LOOP(trials, to_well_formed_utf16le_for_valid_input_surrogate_pairs_long) {
   simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
-  const auto utf16{generator.generate(512)};
+  const auto utf16{generator.generate_le(512)};
   const auto len = utf16.size();
   std::vector<char16_t> output(len);
   implementation.to_well_formed_utf16le(utf16.data(), len, output.data());
@@ -66,19 +63,16 @@ TEST_LOOP(trials, to_well_formed_utf16le_for_valid_input_surrogate_pairs_long) {
 
 TEST_LOOP(trials, to_well_formed_utf16be_for_valid_input_surrogate_pairs_long) {
   simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
-  const auto utf16{generator.generate(512)};
+  const auto utf16{generator.generate_be(512)};
   const auto len = utf16.size();
   std::vector<char16_t> output(len);
-  std::vector<char16_t> flipped(utf16.size());
-  implementation.change_endianness_utf16(utf16.data(), utf16.size(),
-                                         flipped.data());
-  implementation.to_well_formed_utf16be(flipped.data(), len, output.data());
-  ASSERT_TRUE(output == flipped);
+  implementation.to_well_formed_utf16be(utf16.data(), len, output.data());
+  ASSERT_TRUE(output == utf16);
 }
 
 TEST_LOOP(trials, to_well_formed_utf16le_for_valid_input_mixed_long) {
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 1};
-  const auto utf16{generator.generate(512)};
+  const auto utf16{generator.generate_le(512)};
   const auto len = utf16.size();
   std::vector<char16_t> output(len);
   implementation.to_well_formed_utf16le(utf16.data(), len, output.data());
@@ -87,19 +81,16 @@ TEST_LOOP(trials, to_well_formed_utf16le_for_valid_input_mixed_long) {
 
 TEST_LOOP(trials, to_well_formed_utf16be_for_valid_input_mixed_long) {
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 1};
-  const auto utf16{generator.generate(512)};
+  const auto utf16{generator.generate_be(512)};
   const auto len = utf16.size();
   std::vector<char16_t> output(len);
-  std::vector<char16_t> flipped(utf16.size());
-  implementation.change_endianness_utf16(utf16.data(), utf16.size(),
-                                         flipped.data());
-  implementation.to_well_formed_utf16be(flipped.data(), len, output.data());
-  ASSERT_TRUE(output == flipped);
+  implementation.to_well_formed_utf16be(utf16.data(), len, output.data());
+  ASSERT_TRUE(output == utf16);
 }
 
 TEST_LOOP(trials, to_well_formed_utf16le_for_valid_input_mixed_long_self) {
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 1};
-  const auto utf16{generator.generate(512)};
+  const auto utf16{generator.generate_le(512)};
   const auto len = utf16.size();
   std::vector<char16_t> output = utf16;
   implementation.to_well_formed_utf16le(output.data(), len, output.data());
@@ -108,14 +99,11 @@ TEST_LOOP(trials, to_well_formed_utf16le_for_valid_input_mixed_long_self) {
 
 TEST_LOOP(trials, to_well_formed_utf16be_for_valid_input_mixed_long_self) {
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 1};
-  const auto utf16{generator.generate(512)};
+  const auto utf16{generator.generate_be(512)};
   const auto len = utf16.size();
-  std::vector<char16_t> flipped(utf16.size());
-  implementation.change_endianness_utf16(utf16.data(), utf16.size(),
-                                         flipped.data());
-  std::vector<char16_t> output = flipped;
+  std::vector<char16_t> output = utf16;
   implementation.to_well_formed_utf16be(output.data(), len, output.data());
-  ASSERT_TRUE(output == flipped);
+  ASSERT_TRUE(output == utf16);
 }
 
 std::vector<char16_t> random_testcase(size_t n, std::mt19937 &rng) {
@@ -163,13 +151,10 @@ TEST(to_well_formed_utf16be_bad_input) {
   for (size_t i = 0; i < 1000; i++) {
     auto utf16 = random_testcase(512, gen);
     auto len = utf16.size();
-    std::vector<char16_t> flipped(utf16.size());
-    implementation.change_endianness_utf16(utf16.data(), utf16.size(),
-                                           flipped.data());
     std::vector<char16_t> output(len);
-    implementation.to_well_formed_utf16be(flipped.data(), len, output.data());
+    implementation.to_well_formed_utf16be(utf16.data(), len, output.data());
     for (size_t j = 0; j < len; j++) {
-      if (flipped[j] != output[j]) {
+      if (utf16[j] != output[j]) {
 #if SIMDUTF_IS_BIG_ENDIAN
         ASSERT_TRUE(output[j] == 0xFFFD);
 #else
@@ -206,13 +191,10 @@ TEST(to_well_formed_utf16be_bad_input_self) {
   for (size_t i = 0; i < 1000; i++) {
     auto utf16 = random_testcase(512, gen);
     auto len = utf16.size();
-    std::vector<char16_t> flipped(utf16.size());
-    implementation.change_endianness_utf16(utf16.data(), utf16.size(),
-                                           flipped.data());
-    std::vector<char16_t> output = flipped;
+    std::vector<char16_t> output = utf16;
     implementation.to_well_formed_utf16be(output.data(), len, output.data());
     for (size_t j = 0; j < len; j++) {
-      if (flipped[j] != output[j]) {
+      if (utf16[j] != output[j]) {
 #if SIMDUTF_IS_BIG_ENDIAN
         ASSERT_TRUE(output[j] == 0xFFFD);
 #else
