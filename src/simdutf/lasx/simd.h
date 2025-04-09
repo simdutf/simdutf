@@ -574,6 +574,17 @@ template <> struct simd8<uint8_t> : base8_numeric<uint8_t> {
   template <int N> simdutf_really_inline simd8<uint8_t> shl() const {
     return __lasx_xvslli_b(this->value, N);
   }
+
+  simdutf_really_inline uint64_t sum_bytes() const {
+    const auto sum_u16 = __lasx_xvhaddw_hu_bu(value, value);
+    const auto sum_u32 = __lasx_xvhaddw_wu_hu(sum_u16, sum_u16);
+    const auto sum_u64 = __lasx_xvhaddw_du_wu(sum_u32, sum_u32);
+
+    return uint64_t(__lasx_xvpickve2gr_du(sum_u64, 0)) +
+           uint64_t(__lasx_xvpickve2gr_du(sum_u64, 1)) +
+           uint64_t(__lasx_xvpickve2gr_du(sum_u64, 2)) +
+           uint64_t(__lasx_xvpickve2gr_du(sum_u64, 3));
+  }
 };
 simdutf_really_inline simd8<int8_t>::operator simd8<uint8_t>() const {
   return this->value;
@@ -700,6 +711,7 @@ template <typename T> struct simd8x64 {
 
 #include "simdutf/lasx/simd16-inl.h"
 #include "simdutf/lasx/simd32-inl.h"
+#include "simdutf/lasx/simd64-inl.h"
 
 } // namespace simd
 } // unnamed namespace

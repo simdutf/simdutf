@@ -67,7 +67,7 @@ simdutf_really_inline size_t count_code_points_bytemask(const char *in,
 
   return count + scalar::utf8::count_code_points(in + pos, size - pos);
 }
-#endif
+#endif // SIMDUTF_SIMD_HAS_BYTEMASK
 
 simdutf_really_inline size_t utf16_length_from_utf8(const char *in,
                                                     size_t size) {
@@ -85,6 +85,7 @@ simdutf_really_inline size_t utf16_length_from_utf8(const char *in,
   }
   return count + scalar::utf8::utf16_length_from_utf8(in + pos, size - pos);
 }
+
 } // namespace utf8
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION

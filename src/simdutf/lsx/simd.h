@@ -259,11 +259,22 @@ template <> struct simd8<uint8_t> : base_u8<uint8_t> {
     __m128i original_tmp = __lsx_vand_v(original, __lsx_vldi(0x1f));
     return __lsx_vshuf_b(__lsx_vldi(0), *this, simd8<uint8_t>(original_tmp));
   }
+
+  simdutf_really_inline uint64_t sum_bytes() const {
+    const auto sum_u16 = __lsx_vhaddw_hu_bu(value, value);
+    const auto sum_u32 = __lsx_vhaddw_wu_hu(sum_u16, sum_u16);
+    const auto sum_u64 = __lsx_vhaddw_du_wu(sum_u32, sum_u32);
+
+    return uint64_t(__lsx_vpickve2gr_du(sum_u64, 0)) +
+           uint64_t(__lsx_vpickve2gr_du(sum_u64, 1));
+  }
 };
 
 // Signed bytes
 template <> struct simd8<int8_t> {
   __m128i value;
+
+  static const int SIZE = sizeof(value);
 
   static simdutf_really_inline simd8<int8_t> splat(int8_t _value) {
     return __lsx_vreplgr2vr_b(_value);
@@ -594,6 +605,7 @@ template <typename T> struct simd8x64 {
 
 #include "simdutf/lsx/simd16-inl.h"
 #include "simdutf/lsx/simd32-inl.h"
+#include "simdutf/lsx/simd64-inl.h"
 
 } // namespace simd
 } // unnamed namespace
