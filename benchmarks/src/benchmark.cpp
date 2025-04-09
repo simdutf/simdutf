@@ -113,7 +113,9 @@ void Benchmark::register_function(std::string name, Fn function,
 
 Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
     : BenchmarkBase(std::move(testcases)) {
-
+  register_function("run_to_well_formed_utf16",
+                    &Benchmark::run_to_well_formed_utf16,
+                    simdutf::encoding_type::UTF16_LE);
   register_function("validate_utf8", &Benchmark::run_validate_utf8,
                     simdutf::encoding_type::UTF8);
   register_function("validate_utf8_with_errors",
@@ -853,6 +855,20 @@ void Benchmark::run_utf8_length_from_utf32(
   count_events(proc, iterations); // warming up!
   const auto result = count_events(proc, iterations);
   print_summary(result, size, size);
+}
+
+void Benchmark::run_to_well_formed_utf16(
+  const simdutf::implementation &implementation, size_t iterations) {
+    const char16_t *data = reinterpret_cast<const char16_t *>(input_data.data());
+    const size_t size = input_data.size()/2;
+    std::unique_ptr<char16_t[]> output_buffer{new char16_t[size]};
+    auto proc = [&implementation, data, size, &output_buffer]() {
+      implementation.to_well_formed_utf16le(data, size, output_buffer.get());
+    };
+    count_events(proc, iterations); // warming up!
+    const auto result = count_events(proc, iterations);
+    size_t char_count = get_active_implementation()->count_utf16le(data, size);
+    print_summary(result, size, char_count);
 }
 
 void Benchmark::run_utf16_length_from_utf8(
