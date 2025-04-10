@@ -28,6 +28,9 @@ using namespace simd;
 #endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_UTF16 ||
        // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_LATIN1)
 
+#if SIMDUTF_FEATURE_UTF16
+  #include "icelake/icelake_utf16fix.cpp"
+#endif // SIMDUTF_FEATURE_UTF16
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
   #include "icelake/icelake_convert_utf8_to_latin1.inl.cpp"
   #include "icelake/icelake_convert_valid_utf8_to_latin1.inl.cpp"

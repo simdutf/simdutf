@@ -34,6 +34,9 @@ namespace utf16 {
 }
 #endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
+#if SIMDUTF_FEATURE_UTF16
+  #include "haswell/avx2_utf16fix.cpp"
+#endif // SIMDUTF_FEATURE_UTF16
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
   #include "haswell/avx2_convert_latin1_to_utf8.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
