@@ -135,11 +135,7 @@ TEST(to_well_formed_utf16le_bad_input) {
     implementation.to_well_formed_utf16le(utf16.data(), len, output.data());
     for (size_t j = 0; j < len; j++) {
       if (utf16[j] != output[j]) {
-#if SIMDUTF_IS_BIG_ENDIAN
-        ASSERT_TRUE(output[j] == 0xFDFF);
-#else
         ASSERT_TRUE(output[j] == 0xFFFD);
-#endif
       }
     }
     ASSERT_TRUE(implementation.validate_utf16le(output.data(), len));
@@ -155,11 +151,7 @@ TEST(to_well_formed_utf16be_bad_input) {
     implementation.to_well_formed_utf16be(utf16.data(), len, output.data());
     for (size_t j = 0; j < len; j++) {
       if (utf16[j] != output[j]) {
-#if SIMDUTF_IS_BIG_ENDIAN
-        ASSERT_TRUE(output[j] == 0xFFFD);
-#else
         ASSERT_TRUE(output[j] == 0xFDFF);
-#endif
       }
     }
     ASSERT_TRUE(implementation.validate_utf16be(output.data(), len));
@@ -175,11 +167,7 @@ TEST(to_well_formed_utf16le_bad_input_self) {
     implementation.to_well_formed_utf16le(output.data(), len, output.data());
     for (size_t j = 0; j < len; j++) {
       if (utf16[j] != output[j]) {
-#if SIMDUTF_IS_BIG_ENDIAN
-        ASSERT_TRUE(output[j] == 0xFDFF);
-#else
         ASSERT_TRUE(output[j] == 0xFFFD);
-#endif
       }
     }
     ASSERT_TRUE(implementation.validate_utf16le(output.data(), len));
@@ -195,11 +183,7 @@ TEST(to_well_formed_utf16be_bad_input_self) {
     implementation.to_well_formed_utf16be(output.data(), len, output.data());
     for (size_t j = 0; j < len; j++) {
       if (utf16[j] != output[j]) {
-#if SIMDUTF_IS_BIG_ENDIAN
-        ASSERT_TRUE(output[j] == 0xFFFD);
-#else
         ASSERT_TRUE(output[j] == 0xFDFF);
-#endif
       }
     }
     ASSERT_TRUE(implementation.validate_utf16be(output.data(), len));
