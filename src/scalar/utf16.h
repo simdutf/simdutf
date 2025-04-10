@@ -123,24 +123,26 @@ simdutf_warn_unused inline size_t trim_partial_utf16(const char16_t *input,
   return length;
 }
 
+template <endianness big_endian> bool is_high_surrogate(char16_t c) {
+  c = !match_system(big_endian) ? u16_swap_bytes(c) : c;
+  return (0xd800 <= c && c <= 0xdbff);
+};
+
+template <endianness big_endian> bool is_low_surrogate(char16_t c) {
+  c = !match_system(big_endian) ? u16_swap_bytes(c) : c;
+  return (0xdc00 <= c && c <= 0xdfff);
+};
+
 template <endianness big_endian>
 void to_well_formed_utf16(const char16_t *input, size_t len, char16_t *output) {
-  auto is_high_surrogate = [](char16_t c) -> bool {
-    return (0xd800 <= c && c <= 0xdbff);
-  };
-
-  auto is_low_surrogate = [](char16_t c) -> bool {
-    return (0xdc00 <= c && c <= 0xdfff);
-  };
   const char16_t replacement =
       !match_system(big_endian) ? u16_swap_bytes(0xfffd) : 0xfffd;
   bool high_surrogate_prev = false, high_surrogate, low_surrogate;
   size_t i = 0;
   for (; i < len; i++) {
     char16_t c = input[i];
-    c = !match_system(big_endian) ? u16_swap_bytes(c) : c;
-    high_surrogate = is_high_surrogate(c);
-    low_surrogate = is_low_surrogate(c);
+    high_surrogate = is_high_surrogate<big_endian>(c);
+    low_surrogate = is_low_surrogate<big_endian>(c);
 
     if (high_surrogate_prev && !low_surrogate) {
       output[i - 1] = replacement;

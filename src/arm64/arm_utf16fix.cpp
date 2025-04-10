@@ -158,11 +158,8 @@ void utf16fix_neon_64bits(const char16_t *in, size_t n, char16_t *out) {
   if (n < 17) {
     return scalar::utf16::to_well_formed_utf16<big_endian>(in, n, out);
   }
-  auto is_low_surrogate = [](char16_t c) -> bool {
-    c = !match_system(big_endian) ? scalar::u16_swap_bytes(c) : c;
-    return (0xdc00 <= c && c <= 0xdfff);
-  };
-  out[0] = is_low_surrogate(in[0]) ? replacement : in[0];
+  out[0] =
+      scalar::utf16::is_low_surrogate<big_endian>(in[0]) ? replacement : in[0];
   i = 1;
 
   /* duplicate code to have the compiler specialise utf16fix_block() */
@@ -187,9 +184,7 @@ void utf16fix_neon_64bits(const char16_t *in, size_t n, char16_t *out) {
 
     utf16fix_block<big_endian>(out + n - 16, in + n - 16, false);
   }
-  auto is_high_surrogate = [](char16_t c) -> bool {
-    c = !match_system(big_endian) ? scalar::u16_swap_bytes(c) : c;
-    return (0xd800 <= c && c <= 0xdbff);
-  };
-  out[n - 1] = is_high_surrogate(out[n - 1]) ? replacement : out[n - 1];
+  out[n - 1] = scalar::utf16::is_high_surrogate<big_endian>(out[n - 1])
+                   ? replacement
+                   : out[n - 1];
 }
