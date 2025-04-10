@@ -9,6 +9,8 @@
  */
 template <endianness big_endian>
 static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
+  const char16_t replacement =
+      !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
   __m256i lookback, block, lb_masked, block_masked, lb_is_high, block_is_low;
   __m256i illseq, lb_illseq, block_illseq, lb_illseq_shifted;
 
@@ -35,11 +37,12 @@ static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
 
     /* fix illegal sequencing in the lookback */
     lb = _mm256_cvtsi256_si32(lb_illseq);
-    lb = lb & 0xfffd | ~lb & out[-1];
+    lb = lb & replacement | ~lb & out[-1];
     out[-1] = lb & 0xffff;
 
     /* fix illegal sequencing in the main block */
-    block = _mm256_blendv_epi8(block, _mm256_set1_epi16(0xfffd), block_illseq);
+    block =
+        _mm256_blendv_epi8(block, _mm256_set1_epi16(replacement), block_illseq);
     _mm256_storeu_si256((__m256i *)out, block);
   } else if (!in_place) {
     _mm256_storeu_si256((__m256i *)out, block);
@@ -48,6 +51,8 @@ static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
 
 template <endianness big_endian>
 void utf16fix_sse(char16_t *out, const char16_t *in, size_t n) {
+  const char16_t replacement =
+      !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
   size_t i;
 
   if (n < 9) {
@@ -55,7 +60,8 @@ void utf16fix_sse(char16_t *out, const char16_t *in, size_t n) {
     return;
   }
 
-  out[0] = scalar::utf16::is_low_surrogate<big_endian>(in[0]) ? 0xfffd : in[0];
+  out[0] =
+      scalar::utf16::is_low_surrogate<big_endian>(in[0]) ? replacement : in[0];
 
   /* duplicate code to have the compiler specialise utf16fix_block() */
   if (in == out) {
@@ -73,12 +79,14 @@ void utf16fix_sse(char16_t *out, const char16_t *in, size_t n) {
   }
 
   out[n - 1] = scalar::utf16::is_high_surrogate<big_endian>(out[n - 1])
-                   ? 0xfffd
+                   ? replacement
                    : out[n - 1];
 }
 
 template <endianness big_endian>
 void utf16fix_avx(char16_t *out, const char16_t *in, size_t n) {
+  const char16_t replacement =
+      !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
   size_t i;
 
   if (n < 17) {
@@ -86,7 +94,8 @@ void utf16fix_avx(char16_t *out, const char16_t *in, size_t n) {
     return;
   }
 
-  out[0] = scalar::utf16::is_low_surrogate<big_endian>(in[0]) ? 0xfffd : in[0];
+  out[0] =
+      scalar::utf16::is_low_surrogate<big_endian>(in[0]) ? replacement : in[0];
 
   /* duplicate code to have the compiler specialise utf16fix_block() */
   if (in == out) {
@@ -104,6 +113,6 @@ void utf16fix_avx(char16_t *out, const char16_t *in, size_t n) {
   }
 
   out[n - 1] = scalar::utf16::is_high_surrogate<big_endian>(out[n - 1])
-                   ? 0xfffd
+                   ? replacement
                    : out[n - 1];
 }

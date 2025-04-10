@@ -8,6 +8,8 @@
  */
 template <endianness big_endian>
 static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
+  const char16_t replacement =
+      !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
   __m128i lookback, block, lb_masked, block_masked, lb_is_high, block_is_low;
   __m128i illseq, lb_illseq, block_illseq;
 
@@ -30,12 +32,13 @@ static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
 
     /* fix illegal sequencing in the lookback */
     lb = _mm_cvtsi128_si32(lb_illseq);
-    lb = lb & 0xfffd | ~lb & out[-1];
+    lb = lb & replacement | ~lb & out[-1];
     out[-1] = lb & 0xffff;
 
     /* fix illegal sequencing in the main block */
-    block = _mm_or_si128(_mm_andnot_si128(block_illseq, block),
-                         _mm_and_si128(block_illseq, _mm_set1_epi16(0xfffd)));
+    block =
+        _mm_or_si128(_mm_andnot_si128(block_illseq, block),
+                     _mm_and_si128(block_illseq, _mm_set1_epi16(replacement)));
 
     _mm_storeu_si128((__m128i *)out, block);
   } else if (!in_place) {
@@ -45,6 +48,8 @@ static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
 
 template <endianness big_endian>
 void utf16fix_sse(char16_t *out, const char16_t *in, size_t n) {
+  const char16_t replacement =
+      !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
   size_t i;
 
   if (n < 9) {
@@ -52,7 +57,8 @@ void utf16fix_sse(char16_t *out, const char16_t *in, size_t n) {
     return;
   }
 
-  out[0] = scalar::utf16::is_low_surrogate<big_endian>(in[0]) ? 0xfffd : in[0];
+  out[0] =
+      scalar::utf16::is_low_surrogate<big_endian>(in[0]) ? replacement : in[0];
 
   /* duplicate code to have the compiler specialise utf16fix_block() */
   if (in == out) {
@@ -70,6 +76,6 @@ void utf16fix_sse(char16_t *out, const char16_t *in, size_t n) {
   }
 
   out[n - 1] = scalar::utf16::is_high_surrogate<big_endian>(out[n - 1])
-                   ? 0xfffd
+                   ? replacement
                    : out[n - 1];
 }

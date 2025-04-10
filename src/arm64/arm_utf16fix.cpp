@@ -23,7 +23,6 @@ static inline int veq_non_zero(uint8x16_t v) {
 template <endianness big_endian>
 static inline void utf16fix_block(char16_t *out, const char16_t *in,
                                   bool inplace) {
-
   const char16_t replacement =
       !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
   uint8x16x2_t lb, block;

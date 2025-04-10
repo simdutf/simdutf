@@ -7,7 +7,10 @@
  * character before the beginning of the buffer as a lookback.
  * If that character is illsequenced, it too is overwritten.
  */
+template <endianness big_endian>
 static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
+  const char16_t replacement =
+      !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
   __m512i lookback, block, lb_masked, block_masked;
   __mmask32 lb_is_high, block_is_low, illseq;
 
@@ -30,15 +33,17 @@ static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
 
     /* fix illegal sequencing in the lookback */
     lb_illseq = _kand_mask32(lb_illseq, _cvtu32_mask32(1));
-    _mm512_mask_storeu_epi16(out - 1, lb_illseq, _mm512_set1_epi16(0xfffdU));
+    _mm512_mask_storeu_epi16(out - 1, lb_illseq,
+                             _mm512_set1_epi16(replacement));
 
     /* fix illegal sequencing in the main block */
     if (in_place)
-      _mm512_mask_storeu_epi16(out, block_illseq, _mm512_set1_epi16(0xfffdU));
+      _mm512_mask_storeu_epi16(out, block_illseq,
+                               _mm512_set1_epi16(replacement));
     else
-      _mm512_storeu_epi32(out,
-                          _mm512_mask_blend_epi16(block_illseq, block,
-                                                  _mm512_set1_epi16(0xfffdU)));
+      _mm512_storeu_epi32(
+          out, _mm512_mask_blend_epi16(block_illseq, block,
+                                       _mm512_set1_epi16(replacement)));
   } else if (!in_place) {
     _mm512_storeu_si512((__m512i *)out, block);
   }
@@ -50,6 +55,8 @@ static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
  */
 template <endianness big_endian>
 void utf16fix_runt(char16_t *out, const char16_t *in, size_t n) {
+  const char16_t replacement =
+      !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
   __m512i lookback, block, lb_masked, block_masked;
   __mmask32 lb_is_high, block_is_low, illseq;
   unsigned long long mask;
@@ -77,15 +84,18 @@ void utf16fix_runt(char16_t *out, const char16_t *in, size_t n) {
     _mm512_mask_storeu_epi16(
         (uint16_t *)out, _cvtmask32_u32(mask),
         _mm512_mask_blend_epi16(block_illseq, block,
-                                _mm512_set1_epi16(0xfffd)));
+                                _mm512_set1_epi16(replacement)));
   } else {
     _mm512_mask_storeu_epi16((uint16_t *)out, _cvtmask32_u32(mask), block);
   }
-  out[n - 1] = is_high_surrogate<big_endian>(out[n - 1]) ? 0xfffd : out[n - 1];
+  out[n - 1] =
+      is_high_surrogate<big_endian>(out[n - 1]) ? replacement : out[n - 1];
 }
 
 template <endianness big_endian>
 void utf16fix_avx512(char16_t *out, const char16_t *in, size_t n) {
+  const char16_t replacement =
+      !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
   size_t i;
 
   if (n == 0)
@@ -94,22 +104,23 @@ void utf16fix_avx512(char16_t *out, const char16_t *in, size_t n) {
     utf16fix_runt<big_endian>(out, in, n);
     return;
   }
-  out[0] = is_low_surrogate<big_endian>(in[0]) ? 0xfffd : in[0];
+  out[0] = is_low_surrogate<big_endian>(in[0]) ? replacement : in[0];
 
   /* duplicate code to have the compiler specialise utf16fix_block() */
   if (in == out) {
     for (i = 1; i + 32 < n; i += 32) {
-      utf16fix_block(out + i, in + i, true);
+      utf16fix_block<big_endian>(out + i, in + i, true);
     }
 
-    utf16fix_block(out + n - 32, in + n - 32, true);
+    utf16fix_block<big_endian>(out + n - 32, in + n - 32, true);
   } else {
     for (i = 1; i + 32 < n; i += 32) {
-      utf16fix_block(out + i, in + i, false);
+      utf16fix_block<big_endian>(out + i, in + i, false);
     }
 
-    utf16fix_block(out + n - 32, in + n - 32, false);
+    utf16fix_block<big_endian>(out + n - 32, in + n - 32, false);
   }
 
-  out[n - 1] = is_high_surrogate<big_endian>(out[n - 1]) ? 0xfffd : out[n - 1];
+  out[n - 1] =
+      is_high_surrogate<big_endian>(out[n - 1]) ? replacement : out[n - 1];
 }
