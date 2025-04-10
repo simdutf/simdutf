@@ -3,7 +3,6 @@
 
 #include "simdutf.h"
 #include "simdutf/lsx/bitmanipulation.h"
-#include <type_traits>
 
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
@@ -24,12 +23,6 @@ template <typename T, typename Mask = simd8<bool>> struct base_u8 {
   simdutf_really_inline base_u8(const __m128i _value) : value(_value) {}
   simdutf_really_inline operator const __m128i &() const { return this->value; }
   simdutf_really_inline operator __m128i &() { return this->value; }
-  simdutf_really_inline T first() const {
-    return __lsx_vpickve2gr_bu(this->value, 0);
-  }
-  simdutf_really_inline T last() const {
-    return __lsx_vpickve2gr_bu(this->value, 15);
-  }
 
   // Bit operations
   simdutf_really_inline simd8<T> operator|(const simd8<T> other) const {
@@ -41,23 +34,10 @@ template <typename T, typename Mask = simd8<bool>> struct base_u8 {
   simdutf_really_inline simd8<T> operator^(const simd8<T> other) const {
     return __lsx_vxor_v(this->value, other);
   }
-  simdutf_really_inline simd8<T> bit_andnot(const simd8<T> other) const {
-    return __lsx_vandn_v(this->value, other);
-  }
   simdutf_really_inline simd8<T> operator~() const { return *this ^ 0xFFu; }
   simdutf_really_inline simd8<T> &operator|=(const simd8<T> other) {
     auto this_cast = static_cast<simd8<T> *>(this);
     *this_cast = *this_cast | other;
-    return *this_cast;
-  }
-  simdutf_really_inline simd8<T> &operator&=(const simd8<T> other) {
-    auto this_cast = static_cast<simd8<T> *>(this);
-    *this_cast = *this_cast & other;
-    return *this_cast;
-  }
-  simdutf_really_inline simd8<T> &operator^=(const simd8<T> other) {
-    auto this_cast = static_cast<simd8<T> *>(this);
-    *this_cast = *this_cast ^ other;
     return *this_cast;
   }
 
@@ -94,16 +74,6 @@ template <> struct simd8<bool> : base_u8<bool> {
   simdutf_really_inline uint32_t to_bitmask() const {
     return __lsx_vpickve2gr_wu(__lsx_vmsknz_b(*this), 0);
   }
-
-  simdutf_really_inline bool any() const {
-    return __lsx_vpickve2gr_hu(__lsx_vmsknz_b(*this), 0) != 0;
-  }
-  simdutf_really_inline bool none() const {
-    return __lsx_vpickve2gr_hu(__lsx_vmsknz_b(*this), 0) == 0;
-  }
-  simdutf_really_inline bool all() const {
-    return __lsx_vpickve2gr_hu(__lsx_vmsknz_b(*this), 0) == 0xFFFF;
-  }
 };
 
 // Unsigned bytes
@@ -124,7 +94,6 @@ template <> struct simd8<uint8_t> : base_u8<uint8_t> {
   // Splat constructor
   simdutf_really_inline simd8(uint8_t _value) : simd8(splat(_value)) {}
   // Member-by-member initialization
-
   simdutf_really_inline
   simd8(uint8_t v0, uint8_t v1, uint8_t v2, uint8_t v3, uint8_t v4, uint8_t v5,
         uint8_t v6, uint8_t v7, uint8_t v8, uint8_t v9, uint8_t v10,
@@ -147,70 +116,24 @@ template <> struct simd8<uint8_t> : base_u8<uint8_t> {
     return __lsx_vst(this->value, dst, 0);
   }
 
-  // Saturated math
-  simdutf_really_inline simd8<uint8_t>
-  saturating_add(const simd8<uint8_t> other) const {
-    return __lsx_vsadd_bu(this->value, other);
-  }
-  simdutf_really_inline simd8<uint8_t>
-  saturating_sub(const simd8<uint8_t> other) const {
-    return __lsx_vssub_bu(this->value, other);
-  }
-
-  // Addition/subtraction are the same for signed and unsigned
-  simdutf_really_inline simd8<uint8_t>
-  operator+(const simd8<uint8_t> other) const {
-    return __lsx_vadd_b(this->value, other);
-  }
-  simdutf_really_inline simd8<uint8_t>
-  operator-(const simd8<uint8_t> other) const {
-    return __lsx_vsub_b(this->value, other);
-  }
-  simdutf_really_inline simd8<uint8_t> &operator+=(const simd8<uint8_t> other) {
-    *this = *this + other;
-    return *this;
-  }
-  simdutf_really_inline simd8<uint8_t> &operator-=(const simd8<uint8_t> other) {
-    *this = *this - other;
-    return *this;
-  }
-
   // Order-specific operations
-  simdutf_really_inline simd8<uint8_t>
-  max_val(const simd8<uint8_t> other) const {
-    return __lsx_vmax_bu(*this, other);
-  }
-  simdutf_really_inline simd8<uint8_t>
-  min_val(const simd8<uint8_t> other) const {
-    return __lsx_vmin_bu(*this, other);
-  }
-  simdutf_really_inline simd8<bool>
-  operator<=(const simd8<uint8_t> other) const {
-    return __lsx_vsle_bu(*this, other);
-  }
   simdutf_really_inline simd8<bool>
   operator>=(const simd8<uint8_t> other) const {
     return __lsx_vsle_bu(other, *this);
   }
   simdutf_really_inline simd8<bool>
-  operator<(const simd8<uint8_t> other) const {
-    return __lsx_vslt_bu(*this, other);
-  }
-  simdutf_really_inline simd8<bool>
   operator>(const simd8<uint8_t> other) const {
     return __lsx_vslt_bu(other, *this);
+  }
+  simdutf_really_inline simd8 &operator-=(const simd8<uint8_t> other) {
+    value = __lsx_vsub_b(value, other.value);
+    return *this;
   }
   // Same as >, but instead of guaranteeing all 1's == true, false = 0 and true
   // = nonzero. For ARM, returns all 1's.
   simdutf_really_inline simd8<uint8_t>
   gt_bits(const simd8<uint8_t> other) const {
     return simd8<uint8_t>(*this > other);
-  }
-  // Same as <, but instead of guaranteeing all 1's == true, false = 0 and true
-  // = nonzero. For ARM, returns all 1's.
-  simdutf_really_inline simd8<uint8_t>
-  lt_bits(const simd8<uint8_t> other) const {
-    return simd8<uint8_t>(*this < other);
   }
 
   // Bit-specific operations
@@ -223,9 +146,6 @@ template <> struct simd8<uint8_t> : base_u8<uint8_t> {
 
   simdutf_really_inline bool any_bits_set_anywhere() const {
     return __lsx_vpickve2gr_hu(__lsx_vmsknz_b(this->value), 0) > 0;
-  }
-  simdutf_really_inline bool any_bits_set_anywhere(simd8<uint8_t> bits) const {
-    return (*this & bits).any_bits_set_anywhere();
   }
   template <int N> simdutf_really_inline simd8<uint8_t> shr() const {
     return __lsx_vsrli_b(this->value, N);
@@ -340,11 +260,6 @@ template <> struct simd8<int8_t> {
   }
   // Conversion from/to SIMD register
   simdutf_really_inline simd8(const __m128i _value) : value(_value) {}
-  simdutf_really_inline operator const __m128i &() const { return this->value; }
-
-  simdutf_really_inline operator const __m128i() const { return this->value; }
-
-  simdutf_really_inline operator __m128i &() { return this->value; }
 
   // Zero constructor
   simdutf_really_inline simd8() : simd8(zero()) {}
@@ -352,23 +267,6 @@ template <> struct simd8<int8_t> {
   simdutf_really_inline simd8(int8_t _value) : simd8(splat(_value)) {}
   // Array constructor
   simdutf_really_inline simd8(const int8_t *values) : simd8(load(values)) {}
-  // Member-by-member initialization
-
-  simdutf_really_inline simd8(int8_t v0, int8_t v1, int8_t v2, int8_t v3,
-                              int8_t v4, int8_t v5, int8_t v6, int8_t v7,
-                              int8_t v8, int8_t v9, int8_t v10, int8_t v11,
-                              int8_t v12, int8_t v13, int8_t v14, int8_t v15)
-      : simd8((__m128i)v16i8{v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11,
-                             v12, v13, v14, v15}) {}
-
-  // Repeat 16 values as many times as necessary (usually for lookup tables)
-  simdutf_really_inline static simd8<int8_t>
-  repeat_16(int8_t v0, int8_t v1, int8_t v2, int8_t v3, int8_t v4, int8_t v5,
-            int8_t v6, int8_t v7, int8_t v8, int8_t v9, int8_t v10, int8_t v11,
-            int8_t v12, int8_t v13, int8_t v14, int8_t v15) {
-    return simd8<int8_t>(v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12,
-                         v13, v14, v15);
-  }
 
   // Store to array
   simdutf_really_inline void store(int8_t dst[16]) const {
@@ -383,36 +281,6 @@ template <> struct simd8<int8_t> {
   operator|(const simd8<int8_t> other) const {
     return __lsx_vor_v((__m128i)value, (__m128i)other.value);
   }
-  simdutf_really_inline simd8<int8_t>
-  operator&(const simd8<int8_t> other) const {
-    return __lsx_vand_v((__m128i)value, (__m128i)other.value);
-  }
-  simdutf_really_inline simd8<int8_t>
-  operator^(const simd8<int8_t> other) const {
-    return __lsx_vxor_v((__m128i)value, (__m128i)other.value);
-  }
-  simdutf_really_inline simd8<int8_t>
-  bit_andnot(const simd8<int8_t> other) const {
-    return __lsx_vandn_v((__m128i)other.value, (__m128i)value);
-  }
-
-  // Math
-  simdutf_really_inline simd8<int8_t>
-  operator+(const simd8<int8_t> other) const {
-    return __lsx_vadd_b((__m128i)value, (__m128i)other.value);
-  }
-  simdutf_really_inline simd8<int8_t>
-  operator-(const simd8<int8_t> other) const {
-    return __lsx_vsub_b((__m128i)value, (__m128i)other.value);
-  }
-  simdutf_really_inline simd8<int8_t> &operator+=(const simd8<int8_t> other) {
-    *this = *this + other;
-    return *this;
-  }
-  simdutf_really_inline simd8<int8_t> &operator-=(const simd8<int8_t> other) {
-    *this = *this - other;
-    return *this;
-  }
 
   simdutf_really_inline bool is_ascii() const {
     return (__lsx_vpickve2gr_hu(__lsx_vmskgez_b((__m128i)this->value), 0) ==
@@ -420,21 +288,11 @@ template <> struct simd8<int8_t> {
   }
 
   // Order-sensitive comparisons
-  simdutf_really_inline simd8<int8_t> max_val(const simd8<int8_t> other) const {
-    return __lsx_vmax_b((__m128i)value, (__m128i)other.value);
-  }
-  simdutf_really_inline simd8<int8_t> min_val(const simd8<int8_t> other) const {
-    return __lsx_vmin_b((__m128i)value, (__m128i)other.value);
-  }
   simdutf_really_inline simd8<bool> operator>(const simd8<int8_t> other) const {
     return __lsx_vslt_b((__m128i)other.value, (__m128i)value);
   }
   simdutf_really_inline simd8<bool> operator<(const simd8<int8_t> other) const {
     return __lsx_vslt_b((__m128i)value, (__m128i)other.value);
-  }
-  simdutf_really_inline simd8<bool>
-  operator==(const simd8<int8_t> other) const {
-    return __lsx_vseq_b((__m128i)value, (__m128i)other.value);
   }
 
   template <int N = 1>
@@ -442,23 +300,6 @@ template <> struct simd8<int8_t> {
   prev(const simd8<int8_t> prev_chunk) const {
     return __lsx_vor_v(__lsx_vbsll_v(this->value, N),
                        __lsx_vbsrl_v(prev_chunk.value, 16 - N));
-  }
-
-  // Perform a lookup assuming no value is larger than 16
-  template <typename L>
-  simdutf_really_inline simd8<L> lookup_16(simd8<L> lookup_table) const {
-    return lookup_table.apply_lookup_16_to(*this);
-  }
-  template <typename L>
-  simdutf_really_inline simd8<L>
-  lookup_16(L replace0, L replace1, L replace2, L replace3, L replace4,
-            L replace5, L replace6, L replace7, L replace8, L replace9,
-            L replace10, L replace11, L replace12, L replace13, L replace14,
-            L replace15) const {
-    return lookup_16(simd8<L>::repeat_16(
-        replace0, replace1, replace2, replace3, replace4, replace5, replace6,
-        replace7, replace8, replace9, replace10, replace11, replace12,
-        replace13, replace14, replace15));
   }
 
   template <typename T>
@@ -540,41 +381,6 @@ template <typename T> struct simd8x64 {
     return __lsx_vpickve2gr_du(mask, 0);
   }
 
-  simdutf_really_inline uint64_t eq(const T m) const {
-    const simd8<T> mask = simd8<T>::splat(m);
-    return simd8x64<bool>(this->chunks[0] == mask, this->chunks[1] == mask,
-                          this->chunks[2] == mask, this->chunks[3] == mask)
-        .to_bitmask();
-  }
-
-  simdutf_really_inline uint64_t lteq(const T m) const {
-    const simd8<T> mask = simd8<T>::splat(m);
-    return simd8x64<bool>(this->chunks[0] <= mask, this->chunks[1] <= mask,
-                          this->chunks[2] <= mask, this->chunks[3] <= mask)
-        .to_bitmask();
-  }
-
-  simdutf_really_inline uint64_t in_range(const T low, const T high) const {
-    const simd8<T> mask_low = simd8<T>::splat(low);
-    const simd8<T> mask_high = simd8<T>::splat(high);
-
-    return simd8x64<bool>(
-               (this->chunks[0] <= mask_high) & (this->chunks[0] >= mask_low),
-               (this->chunks[1] <= mask_high) & (this->chunks[1] >= mask_low),
-               (this->chunks[2] <= mask_high) & (this->chunks[2] >= mask_low),
-               (this->chunks[3] <= mask_high) & (this->chunks[3] >= mask_low))
-        .to_bitmask();
-  }
-  simdutf_really_inline uint64_t not_in_range(const T low, const T high) const {
-    const simd8<T> mask_low = simd8<T>::splat(low);
-    const simd8<T> mask_high = simd8<T>::splat(high);
-    return simd8x64<bool>(
-               (this->chunks[0] > mask_high) | (this->chunks[0] < mask_low),
-               (this->chunks[1] > mask_high) | (this->chunks[1] < mask_low),
-               (this->chunks[2] > mask_high) | (this->chunks[2] < mask_low),
-               (this->chunks[3] > mask_high) | (this->chunks[3] < mask_low))
-        .to_bitmask();
-  }
   simdutf_really_inline uint64_t lt(const T m) const {
     const simd8<T> mask = simd8<T>::splat(m);
     return simd8x64<bool>(this->chunks[0] < mask, this->chunks[1] < mask,
@@ -585,12 +391,6 @@ template <typename T> struct simd8x64 {
     const simd8<T> mask = simd8<T>::splat(m);
     return simd8x64<bool>(this->chunks[0] > mask, this->chunks[1] > mask,
                           this->chunks[2] > mask, this->chunks[3] > mask)
-        .to_bitmask();
-  }
-  simdutf_really_inline uint64_t gteq(const T m) const {
-    const simd8<T> mask = simd8<T>::splat(m);
-    return simd8x64<bool>(this->chunks[0] >= mask, this->chunks[1] >= mask,
-                          this->chunks[2] >= mask, this->chunks[3] >= mask)
         .to_bitmask();
   }
   simdutf_really_inline uint64_t gteq_unsigned(const uint8_t m) const {
