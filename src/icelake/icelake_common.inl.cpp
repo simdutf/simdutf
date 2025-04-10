@@ -29,3 +29,9 @@ __m512i shuffle_epi128(__m512i v) {
 template <unsigned idx> constexpr __m512i broadcast_epi128(__m512i v) {
   return shuffle_epi128<idx, idx, idx, idx>(v);
 }
+
+simdutf_really_inline __m512i broadcast_128bit_lane(__m128i lane) {
+  const __m512i tmp = _mm512_castsi128_si512(lane);
+
+  return broadcast_epi128<0>(tmp);
+}

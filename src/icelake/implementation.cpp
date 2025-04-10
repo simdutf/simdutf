@@ -1482,19 +1482,75 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(
 simdutf_warn_unused size_t implementation::utf16_length_from_utf8(
     const char *input, size_t length) const noexcept {
   size_t pos = 0;
-  size_t count = 0;
-  // This algorithm could no doubt be improved!
+
+  // UTF-16 char length based on the four most significant bits of UTF-8 bytes
+  const __m128i utf8_length_128 = _mm_setr_epi8(
+      // ASCII chars
+      /* 0000 */ 1,
+      /* 0001 */ 1,
+      /* 0010 */ 1,
+      /* 0011 */ 1,
+      /* 0100 */ 1,
+      /* 0101 */ 1,
+      /* 0110 */ 1,
+      /* 0111 */ 1,
+
+      // continutation bytes
+      /* 1000 */ 0,
+      /* 1001 */ 0,
+      /* 1010 */ 0,
+      /* 1011 */ 0,
+
+      // leading bytes
+      /* 1100 */ 1, // 2-byte UTF-8 char => 1 UTF-16 word
+      /* 1101 */ 1, // 2-byte UTF-8 char => 1 UTF-16 word
+      /* 1110 */ 1, // 3-byte UTF-8 char => 1 UTF-16 word
+      /* 1111 */ 2  // 4-byte UTF-8 char => 2 UTF-16 words (surrogate pair)
+  );
+
+  const __m512i char_length = broadcast_128bit_lane(utf8_length_128);
+
+  constexpr size_t max_iterations = 255 / 2;
+
+  size_t iterations = 0;
+  const auto zero = _mm512_setzero_si512();
+  __m512i local = _mm512_setzero_si512();    // byte-wise counters
+  __m512i counters = _mm512_setzero_si512(); // 64-bit counters
   for (; pos + 64 <= length; pos += 64) {
     __m512i utf8 = _mm512_loadu_si512((const __m512i *)(input + pos));
-    uint64_t utf8_continuation_mask =
-        _mm512_cmplt_epi8_mask(utf8, _mm512_set1_epi8(-65 + 1));
-    // We count one word for anything that is not a continuation (so
-    // leading bytes).
-    count += 64 - count_ones(utf8_continuation_mask);
-    uint64_t utf8_4byte =
-        _mm512_cmpge_epu8_mask(utf8, _mm512_set1_epi8(int8_t(240)));
-    count += count_ones(utf8_4byte);
+    const auto t0 = _mm512_srli_epi32(utf8, 4);
+    const auto t1 = _mm512_and_si512(t0, _mm512_set1_epi8(0xf));
+    const auto t2 = _mm512_shuffle_epi8(char_length, t1);
+    local = _mm512_add_epi8(local, t2);
+
+    iterations += 1;
+    if (iterations == max_iterations) {
+      counters = _mm512_add_epi64(counters, _mm512_sad_epu8(local, zero));
+      local = zero;
+      iterations = 0;
+    }
   }
+
+  size_t count = 0;
+
+  if (pos > 0) {
+    // don't waste time for short strings
+    if (iterations > 0) {
+      counters = _mm512_add_epi64(counters, _mm512_sad_epu8(local, zero));
+    }
+
+    const auto l0 = _mm512_extracti32x4_epi32(counters, 0);
+    const auto l1 = _mm512_extracti32x4_epi32(counters, 1);
+    const auto l2 = _mm512_extracti32x4_epi32(counters, 2);
+    const auto l3 = _mm512_extracti32x4_epi32(counters, 3);
+
+    const auto sum =
+        _mm_add_epi64(_mm_add_epi64(l0, l1), _mm_add_epi64(l2, l3));
+
+    count = uint64_t(_mm_extract_epi64(sum, 0)) +
+            uint64_t(_mm_extract_epi64(sum, 1));
+  }
+
   return count +
          scalar::utf8::utf16_length_from_utf8(input + pos, length - pos);
 }
