@@ -41,8 +41,9 @@ static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
     /* fix illegal sequencing in the main block */
     block = _mm256_blendv_epi8(block, _mm256_set1_epi16(0xfffd), block_illseq);
     _mm256_storeu_si256((__m256i *)out, block);
-  } else if (!in_place)
+  } else if (!in_place) {
     _mm256_storeu_si256((__m256i *)out, block);
+  }
 }
 
 template <endianness big_endian>
@@ -58,13 +59,15 @@ void utf16fix_sse(char16_t *out, const char16_t *in, size_t n) {
 
   /* duplicate code to have the compiler specialise utf16fix_block() */
   if (in == out) {
-    for (i = 1; i + 8 < n; i += 8)
+    for (i = 1; i + 8 < n; i += 8) {
       utf16fix_block<big_endian>(out + i, in + i, true);
+    }
 
     utf16fix_block<big_endian>(out + n - 8, in + n - 8, true);
   } else {
-    for (i = 1; i + 8 < n; i += 8)
+    for (i = 1; i + 8 < n; i += 8) {
       utf16fix_block<big_endian>(out + i, in + i, false);
+    }
 
     utf16fix_block<big_endian>(out + n - 8, in + n - 8, false);
   }
@@ -87,13 +90,15 @@ void utf16fix_avx(char16_t *out, const char16_t *in, size_t n) {
 
   /* duplicate code to have the compiler specialise utf16fix_block() */
   if (in == out) {
-    for (i = 1; i + 16 < n; i += 16)
+    for (i = 1; i + 16 < n; i += 16) {
       utf16fix_block<big_endian>(out + i, in + i, true);
+    }
 
     utf16fix_block<big_endian>(out + n - 16, in + n - 16, true);
   } else {
-    for (i = 1; i + 16 < n; i += 16)
+    for (i = 1; i + 16 < n; i += 16) {
       utf16fix_block<big_endian>(out + i, in + i, false);
+    }
 
     utf16fix_block<big_endian>(out + n - 16, in + n - 16, false);
   }

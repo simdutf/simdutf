@@ -39,8 +39,9 @@ static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
       _mm512_storeu_epi32(out,
                           _mm512_mask_blend_epi16(block_illseq, block,
                                                   _mm512_set1_epi16(0xfffdU)));
-  } else if (!in_place)
-    _mm512_storeu_si512((void *)out, block);
+  } else if (!in_place) {
+    _mm512_storeu_si512((__m512i *)out, block);
+  }
 }
 
 /*
@@ -74,11 +75,11 @@ void utf16fix_runt(char16_t *out, const char16_t *in, size_t n) {
 
     /* fix illegal sequencing in the main block */
     _mm512_mask_storeu_epi16(
-        (void *)out, _cvtmask32_u32(mask),
+        (uint16_t *)out, _cvtmask32_u32(mask),
         _mm512_mask_blend_epi16(block_illseq, block,
                                 _mm512_set1_epi16(0xfffd)));
   } else {
-    _mm512_mask_storeu_epi16((void *)out, _cvtmask32_u32(mask), block);
+    _mm512_mask_storeu_epi16((uint16_t *)out, _cvtmask32_u32(mask), block);
   }
   out[n - 1] = is_high_surrogate<big_endian>(out[n - 1]) ? 0xfffd : out[n - 1];
 }
@@ -97,13 +98,15 @@ void utf16fix_avx512(char16_t *out, const char16_t *in, size_t n) {
 
   /* duplicate code to have the compiler specialise utf16fix_block() */
   if (in == out) {
-    for (i = 1; i + 32 < n; i += 32)
+    for (i = 1; i + 32 < n; i += 32) {
       utf16fix_block(out + i, in + i, true);
+    }
 
     utf16fix_block(out + n - 32, in + n - 32, true);
   } else {
-    for (i = 1; i + 32 < n; i += 32)
+    for (i = 1; i + 32 < n; i += 32) {
       utf16fix_block(out + i, in + i, false);
+    }
 
     utf16fix_block(out + n - 32, in + n - 32, false);
   }

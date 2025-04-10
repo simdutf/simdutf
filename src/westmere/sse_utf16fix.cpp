@@ -37,9 +37,10 @@ static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
     block = _mm_or_si128(_mm_andnot_si128(block_illseq, block),
                          _mm_and_si128(block_illseq, _mm_set1_epi16(0xfffd)));
 
-    _mm_storeu_si128((void *)out, block);
-  } else if (!in_place)
-    _mm_storeu_si128((void *)out, block);
+    _mm_storeu_si128((__m128i *)out, block);
+  } else if (!in_place) {
+    _mm_storeu_si128((__m128i *)out, block);
+  }
 }
 
 template <endianness big_endian>
@@ -55,13 +56,15 @@ void utf16fix_sse(char16_t *out, const char16_t *in, size_t n) {
 
   /* duplicate code to have the compiler specialise utf16fix_block() */
   if (in == out) {
-    for (i = 1; i + 8 < n; i += 8)
+    for (i = 1; i + 8 < n; i += 8) {
       utf16fix_block<big_endian>(out + i, in + i, true);
+    }
 
     utf16fix_block<big_endian>(out + n - 8, in + n - 8, true);
   } else {
-    for (i = 1; i + 8 < n; i += 8)
+    for (i = 1; i + 8 < n; i += 8) {
       utf16fix_block<big_endian>(out + i, in + i, false);
+    }
 
     utf16fix_block<big_endian>(out + n - 8, in + n - 8, false);
   }
