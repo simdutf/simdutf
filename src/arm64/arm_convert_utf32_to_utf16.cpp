@@ -5,30 +5,31 @@ arm_convert_utf32_to_utf16(const char32_t *buf, size_t len,
   uint16_t *utf16_output = reinterpret_cast<uint16_t *>(utf16_out);
   const char32_t *end = buf + len;
 
-  uint16x4_t forbidden_bytemask = vmov_n_u16(0x0);
+  uint16x8_t forbidden_bytemask = vmovq_n_u16(0x0);
 
-  while (end - buf >= 4) {
-    uint32x4_t in = vld1q_u32(reinterpret_cast<const uint32_t *>(buf));
+  while (end - buf >= 8) {
+    uint32x4x2_t in = vld1q_u32_x2(reinterpret_cast<const uint32_t *>(buf));
 
     // Check if no bits set above 16th
-    if (vmaxvq_u32(in) <= 0xFFFF) {
-      uint16x4_t utf16_packed = vmovn_u32(in);
+    if (vmaxvq_u32(vorrq_u32(in.val[0], in.val[1])) <= 0xFFFF) {
+      uint16x8_t utf16_packed = vuzp1q_u16(vreinterpretq_u16_u32(in.val[0]),
+                                           vreinterpretq_u16_u32(in.val[1]));
 
-      const uint16x4_t v_d800 = vmov_n_u16((uint16_t)0xd800);
-      const uint16x4_t v_dfff = vmov_n_u16((uint16_t)0xdfff);
-      forbidden_bytemask = vorr_u16(vand_u16(vcle_u16(utf16_packed, v_dfff),
-                                             vcge_u16(utf16_packed, v_d800)),
-                                    forbidden_bytemask);
+      const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
+      const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
+      forbidden_bytemask =
+          vorrq_u16(vceqq_u16(vandq_u16(utf16_packed, v_f800), v_d800),
+                    forbidden_bytemask);
 
       if (!match_system(big_endian)) {
-        utf16_packed =
-            vreinterpret_u16_u8(vrev16_u8(vreinterpret_u8_u16(utf16_packed)));
+        utf16_packed = vreinterpretq_u16_u8(
+            vrev16q_u8(vreinterpretq_u8_u16(utf16_packed)));
       }
-      vst1_u16(utf16_output, utf16_packed);
-      utf16_output += 4;
-      buf += 4;
+      vst1q_u16(utf16_output, utf16_packed);
+      utf16_output += 8;
+      buf += 8;
     } else {
-      size_t forward = 3;
+      size_t forward = 7;
       size_t k = 0;
       if (size_t(end - buf) < forward + 1) {
         forward = size_t(end - buf - 1);
@@ -67,7 +68,7 @@ arm_convert_utf32_to_utf16(const char32_t *buf, size_t len,
   }
 
   // check for invalid input
-  if (vmaxv_u16(forbidden_bytemask) != 0) {
+  if (vmaxvq_u16(forbidden_bytemask) != 0) {
     return std::make_pair(nullptr, reinterpret_cast<char16_t *>(utf16_output));
   }
 
@@ -82,31 +83,32 @@ arm_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
   const char32_t *start = buf;
   const char32_t *end = buf + len;
 
-  while (end - buf >= 4) {
-    uint32x4_t in = vld1q_u32(reinterpret_cast<const uint32_t *>(buf));
+  while (end - buf >= 8) {
+    uint32x4x2_t in = vld1q_u32_x2(reinterpret_cast<const uint32_t *>(buf));
 
     // Check if no bits set above 16th
-    if (vmaxvq_u32(in) <= 0xFFFF) {
-      uint16x4_t utf16_packed = vmovn_u32(in);
+    if (vmaxvq_u32(vorrq_u32(in.val[0], in.val[1])) <= 0xFFFF) {
+      uint16x8_t utf16_packed = vuzp1q_u16(vreinterpretq_u16_u32(in.val[0]),
+                                           vreinterpretq_u16_u32(in.val[1]));
 
-      const uint16x4_t v_d800 = vmov_n_u16((uint16_t)0xd800);
-      const uint16x4_t v_dfff = vmov_n_u16((uint16_t)0xdfff);
-      const uint16x4_t forbidden_bytemask = vand_u16(
-          vcle_u16(utf16_packed, v_dfff), vcge_u16(utf16_packed, v_d800));
-      if (vmaxv_u16(forbidden_bytemask) != 0) {
+      const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
+      const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
+      const uint16x8_t forbidden_bytemask =
+          vceqq_u16(vandq_u16(utf16_packed, v_f800), v_d800);
+      if (vmaxvq_u16(forbidden_bytemask) != 0) {
         return std::make_pair(result(error_code::SURROGATE, buf - start),
                               reinterpret_cast<char16_t *>(utf16_output));
       }
 
       if (!match_system(big_endian)) {
-        utf16_packed =
-            vreinterpret_u16_u8(vrev16_u8(vreinterpret_u8_u16(utf16_packed)));
+        utf16_packed = vreinterpretq_u16_u8(
+            vrev16q_u8(vreinterpretq_u8_u16(utf16_packed)));
       }
-      vst1_u16(utf16_output, utf16_packed);
-      utf16_output += 4;
-      buf += 4;
+      vst1q_u16(utf16_output, utf16_packed);
+      utf16_output += 8;
+      buf += 8;
     } else {
-      size_t forward = 3;
+      size_t forward = 7;
       size_t k = 0;
       if (size_t(end - buf) < forward + 1) {
         forward = size_t(end - buf - 1);
