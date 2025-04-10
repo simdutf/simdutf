@@ -15,16 +15,17 @@ void info_message() {
   std::cout << "Using iconv version " << _LIBICONV_VERSION << std::endl;
 #endif
 #if defined(__clang__)
-  std::cout << "Compiler: Clang " << __clang_major__ << "." 
-          << __clang_minor__ << "." << __clang_patchlevel__ << "\n";
+  std::cout << "Compiler: Clang " << __clang_major__ << "." << __clang_minor__
+            << "." << __clang_patchlevel__ << "\n";
 #elif defined(__GNUC__)
-  std::cout << "Compiler: GCC " << __GNUC__ << "." 
-          << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << "\n";
+  std::cout << "Compiler: GCC " << __GNUC__ << "." << __GNUC_MINOR__ << "."
+            << __GNUC_PATCHLEVEL__ << "\n";
 #elif defined(_MSC_VER)
   std::cout << "Compiler: MSVC " << _MSC_VER << "\n";
 #endif
   std::cout << "SIMDUTF version: " << SIMDUTF_VERSION << "\n";
-  std::cout << "System: " << simdutf::get_active_implementation()->name() << "\n";
+  std::cout << "System: " << simdutf::get_active_implementation()->name()
+            << "\n";
   std::cout << "===========================\n";
 }
 

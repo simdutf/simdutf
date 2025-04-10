@@ -88,6 +88,7 @@ private:
   void
   register_function(std::string name, Fn function, simdutf::encoding_type enc1,
                     simdutf::encoding_type enc2, simdutf::encoding_type enc3);
+
 private:
   void run_validate_utf8(const simdutf::implementation &implementation,
                          size_t iterations);
