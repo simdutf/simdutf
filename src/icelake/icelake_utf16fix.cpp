@@ -115,7 +115,7 @@ void utf16fix_avx512(const char16_t *in, size_t n, char16_t *out) {
   if (n == 0)
     return;
   else if (n < 33) {
-    utf16fix_runt<big_endian>(out, in, n);
+    utf16fix_runt<big_endian>(in, n, out);
     return;
   }
   out[0] = is_low_surrogate<big_endian>(in[0]) ? replacement : in[0];

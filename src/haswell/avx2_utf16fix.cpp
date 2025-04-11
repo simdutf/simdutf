@@ -28,10 +28,10 @@ static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
     lookback = swap_endianness(lookback);
     block = swap_endianness(block);
   }
-  lb_masked = _mm256_and_si256(lookback, _mm256_set1_epi16(0xfc00));
-  block_masked = _mm256_and_si256(block, _mm256_set1_epi16(0xfc00));
-  lb_is_high = _mm256_cmpeq_epi16(lb_masked, _mm256_set1_epi16(0xd800));
-  block_is_low = _mm256_cmpeq_epi16(block_masked, _mm256_set1_epi16(0xdc00));
+  lb_masked = _mm256_and_si256(lookback, _mm256_set1_epi16(0xfc00u));
+  block_masked = _mm256_and_si256(block, _mm256_set1_epi16(0xfc00u));
+  lb_is_high = _mm256_cmpeq_epi16(lb_masked, _mm256_set1_epi16(0xd800u));
+  block_is_low = _mm256_cmpeq_epi16(block_masked, _mm256_set1_epi16(0xdc00u));
 
   illseq = _mm256_xor_si256(lb_is_high, block_is_low);
   if (!_mm256_testz_si256(illseq, illseq)) {
@@ -163,7 +163,7 @@ void utf16fix_avx(const char16_t *in, size_t n, char16_t *out) {
   size_t i;
 
   if (n < 17) {
-    utf16fix_sse<big_endian>(out, in, n);
+    utf16fix_sse<big_endian>(in, n, out);
     return;
   }
 
