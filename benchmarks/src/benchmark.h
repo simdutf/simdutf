@@ -102,6 +102,8 @@ private:
                                  size_t iterations);
   void run_validate_utf32(const simdutf::implementation &implementation,
                           size_t iterations);
+  void run_to_well_formed_utf16(const simdutf::implementation &implementation,
+                                size_t iterations);
   void
   run_validate_utf32_with_errors(const simdutf::implementation &implementation,
                                  size_t iterations);

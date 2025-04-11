@@ -28,6 +28,9 @@ using namespace simd;
 #endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_UTF16 ||
        // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_LATIN1)
 
+#if SIMDUTF_FEATURE_UTF16
+  #include "icelake/icelake_utf16fix.cpp"
+#endif // SIMDUTF_FEATURE_UTF16
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
   #include "icelake/icelake_convert_utf8_to_latin1.inl.cpp"
   #include "icelake/icelake_convert_valid_utf8_to_latin1.inl.cpp"
@@ -494,6 +497,16 @@ simdutf_warn_unused result implementation::validate_utf16be_with_errors(
     }
   }
   return result(error_code::SUCCESS, len);
+}
+
+void implementation::to_well_formed_utf16le(const char16_t *input, size_t len,
+                                            char16_t *output) const noexcept {
+  return utf16fix_avx512<endianness::LITTLE>(input, len, output);
+}
+
+void implementation::to_well_formed_utf16be(const char16_t *input, size_t len,
+                                            char16_t *output) const noexcept {
+  return utf16fix_avx512<endianness::BIG>(input, len, output);
 }
 #endif // SIMDUTF_FEATURE_UTF16
 

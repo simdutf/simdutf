@@ -665,6 +665,37 @@ simdutf_warn_unused result validate_utf32_with_errors(const char32_t *buf, size_
 
 ```
 
+Given a potentially invalid UTF-16 input, you may want to make it correct, by using
+a replacement character whenever needed. We have fast functions for this purpose.
+
+```cpp
+/**
+ * Copies the UTF-16BE string while replacing mismatched surrogates with the
+ * Unicode replacement character U+FFFD. We allow the input and output to be the
+ * same buffer so that the correction is done in-place.
+ *
+ * @param input the UTF-16BE string to correct.
+ * @param len the length of the string in number of 2-byte code units
+ * (char16_t).
+ * @param output the output buffer.
+ */
+void to_well_formed_utf16be(const char16_t *input, size_t len,
+                            char16_t *output) noexcept;
+
+/**
+ * Copies the UTF-16 string while replacing mismatched surrogates with the
+ * Unicode replacement character U+FFFD. We allow the input and output to be the
+ * same buffer so that the correction is done in-place.
+ *
+ * @param input the UTF-16 string to correct.
+ * @param len the length of the string in number of 2-byte code units
+ * (char16_t).
+ * @param output the output buffer.
+ */
+void to_well_formed_utf16(const char16_t *input, size_t len,
+                          char16_t *output) noexcept;
+```
+
 Given a valid UTF-8 or UTF-16 input, you may count the number Unicode characters using
 fast functions. For UTF-32, there is no need for a function given that each character
 requires a flat 4 bytes. Likewise for Latin1: one byte will always equal one character.
