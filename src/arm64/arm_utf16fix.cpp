@@ -2,7 +2,7 @@
 /*
  * Returns if a vector of type uint8x16_t is all zero.
  */
- simdutf_really_inline int veq_non_zero(uint8x16_t v) {
+simdutf_really_inline int veq_non_zero(uint8x16_t v) {
   // might compile to two instructions:
   //	umaxv   s0, v0.4s
   //	fmov	w0, s0
@@ -21,8 +21,7 @@
  * If that character is illsequenced, it too is overwritten.
  */
 template <endianness big_endian>
-void utf16fix_block(char16_t *out, const char16_t *in,
-                                  bool inplace) {
+void utf16fix_block(char16_t *out, const char16_t *in, bool inplace) {
   const char16_t replacement =
       !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
   uint8x16x2_t lb, block;
@@ -71,8 +70,7 @@ void utf16fix_block(char16_t *out, const char16_t *in,
 }
 
 template <endianness big_endian>
-uint8x16_t get_mismatch_copy(const char16_t *in, char16_t *out,
-                                           bool inplace) {
+uint8x16_t get_mismatch_copy(const char16_t *in, char16_t *out, bool inplace) {
   const int idx = !match_system(big_endian) ? 0 : 1;
   uint8x16x2_t lb = vld2q_u8((const uint8_t *)(in - 1));
   uint8x16x2_t block = vld2q_u8((const uint8_t *)in);
@@ -88,7 +86,7 @@ uint8x16_t get_mismatch_copy(const char16_t *in, char16_t *out,
 }
 
 simdutf_really_inline uint64_t get_mask(uint8x16_t illse0, uint8x16_t illse1,
-                                uint8x16_t illse2, uint8x16_t illse3) {
+                                        uint8x16_t illse2, uint8x16_t illse3) {
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
   uint8x16_t bit_mask =
       simdutf_make_uint8x16_t(0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
@@ -111,8 +109,7 @@ simdutf_really_inline uint64_t get_mask(uint8x16_t illse0, uint8x16_t illse1,
 // function might be faster than alternative implementations working on small
 // blocks of input.
 template <endianness big_endian>
-bool utf16fix_block64(char16_t *out, const char16_t *in,
-                                    bool inplace) {
+bool utf16fix_block64(char16_t *out, const char16_t *in, bool inplace) {
 
   const char16_t replacement =
       !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;

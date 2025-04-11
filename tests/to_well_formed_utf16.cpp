@@ -9,6 +9,14 @@
 
 constexpr size_t trials = 1000;
 
+#if SIMDUTF_BIG_ENDIAN
+constexpr char16_t replacement_le = 0xFDFF;
+constexpr char16_t replacement_be = 0xFFFD;
+#else
+constexpr char16_t replacement_le = 0xFFFD;
+constexpr char16_t replacement_be = 0xFDFF;
+#endif
+
 TEST_LOOP(trials, to_well_formed_utf16le_single_surrogate) {
   for (size_t j = 0; j < 40; j++) {
     std::vector<uint16_t> utf16(40);
@@ -17,7 +25,7 @@ TEST_LOOP(trials, to_well_formed_utf16le_single_surrogate) {
     std::vector<char16_t> output(len);
     implementation.to_well_formed_utf16le((const char16_t *)utf16.data(), len,
                                           output.data());
-    ASSERT_TRUE(output[j] == 0xFFFD);
+    ASSERT_TRUE(output[j] == replacement_le);
   }
 }
 
@@ -29,7 +37,7 @@ TEST_LOOP(trials, to_well_formed_utf16be_single_surrogate) {
     std::vector<char16_t> output(len);
     implementation.to_well_formed_utf16be((const char16_t *)utf16.data(), len,
                                           output.data());
-    ASSERT_TRUE(output[j] == 0xFDFF);
+    ASSERT_TRUE(output[j] == replacement_be);
   }
 }
 // Should be the identity on valid input
@@ -136,7 +144,7 @@ TEST(to_well_formed_utf16le_bad_input) {
     implementation.to_well_formed_utf16le(utf16.data(), len, output.data());
     for (size_t j = 0; j < len; j++) {
       if (utf16[j] != output[j]) {
-        ASSERT_TRUE(output[j] == 0xFFFD);
+        ASSERT_TRUE(output[j] == replacement_le);
       }
     }
     ASSERT_TRUE(implementation.validate_utf16le(output.data(), len));
@@ -152,7 +160,7 @@ TEST(to_well_formed_utf16be_bad_input) {
     implementation.to_well_formed_utf16be(utf16.data(), len, output.data());
     for (size_t j = 0; j < len; j++) {
       if (utf16[j] != output[j]) {
-        ASSERT_TRUE(output[j] == 0xFDFF);
+        ASSERT_TRUE(output[j] == replacement_be);
       }
     }
     ASSERT_TRUE(implementation.validate_utf16be(output.data(), len));
@@ -168,7 +176,7 @@ TEST(to_well_formed_utf16le_bad_input_self) {
     implementation.to_well_formed_utf16le(output.data(), len, output.data());
     for (size_t j = 0; j < len; j++) {
       if (utf16[j] != output[j]) {
-        ASSERT_TRUE(output[j] == 0xFFFD);
+        ASSERT_TRUE(output[j] == replacement_le);
       }
     }
     ASSERT_TRUE(implementation.validate_utf16le(output.data(), len));
@@ -184,7 +192,7 @@ TEST(to_well_formed_utf16be_bad_input_self) {
     implementation.to_well_formed_utf16be(output.data(), len, output.data());
     for (size_t j = 0; j < len; j++) {
       if (utf16[j] != output[j]) {
-        ASSERT_TRUE(output[j] == 0xFDFF);
+        ASSERT_TRUE(output[j] == replacement_be);
       }
     }
     ASSERT_TRUE(implementation.validate_utf16be(output.data(), len));

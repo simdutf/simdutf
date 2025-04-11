@@ -55,8 +55,7 @@ void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
 }
 
 template <endianness big_endian>
-void utf16fix_block_sse(char16_t *out, const char16_t *in,
-                               bool in_place) {
+void utf16fix_block_sse(char16_t *out, const char16_t *in, bool in_place) {
   const char16_t replacement =
       !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
   auto swap_if_needed = [](uint16_t c) -> uint16_t {
