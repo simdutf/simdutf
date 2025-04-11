@@ -1,11 +1,3 @@
-__m512i swap_endianness(__m512i x) {
-  const __m512i swap = _mm512_setr_epi64(
-      0x0607040502030001, 0x0e0f0c0d0a0b0809, 0x0607040502030001,
-      0x0e0f0c0d0a0b0809, 0x0607040502030001, 0x0e0f0c0d0a0b0809,
-      0x0607040502030001, 0x0e0f0c0d0a0b0809);
-  return _mm512_shuffle_epi8(x, swap);
-}
-
 /*
  * Process one block of 32 characters.  If in_place is false,
  * copy the block from in to out.  If there is a sequencing
@@ -16,23 +8,26 @@ __m512i swap_endianness(__m512i x) {
  */
 template <endianness big_endian>
 static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
-  const char16_t replacement = 0xfffd;
+  const char16_t replacement =
+      !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
+  auto swap_if_needed = [](uint16_t c) -> uint16_t {
+    return !simdutf::match_system(big_endian) ? scalar::u16_swap_bytes(c) : c;
+  };
+
   __m512i lookback, block, lb_masked, block_masked;
   __mmask32 lb_is_high, block_is_low, illseq;
 
   lookback = _mm512_loadu_si512((const __m512i *)(in - 1));
   block = _mm512_loadu_si512((const __m512i *)in);
-  // Optimization opportunity: swapping is not ideal (used for UTF-16BE)
-  if (!simdutf::match_system(big_endian)) {
-    lookback = swap_endianness(lookback);
-    block = swap_endianness(block);
-  }
-  lb_masked = _mm512_and_epi32(lookback, _mm512_set1_epi16(0xfc00U));
-  block_masked = _mm512_and_epi32(block, _mm512_set1_epi16(0xfc00U));
+  lb_masked =
+      _mm512_and_epi32(lookback, _mm512_set1_epi16(swap_if_needed(0xfc00U)));
+  block_masked =
+      _mm512_and_epi32(block, _mm512_set1_epi16(swap_if_needed(0xfc00U)));
 
-  lb_is_high = _mm512_cmpeq_epi16_mask(lb_masked, _mm512_set1_epi16(0xd800U));
-  block_is_low =
-      _mm512_cmpeq_epi16_mask(block_masked, _mm512_set1_epi16(0xdc00U));
+  lb_is_high = _mm512_cmpeq_epi16_mask(
+      lb_masked, _mm512_set1_epi16(swap_if_needed(0xd800U)));
+  block_is_low = _mm512_cmpeq_epi16_mask(
+      block_masked, _mm512_set1_epi16(swap_if_needed(0xdc00U)));
   illseq = _kxor_mask32(lb_is_high, block_is_low);
   if (!_ktestz_mask32_u8(illseq, illseq)) {
     __mmask32 lb_illseq, block_illseq;
@@ -57,9 +52,6 @@ static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
                                        _mm512_set1_epi16(replacement)));
     }
   } else if (!in_place) {
-    if (!simdutf::match_system(big_endian)) {
-      block = swap_endianness(block);
-    }
     _mm512_storeu_si512((__m512i *)out, block);
   }
 }
@@ -72,20 +64,24 @@ template <endianness big_endian>
 void utf16fix_runt(const char16_t *in, size_t n, char16_t *out) {
   const char16_t replacement =
       !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
+  auto swap_if_needed = [](uint16_t c) -> uint16_t {
+    return !simdutf::match_system(big_endian) ? scalar::u16_swap_bytes(c) : c;
+  };
   __m512i lookback, block, lb_masked, block_masked;
   __mmask32 lb_is_high, block_is_low, illseq;
-  unsigned long long mask;
-
-  mask = (1ULL << n) - 1;
+  uint32_t mask = 0xFFFFFFFF >> (32 - n);
   lookback = _mm512_maskz_loadu_epi16(_cvtmask32_u32(mask << 1),
-                                      (const void *)(in - 1));
-  block = _mm512_maskz_loadu_epi16(_cvtmask32_u32(mask), (const void *)in);
-  lb_masked = _mm512_and_epi32(lookback, _mm512_set1_epi16(0xfc00));
-  block_masked = _mm512_and_epi32(block, _mm512_set1_epi16(0xfc00));
+                                      (const uint16_t *)(in - 1));
+  block = _mm512_maskz_loadu_epi16(_cvtmask32_u32(mask), (const uint16_t *)in);
+  lb_masked =
+      _mm512_and_epi32(lookback, _mm512_set1_epi16(swap_if_needed(0xfc00u)));
+  block_masked =
+      _mm512_and_epi32(block, _mm512_set1_epi16(swap_if_needed(0xfc00u)));
 
-  lb_is_high = _mm512_cmpeq_epi16_mask(lb_masked, _mm512_set1_epi16(0xd800));
-  block_is_low =
-      _mm512_cmpeq_epi16_mask(block_masked, _mm512_set1_epi16(0xdc00));
+  lb_is_high = _mm512_cmpeq_epi16_mask(
+      lb_masked, _mm512_set1_epi16(swap_if_needed(0xd800u)));
+  block_is_low = _mm512_cmpeq_epi16_mask(
+      block_masked, _mm512_set1_epi16(swap_if_needed(0xdc00u)));
   illseq = _kxor_mask32(lb_is_high, block_is_low);
   if (!_ktestz_mask32_u8(illseq, illseq)) {
     __mmask32 lb_illseq, block_illseq;
