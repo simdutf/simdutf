@@ -1,12 +1,3 @@
-
-__m256i swap_endianness(__m256i x) {
-  const __m256i swap = _mm256_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10,
-                                        13, 12, 15, 14, 17, 16, 19, 18, 21, 20,
-                                        23, 22, 25, 24, 27, 26, 29, 28, 31, 30);
-
-  return _mm256_shuffle_epi8(x, swap);
-}
-
 /*
  * Process one block of 16 characters.  If in_place is false,
  * copy the block from in to out.  If there is a sequencing
@@ -19,19 +10,22 @@ template <endianness big_endian>
 static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
   const char16_t replacement =
       !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
+  auto swap_if_needed = [](uint16_t c) -> uint16_t {
+    return !simdutf::match_system(big_endian) ? scalar::u16_swap_bytes(c) : c;
+  };
   __m256i lookback, block, lb_masked, block_masked, lb_is_high, block_is_low;
   __m256i illseq, lb_illseq, block_illseq, lb_illseq_shifted;
 
   lookback = _mm256_loadu_si256((const __m256i *)(in - 1));
   block = _mm256_loadu_si256((const __m256i *)in);
-  if (big_endian) {
-    lookback = swap_endianness(lookback);
-    block = swap_endianness(block);
-  }
-  lb_masked = _mm256_and_si256(lookback, _mm256_set1_epi16(0xfc00u));
-  block_masked = _mm256_and_si256(block, _mm256_set1_epi16(0xfc00u));
-  lb_is_high = _mm256_cmpeq_epi16(lb_masked, _mm256_set1_epi16(0xd800u));
-  block_is_low = _mm256_cmpeq_epi16(block_masked, _mm256_set1_epi16(0xdc00u));
+  lb_masked =
+      _mm256_and_si256(lookback, _mm256_set1_epi16(swap_if_needed(0xfc00u)));
+  block_masked =
+      _mm256_and_si256(block, _mm256_set1_epi16(swap_if_needed(0xfc00u)));
+  lb_is_high =
+      _mm256_cmpeq_epi16(lb_masked, _mm256_set1_epi16(swap_if_needed(0xd800u)));
+  block_is_low = _mm256_cmpeq_epi16(block_masked,
+                                    _mm256_set1_epi16(swap_if_needed(0xdc00u)));
 
   illseq = _mm256_xor_si256(lb_is_high, block_is_low);
   if (!_mm256_testz_si256(illseq, illseq)) {
@@ -52,24 +46,11 @@ static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
     out[-1] = char16_t(lb);
 
     /* fix illegal sequencing in the main block */
-    block =
-        _mm256_blendv_epi8(block, _mm256_set1_epi16(0xfffdu), block_illseq);
-    if (big_endian) {
-      block = swap_endianness(block);
-    }
+    block = _mm256_blendv_epi8(block, _mm256_set1_epi16(replacement), block_illseq);
     _mm256_storeu_si256((__m256i *)out, block);
   } else if (!in_place) {
-    if (big_endian) {
-      block = swap_endianness(block);
-    }
     _mm256_storeu_si256((__m256i *)out, block);
   }
-}
-
-__m128i swap_endianness(__m128i x) {
-  const __m128i swap =
-      _mm_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
-  return _mm_shuffle_epi8(x, swap);
 }
 
 template <endianness big_endian>
@@ -77,21 +58,21 @@ static void utf16fix_block_sse(char16_t *out, const char16_t *in,
                                bool in_place) {
   const char16_t replacement =
       !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
+  auto swap_if_needed = [](uint16_t c) -> uint16_t {
+    return !simdutf::match_system(big_endian) ? scalar::u16_swap_bytes(c) : c;
+  };
 
   __m128i lookback, block, lb_masked, block_masked, lb_is_high, block_is_low;
   __m128i illseq, lb_illseq, block_illseq;
 
   lookback = _mm_loadu_si128((const __m128i *)(in - 1));
   block = _mm_loadu_si128((const __m128i *)in);
-  if (!simdutf::match_system(big_endian)) {
-    lookback = swap_endianness(lookback);
-    block = swap_endianness(block);
-  }
-
-  lb_masked = _mm_and_si128(lookback, _mm_set1_epi16(0xfc00U));
-  block_masked = _mm_and_si128(block, _mm_set1_epi16(0xfc00U));
-  lb_is_high = _mm_cmpeq_epi16(lb_masked, _mm_set1_epi16(0xd800U));
-  block_is_low = _mm_cmpeq_epi16(block_masked, _mm_set1_epi16(0xdc00U));
+  lb_masked = _mm_and_si128(lookback, _mm_set1_epi16(swap_if_needed(0xfc00U)));
+  block_masked = _mm_and_si128(block, _mm_set1_epi16(swap_if_needed(0xfc00U)));
+  lb_is_high =
+      _mm_cmpeq_epi16(lb_masked, _mm_set1_epi16(swap_if_needed(0xd800U)));
+  block_is_low =
+      _mm_cmpeq_epi16(block_masked, _mm_set1_epi16(swap_if_needed(0xdc00U)));
 
   illseq = _mm_xor_si128(lb_is_high, block_is_low);
   if (_mm_movemask_epi8(illseq) != 0) {
@@ -109,15 +90,9 @@ static void utf16fix_block_sse(char16_t *out, const char16_t *in,
     /* fix illegal sequencing in the main block */
     block =
         _mm_or_si128(_mm_andnot_si128(block_illseq, block),
-                     _mm_and_si128(block_illseq, _mm_set1_epi16(0xfffdu)));
-    if (!simdutf::match_system(big_endian)) {
-      block = swap_endianness(block);
-    }
+                     _mm_and_si128(block_illseq, _mm_set1_epi16(replacement)));
     _mm_storeu_si128((__m128i *)out, block);
   } else if (!in_place) {
-    if (!simdutf::match_system(big_endian)) {
-      block = swap_endianness(block);
-    }
     _mm_storeu_si128((__m128i *)out, block);
   }
 }

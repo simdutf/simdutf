@@ -22,6 +22,7 @@ static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
 
   lookback = _mm512_loadu_si512((const __m512i *)(in - 1));
   block = _mm512_loadu_si512((const __m512i *)in);
+  // Optimization opportunity: swapping is not ideal (used for UTF-16BE)
   if (!simdutf::match_system(big_endian)) {
     lookback = swap_endianness(lookback);
     block = swap_endianness(block);
@@ -102,8 +103,9 @@ void utf16fix_runt(const char16_t *in, size_t n, char16_t *out) {
   } else {
     _mm512_mask_storeu_epi16((uint16_t *)out, _cvtmask32_u32(mask), block);
   }
-  out[n - 1] =
-      is_high_surrogate<big_endian>(out[n - 1]) ? replacement : out[n - 1];
+  out[n - 1] = scalar::utf16::is_high_surrogate<big_endian>(out[n - 1])
+                   ? replacement
+                   : out[n - 1];
 }
 
 template <endianness big_endian>
@@ -118,7 +120,8 @@ void utf16fix_avx512(const char16_t *in, size_t n, char16_t *out) {
     utf16fix_runt<big_endian>(in, n, out);
     return;
   }
-  out[0] = is_low_surrogate<big_endian>(in[0]) ? replacement : in[0];
+  out[0] =
+      scalar::utf16::is_low_surrogate<big_endian>(in[0]) ? replacement : in[0];
 
   /* duplicate code to have the compiler specialise utf16fix_block() */
   if (in == out) {
@@ -135,6 +138,7 @@ void utf16fix_avx512(const char16_t *in, size_t n, char16_t *out) {
     utf16fix_block<big_endian>(out + n - 32, in + n - 32, false);
   }
 
-  out[n - 1] =
-      is_high_surrogate<big_endian>(out[n - 1]) ? replacement : out[n - 1];
+  out[n - 1] = scalar::utf16::is_high_surrogate<big_endian>(out[n - 1])
+                   ? replacement
+                   : out[n - 1];
 }
