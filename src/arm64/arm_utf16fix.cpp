@@ -122,10 +122,6 @@ bool utf16fix_block64(char16_t *out, const char16_t *in) {
   uint8x16_t illse3 =
       inplace ? get_mismatch_copy<big_endian, true>(in + 48, out + 48)
               : get_mismatch_copy<big_endian, false>(in + 48, out + 48);
-  auto is_high_surrogate = [](char16_t c) -> bool {
-    c = !match_system(big_endian) ? scalar::u16_swap_bytes(c) : c;
-    return (0xd800 <= c && c <= 0xdbff);
-  };
   // this branch could be marked as unlikely:
   if (veq_non_zero(
           vorrq_u8(vorrq_u8(illse0, illse1), vorrq_u8(illse2, illse3)))) {
@@ -138,13 +134,12 @@ bool utf16fix_block64(char16_t *out, const char16_t *in) {
     // but it might require more instructions.
 
     while (matches != 0) {
-      uint64_t t = matches & (~matches + 1);
       int r = trailing_zeroes(matches); // generates rbit + clz
       // Either we have a high surrogate followed by a non-low surrogate
       // or we have a low surrogate not preceded by a high surrogate.
-      bool is_high = is_high_surrogate(in[r - 1]);
+      bool is_high = scalar::utf16::is_high_surrogate<big_endian>(in[r - 1]);
       out[r - is_high] = replacement;
-      matches ^= t;
+      matches = clear_least_significant_bit(matches);
     }
     return false;
   }
