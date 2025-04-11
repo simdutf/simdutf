@@ -43,8 +43,9 @@ template <typename T> struct base16_numeric : base16<T> {
     return __lasx_xvreplgr2vr_h((uint16_t)_value);
   }
   static simdutf_really_inline simd16<T> zero() { return __lasx_xvldi(0); }
-  static simdutf_really_inline simd16<T> load(const T values[8]) {
-    return __lasx_xvld(reinterpret_cast<const __m256i *>(values), 0);
+  template <typename Pointer>
+  static simdutf_really_inline simd16<T> load(const Pointer values) {
+    return __lasx_xvld(values, 0);
   }
 
   simdutf_really_inline base16_numeric() : base16<T>() {}
@@ -83,6 +84,10 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
   operator>=(const simd16<uint16_t> other) const {
     return __lasx_xvsle_hu(other.value, this->value);
   }
+  simdutf_really_inline simd16 &operator+=(const simd16 other) {
+    value = __lasx_xvadd_h(value, other.value);
+    return *this;
+  }
 
   // Change the endianness
   simdutf_really_inline simd16<uint16_t> swap_bytes() const {
@@ -102,6 +107,16 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
                                                    const simd16<uint16_t> &v1) {
 
     return pack_shifted_right<0>(v0, v1);
+  }
+
+  simdutf_really_inline uint64_t sum() const {
+    const auto sum_u32 = __lasx_xvhaddw_wu_hu(value, value);
+    const auto sum_u64 = __lasx_xvhaddw_du_wu(sum_u32, sum_u32);
+
+    return uint64_t(__lasx_xvpickve2gr_du(sum_u64, 0)) +
+           uint64_t(__lasx_xvpickve2gr_du(sum_u64, 1)) +
+           uint64_t(__lasx_xvpickve2gr_du(sum_u64, 2)) +
+           uint64_t(__lasx_xvpickve2gr_du(sum_u64, 3));
   }
 };
 
@@ -159,3 +174,8 @@ template <typename T> struct simd16x32 {
         .to_bitmask();
   }
 }; // struct simd16x32<T>
+
+simdutf_really_inline simd16<uint16_t> min(const simd16<uint16_t> a,
+                                           const simd16<uint16_t> b) {
+  return __lasx_xvmin_hu(a.value, b.value);
+}

@@ -2,7 +2,8 @@ template <typename T> struct simd16;
 
 template <typename T, typename Mask = simd16<bool>> struct base_u16 {
   __m128i value;
-  static const int SIZE = sizeof(value);
+  static const size_t SIZE = sizeof(value);
+  static const size_t ELEMENTS = sizeof(value) / sizeof(T);
 
   // Conversion from/to SIMD register
   simdutf_really_inline base_u16() = default;
@@ -60,8 +61,10 @@ template <typename T> struct base16_numeric : base16<T> {
     return __lsx_vreplgr2vr_h(_value);
   }
   static simdutf_really_inline simd16<T> zero() { return __lsx_vldi(0); }
-  static simdutf_really_inline simd16<T> load(const T values[8]) {
-    return __lsx_vld(reinterpret_cast<const uint16_t *>(values), 0);
+
+  template <typename Pointer>
+  static simdutf_really_inline simd16<T> load(const Pointer values) {
+    return __lsx_vld(values, 0);
   }
 
   simdutf_really_inline base16_numeric(const __m128i _value)
@@ -74,22 +77,6 @@ template <typename T> struct base16_numeric : base16<T> {
 
   // Override to distinguish from bool version
   simdutf_really_inline simd16<T> operator~() const { return *this ^ 0xFFu; }
-
-  // Addition/subtraction are the same for signed and unsigned
-  simdutf_really_inline simd16<T> operator+(const simd16<T> other) const {
-    return __lsx_vadd_b(*this, other);
-  }
-  simdutf_really_inline simd16<T> operator-(const simd16<T> other) const {
-    return __lsx_vsub_b(*this, other);
-  }
-  simdutf_really_inline simd16<T> &operator+=(const simd16<T> other) {
-    *this = *this + other;
-    return *static_cast<simd16<T> *>(this);
-  }
-  simdutf_really_inline simd16<T> &operator-=(const simd16<T> other) {
-    *this = *this - other;
-    return *static_cast<simd16<T> *>(this);
-  }
 };
 
 // Unsigned code unitstemplate<>
@@ -118,6 +105,10 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
   operator<(const simd16<uint16_t> other) const {
     return __lsx_vslt_hu(this->value, other.value);
   }
+  simdutf_really_inline simd16 &operator+=(const simd16 other) {
+    value = __lsx_vadd_h(value, other.value);
+    return *this;
+  }
 
   template <unsigned N>
   static simdutf_really_inline simd8<uint8_t>
@@ -135,6 +126,14 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
   // Change the endianness
   simdutf_really_inline simd16<uint16_t> swap_bytes() const {
     return __lsx_vshuf4i_b(this->value, 0b10110001);
+  }
+
+  simdutf_really_inline uint64_t sum() const {
+    const auto sum_u32 = __lsx_vhaddw_wu_hu(value, value);
+    const auto sum_u64 = __lsx_vhaddw_du_wu(sum_u32, sum_u32);
+
+    return uint64_t(__lsx_vpickve2gr_du(sum_u64, 0)) +
+           uint64_t(__lsx_vpickve2gr_du(sum_u64, 1));
   }
 };
 
@@ -202,3 +201,14 @@ template <typename T> struct simd16x32 {
         .to_bitmask();
   }
 }; // struct simd16x32<T>
+
+simdutf_really_inline simd16<uint16_t> operator^(const simd16<uint16_t> a,
+                                                 uint16_t b) {
+  const auto bv = __lsx_vreplgr2vr_h(b);
+  return __lsx_vxor_v(a.value, bv);
+}
+
+simdutf_really_inline simd16<uint16_t> min(const simd16<uint16_t> a,
+                                           const simd16<uint16_t> b) {
+  return __lsx_vmin_hu(a.value, b.value);
+}
