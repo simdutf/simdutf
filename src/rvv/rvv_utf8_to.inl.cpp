@@ -78,14 +78,9 @@ simdutf_really_inline static size_t rvv_utf8_to_common(char const *src,
     vuint8m2_t v3 = __riscv_vslide1down_vx_u8m2(v2, next2, vl);
 
     if (validate) {
-      vuint8m2_t s1 = __riscv_vreinterpret_v_u16m2_u8m2(__riscv_vsrl_vx_u16m2(
-          __riscv_vreinterpret_v_u8m2_u16m2(v2), 4, __riscv_vsetvlmax_e16m2()));
-      vuint8m2_t s3 = __riscv_vreinterpret_v_u16m2_u8m2(__riscv_vsrl_vx_u16m2(
-          __riscv_vreinterpret_v_u8m2_u16m2(v3), 4, __riscv_vsetvlmax_e16m2()));
-
       vuint8m2_t idx2 = __riscv_vand_vx_u8m2(v2, 0xF, vl);
-      vuint8m2_t idx1 = __riscv_vand_vx_u8m2(s1, 0xF, vl);
-      vuint8m2_t idx3 = __riscv_vand_vx_u8m2(s3, 0xF, vl);
+      vuint8m2_t idx1 = __riscv_vsrl_vx_u8m2(v2, 4, vl);
+      vuint8m2_t idx3 = __riscv_vsrl_vx_u8m2(v3, 4, vl);
 
       vuint8m2_t err1 = simdutf_vrgather_u8m1x2(err1tbl, idx1);
       vuint8m2_t err2 = simdutf_vrgather_u8m1x2(err2tbl, idx2);
