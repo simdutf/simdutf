@@ -22,8 +22,7 @@ simdutf_really_inline int veq_non_zero(uint8x16_t v) {
  */
 template <endianness big_endian, bool inplace>
 void utf16fix_block(char16_t *out, const char16_t *in) {
-  const char16_t replacement =
-      !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
+  const char16_t replacement = scalar::utf16::replacement<big_endian>;
   uint8x16x2_t lb, block;
   uint8x16_t lb_masked, block_masked, lb_is_high, block_is_low;
   uint8x16_t illseq;
@@ -110,9 +109,7 @@ simdutf_really_inline uint64_t get_mask(uint8x16_t illse0, uint8x16_t illse1,
 // blocks of input.
 template <endianness big_endian, bool inplace>
 bool utf16fix_block64(char16_t *out, const char16_t *in) {
-
-  const char16_t replacement =
-      !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
+  const char16_t replacement = scalar::utf16::replacement<big_endian>;
   uint8x16_t illse0 = get_mismatch_copy<big_endian>(in, out, inplace);
   uint8x16_t illse1 = get_mismatch_copy<big_endian>(in + 16, out + 16, inplace);
   uint8x16_t illse2 = get_mismatch_copy<big_endian>(in + 32, out + 32, inplace);
@@ -149,8 +146,7 @@ bool utf16fix_block64(char16_t *out, const char16_t *in) {
 template <endianness big_endian>
 void utf16fix_neon_64bits(const char16_t *in, size_t n, char16_t *out) {
   size_t i;
-  const char16_t replacement =
-      !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
+  const char16_t replacement = scalar::utf16::replacement<big_endian>;
   if (n < 17) {
     return scalar::utf16::to_well_formed_utf16<big_endian>(in, n, out);
   }
