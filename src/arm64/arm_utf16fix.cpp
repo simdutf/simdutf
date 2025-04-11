@@ -2,7 +2,7 @@
 /*
  * Returns if a vector of type uint8x16_t is all zero.
  */
-static inline int veq_non_zero(uint8x16_t v) {
+ simdutf_really_inline int veq_non_zero(uint8x16_t v) {
   // might compile to two instructions:
   //	umaxv   s0, v0.4s
   //	fmov	w0, s0
@@ -21,7 +21,7 @@ static inline int veq_non_zero(uint8x16_t v) {
  * If that character is illsequenced, it too is overwritten.
  */
 template <endianness big_endian>
-static inline void utf16fix_block(char16_t *out, const char16_t *in,
+void utf16fix_block(char16_t *out, const char16_t *in,
                                   bool inplace) {
   const char16_t replacement =
       !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
@@ -71,7 +71,7 @@ static inline void utf16fix_block(char16_t *out, const char16_t *in,
 }
 
 template <endianness big_endian>
-static inline uint8x16_t get_mismatch_copy(const char16_t *in, char16_t *out,
+uint8x16_t get_mismatch_copy(const char16_t *in, char16_t *out,
                                            bool inplace) {
   const int idx = !match_system(big_endian) ? 0 : 1;
   uint8x16x2_t lb = vld2q_u8((const uint8_t *)(in - 1));
@@ -87,7 +87,7 @@ static inline uint8x16_t get_mismatch_copy(const char16_t *in, char16_t *out,
   return illseq;
 }
 
-static inline uint64_t get_mask(uint8x16_t illse0, uint8x16_t illse1,
+simdutf_really_inline uint64_t get_mask(uint8x16_t illse0, uint8x16_t illse1,
                                 uint8x16_t illse2, uint8x16_t illse3) {
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
   uint8x16_t bit_mask =
@@ -111,7 +111,7 @@ static inline uint64_t get_mask(uint8x16_t illse0, uint8x16_t illse1,
 // function might be faster than alternative implementations working on small
 // blocks of input.
 template <endianness big_endian>
-static inline bool utf16fix_block64(char16_t *out, const char16_t *in,
+bool utf16fix_block64(char16_t *out, const char16_t *in,
                                     bool inplace) {
 
   const char16_t replacement =
