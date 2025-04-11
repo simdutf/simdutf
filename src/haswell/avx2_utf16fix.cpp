@@ -6,8 +6,8 @@
  * character before the beginning of the buffer as a lookback.
  * If that character is illsequenced, it too is overwritten.
  */
-template <endianness big_endian>
-void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
+template <endianness big_endian, bool in_place>
+void utf16fix_block(char16_t *out, const char16_t *in) {
   const char16_t replacement =
       !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
   auto swap_if_needed = [](uint16_t c) -> uint16_t {
@@ -54,8 +54,8 @@ void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
   }
 }
 
-template <endianness big_endian>
-void utf16fix_block_sse(char16_t *out, const char16_t *in, bool in_place) {
+template <endianness big_endian, bool in_place>
+void utf16fix_block_sse(char16_t *out, const char16_t *in) {
   const char16_t replacement =
       !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
   auto swap_if_needed = [](uint16_t c) -> uint16_t {
@@ -114,16 +114,16 @@ void utf16fix_sse(const char16_t *in, size_t n, char16_t *out) {
   /* duplicate code to have the compiler specialise utf16fix_block() */
   if (in == out) {
     for (i = 1; i + 8 < n; i += 8) {
-      utf16fix_block_sse<big_endian>(out + i, in + i, true);
+      utf16fix_block_sse<big_endian, true>(out + i, in + i);
     }
 
-    utf16fix_block_sse<big_endian>(out + n - 8, in + n - 8, true);
+    utf16fix_block_sse<big_endian, true>(out + n - 8, in + n - 8);
   } else {
     for (i = 1; i + 8 < n; i += 8) {
-      utf16fix_block_sse<big_endian>(out + i, in + i, false);
+      utf16fix_block_sse<big_endian, false>(out + i, in + i);
     }
 
-    utf16fix_block_sse<big_endian>(out + n - 8, in + n - 8, false);
+    utf16fix_block_sse<big_endian, false>(out + n - 8, in + n - 8);
   }
 
   out[n - 1] = scalar::utf16::is_high_surrogate<big_endian>(out[n - 1])
@@ -148,16 +148,16 @@ void utf16fix_avx(const char16_t *in, size_t n, char16_t *out) {
   /* duplicate code to have the compiler specialise utf16fix_block() */
   if (in == out) {
     for (i = 1; i + 16 < n; i += 16) {
-      utf16fix_block<big_endian>(out + i, in + i, true);
+      utf16fix_block<big_endian, true>(out + i, in + i);
     }
 
-    utf16fix_block<big_endian>(out + n - 16, in + n - 16, true);
+    utf16fix_block<big_endian, true>(out + n - 16, in + n - 16);
   } else {
     for (i = 1; i + 16 < n; i += 16) {
-      utf16fix_block<big_endian>(out + i, in + i, false);
+      utf16fix_block<big_endian, false>(out + i, in + i);
     }
 
-    utf16fix_block<big_endian>(out + n - 16, in + n - 16, false);
+    utf16fix_block<big_endian, false>(out + n - 16, in + n - 16);
   }
 
   out[n - 1] = scalar::utf16::is_high_surrogate<big_endian>(out[n - 1])

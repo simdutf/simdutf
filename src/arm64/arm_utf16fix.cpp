@@ -20,8 +20,8 @@ simdutf_really_inline int veq_non_zero(uint8x16_t v) {
  * character before the beginning of the buffer as a lookback.
  * If that character is illsequenced, it too is overwritten.
  */
-template <endianness big_endian>
-void utf16fix_block(char16_t *out, const char16_t *in, bool inplace) {
+template <endianness big_endian, bool inplace>
+void utf16fix_block(char16_t *out, const char16_t *in) {
   const char16_t replacement =
       !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
   uint8x16x2_t lb, block;
@@ -69,8 +69,8 @@ void utf16fix_block(char16_t *out, const char16_t *in, bool inplace) {
   }
 }
 
-template <endianness big_endian>
-uint8x16_t get_mismatch_copy(const char16_t *in, char16_t *out, bool inplace) {
+template <endianness big_endian, bool inplace>
+uint8x16_t get_mismatch_copy(const char16_t *in, char16_t *out) {
   const int idx = !match_system(big_endian) ? 0 : 1;
   uint8x16x2_t lb = vld2q_u8((const uint8_t *)(in - 1));
   uint8x16x2_t block = vld2q_u8((const uint8_t *)in);
@@ -108,8 +108,8 @@ simdutf_really_inline uint64_t get_mask(uint8x16_t illse0, uint8x16_t illse1,
 // we can fix it with a bit of scalar code. When the input is correct, this
 // function might be faster than alternative implementations working on small
 // blocks of input.
-template <endianness big_endian>
-bool utf16fix_block64(char16_t *out, const char16_t *in, bool inplace) {
+template <endianness big_endian, bool inplace>
+bool utf16fix_block64(char16_t *out, const char16_t *in) {
 
   const char16_t replacement =
       !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
@@ -161,24 +161,24 @@ void utf16fix_neon_64bits(const char16_t *in, size_t n, char16_t *out) {
   /* duplicate code to have the compiler specialise utf16fix_block() */
   if (in == out) {
     for (i = 1; i + 64 < n; i += 64) {
-      utf16fix_block64<big_endian>(out + i, in + i, true);
+      utf16fix_block64<big_endian, true>(out + i, in + i);
     }
 
     for (; i + 16 < n; i += 16) {
-      utf16fix_block<big_endian>(out + i, in + i, true);
+      utf16fix_block<big_endian, true>(out + i, in + i);
     }
 
     /* tbd: find carry */
-    utf16fix_block<big_endian>(out + n - 16, in + n - 16, true);
+    utf16fix_block<big_endian, true>(out + n - 16, in + n - 16);
   } else {
     for (i = 1; i + 64 < n; i += 64) {
-      utf16fix_block64<big_endian>(out + i, in + i, false);
+      utf16fix_block64<big_endian, false>(out + i, in + i);
     }
     for (; i + 16 < n; i += 16) {
-      utf16fix_block<big_endian>(out + i, in + i, false);
+      utf16fix_block<big_endian, false>(out + i, in + i);
     }
 
-    utf16fix_block<big_endian>(out + n - 16, in + n - 16, false);
+    utf16fix_block<big_endian, false>(out + n - 16, in + n - 16);
   }
   out[n - 1] = scalar::utf16::is_high_surrogate<big_endian>(out[n - 1])
                    ? replacement
