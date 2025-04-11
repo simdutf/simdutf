@@ -119,6 +119,7 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 #endif // SIMDUTF_FEATURE_UTF8
 #if SIMDUTF_FEATURE_UTF16
   #include "generic/utf16.h"
+  #include "generic/utf16/utf8_length_from_utf16_bytemask.h"
 #endif // SIMDUTF_FEATURE_UTF16
 #if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
   #include "generic/validate_utf16.h"
