@@ -22,13 +22,13 @@ TEST_LOOP(trials, to_well_formed_utf16le_single_surrogate) {
   std::vector<uint16_t> utf16(length);
   std::vector<char16_t> surrogates = {0xD800, 0xDC00, 0xDFFF, 0xD800, 0xDC00};
   for (size_t j = 0; j < length; j++) {
-    for(char16_t surrogate : surrogates) {
+    for (char16_t surrogate : surrogates) {
       utf16[j] = surrogate;
       const auto len = utf16.size();
       std::vector<char16_t> output(len);
       implementation.to_well_formed_utf16le((const char16_t *)utf16.data(), len,
                                             output.data());
-      ASSERT_TRUE(output[j] == replacement_le);
+      ASSERT_EQUAL(output[j], replacement_le);
       utf16[j] = 0x0000; // Reset to a valid character
     }
   }
@@ -43,7 +43,7 @@ TEST_LOOP(trials, to_well_formed_utf16be_single_surrogate) {
     std::vector<char16_t> output(len);
     implementation.to_well_formed_utf16be((const char16_t *)utf16.data(), len,
                                           output.data());
-    ASSERT_TRUE(output[j] == replacement_be);
+    ASSERT_EQUAL(output[j], replacement_be);
     utf16[j] = 0x0000; // Reset to a valid character
   }
 }
@@ -55,7 +55,7 @@ TEST_LOOP(trials,
   const auto len = utf16.size();
   std::vector<char16_t> output(len);
   implementation.to_well_formed_utf16le(utf16.data(), len, output.data());
-  ASSERT_TRUE(output == utf16);
+  ASSERT_EQUAL(output, utf16);
 }
 
 TEST_LOOP(trials,
@@ -65,7 +65,7 @@ TEST_LOOP(trials,
   const auto len = utf16.size();
   std::vector<char16_t> output(len);
   implementation.to_well_formed_utf16be(utf16.data(), len, output.data());
-  ASSERT_TRUE(output == utf16);
+  ASSERT_EQUAL(output, utf16);
 }
 
 TEST_LOOP(trials, to_well_formed_utf16le_for_valid_input_surrogate_pairs_long) {
@@ -74,7 +74,7 @@ TEST_LOOP(trials, to_well_formed_utf16le_for_valid_input_surrogate_pairs_long) {
   const auto len = utf16.size();
   std::vector<char16_t> output(len);
   implementation.to_well_formed_utf16le(utf16.data(), len, output.data());
-  ASSERT_TRUE(output == utf16);
+  ASSERT_EQUAL(output, utf16);
 }
 
 TEST_LOOP(trials, to_well_formed_utf16be_for_valid_input_surrogate_pairs_long) {
@@ -83,7 +83,7 @@ TEST_LOOP(trials, to_well_formed_utf16be_for_valid_input_surrogate_pairs_long) {
   const auto len = utf16.size();
   std::vector<char16_t> output(len);
   implementation.to_well_formed_utf16be(utf16.data(), len, output.data());
-  ASSERT_TRUE(output == utf16);
+  ASSERT_EQUAL(output, utf16);
 }
 
 TEST_LOOP(trials, to_well_formed_utf16le_for_valid_input_mixed_long) {
@@ -92,7 +92,7 @@ TEST_LOOP(trials, to_well_formed_utf16le_for_valid_input_mixed_long) {
   const auto len = utf16.size();
   std::vector<char16_t> output(len);
   implementation.to_well_formed_utf16le(utf16.data(), len, output.data());
-  ASSERT_TRUE(output == utf16);
+  ASSERT_EQUAL(output, utf16);
 }
 
 TEST_LOOP(trials, to_well_formed_utf16be_for_valid_input_mixed_long) {
@@ -101,7 +101,7 @@ TEST_LOOP(trials, to_well_formed_utf16be_for_valid_input_mixed_long) {
   const auto len = utf16.size();
   std::vector<char16_t> output(len);
   implementation.to_well_formed_utf16be(utf16.data(), len, output.data());
-  ASSERT_TRUE(output == utf16);
+  ASSERT_EQUAL(output, utf16);
 }
 
 TEST_LOOP(trials, to_well_formed_utf16le_for_valid_input_mixed_long_self) {
@@ -110,7 +110,7 @@ TEST_LOOP(trials, to_well_formed_utf16le_for_valid_input_mixed_long_self) {
   const auto len = utf16.size();
   std::vector<char16_t> output = utf16;
   implementation.to_well_formed_utf16le(output.data(), len, output.data());
-  ASSERT_TRUE(output == utf16);
+  ASSERT_EQUAL(output, utf16);
 }
 
 TEST_LOOP(trials, to_well_formed_utf16be_for_valid_input_mixed_long_self) {
@@ -119,7 +119,7 @@ TEST_LOOP(trials, to_well_formed_utf16be_for_valid_input_mixed_long_self) {
   const auto len = utf16.size();
   std::vector<char16_t> output = utf16;
   implementation.to_well_formed_utf16be(output.data(), len, output.data());
-  ASSERT_TRUE(output == utf16);
+  ASSERT_EQUAL(output, utf16);
 }
 
 std::vector<char16_t> random_testcase(size_t n, std::mt19937 &rng) {
@@ -151,7 +151,7 @@ TEST(to_well_formed_utf16le_bad_input) {
     implementation.to_well_formed_utf16le(utf16.data(), len, output.data());
     for (size_t j = 0; j < len; j++) {
       if (utf16[j] != output[j]) {
-        ASSERT_TRUE(output[j] == replacement_le);
+        ASSERT_EQUAL(output[j], replacement_le);
       }
     }
     ASSERT_TRUE(implementation.validate_utf16le(output.data(), len));
@@ -167,7 +167,7 @@ TEST(to_well_formed_utf16be_bad_input) {
     implementation.to_well_formed_utf16be(utf16.data(), len, output.data());
     for (size_t j = 0; j < len; j++) {
       if (utf16[j] != output[j]) {
-        ASSERT_TRUE(output[j] == replacement_be);
+        ASSERT_EQUAL(output[j], replacement_be);
       }
     }
     ASSERT_TRUE(implementation.validate_utf16be(output.data(), len));
@@ -183,7 +183,7 @@ TEST(to_well_formed_utf16le_bad_input_self) {
     implementation.to_well_formed_utf16le(output.data(), len, output.data());
     for (size_t j = 0; j < len; j++) {
       if (utf16[j] != output[j]) {
-        ASSERT_TRUE(output[j] == replacement_le);
+        ASSERT_EQUAL(output[j], replacement_le);
       }
     }
     ASSERT_TRUE(implementation.validate_utf16le(output.data(), len));
@@ -199,7 +199,7 @@ TEST(to_well_formed_utf16be_bad_input_self) {
     implementation.to_well_formed_utf16be(output.data(), len, output.data());
     for (size_t j = 0; j < len; j++) {
       if (utf16[j] != output[j]) {
-        ASSERT_TRUE(output[j] == replacement_be);
+        ASSERT_EQUAL(output[j], replacement_be);
       }
     }
     ASSERT_TRUE(implementation.validate_utf16be(output.data(), len));
