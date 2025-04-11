@@ -38,7 +38,6 @@ TEST_LOOP(trials, to_well_formed_utf16le_single_surrogate) {
   }
 }
 
-
 TEST_LOOP(trials, to_well_formed_utf16be_single_surrogate) {
   const size_t length = 128;
   std::vector<uint16_t> utf16(length);

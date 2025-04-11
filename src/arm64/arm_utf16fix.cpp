@@ -113,10 +113,17 @@ bool utf16fix_block64(char16_t *out, const char16_t *in) {
 
   const char16_t replacement =
       !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
-  uint8x16_t illse0 = get_mismatch_copy<big_endian>(in, out, inplace);
-  uint8x16_t illse1 = get_mismatch_copy<big_endian>(in + 16, out + 16, inplace);
-  uint8x16_t illse2 = get_mismatch_copy<big_endian>(in + 32, out + 32, inplace);
-  uint8x16_t illse3 = get_mismatch_copy<big_endian>(in + 48, out + 48, inplace);
+  uint8x16_t illse0 = inplace ? get_mismatch_copy<big_endian, true>(in, out)
+                              : get_mismatch_copy<big_endian, false>(in, out);
+  uint8x16_t illse1 =
+      inplace ? get_mismatch_copy<big_endian, true>(in + 16, out + 16)
+              : get_mismatch_copy<big_endian, false>(in + 16, out + 16);
+  uint8x16_t illse2 =
+      inplace ? get_mismatch_copy<big_endian, true>(in + 32, out + 32)
+              : get_mismatch_copy<big_endian, false>(in + 32, out + 32);
+  uint8x16_t illse3 =
+      inplace ? get_mismatch_copy<big_endian, true>(in + 48, out + 48)
+              : get_mismatch_copy<big_endian, false>(in + 48, out + 48);
   auto is_high_surrogate = [](char16_t c) -> bool {
     c = !match_system(big_endian) ? scalar::u16_swap_bytes(c) : c;
     return (0xd800 <= c && c <= 0xdbff);

@@ -79,9 +79,6 @@ void dump_diff_hex(const T &lhs, const U &rhs) {
   putchar('\n');
 }
 
-inline std::ostream &operator<<(std::ostream &os, char8_t c) {
-  return os << uint8_t(c);
-}
 inline std::ostream &operator<<(std::ostream &os, char16_t c) {
   return os << uint16_t(c);
 }
