@@ -162,9 +162,11 @@ void to_well_formed_utf16(const char16_t *input, size_t len, char16_t *output) {
   }
 }
 
+// variable templates are a C++14 extension
 template <endianness big_endian>
-const char16_t replacement = !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
-
+char16_t replacement() { 
+  return !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
+}
 } // namespace utf16
 } // unnamed namespace
 } // namespace scalar

@@ -8,7 +8,7 @@
  */
 template <endianness big_endian, bool in_place>
 void utf16fix_block(char16_t *out, const char16_t *in) {
-  const char16_t replacement = scalar::utf16::replacement<big_endian>;
+  const char16_t replacement = scalar::utf16::replacement<big_endian>();
   auto swap_if_needed = [](uint16_t c) -> uint16_t {
     return !simdutf::match_system(big_endian) ? scalar::u16_swap_bytes(c) : c;
   };
@@ -55,7 +55,7 @@ void utf16fix_block(char16_t *out, const char16_t *in) {
 
 template <endianness big_endian, bool in_place>
 void utf16fix_block_sse(char16_t *out, const char16_t *in) {
-  const char16_t replacement = scalar::utf16::replacement<big_endian>;
+  const char16_t replacement = scalar::utf16::replacement<big_endian>();
   auto swap_if_needed = [](uint16_t c) -> uint16_t {
     return !simdutf::match_system(big_endian) ? scalar::u16_swap_bytes(c) : c;
   };
@@ -97,7 +97,7 @@ void utf16fix_block_sse(char16_t *out, const char16_t *in) {
 
 template <endianness big_endian>
 void utf16fix_sse(const char16_t *in, size_t n, char16_t *out) {
-  const char16_t replacement = scalar::utf16::replacement<big_endian>;
+  const char16_t replacement = scalar::utf16::replacement<big_endian>();
   size_t i;
 
   if (n < 9) {
@@ -130,7 +130,7 @@ void utf16fix_sse(const char16_t *in, size_t n, char16_t *out) {
 
 template <endianness big_endian>
 void utf16fix_avx(const char16_t *in, size_t n, char16_t *out) {
-  const char16_t replacement = scalar::utf16::replacement<big_endian>;
+  const char16_t replacement = scalar::utf16::replacement<big_endian>();
   size_t i;
 
   if (n < 17) {
