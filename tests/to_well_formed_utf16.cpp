@@ -20,6 +20,7 @@ TEST_LOOP(trials, to_well_formed_utf16le_single_surrogate) {
     ASSERT_TRUE(output[j] == 0xFFFD);
   }
 }
+
 TEST_LOOP(trials, to_well_formed_utf16be_single_surrogate) {
   for (size_t j = 0; j < 40; j++) {
     std::vector<uint16_t> utf16(40);

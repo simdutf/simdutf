@@ -1,3 +1,10 @@
+__m512i swap_endianness(__m512i x) {
+  const __m512i swap = _mm512_setr_epi64(
+      0x0607040502030001, 0x0e0f0c0d0a0b0809, 0x0607040502030001,
+      0x0e0f0c0d0a0b0809, 0x0607040502030001, 0x0e0f0c0d0a0b0809,
+      0x0607040502030001, 0x0e0f0c0d0a0b0809);
+  return _mm512_shuffle_epi8(x, swap);
+}
 
 /*
  * Process one block of 32 characters.  If in_place is false,
@@ -9,13 +16,16 @@
  */
 template <endianness big_endian>
 static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
-  const char16_t replacement =
-      !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
+  const char16_t replacement = 0xfffd;
   __m512i lookback, block, lb_masked, block_masked;
   __mmask32 lb_is_high, block_is_low, illseq;
 
-  lookback = _mm512_loadu_si512((const void *)(in - 1));
-  block = _mm512_loadu_si512((const void *)in);
+  lookback = _mm512_loadu_si512((const __m512i *)(in - 1));
+  block = _mm512_loadu_si512((const __m512i *)in);
+  if (!simdutf::match_system(big_endian)) {
+    lookback = swap_endianness(lookback);
+    block = swap_endianness(block);
+  }
   lb_masked = _mm512_and_epi32(lookback, _mm512_set1_epi16(0xfc00U));
   block_masked = _mm512_and_epi32(block, _mm512_set1_epi16(0xfc00U));
 
@@ -37,14 +47,18 @@ static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
                              _mm512_set1_epi16(replacement));
 
     /* fix illegal sequencing in the main block */
-    if (in_place)
+    if (in_place) {
       _mm512_mask_storeu_epi16(out, block_illseq,
                                _mm512_set1_epi16(replacement));
-    else
+    } else {
       _mm512_storeu_epi32(
           out, _mm512_mask_blend_epi16(block_illseq, block,
                                        _mm512_set1_epi16(replacement)));
+    }
   } else if (!in_place) {
+    if (!simdutf::match_system(big_endian)) {
+      block = swap_endianness(block);
+    }
     _mm512_storeu_si512((__m512i *)out, block);
   }
 }
@@ -54,7 +68,7 @@ static void utf16fix_block(char16_t *out, const char16_t *in, bool in_place) {
  * out-of-place operation.
  */
 template <endianness big_endian>
-void utf16fix_runt(char16_t *out, const char16_t *in, size_t n) {
+void utf16fix_runt(const char16_t *in, size_t n, char16_t *out) {
   const char16_t replacement =
       !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
   __m512i lookback, block, lb_masked, block_masked;
@@ -93,7 +107,7 @@ void utf16fix_runt(char16_t *out, const char16_t *in, size_t n) {
 }
 
 template <endianness big_endian>
-void utf16fix_avx512(char16_t *out, const char16_t *in, size_t n) {
+void utf16fix_avx512(const char16_t *in, size_t n, char16_t *out) {
   const char16_t replacement =
       !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
   size_t i;
