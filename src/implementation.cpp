@@ -1484,14 +1484,6 @@ simdutf_warn_unused bool validate_utf16(const char16_t *buf,
   return validate_utf16le(buf, len);
   #endif
 }
-void validate_utf16(const char16_t *input, size_t len,
-                    char16_t *output) noexcept {
-  #if SIMDUTF_IS_BIG_ENDIAN
-  return to_well_formed_utf16be(input, len, output);
-  #else
-  return to_well_formed_utf16le(input, len, output);
-  #endif
-}
 void to_well_formed_utf16be(const char16_t *input, size_t len,
                             char16_t *output) noexcept {
   return get_default_implementation()->to_well_formed_utf16be(input, len,
