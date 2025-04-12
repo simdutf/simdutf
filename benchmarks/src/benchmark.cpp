@@ -868,7 +868,7 @@ void Benchmark::run_to_well_formed_utf16(
   count_events(proc, iterations); // warming up!
   const auto result = count_events(proc, iterations);
   size_t char_count = get_active_implementation()->count_utf16le(data, size);
-  print_summary(result, size, char_count);
+  print_summary(result, input_data.size(), char_count);
 }
 
 void Benchmark::run_utf16_length_from_utf8(
