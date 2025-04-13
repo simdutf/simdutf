@@ -76,14 +76,6 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
       : simd16(load(reinterpret_cast<const uint16_t *>(values))) {}
 
   // Order-specific operations
-  simdutf_really_inline simd16<bool>
-  operator<=(const simd16<uint16_t> other) const {
-    return __lasx_xvsle_hu(this->value, other.value);
-  }
-  simdutf_really_inline simd16<bool>
-  operator>=(const simd16<uint16_t> other) const {
-    return __lasx_xvsle_hu(other.value, this->value);
-  }
   simdutf_really_inline simd16 &operator+=(const simd16 other) {
     value = __lasx_xvadd_h(value, other.value);
     return *this;
@@ -143,39 +135,19 @@ template <typename T> struct simd16x32 {
     this->chunks[1].store(ptr + sizeof(simd16<T>) * 1 / sizeof(T));
   }
 
-  simdutf_really_inline uint64_t to_bitmask() const {
-    uint64_t r_lo = uint32_t(this->chunks[0].to_bitmask());
-    uint64_t r_hi = this->chunks[1].to_bitmask();
-    return r_lo | (r_hi << 32);
-  }
-
-  simdutf_really_inline void store_ascii_as_utf16(char16_t *ptr) const {
-    this->chunks[0].store_ascii_as_utf16(ptr + sizeof(simd16<T>) * 0);
-    this->chunks[1].store_ascii_as_utf16(ptr + sizeof(simd16<T>));
-  }
-
   simdutf_really_inline void swap_bytes() {
     this->chunks[0] = this->chunks[0].swap_bytes();
     this->chunks[1] = this->chunks[1].swap_bytes();
-  }
-
-  simdutf_really_inline uint64_t lteq(const T m) const {
-    const simd16<T> mask = simd16<T>::splat(m);
-    return simd16x32<bool>(this->chunks[0] <= mask, this->chunks[1] <= mask)
-        .to_bitmask();
-  }
-
-  simdutf_really_inline uint64_t not_in_range(const T low, const T high) const {
-    const simd16<T> mask_low = simd16<T>::splat(static_cast<T>(low - 1));
-    const simd16<T> mask_high = simd16<T>::splat(static_cast<T>(high + 1));
-    return simd16x32<bool>(
-               (this->chunks[0] >= mask_high) | (this->chunks[0] <= mask_low),
-               (this->chunks[1] >= mask_high) | (this->chunks[1] <= mask_low))
-        .to_bitmask();
   }
 }; // struct simd16x32<T>
 
 simdutf_really_inline simd16<uint16_t> min(const simd16<uint16_t> a,
                                            const simd16<uint16_t> b) {
   return __lasx_xvmin_hu(a.value, b.value);
+}
+
+simdutf_really_inline simd16<bool> operator==(const simd16<uint16_t> a,
+                                              uint16_t b) {
+  const auto bv = __lasx_xvreplgr2vr_h(b);
+  return __lasx_xvseq_h(a.value, bv);
 }

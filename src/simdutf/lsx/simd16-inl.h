@@ -92,19 +92,10 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
   simdutf_really_inline simd16(const char16_t *values)
       : simd16(load(reinterpret_cast<const uint16_t *>(values))) {}
 
+  // Copy constructor
+  simdutf_really_inline simd16(const simd16<bool> mask) : simd16(mask.value) {}
+
   // Order-specific operations
-  simdutf_really_inline simd16<bool>
-  operator<=(const simd16<uint16_t> other) const {
-    return __lsx_vsle_hu(this->value, other.value);
-  }
-  simdutf_really_inline simd16<bool>
-  operator>(const simd16<uint16_t> other) const {
-    return __lsx_vslt_hu(other.value, this->value);
-  }
-  simdutf_really_inline simd16<bool>
-  operator<(const simd16<uint16_t> other) const {
-    return __lsx_vslt_hu(this->value, other.value);
-  }
   simdutf_really_inline simd16 &operator+=(const simd16 other) {
     value = __lsx_vadd_h(value, other.value);
     return *this;
@@ -166,39 +157,11 @@ template <typename T> struct simd16x32 {
     this->chunks[3].store(ptr + sizeof(simd16<T>) * 3 / sizeof(T));
   }
 
-  simdutf_really_inline uint64_t to_bitmask() const {
-    __m128i mask = __lsx_vbsll_v(__lsx_vmsknz_b((this->chunks[3]).value), 6);
-    mask = __lsx_vor_v(
-        mask, __lsx_vbsll_v(__lsx_vmsknz_b((this->chunks[2]).value), 4));
-    mask = __lsx_vor_v(
-        mask, __lsx_vbsll_v(__lsx_vmsknz_b((this->chunks[1]).value), 2));
-    mask = __lsx_vor_v(mask, __lsx_vmsknz_b((this->chunks[0]).value));
-    return __lsx_vpickve2gr_du(mask, 0);
-  }
-
   simdutf_really_inline void swap_bytes() {
     this->chunks[0] = this->chunks[0].swap_bytes();
     this->chunks[1] = this->chunks[1].swap_bytes();
     this->chunks[2] = this->chunks[2].swap_bytes();
     this->chunks[3] = this->chunks[3].swap_bytes();
-  }
-
-  simdutf_really_inline uint64_t lteq(const T m) const {
-    const simd16<T> mask = simd16<T>::splat(m);
-    return simd16x32<bool>(this->chunks[0] <= mask, this->chunks[1] <= mask,
-                           this->chunks[2] <= mask, this->chunks[3] <= mask)
-        .to_bitmask();
-  }
-
-  simdutf_really_inline uint64_t not_in_range(const T low, const T high) const {
-    const simd16<T> mask_low = simd16<T>::splat(low);
-    const simd16<T> mask_high = simd16<T>::splat(high);
-    return simd16x32<bool>(
-               (this->chunks[0] > mask_high) | (this->chunks[0] < mask_low),
-               (this->chunks[1] > mask_high) | (this->chunks[1] < mask_low),
-               (this->chunks[2] > mask_high) | (this->chunks[2] < mask_low),
-               (this->chunks[3] > mask_high) | (this->chunks[3] < mask_low))
-        .to_bitmask();
   }
 }; // struct simd16x32<T>
 
