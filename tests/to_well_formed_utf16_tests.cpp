@@ -9,7 +9,7 @@
 
 constexpr size_t trials = 1000;
 
-#if SIMDUTF_BIG_ENDIAN
+#if SIMDUTF_IS_BIG_ENDIAN
 constexpr char16_t replacement_le = 0xFDFF;
 constexpr char16_t replacement_be = 0xFFFD;
 #else
@@ -20,18 +20,18 @@ constexpr char16_t replacement_be = 0xFDFF;
 TEST_LOOP(trials, to_well_formed_utf16le_single_surrogate) {
   const size_t length = 128;
   std::vector<uint16_t> utf16(length);
-#if SIMDUTF_BIG_ENDIAN
+#if SIMDUTF_IS_BIG_ENDIAN
   std::vector<char16_t> surrogates = {0x00D8, 0x00DC, 0xFFDF, 0x00D8, 0x00DC};
 #else
   std::vector<char16_t> surrogates = {0xD800, 0xDC00, 0xDFFF, 0xD800, 0xDC00};
 #endif
+  std::vector<char16_t> output(length);
   for (size_t j = 0; j < length; j++) {
     for (char16_t surrogate : surrogates) {
       utf16[j] = surrogate;
-      const auto len = utf16.size();
-      std::vector<char16_t> output(len);
-      implementation.to_well_formed_utf16le((const char16_t *)utf16.data(), len,
-                                            output.data());
+      std::fill(output.begin(), output.end(), 0);
+      implementation.to_well_formed_utf16le((const char16_t *)utf16.data(),
+                                            utf16.size(), output.data());
       ASSERT_EQUAL(output[j], replacement_le);
       utf16[j] = 0x0000; // Reset to a valid character
     }
@@ -41,18 +41,18 @@ TEST_LOOP(trials, to_well_formed_utf16le_single_surrogate) {
 TEST_LOOP(trials, to_well_formed_utf16be_single_surrogate) {
   const size_t length = 128;
   std::vector<uint16_t> utf16(length);
-#if SIMDUTF_BIG_ENDIAN
+#if SIMDUTF_IS_BIG_ENDIAN
   std::vector<char16_t> surrogates = {0xD800, 0xDC00, 0xDFFF, 0xD800, 0xDC00};
 #else
   std::vector<char16_t> surrogates = {0x00D8, 0x00DC, 0xFFDF, 0x00D8, 0x00DC};
 #endif
+  std::vector<char16_t> output(length);
   for (size_t j = 0; j < length; j++) {
     for (char16_t surrogate : surrogates) {
       utf16[j] = surrogate;
-      const auto len = utf16.size();
-      std::vector<char16_t> output(len);
-      implementation.to_well_formed_utf16be((const char16_t *)utf16.data(), len,
-                                            output.data());
+      std::fill(output.begin(), output.end(), 0);
+      implementation.to_well_formed_utf16be((const char16_t *)utf16.data(),
+                                            utf16.size(), output.data());
       ASSERT_EQUAL(output[j], replacement_be);
       utf16[j] = 0x0000; // Reset to a valid character
     }
