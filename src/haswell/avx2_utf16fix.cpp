@@ -74,15 +74,12 @@ void utf16fix_block_sse(char16_t *out, const char16_t *in) {
 
   illseq = _mm_xor_si128(lb_is_high, block_is_low);
   if (_mm_movemask_epi8(illseq) != 0) {
-    int lb;
-
     /* compute the cause of the illegal sequencing */
     lb_illseq = _mm_andnot_si128(block_is_low, lb_is_high);
     block_illseq = _mm_or_si128(_mm_andnot_si128(lb_is_high, block_is_low),
                                 _mm_bsrli_si128(lb_illseq, 2));
-
     /* fix illegal sequencing in the lookback */
-    lb = _mm_cvtsi128_si32(lb_illseq);
+    int lb = _mm_cvtsi128_si32(lb_illseq);
     lb = (lb & replacement) | (~lb & out[-1]);
     out[-1] = char16_t(lb);
     /* fix illegal sequencing in the main block */
