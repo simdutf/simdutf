@@ -403,7 +403,7 @@ void to_well_formed_utf16le(const char16_t *input, size_t len,
 simdutf_really_inline void
 to_well_formed_utf16le(std::span<const char16_t> input,
                        std::span<char16_t> output) noexcept {
-  return to_well_formed_utf16le(input.data(), input.size(), output.data());
+  to_well_formed_utf16le(input.data(), input.size(), output.data());
 }
   #endif // SIMDUTF_SPAN
 
@@ -425,7 +425,7 @@ void to_well_formed_utf16be(const char16_t *input, size_t len,
 simdutf_really_inline void
 to_well_formed_utf16be(std::span<const char16_t> input,
                        std::span<char16_t> output) noexcept {
-  return to_well_formed_utf16be(input.data(), input.size(), output.data());
+  to_well_formed_utf16be(input.data(), input.size(), output.data());
 }
   #endif // SIMDUTF_SPAN
 
@@ -447,7 +447,7 @@ void to_well_formed_utf16(const char16_t *input, size_t len,
 simdutf_really_inline void
 to_well_formed_utf16(std::span<const char16_t> input,
                      std::span<char16_t> output) noexcept {
-  return to_well_formed_utf16(input.data(), input.size(), output.data());
+  to_well_formed_utf16(input.data(), input.size(), output.data());
 }
   #endif // SIMDUTF_SPAN
 
