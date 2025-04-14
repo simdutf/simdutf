@@ -1495,7 +1495,7 @@ void to_well_formed_utf16le(const char16_t *input, size_t len,
                                                               output);
 }
 void to_well_formed_utf16(const char16_t *input, size_t len,
-                                        char16_t *output) noexcept {
+                          char16_t *output) noexcept {
   #if SIMDUTF_IS_BIG_ENDIAN
   to_well_formed_utf16be(input, len, output);
   #else
