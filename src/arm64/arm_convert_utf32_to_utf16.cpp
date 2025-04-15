@@ -64,7 +64,7 @@ arm_convert_utf32_to_utf16(const char32_t *buf, size_t len,
     uint32x4x2_t in = vld1q_u32_x2(reinterpret_cast<const uint32_t *>(buf));
 
     // Check if no bits set above 16th
-    if (vmaxvq_u32(vorrq_u32(in.val[0], in.val[1])) <= 0xFFFF) {
+    if (simdutf_likely(vmaxvq_u32(vorrq_u32(in.val[0], in.val[1])) <= 0xFFFF)) {
       uint16x8_t utf16_packed = vuzp1q_u16(vreinterpretq_u16_u32(in.val[0]),
                                            vreinterpretq_u16_u32(in.val[1]));
 
