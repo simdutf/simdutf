@@ -23,6 +23,9 @@ simdutf_really_inline int trailing_zeroes(uint64_t input_num) {
   #endif // SIMDUTF_REGULAR_VISUAL_STUDIO
 }
 #endif
+template <typename T> T clear_least_significant_bit(T x) {
+  return (x & (x - 1));
+}
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION

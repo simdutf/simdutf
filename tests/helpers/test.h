@@ -79,6 +79,27 @@ void dump_diff_hex(const T &lhs, const U &rhs) {
   putchar('\n');
 }
 
+inline std::ostream &operator<<(std::ostream &os, char16_t c) {
+  return os << uint16_t(c);
+}
+inline std::ostream &operator<<(std::ostream &os, char32_t c) {
+  return os << uint32_t(c);
+}
+template <typename T>
+std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
+  os << "["; // Start with opening bracket
+  if (!vec.empty()) {
+    // Print first element without leading comma
+    os << static_cast<uint16_t>(vec[0]);
+    // Print remaining elements with commas
+    for (size_t i = 1; i < vec.size(); ++i) {
+      os << ", " << static_cast<uint16_t>(vec[i]);
+    }
+  }
+  os << "]"; // End with closing bracket
+  return os;
+}
+
 #define TEST(name)                                                             \
   void test_impl_##name(const simdutf::implementation &impl);                  \
   void name(const simdutf::implementation &impl) {                             \

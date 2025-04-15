@@ -396,3 +396,8 @@ target_link_libraries(internal_tests
 add_cpp_test(utf8_length_from_utf16_tests)
 target_link_libraries(utf8_length_from_utf16_tests
     PUBLIC simdutf::tests::helpers)
+
+add_cpp_test(to_well_formed_utf16_tests)
+target_link_libraries(to_well_formed_utf16_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)

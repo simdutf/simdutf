@@ -32,6 +32,9 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
   #include "westmere/internal/loader.cpp"
 #endif // SIMDUTF_FEATURE_UTF8
 
+#if SIMDUTF_FEATURE_UTF16
+  #include "westmere/sse_utf16fix.cpp"
+#endif // SIMDUTF_FEATURE_UTF16
 #if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
   #include "westmere/sse_validate_utf16.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
@@ -386,6 +389,16 @@ simdutf_warn_unused result implementation::validate_utf16be_with_errors(
   } else {
     return res;
   }
+}
+
+void implementation::to_well_formed_utf16le(const char16_t *input, size_t len,
+                                            char16_t *output) const noexcept {
+  return utf16fix_sse<endianness::LITTLE>(input, len, output);
+}
+
+void implementation::to_well_formed_utf16be(const char16_t *input, size_t len,
+                                            char16_t *output) const noexcept {
+  return utf16fix_sse<endianness::BIG>(input, len, output);
 }
 #endif // SIMDUTF_FEATURE_UTF16
 

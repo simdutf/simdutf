@@ -267,6 +267,14 @@ public:
       const char16_t *buf, size_t len) const noexcept final override {
     return set_best()->validate_utf16be_with_errors(buf, len);
   }
+  void to_well_formed_utf16be(const char16_t *input, size_t len,
+                              char16_t *output) const noexcept final override {
+    return set_best()->to_well_formed_utf16be(input, len, output);
+  }
+  void to_well_formed_utf16le(const char16_t *input, size_t len,
+                              char16_t *output) const noexcept final override {
+    return set_best()->to_well_formed_utf16le(input, len, output);
+  }
 #endif // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
@@ -845,6 +853,10 @@ public:
       const char16_t *, size_t) const noexcept final override {
     return result(error_code::OTHER, 0);
   }
+  void to_well_formed_utf16be(const char16_t *, size_t,
+                              char16_t *) const noexcept final override {}
+  void to_well_formed_utf16le(const char16_t *, size_t,
+                              char16_t *) const noexcept final override {}
 #endif // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
@@ -1470,6 +1482,24 @@ simdutf_warn_unused bool validate_utf16(const char16_t *buf,
   return validate_utf16be(buf, len);
   #else
   return validate_utf16le(buf, len);
+  #endif
+}
+void to_well_formed_utf16be(const char16_t *input, size_t len,
+                            char16_t *output) noexcept {
+  return get_default_implementation()->to_well_formed_utf16be(input, len,
+                                                              output);
+}
+void to_well_formed_utf16le(const char16_t *input, size_t len,
+                            char16_t *output) noexcept {
+  return get_default_implementation()->to_well_formed_utf16le(input, len,
+                                                              output);
+}
+void to_well_formed_utf16(const char16_t *input, size_t len,
+                          char16_t *output) noexcept {
+  #if SIMDUTF_IS_BIG_ENDIAN
+  to_well_formed_utf16be(input, len, output);
+  #else
+  to_well_formed_utf16le(input, len, output);
   #endif
 }
 #endif // SIMDUTF_FEATURE_UTF16
