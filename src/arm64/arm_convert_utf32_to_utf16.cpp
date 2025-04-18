@@ -27,13 +27,14 @@ simdutf_really_inline uint64_t fast_invalid_utf32(const uint32x4x2_t in) {
   const auto v_fffff800 = vdupq_n_u32(0xfffff800);
   const auto surrogate1 = vceqq_u32(vandq_u32(in.val[0], v_fffff800), v_d800);
   const auto surrogate2 = vceqq_u32(vandq_u32(in.val[1], v_fffff800), v_d800);
-  const auto err =
-      vuzp2q_u16(vreinterpretq_u16_u32(surrogate1), vreinterpretq_u16_u32(surrogate2));
+  const auto err = vuzp2q_u16(vreinterpretq_u16_u32(surrogate1),
+                              vreinterpretq_u16_u32(surrogate2));
   return vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(err, 8)), 0);
 }
 
 template <endianness byte_order>
-simdutf_really_inline expansion_result_t neon_expand_surrogate(const uint32x4_t in) {
+simdutf_really_inline expansion_result_t
+neon_expand_surrogate(const uint32x4_t in) {
   const uint32x4_t v_ffff0000 = vdupq_n_u32(0xffff0000);
   const uint32x4_t non_surrogate_mask = vceqzq_u32(vandq_u32(in, v_ffff0000));
   const uint64_t cmp_bits =
@@ -96,7 +97,7 @@ arm_convert_utf32_to_utf16(const char32_t *buf, size_t len,
       utf16_output += 8;
       buf += 8;
     } else {
-      if (simdutf_unlikely(max_val > 0x10ffff || fast_invalid_utf32(in))) {
+      if (simdutf_unlikely(fast_invalid_utf32(in) || max_val > 0x10ffff)) {
         return std::make_pair(nullptr,
                               reinterpret_cast<char16_t *>(utf16_output));
       }
@@ -154,7 +155,8 @@ arm_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
       utf16_output += 8;
       buf += 8;
     } else {
-      const uint64_t err = max_val <=  0x10ffff ? fast_invalid_utf32(in) : invalid_utf32(in);
+      const uint64_t err =
+          max_val <= 0x10ffff ? fast_invalid_utf32(in) : invalid_utf32(in);
       if (simdutf_unlikely(err)) {
         const size_t pos = trailing_zeroes(err) / 8;
         for (size_t k = 0; k < pos; k++) {
