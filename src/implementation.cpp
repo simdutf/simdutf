@@ -1509,6 +1509,70 @@ simdutf_warn_unused bool validate_utf16le(const char16_t *buf,
                                           size_t len) noexcept {
   return get_default_implementation()->validate_utf16le(buf, len);
 }
+
+  #if SIMDUTF_ATOMIC_REF
+template <typename char_type>
+simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
+    const char_type *input, size_t length, char *output, size_t &outlen,
+    base64_options options,
+    last_chunk_handling_options last_chunk_handling_options) noexcept {
+  static_assert(std::atomic_ref<char_type>::required_alignment ==
+                    sizeof(char_type),
+                "std::atomic_ref requires the same alignment as char_type");
+  std::array<4096, char> temp_buffer;
+  const char_type *input_init = input;
+  size_t actual_out = 0;
+  while (true) {
+    size_t temp_outlen = temp_buffer.size();
+    result r =
+        base64_to_binary_safe(input, length, temp_buffer.data(), temp_outlen,
+                              options, last_chunk_handling_options);
+    size_t needs_to_write = temp_outlen;
+    bool ran_out_of_room = false;
+    if (needs_to_write + actual_out > outlen) {
+      needs_to_write = outlen - actual_out;
+      ran_out_of_room = true;
+    }
+    // Copy with relaxed atomic operations to the output
+    for (size_t i = actual_out; i < actual_out + needs_to_write; ++i) {
+      std::atomic_ref<char>(output[i]).store(temp_buffer[i],
+                                             std::memory_order_relaxed);
+    }
+    actual_out += needs_to_write;
+    length -= r.count;
+    input += r.count;
+    if (ran_out_of_room) {
+      return result(error_code::OUTPUT_BUFFER_TOO_SMALL, length);
+    }
+    if (r.error == error_code::SUCCESS) {
+      outlen = actual_out;
+      r.count = size_t(input - input_init);
+      return r;
+    } else if (r.error != error_code::OUTPUT_BUFFER_TOO_SMALL) {
+      // We have an error, but we need to return the number of bytes
+      // that we have written so far.
+      outlen = actual_out;
+      r.count = size_t(input - input_init);
+      return r;
+    }
+  }
+}
+simdutf_warn_unused result atomic_base64_to_binary_safe(
+    const char *input, size_t length, char *output, size_t &outlen,
+    base64_options options,
+    last_chunk_handling_options last_chunk_handling_options) noexcept {
+  return atomic_base64_to_binary_safe_impl<char>(
+      input, length, output, outlen, options, last_chunk_handling_options);
+}
+simdutf_warn_unused result atomic_base64_to_binary_safe(
+    const char16_t *input, size_t length, char *output, size_t &outlen,
+    base64_options options,
+    last_chunk_handling_options last_chunk_handling_options) noexcept {
+  return atomic_base64_to_binary_safe_impl<char16_t>(
+      input, length, output, outlen, options, last_chunk_handling_options);
+}
+  #endif // SIMDUTF_ATOMIC_REF
+
 #endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF16

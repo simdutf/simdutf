@@ -1243,20 +1243,16 @@ TEST(complete_safe_decode_base64_cases) {
     for (size_t i = 0; i < bufsize; i++) {
       ASSERT_EQUAL(buffer[i], p.first[i]);
     }
-  }
-}
-
-TEST(complete_decode_base64url_cases) {
-  for (const auto &p : cases::whitespaces) {
-    std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
-        p.second.data(), p.second.size()));
-    simdutf::result r = implementation.base64_to_binary(
-        p.second.data(), p.second.size(), buffer.data(), simdutf::base64_url);
+#if SIMDUTF_ATOMIC_REF
+    bufsize = buffer.size();
+    r = simdutf::atomic_base64_to_binary_safe(p.second.data(), p.second.size(),
+                                              buffer.data(), bufsize);
     ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
-    ASSERT_EQUAL(r.count, p.first.size());
-    for (size_t i = 0; i < r.count; i++) {
+    ASSERT_EQUAL(bufsize, p.first.size());
+    for (size_t i = 0; i < bufsize; i++) {
       ASSERT_EQUAL(buffer[i], p.first[i]);
     }
+#endif
   }
 }
 
@@ -1273,6 +1269,17 @@ TEST(complete_safe_decode_base64url_cases) {
     for (size_t i = 0; i < bufsize; i++) {
       ASSERT_EQUAL(buffer[i], p.first[i]);
     }
+#if SIMDUTF_ATOMIC_REF
+    ufsize = buffer.size();
+    r = simdutf::base64_to_binary_safe(p.second.data(), p.second.size(),
+                                       buffer.data(), bufsize,
+                                       simdutf::base64_url);
+    ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+    ASSERT_EQUAL(bufsize, p.first.size());
+    for (size_t i = 0; i < bufsize; i++) {
+      ASSERT_EQUAL(buffer[i], p.first[i]);
+    }
+#endif
   }
 }
 

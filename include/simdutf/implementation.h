@@ -3182,7 +3182,49 @@ simdutf_really_inline simdutf_warn_unused result base64_to_binary_safe(
                                outlen, options, last_chunk_options);
 }
   #endif // SIMDUTF_SPAN
-#endif   // SIMDUTF_FEATURE_BASE64
+
+  #if SIMDUTF_ATOMIC_REF
+/**
+ * Convert a base64 input to a binary output with a size limit and using atomic
+ * operations.
+ *
+ * Like `base64_to_binary_safe` but using atomic operations, this function is
+ * thread-safe for concurrent memory access, allowing the input and output
+ * buffers to be shared between threads without undefined behavior in case of
+ * data races.
+ *
+ * This function comes with a potentially significant performance penalty, but
+ * is useful when thread safety is needed during base64 decoding.
+ *
+ * This function is only available when simdutf is compiled with
+ * C++20 support and __cpp_lib_atomic_ref >= 201806L. You may check
+ * the availability of this function by checking the macro
+ * SIMDUTF_ATOMIC_REF.
+ *
+ * @param input         the base64 input to decode
+ * @param length        the length of the input in bytes
+ * @param output        the pointer to buffer that can hold the conversion
+ * result
+ * @param outlen        the number of bytes that can be written in the output
+ * buffer. Upon return, it is modified to reflect how many bytes were written.
+ * @param options       the base64 options to use (default, url, etc.)
+ * @param last_chunk_options the last chunk handling options (loose, strict,
+ * stop_before_partial)
+ * @return a result struct with an error code and count indicating error
+ * position or success
+ */
+simdutf_warn_unused result atomic_base64_to_binary_safe(
+    const char *input, size_t length, char *output, size_t &outlen,
+    base64_options options = base64_default,
+    last_chunk_handling_options last_chunk_options =
+        last_chunk_handling_options::loose) noexcept;
+simdutf_warn_unused result atomic_base64_to_binary_safe(
+    const char16_t *input, size_t length, char *output, size_t &outlen,
+    base64_options options = base64_default,
+    last_chunk_handling_options last_chunk_options = loose) noexcept;
+  #endif // SIMDUTF_ATOMIC_REF
+
+#endif // SIMDUTF_FEATURE_BASE64
 
 /**
  * An implementation of simdutf for a particular CPU architecture.
