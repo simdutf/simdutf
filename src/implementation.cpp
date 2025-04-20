@@ -1519,7 +1519,7 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
   static_assert(std::atomic_ref<char_type>::required_alignment ==
                     sizeof(char_type),
                 "std::atomic_ref requires the same alignment as char_type");
-  std::array<char,4096> temp_buffer;
+  std::array<char, 4096> temp_buffer;
   const char_type *input_init = input;
   size_t actual_out = 0;
   while (true) {

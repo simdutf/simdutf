@@ -1270,7 +1270,7 @@ TEST(complete_safe_decode_base64url_cases) {
       ASSERT_EQUAL(buffer[i], p.first[i]);
     }
 #if SIMDUTF_ATOMIC_REF
-    ufsize = buffer.size();
+    bufsize = buffer.size();
     r = simdutf::base64_to_binary_safe(p.second.data(), p.second.size(),
                                        buffer.data(), bufsize,
                                        simdutf::base64_url);
