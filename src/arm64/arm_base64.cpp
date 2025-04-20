@@ -136,19 +136,7 @@ struct block64 {
 static_assert(sizeof(block64) == 64, "block64 is not 64 bytes");
 template <bool base64_url> uint64_t to_base64_mask(block64 *b, bool *error) {
   uint8x16_t v0f = vdupq_n_u8(0xf);
-
-  uint8x16_t underscore0, underscore1, underscore2, underscore3;
-  if (base64_url) {
-    underscore0 = vceqq_u8(b->chunks[0], vdupq_n_u8(0x5f));
-    underscore1 = vceqq_u8(b->chunks[1], vdupq_n_u8(0x5f));
-    underscore2 = vceqq_u8(b->chunks[2], vdupq_n_u8(0x5f));
-    underscore3 = vceqq_u8(b->chunks[3], vdupq_n_u8(0x5f));
-  } else {
-    (void)underscore0;
-    (void)underscore1;
-    (void)underscore2;
-    (void)underscore3;
-  }
+  uint8x16_t v01 = vdupq_n_u8(0x1);
 
   uint8x16_t lo_nibbles0 = vandq_u8(b->chunks[0], v0f);
   uint8x16_t lo_nibbles1 = vandq_u8(b->chunks[1], v0f);
@@ -156,28 +144,28 @@ template <bool base64_url> uint64_t to_base64_mask(block64 *b, bool *error) {
   uint8x16_t lo_nibbles3 = vandq_u8(b->chunks[3], v0f);
 
   // Needed by the decoding step.
-  uint8x16_t hi_nibbles0 = vshrq_n_u8(b->chunks[0], 4);
-  uint8x16_t hi_nibbles1 = vshrq_n_u8(b->chunks[1], 4);
-  uint8x16_t hi_nibbles2 = vshrq_n_u8(b->chunks[2], 4);
-  uint8x16_t hi_nibbles3 = vshrq_n_u8(b->chunks[3], 4);
+  uint8x16_t hi_bits0 = vshrq_n_u8(b->chunks[0], 3);
+  uint8x16_t hi_bits1 = vshrq_n_u8(b->chunks[1], 3);
+  uint8x16_t hi_bits2 = vshrq_n_u8(b->chunks[2], 3);
+  uint8x16_t hi_bits3 = vshrq_n_u8(b->chunks[3], 3);
   uint8x16_t lut_lo;
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
   if (base64_url) {
     lut_lo =
-        simdutf_make_uint8x16_t(0x3a, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70,
-                                0x70, 0x61, 0xe1, 0xf4, 0xe5, 0xa5, 0xf4, 0xf4);
+        simdutf_make_uint8x16_t(0x15, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c,
+                                0x1c, 0x1d, 0x19, 0x10, 0x11, 0x13, 0x10, 0x30);
   } else {
     lut_lo =
-        simdutf_make_uint8x16_t(0x3a, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70,
-                                0x70, 0x61, 0xe1, 0xb4, 0xe5, 0xe5, 0xf4, 0xb4);
+        simdutf_make_uint8x16_t(0x15, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c,
+                                0x1c, 0x1d, 0x19, 0x12, 0x11, 0x11, 0x10, 0x12);
   }
 #else
   if (base64_url) {
-    lut_lo = uint8x16_t{0x3a, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70,
-                        0x70, 0x61, 0xe1, 0xf4, 0xe5, 0xa5, 0xf4, 0xf4};
+    lut_lo = uint8x16_t{0x15, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c,
+                        0x1c, 0x1d, 0x19, 0x10, 0x11, 0x13, 0x10, 0x30};
   } else {
-    lut_lo = uint8x16_t{0x3a, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70,
-                        0x70, 0x61, 0xe1, 0xb4, 0xe5, 0xe5, 0xf4, 0xb4};
+    lut_lo = uint8x16_t{0x15, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c,
+                        0x1c, 0x1d, 0x19, 0x12, 0x11, 0x11, 0x10, 0x12};
   }
 #endif
   uint8x16_t lo0 = vqtbl1q_u8(lut_lo, lo_nibbles0);
@@ -188,37 +176,35 @@ template <bool base64_url> uint64_t to_base64_mask(block64 *b, bool *error) {
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
   if (base64_url) {
     lut_hi =
-        simdutf_make_uint8x16_t(0x11, 0x20, 0x42, 0x80, 0x8, 0x4, 0x8, 0x4,
-                                0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20);
+        simdutf_make_uint8x16_t(0x0, 0x1, 0x0, 0x0, 0x1, 0x2, 0x4, 0x4, 0x8,
+                                0x10, 0x10, 0x28, 0x8, 0x10, 0x10, 0x8);
   } else {
     lut_hi =
-        simdutf_make_uint8x16_t(0x11, 0x20, 0x42, 0x80, 0x8, 0x4, 0x8, 0x4,
-                                0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20);
+        simdutf_make_uint8x16_t(0x0, 0x1, 0x0, 0x0, 0x1, 0x2, 0x4, 0x4, 0x8,
+                                0x10, 0x10, 0x8, 0x8, 0x10, 0x10, 0x8);
   }
 #else
   if (base64_url) {
-    lut_hi = uint8x16_t{0x11, 0x20, 0x42, 0x80, 0x8,  0x4,  0x8,  0x4,
-                        0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20};
+    lut_hi = uint8x16_t{0x0, 0x1,  0x0,  0x0,  0x1, 0x2,  0x4,  0x4,
+                        0x8, 0x10, 0x10, 0x28, 0x8, 0x10, 0x10, 0x8};
   } else {
-    lut_hi = uint8x16_t{0x11, 0x20, 0x42, 0x80, 0x8,  0x4,  0x8,  0x4,
-                        0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20};
+    lut_hi = uint8x16_t{0x0, 0x1,  0x0,  0x0, 0x1, 0x2,  0x4,  0x4,
+                        0x8, 0x10, 0x10, 0x8, 0x8, 0x10, 0x10, 0x8};
   }
 #endif
-  uint8x16_t hi0 = vqtbl1q_u8(lut_hi, hi_nibbles0);
-  uint8x16_t hi1 = vqtbl1q_u8(lut_hi, hi_nibbles1);
-  uint8x16_t hi2 = vqtbl1q_u8(lut_hi, hi_nibbles2);
-  uint8x16_t hi3 = vqtbl1q_u8(lut_hi, hi_nibbles3);
+  uint8x16_t hi0 = vqtbl1q_u8(lut_hi, hi_bits0);
+  uint8x16_t hi1 = vqtbl1q_u8(lut_hi, hi_bits1);
+  uint8x16_t hi2 = vqtbl1q_u8(lut_hi, hi_bits2);
+  uint8x16_t hi3 = vqtbl1q_u8(lut_hi, hi_bits3);
 
-  if (base64_url) {
-    hi0 = vbicq_u8(hi0, underscore0);
-    hi1 = vbicq_u8(hi1, underscore1);
-    hi2 = vbicq_u8(hi2, underscore2);
-    hi3 = vbicq_u8(hi3, underscore3);
-  }
+  // maps error byte to 0 and space byte to 1, valid bytes are >1
+  uint8x16_t res0 = vandq_u8(lo0, hi0);
+  uint8x16_t res1 = vandq_u8(lo1, hi1);
+  uint8x16_t res2 = vandq_u8(lo2, hi2);
+  uint8x16_t res3 = vandq_u8(lo3, hi3);
 
   uint8_t checks =
-      vmaxvq_u8(vorrq_u8(vorrq_u8(vandq_u8(lo0, hi0), vandq_u8(lo1, hi1)),
-                         vorrq_u8(vandq_u8(lo2, hi2), vandq_u8(lo3, hi3))));
+      vminvq_u8(vminq_u8(vminq_u8(res0, res1), vminq_u8(res2, res3)));
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
   const uint8x16_t bit_mask =
       simdutf_make_uint8x16_t(0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
@@ -228,14 +214,14 @@ template <bool base64_url> uint64_t to_base64_mask(block64 *b, bool *error) {
                                0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80};
 #endif
   uint64_t badcharmask = 0;
-  *error = checks > 0x3;
-  if (checks) {
+  *error = checks == 0;
+  if (checks <= 1) {
     // Add each of the elements next to each other, successively, to stuff each
     // 8 byte mask into one.
-    uint8x16_t test0 = vtstq_u8(lo0, hi0);
-    uint8x16_t test1 = vtstq_u8(lo1, hi1);
-    uint8x16_t test2 = vtstq_u8(lo2, hi2);
-    uint8x16_t test3 = vtstq_u8(lo3, hi3);
+    uint8x16_t test0 = vcleq_u8(res0, v01);
+    uint8x16_t test1 = vcleq_u8(res1, v01);
+    uint8x16_t test2 = vcleq_u8(res2, v01);
+    uint8x16_t test3 = vcleq_u8(res3, v01);
     uint8x16_t sum0 =
         vpaddq_u8(vandq_u8(test0, bit_mask), vandq_u8(test1, bit_mask));
     uint8x16_t sum1 =
@@ -247,40 +233,46 @@ template <bool base64_url> uint64_t to_base64_mask(block64 *b, bool *error) {
   // This is the transformation step that can be done while we are waiting for
   // sum0
   uint8x16_t roll_lut;
+  uint8x16_t delta_asso;
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
   if (base64_url) {
     roll_lut =
-        simdutf_make_uint8x16_t(0xe0, 0x11, 0x13, 0x4, 0xbf, 0xbf, 0xb9, 0xb9,
-                                0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0);
+        simdutf_make_uint8x16_t(0x00, 0x00, 0x00, 0x13, 0x04, 0xBF, 0xBF, 0xB9,
+                                0xB9, 0x00, 0x11, 0xC3, 0xBF, 0xE0, 0xB9, 0xB9);
   } else {
     roll_lut =
-        simdutf_make_uint8x16_t(0x0, 0x10, 0x13, 0x4, 0xbf, 0xbf, 0xb9, 0xb9,
-                                0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0);
+        simdutf_make_uint8x16_t(0x00, 0x00, 0x00, 0x13, 0x04, 0xBF, 0xBF, 0xB9,
+                                0xB9, 0x00, 0x10, 0xC3, 0xBF, 0xBF, 0xB9, 0xB9);
   }
+  delta_asso =
+      simdutf_make_uint8x16_t(0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+                              0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x0F);
 #else
   if (base64_url) {
-    roll_lut = uint8x16_t{0xe0, 0x11, 0x13, 0x4, 0xbf, 0xbf, 0xb9, 0xb9,
-                          0x0,  0x0,  0x0,  0x0, 0x0,  0x0,  0x0,  0x0};
+    roll_lut = uint8x16_t{0x00, 0x00, 0x00, 0x13, 0x04, 0xBF, 0xBF, 0xB9,
+                          0xB9, 0x00, 0x11, 0xC3, 0xBF, 0xE0, 0xB9, 0xB9};
   } else {
-    roll_lut = uint8x16_t{0x0, 0x10, 0x13, 0x4, 0xbf, 0xbf, 0xb9, 0xb9,
-                          0x0, 0x0,  0x0,  0x0, 0x0,  0x0,  0x0,  0x0};
+    roll_lut = uint8x16_t{0x00, 0x00, 0x00, 0x13, 0x04, 0xBF, 0xBF, 0xB9,
+                          0xB9, 0x00, 0x10, 0xC3, 0xBF, 0xBF, 0xB9, 0xB9};
   }
+  delta_asso = uint8x16_t{0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+                          0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x0F};
 #endif
-  uint8x16_t vsecond_last = base64_url ? vdupq_n_u8(0x2d) : vdupq_n_u8(0x2f);
-  if (base64_url) {
-    hi_nibbles0 = vbicq_u8(hi_nibbles0, underscore0);
-    hi_nibbles1 = vbicq_u8(hi_nibbles1, underscore1);
-    hi_nibbles2 = vbicq_u8(hi_nibbles2, underscore2);
-    hi_nibbles3 = vbicq_u8(hi_nibbles3, underscore3);
-  }
-  uint8x16_t roll0 = vqtbl1q_u8(
-      roll_lut, vaddq_u8(vceqq_u8(b->chunks[0], vsecond_last), hi_nibbles0));
-  uint8x16_t roll1 = vqtbl1q_u8(
-      roll_lut, vaddq_u8(vceqq_u8(b->chunks[1], vsecond_last), hi_nibbles1));
-  uint8x16_t roll2 = vqtbl1q_u8(
-      roll_lut, vaddq_u8(vceqq_u8(b->chunks[2], vsecond_last), hi_nibbles2));
-  uint8x16_t roll3 = vqtbl1q_u8(
-      roll_lut, vaddq_u8(vceqq_u8(b->chunks[3], vsecond_last), hi_nibbles3));
+  // the logic of translating is based on westmere
+  uint8x16_t delta_hash0 =
+      vrhaddq_u8(vqtbl1q_u8(delta_asso, lo_nibbles0), hi_bits0);
+  uint8x16_t delta_hash1 =
+      vrhaddq_u8(vqtbl1q_u8(delta_asso, lo_nibbles1), hi_bits1);
+  uint8x16_t delta_hash2 =
+      vrhaddq_u8(vqtbl1q_u8(delta_asso, lo_nibbles2), hi_bits2);
+  uint8x16_t delta_hash3 =
+      vrhaddq_u8(vqtbl1q_u8(delta_asso, lo_nibbles3), hi_bits3);
+
+  uint8x16_t roll0 = vqtbl1q_u8(roll_lut, delta_hash0);
+  uint8x16_t roll1 = vqtbl1q_u8(roll_lut, delta_hash1);
+  uint8x16_t roll2 = vqtbl1q_u8(roll_lut, delta_hash2);
+  uint8x16_t roll3 = vqtbl1q_u8(roll_lut, delta_hash3);
+
   b->chunks[0] = vaddq_u8(b->chunks[0], roll0);
   b->chunks[1] = vaddq_u8(b->chunks[1], roll1);
   b->chunks[2] = vaddq_u8(b->chunks[2], roll2);
