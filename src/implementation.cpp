@@ -1538,11 +1538,11 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
     size_t to_write = (std::min)(temp_outlen, outlen - actual_out);
 
     // Copy with relaxed atomic operations to the output
-    for (size_t i = 0; i < needs_to_write; ++i) {
+    for (size_t i = 0; i < to_write; ++i) {
       std::atomic_ref<char>(output[actual_out + i])
           .store(temp_buffer[i], std::memory_order_relaxed);
     }
-    actual_out += needs_to_write;
+    actual_out += to_write;
     length -= r.count;
     input += r.count;
 
