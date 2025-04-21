@@ -1527,6 +1527,12 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
     result r =
         base64_to_binary_safe(input, length, temp_buffer.data(), temp_outlen,
                               options, last_chunk_handling_options);
+    // We wrote temp_outlen bytes to temp_buffer.
+    // We need to copy them to output. However,
+    // we may not have enough room in output.
+    // We need to copy no more than outlen - actual_out bytes.
+    // Further, if we ran out of space in output, we need to return
+    // error_code::OUTPUT_BUFFER_TOO_SMALL *after* copying.
     size_t needs_to_write = temp_outlen;
     bool ran_out_of_room = false;
     if (needs_to_write + actual_out > outlen) {
@@ -1534,9 +1540,9 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
       ran_out_of_room = true;
     }
     // Copy with relaxed atomic operations to the output
-    for (size_t i = actual_out; i < actual_out + needs_to_write; ++i) {
-      std::atomic_ref<char>(output[i]).store(temp_buffer[i],
-                                             std::memory_order_relaxed);
+    for (size_t i = 0; i < needs_to_write; ++i) {
+      std::atomic_ref<char>(output[actual_out + i])
+          .store(temp_buffer[i], std::memory_order_relaxed);
     }
     actual_out += needs_to_write;
     length -= r.count;
@@ -1544,13 +1550,7 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
     if (ran_out_of_room) {
       return result(error_code::OUTPUT_BUFFER_TOO_SMALL, length);
     }
-    if (r.error == error_code::SUCCESS) {
-      outlen = actual_out;
-      r.count = size_t(input - input_init);
-      return r;
-    } else if (r.error != error_code::OUTPUT_BUFFER_TOO_SMALL) {
-      // We have an error, but we need to return the number of bytes
-      // that we have written so far.
+    if (r.error != error_code::OUTPUT_BUFFER_TOO_SMALL) {
       outlen = actual_out;
       r.count = size_t(input - input_init);
       return r;
