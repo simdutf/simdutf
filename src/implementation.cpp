@@ -1533,12 +1533,10 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
     // We need to copy no more than outlen - actual_out bytes.
     // Further, if we ran out of space in output, we need to return
     // error_code::OUTPUT_BUFFER_TOO_SMALL *after* copying.
-    size_t needs_to_write = temp_outlen;
-    bool ran_out_of_room = false;
-    if (needs_to_write + actual_out > outlen) {
-      needs_to_write = outlen - actual_out;
-      ran_out_of_room = true;
-    }
+
+    // Calculate how many bytes to copy (limited by output buffer size)
+    size_t to_write = (std::min)(temp_outlen, outlen - actual_out);
+
     // Copy with relaxed atomic operations to the output
     for (size_t i = 0; i < needs_to_write; ++i) {
       std::atomic_ref<char>(output[actual_out + i])
@@ -1547,9 +1545,14 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
     actual_out += needs_to_write;
     length -= r.count;
     input += r.count;
-    if (ran_out_of_room) {
+
+    // Return error if output buffer was too small
+    if (to_write < temp_outlen) {
       return result(error_code::OUTPUT_BUFFER_TOO_SMALL, length);
     }
+
+    // If we are done, return the result, the only case where
+    // we are not done is when we ran out of space in output.
     if (r.error != error_code::OUTPUT_BUFFER_TOO_SMALL) {
       outlen = actual_out;
       r.count = size_t(input - input_init);
