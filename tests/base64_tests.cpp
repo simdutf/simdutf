@@ -2386,8 +2386,8 @@ TEST(atomic_roundtrip_base64) {
       ASSERT_TRUE(back == source);
       back.assign(len, 0);
       size_t written_out = back.size();
-      r = implementation.atomic_base64_to_binary_safe(buffer.data(), size,
-                                                      back.data(), written_out);
+      r = simdutf::atomic_base64_to_binary_safe(buffer.data(), size,
+                                                back.data(), written_out);
       ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
       ASSERT_EQUAL(r.count, size);
       ASSERT_EQUAL(written_out, len);
