@@ -5,11 +5,37 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
+#include <sys/resource.h>
 #include <tuple>
 
 #include <sys/types.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
+
+TEST(hybrid_decoding) {
+
+  std::vector<std::pair<std::string, std::vector<uint8_t>>> test_data = {
+      {"__--_--_--__", {0xff, 0xff, 0xbe, 0xff, 0xef, 0xbf, 0xfb, 0xef, 0xff}},
+      {"__-+_--_--/_", {0xff, 0xff, 0xbe, 0xff, 0xef, 0xbf, 0xfb, 0xef, 0xff}},
+      {"__-+_-- / --/_",
+       {0xff, 0xff, 0xbe, 0xff, 0xef, 0xbf, 0xfb, 0xef, 0xff}},
+      {"//-+/--/--/_", {0xff, 0xff, 0xbe, 0xff, 0xef, 0xbf, 0xfb, 0xef, 0xff}},
+
+  };
+  for (const auto &test : test_data) {
+    const std::string &base64 = test.first;
+    const std::vector<uint8_t> &expected = test.second;
+    std::vector<uint8_t> decoded(simdutf::maximal_binary_length_from_base64(
+        base64.data(), base64.size()));
+    auto r = implementation.base64_to_binary(
+        base64.data(), base64.size(), reinterpret_cast<char *>(decoded.data()),
+        simdutf::base64_default_or_url);
+    ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+    ASSERT_EQUAL(r.count, expected.size());
+    decoded.resize(r.count);
+    ASSERT_EQUAL(decoded, expected);
+  }
+}
 
 // We may disable base64url tests by commenting out this next line.
 #define SIMDUTF_BASE64URL_TESTS 1
