@@ -1584,6 +1584,46 @@ simdutf_warn_unused size_t convert_utf16_to_utf8(const char16_t *buf,
   return convert_utf16le_to_utf8(buf, len, utf8_buffer);
   #endif
 }
+
+simdutf_warn_unused size_t convert_utf16_to_utf8_safe(const char16_t *buf,
+  size_t len,
+  char *utf8_buffer, size_t& utf8_buffer_size) noexcept {
+    size_t expected_size = utf8_length_from_utf16(buf, len);
+    if (expected_size <= utf8_buffer_size) {
+      // fast path
+      return convert_utf16_to_utf8(buf, len, utf8_buffer);
+    }
+    // slow path
+    size_t utf8_deficit = expected_size - utf8_buffer_size;
+    size_t end_point = len;
+    while(end_point > 1 && utf8_deficit > 0) {
+      char16_t c = buf[end_point - 1];
+      if (c >= 0xDC00 && c <= 0xDFFF) {
+        // surrogate pair
+        end_point -= 2;
+        utf8_deficit -= 4;
+      } else if( c < 0x80) {
+        end_point--;
+        utf8_deficit--;
+      } else if( c < 0x800) {
+        end_point--;
+        utf8_deficit -= 2;
+      } else {
+        end_point--;
+        utf8_deficit -= 3;
+      }
+    }
+    while(end_point > 1 && buf[end_point - 1] >= 0xD800 && buf[end_point - 1] <= 0xDFFF) {
+      end_point -= 2;
+    }
+    if (end_point == 0) {
+      // do pure scalar decoding
+      
+    }
+    size_t len = convert_utf16_to_utf8(buf, end_point, utf8_buffer);
+
+
+}
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
