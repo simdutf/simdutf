@@ -2433,6 +2433,7 @@ TEST(atomic_binary_to_base64_large_roundtrip) {
   const auto ret2 = simdutf::atomic_base64_to_binary_safe(
       b64output.data(), b64output.size(), recovered.data(), outlen);
   ASSERT_EQUAL(ret2.error, simdutf::SUCCESS);
+  ASSERT_EQUAL(recovered, binary);
 }
 
 TEST(atomic_span_roundtrip_base64) {
