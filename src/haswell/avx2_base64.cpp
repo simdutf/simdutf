@@ -297,19 +297,21 @@ public:
     std::memcpy(out + 24, buffer, 24);
   }
 
-  template <bool base64_url, bool ignore_garbage>
+  template <bool base64_url, bool ignore_garbage, bool default_or_url>
   simdutf_really_inline uint64_t to_base64_mask(uint64_t *error) {
     uint32_t err0 = 0;
     uint32_t err1 = 0;
-    uint64_t m0 = to_base64_mask<base64_url, ignore_garbage>(&chunks[0], &err0);
-    uint64_t m1 = to_base64_mask<base64_url, ignore_garbage>(&chunks[1], &err1);
+    uint64_t m0 = to_base64_mask<base64_url, ignore_garbage, default_or_url>(
+        &chunks[0], &err0);
+    uint64_t m1 = to_base64_mask<base64_url, ignore_garbage, default_or_url>(
+        &chunks[1], &err1);
     if (!ignore_garbage) {
       *error = err0 | ((uint64_t)err1 << 32);
     }
     return m0 | (m1 << 32);
   }
 
-  template <bool base64_url, bool ignore_garbage>
+  template <bool base64_url, bool ignore_garbage, bool default_or_url>
   simdutf_really_inline uint32_t to_base64_mask(__m256i *src, uint32_t *error) {
     const __m256i ascii_space_tbl =
         _mm256_setr_epi8(0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x9, 0xa,
@@ -317,7 +319,12 @@ public:
                          0x0, 0x0, 0x0, 0x9, 0xa, 0x0, 0xc, 0xd, 0x0, 0x0);
     // credit: aqrit
     __m256i delta_asso;
-    if (base64_url) {
+    if (default_or_url) {
+      delta_asso = _mm256_setr_epi8(
+          0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x11, 0x00, 0x16, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+          0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x00, 0x16);
+    } else if (base64_url) {
       delta_asso = _mm256_setr_epi8(0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x0,
                                     0x0, 0x0, 0x0, 0x0, 0xF, 0x0, 0xF, 0x1, 0x1,
                                     0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x0, 0x0, 0x0,
@@ -330,7 +337,17 @@ public:
     }
 
     __m256i delta_values;
-    if (base64_url) {
+    if (default_or_url) {
+      delta_values = _mm256_setr_epi8(
+          uint8_t(0xBF), uint8_t(0xE0), uint8_t(0xB9), uint8_t(0x13),
+          uint8_t(0x04), uint8_t(0xBF), uint8_t(0xBF), uint8_t(0xB9),
+          uint8_t(0xB9), uint8_t(0x00), uint8_t(0xFF), uint8_t(0x11),
+          uint8_t(0xFF), uint8_t(0xBF), uint8_t(0x10), uint8_t(0xB9),
+          uint8_t(0xBF), uint8_t(0xE0), uint8_t(0xB9), uint8_t(0x13),
+          uint8_t(0x04), uint8_t(0xBF), uint8_t(0xBF), uint8_t(0xB9),
+          uint8_t(0xB9), uint8_t(0x00), uint8_t(0xFF), uint8_t(0x11),
+          uint8_t(0xFF), uint8_t(0xBF), uint8_t(0x10), uint8_t(0xB9));
+    } else if (base64_url) {
       delta_values = _mm256_setr_epi8(
           0x0, 0x0, 0x0, 0x13, 0x4, uint8_t(0xBF), uint8_t(0xBF), uint8_t(0xB9),
           uint8_t(0xB9), 0x0, 0x11, uint8_t(0xC3), uint8_t(0xBF), uint8_t(0xE0),
@@ -349,7 +366,12 @@ public:
     }
 
     __m256i check_asso;
-    if (base64_url) {
+    if (default_or_url) {
+      check_asso = _mm256_setr_epi8(
+          0x0D, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x03,
+          0x07, 0x0B, 0x0E, 0x0B, 0x06, 0x0D, 0x01, 0x01, 0x01, 0x01, 0x01,
+          0x01, 0x01, 0x01, 0x01, 0x03, 0x07, 0x0B, 0x0E, 0x0B, 0x06);
+    } else if (base64_url) {
       check_asso = _mm256_setr_epi8(0xD, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1,
                                     0x1, 0x3, 0x7, 0xB, 0xE, 0xB, 0x6, 0xD, 0x1,
                                     0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x3,
@@ -361,7 +383,17 @@ public:
           0x01, 0x01, 0x01, 0x01, 0x03, 0x07, 0x0B, 0x0B, 0x0B, 0x0F);
     }
     __m256i check_values;
-    if (base64_url) {
+    if (default_or_url) {
+      check_values = _mm256_setr_epi8(
+          uint8_t(0x80), uint8_t(0x80), uint8_t(0x80), uint8_t(0x80),
+          uint8_t(0xCF), uint8_t(0xBF), uint8_t(0xD5), uint8_t(0xA6),
+          uint8_t(0xB5), uint8_t(0xA1), uint8_t(0x00), uint8_t(0x80),
+          uint8_t(0x00), uint8_t(0x80), uint8_t(0x00), uint8_t(0x80),
+          uint8_t(0x80), uint8_t(0x80), uint8_t(0x80), uint8_t(0x80),
+          uint8_t(0xCF), uint8_t(0xBF), uint8_t(0xD5), uint8_t(0xA6),
+          uint8_t(0xB5), uint8_t(0xA1), uint8_t(0x00), uint8_t(0x80),
+          uint8_t(0x00), uint8_t(0x80), uint8_t(0x00), uint8_t(0x80));
+    } else if (base64_url) {
       check_values = _mm256_setr_epi8(
           uint8_t(0x80), uint8_t(0x80), uint8_t(0x80), uint8_t(0x80),
           uint8_t(0xCF), uint8_t(0xBF), uint8_t(0xB6), uint8_t(0xA6),
@@ -381,8 +413,11 @@ public:
           int8_t(0x91), int8_t(0x80));
     }
     const __m256i shifted = _mm256_srli_epi32(*src, 3);
-    const __m256i delta_hash =
+    __m256i delta_hash =
         _mm256_avg_epu8(_mm256_shuffle_epi8(delta_asso, *src), shifted);
+    if (default_or_url) {
+      delta_hash = _mm256_and_si256(delta_hash, _mm256_set1_epi8(0xf));
+    }
     const __m256i check_hash =
         _mm256_avg_epu8(_mm256_shuffle_epi8(check_asso, *src), shifted);
     const __m256i out =
