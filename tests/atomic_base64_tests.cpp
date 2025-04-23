@@ -15,8 +15,28 @@ TEST(empty_input_gives_empty_output) {
   std::vector<char> input;
   std::vector<char> output;
 
-  const auto ret = simdutf::atomic_binary_to_base64(input, output);
-  ASSERT_EQUAL(ret, 0);
+  {
+    const auto ret = simdutf::atomic_binary_to_base64(input, output);
+    ASSERT_EQUAL(ret, 0);
+  }
+  {
+    const auto s = std::span(output);
+    const auto [ret, outlen] = simdutf::atomic_base64_to_binary_safe(input, s);
+    ASSERT_EQUAL(ret.error, simdutf::SUCCESS);
+    ASSERT_EQUAL(outlen, 0);
+  }
+  {
+    const auto [ret, outlen] =
+        simdutf::atomic_base64_to_binary_safe(input, std::span(output));
+    ASSERT_EQUAL(ret.error, simdutf::SUCCESS);
+    ASSERT_EQUAL(outlen, 0);
+  }
+  {
+    const auto [ret, outlen] =
+        simdutf::atomic_base64_to_binary_safe(input, output);
+    ASSERT_EQUAL(ret.error, simdutf::SUCCESS);
+    ASSERT_EQUAL(outlen, 0);
+  }
 }
 
 TEST(small_input) {
@@ -27,6 +47,26 @@ TEST(small_input) {
   const auto ret = simdutf::atomic_binary_to_base64(input, output);
   ASSERT_EQUAL(ret, expected_output.size());
   ASSERT_EQUAL(output, expected_output);
+
+  // try to recover the input by going in the opposite direction
+  std::string recovered;
+  {
+    // try with a (too) small buffer
+    const auto [ret2, outlen] = simdutf::atomic_base64_to_binary_safe(
+        std::span(output).first(expected_output.size()), recovered);
+    ASSERT_EQUAL(ret2.error, simdutf::OUTPUT_BUFFER_TOO_SMALL);
+    ASSERT_EQUAL(outlen, 0);
+  }
+  {
+    // ...then with a larger size
+    recovered.resize(100);
+    const auto [ret2, outlen] = simdutf::atomic_base64_to_binary_safe(
+        std::span(output).first(expected_output.size()), recovered);
+    ASSERT_EQUAL(ret2.error, simdutf::SUCCESS);
+    ASSERT_EQUAL(outlen, input.size());
+    recovered.resize(outlen);
+  }
+  ASSERT_EQUAL(input, recovered);
 }
 
 TEST(large_input) {
@@ -41,8 +81,50 @@ TEST(large_input) {
   const auto ret = simdutf::atomic_binary_to_base64(input, output);
   ASSERT_EQUAL(ret, expected_output.size());
   ASSERT_EQUAL(output, expected_output);
+
+  // try to recover the input by going in the opposite direction
+  std::string recovered(input.size(), '?');
+  const auto [ret2, outlen] = simdutf::atomic_base64_to_binary_safe(
+      std::span(output).first(ret), recovered);
+  ASSERT_EQUAL(ret2.error, simdutf::SUCCESS);
+  ASSERT_EQUAL(outlen, input.size());
+  recovered.resize(outlen);
+  ASSERT_EQUAL(input, recovered);
 }
 
+void varying_input_size_utf16_impl(const std::size_t N_input) {
+  std::string input;
+  std::u16string expected_output;
+  for (std::size_t i = 0; i < N_input; ++i) {
+    input.append("abc");
+    expected_output.append(u"YWJj");
+  }
+  std::u16string output16(expected_output.size(), '\0');
+  {
+    std::string output(expected_output.size(), '\0');
+    const auto ret = simdutf::atomic_binary_to_base64(input, output);
+    ASSERT_EQUAL(output.size(),
+                 simdutf::convert_utf8_to_utf16le(output, output16));
+    ASSERT_EQUAL(ret, expected_output.size());
+    ASSERT_TRUE(output16 == expected_output);
+  }
+
+  // try to recover the input by going in the opposite direction
+  std::string recovered(input.size(), '?');
+  const auto [ret2, outlen] =
+      simdutf::atomic_base64_to_binary_safe(std::span(output16), recovered);
+  ASSERT_EQUAL(ret2.error, simdutf::SUCCESS);
+  ASSERT_EQUAL(outlen, input.size());
+  recovered.resize(outlen);
+
+  ASSERT_EQUAL(input, recovered);
+}
+TEST(varying_input_size_utf16) {
+  varying_input_size_utf16_impl(0);
+  varying_input_size_utf16_impl(1);
+
+  varying_input_size_utf16_impl(1'000'000);
+}
   #if SIMDUTF_CPLUSPLUS20
 
 TEST(threaded) {

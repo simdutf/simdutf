@@ -15,6 +15,9 @@
   #include <concepts>
   #include <type_traits>
   #include <span>
+  #if !defined(SIMDUTF_NO_THREADS)
+    #include <tuple>
+  #endif
 #endif
 
 // The following defines are conditionally enabled/disabled during amalgamation.
@@ -3237,7 +3240,46 @@ simdutf_warn_unused result atomic_base64_to_binary_safe(
     base64_options options = base64_default,
     last_chunk_handling_options last_chunk_options = loose,
     bool decode_up_to_bad_char = false) noexcept;
-  #endif // SIMDUTF_ATOMIC_REF
+    #if SIMDUTF_SPAN
+/**
+ * @brief span overload
+ * @return a tuple of result and outlen
+ */
+simdutf_really_inline simdutf_warn_unused std::tuple<result, std::size_t>
+atomic_base64_to_binary_safe(
+    const detail::input_span_of_byte_like auto &binary_input,
+    detail::output_span_of_byte_like auto &&output,
+    base64_options options = base64_default,
+    last_chunk_handling_options last_chunk_options =
+        last_chunk_handling_options::loose,
+    bool decode_up_to_bad_char = false) noexcept {
+  size_t outlen = output.size();
+  auto ret = atomic_base64_to_binary_safe(
+      reinterpret_cast<const char *>(binary_input.data()), binary_input.size(),
+      reinterpret_cast<char *>(output.data()), outlen, options,
+      last_chunk_options, decode_up_to_bad_char);
+  return {ret, outlen};
+}
+/**
+ * @brief span overload
+ * @return a tuple of result and outlen
+ */
+simdutf_warn_unused std::tuple<result, std::size_t>
+atomic_base64_to_binary_safe(
+    std::span<const char16_t> base64_input,
+    detail::output_span_of_byte_like auto &&binary_output,
+    base64_options options = base64_default,
+    last_chunk_handling_options last_chunk_options = loose,
+    bool decode_up_to_bad_char = false) noexcept {
+  size_t outlen = binary_output.size();
+  auto ret = atomic_base64_to_binary_safe(
+      base64_input.data(), base64_input.size(),
+      reinterpret_cast<char *>(binary_output.data()), outlen, options,
+      last_chunk_options, decode_up_to_bad_char);
+  return {ret, outlen};
+}
+    #endif // SIMDUTF_SPAN
+  #endif   // SIMDUTF_ATOMIC_REF
 
 #endif // SIMDUTF_FEATURE_BASE64
 
