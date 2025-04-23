@@ -9,6 +9,23 @@
 
 #include <tests/helpers/test.h>
 
+// check if we are running with thread sanitizer
+#if defined(__clang__)
+  #if __has_feature(thread_sanitizer)
+    #define RUNNING_UNDER_THREAD_SANITIZER 1
+  #else
+    #define RUNNING_UNDER_THREAD_SANITIZER 0
+  #endif
+#elif defined(__GNUC__)
+  #if defined(__SANITIZE_THREAD__)
+    #define RUNNING_UNDER_THREAD_SANITIZER 1
+  #else
+    #define RUNNING_UNDER_THREAD_SANITIZER 0
+  #endif
+#else
+  #define RUNNING_UNDER_THREAD_SANITIZER 0
+#endif
+
 #if !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF && SIMDUTF_SPAN
 
 TEST(empty_input_gives_empty_output) {
@@ -127,6 +144,8 @@ TEST(varying_input_size_utf16) {
 }
   #if SIMDUTF_CPLUSPLUS20
 
+    #if RUNNING_UNDER_THREAD_SANITIZER
+// this test is only relevant if compiling with thread sanitizer
 TEST(threaded) {
   // large means larger than one internal block of data
   const std::size_t N_input = 1'000'000;
@@ -169,8 +188,10 @@ TEST(threaded) {
 
   keep_running = false;
 }
-  #endif // SIMDUTF_CPLUSPLUS20
+    #endif // thread sanitizer
+  #endif   // SIMDUTF_CPLUSPLUS20
 
-#endif // #if !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF && SIMDUTF_SPAN
+#endif // #if !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF &&
+       // SIMDUTF_SPAN
 
 TEST_MAIN
