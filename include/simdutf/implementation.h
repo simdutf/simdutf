@@ -4,7 +4,9 @@
   #include <atomic>
 #endif
 #include <string>
-#include <vector>
+#ifdef SIMDUTF_INTERNAL_TESTS
+  #include <vector>
+#endif
 #include "simdutf/common_defs.h"
 #include "simdutf/compiler_check.h"
 #include "simdutf/encoding_types.h"
