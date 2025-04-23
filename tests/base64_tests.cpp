@@ -1243,20 +1243,16 @@ TEST(complete_safe_decode_base64_cases) {
     for (size_t i = 0; i < bufsize; i++) {
       ASSERT_EQUAL(buffer[i], p.first[i]);
     }
-  }
-}
-
-TEST(complete_decode_base64url_cases) {
-  for (const auto &p : cases::whitespaces) {
-    std::vector<char> buffer(implementation.maximal_binary_length_from_base64(
-        p.second.data(), p.second.size()));
-    simdutf::result r = implementation.base64_to_binary(
-        p.second.data(), p.second.size(), buffer.data(), simdutf::base64_url);
+#if SIMDUTF_ATOMIC_REF
+    bufsize = buffer.size();
+    r = simdutf::atomic_base64_to_binary_safe(p.second.data(), p.second.size(),
+                                              buffer.data(), bufsize);
     ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
-    ASSERT_EQUAL(r.count, p.first.size());
-    for (size_t i = 0; i < r.count; i++) {
+    ASSERT_EQUAL(bufsize, p.first.size());
+    for (size_t i = 0; i < bufsize; i++) {
       ASSERT_EQUAL(buffer[i], p.first[i]);
     }
+#endif
   }
 }
 
@@ -1273,6 +1269,17 @@ TEST(complete_safe_decode_base64url_cases) {
     for (size_t i = 0; i < bufsize; i++) {
       ASSERT_EQUAL(buffer[i], p.first[i]);
     }
+#if SIMDUTF_ATOMIC_REF
+    bufsize = buffer.size();
+    r = simdutf::base64_to_binary_safe(p.second.data(), p.second.size(),
+                                       buffer.data(), bufsize,
+                                       simdutf::base64_url);
+    ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+    ASSERT_EQUAL(bufsize, p.first.size());
+    for (size_t i = 0; i < bufsize; i++) {
+      ASSERT_EQUAL(buffer[i], p.first[i]);
+    }
+#endif
   }
 }
 
@@ -2377,6 +2384,27 @@ TEST(atomic_roundtrip_base64) {
         }
       }
       ASSERT_TRUE(back == source);
+      back.assign(len, 0);
+      size_t written_out = back.size();
+      r = simdutf::atomic_base64_to_binary_safe(buffer.data(), size,
+                                                back.data(), written_out);
+      ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+      ASSERT_EQUAL(r.count, size);
+      ASSERT_EQUAL(written_out, len);
+      if (back != source) {
+        printf("=====input size %zu\n", len);
+        for (size_t i = 0; i < len; i++) {
+          if (back[i] != source[i]) {
+            printf("Mismatch at position %zu trial %zu\n", i, trial);
+          }
+          printf("%zu: %02x %02x\n", i, uint8_t(back[i]), uint8_t(source[i]));
+        }
+        printf("=====base64 size %zu\n", size);
+        for (size_t i = 0; i < size; i++) {
+          printf("%zu: %02x %c\n", i, uint8_t(buffer[i]), buffer[i]);
+        }
+      }
+      ASSERT_TRUE(back == source);
 
       // Test with all last_chunk_handling_options
       for (auto option :
@@ -2392,6 +2420,20 @@ TEST(atomic_roundtrip_base64) {
       }
     }
   }
+}
+
+TEST(atomic_binary_to_base64_large_roundtrip) {
+  const std::vector<char> binary(10000, '\0');
+  std::string b64output(binary.size() * 4 / 3 + 4, '\0');
+  const auto ret = simdutf::atomic_binary_to_base64(binary, b64output);
+  ASSERT_TRUE(ret > 0);
+  b64output.resize(ret);
+  std::vector<char> recovered(binary.size(), '?');
+  std::size_t outlen = recovered.size();
+  const auto ret2 = simdutf::atomic_base64_to_binary_safe(
+      b64output.data(), b64output.size(), recovered.data(), outlen);
+  ASSERT_EQUAL(ret2.error, simdutf::SUCCESS);
+  ASSERT_EQUAL(recovered, binary);
 }
 
 TEST(atomic_span_roundtrip_base64) {
