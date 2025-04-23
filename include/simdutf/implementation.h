@@ -3189,7 +3189,7 @@ simdutf_really_inline simdutf_warn_unused result base64_to_binary_safe(
  * operations.
  *
  * Like `base64_to_binary_safe` but using atomic operations, this function is
- * thread-safe for concurrent memory access, allowing the input and output
+ * thread-safe for concurrent memory access, allowing the output
  * buffers to be shared between threads without undefined behavior in case of
  * data races.
  *
