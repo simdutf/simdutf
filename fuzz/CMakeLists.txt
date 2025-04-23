@@ -36,5 +36,8 @@ endmacro()
 
 create_fuzztest(conversion)
 create_fuzztest(misc)
-create_fuzztest(roundtrip)
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # this file uses FuzzedDataProvider.h which is provided by clang
+    create_fuzztest(roundtrip)
+endif()
 create_fuzztest(base64)
