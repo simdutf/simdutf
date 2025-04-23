@@ -2959,8 +2959,8 @@ binary_to_base64(const detail::input_span_of_byte_like auto &input,
 /**
  * Convert a binary input to a base64 output, using atomic accesses.
  * This function comes with a potentially significant performance
- * penalty, but it may be useful in some cases where the input and
- * output buffers are shared between threads, to avoid undefined
+ * penalty, but it may be useful in some cases where the input
+ * buffers are shared between threads, to avoid undefined
  * behavior in case of data races.
  *
  * The function is for advanced users. Its main use case is when
