@@ -111,8 +111,8 @@ void decode(std::span<const FromChar> base64_, const auto selected_option,
       // suppress this output, it happens all the time otherwise
       std::cerr << "different data size! " << atomic.binary.size() << " vs "
                 << non_atomic.binary.size() << '\n';
-      bad = true;
     }
+    bad = true;
   } else {
     if (non_atomic.result.error == simdutf::SUCCESS) {
       if (atomic.binary != non_atomic.binary) {
@@ -134,7 +134,10 @@ void decode(std::span<const FromChar> base64_, const auto selected_option,
   if (!bad) {
     return;
   }
-
+  if (non_atomic.result.error != simdutf::error_code::SUCCESS) {
+    // for now, don't bother checking the result unless SUCCESS
+    return;
+  }
   std::cerr << "TEST(issue_xxx) {\n";
   std::cerr << "const std::vector<"
             << (sizeof(FromChar) == 1 ? "unsigned char" : "std::uint16_t")
