@@ -248,13 +248,11 @@ void varying_input_size_utf16_impl(const std::size_t N_input) {
   recovered.resize(outlen);
   ASSERT_EQUAL(input, recovered);
 }
-
 TEST(varying_input_size_utf16) {
   varying_input_size_utf16_impl(0);
   varying_input_size_utf16_impl(1);
   varying_input_size_utf16_impl(1'000'000);
 }
-
   #if SIMDUTF_CPLUSPLUS20
 
     #if RUNNING_UNDER_THREAD_SANITIZER
