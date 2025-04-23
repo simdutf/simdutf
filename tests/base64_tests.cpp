@@ -5,10 +5,8 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
-#include <sys/resource.h>
 #include <tuple>
 
-#include <sys/types.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
 
