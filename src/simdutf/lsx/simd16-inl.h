@@ -15,17 +15,22 @@ template <typename T, typename Mask = simd16<bool>> struct base_u16 {
   simdutf_really_inline simd16<T> operator&(const simd16<T> other) const {
     return __lsx_vand_v(this->value, other.value);
   }
-  simdutf_really_inline simd16<T> operator~() const { return *this ^ 0xFFu; }
+  simdutf_really_inline simd16<T> operator~() const {
+    return __lsx_vxori_b(this->value, 0xFF);
+  }
 
   friend simdutf_really_inline Mask operator==(const simd16<T> lhs,
                                                const simd16<T> rhs) {
     return __lsx_vseq_h(lhs.value, rhs.value);
   }
 
-  template <int N = 1>
-  simdutf_really_inline simd16<T> prev(const simd16<T> prev_chunk) const {
-    return __lsx_vor_v(__lsx_vbsll_v(*this, N * 2),
-                       __lsx_vbsrl_v(prev_chunk, 16 - N * 2));
+  template <unsigned N>
+  simdutf_really_inline simd16<T> byte_right_shift() const {
+    return __lsx_vbsrl_v(this->value, N);
+  }
+
+  simdutf_really_inline uint16_t first() const {
+    return uint16_t(__lsx_vpickve2gr_w(value, 0));
   }
 };
 
@@ -39,7 +44,7 @@ struct base16 : base_u16<T> {
 
   static const int SIZE = sizeof(base_u16<T>::value);
 
-  template <int N = 1>
+  template <unsigned N = 1>
   simdutf_really_inline simd16<T> prev(const simd16<T> prev_chunk) const {
     return __lsx_vor_v(__lsx_vbsll_v(*this, N * 2),
                        __lsx_vbsrl_v(prev_chunk, 16 - N * 2));
@@ -54,6 +59,8 @@ template <> struct simd16<bool> : base16<bool> {
 
   simdutf_really_inline simd16() : base16() {}
   simdutf_really_inline simd16(const __m128i _value) : base16<bool>(_value) {}
+
+  simdutf_really_inline bool is_zero() const { return __lsx_bz_v(this->value); }
 };
 
 template <typename T> struct base16_numeric : base16<T> {
@@ -76,7 +83,9 @@ template <typename T> struct base16_numeric : base16<T> {
   }
 
   // Override to distinguish from bool version
-  simdutf_really_inline simd16<T> operator~() const { return *this ^ 0xFFu; }
+  simdutf_really_inline simd16<T> operator~() const {
+    return __lsx_vxori_b(this->value, 0xFF);
+  }
 };
 
 // Unsigned code unitstemplate<>
@@ -171,7 +180,16 @@ simdutf_really_inline simd16<uint16_t> operator^(const simd16<uint16_t> a,
   return __lsx_vxor_v(a.value, bv);
 }
 
+simdutf_really_inline simd16<bool> operator^(const simd16<bool> a,
+                                             const simd16<bool> b) {
+  return __lsx_vxor_v(a.value, b.value);
+}
+
 simdutf_really_inline simd16<uint16_t> min(const simd16<uint16_t> a,
                                            const simd16<uint16_t> b) {
   return __lsx_vmin_hu(a.value, b.value);
+}
+
+simdutf_really_inline simd16<uint16_t> as_vector_u16(const simd16<bool> x) {
+  return x.value;
 }
