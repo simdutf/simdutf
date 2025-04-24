@@ -2180,11 +2180,9 @@ size_t atomic_binary_to_base64(const char *input, size_t length, char *output,
                                base64_options options) noexcept {
   static_assert(std::atomic_ref<char>::required_alignment == 1);
   size_t retval = 0;
-  // Arbitrary block sizes: 3KB for input, 4KB for output. Total is 7KB.
+  // Arbitrary block sizes: 3KB for input which produces 4KB in output.
   constexpr size_t input_block_size = 1024 * 3;
-  constexpr size_t output_block_size = input_block_size * 4 / 3;
   std::array<char, input_block_size> inbuf;
-  std::array<char, output_block_size> outbuf;
 
   // std::atomic_ref<T> must not have a const T, see
   // https://cplusplus.github.io/LWG/issue3508
@@ -2202,13 +2200,7 @@ size_t atomic_binary_to_base64(const char *input, size_t length, char *output,
                      .load(std::memory_order_relaxed);
     }
     const size_t written = binary_to_base64(inbuf.data(), current_block_size,
-                                            outbuf.data(), options);
-    // This copy is inefficient.
-    // Under x64, we could use 16-byte aligned stores.
-    for (size_t j = 0; j < written; ++j) {
-      std::atomic_ref<char>(output[retval + j])
-          .store(outbuf[j], std::memory_order_relaxed);
-    }
+                                            output + retval, options);
     retval += written;
   }
   return retval;
