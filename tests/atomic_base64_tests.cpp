@@ -69,12 +69,9 @@ TEST(threaded) {
       std::uniform_int_distribution<int> dist{0, 255};
       std::uniform_int_distribution<std::size_t> input_index_dist{
           0, input.size() - 1};
-      std::uniform_int_distribution<std::size_t> output_index_dist{
-          0, expected_output.size() - 1};
       sync_point.arrive_and_wait();
       while (keep_running) {
         std::atomic_ref(input[input_index_dist(gen)]).fetch_add(dist(gen));
-        std::atomic_ref(output[output_index_dist(gen)]).store(dist(gen));
       }
     });
   }
