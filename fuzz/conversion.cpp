@@ -16,6 +16,15 @@
 
 #include "simdutf.h"
 
+// clang-format off
+// suppress warnings from attributes when expanding function pointers in
+// nameof macros
+#if !defined(SIMDUTF_REGULAR_VISUAL_STUDIO)
+SIMDUTF_DISABLE_GCC_WARNING(-Wignored-attributes);
+#endif
+//clang-format on
+
+
 // these knobs tweak how the fuzzer works
 constexpr bool allow_implementations_to_differ = false;
 constexpr bool use_canary_in_output = true;
