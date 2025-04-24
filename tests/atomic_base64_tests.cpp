@@ -146,7 +146,7 @@ TEST(varying_input_size_utf16) {
 
     #if RUNNING_UNDER_THREAD_SANITIZER
 // this test is only relevant if compiling with thread sanitizer
-TEST(threaded) {
+TEST(threaded_binary_to_base64) {
   // large means larger than one internal block of data
   const std::size_t N_input = 1'000'000;
   std::string input, expected_output;
@@ -188,7 +188,50 @@ TEST(threaded) {
 
   keep_running = false;
 }
-    #endif // thread sanitizer
+
+TEST(threaded_base64_to_binary_safe) {
+  // large means larger than one internal block of data
+  const std::size_t N_input = 1'000'000;
+  std::string input, expected_output;
+  for (std::size_t i = 0; i < N_input; ++i) {
+    input.append("YWJj");
+    expected_output.append("abc");
+  }
+  std::string output(expected_output.size(), '\0');
+
+  constexpr auto nthreads = 4;
+
+  std::barrier sync_point(nthreads + 1, [nthreads]() noexcept {
+    std::printf("all %u threads reached the barrier\n", nthreads);
+  });
+
+  std::vector<std::jthread> threads;
+  std::atomic_bool keep_running{true};
+  for (std::size_t threadi = 0; threadi < nthreads; ++threadi) {
+    threads.emplace_back([&, threadi]() {
+      std::mt19937 gen{static_cast<std::mt19937::result_type>(threadi)};
+      std::uniform_int_distribution<int> dist{0, 255};
+      std::uniform_int_distribution<std::size_t> output_index_dist{
+          0, output.size() - 1};
+      sync_point.arrive_and_wait();
+      while (keep_running) {
+        std::atomic_ref(output[output_index_dist(gen)]).fetch_add(dist(gen));
+      }
+    });
+  }
+
+  sync_point.arrive_and_wait();
+
+  for (int i = 0; i < 10; ++i) {
+    // don't bother to look at the output, it can fail or succeed depending
+    // on the thread scheduling
+    [[maybe_unused]] const auto ret =
+        simdutf::atomic_base64_to_binary_safe(input, output);
+  }
+
+  keep_running = false;
+}
+    #endif // RUNNING_UNDER_THREAD_SANITIZER
   #endif   // SIMDUTF_CPLUSPLUS20
 
 #endif // #if !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF &&
