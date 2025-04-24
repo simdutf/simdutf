@@ -554,7 +554,7 @@ TEST(base64_decode_strict_cases_length) {
 // https://bugs.webkit.org/show_bug.cgi?id=290829
 TEST(issue_webkit_290829) {
   std::string data = "MjYyZg===";
-  std::vector<char> output(3);
+  std::vector<char> output(5); // 5 is part of the issue
   std::vector<uint8_t> expected = {0x32, 0x36, 0x32};
 
   for (auto option :
@@ -590,7 +590,7 @@ TEST(issue_webkit_290829) {
 // https://bugs.webkit.org/show_bug.cgi?id=290829
 TEST(issue_webkit_utf16_290829) {
   std::string data = "MjYyZg===";
-  std::vector<char> output(3);
+  std::vector<char> output(5); // 5 is part of the issue
   std::vector<uint16_t> expected = {0x32, 0x36, 0x32};
 
   for (auto option :
