@@ -1828,6 +1828,11 @@ simdutf_warn_unused result convert_utf32_to_latin1_with_errors(
   return get_default_implementation()->convert_utf32_to_latin1_with_errors(
       input, length, latin1_buffer);
 }
+simdutf_warn_unused size_t convert_valid_utf32_to_latin1(
+    const char32_t *input, size_t length, char *latin1_buffer) noexcept {
+  return get_default_implementation()->convert_valid_utf32_to_latin1(
+      input, length, latin1_buffer);
+}
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
