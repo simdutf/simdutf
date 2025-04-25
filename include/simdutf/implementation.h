@@ -3122,6 +3122,9 @@ simdutf_really_inline simdutf_warn_unused result base64_to_binary(
  *
  * https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
  *
+ * When the error is INVALID_BASE64_CHARACTER, this function still writes out
+ * the valid bytes that can be decoded before the INVALID_BASE64_CHARACTER.
+ *
  * @param input         the base64 string to process, in ASCII stored as 8-bit
  * or 16-bit units
  * @param length        the length of the string in 8-bit or 16-bit units.
