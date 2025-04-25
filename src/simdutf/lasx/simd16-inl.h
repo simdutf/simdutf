@@ -21,7 +21,7 @@ struct base16 : base<simd16<T>> {
 // SIMD byte mask type (returned by things like eq and gt)
 template <> struct simd16<bool> : base16<bool> {
   static simdutf_really_inline simd16<bool> splat(bool _value) {
-    return __lasx_xvreplgr2vr_h(uint8_t(-(!!_value)));
+    return __lasx_xvreplgr2vr_h(uint16_t(-(!!_value)));
   }
 
   simdutf_really_inline simd16() : base16() {}
@@ -36,6 +36,22 @@ template <> struct simd16<bool> : base16<bool> {
     return (mask0 | (mask1 << 16));
   }
   simdutf_really_inline simd16<bool> operator~() const { return *this ^ true; }
+
+  simdutf_really_inline bool is_zero() const {
+    return __lasx_xbz_v(this->value);
+  }
+
+  template <unsigned N> simdutf_really_inline simd16 byte_right_shift() const {
+    const auto t0 = __lasx_xvbsrl_v(this->value, N);
+    const auto t1 = __lasx_xvpermi_q(this->value, __lasx_xvldi(0), 0b00000011);
+    const auto t2 = __lasx_xvbsll_v(t1, 16 - N);
+    const auto t3 = __lasx_xvor_v(t0, t2);
+    return t3;
+  }
+
+  simdutf_really_inline uint16_t first() const {
+    return uint16_t(__lasx_xvpickve2gr_w(value, 0));
+  }
 };
 
 template <typename T> struct base16_numeric : base16<T> {
@@ -110,6 +126,10 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
            uint64_t(__lasx_xvpickve2gr_du(sum_u64, 2)) +
            uint64_t(__lasx_xvpickve2gr_du(sum_u64, 3));
   }
+
+  template <unsigned N> simdutf_really_inline simd16 byte_right_shift() const {
+    return __lasx_xvbsrl_v(this->value, N);
+  }
 };
 
 template <typename T> struct simd16x32 {
@@ -150,4 +170,30 @@ simdutf_really_inline simd16<bool> operator==(const simd16<uint16_t> a,
                                               uint16_t b) {
   const auto bv = __lasx_xvreplgr2vr_h(b);
   return __lasx_xvseq_h(a.value, bv);
+}
+
+simdutf_really_inline simd16<uint16_t> as_vector_u16(const simd16<bool> x) {
+  return x.value;
+}
+
+simdutf_really_inline simd16<uint16_t> operator&(const simd16<uint16_t> a,
+                                                 uint16_t b) {
+  const auto bv = __lasx_xvreplgr2vr_h(b);
+  return __lasx_xvand_v(a.value, bv);
+}
+
+simdutf_really_inline simd16<uint16_t> operator&(const simd16<uint16_t> a,
+                                                 const simd16<uint16_t> b) {
+  return __lasx_xvand_v(a.value, b.value);
+}
+
+simdutf_really_inline simd16<uint16_t> operator^(const simd16<uint16_t> a,
+                                                 uint16_t b) {
+  const auto bv = __lasx_xvreplgr2vr_h(b);
+  return __lasx_xvxor_v(a.value, bv);
+}
+
+simdutf_really_inline simd16<bool> operator^(const simd16<bool> a,
+                                             const simd16<bool> b) {
+  return __lasx_xvxor_v(a.value, b.value);
 }

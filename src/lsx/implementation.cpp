@@ -207,6 +207,7 @@ convert_utf8_1_to_2_byte_to_utf16(__m128i in, size_t shufutf8_idx) {
   #include "generic/utf16/change_endianness.h"
   #include "generic/utf16/utf8_length_from_utf16_bytemask.h"
   #include "generic/utf16/utf32_length_from_utf16.h"
+  #include "generic/utf16/to_well_formed.h"
 #endif // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
@@ -361,14 +362,12 @@ simdutf_warn_unused result implementation::validate_utf16be_with_errors(
 
 void implementation::to_well_formed_utf16le(const char16_t *input, size_t len,
                                             char16_t *output) const noexcept {
-  return scalar::utf16::to_well_formed_utf16<endianness::LITTLE>(input, len,
-                                                                 output);
+  utf16::to_well_formed<endianness::LITTLE>(input, len, output);
 }
 
 void implementation::to_well_formed_utf16be(const char16_t *input, size_t len,
                                             char16_t *output) const noexcept {
-  return scalar::utf16::to_well_formed_utf16<endianness::BIG>(input, len,
-                                                              output);
+  utf16::to_well_formed<endianness::BIG>(input, len, output);
 }
 #endif // SIMDUTF_FEATURE_UTF16
 
