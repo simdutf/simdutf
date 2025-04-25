@@ -227,5 +227,164 @@ TEST(convert_utf8_to_utf16) {
   auto r1b = simdutf::convert_utf8_to_utf16(std::as_const(input), output);
 }
 
+TEST(convert_utf16_to_utf8) {
+  std::array<char16_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_utf16_to_utf8(input, output);
+  auto r1b = simdutf::convert_utf16_to_utf8(std::as_const(input), output);
+}
+
+TEST(convert_utf16_to_latin1) {
+  std::array<char16_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_utf16_to_latin1(input, output);
+  auto r1b = simdutf::convert_utf16_to_latin1(std::as_const(input), output);
+}
+
+TEST(convert_utf16le_to_latin1) {
+  std::array<char16_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_utf16le_to_latin1(input, output);
+  auto r1b = simdutf::convert_utf16le_to_latin1(std::as_const(input), output);
+}
+
+TEST(convert_utf16be_to_latin1) {
+  std::array<char16_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_utf16be_to_latin1(input, output);
+  auto r1b = simdutf::convert_utf16be_to_latin1(std::as_const(input), output);
+}
+
+TEST(convert_utf16le_to_utf8) {
+  std::array<char16_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_utf16le_to_utf8(input, output);
+  auto r1b = simdutf::convert_utf16le_to_utf8(std::as_const(input), output);
+}
+
+TEST(convert_utf16be_to_utf8) {
+  std::array<char16_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_utf16be_to_utf8(input, output);
+  auto r1b = simdutf::convert_utf16be_to_utf8(std::as_const(input), output);
+}
+
+TEST(convert_utf16_to_latin1_with_errors) {
+  std::array<char16_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_utf16_to_latin1_with_errors(input, output);
+  auto r1b = simdutf::convert_utf16_to_latin1_with_errors(std::as_const(input),
+                                                          output);
+}
+
+TEST(convert_utf16le_to_latin1_with_errors) {
+  std::array<char16_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_utf16le_to_latin1_with_errors(input, output);
+  auto r1b = simdutf::convert_utf16le_to_latin1_with_errors(
+      std::as_const(input), output);
+}
+
+TEST(convert_utf16be_to_latin1_with_errors) {
+  std::array<char16_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_utf16be_to_latin1_with_errors(input, output);
+  auto r1b = simdutf::convert_utf16be_to_latin1_with_errors(
+      std::as_const(input), output);
+}
+
+TEST(convert_utf16_to_utf8_with_errors) {
+  std::array<char16_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_utf16_to_utf8_with_errors(input, output);
+  auto r1b =
+      simdutf::convert_utf16_to_utf8_with_errors(std::as_const(input), output);
+}
+
+TEST(convert_utf16le_to_utf8_with_errors) {
+  std::array<char16_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_utf16le_to_utf8_with_errors(input, output);
+  auto r1b = simdutf::convert_utf16le_to_utf8_with_errors(std::as_const(input),
+                                                          output);
+}
+
+TEST(convert_utf16be_to_utf8_with_errors) {
+  std::array<char16_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_utf16be_to_utf8_with_errors(input, output);
+  auto r1b = simdutf::convert_utf16be_to_utf8_with_errors(std::as_const(input),
+                                                          output);
+}
+
+TEST(convert_valid_utf16_to_utf8) {
+  std::array<char16_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_valid_utf16_to_utf8(input, output);
+  auto r1b = simdutf::convert_valid_utf16_to_utf8(std::as_const(input), output);
+}
+
+TEST(convert_valid_utf16_to_latin1) {
+  std::array<char16_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_valid_utf16_to_latin1(input, output);
+  auto r1b =
+      simdutf::convert_valid_utf16_to_latin1(std::as_const(input), output);
+}
+
+TEST(convert_valid_utf16le_to_latin1) {
+  std::array<char16_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_valid_utf16le_to_latin1(input, output);
+  auto r1b =
+      simdutf::convert_valid_utf16le_to_latin1(std::as_const(input), output);
+}
+
+TEST(convert_valid_utf16be_to_latin1) {
+  std::array<char16_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_valid_utf16be_to_latin1(input, output);
+  auto r1b =
+      simdutf::convert_valid_utf16be_to_latin1(std::as_const(input), output);
+}
+
+TEST(convert_valid_utf16le_to_utf8) {
+  std::array<char16_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_valid_utf16le_to_utf8(input, output);
+  auto r1b =
+      simdutf::convert_valid_utf16le_to_utf8(std::as_const(input), output);
+}
+
+TEST(convert_valid_utf16be_to_utf8) {
+  std::array<char16_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_valid_utf16be_to_utf8(input, output);
+  auto r1b =
+      simdutf::convert_valid_utf16be_to_utf8(std::as_const(input), output);
+}
+
+TEST(convert_utf32_to_latin1) {
+  std::array<char32_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_utf32_to_latin1(input, output);
+  auto r1b = simdutf::convert_utf32_to_latin1(std::as_const(input), output);
+}
+
+TEST(convert_utf32_to_latin1_with_errors) {
+  std::array<char32_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_utf32_to_latin1_with_errors(input, output);
+  auto r1b = simdutf::convert_utf32_to_latin1_with_errors(std::as_const(input),
+                                                          output);
+}
+
+TEST(convert_valid_utf32_to_latin1) {
+  std::array<char32_t, 4> input{};
+  std::string output;
+  auto r1a = simdutf::convert_valid_utf32_to_latin1(input, output);
+  auto r1b =
+      simdutf::convert_valid_utf32_to_latin1(std::as_const(input), output);
+}
 #endif
 TEST_MAIN
