@@ -2148,7 +2148,7 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
     if (r.error == error_code::INVALID_BASE64_CHARACTER) {
       // We need to use the slow path because we want to make sure that
       // we write as much data as possible to the output buffer to meet
-      // the requirements of th JavaScript standard.
+      // the requirements of the JavaScript standard.
       return slow_base64_to_binary_safe_impl(
           input, length, output, outlen, options, last_chunk_handling_options);
     }
@@ -2183,7 +2183,7 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   if (r.error == error_code::INVALID_BASE64_CHARACTER) {
     // We need to use the slow path because we want to make sure that
     // we write as much data as possible to the output buffer to meet
-    // the requirements of th JavaScript standard.
+    // the requirements of the JavaScript standard.
     return slow_base64_to_binary_safe_impl(
         input, length, output, outlen, options, last_chunk_handling_options);
   }
