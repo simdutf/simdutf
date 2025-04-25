@@ -2065,14 +2065,12 @@ simdutf_warn_unused result base64_to_binary(
       input, length, output, options, last_chunk_handling_options);
 }
 
-
 template <typename chartype>
 simdutf_warn_unused result slow_base64_to_binary_safe_impl(
     const chartype *input, size_t length, char *output, size_t &outlen,
     base64_options options,
     last_chunk_handling_options last_chunk_options) noexcept {
-  const bool ignore_garbage =
-      (options & base64_default_accept_garbage) != 0;
+  const bool ignore_garbage = (options & base64_default_accept_garbage) != 0;
   while (length > 0 &&
          scalar::base64::is_ascii_white_space(input[length - 1])) {
     length--;
@@ -2121,8 +2119,7 @@ simdutf_warn_unused result slow_base64_to_binary_safe_impl(
   // The function will also return an error code if the input buffer is not
   // valid base64.
   result r = scalar::base64::base64_tail_decode_safe(
-    output, outlen, input, length,
-    equalsigns, options, last_chunk_options);
+      output, outlen, input, length, equalsigns, options, last_chunk_options);
   if (last_chunk_options != stop_before_partial &&
       r.error == error_code::SUCCESS && equalsigns > 0) {
     // additional checks
@@ -2148,12 +2145,12 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
     // fast path
     full_result r = get_default_implementation()->base64_to_binary_details(
         input, length, output, options, last_chunk_handling_options);
-    if(r.error == error_code::INVALID_BASE64_CHARACTER) {
+    if (r.error == error_code::INVALID_BASE64_CHARACTER) {
       // We need to use the slow path because we want to make sure that
       // we write as much data as possible to the output buffer to meet
       // the requirements of th JavaScript standard.
-      return slow_base64_to_binary_safe_impl(input, length, output, outlen,
-                                            options, last_chunk_handling_options);
+      return slow_base64_to_binary_safe_impl(
+          input, length, output, outlen, options, last_chunk_handling_options);
     }
     if (r.error != error_code::INVALID_BASE64_CHARACTER &&
         r.error != error_code::BASE64_EXTRA_BITS) {
@@ -2187,8 +2184,8 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
     // We need to use the slow path because we want to make sure that
     // we write as much data as possible to the output buffer to meet
     // the requirements of th JavaScript standard.
-    return slow_base64_to_binary_safe_impl(input, length, output, outlen,
-                                          options, last_chunk_handling_options);
+    return slow_base64_to_binary_safe_impl(
+        input, length, output, outlen, options, last_chunk_handling_options);
   }
   size_t offset =
       (r.error == error_code::BASE64_INPUT_REMAINDER)

@@ -586,7 +586,6 @@ TEST(issue_webkit_290829) {
   }
 }
 
-
 // https://bugs.webkit.org/show_bug.cgi?id=290829
 TEST(issue_webkit_utf16_290829) {
   std::string data = "MjYyZg===";
