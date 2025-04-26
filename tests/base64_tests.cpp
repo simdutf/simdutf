@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <iostream>
 #include <memory>
@@ -10,6 +11,7 @@
 #include <sys/types.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
+#include <vector>
 
 // We may disable base64url tests by commenting out this next line.
 #define SIMDUTF_BASE64URL_TESTS 1
@@ -554,7 +556,7 @@ TEST(base64_decode_strict_cases_length) {
 // https://bugs.webkit.org/show_bug.cgi?id=290829
 TEST(issue_webkit_290829) {
   std::string data = "MjYyZg===";
-  std::vector<char> output(3);
+  std::vector<char> output(5); // 5 is part of the issue
   std::vector<uint8_t> expected = {0x32, 0x36, 0x32};
 
   for (auto option :
@@ -575,14 +577,107 @@ TEST(issue_webkit_290829) {
         simdutf::last_chunk_handling_options::stop_before_partial}) {
     std::fill(output.begin(), output.end(), 0);
     size_t back_length = output.size();
-    auto r = simdutf::base64_to_binary_safe(data.data(), data.size(),
-                                            output.data(), back_length,
-                                            simdutf::base64_default, option);
+    constexpr bool decode_up_to_bad_char = true;
+    auto r = simdutf::base64_to_binary_safe(
+        data.data(), data.size(), output.data(), back_length,
+        simdutf::base64_default, option, decode_up_to_bad_char);
 
     ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
     ASSERT_EQUAL(r.count, 6);
     ASSERT_EQUAL(back_length, 3);
     ASSERT_BYTES_EQUAL(output, expected, 3);
+  }
+}
+
+// https://bugs.webkit.org/show_bug.cgi?id=290829
+TEST(issue_webkit_utf16_290829) {
+  std::string data = "MjYyZg===";
+  std::vector<char> output(5); // 5 is part of the issue
+  std::vector<uint16_t> expected = {0x32, 0x36, 0x32};
+
+  for (auto option :
+       {simdutf::last_chunk_handling_options::strict,
+        simdutf::last_chunk_handling_options::loose,
+        simdutf::last_chunk_handling_options::stop_before_partial}) {
+    std::fill(output.begin(), output.end(), 0);
+    const auto r1 =
+        implementation.base64_to_binary(data.data(), data.size(), output.data(),
+                                        simdutf::base64_default, option);
+    ASSERT_EQUAL(r1.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+    ASSERT_EQUAL(r1.count, 6);
+  }
+
+  for (auto option :
+       {simdutf::last_chunk_handling_options::strict,
+        simdutf::last_chunk_handling_options::loose,
+        simdutf::last_chunk_handling_options::stop_before_partial}) {
+    std::fill(output.begin(), output.end(), 0);
+    size_t back_length = output.size();
+    constexpr bool decode_up_to_bad_char = true;
+    auto r = simdutf::base64_to_binary_safe(
+        data.data(), data.size(), output.data(), back_length,
+        simdutf::base64_default, option, decode_up_to_bad_char);
+
+    ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+    ASSERT_EQUAL(r.count, 6);
+    ASSERT_EQUAL(back_length, 3);
+    ASSERT_BYTES_EQUAL(output, expected, 3);
+  }
+}
+
+// https://bugs.webkit.org/show_bug.cgi?id=290829
+
+TEST(issue_webkit_utf16_290829_bad_char) {
+  std::string data(1024, 'A');
+  std::vector<char> expected(1024 / 4 * 3, 0);
+  std::vector<char> output(1024 / 4 * 3);
+  for (size_t invalid = 0; invalid < data.size(); invalid++) {
+    data[invalid] = '?'; // invalid
+    for (auto option :
+         {simdutf::last_chunk_handling_options::strict,
+          simdutf::last_chunk_handling_options::loose,
+          simdutf::last_chunk_handling_options::stop_before_partial}) {
+      std::fill(output.begin(), output.end(), 255);
+      size_t back_length = output.size();
+      constexpr bool decode_up_to_bad_char = true;
+      auto r = simdutf::base64_to_binary_safe(
+          data.data(), data.size(), output.data(), back_length,
+          simdutf::base64_default, option, decode_up_to_bad_char);
+
+      ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+      ASSERT_EQUAL(r.count, invalid);
+      size_t expected_length = invalid / 4 * 3;
+      ASSERT_EQUAL(back_length, expected_length);
+      ASSERT_BYTES_EQUAL(output, expected, expected_length);
+    }
+    data[invalid] = 'A'; // valid
+  }
+}
+
+TEST(issue_webkit_utf16_290829_example) {
+  std::string data(1024, 'A');
+  std::vector<char> expected(1024 / 4 * 3, 0);
+  std::vector<char> output(1024 / 4 * 3);
+  for (size_t invalid = 0; invalid < data.size(); invalid++) {
+    data[invalid] = '?'; // invalid
+    for (auto option :
+         {simdutf::last_chunk_handling_options::strict,
+          simdutf::last_chunk_handling_options::loose,
+          simdutf::last_chunk_handling_options::stop_before_partial}) {
+      std::fill(output.begin(), output.end(), 255);
+      size_t back_length = output.size();
+      constexpr bool decode_up_to_bad_char = true;
+      auto r = simdutf::base64_to_binary_safe(
+          data.data(), data.size(), output.data(), back_length,
+          simdutf::base64_default, option, decode_up_to_bad_char);
+
+      ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+      ASSERT_EQUAL(r.count, invalid);
+      size_t expected_length = invalid / 4 * 3;
+      ASSERT_EQUAL(back_length, expected_length);
+      ASSERT_BYTES_EQUAL(output, expected, expected_length);
+    }
+    data[invalid] = 'A'; // valid
   }
 }
 
