@@ -654,7 +654,6 @@ TEST(issue_webkit_utf16_290829_bad_char) {
   }
 }
 
-
 TEST(issue_webkit_utf16_290829_example) {
   std::string data(1024, 'A');
   std::vector<char> expected(1024 / 4 * 3, 0);
