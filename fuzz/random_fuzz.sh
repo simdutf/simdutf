@@ -122,7 +122,7 @@ while true ; do
     
     export CXX=$(selectrandomclang)
     optlevel=$(selectrandomoptlevel)
-    export CXXFLAGS="$(selectsanitizerflags) -g -O${optlevel} ${MARCHFLAGS}"
+    export CXXFLAGS="$(selectsanitizerflags) -g -O${optlevel} ${MARCHFLAGS} -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=1"
     export LIB_FUZZING_ENGINE="-fsanitize=fuzzer"
     export OUT=fuzz/out
     export WORK=fuzz/work
