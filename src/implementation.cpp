@@ -1520,7 +1520,14 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
   static_assert(std::atomic_ref<char_type>::required_alignment ==
                     sizeof(char_type),
                 "std::atomic_ref requires the same alignment as char_type");
-  std::array<char, 4096> temp_buffer;
+    #if defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
+  // We use a smaller buffer during fuzzing to more easily detect bugs.
+  constexpr size_t buffer_size = 128;
+    #else
+  // Arbitrary block sizes: 4KB for input.
+  constexpr size_t buffer_size = 4096;
+    #endif
+  std::array<char, buffer_size> temp_buffer;
   const char_type *input_init = input;
   size_t actual_out = 0;
   while (true) {
