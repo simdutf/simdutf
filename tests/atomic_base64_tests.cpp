@@ -6,6 +6,7 @@
 #include <random>
 #include <thread>
 #include <vector>
+#include <cassert>
 
 #include <tests/helpers/test.h>
 
@@ -100,6 +101,10 @@ TEST(show_that_base64_to_binary_safe_writes_after_outlen) {
 };
 
 TEST(gets_success_but_different_count) {
+<<<<<<< HEAD
+=======
+  // this triggers if FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION is set
+>>>>>>> 22587fb3 (add some problematic unit tests for atomic_base64_to_binary_safe)
   const std::vector<unsigned char> base64{
       0x0a, 0x6d, 0x6d, 0x6d, 0x6d, 0x6d, 0x6d, 0x6d, 0x6d, 0x6d, 0x6d, 0x6d,
       0x6d, 0x6d, 0x6d, 0x6d, 0x6d, 0x6d, 0x6d, 0x6d, 0x6d, 0x6d, 0x6d, 0x6d,
