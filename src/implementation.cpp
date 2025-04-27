@@ -1524,43 +1524,33 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
   const char_type *input_init = input;
   size_t actual_out = 0;
   while (true) {
-    size_t temp_outlen = temp_buffer.size();
+    const bool last_chunk = (temp_buffer.size() >= outlen - actual_out);
+    size_t temp_outlen = (std::min)(temp_buffer.size(), outlen - actual_out);
+
     result r = base64_to_binary_safe(
         input, length, temp_buffer.data(), temp_outlen, options,
         last_chunk_handling_options, decode_up_to_bad_char);
     // We wrote temp_outlen bytes to temp_buffer.
-    // We need to copy them to output. However,
-    // we may not have enough room in output.
-    // We need to copy no more than outlen - actual_out bytes.
-    // Further, if we ran out of space in output, we need to return
-    // error_code::OUTPUT_BUFFER_TOO_SMALL *after* copying.
-
-    // Calculate how many bytes to copy (limited by output buffer size)
-    size_t to_write = (std::min)(temp_outlen, outlen - actual_out);
-
+    // We need to copy them to output.
     // Copy with relaxed atomic operations to the output
-    for (size_t i = 0; i < to_write; ++i) {
+    for (size_t i = 0; i < temp_outlen; ++i) {
       std::atomic_ref<char>(output[actual_out + i])
           .store(temp_buffer[i], std::memory_order_relaxed);
     }
-    actual_out += to_write;
+    actual_out += temp_outlen;
     length -= r.count;
     input += r.count;
 
-    // Return error if output buffer was too small
-    if (to_write < temp_outlen) {
-      return result(error_code::OUTPUT_BUFFER_TOO_SMALL, length);
-    }
-
     // If we are done, return the result, the only case where
     // we are not done is when we ran out of space in output.
-    if (r.error != error_code::OUTPUT_BUFFER_TOO_SMALL) {
+    if (last_chunk || r.error != error_code::OUTPUT_BUFFER_TOO_SMALL) {
       outlen = actual_out;
       r.count = size_t(input - input_init);
       return r;
     }
   }
 }
+
 simdutf_warn_unused result atomic_base64_to_binary_safe(
     const char *input, size_t length, char *output, size_t &outlen,
     base64_options options,
