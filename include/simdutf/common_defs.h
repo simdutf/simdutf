@@ -43,7 +43,7 @@
   #define SIMDUTF_DISABLE_DEPRECATED_WARNING SIMDUTF_DISABLE_VS_WARNING(4996)
   #define SIMDUTF_DISABLE_STRICT_OVERFLOW_WARNING
   #define SIMDUTF_POP_DISABLE_WARNINGS __pragma(warning(pop))
-
+  #define SIMDUTF_DISABLE_UNUSED_WARNING
 #else // SIMDUTF_REGULAR_VISUAL_STUDIO
   #if defined(__OPTIMIZE__) || defined(NDEBUG)
     #define simdutf_really_inline inline __attribute__((always_inline))
@@ -64,7 +64,6 @@
   #ifndef simdutf_unlikely
     #define simdutf_unlikely(x) __builtin_expect(!!(x), 0)
   #endif
-
   // clang-format off
   #define SIMDUTF_PUSH_DISABLE_WARNINGS _Pragma("GCC diagnostic push")
   // gcc doesn't seem to disable all warnings with all and extra, add warnings
@@ -96,6 +95,10 @@
   #define SIMDUTF_DISABLE_STRICT_OVERFLOW_WARNING                              \
     SIMDUTF_DISABLE_GCC_WARNING(-Wstrict-overflow)
   #define SIMDUTF_POP_DISABLE_WARNINGS _Pragma("GCC diagnostic pop")
+  #define SIMDUTF_DISABLE_UNUSED_WARNING                                       \
+    SIMDUTF_PUSH_DISABLE_WARNINGS                                              \
+    SIMDUTF_DISABLE_GCC_WARNING(-Wunused-function)                             \
+    SIMDUTF_DISABLE_GCC_WARNING(-Wunused-const-variable)
   // clang-format on
 
 #endif // MSC_VER
