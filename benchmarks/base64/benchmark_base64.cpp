@@ -434,6 +434,12 @@ private:
         }
       });
     }
+    summarize("simdutf::atomic_binary_to_base64", [this, &base64_size]() {
+      for (const std::vector<char> &source : data) {
+        base64_size = simdutf::atomic_binary_to_base64(
+            source.data(), source.size(), buffer1.data());
+      }
+    });
   }
 
   void roundtripurl() {
