@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <tuple>
 #include <utility>
 #include "simdutf/icelake/intrinsics.h"
@@ -1709,8 +1710,34 @@ size_t implementation::binary_to_base64(const char *input, size_t length,
 }
 
   #if SIMDUTF_ATOMIC_REF
-void implementation::memcpy_atomic_read(char *const dst, const char *const src,
-                                        const std::size_t len) const noexcept {
+void implementation::memcpy_atomic_read(char *dst, const char *src,
+                                        std::size_t len) const noexcept {
+
+  // aligned reads of 16 byte are atomic, see https://rigtorp.se/isatomic/
+
+  // process data until aligned
+  constexpr std::uintptr_t alignment = 16U;
+  const auto offset_from_boundary =
+      reinterpret_cast<std::uintptr_t>(src) % alignment;
+  if (offset_from_boundary != 0) {
+    const auto remaining = alignment - offset_from_boundary;
+    const auto limited_len = std::min(len, remaining);
+    scalar::memcpy_atomic_read(dst, src, limited_len);
+    src += limited_len;
+    dst += limited_len;
+    len -= limited_len;
+  }
+
+  // process aligned data
+  while (len >= alignment) {
+    const __m128i tmp = _mm_load_epi64(src);
+    _mm_store_epi64(dst, tmp);
+    src += alignment;
+    dst += alignment;
+    len -= alignment;
+  }
+
+  // process any remaining data
   scalar::memcpy_atomic_read(dst, src, len);
 }
   #endif // SIMDUTF_ATOMIC_REF
