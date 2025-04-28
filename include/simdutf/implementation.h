@@ -4963,7 +4963,21 @@ public:
   virtual size_t
   binary_to_base64(const char *input, size_t length, char *output,
                    base64_options options = base64_default) const noexcept = 0;
-#endif // SIMDUTF_FEATURE_BASE64
+
+  #if SIMDUTF_ATOMIC_REF
+  /**
+   * copies len byte from src to dst, using atomic reads (but not atomic writes)
+   *
+   * this is not part of the public api, it is an implementation detail.
+   *
+   * @param dst may not overlap with src
+   * @param src may not overlap with dst
+   * @param len
+   */
+  virtual void memcpy_atomic_read(char *dst, const char *src,
+                                  std::size_t len) const noexcept {} //=0;
+  #endif // SIMDUTF_ATOMIC_REF
+#endif   // SIMDUTF_FEATURE_BASE64
 
 #ifdef SIMDUTF_INTERNAL_TESTS
   // This method is exported only in developer mode, its purpose

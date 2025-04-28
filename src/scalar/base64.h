@@ -487,6 +487,22 @@ base64_length_from_binary(size_t length, base64_options options) noexcept {
 }
 
 } // namespace base64
+
+#if SIMDUTF_ATOMIC_REF
+void memcpy_atomic_read(char *const dst, const char *const src,
+                        const std::size_t len) noexcept {
+  // std::atomic_ref<T> must not have a const T, see
+  // https://cplusplus.github.io/LWG/issue3508
+  // we instead provide a mutable input, which is ok since we are only reading
+  // from it.
+  char *mutable_src = const_cast<char *>(src);
+  for (size_t j = 0; j < len; ++j) {
+    dst[j] =
+        std::atomic_ref<char>(mutable_src[j]).load(std::memory_order_relaxed);
+  }
+}
+#endif // SIMDUTF_ATOMIC_REF
+
 } // unnamed namespace
 } // namespace scalar
 } // namespace simdutf

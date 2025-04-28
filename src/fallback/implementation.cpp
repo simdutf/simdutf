@@ -726,6 +726,14 @@ size_t implementation::binary_to_base64(const char *input, size_t length,
                                         base64_options options) const noexcept {
   return scalar::base64::tail_encode_base64(output, input, length, options);
 }
+
+  #if SIMDUTF_ATOMIC_REF
+void implementation::memcpy_atomic_read(char *const dst, const char *const src,
+                                        const std::size_t len) const noexcept {
+  scalar::memcpy_atomic_read(dst, src, len);
+}
+  #endif // SIMDUTF_ATOMIC_REF
+
 #endif // SIMDUTF_FEATURE_BASE64
 
 } // namespace SIMDUTF_IMPLEMENTATION

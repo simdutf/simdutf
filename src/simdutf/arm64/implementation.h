@@ -263,7 +263,11 @@ public:
           last_chunk_handling_options::loose) const noexcept;
   size_t binary_to_base64(const char *input, size_t length, char *output,
                           base64_options options) const noexcept;
-#endif // SIMDUTF_FEATURE_BASE64
+  #if SIMDUTF_ATOMIC_REF
+  void memcpy_atomic_read(char *dst, const char *src,
+                          std::size_t len) const noexcept override;
+  #endif // SIMDUTF_ATOMIC_REF
+#endif   // SIMDUTF_FEATURE_BASE64
 };
 
 } // namespace arm64

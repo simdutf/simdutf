@@ -21,6 +21,7 @@ public:
   bool write_to_file_descriptor(std::FILE *fp, const char *data, size_t length);
   static void show_help();
   bool decode;
+  bool atomic = false;
 };
 
 CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[]) {
@@ -41,7 +42,9 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[]) {
   }
   cmdline.decode = false;
   for (std::string &a : arguments) {
-    if (a == "-d") {
+    if (a == "-a") {
+      cmdline.atomic = true;
+    } else if (a == "-d") {
       cmdline.decode = true;
     } else if (a == "-e") {
       cmdline.decode = false;
@@ -212,8 +215,15 @@ bool CommandLine::encode_to(std::FILE *fpout) {
     // true.
     if (!p.first) {
       // We finish the file
-      size_t output_size = simdutf::binary_to_base64(
-          input_data.data(), total_bytes, output_buffer.data());
+      size_t output_size;
+      if (atomic) {
+        // std::abort();
+        output_size = simdutf::atomic_binary_to_base64(
+            input_data.data(), total_bytes, output_buffer.data());
+      } else {
+        output_size = simdutf::binary_to_base64(input_data.data(), total_bytes,
+                                                output_buffer.data());
+      }
       write_to_file_descriptor(fpout, output_buffer.data(), output_size);
       return true;
     }

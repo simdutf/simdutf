@@ -732,7 +732,13 @@ public:
                           base64_options options) const noexcept override {
     return set_best()->binary_to_base64(input, length, output, options);
   }
-#endif // SIMDUTF_FEATURE_BASE64
+  #if SIMDUTF_ATOMIC_REF
+  void memcpy_atomic_read(char *dst, const char *src,
+                          std::size_t len) const noexcept override {
+    set_best()->memcpy_atomic_read(dst, src, len);
+  }
+  #endif // SIMDUTF_ATOMIC_REF
+#endif   // SIMDUTF_FEATURE_BASE64
 
   simdutf_really_inline
   detect_best_supported_implementation_on_first_use() noexcept
@@ -742,7 +748,7 @@ public:
 
 private:
   const implementation *set_best() const noexcept;
-};
+}; // class detect_best_supported_implementation_on_first_use
 
 static_assert(std::is_trivially_destructible<
                   detect_best_supported_implementation_on_first_use>::value,
@@ -2274,6 +2280,7 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   #if SIMDUTF_ATOMIC_REF
 size_t atomic_binary_to_base64(const char *input, size_t length, char *output,
                                base64_options options) noexcept {
+  const simdutf::implementation *const impl = get_default_implementation();
   static_assert(std::atomic_ref<char>::required_alignment == 1);
   size_t retval = 0;
   // Arbitrary block sizes: 3KB for input which produces 4KB in output.
@@ -2291,9 +2298,13 @@ size_t atomic_binary_to_base64(const char *input, size_t length, char *output,
     // This copy is inefficient.
     // Under x64, we could use 16-byte aligned loads.
     // Note that we warn users that the performance might be poor.
-    for (size_t j = 0; j < current_block_size; ++j) {
-      inbuf[j] = std::atomic_ref<char>(mutable_input[i + j])
-                     .load(std::memory_order_relaxed);
+    if (false) {
+      for (size_t j = 0; j < current_block_size; ++j) {
+        inbuf[j] = std::atomic_ref<char>(mutable_input[i + j])
+                       .load(std::memory_order_seq_cst);
+      }
+    } else {
+      impl->memcpy_atomic_read(inbuf.data(), input + i, current_block_size);
     }
     const size_t written = binary_to_base64(inbuf.data(), current_block_size,
                                             output + retval, options);
