@@ -19,7 +19,9 @@
 // only for peculiar build targets.
 
 // The best choice should always come first!
+#ifndef SIMDUTF_REGULAR_VISUAL_STUDIO
 SIMDUTF_DISABLE_UNUSED_WARNING
+#endif
 #include "simdutf/arm64.h"
 #include "simdutf/icelake.h"
 #include "simdutf/haswell.h"
@@ -29,7 +31,9 @@ SIMDUTF_DISABLE_UNUSED_WARNING
 #include "simdutf/lsx.h"
 #include "simdutf/lasx.h"
 #include "simdutf/fallback.h" // have it always last.
+#ifndef SIMDUTF_REGULAR_VISUAL_STUDIO
 SIMDUTF_POP_DISABLE_WARNINGS
+#endif
 
 // The scalar routines should be included once.
 #include "scalar/swap_bytes.h"
