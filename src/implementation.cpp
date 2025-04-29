@@ -2193,7 +2193,7 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   size_t outlen3 = outlen / 3 * 3; // round down to multiple of 3
   size_t safe_input = base64_length_from_binary(outlen3, options);
   full_result r = get_default_implementation()->base64_to_binary_details(
-      input, safe_input, output, options, loose);
+      input, safe_input, output, options, last_chunk_handling_options);
   if (r.error == error_code::INVALID_BASE64_CHARACTER) {
     if (decode_up_to_bad_char) { // We need to use the slow path because we want
                                  // to make sure that

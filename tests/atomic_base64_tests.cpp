@@ -51,11 +51,15 @@ void compare_decode(
   const auto r1 = simdutf::base64_to_binary_safe(
       s.data(), s.size(), outbuf1.data(), outlen1, options, last_chunk_options,
       decode_up_to_bad_char);
-
+  for (std::size_t i = outlen1; i < decodesize; ++i) {
+    ASSERT_EQUAL(uint8_t(outbuf1.at(i)), 0);
+  }
   std::vector<char> outbuf2(decodesize);
   const auto [r2, outlen2] = simdutf::atomic_base64_to_binary_safe(
       s, outbuf2, options, last_chunk_options, decode_up_to_bad_char);
-
+  for (std::size_t i = outlen2; i < decodesize; ++i) {
+    ASSERT_EQUAL(uint8_t(outbuf2.at(i)), 0);
+  }
   // both must agree on the kind of error
   ASSERT_EQUAL(r1.error, r2.error);
 
