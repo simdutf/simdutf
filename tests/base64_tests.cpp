@@ -143,6 +143,27 @@ size_t add_garbage(std::vector<char_type> &v, std::mt19937 &gen,
   return i;
 }
 
+TEST(test_stop_before_partial) {
+  std::vector<uint8_t> expected = {0x9A, 0x69, 0xA3, 0x9A, 0x69, 0xA6, 0x8E, 0x69,
+    0xA6, 0x9A, 0x69, 0xA6, 0x9A, 0x69, 0xA6};
+  for(std::string source : {"mmmjmmmmjmmmmmmmmmmmm-", "mmmjmmmmjmmmmmmmmmmm"}) {
+    for(size_t padding = 0; padding < 100; padding++) {
+      std::vector<uint8_t> back(
+          simdutf::maximal_binary_length_from_base64(source.data(), source.size()));
+      simdutf::result r = implementation.base64_to_binary(
+        source.data(), source.size(), reinterpret_cast<char*>(back.data()), simdutf::base64_url,
+          simdutf::last_chunk_handling_options::stop_before_partial);
+      ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+      ASSERT_EQUAL(r.count, expected.size());
+      ASSERT_BYTES_EQUAL(back, expected, expected.size());
+      for(size_t i = r.count; i < back.size(); i++) {
+        ASSERT_TRUE(back[i] == 0);
+      }
+      source += '\t';
+    }
+  }
+}
+
 TEST(roundtrip_base64_with_spaces) {
   for (size_t len = 0; len < 2048; len++) {
     std::vector<char> source(len, 0);

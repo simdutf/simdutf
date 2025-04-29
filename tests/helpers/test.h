@@ -42,8 +42,9 @@ struct register_test {
 } // namespace test
 } // namespace simdutf
 
-template <typename T> void dump_ascii(const T &values) {
-  for (size_t i = 0; i < values.size(); i++) {
+template <typename T> void dump_ascii(const T &values, size_t len) {
+  const size_t size = (values.size() <= len) ? values.size() : len;
+  for (size_t i = 0; i < size; i++) {
     const uint8_t b = values[i];
     if (b >= 32 and b < 128) {
       printf(" %c ", b);
@@ -54,8 +55,9 @@ template <typename T> void dump_ascii(const T &values) {
   putchar('\n');
 }
 
-template <typename T> void dump_hex(const T &values) {
-  for (size_t i = 0; i < values.size(); i++) {
+template <typename T> void dump_hex(const T &values, size_t len) {
+  const size_t size = (values.size() <= len) ? values.size() : len;
+  for (size_t i = 0; i < size; i++) {
     const uint8_t b = values[i];
     printf(" %02x", b);
   }
@@ -63,17 +65,18 @@ template <typename T> void dump_hex(const T &values) {
 }
 
 template <typename T, typename U>
-void dump_diff_hex(const T &lhs, const U &rhs) {
+void dump_diff_hex(const T &lhs, const U &rhs, size_t len) {
   const size_t ls = lhs.size();
   const size_t rs = rhs.size();
-  const size_t size = (ls <= rs) ? ls : rs;
+  size_t size = (ls <= rs) ? ls : rs;
+  size = (size <= len) ? size : len;
   for (size_t i = 0; i < size; i++) {
     const uint8_t l = lhs[i];
     const uint8_t r = rhs[i];
     if (l != r) {
       printf(" %02x", l);
     } else {
-      printf("   ");
+      printf(" ==");
     }
   }
   putchar('\n');
@@ -148,18 +151,18 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
     const auto lhs = (a);                                                      \
     const auto rhs = (b);                                                      \
     if (!std::equal(lhs.begin(), lhs.begin() + len, rhs.begin())) {            \
-      printf("lhs = `%s`\n", #a);                                              \
+      printf("lhs = `%s` size = %zu\n", #a, lhs.size());                       \
       printf(" ascii: ");                                                      \
-      dump_ascii(lhs);                                                         \
+      dump_ascii(lhs, len);                                                    \
       printf("   hex: ");                                                      \
-      dump_hex(lhs);                                                           \
-      printf("rhs = `%s`\n", #b);                                              \
+      dump_hex(lhs, len);                                                      \
+      printf("rhs = `%s` size = %zu\n", #b, lhs.size());                       \
       printf(" ascii: ");                                                      \
-      dump_ascii(rhs);                                                         \
+      dump_ascii(rhs, len);                                                    \
       printf("   hex: ");                                                      \
-      dump_hex(rhs);                                                           \
+      dump_hex(rhs, len);                                                      \
       printf("  diff: ");                                                      \
-      dump_diff_hex(lhs, rhs);                                                 \
+      dump_diff_hex(lhs, rhs, len);                                            \
       printf("file %s:%d, function %s\n", __FILE__, __LINE__, __func__);       \
       exit(1);                                                                 \
     }                                                                          \
