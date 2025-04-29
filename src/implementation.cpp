@@ -3,7 +3,7 @@
 #include <climits>
 #include <type_traits>
 #if SIMDUTF_ATOMIC_REF
-#include "scalar/atomic_util.h"
+  #include "scalar/atomic_util.h"
 #endif
 
 static_assert(sizeof(uint8_t) == sizeof(char),
@@ -1540,7 +1540,8 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
     // We wrote temp_outlen bytes to temp_buffer.
     // We need to copy them to output.
     // Copy with relaxed atomic operations to the output
-    simdutf::scalar::memcpy_atomic_write(output + actual_out, temp_buffer.data(), temp_outlen);
+    simdutf::scalar::memcpy_atomic_write(output + actual_out,
+                                         temp_buffer.data(), temp_outlen);
     actual_out += temp_outlen;
     length -= r.count;
     input += r.count;
@@ -2279,7 +2280,8 @@ size_t atomic_binary_to_base64(const char *input, size_t length, char *output,
   std::array<char, input_block_size> inbuf;
   for (size_t i = 0; i < length; i += input_block_size) {
     const size_t current_block_size = std::min(input_block_size, length - i);
-    simdutf::scalar::memcpy_atomic_read(inbuf.data(), input + i, current_block_size);
+    simdutf::scalar::memcpy_atomic_read(inbuf.data(), input + i,
+                                        current_block_size);
     const size_t written = binary_to_base64(inbuf.data(), current_block_size,
                                             output + retval, options);
     retval += written;
