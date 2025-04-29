@@ -1,7 +1,6 @@
 #include "simdutf.h"
 
 #include <array>
-#include <cassert>
 #include <vector>
 
 #include <tests/helpers/random_utf16.h>
@@ -73,8 +72,8 @@ TEST(provoke_integer_wraparound_in_icelake) {
       0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20};
   unsigned int cleaned_crash_len = 62;
 
-  assert(reinterpret_cast<std::uintptr_t>(cleaned_crash) % alignof(char16_t) ==
-         0);
+  ASSERT_EQUAL(
+      reinterpret_cast<std::uintptr_t>(cleaned_crash) % alignof(char16_t), 0);
 
   const auto size = cleaned_crash_len / sizeof(char16_t);
 

@@ -1,7 +1,6 @@
 #include "simdutf.h"
 
 #include <array>
-#include <cassert>
 #include <fstream>
 #include <memory>
 
@@ -60,14 +59,14 @@ TEST(provoke_integer_wraparound_in_icelake) {
       0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
       0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20};
   unsigned int cleaned_crash_len = 62;
-  assert(reinterpret_cast<std::uintptr_t>(cleaned_crash) % alignof(char16_t) ==
-         0);
+  ASSERT_EQUAL(
+      reinterpret_cast<std::uintptr_t>(cleaned_crash) % alignof(char16_t), 0);
 
   const auto size = cleaned_crash_len / sizeof(char16_t);
 
   auto r = simdutf::validate_utf16le_with_errors(
       (const char16_t *)cleaned_crash, size);
-  assert(r.error == simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
 }
 
 // mixed = either 16-bit or 32-bit codewords

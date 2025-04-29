@@ -6,7 +6,6 @@
 #include <random>
 #include <thread>
 #include <vector>
-#include <cassert>
 
 #include <tests/helpers/test.h>
 
