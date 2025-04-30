@@ -17,9 +17,7 @@
   #include <concepts>
   #include <type_traits>
   #include <span>
-  #if !defined(SIMDUTF_NO_THREADS)
-    #include <tuple>
-  #endif
+  #include <tuple>
 #endif
 
 // The following defines are conditionally enabled/disabled during amalgamation.
@@ -3157,20 +3155,22 @@ base64_to_binary_safe(const char *input, size_t length, char *output,
                           last_chunk_handling_options::loose,
                       bool decode_up_to_bad_char = false) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused result
+/**
+ * @brief span overload
+ * @return a tuple of result and outlen
+ */
+simdutf_really_inline simdutf_warn_unused std::tuple<result, std::size_t>
 base64_to_binary_safe(const detail::input_span_of_byte_like auto &input,
                       detail::output_span_of_byte_like auto &&binary_output,
                       base64_options options = base64_default,
                       last_chunk_handling_options last_chunk_options = loose,
                       bool decode_up_to_bad_char = false) noexcept {
-  // we can't write the outlen to the provided output span, the user will have
-  // to pick it up from the returned value instead (assuming success). we still
-  // get the benefit of providing info of how long the output buffer is.
   size_t outlen = binary_output.size();
-  return base64_to_binary_safe(
+  auto r = base64_to_binary_safe(
       reinterpret_cast<const char *>(input.data()), input.size(),
       reinterpret_cast<char *>(binary_output.data()), outlen, options,
       last_chunk_options, decode_up_to_bad_char);
+  return {r, outlen};
 }
   #endif // SIMDUTF_SPAN
 
@@ -3181,20 +3181,22 @@ base64_to_binary_safe(const char16_t *input, size_t length, char *output,
                           last_chunk_handling_options::loose,
                       bool decode_up_to_bad_char = false) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused result
+/**
+ * @brief span overload
+ * @return a tuple of result and outlen
+ */
+simdutf_really_inline simdutf_warn_unused std::tuple<result, std::size_t>
 base64_to_binary_safe(std::span<const char16_t> input,
                       detail::output_span_of_byte_like auto &&binary_output,
                       base64_options options = base64_default,
                       last_chunk_handling_options last_chunk_options = loose,
                       bool decode_up_to_bad_char = false) noexcept {
-  // we can't write the outlen to the provided output span, the user will have
-  // to pick it up from the returned value instead (assuming success). we still
-  // get the benefit of providing info of how long the output buffer is.
   size_t outlen = binary_output.size();
-  return base64_to_binary_safe(input.data(), input.size(),
-                               reinterpret_cast<char *>(binary_output.data()),
-                               outlen, options, last_chunk_options,
-                               decode_up_to_bad_char);
+  auto r = base64_to_binary_safe(input.data(), input.size(),
+                                 reinterpret_cast<char *>(binary_output.data()),
+                                 outlen, options, last_chunk_options,
+                                 decode_up_to_bad_char);
+  return {r, outlen};
 }
   #endif // SIMDUTF_SPAN
 
