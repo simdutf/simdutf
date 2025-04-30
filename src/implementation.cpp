@@ -1533,7 +1533,6 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
   while (true) {
     const bool last_chunk = (temp_buffer.size() >= outlen - actual_out);
     size_t temp_outlen = (std::min)(temp_buffer.size(), outlen - actual_out);
-
     result r = base64_to_binary_safe(
         input, length, temp_buffer.data(), temp_outlen, options,
         last_chunk_handling_options, decode_up_to_bad_char);
@@ -2103,6 +2102,7 @@ simdutf_warn_unused result slow_base64_to_binary_safe_impl(
     }
   }
   if (length == 0) {
+    outlen = 0;
     if (!ignore_garbage && equalsigns > 0) {
       if (last_chunk_options == last_chunk_handling_options::strict) {
         return {BASE64_INPUT_REMAINDER, 0};
@@ -2224,6 +2224,8 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   size_t remaining_out = outlen - output_index;
   const chartype *tail_input = input + input_index;
   size_t tail_length = length - input_index;
+  const size_t original_tail_length = length - input_index;
+
   while (tail_length > 0 &&
          scalar::base64::is_ascii_white_space(tail_input[tail_length - 1])) {
     tail_length--;
@@ -2253,16 +2255,19 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
       rr.error = error_code::INVALID_BASE64_CHARACTER;
     }
   }
-  if (rr.error == error_code::SUCCESS &&
-      last_chunk_handling_options == stop_before_partial) {
-    if (tail_input > input + input_index) {
-      rr.count = tail_input - input;
-    } else if (r.input_count > 0) {
-      rr.count = r.input_count + rr.count;
+  if (rr.error == error_code::SUCCESS) {
+    if (last_chunk_handling_options == stop_before_partial) {
+      if (tail_input > input + input_index) {
+        rr.count = tail_input - input;
+      } else if (r.input_count > 0) {
+        rr.count = r.input_count + rr.count;
+      }
+      return rr;
     }
-    return rr;
+    rr.count = length;
+  } else {
+    rr.count += input_index;
   }
-  rr.count += input_index;
   return rr;
 }
 
