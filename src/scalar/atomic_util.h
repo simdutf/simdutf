@@ -1,6 +1,6 @@
 #ifndef SIMDUTF_ATOMIC_UTIL_H
 #define SIMDUTF_ATOMIC_UTIL_H
-#if SIMDUTF_ATOMIC_REF || 1
+#if SIMDUTF_ATOMIC_REF
   #include <atomic>
 namespace simdutf {
 namespace scalar {
