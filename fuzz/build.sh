@@ -17,17 +17,18 @@ if [ -z $SRC ] ; then
     cd "$SCRIPTDIR/.."
 
     export CXX=/usr/lib/ccache/clang++-18
-    export CXXFLAGS="-fsanitize=fuzzer-no-link,address,undefined -g -O1 -fsanitize-trap=undefined"
+    export CXXFLAGS="-fsanitize=fuzzer-no-link,address,undefined -g -O1 -fsanitize-trap=undefined -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=1"
     export LIB_FUZZING_ENGINE="-fsanitize=fuzzer"
     export OUT=fuzz/out
     export WORK=fuzz/work
     mkdir -p $OUT $WORK
+    fuzzer_src_files=$(ls fuzz/*.cpp|grep -v -E "fuzz/(reproducer.|main)")
 else
     # invoked from oss fuzz
     cd $SRC/simdutf
+    # temporary: exclude atomic from oss-fuzz, libc++ 18 used there does not support atomic ref
+    fuzzer_src_files=$(ls fuzz/*.cpp|grep -v -E "fuzz/(reproducer.|main|atomic.)")
 fi
-
-fuzzer_src_files=$(ls fuzz/*.cpp|grep -v -E "fuzz/(reproducer.|main)")
 
 
 

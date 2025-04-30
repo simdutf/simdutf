@@ -1520,47 +1520,44 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
   static_assert(std::atomic_ref<char_type>::required_alignment ==
                     sizeof(char_type),
                 "std::atomic_ref requires the same alignment as char_type");
-  std::array<char, 4096> temp_buffer;
+    #if defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
+  // We use a smaller buffer during fuzzing to more easily detect bugs.
+  constexpr size_t buffer_size = 128;
+    #else
+  // Arbitrary block sizes: 4KB for input.
+  constexpr size_t buffer_size = 4096;
+    #endif
+  std::array<char, buffer_size> temp_buffer;
   const char_type *input_init = input;
   size_t actual_out = 0;
   while (true) {
-    size_t temp_outlen = temp_buffer.size();
+    const bool last_chunk = (temp_buffer.size() >= outlen - actual_out);
+    size_t temp_outlen = (std::min)(temp_buffer.size(), outlen - actual_out);
+
     result r = base64_to_binary_safe(
         input, length, temp_buffer.data(), temp_outlen, options,
         last_chunk_handling_options, decode_up_to_bad_char);
     // We wrote temp_outlen bytes to temp_buffer.
-    // We need to copy them to output. However,
-    // we may not have enough room in output.
-    // We need to copy no more than outlen - actual_out bytes.
-    // Further, if we ran out of space in output, we need to return
-    // error_code::OUTPUT_BUFFER_TOO_SMALL *after* copying.
-
-    // Calculate how many bytes to copy (limited by output buffer size)
-    size_t to_write = (std::min)(temp_outlen, outlen - actual_out);
-
+    // We need to copy them to output.
     // Copy with relaxed atomic operations to the output
-    for (size_t i = 0; i < to_write; ++i) {
+    for (size_t i = 0; i < temp_outlen; ++i) {
       std::atomic_ref<char>(output[actual_out + i])
           .store(temp_buffer[i], std::memory_order_relaxed);
     }
-    actual_out += to_write;
+    actual_out += temp_outlen;
     length -= r.count;
     input += r.count;
 
-    // Return error if output buffer was too small
-    if (to_write < temp_outlen) {
-      return result(error_code::OUTPUT_BUFFER_TOO_SMALL, length);
-    }
-
     // If we are done, return the result, the only case where
     // we are not done is when we ran out of space in output.
-    if (r.error != error_code::OUTPUT_BUFFER_TOO_SMALL) {
+    if (last_chunk || r.error != error_code::OUTPUT_BUFFER_TOO_SMALL) {
       outlen = actual_out;
       r.count = size_t(input - input_init);
       return r;
     }
   }
 }
+
 simdutf_warn_unused result atomic_base64_to_binary_safe(
     const char *input, size_t length, char *output, size_t &outlen,
     base64_options options,
@@ -2196,7 +2193,7 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   size_t outlen3 = outlen / 3 * 3; // round down to multiple of 3
   size_t safe_input = base64_length_from_binary(outlen3, options);
   full_result r = get_default_implementation()->base64_to_binary_details(
-      input, safe_input, output, options, loose);
+      input, safe_input, output, options, last_chunk_handling_options);
   if (r.error == error_code::INVALID_BASE64_CHARACTER) {
     if (decode_up_to_bad_char) { // We need to use the slow path because we want
                                  // to make sure that
@@ -2276,8 +2273,13 @@ size_t atomic_binary_to_base64(const char *input, size_t length, char *output,
                                base64_options options) noexcept {
   static_assert(std::atomic_ref<char>::required_alignment == 1);
   size_t retval = 0;
+    #if defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
+  // We use a smaller buffer during fuzzing to more easily detect bugs.
+  constexpr size_t buffer_size = 128 * 3;
+    #else
   // Arbitrary block sizes: 3KB for input which produces 4KB in output.
   constexpr size_t input_block_size = 1024 * 3;
+    #endif
   std::array<char, input_block_size> inbuf;
 
   // std::atomic_ref<T> must not have a const T, see

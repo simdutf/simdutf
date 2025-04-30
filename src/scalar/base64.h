@@ -193,7 +193,7 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
 }
 
 // like base64_tail_decode, but it will not write past the end of the output
-// buffer. The outlen paramter is modified to reflect the number of bytes
+// buffer. The outlen parameter is modified to reflect the number of bytes
 // written. This functions assumes that the padding (=) has been removed.
 template <class char_type>
 result base64_tail_decode_safe(
