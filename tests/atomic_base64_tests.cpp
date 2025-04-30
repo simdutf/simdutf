@@ -295,7 +295,7 @@ TEST(threaded_binary_to_base64) {
   for (int i = 0; i < 10; ++i) {
     // don't bother to look at the output, it can fail or succeed depending
     // on the thread scheduling
-    [[maybe_unused]] const auto ret =
+    simdutf_maybe_unused const auto ret =
         simdutf::atomic_binary_to_base64(input, output);
   }
 
@@ -338,7 +338,7 @@ TEST(threaded_base64_to_binary_safe) {
   for (int i = 0; i < 10; ++i) {
     // don't bother to look at the output, it can fail or succeed depending
     // on the thread scheduling
-    [[maybe_unused]] const auto ret =
+    simdutf_maybe_unused const auto ret =
         simdutf::atomic_base64_to_binary_safe(input, output);
   }
 
