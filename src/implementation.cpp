@@ -2272,7 +2272,7 @@ size_t atomic_binary_to_base64(const char *input, size_t length, char *output,
   size_t retval = 0;
     #if defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
   // We use a smaller buffer during fuzzing to more easily detect bugs.
-  constexpr size_t buffer_size = 128 * 3;
+  constexpr size_t input_block_size = 128 * 3;
     #else
   // Arbitrary block sizes: 3KB for input which produces 4KB in output.
   constexpr size_t input_block_size = 1024 * 3;
