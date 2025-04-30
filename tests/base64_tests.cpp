@@ -2510,6 +2510,28 @@ TEST(readme_safe) {
   ASSERT_EQUAL(limited_length2 + limited_length, (len + 3) / 4 * 3);
 }
 
+#if SIMDUTF_SPAN
+TEST(base64_to_binary_safe_span_api_char) {
+  const std::string input{"QWJyYWNhZGFicmEh"};
+  const std::string expected_output{"Abracadabra!"};
+  std::string output(expected_output.size() + 4, '\0');
+  const auto [ret, outlen] = simdutf::base64_to_binary_safe(input, output);
+  ASSERT_EQUAL(ret.error, simdutf::SUCCESS);
+  ASSERT_EQUAL(ret.count, 16); // amount of consumed input
+  ASSERT_EQUAL(outlen, 12);    // how much was written to output
+}
+
+TEST(base64_to_binary_safe_span_api_char16) {
+  const std::u16string input{u"QWJyYWNhZGFicmEh"};
+  const std::string expected_output{"Abracadabra!"};
+  std::string output(expected_output.size() + 4, '\0');
+  const auto [ret, outlen] = simdutf::base64_to_binary_safe(input, output);
+  ASSERT_EQUAL(ret.error, simdutf::SUCCESS);
+  ASSERT_EQUAL(ret.count, 16); // amount of consumed input
+  ASSERT_EQUAL(outlen, 12);    // how much was written to output
+}
+#endif
+
 #if !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF
 TEST(atomic_roundtrip_base64) {
   for (size_t len = 0; len < 2048; len++) {
