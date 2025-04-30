@@ -141,6 +141,32 @@ TEST(gets_success_but_different_content) {
                  true);
 };
 
+TEST(unaligned_encode) {
+  // this test uses misaligned in and output buffers, to provoke problems
+  // in the code for handling pointer alignment
+  std::vector<unsigned char> base64{
+      0x3d, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+      0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+      0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+      0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+  };
+  const auto payload_size = base64.size();
+  std::string output(100 + 128, '\0');
+  std::string reference_output;
+  for (std::size_t misalign = 0; misalign < 128; ++misalign) {
+    const auto output_span = std::span(output).subspan(misalign, 100);
+    const auto r = simdutf::atomic_binary_to_base64(
+        std::span(base64).last(payload_size), output_span);
+    base64.insert(base64.begin(), '\0');
+    if (reference_output.empty()) {
+      reference_output.assign(output_span.begin(), output_span.end());
+    } else {
+      ASSERT_EQUAL(output_span.size(), reference_output.size());
+      ASSERT_BYTES_EQUAL(output_span, reference_output, output_span.size());
+    }
+  }
+}
+
 TEST(empty_input_gives_empty_output) {
   std::vector<char> input;
   std::vector<char> output;
