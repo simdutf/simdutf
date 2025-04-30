@@ -2794,6 +2794,11 @@ enum base64_options : uint64_t {
       4, /* standard base64 format accepting garbage characters */
   base64_url_accept_garbage =
       5, /* base64url format accepting garbage characters */
+  base64_default_or_url =
+      8, /* standard/base64url hybrid format (only meaningful for decoding!) */
+  base64_default_or_url_accept_garbage =
+      12, /* standard/base64url hybrid format accepting garbage characters
+             (only meaningful for decoding!) */
 };
 
 // last_chunk_handling_options are used to specify the handling of the last

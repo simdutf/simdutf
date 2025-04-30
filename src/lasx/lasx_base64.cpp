@@ -237,17 +237,30 @@ struct block64 {
   __m256i chunks[2];
 };
 
-template <bool base64_url>
+template <bool base64_url, bool default_or_url>
 static inline uint32_t to_base64_mask(__m256i *src, bool *error) {
   __m256i ascii_space_tbl =
       ____m256i((__m128i)v16u8{0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
                                0x9, 0xa, 0x0, 0xc, 0xd, 0x0, 0x0});
   // credit: aqrit
-  __m256i delta_asso =
-      ____m256i((__m128i)v16u8{0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x0, 0x0,
-                               0x0, 0x0, 0x0, 0xF, 0x0, 0xF});
+  __m256i delta_asso;
+  if (default_or_url) {
+    delta_asso =
+        ____m256i((__m128i)v16u8{0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x0,
+                                 0x0, 0x0, 0x0, 0x0, 0x11, 0x0, 0x16});
+  } else {
+    delta_asso =
+        ____m256i((__m128i)v16u8{0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x0,
+                                 0x0, 0x0, 0x0, 0x0, 0xF, 0x0, 0xF});
+  }
   __m256i delta_values;
-  if (base64_url) {
+  if (default_or_url) {
+    delta_values = ____m256i(
+        (__m128i)v16i8{int8_t(0xBF), int8_t(0xE0), int8_t(0xB9), int8_t(0x13),
+                       int8_t(0x04), int8_t(0xBF), int8_t(0xBF), int8_t(0xB9),
+                       int8_t(0xB9), int8_t(0x00), int8_t(0xFF), int8_t(0x11),
+                       int8_t(0xFF), int8_t(0xBF), int8_t(0x10), int8_t(0xB9)});
+  } else if (base64_url) {
     delta_values = ____m256i(
         (__m128i)v16i8{int8_t(0x00), int8_t(0x00), int8_t(0x00), int8_t(0x13),
                        int8_t(0x04), int8_t(0xBF), int8_t(0xBF), int8_t(0xB9),
@@ -262,7 +275,12 @@ static inline uint32_t to_base64_mask(__m256i *src, bool *error) {
   }
 
   __m256i check_asso;
-  if (base64_url) {
+  if (default_or_url) {
+    check_asso = ____m256i((__m128i)v16u8{0x0D, 0x01, 0x01, 0x01, 0x01, 0x01,
+                                          0x01, 0x01, 0x01, 0x01, 0x03, 0x07,
+                                          0x0B, 0x0E, 0x0B, 0x06});
+
+  } else if (base64_url) {
     check_asso = ____m256i((__m128i)v16u8{0x0D, 0x01, 0x01, 0x01, 0x01, 0x01,
                                           0x01, 0x01, 0x01, 0x01, 0x03, 0x07,
                                           0x0B, 0x06, 0x0B, 0x12});
@@ -273,7 +291,14 @@ static inline uint32_t to_base64_mask(__m256i *src, bool *error) {
   }
 
   __m256i check_values;
-  if (base64_url) {
+  if (default_or_url) {
+
+    check_values = ____m256i(
+        (__m128i)v16i8{int8_t(0x80), int8_t(0x80), int8_t(0x80), int8_t(0x80),
+                       int8_t(0xCF), int8_t(0xBF), int8_t(0xD5), int8_t(0xA6),
+                       int8_t(0xB5), int8_t(0xA1), int8_t(0x00), int8_t(0x80),
+                       int8_t(0x00), int8_t(0x80), int8_t(0x00), int8_t(0x80)});
+  } else if (base64_url) {
     check_values = ____m256i(
         (__m128i)v16i8{int8_t(0x0), int8_t(0x80), int8_t(0x80), int8_t(0x80),
                        int8_t(0xCF), int8_t(0xBF), int8_t(0xD3), int8_t(0xA6),
@@ -316,11 +341,13 @@ static inline uint32_t to_base64_mask(__m256i *src, bool *error) {
   return (uint32_t)mask;
 }
 
-template <bool base64_url>
+template <bool base64_url, bool default_or_url>
 static inline uint64_t to_base64_mask(block64 *b, bool *error) {
   *error = 0;
-  uint64_t m0 = to_base64_mask<base64_url>(&b->chunks[0], error);
-  uint64_t m1 = to_base64_mask<base64_url>(&b->chunks[1], error);
+  uint64_t m0 =
+      to_base64_mask<base64_url, default_or_url>(&b->chunks[0], error);
+  uint64_t m1 =
+      to_base64_mask<base64_url, default_or_url>(&b->chunks[1], error);
   return m0 | (m1 << 32);
 }
 
@@ -404,13 +431,16 @@ static inline void base64_decode_block_safe(char *out, block64 *b) {
   std::memcpy(out + 24, buffer, 24);
 }
 
-template <bool base64_url, bool ignore_garbage, typename chartype>
+template <bool base64_url, bool ignore_garbage, bool default_or_url,
+          typename chartype>
 full_result
 compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                        base64_options options,
                        last_chunk_handling_options last_chunk_options) {
-  const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value
-                                        : tables::base64::to_base64_value;
+  const uint8_t *to_base64 =
+      default_or_url ? tables::base64::to_base64_default_or_url_value
+                     : (base64_url ? tables::base64::to_base64_url_value
+                                   : tables::base64::to_base64_value);
   size_t equallocation =
       srclen; // location of the first padding character if any
   // skip trailing spaces
@@ -464,7 +494,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       load_block(&b, src);
       src += 64;
       bool error = false;
-      uint64_t badcharmask = to_base64_mask<base64_url>(&b, &error);
+      uint64_t badcharmask =
+          to_base64_mask<base64_url, default_or_url>(&b, &error);
       if (error && !ignore_garbage) {
         src -= 64;
         while (src < srcend && scalar::base64::is_eight_byte(*src) &&

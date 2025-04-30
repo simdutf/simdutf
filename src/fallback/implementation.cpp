@@ -520,7 +520,8 @@ simdutf_warn_unused result implementation::base64_to_binary(
     last_chunk_handling_options last_chunk_options) const noexcept {
   const bool ignore_garbage =
       (options == base64_options::base64_url_accept_garbage) ||
-      (options == base64_options::base64_default_accept_garbage);
+      (options == base64_options::base64_default_accept_garbage) ||
+      (options == base64_options::base64_default_or_url_accept_garbage);
   while (length > 0 &&
          scalar::base64::is_ascii_white_space(input[length - 1])) {
     length--;
@@ -571,7 +572,8 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
     last_chunk_handling_options last_chunk_options) const noexcept {
   const bool ignore_garbage =
       (options == base64_options::base64_url_accept_garbage) ||
-      (options == base64_options::base64_default_accept_garbage);
+      (options == base64_options::base64_default_accept_garbage) ||
+      (options == base64_options::base64_default_or_url_accept_garbage);
   while (length > 0 &&
          scalar::base64::is_ascii_white_space(input[length - 1])) {
     length--;
@@ -623,7 +625,8 @@ simdutf_warn_unused result implementation::base64_to_binary(
     last_chunk_handling_options last_chunk_options) const noexcept {
   const bool ignore_garbage =
       (options == base64_options::base64_url_accept_garbage) ||
-      (options == base64_options::base64_default_accept_garbage);
+      (options == base64_options::base64_default_accept_garbage) ||
+      (options == base64_options::base64_default_or_url_accept_garbage);
   while (length > 0 &&
          scalar::base64::is_ascii_white_space(input[length - 1])) {
     length--;

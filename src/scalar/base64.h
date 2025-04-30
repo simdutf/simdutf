@@ -37,30 +37,42 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
                                              // '=', typically 0, 1, 2.
                    base64_options options,
                    last_chunk_handling_options last_chunk_options) {
-  // This looks like 5 branches, but we expect the compiler to resolve this to a
-  // single branch:
-  const uint8_t *to_base64 = (options & base64_url)
-                                 ? tables::base64::to_base64_url_value
-                                 : tables::base64::to_base64_value;
-  const uint32_t *d0 = (options & base64_url)
-                           ? tables::base64::base64_url::d0
-                           : tables::base64::base64_default::d0;
-  const uint32_t *d1 = (options & base64_url)
-                           ? tables::base64::base64_url::d1
-                           : tables::base64::base64_default::d1;
-  const uint32_t *d2 = (options & base64_url)
-                           ? tables::base64::base64_url::d2
-                           : tables::base64::base64_default::d2;
-  const uint32_t *d3 = (options & base64_url)
-                           ? tables::base64::base64_url::d3
-                           : tables::base64::base64_default::d3;
+
+  // This looks like 10 branches, but we expect the compiler to resolve this to
+  // two branches (easily predicted):
+  const uint8_t *to_base64 =
+      (options & base64_default_or_url)
+          ? tables::base64::to_base64_default_or_url_value
+          : ((options & base64_url) ? tables::base64::to_base64_url_value
+                                    : tables::base64::to_base64_value);
+  const uint32_t *d0 =
+      (options & base64_default_or_url)
+          ? tables::base64::base64_default_or_url::d0
+          : ((options & base64_url) ? tables::base64::base64_url::d0
+                                    : tables::base64::base64_default::d0);
+  const uint32_t *d1 =
+      (options & base64_default_or_url)
+          ? tables::base64::base64_default_or_url::d1
+          : ((options & base64_url) ? tables::base64::base64_url::d1
+                                    : tables::base64::base64_default::d1);
+  const uint32_t *d2 =
+      (options & base64_default_or_url)
+          ? tables::base64::base64_default_or_url::d2
+          : ((options & base64_url) ? tables::base64::base64_url::d2
+                                    : tables::base64::base64_default::d2);
+  const uint32_t *d3 =
+      (options & base64_default_or_url)
+          ? tables::base64::base64_default_or_url::d3
+          : ((options & base64_url) ? tables::base64::base64_url::d3
+                                    : tables::base64::base64_default::d3);
+  const bool ignore_garbage =
+      (options == base64_options::base64_url_accept_garbage) ||
+      (options == base64_options::base64_default_accept_garbage) ||
+      (options == base64_options::base64_default_or_url_accept_garbage);
 
   const char_type *srcend = src + length;
   const char_type *srcinit = src;
   const char *dstinit = dst;
-  const bool ignore_garbage =
-      (options == base64_options::base64_url_accept_garbage) ||
-      (options == base64_options::base64_default_accept_garbage);
 
   uint32_t x;
   size_t idx;
@@ -206,26 +218,37 @@ result base64_tail_decode_safe(
     outlen = 0;
     return {SUCCESS, 0};
   }
-  // This looks like 5 branches, but we expect the compiler to resolve this to a
-  // single branch:
-  const uint8_t *to_base64 = (options & base64_url)
-                                 ? tables::base64::to_base64_url_value
-                                 : tables::base64::to_base64_value;
-  const uint32_t *d0 = (options & base64_url)
-                           ? tables::base64::base64_url::d0
-                           : tables::base64::base64_default::d0;
-  const uint32_t *d1 = (options & base64_url)
-                           ? tables::base64::base64_url::d1
-                           : tables::base64::base64_default::d1;
-  const uint32_t *d2 = (options & base64_url)
-                           ? tables::base64::base64_url::d2
-                           : tables::base64::base64_default::d2;
-  const uint32_t *d3 = (options & base64_url)
-                           ? tables::base64::base64_url::d3
-                           : tables::base64::base64_default::d3;
+  // This looks like 10 branches, but we expect the compiler to resolve this to
+  // two branches (easily predicted):
+  const uint8_t *to_base64 =
+      (options & base64_default_or_url)
+          ? tables::base64::to_base64_default_or_url_value
+          : ((options & base64_url) ? tables::base64::to_base64_url_value
+                                    : tables::base64::to_base64_value);
+  const uint32_t *d0 =
+      (options & base64_default_or_url)
+          ? tables::base64::base64_default_or_url::d0
+          : ((options & base64_url) ? tables::base64::base64_url::d0
+                                    : tables::base64::base64_default::d0);
+  const uint32_t *d1 =
+      (options & base64_default_or_url)
+          ? tables::base64::base64_default_or_url::d1
+          : ((options & base64_url) ? tables::base64::base64_url::d1
+                                    : tables::base64::base64_default::d1);
+  const uint32_t *d2 =
+      (options & base64_default_or_url)
+          ? tables::base64::base64_default_or_url::d2
+          : ((options & base64_url) ? tables::base64::base64_url::d2
+                                    : tables::base64::base64_default::d2);
+  const uint32_t *d3 =
+      (options & base64_default_or_url)
+          ? tables::base64::base64_default_or_url::d3
+          : ((options & base64_url) ? tables::base64::base64_url::d3
+                                    : tables::base64::base64_default::d3);
   const bool ignore_garbage =
       (options == base64_options::base64_url_accept_garbage) ||
-      (options == base64_options::base64_default_accept_garbage);
+      (options == base64_options::base64_default_accept_garbage) ||
+      (options == base64_options::base64_default_or_url_accept_garbage);
 
   const char_type *srcend = src + length;
   const char_type *srcinit = src;
