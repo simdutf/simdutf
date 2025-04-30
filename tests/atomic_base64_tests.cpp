@@ -301,8 +301,8 @@ TEST(threaded_binary_to_base64) {
     std::printf("all %u threads reached the barrier\n", nthreads);
   });
 
-  std::vector<std::jthread> threads;
   std::atomic_bool keep_running{true};
+  std::vector<std::jthread> threads;
   for (std::size_t threadi = 0; threadi < nthreads; ++threadi) {
     threads.emplace_back([&, threadi]() {
       std::mt19937 gen{static_cast<std::mt19937::result_type>(threadi)};
@@ -344,8 +344,8 @@ TEST(threaded_base64_to_binary_safe) {
     std::printf("all %u threads reached the barrier\n", nthreads);
   });
 
-  std::vector<std::jthread> threads;
   std::atomic_bool keep_running{true};
+  std::vector<std::jthread> threads;
   for (std::size_t threadi = 0; threadi < nthreads; ++threadi) {
     threads.emplace_back([&, threadi]() {
       std::mt19937 gen{static_cast<std::mt19937::result_type>(threadi)};
