@@ -20,6 +20,11 @@ if((CMAKE_CXX_COMPILER_ID MATCHES "MSVC" AND MSVC_CXX20_SUPPORTED) OR
 
   target_link_libraries(benchmark_base64 PUBLIC base64)
   target_link_libraries(benchmark_base64 PUBLIC simdutf::benchmarks::benchmark)
+
+  # check if simdutf was built with c++ 20 - otherwise atomic base64 operations are not available
+  get_property(SIMDUTF_COMPILED_CXX_VERSION TARGET simdutf PROPERTY CXX_STANDARD)
+  message(VERBOSE "simdutf version is ${SIMDUTF_COMPILED_CXX_VERSION}")
+  target_compile_definitions(benchmark_base64 PRIVATE SIMDUTF_COMPILED_CXX_VERSION=${SIMDUTF_COMPILED_CXX_VERSION})
 else()
   message(STATUS "Compiler does not support C++20. We not building the tool benchmark_base64.")
 endif()
