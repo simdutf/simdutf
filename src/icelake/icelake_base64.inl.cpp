@@ -87,7 +87,7 @@ size_t encode_base64(char *dst, const char *src, size_t srclen,
   return (size_t)(out - (uint8_t *)dst) + output_len;
 }
 
-template <bool base64_url, bool ignore_garbage>
+template <bool base64_url, bool ignore_garbage, bool default_or_url>
 static inline uint64_t to_base64_mask(block64 *b, uint64_t *error,
                                       uint64_t input_mask = UINT64_MAX) {
   __m512i input = b->chunks[0];
@@ -96,7 +96,14 @@ static inline uint64_t to_base64_mask(block64 *b, uint64_t *error,
       9, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 13, 12, 0, 10, 9, 0, 0, 0, 0, 0, 0,
       0, 0, 32, 0, 0, 13, 12, 0, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0, 32);
   __m512i lookup0;
-  if (base64_url) {
+  if (default_or_url) {
+    lookup0 = _mm512_set_epi8(
+        -128, -128, -128, -128, -128, -128, 61, 60, 59, 58, 57, 56, 55, 54, 53,
+        52, 63, -128, 62, -128, 62, -128, -128, -128, -128, -128, -128, -128,
+        -128, -128, -128, -1, -128, -128, -128, -128, -128, -128, -128, -128,
+        -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -1, -128,
+        -128, -1, -1, -128, -128, -128, -128, -128, -128, -128, -128, -1);
+  } else if (base64_url) {
     lookup0 = _mm512_set_epi8(
         -128, -128, -128, -128, -128, -128, 61, 60, 59, 58, 57, 56, 55, 54, 53,
         52, -128, -128, 62, -128, -128, -128, -128, -128, -128, -128, -128,
@@ -112,7 +119,13 @@ static inline uint64_t to_base64_mask(block64 *b, uint64_t *error,
         -128, -1, -1, -128, -128, -128, -128, -128, -128, -128, -128, -128);
   }
   __m512i lookup1;
-  if (base64_url) {
+  if (default_or_url) {
+    lookup1 = _mm512_set_epi8(
+        -128, -128, -128, -128, -128, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42,
+        41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, -128,
+        63, -128, -128, -128, -128, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15,
+        14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -128);
+  } else if (base64_url) {
     lookup1 = _mm512_set_epi8(
         -128, -128, -128, -128, -128, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42,
         41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, -128,
@@ -210,14 +223,17 @@ static inline void base64_decode_block(char *out, block64 *b) {
   base64_decode(out, b->chunks[0]);
 }
 
-template <bool base64_url, bool ignore_garbage, typename chartype>
+template <bool base64_url, bool ignore_garbage, bool default_or_url,
+          typename chartype>
 full_result
 compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                        base64_options options,
                        last_chunk_handling_options last_chunk_options) {
   (void)options;
-  const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value
-                                        : tables::base64::to_base64_value;
+  const uint8_t *to_base64 =
+      default_or_url ? tables::base64::to_base64_default_or_url_value
+                     : (base64_url ? tables::base64::to_base64_url_value
+                                   : tables::base64::to_base64_value);
   size_t equallocation =
       srclen; // location of the first padding character if any
   size_t equalsigns = 0;
@@ -270,7 +286,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       src += 64;
       uint64_t error = 0;
       uint64_t badcharmask =
-          to_base64_mask<base64_url, ignore_garbage>(&b, &error);
+          to_base64_mask<base64_url, ignore_garbage, default_or_url>(&b,
+                                                                     &error);
       if (!ignore_garbage && error) {
         src -= 64;
         size_t error_offset = _tzcnt_u64(error);
@@ -308,7 +325,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     load_block_partial(&b, src, input_mask);
     uint64_t error = 0;
     uint64_t badcharmask =
-        to_base64_mask<base64_url, ignore_garbage>(&b, &error, input_mask);
+        to_base64_mask<base64_url, ignore_garbage, default_or_url>(&b, &error,
+                                                                   input_mask);
     if (!ignore_garbage && error) {
       size_t error_offset = _tzcnt_u64(error);
       return {error_code::INVALID_BASE64_CHARACTER,

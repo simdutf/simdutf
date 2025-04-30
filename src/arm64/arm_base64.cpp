@@ -134,7 +134,8 @@ struct block64 {
 };
 
 static_assert(sizeof(block64) == 64, "block64 is not 64 bytes");
-template <bool base64_url> uint64_t to_base64_mask(block64 *b, bool *error) {
+template <bool base64_url, bool default_or_url>
+uint64_t to_base64_mask(block64 *b, bool *error) {
   uint8x16_t v0f = vdupq_n_u8(0xf);
   uint8x16_t v01 = vdupq_n_u8(0x1);
 
@@ -150,7 +151,11 @@ template <bool base64_url> uint64_t to_base64_mask(block64 *b, bool *error) {
   uint8x16_t hi_bits3 = vshrq_n_u8(b->chunks[3], 3);
   uint8x16_t lut_lo;
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-  if (base64_url) {
+  if (default_or_url) {
+    lut_lo =
+        simdutf_make_uint8x16_t(0x15, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c,
+                                0x1c, 0x1d, 0x19, 0x12, 0x11, 0x13, 0x10, 0x32);
+  } else if (base64_url) {
     lut_lo =
         simdutf_make_uint8x16_t(0x15, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c,
                                 0x1c, 0x1d, 0x19, 0x10, 0x11, 0x13, 0x10, 0x30);
@@ -160,7 +165,10 @@ template <bool base64_url> uint64_t to_base64_mask(block64 *b, bool *error) {
                                 0x1c, 0x1d, 0x19, 0x12, 0x11, 0x11, 0x10, 0x12);
   }
 #else
-  if (base64_url) {
+  if (default_or_url) {
+    lut_lo = uint8x16_t{0x15, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c,
+                        0x1c, 0x1d, 0x19, 0x12, 0x11, 0x13, 0x10, 0x32};
+  } else if (base64_url) {
     lut_lo = uint8x16_t{0x15, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c,
                         0x1c, 0x1d, 0x19, 0x10, 0x11, 0x13, 0x10, 0x30};
   } else {
@@ -174,7 +182,11 @@ template <bool base64_url> uint64_t to_base64_mask(block64 *b, bool *error) {
   uint8x16_t lo3 = vqtbl1q_u8(lut_lo, lo_nibbles3);
   uint8x16_t lut_hi;
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-  if (base64_url) {
+  if (default_or_url) {
+    lut_hi =
+        simdutf_make_uint8x16_t(0x0, 0x1, 0x0, 0x0, 0x1, 0x2, 0x4, 0x4, 0x8,
+                                0x10, 0x10, 0x28, 0x8, 0x10, 0x10, 0x8);
+  } else if (base64_url) {
     lut_hi =
         simdutf_make_uint8x16_t(0x0, 0x1, 0x0, 0x0, 0x1, 0x2, 0x4, 0x4, 0x8,
                                 0x10, 0x10, 0x28, 0x8, 0x10, 0x10, 0x8);
@@ -184,7 +196,10 @@ template <bool base64_url> uint64_t to_base64_mask(block64 *b, bool *error) {
                                 0x10, 0x10, 0x8, 0x8, 0x10, 0x10, 0x8);
   }
 #else
-  if (base64_url) {
+  if (default_or_url) {
+    lut_hi = uint8x16_t{0x0, 0x1,  0x0,  0x0,  0x1, 0x2,  0x4,  0x4,
+                        0x8, 0x10, 0x10, 0x28, 0x8, 0x10, 0x10, 0x8};
+  } else if (base64_url) {
     lut_hi = uint8x16_t{0x0, 0x1,  0x0,  0x0,  0x1, 0x2,  0x4,  0x4,
                         0x8, 0x10, 0x10, 0x28, 0x8, 0x10, 0x10, 0x8};
   } else {
@@ -235,7 +250,11 @@ template <bool base64_url> uint64_t to_base64_mask(block64 *b, bool *error) {
   uint8x16_t roll_lut;
   uint8x16_t delta_asso;
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-  if (base64_url) {
+  if (default_or_url) {
+    roll_lut =
+        simdutf_make_uint8x16_t(0xBF, 0xE0, 0xB9, 0x13, 0x04, 0xBF, 0xBF, 0xB9,
+                                0xB9, 0x00, 0xFF, 0x11, 0xFF, 0xBF, 0x10, 0xB9);
+  } else if (base64_url) {
     roll_lut =
         simdutf_make_uint8x16_t(0x00, 0x00, 0x00, 0x13, 0x04, 0xBF, 0xBF, 0xB9,
                                 0xB9, 0x00, 0x11, 0xC3, 0xBF, 0xE0, 0xB9, 0xB9);
@@ -244,19 +263,33 @@ template <bool base64_url> uint64_t to_base64_mask(block64 *b, bool *error) {
         simdutf_make_uint8x16_t(0x00, 0x00, 0x00, 0x13, 0x04, 0xBF, 0xBF, 0xB9,
                                 0xB9, 0x00, 0x10, 0xC3, 0xBF, 0xBF, 0xB9, 0xB9);
   }
-  delta_asso =
-      simdutf_make_uint8x16_t(0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x0F);
+  if (default_or_url) {
+    delta_asso =
+        simdutf_make_uint8x16_t(0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+                                0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x00, 0x16);
+  } else {
+    delta_asso =
+        simdutf_make_uint8x16_t(0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+                                0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x0F);
+  }
 #else
-  if (base64_url) {
+  if (default_or_url) {
+    roll_lut = uint8x16_t{0xBF, 0xE0, 0xB9, 0x13, 0x04, 0xBF, 0xBF, 0xB9,
+                          0xB9, 0x00, 0xFF, 0x11, 0xFF, 0xBF, 0x10, 0xB9};
+  } else if (base64_url) {
     roll_lut = uint8x16_t{0x00, 0x00, 0x00, 0x13, 0x04, 0xBF, 0xBF, 0xB9,
                           0xB9, 0x00, 0x11, 0xC3, 0xBF, 0xE0, 0xB9, 0xB9};
   } else {
     roll_lut = uint8x16_t{0x00, 0x00, 0x00, 0x13, 0x04, 0xBF, 0xBF, 0xB9,
                           0xB9, 0x00, 0x10, 0xC3, 0xBF, 0xBF, 0xB9, 0xB9};
   }
-  delta_asso = uint8x16_t{0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-                          0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x0F};
+  if (default_or_url) {
+    delta_asso = uint8x16_t{0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x00, 0x16};
+  } else {
+    delta_asso = uint8x16_t{0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x0F};
+  }
 #endif
   // the logic of translating is based on westmere
   uint8x16_t delta_hash0 =
@@ -268,10 +301,19 @@ template <bool base64_url> uint64_t to_base64_mask(block64 *b, bool *error) {
   uint8x16_t delta_hash3 =
       vrhaddq_u8(vqtbl1q_u8(delta_asso, lo_nibbles3), hi_bits3);
 
-  uint8x16_t roll0 = vqtbl1q_u8(roll_lut, delta_hash0);
-  uint8x16_t roll1 = vqtbl1q_u8(roll_lut, delta_hash1);
-  uint8x16_t roll2 = vqtbl1q_u8(roll_lut, delta_hash2);
-  uint8x16_t roll3 = vqtbl1q_u8(roll_lut, delta_hash3);
+  uint8x16_t roll0, roll1, roll2, roll3;
+  if (default_or_url) {
+    const uint8x16x2_t roll_lut_2 = {roll_lut, roll_lut};
+    roll0 = vqtbl2q_u8(roll_lut_2, delta_hash0);
+    roll1 = vqtbl2q_u8(roll_lut_2, delta_hash1);
+    roll2 = vqtbl2q_u8(roll_lut_2, delta_hash2);
+    roll3 = vqtbl2q_u8(roll_lut_2, delta_hash3);
+  } else {
+    roll0 = vqtbl1q_u8(roll_lut, delta_hash0);
+    roll1 = vqtbl1q_u8(roll_lut, delta_hash1);
+    roll2 = vqtbl1q_u8(roll_lut, delta_hash2);
+    roll3 = vqtbl1q_u8(roll_lut, delta_hash3);
+  }
 
   b->chunks[0] = vaddq_u8(b->chunks[0], roll0);
   b->chunks[1] = vaddq_u8(b->chunks[1], roll1);
@@ -410,13 +452,16 @@ static size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
 
 template <typename T> bool is_power_of_two(T x) { return (x & (x - 1)) == 0; }
 
-template <bool base64_url, bool ignore_garbage, typename char_type>
+template <bool base64_url, bool ignore_garbage, bool default_or_url,
+          typename char_type>
 full_result
 compress_decode_base64(char *dst, const char_type *src, size_t srclen,
                        base64_options options,
                        last_chunk_handling_options last_chunk_options) {
-  const uint8_t *to_base64 = base64_url ? tables::base64::to_base64_url_value
-                                        : tables::base64::to_base64_value;
+  const uint8_t *to_base64 =
+      default_or_url ? tables::base64::to_base64_default_or_url_value
+                     : (base64_url ? tables::base64::to_base64_url_value
+                                   : tables::base64::to_base64_value);
   size_t equallocation =
       srclen; // location of the first padding character if any
   // skip trailing spaces
@@ -466,7 +511,8 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
       load_block(&b, src);
       src += 64;
       bool error = false;
-      uint64_t badcharmask = to_base64_mask<base64_url>(&b, &error);
+      uint64_t badcharmask =
+          to_base64_mask<base64_url, default_or_url>(&b, &error);
       if (badcharmask) {
         if (error && !ignore_garbage) {
           src -= 64;
