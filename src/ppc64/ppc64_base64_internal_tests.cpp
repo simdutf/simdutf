@@ -364,7 +364,8 @@ scalar_compress(const simdutf::ppc64::vector_u8 data, uint16_t nmask,
   return j;
 }
 
-simdutf_maybe_unused static void base64_compress(const simdutf::implementation &) {
+simdutf_maybe_unused static void
+base64_compress(const simdutf::implementation &) {
   using simdutf::ppc64::compress;
   using simdutf::ppc64::vector_u8;
 

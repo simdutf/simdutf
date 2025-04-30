@@ -28,11 +28,10 @@
   #if __cpp_lib_atomic_ref >= 201806L
     #define SIMDUTF_ATOMIC_REF 1
   #endif // __cpp_lib_atomic_ref
-  #if  __has_cpp_attribute(maybe_unused) >= 201603L
+  #if __has_cpp_attribute(maybe_unused) >= 201603L
     #define SIMDUTF_MAYBE_UNUSED_AVAILABLE 1
   #endif // __has_cpp_attribute(maybe_unused) >= 201603L
 #endif
-
 
 /**
  * We want to check that it is actually a little endian system at
