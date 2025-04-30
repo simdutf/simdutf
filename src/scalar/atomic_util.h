@@ -16,8 +16,8 @@ inline void memcpy_atomic_read(char *dst, const char *src, size_t len) {
   constexpr size_t alignment = sizeof(uint64_t);
 
   // Lambda for atomic byte-by-byte copy
-  auto memcpy_atomic_read = [](char *bytedst, const char *bytesrc,
-                               size_t bytelen) noexcept {
+  auto bbb_memcpy_atomic_read = [](char *bytedst, const char *bytesrc,
+                                   size_t bytelen) noexcept {
     char *mutable_src = const_cast<char *>(bytesrc);
     for (size_t j = 0; j < bytelen; ++j) {
       bytedst[j] =
@@ -29,13 +29,13 @@ inline void memcpy_atomic_read(char *dst, const char *src, size_t len) {
   size_t offset = reinterpret_cast<std::uintptr_t>(src) % alignment;
   if (offset) {
     size_t to_align = std::min(len, alignment - offset);
-    memcpy_atomic_read(dst, src, to_align);
+    bbb_memcpy_atomic_read(dst, src, to_align);
     src += to_align;
     dst += to_align;
     len -= to_align;
   }
 
-  // Process aligned 128-bit chunks
+  // Process aligned 64-bit chunks
   while (len >= alignment) {
     auto *src_aligned = reinterpret_cast<uint64_t *>(const_cast<char *>(src));
     const auto dst_value =
@@ -48,7 +48,7 @@ inline void memcpy_atomic_read(char *dst, const char *src, size_t len) {
 
   // Handle remaining bytes
   if (len) {
-    memcpy_atomic_read(dst, src, len);
+    bbb_memcpy_atomic_read(dst, src, len);
   }
 }
 
@@ -64,8 +64,8 @@ inline void memcpy_atomic_write(char *dst, const char *src, size_t len) {
   constexpr size_t alignment = sizeof(uint64_t);
 
   // Lambda for atomic byte-by-byte write
-  auto memcpy_atomic_write = [](char *bytedst, const char *bytesrc,
-                                size_t bytelen) noexcept {
+  auto bbb_memcpy_atomic_write = [](char *bytedst, const char *bytesrc,
+                                    size_t bytelen) noexcept {
     for (size_t j = 0; j < bytelen; ++j) {
       std::atomic_ref<char>(bytedst[j])
           .store(bytesrc[j], std::memory_order_relaxed);
@@ -76,13 +76,13 @@ inline void memcpy_atomic_write(char *dst, const char *src, size_t len) {
   size_t offset = reinterpret_cast<std::uintptr_t>(dst) % alignment;
   if (offset) {
     size_t to_align = std::min(len, alignment - offset);
-    memcpy_atomic_write(dst, src, to_align);
+    bbb_memcpy_atomic_write(dst, src, to_align);
     dst += to_align;
     src += to_align;
     len -= to_align;
   }
 
-  // Process aligned 128-bit chunks
+  // Process aligned 64-bit chunks
   while (len >= alignment) {
     auto *dst_aligned = reinterpret_cast<uint64_t *>(dst);
     uint64_t src_val;
@@ -96,7 +96,7 @@ inline void memcpy_atomic_write(char *dst, const char *src, size_t len) {
 
   // Handle remaining bytes
   if (len) {
-    memcpy_atomic_write(dst, src, len);
+    bbb_memcpy_atomic_write(dst, src, len);
   }
 }
 } // namespace scalar
