@@ -1,6 +1,6 @@
 #ifndef SIMDUTF_ATOMIC_UTIL_H
 #define SIMDUTF_ATOMIC_UTIL_H
-#if SIMDUTF_ATOMIC_REF
+#if SIMDUTF_ATOMIC_REF || 1
   #include <atomic>
 namespace simdutf {
 namespace scalar {
@@ -37,10 +37,10 @@ inline void memcpy_atomic_read(char *dst, const char *src, size_t len) {
 
   // Process aligned 128-bit chunks
   while (len >= alignment) {
-    auto *dst_aligned = reinterpret_cast<uint64_t *>(dst);
     auto *src_aligned = reinterpret_cast<uint64_t *>(const_cast<char *>(src));
-    *dst_aligned =
+    const auto dst_value =
         std::atomic_ref<uint64_t>(*src_aligned).load(std::memory_order_relaxed);
+    std::memcpy(dst, &dst_value, sizeof(uint64_t));
     src += alignment;
     dst += alignment;
     len -= alignment;
