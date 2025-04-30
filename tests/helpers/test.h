@@ -108,7 +108,7 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
   }                                                                            \
   static simdutf::test::register_test test_register_##name(#name, name);       \
   void test_impl_##name(                                                       \
-      [[maybe_unused]] const simdutf::implementation &implementation)
+      simdutf_maybe_unused const simdutf::implementation &implementation)
 
 #define TEST_LOOP(trials, name)                                                \
   void test_impl_##name(const simdutf::implementation &impl, uint32_t seed);   \
@@ -124,7 +124,7 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
   }                                                                            \
   static simdutf::test::register_test test_register_##name(#name, name);       \
   void test_impl_##name(const simdutf::implementation &implementation,         \
-                        [[maybe_unused]] uint32_t seed)
+                        simdutf_maybe_unused uint32_t seed)
 
 #define ASSERT_EQUAL(a, b)                                                     \
   {                                                                            \
