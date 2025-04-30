@@ -134,7 +134,6 @@ void decode(std::span<const FromChar> base64_, const auto selected_option,
   if (!bad) {
     return;
   }
-
   std::cerr << "TEST(issue_xxx) {\n";
   std::cerr << "const std::vector<"
             << (sizeof(FromChar) == 1 ? "unsigned char" : "std::uint16_t")

@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstddef>
 #include <fstream>
 #include <iostream>
 #include <numeric>
@@ -142,7 +143,7 @@ void show_help() {
   printf(" See https://github.com/lemire/base64data for test data.\n");
 }
 void pretty_print(size_t, size_t bytes, std::string name, event_aggregate agg) {
-  printf("%-40s : ", name.c_str());
+  printf("%-45s : ", name.c_str());
   fflush(stdout);
   double avgspeed = bytes / agg.elapsed_ns();
   double bestspeed = bytes / agg.best.elapsed_ns();
@@ -433,6 +434,16 @@ private:
               e->binary_to_base64(source.data(), source.size(), buffer1.data());
         }
       });
+#if SIMDUTF_COMPILED_CXX_VERSION >= 20
+      summarize("simdutf::atomic_binary_to_base64_" +
+                    (simdutf::get_active_implementation() = e)->name(),
+                [this, &base64_size]() {
+                  for (const std::vector<char> &source : data) {
+                    base64_size = simdutf::atomic_binary_to_base64(
+                        source.data(), source.size(), buffer1.data());
+                  }
+                });
+#endif
     }
   }
 
@@ -569,6 +580,30 @@ private:
           }
         }
       });
+
+#if SIMDUTF_COMPILED_CXX_VERSION >= 20
+      summarize("simdutf::atomic_base64_to_binary_" +
+                    (simdutf::get_active_implementation() = e)->name(),
+                [this]() {
+                  for (const std::vector<char> &source : data) {
+                    size_t len = buffer1.size();
+                    auto err = simdutf::atomic_base64_to_binary_safe(
+                        source.data(), source.size(), buffer1.data(), len);
+                    if (err.error) {
+                      std::cerr << "Error: at position " << err.count
+                                << " out of " << source.size() << std::endl;
+                      for (size_t i = err.count; i < source.size(); i++) {
+                        printf("0x%02x (%c) ", uint8_t(source[i]), source[i]);
+                      }
+                      printf("\n");
+                      throw std::runtime_error(
+                          "Error: is input valid base64? " +
+                          std::to_string(err.error) + " at position " +
+                          std::to_string(err.count));
+                    }
+                  }
+                });
+#endif
     }
   }
 };

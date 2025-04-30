@@ -6,7 +6,7 @@ const char *base64_url =
 const char *accepted_whitespaces = "\x20\x09\x0a\x0c\x0d";
 } // namespace base64tests
 
-[[maybe_unused]] static void
+simdutf_maybe_unused static void
 base64_encoding_translate_6bit_values(const simdutf::implementation &) {
   using simdutf::ppc64::encoding_translate_6bit_values;
   using simdutf::ppc64::vector_u8;
@@ -44,7 +44,7 @@ base64_encoding_translate_6bit_values(const simdutf::implementation &) {
   }
 }
 
-[[maybe_unused]] static void
+simdutf_maybe_unused static void
 base64_encoding_expand_6bit_fields(const simdutf::implementation &) {
   using simdutf::ppc64::encoding_expand_6bit_fields;
   using simdutf::ppc64::vector_u8;
@@ -96,7 +96,7 @@ base64_encoding_expand_6bit_fields(const simdutf::implementation &) {
   }
 }
 
-[[maybe_unused]] static void
+simdutf_maybe_unused static void
 base64_decoding_valid(const simdutf::implementation &) {
   using simdutf::ppc64::block64;
   using simdutf::ppc64::vector_u8;
@@ -260,7 +260,7 @@ static void unittest_decoding_invalid_strict_errors(const char *base64) {
   }
 }
 
-[[maybe_unused]] static void
+simdutf_maybe_unused static void
 base64_decoding_invalid_ignore_errors(const simdutf::implementation &) {
   using simdutf::ppc64::with_base64_std;
 
@@ -268,7 +268,7 @@ base64_decoding_invalid_ignore_errors(const simdutf::implementation &) {
       base64tests::base64_std);
 }
 
-[[maybe_unused]] static void
+simdutf_maybe_unused static void
 base64url_decoding_invalid_ignore_errors(const simdutf::implementation &) {
   using simdutf::ppc64::with_base64_url;
 
@@ -276,7 +276,7 @@ base64url_decoding_invalid_ignore_errors(const simdutf::implementation &) {
       base64tests::base64_url);
 }
 
-[[maybe_unused]] static void
+simdutf_maybe_unused static void
 base64_decoding_invalid_strict_errors(const simdutf::implementation &) {
   using simdutf::ppc64::with_base64_std;
 
@@ -284,7 +284,7 @@ base64_decoding_invalid_strict_errors(const simdutf::implementation &) {
       base64tests::base64_std);
 }
 
-[[maybe_unused]] static void
+simdutf_maybe_unused static void
 base64url_decoding_invalid_strict_errors(const simdutf::implementation &) {
   using simdutf::ppc64::with_base64_url;
 
@@ -292,7 +292,7 @@ base64url_decoding_invalid_strict_errors(const simdutf::implementation &) {
       base64tests::base64_url);
 }
 
-[[maybe_unused]] static void
+simdutf_maybe_unused static void
 base64_decoding_pack(const simdutf::implementation &) {
   using simdutf::ppc64::decoding_pack;
   using simdutf::ppc64::vector_u8;
@@ -346,7 +346,7 @@ base64_decoding_pack(const simdutf::implementation &) {
   }
 }
 
-[[maybe_unused]] static int
+simdutf_maybe_unused static int
 scalar_compress(const simdutf::ppc64::vector_u8 data, uint16_t nmask,
                 char *output) {
   char tmp[16];
@@ -364,7 +364,8 @@ scalar_compress(const simdutf::ppc64::vector_u8 data, uint16_t nmask,
   return j;
 }
 
-[[maybe_unused]] static void base64_compress(const simdutf::implementation &) {
+simdutf_maybe_unused static void
+base64_compress(const simdutf::implementation &) {
   using simdutf::ppc64::compress;
   using simdutf::ppc64::vector_u8;
 
