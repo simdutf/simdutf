@@ -126,28 +126,31 @@ template <simdutf_ByteFlip bflip>
 simdutf_really_inline static result
 rvv_validate_utf16_with_errors(const char16_t *src, size_t len) {
   const char16_t *beg = src;
+
+  const uint16_t mask = simdutf_byteflip<bflip>(0xfc00);
+  const uint16_t hi_surrogate = simdutf_byteflip<bflip>(0xd800);
+  const uint16_t lo_surrogate = simdutf_byteflip<bflip>(0xdc00);
+
   uint16_t last = 0;
-  for (size_t vl; len > 0;
-       len -= vl, src += vl, last = simdutf_byteflip<bflip>(src[-1])) {
+  for (size_t vl; len > 0; len -= vl, src += vl, last = src[-1]) {
     vl = __riscv_vsetvl_e16m8(len);
     vuint16m8_t v1 = __riscv_vle16_v_u16m8((const uint16_t *)src, vl);
-    v1 = simdutf_byteflip<bflip>(v1, vl);
     vuint16m8_t v0 = __riscv_vslide1up_vx_u16m8(v1, last, vl);
 
     vbool2_t surhi = __riscv_vmseq_vx_u16m8_b2(
-        __riscv_vand_vx_u16m8(v0, 0xFC00, vl), 0xD800, vl);
+        __riscv_vand_vx_u16m8(v0, mask, vl), hi_surrogate, vl);
     vbool2_t surlo = __riscv_vmseq_vx_u16m8_b2(
-        __riscv_vand_vx_u16m8(v1, 0xFC00, vl), 0xDC00, vl);
+        __riscv_vand_vx_u16m8(v1, mask, vl), lo_surrogate, vl);
 
     long idx = __riscv_vfirst_m_b2(__riscv_vmxor_mm_b2(surhi, surlo, vl), vl);
     if (idx >= 0) {
-      last = idx > 0 ? simdutf_byteflip<bflip>(src[idx - 1]) : last;
+      last = simdutf_byteflip<bflip>(idx > 0 ? src[idx - 1] : last);
       return result(error_code::SURROGATE,
                     src - beg + idx - (last - 0xD800u < 0x400u));
       break;
     }
   }
-  if (last - 0xD800u < 0x400u) {
+  if (simdutf_byteflip<bflip>(last) - 0xD800u < 0x400u) {
     return result(error_code::SURROGATE,
                   src - beg - 1); /* end on high surrogate */
   } else {
