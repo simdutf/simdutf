@@ -76,6 +76,12 @@ void compare_decode(
   }
 }
 
+TEST(causes_mismatch_in_count) {
+  const std::vector<unsigned char> base64(9194, 0x20);
+  compare_decode(base64, 8224, simdutf::base64_default,
+                 simdutf::last_chunk_handling_options::loose, false);
+};
+
 TEST(decoding_into_zero_length_output) {
   const std::vector<unsigned char> base64{
       0x09,
