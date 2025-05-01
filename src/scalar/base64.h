@@ -139,9 +139,17 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
       } else if (!ignore_garbage &&
                  last_chunk_options ==
                      last_chunk_handling_options::stop_before_partial &&
-                 (idx != 1) && ((idx + padded_characters) & 3) != 0) {
+                 ((idx + padded_characters) & 3) != 0) {
         // Rewind src to before partial chunk
         src -= idx;
+        // adjust, skipping ignorable characters
+        for (; src < srcend; src++) {
+          char_type c = *src;
+          uint8_t code = to_base64[uint8_t(c)];
+          if (is_eight_byte(c) && code <= 63) {
+            break;
+          }
+        }
         return {SUCCESS, size_t(src - srcinit), size_t(dst - dstinit)};
       } else {
         if (idx == 2) {
@@ -181,7 +189,9 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
             std::memcpy(dst, &triple, 2);
           }
           dst += 2;
-        } else if (!ignore_garbage && idx == 1) {
+        } else if (!ignore_garbage && idx == 1 &&
+                   last_chunk_options !=
+                       last_chunk_handling_options::stop_before_partial) {
           return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
                   size_t(dst - dstinit)};
         }
@@ -304,7 +314,6 @@ result base64_tail_decode_safe(
     while (idx < 4 && src < srcend) {
       char_type c = *src;
       uint8_t code = to_base64[uint8_t(c)];
-
       buffer[idx] = uint8_t(code);
       if (is_eight_byte(c) && code <= 63) {
         idx++;
@@ -331,6 +340,14 @@ result base64_tail_decode_safe(
                  ((idx + padded_characters) & 3) != 0) {
         // Rewind src to before partial chunk
         srcr = srccur;
+        // adjust, skipping ignorable characters
+        for (; srcr < srcend; srcr++) {
+          char_type c = *srcr;
+          uint8_t code = to_base64[uint8_t(c)];
+          if (is_eight_byte(c) && code <= 63) {
+            break;
+          }
+        }
         outlen = size_t(dst - dstinit);
         return {SUCCESS, size_t(dst - dstinit)};
       } else { // loose mode
@@ -339,7 +356,9 @@ result base64_tail_decode_safe(
           outlen = size_t(dst - dstinit);
           srcr = src;
           return {SUCCESS, size_t(dst - dstinit)};
-        } else if (!ignore_garbage && idx == 1) {
+        } else if (!ignore_garbage && idx == 1 &&
+                   last_chunk_options !=
+                       last_chunk_handling_options::stop_before_partial) {
           // Error: Incomplete chunk of length 1 is invalid in loose mode
           outlen = size_t(dst - dstinit);
           srcr = src;

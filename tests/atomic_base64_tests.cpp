@@ -50,6 +50,7 @@ void compare_decode(
   const auto r1 = simdutf::base64_to_binary_safe(
       s.data(), s.size(), outbuf1.data(), outlen1, options, last_chunk_options,
       decode_up_to_bad_char);
+  // ensure that the output is zeroed out
   for (std::size_t i = outlen1; i < decodesize; ++i) {
     ASSERT_EQUAL(uint8_t(outbuf1.at(i)), 0);
   }
@@ -74,6 +75,14 @@ void compare_decode(
       ASSERT_EQUAL(+outbuf1.at(i), +outbuf2.at(i));
     }
   }
+}
+
+TEST(gets_different_error) {
+  std::vector<unsigned char> base64(5463, 0x20);
+  base64.back() = 0x38;
+  compare_decode(base64, 8224, simdutf::base64_default,
+                 simdutf::last_chunk_handling_options::stop_before_partial,
+                 false);
 }
 
 TEST(causes_mismatch_in_count) {
