@@ -22,4 +22,4 @@ jobs:
           run: |
             fuzz/build.sh
             mkdir -p /tmp/atomic_out
-            fuzz/out/atomic_base64 -max_len=20000 -timout=10 -max_total_time=300 -jobs=$(nproc) -workers=$(nproc) /tmp/atomic_out
+            fuzz/out/atomic_base64 -max_len=20000 -timeout=10 -max_total_time=300 -jobs=$(nproc) -workers=$(nproc) /tmp/atomic_out
