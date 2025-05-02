@@ -84,7 +84,10 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     return {SUCCESS, 0, 0};
   }
   char *end_of_safe_64byte_zone =
-      (srclen + 3) / 4 * 3 >= 63 ? dst + (srclen + 3) / 4 * 3 - 63 : dst;
+      dst == nullptr
+          ? nullptr
+          : ((srclen + 3) / 4 * 3 >= 63 ? dst + (srclen + 3) / 4 * 3 - 63
+                                        : dst);
 
   const chartype *const srcinit = src;
   const char *const dstinit = dst;
