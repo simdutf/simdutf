@@ -372,16 +372,16 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                last_chunk_options ==
                    last_chunk_handling_options::stop_before_partial &&
                ((idx + equalsigns) & 3) != 0) {
-      // Rewind src to before partial chunk
       _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
       dst += output_len;
-      src -= idx;
-      // skipping over ignorable characters
-      for (; src < srcend; src++) {
+      // We rewind src to before the partial chunk
+      size_t characters_to_skip = idx;
+      while (characters_to_skip > 0) {
+        src--;
         auto c = *src;
         uint8_t code = to_base64[uint8_t(c)];
         if (simdutf::scalar::base64::is_eight_byte(c) && code <= 63) {
-          break;
+          characters_to_skip--;
         }
       }
       return {SUCCESS, size_t(src - srcinit), size_t(dst - dstinit)};

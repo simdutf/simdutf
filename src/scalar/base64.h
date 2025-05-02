@@ -90,6 +90,7 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
       dst += 3;
       src += 4;
     }
+    const char_type *srccur = src;
     idx = 0;
     // we need at least four characters.
 #ifdef __clang__
@@ -141,7 +142,7 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
                      last_chunk_handling_options::stop_before_partial &&
                  ((idx + padded_characters) & 3) != 0) {
         // Rewind src to before partial chunk
-        src -= idx;
+        src = srccur;
         // adjust, skipping ignorable characters
         for (; src < srcend; src++) {
           char_type c = *src;
@@ -368,7 +369,7 @@ result base64_tail_decode_safe(
           size_t required_space = (idx == 2) ? 1 : 2;
           if (size_t(dstend - dst) < required_space) {
             outlen = size_t(dst - dstinit);
-            srcr = src;
+            srcr = srccur;
             return {OUTPUT_BUFFER_TOO_SMALL, size_t(srccur - srcinit)};
           }
           uint32_t triple = 0;
@@ -408,7 +409,7 @@ result base64_tail_decode_safe(
 
     if (dstend - dst < 3) {
       outlen = size_t(dst - dstinit);
-      srcr = src;
+      srcr = srccur;
       return {OUTPUT_BUFFER_TOO_SMALL, size_t(srccur - srcinit)};
     }
     uint32_t triple = (uint32_t(buffer[0]) << 18) +
