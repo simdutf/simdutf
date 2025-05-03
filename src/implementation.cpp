@@ -1539,7 +1539,15 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
     // We processed r.count characters of input.
     // We wrote temp_outlen bytes to temp_buffer.
     // If there is no ignorable characters,
-    // we should expect that values/4.0*3 == temp_outlen.
+    // we should expect that values/4.0*3 == temp_outlen,
+    // except maybe at the tail end of the string.
+
+    //
+    // We are assuming that when r.error == error_code::OUTPUT_BUFFER_TOO_SMALL,
+    // we truncate the results so that a number of base64 characters divisible
+    // by four is processed.
+    //
+
     //
     // We wrote temp_outlen bytes to temp_buffer.
     // We need to copy them to output.
@@ -2191,6 +2199,7 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
     }
     return r;
   }
+
   //
   //
   // We may not have enough space in the output buffer.
@@ -2235,11 +2244,11 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   //
   // We then need to combine the two results.
   //
-  size_t safe_input = base64_length_from_binary(outlen / 3 * 3, options);
+  const size_t safe_input = base64_length_from_binary(outlen / 3 * 3, options);
   full_result r = get_default_implementation()->base64_to_binary_details(
       input, safe_input, output, options, stop_before_partial);
-  size_t input_index = r.input_count;
-  size_t output_index = r.output_count;
+  const size_t input_index = r.input_count;
+  const size_t output_index = r.output_count;
   if (r.error == error_code::INVALID_BASE64_CHARACTER) {
     if (decode_up_to_bad_char) { // We need to use the slow path because we want
                                  // to make sure that
@@ -2258,27 +2267,6 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   //
   // No matter what, at this point, the number of base64 characters in the
   // range [0, input_index) is a multiple of 4.
-  /**
-  // To illustrate, we could use the following code:
-    {
-      size_t spaces = 0;
-      size_t values = 0;
-      for (size_t i = 0; i < input_index; i++) {
-        chartype c = input[i];
-        if (scalar::base64::is_ascii_white_space(c)) {
-          spaces++;
-        } else {
-          values++;
-        }
-      }
-      if(values % 4 != 0) {
-        std::abort();
-      }
-      if(values / 4 * 3 != output_index) {
-        std::abort();
-      }
-    }
-  **/
 
   // Now we have to decode the rest of the input buffer.
   size_t remaining_out = outlen - output_index;
@@ -2303,7 +2291,7 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
       padding_characts++;
     }
   }
-  // this will advance tail_input and tail_length
+  // the base64_tail_decode_safe functoin will advance tail_input
   result rr = scalar::base64::base64_tail_decode_safe(
       output + output_index, remaining_out, tail_input, tail_length,
       padding_characts, options, last_chunk_handling_options);
@@ -2318,28 +2306,13 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   // The number of processed characters is:
   //  tail_input - (input + input_index).
   //
-  // If there were no ignorable characters, we would expect that
+  // If there were no ignorable characters and there is a number of
+  // characters divisible by four, we would expect that
   //  (tail_input - (input + input_index)) / 4 * 3 == remaining_out
+  // But the tail handling might be an issue if
+  // (tail_input - (input + input_index)) is not divisible by 4.
   //
-  /**
-  // To illustrate, we could use the following code:
-  {
-    size_t spaces = 0;
-    size_t values = 0;
-    size_t written = tail_input - (input + input_index);
-    for (size_t i = 0; i < written; i++) {
-      chartype c = input[input_index + i];
-      if (scalar::base64::is_ascii_white_space(c)) {
-        spaces++;
-      } else {
-        values++;
-      }
-    }
-    if(values / 4 * 3 != remaining_out) {
-      std::abort();
-    }
-  }
-  **/
+
   outlen = output_index + remaining_out;
   if (last_chunk_handling_options != stop_before_partial &&
       rr.error == error_code::SUCCESS && padding_characts > 0) {
@@ -2350,10 +2323,47 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   }
   if (rr.error == error_code::SUCCESS) {
     if (last_chunk_handling_options == stop_before_partial) {
-      if (tail_input > input + input_index) {
-        rr.count = tail_input - input;
-      } else if (r.input_count > 0) {
-        rr.count = r.input_count + rr.count;
+      //
+      // tail_input is initially set to input + input_index
+      // and it is modified by base64_tail_decode_safe.
+      // If it advanced, then we know that we have read up to
+      // tail_input and, thus, we consumed tail_input - input
+      // characters. Recall that input points at the beginning of
+      // the input buffer and input_index is the number of
+      // characters that we have have processed prior to calling
+      // base64_tail_decode_safe.
+      rr.count = tail_input - input;
+
+      // We may need to consume some padding characters.
+      // If remaining_out is divisible by 3, we are done.
+      // If the remainder of remaining_out is 1, we need to consume
+      // up to one padding character.
+      // If the remainder of remaining_out is 2, we need to consume
+      // up to one padding character.
+      size_t remainder = remaining_out % 3;
+      size_t expected_padding = (remainder % 3 == 0) ? 0 : (3 - remainder);
+      // We only try to advance *if* we may have padding characters.
+      if (expected_padding > 0) {
+        while (rr.count < length) {
+          auto c = input[rr.count];
+          if (c == '=') {
+            if (expected_padding == 0) {
+              // We have already consumed all the padding characters.
+              break;
+            }
+            expected_padding--;
+            rr.count++;
+
+          } else if (scalar::base64::is_ascii_white_space(input[rr.count])) {
+            // We have a white space character.
+            // We need to consume it.
+            rr.count++;
+          } else {
+            // We have a non-white space character.
+            // We need to stop here.
+            break;
+          }
+        }
       }
       return rr;
     }

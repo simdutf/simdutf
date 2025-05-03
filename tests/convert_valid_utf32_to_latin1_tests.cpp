@@ -49,7 +49,7 @@ TEST(convert_latin1_only) {
     return implementation.convert_valid_utf32_to_latin1(utf32, size, latin1);
   };
   auto size_procedure =
-      [&implementation]([[maybe_unused]] const char32_t *utf32,
+      [&implementation](simdutf_maybe_unused const char32_t *utf32,
                         size_t size) -> size_t {
     return implementation.latin1_length_from_utf32(size);
   };

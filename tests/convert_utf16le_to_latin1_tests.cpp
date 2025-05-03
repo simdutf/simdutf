@@ -48,7 +48,7 @@ TEST_LOOP(trials, convert_randoms) {
     return implementation.convert_utf16le_to_latin1(utf16, size, latin1);
   };
   auto size_procedure =
-      [&implementation]([[maybe_unused]] const char16_t *utf16,
+      [&implementation](simdutf_maybe_unused const char16_t *utf16,
                         size_t size) -> size_t {
     return implementation.latin1_length_from_utf16(size);
   };
@@ -68,7 +68,7 @@ TEST_LOOP(trials, convert_1_or_2_UTF16_bytes) {
     return implementation.convert_utf16le_to_latin1(utf16, size, latin1);
   };
   auto size_procedure =
-      [&implementation]([[maybe_unused]] const char16_t *utf16,
+      [&implementation](simdutf_maybe_unused const char16_t *utf16,
                         size_t size) -> size_t {
     return implementation.latin1_length_from_utf16(size);
   };

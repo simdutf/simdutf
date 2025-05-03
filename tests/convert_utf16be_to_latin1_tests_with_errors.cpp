@@ -70,7 +70,7 @@ TEST_LOOP(trials, convert_2_UTF16_bytes) {
     return res.count;
   };
   auto size_procedure =
-      [&implementation]([[maybe_unused]] const char16_t *utf16,
+      [&implementation](simdutf_maybe_unused const char16_t *utf16,
                         size_t size) -> size_t {
     return implementation.latin1_length_from_utf16(size);
   };
