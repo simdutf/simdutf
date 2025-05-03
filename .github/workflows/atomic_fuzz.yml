@@ -1,0 +1,25 @@
+name: atomic base64 fuzz
+
+# this runs the atomic base64 fuzzer for a short while.
+# it is not covered by the CIFuzz job, since that does not support C++20 fully
+
+on:
+    push:
+        branches:
+        - master
+    pull_request:
+        branches:
+        - master
+
+jobs:
+    ubuntu-build:
+        runs-on: ubuntu-24.04
+        steps:
+        - uses: actions/checkout@v4
+        - name: install clang
+          run: sudo apt install -y clang-18 ccache
+        - name: compile and run atomic base64 fuzzer
+          run: |
+            fuzz/build.sh
+            mkdir -p /tmp/atomic_out
+            fuzz/out/atomic_base64 -max_len=20000 -timeout=10 -max_total_time=300 -jobs=$(nproc) -workers=$(nproc) /tmp/atomic_out

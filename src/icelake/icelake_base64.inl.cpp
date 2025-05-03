@@ -371,11 +371,20 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     } else if (!ignore_garbage &&
                last_chunk_options ==
                    last_chunk_handling_options::stop_before_partial &&
-               (idx != 1) && ((idx + equalsigns) & 3) != 0) {
-      // Rewind src to before partial chunk
+               ((idx + equalsigns) & 3) != 0) {
       _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
       dst += output_len;
-      src -= idx;
+      // We rewind src to before the partial chunk
+      size_t characters_to_skip = idx;
+      while (characters_to_skip > 0) {
+        src--;
+        auto c = *src;
+        uint8_t code = to_base64[uint8_t(c)];
+        if (simdutf::scalar::base64::is_eight_byte(c) && code <= 63) {
+          characters_to_skip--;
+        }
+      }
+      return {SUCCESS, size_t(src - srcinit), size_t(dst - dstinit)};
     } else {
       if (idx == 2) {
         if (!ignore_garbage &&
@@ -410,7 +419,9 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         output_len += 2;
         _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
         dst += output_len;
-      } else if (!ignore_garbage && idx == 1) {
+      } else if (!ignore_garbage && idx == 1 &&
+                 last_chunk_options !=
+                     last_chunk_handling_options::stop_before_partial) {
         _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
         dst += output_len;
         return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
@@ -429,10 +440,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         return {INVALID_BASE64_CHARACTER, equallocation, output_count};
       }
     }
-
     return {SUCCESS, srclen, size_t(dst - dstinit)};
   }
-
   if (!ignore_garbage && equalsigns > 0) {
     if (last_chunk_options == last_chunk_handling_options::strict) {
       return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
