@@ -218,6 +218,8 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
 // like base64_tail_decode, but it will not write past the end of the output
 // buffer. The outlen parameter is modified to reflect the number of bytes
 // written. This functions assumes that the padding (=) has been removed.
+//
+// The caller is expected to have the case where length == 0.
 template <class char_type>
 result base64_tail_decode_safe(
     char *dst, size_t &outlen, const char_type *&srcr, size_t length,
@@ -226,6 +228,7 @@ result base64_tail_decode_safe(
     base64_options options, last_chunk_handling_options last_chunk_options) {
   const char_type *src = srcr;
   if (length == 0) {
+    // This case should be handled by the caller.
     outlen = 0;
     return {SUCCESS, 0};
   }
@@ -331,7 +334,7 @@ result base64_tail_decode_safe(
     if (idx != 4) {
       if (!ignore_garbage &&
           last_chunk_options == last_chunk_handling_options::strict &&
-          ((idx + padded_characters) & 3) != 0) {
+          (idx != 1) && ((idx + padded_characters) & 3) != 0) {
         outlen = size_t(dst - dstinit);
         srcr = src;
         return {BASE64_INPUT_REMAINDER, size_t(src - srcinit)};

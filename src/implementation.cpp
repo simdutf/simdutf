@@ -2274,6 +2274,8 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   size_t tail_length = length - input_index;
   // We need to count the number of padding characters (if any)
   // because base64_tail_decode_safe expects us to do it.
+  size_t equallocation =
+      length; // location of the first padding character if any
   while (tail_length > 0 &&
          scalar::base64::is_ascii_white_space(tail_input[tail_length - 1])) {
     tail_length--;
@@ -2282,16 +2284,32 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   if (tail_length > 0 && tail_input[tail_length - 1] == '=') {
     tail_length--;
     padding_characts++;
+    equallocation = tail_length + input_index;
     while (tail_length > 0 &&
            scalar::base64::is_ascii_white_space(tail_input[tail_length - 1])) {
       tail_length--;
     }
     if (tail_length > 0 && tail_input[tail_length - 1] == '=') {
       tail_length--;
+      equallocation = tail_length + input_index;
       padding_characts++;
     }
   }
-  // the base64_tail_decode_safe functoin will advance tail_input
+  const bool ignore_garbage = (options & base64_default_accept_garbage) != 0;
+  if (tail_length == 0) {
+    outlen = output_index;
+    if (!ignore_garbage && padding_characts > 0) {
+      if (last_chunk_handling_options == last_chunk_handling_options::strict) {
+        return {BASE64_INPUT_REMAINDER, length};
+      } else if (last_chunk_handling_options ==
+                 last_chunk_handling_options::stop_before_partial) {
+        return {SUCCESS, input_index};
+      }
+      return {INVALID_BASE64_CHARACTER, equallocation};
+    }
+    return {SUCCESS, length};
+  }
+  // the base64_tail_decode_safe function will advance tail_input
   result rr = scalar::base64::base64_tail_decode_safe(
       output + output_index, remaining_out, tail_input, tail_length,
       padding_characts, options, last_chunk_handling_options);

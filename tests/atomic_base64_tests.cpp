@@ -144,7 +144,8 @@ TEST(gets_different_error) {
                  false);
 }
 
-// different error reported, INVALID_BASE64_CHARACTER vs BASE64_INPUT_REMAINDER
+// different error reported, INVALID_BASE64_CHARACTER=7 vs
+// BASE64_INPUT_REMAINDER=8
 TEST(gets_different_error2) {
   const std::vector<unsigned char> base64{
       0x69, 0x30, 0x69, 0x69, 0x69, 0x69, 0x69, 0x69, 0x69, 0x69, 0x69, 0x4c,
