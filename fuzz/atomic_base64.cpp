@@ -101,9 +101,11 @@ void decode(std::span<const FromChar> base64_, const auto selected_option,
   }
 
   if (atomic.result.count != non_atomic.result.count) {
-    std::cerr << "different count reported! " << atomic.result.count << " vs "
-              << non_atomic.result.count << '\n';
-    bad = true;
+    if (non_atomic.result.error == simdutf::SUCCESS) {
+      std::cerr << "different count reported! " << atomic.result.count << " vs "
+                << non_atomic.result.count << '\n';
+      bad = true;
+    }
   }
   if (atomic.binary.size() != non_atomic.binary.size()) {
 

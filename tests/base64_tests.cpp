@@ -12,8 +12,39 @@
 #include <tests/helpers/test.h>
 #include <vector>
 
-TEST(hybrid_decoding) {
+TEST(stop_before_partial_one_char) {
+  std::vector<char> base64(5463, 0x20);
+  base64.back() = 0x38; // this is the number 8 (a valid base64 character)
+  std::vector<char> back(0);
+  // with stop_before_partial, we should stop before the last character
+  // and not decode it. There should be no error.
+  // https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
+  simdutf::result r = implementation.base64_to_binary(
+      base64.data(), base64.size(), back.data(), simdutf::base64_default,
+      simdutf::last_chunk_handling_options::stop_before_partial);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.count, 0);
+  size_t buflen = back.size();
+  ASSERT_EQUAL(buflen, 0);
+  r = simdutf::base64_to_binary_safe(
+      base64.data(), base64.size(), back.data(), buflen,
+      simdutf::base64_default,
+      simdutf::last_chunk_handling_options::stop_before_partial);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(buflen, 0);
+  ASSERT_EQUAL(r.count, 5462);
+  back.resize(base64.size());
+  buflen = back.size();
+  r = simdutf::base64_to_binary_safe(
+      base64.data(), base64.size(), back.data(), buflen,
+      simdutf::base64_default,
+      simdutf::last_chunk_handling_options::stop_before_partial);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(buflen, 0);
+  ASSERT_EQUAL(r.count, 5462);
+}
 
+TEST(hybrid_decoding) {
   std::vector<std::pair<std::string, std::vector<uint8_t>>> test_data = {
       {"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA__--_--"
        "_--__AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
@@ -2012,10 +2043,8 @@ TEST(doomed_truncated_base64_roundtrip) {
       buffer.resize(size - 3);
       std::vector<char> back(simdutf::maximal_binary_length_from_base64(
           buffer.data(), buffer.size()));
-      for (auto option :
-           {simdutf::last_chunk_handling_options::loose,
-            simdutf::last_chunk_handling_options::strict,
-            simdutf::last_chunk_handling_options::stop_before_partial}) {
+      for (auto option : {simdutf::last_chunk_handling_options::loose,
+                          simdutf::last_chunk_handling_options::strict}) {
         simdutf::result r = implementation.base64_to_binary(
             buffer.data(), buffer.size(), back.data(), simdutf::base64_default,
             option);

@@ -21,6 +21,7 @@ if [ -z $SRC ] ; then
     export LIB_FUZZING_ENGINE="-fsanitize=fuzzer"
     export OUT=fuzz/out
     export WORK=fuzz/work
+    BUILD=$WORK/build
     mkdir -p $OUT $WORK
     fuzzer_src_files=$(ls fuzz/*.cpp|grep -v -E "fuzz/(reproducer.|main)")
 else
@@ -28,11 +29,12 @@ else
     cd $SRC/simdutf
     # temporary: exclude atomic from oss-fuzz, libc++ 18 used there does not support atomic ref
     fuzzer_src_files=$(ls fuzz/*.cpp|grep -v -E "fuzz/(reproducer.|main|atomic.)")
+    BUILD=build
 fi
 
 
 
-cmake -B build -S . \
+cmake -B $BUILD -S . \
       -DSIMDUTF_TESTS=Off \
       -DSIMDUTF_TOOLS=Off \
       -DSIMDUTF_FUZZERS=Off \
@@ -40,8 +42,8 @@ cmake -B build -S . \
       -DSIMDUTF_CXX_STANDARD=20 \
       -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=On
 
-cmake --build build -j$(nproc)
-cmake --install build --prefix $WORK
+cmake --build $BUILD -j$(nproc)
+cmake --install $BUILD --prefix $WORK
 
 CXXFLAGSEXTRA=-std=c++20
 
