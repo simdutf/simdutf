@@ -431,7 +431,6 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         dst += output_len;
       }
     }
-
     if (!ignore_garbage && last_chunk_options != stop_before_partial &&
         equalsigns > 0) {
       size_t output_count = size_t(dst - dstinit);
@@ -442,6 +441,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     }
     return {SUCCESS, srclen, size_t(dst - dstinit)};
   }
+
   if (!ignore_garbage && equalsigns > 0) {
     if (last_chunk_options == last_chunk_handling_options::strict) {
       return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),

@@ -16,16 +16,37 @@ template <class char_type> bool is_ascii_white_space(char_type c) {
   return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f';
 }
 
-template <class char_type> bool is_ascii_white_space_or_padding(char_type c) {
-  return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' ||
-         c == '=';
-}
-
 template <class char_type> bool is_eight_byte(char_type c) {
   if (sizeof(char_type) == 1) {
     return true;
   }
   return uint8_t(c) == c;
+}
+
+template <class char_type>
+bool is_ignorable(char_type c, simdutf::base64_options options) {
+  const uint8_t *to_base64 =
+      (options & base64_default_or_url)
+          ? tables::base64::to_base64_default_or_url_value
+          : ((options & base64_url) ? tables::base64::to_base64_url_value
+                                    : tables::base64::to_base64_value);
+  const bool ignore_garbage =
+      (options == base64_options::base64_url_accept_garbage) ||
+      (options == base64_options::base64_default_accept_garbage) ||
+      (options == base64_options::base64_default_or_url_accept_garbage);
+  uint8_t code = to_base64[uint8_t(c)];
+  if (is_eight_byte(c) && code <= 63) {
+    return false;
+  }
+  if (is_eight_byte(c) && code == 64) {
+    return true;
+  }
+  return ignore_garbage;
+}
+
+template <class char_type>
+bool is_ignorable_or_padding(char_type c, simdutf::base64_options options) {
+  return is_ignorable(c, options) || c == '=';
 }
 
 // Returns true upon success. The destination buffer must be large enough.

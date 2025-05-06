@@ -31,6 +31,35 @@ enum error_code {
   OTHER                     // Not related to validation/transcoding.
 };
 
+inline std::string_view to_string(error_code code) {
+  switch (code) {
+  case SUCCESS:
+    return "SUCCESS";
+  case HEADER_BITS:
+    return "HEADER_BITS";
+  case TOO_SHORT:
+    return "TOO_SHORT";
+  case TOO_LONG:
+    return "TOO_LONG";
+  case OVERLONG:
+    return "OVERLONG";
+  case TOO_LARGE:
+    return "TOO_LARGE";
+  case SURROGATE:
+    return "SURROGATE";
+  case INVALID_BASE64_CHARACTER:
+    return "INVALID_BASE64_CHARACTER";
+  case BASE64_INPUT_REMAINDER:
+    return "BASE64_INPUT_REMAINDER";
+  case BASE64_EXTRA_BITS:
+    return "BASE64_EXTRA_BITS";
+  case OUTPUT_BUFFER_TOO_SMALL:
+    return "OUTPUT_BUFFER_TOO_SMALL";
+  default:
+    return "OTHER";
+  }
+}
+
 struct result {
   error_code error;
   size_t count; // In case of error, indicates the position of the error. In

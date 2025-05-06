@@ -4,6 +4,21 @@
 #include "simdutf/portability.h"
 #include "simdutf/avx512.h"
 
+// Sometimes logging is useful, but we want it disabled by default
+// and free of any logging code in release builds.
+#ifdef SIMDUTF_LOGGING
+  #include <iostream>
+  #define simdutf_log(msg)                                                     \
+    std::cout << "[" << __FUNCTION__ << "]: " << msg << std::endl              \
+              << "\t" << __FILE__ << ":" << __LINE__ << std::endl;
+  #define simdutf_error(msg)                                                   \
+    std::cerr << "[" << __FUNCTION__ << "]: " << msg << std::endl              \
+              << "\t" << __FILE__ << ":" << __LINE__ << std::endl;
+#else
+  #define simdutf_log(msg)
+  #define simdutf_error(msg)
+#endif
+
 #if defined(SIMDUTF_REGULAR_VISUAL_STUDIO)
   #define SIMDUTF_DEPRECATED __declspec(deprecated)
 

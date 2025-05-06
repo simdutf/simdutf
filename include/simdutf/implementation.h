@@ -2779,10 +2779,11 @@ trim_partial_utf16(std::span<const char16_t> valid_utf16_input) noexcept {
 // ASCII spaces are ' ', '\t', '\n', '\r', '\f'
 // garbage characters are characters that are not part of the base64 alphabet
 // nor ASCII spaces.
+constexpr uint64_t base64_reverse_padding =
+    2; /* modifier for base64_default and base64_url */
 enum base64_options : uint64_t {
-  base64_default = 0,         /* standard base64 format (with padding) */
-  base64_url = 1,             /* base64url format (no padding) */
-  base64_reverse_padding = 2, /* modifier for base64_default and base64_url */
+  base64_default = 0, /* standard base64 format (with padding) */
+  base64_url = 1,     /* base64url format (no padding) */
   base64_default_no_padding =
       base64_default |
       base64_reverse_padding, /* standard base64 format without padding */
@@ -2799,6 +2800,28 @@ enum base64_options : uint64_t {
              (only meaningful for decoding!) */
 };
 
+inline std::string_view to_string(base64_options options) {
+  switch (options) {
+  case base64_default:
+    return "base64_default";
+  case base64_url:
+    return "base64_url";
+  case base64_reverse_padding:
+    return "base64_reverse_padding";
+  case base64_url_with_padding:
+    return "base64_url_with_padding";
+  case base64_default_accept_garbage:
+    return "base64_default_accept_garbage";
+  case base64_url_accept_garbage:
+    return "base64_url_accept_garbage";
+  case base64_default_or_url:
+    return "base64_default_or_url";
+  case base64_default_or_url_accept_garbage:
+    return "base64_default_or_url_accept_garbage";
+  }
+  return "<unknown>";
+}
+
 // last_chunk_handling_options are used to specify the handling of the last
 // chunk in base64 decoding.
 // https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
@@ -2809,6 +2832,18 @@ enum last_chunk_handling_options : uint64_t {
   stop_before_partial =
       2, /* if the last chunk is partial (2 or 3 chars), ignore it (no error) */
 };
+
+inline std::string_view to_string(last_chunk_handling_options options) {
+  switch (options) {
+  case loose:
+    return "loose";
+  case strict:
+    return "strict";
+  case stop_before_partial:
+    return "stop_before_partial";
+  }
+  return "<unknown>";
+}
 
 /**
  * Provide the maximal binary length in bytes given the base64 input.
