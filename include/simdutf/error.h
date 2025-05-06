@@ -30,7 +30,7 @@ enum error_code {
   OUTPUT_BUFFER_TOO_SMALL,  // The provided buffer is too small.
   OTHER                     // Not related to validation/transcoding.
 };
-
+#if SIMDUTF_CPLUSPLUS17
 inline std::string_view to_string(error_code code) {
   switch (code) {
   case SUCCESS:
@@ -59,6 +59,7 @@ inline std::string_view to_string(error_code code) {
     return "OTHER";
   }
 }
+#endif
 
 struct result {
   error_code error;
