@@ -12,6 +12,7 @@ namespace {
 namespace base64 {
 
 // This function is not expected to be fast. Do not use in long loops.
+// In most instances you should be using is_ignorable.
 template <class char_type> bool is_ascii_white_space(char_type c) {
   return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f';
 }
@@ -248,11 +249,7 @@ result base64_tail_decode_safe(
                               // 1, 2.
     base64_options options, last_chunk_handling_options last_chunk_options) {
   const char_type *src = srcr;
-  if (length == 0) {
-    // This case should be handled by the caller.
-    outlen = 0;
-    return {SUCCESS, 0};
-  }
+  simdutf_log_assert(length != 0, "length should not be 0");
   // This looks like 10 branches, but we expect the compiler to resolve this to
   // two branches (easily predicted):
   const uint8_t *to_base64 =

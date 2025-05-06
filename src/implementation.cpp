@@ -2399,7 +2399,7 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
       padding_characts, options, last_chunk_handling_options);
   //
   // base64_tail_decode_safe produced 'remaining_out' additonal bytes.
-  // Remeber that we already had decoded 'output_index' bytes.
+  // Remember that we already had decoded 'output_index' bytes.
   //
   // We originally had that tail_input = input + input_index, but
   // tail_input was passed by reference to base64_tail_decode_safe, and
