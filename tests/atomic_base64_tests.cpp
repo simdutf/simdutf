@@ -2041,7 +2041,7 @@ void varying_input_size_utf16_impl(const std::size_t N_input) {
     std::string output(expected_output.size(), '\0');
     const auto ret = simdutf::atomic_binary_to_base64(input, output);
     ASSERT_EQUAL(output.size(),
-                 simdutf::convert_utf8_to_utf16le(output, output16));
+                 simdutf::convert_utf8_to_utf16(output, output16));
     ASSERT_EQUAL(ret, expected_output.size());
     ASSERT_TRUE(output16 == expected_output);
   }
