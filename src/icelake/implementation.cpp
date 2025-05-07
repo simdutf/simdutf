@@ -1693,6 +1693,16 @@ simdutf_warn_unused result implementation::base64_to_binary(
 simdutf_warn_unused full_result implementation::base64_to_binary_details(
     const char16_t *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
+  simdutf_log(" input: \"");
+  for (size_t i = 0; i < length; i++) {
+    if (scalar::base64::is_ignorable(input[i], options)) {
+      printf(" ");
+    } else {
+      printf("%c", input[i]);
+    }
+  }
+  printf("\"\n");
+
   if (options & base64_default_or_url) {
     if (options == base64_options::base64_default_or_url_accept_garbage) {
       return compress_decode_base64<false, true, true>(

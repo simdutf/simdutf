@@ -216,18 +216,30 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     }
   }
   if (src < srcend + equalsigns) {
+    simdutf_log("base64_tail_decode: src < srcend + equalsigns, equalsigns = "
+                << equalsigns);
     full_result r = scalar::base64::base64_tail_decode(
         dst, src, srcend - src, equalsigns, options, last_chunk_options);
+    simdutf_log("base64_tail_decode produced "
+                << r.output_count << " bytes of output from " << r.input_count
+                << " bytes of input, error = " << simdutf::to_string(r.error));
     r.input_count += size_t(src - srcinit);
-    if (r.error == error_code::INVALID_BASE64_CHARACTER ||
+    simdutf_log("updated input_count to  " << r.input_count);
+    if (r.error == error_code::BASE64_INPUT_REMAINDER ||
+        r.error == error_code::INVALID_BASE64_CHARACTER ||
         r.error == error_code::BASE64_EXTRA_BITS) {
+      simdutf_log("returing based on base64_tail_decode error: "
+                  << simdutf::to_string(r.error) << " input_count = "
+                  << r.input_count << " output_count = " << r.output_count);
       return r;
     } else {
       r.output_count += size_t(dst - dstinit);
     }
-    if (!ignore_garbage && last_chunk_options != stop_before_partial &&
-        r.error == error_code::SUCCESS && equalsigns > 0) {
-      // additional checks
+    if (!ignore_garbage && r.error == error_code::SUCCESS && equalsigns > 0 &&
+        last_chunk_options != stop_before_partial) {
+      simdutf_log(
+          "last_chunk_options != stop_before_partial error equalsigns = "
+          << equalsigns << " output_count = " << r.output_count);
       if ((r.output_count % 3 == 0) ||
           ((r.output_count % 3) + 1 + equalsigns != 4)) {
         r.error = error_code::INVALID_BASE64_CHARACTER;

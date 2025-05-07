@@ -12,13 +12,13 @@
     std::cout << "[" << __FUNCTION__ << "]: " << msg << std::endl              \
               << "\t" << __FILE__ << ":" << __LINE__ << std::endl;
   #define simdutf_log_assert(cond, msg)                                        \
-              do {                                                                       \
-                if (!(cond)) {                                                           \
-                  std::cerr << "[" << __FUNCTION__ << "]: " << msg << std::endl          \
-                            << "\t" << __FILE__ << ":" << __LINE__ << std::endl;         \
-                  std::abort();                                                \
-                }                                                                        \
-              } while (0)
+    do {                                                                       \
+      if (!(cond)) {                                                           \
+        std::cerr << "[" << __FUNCTION__ << "]: " << msg << std::endl          \
+                  << "\t" << __FILE__ << ":" << __LINE__ << std::endl;         \
+        std::abort();                                                          \
+      }                                                                        \
+    } while (0)
 #else
   #define simdutf_log(msg)
   #define simdutf_log_assert(cond, msg)

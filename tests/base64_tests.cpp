@@ -548,11 +548,24 @@ TEST(roundtrip_base64_with_lots_of_spaces_at_the_beginning) {
   }
 }
 
-// partial decoding with 'safe' will succeed and just decode the first 3 bytes,
-// even if we have ample output memory. It should consume only 4 bytes.
 TEST(base64_decode_just_one_padding_partial_safe) {
   std::vector<std::tuple<std::string, simdutf::result, size_t>> test_cases = {
-      {"uuuu             =", {simdutf::error_code::SUCCESS, 4}, 3}};
+      {"uuuu             uu=", {simdutf::error_code::SUCCESS, 4}, 3},
+      // 5. If char is "=", then If chunkLength < 2, then Let error be a new
+      // SyntaxError exception.
+      {"uuuu             u==",
+       {simdutf::error_code::BASE64_INPUT_REMAINDER, 17},
+       0}, // error
+      {"uuuu             u=",
+       {simdutf::error_code::BASE64_INPUT_REMAINDER, 17},
+       0}, // error
+      {"uuuu             ==",
+       {simdutf::error_code::INVALID_BASE64_CHARACTER, 17},
+       0}, // error
+      {"uuuu             =",
+       {simdutf::error_code::INVALID_BASE64_CHARACTER, 17},
+       0}, // error
+  };
   std::vector<char> buffer(128);
   for (auto &p : test_cases) {
     auto input = std::get<0>(p);
@@ -581,10 +594,22 @@ TEST(base64_decode_just_one_padding_partial_safe) {
 // have ample output memory.
 TEST(base64_decode_just_one_padding_partial_generous) {
   std::vector<std::pair<std::string, simdutf::result>> test_cases = {
-      {"uuuu             =", {simdutf::error_code::SUCCESS, 3}}};
+      {"uuuu             uu=", {simdutf::error_code::SUCCESS, 3}},
+      // 5. If char is "=", then If chunkLength < 2, then Let error be a new
+      // SyntaxError exception.
+      {"  uuuu             u==",
+       {simdutf::error_code::BASE64_INPUT_REMAINDER, 3}}, // error
+      {"uuuu             u=",
+       {simdutf::error_code::BASE64_INPUT_REMAINDER, 3}}, // error
+      {"uuuu             ==",
+       {simdutf::error_code::INVALID_BASE64_CHARACTER, 17}}, // error
+      {"uuuu             =",
+       {simdutf::error_code::INVALID_BASE64_CHARACTER, 4}}, // error
+  };
   std::vector<char> buffer(6);
   for (auto &p : test_cases) {
     auto input = p.first;
+    simdutf_log("input: " << input);
     auto expected_result = p.second;
     for (auto option : {simdutf::base64_options::base64_default,
                         simdutf::base64_options::base64_url}) {
@@ -641,9 +666,21 @@ TEST(base64_decode_just_one_padding_strict) {
 }
 
 // partial decoding will succeed and just decode the first 3 bytes.
+// https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
 TEST(base64_decode_just_one_padding_partial) {
   std::vector<std::pair<std::string, simdutf::result>> test_cases = {
-      {"uuuu             =", {simdutf::error_code::SUCCESS, 3}}};
+      {"uuuu             uu=", {simdutf::error_code::SUCCESS, 3}},
+      // 5. If char is "=", then If chunkLength < 2, then Let error be a new
+      // SyntaxError exception.
+      {"uuuu             u==",
+       {simdutf::error_code::BASE64_INPUT_REMAINDER, 17}}, // error
+      {"uuuu             u=",
+       {simdutf::error_code::BASE64_INPUT_REMAINDER, 17}}, // error
+      {"uuuu             ==",
+       {simdutf::error_code::INVALID_BASE64_CHARACTER, 17}}, // error
+      {"uuuu             =",
+       {simdutf::error_code::INVALID_BASE64_CHARACTER, 17}}, // error
+  };
   std::vector<char> buffer(3);
   for (auto &p : test_cases) {
     auto input = p.first;

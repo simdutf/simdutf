@@ -153,17 +153,24 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
       src++;
     }
     if (idx != 4) {
+      simdutf_log_assert(idx < 4, "idx should be less than 4");
+      simdutf_log("idx: " << idx
+                          << " padded_characters: " << padded_characters);
       if (!ignore_garbage &&
           last_chunk_options == last_chunk_handling_options::strict &&
           (idx != 1) && ((idx + padded_characters) & 3) != 0) {
         // The partial chunk was at src - idx
+        simdutf_log("strict case BASE64_INPUT_REMAINDER");
         return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
                 size_t(dst - dstinit)};
       } else if (!ignore_garbage &&
                  last_chunk_options ==
                      last_chunk_handling_options::stop_before_partial &&
-                 ((idx + padded_characters) & 3) != 0) {
+                 ((idx + padded_characters) & 3) != 0 &&
+                 (padded_characters == 0 || idx >= 2)) {
         // Rewind src to before partial chunk
+        simdutf_log("stop_before_partial case SUCCESS");
+
         src = srccur;
         // adjust, skipping ignorable characters
         for (; src < srcend; src++) {
@@ -181,6 +188,8 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
           if (!ignore_garbage &&
               (last_chunk_options == last_chunk_handling_options::strict) &&
               (triple & 0xffff)) {
+            simdutf_log("strict case BASE64_EXTRA_BITS");
+
             return {BASE64_EXTRA_BITS, size_t(src - srcinit),
                     size_t(dst - dstinit)};
           }
@@ -200,6 +209,8 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
           if (!ignore_garbage &&
               (last_chunk_options == last_chunk_handling_options::strict) &&
               (triple & 0xff)) {
+            simdutf_log("strict case BASE64_EXTRA_BITS");
+
             return {BASE64_EXTRA_BITS, size_t(src - srcinit),
                     size_t(dst - dstinit)};
           }
@@ -213,11 +224,23 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
           }
           dst += 2;
         } else if (!ignore_garbage && idx == 1 &&
-                   last_chunk_options !=
-                       last_chunk_handling_options::stop_before_partial) {
+                   (last_chunk_options !=
+                        last_chunk_handling_options::stop_before_partial ||
+                    (last_chunk_options ==
+                         last_chunk_handling_options::stop_before_partial &&
+                     padded_characters > 0))) {
+          simdutf_log("BASE64_INPUT_REMAINDER");
           return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
                   size_t(dst - dstinit)};
+        } else if (!ignore_garbage && idx == 0 && padded_characters > 0) {
+          simdutf_log("INVALID_BASE64_CHARACTER size_t(src - srcinit) = "
+                      << size_t(src - srcinit)
+                      << " size_t(dst - dstinit) = " << size_t(dst - dstinit));
+          return {INVALID_BASE64_CHARACTER, size_t(src - srcinit),
+                  size_t(dst - dstinit)};
         }
+        simdutf_log("pass-through case SUCCESS");
+
         return {SUCCESS, size_t(src - srcinit), size_t(dst - dstinit)};
       }
     }
@@ -350,16 +373,22 @@ result base64_tail_decode_safe(
       src++;
     }
     if (idx != 4) {
+      simdutf_log_assert(idx < 4, "idx should be less than 4");
+      simdutf_log("idx: " << idx
+                          << " padded_characters: " << padded_characters);
       if (!ignore_garbage &&
           last_chunk_options == last_chunk_handling_options::strict &&
           (idx != 1) && ((idx + padded_characters) & 3) != 0) {
         outlen = size_t(dst - dstinit);
         srcr = src;
+        simdutf_log("strict case BASE64_INPUT_REMAINDER");
         return {BASE64_INPUT_REMAINDER, size_t(src - srcinit)};
       } else if (!ignore_garbage &&
                  last_chunk_options ==
                      last_chunk_handling_options::stop_before_partial &&
-                 ((idx + padded_characters) & 3) != 0) {
+                 ((idx + padded_characters) & 3) != 0 &&
+                 (padded_characters == 0 || idx >= 2)) {
+                  simdutf_log("stop_before_partial case SUCCESS");
         // Rewind src to before partial chunk
         srcr = srccur;
         // adjust, skipping ignorable characters
@@ -375,15 +404,20 @@ result base64_tail_decode_safe(
       } else { // loose mode
         if (idx == 0) {
           // No data left; return success
+          simdutf_log("idx == 0, no data left; return success");
           outlen = size_t(dst - dstinit);
           srcr = src;
           return {SUCCESS, size_t(dst - dstinit)};
         } else if (!ignore_garbage && idx == 1 &&
-                   last_chunk_options !=
-                       last_chunk_handling_options::stop_before_partial) {
+                   (last_chunk_options !=
+                        last_chunk_handling_options::stop_before_partial ||
+                    (last_chunk_options ==
+                         last_chunk_handling_options::stop_before_partial &&
+                     padded_characters > 0))) {
           // Error: Incomplete chunk of length 1 is invalid in loose mode
           outlen = size_t(dst - dstinit);
           srcr = src;
+          simdutf_log("BASE64_INPUT_REMAINDER");
           return {BASE64_INPUT_REMAINDER, size_t(src - srcinit)};
         } else if (idx == 2 || idx == 3) {
           // Check if there's enough space in the destination buffer
@@ -391,6 +425,7 @@ result base64_tail_decode_safe(
           if (size_t(dstend - dst) < required_space) {
             outlen = size_t(dst - dstinit);
             srcr = srccur;
+            simdutf_log("Not enough space in destination buffer");
             return {OUTPUT_BUFFER_TOO_SMALL, size_t(srccur - srcinit)};
           }
           uint32_t triple = 0;
@@ -400,6 +435,7 @@ result base64_tail_decode_safe(
                 (last_chunk_options == last_chunk_handling_options::strict) &&
                 (triple & 0xffff)) {
               srcr = src;
+              simdutf_log("strict case BASE64_EXTRA_BITS");
               return {BASE64_EXTRA_BITS, size_t(src - srcinit)};
             }
             // Extract the first byte
@@ -413,6 +449,7 @@ result base64_tail_decode_safe(
                 (last_chunk_options == last_chunk_handling_options::strict) &&
                 (triple & 0xff)) {
               srcr = src;
+              simdutf_log("strict case BASE64_EXTRA_BITS");
               return {BASE64_EXTRA_BITS, size_t(src - srcinit)};
             }
             // Extract the first two bytes
@@ -420,6 +457,12 @@ result base64_tail_decode_safe(
             dst[0] = static_cast<char>((triple >> 8) & 0xFF);
             dst[1] = static_cast<char>(triple & 0xFF);
             dst += 2;
+          } else if (!ignore_garbage && idx == 0 && padded_characters > 0) {
+            simdutf_log("INVALID_BASE64_CHARACTER size_t(src - srcinit) = "
+                        << size_t(src - srcinit) << " size_t(dst - dstinit) = "
+                        << size_t(dst - dstinit));
+                        simdutf_log("idx == 0, no data left but padding; return INVALID_BASE64_CHARACTER");
+            return {INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
           }
           outlen = size_t(dst - dstinit);
           srcr = src;

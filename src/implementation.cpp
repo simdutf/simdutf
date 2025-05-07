@@ -1524,13 +1524,13 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
                          << "\n\toptions: " << simdutf::to_string(options)
                          << " last_chunk_handling_options: "
                          << simdutf::to_string(last_chunk_handling_options));
-    #if defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
+  // #if defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
   // We use a smaller buffer during fuzzing to more easily detect bugs.
   constexpr size_t buffer_size = 128;
-    #else
+  // #else
   // Arbitrary block sizes: 4KB for input.
-  constexpr size_t buffer_size = 4096;
-    #endif
+  // constexpr size_t buffer_size = 4096;
+  // #endif
   std::array<char, buffer_size> temp_buffer;
   const char_type *input_init = input;
   size_t actual_out = 0;
@@ -2174,6 +2174,15 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
               << length << " outlen: " << outlen << "\n\toptions: "
               << simdutf::to_string(options) << " last_chunk_handling_options: "
               << simdutf::to_string(last_chunk_handling_options));
+  printf("\"");
+  for (size_t i = 0; i < length; i++) {
+    if (scalar::base64::is_ignorable(input[i], options)) {
+      printf(" ");
+    } else {
+      printf("%c", input[i]);
+    }
+  }
+  printf("\"\n");
   static_assert(std::is_same<chartype, char>::value ||
                     std::is_same<chartype, char16_t>::value,
                 "Only char and char16_t are supported.");
@@ -2290,13 +2299,25 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   }
   // If the tail is empty, we want to use the fast path.
   if (empty_tail) {
-    simdutf_log("base64_to_binary_safe_impl tail is empty");
+    simdutf_log("base64_to_binary_safe_impl tail is empty length = "
+                << length << " safe_input: " << safe_input << " outlen: "
+                << outlen << "\n\toptions: " << simdutf::to_string(options)
+                << " last_chunk_handling_options: "
+                << simdutf::to_string(last_chunk_handling_options));
     // This will call the fast path.
     auto r = base64_to_binary_safe_impl(input, safe_input, output, outlen,
                                         options, last_chunk_handling_options,
                                         decode_up_to_bad_char);
     // We need to adjust the input count.
-    if (r.error == error_code::SUCCESS) {
+    simdutf_log("base64_to_binary_safe_impl fast path result: "
+                << simdutf::to_string(r.error) << " count: " << r.count
+                << " outlen: " << outlen);
+    // If the tail is empty and it succeeded, and it is not a partial
+    // decoding, then we can consider that we have decoded the whole input
+    // buffer.
+    if (last_chunk_handling_options !=
+            last_chunk_handling_options::stop_before_partial &&
+        r.error == error_code::SUCCESS) {
       r.count = length;
     }
     return r;
@@ -2310,7 +2331,7 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
     // to backtrack the input buffer to the last base64 character.
     // We need to do that because we will call a fast function
     // with stop_before_partial mode. This function might not
-    // catch some issues.
+    // catch some issues unless we have rewinded.
     while (safe_input > 0 && scalar::base64::is_ignorable_or_padding(
                                  input[safe_input - 1], options)) {
       safe_input--;
@@ -2379,6 +2400,7 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
       padding_characts++;
     }
   }
+
   const bool ignore_garbage = (options & base64_default_accept_garbage) != 0;
   if (tail_length == 0) {
     outlen = output_index;

@@ -2802,7 +2802,7 @@ enum base64_options : uint64_t {
              (only meaningful for decoding!) */
 };
 
-#if SIMDUTF_CPLUSPLUS17
+  #if SIMDUTF_CPLUSPLUS17
 inline std::string_view to_string(base64_options options) {
   switch (options) {
   case base64_default:
@@ -2824,7 +2824,7 @@ inline std::string_view to_string(base64_options options) {
   }
   return "<unknown>";
 }
-#endif // SIMDUTF_CPLUSPLUS17
+  #endif // SIMDUTF_CPLUSPLUS17
 
 // last_chunk_handling_options are used to specify the handling of the last
 // chunk in base64 decoding.
@@ -2837,7 +2837,7 @@ enum last_chunk_handling_options : uint64_t {
       2, /* if the last chunk is partial (2 or 3 chars), ignore it (no error) */
 };
 
-#if SIMDUTF_CPLUSPLUS17
+  #if SIMDUTF_CPLUSPLUS17
 inline std::string_view to_string(last_chunk_handling_options options) {
   switch (options) {
   case loose:
@@ -2849,7 +2849,7 @@ inline std::string_view to_string(last_chunk_handling_options options) {
   }
   return "<unknown>";
 }
-#endif
+  #endif
 
 /**
  * Provide the maximal binary length in bytes given the base64 input.
