@@ -113,18 +113,18 @@ void Benchmark::register_function(std::string name, Fn function,
 
 Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
     : BenchmarkBase(std::move(testcases)) {
-  register_function("run_to_well_formed_utf16",
-                    &Benchmark::run_to_well_formed_utf16,
+  register_function("to_well_formed_utf16le",
+                    &Benchmark::run_to_well_formed_utf16le,
                     simdutf::encoding_type::UTF16_LE);
   register_function("validate_utf8", &Benchmark::run_validate_utf8,
                     simdutf::encoding_type::UTF8);
   register_function("validate_utf8_with_errors",
                     &Benchmark::run_validate_utf8_with_errors,
                     simdutf::encoding_type::UTF8);
-  register_function("validate_utf16", &Benchmark::run_validate_utf16,
+  register_function("validate_utf16le", &Benchmark::run_validate_utf16le,
                     simdutf::encoding_type::UTF16_LE);
-  register_function("validate_utf16_with_errors",
-                    &Benchmark::run_validate_utf16_with_errors,
+  register_function("validate_utf16le_with_errors",
+                    &Benchmark::run_validate_utf16le_with_errors,
                     simdutf::encoding_type::UTF16_LE);
   register_function("validate_utf32", &Benchmark::run_validate_utf32,
                     simdutf::encoding_type::UTF32_LE);
@@ -134,7 +134,7 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
 
   register_function("count_utf8", &Benchmark::run_count_utf8,
                     simdutf::encoding_type::UTF8);
-  register_function("count_utf16", &Benchmark::run_count_utf16,
+  register_function("count_utf16le", &Benchmark::run_count_utf16le,
                     simdutf::encoding_type::UTF16_LE);
 
   register_function("utf8_length_from_latin1",
@@ -155,8 +155,8 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
   register_function("convert_latin1_to_utf8",
                     &Benchmark::run_convert_latin1_to_utf8,
                     simdutf::encoding_type::Latin1);
-  register_function("convert_latin1_to_utf16",
-                    &Benchmark::run_convert_latin1_to_utf16,
+  register_function("convert_latin1_to_utf16le",
+                    &Benchmark::run_convert_latin1_to_utf16le,
                     simdutf::encoding_type::Latin1);
   register_function("convert_latin1_to_utf32",
                     &Benchmark::run_convert_latin1_to_utf32,
@@ -172,18 +172,18 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
                     &Benchmark::run_convert_valid_utf8_to_latin1,
                     simdutf::encoding_type::UTF8);
 
-  register_function("convert_utf8_to_utf16",
-                    &Benchmark::run_convert_utf8_to_utf16,
+  register_function("convert_utf8_to_utf16le",
+                    &Benchmark::run_convert_utf8_to_utf16le,
                     simdutf::encoding_type::UTF8);
-  register_function("convert_utf8_to_utf16_with_errors",
-                    &Benchmark::run_convert_utf8_to_utf16_with_errors,
+  register_function("convert_utf8_to_utf16le_with_errors",
+                    &Benchmark::run_convert_utf8_to_utf16le_with_errors,
                     simdutf::encoding_type::UTF8);
   register_function(
-      "convert_utf8_to_utf16_with_dynamic_allocation",
-      &Benchmark::run_convert_utf8_to_utf16_with_dynamic_allocation,
+      "convert_utf8_to_utf16le_with_dynamic_allocation",
+      &Benchmark::run_convert_utf8_to_utf16le_with_dynamic_allocation,
       simdutf::encoding_type::UTF8);
-  register_function("convert_valid_utf8_to_utf16",
-                    &Benchmark::run_convert_valid_utf8_to_utf16,
+  register_function("convert_valid_utf8_to_utf16le",
+                    &Benchmark::run_convert_valid_utf8_to_utf16le,
                     simdutf::encoding_type::UTF8);
 
   register_function("convert_utf8_to_utf32",
@@ -200,42 +200,42 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
                     &Benchmark::run_convert_valid_utf8_to_utf32,
                     simdutf::encoding_type::UTF8);
 
-  register_function("convert_utf16_to_latin1",
-                    &Benchmark::run_convert_utf16_to_latin1,
+  register_function("convert_utf16le_to_latin1",
+                    &Benchmark::run_convert_utf16le_to_latin1,
                     simdutf::encoding_type::UTF16_LE);
-  register_function("convert_utf16_to_latin1_with_errors",
-                    &Benchmark::run_convert_utf16_to_latin1_with_errors,
+  register_function("convert_utf16le_to_latin1_with_errors",
+                    &Benchmark::run_convert_utf16le_to_latin1_with_errors,
                     simdutf::encoding_type::UTF16_LE);
-  register_function("convert_valid_utf16_to_latin1",
-                    &Benchmark::run_convert_valid_utf16_to_latin1,
-                    simdutf::encoding_type::UTF16_LE);
-
-  register_function("convert_utf16_to_utf8",
-                    &Benchmark::run_convert_utf16_to_utf8,
-                    simdutf::encoding_type::UTF16_LE);
-  register_function("convert_utf16_to_utf8_with_errors",
-                    &Benchmark::run_convert_utf16_to_utf8_with_errors,
-                    simdutf::encoding_type::UTF16_LE);
-  register_function(
-      "convert_utf16_to_utf8_with_dynamic_allocation",
-      &Benchmark::run_convert_utf16_to_utf8_with_dynamic_allocation,
-      simdutf::encoding_type::UTF16_LE);
-  register_function("convert_valid_utf16_to_utf8",
-                    &Benchmark::run_convert_valid_utf16_to_utf8,
+  register_function("convert_valid_utf16le_to_latin1",
+                    &Benchmark::run_convert_valid_utf16le_to_latin1,
                     simdutf::encoding_type::UTF16_LE);
 
-  register_function("convert_utf16_to_utf32",
-                    &Benchmark::run_convert_utf16_to_utf32,
+  register_function("convert_utf16le_to_utf8",
+                    &Benchmark::run_convert_utf16le_to_utf8,
                     simdutf::encoding_type::UTF16_LE);
-  register_function("convert_utf16_to_utf32_with_errors",
-                    &Benchmark::run_convert_utf16_to_utf32_with_errors,
+  register_function("convert_utf16le_to_utf8_with_errors",
+                    &Benchmark::run_convert_utf16le_to_utf8_with_errors,
                     simdutf::encoding_type::UTF16_LE);
   register_function(
-      "convert_utf16_to_utf32_with_dynamic_allocation",
-      &Benchmark::run_convert_utf16_to_utf32_with_dynamic_allocation,
+      "convert_utf16le_to_utf8_with_dynamic_allocation",
+      &Benchmark::run_convert_utf16le_to_utf8_with_dynamic_allocation,
       simdutf::encoding_type::UTF16_LE);
-  register_function("convert_valid_utf16_to_utf32",
-                    &Benchmark::run_convert_valid_utf16_to_utf32,
+  register_function("convert_valid_utf16le_to_utf8",
+                    &Benchmark::run_convert_valid_utf16le_to_utf8,
+                    simdutf::encoding_type::UTF16_LE);
+
+  register_function("convert_utf16le_to_utf32",
+                    &Benchmark::run_convert_utf16le_to_utf32,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("convert_utf16le_to_utf32_with_errors",
+                    &Benchmark::run_convert_utf16le_to_utf32_with_errors,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function(
+      "convert_utf16le_to_utf32_with_dynamic_allocation",
+      &Benchmark::run_convert_utf16le_to_utf32_with_dynamic_allocation,
+      simdutf::encoding_type::UTF16_LE);
+  register_function("convert_valid_utf16le_to_utf32",
+                    &Benchmark::run_convert_valid_utf16le_to_utf32,
                     simdutf::encoding_type::UTF16_LE);
 
   register_function("convert_utf32_to_latin1",
@@ -621,7 +621,7 @@ void Benchmark::run_validate_utf8_with_errors(
   print_summary(result, size, char_count);
 }
 
-void Benchmark::run_validate_utf16(
+void Benchmark::run_validate_utf16le(
     const simdutf::implementation &implementation, size_t iterations) {
   const simdutf::encoding_type bom =
       BOM::check_bom(input_data.data(), input_data.size());
@@ -650,7 +650,7 @@ void Benchmark::run_validate_utf16(
   print_summary(result, input_data.size(), char_count);
 }
 
-void Benchmark::run_validate_utf16_with_errors(
+void Benchmark::run_validate_utf16le_with_errors(
     const simdutf::implementation &implementation, size_t iterations) {
   const simdutf::encoding_type bom =
       BOM::check_bom(input_data.data(), input_data.size());
@@ -759,7 +759,7 @@ void Benchmark::run_convert_latin1_to_utf8(
   print_summary(result, size, char_count);
 }
 
-void Benchmark::run_convert_latin1_to_utf16(
+void Benchmark::run_convert_latin1_to_utf16le(
     const simdutf::implementation &implementation, size_t iterations) {
   const char *data = reinterpret_cast<const char *>(input_data.data());
   const size_t size = input_data.size();
@@ -857,7 +857,7 @@ void Benchmark::run_utf8_length_from_utf32(
   print_summary(result, size, size);
 }
 
-void Benchmark::run_to_well_formed_utf16(
+void Benchmark::run_to_well_formed_utf16le(
     const simdutf::implementation &implementation, size_t iterations) {
   const char16_t *data = reinterpret_cast<const char16_t *>(input_data.data());
   const size_t size = input_data.size() / 2;
@@ -992,7 +992,7 @@ void Benchmark::run_convert_valid_utf8_to_latin1(
   print_summary(result, size, char_count);
 }
 
-void Benchmark::run_convert_utf8_to_utf16(
+void Benchmark::run_convert_utf8_to_utf16le(
     const simdutf::implementation &implementation, size_t iterations) {
   const char *data = reinterpret_cast<const char *>(input_data.data());
   const size_t size = input_data.size();
@@ -1012,7 +1012,7 @@ void Benchmark::run_convert_utf8_to_utf16(
   print_summary(result, size, char_count);
 }
 
-void Benchmark::run_convert_utf8_to_utf16_with_errors(
+void Benchmark::run_convert_utf8_to_utf16le_with_errors(
     const simdutf::implementation &implementation, size_t iterations) {
   const char *data = reinterpret_cast<const char *>(input_data.data());
   const size_t size = input_data.size();
@@ -1074,7 +1074,7 @@ void Benchmark::run_convert_utf8_to_utf32_with_errors(
   print_summary(result, size, char_count);
 }
 
-void Benchmark::run_convert_utf8_to_utf16_with_dynamic_allocation(
+void Benchmark::run_convert_utf8_to_utf16le_with_dynamic_allocation(
     const simdutf::implementation &implementation, size_t iterations) {
   const char *data = reinterpret_cast<const char *>(input_data.data());
   const size_t size = input_data.size();
@@ -2486,7 +2486,7 @@ void Benchmark::run_convert_utf8_to_utf16_utf8sse4(size_t iterations) {
 }
 #endif
 
-void Benchmark::run_convert_valid_utf8_to_utf16(
+void Benchmark::run_convert_valid_utf8_to_utf16le(
     const simdutf::implementation &implementation, size_t iterations) {
   const char *data = reinterpret_cast<const char *>(input_data.data());
   const size_t size = input_data.size();
@@ -2526,7 +2526,7 @@ void Benchmark::run_convert_valid_utf8_to_utf32(
   print_summary(result, size, char_count);
 }
 
-void Benchmark::run_convert_utf16_to_latin1(
+void Benchmark::run_convert_utf16le_to_latin1(
     const simdutf::implementation &implementation, size_t iterations) {
   const simdutf::encoding_type bom =
       BOM::check_bom(input_data.data(), input_data.size());
@@ -2555,7 +2555,7 @@ void Benchmark::run_convert_utf16_to_latin1(
   print_summary(result, input_data.size(), char_count);
 }
 
-void Benchmark::run_convert_utf16_to_latin1_with_errors(
+void Benchmark::run_convert_utf16le_to_latin1_with_errors(
     const simdutf::implementation &implementation, size_t iterations) {
   const simdutf::encoding_type bom =
       BOM::check_bom(input_data.data(), input_data.size());
@@ -2585,7 +2585,7 @@ void Benchmark::run_convert_utf16_to_latin1_with_errors(
   print_summary(result, input_data.size(), char_count);
 }
 
-void Benchmark::run_convert_valid_utf16_to_latin1(
+void Benchmark::run_convert_valid_utf16le_to_latin1(
     const simdutf::implementation &implementation, size_t iterations) {
   const simdutf::encoding_type bom =
       BOM::check_bom(input_data.data(), input_data.size());
@@ -2614,7 +2614,7 @@ void Benchmark::run_convert_valid_utf16_to_latin1(
   print_summary(result, input_data.size(), char_count);
 }
 
-void Benchmark::run_convert_utf16_to_utf8(
+void Benchmark::run_convert_utf16le_to_utf8(
     const simdutf::implementation &implementation, size_t iterations) {
   const simdutf::encoding_type bom =
       BOM::check_bom(input_data.data(), input_data.size());
@@ -2650,7 +2650,7 @@ void Benchmark::run_convert_utf16_to_utf8(
   print_summary(result, input_data.size(), char_count);
 }
 
-void Benchmark::run_convert_utf16_to_utf8_with_errors(
+void Benchmark::run_convert_utf16le_to_utf8_with_errors(
     const simdutf::implementation &implementation, size_t iterations) {
   const simdutf::encoding_type bom =
       BOM::check_bom(input_data.data(), input_data.size());
@@ -2687,7 +2687,7 @@ void Benchmark::run_convert_utf16_to_utf8_with_errors(
   print_summary(result, input_data.size(), char_count);
 }
 
-void Benchmark::run_convert_utf16_to_utf32(
+void Benchmark::run_convert_utf16le_to_utf32(
     const simdutf::implementation &implementation, size_t iterations) {
   const simdutf::encoding_type bom =
       BOM::check_bom(input_data.data(), input_data.size());
@@ -2722,7 +2722,7 @@ void Benchmark::run_convert_utf16_to_utf32(
   print_summary(result, input_data.size(), char_count);
 }
 
-void Benchmark::run_convert_utf16_to_utf32_with_errors(
+void Benchmark::run_convert_utf16le_to_utf32_with_errors(
     const simdutf::implementation &implementation, size_t iterations) {
   const simdutf::encoding_type bom =
       BOM::check_bom(input_data.data(), input_data.size());
@@ -2758,7 +2758,7 @@ void Benchmark::run_convert_utf16_to_utf32_with_errors(
   print_summary(result, input_data.size(), char_count);
 }
 
-void Benchmark::run_convert_utf16_to_utf8_with_dynamic_allocation(
+void Benchmark::run_convert_utf16le_to_utf8_with_dynamic_allocation(
     const simdutf::implementation &implementation, size_t iterations) {
   const simdutf::encoding_type bom =
       BOM::check_bom(input_data.data(), input_data.size());
@@ -2795,7 +2795,7 @@ void Benchmark::run_convert_utf16_to_utf8_with_dynamic_allocation(
   print_summary(result, input_data.size(), char_count);
 }
 
-void Benchmark::run_convert_utf16_to_utf32_with_dynamic_allocation(
+void Benchmark::run_convert_utf16le_to_utf32_with_dynamic_allocation(
     const simdutf::implementation &implementation, size_t iterations) {
   const simdutf::encoding_type bom =
       BOM::check_bom(input_data.data(), input_data.size());
@@ -2831,7 +2831,7 @@ void Benchmark::run_convert_utf16_to_utf32_with_dynamic_allocation(
   print_summary(result, input_data.size(), char_count);
 }
 
-void Benchmark::run_convert_valid_utf16_to_utf8(
+void Benchmark::run_convert_valid_utf16le_to_utf8(
     const simdutf::implementation &implementation, size_t iterations) {
   const simdutf::encoding_type bom =
       BOM::check_bom(input_data.data(), input_data.size());
@@ -3065,7 +3065,7 @@ void Benchmark::run_convert_valid_utf32_to_utf8(
   print_summary(result, input_data.size(), char_count);
 }
 
-void Benchmark::run_convert_valid_utf16_to_utf32(
+void Benchmark::run_convert_valid_utf16le_to_utf32(
     const simdutf::implementation &implementation, size_t iterations) {
   const simdutf::encoding_type bom =
       BOM::check_bom(input_data.data(), input_data.size());
@@ -3244,8 +3244,8 @@ void Benchmark::run_count_utf8(const simdutf::implementation &implementation,
   print_summary(result, size, char_count);
 }
 
-void Benchmark::run_count_utf16(const simdutf::implementation &implementation,
-                                size_t iterations) {
+void Benchmark::run_count_utf16le(const simdutf::implementation &implementation,
+                                  size_t iterations) {
   const simdutf::encoding_type bom =
       BOM::check_bom(input_data.data(), input_data.size());
   const char16_t *data = reinterpret_cast<const char16_t *>(input_data.data());
