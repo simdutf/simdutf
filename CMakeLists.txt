@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.15)
 project(simdutf
   DESCRIPTION "Fast Unicode validation, transcoding and processing"
   LANGUAGES CXX
-  VERSION 7.0.0
+  VERSION 7.0.1
 )
 
 include (TestBigEndian)
@@ -32,6 +32,7 @@ option(SIMDUTF_ICONV "Whether to use iconv as part of the CMake build if availab
 option(SIMDUTF_FUZZERS "Whether to build the fuzzers." OFF)
 option(SIMDUTF_COVERAGE "Enable code coverage collection during tests (only GCC and Clang)." OFF)
 option(SIMDUTF_INTERNAL_TESTS "Whether to test also internal procedures. Useful mostly for developers, not users." OFF)
+option(SIMDUTF_LOGGING "Whether to enable logging (this should never be used in binary releases)." OFF)
 
 set(SIMDUTF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 

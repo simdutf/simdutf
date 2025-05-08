@@ -523,7 +523,7 @@ simdutf_warn_unused result implementation::base64_to_binary(
       (options == base64_options::base64_default_accept_garbage) ||
       (options == base64_options::base64_default_or_url_accept_garbage);
   while (length > 0 &&
-         scalar::base64::is_ascii_white_space(input[length - 1])) {
+         scalar::base64::is_ignorable(input[length - 1], options)) {
     length--;
   }
   size_t equallocation =
@@ -534,7 +534,7 @@ simdutf_warn_unused result implementation::base64_to_binary(
     length -= 1;
     equalsigns++;
     while (length > 0 &&
-           scalar::base64::is_ascii_white_space(input[length - 1])) {
+           scalar::base64::is_ignorable(input[length - 1], options)) {
       length--;
     }
     if (length > 0 && input[length - 1] == '=') {
@@ -575,7 +575,7 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
       (options == base64_options::base64_default_accept_garbage) ||
       (options == base64_options::base64_default_or_url_accept_garbage);
   while (length > 0 &&
-         scalar::base64::is_ascii_white_space(input[length - 1])) {
+         scalar::base64::is_ignorable(input[length - 1], options)) {
     length--;
   }
   size_t equallocation =
@@ -586,7 +586,7 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
     length -= 1;
     equalsigns++;
     while (length > 0 &&
-           scalar::base64::is_ascii_white_space(input[length - 1])) {
+           scalar::base64::is_ignorable(input[length - 1], options)) {
       length--;
     }
     if (length > 0 && input[length - 1] == '=') {
@@ -628,7 +628,7 @@ simdutf_warn_unused result implementation::base64_to_binary(
       (options == base64_options::base64_default_accept_garbage) ||
       (options == base64_options::base64_default_or_url_accept_garbage);
   while (length > 0 &&
-         scalar::base64::is_ascii_white_space(input[length - 1])) {
+         scalar::base64::is_ignorable(input[length - 1], options)) {
     length--;
   }
   size_t equallocation =
@@ -639,7 +639,7 @@ simdutf_warn_unused result implementation::base64_to_binary(
     length -= 1;
     equalsigns++;
     while (length > 0 &&
-           scalar::base64::is_ascii_white_space(input[length - 1])) {
+           scalar::base64::is_ignorable(input[length - 1], options)) {
       length--;
     }
     if (length > 0 && input[length - 1] == '=') {
@@ -679,7 +679,7 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
       (options == base64_options::base64_url_accept_garbage) ||
       (options == base64_options::base64_default_accept_garbage);
   while (length > 0 &&
-         scalar::base64::is_ascii_white_space(input[length - 1])) {
+         scalar::base64::is_ignorable(input[length - 1], options)) {
     length--;
   }
   size_t equallocation =
@@ -690,7 +690,7 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
     length -= 1;
     equalsigns++;
     while (length > 0 &&
-           scalar::base64::is_ascii_white_space(input[length - 1])) {
+           scalar::base64::is_ignorable(input[length - 1], options)) {
       length--;
     }
     if (length > 0 && input[length - 1] == '=') {

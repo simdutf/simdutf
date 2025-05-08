@@ -462,6 +462,92 @@ TEST(roundtrip_base64_with_lots_of_spaces) {
   }
 }
 
+TEST(roundtrip_base64_with_lots_of_spaces_at_the_end) {
+  std::vector<char> buffer;
+  for (size_t len = 0; len < 2048; len += 10) {
+    std::vector<char> source(len, 0);
+    buffer.clear();
+    buffer.resize(implementation.base64_length_from_binary(len), '\0');
+    std::mt19937 gen((std::mt19937::result_type)(seed));
+    std::uniform_int_distribution<int> byte_generator{0, 255};
+    for (size_t trial = 0; trial < 10; trial++) {
+      for (size_t i = 0; i < len; i++) {
+        source[i] = byte_generator(gen);
+      }
+      size_t size = implementation.binary_to_base64(
+          source.data(), source.size(), buffer.data());
+      buffer.resize(size);
+      add_simple_spaces(buffer, gen, 5 + 2 * len);
+      std::vector<char> back(simdutf::maximal_binary_length_from_base64(
+          buffer.data(), buffer.size()));
+      buffer.resize(buffer.size() + 65536, ' ');
+      for (auto option :
+           {simdutf::last_chunk_handling_options::strict,
+            simdutf::last_chunk_handling_options::loose,
+            simdutf::last_chunk_handling_options::stop_before_partial}) {
+        size_t back_length = back.size();
+        auto r = simdutf::base64_to_binary_safe(
+            buffer.data(), buffer.size(), back.data(), back_length,
+            simdutf::base64_default, option);
+        ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+        if (option ==
+            simdutf::last_chunk_handling_options::stop_before_partial) {
+          for (size_t i = r.count; i < buffer.size(); i++) {
+            ASSERT_TRUE(is_space(buffer[i]));
+          }
+        } else {
+          ASSERT_EQUAL(r.count, buffer.size());
+        }
+        ASSERT_TRUE(std::equal(back.begin(), back.begin() + back_length,
+                               source.begin()));
+      }
+    }
+  }
+}
+
+TEST(roundtrip_base64_with_lots_of_spaces_at_the_beginning) {
+  std::vector<char> buffer;
+  for (size_t len = 0; len < 2048; len += 10) {
+    std::vector<char> source(len, 0);
+    buffer.clear();
+    buffer.resize(implementation.base64_length_from_binary(len), '\0');
+    std::mt19937 gen((std::mt19937::result_type)(seed));
+    std::uniform_int_distribution<int> byte_generator{0, 255};
+    for (size_t trial = 0; trial < 10; trial++) {
+      for (size_t i = 0; i < len; i++) {
+        source[i] = byte_generator(gen);
+      }
+      size_t size = implementation.binary_to_base64(
+          source.data(), source.size(), buffer.data());
+      buffer.resize(size);
+      add_simple_spaces(buffer, gen, 5 + 2 * len);
+      std::vector<char> back(simdutf::maximal_binary_length_from_base64(
+          buffer.data(), buffer.size()));
+      buffer.insert(buffer.begin(), 65536, ' ');
+      for (auto option :
+           {simdutf::last_chunk_handling_options::strict,
+            simdutf::last_chunk_handling_options::loose,
+            simdutf::last_chunk_handling_options::stop_before_partial}) {
+        size_t back_length = back.size();
+        auto r = simdutf::base64_to_binary_safe(
+            buffer.data(), buffer.size(), back.data(), back_length,
+            simdutf::base64_default, option);
+        ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+        if (option ==
+            simdutf::last_chunk_handling_options::stop_before_partial) {
+          for (size_t i = r.count; i < buffer.size(); i++) {
+            ASSERT_TRUE(is_space(buffer[i]));
+          }
+        } else {
+          ASSERT_EQUAL(r.count, buffer.size());
+        }
+        ASSERT_TRUE(std::equal(back.begin(), back.begin() + back_length,
+                               source.begin()));
+      }
+    }
+  }
+}
+
 // partial decoding with 'safe' will succeed and just decode the first 3 bytes,
 // even if we have ample output memory. It should consume only 4 bytes.
 TEST(base64_decode_just_one_padding_partial_safe) {
