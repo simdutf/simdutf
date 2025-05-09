@@ -3146,7 +3146,7 @@ simdutf_really_inline simdutf_warn_unused result base64_to_binary(
  * is too small (OUTPUT_BUFFER_TOO_SMALL).
  *
  * When OUTPUT_BUFFER_TOO_SMALL, we return both the number of bytes written
- * and the number of units processed, see description of the parameters and
+ * and the number of characters processed, see description of the parameters and
  * returned value.
  *
  * When the error is INVALID_BASE64_CHARACTER, r.count contains the index in the
@@ -3191,8 +3191,8 @@ simdutf_really_inline simdutf_warn_unused result base64_to_binary(
  * buffer is to be discarded.
  * @return a result pair struct (of type simdutf::result containing the two
  * fields error and count) with an error code and position of the
- * INVALID_BASE64_CHARACTER error (in the input in units) if any, or the number
- * of units processed if successful.
+ * error (in the input in characters) if any, or the number
+ * of characters processed if successful.
  */
 simdutf_warn_unused result
 base64_to_binary_safe(const char *input, size_t length, char *output,

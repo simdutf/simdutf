@@ -264,7 +264,11 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
 // buffer. The outlen parameter is modified to reflect the number of bytes
 // written. This functions assumes that the padding (=) has been removed.
 //
-// The caller is expected to have the case where length == 0.
+// The caller is expected to handle the case where length == 0.
+//
+// The return value is a pair of error code and the number of bytes read from
+// the input buffer when there is an error. Otherwise, on SUCCESS, we return the
+// number of bytes written to the output buffer.
 template <class char_type>
 result base64_tail_decode_safe(
     char *dst, size_t &outlen, const char_type *&srcr, size_t length,
@@ -388,7 +392,7 @@ result base64_tail_decode_safe(
                      last_chunk_handling_options::stop_before_partial &&
                  ((idx + padded_characters) & 3) != 0 &&
                  (padded_characters == 0 || idx >= 2)) {
-                  simdutf_log("stop_before_partial case SUCCESS");
+        simdutf_log("stop_before_partial case SUCCESS");
         // Rewind src to before partial chunk
         srcr = srccur;
         // adjust, skipping ignorable characters
@@ -403,6 +407,13 @@ result base64_tail_decode_safe(
         return {SUCCESS, size_t(dst - dstinit)};
       } else { // loose mode
         if (idx == 0) {
+          if (!ignore_garbage && padded_characters > 0) {
+            simdutf_log("INVALID_BASE64_CHARACTER size_t(src - srcinit) = "
+                        << size_t(src - srcinit) << " size_t(dst - dstinit) = "
+                        << size_t(dst - dstinit));
+            outlen = size_t(dst - dstinit);
+            return {INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
+          }
           // No data left; return success
           simdutf_log("idx == 0, no data left; return success");
           outlen = size_t(dst - dstinit);
@@ -461,7 +472,8 @@ result base64_tail_decode_safe(
             simdutf_log("INVALID_BASE64_CHARACTER size_t(src - srcinit) = "
                         << size_t(src - srcinit) << " size_t(dst - dstinit) = "
                         << size_t(dst - dstinit));
-                        simdutf_log("idx == 0, no data left but padding; return INVALID_BASE64_CHARACTER");
+            simdutf_log("idx == 0, no data left but padding; return "
+                        "INVALID_BASE64_CHARACTER");
             return {INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
           }
           outlen = size_t(dst - dstinit);

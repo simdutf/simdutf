@@ -376,7 +376,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                last_chunk_options ==
                    last_chunk_handling_options::stop_before_partial &&
                ((idx + equalsigns) & 3) != 0 && (equalsigns == 0 || idx >= 2)) {
-                simdutf_log("stop_before_partial return");
+      simdutf_log("stop_before_partial return");
       _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
       dst += output_len;
       // We rewind src to before the partial chunk
@@ -448,8 +448,11 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                 size_t(dst - dstinit)};
 
       } else {
-        simdutf_log("fallthrough");
-        
+        simdutf_log("fallthrough idx = "
+                    << idx << " equalsigns = " << equalsigns
+                    << " last_chunk_options = "
+                    << simdutf::to_string(last_chunk_options));
+
         _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
         dst += output_len;
       }
@@ -459,7 +462,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       size_t output_count = size_t(dst - dstinit);
       if ((output_count % 3 == 0) ||
           ((output_count % 3) + 1 + equalsigns != 4)) {
-            simdutf_log("final INVALID_BASE64_CHARACTER");
+        simdutf_log("final INVALID_BASE64_CHARACTER");
 
         return {INVALID_BASE64_CHARACTER, equallocation, output_count};
       }

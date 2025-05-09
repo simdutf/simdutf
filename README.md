@@ -2025,10 +2025,10 @@ The specification of our base64 functions is as follows:
 // ASCII spaces are ' ', '\t', '\n', '\r', '\f'
 // garbage characters are characters that are not part of the base64 alphabet nor ASCII spaces.
 using base64_options = uint64_t;
+constexpr uint64_t base64_reverse_padding = 2; /* modifier for base64_default and base64_url */
 enum base64_options : uint64_t {
   base64_default = 0,         /* standard base64 format (with padding) */
   base64_url = 1,             /* base64url format (no padding) */
-  base64_reverse_padding = 2, /* modifier for base64_default and base64_url */
   base64_default_no_padding =
       base64_default |
       base64_reverse_padding, /* standard base64 format without padding */
@@ -2218,7 +2218,7 @@ simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t lengt
  * is too small (OUTPUT_BUFFER_TOO_SMALL).
  *
  * When OUTPUT_BUFFER_TOO_SMALL, we return both the number of bytes written
- * and the number of units processed, see description of the parameters and
+ * and the number of characters processed, see description of the parameters and
  * returned value.
  *
  * When the error is INVALID_BASE64_CHARACTER, r.count contains the index in the
@@ -2236,8 +2236,8 @@ simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t lengt
  *
  * The INVALID_BASE64_CHARACTER cases are considered fatal and you are expected
  * to discard the output unless the parameter decode_up_to_bad_char is set to
- * true. In that case, the function will decode up to the first invalid character.
- * Extra padding characters ('=') are considered invalid characters.
+ * true. In that case, the function will decode up to the first invalid
+ * character. Extra padding characters ('=') are considered invalid characters.
  *
  * Advanced users may want to taylor how the last chunk is handled. By default,
  * we use a loose (forgiving) approach but we also support a strict approach
@@ -2263,8 +2263,8 @@ simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t lengt
  * buffer is to be discarded.
  * @return a result pair struct (of type simdutf::result containing the two
  * fields error and count) with an error code and position of the
- * INVALID_BASE64_CHARACTER error (in the input in units) if any, or the number
- * of units processed if successful.
+ * error (in the input in characters) if any, or the number
+ * of characters processed if successful.
  */
 simdutf_warn_unused result base64_to_binary_safe(const char * input, size_t length, char* output, size_t& outlen, base64_options options = base64_default,
       last_chunk_handling_options last_chunk_options = loose,
