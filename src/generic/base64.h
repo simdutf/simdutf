@@ -47,15 +47,18 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       default_or_url ? tables::base64::to_base64_default_or_url_value
                      : (base64_url ? tables::base64::to_base64_url_value
                                    : tables::base64::to_base64_value);
-  size_t equallocation =
-      srclen; // location of the first padding character if any
+
   // skip trailing spaces
+    // We always remove ignorable characters from the end. They are
+  // not part of the base64 data.
   while (!ignore_garbage && srclen > 0 &&
          scalar::base64::is_eight_byte(src[srclen - 1]) &&
          to_base64[uint8_t(src[srclen - 1])] == 64) {
     srclen--;
   }
+  size_t equallocation = srclen; // location of the first padding character if any, or length otherwise
   size_t equalsigns = 0;
+  size_t full_input_length = srclen;
   if (!ignore_garbage && srclen > 0 && src[srclen - 1] == '=') {
     equallocation = srclen - 1;
     srclen--;
@@ -66,7 +69,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       srclen--;
     }
     if (srclen > 0 && src[srclen - 1] == '=') {
-      equallocation = srclen - 1;
+      // We only want the location of the last padding character.
+      // equallocation = srclen - 1;
       srclen--;
       equalsigns = 2;
     }
@@ -228,7 +232,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     if (r.error == error_code::BASE64_INPUT_REMAINDER ||
         r.error == error_code::INVALID_BASE64_CHARACTER ||
         r.error == error_code::BASE64_EXTRA_BITS) {
-      simdutf_log("returing based on base64_tail_decode error: "
+      simdutf_log("returning based on base64_tail_decode error: "
                   << simdutf::to_string(r.error) << " input_count = "
                   << r.input_count << " output_count = " << r.output_count);
       return r;
@@ -254,7 +258,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       return {INVALID_BASE64_CHARACTER, equallocation, size_t(dst - dstinit)};
     }
   }
-  return {SUCCESS, srclen, size_t(dst - dstinit)};
+  return {SUCCESS, full_input_length, size_t(dst - dstinit)};
 }
 
 } // namespace base64

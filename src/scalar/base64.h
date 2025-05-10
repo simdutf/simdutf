@@ -412,6 +412,7 @@ result base64_tail_decode_safe(
                         << size_t(src - srcinit) << " size_t(dst - dstinit) = "
                         << size_t(dst - dstinit));
             outlen = size_t(dst - dstinit);
+            srcr = src;
             return {INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
           }
           // No data left; return success
@@ -474,6 +475,8 @@ result base64_tail_decode_safe(
                         << size_t(dst - dstinit));
             simdutf_log("idx == 0, no data left but padding; return "
                         "INVALID_BASE64_CHARACTER");
+            outlen = size_t(dst - dstinit);
+            srcr = src;
             return {INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
           }
           outlen = size_t(dst - dstinit);

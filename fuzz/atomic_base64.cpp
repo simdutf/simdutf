@@ -110,7 +110,6 @@ void decode(std::span<const FromChar> base64_, const auto selected_option,
   if (atomic.binary.size() != non_atomic.binary.size()) {
 
     if (non_atomic.result.error == simdutf::SUCCESS) {
-      // suppress this output, it happens all the time otherwise
       std::cerr << "different data size! " << atomic.binary.size() << " vs "
                 << non_atomic.binary.size() << '\n';
       bad = true;

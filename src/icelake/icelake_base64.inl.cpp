@@ -229,35 +229,48 @@ full_result
 compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                        base64_options options,
                        last_chunk_handling_options last_chunk_options) {
+                        printf("========================================='''%.*s''' srclen = %d\n", srclen, src, srclen);
+
   (void)options;
   const uint8_t *to_base64 =
       default_or_url ? tables::base64::to_base64_default_or_url_value
                      : (base64_url ? tables::base64::to_base64_url_value
                                    : tables::base64::to_base64_value);
-  size_t equallocation =
-      srclen; // location of the first padding character if any
   size_t equalsigns = 0;
   // skip trailing spaces
+      // We always remove ignorable characters from the end. They are
+  // not part of the base64 data.
   while (!ignore_garbage && srclen > 0 &&
          scalar::base64::is_eight_byte(src[srclen - 1]) &&
          to_base64[uint8_t(src[srclen - 1])] == 64) {
+          printf("%d-->%02x\n", srclen - 1, src[srclen - 1]);
     srclen--;
   }
+  size_t equallocation = srclen; // location of the first padding character if any, or length otherwise
+  const size_t full_input_length = srclen;
   if (!ignore_garbage && srclen > 0 && src[srclen - 1] == '=') {
+    printf("%d-->%02x\n", srclen - 1, src[srclen - 1]);
+
     equallocation = srclen - 1;
     srclen--;
     equalsigns = 1;
     // skip trailing spaces
     while (srclen > 0 && scalar::base64::is_eight_byte(src[srclen - 1]) &&
            to_base64[uint8_t(src[srclen - 1])] == 64) {
+            printf("%d-->%02x\n", srclen - 1, src[srclen - 1]);
+
       srclen--;
     }
     if (srclen > 0 && src[srclen - 1] == '=') {
-      equallocation = srclen - 1;
+      printf("%d-->%02x ===\n", srclen - 1, src[srclen - 1]);
+      // We only want the last '=' sign.
+      //equallocation = srclen - 1;
       srclen--;
       equalsigns = 2;
     }
   }
+  printf("=========================================srclen=%zu equallocation=%zu equalsigns=%zu\n", srclen,
+         equallocation, equalsigns);
   if (srclen == 0) {
     if (!ignore_garbage && equalsigns > 0) {
       if (last_chunk_options == last_chunk_handling_options::strict) {
@@ -389,6 +402,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
           characters_to_skip--;
         }
       }
+      simdutf_log("partial return characters_to_skip = " << characters_to_skip);
       return {SUCCESS, size_t(src - srcinit), size_t(dst - dstinit)};
     } else {
       if (idx == 2) {
@@ -444,6 +458,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         simdutf_log("INVALID_BASE64_CHARACTER size_t(src - srcinit) = "
                     << size_t(src - srcinit)
                     << " size_t(dst - dstinit) = " << size_t(dst - dstinit));
+        _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
+        dst += output_len;
         return {INVALID_BASE64_CHARACTER, size_t(src - srcinit),
                 size_t(dst - dstinit)};
 
@@ -467,7 +483,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         return {INVALID_BASE64_CHARACTER, equallocation, output_count};
       }
     }
-    return {SUCCESS, srclen, size_t(dst - dstinit)};
+    simdutf_log("fallthrough return");
+    return {SUCCESS, full_input_length, size_t(dst - dstinit)};
   }
 
   if (!ignore_garbage && equalsigns > 0) {
@@ -477,6 +494,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     }
     if (last_chunk_options ==
         last_chunk_handling_options::stop_before_partial) {
+      simdutf_log("final stop_before_partial return");
       return {SUCCESS, size_t(src - srcinit), size_t(dst - dstinit)};
     }
     if ((size_t(dst - dstinit) % 3 == 0) ||
@@ -484,5 +502,6 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       return {INVALID_BASE64_CHARACTER, equallocation, size_t(dst - dstinit)};
     }
   }
-  return {SUCCESS, srclen, size_t(dst - dstinit)};
+  simdutf_log("final return");
+  return {SUCCESS, full_input_length, size_t(dst - dstinit)};
 }

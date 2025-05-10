@@ -522,13 +522,15 @@ simdutf_warn_unused result implementation::base64_to_binary(
       (options == base64_options::base64_url_accept_garbage) ||
       (options == base64_options::base64_default_accept_garbage) ||
       (options == base64_options::base64_default_or_url_accept_garbage);
+    // We always remove ignorable characters from the end. They are
+  // not part of the base64 data.
   while (length > 0 &&
          scalar::base64::is_ignorable(input[length - 1], options)) {
     length--;
   }
-  size_t equallocation =
-      length; // location of the first padding character if any
+  size_t equallocation = length; // location of the first padding character if any, or length otherwise
   size_t equalsigns = 0;
+  const size_t full_input_length = length;
   if (length > 0 && input[length - 1] == '=') {
     equallocation = length - 1;
     length -= 1;
@@ -538,7 +540,8 @@ simdutf_warn_unused result implementation::base64_to_binary(
       length--;
     }
     if (length > 0 && input[length - 1] == '=') {
-      equallocation = length - 1;
+      // We only want the location of the last padding character.
+      // equallocation = length - 1;
       equalsigns++;
       length -= 1;
     }
@@ -574,13 +577,15 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
       (options == base64_options::base64_url_accept_garbage) ||
       (options == base64_options::base64_default_accept_garbage) ||
       (options == base64_options::base64_default_or_url_accept_garbage);
+        // We always remove ignorable characters from the end. They are
+  // not part of the base64 data.
   while (length > 0 &&
          scalar::base64::is_ignorable(input[length - 1], options)) {
     length--;
   }
-  size_t equallocation =
-      length; // location of the first padding character if any
+  size_t equallocation = length; // location of the first padding character if any, or length otherwise
   size_t equalsigns = 0;
+  const size_t full_input_length = length;
   if (length > 0 && input[length - 1] == '=') {
     equallocation = length - 1;
     length -= 1;
@@ -590,7 +595,8 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
       length--;
     }
     if (length > 0 && input[length - 1] == '=') {
-      equallocation = length - 1;
+      // We only want the location of the last padding character.
+      //equallocation = length - 1;
       equalsigns++;
       length -= 1;
     }
@@ -627,13 +633,15 @@ simdutf_warn_unused result implementation::base64_to_binary(
       (options == base64_options::base64_url_accept_garbage) ||
       (options == base64_options::base64_default_accept_garbage) ||
       (options == base64_options::base64_default_or_url_accept_garbage);
+        // We always remove ignorable characters from the end. They are
+  // not part of the base64 data.
   while (length > 0 &&
          scalar::base64::is_ignorable(input[length - 1], options)) {
     length--;
   }
-  size_t equallocation =
-      length; // location of the first padding character if any
+  size_t equallocation = length; // location of the first padding character if any, or length otherwise
   size_t equalsigns = 0;
+  const size_t full_input_length = length;
   if (length > 0 && input[length - 1] == '=') {
     equallocation = length - 1;
     length -= 1;
@@ -643,7 +651,8 @@ simdutf_warn_unused result implementation::base64_to_binary(
       length--;
     }
     if (length > 0 && input[length - 1] == '=') {
-      equallocation = length - 1;
+      // // We only want the location of the last padding character.
+      //equallocation = length - 1;
       equalsigns++;
       length -= 1;
     }
@@ -678,13 +687,15 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
   const bool ignore_garbage =
       (options == base64_options::base64_url_accept_garbage) ||
       (options == base64_options::base64_default_accept_garbage);
+        // We always remove ignorable characters from the end. They are
+  // not part of the base64 data.
   while (length > 0 &&
          scalar::base64::is_ignorable(input[length - 1], options)) {
     length--;
   }
-  size_t equallocation =
-      length; // location of the first padding character if any
+  size_t equallocation = length; // location of the first padding character if any, or length otherwise
   size_t equalsigns = 0;
+  const size_t full_input_length = length;
   if (length > 0 && input[length - 1] == '=') {
     equallocation = length - 1;
     length -= 1;
@@ -694,7 +705,8 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
       length--;
     }
     if (length > 0 && input[length - 1] == '=') {
-      equallocation = length - 1;
+      // We only want the location of the last padding character.
+      // equallocation = length - 1;
       equalsigns++;
       length -= 1;
     }

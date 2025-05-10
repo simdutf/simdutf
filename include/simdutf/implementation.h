@@ -3277,7 +3277,7 @@ base64_to_binary_safe(std::span<const char16_t> input,
  * first invalid character. By default (false), it is assumed that the output
  * buffer is to be discarded.
  * @return a result struct with an error code and count indicating error
- * position or success
+ * position or success.
  */
 simdutf_warn_unused result atomic_base64_to_binary_safe(
     const char *input, size_t length, char *output, size_t &outlen,

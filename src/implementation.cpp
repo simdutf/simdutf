@@ -2120,7 +2120,8 @@ simdutf_warn_unused result slow_base64_to_binary_safe_impl(
       length--;
     }
     if (length > 0 && input[length - 1] == '=') {
-      equallocation = length - 1;
+      // We only want the last padding character.
+      //equallocation = length - 1;
       equalsigns++;
       length -= 1;
     }
@@ -2204,7 +2205,7 @@ simdutf_warn_unused result base64_to_binary_unsafe_impl_fast_path(
   // ignorable. In that case, we set the input count to the length of the
   // input buffer. That's only needed in the case where we have a partial
   // ending, that is, if output_count % 3 != 0.
-  if (last_chunk_handling_options == stop_before_partial) {
+  /*if (last_chunk_handling_options == stop_before_partial) {
     simdutf_log("investigating stop_before_partial's empty tail");
 
     if ((r.output_count % 3) != 0) {
@@ -2222,7 +2223,7 @@ simdutf_warn_unused result base64_to_binary_unsafe_impl_fast_path(
         r.input_count = length;
       }
     }
-  }
+  }*/
   simdutf_log("base64_to_binary_safe_impl fast path returning: "
               << simdutf::to_string(r.error) << " input_count: "
               << r.input_count << " output_count: " << r.output_count);
@@ -2392,13 +2393,16 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   size_t tail_length = length - input_index;
   // We need to count the number of padding characters (if any)
   // because base64_tail_decode_safe expects us to do it.
-  size_t equallocation =
-      length; // location of the first padding character if any
+  //
+  // We always remove ignorable characters from the end. They are
+  // not part of the base64 data.
   while (tail_length > 0 &&
          scalar::base64::is_ignorable(tail_input[tail_length - 1], options)) {
     tail_length--;
   }
+  size_t equallocation = tail_length; // location of the first padding character if any, or length otherwise
   size_t padding_characts = 0;
+  size_t full_input_length = tail_length + input_index;
   if (tail_length > 0 && tail_input[tail_length - 1] == '=') {
     tail_length--;
     padding_characts++;
@@ -2409,7 +2413,8 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
     }
     if (tail_length > 0 && tail_input[tail_length - 1] == '=') {
       tail_length--;
-      equallocation = tail_length + input_index;
+      // We only want the last padding character.
+      //equallocation = tail_length + input_index;
       padding_characts++;
     }
   }
@@ -2468,7 +2473,7 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   (void)processed_characters_in_tail; // to avoid unused variable warning
   simdutf_log_assert(tail_input >= input + input_index,
                      "tail_input should be greater than or equal to input + input_index");
-
+  bool consumed_whole_tail = (processed_characters_in_tail == tail_length);
   // Importantly, we need to convert the result into a pair
   // of error code and the number of bytes read from the input buffer
   if (rr.error == error_code::SUCCESS) {
@@ -2485,7 +2490,8 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
                input_index; // We have consumed the whole input buffer.
   } else {
     simdutf_log_assert(rr.count == processed_characters_in_tail,
-                       "we should have a consistent reading count");
+                       "we should have a consistent reading count processed_characters_in_tail = " << processed_characters_in_tail
+                      << " rr.count = " << rr.count);
     simdutf_log_assert(rr.count <= tail_length,
                        "we should not have read more than the tail length");
     // We have an error. The rr.count is the number of bytes read from the input
@@ -2493,6 +2499,12 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
     rr.count += input_index;
     simdutf_log_assert(rr.count <= length,
                        "we should not have read more than the input buffer");
+    if(consumed_whole_tail && rr.error == INVALID_BASE64_CHARACTER && padding_characts > 0) {
+      // We have an error, but we have consumed some padding characters.
+      // We need to adjust the count.
+      printf("=========adjusting count to equallocation = %zu\n", equallocation);
+      rr.count = equallocation;
+    }
   }
   // At this point, rr is a pair of error code and the number of bytes read from
   // the input buffer or the success code and the number of bytes written.
@@ -2527,14 +2539,14 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
         if (empty_trail) {
           simdutf_log("caught an empty tail with stop_before_partial, "
                       "adjusting input_count to length = "
-                      << length);
-          rr.count = length;
+                      << full_input_length);
+          rr.count = full_input_length;
         }
       }
     } else {
       // A success when we are not in stop_before_partial mode.
       // means that we have consumed the whole input buffer.
-      rr.count = length;
+      rr.count = full_input_length;
     }
   }
 
