@@ -206,27 +206,33 @@ rvv_convert_utf32_to_utf16_with_errors(const char32_t *src, size_t len,
     vl = __riscv_vsetvl_e32m4(len);
     vuint32m4_t v = __riscv_vle32_v_u32m4((uint32_t *)src, vl);
     vuint32m4_t off = __riscv_vadd_vx_u32m4(v, 0xFFFF2000, vl);
-    const long idx1 =
-        __riscv_vfirst_m_b8(__riscv_vmsgtu_vx_u32m4_b8(v, 0x10FFFF, vl), vl);
-    const long idx2 = __riscv_vfirst_m_b8(
+    const long err_surrogate_idx = __riscv_vfirst_m_b8(
         __riscv_vmsgtu_vx_u32m4_b8(off, 0xFFFFF7FF, vl), vl);
-    if (idx1 >= 0 || idx2 >= 0) {
-      if (static_cast<unsigned long>(idx1) <=
-          static_cast<unsigned long>(idx2)) {
-        return result(error_code::TOO_LARGE, src - srcBeg + idx1);
-      } else {
-        return result(error_code::SURROGATE, src - srcBeg + idx2);
-      }
-    }
     const long idx =
         __riscv_vfirst_m_b8(__riscv_vmsgtu_vx_u32m4_b8(v, 0xFFFF, vl), vl);
     if (idx < 0) {
+      if (err_surrogate_idx >= 0) {
+        return result(error_code::SURROGATE, src - srcBeg + err_surrogate_idx);
+      }
+
       vlOut = vl;
       vuint16m2_t n =
           simdutf_byteflip<bflip>(__riscv_vncvt_x_x_w_u16m2(v, vlOut), vlOut);
       __riscv_vse16_v_u16m2((uint16_t *)dst, n, vlOut);
       continue;
     }
+
+    const long err_too_big_idx =
+        __riscv_vfirst_m_b8(__riscv_vmsgtu_vx_u32m4_b8(v, 0x10FFFF, vl), vl);
+    if (err_too_big_idx >= 0 || err_surrogate_idx >= 0) {
+      if (static_cast<unsigned long>(err_too_big_idx) <=
+          static_cast<unsigned long>(err_surrogate_idx)) {
+        return result(error_code::TOO_LARGE, src - srcBeg + err_too_big_idx);
+      } else {
+        return result(error_code::SURROGATE, src - srcBeg + err_surrogate_idx);
+      }
+    }
+
     vlOut = rvv_utf32_store_utf16_m4<bflip>((uint16_t *)dst, v, vl, m4even);
   }
   return result(error_code::SUCCESS, dst - dstBeg);
