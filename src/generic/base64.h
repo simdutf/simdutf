@@ -47,38 +47,14 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       default_or_url ? tables::base64::to_base64_default_or_url_value
                      : (base64_url ? tables::base64::to_base64_url_value
                                    : tables::base64::to_base64_value);
-  size_t equallocation =
-      srclen; // location of the first padding character if any
-  // skip trailing spaces
-  while (!ignore_garbage && srclen > 0 &&
-         scalar::base64::is_eight_byte(src[srclen - 1]) &&
-         to_base64[uint8_t(src[srclen - 1])] == 64) {
-    srclen--;
-  }
-  size_t equalsigns = 0;
-  if (!ignore_garbage && srclen > 0 && src[srclen - 1] == '=') {
-    equallocation = srclen - 1;
-    srclen--;
-    equalsigns = 1;
-    // skip trailing spaces
-    while (srclen > 0 && scalar::base64::is_eight_byte(src[srclen - 1]) &&
-           to_base64[uint8_t(src[srclen - 1])] == 64) {
-      srclen--;
-    }
-    if (srclen > 0 && src[srclen - 1] == '=') {
-      equallocation = srclen - 1;
-      srclen--;
-      equalsigns = 2;
-    }
-  }
+  auto ri = simdutf::scalar::base64::find_end(src, srclen, options);
+  size_t equallocation = ri.equallocation;
+  size_t equalsigns = ri.equalsigns;
+  srclen = ri.srclen;
+  size_t full_input_length = ri.full_input_length;
+  (void)full_input_length;
   if (srclen == 0) {
     if (!ignore_garbage && equalsigns > 0) {
-      if (last_chunk_options == last_chunk_handling_options::strict) {
-        return {BASE64_INPUT_REMAINDER, 0, 0};
-      } else if (last_chunk_options ==
-                 last_chunk_handling_options::stop_before_partial) {
-        return {SUCCESS, 0, 0};
-      }
       return {INVALID_BASE64_CHARACTER, equallocation, 0};
     }
     return {SUCCESS, 0, 0};
@@ -223,19 +199,49 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     simdutf_log("base64_tail_decode produced "
                 << r.output_count << " bytes of output from " << r.input_count
                 << " bytes of input, error = " << simdutf::to_string(r.error));
+    const bool consumed_whole_tail = (size_t(srcend - src) == r.input_count);
     r.input_count += size_t(src - srcinit);
-    simdutf_log("updated input_count to  " << r.input_count);
-    if (r.error == error_code::BASE64_INPUT_REMAINDER ||
-        r.error == error_code::INVALID_BASE64_CHARACTER ||
-        r.error == error_code::BASE64_EXTRA_BITS) {
-      simdutf_log("returing based on base64_tail_decode error: "
-                  << simdutf::to_string(r.error) << " input_count = "
-                  << r.input_count << " output_count = " << r.output_count);
-      return r;
-    } else {
-      r.output_count += size_t(dst - dstinit);
+    r.output_count += size_t(dst - dstinit);
+    // if we consumed the whole tail, and the error is INVALID_BASE64_CHARACTER,
+    // then it is due to the fact that we have a problem with
+    // padding characters at the end.
+    if (consumed_whole_tail &&
+        r.error == error_code::INVALID_BASE64_CHARACTER) {
+      r.input_count = equallocation;
     }
-    if (!ignore_garbage && r.error == error_code::SUCCESS && equalsigns > 0 &&
+
+    if (r.error == error_code::SUCCESS) {
+
+      if (last_chunk_options == stop_before_partial) {
+        // When we are in stop_before_partial mode, we need to check
+        // if there is nothing in the tail of the input buffer that is not
+        // ignorable. In that case, we set the input count to the length of the
+        // input buffer. That's only needed in the case where we have a partial
+        // ending, that is, if output_count % 3 != 0.
+        simdutf_log("investigating stop_before_partial's empty tail");
+
+        if ((r.output_count % 3) != 0) {
+          bool empty_trail = true;
+          for (size_t i = r.input_count; i < full_input_length; i++) {
+            if (!scalar::base64::is_ignorable_or_padding(src[i], options)) {
+              empty_trail = false;
+              break;
+            }
+          }
+          if (empty_trail) {
+            simdutf_log("caught an empty tail with stop_before_partial, "
+                        "adjusting input_count to length = "
+                        << full_input_length);
+            r.input_count = full_input_length;
+          }
+        }
+      } else {
+        // A success when we are not in stop_before_partial mode.
+        // means that we have consumed the whole input buffer.
+        r.input_count = full_input_length;
+      }
+    }
+    /*if (!ignore_garbage && r.error == error_code::SUCCESS && equalsigns > 0 &&
         last_chunk_options != stop_before_partial) {
       simdutf_log(
           "last_chunk_options != stop_before_partial error equalsigns = "
@@ -245,7 +251,9 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         r.error = error_code::INVALID_BASE64_CHARACTER;
         r.input_count = equallocation;
       }
-    }
+    }*/
+    // printf("computed output count =%zu %zu\n", r.input_count,
+    // r.output_count);
     return r;
   }
   if (!ignore_garbage && equalsigns > 0) {

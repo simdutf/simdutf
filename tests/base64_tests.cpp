@@ -12,101 +12,29 @@
 #include <tests/helpers/test.h>
 #include <vector>
 
-TEST(stop_before_partial_one_char) {
-  std::vector<char> base64(5463, 0x20);
-  base64.back() = 0x38; // this is the number 8 (a valid base64 character)
-  std::vector<char> back(0);
-  // with stop_before_partial, we should stop before the last character
-  // and not decode it. There should be no error.
-  // https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
-  simdutf::result r = implementation.base64_to_binary(
-      base64.data(), base64.size(), back.data(), simdutf::base64_default,
-      simdutf::last_chunk_handling_options::stop_before_partial);
-  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
-  ASSERT_EQUAL(r.count, 0);
-  size_t buflen = back.size();
-  ASSERT_EQUAL(buflen, 0);
-  r = simdutf::base64_to_binary_safe(
-      base64.data(), base64.size(), back.data(), buflen,
-      simdutf::base64_default,
-      simdutf::last_chunk_handling_options::stop_before_partial);
-  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
-  ASSERT_EQUAL(buflen, 0);
-  ASSERT_EQUAL(r.count, 5462);
-  back.resize(base64.size());
-  buflen = back.size();
-  r = simdutf::base64_to_binary_safe(
-      base64.data(), base64.size(), back.data(), buflen,
-      simdutf::base64_default,
-      simdutf::last_chunk_handling_options::stop_before_partial);
-  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
-  ASSERT_EQUAL(buflen, 0);
-  ASSERT_EQUAL(r.count, 5462);
-}
-
-TEST(hybrid_decoding) {
-  std::vector<std::pair<std::string, std::vector<uint8_t>>> test_data = {
-      {"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA__--_--"
-       "_--__AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-       {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0xff, 0xff, 0xbe, 0xff, 0xef, 0xbf, 0xfb, 0xef, 0xff, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
-      {"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA__-+_--"
-       "_--/_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-       {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0xff, 0xff, 0xbe, 0xff, 0xef, 0xbf, 0xfb, 0xef, 0xff, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
-      {"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA__-+_--"
-       " / "
-       "--/_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-       {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0xff, 0xff, 0xbe, 0xff, 0xef, 0xbf, 0xfb, 0xef, 0xff, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
-      {"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//-+/"
-       "--/--/"
-       "_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-       {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0xff, 0xff, 0xbe, 0xff, 0xef, 0xbf, 0xfb, 0xef, 0xff, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
-
-  };
-  for (const auto &test : test_data) {
-    const std::string &base64 = test.first;
-    const std::vector<uint8_t> &expected = test.second;
-    std::vector<uint8_t> decoded(simdutf::maximal_binary_length_from_base64(
-        base64.data(), base64.size()));
-    auto r = implementation.base64_to_binary(
-        base64.data(), base64.size(), reinterpret_cast<char *>(decoded.data()),
-        simdutf::base64_default_or_url);
-    ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
-    ASSERT_EQUAL(r.count, expected.size());
-    decoded.resize(r.count);
-    ASSERT_EQUAL(decoded, expected);
+// Return the length of the prefix that contains count base64 characters.
+// Thus, if count is 3, the function returns the length of the prefix
+// that contains 3 base64 characters.
+size_t prefix_length_base64_index(size_t count, simdutf::base64_options options,
+                                  const char *input, size_t length) {
+  size_t i = 0;
+  while (i < length && simdutf::base64_ignorable(input[i], options)) {
+    i++;
   }
+  if (count == 0) {
+    return i; // duh!
+  }
+  for (; i < length; i++) {
+    if (simdutf::base64_ignorable(input[i], options)) {
+      continue;
+    }
+    // We have a base64 character or a padding character.
+    count--;
+    if (count == 0) {
+      return i + 1;
+    }
+  }
+  return -1; // should never happen
 }
 
 // We may disable base64url tests by commenting out this next line.
@@ -237,6 +165,196 @@ size_t add_garbage(std::vector<char_type> &v, std::mt19937 &gen,
   }
   v.insert(v.begin() + i, c);
   return i;
+}
+
+// stop-before-partial should behave like so:
+// 1. if the last chunk is not a multiple of 4, we should stop before the last
+//    chunk
+// 2. if the last chunk is a multiple of 4 (not counting padding), we should
+// decode it
+// 3. If there is a padding character appearing in the last chunk where we have
+//    fewer than 2 base64 characters, we should return an error.
+//
+// The JavaScript spec suggests that in all cases, we should have decoded
+// everything up to the last chunk, even in case of an error, but simdutf
+// does not do that??? (We need to do extra work to do that).
+// https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
+//
+TEST(partial_should_decode_up_to_last_chunk) {
+  for (size_t len = 0; len < 2048; len++) {
+    std::vector<char> source(len, 0);
+    std::vector<char> buffer;
+    buffer.resize(implementation.base64_length_from_binary(len));
+    std::mt19937 gen((std::mt19937::result_type)(seed));
+    std::uniform_int_distribution<int> byte_generator{0, 255};
+    for (size_t trial = 0; trial < 10; trial++) {
+      for (size_t i = 0; i < len; i++) {
+        source[i] = byte_generator(gen);
+      }
+      size_t size = implementation.binary_to_base64(
+          source.data(), source.size(), buffer.data());
+      buffer.resize(size);
+      add_simple_spaces(buffer, gen, 5 + 2 * len);
+      std::vector<char> back(simdutf::maximal_binary_length_from_base64(
+          buffer.data(), buffer.size()));
+      auto option = simdutf::last_chunk_handling_options::stop_before_partial;
+
+      simdutf::full_result r = implementation.base64_to_binary_details(
+          buffer.data(), buffer.size(), back.data(), simdutf::base64_default,
+          option);
+      ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+      const size_t expected_output_length = len / 3 * 3;
+      const size_t expected_input_length = prefix_length_base64_index(
+          expected_output_length / 3 * 4, simdutf::base64_default,
+          buffer.data(), buffer.size());
+      ASSERT_EQUAL(r.input_count, expected_input_length);
+      ASSERT_EQUAL(r.output_count, expected_output_length);
+      ASSERT_TRUE(std::equal(
+          back.begin(), back.begin() + expected_output_length, source.begin()));
+      // If there is just zero one character in the last chunk, and there is a
+      // padding character, we should return an error.
+      if (buffer.size() > 0 && len > 0 && len % 3 != 0) {
+        // We have a last chunk that is not a multiple of 4.
+        // So there are padding characters.
+        size_t to_remove = 0;
+        // We want to leave just one character in the last chunk
+        // This should cause an error.
+        if (len % 3 == 1) {
+          // last chunk is 2
+          to_remove = 1;
+        } else if (len % 3 == 2) {
+          // last chunk is 3
+          to_remove = 2;
+        }
+        for (size_t i = buffer.size() - 1;; i--) {
+          if (simdutf::base64_valid(buffer[i], simdutf::base64_default)) {
+            buffer[i] = ' ';
+            to_remove--;
+            if (to_remove == 0) {
+              break;
+            }
+          }
+        }
+        r = implementation.base64_to_binary_details(
+            buffer.data(), buffer.size(), back.data(), simdutf::base64_default,
+            option);
+        ASSERT_EQUAL(r.error, simdutf::error_code::BASE64_INPUT_REMAINDER);
+        // Next, we empty the last chunk
+        for (size_t i = buffer.size() - 1;; i--) {
+          if (simdutf::base64_valid(buffer[i], simdutf::base64_default)) {
+            buffer[i] = ' ';
+            break;
+          }
+        }
+        r = implementation.base64_to_binary_details(
+            buffer.data(), buffer.size(), back.data(), simdutf::base64_default,
+            option);
+        ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+      }
+    }
+  }
+}
+
+TEST(stop_before_partial_one_char) {
+  std::vector<char> base64(5463, 0x20);
+  base64.back() = 0x38; // this is the number 8 (a valid base64 character)
+  std::vector<char> back(0);
+  // with stop_before_partial, we should stop before the last character
+  // and not decode it. There should be no error.
+  // https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
+  simdutf::result r = implementation.base64_to_binary(
+      base64.data(), base64.size(), back.data(), simdutf::base64_default,
+      simdutf::last_chunk_handling_options::stop_before_partial);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.count, 0);
+  size_t buflen = back.size();
+  ASSERT_EQUAL(buflen, 0);
+  r = simdutf::base64_to_binary_safe(
+      base64.data(), base64.size(), back.data(), buflen,
+      simdutf::base64_default,
+      simdutf::last_chunk_handling_options::stop_before_partial);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(buflen, 0);
+  ASSERT_EQUAL(r.count, 5462);
+  back.resize(base64.size());
+  buflen = back.size();
+  r = simdutf::base64_to_binary_safe(
+      base64.data(), base64.size(), back.data(), buflen,
+      simdutf::base64_default,
+      simdutf::last_chunk_handling_options::stop_before_partial);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(buflen, 0);
+  ASSERT_EQUAL(r.count, 5462);
+}
+
+TEST(hybrid_decoding) {
+  std::vector<std::pair<std::string, std::vector<uint8_t>>> test_data = {
+      {"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA__--_"
+       "--"
+       "_--__"
+       "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+       {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xff, 0xff, 0xbe, 0xff, 0xef, 0xbf, 0xfb, 0xef, 0xff, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+      {"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA__-+_"
+       "--"
+       "_--/"
+       "_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+       {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xff, 0xff, 0xbe, 0xff, 0xef, 0xbf, 0xfb, 0xef, 0xff, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+      {"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA__-+_"
+       "--"
+       " / "
+       "--/_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+       {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xff, 0xff, 0xbe, 0xff, 0xef, 0xbf, 0xfb, 0xef, 0xff, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+      {"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//-+/"
+       "--/--/"
+       "_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+       {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xff, 0xff, 0xbe, 0xff, 0xef, 0xbf, 0xfb, 0xef, 0xff, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+
+  };
+  for (const auto &test : test_data) {
+    const std::string &base64 = test.first;
+    const std::vector<uint8_t> &expected = test.second;
+    std::vector<uint8_t> decoded(simdutf::maximal_binary_length_from_base64(
+        base64.data(), base64.size()));
+    auto r = implementation.base64_to_binary(
+        base64.data(), base64.size(), reinterpret_cast<char *>(decoded.data()),
+        simdutf::base64_default_or_url);
+    ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+    ASSERT_EQUAL(r.count, expected.size());
+    decoded.resize(r.count);
+    ASSERT_EQUAL(decoded, expected);
+  }
 }
 
 TEST(roundtrip_base64_with_spaces) {
@@ -701,9 +819,11 @@ TEST(base64_decode_just_one_padding_partial) {
 TEST(base64_decode_partial_cases) {
   std::vector<std::pair<std::string, simdutf::result>> test_cases = {
       {"ZXhhZg", {simdutf::error_code::SUCCESS, 4}},
-      {"ZXhhZg                                                                ",
+      {"ZXhhZg                                                               "
+       " ",
        {simdutf::error_code::SUCCESS, 4}},
-      {"                                                                ZXhhZg",
+      {"                                                                "
+       "ZXhhZg",
        {simdutf::error_code::SUCCESS, 68}},
   };
   std::vector<char> buffer(3);
@@ -750,7 +870,8 @@ TEST(base64_decode_strict_cases) {
 
 TEST(base64_decode_strict_cases_length) {
   std::vector<std::pair<std::string, simdutf::result>> test_cases = {
-      {"ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+      {"ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+       "dd"
        "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddzzz=",
        {simdutf::error_code::BASE64_EXTRA_BITS, 131}},
   };
@@ -1500,8 +1621,10 @@ const std::vector<std::pair<std::string, std::string>> simple_url_with_padding =
      {"Base64 Encoding", "QmFzZTY0IEVuY29kaW5n"},
      {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ "
       "PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k",
-      "IVJ-SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c-"
-      "fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNTk"
+      "IVJ-"
+      "SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c-"
+      "fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEV"
+      "yNTk"
       "tWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
 } // namespace cases
 
@@ -1513,8 +1636,10 @@ const std::vector<std::pair<std::string, std::u16string>> simple_with_padding =
      {"Base64 Encoding", u"QmFzZTY0IEVuY29kaW5n"},
      {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ "
       "PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k",
-      u"IVJ+SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c+"
-      u"fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVyNT"
+      u"IVJ+"
+      u"SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c+"
+      u"fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJE"
+      u"VyNT"
       u"ktWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
 
 const std::vector<std::pair<std::string, std::u16string>>
@@ -1525,8 +1650,10 @@ const std::vector<std::pair<std::string, std::u16string>>
         {"Base64 Encoding", u"QmFzZTY0IEVuY29kaW5n"},
         {"!R~J2jL&mI]O)3=c:G3Mo)oqmJdxoprTZDyxEvU0MI.'Ww5H{G>}y;;+B8E_Ah,Ed[ "
          "PdBqY'^N>O$4:7LK1<:|7)btV@|{YWR$$Er59-XjVrFl4L}~yzTEd4'E[@k",
-         u"IVJ-SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c-"
-         u"fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJEVy"
+         u"IVJ-"
+         u"SjJqTCZtSV1PKTM9YzpHM01vKW9xbUpkeG9wclRaRHl4RXZVME1JLidXdzVIe0c-"
+         u"fXk7OytCOEVfQWgsRWRbIFBkQnFZJ15OPk8kNDo3TEsxPDp8NylidFZAfHtZV1IkJE"
+         u"Vy"
          u"NT"
          u"ktWGpWckZsNEx9fnl6VEVkNCdFW0Br"}};
 } // namespace cases16

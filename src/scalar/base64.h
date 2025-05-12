@@ -46,8 +46,79 @@ bool is_ignorable(char_type c, simdutf::base64_options options) {
 }
 
 template <class char_type>
+bool is_base64(char_type c, simdutf::base64_options options) {
+  const uint8_t *to_base64 =
+      (options & base64_default_or_url)
+          ? tables::base64::to_base64_default_or_url_value
+          : ((options & base64_url) ? tables::base64::to_base64_url_value
+                                    : tables::base64::to_base64_value);
+  uint8_t code = to_base64[uint8_t(c)];
+  if (is_eight_byte(c) && code <= 63) {
+    return true;
+  }
+  return false;
+}
+
+template <class char_type>
 bool is_ignorable_or_padding(char_type c, simdutf::base64_options options) {
   return is_ignorable(c, options) || c == '=';
+}
+
+struct reduced_input {
+  size_t equalsigns;    // number of padding characters '=', typically 0, 1, 2.
+  size_t equallocation; // location of the first padding character if any
+  size_t srclen;        // length of the input buffer before padding
+  size_t full_input_length; // length of the input buffer with padding but
+                            // without ignorable characters
+};
+
+// find the end of the base64 input buffer
+// It returns the number of padding characters, the location of the first
+// padding character if any, the length of the input buffer before padding
+// and the length of the input buffer with padding but without ignorable
+// characters. The input buffer is not modified.
+// The function assumes that there are at most two padding characters.
+template <class char_type>
+reduced_input find_end(const char_type *src, size_t srclen,
+                       simdutf::base64_options options) {
+  const uint8_t *to_base64 =
+      (options & base64_default_or_url)
+          ? tables::base64::to_base64_default_or_url_value
+          : ((options & base64_url) ? tables::base64::to_base64_url_value
+                                    : tables::base64::to_base64_value);
+  const bool ignore_garbage =
+      (options == base64_options::base64_url_accept_garbage) ||
+      (options == base64_options::base64_default_accept_garbage) ||
+      (options == base64_options::base64_default_or_url_accept_garbage);
+
+  size_t equalsigns = 0;
+  // skip trailing spaces
+  while (!ignore_garbage && srclen > 0 &&
+         scalar::base64::is_eight_byte(src[srclen - 1]) &&
+         to_base64[uint8_t(src[srclen - 1])] == 64) {
+    srclen--;
+  }
+  size_t full_input_length = srclen;
+  size_t equallocation =
+      srclen; // location of the first padding character if any
+  if (!ignore_garbage && srclen > 0 && src[srclen - 1] == '=') {
+    // This is the last '=' sign.
+    equallocation = srclen - 1;
+    srclen--;
+    equalsigns = 1;
+    // skip trailing spaces
+    while (srclen > 0 && scalar::base64::is_eight_byte(src[srclen - 1]) &&
+           to_base64[uint8_t(src[srclen - 1])] == 64) {
+      srclen--;
+    }
+    if (srclen > 0 && src[srclen - 1] == '=') {
+      // This is the second '=' sign.
+      equallocation = srclen - 1;
+      srclen--;
+      equalsigns = 2;
+    }
+  }
+  return {equalsigns, equallocation, srclen, full_input_length};
 }
 
 // Returns true upon success. The destination buffer must be large enough.
@@ -163,11 +234,9 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
         simdutf_log("strict case BASE64_INPUT_REMAINDER");
         return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
                 size_t(dst - dstinit)};
-      } else if (!ignore_garbage &&
-                 last_chunk_options ==
+      } else if (last_chunk_options ==
                      last_chunk_handling_options::stop_before_partial &&
-                 ((idx + padded_characters) & 3) != 0 &&
-                 (padded_characters == 0 || idx >= 2)) {
+                 idx >= 2) {
         // Rewind src to before partial chunk
         simdutf_log("stop_before_partial case SUCCESS");
 
@@ -240,7 +309,6 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
                   size_t(dst - dstinit)};
         }
         simdutf_log("pass-through case SUCCESS");
-
         return {SUCCESS, size_t(src - srcinit), size_t(dst - dstinit)};
       }
     }
@@ -388,7 +456,7 @@ result base64_tail_decode_safe(
                      last_chunk_handling_options::stop_before_partial &&
                  ((idx + padded_characters) & 3) != 0 &&
                  (padded_characters == 0 || idx >= 2)) {
-                  simdutf_log("stop_before_partial case SUCCESS");
+        simdutf_log("stop_before_partial case SUCCESS");
         // Rewind src to before partial chunk
         srcr = srccur;
         // adjust, skipping ignorable characters
@@ -461,7 +529,8 @@ result base64_tail_decode_safe(
             simdutf_log("INVALID_BASE64_CHARACTER size_t(src - srcinit) = "
                         << size_t(src - srcinit) << " size_t(dst - dstinit) = "
                         << size_t(dst - dstinit));
-                        simdutf_log("idx == 0, no data left but padding; return INVALID_BASE64_CHARACTER");
+            simdutf_log("idx == 0, no data left but padding; return "
+                        "INVALID_BASE64_CHARACTER");
             return {INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
           }
           outlen = size_t(dst - dstinit);

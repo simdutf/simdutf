@@ -114,12 +114,6 @@ simdutf_warn_unused result implementation::base64_to_binary(
   }
   if (length == 0) {
     if (!ignore_garbage && equalsigns > 0) {
-      if (last_chunk_options == last_chunk_handling_options::strict) {
-        return {BASE64_INPUT_REMAINDER, 0};
-      } else if (last_chunk_options ==
-                 last_chunk_handling_options::stop_before_partial) {
-        return {SUCCESS, 0};
-      }
       return {INVALID_BASE64_CHARACTER, equallocation};
     }
     return {SUCCESS, 0};
@@ -165,12 +159,6 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
   }
   if (length == 0) {
     if (!ignore_garbage && equalsigns > 0) {
-      if (last_chunk_options == last_chunk_handling_options::strict) {
-        return {BASE64_INPUT_REMAINDER, 0, 0};
-      } else if (last_chunk_options ==
-                 last_chunk_handling_options::stop_before_partial) {
-        return {SUCCESS, 0, 0};
-      }
       return {INVALID_BASE64_CHARACTER, equallocation, 0};
     }
     return {SUCCESS, 0, 0};
@@ -217,12 +205,6 @@ simdutf_warn_unused result implementation::base64_to_binary(
   }
   if (length == 0) {
     if (!ignore_garbage && equalsigns > 0) {
-      if (last_chunk_options == last_chunk_handling_options::strict) {
-        return {BASE64_INPUT_REMAINDER, 0};
-      } else if (last_chunk_options ==
-                 last_chunk_handling_options::stop_before_partial) {
-        return {SUCCESS, 0};
-      }
       return {INVALID_BASE64_CHARACTER, equallocation};
     }
     return {SUCCESS, 0};
@@ -268,12 +250,6 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
   }
   if (length == 0) {
     if (!ignore_garbage && equalsigns > 0) {
-      if (last_chunk_options == last_chunk_handling_options::strict) {
-        return {BASE64_INPUT_REMAINDER, 0, 0};
-      } else if (last_chunk_options ==
-                 last_chunk_handling_options::stop_before_partial) {
-        return {SUCCESS, 0, 0};
-      }
       return {INVALID_BASE64_CHARACTER, equallocation, 0};
     }
     return {SUCCESS, 0, 0};

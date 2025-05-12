@@ -3129,6 +3129,38 @@ simdutf_really_inline simdutf_warn_unused result base64_to_binary(
   #endif // SIMDUTF_SPAN
 
 /**
+ * Check if a character is an ignorabl base64 character.
+ * Checking a large input, character by character, is not computationally
+ * efficient.
+ *
+ * @param input         the character to check
+ * @param options       the base64 options to use, is base64_default by default.
+ * @return true if the character is an ignorablee base64 character, false
+ * otherwise.
+ */
+simdutf_warn_unused bool
+base64_ignorable(char input, base64_options options = base64_default) noexcept;
+simdutf_warn_unused bool
+base64_ignorable(char16_t input,
+                 base64_options options = base64_default) noexcept;
+
+/**
+ * Check if a character is a valid base64 character.
+ * Checking a large input, character by character, is not computationally
+ * efficient.
+ * Note that padding characters are not considered valid base64 characters in
+ * this context, nor are spaces.
+ *
+ * @param input         the character to check
+ * @param options       the base64 options to use, is base64_default by default.
+ * @return true if the character is a base64 character, false otherwise.
+ */
+simdutf_warn_unused bool
+base64_valid(char input, base64_options options = base64_default) noexcept;
+simdutf_warn_unused bool
+base64_valid(char16_t input, base64_options options = base64_default) noexcept;
+
+/**
  * Convert a base64 input to a binary output.
  *
  * This function follows the WHATWG forgiving-base64 format, which means that it
