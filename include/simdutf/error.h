@@ -85,6 +85,8 @@ struct full_result {
   error_code error;
   size_t input_count;
   size_t output_count;
+  bool padding_error = false; // true if the error is due to padding, only
+                              // meaningful when error is not SUCCESS
 
   simdutf_really_inline full_result()
       : error{error_code::SUCCESS}, input_count{0}, output_count{0} {}
@@ -92,6 +94,10 @@ struct full_result {
   simdutf_really_inline full_result(error_code err, size_t pos_in,
                                     size_t pos_out)
       : error{err}, input_count{pos_in}, output_count{pos_out} {}
+  simdutf_really_inline full_result(error_code err, size_t pos_in,
+                                    size_t pos_out, bool padding_err)
+      : error{err}, input_count{pos_in}, output_count{pos_out},
+        padding_error{padding_err} {}
 
   simdutf_really_inline operator result() const noexcept {
     if (error == error_code::SUCCESS ||

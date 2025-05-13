@@ -123,14 +123,16 @@ reduced_input find_end(const char_type *src, size_t srclen,
 
 // Returns true upon success. The destination buffer must be large enough.
 // This functions assumes that the padding (=) has been removed.
-template <class char_type>
-full_result
-base64_tail_decode(char *dst, const char_type *src, size_t length,
-                   size_t padded_characters, // number of padding characters
-                                             // '=', typically 0, 1, 2.
-                   base64_options options,
-                   last_chunk_handling_options last_chunk_options) {
-
+// if check_capacity is true, it will check that the destination buffer is
+// large enough. If it is not, it will return OUTPUT_BUFFER_TOO_SMALL.
+template <bool check_capacity, class char_type>
+full_result base64_tail_decode_impl(
+    char *dst, size_t outlen, const char_type *src, size_t length,
+    size_t padding_characters, // number of padding characters
+                               // '=', typically 0, 1, 2.
+    base64_options options, last_chunk_handling_options last_chunk_options) {
+  char *dstend = dst + outlen;
+  (void)dstend;
   // This looks like 10 branches, but we expect the compiler to resolve this to
   // two branches (easily predicted):
   const uint8_t *to_base64 =
@@ -178,6 +180,10 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
                 d2[uint8_t(src[2])] | d3[uint8_t(src[3])]) < 0x01FFFFFF) {
       if (match_system(endianness::BIG)) {
         x = scalar::u32_swap_bytes(x);
+      }
+      if (check_capacity && dstend - dst < 3) {
+        return {OUTPUT_BUFFER_TOO_SMALL, size_t(src - srcinit),
+                size_t(dst - dstinit)};
       }
       std::memcpy(dst, &x, 3); // optimization opportunity: copy 4 bytes
       dst += 3;
@@ -226,10 +232,10 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
     if (idx != 4) {
       simdutf_log_assert(idx < 4, "idx should be less than 4");
       simdutf_log("idx: " << idx
-                          << " padded_characters: " << padded_characters);
+                          << " padding_characters: " << padding_characters);
       if (!ignore_garbage &&
           last_chunk_options == last_chunk_handling_options::strict &&
-          (idx != 1) && ((idx + padded_characters) & 3) != 0) {
+          (idx != 1) && ((idx + padding_characters) & 3) != 0) {
         // The partial chunk was at src - idx
         simdutf_log("strict case BASE64_INPUT_REMAINDER");
         return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
@@ -262,6 +268,10 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
             return {BASE64_EXTRA_BITS, size_t(src - srcinit),
                     size_t(dst - dstinit)};
           }
+          if (check_capacity && dstend - dst < 1) {
+            return {OUTPUT_BUFFER_TOO_SMALL, size_t(src - srcinit),
+                    size_t(dst - dstinit)};
+          }
           if (match_system(endianness::BIG)) {
             triple <<= 8;
             std::memcpy(dst, &triple, 1);
@@ -283,6 +293,10 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
             return {BASE64_EXTRA_BITS, size_t(src - srcinit),
                     size_t(dst - dstinit)};
           }
+          if (check_capacity && dstend - dst < 2) {
+            return {OUTPUT_BUFFER_TOO_SMALL, size_t(src - srcinit),
+                    size_t(dst - dstinit)};
+          }
           if (match_system(endianness::BIG)) {
             triple <<= 8;
             std::memcpy(dst, &triple, 2);
@@ -297,22 +311,22 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
                         last_chunk_handling_options::stop_before_partial ||
                     (last_chunk_options ==
                          last_chunk_handling_options::stop_before_partial &&
-                     padded_characters > 0))) {
+                     padding_characters > 0))) {
           simdutf_log("BASE64_INPUT_REMAINDER");
           return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
                   size_t(dst - dstinit)};
-        } else if (!ignore_garbage && idx == 0 && padded_characters > 0) {
-          simdutf_log("INVALID_BASE64_CHARACTER size_t(src - srcinit) = "
-                      << size_t(src - srcinit)
-                      << " size_t(dst - dstinit) = " << size_t(dst - dstinit));
+        } else if (!ignore_garbage && idx == 0 && padding_characters > 0) {
           return {INVALID_BASE64_CHARACTER, size_t(src - srcinit),
-                  size_t(dst - dstinit)};
+                  size_t(dst - dstinit), true};
         }
         simdutf_log("pass-through case SUCCESS");
         return {SUCCESS, size_t(src - srcinit), size_t(dst - dstinit)};
       }
     }
-
+    if (check_capacity && dstend - dst < 3) {
+      return {OUTPUT_BUFFER_TOO_SMALL, size_t(src - srcinit),
+              size_t(dst - dstinit)};
+    }
     uint32_t triple =
         (uint32_t(buffer[0]) << 3 * 6) + (uint32_t(buffer[1]) << 2 * 6) +
         (uint32_t(buffer[2]) << 1 * 6) + (uint32_t(buffer[3]) << 0 * 6);
@@ -328,236 +342,49 @@ base64_tail_decode(char *dst, const char_type *src, size_t length,
   }
 }
 
+template <class char_type>
+full_result
+base64_tail_decode(char *dst, const char_type *src, size_t length,
+                   size_t padding_characters, // number of padding characters
+                                              // '=', typically 0, 1, 2.
+                   base64_options options,
+                   last_chunk_handling_options last_chunk_options) {
+  return base64_tail_decode_impl<false>(dst, 0, src, length, padding_characters,
+                                        options, last_chunk_options);
+}
+
 // like base64_tail_decode, but it will not write past the end of the output
 // buffer. The outlen parameter is modified to reflect the number of bytes
 // written. This functions assumes that the padding (=) has been removed.
 //
-// The caller is expected to have the case where length == 0.
 template <class char_type>
-result base64_tail_decode_safe(
-    char *dst, size_t &outlen, const char_type *&srcr, size_t length,
-    size_t padded_characters, // number of padding characters '=', typically 0,
-                              // 1, 2.
+full_result base64_tail_decode_safe(
+    char *dst, size_t outlen, const char_type *src, size_t length,
+    size_t padding_characters, // number of padding characters
+                               // '=', typically 0, 1, 2.
     base64_options options, last_chunk_handling_options last_chunk_options) {
-  const char_type *src = srcr;
-  simdutf_log_assert(length != 0, "length should not be 0");
-  // This looks like 10 branches, but we expect the compiler to resolve this to
-  // two branches (easily predicted):
-  const uint8_t *to_base64 =
-      (options & base64_default_or_url)
-          ? tables::base64::to_base64_default_or_url_value
-          : ((options & base64_url) ? tables::base64::to_base64_url_value
-                                    : tables::base64::to_base64_value);
-  const uint32_t *d0 =
-      (options & base64_default_or_url)
-          ? tables::base64::base64_default_or_url::d0
-          : ((options & base64_url) ? tables::base64::base64_url::d0
-                                    : tables::base64::base64_default::d0);
-  const uint32_t *d1 =
-      (options & base64_default_or_url)
-          ? tables::base64::base64_default_or_url::d1
-          : ((options & base64_url) ? tables::base64::base64_url::d1
-                                    : tables::base64::base64_default::d1);
-  const uint32_t *d2 =
-      (options & base64_default_or_url)
-          ? tables::base64::base64_default_or_url::d2
-          : ((options & base64_url) ? tables::base64::base64_url::d2
-                                    : tables::base64::base64_default::d2);
-  const uint32_t *d3 =
-      (options & base64_default_or_url)
-          ? tables::base64::base64_default_or_url::d3
-          : ((options & base64_url) ? tables::base64::base64_url::d3
-                                    : tables::base64::base64_default::d3);
-  const bool ignore_garbage =
-      (options == base64_options::base64_url_accept_garbage) ||
-      (options == base64_options::base64_default_accept_garbage) ||
-      (options == base64_options::base64_default_or_url_accept_garbage);
+  return base64_tail_decode_impl<false>(dst, outlen, src, length,
+                                        padding_characters, options,
+                                        last_chunk_options);
+}
 
-  const char_type *srcend = src + length;
-  const char_type *srcinit = src;
-  const char *dstinit = dst;
-  const char *dstend = dst + outlen;
-
-  uint32_t x;
-  size_t idx;
-  uint8_t buffer[4];
-  while (true) {
-    while (src + 4 <= srcend && is_eight_byte(src[0]) &&
-           is_eight_byte(src[1]) && is_eight_byte(src[2]) &&
-           is_eight_byte(src[3]) &&
-           (x = d0[uint8_t(src[0])] | d1[uint8_t(src[1])] |
-                d2[uint8_t(src[2])] | d3[uint8_t(src[3])]) < 0x01FFFFFF) {
-      if (dstend - dst < 3) {
-        outlen = size_t(dst - dstinit);
-        srcr = src;
-        return {OUTPUT_BUFFER_TOO_SMALL, size_t(src - srcinit)};
-      }
-      if (match_system(endianness::BIG)) {
-        x = scalar::u32_swap_bytes(x);
-      }
-      std::memcpy(dst, &x, 3); // optimization opportunity: copy 4 bytes
-      dst += 3;
-      src += 4;
-    }
-    idx = 0;
-    const char_type *srccur = src;
-    // We need at least four characters.
-#ifdef __clang__
-    // If possible, we read four characters at a time. (It is an optimization.)
-    if (ignore_garbage && src + 4 <= srcend) {
-      char_type c0 = src[0];
-      char_type c1 = src[1];
-      char_type c2 = src[2];
-      char_type c3 = src[3];
-      uint8_t code0 = to_base64[uint8_t(c0)];
-      uint8_t code1 = to_base64[uint8_t(c1)];
-      uint8_t code2 = to_base64[uint8_t(c2)];
-      uint8_t code3 = to_base64[uint8_t(c3)];
-      buffer[idx] = code0;
-      idx += (is_eight_byte(c0) && code0 <= 63);
-      buffer[idx] = code1;
-      idx += (is_eight_byte(c1) && code1 <= 63);
-      buffer[idx] = code2;
-      idx += (is_eight_byte(c2) && code2 <= 63);
-      buffer[idx] = code3;
-      idx += (is_eight_byte(c3) && code3 <= 63);
-      src += 4;
-    }
-#endif
-    while (idx < 4 && src < srcend) {
-      char_type c = *src;
-      uint8_t code = to_base64[uint8_t(c)];
-      buffer[idx] = uint8_t(code);
-      if (is_eight_byte(c) && code <= 63) {
-        idx++;
-      } else if (!ignore_garbage &&
-                 (code > 64 || !scalar::base64::is_eight_byte(c))) {
-        outlen = size_t(dst - dstinit);
-        srcr = src;
-        return {INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
-      } else {
-        // We have a space or a newline or garbage. We ignore it.
-      }
-      src++;
-    }
-    if (idx != 4) {
-      simdutf_log_assert(idx < 4, "idx should be less than 4");
-      simdutf_log("idx: " << idx
-                          << " padded_characters: " << padded_characters);
-      if (!ignore_garbage &&
-          last_chunk_options == last_chunk_handling_options::strict &&
-          (idx != 1) && ((idx + padded_characters) & 3) != 0) {
-        outlen = size_t(dst - dstinit);
-        srcr = src;
-        simdutf_log("strict case BASE64_INPUT_REMAINDER");
-        return {BASE64_INPUT_REMAINDER, size_t(src - srcinit)};
-      } else if (!ignore_garbage &&
-                 last_chunk_options ==
-                     last_chunk_handling_options::stop_before_partial &&
-                 ((idx + padded_characters) & 3) != 0 &&
-                 (padded_characters == 0 || idx >= 2)) {
-        simdutf_log("stop_before_partial case SUCCESS");
-        // Rewind src to before partial chunk
-        srcr = srccur;
-        // adjust, skipping ignorable characters
-        for (; srcr < srcend; srcr++) {
-          char_type c = *srcr;
-          uint8_t code = to_base64[uint8_t(c)];
-          if (is_eight_byte(c) && code <= 63) {
-            break;
-          }
-        }
-        outlen = size_t(dst - dstinit);
-        return {SUCCESS, size_t(dst - dstinit)};
-      } else { // loose mode
-        if (idx == 0) {
-          // No data left; return success
-          simdutf_log("idx == 0, no data left; return success");
-          outlen = size_t(dst - dstinit);
-          srcr = src;
-          return {SUCCESS, size_t(dst - dstinit)};
-        } else if (!ignore_garbage && idx == 1 &&
-                   (last_chunk_options !=
-                        last_chunk_handling_options::stop_before_partial ||
-                    (last_chunk_options ==
-                         last_chunk_handling_options::stop_before_partial &&
-                     padded_characters > 0))) {
-          // Error: Incomplete chunk of length 1 is invalid in loose mode
-          outlen = size_t(dst - dstinit);
-          srcr = src;
-          simdutf_log("BASE64_INPUT_REMAINDER");
-          return {BASE64_INPUT_REMAINDER, size_t(src - srcinit)};
-        } else if (idx == 2 || idx == 3) {
-          // Check if there's enough space in the destination buffer
-          size_t required_space = (idx == 2) ? 1 : 2;
-          if (size_t(dstend - dst) < required_space) {
-            outlen = size_t(dst - dstinit);
-            srcr = srccur;
-            simdutf_log("Not enough space in destination buffer");
-            return {OUTPUT_BUFFER_TOO_SMALL, size_t(srccur - srcinit)};
-          }
-          uint32_t triple = 0;
-          if (idx == 2) {
-            triple = (uint32_t(buffer[0]) << 18) + (uint32_t(buffer[1]) << 12);
-            if (!ignore_garbage &&
-                (last_chunk_options == last_chunk_handling_options::strict) &&
-                (triple & 0xffff)) {
-              srcr = src;
-              simdutf_log("strict case BASE64_EXTRA_BITS");
-              return {BASE64_EXTRA_BITS, size_t(src - srcinit)};
-            }
-            // Extract the first byte
-            triple >>= 16;
-            dst[0] = static_cast<char>(triple & 0xFF);
-            dst += 1;
-          } else if (idx == 3) {
-            triple = (uint32_t(buffer[0]) << 18) + (uint32_t(buffer[1]) << 12) +
-                     (uint32_t(buffer[2]) << 6);
-            if (!ignore_garbage &&
-                (last_chunk_options == last_chunk_handling_options::strict) &&
-                (triple & 0xff)) {
-              srcr = src;
-              simdutf_log("strict case BASE64_EXTRA_BITS");
-              return {BASE64_EXTRA_BITS, size_t(src - srcinit)};
-            }
-            // Extract the first two bytes
-            triple >>= 8;
-            dst[0] = static_cast<char>((triple >> 8) & 0xFF);
-            dst[1] = static_cast<char>(triple & 0xFF);
-            dst += 2;
-          } else if (!ignore_garbage && idx == 0 && padded_characters > 0) {
-            simdutf_log("INVALID_BASE64_CHARACTER size_t(src - srcinit) = "
-                        << size_t(src - srcinit) << " size_t(dst - dstinit) = "
-                        << size_t(dst - dstinit));
-            simdutf_log("idx == 0, no data left but padding; return "
-                        "INVALID_BASE64_CHARACTER");
-            return {INVALID_BASE64_CHARACTER, size_t(src - srcinit)};
-          }
-          outlen = size_t(dst - dstinit);
-          srcr = src;
-          return {SUCCESS, size_t(dst - dstinit)};
-        }
-      }
-    }
-
-    if (dstend - dst < 3) {
-      outlen = size_t(dst - dstinit);
-      srcr = srccur;
-      return {OUTPUT_BUFFER_TOO_SMALL, size_t(srccur - srcinit)};
-    }
-    uint32_t triple = (uint32_t(buffer[0]) << 18) +
-                      (uint32_t(buffer[1]) << 12) + (uint32_t(buffer[2]) << 6) +
-                      (uint32_t(buffer[3]));
-    if (match_system(endianness::BIG)) {
-      triple <<= 8;
-      std::memcpy(dst, &triple, 3);
-    } else {
-      triple = scalar::u32_swap_bytes(triple);
-      triple >>= 8;
-      std::memcpy(dst, &triple, 3);
-    }
-    dst += 3;
+inline full_result
+patch_tail_result(full_result r, size_t previous_input, size_t previous_output,
+                  size_t equallocation, size_t full_input_length,
+                  last_chunk_handling_options last_chunk_options) {
+  r.input_count += previous_input;
+  r.output_count += previous_output;
+  if (r.padding_error) {
+    r.input_count = equallocation;
   }
+
+  if (r.error == error_code::SUCCESS &&
+      last_chunk_options != stop_before_partial) {
+    // A success when we are not in stop_before_partial mode.
+    // means that we have consumed the whole input buffer.
+    r.input_count = full_input_length;
+  }
+  return r;
 }
 
 // Returns the number of bytes written. The destination buffer must be large
