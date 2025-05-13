@@ -23,7 +23,7 @@ TEST_LOOP(trials, convert_into_2_UTF16_bytes) {
 
   auto procedure = [&implementation](const char32_t *utf32, size_t size,
                                      char16_t *utf16be) -> size_t {
-    return implementation.convert_utf32_to_utf16be(utf32, size, utf16be);
+    return implementation.convert_valid_utf32_to_utf16be(utf32, size, utf16be);
   };
   for (size_t size : input_size) {
     transcode_utf32_to_utf16_test_base test(BE, random, size);
@@ -37,7 +37,7 @@ TEST_LOOP(trials, convert_into_4_UTF16_bytes) {
 
   auto procedure = [&implementation](const char32_t *utf32, size_t size,
                                      char16_t *utf16be) -> size_t {
-    return implementation.convert_utf32_to_utf16be(utf32, size, utf16be);
+    return implementation.convert_valid_utf32_to_utf16be(utf32, size, utf16be);
   };
   for (size_t size : input_size) {
     transcode_utf32_to_utf16_test_base test(BE, random, size);
@@ -52,7 +52,7 @@ TEST_LOOP(trials, convert_into_2_or_4_UTF16_bytes) {
 
   auto procedure = [&implementation](const char32_t *utf32, size_t size,
                                      char16_t *utf16be) -> size_t {
-    return implementation.convert_utf32_to_utf16be(utf32, size, utf16be);
+    return implementation.convert_valid_utf32_to_utf16be(utf32, size, utf16be);
   };
   for (size_t size : input_size) {
     transcode_utf32_to_utf16_test_base test(BE, random, size);
