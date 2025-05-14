@@ -60,6 +60,23 @@ bool is_base64(char_type c, simdutf::base64_options options) {
 }
 
 template <class char_type>
+bool is_base64_or_padding(char_type c, simdutf::base64_options options) {
+  const uint8_t *to_base64 =
+      (options & base64_default_or_url)
+          ? tables::base64::to_base64_default_or_url_value
+          : ((options & base64_url) ? tables::base64::to_base64_url_value
+                                    : tables::base64::to_base64_value);
+  if(c == '=') {
+    return true;
+  }
+  uint8_t code = to_base64[uint8_t(c)];
+  if (is_eight_byte(c) && code <= 63) {
+    return true;
+  }
+  return false;
+}
+
+template <class char_type>
 bool is_ignorable_or_padding(char_type c, simdutf::base64_options options) {
   return is_ignorable(c, options) || c == '=';
 }
@@ -239,7 +256,7 @@ full_result base64_tail_decode_impl(
         // The partial chunk was at src - idx
         simdutf_log("strict case BASE64_INPUT_REMAINDER");
         return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
-                size_t(dst - dstinit)};
+                size_t(dst - dstinit), true};
       } else if (last_chunk_options ==
                      last_chunk_handling_options::stop_before_partial &&
                  idx >= 2) {
@@ -269,7 +286,7 @@ full_result base64_tail_decode_impl(
                     size_t(dst - dstinit)};
           }
           if (check_capacity && dstend - dst < 1) {
-            return {OUTPUT_BUFFER_TOO_SMALL, size_t(src - srcinit),
+            return {OUTPUT_BUFFER_TOO_SMALL, size_t(srccur - srcinit),
                     size_t(dst - dstinit)};
           }
           if (match_system(endianness::BIG)) {
@@ -294,7 +311,7 @@ full_result base64_tail_decode_impl(
                     size_t(dst - dstinit)};
           }
           if (check_capacity && dstend - dst < 2) {
-            return {OUTPUT_BUFFER_TOO_SMALL, size_t(src - srcinit),
+            return {OUTPUT_BUFFER_TOO_SMALL, size_t(srccur - srcinit),
                     size_t(dst - dstinit)};
           }
           if (match_system(endianness::BIG)) {
@@ -312,10 +329,11 @@ full_result base64_tail_decode_impl(
                     (last_chunk_options ==
                          last_chunk_handling_options::stop_before_partial &&
                      padding_characters > 0))) {
-          simdutf_log("BASE64_INPUT_REMAINDER");
+          simdutf_log("BASE64_INPUT_REMAINDER at " <<  size_t(src - srcinit));
           return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
                   size_t(dst - dstinit)};
         } else if (!ignore_garbage && idx == 0 && padding_characters > 0) {
+                    simdutf_log("INVALID_BASE64_CHARACTER idx == 0");
           return {INVALID_BASE64_CHARACTER, size_t(src - srcinit),
                   size_t(dst - dstinit), true};
         }
@@ -324,7 +342,7 @@ full_result base64_tail_decode_impl(
       }
     }
     if (check_capacity && dstend - dst < 3) {
-      return {OUTPUT_BUFFER_TOO_SMALL, size_t(src - srcinit),
+      return {OUTPUT_BUFFER_TOO_SMALL, size_t(srccur - srcinit),
               size_t(dst - dstinit)};
     }
     uint32_t triple =
@@ -363,7 +381,7 @@ full_result base64_tail_decode_safe(
     size_t padding_characters, // number of padding characters
                                // '=', typically 0, 1, 2.
     base64_options options, last_chunk_handling_options last_chunk_options) {
-  return base64_tail_decode_impl<false>(dst, outlen, src, length,
+  return base64_tail_decode_impl<true>(dst, outlen, src, length,
                                         padding_characters, options,
                                         last_chunk_options);
 }
@@ -467,6 +485,42 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(
   // if we have a valid input, then the remainder must be 2 or 3 adding one or
   // two extra bytes.
   return actual_length / 4 * 3 + (actual_length % 4) - 1;
+}
+
+
+template <typename char_type>
+simdutf_warn_unused full_result base64_to_binary_details_impl(
+    const char_type *input, size_t length, char *output, base64_options options,
+    last_chunk_handling_options last_chunk_options) noexcept {
+  const bool ignore_garbage =
+      (options == base64_options::base64_url_accept_garbage) ||
+      (options == base64_options::base64_default_accept_garbage) ||
+      (options == base64_options::base64_default_or_url_accept_garbage);
+  auto ri = simdutf::scalar::base64::find_end(input, length, options);
+  size_t equallocation = ri.equallocation;
+  size_t equalsigns = ri.equalsigns;
+  length = ri.srclen;
+  size_t full_input_length = ri.full_input_length;
+  (void)full_input_length;
+  if (length == 0) {
+    if (!ignore_garbage && equalsigns > 0) {
+      return {INVALID_BASE64_CHARACTER, equallocation, 0};
+    }
+    return {SUCCESS, 0, 0};
+  }
+  full_result r = scalar::base64::base64_tail_decode(
+      output, input, length, equalsigns, options, last_chunk_options);
+  r = scalar::base64::patch_tail_result(r, 0, 0,
+                      equallocation, full_input_length, last_chunk_options);
+  if (last_chunk_options != stop_before_partial &&
+      r.error == error_code::SUCCESS && equalsigns > 0 && !ignore_garbage) {
+    // additional checks
+    if ((r.output_count % 3 == 0) ||
+        ((r.output_count % 3) + 1 + equalsigns != 4)) {
+      return {INVALID_BASE64_CHARACTER, equallocation, r.output_count};
+    }
+  }
+  return r;
 }
 
 simdutf_warn_unused size_t

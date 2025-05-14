@@ -587,22 +587,9 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
   if (src < srcend + equalsigns) {
     full_result r = scalar::base64::base64_tail_decode(
         dst, src, srcend - src, equalsigns, options, last_chunk_options);
-    r.input_count += size_t(src - srcinit);
-    if (r.error == error_code::INVALID_BASE64_CHARACTER ||
-        r.error == error_code::BASE64_EXTRA_BITS) {
-      return r;
-    } else {
-      r.output_count += size_t(dst - dstinit);
-    }
-    if (last_chunk_options != stop_before_partial &&
-        r.error == error_code::SUCCESS && equalsigns > 0 && !ignore_garbage) {
-      // additional checks
-      if ((r.output_count % 3 == 0) ||
-          ((r.output_count % 3) + 1 + equalsigns != 4)) {
-        r.error = error_code::INVALID_BASE64_CHARACTER;
-        r.input_count = equallocation;
-      }
-    }
+    r = scalar::base64::patch_tail_result(
+        r, size_t(src - srcinit), size_t(dst - dstinit), equallocation,
+        full_input_length, last_chunk_options);
     return r;
   }
   if (equalsigns > 0 && !ignore_garbage) {

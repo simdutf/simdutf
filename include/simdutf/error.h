@@ -100,8 +100,7 @@ struct full_result {
         padding_error{padding_err} {}
 
   simdutf_really_inline operator result() const noexcept {
-    if (error == error_code::SUCCESS ||
-        error == error_code::BASE64_INPUT_REMAINDER) {
+    if (error == error_code::SUCCESS) {
       return result{error, output_count};
     } else {
       return result{error, input_count};

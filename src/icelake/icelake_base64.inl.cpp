@@ -345,8 +345,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       // The partial chunk was at src - idx
       _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
       dst += output_len;
-      simdutf_log("strict return");
-      return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
+      simdutf_log("strict return at "<<size_t(src - srcinit));
+      return {BASE64_INPUT_REMAINDER, equallocation,
               size_t(dst - dstinit)};
     } else if (last_chunk_options ==
                    last_chunk_handling_options::stop_before_partial &&
@@ -414,7 +414,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                    equalsigns > 0))) {
         _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
         dst += output_len;
-        simdutf_log("BASE64_INPUT_REMAINDER return");
+        simdutf_log("BASE64_INPUT_REMAINDER return at "<< size_t(src - srcinit));
 
         return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
                 size_t(dst - dstinit)};
@@ -422,7 +422,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         simdutf_log("INVALID_BASE64_CHARACTER size_t(src - srcinit) = "
                     << size_t(src - srcinit)
                     << " size_t(dst - dstinit) = " << size_t(dst - dstinit));
-        return {INVALID_BASE64_CHARACTER, size_t(src - srcinit),
+        return {INVALID_BASE64_CHARACTER, equallocation,
                 size_t(dst - dstinit)};
 
       } else {
