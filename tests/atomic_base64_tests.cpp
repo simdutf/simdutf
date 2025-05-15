@@ -8,7 +8,8 @@
 #include <vector>
 
 #include <tests/helpers/test.h>
-
+using random_generator = std::mt19937;
+static random_generator::result_type seed = 42;
 // check if we are running with thread sanitizer
 #if defined(__clang__)
   #if __has_feature(thread_sanitizer)
