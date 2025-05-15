@@ -88,27 +88,29 @@ void implementation::change_endianness_utf16(const char16_t *src, size_t len,
 simdutf_warn_unused result implementation::base64_to_binary(
     const char *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
-   return simdutf::scalar::base64::base64_to_binary_details_impl(input, length, output, options, last_chunk_options);
+  return simdutf::scalar::base64::base64_to_binary_details_impl(
+      input, length, output, options, last_chunk_options);
 }
-
 
 simdutf_warn_unused result implementation::base64_to_binary(
     const char16_t *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
-   return simdutf::scalar::base64::base64_to_binary_details_impl(input, length, output, options, last_chunk_options);
+  return simdutf::scalar::base64::base64_to_binary_details_impl(
+      input, length, output, options, last_chunk_options);
 }
 
 simdutf_warn_unused full_result implementation::base64_to_binary_details(
     const char *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
-   return simdutf::scalar::base64::base64_to_binary_details_impl(input, length, output, options, last_chunk_options);
+  return simdutf::scalar::base64::base64_to_binary_details_impl(
+      input, length, output, options, last_chunk_options);
 }
-
 
 simdutf_warn_unused full_result implementation::base64_to_binary_details(
     const char16_t *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
-   return simdutf::scalar::base64::base64_to_binary_details_impl(input, length, output, options, last_chunk_options);
+  return simdutf::scalar::base64::base64_to_binary_details_impl(
+      input, length, output, options, last_chunk_options);
 }
 
 size_t implementation::binary_to_base64(const char *input, size_t length,

@@ -2133,8 +2133,8 @@ simdutf_warn_unused result slow_base64_to_binary_safe_impl(
   // valid base64.
   auto r = scalar::base64::base64_tail_decode_safe(
       output, outlen, input, length, equalsigns, options, last_chunk_options);
-  r = scalar::base64::patch_tail_result(r, 0, 0,
-                      equallocation, full_input_length, last_chunk_options);
+  r = scalar::base64::patch_tail_result(r, 0, 0, equallocation,
+                                        full_input_length, last_chunk_options);
   outlen = r.output_count;
   if (last_chunk_options != stop_before_partial &&
       r.error == error_code::SUCCESS && equalsigns > 0) {
@@ -2143,7 +2143,8 @@ simdutf_warn_unused result slow_base64_to_binary_safe_impl(
       r.error = error_code::INVALID_BASE64_CHARACTER;
     }
   }
-  return {r.error, r.input_count}; // we cannot return r itself because it gets converted to error/output_count
+  return {r.error, r.input_count}; // we cannot return r itself because it gets
+                                   // converted to error/output_count
 }
 simdutf_warn_unused bool base64_ignorable(char input,
                                           base64_options options) noexcept {
@@ -2161,12 +2162,12 @@ simdutf_warn_unused bool base64_valid(char16_t input,
                                       base64_options options) noexcept {
   return scalar::base64::is_base64(input, options);
 }
-simdutf_warn_unused bool base64_valid_or_padding(char input,
-                                      base64_options options) noexcept {
+simdutf_warn_unused bool
+base64_valid_or_padding(char input, base64_options options) noexcept {
   return scalar::base64::is_base64_or_padding(input, options);
 }
-simdutf_warn_unused bool base64_valid_or_padding(char16_t input,
-                                      base64_options options) noexcept {
+simdutf_warn_unused bool
+base64_valid_or_padding(char16_t input, base64_options options) noexcept {
   return scalar::base64::is_base64_or_padding(input, options);
 }
 
@@ -2176,11 +2177,10 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
     base64_options options,
     last_chunk_handling_options last_chunk_handling_options,
     bool decode_up_to_bad_char) noexcept {
-    if(true){
-      return slow_base64_to_binary_safe_impl(
-          input, length, output, outlen, options,
-          last_chunk_handling_options);
-    }
+  if (true) {
+    return slow_base64_to_binary_safe_impl(
+        input, length, output, outlen, options, last_chunk_handling_options);
+  }
   simdutf_log("base64_to_binary_safe_impl length: "
               << length << " outlen: " << outlen << "\n\toptions: "
               << simdutf::to_string(options) << " last_chunk_handling_options: "

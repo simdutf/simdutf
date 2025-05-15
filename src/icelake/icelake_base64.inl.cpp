@@ -236,12 +236,12 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                                    : tables::base64::to_base64_value);
   auto ri = simdutf::scalar::base64::find_end(src, srclen, options);
   size_t equallocation = ri.equallocation;
-  size_t equalsigns = ri.equalsigns;
+  size_t padding_characters = ri.equalsigns;
   srclen = ri.srclen;
   size_t full_input_length = ri.full_input_length;
   (void)full_input_length;
   if (srclen == 0) {
-    if (!ignore_garbage && equalsigns > 0) {
+    if (!ignore_garbage && padding_characters > 0) {
       return {INVALID_BASE64_CHARACTER, equallocation, 0};
     }
     return {SUCCESS, 0, 0};
@@ -335,108 +335,134 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         28, 29, 30, 24, 25, 26, 20, 21, 22, 16, 17, 18, 12, 13, 14, 8, 9, 10, 4,
         5, 6, 0, 1, 2);
     const __m512i shuffled = _mm512_permutexvar_epi8(pack, merged);
-    simdutf_log("idx = " << idx << " equalsigns = " << equalsigns
-                         << " last_chunk_options = "
+    simdutf_log("idx = " << idx << " padding_characters = "
+                         << padding_characters << " last_chunk_options = "
                          << simdutf::to_string(last_chunk_options));
 
+    // The idea here is that in loose mode,
+    // if there is padding at all, it must be used
+    // to form 4-wise chunk. However, in loose mode,
+    // we do accept no padding at all.
     if (!ignore_garbage &&
-        last_chunk_options == last_chunk_handling_options::strict &&
-        (idx != 1) && ((idx + equalsigns) & 3) != 0) {
-      // The partial chunk was at src - idx
-      _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
-      dst += output_len;
-      simdutf_log("strict return at "<<size_t(src - srcinit));
-      return {BASE64_INPUT_REMAINDER, equallocation,
-              size_t(dst - dstinit)};
-    } else if (last_chunk_options ==
-                   last_chunk_handling_options::stop_before_partial &&
-               idx >= 2) {
-      simdutf_log("stop_before_partial return");
-      _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
-      dst += output_len;
-      // We rewind src to before the partial chunk
-      size_t characters_to_skip = idx;
-      while (characters_to_skip > 0) {
-        src--;
-        auto c = *src;
-        uint8_t code = to_base64[uint8_t(c)];
-        if (simdutf::scalar::base64::is_eight_byte(c) && code <= 63) {
-          characters_to_skip--;
-        }
-      }
-      return {SUCCESS, size_t(src - srcinit), size_t(dst - dstinit)};
-    } else {
-      simdutf_log("else case idx = " << idx << " equalsigns = " << equalsigns
-                                     << " last_chunk_options = "
-                                     << simdutf::to_string(last_chunk_options));
-      if (idx == 2) {
-        if (!ignore_garbage &&
-            last_chunk_options == last_chunk_handling_options::strict) {
-          uint32_t triple = (uint32_t(bufferptr[-2]) << 3 * 6) +
-                            (uint32_t(bufferptr[-1]) << 2 * 6);
-          if (triple & 0xffff) {
-            simdutf_log("BASE64_EXTRA_BITS return");
+        last_chunk_options == last_chunk_handling_options::loose &&
+        (idx >= 2) && padding_characters > 0 &&
+        ((idx + padding_characters) & 3) != 0) {
+      simdutf_log("strict case INVALID_BASE64_CHARACTER");
+      return {INVALID_BASE64_CHARACTER, size_t(src - srcinit),
+              size_t(dst - dstinit), true};
+    } else
+
+      // The idea here is that in strict mode, we do not want to accept
+      // incomplete base64 chunks. So if the chunk was otherwise valid, we
+      // return BASE64_INPUT_REMAINDER.
+      if (!ignore_garbage &&
+          last_chunk_options == last_chunk_handling_options::strict &&
+          (idx >= 2) && ((idx + padding_characters) & 3) != 0) {
+        // The partial chunk was at src - idx
+        _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
+        dst += output_len;
+        simdutf_log("strict return at " << size_t(src - srcinit));
+        return {BASE64_INPUT_REMAINDER, equallocation, size_t(dst - dstinit)};
+      } else
+        // The idea here is that in stop_before_partial mode, we stop right away
+        // if we have a partial chunk that would be valid.
+        if (last_chunk_options ==
+                last_chunk_handling_options::stop_before_partial &&
+            (idx >= 2 ||
+             padding_characters ==
+                 0)) { // There are two cases where stop_before_partial
+                       // succeeds: either we have idx >= 2 or we have
+                       // padding_characters == 0
+          simdutf_log("stop_before_partial return");
+          _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
+          dst += output_len;
+          // we need to rewind src to before the partial chunk
+          size_t characters_to_skip = idx;
+          while (characters_to_skip > 0) {
+            src--;
+            auto c = *src;
+            uint8_t code = to_base64[uint8_t(c)];
+            if (simdutf::scalar::base64::is_eight_byte(c) && code <= 63) {
+              characters_to_skip--;
+            }
+          }
+          return {SUCCESS, size_t(src - srcinit), size_t(dst - dstinit)};
+        } else {
+          simdutf_log("else case idx = "
+                      << idx << " padding_characters = " << padding_characters
+                      << " last_chunk_options = "
+                      << simdutf::to_string(last_chunk_options));
+          if (idx == 2) {
+            if (!ignore_garbage &&
+                last_chunk_options == last_chunk_handling_options::strict) {
+              simdutf_log("checking for BASE64_EXTRA_BITS return");
+
+              uint32_t triple = (uint32_t(bufferptr[-2]) << 3 * 6) +
+                                (uint32_t(bufferptr[-1]) << 2 * 6);
+              if (triple & 0xffff) {
+                simdutf_log("BASE64_EXTRA_BITS return");
+
+                _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
+                dst += output_len;
+                return {BASE64_EXTRA_BITS, size_t(src - srcinit),
+                        size_t(dst - dstinit)};
+              }
+            }
+            output_mask = (output_mask << 1) | 1;
+            output_len += 1;
+            _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
+            dst += output_len;
+          } else if (idx == 3) {
+            if (!ignore_garbage &&
+                last_chunk_options == last_chunk_handling_options::strict) {
+              uint32_t triple = (uint32_t(bufferptr[-3]) << 3 * 6) +
+                                (uint32_t(bufferptr[-2]) << 2 * 6) +
+                                (uint32_t(bufferptr[-1]) << 1 * 6);
+              if (triple & 0xff) {
+                simdutf_log("BASE64_EXTRA_BITS return");
+
+                _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
+                dst += output_len;
+                return {BASE64_EXTRA_BITS, size_t(src - srcinit),
+                        size_t(dst - dstinit)};
+              }
+            }
+            output_mask = (output_mask << 2) | 3;
+            output_len += 2;
+            _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
+            dst += output_len;
+          } else if (!ignore_garbage && idx == 1 &&
+                     (last_chunk_options !=
+                          last_chunk_handling_options::stop_before_partial ||
+                      (last_chunk_options ==
+                           last_chunk_handling_options::stop_before_partial &&
+                       padding_characters > 0))) {
+            _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
+            dst += output_len;
+            simdutf_log("BASE64_INPUT_REMAINDER return at "
+                        << size_t(src - srcinit));
+
+            return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
+                    size_t(dst - dstinit)};
+          } else if (!ignore_garbage && idx == 0 && padding_characters > 0) {
+            simdutf_log("INVALID_BASE64_CHARACTER size_t(src - srcinit) = "
+                        << size_t(src - srcinit) << " size_t(dst - dstinit) = "
+                        << size_t(dst - dstinit));
+            return {INVALID_BASE64_CHARACTER, equallocation,
+                    size_t(dst - dstinit)};
+
+          } else {
+            simdutf_log("fallthrough");
 
             _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
             dst += output_len;
-            return {BASE64_EXTRA_BITS, size_t(src - srcinit),
-                    size_t(dst - dstinit)};
           }
         }
-        output_mask = (output_mask << 1) | 1;
-        output_len += 1;
-        _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
-        dst += output_len;
-      } else if (idx == 3) {
-        if (!ignore_garbage &&
-            last_chunk_options == last_chunk_handling_options::strict) {
-          uint32_t triple = (uint32_t(bufferptr[-3]) << 3 * 6) +
-                            (uint32_t(bufferptr[-2]) << 2 * 6) +
-                            (uint32_t(bufferptr[-1]) << 1 * 6);
-          if (triple & 0xff) {
-            simdutf_log("BASE64_EXTRA_BITS return");
-
-            _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
-            dst += output_len;
-            return {BASE64_EXTRA_BITS, size_t(src - srcinit),
-                    size_t(dst - dstinit)};
-          }
-        }
-        output_mask = (output_mask << 2) | 3;
-        output_len += 2;
-        _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
-        dst += output_len;
-      } else if (!ignore_garbage && idx == 1 &&
-                 (last_chunk_options !=
-                      last_chunk_handling_options::stop_before_partial ||
-                  (last_chunk_options ==
-                       last_chunk_handling_options::stop_before_partial &&
-                   equalsigns > 0))) {
-        _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
-        dst += output_len;
-        simdutf_log("BASE64_INPUT_REMAINDER return at "<< size_t(src - srcinit));
-
-        return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
-                size_t(dst - dstinit)};
-      } else if (!ignore_garbage && idx == 0 && equalsigns > 0) {
-        simdutf_log("INVALID_BASE64_CHARACTER size_t(src - srcinit) = "
-                    << size_t(src - srcinit)
-                    << " size_t(dst - dstinit) = " << size_t(dst - dstinit));
-        return {INVALID_BASE64_CHARACTER, equallocation,
-                size_t(dst - dstinit)};
-
-      } else {
-        simdutf_log("fallthrough");
-
-        _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
-        dst += output_len;
-      }
-    }
     if (!ignore_garbage && last_chunk_options != stop_before_partial &&
-        equalsigns > 0) {
+        padding_characters > 0) {
       size_t output_count = size_t(dst - dstinit);
       if ((output_count % 3 == 0) ||
-          ((output_count % 3) + 1 + equalsigns != 4)) {
+          ((output_count % 3) + 1 + padding_characters != 4)) {
         simdutf_log("final INVALID_BASE64_CHARACTER");
 
         return {INVALID_BASE64_CHARACTER, equallocation, output_count};
@@ -444,12 +470,12 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     }
     simdutf_log("what?");
 
-    return {SUCCESS, srclen, size_t(dst - dstinit)};
+    return {SUCCESS, size_t(src - srcinit), size_t(dst - dstinit)};
   }
 
-  if (!ignore_garbage && equalsigns > 0) {
+  if (!ignore_garbage && padding_characters > 0) {
     if ((size_t(dst - dstinit) % 3 == 0) ||
-        ((size_t(dst - dstinit) % 3) + 1 + equalsigns != 4)) {
+        ((size_t(dst - dstinit) % 3) + 1 + padding_characters != 4)) {
       return {INVALID_BASE64_CHARACTER, equallocation, size_t(dst - dstinit)};
     }
   }

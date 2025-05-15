@@ -14,7 +14,7 @@ template <typename T> struct base16 {
 
   // Conversion from SIMD register
   simdutf_really_inline base16(const vector_type _value) : value{_value} {}
-
+#ifdef SIMDUTF_DEBUG
   void dump() const {
     uint16_t tmp[8];
     vec_xst(value, 0, reinterpret_cast<vector_type *>(tmp));
@@ -29,6 +29,7 @@ template <typename T> struct base16 {
     }
     putchar('\n');
   }
+#endif
 };
 
 // Forward declaration

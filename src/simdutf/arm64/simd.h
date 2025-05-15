@@ -75,6 +75,7 @@ template <typename T> struct simd8;
 template <typename T, typename Mask = simd8<bool>> struct base_u8 {
   uint8x16_t value;
   static const int SIZE = sizeof(value);
+#ifdef SIMDUTF_DEBUG
   void dump() const {
     uint8_t temp[16];
     vst1q_u8(temp, *this);
@@ -84,6 +85,7 @@ template <typename T, typename Mask = simd8<bool>> struct base_u8 {
            temp[7], temp[8], temp[9], temp[10], temp[11], temp[12], temp[13],
            temp[14], temp[15]);
   }
+#endif // SIMDUTF_DEBUG
   // Conversion from/to SIMD register
   simdutf_really_inline base_u8(const uint8x16_t _value) : value(_value) {}
   simdutf_really_inline operator const uint8x16_t &() const {

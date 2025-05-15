@@ -3160,10 +3160,9 @@ base64_valid(char input, base64_options options = base64_default) noexcept;
 simdutf_warn_unused bool
 base64_valid(char16_t input, base64_options options = base64_default) noexcept;
 
-
 /**
- * Check if a character is a valid base64 character or the padding character ('=').
- * Checking a large input, character by character, is not computationally
+ * Check if a character is a valid base64 character or the padding character
+ * ('='). Checking a large input, character by character, is not computationally
  * efficient.
  *
  * @param input         the character to check
@@ -3171,9 +3170,11 @@ base64_valid(char16_t input, base64_options options = base64_default) noexcept;
  * @return true if the character is a base64 character, false otherwise.
  */
 simdutf_warn_unused bool
-base64_valid_or_padding(char input, base64_options options = base64_default) noexcept;
+base64_valid_or_padding(char input,
+                        base64_options options = base64_default) noexcept;
 simdutf_warn_unused bool
-base64_valid_or_padding(char16_t input, base64_options options = base64_default) noexcept;
+base64_valid_or_padding(char16_t input,
+                        base64_options options = base64_default) noexcept;
 
 /**
  * Convert a base64 input to a binary output.

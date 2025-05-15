@@ -370,7 +370,8 @@ template <> struct simd8<uint8_t> : base8_numeric<uint8_t> {
     return simd8<uint8_t>(
         (vector_type)vec_sl(this->value, (vector_type)vec_splat_u8(N)));
   }
-
+#ifdef SIMDUTF_DEBUG
+  // Debugging functions
   void dump() const {
     uint8_t tmp[16];
     store(tmp);
@@ -400,6 +401,7 @@ template <> struct simd8<uint8_t> : base8_numeric<uint8_t> {
     }
     putchar('\n');
   }
+#endif // SIMDUTF_DEBUG
 };
 
 // Signed bytes
