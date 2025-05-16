@@ -464,9 +464,8 @@ TEST(roundtrip_base64_with_garbage) {
       }
       std::vector<char> back(simdutf::maximal_binary_length_from_base64(
           buffer.data(), buffer.size()));
-      for (auto option :
-           {simdutf::last_chunk_handling_options::strict,
-            simdutf::last_chunk_handling_options::loose}) {
+      for (auto option : {simdutf::last_chunk_handling_options::strict,
+                          simdutf::last_chunk_handling_options::loose}) {
         simdutf::result r = implementation.base64_to_binary(
             buffer.data(), buffer.size(), back.data(),
             simdutf::base64_default_accept_garbage, option);

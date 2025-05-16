@@ -82,7 +82,6 @@ TEST(atomic_roundtrip_base64) {
         }
       }
       ASSERT_TRUE(back == source);
-
     }
   }
 }
@@ -133,7 +132,6 @@ TEST(atomic_span_roundtrip_base64) {
         }
       }
       ASSERT_TRUE(back == source);
-
     }
   }
 }

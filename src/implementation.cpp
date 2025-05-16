@@ -1520,13 +1520,13 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
     base64_options options,
     last_chunk_handling_options last_chunk_handling_options,
     bool decode_up_to_bad_char) noexcept {
-  #if defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
+    #if defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
   // We use a smaller buffer during fuzzing to more easily detect bugs.
   constexpr size_t buffer_size = 128;
-  #else
+    #else
   // Arbitrary block sizes: 4KB for input.
   constexpr size_t buffer_size = 4096;
-  #endif
+    #endif
   std::array<char, buffer_size> temp_buffer;
   const char_type *const input_init = input;
   size_t actual_out = 0;
@@ -1535,9 +1535,9 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
   while (!last_chunk) {
     last_chunk |= (temp_buffer.size() >= outlen - actual_out);
     size_t temp_outlen = (std::min)(temp_buffer.size(), outlen - actual_out);
-    r = base64_to_binary_safe(
-        input, length, temp_buffer.data(), temp_outlen, options,
-        last_chunk_handling_options, decode_up_to_bad_char);
+    r = base64_to_binary_safe(input, length, temp_buffer.data(), temp_outlen,
+                              options, last_chunk_handling_options,
+                              decode_up_to_bad_char);
     // We processed r.count characters of input.
     // We wrote temp_outlen bytes to temp_buffer.
     // If there is no ignorable characters,
@@ -1560,7 +1560,7 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
     length -= r.count;
     input += r.count;
 
-    if(r.error != error_code::OUTPUT_BUFFER_TOO_SMALL) {
+    if (r.error != error_code::OUTPUT_BUFFER_TOO_SMALL) {
       break;
     }
   }
