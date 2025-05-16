@@ -2170,10 +2170,6 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   static_assert(std::is_same<chartype, char>::value ||
                     std::is_same<chartype, char16_t>::value,
                 "Only char and char16_t are supported.");
-  if (false) {
-    return slow_base64_to_binary_safe_impl(
-        input, length, output, outlen, options, last_chunk_handling_options);
-  }
   size_t remaining_input_length = length;
   size_t remaining_output_length = outlen;
   size_t input_position = 0;
@@ -2184,7 +2180,6 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
       remaining_input_length,
       base64_length_from_binary(remaining_output_length / 3 * 3, options));
   bool done_with_partial = (safe_input == remaining_input_length);
-
   simdutf::full_result r =
       get_default_implementation()->base64_to_binary_details(
           input + input_position, safe_input, output + output_position, options,
@@ -2219,7 +2214,6 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
 
   // We have decoded some data, but we still have some data to decode.
   // We need to decode the rest of the input buffer.
-
   r = simdutf::scalar::base64::base64_to_binary_details_safe_impl(
       input + input_position, remaining_input_length, output + output_position,
       remaining_output_length, options, last_chunk_handling_options);
