@@ -95,7 +95,7 @@ void decode(std::span<const FromChar> base64_, const auto selected_option,
 
   bool bad = false;
   // When decode_up_to_bad_char is true, the error code should be consistent
-  if(decode_up_to_bad_char) {
+  if (decode_up_to_bad_char) {
     if (atomic.result.error != non_atomic.result.error) {
       std::cerr << "different error reported! " << atomic.result.error << " vs "
                 << non_atomic.result.error << '\n';
@@ -104,7 +104,8 @@ void decode(std::span<const FromChar> base64_, const auto selected_option,
   } else {
     // When decode_up_to_bad_char is false, they either both succeed or
     // both fail, although the error codes may differ.
-      if ((atomic.result.error == simdutf::simdutf::SUCCESS) != (non_atomic.result.error == simdutf::SUCCESS)) {
+    if ((atomic.result.error == simdutf::SUCCESS) !=
+        (non_atomic.result.error == simdutf::SUCCESS)) {
       std::cerr << "different error reported! " << atomic.result.error << " vs "
                 << non_atomic.result.error << '\n';
       bad = true;
