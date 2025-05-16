@@ -111,7 +111,7 @@ if(Python3_FOUND)
   set(SCRIPT ${SIMDUTF_SOURCE_DIR}/scripts/sse_validate_utf16le_testcases.py)
   add_custom_command(TARGET validate_utf16le_basic_tests
                    COMMAND ${Python3_EXECUTABLE} ${SCRIPT}
-                   DEPENDS ${SCRIPT}
+                   POST_BUILD
                    VERBATIM
   )
   unset(SCRIPT)

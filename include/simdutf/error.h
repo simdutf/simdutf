@@ -32,7 +32,7 @@ enum error_code {
   OTHER                     // Not related to validation/transcoding.
 };
 #if SIMDUTF_CPLUSPLUS17
-inline std::string_view to_string(error_code code) {
+inline std::string_view error_to_string(error_code code) {
   switch (code) {
   case SUCCESS:
     return "SUCCESS";

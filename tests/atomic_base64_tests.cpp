@@ -153,8 +153,6 @@ void compare_decode(
           b64_input.size());
     }
   }();
-  simdutf_log("==> base64_to_binary_safe (r1)");
-
   std::vector<char> outbuf1(decodesize);
   std::size_t outlen1 = outbuf1.size();
   const auto r1 = simdutf::base64_to_binary_safe(
@@ -164,7 +162,6 @@ void compare_decode(
   for (std::size_t i = outlen1; i < decodesize; ++i) {
     ASSERT_EQUAL(uint8_t(outbuf1.at(i)), 0);
   }
-  simdutf_log("==> atomic_base64_to_binary_safe (r2)");
   std::vector<char> outbuf2(decodesize);
   const auto [r2, outlen2] = simdutf::atomic_base64_to_binary_safe(
       s, outbuf2, options, last_chunk_options, decode_up_to_bad_char);
@@ -172,7 +169,7 @@ void compare_decode(
     ASSERT_EQUAL(uint8_t(outbuf2.at(i)), 0);
   }
   // both must agree on the kind of error
-  ASSERT_EQUAL(simdutf::to_string(r1.error), simdutf::to_string(r2.error));
+  ASSERT_EQUAL(r1.error, r2.error);
 
   // on success, must agree on the output
   if (r1.error == simdutf::error_code::SUCCESS) {

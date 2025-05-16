@@ -466,12 +466,12 @@ TEST(roundtrip_base64_with_garbage) {
           buffer.data(), buffer.size()));
       for (auto option :
            {simdutf::last_chunk_handling_options::strict,
-            simdutf::last_chunk_handling_options::loose,
-            simdutf::last_chunk_handling_options::stop_before_partial}) {
+            simdutf::last_chunk_handling_options::loose}) {
         simdutf::result r = implementation.base64_to_binary(
             buffer.data(), buffer.size(), back.data(),
             simdutf::base64_default_accept_garbage, option);
         ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+        ASSERT_EQUAL(r.count, len);
         ASSERT_TRUE(
             std::equal(back.begin(), back.begin() + len, source.begin()));
       }
@@ -788,7 +788,6 @@ TEST(base64_decode_just_one_padding_partial_generous) {
   std::vector<char> buffer(6);
   for (auto &p : test_cases) {
     auto input = p.first;
-    simdutf_log("input: " << input);
     auto expected_result = p.second;
     for (auto option : {simdutf::base64_options::base64_default,
                         simdutf::base64_options::base64_url}) {

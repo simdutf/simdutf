@@ -1520,17 +1520,13 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
     base64_options options,
     last_chunk_handling_options last_chunk_handling_options,
     bool decode_up_to_bad_char) noexcept {
-  simdutf_log("length: " << length << " outlen: " << outlen
-                         << "\n\toptions: " << simdutf::to_string(options)
-                         << " last_chunk_handling_options: "
-                         << simdutf::to_string(last_chunk_handling_options));
-  // #if defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
+  #if defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
   // We use a smaller buffer during fuzzing to more easily detect bugs.
   constexpr size_t buffer_size = 128;
-  // #else
+  #else
   // Arbitrary block sizes: 4KB for input.
-  // constexpr size_t buffer_size = 4096;
-  // #endif
+  constexpr size_t buffer_size = 4096;
+  #endif
   std::array<char, buffer_size> temp_buffer;
   const char_type *const input_init = input;
   size_t actual_out = 0;
@@ -1539,16 +1535,9 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
   while (!last_chunk) {
     last_chunk |= (temp_buffer.size() >= outlen - actual_out);
     size_t temp_outlen = (std::min)(temp_buffer.size(), outlen - actual_out);
-    simdutf_log("============calling base64_to_binary_safe with length: "
-                << length << " temp_outlen: " << temp_outlen
-                << " last_chunk: " << last_chunk_handling_options);
     r = base64_to_binary_safe(
         input, length, temp_buffer.data(), temp_outlen, options,
         last_chunk_handling_options, decode_up_to_bad_char);
-    simdutf_log("===========base64_to_binary_safe returned: "
-                << r.error << " count: " << r.count
-                << " temp_outlen: " << temp_outlen << "\n\t"
-                << simdutf::to_string(r.error) << " r.count=" << r.count);
     // We processed r.count characters of input.
     // We wrote temp_outlen bytes to temp_buffer.
     // If there is no ignorable characters,
@@ -2185,10 +2174,6 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
     return slow_base64_to_binary_safe_impl(
         input, length, output, outlen, options, last_chunk_handling_options);
   }
-  simdutf_log("length: " << length << " outlen: " << outlen
-                         << "\n\toptions: " << simdutf::to_string(options)
-                         << " last_chunk_handling_options: "
-                         << simdutf::to_string(last_chunk_handling_options));
   size_t remaining_input_length = length;
   size_t remaining_output_length = outlen;
   size_t input_position = 0;
@@ -2216,10 +2201,6 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   output_position += r.output_count;
   remaining_input_length -= r.input_count;
   remaining_output_length -= r.output_count;
-  simdutf_log("afer fast path input_position: "
-              << input_position << " output_position: " << output_position
-              << " remaining_input_length: " << remaining_input_length
-              << " remaining_output_length: " << remaining_output_length);
   if (r.error != simdutf::error_code::SUCCESS) {
     // There is an error. We return.
     if (decode_up_to_bad_char &&
@@ -2242,18 +2223,12 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   r = simdutf::scalar::base64::base64_to_binary_details_safe_impl(
       input + input_position, remaining_input_length, output + output_position,
       remaining_output_length, options, last_chunk_handling_options);
-  simdutf_log("slow: " << r.input_count << " " << r.output_count << " "
-                       << r.error);
 
   input_position += r.input_count;
   output_position += r.output_count;
   remaining_input_length -= r.input_count;
   remaining_output_length -= r.output_count;
 
-  simdutf_log("afer slow input_position: "
-              << input_position << " output_position: " << output_position
-              << " remaining_input_length: " << remaining_input_length
-              << " remaining_output_length: " << remaining_output_length);
   if (r.error != simdutf::error_code::SUCCESS) {
     // There is an error. We return.
     if (decode_up_to_bad_char &&

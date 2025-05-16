@@ -140,6 +140,27 @@ The scripts `./scripts/benchmark_print.py`and `./scripts/base64bench_print.py` c
 
 We recommend that you run our fuzzers as well, please see `fuzz/README.md`.
 
+
+
+## Tips
+
+### Running a single test
+
+Our testing binaries allow you to run specific tests which can be convenient:
+
+```
+cmake --build build --target base64_tests  && ./build/tests/base64_tests -t roundtrip_base64_with_garbage
+```
+
+### C++20
+
+We recommend running tests using C++20 since some of our functions and tests
+are only available when C++20 is set.
+
+```
+cmake -B build20  -DSIMDUTF_CXX_STANDARD=20
+```
+
 ## Documentation
 
 Update documentation for any changes: Modify README.md or other files as needed. Provide clear examples for new features. Ensure accuracy and clarity.
