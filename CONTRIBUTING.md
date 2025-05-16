@@ -161,6 +161,15 @@ are only available when C++20 is set.
 cmake -B build20  -DSIMDUTF_CXX_STANDARD=20
 ```
 
+
+### Adapting internal buffers
+
+Some bugs are easier to track if internal buffers are reduced.
+
+```
+cmake -B buildfuzz20  -DSIMDUTF_CXX_STANDARD=20 -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=ON
+```
+
 ## Documentation
 
 Update documentation for any changes: Modify README.md or other files as needed. Provide clear examples for new features. Ensure accuracy and clarity.
