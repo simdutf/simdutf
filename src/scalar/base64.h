@@ -148,6 +148,7 @@ full_result base64_tail_decode_impl(
     size_t padding_characters, // number of padding characters
                                // '=', typically 0, 1, 2.
     base64_options options, last_chunk_handling_options last_chunk_options) {
+  simdutf_log("base64_tail_decode_impl " << length << " " << outlen);
   char *dstend = dst + outlen;
   (void)dstend;
   // This looks like 10 branches, but we expect the compiler to resolve this to
@@ -256,9 +257,6 @@ full_result base64_tail_decode_impl(
       } else {
         // We have a space or a newline or garbage. We ignore it.
       }
-      simdutf_log("reading  " << ("" + c) << " code  " << int(code) << " idx "
-                              << idx << "at " << size_t(src - srcinit));
-
       src++;
     }
     if (idx != 4) {
@@ -574,6 +572,44 @@ simdutf_warn_unused full_result base64_to_binary_details_impl(
   return r;
 }
 
+template <typename char_type>
+simdutf_warn_unused full_result base64_to_binary_details_safe_impl(
+    const char_type *input, size_t length, char *output, size_t outlen,
+    base64_options options,
+    last_chunk_handling_options last_chunk_options) noexcept {
+  const bool ignore_garbage =
+      (options == base64_options::base64_url_accept_garbage) ||
+      (options == base64_options::base64_default_accept_garbage) ||
+      (options == base64_options::base64_default_or_url_accept_garbage);
+  auto ri = simdutf::scalar::base64::find_end(input, length, options);
+  size_t equallocation = ri.equallocation;
+  size_t equalsigns = ri.equalsigns;
+  length = ri.srclen;
+  size_t full_input_length = ri.full_input_length;
+  (void)full_input_length;
+  if (length == 0) {
+    if (!ignore_garbage && equalsigns > 0) {
+      return {INVALID_BASE64_CHARACTER, equallocation, 0};
+    }
+    return {SUCCESS, 0, 0};
+  }
+  full_result r = scalar::base64::base64_tail_decode_safe(
+      output, outlen, input, length, equalsigns, options, last_chunk_options);
+  simdutf_log("base64_tail_decode_safe returned "
+              << r.error << " " << r.input_count << " " << r.output_count);
+  r = scalar::base64::patch_tail_result(r, 0, 0, equallocation,
+                                        full_input_length, last_chunk_options);
+  if (last_chunk_options != stop_before_partial &&
+      r.error == error_code::SUCCESS && equalsigns > 0 && !ignore_garbage) {
+    // additional checks
+    if ((r.output_count % 3 == 0) ||
+        ((r.output_count % 3) + 1 + equalsigns != 4)) {
+      return {INVALID_BASE64_CHARACTER, equallocation, r.output_count};
+    }
+  }
+  return r;
+}
+
 simdutf_warn_unused size_t
 base64_length_from_binary(size_t length, base64_options options) noexcept {
   // By default, we use padding if we are not using the URL variant.
@@ -592,6 +628,38 @@ base64_length_from_binary(size_t length, base64_options options) noexcept {
   }
   return (length + 2) / 3 *
          4; // We use padding to make the length a multiple of 4.
+}
+
+// Return the length of the prefix that contains count base64 characters.
+// Thus, if count is 3, the function returns the length of the prefix
+// that contains 3 base64 characters.
+// The function returns (size_t)-1 if there is not enough base64 characters in
+// the input.
+template <typename char_type>
+simdutf_warn_unused size_t prefix_length(size_t count,
+                                         simdutf::base64_options options,
+                                         const char_type *input,
+                                         size_t length) noexcept {
+  size_t i = 0;
+  while (i < length && is_ignorable(input[i], options)) {
+    i++;
+  }
+  if (count == 0) {
+    return i; // duh!
+  }
+  for (; i < length; i++) {
+    if (is_ignorable(input[i], options)) {
+      continue;
+    }
+    // We have a base64 character or a padding character.
+    count--;
+    if (count == 0) {
+      return i + 1;
+    }
+  }
+  simdutf_log_assert(false, "You never get here");
+
+  return -1; // should never happen
 }
 
 } // namespace base64

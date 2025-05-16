@@ -384,7 +384,7 @@ template <> struct simd8<uint8_t> : base8_numeric<uint8_t> {
       }
     }
     putchar('\n');
-  #endif // SIMDUTF_LOGGING
+#endif // SIMDUTF_LOGGING
   }
 
   void dump_ascii() const {

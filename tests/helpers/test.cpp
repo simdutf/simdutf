@@ -1,5 +1,6 @@
 #include "test.h"
 
+#include <cstdlib>
 #include <stdexcept>
 #include <cstdio>
 
@@ -195,8 +196,7 @@ void run(const CommandLine &cmdline) {
     }
   }
   if (matching_implementation == 0) {
-    puts("not a single compatible implementation found, this is an error");
-    abort();
+    throw std::runtime_error("not a single compatible implementation found");
   }
 }
 
@@ -211,11 +211,20 @@ register_test::register_test(const char *name, test_procedure proc) {
 }
 
 int main(int argc, char *argv[]) {
-  const auto cmdline = CommandLine::parse(argc, argv);
+  try {
+    const auto cmdline = CommandLine::parse(argc, argv);
 
-  run(cmdline);
+    run(cmdline);
 
-  return 0;
+  } catch (const std::exception &e) {
+    fprintf(stderr, "Error: %s\n", e.what());
+    return EXIT_FAILURE;
+  } catch (...) {
+    fprintf(stderr, "Unknown error\n");
+    return EXIT_FAILURE;
+  }
+
+  return EXIT_SUCCESS;
 }
 
 } // namespace test

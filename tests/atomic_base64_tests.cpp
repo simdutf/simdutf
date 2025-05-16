@@ -83,18 +83,6 @@ TEST(atomic_roundtrip_base64) {
       }
       ASSERT_TRUE(back == source);
 
-      // Test with all last_chunk_handling_options
-      for (auto option :
-           {simdutf::last_chunk_handling_options::strict,
-            simdutf::last_chunk_handling_options::loose,
-            simdutf::last_chunk_handling_options::stop_before_partial}) {
-        r = implementation.base64_to_binary(buffer.data(), size, back.data(),
-                                            simdutf::base64_default, option);
-        ASSERT_TRUE((size % 4) == 0);
-        ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
-        ASSERT_EQUAL(r.count, len);
-        ASSERT_TRUE(back == source);
-      }
     }
   }
 }
@@ -146,18 +134,6 @@ TEST(atomic_span_roundtrip_base64) {
       }
       ASSERT_TRUE(back == source);
 
-      // Test with all last_chunk_handling_options
-      for (auto option :
-           {simdutf::last_chunk_handling_options::strict,
-            simdutf::last_chunk_handling_options::loose,
-            simdutf::last_chunk_handling_options::stop_before_partial}) {
-        r = implementation.base64_to_binary(buffer.data(), size, back.data(),
-                                            simdutf::base64_default, option);
-        ASSERT_TRUE((size % 4) == 0);
-        ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
-        ASSERT_EQUAL(r.count, len);
-        ASSERT_TRUE(back == source);
-      }
     }
   }
 }

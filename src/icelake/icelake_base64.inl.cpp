@@ -448,6 +448,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
             simdutf_log("INVALID_BASE64_CHARACTER size_t(src - srcinit) = "
                         << size_t(src - srcinit) << " size_t(dst - dstinit) = "
                         << size_t(dst - dstinit));
+            _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
+            dst += output_len;
             return {INVALID_BASE64_CHARACTER, equallocation,
                     size_t(dst - dstinit)};
 
