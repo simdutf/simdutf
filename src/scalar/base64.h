@@ -44,7 +44,6 @@ bool is_ignorable(char_type c, simdutf::base64_options options) {
   }
   return ignore_garbage;
 }
-
 template <class char_type>
 bool is_base64(char_type c, simdutf::base64_options options) {
   const uint8_t *to_base64 =
