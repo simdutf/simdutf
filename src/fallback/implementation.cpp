@@ -515,213 +515,33 @@ simdutf_warn_unused size_t implementation::utf32_length_from_utf8(
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_BASE64
+
 simdutf_warn_unused result implementation::base64_to_binary(
     const char *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
-  const bool ignore_garbage =
-      (options == base64_options::base64_url_accept_garbage) ||
-      (options == base64_options::base64_default_accept_garbage) ||
-      (options == base64_options::base64_default_or_url_accept_garbage);
-  while (length > 0 &&
-         scalar::base64::is_ascii_white_space(input[length - 1])) {
-    length--;
-  }
-  size_t equallocation =
-      length; // location of the first padding character if any
-  size_t equalsigns = 0;
-  if (length > 0 && input[length - 1] == '=') {
-    equallocation = length - 1;
-    length -= 1;
-    equalsigns++;
-    while (length > 0 &&
-           scalar::base64::is_ascii_white_space(input[length - 1])) {
-      length--;
-    }
-    if (length > 0 && input[length - 1] == '=') {
-      equallocation = length - 1;
-      equalsigns++;
-      length -= 1;
-    }
-  }
-  if (length == 0) {
-    if (!ignore_garbage && equalsigns > 0) {
-      if (last_chunk_options == last_chunk_handling_options::strict) {
-        return {BASE64_INPUT_REMAINDER, 0};
-      } else if (last_chunk_options ==
-                 last_chunk_handling_options::stop_before_partial) {
-        return {SUCCESS, 0};
-      }
-      return {INVALID_BASE64_CHARACTER, equallocation};
-    }
-    return {SUCCESS, 0};
-  }
-  result r = scalar::base64::base64_tail_decode(
-      output, input, length, equalsigns, options, last_chunk_options);
-  if (last_chunk_options != stop_before_partial &&
-      r.error == error_code::SUCCESS && equalsigns > 0 && !ignore_garbage) {
-    // additional checks
-    if ((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
-      return {INVALID_BASE64_CHARACTER, equallocation};
-    }
-  }
-  return r;
-}
-
-simdutf_warn_unused full_result implementation::base64_to_binary_details(
-    const char *input, size_t length, char *output, base64_options options,
-    last_chunk_handling_options last_chunk_options) const noexcept {
-  const bool ignore_garbage =
-      (options == base64_options::base64_url_accept_garbage) ||
-      (options == base64_options::base64_default_accept_garbage) ||
-      (options == base64_options::base64_default_or_url_accept_garbage);
-  while (length > 0 &&
-         scalar::base64::is_ascii_white_space(input[length - 1])) {
-    length--;
-  }
-  size_t equallocation =
-      length; // location of the first padding character if any
-  size_t equalsigns = 0;
-  if (length > 0 && input[length - 1] == '=') {
-    equallocation = length - 1;
-    length -= 1;
-    equalsigns++;
-    while (length > 0 &&
-           scalar::base64::is_ascii_white_space(input[length - 1])) {
-      length--;
-    }
-    if (length > 0 && input[length - 1] == '=') {
-      equallocation = length - 1;
-      equalsigns++;
-      length -= 1;
-    }
-  }
-  if (length == 0) {
-    if (!ignore_garbage && equalsigns > 0) {
-      if (last_chunk_options == last_chunk_handling_options::strict) {
-        return {BASE64_INPUT_REMAINDER, 0, 0};
-      } else if (last_chunk_options ==
-                 last_chunk_handling_options::stop_before_partial) {
-        return {SUCCESS, 0, 0};
-      }
-      return {INVALID_BASE64_CHARACTER, equallocation, 0};
-    }
-    return {SUCCESS, 0, 0};
-  }
-  full_result r = scalar::base64::base64_tail_decode(
-      output, input, length, equalsigns, options, last_chunk_options);
-  if (last_chunk_options != stop_before_partial &&
-      r.error == error_code::SUCCESS && equalsigns > 0 && !ignore_garbage) {
-    // additional checks
-    if ((r.output_count % 3 == 0) ||
-        ((r.output_count % 3) + 1 + equalsigns != 4)) {
-      return {INVALID_BASE64_CHARACTER, equallocation, r.output_count};
-    }
-  }
-  return r;
+  return simdutf::scalar::base64::base64_to_binary_details_impl(
+      input, length, output, options, last_chunk_options);
 }
 
 simdutf_warn_unused result implementation::base64_to_binary(
     const char16_t *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
-  const bool ignore_garbage =
-      (options == base64_options::base64_url_accept_garbage) ||
-      (options == base64_options::base64_default_accept_garbage) ||
-      (options == base64_options::base64_default_or_url_accept_garbage);
-  while (length > 0 &&
-         scalar::base64::is_ascii_white_space(input[length - 1])) {
-    length--;
-  }
-  size_t equallocation =
-      length; // location of the first padding character if any
-  size_t equalsigns = 0;
-  if (length > 0 && input[length - 1] == '=') {
-    equallocation = length - 1;
-    length -= 1;
-    equalsigns++;
-    while (length > 0 &&
-           scalar::base64::is_ascii_white_space(input[length - 1])) {
-      length--;
-    }
-    if (length > 0 && input[length - 1] == '=') {
-      equallocation = length - 1;
-      equalsigns++;
-      length -= 1;
-    }
-  }
-  if (length == 0) {
-    if (!ignore_garbage && equalsigns > 0) {
-      if (last_chunk_options == last_chunk_handling_options::strict) {
-        return {BASE64_INPUT_REMAINDER, 0};
-      } else if (last_chunk_options ==
-                 last_chunk_handling_options::stop_before_partial) {
-        return {SUCCESS, 0};
-      }
-      return {INVALID_BASE64_CHARACTER, equallocation};
-    }
-    return {SUCCESS, 0};
-  }
-  result r = scalar::base64::base64_tail_decode(
-      output, input, length, equalsigns, options, last_chunk_options);
-  if (last_chunk_options != stop_before_partial &&
-      r.error == error_code::SUCCESS && equalsigns > 0 && !ignore_garbage) {
-    // additional checks
-    if ((r.count % 3 == 0) || ((r.count % 3) + 1 + equalsigns != 4)) {
-      return {INVALID_BASE64_CHARACTER, equallocation};
-    }
-  }
-  return r;
+  return simdutf::scalar::base64::base64_to_binary_details_impl(
+      input, length, output, options, last_chunk_options);
+}
+
+simdutf_warn_unused full_result implementation::base64_to_binary_details(
+    const char *input, size_t length, char *output, base64_options options,
+    last_chunk_handling_options last_chunk_options) const noexcept {
+  return simdutf::scalar::base64::base64_to_binary_details_impl(
+      input, length, output, options, last_chunk_options);
 }
 
 simdutf_warn_unused full_result implementation::base64_to_binary_details(
     const char16_t *input, size_t length, char *output, base64_options options,
     last_chunk_handling_options last_chunk_options) const noexcept {
-  const bool ignore_garbage =
-      (options == base64_options::base64_url_accept_garbage) ||
-      (options == base64_options::base64_default_accept_garbage);
-  while (length > 0 &&
-         scalar::base64::is_ascii_white_space(input[length - 1])) {
-    length--;
-  }
-  size_t equallocation =
-      length; // location of the first padding character if any
-  size_t equalsigns = 0;
-  if (length > 0 && input[length - 1] == '=') {
-    equallocation = length - 1;
-    length -= 1;
-    equalsigns++;
-    while (length > 0 &&
-           scalar::base64::is_ascii_white_space(input[length - 1])) {
-      length--;
-    }
-    if (length > 0 && input[length - 1] == '=') {
-      equallocation = length - 1;
-      equalsigns++;
-      length -= 1;
-    }
-  }
-  if (length == 0) {
-    if (!ignore_garbage && equalsigns > 0) {
-      if (last_chunk_options == last_chunk_handling_options::strict) {
-        return {BASE64_INPUT_REMAINDER, 0, 0};
-      } else if (last_chunk_options ==
-                 last_chunk_handling_options::stop_before_partial) {
-        return {SUCCESS, 0, 0};
-      }
-      return {INVALID_BASE64_CHARACTER, equallocation, 0};
-    }
-    return {SUCCESS, 0, 0};
-  }
-  full_result r = scalar::base64::base64_tail_decode(
-      output, input, length, equalsigns, options, last_chunk_options);
-  if (last_chunk_options != stop_before_partial &&
-      r.error == error_code::SUCCESS && equalsigns > 0 && !ignore_garbage) {
-    // additional checks
-    if ((r.output_count % 3 == 0) ||
-        ((r.output_count % 3) + 1 + equalsigns != 4)) {
-      return {INVALID_BASE64_CHARACTER, equallocation, r.output_count};
-    }
-  }
-  return r;
+  return simdutf::scalar::base64::base64_to_binary_details_impl(
+      input, length, output, options, last_chunk_options);
 }
 
 size_t implementation::binary_to_base64(const char *input, size_t length,

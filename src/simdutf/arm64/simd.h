@@ -76,6 +76,7 @@ template <typename T, typename Mask = simd8<bool>> struct base_u8 {
   uint8x16_t value;
   static const int SIZE = sizeof(value);
   void dump() const {
+#ifdef SIMDUTF_LOGGING
     uint8_t temp[16];
     vst1q_u8(temp, *this);
     printf("[%04x, %04x, %04x, %04x, %04x, %04x, %04x, %04x,%04x, %04x, %04x, "
@@ -83,6 +84,7 @@ template <typename T, typename Mask = simd8<bool>> struct base_u8 {
            temp[0], temp[1], temp[2], temp[3], temp[4], temp[5], temp[6],
            temp[7], temp[8], temp[9], temp[10], temp[11], temp[12], temp[13],
            temp[14], temp[15]);
+#endif // SIMDUTF_LOGGING
   }
   // Conversion from/to SIMD register
   simdutf_really_inline base_u8(const uint8x16_t _value) : value(_value) {}

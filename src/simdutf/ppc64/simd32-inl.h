@@ -30,8 +30,8 @@ template <typename T> struct base32 {
     return vec_xst(this->value, 0, reinterpret_cast<vector_type *>(dst));
 #endif // defined(__clang__)
   }
-
   void dump(const char *name = nullptr) const {
+#ifdef SIMDUTF_LOGGING
     if (name != nullptr) {
       printf("%-10s = ", name);
     }
@@ -48,6 +48,7 @@ template <typename T> struct base32 {
       }
     }
     putchar('\n');
+#endif // SIMDUTF_LOGGING
   }
 };
 

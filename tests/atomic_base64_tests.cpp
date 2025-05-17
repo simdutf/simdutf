@@ -3,12 +3,15 @@
 #if SIMDUTF_CPLUSPLUS20
   #include <barrier>
 #endif
+#include <iostream>
+#include <iomanip>
 #include <random>
 #include <thread>
 #include <vector>
 
 #include <tests/helpers/test.h>
-
+using random_generator = std::mt19937;
+static random_generator::result_type seed = 42;
 // check if we are running with thread sanitizer
 #if defined(__clang__)
   #if __has_feature(thread_sanitizer)
@@ -27,7 +30,113 @@
 #endif
 
 #if !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF && SIMDUTF_SPAN
+TEST(atomic_roundtrip_base64) {
+  for (size_t len = 0; len < 2048; len++) {
+    std::vector<char> source(len, 0);
+    std::vector<char> buffer;
+    buffer.resize(implementation.base64_length_from_binary(len));
+    std::vector<char> back(len);
+    std::mt19937 gen((std::mt19937::result_type)(seed));
+    std::uniform_int_distribution<int> byte_generator{0, 255};
+    for (size_t trial = 0; trial < 10; trial++) {
+      for (size_t i = 0; i < len; i++) {
+        source[i] = byte_generator(gen);
+      }
+      size_t size = simdutf::atomic_binary_to_base64(
+          source.data(), source.size(), buffer.data());
+      ASSERT_EQUAL(size, implementation.base64_length_from_binary(len));
+      simdutf::result r =
+          implementation.base64_to_binary(buffer.data(), size, back.data());
+      ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+      ASSERT_EQUAL(r.count, len);
+      if (back != source) {
+        printf("=====input size %zu\n", len);
+        for (size_t i = 0; i < len; i++) {
+          if (back[i] != source[i]) {
+            printf("Mismatch at position %zu trial %zu\n", i, trial);
+          }
+          printf("%zu: %02x %02x\n", i, uint8_t(back[i]), uint8_t(source[i]));
+        }
+        printf("=====base64 size %zu\n", size);
+        for (size_t i = 0; i < size; i++) {
+          printf("%zu: %02x %c\n", i, uint8_t(buffer[i]), buffer[i]);
+        }
+      }
+      ASSERT_TRUE(back == source);
+      back.assign(len, 0);
+      size_t written_out = back.size();
+      r = simdutf::atomic_base64_to_binary_safe(buffer.data(), size,
+                                                back.data(), written_out);
+      ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+      ASSERT_EQUAL(r.count, size);
+      ASSERT_EQUAL(written_out, len);
+      if (back != source) {
+        printf("=====input size %zu\n", len);
+        for (size_t i = 0; i < len; i++) {
+          if (back[i] != source[i]) {
+            printf("Mismatch at position %zu trial %zu\n", i, trial);
+          }
+          printf("%zu: %02x %02x\n", i, uint8_t(back[i]), uint8_t(source[i]));
+        }
+        printf("=====base64 size %zu\n", size);
+        for (size_t i = 0; i < size; i++) {
+          printf("%zu: %02x %c\n", i, uint8_t(buffer[i]), buffer[i]);
+        }
+      }
+      ASSERT_TRUE(back == source);
+    }
+  }
+}
 
+TEST(atomic_binary_to_base64_large_roundtrip) {
+  const std::vector<char> binary(10000, '\0');
+  std::string b64output(binary.size() * 4 / 3 + 4, '\0');
+  const auto ret = simdutf::atomic_binary_to_base64(binary, b64output);
+  ASSERT_TRUE(ret > 0);
+  b64output.resize(ret);
+  std::vector<char> recovered(binary.size(), '?');
+  std::size_t outlen = recovered.size();
+  const auto ret2 = simdutf::atomic_base64_to_binary_safe(
+      b64output.data(), b64output.size(), recovered.data(), outlen);
+  ASSERT_EQUAL(ret2.error, simdutf::SUCCESS);
+  ASSERT_EQUAL(recovered, binary);
+}
+
+TEST(atomic_span_roundtrip_base64) {
+  for (size_t len = 0; len < 2048; len++) {
+    std::vector<char> source(len, 0);
+    std::vector<char> buffer;
+    buffer.resize(implementation.base64_length_from_binary(len));
+    std::vector<char> back(len);
+    std::mt19937 gen((std::mt19937::result_type)(seed));
+    std::uniform_int_distribution<int> byte_generator{0, 255};
+    for (size_t trial = 0; trial < 10; trial++) {
+      for (size_t i = 0; i < len; i++) {
+        source[i] = byte_generator(gen);
+      }
+      size_t size = simdutf::atomic_binary_to_base64(source, buffer);
+      ASSERT_EQUAL(size, implementation.base64_length_from_binary(len));
+      simdutf::result r =
+          implementation.base64_to_binary(buffer.data(), size, back.data());
+      ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+      ASSERT_EQUAL(r.count, len);
+      if (back != source) {
+        printf("=====input size %zu\n", len);
+        for (size_t i = 0; i < len; i++) {
+          if (back[i] != source[i]) {
+            printf("Mismatch at position %zu trial %zu\n", i, trial);
+          }
+          printf("%zu: %02x %02x\n", i, uint8_t(back[i]), uint8_t(source[i]));
+        }
+        printf("=====base64 size %zu\n", size);
+        for (size_t i = 0; i < size; i++) {
+          printf("%zu: %02x %c\n", i, uint8_t(buffer[i]), buffer[i]);
+        }
+      }
+      ASSERT_TRUE(back == source);
+    }
+  }
+}
 void compare_decode(
     const auto &b64_input, const std::size_t decodesize,
     const simdutf::base64_options options,
@@ -44,7 +153,6 @@ void compare_decode(
           b64_input.size());
     }
   }();
-
   std::vector<char> outbuf1(decodesize);
   std::size_t outlen1 = outbuf1.size();
   const auto r1 = simdutf::base64_to_binary_safe(
@@ -60,8 +168,14 @@ void compare_decode(
   for (std::size_t i = outlen2; i < decodesize; ++i) {
     ASSERT_EQUAL(uint8_t(outbuf2.at(i)), 0);
   }
-  // both must agree on the kind of error
-  ASSERT_EQUAL(r1.error, r2.error);
+  // both must agree on the kind of error: we do not guarantee that they
+  // agree on the error code unless decode_up_to_bad_char is set to true
+  if (decode_up_to_bad_char) {
+    ASSERT_EQUAL(r1.error, r2.error);
+  } else {
+    ASSERT_EQUAL(r1.error == simdutf::error_code::SUCCESS,
+                 r2.error == simdutf::error_code::SUCCESS);
+  }
 
   // on success, must agree on the output
   if (r1.error == simdutf::error_code::SUCCESS) {
@@ -76,6 +190,495 @@ void compare_decode(
     }
   }
 }
+
+template <typename T> std::string get_code(T c) {
+  static_assert(std::is_same_v<T, char> || std::is_same_v<T, char16_t>,
+                "T must be char or char16_t");
+
+  using output_type =
+      std::conditional_t<std::is_same_v<T, char>, uint8_t, uint16_t>;
+  auto value = static_cast<output_type>(c);
+  if (c == '\n') {
+    return "'\\n'";
+  } else if (c == '\r') {
+    return "'\\r'";
+  } else if (c == '\t') {
+    return "'\\t'";
+  } else if (c == '\f') {
+    return "'\\f'";
+  } else if (c == '\\') {
+    return "'\\\\'";
+  } else if (value >= 32 && value <= 126) { // Printable ASCII range
+    return "'" + std::string(1, static_cast<char>(value)) + "'";
+  } else {
+    std::ostringstream oss;
+    oss << "'" << (std::is_same_v<T, char> ? "\\x" : "\\u") << std::hex
+        << std::setw(std::is_same_v<T, char> ? 2 : 4) << std::setfill('0')
+        << static_cast<unsigned>(value) << "'";
+    return oss.str();
+  }
+}
+
+[[nodiscard]] std::uint64_t compute_hash(const auto &data) noexcept {
+  constexpr std::uint64_t fnv_prime = 1099511628211ULL;
+  constexpr std::uint64_t fnv_offset = 14695981039346656037ULL;
+
+  std::uint64_t hash = fnv_offset;
+  for (const auto &item : data) {
+    hash ^= static_cast<std::uint64_t>(item);
+    hash *= fnv_prime;
+  }
+  return hash;
+}
+
+// For debugging purposes, we want to see a careful comparison of the
+// output of the two implementations.
+bool compare_decode_verbose(
+    const auto &b64_input, const std::size_t decodesize,
+    const simdutf::base64_options options,
+    const simdutf::last_chunk_handling_options last_chunk_options,
+    const bool decode_up_to_bad_char) {
+  std::cerr << "// input size: " << b64_input.size() << "\n";
+  std::cerr << "// decode buffer size: " << decodesize << "\n";
+  std::cerr << "// options: " << options << "\n";
+  std::cerr << "// last chunk options: " << last_chunk_options << "\n";
+  std::cerr << "// decode up to bad char: " << decode_up_to_bad_char << "\n";
+  std::cerr << "// hash: " << compute_hash(b64_input) << "\n";
+  std::cerr << "// implementation tested: "
+            << simdutf::get_active_implementation()->name() << "\n";
+  std::cerr << "// ";
+  for (std::size_t i = 0; i < b64_input.size(); ++i) {
+    std::cerr << uint64_t(b64_input[i]) << ", ";
+    if ((i + 1) % 16 == 0) {
+      std::cerr << "\n";
+      std::cerr << "// ";
+    }
+  }
+  std::cerr << "\n";
+  #if FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+  std::cerr << "// fuzzing build mode: unsafe for production\n";
+  #else
+  std::cerr << "// fuzzing build mode: DISABLED, try enabling it when working "
+               "with fuzzers\n";
+  #endif
+  const auto s = [&]() {
+    if constexpr (sizeof(b64_input[0]) == 1) {
+      return std::span<const char>(
+          reinterpret_cast<const char *>(b64_input.data()), b64_input.size());
+    } else {
+      return std::span<const char16_t>(
+          reinterpret_cast<const char16_t *>(b64_input.data()),
+          b64_input.size());
+    }
+  }();
+
+  {
+    // We are going to compute the 'true' answer.
+    std::vector<char> largebuffer(s.size());
+    simdutf::full_result tr =
+        simdutf::get_active_implementation()->base64_to_binary_details(
+            s.data(), s.size(), largebuffer.data(), options,
+            last_chunk_options);
+    std::cerr << "// 'correct' output " << tr.output_count << " bytes\n";
+    std::cerr << "// 'correct' consumes " << tr.input_count << " characters\n";
+    std::cerr << "// 'correct' has error " << tr.error << "\n";
+  }
+
+  std::vector<char> outbuf1(decodesize);
+  std::size_t outlen1 = outbuf1.size();
+  const auto r1 = simdutf::base64_to_binary_safe(
+      s.data(), s.size(), outbuf1.data(), outlen1, options, last_chunk_options,
+      decode_up_to_bad_char);
+  // Check that the output is zeroed out
+  for (std::size_t i = outlen1; i < decodesize; ++i) {
+    if (uint8_t(outbuf1.at(i)) != 0) {
+      return false;
+    }
+  }
+  std::cerr << "// regular safe produces " << outlen1 << " bytes\n";
+  std::cerr << "// regular safe consumes " << r1.count << " characters\n";
+  std::cerr << "// regular has error " << r1.error << "\n";
+  if (r1.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {
+    std::cerr << "// regular has error INVALID_BASE64_CHARACTER\n";
+    if (r1.count < s.size()) {
+      std::cerr << "// at chararacter " << get_code(s[r1.count]) << "\n";
+    }
+  }
+  if (r1.error == simdutf::error_code::BASE64_INPUT_REMAINDER) {
+    std::cerr << "// regular has error BASE64_INPUT_REMAINDER\n";
+  }
+  if (r1.error == simdutf::error_code::OUTPUT_BUFFER_TOO_SMALL) {
+    std::cerr << "// regular has error OUTPUT_BUFFER_TOO_SMALL\n";
+  }
+  if (r1.error == simdutf::error_code::SUCCESS) {
+    std::cerr << "// regular has error SUCCESS\n";
+  }
+  std::vector<char> outbuf2(decodesize);
+  const auto [r2, outlen2] = simdutf::atomic_base64_to_binary_safe(
+      s, outbuf2, options, last_chunk_options, decode_up_to_bad_char);
+  for (std::size_t i = outlen2; i < decodesize; ++i) {
+    if (uint8_t(outbuf2.at(i)) != 0) {
+      return false;
+    }
+  }
+  std::cerr << "// atomic produces " << outlen2 << " bytes\n";
+  std::cerr << "// atomic consumes " << r2.count << " characters\n";
+  std::cerr << "// atomic has error " << r2.error << "\n";
+  if (r2.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {
+    std::cerr << "// atomic has error INVALID_BASE64_CHARACTER\n";
+    if (r2.count < s.size()) {
+      std::cerr << "// at chararacter " << get_code(s[r2.count]) << "\n";
+    }
+  }
+  if (r2.error == simdutf::error_code::BASE64_INPUT_REMAINDER) {
+    std::cerr << "// atomic has error BASE64_INPUT_REMAINDER\n";
+  }
+  if (r2.error == simdutf::error_code::OUTPUT_BUFFER_TOO_SMALL) {
+    std::cerr << "// atomic has error OUTPUT_BUFFER_TOO_SMALL\n";
+  }
+  if (r2.error == simdutf::error_code::SUCCESS) {
+    std::cerr << "// atomic has error SUCCESS\n";
+  }
+
+  // Both must agree on the kind of error
+  if (decode_up_to_bad_char) {
+    if (r1.error != r2.error) {
+      return false;
+    }
+  } else {
+    if ((r1.error == simdutf::error_code::SUCCESS) !=
+        (r2.error == simdutf::error_code::SUCCESS)) {
+      return false;
+    }
+  }
+
+  // On success, must agree on the output
+  if (r1.error == simdutf::error_code::SUCCESS) {
+    if (outlen1 != outlen2 || r1.count != r2.count) {
+      return false;
+    }
+    for (std::size_t i = 0; i < outlen1; ++i) {
+      if (+outbuf1.at(i) != +outbuf2.at(i)) {
+        return false;
+      }
+    }
+    // Ensure remainder of the output is equal
+    for (std::size_t i = outlen1; i < decodesize; ++i) {
+      if (+outbuf1.at(i) != +outbuf2.at(i)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+TEST(issue_202505170242) {
+  const std::vector<char> base64{
+      '\f', '\n', '=', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', '=', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+  };
+  compare_decode(base64, 62976, simdutf::base64_url_with_padding,
+                 simdutf::last_chunk_handling_options::strict, true);
+  ASSERT_TRUE(compare_decode_verbose(
+      base64, 62976, simdutf::base64_url_with_padding,
+      simdutf::last_chunk_handling_options::strict, true));
+};
+
+TEST(issue_202505170245) {
+  const std::vector<char> base64{
+      '\r', '\t', '\t', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',
+      ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',
+      'C',  '0',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',
+      ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',
+      ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',
+      ' ',  'C',  '0',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  '1',  ' ',
+      ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  '0',
+      ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',
+      ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  '5',  ' ',  ' ',  ' ',  ' ',
+      ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  '0',  ' ',  ' ',
+      ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  '\f',
+      '\f', '\f', ' ',  '\n', '\n', '\n', '=',
+  };
+  compare_decode(base64, 8236, simdutf::base64_default,
+                 simdutf::last_chunk_handling_options::strict, true);
+  ASSERT_TRUE(compare_decode_verbose(
+      base64, 8236, simdutf::base64_default,
+      simdutf::last_chunk_handling_options::strict, true));
+};
+
+TEST(issue_202505170241) {
+  const std::vector<char> base64{
+      'c',  'c',  'c',  '\t', '=',  '\n', '\r', '\n', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '=',
+  };
+  compare_decode(base64, 2621, simdutf::base64_url_with_padding,
+                 simdutf::last_chunk_handling_options::stop_before_partial,
+                 true);
+  ASSERT_TRUE(compare_decode_verbose(
+      base64, 2621, simdutf::base64_url_with_padding,
+      simdutf::last_chunk_handling_options::stop_before_partial, true));
+};
+
+TEST(issue_202505170219) {
+  const std::vector<char> base64{
+      '\r', 'c',  'c',  'c',  '\f', '\f', '\f', '-',  '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\n', '\n', '\n', '\n',
+      '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n',
+      '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n',
+      '\n', '\n', '\n', 'y',  'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'x',  'y',  'y',  'y',  'y',  '\t',
+      'D',  'y',  'i',  'y',  'D',  'D',  'y',  'y',  'y',  'y',  'y',  'x',
+      'y',  'y',  '\t', 'D',  '\t', 'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  '\n', '\n', '\n',
+      '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n',
+      '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n',
+      '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n',
+      '\n', '\n', '\n', '\n', '\f', '\f', '\f', '\f', '\f', '\f', '\t', '=',
+      '\t', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\t', '=',  '\t',
+  };
+  compare_decode(base64, 2621, simdutf::base64_url_with_padding,
+                 simdutf::last_chunk_handling_options::stop_before_partial,
+                 true);
+  ASSERT_TRUE(compare_decode_verbose(
+      base64, 2621, simdutf::base64_url_with_padding,
+      simdutf::last_chunk_handling_options::stop_before_partial, true));
+};
+
+TEST(issue_202505170211) {
+  const std::vector<char> base64{
+      'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'x',  'y',  'y',  'y',  'y',  '\t',
+      'D',  'y',  'i',  'y',  'D',  'D',  'y',  'y',  'y',  'y',  'y',  'x',
+      'y',  'y',  '\t', 'D',  '\t', 'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'x',  'y',  'y',  'y',  'y',  '\t', 'D',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'k',  'y',  'y',  'y',
+      'y',  'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'i',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'k',  'y',  'y',  'y',  'y',
+      'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  '\t', 'D',  'D',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'x',  'y',  'y',  'y',  'y',  '\f', '\f',
+      '\f', '\f', '\f', '\f', 'y',  'y',  'k',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'i',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'D',  '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', 'D',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'x',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', 'y',
+      'y',  'y',  'y',  'y',  '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '=',
+  };
+  compare_decode(base64, 31097, simdutf::base64_url_with_padding,
+                 simdutf::last_chunk_handling_options::strict, true);
+  ASSERT_TRUE(compare_decode_verbose(
+      base64, 31097, simdutf::base64_url_with_padding,
+      simdutf::last_chunk_handling_options::strict, true));
+};
+
+TEST(issue_202505170137) {
+  const std::vector<char> base64{
+      '\r', 'c',  'c',  'c',  '\f', '\f', '\f', '\f', '\f', 'p',  'C',  '\n',
+      '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n',
+      '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', 'C',  'C',  'C',
+      'C',  'C',  'C',  '1',  'C',  'C',  'C',  'C',  'C',  'C',  'C',  'C',
+      'C',  'C',  'C',  'C',  'C',  'C',  'C',  'C',  'C',  'C',  'C',  'C',
+      'C',  'C',  'C',  'C',  'C',  'C',  'C',  'C',  '\n', '\n', '\n', '\n',
+      '\n', '\n', '\n', '\n', 'C',  'C',  'C',  'C',  'C',  'C',  'C',  'C',
+      'C',  'C',  'C',  'C',  'C',  'C',  'C',  'C',  'C',  'C',  'C',  'C',
+      'C',  'C',  '_',  'C',  'C',  'C',  'r',  'r',  'r',  'r',  '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\n', '\n',
+      '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n',
+      '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '1',  '\f', '\f', '\t', '=',  '\t',
+      '\f', '\n', '\f', '\f', '\f', '\n', '=',
+  };
+  compare_decode(base64, 2621, simdutf::base64_url_with_padding,
+                 simdutf::last_chunk_handling_options::stop_before_partial,
+                 true);
+  ASSERT_TRUE(compare_decode_verbose(
+      base64, 2621, simdutf::base64_url_with_padding,
+      simdutf::last_chunk_handling_options::stop_before_partial, true));
+};
+
+TEST(issue_202505170122) {
+  const std::vector<char> base64{
+      'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'x',  'y',  'y',  'y',  'y',  '\t',
+      'D',  'y',  'i',  'y',  'D',  'D',  'y',  'y',  'y',  'y',  'y',  'x',
+      'y',  'y',  '\t', 'D',  '\t', 'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'x',  'y',  'y',  'y',  'y',  '\t', 'D',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'k',  'y',  'y',  'y',
+      'y',  'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'i',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  '\t', 'D',  'D',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'x',  'y',  'y',  'y',  'y',  '\f',
+      '\f', '\f', '\f', '\f', '\f', 'y',  'y',  'k',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'i',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'D',  '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', 'D',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'x',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'i',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'x',  'y',
+      'Y',  'y',  'D',  '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      'D',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'x',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', 'z',  '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '=',
+  };
+  compare_decode(base64, 31097, simdutf::base64_url_with_padding,
+                 simdutf::last_chunk_handling_options::strict, true);
+
+  ASSERT_TRUE(compare_decode_verbose(
+      base64, 31097, simdutf::base64_url_with_padding,
+      simdutf::last_chunk_handling_options::strict, true));
+};
+
+TEST(issue_202505170003) {
+  // input:
+  // _ccc_____pC__________________J___CCCCCC1CCCCCCCCCCCCCCCCCCCCCCCCCCCC_________CCCCCCCCCCCCCCCCCCCCCCCCCrrrr_____________________
+  // ___________________________________1___=_______=
+  // count=175
+  const std::vector<unsigned char> base64{
+      0x0d, 0x63, 0x63, 0x63, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x70, 0x43, 0x0a,
+      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a,
+      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x4a, 0x0a, 0x0a, 0x0a, 0x43, 0x43, 0x43,
+      0x43, 0x43, 0x43, 0x31, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43,
+      0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43,
+      0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x0a, 0x0a, 0x0a, 0x0a,
+      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43,
+      0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43,
+      0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x72, 0x72, 0x72, 0x72, 0x0c, 0x0c,
+      0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0a, 0x0a,
+      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a,
+      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a,
+      0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c,
+      0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x31, 0x0c, 0x0c, 0x09, 0x3d, 0x09,
+      0x0c, 0x0a, 0x0c, 0x0c, 0x0c, 0x0a, 0x3d,
+  };
+  compare_decode(base64, 2621, simdutf::base64_url_with_padding,
+                 simdutf::last_chunk_handling_options::stop_before_partial,
+                 true);
+};
+TEST(issue_16_05_2025_002) {
+  const std::vector<unsigned char> base64{
+      0x0d, 0x63, 0x63, 0x63, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x70, 0x43, 0x0a,
+      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a,
+      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x43, 0x43, 0x43,
+      0x43, 0x43, 0x43, 0x31, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43,
+      0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43,
+      0x43, 0x43, 0x79, 0x78, 0x6b, 0x42, 0x09, 0x44, 0x09, 0x44, 0x44, 0x79,
+      0x79, 0x79, 0x79, 0x79, 0x79, 0x78, 0x79, 0x79, 0x09, 0x44, 0x09, 0x44,
+      0x44, 0x79, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43,
+      0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x72, 0x72, 0x72, 0x72, 0x0c, 0x0c,
+      0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0a, 0x0a,
+      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a,
+      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a,
+      0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c,
+      0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x31, 0x0c, 0x0c, 0x09, 0x3d, 0x09,
+      0x0c, 0x0a, 0x0c, 0x0c, 0x0c, 0x0a, 0x3d,
+  };
+  compare_decode(base64, 2621, simdutf::base64_url_with_padding,
+                 simdutf::last_chunk_handling_options::stop_before_partial,
+                 true);
+};
+
+TEST(issue_16_05_2025_001) {
+  const std::vector<unsigned char> base64{
+      0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09,
+      0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09,
+      0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09,
+      0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09,
+      0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09,
+      0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09,
+      0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09,
+      0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09,
+      0x4c, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09,
+      0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x3d, 0x09, 0x09, 0x09,
+      0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x0d, 0x09,
+      0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09,
+      0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09,
+      0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09,
+      0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09,
+      0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0xa6, 0xa6, 0xa6,
+      0xa6, 0xa6, 0xa6, 0xa6, 0xa6, 0xa6, 0xa6, 0xa6, 0x8c, 0xa6, 0xa6, 0xa6,
+      0xa6, 0xa6, 0xa6, 0xa6, 0xa6, 0xa6, 0x33, 0xff, 0x32, 0xff, 0x32, 0x7a,
+      0x3d,
+  };
+  compare_decode(base64, 42662, simdutf::base64_default_no_padding,
+                 simdutf::last_chunk_handling_options::loose, false);
+};
+
+TEST(issue_06_05_2025_001) {
+  const std::vector<unsigned char> base64{
+      0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f,
+      0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f,
+      0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f,
+      0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f,
+      0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f,
+      0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f,
+      0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f,
+      0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f,
+      0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x0a, 0x0a,
+      0x0a, 0x6f, 0x6e, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f,
+      0x71, 0x71, 0x71, 0x71, 0x71, 0x71, 0x71, 0x71, 0x71, 0x71, 0x71, 0x71,
+      0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x6f, 0x0a,
+      0x0a, 0x0a, 0x0a, 0x0a, 0x67, 0x67, 0x67, 0x67, 0x67, 0x67, 0x67, 0x0a,
+      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x4b, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a,
+      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a,
+  };
+  compare_decode(base64, 28426, simdutf::base64_default,
+                 simdutf::last_chunk_handling_options::stop_before_partial,
+                 true);
+};
 
 template <typename char_type>
 std::vector<char_type> add_simple_spaces(std::vector<char_type> &v,
@@ -610,23 +1213,13 @@ TEST(gets_different_error2) {
 };
 
 TEST(issue_001) {
-  const std::vector<unsigned char> base64{
-      0x0a, 0x0d, 0x0d, 0x63, 0x63, 0x63, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c,
-      0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0a, 0x0a, 0x0a,
-      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a,
-      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a,
-      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a,
-      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a,
-      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a,
-      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a,
-      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a,
-      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a,
-      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a,
-      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a,
-      0x0a, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x09, 0x3d, 0x09, 0x0a,
-      0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c,
-      0x0c, 0x09, 0x3d, 0x09, 0x0a,
-  };
+  // This string has two padding characters at the end following 3 base64
+  // characters.
+  //
+  std::string base64 =
+      "   ccc                                                                  "
+      "                                                                        "
+      "         =                =  ";
   compare_decode(base64, 65131, simdutf::base64_default,
                  simdutf::last_chunk_handling_options::stop_before_partial,
                  true);

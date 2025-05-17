@@ -33,12 +33,13 @@ template <> struct simd32<uint32_t> {
   template <int N> simdutf_really_inline simd32<uint32_t> shl() const {
     return _mm_slli_epi32(value, N);
   }
-
   void dump() const {
+#ifdef SIMDUTF_LOGGING
     printf("[%08x, %08x, %08x, %08x]\n", uint32_t(_mm_extract_epi32(value, 0)),
            uint32_t(_mm_extract_epi32(value, 1)),
            uint32_t(_mm_extract_epi32(value, 2)),
            uint32_t(_mm_extract_epi32(value, 3)));
+#endif // SIMDUTF_LOGGING
   }
 
   // operators

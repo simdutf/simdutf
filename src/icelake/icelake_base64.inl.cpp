@@ -234,38 +234,14 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       default_or_url ? tables::base64::to_base64_default_or_url_value
                      : (base64_url ? tables::base64::to_base64_url_value
                                    : tables::base64::to_base64_value);
-  size_t equallocation =
-      srclen; // location of the first padding character if any
-  size_t equalsigns = 0;
-  // skip trailing spaces
-  while (!ignore_garbage && srclen > 0 &&
-         scalar::base64::is_eight_byte(src[srclen - 1]) &&
-         to_base64[uint8_t(src[srclen - 1])] == 64) {
-    srclen--;
-  }
-  if (!ignore_garbage && srclen > 0 && src[srclen - 1] == '=') {
-    equallocation = srclen - 1;
-    srclen--;
-    equalsigns = 1;
-    // skip trailing spaces
-    while (srclen > 0 && scalar::base64::is_eight_byte(src[srclen - 1]) &&
-           to_base64[uint8_t(src[srclen - 1])] == 64) {
-      srclen--;
-    }
-    if (srclen > 0 && src[srclen - 1] == '=') {
-      equallocation = srclen - 1;
-      srclen--;
-      equalsigns = 2;
-    }
-  }
+  auto ri = simdutf::scalar::base64::find_end(src, srclen, options);
+  size_t equallocation = ri.equallocation;
+  size_t padding_characters = ri.equalsigns;
+  srclen = ri.srclen;
+  size_t full_input_length = ri.full_input_length;
+  (void)full_input_length;
   if (srclen == 0) {
-    if (!ignore_garbage && equalsigns > 0) {
-      if (last_chunk_options == last_chunk_handling_options::strict) {
-        return {BASE64_INPUT_REMAINDER, 0, 0};
-      } else if (last_chunk_options ==
-                 last_chunk_handling_options::stop_before_partial) {
-        return {SUCCESS, 0, 0};
-      }
+    if (!ignore_garbage && padding_characters > 0) {
       return {INVALID_BASE64_CHARACTER, equallocation, 0};
     }
     return {SUCCESS, 0, 0};
@@ -360,99 +336,119 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         5, 6, 0, 1, 2);
     const __m512i shuffled = _mm512_permutexvar_epi8(pack, merged);
 
+    // The idea here is that in loose mode,
+    // if there is padding at all, it must be used
+    // to form 4-wise chunk. However, in loose mode,
+    // we do accept no padding at all.
     if (!ignore_garbage &&
-        last_chunk_options == last_chunk_handling_options::strict &&
-        (idx != 1) && ((idx + equalsigns) & 3) != 0) {
-      // The partial chunk was at src - idx
-      _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
-      dst += output_len;
-      return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
-              size_t(dst - dstinit)};
-    } else if (!ignore_garbage &&
-               last_chunk_options ==
-                   last_chunk_handling_options::stop_before_partial &&
-               ((idx + equalsigns) & 3) != 0) {
-      _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
-      dst += output_len;
-      // We rewind src to before the partial chunk
-      size_t characters_to_skip = idx;
-      while (characters_to_skip > 0) {
-        src--;
-        auto c = *src;
-        uint8_t code = to_base64[uint8_t(c)];
-        if (simdutf::scalar::base64::is_eight_byte(c) && code <= 63) {
-          characters_to_skip--;
-        }
-      }
-      return {SUCCESS, size_t(src - srcinit), size_t(dst - dstinit)};
-    } else {
-      if (idx == 2) {
-        if (!ignore_garbage &&
-            last_chunk_options == last_chunk_handling_options::strict) {
-          uint32_t triple = (uint32_t(bufferptr[-2]) << 3 * 6) +
-                            (uint32_t(bufferptr[-1]) << 2 * 6);
-          if (triple & 0xffff) {
-            _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
-            dst += output_len;
-            return {BASE64_EXTRA_BITS, size_t(src - srcinit),
-                    size_t(dst - dstinit)};
-          }
-        }
-        output_mask = (output_mask << 1) | 1;
-        output_len += 1;
-        _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
-        dst += output_len;
-      } else if (idx == 3) {
-        if (!ignore_garbage &&
-            last_chunk_options == last_chunk_handling_options::strict) {
-          uint32_t triple = (uint32_t(bufferptr[-3]) << 3 * 6) +
-                            (uint32_t(bufferptr[-2]) << 2 * 6) +
-                            (uint32_t(bufferptr[-1]) << 1 * 6);
-          if (triple & 0xff) {
-            _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
-            dst += output_len;
-            return {BASE64_EXTRA_BITS, size_t(src - srcinit),
-                    size_t(dst - dstinit)};
-          }
-        }
-        output_mask = (output_mask << 2) | 3;
-        output_len += 2;
-        _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
-        dst += output_len;
-      } else if (!ignore_garbage && idx == 1 &&
-                 last_chunk_options !=
-                     last_chunk_handling_options::stop_before_partial) {
-        _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
-        dst += output_len;
-        return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
-                size_t(dst - dstinit)};
-      } else {
-        _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
-        dst += output_len;
-      }
-    }
+        last_chunk_options == last_chunk_handling_options::loose &&
+        (idx >= 2) && padding_characters > 0 &&
+        ((idx + padding_characters) & 3) != 0) {
+      return {INVALID_BASE64_CHARACTER, size_t(src - srcinit),
+              size_t(dst - dstinit), true};
+    } else
 
+      // The idea here is that in strict mode, we do not want to accept
+      // incomplete base64 chunks. So if the chunk was otherwise valid, we
+      // return BASE64_INPUT_REMAINDER.
+      if (!ignore_garbage &&
+          last_chunk_options == last_chunk_handling_options::strict &&
+          (idx >= 2) && ((idx + padding_characters) & 3) != 0) {
+        // The partial chunk was at src - idx
+        _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
+        dst += output_len;
+        return {BASE64_INPUT_REMAINDER, equallocation, size_t(dst - dstinit)};
+      } else
+        // The idea here is that in stop_before_partial mode, we stop right away
+        // if we have a partial chunk that would be valid.
+        if (last_chunk_options ==
+                last_chunk_handling_options::stop_before_partial &&
+            (idx >= 2 ||
+             padding_characters ==
+                 0)) { // There are two cases where stop_before_partial
+                       // succeeds: either we have idx >= 2 or we have
+                       // padding_characters == 0
+          _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
+          dst += output_len;
+          // we need to rewind src to before the partial chunk
+          size_t characters_to_skip = idx;
+          while (characters_to_skip > 0) {
+            src--;
+            auto c = *src;
+            uint8_t code = to_base64[uint8_t(c)];
+            if (simdutf::scalar::base64::is_eight_byte(c) && code <= 63) {
+              characters_to_skip--;
+            }
+          }
+          return {SUCCESS, size_t(src - srcinit), size_t(dst - dstinit)};
+        } else {
+          if (idx == 2) {
+            if (!ignore_garbage &&
+                last_chunk_options == last_chunk_handling_options::strict) {
+              uint32_t triple = (uint32_t(bufferptr[-2]) << 3 * 6) +
+                                (uint32_t(bufferptr[-1]) << 2 * 6);
+              if (triple & 0xffff) {
+                _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
+                dst += output_len;
+                return {BASE64_EXTRA_BITS, size_t(src - srcinit),
+                        size_t(dst - dstinit)};
+              }
+            }
+            output_mask = (output_mask << 1) | 1;
+            output_len += 1;
+            _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
+            dst += output_len;
+          } else if (idx == 3) {
+            if (!ignore_garbage &&
+                last_chunk_options == last_chunk_handling_options::strict) {
+              uint32_t triple = (uint32_t(bufferptr[-3]) << 3 * 6) +
+                                (uint32_t(bufferptr[-2]) << 2 * 6) +
+                                (uint32_t(bufferptr[-1]) << 1 * 6);
+              if (triple & 0xff) {
+                _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
+                dst += output_len;
+                return {BASE64_EXTRA_BITS, size_t(src - srcinit),
+                        size_t(dst - dstinit)};
+              }
+            }
+            output_mask = (output_mask << 2) | 3;
+            output_len += 2;
+            _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
+            dst += output_len;
+          } else if (!ignore_garbage && idx == 1 &&
+                     (last_chunk_options !=
+                          last_chunk_handling_options::stop_before_partial ||
+                      (last_chunk_options ==
+                           last_chunk_handling_options::stop_before_partial &&
+                       padding_characters > 0))) {
+            _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
+            dst += output_len;
+            return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
+                    size_t(dst - dstinit)};
+          } else if (!ignore_garbage && idx == 0 && padding_characters > 0) {
+            _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
+            dst += output_len;
+            return {INVALID_BASE64_CHARACTER, equallocation,
+                    size_t(dst - dstinit)};
+          } else {
+            _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
+            dst += output_len;
+          }
+        }
     if (!ignore_garbage && last_chunk_options != stop_before_partial &&
-        equalsigns > 0) {
+        padding_characters > 0) {
       size_t output_count = size_t(dst - dstinit);
       if ((output_count % 3 == 0) ||
-          ((output_count % 3) + 1 + equalsigns != 4)) {
+          ((output_count % 3) + 1 + padding_characters != 4)) {
         return {INVALID_BASE64_CHARACTER, equallocation, output_count};
       }
     }
-    return {SUCCESS, srclen, size_t(dst - dstinit)};
+    return {SUCCESS, size_t(src - srcinit), size_t(dst - dstinit)};
   }
-  if (!ignore_garbage && equalsigns > 0) {
-    if (last_chunk_options == last_chunk_handling_options::strict) {
-      return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
-              size_t(dst - dstinit)};
-    }
-    if (last_chunk_options ==
-        last_chunk_handling_options::stop_before_partial) {
-      return {SUCCESS, size_t(src - srcinit), size_t(dst - dstinit)};
-    }
+
+  if (!ignore_garbage && padding_characters > 0) {
     if ((size_t(dst - dstinit) % 3 == 0) ||
-        ((size_t(dst - dstinit) % 3) + 1 + equalsigns != 4)) {
+        ((size_t(dst - dstinit) % 3) + 1 + padding_characters != 4)) {
       return {INVALID_BASE64_CHARACTER, equallocation, size_t(dst - dstinit)};
     }
   }

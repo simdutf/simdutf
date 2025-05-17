@@ -26,7 +26,7 @@ instructions here.
  - [libfuzzer documentation](https://llvm.org/docs/LibFuzzer.html)
 ## Building the fuzzers locally
 
-Ensure you have clang installed.
+Ensure you have clang installed with fuzzing support. Under macOS or other platforms, fuzzing support may not be enabled by default.
 
 ```shell
 cd fuzz

@@ -14,8 +14,8 @@ template <typename T> struct base16 {
 
   // Conversion from SIMD register
   simdutf_really_inline base16(const vector_type _value) : value{_value} {}
-
   void dump() const {
+#ifdef SIMDUTF_LOGGING
     uint16_t tmp[8];
     vec_xst(value, 0, reinterpret_cast<vector_type *>(tmp));
     for (int i = 0; i < 8; i++) {
@@ -28,6 +28,7 @@ template <typename T> struct base16 {
       }
     }
     putchar('\n');
+#endif // SIMDUTF_LOGGING
   }
 };
 

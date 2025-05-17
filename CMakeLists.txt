@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.15)
 project(simdutf
   DESCRIPTION "Fast Unicode validation, transcoding and processing"
   LANGUAGES CXX
-  VERSION 7.0.0
+  VERSION 7.1.0
 )
 
 include (TestBigEndian)
@@ -23,8 +23,8 @@ include(GNUInstallDirs)
 include(CTest)
 include(cmake/simdutf-flags.cmake)
 
-set(SIMDUTF_LIB_VERSION "21.0.0" CACHE STRING "simdutf library version")
-set(SIMDUTF_LIB_SOVERSION "21" CACHE STRING "simdutf library soversion")
+set(SIMDUTF_LIB_VERSION "23.0.0" CACHE STRING "simdutf library version")
+set(SIMDUTF_LIB_SOVERSION "23" CACHE STRING "simdutf library soversion")
 option(SIMDUTF_TESTS "Whether the tests are included as part of the CMake Build." ON)
 option(SIMDUTF_BENCHMARKS "Whether the benchmarks are included as part of the CMake Build." OFF)
 option(SIMDUTF_TOOLS "Whether the tools are included as part of the CMake build. Requires C++17 or better." ON)
@@ -32,7 +32,12 @@ option(SIMDUTF_ICONV "Whether to use iconv as part of the CMake build if availab
 option(SIMDUTF_FUZZERS "Whether to build the fuzzers." OFF)
 option(SIMDUTF_COVERAGE "Enable code coverage collection during tests (only GCC and Clang)." OFF)
 option(SIMDUTF_INTERNAL_TESTS "Whether to test also internal procedures. Useful mostly for developers, not users." OFF)
-
+option(SIMDUTF_LOGGING "Whether to enable logging (this should never be used in binary releases)." OFF)
+option(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION "Whether to enable unsafe fuzzing mode." OFF)
+if(SIMDUTF_LOGGING AND DEFINED CMAKE_CXX_STANDARD AND CMAKE_CXX_STANDARD LESS 17)
+    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+endif()
 set(SIMDUTF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(src)

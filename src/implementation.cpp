@@ -1528,14 +1528,16 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
   constexpr size_t buffer_size = 4096;
     #endif
   std::array<char, buffer_size> temp_buffer;
-  const char_type *input_init = input;
+  const char_type *const input_init = input;
   size_t actual_out = 0;
-  while (true) {
-    const bool last_chunk = (temp_buffer.size() >= outlen - actual_out);
+  bool last_chunk = false;
+  result r;
+  while (!last_chunk) {
+    last_chunk |= (temp_buffer.size() >= outlen - actual_out);
     size_t temp_outlen = (std::min)(temp_buffer.size(), outlen - actual_out);
-    result r = base64_to_binary_safe(
-        input, length, temp_buffer.data(), temp_outlen, options,
-        last_chunk_handling_options, decode_up_to_bad_char);
+    r = base64_to_binary_safe(input, length, temp_buffer.data(), temp_outlen,
+                              options, last_chunk_handling_options,
+                              decode_up_to_bad_char);
     // We processed r.count characters of input.
     // We wrote temp_outlen bytes to temp_buffer.
     // If there is no ignorable characters,
@@ -1552,20 +1554,23 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
     // We wrote temp_outlen bytes to temp_buffer.
     // We need to copy them to output.
     // Copy with relaxed atomic operations to the output
+    simdutf_log_assert(temp_outlen <= outlen - actual_out,
+                       "Output buffer is too small");
+    simdutf_log_assert(temp_outlen <= temp_buffer.size(),
+                       "Output buffer is too small");
+
     simdutf::scalar::memcpy_atomic_write(output + actual_out,
                                          temp_buffer.data(), temp_outlen);
     actual_out += temp_outlen;
     length -= r.count;
     input += r.count;
 
-    // If we are done, return the result, the only case where
-    // we are not done is when we ran out of space in output.
-    if (last_chunk || r.error != error_code::OUTPUT_BUFFER_TOO_SMALL) {
-      outlen = actual_out;
-      r.count = size_t(input - input_init);
-      return r;
+    if (r.error != error_code::OUTPUT_BUFFER_TOO_SMALL) {
+      break;
     }
   }
+  outlen = actual_out;
+  return {r.error, size_t(input - input_init)};
 }
 
 simdutf_warn_unused result atomic_base64_to_binary_safe(
@@ -2093,36 +2098,15 @@ simdutf_warn_unused result slow_base64_to_binary_safe_impl(
     base64_options options,
     last_chunk_handling_options last_chunk_options) noexcept {
   const bool ignore_garbage = (options & base64_default_accept_garbage) != 0;
-  while (length > 0 &&
-         scalar::base64::is_ascii_white_space(input[length - 1])) {
-    length--;
-  }
-  size_t equallocation =
-      length; // location of the first padding character if any
-  size_t equalsigns = 0;
-  if (length > 0 && input[length - 1] == '=') {
-    equallocation = length - 1;
-    length -= 1;
-    equalsigns++;
-    while (length > 0 &&
-           scalar::base64::is_ascii_white_space(input[length - 1])) {
-      length--;
-    }
-    if (length > 0 && input[length - 1] == '=') {
-      equallocation = length - 1;
-      equalsigns++;
-      length -= 1;
-    }
-  }
+  auto ri = simdutf::scalar::base64::find_end(input, length, options);
+  size_t equallocation = ri.equallocation;
+  size_t equalsigns = ri.equalsigns;
+  length = ri.srclen;
+  size_t full_input_length = ri.full_input_length;
+  (void)full_input_length;
   if (length == 0) {
     outlen = 0;
     if (!ignore_garbage && equalsigns > 0) {
-      if (last_chunk_options == last_chunk_handling_options::strict) {
-        return {BASE64_INPUT_REMAINDER, 0};
-      } else if (last_chunk_options ==
-                 last_chunk_handling_options::stop_before_partial) {
-        return {SUCCESS, 0};
-      }
       return {INVALID_BASE64_CHARACTER, equallocation};
     }
     return {SUCCESS, 0};
@@ -2141,8 +2125,11 @@ simdutf_warn_unused result slow_base64_to_binary_safe_impl(
   // and the number of bytes read from the input buffer.
   // The function will also return an error code if the input buffer is not
   // valid base64.
-  result r = scalar::base64::base64_tail_decode_safe(
+  auto r = scalar::base64::base64_tail_decode_safe(
       output, outlen, input, length, equalsigns, options, last_chunk_options);
+  r = scalar::base64::patch_tail_result(r, 0, 0, equallocation,
+                                        full_input_length, last_chunk_options);
+  outlen = r.output_count;
   if (last_chunk_options != stop_before_partial &&
       r.error == error_code::SUCCESS && equalsigns > 0) {
     // additional checks
@@ -2150,7 +2137,32 @@ simdutf_warn_unused result slow_base64_to_binary_safe_impl(
       r.error = error_code::INVALID_BASE64_CHARACTER;
     }
   }
-  return r;
+  return {r.error, r.input_count}; // we cannot return r itself because it gets
+                                   // converted to error/output_count
+}
+simdutf_warn_unused bool base64_ignorable(char input,
+                                          base64_options options) noexcept {
+  return scalar::base64::is_ignorable(input, options);
+}
+simdutf_warn_unused bool base64_ignorable(char16_t input,
+                                          base64_options options) noexcept {
+  return scalar::base64::is_ignorable(input, options);
+}
+simdutf_warn_unused bool base64_valid(char input,
+                                      base64_options options) noexcept {
+  return scalar::base64::is_base64(input, options);
+}
+simdutf_warn_unused bool base64_valid(char16_t input,
+                                      base64_options options) noexcept {
+  return scalar::base64::is_base64(input, options);
+}
+simdutf_warn_unused bool
+base64_valid_or_padding(char input, base64_options options) noexcept {
+  return scalar::base64::is_base64_or_padding(input, options);
+}
+simdutf_warn_unused bool
+base64_valid_or_padding(char16_t input, base64_options options) noexcept {
+  return scalar::base64::is_base64_or_padding(input, options);
 }
 
 template <typename chartype>
@@ -2159,237 +2171,75 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
     base64_options options,
     last_chunk_handling_options last_chunk_handling_options,
     bool decode_up_to_bad_char) noexcept {
+
   static_assert(std::is_same<chartype, char>::value ||
                     std::is_same<chartype, char16_t>::value,
                 "Only char and char16_t are supported.");
-  // The implementation could be nicer, but we expect that most times, the user
-  // will provide us with a buffer that is large enough.
-  size_t max_length = maximal_binary_length_from_base64(input, length);
-  if (outlen >= max_length) {
-    // fast path
-    full_result r = get_default_implementation()->base64_to_binary_details(
-        input, length, output, options, last_chunk_handling_options);
+  size_t remaining_input_length = length;
+  size_t remaining_output_length = outlen;
+  size_t input_position = 0;
+  size_t output_position = 0;
+
+  // We also do a first pass using the fast path to decode as much as possible
+  size_t safe_input = (std::min)(
+      remaining_input_length,
+      base64_length_from_binary(remaining_output_length / 3 * 3, options));
+  bool done_with_partial = (safe_input == remaining_input_length);
+  simdutf::full_result r =
+      get_default_implementation()->base64_to_binary_details(
+          input + input_position, safe_input, output + output_position, options,
+          done_with_partial
+              ? last_chunk_handling_options
+              : simdutf::last_chunk_handling_options::stop_before_partial);
+  simdutf_log_assert(r.input_count <= safe_input,
+                     "You should not read more than safe_input");
+  simdutf_log_assert(r.output_count <= remaining_output_length,
+                     "You should not write more than remaining_output_length");
+
+  // Technically redundant, but we want to be explicit about it.
+  input_position += r.input_count;
+  output_position += r.output_count;
+  remaining_input_length -= r.input_count;
+  remaining_output_length -= r.output_count;
+  if (r.error != simdutf::error_code::SUCCESS) {
+    // There is an error. We return.
     if (decode_up_to_bad_char &&
         r.error == error_code::INVALID_BASE64_CHARACTER) {
-      // We need to use the slow path because we want to make sure that
-      // we write as much data as possible to the output buffer to meet
-      // the requirements of the JavaScript standard.
       return slow_base64_to_binary_safe_impl(
           input, length, output, outlen, options, last_chunk_handling_options);
     }
-    if (r.error != error_code::INVALID_BASE64_CHARACTER &&
-        r.error != error_code::BASE64_EXTRA_BITS) {
-      outlen = r.output_count;
-      if (last_chunk_handling_options == stop_before_partial) {
-        if ((r.output_count % 3) != 0) {
-          bool empty_trail = true;
-          for (size_t i = r.input_count; i < length; i++) {
-            if (!scalar::base64::is_ascii_white_space_or_padding(input[i])) {
-              empty_trail = false;
-              break;
-            }
-          }
-          if (empty_trail) {
-            r.input_count = length;
-          }
-        }
-        return {r.error, r.input_count};
-      }
-      return {r.error, length};
-    }
-    return r;
+    outlen = output_position;
+    return {r.error, input_position};
+  }
+  if (done_with_partial) {
+    // We are done. We have decoded everything.
+    outlen = output_position;
+    return {simdutf::error_code::SUCCESS, input_position};
   }
 
-  //
-  //
-  // We may not have enough space in the output buffer.
-  // So we may need to decode in two steps.
-  //
-  // We can split the input in two parts:
-  // - the first part is small enough so that we are sure that we can decode
-  //   it in the output buffer
-  // - the second part is the rest of the input buffer
-  //   We will decode it in a separate call to base64_tail_decode_safe.
-  //   This is the slow path.
-  //
-  // Now, there is a potential problem with the first part: it may be truncated.
-  // Thus, for example, we might have something like:
-  //
-  // [ AAAA   A   B     A      ][ C]
-  //
-  // where I have marked the two regions with square brakets.
-  // So in the first step, we do not what to do to partial decoding at all.
-  //
-  // Thus we will decode the first part using the stop_before_partial model
-  // no matter what the last_chunk_handling_options provided by the user is.
-  //
-  // So it works like this... given
-  // [ AAAA   A   B     A          C]
-  //
-  // We first select a small enough prefix so that we are sure we can
-  // decode it in the output buffer.
-  //
-  // [ AAAA   A   B     A      ][ C]
-  //
-  // Next we call our function and we decode the first part.
-  // It returns both the number of bytes written to the output buffer and the
-  // number of characters read from the input buffer.
-  //
-  // We resplit the input accordingly:
-  //
-  // [ AAAA][   A   B     A       C]
-  //
-  // And then we process the last part using a safe function. In this later
-  // case, we use last_chunk_handling_options provided by the user.
-  //
-  // We then need to combine the two results.
-  //
-  const size_t safe_input = base64_length_from_binary(outlen / 3 * 3, options);
-  full_result r = get_default_implementation()->base64_to_binary_details(
-      input, safe_input, output, options, stop_before_partial);
-  const size_t input_index = r.input_count;
-  const size_t output_index = r.output_count;
-  if (r.error == error_code::INVALID_BASE64_CHARACTER) {
-    if (decode_up_to_bad_char) { // We need to use the slow path because we want
-                                 // to make sure that
-      // we write as much data as possible to the output buffer to meet
-      // the requirements of the JavaScript standard.
+  // We have decoded some data, but we still have some data to decode.
+  // We need to decode the rest of the input buffer.
+  r = simdutf::scalar::base64::base64_to_binary_details_safe_impl(
+      input + input_position, remaining_input_length, output + output_position,
+      remaining_output_length, options, last_chunk_handling_options);
+
+  input_position += r.input_count;
+  output_position += r.output_count;
+  remaining_input_length -= r.input_count;
+  remaining_output_length -= r.output_count;
+
+  if (r.error != simdutf::error_code::SUCCESS) {
+    // There is an error. We return.
+    if (decode_up_to_bad_char &&
+        r.error == error_code::INVALID_BASE64_CHARACTER) {
       return slow_base64_to_binary_safe_impl(
           input, length, output, outlen, options, last_chunk_handling_options);
     }
-    return r;
+    outlen = output_position;
+    return {r.error, input_position};
   }
-  //
-  // At this point, we have decoded up to input_index characters, and we have
-  // written output_index characters to the output buffer.
-  // If there are no ignorable character, we would expect that
-  // input_index / 4 * 3 == output_index
-  //
-  // No matter what, at this point, the number of base64 characters in the
-  // range [0, input_index) is a multiple of 4.
-
-  // Now we have to decode the rest of the input buffer.
-  size_t remaining_out = outlen - output_index;
-  const chartype *tail_input = input + input_index;
-  size_t tail_length = length - input_index;
-  // We need to count the number of padding characters (if any)
-  // because base64_tail_decode_safe expects us to do it.
-  size_t equallocation =
-      length; // location of the first padding character if any
-  while (tail_length > 0 &&
-         scalar::base64::is_ascii_white_space(tail_input[tail_length - 1])) {
-    tail_length--;
-  }
-  size_t padding_characts = 0;
-  if (tail_length > 0 && tail_input[tail_length - 1] == '=') {
-    tail_length--;
-    padding_characts++;
-    equallocation = tail_length + input_index;
-    while (tail_length > 0 &&
-           scalar::base64::is_ascii_white_space(tail_input[tail_length - 1])) {
-      tail_length--;
-    }
-    if (tail_length > 0 && tail_input[tail_length - 1] == '=') {
-      tail_length--;
-      equallocation = tail_length + input_index;
-      padding_characts++;
-    }
-  }
-  const bool ignore_garbage = (options & base64_default_accept_garbage) != 0;
-  if (tail_length == 0) {
-    outlen = output_index;
-    if (!ignore_garbage && padding_characts > 0) {
-      if (last_chunk_handling_options == last_chunk_handling_options::strict) {
-        return {BASE64_INPUT_REMAINDER, length};
-      } else if (last_chunk_handling_options ==
-                 last_chunk_handling_options::stop_before_partial) {
-        return {SUCCESS, input_index};
-      }
-      return {INVALID_BASE64_CHARACTER, equallocation};
-    }
-    return {SUCCESS, length};
-  }
-  // the base64_tail_decode_safe function will advance tail_input
-  result rr = scalar::base64::base64_tail_decode_safe(
-      output + output_index, remaining_out, tail_input, tail_length,
-      padding_characts, options, last_chunk_handling_options);
-  //
-  // base64_tail_decode_safe produced 'remaining_out' additonal bytes.
-  // Remeber that we already had decoded 'output_index' bytes.
-  //
-  // We originally had that tail_input = input + input_index, but
-  // tail_input was passed by reference to base64_tail_decode_safe, and
-  // it was modified.
-  //
-  // The number of processed characters is:
-  //  tail_input - (input + input_index).
-  //
-  // If there were no ignorable characters and there is a number of
-  // characters divisible by four, we would expect that
-  //  (tail_input - (input + input_index)) / 4 * 3 == remaining_out
-  // But the tail handling might be an issue if
-  // (tail_input - (input + input_index)) is not divisible by 4.
-  //
-
-  outlen = output_index + remaining_out;
-  if (last_chunk_handling_options != stop_before_partial &&
-      rr.error == error_code::SUCCESS && padding_characts > 0) {
-    // additional checks
-    if ((outlen % 3 == 0) || ((outlen % 3) + 1 + padding_characts != 4)) {
-      rr.error = error_code::INVALID_BASE64_CHARACTER;
-    }
-  }
-  if (rr.error == error_code::SUCCESS) {
-    if (last_chunk_handling_options == stop_before_partial) {
-      //
-      // tail_input is initially set to input + input_index
-      // and it is modified by base64_tail_decode_safe.
-      // If it advanced, then we know that we have read up to
-      // tail_input and, thus, we consumed tail_input - input
-      // characters. Recall that input points at the beginning of
-      // the input buffer and input_index is the number of
-      // characters that we have have processed prior to calling
-      // base64_tail_decode_safe.
-      rr.count = tail_input - input;
-
-      // We may need to consume some padding characters.
-      // If remaining_out is divisible by 3, we are done.
-      // If the remainder of remaining_out is 1, we need to consume
-      // up to one padding character.
-      // If the remainder of remaining_out is 2, we need to consume
-      // up to one padding character.
-      size_t remainder = remaining_out % 3;
-      size_t expected_padding = (remainder % 3 == 0) ? 0 : (3 - remainder);
-      // We only try to advance *if* we may have padding characters.
-      if (expected_padding > 0) {
-        while (rr.count < length) {
-          auto c = input[rr.count];
-          if (c == '=') {
-            if (expected_padding == 0) {
-              // We have already consumed all the padding characters.
-              break;
-            }
-            expected_padding--;
-            rr.count++;
-
-          } else if (scalar::base64::is_ascii_white_space(input[rr.count])) {
-            // We have a white space character.
-            // We need to consume it.
-            rr.count++;
-          } else {
-            // We have a non-white space character.
-            // We need to stop here.
-            break;
-          }
-        }
-      }
-      return rr;
-    }
-    rr.count = length;
-  } else {
-    rr.count += input_index;
-  }
-  return rr;
+  outlen = output_position;
+  return {simdutf::error_code::SUCCESS, input_position};
 }
 
   #if SIMDUTF_ATOMIC_REF

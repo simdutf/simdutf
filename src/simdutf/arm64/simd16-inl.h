@@ -66,10 +66,12 @@ struct base16 : base_u16<T> {
 
   static const int SIZE = sizeof(base_u16<T>::value);
   void dump() const {
+#ifdef SIMDUTF_LOGGING
     uint16_t temp[8];
     vst1q_u16(temp, *this);
     printf("[%04x, %04x, %04x, %04x, %04x, %04x, %04x, %04x]\n", temp[0],
            temp[1], temp[2], temp[3], temp[4], temp[5], temp[6], temp[7]);
+#endif // SIMDUTF_LOGGING
   }
   template <int N = 1>
   simdutf_really_inline simd16<T> prev(const simd16<T> prev_chunk) const {

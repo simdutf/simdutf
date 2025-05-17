@@ -24,12 +24,43 @@ enum error_code {
                             // base64 string. This may include a misplaced
                             // padding character ('=').
   BASE64_INPUT_REMAINDER,   // The base64 input terminates with a single
-                            // character, excluding padding (=).
+                            // character, excluding padding (=). It is also used
+                            // in strict mode when padding is not adequate.
   BASE64_EXTRA_BITS,        // The base64 input terminates with non-zero
                             // padding bits.
   OUTPUT_BUFFER_TOO_SMALL,  // The provided buffer is too small.
   OTHER                     // Not related to validation/transcoding.
 };
+#if SIMDUTF_CPLUSPLUS17
+inline std::string_view error_to_string(error_code code) {
+  switch (code) {
+  case SUCCESS:
+    return "SUCCESS";
+  case HEADER_BITS:
+    return "HEADER_BITS";
+  case TOO_SHORT:
+    return "TOO_SHORT";
+  case TOO_LONG:
+    return "TOO_LONG";
+  case OVERLONG:
+    return "OVERLONG";
+  case TOO_LARGE:
+    return "TOO_LARGE";
+  case SURROGATE:
+    return "SURROGATE";
+  case INVALID_BASE64_CHARACTER:
+    return "INVALID_BASE64_CHARACTER";
+  case BASE64_INPUT_REMAINDER:
+    return "BASE64_INPUT_REMAINDER";
+  case BASE64_EXTRA_BITS:
+    return "BASE64_EXTRA_BITS";
+  case OUTPUT_BUFFER_TOO_SMALL:
+    return "OUTPUT_BUFFER_TOO_SMALL";
+  default:
+    return "OTHER";
+  }
+}
+#endif
 
 struct result {
   error_code error;
@@ -55,6 +86,8 @@ struct full_result {
   error_code error;
   size_t input_count;
   size_t output_count;
+  bool padding_error = false; // true if the error is due to padding, only
+                              // meaningful when error is not SUCCESS
 
   simdutf_really_inline full_result()
       : error{error_code::SUCCESS}, input_count{0}, output_count{0} {}
@@ -62,10 +95,13 @@ struct full_result {
   simdutf_really_inline full_result(error_code err, size_t pos_in,
                                     size_t pos_out)
       : error{err}, input_count{pos_in}, output_count{pos_out} {}
+  simdutf_really_inline full_result(error_code err, size_t pos_in,
+                                    size_t pos_out, bool padding_err)
+      : error{err}, input_count{pos_in}, output_count{pos_out},
+        padding_error{padding_err} {}
 
   simdutf_really_inline operator result() const noexcept {
-    if (error == error_code::SUCCESS ||
-        error == error_code::BASE64_INPUT_REMAINDER) {
+    if (error == error_code::SUCCESS) {
       return result{error, output_count};
     } else {
       return result{error, input_count};

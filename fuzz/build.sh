@@ -16,7 +16,26 @@ if [ -z $SRC ] ; then
     SCRIPTDIR=$(dirname "$0")
     cd "$SCRIPTDIR/.."
 
-    export CXX=/usr/lib/ccache/clang++-18
+    # Check if /usr/lib/ccache/clang++-18 exists
+    if [ -f /usr/lib/ccache/clang++-18 ]; then
+        export CXX=/usr/lib/ccache/clang++-18
+    else
+        # Check if clang++ exists
+        if command -v clang++ >/dev/null 2>&1; then
+            # Get clang++ version
+            CLANG_VERSION=$(clang++ --version | grep -oP 'version \K[0-9]+' | head -1)
+            
+            # Check if version is less than 18
+            if [ "$CLANG_VERSION" -lt 18 ]; then
+                echo "Warning: clang++ version $CLANG_VERSION is less than 18."
+            fi
+            
+            export CXX=clang++
+        else
+            echo "Error: clang++ not found."
+            exit 1
+        fi
+    fi
     export CXXFLAGS="-fsanitize=fuzzer-no-link,address,undefined -g -O1 -fsanitize-trap=undefined -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=1"
     export LIB_FUZZING_ENGINE="-fsanitize=fuzzer"
     export OUT=fuzz/out

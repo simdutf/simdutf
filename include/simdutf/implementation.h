@@ -19,7 +19,9 @@
   #include <span>
   #include <tuple>
 #endif
-
+#if SIMDUTF_CPLUSPLUS17
+  #include <string_view>
+#endif
 // The following defines are conditionally enabled/disabled during amalgamation.
 // By default all features are enabled, regular code shouldn't check them. Only
 // when user code really relies of a selected subset, it's good to verify these
@@ -2779,10 +2781,11 @@ trim_partial_utf16(std::span<const char16_t> valid_utf16_input) noexcept {
 // ASCII spaces are ' ', '\t', '\n', '\r', '\f'
 // garbage characters are characters that are not part of the base64 alphabet
 // nor ASCII spaces.
+constexpr uint64_t base64_reverse_padding =
+    2; /* modifier for base64_default and base64_url */
 enum base64_options : uint64_t {
-  base64_default = 0,         /* standard base64 format (with padding) */
-  base64_url = 1,             /* base64url format (no padding) */
-  base64_reverse_padding = 2, /* modifier for base64_default and base64_url */
+  base64_default = 0, /* standard base64 format (with padding) */
+  base64_url = 1,     /* base64url format (no padding) */
   base64_default_no_padding =
       base64_default |
       base64_reverse_padding, /* standard base64 format without padding */
@@ -2799,6 +2802,30 @@ enum base64_options : uint64_t {
              (only meaningful for decoding!) */
 };
 
+  #if SIMDUTF_CPLUSPLUS17
+inline std::string_view to_string(base64_options options) {
+  switch (options) {
+  case base64_default:
+    return "base64_default";
+  case base64_url:
+    return "base64_url";
+  case base64_reverse_padding:
+    return "base64_reverse_padding";
+  case base64_url_with_padding:
+    return "base64_url_with_padding";
+  case base64_default_accept_garbage:
+    return "base64_default_accept_garbage";
+  case base64_url_accept_garbage:
+    return "base64_url_accept_garbage";
+  case base64_default_or_url:
+    return "base64_default_or_url";
+  case base64_default_or_url_accept_garbage:
+    return "base64_default_or_url_accept_garbage";
+  }
+  return "<unknown>";
+}
+  #endif // SIMDUTF_CPLUSPLUS17
+
 // last_chunk_handling_options are used to specify the handling of the last
 // chunk in base64 decoding.
 // https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
@@ -2809,6 +2836,20 @@ enum last_chunk_handling_options : uint64_t {
   stop_before_partial =
       2, /* if the last chunk is partial (2 or 3 chars), ignore it (no error) */
 };
+
+  #if SIMDUTF_CPLUSPLUS17
+inline std::string_view to_string(last_chunk_handling_options options) {
+  switch (options) {
+  case loose:
+    return "loose";
+  case strict:
+    return "strict";
+  case stop_before_partial:
+    return "stop_before_partial";
+  }
+  return "<unknown>";
+}
+  #endif
 
 /**
  * Provide the maximal binary length in bytes given the base64 input.
@@ -3088,6 +3129,54 @@ simdutf_really_inline simdutf_warn_unused result base64_to_binary(
   #endif // SIMDUTF_SPAN
 
 /**
+ * Check if a character is an ignorabl base64 character.
+ * Checking a large input, character by character, is not computationally
+ * efficient.
+ *
+ * @param input         the character to check
+ * @param options       the base64 options to use, is base64_default by default.
+ * @return true if the character is an ignorablee base64 character, false
+ * otherwise.
+ */
+simdutf_warn_unused bool
+base64_ignorable(char input, base64_options options = base64_default) noexcept;
+simdutf_warn_unused bool
+base64_ignorable(char16_t input,
+                 base64_options options = base64_default) noexcept;
+
+/**
+ * Check if a character is a valid base64 character.
+ * Checking a large input, character by character, is not computationally
+ * efficient.
+ * Note that padding characters are not considered valid base64 characters in
+ * this context, nor are spaces.
+ *
+ * @param input         the character to check
+ * @param options       the base64 options to use, is base64_default by default.
+ * @return true if the character is a base64 character, false otherwise.
+ */
+simdutf_warn_unused bool
+base64_valid(char input, base64_options options = base64_default) noexcept;
+simdutf_warn_unused bool
+base64_valid(char16_t input, base64_options options = base64_default) noexcept;
+
+/**
+ * Check if a character is a valid base64 character or the padding character
+ * ('='). Checking a large input, character by character, is not computationally
+ * efficient.
+ *
+ * @param input         the character to check
+ * @param options       the base64 options to use, is base64_default by default.
+ * @return true if the character is a base64 character, false otherwise.
+ */
+simdutf_warn_unused bool
+base64_valid_or_padding(char input,
+                        base64_options options = base64_default) noexcept;
+simdutf_warn_unused bool
+base64_valid_or_padding(char16_t input,
+                        base64_options options = base64_default) noexcept;
+
+/**
  * Convert a base64 input to a binary output.
  *
  * This function follows the WHATWG forgiving-base64 format, which means that it
@@ -3147,7 +3236,8 @@ simdutf_really_inline simdutf_warn_unused result base64_to_binary(
  * last_chunk_handling_options::stop_before_partial.
  * @param decode_up_to_bad_char if true, the function will decode up to the
  * first invalid character. By default (false), it is assumed that the output
- * buffer is to be discarded.
+ * buffer is to be discarded. When there are multiple errors in the input,
+ * using decode_up_to_bad_char might trigger a different error.
  * @return a result pair struct (of type simdutf::result containing the two
  * fields error and count) with an error code and position of the
  * INVALID_BASE64_CHARACTER error (in the input in units) if any, or the number
@@ -3234,7 +3324,8 @@ base64_to_binary_safe(std::span<const char16_t> input,
  * stop_before_partial)
  * @param decode_up_to_bad_char if true, the function will decode up to the
  * first invalid character. By default (false), it is assumed that the output
- * buffer is to be discarded.
+ * buffer is to be discarded. When there are multiple errors in the input,
+ * using decode_up_to_bad_char might trigger a different error.
  * @return a result struct with an error code and count indicating error
  * position or success
  */
