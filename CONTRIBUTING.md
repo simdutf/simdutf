@@ -157,7 +157,7 @@ cmake --build build --target base64_tests  && ./build/tests/base64_tests -t roun
 By default, we may disable the fallback kernel on some systems. You can force it on with `SIMDUTF_ALWAYS_INCLUDE_FALLBACK`:
 
 ```
-cmake -B build  -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=OM
+cmake -B build  -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON
 ```
 
 
@@ -167,7 +167,7 @@ We recommend running tests using C++20 since some of our functions and tests
 are only available when C++20 is set.
 
 ```
-cmake -B build20  -DSIMDUTF_CXX_STANDARD=20 -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=OM
+cmake -B build20  -DSIMDUTF_CXX_STANDARD=20 -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON
 ```
 
 
@@ -176,7 +176,15 @@ cmake -B build20  -DSIMDUTF_CXX_STANDARD=20 -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=OM
 Some bugs are easier to track if internal buffers are reduced.
 
 ```
-cmake -B buildfuzz20  -DSIMDUTF_CXX_STANDARD=20 -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=ON -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=OM
+cmake -B buildfuzz20  -DSIMDUTF_CXX_STANDARD=20 -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=ON -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON
+```
+
+### Add sanitizers!
+
+Try to combine these flags with the sanitizers for best results.
+
+```
+cmake -B buildsani  -DSIMDUTF_CXX_STANDARD=20 -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=ON -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DSIMDUTF_SANITIZE=ON
 ```
 
 ## Documentation

@@ -226,6 +226,11 @@ bool compare_decode_verbose(
     const bool decode_up_to_bad_char) {
   std::cerr << "// implementation tested: "
             << simdutf::get_active_implementation()->name() << "\n";
+  #if FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    std::cerr << "// fuzzing build mode: unsafe for production\n";
+  #else
+    std::cerr << "// fuzzing build mode: DISABLED, try enabling it when working with fuzzers\n";
+  #endif
   const auto s = [&]() {
     if constexpr (sizeof(b64_input[0]) == 1) {
       return std::span<const char>(
