@@ -181,10 +181,10 @@ cmake -B buildfuzz20  -DSIMDUTF_CXX_STANDARD=20 -DFUZZING_BUILD_MODE_UNSAFE_FOR_
 
 ### Add sanitizers!
 
-Try to combine these flags with the sanitizers for best results.
+Try to combine these flags with the sanitizers and logging/asserts for best results.
 
 ```
-cmake -B buildsani  -DSIMDUTF_CXX_STANDARD=20 -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=ON -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DSIMDUTF_SANITIZE=ON
+cmake -B buildsani  -DSIMDUTF_CXX_STANDARD=20 -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=ON -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DSIMDUTF_SANITIZE=ON -DSIMDUTF_LOGGING=ON
 ```
 
 ## Documentation

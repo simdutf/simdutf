@@ -116,11 +116,40 @@ decode_impl(std::span<const FromChar> base64_, const auto selected_option,
   return ret;
 }
 
+[[nodiscard]] std::uint64_t compute_hash(const auto& data) noexcept {
+  constexpr std::uint64_t fnv_prime = 1099511628211ULL;
+  constexpr std::uint64_t fnv_offset = 14695981039346656037ULL;
+
+  std::uint64_t hash = fnv_offset;
+  for (const auto& item : data) {
+    hash ^= static_cast<std::uint64_t>(item);
+    hash *= fnv_prime;
+  }
+  return hash;
+}
+
 bool compare_decode_verbose(
     const auto& b64_input, const std::size_t decodesize,
     const simdutf::base64_options options,
     const simdutf::last_chunk_handling_options last_chunk_options,
     const bool decode_up_to_bad_char) {
+  std::cerr << "// input size: " << b64_input.size() << "\n";
+  std::cerr << "// decode buffer size: " << decodesize << "\n";
+  std::cerr << "// options: " << options << "\n";
+  std::cerr << "// last chunk options: " << last_chunk_options << "\n";
+  std::cerr << "// decode up to bad char: " << decode_up_to_bad_char << "\n";
+  std::cerr << "// hash: " << compute_hash(b64_input) << "\n";
+  std::cerr << "// implementation tested: "
+            << simdutf::get_active_implementation()->name() << "\n";
+  std::cerr << "// ";
+  for (std::size_t i = 0; i < b64_input.size(); ++i) {
+    std::cerr << uint64_t(b64_input[i]) << ", ";
+    if ((i + 1) % 16 == 0) {
+      std::cerr << "\n";
+      std::cerr << "// ";
+    }
+  }
+  std::cerr << "\n";
 
   const auto s = [&]() {
     if constexpr (sizeof(b64_input[0]) == 1) {

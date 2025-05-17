@@ -219,17 +219,45 @@ template <typename T> std::string get_code(T c) {
   }
 }
 
+[[nodiscard]] std::uint64_t compute_hash(const auto &data) noexcept {
+  constexpr std::uint64_t fnv_prime = 1099511628211ULL;
+  constexpr std::uint64_t fnv_offset = 14695981039346656037ULL;
+
+  std::uint64_t hash = fnv_offset;
+  for (const auto &item : data) {
+    hash ^= static_cast<std::uint64_t>(item);
+    hash *= fnv_prime;
+  }
+  return hash;
+}
+
 bool compare_decode_verbose(
     const auto &b64_input, const std::size_t decodesize,
     const simdutf::base64_options options,
     const simdutf::last_chunk_handling_options last_chunk_options,
     const bool decode_up_to_bad_char) {
+  std::cerr << "// input size: " << b64_input.size() << "\n";
+  std::cerr << "// decode buffer size: " << decodesize << "\n";
+  std::cerr << "// options: " << options << "\n";
+  std::cerr << "// last chunk options: " << last_chunk_options << "\n";
+  std::cerr << "// decode up to bad char: " << decode_up_to_bad_char << "\n";
+  std::cerr << "// hash: " << compute_hash(b64_input) << "\n";
   std::cerr << "// implementation tested: "
             << simdutf::get_active_implementation()->name() << "\n";
+  std::cerr << "// ";
+  for (std::size_t i = 0; i < b64_input.size(); ++i) {
+    std::cerr << uint64_t(b64_input[i]) << ", ";
+    if ((i + 1) % 16 == 0) {
+      std::cerr << "\n";
+      std::cerr << "// ";
+    }
+  }
+  std::cerr << "\n";
   #if FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    std::cerr << "// fuzzing build mode: unsafe for production\n";
+  std::cerr << "// fuzzing build mode: unsafe for production\n";
   #else
-    std::cerr << "// fuzzing build mode: DISABLED, try enabling it when working with fuzzers\n";
+  std::cerr << "// fuzzing build mode: DISABLED, try enabling it when working "
+               "with fuzzers\n";
   #endif
   const auto s = [&]() {
     if constexpr (sizeof(b64_input[0]) == 1) {
@@ -337,6 +365,105 @@ bool compare_decode_verbose(
   }
   return true;
 }
+TEST(issue_202505170219) {
+  // input size: 174
+  // decode buffer size: 2621
+  // options: 3
+  // last chunk options: 2
+  // decode up to bad char: 1
+  // hash: 16235976592833790092
+  // implementation tested: icelake
+  // 13, 99, 99, 99, 12, 12, 12, 45, 12, 12, 12, 12, 12, 12, 12, 12,
+  // 12, 12, 12, 12, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+  // 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+  // 10, 10, 10, 121, 105, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121,
+  // 121, 121, 121, 120, 121, 121, 121, 121, 9, 68, 121, 105, 121, 68, 68, 121,
+  // 121, 121, 121, 121, 120, 121, 121, 9, 68, 9, 121, 121, 121, 121, 121, 121,
+  // 121, 121, 105, 121, 121, 121, 121, 121, 121, 121, 10, 10, 10, 10, 10, 10,
+  // 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+  // 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 12,
+  // 12, 12, 12, 12, 12, 9, 61, 9, 10, 10, 10, 10, 10, 10, 10, 12, 12, 12, 12,
+  // 12, 12, 12, 9, 61, 9, 'correct' output 39 bytes 'correct' consumes 102
+  // characters 'correct' has error 0 regular safe produces 39 bytes regular
+  // safe consumes 102 characters regular has error 0 regular has error SUCCESS
+  // atomic produces 41 bytes
+  // atomic consumes 155 characters
+  // atomic has error 0
+  // atomic has error SUCCESS
+  // implementation tested: icelake
+  // FAILURE VERIFIED
+  // input is char
+  // input:
+  //  ccc   -                                           yiyyyyyyyyyyyyyxyyyy
+  //  DyiyDDyyyyyxyy D yyyyyyyyiyyyyyyy
+  //                             =                =
+  // count=174
+  const std::vector<char> base64{
+      '\r', 'c',  'c',  'c',  '\f', '\f', '\f', '-',  '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\n', '\n', '\n', '\n',
+      '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n',
+      '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n',
+      '\n', '\n', '\n', 'y',  'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'x',  'y',  'y',  'y',  'y',  '\t',
+      'D',  'y',  'i',  'y',  'D',  'D',  'y',  'y',  'y',  'y',  'y',  'x',
+      'y',  'y',  '\t', 'D',  '\t', 'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  '\n', '\n', '\n',
+      '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n',
+      '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n',
+      '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n',
+      '\n', '\n', '\n', '\n', '\f', '\f', '\f', '\f', '\f', '\f', '\t', '=',
+      '\t', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\t', '=',  '\t',
+  };
+  compare_decode(base64, 2621, simdutf::base64_url_with_padding,
+                 simdutf::last_chunk_handling_options::stop_before_partial,
+                 true);
+  ASSERT_TRUE(compare_decode_verbose(
+      base64, 2621, simdutf::base64_url_with_padding,
+      simdutf::last_chunk_handling_options::stop_before_partial, true));
+};
+
+TEST(issue_202505170211) {
+  const std::vector<char> base64{
+      'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'x',  'y',  'y',  'y',  'y',  '\t',
+      'D',  'y',  'i',  'y',  'D',  'D',  'y',  'y',  'y',  'y',  'y',  'x',
+      'y',  'y',  '\t', 'D',  '\t', 'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'x',  'y',  'y',  'y',  'y',  '\t', 'D',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'k',  'y',  'y',  'y',
+      'y',  'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'i',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'k',  'y',  'y',  'y',  'y',
+      'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'i',  'y',  'y',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  '\t', 'D',  'D',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'x',  'y',  'y',  'y',  'y',  '\f', '\f',
+      '\f', '\f', '\f', '\f', 'y',  'y',  'k',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'i',  'y',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  'D',  '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', 'D',  'y',  'y',  'y',  'y',
+      'y',  'y',  'y',  'x',  'y',  'y',  'y',  'y',  'y',  'y',  'y',  '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', 'y',
+      'y',  'y',  'y',  'y',  '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '=',
+  };
+  compare_decode(base64, 31097, simdutf::base64_url_with_padding,
+                 simdutf::last_chunk_handling_options::strict, true);
+  ASSERT_TRUE(compare_decode_verbose(
+      base64, 31097, simdutf::base64_url_with_padding,
+      simdutf::last_chunk_handling_options::strict, true));
+};
+
 TEST(issue_202505170137) {
   const std::vector<char> base64{
       '\r', 'c',  'c',  'c',  '\f', '\f', '\f', '\f', '\f', 'p',  'C',  '\n',

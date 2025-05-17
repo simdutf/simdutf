@@ -2261,7 +2261,8 @@ simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t lengt
  * last_chunk_handling_options::stop_before_partial.
  * @param decode_up_to_bad_char if true, the function will decode up to the
  * first invalid character. By default (false), it is assumed that the output
- * buffer is to be discarded.
+ * buffer is to be discarded. When there are multiple errors in the input,
+ * using decode_up_to_bad_char might trigger a different error.
  * @return a result pair struct (of type simdutf::result containing the two
  * fields error and count) with an error code and position of the
  * INVALID_BASE64_CHARACTER error (in the input in units) if any, or the number
