@@ -181,6 +181,18 @@ size_t add_garbage(std::vector<char_type> &v, std::mt19937 &gen,
   return i;
 }
 
+TEST(issue_dash) {
+  const std::string input = "Iw==";
+  std::vector<char> back(1);
+  size_t len = back.size();
+  auto r = simdutf::base64_to_binary_safe(
+      input.data(), input.size(), back.data(), len);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.count, 4);
+  ASSERT_EQUAL(len, 1);
+  ASSERT_EQUAL(back[0], '#');
+}
+
 // stop-before-partial should behave like so:
 // 1. if the last chunk is not a multiple of 4, we should stop before the last
 //    chunk
