@@ -12,8 +12,10 @@ namespace simdutf {
 namespace test {
 
 struct CommandLine {
+  std::string exe_name;
   bool show_help{false};
   bool show_tests{false};
+  bool gtest_list_tests{false};
   bool show_architectures{false};
   std::set<std::string> architectures;
   std::vector<std::string> tests;
@@ -22,12 +24,13 @@ struct CommandLine {
   static CommandLine parse(int argc, char *argv[]);
 };
 
-int main(int argc, char *argv[]);
+int main(int argc, char *argv[], bool use_threads);
 void run(const CommandLine &cmdline);
 
 using test_procedure = void (*)(const simdutf::implementation &impl);
 struct test_entry {
   std::string name;
+  std::string title;
   test_procedure procedure;
 
   void operator()(const simdutf::implementation &impl);
@@ -186,4 +189,6 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
   }
 
 #define TEST_MAIN                                                              \
-  int main(int argc, char *argv[]) { return simdutf::test::main(argc, argv); }
+  int main(int argc, char *argv[]) {                                           \
+    return simdutf::test::main(argc, argv, true);                              \
+  }
