@@ -1554,6 +1554,11 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
     // We wrote temp_outlen bytes to temp_buffer.
     // We need to copy them to output.
     // Copy with relaxed atomic operations to the output
+    simdutf_log_assert(temp_outlen <= outlen - actual_out,
+                       "Output buffer is too small");
+    simdutf_log_assert(temp_outlen <= temp_buffer.size(),
+                       "Output buffer is too small");
+
     simdutf::scalar::memcpy_atomic_write(output + actual_out,
                                          temp_buffer.data(), temp_outlen);
     actual_out += temp_outlen;
