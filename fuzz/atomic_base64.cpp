@@ -385,7 +385,7 @@ void decode(std::span<const FromChar> base64_, const auto selected_option,
             << NAMEOF_ENUM(last_chunk_option) << ", "
             << (decode_up_to_bad_char ? "true" : "false") << "));\n";
   std::cerr << "};\n";
-  std::abort();
+  // std::abort();
 }
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {

@@ -371,39 +371,83 @@ bool compare_decode_verbose(
   }
   return true;
 }
+
+TEST(issue_202505170242) {
+  const std::vector<char> base64{
+      '\f', '\n', '=', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', '=', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+      ' ',  ' ',  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+  };
+  compare_decode(base64, 62976, simdutf::base64_url_with_padding,
+                 simdutf::last_chunk_handling_options::strict, true);
+  ASSERT_TRUE(compare_decode_verbose(
+      base64, 62976, simdutf::base64_url_with_padding,
+      simdutf::last_chunk_handling_options::strict, true));
+};
+
+TEST(issue_202505170245) {
+  const std::vector<char> base64{
+      '\r', '\t', '\t', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',
+      ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',
+      'C',  '0',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',
+      ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',
+      ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',
+      ' ',  'C',  '0',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  '1',  ' ',
+      ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  '0',
+      ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',
+      ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  '5',  ' ',  ' ',  ' ',  ' ',
+      ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  '0',  ' ',  ' ',
+      ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  '\f',
+      '\f', '\f', ' ',  '\n', '\n', '\n', '=',
+  };
+  compare_decode(base64, 8236, simdutf::base64_default,
+                 simdutf::last_chunk_handling_options::strict, true);
+  ASSERT_TRUE(compare_decode_verbose(
+      base64, 8236, simdutf::base64_default,
+      simdutf::last_chunk_handling_options::strict, true));
+};
+
+TEST(issue_202505170241) {
+  const std::vector<char> base64{
+      'c',  'c',  'c',  '\t', '=',  '\n', '\r', '\n', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '=',
+  };
+  compare_decode(base64, 2621, simdutf::base64_url_with_padding,
+                 simdutf::last_chunk_handling_options::stop_before_partial,
+                 true);
+  ASSERT_TRUE(compare_decode_verbose(
+      base64, 2621, simdutf::base64_url_with_padding,
+      simdutf::last_chunk_handling_options::stop_before_partial, true));
+};
+
 TEST(issue_202505170219) {
-  // input size: 174
-  // decode buffer size: 2621
-  // options: 3
-  // last chunk options: 2
-  // decode up to bad char: 1
-  // hash: 16235976592833790092
-  // implementation tested: icelake
-  // 13, 99, 99, 99, 12, 12, 12, 45, 12, 12, 12, 12, 12, 12, 12, 12,
-  // 12, 12, 12, 12, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-  // 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-  // 10, 10, 10, 121, 105, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121,
-  // 121, 121, 121, 120, 121, 121, 121, 121, 9, 68, 121, 105, 121, 68, 68, 121,
-  // 121, 121, 121, 121, 120, 121, 121, 9, 68, 9, 121, 121, 121, 121, 121, 121,
-  // 121, 121, 105, 121, 121, 121, 121, 121, 121, 121, 10, 10, 10, 10, 10, 10,
-  // 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-  // 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 12,
-  // 12, 12, 12, 12, 12, 9, 61, 9, 10, 10, 10, 10, 10, 10, 10, 12, 12, 12, 12,
-  // 12, 12, 12, 9, 61, 9, 'correct' output 39 bytes 'correct' consumes 102
-  // characters 'correct' has error 0 regular safe produces 39 bytes regular
-  // safe consumes 102 characters regular has error 0 regular has error SUCCESS
-  // atomic produces 41 bytes
-  // atomic consumes 155 characters
-  // atomic has error 0
-  // atomic has error SUCCESS
-  // implementation tested: icelake
-  // FAILURE VERIFIED
-  // input is char
-  // input:
-  //  ccc   -                                           yiyyyyyyyyyyyyyxyyyy
-  //  DyiyDDyyyyyxyy D yyyyyyyyiyyyyyyy
-  //                             =                =
-  // count=174
   const std::vector<char> base64{
       '\r', 'c',  'c',  'c',  '\f', '\f', '\f', '-',  '\f', '\f', '\f', '\f',
       '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\n', '\n', '\n', '\n',
