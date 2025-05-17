@@ -31,9 +31,9 @@ template <typename T> std::string get_code(T c) {
   static_assert(std::is_same_v<T, char> || std::is_same_v<T, char16_t>,
                 "T must be char or char16_t");
 
-  using OutputType =
+  using output_type =
       std::conditional_t<std::is_same_v<T, char>, uint8_t, uint16_t>;
-  auto value = static_cast<OutputType>(c);
+  auto value = static_cast<output_type>(c);
   if (c == '\n') {
     return "'\\n'";
   } else if (c == '\r') {
@@ -128,6 +128,8 @@ decode_impl(std::span<const FromChar> base64_, const auto selected_option,
   return hash;
 }
 
+// For debugging purposes, we want to see a careful comparison of the
+// output of the two implementations.
 bool compare_decode_verbose(
     const auto& b64_input, const std::size_t decodesize,
     const simdutf::base64_options options,
@@ -190,7 +192,9 @@ bool compare_decode_verbose(
   std::cerr << "// regular has error " << r1.error << "\n";
   if (r1.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {
     std::cerr << "// regular has error INVALID_BASE64_CHARACTER\n";
-    std::cerr << "// at chararacter " << get_code(s[r1.count]) << "\n";
+    if (r1.count < s.size()) {
+      std::cerr << "// at chararacter " << get_code(s[r1.count]) << "\n";
+    }
   }
   if (r1.error == simdutf::error_code::BASE64_INPUT_REMAINDER) {
     std::cerr << "// regular has error BASE64_INPUT_REMAINDER\n";
@@ -214,7 +218,9 @@ bool compare_decode_verbose(
   std::cerr << "// atomic has error " << r2.error << "\n";
   if (r2.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {
     std::cerr << "// atomic has error INVALID_BASE64_CHARACTER\n";
-    std::cerr << "// at chararacter " << get_code(s[r2.count]) << "\n";
+    if (r2.count < s.size()) {
+      std::cerr << "// at chararacter " << get_code(s[r2.count]) << "\n";
+    }
   }
   if (r2.error == simdutf::error_code::BASE64_INPUT_REMAINDER) {
     std::cerr << "// atomic has error BASE64_INPUT_REMAINDER\n";
