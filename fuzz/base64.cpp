@@ -114,7 +114,9 @@ struct roundtripresult {
 
 void roundtrip(std::span<const char> binary, const auto selected_option,
                const auto last_chunk_option) {
-
+  if(last_chunk_option == simdutf::last_chunk_handling_options::stop_before_partial) {
+    return; // this is not a valid option for roundtrip
+  }
   const auto inputhash = FNV1A_hash::as_str(binary);
   const auto implementations = get_supported_implementations();
   std::vector<roundtripresult> results;
