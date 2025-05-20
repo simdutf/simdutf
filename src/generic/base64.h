@@ -38,9 +38,9 @@ namespace base64 {
     to any vectorized implementation to learn the API of these procedures.
 */
 template <bool base64_url, bool ignore_garbage, bool default_or_url,
-          typename chartype>
+          typename char_type>
 full_result
-compress_decode_base64(char *dst, const chartype *src, size_t srclen,
+compress_decode_base64(char *dst, const char_type *src, size_t srclen,
                        base64_options options,
                        last_chunk_handling_options last_chunk_options) {
   const uint8_t *to_base64 =
@@ -65,22 +65,37 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
           : ((srclen + 3) / 4 * 3 >= 63 ? dst + (srclen + 3) / 4 * 3 - 63
                                         : dst);
 
-  const chartype *const srcinit = src;
+  const char_type *const srcinit = src;
   const char *const dstinit = dst;
-  const chartype *const srcend = src + srclen;
+  const char_type *const srcend = src + srclen;
 
   constexpr size_t block_size = 6;
   static_assert(block_size >= 2, "block_size must be at least two");
   char buffer[block_size * 64];
   char *bufferptr = buffer;
   if (srclen >= 64) {
-    const chartype *const srcend64 = src + srclen - 64;
+    const char_type *const srcend64 = src + srclen - 64;
     while (src <= srcend64) {
       block64 b(src);
       src += 64;
       uint64_t error = 0;
       const uint64_t badcharmask =
           b.to_base64_mask<base64_url, ignore_garbage, default_or_url>(&error);
+      if (error && ignore_garbage) {
+        // look for '=', if so, this ends the string.
+        const char_type *src_equal = nullptr;
+        for (auto s = src - 64; s < src; s++) {
+          if (*s == '=') {
+            src_equal = s;
+            break;
+          }
+        }
+        if (src_equal) {
+          src -= 64;
+          srclen = src_equal - src;
+          break;
+        }
+      }
       if (!ignore_garbage && error) {
         src -= 64;
         const size_t error_offset = trailing_zeroes(error);

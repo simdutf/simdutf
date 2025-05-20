@@ -2092,9 +2092,9 @@ simdutf_warn_unused result base64_to_binary(
       input, length, output, options, last_chunk_handling_options);
 }
 
-template <typename chartype>
+template <typename char_type>
 simdutf_warn_unused result slow_base64_to_binary_safe_impl(
-    const chartype *input, size_t length, char *output, size_t &outlen,
+    const char_type *input, size_t length, char *output, size_t &outlen,
     base64_options options,
     last_chunk_handling_options last_chunk_options) noexcept {
   const bool ignore_garbage = (options & base64_default_accept_garbage) != 0;
@@ -2165,15 +2165,15 @@ base64_valid_or_padding(char16_t input, base64_options options) noexcept {
   return scalar::base64::is_base64_or_padding(input, options);
 }
 
-template <typename chartype>
+template <typename char_type>
 simdutf_warn_unused result base64_to_binary_safe_impl(
-    const chartype *input, size_t length, char *output, size_t &outlen,
+    const char_type *input, size_t length, char *output, size_t &outlen,
     base64_options options,
     last_chunk_handling_options last_chunk_handling_options,
     bool decode_up_to_bad_char) noexcept {
 
-  static_assert(std::is_same<chartype, char>::value ||
-                    std::is_same<chartype, char16_t>::value,
+  static_assert(std::is_same<char_type, char>::value ||
+                    std::is_same<char_type, char16_t>::value,
                 "Only char and char16_t are supported.");
   size_t remaining_input_length = length;
   size_t remaining_output_length = outlen;
