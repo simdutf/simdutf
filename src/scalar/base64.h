@@ -108,16 +108,33 @@ reduced_input find_end(const char_type *src, size_t srclen,
       (options == base64_options::base64_default_or_url_accept_garbage);
 
   size_t equalsigns = 0;
-  // skip trailing spaces
-  while (!ignore_garbage && srclen > 0 &&
-         scalar::base64::is_eight_byte(src[srclen - 1]) &&
-         to_base64[uint8_t(src[srclen - 1])] == 64) {
-    srclen--;
-  }
   size_t full_input_length = srclen;
   size_t equallocation =
       srclen; // location of the first padding character if any
-  if (!ignore_garbage && srclen > 0 && src[srclen - 1] == '=') {
+  if (ignore_garbage) {
+    // By convention in Node.js, if there is a trailing '=' sign, it marks
+    // the end of the base64 input buffer. We need to possibly scan the whole
+    // input buffer to find the end of the base64 input buffer.
+    // We could do the following:
+    /*
+    auto it =  std::find(src, src + srclen, '=');
+    if (it != src + srclen) {
+      // We found a '=' sign.
+      equalsigns = 1;
+      equallocation = it - src;
+      // We do not bother checking for more '=' signs.
+      full_input_length = equallocation + 1;
+    }*/
+    // But it would be wasteful to scan the whole input buffer.
+    //
+    return {equalsigns, full_input_length, srclen, full_input_length};
+  }
+  // skip trailing ignorable characters
+  while (srclen > 0 && scalar::base64::is_eight_byte(src[srclen - 1]) &&
+         to_base64[uint8_t(src[srclen - 1])] == 64) {
+    srclen--;
+  }
+  if (srclen > 0 && src[srclen - 1] == '=') {
     // This is the last '=' sign.
     equallocation = srclen - 1;
     srclen--;
@@ -234,6 +251,12 @@ full_result base64_tail_decode_impl(
 #endif
     while ((idx < 4) && (src < srcend)) {
       char_type c = *src;
+      // By the Node.js convention, in the ignore_garbage mode,
+      // any '=' ends the stream.
+      if (ignore_garbage && c == '=') {
+        src = srcend;
+        break;
+      }
 
       uint8_t code = to_base64[uint8_t(c)];
       buffer[idx] = uint8_t(code);

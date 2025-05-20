@@ -477,7 +477,7 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
   char buffer[block_size * 64];
   char *bufferptr = buffer;
   if (srclen >= 64) {
-    const char_type *const srcend64 = src + srclen - 64;
+    const char_type *srcend64 = src + srclen - 64;
     while (src <= srcend64) {
       block64 b;
       load_block(&b, src);
@@ -486,6 +486,21 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
       uint64_t badcharmask =
           to_base64_mask<base64_url, default_or_url>(&b, &error);
       if (badcharmask) {
+        if (error && ignore_garbage) {
+          // look for '=', if so, this ends the string.
+          const char_type *src_equal = nullptr;
+          for (auto s = src - 64; s < src; s++) {
+            if (*s == '=') {
+              src_equal = s;
+              break;
+            }
+          }
+          if (src_equal) {
+            src -= 64;
+            srclen = src_equal - src;
+            break;
+          }
+        }
         if (error && !ignore_garbage) {
           src -= 64;
           while (src < srcend && scalar::base64::is_eight_byte(*src) &&

@@ -264,6 +264,22 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       uint64_t badcharmask =
           to_base64_mask<base64_url, ignore_garbage, default_or_url>(&b,
                                                                      &error);
+      if (error && ignore_garbage) {
+        // look for '=', if so, this ends the string.
+        const char_type *src_equal = nullptr;
+        for (auto s = src - 64; s < src; s++) {
+          if (*s == '=') {
+            src_equal = s;
+            break;
+          }
+        }
+        if (src_equal) {
+          src -= 64;
+          srclen = src_equal - src;
+          break;
+        }
+      }
+
       if (!ignore_garbage && error) {
         src -= 64;
         size_t error_offset = _tzcnt_u64(error);
@@ -308,8 +324,27 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       return {error_code::INVALID_BASE64_CHARACTER,
               size_t(src - srcinit + error_offset), size_t(dst - dstinit)};
     }
-    src += last_block_len;
-    bufferptr += compress_block(&b, badcharmask, bufferptr);
+    if (error && ignore_garbage) {
+      // look for '=', if so, this ends the string.
+      const char_type *src_equal = nullptr;
+      for (auto s = src - 64; s < src; s++) {
+        if (*s == '=') {
+          src_equal = s;
+          break;
+        }
+      }
+      if (src_equal) {
+        src -= 64;
+        srclen = src_equal - src;
+        break;
+      } else {
+        src += last_block_len;
+        bufferptr += compress_block(&b, badcharmask, bufferptr);
+      }
+    } else {
+      src += last_block_len;
+      bufferptr += compress_block(&b, badcharmask, bufferptr);
+    }
   }
 
   char *buffer_start = buffer;

@@ -174,7 +174,7 @@ size_t add_garbage(std::vector<char_type> &v, std::mt19937 &gen,
   std::uniform_int_distribution<int> char_dist(
       0, (1 << (sizeof(char_type) * 8)) - 1);
   uint8_t c = char_dist(gen);
-  while (uint8_t(c) == c && table[uint8_t(c)] != 255) {
+  while ((uint8_t(c) == c && table[uint8_t(c)] != 255) || c == '=') {
     c = char_dist(gen);
   }
   v.insert(v.begin() + i, c);
@@ -185,14 +185,113 @@ TEST(issue_dash) {
   const std::string input = "Iw==";
   std::vector<char> back(1);
   size_t len = back.size();
-  auto r = simdutf::base64_to_binary_safe(
-      input.data(), input.size(), back.data(), len);
+  auto r = simdutf::base64_to_binary_safe(input.data(), input.size(),
+                                          back.data(), len);
   ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
   ASSERT_EQUAL(r.count, 4);
   ASSERT_EQUAL(len, 1);
   ASSERT_EQUAL(back[0], '#');
 }
 
+// From Node.js tests:
+TEST(issue_node_anything_goes) {
+
+  auto test =
+      [](const std::string &input, const std::string &expected,
+         simdutf::base64_options options =
+             simdutf::base64_options::base64_default_or_url_accept_garbage) {
+        size_t buflen = simdutf::maximal_binary_length_from_base64(
+            input.data(), input.size());
+        std::vector<char> back(buflen);
+        size_t written_len = buflen;
+        auto result = simdutf::base64_to_binary_safe(
+            input.data(), input.length(), back.data(), written_len,
+            simdutf::base64_default_or_url_accept_garbage);
+        std::cout << "input: " << input << "\n";
+        std::cout << "expected: " << expected << "\n";
+        std::cout << "result: " << std::string(back.data(), written_len)
+                  << "\n";
+        ASSERT_EQUAL(result.error, simdutf::error_code::SUCCESS);
+        ASSERT_EQUAL(written_len, expected.size());
+        ASSERT_TRUE(std::equal(back.begin(), back.begin() + written_len,
+                               expected.begin()));
+      };
+  test("YQ", "a");
+  test("Y Q", "a");
+  test("Y Q ", "a");
+  test(" Y Q", "a");
+  test("Y Q==", "a");
+  test("YQ ==", "a");
+  test("YQ == junk", "a");
+  test("YWI", "ab");
+  test("YWI=", "ab");
+  test("YWJj", "abc");
+  test("YWJjZA", "abcd");
+  test("YWJjZA==", "abcd");
+  test("YW Jj ZA ==", "abcd");
+  test("YWJjZGU=", "abcde");
+  test("YWJjZGVm", "abcdef");
+  test("Y WJjZGVm", "abcdef");
+  test("YW JjZGVm", "abcdef");
+  test("YWJ jZGVm", "abcdef");
+  test("YWJj ZGVm", "abcdef");
+  test("Y W J j Z G V m", "abcdef");
+  test("Y   W\n JjZ \nG Vm", "abcdef");
+  test("rMeTqoNvw-M_dQ", "\xac\xc7\x93\xaa\x83\x6f\xc3\xe3\x3f\x75");
+
+  const char *text =
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do "
+      "eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut "
+      "enim ad minim veniam, quis nostrud exercitation ullamco laboris "
+      "nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in "
+      "reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla "
+      "pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
+      "culpa qui officia deserunt mollit anim id est laborum.";
+
+  test("TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2Npbmcg"
+       "ZWxpdCwgc2VkIGRvIGVpdXNtb2QgdGVtcG9yIGluY2lkaWR1bnQgdXQgbGFib3JlIGV0"
+       "IGRvbG9yZSBtYWduYSBhbGlxdWEuIFV0IGVuaW0gYWQgbWluaW0gdmVuaWFtLCBxdWlz"
+       "IG5vc3RydWQgZXhlcmNpdGF0aW9uIHVsbGFtY28gbGFib3JpcyBuaXNpIHV0IGFsaXF1"
+       "aXAgZXggZWEgY29tbW9kbyBjb25zZXF1YXQuIER1aXMgYXV0ZSBpcnVyZSBkb2xvciBp"
+       "biByZXByZWhlbmRlcml0IGluIHZvbHVwdGF0ZSB2ZWxpdCBlc3NlIGNpbGx1bSBkb2xv"
+       "cmUgZXUgZnVnaWF0IG51bGxhIHBhcmlhdHVyLiBFeGNlcHRldXIgc2ludCBvY2NhZWNh"
+       "dCBjdXBpZGF0YXQgbm9uIHByb2lkZW50LCBzdW50IGluIGN1bHBhIHF1aSBvZmZpY2lh"
+       "IGRlc2VydW50IG1vbGxpdCBhbmltIGlkIGVzdCBsYWJvcnVtLg==",
+       text);
+
+  test("TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2Npbmcg"
+       "ZWxpdCwgc2VkIGRvIGVpdXNtb2QgdGVtcG9yIGluY2lkaWR1bnQgdXQgbGFib3JlIGV0"
+       "IGRvbG9yZSBtYWduYSBhbGlxdWEuIFV0IGVuaW0gYWQgbWluaW0gdmVuaWFtLCBxdWlz"
+       "IG5vc3RydWQgZXhlcmNpdGF0aW9uIHVsbGFtY28gbGFib3JpcyBuaXNpIHV0IGFsaXF1"
+       "aXAgZXggZWEgY29tbW9kbyBjb25zZXF1YXQuIER1aXMgYXV0ZSBpcnVyZSBkb2xvciBp"
+       "biByZXByZWhlbmRlcml0IGluIHZvbHVwdGF0ZSB2ZWxpdCBlc3NlIGNpbGx1bSBkb2xv"
+       "cmUgZXUgZnVnaWF0IG51bGxhIHBhcmlhdHVyLiBFeGNlcHRldXIgc2ludCBvY2NhZWNh"
+       "dCBjdXBpZGF0YXQgbm9uIHByb2lkZW50LCBzdW50IGluIGN1bHBhIHF1aSBvZmZpY2lh"
+       "IGRlc2VydW50IG1vbGxpdCBhbmltIGlkIGVzdCBsYWJvcnVtLg",
+       text);
+
+  test("TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2Npbmcg\n"
+       "ZWxpdCwgc2VkIGRvIGVpdXNtb2QgdGVtcG9yIGluY2lkaWR1bnQgdXQgbGFib3JlIGV0\n"
+       "IGRvbG9yZSBtYWduYSBhbGlxdWEuIFV0IGVuaW0gYWQgbWluaW0gdmVuaWFtLCBxdWlz\n"
+       "IG5vc3RydWQgZXhlcmNpdGF0aW9uIHVsbGFtY28gbGFib3JpcyBuaXNpIHV0IGFsaXF1\n"
+       "aXAgZXggZWEgY29tbW9kbyBjb25zZXF1YXQuIER1aXMgYXV0ZSBpcnVyZSBkb2xvciBp\n"
+       "biByZXByZWhlbmRlcml0IGluIHZvbHVwdGF0ZSB2ZWxpdCBlc3NlIGNpbGx1bSBkb2xv\n"
+       "cmUgZXUgZnVnaWF0IG51bGxhIHBhcmlhdHVyLiBFeGNlcHRldXIgc2ludCBvY2NhZWNh\n"
+       "dCBjdXBpZGF0YXQgbm9uIHByb2lkZW50LCBzdW50IGluIGN1bHBhIHF1aSBvZmZpY2lh\n"
+       "IGRlc2VydW50IG1vbGxpdCBhbmltIGlkIGVzdCBsYWJvcnVtLg==",
+       text);
+
+  test("TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2Npbmcg\n"
+       "ZWxpdCwgc2VkIGRvIGVpdXNtb2QgdGVtcG9yIGluY2lkaWR1bnQgdXQgbGFib3JlIGV0\n"
+       "IGRvbG9yZSBtYWduYSBhbGlxdWEuIFV0IGVuaW0gYWQgbWluaW0gdmVuaWFtLCBxdWlz\n"
+       "IG5vc3RydWQgZXhlcmNpdGF0aW9uIHVsbGFtY28gbGFib3JpcyBuaXNpIHV0IGFsaXF1\n"
+       "aXAgZXggZWEgY29tbW9kbyBjb25zZXF1YXQuIER1aXMgYXV0ZSBpcnVyZSBkb2xvciBp\n"
+       "biByZXByZWhlbmRlcml0IGluIHZvbHVwdGF0ZSB2ZWxpdCBlc3NlIGNpbGx1bSBkb2xv\n"
+       "cmUgZXUgZnVnaWF0IG51bGxhIHBhcmlhdHVyLiBFeGNlcHRldXIgc2ludCBvY2NhZWNh\n"
+       "dCBjdXBpZGF0YXQgbm9uIHByb2lkZW50LCBzdW50IGluIGN1bHBhIHF1aSBvZmZpY2lh\n"
+       "IGRlc2VydW50IG1vbGxpdCBhbmltIGlkIGVzdCBsYWJvcnVtLg",
+       text);
+}
 // stop-before-partial should behave like so:
 // 1. if the last chunk is not a multiple of 4, we should stop before the last
 //    chunk
