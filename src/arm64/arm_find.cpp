@@ -1,6 +1,6 @@
 
 simdutf_really_inline const char *util_find(const char *start, const char *end,
-                                       char character) noexcept {
+                                            char character) noexcept {
   // Handle empty or invalid range
   if (start >= end)
     return end;
@@ -13,7 +13,8 @@ simdutf_really_inline const char *util_find(const char *start, const char *end,
   while (start + step <= end) {
     uint8x16_t data = vld1q_u8(reinterpret_cast<const uint8_t *>(start));
     uint8x16_t cmp = vceqq_u8(data, char_vec);
-    uint64_t mask = vget_lane_u64(vshrn_n_u16(vreinterpretq_u16_u8(cmp), 4), 0);
+    uint64_t mask = vget_lane_u64(
+        vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(cmp), 4)), 0);
 
     if (mask != 0) {
       // Found a match, return the first one
@@ -35,8 +36,8 @@ simdutf_really_inline const char *util_find(const char *start, const char *end,
 }
 
 simdutf_really_inline const char16_t *util_find(const char16_t *start,
-                                           const char16_t *end,
-                                           char16_t character) noexcept {
+                                                const char16_t *end,
+                                                char16_t character) noexcept {
   // Handle empty or invalid range
   if (start >= end)
     return end;
