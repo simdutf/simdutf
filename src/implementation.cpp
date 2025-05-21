@@ -735,6 +735,16 @@ public:
                           base64_options options) const noexcept override {
     return set_best()->binary_to_base64(input, length, output, options);
   }
+
+  const char *find(const char *start, const char *end,
+                   char character) const noexcept override {
+    return set_best()->find(start, end, character);
+  }
+
+  const char16_t *find(const char16_t *start, const char16_t *end,
+                       char16_t character) const noexcept override {
+    return set_best()->find(start, end, character);
+  }
 #endif // SIMDUTF_FEATURE_BASE64
 
   simdutf_really_inline
@@ -1244,6 +1254,13 @@ public:
   size_t binary_to_base64(const char *, size_t, char *,
                           base64_options) const noexcept override {
     return 0;
+  }
+  const char *find(const char *, const char *, char) const noexcept override {
+    return nullptr;
+  }
+  const char16_t *find(const char16_t *, const char16_t *,
+                       char16_t) const noexcept override {
+    return nullptr;
   }
 #endif // SIMDUTF_FEATURE_BASE64
 

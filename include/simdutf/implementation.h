@@ -2792,14 +2792,17 @@ enum base64_options : uint64_t {
   base64_url_with_padding =
       base64_url | base64_reverse_padding, /* base64url with padding */
   base64_default_accept_garbage =
-      4, /* standard base64 format accepting garbage characters */
+      4, /* standard base64 format accepting garbage characters, the input stops
+            with the first '=' if any */
   base64_url_accept_garbage =
-      5, /* base64url format accepting garbage characters */
+      5, /* base64url format accepting garbage characters, the input stops with
+            the first '=' if any */
   base64_default_or_url =
       8, /* standard/base64url hybrid format (only meaningful for decoding!) */
   base64_default_or_url_accept_garbage =
       12, /* standard/base64url hybrid format accepting garbage characters
-             (only meaningful for decoding!) */
+             (only meaningful for decoding!), the input stops with the first '='
+             if any */
 };
 
   #if SIMDUTF_CPLUSPLUS17
@@ -5105,6 +5108,13 @@ public:
   virtual size_t
   binary_to_base64(const char *input, size_t length, char *output,
                    base64_options options = base64_default) const noexcept = 0;
+  /**
+   * Find the first occurrence of a character in a string.
+   */
+  virtual const char *find(const char *start, const char *end,
+                           char character) const noexcept = 0;
+  virtual const char16_t *find(const char16_t *start, const char16_t *end,
+                               char16_t character) const noexcept = 0;
 #endif // SIMDUTF_FEATURE_BASE64
 
 #ifdef SIMDUTF_INTERNAL_TESTS
