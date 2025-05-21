@@ -30,11 +30,12 @@ void random_char_search(impl &implementation) {
     char_type search_char = static_cast<char_type>(char_dist(gen));
     
     // Use std::find to search for the character
-    auto result = std::find(arr.begin(), arr.end(), search_char);
+    auto result = std::find(arr.data(), arr.data() + size, search_char);
 
     // Nest use simdutf::find to search for the character
     auto simd_result = implementation.find(arr.data(), arr.data() + size, search_char);
-    ASSERT_TRUE(&*result == simd_result);
+    // Check if the results are the same
+    ASSERT_TRUE(simd_result == result);
 }
 
 TEST(random_char_search_char) {
