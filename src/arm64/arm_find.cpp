@@ -50,8 +50,8 @@ simdutf_really_inline const char16_t *util_find(const char16_t *start,
   while (start + step <= end) {
     uint16x8_t data = vld1q_u16(reinterpret_cast<const uint16_t *>(start));
     uint16x8_t cmp = vceqq_u16(data, char_vec);
-    uint64_t mask =
-        vget_lane_u64(vshrn_n_u32(vreinterpretq_u32_u16(cmp), 4), 0);
+    uint64_t mask = vget_lane_u64(
+        vreinterpret_u64_u16(vshrn_n_u32(vreinterpretq_u32_u16(cmp), 4)), 0);
 
     if (mask != 0) {
       // Found a match, return the first one
