@@ -1,6 +1,6 @@
 
-simdutf_really_inline const char *find(const char *start, const char *end,
-                                       char character) const noexcept {
+simdutf_really_inline const char *util_find(const char *start, const char *end,
+                                       char character) noexcept {
   // Handle empty or invalid range
   if (start >= end)
     return end;
@@ -34,9 +34,9 @@ simdutf_really_inline const char *find(const char *start, const char *end,
   return end;
 }
 
-simdutf_really_inline const char16_t *find(const char16_t *start,
+simdutf_really_inline const char16_t *util_find(const char16_t *start,
                                            const char16_t *end,
-                                           char16_t character) const noexcept {
+                                           char16_t character) noexcept {
   // Handle empty or invalid range
   if (start >= end)
     return end;
