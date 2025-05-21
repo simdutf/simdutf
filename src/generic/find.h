@@ -20,12 +20,12 @@ simdutf_really_inline const char *find(const char *start, const char *end,
 
 simdutf_really_inline const char16_t *
 find(const char16_t *start, const char16_t *end, char16_t character) noexcept {
-  for (; std::distance(start, end) >= 64; start += 64) {
+  for (; std::distance(start, end) >= 32; start += 32) {
     simd16x32<uint16_t> input(reinterpret_cast<const uint16_t *>(start));
     uint64_t matches = input.eq(uint16_t(character));
     if (matches != 0) {
       // Found a match, return the first one
-      int index = trailing_zeroes(matches);
+      int index = trailing_zeroes(matches)/2;
       return start + index;
     }
   }
