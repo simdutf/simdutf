@@ -116,7 +116,11 @@ if(Python3_FOUND)
   )
   unset(SCRIPT)
 endif(Python3_FOUND)
+add_cpp_test(find_tests)
 
+target_link_libraries(find_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)
 
 add_cpp_test(convert_latin1_to_utf8_tests)
 target_link_libraries(convert_latin1_to_utf8_tests 
