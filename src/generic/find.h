@@ -25,7 +25,7 @@ find(const char16_t *start, const char16_t *end, char16_t character) noexcept {
     uint64_t matches = input.eq(uint16_t(character));
     if (matches != 0) {
       // Found a match, return the first one
-      int index = trailing_zeroes(matches)/2;
+      int index = trailing_zeroes(matches) / 2;
       return start + index;
     }
   }
