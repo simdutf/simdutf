@@ -95,7 +95,6 @@ enum class ErrorReporting {
 
 #if SIMDUTF_FEATURE_BASE64
   #include "ppc64/ppc64_base64.cpp"
-  #include "generic/find.h"
 #endif // SIMDUTF_FEATURE_BASE64
 
 } // unnamed namespace
@@ -143,6 +142,7 @@ enum class ErrorReporting {
 
 #if SIMDUTF_FEATURE_BASE64
   #include "generic/base64.h"
+  #include "generic/find.h"
 #endif // SIMDUTF_FEATURE_BASE64
 
 #include "ppc64/templates.cpp"
