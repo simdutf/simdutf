@@ -10,7 +10,7 @@ simdutf_really_inline const char *util_find(const char *start, const char *end,
   uint8x16_t char_vec = vdupq_n_u8(static_cast<uint8_t>(character));
 
   // Main loop for full 16-byte chunks
-  while (start + step <= end) {
+  while (end - start >= step) {
     uint8x16_t data = vld1q_u8(reinterpret_cast<const uint8_t *>(start));
     uint8x16_t cmp = vceqq_u8(data, char_vec);
     uint64_t mask = vget_lane_u64(
@@ -47,7 +47,7 @@ simdutf_really_inline const char16_t *util_find(const char16_t *start,
   uint16x8_t char_vec = vdupq_n_u16(character);
 
   // Main loop for full 8-element chunks
-  while (start + step <= end) {
+  while (end - start >= step) {
     uint16x8_t data = vld1q_u16(reinterpret_cast<const uint16_t *>(start));
     uint16x8_t cmp = vceqq_u16(data, char_vec);
     uint64_t mask = vget_lane_u64(

@@ -10,7 +10,7 @@ simdutf_really_inline const char *util_find(const char *start, const char *end,
   __m512i char_vec = _mm512_set1_epi8(character);
 
   // Main loop for full 64-byte chunks
-  while (start + step <= end) {
+  while (end - start >= step) {
     __m512i data = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(start));
     __mmask64 mask = _mm512_cmpeq_epi8_mask(data, char_vec);
 
@@ -57,7 +57,7 @@ simdutf_really_inline const char16_t *util_find(const char16_t *start,
   __m512i char_vec = _mm512_set1_epi16(character);
 
   // Main loop for full 32-element chunks
-  while (start + step <= end) {
+  while (end - start >= step) {
     __m512i data = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(start));
     __mmask32 mask = _mm512_cmpeq_epi16_mask(data, char_vec);
 

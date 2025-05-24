@@ -173,7 +173,7 @@ size_t add_garbage(std::vector<char_type> &v, std::mt19937 &gen,
   size_t i = index_dist(gen);
   std::uniform_int_distribution<int> char_dist(
       0, (1 << (sizeof(char_type) * 8)) - 1);
-  uint8_t c = char_dist(gen);
+  char_type c = char_dist(gen);
   while ((uint8_t(c) == c && table[uint8_t(c)] != 255) || c == '=') {
     c = char_dist(gen);
   }
