@@ -333,7 +333,11 @@ template <typename T> struct simd8x64 {
     return simd8x64<bool>(this->chunks[0] > mask, this->chunks[1] > mask)
         .to_bitmask();
   }
-
+  simdutf_really_inline uint64_t eq(const T m) const {
+    const simd8<T> mask = simd8<T>::splat(m);
+    return simd8x64<bool>(this->chunks[0] == mask, this->chunks[1] == mask)
+        .to_bitmask();
+  }
   simdutf_really_inline uint64_t gteq_unsigned(const uint8_t m) const {
     const simd8<uint8_t> mask = simd8<uint8_t>::splat(m);
     return simd8x64<bool>((simd8<uint8_t>(__m256i(this->chunks[0])) >= mask),

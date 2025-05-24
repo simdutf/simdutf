@@ -294,15 +294,24 @@ public:
           last_chunk_handling_options::loose) const noexcept;
   size_t binary_to_base64(const char *input, size_t length, char *output,
                           base64_options options) const noexcept;
+
+  const char *find(const char *start, const char *end,
+                   char character) const noexcept;
+
+  const char16_t *find(const char16_t *start, const char16_t *end,
+                       char16_t character) const noexcept;
 #endif // SIMDUTF_FEATURE_BASE64
 
 #ifdef SIMDUTF_INTERNAL_TESTS
   virtual std::vector<TestProcedure> internal_tests() const override;
 #endif
+#if SIMDUTF_FEATURE_UTF16
+
   void to_well_formed_utf16be(const char16_t *input, size_t len,
                               char16_t *output) const noexcept final;
   void to_well_formed_utf16le(const char16_t *input, size_t len,
                               char16_t *output) const noexcept final;
+#endif
 };
 
 } // namespace ppc64

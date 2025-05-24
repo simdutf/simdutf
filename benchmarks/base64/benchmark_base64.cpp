@@ -388,6 +388,7 @@ private:
       if (!e->supported_by_runtime_system()) {
         continue;
       }
+      simdutf::get_active_implementation() = e;
       summarize("simdutf::" + e->name(), [this, &e]() {
         for (const std::vector<char> &source : data) {
           size_t base64_size =
@@ -428,6 +429,7 @@ private:
       if (!e->supported_by_runtime_system()) {
         continue;
       }
+      simdutf::get_active_implementation() = e;
       summarize("simdutf::" + e->name(), [this, &e, &base64_size]() {
         for (const std::vector<char> &source : data) {
           base64_size =
@@ -458,7 +460,7 @@ private:
       if (!e->supported_by_runtime_system()) {
         continue;
       }
-
+      simdutf::get_active_implementation() = e;
       summarize("simdutf::" + e->name(), [this, &e]() {
         for (const std::vector<char> &source : data) {
           size_t base64_size =
@@ -543,6 +545,7 @@ private:
       if (!e->supported_by_runtime_system()) {
         continue;
       }
+      simdutf::get_active_implementation() = e;
 
       summarize("simdutf::" + e->name(), [this, &e]() {
         for (const std::vector<char> &source : data) {
@@ -655,6 +658,7 @@ void bench_bun() {
       if (!e->supported_by_runtime_system()) {
         continue;
       }
+      simdutf::get_active_implementation() = e;
       pretty_print(1, source.size(), "simdutf::" + e->name(),
                    bench([&source, &buffer1, &e, &base64_size]() {
                      base64_size = e->binary_to_base64(

@@ -142,6 +142,7 @@ enum class ErrorReporting {
 
 #if SIMDUTF_FEATURE_BASE64
   #include "generic/base64.h"
+  #include "generic/find.h"
 #endif // SIMDUTF_FEATURE_BASE64
 
 #include "ppc64/templates.cpp"
@@ -892,6 +893,15 @@ size_t implementation::binary_to_base64(const char *input, size_t length,
   } else {
     return encode_base64<false>(output, input, length, options);
   }
+}
+const char *implementation::find(const char *start, const char *end,
+                                 char character) const noexcept {
+  return util::find(start, end, character);
+}
+
+const char16_t *implementation::find(const char16_t *start, const char16_t *end,
+                                     char16_t character) const noexcept {
+  return util::find(start, end, character);
 }
 #endif // SIMDUTF_FEATURE_BASE64
 

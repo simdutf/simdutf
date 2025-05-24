@@ -290,6 +290,11 @@ public:
           last_chunk_handling_options::loose) const noexcept;
   size_t binary_to_base64(const char *input, size_t length, char *output,
                           base64_options options) const noexcept;
+  const char *find(const char *start, const char *end,
+                   char character) const noexcept;
+  const char16_t *find(const char16_t *start, const char16_t *end,
+                       char16_t character) const noexcept;
+
 #endif // SIMDUTF_FEATURE_BASE64
 };
 } // namespace fallback

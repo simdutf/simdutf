@@ -1,6 +1,7 @@
 #ifndef SIMDUTF_BASE64_H
 #define SIMDUTF_BASE64_H
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -117,6 +118,19 @@ reduced_input find_end(const char_type *src, size_t srclen,
   size_t full_input_length = srclen;
   size_t equallocation =
       srclen; // location of the first padding character if any
+  if (ignore_garbage) {
+    // Technically, we don't need to find the first padding character, we can
+    // just change our algorithms, but it adds substantial complexity.
+    auto it =
+        simdutf::get_active_implementation()->find(src, src + srclen, '=');
+    if (it != src + srclen) {
+      equallocation = it - src;
+      equalsigns = 1;
+      srclen = equallocation;
+      full_input_length = equallocation + 1;
+    }
+    return {equalsigns, equallocation, srclen, full_input_length};
+  }
   if (!ignore_garbage && srclen > 0 && src[srclen - 1] == '=') {
     // This is the last '=' sign.
     equallocation = srclen - 1;
