@@ -45,7 +45,7 @@ target_link_libraries(benchmark PUBLIC simdutf::benchmarks::benchmark)
 set_property(TARGET benchmark PROPERTY CXX_STANDARD 17)
 set_property(TARGET benchmark PROPERTY CXX_STANDARD_REQUIRED ON)
 
-if(MSVC AND BUILD_SHARED_LIBS)
+if(WIN32 AND BUILD_SHARED_LIBS)
   # Copy the simdutf dll into the benchmark directory
   add_custom_command(TARGET stream POST_BUILD        # Adds a post-build event
     COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake -E copy_if_different..."

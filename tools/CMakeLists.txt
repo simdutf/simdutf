@@ -49,7 +49,7 @@ set_property(TARGET fastbase64 PROPERTY CXX_STANDARD_REQUIRED ON)
 target_link_libraries(sutf PUBLIC simdutf)
 target_link_libraries(fastbase64 PUBLIC simdutf)
 
-if(MSVC AND BUILD_SHARED_LIBS)
+if(WIN32 AND BUILD_SHARED_LIBS)
   # Copy the simdutf dll into the directory
   add_custom_command(TARGET sutf POST_BUILD        # Adds a post-build event
     COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake -E copy_if_different..."
