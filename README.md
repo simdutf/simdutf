@@ -2052,7 +2052,7 @@ enum last_chunk_handling_options : uint64_t {
   loose = 0,               /* standard base64 format, decode partial final chunk */
   strict = 1,              /* error when the last chunk is partial, 2 or 3 chars, and unpadded, or non-zero bit padding */
   stop_before_partial = 2, /* if the last chunk is partial , ignore it (no error) */
-  only_full = 3 /* only decode full blocks (4 base64 characters, no padding) */
+  only_full_chunks = 3 /* only decode full blocks (4 base64 characters, no padding) */
 };
 
 /**

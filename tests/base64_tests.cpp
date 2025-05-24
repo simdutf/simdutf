@@ -2999,7 +2999,7 @@ TEST(streaming_base64_roundtrip) {
       simdutf::full_result r = implementation.base64_to_binary_details(
           buffer.data() + pos, count, back.data() + outpos,
           simdutf::base64_default,
-          simdutf::last_chunk_handling_options::stop_before_partial);
+          simdutf::last_chunk_handling_options::only_full_chunks);
       ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
       ASSERT_TRUE(r.input_count <= count);
       ASSERT_TRUE(r.output_count <= back.size() - outpos);

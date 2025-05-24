@@ -2142,10 +2142,11 @@ simdutf_warn_unused result slow_base64_to_binary_safe_impl(
   // and the number of bytes read from the input buffer.
   // The function will also return an error code if the input buffer is not
   // valid base64.
-  auto r = scalar::base64::base64_tail_decode_safe(
+  full_result r = scalar::base64::base64_tail_decode_safe(
       output, outlen, input, length, equalsigns, options, last_chunk_options);
   r = scalar::base64::patch_tail_result(r, 0, 0, equallocation,
                                         full_input_length, last_chunk_options);
+  outlen = r.output_count;
   if (!is_partial(last_chunk_options) && r.error == error_code::SUCCESS &&
       equalsigns > 0) {
     // additional checks
@@ -2204,7 +2205,7 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
       get_default_implementation()->base64_to_binary_details(
           input + input_position, safe_input, output + output_position, options,
           done_with_partial ? last_chunk_handling_options
-                            : simdutf::last_chunk_handling_options::only_full);
+                            : simdutf::last_chunk_handling_options::only_full_chunks);
   simdutf_log_assert(r.input_count <= safe_input,
                      "You should not read more than safe_input");
   simdutf_log_assert(r.output_count <= remaining_output_length,

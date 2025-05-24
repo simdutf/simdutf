@@ -293,7 +293,7 @@ full_result base64_tail_decode_impl(
                    last_chunk_handling_options::stop_before_partial &&
                (padding_characters + idx < 4) &&
                (idx >= 2 || padding_characters == 0)) ||
-              (last_chunk_options == last_chunk_handling_options::only_full &&
+              (last_chunk_options == last_chunk_handling_options::only_full_chunks &&
                (idx >= 2 || padding_characters == 0))) {
             // Rewind src to before partial chunk
 
