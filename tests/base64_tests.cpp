@@ -14,7 +14,7 @@
 
 // Return the length of the prefix that contains count base64 characters.
 // Thus, if count is 3, the function returns the length of the prefix
-// that contains 3 base64 characters.
+// that contains 3 base64 characters. Padding characters are counted.
 size_t prefix_length_base64_index(size_t count, simdutf::base64_options options,
                                   const char *input, size_t length) {
   size_t i = 0;
@@ -289,17 +289,150 @@ TEST(issue_dash) {
   ASSERT_EQUAL(back[0], '#');
 }
 
+TEST(issue_dash_partial) {
+  const std::string input = "Iw==";
+  std::vector<char> back(1);
+  size_t len = back.size();
+  auto r = simdutf::base64_to_binary_safe(
+      input.data(), input.size(), back.data(), len, simdutf::base64_default,
+      simdutf::last_chunk_handling_options::stop_before_partial);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.count, 4);
+  ASSERT_EQUAL(len, 1);
+  ASSERT_EQUAL(back[0], '#');
+}
+
+// https://github.com/tc39/test262
+TEST(tc39_4a) {
+  std::pair<std::string, std::vector<uint8_t>> test_cases[] = {
+      {"ZXhhZg==", {101, 120, 97, 102}},
+      {"ZXhhZg", {101, 120, 97}},
+      {"ZXhhZh==", {101, 120, 97, 102}},
+      {"ZXhhZh", {101, 120, 97}},
+      {"ZXhhZg=", {101, 120, 97}}};
+  for (const auto tc : test_cases) {
+    const std::string &input = tc.first;
+    const std::vector<uint8_t> &expected = tc.second;
+    std::vector<uint8_t> back(expected.size(), 255);
+    size_t len = back.size();
+    auto r = simdutf::base64_to_binary_safe(
+        input.data(), input.size(), reinterpret_cast<char *>(back.data()), len,
+        simdutf::base64_default,
+        simdutf::last_chunk_handling_options::stop_before_partial, true);
+    ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+    ASSERT_EQUAL(len, expected.size());
+    ASSERT_EQUAL(back, expected);
+  }
+}
+
+// https://github.com/tc39/test262
+TEST(tc39_4b) {
+  std::pair<std::string, std::vector<uint8_t>> test_cases[] = {
+      {"ZXhhZg==", {101, 120, 97, 102}},
+      {"ZXhhZg", {101, 120, 97}},
+      {"ZXhhZh==", {101, 120, 97, 102}},
+      {"ZXhhZh", {101, 120, 97}},
+      {"ZXhhZg=", {101, 120, 97}}};
+  for (const auto tc : test_cases) {
+    const std::string &input = tc.first;
+    const std::vector<uint8_t> &expected = tc.second;
+    std::vector<uint8_t> back(expected.size(), 255);
+    size_t len = back.size();
+    auto r = simdutf::base64_to_binary_safe(
+        input.data(), input.size(), reinterpret_cast<char *>(back.data()), len,
+        simdutf::base64_default,
+        simdutf::last_chunk_handling_options::stop_before_partial, true);
+    ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+    ASSERT_EQUAL(len, expected.size());
+    ASSERT_EQUAL(back, expected);
+  }
+}
+
+// https://github.com/tc39/test262
+TEST(tc39_3a) {
+  const std::string input = "ZXhhZg===";
+  std::vector<uint8_t> back = {255, 255, 255, 255, 255};
+
+  size_t len = back.size();
+  auto r = simdutf::base64_to_binary_safe(
+      input.data(), input.size(), reinterpret_cast<char *>(back.data()), len,
+      simdutf::base64_default,
+      simdutf::last_chunk_handling_options::stop_before_partial, true);
+  ASSERT_TRUE(r.error != simdutf::error_code::SUCCESS);
+}
+
+// https://github.com/tc39/test262
+TEST(tc39_3b) {
+  const std::string input = "ZXhhZg===";
+  std::vector<uint8_t> back = {255, 255, 255, 255, 255};
+
+  size_t len = back.size();
+  auto r = implementation.base64_to_binary(
+      input.data(), input.size(), reinterpret_cast<char *>(back.data()),
+      simdutf::base64_default,
+      simdutf::last_chunk_handling_options::stop_before_partial);
+  ASSERT_TRUE(r.error != simdutf::error_code::SUCCESS);
+}
+
+// https://github.com/tc39/test262
+TEST(tc39_1a) {
+  const std::string input = "Zm9vYmE=";
+  std::vector<uint8_t> back = {255, 255, 255, 255, 255};
+  std::vector<uint8_t> expected = {102, 111, 111, 98, 97};
+
+  size_t len = back.size();
+  auto r = simdutf::base64_to_binary_safe(
+      input.data(), input.size(), reinterpret_cast<char *>(back.data()), len,
+      simdutf::base64_default,
+      simdutf::last_chunk_handling_options::stop_before_partial, true);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.count, 8);
+  ASSERT_EQUAL(len, 5);
+  ASSERT_EQUAL(back, expected);
+}
+
+// https://github.com/tc39/test262
+TEST(tc39_1b) {
+  const std::string input = "Zm9vYmE=";
+  std::vector<uint8_t> back = {255, 255, 255, 255, 255};
+  std::vector<uint8_t> expected = {102, 111, 111, 98, 97};
+
+  size_t len = back.size();
+  auto r = simdutf::base64_to_binary_safe(
+      input.data(), input.size(), reinterpret_cast<char *>(back.data()), len,
+      simdutf::base64_default,
+      simdutf::last_chunk_handling_options::stop_before_partial, true);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.count, 8);
+  ASSERT_EQUAL(len, 5);
+  ASSERT_EQUAL(back, expected);
+}
+
+// https://github.com/tc39/test262
+TEST(tc39_2) {
+  const std::string input = "Zm9vYmE";
+  std::vector<uint8_t> back = {255, 255, 255, 255, 255};
+  std::vector<uint8_t> expected = {102, 111, 111, 255, 255};
+
+  size_t len = back.size();
+  auto r = simdutf::base64_to_binary_safe(
+      input.data(), input.size(), reinterpret_cast<char *>(back.data()), len,
+      simdutf::base64_default,
+      simdutf::last_chunk_handling_options::stop_before_partial, true);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.count, 4);
+  ASSERT_EQUAL(len, 3);
+  ASSERT_EQUAL(back, expected);
+}
+
 // stop-before-partial should behave like so:
 // 1. if the last chunk is not a multiple of 4, we should stop before the last
 //    chunk
-// 2. if the last chunk is a multiple of 4 (not counting padding), we should
+// 2. if the last chunk is a multiple of 4 (counting padding), we should
 // decode it
 // 3. If there is a padding character appearing in the last chunk where we have
 //    fewer than 2 base64 characters, we should return an error.
 //
-// The JavaScript spec suggests that in all cases, we should have decoded
-// everything up to the last chunk, even in case of an error, but simdutf
-// does not do that??? (We need to do extra work to do that).
 // https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
 //
 TEST(partial_should_decode_up_to_last_chunk) {
@@ -325,11 +458,10 @@ TEST(partial_should_decode_up_to_last_chunk) {
           buffer.data(), buffer.size(), back.data(), simdutf::base64_default,
           option);
       ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
-      const size_t expected_output_length = len / 3 * 3;
+      const size_t expected_output_length = len;
       const size_t expected_input_length = prefix_length_base64_index(
-          expected_output_length / 3 * 4, simdutf::base64_default,
+          (expected_output_length + 2) / 3 * 4, simdutf::base64_default,
           buffer.data(), buffer.size());
-      ASSERT_EQUAL(r.input_count, expected_input_length);
       ASSERT_EQUAL(r.output_count, expected_output_length);
       ASSERT_TRUE(std::equal(
           back.begin(), back.begin() + expected_output_length, source.begin()));
@@ -378,6 +510,7 @@ TEST(partial_should_decode_up_to_last_chunk) {
 }
 
 TEST(partial_should_decode_four_wise_chunks) {
+  // 37 bytes = 4 * 3 + 1
   const std::string input = "X8vzLrvHmZgncicZDnXdVZkktaYFDvi41fA2A";
   std::vector<char> buffer;
   buffer.resize(input.size() / 4 * 3);
@@ -386,9 +519,8 @@ TEST(partial_should_decode_four_wise_chunks) {
       input.data(), input.size(), buffer.data(), simdutf::base64_default,
       option);
   ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
-  ASSERT_TRUE(r.input_count > 0);
-  ASSERT_TRUE(r.input_count % 4 == 0);
-  ASSERT_TRUE(r.output_count == 3 * r.input_count / 4);
+  ASSERT_TRUE(r.input_count == 36);
+  ASSERT_TRUE(r.output_count == 27);
 }
 
 TEST(stop_before_partial_one_char) {
@@ -539,7 +671,6 @@ TEST(roundtrip_base64_with_spaces) {
         auto r = simdutf::base64_to_binary_safe(
             buffer.data(), buffer.size(), back.data(), back_length,
             simdutf::base64_default, option);
-
         ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
         ASSERT_EQUAL(back_length, len);
 
@@ -853,11 +984,12 @@ TEST(base64_decode_just_one_padding_partial_safe) {
        3}, // error
   };
   std::vector<char> buffer(128);
+  printf("\n");
   for (auto &p : test_cases) {
     auto input = std::get<0>(p);
     auto expected_result = std::get<1>(p);
     size_t expected_output = std::get<2>(p);
-
+    printf("input: %s\n", input.c_str());
     for (auto option : {simdutf::base64_options::base64_default,
                         simdutf::base64_options::base64_url}) {
       for (auto chunk_option :

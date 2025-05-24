@@ -229,6 +229,7 @@ full_result
 compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                        base64_options options,
                        last_chunk_handling_options last_chunk_options) {
+
   (void)options;
   const uint8_t *to_base64 =
       default_or_url ? tables::base64::to_base64_default_or_url_value
@@ -359,15 +360,15 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         dst += output_len;
         return {BASE64_INPUT_REMAINDER, equallocation, size_t(dst - dstinit)};
       } else
-        // The idea here is that in stop_before_partial mode, we stop right away
-        // if we have a partial chunk that would be valid.
-        if (last_chunk_options ==
-                last_chunk_handling_options::stop_before_partial &&
-            (idx >= 2 ||
-             padding_characters ==
-                 0)) { // There are two cases where stop_before_partial
-                       // succeeds: either we have idx >= 2 or we have
-                       // padding_characters == 0
+        // If there is a partial chunk with insufficient padding, with
+        // stop_before_partial, we need to just ignore it. In "only full" mode,
+        // skip the minute there are padding characters.
+        if ((last_chunk_options ==
+                 last_chunk_handling_options::stop_before_partial &&
+             (padding_characters + idx < 4) &&
+             (idx >= 2 || padding_characters == 0)) ||
+            (last_chunk_options == last_chunk_handling_options::only_full &&
+             (idx >= 2 || padding_characters == 0))) {
           _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
           dst += output_len;
           // we need to rewind src to before the partial chunk
@@ -416,10 +417,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
             _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
             dst += output_len;
           } else if (!ignore_garbage && idx == 1 &&
-                     (last_chunk_options !=
-                          last_chunk_handling_options::stop_before_partial ||
-                      (last_chunk_options ==
-                           last_chunk_handling_options::stop_before_partial &&
+                     (!is_partial(last_chunk_options) ||
+                      (is_partial(last_chunk_options) &&
                        padding_characters > 0))) {
             _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
             dst += output_len;
@@ -435,7 +434,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
             dst += output_len;
           }
         }
-    if (!ignore_garbage && last_chunk_options != stop_before_partial &&
+
+    if (!ignore_garbage && !is_partial(last_chunk_options) &&
         padding_characters > 0) {
       size_t output_count = size_t(dst - dstinit);
       if ((output_count % 3 == 0) ||
@@ -443,6 +443,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         return {INVALID_BASE64_CHARACTER, equallocation, output_count};
       }
     }
+
     return {SUCCESS, size_t(src - srcinit), size_t(dst - dstinit)};
   }
 

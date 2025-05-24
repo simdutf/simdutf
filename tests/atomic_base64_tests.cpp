@@ -384,6 +384,19 @@ TEST(issue_dash) {
   ASSERT_EQUAL(back[0], '#');
 }
 
+TEST(issue_dash_partial) {
+  const std::string input = "Iw==";
+  std::vector<char> back(1);
+  size_t len = back.size();
+  auto r = simdutf::atomic_base64_to_binary_safe(
+      input.data(), input.size(), back.data(), len, sidmstd::base64_url,
+      simdutf::last_chunk_handling_options::stop_before_partial);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.count, 4);
+  ASSERT_EQUAL(len, 1);
+  ASSERT_EQUAL(back[0], '#');
+}
+
 TEST(issue_202505170242) {
   const std::vector<char> base64{
       '\f', '\n', '=', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',

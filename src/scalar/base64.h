@@ -286,15 +286,15 @@ full_result base64_tail_decode_impl(
           return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
                   size_t(dst - dstinit), true};
         } else
-          // The idea here is that in stop_before_partial mode, we stop right
-          // away if we have a partial chunk that would be valid.
-          if (last_chunk_options ==
-                  last_chunk_handling_options::stop_before_partial &&
-              (idx >= 2 ||
-               padding_characters ==
-                   0)) { // There are two cases where stop_before_partial
-                         // succeeds: either we have idx >= 2 or we have
-                         // padding_characters == 0
+          // If there is a partial chunk with insufficient padding, with
+          // stop_before_partial, we need to just ignore it. In "only full"
+          // mode, skip the minute there are padding characters.
+          if ((last_chunk_options ==
+                   last_chunk_handling_options::stop_before_partial &&
+               (padding_characters + idx < 4) &&
+               (idx >= 2 || padding_characters == 0)) ||
+              (last_chunk_options == last_chunk_handling_options::only_full &&
+               (idx >= 2 || padding_characters == 0))) {
             // Rewind src to before partial chunk
 
             // partial means that we are *not* going to consume the read
@@ -356,10 +356,8 @@ full_result base64_tail_decode_impl(
               }
               dst += 2;
             } else if (!ignore_garbage && idx == 1 &&
-                       (last_chunk_options !=
-                            last_chunk_handling_options::stop_before_partial ||
-                        (last_chunk_options ==
-                             last_chunk_handling_options::stop_before_partial &&
+                       (!is_partial(last_chunk_options) ||
+                        (is_partial(last_chunk_options) &&
                          padding_characters > 0))) {
               return {BASE64_INPUT_REMAINDER, size_t(src - srcinit),
                       size_t(dst - dstinit)};
@@ -425,11 +423,14 @@ patch_tail_result(full_result r, size_t previous_input, size_t previous_output,
     r.input_count = equallocation;
   }
 
-  if (r.error == error_code::SUCCESS &&
-      last_chunk_options != stop_before_partial) {
-    // A success when we are not in stop_before_partial mode.
-    // means that we have consumed the whole input buffer.
-    r.input_count = full_input_length;
+  if (r.error == error_code::SUCCESS) {
+    if (!is_partial(last_chunk_options)) {
+      // A success when we are not in stop_before_partial mode.
+      // means that we have consumed the whole input buffer.
+      r.input_count = full_input_length;
+    } else if (r.output_count % 3 != 0) {
+      r.input_count = full_input_length;
+    }
   }
   return r;
 }
@@ -540,8 +541,8 @@ simdutf_warn_unused full_result base64_to_binary_details_impl(
       output, input, length, equalsigns, options, last_chunk_options);
   r = scalar::base64::patch_tail_result(r, 0, 0, equallocation,
                                         full_input_length, last_chunk_options);
-  if (last_chunk_options != stop_before_partial &&
-      r.error == error_code::SUCCESS && equalsigns > 0 && !ignore_garbage) {
+  if (!is_partial(last_chunk_options) && r.error == error_code::SUCCESS &&
+      equalsigns > 0 && !ignore_garbage) {
     // additional checks
     if ((r.output_count % 3 == 0) ||
         ((r.output_count % 3) + 1 + equalsigns != 4)) {
@@ -576,8 +577,8 @@ simdutf_warn_unused full_result base64_to_binary_details_safe_impl(
       output, outlen, input, length, equalsigns, options, last_chunk_options);
   r = scalar::base64::patch_tail_result(r, 0, 0, equallocation,
                                         full_input_length, last_chunk_options);
-  if (last_chunk_options != stop_before_partial &&
-      r.error == error_code::SUCCESS && equalsigns > 0 && !ignore_garbage) {
+  if (!is_partial(last_chunk_options) && r.error == error_code::SUCCESS &&
+      equalsigns > 0 && !ignore_garbage) {
     // additional checks
     if ((r.output_count % 3 == 0) ||
         ((r.output_count % 3) + 1 + equalsigns != 4)) {

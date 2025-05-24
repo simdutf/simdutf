@@ -2837,8 +2837,13 @@ enum last_chunk_handling_options : uint64_t {
   strict = 1, /* error when the last chunk is partial, 2 or 3 chars, and
                  unpadded, or non-zero bit padding */
   stop_before_partial =
-      2, /* if the last chunk is partial (2 or 3 chars), ignore it (no error) */
+      2,        /* if the last chunk is partial, ignore it (no error) */
+  only_full = 3 /* only decode full blocks (4 base64 characters, no padding) */
 };
+
+inline bool is_partial(last_chunk_handling_options options) {
+  return (options == stop_before_partial) || (options == only_full);
+}
 
   #if SIMDUTF_CPLUSPLUS17
 inline std::string_view to_string(last_chunk_handling_options options) {

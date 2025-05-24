@@ -2146,9 +2146,8 @@ simdutf_warn_unused result slow_base64_to_binary_safe_impl(
       output, outlen, input, length, equalsigns, options, last_chunk_options);
   r = scalar::base64::patch_tail_result(r, 0, 0, equallocation,
                                         full_input_length, last_chunk_options);
-  outlen = r.output_count;
-  if (last_chunk_options != stop_before_partial &&
-      r.error == error_code::SUCCESS && equalsigns > 0) {
+  if (!is_partial(last_chunk_options) && r.error == error_code::SUCCESS &&
+      equalsigns > 0) {
     // additional checks
     if ((outlen % 3 == 0) || ((outlen % 3) + 1 + equalsigns != 4)) {
       r.error = error_code::INVALID_BASE64_CHARACTER;
@@ -2188,7 +2187,6 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
     base64_options options,
     last_chunk_handling_options last_chunk_handling_options,
     bool decode_up_to_bad_char) noexcept {
-
   static_assert(std::is_same<chartype, char>::value ||
                     std::is_same<chartype, char16_t>::value,
                 "Only char and char16_t are supported.");
@@ -2205,9 +2203,8 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   simdutf::full_result r =
       get_default_implementation()->base64_to_binary_details(
           input + input_position, safe_input, output + output_position, options,
-          done_with_partial
-              ? last_chunk_handling_options
-              : simdutf::last_chunk_handling_options::stop_before_partial);
+          done_with_partial ? last_chunk_handling_options
+                            : simdutf::last_chunk_handling_options::only_full);
   simdutf_log_assert(r.input_count <= safe_input,
                      "You should not read more than safe_input");
   simdutf_log_assert(r.output_count <= remaining_output_length,
