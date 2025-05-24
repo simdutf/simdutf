@@ -277,6 +277,39 @@ TEST(issue_node_anything_goes) {
        text);
 }
 
+TEST(issue_202505170241) {
+  const std::vector<char> base64{
+      'c',  'c',  'c',  '\t', '=',  '\n', '\r', '\n', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
+      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '=',
+  };
+  std::vector<char> buffer;
+  for (size_t fixed_len : {2, 1024}) {
+    buffer.resize(fixed_len);
+    size_t len = buffer.size();
+    auto result = simdutf::base64_to_binary_safe(
+        base64.data(), base64.size(), buffer.data(), len,
+        simdutf::base64_default,
+        simdutf::last_chunk_handling_options::stop_before_partial);
+    ASSERT_EQUAL(result.error, simdutf::error_code::SUCCESS);
+    ASSERT_EQUAL(result.count, base64.size());
+    ASSERT_EQUAL(len, 2);
+  }
+};
+
 TEST(issue_dash) {
   const std::string input = "Iw==";
   std::vector<char> back(1);

@@ -389,7 +389,7 @@ TEST(issue_dash_partial) {
   std::vector<char> back(1);
   size_t len = back.size();
   auto r = simdutf::atomic_base64_to_binary_safe(
-      input.data(), input.size(), back.data(), len, sidmstd::base64_url,
+      input.data(), input.size(), back.data(), len, simdutf::base64_url,
       simdutf::last_chunk_handling_options::stop_before_partial);
   ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
   ASSERT_EQUAL(r.count, 4);
@@ -438,11 +438,11 @@ TEST(issue_202505170245) {
       ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  '\f',
       '\f', '\f', ' ',  '\n', '\n', '\n', '=',
   };
-  compare_decode(base64, 8236, simdutf::base64_default,
-                 simdutf::last_chunk_handling_options::strict, true);
   ASSERT_TRUE(compare_decode_verbose(
       base64, 8236, simdutf::base64_default,
       simdutf::last_chunk_handling_options::strict, true));
+  compare_decode(base64, 8236, simdutf::base64_default,
+                 simdutf::last_chunk_handling_options::strict, true);
 };
 
 TEST(issue_202505170241) {
@@ -464,12 +464,12 @@ TEST(issue_202505170241) {
       '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
       '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '=',
   };
-  compare_decode(base64, 2621, simdutf::base64_url_with_padding,
-                 simdutf::last_chunk_handling_options::stop_before_partial,
-                 true);
   ASSERT_TRUE(compare_decode_verbose(
       base64, 2621, simdutf::base64_url_with_padding,
       simdutf::last_chunk_handling_options::stop_before_partial, true));
+  compare_decode(base64, 2621, simdutf::base64_url_with_padding,
+                 simdutf::last_chunk_handling_options::stop_before_partial,
+                 true);
 };
 
 TEST(issue_202505170219) {

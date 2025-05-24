@@ -2131,8 +2131,7 @@ simdutf_warn_unused result slow_base64_to_binary_safe_impl(
 
   // The parameters of base64_tail_decode_safe are:
   // - dst: the output buffer
-  // - outlen: the size of the output buffer, modified to the number of
-  //   bytes written to the output buffer
+  // - outlen: the size of the output buffer
   // - srcr: the input buffer
   // - length: the size of the input buffer
   // - padded_characters: the number of padding characters
@@ -2204,13 +2203,13 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
   simdutf::full_result r =
       get_default_implementation()->base64_to_binary_details(
           input + input_position, safe_input, output + output_position, options,
-          done_with_partial ? last_chunk_handling_options
-                            : simdutf::last_chunk_handling_options::only_full_chunks);
+          done_with_partial
+              ? last_chunk_handling_options
+              : simdutf::last_chunk_handling_options::only_full_chunks);
   simdutf_log_assert(r.input_count <= safe_input,
                      "You should not read more than safe_input");
   simdutf_log_assert(r.output_count <= remaining_output_length,
                      "You should not write more than remaining_output_length");
-
   // Technically redundant, but we want to be explicit about it.
   input_position += r.input_count;
   output_position += r.output_count;
