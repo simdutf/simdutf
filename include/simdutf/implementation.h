@@ -3392,6 +3392,20 @@ atomic_base64_to_binary_safe(
     #endif // SIMDUTF_SPAN
   #endif   // SIMDUTF_ATOMIC_REF
 
+/**
+  * Find the first occurrence of a character in a string. If the character is
+  * not found, return a pointer to the end of the string. 
+  * @param start        the start of the string
+  * @param end          the end of the string
+  * @param character    the character to find
+  * @return a pointer to the first occurrence of the character in the string,
+  * or a pointer to the end of the string if the character is not found.
+  *
+  */
+simdutf_warn_unused const char *find(const char *start, const char *end,
+                          char character) noexcept;
+simdutf_warn_unused const char16_t *find(const char16_t *start, const char16_t *end,
+                              char16_t character) noexcept;
 #endif // SIMDUTF_FEATURE_BASE64
 
 /**
@@ -5117,7 +5131,14 @@ public:
   binary_to_base64(const char *input, size_t length, char *output,
                    base64_options options = base64_default) const noexcept = 0;
   /**
-   * Find the first occurrence of a character in a string.
+   * Find the first occurrence of a character in a string. If the character is
+   * not found, return a pointer to the end of the string. 
+   * @param start        the start of the string
+   * @param end          the end of the string
+   * @param character    the character to find
+   * @return a pointer to the first occurrence of the character in the string,
+   * or a pointer to the end of the string if the character is not found.
+   *
    */
   virtual const char *find(const char *start, const char *end,
                            char character) const noexcept = 0;

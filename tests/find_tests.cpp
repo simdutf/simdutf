@@ -36,6 +36,10 @@ void random_char_search(impl &implementation) {
       implementation.find(arr.data(), arr.data() + size, search_char);
   // Check if the results are the same
   ASSERT_TRUE(simd_result == result);
+  simd_result =
+      simdutf::find(arr.data(), arr.data() + size, search_char);
+  // Check if the results are the same
+  ASSERT_TRUE(simd_result == result);
 }
 
 TEST(random_char_search_char) {
