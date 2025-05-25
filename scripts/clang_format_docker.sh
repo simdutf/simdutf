@@ -31,7 +31,7 @@ gitroot="$(git rev-parse --show-toplevel)"
 
 cd "$gitroot"
 
-docker run -v"$(pwd):/src" \
+docker run -v"$(pwd):/src" --platform linux/amd64 \
        --workdir /src \
        -u "$(id -u $USER):$(id -g $USER)" \
        ghcr.io/pauldreik/clang-format-18:latest \

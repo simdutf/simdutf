@@ -121,8 +121,7 @@ reduced_input find_end(const char_type *src, size_t srclen,
   if (ignore_garbage) {
     // Technically, we don't need to find the first padding character, we can
     // just change our algorithms, but it adds substantial complexity.
-    auto it =
-        simdutf::find(src, src + srclen, '=');
+    auto it = simdutf::find(src, src + srclen, '=');
     if (it != src + srclen) {
       equallocation = it - src;
       equalsigns = 1;
