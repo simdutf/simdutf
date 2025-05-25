@@ -21,6 +21,7 @@ simdutf: Unicode validation and transcoding at billions of characters per second
   - [Example](#example)
   - [API](#api)
   - [Base64](#base64)
+  - [Find](#find)
   - [The sutf command-line tool](#the-sutf-command-line-tool)
   - [Manual implementation selection](#manual-implementation-selection)
   - [Thread safety](#thread-safety)
@@ -254,7 +255,7 @@ The script `singleheader/amalgamate.py` accepts the following parameters:
 * `--with-utf32` - likewise: only UTF-32 encoding;
 * `--with-ascii` - procedures related to ASCII encoding;
 * `--with-latin1` - convert between selected UTF encodings and Latin1;
-* `--with-base64` - procedures related to Base64 encoding;
+* `--with-base64` - procedures related to Base64 encoding, includes 'find';
 * `--with-detect-enc` - enable detect encoding.
 
 If we need conversion between different encodings, like UTF-8 and UTF-32, then
@@ -2281,6 +2282,41 @@ simdutf_warn_unused result base64_to_binary_safe(const char * input, size_t leng
 simdutf_warn_unused result base64_to_binary_safe(const char16_t * input, size_t length, char* output, size_t& outlen, base64_options options = base64_default,
       last_chunk_handling_options last_chunk_options = loose,
       bool decode_up_to_bad_char = false) noexcept;
+```
+
+Find
+-----
+
+The C++ standard library provides `std::find` for locating a character in a string, but its performance can be suboptimal on modern hardware. To address this, we introduce `simdutf::find`, a high-performance alternative optimized for recent processors using SIMD instructions. It operates on raw pointers (`char` or `char16_t`) for maximum efficiency.
+
+
+
+```cpp
+  std::string input = "abc";
+
+  const char* result =
+      simdutf::find(input.data(), input.data() + input.size(), 'c');
+  // result should point at the letter 'c'
+```
+
+The `simdutf::find` interface is straightforward and efficient.
+
+
+```cpp
+/**
+  * Find the first occurrence of a character in a string. If the character is
+  * not found, return a pointer to the end of the string. 
+  * @param start        the start of the string
+  * @param end          the end of the string
+  * @param character    the character to find
+  * @return a pointer to the first occurrence of the character in the string,
+  * or a pointer to the end of the string if the character is not found.
+  *
+  */
+simdutf_warn_unused const char *find(const char *start, const char *end,
+                          char character) noexcept;
+simdutf_warn_unused const char16_t *find(const char16_t *start, const char16_t *end,
+                              char16_t character) noexcept;
 ```
 
 
