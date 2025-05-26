@@ -152,7 +152,7 @@ Linux or macOS users might follow the following instructions if they have a rece
 
 1. Pull the library in a directory
    ```
-   wget https://github.com/simdutf/simdutf/releases/download/v7.1.0/singleheader.zip
+   wget https://github.com/simdutf/simdutf/releases/download/v7.2.0/singleheader.zip
    unzip singleheader.zip
    ```
    You can replace `wget` by `curl -OL https://...` if you prefer.
@@ -223,7 +223,7 @@ Single-header version
 You can create a single-header version of the library where
 all of the code is put into two files (`simdutf.h` and `simdutf.cpp`).
 We publish a zip archive containing these files, e.g., see
-https://github.com/simdutf/simdutf/releases/download/v7.1.0/singleheader.zip
+https://github.com/simdutf/simdutf/releases/download/v7.2.0/singleheader.zip
 
 You may generate it on your own using a Python script.
 
@@ -2305,7 +2305,7 @@ The `simdutf::find` interface is straightforward and efficient.
 ```cpp
 /**
   * Find the first occurrence of a character in a string. If the character is
-  * not found, return a pointer to the end of the string. 
+  * not found, return a pointer to the end of the string.
   * @param start        the start of the string
   * @param end          the end of the string
   * @param character    the character to find
