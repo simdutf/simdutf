@@ -2084,14 +2084,13 @@ simdutf_warn_unused size_t utf32_length_from_utf8(const char *input,
 
 #if SIMDUTF_FEATURE_BASE64
 simdutf_warn_unused const char *find(const char *start, const char *end,
-                          char character) noexcept {
-  return get_default_implementation()->find(start, end, character); 
-                          }
-simdutf_warn_unused const char16_t *find(const char16_t *start, const char16_t *end,
-                              char16_t character) noexcept {
+                                     char character) noexcept {
   return get_default_implementation()->find(start, end, character);
-                              }
-
+}
+simdutf_warn_unused const char16_t *
+find(const char16_t *start, const char16_t *end, char16_t character) noexcept {
+  return get_default_implementation()->find(start, end, character);
+}
 
 simdutf_warn_unused size_t
 maximal_binary_length_from_base64(const char *input, size_t length) noexcept {
