@@ -17,20 +17,20 @@ jobs:
         run: |
           mkdir build &&
           cd build &&
-          cmake -DSIMDUTF_CXX_STANDARD=20  -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=ON -DSIMDUTF_SANITIZE=ON ..  &&
+          cmake -DSIMDUTF_CXX_STANDARD=20 -DSIMDUTF_ATOMIC_BASE64_TESTS=ON  -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=ON -DSIMDUTF_SANITIZE=ON ..  &&
           cmake --build .   &&
           ctest --output-on-failure
       - name: Use cmake with undefined behavior sanitizer
         run: |
           mkdir buildundef &&
           cd buildundef &&
-          cmake -DSIMDUTF_CXX_STANDARD=20  -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=ON -DSIMDUTF_SANITIZE_UNDEFINED=ON ..  &&
+          cmake -DSIMDUTF_CXX_STANDARD=20  -DSIMDUTF_ATOMIC_BASE64_TESTS=ON -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=ON -DSIMDUTF_SANITIZE_UNDEFINED=ON ..  &&
           cmake --build .   &&
           ctest --output-on-failure
       - name: Use cmake with thread sanitizer
         run: |
           mkdir buildthread &&
           cd buildthread &&
-          cmake -DSIMDUTF_CXX_STANDARD=20  -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=ON -DSIMDUTF_SANITIZE_THREAD=ON ..  &&
+          cmake -DSIMDUTF_CXX_STANDARD=20  -DSIMDUTF_ATOMIC_BASE64_TESTS=ON -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=ON -DSIMDUTF_SANITIZE_THREAD=ON ..  &&
           cmake --build .   &&
           ctest --output-on-failure
