@@ -1160,6 +1160,47 @@ simdutf_warn_unused size_t convert_utf8_to_utf16be(const char * input, size_t le
  */
 simdutf_warn_unused size_t convert_utf8_to_utf32(const char * input, size_t length, char32_t* utf32_output) noexcept;
 
+/**
+ * Using native endianness, convert possibly broken UTF-16 string into UTF-8
+ * string.
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-16 string to convert
+ * @param length        the length of the string in 2-byte code units (char16_t)
+ * @param utf8_buffer   the pointer to buffer that can hold conversion result
+ * @return number of written code units; 0 if input is not a valid UTF-16LE
+ * string
+ */
+simdutf_warn_unused size_t convert_utf16_to_utf8(const char16_t *input,
+                                                 size_t length,
+                                                 char *utf8_buffer) noexcept;
+
+
+/**
+ * Using native endianness, convert possibly broken UTF-16 string into UTF-8
+ * string with output limit.
+ *
+ * We write as many characters as possible into the output buffer,
+ *
+ * During the conversion also validation of the input string is done.
+ * This function is suitable to work with inputs from untrusted sources.
+ *
+ * This function is not BOM-aware.
+ *
+ *
+ * @param input         the UTF-16 string to convert
+ * @param length        the length of the string in 16-bit code units (char16_t)
+ * @param utf8_output  	the pointer to buffer that can hold conversion result
+ * @param utf8_len      the maximum output length
+ * @return the number of written char; 0 if conversion is not possible
+ */
+simdutf_warn_unused size_t
+convert_utf16_to_utf8_safe(const char16_t *input, size_t length, char *utf8_output,
+                            size_t utf8_len) noexcept;
 
 /**
  * Using native endianness, convert possibly broken UTF-16 string into Latin1 string.
