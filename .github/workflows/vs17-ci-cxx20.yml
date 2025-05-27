@@ -19,7 +19,7 @@ jobs:
       uses: actions/checkout@v4
     - name: Configure
       run: |
-        cmake  -DSIMDUTF_CXX_STANDARD=20  -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=ON -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DSIMDUTF_BENCHMARKS=ON -G "${{matrix.gen}}" -A ${{matrix.arch}} -DBUILD_SHARED_LIBS=${{matrix.shared}} -B build
+        cmake  -DSIMDUTF_CXX_STANDARD=20 -DSIMDUTF_ATOMIC_BASE64_TESTS=ON -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=ON -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DSIMDUTF_BENCHMARKS=ON -G "${{matrix.gen}}" -A ${{matrix.arch}} -DBUILD_SHARED_LIBS=${{matrix.shared}} -B build
     - name: Build Debug
       run: cmake --build build --config Debug --verbose
     - name: Build Release

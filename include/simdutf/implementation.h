@@ -3041,6 +3041,12 @@ binary_to_base64(const detail::input_span_of_byte_like auto &input,
  *
  * This function always succeeds.
  *
+ * This function is considered experimental. It is not tested by default
+ * (see the CMake option SIMDUTF_ATOMIC_BASE64_TESTS) nor is it fuzz tested.
+ * It is not documented in the public API documentation (README). It is
+ * offered on a best effort basis. We rely on the community for further
+ * testing and feedback.
+ *
  * @brief atomic_binary_to_base64
  * @param input         the binary to process
  * @param length        the length of the input in bytes
@@ -3323,6 +3329,12 @@ base64_to_binary_safe(std::span<const char16_t> input,
  * C++20 support and __cpp_lib_atomic_ref >= 201806L. You may check
  * the availability of this function by checking the macro
  * SIMDUTF_ATOMIC_REF.
+ *
+ * This function is considered experimental. It is not tested by default
+ * (see the CMake option SIMDUTF_ATOMIC_BASE64_TESTS) nor is it fuzz tested.
+ * It is not documented in the public API documentation (README). It is
+ * offered on a best effort basis. We rely on the community for further
+ * testing and feedback.
  *
  * @param input         the base64 input to decode
  * @param length        the length of the input in bytes
