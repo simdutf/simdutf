@@ -1685,6 +1685,62 @@ simdutf_warn_unused size_t convert_utf16_to_utf8(const char16_t *buf,
   return convert_utf16le_to_utf8(buf, len, utf8_buffer);
   #endif
 }
+
+simdutf_warn_unused size_t
+convert_utf16_to_utf8_safe(const char16_t *buf, size_t len, char *utf8_output,
+                           size_t utf8_len) noexcept {
+  const auto start{utf8_output};
+  // We might be able to go faster by first scanning the input buffer to
+  // determine how many char16_t characters we can read without exceeding the
+  // utf8_len. This is a one-pass algorithm that has the benefit of not
+  // requiring a first pass to determine the length.
+  while (true) {
+    // The worst case for convert_utf16_to_utf8 is when you go from 1 char16_t
+    // to 3 characters of UTF-8. So we can read at most utf8_len / 3 char16_t
+    // characters.
+    auto read_len = std::min(len, utf8_len / 3);
+    if (read_len <= 16) {
+      break;
+    }
+    if (read_len < len) {
+      //  If we have a high surrogate at the end of the buffer, we need to
+      //  either read one more char16_t or backtrack.
+      if (scalar::utf16::high_surrogate(buf[read_len - 1])) {
+        read_len--;
+      }
+    }
+    if (read_len == 0) {
+      // If we cannot read anything, we are done.
+      break;
+    }
+    const auto write_len =
+        simdutf::convert_utf16_to_utf8(buf, read_len, utf8_output);
+    if (write_len == 0) {
+      // There was an error in the conversion, we cannot continue.
+      return 0; // indicating failure
+    }
+
+    utf8_output += write_len;
+    utf8_len -= write_len;
+    buf += read_len;
+    len -= read_len;
+  }
+  #if SIMDUTF_IS_BIG_ENDIAN
+  full_result r =
+      scalar::utf16_to_utf8::convert_with_errors<endianness::BIG, true>(
+          buf, len, utf8_output, utf8_len);
+  #else
+  full_result r =
+      scalar::utf16_to_utf8::convert_with_errors<endianness::LITTLE, true>(
+          buf, len, utf8_output, utf8_len);
+  #endif
+  if (r.error != error_code::SUCCESS &&
+      r.error != error_code::OUTPUT_BUFFER_TOO_SMALL) {
+    // If there was an error, we return 0 to indicate failure.
+    return 0; // indicating failure
+  }
+  return r.output_count + (utf8_output - start);
+}
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1

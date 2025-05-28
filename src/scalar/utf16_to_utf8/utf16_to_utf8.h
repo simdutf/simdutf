@@ -79,12 +79,18 @@ inline size_t convert(const char16_t *buf, size_t len, char *utf8_output) {
   return utf8_output - start;
 }
 
-template <endianness big_endian>
-inline result convert_with_errors(const char16_t *buf, size_t len,
-                                  char *utf8_output) {
+template <endianness big_endian, bool check_output = false>
+inline full_result convert_with_errors(const char16_t *buf, size_t len,
+                                       char *utf8_output, size_t utf8_len = 0) {
   const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
+  if (check_output && utf8_len == 0) {
+    return full_result(error_code::OUTPUT_BUFFER_TOO_SMALL, 0, 0);
+  }
+
   size_t pos = 0;
   char *start{utf8_output};
+  char *end{utf8_output + utf8_len};
+
   while (pos < len) {
     // try to convert the next block of 8 bytes
     if (pos + 4 <=
@@ -100,6 +106,10 @@ inline result convert_with_errors(const char16_t *buf, size_t len,
                                ? char(u16_swap_bytes(buf[pos]))
                                : char(buf[pos]);
           pos++;
+          if (check_output && size_t(end - utf8_output) == 0) {
+            return full_result(error_code::OUTPUT_BUFFER_TOO_SMALL, pos,
+                               utf8_output - start);
+          }
         }
         continue;
       }
@@ -110,34 +120,52 @@ inline result convert_with_errors(const char16_t *buf, size_t len,
       // will generate one UTF-8 bytes
       *utf8_output++ = char(word);
       pos++;
+      if (check_output && size_t(end - utf8_output) == 0) {
+        return full_result(error_code::OUTPUT_BUFFER_TOO_SMALL, pos,
+                           utf8_output - start);
+      }
     } else if ((word & 0xF800) == 0) {
       // will generate two UTF-8 bytes
       // we have 0b110XXXXX 0b10XXXXXX
+      if (check_output && size_t(end - utf8_output) < 2) {
+        return full_result(error_code::OUTPUT_BUFFER_TOO_SMALL, pos,
+                           utf8_output - start);
+      }
       *utf8_output++ = char((word >> 6) | 0b11000000);
       *utf8_output++ = char((word & 0b111111) | 0b10000000);
       pos++;
+
     } else if ((word & 0xF800) != 0xD800) {
       // will generate three UTF-8 bytes
       // we have 0b1110XXXX 0b10XXXXXX 0b10XXXXXX
+      if (check_output && size_t(end - utf8_output) < 3) {
+        return full_result(error_code::OUTPUT_BUFFER_TOO_SMALL, pos,
+                           utf8_output - start);
+      }
       *utf8_output++ = char((word >> 12) | 0b11100000);
       *utf8_output++ = char(((word >> 6) & 0b111111) | 0b10000000);
       *utf8_output++ = char((word & 0b111111) | 0b10000000);
       pos++;
     } else {
+
+      if (check_output && size_t(end - utf8_output) < 4) {
+        return full_result(error_code::OUTPUT_BUFFER_TOO_SMALL, pos,
+                           utf8_output - start);
+      }
       // must be a surrogate pair
       if (pos + 1 >= len) {
-        return result(error_code::SURROGATE, pos);
+        return full_result(error_code::SURROGATE, pos, utf8_output - start);
       }
       uint16_t diff = uint16_t(word - 0xD800);
       if (diff > 0x3FF) {
-        return result(error_code::SURROGATE, pos);
+        return full_result(error_code::SURROGATE, pos, utf8_output - start);
       }
       uint16_t next_word = !match_system(big_endian)
                                ? u16_swap_bytes(data[pos + 1])
                                : data[pos + 1];
       uint16_t diff2 = uint16_t(next_word - 0xDC00);
       if (diff2 > 0x3FF) {
-        return result(error_code::SURROGATE, pos);
+        return full_result(error_code::SURROGATE, pos, utf8_output - start);
       }
       uint32_t value = (diff << 10) + diff2 + 0x10000;
       // will generate four UTF-8 bytes
@@ -149,7 +177,13 @@ inline result convert_with_errors(const char16_t *buf, size_t len,
       pos += 2;
     }
   }
-  return result(error_code::SUCCESS, utf8_output - start);
+  return full_result(error_code::SUCCESS, pos, utf8_output - start);
+}
+
+template <endianness big_endian>
+inline result simple_convert_with_errors(const char16_t *buf, size_t len,
+                                         char *utf8_output) {
+  return convert_with_errors<big_endian, false>(buf, len, utf8_output, 0);
 }
 
 } // namespace utf16_to_utf8

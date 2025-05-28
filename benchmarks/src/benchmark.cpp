@@ -209,7 +209,15 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
   register_function("convert_valid_utf16le_to_latin1",
                     &Benchmark::run_convert_valid_utf16le_to_latin1,
                     simdutf::encoding_type::UTF16_LE);
-
+#if SIMDUTF_BIG_ENDIAN
+  register_function("convert_utf16_to_utf8_safe",
+                    &Benchmark::run_convert_utf16_to_utf8_safe,
+                    simdutf::encoding_type::UTF16_BE);
+#else
+  register_function("convert_utf16_to_utf8_safe",
+                    &Benchmark::run_convert_utf16_to_utf8_safe,
+                    simdutf::encoding_type::UTF16_LE);
+#endif // SIMDUTF_BIG_ENDIAN
   register_function("convert_utf16le_to_utf8",
                     &Benchmark::run_convert_utf16le_to_utf8,
                     simdutf::encoding_type::UTF16_LE);
@@ -2614,6 +2622,46 @@ void Benchmark::run_convert_valid_utf16le_to_latin1(
   print_summary(result, input_data.size(), char_count);
 }
 
+void Benchmark::run_convert_utf16_to_utf8_safe(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const simdutf::implementation *active_implementation =
+      simdutf::get_active_implementation();
+  simdutf::get_active_implementation() =
+      &implementation; // set the active implementation
+  const simdutf::encoding_type bom =
+      BOM::check_bom(input_data.data(), input_data.size());
+  const char16_t *data = reinterpret_cast<const char16_t *>(
+      input_data.data() + BOM::bom_byte_size(bom));
+  size_t size = input_data.size() - BOM::bom_byte_size(bom);
+  if (size % 2 != 0) {
+    printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+           size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+    printf(" Running function on truncated input.\n");
+  }
+
+  size /= 2;
+
+  size_t budget = simdutf::utf8_length_from_utf16(data, size);
+
+  std::unique_ptr<char[]> output_buffer{new char[budget]};
+
+  volatile size_t sink{0};
+
+  auto proc = [&implementation, data, size, &output_buffer, &sink, &budget]() {
+    sink = simdutf::convert_utf16_to_utf8_safe(data, size, output_buffer.get(),
+                                               budget);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  if ((sink == 0) && (size != 0) && (iterations > 0)) {
+    std::cerr << "The output is zero which might indicate an error.\n";
+  }
+  size_t char_count = get_active_implementation()->count_utf16le(data, size);
+  print_summary(result, input_data.size(), char_count);
+  simdutf::get_active_implementation() =
+      active_implementation; // restore the active implementation
+}
+
 void Benchmark::run_convert_utf16le_to_utf8(
     const simdutf::implementation &implementation, size_t iterations) {
   const simdutf::encoding_type bom =
@@ -3616,6 +3664,8 @@ void Benchmark::run_convert_utf8_to_utf16_utfcpp(size_t iterations) {
     } catch (const char *msg) {
       std::cout << msg << std::endl;
       sink = 0;
+    } catch (...) {
+      sink = 0;
     }
   };
   count_events(proc, iterations); // warming up!
@@ -3647,7 +3697,6 @@ void Benchmark::run_convert_utf16_to_utf8_utfcpp(size_t iterations) {
   }
 
   volatile size_t sink{0};
-
   auto proc = [data, size, &sink]() {
     try {
       std::string str;
@@ -3655,6 +3704,8 @@ void Benchmark::run_convert_utf16_to_utf8_utfcpp(size_t iterations) {
       sink = str.size();
     } catch (const char *msg) {
       std::cout << msg << std::endl;
+      sink = 0;
+    } catch (...) {
       sink = 0;
     }
   };
@@ -3664,6 +3715,7 @@ void Benchmark::run_convert_utf16_to_utf8_utfcpp(size_t iterations) {
   if ((sink == 0) && (size != 0) && (iterations > 0)) {
     std::cerr << "The output is zero which might indicate an error.\n";
   }
+
   size_t char_count = get_active_implementation()->count_utf16le(data, size);
   print_summary(result, input_data.size(), char_count);
 }
@@ -3680,6 +3732,8 @@ void Benchmark::run_convert_utf8_to_utf32_utfcpp(size_t iterations) {
       sink = str.size();
     } catch (const char *msg) {
       std::cout << msg << std::endl;
+      sink = 0;
+    } catch (...) {
       sink = 0;
     }
   };
@@ -3715,6 +3769,8 @@ void Benchmark::run_convert_utf32_to_utf8_utfcpp(size_t iterations) {
       sink = str.size();
     } catch (const char *msg) {
       std::cout << msg << std::endl;
+      sink = 0;
+    } catch (...) {
       sink = 0;
     }
   };

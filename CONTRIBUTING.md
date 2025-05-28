@@ -57,7 +57,7 @@ To contribute code or documentation:
     ```bash
     git push origin feature/your-feature-name
     ```
-8. Open a pull request with: A descriptive title and explanation. References to related issues (e.g., "Fixes #123"). 
+8. Open a pull request with: A descriptive title and explanation. References to related issues (e.g., "Fixes #123").
 9. Address feedback during review.
 
 ## Development Setup
@@ -93,7 +93,7 @@ All code should be pure ASCII, including the strings.
 We do not use `assert` expressions in the code. We either always check a condition, or else we
 only test it when logging is enabled (`simdutf_log_assert`).
 
-It is sometimes beneficial to use logging or assertions to help debug code. Configure the build directory with the 
+It is sometimes beneficial to use logging or assertions to help debug code. Configure the build directory with the
 `SIMDUTF_LOGGING` variable set to `ON`.
 
 ```bash
@@ -132,8 +132,8 @@ All optimizations should be based on benchmarks, please configure your projects 
 ```bash
 cmake -B build -D SIMDUTF_BENCHMARKS=ON
 cmake --build build
-./build/benchmarks/benchmark 
-./build/benchmarks/base64/benchmark_base64 
+./build/benchmarks/benchmark
+./build/benchmarks/base64/benchmark_base64
 ```
 
 The scripts `./scripts/benchmark_print.py`and `./scripts/base64bench_print.py` can be used to produce good-looking before/after tables in MarkDown. Please consider using these scripts.
