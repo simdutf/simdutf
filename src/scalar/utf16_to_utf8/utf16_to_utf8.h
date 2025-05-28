@@ -180,6 +180,15 @@ inline full_result convert_with_errors(const char16_t *buf, size_t len,
   return full_result(error_code::SUCCESS, pos, utf8_output - start);
 }
 
+
+
+
+template <endianness big_endian>
+inline result simple_convert_with_errors(const char16_t *buf, size_t len,
+                                       char *utf8_output) {
+  return convert_with_errors<big_endian, false>(buf, len, utf8_output, 0);
+}
+
 } // namespace utf16_to_utf8
 } // unnamed namespace
 } // namespace scalar

@@ -497,7 +497,7 @@ simdutf_warn_unused result implementation::convert_utf16le_to_utf8_with_errors(
 
   return convert_with_errors_impl(
       ppc64_convert_utf16_to_utf8<endianness::LITTLE>,
-      scalar::utf16_to_utf8::convert_with_errors<endianness::LITTLE>, buf, len,
+      scalar::utf16_to_utf8::simple_convert_with_errors<endianness::LITTLE>, buf, len,
       utf8_output);
 }
 
@@ -506,7 +506,7 @@ simdutf_warn_unused result implementation::convert_utf16be_to_utf8_with_errors(
 
   return convert_with_errors_impl(
       ppc64_convert_utf16_to_utf8<endianness::BIG>,
-      scalar::utf16_to_utf8::convert_with_errors<endianness::BIG>, buf, len,
+      scalar::utf16_to_utf8::simple_convert_with_errors<endianness::BIG>, buf, len,
       utf8_output);
 }
 
