@@ -133,6 +133,14 @@ template <endianness big_endian> bool is_low_surrogate(char16_t c) {
   return (0xdc00 <= c && c <= 0xdfff);
 }
 
+simdutf_really_inline bool high_surrogate(char16_t c) {
+  return (0xd800 <= c && c <= 0xdbff);
+}
+
+simdutf_really_inline bool low_surrogate(char16_t c) {
+  return (0xdc00 <= c && c <= 0xdfff);
+}
+
 // variable templates are a C++14 extension
 template <endianness big_endian> char16_t replacement() {
   return !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;

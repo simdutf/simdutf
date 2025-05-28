@@ -1703,10 +1703,9 @@ convert_utf16_to_utf8_safe(const char16_t *buf, size_t len, char *utf8_output,
       break;
     }
     if (read_len < len) {
-      // printf("checking value %zx\n", uint16_t(buf[read_len - 1]));
       //  If we have a high surrogate at the end of the buffer, we need to
       //  either read one more char16_t or backtrack.
-      if (buf[read_len - 1] >= 0xD800 && buf[read_len - 1] <= 0xDBFF) {
+      if (scalar::utf16::high_surrogate(buf[read_len - 1])) {
         read_len--;
       }
     }
