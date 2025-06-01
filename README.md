@@ -2400,7 +2400,7 @@ Most validation and conversion functions in simdutf have overloads that take `st
 
 ## List of span-enabled functions
 
-Below is a categorized list of simdutf functions that provide C++20 `std::span` overloads. All these functions are available only if your environment supports C++20 and simdutf is compiled with span support (`SIMDUTF_SPAN`).
+Below is a categorized list of simdutf functions that provide C++20 `std::span` overloads. All these functions are available only if your environment supports C++20.
 
 ### Validation functions
 - `validate_ascii(std::span<const char>)`
@@ -2466,17 +2466,14 @@ Below is a categorized list of simdutf functions that provide C++20 `std::span` 
 - `latin1_length_from_utf32(std::span<const char32_t>)`
 
 ### Base64 
-- `validate_base64(std::span<const char>)`
 - `base64_to_binary(std::span<const char>, std::span<char>)`
 - `binary_to_base64(std::span<const char>, std::span<char>)`
+- ...
 
 
 
-## Notes
-- The span overloads are only available if your environment supports C++20 and simdutf is compiled with this option.
+## Note
 - You are still responsible for providing a sufficiently large output buffer, just as with the pointer/size API.
-
-
 
 
 The sutf command-line tool
