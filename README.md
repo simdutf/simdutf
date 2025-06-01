@@ -22,6 +22,7 @@ simdutf: Unicode validation and transcoding at billions of characters per second
   - [API](#api)
   - [Base64](#base64)
   - [Find](#find)
+  - [C++20 and std::span usage in simdutf](#c20-and-stdspan-usage-in-simdutf)
   - [The sutf command-line tool](#the-sutf-command-line-tool)
   - [Manual implementation selection](#manual-implementation-selection)
   - [Thread safety](#thread-safety)
@@ -2359,6 +2360,123 @@ simdutf_warn_unused const char *find(const char *start, const char *end,
 simdutf_warn_unused const char16_t *find(const char16_t *start, const char16_t *end,
                               char16_t character) noexcept;
 ```
+
+# C++20 and std::span usage in simdutf
+
+If you are using a C++20 compiler and simdutf is built with span support, the library provides modern overloads of its main functions that accept `std::span`. This allows you to use simdutf in a safer and more expressive way, without manually handling pointers and sizes.
+
+## Advantages
+- **Safety:** `std::span` encapsulates a pointer and a size, reducing buffer overrun risks.
+- **Interoperability:** You can pass `std::vector`, `std::array`, or any compatible buffer directly to simdutf functions.
+- **Readability:** Code is more idiomatic and clear in modern C++.
+
+## Example
+
+Suppose you want to convert a UTF-16 string to UTF-8:
+
+```cpp
+#include <simdutf.h>
+#include <vector>
+#include <span>
+#include <string>
+
+std::u16string utf16_input = u"Bonjour le monde";
+std::vector<char> utf8_output(64); // ensure sufficient size
+
+// Use std::span for input and output
+size_t written = simdutf::convert_utf16_to_utf8_safe(
+    std::span<const char16_t>(utf16_input),
+    std::span<char>(utf8_output)
+);
+```
+
+## Supported functions
+Most validation and conversion functions in simdutf have overloads that take `std::span`, for example:
+- `validate_utf8(std::span<const char>)`
+- `validate_utf16(std::span<const char16_t>)`
+- `convert_utf16_to_utf8(std::span<const char16_t>, std::span<char>)`
+- `convert_utf16_to_utf8_safe(std::span<const char16_t>, std::span<char>)`
+- ...and many more (see `implementation.h`).
+
+## List of span-enabled functions
+
+Below is a categorized list of simdutf functions that provide C++20 `std::span` overloads. All these functions are available only if your environment supports C++20 and simdutf is compiled with span support (`SIMDUTF_SPAN`).
+
+### Validation functions
+- `validate_ascii(std::span<const char>)`
+- `validate_utf8(std::span<const char>)`
+- `validate_utf16(std::span<const char16_t>)`
+- `validate_utf16le(std::span<const char16_t>)`
+- `validate_utf16be(std::span<const char16_t>)`
+- `validate_utf32(std::span<const char32_t>)`
+
+#### With error reporting
+- `validate_ascii_with_errors(std::span<const char>)`
+- `validate_utf8_with_errors(std::span<const char>)`
+- `validate_utf16_with_errors(std::span<const char16_t>)`
+- `validate_utf16le_with_errors(std::span<const char16_t>)`
+- `validate_utf16be_with_errors(std::span<const char16_t>)`
+- `validate_utf32_with_errors(std::span<const char32_t>)`
+
+### Transcoding/conversion functions
+- `convert_utf8_to_utf16(std::span<const char>, std::span<char16_t>)`
+- `convert_utf8_to_utf16le(std::span<const char>, std::span<char16_t>)`
+- `convert_utf8_to_utf16be(std::span<const char>, std::span<char16_t>)`
+- `convert_utf8_to_utf32(std::span<const char>, std::span<char32_t>)`
+- `convert_utf16_to_utf8(std::span<const char16_t>, std::span<char>)`
+- `convert_utf16_to_utf8_safe(std::span<const char16_t>, std::span<char>)`
+- `convert_utf16le_to_utf8(std::span<const char16_t>, std::span<char>)`
+- `convert_utf16be_to_utf8(std::span<const char16_t>, std::span<char>)`
+- `convert_utf16_to_latin1(std::span<const char16_t>, std::span<char>)`
+- `convert_utf16le_to_latin1(std::span<const char16_t>, std::span<char>)`
+- `convert_utf16be_to_latin1(std::span<const char16_t>, std::span<char>)`
+- `convert_utf32_to_utf8(std::span<const char32_t>, std::span<char>)`
+- `convert_utf32_to_utf16(std::span<const char32_t>, std::span<char16_t>)`
+- `convert_utf32_to_latin1(std::span<const char32_t>, std::span<char>)`
+- `convert_latin1_to_utf8(std::span<const char>, std::span<char>)`
+- `convert_latin1_to_utf16(std::span<const char>, std::span<char16_t>)`
+- `convert_latin1_to_utf32(std::span<const char>, std::span<char32_t>)`
+
+#### With error reporting (result struct)
+- `convert_utf8_to_utf16_with_errors(std::span<const char>, std::span<char16_t>)`
+- `convert_utf8_to_utf16le_with_errors(std::span<const char>, std::span<char16_t>)`
+- `convert_utf8_to_utf16be_with_errors(std::span<const char>, std::span<char16_t>)`
+- `convert_utf8_to_utf32_with_errors(std::span<const char>, std::span<char32_t>)`
+- `convert_utf16_to_utf8_with_errors(std::span<const char16_t>, std::span<char>)`
+- `convert_utf16le_to_utf8_with_errors(std::span<const char16_t>, std::span<char>)`
+- `convert_utf16be_to_utf8_with_errors(std::span<const char16_t>, std::span<char>)`
+- `convert_utf16_to_latin1_with_errors(std::span<const char16_t>, std::span<char>)`
+- `convert_utf16le_to_latin1_with_errors(std::span<const char16_t>, std::span<char>)`
+- `convert_utf16be_to_latin1_with_errors(std::span<const char16_t>, std::span<char>)`
+- `convert_utf32_to_utf8_with_errors(std::span<const char32_t>, std::span<char>)`
+- `convert_utf32_to_utf16_with_errors(std::span<const char32_t>, std::span<char16_t>)`
+- `convert_utf32_to_latin1_with_errors(std::span<const char32_t>, std::span<char>)`
+
+### Length/count functions
+- `utf8_length_from_utf16(std::span<const char16_t>)`
+- `utf8_length_from_utf16le(std::span<const char16_t>)`
+- `utf8_length_from_utf16be(std::span<const char16_t>)`
+- `utf8_length_from_utf32(std::span<const char32_t>)`
+- `utf16_length_from_utf8(std::span<const char>)`
+- `utf16_length_from_utf32(std::span<const char32_t>)`
+- `utf32_length_from_utf8(std::span<const char>)`
+- `utf32_length_from_utf16(std::span<const char16_t>)`
+- `latin1_length_from_utf8(std::span<const char>)`
+- `latin1_length_from_utf16(std::span<const char16_t>)`
+- `latin1_length_from_utf32(std::span<const char32_t>)`
+
+### Base64 
+- `validate_base64(std::span<const char>)`
+- `base64_to_binary(std::span<const char>, std::span<char>)`
+- `binary_to_base64(std::span<const char>, std::span<char>)`
+
+
+
+## Notes
+- The span overloads are only available if your environment supports C++20 and simdutf is compiled with this option.
+- You are still responsible for providing a sufficiently large output buffer, just as with the pointer/size API.
+
+
 
 
 The sutf command-line tool
