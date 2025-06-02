@@ -22,6 +22,7 @@ simdutf: Unicode validation and transcoding at billions of characters per second
   - [API](#api)
   - [Base64](#base64)
   - [Find](#find)
+  - [C++20 and std::span usage in simdutf](#c20-and-stdspan-usage-in-simdutf)
   - [The sutf command-line tool](#the-sutf-command-line-tool)
   - [Manual implementation selection](#manual-implementation-selection)
   - [Thread safety](#thread-safety)
@@ -2359,6 +2360,34 @@ simdutf_warn_unused const char *find(const char *start, const char *end,
 simdutf_warn_unused const char16_t *find(const char16_t *start, const char16_t *end,
                               char16_t character) noexcept;
 ```
+
+# C++20 and std::span usage in simdutf
+
+If you are compiling with C++20 or later, span support is enabled. This allows you to use simdutf in a safer and more expressive way, without manually handling pointers and sizes.
+
+The span interface is easy to use. If you have a container like `std::vector` or `std::array`, you can pass the container directly. If you have a pointer and a size, construct a `std::span` and pass it.
+When dealing with ranges of bytes (like `char`), anything that has a `std::span-like` interface (has appopriate `data()` and `size()` member functions) is accepted. Ranges of larger types are accepted as `std::span` arguments.
+
+## Example
+
+Suppose you want to convert a UTF-16 string to UTF-8:
+
+```cpp
+#include <simdutf.h>
+#include <vector>
+#include <span>
+#include <string>
+
+std::u16string utf16_input = u"Bonjour le monde";
+std::vector<char> utf8_output(64); // ensure sufficient size
+
+// Use std::span for input and output
+size_t written = simdutf::convert_utf16_to_utf8_safe(utf16_input, utf8_output);
+```
+
+
+## Note
+- You are still responsible for providing a sufficiently large output buffer, just as with the pointer/size API.
 
 
 The sutf command-line tool
