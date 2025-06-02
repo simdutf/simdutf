@@ -16,4 +16,4 @@ jobs:
       - name: Configure
         run: emcmake cmake -B build
       - name: Build # We build but do not test 
-        run: cmake --build buildwasm
+        run: cmake --build build
