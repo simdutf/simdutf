@@ -1,11 +1,59 @@
 #ifndef SIMDUTF_RVV_IMPLEMENTATION_H
 #define SIMDUTF_RVV_IMPLEMENTATION_H
 
+#include <vector>
 #include "simdutf.h"
-#include "simdutf/internal/isadetection.h"
 
 namespace simdutf {
 namespace rvv {
+
+#if SIMDUTF_FEATURE_BASE64
+constexpr bool Base64UrlAlphabet = false;
+constexpr bool Base64StandardAlphabet = false;
+
+enum class LMUL { M1, M2, M4, M8 };
+
+// `Base64EncodingProcedure` tells which implementation
+// of procedure transforming 6-bit data into ASCII can be used.
+enum class Base64EncodingProcedure {
+  /// VLMAX >= 64 --- single in-register gather is enough
+  PlainGatherM1,
+  PlainGatherM2,
+  PlainGatherM4,
+  PlainGatherM8,
+
+  /// VLMAX * LMUL >= 16 --- use port of SSE procedure (see `westmere`
+  /// implementation)
+  LookupM1,
+  LookupM2,
+  LookupM4,
+  LookupM8,
+
+  /// VLMAX * LMUL < 16 --- fallback to scalar code
+  ///
+  /// Just in case, as it would mean VLMAX < 2 bytes, which makes little
+  /// sense in practise.
+  Scalar
+};
+
+// `Base64Encoding` wraps details of encoding, as depending on the concrete RVV
+// implementation, we can use different means to perform the base64 algorithm
+class Base64Encoding {
+  Base64EncodingProcedure procedure;
+
+  // How many input bytes is read in a single iteration of vectorized code.
+  size_t step;
+
+  size_t max_size;
+
+public:
+  simdutf_really_inline Base64Encoding();
+
+  simdutf_really_inline size_t perform(const uint8_t *input, size_t bytes,
+                                       uint8_t *output,
+                                       base64_options options) const;
+};
+#endif
 
 namespace {
 using namespace simdutf;
@@ -17,7 +65,9 @@ public:
       : simdutf::implementation("rvv", "RISC-V Vector Extension",
                                 internal::instruction_set::RVV),
         _supports_zvbb(internal::detect_supported_architectures() &
-                       internal::instruction_set::ZVBB) {}
+                       internal::instruction_set::ZVBB),
+        base64_encoding() {}
+
 #if SIMDUTF_FEATURE_DETECT_ENCODING
   simdutf_warn_unused int detect_encodings(const char *input,
                                            size_t length) const noexcept final;
@@ -285,6 +335,10 @@ private:
 #else
   bool supports_zvbb() const { return false; }
 #endif
+
+#if SIMDUTF_FEATURE_BASE64
+  Base64Encoding base64_encoding;
+#endif // SIMDUTF_FEATURE_BASE64
 };
 
 } // namespace rvv
