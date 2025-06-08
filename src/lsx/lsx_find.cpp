@@ -10,8 +10,9 @@ simdutf_really_inline const char *util_find(const char *start, const char *end,
     __m128i data = __lsx_vld(reinterpret_cast<const __m128i *>(start), 0);
     __m128i cmp = __lsx_vseq_b(data, char_vec);
     if (__lsx_bnz_v(cmp)) {
-        uint16_t mask = static_cast<uint16_t>(__lsx_vpickve2gr_hu(__lsx_vmsknz_b(cmp), 0));
-        return start + trailing_zeroes(mask);
+      uint16_t mask =
+          static_cast<uint16_t>(__lsx_vpickve2gr_hu(__lsx_vmsknz_b(cmp), 0));
+      return start + trailing_zeroes(mask);
     }
 
     start += step;
@@ -40,8 +41,9 @@ simdutf_really_inline const char16_t *util_find(const char16_t *start,
     __m128i data = __lsx_vld(reinterpret_cast<const __m128i *>(start), 0);
     __m128i cmp = __lsx_vseq_h(data, char_vec);
     if (__lsx_bnz_v(cmp)) {
-        uint16_t mask = static_cast<uint16_t>(__lsx_vpickve2gr_hu(__lsx_vmsknz_b(cmp), 0));
-        return start + trailing_zeroes(mask) / 2;
+      uint16_t mask =
+          static_cast<uint16_t>(__lsx_vpickve2gr_hu(__lsx_vmsknz_b(cmp), 0));
+      return start + trailing_zeroes(mask) / 2;
     }
 
     start += step;
