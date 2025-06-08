@@ -167,6 +167,7 @@ convert_utf8_1_to_2_byte_to_utf16(__m128i in, size_t shufutf8_idx) {
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 #if SIMDUTF_FEATURE_BASE64
   #include "lasx/lasx_base64.cpp"
+  #include "lasx/lasx_find.cpp"
 #endif // SIMDUTF_FEATURE_BASE64
 
 } // namespace
@@ -1451,12 +1452,12 @@ size_t implementation::binary_to_base64(const char *input, size_t length,
 
 const char *implementation::find(const char *start, const char *end,
                                  char character) const noexcept {
-  return std::find(start, end, character);
+  return util_find(start, end, character);
 }
 
 const char16_t *implementation::find(const char16_t *start, const char16_t *end,
                                      char16_t character) const noexcept {
-  return std::find(start, end, character);
+  return util_find(start, end, character);
 }
 #endif // SIMDUTF_FEATURE_BASE64
 
