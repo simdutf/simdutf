@@ -176,7 +176,7 @@ endif()
 
 
 
-if(NOT SIMDUTF_SANITIZE)
+if(SIMDUTF_TESTS AND NOT SIMDUTF_SANITIZE)
   find_program(GREP grep)
   find_program(NM nm)
   if((NOT GREP) OR (NOT NM))
