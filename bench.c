@@ -9,8 +9,10 @@
 #include <uchar.h>
 #include <unistd.h>
 
+#ifdef __linux__
 #include <linux/perf_event.h>
 #include <linux/hw_breakpoint.h>
+#endif
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -53,8 +55,9 @@ static const struct utf16le_method {
 	{ NULL, NULL, NULL },
 };
 
-static int event_group = -1, num_counters = 0;
 enum { EVENT_COUNT = 2 };
+#ifdef __linux__
+static int event_group = -1, num_counters = 0;
 static struct event {
 	uint32_t type;
 	int fd;
@@ -91,6 +94,7 @@ static void init_counters()
 			event_group = events[i].fd;
 	}
 }
+#endif
 
 /* state of performance counters at one point in time */
 struct counters {
@@ -115,6 +119,7 @@ reset_counters(struct counters *c)
 		return (-1);
 	}
 
+#ifdef __linux__
 	if (event_group != -1) {
 		count = read(event_group, c->counters, (2 * num_counters + 1) * sizeof c->counters[0]);
 		if (count < 0) {
@@ -122,6 +127,7 @@ reset_counters(struct counters *c)
 			return (-1);
 		}
 	}
+#endif
 
 	return (0);
 }
@@ -143,6 +149,7 @@ tsdiff(struct timespec start, struct timespec end)
 	return (sec + nsec * 1.0e-9);
 }
 
+#ifdef __linux__
 /* compute the difference between the two counter vectors */
 static void
 counterdiff(uint64_t out[EVENT_COUNT], uint64_t start[], uint64_t end[])
@@ -158,6 +165,7 @@ counterdiff(uint64_t out[EVENT_COUNT], uint64_t start[], uint64_t end[])
 		}
 	}
 }
+#endif
 
 /* print test results */
 /* https://golang.org/design/14313-benchmark-format */
@@ -170,7 +178,9 @@ print_results(
 	double elapsed;
 
 	elapsed = tsdiff(start->ts, end->ts);
+#ifdef __linux__
 	counterdiff(counts, start->counters, end->counters);
+#endif
 
 	if (name == NULL || name[0] == '\0')
 		name = " ";
@@ -180,11 +190,13 @@ print_results(
 	    toupper(group[0]), group+1, name, filename, m,
 	    (elapsed * 1e9) / m, (1e-6 * n * m) / elapsed);
 
+#ifdef __linux__
 	if (num_counters == EVENT_COUNT) {
 		printf("\t%.8g cy/B\t%.8g ins/B\t%.8g ipc\n",
 		    counts[0]/((double)n * m), counts[1]/((double)n * m),
 		    (double)counts[1] / counts[0]);
 	} else
+#endif
 		putchar('\n');
 }
 
@@ -480,7 +492,9 @@ main(int argc, char *argv[])
 	int i = 1, j, k, n;
 
 	setlinebuf(stdout);
+#ifdef __linux__
 	init_counters();
+#endif
 
 	if (argc < 2)
 		usage(argv[0]);
