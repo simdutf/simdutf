@@ -14,7 +14,7 @@ int main(int, char *[]) {
     puts("invalid UTF-8");
     return EXIT_FAILURE;
   }
-#endif
+#endif // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
   // We need a buffer of size where to write the UTF-16LE words.
@@ -49,6 +49,6 @@ int main(int, char *[]) {
   } else {
     puts("perfect round trip");
   }
-#endif
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
   return EXIT_SUCCESS;
 }

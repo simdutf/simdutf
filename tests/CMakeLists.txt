@@ -409,3 +409,11 @@ add_cpp_test(to_well_formed_utf16_tests)
 target_link_libraries(to_well_formed_utf16_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
+
+find_program(GIT_EXECUTABLE git)
+if(Python3_FOUND AND GIT_EXECUTABLE)
+  add_test(NAME check_feature_macros
+    COMMAND ${Python3_EXECUTABLE} ${SIMDUTF_SOURCE_DIR}/scripts/check_feature_macros.py
+    WORKING_DIRECTORY ${SIMDUTF_SOURCE_DIR}
+  )
+endif()

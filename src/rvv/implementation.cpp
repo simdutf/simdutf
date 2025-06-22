@@ -28,7 +28,7 @@ namespace SIMDUTF_IMPLEMENTATION {
 
 #if SIMDUTF_FEATURE_BASE64
   #include "rvv/rvv_find.cpp"
-#endif
+#endif // SIMDUTF_FEATURE_BASE64
 
 #if SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_warn_unused int
