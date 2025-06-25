@@ -1,6 +1,7 @@
 #include <vector>
 #include <random>
 #include <stdexcept>
+#include <functional>
 #include "benchmark_base.h"
 #include "simdutf.h"
 
