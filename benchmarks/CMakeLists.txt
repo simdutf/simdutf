@@ -85,3 +85,10 @@ if(SIMDUTF_BENCHMARK_BASE64)
     add_subdirectory(base64)
   endif()
 endif(SIMDUTF_BENCHMARK_BASE64)
+
+
+add_executable(benchmark_to_well_formed_utf16 benchmark_to_well_formed_utf16.cpp)
+target_link_libraries(benchmark_to_well_formed_utf16 PUBLIC simdutf)
+target_link_libraries(benchmark_to_well_formed_utf16 PUBLIC simdutf::benchmarks::benchmark)
+set_property(TARGET benchmark_to_well_formed_utf16 PROPERTY CXX_STANDARD 17)
+set_property(TARGET benchmark_to_well_formed_utf16 PROPERTY CXX_STANDARD_REQUIRED ON)

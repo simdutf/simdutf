@@ -22,7 +22,7 @@ else(SIMDUTF_ICONV)
   message(STATUS "We are not seeking iconv.")
 endif(SIMDUTF_ICONV)
 if(APPLE)
-  message(STATUS "This is an Apple platform "${CMAKE_CXX_COMPILER_ID})
+  message(STATUS "This is an Apple platform " ${CMAKE_CXX_COMPILER_ID})
 
   if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     message(STATUS "Apple platform detected, using dead_strip and LTO")
