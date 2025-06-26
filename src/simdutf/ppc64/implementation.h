@@ -311,7 +311,7 @@ public:
                               char16_t *output) const noexcept final;
   void to_well_formed_utf16le(const char16_t *input, size_t len,
                               char16_t *output) const noexcept final;
-#endif
+#endif // SIMDUTF_FEATURE_UTF16
 };
 
 } // namespace ppc64
