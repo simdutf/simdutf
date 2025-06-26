@@ -89,8 +89,8 @@ std::vector<char16_t> generate_random_utf16(size_t length, utf16_statistics s) {
 typedef std::function<void(const char16_t *, size_t, char16_t *)> utf16_fixer;
 
 struct utf16_fixe_implementation {
-    utf16_fixe_implementation(utf16_fixer f, const std::string &n)
-        : fix(f), name(n) {}
+  utf16_fixe_implementation(utf16_fixer f, const std::string &n)
+      : fix(f), name(n) {}
   utf16_fixer fix;
   std::string name;
 };
@@ -167,10 +167,9 @@ event_aggregate bench(const utf16_fixe_implementation &f, const char16_t *input,
   return all;
 }
 
-
 // https://lemire.me/blog/2025/05/22/dividing-an-array-into-fair-sized-chunks/
-// Returns the start index and length of the i-th chunk when dividing an array of size N into M nearly equal parts.
-// Parameters:
+// Returns the start index and length of the i-th chunk when dividing an array
+// of size N into M nearly equal parts. Parameters:
 //   N: total size of the array
 //   M: number of chunks
 //   i: index of the chunk (0-based)
@@ -184,12 +183,12 @@ std::pair<size_t, size_t> get_chunk_range_simple(size_t N, size_t M, size_t i) {
 }
 
 struct data_point {
-    // Constructor
-    // Parameters:
-    //   size: input size for this data point
-    //   e: event_aggregate with measured events
-    data_point(size_t size, event_aggregate e)
-        : input_size(size), events(std::move(e)) {}
+  // Constructor
+  // Parameters:
+  //   size: input size for this data point
+  //   e: event_aggregate with measured events
+  data_point(size_t size, event_aggregate e)
+      : input_size(size), events(std::move(e)) {}
   size_t input_size;
   event_aggregate events;
 };
@@ -204,15 +203,15 @@ void print_header(std::vector<utf16_fixe_implementation> &fixers) {
     printf("%sGB_s %serror_percent ", name, name);
     event_collector collector;
     if (collector.has_events()) {
-      printf("%sins_byte %scycle_byte  %sGHz %sins_cycle", name, name, name,
+      printf("%sins_byte %scycle_byte  %sGHz %sins_cycle ", name, name, name,
              name);
     }
   }
   printf("\n");
 }
 
-// Prints the results for a single data point (performance and hardware counters if available).
-// Parameters:
+// Prints the results for a single data point (performance and hardware counters
+// if available). Parameters:
 //   dp: the data_point to print
 void print_data_point(const data_point &dp) {
   const double best_time = dp.events.best.elapsed_ns();
@@ -234,8 +233,8 @@ void print_data_point(const data_point &dp) {
            inspercycle);
   }
 }
-// Prints a row of results for a set of data points (one per fixer for a given input size).
-// Parameters:
+// Prints a row of results for a set of data points (one per fixer for a given
+// input size). Parameters:
 //   dp: vector of data_point for a given input size
 void print_data_point(const std::vector<data_point> &dp) {
   if (dp.empty()) {
@@ -247,8 +246,8 @@ void print_data_point(const std::vector<data_point> &dp) {
   }
   printf("\n");
 }
-// Runs the benchmarks for each fixer on subarrays of increasing size, returns the results.
-// Parameters:
+// Runs the benchmarks for each fixer on subarrays of increasing size, returns
+// the results. Parameters:
 //   fixers: vector of all tested UTF-16 fixer implementations
 //   s: statistics describing the surrogate/mismatched surrogate ratio
 //   max_size: maximum input size to test (default: 1,000,000)
@@ -288,8 +287,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   std::vector<utf16_fixe_implementation> fixers;
-  fixers.emplace_back(v8::ReplaceUnpairedSurrogates,
-                      "v8");
+  fixers.emplace_back(v8::ReplaceUnpairedSurrogates, "v8");
 
   for (auto &e : simdutf::get_available_implementations()) {
     if (!e->supported_by_runtime_system()) {
