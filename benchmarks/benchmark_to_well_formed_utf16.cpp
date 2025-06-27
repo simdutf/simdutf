@@ -268,7 +268,8 @@ run_from_utf16(std::vector<utf16_fixe_implementation> &fixers,
                                      data.begin() + start + length);
     std::vector<data_point> current_data_points;
     for (const auto &fixer : fixers) {
-
+      // We spend ample time warming up the processor and the cache, for reproducible and stable results
+      for(size_t i = 0; i < 10; i++) bench(fixer, data.data(), length + start, output_data.data());
       current_data_points.emplace_back(
           start + length,
           bench(fixer, data.data(), length + start, output_data.data()));
