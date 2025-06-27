@@ -149,7 +149,7 @@ event_aggregate bench(const utf16_fixe_implementation &f, const char16_t *input,
     }
     event_count allocate_count = collector.end();
     test << allocate_count;
-    if (test.best.elapsed_ns() < 4000) {
+    if (test.best.elapsed_ns() < 1000000) {
       multiplier *= 2;
     } else {
       break;
@@ -279,10 +279,24 @@ run_from_utf16(std::vector<utf16_fixe_implementation> &fixers,
 }
 
 int main(int argc, char *argv[]) {
+  // Default number of data points
+  size_t num_datapoints = 128;
+  // Parse optional --datapoints flag
+  for (int i = 1; i < argc; ++i) {
+    std::string arg = argv[i];
+    if (arg.rfind("--datapoints=", 0) == 0) {
+      num_datapoints = std::stoul(arg.substr(13));
+      // Remove this argument from argv for further parsing
+      for (int j = i; j < argc - 1; ++j) argv[j] = argv[j + 1];
+      --argc;
+      break;
+    }
+  }
+  printf("Running with %zu data points\n", num_datapoints);
   if (argc < 4) {
+    //  ./build/benchmarks/benchmark_to_well_formed_utf16 1000000 0.1 0.1 [--datapoints=256]
     fprintf(stderr,
-            "Usage: %s <length> <surrogate_pair_percentage> "
-            "<mismatched_surrogate_percentage>\n",
+            "Usage: %s <length> <surrogate_pair_percentage> <mismatched_surrogate_percentage> [--datapoints=N]\n",
             argv[0]);
     return 1;
   }
@@ -307,10 +321,15 @@ int main(int argc, char *argv[]) {
   double surrogate_pair_percentage = std::stod(argv[2]);
   double mismatched_surrogate_percentage = std::stod(argv[3]);
 
+  if (num_datapoints == 0 || num_datapoints > length) {
+    fprintf(stderr, "Error: [--datapoints=N] must be > 0 and <= <length> (got %zu, length=%zu)\n", num_datapoints, length);
+    return 1;
+  }
+
   print_header(fixers);
   std::vector<std::vector<data_point>> dp = run_from_utf16(
       fixers, {surrogate_pair_percentage, mismatched_surrogate_percentage},
-      length);
+      length, num_datapoints);
   for (const std::vector<data_point> &data_points : dp) {
     print_data_point(data_points);
   }
