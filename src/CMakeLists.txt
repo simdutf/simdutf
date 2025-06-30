@@ -14,7 +14,7 @@ target_include_directories(simdutf PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOU
 target_include_directories(simdutf PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>")
 if(NOT DEFINED CMAKE_POSITION_INDEPENDENT_CODE)
   # We default to ON for all targets, so that we can use the library in shared libraries.
-  set_target_properties(ada PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set_target_properties(simdutf PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif(NOT DEFINED CMAKE_POSITION_INDEPENDENT_CODE)
 if(MSVC)
   if("${MSVC_TOOLSET_VERSION}" STREQUAL "140")
