@@ -268,8 +268,10 @@ run_from_utf16(std::vector<utf16_fixe_implementation> &fixers,
                                      data.begin() + start + length);
     std::vector<data_point> current_data_points;
     for (const auto &fixer : fixers) {
-      // We spend ample time warming up the processor and the cache, for reproducible and stable results
-      for(size_t i = 0; i < 10; i++) bench(fixer, data.data(), length + start, output_data.data());
+      // We spend ample time warming up the processor and the cache, for
+      // reproducible and stable results
+      for (size_t i = 0; i < 10; i++)
+        bench(fixer, data.data(), length + start, output_data.data());
       current_data_points.emplace_back(
           start + length,
           bench(fixer, data.data(), length + start, output_data.data()));
@@ -288,16 +290,19 @@ int main(int argc, char *argv[]) {
     if (arg.rfind("--datapoints=", 0) == 0) {
       num_datapoints = std::stoul(arg.substr(13));
       // Remove this argument from argv for further parsing
-      for (int j = i; j < argc - 1; ++j) argv[j] = argv[j + 1];
+      for (int j = i; j < argc - 1; ++j)
+        argv[j] = argv[j + 1];
       --argc;
       break;
     }
   }
   printf("Running with %zu data points\n", num_datapoints);
   if (argc < 4) {
-    //  ./build/benchmarks/benchmark_to_well_formed_utf16 1000000 0.1 0.1 [--datapoints=256]
+    //  ./build/benchmarks/benchmark_to_well_formed_utf16 1000000 0.1 0.1
+    //  [--datapoints=256]
     fprintf(stderr,
-            "Usage: %s <length> <surrogate_pair_percentage> <mismatched_surrogate_percentage> [--datapoints=N]\n",
+            "Usage: %s <length> <surrogate_pair_percentage> "
+            "<mismatched_surrogate_percentage> [--datapoints=N]\n",
             argv[0]);
     return 1;
   }
@@ -323,7 +328,10 @@ int main(int argc, char *argv[]) {
   double mismatched_surrogate_percentage = std::stod(argv[3]);
 
   if (num_datapoints == 0 || num_datapoints > length) {
-    fprintf(stderr, "Error: [--datapoints=N] must be > 0 and <= <length> (got %zu, length=%zu)\n", num_datapoints, length);
+    fprintf(stderr,
+            "Error: [--datapoints=N] must be > 0 and <= <length> (got %zu, "
+            "length=%zu)\n",
+            num_datapoints, length);
     return 1;
   }
 
