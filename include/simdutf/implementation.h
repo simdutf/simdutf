@@ -512,7 +512,7 @@ validate_utf32_with_errors(std::span<const char32_t> input) noexcept {
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 /**
- * Convert Latin1 string into UTF8 string.
+ * Convert Latin1 string into UTF-8 string.
  *
  * This function is suitable to work with inputs from untrusted sources.
  *
@@ -535,7 +535,7 @@ simdutf_really_inline simdutf_warn_unused size_t convert_latin1_to_utf8(
   #endif // SIMDUTF_SPAN
 
 /**
- * Convert Latin1 string into UTF8 string with output limit.
+ * Convert Latin1 string into UTF-8 string with output limit.
  *
  * This function is suitable to work with inputs from untrusted sources.
  *
@@ -573,7 +573,7 @@ simdutf_really_inline simdutf_warn_unused size_t convert_latin1_to_utf8_safe(
  *
  * This function is suitable to work with inputs from untrusted sources.
  *
- * @param input         the Latin1  string to convert
+ * @param input         the Latin1 string to convert
  * @param length        the length of the string in bytes
  * @param utf16_buffer  the pointer to buffer that can hold conversion result
  * @return the number of written char16_t; 0 if conversion is not possible
@@ -712,7 +712,7 @@ convert_utf8_to_utf16(const detail::input_span_of_byte_like auto &input,
 /**
  * Using native endianness, convert a Latin1 string into a UTF-16 string.
  *
- * @param input         the UTF-8 string to convert
+ * @param input         the Latin1 string to convert
  * @param length        the length of the string in bytes
  * @param utf16_buffer  the pointer to buffer that can hold conversion result
  * @return the number of written char16_t.
@@ -3739,7 +3739,7 @@ public:
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
   /**
-   * Convert Latin1 string into UTF8 string.
+   * Convert Latin1 string into UTF-8 string.
    *
    * This function is suitable to work with inputs from untrusted sources.
    *
