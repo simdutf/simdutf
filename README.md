@@ -1015,7 +1015,7 @@ simdutf_warn_unused size_t utf32_length_from_latin1(size_t length) noexcept;
 
 
 We have a wide range of conversion between Latin1, UTF-8, UTF-16 and UTF-32. They assume
-that you are allocated sufficient memory for the input. The simplest conversin
+that you are allocated sufficient memory for the input. The simplest conversion
 function output a single integer representing the size of the input, with a value of zero
 indicating an error (e.g., `convert_utf8_to_utf16le`). They are well suited in the
 scenario where you expect the input to be valid most of the time.
@@ -1024,7 +1024,7 @@ scenario where you expect the input to be valid most of the time.
 
 ```cpp
 /**
- * Convert Latin1 string into UTF8 string.
+ * Convert Latin1 string into UTF-8 string.
  *
  * This function is suitable to work with inputs from untrusted sources.
  *
@@ -1036,7 +1036,7 @@ scenario where you expect the input to be valid most of the time.
 simdutf_warn_unused size_t convert_latin1_to_utf8(const char * input, size_t length, char* utf8_output) noexcept;
 
 /**
- * Convert Latin1 string into UTF8 string with output limit.
+ * Convert Latin1 string into UTF-8 string with output limit.
  *
  * This function is suitable to work with inputs from untrusted sources.
  *
@@ -1051,7 +1051,7 @@ simdutf_warn_unused size_t convert_latin1_to_utf8_safe(const char * input, size_
 /**
  * Using native endianness, convert a Latin1 string into a UTF-16 string.
  *
- * @param input         the UTF-8 string to convert
+ * @param input         the Latin1 string to convert
  * @param length        the length of the string in bytes
  * @param utf16_buffer  the pointer to buffer that can hold conversion result
  * @return the number of written char16_t.
@@ -1063,7 +1063,7 @@ simdutf_warn_unused size_t convert_latin1_to_utf16(const char * input, size_t le
  *
  * This function is suitable to work with inputs from untrusted sources.
  *
- * @param input         the Latin1  string to convert
+ * @param input         the Latin1 string to convert
  * @param length        the length of the string in bytes
  * @param utf16_buffer  the pointer to buffer that can hold conversion result
  * @return the number of written char16_t; 0 if conversion is not possible
@@ -2059,7 +2059,8 @@ the base64 code and the binary data. In the defaut setting is used (`last_chunk_
 then `"ZXhhZg=="`, `"ZXhhZg"`, `"ZXhhZh=="` all decode to the same binary content.
 If `last_chunk_options` is set to `last_chunk_handling_options::strict`, then
 decoding `"ZXhhZg=="` succeeds, but decoding `"ZXhhZg"` fails with `simdutf::error_code::BASE64_INPUT_REMAINDER` while `"ZXhhZh=="` fails with
-`simdutf::error_code::BASE64_EXTRA_BITS`.
+`simdutf::error_code::BASE64_EXTRA_BITS`. If `last_chunk_options` is set to `last_chunk_handling_options::stop_before_partial`,
+then decoding `"ZXhhZg"` decodes into `exa` (and `Zg` is left over).
 
 The specification of our base64 functions is as follows:
 
