@@ -120,6 +120,12 @@ TEST(issue_516) {
   ASSERT_EQUAL(r, 0);
 }
 
+TEST(issue818) {
+  std::string data = "\xEF\xBB\xBF";
+  const auto r = simdutf::BOM::check_bom(data.data(), data.size());
+  ASSERT_EQUAL(r, simdutf::encoding_type::UTF8);
+}
+
 TEST(boommmmm) {
   const char *utf8_bom = "\xef\xbb\xbf";
   const char *utf16be_bom = "\xfe\xff";
