@@ -458,6 +458,51 @@ TEST(tc39_2) {
   ASSERT_EQUAL(back, expected);
 }
 
+// https://github.com/tc39/test262
+TEST(tc39_illegal_padded_chunks) {
+  std::string test_cases[] = {
+    "=",
+    "==",
+    "===",
+    "====",
+    "=====",
+    "A=",
+    "A==",
+    "A===",
+    "A====",
+    "A=====",
+    "AA====",
+    "AA=====",
+    "AAA==",
+    "AAA===",
+    "AAA====",
+    "AAA=====",
+    "AAAA=",
+    "AAAA==",
+    "AAAA===",
+    "AAAA====",
+    "AAAA=====",
+    "AAAAA=",
+    "AAAAA==",
+    "AAAAA===",
+    "AAAAA====",
+    "AAAAA====="};
+  for (const std::string& input : test_cases) {
+    std::vector<uint8_t> back(255);
+    size_t len = back.size();
+    for (auto option :
+           {simdutf::last_chunk_handling_options::strict,
+            simdutf::last_chunk_handling_options::loose,
+            simdutf::last_chunk_handling_options::stop_before_partial}) {
+      auto r = simdutf::base64_to_binary_safe(
+        input.data(), input.size(), reinterpret_cast<char *>(back.data()), len,
+        simdutf::base64_default, option, true);
+      ASSERT_FALSE(r.error == simdutf::error_code::SUCCESS);
+      ASSERT_FALSE(r.error == simdutf::error_code::OUTPUT_BUFFER_TOO_SMALL);
+    }
+  }
+}
+
 // stop-before-partial should behave like so:
 // 1. if the last chunk is not a multiple of 4, we should stop before the last
 //    chunk
