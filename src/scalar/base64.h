@@ -263,6 +263,13 @@ full_result base64_tail_decode_impl(
     }
     if (idx != 4) {
       simdutf_log_assert(idx < 4, "idx should be less than 4");
+      // We never should have that the number of base64 characters + the
+      // number of padding characters is more than 4.
+      if (!ignore_garbage && (idx + padding_characters > 4)) {
+        return {INVALID_BASE64_CHARACTER, size_t(src - srcinit),
+                size_t(dst - dstinit), true};
+      }
+
       // The idea here is that in loose mode,
       // if there is padding at all, it must be used
       // to form 4-wise chunk. However, in loose mode,

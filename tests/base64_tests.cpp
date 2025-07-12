@@ -161,6 +161,36 @@ std::vector<char_type> add_simple_spaces(std::vector<char_type> &v,
   return result;
 }
 
+std::string add_simple_spaces(std::string &v, std::mt19937 &gen,
+                              size_t number_of_spaces) {
+  // If there are no spaces to add or the vector is empty, return
+  if (number_of_spaces == 0) {
+    return v;
+  }
+
+  // Generate unique random positions
+  std::vector<bool> positions(v.size() + number_of_spaces, false);
+  std::uniform_int_distribution<size_t> dist(0, positions.size() - 1);
+  for (size_t i = 0; i < number_of_spaces; ++i) {
+    size_t pos = dist(gen);
+    while (positions[pos]) {
+      pos = dist(gen);
+    }
+    positions[pos] = true;
+  }
+  std::string result;
+  result.resize(v.size() + number_of_spaces);
+  int pos = 0;
+  for (size_t i = 0; i < v.size() + number_of_spaces; ++i) {
+    if (positions[i]) {
+      result[i] = ' ';
+    } else {
+      result[i] = v[pos++];
+    }
+  }
+  return result;
+}
+
 template <typename char_type>
 size_t add_garbage(std::vector<char_type> &v, std::mt19937 &gen,
                    const uint8_t *table) {
@@ -276,39 +306,6 @@ TEST(issue_node_anything_goes) {
        "IGRlc2VydW50IG1vbGxpdCBhbmltIGlkIGVzdCBsYWJvcnVtLg",
        text);
 }
-
-TEST(issue_202505170241) {
-  const std::vector<char> base64{
-      'c',  'c',  'c',  '\t', '=',  '\n', '\r', '\n', '\f', '\f', '\f', '\f',
-      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
-      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
-      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
-      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
-      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
-      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
-      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
-      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
-      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
-      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
-      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
-      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
-      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
-      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f',
-      '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '\f', '=',
-  };
-  std::vector<char> buffer;
-  for (size_t fixed_len : {2, 1024}) {
-    buffer.resize(fixed_len);
-    size_t len = buffer.size();
-    auto result = simdutf::base64_to_binary_safe(
-        base64.data(), base64.size(), buffer.data(), len,
-        simdutf::base64_default,
-        simdutf::last_chunk_handling_options::stop_before_partial);
-    ASSERT_EQUAL(result.error, simdutf::error_code::SUCCESS);
-    ASSERT_EQUAL(result.count, base64.size());
-    ASSERT_EQUAL(len, 2);
-  }
-};
 
 TEST(issue_dash) {
   const std::string input = "Iw==";
@@ -459,44 +456,112 @@ TEST(tc39_2) {
 }
 
 // https://github.com/tc39/test262
-TEST(tc39_illegal_padded_chunks) {
+TEST(tc39_illegal_padded_chunks_unsafe) {
   std::string test_cases[] = {
-    "=",
-    "==",
-    "===",
-    "====",
-    "=====",
-    "A=",
-    "A==",
-    "A===",
-    "A====",
-    "A=====",
-    "AA====",
-    "AA=====",
-    "AAA==",
-    "AAA===",
-    "AAA====",
-    "AAA=====",
-    "AAAA=",
-    "AAAA==",
-    "AAAA===",
-    "AAAA====",
-    "AAAA=====",
-    "AAAAA=",
-    "AAAAA==",
-    "AAAAA===",
-    "AAAAA====",
-    "AAAAA====="};
-  for (const std::string& input : test_cases) {
+      "=",         "==",        "===",       "====",     "=====",   "A=",
+      "A==",       "A===",      "A====",     "A=====",   "AA====",  "AA=====",
+      "AAA==",     "AAA===",    "AAA====",   "AAA=====", "AAAA=",   "AAAA==",
+      "AAAA===",   "AAAA====",  "AAAA=====", "AAAAA=",   "AAAAA==", "AAAAA===",
+      "AAAAA====", "AAAAA====="};
+  std::mt19937 gen((std::mt19937::result_type)(seed));
+  for (const std::string &input : test_cases) {
     std::vector<uint8_t> back(255);
     size_t len = back.size();
     for (auto option :
-           {simdutf::last_chunk_handling_options::strict,
-            simdutf::last_chunk_handling_options::loose,
-            simdutf::last_chunk_handling_options::stop_before_partial}) {
+         {simdutf::last_chunk_handling_options::strict,
+          simdutf::last_chunk_handling_options::loose,
+          simdutf::last_chunk_handling_options::stop_before_partial}) {
+      auto r = simdutf::base64_to_binary(input.data(), input.size(),
+                                         reinterpret_cast<char *>(back.data()),
+                                         simdutf::base64_default, option);
+      ASSERT_FALSE(r.error == simdutf::error_code::SUCCESS);
+    }
+  }
+  std::string base(128, 'A');
+  for (const std::string &input_orig : test_cases) {
+    std::string input = base + input_orig;
+
+    std::vector<uint8_t> back(255);
+    size_t len = back.size();
+    for (auto option :
+         {simdutf::last_chunk_handling_options::strict,
+          simdutf::last_chunk_handling_options::loose,
+          simdutf::last_chunk_handling_options::stop_before_partial}) {
+      auto r = simdutf::base64_to_binary(input.data(), input.size(),
+                                         reinterpret_cast<char *>(back.data()),
+                                         simdutf::base64_default, option);
+      ASSERT_FALSE(r.error == simdutf::error_code::SUCCESS);
+    }
+  }
+  for (const std::string &input_orig : test_cases) {
+    std::string input = base + input_orig;
+    add_simple_spaces(input, gen, 5 + 2 * input.size());
+    std::vector<uint8_t> back(255);
+    size_t len = back.size();
+    for (auto option :
+         {simdutf::last_chunk_handling_options::strict,
+          simdutf::last_chunk_handling_options::loose,
+          simdutf::last_chunk_handling_options::stop_before_partial}) {
+      auto r = simdutf::base64_to_binary(input.data(), input.size(),
+                                         reinterpret_cast<char *>(back.data()),
+                                         simdutf::base64_default, option);
+      ASSERT_FALSE(r.error == simdutf::error_code::SUCCESS);
+    }
+  }
+}
+
+// https://github.com/tc39/test262
+TEST(tc39_illegal_padded_chunks) {
+  std::string test_cases[] = {
+      "=",         "==",        "===",       "====",     "=====",   "A=",
+      "A==",       "A===",      "A====",     "A=====",   "AA====",  "AA=====",
+      "AAA==",     "AAA===",    "AAA====",   "AAA=====", "AAAA=",   "AAAA==",
+      "AAAA===",   "AAAA====",  "AAAA=====", "AAAAA=",   "AAAAA==", "AAAAA===",
+      "AAAAA====", "AAAAA====="};
+  std::mt19937 gen((std::mt19937::result_type)(seed));
+  for (const std::string &input : test_cases) {
+    std::vector<uint8_t> back(255);
+    size_t len = back.size();
+    for (auto option :
+         {simdutf::last_chunk_handling_options::strict,
+          simdutf::last_chunk_handling_options::loose,
+          simdutf::last_chunk_handling_options::stop_before_partial}) {
       auto r = simdutf::base64_to_binary_safe(
-        input.data(), input.size(), reinterpret_cast<char *>(back.data()), len,
-        simdutf::base64_default, option, true);
+          input.data(), input.size(), reinterpret_cast<char *>(back.data()),
+          len, simdutf::base64_default, option, true);
+      ASSERT_FALSE(r.error == simdutf::error_code::SUCCESS);
+      ASSERT_FALSE(r.error == simdutf::error_code::OUTPUT_BUFFER_TOO_SMALL);
+    }
+  }
+  std::string base(128, 'A');
+  for (const std::string &input_orig : test_cases) {
+    std::string input = base + input_orig;
+    std::vector<uint8_t> back(255);
+    size_t len = back.size();
+    for (auto option :
+         {simdutf::last_chunk_handling_options::strict,
+          simdutf::last_chunk_handling_options::loose,
+          simdutf::last_chunk_handling_options::stop_before_partial}) {
+      auto r = simdutf::base64_to_binary_safe(
+          input.data(), input.size(), reinterpret_cast<char *>(back.data()),
+          len, simdutf::base64_default, option, true);
+      ASSERT_FALSE(r.error == simdutf::error_code::SUCCESS);
+      ASSERT_FALSE(r.error == simdutf::error_code::OUTPUT_BUFFER_TOO_SMALL);
+    }
+  }
+
+  for (const std::string &input_orig : test_cases) {
+    std::string input = base + input_orig;
+    add_simple_spaces(input, gen, 5 + 2 * input.size());
+    std::vector<uint8_t> back(255);
+    size_t len = back.size();
+    for (auto option :
+         {simdutf::last_chunk_handling_options::strict,
+          simdutf::last_chunk_handling_options::loose,
+          simdutf::last_chunk_handling_options::stop_before_partial}) {
+      auto r = simdutf::base64_to_binary_safe(
+          input.data(), input.size(), reinterpret_cast<char *>(back.data()),
+          len, simdutf::base64_default, option, true);
       ASSERT_FALSE(r.error == simdutf::error_code::SUCCESS);
       ASSERT_FALSE(r.error == simdutf::error_code::OUTPUT_BUFFER_TOO_SMALL);
     }
