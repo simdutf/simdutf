@@ -2071,7 +2071,7 @@ option which discards leftover base64 characters when the padding is not appropr
 The `stop_before_partial` option might be appropriate for streaming applications
 where you expect to get part of the base64 stream.
 The `strict` approach is useful if you want to have one-to-one correspondence between
-the base64 code and the binary data. If the defaut setting is used (`last_chunk_handling_options::loose`),
+the base64 code and the binary data. If the default setting is used (`last_chunk_handling_options::loose`),
 then `"ZXhhZg=="`, `"ZXhhZg"`, `"ZXhhZh=="` all decode to the same binary content.
 If `last_chunk_options` is set to `last_chunk_handling_options::strict`, then
 decoding `"ZXhhZg=="` succeeds, but decoding `"ZXhhZg"` fails with `simdutf::error_code::BASE64_INPUT_REMAINDER` while `"ZXhhZh=="` fails with
