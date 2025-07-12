@@ -161,7 +161,7 @@ std::vector<char_type> add_simple_spaces(std::vector<char_type> &v,
   return result;
 }
 
-std::string add_simple_spaces(std::string &v, std::mt19937 &gen,
+std::string add_simple_spaces(const std::string &v, std::mt19937 &gen,
                               size_t number_of_spaces) {
   // If there are no spaces to add or the vector is empty, return
   if (number_of_spaces == 0) {
