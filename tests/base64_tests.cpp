@@ -495,7 +495,7 @@ TEST(tc39_illegal_padded_chunks_unsafe) {
   }
   for (const std::string &input_orig : test_cases) {
     std::string input = base + input_orig;
-    add_simple_spaces(input, gen, 5 + 2 * input.size());
+    input = add_simple_spaces(input, gen, 5 + 2 * input.size());
     std::vector<uint8_t> back(255);
     size_t len = back.size();
     for (auto option :
