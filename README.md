@@ -2070,7 +2070,7 @@ where precise padding must be used or an error is generated, or the `stop_before
 option which discards leftover base64 characters when the padding is not appropriate.
 The `stop_before_partial` option might be appropriate for streaming applications
 where you expect to get part of the base64 stream.
-The `strict` approach is useful if you want to have one-to-one correspondance between
+The `strict` approach is useful if you want to have one-to-one correspondence between
 the base64 code and the binary data. If the defaut setting is used (`last_chunk_handling_options::loose`),
 then `"ZXhhZg=="`, `"ZXhhZg"`, `"ZXhhZh=="` all decode to the same binary content.
 If `last_chunk_options` is set to `last_chunk_handling_options::strict`, then
