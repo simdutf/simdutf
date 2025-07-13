@@ -1843,9 +1843,22 @@ void change_endianness_utf16(const char16_t * input, size_t length, char16_t * o
 Base64
 -----
 
-We also support converting from [WHATWG forgiving-base64](https://infra.spec.whatwg.org/#forgiving-base64-decode) to binary, and back. In particular, you can convert base64 inputs which contain ASCII spaces (' ', '\t', '\n', '\r', '\f') to binary. We also support the base64 URL encoding alternative. These functions are part of the Node.js JavaScript runtime: in particular `atob` in Node.js relies on simdutf.
+The WHATWG (Web Hypertext Application Technology Working Group) defines a "forgiving" base64 decoding algorithm in its Infra Standard, which is used in web contexts like the JavaScript atob() function. This algorithm is more lenient than strict RFC 4648 base64, primarily to handle common web data variations. It ignores all ASCII whitespace (spaces, tabs, newlines, etc.), allows omitting padding characters (=), and decodes inputs as long as they meet certain length and character validity rules. However, it still rejects inputs that could lead to ambiguous or incomplete byte formation.
 
-Converting binary data to base64 always succeeds and is relatively simple:
+We also converting from [WHATWG forgiving-base64](https://infra.spec.whatwg.org/#forgiving-base64-decode) to binary, and back. In particular, you can convert base64 inputs which contain ASCII spaces (' ', '\t', '\n', '\r', '\f') to binary. We also support the base64 URL encoding alternative. These functions are part of the Node.js JavaScript runtime: in particular `atob` in Node.js relies on simdutf.
+
+
+The key steps in this algorithm are:
+- Remove all whitespace from the input string.
+- If the resulting string's length is a multiple of 4 and it ends with one or two '=' characters, remove those '=' from the end (treating them as optional padding).
+- If the length (after any padding removal) modulo 4 equals 1, the input is invalid— this prevents cases where the bit count wouldn't align properly to form whole bytes.
+- Check that all remaining characters are valid base64 symbols (A-Z, a-z, 0-9, +, /, or =); otherwise, invalid.
+- Decode by converting each character to its 6-bit value, concatenating the bits, and grouping them into 8-bit bytes. At the end, if there are leftover bits (12 or 18), form as many full bytes as possible and discard the trailing bits (4 or 2, respectively), assuming they are padding zeros.
+
+This forgiving approach makes base64 decoding robust for web use, but it enforces rules to avoid data corruption.
+
+The conversion of binary data to base64 always succeeds and is relatively simple. Suppose
+that you have an original input of binary data `source` (e.g., `std::vector<char>`).
 ```C++
 std::vector<char> buffer(simdutf::base64_length_from_binary(source.size()));
 simdutf::binary_to_base64(source.data(), source.size(), buffer.data());
@@ -1866,11 +1879,16 @@ if(r.error) {
 }
 ```
 
-Let us consider a more interesting example.  Take the following strings:
+Let us consider concrete examples.  Take the following strings:
 `"  A  A  "`, `"  A  A  G  A  /  v  8  "`, `"  A  A  G  A  /  v  8  =  "`, `"  A  A  G  A  /  v  8  =  =  "`.
-They are all valid WHATWG base64 inputs, except for the last one. The first string decodes to a single
-byte value (0) while the second and third decode to the byte sequence `0, 0x1, 0x80, 0xfe, 0xff`.
+They are all valid WHATWG base64 inputs, except for the last one.
 
+- The first string, `"  A  A  "`, becomes "AA" after whitespace removal. Its length is 2, and 2 % 4 = 2 (not 1), so it's valid. Decoding: 'A' is 000000 and 'A' is 000000, giving 12 bits (000000000000). Form one byte from the first 8 bits (00000000 = 0x00) and discard the last 4 bits (0000). Result: a single byte value of 0.
+- The second string, `"  A  A  G  A  /  v  8  "`, becomes "AAGA/v8" (length 7, 7 % 4 = 3, not 1—valid). Decoding the 42 bits yields the byte sequence 0x00, 0x01, 0x80, 0xFE, 0xFF (as you noted; the process groups full 24-bit chunks into three bytes each, then handles the remaining 18 bits as two bytes, discarding the last 2 bits).
+- The third string, `"  A  A  G  A  /  v  8  =  "`, becomes "AAGA/v8=" (length 8, 8 % 4 = 0). It ends with one '=', so remove it, leaving "AAGA/v8" (same as the second example). Valid, and decodes to the same byte sequence: 0x00, 0x01, 0x80, 0xFE, 0xFF.
+- The fourth string, `"  A  A  G  A  /  v  8  =  =  "`, becomes "AAGA/v8==" (length 9, 9 % 4 = 1). The length isn't a multiple of 4, so the algorithm doesn't remove the trailing '=='. Since the length modulo 4 is 1, it's invalid. This rule exists because a remainder of 1 would leave only 6 leftover bits after full bytes, which can't form a complete byte (unlike remainders of 2 or 3, which leave 12 or 18 bits and allow discarding 4 or 2 bits). Adding extra '=' here disrupts the expected alignment without qualifying for padding removal.
+
+Let us process them with actual code.
 
 ```C++
   std::vector<std::string> sources = {
@@ -2021,8 +2039,7 @@ We support two conventions: `base64_default` and `base64_url`:
   stream, there must be no more than two, and if there are any, the total number of characters (excluding
   ASCII spaces ' ', '\t', '\n', '\r', '\f' but including padding characters) must be divisible by four.
 * The URL convention (`base64_url`) uses the characters `-` and `_` as part of its alphabet. It does
-  not pad its output. Thus, we have that the string `"Hello, World!"` is encoded to `"SGVsbG8sIFdvcmxkIQ"`.
-  To specify the URL convention, you can pass the appropriate option to our decoding and encoding functions: e.g., `simdutf::base64_to_binary(source, size, out, simdutf::base64_url)`.
+  not pad its output. Thus, we have that the string `"Hello, World!"` is encoded to `"SGVsbG8sIFdvcmxkIQ"` instead of `"SGVsbG8sIFdvcmxkIQ=="`. To specify the URL convention, you can pass the appropriate option to our decoding and encoding functions: e.g., `simdutf::base64_to_binary(source, size, out, simdutf::base64_url)`.
 
 When we encounter a character that is neither an ASCII space nor a base64 character (a garbage character), we detect an error. To tolerate 'garbage' characters, you can use `base64_default_accept_garbage` or `base64_url_accept_garbage` instead of `base64_default` or `base64_url`.
 
@@ -2048,14 +2065,13 @@ For greater convenience, you may use `simdutf::base64_default_no_padding` and
 `simdutf::base64_url_with_padding`, as shorthands.
 
 When decoding, by default we use a loose approach: the padding character may be omitted.
-Advanced users may use the `last_chunk_options` parameter to use either a strict approach,
-where precise padding must be used or an error is generated, or the stop_before_partial
-option which simply discards leftover base64 characters when the padding is not appropriate.
-The stop_before_partial option might be useful for streaming: given a stream of base64
-characters over the network, you may want to be able to decode them without first waiting
-for the whole stream to come in.
-The strict approach is useful if you want to have one-to-one correspondance between
-the base64 code and the binary data. In the defaut setting is used (`last_chunk_handling_options::loose`),
+Advanced users may use the `last_chunk_options` parameter to use either a `strict` approach,
+where precise padding must be used or an error is generated, or the `stop_before_partial`
+option which discards leftover base64 characters when the padding is not appropriate.
+The `stop_before_partial` option might be appropriate for streaming applications
+where you expect to get part of the base64 stream.
+The `strict` approach is useful if you want to have one-to-one correspondence between
+the base64 code and the binary data. If the default setting is used (`last_chunk_handling_options::loose`),
 then `"ZXhhZg=="`, `"ZXhhZg"`, `"ZXhhZh=="` all decode to the same binary content.
 If `last_chunk_options` is set to `last_chunk_handling_options::strict`, then
 decoding `"ZXhhZg=="` succeeds, but decoding `"ZXhhZg"` fails with `simdutf::error_code::BASE64_INPUT_REMAINDER` while `"ZXhhZh=="` fails with
@@ -2155,7 +2171,7 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char16_t * in
  * maximal_binary_length_from_base64(input, length) bytes long. If you fail to
  * provide that much space, the function may cause a buffer overflow.
  *
- * Advanced users may want to taylor how the last chunk is handled. By default,
+ * Advanced users may want to tailor how the last chunk is handled. By default,
  * we use a loose (forgiving) approach but we also support a strict approach
  * as well as a stop_before_partial approach, as per the following proposal:
  *
@@ -2232,7 +2248,7 @@ size_t binary_to_base64(const char * input, size_t length, char* output, base64_
  * You should call this function with a buffer that is at least maximal_binary_length_from_base64(input, length) bytes long.
  * If you fail to provide that much space, the function may cause a buffer overflow.
  *
- * Advanced users may want to taylor how the last chunk is handled. By default,
+ * Advanced users may want to tailor how the last chunk is handled. By default,
  * we use a loose (forgiving) approach but we also support a strict approach
  * as well as a stop_before_partial approach, as per the following proposal:
  *
@@ -2291,7 +2307,7 @@ simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t lengt
  * true. In that case, the function will decode up to the first invalid character.
  * Extra padding characters ('=') are considered invalid characters.
  *
- * Advanced users may want to taylor how the last chunk is handled. By default,
+ * Advanced users may want to tailor how the last chunk is handled. By default,
  * we use a loose (forgiving) approach but we also support a strict approach
  * as well as a stop_before_partial approach, as per the following proposal:
  *

@@ -320,6 +320,9 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   }
 
   if ((bufferptr - buffer_start) != 0) {
+    // For efficiency reasons, we end up reproducing much of the code
+    // in base64_tail_decode_impl. Better engineering would be to
+    // refactor the code so that we can call it without a performance hit.
     size_t rem = (bufferptr - buffer_start);
     int idx = rem % 4;
     __mmask64 mask = ((__mmask64)1 << rem) - 1;
@@ -336,7 +339,12 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         28, 29, 30, 24, 25, 26, 20, 21, 22, 16, 17, 18, 12, 13, 14, 8, 9, 10, 4,
         5, 6, 0, 1, 2);
     const __m512i shuffled = _mm512_permutexvar_epi8(pack, merged);
-
+    // We never should have that the number of base64 characters + the
+    // number of padding characters is more than 4.
+    if (!ignore_garbage && (idx + padding_characters > 4)) {
+      return {INVALID_BASE64_CHARACTER, size_t(src - srcinit),
+              size_t(dst - dstinit), true};
+    }
     // The idea here is that in loose mode,
     // if there is padding at all, it must be used
     // to form 4-wise chunk. However, in loose mode,
