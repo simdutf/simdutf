@@ -455,7 +455,7 @@ TEST(tc39_2) {
   ASSERT_EQUAL(back, expected);
 }
 
-// https://github.com/tc39/test262
+// https://github.com/tc39/test262/blob/f0dc15c6c7ec095ba3caf3acc0f8665394665841/test/built-ins/Uint8Array/fromBase64/last-chunk-invalid.js
 TEST(tc39_illegal_padded_chunks_unsafe) {
   std::string test_cases[] = {
       "=",         "==",        "===",       "====",     "=====",   "A=",
@@ -510,7 +510,7 @@ TEST(tc39_illegal_padded_chunks_unsafe) {
   }
 }
 
-// https://github.com/tc39/test262
+// https://github.com/tc39/test262/blob/f0dc15c6c7ec095ba3caf3acc0f8665394665841/test/built-ins/Uint8Array/fromBase64/last-chunk-invalid.js
 TEST(tc39_illegal_padded_chunks) {
   std::string test_cases[] = {
       "=",         "==",        "===",       "====",     "=====",   "A=",
