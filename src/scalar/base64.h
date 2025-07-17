@@ -92,8 +92,8 @@ struct reduced_input {
 // find the end of the base64 input buffer
 // It returns the number of padding characters, the location of the first
 // padding character if any, the length of the input buffer before padding
-// and the length of the input buffer with padding. The input buffer is not modified.
-// The function assumes that there are at most two padding characters.
+// and the length of the input buffer with padding. The input buffer is not
+// modified. The function assumes that there are at most two padding characters.
 template <class char_type>
 reduced_input find_end(const char_type *src, size_t srclen,
                        simdutf::base64_options options) {

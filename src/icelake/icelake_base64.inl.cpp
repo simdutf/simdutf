@@ -390,8 +390,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
           }
           // And then we need to skip ignored characters
           // See https://github.com/simdutf/simdutf/issues/824
-          while(src > srcinit) {
-            auto c = *(src-1);
+          while (src > srcinit) {
+            auto c = *(src - 1);
             uint8_t code = to_base64[uint8_t(c)];
             if (simdutf::scalar::base64::is_eight_byte(c) && code <= 63) {
               break;

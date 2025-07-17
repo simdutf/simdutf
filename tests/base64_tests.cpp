@@ -211,7 +211,6 @@ size_t add_garbage(std::vector<char_type> &v, std::mt19937 &gen,
   return i;
 }
 
-
 // https://github.com/tc39/test262/blob/f0dc15c6c7ec095ba3caf3acc0f8665394665841/test/built-ins/Uint8Array/fromBase64/last-chunk-invalid.js
 TEST(tc39_illegal_padded_chunks) {
   std::string test_cases[] = {
@@ -236,7 +235,6 @@ TEST(tc39_illegal_padded_chunks) {
     }
   }
 }
-
 
 // From Node.js tests:
 TEST(issue_node_anything_goes) {
@@ -1544,21 +1542,29 @@ TEST(base64_decode_complete_input) {
 
 // https://github.com/simdutf/simdutf/issues/824
 /*
-The TC39 base64 proposal step 10.a and 10.b together means that, when using stop-before-partial:
+The TC39 base64 proposal step 10.a and 10.b together means that, when using
+stop-before-partial:
 
-If in the middle of decoding a chunk, return the ending position of the previous chunk before skipping whitespace.
-If not in the middle of decoding a chunk, return the entire input length, including trailing whitespace.
+If in the middle of decoding a chunk, return the ending position of the previous
+chunk before skipping whitespace. If not in the middle of decoding a chunk,
+return the entire input length, including trailing whitespace.
 */
 TEST(issue_824) {
   struct read_write {
     size_t read;
     size_t written;
   };
-  std::vector<std::tuple<std::string, read_write, std::vector<uint8_t>>> test_cases = {
-          {"  ", {2,0}, {}}, // return the entire input length, including trailing whitespace.
-          {" A A G A / v 8 ", {8,3}, {0, 1, 128}} // return the ending position of the previous chunk before skipping whitespace.
-  };
-  for (const std::tuple<std::string, read_write, std::vector<uint8_t>> &t : test_cases) {
+  std::vector<std::tuple<std::string, read_write, std::vector<uint8_t>>>
+      test_cases = {
+          {"  ", {2, 0}, {}}, // return the entire input length, including
+                              // trailing whitespace.
+          {" A A G A / v 8 ",
+           {8, 3},
+           {0, 1, 128}} // return the ending position of the previous chunk
+                        // before skipping whitespace.
+      };
+  for (const std::tuple<std::string, read_write, std::vector<uint8_t>> &t :
+       test_cases) {
     auto input_data = std::get<0>(t);
     auto read_write_info = std::get<1>(t);
     auto expected_output = std::get<2>(t);
@@ -1566,10 +1572,11 @@ TEST(issue_824) {
         implementation.maximal_binary_length_from_base64(input_data.data(),
                                                          input_data.size()));
     size_t written = output_buffer.size();
-      auto result = simdutf::base64_to_binary_safe(
-          input_data.data(), input_data.size(),
-          reinterpret_cast<char *>(output_buffer.data()), written,
-          simdutf::base64_default, simdutf::last_chunk_handling_options::stop_before_partial, true);
+    auto result = simdutf::base64_to_binary_safe(
+        input_data.data(), input_data.size(),
+        reinterpret_cast<char *>(output_buffer.data()), written,
+        simdutf::base64_default,
+        simdutf::last_chunk_handling_options::stop_before_partial, true);
     ASSERT_EQUAL(result.error, simdutf::error_code::SUCCESS);
     ASSERT_EQUAL(result.count, read_write_info.read);
     ASSERT_EQUAL(written, expected_output.size());
@@ -1585,32 +1592,34 @@ TEST(base64_decode_webkit_cases) {
     size_t read;
     size_t written;
   };
-  std::vector<std::tuple<std::string, read_write, std::vector<uint8_t>>> test_cases = {
-      {"", {0,0}, {}},
-      {"AA==", {4,1}, {0}},
-      {"AQ==", {4,1},{1}},
-      {"gA==", {4,1},{128}},
-      {"/g==", {4,1},{254}},
-      {"/w==", {4,1},{255}},
-      {"AAE=", {4,2},{0, 1}},
-      {"/v8=", {4,2},{254, 255}},
-      {"AAGA/v8=",{8,5}, {0, 1, 128, 254, 255}},
-      {"  ", {2,0}, {}},
-      {"  A  A  =  =  ", {14,1}, {0}},
-      {"  A  Q  =  =  ", {14,1}, {1}},
-      {"  g  A  =  =  ", {14,1}, {128}},
-      {"  /  g  =  =  ", {14,1}, {254}},
-      {"  /  w  =  =  ", {14,1}, {255}},
-      {"  A  A  E  =  ", {14,2}, {0, 1}},
-      {"  /  v  8  =  ", {14,2}, {254, 255}},
-      {"  A  A  G  A  /  v  8  =  ", {26,5}, {0, 1, 128, 254, 255}}
-    };
+  std::vector<std::tuple<std::string, read_write, std::vector<uint8_t>>>
+      test_cases = {
+          {"", {0, 0}, {}},
+          {"AA==", {4, 1}, {0}},
+          {"AQ==", {4, 1}, {1}},
+          {"gA==", {4, 1}, {128}},
+          {"/g==", {4, 1}, {254}},
+          {"/w==", {4, 1}, {255}},
+          {"AAE=", {4, 2}, {0, 1}},
+          {"/v8=", {4, 2}, {254, 255}},
+          {"AAGA/v8=", {8, 5}, {0, 1, 128, 254, 255}},
+          {"  ", {2, 0}, {}},
+          {"  A  A  =  =  ", {14, 1}, {0}},
+          {"  A  Q  =  =  ", {14, 1}, {1}},
+          {"  g  A  =  =  ", {14, 1}, {128}},
+          {"  /  g  =  =  ", {14, 1}, {254}},
+          {"  /  w  =  =  ", {14, 1}, {255}},
+          {"  A  A  E  =  ", {14, 2}, {0, 1}},
+          {"  /  v  8  =  ", {14, 2}, {254, 255}},
+          {"  A  A  G  A  /  v  8  =  ", {26, 5}, {0, 1, 128, 254, 255}}};
 
   // Test with all last_chunk_handling_options
-  for (auto option : {simdutf::last_chunk_handling_options::strict,
-                      simdutf::last_chunk_handling_options::loose,
-                      simdutf::last_chunk_handling_options::stop_before_partial}) {
-    for (const std::tuple<std::string, read_write, std::vector<uint8_t>> &t : test_cases) {
+  for (auto option :
+       {simdutf::last_chunk_handling_options::strict,
+        simdutf::last_chunk_handling_options::loose,
+        simdutf::last_chunk_handling_options::stop_before_partial}) {
+    for (const std::tuple<std::string, read_write, std::vector<uint8_t>> &t :
+         test_cases) {
       auto input_data = std::get<0>(t);
       auto expected_output = std::get<2>(t);
       std::vector<uint8_t> output_buffer(
@@ -1627,10 +1636,12 @@ TEST(base64_decode_webkit_cases) {
     }
   }
 
-  for (auto option : {simdutf::last_chunk_handling_options::strict,
-                      simdutf::last_chunk_handling_options::loose,
-                      simdutf::last_chunk_handling_options::stop_before_partial}) {
-    for (const std::tuple<std::string, read_write, std::vector<uint8_t>> &t : test_cases) {
+  for (auto option :
+       {simdutf::last_chunk_handling_options::strict,
+        simdutf::last_chunk_handling_options::loose,
+        simdutf::last_chunk_handling_options::stop_before_partial}) {
+    for (const std::tuple<std::string, read_write, std::vector<uint8_t>> &t :
+         test_cases) {
       auto input_data = std::get<0>(t);
       auto read_write_info = std::get<1>(t);
       auto expected_output = std::get<2>(t);
@@ -1652,7 +1663,8 @@ TEST(base64_decode_webkit_cases) {
   // Test with all last_chunk_handling_options
   for (auto option : {simdutf::last_chunk_handling_options::strict,
                       simdutf::last_chunk_handling_options::loose}) {
-    for (const std::tuple<std::string, read_write, std::vector<uint8_t>> &t : test_cases) {
+    for (const std::tuple<std::string, read_write, std::vector<uint8_t>> &t :
+         test_cases) {
       auto input_data = std::get<0>(t);
       auto read_write_info = std::get<1>(t);
       auto expected_output = std::get<2>(t);
@@ -1664,7 +1676,7 @@ TEST(base64_decode_webkit_cases) {
           input_data.data(), input_data.size(),
           reinterpret_cast<char *>(output_buffer.data()), written,
           simdutf::base64_default, option);
-          ASSERT_EQUAL(result.error, simdutf::error_code::SUCCESS);
+      ASSERT_EQUAL(result.error, simdutf::error_code::SUCCESS);
       ASSERT_EQUAL(result.count, read_write_info.read);
       ASSERT_EQUAL(written, expected_output.size());
       output_buffer.resize(written);
