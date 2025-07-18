@@ -109,7 +109,7 @@ reduced_input find_end(const char_type *src, size_t srclen,
 
   size_t equalsigns = 0;
   // We intentionally include trailing spaces in the full input length.
-  // See
+  // See https://github.com/simdutf/simdutf/issues/824
   size_t full_input_length = srclen;
   // skip trailing spaces
   while (!ignore_garbage && srclen > 0 &&
