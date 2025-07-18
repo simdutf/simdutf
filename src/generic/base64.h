@@ -52,12 +52,11 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   size_t equalsigns = ri.equalsigns;
   srclen = ri.srclen;
   size_t full_input_length = ri.full_input_length;
-  (void)full_input_length;
   if (srclen == 0) {
     if (!ignore_garbage && equalsigns > 0) {
       return {INVALID_BASE64_CHARACTER, equallocation, 0};
     }
-    return {SUCCESS, 0, 0};
+    return {SUCCESS, full_input_length, 0};
   }
   char *end_of_safe_64byte_zone =
       dst == nullptr
