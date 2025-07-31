@@ -1563,13 +1563,23 @@ TEST(issue_824) {
            {0, 1, 128}} // return the ending position of the previous chunk
                         // before skipping whitespace.
       };
+
+  std::vector<unsigned char> case1(5463, 0x20);
+  case1.back() = 0x38;
+  test_cases.emplace_back(std::string(case1.begin(), case1.end()),
+                          read_write{0, 0}, std::vector<uint8_t>{});
+
   std::string long_input(1000, ' ');
   test_cases.emplace_back(long_input, read_write{1000, 0},
                           std::vector<uint8_t>{});
   test_cases.emplace_back(long_input + " A A G A / v 8 ",
                           read_write{1000 + 8, 3},
                           std::vector<uint8_t>{0, 1, 128});
-  test_cases.emplace_back(long_input + "A", read_write{1000, 0},
+  // In https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
+  // the 'read' variable is only ever incremented when a full chunk is
+  // successfully decoded. And we always return the 'read' variable,
+  // except when we reach the end of the input with a chunkLength of zero.
+  test_cases.emplace_back(long_input + "A", read_write{0, 0},
                           std::vector<uint8_t>{});
   test_cases.emplace_back("AAAA" + long_input + "A", read_write{4, 3},
                           std::vector<uint8_t>{0, 0, 0});
@@ -1612,6 +1622,38 @@ TEST(issue_824) {
     output_buffer.resize(written);
     ASSERT_TRUE(output_buffer == expected_output);
   }
+  for (const std::tuple<std::string, read_write, std::vector<uint8_t>> &t :
+       test_cases) {
+    auto input_data = std::get<0>(t);
+    auto read_write_info = std::get<1>(t);
+    auto expected_output = std::get<2>(t);
+    std::vector<uint8_t> output_buffer(expected_output.size());
+    size_t written = 3;
+    auto result = simdutf::base64_to_binary_safe(
+        input_data.data(), input_data.size(),
+        reinterpret_cast<char *>(output_buffer.data()), written,
+        simdutf::base64_default,
+        simdutf::last_chunk_handling_options::stop_before_partial, true);
+    ASSERT_EQUAL(result.error, simdutf::error_code::SUCCESS);
+    ASSERT_EQUAL(result.count, read_write_info.read);
+    ASSERT_EQUAL(written, expected_output.size());
+    output_buffer.resize(written);
+    ASSERT_TRUE(output_buffer == expected_output);
+  }
+}
+
+TEST(issue_824_a) {
+  std::vector<unsigned char> base64(5463, 0x20);
+  base64.back() = 0x38;
+  std::vector<char> outbuf(8224);
+  std::size_t outlen = outbuf.size();
+  const auto result = simdutf::base64_to_binary_safe(
+      (const char *)base64.data(), base64.size(), outbuf.data(), outlen,
+      simdutf::base64_default,
+      simdutf::last_chunk_handling_options::stop_before_partial, false);
+  ASSERT_EQUAL(result.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(result.count, 0);
+  ASSERT_EQUAL(outlen, 0);
 }
 
 // https://github.com/WebKit/WebKit/blob/18fad22e2078542316a576989676d31cfd08d777/JSTests/stress/uint8array-fromBase64.js#L135

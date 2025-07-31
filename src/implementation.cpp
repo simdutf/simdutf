@@ -1548,6 +1548,7 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
   const char_type *const input_init = input;
   size_t actual_out = 0;
   bool last_chunk = false;
+  const size_t length_init = length;
   result r;
   while (!last_chunk) {
     last_chunk |= (temp_buffer.size() >= outlen - actual_out);
@@ -1584,6 +1585,14 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
 
     if (r.error != error_code::OUTPUT_BUFFER_TOO_SMALL) {
       break;
+    }
+  }
+  if (size_t(input - input_init) != length_init) {
+    // We did not process all input characters. In such case, we
+    // should not end with an ignorable character. See
+    // https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
+    while (input > input_init && base64_ignorable(*(input - 1), options)) {
+      --input;
     }
   }
   outlen = actual_out;
@@ -2290,18 +2299,17 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
     outlen = output_position;
     return {r.error, input_position};
   }
+
   if (done_with_partial) {
     // We are done. We have decoded everything.
     outlen = output_position;
     return {simdutf::error_code::SUCCESS, input_position};
   }
-
   // We have decoded some data, but we still have some data to decode.
   // We need to decode the rest of the input buffer.
   r = simdutf::scalar::base64::base64_to_binary_details_safe_impl(
       input + input_position, remaining_input_length, output + output_position,
       remaining_output_length, options, last_chunk_handling_options);
-
   input_position += r.input_count;
   output_position += r.output_count;
   remaining_input_length -= r.input_count;
@@ -2316,6 +2324,21 @@ simdutf_warn_unused result base64_to_binary_safe_impl(
     }
     outlen = output_position;
     return {r.error, input_position};
+  }
+  if (input_position < length) {
+    // We cannot process the entire input in one go, so we need to
+    // process it in two steps: first the fast path, then the slow path.
+    // In some cases, the processing might 'eat up' trailing ignorable
+    // characters in the fast path, but that can be a problem.
+    // suppose we have just white space followed by a single base64 character.
+    // If we first process the white space with the fast path, it will
+    // eat all of it. But, by the JavaScript standard, we should consume
+    // no character. See
+    // https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
+    while (input_position > 0 &&
+           base64_ignorable(input[input_position - 1], options)) {
+      input_position--;
+    }
   }
   outlen = output_position;
   return {simdutf::error_code::SUCCESS, input_position};
