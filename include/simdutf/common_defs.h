@@ -123,21 +123,23 @@
 
 #endif // MSC_VER
 
-#ifndef SIMDUTF_DLLIMPORTEXPORT
-  #if defined(SIMDUTF_VISUAL_STUDIO)
+ #ifndef SIMDUTF_DLLIMPORTEXPORT
+  #if defined(SIMDUTF_VISUAL_STUDIO) // Visual Studio
     /**
      * It does not matter here whether you are using
      * the regular visual studio or clang under visual
      * studio.
      */
-    #if SIMDUTF_USING_LIBRARY
+    #if SIMDUTF_BUILDING_WINDOWS_DYNAMIC_LIBRARY
       #define SIMDUTF_DLLIMPORTEXPORT __declspec(dllimport)
-    #else
+    #elif SIMDUTF_USING_WINDOWS_DYNAMIC_LIBRARY
       #define SIMDUTF_DLLIMPORTEXPORT __declspec(dllexport)
+    #else
+      #define SIMDUTF_DLLIMPORTEXPORT
     #endif
-  #else
+  #else // defined(SIMDUTF_VISUAL_STUDIO)
     #define SIMDUTF_DLLIMPORTEXPORT
-  #endif
+  #endif // defined(SIMDUTF_VISUAL_STUDIO)
 #endif
 
 #if SIMDUTF_MAYBE_UNUSED_AVAILABLE

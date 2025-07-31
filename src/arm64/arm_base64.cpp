@@ -595,6 +595,17 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
     r = scalar::base64::patch_tail_result(
         r, size_t(src - srcinit), size_t(dst - dstinit), equallocation,
         full_input_length, last_chunk_options);
+    // When is_partial(last_chunk_options) is true, we must either end with
+    // the end of the stream (beyond whitespace) or right after a non-ignorable
+    // character or at the very beginning of the stream.
+    // See https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
+    if (is_partial(last_chunk_options) && r.error == error_code::SUCCESS &&
+        r.input_count < full_input_length) {
+      while (r.input_count > 0 &&
+             base64_ignorable(*(srcinit + r.input_count - 1), options)) {
+        r.input_count--;
+      }
+    }
     return r;
   }
   if (equalsigns > 0 && !ignore_garbage) {
