@@ -546,6 +546,26 @@ simdutf_warn_unused full_result base64_to_binary_details_impl(
       return {INVALID_BASE64_CHARACTER, equallocation, r.output_count};
     }
   }
+  // When is_partial(last_chunk_options) is true, we must either end with
+  // the end of the stream (beyond whitespace) or right after a non-ignorable
+  // character or at the very beginning of the stream.
+  // See https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
+  if (is_partial(last_chunk_options) && r.error == error_code::SUCCESS &&
+      r.input_count < full_input_length) {
+    // First check if we can extend the input to the end of the stream
+    while (r.input_count < full_input_length &&
+           base64_ignorable(*(input + r.input_count), options)) {
+      r.input_count++;
+    }
+    // If we are still not at the end of the stream, then we must backtrack
+    // to the last non-ignorable character.
+    if (r.input_count < full_input_length) {
+      while (r.input_count > 0 &&
+             base64_ignorable(*(input + r.input_count - 1), options)) {
+        r.input_count--;
+      }
+    }
+  }
   return r;
 }
 
@@ -579,6 +599,27 @@ simdutf_warn_unused full_result base64_to_binary_details_safe_impl(
     if ((r.output_count % 3 == 0) ||
         ((r.output_count % 3) + 1 + equalsigns != 4)) {
       return {INVALID_BASE64_CHARACTER, equallocation, r.output_count};
+    }
+  }
+
+  // When is_partial(last_chunk_options) is true, we must either end with
+  // the end of the stream (beyond whitespace) or right after a non-ignorable
+  // character or at the very beginning of the stream.
+  // See https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
+  if (is_partial(last_chunk_options) && r.error == error_code::SUCCESS &&
+      r.input_count < full_input_length) {
+    // First check if we can extend the input to the end of the stream
+    while (r.input_count < full_input_length &&
+           base64_ignorable(*(input + r.input_count), options)) {
+      r.input_count++;
+    }
+    // If we are still not at the end of the stream, then we must backtrack
+    // to the last non-ignorable character.
+    if (r.input_count < full_input_length) {
+      while (r.input_count > 0 &&
+             base64_ignorable(*(input + r.input_count - 1), options)) {
+        r.input_count--;
+      }
     }
   }
   return r;
