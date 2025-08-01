@@ -62,7 +62,6 @@ TEST(issue_824) {
   for (const std::tuple<std::string, read_write, std::vector<char>> &t :
        test_cases) {
     auto input_data = std::get<0>(t);
-    std::cout << "input: '" << input_data << "'" << std::endl;
     auto read_write_info = std::get<1>(t);
     auto expected_output = std::get<2>(t);
     std::vector<char> output_buffer(
@@ -82,13 +81,11 @@ TEST(issue_824) {
   for (const std::tuple<std::string, read_write, std::vector<char>> &t :
        test_cases) {
     auto input_data = std::get<0>(t);
-    std::cout << "input: '" << input_data << "'" << std::endl;
     auto read_write_info = std::get<1>(t);
     auto expected_output = std::get<2>(t);
-    std::vector<char> output_buffer(
-        implementation.maximal_binary_length_from_base64(input_data.data(),
-                                                         input_data.size()));
-    size_t written = 3;
+    std::vector<char> output_buffer(expected_output.size(),
+                                    0); // we know the size of the output
+    size_t written = output_buffer.size();
     const auto r = simdutf::atomic_base64_to_binary_safe(
         input_data.data(), input_data.size(), output_buffer.data(), written,
         simdutf::base64_default,
