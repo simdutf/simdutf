@@ -202,9 +202,18 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     // See https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
     if (is_partial(last_chunk_options) && r.error == error_code::SUCCESS &&
         r.input_count < full_input_length) {
-      while (r.input_count > 0 &&
-             base64_ignorable(*(srcinit + r.input_count - 1), options)) {
-        r.input_count--;
+      // First check if we can extend the input to the end of the stream
+      while (r.input_count < full_input_length &&
+             base64_ignorable(*(srcinit + r.input_count), options)) {
+        r.input_count++;
+      }
+      // If we are still not at the end of the stream, then we must backtrack
+      // to the last non-ignorable character.
+      if (r.input_count < full_input_length) {
+        while (r.input_count > 0 &&
+               base64_ignorable(*(srcinit + r.input_count - 1), options)) {
+          r.input_count--;
+        }
       }
     }
     return r;

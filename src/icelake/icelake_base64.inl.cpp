@@ -316,7 +316,6 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     base64_decode_block(dst, buffer_start);
     dst += 48;
   }
-
   if ((bufferptr - buffer_start) != 0) {
     // For efficiency reasons, we end up reproducing much of the code
     // in base64_tail_decode_impl. Better engineering would be to
@@ -354,7 +353,6 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       return {INVALID_BASE64_CHARACTER, size_t(src - srcinit),
               size_t(dst - dstinit), true};
     } else
-
       // The idea here is that in strict mode, we do not want to accept
       // incomplete base64 chunks. So if the chunk was otherwise valid, we
       // return BASE64_INPUT_REMAINDER.
@@ -371,7 +369,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         // skip the minute there are padding characters.
         if ((last_chunk_options ==
                  last_chunk_handling_options::stop_before_partial &&
-             (padding_characters + idx < 4) &&
+             (padding_characters + idx < 4) && (idx != 0) &&
              (idx >= 2 || padding_characters == 0)) ||
             (last_chunk_options ==
                  last_chunk_handling_options::only_full_chunks &&
@@ -451,7 +449,6 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
             dst += output_len;
           }
         }
-
     if (!ignore_garbage && !is_partial(last_chunk_options) &&
         padding_characters > 0) {
       size_t output_count = size_t(dst - dstinit);
