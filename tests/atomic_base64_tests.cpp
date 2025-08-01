@@ -30,6 +30,77 @@ static random_generator::result_type seed = 42;
 #endif
 
 #if !defined(SIMDUTF_NO_THREADS) && SIMDUTF_ATOMIC_REF && SIMDUTF_SPAN
+
+TEST(issue_824) {
+  struct read_write {
+    size_t read;
+    size_t written;
+  };
+  std::vector<std::tuple<std::string, read_write, std::vector<char>>>
+      test_cases = {
+          {"  ", {2, 0}, {}}, // return the entire input length, including
+                              // trailing whitespace.
+          {" A A G A / v 8 ",
+           {8, 3},
+           {0, 1, char(128)}} // return the ending position of the previous
+                              // chunk before skipping whitespace.
+      };
+  std::vector<unsigned char> case1(5463, 0x20);
+  case1.back() = 0x38;
+  test_cases.emplace_back(std::string(case1.begin(), case1.end()),
+                          read_write{0, 0}, std::vector<char>{});
+  std::string long_input(1000, ' ');
+  test_cases.emplace_back(long_input, read_write{1000, 0}, std::vector<char>{});
+  test_cases.emplace_back(long_input + " A A G A / v 8 ",
+                          read_write{1000 + 8, 3},
+                          std::vector<char>{0, 1, char(128)});
+  test_cases.emplace_back(long_input + "A", read_write{0, 0},
+                          std::vector<char>{});
+  test_cases.emplace_back("AAAA" + long_input + "A", read_write{4, 3},
+                          std::vector<char>{0, 0, 0});
+
+  for (const std::tuple<std::string, read_write, std::vector<char>> &t :
+       test_cases) {
+    auto input_data = std::get<0>(t);
+    std::cout << "input: '" << input_data << "'" << std::endl;
+    auto read_write_info = std::get<1>(t);
+    auto expected_output = std::get<2>(t);
+    std::vector<char> output_buffer(
+        implementation.maximal_binary_length_from_base64(input_data.data(),
+                                                         input_data.size()));
+    size_t written = output_buffer.size();
+    const auto r = simdutf::atomic_base64_to_binary_safe(
+        input_data.data(), input_data.size(), output_buffer.data(), written,
+        simdutf::base64_default,
+        simdutf::last_chunk_handling_options::stop_before_partial, true);
+    ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+    ASSERT_EQUAL(r.count, read_write_info.read);
+    ASSERT_EQUAL(written, expected_output.size());
+    output_buffer.resize(written);
+    ASSERT_TRUE(output_buffer == expected_output);
+  }
+  for (const std::tuple<std::string, read_write, std::vector<char>> &t :
+       test_cases) {
+    auto input_data = std::get<0>(t);
+    std::cout << "input: '" << input_data << "'" << std::endl;
+    auto read_write_info = std::get<1>(t);
+    auto expected_output = std::get<2>(t);
+    std::vector<char> output_buffer(
+        implementation.maximal_binary_length_from_base64(input_data.data(),
+                                                         input_data.size()));
+    size_t written = 3;
+    const auto r = simdutf::atomic_base64_to_binary_safe(
+        input_data.data(), input_data.size(), output_buffer.data(), written,
+        simdutf::base64_default,
+        simdutf::last_chunk_handling_options::stop_before_partial, true);
+    ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+    ASSERT_EQUAL(r.count, read_write_info.read);
+    ASSERT_EQUAL(written, expected_output.size());
+    output_buffer.resize(written);
+    ASSERT_TRUE(output_buffer == expected_output);
+  }
+}
+
 TEST(atomic_roundtrip_base64) {
   for (size_t len = 0; len < 2048; len++) {
     std::vector<char> source(len, 0);
@@ -142,7 +213,6 @@ void compare_decode(
     const simdutf::base64_options options,
     const simdutf::last_chunk_handling_options last_chunk_options,
     const bool decode_up_to_bad_char) {
-
   const auto s = [&]() {
     if constexpr (sizeof(b64_input[0]) == 1) {
       return std::span<const char>(

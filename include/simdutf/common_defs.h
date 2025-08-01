@@ -124,20 +124,42 @@
 #endif // MSC_VER
 
 #ifndef SIMDUTF_DLLIMPORTEXPORT
-  #if defined(SIMDUTF_VISUAL_STUDIO)
-    /**
-     * It does not matter here whether you are using
-     * the regular visual studio or clang under visual
-     * studio.
-     */
-    #if SIMDUTF_USING_LIBRARY
+  #if defined(SIMDUTF_VISUAL_STUDIO) // Visual Studio
+                                     /**
+                                      * Windows users need to do some extra work when building
+                                      * or using a dynamic library (DLL). When building, we need
+                                      * to set SIMDUTF_DLLIMPORTEXPORT to __declspec(dllexport).
+                                      * When *using* the DLL, the user needs to set
+                                      * SIMDUTF_DLLIMPORTEXPORT __declspec(dllimport).
+                                      *
+                                      * Static libraries not need require such work.
+                                      *
+                                      * It does not matter here whether you are using
+                                      * the regular visual studio or clang under visual
+                                      * studio, you still need to handle these issues.
+                                      *
+                                      * Non-Windows systems do not have this complexity.
+                                      */
+    #if SIMDUTF_BUILDING_WINDOWS_DYNAMIC_LIBRARY
+
+      // We set SIMDUTF_BUILDING_WINDOWS_DYNAMIC_LIBRARY when we build a DLL
+      // under Windows. It should never happen that both
+      // SIMDUTF_BUILDING_WINDOWS_DYNAMIC_LIBRARY and
+      // SIMDUTF_USING_WINDOWS_DYNAMIC_LIBRARY are set.
+      #define SIMDUTF_DLLIMPORTEXPORT __declspec(dllexport)
+    #elif SIMDUTF_USING_WINDOWS_DYNAMIC_LIBRARY
+      // Windows user who call a dynamic library should set
+      // SIMDUTF_USING_WINDOWS_DYNAMIC_LIBRARY to 1.
+
       #define SIMDUTF_DLLIMPORTEXPORT __declspec(dllimport)
     #else
-      #define SIMDUTF_DLLIMPORTEXPORT __declspec(dllexport)
+      // We assume by default static linkage
+      #define SIMDUTF_DLLIMPORTEXPORT
     #endif
-  #else
+  #else // defined(SIMDUTF_VISUAL_STUDIO)
+    // Non-Windows systems do not have this complexity.
     #define SIMDUTF_DLLIMPORTEXPORT
-  #endif
+  #endif // defined(SIMDUTF_VISUAL_STUDIO)
 #endif
 
 #if SIMDUTF_MAYBE_UNUSED_AVAILABLE

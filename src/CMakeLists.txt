@@ -4,6 +4,13 @@ add_library(simdutf-source INTERFACE)
 target_sources(simdutf-source INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/simdutf.cpp)
 target_link_libraries(simdutf-source INTERFACE simdutf-include-source)
 add_library(simdutf simdutf.cpp)
+if(WIN32 AND BUILD_SHARED_LIBS)
+  target_compile_definitions(
+      simdutf
+      PRIVATE SIMDUTF_BUILDING_WINDOWS_DYNAMIC_LIBRARY=1
+      INTERFACE SIMDUTF_USING_WINDOWS_DYNAMIC_LIBRARY=1
+  )
+endif()
 if(SIMDUTF_LOGGING)
   target_compile_definitions(simdutf PUBLIC SIMDUTF_LOGGING=1)
 endif()

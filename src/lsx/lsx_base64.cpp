@@ -443,12 +443,11 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
   size_t equalsigns = ri.equalsigns;
   srclen = ri.srclen;
   size_t full_input_length = ri.full_input_length;
-  (void)full_input_length;
   if (srclen == 0) {
     if (!ignore_garbage && equalsigns > 0) {
       return {INVALID_BASE64_CHARACTER, equallocation, 0};
     }
-    return {SUCCESS, 0, 0};
+    return {SUCCESS, full_input_length, 0};
   }
   const char_type *const srcinit = src;
   const char *const dstinit = dst;
@@ -573,6 +572,26 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
     r = scalar::base64::patch_tail_result(
         r, size_t(src - srcinit), size_t(dst - dstinit), equallocation,
         full_input_length, last_chunk_options);
+    // When is_partial(last_chunk_options) is true, we must either end with
+    // the end of the stream (beyond whitespace) or right after a non-ignorable
+    // character or at the very beginning of the stream.
+    // See https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
+    if (is_partial(last_chunk_options) && r.error == error_code::SUCCESS &&
+        r.input_count < full_input_length) {
+      // First check if we can extend the input to the end of the stream
+      while (r.input_count < full_input_length &&
+             base64_ignorable(*(srcinit + r.input_count), options)) {
+        r.input_count++;
+      }
+      // If we are still not at the end of the stream, then we must backtrack
+      // to the last non-ignorable character.
+      if (r.input_count < full_input_length) {
+        while (r.input_count > 0 &&
+               base64_ignorable(*(srcinit + r.input_count - 1), options)) {
+          r.input_count--;
+        }
+      }
+    }
     return r;
   }
   if (equalsigns > 0 && !ignore_garbage) {
