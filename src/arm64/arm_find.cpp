@@ -5,9 +5,63 @@ simdutf_really_inline const char *util_find(const char *start, const char *end,
   if (start >= end)
     return end;
 
-  // Process 16 bytes (128 bits) at a time with NEON
+  const size_t widestep = 64;
+
   const size_t step = 16;
   uint8x16_t char_vec = vdupq_n_u8(static_cast<uint8_t>(character));
+  // Main loop for full 64-byte chunks
+  while (size_t(end - start) >= widestep) {
+    uint8x16_t data1 = vld1q_u8(reinterpret_cast<const uint8_t *>(start));
+    uint8x16_t data2 = vld1q_u8(reinterpret_cast<const uint8_t *>(start) + 16);
+    uint8x16_t data3 = vld1q_u8(reinterpret_cast<const uint8_t *>(start) + 32);
+    uint8x16_t data4 = vld1q_u8(reinterpret_cast<const uint8_t *>(start) + 48);
+
+    uint8x16_t cmp1 = vceqq_u8(data1, char_vec);
+    uint8x16_t cmp2 = vceqq_u8(data2, char_vec);
+    uint8x16_t cmp3 = vceqq_u8(data3, char_vec);
+    uint8x16_t cmp4 = vceqq_u8(data4, char_vec);
+    uint8x16_t cmpall = vorrq_u8(vorrq_u8(cmp1, cmp2), vorrq_u8(cmp3, cmp4));
+
+
+
+
+    uint64_t mask = vget_lane_u64(
+        vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(cmpall), 4)), 0);
+
+    if (mask != 0) {
+      // Found a match, return the first one
+      uint64_t mask1 = vget_lane_u64(
+        vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(cmp1), 4)), 0);
+      if(mask1 != 0) {
+        // Found a match in the first chunk
+        int index = trailing_zeroes(mask1) / 4; // Each character maps to 4 bits
+        return start + index;
+      }
+      uint64_t mask2 = vget_lane_u64(
+        vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(cmp2), 4)), 0);
+      if(mask2 != 0) {
+        // Found a match in the second chunk
+        int index = trailing_zeroes(mask2) / 4; // Each character maps to 4 bits
+        return start + index + 16;
+      }
+      uint64_t mask3 = vget_lane_u64(
+        vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(cmp3), 4)), 0);
+      if(mask3 != 0) {
+        // Found a match in the third chunk
+        int index = trailing_zeroes(mask3) / 4; // Each character maps to 4 bits
+        return start + index + 32;
+      }
+      uint64_t mask4 = vget_lane_u64(
+        vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(cmp4), 4)), 0);
+      if(mask4 != 0) {
+        // Found a match in the fourth chunk
+        int index = trailing_zeroes(mask4) / 4; // Each character maps to 4 bits
+        return start + index + 48;
+      }
+    }
+
+    start += widestep;
+  }
 
   // Main loop for full 16-byte chunks
   while (size_t(end - start) >= step) {
