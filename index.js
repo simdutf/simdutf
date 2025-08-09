@@ -13,10 +13,15 @@ var index =
       [ "Example", "index.html#autotoc_md10", null ],
       [ "API", "index.html#autotoc_md11", null ],
       [ "Base64", "index.html#autotoc_md12", null ],
-      [ "The sutf command-line tool", "index.html#autotoc_md13", null ],
-      [ "Manual implementation selection", "index.html#autotoc_md14", null ],
-      [ "Thread safety", "index.html#autotoc_md15", null ],
-      [ "References", "index.html#autotoc_md16", null ],
-      [ "License", "index.html#autotoc_md17", null ]
+      [ "Find", "index.html#autotoc_md13", null ]
+    ] ],
+    [ "C++20 and std::span usage in simdutf", "index.html#autotoc_md14", [
+      [ "Example", "index.html#autotoc_md15", null ],
+      [ "Note", "index.html#autotoc_md16", null ],
+      [ "The sutf command-line tool", "index.html#autotoc_md17", null ],
+      [ "Manual implementation selection", "index.html#autotoc_md18", null ],
+      [ "Thread safety", "index.html#autotoc_md19", null ],
+      [ "References", "index.html#autotoc_md20", null ],
+      [ "License", "index.html#autotoc_md21", null ]
     ] ]
 ];

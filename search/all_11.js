@@ -1,18 +1,10 @@
 var searchData=
 [
-  ['unicode_20validation_20and_20transcoding_20at_20billions_20of_20characters_20per_20second_0',['simdutf: Unicode validation and transcoding at billions of characters per second',['../index.html',1,'']]],
-  ['usage_1',['Real-World Usage',['../index.html#autotoc_md1',1,'']]],
-  ['usage_20cmake_2',['Usage (CMake)',['../index.html#autotoc_md6',1,'']]],
-  ['usage_20usage_3',['Usage (Usage)',['../index.html#autotoc_md4',1,'']]],
-  ['utf16_5flength_5ffrom_5flatin1_4',['utf16_length_from_latin1',['../classsimdutf_1_1implementation.html#af5253692b2a0e1f15881b1fa393a2f42',1,'simdutf::implementation']]],
-  ['utf16_5flength_5ffrom_5futf32_5',['utf16_length_from_utf32',['../classsimdutf_1_1implementation.html#a3761299ce52ee8b2b480fcadc50b45a5',1,'simdutf::implementation']]],
-  ['utf16_5flength_5ffrom_5futf8_6',['utf16_length_from_utf8',['../classsimdutf_1_1implementation.html#ae01141d4bf774c95e771924caa11efb1',1,'simdutf::implementation']]],
-  ['utf32_5flength_5ffrom_5flatin1_7',['utf32_length_from_latin1',['../classsimdutf_1_1implementation.html#a5e9eb578e05cda0e4cb47d91208dbda9',1,'simdutf::implementation']]],
-  ['utf32_5flength_5ffrom_5futf16be_8',['utf32_length_from_utf16be',['../classsimdutf_1_1implementation.html#a0df5efd699e928178cb569ee2b9b0711',1,'simdutf::implementation']]],
-  ['utf32_5flength_5ffrom_5futf16le_9',['utf32_length_from_utf16le',['../classsimdutf_1_1implementation.html#a83b225db7024f73fdcd6f84fb10ecdfe',1,'simdutf::implementation']]],
-  ['utf32_5flength_5ffrom_5futf8_10',['utf32_length_from_utf8',['../classsimdutf_1_1implementation.html#a39bc047dd50ede9cd33cb7e825eb5b56',1,'simdutf::implementation']]],
-  ['utf8_5flength_5ffrom_5flatin1_11',['utf8_length_from_latin1',['../classsimdutf_1_1implementation.html#aff358bb1f0b909cd1e9a6227656ee5d7',1,'simdutf::implementation']]],
-  ['utf8_5flength_5ffrom_5futf16be_12',['utf8_length_from_utf16be',['../classsimdutf_1_1implementation.html#abce2ef1ff8ab5ffd3999d545f703a2fd',1,'simdutf::implementation']]],
-  ['utf8_5flength_5ffrom_5futf16le_13',['utf8_length_from_utf16le',['../classsimdutf_1_1implementation.html#a446248e71fc872b071d25a27673139f5',1,'simdutf::implementation']]],
-  ['utf8_5flength_5ffrom_5futf32_14',['utf8_length_from_utf32',['../classsimdutf_1_1implementation.html#a2f39ff7d49c8864a9035c626825edad0',1,'simdutf::implementation']]]
+  ['table_20of_20contents_0',['Table of contents',['../index.html#autotoc_md0',1,'']]],
+  ['the_20sutf_20command_20line_20tool_1',['The sutf command-line tool',['../index.html#autotoc_md17',1,'']]],
+  ['thread_20safety_2',['Thread safety',['../index.html#autotoc_md19',1,'']]],
+  ['to_5fwell_5fformed_5futf16be_3',['to_well_formed_utf16be',['../classsimdutf_1_1implementation.html#adaf5488b9e07462f004b8aa819b85e73',1,'simdutf::implementation']]],
+  ['to_5fwell_5fformed_5futf16le_4',['to_well_formed_utf16le',['../classsimdutf_1_1implementation.html#a3d8b3a891225e204cb9e98fbea8a7dab',1,'simdutf::implementation']]],
+  ['tool_5',['The sutf command-line tool',['../index.html#autotoc_md17',1,'']]],
+  ['transcoding_20at_20billions_20of_20characters_20per_20second_6',['simdutf: Unicode validation and transcoding at billions of characters per second',['../index.html',1,'']]]
 ];

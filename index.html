@@ -29,7 +29,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">simdutf<span id="projectnumber">&#160;6.4.0</span>
+   <div id="projectname">simdutf<span id="projectnumber">&#160;7.3.5</span>
    </div>
    <div id="projectbrief">Unicode at GB/s.</div>
   </td>
@@ -115,6 +115,8 @@ Table of contents</h1>
 <li>Example</li>
 <li>API</li>
 <li>Base64</li>
+<li>Find</li>
+<li>C++20 and std::span usage in simdutf</li>
 <li>The sutf command-line tool</li>
 <li>Manual implementation selection</li>
 <li>Thread safety</li>
@@ -206,7 +208,7 @@ Usage (Usage)</h2>
 Quick Start</h2>
 <p>Linux or macOS users might follow the following instructions if they have a recent C++ compiler installed and the standard utilities (<code>wget</code>, <code>unzip</code>, etc.)</p>
 <ol type="1">
-<li>Pull the library in a directory <div class="fragment"><div class="line">wget https://github.com/simdutf/simdutf/releases/download/v6.4.0/singleheader.zip</div>
+<li>Pull the library in a directory <div class="fragment"><div class="line">wget https://github.com/simdutf/simdutf/releases/download/v7.3.5/singleheader.zip</div>
 <div class="line">unzip singleheader.zip</div>
 </div><!-- fragment --> You can replace <code>wget</code> by <code>curl -OL <a href="https://..">https://..</a>.</code> if you prefer.</li>
 <li>Compile <div class="fragment"><div class="line">c++ -std=c++17 -o amalgamation_demo amalgamation_demo.cpp</div>
@@ -241,7 +243,7 @@ Usage (CMake)</h2>
 <p>You may also use a package manager. E.g., <a href="https://github.com/simdutf/simdutf-vcpkg">we have a complete example using vcpkg</a>.</p>
 <h2><a class="anchor" id="autotoc_md7"></a>
 Single-header version</h2>
-<p>You can create a single-header version of the library where all of the code is put into two files (<code><a class="el" href="simdutf_8h_source.html">simdutf.h</a></code> and <code>simdutf.cpp</code>). We publish a zip archive containing these files, e.g., see <a href="https://github.com/simdutf/simdutf/releases/download/v6.4.0/singleheader.zip">https://github.com/simdutf/simdutf/releases/download/v6.4.0/singleheader.zip</a></p>
+<p>You can create a single-header version of the library where all of the code is put into two files (<code><a class="el" href="simdutf_8h_source.html">simdutf.h</a></code> and <code>simdutf.cpp</code>). We publish a zip archive containing these files, e.g., see <a href="https://github.com/simdutf/simdutf/releases/download/v7.3.5/singleheader.zip">https://github.com/simdutf/simdutf/releases/download/v7.3.5/singleheader.zip</a></p>
 <p>You may generate it on your own using a Python script.</p>
 <div class="fragment"><div class="line">python3 ./singleheader/amalgamate.py</div>
 </div><!-- fragment --><p>We require Python 3 or better.</p>
@@ -259,7 +261,7 @@ Single-header version with limited features</h2>
 <li><code>--with-utf32</code> - likewise: only UTF-32 encoding;</li>
 <li><code>--with-ascii</code> - procedures related to ASCII encoding;</li>
 <li><code>--with-latin1</code> - convert between selected UTF encodings and Latin1;</li>
-<li><code>--with-base64</code> - procedures related to Base64 encoding;</li>
+<li><code>--with-base64</code> - procedures related to Base64 encoding, includes 'find';</li>
 <li><code>--with-detect-enc</code> - enable detect encoding.</li>
 </ul>
 <p>If we need conversion between different encodings, like UTF-8 and UTF-32, then these two features have to be enabled.</p>
@@ -389,7 +391,8 @@ API</h2>
 <div class="line">  INVALID_BASE64_CHARACTER, <span class="comment">// Found a character that cannot be part of a valid</span></div>
 <div class="line">                            <span class="comment">// base64 string. This may include a misplaced padding character (&#39;=&#39;).</span></div>
 <div class="line">  BASE64_INPUT_REMAINDER,   <span class="comment">// The base64 input terminates with a single</span></div>
-<div class="line">                            <span class="comment">// character, excluding padding (=).</span></div>
+<div class="line">                            <span class="comment">// character, excluding padding (=). It is also used</span></div>
+<div class="line">                            <span class="comment">// in strict mode when padding is not adequate.</span></div>
 <div class="line">  BASE64_EXTRA_BITS,        <span class="comment">// The base64 input terminates with non-zero</span></div>
 <div class="line">                            <span class="comment">// padding bits.</span></div>
 <div class="line">  OUTPUT_BUFFER_TOO_SMALL,  <span class="comment">// The provided buffer is too small.</span></div>
@@ -403,7 +406,7 @@ API</h2>
 <div class="line"><span class="keywordflow">if</span>(res.error != simdutf::error_code::SUCCESS) {</div>
 <div class="line">  std::cerr &lt;&lt; <span class="stringliteral">&quot;error at index &quot;</span> &lt;&lt; res.count &lt;&lt; std::endl;</div>
 <div class="line">}</div>
-<div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00034">error.h:34</a></div></div>
+<div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00065">error.h:65</a></div></div>
 </div><!-- fragment --><p>Or as follows:</p>
 <div class="fragment"><div class="line">std::string bad_utf8 = <span class="stringliteral">&quot;\xc3\xa9\xc3\xa9\x20\xff\xc3\xa9&quot;</span>;</div>
 <div class="line"><a class="code hl_struct" href="structsimdutf_1_1result.html">simdutf::result</a> res = implementation.validate_utf8_with_errors(bad_utf8.data(), bad_utf8.size());</div>
@@ -440,6 +443,16 @@ API</h2>
 <div class="line">simdutf_warn_unused <span class="keywordtype">bool</span> validate_utf32(<span class="keyword">const</span> <span class="keywordtype">char32_t</span> *buf, <span class="keywordtype">size_t</span> len) <span class="keyword">noexcept</span>;</div>
 <div class="line"> </div>
 <div class="line">simdutf_warn_unused result validate_utf32_with_errors(<span class="keyword">const</span> <span class="keywordtype">char32_t</span> *buf, <span class="keywordtype">size_t</span> len) <span class="keyword">noexcept</span>;</div>
+</div><!-- fragment --><p>Given a potentially invalid UTF-16 input, you may want to make it correct, by using a replacement character whenever needed. We have fast functions for this purpose (<code>to_well_formed_utf16</code>, <code>to_well_formed_utf16le</code>, and <code>to_well_formed_utf16be</code>). They can either copy the string while fixing it, or they can be used to fix a string in-place.</p>
+<div class="fragment"><div class="line"> </div>
+<div class="line"><span class="keywordtype">void</span> to_well_formed_utf16le(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input, <span class="keywordtype">size_t</span> len,</div>
+<div class="line">                            <span class="keywordtype">char16_t</span> *output) <span class="keyword">noexcept</span>;</div>
+<div class="line"> </div>
+<div class="line"><span class="keywordtype">void</span> to_well_formed_utf16be(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input, <span class="keywordtype">size_t</span> len,</div>
+<div class="line">                            <span class="keywordtype">char16_t</span> *output) <span class="keyword">noexcept</span>;</div>
+<div class="line"> </div>
+<div class="line"><span class="keywordtype">void</span> to_well_formed_utf16(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input, <span class="keywordtype">size_t</span> len,</div>
+<div class="line">                          <span class="keywordtype">char16_t</span> *output) <span class="keyword">noexcept</span>;</div>
 </div><!-- fragment --><p>Given a valid UTF-8 or UTF-16 input, you may count the number Unicode characters using fast functions. For UTF-32, there is no need for a function given that each character requires a flat 4 bytes. Likewise for Latin1: one byte will always equal one character.</p>
 <div class="fragment"><div class="line"> </div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> count_utf16(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
@@ -496,7 +509,7 @@ API</h2>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf32_length_from_utf16be(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
 <div class="line"> </div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> utf32_length_from_latin1(<span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
-</div><!-- fragment --><p>We have a wide range of conversion between Latin1, UTF-8, UTF-16 and UTF-32. They assume that you are allocated sufficient memory for the input. The simplest conversin function output a single integer representing the size of the input, with a value of zero indicating an error (e.g., <code>convert_utf8_to_utf16le</code>). They are well suited in the scenario where you expect the input to be valid most of the time.</p>
+</div><!-- fragment --><p>We have a wide range of conversion between Latin1, UTF-8, UTF-16 and UTF-32. They assume that you are allocated sufficient memory for the input. The simplest conversion function output a single integer representing the size of the input, with a value of zero indicating an error (e.g., <code>convert_utf8_to_utf16le</code>). They are well suited in the scenario where you expect the input to be valid most of the time.</p>
 <div class="fragment"><div class="line"> </div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_latin1_to_utf8(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* utf8_output) <span class="keyword">noexcept</span>;</div>
 <div class="line"> </div>
@@ -520,6 +533,14 @@ API</h2>
 <div class="line"> </div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf8_to_utf32(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char32_t</span>* utf32_output) <span class="keyword">noexcept</span>;</div>
 <div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf16_to_utf8(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input,</div>
+<div class="line">                                                 <span class="keywordtype">size_t</span> length,</div>
+<div class="line">                                                 <span class="keywordtype">char</span> *utf8_buffer) <span class="keyword">noexcept</span>;</div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span></div>
+<div class="line">convert_utf16_to_utf8_safe(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span> *utf8_output,</div>
+<div class="line">                            <span class="keywordtype">size_t</span> utf8_len) <span class="keyword">noexcept</span>;</div>
 <div class="line"> </div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf16_to_latin1(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* latin1_buffer) <span class="keyword">noexcept</span>;</div>
 <div class="line"> </div>
@@ -656,9 +677,18 @@ API</h2>
 <div class="line"><span class="keywordtype">void</span> change_endianness_utf16(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char16_t</span> * output) <span class="keyword">noexcept</span>;</div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md12"></a>
 Base64</h2>
-<p>We also support converting from <a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">WHATWG forgiving-base64</a> to binary, and back. In particular, you can convert base64 inputs which contain ASCII spaces (' ', '\t', '<br  />
+<p>The WHATWG (Web Hypertext Application Technology Working Group) defines a "forgiving" base64 decoding algorithm in its Infra Standard, which is used in web contexts like the JavaScript atob() function. This algorithm is more lenient than strict RFC 4648 base64, primarily to handle common web data variations. It ignores all ASCII whitespace (spaces, tabs, newlines, etc.), allows omitting padding characters (=), and decodes inputs as long as they meet certain length and character validity rules. However, it still rejects inputs that could lead to ambiguous or incomplete byte formation.</p>
+<p>We also converting from <a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">WHATWG forgiving-base64</a> to binary, and back. In particular, you can convert base64 inputs which contain ASCII spaces (' ', '\t', '<br  />
 ', '\r', '\f') to binary. We also support the base64 URL encoding alternative. These functions are part of the Node.js JavaScript runtime: in particular <code>atob</code> in Node.js relies on simdutf.</p>
-<p>Converting binary data to base64 always succeeds and is relatively simple: </p><div class="fragment"><div class="line"> ++</div>
+<p>The key steps in this algorithm are:</p><ul>
+<li>Remove all whitespace from the input string.</li>
+<li>If the resulting string's length is a multiple of 4 and it ends with one or two '=' characters, remove those '=' from the end (treating them as optional padding).</li>
+<li>If the length (after any padding removal) modulo 4 equals 1, the input is invalid— this prevents cases where the bit count wouldn't align properly to form whole bytes.</li>
+<li>Check that all remaining characters are valid base64 symbols (A-Z, a-z, 0-9, +, /, or =); otherwise, invalid.</li>
+<li>Decode by converting each character to its 6-bit value, concatenating the bits, and grouping them into 8-bit bytes. At the end, if there are leftover bits (12 or 18), form as many full bytes as possible and discard the trailing bits (4 or 2, respectively), assuming they are padding zeros.</li>
+</ul>
+<p>This forgiving approach makes base64 decoding robust for web use, but it enforces rules to avoid data corruption.</p>
+<p>The conversion of binary data to base64 always succeeds and is relatively simple. Suppose that you have an original input of binary data <code>source</code> (e.g., <code>std::vector&lt;char&gt;</code>). </p><div class="fragment"><div class="line"> ++</div>
 <div class="line">std::vector&lt;char&gt; buffer(simdutf::base64_length_from_binary(source.size()));</div>
 <div class="line">simdutf::binary_to_base64(source.data(), source.size(), buffer.data());</div>
 </div><!-- fragment --><p>Decoding base64 requires validation and, thus, error handling. Furthermore, because we prune ASCII spaces, we may need to adjust the result size afterward.</p>
@@ -672,7 +702,14 @@ Base64</h2>
 <div class="line">} <span class="keywordflow">else</span> {</div>
 <div class="line">  buffer.resize(r.count); <span class="comment">// resize the buffer according to actual number of bytes</span></div>
 <div class="line">}</div>
-</div><!-- fragment --><p>Let us consider a more interesting example. Take the following strings: <code>"  A  A  "</code>, <code>"  A  A  G  A  /  v  8  "</code>, <code>"  A  A  G  A  /  v  8  =  "</code>, <code>"  A  A  G  A  /  v  8  =  =  "</code>. They are all valid WHATWG base64 inputs, except for the last one. The first string decodes to a single byte value (0) while the second and third decode to the byte sequence <code>0, 0x1, 0x80, 0xfe, 0xff</code>.</p>
+</div><!-- fragment --><p>Let us consider concrete examples. Take the following strings: <code>"  A  A  "</code>, <code>"  A  A  G  A  /  v  8  "</code>, <code>"  A  A  G  A  /  v  8  =  "</code>, <code>"  A  A  G  A  /  v  8  =  =  "</code>. They are all valid WHATWG base64 inputs, except for the last one.</p>
+<ul>
+<li>The first string, <code>"  A  A  "</code>, becomes "AA" after whitespace removal. Its length is 2, and 2 % 4 = 2 (not 1), so it's valid. Decoding: 'A' is 000000 and 'A' is 000000, giving 12 bits (000000000000). Form one byte from the first 8 bits (00000000 = 0x00) and discard the last 4 bits (0000). Result: a single byte value of 0.</li>
+<li>The second string, <code>"  A  A  G  A  /  v  8  "</code>, becomes "AAGA/v8" (length 7, 7 % 4 = 3, not 1—valid). Decoding the 42 bits yields the byte sequence 0x00, 0x01, 0x80, 0xFE, 0xFF (as you noted; the process groups full 24-bit chunks into three bytes each, then handles the remaining 18 bits as two bytes, discarding the last 2 bits).</li>
+<li>The third string, <code>"  A  A  G  A  /  v  8  =  "</code>, becomes "AAGA/v8=" (length 8, 8 % 4 = 0). It ends with one '=', so remove it, leaving "AAGA/v8" (same as the second example). Valid, and decodes to the same byte sequence: 0x00, 0x01, 0x80, 0xFE, 0xFF.</li>
+<li>The fourth string, <code>"  A  A  G  A  /  v  8  =  =  "</code>, becomes "AAGA/v8==" (length 9, 9 % 4 = 1). The length isn't a multiple of 4, so the algorithm doesn't remove the trailing '=='. Since the length modulo 4 is 1, it's invalid. This rule exists because a remainder of 1 would leave only 6 leftover bits after full bytes, which can't form a complete byte (unlike remainders of 2 or 3, which leave 12 or 18 bits and allow discarding 4 or 2 bits). Adding extra '=' here disrupts the expected alignment without qualifying for padding removal.</li>
+</ul>
+<p>Let us process them with actual code.</p>
 <div class="fragment"><div class="line">++</div>
 <div class="line"> std::vector&lt;std::string&gt; sources = {</div>
 <div class="line">     <span class="stringliteral">&quot;  A  A  &quot;</span>, <span class="stringliteral">&quot;  A  A  G  A  /  v  8  &quot;</span>, <span class="stringliteral">&quot;  A  A  G  A  /  v  8  =  &quot;</span>, <span class="stringliteral">&quot;  A  A  G  A  /  v  8  =  =  &quot;</span>};</div>
@@ -706,7 +743,7 @@ Base64</h2>
 <div class="line">source: &#39;  A  A  G  A  /  v  8  =  =  &#39;</div>
 <div class="line">output: error</div>
 </div><!-- fragment --><p>As you can see, the result is as expected.</p>
-<p>In some instances, you may want to limit the size of the output further when decoding base64. For this purpose, you may use the <code>base64_to_binary_safe</code> functions. The functions may also be useful if you seek to decode the input into segments having a maximal capacity.</p>
+<p>In some instances, you may want to limit the size of the output further when decoding base64. For this purpose, you may use the <code>base64_to_binary_safe</code> functions. The functions may also be useful if you seek to decode the input into segments having a maximal capacity. Another benefit of the <code>base64_to_binary_safe</code> functions is that they inform you about how much data was written to the output buffer, even when there is a fatal error. This number might not be 'maximal': our fast functions may leave some data that could have been decoded prior to a bad character undecode. With the <code>base64_to_binary_safe</code> function, you also have the option of requesting that as much of the data as possible is decoded despite the error by setting the <code>decode_up_to_bad_char</code> parameter to true (it defaults to false for best performance).</p>
 <div class="fragment"><div class="line">++</div>
 <div class="line"> <span class="keywordtype">size_t</span> len = 72; <span class="comment">// for simplicity we chose len divisible by 3</span></div>
 <div class="line"> std::vector&lt;char&gt; base64(len, <span class="charliteral">&#39;a&#39;</span>); <span class="comment">// we want to decode &#39;aaaaa....&#39;</span></div>
@@ -773,7 +810,7 @@ Base64</h2>
 <p>We support two conventions: <code>base64_default</code> and <code>base64_url</code>:</p><ul>
 <li>The default (<code>base64_default</code>) includes the characters <code>+</code> and <code>/</code> as part of its alphabet. It also pads the output with the padding character (<code>=</code>) so that the output is divisible by 4. Thus, we have that the string <code>"Hello, World!"</code> is encoded to <code>"SGVsbG8sIFdvcmxkIQ=="</code> with an expression such as <code>simdutf::binary_to_base64(source, size, out, simdutf::base64_default)</code>. When using the default, you can omit the option parameter for simplicity: <code>simdutf::binary_to_base64(source, size, out, buffer.data())</code>. When decoding, white space characters are omitted as per the <a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">WHATWG forgiving-base64</a> standard. Further, if padding characters are present at the end of the stream, there must be no more than two, and if there are any, the total number of characters (excluding ASCII spaces ' ', '\t', '<br  />
 ', '\r', '\f' but including padding characters) must be divisible by four.</li>
-<li>The URL convention (<code>base64_url</code>) uses the characters <code>-</code> and <code>_</code> as part of its alphabet. It does not pad its output. Thus, we have that the string <code>"Hello, World!"</code> is encoded to <code>"SGVsbG8sIFdvcmxkIQ"</code>. To specify the URL convention, you can pass the appropriate option to our decoding and encoding functions: e.g., <code>simdutf::base64_to_binary(source, size, out, simdutf::base64_url)</code>.</li>
+<li>The URL convention (<code>base64_url</code>) uses the characters <code>-</code> and <code>_</code> as part of its alphabet. It does not pad its output. Thus, we have that the string <code>"Hello, World!"</code> is encoded to <code>"SGVsbG8sIFdvcmxkIQ"</code> instead of <code>"SGVsbG8sIFdvcmxkIQ=="</code>. To specify the URL convention, you can pass the appropriate option to our decoding and encoding functions: e.g., <code>simdutf::base64_to_binary(source, size, out, simdutf::base64_url)</code>.</li>
 </ul>
 <p>When we encounter a character that is neither an ASCII space nor a base64 character (a garbage character), we detect an error. To tolerate 'garbage' characters, you can use <code>base64_default_accept_garbage</code> or <code>base64_url_accept_garbage</code> instead of <code>base64_default</code> or <code>base64_url</code>.</p>
 <p>Thus we follow the convention of systems such as the Node or Bun JavaScript runtimes with respect to padding. The default base64 uses padding whereas the URL variant does not.</p>
@@ -787,7 +824,7 @@ Base64</h2>
 <p>&zwj;The pad character "=" is typically percent-encoded when used in an URI, but if the data length is known implicitly, this can be avoided by skipping the padding; see section 3.2. </p>
 </blockquote>
 <p>Nevertheless, some users may want to use padding with the URL variant and omit it with the default variant. These users can 'reverse' the convention by using <code>simdutf::base64_url | simdutf::base64_reverse_padding</code> or <code>simdutf::base64_default | simdutf::base64_reverse_padding</code>. For greater convenience, you may use <code>simdutf::base64_default_no_padding</code> and <code>simdutf::base64_url_with_padding</code>, as shorthands.</p>
-<p>When decoding, by default we use a loose approach: the padding character may be omitted. Advanced users may use the <code>last_chunk_options</code> parameter to use either a strict approach, where precise padding must be used or an error is generated, or the stop_before_partial option which simply discards leftover base64 characters when the padding is not appropriate. The stop_before_partial option might be useful for streaming: given a stream of base64 characters over the network, you may want to be able to decode them without first waiting for the whole stream to come in. The strict approach is useful if you want to have one-to-one correspondance between the base64 code and the binary data. In the defaut setting is used (<code>last_chunk_handling_options::loose</code>), then <code>"ZXhhZg=="</code>, <code>"ZXhhZg"</code>, <code>"ZXhhZh=="</code> all decode to the same binary content. If <code>last_chunk_options</code> is set to <code>last_chunk_handling_options::strict</code>, then decoding <code>"ZXhhZg=="</code> succeeds, but decoding <code>"ZXhhZg"</code> fails with <code>simdutf::error_code::BASE64_INPUT_REMAINDER</code> while <code>"ZXhhZh=="</code> fails with <code>simdutf::error_code::BASE64_EXTRA_BITS</code>.</p>
+<p>When decoding, by default we use a loose approach: the padding character may be omitted. Advanced users may use the <code>last_chunk_options</code> parameter to use either a <code>strict</code> approach, where precise padding must be used or an error is generated, or the <code>stop_before_partial</code> option which discards leftover base64 characters when the padding is not appropriate. The <code>stop_before_partial</code> option might be appropriate for streaming applications where you expect to get part of the base64 stream. The <code>strict</code> approach is useful if you want to have one-to-one correspondence between the base64 code and the binary data. If the default setting is used (<code>last_chunk_handling_options::loose</code>), then <code>"ZXhhZg=="</code>, <code>"ZXhhZg"</code>, <code>"ZXhhZh=="</code> all decode to the same binary content. If <code>last_chunk_options</code> is set to <code>last_chunk_handling_options::strict</code>, then decoding <code>"ZXhhZg=="</code> succeeds, but decoding <code>"ZXhhZg"</code> fails with <code>simdutf::error_code::BASE64_INPUT_REMAINDER</code> while <code>"ZXhhZh=="</code> fails with <code>simdutf::error_code::BASE64_EXTRA_BITS</code>. If <code>last_chunk_options</code> is set to <code>last_chunk_handling_options::stop_before_partial</code>, then decoding <code>"ZXhhZg"</code> decodes into <code>exa</code> (and <code>Zg</code> is left over).</p>
 <p>The specification of our base64 functions is as follows:</p>
 <div class="fragment"><div class="line"> ++</div>
 <div class="line"> </div>
@@ -796,16 +833,22 @@ Base64</h2>
 <div class="line"><span class="comment">// garbage characters are characters that are not part of the base64 alphabet nor ASCII spaces.</span></div>
 <div class="line"><span class="keyword">using </span>base64_options = uint64_t;</div>
 <div class="line"><span class="keyword">enum</span> base64_options : uint64_t {</div>
-<div class="line">  base64_default = 0,         <span class="comment">/* standard base64 format (with padding) */</span></div>
-<div class="line">  base64_url = 1,             <span class="comment">/* base64url format (no padding) */</span></div>
-<div class="line">  base64_reverse_padding = 2, <span class="comment">/* modifier for base64_default and base64_url */</span></div>
+<div class="line">  base64_default = 0, <span class="comment">/* standard base64 format (with padding) */</span></div>
+<div class="line">  base64_url = 1,     <span class="comment">/* base64url format (no padding) */</span></div>
 <div class="line">  base64_default_no_padding =</div>
 <div class="line">      base64_default |</div>
 <div class="line">      base64_reverse_padding, <span class="comment">/* standard base64 format without padding */</span></div>
 <div class="line">  base64_url_with_padding =</div>
 <div class="line">      base64_url | base64_reverse_padding, <span class="comment">/* base64url with padding */</span></div>
-<div class="line">  base64_default_accept_garbage = 4,       <span class="comment">/* standard base64 format accepting garbage characters */</span></div>
-<div class="line">  base64_url_accept_garbage = 5,           <span class="comment">/* base64url format accepting garbage characters */</span></div>
+<div class="line">  base64_default_accept_garbage =</div>
+<div class="line">      4, <span class="comment">/* standard base64 format accepting garbage characters, the input stops with the first &#39;=&#39; if any */</span></div>
+<div class="line">  base64_url_accept_garbage =</div>
+<div class="line">      5, <span class="comment">/* base64url format accepting garbage characters, the input stops with the first &#39;=&#39; if any */</span></div>
+<div class="line">  base64_default_or_url =</div>
+<div class="line">      8, <span class="comment">/* standard/base64url hybrid format (only meaningful for decoding!) */</span></div>
+<div class="line">  base64_default_or_url_accept_garbage =</div>
+<div class="line">      12, <span class="comment">/* standard/base64url hybrid format accepting garbage characters</span></div>
+<div class="line"><span class="comment">             (only meaningful for decoding!), the input stops with the first &#39;=&#39; if any */</span></div>
 <div class="line">};</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// last_chunk_handling_options are used to specify the handling of the last</span></div>
@@ -814,7 +857,8 @@ Base64</h2>
 <div class="line"><span class="keyword">enum</span> last_chunk_handling_options : uint64_t {</div>
 <div class="line">  loose = 0,               <span class="comment">/* standard base64 format, decode partial final chunk */</span></div>
 <div class="line">  strict = 1,              <span class="comment">/* error when the last chunk is partial, 2 or 3 chars, and unpadded, or non-zero bit padding */</span></div>
-<div class="line">  stop_before_partial = 2, <span class="comment">/* if the last chunk is partial (2 or 3 chars), ignore it (no error) */</span></div>
+<div class="line">  stop_before_partial = 2, <span class="comment">/* if the last chunk is partial , ignore it (no error) */</span></div>
+<div class="line">  only_full_chunks = 3 <span class="comment">/* only decode full blocks (4 base64 characters, no padding) */</span></div>
 <div class="line">};</div>
 <div class="line"> </div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> maximal_binary_length_from_base64(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
@@ -835,15 +879,54 @@ Base64</h2>
 <div class="line">simdutf_warn_unused result base64_to_binary(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* output, base64_options options = base64_default, last_chunk_handling_options last_chunk_options =</div>
 <div class="line">                     last_chunk_handling_options::loose)  <span class="keyword">noexcept</span>;</div>
 <div class="line"> </div>
+<div class="line"> </div>
 <div class="line">simdutf_warn_unused result base64_to_binary_safe(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* output, <span class="keywordtype">size_t</span>&amp; outlen, base64_options options = base64_default,</div>
-<div class="line">      last_chunk_handling_options last_chunk_options = loose) <span class="keyword">noexcept</span>;</div>
-<div class="line">simdutf_warn_unused result base64_to_binary_safe(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* output, <span class="keywordtype">size_t</span>&amp; outlen, base64_options options = base64_default,</div>
-<div class="line">      last_chunk_handling_options last_chunk_options = loose) <span class="keyword">noexcept</span>;</div>
+<div class="line">      last_chunk_handling_options last_chunk_options = loose,</div>
+<div class="line">      <span class="keywordtype">bool</span> decode_up_to_bad_char = <span class="keyword">false</span>) noexcept;</div>
+<div class="line">simdutf_warn_unused result base64_to_binary_safe(const <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* output, <span class="keywordtype">size_t</span>&amp; outlen, base64_options options = base64_default,</div>
+<div class="line">      last_chunk_handling_options last_chunk_options = loose,</div>
+<div class="line">      <span class="keywordtype">bool</span> decode_up_to_bad_char = false) noexcept;</div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md13"></a>
+Find</h2>
+<p>The C++ standard library provides <code>std::find</code> for locating a character in a string, but its performance can be suboptimal on modern hardware. To address this, we introduce <code>simdutf::find</code>, a high-performance alternative optimized for recent processors using SIMD instructions. It operates on raw pointers (<code>char</code> or <code>char16_t</code>) for maximum efficiency.</p>
+<div class="fragment"><div class="line">std::string input = <span class="stringliteral">&quot;abc&quot;</span>;</div>
+<div class="line"> </div>
+<div class="line"><span class="keyword">const</span> <span class="keywordtype">char</span>* result =</div>
+<div class="line">    simdutf::find(input.data(), input.data() + input.size(), <span class="charliteral">&#39;c&#39;</span>);</div>
+<div class="line"><span class="comment">// result should point at the letter &#39;c&#39;</span></div>
+</div><!-- fragment --><p>The <code>simdutf::find</code> interface is straightforward and efficient.</p>
+<div class="fragment"><div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keyword">const</span> <span class="keywordtype">char</span> *find(<span class="keyword">const</span> <span class="keywordtype">char</span> *start, <span class="keyword">const</span> <span class="keywordtype">char</span> *end,</div>
+<div class="line">                          <span class="keywordtype">char</span> character) <span class="keyword">noexcept</span>;</div>
+<div class="line">simdutf_warn_unused <span class="keyword">const</span> <span class="keywordtype">char16_t</span> *find(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *start, <span class="keyword">const</span> <span class="keywordtype">char16_t</span> *end,</div>
+<div class="line">                              <span class="keywordtype">char16_t</span> character) <span class="keyword">noexcept</span>;</div>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md14"></a>
+C++20 and std::span usage in simdutf</h1>
+<p>If you are compiling with C++20 or later, span support is enabled. This allows you to use simdutf in a safer and more expressive way, without manually handling pointers and sizes.</p>
+<p>The span interface is easy to use. If you have a container like <code>std::vector</code> or <code>std::array</code>, you can pass the container directly. If you have a pointer and a size, construct a <code>std::span</code> and pass it. When dealing with ranges of bytes (like <code>char</code>), anything that has a <code>std::span-like</code> interface (has appopriate <code>data()</code> and <code>size()</code> member functions) is accepted. Ranges of larger types are accepted as <code>std::span</code> arguments.</p>
+<h2><a class="anchor" id="autotoc_md15"></a>
+Example</h2>
+<p>Suppose you want to convert a UTF-16 string to UTF-8:</p>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;simdutf.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;span&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"> </div>
+<div class="line">std::u16string utf16_input = u<span class="stringliteral">&quot;Bonjour le monde&quot;</span>;</div>
+<div class="line">std::vector&lt;char&gt; utf8_output(64); <span class="comment">// ensure sufficient size</span></div>
+<div class="line"> </div>
+<div class="line"><span class="comment">// Use std::span for input and output</span></div>
+<div class="line"><span class="keywordtype">size_t</span> written = simdutf::convert_utf16_to_utf8_safe(utf16_input, utf8_output);</div>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md16"></a>
+Note</h2>
+<ul>
+<li>You are still responsible for providing a sufficiently large output buffer, just as with the pointer/size API.</li>
+</ul>
+<h2><a class="anchor" id="autotoc_md17"></a>
 The sutf command-line tool</h2>
 <p>We also provide a command-line tool which can be build as follows: </p><div class="fragment"><div class="line">cmake -B build &amp;&amp; cmake --build build --target sutf</div>
 </div><!-- fragment --><p> This command builds the executable in <code>./build/tool/</code> under most platforms. The sutf tool enables the user to easily transcode files from one encoding to another directly from the command line. The usage is similar to <a href="https://www.gnu.org/software/libiconv/">iconv</a> (see <code>sutf --help</code> for more details). The sutf command-line tool relies on the simdutf library functions for fast transcoding of supported formats (UTF-8, UTF-16LE, UTF-16BE and UTF-32). If iconv is found on the system and simdutf does not support a conversion, the sutf tool falls back on iconv: a message lets the user know if iconv is available during compilation. The following is an example of transcoding two input files to an output file, from UTF-8 to UTF-16LE: </p><div class="fragment"><div class="line">sutf -f UTF-8 -t UTF-16LE -o output_file.txt first_input_file.txt second_input_file.txt</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md14"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md18"></a>
 Manual implementation selection</h2>
 <p>When compiling the llibrary for x64 processors, we build several implementations of each functions. At runtime, the best implementation is picked automatically. Advanced users may want to pick a particular implementation, thus bypassing our runtime detection. It is possible and even relatively convenient to do so. The following C++ program checks all the available implementation, and selects one as the default:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &quot;simdutf.h&quot;</span></div>
@@ -886,10 +969,10 @@ Manual implementation selection</h2>
 <div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;I have manually selected: &quot;</span> &lt;&lt; simdutf::get_active_implementation()-&gt;name() &lt;&lt; std::endl;</div>
 <div class="line">  <span class="keywordflow">return</span> EXIT_SUCCESS;</div>
 <div class="line">}</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md15"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md19"></a>
 Thread safety</h2>
 <p>We built simdutf with thread safety in mind. The simdutf library is single-threaded throughout. The CPU detection, which runs the first time parsing is attempted and switches to the fastest parser for your CPU, is transparent and thread-safe. Our runtime dispatching is based on global objects that are instantiated at the beginning of the main thread and may be discarded at the end of the main thread. If you have multiple threads running and some threads use the library while the main thread is cleaning up ressources, you may encounter issues. If you expect such problems, you may consider using <a href="https://en.cppreference.com/w/cpp/utility/program/quick_exit">std::quick_exit</a>.</p>
-<h2><a class="anchor" id="autotoc_md16"></a>
+<h2><a class="anchor" id="autotoc_md20"></a>
 References</h2>
 <ul>
 <li>Robert Clausecker, Daniel Lemire, <a href="https://arxiv.org/abs/2212.05098">Transcoding Unicode Characters with AVX-512 Instructions</a>, Software: Practice and Experience 53 (12), 2023.</li>
@@ -898,7 +981,7 @@ References</h2>
 <li>Wojciech Muła, Daniel Lemire, <a href="https://arxiv.org/abs/1910.05109">Base64 encoding and decoding at almost the speed of a memory copy</a>, Software: Practice and Experience 50 (2), 2020.</li>
 <li>Wojciech Muła, Daniel Lemire, <a href="https://arxiv.org/abs/1704.00605">Faster Base64 Encoding and Decoding using AVX2 Instructions</a>, ACM Transactions on the Web 12 (3), 2018.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md17"></a>
+<h2><a class="anchor" id="autotoc_md21"></a>
 License</h2>
 <p>This code is made available under the <a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache License 2.0</a> as well as the MIT license. As a user, you can pick the license you prefer.</p>
 <p>We include a few competitive solutions under the benchmarks/competition directory. They are provided for research purposes only. </p>

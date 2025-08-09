@@ -1,6 +1,4 @@
 var searchData=
 [
-  ['fast_20is_20it_0',['How fast is it?',['../index.html#autotoc_md2',1,'']]],
-  ['features_1',['Single-header version with limited features',['../index.html#autotoc_md8',1,'']]],
-  ['full_5fresult_2',['full_result',['../structsimdutf_1_1full__result.html',1,'simdutf']]]
+  ['example_0',['example',['../index.html#autotoc_md10',1,'Example'],['../index.html#autotoc_md15',1,'Example']]]
 ];

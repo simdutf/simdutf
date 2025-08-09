@@ -29,7 +29,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">simdutf<span id="projectnumber">&#160;6.4.0</span>
+   <div id="projectname">simdutf<span id="projectnumber">&#160;7.3.5</span>
    </div>
    <div id="projectbrief">Unicode at GB/s.</div>
   </td>
@@ -147,6 +147,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a7632c87e825c7f268cbb787612e940bf" id="r_a7632c87e825c7f268cbb787612e940bf"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a7632c87e825c7f268cbb787612e940bf">validate_utf16be_with_errors</a> (const char16_t *buf, size_t len) const noexcept=0</td></tr>
 <tr class="memdesc:a7632c87e825c7f268cbb787612e940bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validate the UTF-16BE string and stop on error.  <br /></td></tr>
 <tr class="separator:a7632c87e825c7f268cbb787612e940bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d8b3a891225e204cb9e98fbea8a7dab" id="r_a3d8b3a891225e204cb9e98fbea8a7dab"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a3d8b3a891225e204cb9e98fbea8a7dab">to_well_formed_utf16le</a> (const char16_t *input, size_t len, char16_t *output) const noexcept=0</td></tr>
+<tr class="memdesc:a3d8b3a891225e204cb9e98fbea8a7dab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies the UTF-16LE string while replacing mismatched surrogates with the Unicode replacement character U+FFFD.  <br /></td></tr>
+<tr class="separator:a3d8b3a891225e204cb9e98fbea8a7dab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adaf5488b9e07462f004b8aa819b85e73" id="r_adaf5488b9e07462f004b8aa819b85e73"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#adaf5488b9e07462f004b8aa819b85e73">to_well_formed_utf16be</a> (const char16_t *input, size_t len, char16_t *output) const noexcept=0</td></tr>
+<tr class="memdesc:adaf5488b9e07462f004b8aa819b85e73"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies the UTF-16BE string while replacing mismatched surrogates with the Unicode replacement character U+FFFD.  <br /></td></tr>
+<tr class="separator:adaf5488b9e07462f004b8aa819b85e73"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab35c6765b2e4b97cc97ab9f3af52c9a9" id="r_ab35c6765b2e4b97cc97ab9f3af52c9a9"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#ab35c6765b2e4b97cc97ab9f3af52c9a9">validate_utf32</a> (const char32_t *buf, size_t len) const noexcept=0</td></tr>
 <tr class="memdesc:ab35c6765b2e4b97cc97ab9f3af52c9a9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validate the UTF-32 string.  <br /></td></tr>
 <tr class="separator:ab35c6765b2e4b97cc97ab9f3af52c9a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -154,7 +160,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a825ad7513447a16cd12f5425e2e88431"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validate the UTF-32 string and stop on error.  <br /></td></tr>
 <tr class="separator:a825ad7513447a16cd12f5425e2e88431"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af79deb79661a71f145b7bc6786fe4223" id="r_af79deb79661a71f145b7bc6786fe4223"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#af79deb79661a71f145b7bc6786fe4223">convert_latin1_to_utf8</a> (const char *input, size_t length, char *utf8_output) const noexcept=0</td></tr>
-<tr class="memdesc:af79deb79661a71f145b7bc6786fe4223"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert Latin1 string into UTF8 string.  <br /></td></tr>
+<tr class="memdesc:af79deb79661a71f145b7bc6786fe4223"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert Latin1 string into UTF-8 string.  <br /></td></tr>
 <tr class="separator:af79deb79661a71f145b7bc6786fe4223"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2315da3daf654f4a7132b1751394b374" id="r_a2315da3daf654f4a7132b1751394b374"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a2315da3daf654f4a7132b1751394b374">convert_latin1_to_utf16le</a> (const char *input, size_t length, char16_t *utf16_output) const noexcept=0</td></tr>
 <tr class="memdesc:a2315da3daf654f4a7132b1751394b374"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly Latin1 string into UTF-16LE string.  <br /></td></tr>
@@ -369,12 +375,18 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a5823f6a86315f4404a4f437977abf9df" id="r_a5823f6a86315f4404a4f437977abf9df"><td class="memItemLeft" align="right" valign="top">virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a5823f6a86315f4404a4f437977abf9df">binary_to_base64</a> (const char *input, size_t length, char *output, base64_options options=base64_default) const noexcept=0</td></tr>
 <tr class="memdesc:a5823f6a86315f4404a4f437977abf9df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a binary input to a base64 output.  <br /></td></tr>
 <tr class="separator:a5823f6a86315f4404a4f437977abf9df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0383b9c8c879508752e083a34b6bae5d" id="r_a0383b9c8c879508752e083a34b6bae5d"><td class="memItemLeft" align="right" valign="top">virtual const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a0383b9c8c879508752e083a34b6bae5d">find</a> (const char *start, const char *end, char character) const noexcept=0</td></tr>
+<tr class="memdesc:a0383b9c8c879508752e083a34b6bae5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the first occurrence of a character in a string.  <br /></td></tr>
+<tr class="separator:a0383b9c8c879508752e083a34b6bae5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a02d9730cac8457a84faa1f62ba347ed7" id="r_a02d9730cac8457a84faa1f62ba347ed7"><td class="memItemLeft" align="right" valign="top"><a id="a02d9730cac8457a84faa1f62ba347ed7" name="a02d9730cac8457a84faa1f62ba347ed7"></a>
+virtual const char16_t *&#160;</td><td class="memItemRight" valign="bottom"><b>find</b> (const char16_t *start, const char16_t *end, char16_t character) const noexcept=0</td></tr>
+<tr class="separator:a02d9730cac8457a84faa1f62ba347ed7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>An implementation of simdutf for a particular CPU architecture. </p>
 <p>Also used to maintain the currently active implementation. The active implementation is automatically initialized on first use to the most advanced implementation supported by the host. </p>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03127">3127</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03470">3470</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="afd306a0bc3e221964af3f31a64784b12" name="afd306a0bc3e221964af3f31a64784b12"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afd306a0bc3e221964af3f31a64784b12">&#9670;&#160;</a></span>autodetect_encoding()</h2>
@@ -593,7 +605,7 @@ Public Member Functions</h2></td></tr>
 <p>This function follows the WHATWG forgiving-base64 format, which means that it will ignore any ASCII spaces in the input. You may provide a padded input (with one or two equal signs at the end) or an unpadded input (without any equal signs at the end).</p>
 <p>See <a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">https://infra.spec.whatwg.org/#forgiving-base64-decode</a></p>
 <p>This function will fail in case of invalid input. When last_chunk_options = loose, there are two possible reasons for failure: the input contains a number of base64 characters that when divided by 4, leaves a single remainder character (BASE64_INPUT_REMAINDER), or the input contains a character that is not a valid base64 character (INVALID_BASE64_CHARACTER).</p>
-<p>You should call this function with a buffer that is at least maximal_binary_length_from_utf6_base64(input, length) bytes long. If you fail to provide that much space, the function may cause a buffer overflow.</p>
+<p>You should call this function with a buffer that is at least maximal_binary_length_from_base64(input, length) bytes long. If you fail to provide that much space, the function may cause a buffer overflow.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the base64 string to process, in ASCII stored as 16-bit units </td></tr>
@@ -1067,7 +1079,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Convert Latin1 string into UTF8 string. </p>
+<p>Convert Latin1 string into UTF-8 string. </p>
 <p>This function is suitable to work with inputs from untrusted sources.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -3558,7 +3570,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </pre><p> impl-&gt;<a class="el" href="classsimdutf_1_1implementation.html#af48e75e8d6d25c3c3d66334a8849cbc7" title="The description of this implementation.">description()</a> &lt;&lt; ")" &lt;&lt; endl;</p>
 <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03149">3149</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03492">3492</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3608,6 +3620,59 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 
 </div>
 </div>
+<a id="a0383b9c8c879508752e083a34b6bae5d" name="a0383b9c8c879508752e083a34b6bae5d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0383b9c8c879508752e083a34b6bae5d">&#9670;&#160;</a></span>find()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual const char * simdutf::implementation::find </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>start</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>end</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char&#160;</td>
+          <td class="paramname"><em>character</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Find the first occurrence of a character in a string. </p>
+<p>If the character is not found, return a pointer to the end of the string. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">start</td><td>the start of the string </td></tr>
+    <tr><td class="paramname">end</td><td>the end of the string </td></tr>
+    <tr><td class="paramname">character</td><td>the character to find </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a pointer to the first occurrence of the character in the string, or a pointer to the end of the string if the character is not found. </dd></dl>
+
+</div>
+</div>
 <a id="a099704e55511390542f01b57957e9d36" name="a099704e55511390542f01b57957e9d36"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a099704e55511390542f01b57957e9d36">&#9670;&#160;</a></span>latin1_length_from_utf16()</h2>
 
@@ -3644,7 +3709,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-16LE string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04465">4465</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04836">4836</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3682,7 +3747,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-32 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04427">4427</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04798">4798</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3856,7 +3921,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </pre><p> impl-&gt;<a class="el" href="classsimdutf_1_1implementation.html#af48e75e8d6d25c3c3d66334a8849cbc7" title="The description of this implementation.">description()</a> &lt;&lt; ")" &lt;&lt; endl;</p>
 <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03138">3138</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03481">3481</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3878,6 +3943,114 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 <p>The instruction sets this implementation is compiled against and the current CPU match. </p>
 <p>This function may poll the current CPU/system and should therefore not be called too often if performance is a concern.</p>
 <dl class="section return"><dt>Returns</dt><dd>true if the implementation can be safely used on the current system (determined at runtime) </dd></dl>
+
+</div>
+</div>
+<a id="adaf5488b9e07462f004b8aa819b85e73" name="adaf5488b9e07462f004b8aa819b85e73"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adaf5488b9e07462f004b8aa819b85e73">&#9670;&#160;</a></span>to_well_formed_utf16be()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void simdutf::implementation::to_well_formed_utf16be </td>
+          <td>(</td>
+          <td class="paramtype">const char16_t *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>len</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char16_t *&#160;</td>
+          <td class="paramname"><em>output</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Copies the UTF-16BE string while replacing mismatched surrogates with the Unicode replacement character U+FFFD. </p>
+<p>We allow the input and output to be the same buffer so that the correction is done in-place.</p>
+<p>Overridden by each implementation.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-16BE string to correct. </td></tr>
+    <tr><td class="paramname">len</td><td>the length of the string in number of 2-byte code units (char16_t). </td></tr>
+    <tr><td class="paramname">output</td><td>the output buffer. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a3d8b3a891225e204cb9e98fbea8a7dab" name="a3d8b3a891225e204cb9e98fbea8a7dab"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3d8b3a891225e204cb9e98fbea8a7dab">&#9670;&#160;</a></span>to_well_formed_utf16le()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void simdutf::implementation::to_well_formed_utf16le </td>
+          <td>(</td>
+          <td class="paramtype">const char16_t *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>len</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char16_t *&#160;</td>
+          <td class="paramname"><em>output</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Copies the UTF-16LE string while replacing mismatched surrogates with the Unicode replacement character U+FFFD. </p>
+<p>We allow the input and output to be the same buffer so that the correction is done in-place.</p>
+<p>Overridden by each implementation.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-16LE string to correct. </td></tr>
+    <tr><td class="paramname">len</td><td>the length of the string in number of 2-byte code units (char16_t). </td></tr>
+    <tr><td class="paramname">output</td><td>the output buffer. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -3915,7 +4088,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-16 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04239">4239</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04610">4610</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -4046,7 +4219,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-32 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04498">4498</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04869">4869</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>

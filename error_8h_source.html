@@ -29,7 +29,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">simdutf<span id="projectnumber">&#160;6.4.0</span>
+   <div id="projectname">simdutf<span id="projectnumber">&#160;7.3.5</span>
    </div>
    <div id="projectbrief">Unicode at GB/s.</div>
   </td>
@@ -128,63 +128,100 @@ $(document).ready(function(){initNavTree('error_8h_source.html',''); initResizab
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>                            <span class="comment">// base64 string. This may include a misplaced</span></div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>                            <span class="comment">// padding character (&#39;=&#39;).</span></div>
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>  BASE64_INPUT_REMAINDER,   <span class="comment">// The base64 input terminates with a single</span></div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>                            <span class="comment">// character, excluding padding (=).</span></div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>  BASE64_EXTRA_BITS,        <span class="comment">// The base64 input terminates with non-zero</span></div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>                            <span class="comment">// padding bits.</span></div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>  OUTPUT_BUFFER_TOO_SMALL,  <span class="comment">// The provided buffer is too small.</span></div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>  OTHER                     <span class="comment">// Not related to validation/transcoding.</span></div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>};</div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span> </div>
-<div class="foldopen" id="foldopen00034" data-start="{" data-end="};">
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno"><a class="line" href="structsimdutf_1_1result.html">   34</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structsimdutf_1_1result.html">result</a> {</div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>  error_code error;</div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>  <span class="keywordtype">size_t</span> count; <span class="comment">// In case of error, indicates the position of the error. In</span></div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>                <span class="comment">// case of success, indicates the number of code units</span></div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>                <span class="comment">// validated/written.</span></div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span> </div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>  simdutf_really_inline <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a>() : error{error_code::SUCCESS}, count{0} {}</div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>  simdutf_really_inline <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a>(error_code err, <span class="keywordtype">size_t</span> pos)</div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>      : error{err}, count{pos} {}</div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>  simdutf_really_inline <span class="keywordtype">bool</span> is_ok()<span class="keyword"> const </span>{</div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <span class="keywordflow">return</span> error == error_code::SUCCESS;</div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>  }</div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span> </div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>  simdutf_really_inline <span class="keywordtype">bool</span> is_err()<span class="keyword"> const </span>{</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    <span class="keywordflow">return</span> error != error_code::SUCCESS;</div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>  }</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>};</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>                            <span class="comment">// character, excluding padding (=). It is also used</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>                            <span class="comment">// in strict mode when padding is not adequate.</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>  BASE64_EXTRA_BITS,        <span class="comment">// The base64 input terminates with non-zero</span></div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>                            <span class="comment">// padding bits.</span></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>  OUTPUT_BUFFER_TOO_SMALL,  <span class="comment">// The provided buffer is too small.</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>  OTHER                     <span class="comment">// Not related to validation/transcoding.</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>};</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="preprocessor">#if SIMDUTF_CPLUSPLUS17</span></div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="keyword">inline</span> std::string_view error_to_string(error_code code) <span class="keyword">noexcept</span> {</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>  <span class="keywordflow">switch</span> (code) {</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>  <span class="keywordflow">case</span> SUCCESS:</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <span class="keywordflow">return</span> <span class="stringliteral">&quot;SUCCESS&quot;</span>;</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>  <span class="keywordflow">case</span> HEADER_BITS:</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    <span class="keywordflow">return</span> <span class="stringliteral">&quot;HEADER_BITS&quot;</span>;</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>  <span class="keywordflow">case</span> TOO_SHORT:</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    <span class="keywordflow">return</span> <span class="stringliteral">&quot;TOO_SHORT&quot;</span>;</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>  <span class="keywordflow">case</span> TOO_LONG:</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    <span class="keywordflow">return</span> <span class="stringliteral">&quot;TOO_LONG&quot;</span>;</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>  <span class="keywordflow">case</span> OVERLONG:</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <span class="keywordflow">return</span> <span class="stringliteral">&quot;OVERLONG&quot;</span>;</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>  <span class="keywordflow">case</span> TOO_LARGE:</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    <span class="keywordflow">return</span> <span class="stringliteral">&quot;TOO_LARGE&quot;</span>;</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>  <span class="keywordflow">case</span> SURROGATE:</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    <span class="keywordflow">return</span> <span class="stringliteral">&quot;SURROGATE&quot;</span>;</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>  <span class="keywordflow">case</span> INVALID_BASE64_CHARACTER:</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    <span class="keywordflow">return</span> <span class="stringliteral">&quot;INVALID_BASE64_CHARACTER&quot;</span>;</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>  <span class="keywordflow">case</span> BASE64_INPUT_REMAINDER:</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    <span class="keywordflow">return</span> <span class="stringliteral">&quot;BASE64_INPUT_REMAINDER&quot;</span>;</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>  <span class="keywordflow">case</span> BASE64_EXTRA_BITS:</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    <span class="keywordflow">return</span> <span class="stringliteral">&quot;BASE64_EXTRA_BITS&quot;</span>;</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>  <span class="keywordflow">case</span> OUTPUT_BUFFER_TOO_SMALL:</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    <span class="keywordflow">return</span> <span class="stringliteral">&quot;OUTPUT_BUFFER_TOO_SMALL&quot;</span>;</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>  <span class="keywordflow">default</span>:</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    <span class="keywordflow">return</span> <span class="stringliteral">&quot;OTHER&quot;</span>;</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>  }</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>}</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span> </div>
+<div class="foldopen" id="foldopen00065" data-start="{" data-end="};">
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno"><a class="line" href="structsimdutf_1_1result.html">   65</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structsimdutf_1_1result.html">result</a> {</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>  error_code error;</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>  <span class="keywordtype">size_t</span> count; <span class="comment">// In case of error, indicates the position of the error. In</span></div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>                <span class="comment">// case of success, indicates the number of code units</span></div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>                <span class="comment">// validated/written.</span></div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span> </div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>  simdutf_really_inline <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a>() noexcept</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>      : error{error_code::SUCCESS}, count{0} {}</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>  simdutf_really_inline <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a>(error_code err, <span class="keywordtype">size_t</span> pos) noexcept</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>      : error{err}, count{pos} {}</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span> </div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>  simdutf_really_inline <span class="keywordtype">bool</span> is_ok() <span class="keyword">const</span> <span class="keyword">noexcept</span> {</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    <span class="keywordflow">return</span> error == error_code::SUCCESS;</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>  }</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span> </div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>  simdutf_really_inline <span class="keywordtype">bool</span> is_err() <span class="keyword">const</span> <span class="keyword">noexcept</span> {</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    <span class="keywordflow">return</span> error != error_code::SUCCESS;</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>  }</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>};</div>
 </div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
-<div class="foldopen" id="foldopen00054" data-start="{" data-end="};">
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno"><a class="line" href="structsimdutf_1_1full__result.html">   54</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structsimdutf_1_1full__result.html">full_result</a> {</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>  error_code error;</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>  <span class="keywordtype">size_t</span> input_count;</div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>  <span class="keywordtype">size_t</span> output_count;</div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>  simdutf_really_inline <a class="code hl_struct" href="structsimdutf_1_1full__result.html">full_result</a>()</div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>      : error{error_code::SUCCESS}, input_count{0}, output_count{0} {}</div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>  simdutf_really_inline <a class="code hl_struct" href="structsimdutf_1_1full__result.html">full_result</a>(error_code err, <span class="keywordtype">size_t</span> pos_in,</div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>                                    <span class="keywordtype">size_t</span> pos_out)</div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>      : error{err}, input_count{pos_in}, output_count{pos_out} {}</div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span> </div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>  simdutf_really_inline <span class="keyword">operator</span> <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a>() <span class="keyword">const</span> <span class="keyword">noexcept</span> {</div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    <span class="keywordflow">if</span> (error == error_code::SUCCESS ||</div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>        error == error_code::BASE64_INPUT_REMAINDER) {</div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>      <span class="keywordflow">return</span> <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a>{error, output_count};</div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>      <span class="keywordflow">return</span> <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a>{error, input_count};</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    }</div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>  }</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>};</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span> </div>
+<div class="foldopen" id="foldopen00086" data-start="{" data-end="};">
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno"><a class="line" href="structsimdutf_1_1full__result.html">   86</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structsimdutf_1_1full__result.html">full_result</a> {</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>  error_code error;</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>  <span class="keywordtype">size_t</span> input_count;</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>  <span class="keywordtype">size_t</span> output_count;</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>  <span class="keywordtype">bool</span> padding_error = <span class="keyword">false</span>; <span class="comment">// true if the error is due to padding, only</span></div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>                              <span class="comment">// meaningful when error is not SUCCESS</span></div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span> </div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>  simdutf_really_inline <a class="code hl_struct" href="structsimdutf_1_1full__result.html">full_result</a>() noexcept</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>      : error{error_code::SUCCESS}, input_count{0}, output_count{0} {}</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span> </div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>  simdutf_really_inline <a class="code hl_struct" href="structsimdutf_1_1full__result.html">full_result</a>(error_code err, <span class="keywordtype">size_t</span> pos_in,</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>                                    <span class="keywordtype">size_t</span> pos_out) noexcept</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>      : error{err}, input_count{pos_in}, output_count{pos_out} {}</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>  simdutf_really_inline <a class="code hl_struct" href="structsimdutf_1_1full__result.html">full_result</a>(error_code err, <span class="keywordtype">size_t</span> pos_in,</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>                                    <span class="keywordtype">size_t</span> pos_out, <span class="keywordtype">bool</span> padding_err) noexcept</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>      : error{err}, input_count{pos_in}, output_count{pos_out},</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>        padding_error{padding_err} {}</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span> </div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>  simdutf_really_inline <span class="keyword">operator</span> <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a>() <span class="keyword">const</span> <span class="keyword">noexcept</span> {</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>    <span class="keywordflow">if</span> (error == error_code::SUCCESS) {</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>      <span class="keywordflow">return</span> <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a>{error, output_count};</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>      <span class="keywordflow">return</span> <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a>{error, input_count};</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    }</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>  }</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>};</div>
 </div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>} <span class="comment">// namespace simdutf</span></div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="preprocessor">#endif</span></div>
-<div class="ttc" id="astructsimdutf_1_1full__result_html"><div class="ttname"><a href="structsimdutf_1_1full__result.html">simdutf::full_result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00054">error.h:54</a></div></div>
-<div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00034">error.h:34</a></div></div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span> </div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>} <span class="comment">// namespace simdutf</span></div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="astructsimdutf_1_1full__result_html"><div class="ttname"><a href="structsimdutf_1_1full__result.html">simdutf::full_result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00086">error.h:86</a></div></div>
+<div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00065">error.h:65</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

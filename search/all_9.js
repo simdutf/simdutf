@@ -1,5 +1,9 @@
 var searchData=
 [
-  ['manual_20implementation_20selection_0',['Manual implementation selection',['../index.html#autotoc_md14',1,'']]],
-  ['maximal_5fbinary_5flength_5ffrom_5fbase64_1',['maximal_binary_length_from_base64',['../classsimdutf_1_1implementation.html#a98579327df6c99c6bfab0394174363ee',1,'simdutf::implementation::maximal_binary_length_from_base64(const char *input, size_t length) const noexcept'],['../classsimdutf_1_1implementation.html#ab3185b3c751048d78d91df45523deeef',1,'simdutf::implementation::maximal_binary_length_from_base64(const char16_t *input, size_t length) const noexcept']]]
+  ['latin1_5flength_5ffrom_5futf16_0',['latin1_length_from_utf16',['../classsimdutf_1_1implementation.html#a099704e55511390542f01b57957e9d36',1,'simdutf::implementation']]],
+  ['latin1_5flength_5ffrom_5futf32_1',['latin1_length_from_utf32',['../classsimdutf_1_1implementation.html#a2f951db4813c86b3eb8ea77ad7d2e144',1,'simdutf::implementation']]],
+  ['latin1_5flength_5ffrom_5futf8_2',['latin1_length_from_utf8',['../classsimdutf_1_1implementation.html#a2cc04b416c87dfa742056ce5bd8033dc',1,'simdutf::implementation']]],
+  ['license_3',['License',['../index.html#autotoc_md21',1,'']]],
+  ['limited_20features_4',['Single-header version with limited features',['../index.html#autotoc_md8',1,'']]],
+  ['line_20tool_5',['The sutf command-line tool',['../index.html#autotoc_md17',1,'']]]
 ];
