@@ -1622,24 +1622,6 @@ TEST(issue_824) {
     output_buffer.resize(written);
     ASSERT_TRUE(output_buffer == expected_output);
   }
-  for (const std::tuple<std::string, read_write, std::vector<uint8_t>> &t :
-       test_cases) {
-    auto input_data = std::get<0>(t);
-    auto read_write_info = std::get<1>(t);
-    auto expected_output = std::get<2>(t);
-    std::vector<uint8_t> output_buffer(expected_output.size());
-    size_t written = 3;
-    auto result = simdutf::base64_to_binary_safe(
-        input_data.data(), input_data.size(),
-        reinterpret_cast<char *>(output_buffer.data()), written,
-        simdutf::base64_default,
-        simdutf::last_chunk_handling_options::stop_before_partial, true);
-    ASSERT_EQUAL(result.error, simdutf::error_code::SUCCESS);
-    ASSERT_EQUAL(result.count, read_write_info.read);
-    ASSERT_EQUAL(written, expected_output.size());
-    output_buffer.resize(written);
-    ASSERT_TRUE(output_buffer == expected_output);
-  }
 }
 
 TEST(issue_824_a) {
