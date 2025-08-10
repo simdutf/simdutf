@@ -42,29 +42,29 @@ simdutf_really_inline const char *util_find(const char *start, const char *end,
     if (mask != 0) {
       // Found a match, return the first one
       uint64_t mask1 = vget_lane_u64(
-        vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(cmp1), 4)), 0);
-      if(mask1 != 0) {
+          vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(cmp1), 4)), 0);
+      if (mask1 != 0) {
         // Found a match in the first chunk
         int index = trailing_zeroes(mask1) / 4; // Each character maps to 4 bits
         return start + index;
       }
       uint64_t mask2 = vget_lane_u64(
-        vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(cmp2), 4)), 0);
-      if(mask2 != 0) {
+          vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(cmp2), 4)), 0);
+      if (mask2 != 0) {
         // Found a match in the second chunk
         int index = trailing_zeroes(mask2) / 4; // Each character maps to 4 bits
         return start + index + 16;
       }
       uint64_t mask3 = vget_lane_u64(
-        vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(cmp3), 4)), 0);
-      if(mask3 != 0) {
+          vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(cmp3), 4)), 0);
+      if (mask3 != 0) {
         // Found a match in the third chunk
         int index = trailing_zeroes(mask3) / 4; // Each character maps to 4 bits
         return start + index + 32;
       }
       uint64_t mask4 = vget_lane_u64(
-        vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(cmp4), 4)), 0);
-      if(mask4 != 0) {
+          vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(cmp4), 4)), 0);
+      if (mask4 != 0) {
         // Found a match in the fourth chunk
         int index = trailing_zeroes(mask4) / 4; // Each character maps to 4 bits
         return start + index + 48;
@@ -111,9 +111,11 @@ simdutf_really_inline const char16_t *util_find(const char16_t *start,
   uint16x8_t char_vec = vdupq_n_u16(character);
 
   // Handle unaligned beginning
-  uintptr_t misalignment = reinterpret_cast<uintptr_t>(start) % (step * sizeof(char16_t));
+  uintptr_t misalignment =
+      reinterpret_cast<uintptr_t>(start) % (step * sizeof(char16_t));
   if (misalignment != 0 && misalignment % 2 == 0) {
-    size_t adjustment = (step * sizeof(char16_t) - misalignment) / sizeof(char16_t);
+    size_t adjustment =
+        (step * sizeof(char16_t) - misalignment) / sizeof(char16_t);
     if (size_t(end - start) < adjustment) {
       adjustment = end - start;
     }
@@ -128,9 +130,12 @@ simdutf_really_inline const char16_t *util_find(const char16_t *start,
   // Main loop for full 8-element chunks with unrolling
   while (size_t(end - start) >= 4 * step) {
     uint16x8_t data1 = vld1q_u16(reinterpret_cast<const uint16_t *>(start));
-    uint16x8_t data2 = vld1q_u16(reinterpret_cast<const uint16_t *>(start) + step);
-    uint16x8_t data3 = vld1q_u16(reinterpret_cast<const uint16_t *>(start) + 2 * step);
-    uint16x8_t data4 = vld1q_u16(reinterpret_cast<const uint16_t *>(start) + 3 * step);
+    uint16x8_t data2 =
+        vld1q_u16(reinterpret_cast<const uint16_t *>(start) + step);
+    uint16x8_t data3 =
+        vld1q_u16(reinterpret_cast<const uint16_t *>(start) + 2 * step);
+    uint16x8_t data4 =
+        vld1q_u16(reinterpret_cast<const uint16_t *>(start) + 3 * step);
 
     uint16x8_t cmp1 = vceqq_u16(data1, char_vec);
     uint16x8_t cmp2 = vceqq_u16(data2, char_vec);

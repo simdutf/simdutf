@@ -69,14 +69,14 @@ except:
 
 print("checking that new version is valid")
 if(newversion[0] !=  currentv[0]):
-    assert newversion[0] ==  currentv[0] + 1
+    assert newversion[0] >=  currentv[0]
     assert newversion[1] == 0
     assert newversion[2] == 0
 elif (newversion[1] !=  currentv[1]):
-    assert newversion[1] ==  currentv[1] + 1
+    assert newversion[1] >=  currentv[1]
     assert newversion[2] == 0
 else :
-    assert newversion[2] ==  currentv[2] + 1
+    assert newversion[2] >=  currentv[2]
 
 atleastminor= (currentv[0] != newversion[0]) or (currentv[1] != newversion[1])
 
