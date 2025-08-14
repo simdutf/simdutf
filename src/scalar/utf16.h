@@ -114,8 +114,8 @@ change_endianness_utf16(const char16_t *input, size_t size, char16_t *output) {
 template <endianness big_endian>
 simdutf_warn_unused inline size_t trim_partial_utf16(const char16_t *input,
                                                      size_t length) {
-  if (length <= 1) {
-    return length;
+  if (length == 0) {
+    return 0;
   }
   uint16_t last_word = uint16_t(input[length - 1]);
   last_word = !match_system(big_endian) ? u16_swap_bytes(last_word) : last_word;

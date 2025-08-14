@@ -142,6 +142,14 @@ TEST(utf8_streaming) {
   ASSERT_EQUAL(utf16words, budget_utf16);
 }
 
+TEST(issue829) {
+  alignas(char16_t) const char unicode_char[] = "\x3c\xd8";
+  const char16_t *unicode = reinterpret_cast<const char16_t *>(unicode_char);
+  size_t length = 1;
+  length = simdutf::trim_partial_utf16le(unicode, length);
+  ASSERT_EQUAL(length, 0);
+}
+
 TEST(utf16_streaming) {
   // We have three sequences of surrogate pairs (UTF-16).
   alignas(char16_t) const char unicode_char[] =
