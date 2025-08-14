@@ -143,8 +143,7 @@ TEST(utf8_streaming) {
 }
 
 TEST(issue829) {
-  alignas(char16_t) const char unicode_char[] =
-      "\x3c\xd8";
+  alignas(char16_t) const char unicode_char[] = "\x3c\xd8";
   const char16_t *unicode = reinterpret_cast<const char16_t *>(unicode_char);
   size_t length = 1;
   length = simdutf::trim_partial_utf16le(unicode, length);
