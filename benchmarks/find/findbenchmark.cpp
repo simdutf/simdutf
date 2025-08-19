@@ -38,9 +38,8 @@ std::string generate_random_ascii_string(size_t length) {
   return result;
 }
 
-int main(int argc, char **argv) {
+int main(int, char **) {
   std::string input = generate_random_ascii_string(10000);
-  size_t volume = input.size();
   volatile uint64_t counter = 0;
   for (size_t i = 0; i < 4; i++) {
     printf("Run %zu\n", i + 1);
