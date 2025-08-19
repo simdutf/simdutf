@@ -49,7 +49,10 @@ int main(int argc, char **argv) {
                                        input.data() + input.size(), '=');
                    counter = counter + size_t(it - input.data());
                  }));
-
+    pretty_print("memchr", input.size(), bench([&input, &counter]() {
+                   char *ptr = (char *)memchr(input.data(), '=', input.size());
+                   counter = counter + size_t(ptr - input.data());
+                 }));
     pretty_print("simdutf::find", input.size(), bench([&input, &counter]() {
                    auto it = simdutf::find(input.data(),
                                            input.data() + input.size(), '=');
