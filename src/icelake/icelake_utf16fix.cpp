@@ -1,3 +1,5 @@
+#include <immintrin.h>
+
 /*
  * Process one block of 32 characters.  If in_place is false,
  * copy the block from in to out.  If there is a sequencing
