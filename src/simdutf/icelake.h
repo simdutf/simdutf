@@ -19,14 +19,15 @@
     // might be unreliable. Search for visualstudio2019icelakeissue in our
     // tests.
     #ifndef SIMDUTF_COMPILER_SUPPORTS_VBMI2
-    #define SIMDUTF_COMPILER_SUPPORTS_VBMI2 1
+      #define SIMDUTF_COMPILER_SUPPORTS_VBMI2 1
     #endif
   #endif
 #endif
 
 #if SIMDUTF_GCC9OROLDER && SIMDUTF_IS_X86_64
-#define SIMDUTF_IMPLEMENTATION_ICELAKE 0
-#warning "You are using a legacy GCC compiler, we are disabling AVX-512 support"
+  #define SIMDUTF_IMPLEMENTATION_ICELAKE 0
+  #warning                                                                     \
+      "You are using a legacy GCC compiler, we are disabling AVX-512 support"
 #endif
 
 // We allow icelake on x64 as long as the compiler is known to support VBMI2.

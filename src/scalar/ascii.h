@@ -30,7 +30,6 @@ inline simdutf_warn_unused bool validate(const char *buf, size_t len) noexcept {
   return true;
 }
 #endif
-
 inline simdutf_warn_unused result validate_with_errors(const char *buf,
                                                        size_t len) noexcept {
   const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);

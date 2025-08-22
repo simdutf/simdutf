@@ -39,6 +39,15 @@ public:
   simdutf_warn_unused result
   validate_ascii_with_errors(const char *buf, size_t len) const noexcept final;
 #endif // SIMDUTF_FEATURE_ASCII
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
+  simdutf_warn_unused bool
+  validate_utf16le_as_ascii(const char16_t *buf,
+                            size_t len) const noexcept final;
+
+  simdutf_warn_unused bool
+  validate_utf16be_as_ascii(const char16_t *buf,
+                            size_t len) const noexcept final;
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
 
 #if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
   simdutf_warn_unused bool validate_utf16le(const char16_t *buf,

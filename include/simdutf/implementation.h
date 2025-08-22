@@ -240,6 +240,68 @@ simdutf_really_inline simdutf_warn_unused result validate_ascii_with_errors(
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_ASCII
 
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
+/**
+ * Validate the ASCII string as a UTF-16 sequence.
+ * An UTF-16 sequence is considered an ASCII sequence
+ * if it could be converted to an ASCII string losslessly.
+ *
+ * Overridden by each implementation.
+ *
+ * @param buf the UTF-16 string to validate.
+ * @param len the length of the string in bytes.
+ * @return true if and only if the string is valid ASCII.
+ */
+simdutf_warn_unused bool validate_utf16_as_ascii(const char16_t *buf,
+                                                 size_t len) noexcept;
+  #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused bool
+validate_utf16_as_ascii(std::span<const char16_t> input) noexcept {
+  return validate_utf16_as_ascii(input.data(), input.size());
+}
+  #endif // SIMDUTF_SPAN
+
+/**
+ * Validate the ASCII string as a UTF-16BE sequence.
+ * An UTF-16 sequence is considered an ASCII sequence
+ * if it could be converted to an ASCII string losslessly.
+ *
+ * Overridden by each implementation.
+ *
+ * @param buf the UTF-16BE string to validate.
+ * @param len the length of the string in bytes.
+ * @return true if and only if the string is valid ASCII.
+ */
+simdutf_warn_unused bool validate_utf16be_as_ascii(const char16_t *buf,
+                                                   size_t len) noexcept;
+  #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused bool
+validate_utf16be_as_ascii(std::span<const char16_t> input) noexcept {
+  return validate_utf16be_as_ascii(input.data(), input.size());
+}
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
+
+/**
+ * Validate the ASCII string as a UTF-16LE sequence.
+ * An UTF-16 sequence is considered an ASCII sequence
+ * if it could be converted to an ASCII string losslessly.
+ *
+ * Overridden by each implementation.
+ *
+ * @param buf the UTF-16LE string to validate.
+ * @param len the length of the string in bytes.
+ * @return true if and only if the string is valid ASCII.
+ */
+simdutf_warn_unused bool validate_utf16le_as_ascii(const char16_t *buf,
+                                                   size_t len) noexcept;
+#if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused bool
+validate_utf16le_as_ascii(std::span<const char16_t> input) noexcept {
+  return validate_utf16le_as_ascii(input.data(), input.size());
+}
+#endif // SIMDUTF_SPAN
+
 #if SIMDUTF_FEATURE_UTF16
 /**
  * Using native endianness; Validate the UTF-16 string.
@@ -3591,7 +3653,38 @@ public:
    */
   simdutf_warn_unused virtual result
   validate_ascii_with_errors(const char *buf, size_t len) const noexcept = 0;
+
 #endif // SIMDUTF_FEATURE_ASCII
+
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
+  /**
+   * Validate the ASCII string as a UTF-16BE sequence.
+   * An UTF-16 sequence is considered an ASCII sequence
+   * if it could be converted to an ASCII string losslessly.
+   *
+   * Overridden by each implementation.
+   *
+   * @param buf the UTF-16BE string to validate.
+   * @param len the length of the string in bytes.
+   * @return true if and only if the string is valid ASCII.
+   */
+  simdutf_warn_unused virtual bool
+  validate_utf16be_as_ascii(const char16_t *buf, size_t len) const noexcept = 0;
+
+  /**
+   * Validate the ASCII string as a UTF-16LE sequence.
+   * An UTF-16 sequence is considered an ASCII sequence
+   * if it could be converted to an ASCII string losslessly.
+   *
+   * Overridden by each implementation.
+   *
+   * @param buf the UTF-16LE string to validate.
+   * @param len the length of the string in bytes.
+   * @return true if and only if the string is valid ASCII.
+   */
+  simdutf_warn_unused virtual bool
+  validate_utf16le_as_ascii(const char16_t *buf, size_t len) const noexcept = 0;
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
 
 #if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
   /**

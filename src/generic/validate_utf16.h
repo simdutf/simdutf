@@ -125,6 +125,38 @@ const result validate_utf16_with_errors(const char16_t *input, size_t size) {
   return result(error_code::SUCCESS, input - start);
 }
 
+template <endianness big_endian>
+const result validate_utf16_as_ascii_with_errors(const char16_t *input,
+                                                 size_t size) {
+  if (simdutf_unlikely(size == 0)) {
+    return result(error_code::SUCCESS, 0);
+  }
+  size_t pos = 0;
+  for (; pos < size / 32 * 32; pos += 32) {
+    simd16x32<uint16_t> input_vec(
+        reinterpret_cast<const uint16_t *>(input + pos));
+    if (!match_system(big_endian)) {
+      input_vec.swap_bytes();
+    }
+    uint64_t matches = input_vec.lteq(uint16_t(0x7f));
+    if (~matches) {
+      // Found a match, return the first one
+      int index = trailing_zeroes(~matches) / 2;
+      return result(error_code::TOO_LARGE, pos + index);
+    }
+  }
+
+  // Scalar tail
+  while (pos < size) {
+    char16_t v = big_endian ? scalar::u16_swap_bytes(input[pos]) : input[pos];
+    if (v > 0x7F) {
+      return result(error_code::TOO_LARGE, pos);
+    }
+    pos++;
+  }
+  return result(error_code::SUCCESS, size);
+}
+
 } // namespace utf16
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION

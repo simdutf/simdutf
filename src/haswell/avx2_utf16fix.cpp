@@ -34,12 +34,12 @@ void utf16fix_block(char16_t *out, const char16_t *in) {
     lb_illseq = _mm256_andnot_si256(block_is_low, lb_is_high);
 #if SIMDUTF_GCC9OROLDER
     // Old GCC versions are missing _mm256_zextsi128_si256, so we emulate it.
-    __m128i tmp_legacygcc = _mm_bslli_si128(
-                            _mm256_extracti128_si256(lb_illseq, 1), 14);
-    __m256i tmp_legacygcc256 = _mm256_set_m128i(_mm_setzero_si128(),tmp_legacygcc);
+    __m128i tmp_legacygcc =
+        _mm_bslli_si128(_mm256_extracti128_si256(lb_illseq, 1), 14);
+    __m256i tmp_legacygcc256 =
+        _mm256_set_m128i(_mm_setzero_si128(), tmp_legacygcc);
     lb_illseq_shifted =
-        _mm256_or_si256(_mm256_bsrli_epi128(lb_illseq, 2),
-                        tmp_legacygcc256);
+        _mm256_or_si256(_mm256_bsrli_epi128(lb_illseq, 2), tmp_legacygcc256);
 #else
     lb_illseq_shifted =
         _mm256_or_si256(_mm256_bsrli_epi128(lb_illseq, 2),

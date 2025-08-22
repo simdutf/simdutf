@@ -266,5 +266,4 @@
   #endif //  __GNUC__ == 10
 #endif   // defined(__GNUC__) && !defined(__clang__)
 
-
 #endif // SIMDUTF_PORTABILITY_H
