@@ -266,10 +266,11 @@ implementation::validate_utf16le_as_ascii(const char16_t *buf,
     // empty input is valid. protected the implementation from nullptr.
     return true;
   }
-  const char16_t *tail = arm_validate_utf16_as_ascii<endianness::LITTLE>(buf, len);
+  const char16_t *tail =
+      arm_validate_utf16_as_ascii<endianness::LITTLE>(buf, len);
   if (tail) {
-    return scalar::utf16::validate_as_ascii<endianness::LITTLE>(tail,
-                                                       len - (tail - buf));
+    return scalar::utf16::validate_as_ascii<endianness::LITTLE>(
+        tail, len - (tail - buf));
   } else {
     return false;
   }
@@ -284,8 +285,8 @@ implementation::validate_utf16be_as_ascii(const char16_t *buf,
   }
   const char16_t *tail = arm_validate_utf16_as_ascii<endianness::BIG>(buf, len);
   if (tail) {
-    return scalar::utf16::validate_as_ascii<endianness::BIG>(tail,
-                                                       len - (tail - buf));
+    return scalar::utf16::validate_as_ascii<endianness::BIG>(
+        tail, len - (tail - buf));
   } else {
     return false;
   }
