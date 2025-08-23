@@ -65,7 +65,7 @@ template <> struct simd16<bool> : base16<bool> {
   simdutf_really_inline bitmask_type to_bitmask() const {
     __m128i mask = __lsx_vmsknz_b(this->value);
     bitmask_type mask0 = __lsx_vpickve2gr_wu(mask, 0);
-    return mask0;
+    return bitmask_type(mask0);
   }
 
   simdutf_really_inline bool is_zero() const { return __lsx_bz_v(this->value); }
