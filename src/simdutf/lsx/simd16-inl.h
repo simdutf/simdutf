@@ -64,8 +64,8 @@ template <> struct simd16<bool> : base16<bool> {
 
   simdutf_really_inline bitmask_type to_bitmask() const {
     __m128i mask = __lsx_vmsknz_b(this->value);
-    bitmask_type mask0 = __lsx_vpickve2gr_wu(mask, 0);
-    return bitmask_type(mask0);
+    bitmask_type mask0 = bitmask_type(__lsx_vpickve2gr_wu(mask, 0));
+    return mask0;
   }
 
   simdutf_really_inline bool is_zero() const { return __lsx_bz_v(this->value); }
@@ -199,6 +199,13 @@ template <typename T> struct simd16x32 {
     this->chunks[1] = this->chunks[1].swap_bytes();
     this->chunks[2] = this->chunks[2].swap_bytes();
     this->chunks[3] = this->chunks[3].swap_bytes();
+  }
+  simdutf_really_inline uint64_t to_bitmask() const {
+    uint64_t r0 = uint32_t(this->chunks[0].to_bitmask());
+    uint64_t r1 = this->chunks[1].to_bitmask();
+    uint64_t r2 = this->chunks[2].to_bitmask();
+    uint64_t r3 = this->chunks[3].to_bitmask();
+    return r0 | (r1 << 16) | (r2 << 32) | (r3 << 48);
   }
   simdutf_really_inline uint64_t lteq(const T m) const {
     const simd16<T> mask = simd16<T>::splat(m);
