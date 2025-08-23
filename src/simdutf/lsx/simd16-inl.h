@@ -137,22 +137,22 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
   }
 };
 
-simdutf_really_inline simd32<bool> operator<(const simd16<uint16_t> a,
+simdutf_really_inline simd16<bool> operator<(const simd16<uint16_t> a,
                                              const simd16<uint16_t> b) {
   return __lsx_vslt_hu(a.value, b.value);
 }
 
-simdutf_really_inline simd32<bool> operator>(const simd16<uint16_t> a,
+simdutf_really_inline simd16<bool> operator>(const simd16<uint16_t> a,
                                              const simd16<uint16_t> b) {
   return __lsx_vslt_hu(b.value, a.value);
 }
 
-simdutf_really_inline simd32<bool> operator<=(const simd16<uint16_t> a,
+simdutf_really_inline simd16<bool> operator<=(const simd16<uint16_t> a,
                                               const simd16<uint16_t> b) {
   return __lsx_vsle_hu(a.value, b.value);
 }
 
-simdutf_really_inline simd32<bool> operator>=(const simd16<uint16_t> a,
+simdutf_really_inline simd16<bool> operator>=(const simd16<uint16_t> a,
                                               const simd16<uint16_t> b) {
   return __lsx_vsle_hu(b.value, a.value);
 }
