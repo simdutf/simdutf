@@ -34,7 +34,7 @@ TEST_LOOP(trials, validate_utf16le_ascii) {
   generator.to_ascii_le(utf16);
   ASSERT_TRUE(
       implementation.validate_utf16le_as_ascii(utf16.data(), utf16.size()));
-  utf16[utf16.size() / 2] = 0x0C00;
+  utf16[utf16.size() / 2] = 0xC0C0;
   ASSERT_FALSE(
       implementation.validate_utf16le_as_ascii(utf16.data(), utf16.size()));
 }

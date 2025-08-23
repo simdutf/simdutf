@@ -15,7 +15,7 @@ TEST_LOOP(trials, validate_utf16be_ascii) {
   generator.to_ascii_be(utf16);
   ASSERT_TRUE(
       implementation.validate_utf16be_as_ascii(utf16.data(), utf16.size()));
-  utf16[utf16.size() / 2] = 0x00C0;
+  utf16[utf16.size() / 2] = 0xC0C0;
   ASSERT_FALSE(
       implementation.validate_utf16be_as_ascii(utf16.data(), utf16.size()));
 }
