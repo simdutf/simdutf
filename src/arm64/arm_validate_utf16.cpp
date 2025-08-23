@@ -81,7 +81,7 @@ const char16_t *arm_validate_utf16_as_ascii(const char16_t *input,
     }
     // next we compute inor > 0x7f
     uint16x8_t cmp = vcgtq_u16(inor, vdupq_n_u16(0x7f));
-    uint64_t mask = vget_lane_u64(vshrn_n_u16(cmp, 4), 0);
+    uint64_t mask = vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(cmp, 4)), 0);
     if (mask) {
       return nullptr;
     }
