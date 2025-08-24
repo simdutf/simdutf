@@ -33,6 +33,9 @@ public:
   std::pair<std::vector<char16_t>, size_t> generate_counted_le(size_t size);
   std::pair<std::vector<char16_t>, size_t> generate_counted_be(size_t size);
 
+  static void to_ascii_le(std::vector<char16_t> &output);
+  static void to_ascii_be(std::vector<char16_t> &output);
+
 private:
   std::pair<std::vector<char16_t>, size_t> generate_counted(size_t size);
 

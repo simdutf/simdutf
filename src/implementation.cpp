@@ -239,12 +239,24 @@ public:
   validate_ascii(const char *buf, size_t len) const noexcept final override {
     return set_best()->validate_ascii(buf, len);
   }
-
   simdutf_warn_unused result validate_ascii_with_errors(
       const char *buf, size_t len) const noexcept final override {
     return set_best()->validate_ascii_with_errors(buf, len);
   }
 #endif // SIMDUTF_FEATURE_ASCII
+
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
+  simdutf_warn_unused bool
+  validate_utf16le_as_ascii(const char16_t *buf,
+                            size_t len) const noexcept final override {
+    return set_best()->validate_utf16le_as_ascii(buf, len);
+  }
+  simdutf_warn_unused bool
+  validate_utf16be_as_ascii(const char16_t *buf,
+                            size_t len) const noexcept final override {
+    return set_best()->validate_utf16be_as_ascii(buf, len);
+  }
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
 
 #if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
   simdutf_warn_unused bool
@@ -844,6 +856,20 @@ public:
   }
 #endif // SIMDUTF_FEATURE_ASCII
 
+#if SIMDUTF_FEATURE_ASCII
+  simdutf_warn_unused bool
+  validate_utf16le_as_ascii(const char16_t *,
+                            size_t) const noexcept final override {
+    return false;
+  }
+
+  simdutf_warn_unused bool
+  validate_utf16be_as_ascii(const char16_t *,
+                            size_t) const noexcept final override {
+    return false;
+  }
+#endif // SIMDUTF_FEATURE_ASCII
+
 #if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
   simdutf_warn_unused bool
   validate_utf16le(const char16_t *, size_t) const noexcept final override {
@@ -1386,6 +1412,25 @@ simdutf_warn_unused result validate_ascii_with_errors(const char *buf,
   return get_default_implementation()->validate_ascii_with_errors(buf, len);
 }
 #endif // SIMDUTF_FEATURE_ASCII
+
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
+simdutf_warn_unused bool validate_utf16le_as_ascii(const char16_t *buf,
+                                                   size_t len) noexcept {
+  return get_default_implementation()->validate_utf16le_as_ascii(buf, len);
+}
+simdutf_warn_unused bool validate_utf16be_as_ascii(const char16_t *buf,
+                                                   size_t len) noexcept {
+  return get_default_implementation()->validate_utf16be_as_ascii(buf, len);
+}
+simdutf_warn_unused bool validate_utf16_as_ascii(const char16_t *input,
+                                                 size_t length) noexcept {
+  #if SIMDUTF_IS_BIG_ENDIAN
+  return validate_utf16be_as_ascii(input, length);
+  #else
+  return validate_utf16le_as_ascii(input, length);
+  #endif
+}
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 simdutf_warn_unused size_t convert_utf8_to_utf16(

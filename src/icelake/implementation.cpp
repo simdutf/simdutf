@@ -275,7 +275,61 @@ simdutf_warn_unused result implementation::validate_ascii_with_errors(
   return result(error_code::SUCCESS, len);
 }
 #endif // SIMDUTF_FEATURE_ASCII
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
+simdutf_warn_unused bool
+implementation::validate_utf16le_as_ascii(const char16_t *buf,
+                                          size_t len) const noexcept {
+  const char16_t *end = buf + len;
+  __m512i limit = _mm512_set1_epi16(uint16_t(0x007F));
+  for (; end - buf >= 32;) {
+    __m512i in = _mm512_loadu_si512((__m512i *)buf);
+    auto mask = _mm512_cmpgt_epu16_mask(in, limit);
+    if (mask) {
+      return false;
+    }
+    buf += 32;
+  }
+  if (buf < end) {
+    __m512i in =
+        _mm512_maskz_loadu_epi16((1U << (end - buf)) - 1, (__m512i *)buf);
+    auto mask = _mm512_cmpgt_epu16_mask(in, limit);
+    if (mask) {
+      return false;
+    }
+  }
+  return true;
+}
 
+simdutf_warn_unused bool
+implementation::validate_utf16be_as_ascii(const char16_t *buf,
+                                          size_t len) const noexcept {
+  const char16_t *end = buf + len;
+  const __m512i byteflip = _mm512_setr_epi64(
+      0x0607040502030001, 0x0e0f0c0d0a0b0809, 0x0607040502030001,
+      0x0e0f0c0d0a0b0809, 0x0607040502030001, 0x0e0f0c0d0a0b0809,
+      0x0607040502030001, 0x0e0f0c0d0a0b0809);
+  __m512i limit = _mm512_set1_epi16(uint16_t(0x007F));
+  for (; end - buf >= 32;) {
+    __m512i in = _mm512_loadu_si512((__m512i *)buf);
+    in = _mm512_shuffle_epi8(in, byteflip);
+    auto mask = _mm512_cmpgt_epu16_mask(in, limit);
+    if (mask) {
+      return false;
+    }
+    buf += 32;
+  }
+  if (buf < end) {
+    __m512i in =
+        _mm512_maskz_loadu_epi16((1U << (end - buf)) - 1, (__m512i *)buf);
+    in = _mm512_shuffle_epi8(in, byteflip);
+    auto mask = _mm512_cmpgt_epu16_mask(in, limit);
+    if (mask) {
+      return false;
+    }
+  }
+  return true;
+}
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
 #if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_warn_unused bool
 implementation::validate_utf16le(const char16_t *buf,
@@ -1410,7 +1464,8 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(
   const uint8_t *str = reinterpret_cast<const uint8_t *>(input);
   size_t answer = length / sizeof(__m512i) * sizeof(__m512i);
   size_t i = 0;
-  if (answer >= 2048) { // long strings optimization
+  if (answer >= 2048) // long strings optimization
+  {
     unsigned char v_0xFF = 0xff;
     __m512i eight_64bits = _mm512_setzero_si512();
     while (i + sizeof(__m512i) <= length) {
@@ -1559,14 +1614,12 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf8(
          scalar::utf8::utf16_length_from_utf8(input + pos, length - pos);
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
-
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::utf8_length_from_utf32(
     const char32_t *input, size_t length) const noexcept {
   return utf32::utf8_length_from_utf32(input, length);
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
-
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::utf16_length_from_utf32(
     const char32_t *input, size_t length) const noexcept {
@@ -1739,7 +1792,6 @@ const char16_t *implementation::find(const char16_t *start, const char16_t *end,
                                      char16_t character) const noexcept {
   return util_find(start, end, character);
 }
-
 #endif // SIMDUTF_FEATURE_BASE64
 
 } // namespace SIMDUTF_IMPLEMENTATION

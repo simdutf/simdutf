@@ -104,7 +104,6 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
   operator>=(const simd16<uint16_t> other) const {
     return other.min_val(*this) == other;
   }
-
   // Bit-specific operations
   simdutf_really_inline simd16<bool> bits_not_set() const {
     return *this == uint16_t(0);

@@ -528,6 +528,47 @@ simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept;
 simdutf_warn_unused result validate_ascii_with_errors(const char *buf, size_t len) noexcept;
 
 /**
+ * Validate the ASCII string as a UTF-16 sequence.
+ * An UTF-16 sequence is considered an ASCII sequence
+ * if it could be converted to an ASCII string losslessly.
+ *
+ * Overridden by each implementation.
+ *
+ * @param buf the UTF-16 string to validate.
+ * @param len the length of the string in bytes.
+ * @return true if and only if the string is valid ASCII.
+ */
+simdutf_warn_unused bool validate_utf16_as_ascii(const char16_t *buf,
+                                                 size_t len) noexcept;
+
+/**
+ * Validate the ASCII string as a UTF-16BE sequence.
+ * An UTF-16 sequence is considered an ASCII sequence
+ * if it could be converted to an ASCII string losslessly.
+ *
+ * Overridden by each implementation.
+ *
+ * @param buf the UTF-16BE string to validate.
+ * @param len the length of the string in bytes.
+ * @return true if and only if the string is valid ASCII.
+ */
+simdutf_warn_unused bool validate_utf16be_as_ascii(const char16_t *buf,
+                                                   size_t len) noexcept;
+/**
+ * Validate the ASCII string as a UTF-16LE sequence.
+ * An UTF-16 sequence is considered an ASCII sequence
+ * if it could be converted to an ASCII string losslessly.
+ *
+ * Overridden by each implementation.
+ *
+ * @param buf the UTF-16LE string to validate.
+ * @param len the length of the string in bytes.
+ * @return true if and only if the string is valid ASCII.
+ */
+simdutf_warn_unused bool validate_utf16le_as_ascii(const char16_t *buf,
+                                                   size_t len) noexcept;
+
+/**
  * Validate the UTF-8 string. This function may be best when you expect
  * the input to be almost always valid. Otherwise, consider using
  * validate_utf8_with_errors.

@@ -258,6 +258,12 @@
   #if __GNUC__ >= 11
     #define SIMDUTF_GCC11ORMORE 1
   #endif //  __GNUC__ >= 11
+  #if __GNUC__ == 10
+    #define SIMDUTF_GCC10 1
+  #endif //  __GNUC__ == 10
+  #if __GNUC__ < 10
+    #define SIMDUTF_GCC9OROLDER 1
+  #endif //  __GNUC__ == 10
 #endif   // defined(__GNUC__) && !defined(__clang__)
 
 #endif // SIMDUTF_PORTABILITY_H

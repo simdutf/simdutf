@@ -9,6 +9,17 @@
 
 constexpr size_t trials = 1000;
 
+TEST_LOOP(trials, validate_utf16be_ascii) {
+  simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
+  auto utf16{generator.generate_be(512, seed)};
+  generator.to_ascii_be(utf16);
+  ASSERT_TRUE(
+      implementation.validate_utf16be_as_ascii(utf16.data(), utf16.size()));
+  utf16[utf16.size() / 2] = 0xC0C0;
+  ASSERT_FALSE(
+      implementation.validate_utf16be_as_ascii(utf16.data(), utf16.size()));
+}
+
 TEST_LOOP(trials, validate_utf16be_returns_true_for_valid_input_single_words) {
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 0};
   const auto utf16{generator.generate_be(512, seed)};
