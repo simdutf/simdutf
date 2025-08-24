@@ -69,6 +69,28 @@ const char16_t *arm_validate_utf16(const char16_t *input, size_t size) {
 }
 
 template <endianness big_endian>
+const char16_t *arm_validate_utf16_as_ascii(const char16_t *input,
+                                            size_t size) {
+  const char16_t *end = input + size;
+  while (end - input >= 16) {
+    uint16x8_t in1 = vld1q_u16(reinterpret_cast<const uint16_t *>(input));
+    uint16x8_t in2 = vld1q_u16(reinterpret_cast<const uint16_t *>(input + 8));
+    uint16x8_t inor = vorrq_u16(in1, in2);
+    if (!match_system(big_endian)) {
+      inor = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(inor)));
+    }
+    // next we compute inor > 0x7f
+    uint16x8_t cmp = vcgtq_u16(inor, vdupq_n_u16(0x7f));
+    uint64_t mask = vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(cmp, 4)), 0);
+    if (mask) {
+      return nullptr;
+    }
+    input += 16;
+  }
+  return input;
+}
+
+template <endianness big_endian>
 const result arm_validate_utf16_with_errors(const char16_t *input,
                                             size_t size) {
   const char16_t *start = input;

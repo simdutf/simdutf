@@ -18,6 +18,26 @@ std::vector<char16_t> random_utf16::generate_le(size_t size) {
   return result;
 }
 
+void random_utf16::to_ascii_le(std::vector<char16_t> &output) {
+  char16_t mask = 0x7F;
+  if (!match_system(endianness::LITTLE)) {
+    mask = 0x7F00;
+  }
+  for (auto &ch : output) {
+    ch &= mask;
+  }
+}
+
+void random_utf16::to_ascii_be(std::vector<char16_t> &output) {
+  char16_t mask = 0x7F;
+  if (!match_system(endianness::BIG)) {
+    mask = 0x7F00;
+  }
+  for (auto &ch : output) {
+    ch &= mask;
+  }
+}
+
 std::vector<char16_t> random_utf16::generate_be(size_t size) {
   auto result = generate_counted(size).first;
   if (!match_system(endianness::BIG)) {

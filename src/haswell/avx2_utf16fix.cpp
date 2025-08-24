@@ -32,15 +32,30 @@ void utf16fix_block(char16_t *out, const char16_t *in) {
 
     /* compute the cause of the illegal sequencing */
     lb_illseq = _mm256_andnot_si256(block_is_low, lb_is_high);
+#if SIMDUTF_GCC9OROLDER
+    // Old GCC versions are missing _mm256_zextsi128_si256, so we emulate it.
+    __m128i tmp_legacygcc =
+        _mm_bslli_si128(_mm256_extracti128_si256(lb_illseq, 1), 14);
+    __m256i tmp_legacygcc256 =
+        _mm256_set_m128i(_mm_setzero_si128(), tmp_legacygcc);
+    lb_illseq_shifted =
+        _mm256_or_si256(_mm256_bsrli_epi128(lb_illseq, 2), tmp_legacygcc256);
+#else
     lb_illseq_shifted =
         _mm256_or_si256(_mm256_bsrli_epi128(lb_illseq, 2),
                         _mm256_zextsi128_si256(_mm_bslli_si128(
                             _mm256_extracti128_si256(lb_illseq, 1), 14)));
+#endif // SIMDUTF_GCC9OROLDER
     block_illseq = _mm256_or_si256(
         _mm256_andnot_si256(lb_is_high, block_is_low), lb_illseq_shifted);
 
     /* fix illegal sequencing in the lookback */
+#if SIMDUTF_GCC10 || SIMDUTF_GCC9OROLDER
+    // GCC 10 is missing important intrinsics.
+    lb = _mm_cvtsi128_si32(_mm256_extractf128_si256(lb_illseq, 0));
+#else
     lb = _mm256_cvtsi256_si32(lb_illseq);
+#endif
     lb = (lb & replacement) | (~lb & out[-1]);
     out[-1] = char16_t(lb);
 
