@@ -216,13 +216,17 @@ simdutf_warn_unused result implementation::validate_ascii_with_errors(
 simdutf_warn_unused bool
 implementation::validate_utf16le_as_ascii(const char16_t *buf,
                                           size_t len) const noexcept {
-  return scalar::utf16::validate_as_ascii<endianness::LITTLE>(buf, len);
+  return ppc64::utf16::validate_utf16_as_ascii_with_errors<endianness::LITTLE>(
+             buf, len)
+             .error == SUCCESS;
 }
 
 simdutf_warn_unused bool
 implementation::validate_utf16be_as_ascii(const char16_t *buf,
                                           size_t len) const noexcept {
-  return scalar::utf16::validate_as_ascii<endianness::BIG>(buf, len);
+  return ppc64::utf16::validate_utf16_as_ascii_with_errors<endianness::BIG>(buf,
+                                                                            len)
+             .error == SUCCESS;
 }
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
 #if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
