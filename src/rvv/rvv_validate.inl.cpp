@@ -26,16 +26,33 @@ simdutf_warn_unused result implementation::validate_ascii_with_errors(
 }
 #endif // SIMDUTF_FEATURE_ASCII
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
+template <simdutf_ByteFlip bflip>
+simdutf_really_inline bool rvv_validate_utf16_as_ascii(const char16_t *buf,
+                                                       size_t len) noexcept {
+  const char16_t *src = buf;
+  for (size_t vl; len > 0; len -= vl, src += vl) {
+    vl = __riscv_vsetvl_e16m8(len);
+    vuint16m8_t v = __riscv_vle16_v_u16m8((uint16_t *)src, vl);
+    v = simdutf_byteflip<bflip>(v, vl);
+    long idx = __riscv_vfirst_m_b2(__riscv_vmsgtu_vx_u16m8_b2(v, 0x7f, vl), vl);
+    if (idx >= 0)
+      return false;
+  }
+  return true;
+}
 simdutf_warn_unused bool
 implementation::validate_utf16le_as_ascii(const char16_t *buf,
                                           size_t len) const noexcept {
-  return scalar::utf16::validate_as_ascii<endianness::LITTLE>(buf, len);
+  return rvv_validate_utf16_as_ascii<simdutf_ByteFlip::NONE>(buf, len);
 }
 
 simdutf_warn_unused bool
 implementation::validate_utf16be_as_ascii(const char16_t *buf,
                                           size_t len) const noexcept {
-  return scalar::utf16::validate_as_ascii<endianness::BIG>(buf, len);
+  if (supports_zvbb())
+    return rvv_validate_utf16_as_ascii<simdutf_ByteFlip::ZVBB>(buf, len);
+  else
+    return rvv_validate_utf16_as_ascii<simdutf_ByteFlip::V>(buf, len);
 }
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
 #if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
