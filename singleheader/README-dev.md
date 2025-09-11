@@ -25,7 +25,7 @@ flags:
 * The corresponding `endif` must contain a repeated condition,
   of course commented out, like `#endif // SIMDUTF_FEATURE_BASE64`.
 
-When we select given set of features, the API of library
+When we select given sets of features, the API of library
 is reduced only to these features. It is the responsibility
 of users to detect whether they header having the expected
 set of features.
