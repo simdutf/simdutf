@@ -102,7 +102,7 @@ TEST(atomic_roundtrip_base64) {
   for (size_t len = 0; len < 2048; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
-    buffer.resize(implementation.base64_length_from_binary(len));
+    buffer.resize(simdutf::base64_length_from_binary(len));
     std::vector<char> back(len);
     std::mt19937 gen((std::mt19937::result_type)(seed));
     std::uniform_int_distribution<int> byte_generator{0, 255};
@@ -112,7 +112,7 @@ TEST(atomic_roundtrip_base64) {
       }
       size_t size = simdutf::atomic_binary_to_base64(
           source.data(), source.size(), buffer.data());
-      ASSERT_EQUAL(size, implementation.base64_length_from_binary(len));
+      ASSERT_EQUAL(size, simdutf::base64_length_from_binary(len));
       simdutf::result r =
           implementation.base64_to_binary(buffer.data(), size, back.data());
       ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
@@ -174,7 +174,7 @@ TEST(atomic_span_roundtrip_base64) {
   for (size_t len = 0; len < 2048; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
-    buffer.resize(implementation.base64_length_from_binary(len));
+    buffer.resize(simdutf::base64_length_from_binary(len));
     std::vector<char> back(len);
     std::mt19937 gen((std::mt19937::result_type)(seed));
     std::uniform_int_distribution<int> byte_generator{0, 255};
@@ -183,7 +183,7 @@ TEST(atomic_span_roundtrip_base64) {
         source[i] = byte_generator(gen);
       }
       size_t size = simdutf::atomic_binary_to_base64(source, buffer);
-      ASSERT_EQUAL(size, implementation.base64_length_from_binary(len));
+      ASSERT_EQUAL(size, simdutf::base64_length_from_binary(len));
       simdutf::result r =
           implementation.base64_to_binary(buffer.data(), size, back.data());
       ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
@@ -809,7 +809,7 @@ TEST(base64_with_spaces) {
   for (size_t len = 0; len < 8000; len += 15) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
-    buffer.resize(implementation.base64_length_from_binary(len));
+    buffer.resize(simdutf::base64_length_from_binary(len));
     std::mt19937 gen((std::mt19937::result_type)(seed));
     std::uniform_int_distribution<int> byte_generator{0, 255};
     for (size_t trial = 0; trial < 20; trial++) {

@@ -2241,10 +2241,23 @@ base64_to_binary(const char *input, size_t length, char *output,
  * Provide the base64 length in bytes given the length of a binary input.
  *
  * @param length        the length of the input in bytes
- * @parem options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.
+ * @param options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.
  * @return number of base64 bytes
  */
 simdutf_warn_unused size_t base64_length_from_binary(size_t length, base64_options options = base64_default) noexcept;
+
+
+/**
+ * Provide the base64 length in bytes given the length of a binary input,
+ * taking into account line breaks.
+ *
+ * @param length        the length of the input in bytes
+ * @param options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.
+ * @param line_length   the length of lines, must be at least 4 (otherwise it is interpreted as 4),
+ * @return number of base64 bytes
+ */
+simdutf_warn_unused size_t
+base64_length_from_binary_with_lines(size_t length, base64_options options, size_t line_length) noexcept;
 
 
 /**
@@ -2265,6 +2278,32 @@ simdutf_warn_unused size_t base64_length_from_binary(size_t length, base64_optio
  * @return number of written bytes, will be equal to base64_length_from_binary(length, options)
  */
 size_t binary_to_base64(const char * input, size_t length, char* output, base64_options options = base64_default) noexcept;
+
+
+/**
+ * Convert a binary input to a base64 output with line breaks.
+ *
+ * The default option (simdutf::base64_default) uses the characters `+` and `/`
+ * as part of its alphabet. Further, it adds padding (`=`) at the end of the
+ * output to ensure that the output length is a multiple of four.
+ *
+ * The URL option (simdutf::base64_url) uses the characters `-` and `_` as part
+ * of its alphabet. No padding is added at the end of the output.
+ *
+ * This function always succeeds.
+ *
+ * @param input         the binary to process
+ * @param length        the length of the input in bytes
+ * @param output        the pointer to a buffer that can hold the conversion
+ * result (should be at least base64_length_from_binary(length) bytes long)
+ * @param line_length   the length of lines, must be at least 4 (otherwise it is interpreted as 4),
+ * @param options       the base64 options to use, can be base64_default or
+ * base64_url, is base64_default by default.
+ * @return number of written bytes, will be equal to
+ * base64_length_from_binary(length, options)
+ */
+size_t binary_to_base64_with_lines(const char *input, size_t length, char *output, size_t line_length = 76,
+                        base64_options options = base64_default) noexcept;
 
 /**
  * Convert a base64 input to a binary output.
