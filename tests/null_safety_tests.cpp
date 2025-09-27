@@ -26,7 +26,7 @@ TEST(test_empty) {
     // empty input is interpreted as utf-8
     ASSERT_EQUAL(simdutf::encoding_type::UTF8,
                  implementation.autodetect_encoding(i8, 0));
-    ASSERT_EQUAL(0, implementation.base64_length_from_binary(0));
+    ASSERT_EQUAL(0, simdutf::base64_length_from_binary(0));
 
     auto test_base64 = [](const simdutf::result &r) {
       ASSERT_EQUAL(r.count, 0);

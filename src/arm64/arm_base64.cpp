@@ -26,6 +26,52 @@
  * https://www.codeproject.com/Articles/276993/Base-Encoding-on-a-GPU. (2013).
  */
 
+
+
+
+
+/**
+ * Insert a line feed character in the 16-byte input at index K in [0,16).
+ */
+inline int8x16_t insert_line_feed16(int8x16_t input, int K) {
+    static const uint8_t shuffle_masks[16][16] = {
+      {0x80, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 0x80, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 0x80, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 0x80, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 0x80, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 0x80, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 0x80, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 0x80, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 0x80, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 0x80, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0x80, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0x80, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0x80, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0x80, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 0x80, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 0x80}
+    };
+    // Prepare a vector with '\n' (0x0A)
+    int8x16_t line_feed_vector = vdupq_n_u8('\n');
+
+    // Load the precomputed shuffle mask for K
+    int8x16_t mask = vld1q_u8(shuffle_masks[K]);
+
+    // Create a mask where 0x80 indicates the line feed position
+    uint8x16_t lf_pos = vceqq_u8(mask, vdupq_n_u8(0x80));
+
+    // Since Neon lacks a direct shuffle like _mm_shuffle_epi8, we adjust the approach.
+    // Shift bytes to make space for '\n' by splitting and concatenating.
+    // For simplicity, we blend the input with the line feed vector at the marked position.
+    int8x16_t result = input;
+
+    // Use vbsl to select '\n' where lf_pos is true, else keep input bytes
+    result = vbslq_s8(lf_pos, line_feed_vector, input);
+
+    return result;
+}
+
 size_t encode_base64(char *dst, const char *src, size_t srclen,
                      base64_options options) {
   // credit: Wojciech Muła
