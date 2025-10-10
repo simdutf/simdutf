@@ -163,20 +163,35 @@ size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
     result.val[2] = vqtbl4q_u8(table, result.val[2]);
     result.val[3] = vqtbl4q_u8(table, result.val[3]);
     if (insert_line_feeds) {
-      uint8x16x2_t Z0 = vzipq_u8(result.val[0], result.val[1]);
-      uint8x16x2_t Z1 = vzipq_u8(result.val[2], result.val[3]);
-      uint16x8x2_t Z2 = vzipq_u16(vreinterpretq_u16_u8(Z0.val[0]),
-                                  vreinterpretq_u16_u8(Z1.val[0]));
-      uint16x8x2_t Z3 = vzipq_u16(vreinterpretq_u16_u8(Z0.val[1]),
-                                  vreinterpretq_u16_u8(Z1.val[1]));
-      uint8x16_t T0 = vreinterpretq_u8_u16(Z2.val[0]);
-      uint8x16_t T1 = vreinterpretq_u8_u16(Z2.val[1]);
-      uint8x16_t T2 = vreinterpretq_u8_u16(Z3.val[0]);
-      uint8x16_t T3 = vreinterpretq_u8_u16(Z3.val[1]);
-      out += write_output_with_line_feeds(out, T0, line_length, offset);
-      out += write_output_with_line_feeds(out, T1, line_length, offset);
-      out += write_output_with_line_feeds(out, T2, line_length, offset);
-      out += write_output_with_line_feeds(out, T3, line_length, offset);
+      if (line_length >= 64) { // fast path
+        vst4q_u8(out, result);
+        if (offset + 64 > line_length) {
+          size_t location_end = line_length - offset;
+          size_t to_move = 64 - location_end;
+          std::memmove(out + location_end + 1, out + location_end, to_move);
+          out[location_end] = '\n';
+          offset = to_move;
+          out += 64 + 1;
+        } else {
+          offset += 64;
+          out += 64;
+        }
+      } else { // slow path
+        uint8x16x2_t Z0 = vzipq_u8(result.val[0], result.val[1]);
+        uint8x16x2_t Z1 = vzipq_u8(result.val[2], result.val[3]);
+        uint16x8x2_t Z2 = vzipq_u16(vreinterpretq_u16_u8(Z0.val[0]),
+                                    vreinterpretq_u16_u8(Z1.val[0]));
+        uint16x8x2_t Z3 = vzipq_u16(vreinterpretq_u16_u8(Z0.val[1]),
+                                    vreinterpretq_u16_u8(Z1.val[1]));
+        uint8x16_t T0 = vreinterpretq_u8_u16(Z2.val[0]);
+        uint8x16_t T1 = vreinterpretq_u8_u16(Z2.val[1]);
+        uint8x16_t T2 = vreinterpretq_u8_u16(Z3.val[0]);
+        uint8x16_t T3 = vreinterpretq_u8_u16(Z3.val[1]);
+        out += write_output_with_line_feeds(out, T0, line_length, offset);
+        out += write_output_with_line_feeds(out, T1, line_length, offset);
+        out += write_output_with_line_feeds(out, T2, line_length, offset);
+        out += write_output_with_line_feeds(out, T3, line_length, offset);
+      }
     } else {
       vst4q_u8(out, result);
       out += 64;
@@ -198,20 +213,35 @@ size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
     result.val[2] = vqtbl4_u8(table, result.val[2]);
     result.val[3] = vqtbl4_u8(table, result.val[3]);
     if (insert_line_feeds) {
-      uint8x8x2_t Z0 = vzip_u8(result.val[0], result.val[1]);
-      uint8x8x2_t Z1 = vzip_u8(result.val[2], result.val[3]);
-      uint16x4x2_t Z2 = vzip_u16(vreinterpret_u16_u8(Z0.val[0]),
-                                 vreinterpret_u16_u8(Z1.val[0]));
-      uint16x4x2_t Z3 = vzip_u16(vreinterpret_u16_u8(Z0.val[1]),
-                                 vreinterpret_u16_u8(Z1.val[1]));
-      uint8x8_t T0 = vreinterpret_u8_u16(Z2.val[0]);
-      uint8x8_t T1 = vreinterpret_u8_u16(Z2.val[1]);
-      uint8x8_t T2 = vreinterpret_u8_u16(Z3.val[0]);
-      uint8x8_t T3 = vreinterpret_u8_u16(Z3.val[1]);
-      uint8x16_t TT0 = vcombine_u8(T0, T1);
-      uint8x16_t TT1 = vcombine_u8(T2, T3);
-      out += write_output_with_line_feeds(out, TT0, line_length, offset);
-      out += write_output_with_line_feeds(out, TT1, line_length, offset);
+      if (line_length >= 32) { // fast path
+        vst4_u8(out, result);
+        if (offset + 32 > line_length) {
+          size_t location_end = line_length - offset;
+          size_t to_move = 32 - location_end;
+          std::memmove(out + location_end + 1, out + location_end, to_move);
+          out[location_end] = '\n';
+          offset = to_move;
+          out += 32 + 1;
+        } else {
+          offset += 32;
+          out += 32;
+        }
+      } else { // slow path
+        uint8x8x2_t Z0 = vzip_u8(result.val[0], result.val[1]);
+        uint8x8x2_t Z1 = vzip_u8(result.val[2], result.val[3]);
+        uint16x4x2_t Z2 = vzip_u16(vreinterpret_u16_u8(Z0.val[0]),
+                                   vreinterpret_u16_u8(Z1.val[0]));
+        uint16x4x2_t Z3 = vzip_u16(vreinterpret_u16_u8(Z0.val[1]),
+                                   vreinterpret_u16_u8(Z1.val[1]));
+        uint8x8_t T0 = vreinterpret_u8_u16(Z2.val[0]);
+        uint8x8_t T1 = vreinterpret_u8_u16(Z2.val[1]);
+        uint8x8_t T2 = vreinterpret_u8_u16(Z3.val[0]);
+        uint8x8_t T3 = vreinterpret_u8_u16(Z3.val[1]);
+        uint8x16_t TT0 = vcombine_u8(T0, T1);
+        uint8x16_t TT1 = vcombine_u8(T2, T3);
+        out += write_output_with_line_feeds(out, TT0, line_length, offset);
+        out += write_output_with_line_feeds(out, TT1, line_length, offset);
+      }
     } else {
       vst4_u8(out, result);
       out += 32;

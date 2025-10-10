@@ -418,6 +418,12 @@ private:
       }
     });
     volatile size_t base64_size;
+    summarize("node", [this, &base64_size]() {
+      for (const std::vector<char> &source : data) {
+        base64_size = node::base64_encode(source.data(), source.size(),
+                                          buffer1.data(), buffer1.size());
+      }
+    });
     summarize("libbase64", [this, &base64_size]() {
       for (const std::vector<char> &source : data) {
         size_t outlen;
@@ -436,6 +442,13 @@ private:
               e->binary_to_base64(source.data(), source.size(), buffer1.data());
         }
       });
+      summarize("simdutf::" + e->name() + "with_lines",
+                [this, &e, &base64_size]() {
+                  for (const std::vector<char> &source : data) {
+                    base64_size = e->binary_to_base64_with_lines(
+                        source.data(), source.size(), buffer1.data());
+                  }
+                });
 #if SIMDUTF_COMPILED_CXX_VERSION >= 20
       summarize("simdutf::atomic_binary_to_base64_" +
                     (simdutf::get_active_implementation() = e)->name(),
