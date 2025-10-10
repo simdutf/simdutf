@@ -119,13 +119,15 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
 size_t implementation::binary_to_base64(const char *input, size_t length,
                                         char *output,
                                         base64_options options) const noexcept {
-  return scalar::base64::tail_encode_base64_impl<true>(output, input, length, options, line_length);
+  return scalar::base64::tail_encode_base64_impl<true>(output, input, length,
+                                                       options, line_length);
 }
 
-size_t implementation::binary_to_base64_with_lines(const char *input, size_t length,
-                                                  char *output, size_t line_length,
-                                                  base64_options options) const noexcept {
-  return scalar::base64::tail_encode_base64_impl(output, input, length, options, line_length);
+size_t implementation::binary_to_base64_with_lines(
+    const char *input, size_t length, char *output, size_t line_length,
+    base64_options options) const noexcept {
+  return scalar::base64::tail_encode_base64_impl(output, input, length, options,
+                                                 line_length);
 }
 
 const char *implementation::find(const char *start, const char *end,

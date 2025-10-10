@@ -437,17 +437,16 @@ patch_tail_result(full_result r, size_t previous_input, size_t previous_output,
 // enough. It will add padding (=) if needed.
 template <bool use_lines = false>
 size_t tail_encode_base64_impl(char *dst, const char *src, size_t srclen,
-                          base64_options options, size_t line_length = 76, size_t line_offset = 0) {
+                               base64_options options, size_t line_length = 76,
+                               size_t line_offset = 0) {
   if (use_lines) {
     // sanitize line_length and starting_line_offset.
     // line_length must be greater than 3.
-    // starting_line_offset must be less than line_length.
     if (line_length < 4) {
       line_length = 4;
     }
-    if (line_offset >= line_length) {
-      line_offset = 0;
-    }
+    simdutf_log_assert(line_offset <= line_length,
+                       "line_offset should be less than line_length");
   }
   // By default, we use padding if we are not using the URL variant.
   // This is check with ((options & base64_url) == 0) which returns true if we
@@ -475,9 +474,9 @@ size_t tail_encode_base64_impl(char *dst, const char *src, size_t srclen,
     t1 = uint8_t(src[i]);
     t2 = uint8_t(src[i + 1]);
     t3 = uint8_t(src[i + 2]);
-    if(use_lines) {
-      if(line_offset + 3 >= line_length) {
-        if(line_offset == line_length) {
+    if (use_lines) {
+      if (line_offset + 3 >= line_length) {
+        if (line_offset == line_length) {
           *out++ = '\n';
           *out++ = e0[t1];
           *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
@@ -525,10 +524,10 @@ size_t tail_encode_base64_impl(char *dst, const char *src, size_t srclen,
     break;
   case 1:
     t1 = uint8_t(src[i]);
-    if(use_lines) {
+    if (use_lines) {
       if (use_padding) {
-        if(line_offset + 3 >= line_length) {
-          if(line_offset == line_length) {
+        if (line_offset + 3 >= line_length) {
+          if (line_offset == line_length) {
             *out++ = '\n';
             *out++ = e0[t1];
             *out++ = e1[(t1 & 0x03) << 4];
@@ -560,8 +559,8 @@ size_t tail_encode_base64_impl(char *dst, const char *src, size_t srclen,
           *out++ = '=';
         }
       } else {
-        if(line_offset + 2 >= line_length) {
-          if(line_offset == line_length) {
+        if (line_offset + 2 >= line_length) {
+          if (line_offset == line_length) {
             *out++ = '\n';
             *out++ = e0[uint8_t(src[i])];
             *out++ = e1[(uint8_t(src[i]) & 0x03) << 4];
@@ -585,73 +584,73 @@ size_t tail_encode_base64_impl(char *dst, const char *src, size_t srclen,
     }
     break;
   default: /* case 2 */
-      t1 = uint8_t(src[i]);
-      t2 = uint8_t(src[i + 1]);
-      if(use_lines) {
-        if (use_padding) {
-          if(line_offset + 3 >= line_length) {
-            if(line_offset == line_length) {
-              *out++ = '\n';
-              *out++ = e0[t1];
-              *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
-              *out++ = e2[(t2 & 0x0F) << 2];
-              *out++ = '=';
-            } else if (line_offset + 1 == line_length) {
-              *out++ = e0[t1];
-              *out++ = '\n';
-              *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
-              *out++ = e2[(t2 & 0x0F) << 2];
-              *out++ = '=';
-            } else if (line_offset + 2 == line_length) {
-              *out++ = e0[t1];
-              *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
-              *out++ = '\n';
-              *out++ = e2[(t2 & 0x0F) << 2];
-              *out++ = '=';
-            } else if (line_offset + 3 == line_length) {
-              *out++ = e0[t1];
-              *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
-              *out++ = e2[(t2 & 0x0F) << 2];
-              *out++ = '\n';
-              *out++ = '=';
-            }
-          } else {
+    t1 = uint8_t(src[i]);
+    t2 = uint8_t(src[i + 1]);
+    if (use_lines) {
+      if (use_padding) {
+        if (line_offset + 3 >= line_length) {
+          if (line_offset == line_length) {
+            *out++ = '\n';
             *out++ = e0[t1];
             *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
             *out++ = e2[(t2 & 0x0F) << 2];
             *out++ = '=';
-          }
-        } else {
-          if(line_offset + 3 >= line_length) {
-            if(line_offset == line_length) {
-              *out++ = '\n';
-              *out++ = e0[t1];
-              *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
-              *out++ = e2[(t2 & 0x0F) << 2];
-            } else if (line_offset + 1 == line_length) {
-              *out++ = e0[t1];
-              *out++ = '\n';
-              *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
-              *out++ =  e2[(t2 & 0x0F) << 2];
-            } else if (line_offset + 2 == line_length) {
-              *out++ = e0[t1];
-              *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
-              *out++ = '\n';
-              *out++ = e2[(t2 & 0x0F) << 2];
-            }
-          } else {
+          } else if (line_offset + 1 == line_length) {
+            *out++ = e0[t1];
+            *out++ = '\n';
+            *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
+            *out++ = e2[(t2 & 0x0F) << 2];
+            *out++ = '=';
+          } else if (line_offset + 2 == line_length) {
+            *out++ = e0[t1];
+            *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
+            *out++ = '\n';
+            *out++ = e2[(t2 & 0x0F) << 2];
+            *out++ = '=';
+          } else if (line_offset + 3 == line_length) {
             *out++ = e0[t1];
             *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
             *out++ = e2[(t2 & 0x0F) << 2];
+            *out++ = '\n';
+            *out++ = '=';
           }
-        }
-      } else {
-        *out++ = e0[t1];
-        *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
-        *out++ = e2[(t2 & 0x0F) << 2];
-        if (use_padding) {
+        } else {
+          *out++ = e0[t1];
+          *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
+          *out++ = e2[(t2 & 0x0F) << 2];
           *out++ = '=';
         }
+      } else {
+        if (line_offset + 3 >= line_length) {
+          if (line_offset == line_length) {
+            *out++ = '\n';
+            *out++ = e0[t1];
+            *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
+            *out++ = e2[(t2 & 0x0F) << 2];
+          } else if (line_offset + 1 == line_length) {
+            *out++ = e0[t1];
+            *out++ = '\n';
+            *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
+            *out++ = e2[(t2 & 0x0F) << 2];
+          } else if (line_offset + 2 == line_length) {
+            *out++ = e0[t1];
+            *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
+            *out++ = '\n';
+            *out++ = e2[(t2 & 0x0F) << 2];
+          }
+        } else {
+          *out++ = e0[t1];
+          *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
+          *out++ = e2[(t2 & 0x0F) << 2];
+        }
+      }
+    } else {
+      *out++ = e0[t1];
+      *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
+      *out++ = e2[(t2 & 0x0F) << 2];
+      if (use_padding) {
+        *out++ = '=';
+      }
     }
   }
   return (size_t)(out - dst);
@@ -659,8 +658,8 @@ size_t tail_encode_base64_impl(char *dst, const char *src, size_t srclen,
 
 // Returns the number of bytes written. The destination buffer must be large
 // enough. It will add padding (=) if needed.
-size_t tail_encode_base64(char *dst, const char *src, size_t srclen,
-                          base64_options options) {
+inline size_t tail_encode_base64(char *dst, const char *src, size_t srclen,
+                                 base64_options options) {
   return tail_encode_base64_impl(dst, src, srclen, options);
 }
 
@@ -816,13 +815,13 @@ base64_length_from_binary(size_t length, base64_options options) noexcept {
          4; // We use padding to make the length a multiple of 4.
 }
 
-simdutf_warn_unused size_t
-base64_length_from_binary_with_lines(size_t length, base64_options options,
-                                 size_t line_length) noexcept {
-  if(length == 0) {
+simdutf_warn_unused size_t base64_length_from_binary_with_lines(
+    size_t length, base64_options options, size_t line_length) noexcept {
+  if (length == 0) {
     return 0;
   }
-  size_t base64_length = scalar::base64::base64_length_from_binary(length, options);
+  size_t base64_length =
+      scalar::base64::base64_length_from_binary(length, options);
   if (line_length < 4) {
     line_length = 4;
   }

@@ -744,9 +744,12 @@ public:
     return set_best()->binary_to_base64(input, length, output, options);
   }
 
-  size_t binary_to_base64_with_lines(const char *input, size_t length, char *output, size_t line_length,
-                                      base64_options options) const noexcept override {
-    return set_best()->binary_to_base64_with_lines(input, length, output, line_length, options);
+  size_t
+  binary_to_base64_with_lines(const char *input, size_t length, char *output,
+                              size_t line_length,
+                              base64_options options) const noexcept override {
+    return set_best()->binary_to_base64_with_lines(input, length, output,
+                                                   line_length, options);
   }
 
   const char *find(const char *start, const char *end,
@@ -1283,7 +1286,7 @@ public:
     return 0;
   }
   size_t binary_to_base64_with_lines(const char *, size_t, char *, size_t,
-                          base64_options) const noexcept override {
+                                     base64_options) const noexcept override {
     return 0;
   }
   const char *find(const char *, const char *, char) const noexcept override {
@@ -2199,14 +2202,15 @@ simdutf_warn_unused size_t utf32_length_from_utf8(const char *input,
 
 #if SIMDUTF_FEATURE_BASE64
 
-simdutf_warn_unused size_t base64_length_from_binary(
-    size_t length, base64_options option) noexcept {
-      return scalar::base64::base64_length_from_binary(length, option);
+simdutf_warn_unused size_t
+base64_length_from_binary(size_t length, base64_options option) noexcept {
+  return scalar::base64::base64_length_from_binary(length, option);
 }
 
-simdutf_warn_unused size_t
-base64_length_from_binary_with_lines(size_t length, base64_options options, size_t line_length) noexcept {
-  return scalar::base64::base64_length_from_binary_with_lines(length, options, line_length);
+simdutf_warn_unused size_t base64_length_from_binary_with_lines(
+    size_t length, base64_options options, size_t line_length) noexcept {
+  return scalar::base64::base64_length_from_binary_with_lines(length, options,
+                                                              line_length);
 }
 
 simdutf_warn_unused const char *find(const char *start, const char *end,
@@ -2485,10 +2489,11 @@ size_t binary_to_base64(const char *input, size_t length, char *output,
                                                         options);
 }
 
-size_t binary_to_base64_with_lines(const char *input, size_t length, char *output,
-                                     size_t line_length, base64_options options) noexcept {
-  return get_default_implementation()->binary_to_base64_with_lines(input, length, output,
-                                                                   line_length, options);
+size_t binary_to_base64_with_lines(const char *input, size_t length,
+                                   char *output, size_t line_length,
+                                   base64_options options) noexcept {
+  return get_default_implementation()->binary_to_base64_with_lines(
+      input, length, output, line_length, options);
 }
 #endif // SIMDUTF_FEATURE_BASE64
 

@@ -536,45 +536,40 @@ TEST(tc39_illegal_padded_chunks_unsafe) {
 }
 
 TEST(with_lines) {
-    auto verify_lines = [](const char* c, int N, int line_length) {
-      int current_line_length = 0; // Track the length of the current line
-      bool is_last_line = false;   // Flag to indicate if processing the last line
-
-      // Iterate through the string
-      for (int i = 0; i < N; ++i) {
-          if (c[i] == '\n') {
-              // Check if a non-final line is too short
-              if (is_last_line) {
-                  return false;
-              }
-              // Check if a non-final line has incorrect length
-              if (current_line_length != line_length && i != N) {
-                  return false;
-              }
-              current_line_length = 0; // Reset for the next line
-              continue;
-          }
-
-          current_line_length++;
-          // Check if the current line exceeds the allowed length
-          if (current_line_length > line_length) {
-              return false;
-          }
-
-          // Mark as last line if at the end of the string
-          if (i + 1 == N) {
-              is_last_line = true;
-          }
+  auto verify_lines = [](const char *c, int N, int line_length) {
+    int current_line_length = 0; // Track the length of the current line
+    // Iterate through the string
+    for (int i = 0; i < N; ++i) {
+      if (c[i] == '\n') {
+        // Check if a non-final line has incorrect length
+        if (current_line_length != line_length) {
+          std::cerr << "A non-final line has incorrect length "
+                    << current_line_length << " != " << line_length << "\n";
+          std::cerr << std::string(c, N) << "\n";
+          return false;
+        }
+        current_line_length = 0; // Reset for the next line
+        continue;
       }
 
-      // Empty string or valid line configuration
-      return true;
+      current_line_length++;
+      // Check if the current line exceeds the allowed length
+      if (current_line_length > line_length) {
+        std::cerr << "A line exceeds the allowed length " << current_line_length
+                  << " > " << line_length << "\n";
+        std::cerr << std::string(c, N) << "\n";
+        return false;
+      }
+    }
+    return true;
   };
+
   for (size_t line_length : {4, 64, 76, 80, 128}) {
-    for (size_t len = 0; len < 2048; len+=17) {
+    for (size_t len = 0; len < 2048; len += 17) {
       std::vector<char> source(len, 0);
       std::vector<char> buffer;
-      buffer.resize(simdutf::base64_length_from_binary_with_lines(len, simdutf::base64_default, line_length));
+      buffer.resize(simdutf::base64_length_from_binary_with_lines(
+          len, simdutf::base64_default, line_length));
       std::mt19937 gen((std::mt19937::result_type)(seed));
       std::uniform_int_distribution<int> byte_generator{0, 255};
       for (size_t trial = 0; trial < 2; trial++) {
@@ -583,7 +578,8 @@ TEST(with_lines) {
         }
         size_t size = implementation.binary_to_base64_with_lines(
             source.data(), source.size(), buffer.data(), line_length);
-        buffer.resize(size);
+        ASSERT_EQUAL(size, buffer.size());
+        buffer.resize(size); // unnecessary
         ASSERT_TRUE(verify_lines(buffer.data(), buffer.size(), line_length));
         std::vector<char> back(simdutf::maximal_binary_length_from_base64(
             buffer.data(), buffer.size()));
@@ -598,14 +594,14 @@ TEST(with_lines) {
             (expected_output_length + 2) / 3 * 4, simdutf::base64_default,
             buffer.data(), buffer.size());
         ASSERT_EQUAL(r.output_count, expected_output_length);
-        ASSERT_TRUE(std::equal(back.begin(), back.begin() + expected_output_length,
+        ASSERT_TRUE(std::equal(back.begin(),
+                               back.begin() + expected_output_length,
                                source.begin()));
         ASSERT_EQUAL(r.input_count, expected_input_length);
       }
     }
   }
 }
-
 
 // stop-before-partial should behave like so:
 // 1. if the last chunk is not a multiple of 4, we should stop before the last
@@ -628,9 +624,11 @@ TEST(partial_should_decode_up_to_last_chunk) {
       for (size_t i = 0; i < len; i++) {
         source[i] = byte_generator(gen);
       }
+      buffer.resize(simdutf::base64_length_from_binary(len));
       size_t size = implementation.binary_to_base64(
           source.data(), source.size(), buffer.data());
-      buffer.resize(size);
+      ASSERT_EQUAL(size, buffer.size());
+      buffer.resize(size); // unnecessary
       add_simple_spaces(buffer, gen, 5 + 2 * len);
       std::vector<char> back(simdutf::maximal_binary_length_from_base64(
           buffer.data(), buffer.size()));
@@ -2670,8 +2668,7 @@ TEST(roundtrip_base64url) {
   for (size_t len = 0; len < 2048; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
-    buffer.resize(
-        simdutf::base64_length_from_binary(len, simdutf::base64_url));
+    buffer.resize(simdutf::base64_length_from_binary(len, simdutf::base64_url));
     std::vector<char> back(len);
     std::mt19937 gen((std::mt19937::result_type)(seed));
     std::uniform_int_distribution<int> byte_generator{0, 255};
@@ -2681,8 +2678,8 @@ TEST(roundtrip_base64url) {
       }
       size_t size = implementation.binary_to_base64(
           source.data(), source.size(), buffer.data(), simdutf::base64_url);
-      ASSERT_EQUAL(size, simdutf::base64_length_from_binary(
-                             len, simdutf::base64_url));
+      ASSERT_EQUAL(
+          size, simdutf::base64_length_from_binary(len, simdutf::base64_url));
       simdutf::result r = implementation.base64_to_binary(
           buffer.data(), size, back.data(), simdutf::base64_url);
       ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
@@ -2739,8 +2736,7 @@ TEST(roundtrip_base64url_16) {
     std::vector<char> buffer;
     std::vector<char16_t> buffer16;
 
-    buffer.resize(
-        simdutf::base64_length_from_binary(len, simdutf::base64_url));
+    buffer.resize(simdutf::base64_length_from_binary(len, simdutf::base64_url));
     std::vector<char> back(len);
     std::mt19937 gen((std::mt19937::result_type)(seed));
     std::uniform_int_distribution<int> byte_generator{0, 255};
@@ -2755,8 +2751,8 @@ TEST(roundtrip_base64url_16) {
       for (size_t i = 0; i < buffer.size(); i++) {
         buffer16[i] = buffer[i];
       }
-      ASSERT_EQUAL(size, simdutf::base64_length_from_binary(
-                             len, simdutf::base64_url));
+      ASSERT_EQUAL(
+          size, simdutf::base64_length_from_binary(len, simdutf::base64_url));
       simdutf::result r = implementation.base64_to_binary(
           buffer16.data(), size, back.data(), simdutf::base64_url);
       ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
@@ -3096,8 +3092,8 @@ TEST(roundtrip_base64_url_16_with_garbage) {
       for (size_t i = 0; i < buffer.size(); i++) {
         buffer16[i] = buffer[i];
       }
-      ASSERT_EQUAL(size, simdutf::base64_length_from_binary(
-                             len, simdutf::base64_url));
+      ASSERT_EQUAL(
+          size, simdutf::base64_length_from_binary(len, simdutf::base64_url));
       simdutf::result r = implementation.base64_to_binary(
           buffer16.data(), buffer16.size(), back.data(),
           simdutf::base64_url_accept_garbage);
