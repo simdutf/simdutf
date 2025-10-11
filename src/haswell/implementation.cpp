@@ -1383,8 +1383,13 @@ size_t implementation::binary_to_base64(const char *input, size_t length,
 size_t implementation::binary_to_base64_with_lines(
     const char *input, size_t length, char *output, size_t line_length,
     base64_options options) const noexcept {
-  return scalar::base64::tail_encode_base64_impl<true>(output, input, length,
-                                                       options, line_length);
+  if (options & base64_url) {
+    return encode_base64_impl<true, true>(output, input, length, options,
+                                          line_length);
+  } else {
+    return encode_base64_impl<false, true>(output, input, length, options,
+                                           line_length);
+  }
 }
 
 const char *implementation::find(const char *start, const char *end,

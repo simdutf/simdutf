@@ -54,9 +54,13 @@ simdutf_really_inline __m256i lookup_pshufb_improved(const __m256i input) {
   return _mm256_add_epi8(result, input);
 }
 
-template <bool isbase64url>
-size_t encode_base64(char *dst, const char *src, size_t srclen,
-                     base64_options options) {
+template <bool isbase64url, bool use_lines>
+size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
+                          base64_options options, size_t line_length = 76) {
+  size_t offset = 0;
+  if (line_length < 4) {
+    line_length = 4; // We do not support line_length less than 4
+  }
   // credit: Wojciech Muła
   const uint8_t *input = (const uint8_t *)src;
 
@@ -122,20 +126,66 @@ size_t encode_base64(char *dst, const char *src, size_t srclen,
     const __m256i input2 = _mm256_or_si256(t1_2, t3_2);
     const __m256i input3 = _mm256_or_si256(t1_3, t3_3);
 
-    _mm256_storeu_si256(reinterpret_cast<__m256i *>(out),
-                        lookup_pshufb_improved<isbase64url>(input0));
-    out += 32;
+    if (use_lines) {
+      if (line_length >= 128) { // fast path
+        _mm256_storeu_si256(reinterpret_cast<__m256i *>(out),
+                            lookup_pshufb_improved<isbase64url>(input0));
+        _mm256_storeu_si256(reinterpret_cast<__m256i *>(out + 32),
+                            lookup_pshufb_improved<isbase64url>(input1));
 
-    _mm256_storeu_si256(reinterpret_cast<__m256i *>(out),
-                        lookup_pshufb_improved<isbase64url>(input1));
-    out += 32;
+        _mm256_storeu_si256(reinterpret_cast<__m256i *>(out + 64),
+                            lookup_pshufb_improved<isbase64url>(input2));
+        _mm256_storeu_si256(reinterpret_cast<__m256i *>(out + 96),
+                            lookup_pshufb_improved<isbase64url>(input3));
 
-    _mm256_storeu_si256(reinterpret_cast<__m256i *>(out),
-                        lookup_pshufb_improved<isbase64url>(input2));
-    out += 32;
-    _mm256_storeu_si256(reinterpret_cast<__m256i *>(out),
-                        lookup_pshufb_improved<isbase64url>(input3));
-    out += 32;
+        if (offset + 128 > line_length) {
+          size_t location_end = line_length - offset;
+          size_t to_move = 128 - location_end;
+          std::memmove(out + location_end + 1, out + location_end, to_move);
+          out[location_end] = '\n';
+          offset = to_move;
+          out += 128 + 1;
+        } else {
+          offset += 128;
+          out += 128;
+        }
+      } else { // slow path
+        // could be optimized
+        uint8_t buffer[128];
+        _mm256_storeu_si256(reinterpret_cast<__m256i *>(buffer),
+                            lookup_pshufb_improved<isbase64url>(input0));
+        _mm256_storeu_si256(reinterpret_cast<__m256i *>(buffer + 32),
+                            lookup_pshufb_improved<isbase64url>(input1));
+        _mm256_storeu_si256(reinterpret_cast<__m256i *>(buffer + 64),
+                            lookup_pshufb_improved<isbase64url>(input2));
+        _mm256_storeu_si256(reinterpret_cast<__m256i *>(buffer + 96),
+                            lookup_pshufb_improved<isbase64url>(input3));
+        std::memcpy(out, buffer, 128);
+        size_t out_pos = 0;
+        size_t local_offset = offset;
+        for (size_t j = 0; j < 128;) {
+          if (local_offset == line_length) {
+            out[out_pos++] = '\n';
+            local_offset = 0;
+          }
+          out[out_pos++] = buffer[j++];
+          local_offset++;
+        }
+        offset = local_offset;
+        out += out_pos;
+      }
+    } else {
+      _mm256_storeu_si256(reinterpret_cast<__m256i *>(out),
+                          lookup_pshufb_improved<isbase64url>(input0));
+      _mm256_storeu_si256(reinterpret_cast<__m256i *>(out + 32),
+                          lookup_pshufb_improved<isbase64url>(input1));
+      _mm256_storeu_si256(reinterpret_cast<__m256i *>(out + 64),
+                          lookup_pshufb_improved<isbase64url>(input2));
+      _mm256_storeu_si256(reinterpret_cast<__m256i *>(out + 96),
+                          lookup_pshufb_improved<isbase64url>(input3));
+
+      out += 128;
+    }
   }
   for (; i + 28 <= srclen; i += 24) {
     // lo = [xxxx|DDDC|CCBB|BAAA]
@@ -157,12 +207,57 @@ size_t encode_base64(char *dst, const char *src, size_t srclen,
     const __m256i t3 = _mm256_mullo_epi16(t2, _mm256_set1_epi32(0x01000010));
     const __m256i indices = _mm256_or_si256(t1, t3);
 
-    _mm256_storeu_si256(reinterpret_cast<__m256i *>(out),
-                        lookup_pshufb_improved<isbase64url>(indices));
-    out += 32;
+    if (use_lines) {
+      if (line_length >= 32) { // fast path
+        _mm256_storeu_si256(reinterpret_cast<__m256i *>(out),
+                            lookup_pshufb_improved<isbase64url>(indices));
+
+        if (offset + 32 > line_length) {
+          size_t location_end = line_length - offset;
+          size_t to_move = 32 - location_end;
+          std::memmove(out + location_end + 1, out + location_end, to_move);
+          out[location_end] = '\n';
+          offset = to_move;
+          out += 32 + 1;
+        } else {
+          offset += 32;
+          out += 32;
+        }
+      } else { // slow path
+        // could be optimized
+        uint8_t buffer[32];
+        _mm256_storeu_si256(reinterpret_cast<__m256i *>(buffer),
+                            lookup_pshufb_improved<isbase64url>(indices));
+        std::memcpy(out, buffer, 32);
+        size_t out_pos = 0;
+        size_t local_offset = offset;
+        for (size_t j = 0; j < 32;) {
+          if (local_offset == line_length) {
+            out[out_pos++] = '\n';
+            local_offset = 0;
+          }
+          out[out_pos++] = buffer[j++];
+          local_offset++;
+        }
+        offset = local_offset;
+        out += out_pos;
+      }
+    } else {
+      _mm256_storeu_si256(reinterpret_cast<__m256i *>(out),
+                          lookup_pshufb_improved<isbase64url>(indices));
+
+      out += 32;
+    }
   }
-  return i / 3 * 4 + scalar::base64::tail_encode_base64((char *)out, src + i,
-                                                        srclen - i, options);
+  return ((char *)out - (char *)dst) +
+         scalar::base64::tail_encode_base64_impl<use_lines>(
+             (char *)out, src + i, srclen - i, options, line_length, offset);
+}
+
+template <bool isbase64url>
+size_t encode_base64(char *dst, const char *src, size_t srclen,
+                     base64_options options) {
+  return encode_base64_impl<isbase64url, false>(dst, src, srclen, options);
 }
 
 static inline void compress(__m128i data, uint16_t mask, char *output) {
