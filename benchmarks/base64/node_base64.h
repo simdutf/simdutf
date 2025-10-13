@@ -166,11 +166,11 @@ base64_encoded_size(size_t size, Base64Mode mode = Base64Mode::NORMAL) {
                                           static_cast<double>(size * 4) / 3));
 }
 
-static constexpr char base64_table_url[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+inline constexpr char base64_table_url[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                            "abcdefghijklmnopqrstuvwxyz"
                                            "0123456789-_";
 
-static constexpr char base64_table_normal[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+inline constexpr char base64_table_normal[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                               "abcdefghijklmnopqrstuvwxyz"
                                               "0123456789+/";
 inline size_t base64_encode(const char *src, size_t slen, char *dst,
