@@ -1,5 +1,5 @@
-simdutf_really_inline const char *util_find(const char *start, const char *end,
-                                            char character) noexcept {
+const char *implementation::find(const char *start, const char *end,
+                                 char character) const noexcept {
   const char *src = start;
   for (size_t len = end - start, vl; len > 0; len -= vl, src += vl) {
     vl = __riscv_vsetvl_e8m8(len);
@@ -12,9 +12,8 @@ simdutf_really_inline const char *util_find(const char *start, const char *end,
   return end;
 }
 
-simdutf_really_inline const char16_t *util_find(const char16_t *start,
-                                                const char16_t *end,
-                                                char16_t character) noexcept {
+const char16_t *implementation::find(const char16_t *start, const char16_t *end,
+                                     char16_t character) const noexcept {
   const char16_t *src = start;
   for (size_t len = end - start, vl; len > 0; len -= vl, src += vl) {
     vl = __riscv_vsetvl_e16m8(len);

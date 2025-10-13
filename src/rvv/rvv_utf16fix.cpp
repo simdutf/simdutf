@@ -1,4 +1,4 @@
-template <endianness big_endian, bool in_place>
+template <endianness big_endian, bool in_place, bool vlmax>
 simdutf_really_inline void utf16fix_block_rvv(char16_t *out, const char16_t *in,
                                               size_t vl) {
   const char16_t replacement = scalar::utf16::replacement<big_endian>();
@@ -20,17 +20,30 @@ simdutf_really_inline void utf16fix_block_rvv(char16_t *out, const char16_t *in,
   vbool2_t illseq = __riscv_vmxor_mm_b2(lb_is_high, block_is_low, vl);
   if (__riscv_vfirst_m_b2(illseq, vl) >= 0) {
     vbool2_t lb_illseq = __riscv_vmandn_mm_b2(lb_is_high, block_is_low, vl);
-    vbool2_t lb_illseq_right_shifted = __riscv_vmandn_mm_b2(
-        __riscv_vmseq_vx_u16m8_b2(
-            __riscv_vslide1down_vx_u16m8(lb_masked, 0, vl),
-            swap_if_needed(0xd800U), vl),
-        __riscv_vmseq_vx_u16m8_b2(
-            __riscv_vslide1down_vx_u16m8(block_masked, 0, vl),
-            swap_if_needed(0xdc00U), vl),
-        vl);
-    if (__riscv_vfirst_m_b2(lb_illseq, vl) == 0) {
-      out[-1] = replacement;
+
+    vbool2_t lb_illseq_right_shifted;
+    if (vlmax) {
+      /* right shift mask register directly via reinterpret at vlmax */
+      size_t vlm = __riscv_vsetvlmax_e8mf2();
+      vuint8mf2_t vlb_illseq =
+          __riscv_vlmul_trunc_u8mf2(__riscv_vreinterpret_u8m1(lb_illseq));
+      lb_illseq_right_shifted =
+          __riscv_vreinterpret_b2(__riscv_vlmul_ext_u8m1(__riscv_vmacc_vx_u8mf2(
+              __riscv_vsrl_vx_u8mf2(vlb_illseq, 1, vlm), 1 << 7,
+              __riscv_vslide1down_vx_u8mf2(vlb_illseq, 0, vlm), vlm)));
+    } else {
+      lb_illseq_right_shifted = __riscv_vmandn_mm_b2(
+          __riscv_vmseq_vx_u16m8_b2(
+              __riscv_vslide1down_vx_u16m8(lb_masked, 0, vl),
+              swap_if_needed(0xd800U), vl),
+          __riscv_vmseq_vx_u16m8_b2(
+              __riscv_vslide1down_vx_u16m8(block_masked, 0, vl),
+              swap_if_needed(0xdc00U), vl),
+          vl);
     }
+
+    char16_t last = out[-1]; /* allow compiler to generate branchless code */
+    out[-1] = __riscv_vfirst_m_b2(lb_illseq, vl) == 0 ? replacement : last;
     vbool2_t block_illseq =
         __riscv_vmor_mm_b2(__riscv_vmandn_mm_b2(block_is_low, lb_is_high, vl),
                            lb_illseq_right_shifted, vl);
@@ -44,6 +57,7 @@ simdutf_really_inline void utf16fix_block_rvv(char16_t *out, const char16_t *in,
 template <endianness big_endian>
 void rvv_to_well_formed_utf16(const char16_t *in, size_t n, char16_t *out) {
   const char16_t replacement = scalar::utf16::replacement<big_endian>();
+  const size_t VL = __riscv_vsetvlmax_e16m8();
   if (n == 0)
     return;
 
@@ -55,18 +69,46 @@ void rvv_to_well_formed_utf16(const char16_t *in, size_t n, char16_t *out) {
 
   /* duplicate code to have the compiler specialise utf16fix_block() */
   if (in == out) {
-    for (size_t vl; n > 0; n -= vl, in += vl, out += vl) {
-      vl = __riscv_vsetvl_e16m8(n);
-      utf16fix_block_rvv<big_endian, true>(out, in, vl);
+    for (; n > VL; n -= VL, in += VL, out += VL) {
+      utf16fix_block_rvv<big_endian, true, true>(out, in, VL);
     }
+    utf16fix_block_rvv<big_endian, true, false>(out, in, n);
   } else {
-    for (size_t vl; n > 0; n -= vl, in += vl, out += vl) {
-      vl = __riscv_vsetvl_e16m8(n);
-      utf16fix_block_rvv<big_endian, false>(out, in, vl);
+    for (; n > VL; n -= VL, in += VL, out += VL) {
+      utf16fix_block_rvv<big_endian, false, true>(out, in, VL);
     }
+    utf16fix_block_rvv<big_endian, false, false>(out, in, n);
   }
 
   out[n - 1] = scalar::utf16::is_high_surrogate<big_endian>(out[n - 1])
                    ? replacement
                    : out[n - 1];
+}
+
+void implementation::to_well_formed_utf16le(const char16_t *input, size_t len,
+                                            char16_t *output) const noexcept {
+  return rvv_to_well_formed_utf16<endianness::LITTLE>(input, len, output);
+}
+
+void implementation::to_well_formed_utf16be(const char16_t *input, size_t len,
+                                            char16_t *output) const noexcept {
+  return rvv_to_well_formed_utf16<endianness::BIG>(input, len, output);
+}
+
+template <simdutf_ByteFlip bflip>
+simdutf_really_inline static void
+rvv_change_endianness_utf16(const char16_t *src, size_t len, char16_t *dst) {
+  for (size_t vl; len > 0; len -= vl, src += vl, dst += vl) {
+    vl = __riscv_vsetvl_e16m8(len);
+    vuint16m8_t v = __riscv_vle16_v_u16m8((uint16_t *)src, vl);
+    __riscv_vse16_v_u16m8((uint16_t *)dst, simdutf_byteflip<bflip>(v, vl), vl);
+  }
+}
+
+void implementation::change_endianness_utf16(const char16_t *src, size_t len,
+                                             char16_t *dst) const noexcept {
+  if (supports_zvbb())
+    return rvv_change_endianness_utf16<simdutf_ByteFlip::ZVBB>(src, len, dst);
+  else
+    return rvv_change_endianness_utf16<simdutf_ByteFlip::V>(src, len, dst);
 }

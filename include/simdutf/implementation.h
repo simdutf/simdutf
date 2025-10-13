@@ -5297,6 +5297,17 @@ public:
           last_chunk_handling_options::loose) const noexcept = 0;
 
   /**
+   * Provide the base64 length in bytes given the length of a binary input.
+   *
+   * @param length        the length of the input in bytes
+   * @param options       the base64 options to use, can be base64_default or
+   * base64_url, is base64_default by default.
+   * @return number of base64 bytes
+   */
+  simdutf_warn_unused size_t base64_length_from_binary(
+      size_t length, base64_options options = base64_default) const noexcept;
+
+  /**
    * Convert a binary input to a base64 output.
    *
    * The default option (simdutf::base64_default) uses the characters `+` and
