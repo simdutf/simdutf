@@ -61,7 +61,8 @@ template <bool base64_url> __m128i lookup_pshufb_improved(const __m128i input) {
 
 template <bool isbase64url, bool use_lines>
 size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
-                          base64_options options, size_t line_length = 76) {
+                          base64_options options,
+                          size_t line_length = simdutf::default_line_length) {
   size_t offset = 0;
   if (line_length < 4) {
     line_length = 4; // We do not support line_length less than 4
@@ -224,7 +225,6 @@ size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
         // could be optimized
         uint8_t buffer[16];
         _mm_storeu_si128(reinterpret_cast<__m128i *>(buffer), T0);
-        std::memcpy(out, buffer, 16);
         size_t out_pos = 0;
         size_t local_offset = offset;
         for (size_t j = 0; j < 16;) {

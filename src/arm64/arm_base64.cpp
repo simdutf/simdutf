@@ -115,7 +115,8 @@ size_t write_output_with_line_feeds(uint8_t *dst, uint8x16_t src,
 
 template <bool insert_line_feeds>
 size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
-                          base64_options options, size_t line_length = 76) {
+                          base64_options options,
+                          size_t line_length = simdutf::default_line_length) {
   size_t offset = 0;
   if (line_length < 4) {
     line_length = 4; // We do not support line_length less than 4

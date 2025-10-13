@@ -2292,6 +2292,8 @@ size_t binary_to_base64(const char * input, size_t length, char* output, base64_
  *
  * This function always succeeds.
  *
+ * The default line length is default_line_length (76)
+ *
  * @param input         the binary to process
  * @param length        the length of the input in bytes
  * @param output        the pointer to a buffer that can hold the conversion
@@ -2302,7 +2304,8 @@ size_t binary_to_base64(const char * input, size_t length, char* output, base64_
  * @return number of written bytes, will be equal to
  * base64_length_from_binary(length, options)
  */
-size_t binary_to_base64_with_lines(const char *input, size_t length, char *output, size_t line_length = 76,
+size_t binary_to_base64_with_lines(const char *input, size_t length, char *output,
+                        size_t line_length = simdutf::default_line_length,
                         base64_options options = base64_default) noexcept;
 
 /**

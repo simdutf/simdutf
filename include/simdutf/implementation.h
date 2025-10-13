@@ -41,6 +41,9 @@
 
 namespace simdutf {
 
+constexpr size_t default_line_length =
+    76; ///< default line length for base64 encoding with lines
+
 #if SIMDUTF_SPAN
 /// helpers placed in namespace detail are not a part of the public API
 namespace detail {
@@ -3093,7 +3096,8 @@ simdutf_warn_unused size_t base64_length_from_binary(
  * @return number of base64 bytes
  */
 simdutf_warn_unused size_t base64_length_from_binary_with_lines(
-    size_t length, base64_options options, size_t line_length) noexcept;
+    size_t length, base64_options options = base64_default,
+    size_t line_length = default_line_length) noexcept;
 
 /**
  * Convert a binary input to a base64 output.
@@ -3154,13 +3158,14 @@ binary_to_base64(const detail::input_span_of_byte_like auto &input,
  */
 size_t
 binary_to_base64_with_lines(const char *input, size_t length, char *output,
-                            size_t line_length = 76,
+                            size_t line_length = simdutf::default_line_length,
                             base64_options options = base64_default) noexcept;
   #if SIMDUTF_SPAN
 simdutf_really_inline simdutf_warn_unused size_t binary_to_base64_with_lines(
     const detail::input_span_of_byte_like auto &input,
     detail::output_span_of_byte_like auto &&binary_output,
-    size_t line_length = 76, base64_options options = base64_default) noexcept {
+    size_t line_length = simdutf::default_line_length,
+    base64_options options = base64_default) noexcept {
   return binary_to_base64_with_lines(
       reinterpret_cast<const char *>(input.data()), input.size(),
       reinterpret_cast<char *>(binary_output.data()), options);
@@ -5342,7 +5347,8 @@ public:
    * base64_length_from_binary_with_lines(length, options, line_length)
    */
   virtual size_t binary_to_base64_with_lines(
-      const char *input, size_t length, char *output, size_t line_length = 76,
+      const char *input, size_t length, char *output,
+      size_t line_length = simdutf::default_line_length,
       base64_options options = base64_default) const noexcept = 0;
   /**
    * Find the first occurrence of a character in a string. If the character is
