@@ -3168,7 +3168,7 @@ simdutf_really_inline simdutf_warn_unused size_t binary_to_base64_with_lines(
     base64_options options = base64_default) noexcept {
   return binary_to_base64_with_lines(
       reinterpret_cast<const char *>(input.data()), input.size(),
-      reinterpret_cast<char *>(binary_output.data()), options);
+      reinterpret_cast<char *>(binary_output.data()), line_length, options);
 }
   #endif // SIMDUTF_SPAN
 
