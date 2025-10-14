@@ -3448,6 +3448,18 @@ TEST(base64_to_binary_safe_span_api_char16) {
   ASSERT_EQUAL(ret.count, 16); // amount of consumed input
   ASSERT_EQUAL(outlen, 12);    // how much was written to output
 }
+
+TEST(binary_to_base64_with_lines_span_api_char) {
+  const std::string input{"Abracadabra!"};
+  const std::string expected_output{"QWJyY\nWNhZG\nFicmE\nh"};
+  std::string output(expected_output.size() + 4, '\0');
+  const auto outlen = simdutf::binary_to_base64_with_lines(input, output, 5);
+  ASSERT_EQUAL(outlen,
+               expected_output.size()); // how much was written to output
+  output.resize(outlen);
+  ASSERT_EQUAL(expected_output, output);
+}
+
 #endif
 
 int main(int argc, char *argv[]) {
