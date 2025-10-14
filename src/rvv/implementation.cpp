@@ -92,7 +92,7 @@ size_t implementation::binary_to_base64(const char *input, size_t length,
                                         char *output,
                                         base64_options options) const noexcept {
   return scalar::base64::tail_encode_base64_impl<true>(output, input, length,
-                                                       options, line_length);
+                                                       options);
 }
 
 size_t implementation::binary_to_base64_with_lines(
