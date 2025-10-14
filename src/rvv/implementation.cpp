@@ -91,8 +91,11 @@ simdutf_warn_unused full_result implementation::base64_to_binary_details(
 size_t implementation::binary_to_base64(const char *input, size_t length,
                                         char *output,
                                         base64_options options) const noexcept {
-  return scalar::base64::tail_encode_base64_impl<true>(output, input, length,
-                                                       options);
+  if (options & base64_url) {
+    return encode_base64<true>(output, input, length, options);
+  } else {
+    return encode_base64<false>(output, input, length, options);
+  }
 }
 
 size_t implementation::binary_to_base64_with_lines(
