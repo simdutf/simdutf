@@ -126,7 +126,7 @@ simdutf_really_inline __m256i insert_line_feed32(__m256i input, int K) {
 
   __m256i line_feed_vector = _mm256_set1_epi8('\n');
   if (K >= 16) {
-    __m256i mask = _mm256_loadu_si256((const __m256i_u *)high_table[K - 16]);
+    __m256i mask = _mm256_loadu_si256((const __m256i *)high_table[K - 16]);
     __m256i lf_pos =
         _mm256_cmpeq_epi8(mask, _mm256_set1_epi8(static_cast<char>(0x80)));
     __m256i shuffled = _mm256_shuffle_epi8(input, mask);
@@ -139,7 +139,7 @@ simdutf_really_inline __m256i insert_line_feed32(__m256i input, int K) {
 
   input = _mm256_blend_epi32(input, shift, 0xF0);
 
-  __m256i mask = _mm256_loadu_si256((const __m256i_u *)low_table[K]);
+  __m256i mask = _mm256_loadu_si256((const __m256i *)low_table[K]);
 
   __m256i lf_pos =
       _mm256_cmpeq_epi8(mask, _mm256_set1_epi8(static_cast<char>(0x80)));

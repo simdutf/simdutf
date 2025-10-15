@@ -29,7 +29,7 @@
 /**
  * Insert a line feed character in the 16-byte input at index K in [0,16).
  */
-inline int8x16_t insert_line_feed16(uint8x16_t input, size_t K) {
+inline uint8x16_t insert_line_feed16(uint8x16_t input, size_t K) {
   static const uint8_t shuffle_masks[16][16] = {
       {0x80, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
       {0, 0x80, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
