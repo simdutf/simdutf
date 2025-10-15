@@ -3148,7 +3148,8 @@ binary_to_base64(const detail::input_span_of_byte_like auto &input,
  * @param input         the binary to process
  * @param length        the length of the input in bytes
  * @param output        the pointer to a buffer that can hold the conversion
- * result (should be at least base64_length_from_binary_with_lines(length, options, line_length) bytes long)
+ * result (should be at least base64_length_from_binary_with_lines(length,
+ * options, line_length) bytes long)
  * @param line_length   the length of lines, must be at least 4 (otherwise it is
  * interpreted as 4),
  * @param options       the base64 options to use, can be base64_default or
