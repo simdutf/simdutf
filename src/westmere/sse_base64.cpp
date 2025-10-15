@@ -27,7 +27,6 @@
  */
 
 // --- encoding ----------------------------------------------------
-
 template <bool base64_url> __m128i lookup_pshufb_improved(const __m128i input) {
   // credit: Wojciech Muła
   // reduce  0..51 -> 0
@@ -59,6 +58,39 @@ template <bool base64_url> __m128i lookup_pshufb_improved(const __m128i input) {
   return _mm_add_epi8(result, input);
 }
 
+inline __m128i insert_line_feed16(__m128i input, size_t K) {
+  static const uint8_t shuffle_masks[16][16] = {
+      {0x80, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 0x80, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 0x80, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 0x80, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 0x80, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 0x80, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 0x80, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 0x80, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 0x80, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 0x80, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0x80, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0x80, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0x80, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0x80, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 0x80, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 0x80}};
+  // Prepare a vector with '\n' (0x0A)
+  __m128i line_feed_vector = _mm_set1_epi8('\n');
+
+  // Load the precomputed shuffle mask for K (index K-1)
+  __m128i mask = _mm_loadu_si128((__m128i *)shuffle_masks[K]);
+  __m128i lf_pos = _mm_cmpeq_epi8(mask, _mm_set1_epi8(static_cast<char>(0x80)));
+
+  // Perform the shuffle to reposition the K bytes
+  __m128i shuffled = _mm_shuffle_epi8(input, mask);
+
+  // Blend with line_feed_vector to insert '\n' at the appropriate positions
+  __m128i result = _mm_blendv_epi8(shuffled, line_feed_vector, lf_pos);
+
+  return result;
+}
 template <bool isbase64url, bool use_lines>
 size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
                           base64_options options,
@@ -123,18 +155,60 @@ size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
 
     if (use_lines) {
       if (line_length >= 64) { // fast path
-        _mm_storeu_si128(reinterpret_cast<__m128i *>(out), t0);
-        _mm_storeu_si128(reinterpret_cast<__m128i *>(out + 16), t1);
-        _mm_storeu_si128(reinterpret_cast<__m128i *>(out + 32), t2);
-        _mm_storeu_si128(reinterpret_cast<__m128i *>(out + 48), t3);
         if (offset + 64 > line_length) {
           size_t location_end = line_length - offset;
           size_t to_move = 64 - location_end;
-          std::memmove(out + location_end + 1, out + location_end, to_move);
-          out[location_end] = '\n';
+          if (location_end < 16) {
+            // We can store or extract store. See below.
+            //_mm_storeu_si128(reinterpret_cast<__m128i *>(out+1), t0);
+            _mm_storeu_si128(reinterpret_cast<__m128i *>(out),
+                             insert_line_feed16(t0, location_end));
+            out[16] = static_cast<uint8_t>(_mm_extract_epi8(t0, 15));
+            out += 17;
+          } else {
+            _mm_storeu_si128(reinterpret_cast<__m128i *>(out), t0);
+            out += 16;
+          }
+          if (location_end >= 16 && location_end < 32) {
+            // We can store or extract store. See below.
+            //_mm_storeu_si128(reinterpret_cast<__m128i *>(out+1), t1);
+            _mm_storeu_si128(reinterpret_cast<__m128i *>(out),
+                             insert_line_feed16(t1, location_end - 16));
+            out[16] = static_cast<uint8_t>(_mm_extract_epi8(t1, 15));
+            out += 17;
+          } else {
+            _mm_storeu_si128(reinterpret_cast<__m128i *>(out), t1);
+            out += 16;
+          }
+          if (location_end >= 32 && location_end < 48) {
+            // We can store or extract store. See below.
+            //_mm_storeu_si128(reinterpret_cast<__m128i *>(out+1), t2);
+            _mm_storeu_si128(reinterpret_cast<__m128i *>(out),
+                             insert_line_feed16(t2, location_end - 32));
+            out[16] = static_cast<uint8_t>(_mm_extract_epi8(t2, 15));
+            out += 17;
+          } else {
+            _mm_storeu_si128(reinterpret_cast<__m128i *>(out), t2);
+            out += 16;
+          }
+          if (location_end >= 48) {
+            // We can store or extract store. See below.
+            //_mm_storeu_si128(reinterpret_cast<__m128i *>(out+1), t3);
+            _mm_storeu_si128(reinterpret_cast<__m128i *>(out),
+                             insert_line_feed16(t3, location_end - 48));
+            out[16] = static_cast<uint8_t>(_mm_extract_epi8(t3, 15));
+            out += 17;
+          } else {
+            _mm_storeu_si128(reinterpret_cast<__m128i *>(out), t3);
+            out += 16;
+          }
           offset = to_move;
-          out += 64 + 1;
         } else {
+
+          _mm_storeu_si128(reinterpret_cast<__m128i *>(out), t0);
+          _mm_storeu_si128(reinterpret_cast<__m128i *>(out + 16), t1);
+          _mm_storeu_si128(reinterpret_cast<__m128i *>(out + 32), t2);
+          _mm_storeu_si128(reinterpret_cast<__m128i *>(out + 48), t3);
           offset += 64;
           out += 64;
         }
