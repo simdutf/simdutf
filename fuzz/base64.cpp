@@ -143,7 +143,7 @@ void verify_lines(std::span<const char> without_lines,
 }
 
 void roundtrip(std::span<const char> binary, const auto selected_option,
-               const auto last_chunk_option) {
+               const auto last_chunk_option, const std::size_t line_length) {
   if (last_chunk_option ==
       simdutf::last_chunk_handling_options::stop_before_partial) {
     return; // this is not a valid option for roundtrip
@@ -163,7 +163,6 @@ void roundtrip(std::span<const char> binary, const auto selected_option,
     }
 
     // make sure generating base64 with lines gives the expected result
-    const auto line_length = 5;
     const auto length_with_lines =
         simdutf::base64_length_from_binary_with_lines(
             binary.size(), selected_option, line_length);
@@ -244,13 +243,16 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   // decode buffer size
   const std::size_t decode_buffer_size = (data[4] << 8) + data[3];
 
+  // line length must be at least 4
+  const std::size_t line_length = unsigned{data[5]} + 4u;
+
   data += optionbytes;
   size -= optionbytes;
 
   switch (action) {
   case 0: {
     const std::span<const char> chardata{(const char*)data, size};
-    roundtrip(chardata, selected_option, selected_last_chunk);
+    roundtrip(chardata, selected_option, selected_last_chunk, line_length);
   } break;
   case 1: {
     const std::span<const char> chardata{(const char*)data, size};
