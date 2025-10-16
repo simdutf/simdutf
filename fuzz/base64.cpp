@@ -112,6 +112,36 @@ struct roundtripresult {
   auto operator<=>(const roundtripresult&) const = default;
 };
 
+/// verifies that base64 with lines is the same as without lines, but with
+/// newlines every line_length:th byte
+void verify_lines(std::span<const char> without_lines,
+                  std::span<const char> with_lines,
+                  const std::size_t line_length) {
+  // ensure we get the same as output, with a newline every line_length:th
+  // byte
+  for (std::size_t i = 0, j = 0;;) {
+    // check one line
+    for (int count = 0; count < line_length && j < with_lines.size(); ++count) {
+      if (without_lines[i++] != with_lines[j++]) {
+        // unexpected - different content
+        std::abort();
+      }
+    }
+    if (j == with_lines.size()) {
+      // we are at the end of with_lines
+      if (i != without_lines.size()) {
+        // unexpected - we are not at the end of without_lines
+        std::abort();
+      }
+      break;
+    }
+    if (with_lines[j++] != '\n') {
+      // unexpected - not a newline
+      std::abort();
+    }
+  }
+}
+
 void roundtrip(std::span<const char> binary, const auto selected_option,
                const auto last_chunk_option) {
   if (last_chunk_option ==
@@ -146,6 +176,7 @@ void roundtrip(std::span<const char> binary, const auto selected_option,
       std::cerr << nwritten_with_lines << "!=" << length_with_lines << '\n';
       std::abort();
     }
+    verify_lines(output, output_with_lines, line_length);
 
     r.outputhash = FNV1A_hash::as_str(output);
     // convert back to binary
