@@ -3155,7 +3155,7 @@ binary_to_base64(const detail::input_span_of_byte_like auto &input,
  * @param options       the base64 options to use, can be base64_default or
  * base64_url, is base64_default by default.
  * @return number of written bytes, will be equal to
- * base64_length_from_binary(length, options)
+ * base64_length_from_binary_with_lines(length, options)
  */
 size_t
 binary_to_base64_with_lines(const char *input, size_t length, char *output,
