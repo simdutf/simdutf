@@ -131,6 +131,22 @@ void roundtrip(std::span<const char> binary, const auto selected_option,
     if (r.length != r.written) {
       std::abort();
     }
+
+    // make sure generating base64 with lines gives the expected result
+    const auto line_length = 5;
+    const auto length_with_lines =
+        simdutf::base64_length_from_binary_with_lines(
+            binary.size(), selected_option, line_length);
+    assert(length_with_lines >= r.length);
+    std::string output_with_lines(length_with_lines, '\0');
+    const auto nwritten_with_lines = impl->binary_to_base64_with_lines(
+        binary.data(), binary.size(), output_with_lines.data(), line_length,
+        selected_option);
+    if (nwritten_with_lines != length_with_lines) {
+      std::cerr << nwritten_with_lines << "!=" << length_with_lines << '\n';
+      std::abort();
+    }
+
     r.outputhash = FNV1A_hash::as_str(output);
     // convert back to binary
     r.maxbinarylength =
