@@ -31,10 +31,6 @@ inline size_t base64_encode(const char *src, size_t slen, char *dst,
 } // namespace node
 
 namespace node {
-/*
-static constexpr char base64_table_url[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                                           "abcdefghijklmnopqrstuvwxyz"
-                                           "0123456789-_";*/
 
 /*extern const int8_t unbase64_table[256];*/
 
@@ -162,5 +158,70 @@ size_t base64_decode(char *const dst, const size_t dstlen,
 
 template size_t base64_decode<char>(char *const dst, const size_t dstlen,
                                     const char *const src, const size_t srclen);
+
+static inline constexpr size_t
+base64_encoded_size(size_t size, Base64Mode mode = Base64Mode::NORMAL) {
+  return mode == Base64Mode::NORMAL ? ((size + 2) / 3 * 4)
+                                    : static_cast<size_t>(std::ceil(
+                                          static_cast<double>(size * 4) / 3));
+}
+
+inline constexpr char base64_table_url[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                           "abcdefghijklmnopqrstuvwxyz"
+                                           "0123456789-_";
+
+inline constexpr char base64_table_normal[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                              "abcdefghijklmnopqrstuvwxyz"
+                                              "0123456789+/";
+inline size_t base64_encode(const char *src, size_t slen, char *dst,
+                            size_t dlen, Base64Mode mode) {
+
+  dlen = base64_encoded_size(slen, mode);
+
+  unsigned a;
+  unsigned b;
+  unsigned c;
+  unsigned i;
+  unsigned k;
+  unsigned n;
+
+  const char *table =
+      (mode == Base64Mode::NORMAL) ? base64_table_normal : base64_table_url;
+
+  i = 0;
+  k = 0;
+  n = slen / 3 * 3;
+
+  while (i < n) {
+    a = src[i + 0] & 0xff;
+    b = src[i + 1] & 0xff;
+    c = src[i + 2] & 0xff;
+
+    dst[k + 0] = table[a >> 2];
+    dst[k + 1] = table[((a & 3) << 4) | (b >> 4)];
+    dst[k + 2] = table[((b & 0x0f) << 2) | (c >> 6)];
+    dst[k + 3] = table[c & 0x3f];
+
+    i += 3;
+    k += 4;
+  }
+
+  switch (slen - n) {
+  case 1:
+    a = src[i + 0] & 0xff;
+    dst[k + 0] = table[a >> 2];
+    dst[k + 1] = table[(a & 3) << 4];
+    break;
+  case 2:
+    a = src[i + 0] & 0xff;
+    b = src[i + 1] & 0xff;
+    dst[k + 0] = table[a >> 2];
+    dst[k + 1] = table[((a & 3) << 4) | (b >> 4)];
+    dst[k + 2] = table[(b & 0x0f) << 2];
+    break;
+  }
+
+  return dlen;
+}
 
 } // namespace node

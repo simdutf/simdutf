@@ -93,6 +93,13 @@ size_t implementation::binary_to_base64(const char *input, size_t length,
                                         base64_options options) const noexcept {
   return scalar::base64::tail_encode_base64(output, input, length, options);
 }
+
+size_t implementation::binary_to_base64_with_lines(
+    const char *input, size_t length, char *output, size_t line_length,
+    base64_options options) const noexcept {
+  return scalar::base64::tail_encode_base64_impl<true>(output, input, length,
+                                                       options, line_length);
+}
 #endif // SIMDUTF_FEATURE_BASE64
 
 } // namespace SIMDUTF_IMPLEMENTATION

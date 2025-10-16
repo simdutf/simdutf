@@ -268,6 +268,7 @@ class Application {
 
   std::vector<char> buffer1;
   std::vector<char> buffer2;
+  std::vector<char> buffer3;
 
   std::vector<std::string> implementations;
 
@@ -288,6 +289,7 @@ public:
 
       buffer1.resize(simdutf::base64_length_from_binary(max_size));
       buffer2.resize(max_size);
+      buffer3.resize(simdutf::base64_length_from_binary_with_lines(max_size));
     }
   }
 
@@ -411,13 +413,19 @@ private:
     if (benchmark_mode != BenchmarkMode::list) {
       printf("# encode\n");
     }
+    volatile size_t base64_size;
 
     summarize("memcpy", [this]() {
       for (const std::vector<char> &source : data) {
         memcpy(buffer1.data(), source.data(), source.size());
       }
     });
-    volatile size_t base64_size;
+    summarize("node", [this, &base64_size]() {
+      for (const std::vector<char> &source : data) {
+        base64_size = node::base64_encode(source.data(), source.size(),
+                                          buffer1.data(), buffer1.size());
+      }
+    });
     summarize("libbase64", [this, &base64_size]() {
       for (const std::vector<char> &source : data) {
         size_t outlen;
@@ -430,12 +438,20 @@ private:
         continue;
       }
       simdutf::get_active_implementation() = e;
-      summarize("simdutf::" + e->name(), [this, &e, &base64_size]() {
+      summarize("simdutf::" + e->name() + "_standard", [this, &e,
+                                                        &base64_size]() {
         for (const std::vector<char> &source : data) {
           base64_size =
               e->binary_to_base64(source.data(), source.size(), buffer1.data());
         }
       });
+      summarize("simdutf::" + e->name() + "_with_lines",
+                [this, &e, &base64_size]() {
+                  for (const std::vector<char> &source : data) {
+                    base64_size = e->binary_to_base64_with_lines(
+                        source.data(), source.size(), buffer3.data());
+                  }
+                });
 #if SIMDUTF_COMPILED_CXX_VERSION >= 20
       summarize("simdutf::atomic_binary_to_base64_" +
                     (simdutf::get_active_implementation() = e)->name(),

@@ -562,7 +562,8 @@ bool fuzz_this(const char *data, size_t size) {
         valid_base64++;
         // We expect failure but if we succeed, then we should have a roundtrip.
         back.resize(r.count);
-        std::vector<char> back2(e->base64_length_from_binary(back.size()));
+        std::vector<char> back2(
+            simdutf::base64_length_from_binary(back.size()));
         size_t base64size =
             e->binary_to_base64(back.data(), back.size(), back2.data());
         back2.resize(base64size);
@@ -594,7 +595,8 @@ bool fuzz_this(const char *data, size_t size) {
       if (r.error == simdutf::error_code::SUCCESS) {
         // We expect failure but if we succeed, then we should have a roundtrip.
         back.resize(max_length_needed);
-        std::vector<char> back2(e->base64_length_from_binary(back.size()));
+        std::vector<char> back2(
+            simdutf::base64_length_from_binary(back.size()));
         size_t base64size =
             e->binary_to_base64(back.data(), back.size(), back2.data());
         back2.resize(base64size);
@@ -621,7 +623,7 @@ bool fuzz_this(const char *data, size_t size) {
     /// it, it should always succeed.
     {
       std::vector<char> base64buffer(
-          e->base64_length_from_binary(source.size()));
+          simdutf::base64_length_from_binary(source.size()));
       size_t base64size = e->binary_to_base64(source.data(), source.size(),
                                               base64buffer.data());
       if (base64size != base64buffer.size()) {

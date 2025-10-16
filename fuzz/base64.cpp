@@ -112,8 +112,38 @@ struct roundtripresult {
   auto operator<=>(const roundtripresult&) const = default;
 };
 
+/// verifies that base64 with lines is the same as without lines, but with
+/// newlines every line_length:th byte
+void verify_lines(std::span<const char> without_lines,
+                  std::span<const char> with_lines,
+                  const std::size_t line_length) {
+  // ensure we get the same as output, with a newline every line_length:th
+  // byte
+  for (std::size_t i = 0, j = 0;;) {
+    // check one line
+    for (int count = 0; count < line_length && j < with_lines.size(); ++count) {
+      if (without_lines[i++] != with_lines[j++]) {
+        // unexpected - different content
+        std::abort();
+      }
+    }
+    if (j == with_lines.size()) {
+      // we are at the end of with_lines
+      if (i != without_lines.size()) {
+        // unexpected - we are not at the end of without_lines
+        std::abort();
+      }
+      break;
+    }
+    if (with_lines[j++] != '\n') {
+      // unexpected - not a newline
+      std::abort();
+    }
+  }
+}
+
 void roundtrip(std::span<const char> binary, const auto selected_option,
-               const auto last_chunk_option) {
+               const auto last_chunk_option, const std::size_t line_length) {
   if (last_chunk_option ==
       simdutf::last_chunk_handling_options::stop_before_partial) {
     return; // this is not a valid option for roundtrip
@@ -131,6 +161,22 @@ void roundtrip(std::span<const char> binary, const auto selected_option,
     if (r.length != r.written) {
       std::abort();
     }
+
+    // make sure generating base64 with lines gives the expected result
+    const auto length_with_lines =
+        simdutf::base64_length_from_binary_with_lines(
+            binary.size(), selected_option, line_length);
+    assert(length_with_lines >= r.length);
+    std::string output_with_lines(length_with_lines, '\0');
+    const auto nwritten_with_lines = impl->binary_to_base64_with_lines(
+        binary.data(), binary.size(), output_with_lines.data(), line_length,
+        selected_option);
+    if (nwritten_with_lines != length_with_lines) {
+      std::cerr << nwritten_with_lines << "!=" << length_with_lines << '\n';
+      std::abort();
+    }
+    verify_lines(output, output_with_lines, line_length);
+
     r.outputhash = FNV1A_hash::as_str(output);
     // convert back to binary
     r.maxbinarylength =
@@ -197,13 +243,16 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   // decode buffer size
   const std::size_t decode_buffer_size = (data[4] << 8) + data[3];
 
+  // line length must be at least 4
+  const std::size_t line_length = unsigned{data[5]} + 4u;
+
   data += optionbytes;
   size -= optionbytes;
 
   switch (action) {
   case 0: {
     const std::span<const char> chardata{(const char*)data, size};
-    roundtrip(chardata, selected_option, selected_last_chunk);
+    roundtrip(chardata, selected_option, selected_last_chunk, line_length);
   } break;
   case 1: {
     const std::span<const char> chardata{(const char*)data, size};
