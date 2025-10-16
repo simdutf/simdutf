@@ -535,34 +535,61 @@ TEST(tc39_illegal_padded_chunks_unsafe) {
   }
 }
 
-TEST(with_lines) {
-  auto verify_lines = [](const char *c, int N, int line_length) {
-    int current_line_length = 0; // Track the length of the current line
-    // Iterate through the string
-    for (int i = 0; i < N; ++i) {
-      if (c[i] == '\n') {
-        // Check if a non-final line has incorrect length
-        if (current_line_length != line_length) {
-          std::cerr << "A non-final line has incorrect length "
-                    << current_line_length << " != " << line_length << "\n";
-          std::cerr << std::string(c, N) << "\n";
-          return false;
-        }
-        current_line_length = 0; // Reset for the next line
-        continue;
-      }
-
-      current_line_length++;
-      // Check if the current line exceeds the allowed length
-      if (current_line_length > line_length) {
-        std::cerr << "A line exceeds the allowed length " << current_line_length
-                  << " > " << line_length << "\n";
+auto verify_lines = [](const char *c, int N, int line_length) {
+  int current_line_length = 0; // Track the length of the current line
+  // Iterate through the string
+  for (int i = 0; i < N; ++i) {
+    if (c[i] == '\n') {
+      // Check if a non-final line has incorrect length
+      if (current_line_length != line_length) {
+        std::cerr << "A non-final line has incorrect length "
+                  << current_line_length << " != " << line_length << "\n";
         std::cerr << std::string(c, N) << "\n";
         return false;
       }
+      current_line_length = 0; // Reset for the next line
+      continue;
     }
-    return true;
-  };
+
+    current_line_length++;
+    // Check if the current line exceeds the allowed length
+    if (current_line_length > line_length) {
+      std::cerr << "A line exceeds the allowed length " << current_line_length
+                << " > " << line_length << "\n";
+      std::cerr << std::string(c, N) << "\n";
+      return false;
+    }
+  }
+  return true;
+};
+
+TEST(with_lines_pauldreik) {
+  size_t line_length = 5;
+  size_t max_length = 2048;
+  std::vector<char> source(max_length, 'f');
+  std::vector<char> back(max_length);
+  std::vector<char> buffer;
+  for (auto selected_option : {simdutf::base64_options::base64_url,
+                               simdutf::base64_options::base64_default}) {
+    for (size_t line_length = 5; line_length < 128; line_length += 7) {
+      for (size_t length = 1; length < 2048; length += 17) {
+        buffer.resize(simdutf::base64_length_from_binary_with_lines(
+            length, selected_option, line_length));
+        size_t size = implementation.binary_to_base64_with_lines(
+            source.data(), length, buffer.data(), line_length, selected_option);
+        auto r = implementation.base64_to_binary(buffer.data(), buffer.size(),
+                                                 back.data(), selected_option);
+        ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+        ASSERT_TRUE(
+            std::equal(back.begin(), back.begin() + length, source.begin()));
+        ASSERT_EQUAL(size, buffer.size());
+        ASSERT_TRUE(verify_lines(buffer.data(), buffer.size(), line_length));
+      }
+    }
+  }
+}
+
+TEST(with_lines) {
 
   for (size_t line_length : {4, 64, 76, 80, 128}) {
     for (size_t len = 0; len < 2048; len += 17) {

@@ -568,6 +568,10 @@ size_t tail_encode_base64_impl(
             *out++ = e0[uint8_t(src[i])];
             *out++ = '\n';
             *out++ = e1[(uint8_t(src[i]) & 0x03) << 4];
+          } else {
+            *out++ = e0[uint8_t(src[i])];
+            *out++ = e1[(uint8_t(src[i]) & 0x03) << 4];
+            // *out++ = '\n'; ==> no newline at the end of the output
           }
         } else {
           *out++ = e0[uint8_t(src[i])];
@@ -637,6 +641,11 @@ size_t tail_encode_base64_impl(
             *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
             *out++ = '\n';
             *out++ = e2[(t2 & 0x0F) << 2];
+          } else {
+            *out++ = e0[t1];
+            *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
+            *out++ = e2[(t2 & 0x0F) << 2];
+            // *out++ = '\n'; ==> no newline at the end of the output
           }
         } else {
           *out++ = e0[t1];
