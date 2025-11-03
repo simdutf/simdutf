@@ -385,7 +385,8 @@ def filter_features(file):
                 current_features = None
             elif enabled:
                 if context.args.debug_sources and not prev_line.endswith('\\'):
-                    yield f"// {file}:{lineno}"
+                    RELFILE = os.path.relpath(file, PROJECTPATH)
+                    yield f"// {RELFILE}:{lineno}"
 
                 if line or (not line and prev_line):
                     yield line
