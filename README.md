@@ -414,8 +414,6 @@ simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const char *input
  * E.g., if the input might be UTF-16LE or UTF-8, this function returns
  * the value (simdutf::encoding_type::UTF8 | simdutf::encoding_type::UTF16_LE).
  *
- * Overridden by each implementation.
- *
  * @param input the string to analyze.
  * @param length the length of the string in bytes.
  * @return the detected encoding type
@@ -479,7 +477,7 @@ You may use functions that report an error to indicate where the problem happens
 
 ```cpp
   std::string bad_ascii = "\x20\x20\x20\x20\x20\xff\x20\x20\x20";
-  simdutf::result res = implementation.validate_ascii_with_errors(bad_ascii.data(), bad_ascii.size());
+  simdutf::result res = simdtuf::validate_ascii_with_errors(bad_ascii.data(), bad_ascii.size());
   if(res.error != simdutf::error_code::SUCCESS) {
     std::cerr << "error at index " << res.count << std::endl;
   }
@@ -489,11 +487,11 @@ Or as follows:
 
 ```cpp
   std::string bad_utf8 = "\xc3\xa9\xc3\xa9\x20\xff\xc3\xa9";
-  simdutf::result res = implementation.validate_utf8_with_errors(bad_utf8.data(), bad_utf8.size());
+  simdutf::result res = simdtuf::validate_utf8_with_errors(bad_utf8.data(), bad_utf8.size());
   if(res.error != simdutf::error_code::SUCCESS) {
     std::cerr << "error at index " << res.count << std::endl;
   }
-  res = implementation.validate_utf8_with_errors(bad_utf8.data(), res.count);
+  res = simdtuf::validate_utf8_with_errors(bad_utf8.data(), res.count);
   // will be successful in this case
   if(res.error == simdutf::error_code::SUCCESS) {
     std::cerr << "we have " << res.count << "valid bytes" << std::endl;
@@ -507,8 +505,6 @@ We have fast validation functions.
 /**
  * Validate the ASCII string.
  *
- * Overridden by each implementation.
- *
  * @param buf the ASCII string to validate.
  * @param len the length of the string in bytes.
  * @return true if and only if the string is valid ASCII.
@@ -517,8 +513,6 @@ simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept;
 
 /**
  * Validate the ASCII string and stop on error.
- *
- * Overridden by each implementation.
  *
  * @param buf the ASCII string to validate.
  * @param len the length of the string in bytes.
@@ -530,8 +524,6 @@ simdutf_warn_unused result validate_ascii_with_errors(const char *buf, size_t le
  * Validate the ASCII string as a UTF-16 sequence.
  * An UTF-16 sequence is considered an ASCII sequence
  * if it could be converted to an ASCII string losslessly.
- *
- * Overridden by each implementation.
  *
  * @param buf the UTF-16 string to validate.
  * @param len the length of the string in bytes.
@@ -545,8 +537,6 @@ simdutf_warn_unused bool validate_utf16_as_ascii(const char16_t *buf,
  * An UTF-16 sequence is considered an ASCII sequence
  * if it could be converted to an ASCII string losslessly.
  *
- * Overridden by each implementation.
- *
  * @param buf the UTF-16BE string to validate.
  * @param len the length of the string in bytes.
  * @return true if and only if the string is valid ASCII.
@@ -557,8 +547,6 @@ simdutf_warn_unused bool validate_utf16be_as_ascii(const char16_t *buf,
  * Validate the ASCII string as a UTF-16LE sequence.
  * An UTF-16 sequence is considered an ASCII sequence
  * if it could be converted to an ASCII string losslessly.
- *
- * Overridden by each implementation.
  *
  * @param buf the UTF-16LE string to validate.
  * @param len the length of the string in bytes.
@@ -572,8 +560,6 @@ simdutf_warn_unused bool validate_utf16le_as_ascii(const char16_t *buf,
  * the input to be almost always valid. Otherwise, consider using
  * validate_utf8_with_errors.
  *
- * Overridden by each implementation.
- *
  * @param buf the UTF-8 string to validate.
  * @param len the length of the string in bytes.
  * @return true if and only if the string is valid UTF-8.
@@ -583,8 +569,6 @@ simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept;
 /**
  * Validate the UTF-8 string and stop on error. It might be faster than
  * validate_utf8 when an error is expected to occur early.
- *
- * Overridden by each implementation.
  *
  * @param buf the UTF-8 string to validate.
  * @param len the length of the string in bytes.
@@ -596,8 +580,6 @@ simdutf_warn_unused result validate_utf8_with_errors(const char *buf, size_t len
  * Using native endianness; Validate the UTF-16 string.
  * This function may be best when you expect the input to be almost always valid.
  * Otherwise, consider using validate_utf16_with_errors.
- *
- * Overridden by each implementation.
  *
  * This function is not BOM-aware.
  *
@@ -612,8 +594,6 @@ simdutf_warn_unused bool validate_utf16(const char16_t *buf, size_t len) noexcep
  * the input to be almost always valid. Otherwise, consider using
  * validate_utf16le_with_errors.
  *
- * Overridden by each implementation.
- *
  * This function is not BOM-aware.
  *
  * @param buf the UTF-16LE string to validate.
@@ -627,8 +607,6 @@ simdutf_warn_unused bool validate_utf16le(const char16_t *buf, size_t len) noexc
  * the input to be almost always valid. Otherwise, consider using
  * validate_utf16be_with_errors.
  *
- * Overridden by each implementation.
- *
  * This function is not BOM-aware.
  *
  * @param buf the UTF-16BE string to validate.
@@ -640,8 +618,6 @@ simdutf_warn_unused bool validate_utf16be(const char16_t *buf, size_t len) noexc
 /**
  * Using native endianness; Validate the UTF-16 string and stop on error.
  * It might be faster than validate_utf16 when an error is expected to occur early.
- *
- * Overridden by each implementation.
  *
  * This function is not BOM-aware.
  *
@@ -655,8 +631,6 @@ simdutf_warn_unused result validate_utf16_with_errors(const char16_t *buf, size_
  * Validate the UTF-16LE string and stop on error. It might be faster than
  * validate_utf16le when an error is expected to occur early.
  *
- * Overridden by each implementation.
- *
  * This function is not BOM-aware.
  *
  * @param buf the UTF-16LE string to validate.
@@ -669,8 +643,6 @@ simdutf_warn_unused result validate_utf16le_with_errors(const char16_t *buf, siz
  * Validate the UTF-16BE string and stop on error. It might be faster than
  * validate_utf16be when an error is expected to occur early.
  *
- * Overridden by each implementation.
- *
  * This function is not BOM-aware.
  *
  * @param buf the UTF-16BE string to validate.
@@ -682,8 +654,6 @@ simdutf_warn_unused result validate_utf16be_with_errors(const char16_t *buf, siz
 /**
  * Validate the UTF-32 string.
  *
- * Overridden by each implementation.
- *
  * This function is not BOM-aware.
  *
  * @param buf the UTF-32 string to validate.
@@ -694,8 +664,6 @@ simdutf_warn_unused bool validate_utf32(const char32_t *buf, size_t len) noexcep
 
 /**
  * Validate the UTF-32 string and stop on error.
- *
- * Overridden by each implementation.
  *
  * This function is not BOM-aware.
  *
