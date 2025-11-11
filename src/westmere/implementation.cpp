@@ -1242,6 +1242,20 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf8(
     const char *input, size_t length) const noexcept {
   return utf8::utf16_length_from_utf8_bytemask(input, length);
 }
+simdutf_warn_unused size_t
+implementation::utf8_length_from_utf16le_with_replacement(
+    const char16_t *input, size_t length) const noexcept {
+  return scalar::utf16::utf8_length_from_utf16_with_replacement<
+      endianness::LITTLE>(input, length);
+}
+
+simdutf_warn_unused size_t
+implementation::utf8_length_from_utf16be_with_replacement(
+    const char16_t *input, size_t length) const noexcept {
+  return scalar::utf16::utf8_length_from_utf16_with_replacement<
+      endianness::BIG>(input, length);
+}
+
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
