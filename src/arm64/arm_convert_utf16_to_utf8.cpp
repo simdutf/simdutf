@@ -714,7 +714,14 @@ arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
 
     auto v_count = vaddq_u8(c1, c0);
     v_count = vaddq_u8(v_count, is_surrogate);
-    count += vaddlvq_u8(v_count); // sum the counts in the vector, could be slow on some hardware?
+    count += vaddlvq_u8(v_count); // sum the counts in the vector
+    /////////
+    // The vaddlvq_u8 instruction could be slow on some hardware. We could
+    // consider various alternatives if that is an issue such as accumulating
+    // into a vector of uint16_t or uint8_t and summing only at the end or
+    // periodically. However, on fast chipsets, like Apple Silicon, it is
+    // likely fast enough.
+    /////////
   }
 
 
