@@ -857,7 +857,6 @@ void Benchmark::run_utf8_length_from_utf16be(
   print_summary(result, size, size);
 }
 
-
 void Benchmark::run_utf8_length_from_utf16le_with_replacement(
     const simdutf::implementation &implementation, size_t iterations) {
   const char16_t *data = reinterpret_cast<const char16_t *>(input_data.data());
