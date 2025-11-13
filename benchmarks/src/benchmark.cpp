@@ -143,8 +143,14 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
   register_function("utf8_length_from_utf16le",
                     &Benchmark::run_utf8_length_from_utf16le,
                     simdutf::encoding_type::UTF16_LE);
+  register_function("utf8_length_from_utf16le_with_replacement",
+                    &Benchmark::run_utf8_length_from_utf16le_with_replacement,
+                    simdutf::encoding_type::UTF16_LE);
   register_function("utf8_length_from_utf16be",
                     &Benchmark::run_utf8_length_from_utf16be,
+                    simdutf::encoding_type::UTF16_BE);
+  register_function("utf8_length_from_utf16be_with_replacement",
+                    &Benchmark::run_utf8_length_from_utf16be_with_replacement,
                     simdutf::encoding_type::UTF16_BE);
   register_function("utf8_length_from_utf32",
                     &Benchmark::run_utf8_length_from_utf32,
@@ -845,6 +851,35 @@ void Benchmark::run_utf8_length_from_utf16be(
 
   auto proc = [&implementation, data, size, &sink]() {
     sink = implementation.utf8_length_from_utf16be(data, size);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  print_summary(result, size, size);
+}
+
+
+void Benchmark::run_utf8_length_from_utf16le_with_replacement(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char16_t *data = reinterpret_cast<const char16_t *>(input_data.data());
+  const size_t size = input_data.size() / 2;
+  volatile size_t sink{0};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    sink = implementation.utf8_length_from_utf16le_with_replacement(data, size);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  print_summary(result, size, size);
+}
+
+void Benchmark::run_utf8_length_from_utf16be_with_replacement(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char16_t *data = reinterpret_cast<const char16_t *>(input_data.data());
+  const size_t size = input_data.size() / 2;
+  volatile size_t sink{0};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    sink = implementation.utf8_length_from_utf16be_with_replacement(data, size);
   };
   count_events(proc, iterations); // warming up!
   const auto result = count_events(proc, iterations);

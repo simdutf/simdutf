@@ -17,7 +17,13 @@ enum encoding_type {
 
 enum endianness { LITTLE = 0, BIG = 1 };
 
-bool match_system(endianness e);
+constexpr bool match_system(endianness e) {
+#if SIMDUTF_IS_BIG_ENDIAN
+  return e == endianness::BIG;
+#else
+  return e == endianness::LITTLE;
+#endif
+}
 
 std::string to_string(encoding_type bom);
 

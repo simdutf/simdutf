@@ -629,7 +629,7 @@ arm64_utf8_length_from_utf16_bytemask(const char16_t *in, size_t size) {
         the expected 4 bytes.
 
         It also correctly handles cases when low surrogate is
-        processed by the this loop, but high surrogate is counted
+        processed by the loop, but high surrogate is counted
         by the scalar procedure. The scalar procedure uses exactly
         the described approach, thanks to that for valid UTF-16
         strings it always count correctly.
@@ -639,5 +639,107 @@ arm64_utf8_length_from_utf16_bytemask(const char16_t *in, size_t size) {
     count += vaddlvq_u16(v_count);
   }
   return count + scalar::utf16::utf8_length_from_utf16<big_endian>(in + pos,
+                                                                   size - pos);
+}
+
+template <endianness big_endian>
+simdutf_really_inline size_t
+arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
+  constexpr size_t N = 16; // we process 16 char16_t at a time, this is NEON specific
+
+  if(N + 1 > size) { 
+    return scalar::utf16::utf8_length_from_utf16_with_replacement<big_endian>(in, size);
+  } // special case for empty input
+  size_t count = 0;
+  const auto one = vmovq_n_u8(1);
+
+  // The general strategy is as follows:
+  // 1. each code unit yields at least one byte, we can account for that by 
+  // adding the size of the input to the count.
+  // 2. ASCII bytes then count for zero.
+  // 3. Values that yield 2 or 3 bytes in UTF-8 add 1 or 2 to the count.
+  // 4. Surrogate pairs are handled by adding 1 for each surrogate code unit
+  //    for a total of 4 bytes for the pair.
+  // 5. Unpaired surrogate elements have value 0xfffd in UTF-8, which is 3 bytes,
+  //    so we need to add 2 more bytes for each unpaired surrogate. In effect,
+  //    an unpaired surrogate should count for 1 (+1 for the )
+  //
+  // Our strategy is to proceed like the arm64_utf8_length_from_utf16_bytemask
+  // function, but, at the same time, to record the number of unpaired surrogates.
+  // and then adjust the count accordingly.
+
+  // If we start with a low surrogate, it is unpaired and the SIMD code won't
+  // detect it, so we handle that here.
+  size_t number_of_unpaired_surrogates = 0;
+  if(scalar::utf16::is_low_surrogate<big_endian>(in[0])) {
+    number_of_unpaired_surrogates += 1;
+  }
+  size_t pos = 0;
+  // We will go through the input at least once.
+  for (; pos + 1 + N <= size; pos += N) {
+    auto base_input = vld2q_u8(reinterpret_cast<const uint8_t *>(in + pos));
+    // We use this to check that surrogates are paired correctly.
+    // It is the input shifted by one code unit (two bytes).
+    // We use it to detect *low* surrogates.
+    auto one_unit_offset_input = vld2q_u8(reinterpret_cast<const uint8_t *>(in + pos + 1));
+    // 
+    size_t idx = 1; // we use the second lane of the deinterleaved load
+    if (!match_system(big_endian)) {
+      idx = 0;
+    }
+    size_t idx_lsb = idx ^ 1;
+    auto lb_masked = vandq_u8(base_input.val[idx], vdupq_n_u8(0xfc));
+    auto block_masked = vandq_u8(one_unit_offset_input.val[idx], vdupq_n_u8(0xfc));
+    auto lb_is_high = vceqq_u8(lb_masked, vdupq_n_u8(0xd8));
+    auto block_is_low = vceqq_u8(block_masked, vdupq_n_u8(0xdc));
+
+    // illseq will mark every low surrogate in the offset block.
+    // that is not preceded by a high surrogate 
+    // 
+    // It will also mark every high surrogate in the main block
+    // that is not followed by a low surrogate
+    //
+    // This means that it will miss undetectable errors, like a high surrogate
+    // at the last index of the main block. And similarly a low surrogate
+    // at the index prior to the main block that was not preceded by a high surrogate.
+    //
+    // The interpretation of the values is that they start with the end value
+    // of the prior block, and end just before the end of the main block (minus one).
+    auto illseq = veorq_u8(lb_is_high, block_is_low);
+    number_of_unpaired_surrogates += vaddlvq_u8(vandq_u8(illseq, one));
+    auto c0 = vminq_u8(vorrq_u8(vandq_u8(base_input.val[idx_lsb], vdupq_n_u8(0x80)), base_input.val[idx]), one);
+    auto c1 = vminq_u8(vandq_u8(base_input.val[idx], vdupq_n_u8(0xf8)), one);
+    auto is_surrogate = vcleq_u8(vsubq_u8(base_input.val[idx], vdupq_n_u8(0xd8)),
+                                vdupq_n_u8(7));
+
+    auto v_count = vaddq_u8(c1, c0);
+    v_count = vaddq_u8(v_count, is_surrogate);
+    count += vaddlvq_u8(v_count); // sum the counts in the vector, could be slow on some hardware?
+  }
+
+
+  //!!!!!!!!!!!!!!!
+  // Here, we have processed up to pos - 1 (inclusive) code units. Except for
+  // the case where the value at pos is a low surrogate not preceded by a high surrogate.
+  // In this special case, we have already added one to the count for the unpaired low surrogate.
+  //!!!!!!!!!!!!!!!
+  if(scalar::utf16::is_low_surrogate<big_endian>(in[pos])) {
+    if(!scalar::utf16::is_high_surrogate<big_endian>(in[pos - 1]))  {
+      number_of_unpaired_surrogates -= 1;
+      count += 2;
+      pos += 1;
+    }
+  }
+  count += pos;
+  count += number_of_unpaired_surrogates;
+  // If we end with a high surrogate, it might be unpaired or not, we
+  // don't know. It counts as a pair suggarate for now.
+  if(scalar::utf16::is_high_surrogate<big_endian>(in[pos-1])) {
+    if(scalar::utf16::is_low_surrogate<big_endian>(in[pos]))  {
+      pos += 1;
+      count += 2;
+    } 
+  }
+  return count + scalar::utf16::utf8_length_from_utf16_with_replacement<big_endian>(in + pos,
                                                                    size - pos);
 }
