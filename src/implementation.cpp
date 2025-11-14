@@ -2166,6 +2166,14 @@ simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t *input,
   return utf8_length_from_utf16le(input, length);
   #endif
 }
+simdutf_warn_unused size_t utf8_length_from_utf16_with_replacement(
+    const char16_t *input, size_t length) noexcept {
+  #if SIMDUTF_IS_BIG_ENDIAN
+  return utf8_length_from_utf16be(input, length);
+  #else
+  return utf8_length_from_utf16le_with_replacement(input, length);
+  #endif
+}
 simdutf_warn_unused size_t utf8_length_from_utf16le(const char16_t *input,
                                                     size_t length) noexcept {
   return get_default_implementation()->utf8_length_from_utf16le(input, length);

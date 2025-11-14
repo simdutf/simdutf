@@ -770,9 +770,11 @@ convert_utf8_to_utf16(const detail::input_span_of_byte_like auto &input,
   return convert_utf8_to_utf16(reinterpret_cast<const char *>(input.data()),
                                input.size(), output.data());
 }
+  #endif // SIMDUTF_SPAN
+
 /**
  * Compute the number of bytes that this UTF-16LE string would require in UTF-8
- * format assuming that the UTF-16LE content contains mismatched surrogates
+ * format even when the UTF-16LE content contains mismatched surrogates
  * that have to be replaced by the replacement character (0xFFFD).
  *
  * @param input         the UTF-16LE string to convert
@@ -782,10 +784,18 @@ convert_utf8_to_utf16(const detail::input_span_of_byte_like auto &input,
 
 simdutf_warn_unused size_t utf8_length_from_utf16le_with_replacement(
     const char16_t *input, size_t length) noexcept;
+  #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused size_t
+utf8_length_from_utf16le_with_replacement(
+    std::span<const char16_t> valid_utf16_input) noexcept {
+  return utf8_length_from_utf16le_with_replacement(valid_utf16_input.data(),
+                                                   valid_utf16_input.size());
+}
+  #endif // SIMDUTF_SPAN
 
 /**
  * Compute the number of bytes that this UTF-16BE string would require in UTF-8
- * format assuming that the UTF-16LE content contains mismatched surrogates
+ * format even when the UTF-16BE content contains mismatched surrogates
  * that have to be replaced by the replacement character (0xFFFD).
  *
  * @param input         the UTF-16BE string to convert
@@ -795,9 +805,16 @@ simdutf_warn_unused size_t utf8_length_from_utf16le_with_replacement(
 
 simdutf_warn_unused size_t utf8_length_from_utf16be_with_replacement(
     const char16_t *input, size_t length) noexcept;
-
+  #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused size_t
+utf8_length_from_utf16be_with_replacement(
+    std::span<const char16_t> valid_utf16_input) noexcept {
+  return utf8_length_from_utf16be_with_replacement(valid_utf16_input.data(),
+                                                   valid_utf16_input.size());
+}
   #endif // SIMDUTF_SPAN
-#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
+
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 /**
@@ -2091,7 +2108,29 @@ utf8_length_from_utf16(std::span<const char16_t> valid_utf16_input) noexcept {
                                 valid_utf16_input.size());
 }
   #endif // SIMDUTF_SPAN
-#endif   // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
+
+/**
+ * Using native endianness; compute the number of bytes that this UTF-16
+ * string would require in UTF-8 format even when the UTF-16LE content contains
+ * mismatched surrogates that have to be replaced by the replacement character
+ * (0xFFFD).
+ *
+ * @param input         the UTF-16 string to convert
+ * @param length        the length of the string in 2-byte code units (char16_t)
+ * @return the number of bytes required to encode the UTF-16LE string as UTF-8
+ */
+simdutf_warn_unused size_t utf8_length_from_utf16_with_replacement(
+    const char16_t *input, size_t length) noexcept;
+  #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused size_t
+utf8_length_from_utf16_with_replacement(
+    std::span<const char16_t> valid_utf16_input) noexcept {
+  return utf8_length_from_utf16_with_replacement(valid_utf16_input.data(),
+                                                 valid_utf16_input.size());
+}
+  #endif // SIMDUTF_SPAN
+
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 /**
@@ -4107,7 +4146,7 @@ public:
       char16_t *utf16_output) const noexcept = 0;
   /**
    * Compute the number of bytes that this UTF-16LE string would require in
-   * UTF-8 format assuming that the UTF-16LE content contains mismatched
+   * UTF-8 format even when the UTF-16LE content contains mismatched
    * surrogates that have to be replaced by the replacement character (0xFFFD).
    *
    * @param input         the UTF-16LE string to convert
@@ -4120,7 +4159,7 @@ public:
 
   /**
    * Compute the number of bytes that this UTF-16BE string would require in
-   * UTF-8 format assuming that the UTF-16LE content contains mismatched
+   * UTF-8 format even when the UTF-16BE content contains mismatched
    * surrogates that have to be replaced by the replacement character (0xFFFD).
    *
    * @param input         the UTF-16BE string to convert
