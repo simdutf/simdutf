@@ -1,87 +1,77 @@
-// This is translation of `utf8_length_from_utf16_bytemask` from
-// `generic/utf16.h`
+// This next function is implemented with intrinsics directly which is
+// not the usual style. We should convert it to the usual style.
 template <endianness big_endian>
-simdutf_really_inline size_t icelake_utf8_length_from_utf16(const char16_t *in,
-                                                            size_t size) {
-  size_t pos = 0;
+simdutf_really_inline size_t icelake_utf8_length_from_utf16(
+    const char16_t* in, size_t size) {
+
 
   using vector_u16 = simd16<uint16_t>;
-  constexpr size_t N = vector_u16::ELEMENTS;
+  constexpr size_t N = vector_u16::ELEMENTS; // 32 on AVX-512
+  if (N + 1 > size) {
+    return scalar::utf16::utf8_length_from_utf16_with_replacement<big_endian>(
+        in, size);
+  } // special case for short inputs
+  size_t pos = 0;
 
-  const auto one = vector_u16::splat(1);
-
-  auto v_count = vector_u16::zero();
+  const __m512i byteflip = _mm512_setr_epi64(
+      0x0607040502030001, 0x0e0f0c0d0a0b0809, 0x0607040502030001,
+      0x0e0f0c0d0a0b0809, 0x0607040502030001, 0x0e0f0c0d0a0b0809,
+      0x0607040502030001, 0x0e0f0c0d0a0b0809);
 
   // each char16 yields at least one byte
-  size_t count = size / N * N;
+  size_t count = 0;
 
-  // in a single iteration the increment is 0, 1 or 2, despite we have
-  // three additions
-  constexpr size_t max_iterations = 65535 / 2;
-  size_t iteration = max_iterations;
+  for (; pos < size / (2*N) * (2*N); pos += 2*N) {
 
-  for (; pos < size / N * N; pos += N) {
-    auto input = vector_u16::load(reinterpret_cast<const uint16_t *>(in + pos));
+    __m512i input1 = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(in + pos));
+    __m512i input2 = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(in + pos + N));
+
     if (!match_system(big_endian)) {
-      input = input.swap_bytes();
+      input1 = _mm512_shuffle_epi8(input1, byteflip);
+      input2 = _mm512_shuffle_epi8(input2, byteflip);
     }
-
-    // not_surrogate[i] = non-zero if i-th element is not a surrogate word
-    const auto not_surrogate = (input & uint16_t(0xf800)) ^ uint16_t(0xd800);
-
-    // not_surrogate[i] = 1 if surrogate word, 0 otherwise
-    const auto is_surrogate = min(not_surrogate, one) ^ one;
-
+    // 0xd800 .. 0xdbff - low surrogate
+    // 0xdc00 .. 0xdfff - high surrogate
+    __mmask32 is_surrogate1 = _mm512_cmpeq_epi16_mask(_mm512_and_si512(input1, _mm512_set1_epi16(uint16_t(0xf800))), _mm512_set1_epi16(uint16_t(0xd800)));
+    __mmask32 is_surrogate2 = _mm512_cmpeq_epi16_mask(_mm512_and_si512(input2, _mm512_set1_epi16(uint16_t(0xf800))), _mm512_set1_epi16(uint16_t(0xd800)));
     // c0 - chars that yield 2- or 3-byte UTF-8 codes
-    const auto c0 = min(input & uint16_t(0xff80), one);
+    __mmask32 c01 = _mm512_test_epi16_mask(input1, _mm512_set1_epi16(uint16_t(0xff80)));
+    __mmask32 c02 = _mm512_test_epi16_mask(input2, _mm512_set1_epi16(uint16_t(0xff80)));
 
     // c1 - chars that yield 3-byte UTF-8 codes (including surrogates)
-    const auto c1 = min(input & uint16_t(0xf800), one);
-
-    /*
-        Explanation how the counting works.
-
-        In the case of a non-surrogate character we count:
-        * always 1 -- see how `count` is initialized above;
-        * c0 = 1 if the current char yields 2 or 3 bytes;
-        * c1 = 1 if the current char yields 3 bytes.
-
-        Thus, we always have correct count for the current char:
-        from 1, 2 or 3 bytes.
-
-        A trickier part is how we count surrogate pairs. Whether
-        we encounter a surrogate (low or high), we count it as
-        3 chars and then minus 1 (`is_surrogate` is -1 or 0).
-        Each surrogate char yields 2. A surrogate pair, that
-        is a low surrogate followed by a high one, yields
-        the expected 4 bytes.
-
-        It also correctly handles cases when low surrogate is
-        processed by the this loop, but high surrogate is counted
-        by the scalar procedure. The scalar procedure uses exactly
-        the described approach, thanks to that for valid UTF-16
-        strings it always count correctly.
-    */
-    v_count += c0;
-    v_count += c1;
-    v_count -= is_surrogate;
-
-    iteration -= 1;
-    if (iteration == 0) {
-      count += v_count.sum();
-      v_count = vector_u16::zero();
-
-      iteration = max_iterations;
+    __mmask32 c11 = _mm512_test_epi16_mask(input1, _mm512_set1_epi16(uint16_t(0xf800)));
+    __mmask32 c12 = _mm512_test_epi16_mask(input2, _mm512_set1_epi16(uint16_t(0xf800)));
+    count += _popcnt32(c01);
+    count += _popcnt32(c11);
+    count -= _popcnt32(is_surrogate1);
+    count += _popcnt32(c02);
+    count += _popcnt32(c12);
+    count -= _popcnt32(is_surrogate2);
+  }
+  if(pos < size / N * N) {
+    __m512i input = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(in + pos));
+    if (!match_system(big_endian)) {
+      input = _mm512_shuffle_epi8(input, byteflip);
     }
-  }
+    // 0xd800 .. 0xdbff - low surrogate
+    // 0xdc00 .. 0xdfff - high surrogate
+    __mmask32 is_surrogate = _mm512_cmpeq_epi16_mask(_mm512_and_si512(input, _mm512_set1_epi16(uint16_t(0xf800))), _mm512_set1_epi16(uint16_t(0xd800)));
 
-  if (iteration > 0) {
-    count += v_count.sum();
-  }
+    // c0 - chars that yield 2- or 3-byte UTF-8 codes
+    __mmask32 c0 = _mm512_test_epi16_mask(input, _mm512_set1_epi16(uint16_t(0xff80)));
 
+    // c1 - chars that yield 3-byte UTF-8 codes (including surrogates)
+    __mmask32 c1 = _mm512_test_epi16_mask(input, _mm512_set1_epi16(uint16_t(0xf800)));
+    count += _popcnt32(c0);
+    count += _popcnt32(c1);
+    count += _popcnt32(is_surrogate);
+    pos += N;
+  }
+  count +=  pos;
   return count + scalar::utf16::utf8_length_from_utf16<big_endian>(in + pos,
                                                                    size - pos);
 }
+
 
 // This next function is implemented with intrinsics directly which is
 // not the usual style. We should convert it to the usual style.
