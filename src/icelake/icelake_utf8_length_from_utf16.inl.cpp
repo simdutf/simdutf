@@ -48,12 +48,12 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16(const char16_t *in,
         _mm512_test_epi16_mask(input1, _mm512_set1_epi16(uint16_t(0xf800)));
     __mmask32 c12 =
         _mm512_test_epi16_mask(input2, _mm512_set1_epi16(uint16_t(0xf800)));
-    count += _popcnt32(c01);
-    count += _popcnt32(c11);
-    count -= _popcnt32(is_surrogate1);
-    count += _popcnt32(c02);
-    count += _popcnt32(c12);
-    count -= _popcnt32(is_surrogate2);
+    count += count_ones32(c01);
+    count += count_ones32(c11);
+    count -= count_ones32(is_surrogate1);
+    count += count_ones32(c02);
+    count += count_ones32(c12);
+    count -= count_ones32(is_surrogate2);
   }
   if (pos + N <= size) {
     __m512i input =
@@ -74,9 +74,9 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16(const char16_t *in,
     // c1 - chars that yield 3-byte UTF-8 codes (including surrogates)
     __mmask32 c1 =
         _mm512_test_epi16_mask(input, _mm512_set1_epi16(uint16_t(0xf800)));
-    count += _popcnt32(c0);
-    count += _popcnt32(c1);
-    count -= _popcnt32(is_surrogate);
+    count += count_ones32(c0);
+    count += count_ones32(c1);
+    count -= count_ones32(is_surrogate);
     pos += N;
   }
   // At this point, we have processed 'pos' char16 values and we have less than
@@ -101,9 +101,9 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16(const char16_t *in,
   // c1 - chars that yield 3-byte UTF-8 codes (including surrogates)
   __mmask32 c1 =
       _mm512_test_epi16_mask(input, _mm512_set1_epi16(uint16_t(0xf800)));
-  count += _popcnt32(c0);
-  count += _popcnt32(c1);
-  count -= _popcnt32(is_surrogate);
+  count += count_ones32(c0);
+  count += count_ones32(c1);
+  count -= count_ones32(is_surrogate);
   pos = size;
 
   count += pos;
@@ -200,14 +200,14 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
         _mm512_and_si512(current2, _mm512_set1_epi16(uint16_t(0xf800))),
         _mm512_setzero_si512());
 
-    count += _popcnt32(c01);
-    count += _popcnt32(c11);
-    count -= _popcnt32(is_surrogate1);
-    count += _popcnt32(c02);
-    count += _popcnt32(c12);
-    count -= _popcnt32(is_surrogate2);
-    mismatched_count += _popcnt32(illseq1);
-    mismatched_count += _popcnt32(illseq2);
+    count += count_ones32(c01);
+    count += count_ones32(c11);
+    count -= count_ones32(is_surrogate1);
+    count += count_ones32(c02);
+    count += count_ones32(c12);
+    count -= count_ones32(is_surrogate2);
+    mismatched_count += count_ones32(illseq1);
+    mismatched_count += count_ones32(illseq2);
   }
   if (pos + N + 1 <= size) {
     __m512i input =
@@ -240,10 +240,10 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
         _mm512_and_si512(input, _mm512_set1_epi16(uint16_t(0xf800))),
         _mm512_setzero_si512());
 
-    count += _popcnt32(c0);
-    count += _popcnt32(c1);
-    count -= _popcnt32(is_surrogate);
-    mismatched_count += _popcnt32(illseq);
+    count += count_ones32(c0);
+    count += count_ones32(c1);
+    count -= count_ones32(is_surrogate);
+    mismatched_count += count_ones32(illseq);
     pos += N;
   }
 
@@ -282,10 +282,10 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
       _mm512_and_si512(input, _mm512_set1_epi16(uint16_t(0xf800))),
       _mm512_setzero_si512());
 
-  count += _popcnt32(c0);
-  count += _popcnt32(c1);
-  count -= _popcnt32(is_surrogate);
-  mismatched_count += _popcnt32(illseq);
+  count += count_ones32(c0);
+  count += count_ones32(c1);
+  count -= count_ones32(is_surrogate);
+  mismatched_count += count_ones32(illseq);
   pos = size;
   count += pos;
 
