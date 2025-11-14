@@ -593,7 +593,7 @@ arm64_utf8_length_from_utf16_bytemask(const char16_t *in, size_t size) {
   if (N + 1 > size) {
     return scalar::utf16::utf8_length_from_utf16_with_replacement<big_endian>(
         in, size);
-  } // special case for empty input
+  } // special case for short inputs
   size_t count = 0;
   const auto one = vmovq_n_u8(1);
 
