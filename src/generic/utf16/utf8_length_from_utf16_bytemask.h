@@ -84,10 +84,9 @@ simdutf_really_inline size_t utf8_length_from_utf16_bytemask(const char16_t *in,
                                                                    size - pos);
 }
 
-
 template <endianness big_endian>
-simdutf_really_inline size_t utf8_length_from_utf16_with_replacement(const char16_t *in,
-                                                             size_t size) {
+simdutf_really_inline size_t
+utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
   using vector_u16 = simd16<uint16_t>;
   constexpr size_t N = vector_u16::ELEMENTS;
   if (N + 1 > size) {
@@ -119,7 +118,8 @@ simdutf_really_inline size_t utf8_length_from_utf16_with_replacement(const char1
     if (!match_system(big_endian)) {
       input = input.swap_bytes();
     }
-    auto input_next = vector_u16::load(reinterpret_cast<const uint16_t *>(in + pos + 1));
+    auto input_next =
+        vector_u16::load(reinterpret_cast<const uint16_t *>(in + pos + 1));
     if (!match_system(big_endian)) {
       input_next = input_next.swap_bytes();
     }
@@ -176,8 +176,9 @@ simdutf_really_inline size_t utf8_length_from_utf16_with_replacement(const char1
       count += 2;
     }
   }
-  return count + scalar::utf16::utf8_length_from_utf16_with_replacement<big_endian>(in + pos,
-                                                                   size - pos);
+  return count +
+         scalar::utf16::utf8_length_from_utf16_with_replacement<big_endian>(
+             in + pos, size - pos);
 }
 
 } // namespace utf16

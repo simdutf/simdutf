@@ -1616,13 +1616,15 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf8(
 simdutf_warn_unused size_t
 implementation::utf8_length_from_utf16le_with_replacement(
     const char16_t *input, size_t length) const noexcept {
-  return icelake_utf8_length_from_utf16_with_replacement<endianness::LITTLE>(input, length);
+  return icelake_utf8_length_from_utf16_with_replacement<endianness::LITTLE>(
+      input, length);
 }
 
 simdutf_warn_unused size_t
 implementation::utf8_length_from_utf16be_with_replacement(
     const char16_t *input, size_t length) const noexcept {
-  return icelake_utf8_length_from_utf16_with_replacement<endianness::BIG>(input, length);
+  return icelake_utf8_length_from_utf16_with_replacement<endianness::BIG>(
+      input, length);
 }
 
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
