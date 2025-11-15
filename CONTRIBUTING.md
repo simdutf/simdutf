@@ -117,7 +117,7 @@ script to read it. Consider running the python script:
 python3 scripts/add_function.py add.sig
 ```
 
-Read `scripts/README_ADD_FUNCTION.md` for details.
+Read [README_ADD_FUNCTION.md](scripts/README_ADD_FUNCTION.md) for details.
 
 ## Testing
 
