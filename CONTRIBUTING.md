@@ -111,7 +111,7 @@ Dependencies: Avoid new external dependencies unless approved.
 ## Adding functions
 
 Adding a new function to simdutf can require some effort. We wrote a python
-script to read it. Consider running the python script:
+script to generate it. Consider running the python script:
 
 ```shell
 python3 scripts/add_function.py add.sig
