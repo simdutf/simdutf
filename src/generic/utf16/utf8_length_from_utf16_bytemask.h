@@ -100,7 +100,6 @@ utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
   auto v_count = vector_u16::zero();
   auto v_mismatched_count = vector_u16::zero();
 
-  // each char16 yields at least one byte
   size_t count = 0;
   size_t mismatched_count = 0;
 
