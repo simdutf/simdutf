@@ -1,4 +1,4 @@
-name: Ubuntu s390x (GCC 11)
+name: Ubuntu s390x
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
         with:
           arch: s390x
           githubToken: ${{ github.token }}
-          distro: ubuntu22.04
+          distro: ubuntu_latest
           install: |
             apt-get update -q -y
             apt-get install -y cmake make g++
