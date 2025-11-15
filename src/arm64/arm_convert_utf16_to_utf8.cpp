@@ -693,9 +693,10 @@ arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
     size_t idx_lsb = idx ^ 1;
     auto is_surrogate = vcleq_u8(
         vsubq_u8(base_input.val[idx], vdupq_n_u8(0xd8)), vdupq_n_u8(7));
-        // We count on the fact that most inputs do not have surrogates.
-    if(vmaxvq_u32(vreinterpretq_u32_u16(is_surrogate)) || scalar::utf16::is_low_surrogate<big_endian>(in[pos + N])) {
-        // there is at least one surrogate in the block
+    // We count on the fact that most inputs do not have surrogates.
+    if (vmaxvq_u32(vreinterpretq_u32_u16(is_surrogate)) ||
+        scalar::utf16::is_low_surrogate<big_endian>(in[pos + N])) {
+      // there is at least one surrogate in the block
       // We use this to check that surrogates are paired correctly.
       // It is the input shifted by one code unit (two bytes).
       // We use it to detect *low* surrogates.
@@ -721,17 +722,16 @@ arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
       // surrogate.
       //
       // The interpretation of the values is that they start with the end value
-      // of the prior block, and end just before the end of the main block (minus
-      // one).
+      // of the prior block, and end just before the end of the main block
+      // (minus one).
       auto illseq = veorq_u8(lb_is_high, block_is_low);
       number_of_unpaired_surrogates += vaddlvq_u8(vandq_u8(illseq, one));
-    } 
+    }
     auto c0 =
         vminq_u8(vorrq_u8(vandq_u8(base_input.val[idx_lsb], vdupq_n_u8(0x80)),
                           base_input.val[idx]),
                  one);
     auto c1 = vminq_u8(vandq_u8(base_input.val[idx], vdupq_n_u8(0xf8)), one);
-
 
     auto v_count = vaddq_u8(c1, c0);
     v_count = vaddq_u8(v_count, is_surrogate);
