@@ -25,7 +25,7 @@ This guide explains how to use the `add_function.py` script to automate adding a
    ```
 
 2. **Run the Script**: Execute the script with the signature file as argument:
-   ```
+   ```shell
    python scripts/add_function.py new_function.sig
    ```
 
