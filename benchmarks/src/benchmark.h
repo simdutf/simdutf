@@ -119,6 +119,10 @@ private:
   void
   run_utf8_length_from_utf16be(const simdutf::implementation &implementation,
                                size_t iterations);
+  void run_utf8_length_from_utf16le_with_replacement(
+      const simdutf::implementation &implementation, size_t iterations);
+  void run_utf8_length_from_utf16be_with_replacement(
+      const simdutf::implementation &implementation, size_t iterations);
   void run_utf8_length_from_utf32(const simdutf::implementation &implementation,
                                   size_t iterations);
   void run_utf16_length_from_utf8(const simdutf::implementation &implementation,
