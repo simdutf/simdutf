@@ -152,22 +152,18 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
     __mmask32 is_surrogate1 = _mm512_cmpeq_epi16_mask(
         _mm512_and_si512(current1, _mm512_set1_epi16(uint16_t(0xf800))),
         _mm512_set1_epi16(uint16_t(0xd800)));
-    __mmask32 c01 = _mm512_cmpneq_epi16_mask(
-        _mm512_and_si512(current1, _mm512_set1_epi16(uint16_t(0xff80))),
-        _mm512_setzero_si512());
-    __mmask32 c11 = _mm512_cmpneq_epi16_mask(
-        _mm512_and_si512(current1, _mm512_set1_epi16(uint16_t(0xf800))),
-        _mm512_setzero_si512());
+    __mmask32 c01 =
+        _mm512_test_epi16_mask(current1, _mm512_set1_epi16(uint16_t(0xff80)));
+    __mmask32 c11 =
+        _mm512_test_epi16_mask(current1, _mm512_set1_epi16(uint16_t(0xf800)));
 
     __mmask32 is_surrogate2 = _mm512_cmpeq_epi16_mask(
         _mm512_and_si512(current2, _mm512_set1_epi16(uint16_t(0xf800))),
         _mm512_set1_epi16(uint16_t(0xd800)));
-    __mmask32 c02 = _mm512_cmpneq_epi16_mask(
-        _mm512_and_si512(current2, _mm512_set1_epi16(uint16_t(0xff80))),
-        _mm512_setzero_si512());
-    __mmask32 c12 = _mm512_cmpneq_epi16_mask(
-        _mm512_and_si512(current2, _mm512_set1_epi16(uint16_t(0xf800))),
-        _mm512_setzero_si512());
+    __mmask32 c02 =
+        _mm512_test_epi16_mask(current2, _mm512_set1_epi16(uint16_t(0xff80)));
+    __mmask32 c12 =
+        _mm512_test_epi16_mask(current2, _mm512_set1_epi16(uint16_t(0xf800)));
     // happy path where we have no surrogates, and we don't end with a low
     // surrogate
     if (_kor_mask32(is_surrogate1, is_surrogate2) ||
@@ -279,12 +275,10 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
   __mmask32 is_surrogate = _mm512_cmpeq_epi16_mask(
       _mm512_and_si512(input, _mm512_set1_epi16(uint16_t(0xf800))),
       _mm512_set1_epi16(uint16_t(0xd800)));
-  __mmask32 c0 = _mm512_cmpneq_epi16_mask(
-      _mm512_and_si512(input, _mm512_set1_epi16(uint16_t(0xff80))),
-      _mm512_setzero_si512());
-  __mmask32 c1 = _mm512_cmpneq_epi16_mask(
-      _mm512_and_si512(input, _mm512_set1_epi16(uint16_t(0xf800))),
-      _mm512_setzero_si512());
+  __mmask32 c0 =
+      _mm512_test_epi16_mask(input, _mm512_set1_epi16(uint16_t(0xff80)));
+  __mmask32 c1 =
+      _mm512_test_epi16_mask(input, _mm512_set1_epi16(uint16_t(0xf800)));
 
   count += count_ones32(c0);
   count += count_ones32(c1);

@@ -117,19 +117,6 @@ utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
     if (!match_system(big_endian)) {
       input = input.swap_bytes();
     }
-    auto input_next =
-        vector_u16::load(reinterpret_cast<const uint16_t *>(in + pos + 1));
-    if (!match_system(big_endian)) {
-      input_next = input_next.swap_bytes();
-    }
-
-    const auto lb_masked = input & (0xfc00);
-    const auto block_masked = input_next & (0xfc00);
-
-    const auto lb_is_high = lb_masked == (0xd800);
-    const auto block_is_low = block_masked == (0xdc00);
-
-    const auto illseq = min(vector_u16(lb_is_high ^ block_is_low), one);
     // 0xd800 .. 0xdbff - low surrogate
     // 0xdc00 .. 0xdfff - high surrogate
     const auto is_surrogate = ((input & uint16_t(0xf800)) == uint16_t(0xd800));
@@ -143,7 +130,33 @@ utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
     v_count += c0;
     v_count += c1;
     v_count += vector_u16(is_surrogate);
-    v_mismatched_count += illseq;
+    //
+    // In theory, we should go faster by avoiding the cost of the coming
+    // branch when there is no surrogate. However, the benefit in practice
+    // are unclear.
+    // This should be revisited in the future for better performance.
+    // It might be possible to batch several iterations together to make
+    // this check worth it.
+    // if(is_surrogate.to_bitmask() != 0 ||
+    // scalar::utf16::is_low_surrogate<big_endian>(in[pos])) {
+    //
+    if (true) { // deliberately always true
+      auto input_next =
+          vector_u16::load(reinterpret_cast<const uint16_t *>(in + pos + 1));
+      if (!match_system(big_endian)) {
+        input_next = input_next.swap_bytes();
+      }
+
+      const auto lb_masked = input & (0xfc00);
+      const auto block_masked = input_next & (0xfc00);
+
+      const auto lb_is_high = lb_masked == (0xd800);
+      const auto block_is_low = block_masked == (0xdc00);
+
+      const auto illseq = min(vector_u16(lb_is_high ^ block_is_low), one);
+
+      v_mismatched_count += illseq;
+    }
 
     iteration -= 1;
     if (iteration == 0) {
