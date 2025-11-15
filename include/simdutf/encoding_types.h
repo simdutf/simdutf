@@ -1,6 +1,7 @@
 #ifndef SIMDUTF_ENCODING_TYPES_H
 #define SIMDUTF_ENCODING_TYPES_H
 #include <string>
+#include "simdutf/portability.h"
 
 namespace simdutf {
 
@@ -18,6 +19,9 @@ enum encoding_type {
 enum endianness { LITTLE = 0, BIG = 1 };
 
 constexpr bool match_system(endianness e) {
+#ifndef SIMDUTF_IS_BIG_ENDIAN
+#error "SIMDUTF_IS_BIG_ENDIAN needs to be defined."
+#endif
 #if SIMDUTF_IS_BIG_ENDIAN
   return e == endianness::BIG;
 #else
