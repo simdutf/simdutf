@@ -8,7 +8,7 @@ This guide explains how to use the `add_function.py` script to automate adding a
 
 ## Steps
 1. **Create a Signature File**: Create a text file (e.g., `new_function.sig`) containing the function signatures, wrapped in the appropriate feature macro block. You can include multiple functions in one block. Most functions in simdutf are marked `noexcept` and you should mark them `noexcept`. If they return a value, we typically marked the return value `simdutf_warn_unused`. Example:
-   ```
+   ```C++
    #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
    /**
     * Documentation for first function.
