@@ -694,7 +694,7 @@ arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
     auto is_surrogate = vcleq_u8(
         vsubq_u8(base_input.val[idx], vdupq_n_u8(0xd8)), vdupq_n_u8(7));
     // We count on the fact that most inputs do not have surrogates.
-    if (vmaxvq_u32(vreinterpretq_u32_u16(is_surrogate)) ||
+    if (vmaxvq_u32(vreinterpretq_u32_u8(is_surrogate)) ||
         scalar::utf16::is_low_surrogate<big_endian>(in[pos + N])) {
       // there is at least one surrogate in the block
       // We use this to check that surrogates are paired correctly.
