@@ -686,46 +686,52 @@ arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
   // We will go through the input at least once.
   for (; size - pos >= N + 1; pos += N) {
     auto base_input = vld2q_u8(reinterpret_cast<const uint8_t *>(in + pos));
-    // We use this to check that surrogates are paired correctly.
-    // It is the input shifted by one code unit (two bytes).
-    // We use it to detect *low* surrogates.
-    auto one_unit_offset_input =
-        vld2q_u8(reinterpret_cast<const uint8_t *>(in + pos + 1));
-    //
     size_t idx = 1; // we use the second lane of the deinterleaved load
     if (!match_system(big_endian)) {
       idx = 0;
     }
     size_t idx_lsb = idx ^ 1;
-    auto lb_masked = vandq_u8(base_input.val[idx], vdupq_n_u8(0xfc));
-    auto block_masked =
-        vandq_u8(one_unit_offset_input.val[idx], vdupq_n_u8(0xfc));
-    auto lb_is_high = vceqq_u8(lb_masked, vdupq_n_u8(0xd8));
-    auto block_is_low = vceqq_u8(block_masked, vdupq_n_u8(0xdc));
+    auto is_surrogate = vcleq_u8(
+        vsubq_u8(base_input.val[idx], vdupq_n_u8(0xd8)), vdupq_n_u8(7));
+        // We count on the fact that most inputs do not have surrogates.
+    if(vmaxvq_u32(vreinterpretq_u32_u16(is_surrogate)) || scalar::utf16::is_low_surrogate<big_endian>(in[pos + N])) {
+        // there is at least one surrogate in the block
+      // We use this to check that surrogates are paired correctly.
+      // It is the input shifted by one code unit (two bytes).
+      // We use it to detect *low* surrogates.
+      auto one_unit_offset_input =
+          vld2q_u8(reinterpret_cast<const uint8_t *>(in + pos + 1));
+      //
 
-    // illseq will mark every low surrogate in the offset block.
-    // that is not preceded by a high surrogate
-    //
-    // It will also mark every high surrogate in the main block
-    // that is not followed by a low surrogate
-    //
-    // This means that it will miss undetectable errors, like a high surrogate
-    // at the last index of the main block. And similarly a low surrogate
-    // at the index prior to the main block that was not preceded by a high
-    // surrogate.
-    //
-    // The interpretation of the values is that they start with the end value
-    // of the prior block, and end just before the end of the main block (minus
-    // one).
-    auto illseq = veorq_u8(lb_is_high, block_is_low);
-    number_of_unpaired_surrogates += vaddlvq_u8(vandq_u8(illseq, one));
+      auto lb_masked = vandq_u8(base_input.val[idx], vdupq_n_u8(0xfc));
+      auto block_masked =
+          vandq_u8(one_unit_offset_input.val[idx], vdupq_n_u8(0xfc));
+      auto lb_is_high = vceqq_u8(lb_masked, vdupq_n_u8(0xd8));
+      auto block_is_low = vceqq_u8(block_masked, vdupq_n_u8(0xdc));
+
+      // illseq will mark every low surrogate in the offset block.
+      // that is not preceded by a high surrogate
+      //
+      // It will also mark every high surrogate in the main block
+      // that is not followed by a low surrogate
+      //
+      // This means that it will miss undetectable errors, like a high surrogate
+      // at the last index of the main block. And similarly a low surrogate
+      // at the index prior to the main block that was not preceded by a high
+      // surrogate.
+      //
+      // The interpretation of the values is that they start with the end value
+      // of the prior block, and end just before the end of the main block (minus
+      // one).
+      auto illseq = veorq_u8(lb_is_high, block_is_low);
+      number_of_unpaired_surrogates += vaddlvq_u8(vandq_u8(illseq, one));
+    } 
     auto c0 =
         vminq_u8(vorrq_u8(vandq_u8(base_input.val[idx_lsb], vdupq_n_u8(0x80)),
                           base_input.val[idx]),
                  one);
     auto c1 = vminq_u8(vandq_u8(base_input.val[idx], vdupq_n_u8(0xf8)), one);
-    auto is_surrogate = vcleq_u8(
-        vsubq_u8(base_input.val[idx], vdupq_n_u8(0xd8)), vdupq_n_u8(7));
+
 
     auto v_count = vaddq_u8(c1, c0);
     v_count = vaddq_u8(v_count, is_surrogate);
