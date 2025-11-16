@@ -120,7 +120,7 @@ ctest --test-dir build
 Add tests in the tests/directory for new features or fixes, covering edge cases and performance.
 Use our macros when building tests:
 
-```C++
+```cpp
 
 TEST(roundtrip_base64_url_with_garbage) {
     ASSERT_TRUE(1==1);

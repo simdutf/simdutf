@@ -1866,7 +1866,7 @@ This forgiving approach makes base64 decoding robust for web use, but it enforce
 
 The conversion of binary data to base64 always succeeds and is relatively simple. Suppose
 that you have an original input of binary data `source` (e.g., `std::vector<char>`).
-```C++
+```cpp
 std::vector<char> buffer(simdutf::base64_length_from_binary(source.size()));
 simdutf::binary_to_base64(source.data(), source.size(), buffer.data());
 ```
@@ -1874,7 +1874,7 @@ simdutf::binary_to_base64(source.data(), source.size(), buffer.data());
 Decoding base64 requires validation and, thus, error handling. Furthermore, because
 we prune ASCII spaces, we may need to adjust the result size afterward.
 
-```C++
+```cpp
 std::vector<char> buffer(simdutf::maximal_binary_length_from_base64(base64.data(), base64.size()));
 simdutf::result r = simdutf::base64_to_binary(base64.data(), base64.size(), buffer.data());
 if(r.error) {
@@ -1897,7 +1897,7 @@ They are all valid WHATWG base64 inputs, except for the last one.
 
 Let us process them with actual code.
 
-```C++
+```cpp
   std::vector<std::string> sources = {
       "  A  A  ", "  A  A  G  A  /  v  8  ", "  A  A  G  A  /  v  8  =  ", "  A  A  G  A  /  v  8  =  =  "};
   std::vector<std::vector<uint8_t>> expected = {
@@ -1950,7 +1950,7 @@ of the data as possible is decoded despite the error by setting the `decode_up_t
 parameter to true (it defaults to false for best performance).
 
 
-```C++
+```cpp
   size_t len = 72; // for simplicity we chose len divisible by 3
   std::vector<char> base64(len, 'a'); // we want to decode 'aaaaa....'
   std::vector<char> back((len + 3) / 4 * 3);
@@ -2087,7 +2087,7 @@ then decoding `"ZXhhZg"` decodes into `exa` (and `Zg` is left over).
 
 The specification of our base64 functions is as follows:
 
-```C++
+```cpp
 
 // base64_options are used to specify the base64 encoding options.
 // ASCII spaces are ' ', '\t', '\n', '\r', '\f'
