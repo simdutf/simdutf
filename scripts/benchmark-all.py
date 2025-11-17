@@ -5,6 +5,7 @@ import sys
 import argparse
 import json
 import subprocess
+import re
 
 
 def main():
@@ -25,6 +26,11 @@ def main():
 
         print(f"[{id}/{count}] {name:{maxlen}}... ", end='')
         sys.stdout.flush()
+
+        if args.filter and not re.search(args.filter, name):
+            print(f"skipping, does not match filter '{args.filter}'")
+            continue
+
         if len(encodings) > 1:
             print(f"skipping, requires multiple input encodings ({encodings})")
             continue
@@ -74,6 +80,10 @@ def parse_args():
                    type=existing_dir,
                    metavar="DIR",
                    help="output directory")
+    p.add_argument("--filter",
+                   type=str,
+                   metavar="PATTERN",
+                   help="only run benchmarks whose name matches this regex pattern")
 
     args = p.parse_args()
 
