@@ -152,49 +152,54 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
     if (!match_system(big_endian)) {
       current2 = _mm512_shuffle_epi8(current2, byteflip);
     }
-    __m512i lb_masked1 =
-        _mm512_and_si512(current1, _mm512_set1_epi16(uint16_t(0xfc00)));
-    __mmask32 hi_surrogates1 = _mm512_cmpeq_epi16_mask(
-        lb_masked1,
+
+    __mmask32 is_surrogate1 = _mm512_cmpeq_epi16_mask(
+        _mm512_and_si512(current1, _mm512_set1_epi16(uint16_t(0xf800))),
         _mm512_set1_epi16(uint16_t(0xd800)));
-    __mmask32 lo_surrogates1 = _mm512_cmpeq_epi16_mask(
-        lb_masked1,
-        _mm512_set1_epi16(uint16_t(0xdc00)));
+    __mmask32 is_surrogate2 = _mm512_cmpeq_epi16_mask(
+        _mm512_and_si512(current2, _mm512_set1_epi16(uint16_t(0xf800))),
+        _mm512_set1_epi16(uint16_t(0xd800)));
     __mmask32 c01 =
         _mm512_test_epi16_mask(current1, _mm512_set1_epi16(uint16_t(0xff80)));
     __mmask32 c11 =
         _mm512_test_epi16_mask(current1, _mm512_set1_epi16(uint16_t(0xf800)));
-
-    __m512i lb_masked2 =
-        _mm512_and_si512(current2, _mm512_set1_epi16(uint16_t(0xfc00)));
-    __mmask32 hi_surrogates2 = _mm512_cmpeq_epi16_mask(
-        lb_masked2,
-        _mm512_set1_epi16(uint16_t(0xd800)));
-    __mmask32 lo_surrogates2 = _mm512_cmpeq_epi16_mask(
-        lb_masked2,
-        _mm512_set1_epi16(uint16_t(0xdc00)));
     __mmask32 c02 =
         _mm512_test_epi16_mask(current2, _mm512_set1_epi16(uint16_t(0xff80)));
     __mmask32 c12 =
         _mm512_test_epi16_mask(current2, _mm512_set1_epi16(uint16_t(0xf800)));
-    
     count += count_ones32(c01);
     count += count_ones32(c11);
     count += count_ones32(c02);
     count += count_ones32(c12);
-    matches +=
-        count_ones32(
-            _kand_mask32(_kshiftli_mask32(hi_surrogates1, 1), lo_surrogates1));
-    matches +=
-        count_ones32(
-            _kand_mask32(_kshiftli_mask32(hi_surrogates2, 1), lo_surrogates2));
-    uint32_t straddle1 =
-        *reinterpret_cast<const uint32_t*>(in + pos + 1 * N - 1);
-    uint32_t straddle2 =
-        *reinterpret_cast<const uint32_t*>(in + pos + 2 * N - 1);
-    matches +=
-        ((straddle1 & straddle_mask) == straddle_pair) +
-        ((straddle2 & straddle_mask) == straddle_pair);
+    if (_kor_mask32(is_surrogate1, is_surrogate2)) {
+      __m512i lb_masked1 =
+          _mm512_and_si512(current1, _mm512_set1_epi16(uint16_t(0xfc00)));
+      __mmask32 hi_surrogates1 = _mm512_cmpeq_epi16_mask(
+          lb_masked1,
+          _mm512_set1_epi16(uint16_t(0xd800)));
+      __mmask32 lo_surrogates1 = _mm512_cmpeq_epi16_mask(
+          lb_masked1,
+          _mm512_set1_epi16(uint16_t(0xdc00)));
+      __m512i lb_masked2 =
+          _mm512_and_si512(current2, _mm512_set1_epi16(uint16_t(0xfc00)));
+      __mmask32 hi_surrogates2 = _mm512_cmpeq_epi16_mask(
+          lb_masked2,
+          _mm512_set1_epi16(uint16_t(0xd800)));
+      __mmask32 lo_surrogates2 = _mm512_cmpeq_epi16_mask(
+          lb_masked2,
+          _mm512_set1_epi16(uint16_t(0xdc00)));
+      matches += count_ones32(
+          _kand_mask32(_kshiftli_mask32(hi_surrogates1, 1), lo_surrogates1));
+      matches += count_ones32(
+          _kand_mask32(_kshiftli_mask32(hi_surrogates2, 1), lo_surrogates2));
+      uint32_t straddle1 =
+          *reinterpret_cast<const uint32_t*>(in + pos + 1 * N - 1);
+      uint32_t straddle2 =
+          *reinterpret_cast<const uint32_t*>(in + pos + 2 * N - 1);
+      matches +=
+          ((straddle1 & straddle_mask) == straddle_pair) +
+          ((straddle2 & straddle_mask) == straddle_pair);
+    }
   }
   if (pos + N + 1 <= size) {
     __m512i input =
@@ -203,24 +208,30 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
       input = _mm512_shuffle_epi8(input, byteflip);
     }
 
-    __m512i lb_masked =
-        _mm512_and_si512(input, _mm512_set1_epi16(uint16_t(0xfc00)));
-    __mmask32 hi_surrogates =
-        _mm512_cmpeq_epi16_mask(lb_masked, _mm512_set1_epi16(uint16_t(0xd800)));
-    __mmask32 lo_surrogates =
-        _mm512_cmpeq_epi16_mask(lb_masked, _mm512_set1_epi16(uint16_t(0xdc00)));
+    __mmask32 is_surrogate = _mm512_cmpeq_epi16_mask(
+        _mm512_and_si512(input, _mm512_set1_epi16(uint16_t(0xf800))),
+        _mm512_set1_epi16(uint16_t(0xd800)));
     __mmask32 c0 =
         _mm512_test_epi16_mask(input, _mm512_set1_epi16(uint16_t(0xff80)));
     __mmask32 c1 =
         _mm512_test_epi16_mask(input, _mm512_set1_epi16(uint16_t(0xf800)));
-
     count += count_ones32(c0);
     count += count_ones32(c1);
-    matches +=
-        count_ones32(
-            _kand_mask32(_kshiftli_mask32(hi_surrogates, 1), lo_surrogates));
-    uint32_t straddle = *reinterpret_cast<const uint32_t*>(in + pos + N - 1);
-    matches += (straddle & straddle_mask) == straddle_pair;
+    if (is_surrogate) {
+      __m512i lb_masked =
+          _mm512_and_si512(input, _mm512_set1_epi16(uint16_t(0xfc00)));
+      __mmask32 hi_surrogates =
+          _mm512_cmpeq_epi16_mask(lb_masked,
+                                  _mm512_set1_epi16(uint16_t(0xd800)));
+      __mmask32 lo_surrogates =
+          _mm512_cmpeq_epi16_mask(lb_masked,
+                                  _mm512_set1_epi16(uint16_t(0xdc00)));
+      matches +=
+          count_ones32(
+              _kand_mask32(_kshiftli_mask32(hi_surrogates, 1), lo_surrogates));
+      uint32_t straddle = *reinterpret_cast<const uint32_t*>(in + pos + N - 1);
+      matches += (straddle & straddle_mask) == straddle_pair;
+    }
     pos += N;
   }
 
@@ -232,12 +243,9 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
     input = _mm512_shuffle_epi8(input, byteflip);
   }
 
-  __m512i lb_masked =
-      _mm512_and_si512(input, _mm512_set1_epi16(uint16_t(0xfc00)));
-  __mmask32 hi_surrogates =
-      _mm512_cmpeq_epi16_mask(lb_masked, _mm512_set1_epi16(uint16_t(0xd800)));
-  __mmask32 lo_surrogates =
-      _mm512_cmpeq_epi16_mask(lb_masked, _mm512_set1_epi16(uint16_t(0xdc00)));
+  __mmask32 is_surrogate = _mm512_cmpeq_epi16_mask(
+      _mm512_and_si512(input, _mm512_set1_epi16(uint16_t(0xf800))),
+      _mm512_set1_epi16(uint16_t(0xd800)));
   __mmask32 c0 =
       _mm512_test_epi16_mask(input, _mm512_set1_epi16(uint16_t(0xff80)));
   __mmask32 c1 =
@@ -245,9 +253,17 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
 
   count += count_ones32(c0);
   count += count_ones32(c1);
-  matches +=
-      count_ones32(
-          _kand_mask32(_kshiftli_mask32(hi_surrogates, 1), lo_surrogates));
+  if (is_surrogate) {
+    __m512i lb_masked =
+        _mm512_and_si512(input, _mm512_set1_epi16(uint16_t(0xfc00)));
+    __mmask32 hi_surrogates =
+        _mm512_cmpeq_epi16_mask(lb_masked, _mm512_set1_epi16(uint16_t(0xd800)));
+    __mmask32 lo_surrogates =
+        _mm512_cmpeq_epi16_mask(lb_masked, _mm512_set1_epi16(uint16_t(0xdc00)));
+    matches +=
+        count_ones32(
+            _kand_mask32(_kshiftli_mask32(hi_surrogates, 1), lo_surrogates));
+  }
   pos = size;
   count += pos;
 
