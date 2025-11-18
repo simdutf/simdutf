@@ -591,8 +591,7 @@ arm64_utf8_length_from_utf16_bytemask(const char16_t *in, size_t size) {
       16; // we process 16 char16_t at a time, this is NEON specific
 
   if (N + 1 > size) {
-    return scalar::utf16::utf8_length_from_utf16_with_replacement<big_endian>(
-        in, size);
+    return scalar::utf16::utf8_length_from_utf16<big_endian>(in, size);
   } // special case for short inputs
   size_t count = 0;
   const auto one = vmovq_n_u8(1);
@@ -636,15 +635,17 @@ arm64_utf8_length_from_utf16_bytemask(const char16_t *in, size_t size) {
   count += pos;
   // If we end with a high surrogate, it might be unpaired or not, we
   // don't know. It counts as a pair suggarate for now.
+
   if (scalar::utf16::is_high_surrogate<big_endian>(in[pos - 1])) {
-    if (scalar::utf16::is_low_surrogate<big_endian>(in[pos])) {
+    if (pos == size) {
+      count += 2;
+    } else if (scalar::utf16::is_low_surrogate<big_endian>(in[pos])) {
       pos += 1;
       count += 2;
     }
   }
-  return count +
-         scalar::utf16::utf8_length_from_utf16_with_replacement<big_endian>(
-             in + pos, size - pos);
+  return count + scalar::utf16::utf8_length_from_utf16<big_endian>(in + pos,
+                                                                   size - pos);
 }
 
 template <endianness big_endian>
@@ -763,7 +764,9 @@ arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
   // If we end with a high surrogate, it might be unpaired or not, we
   // don't know. It counts as a pair suggarate for now.
   if (scalar::utf16::is_high_surrogate<big_endian>(in[pos - 1])) {
-    if (scalar::utf16::is_low_surrogate<big_endian>(in[pos])) {
+    if (pos == size) {
+      count += 2;
+    } else if (scalar::utf16::is_low_surrogate<big_endian>(in[pos])) {
       pos += 1;
       count += 2;
     }

@@ -183,7 +183,9 @@ utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
   count += pos;
   count += mismatched_count;
   if (scalar::utf16::is_high_surrogate<big_endian>(in[pos - 1])) {
-    if (scalar::utf16::is_low_surrogate<big_endian>(in[pos])) {
+    if (pos == size) {
+      count += 2;
+    } else if (scalar::utf16::is_low_surrogate<big_endian>(in[pos])) {
       pos += 1;
       count += 2;
     }
