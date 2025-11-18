@@ -123,6 +123,13 @@
 
 #endif // MSC_VER
 
+// Conditional constexpr macro: expands to constexpr for C++17+, empty otherwise
+#if SIMDUTF_CPLUSPLUS17
+  #define simdutf_constexpr constexpr
+#else
+  #define simdutf_constexpr
+#endif
+
 #ifndef SIMDUTF_DLLIMPORTEXPORT
   #if defined(SIMDUTF_VISUAL_STUDIO) // Visual Studio
                                      /**

@@ -63,7 +63,7 @@ lsx_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
   __m128i v_07ff = __lsx_vreplgr2vr_h(uint16_t(0x7ff));
   while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     __m128i in = __lsx_vld(reinterpret_cast<const uint16_t *>(buf), 0);
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       in = lsx_swap_bytes(in);
     }
     if (__lsx_bz_v(
@@ -71,7 +71,7 @@ lsx_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
       // It is common enough that we have sequences of 16 consecutive ASCII
       // characters.
       __m128i nextin = __lsx_vld(reinterpret_cast<const uint16_t *>(buf), 16);
-      if (!match_system(big_endian)) {
+      if simdutf_constexpr (!match_system(big_endian)) {
         nextin = lsx_swap_bytes(nextin);
       }
       if (__lsx_bz_v(__lsx_vslt_hu(__lsx_vrepli_h(0x7F), nextin))) {
@@ -300,7 +300,7 @@ lsx_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
           // https://github.com/simdutf/simdutf/issues/92
   while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     __m128i in = __lsx_vld(reinterpret_cast<const uint16_t *>(buf), 0);
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       in = lsx_swap_bytes(in);
     }
     if (__lsx_bz_v(
@@ -308,7 +308,7 @@ lsx_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
       // It is common enough that we have sequences of 16 consecutive ASCII
       // characters.
       __m128i nextin = __lsx_vld(reinterpret_cast<const uint16_t *>(buf), 16);
-      if (!match_system(big_endian)) {
+      if simdutf_constexpr (!match_system(big_endian)) {
         nextin = lsx_swap_bytes(nextin);
       }
       if (__lsx_bz_v(__lsx_vslt_hu(__lsx_vrepli_h(0x7F), nextin))) {

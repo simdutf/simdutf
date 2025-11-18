@@ -27,7 +27,7 @@ simdutf_really_inline size_t utf8_length_from_utf16_bytemask(const char16_t *in,
 
   for (; pos < size / N * N; pos += N) {
     auto input = vector_u16::load(reinterpret_cast<const uint16_t *>(in + pos));
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       input = input.swap_bytes();
     }
     // 0xd800 .. 0xdbff - low surrogate
@@ -114,7 +114,7 @@ utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
 
   for (; pos < (size - 1) / N * N; pos += N) {
     auto input = vector_u16::load(reinterpret_cast<const uint16_t *>(in + pos));
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       input = input.swap_bytes();
     }
     // 0xd800 .. 0xdbff - low surrogate
@@ -143,7 +143,7 @@ utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
     if (true) { // deliberately always true
       auto input_next =
           vector_u16::load(reinterpret_cast<const uint16_t *>(in + pos + 1));
-      if (!match_system(big_endian)) {
+      if simdutf_constexpr (!match_system(big_endian)) {
         input_next = input_next.swap_bytes();
       }
 

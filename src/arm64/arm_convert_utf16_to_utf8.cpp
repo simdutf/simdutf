@@ -64,7 +64,7 @@ arm_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
           // https://github.com/simdutf/simdutf/issues/92
   while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in)));
     }
     if (vmaxvq_u16(in) <= 0x7F) { // ASCII fast path!!!!
@@ -72,7 +72,7 @@ arm_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
       // characters.
       uint16x8_t nextin =
           vld1q_u16(reinterpret_cast<const uint16_t *>(buf) + 8);
-      if (!match_system(big_endian)) {
+      if simdutf_constexpr (!match_system(big_endian)) {
         nextin = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(nextin)));
       }
       if (vmaxvq_u16(nextin) > 0x7F) {
@@ -335,7 +335,7 @@ arm_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
 
   while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in)));
     }
     if (vmaxvq_u16(in) <= 0x7F) { // ASCII fast path!!!!
@@ -343,7 +343,7 @@ arm_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
       // characters.
       uint16x8_t nextin =
           vld1q_u16(reinterpret_cast<const uint16_t *>(buf) + 8);
-      if (!match_system(big_endian)) {
+      if simdutf_constexpr (!match_system(big_endian)) {
         nextin = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(nextin)));
       }
       if (vmaxvq_u16(nextin) > 0x7F) {
@@ -609,7 +609,7 @@ arm64_utf8_length_from_utf16_bytemask(const char16_t *in, size_t size) {
     auto base_input = vld2q_u8(reinterpret_cast<const uint8_t *>(in + pos));
     //
     size_t idx = 1; // we use the second lane of the deinterleaved load
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       idx = 0;
     }
     size_t idx_lsb = idx ^ 1;
@@ -688,7 +688,7 @@ arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
   for (; size - pos >= N + 1; pos += N) {
     auto base_input = vld2q_u8(reinterpret_cast<const uint8_t *>(in + pos));
     size_t idx = 1; // we use the second lane of the deinterleaved load
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       idx = 0;
     }
     size_t idx_lsb = idx ^ 1;

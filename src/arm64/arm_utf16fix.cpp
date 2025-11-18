@@ -27,7 +27,7 @@ void utf16fix_block(char16_t *out, const char16_t *in) {
   uint8x16_t lb_masked, block_masked, lb_is_high, block_is_low;
   uint8x16_t illseq;
 
-  const int idx = !match_system(big_endian) ? 0 : 1;
+  simdutf_constexpr int idx = !match_system(big_endian) ? 0 : 1;
 
   /* TODO: compute lookback using shifts */
   lb = vld2q_u8((const uint8_t *)(in - 1));
@@ -54,7 +54,7 @@ void utf16fix_block(char16_t *out, const char16_t *in) {
     out[-1] = ill ? replacement : lbc;
 
     /* fix illegal sequencing in the main block */
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       block.val[1] = vbslq_u8(block_illseq, vdupq_n_u8(0xfd), block.val[1]);
       block.val[0] = vorrq_u8(block_illseq, block.val[0]);
     } else {
@@ -70,7 +70,7 @@ void utf16fix_block(char16_t *out, const char16_t *in) {
 
 template <endianness big_endian, bool inplace>
 uint8x16_t get_mismatch_copy(const char16_t *in, char16_t *out) {
-  const int idx = !match_system(big_endian) ? 0 : 1;
+  simdutf_constexpr int idx = !match_system(big_endian) ? 0 : 1;
   uint8x16x2_t lb = vld2q_u8((const uint8_t *)(in - 1));
   uint8x16x2_t block = vld2q_u8((const uint8_t *)in);
   uint8x16_t lb_masked = vandq_u8(lb.val[idx], vdupq_n_u8(0xfc));

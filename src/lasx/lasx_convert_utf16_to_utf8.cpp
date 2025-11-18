@@ -66,7 +66,7 @@ lasx_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
   __m128i zero_128 = __lsx_vldi(0);
   while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     __m256i in = __lasx_xvld(reinterpret_cast<const uint16_t *>(buf), 0);
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       in = lasx_swap_bytes(in);
     }
     if (__lasx_xbnz_h(__lasx_xvslt_hu(
@@ -320,7 +320,7 @@ lasx_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
   __m128i zero_128 = __lsx_vldi(0);
   while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     __m256i in = __lasx_xvld(reinterpret_cast<const uint16_t *>(buf), 0);
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       in = lasx_swap_bytes(in);
     }
     if (__lasx_xbnz_h(__lasx_xvslt_hu(

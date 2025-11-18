@@ -7,7 +7,7 @@ sse_convert_utf16_to_latin1(const char16_t *buf, size_t len,
     // Load 8 UTF-16 characters into 128-bit SSE register
     __m128i in = _mm_loadu_si128(reinterpret_cast<const __m128i *>(buf));
 
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       const __m128i swap =
           _mm_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
       in = _mm_shuffle_epi8(in, swap);
@@ -38,7 +38,7 @@ sse_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
   while (end - buf >= 8) {
     __m128i in = _mm_loadu_si128(reinterpret_cast<const __m128i *>(buf));
 
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       const __m128i swap =
           _mm_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
       in = _mm_shuffle_epi8(in, swap);

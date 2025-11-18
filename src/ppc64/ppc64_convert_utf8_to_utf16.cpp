@@ -41,7 +41,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     const auto hi = in16.shr<2>();
 
     auto composed = select(uint16_t(0x1f00 >> 2), hi, lo);
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       composed = composed.swap_bytes();
     }
 
@@ -70,7 +70,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     const auto composed = b2;
     auto packed = vector_u32::pack(composed, composed);
 
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       packed = packed.swap_bytes();
     }
 
@@ -104,7 +104,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
 
     auto composed = b0 | b1.shr<2>();
 
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       composed = composed.swap_bytes();
     }
 
@@ -127,7 +127,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
 
     auto packed = vector_u32::pack(composed, composed);
 
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       packed = packed.swap_bytes();
     }
 
@@ -190,7 +190,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
       if (basic_buffer[i] > 0x3c00000) {
         const auto ch0 = uint16_t(surrogate_buffer[i] & 0xffff);
         const auto ch1 = uint16_t(surrogate_buffer[i] >> 16);
-        if (match_system(big_endian)) {
+        if simdutf_constexpr (match_system(big_endian)) {
           utf16_output[1] = scalar::u16_swap_bytes(ch0);
           utf16_output[0] = scalar::u16_swap_bytes(ch1);
         } else {
@@ -200,7 +200,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
         utf16_output += 2;
       } else {
         const auto chr = uint16_t(basic_buffer[i]);
-        if (match_system(big_endian)) {
+        if simdutf_constexpr (match_system(big_endian)) {
           utf16_output[0] = chr;
         } else {
           utf16_output[0] = scalar::u16_swap_bytes(chr);
