@@ -380,7 +380,7 @@ avx2_encode_base64_impl(char *dst, const char *src, size_t srclen,
         }
       } else { // slow path
         // could be optimized
-        uint8_t buffer[32];
+        alignas(32) uint8_t buffer[32];
         _mm256_storeu_si256(reinterpret_cast<__m256i *>(buffer),
                             lookup_pshufb_improved<isbase64url>(indices));
         std::memcpy(out, buffer, 32);
@@ -490,7 +490,7 @@ simdutf_really_inline void base64_decode_block_safe(char *out,
                                                     const char *src) {
   base64_decode(out,
                 _mm256_loadu_si256(reinterpret_cast<const __m256i *>(src)));
-  char buffer[32]; // We enforce safety with a buffer.
+  alignas(32) char buffer[32]; // We enforce safety with a buffer.
   base64_decode(
       buffer, _mm256_loadu_si256(reinterpret_cast<const __m256i *>(src + 32)));
   std::memcpy(out + 24, buffer, 24);
@@ -542,7 +542,7 @@ public:
 
   simdutf_really_inline void base64_decode_block_safe(char *out) {
     base64_decode(out, chunks[0]);
-    char buffer[32]; // We enforce safety with a buffer.
+    alignas(32) char buffer[32]; // We enforce safety with a buffer.
     base64_decode(buffer, chunks[1]);
     std::memcpy(out + 24, buffer, 24);
   }
