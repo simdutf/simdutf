@@ -192,10 +192,9 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
           _kand_mask32(_kshiftli_mask32(hi_surrogates1, 1), lo_surrogates1));
       matches += count_ones32(
           _kand_mask32(_kshiftli_mask32(hi_surrogates2, 1), lo_surrogates2));
-      uint32_t straddle1 =
-          *reinterpret_cast<const uint32_t*>(in + pos + 1 * N - 1);
-      uint32_t straddle2 =
-          *reinterpret_cast<const uint32_t*>(in + pos + 2 * N - 1);
+      uint32_t straddle1, straddle2;
+      memcpy(&straddle1, in + pos + 1 * N - 1, sizeof(uint32_t));
+      memcpy(&straddle2, in + pos + 2 * N - 1, sizeof(uint32_t));
       matches +=
           ((straddle1 & straddle_mask) == straddle_pair) +
           ((straddle2 & straddle_mask) == straddle_pair);
@@ -229,7 +228,8 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
       matches +=
           count_ones32(
               _kand_mask32(_kshiftli_mask32(hi_surrogates, 1), lo_surrogates));
-      uint32_t straddle = *reinterpret_cast<const uint32_t*>(in + pos + N - 1);
+      uint32_t straddle;
+      memcpy(&straddle, in + pos + N - 1, sizeof(uint32_t));
       matches += (straddle & straddle_mask) == straddle_pair;
     }
     pos += N;
