@@ -175,19 +175,15 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
       __m512i lb_masked1 =
           _mm512_and_si512(current1, _mm512_set1_epi16(uint16_t(0xfc00)));
       __mmask32 hi_surrogates1 = _mm512_cmpeq_epi16_mask(
-          lb_masked1,
-          _mm512_set1_epi16(uint16_t(0xd800)));
+          lb_masked1, _mm512_set1_epi16(uint16_t(0xd800)));
       __mmask32 lo_surrogates1 = _mm512_cmpeq_epi16_mask(
-          lb_masked1,
-          _mm512_set1_epi16(uint16_t(0xdc00)));
+          lb_masked1, _mm512_set1_epi16(uint16_t(0xdc00)));
       __m512i lb_masked2 =
           _mm512_and_si512(current2, _mm512_set1_epi16(uint16_t(0xfc00)));
       __mmask32 hi_surrogates2 = _mm512_cmpeq_epi16_mask(
-          lb_masked2,
-          _mm512_set1_epi16(uint16_t(0xd800)));
+          lb_masked2, _mm512_set1_epi16(uint16_t(0xd800)));
       __mmask32 lo_surrogates2 = _mm512_cmpeq_epi16_mask(
-          lb_masked2,
-          _mm512_set1_epi16(uint16_t(0xdc00)));
+          lb_masked2, _mm512_set1_epi16(uint16_t(0xdc00)));
       matches += count_ones32(
           _kand_mask32(_kshiftli_mask32(hi_surrogates1, 1), lo_surrogates1));
       matches += count_ones32(
@@ -195,9 +191,8 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
       uint32_t straddle1, straddle2;
       memcpy(&straddle1, in + pos + 1 * N - 1, sizeof(uint32_t));
       memcpy(&straddle2, in + pos + 2 * N - 1, sizeof(uint32_t));
-      matches +=
-          ((straddle1 & straddle_mask) == straddle_pair) +
-          ((straddle2 & straddle_mask) == straddle_pair);
+      matches += ((straddle1 & straddle_mask) == straddle_pair) +
+                 ((straddle2 & straddle_mask) == straddle_pair);
     }
   }
   if (pos + N + 1 <= size) {
@@ -219,15 +214,12 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
     if (is_surrogate) {
       __m512i lb_masked =
           _mm512_and_si512(input, _mm512_set1_epi16(uint16_t(0xfc00)));
-      __mmask32 hi_surrogates =
-          _mm512_cmpeq_epi16_mask(lb_masked,
-                                  _mm512_set1_epi16(uint16_t(0xd800)));
-      __mmask32 lo_surrogates =
-          _mm512_cmpeq_epi16_mask(lb_masked,
-                                  _mm512_set1_epi16(uint16_t(0xdc00)));
-      matches +=
-          count_ones32(
-              _kand_mask32(_kshiftli_mask32(hi_surrogates, 1), lo_surrogates));
+      __mmask32 hi_surrogates = _mm512_cmpeq_epi16_mask(
+          lb_masked, _mm512_set1_epi16(uint16_t(0xd800)));
+      __mmask32 lo_surrogates = _mm512_cmpeq_epi16_mask(
+          lb_masked, _mm512_set1_epi16(uint16_t(0xdc00)));
+      matches += count_ones32(
+          _kand_mask32(_kshiftli_mask32(hi_surrogates, 1), lo_surrogates));
       uint32_t straddle;
       memcpy(&straddle, in + pos + N - 1, sizeof(uint32_t));
       matches += (straddle & straddle_mask) == straddle_pair;
@@ -260,9 +252,8 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
         _mm512_cmpeq_epi16_mask(lb_masked, _mm512_set1_epi16(uint16_t(0xd800)));
     __mmask32 lo_surrogates =
         _mm512_cmpeq_epi16_mask(lb_masked, _mm512_set1_epi16(uint16_t(0xdc00)));
-    matches +=
-        count_ones32(
-            _kand_mask32(_kshiftli_mask32(hi_surrogates, 1), lo_surrogates));
+    matches += count_ones32(
+        _kand_mask32(_kshiftli_mask32(hi_surrogates, 1), lo_surrogates));
   }
   pos = size;
   count += pos;
