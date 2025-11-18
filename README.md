@@ -906,6 +906,17 @@ simdutf_warn_unused size_t utf32_length_from_utf8(const char * input, size_t len
 simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t * input, size_t length) noexcept;
 
 /**
+ * Using native endianness; compute the number of bytes that this UTF-16
+ * string would require in UTF-8 format even when the UTF-16 content contains mismatched
+ * surrogates that have to be replaced by the replacement character (0xFFFD).
+ *
+ * @param input         the UTF-16 string to convert
+ * @param length        the length of the string in 2-byte code units (char16_t)
+ * @return the number of bytes required to encode the UTF-16LE string as UTF-8
+ */
+simdutf_warn_unused size_t utf8_length_from_utf16_with_replacement(const char16_t *input,
+                                                  size_t length) noexcept;
+/**
  * Compute the number of bytes that this UTF-16LE string would require in UTF-8 format.
  *
  * This function does not validate the input. It is acceptable to pass invalid UTF-16 strings but in such cases
@@ -928,6 +939,58 @@ simdutf_warn_unused size_t utf8_length_from_utf16le(const char16_t * input, size
  * @return the number of bytes required to encode the UTF-16BE string as UTF-8
  */
 simdutf_warn_unused size_t utf8_length_from_utf16be(const char16_t * input, size_t length) noexcept;
+
+/**
+ * Compute the number of bytes that this UTF-16LE string would require in UTF-8
+ * format even when the UTF-16LE content contains mismatched surrogates
+ * that have to be replaced by the replacement character (0xFFFD).
+ *
+ * @param input         the UTF-16LE string to convert
+ * @param length        the length of the string in 2-byte code units (char16_t)
+ * @return the number of bytes required to encode the UTF-16LE string as UTF-8
+ */
+
+simdutf_warn_unused size_t utf8_length_from_utf16le_with_replacement(
+    const char16_t *input, size_t length) noexcept;
+
+
+/**
+ * Compute the number of bytes that this UTF-16BE string would require in UTF-8
+ * format even when the UTF-16BE content contains mismatched surrogates
+ * that have to be replaced by the replacement character (0xFFFD).
+ *
+ * @param input         the UTF-16BE string to convert
+ * @param length        the length of the string in 2-byte code units (char16_t)
+ * @return the number of bytes required to encode the UTF-16BE string as UTF-8
+ */
+
+simdutf_warn_unused size_t utf8_length_from_utf16be_with_replacement(
+    const char16_t *input, size_t length) noexcept;
+
+/**
+ * Compute the number of bytes that this UTF-16LE string would require in UTF-8
+ * format even when the UTF-16LE content contains mismatched surrogates
+ * that have to be replaced by the replacement character (0xFFFD).
+ *
+ * @param input         the UTF-16LE string to convert
+ * @param length        the length of the string in 2-byte code units (char16_t)
+ * @return the number of bytes required to encode the UTF-16LE string as UTF-8
+ */
+simdutf_warn_unused size_t utf8_length_from_utf16le_with_replacement(
+    const char16_t *input, size_t length) noexcept;
+
+/**
+ * Compute the number of bytes that this UTF-16BE string would require in UTF-8
+ * format even when the UTF-16BE content contains mismatched surrogates
+ * that have to be replaced by the replacement character (0xFFFD).
+ *
+ * @param input         the UTF-16BE string to convert
+ * @param length        the length of the string in 2-byte code units (char16_t)
+ * @return the number of bytes required to encode the UTF-16BE string as UTF-8
+ */
+simdutf_warn_unused size_t utf8_length_from_utf16be_with_replacement(
+    const char16_t *input, size_t length) noexcept;
+
 
 /**
  * Compute the number of bytes that this UTF-32 string would require in UTF-8 format.

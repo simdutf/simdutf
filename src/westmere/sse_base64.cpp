@@ -214,7 +214,7 @@ size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
         }
       } else { // slow path
         // could be optimized
-        uint8_t buffer[64];
+        alignas(64) uint8_t buffer[64];
         _mm_storeu_si128(reinterpret_cast<__m128i *>(buffer), t0);
         _mm_storeu_si128(reinterpret_cast<__m128i *>(buffer + 16), t1);
         _mm_storeu_si128(reinterpret_cast<__m128i *>(buffer + 32), t2);

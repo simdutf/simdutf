@@ -154,6 +154,34 @@ simdutf_really_inline bool low_surrogate(char16_t c) {
   return (0xdc00 <= c && c <= 0xdfff);
 }
 
+template <endianness big_endian>
+inline size_t utf8_length_from_utf16_with_replacement(const char16_t *p,
+                                                      size_t len) {
+  // We are not BOM aware.
+  size_t counter{0};
+  for (size_t i = 0; i < len; i++) {
+    if (is_high_surrogate<big_endian>(p[i])) {
+      // surrogate pair
+      if (i + 1 < len && is_low_surrogate<big_endian>(p[i + 1])) {
+        counter += 4;
+        i++; // skip low surrogate
+      } else {
+        counter += 3; // unpaired high surrogate replaced by U+FFFD
+      }
+      continue;
+    } else if (is_low_surrogate<big_endian>(p[i])) {
+      counter += 3; // unpaired low surrogate replaced by U+FFFD
+      continue;
+    }
+    char16_t word = !match_system(big_endian) ? u16_swap_bytes(p[i]) : p[i];
+    counter++; // at least 1 byte
+    counter +=
+        static_cast<size_t>(word > 0x7F); // non-ASCII is at least 2 bytes
+    counter += static_cast<size_t>(word > 0x7FF); // three-byte
+  }
+  return counter;
+}
+
 // variable templates are a C++14 extension
 template <endianness big_endian> char16_t replacement() {
   return !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
