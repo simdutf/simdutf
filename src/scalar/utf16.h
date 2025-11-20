@@ -155,12 +155,14 @@ simdutf_really_inline bool low_surrogate(char16_t c) {
 }
 
 template <endianness big_endian>
-inline size_t utf8_length_from_utf16_with_replacement(const char16_t *p,
+inline result utf8_length_from_utf16_with_replacement(const char16_t *p,
                                                       size_t len) {
+  bool any_surrogates = false;
   // We are not BOM aware.
   size_t counter{0};
   for (size_t i = 0; i < len; i++) {
     if (is_high_surrogate<big_endian>(p[i])) {
+      any_surrogates = true;
       // surrogate pair
       if (i + 1 < len && is_low_surrogate<big_endian>(p[i + 1])) {
         counter += 4;
@@ -170,6 +172,7 @@ inline size_t utf8_length_from_utf16_with_replacement(const char16_t *p,
       }
       continue;
     } else if (is_low_surrogate<big_endian>(p[i])) {
+      any_surrogates = true;
       counter += 3; // unpaired low surrogate replaced by U+FFFD
       continue;
     }
@@ -179,7 +182,7 @@ inline size_t utf8_length_from_utf16_with_replacement(const char16_t *p,
         static_cast<size_t>(word > 0x7F); // non-ASCII is at least 2 bytes
     counter += static_cast<size_t>(word > 0x7FF); // three-byte
   }
-  return counter;
+  return { any_surrogates ? error_code::SURROGATE : error_code::SUCCESS, counter };
 }
 
 // variable templates are a C++14 extension

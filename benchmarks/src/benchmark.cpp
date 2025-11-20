@@ -864,7 +864,8 @@ void Benchmark::run_utf8_length_from_utf16le_with_replacement(
   volatile size_t sink{0};
 
   auto proc = [&implementation, data, size, &sink]() {
-    sink = implementation.utf8_length_from_utf16le_with_replacement(data, size);
+    auto r = implementation.utf8_length_from_utf16le_with_replacement(data, size);
+    sink = r.count;
   };
   count_events(proc, iterations); // warming up!
   const auto result = count_events(proc, iterations);
@@ -878,7 +879,8 @@ void Benchmark::run_utf8_length_from_utf16be_with_replacement(
   volatile size_t sink{0};
 
   auto proc = [&implementation, data, size, &sink]() {
-    sink = implementation.utf8_length_from_utf16be_with_replacement(data, size);
+    auto r = implementation.utf8_length_from_utf16be_with_replacement(data, size);
+    sink = r.count;
   };
   count_events(proc, iterations); // warming up!
   const auto result = count_events(proc, iterations);

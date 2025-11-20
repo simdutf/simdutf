@@ -229,10 +229,10 @@ public:
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
   simdutf_warn_unused size_t
   utf16_length_from_utf8(const char *input, size_t length) const noexcept;
-  simdutf_warn_unused size_t utf8_length_from_utf16le_with_replacement(
+  simdutf_warn_unused result utf8_length_from_utf16le_with_replacement(
       const char16_t *input, size_t length) const noexcept;
   ;
-  simdutf_warn_unused size_t utf8_length_from_utf16be_with_replacement(
+  simdutf_warn_unused result utf8_length_from_utf16be_with_replacement(
       const char16_t *input, size_t length) const noexcept;
   ;
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
