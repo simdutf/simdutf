@@ -85,7 +85,8 @@ The simdutf library is used by:
 - [Cloudflare workerd](https://github.com/cloudflare/workerd), a JavaScript/Wasm Runtime,
 - [haskell/text](https://github.com/haskell/text), a library for fast operations over Unicode text,
 - [klogg](https://github.com/variar/klogg), a Really fast log explorer,
-- [Pixie](https://github.com/pixie-io/pixie), observability tool for Kubernetes applications.
+- [Pixie](https://github.com/pixie-io/pixie), observability tool for Kubernetes applications,
+- [vte](https://gitlab.gnome.org/GNOME/vte) (0.81.0 or better), a virtual terminal widget for GTK applications.
 
 
 
