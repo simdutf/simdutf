@@ -37,16 +37,14 @@ lsx_convert_utf16_to_utf32(const char16_t *buf, size_t len,
         forward = size_t(end - buf - 1);
       }
       for (; k < forward; k++) {
-        uint16_t word =
-            !match_system(big_endian) ? scalar::u16_swap_bytes(buf[k]) : buf[k];
+        uint16_t word = scalar::utf16::swap_if_needed<big_endian>(buf[k]);
         if ((word & 0xF800) != 0xD800) {
           *utf32_output++ = char32_t(word);
         } else {
           // must be a surrogate pair
           uint16_t diff = uint16_t(word - 0xD800);
-          uint16_t next_word = !match_system(big_endian)
-                                   ? scalar::u16_swap_bytes(buf[k + 1])
-                                   : buf[k + 1];
+          uint16_t next_word =
+              scalar::utf16::swap_if_needed<big_endian>(buf[k + 1]);
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
           if ((diff | diff2) > 0x3FF) {
@@ -108,16 +106,14 @@ lsx_convert_utf16_to_utf32_with_errors(const char16_t *buf, size_t len,
         forward = size_t(end - buf - 1);
       }
       for (; k < forward; k++) {
-        uint16_t word =
-            !match_system(big_endian) ? scalar::u16_swap_bytes(buf[k]) : buf[k];
+        uint16_t word = scalar::utf16::swap_if_needed<big_endian>(buf[k]);
         if ((word & 0xF800) != 0xD800) {
           *utf32_output++ = char32_t(word);
         } else {
           // must be a surrogate pair
           uint16_t diff = uint16_t(word - 0xD800);
-          uint16_t next_word = !match_system(big_endian)
-                                   ? scalar::u16_swap_bytes(buf[k + 1])
-                                   : buf[k + 1];
+          uint16_t next_word =
+              scalar::utf16::swap_if_needed<big_endian>(buf[k + 1]);
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
           if ((diff | diff2) > 0x3FF) {

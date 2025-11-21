@@ -549,6 +549,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                          (uint32_t(uint8_t(buffer_start[2])) << 1 * 6) +
                          (uint32_t(uint8_t(buffer_start[3])) << 0 * 6))
                         << 8;
+      // lasx is little-endian
       triple = scalar::u32_swap_bytes(triple);
       std::memcpy(dst, &triple, 4);
 
@@ -561,6 +562,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                          (uint32_t(uint8_t(buffer_start[2])) << 1 * 6) +
                          (uint32_t(uint8_t(buffer_start[3])) << 0 * 6))
                         << 8;
+      // lasx is little-endian
       triple = scalar::u32_swap_bytes(triple);
       std::memcpy(dst, &triple, 3);
 

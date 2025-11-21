@@ -16,21 +16,21 @@ namespace utf16 {
 template <endianness big_endian, bool in_place>
 simdutf_really_inline void utf16fix_block(char16_t *out, const char16_t *in) {
   const char16_t replacement = scalar::utf16::replacement<big_endian>();
-  simdutf_constexpr auto swap_if_needed = [](uint16_t c) -> uint16_t {
-    return !simdutf::match_system(big_endian) ? scalar::u16_swap_bytes(c) : c;
-  };
 
   using vector_u16 = simd16<uint16_t>;
 
   const auto lookback = vector_u16::load(in - 1);
   const auto block = vector_u16::load(in);
 
-  const auto lb_masked = lookback & swap_if_needed(0xfc00);
-  const auto block_masked = block & swap_if_needed(0xfc00);
+  const auto lb_masked =
+      lookback & scalar::utf16::swap_if_needed<big_endian>(0xfc00);
+  const auto block_masked =
+      block & scalar::utf16::swap_if_needed<big_endian>(0xfc00);
 
-  const auto lb_is_high = lb_masked == swap_if_needed(0xd800);
-  const auto block_is_low = block_masked == swap_if_needed(0xdc00);
-
+  const auto lb_is_high =
+      lb_masked == scalar::utf16::swap_if_needed<big_endian>(0xd800);
+  const auto block_is_low =
+      block_masked == scalar::utf16::swap_if_needed<big_endian>(0xdc00);
   const auto illseq = lb_is_high ^ block_is_low;
   if (!illseq.is_zero()) {
     /* compute the cause of the illegal sequencing */

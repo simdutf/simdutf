@@ -148,7 +148,8 @@ const result validate_utf16_as_ascii_with_errors(const char16_t *input,
 
   // Scalar tail
   while (pos < size) {
-    char16_t v = big_endian ? scalar::u16_swap_bytes(input[pos]) : input[pos];
+
+    char16_t v = scalar::utf16::swap_if_needed<big_endian>(input[pos]);
     if (v > 0x7F) {
       return result(error_code::TOO_LARGE, pos);
     }
