@@ -81,4 +81,27 @@ TEST(issue001) {
 #endif
 }
 
+
+TEST(issue002) {
+  // There are surrogates but they are well formed.
+  std::vector<char16_t> input = {0xd950, 0xdd9a, 0x002d};
+#if SIMDUTF_BIG_ENDIAN
+  const size_t standard =
+      implementation.utf8_length_from_utf16be(input.data(), input.size());
+  ASSERT_EQUAL(standard, 5);
+  const auto result1 = implementation.utf8_length_from_utf16be_with_replacement(
+      input.data(), input.size());
+  ASSERT_EQUAL(result1.count, 5);
+  ASSERT_EQUAL(simdutf::SURROGATE, result1.error);
+#else
+  const size_t standard =
+      implementation.utf8_length_from_utf16le(input.data(), input.size());
+  ASSERT_EQUAL(standard, 5);
+  const auto result2 = implementation.utf8_length_from_utf16le_with_replacement(
+      input.data(), input.size());
+  ASSERT_EQUAL(result2.count, 5);
+  ASSERT_EQUAL(simdutf::SURROGATE, result2.error);
+#endif
+}
+
 TEST_MAIN
