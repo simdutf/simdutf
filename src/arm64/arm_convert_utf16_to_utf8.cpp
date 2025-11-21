@@ -776,9 +776,9 @@ arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
       count += 2;
     }
   }
-  result scalar_result = 
+  result scalar_result =
       scalar::utf16::utf8_length_from_utf16_with_replacement<big_endian>(
           in + pos, size - pos);
-  return { any_surrogates ? SURROGATE : scalar_result.error,
-           count + scalar_result.count };
+  return {any_surrogates ? SURROGATE : scalar_result.error,
+          count + scalar_result.count};
 }

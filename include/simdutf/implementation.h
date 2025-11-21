@@ -779,7 +779,10 @@ convert_utf8_to_utf16(const detail::input_span_of_byte_like auto &input,
  *
  * @param input         the UTF-16LE string to convert
  * @param length        the length of the string in 2-byte code units (char16_t)
- * @return a result pair struct (of type simdutf::result containing the two fields error and count) where the count is the number of bytes required to encode the UTF-16LE string as UTF-8, and the error code is either SUCCESS or SURROGATE. The count is correct regardless of the error field.
+ * @return a result pair struct (of type simdutf::result containing the two
+ * fields error and count) where the count is the number of bytes required to
+ * encode the UTF-16LE string as UTF-8, and the error code is either SUCCESS or
+ * SURROGATE. The count is correct regardless of the error field.
  */
 
 simdutf_warn_unused result utf8_length_from_utf16le_with_replacement(
@@ -800,7 +803,10 @@ utf8_length_from_utf16le_with_replacement(
  *
  * @param input         the UTF-16BE string to convert
  * @param length        the length of the string in 2-byte code units (char16_t)
- * @return a result pair struct (of type simdutf::result containing the two fields error and count) where the count is the number of bytes required to encode the UTF-16BE string as UTF-8, and the error code is either SUCCESS or SURROGATE. The count is correct regardless of the error field.
+ * @return a result pair struct (of type simdutf::result containing the two
+ * fields error and count) where the count is the number of bytes required to
+ * encode the UTF-16BE string as UTF-8, and the error code is either SUCCESS or
+ * SURROGATE. The count is correct regardless of the error field.
  */
 
 simdutf_warn_unused result utf8_length_from_utf16be_with_replacement(
@@ -2120,7 +2126,10 @@ utf8_length_from_utf16(std::span<const char16_t> valid_utf16_input) noexcept {
  *
  * @param input         the UTF-16 string to convert
  * @param length        the length of the string in 2-byte code units (char16_t)
- * @return a result pair struct (of type simdutf::result containing the two fields error and count) where the count is the number of bytes required to encode the UTF-16 string as UTF-8, and the error code is either SUCCESS or SURROGATE. The count is correct regardless of the error field.
+ * @return a result pair struct (of type simdutf::result containing the two
+ * fields error and count) where the count is the number of bytes required to
+ * encode the UTF-16 string as UTF-8, and the error code is either SUCCESS or
+ * SURROGATE. The count is correct regardless of the error field.
  */
 simdutf_warn_unused result utf8_length_from_utf16_with_replacement(
     const char16_t *input, size_t length) noexcept;
@@ -4152,7 +4161,10 @@ public:
    * @param input         the UTF-16LE string to convert
    * @param length        the length of the string in 2-byte code units
    * (char16_t)
-   * @return a result pair struct (of type simdutf::result containing the two fields error and count) where the count is the number of bytes required to encode the UTF-16LE string as UTF-8, and the error code is either SUCCESS or SURROGATE. The count is correct regardless of the error field.
+   * @return a result pair struct (of type simdutf::result containing the two
+   * fields error and count) where the count is the number of bytes required to
+   * encode the UTF-16LE string as UTF-8, and the error code is either SUCCESS
+   * or SURROGATE. The count is correct regardless of the error field.
    */
   virtual simdutf_warn_unused result utf8_length_from_utf16le_with_replacement(
       const char16_t *input, size_t length) const noexcept = 0;
@@ -4165,7 +4177,10 @@ public:
    * @param input         the UTF-16BE string to convert
    * @param length        the length of the string in 2-byte code units
    * (char16_t)
-   * @return a result pair struct (of type simdutf::result containing the two fields error and count) where the count is the number of bytes required to encode the UTF-16BE string as UTF-8, and the error code is either SUCCESS or SURROGATE. The count is correct regardless of the error field.
+   * @return a result pair struct (of type simdutf::result containing the two
+   * fields error and count) where the count is the number of bytes required to
+   * encode the UTF-16BE string as UTF-8, and the error code is either SUCCESS
+   * or SURROGATE. The count is correct regardless of the error field.
    */
   virtual simdutf_warn_unused result utf8_length_from_utf16be_with_replacement(
       const char16_t *input, size_t length) const noexcept = 0;

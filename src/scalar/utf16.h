@@ -182,7 +182,8 @@ inline result utf8_length_from_utf16_with_replacement(const char16_t *p,
         static_cast<size_t>(word > 0x7F); // non-ASCII is at least 2 bytes
     counter += static_cast<size_t>(word > 0x7FF); // three-byte
   }
-  return { any_surrogates ? error_code::SURROGATE : error_code::SUCCESS, counter };
+  return {any_surrogates ? error_code::SURROGATE : error_code::SUCCESS,
+          counter};
 }
 
 // variable templates are a C++14 extension

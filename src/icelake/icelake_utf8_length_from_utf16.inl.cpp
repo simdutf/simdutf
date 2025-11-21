@@ -265,5 +265,5 @@ simdutf_really_inline result icelake_utf8_length_from_utf16_with_replacement(
   count += pos;
 
   count -= 2 * matches;
-  return { any_surrogates ? SURROGATE : SUCCESS, count };
+  return {any_surrogates ? SURROGATE : SUCCESS, count};
 }

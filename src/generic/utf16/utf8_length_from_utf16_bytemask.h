@@ -132,8 +132,8 @@ utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
     v_count += c0;
     v_count += c1;
     v_count += vector_u16(is_surrogate);
-    if(is_surrogate.to_bitmask() != 0 ||
-       scalar::utf16::is_low_surrogate<big_endian>(in[pos + N])) {
+    if (is_surrogate.to_bitmask() != 0 ||
+        scalar::utf16::is_low_surrogate<big_endian>(in[pos + N])) {
       any_surrogates = true;
       auto input_next =
           vector_u16::load(reinterpret_cast<const uint16_t *>(in + pos + 1));
@@ -189,8 +189,8 @@ utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
   result scalar_result =
       scalar::utf16::utf8_length_from_utf16_with_replacement<big_endian>(
           in + pos, size - pos);
-  return { any_surrogates ? SURROGATE : scalar_result.error,
-           count + scalar_result.count };
+  return {any_surrogates ? SURROGATE : scalar_result.error,
+          count + scalar_result.count};
 }
 
 } // namespace utf16

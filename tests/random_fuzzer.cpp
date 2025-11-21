@@ -146,8 +146,8 @@ inline simdutf::result utf8_length_from_utf16(const char16_t *p, size_t len) {
     counter += static_cast<size_t>(word > 0x7FF);
     surrogates += static_cast<size_t>(word >= 0xD800 && word < 0xE000);
   }
-  return { surrogates == 0 ? simdutf::SUCCESS : simdutf::SURROGATE,
-           counter - 2 * surrogates };
+  return {surrogates == 0 ? simdutf::SUCCESS : simdutf::SURROGATE,
+          counter - 2 * surrogates};
 }
 /**
  * Returns false on error.

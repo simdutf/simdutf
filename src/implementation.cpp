@@ -1004,12 +1004,12 @@ public:
   }
   simdutf_warn_unused result utf8_length_from_utf16le_with_replacement(
       const char16_t *, size_t) const noexcept final override {
-    return { OTHER, 0 }; // Not supported
+    return {OTHER, 0}; // Not supported
   }
 
   simdutf_warn_unused result utf8_length_from_utf16be_with_replacement(
       const char16_t *, size_t) const noexcept final override {
-    return { OTHER, 0 }; // Not supported
+    return {OTHER, 0}; // Not supported
   }
 
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
