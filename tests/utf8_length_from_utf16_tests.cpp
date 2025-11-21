@@ -81,7 +81,6 @@ TEST(issue001) {
 #endif
 }
 
-
 TEST(issue002) {
   // There are surrogates but they are well formed.
   std::vector<char16_t> input = {0xd950, 0xdd9a, 0x002d};
