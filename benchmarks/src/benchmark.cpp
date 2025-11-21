@@ -215,7 +215,7 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
   register_function("convert_valid_utf16le_to_latin1",
                     &Benchmark::run_convert_valid_utf16le_to_latin1,
                     simdutf::encoding_type::UTF16_LE);
-#if SIMDUTF_BIG_ENDIAN
+#if SIMDUTF_IS_BIG_ENDIAN
   register_function("convert_utf16_to_utf8_safe",
                     &Benchmark::run_convert_utf16_to_utf8_safe,
                     simdutf::encoding_type::UTF16_BE);
@@ -223,7 +223,7 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
   register_function("convert_utf16_to_utf8_safe",
                     &Benchmark::run_convert_utf16_to_utf8_safe,
                     simdutf::encoding_type::UTF16_LE);
-#endif // SIMDUTF_BIG_ENDIAN
+#endif // SIMDUTF_IS_BIG_ENDIAN
   register_function("convert_utf16le_to_utf8",
                     &Benchmark::run_convert_utf16le_to_utf8,
                     simdutf::encoding_type::UTF16_LE);
