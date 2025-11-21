@@ -5,8 +5,10 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16(const char16_t *in,
   using vector_u16 = simd16<uint16_t>;
   constexpr size_t N = vector_u16::ELEMENTS; // 32 on AVX-512
   if (N + 1 > size) {
-    return scalar::utf16::utf8_length_from_utf16_with_replacement<big_endian>(
-        in, size);
+    result scalar_result =
+        scalar::utf16::utf8_length_from_utf16_with_replacement<big_endian>(
+            in, size);
+    return scalar_result.count;
   } // special case for short inputs
   size_t pos = 0;
 
@@ -110,7 +112,7 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16(const char16_t *in,
 }
 
 template <endianness big_endian>
-simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
+simdutf_really_inline result icelake_utf8_length_from_utf16_with_replacement(
     const char16_t *in, size_t size) {
   ///////
   // We repeat 3 times the same algorithm.
@@ -137,6 +139,7 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
       match_system(big_endian) ? 0xdc00d800 : 0x00dc00d8;
 
   size_t count = 0;
+  bool any_surrogates = false;
   // We assume all surrogates are mismatched and count here the matched
   // ones.
   size_t matches = 0;
@@ -172,6 +175,7 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
     count += count_ones32(c02);
     count += count_ones32(c12);
     if (_kor_mask32(is_surrogate1, is_surrogate2)) {
+      any_surrogates = true;
       __m512i lb_masked1 =
           _mm512_and_si512(current1, _mm512_set1_epi16(uint16_t(0xfc00)));
       __mmask32 hi_surrogates1 = _mm512_cmpeq_epi16_mask(
@@ -212,6 +216,7 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
     count += count_ones32(c0);
     count += count_ones32(c1);
     if (is_surrogate) {
+      any_surrogates = true;
       __m512i lb_masked =
           _mm512_and_si512(input, _mm512_set1_epi16(uint16_t(0xfc00)));
       __mmask32 hi_surrogates = _mm512_cmpeq_epi16_mask(
@@ -246,6 +251,7 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
   count += count_ones32(c0);
   count += count_ones32(c1);
   if (is_surrogate) {
+    any_surrogates = true;
     __m512i lb_masked =
         _mm512_and_si512(input, _mm512_set1_epi16(uint16_t(0xfc00)));
     __mmask32 hi_surrogates =
@@ -259,5 +265,5 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
   count += pos;
 
   count -= 2 * matches;
-  return count;
+  return { any_surrogates ? SURROGATE : SUCCESS, count };
 }

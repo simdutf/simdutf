@@ -1613,14 +1613,14 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf8(
   return count +
          scalar::utf8::utf16_length_from_utf8(input + pos, length - pos);
 }
-simdutf_warn_unused size_t
+simdutf_warn_unused result
 implementation::utf8_length_from_utf16le_with_replacement(
     const char16_t *input, size_t length) const noexcept {
   return icelake_utf8_length_from_utf16_with_replacement<endianness::LITTLE>(
       input, length);
 }
 
-simdutf_warn_unused size_t
+simdutf_warn_unused result
 implementation::utf8_length_from_utf16be_with_replacement(
     const char16_t *input, size_t length) const noexcept {
   return icelake_utf8_length_from_utf16_with_replacement<endianness::BIG>(

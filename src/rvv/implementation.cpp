@@ -102,14 +102,14 @@ size_t implementation::binary_to_base64_with_lines(
 }
 #endif // SIMDUTF_FEATURE_BASE64
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
-simdutf_warn_unused size_t
+simdutf_warn_unused result
 implementation::utf8_length_from_utf16le_with_replacement(
     const char16_t *input, size_t length) const noexcept {
   return scalar::utf16::utf8_length_from_utf16_with_replacement<
       endianness::LITTLE>(input, length);
 }
 
-simdutf_warn_unused size_t
+simdutf_warn_unused result
 implementation::utf8_length_from_utf16be_with_replacement(
     const char16_t *input, size_t length) const noexcept {
   return scalar::utf16::utf8_length_from_utf16_with_replacement<
