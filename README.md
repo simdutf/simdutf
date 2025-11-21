@@ -450,12 +450,19 @@ enum error_code {
              // U+10FFFF,less than or equal than U+7F for ASCII OR less than
              // equal than U+FF for Latin1
   SURROGATE, // The decoded character must be not be in U+D800...DFFF (UTF-8 or
-             // UTF-32) OR a high surrogate must be followed by a low surrogate
+             // UTF-32)
+             // OR
+             // a high surrogate must be followed by a low surrogate
              // and a low surrogate must be preceded by a high surrogate
-             // (UTF-16) OR there must be no surrogate at all and one is
-             // found (Latin1) OR
-             // a mismatched surrogate has been detected without
-             // this being a error (utf8_length_from_utf16_with_replacement).
+             // (UTF-16)
+             // OR
+             // there must be no surrogate at all and one is
+             // found (Latin1 functions)
+             // OR
+             // *specifically* for the function
+             // utf8_length_from_utf16_with_replacement, a surrogate (whether
+             // in error or not) has been found (I.e., whether we are in the
+             // Basic Multilingual Plane or not).
   INVALID_BASE64_CHARACTER, // Found a character that cannot be part of a valid
                             // base64 string. This may include a misplaced padding character ('=').
   BASE64_INPUT_REMAINDER,   // The base64 input terminates with a single
@@ -917,7 +924,13 @@ simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t * input, size_t
  * @param input         the UTF-16 string to convert
  * @param length        the length of the string in 2-byte code units (char16_t)
  * @return the number of bytes required to encode the UTF-16 string as UTF-8
- * @return a result pair struct (of type simdutf::result containing the two fields error and count) where the count is the number of bytes required to encode the UTF-16 string as UTF-8, and the error code is either SUCCESS or SURROGATE. The count is correct regardless of the error field.
+ * @return a result pair struct (of type simdutf::result containing the two fields error and count)
+ * where the count is the number of bytes required to encode the UTF-16 string as UTF-8, and the
+ * error code is either SUCCESS or SURROGATE. The count is correct regardless of the error field.
+ * When SURROGATE is returned, it does not indicate an error in the case of this function:
+ * it indicates that at least one surrogate has been encountered: the surrogates may be matched
+ * or not (thus this function does not validate). If the returned error code is SUCCESS,
+ * then the input contains no surrogate, is in the Basic Multilingual Plane, and is necessarily valid.
  */
 simdutf_warn_unused result utf8_length_from_utf16_with_replacement(const char16_t *input,
                                                   size_t length) noexcept;
@@ -953,9 +966,14 @@ simdutf_warn_unused size_t utf8_length_from_utf16be(const char16_t * input, size
  * @param input         the UTF-16LE string to convert
  * @param length        the length of the string in 2-byte code units (char16_t)
  * @return the number of bytes required to encode the UTF-16LE string as UTF-8
- * @return a result pair struct (of type simdutf::result containing the two fields error and count) where the count is the number of bytes required to encode the UTF-16LE string as UTF-8, and the error code is either SUCCESS or SURROGATE. The count is correct regardless of the error field.
+ * @return a result pair struct (of type simdutf::result containing the two fields error and count)
+ * where the count is the number of bytes required to encode the UTF-16LE string as UTF-8, and the
+ * error code is either SUCCESS or SURROGATE. The count is correct regardless of the error field.
+ * When SURROGATE is returned, it does not indicate an error in the case of this function:
+ * it indicates that at least one surrogate has been encountered: the surrogates may be matched
+ * or not (thus this function does not validate). If the returned error code is SUCCESS,
+ * then the input contains no surrogate, is in the Basic Multilingual Plane, and is necessarily valid.
  */
-
 simdutf_warn_unused result utf8_length_from_utf16le_with_replacement(
     const char16_t *input, size_t length) noexcept;
 
@@ -967,9 +985,14 @@ simdutf_warn_unused result utf8_length_from_utf16le_with_replacement(
  *
  * @param input         the UTF-16BE string to convert
  * @param length        the length of the string in 2-byte code units (char16_t)
- * @return a result pair struct (of type simdutf::result containing the two fields error and count) where the count is the number of bytes required to encode the UTF-16LE string as UTF-8, and the error code is either SUCCESS or SURROGATE. The count is correct regardless of the error field.
+ * @return a result pair struct (of type simdutf::result containing the two fields error and count)
+ * where the count is the number of bytes required to encode the UTF-16LE string as UTF-8, and
+ * the error code is either SUCCESS or SURROGATE. The count is correct regardless of the error field.
+ * When SURROGATE is returned, it does not indicate an error in the case of this function:
+ * it indicates that at least one surrogate has been encountered: the surrogates may be matched
+ * or not (thus this function does not validate). If the returned error code is SUCCESS,
+ * then the input contains no surrogate, is in the Basic Multilingual Plane, and is necessarily valid.
  */
-
 simdutf_warn_unused result utf8_length_from_utf16be_with_replacement(
     const char16_t *input, size_t length) noexcept;
 

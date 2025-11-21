@@ -58,4 +58,27 @@ TEST(utf16be_surrogate_pair) {
   }
 }
 
+TEST(issue001) {
+  // There are surrogates but they are well formed.
+  std::vector<char16_t> input = {0x004e, 0x000e, 0xdbba, 0xdd90,
+                                 0x030b, 0x0035, 0x004f, 0x0045};
+#if SIMDUTF_BIG_ENDIAN
+  const size_t standard =
+      implementation.utf8_length_from_utf16be(input.data(), input.size());
+  ASSERT_EQUAL(standard, 11);
+  const auto result1 = implementation.utf8_length_from_utf16be_with_replacement(
+      input.data(), input.size());
+  ASSERT_EQUAL(result1.count, 11);
+  ASSERT_EQUAL(simdutf::SURROGATE, result1.error);
+#else
+  const size_t standard =
+      implementation.utf8_length_from_utf16le(input.data(), input.size());
+  ASSERT_EQUAL(standard, 11);
+  const auto result2 = implementation.utf8_length_from_utf16le_with_replacement(
+      input.data(), input.size());
+  ASSERT_EQUAL(result2.count, 11);
+  ASSERT_EQUAL(simdutf::SURROGATE, result2.error);
+#endif
+}
+
 TEST_MAIN

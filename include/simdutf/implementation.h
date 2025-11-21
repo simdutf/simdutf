@@ -783,8 +783,12 @@ convert_utf8_to_utf16(const detail::input_span_of_byte_like auto &input,
  * fields error and count) where the count is the number of bytes required to
  * encode the UTF-16LE string as UTF-8, and the error code is either SUCCESS or
  * SURROGATE. The count is correct regardless of the error field.
+ * When SURROGATE is returned, it does not indicate an error in the case of this
+ * function: it indicates that at least one surrogate has been encountered: the
+ * surrogates may be matched or not (thus this function does not validate). If
+ * the returned error code is SUCCESS, then the input contains no surrogate, is
+ * in the Basic Multilingual Plane, and is necessarily valid.
  */
-
 simdutf_warn_unused result utf8_length_from_utf16le_with_replacement(
     const char16_t *input, size_t length) noexcept;
   #if SIMDUTF_SPAN
@@ -807,8 +811,12 @@ utf8_length_from_utf16le_with_replacement(
  * fields error and count) where the count is the number of bytes required to
  * encode the UTF-16BE string as UTF-8, and the error code is either SUCCESS or
  * SURROGATE. The count is correct regardless of the error field.
+ * When SURROGATE is returned, it does not indicate an error in the case of this
+ * function: it indicates that at least one surrogate has been encountered: the
+ * surrogates may be matched or not (thus this function does not validate). If
+ * the returned error code is SUCCESS, then the input contains no surrogate, is
+ * in the Basic Multilingual Plane, and is necessarily valid.
  */
-
 simdutf_warn_unused result utf8_length_from_utf16be_with_replacement(
     const char16_t *input, size_t length) noexcept;
   #if SIMDUTF_SPAN
@@ -2130,6 +2138,11 @@ utf8_length_from_utf16(std::span<const char16_t> valid_utf16_input) noexcept {
  * fields error and count) where the count is the number of bytes required to
  * encode the UTF-16 string as UTF-8, and the error code is either SUCCESS or
  * SURROGATE. The count is correct regardless of the error field.
+ * When SURROGATE is returned, it does not indicate an error in the case of this
+ * function: it indicates that at least one surrogate has been encountered: the
+ * surrogates may be matched or not (thus this function does not validate). If
+ * the returned error code is SUCCESS, then the input contains no surrogate, is
+ * in the Basic Multilingual Plane, and is necessarily valid.
  */
 simdutf_warn_unused result utf8_length_from_utf16_with_replacement(
     const char16_t *input, size_t length) noexcept;
@@ -4165,6 +4178,12 @@ public:
    * fields error and count) where the count is the number of bytes required to
    * encode the UTF-16LE string as UTF-8, and the error code is either SUCCESS
    * or SURROGATE. The count is correct regardless of the error field.
+   * When SURROGATE is returned, it does not indicate an error in the case of
+   * this function: it indicates that at least one surrogate has been
+   * encountered: the surrogates may be matched or not (thus this function does
+   * not validate). If the returned error code is SUCCESS, then the input
+   * contains no surrogate, is in the Basic Multilingual Plane, and is
+   * necessarily valid.
    */
   virtual simdutf_warn_unused result utf8_length_from_utf16le_with_replacement(
       const char16_t *input, size_t length) const noexcept = 0;
@@ -4181,6 +4200,12 @@ public:
    * fields error and count) where the count is the number of bytes required to
    * encode the UTF-16BE string as UTF-8, and the error code is either SUCCESS
    * or SURROGATE. The count is correct regardless of the error field.
+   * When SURROGATE is returned, it does not indicate an error in the case of
+   * this function: it indicates that at least one surrogate has been
+   * encountered: the surrogates may be matched or not (thus this function does
+   * not validate). If the returned error code is SUCCESS, then the input
+   * contains no surrogate, is in the Basic Multilingual Plane, and is
+   * necessarily valid.
    */
   virtual simdutf_warn_unused result utf8_length_from_utf16be_with_replacement(
       const char16_t *input, size_t length) const noexcept = 0;
