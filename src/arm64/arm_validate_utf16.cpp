@@ -12,7 +12,7 @@ const char16_t *arm_validate_utf16(const char16_t *input, size_t size) {
     auto in0 = simd16<uint16_t>(input);
     auto in1 =
         simd16<uint16_t>(input + simd16<uint16_t>::SIZE / sizeof(char16_t));
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       in0 = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in0)));
       in1 = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in1)));
     }
@@ -76,7 +76,7 @@ const char16_t *arm_validate_utf16_as_ascii(const char16_t *input,
     uint16x8_t in1 = vld1q_u16(reinterpret_cast<const uint16_t *>(input));
     uint16x8_t in2 = vld1q_u16(reinterpret_cast<const uint16_t *>(input + 8));
     uint16x8_t inor = vorrq_u16(in1, in2);
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       inor = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(inor)));
     }
     // next we compute inor > 0x7f
@@ -108,7 +108,7 @@ const result arm_validate_utf16_with_errors(const char16_t *input,
     auto in1 =
         simd16<uint16_t>(input + simd16<uint16_t>::SIZE / sizeof(char16_t));
 
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       in0 = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in0)));
       in1 = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in1)));
     }

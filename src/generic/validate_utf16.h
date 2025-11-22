@@ -135,7 +135,7 @@ const result validate_utf16_as_ascii_with_errors(const char16_t *input,
   for (; pos < size / 32 * 32; pos += 32) {
     simd16x32<uint16_t> input_vec(
         reinterpret_cast<const uint16_t *>(input + pos));
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       input_vec.swap_bytes();
     }
     uint64_t matches = input_vec.lteq(uint16_t(0x7f));

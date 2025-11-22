@@ -14,7 +14,7 @@ utf16_to_latin1_t ppc64_convert_utf16_to_latin1(const char16_t *buf, size_t len,
 
     // Move low bytes of UTF-16 chars to lower half of `in`
     // and upper bytes to upper half of `in`.
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       const auto perm =
           vector_u8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
       in = perm.lookup_16(in);

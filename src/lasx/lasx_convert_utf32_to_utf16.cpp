@@ -27,7 +27,7 @@ lasx_convert_utf32_to_utf16(const char32_t *buf, size_t len,
       word -= 0x10000;
       uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
       uint16_t low_surrogate = uint16_t(0xDC00 + (word & 0x3FF));
-      if (!match_system(big_endian)) {
+      if simdutf_constexpr (!match_system(big_endian)) {
         high_surrogate = uint16_t(high_surrogate >> 8 | high_surrogate << 8);
         low_surrogate = uint16_t(low_surrogate << 8 | low_surrogate >> 8);
       }
@@ -54,7 +54,7 @@ lasx_convert_utf32_to_utf16(const char32_t *buf, size_t len,
               __lasx_xvsle_h(v_d800, utf16_packed)), // utf16_packed >= 0xd800
           forbidden_bytemask);
 
-      if (!match_system(big_endian)) {
+      if simdutf_constexpr (!match_system(big_endian)) {
         utf16_packed = lasx_swap_bytes(utf16_packed);
       }
       __lasx_xvst(utf16_packed, utf16_output, 0);
@@ -86,7 +86,7 @@ lasx_convert_utf32_to_utf16(const char32_t *buf, size_t len,
           word -= 0x10000;
           uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
           uint16_t low_surrogate = uint16_t(0xDC00 + (word & 0x3FF));
-          if (!match_system(big_endian)) {
+          if simdutf_constexpr (!match_system(big_endian)) {
             high_surrogate =
                 uint16_t(high_surrogate >> 8 | high_surrogate << 8);
             low_surrogate = uint16_t(low_surrogate << 8 | low_surrogate >> 8);
@@ -135,7 +135,7 @@ lasx_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
       word -= 0x10000;
       uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
       uint16_t low_surrogate = uint16_t(0xDC00 + (word & 0x3FF));
-      if (!match_system(big_endian)) {
+      if simdutf_constexpr (!match_system(big_endian)) {
         high_surrogate = uint16_t(high_surrogate >> 8 | high_surrogate << 8);
         low_surrogate = uint16_t(low_surrogate << 8 | low_surrogate >> 8);
       }
@@ -165,7 +165,7 @@ lasx_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
                               reinterpret_cast<char16_t *>(utf16_output));
       }
 
-      if (!match_system(big_endian)) {
+      if simdutf_constexpr (!match_system(big_endian)) {
         utf16_packed = lasx_swap_bytes(utf16_packed);
       }
 
@@ -200,7 +200,7 @@ lasx_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
           word -= 0x10000;
           uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
           uint16_t low_surrogate = uint16_t(0xDC00 + (word & 0x3FF));
-          if (!match_system(big_endian)) {
+          if simdutf_constexpr (!match_system(big_endian)) {
             high_surrogate =
                 uint16_t(high_surrogate >> 8 | high_surrogate << 8);
             low_surrogate = uint16_t(low_surrogate << 8 | low_surrogate >> 8);

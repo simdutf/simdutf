@@ -37,7 +37,7 @@ lasx_convert_utf16_to_utf32(const char16_t *buf, size_t len,
 
   while (end - buf >= 16) {
     __m256i in = __lasx_xvld(reinterpret_cast<const uint16_t *>(buf), 0);
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       in = lasx_swap_bytes(in);
     }
 
@@ -135,7 +135,7 @@ lasx_convert_utf16_to_utf32_with_errors(const char16_t *buf, size_t len,
   __m256i v_d800 = lasx_splat_u16(0xd800);
   while (end - buf >= 16) {
     __m256i in = __lasx_xvld(reinterpret_cast<const uint16_t *>(buf), 0);
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       in = lasx_swap_bytes(in);
     }
 
