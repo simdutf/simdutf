@@ -83,9 +83,8 @@ utf32_to_utf16_t ppc64_convert_utf32_to_utf16(const char32_t *buf, size_t len,
             return utf32_to_utf16_t{error_code::SURROGATE, buf + k,
                                     utf16_output};
           }
-          *utf16_output++ = not match_system(big_endian)
-                                ? scalar::u16_swap_bytes(uint16_t(word))
-                                : uint16_t(word);
+          *utf16_output++ =
+              scalar::utf16::swap_if_needed<big_endian>(uint16_t(word));
         } else {
           // will generate a surrogate pair
           if (word > 0x10FFFF) {
@@ -95,10 +94,10 @@ utf32_to_utf16_t ppc64_convert_utf32_to_utf16(const char32_t *buf, size_t len,
           word -= 0x10000;
           uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
           uint16_t low_surrogate = uint16_t(0xDC00 + (word & 0x3FF));
-          if (not match_system(big_endian)) {
-            high_surrogate = scalar::u16_swap_bytes(high_surrogate);
-            low_surrogate = scalar::u16_swap_bytes(low_surrogate);
-          }
+          high_surrogate =
+              scalar::utf16::swap_if_needed<big_endian>(high_surrogate);
+          low_surrogate =
+              scalar::utf16::swap_if_needed<big_endian>(low_surrogate);
           *utf16_output++ = char16_t(high_surrogate);
           *utf16_output++ = char16_t(low_surrogate);
         }

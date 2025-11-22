@@ -23,7 +23,7 @@ simdutf_really_inline size_t count_code_points(const char16_t *in,
   auto counters = zero;
   for (; pos < size / N * N; pos += N) {
     auto input = vector_u16::load(in + pos);
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       input = input.swap_bytes();
     }
 

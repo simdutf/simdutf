@@ -3,7 +3,6 @@
 
 namespace simdutf {
 namespace scalar {
-namespace {
 namespace utf32 {
 
 inline simdutf_warn_unused bool validate(const char32_t *buf,
@@ -61,7 +60,6 @@ inline size_t utf16_length_from_utf32(const char32_t *buf, size_t len) {
 }
 
 } // namespace utf32
-} // unnamed namespace
 } // namespace scalar
 } // namespace simdutf
 

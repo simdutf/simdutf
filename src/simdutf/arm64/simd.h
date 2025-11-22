@@ -310,9 +310,9 @@ template <> struct simd8<int8_t> {
   //    ...
   template <endianness big_endian>
   simdutf_really_inline void store_ascii_as_utf16(char16_t *p) const {
-    int8x16x2_t pair = match_system(big_endian)
-                           ? int8x16x2_t{{this->value, vmovq_n_s8(0)}}
-                           : int8x16x2_t{{vmovq_n_s8(0), this->value}};
+    simdutf_constexpr int8x16x2_t pair =
+        match_system(big_endian) ? int8x16x2_t{{this->value, vmovq_n_s8(0)}}
+                                 : int8x16x2_t{{vmovq_n_s8(0), this->value}};
     vst2q_s8(reinterpret_cast<int8_t *>(p), pair);
   }
 

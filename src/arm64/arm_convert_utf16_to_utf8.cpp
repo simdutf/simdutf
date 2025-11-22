@@ -64,7 +64,7 @@ arm_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
           // https://github.com/simdutf/simdutf/issues/92
   while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in)));
     }
     if (vmaxvq_u16(in) <= 0x7F) { // ASCII fast path!!!!
@@ -72,7 +72,7 @@ arm_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
       // characters.
       uint16x8_t nextin =
           vld1q_u16(reinterpret_cast<const uint16_t *>(buf) + 8);
-      if (!match_system(big_endian)) {
+      if simdutf_constexpr (!match_system(big_endian)) {
         nextin = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(nextin)));
       }
       if (vmaxvq_u16(nextin) > 0x7F) {
@@ -274,8 +274,7 @@ arm_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
         forward = size_t(end - buf - 1);
       }
       for (; k < forward; k++) {
-        uint16_t word =
-            !match_system(big_endian) ? scalar::u16_swap_bytes(buf[k]) : buf[k];
+        uint16_t word = scalar::utf16::swap_if_needed<big_endian>(buf[k]);
         if ((word & 0xFF80) == 0) {
           *utf8_output++ = char(word);
         } else if ((word & 0xF800) == 0) {
@@ -288,9 +287,8 @@ arm_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
         } else {
           // must be a surrogate pair
           uint16_t diff = uint16_t(word - 0xD800);
-          uint16_t next_word = !match_system(big_endian)
-                                   ? scalar::u16_swap_bytes(buf[k + 1])
-                                   : buf[k + 1];
+          uint16_t next_word =
+              scalar::utf16::swap_if_needed<big_endian>(buf[k + 1]);
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
           if ((diff | diff2) > 0x3FF) {
@@ -335,7 +333,7 @@ arm_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
 
   while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in)));
     }
     if (vmaxvq_u16(in) <= 0x7F) { // ASCII fast path!!!!
@@ -343,7 +341,7 @@ arm_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
       // characters.
       uint16x8_t nextin =
           vld1q_u16(reinterpret_cast<const uint16_t *>(buf) + 8);
-      if (!match_system(big_endian)) {
+      if simdutf_constexpr (!match_system(big_endian)) {
         nextin = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(nextin)));
       }
       if (vmaxvq_u16(nextin) > 0x7F) {
@@ -545,8 +543,7 @@ arm_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
         forward = size_t(end - buf - 1);
       }
       for (; k < forward; k++) {
-        uint16_t word =
-            !match_system(big_endian) ? scalar::u16_swap_bytes(buf[k]) : buf[k];
+        uint16_t word = scalar::utf16::swap_if_needed<big_endian>(buf[k]);
         if ((word & 0xFF80) == 0) {
           *utf8_output++ = char(word);
         } else if ((word & 0xF800) == 0) {
@@ -559,9 +556,8 @@ arm_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
         } else {
           // must be a surrogate pair
           uint16_t diff = uint16_t(word - 0xD800);
-          uint16_t next_word = !match_system(big_endian)
-                                   ? scalar::u16_swap_bytes(buf[k + 1])
-                                   : buf[k + 1];
+          uint16_t next_word =
+              scalar::utf16::swap_if_needed<big_endian>(buf[k + 1]);
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
           if ((diff | diff2) > 0x3FF) {
@@ -609,7 +605,7 @@ arm64_utf8_length_from_utf16_bytemask(const char16_t *in, size_t size) {
     auto base_input = vld2q_u8(reinterpret_cast<const uint8_t *>(in + pos));
     //
     size_t idx = 1; // we use the second lane of the deinterleaved load
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       idx = 0;
     }
     size_t idx_lsb = idx ^ 1;
@@ -690,7 +686,7 @@ arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
   for (; size - pos >= N + 1; pos += N) {
     auto base_input = vld2q_u8(reinterpret_cast<const uint8_t *>(in + pos));
     size_t idx = 1; // we use the second lane of the deinterleaved load
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       idx = 0;
     }
     size_t idx_lsb = idx ^ 1;
