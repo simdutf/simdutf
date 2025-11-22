@@ -190,9 +190,9 @@ size_t convert_masked_utf8_to_utf16(const char *input,
       if (basic_buffer[i] > 0x3c00000) {
         const auto ch0 = uint16_t(surrogate_buffer[i] & 0xffff);
         const auto ch1 = uint16_t(surrogate_buffer[i] >> 16);
-        if simdutf_constexpr (match_system(big_endian)) {
-          utf16_output[1] = scalar::utf16::swap_if_needed<big_endian>(ch0);
-          utf16_output[0] = scalar::utf16::swap_if_needed<big_endian>(ch1);
+        if (match_system(big_endian)) {
+          utf16_output[1] = scalar::u16_swap_bytes(ch0);
+          utf16_output[0] = scalar::u16_swap_bytes(ch1);
         } else {
           utf16_output[1] = ch0;
           utf16_output[0] = ch1;
