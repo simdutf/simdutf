@@ -31,10 +31,10 @@ simdutf_really_inline void utf16fix_block_rvv(char16_t *out, const char16_t *in,
       lb_illseq_right_shifted = __riscv_vmandn_mm_b2(
           __riscv_vmseq_vx_u16m8_b2(
               __riscv_vslide1down_vx_u16m8(lb_masked, 0, vl),
-              swap_if_needed(0xd800U), vl),
+              scalar::utf16::swap_if_needed<big_endian>(0xd800U), vl),
           __riscv_vmseq_vx_u16m8_b2(
               __riscv_vslide1down_vx_u16m8(block_masked, 0, vl),
-              swap_if_needed(0xdc00U), vl),
+              scalar::utf16::swap_if_needed<big_endian>(0xdc00U), vl),
           vl);
     }
 
