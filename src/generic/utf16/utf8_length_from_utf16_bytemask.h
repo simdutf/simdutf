@@ -85,7 +85,7 @@ simdutf_really_inline size_t utf8_length_from_utf16_bytemask(const char16_t *in,
 }
 
 template <endianness big_endian>
-simdutf_really_inline size_t
+simdutf_really_inline result
 utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
   using vector_u16 = simd16<uint16_t>;
   constexpr size_t N = vector_u16::ELEMENTS;
@@ -94,6 +94,7 @@ utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
         in, size);
   } // special case for short inputs
   size_t pos = 0;
+  bool any_surrogates = false;
 
   const auto one = vector_u16::splat(1);
 
@@ -109,6 +110,7 @@ utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
   size_t iteration = max_iterations;
 
   if (scalar::utf16::is_low_surrogate<big_endian>(in[0])) {
+    any_surrogates = true;
     mismatched_count += 1;
   }
 
@@ -130,17 +132,9 @@ utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
     v_count += c0;
     v_count += c1;
     v_count += vector_u16(is_surrogate);
-    //
-    // In theory, we should go faster by avoiding the cost of the coming
-    // branch when there is no surrogate. However, the benefit in practice
-    // are unclear.
-    // This should be revisited in the future for better performance.
-    // It might be possible to batch several iterations together to make
-    // this check worth it.
-    // if(is_surrogate.to_bitmask() != 0 ||
-    // scalar::utf16::is_low_surrogate<big_endian>(in[pos])) {
-    //
-    if (true) { // deliberately always true
+    if (is_surrogate.to_bitmask() != 0 ||
+        scalar::utf16::is_low_surrogate<big_endian>(in[pos + N])) {
+      any_surrogates = true;
       auto input_next =
           vector_u16::load(reinterpret_cast<const uint16_t *>(in + pos + 1));
       if (!match_system(big_endian)) {
@@ -174,6 +168,7 @@ utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
   }
 
   if (scalar::utf16::is_low_surrogate<big_endian>(in[pos])) {
+    any_surrogates = true;
     if (!scalar::utf16::is_high_surrogate<big_endian>(in[pos - 1])) {
       mismatched_count -= 1;
       count += 2;
@@ -183,6 +178,7 @@ utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
   count += pos;
   count += mismatched_count;
   if (scalar::utf16::is_high_surrogate<big_endian>(in[pos - 1])) {
+    any_surrogates = true;
     if (pos == size) {
       count += 2;
     } else if (scalar::utf16::is_low_surrogate<big_endian>(in[pos])) {
@@ -190,9 +186,11 @@ utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
       count += 2;
     }
   }
-  return count +
-         scalar::utf16::utf8_length_from_utf16_with_replacement<big_endian>(
-             in + pos, size - pos);
+  result scalar_result =
+      scalar::utf16::utf8_length_from_utf16_with_replacement<big_endian>(
+          in + pos, size - pos);
+  return {any_surrogates ? SURROGATE : scalar_result.error,
+          count + scalar_result.count};
 }
 
 } // namespace utf16

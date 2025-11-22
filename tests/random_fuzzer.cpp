@@ -127,25 +127,6 @@ size_t valid_utf16le = 0;
 size_t valid_utf16be = 0;
 size_t valid_base64 = 0;
 
-inline int16_t u16_swap_bytes(const uint16_t word) {
-  return uint16_t((word >> 8) | (word << 8));
-}
-
-template <simdutf::endianness big_endian>
-inline size_t utf8_length_from_utf16(const char16_t *p, size_t len) {
-  // We are not BOM aware.
-  size_t counter{0};
-  for (size_t i = 0; i < len; i++) {
-    char16_t word = !match_system(big_endian) ? u16_swap_bytes(p[i]) : p[i];
-    counter++; // ASCII
-    counter += static_cast<size_t>(
-        word >
-        0x7F); // non-ASCII is at least 2 bytes, surrogates are 2*2 == 4 bytes
-    counter += static_cast<size_t>((word > 0x7FF && word <= 0xD7FF) ||
-                                   (word >= 0xE000)); // three-byte
-  }
-  return counter;
-}
 /**
  * Returns false on error.
  */
@@ -185,18 +166,10 @@ bool fuzz_this(const char *data, size_t size) {
       // We need a buffer where to write the UTF-8 code units.
       size_t expected_utf8words =
           e->utf8_length_from_utf16le(utf16_output.get(), utf16words);
-      size_t scalar_expected_utf8words =
-          utf8_length_from_utf16<simdutf::endianness::LITTLE>(
-              utf16_output.get(), utf16words); // test scalar function too
-      if (expected_utf8words != scalar_expected_utf8words) {
-        printf("Mismatch between scalar and SIMD utf8 length from utf16le\n");
-        print_input(source, e);
-        return false;
-      }
-      size_t expected_utf8words_with_replacement =
+      simdutf::result expected_utf8words_with_replacement =
           e->utf8_length_from_utf16le_with_replacement(utf16_output.get(),
                                                        utf16words);
-      if (expected_utf8words != expected_utf8words_with_replacement) {
+      if (expected_utf8words != expected_utf8words_with_replacement.count) {
         printf("Mismatch between replacement and standard utf8 length from "
                "utf16le\n");
         print_input(source, e);

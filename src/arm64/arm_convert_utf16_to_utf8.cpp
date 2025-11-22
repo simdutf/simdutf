@@ -649,7 +649,7 @@ arm64_utf8_length_from_utf16_bytemask(const char16_t *in, size_t size) {
 }
 
 template <endianness big_endian>
-simdutf_really_inline size_t
+simdutf_really_inline result
 arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
   constexpr size_t N =
       16; // we process 16 char16_t at a time, this is NEON specific
@@ -659,6 +659,7 @@ arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
         in, size);
   } // special case for short input
   size_t count = 0;
+  bool any_surrogates = false;
   const auto one = vmovq_n_u8(1);
 
   // The general strategy is as follows:
@@ -682,6 +683,7 @@ arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
   size_t number_of_unpaired_surrogates = 0;
   if (scalar::utf16::is_low_surrogate<big_endian>(in[0])) {
     number_of_unpaired_surrogates += 1;
+    any_surrogates = true;
   }
   size_t pos = 0;
   // We will go through the input at least once.
@@ -697,6 +699,7 @@ arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
     // We count on the fact that most inputs do not have surrogates.
     if (vmaxvq_u32(vreinterpretq_u32_u8(is_surrogate)) ||
         scalar::utf16::is_low_surrogate<big_endian>(in[pos + N])) {
+      any_surrogates = true;
       // there is at least one surrogate in the block
       // We use this to check that surrogates are paired correctly.
       // It is the input shifted by one code unit (two bytes).
@@ -753,6 +756,7 @@ arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
   // the unpaired low surrogate.
   //!!!!!!!!!!!!!!!
   if (scalar::utf16::is_low_surrogate<big_endian>(in[pos])) {
+    any_surrogates = true;
     if (!scalar::utf16::is_high_surrogate<big_endian>(in[pos - 1])) {
       number_of_unpaired_surrogates -= 1;
       count += 2;
@@ -764,6 +768,7 @@ arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
   // If we end with a high surrogate, it might be unpaired or not, we
   // don't know. It counts as a pair suggarate for now.
   if (scalar::utf16::is_high_surrogate<big_endian>(in[pos - 1])) {
+    any_surrogates = true;
     if (pos == size) {
       count += 2;
     } else if (scalar::utf16::is_low_surrogate<big_endian>(in[pos])) {
@@ -771,7 +776,9 @@ arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
       count += 2;
     }
   }
-  return count +
-         scalar::utf16::utf8_length_from_utf16_with_replacement<big_endian>(
-             in + pos, size - pos);
+  result scalar_result =
+      scalar::utf16::utf8_length_from_utf16_with_replacement<big_endian>(
+          in + pos, size - pos);
+  return {any_surrogates ? SURROGATE : scalar_result.error,
+          count + scalar_result.count};
 }
