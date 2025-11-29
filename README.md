@@ -1,5 +1,5 @@
 
-simdutf: Unicode validation and transcoding at billions of characters per second
+simdutf: Text processing at billions of characters per second
 ===============================================
 
 [![Alpine Linux](https://github.com/simdutf/simdutf/actions/workflows/alpine.yml/badge.svg)](https://github.com/simdutf/simdutf/actions/workflows/alpine.yml)
