@@ -5,11 +5,10 @@ namespace simdutf {
 namespace scalar {
 namespace {
 namespace utf8 {
-#if SIMDUTF_IMPLEMENTATION_FALLBACK || SIMDUTF_IMPLEMENTATION_RVV
-// only used by the fallback kernel.
+
 // credit: based on code from Google Fuchsia (Apache Licensed)
-inline simdutf_warn_unused bool validate(const char *buf, size_t len) noexcept {
-  const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);
+inline simdutf_constexpr simdutf_warn_unused bool
+validate(const uint8_t *data, size_t len) noexcept {
   uint64_t pos = 0;
   uint32_t code_point = 0;
   while (pos < len) {
@@ -97,7 +96,11 @@ inline simdutf_warn_unused bool validate(const char *buf, size_t len) noexcept {
   }
   return true;
 }
-#endif
+
+simdutf_really_inline /*constexpr*/ simdutf_warn_unused bool
+validate(const char *buf, size_t len) noexcept {
+  return validate(reinterpret_cast<const uint8_t *>(buf), len);
+}
 
 inline simdutf_warn_unused result validate_with_errors(const char *buf,
                                                        size_t len) noexcept {
