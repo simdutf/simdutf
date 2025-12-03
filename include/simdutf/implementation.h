@@ -39,6 +39,42 @@
 #define SIMDUTF_FEATURE_UTF32 1
 #define SIMDUTF_FEATURE_BASE64 1
 
+#if SIMDUTF_CPLUSPLUS23
+  #include <simdutf/constexpr_ptr.h>
+#endif
+
+// these includes are needed for constexpr support. they are
+// not part of the public api.
+#include <simdutf/scalar/swap_bytes.h>
+#include <simdutf/scalar/ascii.h>
+#include <simdutf/scalar/atomic_util.h>
+// #include <simdutf/scalar/base64.h>
+#include <simdutf/scalar/latin1.h>
+#include <simdutf/scalar/latin1_to_utf16/latin1_to_utf16.h>
+#include <simdutf/scalar/latin1_to_utf32/latin1_to_utf32.h>
+#include <simdutf/scalar/latin1_to_utf8/latin1_to_utf8.h>
+#include <simdutf/scalar/utf16.h>
+#include <simdutf/scalar/utf16_to_latin1/utf16_to_latin1.h>
+#include <simdutf/scalar/utf16_to_latin1/valid_utf16_to_latin1.h>
+#include <simdutf/scalar/utf16_to_utf32/utf16_to_utf32.h>
+#include <simdutf/scalar/utf16_to_utf32/valid_utf16_to_utf32.h>
+#include <simdutf/scalar/utf16_to_utf8/utf16_to_utf8.h>
+#include <simdutf/scalar/utf16_to_utf8/valid_utf16_to_utf8.h>
+#include <simdutf/scalar/utf32.h>
+#include <simdutf/scalar/utf32_to_latin1/utf32_to_latin1.h>
+#include <simdutf/scalar/utf32_to_latin1/valid_utf32_to_latin1.h>
+#include <simdutf/scalar/utf32_to_utf16/utf32_to_utf16.h>
+#include <simdutf/scalar/utf32_to_utf16/valid_utf32_to_utf16.h>
+#include <simdutf/scalar/utf32_to_utf8/utf32_to_utf8.h>
+#include <simdutf/scalar/utf32_to_utf8/valid_utf32_to_utf8.h>
+#include <simdutf/scalar/utf8.h>
+#include <simdutf/scalar/utf8_to_latin1/utf8_to_latin1.h>
+#include <simdutf/scalar/utf8_to_latin1/valid_utf8_to_latin1.h>
+#include <simdutf/scalar/utf8_to_utf16/utf8_to_utf16.h>
+#include <simdutf/scalar/utf8_to_utf16/valid_utf8_to_utf16.h>
+#include <simdutf/scalar/utf8_to_utf32/utf8_to_utf32.h>
+#include <simdutf/scalar/utf8_to_utf32/valid_utf8_to_utf32.h>
+
 namespace simdutf {
 
 constexpr size_t default_line_length =
@@ -169,10 +205,18 @@ detect_encodings(const detail::input_span_of_byte_like auto &input) noexcept {
  */
 simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused bool
+simdutf_constexpr23 simdutf_really_inline simdutf_warn_unused bool
 validate_utf8(const detail::input_span_of_byte_like auto &input) noexcept {
-  return validate_utf8(reinterpret_cast<const char *>(input.data()),
-                       input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf8::validate(
+        detail::constexpr_cast_ptr<uint8_t>(input.data()), input.size());
+  } else
+    #endif
+  {
+    return validate_utf8(reinterpret_cast<const char *>(input.data()),
+                         input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING

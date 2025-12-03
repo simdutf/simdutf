@@ -5,11 +5,14 @@ namespace simdutf {
 namespace scalar {
 namespace {
 namespace utf8 {
-#if SIMDUTF_IMPLEMENTATION_FALLBACK || SIMDUTF_IMPLEMENTATION_RVV
-// only used by the fallback kernel.
+
 // credit: based on code from Google Fuchsia (Apache Licensed)
-inline simdutf_warn_unused bool validate(const char *buf, size_t len) noexcept {
-  const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);
+template <class BytePtr>
+simdutf_constexpr23 simdutf_warn_unused bool validate(BytePtr data,
+                                                      size_t len) noexcept {
+  static_assert(
+      std::is_same<typename std::decay<decltype(*data)>::type, uint8_t>::value,
+      "dereferencing the data pointer must result in a uint8_t");
   uint64_t pos = 0;
   uint32_t code_point = 0;
   while (pos < len) {
@@ -97,7 +100,11 @@ inline simdutf_warn_unused bool validate(const char *buf, size_t len) noexcept {
   }
   return true;
 }
-#endif
+
+simdutf_really_inline simdutf_warn_unused bool validate(const char *buf,
+                                                        size_t len) noexcept {
+  return validate(reinterpret_cast<const uint8_t *>(buf), len);
+}
 
 inline simdutf_warn_unused result validate_with_errors(const char *buf,
                                                        size_t len) noexcept {

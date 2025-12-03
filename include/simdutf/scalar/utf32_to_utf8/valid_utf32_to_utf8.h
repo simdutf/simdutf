@@ -6,8 +6,6 @@ namespace scalar {
 namespace {
 namespace utf32_to_utf8 {
 
-#if SIMDUTF_IMPLEMENTATION_FALLBACK || SIMDUTF_IMPLEMENTATION_PPC64
-// only used by the fallback and POWER kernel
 inline size_t convert_valid(const char32_t *buf, size_t len,
                             char *utf8_output) {
   const uint32_t *data = reinterpret_cast<const uint32_t *>(buf);
@@ -56,7 +54,6 @@ inline size_t convert_valid(const char32_t *buf, size_t len,
   }
   return utf8_output - start;
 }
-#endif // SIMDUTF_IMPLEMENTATION_FALLBACK || SIMDUTF_IMPLEMENTATION_PPC64
 
 } // namespace utf32_to_utf8
 } // unnamed namespace

@@ -5,8 +5,6 @@ namespace simdutf {
 namespace scalar {
 namespace {
 namespace ascii {
-#if SIMDUTF_IMPLEMENTATION_FALLBACK
-// Only used by the fallback kernel.
 inline simdutf_warn_unused bool validate(const char *buf, size_t len) noexcept {
   const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);
   uint64_t pos = 0;
@@ -29,7 +27,6 @@ inline simdutf_warn_unused bool validate(const char *buf, size_t len) noexcept {
   }
   return true;
 }
-#endif
 inline simdutf_warn_unused result validate_with_errors(const char *buf,
                                                        size_t len) noexcept {
   const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);
