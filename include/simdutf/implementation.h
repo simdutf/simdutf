@@ -5372,6 +5372,7 @@ public:
       base64_options options = base64_default,
       last_chunk_handling_options last_chunk_options =
           last_chunk_handling_options::loose) const noexcept = 0;
+
   /**
    * Convert a base64 input to a binary output.
    *
@@ -5513,6 +5514,7 @@ public:
       const char *input, size_t length, char *output,
       size_t line_length = simdutf::default_line_length,
       base64_options options = base64_default) const noexcept = 0;
+
   /**
    * Find the first occurrence of a character in a string. If the character is
    * not found, return a pointer to the end of the string.
