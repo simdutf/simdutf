@@ -130,6 +130,14 @@
   #define simdutf_constexpr
 #endif
 
+// Will evaluate to constexpr in C++23 or later. This makes it possible to mark
+// functions constexpr if the "if consteval" feature is available to use.
+#if SIMDUTF_CPLUSPLUS23
+  #define simdutf_constexpr23 constexpr
+#else
+  #define simdutf_constexpr23
+#endif
+
 #ifndef SIMDUTF_DLLIMPORTEXPORT
   #if defined(SIMDUTF_VISUAL_STUDIO) // Visual Studio
                                      /**
