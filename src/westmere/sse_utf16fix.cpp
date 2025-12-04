@@ -9,7 +9,7 @@
 template <endianness big_endian, bool in_place>
 simdutf_really_inline void utf16fix_block_sse(char16_t *out,
                                               const char16_t *in) {
-  constexpr auto swap_if_needed = [](uint16_t x) simdutf_constexpr -> uint16_t {
+  auto swap_if_needed = [](uint16_t x) simdutf_constexpr -> uint16_t {
     return scalar::utf16::swap_if_needed<big_endian>(x);
   };
   const char16_t replacement = scalar::utf16::replacement<big_endian>();

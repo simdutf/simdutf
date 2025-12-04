@@ -13,7 +13,7 @@ simdutf_really_inline void utf16fix_block(char16_t *out, const char16_t *in) {
   const char16_t replacement = scalar::utf16::replacement<big_endian>();
   __m512i lookback, block, lb_masked, block_masked;
   __mmask32 lb_is_high, block_is_low, illseq;
-  constexpr auto swap_if_needed = [](uint16_t x) simdutf_constexpr -> uint16_t {
+  auto swap_if_needed = [](uint16_t x) simdutf_constexpr -> uint16_t {
     return scalar::utf16::swap_if_needed<big_endian>(x);
   };
 
@@ -66,7 +66,7 @@ void utf16fix_short(const char16_t *in, size_t n, char16_t *out) {
   __m512i lookback, block, lb_masked, block_masked;
   __mmask32 lb_is_high, block_is_low, illseq;
   uint32_t mask = 0xFFFFFFFF >> (32 - n);
-  constexpr auto swap_if_needed = [](uint16_t x) simdutf_constexpr -> uint16_t {
+  auto swap_if_needed = [](uint16_t x) simdutf_constexpr -> uint16_t {
     return scalar::utf16::swap_if_needed<big_endian>(x);
   };
   lookback = _mm512_maskz_loadu_epi16(_cvtmask32_u32(mask << 1),
