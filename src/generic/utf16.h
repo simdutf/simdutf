@@ -10,7 +10,7 @@ simdutf_really_inline size_t count_code_points(const char16_t *in,
   size_t count = 0;
   for (; pos < size / 32 * 32; pos += 32) {
     simd16x32<uint16_t> input(reinterpret_cast<const uint16_t *>(in + pos));
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       input.swap_bytes();
     }
     uint64_t not_pair = input.not_in_range(0xDC00, 0xDFFF);
@@ -28,7 +28,7 @@ simdutf_really_inline size_t utf8_length_from_utf16(const char16_t *in,
   // This algorithm could no doubt be improved!
   for (; pos < size / 32 * 32; pos += 32) {
     simd16x32<uint16_t> input(reinterpret_cast<const uint16_t *>(in + pos));
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       input.swap_bytes();
     }
     uint64_t ascii_mask = input.lteq(0x7F);

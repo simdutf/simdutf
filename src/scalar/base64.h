@@ -208,7 +208,7 @@ full_result base64_tail_decode_impl(
            is_eight_byte(src[3]) &&
            (x = d0[uint8_t(src[0])] | d1[uint8_t(src[1])] |
                 d2[uint8_t(src[2])] | d3[uint8_t(src[3])]) < 0x01FFFFFF) {
-      if (match_system(endianness::BIG)) {
+      if simdutf_constexpr (match_system(endianness::BIG)) {
         x = scalar::u32_swap_bytes(x);
       }
       if (check_capacity && dstend - dst < 3) {
@@ -321,7 +321,7 @@ full_result base64_tail_decode_impl(
                 return {OUTPUT_BUFFER_TOO_SMALL, size_t(srccur - srcinit),
                         size_t(dst - dstinit)};
               }
-              if (match_system(endianness::BIG)) {
+              if simdutf_constexpr (match_system(endianness::BIG)) {
                 triple <<= 8;
                 std::memcpy(dst, &triple, 1);
               } else {
@@ -344,7 +344,7 @@ full_result base64_tail_decode_impl(
                 return {OUTPUT_BUFFER_TOO_SMALL, size_t(srccur - srcinit),
                         size_t(dst - dstinit)};
               }
-              if (match_system(endianness::BIG)) {
+              if simdutf_constexpr (match_system(endianness::BIG)) {
                 triple <<= 8;
                 std::memcpy(dst, &triple, 2);
               } else {
@@ -373,7 +373,7 @@ full_result base64_tail_decode_impl(
     uint32_t triple =
         (uint32_t(buffer[0]) << 3 * 6) + (uint32_t(buffer[1]) << 2 * 6) +
         (uint32_t(buffer[2]) << 1 * 6) + (uint32_t(buffer[3]) << 0 * 6);
-    if (match_system(endianness::BIG)) {
+    if simdutf_constexpr (match_system(endianness::BIG)) {
       triple <<= 8;
       std::memcpy(dst, &triple, 3);
     } else {

@@ -24,7 +24,7 @@ simdutf_really_inline bool validate(const char32_t *input, size_t size) {
 
   while (input + N < end) {
     auto in = vector_u32(input);
-    if (!match_system(endianness::BIG)) {
+    if simdutf_constexpr (!match_system(endianness::BIG)) {
       in.swap_bytes();
     }
 
@@ -67,7 +67,7 @@ simdutf_really_inline result validate_with_errors(const char32_t *input,
 
   while (input + N < end) {
     auto in = vector_u32(input);
-    if (!match_system(endianness::BIG)) {
+    if simdutf_constexpr (!match_system(endianness::BIG)) {
       in.swap_bytes();
     }
 

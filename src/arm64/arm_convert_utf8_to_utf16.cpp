@@ -37,7 +37,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // UTF-16 code units.
     uint16x4_t composed = convert_utf8_3_byte_to_utf16(in);
     // Byte swap if necessary
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       composed = vreinterpret_u16_u8(vrev16_u8(vreinterpret_u8_u16(composed)));
     }
     vst1_u16(reinterpret_cast<uint16_t *>(utf16_output), composed);
@@ -51,7 +51,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // UTF-16 code units.
     uint16x8_t composed = convert_utf8_2_byte_to_utf16(in);
     // Byte swap if necessary
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       composed =
           vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(composed)));
     }
@@ -74,7 +74,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // Convert to UTF-16
     uint16x8_t composed = convert_utf8_1_to_2_byte_to_utf16(in, idx);
     // Byte swap if necessary
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       composed =
           vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(composed)));
     }
@@ -121,7 +121,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // 3 byte: aaaabbbb bbcccccc
     uint16x4_t composed = vsli_n_u16(middlelow, highperm, 12);
     // Byte swap if necessary
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       composed = vreinterpret_u16_u8(vrev16_u8(vreinterpret_u8_u16(composed)));
     }
     vst1_u16(reinterpret_cast<uint16_t *>(utf16_output), composed);
@@ -176,7 +176,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
       // 110111CC CCDDDDDD|110110AA BBBBBBCC
       uint16x8_t composed = vaddq_u16(blend, magic_with_low_2);
       // Byte swap if necessary
-      if (!match_system(big_endian)) {
+      if simdutf_constexpr (!match_system(big_endian)) {
         composed =
             vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(composed)));
       }
@@ -281,7 +281,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // 4 byte: 110110AA BBBBBBCC|110111CC CCDDDDDD
     uint32x4_t selected = vbslq_u32(is_pair, surrogates, composed);
     // Byte swap if necessary
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       selected =
           vreinterpretq_u32_u8(vrev16q_u8(vreinterpretq_u8_u32(selected)));
     }
