@@ -3056,7 +3056,6 @@ inline std::string_view to_string(last_chunk_handling_options options) {
 
 /**
  * Provide the maximal binary length in bytes given the base64 input.
- * Provide the maximal binary length in bytes given the base64 input.
  * As long as the input does not contain ignorable characters (e.g., ASCII spaces
  * or linefeed characters), the result is exact. In particular, the function
  * checks for padding characters.
@@ -3080,7 +3079,6 @@ maximal_binary_length_from_base64(
   #endif // SIMDUTF_SPAN
 
 /**
- * Provide the maximal binary length in bytes given the base64 input.
  * Provide the maximal binary length in bytes given the base64 input.
  * As long as the input does not contain ignorable characters (e.g., ASCII spaces
  * or linefeed characters), the result is exact. In particular, the function
