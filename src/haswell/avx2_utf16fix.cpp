@@ -8,7 +8,9 @@
  */
 template <endianness big_endian, bool in_place>
 void utf16fix_block(char16_t *out, const char16_t *in) {
-  using swap_if_needed = scalar::utf16::swap_if_needed<big_endian>;
+  constexpr auto swap_if_needed = [](uint16_t x) constexpr -> uint16_t {
+    return scalar::utf16::swap_if_needed<big_endian>(x);
+  };
   const char16_t replacement = scalar::utf16::replacement<big_endian>();
   __m256i lookback, block, lb_masked, block_masked, lb_is_high, block_is_low;
   __m256i illseq, lb_illseq, block_illseq, lb_illseq_shifted;
@@ -68,7 +70,9 @@ void utf16fix_block(char16_t *out, const char16_t *in) {
 
 template <endianness big_endian, bool in_place>
 void utf16fix_block_sse(char16_t *out, const char16_t *in) {
-  using swap_if_needed = scalar::utf16::swap_if_needed<big_endian>;
+  constexpr auto swap_if_needed = [](uint16_t x) constexpr -> uint16_t {
+    return scalar::utf16::swap_if_needed<big_endian>(x);
+  };
   const char16_t replacement = scalar::utf16::replacement<big_endian>();
   __m128i lookback, block, lb_masked, block_masked, lb_is_high, block_is_low;
   __m128i illseq, lb_illseq, block_illseq;
