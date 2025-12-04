@@ -3,7 +3,7 @@
 #include <climits>
 #include <type_traits>
 #if SIMDUTF_ATOMIC_REF
-  #include "scalar/atomic_util.h"
+  #include "simdutf/scalar/atomic_util.h"
 #endif
 
 static_assert(sizeof(uint8_t) == sizeof(char),
