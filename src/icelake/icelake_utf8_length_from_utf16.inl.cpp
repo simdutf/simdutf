@@ -26,7 +26,7 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16(const char16_t *in,
     __m512i input2 =
         _mm512_loadu_si512(reinterpret_cast<const __m512i *>(in + pos + N));
 
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       input1 = _mm512_shuffle_epi8(input1, byteflip);
       input2 = _mm512_shuffle_epi8(input2, byteflip);
     }
@@ -59,7 +59,7 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16(const char16_t *in,
   if (pos + N <= size) {
     __m512i input =
         _mm512_loadu_si512(reinterpret_cast<const __m512i *>(in + pos));
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       input = _mm512_shuffle_epi8(input, byteflip);
     }
     // 0xd800 .. 0xdbff - low surrogate
@@ -86,7 +86,7 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16(const char16_t *in,
       0xFFFFFFFFULL >>
       (32 - (size - pos)); // mask for the remaining char16 values
   __m512i input = _mm512_maskz_loadu_epi16(remaining_mask, in + pos);
-  if (!match_system(big_endian)) {
+  if simdutf_constexpr (!match_system(big_endian)) {
     input = _mm512_shuffle_epi8(input, byteflip);
   }
   // 0xd800 .. 0xdbff - low surrogate
@@ -133,9 +133,9 @@ simdutf_really_inline result icelake_utf8_length_from_utf16_with_replacement(
       0x0e0f0c0d0a0b0809, 0x0607040502030001, 0x0e0f0c0d0a0b0809,
       0x0607040502030001, 0x0e0f0c0d0a0b0809);
 
-  const uint32_t straddle_mask =
+  constexpr uint32_t straddle_mask =
       match_system(big_endian) ? 0xfc00fc00 : 0x00fc00fc;
-  const uint32_t straddle_pair =
+  constexpr uint32_t straddle_pair =
       match_system(big_endian) ? 0xdc00d800 : 0x00dc00d8;
 
   size_t count = 0;
@@ -147,12 +147,12 @@ simdutf_really_inline result icelake_utf8_length_from_utf16_with_replacement(
   for (; pos < (size - 1) / (2 * N) * (2 * N); pos += 2 * N) {
     __m512i current1 =
         _mm512_loadu_si512(reinterpret_cast<const __m512i *>(in + pos));
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       current1 = _mm512_shuffle_epi8(current1, byteflip);
     }
     __m512i current2 =
         _mm512_loadu_si512(reinterpret_cast<const __m512i *>(in + pos + N));
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       current2 = _mm512_shuffle_epi8(current2, byteflip);
     }
 
@@ -202,7 +202,7 @@ simdutf_really_inline result icelake_utf8_length_from_utf16_with_replacement(
   if (pos + N + 1 <= size) {
     __m512i input =
         _mm512_loadu_si512(reinterpret_cast<const __m512i *>(in + pos));
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       input = _mm512_shuffle_epi8(input, byteflip);
     }
 
@@ -236,7 +236,7 @@ simdutf_really_inline result icelake_utf8_length_from_utf16_with_replacement(
   __mmask32 remaining_mask = 0xFFFFFFFFULL << overshoot;
   __m512i input =
       _mm512_maskz_loadu_epi16(remaining_mask, in + pos - overshoot);
-  if (!match_system(big_endian)) {
+  if simdutf_constexpr (!match_system(big_endian)) {
     input = _mm512_shuffle_epi8(input, byteflip);
   }
 

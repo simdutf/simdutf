@@ -135,7 +135,7 @@ const result validate_utf16_as_ascii_with_errors(const char16_t *input,
   for (; pos < size / 32 * 32; pos += 32) {
     simd16x32<uint16_t> input_vec(
         reinterpret_cast<const uint16_t *>(input + pos));
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       input_vec.swap_bytes();
     }
     uint64_t matches = input_vec.lteq(uint16_t(0x7f));
@@ -148,7 +148,8 @@ const result validate_utf16_as_ascii_with_errors(const char16_t *input,
 
   // Scalar tail
   while (pos < size) {
-    char16_t v = big_endian ? scalar::u16_swap_bytes(input[pos]) : input[pos];
+
+    char16_t v = scalar::utf16::swap_if_needed<big_endian>(input[pos]);
     if (v > 0x7F) {
       return result(error_code::TOO_LARGE, pos);
     }

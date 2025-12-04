@@ -2,20 +2,16 @@ template <endianness big_endian, bool in_place, bool vlmax>
 simdutf_really_inline void utf16fix_block_rvv(char16_t *out, const char16_t *in,
                                               size_t vl) {
   const char16_t replacement = scalar::utf16::replacement<big_endian>();
-  auto swap_if_needed = [](uint16_t c) -> uint16_t {
-    return !simdutf::match_system(big_endian) ? scalar::u16_swap_bytes(c) : c;
-  };
-
   vuint16m8_t block = __riscv_vle16_v_u16m8((const uint16_t *)in, vl);
   vuint16m8_t lookback = __riscv_vslide1up_vx_u16m8(block, in[-1], vl);
-  vuint16m8_t lb_masked =
-      __riscv_vand_vx_u16m8(lookback, swap_if_needed(0xfc00U), vl);
-  vuint16m8_t block_masked =
-      __riscv_vand_vx_u16m8(block, swap_if_needed(0xfc00U), vl);
-  vbool2_t lb_is_high =
-      __riscv_vmseq_vx_u16m8_b2(lb_masked, swap_if_needed(0xd800U), vl);
-  vbool2_t block_is_low =
-      __riscv_vmseq_vx_u16m8_b2(block_masked, swap_if_needed(0xdc00U), vl);
+  vuint16m8_t lb_masked = __riscv_vand_vx_u16m8(
+      lookback, scalar::utf16::swap_if_needed<big_endian>(0xfc00U), vl);
+  vuint16m8_t block_masked = __riscv_vand_vx_u16m8(
+      block, scalar::utf16::swap_if_needed<big_endian>(0xfc00U), vl);
+  vbool2_t lb_is_high = __riscv_vmseq_vx_u16m8_b2(
+      lb_masked, scalar::utf16::swap_if_needed<big_endian>(0xd800U), vl);
+  vbool2_t block_is_low = __riscv_vmseq_vx_u16m8_b2(
+      block_masked, scalar::utf16::swap_if_needed<big_endian>(0xdc00U), vl);
 
   vbool2_t illseq = __riscv_vmxor_mm_b2(lb_is_high, block_is_low, vl);
   if (__riscv_vfirst_m_b2(illseq, vl) >= 0) {
@@ -35,10 +31,10 @@ simdutf_really_inline void utf16fix_block_rvv(char16_t *out, const char16_t *in,
       lb_illseq_right_shifted = __riscv_vmandn_mm_b2(
           __riscv_vmseq_vx_u16m8_b2(
               __riscv_vslide1down_vx_u16m8(lb_masked, 0, vl),
-              swap_if_needed(0xd800U), vl),
+              scalar::utf16::swap_if_needed<big_endian>(0xd800U), vl),
           __riscv_vmseq_vx_u16m8_b2(
               __riscv_vslide1down_vx_u16m8(block_masked, 0, vl),
-              swap_if_needed(0xdc00U), vl),
+              scalar::utf16::swap_if_needed<big_endian>(0xdc00U), vl),
           vl);
     }
 

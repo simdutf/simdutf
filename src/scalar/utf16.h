@@ -3,15 +3,13 @@
 
 namespace simdutf {
 namespace scalar {
-namespace {
 namespace utf16 {
 
 template <endianness big_endian>
 inline simdutf_warn_unused bool validate_as_ascii(const char16_t *data,
                                                   size_t len) noexcept {
   for (size_t pos = 0; pos < len; pos++) {
-    char16_t word =
-        !match_system(big_endian) ? u16_swap_bytes(data[pos]) : data[pos];
+    char16_t word = scalar::utf16::swap_if_needed<big_endian>(data[pos]);
     if (word >= 0x80) {
       return false;
     }
@@ -24,8 +22,7 @@ inline simdutf_warn_unused bool validate(const char16_t *data,
                                          size_t len) noexcept {
   uint64_t pos = 0;
   while (pos < len) {
-    char16_t word =
-        !match_system(big_endian) ? u16_swap_bytes(data[pos]) : data[pos];
+    char16_t word = scalar::utf16::swap_if_needed<big_endian>(data[pos]);
     if ((word & 0xF800) == 0xD800) {
       if (pos + 1 >= len) {
         return false;
@@ -54,8 +51,7 @@ inline simdutf_warn_unused result validate_with_errors(const char16_t *data,
                                                        size_t len) noexcept {
   size_t pos = 0;
   while (pos < len) {
-    char16_t word =
-        !match_system(big_endian) ? u16_swap_bytes(data[pos]) : data[pos];
+    char16_t word = scalar::utf16::swap_if_needed<big_endian>(data[pos]);
     if ((word & 0xF800) == 0xD800) {
       if (pos + 1 >= len) {
         return result(error_code::SURROGATE, pos);
@@ -84,7 +80,7 @@ inline size_t count_code_points(const char16_t *p, size_t len) {
   // We are not BOM aware.
   size_t counter{0};
   for (size_t i = 0; i < len; i++) {
-    char16_t word = !match_system(big_endian) ? u16_swap_bytes(p[i]) : p[i];
+    char16_t word = scalar::utf16::swap_if_needed<big_endian>(p[i]);
     counter += ((word & 0xFC00) != 0xDC00);
   }
   return counter;
@@ -95,7 +91,7 @@ inline size_t utf8_length_from_utf16(const char16_t *p, size_t len) {
   // We are not BOM aware.
   size_t counter{0};
   for (size_t i = 0; i < len; i++) {
-    char16_t word = !match_system(big_endian) ? u16_swap_bytes(p[i]) : p[i];
+    char16_t word = scalar::utf16::swap_if_needed<big_endian>(p[i]);
     counter++; // ASCII
     counter += static_cast<size_t>(
         word >
@@ -111,7 +107,7 @@ inline size_t utf32_length_from_utf16(const char16_t *p, size_t len) {
   // We are not BOM aware.
   size_t counter{0};
   for (size_t i = 0; i < len; i++) {
-    char16_t word = !match_system(big_endian) ? u16_swap_bytes(p[i]) : p[i];
+    char16_t word = scalar::utf16::swap_if_needed<big_endian>(p[i]);
     counter += ((word & 0xFC00) != 0xDC00);
   }
   return counter;
@@ -131,26 +127,28 @@ simdutf_warn_unused inline size_t trim_partial_utf16(const char16_t *input,
     return 0;
   }
   uint16_t last_word = uint16_t(input[length - 1]);
-  last_word = !match_system(big_endian) ? u16_swap_bytes(last_word) : last_word;
+  last_word = scalar::utf16::swap_if_needed<big_endian>(last_word);
   length -= ((last_word & 0xFC00) == 0xD800);
   return length;
 }
 
-template <endianness big_endian> bool is_high_surrogate(char16_t c) {
-  c = !match_system(big_endian) ? u16_swap_bytes(c) : c;
+template <endianness big_endian>
+simdutf_constexpr bool is_high_surrogate(char16_t c) {
+  c = scalar::utf16::swap_if_needed<big_endian>(c);
   return (0xd800 <= c && c <= 0xdbff);
 }
 
-template <endianness big_endian> bool is_low_surrogate(char16_t c) {
-  c = !match_system(big_endian) ? u16_swap_bytes(c) : c;
+template <endianness big_endian>
+simdutf_constexpr bool is_low_surrogate(char16_t c) {
+  c = scalar::utf16::swap_if_needed<big_endian>(c);
   return (0xdc00 <= c && c <= 0xdfff);
 }
 
-simdutf_really_inline bool high_surrogate(char16_t c) {
+simdutf_really_inline constexpr bool high_surrogate(char16_t c) {
   return (0xd800 <= c && c <= 0xdbff);
 }
 
-simdutf_really_inline bool low_surrogate(char16_t c) {
+simdutf_really_inline constexpr bool low_surrogate(char16_t c) {
   return (0xdc00 <= c && c <= 0xdfff);
 }
 
@@ -187,7 +185,7 @@ inline result utf8_length_from_utf16_with_replacement(const char16_t *p,
 }
 
 // variable templates are a C++14 extension
-template <endianness big_endian> char16_t replacement() {
+template <endianness big_endian> constexpr char16_t replacement() {
   return !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
 }
 
@@ -219,7 +217,6 @@ void to_well_formed_utf16(const char16_t *input, size_t len, char16_t *output) {
 }
 
 } // namespace utf16
-} // unnamed namespace
 } // namespace scalar
 } // namespace simdutf
 

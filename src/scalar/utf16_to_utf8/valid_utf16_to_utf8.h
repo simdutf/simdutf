@@ -18,7 +18,7 @@ inline size_t convert_valid(const char16_t *buf, size_t len,
         len) { // if it is safe to read 8 more bytes, check that they are ascii
       uint64_t v;
       ::memcpy(&v, data + pos, sizeof(uint64_t));
-      if (!match_system(big_endian)) {
+      if simdutf_constexpr (!match_system(big_endian)) {
         v = (v >> 8) | (v << (64 - 8));
       }
       if ((v & 0xFF80FF80FF80FF80) == 0) {

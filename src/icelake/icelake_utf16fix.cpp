@@ -11,12 +11,11 @@
 template <endianness big_endian, bool in_place>
 simdutf_really_inline void utf16fix_block(char16_t *out, const char16_t *in) {
   const char16_t replacement = scalar::utf16::replacement<big_endian>();
-  auto swap_if_needed = [](uint16_t c) -> uint16_t {
-    return !simdutf::match_system(big_endian) ? scalar::u16_swap_bytes(c) : c;
-  };
-
   __m512i lookback, block, lb_masked, block_masked;
   __mmask32 lb_is_high, block_is_low, illseq;
+  auto swap_if_needed = [](uint16_t x) simdutf_constexpr -> uint16_t {
+    return scalar::utf16::swap_if_needed<big_endian>(x);
+  };
 
   lookback = _mm512_loadu_si512((const __m512i *)(in - 1));
   block = _mm512_loadu_si512((const __m512i *)in);
@@ -62,14 +61,14 @@ simdutf_really_inline void utf16fix_block(char16_t *out, const char16_t *in) {
  * out-of-place operation.
  */
 template <endianness big_endian>
-void utf16fix_runt(const char16_t *in, size_t n, char16_t *out) {
+void utf16fix_short(const char16_t *in, size_t n, char16_t *out) {
   const char16_t replacement = scalar::utf16::replacement<big_endian>();
-  auto swap_if_needed = [](uint16_t c) -> uint16_t {
-    return !simdutf::match_system(big_endian) ? scalar::u16_swap_bytes(c) : c;
-  };
   __m512i lookback, block, lb_masked, block_masked;
   __mmask32 lb_is_high, block_is_low, illseq;
   uint32_t mask = 0xFFFFFFFF >> (32 - n);
+  auto swap_if_needed = [](uint16_t x) simdutf_constexpr -> uint16_t {
+    return scalar::utf16::swap_if_needed<big_endian>(x);
+  };
   lookback = _mm512_maskz_loadu_epi16(_cvtmask32_u32(mask << 1),
                                       (const uint16_t *)(in - 1));
   block = _mm512_maskz_loadu_epi16(_cvtmask32_u32(mask), (const uint16_t *)in);
@@ -112,7 +111,7 @@ void utf16fix_avx512(const char16_t *in, size_t n, char16_t *out) {
   if (n == 0)
     return;
   else if (n < 33) {
-    utf16fix_runt<big_endian>(in, n, out);
+    utf16fix_short<big_endian>(in, n, out);
     return;
   }
   out[0] =

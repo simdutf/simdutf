@@ -6,7 +6,7 @@ lsx_convert_utf16_to_latin1(const char16_t *buf, size_t len,
   while (end - buf >= 16) {
     __m128i in = __lsx_vld(reinterpret_cast<const uint16_t *>(buf), 0);
     __m128i in1 = __lsx_vld(reinterpret_cast<const uint16_t *>(buf), 16);
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       in = lsx_swap_bytes(in);
       in1 = lsx_swap_bytes(in1);
     }
@@ -34,7 +34,7 @@ lsx_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
   while (end - buf >= 16) {
     __m128i in = __lsx_vld(reinterpret_cast<const uint16_t *>(buf), 0);
     __m128i in1 = __lsx_vld(reinterpret_cast<const uint16_t *>(buf), 16);
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       in = lsx_swap_bytes(in);
       in1 = lsx_swap_bytes(in1);
     }
@@ -49,8 +49,7 @@ lsx_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
     } else {
       // Let us do a scalar fallback.
       for (int k = 0; k < 16; k++) {
-        uint16_t word =
-            !match_system(big_endian) ? scalar::u16_swap_bytes(buf[k]) : buf[k];
+        uint16_t word = scalar::utf16::swap_if_needed<big_endian>(buf[k]);
         if (word <= 0xff) {
           *latin1_output++ = char(word);
         } else {

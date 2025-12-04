@@ -38,7 +38,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // UTF-16 code units.
     __m128i composed = convert_utf8_3_byte_to_utf16(in);
     // Byte swap if necessary
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       composed = lsx_swap_bytes(composed);
     }
 
@@ -53,7 +53,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // UTF-16 code units.
     __m128i composed = convert_utf8_2_byte_to_utf16(in);
     // Byte swap if necessary
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       composed = lsx_swap_bytes(composed);
     }
 
@@ -75,7 +75,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // Convert to UTF-16
     __m128i composed = convert_utf8_1_to_2_byte_to_utf16(in, idx);
     // Byte swap if necessary
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       composed = lsx_swap_bytes(composed);
     }
     // Store
@@ -121,7 +121,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // aaaabbbb bbcccccc
     composed = __lsx_vbitsel_v(highperm, composed, v0fff);
 
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       composed = lsx_swap_bytes(composed);
     }
 
@@ -184,7 +184,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
       // 110111CC CCDDDDDD|110110AA BBBBBBCC
       __m128i composed = __lsx_vadd_h(blend, magic_with_low_2);
       // Byte swap if necessary
-      if (!match_system(big_endian)) {
+      if simdutf_constexpr (!match_system(big_endian)) {
         composed = lsx_swap_bytes(composed);
       }
       // __lsx_vst(composed, reinterpret_cast<uint16_t *>(utf16_output), 0);
@@ -260,7 +260,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     // 4 byte: 110110AA BBBBBBCC|110111CC CCDDDDDD
     __m128i selected = __lsx_vbitsel_v(composed, surrogates, is_pair);
     // Byte swap if necessary
-    if (!match_system(big_endian)) {
+    if simdutf_constexpr (!match_system(big_endian)) {
       selected = lsx_swap_bytes(selected);
     }
     // Attempting to shuffle and store would be complex, just scalarize.

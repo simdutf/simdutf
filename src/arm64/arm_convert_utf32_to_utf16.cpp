@@ -89,7 +89,7 @@ arm_convert_utf32_to_utf16(const char32_t *buf, size_t len,
           vorrq_u16(vceqq_u16(vandq_u16(utf16_packed, v_f800), v_d800),
                     forbidden_bytemask);
 
-      if (!match_system(big_endian)) {
+      if simdutf_constexpr (!match_system(big_endian)) {
         utf16_packed = vreinterpretq_u16_u8(
             vrev16q_u8(vreinterpretq_u8_u16(utf16_packed)));
       }
@@ -147,7 +147,7 @@ arm_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
                               reinterpret_cast<char16_t *>(utf16_output));
       }
 
-      if (!match_system(big_endian)) {
+      if simdutf_constexpr (!match_system(big_endian)) {
         utf16_packed = vreinterpretq_u16_u8(
             vrev16q_u8(vreinterpretq_u8_u16(utf16_packed)));
       }
@@ -171,7 +171,7 @@ arm_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
             word -= 0x10000;
             uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
             uint16_t low_surrogate = uint16_t(0xDC00 + (word & 0x3FF));
-            if (!match_system(big_endian)) {
+            if simdutf_constexpr (!match_system(big_endian)) {
               high_surrogate =
                   uint16_t(high_surrogate >> 8 | high_surrogate << 8);
               low_surrogate = uint16_t(low_surrogate << 8 | low_surrogate >> 8);
