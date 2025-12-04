@@ -36,88 +36,88 @@ SIMDUTF_POP_DISABLE_WARNINGS
 #endif
 
 // The scalar routines should be included once.
-#include "scalar/swap_bytes.h"
+#include "simdutf/scalar/swap_bytes.h"
 #if SIMDUTF_FEATURE_ASCII
-  #include "scalar/ascii.h"
+  #include "simdutf/scalar/ascii.h"
 #endif // SIMDUTF_FEATURE_ASCII
 #if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
-  #include "scalar/utf8.h"
+  #include "simdutf/scalar/utf8.h"
 #endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 #if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING ||                \
     (SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1)
-  #include "scalar/utf16.h"
+  #include "simdutf/scalar/utf16.h"
 #endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING ||
        // (SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1)
 #if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
-  #include "scalar/utf32.h"
+  #include "simdutf/scalar/utf32.h"
 #endif // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 #if SIMDUTF_FEATURE_LATIN1
-  #include "scalar/latin1.h"
+  #include "simdutf/scalar/latin1.h"
 #endif // SIMDUTF_FEATURE_LATIN1
 #if SIMDUTF_FEATURE_BASE64
-  #include "scalar/base64.h"
+  #include "simdutf/scalar/base64.h"
 #endif // SIMDUTF_FEATURE_BASE64
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
-  #include "scalar/utf32_to_utf8/valid_utf32_to_utf8.h"
-  #include "scalar/utf32_to_utf8/utf32_to_utf8.h"
+  #include "simdutf/scalar/utf32_to_utf8/valid_utf32_to_utf8.h"
+  #include "simdutf/scalar/utf32_to_utf8/utf32_to_utf8.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
-  #include "scalar/utf32_to_utf16/valid_utf32_to_utf16.h"
-  #include "scalar/utf32_to_utf16/utf32_to_utf16.h"
+  #include "simdutf/scalar/utf32_to_utf16/valid_utf32_to_utf16.h"
+  #include "simdutf/scalar/utf32_to_utf16/utf32_to_utf16.h"
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
-  #include "scalar/utf16_to_utf8/valid_utf16_to_utf8.h"
-  #include "scalar/utf16_to_utf8/utf16_to_utf8.h"
+  #include "simdutf/scalar/utf16_to_utf8/valid_utf16_to_utf8.h"
+  #include "simdutf/scalar/utf16_to_utf8/utf16_to_utf8.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
-  #include "scalar/utf16_to_utf32/valid_utf16_to_utf32.h"
-  #include "scalar/utf16_to_utf32/utf16_to_utf32.h"
+  #include "simdutf/scalar/utf16_to_utf32/valid_utf16_to_utf32.h"
+  #include "simdutf/scalar/utf16_to_utf32/utf16_to_utf32.h"
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF8 &&                                                    \
     (SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_LATIN1)
-  #include "scalar/utf8_to_utf16/valid_utf8_to_utf16.h"
-  #include "scalar/utf8_to_utf16/utf8_to_utf16.h"
+  #include "simdutf/scalar/utf8_to_utf16/valid_utf8_to_utf16.h"
+  #include "simdutf/scalar/utf8_to_utf16/utf8_to_utf16.h"
 #endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_UTF16 ||
        // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_LATIN1)
 
 #if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_UTF32
-  #include "scalar/utf8_to_utf32/valid_utf8_to_utf32.h"
-  #include "scalar/utf8_to_utf32/utf8_to_utf32.h"
+  #include "simdutf/scalar/utf8_to_utf32/valid_utf8_to_utf32.h"
+  #include "simdutf/scalar/utf8_to_utf32/utf8_to_utf32.h"
 #endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
-  #include "scalar/latin1_to_utf8/latin1_to_utf8.h"
+  #include "simdutf/scalar/latin1_to_utf8/latin1_to_utf8.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
-  #include "scalar/latin1_to_utf16/latin1_to_utf16.h"
+  #include "simdutf/scalar/latin1_to_utf16/latin1_to_utf16.h"
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
-  #include "scalar/latin1_to_utf32/latin1_to_utf32.h"
+  #include "simdutf/scalar/latin1_to_utf32/latin1_to_utf32.h"
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
-  #include "scalar/utf8_to_latin1/utf8_to_latin1.h"
+  #include "simdutf/scalar/utf8_to_latin1/utf8_to_latin1.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
-  #include "scalar/utf16_to_latin1/utf16_to_latin1.h"
+  #include "simdutf/scalar/utf16_to_latin1/utf16_to_latin1.h"
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
-  #include "scalar/utf32_to_latin1/utf32_to_latin1.h"
+  #include "simdutf/scalar/utf32_to_latin1/utf32_to_latin1.h"
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
-  #include "scalar/utf8_to_latin1/valid_utf8_to_latin1.h"
+  #include "simdutf/scalar/utf8_to_latin1/valid_utf8_to_latin1.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
-  #include "scalar/utf16_to_latin1/valid_utf16_to_latin1.h"
+  #include "simdutf/scalar/utf16_to_latin1/valid_utf16_to_latin1.h"
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
-  #include "scalar/utf32_to_latin1/valid_utf32_to_latin1.h"
+  #include "simdutf/scalar/utf32_to_latin1/valid_utf32_to_latin1.h"
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
 #include "implementation.cpp"
