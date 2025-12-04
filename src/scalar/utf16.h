@@ -3,6 +3,7 @@
 
 namespace simdutf {
 namespace scalar {
+namespace {
 namespace utf16 {
 
 template <endianness big_endian>
@@ -213,6 +214,7 @@ void to_well_formed_utf16(const char16_t *input, size_t len, char16_t *output) {
 }
 
 } // namespace utf16
+} // namespace
 } // namespace scalar
 } // namespace simdutf
 
