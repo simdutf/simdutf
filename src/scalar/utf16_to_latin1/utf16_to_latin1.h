@@ -1,12 +1,12 @@
 #ifndef SIMDUTF_UTF16_TO_LATIN1_H
 #define SIMDUTF_UTF16_TO_LATIN1_H
 
+#include <cstring> // for std::memcpy
+
 namespace simdutf {
 namespace scalar {
 namespace {
 namespace utf16_to_latin1 {
-
-#include <cstring> // for std::memcpy
 
 template <endianness big_endian>
 inline size_t convert(const char16_t *buf, size_t len, char *latin_output) {
