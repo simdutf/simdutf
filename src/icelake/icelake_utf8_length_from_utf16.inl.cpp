@@ -131,9 +131,9 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16_with_replacement(
       0x0e0f0c0d0a0b0809, 0x0607040502030001, 0x0e0f0c0d0a0b0809,
       0x0607040502030001, 0x0e0f0c0d0a0b0809);
 
-  simdutf_constexpr uint32_t straddle_mask =
+  constexpr uint32_t straddle_mask =
       match_system(big_endian) ? 0xfc00fc00 : 0x00fc00fc;
-  simdutf_constexpr uint32_t straddle_pair =
+  constexpr uint32_t straddle_pair =
       match_system(big_endian) ? 0xdc00d800 : 0x00dc00d8;
 
   size_t count = 0;

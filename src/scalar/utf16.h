@@ -132,23 +132,21 @@ simdutf_warn_unused inline size_t trim_partial_utf16(const char16_t *input,
   return length;
 }
 
-template <endianness big_endian>
-simdutf_constexpr bool is_high_surrogate(char16_t c) {
+template <endianness big_endian> constexpr bool is_high_surrogate(char16_t c) {
   c = scalar::utf16::swap_if_needed<big_endian>(c);
   return (0xd800 <= c && c <= 0xdbff);
 }
 
-template <endianness big_endian>
-simdutf_constexpr bool is_low_surrogate(char16_t c) {
+template <endianness big_endian> constexpr bool is_low_surrogate(char16_t c) {
   c = scalar::utf16::swap_if_needed<big_endian>(c);
   return (0xdc00 <= c && c <= 0xdfff);
 }
 
-simdutf_really_inline simdutf_constexpr bool high_surrogate(char16_t c) {
+simdutf_really_inline constexpr bool high_surrogate(char16_t c) {
   return (0xd800 <= c && c <= 0xdbff);
 }
 
-simdutf_really_inline simdutf_constexpr bool low_surrogate(char16_t c) {
+simdutf_really_inline constexpr bool low_surrogate(char16_t c) {
   return (0xdc00 <= c && c <= 0xdfff);
 }
 
@@ -181,7 +179,7 @@ inline size_t utf8_length_from_utf16_with_replacement(const char16_t *p,
 }
 
 // variable templates are a C++14 extension
-template <endianness big_endian> simdutf_constexpr char16_t replacement() {
+template <endianness big_endian> constexpr char16_t replacement() {
   return !match_system(big_endian) ? scalar::u16_swap_bytes(0xfffd) : 0xfffd;
 }
 
