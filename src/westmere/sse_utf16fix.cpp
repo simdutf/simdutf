@@ -9,6 +9,7 @@
 template <endianness big_endian, bool in_place>
 simdutf_really_inline void utf16fix_block_sse(char16_t *out,
                                               const char16_t *in) {
+  using swap_if_needed = scalar::utf16::swap_if_needed<big_endian>;
   const char16_t replacement = scalar::utf16::replacement<big_endian>();
 
   __m128i lookback, block, lb_masked, block_masked, lb_is_high, block_is_low;
@@ -16,18 +17,12 @@ simdutf_really_inline void utf16fix_block_sse(char16_t *out,
 
   lookback = _mm_loadu_si128((const __m128i *)(in - 1));
   block = _mm_loadu_si128((const __m128i *)in);
-  lb_masked = _mm_and_si128(
-      lookback,
-      _mm_set1_epi16(scalar::utf16::swap_if_needed<big_endian>(0xfc00U)));
-  block_masked = _mm_and_si128(
-      block,
-      _mm_set1_epi16(scalar::utf16::swap_if_needed<big_endian>(0xfc00U)));
-  lb_is_high = _mm_cmpeq_epi16(
-      lb_masked,
-      _mm_set1_epi16(scalar::utf16::swap_if_needed<big_endian>(0xd800U)));
-  block_is_low = _mm_cmpeq_epi16(
-      block_masked,
-      _mm_set1_epi16(scalar::utf16::swap_if_needed<big_endian>(0xdc00U)));
+  lb_masked = _mm_and_si128(lookback, _mm_set1_epi16(swap_if_needed(0xfc00U)));
+  block_masked = _mm_and_si128(block, _mm_set1_epi16(swap_if_needed(0xfc00U)));
+  lb_is_high =
+      _mm_cmpeq_epi16(lb_masked, _mm_set1_epi16(swap_if_needed(0xd800U)));
+  block_is_low =
+      _mm_cmpeq_epi16(block_masked, _mm_set1_epi16(swap_if_needed(0xdc00U)));
 
   illseq = _mm_xor_si128(lb_is_high, block_is_low);
   if (_mm_movemask_epi8(illseq) != 0) {
