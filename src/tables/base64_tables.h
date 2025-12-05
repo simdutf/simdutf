@@ -1,6 +1,5 @@
 #ifndef SIMDUTF_BASE64_TABLES_H
 #define SIMDUTF_BASE64_TABLES_H
-#include <array>
 #include <cstdint>
 
 namespace simdutf {
@@ -877,9 +876,9 @@ static_assert(to_base64_value[uint8_t('+')] == 62,
 static_assert(to_base64_url_value[uint8_t('-')] == 62,
               "- must be == 62 in to_base64_url_value");
 static_assert(to_base64_value[uint8_t('/')] == 63,
-              "/ must be == 62 in to_base64_value");
+              "/ must be == 63 in to_base64_value");
 static_assert(to_base64_url_value[uint8_t('_')] == 63,
-              "_ must be == 62 in to_base64_url_value");
+              "_ must be == 63 in to_base64_url_value");
 } // namespace base64
 } // namespace tables
 } // unnamed namespace
