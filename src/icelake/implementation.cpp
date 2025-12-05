@@ -336,14 +336,66 @@ implementation::validate_utf16le(const char16_t *buf,
                                  size_t len) const noexcept {
   const char16_t *end = buf + len;
 
+  // Optimized: Process 64 code units (2x 512-bit) per iteration
+  const __m512i surr_base = _mm512_set1_epi16(uint16_t(0xD800));
+  const __m512i surr_range = _mm512_set1_epi16(uint16_t(0x0800));
+  const __m512i high_range = _mm512_set1_epi16(uint16_t(0x0400));
+
+  for (; end - buf >= 64;) {
+    __m512i in_1 = _mm512_loadu_si512((__m512i *)buf);
+    __m512i in_2 = _mm512_loadu_si512((__m512i *)(buf + 32));
+
+    __m512i diff_1 = _mm512_sub_epi16(in_1, surr_base);
+    __m512i diff_2 = _mm512_sub_epi16(in_2, surr_base);
+
+    __mmask32 surrogates_1 = _mm512_cmplt_epu16_mask(diff_1, surr_range);
+    __mmask32 surrogates_2 = _mm512_cmplt_epu16_mask(diff_2, surr_range);
+
+    if (surrogates_1 | surrogates_2) {
+      __mmask32 highsurrogates_1 = _mm512_cmplt_epu16_mask(diff_1, high_range);
+      __mmask32 lowsurrogates_1 = surrogates_1 ^ highsurrogates_1;
+
+      __mmask32 highsurrogates_2 = _mm512_cmplt_epu16_mask(diff_2, high_range);
+      __mmask32 lowsurrogates_2 = surrogates_2 ^ highsurrogates_2;
+
+      // Validate first block: high must be followed by low
+      if ((highsurrogates_1 << 1) != lowsurrogates_1) {
+        return false;
+      }
+
+      // Check boundary between blocks: if first block ends with high, second must start with low
+      bool ends_with_high_1 = ((highsurrogates_1 & 0x80000000) != 0);
+      bool starts_with_low_2 = ((lowsurrogates_2 & 0x1) != 0);
+      if (ends_with_high_1 && !starts_with_low_2) {
+        return false;
+      }
+
+      // Validate second block (shift by 1 if first ended with high)
+      __mmask32 expected_low_2 = ends_with_high_1 ? (highsurrogates_2 << 1) | 0x1 : (highsurrogates_2 << 1);
+      if (expected_low_2 != lowsurrogates_2) {
+        return false;
+      }
+
+      bool ends_with_high_2 = ((highsurrogates_2 & 0x80000000) != 0);
+      if (ends_with_high_2) {
+        buf += 63; // advance by 63 to start with high surrogate next round
+      } else {
+        buf += 64;
+      }
+    } else {
+      buf += 64;
+    }
+  }
+
+  // Handle remaining 32-63 code units
   for (; end - buf >= 32;) {
     __m512i in = _mm512_loadu_si512((__m512i *)buf);
-    __m512i diff = _mm512_sub_epi16(in, _mm512_set1_epi16(uint16_t(0xD800)));
+    __m512i diff = _mm512_sub_epi16(in, surr_base);
     __mmask32 surrogates =
-        _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0800)));
+        _mm512_cmplt_epu16_mask(diff, surr_range);
     if (surrogates) {
       __mmask32 highsurrogates =
-          _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0400)));
+          _mm512_cmplt_epu16_mask(diff, high_range);
       __mmask32 lowsurrogates = surrogates ^ highsurrogates;
       // high must be followed by low
       if ((highsurrogates << 1) != lowsurrogates) {
