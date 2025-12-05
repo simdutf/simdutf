@@ -3056,9 +3056,9 @@ inline std::string_view to_string(last_chunk_handling_options options) {
 
 /**
  * Provide the maximal binary length in bytes given the base64 input.
- * As long as the input does not contain ignorable characters (e.g., ASCII spaces
- * or linefeed characters), the result is exact. In particular, the function
- * checks for padding characters.
+ * As long as the input does not contain ignorable characters (e.g., ASCII
+ * spaces or linefeed characters), the result is exact. In particular, the
+ * function checks for padding characters.
  *
  * The function is fast (constant time). It checks up to two characters at
  * the end of the string. The input is not otherwise validated or read.
@@ -3080,9 +3080,9 @@ maximal_binary_length_from_base64(
 
 /**
  * Provide the maximal binary length in bytes given the base64 input.
- * As long as the input does not contain ignorable characters (e.g., ASCII spaces
- * or linefeed characters), the result is exact. In particular, the function
- * checks for padding characters.
+ * As long as the input does not contain ignorable characters (e.g., ASCII
+ * spaces or linefeed characters), the result is exact. In particular, the
+ * function checks for padding characters.
  *
  * The function is fast (constant time). It checks up to two characters at
  * the end of the string. The input is not otherwise validated or read.
@@ -5261,9 +5261,9 @@ public:
 #if SIMDUTF_FEATURE_BASE64
   /**
    * Provide the maximal binary length in bytes given the base64 input.
-   * As long as the input does not contain ignorable characters (e.g., ASCII spaces
-   * or linefeed characters), the result is exact. In particular, the function
-   * checks for padding characters.
+   * As long as the input does not contain ignorable characters (e.g., ASCII
+   * spaces or linefeed characters), the result is exact. In particular, the
+   * function checks for padding characters.
    *
    * The function is fast (constant time). It checks up to two characters at
    * the end of the string. The input is not otherwise validated or read..
@@ -5277,9 +5277,9 @@ public:
 
   /**
    * Provide the maximal binary length in bytes given the base64 input.
-   * As long as the input does not contain ignorable characters (e.g., ASCII spaces
-   * or linefeed characters), the result is exact. In particular, the function
-   * checks for padding characters.
+   * As long as the input does not contain ignorable characters (e.g., ASCII
+   * spaces or linefeed characters), the result is exact. In particular, the
+   * function checks for padding characters.
    *
    * The function is fast (constant time). It checks up to two characters at
    * the end of the string. The input is not otherwise validated or read.

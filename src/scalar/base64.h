@@ -676,7 +676,8 @@ template <class char_type>
 simdutf_warn_unused size_t maximal_binary_length_from_base64(
     const char_type *input, size_t length) noexcept {
   // We process the padding characters ('=') at the end to make sure
-  // that we return an exact result when the input has no ignorable characters (e.g., spaces).
+  // that we return an exact result when the input has no ignorable characters
+  // (e.g., spaces).
   size_t padding = 0;
   if (length > 0) {
     if (input[length - 1] == '=') {
@@ -686,21 +687,23 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(
       }
     }
   }
-  // The input is not otherwise processed for ignorable characters or validation,
-  // so that the function runs in constant time (very fast).
-  // In practice, base64 inputs without ignorable characters are common and the common
-  // case are line separated inputs with relatively long lines (e.g., 76 characters)
-  // which leads this function to a slight (1%) overestimation of the output size.
+  // The input is not otherwise processed for ignorable characters or
+  // validation, so that the function runs in constant time (very fast). In
+  // practice, base64 inputs without ignorable characters are common and the
+  // common case are line separated inputs with relatively long lines (e.g., 76
+  // characters) which leads this function to a slight (1%) overestimation of
+  // the output size.
   //
-  // Of course, some inputs might contain an arbitrary number of spaces or newlines,
-  // which would make this function return a very pessimistic output size but systems
-  // that produce base64 outputs typically do not do that and if they do, they do not
-  // care much about minimizing memory usage.
+  // Of course, some inputs might contain an arbitrary number of spaces or
+  // newlines, which would make this function return a very pessimistic output
+  // size but systems that produce base64 outputs typically do not do that and
+  // if they do, they do not care much about minimizing memory usage.
   //
-  // In specialized applications, users may know that their input is line separated,
-  // which can be checked very quickly by by iterating (e.g., over 76 character chunks,
-  // looking for the linefeed characters only). We could provide a specialized function
-  // for that, but it is not clear that the added complexity is worth it for us.
+  // In specialized applications, users may know that their input is line
+  // separated, which can be checked very quickly by by iterating (e.g., over 76
+  // character chunks, looking for the linefeed characters only). We could
+  // provide a specialized function for that, but it is not clear that the added
+  // complexity is worth it for us.
   //
   size_t actual_length = length - padding;
   if (actual_length % 4 <= 1) {
