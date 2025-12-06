@@ -3,6 +3,7 @@
 #include <climits>
 #include <type_traits>
 #if SIMDUTF_ATOMIC_REF
+  #include <array>
   #include "simdutf/scalar/atomic_util.h"
 #endif
 
