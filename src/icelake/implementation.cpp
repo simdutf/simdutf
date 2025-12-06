@@ -363,7 +363,8 @@ implementation::validate_utf16le(const char16_t *buf,
         return false;
       }
 
-      // Check boundary between blocks: if first block ends with high, second must start with low
+      // Check boundary between blocks: if first block ends with high, second
+      // must start with low
       bool ends_with_high_1 = ((highsurrogates_1 & 0x80000000) != 0);
       bool starts_with_low_2 = ((lowsurrogates_2 & 0x1) != 0);
       if (ends_with_high_1 && !starts_with_low_2) {
@@ -371,7 +372,9 @@ implementation::validate_utf16le(const char16_t *buf,
       }
 
       // Validate second block (shift by 1 if first ended with high)
-      __mmask32 expected_low_2 = ends_with_high_1 ? (highsurrogates_2 << 1) | 0x1 : (highsurrogates_2 << 1);
+      __mmask32 expected_low_2 = ends_with_high_1
+                                     ? (highsurrogates_2 << 1) | 0x1
+                                     : (highsurrogates_2 << 1);
       if (expected_low_2 != lowsurrogates_2) {
         return false;
       }
@@ -391,11 +394,9 @@ implementation::validate_utf16le(const char16_t *buf,
   for (; end - buf >= 32;) {
     __m512i in = _mm512_loadu_si512((__m512i *)buf);
     __m512i diff = _mm512_sub_epi16(in, surr_base);
-    __mmask32 surrogates =
-        _mm512_cmplt_epu16_mask(diff, surr_range);
+    __mmask32 surrogates = _mm512_cmplt_epu16_mask(diff, surr_range);
     if (surrogates) {
-      __mmask32 highsurrogates =
-          _mm512_cmplt_epu16_mask(diff, high_range);
+      __mmask32 highsurrogates = _mm512_cmplt_epu16_mask(diff, high_range);
       __mmask32 lowsurrogates = surrogates ^ highsurrogates;
       // high must be followed by low
       if ((highsurrogates << 1) != lowsurrogates) {
