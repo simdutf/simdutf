@@ -22,9 +22,6 @@
 #if SIMDUTF_CPLUSPLUS17
   #include <string_view>
 #endif
-#if SIMDUTF_CPLUSPLUS23
-  #include <vector>
-#endif
 // The following defines are conditionally enabled/disabled during amalgamation.
 // By default all features are enabled, regular code shouldn't check them. Only
 // when user code really relies of a selected subset, it's good to verify these
@@ -290,9 +287,7 @@ simdutf_constexpr23 simdutf_really_inline simdutf_warn_unused bool
 validate_utf8(const detail::input_span_of_byte_like auto &input) noexcept {
     #if SIMDUTF_CPLUSPLUS23
   if consteval {
-    // can't use reinterpret_cast during constant evaluation. but we can copy.
-    const std::vector<char> tmp(input.begin(), input.end());
-    return simdutf::scalar::utf8::validate(tmp.data(), tmp.size());
+    return simdutf::scalar::utf8::validate(input.data(), input.size());
   } else {
     #endif
     return validate_utf8(reinterpret_cast<const char *>(input.data()),

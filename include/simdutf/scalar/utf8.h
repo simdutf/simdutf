@@ -7,8 +7,9 @@ namespace {
 namespace utf8 {
 
 // credit: based on code from Google Fuchsia (Apache Licensed)
-inline simdutf_constexpr23 simdutf_warn_unused bool
-validate(const char *buf, size_t len) noexcept {
+template <class BytePtr>
+simdutf_constexpr23 simdutf_warn_unused bool validate(BytePtr buf,
+                                                      size_t len) noexcept {
 #if SIMDUTF_CPLUSPLUS23
   auto data = simdutf::detail::constexpr_cast_ptr<const uint8_t>(buf);
 #else
