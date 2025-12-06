@@ -10,8 +10,9 @@ bool validate_utf32(const char32_t *buf, size_t len) {
   __m512i currentmax = _mm512_setzero_si512();
   __m512i currentoffsetmax = _mm512_setzero_si512();
 
-  // Optimized: Process 32 values (2x 512-bit) per iteration for better throughput
-  while (buf + 32 <= end) {
+  // Optimized: Process 32 values (2x 512-bit) per iteration for better
+  // throughput
+  while (end - buf >= 32) {
     __m512i utf32_1 = _mm512_loadu_si512((const __m512i *)buf);
     __m512i utf32_2 = _mm512_loadu_si512((const __m512i *)(buf + 16));
     buf += 32;
@@ -28,7 +29,7 @@ bool validate_utf32(const char32_t *buf, size_t len) {
   }
 
   // Handle remaining 16-31 values
-  if (buf + 16 <= end) {
+  if (end - buf >= 16) {
     __m512i utf32 = _mm512_loadu_si512((const __m512i *)buf);
     buf += 16;
     currentoffsetmax =
