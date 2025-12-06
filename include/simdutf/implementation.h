@@ -42,7 +42,89 @@
 #define SIMDUTF_FEATURE_UTF32 1
 #define SIMDUTF_FEATURE_BASE64 1
 
-// these  includes are needed for constexpr support. they are
+#if SIMDUTF_CPLUSPLUS23
+namespace simdutf {
+namespace detail {
+/**
+ * The constexpr_ptr class is a workaround for reinterpret_cast not being
+ * allowed during constant evaluation.
+ */
+template <typename to, typename from>
+  requires(sizeof(to) == sizeof(from))
+struct constexpr_ptr {
+  const from *p;
+
+  constexpr constexpr_ptr() noexcept = default;
+
+  constexpr explicit constexpr_ptr(const from *ptr) noexcept : p(ptr) {}
+
+  constexpr to operator*() const noexcept { return std::bit_cast<to>(*p); }
+
+  constexpr constexpr_ptr &operator++() noexcept {
+    ++p;
+    return *this;
+  }
+
+  constexpr constexpr_ptr operator++(int) noexcept {
+    auto old = *this;
+    ++p;
+    return old;
+  }
+
+  constexpr constexpr_ptr &operator--() noexcept {
+    --p;
+    return *this;
+  }
+
+  constexpr constexpr_ptr operator--(int) noexcept {
+    auto old = *this;
+    --p;
+    return old;
+  }
+
+  constexpr constexpr_ptr &operator+=(std::ptrdiff_t n) noexcept {
+    p += n;
+    return *this;
+  }
+
+  constexpr constexpr_ptr &operator-=(std::ptrdiff_t n) noexcept {
+    p -= n;
+    return *this;
+  }
+
+  constexpr constexpr_ptr operator+(std::ptrdiff_t n) const noexcept {
+    return constexpr_ptr{p + n};
+  }
+
+  constexpr constexpr_ptr operator-(std::ptrdiff_t n) const noexcept {
+    return p - n;
+  }
+
+  constexpr std::ptrdiff_t operator-(const constexpr_ptr &o) const noexcept {
+    return p - o.p;
+  }
+
+  constexpr to operator[](std::ptrdiff_t n) const noexcept {
+    return std::bit_cast<to>(*(p + n));
+  }
+
+  //  constexpr auto operator<=>(const constexpr_ptr &) const noexcept =
+  //  default;
+
+  // for memcpy to work
+  constexpr operator const void *() const noexcept { return p; }
+};
+
+template <typename to, typename from>
+constexpr constexpr_ptr<to, from> constexpr_cast_ptr(from *p) noexcept {
+  return constexpr_ptr<to, from>{p};
+}
+
+} // namespace detail
+} // namespace simdutf
+#endif
+
+// these includes are needed for constexpr support. they are
 // not part of the public api.
 #include <simdutf/scalar/swap_bytes.h>
 #include <simdutf/scalar/ascii.h>
@@ -209,7 +291,7 @@ validate_utf8(const detail::input_span_of_byte_like auto &input) noexcept {
     #if SIMDUTF_CPLUSPLUS23
   if consteval {
     // can't use reinterpret_cast during constant evaluation. but we can copy.
-    const std::vector<uint8_t> tmp(input.begin(), input.end());
+    const std::vector<char> tmp(input.begin(), input.end());
     return simdutf::scalar::utf8::validate(tmp.data(), tmp.size());
   } else {
     #endif

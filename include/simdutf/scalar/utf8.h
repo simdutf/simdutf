@@ -7,8 +7,13 @@ namespace {
 namespace utf8 {
 
 // credit: based on code from Google Fuchsia (Apache Licensed)
-inline simdutf_constexpr simdutf_warn_unused bool
-validate(const uint8_t *data, size_t len) noexcept {
+inline simdutf_constexpr23 simdutf_warn_unused bool
+validate(const char *buf, size_t len) noexcept {
+#if SIMDUTF_CPLUSPLUS23
+  auto data = simdutf::detail::constexpr_cast_ptr<const uint8_t>(buf);
+#else
+  const auto *data = reinterpret_cast<const uint8_t *>(buf);
+#endif
   uint64_t pos = 0;
   uint32_t code_point = 0;
   while (pos < len) {
@@ -95,11 +100,6 @@ validate(const uint8_t *data, size_t len) noexcept {
     pos = next_pos;
   }
   return true;
-}
-
-simdutf_really_inline /*constexpr*/ simdutf_warn_unused bool
-validate(const char *buf, size_t len) noexcept {
-  return validate(reinterpret_cast<const uint8_t *>(buf), len);
 }
 
 inline simdutf_warn_unused result validate_with_errors(const char *buf,
