@@ -10,7 +10,25 @@ bool validate_utf32(const char32_t *buf, size_t len) {
   __m512i currentmax = _mm512_setzero_si512();
   __m512i currentoffsetmax = _mm512_setzero_si512();
 
-  while (buf < end - 16) {
+  // Optimized: Process 32 values (2x 512-bit) per iteration for better throughput
+  while (buf + 32 <= end) {
+    __m512i utf32_1 = _mm512_loadu_si512((const __m512i *)buf);
+    __m512i utf32_2 = _mm512_loadu_si512((const __m512i *)(buf + 16));
+    buf += 32;
+
+    // Process both blocks in parallel to maximize instruction-level parallelism
+    __m512i offsetmax_1 = _mm512_add_epi32(utf32_1, offset);
+    __m512i offsetmax_2 = _mm512_add_epi32(utf32_2, offset);
+
+    currentoffsetmax = _mm512_max_epu32(offsetmax_1, currentoffsetmax);
+    currentmax = _mm512_max_epu32(utf32_1, currentmax);
+
+    currentoffsetmax = _mm512_max_epu32(offsetmax_2, currentoffsetmax);
+    currentmax = _mm512_max_epu32(utf32_2, currentmax);
+  }
+
+  // Handle remaining 16-31 values
+  if (buf + 16 <= end) {
     __m512i utf32 = _mm512_loadu_si512((const __m512i *)buf);
     buf += 16;
     currentoffsetmax =
@@ -18,11 +36,14 @@ bool validate_utf32(const char32_t *buf, size_t len) {
     currentmax = _mm512_max_epu32(utf32, currentmax);
   }
 
-  __m512i utf32 =
-      _mm512_maskz_loadu_epi32(__mmask16((1 << (end - buf)) - 1), buf);
-  currentoffsetmax =
-      _mm512_max_epu32(_mm512_add_epi32(utf32, offset), currentoffsetmax);
-  currentmax = _mm512_max_epu32(utf32, currentmax);
+  // Handle remaining 0-15 values with masked load
+  if (buf < end) {
+    __m512i utf32 =
+        _mm512_maskz_loadu_epi32(__mmask16((1 << (end - buf)) - 1), buf);
+    currentoffsetmax =
+        _mm512_max_epu32(_mm512_add_epi32(utf32, offset), currentoffsetmax);
+    currentmax = _mm512_max_epu32(utf32, currentmax);
+  }
 
   const __m512i standardmax = _mm512_set1_epi32((uint32_t)0x10ffff);
   const __m512i standardoffsetmax = _mm512_set1_epi32((uint32_t)0xfffff7ff);
