@@ -106,9 +106,12 @@ simdutf_really_inline simdutf_warn_unused bool validate(const char *buf,
   return validate(reinterpret_cast<const uint8_t *>(buf), len);
 }
 
-inline simdutf_warn_unused result validate_with_errors(const char *buf,
-                                                       size_t len) noexcept {
-  const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);
+template <class BytePtr>
+simdutf_constexpr23 simdutf_warn_unused result
+validate_with_errors(BytePtr data, size_t len) noexcept {
+  static_assert(
+      std::is_same<typename std::decay<decltype(*data)>::type, uint8_t>::value,
+      "dereferencing the data pointer must result in a uint8_t");
   size_t pos = 0;
   uint32_t code_point = 0;
   while (pos < len) {
@@ -204,6 +207,11 @@ inline simdutf_warn_unused result validate_with_errors(const char *buf,
     pos = next_pos;
   }
   return result(error_code::SUCCESS, len);
+}
+
+simdutf_really_inline simdutf_warn_unused result
+validate_with_errors(const char *buf, size_t len) noexcept {
+  return validate_with_errors(reinterpret_cast<const uint8_t *>(buf), len);
 }
 
 // Finds the previous leading byte starting backward from buf and validates with

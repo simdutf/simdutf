@@ -81,7 +81,8 @@ struct result {
   simdutf_really_inline result() noexcept
       : error{error_code::SUCCESS}, count{0} {}
 
-  simdutf_really_inline result(error_code err, size_t pos) noexcept
+  simdutf_constexpr23 simdutf_really_inline result(error_code err,
+                                                   size_t pos) noexcept
       : error{err}, count{pos} {}
 
   simdutf_really_inline bool is_ok() const noexcept {

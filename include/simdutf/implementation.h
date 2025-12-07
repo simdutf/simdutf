@@ -237,10 +237,19 @@ validate_utf8(const detail::input_span_of_byte_like auto &input) noexcept {
 simdutf_warn_unused result validate_utf8_with_errors(const char *buf,
                                                      size_t len) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused result validate_utf8_with_errors(
+simdutf_really_inline simdutf_constexpr23 simdutf_warn_unused result
+validate_utf8_with_errors(
     const detail::input_span_of_byte_like auto &input) noexcept {
-  return validate_utf8_with_errors(reinterpret_cast<const char *>(input.data()),
-                                   input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf8::validate_with_errors(
+        detail::constexpr_cast_ptr<uint8_t>(input.data()), input.size());
+  } else
+    #endif
+  {
+    return validate_utf8_with_errors(
+        reinterpret_cast<const char *>(input.data()), input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF8
