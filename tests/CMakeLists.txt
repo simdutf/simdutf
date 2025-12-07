@@ -435,6 +435,11 @@ target_link_libraries(to_well_formed_utf16_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
 
+add_cpp_test(fixed_string_tests)
+target_link_libraries(fixed_string_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)
+
 find_program(GIT_EXECUTABLE git)
 if(Python3_FOUND AND GIT_EXECUTABLE)
   add_test(NAME check_feature_macros
