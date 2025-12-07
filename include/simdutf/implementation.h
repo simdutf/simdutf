@@ -287,7 +287,8 @@ simdutf_constexpr23 simdutf_really_inline simdutf_warn_unused bool
 validate_utf8(const detail::input_span_of_byte_like auto &input) noexcept {
     #if SIMDUTF_CPLUSPLUS23
   if consteval {
-    return simdutf::scalar::utf8::validate(input.data(), input.size());
+    return scalar::utf8::validate(
+        detail::constexpr_cast_ptr<uint8_t>(input.data()), input.size());
   } else {
     #endif
     return validate_utf8(reinterpret_cast<const char *>(input.data()),
