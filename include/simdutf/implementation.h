@@ -211,13 +211,12 @@ validate_utf8(const detail::input_span_of_byte_like auto &input) noexcept {
   if consteval {
     return scalar::utf8::validate(
         detail::constexpr_cast_ptr<uint8_t>(input.data()), input.size());
-  } else {
+  } else
     #endif
+  {
     return validate_utf8(reinterpret_cast<const char *>(input.data()),
                          input.size());
-    #if SIMDUTF_CPLUSPLUS23
   }
-    #endif
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
