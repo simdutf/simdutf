@@ -87,7 +87,8 @@ inline size_t count_code_points(const char16_t *p, size_t len) {
 }
 
 template <endianness big_endian>
-inline size_t utf8_length_from_utf16(const char16_t *p, size_t len) {
+simdutf_constexpr23 size_t utf8_length_from_utf16(const char16_t *p,
+                                                  size_t len) {
   // We are not BOM aware.
   size_t counter{0};
   for (size_t i = 0; i < len; i++) {
@@ -153,8 +154,8 @@ simdutf_really_inline constexpr bool low_surrogate(char16_t c) {
 }
 
 template <endianness big_endian>
-inline result utf8_length_from_utf16_with_replacement(const char16_t *p,
-                                                      size_t len) {
+simdutf_constexpr23 result
+utf8_length_from_utf16_with_replacement(const char16_t *p, size_t len) {
   bool any_surrogates = false;
   // We are not BOM aware.
   size_t counter{0};
@@ -190,7 +191,8 @@ template <endianness big_endian> constexpr char16_t replacement() {
 }
 
 template <endianness big_endian>
-void to_well_formed_utf16(const char16_t *input, size_t len, char16_t *output) {
+simdutf_constexpr23 void to_well_formed_utf16(const char16_t *input, size_t len,
+                                              char16_t *output) {
   const char16_t replacement = utf16::replacement<big_endian>();
   bool high_surrogate_prev = false, high_surrogate, low_surrogate;
   size_t i = 0;
