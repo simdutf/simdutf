@@ -1,10 +1,12 @@
 #include "simdutf.h"
+#include "tests/helpers/fixed_string.h"
 
 #include <array>
 
 #include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
+#include <tests/helpers/compiletime_conversions.h>
 
 namespace {
 std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
@@ -32,5 +34,16 @@ TEST(convert_latin1_only) {
     ASSERT_TRUE(test.check_size(size_procedure));
   }
 }
+
+#if SIMDUTF_CPLUSPLUS23
+TEST(compile_time_test) {
+  using namespace simdutf::tests::helpers;
+  constexpr auto utf32input = U"hello!"_utf32;
+
+  constexpr auto latin1 = to_latin1(utf32input);
+  static_assert(latin1 == "hello!"_latin1);
+}
+
+#endif
 
 TEST_MAIN
