@@ -76,6 +76,58 @@ constexpr constexpr_ptr<to, from> constexpr_cast_ptr(from *p) noexcept {
   return constexpr_ptr<to, from>{p};
 }
 
+/**
+ * helper type for constexpr_writeptr, so it is possible to
+ * do "*ptr = val;"
+ */
+template <typename SrcType, typename TargetType>
+struct constexpr_write_ptr_proxy {
+
+  constexpr explicit constexpr_write_ptr_proxy(TargetType *raw) : p(raw) {}
+
+  constexpr constexpr_write_ptr_proxy &operator=(SrcType v) {
+    *p = static_cast<TargetType>(v);
+    return *this;
+  }
+
+  TargetType *p;
+};
+
+/**
+ * helper for working around reinterpret_cast not being allowed during constexpr
+ * evaluation. will try to act as a SrcType* but actually write to the pointer
+ * given in the constructor, which is of another type TargetType
+ */
+template <typename SrcType, typename TargetType> struct constexpr_write_ptr {
+  constexpr explicit constexpr_write_ptr(TargetType *raw) : p(raw) {}
+
+  constexpr constexpr_write_ptr_proxy<SrcType, TargetType> operator*() const {
+    return constexpr_write_ptr_proxy<SrcType, TargetType>{p};
+  }
+
+  constexpr constexpr_write_ptr &operator++() {
+    ++p;
+    return *this;
+  }
+
+  constexpr constexpr_write_ptr operator++(int) {
+    constexpr_write_ptr old = *this;
+    ++p;
+    return old;
+  }
+
+  constexpr std::ptrdiff_t operator-(const constexpr_write_ptr &other) const {
+    return p - other.p;
+  }
+
+  TargetType *p;
+};
+
+template <typename SrcType, typename TargetType>
+constexpr auto constexpr_cast_writeptr(TargetType *raw) {
+  return constexpr_write_ptr<SrcType, TargetType>{raw};
+}
+
 } // namespace detail
 } // namespace simdutf
 #endif

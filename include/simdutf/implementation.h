@@ -2488,12 +2488,23 @@ convert_utf32_to_latin1_with_errors(
 simdutf_warn_unused size_t convert_valid_utf32_to_latin1(
     const char32_t *input, size_t length, char *latin1_buffer) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf32_to_latin1(
+simdutf_really_inline simdutf_constexpr23 simdutf_warn_unused size_t
+convert_valid_utf32_to_latin1(
     std::span<const char32_t> valid_utf32_input,
     detail::output_span_of_byte_like auto &&latin1_output) noexcept {
-  return convert_valid_utf32_to_latin1(
-      valid_utf32_input.data(), valid_utf32_input.size(),
-      reinterpret_cast<char *>(latin1_output.data()));
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf32_to_latin1::convert_valid(
+        detail::constexpr_cast_ptr<uint32_t>(valid_utf32_input.data()),
+        valid_utf32_input.size(),
+        detail::constexpr_cast_writeptr<char>(latin1_output.data()));
+  }
+    #endif
+  {
+    return convert_valid_utf32_to_latin1(
+        valid_utf32_input.data(), valid_utf32_input.size(),
+        reinterpret_cast<char *>(latin1_output.data()));
+  }
 }
   #endif // SIMDUTF_SPAN
 
