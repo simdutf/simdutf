@@ -171,6 +171,10 @@ Linux or macOS users might follow the following instructions if they have a rece
    perfect round trip
    ```
 
+
+*We strongly discourage working from our main git branch. You should never use our main branch
+in production. [Use our releases](https://github.com/simdutf/simdutf/releases/). They are tagged as `vX.Y.Z`.*
+
 Usage (CMake)
 -------
 
