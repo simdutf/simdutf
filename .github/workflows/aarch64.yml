@@ -1,4 +1,4 @@
-name: Ubuntu aarch64 (GCC 11)
+name: Ubuntu aarch64
 
 on:
   push:
@@ -9,8 +9,12 @@ on:
       - master
 
 jobs:
-  build:
+  build-22:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cxxversion: [11, 17, 20]
+        compiler: [g++, clang++-19]
     steps:
       - uses: actions/checkout@v4
       - uses: uraimo/run-on-arch-action@v3
@@ -19,11 +23,16 @@ jobs:
         with:
           arch: aarch64
           githubToken: ${{ github.token }}
-          distro: ubuntu22.04
+          distro: ubuntu24.04
           install: |
             apt-get update -q -y
-            apt-get install -y cmake make g++
+            apt-get install -y cmake make g++ clang-19
           run: |
-            cmake -DCMAKE_BUILD_TYPE=Release -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -B build
-            cmake --build build -j=2
-            ctest --output-on-failure --test-dir build
+            cmake \
+               -DCMAKE_BUILD_TYPE=Release \
+               -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} \
+               -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON \
+               -DSIMDUTF_CXX_STANDARD=${{ matrix.cxxversion }} \
+               -B build
+            cmake --build build -j=$(nproc)
+            ctest --output-on-failure --test-dir build -j=$(nproc)
