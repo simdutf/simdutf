@@ -11,10 +11,9 @@ std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
 
 using simdutf::tests::helpers::transcode_utf8_to_latin1_test_base;
 
-constexpr size_t trials = 10000;
 } // namespace
 
-TEST_LOOP(trials, convert_pure_ASCII) {
+TEST_LOOP(convert_pure_ASCII) {
   size_t counter = 0;
   auto generator = [&counter]() -> uint8_t { return counter++ & 0x7f; };
 
@@ -34,7 +33,7 @@ TEST_LOOP(trials, convert_pure_ASCII) {
   }
 }
 
-TEST_LOOP(trials, convert_1_or_2_valid_UTF8_bytes_to_latin1) {
+TEST_LOOP(convert_1_or_2_valid_UTF8_bytes_to_latin1) {
   simdutf::tests::helpers::RandomInt random(
       0x0000, 0x0ff, seed); // range for 1 or 2 UTF-8 bytes
 

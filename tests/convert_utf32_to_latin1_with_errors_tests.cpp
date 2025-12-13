@@ -11,7 +11,6 @@ std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
 
 using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
 
-constexpr size_t trials = 1000;
 } // namespace
 
 TEST(convert_latin1_only) {
@@ -37,7 +36,7 @@ TEST(convert_latin1_only) {
   }
 }
 
-TEST_LOOP(trials, convert_fails_if_input_too_large) {
+TEST_LOOP(convert_fails_if_input_too_large) {
   simdutf::tests::helpers::RandomInt generator(0xFF, 0xffffffff, seed);
   const size_t size = 64;
   simdutf::tests::helpers::transcode_utf32_to_latin1_test_base test(

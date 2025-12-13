@@ -13,8 +13,6 @@
 namespace {
 std::array<size_t, 7> input_size{8, 16, 12, 64, 68, 128, 256};
 
-constexpr size_t trials = 10000;
-
 template <typename Pointer> bool has_bom(Pointer *data, size_t size) {
   return (simdutf::BOM::check_bom(data, size) !=
           simdutf::encoding_type::unspecified);
@@ -162,7 +160,7 @@ TEST(issue_627) {
 }
 #endif
 
-TEST_LOOP(trials, pure_utf8_ASCII) {
+TEST_LOOP(pure_utf8_ASCII) {
   simdutf::tests::helpers::random_utf8 random(seed, 1, 0, 0, 0);
 
   for (size_t size : input_size) {
@@ -175,7 +173,7 @@ TEST_LOOP(trials, pure_utf8_ASCII) {
   }
 }
 
-TEST_LOOP(trials, pure_utf16_ASCII) {
+TEST_LOOP(pure_utf16_ASCII) {
   simdutf::tests::helpers::RandomInt random(0, 127, seed);
 
   for (size_t size : input_size) {
@@ -189,7 +187,7 @@ TEST_LOOP(trials, pure_utf16_ASCII) {
   }
 }
 
-TEST_LOOP(trials, pure_utf32_ASCII) {
+TEST_LOOP(pure_utf32_ASCII) {
   simdutf::tests::helpers::RandomInt random(0, 0x7f, seed);
 
   for (size_t size : input_size) {
@@ -205,7 +203,7 @@ TEST_LOOP(trials, pure_utf32_ASCII) {
 }
 
 #if 0 // XXX
-TEST_LOOP(trials, no_utf8_bytes_no_surrogates) {
+TEST_LOOP(no_utf8_bytes_no_surrogates) {
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x007f, 0xd800 - 1}, {0xe000, 0xffff}}, seed);
 
@@ -227,7 +225,7 @@ TEST_LOOP(trials, no_utf8_bytes_no_surrogates) {
 }
 #endif
 
-TEST_LOOP(trials, two_utf8_bytes) {
+TEST_LOOP(two_utf8_bytes) {
   simdutf::tests::helpers::random_utf8 random(seed, 0, 1, 0, 0);
 
   for (size_t size : input_size) {
@@ -249,7 +247,7 @@ TEST_LOOP(trials, two_utf8_bytes) {
   }
 }
 
-TEST_LOOP(trials, utf_16_surrogates) {
+TEST_LOOP(utf_16_surrogates) {
   simdutf::tests::helpers::random_utf16 random(seed, 0, 1);
 
   for (size_t size : input_size) {
@@ -261,7 +259,7 @@ TEST_LOOP(trials, utf_16_surrogates) {
   }
 }
 
-TEST_LOOP(trials, utf32_surrogates) {
+TEST_LOOP(utf32_surrogates) {
   simdutf::tests::helpers::RandomInt random_prefix(0x10000, 0x10ffff, seed);
   simdutf::tests::helpers::RandomInt random_suffix(0xd800, 0xdfff, seed);
 
@@ -277,7 +275,7 @@ TEST_LOOP(trials, utf32_surrogates) {
   }
 }
 
-TEST_LOOP(trials, edge_surrogate) {
+TEST_LOOP(edge_surrogate) {
   simdutf::tests::helpers::RandomInt random(0x10000, 0x10ffff, seed);
 
   const size_t size = 512;
@@ -297,7 +295,7 @@ TEST_LOOP(trials, edge_surrogate) {
   ASSERT_TRUE((actual & expected) == expected); // Must be at least UTF16_LE.
 }
 
-TEST_LOOP(trials, tail_utf8) {
+TEST_LOOP(tail_utf8) {
   simdutf::tests::helpers::random_utf8 random(seed, 0, 0, 1, 0);
   std::array<size_t, 5> multiples_three{12, 54, 66, 126, 252};
   for (size_t size : multiples_three) {

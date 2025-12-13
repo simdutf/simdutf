@@ -7,10 +7,9 @@
 namespace {
 using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
 
-constexpr size_t trials = 10000;
 } // namespace
 
-TEST_LOOP(trials, convert_all_latin1) {
+TEST_LOOP(convert_all_latin1) {
   size_t counter = 0;
   auto generator = [&counter]() -> uint32_t { return counter++ & 0xFF; };
 

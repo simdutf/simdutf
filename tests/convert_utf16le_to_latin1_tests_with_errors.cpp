@@ -15,7 +15,6 @@ constexpr simdutf::endianness LE = simdutf::endianness::LITTLE;
 
 using simdutf::tests::helpers::transcode_utf16_to_latin1_test_base;
 
-constexpr int trials = 1000;
 } // namespace
 
 TEST(issue_convert_utf16le_to_latin1_with_errors_38c7a3a4c673f504) {
@@ -73,7 +72,7 @@ TEST(issue_convert_utf16le_to_latin1_with_errors_cbf29ce48422238a) {
   ASSERT_EQUAL(r.error, simdutf::error_code::TOO_LARGE);
 }
 
-TEST_LOOP(trials, convert_2_UTF16_bytes) {
+TEST_LOOP(convert_2_UTF16_bytes) {
   // range for 1, 2 or 3 UTF-8 bytes
   simdutf::tests::helpers::RandomIntRanges random({{0x0000, 0x00ff}}, seed);
 

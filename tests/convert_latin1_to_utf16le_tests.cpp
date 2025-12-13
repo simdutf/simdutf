@@ -12,10 +12,9 @@ constexpr simdutf::endianness LE = simdutf::endianness::LITTLE;
 
 using simdutf::tests::helpers::transcode_latin1_to_utf16_test_base;
 
-constexpr int trials = 1000;
 } // namespace
 
-TEST_LOOP(trials, convert_all_latin) {
+TEST_LOOP(convert_all_latin) {
   // range for 2 UTF-16 bytes
   simdutf::tests::helpers::RandomIntRanges random({{0x00, 0xff}}, seed);
 

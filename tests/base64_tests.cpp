@@ -12,6 +12,12 @@
 #include <tests/helpers/test.h>
 #include <vector>
 
+// to limit the runtime of this test
+#ifndef SIMDUTF_BASE64_TEST_MAXLEN
+  #error "SIMDUTF_BASE64_TEST_MAXLEN not set."
+#endif
+constexpr std::size_t max_len = SIMDUTF_BASE64_TEST_MAXLEN;
+
 // Return the length of the prefix that contains count base64 characters.
 // Thus, if count is 3, the function returns the length of the prefix
 // that contains 3 base64 characters. Padding characters are counted.
@@ -592,7 +598,7 @@ TEST(with_lines_pauldreik) {
 TEST(with_lines) {
 
   for (size_t line_length : {4, 64, 76, 80, 128}) {
-    for (size_t len = 0; len < 2048; len += 17) {
+    for (size_t len = 0; len < max_len; len += 17) {
       std::vector<char> source(len, 0);
       std::vector<char> buffer;
       buffer.resize(simdutf::base64_length_from_binary_with_lines(
@@ -641,7 +647,7 @@ TEST(with_lines) {
 // https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
 //
 TEST(partial_should_decode_up_to_last_chunk) {
-  for (size_t len = 0; len < 2048; len++) {
+  for (size_t len = 0; len < max_len; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     buffer.resize(simdutf::base64_length_from_binary(len));
@@ -831,7 +837,7 @@ TEST(hybrid_decoding) {
 }
 
 TEST(roundtrip_base64_with_spaces) {
-  for (size_t len = 0; len < 2048; len++) {
+  for (size_t len = 0; len < max_len; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     buffer.resize(simdutf::base64_length_from_binary(len));
@@ -892,7 +898,7 @@ TEST(roundtrip_base64_with_spaces) {
 }
 
 TEST(roundtrip_base64_with_garbage) {
-  for (size_t len = 0; len < 2048; len++) {
+  for (size_t len = 0; len < max_len; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     buffer.resize(simdutf::base64_length_from_binary(len));
@@ -948,7 +954,7 @@ TEST(roundtrip_base64_with_garbage) {
 }
 
 TEST(roundtrip_base64_url_with_garbage) {
-  for (size_t len = 0; len < 2048; len++) {
+  for (size_t len = 0; len < max_len; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     buffer.resize(simdutf::base64_length_from_binary(len));
@@ -1016,7 +1022,7 @@ TEST(roundtrip_base64_url_with_garbage) {
 }
 
 TEST(roundtrip_base64_with_lots_of_spaces) {
-  for (size_t len = 0; len < 2048; len++) {
+  for (size_t len = 0; len < max_len; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     buffer.resize(simdutf::base64_length_from_binary(len));
@@ -1085,7 +1091,7 @@ TEST(roundtrip_base64_with_lots_of_spaces) {
 
 TEST(roundtrip_base64_with_lots_of_spaces_at_the_end) {
   std::vector<char> buffer;
-  for (size_t len = 0; len < 2048; len += 10) {
+  for (size_t len = 0; len < max_len; len += 10) {
     std::vector<char> source(len, 0);
     buffer.clear();
     buffer.resize(simdutf::base64_length_from_binary(len), '\0');
@@ -1129,7 +1135,7 @@ TEST(roundtrip_base64_with_lots_of_spaces_at_the_end) {
 
 TEST(roundtrip_base64_with_lots_of_spaces_at_the_beginning) {
   std::vector<char> buffer;
-  for (size_t len = 0; len < 2048; len += 10) {
+  for (size_t len = 0; len < max_len; len += 10) {
     std::vector<char> source(len, 0);
     buffer.clear();
     buffer.resize(simdutf::base64_length_from_binary(len), '\0');
@@ -1912,7 +1918,7 @@ TEST(base64_decode_webkit_more_cases) {
 }
 
 TEST(base64_decode_webkit_like_but_random_more_cases) {
-  for (size_t len = 1; len <= 2048; len++) {
+  for (size_t len = 1; len <= max_len; len++) {
     for (size_t trial = 0; trial < 10; trial++) {
       std::vector<char> source(len, 0);
       std::vector<char> buffer;
@@ -1969,7 +1975,7 @@ TEST(base64_decode_webkit_like_but_random_more_cases) {
 }
 
 TEST(base64_decode_webkit_like_but_random_with_spaces_more_cases) {
-  for (size_t len = 1; len <= 2048; len++) {
+  for (size_t len = 1; len <= max_len; len++) {
     for (size_t trial = 0; trial < 20; trial++) {
       std::vector<char> source(len, 0);
       std::vector<char> buffer;
@@ -2587,7 +2593,7 @@ TEST(safe_decode_base64url_cases_16) {
 #endif
 
 TEST(roundtrip_base64) {
-  for (size_t len = 0; len < 2048; len++) {
+  for (size_t len = 0; len < max_len; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     buffer.resize(simdutf::base64_length_from_binary(len));
@@ -2635,7 +2641,7 @@ TEST(roundtrip_base64) {
 }
 
 TEST(roundtrip_base64_16) {
-  for (size_t len = 0; len < 2048; len++) {
+  for (size_t len = 0; len < max_len; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     std::vector<char16_t> buffer16;
@@ -2692,7 +2698,7 @@ TEST(roundtrip_base64_16) {
 #if SIMDUTF_BASE64URL_TESTS
 
 TEST(roundtrip_base64url) {
-  for (size_t len = 0; len < 2048; len++) {
+  for (size_t len = 0; len < max_len; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     buffer.resize(simdutf::base64_length_from_binary(len, simdutf::base64_url));
@@ -2758,7 +2764,7 @@ TEST(roundtrip_base64url) {
 }
 
 TEST(roundtrip_base64url_16) {
-  for (size_t len = 0; len < 2048; len++) {
+  for (size_t len = 0; len < max_len; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     std::vector<char16_t> buffer16;
@@ -2830,7 +2836,7 @@ TEST(roundtrip_base64url_16) {
 #endif
 
 TEST(bad_padding_base64) {
-  for (size_t len = 0; len < 2048; len++) {
+  for (size_t len = 0; len < max_len; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     buffer.resize(simdutf::base64_length_from_binary(len) + 1);
@@ -2902,7 +2908,7 @@ TEST(bad_padding_base64) {
   }
 }
 TEST(doomed_base64_roundtrip) {
-  for (size_t len = 0; len < 2048; len++) {
+  for (size_t len = 0; len < max_len; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     buffer.resize(simdutf::base64_length_from_binary(len));
@@ -2938,7 +2944,7 @@ TEST(doomed_base64_roundtrip) {
 }
 
 TEST(doomed_truncated_base64_roundtrip) {
-  for (size_t len = 1; len < 2048; len++) {
+  for (size_t len = 1; len < max_len; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     std::mt19937 gen((std::mt19937::result_type)(seed));
@@ -2969,7 +2975,7 @@ TEST(doomed_truncated_base64_roundtrip) {
 }
 
 TEST(doomed_truncated_base64_roundtrip_16) {
-  for (size_t len = 1; len < 2048; len++) {
+  for (size_t len = 1; len < max_len; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     std::vector<char16_t> buffer16;
@@ -3001,7 +3007,7 @@ TEST(doomed_truncated_base64_roundtrip_16) {
 }
 
 TEST(roundtrip_base64_16_with_spaces) {
-  for (size_t len = 0; len < 2048; len++) {
+  for (size_t len = 0; len < max_len; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     std::vector<char16_t> buffer16;
@@ -3048,7 +3054,7 @@ TEST(roundtrip_base64_16_with_spaces) {
 }
 
 TEST(roundtrip_base64_16_with_garbage) {
-  for (size_t len = 0; len < 2048; len++) {
+  for (size_t len = 0; len < max_len; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     std::vector<char16_t> buffer16;
@@ -3096,7 +3102,7 @@ TEST(roundtrip_base64_16_with_garbage) {
 }
 
 TEST(roundtrip_base64_url_16_with_garbage) {
-  for (size_t len = 0; len < 2048; len++) {
+  for (size_t len = 0; len < max_len; len++) {
     std::vector<char> source(len, 0);
     std::vector<char> buffer;
     std::vector<char16_t> buffer16;
@@ -3146,7 +3152,7 @@ TEST(roundtrip_base64_url_16_with_garbage) {
 
 TEST(aborted_safe_roundtrip_base64) {
   for (size_t offset = 1; offset <= 16; offset += 3) {
-    for (size_t len = offset; len < 1024; len++) {
+    for (size_t len = offset; len < (max_len / 2); len++) {
       std::vector<char> source(len, 0);
       std::vector<char> buffer;
       buffer.resize(simdutf::base64_length_from_binary(len));
@@ -3192,7 +3198,7 @@ TEST(aborted_safe_roundtrip_base64) {
 
 TEST(aborted_safe_roundtrip_base64_16) {
   for (size_t offset = 1; offset <= 16; offset += 3) {
-    for (size_t len = offset; len < 1024; len++) {
+    for (size_t len = offset; len < (max_len / 2); len++) {
       std::vector<char> source(len, 0);
       std::vector<char> buffer;
       std::vector<char16_t> buffer16;
@@ -3243,7 +3249,7 @@ TEST(aborted_safe_roundtrip_base64_16) {
 
 TEST(aborted_safe_roundtrip_base64_with_spaces) {
   for (size_t offset = 1; offset <= 16; offset += 3) {
-    for (size_t len = offset; len < 1024; len++) {
+    for (size_t len = offset; len < (max_len / 2); len++) {
       std::vector<char> source(len, 0);
       std::vector<char> buffer;
       buffer.resize(simdutf::base64_length_from_binary(len));
@@ -3291,7 +3297,7 @@ TEST(aborted_safe_roundtrip_base64_with_spaces) {
 
 TEST(aborted_safe_roundtrip_base64_16_with_spaces) {
   for (size_t offset = 1; offset <= 16; offset += 3) {
-    for (size_t len = offset; len < 1024; len++) {
+    for (size_t len = offset; len < (max_len / 2); len++) {
       std::vector<char> source(len, 0);
       std::vector<char> buffer;
       std::vector<char16_t> buffer16;

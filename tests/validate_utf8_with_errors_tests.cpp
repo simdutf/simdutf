@@ -3,8 +3,6 @@
 #include <tests/helpers/random_utf8.h>
 #include <tests/helpers/test.h>
 
-constexpr size_t num_trials = 1000;
-
 TEST(validate_utf8_with_errors_cbf29ce4842223f0) {
   const unsigned char data[] = {
       0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
@@ -42,7 +40,7 @@ TEST(copyright) {
   ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
 }
 
-TEST_LOOP(num_trials, no_error) {
+TEST_LOOP(no_error) {
   simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
   const auto utf8{generator.generate(512, seed)};
   simdutf::result res = implementation.validate_utf8_with_errors(
@@ -51,7 +49,7 @@ TEST_LOOP(num_trials, no_error) {
   ASSERT_EQUAL(res.count, utf8.size());
 }
 
-TEST_LOOP(num_trials, header_bits_error) {
+TEST_LOOP(header_bits_error) {
   simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
   auto utf8{generator.generate(512, seed)};
 
@@ -68,7 +66,7 @@ TEST_LOOP(num_trials, header_bits_error) {
   }
 }
 
-TEST_LOOP(num_trials, too_short_error) {
+TEST_LOOP(too_short_error) {
   simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
   auto utf8{generator.generate(512, seed)};
   int leading_byte_pos = 0;
@@ -89,7 +87,7 @@ TEST_LOOP(num_trials, too_short_error) {
   }
 }
 
-TEST_LOOP(num_trials, too_long_error) {
+TEST_LOOP(too_long_error) {
   simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
   auto utf8{generator.generate(512, seed)};
   for (unsigned int i = 1; i < 512; i++) {
@@ -107,7 +105,7 @@ TEST_LOOP(num_trials, too_long_error) {
   }
 }
 
-TEST_LOOP(num_trials, overlong_error) {
+TEST_LOOP(overlong_error) {
   simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
   auto utf8{generator.generate(512, seed)};
   for (unsigned int i = 1; i < 512; i++) {
@@ -136,7 +134,7 @@ TEST_LOOP(num_trials, overlong_error) {
   }
 }
 
-TEST_LOOP(num_trials, too_large_error) {
+TEST_LOOP(too_large_error) {
   simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
   auto utf8{generator.generate(512, seed)};
   for (unsigned int i = 1; i < 512; i++) {
@@ -155,7 +153,7 @@ TEST_LOOP(num_trials, too_large_error) {
   }
 }
 
-TEST_LOOP(num_trials, surrogate_error) {
+TEST_LOOP(surrogate_error) {
   simdutf::tests::helpers::random_utf8 generator{seed, 1, 1, 1, 1};
   auto utf8{generator.generate(512, seed)};
   for (unsigned int i = 1; i < 512; i++) {

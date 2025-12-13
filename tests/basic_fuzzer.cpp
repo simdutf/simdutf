@@ -11,6 +11,11 @@
 static uint32_t seed = 123;
 const size_t MAX_SIZE = 1025;
 
+#ifndef SIMDUTF_TEST_FUZZER_TRIALS
+  #error "SIMDUTF_TEST_FUZZER_TRIALS not set."
+#endif
+constexpr std::size_t trials = SIMDUTF_TEST_FUZZER_TRIALS;
+
 std::vector<char> input;
 std::pair<bool, bool> is_ok_utf8 = std::make_pair(false, false);
 std::pair<bool, bool> is_ok_utf16 = std::make_pair(false, false);
@@ -355,7 +360,7 @@ TEST(garbage_utf8_fuzz_with_errors) {
   std::uniform_int_distribution<size_t> length_generator{1, 65};
   std::uniform_int_distribution<uint32_t> byte_generator{0, 256};
 
-  for (size_t counter = 0; counter < 100000; counter++) {
+  for (size_t counter = 0; counter < trials; counter++) {
     if ((counter % 10000) == 0) {
       printf("-");
       fflush(NULL);
@@ -407,7 +412,7 @@ TEST(garbage_utf8_fuzz) {
   std::uniform_int_distribution<size_t> length_generator{1, 65};
   std::uniform_int_distribution<uint32_t> byte_generator{0, 256};
 
-  for (size_t counter = 0; counter < 100000; counter++) {
+  for (size_t counter = 0; counter < trials; counter++) {
     if ((counter % 10000) == 0) {
       printf("-");
       fflush(NULL);
@@ -447,7 +452,7 @@ TEST(overflow_fuzz) {
   size_t counter{0};
   for (int i = 0; i < 6; i++) {
     state_tracker tracker(seed, weights[i][0], weights[i][1]);
-    while (counter < 100000) {
+    while (counter < trials) {
       for (size_t size : input_size) {
         input.clear();
         std::vector<char> output(4 * size);
@@ -561,7 +566,7 @@ TEST(overflow_with_errors_fuzz) {
   size_t counter{0};
   for (int i = 0; i < 6; i++) {
     state_tracker tracker(seed, weights[i][0], weights[i][1]);
-    while (counter < 100000) {
+    while (counter < trials) {
       for (size_t size : input_size) {
         input.clear();
         std::vector<char> output(4 * size);
@@ -681,7 +686,7 @@ TEST(basic_fuzz) {
   size_t counter{0};
   for (int i = 0; i < 6; i++) {
     state_tracker tracker(seed, weights[i][0], weights[i][1]);
-    while (counter < 100000) {
+    while (counter < trials) {
       for (size_t size : input_size) {
         input.clear();
         std::vector<char> output(4 * size);

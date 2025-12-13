@@ -23,6 +23,11 @@ add_cpp_test(random_fuzzer)
 target_link_libraries(random_fuzzer
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
+if(SIMDUTF_FAST_TESTS)
+ target_compile_definitions(random_fuzzer PRIVATE SIMDUTF_TEST_FUZZER_TRIALS=10)
+else()
+ target_compile_definitions(random_fuzzer PRIVATE SIMDUTF_TEST_FUZZER_TRIALS=10000)
+endif()
 if(WIN32 AND BUILD_SHARED_LIBS)
   # Copy the simdutf dll into the tests directory
   add_custom_command(TARGET random_fuzzer POST_BUILD        # Adds a post-build event
@@ -361,6 +366,11 @@ add_cpp_test(count_utf8)
 target_link_libraries(count_utf8
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
+if(SIMDUTF_FAST_TESTS)
+  target_compile_definitions(count_utf8 PRIVATE SIMDUTF_FAST_TESTS=1)
+else()
+  target_compile_definitions(count_utf8 PRIVATE SIMDUTF_FAST_TESTS=0)
+endif()
 
 add_cpp_test(count_utf16le)
 target_link_libraries(count_utf16le
@@ -381,11 +391,21 @@ add_cpp_test(basic_fuzzer)
 target_link_libraries(basic_fuzzer
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
+if(SIMDUTF_FAST_TESTS)
+   target_compile_definitions(basic_fuzzer PRIVATE SIMDUTF_TEST_FUZZER_TRIALS=100)
+else()
+   target_compile_definitions(basic_fuzzer PRIVATE SIMDUTF_TEST_FUZZER_TRIALS=100000)
+endif()
 
 add_cpp_test(base64_tests)
 target_link_libraries(base64_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
+if(SIMDUTF_FAST_TESTS)
+   target_compile_definitions(base64_tests PRIVATE SIMDUTF_BASE64_TEST_MAXLEN=100)
+else()
+   target_compile_definitions(base64_tests PRIVATE SIMDUTF_BASE64_TEST_MAXLEN=2048)
+endif()
 
 add_cpp_test(span_tests)
 target_link_libraries(span_tests

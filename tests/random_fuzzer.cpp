@@ -753,7 +753,10 @@ int main(int argc, char *argv[]) {
     }
     printf("testing: %s\n", e->name().c_str());
   }
-  size_t N = 10000;
+#ifndef SIMDUTF_TEST_FUZZER_TRIALS
+  #error "SIMDUTF_TEST_FUZZER_TRIALS not set."
+#endif
+  std::size_t N = SIMDUTF_TEST_FUZZER_TRIALS;
   if (argc == 2) {
     try {
       N = std::stoi(argv[1]);
