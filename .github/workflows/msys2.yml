@@ -45,6 +45,6 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake  -DCMAKE_BUILD_TYPE=${{ matrix.type }}  ..  -DSIMDUTF_BENCHMARKS=OFF
+          cmake  -DCMAKE_BUILD_TYPE=${{ matrix.type }}  ..  -DSIMDUTF_BENCHMARKS=OFF -DSIMDUTF_FAST_TESTS=On
           cmake --build . --verbose
           ctest -j4 --output-on-failure

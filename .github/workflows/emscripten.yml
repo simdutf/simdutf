@@ -14,6 +14,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v3.6.0
       - name: Configure
-        run: emcmake cmake -B build
+        run: emcmake cmake -B build -DSIMDUTF_FAST_TESTS=On
       - name: Build # We build but do not test 
         run: cmake --build build

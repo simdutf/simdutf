@@ -32,6 +32,7 @@ jobs:
                -DCMAKE_BUILD_TYPE=Release \
                -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} \
                -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON \
+               -DSIMDUTF_FAST_TESTS=On \
                -DSIMDUTF_CXX_STANDARD=${{ matrix.cxxversion }} \
                -B build
             cmake --build build -j=$(nproc)

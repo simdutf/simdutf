@@ -17,13 +17,13 @@ jobs:
         run: |
           mkdir build &&
           cd build &&
-          cmake -DSIMDUTF_SANITIZE=ON ..  &&
+          cmake -DSIMDUTF_SANITIZE=ON .. -DSIMDUTF_FAST_TESTS=On &&
           cmake --build .   &&
           ctest --output-on-failure
       - name: Use cmake with undefined behavior sanitizer
         run: |
           mkdir buildundef &&
           cd buildundef &&
-          cmake -DSIMDUTF_SANITIZE_UNDEFINED=ON ..  &&
+          cmake -DSIMDUTF_SANITIZE_UNDEFINED=ON .. -DSIMDUTF_FAST_TESTS=On &&
           cmake --build .   &&
           ctest --output-on-failure

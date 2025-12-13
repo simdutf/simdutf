@@ -43,6 +43,6 @@ jobs:
           install: ${{ matrix.install }}
       - name: Build and Test
         run: |
-          cmake -B build  -DSIMDUTF_BENCHMARKS=OFF -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+          cmake -B build  -DSIMDUTF_BENCHMARKS=OFF -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DSIMDUTF_FAST_TESTS=On
           cmake --build build --verbose
           ctest -j4 --output-on-failure
