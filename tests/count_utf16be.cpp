@@ -11,10 +11,9 @@
 namespace {
 std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
 
-constexpr size_t trials = 10000;
 } // namespace
 
-TEST_LOOP(trials, count_just_one_word) {
+TEST_LOOP(count_just_one_word) {
   simdutf::tests::helpers::random_utf16 random(seed, 1, 0);
 
   for (size_t size : input_size) {
@@ -27,7 +26,7 @@ TEST_LOOP(trials, count_just_one_word) {
   }
 }
 
-TEST_LOOP(trials, count_1_or_2_UTF16_words) {
+TEST_LOOP(count_1_or_2_UTF16_words) {
   simdutf::tests::helpers::random_utf16 random(seed, 1, 1);
 
   for (size_t size : input_size) {
@@ -40,7 +39,7 @@ TEST_LOOP(trials, count_1_or_2_UTF16_words) {
   }
 }
 
-TEST_LOOP(trials, count_2_UTF16_words) {
+TEST_LOOP(count_2_UTF16_words) {
   simdutf::tests::helpers::random_utf16 random(seed, 0, 1);
 
   for (size_t size : input_size) {

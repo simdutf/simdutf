@@ -7,8 +7,6 @@
 #include <tests/helpers/random_utf16.h>
 #include <tests/helpers/test.h>
 
-constexpr size_t trials = 1000;
-
 #if SIMDUTF_IS_BIG_ENDIAN
 constexpr char16_t replacement_le = 0xFDFF;
 constexpr char16_t replacement_be = 0xFFFD;
@@ -17,7 +15,7 @@ constexpr char16_t replacement_le = 0xFFFD;
 constexpr char16_t replacement_be = 0xFDFF;
 #endif
 
-TEST_LOOP(trials, to_well_formed_utf16le_single_surrogate) {
+TEST_LOOP(to_well_formed_utf16le_single_surrogate) {
   const size_t length = 128;
   std::vector<uint16_t> utf16(length);
 #if SIMDUTF_IS_BIG_ENDIAN
@@ -47,7 +45,7 @@ TEST_LOOP(trials, to_well_formed_utf16le_single_surrogate) {
   }
 }
 
-TEST_LOOP(trials, to_well_formed_utf16be_single_surrogate) {
+TEST_LOOP(to_well_formed_utf16be_single_surrogate) {
   const size_t length = 128;
   std::vector<uint16_t> utf16(length);
 #if SIMDUTF_IS_BIG_ENDIAN
@@ -76,8 +74,7 @@ TEST_LOOP(trials, to_well_formed_utf16be_single_surrogate) {
 }
 
 // Should be the identity on valid input
-TEST_LOOP(trials,
-          to_well_formed_utf16le_for_valid_input_surrogate_pairs_short) {
+TEST_LOOP(to_well_formed_utf16le_for_valid_input_surrogate_pairs_short) {
   simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
   const auto utf16{generator.generate_le(8)};
   const auto len = utf16.size();
@@ -92,8 +89,7 @@ TEST_LOOP(trials,
   ASSERT_EQUAL(utf8_length.count, utf8_length_check);
 }
 
-TEST_LOOP(trials,
-          to_well_formed_utf16be_for_valid_input_surrogate_pairs_short) {
+TEST_LOOP(to_well_formed_utf16be_for_valid_input_surrogate_pairs_short) {
   simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
   const auto utf16{generator.generate_be(8)};
   const auto len = utf16.size();
@@ -108,7 +104,7 @@ TEST_LOOP(trials,
   ASSERT_EQUAL(utf8_length.count, utf8_length_check);
 }
 
-TEST_LOOP(trials, to_well_formed_utf16le_for_valid_input_surrogate_pairs_long) {
+TEST_LOOP(to_well_formed_utf16le_for_valid_input_surrogate_pairs_long) {
   simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
   const auto utf16{generator.generate_le(512)};
   const auto len = utf16.size();
@@ -123,7 +119,7 @@ TEST_LOOP(trials, to_well_formed_utf16le_for_valid_input_surrogate_pairs_long) {
   ASSERT_EQUAL(utf8_length.count, utf8_length_check);
 }
 
-TEST_LOOP(trials, to_well_formed_utf16be_for_valid_input_surrogate_pairs_long) {
+TEST_LOOP(to_well_formed_utf16be_for_valid_input_surrogate_pairs_long) {
   simdutf::tests::helpers::random_utf16 generator{seed, 0, 1};
   const auto utf16{generator.generate_be(512)};
   const auto len = utf16.size();
@@ -138,7 +134,7 @@ TEST_LOOP(trials, to_well_formed_utf16be_for_valid_input_surrogate_pairs_long) {
   ASSERT_EQUAL(utf8_length.count, utf8_length_check);
 }
 
-TEST_LOOP(trials, to_well_formed_utf16le_for_valid_input_mixed_long) {
+TEST_LOOP(to_well_formed_utf16le_for_valid_input_mixed_long) {
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 1};
   const auto utf16{generator.generate_le(512)};
   const auto len = utf16.size();
@@ -153,7 +149,7 @@ TEST_LOOP(trials, to_well_formed_utf16le_for_valid_input_mixed_long) {
   ASSERT_EQUAL(utf8_length.count, utf8_length_check);
 }
 
-TEST_LOOP(trials, to_well_formed_utf16be_for_valid_input_mixed_long) {
+TEST_LOOP(to_well_formed_utf16be_for_valid_input_mixed_long) {
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 1};
   const auto utf16{generator.generate_be(512)};
   const auto len = utf16.size();
@@ -168,7 +164,7 @@ TEST_LOOP(trials, to_well_formed_utf16be_for_valid_input_mixed_long) {
   ASSERT_EQUAL(utf8_length.count, utf8_length_check);
 }
 
-TEST_LOOP(trials, to_well_formed_utf16le_for_valid_input_mixed_long_self) {
+TEST_LOOP(to_well_formed_utf16le_for_valid_input_mixed_long_self) {
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 1};
   const auto utf16{generator.generate_le(512)};
   const auto len = utf16.size();
@@ -183,7 +179,7 @@ TEST_LOOP(trials, to_well_formed_utf16le_for_valid_input_mixed_long_self) {
   ASSERT_EQUAL(utf8_length.count, utf8_length_check);
 }
 
-TEST_LOOP(trials, to_well_formed_utf16be_for_valid_input_mixed_long_self) {
+TEST_LOOP(to_well_formed_utf16be_for_valid_input_mixed_long_self) {
   simdutf::tests::helpers::random_utf16 generator{seed, 1, 1};
   const auto utf16{generator.generate_be(512)};
   const auto len = utf16.size();

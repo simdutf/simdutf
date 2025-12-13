@@ -5,9 +5,7 @@
 #include <tests/helpers/random_utf8.h>
 #include <tests/helpers/test.h>
 
-constexpr size_t trials = 1000;
-
-TEST_LOOP(trials, no_error_ASCII) {
+TEST_LOOP(no_error_ASCII) {
   simdutf::tests::helpers::random_utf8 generator{seed, 1, 0, 0, 0};
   const auto ascii{generator.generate(512)};
 
@@ -18,7 +16,7 @@ TEST_LOOP(trials, no_error_ASCII) {
   ASSERT_EQUAL(res.count, ascii.size());
 }
 
-TEST_LOOP(trials, error_ASCII) {
+TEST_LOOP(error_ASCII) {
   simdutf::tests::helpers::random_utf8 generator{seed, 1, 0, 0, 0};
 
   auto ascii{generator.generate(512)};

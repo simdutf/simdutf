@@ -12,11 +12,10 @@ std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
 
 using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
 
-constexpr size_t trials = 1000;
 } // namespace
 
 // For invalid inputs, we expect the conversion to fail (return 0)
-TEST_LOOP(trials, convert_random_inputs) {
+TEST_LOOP(convert_random_inputs) {
   simdutf::tests::helpers::RandomInt r(0x00, 0xffffffff, seed);
 
   for (size_t size : input_size) {
@@ -55,7 +54,7 @@ TEST(convert_latin1_only) {
   }
 }
 
-TEST_LOOP(trials, convert_fails_if_input_too_large) {
+TEST_LOOP(convert_fails_if_input_too_large) {
   simdutf::tests::helpers::RandomInt generator(0xFF, 0xffffffff, seed);
 
   auto procedure = [&implementation](const char32_t *utf32, size_t size,

@@ -13,7 +13,6 @@ constexpr simdutf::endianness BE = simdutf::endianness::BIG;
 
 using simdutf::tests::helpers::transcode_utf16_to_utf32_test_base;
 
-constexpr int trials = 1000;
 } // namespace
 
 TEST(issue_convert_utf16be_to_utf32_with_errors_7f6091b746e6e764) {
@@ -203,7 +202,7 @@ TEST(issue_convert_utf16be_to_utf32_with_errors_7f6091b746e6e764) {
   ASSERT_EQUAL(r.count, 945);
 }
 
-TEST_LOOP(trials, convert_2_UTF16_bytes) {
+TEST_LOOP(convert_2_UTF16_bytes) {
   // range for 1, 2 or 3 UTF-8 bytes
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x0000, 0x007f}, {0x0080, 0x07ff}, {0x0800, 0xd7ff}, {0xe000, 0xffff}},
@@ -227,7 +226,7 @@ TEST_LOOP(trials, convert_2_UTF16_bytes) {
   }
 }
 
-TEST_LOOP(trials, convert_with_surrogates) {
+TEST_LOOP(convert_with_surrogates) {
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x0800, 0xd800 - 1}, {0xe000, 0x10ffff}}, seed);
 

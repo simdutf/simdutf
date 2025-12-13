@@ -12,10 +12,9 @@ std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
 
 using simdutf::tests::helpers::transcode_utf8_to_utf32_test_base;
 
-constexpr size_t trials = 10000;
 } // namespace
 
-TEST_LOOP(trials, convert_pure_ASCII) {
+TEST_LOOP(convert_pure_ASCII) {
   size_t counter = 0;
   auto generator = [&counter]() -> uint32_t { return counter++ & 0x7f; };
 
@@ -30,7 +29,7 @@ TEST_LOOP(trials, convert_pure_ASCII) {
   }
 }
 
-TEST_LOOP(trials, convert_1_or_2_UTF8_bytes) {
+TEST_LOOP(convert_1_or_2_UTF8_bytes) {
   simdutf::tests::helpers::RandomInt random(
       0x0000, 0x07ff, seed); // range for 1 or 2 UTF-8 bytes
 
@@ -45,7 +44,7 @@ TEST_LOOP(trials, convert_1_or_2_UTF8_bytes) {
   }
 }
 
-TEST_LOOP(trials, convert_1_or_2_or_3_UTF8_bytes) {
+TEST_LOOP(convert_1_or_2_or_3_UTF8_bytes) {
   // range for 1, 2 or 3 UTF-8 bytes
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x0000, 0xd7ff}, {0xe000, 0xffff}}, seed);
@@ -61,7 +60,7 @@ TEST_LOOP(trials, convert_1_or_2_or_3_UTF8_bytes) {
   }
 }
 
-TEST_LOOP(trials, convert_3_or_4_UTF8_bytes) {
+TEST_LOOP(convert_3_or_4_UTF8_bytes) {
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x0800, 0xd800 - 1}, {0xe000, 0x10ffff}},
       seed); // range for 3 or 4 UTF-8 bytes
@@ -77,7 +76,7 @@ TEST_LOOP(trials, convert_3_or_4_UTF8_bytes) {
   }
 }
 
-TEST_LOOP(trials, convert_null_4_UTF8_bytes) {
+TEST_LOOP(convert_null_4_UTF8_bytes) {
   simdutf::tests::helpers::RandomIntRanges random(
       {{0x0000, 0x00000}, {0x10000, 0x10ffff}},
       seed); // range for 3 or 4 UTF-8 bytes

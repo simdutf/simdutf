@@ -38,6 +38,10 @@ std::list<test_entry> &test_procedures();
 struct register_test {
   register_test(const char *name, test_procedure proc);
 };
+#ifndef SIMDUTF_TEST_LOOP_TRIALS
+  #error "SIMDUTF_TEST_LOOP_TRIALS not set."
+#endif
+constexpr std::size_t trials = SIMDUTF_TEST_LOOP_TRIALS;
 
 } // namespace test
 } // namespace simdutf
@@ -110,10 +114,10 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
   void test_impl_##name(                                                       \
       simdutf_maybe_unused const simdutf::implementation &implementation)
 
-#define TEST_LOOP(trials, name)                                                \
+#define TEST_LOOP(name)                                                        \
   void test_impl_##name(const simdutf::implementation &impl, uint32_t seed);   \
   void name(const simdutf::implementation &impl) {                             \
-    for (size_t trial = 0; trial < (trials); trial++) {                        \
+    for (size_t trial = 0; trial < simdutf::test::trials; trial++) {           \
       const uint32_t seed{1234 + uint32_t(trial)};                             \
       if ((trial % 100) == 0) {                                                \
         putchar('.');                                                          \
