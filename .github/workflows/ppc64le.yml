@@ -25,5 +25,5 @@ jobs:
             apt-get install -y cmake make g++
           run: |
             cmake -DCMAKE_BUILD_TYPE=Release -B build -DSIMDUTF_FAST_TESTS=On
-            cmake --build build
-            ctest --output-on-failure --test-dir build
+            cmake --build build -j=$(nproc)
+            ctest --output-on-failure --test-dir build -j=$(nproc)

@@ -21,21 +21,21 @@ jobs:
       run: |
         cmake  -DSIMDUTF_CXX_STANDARD=20 -DSIMDUTF_ATOMIC_BASE64_TESTS=ON -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=ON -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DSIMDUTF_BENCHMARKS=ON -G "${{matrix.gen}}" -A ${{matrix.arch}} -DBUILD_SHARED_LIBS=${{matrix.shared}} -DSIMDUTF_FAST_TESTS=On -B build
     - name: Build Debug
-      run: cmake --build build --config Debug --verbose
+      run: cmake --build build --config Debug --verbose --parallel
     - name: Build Release
-      run: cmake --build build --config Release --verbose
+      run: cmake --build build --config Release --verbose --parallel
     - name: Run Release tests
       run: |
         cd build
-        ctest -C Release   --output-on-failure
+        ctest -C Release   --output-on-failure --parallel
     - name: Run Debug tests
       run: |
         cd build
-        ctest -C Debug  --output-on-failure  -E basic_fuzzer
+        ctest -C Debug  --output-on-failure  -E basic_fuzzer --parallel
     - name: Install
       run: |
         cmake --install build --config Release
     - name: Test Installation
       run: |
         cmake -G "${{matrix.gen}}" -A ${{matrix.arch}}  -B build_install_test tests/installation_tests/find
-        cmake --build build_install_test --config Release
+        cmake --build build_install_test --config Release --parallel
