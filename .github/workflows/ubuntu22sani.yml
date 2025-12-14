@@ -18,12 +18,12 @@ jobs:
           mkdir build &&
           cd build &&
           cmake -DSIMDUTF_SANITIZE=ON .. -DSIMDUTF_FAST_TESTS=On &&
-          cmake --build .   &&
-          ctest --output-on-failure
+          cmake --build .  --parallel $(nproc) &&
+          ctest --output-on-failure --parallel $(nproc)
       - name: Use cmake with undefined behavior sanitizer
         run: |
           mkdir buildundef &&
           cd buildundef &&
           cmake -DSIMDUTF_SANITIZE_UNDEFINED=ON .. -DSIMDUTF_FAST_TESTS=On &&
-          cmake --build .   &&
-          ctest --output-on-failure
+          cmake --build . --parallel $(nproc)  &&
+          ctest --output-on-failure --parallel $(nproc)

@@ -18,12 +18,12 @@ jobs:
           mkdir build
           cd build
           cmake -DCMAKE_CXX_FLAGS=-Werror -DSIMDUTF_FAST_TESTS=On -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX:PATH=destination -DBUILD_SHARED_LIBS=${{matrix.shared}} ..   -DSIMDUTF_BENCHMARKS=OFF
-          cmake --build .
-          ctest --output-on-failure
+          cmake --build . --parallel
+          ctest --output-on-failure --parallel
           cmake --install .
           cd ../tests/installation_tests/find
           mkdir build
           cd build
           cmake -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX:PATH=../../../build/destination ..
-          cmake --build .
+          cmake --build . --parallel
           ./repro
