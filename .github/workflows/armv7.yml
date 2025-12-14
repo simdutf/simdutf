@@ -19,14 +19,14 @@ jobs:
         with:
           arch: armv7
           githubToken: ${{ github.token }}
-          distro: ubuntu22.04
+          distro: ubuntu24.04
           install: |
             apt-get update -q -y
             apt-get install -y cmake make g++
           run: |
             cmake -B build -DSIMDUTF_FAST_TESTS=On
-            cmake --build build -j=2
-            ctest --output-on-failure --test-dir build
+            cmake --build build -j=$(nproc)
+            ctest --output-on-failure --test-dir build -j=$(nproc)
             cmake -DCMAKE_CXX_FLAGS="-fstack-protector-strong -fno-strict-aliasing" -B buildprotected -DSIMDUTF_FAST_TESTS=On
-            cmake --build buildprotected -j=2
-            ctest --output-on-failure --test-dir buildprotected
+            cmake --build buildprotected -j=$(nproc)
+            ctest --output-on-failure --test-dir buildprotected -j=$(nproc)
