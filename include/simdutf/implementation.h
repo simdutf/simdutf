@@ -52,10 +52,11 @@ namespace detail {
  * are all distinct types.
  */
 template <typename T>
-concept byte_like = std::is_same_v<T, std::byte> ||   //
-                    std::is_same_v<T, char> ||        //
-                    std::is_same_v<T, signed char> || //
-                    std::is_same_v<T, unsigned char>;
+concept byte_like = std::is_same_v<T, std::byte> ||     //
+                    std::is_same_v<T, char> ||          //
+                    std::is_same_v<T, signed char> ||   //
+                    std::is_same_v<T, unsigned char> || //
+                    std::is_same_v<T, char8_t>;
 
 template <typename T>
 concept is_byte_like = byte_like<std::remove_cvref_t<T>>;
