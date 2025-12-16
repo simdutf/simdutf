@@ -2220,8 +2220,12 @@ enum last_chunk_handling_options : uint64_t {
 
 /**
  * Provide the maximal binary length in bytes given the base64 input.
- * In general, if the input contains ASCII spaces, the result will be less than
- * the maximum length.
+ * As long as the input does not contain ignorable characters (e.g., ASCII spaces
+ * or linefeed characters), the result is exact. In particular, the function
+ * checks for padding characters.
+ *
+ * The function is fast (constant time). It checks up to two characters at
+ * the end of the string. The input is not otherwise validated or read.
  *
  * @param input         the base64 input to process
  * @param length        the length of the base64 input in bytes
@@ -2231,8 +2235,12 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char * input,
 
 /**
  * Provide the maximal binary length in bytes given the base64 input.
- * In general, if the input contains ASCII spaces, the result will be less than
- * the maximum length.
+ * As long as the input does not contain ignorable characters (e.g., ASCII spaces
+ * or linefeed characters), the result is exact. In particular, the function
+ * checks for padding characters.
+ *
+ * The function is fast (constant time). It checks up to two characters at
+ * the end of the string. The input is not otherwise validated or read.
  *
  * @param input         the base64 input to process, in ASCII stored as 16-bit units
  * @param length        the length of the base64 input in 16-bit units
