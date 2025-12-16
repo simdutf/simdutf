@@ -66,6 +66,16 @@ TEST(autodect_can_use_containers_and_views) {
   auto r9a = simdutf::autodetect_encoding(c);
   auto r9b = simdutf::autodetect_encoding(std::as_const(c));
   auto r9c = simdutf::autodetect_encoding(std::move(c));
+
+  std::u8string u8stringdata{1, 2, 3, 4, 5};
+  auto r10a = simdutf::autodetect_encoding(u8stringdata);
+  auto r10b = simdutf::autodetect_encoding(std::span{u8stringdata});
+  auto r10c = simdutf::autodetect_encoding(std::span{std::as_const(u8stringdata)});
+  auto r10d = simdutf::autodetect_encoding(std::as_const(u8stringdata));
+
+  std::u8string_view u8stringview_data{u8stringdata};
+  auto r11a = simdutf::autodetect_encoding(u8stringview_data);
+  auto r11b = simdutf::autodetect_encoding(std::as_const(u8stringview_data));
 }
 
 /// this is used to show failure to compile
