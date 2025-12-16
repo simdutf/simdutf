@@ -265,7 +265,7 @@ The script `singleheader/amalgamate.py` accepts the following parameters:
 If we need conversion between different encodings, like UTF-8 and UTF-32, then
 these two features have to be enabled.
 
-The amalgamated sources set to 1 the following preprocesor defines:
+The amalgamated sources set to 1 the following preprocessor defines:
 
 * `SIMDUTF_FEATURE_UTF8`,
 * `SIMDUTF_FEATURE_UTF16`,
@@ -2040,7 +2040,7 @@ Another benefit of the `base64_to_binary_safe` functions is that they inform you
 about how much data was written to the output buffer, even when there is a fatal
 error.
 This number might not be 'maximal': our fast functions may leave some data that could
-have been decoded prior to a bad character undecode. With the
+have been decoded prior to a bad character undecoded. With the
 `base64_to_binary_safe` function, you also have the option of requesting that as much
 of the data as possible is decoded despite the error by setting the `decode_up_to_bad_char`
 parameter to true (it defaults to false for best performance).
@@ -2536,7 +2536,7 @@ simdutf_warn_unused const char16_t *find(const char16_t *start, const char16_t *
 If you are compiling with C++20 or later, span support is enabled. This allows you to use simdutf in a safer and more expressive way, without manually handling pointers and sizes.
 
 The span interface is easy to use. If you have a container like `std::vector` or `std::array`, you can pass the container directly. If you have a pointer and a size, construct a `std::span` and pass it.
-When dealing with ranges of bytes (like `char`), anything that has a `std::span-like` interface (has appopriate `data()` and `size()` member functions) is accepted. Ranges of larger types are accepted as `std::span` arguments.
+When dealing with ranges of bytes (like `char`), anything that has a `std::span-like` interface (has appropriate `data()` and `size()` member functions) is accepted. Ranges of larger types are accepted as `std::span` arguments.
 
 ## Example
 
@@ -2577,7 +2577,7 @@ sutf -f UTF-8 -t UTF-16LE -o output_file.txt first_input_file.txt second_input_f
 Manual implementation selection
 -------------------------------
 
-When compiling the llibrary for x64 processors, we build several implementations of each functions. At runtime, the best
+When compiling the library for x64 processors, we build several implementations of each functions. At runtime, the best
 implementation is picked automatically. Advanced users may want to pick a particular implementation, thus bypassing our
 runtime detection. It is possible and even relatively convenient to do so. The following C++ program checks all the available
 implementation, and selects one as the default:
@@ -2629,7 +2629,7 @@ Thread safety
 -----------
 
 We built simdutf with thread safety in mind. The simdutf library is single-threaded throughout.
-The CPU detection, which runs the first time parsing is attempted and switches to the fastest parser for your CPU, is transparent and thread-safe. Our runtime dispatching is based on global objects that are instantiated at the beginning of the main thread and may be discarded at the end of the main thread. If you have multiple threads running and some threads use the library while the main thread is cleaning up ressources, you may encounter issues. If you expect such problems, you may consider using [std::quick_exit](https://en.cppreference.com/w/cpp/utility/program/quick_exit).
+The CPU detection, which runs the first time parsing is attempted and switches to the fastest parser for your CPU, is transparent and thread-safe. Our runtime dispatching is based on global objects that are instantiated at the beginning of the main thread and may be discarded at the end of the main thread. If you have multiple threads running and some threads use the library while the main thread is cleaning up resources, you may encounter issues. If you expect such problems, you may consider using [std::quick_exit](https://en.cppreference.com/w/cpp/utility/program/quick_exit).
 
 
 References
