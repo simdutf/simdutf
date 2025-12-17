@@ -284,7 +284,6 @@ validate_utf16be_as_ascii(std::span<const char16_t> input) noexcept {
   return validate_utf16be_as_ascii(input.data(), input.size());
 }
   #endif // SIMDUTF_SPAN
-#endif   // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
 
 /**
  * Validate the ASCII string as a UTF-16LE sequence.
@@ -299,12 +298,13 @@ validate_utf16be_as_ascii(std::span<const char16_t> input) noexcept {
  */
 simdutf_warn_unused bool validate_utf16le_as_ascii(const char16_t *buf,
                                                    size_t len) noexcept;
-#if SIMDUTF_SPAN
+  #if SIMDUTF_SPAN
 simdutf_really_inline simdutf_warn_unused bool
 validate_utf16le_as_ascii(std::span<const char16_t> input) noexcept {
   return validate_utf16le_as_ascii(input.data(), input.size());
 }
-#endif // SIMDUTF_SPAN
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
 
 #if SIMDUTF_FEATURE_UTF16
 /**
