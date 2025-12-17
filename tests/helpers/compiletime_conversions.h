@@ -21,12 +21,18 @@ constexpr auto to_wellformed(utf16_ctstring auto &&input) {
 }
 
 /// converts valid input to latin1
-template <typename CharType, std::size_t N>
-constexpr auto to_latin1(const CTString<CharType, N> &input) {
+template <typename CharType, std::size_t N, std::endian endianness>
+constexpr auto to_latin1(const CTString<CharType, N, endianness> &input) {
   CTString<char, N> tmp;
   std::size_t ret;
   if constexpr (std::is_same_v<CharType, char32_t>) {
     ret = simdutf::convert_valid_utf32_to_latin1(input, tmp);
+  } else if constexpr (std::is_same_v<CharType, char16_t> &&
+                       endianness == std::endian::little) {
+    ret = simdutf::convert_valid_utf16le_to_latin1(input, tmp);
+  } else if constexpr (std::is_same_v<CharType, char16_t> &&
+                       endianness == std::endian::big) {
+    ret = simdutf::convert_valid_utf16be_to_latin1(input, tmp);
   } else {
     throw "unknown type";
   }
