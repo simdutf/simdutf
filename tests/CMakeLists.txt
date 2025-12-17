@@ -2,7 +2,7 @@ include(CTest)
 
 set(SIMDUTF_TEST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../)
 if(MSVC)
-  add_compile_options("/Zi" "/EHsc" "/GR")
+  add_compile_options("/Zi" "/EHsc" "/GR" "/source-charset:utf-8")
 endif()
 add_subdirectory(helpers)
 add_subdirectory(reference)
