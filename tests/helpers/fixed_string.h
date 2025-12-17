@@ -5,6 +5,7 @@
 
 #if SIMDUTF_CPLUSPLUS23
 
+  #include <bit>
   #include <string>
   #include <cstddef>
   #include <span>
@@ -70,11 +71,15 @@ struct TmpStringLiteral {
  *
  * clang-format on
  */
-template <detail::valid_chartype CharType, std::size_t N> struct CTString {
+template <detail::valid_chartype CharType, std::size_t N,
+          std::endian endianness_ = std::endian::native>
+struct CTString {
   /// the string, not null terminated
   CharType storage[N];
 
   using type = CharType;
+  static constexpr std::endian endianness = endianness_;
+
   constexpr CTString() = default;
 
   /// construction from a string literal (includes a null character)
@@ -142,13 +147,43 @@ template <detail::TmpStringLiteral a> constexpr auto operator""_utf32() {
   return CTString<C, a.size()>(a.storage);
 }
 
-/// creates a fixed size string of UTF-16
+/// creates a fixed size string of UTF-16 (native endian)
 template <detail::TmpStringLiteral a> constexpr auto operator""_utf16() {
   using C = typename decltype(a)::type;
   static_assert(
       std::is_same_v<C, char16_t>,
       "_utf16 user defined literal must be on the form u\"text...\"_utf16");
   return CTString<C, a.size()>(a.storage);
+}
+
+/// creates a fixed size string of UTF-16 (little endian)
+template <detail::TmpStringLiteral a> constexpr auto operator""_utf16le() {
+  using C = typename decltype(a)::type;
+  static_assert(
+      std::is_same_v<C, char16_t>,
+      "_utf16 user defined literal must be on the form u\"text...\"_utf16le");
+  auto ret = CTString<C, a.size(), std::endian::little>(a.storage);
+  if constexpr (std::endian::little != std::endian::native) {
+    for (auto &e : ret) {
+      e = std::byteswap(e);
+    }
+  }
+  return ret;
+}
+
+/// creates a fixed size string of UTF-16 (big endian)
+template <detail::TmpStringLiteral a> constexpr auto operator""_utf16be() {
+  using C = typename decltype(a)::type;
+  static_assert(
+      std::is_same_v<C, char16_t>,
+      "_utf16 user defined literal must be on the form u\"text...\"_utf16be");
+  auto ret = CTString<C, a.size(), std::endian::big>(a.storage);
+  if constexpr (std::endian::big != std::endian::native) {
+    for (auto &e : ret) {
+      e = std::byteswap(e);
+    }
+  }
+  return ret;
 }
 
 /// creates a fixed size string of UTF-8
@@ -172,8 +207,8 @@ template <detail::TmpStringLiteral a> constexpr auto operator""_latin1() {
 namespace detail {
 template <class T> struct is_CTString : std::false_type {};
 
-template <typename CharType, std::size_t N>
-struct is_CTString<CTString<CharType, N>> : std::true_type {};
+template <typename CharType, std::size_t N, std::endian endianness>
+struct is_CTString<CTString<CharType, N, endianness>> : std::true_type {};
 
 } // namespace detail
 
@@ -196,6 +231,18 @@ template <class T>
 concept utf16_ctstring =
     (detail::is_CTString<std::decay_t<T>>::value &&
      std::is_same_v<typename std::decay_t<T>::type, char16_t>);
+
+template <class T>
+concept utf16le_ctstring =
+    (detail::is_CTString<std::decay_t<T>>::value &&
+     std::is_same_v<typename std::decay_t<T>::type, char16_t> &&
+     T::endianness == std::endian::little);
+
+template <class T>
+concept utf16be_ctstring =
+    (detail::is_CTString<std::decay_t<T>>::value &&
+     std::is_same_v<typename std::decay_t<T>::type, char16_t> &&
+     T::endianness == std::endian::big);
 
 template <class T>
 concept utf32_ctstring =

@@ -123,6 +123,29 @@ TEST(construct_from_literals) {
   static_assert(utf32_ctstring<decltype(d)>);
 }
 
+TEST(test_endianness) {
+  using namespace simdutf::tests::helpers;
+  // make them equally long so we can compare the type (the length is encoded in
+  // the type)
+  constexpr auto native = u"NATIVE"_utf16;
+  constexpr auto little = u"BIGBIG"_utf16le;
+  constexpr auto bigbig = u"LITTLE"_utf16be;
+  using Native = decltype(native);
+  using Big = decltype(bigbig);
+  using Little = decltype(little);
+  static_assert(utf16_ctstring<Native>);
+  static_assert(utf16_ctstring<Big>);
+  static_assert(utf16_ctstring<Little>);
+  constexpr bool is_little = (std::endian::native == std::endian::little);
+  static_assert(utf16le_ctstring<Native> == is_little);
+  static_assert(utf16be_ctstring<Native> == !is_little);
+
+  static_assert(!std::is_same_v<Big, Little>);
+  static_assert(std::is_same_v<Big, Native> || std::is_same_v<Little, Native>);
+
+  static_assert(little[0] != bigbig[0]);
+}
+
 #else
 TEST(nothing_happens_when_not_in_cxx23_mode) {}
 #endif
