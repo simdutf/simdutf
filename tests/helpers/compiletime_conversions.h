@@ -13,7 +13,14 @@ namespace simdutf {
 namespace tests {
 namespace helpers {
 
-/// converts to latin1
+constexpr auto to_wellformed(utf16_ctstring auto &&input) {
+  using T = std::decay_t<decltype(input)>;
+  T output;
+  simdutf::to_well_formed_utf16le(input, output);
+  return output;
+}
+
+/// converts valid input to latin1
 template <typename CharType, std::size_t N>
 constexpr auto to_latin1(const CTString<CharType, N> &input) {
   CTString<char, N> tmp;

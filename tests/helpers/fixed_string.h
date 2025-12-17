@@ -112,6 +112,7 @@ template <detail::valid_chartype CharType, std::size_t N> struct CTString {
   constexpr CharType operator[](auto index) const noexcept {
     return storage[index];
   }
+  constexpr CharType &operator[](auto index) noexcept { return storage[index]; }
   template <typename DestCharType> constexpr auto as_array() const noexcept {
     std::array<DestCharType, size()> ret;
     for (std::size_t i = 0; i < size(); ++i) {

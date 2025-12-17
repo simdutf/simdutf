@@ -1,12 +1,12 @@
 #include "simdutf.h"
 
-#include <array>
 #include <random>
-#include <thread>
 #include <vector>
 
 #include <tests/helpers/random_utf16.h>
 #include <tests/helpers/test.h>
+#include "tests/helpers/fixed_string.h"
+#include "tests/helpers/compiletime_conversions.h"
 
 #if SIMDUTF_IS_BIG_ENDIAN
 constexpr char16_t replacement_le = 0xFDFF;
@@ -308,28 +308,24 @@ TEST(to_well_formed_utf16be_bad_input_self) {
 }
 
 #if SIMDUTF_CPLUSPLUS23
+
 void compile_time_test() {
-  constexpr std::array<char16_t, 5> utf16{0, 0,
+  constexpr auto utf16 = []() {
+    simdutf::tests::helpers::CTString<char16_t, 5> data{};
   #if SIMDUTF_IS_BIG_ENDIAN
-                                          0x00D8,
+    data[2] = 0x00D8;
   #else
-                                          0xD800,
+    data[2] = 0xD800;
   #endif
-                                          0, 0};
+    return data;
+  }();
 
   constexpr simdutf::result utf8_length =
       simdutf::utf8_length_from_utf16le_with_replacement(utf16);
   static_assert(utf8_length.count == utf16.size() + 2);
   static_assert(utf8_length.error == simdutf::SURROGATE);
 
-  // this lambda is here to make it possible to invoke to_well_formed_utf16le
-  // and get a constexpr value out
-  auto invoke_to_well_formed = [](const auto input) {
-    std::array<char16_t, input.size()> output{};
-    simdutf::to_well_formed_utf16le(input, output);
-    return output;
-  };
-  constexpr auto output = invoke_to_well_formed(utf16);
+  constexpr auto output = to_wellformed(utf16);
   static_assert(output[0] == 0);
   static_assert(output[1] == 0);
   static_assert(output[2] == replacement_le);
@@ -337,9 +333,9 @@ void compile_time_test() {
   static_assert(output[4] == 0);
   constexpr size_t utf8_length_check =
       simdutf::utf8_length_from_utf16le(output);
-  static_assert(utf8_length.error == simdutf::SURROGATE);
   static_assert(utf8_length.count == utf8_length_check);
 }
+
 #endif
 
 TEST_MAIN
