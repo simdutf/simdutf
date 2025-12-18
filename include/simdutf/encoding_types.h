@@ -22,12 +22,22 @@ enum encoding_type {
   unspecified = 0
 };
 
-enum endianness { LITTLE = 0, BIG = 1 };
-
-constexpr bool match_system(endianness e) {
 #ifndef SIMDUTF_IS_BIG_ENDIAN
   #error "SIMDUTF_IS_BIG_ENDIAN needs to be defined."
 #endif
+
+enum endianness {
+  LITTLE = 0,
+  BIG = 1,
+  NATIVE =
+#if SIMDUTF_IS_BIG_ENDIAN
+      BIG
+#else
+      LITTLE
+#endif
+};
+
+constexpr bool match_system(endianness e) {
 #if SIMDUTF_IS_BIG_ENDIAN
   return e == endianness::BIG;
 #else
