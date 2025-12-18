@@ -1,14 +1,12 @@
 
-simdutf: Text processing at billions of characters per second
+simdutf: Text processing at billions of characters per second [![Alpine Linux](https://github.com/simdutf/simdutf/actions/workflows/alpine.yml/badge.svg)](https://github.com/simdutf/simdutf/actions/workflows/alpine.yml) [![MSYS2-CLANG-CI](https://github.com/simdutf/simdutf/actions/workflows/msys2-clang.yml/badge.svg)](https://github.com/simdutf/simdutf/actions/workflows/msys2-clang.yml) [![Ubuntu 22.04 Sanitized CI (GCC 12, CXX 20)](https://github.com/simdutf/simdutf/actions/workflows/ubuntu22-cxx20.yml/badge.svg)](https://github.com/simdutf/simdutf/actions/workflows/ubuntu22-cxx20.yml)
 ===============================================
 
-[![Alpine Linux](https://github.com/simdutf/simdutf/actions/workflows/alpine.yml/badge.svg)](https://github.com/simdutf/simdutf/actions/workflows/alpine.yml)
-[![MSYS2-CLANG-CI](https://github.com/simdutf/simdutf/actions/workflows/msys2-clang.yml/badge.svg)](https://github.com/simdutf/simdutf/actions/workflows/msys2-clang.yml)
-[![Ubuntu 22.04 Sanitized CI (GCC 12, CXX 20)](https://github.com/simdutf/simdutf/actions/workflows/ubuntu22-cxx20.yml/badge.svg)](https://github.com/simdutf/simdutf/actions/workflows/ubuntu22-cxx20.yml)
-# Table of contents
 
-- [Table of contents](#table-of-contents)
-- [simdutf: Unicode validation and transcoding at billions of characters per second](#simdutf-unicode-validation-and-transcoding-at-billions-of-characters-per-second)
+
+
+<img src="doc/logo.svg" width="25%" style="float: right">
+
   - [Real-World Usage](#real-world-usage)
   - [How fast is it?](#how-fast-is-it)
   - [Requirements](#requirements)
