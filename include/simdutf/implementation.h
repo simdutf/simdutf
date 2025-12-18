@@ -377,9 +377,17 @@ validate_utf16le_as_ascii(std::span<const char16_t> input) noexcept {
 simdutf_warn_unused bool validate_utf16(const char16_t *buf,
                                         size_t len) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused bool
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 bool
 validate_utf16(std::span<const char16_t> input) noexcept {
-  return validate_utf16(input.data(), input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16::validate<endianness::NATIVE>(input.data(),
+                                                       input.size());
+  } else
+    #endif
+  {
+    return validate_utf16(input.data(), input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF16
@@ -402,9 +410,17 @@ validate_utf16(std::span<const char16_t> input) noexcept {
 simdutf_warn_unused bool validate_utf16le(const char16_t *buf,
                                           size_t len) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused bool
+simdutf_really_inline simdutf_constexpr23 simdutf_warn_unused bool
 validate_utf16le(std::span<const char16_t> input) noexcept {
-  return validate_utf16le(input.data(), input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16::validate<endianness::LITTLE>(input.data(),
+                                                       input.size());
+  } else
+    #endif
+  {
+    return validate_utf16le(input.data(), input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
@@ -427,9 +443,16 @@ validate_utf16le(std::span<const char16_t> input) noexcept {
 simdutf_warn_unused bool validate_utf16be(const char16_t *buf,
                                           size_t len) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused bool
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 bool
 validate_utf16be(std::span<const char16_t> input) noexcept {
-  return validate_utf16be(input.data(), input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16::validate<endianness::BIG>(input.data(), input.size());
+  } else
+    #endif
+  {
+    return validate_utf16be(input.data(), input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 

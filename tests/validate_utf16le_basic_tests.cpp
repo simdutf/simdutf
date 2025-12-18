@@ -242,6 +242,19 @@ TEST(compile_time_change_endianness) {
   static_assert(native == to_utf16(big));
 }
 
+TEST(compile_time_validation) {
+  using namespace simdutf::tests::helpers;
+
+  static_assert(simdutf::validate_utf16le(u"hello!"_utf16le));
+  static_assert(simdutf::validate_utf16(u"hello!"_utf16));
+
+  // invalid - two high surrogates following each other
+  constexpr auto invalid = u"\xd800\xd800"_utf16;
+  constexpr auto invalid_le = to_utf16le(invalid);
+  static_assert(not simdutf::validate_utf16le(invalid_le));
+  static_assert(not simdutf::validate_utf16(invalid));
+}
+
 #endif
 
 TEST_MAIN

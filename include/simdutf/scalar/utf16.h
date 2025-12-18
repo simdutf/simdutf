@@ -18,8 +18,8 @@ inline simdutf_warn_unused bool validate_as_ascii(const char16_t *data,
 }
 
 template <endianness big_endian>
-inline simdutf_warn_unused bool validate(const char16_t *data,
-                                         size_t len) noexcept {
+inline simdutf_warn_unused simdutf_constexpr23 bool
+validate(const char16_t *data, size_t len) noexcept {
   uint64_t pos = 0;
   while (pos < len) {
     char16_t word = scalar::utf16::swap_if_needed<big_endian>(data[pos]);
