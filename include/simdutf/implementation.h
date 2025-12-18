@@ -2752,11 +2752,19 @@ convert_valid_utf32_to_utf16be(std::span<const char32_t> valid_utf32_input,
 void change_endianness_utf16(const char16_t *input, size_t length,
                              char16_t *output) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline void
+simdutf_really_inline simdutf_constexpr23 void
 change_endianness_utf16(std::span<const char16_t> utf16_input,
                         std::span<char16_t> utf16_output) noexcept {
-  return change_endianness_utf16(utf16_input.data(), utf16_input.size(),
-                                 utf16_output.data());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16::change_endianness_utf16(
+        utf16_input.data(), utf16_input.size(), utf16_output.data());
+  } else
+    #endif
+  {
+    return change_endianness_utf16(utf16_input.data(), utf16_input.size(),
+                                   utf16_output.data());
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF16

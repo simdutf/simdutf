@@ -41,6 +41,45 @@ constexpr auto to_latin1(const CTString<CharType, N, endianness> &input) {
   }
   return tmp;
 }
+
+namespace detail {
+template <std::endian output_endianness, typename CharType, std::size_t N,
+          std::endian input_endianness>
+constexpr auto
+to_utf16_impl(const CTString<CharType, N, input_endianness> &input) {
+
+  if constexpr (std::is_same_v<CharType, char16_t>) {
+    if constexpr (output_endianness == input_endianness) {
+      // no-op
+      return input;
+    } else {
+      // byteswap
+      CTString<CharType, N, output_endianness> output;
+      simdutf::change_endianness_utf16(input, output);
+      return output;
+    }
+  }
+}
+} // namespace detail
+
+/// converts valid input to utf16
+template <typename CharType, std::size_t N, std::endian endianness>
+constexpr auto to_utf16(const CTString<CharType, N, endianness> &input) {
+  return detail::to_utf16_impl<std::endian::native>(input);
+}
+
+/// converts valid input to utf16le
+template <typename CharType, std::size_t N, std::endian endianness>
+constexpr auto to_utf16le(const CTString<CharType, N, endianness> &input) {
+  return detail::to_utf16_impl<std::endian::little>(input);
+}
+
+/// converts valid input to utf16be
+template <typename CharType, std::size_t N, std::endian endianness>
+constexpr auto to_utf16be(const CTString<CharType, N, endianness> &input) {
+  return detail::to_utf16_impl<std::endian::big>(input);
+}
+
 } // namespace helpers
 } // namespace tests
 } // namespace simdutf
