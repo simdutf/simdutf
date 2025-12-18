@@ -3,6 +3,8 @@
 #include <array>
 #include <vector>
 
+#include <tests/helpers/compiletime_conversions.h>
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_utf16.h>
 #include <tests/helpers/test.h>
 #include <tests/helpers/utf16.h>
@@ -141,4 +143,18 @@ TEST(validate_utf16be_returns_false_when_input_is_truncated) {
   }
 }
 
+#if SIMDUTF_CPLUSPLUS23
+
+TEST(compile_time_validation) {
+  using namespace simdutf::tests::helpers;
+
+  static_assert(simdutf::validate_utf16be(u"hello!"_utf16be));
+
+  // invalid - two high surrogates following each other
+  constexpr auto invalid = u"\xd800\xd800"_utf16;
+  constexpr auto invalid_be = to_utf16be(invalid);
+  static_assert(not simdutf::validate_utf16be(invalid_be));
+}
+
+#endif
 TEST_MAIN
