@@ -114,7 +114,7 @@ inline size_t utf32_length_from_utf16(const char16_t *p, size_t len) {
   return counter;
 }
 
-simdutf_really_inline void
+simdutf_really_inline simdutf_constexpr23 void
 change_endianness_utf16(const char16_t *input, size_t size, char16_t *output) {
   for (size_t i = 0; i < size; i++) {
     *output++ = char16_t(input[i] >> 8 | input[i] << 8);
