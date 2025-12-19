@@ -3506,6 +3506,30 @@ TEST(compile_time_length_from_binary) {
   static_assert(encoded_length == encoded.size());
 }
 
+TEST(compile_time_maximal_binary_length) {
+  using namespace simdutf::tests::helpers;
+  constexpr auto binary = "Abracadabra!"_latin1;
+
+  constexpr auto encoded = "QWJyYWNhZGFicmEh"_latin1;
+  // char
+  static_assert(simdutf::maximal_binary_length_from_base64(encoded) ==
+                binary.size());
+  // unsigned char
+  static_assert(simdutf::maximal_binary_length_from_base64(
+                    encoded.as_array<unsigned char>()) == binary.size());
+  // signed char
+  static_assert(simdutf::maximal_binary_length_from_base64(
+                    encoded.as_array<signed char>()) == binary.size());
+}
+
+TEST(compile_time_maximal_binary_length16) {
+  using namespace simdutf::tests::helpers;
+  constexpr auto binary = "Abracadabra!"_latin1;
+  constexpr auto encoded = u"QWJyYWNhZGFicmEh"_utf16;
+  static_assert(simdutf::maximal_binary_length_from_base64(encoded) ==
+                binary.size());
+}
+
 #endif
 
 int main(int argc, char *argv[]) {
