@@ -3235,11 +3235,19 @@ inline std::string_view to_string(last_chunk_handling_options options) {
 simdutf_warn_unused size_t
 maximal_binary_length_from_base64(const char *input, size_t length) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
 maximal_binary_length_from_base64(
     const detail::input_span_of_byte_like auto &input) noexcept {
-  return maximal_binary_length_from_base64(
-      reinterpret_cast<const char *>(input.data()), input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::base64::maximal_binary_length_from_base64(
+        detail::constexpr_cast_ptr<uint8_t>(input.data()), input.size());
+  } else
+    #endif
+  {
+    return maximal_binary_length_from_base64(
+        reinterpret_cast<const char *>(input.data()), input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 
@@ -3260,9 +3268,17 @@ maximal_binary_length_from_base64(
 simdutf_warn_unused size_t maximal_binary_length_from_base64(
     const char16_t *input, size_t length) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
 maximal_binary_length_from_base64(std::span<const char16_t> input) noexcept {
-  return maximal_binary_length_from_base64(input.data(), input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::base64::maximal_binary_length_from_base64(input.data(),
+                                                             input.size());
+  } else
+    #endif
+  {
+    return maximal_binary_length_from_base64(input.data(), input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 

@@ -672,9 +672,9 @@ inline size_t tail_encode_base64(char *dst, const char *src, size_t srclen,
   return tail_encode_base64_impl(dst, src, srclen, options);
 }
 
-template <class char_type>
-simdutf_warn_unused size_t maximal_binary_length_from_base64(
-    const char_type *input, size_t length) noexcept {
+template <class InputPtr>
+simdutf_warn_unused simdutf_constexpr23 size_t
+maximal_binary_length_from_base64(InputPtr input, size_t length) noexcept {
   // We process the padding characters ('=') at the end to make sure
   // that we return an exact result when the input has no ignorable characters
   // (e.g., spaces).
