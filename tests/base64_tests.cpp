@@ -6,10 +6,11 @@
 #include <cstddef>
 #include <iostream>
 #include <tuple>
+#include <vector>
 
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
-#include <vector>
 
 // to limit the runtime of this test
 #ifndef SIMDUTF_BASE64_TEST_MAXLEN
@@ -3490,6 +3491,19 @@ TEST(binary_to_base64_with_lines_span_api_char) {
                expected_output.size()); // how much was written to output
   output.resize(outlen);
   ASSERT_EQUAL(expected_output, output);
+}
+
+#endif
+
+#if SIMDUTF_CPLUSPLUS23
+
+TEST(compile_time_length_from_binary) {
+  using namespace simdutf::tests::helpers;
+  const auto binary = "Abracadabra!"_latin1;
+  const auto encoded = "QWJyYWNhZGFicmEh"_latin1;
+  constexpr auto encoded_length =
+      simdutf::base64_length_from_binary(binary.size());
+  static_assert(encoded_length == encoded.size());
 }
 
 #endif
