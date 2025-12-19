@@ -48,7 +48,6 @@
 #include <simdutf/scalar/swap_bytes.h>
 #include <simdutf/scalar/ascii.h>
 #include <simdutf/scalar/atomic_util.h>
-// #include <simdutf/scalar/base64.h>
 #include <simdutf/scalar/latin1.h>
 #include <simdutf/scalar/latin1_to_utf16/latin1_to_utf16.h>
 #include <simdutf/scalar/latin1_to_utf32/latin1_to_utf32.h>
@@ -3142,6 +3141,44 @@ enum base64_options : uint64_t {
              if any */
 };
 
+// last_chunk_handling_options are used to specify the handling of the last
+// chunk in base64 decoding.
+// https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
+enum last_chunk_handling_options : uint64_t {
+  loose = 0,  /* standard base64 format, decode partial final chunk */
+  strict = 1, /* error when the last chunk is partial, 2 or 3 chars, and
+                 unpadded, or non-zero bit padding */
+  stop_before_partial =
+      2, /* if the last chunk is partial, ignore it (no error) */
+  only_full_chunks =
+      3 /* only decode full blocks (4 base64 characters, no padding) */
+};
+
+inline bool is_partial(last_chunk_handling_options options) {
+  return (options == stop_before_partial) || (options == only_full_chunks);
+}
+
+/**
+ * Find the first occurrence of a character in a string. If the character is
+ * not found, return a pointer to the end of the string.
+ * @param start        the start of the string
+ * @param end          the end of the string
+ * @param character    the character to find
+ * @return a pointer to the first occurrence of the character in the string,
+ * or a pointer to the end of the string if the character is not found.
+ *
+ */
+simdutf_warn_unused const char *find(const char *start, const char *end,
+                                     char character) noexcept;
+simdutf_warn_unused const char16_t *
+find(const char16_t *start, const char16_t *end, char16_t character) noexcept;
+}
+  // We include base64_tables once.
+  #include <simdutf/base64_tables.h>
+  #include <simdutf/scalar/base64.h>
+
+namespace simdutf {
+
   #if SIMDUTF_CPLUSPLUS17
 inline std::string_view to_string(base64_options options) {
   switch (options) {
@@ -3165,23 +3202,6 @@ inline std::string_view to_string(base64_options options) {
   return "<unknown>";
 }
   #endif // SIMDUTF_CPLUSPLUS17
-
-// last_chunk_handling_options are used to specify the handling of the last
-// chunk in base64 decoding.
-// https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
-enum last_chunk_handling_options : uint64_t {
-  loose = 0,  /* standard base64 format, decode partial final chunk */
-  strict = 1, /* error when the last chunk is partial, 2 or 3 chars, and
-                 unpadded, or non-zero bit padding */
-  stop_before_partial =
-      2, /* if the last chunk is partial, ignore it (no error) */
-  only_full_chunks =
-      3 /* only decode full blocks (4 base64 characters, no padding) */
-};
-
-inline bool is_partial(last_chunk_handling_options options) {
-  return (options == stop_before_partial) || (options == only_full_chunks);
-}
 
   #if SIMDUTF_CPLUSPLUS17
 inline std::string_view to_string(last_chunk_handling_options options) {
@@ -3802,20 +3822,6 @@ atomic_base64_to_binary_safe(
     #endif // SIMDUTF_SPAN
   #endif   // SIMDUTF_ATOMIC_REF
 
-/**
- * Find the first occurrence of a character in a string. If the character is
- * not found, return a pointer to the end of the string.
- * @param start        the start of the string
- * @param end          the end of the string
- * @param character    the character to find
- * @return a pointer to the first occurrence of the character in the string,
- * or a pointer to the end of the string if the character is not found.
- *
- */
-simdutf_warn_unused const char *find(const char *start, const char *end,
-                                     char character) noexcept;
-simdutf_warn_unused const char16_t *
-find(const char16_t *start, const char16_t *end, char16_t character) noexcept;
 #endif // SIMDUTF_FEATURE_BASE64
 
 /**

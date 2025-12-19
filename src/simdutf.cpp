@@ -1,10 +1,5 @@
 #include "simdutf.h"
 
-#if SIMDUTF_FEATURE_BASE64
-  // We include base64_tables once.
-  #include "tables/base64_tables.h"
-#endif // SIMDUTF_FEATURE_BASE64
-
 #include "encoding_types.cpp"
 #include "error.cpp"
 // The large tables should be included once and they
