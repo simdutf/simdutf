@@ -1,7 +1,5 @@
 #include "simdutf.h"
 
-#include <array>
-
 #include <tests/helpers/random_utf8.h>
 #include <tests/helpers/test.h>
 

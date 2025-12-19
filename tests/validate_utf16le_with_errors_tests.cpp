@@ -2,7 +2,6 @@
 
 #include <array>
 #include <fstream>
-#include <memory>
 
 #include <tests/helpers/random_utf16.h>
 #include <tests/helpers/test.h>

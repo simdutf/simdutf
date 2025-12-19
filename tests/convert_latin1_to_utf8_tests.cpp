@@ -1,6 +1,5 @@
 #include "simdutf.h"
 
-#include <array>
 #include <vector>
 
 #include <tests/helpers/transcode_test_base.h>

@@ -5,7 +5,6 @@
 #include <cmath>
 #include <cstddef>
 #include <iostream>
-#include <memory>
 #include <tuple>
 
 #include <tests/helpers/random_int.h>
