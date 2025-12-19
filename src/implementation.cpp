@@ -2248,10 +2248,9 @@ simdutf_warn_unused size_t utf32_length_from_utf8(const char *input,
 
 #if SIMDUTF_FEATURE_BASE64
 
-simdutf_warn_unused size_t
-base64_length_from_binary(size_t length, base64_options option) noexcept {
-  return scalar::base64::base64_length_from_binary(length, option);
-}
+// this has been moved to implementation.h
+// simdutf_warn_unused size_t
+// base64_length_from_binary(size_t length, base64_options option) noexcept;
 
 simdutf_warn_unused size_t base64_length_from_binary_with_lines(
     size_t length, base64_options options, size_t line_length) noexcept {

@@ -824,7 +824,7 @@ simdutf_warn_unused full_result base64_to_binary_details_safe_impl(
   return r;
 }
 
-simdutf_warn_unused size_t
+simdutf_warn_unused simdutf_constexpr23 size_t
 base64_length_from_binary(size_t length, base64_options options) noexcept {
   // By default, we use padding if we are not using the URL variant.
   // This is check with ((options & base64_url) == 0) which returns true if we
