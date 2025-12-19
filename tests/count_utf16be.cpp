@@ -1,7 +1,6 @@
 #include "simdutf.h"
 
 #include <array>
-#include <random>
 #include <vector>
 
 #include <tests/helpers/random_int.h>
