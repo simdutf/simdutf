@@ -3530,6 +3530,80 @@ TEST(compile_time_maximal_binary_length16) {
                 binary.size());
 }
 
+namespace {
+
+template <auto input>
+  requires simdutf::tests::helpers::any_ctstring<decltype(input)>
+constexpr auto b64_to_bin_impl() {
+  using namespace simdutf::tests::helpers;
+  constexpr auto Nmax = simdutf::maximal_binary_length_from_base64(input);
+  CTString<char, Nmax> buffer{};
+  auto res = simdutf::base64_to_binary(input, buffer);
+  if (res.is_err()) {
+    throw "failed convert";
+  }
+  if (res.count > Nmax) {
+    throw "weird";
+  }
+  return std::tuple(res.count, buffer);
+}
+
+/**
+ * converts base64 to binary. ideally the input should be passed as a
+ * function parameter but I could not get that to work.
+ */
+template <auto input>
+  requires simdutf::tests::helpers::any_ctstring<decltype(input)>
+constexpr auto b64_to_binary() {
+  constexpr auto r = b64_to_bin_impl<input>();
+  constexpr auto N = std::get<0>(r);
+  constexpr auto ret = std::get<1>(r);
+  if constexpr (ret.size() != N) {
+    return ret.template shrink<N>();
+  } else {
+    return ret;
+  }
+}
+
+} // namespace
+
+TEST(compile_time_base64_to_binary) {
+  using namespace simdutf::tests::helpers;
+  constexpr auto binary = "Abracadabra!"_latin1;
+
+  // tightly packed base64 works fine
+  {
+    constexpr auto base64 = "QWJyYWNhZGFicmEh"_latin1;
+    constexpr auto binary_again = b64_to_binary<base64>();
+    static_assert(binary_again == binary);
+  }
+
+  // extra spaces is no problem
+  {
+    constexpr auto base64 = "   QWJyYWNhZGF icmEh   "_latin1;
+    constexpr auto binary_again = b64_to_binary<base64>();
+    static_assert(binary_again == binary);
+  }
+}
+
+TEST(compile_time_base64_utf16_to_binary) {
+  using namespace simdutf::tests::helpers;
+  constexpr auto binary = "Abracadabra!"_latin1;
+
+  // tightly packed base64 works fine
+  {
+    constexpr auto base64 = u"QWJyYWNhZGFicmEh"_utf16;
+    constexpr auto binary_again = b64_to_binary<base64>();
+    static_assert(binary_again == binary);
+  }
+
+  // extra spaces is no problem
+  {
+    constexpr auto base64 = u"   QWJyYWNhZGF icmEh   "_utf16;
+    constexpr auto binary_again = b64_to_binary<base64>();
+    static_assert(binary_again == binary);
+  }
+}
 #endif
 
 int main(int argc, char *argv[]) {

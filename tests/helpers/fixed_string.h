@@ -125,6 +125,14 @@ struct CTString {
     }
     return ret;
   }
+
+  template <std::size_t NewSize>
+    requires(NewSize <= N)
+  constexpr auto shrink() const noexcept {
+    CTString<CharType, NewSize, endianess_> ret;
+    std::ranges::copy_n(storage, NewSize, ret.storage);
+    return ret;
+  }
 };
 
 /// Class template argument deduction (CTAD) for a string literal (null

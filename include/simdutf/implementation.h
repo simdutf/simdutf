@@ -3154,7 +3154,8 @@ enum last_chunk_handling_options : uint64_t {
       3 /* only decode full blocks (4 base64 characters, no padding) */
 };
 
-inline bool is_partial(last_chunk_handling_options options) {
+inline simdutf_constexpr23 bool
+is_partial(last_chunk_handling_options options) {
   return (options == stop_before_partial) || (options == only_full_chunks);
 }
 
@@ -3374,15 +3375,25 @@ simdutf_warn_unused result base64_to_binary(
     base64_options options = base64_default,
     last_chunk_handling_options last_chunk_options = loose) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused result base64_to_binary(
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 result
+base64_to_binary(
     const detail::input_span_of_byte_like auto &input,
     detail::output_span_of_byte_like auto &&binary_output,
     base64_options options = base64_default,
     last_chunk_handling_options last_chunk_options = loose) noexcept {
-  return base64_to_binary(reinterpret_cast<const char *>(input.data()),
-                          input.size(),
-                          reinterpret_cast<char *>(binary_output.data()),
-                          options, last_chunk_options);
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::base64::base64_to_binary_details_impl(
+        input.data(), input.size(), binary_output.data(), options,
+        last_chunk_options);
+  } else
+    #endif
+  {
+    return base64_to_binary(reinterpret_cast<const char *>(input.data()),
+                            input.size(),
+                            reinterpret_cast<char *>(binary_output.data()),
+                            options, last_chunk_options);
+  }
 }
   #endif // SIMDUTF_SPAN
 
@@ -3603,14 +3614,24 @@ base64_to_binary(const char16_t *input, size_t length, char *output,
                  last_chunk_handling_options last_chunk_options =
                      last_chunk_handling_options::loose) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused result base64_to_binary(
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 result
+base64_to_binary(
     std::span<const char16_t> input,
     detail::output_span_of_byte_like auto &&binary_output,
     base64_options options = base64_default,
     last_chunk_handling_options last_chunk_options = loose) noexcept {
-  return base64_to_binary(input.data(), input.size(),
-                          reinterpret_cast<char *>(binary_output.data()),
-                          options, last_chunk_options);
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::base64::base64_to_binary_details_impl(
+        input.data(), input.size(), binary_output.data(), options,
+        last_chunk_options);
+  } else
+    #endif
+  {
+    return base64_to_binary(input.data(), input.size(),
+                            reinterpret_cast<char *>(binary_output.data()),
+                            options, last_chunk_options);
+  }
 }
   #endif // SIMDUTF_SPAN
 
