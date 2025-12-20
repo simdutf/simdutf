@@ -3632,6 +3632,52 @@ TEST(compile_time_binary_to_base64_char) {
   constexpr auto encoded = binary_to_b64<binary>();
   static_assert(expected == encoded);
 }
+
+namespace {
+// this is just to demo that it is possible to do _base64 literals.
+template <std::size_t N> struct Base64LiteralHelper {
+  char storage[N - 1];
+
+  static constexpr std::size_t size() noexcept { return N - 1; }
+
+  constexpr Base64LiteralHelper(const char (&str)[N]) {
+    static_assert(N > 1, "weird size");
+    std::copy(str, str + size(), storage);
+  }
+};
+
+template <Base64LiteralHelper a> constexpr auto operator""_base64() {
+  using namespace simdutf::tests::helpers;
+  constexpr auto N = a.size();
+  constexpr std::span data(a.storage);
+  constexpr CTString<char, N> tmp(data);
+  return b64_to_binary<tmp>().template as_array<std::uint8_t>();
+}
+
+} // namespace
+
+TEST(compile_time_base64_literal_demo) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr std::array decoded = "QWJyYWNhZGFicmEh"_base64;
+  const auto readable = std::string(begin(decoded), end(decoded));
+  ASSERT_EQUAL(readable, "Abracadabra!");
+
+  static_assert(decoded.size() == 12);
+  static_assert(decoded[0] == 'A');
+  static_assert(decoded[1] == 'b');
+  static_assert(decoded[2] == 'r');
+  static_assert(decoded[3] == 'a');
+  static_assert(decoded[4] == 'c');
+  static_assert(decoded[5] == 'a');
+  static_assert(decoded[6] == 'd');
+  static_assert(decoded[7] == 'a');
+  static_assert(decoded[8] == 'b');
+  static_assert(decoded[9] == 'r');
+  static_assert(decoded[10] == 'a');
+  static_assert(decoded[11] == '!');
+}
+
 #endif
 
 int main(int argc, char *argv[]) {
