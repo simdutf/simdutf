@@ -32,10 +32,19 @@ result generic_validate_ascii_with_errors(const char *input, size_t length) {
   }
 }
 
-// in general, validate_ascii calls validate_ascii_with_errors as there is no
-// general-purpose faster way to do it.
-bool generic_validate_ascii(const char *in, size_t length) {
-  return validate_ascii_with_errors(in, length).error == error_code::SUCCESS;
+bool generic_validate_ascii(const char *input, size_t length) {
+  buf_block_reader<64> reader(reinterpret_cast<const uint8_t *>(input), length);
+  while (reader.has_full_block()) {
+    simd::simd8x64<uint8_t> in(reader.full_block());
+    if (!in.is_ascii()) {
+      return false;
+    }
+    reader.advance();
+  }
+  uint8_t block[64]{};
+  reader.get_remainder(block);
+  simd::simd8x64<uint8_t> in(block);
+  return in.is_ascii();
 }
 
 } // namespace ascii_validation
