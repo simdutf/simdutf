@@ -2258,12 +2258,13 @@ simdutf_warn_unused size_t base64_length_from_binary_with_lines(
                                                               line_length);
 }
 
-simdutf_warn_unused const char *find(const char *start, const char *end,
-                                     char character) noexcept {
+simdutf_warn_unused const char *detail::find(const char *start, const char *end,
+                                             char character) noexcept {
   return get_default_implementation()->find(start, end, character);
 }
-simdutf_warn_unused const char16_t *
-find(const char16_t *start, const char16_t *end, char16_t character) noexcept {
+simdutf_warn_unused const char16_t *detail::find(const char16_t *start,
+                                                 const char16_t *end,
+                                                 char16_t character) noexcept {
   return get_default_implementation()->find(start, end, character);
 }
 
