@@ -3567,6 +3567,11 @@ constexpr auto b64_to_binary() {
 
 } // namespace
 
+TEST(compile_time_length_from_binary_with_lines) {
+  static_assert(4 == simdutf::base64_length_from_binary_with_lines(1));
+  static_assert(137 == simdutf::base64_length_from_binary_with_lines(100));
+}
+
 TEST(compile_time_base64_to_binary) {
   using namespace simdutf::tests::helpers;
   constexpr auto binary = "Abracadabra!"_latin1;
