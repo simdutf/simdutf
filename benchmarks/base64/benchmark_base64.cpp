@@ -509,7 +509,7 @@ private:
     const bool spaces =
         benchmark_mode != BenchmarkMode::list ? contains_spaces(data) : false;
     if (spaces) {
-      printf("# the base64 data contains spaces, so we cannot use straigth "
+      printf("# the base64 data contains spaces, so we cannot use straight "
              "libbase64::base64_decode directly\n");
     } else {
       summarize("libbase64", [this]() {
