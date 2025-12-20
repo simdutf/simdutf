@@ -116,6 +116,11 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
   register_function("to_well_formed_utf16le",
                     &Benchmark::run_to_well_formed_utf16le,
                     simdutf::encoding_type::UTF16_LE);
+  register_function("validate_ascii", &Benchmark::run_validate_ascii,
+                    simdutf::encoding_type::UTF8);
+  register_function("validate_ascii_with_errors",
+                    &Benchmark::run_validate_ascii_with_errors,
+                    simdutf::encoding_type::UTF8);
   register_function("validate_utf8", &Benchmark::run_validate_utf8,
                     simdutf::encoding_type::UTF8);
   register_function("validate_utf8_with_errors",
@@ -623,6 +628,45 @@ void Benchmark::run_validate_utf8_with_errors(
 
   auto proc = [&implementation, data, size, &sink]() {
     result res = implementation.validate_utf8_with_errors(data, size);
+    sink = !(res.error);
+  };
+
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  if ((sink == false) && (iterations > 0)) {
+    std::cerr << "The input was declared invalid.\n";
+  }
+  size_t char_count = get_active_implementation()->count_utf8(data, size);
+  print_summary(result, size, char_count);
+}
+
+void Benchmark::run_validate_ascii(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char *data = reinterpret_cast<const char *>(input_data.data());
+  const size_t size = input_data.size();
+  volatile bool sink{false};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    sink = implementation.validate_ascii(data, size);
+  };
+
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  if ((sink == false) && (iterations > 0)) {
+    std::cerr << "The input was declared invalid.\n";
+  }
+  size_t char_count = get_active_implementation()->count_utf8(data, size);
+  print_summary(result, size, char_count);
+}
+
+void Benchmark::run_validate_ascii_with_errors(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char *data = reinterpret_cast<const char *>(input_data.data());
+  const size_t size = input_data.size();
+  volatile bool sink{false};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    result res = implementation.validate_ascii_with_errors(data, size);
     sink = !(res.error);
   };
 
