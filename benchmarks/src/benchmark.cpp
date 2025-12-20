@@ -116,6 +116,9 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
   register_function("to_well_formed_utf16le",
                     &Benchmark::run_to_well_formed_utf16le,
                     simdutf::encoding_type::UTF16_LE);
+  register_function("naive_validate_ascii",
+                    &Benchmark::run_naive_validate_ascii,
+                    simdutf::encoding_type::UTF8);
   register_function("validate_ascii", &Benchmark::run_validate_ascii,
                     simdutf::encoding_type::UTF8);
   register_function("validate_ascii_with_errors",
@@ -629,6 +632,34 @@ void Benchmark::run_validate_utf8_with_errors(
   auto proc = [&implementation, data, size, &sink]() {
     result res = implementation.validate_utf8_with_errors(data, size);
     sink = !(res.error);
+  };
+
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  if ((sink == false) && (iterations > 0)) {
+    std::cerr << "The input was declared invalid.\n";
+  }
+  size_t char_count = get_active_implementation()->count_utf8(data, size);
+  print_summary(result, size, char_count);
+}
+
+namespace details {
+bool ascii_is_valid(const char *data, size_t size) {
+  unsigned char result = 0;
+  for (size_t i = 0; i < size; i++) {
+    result |= static_cast<unsigned char>(data[i]);
+  }
+  return (result <= 0x7F);
+}
+} // namespace details
+
+void Benchmark::run_naive_validate_ascii(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char *data = reinterpret_cast<const char *>(input_data.data());
+  const size_t size = input_data.size();
+  volatile bool sink{false};
+  auto proc = [&implementation, data, size, &sink]() {
+    sink = details::ascii_is_valid(data, size);
   };
 
   count_events(proc, iterations); // warming up!
