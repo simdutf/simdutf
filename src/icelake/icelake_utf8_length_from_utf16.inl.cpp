@@ -233,7 +233,7 @@ simdutf_really_inline result icelake_utf8_length_from_utf16_with_replacement(
   }
 
   size_t overshoot = 32 - (size - pos);
-  __mmask32 remaining_mask = 0xFFFFFFFFULL << overshoot;
+  __mmask32 remaining_mask(0xFFFFFFFFULL << overshoot);
   __m512i input =
       _mm512_maskz_loadu_epi16(remaining_mask, in + pos - overshoot);
   if simdutf_constexpr (!match_system(big_endian)) {
