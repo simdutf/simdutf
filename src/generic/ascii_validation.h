@@ -3,9 +3,6 @@ namespace SIMDUTF_IMPLEMENTATION {
 namespace {
 namespace ascii_validation {
 
-
-
-
 result generic_validate_ascii_with_errors(const char *input, size_t length) {
   buf_block_reader<64> reader(reinterpret_cast<const uint8_t *>(input), length);
   size_t count{0};

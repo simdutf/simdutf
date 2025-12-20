@@ -91,10 +91,10 @@ private:
 
 private:
   void run_validate_ascii(const simdutf::implementation &implementation,
-                         size_t iterations);
+                          size_t iterations);
   void
   run_validate_ascii_with_errors(const simdutf::implementation &implementation,
-                                size_t iterations);
+                                 size_t iterations);
   void run_validate_utf8(const simdutf::implementation &implementation,
                          size_t iterations);
   void

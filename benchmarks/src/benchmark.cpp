@@ -640,9 +640,8 @@ void Benchmark::run_validate_utf8_with_errors(
   print_summary(result, size, char_count);
 }
 
-
-void Benchmark::run_validate_ascii(const simdutf::implementation &implementation,
-                                  size_t iterations) {
+void Benchmark::run_validate_ascii(
+    const simdutf::implementation &implementation, size_t iterations) {
   const char *data = reinterpret_cast<const char *>(input_data.data());
   const size_t size = input_data.size();
   volatile bool sink{false};
