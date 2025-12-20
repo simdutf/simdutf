@@ -193,7 +193,7 @@ E.g., under Linux you may do the following:
 cmake -B build -D SIMDUTF_BENCHMARKS=ON
 cmake --build build
 ./build/benchmarks/benchmark --help
-./build/benchmarks/base64/base64_benchmark --help
+./build/benchmarks/base64/benchmark_base64 --help
 ```
 
 E.g., to run base64 decoding benchmarks on DNS data (short inputs), do
