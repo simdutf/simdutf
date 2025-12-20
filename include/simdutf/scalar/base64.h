@@ -412,7 +412,7 @@ patch_tail_result(full_result r, size_t previous_input, size_t previous_output,
 // Returns the number of bytes written. The destination buffer must be large
 // enough. It will add padding (=) if needed.
 template <bool use_lines = false>
-size_t tail_encode_base64_impl(
+simdutf_constexpr23 size_t tail_encode_base64_impl(
     char *dst, const char *src, size_t srclen, base64_options options,
     size_t line_length = simdutf::default_line_length, size_t line_offset = 0) {
   if (use_lines) {
@@ -643,8 +643,9 @@ size_t tail_encode_base64_impl(
 
 // Returns the number of bytes written. The destination buffer must be large
 // enough. It will add padding (=) if needed.
-inline size_t tail_encode_base64(char *dst, const char *src, size_t srclen,
-                                 base64_options options) {
+inline simdutf_constexpr23 size_t tail_encode_base64(char *dst, const char *src,
+                                                     size_t srclen,
+                                                     base64_options options) {
   return tail_encode_base64_impl(dst, src, srclen, options);
 }
 
