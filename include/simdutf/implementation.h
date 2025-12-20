@@ -3417,9 +3417,13 @@ inline simdutf_warn_unused simdutf_constexpr23 size_t base64_length_from_binary(
  * interpreted as 4),
  * @return number of base64 bytes
  */
-simdutf_warn_unused size_t base64_length_from_binary_with_lines(
+inline simdutf_warn_unused simdutf_constexpr23 size_t
+base64_length_from_binary_with_lines(
     size_t length, base64_options options = base64_default,
-    size_t line_length = default_line_length) noexcept;
+    size_t line_length = default_line_length) noexcept {
+  return scalar::base64::base64_length_from_binary_with_lines(length, options,
+                                                              line_length);
+}
 
 /**
  * Convert a binary input to a base64 output.

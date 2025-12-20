@@ -821,8 +821,9 @@ base64_length_from_binary(size_t length, base64_options options) noexcept {
          4; // We use padding to make the length a multiple of 4.
 }
 
-simdutf_warn_unused size_t base64_length_from_binary_with_lines(
-    size_t length, base64_options options, size_t line_length) noexcept {
+simdutf_warn_unused simdutf_constexpr23 size_t
+base64_length_from_binary_with_lines(size_t length, base64_options options,
+                                     size_t line_length) noexcept {
   if (length == 0) {
     return 0;
   }
