@@ -3449,13 +3449,21 @@ base64_length_from_binary_with_lines(
 size_t binary_to_base64(const char *input, size_t length, char *output,
                         base64_options options = base64_default) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
 binary_to_base64(const detail::input_span_of_byte_like auto &input,
                  detail::output_span_of_byte_like auto &&binary_output,
                  base64_options options = base64_default) noexcept {
-  return binary_to_base64(
-      reinterpret_cast<const char *>(input.data()), input.size(),
-      reinterpret_cast<char *>(binary_output.data()), options);
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::base64::tail_encode_base64(
+        binary_output.data(), input.data(), input.size(), options);
+  } else
+    #endif
+  {
+    return binary_to_base64(
+        reinterpret_cast<const char *>(input.data()), input.size(),
+        reinterpret_cast<char *>(binary_output.data()), options);
+  }
 }
   #endif // SIMDUTF_SPAN
 

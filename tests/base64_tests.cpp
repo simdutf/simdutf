@@ -3609,6 +3609,29 @@ TEST(compile_time_base64_utf16_to_binary) {
     static_assert(binary_again == binary);
   }
 }
+
+namespace {
+template <auto input>
+  requires simdutf::tests::helpers::any_ctstring<decltype(input)>
+constexpr auto binary_to_b64() {
+  using namespace simdutf::tests::helpers;
+  constexpr auto N = simdutf::base64_length_from_binary(input.size());
+  CTString<char, N> buffer{};
+  const auto r1 = simdutf::binary_to_base64(input, buffer);
+  if (r1 != N) {
+    throw "oops, size mismatch";
+  }
+  return buffer;
+}
+} // namespace
+
+TEST(compile_time_binary_to_base64_char) {
+  using namespace simdutf::tests::helpers;
+  constexpr auto binary = "Abracadabra!"_latin1;
+  constexpr auto expected = "QWJyYWNhZGFicmEh"_latin1;
+  constexpr auto encoded = binary_to_b64<binary>();
+  static_assert(expected == encoded);
+}
 #endif
 
 int main(int argc, char *argv[]) {
