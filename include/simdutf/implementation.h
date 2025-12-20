@@ -3158,6 +3158,13 @@ inline bool is_partial(last_chunk_handling_options options) {
   return (options == stop_before_partial) || (options == only_full_chunks);
 }
 
+namespace detail {
+simdutf_warn_unused const char *find(const char *start, const char *end,
+                                     char character) noexcept;
+simdutf_warn_unused const char16_t *
+find(const char16_t *start, const char16_t *end, char16_t character) noexcept;
+} // namespace detail
+
 /**
  * Find the first occurrence of a character in a string. If the character is
  * not found, return a pointer to the end of the string.
@@ -3168,10 +3175,36 @@ inline bool is_partial(last_chunk_handling_options options) {
  * or a pointer to the end of the string if the character is not found.
  *
  */
-simdutf_warn_unused const char *find(const char *start, const char *end,
-                                     char character) noexcept;
-simdutf_warn_unused const char16_t *
-find(const char16_t *start, const char16_t *end, char16_t character) noexcept;
+simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 const char *
+find(const char *start, const char *end, char character) noexcept {
+  #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    for (; start != end; ++start)
+      if (*start == character)
+        return start;
+    return end;
+  } else
+  #endif
+  {
+    return detail::find(start, end, character);
+  }
+}
+simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 const char16_t *
+find(const char16_t *start, const char16_t *end, char16_t character) noexcept {
+    // implementation note: this is repeated instead of a template, to ensure
+    // the api is still a function and compiles without concepts
+  #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    for (; start != end; ++start)
+      if (*start == character)
+        return start;
+    return end;
+  } else
+  #endif
+  {
+    return detail::find(start, end, character);
+  }
+}
 }
   // We include base64_tables once.
   #include <simdutf/base64_tables.h>
