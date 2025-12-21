@@ -412,6 +412,11 @@ else()
    target_compile_definitions(base64_tests PRIVATE SIMDUTF_BASE64_TEST_MAXLEN=2048)
 endif()
 
+add_cpp_test(constexpr_base64_tests)
+target_link_libraries(constexpr_base64_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)
+
 add_cpp_test(span_tests)
 target_link_libraries(span_tests
   PUBLIC simdutf::tests::helpers
