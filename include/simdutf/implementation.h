@@ -3405,13 +3405,13 @@ simdutf_really_inline simdutf_warn_unused result base64_to_binary(
   #endif // SIMDUTF_SPAN
 
 /**
- * Check if a character is an ignorabl base64 character.
+ * Check if a character is an ignorable base64 character.
  * Checking a large input, character by character, is not computationally
  * efficient.
  *
  * @param input         the character to check
  * @param options       the base64 options to use, is base64_default by default.
- * @return true if the character is an ignorablee base64 character, false
+ * @return true if the character is an ignorable base64 character, false
  * otherwise.
  */
 simdutf_warn_unused bool
