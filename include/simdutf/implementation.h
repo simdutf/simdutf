@@ -89,6 +89,16 @@ concept output_span_of_byte_like = requires(T &t) {
   { *t.data() } noexcept -> is_byte_like;
   { *t.data() } noexcept -> is_mutable;
 };
+
+/**
+ * a pointer like object, when indexed, results in a byte like result.
+ * valid examples: char*, const char*, std::array<char,10>
+ * invalid examples: int*, std::array<int,10>
+ */
+template <class InputPtr>
+concept indexes_into_byte_like = requires(InputPtr p) {
+  { std::decay_t<decltype(p[0])>{} } -> simdutf::detail::byte_like;
+};
 } // namespace detail
 } // namespace simdutf
 #endif // SIMDUTF_SPAN
@@ -267,10 +277,18 @@ validate_utf8_with_errors(
  */
 simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused bool
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 bool
 validate_ascii(const detail::input_span_of_byte_like auto &input) noexcept {
-  return validate_ascii(reinterpret_cast<const char *>(input.data()),
-                        input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::ascii::validate(
+        detail::constexpr_cast_ptr<std::uint8_t>(input.data()), input.size());
+  } else
+    #endif
+  {
+    return validate_ascii(reinterpret_cast<const char *>(input.data()),
+                          input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 
