@@ -43,44 +43,9 @@
   #include <simdutf/constexpr_ptr.h>
 #endif
 
-// these includes are needed for constexpr support. they are
-// not part of the public api.
-#include <simdutf/scalar/swap_bytes.h>
-#include <simdutf/scalar/ascii.h>
-#include <simdutf/scalar/atomic_util.h>
-#include <simdutf/scalar/latin1.h>
-#include <simdutf/scalar/latin1_to_utf16/latin1_to_utf16.h>
-#include <simdutf/scalar/latin1_to_utf32/latin1_to_utf32.h>
-#include <simdutf/scalar/latin1_to_utf8/latin1_to_utf8.h>
-#include <simdutf/scalar/utf16.h>
-#include <simdutf/scalar/utf16_to_latin1/utf16_to_latin1.h>
-#include <simdutf/scalar/utf16_to_latin1/valid_utf16_to_latin1.h>
-#include <simdutf/scalar/utf16_to_utf32/utf16_to_utf32.h>
-#include <simdutf/scalar/utf16_to_utf32/valid_utf16_to_utf32.h>
-#include <simdutf/scalar/utf16_to_utf8/utf16_to_utf8.h>
-#include <simdutf/scalar/utf16_to_utf8/valid_utf16_to_utf8.h>
-#include <simdutf/scalar/utf32.h>
-#include <simdutf/scalar/utf32_to_latin1/utf32_to_latin1.h>
-#include <simdutf/scalar/utf32_to_latin1/valid_utf32_to_latin1.h>
-#include <simdutf/scalar/utf32_to_utf16/utf32_to_utf16.h>
-#include <simdutf/scalar/utf32_to_utf16/valid_utf32_to_utf16.h>
-#include <simdutf/scalar/utf32_to_utf8/utf32_to_utf8.h>
-#include <simdutf/scalar/utf32_to_utf8/valid_utf32_to_utf8.h>
-#include <simdutf/scalar/utf8.h>
-#include <simdutf/scalar/utf8_to_latin1/utf8_to_latin1.h>
-#include <simdutf/scalar/utf8_to_latin1/valid_utf8_to_latin1.h>
-#include <simdutf/scalar/utf8_to_utf16/utf8_to_utf16.h>
-#include <simdutf/scalar/utf8_to_utf16/valid_utf8_to_utf16.h>
-#include <simdutf/scalar/utf8_to_utf32/utf8_to_utf32.h>
-#include <simdutf/scalar/utf8_to_utf32/valid_utf8_to_utf32.h>
-
-namespace simdutf {
-
-constexpr size_t default_line_length =
-    76; ///< default line length for base64 encoding with lines
-
 #if SIMDUTF_SPAN
 /// helpers placed in namespace detail are not a part of the public API
+namespace simdutf {
 namespace detail {
 /**
  * matches a byte, in the many ways C++ allows. note that these
@@ -125,7 +90,44 @@ concept output_span_of_byte_like = requires(T &t) {
   { *t.data() } noexcept -> is_mutable;
 };
 } // namespace detail
-#endif
+} // namespace simdutf
+#endif // SIMDUTF_SPAN
+
+// these includes are needed for constexpr support. they are
+// not part of the public api.
+#include <simdutf/scalar/swap_bytes.h>
+#include <simdutf/scalar/ascii.h>
+#include <simdutf/scalar/atomic_util.h>
+#include <simdutf/scalar/latin1.h>
+#include <simdutf/scalar/latin1_to_utf16/latin1_to_utf16.h>
+#include <simdutf/scalar/latin1_to_utf32/latin1_to_utf32.h>
+#include <simdutf/scalar/latin1_to_utf8/latin1_to_utf8.h>
+#include <simdutf/scalar/utf16.h>
+#include <simdutf/scalar/utf16_to_latin1/utf16_to_latin1.h>
+#include <simdutf/scalar/utf16_to_latin1/valid_utf16_to_latin1.h>
+#include <simdutf/scalar/utf16_to_utf32/utf16_to_utf32.h>
+#include <simdutf/scalar/utf16_to_utf32/valid_utf16_to_utf32.h>
+#include <simdutf/scalar/utf16_to_utf8/utf16_to_utf8.h>
+#include <simdutf/scalar/utf16_to_utf8/valid_utf16_to_utf8.h>
+#include <simdutf/scalar/utf32.h>
+#include <simdutf/scalar/utf32_to_latin1/utf32_to_latin1.h>
+#include <simdutf/scalar/utf32_to_latin1/valid_utf32_to_latin1.h>
+#include <simdutf/scalar/utf32_to_utf16/utf32_to_utf16.h>
+#include <simdutf/scalar/utf32_to_utf16/valid_utf32_to_utf16.h>
+#include <simdutf/scalar/utf32_to_utf8/utf32_to_utf8.h>
+#include <simdutf/scalar/utf32_to_utf8/valid_utf32_to_utf8.h>
+#include <simdutf/scalar/utf8.h>
+#include <simdutf/scalar/utf8_to_latin1/utf8_to_latin1.h>
+#include <simdutf/scalar/utf8_to_latin1/valid_utf8_to_latin1.h>
+#include <simdutf/scalar/utf8_to_utf16/utf8_to_utf16.h>
+#include <simdutf/scalar/utf8_to_utf16/valid_utf8_to_utf16.h>
+#include <simdutf/scalar/utf8_to_utf32/utf8_to_utf32.h>
+#include <simdutf/scalar/utf8_to_utf32/valid_utf8_to_utf32.h>
+
+namespace simdutf {
+
+constexpr size_t default_line_length =
+    76; ///< default line length for base64 encoding with lines
 
 #if SIMDUTF_FEATURE_DETECT_ENCODING
 /**
