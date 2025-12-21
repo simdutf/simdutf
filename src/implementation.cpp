@@ -2340,30 +2340,20 @@ simdutf_warn_unused result slow_base64_to_binary_safe_impl(
   return {r.error, r.input_count}; // we cannot return r itself because it gets
                                    // converted to error/output_count
 }
-simdutf_warn_unused bool base64_ignorable(char input,
-                                          base64_options options) noexcept {
-  return scalar::base64::is_ignorable(input, options);
-}
-simdutf_warn_unused bool base64_ignorable(char16_t input,
-                                          base64_options options) noexcept {
-  return scalar::base64::is_ignorable(input, options);
-}
-simdutf_warn_unused bool base64_valid(char input,
-                                      base64_options options) noexcept {
-  return scalar::base64::is_base64(input, options);
-}
-simdutf_warn_unused bool base64_valid(char16_t input,
-                                      base64_options options) noexcept {
-  return scalar::base64::is_base64(input, options);
-}
-simdutf_warn_unused bool
-base64_valid_or_padding(char input, base64_options options) noexcept {
-  return scalar::base64::is_base64_or_padding(input, options);
-}
-simdutf_warn_unused bool
-base64_valid_or_padding(char16_t input, base64_options options) noexcept {
-  return scalar::base64::is_base64_or_padding(input, options);
-}
+
+// moved to implementation.h
+// simdutf_warn_unused bool base64_ignorable(char input,
+//                                           base64_options options) noexcept
+// simdutf_warn_unused bool base64_ignorable(char16_t input,
+//                                           base64_options options) noexcept
+// simdutf_warn_unused bool base64_valid(char input,
+//                                       base64_options options) noexcept
+// simdutf_warn_unused bool base64_valid(char16_t input,
+//                                       base64_options options) noexcept
+// simdutf_warn_unused bool
+// base64_valid_or_padding(char input, base64_options options) noexcept
+// simdutf_warn_unused bool
+// base64_valid_or_padding(char16_t input, base64_options options) noexcept
 
 template <typename chartype>
 simdutf_warn_unused result base64_to_binary_safe_impl(

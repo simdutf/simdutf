@@ -3666,11 +3666,15 @@ base64_to_binary(
  * @return true if the character is an ignorable base64 character, false
  * otherwise.
  */
-simdutf_warn_unused bool
-base64_ignorable(char input, base64_options options = base64_default) noexcept;
-simdutf_warn_unused bool
+simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 bool
+base64_ignorable(char input, base64_options options = base64_default) noexcept {
+  return scalar::base64::is_ignorable(input, options);
+}
+simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 bool
 base64_ignorable(char16_t input,
-                 base64_options options = base64_default) noexcept;
+                 base64_options options = base64_default) noexcept {
+  return scalar::base64::is_ignorable(input, options);
+}
 
 /**
  * Check if a character is a valid base64 character.
@@ -3683,10 +3687,14 @@ base64_ignorable(char16_t input,
  * @param options       the base64 options to use, is base64_default by default.
  * @return true if the character is a base64 character, false otherwise.
  */
-simdutf_warn_unused bool
-base64_valid(char input, base64_options options = base64_default) noexcept;
-simdutf_warn_unused bool
-base64_valid(char16_t input, base64_options options = base64_default) noexcept;
+simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 bool
+base64_valid(char input, base64_options options = base64_default) noexcept {
+  return scalar::base64::is_base64(input, options);
+}
+simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 bool
+base64_valid(char16_t input, base64_options options = base64_default) noexcept {
+  return scalar::base64::is_base64(input, options);
+}
 
 /**
  * Check if a character is a valid base64 character or the padding character
@@ -3697,12 +3705,16 @@ base64_valid(char16_t input, base64_options options = base64_default) noexcept;
  * @param options       the base64 options to use, is base64_default by default.
  * @return true if the character is a base64 character, false otherwise.
  */
-simdutf_warn_unused bool
+simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 bool
 base64_valid_or_padding(char input,
-                        base64_options options = base64_default) noexcept;
-simdutf_warn_unused bool
+                        base64_options options = base64_default) noexcept {
+  return scalar::base64::is_base64_or_padding(input, options);
+}
+simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 bool
 base64_valid_or_padding(char16_t input,
-                        base64_options options = base64_default) noexcept;
+                        base64_options options = base64_default) noexcept {
+  return scalar::base64::is_base64_or_padding(input, options);
+}
 
 /**
  * Convert a base64 input to a binary output.
