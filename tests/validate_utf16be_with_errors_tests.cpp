@@ -3,6 +3,7 @@
 #include <array>
 #include <vector>
 
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_utf16.h>
 #include <tests/helpers/test.h>
 #include <tests/helpers/utf16.h>
@@ -168,5 +169,20 @@ TEST(validate_utf16be_returns_false_when_input_is_truncated) {
     ASSERT_EQUAL(res.count, size - 1);
   }
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+TEST(compile_time_validation_with_errors_native) {
+  using namespace simdutf::tests::helpers;
+  static_assert(simdutf::validate_utf16_with_errors(u"hello!"_utf16).is_ok());
+}
+
+TEST(compile_time_validation_with_errors_big) {
+  using namespace simdutf::tests::helpers;
+  static_assert(
+      simdutf::validate_utf16be_with_errors(u"hello!"_utf16be).is_ok());
+}
+
+#endif
 
 TEST_MAIN

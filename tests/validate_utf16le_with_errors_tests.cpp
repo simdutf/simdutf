@@ -3,6 +3,7 @@
 #include <array>
 #include <fstream>
 
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_utf16.h>
 #include <tests/helpers/test.h>
 #include <tests/helpers/utf16.h>
@@ -254,5 +255,20 @@ TEST(validate_utf16le_with_errors_extensive_tests) {
     ASSERT_EQUAL(res.error, valid);
   }
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+TEST(compile_time_validation_with_errors_native) {
+  using namespace simdutf::tests::helpers;
+  static_assert(simdutf::validate_utf16_with_errors(u"hello!"_utf16).is_ok());
+}
+
+TEST(compile_time_validation_with_errors_little) {
+  using namespace simdutf::tests::helpers;
+  static_assert(
+      simdutf::validate_utf16le_with_errors(u"hello!"_utf16le).is_ok());
+}
+
+#endif
 
 TEST_MAIN
