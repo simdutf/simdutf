@@ -6,8 +6,8 @@ namespace scalar {
 namespace utf16 {
 
 template <endianness big_endian>
-inline simdutf_warn_unused bool validate_as_ascii(const char16_t *data,
-                                                  size_t len) noexcept {
+simdutf_warn_unused simdutf_constexpr23 bool
+validate_as_ascii(const char16_t *data, size_t len) noexcept {
   for (size_t pos = 0; pos < len; pos++) {
     char16_t word = scalar::utf16::swap_if_needed<big_endian>(data[pos]);
     if (word >= 0x80) {

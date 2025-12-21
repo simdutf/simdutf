@@ -156,5 +156,20 @@ TEST(compile_time_validation) {
   static_assert(not simdutf::validate_utf16be(invalid_be));
 }
 
+TEST(compile_time_ascii_validation_native_endian) {
+  using namespace simdutf::tests::helpers;
+  static_assert(
+      simdutf::validate_utf16_as_ascii(u"I am ascii, I promise!"_utf16));
+  static_assert(
+      not simdutf::validate_utf16_as_ascii(u"But this isn't: köttbulle"_utf16));
+}
+
+TEST(compile_time_ascii_validation_be) {
+  using namespace simdutf::tests::helpers;
+  static_assert(
+      simdutf::validate_utf16be_as_ascii(u"I am ascii, I promise!"_utf16be));
+  static_assert(not simdutf::validate_utf16be_as_ascii(
+      u"But this isn't: köttbulle"_utf16be));
+}
 #endif
 TEST_MAIN
