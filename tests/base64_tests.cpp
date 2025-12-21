@@ -3705,6 +3705,31 @@ TEST(compile_time_binary_to_base64_with_lines_char) {
   static_assert(expected == encoded);
 }
 
+TEST(compile_time_base64_ignorable) {
+  static_assert(simdutf::base64_ignorable(' '));
+  static_assert(not simdutf::base64_ignorable('x'));
+
+  static_assert(simdutf::base64_ignorable(char16_t{' '}));
+  static_assert(not simdutf::base64_ignorable(char16_t{'x'}));
+}
+
+TEST(compile_time_base64_valid) {
+  static_assert(not simdutf::base64_valid(' '));
+  static_assert(simdutf::base64_valid('x'));
+
+  static_assert(not simdutf::base64_valid(char16_t{' '}));
+  static_assert(simdutf::base64_valid(char16_t{'x'}));
+}
+
+TEST(compile_time_base64_valid_or_padding) {
+  static_assert(not simdutf::base64_valid_or_padding(' '));
+  static_assert(simdutf::base64_valid_or_padding('x'));
+  static_assert(simdutf::base64_valid_or_padding('='));
+
+  static_assert(not simdutf::base64_valid_or_padding(char16_t{' '}));
+  static_assert(simdutf::base64_valid_or_padding(char16_t{'x'}));
+  static_assert(simdutf::base64_valid_or_padding(char16_t{'='}));
+}
 #endif
 
 int main(int argc, char *argv[]) {

@@ -26,7 +26,8 @@ template <class char_type> simdutf_constexpr23 bool is_eight_byte(char_type c) {
 }
 
 template <class char_type>
-bool is_ignorable(char_type c, simdutf::base64_options options) {
+simdutf_constexpr23 bool is_ignorable(char_type c,
+                                      simdutf::base64_options options) {
   const uint8_t *to_base64 =
       (options & base64_default_or_url)
           ? tables::base64::to_base64_default_or_url_value
@@ -46,7 +47,8 @@ bool is_ignorable(char_type c, simdutf::base64_options options) {
   return ignore_garbage;
 }
 template <class char_type>
-bool is_base64(char_type c, simdutf::base64_options options) {
+simdutf_constexpr23 bool is_base64(char_type c,
+                                   simdutf::base64_options options) {
   const uint8_t *to_base64 =
       (options & base64_default_or_url)
           ? tables::base64::to_base64_default_or_url_value
@@ -60,7 +62,8 @@ bool is_base64(char_type c, simdutf::base64_options options) {
 }
 
 template <class char_type>
-bool is_base64_or_padding(char_type c, simdutf::base64_options options) {
+simdutf_constexpr23 bool is_base64_or_padding(char_type c,
+                                              simdutf::base64_options options) {
   const uint8_t *to_base64 =
       (options & base64_default_or_url)
           ? tables::base64::to_base64_default_or_url_value
