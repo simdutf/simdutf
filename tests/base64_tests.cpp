@@ -3678,6 +3678,33 @@ TEST(compile_time_base64_literal_demo) {
   static_assert(decoded[11] == '!');
 }
 
+namespace {
+template <auto input, std::size_t lines>
+  requires simdutf::tests::helpers::any_ctstring<decltype(input)>
+constexpr auto binary_to_b64_with_lines() {
+  using namespace simdutf::tests::helpers;
+  constexpr auto N = simdutf::base64_length_from_binary_with_lines(
+      input.size(), simdutf::base64_default, lines);
+  CTString<char, N> buffer{};
+  const auto r1 = simdutf::binary_to_base64_with_lines(input, buffer, lines,
+                                                       simdutf::base64_default);
+  if (r1 != N) {
+    throw "oops, size mismatch";
+  }
+  return buffer;
+}
+} // namespace
+
+TEST(compile_time_binary_to_base64_with_lines_char) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr std::size_t lines = 4;
+  constexpr auto binary = "Abracadabra!"_latin1;
+  constexpr auto expected = "QWJy\nYWNh\nZGFi\ncmEh"_latin1;
+  constexpr auto encoded = binary_to_b64_with_lines<binary, lines>();
+  static_assert(expected == encoded);
+}
+
 #endif
 
 int main(int argc, char *argv[]) {
