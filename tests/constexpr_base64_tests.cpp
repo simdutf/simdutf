@@ -244,6 +244,84 @@ TEST(compile_time_base64_valid_or_padding) {
   static_assert(simdutf::base64_valid_or_padding(char16_t{'='}));
 }
 
+namespace {
+
+template <auto input>
+  requires simdutf::tests::helpers::any_ctstring<decltype(input)>
+constexpr auto b64_to_bin_safe_impl() {
+  using namespace simdutf::tests::helpers;
+  constexpr auto Nmax = simdutf::maximal_binary_length_from_base64(input);
+  CTString<char, Nmax> buffer{};
+  auto [res, outlen] = simdutf::base64_to_binary_safe(input, buffer);
+  if (res.is_err()) {
+    throw "failed convert";
+  }
+  if (res.count > input.size()) {
+    throw "res.count > input.size()";
+  }
+  if (outlen > Nmax) {
+    throw "outlen > Nmax";
+  }
+  return std::tuple(res.count, buffer, outlen);
+}
+
+/**
+ * converts base64 to binary. ideally the input should be passed as a
+ * function parameter but I could not get that to work.
+ */
+template <auto input>
+  requires simdutf::tests::helpers::any_ctstring<decltype(input)>
+constexpr auto b64_to_binary_safe() {
+  constexpr auto r = b64_to_bin_safe_impl<input>();
+  constexpr auto N_read_from_input = std::get<0>(r);
+  constexpr auto ret = std::get<1>(r);
+  constexpr auto outputbuffer_size = ret.size();
+  constexpr auto outlen = std::get<2>(r);
+  static_assert(N_read_from_input <= input.size());
+  static_assert(outputbuffer_size >= outlen);
+  if constexpr (ret.size() != outlen) {
+    return ret.template shrink<outlen>();
+  } else {
+    return ret;
+  }
+}
+
+} // namespace
+
+TEST(compile_time_base64_to_binary_safe) {
+  using namespace simdutf::tests::helpers;
+  constexpr auto binary = "Abracadabra!"_latin1;
+  static_assert(binary.size() == 12);
+
+  // tightly packed base64 works fine
+  {
+    constexpr auto base64 = "QWJyYWNhZGFicmEh"_latin1;
+    constexpr auto binary_again = b64_to_binary_safe<base64>();
+    static_assert(binary_again == binary);
+  }
+
+  // extra spaces is no problem
+  {
+    constexpr auto base64 = "   QWJyYWNhZGF icmEh   "_latin1;
+    constexpr auto binary_again = b64_to_binary_safe<base64>();
+    static_assert(binary_again == binary);
+  }
+
+  // tightly packed base64 works fine also in utf-16
+  {
+    constexpr auto base64 = u"QWJyYWNhZGFicmEh"_utf16;
+    constexpr auto binary_again = b64_to_binary_safe<base64>();
+    static_assert(binary_again == binary);
+  }
+
+  // extra spaces is no problem also in utf-16
+  {
+    constexpr auto base64 = u"   QWJyYWNhZGF icmEh   "_utf16;
+    constexpr auto binary_again = b64_to_binary_safe<base64>();
+    static_assert(binary_again == binary);
+  }
+}
+
 #else
 TEST(no_compile_time_tests_below_cpp23) {}
 #endif
