@@ -255,6 +255,14 @@ TEST(compile_time_validation) {
   static_assert(not simdutf::validate_utf16(invalid));
 }
 
+TEST(compile_time_ascii_validation_le) {
+  using namespace simdutf::tests::helpers;
+  static_assert(
+      simdutf::validate_utf16_as_ascii(u"I am ascii, I promise!"_utf16le));
+  static_assert(not simdutf::validate_utf16_as_ascii(
+      u"But this isn't: köttbulle"_utf16le));
+}
+
 #endif
 
 TEST_MAIN

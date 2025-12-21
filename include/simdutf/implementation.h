@@ -340,9 +340,17 @@ validate_ascii_with_errors(
 simdutf_warn_unused bool validate_utf16_as_ascii(const char16_t *buf,
                                                  size_t len) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused bool
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 bool
 validate_utf16_as_ascii(std::span<const char16_t> input) noexcept {
-  return validate_utf16_as_ascii(input.data(), input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16::validate_as_ascii<endianness::NATIVE>(input.data(),
+                                                                input.size());
+  } else
+    #endif
+  {
+    return validate_utf16_as_ascii(input.data(), input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 
@@ -360,9 +368,17 @@ validate_utf16_as_ascii(std::span<const char16_t> input) noexcept {
 simdutf_warn_unused bool validate_utf16be_as_ascii(const char16_t *buf,
                                                    size_t len) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused bool
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 bool
 validate_utf16be_as_ascii(std::span<const char16_t> input) noexcept {
-  return validate_utf16be_as_ascii(input.data(), input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16::validate_as_ascii<endianness::BIG>(input.data(),
+                                                             input.size());
+  } else
+    #endif
+  {
+    return validate_utf16be_as_ascii(input.data(), input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 
@@ -380,9 +396,17 @@ validate_utf16be_as_ascii(std::span<const char16_t> input) noexcept {
 simdutf_warn_unused bool validate_utf16le_as_ascii(const char16_t *buf,
                                                    size_t len) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused bool
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 bool
 validate_utf16le_as_ascii(std::span<const char16_t> input) noexcept {
-  return validate_utf16le_as_ascii(input.data(), input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16::validate_as_ascii<endianness::LITTLE>(input.data(),
+                                                                input.size());
+  } else
+    #endif
+  {
+    return validate_utf16le_as_ascii(input.data(), input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
