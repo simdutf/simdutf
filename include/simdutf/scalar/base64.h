@@ -380,7 +380,7 @@ simdutf_constexpr23 full_result base64_tail_decode(
 // written. This functions assumes that the padding (=) has been removed.
 //
 template <class char_type>
-full_result base64_tail_decode_safe(
+simdutf_constexpr23 full_result base64_tail_decode_safe(
     char *dst, size_t outlen, const char_type *src, size_t length,
     size_t padding_characters, // number of padding characters
                                // '=', typically 0, 1, 2.
@@ -750,7 +750,8 @@ base64_to_binary_details_impl(
 }
 
 template <typename char_type>
-simdutf_warn_unused full_result base64_to_binary_details_safe_impl(
+simdutf_constexpr23 simdutf_warn_unused full_result
+base64_to_binary_details_safe_impl(
     const char_type *input, size_t length, char *output, size_t outlen,
     base64_options options,
     last_chunk_handling_options last_chunk_options) noexcept {
