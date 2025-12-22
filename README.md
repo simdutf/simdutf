@@ -2640,6 +2640,21 @@ References
 * Wojciech Muła, Daniel Lemire, [Faster Base64 Encoding and Decoding using AVX2 Instructions](https://arxiv.org/abs/1704.00605), ACM Transactions on the Web 12 (3), 2018.
 
 
+Citing this work
+----------------
+
+If you use this library in your research, please cite our work:
+
+```bibtex
+@misc{simdutf,
+  title={The simdutf library: {Unicode} validation and transcoding at billions of characters per second},
+  author={Daniel Lemire and Wojciech Mu{\l}a and Paul Dreik and others},
+  year={2021},
+  note={\url{https://github.com/simdutf/simdutf}}
+}
+```
+
+
 Stars
 -------
 
