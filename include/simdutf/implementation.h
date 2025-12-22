@@ -99,6 +99,10 @@ template <class InputPtr>
 concept indexes_into_byte_like = requires(InputPtr p) {
   { std::decay_t<decltype(p[0])>{} } -> simdutf::detail::byte_like;
 };
+template <class InputPtr>
+concept index_assignable_from_char = requires(InputPtr p, char s) {
+  { p[0] = s };
+};
 
 /**
  * a pointer like object that results in a uint32_t when indexed.
@@ -792,12 +796,23 @@ simdutf_warn_unused size_t convert_latin1_to_utf8(const char *input,
                                                   size_t length,
                                                   char *utf8_output) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t convert_latin1_to_utf8(
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+convert_latin1_to_utf8(
     const detail::input_span_of_byte_like auto &latin1_input,
     detail::output_span_of_byte_like auto &&utf8_output) noexcept {
-  return convert_latin1_to_utf8(
-      reinterpret_cast<const char *>(latin1_input.data()), latin1_input.size(),
-      utf8_output.data());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::latin1_to_utf8::convert(
+        detail::constexpr_cast_ptr<char>(latin1_input.data()),
+        latin1_input.size(),
+        detail::constexpr_cast_writeptr<char>(utf8_output.data()));
+  } else
+    #endif
+  {
+    return convert_latin1_to_utf8(
+        reinterpret_cast<const char *>(latin1_input.data()),
+        latin1_input.size(), reinterpret_cast<char *>(utf8_output.data()));
+  }
 }
   #endif // SIMDUTF_SPAN
 

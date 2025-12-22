@@ -64,6 +64,26 @@ TEST(compile_time_utf8_length_from_latin1) {
   // swedish character "ö":
   static_assert(simdutf::utf8_length_from_latin1("\xF6"_latin1) == 2);
 }
+
+TEST(compile_time_convert_latin1_to_utf8) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = "I am a nice and wellbehaved string"_latin1;
+  constexpr auto expected = u8"I am a nice and wellbehaved string"_utf8;
+  static_assert(simdutf::utf8_length_from_latin1(input) == expected.size());
+  constexpr auto converted = to_utf8<input>();
+  static_assert(converted == expected);
+}
+
+TEST(compile_time_convert_latin1_to_utf8_harder) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = "k\xF6ttbulle"_latin1;
+  constexpr auto expected = u8"köttbulle"_utf8;
+  static_assert(simdutf::utf8_length_from_latin1(input) == expected.size());
+  constexpr auto converted = to_utf8<input>();
+  static_assert(converted == expected);
+}
 #endif
 
 TEST_MAIN
