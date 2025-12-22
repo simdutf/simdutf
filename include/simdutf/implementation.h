@@ -762,9 +762,17 @@ validate_utf32(std::span<const char32_t> input) noexcept {
 simdutf_warn_unused result validate_utf32_with_errors(const char32_t *buf,
                                                       size_t len) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused result
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 result
 validate_utf32_with_errors(std::span<const char32_t> input) noexcept {
-  return validate_utf32_with_errors(input.data(), input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf32::validate_with_errors(
+        detail::constexpr_cast_ptr<std::uint32_t>(input.data()), input.size());
+  } else
+    #endif
+  {
+    return validate_utf32_with_errors(input.data(), input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF32
