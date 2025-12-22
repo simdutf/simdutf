@@ -3,10 +3,10 @@
 #include <random>
 #include <vector>
 
+#include <tests/helpers/compiletime_conversions.h>
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_utf16.h>
 #include <tests/helpers/test.h>
-#include "tests/helpers/fixed_string.h"
-#include "tests/helpers/compiletime_conversions.h"
 
 #if SIMDUTF_IS_BIG_ENDIAN
 constexpr char16_t replacement_le = 0xFDFF;
@@ -309,31 +309,67 @@ TEST(to_well_formed_utf16be_bad_input_self) {
 
 #if SIMDUTF_CPLUSPLUS23
 
-void compile_time_test() {
-  constexpr auto utf16 = []() {
-    simdutf::tests::helpers::CTString<char16_t, 5> data{};
-  #if SIMDUTF_IS_BIG_ENDIAN
-    data[2] = 0x00D8;
-  #else
-    data[2] = 0xD800;
-  #endif
-    return data;
-  }();
+namespace {
 
-  constexpr simdutf::result utf8_length =
-      simdutf::utf8_length_from_utf16le_with_replacement(utf16);
-  static_assert(utf8_length.count == utf16.size() + 2);
-  static_assert(utf8_length.error == simdutf::SURROGATE);
+// makes a malformed string in the requested endianness
+template <simdutf::endianness e> constexpr auto make_malformed() {
+  simdutf::tests::helpers::CTString<
+      char16_t, 5,
+      e == simdutf::endianness::BIG ? std::endian::big : std::endian::little>
+      data{};
+  data[2] = simdutf::scalar::utf16::swap_if_needed<e>(0xD800);
+  return data;
+}
 
-  constexpr auto output = to_wellformed(utf16);
-  static_assert(output[0] == 0);
-  static_assert(output[1] == 0);
-  static_assert(output[2] == replacement_le);
-  static_assert(output[3] == 0);
-  static_assert(output[4] == 0);
-  constexpr size_t utf8_length_check =
-      simdutf::utf8_length_from_utf16le(output);
-  static_assert(utf8_length.count == utf8_length_check);
+// makes a wellformed string in the requested endianness
+template <simdutf::endianness e> constexpr auto make_wellformed() {
+  simdutf::tests::helpers::CTString<
+      char16_t, 5,
+      e == simdutf::endianness::BIG ? std::endian::big : std::endian::little>
+      data{};
+  data[2] = simdutf::scalar::utf16::swap_if_needed<e>(0xfffd);
+  return data;
+}
+} // namespace
+
+TEST(compile_time_to_wellformed_big) {
+  using namespace simdutf::tests::helpers;
+  using enum simdutf::endianness;
+
+  constexpr auto malformed = make_malformed<BIG>();
+  constexpr auto replaced = to_wellformed(malformed);
+  constexpr auto expected = make_wellformed<BIG>();
+  static_assert(replaced == expected);
+}
+
+TEST(compile_time_to_wellformed_little) {
+  using namespace simdutf::tests::helpers;
+  using enum simdutf::endianness;
+
+  constexpr auto malformed = make_malformed<LITTLE>();
+  constexpr auto replaced = to_wellformed(malformed);
+  constexpr auto expected = make_wellformed<LITTLE>();
+  static_assert(replaced == expected);
+}
+
+namespace {
+template <auto input> constexpr auto invoke_to_wellformed() {
+  auto output = input;
+  simdutf::to_well_formed_utf16(input, output);
+  return output;
+}
+} // namespace
+
+TEST(compile_time_to_wellformed_native) {
+
+  using namespace simdutf::tests::helpers;
+  using enum simdutf::endianness;
+
+  constexpr auto malformed = make_malformed<NATIVE>();
+  constexpr auto replaced = invoke_to_wellformed<malformed>();
+
+  constexpr auto expected = make_wellformed<NATIVE>();
+  static_assert(replaced == expected);
 }
 
 #endif

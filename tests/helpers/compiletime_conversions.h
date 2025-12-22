@@ -13,10 +13,18 @@ namespace simdutf {
 namespace tests {
 namespace helpers {
 
-constexpr auto to_wellformed(utf16_ctstring auto &&input) {
-  using T = std::decay_t<decltype(input)>;
-  T output;
-  simdutf::to_well_formed_utf16le(input, output);
+/**
+ * creates a copy of input with the same endianness but with
+ * illformed data replaced.
+ */
+template <typename CharType, std::size_t N, std::endian endianness>
+constexpr auto to_wellformed(const CTString<CharType, N, endianness> &input) {
+  CTString<CharType, N, endianness> output;
+  if constexpr (endianness == std::endian::little) {
+    simdutf::to_well_formed_utf16le(input, output);
+  } else {
+    simdutf::to_well_formed_utf16be(input, output);
+  }
   return output;
 }
 
