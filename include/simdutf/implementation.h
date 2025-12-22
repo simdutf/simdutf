@@ -99,6 +99,15 @@ template <class InputPtr>
 concept indexes_into_byte_like = requires(InputPtr p) {
   { std::decay_t<decltype(p[0])>{} } -> simdutf::detail::byte_like;
 };
+
+/**
+ * a pointer like object that results in a uint32_t when indexed.
+ * valid examples: uint32_t*
+ */
+template <class InputPtr>
+concept indexes_into_uint32 = requires(InputPtr p) {
+  { std::decay_t<decltype(p[0])>{} } -> std::same_as<std::uint32_t>;
+};
 } // namespace detail
 } // namespace simdutf
 #endif // SIMDUTF_SPAN
@@ -718,9 +727,17 @@ to_well_formed_utf16(std::span<const char16_t> input,
 simdutf_warn_unused bool validate_utf32(const char32_t *buf,
                                         size_t len) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused bool
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 bool
 validate_utf32(std::span<const char32_t> input) noexcept {
-  return validate_utf32(input.data(), input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf32::validate(
+        detail::constexpr_cast_ptr<std::uint32_t>(input.data()), input.size());
+  } else
+    #endif
+  {
+    return validate_utf32(input.data(), input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
