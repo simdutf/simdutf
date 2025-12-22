@@ -1,5 +1,6 @@
 #include "simdutf.h"
 
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_utf32.h>
 #include <tests/helpers/test.h>
 
@@ -87,5 +88,27 @@ TEST_LOOP(validate_utf32_with_errors_returns_error_when_input_too_large) {
     }
   }
 }
+#if SIMDUTF_CPLUSPLUS23
+
+namespace {
+constexpr auto make_bad() {
+  using namespace simdutf::tests::helpers;
+  auto bad = U"I am bad: ?"_utf32;
+  bad[bad.size() - 1] = 0x10FFFF + 1;
+  return bad;
+}
+
+} // namespace
+
+TEST(compile_time_validate) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto good = U"I am a nice and wellbehaved string"_utf32;
+  static_assert(simdutf::validate_utf32_with_errors(good).is_ok());
+
+  constexpr auto bad = make_bad();
+  static_assert(simdutf::validate_utf32_with_errors(bad).is_err());
+}
+#endif
 
 TEST_MAIN
