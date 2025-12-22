@@ -50,6 +50,19 @@ constexpr auto to_latin1(const CTString<CharType, N, endianness> &input) {
   return tmp;
 }
 
+/// converts latin1 input to utf8
+template <auto input>
+  requires latin1_ctstring<decltype(input)>
+constexpr auto to_utf8() {
+  constexpr auto N = utf8_length_from_latin1(input);
+  CTString<char8_t, N> tmp;
+  auto ret = simdutf::convert_latin1_to_utf8(input, tmp);
+  if (!input.empty() && ret == 0) {
+    throw "failed conversion";
+  }
+  return tmp;
+}
+
 namespace detail {
 template <std::endian output_endianness, typename CharType, std::size_t N,
           std::endian input_endianness>

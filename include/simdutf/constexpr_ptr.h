@@ -105,6 +105,11 @@ template <typename SrcType, typename TargetType> struct constexpr_write_ptr {
     return constexpr_write_ptr_proxy<SrcType, TargetType>{p};
   }
 
+  constexpr constexpr_write_ptr_proxy<SrcType, TargetType>
+  operator[](std::ptrdiff_t n) const {
+    return constexpr_write_ptr_proxy<SrcType, TargetType>{p + n};
+  }
+
   constexpr constexpr_write_ptr &operator++() {
     ++p;
     return *this;
