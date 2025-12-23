@@ -54,7 +54,7 @@ fi
 
 
 cmake -B $BUILD -S . \
-      -DSIMDUTF_TESTS=Off \
+      -DSIMDUTF_TESTS=On \
       -DSIMDUTF_TOOLS=Off \
       -DSIMDUTF_FUZZERS=Off \
       -DCMAKE_BUILD_TYPE=Debug \
