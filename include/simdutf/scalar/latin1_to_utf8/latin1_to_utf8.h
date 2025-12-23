@@ -114,6 +114,34 @@ inline size_t convert_safe(const char *buf, size_t len, char *utf8_output,
   return utf8_pos;
 }
 
+template <typename InputPtr, typename OutputPtr>
+#if SIMDUTF_CPLUSPLUS20
+  requires(simdutf::detail::indexes_into_byte_like<InputPtr> &&
+           simdutf::detail::index_assignable_from_char<OutputPtr>)
+#endif
+simdutf_constexpr23 size_t convert_safe_constexpr(InputPtr data, size_t len,
+                                                  OutputPtr utf8_output,
+                                                  size_t utf8_len) {
+  size_t pos = 0;
+  size_t utf8_pos = 0;
+  while (pos < len && utf8_pos < utf8_len) {
+    const unsigned char byte = data[pos];
+    if ((byte & 0x80) == 0) { // if ASCII
+      // will generate one UTF-8 bytes
+      utf8_output[utf8_pos++] = char(byte);
+      pos++;
+    } else if (utf8_pos + 2 <= utf8_len) {
+      // will generate two UTF-8 bytes
+      utf8_output[utf8_pos++] = char((byte >> 6) | 0b11000000);
+      utf8_output[utf8_pos++] = char((byte & 0b111111) | 0b10000000);
+      pos++;
+    } else {
+      break;
+    }
+  }
+  return utf8_pos;
+}
+
 template <typename InputPtr>
 #if SIMDUTF_CPLUSPLUS20
   requires simdutf::detail::indexes_into_byte_like<InputPtr>
