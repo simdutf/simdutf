@@ -84,6 +84,37 @@ TEST(compile_time_convert_latin1_to_utf8_harder) {
   constexpr auto converted = to_utf8<input>();
   static_assert(converted == expected);
 }
+
+namespace {
+template <auto input, std::size_t N> constexpr auto convert_safe() {
+  simdutf::tests::helpers::CTString<char8_t, N> ret{};
+  auto written = simdutf::convert_latin1_to_utf8_safe(input, ret);
+  return std::tuple(written, ret);
+}
+} // namespace
+
+TEST(compile_time_convert_latin1_to_utf8_safe) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = "k\xF6ttbulle"_latin1;
+  constexpr auto expected = u8"köttbulle"_utf8;
+
+  // convert using a too small buffer
+  {
+    constexpr auto small = convert_safe<input, 2>();
+    constexpr auto written = std::get<0>(small);
+    static_assert(written == 1);
+  }
+
+  // use a large enough buffer
+  {
+    constexpr auto large = convert_safe<input, 100>();
+    constexpr auto written = std::get<0>(large);
+    static_assert(written == expected.size());
+    constexpr auto output = std::get<1>(large).shrink<written>();
+    static_assert(output == expected);
+  }
+}
 #endif
 
 TEST_MAIN
