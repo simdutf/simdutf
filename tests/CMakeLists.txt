@@ -445,6 +445,18 @@ target_link_libraries(fixed_string_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
 
+
+# test C++26 embed, currently only available in gcc 15
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+ if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "15")
+   add_cpp_test(embed_tests)
+   target_link_libraries(embed_tests
+     PUBLIC simdutf::tests::helpers
+            simdutf::tests::reference)
+          target_compile_options(embed_tests PRIVATE --embed-directory ${CMAKE_CURRENT_SOURCE_DIR})
+   endif()
+endif()
+
 find_program(GIT_EXECUTABLE git)
 if(Python3_FOUND AND GIT_EXECUTABLE)
   add_test(NAME check_feature_macros
