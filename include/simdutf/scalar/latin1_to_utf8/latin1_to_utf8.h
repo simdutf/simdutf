@@ -96,6 +96,47 @@ inline size_t convert_safe(const char *buf, size_t len, char *utf8_output,
   return utf8_pos;
 }
 
+template <typename InputPtr>
+#if SIMDUTF_CPLUSPLUS20
+  requires simdutf::detail::indexes_into_byte_like<InputPtr>
+#endif
+simdutf_constexpr23 simdutf_warn_unused size_t
+utf8_length_from_latin1(InputPtr input, size_t length) noexcept {
+  size_t answer = length;
+  size_t i = 0;
+
+#if SIMDUTF_CPLUSPLUS23
+  if !consteval
+#endif
+  {
+    auto pop = [](uint64_t v) {
+      return (size_t)(((v >> 7) & UINT64_C(0x0101010101010101)) *
+                          UINT64_C(0x0101010101010101) >>
+                      56);
+    };
+    for (; i + 32 <= length; i += 32) {
+      uint64_t v;
+      memcpy(&v, input + i, 8);
+      answer += pop(v);
+      memcpy(&v, input + i + 8, sizeof(v));
+      answer += pop(v);
+      memcpy(&v, input + i + 16, sizeof(v));
+      answer += pop(v);
+      memcpy(&v, input + i + 24, sizeof(v));
+      answer += pop(v);
+    }
+    for (; i + 8 <= length; i += 8) {
+      uint64_t v;
+      memcpy(&v, input + i, sizeof(v));
+      answer += pop(v);
+    }
+  } // !consteval scope
+  for (; i + 1 <= length; i += 1) {
+    answer += static_cast<uint8_t>(input[i]) >> 7;
+  }
+  return answer;
+}
+
 } // namespace latin1_to_utf8
 } // unnamed namespace
 } // namespace scalar
