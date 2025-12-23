@@ -2,8 +2,10 @@
 
 #include <vector>
 
-#include <tests/helpers/transcode_test_base.h>
+#include <tests/helpers/compiletime_conversions.h>
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/test.h>
+#include <tests/helpers/transcode_test_base.h>
 
 namespace {
 using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
@@ -53,5 +55,15 @@ TEST(convert_all_latin1_safe) {
     }
   }
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+TEST(compile_time_utf8_length_from_latin1) {
+  using namespace simdutf::tests::helpers;
+  static_assert(simdutf::utf8_length_from_latin1("x"_latin1) == 1);
+  // swedish character "ö":
+  static_assert(simdutf::utf8_length_from_latin1("\xF6"_latin1) == 2);
+}
+#endif
 
 TEST_MAIN
