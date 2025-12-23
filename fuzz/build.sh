@@ -43,18 +43,20 @@ if [ -z $SRC ] ; then
     BUILD=$WORK/build
     mkdir -p $OUT $WORK
     fuzzer_src_files=$(ls fuzz/*.cpp|grep -v -E "fuzz/(reproducer.|main)")
+    ENABLE_TESTING=Off
 else
     # invoked from oss fuzz
     cd $SRC/simdutf
     # temporary: exclude atomic from oss-fuzz, libc++ 18 used there does not support atomic ref
     fuzzer_src_files=$(ls fuzz/*.cpp|grep -v -E "fuzz/(reproducer.|main|atomic.)")
     BUILD=build
+    ENABLE_TESTING=On
 fi
 
 
 
 cmake -B $BUILD -S . \
-      -DSIMDUTF_TESTS=On \
+      -DSIMDUTF_TESTS=$ENABLE_TESTING \
       -DSIMDUTF_TOOLS=Off \
       -DSIMDUTF_FUZZERS=Off \
       -DCMAKE_BUILD_TYPE=Debug \
