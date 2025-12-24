@@ -101,6 +101,21 @@ constexpr auto to_utf16be(const CTString<CharType, N, endianness> &input) {
   return detail::to_utf16_impl<std::endian::big>(input);
 }
 
+template <std::endian target_endianness>
+constexpr auto latin1_to_utf16(latin1_ctstring auto &&input) {
+  using I = decltype(input);
+  constexpr auto N = I{}.size();
+  CTString<char16_t, N, target_endianness> output;
+  std::size_t converted;
+  if constexpr (target_endianness == std::endian::little) {
+    converted = convert_latin1_to_utf16le(input, output);
+  }
+  if (converted != N) {
+    throw "oops";
+  }
+  return output;
+}
+
 } // namespace helpers
 } // namespace tests
 } // namespace simdutf
