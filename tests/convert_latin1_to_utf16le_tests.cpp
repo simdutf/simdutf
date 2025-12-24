@@ -2,9 +2,11 @@
 
 #include <array>
 
-#include <tests/helpers/transcode_test_base.h>
+#include <tests/helpers/compiletime_conversions.h>
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
+#include <tests/helpers/transcode_test_base.h>
 
 namespace {
 constexpr std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
@@ -33,5 +35,20 @@ TEST_LOOP(convert_all_latin) {
     ASSERT_TRUE(test.check_size(size_procedure));
   }
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+namespace {} // namespace
+
+TEST(compile_time_convert_latin1_to_utf16le) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = "hello"_latin1;
+  constexpr auto expected = u"hello"_utf16le;
+  constexpr auto output = latin1_to_utf16<std::endian::little>(input);
+  static_assert(output == expected);
+}
+
+#endif
 
 TEST_MAIN
