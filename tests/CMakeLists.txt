@@ -387,6 +387,16 @@ target_link_libraries(detect_encodings_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
 
+add_cpp_test(text_encoding_tests)
+target_link_libraries(text_encoding_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)
+         
+if(cxx_std_26 IN_LIST CMAKE_CXX_COMPILE_FEATURES)
+  set_property(TARGET text_encoding_tests PROPERTY CXX_STANDARD 26)
+  set_property(TARGET text_encoding_tests PROPERTY CXX_STANDARD_REQUIRED OFF)
+endif()
+
 add_cpp_test(basic_fuzzer)
 target_link_libraries(basic_fuzzer
   PUBLIC simdutf::tests::helpers

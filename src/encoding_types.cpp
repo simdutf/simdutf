@@ -1,3 +1,4 @@
+#include "simdutf/encoding_types.h"
 
 namespace simdutf {
 std::string to_string(encoding_type bom) {
@@ -64,4 +65,5 @@ size_t bom_byte_size(encoding_type bom) {
 }
 
 } // namespace BOM
+
 } // namespace simdutf
