@@ -1517,11 +1517,20 @@ simdutf_really_inline simdutf_warn_unused size_t latin1_length_from_utf8(
 simdutf_warn_unused size_t utf16_length_from_utf8(const char *input,
                                                   size_t length) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t utf16_length_from_utf8(
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+utf16_length_from_utf8(
     const detail::input_span_of_byte_like auto &valid_utf8_input) noexcept {
-  return utf16_length_from_utf8(
-      reinterpret_cast<const char *>(valid_utf8_input.data()),
-      valid_utf8_input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf8::utf16_length_from_utf8(valid_utf8_input.data(),
+                                                valid_utf8_input.size());
+  } else
+    #endif
+  {
+    return utf16_length_from_utf8(
+        reinterpret_cast<const char *>(valid_utf8_input.data()),
+        valid_utf8_input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
