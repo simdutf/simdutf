@@ -242,13 +242,16 @@ inline simdutf_warn_unused result rewind_and_validate_with_errors(
   return res;
 }
 
-inline size_t count_code_points(const char *buf, size_t len) {
-  const int8_t *p = reinterpret_cast<const int8_t *>(buf);
+template <typename InputPtr>
+#if SIMDUTF_CPLUSPLUS20
+  requires simdutf::detail::indexes_into_byte_like<InputPtr>
+#endif
+simdutf_constexpr23 size_t count_code_points(InputPtr data, size_t len) {
   size_t counter{0};
   for (size_t i = 0; i < len; i++) {
     // -65 is 0b10111111, anything larger in two-complement's should start a new
     // code point.
-    if (p[i] > -65) {
+    if (int8_t(data[i]) > -65) {
       counter++;
     }
   }
