@@ -1238,13 +1238,21 @@ convert_utf8_to_utf16be(const detail::input_span_of_byte_like auto &utf8_input,
 simdutf_warn_unused result convert_utf8_to_latin1_with_errors(
     const char *input, size_t length, char *latin1_output) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused result
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 result
 convert_utf8_to_latin1_with_errors(
     const detail::input_span_of_byte_like auto &utf8_input,
     detail::output_span_of_byte_like auto &&latin1_output) noexcept {
-  return convert_utf8_to_latin1_with_errors(
-      reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
-      reinterpret_cast<char *>(latin1_output.data()));
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf8_to_latin1::convert_with_errors(
+        utf8_input.data(), utf8_input.size(), latin1_output.data());
+  } else
+    #endif
+  {
+    return convert_utf8_to_latin1_with_errors(
+        reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
+        reinterpret_cast<char *>(latin1_output.data()));
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
@@ -1588,11 +1596,20 @@ utf8_length_from_latin1(
 simdutf_warn_unused size_t latin1_length_from_utf8(const char *input,
                                                    size_t length) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t latin1_length_from_utf8(
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+latin1_length_from_utf8(
     const detail::input_span_of_byte_like auto &valid_utf8_input) noexcept {
-  return latin1_length_from_utf8(
-      reinterpret_cast<const char *>(valid_utf8_input.data()),
-      valid_utf8_input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf8::count_code_points(valid_utf8_input.data(),
+                                           valid_utf8_input.size());
+  } else
+    #endif
+  {
+    return latin1_length_from_utf8(
+        reinterpret_cast<const char *>(valid_utf8_input.data()),
+        valid_utf8_input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
