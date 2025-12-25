@@ -3,9 +3,11 @@
 #include <array>
 #include <memory>
 
-#include <tests/helpers/transcode_test_base.h>
+#include "tests/helpers/compiletime_conversions.h"
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
+#include <tests/helpers/transcode_test_base.h>
 
 namespace {
 constexpr std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
@@ -89,5 +91,34 @@ TEST(special_cases) {
   ASSERT_EQUAL(utf16size, utf16len);
   ASSERT_EQUAL(memcmp((const char *)utf16.get(), expected, 2), 0);
 }
+#if SIMDUTF_CPLUSPLUS23
+
+namespace {
+template <auto input> constexpr auto test_compile() {
+  std::array<char16_t, 100> tmp;
+  auto ret = simdutf::convert_valid_utf8_to_utf16(input, tmp);
+  return ret;
+}
+} // namespace
+
+TEST(compile_time_convert_utf8_to_utf16) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = u8"hello I am over 16 byte long"_utf8;
+  constexpr auto ret = test_compile<input>();
+  static_assert(ret == input.size());
+}
+
+TEST(compile_time_convert_utf8_to_utf16be) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = u8"hello I am over 16 byte long"_utf8;
+  constexpr auto expected = u"hello I am over 16 byte long"_utf16be;
+  constexpr auto output = valid_utf8_to_utf16<std::endian::big, input>();
+  static_assert(output.size() == expected.size());
+  static_assert(output == expected);
+}
+
+#endif
 
 TEST_MAIN

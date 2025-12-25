@@ -3,9 +3,11 @@
 #include <array>
 #include <memory>
 
-#include <tests/helpers/transcode_test_base.h>
+#include "tests/helpers/compiletime_conversions.h"
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
+#include <tests/helpers/transcode_test_base.h>
 
 namespace {
 constexpr std::array<size_t, 9> input_size{7,   12,  16,  64,  67,
@@ -201,5 +203,19 @@ TEST(special_cases) {
   ASSERT_EQUAL(utf16size, utf16len);
   ASSERT_EQUAL(memcmp((const char *)utf16.get(), expected, 2), 0);
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+TEST(compile_time_convert_utf8_to_utf16le) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = u8"hello I am over 16 byte long"_utf8;
+  constexpr auto expected = u"hello I am over 16 byte long"_utf16le;
+  constexpr auto output = valid_utf8_to_utf16<std::endian::little, input>();
+  static_assert(output.size() == expected.size());
+  static_assert(output == expected);
+}
+
+#endif
 
 TEST_MAIN
