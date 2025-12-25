@@ -6,29 +6,38 @@ namespace scalar {
 namespace {
 namespace utf8_to_utf32 {
 
-inline size_t convert(const char *buf, size_t len, char32_t *utf32_output) {
-  const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);
+template <typename InputPtr>
+#if SIMDUTF_CPLUSPLUS20
+  requires simdutf::detail::indexes_into_byte_like<InputPtr>
+#endif
+simdutf_constexpr23 size_t convert(InputPtr data, size_t len,
+                                   char32_t *utf32_output) {
   size_t pos = 0;
   char32_t *start{utf32_output};
   while (pos < len) {
-    // try to convert the next block of 16 ASCII bytes
-    if (pos + 16 <=
-        len) { // if it is safe to read 16 more bytes, check that they are ascii
-      uint64_t v1;
-      ::memcpy(&v1, data + pos, sizeof(uint64_t));
-      uint64_t v2;
-      ::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
-      uint64_t v{v1 | v2};
-      if ((v & 0x8080808080808080) == 0) {
-        size_t final_pos = pos + 16;
-        while (pos < final_pos) {
-          *utf32_output++ = char32_t(buf[pos]);
-          pos++;
+#if SIMDUTF_CPLUSPLUS23
+    if !consteval
+#endif
+    {
+      // try to convert the next block of 16 ASCII bytes
+      if (pos + 16 <= len) { // if it is safe to read 16 more bytes, check that
+                             // they are ascii
+        uint64_t v1;
+        ::memcpy(&v1, data + pos, sizeof(uint64_t));
+        uint64_t v2;
+        ::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
+        uint64_t v{v1 | v2};
+        if ((v & 0x8080808080808080) == 0) {
+          size_t final_pos = pos + 16;
+          while (pos < final_pos) {
+            *utf32_output++ = uint8_t(data[pos]);
+            pos++;
+          }
+          continue;
         }
-        continue;
       }
     }
-    uint8_t leading_byte = data[pos]; // leading byte
+    auto leading_byte = uint8_t(data[pos]); // leading byte
     if (leading_byte < 0b10000000) {
       // converting one ASCII byte !!!
       *utf32_output++ = char32_t(leading_byte);
@@ -42,8 +51,8 @@ inline size_t convert(const char *buf, size_t len, char32_t *utf32_output) {
         return 0;
       }
       // range check
-      uint32_t code_point =
-          (leading_byte & 0b00011111) << 6 | (data[pos + 1] & 0b00111111);
+      uint32_t code_point = (leading_byte & 0b00011111) << 6 |
+                            (uint8_t(data[pos + 1]) & 0b00111111);
       if (code_point < 0x80 || 0x7ff < code_point) {
         return 0;
       }
@@ -55,16 +64,16 @@ inline size_t convert(const char *buf, size_t len, char32_t *utf32_output) {
         return 0;
       } // minimal bound checking
 
-      if ((data[pos + 1] & 0b11000000) != 0b10000000) {
+      if ((uint8_t(data[pos + 1]) & 0b11000000) != 0b10000000) {
         return 0;
       }
-      if ((data[pos + 2] & 0b11000000) != 0b10000000) {
+      if ((uint8_t(data[pos + 2]) & 0b11000000) != 0b10000000) {
         return 0;
       }
       // range check
       uint32_t code_point = (leading_byte & 0b00001111) << 12 |
-                            (data[pos + 1] & 0b00111111) << 6 |
-                            (data[pos + 2] & 0b00111111);
+                            (uint8_t(data[pos + 1]) & 0b00111111) << 6 |
+                            (uint8_t(data[pos + 2]) & 0b00111111);
       if (code_point < 0x800 || 0xffff < code_point ||
           (0xd7ff < code_point && code_point < 0xe000)) {
         return 0;
@@ -76,21 +85,21 @@ inline size_t convert(const char *buf, size_t len, char32_t *utf32_output) {
       if (pos + 3 >= len) {
         return 0;
       } // minimal bound checking
-      if ((data[pos + 1] & 0b11000000) != 0b10000000) {
+      if ((uint8_t(data[pos + 1]) & 0b11000000) != 0b10000000) {
         return 0;
       }
-      if ((data[pos + 2] & 0b11000000) != 0b10000000) {
+      if ((uint8_t(data[pos + 2]) & 0b11000000) != 0b10000000) {
         return 0;
       }
-      if ((data[pos + 3] & 0b11000000) != 0b10000000) {
+      if ((uint8_t(data[pos + 3]) & 0b11000000) != 0b10000000) {
         return 0;
       }
 
       // range check
       uint32_t code_point = (leading_byte & 0b00000111) << 18 |
-                            (data[pos + 1] & 0b00111111) << 12 |
-                            (data[pos + 2] & 0b00111111) << 6 |
-                            (data[pos + 3] & 0b00111111);
+                            (uint8_t(data[pos + 1]) & 0b00111111) << 12 |
+                            (uint8_t(data[pos + 2]) & 0b00111111) << 6 |
+                            (uint8_t(data[pos + 3]) & 0b00111111);
       if (code_point <= 0xffff || 0x10ffff < code_point) {
         return 0;
       }

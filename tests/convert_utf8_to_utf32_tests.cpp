@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
 #include <tests/helpers/transcode_test_base.h>
@@ -1171,5 +1172,31 @@ TEST(convert_invalid_special_cases) {
       source.c_str(), source.size(), utf32_output.get());
   ASSERT_EQUAL(utf32words, 0);
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+namespace {
+template <auto input> constexpr auto length() {
+  return simdutf::utf32_length_from_utf8(input);
+}
+template <auto input> constexpr auto convert() {
+  std::array<char32_t, length<input>()> tmp;
+  auto ret = simdutf::convert_utf8_to_utf32(input, tmp);
+  if (ret != tmp.size()) {
+    throw "oops";
+  }
+  return ret;
+}
+} // namespace
+
+TEST(compile_time_convert_utf8_to_utf32) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = u8"köttbulle"_utf8;
+  constexpr auto expected = U"köttbulle"_utf32;
+  constexpr auto actual = convert<input>();
+}
+
+#endif
 
 TEST_MAIN
