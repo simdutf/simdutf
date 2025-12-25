@@ -918,7 +918,10 @@ convert_latin1_to_utf16be(const detail::input_span_of_byte_like auto &input,
  * @return the length of the string in Latin1 code units (char) required to
  * encode the UTF-16 string as Latin1
  */
-simdutf_warn_unused size_t latin1_length_from_utf16(size_t length) noexcept;
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+latin1_length_from_utf16(size_t length) noexcept {
+  return length;
+}
 
 /**
  * Compute the number of code units that this Latin1 string would require in
@@ -928,7 +931,10 @@ simdutf_warn_unused size_t latin1_length_from_utf16(size_t length) noexcept;
  * @return the length of the string in 2-byte code units (char16_t) required to
  * encode the Latin1 string as UTF-16
  */
-simdutf_warn_unused size_t utf16_length_from_latin1(size_t length) noexcept;
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+utf16_length_from_latin1(size_t length) noexcept {
+  return length;
+}
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1

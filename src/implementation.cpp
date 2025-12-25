@@ -1878,12 +1878,9 @@ simdutf_warn_unused result convert_utf16be_to_latin1_with_errors(
   return get_default_implementation()->convert_utf16be_to_latin1_with_errors(
       buf, len, latin1_buffer);
 }
-simdutf_warn_unused size_t latin1_length_from_utf16(size_t length) noexcept {
-  return length;
-}
-simdutf_warn_unused size_t utf16_length_from_latin1(size_t length) noexcept {
-  return length;
-}
+// moved to header file
+// simdutf_warn_unused size_t latin1_length_from_utf16(size_t length) noexcept
+// simdutf_warn_unused size_t utf16_length_from_latin1(size_t length) noexcept
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
