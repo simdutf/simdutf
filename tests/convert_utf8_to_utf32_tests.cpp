@@ -1180,12 +1180,13 @@ template <auto input> constexpr auto length() {
   return simdutf::utf32_length_from_utf8(input);
 }
 template <auto input> constexpr auto convert() {
-  std::array<char32_t, length<input>()> tmp;
+  using namespace simdutf::tests::helpers;
+  CTString<char32_t, length<input>()> tmp;
   auto ret = simdutf::convert_utf8_to_utf32(input, tmp);
   if (ret != tmp.size()) {
     throw "oops";
   }
-  return ret;
+  return tmp;
 }
 } // namespace
 
@@ -1195,6 +1196,7 @@ TEST(compile_time_convert_utf8_to_utf32) {
   constexpr auto input = u8"köttbulle"_utf8;
   constexpr auto expected = U"köttbulle"_utf32;
   constexpr auto actual = convert<input>();
+  static_assert(actual == expected);
 }
 
 #endif
