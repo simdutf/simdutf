@@ -118,6 +118,39 @@ constexpr auto latin1_to_utf16(latin1_ctstring auto &&input) {
   return output;
 }
 
+template <std::endian target_endianness, bool with_errors, auto input>
+constexpr auto utf8_to_utf16() {
+  using namespace simdutf::tests::helpers;
+  constexpr auto Nout = simdutf::utf16_length_from_utf8(input);
+  CTString<char16_t, Nout, target_endianness> tmp{};
+  std::size_t N;
+  if constexpr (target_endianness == std::endian::little) {
+    if constexpr (with_errors) {
+      auto res = simdutf::convert_utf8_to_utf16le_with_errors(input, tmp);
+      if (res.is_err()) {
+        throw "fail";
+      }
+      N = res.count;
+    } else {
+      N = simdutf::convert_utf8_to_utf16le(input, tmp);
+    }
+  } else {
+    if constexpr (with_errors) {
+      auto res = simdutf::convert_utf8_to_utf16be_with_errors(input, tmp);
+      if (res.is_err()) {
+        throw "fail";
+      }
+      N = res.count;
+    } else {
+      N = simdutf::convert_utf8_to_utf16be(input, tmp);
+    }
+  }
+  if (N != input.size()) {
+    throw "oops";
+  }
+  return tmp;
+}
+
 } // namespace helpers
 } // namespace tests
 } // namespace simdutf

@@ -4,11 +4,13 @@
 #include <memory>
 #include <vector>
 
-#include <tests/reference/validate_utf8.h>
-#include <tests/helpers/transcode_test_base.h>
+#include <tests/helpers/compiletime_conversions.h>
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_int.h>
-#include <tests/helpers/test.h>
 #include <tests/helpers/random_utf8.h>
+#include <tests/helpers/test.h>
+#include <tests/helpers/transcode_test_base.h>
+#include <tests/reference/validate_utf8.h>
 
 namespace {
 constexpr std::array<size_t, 9> input_size{7,   12,  16,  64,  67,
@@ -633,5 +635,37 @@ TEST(corrupt_123byte) {
   test_corrupt(implementation, seed,
                simdutf::tests::helpers::random_utf8(seed, 1, 1, 1, 0));
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+namespace {
+template <auto input> constexpr auto test_compile() {
+  std::array<char16_t, 100> tmp;
+  auto ret = simdutf::convert_utf8_to_utf16(input, tmp);
+  return ret;
+}
+} // namespace
+
+TEST(compile_time_convert_utf8_to_utf16) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = u8"hello I am over 16 byte long"_utf8;
+  constexpr auto ret = test_compile<input>();
+  static_assert(ret == input.size());
+}
+
+TEST(compile_time_convert_utf8_to_utf16le) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = u8"hello I am over 16 byte long"_utf8;
+  constexpr auto expected = u"hello I am over 16 byte long"_utf16le;
+  constexpr bool with_errors = false;
+  constexpr auto output =
+      utf8_to_utf16<std::endian::little, with_errors, input>();
+  static_assert(output.size() == expected.size());
+  static_assert(output == expected);
+}
+
+#endif
 
 TEST_MAIN
