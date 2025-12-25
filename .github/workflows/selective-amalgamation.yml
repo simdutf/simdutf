@@ -1,0 +1,29 @@
+name: selective amalgamation tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  ubuntu-build:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        cppversion: [11, 23]
+        compiler: [g++, clang++]
+    steps:
+      - uses: actions/checkout@v4
+      - name: selective amalgamation
+        run: |
+          scripts/amalgamation_tests.py \
+             --warnings \
+             --standard ${{matrix.cppversion}} \
+             --compiler ${{matrix.compiler}} \
+             --test-implicit-all \
+             --test-explicit-all \
+             --test-singles \
+             --test-pairs
