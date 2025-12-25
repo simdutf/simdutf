@@ -2383,23 +2383,6 @@ convert_valid_utf16be_to_utf32(std::span<const char16_t> valid_utf16_input,
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
-#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
-/**
- * Compute the number of bytes that this UTF-16LE/BE string would require in
- * Latin1 format.
- *
- * This function does not validate the input. It is acceptable to pass invalid
- * UTF-16 strings but in such cases the result is implementation defined.
- *
- * This function is not BOM-aware.
- *
- * @param length        the length of the string in 2-byte code units (char16_t)
- * @return the number of bytes required to encode the UTF-16LE string as Latin1
- */
-simdutf_warn_unused size_t latin1_length_from_utf16(size_t length) noexcept;
-
-#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
-
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 /**
  * Using native endianness; Compute the number of bytes that this UTF-16
