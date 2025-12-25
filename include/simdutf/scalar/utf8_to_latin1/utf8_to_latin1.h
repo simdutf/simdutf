@@ -6,30 +6,40 @@ namespace scalar {
 namespace {
 namespace utf8_to_latin1 {
 
-inline size_t convert(const char *buf, size_t len, char *latin_output) {
-  const uint8_t *data = reinterpret_cast<const uint8_t *>(buf);
+template <typename InputPtr, typename OutputPtr>
+#if SIMDUTF_CPLUSPLUS20
+  requires(simdutf::detail::indexes_into_byte_like<InputPtr> &&
+           simdutf::detail::indexes_into_byte_like<OutputPtr>)
+#endif
+simdutf_constexpr23 size_t convert(InputPtr data, size_t len,
+                                   OutputPtr latin_output) {
   size_t pos = 0;
-  char *start{latin_output};
+  auto start = latin_output;
 
   while (pos < len) {
-    // try to convert the next block of 16 ASCII bytes
-    if (pos + 16 <=
-        len) { // if it is safe to read 16 more bytes, check that they are ascii
-      uint64_t v1;
-      ::memcpy(&v1, data + pos, sizeof(uint64_t));
-      uint64_t v2;
-      ::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
-      uint64_t v{v1 | v2}; // We are only interested in these bits: 1000 1000
-                           // 1000 1000 .... etc
-      if ((v & 0x8080808080808080) ==
-          0) { // if NONE of these are set, e.g. all of them are zero, then
-               // everything is ASCII
-        size_t final_pos = pos + 16;
-        while (pos < final_pos) {
-          *latin_output++ = char(buf[pos]);
-          pos++;
+#if SIMDUTF_CPLUSPLUS23
+    if !consteval
+#endif
+    {
+      // try to convert the next block of 16 ASCII bytes
+      if (pos + 16 <= len) { // if it is safe to read 16 more bytes, check that
+                             // they are ascii
+        uint64_t v1;
+        ::memcpy(&v1, data + pos, sizeof(uint64_t));
+        uint64_t v2;
+        ::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
+        uint64_t v{v1 | v2}; // We are only interested in these bits: 1000 1000
+                             // 1000 1000 .... etc
+        if ((v & 0x8080808080808080) ==
+            0) { // if NONE of these are set, e.g. all of them are zero, then
+                 // everything is ASCII
+          size_t final_pos = pos + 16;
+          while (pos < final_pos) {
+            *latin_output++ = char(data[pos]);
+            pos++;
+          }
+          continue;
         }
-        continue;
       }
     }
 
