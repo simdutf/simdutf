@@ -1457,12 +1457,21 @@ convert_utf8_to_utf32_with_errors(
 simdutf_warn_unused size_t convert_valid_utf8_to_latin1(
     const char *input, size_t length, char *latin1_output) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf8_to_latin1(
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+convert_valid_utf8_to_latin1(
     const detail::input_span_of_byte_like auto &valid_utf8_input,
     detail::output_span_of_byte_like auto &&latin1_output) noexcept {
-  return convert_valid_utf8_to_latin1(
-      reinterpret_cast<const char *>(valid_utf8_input.data()),
-      valid_utf8_input.size(), latin1_output.data());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf8_to_latin1::convert_valid(
+        valid_utf8_input.data(), valid_utf8_input.size(), latin1_output.data());
+  } else
+    #endif
+  {
+    return convert_valid_utf8_to_latin1(
+        reinterpret_cast<const char *>(valid_utf8_input.data()),
+        valid_utf8_input.size(), latin1_output.data());
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
