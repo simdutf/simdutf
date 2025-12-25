@@ -1,0 +1,38 @@
+name: Debian, C++26 on gcc 15 and clang 21
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  cppstandards:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:forky
+    strategy:
+      matrix:
+        compiler: [g++-15, clang++-21]
+        cppversion: [26,]
+    steps:
+      - uses: actions/checkout@v4
+      - name: install
+        run: |
+          apt-get update -q -y
+          apt-get install -y cmake make g++-15 clang-21 ninja-build
+      - name: Build and test ${{matrix.compiler}} C++ ${{matrix.cppversion}}
+        run: |
+          cmake \
+             -DCMAKE_CXX_COMPILER=${{matrix.compiler}} \
+             -DSIMDUTF_CXX_STANDARD=${{matrix.cppversion}} \
+             -DSIMDUTF_BENCHMARKS=OFF \
+             -DCMAKE_BUILD_TYPE=Release \
+             -DSIMDUTF_FAST_TESTS=On \
+             -GNinja \
+             -B build \
+             -S .
+          cmake --build build
+          ctest -j --output-on-failure --test-dir build
