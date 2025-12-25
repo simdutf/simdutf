@@ -1415,13 +1415,21 @@ convert_utf8_to_utf32(const detail::input_span_of_byte_like auto &utf8_input,
 simdutf_warn_unused result convert_utf8_to_utf32_with_errors(
     const char *input, size_t length, char32_t *utf32_output) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused result
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 result
 convert_utf8_to_utf32_with_errors(
     const detail::input_span_of_byte_like auto &utf8_input,
     std::span<char32_t> utf32_output) noexcept {
-  return convert_utf8_to_utf32_with_errors(
-      reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
-      utf32_output.data());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf8_to_utf32::convert_with_errors(
+        utf8_input.data(), utf8_input.size(), utf32_output.data());
+  } else
+    #endif
+  {
+    return convert_utf8_to_utf32_with_errors(
+        reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
+        utf32_output.data());
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
