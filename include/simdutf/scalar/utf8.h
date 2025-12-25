@@ -255,14 +255,17 @@ inline size_t count_code_points(const char *buf, size_t len) {
   return counter;
 }
 
-inline size_t utf16_length_from_utf8(const char *buf, size_t len) {
-  const int8_t *p = reinterpret_cast<const int8_t *>(buf);
+template <typename InputPtr>
+#if SIMDUTF_CPLUSPLUS20
+  requires simdutf::detail::indexes_into_byte_like<InputPtr>
+#endif
+simdutf_constexpr23 size_t utf16_length_from_utf8(InputPtr data, size_t len) {
   size_t counter{0};
   for (size_t i = 0; i < len; i++) {
-    if (p[i] > -65) {
+    if (int8_t(data[i]) > -65) {
       counter++;
     }
-    if (uint8_t(p[i]) >= 240) {
+    if (uint8_t(data[i]) >= 240) {
       counter++;
     }
   }
