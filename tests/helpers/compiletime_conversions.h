@@ -109,6 +109,8 @@ constexpr auto latin1_to_utf16(latin1_ctstring auto &&input) {
   std::size_t converted;
   if constexpr (target_endianness == std::endian::little) {
     converted = convert_latin1_to_utf16le(input, output);
+  } else {
+    converted = convert_latin1_to_utf16be(input, output);
   }
   if (converted != N) {
     throw "oops";
