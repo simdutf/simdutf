@@ -873,7 +873,7 @@ public:
   }
 #endif // SIMDUTF_FEATURE_ASCII
 
-#if SIMDUTF_FEATURE_ASCII
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
   simdutf_warn_unused bool
   validate_utf16le_as_ascii(const char16_t *,
                             size_t) const noexcept final override {
@@ -885,7 +885,7 @@ public:
                             size_t) const noexcept final override {
     return false;
   }
-#endif // SIMDUTF_FEATURE_ASCII
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
 
 #if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
   simdutf_warn_unused bool
@@ -1605,7 +1605,9 @@ simdutf_warn_unused bool validate_utf16le(const char16_t *buf,
                                           size_t len) noexcept {
   return get_default_implementation()->validate_utf16le(buf, len);
 }
+#endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
+#if SIMDUTF_FEATURE_BASE64
   #if SIMDUTF_ATOMIC_REF
 template <typename char_type>
 simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
@@ -1695,7 +1697,7 @@ simdutf_warn_unused result atomic_base64_to_binary_safe(
 }
   #endif // SIMDUTF_ATOMIC_REF
 
-#endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
+#endif // SIMDUTF_FEATURE_BASE64
 
 #if SIMDUTF_FEATURE_UTF16
 simdutf_warn_unused bool validate_utf16be(const char16_t *buf,
