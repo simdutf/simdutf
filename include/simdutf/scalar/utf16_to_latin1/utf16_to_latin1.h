@@ -8,28 +8,32 @@ namespace scalar {
 namespace {
 namespace utf16_to_latin1 {
 
-template <endianness big_endian>
-inline size_t convert(const char16_t *buf, size_t len, char *latin_output) {
+template <endianness big_endian, typename InputPtr, typename OutputPtr>
+#if SIMDUTF_CPLUSPLUS20
+  requires(simdutf::detail::indexes_into_utf16<InputPtr> &&
+           simdutf::detail::index_assignable_from_char<OutputPtr>)
+#endif
+simdutf_constexpr23 size_t convert(InputPtr data, size_t len,
+                                   OutputPtr latin_output) {
   if (len == 0) {
     return 0;
   }
-  const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
   size_t pos = 0;
-  char *current_write = latin_output;
+  const auto latin_output_start = latin_output;
   uint16_t word = 0;
   uint16_t too_large = 0;
 
   while (pos < len) {
     word = !match_system(big_endian) ? u16_swap_bytes(data[pos]) : data[pos];
     too_large |= word;
-    *current_write++ = char(word & 0xFF);
+    *latin_output++ = char(word & 0xFF);
     pos++;
   }
   if ((too_large & 0xFF00) != 0) {
     return 0;
   }
 
-  return current_write - latin_output;
+  return latin_output - latin_output_start;
 }
 
 template <endianness big_endian>
