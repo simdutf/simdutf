@@ -3,10 +3,11 @@
 #include <array>
 #include <vector>
 
-#include <tests/reference/validate_utf16.h>
-#include <tests/helpers/transcode_test_base.h>
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
+#include <tests/helpers/transcode_test_base.h>
+#include <tests/reference/validate_utf16.h>
 
 namespace {
 constexpr std::array<size_t, 9> input_size{7,   12,  16,  64,  67,
@@ -187,6 +188,57 @@ TEST(all_possible_8_codepoint_combinations) {
     }
   }
 }
+#endif
+
+#if SIMDUTF_CPLUSPLUS23
+
+namespace {
+template <auto input> constexpr auto size() {
+  return simdutf::utf8_length_from_utf16(input);
+}
+
+template <auto input> constexpr auto convert() {
+  using namespace simdutf::tests::helpers;
+  CTString<char8_t, size<input>()> tmp;
+  const auto ret = simdutf::convert_valid_utf16_to_utf8(input, tmp);
+  if (ret != tmp.size()) {
+    throw "unexpected write size";
+  }
+  return tmp;
+}
+} // namespace
+
+TEST(compile_time_convert_valid_utf16_to_utf8) {
+  using namespace simdutf::tests::helpers;
+  constexpr auto input = u"köttbulle"_utf16;
+  constexpr auto expected = u8"köttbulle"_utf8;
+  constexpr auto output = convert<input>();
+  static_assert(output == expected);
+}
+
+namespace {
+template <auto input> constexpr auto size_le() {
+  return simdutf::utf8_length_from_utf16le(input);
+}
+template <auto input> constexpr auto convert_le() {
+  using namespace simdutf::tests::helpers;
+  CTString<char8_t, size_le<input>()> tmp;
+  const auto ret = simdutf::convert_valid_utf16le_to_utf8(input, tmp);
+  if (ret != tmp.size()) {
+    throw "unexpected write size";
+  }
+  return tmp;
+}
+} // namespace
+
+TEST(compile_time_convert_utf16le_to_utf8_with_errors) {
+  using namespace simdutf::tests::helpers;
+  constexpr auto input = u"köttbulle"_utf16le;
+  constexpr auto expected = u8"köttbulle"_utf8;
+  constexpr auto output = convert_le<input>();
+  static_assert(output == expected);
+}
+
 #endif
 
 TEST_MAIN

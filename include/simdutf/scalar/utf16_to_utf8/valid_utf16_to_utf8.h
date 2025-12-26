@@ -6,30 +6,38 @@ namespace scalar {
 namespace {
 namespace utf16_to_utf8 {
 
-template <endianness big_endian>
-inline size_t convert_valid(const char16_t *buf, size_t len,
-                            char *utf8_output) {
-  const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
+template <endianness big_endian, typename InputPtr, typename OutputPtr>
+#if SIMDUTF_CPLUSPLUS20
+  requires(simdutf::detail::indexes_into_utf16<InputPtr> &&
+           simdutf::detail::index_assignable_from_char<OutputPtr>)
+#endif
+simdutf_constexpr23 size_t convert_valid(InputPtr data, size_t len,
+                                         OutputPtr utf8_output) {
   size_t pos = 0;
-  char *start{utf8_output};
+  auto start = utf8_output;
   while (pos < len) {
-    // try to convert the next block of 4 ASCII characters
-    if (pos + 4 <=
-        len) { // if it is safe to read 8 more bytes, check that they are ascii
-      uint64_t v;
-      ::memcpy(&v, data + pos, sizeof(uint64_t));
-      if simdutf_constexpr (!match_system(big_endian)) {
-        v = (v >> 8) | (v << (64 - 8));
-      }
-      if ((v & 0xFF80FF80FF80FF80) == 0) {
-        size_t final_pos = pos + 4;
-        while (pos < final_pos) {
-          *utf8_output++ = !match_system(big_endian)
-                               ? char(u16_swap_bytes(buf[pos]))
-                               : char(buf[pos]);
-          pos++;
+#if SIMDUTF_CPLUSPLUS23
+    if !consteval
+#endif
+    {
+      // try to convert the next block of 4 ASCII characters
+      if (pos + 4 <= len) { // if it is safe to read 8 more bytes, check that
+                            // they are ascii
+        uint64_t v;
+        ::memcpy(&v, data + pos, sizeof(uint64_t));
+        if simdutf_constexpr (!match_system(big_endian)) {
+          v = (v >> 8) | (v << (64 - 8));
         }
-        continue;
+        if ((v & 0xFF80FF80FF80FF80) == 0) {
+          size_t final_pos = pos + 4;
+          while (pos < final_pos) {
+            *utf8_output++ = !match_system(big_endian)
+                                 ? char(u16_swap_bytes(data[pos]))
+                                 : char(data[pos]);
+            pos++;
+          }
+          continue;
+        }
       }
     }
 
