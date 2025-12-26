@@ -1807,18 +1807,34 @@ simdutf_warn_unused size_t convert_utf16_to_utf8_safe(const char16_t *input,
                                                       char *utf8_output,
                                                       size_t utf8_len) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t convert_utf16_to_utf8_safe(
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+convert_utf16_to_utf8_safe(
     std::span<const char16_t> utf16_input,
     detail::output_span_of_byte_like auto &&utf8_output) noexcept {
-  // implementation note: outputspan is a forwarding ref to avoid copying and
-  // allow both lvalues and rvalues. std::span can be copied without problems,
-  // but std::vector should not, and this function should accept both. it will
-  // allow using an owning rvalue ref (example: passing a temporary std::string)
-  // as output, but the user will quickly find out that he has no way of getting
-  // the data out of the object in that case.
-  return convert_utf16_to_utf8_safe(
-      utf16_input.data(), utf16_input.size(),
-      reinterpret_cast<char *>(utf8_output.data()), utf8_output.size());
+      // implementation note: outputspan is a forwarding ref to avoid copying
+      // and allow both lvalues and rvalues. std::span can be copied without
+      // problems, but std::vector should not, and this function should accept
+      // both. it will allow using an owning rvalue ref (example: passing a
+      // temporary std::string) as output, but the user will quickly find out
+      // that he has no way of getting the data out of the object in that case.
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    const full_result r =
+        scalar::utf16_to_utf8::convert_with_errors<endianness::NATIVE, true>(
+            utf16_input.data(), utf16_input.size(), utf8_output.data(),
+            utf8_output.size());
+    if (r.error != error_code::SUCCESS &&
+        r.error != error_code::OUTPUT_BUFFER_TOO_SMALL) {
+      return 0;
+    }
+    return r.output_count;
+  } else
+    #endif
+  {
+    return convert_utf16_to_utf8_safe(
+        utf16_input.data(), utf16_input.size(),
+        reinterpret_cast<char *>(utf8_output.data()), utf8_output.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16

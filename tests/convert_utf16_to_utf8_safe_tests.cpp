@@ -3,10 +3,11 @@
 #include <array>
 #include <vector>
 
-#include <tests/reference/validate_utf16.h>
-#include <tests/helpers/transcode_test_base.h>
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
+#include <tests/helpers/transcode_test_base.h>
+#include <tests/reference/validate_utf16.h>
 
 namespace {
 constexpr std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
@@ -141,5 +142,33 @@ TEST_LOOP(convert_into_3_or_4_UTF8_bytes) {
     ASSERT_TRUE(test.check_size(size_procedure));
   }
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+namespace {
+template <auto input> constexpr auto convert() {
+  using namespace simdutf::tests::helpers;
+  constexpr auto Noutput = simdutf::utf8_length_from_utf16(input);
+  CTString<char8_t, Noutput> output{};
+  const auto ret = simdutf::convert_utf16_to_utf8_safe(input, output);
+  if (ret == 0) {
+    throw "failed conversion";
+  }
+  if (ret != Noutput) {
+    throw "mismatch in write length";
+  }
+  return output;
+}
+} // namespace
+
+TEST(compile_time_convert_utf16_to_utf8_safe) {
+  using namespace simdutf::tests::helpers;
+  constexpr auto input = u"köttbulle"_utf16;
+  constexpr auto expected = u8"köttbulle"_utf8;
+  constexpr auto actual = convert<input>();
+  static_assert(actual == expected);
+}
+
+#endif
 
 TEST_MAIN
