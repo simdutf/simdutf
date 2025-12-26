@@ -2252,7 +2252,7 @@ convert_utf16be_to_utf8_with_errors(
 /**
  * Using native endianness, convert valid UTF-16 string into UTF-8 string.
  *
- * This function assumes that the input string is valid UTF-16LE.
+ * This function assumes that the input string is valid UTF-16.
  *
  * This function is not BOM-aware.
  *
@@ -2265,12 +2265,21 @@ convert_utf16be_to_utf8_with_errors(
 simdutf_warn_unused size_t convert_valid_utf16_to_utf8(
     const char16_t *input, size_t length, char *utf8_buffer) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf16_to_utf8(
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+convert_valid_utf16_to_utf8(
     std::span<const char16_t> valid_utf16_input,
     detail::output_span_of_byte_like auto &&utf8_output) noexcept {
-  return convert_valid_utf16_to_utf8(
-      valid_utf16_input.data(), valid_utf16_input.size(),
-      reinterpret_cast<char *>(utf8_output.data()));
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16_to_utf8::convert_valid<endianness::NATIVE>(
+        valid_utf16_input.data(), valid_utf16_input.size(), utf8_output.data());
+  } else
+    #endif
+  {
+    return convert_valid_utf16_to_utf8(
+        valid_utf16_input.data(), valid_utf16_input.size(),
+        reinterpret_cast<char *>(utf8_output.data()));
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
@@ -2396,8 +2405,7 @@ convert_valid_utf16be_to_latin1(
 /**
  * Convert valid UTF-16LE string into UTF-8 string.
  *
- * This function assumes that the input string is valid UTF-16LE and that it can
- * be represented as Latin1.
+ * This function assumes that the input string is valid UTF-16LE
  *
  * This function is not BOM-aware.
  *
@@ -2410,12 +2418,21 @@ convert_valid_utf16be_to_latin1(
 simdutf_warn_unused size_t convert_valid_utf16le_to_utf8(
     const char16_t *input, size_t length, char *utf8_buffer) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf16le_to_utf8(
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+convert_valid_utf16le_to_utf8(
     std::span<const char16_t> valid_utf16_input,
     detail::output_span_of_byte_like auto &&utf8_output) noexcept {
-  return convert_valid_utf16le_to_utf8(
-      valid_utf16_input.data(), valid_utf16_input.size(),
-      reinterpret_cast<char *>(utf8_output.data()));
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16_to_utf8::convert_valid<endianness::NATIVE>(
+        valid_utf16_input.data(), valid_utf16_input.size(), utf8_output.data());
+  } else
+    #endif
+  {
+    return convert_valid_utf16le_to_utf8(
+        valid_utf16_input.data(), valid_utf16_input.size(),
+        reinterpret_cast<char *>(utf8_output.data()));
+  }
 }
   #endif // SIMDUTF_SPAN
 
@@ -2435,12 +2452,21 @@ simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf16le_to_utf8(
 simdutf_warn_unused size_t convert_valid_utf16be_to_utf8(
     const char16_t *input, size_t length, char *utf8_buffer) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t convert_valid_utf16be_to_utf8(
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+convert_valid_utf16be_to_utf8(
     std::span<const char16_t> valid_utf16_input,
     detail::output_span_of_byte_like auto &&utf8_output) noexcept {
-  return convert_valid_utf16be_to_utf8(
-      valid_utf16_input.data(), valid_utf16_input.size(),
-      reinterpret_cast<char *>(utf8_output.data()));
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16_to_utf8::convert_valid<endianness::BIG>(
+        valid_utf16_input.data(), valid_utf16_input.size(), utf8_output.data());
+  } else
+    #endif
+  {
+    return convert_valid_utf16be_to_utf8(
+        valid_utf16_input.data(), valid_utf16_input.size(),
+        reinterpret_cast<char *>(utf8_output.data()));
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
