@@ -88,41 +88,52 @@ simdutf_constexpr23 size_t convert(InputPtr data, size_t len,
   return utf8_output - start;
 }
 
-template <endianness big_endian, bool check_output = false>
-inline full_result convert_with_errors(const char16_t *buf, size_t len,
-                                       char *utf8_output, size_t utf8_len = 0) {
-  const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
+template <endianness big_endian, bool check_output = false, typename InputPtr,
+          typename OutputPtr>
+#if SIMDUTF_CPLUSPLUS20
+  requires(simdutf::detail::indexes_into_utf16<InputPtr> &&
+           simdutf::detail::index_assignable_from_char<OutputPtr>)
+#endif
+simdutf_constexpr23 full_result convert_with_errors(InputPtr data, size_t len,
+                                                    OutputPtr utf8_output,
+                                                    size_t utf8_len = 0) {
   if (check_output && utf8_len == 0) {
     return full_result(error_code::OUTPUT_BUFFER_TOO_SMALL, 0, 0);
   }
 
   size_t pos = 0;
-  char *start{utf8_output};
-  char *end{utf8_output + utf8_len};
+  auto start = utf8_output;
+  auto end = utf8_output + utf8_len;
 
   while (pos < len) {
-    // try to convert the next block of 8 bytes
-    if (pos + 4 <=
-        len) { // if it is safe to read 8 more bytes, check that they are ascii
-      uint64_t v;
-      ::memcpy(&v, data + pos, sizeof(uint64_t));
-      if simdutf_constexpr (!match_system(big_endian))
-        v = (v >> 8) | (v << (64 - 8));
-      if ((v & 0xFF80FF80FF80FF80) == 0) {
-        size_t final_pos = pos + 4;
-        while (pos < final_pos) {
-          *utf8_output++ = !match_system(big_endian)
-                               ? char(u16_swap_bytes(buf[pos]))
-                               : char(buf[pos]);
-          pos++;
-          if (check_output && size_t(end - utf8_output) == 0) {
-            return full_result(error_code::OUTPUT_BUFFER_TOO_SMALL, pos,
-                               utf8_output - start);
+#if SIMDUTF_CPLUSPLUS23
+    if !consteval
+#endif
+    {
+      // try to convert the next block of 8 bytes
+      if (pos + 4 <= len) { // if it is safe to read 8 more bytes, check that
+                            // they are ascii
+        uint64_t v;
+        ::memcpy(&v, data + pos, sizeof(uint64_t));
+        if simdutf_constexpr (!match_system(big_endian))
+          v = (v >> 8) | (v << (64 - 8));
+        if ((v & 0xFF80FF80FF80FF80) == 0) {
+          size_t final_pos = pos + 4;
+          while (pos < final_pos) {
+            *utf8_output++ = !match_system(big_endian)
+                                 ? char(u16_swap_bytes(data[pos]))
+                                 : char(data[pos]);
+            pos++;
+            if (check_output && size_t(end - utf8_output) == 0) {
+              return full_result(error_code::OUTPUT_BUFFER_TOO_SMALL, pos,
+                                 utf8_output - start);
+            }
           }
+          continue;
         }
-        continue;
       }
     }
+
     uint16_t word =
         !match_system(big_endian) ? u16_swap_bytes(data[pos]) : data[pos];
     if ((word & 0xFF80) == 0) {
