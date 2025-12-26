@@ -168,6 +168,51 @@ constexpr auto valid_utf8_to_utf16() {
   return tmp;
 }
 
+namespace detail {
+template <auto input> constexpr auto utf8_length_from_utf16_helper() {
+  if constexpr (decltype(input)::endianness == std::endian::little) {
+    return simdutf::utf8_length_from_utf16le(input);
+  } else {
+    return simdutf::utf8_length_from_utf16be(input);
+  }
+}
+} // namespace detail
+
+template <auto input, bool with_errors> constexpr auto valid_utf16_to_utf8() {
+  using namespace simdutf::tests::helpers;
+  constexpr auto Nout = detail::utf8_length_from_utf16_helper<input>();
+  CTString<char8_t, Nout> tmp{};
+  std::size_t N;
+  if constexpr (decltype(input)::endianness == std::endian::little) {
+    N = simdutf::convert_valid_utf16le_to_utf8(input, tmp);
+  } else {
+    N = simdutf::convert_valid_utf16be_to_utf8(input, tmp);
+  }
+  if (N != input.size()) {
+    throw "oops";
+  }
+  return tmp;
+}
+
+template <auto input, bool with_errors> constexpr auto utf16_to_utf8() {
+  using namespace simdutf::tests::helpers;
+  constexpr auto Nout = detail::utf8_length_from_utf16_helper<input>();
+  CTString<char8_t, Nout> tmp{};
+  std::size_t N;
+  if constexpr (decltype(input)::endianness == std::endian::little) {
+    N = simdutf::convert_utf16le_to_utf8(input, tmp);
+  } else {
+    N = simdutf::convert_utf16be_to_utf8(input, tmp);
+  }
+  if (N == 0) {
+    throw "failed";
+  }
+  if (N != tmp.size()) {
+    throw "oops";
+  }
+  return tmp;
+}
+
 } // namespace helpers
 } // namespace tests
 } // namespace simdutf
