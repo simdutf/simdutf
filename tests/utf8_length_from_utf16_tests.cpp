@@ -103,4 +103,31 @@ TEST(issue002) {
 #endif
 }
 
+TEST(bug_found_in_release_7_7_0) {
+
+  // this is invalid input in native endian, such that
+  // utf8_length_from_utf16_with_replacement happens to give a different answer
+  // than utf8_length_from_utf16. It is implementation defined what
+  // utf8_length_from_utf16 gives, but it is sufficient to demonstrate the bug
+  // to prove the bug in the current implementation.
+
+  const std::vector<char16_t> input = {0xD800, 0xDC00, 0xDFFF, 0xD800, 0xDC00};
+  const bool valid = simdutf::validate_utf16(input.data(), input.size());
+  ASSERT_FALSE(valid);
+
+  const auto native_length =
+      simdutf::utf8_length_from_utf16(input.data(), input.size());
+  const auto be_length =
+      simdutf::utf8_length_from_utf16be(input.data(), input.size());
+  const auto le_length =
+      simdutf::utf8_length_from_utf16le(input.data(), input.size());
+#if SIMDUTF_IS_BIG_ENDIAN
+  ASSERT_EQUAL(native_length, be_length);
+  (void)le_length;
+#else
+  (void)be_length;
+  ASSERT_EQUAL(native_length, le_length);
+#endif
+}
+
 TEST_MAIN

@@ -2161,8 +2161,7 @@ simdutf_warn_unused size_t utf8_length_from_latin1(const char *buf,
 simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t *input,
                                                   size_t length) noexcept {
   #if SIMDUTF_IS_BIG_ENDIAN
-  result r = utf8_length_from_utf16be_with_replacement(input, length);
-  return r.count;
+  return utf8_length_from_utf16be(input, length);
   #else
   return utf8_length_from_utf16le(input, length);
   #endif
