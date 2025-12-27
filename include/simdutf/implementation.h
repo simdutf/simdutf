@@ -104,6 +104,11 @@ concept indexes_into_utf16 = requires(InputPtr p) {
   { std::decay_t<decltype(p[0])>{} } -> std::same_as<char16_t>;
 };
 template <class InputPtr>
+concept indexes_into_utf32 = requires(InputPtr p) {
+  { std::decay_t<decltype(p[0])>{} } -> std::same_as<char32_t>;
+};
+
+template <class InputPtr>
 concept index_assignable_from_char = requires(InputPtr p, char s) {
   { p[0] = s };
 };
@@ -2940,11 +2945,20 @@ simdutf_warn_unused size_t convert_utf32_to_utf8(const char32_t *input,
                                                  size_t length,
                                                  char *utf8_buffer) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t convert_utf32_to_utf8(
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+convert_utf32_to_utf8(
     std::span<const char32_t> utf32_input,
     detail::output_span_of_byte_like auto &&utf8_output) noexcept {
-  return convert_utf32_to_utf8(utf32_input.data(), utf32_input.size(),
-                               reinterpret_cast<char *>(utf8_output.data()));
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf32_to_utf8::convert(
+        utf32_input.data(), utf32_input.size(), utf8_output.data());
+  } else
+    #endif
+  {
+    return convert_utf32_to_utf8(utf32_input.data(), utf32_input.size(),
+                                 reinterpret_cast<char *>(utf8_output.data()));
+  }
 }
   #endif // SIMDUTF_SPAN
 
@@ -3410,10 +3424,18 @@ change_endianness_utf16(std::span<const char16_t> utf16_input,
 simdutf_warn_unused size_t utf8_length_from_utf32(const char32_t *input,
                                                   size_t length) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
 utf8_length_from_utf32(std::span<const char32_t> valid_utf32_input) noexcept {
-  return utf8_length_from_utf32(valid_utf32_input.data(),
-                                valid_utf32_input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf32::utf8_length_from_utf32(valid_utf32_input.data(),
+                                                 valid_utf32_input.size());
+  } else
+    #endif
+  {
+    return utf8_length_from_utf32(valid_utf32_input.data(),
+                                  valid_utf32_input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32

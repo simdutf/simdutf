@@ -50,9 +50,9 @@ validate_with_errors(const char32_t *buf, size_t len) noexcept {
   return validate_with_errors(reinterpret_cast<const uint32_t *>(buf), len);
 }
 
-inline size_t utf8_length_from_utf32(const char32_t *buf, size_t len) {
+inline simdutf_constexpr23 size_t utf8_length_from_utf32(const char32_t *p,
+                                                         size_t len) {
   // We are not BOM aware.
-  const uint32_t *p = reinterpret_cast<const uint32_t *>(buf);
   size_t counter{0};
   for (size_t i = 0; i < len; i++) {
     // credit: @ttsugriy  for the vectorizable approach
