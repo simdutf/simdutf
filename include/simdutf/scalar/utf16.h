@@ -76,7 +76,7 @@ validate_with_errors(const char16_t *data, size_t len) noexcept {
 }
 
 template <endianness big_endian>
-inline size_t count_code_points(const char16_t *p, size_t len) {
+simdutf_constexpr23 size_t count_code_points(const char16_t *p, size_t len) {
   // We are not BOM aware.
   size_t counter{0};
   for (size_t i = 0; i < len; i++) {

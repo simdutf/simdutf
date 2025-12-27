@@ -3,6 +3,7 @@
 #include <array>
 #include <vector>
 
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/random_utf16.h>
 #include <tests/helpers/test.h>
@@ -50,5 +51,14 @@ TEST_LOOP(count_2_UTF16_words) {
     ASSERT_EQUAL(count, utf16_count);
   }
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+TEST(compile_time_count_utf16be) {
+  using namespace simdutf::tests::helpers;
+
+  static_assert(simdutf::count_utf16be(u"köttbulle"_utf16be) == 9);
+}
+#endif
 
 TEST_MAIN

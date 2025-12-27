@@ -2,6 +2,7 @@
 
 #include <array>
 
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/random_utf16.h>
 #include <tests/helpers/test.h>
@@ -41,5 +42,20 @@ TEST_LOOP(count_2_UTF16_words) {
                  generated.second);
   }
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+TEST(compile_time_count_utf16) {
+  using namespace simdutf::tests::helpers;
+
+  static_assert(simdutf::count_utf16(u"köttbulle"_utf16) == 9);
+}
+
+TEST(compile_time_count_utf16le) {
+  using namespace simdutf::tests::helpers;
+
+  static_assert(simdutf::count_utf16(u"köttbulle"_utf16le) == 9);
+}
+#endif
 
 TEST_MAIN
