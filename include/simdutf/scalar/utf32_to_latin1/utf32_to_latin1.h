@@ -25,23 +25,29 @@ inline simdutf_constexpr23 size_t convert(const char32_t *data, size_t len,
   return latin1_output - start;
 }
 
-inline result convert_with_errors(const char32_t *buf, size_t len,
-                                  char *latin1_output) {
-  const uint32_t *data = reinterpret_cast<const uint32_t *>(buf);
+inline simdutf_constexpr23 result convert_with_errors(const char32_t *data,
+                                                      size_t len,
+                                                      char *latin1_output) {
   char *start{latin1_output};
   size_t pos = 0;
   while (pos < len) {
-    if (pos + 2 <=
-        len) { // if it is safe to read 8 more bytes, check that they are Latin1
-      uint64_t v;
-      ::memcpy(&v, data + pos, sizeof(uint64_t));
-      if ((v & 0xFFFFFF00FFFFFF00) == 0) {
-        *latin1_output++ = char(buf[pos]);
-        *latin1_output++ = char(buf[pos + 1]);
-        pos += 2;
-        continue;
+#if SIMDUTF_CPLUSPLUS23
+    if !consteval
+#endif
+    {
+      if (pos + 2 <= len) { // if it is safe to read 8 more bytes, check that
+                            // they are Latin1
+        uint64_t v;
+        ::memcpy(&v, data + pos, sizeof(uint64_t));
+        if ((v & 0xFFFFFF00FFFFFF00) == 0) {
+          *latin1_output++ = char(data[pos]);
+          *latin1_output++ = char(data[pos + 1]);
+          pos += 2;
+          continue;
+        }
       }
     }
+
     uint32_t utf32_char = data[pos];
     if ((utf32_char & 0xFFFFFF00) ==
         0) { // Check if the character can be represented in Latin-1
