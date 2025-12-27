@@ -1502,9 +1502,8 @@ simdutf_warn_unused size_t convert_latin1_to_utf32(
   return get_default_implementation()->convert_latin1_to_utf32(buf, len,
                                                                latin1_output);
 }
-simdutf_warn_unused size_t latin1_length_from_utf32(size_t length) noexcept {
-  return length;
-}
+// moved to the header file
+// simdutf_warn_unused size_t latin1_length_from_utf32(size_t length) noexcept
 simdutf_warn_unused size_t utf32_length_from_latin1(size_t length) noexcept {
   return length;
 }

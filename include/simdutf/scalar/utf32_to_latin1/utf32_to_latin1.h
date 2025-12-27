@@ -6,8 +6,8 @@ namespace scalar {
 namespace {
 namespace utf32_to_latin1 {
 
-inline size_t convert(const char32_t *buf, size_t len, char *latin1_output) {
-  const uint32_t *data = reinterpret_cast<const uint32_t *>(buf);
+inline simdutf_constexpr23 size_t convert(const char32_t *data, size_t len,
+                                          char *latin1_output) {
   char *start = latin1_output;
   uint32_t utf32_char;
   size_t pos = 0;
