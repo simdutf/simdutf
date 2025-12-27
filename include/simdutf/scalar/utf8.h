@@ -275,8 +275,12 @@ simdutf_constexpr23 size_t utf16_length_from_utf8(InputPtr data, size_t len) {
   return counter;
 }
 
-simdutf_warn_unused inline size_t trim_partial_utf8(const char *input,
-                                                    size_t length) {
+template <typename InputPtr>
+#if SIMDUTF_CPLUSPLUS20
+  requires simdutf::detail::indexes_into_byte_like<InputPtr>
+#endif
+simdutf_warn_unused simdutf_constexpr23 size_t
+trim_partial_utf8(InputPtr input, size_t length) {
   if (length < 3) {
     switch (length) {
     case 2:

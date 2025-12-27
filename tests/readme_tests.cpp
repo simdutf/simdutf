@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/test.h>
 
 TEST(base64_fun) {
@@ -230,5 +231,17 @@ TEST(error_location_badutf8_transcoding) {
   ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
   ASSERT_EQUAL(res.count, 3);
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+TEST(compile_time_trim_partial_utf8) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto str = u8"\xc3\xa9\xc3\xa9\x20\xff\xc3\xa9"_utf8;
+  constexpr auto compile_time = simdutf::trim_partial_utf8(str);
+  const auto runtime = simdutf::trim_partial_utf8(str);
+  ASSERT_EQUAL(compile_time, runtime);
+}
+#endif
 
 TEST_MAIN
