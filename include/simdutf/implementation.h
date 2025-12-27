@@ -3243,7 +3243,10 @@ latin1_length_from_utf32(size_t length) noexcept {
  * @return the length of the string in 4-byte code units (char32_t) required to
  * encode the Latin1 string as UTF-32
  */
-simdutf_warn_unused size_t utf32_length_from_latin1(size_t length) noexcept;
+simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 size_t
+utf32_length_from_latin1(size_t length) noexcept {
+  return length;
+}
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32

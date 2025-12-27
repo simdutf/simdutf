@@ -57,6 +57,10 @@ TEST(compile_time_convert_latin1_to_utf32) {
   static_assert(output == expected);
 }
 
+TEST(compile_time_utf32_length_from_latin1) {
+  static_assert(simdutf::utf32_length_from_latin1(42) == 42);
+}
+
 #endif
 
 TEST_MAIN

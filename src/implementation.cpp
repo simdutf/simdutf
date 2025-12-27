@@ -1504,9 +1504,7 @@ simdutf_warn_unused size_t convert_latin1_to_utf32(
 }
 // moved to the header file
 // simdutf_warn_unused size_t latin1_length_from_utf32(size_t length) noexcept
-simdutf_warn_unused size_t utf32_length_from_latin1(size_t length) noexcept {
-  return length;
-}
+// simdutf_warn_unused size_t utf32_length_from_latin1(size_t length) noexcept
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
