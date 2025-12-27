@@ -3119,12 +3119,21 @@ convert_utf32_to_utf16le(std::span<const char32_t> utf32_input,
 simdutf_warn_unused size_t convert_utf32_to_latin1(
     const char32_t *input, size_t length, char *latin1_buffer) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t convert_utf32_to_latin1(
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+convert_utf32_to_latin1(
     std::span<const char32_t> utf32_input,
     detail::output_span_of_byte_like auto &&latin1_output) noexcept {
-  return convert_utf32_to_latin1(
-      utf32_input.data(), utf32_input.size(),
-      reinterpret_cast<char *>(latin1_output.data()));
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf32_to_latin1::convert(
+        utf32_input.data(), utf32_input.size(), latin1_output.data());
+  } else
+    #endif
+  {
+    return convert_utf32_to_latin1(
+        utf32_input.data(), utf32_input.size(),
+        reinterpret_cast<char *>(latin1_output.data()));
+  }
 }
   #endif // SIMDUTF_SPAN
 
@@ -3213,7 +3222,10 @@ convert_valid_utf32_to_latin1(
  * @param length        the length of the string in 4-byte code units (char32_t)
  * @return the number of bytes required to encode the UTF-32 string as Latin1
  */
-simdutf_warn_unused size_t latin1_length_from_utf32(size_t length) noexcept;
+simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 size_t
+latin1_length_from_utf32(size_t length) noexcept {
+  return length;
+}
 
 /**
  * Compute the number of bytes that this Latin1 string would require in UTF-32
