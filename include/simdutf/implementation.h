@@ -3709,9 +3709,17 @@ utf32_length_from_utf16be(
 simdutf_warn_unused size_t count_utf16(const char16_t *input,
                                        size_t length) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
 count_utf16(std::span<const char16_t> valid_utf16_input) noexcept {
-  return count_utf16(valid_utf16_input.data(), valid_utf16_input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16::count_code_points<endianness::NATIVE>(
+        valid_utf16_input.data(), valid_utf16_input.size());
+  } else
+    #endif
+  {
+    return count_utf16(valid_utf16_input.data(), valid_utf16_input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 
@@ -3732,9 +3740,17 @@ count_utf16(std::span<const char16_t> valid_utf16_input) noexcept {
 simdutf_warn_unused size_t count_utf16le(const char16_t *input,
                                          size_t length) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
 count_utf16le(std::span<const char16_t> valid_utf16_input) noexcept {
-  return count_utf16le(valid_utf16_input.data(), valid_utf16_input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16::count_code_points<endianness::LITTLE>(
+        valid_utf16_input.data(), valid_utf16_input.size());
+  } else
+    #endif
+  {
+    return count_utf16le(valid_utf16_input.data(), valid_utf16_input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 
@@ -3755,9 +3771,17 @@ count_utf16le(std::span<const char16_t> valid_utf16_input) noexcept {
 simdutf_warn_unused size_t count_utf16be(const char16_t *input,
                                          size_t length) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
 count_utf16be(std::span<const char16_t> valid_utf16_input) noexcept {
-  return count_utf16be(valid_utf16_input.data(), valid_utf16_input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16::count_code_points<endianness::BIG>(
+        valid_utf16_input.data(), valid_utf16_input.size());
+  } else
+    #endif
+  {
+    return count_utf16be(valid_utf16_input.data(), valid_utf16_input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF16
