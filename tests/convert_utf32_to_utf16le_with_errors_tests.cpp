@@ -187,6 +187,29 @@ TEST(compile_time_convert_utf32_to_utf16_with_errors) {
   static_assert(output == expected);
 }
 
+namespace {
+
+template <auto input> constexpr auto convert_le() {
+  using namespace simdutf::tests::helpers;
+  CTString<char16_t, size<input>(), std::endian::little> tmp;
+  const auto ret = simdutf::convert_utf32_to_utf16le_with_errors(input, tmp);
+  if (ret.count != tmp.size()) {
+    throw "unexpected write size";
+  }
+  return tmp;
+}
+} // namespace
+
+TEST(compile_time_convert_utf32_to_utf16le_with_errors) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = U"köttbulle"_utf32;
+  constexpr auto expected = u"köttbulle"_utf16le;
+  constexpr bool with_errors = true;
+  constexpr auto output = convert_le<input>();
+  static_assert(output == expected);
+}
+
 #endif
 
 TEST_MAIN
