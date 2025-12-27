@@ -43,9 +43,8 @@ simdutf_constexpr23 size_t convert(const char16_t *data, size_t len,
 }
 
 template <endianness big_endian>
-inline result convert_with_errors(const char16_t *buf, size_t len,
-                                  char32_t *utf32_output) {
-  const uint16_t *data = reinterpret_cast<const uint16_t *>(buf);
+simdutf_constexpr23 result convert_with_errors(const char16_t *data, size_t len,
+                                               char32_t *utf32_output) {
   size_t pos = 0;
   char32_t *start{utf32_output};
   while (pos < len) {
