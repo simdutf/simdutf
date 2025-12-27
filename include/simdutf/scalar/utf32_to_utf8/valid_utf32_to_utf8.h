@@ -6,24 +6,33 @@ namespace scalar {
 namespace {
 namespace utf32_to_utf8 {
 
-inline size_t convert_valid(const char32_t *buf, size_t len,
-                            char *utf8_output) {
-  const uint32_t *data = reinterpret_cast<const uint32_t *>(buf);
+template <typename InputPtr, typename OutputPtr>
+#if SIMDUTF_CPLUSPLUS20
+  requires(simdutf::detail::indexes_into_utf32<InputPtr> &&
+           simdutf::detail::index_assignable_from_char<OutputPtr>)
+#endif
+simdutf_constexpr23 size_t convert_valid(InputPtr data, size_t len,
+                                         OutputPtr utf8_output) {
   size_t pos = 0;
-  char *start{utf8_output};
+  auto start = utf8_output;
   while (pos < len) {
-    // try to convert the next block of 2 ASCII characters
-    if (pos + 2 <=
-        len) { // if it is safe to read 8 more bytes, check that they are ascii
-      uint64_t v;
-      ::memcpy(&v, data + pos, sizeof(uint64_t));
-      if ((v & 0xFFFFFF80FFFFFF80) == 0) {
-        *utf8_output++ = char(buf[pos]);
-        *utf8_output++ = char(buf[pos + 1]);
-        pos += 2;
-        continue;
+#if SIMDUTF_CPLUSPLUS23
+    if !consteval
+#endif
+    { // try to convert the next block of 2 ASCII characters
+      if (pos + 2 <= len) { // if it is safe to read 8 more bytes, check that
+                            // they are ascii
+        uint64_t v;
+        ::memcpy(&v, data + pos, sizeof(uint64_t));
+        if ((v & 0xFFFFFF80FFFFFF80) == 0) {
+          *utf8_output++ = char(data[pos]);
+          *utf8_output++ = char(data[pos + 1]);
+          pos += 2;
+          continue;
+        }
       }
     }
+
     uint32_t word = data[pos];
     if ((word & 0xFFFFFF80) == 0) {
       // will generate one UTF-8 bytes
