@@ -242,6 +242,33 @@ TEST(compile_time_trim_partial_utf8) {
   const auto runtime = simdutf::trim_partial_utf8(str);
   ASSERT_EQUAL(compile_time, runtime);
 }
+
+TEST(compile_time_trim_partial_utf16) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto str = u"\xd800"_utf16;
+  constexpr auto compile_time = simdutf::trim_partial_utf16(str);
+  const auto runtime = simdutf::trim_partial_utf16(str);
+  ASSERT_EQUAL(compile_time, runtime);
+}
+
+TEST(compile_time_trim_partial_utf16le) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto str = u"\xd800"_utf16le;
+  constexpr auto compile_time = simdutf::trim_partial_utf16le(str);
+  const auto runtime = simdutf::trim_partial_utf16le(str);
+  ASSERT_EQUAL(compile_time, runtime);
+}
+
+TEST(compile_time_trim_partial_utf16be) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto str = u"\xd800"_utf16be;
+  constexpr auto compile_time = simdutf::trim_partial_utf16be(str);
+  const auto runtime = simdutf::trim_partial_utf16be(str);
+  ASSERT_EQUAL(compile_time, runtime);
+}
 #endif
 
 TEST_MAIN

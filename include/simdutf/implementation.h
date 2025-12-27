@@ -3869,10 +3869,18 @@ trim_partial_utf8(
 simdutf_warn_unused size_t trim_partial_utf16be(const char16_t *input,
                                                 size_t length);
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
 trim_partial_utf16be(std::span<const char16_t> valid_utf16_input) noexcept {
-  return trim_partial_utf16be(valid_utf16_input.data(),
-                              valid_utf16_input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16::trim_partial_utf16<endianness::BIG>(
+        valid_utf16_input.data(), valid_utf16_input.size());
+  } else
+    #endif
+  {
+    return trim_partial_utf16be(valid_utf16_input.data(),
+                                valid_utf16_input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 
@@ -3893,10 +3901,18 @@ trim_partial_utf16be(std::span<const char16_t> valid_utf16_input) noexcept {
 simdutf_warn_unused size_t trim_partial_utf16le(const char16_t *input,
                                                 size_t length);
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
 trim_partial_utf16le(std::span<const char16_t> valid_utf16_input) noexcept {
-  return trim_partial_utf16le(valid_utf16_input.data(),
-                              valid_utf16_input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16::trim_partial_utf16<endianness::LITTLE>(
+        valid_utf16_input.data(), valid_utf16_input.size());
+  } else
+    #endif
+  {
+    return trim_partial_utf16le(valid_utf16_input.data(),
+                                valid_utf16_input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 
@@ -3917,9 +3933,18 @@ trim_partial_utf16le(std::span<const char16_t> valid_utf16_input) noexcept {
 simdutf_warn_unused size_t trim_partial_utf16(const char16_t *input,
                                               size_t length);
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
 trim_partial_utf16(std::span<const char16_t> valid_utf16_input) noexcept {
-  return trim_partial_utf16(valid_utf16_input.data(), valid_utf16_input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16::trim_partial_utf16<endianness::NATIVE>(
+        valid_utf16_input.data(), valid_utf16_input.size());
+  } else
+    #endif
+  {
+    return trim_partial_utf16(valid_utf16_input.data(),
+                              valid_utf16_input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF16
