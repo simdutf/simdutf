@@ -16,20 +16,26 @@ simdutf_constexpr23 simdutf_warn_unused bool validate(BytePtr data,
   uint64_t pos = 0;
   uint32_t code_point = 0;
   while (pos < len) {
-    // check of the next 16 bytes are ascii.
-    uint64_t next_pos = pos + 16;
-    if (next_pos <=
-        len) { // if it is safe to read 16 more bytes, check that they are ascii
-      uint64_t v1{};
-      std::memcpy(&v1, data + pos, sizeof(uint64_t));
-      uint64_t v2{};
-      std::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
-      uint64_t v{v1 | v2};
-      if ((v & 0x8080808080808080) == 0) {
-        pos = next_pos;
-        continue;
+    uint64_t next_pos;
+#if SIMDUTF_CPLUSPLUS23
+    if !consteval
+#endif
+    { // check if the next 16 bytes are ascii.
+      next_pos = pos + 16;
+      if (next_pos <= len) { // if it is safe to read 16 more bytes, check
+                             // that they are ascii
+        uint64_t v1{};
+        std::memcpy(&v1, data + pos, sizeof(uint64_t));
+        uint64_t v2{};
+        std::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
+        uint64_t v{v1 | v2};
+        if ((v & 0x8080808080808080) == 0) {
+          pos = next_pos;
+          continue;
+        }
       }
     }
+
     unsigned char byte = data[pos];
 
     while (byte < 0b10000000) {

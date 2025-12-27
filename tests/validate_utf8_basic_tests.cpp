@@ -3,6 +3,8 @@
 #if SIMDUTF_CPLUSPLUS17
   #include <string_view>
 #endif
+
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/test.h>
 
 // https://github.com/nodejs/node/issues/48995
@@ -130,7 +132,8 @@ TEST(good_bad_sequences) {
 }
 
 #if SIMDUTF_CPLUSPLUS23
-void compiletime() {
+
+TEST(compile_time_validation_goodsequences) {
   static_assert(std::ranges::all_of(goodsequences, [](std::string_view v) {
     return simdutf::validate_utf8(v);
   }));
@@ -142,6 +145,34 @@ TEST(compile_time_validation_badsequences) {
     return simdutf::validate_utf8(v);
   }));
 }
+
+TEST(compile_time_validation_casts_of_good) {
+
+  using namespace simdutf::tests::helpers;
+  constexpr auto good = u8"My favourite dish is köttbullar"_utf8;
+  static_assert(simdutf::validate_utf8(good));
+  static_assert(simdutf::validate_utf8(good.as_array<std::int8_t>()));
+  static_assert(simdutf::validate_utf8(good.as_array<std::uint8_t>()));
+  static_assert(simdutf::validate_utf8(good.as_array<std::byte>()));
+}
+
+TEST(compile_time_validation_casts_of_bad) {
+
+  using namespace simdutf::tests::helpers;
+
+  // this is the emoji U+1F373 COOKING
+  constexpr auto good = u8"\U0001F373"_utf8;
+  static_assert(simdutf::validate_utf8(good));
+
+  // cut off the last byte to make it bad
+  constexpr auto bad = good.shrink<good.size() - 1>();
+
+  static_assert(not simdutf::validate_utf8(bad));
+  static_assert(not simdutf::validate_utf8(bad.as_array<std::int8_t>()));
+  static_assert(not simdutf::validate_utf8(bad.as_array<std::uint8_t>()));
+  static_assert(not simdutf::validate_utf8(bad.as_array<std::byte>()));
+}
+
 #endif
 
 TEST_MAIN
