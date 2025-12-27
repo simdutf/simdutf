@@ -18,8 +18,7 @@ simdutf_constexpr23 size_t convert_valid(InputPtr data, size_t len,
 #if SIMDUTF_CPLUSPLUS23
     if !consteval
 #endif
-    {
-      // try to convert the next block of 8 ASCII bytes
+    {                       // try to convert the next block of 8 ASCII bytes
       if (pos + 8 <= len) { // if it is safe to read 8 more bytes, check that
                             // they are ascii
         uint64_t v;
@@ -27,7 +26,7 @@ simdutf_constexpr23 size_t convert_valid(InputPtr data, size_t len,
         if ((v & 0x8080808080808080) == 0) {
           size_t final_pos = pos + 8;
           while (pos < final_pos) {
-            const char16_t byte = uint32_t(data[pos]);
+            const char16_t byte = uint8_t(data[pos]);
             *utf16_output++ =
                 !match_system(big_endian) ? u16_swap_bytes(byte) : byte;
             pos++;
@@ -36,6 +35,7 @@ simdutf_constexpr23 size_t convert_valid(InputPtr data, size_t len,
         }
       }
     }
+
     auto leading_byte = uint8_t(data[pos]); // leading byte
     if (leading_byte < 0b10000000) {
       // converting one ASCII byte !!!
