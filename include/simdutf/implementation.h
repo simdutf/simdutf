@@ -3833,11 +3833,20 @@ simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t count_utf8(
  */
 simdutf_warn_unused size_t trim_partial_utf8(const char *input, size_t length);
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t trim_partial_utf8(
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+trim_partial_utf8(
     const detail::input_span_of_byte_like auto &valid_utf8_input) noexcept {
-  return trim_partial_utf8(
-      reinterpret_cast<const char *>(valid_utf8_input.data()),
-      valid_utf8_input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf8::trim_partial_utf8(valid_utf8_input.data(),
+                                           valid_utf8_input.size());
+  } else
+    #endif
+  {
+    return trim_partial_utf8(
+        reinterpret_cast<const char *>(valid_utf8_input.data()),
+        valid_utf8_input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF8
