@@ -20,6 +20,7 @@ simdutf: Text processing at billions of characters per second [![Alpine Linux](h
   - [Base64](#base64)
   - [Find](#find)
   - [C++20 and std::span usage in simdutf](#c20-and-stdspan-usage-in-simdutf)
+  - [C++23 and constexpr support](#c23-and-constexpr-support)
   - [The sutf command-line tool](#the-sutf-command-line-tool)
   - [Manual implementation selection](#manual-implementation-selection)
   - [Thread safety](#thread-safety)
@@ -67,6 +68,7 @@ The library compiles down to a small library of a few hundred kilobytes. Our fun
 
 We have exhaustive tests, including an elaborate fuzzing setup. The library has been used in production systems for years.
 
+If using C++23 or newer, there is experimental support for using the library at compile time (constexpr).
 
 Real-World Usage
 -----
@@ -2557,6 +2559,38 @@ size_t written = simdutf::convert_utf16_to_utf8_safe(utf16_input, utf8_output);
 ## Note
 - You are still responsible for providing a sufficiently large output buffer, just as with the pointer/size API.
 
+# C++23 and constexpr support
+
+If using C++23 or newer, it is possible to use the functions in the public api at compile time, with the following exceptions:
+
+  * `atomic_binary_to_base64`
+  * `atomic_base64_to_binary_safe`
+
+The following functions are also not constexpr but expected to be so in a future version:
+
+  * `autodetect_encoding`
+  * `detect_encodings`
+  * `base64_to_binary_safe`
+
+Here is an example:
+
+```cpp
+constexpr std::span s(u8"My favourite dish is köttbullar!");
+static_assert(!simdutf::validate_ascii(s));
+static_assert(simdutf::validate_utf8(s));
+static_assert(s.size() != simdutf::latin1_length_from_utf8(s));
+```
+
+To use the constexpr functionality, your have to go through the span overloads.
+
+The constexpr functionality is tested with `static_assert` in the unit tests which is handy - if it compiled, the unit tests passed!
+
+## Note - the constexpr support is experimental!
+
+The constexpr support is implemented with functions that are already tested and proven. There were however
+modifications made to make it usable at constexpr time. Also, when in a constexpr context, the functions are not invoked exactly
+as during normal dynamic invocation. For this reason, there might have slipped in subtile bugs and the constexpr
+support is considered experimental. Please report any bugs you encounter!
 
 The sutf command-line tool
 ------
