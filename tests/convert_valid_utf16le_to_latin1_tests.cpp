@@ -37,6 +37,22 @@ TEST_LOOP(convert_2_UTF16_bytes) {
 }
 
 #if SIMDUTF_CPLUSPLUS23
+
+namespace {
+template <auto input> constexpr auto size() {
+  return simdutf::latin1_length_from_utf16(input.size());
+}
+template <auto input> constexpr auto convert() {
+  using namespace simdutf::tests::helpers;
+  CTString<char, size<input>()> tmp;
+  const auto ret = simdutf::convert_valid_utf16_to_latin1(input, tmp);
+  if (ret != tmp.size()) {
+    throw "unexpected write size";
+  }
+  return tmp;
+}
+} // namespace
+
 TEST(compile_time_test) {
   using namespace simdutf::tests::helpers;
 
@@ -46,6 +62,8 @@ TEST(compile_time_test) {
   static_assert(to_latin1(u"hello!"_utf16le) == expected);
   static_assert(to_latin1(u"hello!"_utf16be) == expected);
   static_assert(u"hello!"_utf16le[0] != u"hello!"_utf16be[0]);
+
+  static_assert(convert<u"köttbulle"_utf16>() == "k\xF6ttbulle"_latin1);
 }
 
 #endif
