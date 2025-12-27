@@ -1,0 +1,34 @@
+name: Ubuntu 24.04 char signedness
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  ubuntu-build:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        compiler: [g++-14]
+        cppversion: [11, 23]
+        charflag: [-fsigned-char, -funsigned-char]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test ${{matrix.charflag}} C++ ${{matrix.cppversion}}
+        run: |
+          cmake \
+             -DCMAKE_CXX_FLAGS="${{matrix.charflag}}" \
+             -DCMAKE_CXX_COMPILER=${{matrix.compiler}} \
+             -DSIMDUTF_CXX_STANDARD=${{matrix.cppversion}} \
+             -DSIMDUTF_BENCHMARKS=OFF \
+             -DSIMDUTF_FAST_TESTS=On \
+             -DCMAKE_BUILD_TYPE=Release \
+             -GNinja \
+             -B build \
+             -S .
+          cmake --build build
+          ctest -j --output-on-failure --test-dir build

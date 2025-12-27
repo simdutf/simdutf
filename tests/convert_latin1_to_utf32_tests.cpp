@@ -1,8 +1,9 @@
 #include "simdutf.h"
 
-#include <tests/helpers/transcode_test_base.h>
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
+#include <tests/helpers/transcode_test_base.h>
 
 namespace {
 using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
@@ -30,5 +31,36 @@ TEST_LOOP(convert_all_latin1) {
     ASSERT_TRUE(test.check_size(size_procedure));
   }
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+namespace {
+
+template <auto input> constexpr auto convert() {
+  using namespace simdutf::tests::helpers;
+  CTString<char32_t, input.size()> tmp;
+  auto N = simdutf::convert_latin1_to_utf32(input, tmp);
+  if (N != input.size()) {
+    throw "oops";
+  }
+  return tmp;
+}
+
+} // namespace
+
+TEST(compile_time_convert_latin1_to_utf32) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = "hello"_latin1;
+  constexpr auto expected = U"hello"_utf32;
+  constexpr auto output = convert<input>();
+  static_assert(output == expected);
+}
+
+TEST(compile_time_utf32_length_from_latin1) {
+  static_assert(simdutf::utf32_length_from_latin1(42) == 42);
+}
+
+#endif
 
 TEST_MAIN

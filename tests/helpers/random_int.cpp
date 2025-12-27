@@ -1,7 +1,5 @@
 #include "random_int.h"
 
-#include <stdexcept>
-
 namespace simdutf {
 namespace tests {
 namespace helpers {

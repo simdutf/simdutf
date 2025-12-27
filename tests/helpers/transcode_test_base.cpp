@@ -6,7 +6,6 @@
 #endif
 
 #include <stdexcept>
-#include <algorithm>
 #include <string>
 #include <vector>
 #include <array>

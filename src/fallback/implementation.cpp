@@ -443,33 +443,7 @@ simdutf_warn_unused size_t implementation::latin1_length_from_utf8(
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::utf8_length_from_latin1(
     const char *input, size_t length) const noexcept {
-  size_t answer = length;
-  size_t i = 0;
-  auto pop = [](uint64_t v) {
-    return (size_t)(((v >> 7) & UINT64_C(0x0101010101010101)) *
-                        UINT64_C(0x0101010101010101) >>
-                    56);
-  };
-  for (; i + 32 <= length; i += 32) {
-    uint64_t v;
-    memcpy(&v, input + i, 8);
-    answer += pop(v);
-    memcpy(&v, input + i + 8, sizeof(v));
-    answer += pop(v);
-    memcpy(&v, input + i + 16, sizeof(v));
-    answer += pop(v);
-    memcpy(&v, input + i + 24, sizeof(v));
-    answer += pop(v);
-  }
-  for (; i + 8 <= length; i += 8) {
-    uint64_t v;
-    memcpy(&v, input + i, sizeof(v));
-    answer += pop(v);
-  }
-  for (; i + 1 <= length; i += 1) {
-    answer += static_cast<uint8_t>(input[i]) >> 7;
-  }
-  return answer;
+  return scalar::latin1_to_utf8::utf8_length_from_latin1(input, length);
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 

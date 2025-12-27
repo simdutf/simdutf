@@ -3,9 +3,10 @@
 #include <array>
 #include <vector>
 
-#include <tests/helpers/transcode_test_base.h>
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
+#include <tests/helpers/transcode_test_base.h>
 
 namespace {
 std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
@@ -118,5 +119,37 @@ TEST(issue132) {
     }
   }
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+namespace {
+
+template <auto input> constexpr auto get_size() {
+  return simdutf::utf32_length_from_utf8(input);
+}
+
+template <auto input> constexpr auto convert() {
+  using namespace simdutf::tests::helpers;
+  CTString<char32_t, get_size<input>()> output;
+  auto N = simdutf::convert_valid_utf8_to_utf32(input, output);
+  if (N != output.size()) {
+    throw "oops";
+  }
+  return output;
+}
+
+} // namespace
+
+TEST(compile_time_convert_valid_utf8_to_utf32) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = u8"hello I am over 16 byte long"_utf8;
+  constexpr auto expected = U"hello I am over 16 byte long"_utf32;
+  constexpr auto output = convert<input>();
+  static_assert(output.size() == expected.size());
+  static_assert(output == expected);
+}
+
+#endif
 
 TEST_MAIN
