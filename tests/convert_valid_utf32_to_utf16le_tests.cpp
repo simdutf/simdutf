@@ -2,6 +2,7 @@
 
 #include <array>
 
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
@@ -57,5 +58,57 @@ TEST_LOOP(convert_into_2_or_4_UTF16_bytes) {
     ASSERT_TRUE(test(procedure));
   }
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+namespace {
+template <auto input> constexpr auto size() {
+  return simdutf::utf16_length_from_utf32(input);
+}
+template <auto input> constexpr auto convert() {
+  using namespace simdutf::tests::helpers;
+  CTString<char16_t, size<input>()> tmp;
+  const auto ret = simdutf::convert_valid_utf32_to_utf16(input, tmp);
+  if (ret != tmp.size()) {
+    throw "unexpected write size";
+  }
+  return tmp;
+}
+} // namespace
+
+TEST(compile_time_convert_valid_utf32_to_utf16) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = U"köttbulle"_utf32;
+  constexpr auto expected = u"köttbulle"_utf16;
+  constexpr bool with_errors = true;
+  constexpr auto output = convert<input>();
+  static_assert(output == expected);
+}
+
+namespace {
+
+template <auto input> constexpr auto convert_le() {
+  using namespace simdutf::tests::helpers;
+  CTString<char16_t, size<input>(), std::endian::little> tmp;
+  const auto ret = simdutf::convert_valid_utf32_to_utf16le(input, tmp);
+  if (ret != tmp.size()) {
+    throw "unexpected write size";
+  }
+  return tmp;
+}
+} // namespace
+
+TEST(compile_time_convert_valid_utf32_to_utf16le) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = U"köttbulle"_utf32;
+  constexpr auto expected = u"köttbulle"_utf16le;
+  constexpr bool with_errors = true;
+  constexpr auto output = convert_le<input>();
+  static_assert(output == expected);
+}
+
+#endif
 
 TEST_MAIN
