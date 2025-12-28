@@ -28,7 +28,7 @@ jobs:
         run: |
           export QEMU_LD_PREFIX="/usr/loongarch64-linux-gnu"
           export QEMU_CPU="la464"
-          cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains-dev/loongarch64.cmake -B build -DSIMDUTF_FAST_TESTS=On
+          cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains-dev/loongarch64.cmake -B build -DSIMDUTF_FAST_TESTS=On -DSIMDUTF_ENABLE_LASX=On
           cmake --build build -j$(nproc)
       - name: Test
         run: |

@@ -7,8 +7,14 @@
 
 #include "simdutf/portability.h"
 
+// The performance of the LASX implementation is poor on tested
+// Loongson 3A5000 processors. Therefore, we disable it by default.
 #ifndef SIMDUTF_IMPLEMENTATION_LASX
-  #define SIMDUTF_IMPLEMENTATION_LASX (SIMDUTF_IS_LSX) // We detect LASX at runtime
+  #if SIMDUTF_ENABLE_LASX
+    #define SIMDUTF_IMPLEMENTATION_LASX (SIMDUTF_IS_LSX)
+  #else
+    #define SIMDUTF_IMPLEMENTATION_LASX 0
+  #endif
 #endif
 #if SIMDUTF_IMPLEMENTATION_LASX && SIMDUTF_IS_LASX
   #define SIMDUTF_CAN_ALWAYS_RUN_LASX 1
