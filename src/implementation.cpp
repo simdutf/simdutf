@@ -149,16 +149,16 @@ static const rvv::implementation *get_rvv_singleton() {
   return &rvv_singleton;
 }
 #endif
-#if SIMDUTF_IMPLEMENTATION_LSX
-static const lsx::implementation *get_lsx_singleton() {
-  static const lsx::implementation lsx_singleton{};
-  return &lsx_singleton;
-}
-#endif
 #if SIMDUTF_IMPLEMENTATION_LASX
 static const lasx::implementation *get_lasx_singleton() {
   static const lasx::implementation lasx_singleton{};
   return &lasx_singleton;
+}
+#endif
+#if SIMDUTF_IMPLEMENTATION_LSX
+static const lsx::implementation *get_lsx_singleton() {
+  static const lsx::implementation lsx_singleton{};
+  return &lsx_singleton;
 }
 #endif
 #if SIMDUTF_IMPLEMENTATION_FALLBACK
@@ -186,11 +186,11 @@ static const implementation *get_single_implementation() {
   #if SIMDUTF_IMPLEMENTATION_PPC64
   get_ppc64_singleton();
   #endif
-  #if SIMDUTF_IMPLEMENTATION_LSX
-  get_lsx_singleton();
-  #endif
   #if SIMDUTF_IMPLEMENTATION_LASX
   get_lasx_singleton();
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_LSX
+  get_lsx_singleton();
   #endif
   #if SIMDUTF_IMPLEMENTATION_FALLBACK
   get_fallback_singleton();
@@ -813,11 +813,11 @@ get_available_implementation_pointers() {
 #if SIMDUTF_IMPLEMENTATION_RVV
           get_rvv_singleton(),
 #endif
-#if SIMDUTF_IMPLEMENTATION_LSX
-          get_lsx_singleton(),
-#endif
 #if SIMDUTF_IMPLEMENTATION_LASX
           get_lasx_singleton(),
+#endif
+#if SIMDUTF_IMPLEMENTATION_LSX
+          get_lsx_singleton(),
 #endif
 #if SIMDUTF_IMPLEMENTATION_FALLBACK
           get_fallback_singleton(),

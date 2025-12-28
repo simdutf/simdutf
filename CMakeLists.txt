@@ -36,6 +36,8 @@ option(SIMDUTF_COVERAGE "Enable code coverage collection during tests (only GCC 
 option(SIMDUTF_INTERNAL_TESTS "Whether to test also internal procedures. Useful mostly for developers, not users." OFF)
 option(SIMDUTF_LOGGING "Whether to enable logging (this should never be used in binary releases)." OFF)
 option(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION "Whether to enable unsafe fuzzing mode." OFF)
+option(SIMDUTF_ENABLE_LASX "Whether to enable the LASX SIMD extension on Loongson processors." OFF)
+
 if(SIMDUTF_LOGGING AND DEFINED CMAKE_CXX_STANDARD AND CMAKE_CXX_STANDARD LESS 17)
     set(CMAKE_CXX_STANDARD 17)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)

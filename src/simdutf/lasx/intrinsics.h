@@ -3,12 +3,20 @@
 
 #include "simdutf.h"
 
-// This should be the correct header whether
-// you use visual studio or other compilers.
-#include <lsxintrin.h>
-#include <lasxintrin.h>
+// We will not be supporting Visual Studio in the near future.
 
-#if defined(__loongarch_asx)
+// Honestly, the following is a mess. I could
+// not find a way to include lasxintrin.h correctly
+// under LLVM without forcing the macro. (@lemire)
+#ifndef __loongarch_asx
+  #define __loongarch_asx
+  #include <lasxintrin.h>
+  #define SIMDUTF_UNDEF_LASX // best we can do is undefine it later
+#else
+  #include <lasxintrin.h>
+#endif
+
+#if defined(__loongarch_asx) // this check is unnecessary
   #ifdef __clang__
     #define VREGS_PREFIX "$vr"
     #define XREGS_PREFIX "$xr"
@@ -257,30 +265,34 @@ public:
   #define lasx_splat_u16(v) __lasx_xvreplgr2vr_h(v)
   #define lasx_splat_u32(v) __lasx_xvreplgr2vr_w(v)
 #else
+namespace {
 template <uint16_t x> constexpr __m256i lasx_splat_u16_aux() {
-  constexpr bool is_imm10 = (int16_t(x) < 512) && (int16_t(x) > -512);
-  constexpr uint16_t imm10 = is_imm10 ? x : 0;
-  constexpr bool is_vldi = lasx_vldi::const_u16<x>::valid;
-  constexpr int vldi_imm = is_vldi ? lasx_vldi::const_u16<x>::value : 0;
-
-  return is_imm10  ? __lasx_xvrepli_h(int16_t(imm10))
-         : is_vldi ? __lasx_xvldi(vldi_imm)
-                   : __lasx_xvreplgr2vr_h(x);
+  return ((int16_t(x) < 512) && (int16_t(x) > -512))
+             ? __lasx_xvrepli_h(
+                   ((int16_t(x) < 512) && (int16_t(x) > -512)) ? int16_t(x) : 0)
+             : (lasx_vldi::const_u16<x>::valid
+                    ? __lasx_xvldi(lasx_vldi::const_u16<x>::valid
+                                       ? lasx_vldi::const_u16<x>::value
+                                       : 0)
+                    : __lasx_xvreplgr2vr_h(x));
 }
 
 template <uint32_t x> constexpr __m256i lasx_splat_u32_aux() {
-  constexpr bool is_imm10 = (int32_t(x) < 512) && (int32_t(x) > -512);
-  constexpr uint32_t imm10 = is_imm10 ? x : 0;
-  constexpr bool is_vldi = lasx_vldi::const_u32<x>::valid;
-  constexpr int vldi_imm = is_vldi ? lasx_vldi::const_u32<x>::value : 0;
-
-  return is_imm10  ? __lasx_xvrepli_w(int32_t(imm10))
-         : is_vldi ? __lasx_xvldi(vldi_imm)
-                   : __lasx_xvreplgr2vr_w(x);
+  return ((int32_t(x) < 512) && (int32_t(x) > -512))
+             ? __lasx_xvrepli_w(
+                   ((int32_t(x) < 512) && (int32_t(x) > -512)) ? int32_t(x) : 0)
+             : (lasx_vldi::const_u32<x>::valid
+                    ? __lasx_xvldi(lasx_vldi::const_u32<x>::valid
+                                       ? lasx_vldi::const_u32<x>::value
+                                       : 0)
+                    : __lasx_xvreplgr2vr_w(x));
 }
+} // namespace
 
   #define lasx_splat_u16(v) lasx_splat_u16_aux<(v)>()
   #define lasx_splat_u32(v) lasx_splat_u32_aux<(v)>()
 #endif // QEMU_VLDI_BUG
-
+#ifdef SIMDUTF_UNDEF_LASX
+  #undef __loongarch_asx
+#endif // SIMDUTF_UNDEF_LASX
 #endif //  SIMDUTF_LASX_INTRINSICS_H
