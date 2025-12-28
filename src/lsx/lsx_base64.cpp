@@ -374,11 +374,10 @@ static size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
 
   switch (pos64 >> 4) {
   case 0b00: {
-    const v16u8 v0 = __lsx_vreplgr2vr_b((uint8_t)(pos - 1));
-    const v16u8 v2 = __lsx_vslt_b(v0, v1); // v1 > v0
-    const v16u8 sh = __lsx_vsub_b(v1, v2);
-    const v16u8 compressed = __lsx_vshuf_b(sh, b->chunks[0], b->chunks[0]);
-
+    const __m128i v0 = __lsx_vreplgr2vr_b((uint8_t)(pos - 1));
+    const __m128i v2 = __lsx_vslt_b(v0, (__m128i)v1); // v1 > v0
+    const __m128i sh = __lsx_vsub_b((__m128i)v1, v2);
+    const __m128i compressed = __lsx_vshuf_b(sh, b->chunks[0], b->chunks[0]);
     __lsx_vst(compressed, reinterpret_cast<__m128i *>(output + 0 * 16), 0);
     __lsx_vst(b->chunks[1], reinterpret_cast<__m128i *>(output + 1 * 16 - 1), 0);
     __lsx_vst(b->chunks[2], reinterpret_cast<__m128i *>(output + 2 * 16 - 1), 0);
@@ -388,10 +387,10 @@ static size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
   case 0b01: {
     __lsx_vst(b->chunks[0], reinterpret_cast<__m128i *>(output + 0 * 16), 0);
 
-    const v16u8 v0 = __lsx_vreplgr2vr_b((uint8_t)(pos - 1));
-    const v16u8 v2 = __lsx_vslt_b(v0, v1);
-    const v16u8 sh = __lsx_vsub_b(v1, v2);
-    const v16u8 compressed = __lsx_vshuf_b(sh, b->chunks[1], b->chunks[1]);
+    const __m128i v0 = __lsx_vreplgr2vr_b((uint8_t)(pos - 1));
+    const __m128i v2 = __lsx_vslt_b(v0, (__m128i)v1);
+    const __m128i sh = __lsx_vsub_b((__m128i)v1, v2);
+    const __m128i compressed = __lsx_vshuf_b(sh, b->chunks[1], b->chunks[1]);
 
     __lsx_vst(compressed, reinterpret_cast<__m128i *>(output + 1 * 16), 0);
     __lsx_vst(b->chunks[2], reinterpret_cast<__m128i *>(output + 2 * 16 - 1), 0);
@@ -402,10 +401,10 @@ static size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
     __lsx_vst(b->chunks[0], reinterpret_cast<__m128i *>(output + 0 * 16), 0);
     __lsx_vst(b->chunks[1], reinterpret_cast<__m128i *>(output + 1 * 16), 0);
 
-    const v16u8 v0 = __lsx_vreplgr2vr_b((uint8_t)(pos - 1));
-    const v16u8 v2 = __lsx_vslt_b(v0, v1);
-    const v16u8 sh = __lsx_vsub_b(v1, v2);
-    const v16u8 compressed = __lsx_vshuf_b(sh, b->chunks[2], b->chunks[2]);
+    const __m128i v0 = __lsx_vreplgr2vr_b((uint8_t)(pos - 1));
+    const __m128i v2 = __lsx_vslt_b(v0, (__m128i)v1);
+    const __m128i sh = __lsx_vsub_b((__m128i)v1, v2);
+    const __m128i compressed = __lsx_vshuf_b(sh, b->chunks[2], b->chunks[2]);
 
     __lsx_vst(compressed, reinterpret_cast<__m128i *>(output + 2 * 16), 0);
     __lsx_vst(b->chunks[3], reinterpret_cast<__m128i *>(output + 3 * 16 - 1), 0);
@@ -416,10 +415,10 @@ static size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
     __lsx_vst(b->chunks[1], reinterpret_cast<__m128i *>(output + 1 * 16), 0);
     __lsx_vst(b->chunks[2], reinterpret_cast<__m128i *>(output + 2 * 16), 0);
 
-    const v16u8 v0 = __lsx_vreplgr2vr_b((uint8_t)(pos - 1));
-    const v16u8 v2 = __lsx_vslt_b(v0, v1);
-    const v16u8 sh = __lsx_vsub_b(v1, v2);
-    const v16u8 compressed = __lsx_vshuf_b(sh, b->chunks[3], b->chunks[3]);
+    const __m128i v0 = __lsx_vreplgr2vr_b((uint8_t)(pos - 1));
+    const __m128i v2 = __lsx_vslt_b(v0, (__m128i)v1);
+    const __m128i sh = __lsx_vsub_b((__m128i)v1, v2);
+    const __m128i compressed = __lsx_vshuf_b(sh, b->chunks[3], b->chunks[3]);
 
     __lsx_vst(compressed, reinterpret_cast<__m128i *>(output + 3 * 16), 0);
   } break;
