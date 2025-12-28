@@ -3,11 +3,21 @@
 
 #include "simdutf.h"
 
-// This should be the correct header whether
-// you use visual studio or other compilers.
-#include <lasxintrin.h>
+// We will not be supporting Visual Studio in the near future.
 
-#if defined(__loongarch_asx)
+
+// Honestly, the following is a mess. I could
+// not find a way to include lasxintrin.h correctly
+// under LLVM without forcing the macro. (@lemire)
+#ifndef __loongarch_asx
+#define __loongarch_asx
+#include <lasxintrin.h>
+#define SIMDUTF_UNDEF_LASX // best we can do is undefine it later
+#else
+#include <lasxintrin.h>
+#endif
+
+#if defined(__loongarch_asx) // this check is unnecessary
   #ifdef __clang__
     #define VREGS_PREFIX "$vr"
     #define XREGS_PREFIX "$xr"
@@ -256,6 +266,7 @@ public:
   #define lasx_splat_u16(v) __lasx_xvreplgr2vr_h(v)
   #define lasx_splat_u32(v) __lasx_xvreplgr2vr_w(v)
 #else
+namespace {
 template <uint16_t x> constexpr __m256i lasx_splat_u16_aux() {
   constexpr bool is_imm10 = (int16_t(x) < 512) && (int16_t(x) > -512);
   constexpr uint16_t imm10 = is_imm10 ? x : 0;
@@ -277,9 +288,12 @@ template <uint32_t x> constexpr __m256i lasx_splat_u32_aux() {
          : is_vldi ? __lasx_xvldi(vldi_imm)
                    : __lasx_xvreplgr2vr_w(x);
 }
+}
 
   #define lasx_splat_u16(v) lasx_splat_u16_aux<(v)>()
   #define lasx_splat_u32(v) lasx_splat_u32_aux<(v)>()
 #endif // QEMU_VLDI_BUG
-
+#ifdef SIMDUTF_UNDEF_LASX
+#undef __loongarch_asx
+#endif // SIMDUTF_UNDEF_LASX
 #endif //  SIMDUTF_LASX_INTRINSICS_H
