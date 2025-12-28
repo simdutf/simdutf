@@ -373,7 +373,8 @@ static inline uint64_t compress_block(block64 *b, uint64_t mask, char *output) {
 
 template <typename T> bool is_power_of_two(T x) { return (x & (x - 1)) == 0; }
 
-static size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
+// currently unused (deliberately)
+inline size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
   const size_t pos64 = trailing_zeroes(mask);
   const int8_t pos = pos64 & 0xf;
 
@@ -549,11 +550,11 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                 size_t(dst - dstinit)};
       }
       if (badcharmask != 0) {
-        if (is_power_of_two(badcharmask)) {
-          bufferptr += compress_block_single(&b, badcharmask, bufferptr);
-        } else {
+        //if (is_power_of_two(badcharmask)) {
+        //  bufferptr += compress_block_single(&b, badcharmask, bufferptr);
+        //} else {
           bufferptr += compress_block(&b, badcharmask, bufferptr);
-        }
+        //}
       } else if (bufferptr != buffer) {
         copy_block(&b, bufferptr);
         bufferptr += 64;
