@@ -20,6 +20,7 @@
 #include "simdutf/internal/isadetection.h"
 
 #if SIMDUTF_IMPLEMENTATION_LASX
+  #define SIMDUTF_TARGET_LASX SIMDUTF_TARGET_REGION("lasx")
 
 namespace simdutf {
 /**
