@@ -373,7 +373,6 @@ static inline uint64_t compress_block(block64 *b, uint64_t mask, char *output) {
 
 template <typename T> bool is_power_of_two(T x) { return (x & (x - 1)) == 0; }
 
-// currently unused (deliberately)
 inline size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
   const size_t pos64 = trailing_zeroes(mask);
   const int8_t pos = pos64 & 0xf;
@@ -389,7 +388,7 @@ inline size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
     const __m128i v0 = __lsx_vreplgr2vr_b((uint8_t)(pos - 1));
     const __m128i v2 = __lsx_vslt_b(v0, (__m128i)v1); // v1 > v0
     const __m128i sh = __lsx_vsub_b((__m128i)v1, v2);
-    const __m128i compressed = __lsx_vshuf_b(sh, lane0, lane0);
+    const __m128i compressed = __lsx_vshuf_b(lane0, lane0, sh);
 
     __lsx_vst(compressed, reinterpret_cast<__m128i *>(output + 0 * 16), 0);
     __lsx_vst(lane1, reinterpret_cast<__m128i *>(output + 1 * 16 - 1), 0);
@@ -404,7 +403,7 @@ inline size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
     const __m128i v0 = __lsx_vreplgr2vr_b((uint8_t)(pos - 1));
     const __m128i v2 = __lsx_vslt_b(v0, (__m128i)v1);
     const __m128i sh = __lsx_vsub_b((__m128i)v1, v2);
-    const __m128i compressed = __lsx_vshuf_b(sh, lane1, lane1);
+    const __m128i compressed = __lsx_vshuf_b(lane1, lane1, sh);
 
     __lsx_vst(compressed, reinterpret_cast<__m128i *>(output + 1 * 16), 0);
     __lasx_xvst(b->chunks[1], reinterpret_cast<__m256i *>(output + 2 * 16 - 1),
@@ -419,7 +418,7 @@ inline size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
     const __m128i v0 = __lsx_vreplgr2vr_b((uint8_t)(pos - 1));
     const __m128i v2 = __lsx_vslt_b(v0, (__m128i)v1);
     const __m128i sh = __lsx_vsub_b((__m128i)v1, v2);
-    const __m128i compressed = __lsx_vshuf_b(sh, lane2, lane2);
+    const __m128i compressed = __lsx_vshuf_b(lane2, lane2, sh);
 
     __lsx_vst(compressed, reinterpret_cast<__m128i *>(output + 2 * 16), 0);
     __lsx_vst(lane3, reinterpret_cast<__m128i *>(output + 3 * 16 - 1), 0);
@@ -434,7 +433,7 @@ inline size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
     const __m128i v0 = __lsx_vreplgr2vr_b((uint8_t)(pos - 1));
     const __m128i v2 = __lsx_vslt_b(v0, (__m128i)v1);
     const __m128i sh = __lsx_vsub_b((__m128i)v1, v2);
-    const __m128i compressed = __lsx_vshuf_b(sh, lane3, lane3);
+    const __m128i compressed = __lsx_vshuf_b(lane3, lane3, sh);
 
     __lsx_vst(compressed, reinterpret_cast<__m128i *>(output + 3 * 16), 0);
   } break;
@@ -553,11 +552,11 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                 size_t(dst - dstinit)};
       }
       if (badcharmask != 0) {
-        // if (is_power_of_two(badcharmask)) {
-        //   bufferptr += compress_block_single(&b, badcharmask, bufferptr);
-        // } else {
-        bufferptr += compress_block(&b, badcharmask, bufferptr);
-        //}
+        if (is_power_of_two(badcharmask)) {
+          bufferptr += compress_block_single(&b, badcharmask, bufferptr);
+        } else {
+          bufferptr += compress_block(&b, badcharmask, bufferptr);
+        }
       } else if (bufferptr != buffer) {
         copy_block(&b, bufferptr);
         bufferptr += 64;
