@@ -5,7 +5,6 @@
 
 // This should be the correct header whether
 // you use visual studio or other compilers.
-#include <lsxintrin.h>
 #include <lasxintrin.h>
 
 #if defined(__loongarch_asx)

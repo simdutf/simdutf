@@ -28,7 +28,6 @@
 #include "simdutf/internal/isadetection.h"
 
 #if SIMDUTF_IMPLEMENTATION_LSX
-  #define SIMDUTF_TARGET_LSX SIMDUTF_TARGET_REGION("lsx")
 
 namespace simdutf {
 /**
