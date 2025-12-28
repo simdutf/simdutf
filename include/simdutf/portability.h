@@ -193,7 +193,7 @@
 //
 
 // We are going to use runtime dispatch.
-#ifdef SIMDUTF_IS_X86_64
+#if defined(SIMDUTF_IS_X86_64) || defined(SIMDUTF_IS_LSX)
   #ifdef __clang__
     // clang does not have GCC push pop
     // warning: clang attribute push can't be used within a namespace in clang
