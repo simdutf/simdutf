@@ -393,7 +393,8 @@ inline size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
 
     __lsx_vst(compressed, reinterpret_cast<__m128i *>(output + 0 * 16), 0);
     __lsx_vst(lane1, reinterpret_cast<__m128i *>(output + 1 * 16 - 1), 0);
-    __lasx_xvst(b->chunks[1], reinterpret_cast<__m256i *>(output + 2 * 16 - 1), 0);
+    __lasx_xvst(b->chunks[1], reinterpret_cast<__m256i *>(output + 2 * 16 - 1),
+                0);
   } break;
   case 0b01: {
     const __m128i lane0 = lasx_extracti128_lo(b->chunks[0]);
@@ -406,7 +407,8 @@ inline size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
     const __m128i compressed = __lsx_vshuf_b(sh, lane1, lane1);
 
     __lsx_vst(compressed, reinterpret_cast<__m128i *>(output + 1 * 16), 0);
-    __lasx_xvst(b->chunks[1], reinterpret_cast<__m256i *>(output + 2 * 16 - 1), 0);
+    __lasx_xvst(b->chunks[1], reinterpret_cast<__m256i *>(output + 2 * 16 - 1),
+                0);
   } break;
   case 0b10: {
     __lasx_xvst(b->chunks[0], reinterpret_cast<__m256i *>(output + 0 * 16), 0);
@@ -424,7 +426,8 @@ inline size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
   } break;
   case 0b11: {
     __lasx_xvst(b->chunks[0], reinterpret_cast<__m256i *>(output + 0 * 16), 0);
-    __lsx_vst(lasx_extracti128_lo(b->chunks[1]), reinterpret_cast<__m128i *>(output + 2 * 16), 0);
+    __lsx_vst(lasx_extracti128_lo(b->chunks[1]),
+              reinterpret_cast<__m128i *>(output + 2 * 16), 0);
 
     const __m128i lane3 = lasx_extracti128_hi(b->chunks[1]);
 
@@ -550,10 +553,10 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                 size_t(dst - dstinit)};
       }
       if (badcharmask != 0) {
-        //if (is_power_of_two(badcharmask)) {
-        //  bufferptr += compress_block_single(&b, badcharmask, bufferptr);
-        //} else {
-          bufferptr += compress_block(&b, badcharmask, bufferptr);
+        // if (is_power_of_two(badcharmask)) {
+        //   bufferptr += compress_block_single(&b, badcharmask, bufferptr);
+        // } else {
+        bufferptr += compress_block(&b, badcharmask, bufferptr);
         //}
       } else if (bufferptr != buffer) {
         copy_block(&b, bufferptr);

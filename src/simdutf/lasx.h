@@ -28,9 +28,9 @@
 #if SIMDUTF_IMPLEMENTATION_LASX
   #define SIMDUTF_TARGET_LASX SIMDUTF_TARGET_REGION("lasx,lsx")
 
-// For runtimne dispatching to work, we need the lsxintrin to appear
-// before we call SIMDUTF_TARGET_LASX. It is unclear why.
-#include <lsxintrin.h>
+  // For runtimne dispatching to work, we need the lsxintrin to appear
+  // before we call SIMDUTF_TARGET_LASX. It is unclear why.
+  #include <lsxintrin.h>
 
 namespace simdutf {
 /**

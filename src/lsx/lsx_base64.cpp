@@ -380,9 +380,12 @@ inline size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
     const __m128i sh = __lsx_vsub_b((__m128i)v1, v2);
     const __m128i compressed = __lsx_vshuf_b(sh, b->chunks[0], b->chunks[0]);
     __lsx_vst(compressed, reinterpret_cast<__m128i *>(output + 0 * 16), 0);
-    __lsx_vst(b->chunks[1], reinterpret_cast<__m128i *>(output + 1 * 16 - 1), 0);
-    __lsx_vst(b->chunks[2], reinterpret_cast<__m128i *>(output + 2 * 16 - 1), 0);
-    __lsx_vst(b->chunks[3], reinterpret_cast<__m128i *>(output + 3 * 16 - 1), 0);
+    __lsx_vst(b->chunks[1], reinterpret_cast<__m128i *>(output + 1 * 16 - 1),
+              0);
+    __lsx_vst(b->chunks[2], reinterpret_cast<__m128i *>(output + 2 * 16 - 1),
+              0);
+    __lsx_vst(b->chunks[3], reinterpret_cast<__m128i *>(output + 3 * 16 - 1),
+              0);
   } break;
 
   case 0b01: {
@@ -394,8 +397,10 @@ inline size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
     const __m128i compressed = __lsx_vshuf_b(sh, b->chunks[1], b->chunks[1]);
 
     __lsx_vst(compressed, reinterpret_cast<__m128i *>(output + 1 * 16), 0);
-    __lsx_vst(b->chunks[2], reinterpret_cast<__m128i *>(output + 2 * 16 - 1), 0);
-    __lsx_vst(b->chunks[3], reinterpret_cast<__m128i *>(output + 3 * 16 - 1), 0);
+    __lsx_vst(b->chunks[2], reinterpret_cast<__m128i *>(output + 2 * 16 - 1),
+              0);
+    __lsx_vst(b->chunks[3], reinterpret_cast<__m128i *>(output + 3 * 16 - 1),
+              0);
   } break;
 
   case 0b10: {
@@ -408,7 +413,8 @@ inline size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
     const __m128i compressed = __lsx_vshuf_b(sh, b->chunks[2], b->chunks[2]);
 
     __lsx_vst(compressed, reinterpret_cast<__m128i *>(output + 2 * 16), 0);
-    __lsx_vst(b->chunks[3], reinterpret_cast<__m128i *>(output + 3 * 16 - 1), 0);
+    __lsx_vst(b->chunks[3], reinterpret_cast<__m128i *>(output + 3 * 16 - 1),
+              0);
   } break;
 
   case 0b11: {
@@ -545,10 +551,10 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
       }
 
       if (badcharmask != 0) {
-        //if (is_power_of_two(badcharmask)) {
-        //  bufferptr += compress_block_single(&b, badcharmask, bufferptr);
-        //} else {
-          bufferptr += compress_block(&b, badcharmask, bufferptr);
+        // if (is_power_of_two(badcharmask)) {
+        //   bufferptr += compress_block_single(&b, badcharmask, bufferptr);
+        // } else {
+        bufferptr += compress_block(&b, badcharmask, bufferptr);
         //}
       } else {
         // optimization opportunity: if bufferptr == buffer and mask == 0, we

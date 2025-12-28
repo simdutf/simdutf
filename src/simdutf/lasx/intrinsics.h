@@ -5,16 +5,15 @@
 
 // We will not be supporting Visual Studio in the near future.
 
-
 // Honestly, the following is a mess. I could
 // not find a way to include lasxintrin.h correctly
 // under LLVM without forcing the macro. (@lemire)
 #ifndef __loongarch_asx
-#define __loongarch_asx
-#include <lasxintrin.h>
-#define SIMDUTF_UNDEF_LASX // best we can do is undefine it later
+  #define __loongarch_asx
+  #include <lasxintrin.h>
+  #define SIMDUTF_UNDEF_LASX // best we can do is undefine it later
 #else
-#include <lasxintrin.h>
+  #include <lasxintrin.h>
 #endif
 
 #if defined(__loongarch_asx) // this check is unnecessary
@@ -267,29 +266,33 @@ public:
   #define lasx_splat_u32(v) __lasx_xvreplgr2vr_w(v)
 #else
 namespace {
-template <uint16_t x> 
-constexpr __m256i lasx_splat_u16_aux() {
+template <uint16_t x> constexpr __m256i lasx_splat_u16_aux() {
   return ((int16_t(x) < 512) && (int16_t(x) > -512))
-    ? __lasx_xvrepli_h(((int16_t(x) < 512) && (int16_t(x) > -512)) ? int16_t(x) : 0)
-    : (lasx_vldi::const_u16<x>::valid 
-        ? __lasx_xvldi(lasx_vldi::const_u16<x>::valid ? lasx_vldi::const_u16<x>::value : 0)
-        : __lasx_xvreplgr2vr_h(x));
+             ? __lasx_xvrepli_h(
+                   ((int16_t(x) < 512) && (int16_t(x) > -512)) ? int16_t(x) : 0)
+             : (lasx_vldi::const_u16<x>::valid
+                    ? __lasx_xvldi(lasx_vldi::const_u16<x>::valid
+                                       ? lasx_vldi::const_u16<x>::value
+                                       : 0)
+                    : __lasx_xvreplgr2vr_h(x));
 }
 
-template <uint32_t x> 
-constexpr __m256i lasx_splat_u32_aux() {
+template <uint32_t x> constexpr __m256i lasx_splat_u32_aux() {
   return ((int32_t(x) < 512) && (int32_t(x) > -512))
-    ? __lasx_xvrepli_w(((int32_t(x) < 512) && (int32_t(x) > -512)) ? int32_t(x) : 0)
-    : (lasx_vldi::const_u32<x>::valid 
-        ? __lasx_xvldi(lasx_vldi::const_u32<x>::valid ? lasx_vldi::const_u32<x>::value : 0)
-        : __lasx_xvreplgr2vr_w(x));
+             ? __lasx_xvrepli_w(
+                   ((int32_t(x) < 512) && (int32_t(x) > -512)) ? int32_t(x) : 0)
+             : (lasx_vldi::const_u32<x>::valid
+                    ? __lasx_xvldi(lasx_vldi::const_u32<x>::valid
+                                       ? lasx_vldi::const_u32<x>::value
+                                       : 0)
+                    : __lasx_xvreplgr2vr_w(x));
 }
-}
+} // namespace
 
   #define lasx_splat_u16(v) lasx_splat_u16_aux<(v)>()
   #define lasx_splat_u32(v) lasx_splat_u32_aux<(v)>()
 #endif // QEMU_VLDI_BUG
 #ifdef SIMDUTF_UNDEF_LASX
-#undef __loongarch_asx
+  #undef __loongarch_asx
 #endif // SIMDUTF_UNDEF_LASX
 #endif //  SIMDUTF_LASX_INTRINSICS_H

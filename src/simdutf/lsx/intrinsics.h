@@ -166,24 +166,28 @@ public:
   #define lsx_splat_u32(v) __lsx_vreplgr2vr_w(v)
 #else
 namespace {
-template <uint16_t x> 
-constexpr __m128i lsx_splat_u16_aux() {
+template <uint16_t x> constexpr __m128i lsx_splat_u16_aux() {
   return ((int16_t(x) < 512) && (int16_t(x) > -512))
-    ? __lsx_vrepli_h(((int16_t(x) < 512) && (int16_t(x) > -512)) ? int16_t(x) : 0)
-    : (vldi::const_u16<x>::valid 
-        ? __lsx_vldi(vldi::const_u16<x>::valid ? vldi::const_u16<x>::value : 0)
-        : __lsx_vreplgr2vr_h(x));
+             ? __lsx_vrepli_h(
+                   ((int16_t(x) < 512) && (int16_t(x) > -512)) ? int16_t(x) : 0)
+             : (vldi::const_u16<x>::valid
+                    ? __lsx_vldi(vldi::const_u16<x>::valid
+                                     ? vldi::const_u16<x>::value
+                                     : 0)
+                    : __lsx_vreplgr2vr_h(x));
 }
 
-template <uint32_t x> 
-constexpr __m128i lsx_splat_u32_aux() {
+template <uint32_t x> constexpr __m128i lsx_splat_u32_aux() {
   return ((int32_t(x) < 512) && (int32_t(x) > -512))
-    ? __lsx_vrepli_w(((int32_t(x) < 512) && (int32_t(x) > -512)) ? int32_t(x) : 0)
-    : (vldi::const_u32<x>::valid 
-        ? __lsx_vldi(vldi::const_u32<x>::valid ? vldi::const_u32<x>::value : 0)
-        : __lsx_vreplgr2vr_w(x));
+             ? __lsx_vrepli_w(
+                   ((int32_t(x) < 512) && (int32_t(x) > -512)) ? int32_t(x) : 0)
+             : (vldi::const_u32<x>::valid
+                    ? __lsx_vldi(vldi::const_u32<x>::valid
+                                     ? vldi::const_u32<x>::value
+                                     : 0)
+                    : __lsx_vreplgr2vr_w(x));
 }
-}
+} // namespace
   #define lsx_splat_u16(v) lsx_splat_u16_aux<(v)>()
   #define lsx_splat_u32(v) lsx_splat_u32_aux<(v)>()
 #endif // QEMU_VLDI_BUG
