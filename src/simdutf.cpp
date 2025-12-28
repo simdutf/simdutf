@@ -28,8 +28,8 @@ SIMDUTF_DISABLE_UNUSED_WARNING
 #include "simdutf/westmere.h"
 #include "simdutf/ppc64.h"
 #include "simdutf/rvv.h"
-#include "simdutf/lsx.h"
 #include "simdutf/lasx.h"
+#include "simdutf/lsx.h"
 #include "simdutf/fallback.h" // have it always last.
 #ifndef SIMDUTF_REGULAR_VISUAL_STUDIO
 SIMDUTF_POP_DISABLE_WARNINGS
