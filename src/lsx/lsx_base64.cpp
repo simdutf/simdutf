@@ -550,9 +550,9 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
 
       if (badcharmask != 0) {
         if (is_power_of_two(badcharmask)) {
-           bufferptr += compress_block_single(&b, badcharmask, bufferptr);
+          bufferptr += compress_block_single(&b, badcharmask, bufferptr);
         } else {
-           bufferptr += compress_block(&b, badcharmask, bufferptr);
+          bufferptr += compress_block(&b, badcharmask, bufferptr);
         }
       } else {
         // optimization opportunity: if bufferptr == buffer and mask == 0, we
