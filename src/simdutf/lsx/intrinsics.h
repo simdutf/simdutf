@@ -161,10 +161,11 @@ public:
 // #define QEMU_VLDI_BUG 1
 #endif
 
-#ifdef QEMU_VLDI_BUG
-  #define lsx_splat_u16(v) __lsx_vreplgr2vr_h(v)
-  #define lsx_splat_u32(v) __lsx_vreplgr2vr_w(v)
-#else
+#ifndef lsx_splat_u16
+  #ifdef QEMU_VLDI_BUG
+    #define lsx_splat_u16(v) __lsx_vreplgr2vr_h(v)
+    #define lsx_splat_u32(v) __lsx_vreplgr2vr_w(v)
+  #else
 namespace {
 template <uint16_t x> constexpr __m128i lsx_splat_u16_aux() {
   return ((int16_t(x) < 512) && (int16_t(x) > -512))
@@ -188,8 +189,8 @@ template <uint32_t x> constexpr __m128i lsx_splat_u32_aux() {
                     : __lsx_vreplgr2vr_w(x));
 }
 } // namespace
-  #define lsx_splat_u16(v) lsx_splat_u16_aux<(v)>()
-  #define lsx_splat_u32(v) lsx_splat_u32_aux<(v)>()
-#endif // QEMU_VLDI_BUG
-
-#endif //  SIMDUTF_LSX_INTRINSICS_H
+    #define lsx_splat_u16(v) lsx_splat_u16_aux<(v)>()
+    #define lsx_splat_u32(v) lsx_splat_u32_aux<(v)>()
+  #endif // QEMU_VLDI_BUG
+#endif   // lsx_splat_u16
+#endif   //  SIMDUTF_LSX_INTRINSICS_H
