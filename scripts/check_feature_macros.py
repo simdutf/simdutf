@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import subprocess
 import re
 import os
@@ -124,3 +125,6 @@ def main():
     else:
         print("All #if...#endif pairs for SIMDUTF feature macros are correctly matched with valid comments.")
         sys.exit(0)  # Exit with success code
+
+if __name__ == "__main__":
+    main()
