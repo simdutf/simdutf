@@ -387,6 +387,11 @@ target_link_libraries(detect_encodings_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
 
+add_cpp_test(text_encoding_tests)
+target_link_libraries(text_encoding_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)
+         
 add_cpp_test(basic_fuzzer)
 target_link_libraries(basic_fuzzer
   PUBLIC simdutf::tests::helpers

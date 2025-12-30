@@ -3,6 +3,12 @@
 #include <string>
 #include "simdutf/portability.h"
 
+#if !defined(SIMDUTF_NO_STD_TEXT_ENCODING) &&                                  \
+    defined(__cpp_lib_text_encoding) && __cpp_lib_text_encoding >= 202306L
+  #define SIMDUTF_HAS_STD_TEXT_ENCODING 1
+  #include <text_encoding>
+#endif
+
 namespace simdutf {
 
 enum encoding_type {
@@ -52,5 +58,123 @@ encoding_type check_bom(const char *byte, size_t length);
 size_t bom_byte_size(encoding_type bom);
 
 } // namespace BOM
+
+#ifdef SIMDUTF_HAS_STD_TEXT_ENCODING
+/**
+ * Convert a simdutf encoding type to a std::text_encoding.
+ *
+ * @param enc  the simdutf encoding type
+ * @return     the corresponding std::text_encoding, or
+ *             std::text_encoding::id::unknown for unspecified/unsupported
+ */
+constexpr std::text_encoding to_std_encoding(encoding_type enc) noexcept {
+  switch (enc) {
+  case UTF8:
+    return std::text_encoding(std::text_encoding::id::UTF8);
+  case UTF16_LE:
+    return std::text_encoding(std::text_encoding::id::UTF16LE);
+  case UTF16_BE:
+    return std::text_encoding(std::text_encoding::id::UTF16BE);
+  case UTF32_LE:
+    return std::text_encoding(std::text_encoding::id::UTF32LE);
+  case UTF32_BE:
+    return std::text_encoding(std::text_encoding::id::UTF32BE);
+  case Latin1:
+    return std::text_encoding(std::text_encoding::id::ISOLatin1);
+  case unspecified:
+  default:
+    return std::text_encoding(std::text_encoding::id::unknown);
+  }
+}
+
+/**
+ * Convert a std::text_encoding to a simdutf encoding type.
+ *
+ * @param enc  the std::text_encoding
+ * @return     the corresponding simdutf encoding type, or
+ *             encoding_type::unspecified if the encoding is not supported
+ */
+constexpr encoding_type
+from_std_encoding(const std::text_encoding &enc) noexcept {
+  switch (enc.mib()) {
+  case std::text_encoding::id::UTF8:
+    return UTF8;
+  case std::text_encoding::id::UTF16LE:
+    return UTF16_LE;
+  case std::text_encoding::id::UTF16BE:
+    return UTF16_BE;
+  case std::text_encoding::id::UTF32LE:
+    return UTF32_LE;
+  case std::text_encoding::id::UTF32BE:
+    return UTF32_BE;
+  case std::text_encoding::id::ISOLatin1:
+    return Latin1;
+  default:
+    return unspecified;
+  }
+}
+
+/**
+ * Get the native-endian UTF-16 encoding type for this system.
+ *
+ * @return UTF16_LE on little-endian systems, UTF16_BE on big-endian systems
+ */
+constexpr encoding_type native_utf16_encoding() noexcept {
+  #if SIMDUTF_IS_BIG_ENDIAN
+  return UTF16_BE;
+  #else
+  return UTF16_LE;
+  #endif
+}
+
+/**
+ * Get the native-endian UTF-32 encoding type for this system.
+ *
+ * @return UTF32_LE on little-endian systems, UTF32_BE on big-endian systems
+ */
+constexpr encoding_type native_utf32_encoding() noexcept {
+  #if SIMDUTF_IS_BIG_ENDIAN
+  return UTF32_BE;
+  #else
+  return UTF32_LE;
+  #endif
+}
+
+/**
+ * Convert a std::text_encoding to a simdutf encoding type,
+ * using native endianness for UTF-16/UTF-32 without explicit endianness.
+ *
+ * When the input is std::text_encoding::id::UTF16 or UTF32 (without LE/BE
+ * suffix), this returns the native-endian simdutf variant.
+ *
+ * @param enc  the std::text_encoding
+ * @return     the corresponding simdutf encoding type, or
+ *             encoding_type::unspecified if the encoding is not supported
+ */
+constexpr encoding_type
+from_std_encoding_native(const std::text_encoding &enc) noexcept {
+  switch (enc.mib()) {
+  case std::text_encoding::id::UTF8:
+    return UTF8;
+  case std::text_encoding::id::UTF16:
+    return native_utf16_encoding();
+  case std::text_encoding::id::UTF16LE:
+    return UTF16_LE;
+  case std::text_encoding::id::UTF16BE:
+    return UTF16_BE;
+  case std::text_encoding::id::UTF32:
+    return native_utf32_encoding();
+  case std::text_encoding::id::UTF32LE:
+    return UTF32_LE;
+  case std::text_encoding::id::UTF32BE:
+    return UTF32_BE;
+  case std::text_encoding::id::ISOLatin1:
+    return Latin1;
+  default:
+    return unspecified;
+  }
+}
+#endif // SIMDUTF_HAS_STD_TEXT_ENCODING
+
 } // namespace simdutf
 #endif
