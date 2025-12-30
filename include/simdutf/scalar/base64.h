@@ -694,6 +694,58 @@ maximal_binary_length_from_base64(InputPtr input, size_t length) noexcept {
   return actual_length / 4 * 3 + (actual_length % 4) - 1;
 }
 
+// This function computes the binary length by iterating through the input
+// and counting non-whitespace characters (excluding padding characters).
+// We use a simple check (c > ' ') which is easy to parallelize and matches
+// SIMD behavior. Only the last few characters are checked for padding '='.
+template <class char_type>
+simdutf_warn_unused size_t binary_length_from_base64(const char_type *input,
+                                                     size_t length) noexcept {
+  // Count non-whitespace characters (c > ' ') with loop unrolling
+  size_t count = 0;
+  size_t i = 0;
+  for (; i + 4 <= length; i += 4) {
+    count += (input[i + 0] > ' ');
+    count += (input[i + 1] > ' ');
+    count += (input[i + 2] > ' ');
+    count += (input[i + 3] > ' ');
+  }
+  for (; i < length; i++) {
+    count += (input[i] > ' ');
+  }
+
+  // Check for padding '=' at the end (at most 2 padding characters)
+  // Scan backwards, skipping whitespace, to find padding
+  size_t padding = 0;
+  size_t pos = length;
+  // Skip trailing whitespace
+  while (pos > 0 && input[pos - 1] <= ' ') {
+    pos--;
+  }
+  // Check for first '='
+  if (pos > 0 && input[pos - 1] == '=') {
+    padding++;
+    pos--;
+    // Skip whitespace between padding characters
+    while (pos > 0 && input[pos - 1] <= ' ') {
+      pos--;
+    }
+    // Check for second '='
+    if (pos > 0 && input[pos - 1] == '=') {
+      padding++;
+    }
+  }
+  size_t base64_count = count - padding;
+
+  // Calculate binary length from the number of base64 characters
+  // Every 4 base64 characters encode 3 binary bytes
+  // Remainder of 2 encodes 1 byte, remainder of 3 encodes 2 bytes
+  if (base64_count % 4 <= 1) {
+    return base64_count / 4 * 3;
+  }
+  return base64_count / 4 * 3 + (base64_count % 4) - 1;
+}
+
 template <typename char_type>
 simdutf_warn_unused simdutf_constexpr23 full_result
 base64_to_binary_details_impl(
