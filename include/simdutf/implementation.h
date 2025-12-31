@@ -3108,6 +3108,64 @@ maximal_binary_length_from_base64(std::span<const char16_t> input) noexcept {
   #endif // SIMDUTF_SPAN
 
 /**
+ * Provide the exact binary length in bytes given the base64 input.
+ * Unlike maximal_binary_length_from_base64, this function iterates through
+ * the input and counts actual base64 characters, excluding ignorable
+ * characters (e.g., ASCII spaces or linefeed characters) and padding
+ * characters ('=').
+ *
+ * The function is slower than maximal_binary_length_from_base64 as it
+ * must process the entire input, but it provides an exact result even when
+ * the input contains ignorable characters.
+ *
+ * @param input         the base64 input to process
+ * @param length        the length of the base64 input in bytes
+ * @param options       the base64 options to use, can be base64_default,
+ * base64_url, or base64_default_or_url. Defaults to base64_default.
+ * @return exact number of binary bytes
+ */
+simdutf_warn_unused size_t
+binary_length_from_base64(const char *input, size_t length,
+                          base64_options options = base64_default) noexcept;
+  #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused size_t
+binary_length_from_base64(const detail::input_span_of_byte_like auto &input,
+                          base64_options options = base64_default) noexcept {
+  return binary_length_from_base64(reinterpret_cast<const char *>(input.data()),
+                                   input.size(), options);
+}
+  #endif // SIMDUTF_SPAN
+
+/**
+ * Provide the exact binary length in bytes given the base64 input.
+ * Unlike maximal_binary_length_from_base64, this function iterates through
+ * the input and counts actual base64 characters, excluding ignorable
+ * characters (e.g., ASCII spaces or linefeed characters) and padding
+ * characters ('=').
+ *
+ * The function is slower than maximal_binary_length_from_base64 as it
+ * must process the entire input, but it provides an exact result even when
+ * the input contains ignorable characters.
+ *
+ * @param input         the base64 input to process, in ASCII stored as 16-bit
+ * units
+ * @param length        the length of the base64 input in 16-bit units
+ * @param options       the base64 options to use, can be base64_default,
+ * base64_url, or base64_default_or_url. Defaults to base64_default.
+ * @return exact number of binary bytes
+ */
+simdutf_warn_unused size_t
+binary_length_from_base64(const char16_t *input, size_t length,
+                          base64_options options = base64_default) noexcept;
+  #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused size_t
+binary_length_from_base64(std::span<const char16_t> input,
+                          base64_options options = base64_default) noexcept {
+  return binary_length_from_base64(input.data(), input.size(), options);
+}
+  #endif // SIMDUTF_SPAN
+
+/**
  * Convert a base64 input to a binary output.
  *
  * This function follows the WHATWG forgiving-base64 format, which means that it
@@ -5297,6 +5355,49 @@ public:
    */
   simdutf_warn_unused size_t maximal_binary_length_from_base64(
       const char16_t *input, size_t length) const noexcept;
+
+  /**
+   * Provide the exact binary length in bytes given the base64 input.
+   * Unlike maximal_binary_length_from_base64, this function iterates through
+   * the input and counts actual base64 characters, excluding ignorable
+   * characters (e.g., ASCII spaces or linefeed characters) and padding
+   * characters ('=').
+   *
+   * The function is slower than maximal_binary_length_from_base64 as it
+   * must process the entire input, but it provides an exact result even when
+   * the input contains ignorable characters.
+   *
+   * @param input         the base64 input to process
+   * @param length        the length of the base64 input in bytes
+   * @param options       the base64 options to use, can be base64_default,
+   * base64_url, or base64_default_or_url. Defaults to base64_default.
+   * @return exact number of binary bytes
+   */
+  simdutf_warn_unused size_t binary_length_from_base64(
+      const char *input, size_t length,
+      base64_options options = base64_default) const noexcept;
+
+  /**
+   * Provide the exact binary length in bytes given the base64 input.
+   * Unlike maximal_binary_length_from_base64, this function iterates through
+   * the input and counts actual base64 characters, excluding ignorable
+   * characters (e.g., ASCII spaces or linefeed characters) and padding
+   * characters ('=').
+   *
+   * The function is slower than maximal_binary_length_from_base64 as it
+   * must process the entire input, but it provides an exact result even when
+   * the input contains ignorable characters.
+   *
+   * @param input         the base64 input to process, in ASCII stored as 16-bit
+   * units
+   * @param length        the length of the base64 input in 16-bit units
+   * @param options       the base64 options to use, can be base64_default,
+   * base64_url, or base64_default_or_url. Defaults to base64_default.
+   * @return exact number of binary bytes
+   */
+  simdutf_warn_unused size_t binary_length_from_base64(
+      const char16_t *input, size_t length,
+      base64_options options = base64_default) const noexcept;
 
   /**
    * Convert a base64 input to a binary output.

@@ -714,6 +714,38 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(
   return actual_length / 4 * 3 + (actual_length % 4) - 1;
 }
 
+// This function computes the exact binary length by iterating through the
+// input and counting actual base64 characters (excluding ignorable characters
+// like spaces and newlines, and padding characters).
+template <class char_type>
+simdutf_warn_unused size_t
+binary_length_from_base64(const char_type *input, size_t length,
+                          simdutf::base64_options options) noexcept {
+  const uint8_t *to_base64 =
+      (options & base64_default_or_url)
+          ? tables::base64::to_base64_default_or_url_value
+          : ((options & base64_url) ? tables::base64::to_base64_url_value
+                                    : tables::base64::to_base64_value);
+  // Count actual base64 characters (not ignorable, not padding)
+  size_t base64_count = 0;
+  for (size_t i = 0; i < length; i++) {
+    char_type c = input[i];
+    // Check if this is a valid base64 character (code <= 63)
+    if (is_eight_byte(c) && to_base64[uint8_t(c)] <= 63) {
+      base64_count++;
+    }
+    // Note: we don't count padding ('=') or ignorable characters (spaces, etc.)
+  }
+
+  // Calculate binary length from the number of base64 characters
+  // Every 4 base64 characters encode 3 binary bytes
+  // Remainder of 2 encodes 1 byte, remainder of 3 encodes 2 bytes
+  if (base64_count % 4 <= 1) {
+    return base64_count / 4 * 3;
+  }
+  return base64_count / 4 * 3 + (base64_count % 4) - 1;
+}
+
 template <typename char_type>
 simdutf_warn_unused full_result base64_to_binary_details_impl(
     const char_type *input, size_t length, char *output, base64_options options,
