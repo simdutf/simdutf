@@ -210,7 +210,7 @@
     #define SIMDUTF_UNTARGET_REGION _Pragma("GCC pop_options")
   #endif // clang then gcc
 
-#endif // x86
+#endif // defined(SIMDUTF_IS_X86_64) || defined(SIMDUTF_IS_LSX)
 
 // Default target region macros don't do anything.
 #ifndef SIMDUTF_TARGET_REGION
