@@ -1,5 +1,6 @@
 #include "simdutf.h"
 
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_utf8.h>
 #include <tests/helpers/test.h>
 
@@ -175,5 +176,53 @@ TEST_LOOP(surrogate_error) {
     }
   }
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+void compile_time_test_of_good_data() {
+
+  using namespace simdutf::tests::helpers;
+  constexpr auto good = u8"köttbulle"_utf8;
+
+  static_assert(good.size() == 10);
+  static_assert(!simdutf::validate_utf8_with_errors(good).error);
+  static_assert(
+      !simdutf::validate_utf8_with_errors(good.as_array<signed char>()).error);
+  static_assert(
+      !simdutf::validate_utf8_with_errors(good.as_array<unsigned char>())
+           .error);
+  static_assert(
+      !simdutf::validate_utf8_with_errors(good.as_array<std::byte>()).error);
+}
+
+namespace {
+template <typename DestCharType, typename ArrayInput>
+constexpr auto convert_array(const ArrayInput &input) {
+  std::array<DestCharType, ArrayInput{}.size()> ret;
+  for (std::size_t i = 0; i < ArrayInput{}.size(); ++i) {
+    ret[i] = static_cast<DestCharType>(input[i]);
+  }
+  return ret;
+}
+} // namespace
+
+void compile_time_test_of_bad_data() {
+  constexpr std::array bad_utf8{'a', '\xFF'};
+  static_assert(simdutf::validate_utf8_with_errors(bad_utf8).error !=
+                simdutf::SUCCESS);
+  static_assert(simdutf::validate_utf8_with_errors(bad_utf8).count == 1);
+  static_assert(
+      simdutf::validate_utf8_with_errors(convert_array<char>(bad_utf8)).error);
+  static_assert(
+      simdutf::validate_utf8_with_errors(convert_array<signed char>(bad_utf8))
+          .error);
+  static_assert(
+      simdutf::validate_utf8_with_errors(convert_array<unsigned char>(bad_utf8))
+          .error);
+  static_assert(
+      simdutf::validate_utf8_with_errors(convert_array<std::byte>(bad_utf8))
+          .error);
+}
+#endif
 
 TEST_MAIN

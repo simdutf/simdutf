@@ -5,12 +5,11 @@
 #include <cmath>
 #include <cstddef>
 #include <iostream>
-#include <memory>
 #include <tuple>
+#include <vector>
 
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
-#include <vector>
 
 // to limit the runtime of this test
 #ifndef SIMDUTF_BASE64_TEST_MAXLEN

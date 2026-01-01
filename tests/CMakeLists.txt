@@ -2,7 +2,7 @@ include(CTest)
 
 set(SIMDUTF_TEST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../)
 if(MSVC)
-  add_compile_options("/Zi" "/EHsc" "/GR")
+  add_compile_options("/Zi" "/EHsc" "/GR" "/source-charset:utf-8")
 endif()
 add_subdirectory(helpers)
 add_subdirectory(reference)
@@ -412,6 +412,11 @@ else()
    target_compile_definitions(base64_tests PRIVATE SIMDUTF_BASE64_TEST_MAXLEN=2048)
 endif()
 
+add_cpp_test(constexpr_base64_tests)
+target_link_libraries(constexpr_base64_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)
+
 add_cpp_test(span_tests)
 target_link_libraries(span_tests
   PUBLIC simdutf::tests::helpers
@@ -434,6 +439,23 @@ add_cpp_test(to_well_formed_utf16_tests)
 target_link_libraries(to_well_formed_utf16_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
+
+add_cpp_test(fixed_string_tests)
+target_link_libraries(fixed_string_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)
+
+
+# test C++26 embed, currently only available in gcc 15
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+ if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "15")
+   add_cpp_test(embed_tests)
+   target_link_libraries(embed_tests
+     PUBLIC simdutf::tests::helpers
+            simdutf::tests::reference)
+          target_compile_options(embed_tests PRIVATE --embed-directory ${CMAKE_CURRENT_SOURCE_DIR})
+   endif()
+endif()
 
 find_program(GIT_EXECUTABLE git)
 if(Python3_FOUND AND GIT_EXECUTABLE)

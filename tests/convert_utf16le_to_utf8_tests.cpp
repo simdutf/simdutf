@@ -3,10 +3,12 @@
 #include <array>
 #include <vector>
 
-#include <tests/reference/validate_utf16.h>
-#include <tests/helpers/transcode_test_base.h>
+#include <tests/helpers/compiletime_conversions.h>
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
+#include <tests/helpers/transcode_test_base.h>
+#include <tests/reference/validate_utf16.h>
 
 namespace {
 constexpr std::array<size_t, 9> input_size{7,   12,  16,  64,  67,
@@ -294,5 +296,48 @@ TEST(all_possible_8_codepoint_combinations) {
     }
   }
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+namespace {
+
+template <auto input> constexpr auto convert() {
+  using namespace simdutf::tests::helpers;
+  constexpr auto Nout = simdutf::utf8_length_from_utf16(input);
+  CTString<char8_t, Nout> tmp{};
+  std::size_t N;
+  if constexpr (decltype(input)::endianness == std::endian::native) {
+    N = simdutf::convert_utf16_to_utf8(input, tmp);
+  }
+  if (N != tmp.size()) {
+    throw "oops";
+  }
+  return tmp;
+}
+
+} // namespace
+
+TEST(compile_time_convert_utf16_to_utf8) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = u"köttbulle"_utf16;
+  constexpr auto expected = u8"köttbulle"_utf8;
+  constexpr auto output = convert<input>();
+  static_assert(output.size() == expected.size());
+  static_assert(output == expected);
+}
+
+TEST(compile_time_convert_utf16le_to_utf8) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = u"köttbulle"_utf16le;
+  constexpr auto expected = u8"köttbulle"_utf8;
+  constexpr bool with_errors = false;
+  constexpr auto output = utf16_to_utf8<input, with_errors>();
+  static_assert(output.size() == expected.size());
+  static_assert(output == expected);
+}
+
+#endif
 
 TEST_MAIN

@@ -3,9 +3,10 @@
 #include <array>
 #include <vector>
 
-#include <tests/helpers/transcode_test_base.h>
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
+#include <tests/helpers/transcode_test_base.h>
 
 namespace {
 constexpr std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
@@ -114,5 +115,34 @@ TEST(convert_fails_if_input_too_large) {
     }
   }
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+namespace {
+
+template <auto input> constexpr auto size() {
+  return simdutf::utf16_length_from_utf32(input);
+}
+
+template <auto input> constexpr auto convert_be() {
+  using namespace simdutf::tests::helpers;
+  CTString<char16_t, size<input>(), std::endian::big> tmp;
+  const auto ret = simdutf::convert_utf32_to_utf16be(input, tmp);
+  if (ret != tmp.size()) {
+    throw "unexpected write size";
+  }
+  return tmp;
+}
+} // namespace
+
+TEST(compile_time_convert_utf32_to_utf16be) {
+  using namespace simdutf::tests::helpers;
+  constexpr auto input = U"köttbulle"_utf32;
+  constexpr auto expected = u"köttbulle"_utf16be;
+  constexpr auto output = convert_be<input>();
+  static_assert(output == expected);
+}
+
+#endif
 
 TEST_MAIN

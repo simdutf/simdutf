@@ -95,7 +95,7 @@ void validate_ascii_with_err(std::span<const char> chardata) {
   }
 }
 
-void utf16_endianess(std::span<const char16_t> data) {
+void utf16_endianness(std::span<const char16_t> data) {
   std::vector<std::string> results;
   const auto implementations = get_supported_implementations();
   for (const simdutf::implementation* impl : implementations) {
@@ -105,7 +105,7 @@ void utf16_endianess(std::span<const char16_t> data) {
   }
   auto neq = [](const auto& a, const auto& b) { return a != b; };
   if (std::ranges::adjacent_find(results, neq) != results.end()) {
-    std::cerr << "in utf16_endianess(const char*, std::size_t):\n";
+    std::cerr << "in utf16_endianness(const char*, std::size_t):\n";
     std::cerr << "output differs between implementations\n";
     for (std::size_t i = 0; i < implementations.size(); ++i) {
       std::cerr << "implementation " << implementations[i]->name() << " gave "
@@ -187,7 +187,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     validate_ascii_with_err(chardata);
     break;
   case 4:
-    utf16_endianess(u16data);
+    utf16_endianness(u16data);
     break;
   case 5: {
     [[maybe_unused]] auto ret =

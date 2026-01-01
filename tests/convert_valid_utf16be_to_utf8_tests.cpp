@@ -3,10 +3,11 @@
 #include <array>
 #include <vector>
 
-#include <tests/reference/validate_utf16.h>
-#include <tests/helpers/transcode_test_base.h>
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
+#include <tests/helpers/transcode_test_base.h>
+#include <tests/reference/validate_utf16.h>
 
 namespace {
 constexpr std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
@@ -96,4 +97,30 @@ TEST(all_possible_8_codepoint_combinations) {
   }
 }
 
+#if SIMDUTF_CPLUSPLUS23
+
+namespace {
+template <auto input> constexpr auto size_be() {
+  return simdutf::utf8_length_from_utf16be(input);
+}
+template <auto input> constexpr auto convert_be() {
+  using namespace simdutf::tests::helpers;
+  CTString<char8_t, size_be<input>()> tmp;
+  const auto ret = simdutf::convert_valid_utf16be_to_utf8(input, tmp);
+  if (ret != tmp.size()) {
+    throw "unexpected write size";
+  }
+  return tmp;
+}
+} // namespace
+
+TEST(compile_time_convert_utf16be_to_utf8_with_errors) {
+  using namespace simdutf::tests::helpers;
+  constexpr auto input = u"köttbulle"_utf16be;
+  constexpr auto expected = u8"köttbulle"_utf8;
+  constexpr auto output = convert_be<input>();
+  static_assert(output == expected);
+}
+
+#endif
 TEST_MAIN

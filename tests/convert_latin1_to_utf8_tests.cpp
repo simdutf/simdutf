@@ -1,10 +1,11 @@
 #include "simdutf.h"
 
-#include <array>
 #include <vector>
 
-#include <tests/helpers/transcode_test_base.h>
+#include <tests/helpers/compiletime_conversions.h>
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/test.h>
+#include <tests/helpers/transcode_test_base.h>
 
 namespace {
 using simdutf::tests::helpers::transcode_utf8_to_utf16_test_base;
@@ -54,5 +55,66 @@ TEST(convert_all_latin1_safe) {
     }
   }
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+TEST(compile_time_utf8_length_from_latin1) {
+  using namespace simdutf::tests::helpers;
+  static_assert(simdutf::utf8_length_from_latin1("x"_latin1) == 1);
+  // swedish character "ö":
+  static_assert(simdutf::utf8_length_from_latin1("\xF6"_latin1) == 2);
+}
+
+TEST(compile_time_convert_latin1_to_utf8) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = "I am a nice and wellbehaved string"_latin1;
+  constexpr auto expected = u8"I am a nice and wellbehaved string"_utf8;
+  static_assert(simdutf::utf8_length_from_latin1(input) == expected.size());
+  constexpr auto converted = to_utf8<input>();
+  static_assert(converted == expected);
+}
+
+TEST(compile_time_convert_latin1_to_utf8_harder) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = "k\xF6ttbulle"_latin1;
+  constexpr auto expected = u8"köttbulle"_utf8;
+  static_assert(simdutf::utf8_length_from_latin1(input) == expected.size());
+  constexpr auto converted = to_utf8<input>();
+  static_assert(converted == expected);
+}
+
+namespace {
+template <auto input, std::size_t N> constexpr auto convert_safe() {
+  simdutf::tests::helpers::CTString<char8_t, N> ret{};
+  auto written = simdutf::convert_latin1_to_utf8_safe(input, ret);
+  return std::tuple(written, ret);
+}
+} // namespace
+
+TEST(compile_time_convert_latin1_to_utf8_safe) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = "k\xF6ttbulle"_latin1;
+  constexpr auto expected = u8"köttbulle"_utf8;
+
+  // convert using a too small buffer
+  {
+    constexpr auto small = convert_safe<input, 2>();
+    constexpr auto written = std::get<0>(small);
+    static_assert(written == 1);
+  }
+
+  // use a large enough buffer
+  {
+    constexpr auto large = convert_safe<input, 100>();
+    constexpr auto written = std::get<0>(large);
+    static_assert(written == expected.size());
+    constexpr auto output = std::get<1>(large).shrink<written>();
+    static_assert(output == expected);
+  }
+}
+#endif
 
 TEST_MAIN

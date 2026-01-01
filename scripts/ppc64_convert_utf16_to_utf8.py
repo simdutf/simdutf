@@ -32,7 +32,7 @@ LE = True
 BE = False
 
 
-def shuffle_for_conversion_1_2_3_utf8_bytes(endianess):
+def shuffle_for_conversion_1_2_3_utf8_bytes(endianness):
     # There are two 8-bit bitmask telling how many bytes each word produces (1, 2 or 3).
     # mask1 = ddccbbaa -- output exactly one byte (d - MSB, a - LSB)
     # mask2 = hhggffee -- output one or two bytes
@@ -50,7 +50,7 @@ def shuffle_for_conversion_1_2_3_utf8_bytes(endianess):
     # | 1 | 1 |  3 |  1 byte
 
     # unlike SSE, the PPC64 shuffle reads from **two** 16-byte vectors
-    if endianess == BE:
+    if endianness == BE:
         byte0_3bytes = 1
         byte1_3bytes = 0
         byte2_3bytes = 16 + 0
