@@ -143,7 +143,7 @@
 #elif defined(__loongarch_lp64)
   #if defined(__loongarch_sx) && defined(__loongarch_asx)
     #define SIMDUTF_IS_LSX 1
-    #define SIMDUTF_IS_LASX 1
+    #define SIMDUTF_IS_LASX 1 // We can always run both
   #elif defined(__loongarch_sx)
     #define SIMDUTF_IS_LSX 1
   #endif
@@ -193,7 +193,7 @@
 //
 
 // We are going to use runtime dispatch.
-#ifdef SIMDUTF_IS_X86_64
+#if defined(SIMDUTF_IS_X86_64) || defined(SIMDUTF_IS_LSX)
   #ifdef __clang__
     // clang does not have GCC push pop
     // warning: clang attribute push can't be used within a namespace in clang
@@ -210,7 +210,7 @@
     #define SIMDUTF_UNTARGET_REGION _Pragma("GCC pop_options")
   #endif // clang then gcc
 
-#endif // x86
+#endif // defined(SIMDUTF_IS_X86_64) || defined(SIMDUTF_IS_LSX)
 
 // Default target region macros don't do anything.
 #ifndef SIMDUTF_TARGET_REGION
