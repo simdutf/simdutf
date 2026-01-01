@@ -470,6 +470,8 @@ static inline void base64_decode(char *out, __m128i str) {
 
   // Store the output:
   // we only need 12.
+  // Optimization opportunity: we could store 16 bytes and reduce the number of
+  // instructions. See the generic implementation for reference on how to do this efficiently.
   __lsx_vstelm_d(t3, out, 0, 0);
   __lsx_vstelm_w(t3, out + 8, 0, 2);
 }
@@ -483,17 +485,12 @@ static inline void base64_decode_block(char *out, const char *src) {
   base64_decode(out + 36,
                 __lsx_vld(reinterpret_cast<const __m128i *>(src), 48));
 }
-static inline void base64_decode_block_safe(char *out, const char *src) {
-  base64_decode_block(out, src);
-}
+
 static inline void base64_decode_block(char *out, block64 *b) {
   base64_decode(out, b->chunks[0]);
   base64_decode(out + 12, b->chunks[1]);
   base64_decode(out + 24, b->chunks[2]);
   base64_decode(out + 36, b->chunks[3]);
-}
-static inline void base64_decode_block_safe(char *out, block64 *b) {
-  base64_decode_block(out, b);
 }
 
 template <bool base64_url, bool ignore_garbage, bool default_or_url,
@@ -517,6 +514,7 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
     }
     return {SUCCESS, full_input_length, 0};
   }
+
   const char_type *const srcinit = src;
   const char *const dstinit = dst;
   const char_type *const srcend = src + srclen;
@@ -554,11 +552,12 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
         } else {
           bufferptr += compress_block(&b, badcharmask, bufferptr);
         }
-      } else {
-        // optimization opportunity: if bufferptr == buffer and mask == 0, we
-        // can avoid the call to compress_block and decode directly.
+      } else if (bufferptr != buffer) {
         copy_block(&b, bufferptr);
         bufferptr += 64;
+      } else {
+        base64_decode_block(dst, &b);
+        dst += 48;
       }
       if (bufferptr >= (block_size - 1) * 64 + buffer) {
         for (size_t i = 0; i < (block_size - 1); i++) {
@@ -569,7 +568,6 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
                     64); // 64 might be too much
         bufferptr -= (block_size - 1) * 64;
       }
-    }
   }
   char *buffer_start = buffer;
   // Optimization note: if this is almost full, then it is worth our
