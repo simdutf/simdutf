@@ -568,6 +568,7 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
                     64); // 64 might be too much
         bufferptr -= (block_size - 1) * 64;
       }
+    }
   }
   char *buffer_start = buffer;
   // Optimization note: if this is almost full, then it is worth our
