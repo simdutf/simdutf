@@ -1607,7 +1607,7 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf8(
       /* 0110 */ 1,
       /* 0111 */ 1,
 
-      // continutation bytes
+      // continuation bytes
       /* 1000 */ 0,
       /* 1001 */ 0,
       /* 1010 */ 0,

@@ -193,7 +193,7 @@ bool compare_decode_verbose(
   if (r1.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {
     std::cerr << "// regular has error INVALID_BASE64_CHARACTER\n";
     if (r1.count < s.size()) {
-      std::cerr << "// at chararacter " << get_code(s[r1.count]) << "\n";
+      std::cerr << "// at character " << get_code(s[r1.count]) << "\n";
     }
   }
   if (r1.error == simdutf::error_code::BASE64_INPUT_REMAINDER) {
@@ -219,7 +219,7 @@ bool compare_decode_verbose(
   if (r2.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {
     std::cerr << "// atomic has error INVALID_BASE64_CHARACTER\n";
     if (r2.count < s.size()) {
-      std::cerr << "// at chararacter " << get_code(s[r2.count]) << "\n";
+      std::cerr << "// at character " << get_code(s[r2.count]) << "\n";
     }
   }
   if (r2.error == simdutf::error_code::BASE64_INPUT_REMAINDER) {

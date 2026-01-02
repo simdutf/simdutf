@@ -2589,7 +2589,7 @@ The constexpr functionality is tested with `static_assert` in the unit tests whi
 
 The constexpr support is implemented with functions that are already tested and proven. There were however
 modifications made to make it usable at constexpr time. Also, when in a constexpr context, the functions are not invoked exactly
-as during normal dynamic invocation. For this reason, there might have slipped in subtile bugs and the constexpr
+as during normal dynamic invocation. For this reason, there might have slipped in subtle bugs and the constexpr
 support is considered experimental. Please report any bugs you encounter!
 
 The sutf command-line tool

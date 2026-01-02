@@ -1,5 +1,5 @@
 # Note: Validation is done for 8-word input, we just need to check 3^8 = 6561 cases
-#       Validation for 16-word inputs reqires 3**16 = 43'046'721 checks
+#       Validation for 16-word inputs requires 3**16 = 43'046'721 checks
 
 ELEMENTS_COUNT   = 8
 ALL_MASK         = (1 << ELEMENTS_COUNT) - 1

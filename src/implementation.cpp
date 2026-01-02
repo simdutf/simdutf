@@ -1423,7 +1423,7 @@ internal::atomic_ptr<const implementation> &get_default_implementation() {
   return get_active_implementation();
 }
 #endif
-#define SIMDUTF_GET_CURRENT_IMPLEMENTION
+#define SIMDUTF_GET_CURRENT_IMPLEMENTATION
 
 #if SIMDUTF_FEATURE_UTF8
 simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept {
