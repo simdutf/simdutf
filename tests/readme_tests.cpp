@@ -202,7 +202,7 @@ TEST(error_location_badutf8) {
   ASSERT_EQUAL(res.count, 5);
   res = implementation.validate_utf8_with_errors(bad_utf8.data(), res.count);
   if (res.error == simdutf::error_code::SUCCESS) {
-    printf("we have transcoded %zu valud bytes", res.count);
+    printf("we have transcoded %zu valid bytes", res.count);
   }
   ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
   ASSERT_EQUAL(res.count, 5);

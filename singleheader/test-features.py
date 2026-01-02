@@ -82,7 +82,7 @@ def create_make(compilers):
     for arch, compiler, _ in compilers:
         writeln(f'\t@echo "make {arch:{width}} --- build using {compiler}"')
 
-    # add convienent targets for architectures ('default' is the first)
+    # add convenient targets for architectures ('default' is the first)
     for arch, _, _ in compilers:
         writeln('')
         writeln(f'.PHONY: {arch}')

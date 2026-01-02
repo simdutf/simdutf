@@ -14,11 +14,11 @@ simdutf_really_inline size_t count_code_points(const char16_t *in,
   size_t pos = 0;
   size_t count = 0;
 
-  constexpr size_t max_itertions = 65535;
+  constexpr size_t max_iterations = 65535;
   const auto one = vector_u16::splat(1);
   const auto zero = vector_u16::zero();
 
-  size_t itertion = 0;
+  size_t iteration = 0;
 
   auto counters = zero;
   for (; pos < size / N * N; pos += N) {
@@ -36,15 +36,15 @@ simdutf_really_inline size_t count_code_points(const char16_t *in,
 
     counters += t2;
 
-    itertion += 1;
-    if (itertion == max_itertions) {
+    iteration += 1;
+    if (iteration == max_iterations) {
       count += counters.sum();
       counters = zero;
-      itertion = 0;
+      iteration = 0;
     }
   }
 
-  if (itertion > 0) {
+  if (iteration > 0) {
     count += counters.sum();
   }
 
