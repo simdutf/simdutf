@@ -18,6 +18,7 @@
   #include <type_traits>
   #include <span>
   #include <tuple>
+  #include <lifetimebound.h>
 #endif
 #if SIMDUTF_CPLUSPLUS17
   #include <string_view>
@@ -359,7 +360,7 @@ validate_ascii_with_errors(
  * @param len the length of the string in bytes.
  * @return true if and only if the string is valid ASCII.
  */
-simdutf_warn_unused bool validate_utf16_as_ascii(const char16_t *buf,
+simdutf_warn_unused bool validate_utf16_as_ascii(const char16_t *__counted_by(len) buf __noescape,
                                                  size_t len) noexcept;
   #if SIMDUTF_SPAN
 simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 bool

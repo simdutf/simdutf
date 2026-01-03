@@ -1454,7 +1454,7 @@ simdutf_warn_unused bool validate_utf16be_as_ascii(const char16_t *buf,
                                                    size_t len) noexcept {
   return get_default_implementation()->validate_utf16be_as_ascii(buf, len);
 }
-simdutf_warn_unused bool validate_utf16_as_ascii(const char16_t *input,
+simdutf_warn_unused bool validate_utf16_as_ascii(const char16_t *__counted_by(length) input __noescape,
                                                  size_t length) noexcept {
   #if SIMDUTF_IS_BIG_ENDIAN
   return validate_utf16be_as_ascii(input, length);
