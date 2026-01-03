@@ -1,0 +1,6 @@
+module simdutf {
+    umbrella header "simdutf.h"
+    requires cplusplus
+    export *
+    module * { export * }
+}
