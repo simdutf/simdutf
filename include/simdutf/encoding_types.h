@@ -2,6 +2,7 @@
 #define SIMDUTF_ENCODING_TYPES_H
 #include <string>
 #include "simdutf/portability.h"
+#include "simdutf/common_defs.h"
 
 #if !defined(SIMDUTF_NO_STD_TEXT_ENCODING) &&                                  \
     defined(__cpp_lib_text_encoding) && __cpp_lib_text_encoding >= 202306L
@@ -37,12 +38,9 @@ enum endianness {
 #endif
 };
 
-constexpr bool match_system(endianness e) {
-#if SIMDUTF_IS_BIG_ENDIAN
-  return e == endianness::BIG;
-#else
-  return e == endianness::LITTLE;
-#endif
+simdutf_warn_unused simdutf_really_inline constexpr bool
+match_system(endianness e) {
+  return e == endianness::NATIVE;
 }
 
 std::string to_string(encoding_type bom);
