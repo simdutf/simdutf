@@ -16,9 +16,9 @@ TEST(validate_utf8_c) {
   ASSERT_EQUAL(r.count, hello_len);
 }
 
-TEST(convert_utf8_to_utf16le_c) {
+TEST(convert_utf8_to_utf16_c) {
   char16_t out[16];
-  size_t n = simdutf_convert_utf8_to_utf16le(hello, hello_len, out);
+  size_t n = simdutf_convert_utf8_to_utf16(hello, hello_len, out);
   ASSERT_EQUAL(n, hello_len);
   for (size_t i = 0; i < n; i++) {
     ASSERT_EQUAL(out[i], char16_t(hello[i]));
@@ -99,10 +99,10 @@ TEST(counts_and_find_utf16_c) {
   ASSERT_EQUAL(c16, 5);
 
   const char16_t *f16 = simdutf_find_utf16(u16, u16 + 5, u'e');
-  if( f16 == nullptr ) {
+  if (f16 == nullptr) {
     ASSERT_TRUE(false); // should not be null
   } else {
-    if( f16 != u16 + 1 ) {
+    if (f16 != u16 + 1) {
       ASSERT_TRUE(false); // should point to second character
     }
   }

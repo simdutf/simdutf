@@ -8,6 +8,13 @@ static simdutf_result to_c_result(const simdutf::result &r) {
   return out;
 }
 
+/* The C wrapper depends on the library features. Only expose the C API
+   when at least one relevant feature is enabled. This helps the
+   single-header generator to omit the C wrapper when features are
+   disabled. */
+#if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_UTF32 ||  \
+    SIMDUTF_FEATURE_LATIN1 || SIMDUTF_FEATURE_ASCII ||                         \
+    SIMDUTF_FEATURE_BASE64 || SIMDUTF_FEATURE_DETECT_ENCODING
 extern "C" {
 
 bool simdutf_validate_utf8(const char *buf, size_t len) {
@@ -194,6 +201,11 @@ size_t simdutf_convert_utf8_to_utf16le(const char *input, size_t length,
                                        char16_t *output) {
   return simdutf::convert_utf8_to_utf16le(input, length,
                                           reinterpret_cast<char16_t *>(output));
+}
+size_t simdutf_convert_utf8_to_utf16(const char *input, size_t length,
+                                     char16_t *output) {
+  return simdutf::convert_utf8_to_utf16(input, length,
+                                        reinterpret_cast<char16_t *>(output));
 }
 size_t simdutf_convert_utf8_to_utf16be(const char *input, size_t length,
                                        char16_t *output) {
@@ -560,3 +572,8 @@ simdutf_result simdutf_base64_to_binary_safe_utf16(
 }
 
 } // extern "C"
+
+#endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_UTF32
+       // ||
+//    SIMDUTF_FEATURE_LATIN1 || SIMDUTF_FEATURE_ASCII || SIMDUTF_FEATURE_BASE64
+//    || SIMDUTF_FEATURE_DETECT_ENCODING
