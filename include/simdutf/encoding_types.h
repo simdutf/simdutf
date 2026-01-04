@@ -43,7 +43,7 @@ match_system(endianness e) {
   return e == endianness::NATIVE;
 }
 
-std::string to_string(encoding_type bom);
+simdutf_warn_unused std::string to_string(encoding_type bom);
 
 // Note that BOM for UTF8 is discouraged.
 namespace BOM {
@@ -55,15 +55,15 @@ namespace BOM {
  * @return the corresponding encoding
  */
 
-encoding_type check_bom(const uint8_t *byte, size_t length);
-encoding_type check_bom(const char *byte, size_t length);
+simdutf_warn_unused encoding_type check_bom(const uint8_t *byte, size_t length);
+simdutf_warn_unused encoding_type check_bom(const char *byte, size_t length);
 /**
  * Returns the size, in bytes, of the BOM for a given encoding type.
  * Note that UTF8 BOM are discouraged.
  * @param bom         the encoding type
  * @return the size in bytes of the corresponding BOM
  */
-size_t bom_byte_size(encoding_type bom);
+simdutf_warn_unused size_t bom_byte_size(encoding_type bom);
 
 } // namespace BOM
 
@@ -75,7 +75,8 @@ size_t bom_byte_size(encoding_type bom);
  * @return     the corresponding std::text_encoding, or
  *             std::text_encoding::id::unknown for unspecified/unsupported
  */
-constexpr std::text_encoding to_std_encoding(encoding_type enc) noexcept {
+simdutf_warn_unused constexpr std::text_encoding
+to_std_encoding(encoding_type enc) noexcept {
   switch (enc) {
   case UTF8:
     return std::text_encoding(std::text_encoding::id::UTF8);
@@ -102,7 +103,7 @@ constexpr std::text_encoding to_std_encoding(encoding_type enc) noexcept {
  * @return     the corresponding simdutf encoding type, or
  *             encoding_type::unspecified if the encoding is not supported
  */
-constexpr encoding_type
+simdutf_warn_unused constexpr encoding_type
 from_std_encoding(const std::text_encoding &enc) noexcept {
   switch (enc.mib()) {
   case std::text_encoding::id::UTF8:
@@ -127,7 +128,7 @@ from_std_encoding(const std::text_encoding &enc) noexcept {
  *
  * @return UTF16_LE on little-endian systems, UTF16_BE on big-endian systems
  */
-constexpr encoding_type native_utf16_encoding() noexcept {
+simdutf_warn_unused constexpr encoding_type native_utf16_encoding() noexcept {
   #if SIMDUTF_IS_BIG_ENDIAN
   return UTF16_BE;
   #else
@@ -140,7 +141,7 @@ constexpr encoding_type native_utf16_encoding() noexcept {
  *
  * @return UTF32_LE on little-endian systems, UTF32_BE on big-endian systems
  */
-constexpr encoding_type native_utf32_encoding() noexcept {
+simdutf_warn_unused constexpr encoding_type native_utf32_encoding() noexcept {
   #if SIMDUTF_IS_BIG_ENDIAN
   return UTF32_BE;
   #else
@@ -159,7 +160,7 @@ constexpr encoding_type native_utf32_encoding() noexcept {
  * @return     the corresponding simdutf encoding type, or
  *             encoding_type::unspecified if the encoding is not supported
  */
-constexpr encoding_type
+simdutf_warn_unused constexpr encoding_type
 from_std_encoding_native(const std::text_encoding &enc) noexcept {
   switch (enc.mib()) {
   case std::text_encoding::id::UTF8:
