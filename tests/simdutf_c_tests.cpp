@@ -2,7 +2,7 @@
 #include <cstring>
 
 extern "C" {
-#include "simdutf/simdutf_c.h"
+#include "simdutf_c.h"
 }
 
 const char *hello = "hello";

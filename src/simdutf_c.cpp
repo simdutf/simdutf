@@ -1,4 +1,4 @@
-#include "simdutf/simdutf_c.h"
+#include "simdutf_c.h"
 #include "simdutf/implementation.h"
 
 static simdutf_result to_c_result(const simdutf::result &r) {
