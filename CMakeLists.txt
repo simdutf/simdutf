@@ -105,6 +105,13 @@ install(
     COMPONENT simdutf_Development
 )
 
+
+install(
+    FILES include/simdutf_c.h
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+    COMPONENT simdutf_Development
+)
+
 install(
     DIRECTORY include/simdutf
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
