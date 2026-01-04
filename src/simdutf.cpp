@@ -148,4 +148,6 @@ SIMDUTF_DISABLE_UNDESIRED_WARNINGS
   #include "lasx/implementation.cpp"
 #endif
 
+
+#include "simdutf_c.cpp"
 SIMDUTF_POP_DISABLE_WARNINGS

@@ -282,10 +282,23 @@ def create_files():
         for cpp in ALLCFILES:
             doinclude(cpp, f"ERROR {cpp} not found")
 
-    # copy the README and DEMOCPP
+    # Always ensure the C API header is available in the output directory
+    c_api_header = os.path.join(context.args.include_dir, "simdutf", "simdutf_c.h")
+    if not os.path.exists(c_api_header):
+        raise FileNotFoundError(f"Required file not found: {c_api_header}")
+    shutil.copy2(c_api_header, outdir)
+
+    # copy the README, DEMO and C API header
     if SCRIPTPATH != outdir:
-        for name in ["amalgamation_demo.cpp", "README.md"]:
-            path = os.path.join(SCRIPTPATH, name)
+        for name in ["amalgamation_demo.cpp", "README.md", "simdutf_c.h", "amalgamation_demo.c"]:
+            # Always copy simdutf_c.h from the include directory (include/simdutf/simdutf_c.h)
+            if name == "simdutf_c.h":
+                candidate = os.path.join(context.args.include_dir, "simdutf", "simdutf_c.h")
+                if not os.path.exists(candidate):
+                    raise FileNotFoundError(f"Required file not found: {candidate}")
+                path = candidate
+            else:
+                path = os.path.join(SCRIPTPATH, name)
             print(f"Creating {outdir}/{name}")
             shutil.copy2(path, outdir)
 
@@ -297,7 +310,7 @@ def create_zip():
     path = os.path.join(outdir, context.zipname)
     print(f"Creating {path}")
     with zipfile.ZipFile(path, 'w') as zf:
-        for name in ["simdutf.cpp", "simdutf.h", "amalgamation_demo.cpp", "README.md"]:
+        for name in ["simdutf.cpp", "simdutf.h", "amalgamation_demo.cpp", "README.md", "simdutf_c.h", "amalgamation_demo.c"]:
             source = os.path.join(outdir, name)
             zf.write(source, name)
 

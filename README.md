@@ -2689,10 +2689,28 @@ If you use this library in your research, please cite our work:
 ```
 
 
+
+C wrapper (C11 or better)
+---------
+
+We provide a thin C API that wraps the C++ `simdutf` library. It is intended
+for applications that prefer or require a plain C interface. The `simdutf_c.h`
+defines the interface.
+
+
+The C API exposes functions for validation, transcoding, size estimation, `find` helpers,
+and Base64 encode/decode helpers. Results are returned using the `simdutf_result` struct
+which contains an `error_code` field and additional fields when relevant.
+
+
+We provide a simple C demo using the C wrapper at `amalgamation_demo.c`.
+It shows validating UTF-8, converting UTF-8 to UTF-16LE and back, and checking the round-trip.
+Refer to `singleheader/README.md` for instructions. Note that the simdutf library requires
+a C++ library.
+
+
 Stars
 -------
-
-
 
 [![Star History Chart](https://api.star-history.com/svg?repos=simdutf/simdutf&type=Date)](https://www.star-history.com/#simdutf/simdutf&Date)
 
