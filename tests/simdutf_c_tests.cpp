@@ -99,7 +99,13 @@ TEST(counts_and_find_utf16_c) {
   ASSERT_EQUAL(c16, 5);
 
   const char16_t *f16 = simdutf_find_utf16(u16, u16 + 5, u'e');
-  ASSERT_EQUAL(f16, u16 + 1);
+  if( f16 == nullptr ) {
+    ASSERT_TRUE(false); // should not be null
+  } else {
+    if( f16 != u16 + 1 ) {
+      ASSERT_TRUE(false); // should point to second character
+    }
+  }
 }
 
 TEST(base64_length_helpers_c) {
