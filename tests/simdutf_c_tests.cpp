@@ -20,14 +20,18 @@ TEST(convert_utf8_to_utf16le_c) {
   char16_t out[16];
   size_t n = simdutf_convert_utf8_to_utf16le(hello, hello_len, out);
   ASSERT_EQUAL(n, hello_len);
-  for (size_t i = 0; i < n; i++) { ASSERT_EQUAL(out[i], char16_t(hello[i])); }
+  for (size_t i = 0; i < n; i++) {
+    ASSERT_EQUAL(out[i], char16_t(hello[i]));
+  }
 }
 
 TEST(convert_utf8_to_utf32_c) {
   char32_t out[16];
   size_t n = simdutf_convert_utf8_to_utf32(hello, hello_len, out);
   ASSERT_EQUAL(n, hello_len);
-  for (size_t i = 0; i < n; i++) { ASSERT_EQUAL(out[i], char32_t(hello[i])); }
+  for (size_t i = 0; i < n; i++) {
+    ASSERT_EQUAL(out[i], char32_t(hello[i]));
+  }
 }
 
 TEST(count_utf8_c) {
@@ -44,13 +48,16 @@ TEST(base64_c) {
   const char *b64 = "aGVsbG8="; // "hello"
   char binout[16] = {0};
   size_t outlen = sizeof(binout);
-  simdutf_result br = simdutf_base64_to_binary_safe(b64, strlen(b64), binout, &outlen, SIMDUTF_BASE64_DEFAULT, SIMDUTF_LAST_CHUNK_LOOSE, true);
+  simdutf_result br = simdutf_base64_to_binary_safe(
+      b64, strlen(b64), binout, &outlen, SIMDUTF_BASE64_DEFAULT,
+      SIMDUTF_LAST_CHUNK_LOOSE, true);
   ASSERT_EQUAL(br.error, SIMDUTF_ERROR_SUCCESS);
   ASSERT_EQUAL(outlen, hello_len);
   ASSERT_TRUE(std::memcmp(binout, "hello", hello_len) == 0);
 
   char b64out[32] = {0};
-  size_t b64len = simdutf_binary_to_base64("hello", hello_len, b64out, SIMDUTF_BASE64_DEFAULT);
+  size_t b64len = simdutf_binary_to_base64("hello", hello_len, b64out,
+                                           SIMDUTF_BASE64_DEFAULT);
   ASSERT_TRUE(b64len >= 8);
 }
 
@@ -77,7 +84,8 @@ TEST(lengths_and_conversions_c) {
 
   // convert utf16->utf8 safe
   char out8[8] = {0};
-  size_t safelen = simdutf_convert_utf16_to_utf8_safe(u16, 5, out8, sizeof(out8));
+  size_t safelen =
+      simdutf_convert_utf16_to_utf8_safe(u16, 5, out8, sizeof(out8));
   ASSERT_TRUE(safelen > 0);
 
   // convert with errors
@@ -101,11 +109,13 @@ TEST(base64_length_helpers_c) {
   size_t b64len = simdutf_base64_length_from_binary(5, SIMDUTF_BASE64_DEFAULT);
   ASSERT_TRUE(b64len >= 8);
 
-  size_t with_lines = simdutf_base64_length_from_binary_with_lines(5, SIMDUTF_BASE64_DEFAULT, 4);
+  size_t with_lines = simdutf_base64_length_from_binary_with_lines(
+      5, SIMDUTF_BASE64_DEFAULT, 4);
   ASSERT_TRUE(with_lines >= b64len);
 
   char out[64] = {0};
-  size_t bl = simdutf_binary_to_base64_with_lines("hello", 5, out, 4, SIMDUTF_BASE64_DEFAULT);
+  size_t bl = simdutf_binary_to_base64_with_lines("hello", 5, out, 4,
+                                                  SIMDUTF_BASE64_DEFAULT);
   ASSERT_TRUE(bl > 0);
 }
 

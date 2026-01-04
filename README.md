@@ -2708,6 +2708,8 @@ It shows validating UTF-8, converting UTF-8 to UTF-16LE and back, and checking t
 Refer to `singleheader/README.md` for instructions. Note that the simdutf library requires
 a C++ library.
 
+Note: The C API is currently not aware of amalgation with limited features. It expects the full simdutf library.
+
 
 Stars
 -------
