@@ -836,8 +836,71 @@ avx2_binary_length_from_base64(const char *input, size_t length) {
   return base64_count / 4 * 3 + (base64_count % 4) - 1;
 }
 
-// char16_t version - use scalar for now as it's less common
+// char16_t version using AVX2
 simdutf_warn_unused size_t
 avx2_binary_length_from_base64(const char16_t *input, size_t length) {
-  return scalar::base64::binary_length_from_base64(input, length);
+  if (length == 0) {
+    return 0;
+  }
+
+  size_t count = 0;
+
+  // Generate space constant (0x0020) in each 16-bit word using Agner Fog's trick:
+  // pcmpeqw -> all 1s, pabsw -> 0x0001, psllw by 5 -> 0x0020
+  __m256i ones = _mm256_cmpeq_epi16(_mm256_setzero_si256(),
+                                    _mm256_setzero_si256());
+  __m256i one_words = _mm256_abs_epi16(ones);
+  __m256i spaces = _mm256_slli_epi16(one_words, 5);
+
+  // Round down to 32-byte alignment (aligned loads can't fault)
+  const char16_t *aligned_ptr =
+      (const char16_t *)((uintptr_t)input & ~(uintptr_t)31);
+  const char16_t *end = input + length;
+
+  // Mask for first iteration: skip bytes before 'input'
+  // (prefix is in bytes, not char16_t units)
+  size_t prefix_bytes = (size_t)((const char *)input - (const char *)aligned_ptr);
+  uint32_t gpr_mask = ~0u << prefix_bytes;
+
+  // Process aligned chunks (16 char16_t = 32 bytes per iteration)
+  uint32_t mask;
+  do {
+    __m256i data = _mm256_load_si256((const __m256i *)aligned_ptr);
+    // Signed comparison works for ASCII (base64 characters are all < 128)
+    __m256i gt_space = _mm256_cmpgt_epi16(data, spaces);
+    // pmovmskb gives 2 bits per char16_t (both 0 or both 1)
+    mask = (uint32_t)_mm256_movemask_epi8(gt_space);
+    mask &= gpr_mask;
+    count += _mm_popcnt_u32(mask);
+    aligned_ptr += 16; // 16 char16_t = 32 bytes
+    gpr_mask = ~0u;
+  } while (aligned_ptr < end);
+
+  // Fix the end: subtract any over-counted bytes past 'end'
+  size_t overshoot_bytes = (size_t)((const char *)aligned_ptr - (const char *)end);
+  if (overshoot_bytes > 0) {
+    uint32_t over_mask = ~0u << (32 - overshoot_bytes);
+    count -= _mm_popcnt_u32(mask & over_mask);
+  }
+
+  // Each char16_t contributed 2 bits to the mask, so divide by 2
+  count /= 2;
+
+  // Check for padding '=' at the end (at most 2 padding characters)
+  size_t padding = 0;
+  size_t pos = length;
+  while (pos > 0 && padding < 2) {
+    char16_t c = input[--pos];
+    if (c == '=') {
+      padding++;
+    } else if (c > ' ') {
+      break;
+    }
+  }
+  size_t base64_count = count - padding;
+
+  if (base64_count % 4 <= 1) {
+    return base64_count / 4 * 3;
+  }
+  return base64_count / 4 * 3 + (base64_count % 4) - 1;
 }
