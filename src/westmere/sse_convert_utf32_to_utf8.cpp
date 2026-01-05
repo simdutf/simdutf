@@ -133,8 +133,7 @@ sse_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_output) {
       // t0 = [000a|aaaa|bbbb|bb00]
       const __m128i t0 = _mm_slli_epi16(in_16, 2); // shift packed vector by two
       // t1 = [000a|aaaa|0000|0000]
-      const __m128i t1 =
-          _mm_and_si128(t0, v_1f00); // potential first utf8 byte
+      const __m128i t1 = _mm_and_si128(t0, v_1f00); // potential first utf8 byte
       // t2 = [0000|0000|00bb|bbbb]
       const __m128i t2 =
           _mm_and_si128(in_16, v_003f); // potential second utf8 byte
