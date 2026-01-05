@@ -5,9 +5,29 @@
 
 #include "simdutf_c.h"
 
-#define ASSERT_TRUE(cond) do { if (!(cond)) { fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); return 1; } } while(0)
-#define ASSERT_EQUAL_SIZE_T(a,b) do { if ((a) != (b)) { fprintf(stderr, "FAIL %s:%d: %s != %s (got %zu vs %zu)\n", __FILE__, __LINE__, #a, #b, (size_t)(a), (size_t)(b)); return 1; } } while(0)
-#define ASSERT_EQUAL_INT(a,b) do { if ((int)(a) != (int)(b)) { fprintf(stderr, "FAIL %s:%d: %s != %s (got %d vs %d)\n", __FILE__, __LINE__, #a, #b, (int)(a), (int)(b)); return 1; } } while(0)
+#define ASSERT_TRUE(cond)                                                      \
+  do {                                                                         \
+    if (!(cond)) {                                                             \
+      fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond);          \
+      return 1;                                                                \
+    }                                                                          \
+  } while (0)
+#define ASSERT_EQUAL_SIZE_T(a, b)                                              \
+  do {                                                                         \
+    if ((a) != (b)) {                                                          \
+      fprintf(stderr, "FAIL %s:%d: %s != %s (got %zu vs %zu)\n", __FILE__,     \
+              __LINE__, #a, #b, (size_t)(a), (size_t)(b));                     \
+      return 1;                                                                \
+    }                                                                          \
+  } while (0)
+#define ASSERT_EQUAL_INT(a, b)                                                 \
+  do {                                                                         \
+    if ((int)(a) != (int)(b)) {                                                \
+      fprintf(stderr, "FAIL %s:%d: %s != %s (got %d vs %d)\n", __FILE__,       \
+              __LINE__, #a, #b, (int)(a), (int)(b));                           \
+      return 1;                                                                \
+    }                                                                          \
+  } while (0)
 
 static const char *hello = "hello";
 static const size_t hello_len = 5;
@@ -89,12 +109,14 @@ static int test_lengths_and_conversions_c(void) {
   ASSERT_EQUAL_SIZE_T(latin_to_utf8, 3);
 
   /* prepare a UTF-16 sample */
-  char16_t u16[5] = { (char16_t)'h', (char16_t)'e', (char16_t)'l', (char16_t)'l', (char16_t)'o' };
+  char16_t u16[5] = {(char16_t)'h', (char16_t)'e', (char16_t)'l', (char16_t)'l',
+                     (char16_t)'o'};
   size_t u16len = simdutf_utf8_length_from_utf16(u16, 5);
 
   /* convert utf16->utf8 safe */
   char out8[8] = {0};
-  size_t safelen = simdutf_convert_utf16_to_utf8_safe(u16, 5, out8, sizeof(out8));
+  size_t safelen =
+      simdutf_convert_utf16_to_utf8_safe(u16, 5, out8, sizeof(out8));
   ASSERT_EQUAL_SIZE_T(safelen, u16len);
 
   /* convert with errors */
@@ -104,7 +126,8 @@ static int test_lengths_and_conversions_c(void) {
 }
 
 static int test_counts_and_find_utf16_c(void) {
-  char16_t u16[5] = { (char16_t)'h', (char16_t)'e', (char16_t)'l', (char16_t)'l', (char16_t)'o' };
+  char16_t u16[5] = {(char16_t)'h', (char16_t)'e', (char16_t)'l', (char16_t)'l',
+                     (char16_t)'o'};
   size_t c16 = simdutf_count_utf16(u16, 5);
   ASSERT_EQUAL_SIZE_T(c16, 5);
 
@@ -133,19 +156,20 @@ static int test_base64_length_helpers_c(void) {
 }
 
 int main(void) {
-  struct { const char *name; int (*fn)(void); } tests[] = {
-    {"validate_utf8_c", test_validate_utf8_c},
-    {"convert_utf8_to_utf16_c", test_convert_utf8_to_utf16_c},
-    {"convert_utf8_to_utf32_c", test_convert_utf8_to_utf32_c},
-    {"count_utf8_c", test_count_utf8_c},
-    {"find_c", test_find_c},
-    {"base64_c", test_base64_c},
-    {"ascii_and_detect_c", test_ascii_and_detect_c},
-    {"lengths_and_conversions_c", test_lengths_and_conversions_c},
-    {"counts_and_find_utf16_c", test_counts_and_find_utf16_c},
-    {"base64_length_helpers_c", test_base64_length_helpers_c},
-    {NULL, NULL}
-  };
+  struct {
+    const char *name;
+    int (*fn)(void);
+  } tests[] = {{"validate_utf8_c", test_validate_utf8_c},
+               {"convert_utf8_to_utf16_c", test_convert_utf8_to_utf16_c},
+               {"convert_utf8_to_utf32_c", test_convert_utf8_to_utf32_c},
+               {"count_utf8_c", test_count_utf8_c},
+               {"find_c", test_find_c},
+               {"base64_c", test_base64_c},
+               {"ascii_and_detect_c", test_ascii_and_detect_c},
+               {"lengths_and_conversions_c", test_lengths_and_conversions_c},
+               {"counts_and_find_utf16_c", test_counts_and_find_utf16_c},
+               {"base64_length_helpers_c", test_base64_length_helpers_c},
+               {NULL, NULL}};
 
   for (int i = 0; tests[i].name != NULL; i++) {
     printf("%s... ", tests[i].name);
