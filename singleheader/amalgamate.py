@@ -283,17 +283,16 @@ def create_files():
             doinclude(cpp, f"ERROR {cpp} not found")
 
     # copy the README, DEMO and C API header
+    print(f"Copying additional files to {outdir}")
+    for name in ["simdutf_c.h"]:
+        print(f"Processing {name}")
+        path = os.path.join(context.args.include_dir, name)
+        print(f"Creating {outdir}/{name}")
+        shutil.copy2(path, outdir)
     if SCRIPTPATH != outdir:
         for name in ["amalgamation_demo.cpp", "README.md", "simdutf_c.h", "amalgamation_demo.c"]:
-            # Always copy simdutf_c.h from the include directory (include/simdutf_c.h)
-            if name == "simdutf_c.h":
-                candidate = os.path.join(context.args.include_dir, "simdutf_c.h")
-                print(f"Looking for {candidate}")
-                if not os.path.exists(candidate):
-                    raise FileNotFoundError(f"Required file not found: {candidate}")
-                path = candidate
-            else:
-                path = os.path.join(SCRIPTPATH, name)
+            print(f"Processing {name}")
+            path = os.path.join(SCRIPTPATH, name)
             print(f"Creating {outdir}/{name}")
             shutil.copy2(path, outdir)
 

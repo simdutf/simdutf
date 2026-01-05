@@ -1,3 +1,10 @@
+/***
+ * simdutf_c.h.h - C API for simdutf
+ * This is currently experimental.
+ * We are committed to keeping the C API, but there might be mistakes in our
+ * implementation. Please report any issues you find.
+ */
+
 #ifndef SIMDUTF_C_H
 #define SIMDUTF_C_H
 

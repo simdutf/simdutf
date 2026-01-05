@@ -2693,6 +2693,9 @@ If you use this library in your research, please cite our work:
 C wrapper (C11 or better)
 ---------
 
+*This is currently experimental. We are committed to maintaining the C API but there might be issues with 
+our implementation.*
+
 We provide a thin C API that wraps the C++ `simdutf` library. It is intended
 for applications that prefer or require a plain C interface. The `simdutf_c.h`
 defines the interface.
