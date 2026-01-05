@@ -289,7 +289,7 @@ def create_files():
     print(f"Creating {outdir}/simdutf_c.h")
     shutil.copy2(c_header_path, outdir)
     if SCRIPTPATH != outdir:
-        for name in ["amalgamation_demo.cpp", "README.md", "simdutf_c.h", "amalgamation_demo.c"]:
+        for name in ["amalgamation_demo.cpp", "README.md", "amalgamation_demo.c"]:
             print(f"Processing {name}")
             path = os.path.join(SCRIPTPATH, name)
             print(f"Creating {outdir}/{name}")
