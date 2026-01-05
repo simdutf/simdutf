@@ -80,13 +80,12 @@ TEST(lengths_and_conversions_c) {
   // prepare a UTF-16 sample
   char16_t u16[5] = {u'h', u'e', u'l', u'l', u'o'};
   size_t u16len = simdutf_utf8_length_from_utf16(u16, 5);
-  (void)u16len;
 
   // convert utf16->utf8 safe
   char out8[8] = {0};
   size_t safelen =
       simdutf_convert_utf16_to_utf8_safe(u16, 5, out8, sizeof(out8));
-  ASSERT_TRUE(safelen > 0);
+  ASSERT_EQUAL(safelen, u16len);
 
   // convert with errors
   simdutf_result cr = simdutf_convert_utf16_to_utf8_with_errors(u16, 5, out8);

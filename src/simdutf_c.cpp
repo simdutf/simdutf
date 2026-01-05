@@ -9,12 +9,11 @@ static simdutf_result to_c_result(const simdutf::result &r) {
 }
 
 /* The C wrapper depends on the library features. Only expose the C API
-   when at least one relevant feature is enabled. This helps the
+   when all relevant feature is enabled. This helps the
    single-header generator to omit the C wrapper when features are
    disabled. */
-#if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_UTF32 ||  \
-    SIMDUTF_FEATURE_LATIN1 || SIMDUTF_FEATURE_ASCII ||                         \
-    SIMDUTF_FEATURE_BASE64 || SIMDUTF_FEATURE_DETECT_ENCODING
+// clang-format off
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_ASCII && SIMDUTF_FEATURE_BASE64 && SIMDUTF_FEATURE_DETECT_ENCODING
 extern "C" {
 
 bool simdutf_validate_utf8(const char *buf, size_t len) {
@@ -573,7 +572,5 @@ simdutf_result simdutf_base64_to_binary_safe_utf16(
 
 } // extern "C"
 
-#endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_UTF32
-//   || SIMDUTF_FEATURE_LATIN1 || SIMDUTF_FEATURE_ASCII ||
-//   SIMDUTF_FEATURE_BASE64
-//    || SIMDUTF_FEATURE_DETECT_ENCODING
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_ASCII && SIMDUTF_FEATURE_BASE64 && SIMDUTF_FEATURE_DETECT_ENCODING
+// clang-format on
