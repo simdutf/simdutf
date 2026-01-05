@@ -46,7 +46,7 @@ We assume that at least `c++` command is available.
 3. Finally run `make Makefile`, preferably with `-j` argument.
 
 Our `Makefile` generates amalgamated library with different variants
-of features; the variants are predefined in `test-fetures.py`. Each
+of features; the variants are predefined in `test-features.py`. Each
 feature set is compiled with all detected C++ compilers.
 
 A sample test session looks like that:
