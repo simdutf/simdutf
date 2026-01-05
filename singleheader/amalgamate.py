@@ -282,12 +282,6 @@ def create_files():
         for cpp in ALLCFILES:
             doinclude(cpp, f"ERROR {cpp} not found")
 
-    # Always ensure the C API header is available in the output directory
-    c_api_header = os.path.join(context.args.include_dir, "simdutf_c.h")
-    if not os.path.exists(c_api_header):
-        raise FileNotFoundError(f"Required file not found: {c_api_header}")
-    shutil.copy2(c_api_header, outdir)
-
     # copy the README, DEMO and C API header
     if SCRIPTPATH != outdir:
         for name in ["amalgamation_demo.cpp", "README.md", "simdutf_c.h", "amalgamation_demo.c"]:
