@@ -2706,7 +2706,7 @@ which contains an `error_code` field and additional fields when relevant.
 We provide a simple C demo using the C wrapper at `amalgamation_demo.c`.
 It shows validating UTF-8, converting UTF-8 to UTF-16LE and back, and checking the round-trip.
 Refer to `singleheader/README.md` for instructions. Note that the simdutf library requires
-a C++ library.
+a C++ standard library (e.g., libstdc++, libc++) at runtime, either statically or dynamically linked.
 
 Note: The C API is currently not aware of amalgamation with limited features. It expects the full simdutf library.
 

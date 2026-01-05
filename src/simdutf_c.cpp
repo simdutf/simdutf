@@ -14,6 +14,7 @@ static simdutf_result to_c_result(const simdutf::result &r) {
    disabled. */
 // clang-format off
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_ASCII && SIMDUTF_FEATURE_BASE64 && SIMDUTF_FEATURE_DETECT_ENCODING
+// clang-format on
 extern "C" {
 
 bool simdutf_validate_utf8(const char *buf, size_t len) {
@@ -571,6 +572,6 @@ simdutf_result simdutf_base64_to_binary_safe_utf16(
 }
 
 } // extern "C"
-
+// clang-format off
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_ASCII && SIMDUTF_FEATURE_BASE64 && SIMDUTF_FEATURE_DETECT_ENCODING
 // clang-format on
