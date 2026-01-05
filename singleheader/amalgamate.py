@@ -284,11 +284,10 @@ def create_files():
 
     # copy the README, DEMO and C API header
     print(f"Copying additional files to {outdir}")
-    for name in ["simdutf_c.h"]:
-        print(f"Processing {name}")
-        path = os.path.join(context.args.include_dir, name)
-        print(f"Creating {outdir}/{name}")
-        shutil.copy2(path, outdir)
+    # C API header
+    c_header_path = os.path.join(PROJECTPATH, "include", "simdutf_c.h")
+    print(f"Creating {outdir}/simdutf_c.h")
+    shutil.copy2(c_header_path, outdir)
     if SCRIPTPATH != outdir:
         for name in ["amalgamation_demo.cpp", "README.md", "simdutf_c.h", "amalgamation_demo.c"]:
             print(f"Processing {name}")
