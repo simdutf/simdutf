@@ -768,3 +768,64 @@ public:
     return 63;
   }
 };
+
+// AVX2 implementation of binary_length_from_base64
+// Counts non-whitespace characters and adjusts for padding
+simdutf_warn_unused size_t
+avx2_binary_length_from_base64(const char *input, size_t length) {
+  // Count non-whitespace characters (c > ' ') using AVX2
+  size_t count = 0;
+  size_t i = 0;
+
+  if (length >= 32) {
+    // Generate space constant (0x20) in each byte using Agner Fog's trick:
+    // pcmpeqw -> all 1s, pabsb -> 0x01, psllw by 5 -> 0x20
+    __m256i ones = _mm256_cmpeq_epi16(_mm256_setzero_si256(),
+                                      _mm256_setzero_si256());
+    __m256i one_bytes = _mm256_abs_epi8(ones);
+    __m256i spaces = _mm256_slli_epi16(one_bytes, 5);
+
+    for (; i + 32 <= length; i += 32) {
+      __m256i data = _mm256_loadu_si256((const __m256i *)(input + i));
+      // Compare: set byte to 0xFF if data > space, else 0x00
+      __m256i gt_space = _mm256_cmpgt_epi8(data, spaces);
+      // Extract high bit of each byte to a 32-bit mask
+      uint32_t mask = (uint32_t)_mm256_movemask_epi8(gt_space);
+      // Count bits set
+      count += _mm_popcnt_u32(mask);
+    }
+  }
+
+  // Handle remaining bytes with scalar
+  for (; i < length; i++) {
+    count += (input[i] > ' ');
+  }
+
+  // Check for padding '=' at the end (at most 2 padding characters)
+  // Scan backwards, skipping whitespace, to find padding
+  size_t padding = 0;
+  size_t pos = length;
+  while (pos > 0 && padding < 2) {
+    char c = input[--pos];
+    if (c == '=') {
+      padding++;
+    } else if (c > ' ') {
+      break;
+    }
+  }
+  size_t base64_count = count - padding;
+
+  // Calculate binary length from the number of base64 characters
+  // Every 4 base64 characters encode 3 binary bytes
+  // Remainder of 2 encodes 1 byte, remainder of 3 encodes 2 bytes
+  if (base64_count % 4 <= 1) {
+    return base64_count / 4 * 3;
+  }
+  return base64_count / 4 * 3 + (base64_count % 4) - 1;
+}
+
+// char16_t version - use scalar for now as it's less common
+simdutf_warn_unused size_t
+avx2_binary_length_from_base64(const char16_t *input, size_t length) {
+  return scalar::base64::binary_length_from_base64(input, length);
+}
