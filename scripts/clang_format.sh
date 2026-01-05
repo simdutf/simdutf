@@ -31,5 +31,5 @@ gitroot="$(git rev-parse --show-toplevel)"
 cd "$gitroot"
 
 git ls-files -z | \
-    grep -z -E '(\.cpp|\.h)$' |\
+    grep -z -E '(\.c|\.cpp|\.h)$' |\
     xargs --null -P $(nproc) -n1 $cf -i
