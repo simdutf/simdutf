@@ -769,8 +769,8 @@ public:
   }
 };
 
-// AVX2 implementation of binary_length_from_base64
-// Counts non-whitespace characters and adjusts for padding
+// AVX2 implementation of binary_length_from_base64.
+// Counts non-ASCII-whitespace characters and adjusts for padding.
 simdutf_warn_unused size_t
 avx2_binary_length_from_base64(const char *input, size_t length) {
   if (length == 0) {
@@ -781,20 +781,21 @@ avx2_binary_length_from_base64(const char *input, size_t length) {
 
   // Generate space constant (0x20) in each byte using Agner Fog's trick:
   // pcmpeqw -> all 1s, pabsb -> 0x01, psllw by 5 -> 0x20
+  // See https://www.agner.org/optimize/optimizing_assembly.pdf#page=124
   __m256i ones = _mm256_cmpeq_epi16(_mm256_setzero_si256(),
                                     _mm256_setzero_si256());
   __m256i one_bytes = _mm256_abs_epi8(ones);
   __m256i spaces = _mm256_slli_epi16(one_bytes, 5);
 
-  // Round down to 32-byte alignment (aligned loads can't fault)
+  // Round down to 32-byte alignment (aligned loads can't fault).
   const char *aligned_ptr = (const char *)((uintptr_t)input & ~(uintptr_t)31);
   const char *end = input + length;
 
-  // Mask for first iteration: skip bytes before 'input'
+  // Mask for first iteration: skip bytes before 'input'.
   size_t prefix = (size_t)(input - aligned_ptr);
   uint32_t gpr_mask = ~0u << prefix;
 
-  // Process aligned chunks
+  // Process aligned chunks.
   uint32_t mask;
   do {
     __m256i data = _mm256_load_si256((const __m256i *)aligned_ptr);
@@ -806,15 +807,12 @@ avx2_binary_length_from_base64(const char *input, size_t length) {
     gpr_mask = ~0u;
   } while (aligned_ptr < end);
 
-  // Fix the end: subtract any over-counted bytes past 'end'
+  // Fix the end: subtract any over-counted bytes past 'end'.
   size_t overshoot = (size_t)(aligned_ptr - end);
-  if (overshoot > 0) {
-    uint32_t over_mask = ~0u << (32 - overshoot);
-    count -= _mm_popcnt_u32(mask & over_mask);
-  }
+  // Use 64 bit because shifting a 32 bit value by 32 doesn't work.
+  uint64_t over_mask = ~0ULL << (32 - overshoot);
+  count -= _mm_popcnt_u64(mask & over_mask);
 
-  // Check for padding '=' at the end (at most 2 padding characters)
-  // Scan backwards, skipping whitespace, to find padding
   size_t padding = 0;
   size_t pos = length;
   while (pos > 0 && padding < 2) {
@@ -845,48 +843,45 @@ avx2_binary_length_from_base64(const char16_t *input, size_t length) {
 
   size_t count = 0;
 
-  // Generate space constant (0x0020) in each 16-bit word using Agner Fog's trick:
-  // pcmpeqw -> all 1s, pabsw -> 0x0001, psllw by 5 -> 0x0020
+  // Generate space constant (0x0020) in each 16-bit word (see above).
   __m256i ones = _mm256_cmpeq_epi16(_mm256_setzero_si256(),
                                     _mm256_setzero_si256());
   __m256i one_words = _mm256_abs_epi16(ones);
   __m256i spaces = _mm256_slli_epi16(one_words, 5);
 
-  // Round down to 32-byte alignment (aligned loads can't fault)
+  // Round down to 32-byte alignment (aligned loads can't fault).
   const char16_t *aligned_ptr =
       (const char16_t *)((uintptr_t)input & ~(uintptr_t)31);
   const char16_t *end = input + length;
 
-  // Mask for first iteration: skip bytes before 'input'
-  // (prefix is in bytes, not char16_t units)
+  // Mask for first iteration: skip bytes before 'input'.
+  // (prefix is in bytes, not char16_t units).
   size_t prefix_bytes = (size_t)((const char *)input - (const char *)aligned_ptr);
   uint32_t gpr_mask = ~0u << prefix_bytes;
 
-  // Process aligned chunks (16 char16_t = 32 bytes per iteration)
+  // Process aligned chunks (16 char16_t = 32 bytes per iteration).
   uint32_t mask;
   do {
     __m256i data = _mm256_load_si256((const __m256i *)aligned_ptr);
-    // Signed comparison works for ASCII (base64 characters are all < 128)
     __m256i gt_space = _mm256_cmpgt_epi16(data, spaces);
-    // pmovmskb gives 2 bits per char16_t (both 0 or both 1)
+    // pmovmskb gives 2 bits per char16_t (both 0 or both 1).
     mask = (uint32_t)_mm256_movemask_epi8(gt_space);
     mask &= gpr_mask;
     count += _mm_popcnt_u32(mask);
-    aligned_ptr += 16; // 16 char16_t = 32 bytes
+    aligned_ptr += 16;
     gpr_mask = ~0u;
   } while (aligned_ptr < end);
 
   // Fix the end: subtract any over-counted bytes past 'end'
   size_t overshoot_bytes = (size_t)((const char *)aligned_ptr - (const char *)end);
-  if (overshoot_bytes > 0) {
-    uint32_t over_mask = ~0u << (32 - overshoot_bytes);
-    count -= _mm_popcnt_u32(mask & over_mask);
-  }
+  // Use 64 bit because shifting a 32 bit value by 32 doesn't work.
+  uint64_t over_mask = ~0ULL << (32 - overshoot_bytes);
+  count -= _mm_popcnt_u64(mask & over_mask);
 
-  // Each char16_t contributed 2 bits to the mask, so divide by 2
+  // Each char16_t contributed 2 bits to the mask, so divide by 2.
+  // Sadly there's no _mm256_movemask_epi16.
   count /= 2;
 
-  // Check for padding '=' at the end (at most 2 padding characters)
   size_t padding = 0;
   size_t pos = length;
   while (pos > 0 && padding < 2) {
