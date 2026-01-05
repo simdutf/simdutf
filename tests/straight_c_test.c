@@ -177,11 +177,11 @@ int main(void) {
     int r = tests[i].fn();
     if (r != 0) {
       printf("FAILED\n");
-      return 1;
+      return EXIT_FAILURE;
     }
     printf("OK\n");
   }
 
   printf("All tests passed.\n");
-  return 0;
+  return EXIT_SUCCESS;
 }
