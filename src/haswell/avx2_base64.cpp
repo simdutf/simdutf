@@ -783,7 +783,7 @@ static inline uint64_t my_mm256_movemask_epi8(__m256i a) {
   );
   return result;
 #else
-  return _mm256_movemask_epi8(a);
+  return static_cast<uint32_t>(_mm256_movemask_epi8(a));
 #endif
 }
 
@@ -799,7 +799,7 @@ static inline uint64_t my_popcnt_u64(uint64_t x) {
   );
   return result;
 #else
-  return _mm_popcnt_u64(x);
+  return static_cast<uint32_t>(_mm_popcnt_u64(x));
 #endif
 }
 
