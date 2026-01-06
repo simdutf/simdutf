@@ -719,31 +719,15 @@ simdutf_warn_unused size_t binary_length_from_base64(const char_type *input,
   size_t padding = 0;
   size_t pos = length;
   // Skip trailing whitespace
-  while (pos > 0 && input[pos - 1] <= ' ') {
-    pos--;
-  }
-  // Check for first '='
-  if (pos > 0 && input[pos - 1] == '=') {
-    padding++;
-    pos--;
-    // Skip whitespace between padding characters
-    while (pos > 0 && input[pos - 1] <= ' ') {
-      pos--;
-    }
-    // Check for second '='
-    if (pos > 0 && input[pos - 1] == '=') {
+  while (pos > 0 && padding < 2) {
+    char_type c = input[--pos];
+    if (c == '=') {
       padding++;
+    } else if (c > ' ') {
+      break;
     }
   }
-  size_t base64_count = count - padding;
-
-  // Calculate binary length from the number of base64 characters
-  // Every 4 base64 characters encode 3 binary bytes
-  // Remainder of 2 encodes 1 byte, remainder of 3 encodes 2 bytes
-  if (base64_count % 4 <= 1) {
-    return base64_count / 4 * 3;
-  }
-  return base64_count / 4 * 3 + (base64_count % 4) - 1;
+  return ((count - padding) * 3) / 4;
 }
 
 template <typename char_type>
