@@ -1993,7 +1993,7 @@ which does detect invalid input.
 ```cpp
 std::vector<char> buffer(simdutf::binary_length_from_base64(base64.data(), base64.size()));
 simdutf::result r = simdutf::base64_to_binary(base64.data(), base64.size(), buffer.data());
-if(r.error) {
+if (r.error != simdutf::SUCCESS) {
   // handle error
 } else {
   // buffer is already the exact size, no resize needed
@@ -2283,12 +2283,13 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char16_t * in
 simdutf_warn_unused size_t binary_length_from_base64(const char * input, size_t length) noexcept;
 
 /**
- * Compute the binary length from a base64 input with ASCII spaces.
- * This function is useful for well-formed base64 inputs that may contain
- * ASCII spaces (such as line breaks). For such inputs, the result is exact.
+ * Compute the binary length from a base64 input.
+ * This function is useful for base64 inputs that may contain ASCII spaces
+ * (such as line breaks). For such inputs, the result is exact, and for any
+ * inputs the result can be used to size the output buffer passed to
+ * `base64_to_binary`.
  *
- * The function counts non-whitespace characters (ASCII value > 0x20) and
- * subtracts padding characters ('=') found at the end.
+ * The function ignores whitespace and does not require padding characters ('=').
  *
  * @param input         the base64 input to process, in ASCII stored as 16-bit units
  * @param length        the length of the base64 input in 16-bit units

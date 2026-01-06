@@ -4162,12 +4162,13 @@ maximal_binary_length_from_base64(std::span<const char16_t> input) noexcept {
   #endif // SIMDUTF_SPAN
 
 /**
- * Compute the binary length from a base64 input with ASCII spaces.
- * This function is useful for well-formed base64 inputs that may contain
- * ASCII spaces (such as line breaks). For such inputs, the result is exact.
+ * Compute the binary length from a base64 input.
+ * This function is useful for base64 inputs that may contain ASCII spaces
+ * (such as line breaks). For such inputs, the result is exact, and for any
+ * inputs the result can be used to size the output buffer passed to
+ * `base64_to_binary`.
  *
- * The function counts non-whitespace characters (ASCII value > 0x20) and
- * subtracts padding characters ('=') found at the end.
+ * The function ignores whitespace and does not require padding characters ('=').
  *
  * @param input         the base64 input to process
  * @param length        the length of the base64 input in bytes
@@ -4193,12 +4194,13 @@ binary_length_from_base64(
   #endif // SIMDUTF_SPAN
 
 /**
- * Compute the binary length from a base64 input with ASCII spaces.
- * This function is useful for well-formed base64 inputs that may contain
- * ASCII spaces (such as line breaks). For such inputs, the result is exact.
+ * Compute the binary length from a base64 input.
+ * This function is useful for base64 inputs that may contain ASCII spaces
+ * (such as line breaks). For such inputs, the result is exact, and for any
+ * inputs the result can be used to size the output buffer passed to
+ * `base64_to_binary`.
  *
- * The function counts non-whitespace characters (ASCII value > 0x20) and
- * subtracts padding characters ('=') found at the end.
+ * The function ignores whitespace and does not require padding characters ('=').
  *
  * @param input         the base64 input to process, in ASCII stored as 16-bit
  * units
