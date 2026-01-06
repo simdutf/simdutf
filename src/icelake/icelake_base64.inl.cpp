@@ -573,12 +573,23 @@ icelake_binary_length_from_base64(const char *input, size_t length) {
   const char *ptr = input;
   const char *end = input + length;
 
-  // Process 64 bytes at a time.
+  // Scalar prefix: process bytes until aligned to 64 bytes.
+  const char *aligned_ptr =
+      reinterpret_cast<const char *>((reinterpret_cast<size_t>(ptr) + 63) & ~63);
+  if (aligned_ptr > end) {
+    aligned_ptr = end;
+  }
+  while (ptr < aligned_ptr) {
+    count += (*ptr > 0x20) ? 1 : 0;
+    ptr++;
+  }
+
+  // Process 64 bytes at a time with aligned loads.
   __m512i spaces = _mm512_set1_epi8(0x20);
   while (ptr + 64 <= end) {
-    __m512i data = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(ptr));
-    __mmask64 mask = _mm512_cmpgt_epi8_mask(data, spaces);
-    count += _mm_popcnt_u64(mask);
+    __m512i data = _mm512_load_si512(reinterpret_cast<const __m512i *>(ptr));
+    uint64_t mask = _mm512_cmpgt_epi8_mask(data, spaces);
+    count += __builtin_popcountll(mask);
     ptr += 64;
   }
 
@@ -609,10 +620,21 @@ icelake_binary_length_from_base64(const char16_t *input, size_t length) {
   const char16_t *ptr = input;
   const char16_t *end = input + length;
 
-  // Process 32 char16_t (64 bytes) at a time.
+  // Scalar prefix: process char16_t until aligned to 64 bytes.
+  const char16_t *aligned_ptr = reinterpret_cast<const char16_t *>(
+      (reinterpret_cast<size_t>(ptr) + 63) & ~63);
+  if (aligned_ptr > end) {
+    aligned_ptr = end;
+  }
+  while (ptr < aligned_ptr) {
+    count += (*ptr > 0x20) ? 1 : 0;
+    ptr++;
+  }
+
+  // Process 32 char16_t (64 bytes) at a time with aligned loads.
   __m512i spaces = _mm512_set1_epi16(0x20);
   while (ptr + 32 <= end) {
-    __m512i data = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(ptr));
+    __m512i data = _mm512_load_si512(reinterpret_cast<const __m512i *>(ptr));
     __mmask32 mask = _mm512_cmpgt_epi16_mask(data, spaces);
     count += _mm_popcnt_u32(mask);
     ptr += 32;
