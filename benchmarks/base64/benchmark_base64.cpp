@@ -66,7 +66,7 @@ int base64_decode_skip_spaces(const char *src, size_t srclen, char *out,
   return !state.bytes;
 }
 
-enum class BenchmarkMode { roundtrip, decode, encode, bun, roundtripurl, list };
+enum class BenchmarkMode { roundtrip, decode, encode, bun, roundtripurl, lengths, list };
 
 const char *name(BenchmarkMode bm) {
   switch (bm) {
@@ -80,6 +80,8 @@ const char *name(BenchmarkMode bm) {
     return "roundtrip-url";
   case BenchmarkMode::bun:
     return "bun";
+  case BenchmarkMode::lengths:
+    return "lengths";
   case BenchmarkMode::list:
     return "list";
   default:
@@ -139,6 +141,7 @@ void show_help() {
          "passed strings\n");
   printf("  -l                 List implementations\n");
   printf("  -b, --bench-bun    Bun benchmark\n");
+  printf("  -L, --lengths      Benchmark only base64 length functions (maximal & exact)\n");
 
   printf(" See https://github.com/lemire/base64data for test data.\n");
 }
@@ -314,6 +317,9 @@ public:
     case BenchmarkMode::encode:
       encode();
       break;
+    case BenchmarkMode::lengths:
+      lengths();
+      break;
     case BenchmarkMode::bun:
       bench_bun();
       break;
@@ -336,11 +342,12 @@ private:
   }
 
   void list() {
-    std::array<BenchmarkMode, 4> modes = {
+    std::array<BenchmarkMode, 5> modes = {
         BenchmarkMode::roundtrip,
         BenchmarkMode::roundtripurl,
         BenchmarkMode::encode,
         BenchmarkMode::decode,
+        BenchmarkMode::lengths,
     };
 
     for (const auto bm : modes) {
@@ -358,6 +365,9 @@ private:
         break;
       case BenchmarkMode::encode:
         encode();
+        break;
+      case BenchmarkMode::lengths:
+        lengths();
         break;
       default:
         break;
@@ -625,6 +635,33 @@ private:
 #endif
     }
   }
+
+  void lengths() {
+    if (benchmark_mode != BenchmarkMode::list) {
+      printf("# lengths\n");
+      printf("# Benchmark only simdutf length functions (maximal and exact)\n");
+    }
+
+    for (auto &e : simdutf::get_available_implementations()) {
+      if (!e->supported_by_runtime_system()) {
+        continue;
+      }
+      simdutf::get_active_implementation() = e;
+
+      volatile size_t len = 0;
+      summarize("simdutf::" + e->name() + "_maximal_binary_length_from_base64", [this, &e, &len]() {
+        for (const std::vector<char> &source : data) {
+          len = e->maximal_binary_length_from_base64(source.data(), source.size());
+        }
+      });
+
+      summarize("simdutf::" + e->name() + "_binary_length_from_base64", [this, &e, &len]() {
+        for (const std::vector<char> &source : data) {
+          len = e->binary_length_from_base64(source.data(), source.size());
+        }
+      });
+    }
+  }
 };
 
 void bench_bun() {
@@ -722,6 +759,9 @@ struct Options {
       } else if ((arg == "-b") || (arg == "--bun")) {
         benchmark_mode = BenchmarkMode::bun;
         collect_files = true;
+      } else if ((arg == "-L") || (arg == "--lengths")) {
+        benchmark_mode = BenchmarkMode::lengths;
+        collect_files = true;
       } else if (arg == "-l") {
         benchmark_mode = BenchmarkMode::list;
         collect_files = true;
@@ -747,6 +787,7 @@ struct Options {
     case BenchmarkMode::roundtripurl:
     case BenchmarkMode::decode:
     case BenchmarkMode::encode:
+    case BenchmarkMode::lengths:
       if (files.empty()) {
         fprintf(stderr, "option %s: no files were given\n",
                 name(benchmark_mode));
