@@ -284,8 +284,8 @@ public:
                    char character) const noexcept;
   const char16_t *find(const char16_t *start, const char16_t *end,
                        char16_t character) const noexcept;
-};
 #endif // SIMDUTF_FEATURE_BASE64
+};
 
 } // namespace arm64
 } // namespace simdutf

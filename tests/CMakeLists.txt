@@ -421,6 +421,18 @@ add_cpp_test(span_tests)
 target_link_libraries(span_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
+
+# C API tests
+add_cpp_test(simdutf_c_tests)
+target_link_libraries(simdutf_c_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)
+
+add_executable(straight_c_test straight_c_test.c)
+target_include_directories(straight_c_test PUBLIC ${SIMDUTF_TEST_INCLUDE_DIR})
+target_link_libraries(straight_c_test PUBLIC simdutf)
+add_test(NAME straight_c_test COMMAND straight_c_test)
+
 if(SIMDUTF_ATOMIC_BASE64_TESTS)
   add_cpp_test(atomic_base64_tests)
   target_link_libraries(atomic_base64_tests

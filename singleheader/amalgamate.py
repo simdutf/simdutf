@@ -282,9 +282,15 @@ def create_files():
         for cpp in ALLCFILES:
             doinclude(cpp, f"ERROR {cpp} not found")
 
-    # copy the README and DEMOCPP
+    # copy the README, DEMO and C API header
+    print(f"Copying additional files to {outdir}")
+    # C API header
+    c_header_path = os.path.join(PROJECTPATH, "include", "simdutf_c.h")
+    print(f"Creating {outdir}/simdutf_c.h")
+    shutil.copy2(c_header_path, outdir)
     if SCRIPTPATH != outdir:
-        for name in ["amalgamation_demo.cpp", "README.md"]:
+        for name in ["amalgamation_demo.cpp", "README.md", "amalgamation_demo.c"]:
+            print(f"Processing {name}")
             path = os.path.join(SCRIPTPATH, name)
             print(f"Creating {outdir}/{name}")
             shutil.copy2(path, outdir)
@@ -297,7 +303,7 @@ def create_zip():
     path = os.path.join(outdir, context.zipname)
     print(f"Creating {path}")
     with zipfile.ZipFile(path, 'w') as zf:
-        for name in ["simdutf.cpp", "simdutf.h", "amalgamation_demo.cpp", "README.md"]:
+        for name in ["simdutf.cpp", "simdutf.h", "amalgamation_demo.cpp", "README.md", "simdutf_c.h", "amalgamation_demo.c"]:
             source = os.path.join(outdir, name)
             zf.write(source, name)
 

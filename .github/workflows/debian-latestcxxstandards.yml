@@ -17,6 +17,7 @@ jobs:
       matrix:
         compiler: [g++-15, clang++-21]
         cppversion: [26,]
+        cversion: [23,]
     steps:
       - uses: actions/checkout@v4
       - name: install
@@ -28,6 +29,7 @@ jobs:
           cmake \
              -DCMAKE_CXX_COMPILER=${{matrix.compiler}} \
              -DSIMDUTF_CXX_STANDARD=${{matrix.cppversion}} \
+             -DSIMDUTF_C_STANDARD=${{matrix.cversion}} \
              -DSIMDUTF_BENCHMARKS=OFF \
              -DCMAKE_BUILD_TYPE=Release \
              -DSIMDUTF_FAST_TESTS=On \
