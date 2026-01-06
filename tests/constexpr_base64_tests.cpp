@@ -43,6 +43,35 @@ TEST(compile_time_maximal_binary_length16) {
                 binary.size());
 }
 
+TEST(compile_time_binary_length_from_base64) {
+  using namespace std::string_view_literals;
+
+  // empty input
+  static_assert(simdutf::binary_length_from_base64(""sv) == 0);
+  static_assert(simdutf::binary_length_from_base64(" "sv) == 0);
+
+  // increasing length of "a" repeated
+  static_assert(simdutf::binary_length_from_base64("YQ=="sv) == 1);
+  static_assert(simdutf::binary_length_from_base64("YWE="sv) == 2);
+  static_assert(simdutf::binary_length_from_base64("YWFh"sv) == 3);
+  static_assert(simdutf::binary_length_from_base64("YWFhYQ=="sv) == 4);
+  static_assert(simdutf::binary_length_from_base64("YWFhYWE="sv) == 5);
+
+  // all these are base64 of 'a', mixed with whitespace in different ways
+  constexpr std::array mixedwithspaces{
+      " YQ=="sv,     //
+      "Y Q=="sv,     //
+      "YQ =="sv,     //
+      "YQ= ="sv,     //
+      "YQ== "sv,     //
+      " Y Q = = "sv, //
+      " YQ = ="sv,   //
+  };
+  static_assert(std::ranges::all_of(mixedwithspaces, [](auto s) {
+    return simdutf::binary_length_from_base64(s) == 1;
+  }));
+}
+
 namespace {
 
 template <auto input>

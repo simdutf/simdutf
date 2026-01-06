@@ -4168,7 +4168,8 @@ maximal_binary_length_from_base64(std::span<const char16_t> input) noexcept {
  * inputs the result can be used to size the output buffer passed to
  * `base64_to_binary`.
  *
- * The function ignores whitespace and does not require padding characters ('=').
+ * The function ignores whitespace and does not require padding characters
+ * ('=').
  *
  * @param input         the base64 input to process
  * @param length        the length of the base64 input in bytes
@@ -4182,8 +4183,8 @@ binary_length_from_base64(
     const detail::input_span_of_byte_like auto &input) noexcept {
     #if SIMDUTF_CPLUSPLUS23
   if consteval {
-    return scalar::base64::binary_length_from_base64(
-        detail::constexpr_cast_ptr<uint8_t>(input.data()), input.size());
+    return scalar::base64::binary_length_from_base64(input.data(),
+                                                     input.size());
   } else
     #endif
   {
@@ -4200,7 +4201,8 @@ binary_length_from_base64(
  * inputs the result can be used to size the output buffer passed to
  * `base64_to_binary`.
  *
- * The function ignores whitespace and does not require padding characters ('=').
+ * The function ignores whitespace and does not require padding characters
+ * ('=').
  *
  * @param input         the base64 input to process, in ASCII stored as 16-bit
  * units
