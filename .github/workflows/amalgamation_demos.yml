@@ -1,0 +1,34 @@
+name: amalgamation demos
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  c++ amalgamation:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: C++ amalgamation demo
+        run: |
+          cd singleheader
+          ./amalgamate.py
+          c++ -o amalgamation_demo amalgamation_demo.cpp -std=c++17
+          ./amalgamation_demo
+
+c amalgamation:
+  runs-on: ubuntu-24.04
+  steps:
+    - uses: actions/checkout@v4
+    - name: c amalgamation demo
+      run: |
+        cd singleheader
+        ./amalgamate.py
+        c++ -c simdutf.cpp
+        cc -c ./amalgamation_demo.c
+        c++ amalgamation_demo.o simdutf.o -o cdemo
+        ./cdemo
