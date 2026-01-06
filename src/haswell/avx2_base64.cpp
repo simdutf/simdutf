@@ -779,28 +779,23 @@ avx2_binary_length_from_base64(const char *input, size_t length) {
 
   size_t count = 0;
 
-  // Generate space constant (0x20) in each byte using Agner Fog's trick:
-  // pcmpeqw -> all 1s, pabsb -> 0x01, psllw by 5 -> 0x20
-  // See https://www.agner.org/optimize/optimizing_assembly.pdf#page=124
-  __m256i ones = _mm256_cmpeq_epi16(_mm256_setzero_si256(),
-                                    _mm256_setzero_si256());
-  __m256i one_bytes = _mm256_abs_epi8(ones);
-  __m256i spaces = _mm256_slli_epi16(one_bytes, 5);
+  size_t prefix = reinterpret_cast<size_t>(input) & 31;
 
   // Round down to 32-byte alignment (aligned loads can't fault).
-  const char *aligned_ptr = (const char *)((uintptr_t)input & ~(uintptr_t)31);
+  const char *aligned_ptr = input - prefix;
   const char *end = input + length;
 
   // Mask for first iteration: skip bytes before 'input'.
-  size_t prefix = (size_t)(input - aligned_ptr);
   uint32_t gpr_mask = ~0u << prefix;
 
   // Process aligned chunks.
   uint32_t mask;
+  __m256i spaces = _mm256_set1_epi8(0x20);  // Pattern of 0x202020...
   do {
-    __m256i data = _mm256_load_si256((const __m256i *)aligned_ptr);
+    __m256i data =
+        _mm256_load_si256(reinterpret_cast<const __m256i *>(aligned_ptr));
     __m256i gt_space = _mm256_cmpgt_epi8(data, spaces);
-    mask = (uint32_t)_mm256_movemask_epi8(gt_space);
+    mask = _mm256_movemask_epi8(gt_space);
     mask &= gpr_mask;
     count += _mm_popcnt_u32(mask);
     aligned_ptr += 32;
@@ -808,7 +803,7 @@ avx2_binary_length_from_base64(const char *input, size_t length) {
   } while (aligned_ptr < end);
 
   // Fix the end: subtract any over-counted bytes past 'end'.
-  size_t overshoot = (size_t)(aligned_ptr - end);
+  size_t overshoot = aligned_ptr - end;
   // Use 64 bit because shifting a 32 bit value by 32 doesn't work.
   uint64_t over_mask = ~0ULL << (32 - overshoot);
   count -= _mm_popcnt_u64(mask & over_mask);
@@ -823,15 +818,7 @@ avx2_binary_length_from_base64(const char *input, size_t length) {
       break;
     }
   }
-  size_t base64_count = count - padding;
-
-  // Calculate binary length from the number of base64 characters
-  // Every 4 base64 characters encode 3 binary bytes
-  // Remainder of 2 encodes 1 byte, remainder of 3 encodes 2 bytes
-  if (base64_count % 4 <= 1) {
-    return base64_count / 4 * 3;
-  }
-  return base64_count / 4 * 3 + (base64_count % 4) - 1;
+  return ((count - padding) * 3) / 4;
 }
 
 // char16_t version using AVX2
@@ -843,37 +830,32 @@ avx2_binary_length_from_base64(const char16_t *input, size_t length) {
 
   size_t count = 0;
 
-  // Generate space constant (0x0020) in each 16-bit word (see above).
-  __m256i ones = _mm256_cmpeq_epi16(_mm256_setzero_si256(),
-                                    _mm256_setzero_si256());
-  __m256i one_words = _mm256_abs_epi16(ones);
-  __m256i spaces = _mm256_slli_epi16(one_words, 5);
+  size_t prefix = reinterpret_cast<size_t>(input) & 31;
 
   // Round down to 32-byte alignment (aligned loads can't fault).
-  const char16_t *aligned_ptr =
-      (const char16_t *)((uintptr_t)input & ~(uintptr_t)31);
-  const char16_t *end = input + length;
+  const char *aligned_ptr = reinterpret_cast<const char *>(input) - prefix;
+  const char *end = reinterpret_cast<const char*>(input + length);
 
   // Mask for first iteration: skip bytes before 'input'.
-  // (prefix is in bytes, not char16_t units).
-  size_t prefix_bytes = (size_t)((const char *)input - (const char *)aligned_ptr);
-  uint32_t gpr_mask = ~0u << prefix_bytes;
+  uint32_t gpr_mask = ~0u << prefix;
 
   // Process aligned chunks (16 char16_t = 32 bytes per iteration).
   uint32_t mask;
+  __m256i spaces = _mm256_set1_epi16(0x20);  // Pattern of 0x0020'0020'0020...
   do {
-    __m256i data = _mm256_load_si256((const __m256i *)aligned_ptr);
+    __m256i data =
+        _mm256_load_si256(reinterpret_cast<const __m256i *>(aligned_ptr));
     __m256i gt_space = _mm256_cmpgt_epi16(data, spaces);
     // pmovmskb gives 2 bits per char16_t (both 0 or both 1).
-    mask = (uint32_t)_mm256_movemask_epi8(gt_space);
+    mask = _mm256_movemask_epi8(gt_space);
     mask &= gpr_mask;
     count += _mm_popcnt_u32(mask);
-    aligned_ptr += 16;
+    aligned_ptr += 32;
     gpr_mask = ~0u;
   } while (aligned_ptr < end);
 
   // Fix the end: subtract any over-counted bytes past 'end'
-  size_t overshoot_bytes = (size_t)((const char *)aligned_ptr - (const char *)end);
+  size_t overshoot_bytes = aligned_ptr - end;
   // Use 64 bit because shifting a 32 bit value by 32 doesn't work.
   uint64_t over_mask = ~0ULL << (32 - overshoot_bytes);
   count -= _mm_popcnt_u64(mask & over_mask);
@@ -892,10 +874,5 @@ avx2_binary_length_from_base64(const char16_t *input, size_t length) {
       break;
     }
   }
-  size_t base64_count = count - padding;
-
-  if (base64_count % 4 <= 1) {
-    return base64_count / 4 * 3;
-  }
-  return base64_count / 4 * 3 + (base64_count % 4) - 1;
+  return ((count - padding) * 3) / 4;
 }
