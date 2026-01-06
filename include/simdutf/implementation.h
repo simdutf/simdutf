@@ -4628,7 +4628,7 @@ base64_valid_or_padding(char16_t input,
  * INVALID_BASE64_CHARACTER error (in the input in units) if any, or the number
  * of units processed if successful.
  */
-simdutf_warn_unused result
+simdutf_really_inline simdutf_constexpr23 simdutf_warn_unused result
 base64_to_binary_safe(const char *input, size_t length, char *output,
                       size_t &outlen, base64_options options = base64_default,
                       last_chunk_handling_options last_chunk_options =
@@ -4636,7 +4636,7 @@ base64_to_binary_safe(const char *input, size_t length, char *output,
                       bool decode_up_to_bad_char = false) noexcept;
 // the span overload has moved to the bottom of the file
 
-simdutf_warn_unused result
+simdutf_really_inline simdutf_constexpr23 simdutf_warn_unused result
 base64_to_binary_safe(const char16_t *input, size_t length, char *output,
                       size_t &outlen, base64_options options = base64_default,
                       last_chunk_handling_options last_chunk_options =
@@ -6760,6 +6760,27 @@ get_active_implementation();
   #include <simdutf/base64_implementation.h>
 
 namespace simdutf {
+
+simdutf_really_inline simdutf_constexpr23 simdutf_warn_unused result
+base64_to_binary_safe(const char *input, size_t length, char *output,
+                      size_t &outlen, base64_options options,
+                      last_chunk_handling_options last_chunk_options,
+                      bool decode_up_to_bad_char) noexcept {
+  return base64_to_binary_safe_impl<char>(input, length, output, outlen,
+                                          options, last_chunk_options,
+                                          decode_up_to_bad_char);
+}
+
+simdutf_really_inline simdutf_constexpr23 simdutf_warn_unused result
+base64_to_binary_safe(const char16_t *input, size_t length, char *output,
+                      size_t &outlen, base64_options options,
+                      last_chunk_handling_options last_chunk_options,
+                      bool decode_up_to_bad_char) noexcept {
+  return base64_to_binary_safe_impl<char16_t>(
+      input, length, output, outlen, options, last_chunk_options,
+      decode_up_to_bad_char);
+}
+
   #if SIMDUTF_SPAN
 /**
  * @brief span overload

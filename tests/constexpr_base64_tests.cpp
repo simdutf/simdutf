@@ -322,6 +322,23 @@ TEST(compile_time_base64_to_binary_safe) {
   }
 }
 
+
+TEST(compile_time_base64_to_binary_safe_pointers) {
+  using namespace simdutf::tests::helpers;
+  constexpr auto base64 = "QWJyYWNhZGFicmEh"_latin1;
+
+  constexpr auto result = [](const auto& input) consteval {
+    char buffer[32] = {};
+    size_t outlen = 32;
+    // explicitly call pointer overload
+    auto r = simdutf::base64_to_binary_safe(input.data(), input.size(), buffer, outlen);
+    return std::pair{outlen, r};
+  }(base64);
+
+  static_assert(result.first == 12);
+  static_assert(result.second.error == simdutf::error_code::SUCCESS);
+}
+
 #else
 TEST(no_compile_time_tests_below_cpp23) {}
 #endif
