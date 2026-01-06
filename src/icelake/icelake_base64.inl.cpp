@@ -564,3 +564,113 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   }
   return {SUCCESS, srclen, size_t(dst - dstinit)};
 }
+
+// AVX-512 implementation of binary_length_from_base64.
+// Counts non-ASCII-whitespace characters and adjusts for padding.
+simdutf_warn_unused size_t
+icelake_binary_length_from_base64(const char *input, size_t length) {
+  if (length == 0) {
+    return 0;
+  }
+
+  size_t count = 0;
+
+  size_t prefix = reinterpret_cast<size_t>(input) & 63;
+
+  // Round down to 64-byte alignment (aligned loads can't fault).
+  const char *aligned_ptr = input - prefix;
+  const char *end = input + length;
+
+  // Mask for first iteration: skip bytes before 'input'.
+  __mmask64 gpr_mask = ~(__mmask64)0 << prefix;
+
+  // Process aligned chunks.
+  __mmask64 mask;
+  __m512i spaces = _mm512_set1_epi8(0x20);
+  do {
+    __m512i data =
+        _mm512_load_si512(reinterpret_cast<const __m512i *>(aligned_ptr));
+    mask = _mm512_cmpgt_epi8_mask(data, spaces);
+    mask &= gpr_mask;
+    count += _mm_popcnt_u64(mask);
+    aligned_ptr += 64;
+    gpr_mask = ~(__mmask64)0;
+  } while (aligned_ptr < end);
+
+  // Fix the end: subtract any over-counted bytes past 'end'.
+  size_t overshoot = aligned_ptr - end;
+  if (overshoot > 0) {
+    __mmask64 over_mask = ~(__mmask64)0 << (64 - overshoot);
+    count -= _mm_popcnt_u64(mask & over_mask);
+  }
+
+  size_t padding = 0;
+  size_t pos = length;
+  while (pos > 0 && padding < 2) {
+    char c = input[--pos];
+    if (c == '=') {
+      padding++;
+    } else if (c > ' ') {
+      break;
+    }
+  }
+  return ((count - padding) * 3) / 4;
+}
+
+// char16_t version using AVX-512
+simdutf_warn_unused size_t
+icelake_binary_length_from_base64(const char16_t *input, size_t length) {
+  if (length == 0) {
+    return 0;
+  }
+
+  size_t count = 0;
+
+  size_t prefix = reinterpret_cast<size_t>(input) & 63;
+
+  // Round down to 64-byte alignment (aligned loads can't fault).
+  const char *aligned_ptr = reinterpret_cast<const char *>(input) - prefix;
+  const char *end = reinterpret_cast<const char *>(input + length);
+
+  // Mask for first iteration: skip bytes before 'input'.
+  __mmask64 gpr_mask = ~(__mmask64)0 << prefix;
+
+  // Process aligned chunks (32 char16_t = 64 bytes per iteration).
+  __mmask64 mask;
+  __m512i spaces = _mm512_set1_epi16(0x20);
+  do {
+    __m512i data =
+        _mm512_load_si512(reinterpret_cast<const __m512i *>(aligned_ptr));
+    // Use epi16 comparison for char16_t, then expand to byte mask.
+    __mmask32 gt_space = _mm512_cmpgt_epi16_mask(data, spaces);
+    // Each char16_t contributes 2 bits to match AVX2's movemask behavior.
+    mask = _pdep_u64(gt_space, 0xAAAAAAAAAAAAAAAAULL) |
+           _pdep_u64(gt_space, 0x5555555555555555ULL);
+    mask &= gpr_mask;
+    count += _mm_popcnt_u64(mask);
+    aligned_ptr += 64;
+    gpr_mask = ~(__mmask64)0;
+  } while (aligned_ptr < end);
+
+  // Fix the end: subtract any over-counted bytes past 'end'.
+  size_t overshoot_bytes = aligned_ptr - end;
+  if (overshoot_bytes > 0) {
+    __mmask64 over_mask = ~(__mmask64)0 << (64 - overshoot_bytes);
+    count -= _mm_popcnt_u64(mask & over_mask);
+  }
+
+  // Each char16_t contributed 2 bits to the mask, so divide by 2.
+  count /= 2;
+
+  size_t padding = 0;
+  size_t pos = length;
+  while (pos > 0 && padding < 2) {
+    char16_t c = input[--pos];
+    if (c == '=') {
+      padding++;
+    } else if (c > ' ') {
+      break;
+    }
+  }
+  return ((count - padding) * 3) / 4;
+}

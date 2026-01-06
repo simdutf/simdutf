@@ -1863,6 +1863,18 @@ size_t implementation::binary_to_base64_with_lines(
   }
 }
 
+simdutf_warn_unused size_t
+implementation::binary_length_from_base64(const char *input,
+                                          size_t length) const noexcept {
+  return icelake_binary_length_from_base64(input, length);
+}
+
+simdutf_warn_unused size_t
+implementation::binary_length_from_base64(const char16_t *input,
+                                          size_t length) const noexcept {
+  return icelake_binary_length_from_base64(input, length);
+}
+
 const char *implementation::find(const char *start, const char *end,
                                  char character) const noexcept {
   return util_find(start, end, character);
