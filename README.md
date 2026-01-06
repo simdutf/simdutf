@@ -1969,9 +1969,13 @@ if(r.error) {
 }
 ```
 
-If you have well-formed base64 input with ASCII spaces and want to know the output size
-without having to resize afterward, you can use `binary_length_from_base64` which counts
-non-whitespace characters (excluding padding):
+You can calculate the exact output space needed by using
+`binary_length_from_base64` which produces an exact number of output
+bytes if the input is well-formed. Well-formed means it contains
+only valid base64 and ASCII whitespace. Invalid input can be given to
+`binary_length_from_base64`. It will not detect invalid input, but the
+result can be safely used to size the output buffer for `base64_to_binary`,
+which does detect invalid input.
 
 ```cpp
 std::vector<char> buffer(simdutf::binary_length_from_base64(base64.data(), base64.size()));
@@ -2251,12 +2255,13 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char * input,
 simdutf_warn_unused size_t maximal_binary_length_from_base64(const char16_t * input, size_t length) noexcept;
 
 /**
- * Compute the binary length from a base64 input with ASCII spaces.
- * This function is useful for well-formed base64 inputs that may contain
- * ASCII spaces (such as line breaks). For such inputs, the result is exact.
+ * Compute the binary length from a base64 input.
+ * This function is useful for base64 inputs that may contain ASCII spaces
+ * (such as line breaks). For such inputs, the result is exact, and for any
+ * inputs the result can be used to size the output buffer passed to
+ * `base64_to_binary`.
  *
- * The function counts non-whitespace characters (ASCII value > 0x20) and
- * subtracts padding characters ('=') found at the end.
+ * The function ignores whitespace and does not require padding characters ('=').
  *
  * @param input         the base64 input to process
  * @param length        the length of the base64 input in bytes
