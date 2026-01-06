@@ -774,25 +774,33 @@ public:
 // will do silly sign-extend and top-half-zeroing instructions because of this.
 // This version doesn't lie to the compiler about the result size.
 static inline uint64_t my_mm256_movemask_epi8(__m256i a) {
-    uint64_t result;
-    __asm__ (
-        "vpmovmskb %1, %0"
-        : "=r" (result)
-        : "x" (a)
-    );
-    return result;
+#if defined(__GNUC__) || defined(__clang__)
+  uint64_t result;
+  __asm__ (
+      "vpmovmskb %1, %0"
+      : "=r" (result)
+      : "x" (a)
+  );
+  return result;
+#else
+  return _mm256_movemask_epi8(a);
+#endif
 }
 
 // The built-in versions of _mm_popcnt_u64 and __builtin_popcount
 // both erroneously claim to return 32 bit values, so fix that too.
 static inline uint64_t my_popcnt_u64(uint64_t x) {
-    uint64_t result;
-    __asm__ (
-        "popcnt %1, %0"
-        : "=r" (result)
-        : "r" (x)
-    );
-    return result;
+#if defined(__GNUC__) || defined(__clang__)
+  uint64_t result;
+  __asm__ (
+      "popcnt %1, %0"
+      : "=r" (result)
+      : "r" (x)
+  );
+  return result;
+#else
+  return _mm_popcnt_u64(x);
+#endif
 }
 
 // AVX2 implementation of binary_length_from_base64.
