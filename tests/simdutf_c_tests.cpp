@@ -1,9 +1,6 @@
 #include <tests/helpers/test.h>
 #include <cstring>
-
-extern "C" {
 #include "simdutf_c.h"
-}
 
 const char *hello = "hello";
 const size_t hello_len = 5;
