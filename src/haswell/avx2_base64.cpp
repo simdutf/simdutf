@@ -769,40 +769,6 @@ public:
   }
 };
 
-// The built-in version of _mm256_movemask_epi8 returns an int, but the
-// instruction actually returns a zero-extended 64 bit value.  The compiler
-// will do silly sign-extend and top-half-zeroing instructions because of this.
-// This version doesn't lie to the compiler about the result size.
-static inline uint64_t my_mm256_movemask_epi8(__m256i a) {
-#if defined(__GNUC__) || defined(__clang__)
-  uint64_t result;
-  __asm__ (
-      "vpmovmskb %1, %0"
-      : "=r" (result)
-      : "x" (a)
-  );
-  return result;
-#else
-  return static_cast<uint32_t>(_mm256_movemask_epi8(a));
-#endif
-}
-
-// The built-in versions of _mm_popcnt_u64 and __builtin_popcount
-// both erroneously claim to return 32 bit values, so fix that too.
-static inline uint64_t my_popcnt_u64(uint64_t x) {
-#if defined(__GNUC__) || defined(__clang__)
-  uint64_t result;
-  __asm__ (
-      "popcnt %1, %0"
-      : "=r" (result)
-      : "r" (x)
-  );
-  return result;
-#else
-  return static_cast<uint32_t>(_mm_popcnt_u64(x));
-#endif
-}
-
 // AVX2 implementation of binary_length_from_base64.
 // Counts non-ASCII-whitespace characters and adjusts for padding.
 simdutf_warn_unused size_t
@@ -822,27 +788,33 @@ avx2_binary_length_from_base64(const char *input, size_t length) {
   // Mask for first iteration: skip bytes before 'input'.
   // This mask is really 32 bit, but we use 64 bit registers throughout to
   // remove zero-extend and sign-extend instructions from the inner loop.
-  uint64_t gpr_mask = ~0ULL << prefix;
+  uint32_t gpr_mask = ~0U << prefix;
 
   // Process aligned chunks.
-  uint64_t mask;
-  __m256i spaces = _mm256_set1_epi8(0x20);  // Pattern of 0x202020...
+  uint32_t mask;
+  // Generate space constant (0x20) in each byte using Agner Fog's trick:
+  // pcmpeqw -> all 1s, pabsb -> 0x01, psllw by 5 -> 0x20
+  // See https://www.agner.org/optimize/optimizing_assembly.pdf#page=124
+  __m256i ones = _mm256_cmpeq_epi16(_mm256_setzero_si256(),
+                                    _mm256_setzero_si256());
+  __m256i one_bytes = _mm256_abs_epi8(ones);
+  __m256i spaces = _mm256_slli_epi16(one_bytes, 5);
   do {
     __m256i data =
         _mm256_load_si256(reinterpret_cast<const __m256i *>(aligned_ptr));
     __m256i gt_space = _mm256_cmpgt_epi8(data, spaces);
-    mask = my_mm256_movemask_epi8(gt_space);
+    mask = _mm256_movemask_epi8(gt_space);
     mask &= gpr_mask;
-    count += my_popcnt_u64(mask);
+    count += _mm_popcnt_u64(mask);
     aligned_ptr += 32;
-    gpr_mask = ~0ULL;
+    gpr_mask = ~0U;
   } while (aligned_ptr < end);
 
   // Fix the end: subtract any over-counted bytes past 'end'.
   size_t overshoot = aligned_ptr - end;
   // Use 64 bit because shifting a 32 bit value by 32 doesn't work.
   uint64_t over_mask = ~0ULL << (32 - overshoot);
-  count -= my_popcnt_u64(mask & over_mask);
+  count -= _mm_popcnt_u64(mask & over_mask);
 
   size_t padding = 0;
   size_t pos = length;
@@ -875,28 +847,28 @@ avx2_binary_length_from_base64(const char16_t *input, size_t length) {
   // Mask for first iteration: skip bytes before 'input'.
   // This mask is really 32 bit, but we use 64 bit registers throughout to
   // remove zero-extend and sign-extend instructions from the inner loop.
-  uint64_t gpr_mask = ~0ULL << prefix;
+  uint32_t gpr_mask = ~0U << prefix;
 
   // Process aligned chunks (16 char16_t = 32 bytes per iteration).
-  uint64_t mask;
+  uint32_t mask;
   __m256i spaces = _mm256_set1_epi16(0x20);  // Pattern of 0x0020'0020'0020...
   do {
     __m256i data =
         _mm256_load_si256(reinterpret_cast<const __m256i *>(aligned_ptr));
     __m256i gt_space = _mm256_cmpgt_epi16(data, spaces);
     // pmovmskb gives 2 bits per char16_t (both 0 or both 1).
-    mask = my_mm256_movemask_epi8(gt_space);
+    mask = _mm256_movemask_epi8(gt_space);
     mask &= gpr_mask;
-    count += my_popcnt_u64(mask);
+    count += _mm_popcnt_u64(mask);
     aligned_ptr += 32;
-    gpr_mask = ~0ULL;
+    gpr_mask = ~0U;
   } while (aligned_ptr < end);
 
   // Fix the end: subtract any over-counted bytes past 'end'
   size_t overshoot_bytes = aligned_ptr - end;
   // Use 64 bit because shifting a 32 bit value by 32 doesn't work.
   uint64_t over_mask = ~0ULL << (32 - overshoot_bytes);
-  count -= my_popcnt_u64(mask & over_mask);
+  count -= _mm_popcnt_u64(mask & over_mask);
 
   // Each char16_t contributed 2 bits to the mask, so divide by 2.
   // Sadly there's no _mm256_movemask_epi16.
