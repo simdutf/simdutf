@@ -2570,7 +2570,6 @@ The following functions are also not constexpr but expected to be so in a future
 
   * `autodetect_encoding`
   * `detect_encodings`
-  * `base64_to_binary_safe`
 
 Here is an example:
 
