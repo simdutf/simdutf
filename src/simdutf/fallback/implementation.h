@@ -223,95 +223,96 @@ public:
 #if SIMDUTF_FEATURE_UTF16
   void change_endianness_utf16(const char16_t *buf, size_t length,
                                char16_t *output) const noexcept final;
-  simdutf_warn_unused size_t count_utf16le(const char16_t *buf,
-                                           size_t length) const noexcept;
-  simdutf_warn_unused size_t count_utf16be(const char16_t *buf,
-                                           size_t length) const noexcept;
+  simdutf_warn_unused size_t
+  count_utf16le(const char16_t *buf, size_t length) const noexcept override;
+  simdutf_warn_unused size_t
+  count_utf16be(const char16_t *buf, size_t length) const noexcept override;
 #endif // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8
   simdutf_warn_unused size_t count_utf8(const char *buf,
-                                        size_t length) const noexcept;
+                                        size_t length) const noexcept override;
 #endif // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF16
-  simdutf_warn_unused size_t
-  utf8_length_from_utf16le(const char16_t *input, size_t length) const noexcept;
-  simdutf_warn_unused size_t
-  utf8_length_from_utf16be(const char16_t *input, size_t length) const noexcept;
+  simdutf_warn_unused size_t utf8_length_from_utf16le(
+      const char16_t *input, size_t length) const noexcept override;
+  simdutf_warn_unused size_t utf8_length_from_utf16be(
+      const char16_t *input, size_t length) const noexcept override;
 #endif // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
   simdutf_warn_unused size_t utf32_length_from_utf16le(
-      const char16_t *input, size_t length) const noexcept;
+      const char16_t *input, size_t length) const noexcept override;
   simdutf_warn_unused size_t utf32_length_from_utf16be(
-      const char16_t *input, size_t length) const noexcept;
+      const char16_t *input, size_t length) const noexcept override;
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
-  simdutf_warn_unused size_t
-  utf16_length_from_utf8(const char *input, size_t length) const noexcept;
+  simdutf_warn_unused size_t utf16_length_from_utf8(
+      const char *input, size_t length) const noexcept override;
   simdutf_warn_unused result utf8_length_from_utf16le_with_replacement(
-      const char16_t *input, size_t length) const noexcept;
+      const char16_t *input, size_t length) const noexcept override;
   ;
   simdutf_warn_unused result utf8_length_from_utf16be_with_replacement(
-      const char16_t *input, size_t length) const noexcept;
+      const char16_t *input, size_t length) const noexcept override;
   ;
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
-  simdutf_warn_unused size_t
-  utf8_length_from_utf32(const char32_t *input, size_t length) const noexcept;
+  simdutf_warn_unused size_t utf8_length_from_utf32(
+      const char32_t *input, size_t length) const noexcept override;
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
-  simdutf_warn_unused size_t
-  utf16_length_from_utf32(const char32_t *input, size_t length) const noexcept;
+  simdutf_warn_unused size_t utf16_length_from_utf32(
+      const char32_t *input, size_t length) const noexcept override;
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
-  simdutf_warn_unused size_t
-  utf32_length_from_utf8(const char *input, size_t length) const noexcept;
+  simdutf_warn_unused size_t utf32_length_from_utf8(
+      const char *input, size_t length) const noexcept override;
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
-  simdutf_warn_unused size_t
-  latin1_length_from_utf8(const char *input, size_t length) const noexcept;
+  simdutf_warn_unused size_t latin1_length_from_utf8(
+      const char *input, size_t length) const noexcept override;
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
-  simdutf_warn_unused size_t
-  utf8_length_from_latin1(const char *input, size_t length) const noexcept;
+  simdutf_warn_unused size_t utf8_length_from_latin1(
+      const char *input, size_t length) const noexcept override;
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_BASE64
   simdutf_warn_unused result base64_to_binary(
       const char *input, size_t length, char *output, base64_options options,
       last_chunk_handling_options last_chunk_options =
-          last_chunk_handling_options::loose) const noexcept;
+          last_chunk_handling_options::loose) const noexcept override;
   simdutf_warn_unused full_result base64_to_binary_details(
       const char *input, size_t length, char *output, base64_options options,
       last_chunk_handling_options last_chunk_options =
-          last_chunk_handling_options::loose) const noexcept;
-  simdutf_warn_unused result
-  base64_to_binary(const char16_t *input, size_t length, char *output,
-                   base64_options options,
-                   last_chunk_handling_options last_chunk_options =
-                       last_chunk_handling_options::loose) const noexcept;
+          last_chunk_handling_options::loose) const noexcept override;
+  simdutf_warn_unused result base64_to_binary(
+      const char16_t *input, size_t length, char *output,
+      base64_options options,
+      last_chunk_handling_options last_chunk_options =
+          last_chunk_handling_options::loose) const noexcept override;
   simdutf_warn_unused full_result base64_to_binary_details(
       const char16_t *input, size_t length, char *output,
       base64_options options,
       last_chunk_handling_options last_chunk_options =
-          last_chunk_handling_options::loose) const noexcept;
+          last_chunk_handling_options::loose) const noexcept override;
   size_t binary_to_base64(const char *input, size_t length, char *output,
-                          base64_options options) const noexcept;
-  size_t binary_to_base64_with_lines(const char *input, size_t length,
-                                     char *output, size_t line_length,
-                                     base64_options options) const noexcept;
+                          base64_options options) const noexcept override;
+  size_t
+  binary_to_base64_with_lines(const char *input, size_t length, char *output,
+                              size_t line_length,
+                              base64_options options) const noexcept override;
   const char *find(const char *start, const char *end,
-                   char character) const noexcept;
+                   char character) const noexcept override;
   const char16_t *find(const char16_t *start, const char16_t *end,
-                       char16_t character) const noexcept;
+                       char16_t character) const noexcept override;
 
 #endif // SIMDUTF_FEATURE_BASE64
 };
