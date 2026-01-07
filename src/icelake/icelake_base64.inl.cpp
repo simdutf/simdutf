@@ -589,7 +589,7 @@ icelake_binary_length_from_base64(const char *input, size_t length) {
   while (ptr + 64 <= end) {
     __m512i data = _mm512_load_si512(reinterpret_cast<const __m512i *>(ptr));
     uint64_t mask = _mm512_cmpgt_epi8_mask(data, spaces);
-    count += __builtin_popcountll(mask);
+    count += count_ones(mask);
     ptr += 64;
   }
 
