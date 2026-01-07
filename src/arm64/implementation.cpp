@@ -196,7 +196,9 @@ convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in, size_t shufutf8_idx) {
   #include "generic/utf8_to_latin1/utf8_to_latin1.h"
   #include "generic/utf8_to_latin1/valid_utf8_to_latin1.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
-
+#if SIMDUTF_FEATURE_BASE64
+  #include "generic/base64lengths.h"
+#endif // SIMDUTF_FEATURE_BASE64
 //
 // Implementation-specific overrides
 //
@@ -1406,6 +1408,18 @@ const char *implementation::find(const char *start, const char *end,
 const char16_t *implementation::find(const char16_t *start, const char16_t *end,
                                      char16_t character) const noexcept {
   return util_find(start, end, character);
+}
+
+simdutf_warn_unused size_t
+implementation::binary_length_from_base64(const char *input,
+                                          size_t length) const noexcept {
+  return base64_lengths::binary_length_from_base64(input, length);
+}
+
+simdutf_warn_unused size_t
+implementation::binary_length_from_base64(const char16_t *input,
+                                          size_t length) const noexcept {
+  return base64_lengths::binary_length_from_base64(input, length);
 }
 #endif // SIMDUTF_FEATURE_BASE64
 
