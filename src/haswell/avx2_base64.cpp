@@ -768,3 +768,80 @@ public:
     return 63;
   }
 };
+
+// AVX2 implementation of binary_length_from_base64.
+// Counts non-ASCII-whitespace characters and adjusts for padding.
+simdutf_warn_unused size_t
+avx2_binary_length_from_base64(const char *input, size_t length) {
+  size_t count = 0;
+  const char *ptr = input;
+  const char *end = input + length;
+
+  // Process 32 bytes at a time.
+  __m256i spaces = _mm256_set1_epi8(0x20);
+  while (ptr + 32 <= end) {
+    __m256i data = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(ptr));
+    __m256i gt_space = _mm256_cmpgt_epi8(data, spaces);
+    uint32_t mask = _mm256_movemask_epi8(gt_space);
+    count += count_ones(mask);
+    ptr += 32;
+  }
+
+  // Scalar tail: process remaining bytes.
+  while (ptr < end) {
+    count += (*ptr > 0x20) ? 1 : 0;
+    ptr++;
+  }
+
+  // Count padding at the end.
+  size_t padding = 0;
+  size_t pos = length;
+  while (pos > 0 && padding < 2) {
+    char c = input[--pos];
+    if (c == '=') {
+      padding++;
+    } else if (c > ' ') {
+      break;
+    }
+  }
+  return ((count - padding) * 3) / 4;
+}
+
+// char16_t version using AVX2
+simdutf_warn_unused size_t
+avx2_binary_length_from_base64(const char16_t *input, size_t length) {
+  size_t count = 0;
+  const char16_t *ptr = input;
+  const char16_t *end = input + length;
+
+  // Process 16 char16_t (32 bytes) at a time.
+  // movemask gives 2 bits per char16_t, so we divide by 2 at the end.
+  __m256i spaces = _mm256_set1_epi16(0x20);
+  while (ptr + 16 <= end) {
+    __m256i data = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(ptr));
+    __m256i gt_space = _mm256_cmpgt_epi16(data, spaces);
+    uint32_t mask = _mm256_movemask_epi8(gt_space);
+    count += count_ones(mask);
+    ptr += 16;
+  }
+  count /= 2;
+
+  // Scalar tail: process remaining char16_t.
+  while (ptr < end) {
+    count += (*ptr > 0x20) ? 1 : 0;
+    ptr++;
+  }
+
+  // Count padding at the end.
+  size_t padding = 0;
+  size_t pos = length;
+  while (pos > 0 && padding < 2) {
+    char16_t c = input[--pos];
+    if (c == '=') {
+      padding++;
+    } else if (c > ' ') {
+      break;
+    }
+  }
+  return ((count - padding) * 3) / 4;
+}
