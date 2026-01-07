@@ -574,23 +574,21 @@ icelake_binary_length_from_base64(const char *input, size_t length) {
   const char *end = input + length;
 
   // Scalar prefix: process bytes until aligned to 64 bytes.
-  const char *aligned_ptr =
-      reinterpret_cast<const char *>((reinterpret_cast<size_t>(ptr) + 63) & ~63);
-  if (aligned_ptr > end) {
-    aligned_ptr = end;
-  }
-  while (ptr < aligned_ptr) {
+  size_t alignment_length = std::min(length, 64 - (reinterpret_cast<size_t>(ptr) & 63));
+  while (ptr < input + alignment_length) {
     count += (*ptr > 0x20) ? 1 : 0;
     ptr++;
+    length--;
   }
 
   // Process 64 bytes at a time with aligned loads.
   __m512i spaces = _mm512_set1_epi8(0x20);
-  while (ptr + 64 <= end) {
+  while (length >= 64) {
     __m512i data = _mm512_load_si512(reinterpret_cast<const __m512i *>(ptr));
     uint64_t mask = _mm512_cmpgt_epi8_mask(data, spaces);
     count += count_ones(mask);
     ptr += 64;
+    length -= 64;
   }
 
   // Scalar tail: process remaining bytes.
@@ -601,9 +599,8 @@ icelake_binary_length_from_base64(const char *input, size_t length) {
 
   // Count padding at the end.
   size_t padding = 0;
-  size_t pos = length;
-  while (pos > 0 && padding < 2) {
-    char c = input[--pos];
+  while (end > input && padding < 2) {
+    char c = *--end;
     if (c == '=') {
       padding++;
     } else if (c > ' ') {
@@ -621,23 +618,22 @@ icelake_binary_length_from_base64(const char16_t *input, size_t length) {
   const char16_t *end = input + length;
 
   // Scalar prefix: process char16_t until aligned to 64 bytes.
-  const char16_t *aligned_ptr = reinterpret_cast<const char16_t *>(
-      (reinterpret_cast<size_t>(ptr) + 63) & ~63);
-  if (aligned_ptr > end) {
-    aligned_ptr = end;
-  }
-  while (ptr < aligned_ptr) {
+  size_t alignment_length = std::min(length * 2, 64 - (reinterpret_cast<size_t>(ptr) & 63));
+  alignment_length /= 2;
+  while (ptr < input + alignment_length) {
     count += (*ptr > 0x20) ? 1 : 0;
     ptr++;
+    length--;
   }
 
   // Process 32 char16_t (64 bytes) at a time with aligned loads.
   __m512i spaces = _mm512_set1_epi16(0x20);
-  while (ptr + 32 <= end) {
+  while (length >= 32) {
     __m512i data = _mm512_load_si512(reinterpret_cast<const __m512i *>(ptr));
     __mmask32 mask = _mm512_cmpgt_epi16_mask(data, spaces);
     count += _mm_popcnt_u32(mask);
     ptr += 32;
+    length -= 32;
   }
 
   // Scalar tail: process remaining char16_t.
@@ -648,9 +644,8 @@ icelake_binary_length_from_base64(const char16_t *input, size_t length) {
 
   // Count padding at the end.
   size_t padding = 0;
-  size_t pos = length;
-  while (pos > 0 && padding < 2) {
-    char16_t c = input[--pos];
+  while (end > input && padding < 2) {
+    char16_t c = *--end;
     if (c == '=') {
       padding++;
     } else if (c > ' ') {
