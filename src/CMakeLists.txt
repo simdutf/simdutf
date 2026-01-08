@@ -33,6 +33,7 @@ if(MSVC)
 else(MSVC)
   target_compile_options(simdutf PRIVATE -Wall -Wextra -Weffc++)
   target_compile_options(simdutf PRIVATE -Wsign-compare -Wshadow -Wwrite-strings -Wpointer-arith -Winit-self -Wconversion -Wno-sign-conversion -Wunused-function)
+  target_compile_options(simdutf PRIVATE -Wsuggest-override)
   target_compile_options(simdutf PRIVATE -Wfatal-errors)
 endif(MSVC)
 
