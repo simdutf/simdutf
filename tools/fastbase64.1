@@ -6,6 +6,8 @@ fastbase64 \- base64 encode/decode
 [\fI\,OPTIONS\/\fR...] [\fI\,INPUTFILE\/\fR] [\fI\,OUTPUTFILE\/\fR]
 .SH DESCRIPTION
 fastbase64 can encode and decode base64. It uses simd instructions to maximize performance.
+At the time of writing, it encodes about 7 times faster than coreutils base64 on the author's machine,
+measured as walltime. For decoding, it is about 10 times faster.
 .SH OPTIONS
 \fB\-d\fR
 decode base64
