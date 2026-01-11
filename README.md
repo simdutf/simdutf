@@ -1,5 +1,7 @@
 # simdutf: Text processing at billions of characters per second
 
+<!-- if(github) { (this is used by the github pages export, don't modify!) -->
+
 [![Alpine Linux](https://github.com/simdutf/simdutf/actions/workflows/alpine.yml/badge.svg)](https://github.com/simdutf/simdutf/actions/workflows/alpine.yml) [![MSYS2-CLANG-CI](https://github.com/simdutf/simdutf/actions/workflows/msys2-clang.yml/badge.svg)](https://github.com/simdutf/simdutf/actions/workflows/msys2-clang.yml) [![Ubuntu 22.04 Sanitized CI (GCC 12, CXX 20)](https://github.com/simdutf/simdutf/actions/workflows/ubuntu22-cxx20.yml/badge.svg)](https://github.com/simdutf/simdutf/actions/workflows/ubuntu22-cxx20.yml)
 
 <img src="doc/logo.svg" width="25%" style="float: right">
@@ -24,6 +26,9 @@
   - [References](#references)
   - [License](#license)
 
+<!-- } (this is used by the github pages export, don't modify!) -->
+
+<!-- base64 KioqUGxlYXNlIHZpc2l0IGh0dHBzOi8vZ2l0aHViLmNvbS9zaW1kdXRmL3NpbWR1dGYgZm9yIHNvdXJjZSBjb2RlIGFuZCBpc3N1ZSB0cmFja2luZyEqKioK (this is used by the github pages export, don't modify!) -->
 
 Most modern software relies on the [Unicode standard](https://en.wikipedia.org/wiki/Unicode).
 In memory, Unicode strings are represented using either
