@@ -1,0 +1,22 @@
+.TH fastbase64: "1" "January 2026" "simdutf tools" "User Commands"
+.SH NAME
+fastbase64 \- base64 encode/decode
+.SH SYNOPSIS
+.B fastbase64
+[\fI\,OPTIONS\/\fR...] [\fI\,INPUTFILE\/\fR] [\fI\,OUTPUTFILE\/\fR]
+.SH DESCRIPTION
+fastbase64 can encode and decode base64. It uses simd instructions to maximize performance.
+.SH OPTIONS
+\fB\-d\fR
+decode base64
+.TP
+\fB\-e\fR
+encode base64 (default)
+.PP
+If output is not specified, the output is redirected to standard output.
+.SH "BUGS"
+Please report bugs in the issue tracker at https://github.com/simdutf/simdutf/issues
+.SH "AUTHOR"
+fastbase64 is part of the simdutf project found at https://github.com/simdutf
+.SH "SEE ALSO"
+base64(1)
