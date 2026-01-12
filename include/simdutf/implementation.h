@@ -860,7 +860,7 @@ convert_latin1_to_utf8_safe(
     #endif
   {
     return convert_latin1_to_utf8_safe(
-        input.data(), input.size(),
+        reinterpret_cast<const char *>(input.data()), input.size(),
         reinterpret_cast<char *>(utf8_output.data()), utf8_output.size());
   }
 }
