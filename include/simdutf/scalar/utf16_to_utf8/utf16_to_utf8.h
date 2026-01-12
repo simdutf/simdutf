@@ -120,14 +120,14 @@ simdutf_constexpr23 full_result convert_with_errors(InputPtr data, size_t len,
         if ((v & 0xFF80FF80FF80FF80) == 0) {
           size_t final_pos = pos + 4;
           while (pos < final_pos) {
+            if (check_output && size_t(end - utf8_output) < 1) {
+              return full_result(error_code::OUTPUT_BUFFER_TOO_SMALL, pos,
+                                 utf8_output - start);
+            }
             *utf8_output++ = !match_system(big_endian)
                                  ? char(u16_swap_bytes(data[pos]))
                                  : char(data[pos]);
             pos++;
-            if (check_output && size_t(end - utf8_output) == 0) {
-              return full_result(error_code::OUTPUT_BUFFER_TOO_SMALL, pos,
-                                 utf8_output - start);
-            }
           }
           continue;
         }
@@ -138,12 +138,12 @@ simdutf_constexpr23 full_result convert_with_errors(InputPtr data, size_t len,
         !match_system(big_endian) ? u16_swap_bytes(data[pos]) : data[pos];
     if ((word & 0xFF80) == 0) {
       // will generate one UTF-8 bytes
-      *utf8_output++ = char(word);
-      pos++;
-      if (check_output && size_t(end - utf8_output) == 0) {
+      if (check_output && size_t(end - utf8_output) < 1) {
         return full_result(error_code::OUTPUT_BUFFER_TOO_SMALL, pos,
                            utf8_output - start);
       }
+      *utf8_output++ = char(word);
+      pos++;
     } else if ((word & 0xF800) == 0) {
       // will generate two UTF-8 bytes
       // we have 0b110XXXXX 0b10XXXXXX
