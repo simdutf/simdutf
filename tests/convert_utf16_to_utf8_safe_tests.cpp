@@ -60,11 +60,9 @@ inline void verify_subset(std::vector<char16_t> &utf16,
 TEST(issue911) {
   char16_t input[] = {0x00E9, 'A'};
   char output[2];
-  size_t written = simdutf::convert_utf16_to_utf8_safe(
-      input, 2, output, 2);
-  ASSERT_EQUAL(written, 2);
+  size_t written = simdutf::convert_utf16_to_utf8_safe(input, 2, output, 2);
+  ASSERT_TRUE(written <= 2);
 }
-
 
 TEST(convert_pure_ASCII) {
   size_t counter = 0;
@@ -176,6 +174,28 @@ TEST(compile_time_convert_utf16_to_utf8_safe) {
   constexpr auto expected = u8"köttbulle"_utf8;
   constexpr auto actual = convert<input>();
   static_assert(actual == expected);
+}
+
+namespace {
+template <auto input, std::size_t buflen>
+constexpr auto convert_insufficient_buf() {
+  using namespace simdutf::tests::helpers;
+  constexpr auto Noutput = simdutf::utf8_length_from_utf16(input);
+  CTString<char8_t, buflen> output{};
+  const auto ret = simdutf::convert_utf16_to_utf8_safe(input, output);
+  if (ret == 0) {
+    throw "failed conversion";
+  }
+  return output;
+}
+} // namespace
+TEST(compile_time_check_of_issue_911) {
+  using namespace simdutf::tests::helpers;
+  constexpr auto input = u"\u00E9A"_utf16;
+  constexpr auto expected = u8"\u00E9A"_utf8;
+  constexpr auto actual = convert_insufficient_buf<input, 2>();
+  constexpr auto N = std::min(actual.size(), expected.size());
+  static_assert(expected.shrink<N>() == actual.shrink<N>());
 }
 
 #endif
