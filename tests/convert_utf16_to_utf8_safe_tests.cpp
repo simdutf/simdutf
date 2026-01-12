@@ -57,6 +57,15 @@ inline void verify_subset(std::vector<char16_t> &utf16,
   }
 }
 
+TEST(issue911) {
+  char16_t input[] = {0x00E9, 'A'};
+  char output[2];
+  size_t written = simdutf::convert_utf16_to_utf8_safe(
+      input, 2, output, 2);
+  ASSERT_EQUAL(written, 2);
+}
+
+
 TEST(convert_pure_ASCII) {
   size_t counter = 0;
   auto generator = [&counter]() -> uint32_t { return counter++ & 0x7f; };
