@@ -35,6 +35,7 @@ macro(create_fuzztest testname)
 endmacro()
 
 create_fuzztest(conversion)
+create_fuzztest(safe_conversion)
 create_fuzztest(misc)
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     # this file uses FuzzedDataProvider.h which is provided by clang
