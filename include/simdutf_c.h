@@ -130,6 +130,8 @@ simdutf_utf8_length_from_utf16be_with_replacement(const char16_t *input,
 /* Conversions: latin1 <-> utf8, utf8 <-> utf16/utf32, utf16 <-> utf8, etc. */
 size_t simdutf_convert_latin1_to_utf8(const char *input, size_t length,
                                       char *output);
+size_t simdutf_convert_latin1_to_utf8_safe(const char *input, size_t length,
+                                           char *output, size_t utf8_len);
 size_t simdutf_convert_latin1_to_utf16le(const char *input, size_t length,
                                          char16_t *output);
 size_t simdutf_convert_latin1_to_utf16be(const char *input, size_t length,
