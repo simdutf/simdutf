@@ -152,7 +152,7 @@ Linux or macOS users might follow the following instructions if they have a rece
 
 1. Pull the library in a directory
    ```
-   wget https://github.com/simdutf/simdutf/releases/download/v7.7.1/singleheader.zip
+   wget https://github.com/simdutf/simdutf/releases/download/v7.7.2/singleheader.zip
    unzip singleheader.zip
    ```
    You can replace `wget` by `curl -OL https://...` if you prefer.
@@ -227,7 +227,7 @@ Single-header version
 You can create a single-header version of the library where
 all of the code is put into two files (`simdutf.h` and `simdutf.cpp`).
 We publish a zip archive containing these files, e.g., see
-https://github.com/simdutf/simdutf/releases/download/v7.7.1/singleheader.zip
+https://github.com/simdutf/simdutf/releases/download/v7.7.2/singleheader.zip
 
 You may generate it on your own using a Python script.
 
@@ -2692,7 +2692,7 @@ If you use this library in your research, please cite our work:
 C wrapper (C11 or better)
 ---------
 
-*This is currently experimental. We are committed to maintaining the C API but there might be issues with 
+*This is currently experimental. We are committed to maintaining the C API but there might be issues with
 our implementation.*
 
 We provide a thin C API that wraps the C++ `simdutf` library. It is intended
