@@ -20,9 +20,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Doxygen
-        run: sudo apt-get install doxygen graphviz -y
+        run: sudo apt-get install doxygen graphviz python3 -y
       - name: Generate Doxygen Documentation
-        run: ./doxygen.sh
+        run: ./doxygen.py
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
