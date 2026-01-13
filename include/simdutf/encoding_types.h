@@ -56,8 +56,8 @@ namespace BOM {
  */
 
 template <typename BytePtr>
-simdutf_warn_unused inline constexpr encoding_type check_bom(BytePtr byte,
-                                                             size_t length) {
+simdutf_warn_unused inline simdutf_constexpr14 encoding_type
+check_bom(BytePtr byte, size_t length) {
   // Cast to uint8_t to handle signed char comparisons correctly
   if (length >= 2 && uint8_t(byte[0]) == 0xff && uint8_t(byte[1]) == 0xfe) {
     if (length >= 4 && uint8_t(byte[2]) == 0x00 && uint8_t(byte[3]) == 0x00) {
