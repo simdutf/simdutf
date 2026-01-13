@@ -179,7 +179,7 @@ size_t simdutf_convert_latin1_to_utf8(const char *input, size_t length,
 }
 
 size_t simdutf_convert_latin1_to_utf8_safe(const char *input, size_t length,
-                                     char *output, size_t utf8_len) {
+                                           char *output, size_t utf8_len) {
   return simdutf::convert_latin1_to_utf8_safe(input, length, output, utf8_len);
 }
 size_t simdutf_convert_latin1_to_utf16le(const char *input, size_t length,
