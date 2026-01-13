@@ -129,12 +129,22 @@ concept indexes_into_uint32 = requires(InputPtr p) {
 // not part of the public api.
 #include <simdutf/scalar/swap_bytes.h>
 #include <simdutf/scalar/ascii.h>
+#include <simdutf/scalar/utf8.h>
+#include <simdutf/scalar/utf16.h>
+#include <simdutf/scalar/utf32.h>
+#include <simdutf/scalar/detect.h>
+
+#if SIMDUTF_SPAN
+namespace simdutf {
+namespace detail {} // namespace detail
+} // namespace simdutf
+#endif // SIMDUTF_SPAN
+
 #include <simdutf/scalar/atomic_util.h>
 #include <simdutf/scalar/latin1.h>
 #include <simdutf/scalar/latin1_to_utf16/latin1_to_utf16.h>
 #include <simdutf/scalar/latin1_to_utf32/latin1_to_utf32.h>
 #include <simdutf/scalar/latin1_to_utf8/latin1_to_utf8.h>
-#include <simdutf/scalar/utf16.h>
 #include <simdutf/scalar/utf16_to_latin1/utf16_to_latin1.h>
 #include <simdutf/scalar/utf16_to_latin1/valid_utf16_to_latin1.h>
 #include <simdutf/scalar/utf16_to_utf32/utf16_to_utf32.h>
@@ -149,6 +159,7 @@ concept indexes_into_uint32 = requires(InputPtr p) {
 #include <simdutf/scalar/utf32_to_utf8/utf32_to_utf8.h>
 #include <simdutf/scalar/utf32_to_utf8/valid_utf32_to_utf8.h>
 #include <simdutf/scalar/utf8.h>
+#include <simdutf/scalar/detect.h>
 #include <simdutf/scalar/utf8_to_latin1/utf8_to_latin1.h>
 #include <simdutf/scalar/utf8_to_latin1/valid_utf8_to_latin1.h>
 #include <simdutf/scalar/utf8_to_utf16/utf8_to_utf16.h>
@@ -190,11 +201,20 @@ autodetect_encoding(const uint8_t *input, size_t length) noexcept {
  * std::string_view, std::vector<char>, std::span<const std::byte> etc.
  * @return the detected encoding type
  */
-simdutf_really_inline simdutf_warn_unused simdutf::encoding_type
-autodetect_encoding(
-    const detail::input_span_of_byte_like auto &input) noexcept {
-  return autodetect_encoding(reinterpret_cast<const char *>(input.data()),
-                             input.size());
+simdutf_really_inline
+    simdutf_warn_unused simdutf_constexpr23 simdutf::encoding_type
+    autodetect_encoding(
+        const detail::input_span_of_byte_like auto &input) noexcept {
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::autodetect_encoding(
+        detail::constexpr_cast_ptr<uint8_t>(input.data()), input.size());
+  } else
+    #endif
+  {
+    return autodetect_encoding(reinterpret_cast<const char *>(input.data()),
+                               input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 
@@ -216,10 +236,18 @@ detect_encodings(const uint8_t *input, size_t length) noexcept {
   return detect_encodings(reinterpret_cast<const char *>(input), length);
 }
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused int
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 int
 detect_encodings(const detail::input_span_of_byte_like auto &input) noexcept {
-  return detect_encodings(reinterpret_cast<const char *>(input.data()),
-                          input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::detect_encodings(
+        detail::constexpr_cast_ptr<uint8_t>(input.data()), input.size());
+  } else
+    #endif
+  {
+    return detect_encodings(reinterpret_cast<const char *>(input.data()),
+                            input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_DETECT_ENCODING
@@ -4628,7 +4656,7 @@ base64_valid_or_padding(char16_t input,
  * INVALID_BASE64_CHARACTER error (in the input in units) if any, or the number
  * of units processed if successful.
  */
-simdutf_warn_unused result
+simdutf_warn_unused simdutf_constexpr23 result
 base64_to_binary_safe(const char *input, size_t length, char *output,
                       size_t &outlen, base64_options options = base64_default,
                       last_chunk_handling_options last_chunk_options =
@@ -4636,7 +4664,7 @@ base64_to_binary_safe(const char *input, size_t length, char *output,
                       bool decode_up_to_bad_char = false) noexcept;
 // the span overload has moved to the bottom of the file
 
-simdutf_warn_unused result
+simdutf_warn_unused simdutf_constexpr23 result
 base64_to_binary_safe(const char16_t *input, size_t length, char *output,
                       size_t &outlen, base64_options options = base64_default,
                       last_chunk_handling_options last_chunk_options =
@@ -6760,6 +6788,27 @@ get_active_implementation();
   #include <simdutf/base64_implementation.h>
 
 namespace simdutf {
+
+simdutf_really_inline simdutf_constexpr23 simdutf_warn_unused result
+base64_to_binary_safe(const char *input, size_t length, char *output,
+                      size_t &outlen, base64_options options,
+                      last_chunk_handling_options last_chunk_options,
+                      bool decode_up_to_bad_char) noexcept {
+  return base64_to_binary_safe_impl<char>(input, length, output, outlen,
+                                          options, last_chunk_options,
+                                          decode_up_to_bad_char);
+}
+
+simdutf_really_inline simdutf_constexpr23 simdutf_warn_unused result
+base64_to_binary_safe(const char16_t *input, size_t length, char *output,
+                      size_t &outlen, base64_options options,
+                      last_chunk_handling_options last_chunk_options,
+                      bool decode_up_to_bad_char) noexcept {
+  return base64_to_binary_safe_impl<char16_t>(input, length, output, outlen,
+                                              options, last_chunk_options,
+                                              decode_up_to_bad_char);
+}
+
   #if SIMDUTF_SPAN
 /**
  * @brief span overload

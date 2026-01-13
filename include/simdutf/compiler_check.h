@@ -19,7 +19,9 @@
 #endif
 
 // C++ 23
-#if !defined(SIMDUTF_CPLUSPLUS23) && (SIMDUTF_CPLUSPLUS >= 202302L)
+#if !defined(SIMDUTF_CPLUSPLUS23) &&                                           \
+    ((SIMDUTF_CPLUSPLUS >= 202302L) ||                                         \
+     (defined(__cpp_if_consteval) && __cpp_if_consteval >= 202106L))
   #define SIMDUTF_CPLUSPLUS23 1
 #endif
 
