@@ -5,10 +5,18 @@
   #error "lsx.h must be included before fallback.h"
 #endif
 
+#ifndef SIMDUTF_CAN_ALWAYS_RUN_LASX
+  #error "lsx.h must be included after lasx.h"
+#endif
+
 #include "simdutf/portability.h"
 
 #ifndef SIMDUTF_IMPLEMENTATION_LSX
-  #define SIMDUTF_IMPLEMENTATION_LSX (SIMDUTF_IS_LSX)
+  #if SIMDUTF_CAN_ALWAYS_RUN_LASX
+    #define SIMDUTF_IMPLEMENTATION_LSX 0
+  #else
+    #define SIMDUTF_IMPLEMENTATION_LSX (SIMDUTF_IS_LSX)
+  #endif
 #endif
 #if SIMDUTF_IMPLEMENTATION_LSX && SIMDUTF_IS_LSX
   #define SIMDUTF_CAN_ALWAYS_RUN_LSX 1

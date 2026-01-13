@@ -23,8 +23,8 @@ SIMDUTF_DISABLE_UNUSED_WARNING
 #include "simdutf/westmere.h"
 #include "simdutf/ppc64.h"
 #include "simdutf/rvv.h"
-#include "simdutf/lsx.h"
 #include "simdutf/lasx.h"
+#include "simdutf/lsx.h"
 #include "simdutf/fallback.h" // have it always last.
 #ifndef SIMDUTF_REGULAR_VISUAL_STUDIO
 SIMDUTF_POP_DISABLE_WARNINGS
@@ -141,11 +141,11 @@ SIMDUTF_DISABLE_UNDESIRED_WARNINGS
 #if SIMDUTF_IMPLEMENTATION_WESTMERE
   #include "westmere/implementation.cpp"
 #endif
-#if SIMDUTF_IMPLEMENTATION_LSX
-  #include "lsx/implementation.cpp"
-#endif
 #if SIMDUTF_IMPLEMENTATION_LASX
   #include "lasx/implementation.cpp"
+#endif
+#if SIMDUTF_IMPLEMENTATION_LSX
+  #include "lsx/implementation.cpp"
 #endif
 
 #include "simdutf_c.cpp"

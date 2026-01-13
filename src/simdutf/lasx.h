@@ -8,7 +8,7 @@
 #include "simdutf/portability.h"
 
 #ifndef SIMDUTF_IMPLEMENTATION_LASX
-  #define SIMDUTF_IMPLEMENTATION_LASX (SIMDUTF_IS_LASX)
+  #define SIMDUTF_IMPLEMENTATION_LASX (SIMDUTF_IS_LSX)
 #endif
 #if SIMDUTF_IMPLEMENTATION_LASX && SIMDUTF_IS_LASX
   #define SIMDUTF_CAN_ALWAYS_RUN_LASX 1
@@ -20,6 +20,11 @@
 #include "simdutf/internal/isadetection.h"
 
 #if SIMDUTF_IMPLEMENTATION_LASX
+  #define SIMDUTF_TARGET_LASX SIMDUTF_TARGET_REGION("lasx,lsx")
+
+  // For runtime dispatching to work, we need the lsxintrin to appear
+  // before we call SIMDUTF_TARGET_LASX. It is unclear why.
+  #include <lsxintrin.h>
 
 namespace simdutf {
 /**
