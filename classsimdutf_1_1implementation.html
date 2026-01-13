@@ -29,7 +29,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">simdutf<span id="projectnumber">&#160;7.3.5</span>
+   <div id="projectname">simdutf<span id="projectnumber">&#160;8.0.0</span>
    </div>
    <div id="projectbrief">Unicode at GB/s.</div>
   </td>
@@ -135,6 +135,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aa73e0b4e751f59a6f67c0bde3e503e23" id="r_aa73e0b4e751f59a6f67c0bde3e503e23"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#aa73e0b4e751f59a6f67c0bde3e503e23">validate_ascii_with_errors</a> (const char *buf, size_t len) const noexcept=0</td></tr>
 <tr class="memdesc:aa73e0b4e751f59a6f67c0bde3e503e23"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validate the ASCII string and stop on error.  <br /></td></tr>
 <tr class="separator:aa73e0b4e751f59a6f67c0bde3e503e23"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7dd6251d9399ecd3a8d60dc27699fd96" id="r_a7dd6251d9399ecd3a8d60dc27699fd96"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a7dd6251d9399ecd3a8d60dc27699fd96">validate_utf16be_as_ascii</a> (const char16_t *buf, size_t len) const noexcept=0</td></tr>
+<tr class="memdesc:a7dd6251d9399ecd3a8d60dc27699fd96"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validate the ASCII string as a UTF-16BE sequence.  <br /></td></tr>
+<tr class="separator:a7dd6251d9399ecd3a8d60dc27699fd96"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9eea2222e793b0d65f4758ef168bd51" id="r_ad9eea2222e793b0d65f4758ef168bd51"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#ad9eea2222e793b0d65f4758ef168bd51">validate_utf16le_as_ascii</a> (const char16_t *buf, size_t len) const noexcept=0</td></tr>
+<tr class="memdesc:ad9eea2222e793b0d65f4758ef168bd51"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validate the ASCII string as a UTF-16LE sequence.  <br /></td></tr>
+<tr class="separator:ad9eea2222e793b0d65f4758ef168bd51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6047ac139bd2e8f6808a5bbd4b687629" id="r_a6047ac139bd2e8f6808a5bbd4b687629"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a6047ac139bd2e8f6808a5bbd4b687629">validate_utf16le</a> (const char16_t *buf, size_t len) const noexcept=0</td></tr>
 <tr class="memdesc:a6047ac139bd2e8f6808a5bbd4b687629"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validate the UTF-16LE string.This function may be best when you expect the input to be almost always valid.  <br /></td></tr>
 <tr class="separator:a6047ac139bd2e8f6808a5bbd4b687629"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -192,6 +198,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ae18e1b44673966d2f058524700d41db0" id="r_ae18e1b44673966d2f058524700d41db0"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#ae18e1b44673966d2f058524700d41db0">convert_utf8_to_utf16be_with_errors</a> (const char *input, size_t length, char16_t *utf16_output) const noexcept=0</td></tr>
 <tr class="memdesc:ae18e1b44673966d2f058524700d41db0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly broken UTF-8 string into UTF-16BE string and stop on error.  <br /></td></tr>
 <tr class="separator:ae18e1b44673966d2f058524700d41db0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f362d3ac73b9955d4065b10028cd8d3" id="r_a4f362d3ac73b9955d4065b10028cd8d3"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a4f362d3ac73b9955d4065b10028cd8d3">utf8_length_from_utf16le_with_replacement</a> (const char16_t *input, size_t length) const noexcept=0</td></tr>
+<tr class="memdesc:a4f362d3ac73b9955d4065b10028cd8d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the number of bytes that this UTF-16LE string would require in UTF-8 format even when the UTF-16LE content contains mismatched surrogates that have to be replaced by the replacement character (0xFFFD).  <br /></td></tr>
+<tr class="separator:a4f362d3ac73b9955d4065b10028cd8d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5b7e749811eecce33c3a2167962ed405" id="r_a5b7e749811eecce33c3a2167962ed405"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a5b7e749811eecce33c3a2167962ed405">utf8_length_from_utf16be_with_replacement</a> (const char16_t *input, size_t length) const noexcept=0</td></tr>
+<tr class="memdesc:a5b7e749811eecce33c3a2167962ed405"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the number of bytes that this UTF-16BE string would require in UTF-8 format even when the UTF-16BE content contains mismatched surrogates that have to be replaced by the replacement character (0xFFFD).  <br /></td></tr>
+<tr class="separator:a5b7e749811eecce33c3a2167962ed405"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aab894ce236190e9cc71e0ce1602bbc60" id="r_aab894ce236190e9cc71e0ce1602bbc60"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#aab894ce236190e9cc71e0ce1602bbc60">convert_utf8_to_utf32</a> (const char *input, size_t length, char32_t *utf32_output) const noexcept=0</td></tr>
 <tr class="memdesc:aab894ce236190e9cc71e0ce1602bbc60"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert possibly broken UTF-8 string into UTF-32 string.  <br /></td></tr>
 <tr class="separator:aab894ce236190e9cc71e0ce1602bbc60"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -375,6 +387,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a5823f6a86315f4404a4f437977abf9df" id="r_a5823f6a86315f4404a4f437977abf9df"><td class="memItemLeft" align="right" valign="top">virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a5823f6a86315f4404a4f437977abf9df">binary_to_base64</a> (const char *input, size_t length, char *output, base64_options options=base64_default) const noexcept=0</td></tr>
 <tr class="memdesc:a5823f6a86315f4404a4f437977abf9df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a binary input to a base64 output.  <br /></td></tr>
 <tr class="separator:a5823f6a86315f4404a4f437977abf9df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a45298a7e235830b11082489c9e57ec25" id="r_a45298a7e235830b11082489c9e57ec25"><td class="memItemLeft" align="right" valign="top">virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a45298a7e235830b11082489c9e57ec25">binary_to_base64_with_lines</a> (const char *input, size_t length, char *output, size_t line_length=simdutf::default_line_length, base64_options options=base64_default) const noexcept=0</td></tr>
+<tr class="memdesc:a45298a7e235830b11082489c9e57ec25"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a binary input to a base64 output with lines of given length.  <br /></td></tr>
+<tr class="separator:a45298a7e235830b11082489c9e57ec25"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0383b9c8c879508752e083a34b6bae5d" id="r_a0383b9c8c879508752e083a34b6bae5d"><td class="memItemLeft" align="right" valign="top">virtual const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a0383b9c8c879508752e083a34b6bae5d">find</a> (const char *start, const char *end, char character) const noexcept=0</td></tr>
 <tr class="memdesc:a0383b9c8c879508752e083a34b6bae5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the first occurrence of a character in a string.  <br /></td></tr>
 <tr class="separator:a0383b9c8c879508752e083a34b6bae5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -386,7 +401,7 @@ virtual const char16_t *&#160;</td><td class="memItemRight" valign="bottom"><b>f
 <div class="textblock"><p>An implementation of simdutf for a particular CPU architecture. </p>
 <p>Also used to maintain the currently active implementation. The active implementation is automatically initialized on first use to the most advanced implementation supported by the host. </p>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03470">3470</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04748">4748</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="afd306a0bc3e221964af3f31a64784b12" name="afd306a0bc3e221964af3f31a64784b12"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afd306a0bc3e221964af3f31a64784b12">&#9670;&#160;</a></span>autodetect_encoding()</h2>
@@ -471,7 +486,8 @@ virtual const char16_t *&#160;</td><td class="memItemRight" valign="bottom"><b>f
 <p>Provide the base64 length in bytes given the length of a binary input. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">length</td><td>the length of the input in bytes @parem options the base64 options to use, can be base64_default or base64_url, is base64_default by default. </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the input in bytes </td></tr>
+    <tr><td class="paramname">options</td><td>the base64 options to use, can be base64_default or base64_url, is base64_default by default. </td></tr>
   </table>
   </dd>
 </dl>
@@ -819,6 +835,78 @@ virtual const char16_t *&#160;</td><td class="memItemRight" valign="bottom"><b>f
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>number of written bytes, will be equal to base64_length_from_binary(length, options) </dd></dl>
+
+</div>
+</div>
+<a id="a45298a7e235830b11082489c9e57ec25" name="a45298a7e235830b11082489c9e57ec25"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a45298a7e235830b11082489c9e57ec25">&#9670;&#160;</a></span>binary_to_base64_with_lines()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual size_t simdutf::implementation::binary_to_base64_with_lines </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>output</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>line_length</em> = <code>simdutf::default_line_length</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">base64_options&#160;</td>
+          <td class="paramname"><em>options</em> = <code>base64_default</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert a binary input to a base64 output with lines of given length. </p>
+<p>Lines are separated by a single linefeed character.</p>
+<p>The default option (simdutf::base64_default) uses the characters <code>+</code> and <code>/</code> as part of its alphabet. Further, it adds padding (<code>=</code>) at the end of the output to ensure that the output length is a multiple of four.</p>
+<p>The URL option (simdutf::base64_url) uses the characters <code>-</code> and <code>_</code> as part of its alphabet. No padding is added at the end of the output.</p>
+<p>This function always succeeds.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the binary to process </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the input in bytes </td></tr>
+    <tr><td class="paramname">output</td><td>the pointer to a buffer that can hold the conversion result (should be at least base64_length_from_binary_with_lines(length,
+options, line_length) bytes long) </td></tr>
+    <tr><td class="paramname">line_length</td><td>the length of each line, values smaller than 4 are interpreted as 4 </td></tr>
+    <tr><td class="paramname">options</td><td>the base64 options to use, can be base64_default or base64_url, is base64_default by default. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>number of written bytes, will be equal to base64_length_from_binary_with_lines(length, options, line_length) </dd></dl>
 
 </div>
 </div>
@@ -3570,7 +3658,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </pre><p> impl-&gt;<a class="el" href="classsimdutf_1_1implementation.html#af48e75e8d6d25c3c3d66334a8849cbc7" title="The description of this implementation.">description()</a> &lt;&lt; ")" &lt;&lt; endl;</p>
 <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03492">3492</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04770">4770</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3709,7 +3797,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-16LE string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04836">4836</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06189">6189</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3747,7 +3835,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-32 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04798">4798</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06151">6151</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3833,7 +3921,8 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </div><div class="memdoc">
 
 <p>Provide the maximal binary length in bytes given the base64 input. </p>
-<p>In general, if the input contains ASCII spaces, the result will be less than the maximum length. It is acceptable to pass invalid base64 strings but in such cases the result is implementation defined.</p>
+<p>As long as the input does not contain ignorable characters (e.g., ASCII spaces or linefeed characters), the result is exact. In particular, the function checks for padding characters.</p>
+<p>The function is fast (constant time). It checks up to two characters at the end of the string. The input is not otherwise validated or read..</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the base64 input to process </td></tr>
@@ -3880,7 +3969,8 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </div><div class="memdoc">
 
 <p>Provide the maximal binary length in bytes given the base64 input. </p>
-<p>In general, if the input contains ASCII spaces, the result will be less than the maximum length. It is acceptable to pass invalid base64 strings but in such cases the result is implementation defined.</p>
+<p>As long as the input does not contain ignorable characters (e.g., ASCII spaces or linefeed characters), the result is exact. In particular, the function checks for padding characters.</p>
+<p>The function is fast (constant time). It checks up to two characters at the end of the string. The input is not otherwise validated or read.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the base64 input to process, in ASCII stored as 16-bit units </td></tr>
@@ -3921,7 +4011,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </pre><p> impl-&gt;<a class="el" href="classsimdutf_1_1implementation.html#af48e75e8d6d25c3c3d66334a8849cbc7" title="The description of this implementation.">description()</a> &lt;&lt; ")" &lt;&lt; endl;</p>
 <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03481">3481</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04759">4759</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -4088,7 +4178,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-16 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04610">4610</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05963">5963</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -4219,7 +4309,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-32 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04869">4869</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06222">6222</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -4463,6 +4553,52 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 
 </div>
 </div>
+<a id="a5b7e749811eecce33c3a2167962ed405" name="a5b7e749811eecce33c3a2167962ed405"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5b7e749811eecce33c3a2167962ed405">&#9670;&#160;</a></span>utf8_length_from_utf16be_with_replacement()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a> simdutf::implementation::utf8_length_from_utf16be_with_replacement </td>
+          <td>(</td>
+          <td class="paramtype">const char16_t *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Compute the number of bytes that this UTF-16BE string would require in UTF-8 format even when the UTF-16BE content contains mismatched surrogates that have to be replaced by the replacement character (0xFFFD). </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-16BE string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type <a class="el" href="structsimdutf_1_1result.html">simdutf::result</a> containing the two fields error and count) where the count is the number of bytes required to encode the UTF-16BE string as UTF-8, and the error code is either SUCCESS or SURROGATE. The count is correct regardless of the error field. When SURROGATE is returned, it does not indicate an error in the case of this function: it indicates that at least one surrogate has been encountered: the surrogates may be matched or not (thus this function does not validate). If the returned error code is SUCCESS, then the input contains no surrogate, is in the Basic Multilingual Plane, and is necessarily valid. </dd></dl>
+
+</div>
+</div>
 <a id="a446248e71fc872b071d25a27673139f5" name="a446248e71fc872b071d25a27673139f5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a446248e71fc872b071d25a27673139f5">&#9670;&#160;</a></span>utf8_length_from_utf16le()</h2>
 
@@ -4508,6 +4644,52 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-16LE string as UTF-8 </dd></dl>
+
+</div>
+</div>
+<a id="a4f362d3ac73b9955d4065b10028cd8d3" name="a4f362d3ac73b9955d4065b10028cd8d3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4f362d3ac73b9955d4065b10028cd8d3">&#9670;&#160;</a></span>utf8_length_from_utf16le_with_replacement()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a> simdutf::implementation::utf8_length_from_utf16le_with_replacement </td>
+          <td>(</td>
+          <td class="paramtype">const char16_t *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Compute the number of bytes that this UTF-16LE string would require in UTF-8 format even when the UTF-16LE content contains mismatched surrogates that have to be replaced by the replacement character (0xFFFD). </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
+    <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a result pair struct (of type <a class="el" href="structsimdutf_1_1result.html">simdutf::result</a> containing the two fields error and count) where the count is the number of bytes required to encode the UTF-16LE string as UTF-8, and the error code is either SUCCESS or SURROGATE. The count is correct regardless of the error field. When SURROGATE is returned, it does not indicate an error in the case of this function: it indicates that at least one surrogate has been encountered: the surrogates may be matched or not (thus this function does not validate). If the returned error code is SUCCESS, then the input contains no surrogate, is in the Basic Multilingual Plane, and is necessarily valid. </dd></dl>
 
 </div>
 </div>
@@ -4701,6 +4883,54 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 
 </div>
 </div>
+<a id="a7dd6251d9399ecd3a8d60dc27699fd96" name="a7dd6251d9399ecd3a8d60dc27699fd96"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7dd6251d9399ecd3a8d60dc27699fd96">&#9670;&#160;</a></span>validate_utf16be_as_ascii()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused bool simdutf::implementation::validate_utf16be_as_ascii </td>
+          <td>(</td>
+          <td class="paramtype">const char16_t *&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>len</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Validate the ASCII string as a UTF-16BE sequence. </p>
+<p>An UTF-16 sequence is considered an ASCII sequence if it could be converted to an ASCII string losslessly.</p>
+<p>Overridden by each implementation.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">buf</td><td>the UTF-16BE string to validate. </td></tr>
+    <tr><td class="paramname">len</td><td>the length of the string in bytes. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true if and only if the string is valid ASCII. </dd></dl>
+
+</div>
+</div>
 <a id="a7632c87e825c7f268cbb787612e940bf" name="a7632c87e825c7f268cbb787612e940bf"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7632c87e825c7f268cbb787612e940bf">&#9670;&#160;</a></span>validate_utf16be_with_errors()</h2>
 
@@ -4796,6 +5026,54 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if and only if the string is valid UTF-16LE. </dd></dl>
+
+</div>
+</div>
+<a id="ad9eea2222e793b0d65f4758ef168bd51" name="ad9eea2222e793b0d65f4758ef168bd51"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad9eea2222e793b0d65f4758ef168bd51">&#9670;&#160;</a></span>validate_utf16le_as_ascii()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused bool simdutf::implementation::validate_utf16le_as_ascii </td>
+          <td>(</td>
+          <td class="paramtype">const char16_t *&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>len</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Validate the ASCII string as a UTF-16LE sequence. </p>
+<p>An UTF-16 sequence is considered an ASCII sequence if it could be converted to an ASCII string losslessly.</p>
+<p>Overridden by each implementation.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">buf</td><td>the UTF-16LE string to validate. </td></tr>
+    <tr><td class="paramname">len</td><td>the length of the string in bytes. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true if and only if the string is valid ASCII. </dd></dl>
 
 </div>
 </div>

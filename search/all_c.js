@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['of_20characters_20per_20second_0',['simdutf: Unicode validation and transcoding at billions of characters per second',['../index.html',1,'']]],
-  ['of_20contents_1',['Table of contents',['../index.html#autotoc_md0',1,'']]]
+  ['of_20characters_20per_20second_0',['simdutf: Text processing at billions of characters per second',['../index.html',1,'']]],
+  ['or_20better_1',['C wrapper (C11 or better)',['../index.html#autotoc_md25',1,'']]]
 ];

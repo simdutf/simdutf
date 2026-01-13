@@ -25,7 +25,7 @@
 var NAVTREE =
 [
   [ "simdutf", "index.html", [
-    [ "simdutf: Unicode validation and transcoding at billions of characters per second", "index.html", "index" ],
+    [ "simdutf: Text processing at billions of characters per second", "index.html", "index" ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
       [ "Class Index", "classes.html", null ],
