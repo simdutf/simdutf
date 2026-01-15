@@ -475,4 +475,5 @@ if(Python3_FOUND AND GIT_EXECUTABLE)
     COMMAND ${Python3_EXECUTABLE} ${SIMDUTF_SOURCE_DIR}/scripts/check_feature_macros.py
     WORKING_DIRECTORY ${SIMDUTF_SOURCE_DIR}
   )
+  set_tests_properties(check_feature_macros PROPERTIES SKIP_RETURN_CODE 142) # Skip if no relevant files are found
 endif()
