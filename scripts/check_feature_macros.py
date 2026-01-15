@@ -131,7 +131,7 @@ def main():
     files = get_git_files(args.limit)
     if not files:
         print("No .cpp or .h files found in the Git repository" + (" in src/ or include/" if args.limit else "") + ".")
-        sys.exit(1)  # Exit with error code if no files are found
+        sys.exit(142)  # Exit with special code if no files are found, see https://github.com/simdutf/simdutf/issues/921
 
     all_errors = []
     statistics = {'if': 0, 'ifdef': 0, 'ifndef': 0, 'endif': 0}
