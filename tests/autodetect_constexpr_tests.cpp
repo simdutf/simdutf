@@ -14,9 +14,6 @@ consteval int get_encodings(std::string_view s) {
 }
 
 TEST(constexpr_autodetect) {
-  // Verify SIMDUTF_CPLUSPLUS23 is actually defined
-  std::cout << "SIMDUTF_CPLUSPLUS23 is defined" << std::endl;
-
   constexpr std::u8string_view hello = u8"Hello world";
   static_assert(simdutf::autodetect_encoding(hello) ==
                 simdutf::encoding_type::UTF8);

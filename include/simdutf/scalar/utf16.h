@@ -17,7 +17,15 @@ validate_as_ascii(const char16_t *data, size_t len) noexcept {
   return true;
 }
 
+#if SIMDUTF_CPLUSPLUS20
+  #include <concepts>
 template <endianness big_endian, typename InputPtr>
+  requires requires(InputPtr p, size_t i) {
+    { p[i] } -> std::convertible_to<char16_t>;
+  }
+#else
+template <endianness big_endian, typename InputPtr>
+#endif
 inline simdutf_warn_unused simdutf_constexpr23 bool
 validate(InputPtr data, size_t len) noexcept {
   uint64_t pos = 0;

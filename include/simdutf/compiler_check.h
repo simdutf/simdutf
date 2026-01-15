@@ -19,6 +19,8 @@
 #endif
 
 // C++ 23
+// AppleClang reports C++23 features but doesn't update __cplusplus correctly,
+// so we check for the if consteval feature test macro as a fallback.
 #if !defined(SIMDUTF_CPLUSPLUS23) &&                                           \
     ((SIMDUTF_CPLUSPLUS >= 202302L) ||                                         \
      (defined(__cpp_if_consteval) && __cpp_if_consteval >= 202106L))

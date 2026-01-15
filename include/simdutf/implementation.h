@@ -159,7 +159,6 @@ namespace detail {} // namespace detail
 #include <simdutf/scalar/utf32_to_utf8/utf32_to_utf8.h>
 #include <simdutf/scalar/utf32_to_utf8/valid_utf32_to_utf8.h>
 #include <simdutf/scalar/utf8.h>
-#include <simdutf/scalar/detect.h>
 #include <simdutf/scalar/utf8_to_latin1/utf8_to_latin1.h>
 #include <simdutf/scalar/utf8_to_latin1/valid_utf8_to_latin1.h>
 #include <simdutf/scalar/utf8_to_utf16/utf8_to_utf16.h>

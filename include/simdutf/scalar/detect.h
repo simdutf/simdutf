@@ -13,7 +13,7 @@ namespace detail {
 
 template <typename BytePtr> struct u16_ptr_shim {
   BytePtr ptr;
-  simdutf_constexpr14 char16_t operator[](size_t i) const {
+  simdutf_constexpr23 char16_t operator[](size_t i) const {
     size_t idx = i * 2;
 #ifdef SIMDUTF_IS_BIG_ENDIAN
     return static_cast<char16_t>((ptr[idx] << 8) | ptr[idx + 1]);
@@ -25,7 +25,7 @@ template <typename BytePtr> struct u16_ptr_shim {
 
 template <typename BytePtr> struct u32_ptr_shim {
   BytePtr ptr;
-  simdutf_constexpr14 uint32_t operator[](size_t i) const {
+  simdutf_constexpr23 uint32_t operator[](size_t i) const {
     size_t idx = i * 4;
 #ifdef SIMDUTF_IS_BIG_ENDIAN
     return static_cast<uint32_t>(
