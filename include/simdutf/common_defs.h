@@ -183,4 +183,47 @@
   #define simdutf_maybe_unused
 #endif
 
+// Currently there is no use case for lifebound annotation is simdutf.
+// But we define it here for future use.
+#ifndef __has_cpp_attribute
+  #define simdutf_lifetime_bound
+#elif __has_cpp_attribute(msvc::lifetimebound)
+  #define simdutf_lifetime_bound [[msvc::lifetimebound]]
+#elif __has_cpp_attribute(clang::lifetimebound)
+  #define simdutf_lifetime_bound [[clang::lifetimebound]]
+#elif __has_cpp_attribute(lifetimebound)
+  #define simdutf_lifetime_bound [[lifetimebound]]
+#else
+  #define simdutf_lifetime_bound
+#endif
+
+// The noescape attribute is used to indicate that pointer parameters
+// do not escape the function. That is, we do not track the pointer beyond
+// the function scope.
+// Examples:
+//
+//    char f(simdutf_noescape const char * p) {
+//      return p[0];  // Valid: the pointer is only used locally within the
+//      function
+//    }
+//
+//    const char * p2;  // Global variable
+//    char * g(simdutf_noescape const char * p) {
+//       p2 = p;  // Invalid: storing the pointer globally allows it to escape
+//       the function scope return (char *)p;  // Also invalid if the returned
+//       pointer enables post-return access
+//     }
+//
+// This attribute is currently supported only by clang.
+// It is declarative only, clang does not appear to perform any checking.
+// It only applies to pointer parameters.
+//
+#ifndef __has_cpp_attribute
+  #define simdutf_noescape
+#elif __has_cpp_attribute(clang::noescape)
+  #define simdutf_noescape [[clang::noescape]]
+#else
+  #define simdutf_noescape
+#endif
+
 #endif // SIMDUTF_COMMON_DEFS_H
