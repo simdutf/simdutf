@@ -55,17 +55,7 @@ namespace BOM {
  * @return the corresponding encoding
  */
 
-#if SIMDUTF_CPLUSPLUS20
-  #include <concepts>
 template <typename BytePtr>
-concept check_bom_byteptr = requires(BytePtr p, size_t i) {
-  { p[i] } -> std::convertible_to<unsigned char>;
-};
-
-template <check_bom_byteptr BytePtr>
-#else
-template <typename BytePtr>
-#endif
 simdutf_warn_unused inline simdutf_constexpr23 encoding_type
 check_bom(BytePtr byte, size_t length) {
   // Cast to uint8_t to handle signed char comparisons correctly

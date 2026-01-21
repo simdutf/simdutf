@@ -46,11 +46,6 @@ TEST(constexpr_detect_encodings) {
   static_assert((simdutf::detect_encodings(hello) &
                  simdutf::encoding_type::UTF8) == simdutf::encoding_type::UTF8);
 }
-#else
-TEST(constexpr_autodetect_dummy) {
-  std::cout << "SIMDUTF_CPLUSPLUS: " << SIMDUTF_CPLUSPLUS << std::endl;
-  ASSERT_TRUE(true);
-}
 #endif
 
 TEST_MAIN

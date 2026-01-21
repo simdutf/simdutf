@@ -11,6 +11,11 @@ namespace scalar {
 
 namespace detail {
 
+/**
+ * Adapter that reinterprets a byte pointer as UTF-16 code units.
+ * Used for constexpr encoding detection where reinterpret_cast is not allowed.
+ * Reads two consecutive bytes and combines them into a char16_t.
+ */
 template <typename BytePtr> struct u16_ptr_shim {
   BytePtr ptr;
   simdutf_constexpr23 char16_t operator[](size_t i) const {
@@ -23,6 +28,11 @@ template <typename BytePtr> struct u16_ptr_shim {
   }
 };
 
+/**
+ * Adapter that reinterprets a byte pointer as UTF-32 code units.
+ * Used for constexpr encoding detection where reinterpret_cast is not allowed.
+ * Reads four consecutive bytes and combines them into a uint32_t.
+ */
 template <typename BytePtr> struct u32_ptr_shim {
   BytePtr ptr;
   simdutf_constexpr23 uint32_t operator[](size_t i) const {

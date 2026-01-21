@@ -17,12 +17,8 @@ validate_as_ascii(const char16_t *data, size_t len) noexcept {
   return true;
 }
 
-#if SIMDUTF_CPLUSPLUS20
-  #include <concepts>
-template <endianness big_endian, typename InputPtr>
-  requires requires(InputPtr p, size_t i) {
-    { p[i] } -> std::convertible_to<char16_t>;
-  }
+#if SIMDUTF_SPAN
+template <endianness big_endian, simdutf::detail::indexes_into_utf16 InputPtr>
 #else
 template <endianness big_endian, typename InputPtr>
 #endif
