@@ -17,9 +17,13 @@ validate_as_ascii(const char16_t *data, size_t len) noexcept {
   return true;
 }
 
-template <endianness big_endian>
+#if SIMDUTF_SPAN
+template <endianness big_endian, simdutf::detail::indexes_into_utf16 InputPtr>
+#else
+template <endianness big_endian, typename InputPtr>
+#endif
 inline simdutf_warn_unused simdutf_constexpr23 bool
-validate(const char16_t *data, size_t len) noexcept {
+validate(InputPtr data, size_t len) noexcept {
   uint64_t pos = 0;
   while (pos < len) {
     char16_t word = scalar::utf16::swap_if_needed<big_endian>(data[pos]);
@@ -44,6 +48,12 @@ validate(const char16_t *data, size_t len) noexcept {
     }
   }
   return true;
+}
+
+template <endianness big_endian>
+inline simdutf_warn_unused simdutf_constexpr23 bool
+validate(const char16_t *data, size_t len) noexcept {
+  return validate<big_endian, const char16_t *>(data, len);
 }
 
 template <endianness big_endian>

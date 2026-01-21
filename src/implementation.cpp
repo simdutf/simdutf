@@ -2359,24 +2359,7 @@ simdutf_warn_unused size_t convert_latin1_to_utf8_safe(
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_BASE64
-simdutf_warn_unused result
-base64_to_binary_safe(const char *input, size_t length, char *output,
-                      size_t &outlen, base64_options options,
-                      last_chunk_handling_options last_chunk_handling_options,
-                      bool decode_up_to_bad_char) noexcept {
-  return base64_to_binary_safe_impl<char>(input, length, output, outlen,
-                                          options, last_chunk_handling_options,
-                                          decode_up_to_bad_char);
-}
-simdutf_warn_unused result
-base64_to_binary_safe(const char16_t *input, size_t length, char *output,
-                      size_t &outlen, base64_options options,
-                      last_chunk_handling_options last_chunk_handling_options,
-                      bool decode_up_to_bad_char) noexcept {
-  return base64_to_binary_safe_impl<char16_t>(
-      input, length, output, outlen, options, last_chunk_handling_options,
-      decode_up_to_bad_char);
-}
+// base64_to_binary_safe functions are defined inline in implementation.h
 
 size_t binary_to_base64(const char *input, size_t length, char *output,
                         base64_options options) noexcept {
