@@ -15,42 +15,47 @@
 #include "event_counter.h"
 
 struct BenchmarkFunc {
-    std::string name;
-    std::function<std::function<void()>(const std::vector<char>&, size_t)> maker;
+  std::string name;
+  std::function<std::function<void()>(const std::vector<char> &, size_t)> maker;
 };
 
 // TODO: add more benchmarked functions.
 std::vector<BenchmarkFunc> available_functions = {
-    {"validate_utf8", [](const std::vector<char>& data, size_t size) {
-        return [size, &data]() {
-            bool valid = simdutf::validate_utf8(data.data(), size);
-            (void)valid;
-        };
-    }},
-    {"utf8_length_from_latin1", [](const std::vector<char>& data, size_t size) {
-        return [size, &data]() {
-            size_t len = simdutf::utf8_length_from_latin1(data.data(), size);
-            (void)len;
-        };
-    }},
-    {"utf16_length_from_utf8", [](const std::vector<char>& data, size_t size) {
-        return [size, &data]() {
-            size_t len = simdutf::utf16_length_from_utf8(data.data(), size);
-            (void)len;
-        };
-    }},
-    {"utf32_length_from_utf8", [](const std::vector<char>& data, size_t size) {
-        return [size, &data]() {
-            size_t len = simdutf::utf32_length_from_utf8(data.data(), size);
-            (void)len;
-        };
-    }},
-    {"count_utf8", [](const std::vector<char>& data, size_t size) {
-        return [size, &data]() {
-            size_t count = simdutf::count_utf8(data.data(), size);
-            (void)count;
-        };
-    }},
+    {"validate_utf8",
+     [](const std::vector<char> &data, size_t size) {
+       return [size, &data]() {
+         bool valid = simdutf::validate_utf8(data.data(), size);
+         (void)valid;
+       };
+     }},
+    {"utf8_length_from_latin1",
+     [](const std::vector<char> &data, size_t size) {
+       return [size, &data]() {
+         size_t len = simdutf::utf8_length_from_latin1(data.data(), size);
+         (void)len;
+       };
+     }},
+    {"utf16_length_from_utf8",
+     [](const std::vector<char> &data, size_t size) {
+       return [size, &data]() {
+         size_t len = simdutf::utf16_length_from_utf8(data.data(), size);
+         (void)len;
+       };
+     }},
+    {"utf32_length_from_utf8",
+     [](const std::vector<char> &data, size_t size) {
+       return [size, &data]() {
+         size_t len = simdutf::utf32_length_from_utf8(data.data(), size);
+         (void)len;
+       };
+     }},
+    {"count_utf8",
+     [](const std::vector<char> &data, size_t size) {
+       return [size, &data]() {
+         size_t count = simdutf::count_utf8(data.data(), size);
+         (void)count;
+       };
+     }},
 };
 
 struct time_stats {
@@ -58,30 +63,20 @@ struct time_stats {
   double m_cycles;
   double m_nanoseconds;
   double m_error; // relative error estimate
-  double elapsed_ns() const {
-    return m_nanoseconds;
-  }
-  double cycles() const {
-    return m_cycles;
-  }
-  double instructions() const {
-    return m_instructions;
-  }
-  double error() const {
-    return m_error;
-  }
+  double elapsed_ns() const { return m_nanoseconds; }
+  double cycles() const { return m_cycles; }
+  double instructions() const { return m_instructions; }
+  double error() const { return m_error; }
 };
 
 event_collector collector;
 
-
-// We expect the functions to be really short, so we do not want too much overhead.
-// Thus we benchmark with multiple inner repeats.
+// We expect the functions to be really short, so we do not want too much
+// overhead. Thus we benchmark with multiple inner repeats.
 template <class function_type>
-time_stats bench(const function_type &function, size_t min_inner_repeat = 1000, 
-                      size_t min_repeat = 10,
-                      size_t min_time_ns = 1000000000,
-                      size_t max_repeat = 1000000) {
+time_stats bench(const function_type &function, size_t min_inner_repeat = 1000,
+                 size_t min_repeat = 10, size_t min_time_ns = 1000000000,
+                 size_t max_repeat = 1000000) {
   event_aggregate aggregate{};
   size_t N = min_repeat;
   if (N == 0) {
@@ -90,7 +85,9 @@ time_stats bench(const function_type &function, size_t min_inner_repeat = 1000,
   for (size_t i = 0; i < N; i++) {
     std::atomic_thread_fence(std::memory_order_acquire);
     collector.start();
-    for(size_t j = 0; j < min_inner_repeat; j++) { function(); }
+    for (size_t j = 0; j < min_inner_repeat; j++) {
+      function();
+    }
     std::atomic_thread_fence(std::memory_order_release);
     event_count allocate_count = collector.end();
     aggregate << allocate_count;
@@ -99,10 +96,14 @@ time_stats bench(const function_type &function, size_t min_inner_repeat = 1000,
       N *= 10;
     }
   }
-  // As an estimate of the timing error, we report the difference between the average run and the best run.
-  // Note that distributions are expected to be *log-normal*, and not normal, so this is a good measure of variability.
-  double error = (aggregate.elapsed_ns() - aggregate.best.elapsed_ns()) / aggregate.worst.elapsed_ns();
-  return time_stats{aggregate.instructions() / min_inner_repeat, aggregate.cycles() / min_inner_repeat, aggregate.elapsed_ns() / min_inner_repeat, error};
+  // As an estimate of the timing error, we report the difference between the
+  // average run and the best run. Note that distributions are expected to be
+  // *log-normal*, and not normal, so this is a good measure of variability.
+  double error = (aggregate.elapsed_ns() - aggregate.best.elapsed_ns()) /
+                 aggregate.worst.elapsed_ns();
+  return time_stats{aggregate.instructions() / min_inner_repeat,
+                    aggregate.cycles() / min_inner_repeat,
+                    aggregate.elapsed_ns() / min_inner_repeat, error};
 }
 
 std::vector<char> read_file(const char *filename) {
@@ -117,13 +118,15 @@ std::vector<char> read_file(const char *filename) {
 
 void print_table_header(bool has_events) {
   if (has_events) {
-        printf("%-10s %-18s %-18s %6s %-15s %-15s %-15s\n",
-               "Size", "Total Time (ns)", "Time/Byte (ns)", "Err%", "Cycles/Byte", "Ins/Byte",
-               "Ins/Cycle");
-        printf("----------------------------------------------------------------------------------------------------------------\n");
+    printf("%-10s %-18s %-18s %6s %-15s %-15s %-15s\n", "Size",
+           "Total Time (ns)", "Time/Byte (ns)", "Err%", "Cycles/Byte",
+           "Ins/Byte", "Ins/Cycle");
+    printf("-------------------------------------------------------------------"
+           "---------------------------------------------\n");
   } else {
-        printf("%-10s %-18s %-18s %6s\n", "Size", "Total Time (ns)", "Time/Byte (ns)", "Err%");
-        printf("---------------------------------------------------------------\n");
+    printf("%-10s %-18s %-18s %6s\n", "Size", "Total Time (ns)",
+           "Time/Byte (ns)", "Err%");
+    printf("---------------------------------------------------------------\n");
   }
 }
 
@@ -131,24 +134,34 @@ void print_table_row(size_t size, time_stats stats, bool has_events) {
   double total_ns = stats.elapsed_ns();
   double time_per_byte_ns = (size == 0) ? 0.0 : total_ns / (double)size;
   int error_pct = int(std::lround(stats.error() * 100.0));
-  if (error_pct < 0) error_pct = 0;
-  if (error_pct > 100) error_pct = 100;
+  if (error_pct < 0)
+    error_pct = 0;
+  if (error_pct > 100)
+    error_pct = 100;
 
   if (has_events) {
     double cycles_per_byte = (size == 0) ? 0.0 : stats.cycles() / (double)size;
-    double Ins_per_byte = (size == 0) ? 0.0 : stats.instructions() / (double)size;
-    double Ins_per_cycle = (stats.cycles() == 0) ? 0.0 : stats.instructions() / (double)stats.cycles();
-    printf("%-10zu %-18.1f   %-15.1f   %5d  %-15.1f %-15.1f   %-15.1f\n",
-           size, total_ns, time_per_byte_ns, error_pct, cycles_per_byte, Ins_per_byte, Ins_per_cycle);
+    double Ins_per_byte =
+        (size == 0) ? 0.0 : stats.instructions() / (double)size;
+    double Ins_per_cycle = (stats.cycles() == 0)
+                               ? 0.0
+                               : stats.instructions() / (double)stats.cycles();
+    printf("%-10zu %-18.1f   %-15.1f   %5d  %-15.1f %-15.1f   %-15.1f\n", size,
+           total_ns, time_per_byte_ns, error_pct, cycles_per_byte, Ins_per_byte,
+           Ins_per_cycle);
   } else {
-    printf("%-10zu %-18.1f   %-15.1f   %5d\n", size, total_ns, time_per_byte_ns, error_pct);
+    printf("%-10zu %-18.1f   %-15.1f   %5d\n", size, total_ns, time_per_byte_ns,
+           error_pct);
   }
 }
 
 int main(int argc, char *argv[]) {
   const bool has_events = collector.has_events();
-  if(!has_events) {
-    std::cerr << "# Warning: Performance events not available on this system. Under macOS and Linux, you may need to run with sudo or configure performance counters." << std::endl;
+  if (!has_events) {
+    std::cerr << "# Warning: Performance events not available on this system. "
+                 "Under macOS and Linux, you may need to run with sudo or "
+                 "configure performance counters."
+              << std::endl;
   }
   size_t max_size = 128;
   const char *filename = nullptr;
@@ -165,9 +178,13 @@ int main(int argc, char *argv[]) {
     } else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
       std::cout << "Usage: " << argv[0] << " [options] <filename>" << std::endl;
       std::cout << "Options:" << std::endl;
-      std::cout << "  --max-size <size>    Max size to benchmark (default 128)" << std::endl;
-      std::cout << "  --function <name>    Function to benchmark (default validate_utf8)" << std::endl;
-      std::cout << "  --list               List available functions" << std::endl;
+      std::cout << "  --max-size <size>    Max size to benchmark (default 128)"
+                << std::endl;
+      std::cout << "  --function <name>    Function to benchmark (default "
+                   "validate_utf8)"
+                << std::endl;
+      std::cout << "  --list               List available functions"
+                << std::endl;
       std::cout << "  --help               Show this help" << std::endl;
       return EXIT_SUCCESS;
     } else if (!filename) {
@@ -180,7 +197,7 @@ int main(int argc, char *argv[]) {
 
   if (list_functions) {
     std::cout << "Available functions:" << std::endl;
-    for (const auto& func : available_functions) {
+    for (const auto &func : available_functions) {
       std::cout << "  " << func.name << std::endl;
     }
     return EXIT_SUCCESS;
@@ -192,24 +209,27 @@ int main(int argc, char *argv[]) {
   }
 
   // Find the selected function
-  auto it = std::find_if(available_functions.begin(), available_functions.end(),
-                         [&](const BenchmarkFunc& f) { return f.name == selected_function; });
+  auto it = std::find_if(
+      available_functions.begin(), available_functions.end(),
+      [&](const BenchmarkFunc &f) { return f.name == selected_function; });
   if (it == available_functions.end()) {
     std::cerr << "Unknown function: " << selected_function << std::endl;
     std::cerr << "Use --list to see available functions" << std::endl;
     return EXIT_FAILURE;
   }
-  const BenchmarkFunc& func = *it;
+  const BenchmarkFunc &func = *it;
 
   try {
     std::vector<char> data = read_file(filename);
     size_t file_size = data.size();
     size_t actual_max = std::min(max_size, file_size);
 
-    printf("# Benchmarking simdutf::%s on file: %s\n", selected_function.c_str(), filename);
+    printf("# Benchmarking simdutf::%s on file: %s\n",
+           selected_function.c_str(), filename);
     printf("# File size: %zu bytes\n", file_size);
     printf("# Max benchmark size: %zu bytes\n", actual_max);
-    printf("# Current system: %s\n", simdutf::get_active_implementation()->name().c_str());
+    printf("# Current system: %s\n",
+           simdutf::get_active_implementation()->name().c_str());
     printf("\n");
 
     print_table_header(has_events);
