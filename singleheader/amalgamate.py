@@ -29,6 +29,9 @@ generic_pattern = re.compile(r'.*generic/.*\.h')
 begin_pattern = re.compile(r'.*/begin\.h')
 end_pattern = re.compile(r'.*/end\.h')
 
+# Cache for file contents to avoid re-reading files included multiple times
+file_cache = {}
+
 
 class Context:
     pass
@@ -223,7 +226,10 @@ def dofile(prepath, filename):
                 pass
             else:
                 # copy the line, with SIMDUTF_IMPLEMENTATION replace to what it is currently defined to
-                print(uses_simdutf_implementation.sub(context.current_implementation+"\\1", line), file=fid)
+                if 'SIMDUTF_IMPLEMENTATION' in line:
+                    print(uses_simdutf_implementation.sub(context.current_implementation+"\\1", line), file=fid)
+                else:
+                    print(line, file=fid)
 
     print(f"/* end file {RELFILE} */", file=fid)
 
@@ -323,9 +329,17 @@ def print_instructions():
 
 
 def read_file(file):
-    with open(file, 'r') as f:
-        for line in f:
-            yield line.rstrip()
+    if file in file_cache:
+        for line in file_cache[file]:
+            yield line
+    else:
+        lines = []
+        with open(file, 'r') as f:
+            for line in f:
+                line = line.rstrip()
+                lines.append(line)
+                yield line
+        file_cache[file] = lines
 
 
 def filter_features(file):
