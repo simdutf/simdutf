@@ -23,77 +23,77 @@ struct BenchmarkFunc {
 // Benchmarked functions.
 std::vector<BenchmarkFunc> available_functions = {
     {"validate_ascii",
-     [](std::span<const char> input, std::span<char> output) {
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
          bool valid = simdutf::validate_ascii(input.data(), input.size());
          (void)valid;
        };
      }},
     {"validate_utf8",
-     [](std::span<const char> input, std::span<char> output) {
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
          bool valid = simdutf::validate_utf8(input.data(), input.size());
          (void)valid;
        };
      }},
     {"utf8_length_from_latin1",
-     [](std::span<const char> input, std::span<char> output) {
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
          size_t len = simdutf::utf8_length_from_latin1(input.data(), input.size());
          (void)len;
        };
      }},
     {"utf16_length_from_utf8",
-     [](std::span<const char> input, std::span<char> output) {
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
          size_t len = simdutf::utf16_length_from_utf8(input.data(), input.size());
          (void)len;
        };
      }},
     {"utf32_length_from_utf8",
-     [](std::span<const char> input, std::span<char> output) {
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
          size_t len = simdutf::utf32_length_from_utf8(input.data(), input.size());
          (void)len;
        };
      }},
     {"count_utf8",
-     [](std::span<const char> input, std::span<char> output) {
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
          size_t count = simdutf::count_utf8(input.data(), input.size());
          (void)count;
        };
      }},
     {"count_utf16",
-     [](std::span<const char> input, std::span<char> output) {
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
          size_t count = simdutf::count_utf16(reinterpret_cast<const char16_t*>(input.data()), input.size() / 2);
          (void)count;
        };
      }},
     {"utf8_length_from_utf16",
-     [](std::span<const char> input, std::span<char> output) {
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
          size_t len = simdutf::utf8_length_from_utf16(reinterpret_cast<const char16_t*>(input.data()), input.size() / 2);
          (void)len;
        };
      }},
     {"utf16_length_from_utf32",
-     [](std::span<const char> input, std::span<char> output) {
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
          size_t len = simdutf::utf16_length_from_utf32(reinterpret_cast<const char32_t*>(input.data()), input.size() / 4);
          (void)len;
        };
      }},
     {"utf32_length_from_utf16",
-     [](std::span<const char> input, std::span<char> output) {
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
          size_t len = simdutf::utf32_length_from_utf16(reinterpret_cast<const char16_t*>(input.data()), input.size() / 2);
          (void)len;
        };
      }},
     {"utf8_length_from_utf32",
-     [](std::span<const char> input, std::span<char> output) {
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
          size_t len = simdutf::utf8_length_from_utf32(reinterpret_cast<const char32_t*>(input.data()), input.size() / 4);
          (void)len;
@@ -247,7 +247,7 @@ std::vector<BenchmarkFunc> available_functions = {
        };
      }},
     {"find_equal",
-     [](std::span<const char> input, std::span<char> output) {
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
          auto it = std::find(input.begin(), input.end(), '=');
          (void)it;
