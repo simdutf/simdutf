@@ -20,6 +20,18 @@ if sys.version_info[0] < 3:
 SCRIPTPATH = os.path.dirname(os.path.abspath(sys.argv[0]))
 PROJECTPATH = os.path.dirname(SCRIPTPATH)
 
+# Pre-compile regex patterns for efficiency
+includepattern = re.compile(r'^\s*#\s*include (<|")(.*)(>|")')
+redefines_simdutf_implementation = re.compile(r'^#define\s+SIMDUTF_IMPLEMENTATION\s+(.*)')
+undefines_simdutf_implementation = re.compile(r'^#undef\s+SIMDUTF_IMPLEMENTATION\s*$')
+uses_simdutf_implementation = re.compile(r'SIMDUTF_IMPLEMENTATION([^_a-zA-Z0-9]|$)')
+generic_pattern = re.compile(r'.*generic/.*\.h')
+begin_pattern = re.compile(r'.*/begin\.h')
+end_pattern = re.compile(r'.*/end\.h')
+
+# Cache for file contents to avoid re-reading files included multiple times
+file_cache = {}
+
 
 class Context:
     pass
@@ -165,12 +177,12 @@ def doinclude(file, line):
         path = os.path.join(directory, file)
         if os.path.exists(path):
             # generic includes are included multiple times
-            if re.match('.*generic/.*.h', file):
+            if generic_pattern.match(file):
                 dofile(directory, file)
             # begin/end_implementation are also included multiple times
-            elif re.match('.*/begin.h', file):
+            elif begin_pattern.match(file):
                 dofile(directory, file)
-            elif re.match('.*/end.h', file):
+            elif end_pattern.match(file):
                 dofile(directory, file)
             elif file not in context.found_includes:
                 context.found_includes.add(file)
@@ -190,10 +202,6 @@ def dofile(prepath, filename):
     RELFILE = os.path.relpath(file, PROJECTPATH)
     # Last lines are always ignored. Files should end by an empty lines.
     print(f"/* begin file {RELFILE} */", file=fid)
-    includepattern = re.compile(r'^\s*#\s*include (<|")(.*)(>|")')
-    redefines_simdutf_implementation = re.compile(r'^#define\s+SIMDUTF_IMPLEMENTATION\s+(.*)')
-    undefines_simdutf_implementation = re.compile(r'^#undef\s+SIMDUTF_IMPLEMENTATION\s*$')
-    uses_simdutf_implementation = re.compile('SIMDUTF_IMPLEMENTATION([^_a-zA-Z0-9]|$)')
     for line in context.read_file(file):
         s = includepattern.search(line)
         if s:
@@ -218,7 +226,10 @@ def dofile(prepath, filename):
                 pass
             else:
                 # copy the line, with SIMDUTF_IMPLEMENTATION replace to what it is currently defined to
-                print(uses_simdutf_implementation.sub(context.current_implementation+"\\1", line), file=fid)
+                if 'SIMDUTF_IMPLEMENTATION' in line:
+                    print(uses_simdutf_implementation.sub(context.current_implementation+"\\1", line), file=fid)
+                else:
+                    print(line, file=fid)
 
     print(f"/* end file {RELFILE} */", file=fid)
 
@@ -318,9 +329,17 @@ def print_instructions():
 
 
 def read_file(file):
-    with open(file, 'r') as f:
-        for line in f:
-            yield line.rstrip()
+    if file in file_cache:
+        for line in file_cache[file]:
+            yield line
+    else:
+        lines = []
+        with open(file, 'r') as f:
+            for line in f:
+                line = line.rstrip()
+                lines.append(line)
+                yield line
+        file_cache[file] = lines
 
 
 def filter_features(file):
