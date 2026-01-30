@@ -1,3 +1,7 @@
+// This benchmnark program seeks to measure the performance of very short
+// functions calls to various simdutf functions.
+// You can process the result with the script at scripts/shortinputplots.py
+// to generate plots. See the instructions in that script for more details.
 #include <algorithm>
 #include <cstddef>
 #include <fstream>
