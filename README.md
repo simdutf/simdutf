@@ -179,38 +179,11 @@ ctest .
 
 Visual Studio users must specify whether they want to build the Release or Debug version.
 
-To run transcoding benchmarks, execute the `benchmark` command. You can get help on its
-usage by first building it and then calling it with the `--help` flag.
-E.g., under Linux you may do the following:
-
-```shell
-cmake -B build -D SIMDUTF_BENCHMARKS=ON
-cmake --build build
-./build/benchmarks/benchmark --help
-./build/benchmarks/base64/benchmark_base64 --help
-```
-
-E.g., to run base64 decoding benchmarks on DNS data (short inputs), do
-
-```shell
-./build/benchmarks/base64/benchmark_base64 -d pathto/base64data/dns/*.txt
-```
-
-where pathto/base64data should contain the path to a clone of
-the repository https://github.com/lemire/base64data.
-
-Instructions are similar for Visual Studio users.
-
 To use the library as a CMake dependency in your project, please see `tests/installation_tests/from_fetch` for
 an example.
 
-Since ICU is so common and popular, we assume that you may have it already on your system. When
-it is not found, it is simply omitted from the benchmarks. Thus, to benchmark against ICU, make
-sure you have ICU installed on your machine and that cmake can find it. For macOS, you may
-install it with brew using `brew install icu4c`. If you have ICU on your system but cmake cannot
-find it, you may need to provide cmake with a path to ICU, such as `ICU_ROOT=/usr/local/opt/icu4c cmake -B build`.
-
 You may also use a package manager. E.g.,  [we have a complete example using vcpkg](https://github.com/simdutf/simdutf-vcpkg).
+
 
 
 ## Single-header version
@@ -2641,6 +2614,63 @@ int main() {
   return EXIT_SUCCESS;
 }
 ```
+
+
+
+## Benchmarks
+
+To run benchmarks, build the project with benchmarks enabled.  Our default benchmarks are in the  `benchmark` command. You can get help on its
+usage by first building it and then calling it with the `--help` flag.
+E.g., under Linux you may do the following:
+
+```shell
+cmake -B build -D SIMDUTF_BENCHMARKS=ON
+cmake --build build
+./build/benchmarks/benchmark --help
+```
+
+
+The standard benchmark tool `benchmark` provides comprehensive transcoding benchmarks between different encodings. It supports various procedures like converting UTF-8 to UTF-16, UTF-16 to UTF-8, and more. You can list available procedures with `--procedures`, run specific benchmarks, or use filters to select particular tests. For example, to benchmark UTF-8 to UTF-16 conversion on a file, use `./build/benchmarks/benchmark --procedure utf8_to_utf16 file.txt`. It outputs detailed performance metrics including throughput in GB/s and CPU cycles.
+
+Since ICU is so common and popular, we assume that you may have it already on your system. When
+it is not found, it is simply omitted from the benchmarks. Thus, to benchmark against ICU, make
+sure you have ICU installed on your machine and that cmake can find it. For macOS, you may
+install it with brew using `brew install icu4c`. If you have ICU on your system but cmake cannot
+find it, you may need to provide cmake with a path to ICU, such as `ICU_ROOT=/usr/local/opt/icu4c cmake -B build`.
+
+
+### Base64 benchmarks
+
+We also have a base64 benchmark tool (`benchmark_base64`).
+
+```shell
+./build/benchmarks/base64/benchmark_base64 --help
+```
+
+E.g., to run base64 decoding benchmarks on DNS data (short inputs), do
+
+```shell
+./build/benchmarks/base64/benchmark_base64 -d pathto/base64data/dns/*.txt
+```
+
+where pathto/base64data should contain the path to a clone of
+the repository https://github.com/lemire/base64data.
+
+
+### Short input benchmarks
+
+To run short benchmarks on various SIMDUTF functions with incremental input sizes, use `shortbench`:
+
+```shell
+./build/benchmarks/shortbench --help
+./build/benchmarks/shortbench --list
+./build/benchmarks/shortbench --function validate_utf8 # validate a zero buffer
+./build/benchmarks/shortbench --function validate_utf8 README.md
+./build/benchmarks/shortbench --function utf8_length_from_latin1 --max-size 256 somefile.txt
+```
+
+This will benchmark the selected function on the input file, testing sizes from 1 byte up to the specified max size (default 128), and output a table with timing and performance metrics.
+
 
 ## Thread safety
 

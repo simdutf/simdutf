@@ -93,4 +93,9 @@ target_link_libraries(benchmark_to_well_formed_utf16 PUBLIC simdutf::benchmarks:
 set_property(TARGET benchmark_to_well_formed_utf16 PROPERTY CXX_STANDARD 17)
 set_property(TARGET benchmark_to_well_formed_utf16 PROPERTY CXX_STANDARD_REQUIRED ON)
 
+
+add_executable(shortbench shortbench.cpp)
+target_link_libraries(shortbench PUBLIC simdutf::benchmarks::benchmark)
+target_compile_features(shortbench PRIVATE cxx_std_20)
+
 add_subdirectory(find)
