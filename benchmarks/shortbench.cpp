@@ -3,17 +3,17 @@
 // You can process the result with the script at scripts/shortinputplots.py
 // to generate plots. See the instructions in that script for more details.
 #include <algorithm>
-#include <cstddef>
-#include <fstream>
-#include <iostream>
-#include <vector>
-#include <stdexcept>
-#include <atomic>
 #include <array>
-#include <cstring>
+#include <atomic>
 #include <cmath>
+#include <cstddef>
+#include <cstring>
+#include <fstream>
 #include <functional>
+#include <iostream>
 #include <span>
+#include <stdexcept>
+#include <vector>
 
 #include "simdutf.h"
 
