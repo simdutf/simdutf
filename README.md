@@ -2664,6 +2664,7 @@ To run short benchmarks on various SIMDUTF functions with incremental input size
 ```shell
 ./build/benchmarks/shortbench --help
 ./build/benchmarks/shortbench --list
+./build/benchmarks/shortbench --function validate_utf8 # validate a zero buffer
 ./build/benchmarks/shortbench --function validate_utf8 README.md
 ./build/benchmarks/shortbench --function utf8_length_from_latin1 --max-size 256 somefile.txt
 ```
