@@ -213,6 +213,12 @@ struct utf8_checker {
     return this->error.any_bits_set_anywhere();
   }
 
+  // Return true if there are incomplete multibyte characters at the end of the
+  // block
+  simdutf_really_inline bool has_incomplete() const {
+    return this->prev_incomplete.any_bits_set_anywhere();
+  }
+
 }; // struct utf8_checker
 } // namespace utf8_validation
 

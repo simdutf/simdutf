@@ -8,20 +8,31 @@ namespace utf8_validation {
  */
 template <class checker>
 bool generic_validate_utf8(const uint8_t *input, size_t length) {
-  checker c{};
-  buf_block_reader<64> reader(input, length);
-  while (reader.has_full_block()) {
-    simd::simd8x64<uint8_t> in(reader.full_block());
-    c.check_next_input(in);
-    reader.advance();
+  if (length >= 64) {
+    checker c{};
+    buf_block_reader<64> reader(input, length);
+    while (reader.has_full_block()) {
+      simd::simd8x64<uint8_t> in(reader.full_block());
+      c.check_next_input(in);
+      reader.advance();
+    }
+    if (c.errors()) {
+      return false;
+    }
+    size_t count = reader.block_index();
+    if (c.has_incomplete()) {
+      size_t location = count - 1;
+      while ((input[location] & 0xC0) == 0x80) {
+        location--;
+      }
+      length -= location;
+      input += location;
+    } else {
+      length -= count;
+      input += count;
+    }
   }
-  uint8_t block[64]{};
-  reader.get_remainder(block);
-  simd::simd8x64<uint8_t> in(block);
-  c.check_next_input(in);
-  reader.advance();
-  c.check_eof();
-  return !c.errors();
+  return scalar::utf8::validate(reinterpret_cast<const char *>(input), length);
 }
 
 bool generic_validate_utf8(const char *input, size_t length) {
@@ -34,43 +45,41 @@ bool generic_validate_utf8(const char *input, size_t length) {
  */
 template <class checker>
 result generic_validate_utf8_with_errors(const uint8_t *input, size_t length) {
-  checker c{};
-  buf_block_reader<64> reader(input, length);
-  size_t count{0};
-  while (reader.has_full_block()) {
-    simd::simd8x64<uint8_t> in(reader.full_block());
-    c.check_next_input(in);
-    if (c.errors()) {
-      if (count != 0) {
-        count--;
-      } // Sometimes the error is only detected in the next chunk
-      result res = scalar::utf8::rewind_and_validate_with_errors(
-          reinterpret_cast<const char *>(input),
-          reinterpret_cast<const char *>(input + count), length - count);
-      res.count += count;
-      return res;
+  size_t count = 0;
+  if (length >= 64) {
+    checker c{};
+    buf_block_reader<64> reader(input, length);
+    while (reader.has_full_block()) {
+      simd::simd8x64<uint8_t> in(reader.full_block());
+      c.check_next_input(in);
+      if (c.errors()) {
+        count = reader.block_index();
+        if (count != 0) {
+          count--;
+        } // Sometimes the error is only detected in the next chunk
+        result res = scalar::utf8::rewind_and_validate_with_errors(
+            reinterpret_cast<const char *>(input),
+            reinterpret_cast<const char *>(input + count), length - count);
+        res.count += count;
+        return res;
+      }
+      reader.advance();
     }
-    reader.advance();
-    count += 64;
+    count = reader.block_index();
+    if (c.has_incomplete()) {
+      size_t location = count - 1;
+      while ((input[location] & 0xC0) == 0x80) {
+        location--;
+      }
+      count = location;
+    }
+    length -= count;
+    input += count;
   }
-  uint8_t block[64]{};
-  reader.get_remainder(block);
-  simd::simd8x64<uint8_t> in(block);
-  c.check_next_input(in);
-  reader.advance();
-  c.check_eof();
-  if (c.errors()) {
-    if (count != 0) {
-      count--;
-    } // Sometimes the error is only detected in the next chunk
-    result res = scalar::utf8::rewind_and_validate_with_errors(
-        reinterpret_cast<const char *>(input),
-        reinterpret_cast<const char *>(input) + count, length - count);
-    res.count += count;
-    return res;
-  } else {
-    return result(error_code::SUCCESS, length);
-  }
+  auto r = scalar::utf8::validate_with_errors(
+      reinterpret_cast<const char *>(input), length);
+  r.count += count;
+  return r;
 }
 
 result generic_validate_utf8_with_errors(const char *input, size_t length) {

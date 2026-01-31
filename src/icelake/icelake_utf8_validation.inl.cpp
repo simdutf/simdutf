@@ -113,4 +113,11 @@ struct avx512_utf8_checker {
   simdutf_really_inline bool errors() const {
     return _mm512_test_epi8_mask(this->error, this->error) != 0;
   }
+
+  // Return true if there are incomplete multibyte characters at the end of the
+  // block
+  simdutf_really_inline bool has_incomplete() const {
+    return _mm512_test_epi8_mask(this->prev_incomplete,
+                                 this->prev_incomplete) != 0;
+  }
 }; // struct avx512_utf8_checker
