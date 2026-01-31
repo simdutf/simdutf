@@ -21,7 +21,8 @@
 
 struct BenchmarkFunc {
   std::string name;
-  std::function<std::function<void()>(std::span<const char>, std::span<char>)> maker;
+  std::function<std::function<void()>(std::span<const char>, std::span<char>)>
+      maker;
 };
 
 // Benchmarked functions.
@@ -43,21 +44,24 @@ std::vector<BenchmarkFunc> available_functions = {
     {"utf8_length_from_latin1",
      [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
-         size_t len = simdutf::utf8_length_from_latin1(input.data(), input.size());
+         size_t len =
+             simdutf::utf8_length_from_latin1(input.data(), input.size());
          (void)len;
        };
      }},
     {"utf16_length_from_utf8",
      [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
-         size_t len = simdutf::utf16_length_from_utf8(input.data(), input.size());
+         size_t len =
+             simdutf::utf16_length_from_utf8(input.data(), input.size());
          (void)len;
        };
      }},
     {"utf32_length_from_utf8",
      [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
-         size_t len = simdutf::utf32_length_from_utf8(input.data(), input.size());
+         size_t len =
+             simdutf::utf32_length_from_utf8(input.data(), input.size());
          (void)len;
        };
      }},
@@ -71,175 +75,221 @@ std::vector<BenchmarkFunc> available_functions = {
     {"count_utf16",
      [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
-         size_t count = simdutf::count_utf16(reinterpret_cast<const char16_t*>(input.data()), input.size() / 2);
+         size_t count = simdutf::count_utf16(
+             reinterpret_cast<const char16_t *>(input.data()),
+             input.size() / 2);
          (void)count;
        };
      }},
     {"utf8_length_from_utf16",
      [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
-         size_t len = simdutf::utf8_length_from_utf16(reinterpret_cast<const char16_t*>(input.data()), input.size() / 2);
+         size_t len = simdutf::utf8_length_from_utf16(
+             reinterpret_cast<const char16_t *>(input.data()),
+             input.size() / 2);
          (void)len;
        };
      }},
     {"utf16_length_from_utf32",
      [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
-         size_t len = simdutf::utf16_length_from_utf32(reinterpret_cast<const char32_t*>(input.data()), input.size() / 4);
+         size_t len = simdutf::utf16_length_from_utf32(
+             reinterpret_cast<const char32_t *>(input.data()),
+             input.size() / 4);
          (void)len;
        };
      }},
     {"utf32_length_from_utf16",
      [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
-         size_t len = simdutf::utf32_length_from_utf16(reinterpret_cast<const char16_t*>(input.data()), input.size() / 2);
+         size_t len = simdutf::utf32_length_from_utf16(
+             reinterpret_cast<const char16_t *>(input.data()),
+             input.size() / 2);
          (void)len;
        };
      }},
     {"utf8_length_from_utf32",
      [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() {
-         size_t len = simdutf::utf8_length_from_utf32(reinterpret_cast<const char32_t*>(input.data()), input.size() / 4);
+         size_t len = simdutf::utf8_length_from_utf32(
+             reinterpret_cast<const char32_t *>(input.data()),
+             input.size() / 4);
          (void)len;
        };
      }},
     {"convert_latin1_to_utf8",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::convert_latin1_to_utf8(input.data(), input.size(), output.data());
+         size_t len = simdutf::convert_latin1_to_utf8(
+             input.data(), input.size(), output.data());
          (void)len;
        };
      }},
     {"convert_latin1_to_utf16le",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::convert_latin1_to_utf16le(input.data(), input.size(), reinterpret_cast<char16_t*>(output.data()));
+         size_t len = simdutf::convert_latin1_to_utf16le(
+             input.data(), input.size(),
+             reinterpret_cast<char16_t *>(output.data()));
          (void)len;
        };
      }},
     {"convert_latin1_to_utf16be",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::convert_latin1_to_utf16be(input.data(), input.size(), reinterpret_cast<char16_t*>(output.data()));
+         size_t len = simdutf::convert_latin1_to_utf16be(
+             input.data(), input.size(),
+             reinterpret_cast<char16_t *>(output.data()));
          (void)len;
        };
      }},
     {"convert_latin1_to_utf32",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::convert_latin1_to_utf32(input.data(), input.size(), reinterpret_cast<char32_t*>(output.data()));
+         size_t len = simdutf::convert_latin1_to_utf32(
+             input.data(), input.size(),
+             reinterpret_cast<char32_t *>(output.data()));
          (void)len;
        };
      }},
     {"convert_utf8_to_latin1",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::convert_utf8_to_latin1(input.data(), input.size(), output.data());
+         size_t len = simdutf::convert_utf8_to_latin1(
+             input.data(), input.size(), output.data());
          (void)len;
        };
      }},
     {"convert_utf8_to_utf16le",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::convert_utf8_to_utf16le(input.data(), input.size(), reinterpret_cast<char16_t*>(output.data()));
+         size_t len = simdutf::convert_utf8_to_utf16le(
+             input.data(), input.size(),
+             reinterpret_cast<char16_t *>(output.data()));
          (void)len;
        };
      }},
     {"convert_utf8_to_utf16be",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::convert_utf8_to_utf16be(input.data(), input.size(), reinterpret_cast<char16_t*>(output.data()));
+         size_t len = simdutf::convert_utf8_to_utf16be(
+             input.data(), input.size(),
+             reinterpret_cast<char16_t *>(output.data()));
          (void)len;
        };
      }},
     {"convert_utf8_to_utf32",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::convert_utf8_to_utf32(input.data(), input.size(), reinterpret_cast<char32_t*>(output.data()));
+         size_t len = simdutf::convert_utf8_to_utf32(
+             input.data(), input.size(),
+             reinterpret_cast<char32_t *>(output.data()));
          (void)len;
        };
      }},
     {"convert_utf16le_to_latin1",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::convert_utf16le_to_latin1(reinterpret_cast<const char16_t*>(input.data()), input.size() / 2, output.data());
+         size_t len = simdutf::convert_utf16le_to_latin1(
+             reinterpret_cast<const char16_t *>(input.data()), input.size() / 2,
+             output.data());
          (void)len;
        };
      }},
     {"convert_utf16le_to_utf8",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::convert_utf16le_to_utf8(reinterpret_cast<const char16_t*>(input.data()), input.size() / 2, output.data());
+         size_t len = simdutf::convert_utf16le_to_utf8(
+             reinterpret_cast<const char16_t *>(input.data()), input.size() / 2,
+             output.data());
          (void)len;
        };
      }},
     {"convert_utf16le_to_utf32",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::convert_utf16le_to_utf32(reinterpret_cast<const char16_t*>(input.data()), input.size() / 2, reinterpret_cast<char32_t*>(output.data()));
+         size_t len = simdutf::convert_utf16le_to_utf32(
+             reinterpret_cast<const char16_t *>(input.data()), input.size() / 2,
+             reinterpret_cast<char32_t *>(output.data()));
          (void)len;
        };
      }},
     {"convert_utf16be_to_latin1",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::convert_utf16be_to_latin1(reinterpret_cast<const char16_t*>(input.data()), input.size() / 2, output.data());
+         size_t len = simdutf::convert_utf16be_to_latin1(
+             reinterpret_cast<const char16_t *>(input.data()), input.size() / 2,
+             output.data());
          (void)len;
        };
      }},
     {"convert_utf16be_to_utf8",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::convert_utf16be_to_utf8(reinterpret_cast<const char16_t*>(input.data()), input.size() / 2, output.data());
+         size_t len = simdutf::convert_utf16be_to_utf8(
+             reinterpret_cast<const char16_t *>(input.data()), input.size() / 2,
+             output.data());
          (void)len;
        };
      }},
     {"convert_utf16be_to_utf32",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::convert_utf16be_to_utf32(reinterpret_cast<const char16_t*>(input.data()), input.size() / 2, reinterpret_cast<char32_t*>(output.data()));
+         size_t len = simdutf::convert_utf16be_to_utf32(
+             reinterpret_cast<const char16_t *>(input.data()), input.size() / 2,
+             reinterpret_cast<char32_t *>(output.data()));
          (void)len;
        };
      }},
     {"convert_utf32_to_latin1",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::convert_utf32_to_latin1(reinterpret_cast<const char32_t*>(input.data()), input.size() / 4, output.data());
+         size_t len = simdutf::convert_utf32_to_latin1(
+             reinterpret_cast<const char32_t *>(input.data()), input.size() / 4,
+             output.data());
          (void)len;
        };
      }},
     {"convert_utf32_to_utf8",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::convert_utf32_to_utf8(reinterpret_cast<const char32_t*>(input.data()), input.size() / 4, output.data());
+         size_t len = simdutf::convert_utf32_to_utf8(
+             reinterpret_cast<const char32_t *>(input.data()), input.size() / 4,
+             output.data());
          (void)len;
        };
      }},
     {"convert_utf32_to_utf16le",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::convert_utf32_to_utf16le(reinterpret_cast<const char32_t*>(input.data()), input.size() / 4, reinterpret_cast<char16_t*>(output.data()));
+         size_t len = simdutf::convert_utf32_to_utf16le(
+             reinterpret_cast<const char32_t *>(input.data()), input.size() / 4,
+             reinterpret_cast<char16_t *>(output.data()));
          (void)len;
        };
      }},
     {"convert_utf32_to_utf16be",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::convert_utf32_to_utf16be(reinterpret_cast<const char32_t*>(input.data()), input.size() / 4, reinterpret_cast<char16_t*>(output.data()));
+         size_t len = simdutf::convert_utf32_to_utf16be(
+             reinterpret_cast<const char32_t *>(input.data()), input.size() / 4,
+             reinterpret_cast<char16_t *>(output.data()));
          (void)len;
        };
      }},
     {"binary_to_base64",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         size_t len = simdutf::binary_to_base64(input.data(), input.size(), output.data());
+         size_t len = simdutf::binary_to_base64(input.data(), input.size(),
+                                                output.data());
          (void)len;
        };
      }},
     {"base64_to_binary",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() {
-         auto result = simdutf::base64_to_binary(input.data(), input.size(), output.data());
+         auto result = simdutf::base64_to_binary(input.data(), input.size(),
+                                                 output.data());
          (void)result;
        };
      }},
@@ -380,7 +430,8 @@ int main(int argc, char *argv[]) {
     } else if (strcmp(argv[i], "--all") == 0) {
       all_functions = true;
     } else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
-      std::cout << "Usage: " << argv[0] << " [options] [<filename>]" << std::endl;
+      std::cout << "Usage: " << argv[0] << " [options] [<filename>]"
+                << std::endl;
       std::cout << "Options:" << std::endl;
       std::cout << "  --max-size <size>    Max size to benchmark (default 128)"
                 << std::endl;
@@ -396,7 +447,8 @@ int main(int argc, char *argv[]) {
     } else if (!filename) {
       filename = argv[i];
     } else {
-      std::cerr << "Usage: " << argv[0] << " [options] [<filename>]" << std::endl;
+      std::cerr << "Usage: " << argv[0] << " [options] [<filename>]"
+                << std::endl;
       return EXIT_FAILURE;
     }
   }
@@ -445,8 +497,8 @@ int main(int argc, char *argv[]) {
 
     if (all_functions) {
       for (const auto &func : available_functions) {
-        printf("# Benchmarking %s on %s\n",
-               func.name.c_str(), input_desc.c_str());
+        printf("# Benchmarking %s on %s\n", func.name.c_str(),
+               input_desc.c_str());
         printf("# Input size: %zu bytes\n", file_size);
         printf("# Max benchmark size: %zu bytes\n", actual_max);
         printf("# Current system: %s\n",
@@ -456,7 +508,9 @@ int main(int argc, char *argv[]) {
         print_table_header(has_events);
 
         for (size_t size = 1; size <= actual_max; ++size) {
-          auto benchmark_lambda = func.maker(std::span<const char>(data.data(), size), std::span<char>(output.data(), output.size()));
+          auto benchmark_lambda =
+              func.maker(std::span<const char>(data.data(), size),
+                         std::span<char>(output.data(), output.size()));
           time_stats stats = bench(benchmark_lambda);
 
           print_table_row(size, stats, has_events);
@@ -464,8 +518,8 @@ int main(int argc, char *argv[]) {
         printf("\n");
       }
     } else {
-      printf("# Benchmarking %s on %s\n",
-             selected_func->name.c_str(), input_desc.c_str());
+      printf("# Benchmarking %s on %s\n", selected_func->name.c_str(),
+             input_desc.c_str());
       printf("# Input size: %zu bytes\n", file_size);
       printf("# Max benchmark size: %zu bytes\n", actual_max);
       printf("# Current system: %s\n",
@@ -475,7 +529,9 @@ int main(int argc, char *argv[]) {
       print_table_header(has_events);
 
       for (size_t size = 1; size <= actual_max; ++size) {
-        auto benchmark_lambda = selected_func->maker(std::span<const char>(data.data(), size), std::span<char>(output.data(), output.size()));
+        auto benchmark_lambda =
+            selected_func->maker(std::span<const char>(data.data(), size),
+                                 std::span<char>(output.data(), output.size()));
         time_stats stats = bench(benchmark_lambda);
 
         print_table_row(size, stats, has_events);
