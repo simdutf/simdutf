@@ -170,7 +170,7 @@ static const fallback::implementation *get_fallback_singleton() {
 #endif
 
 #if SIMDUTF_SINGLE_IMPLEMENTATION
-static const implementation *get_single_implementation() {
+simdutf_really_inline static const implementation *get_single_implementation() {
   return
   #if SIMDUTF_IMPLEMENTATION_ICELAKE
       get_icelake_singleton();
@@ -1415,11 +1415,11 @@ get_active_implementation() {
 }
 
 #if SIMDUTF_SINGLE_IMPLEMENTATION
-const implementation *get_default_implementation() {
+simdutf_really_inline const implementation *get_default_implementation() {
   return internal::get_single_implementation();
 }
 #else
-internal::atomic_ptr<const implementation> &get_default_implementation() {
+simdutf_really_inline internal::atomic_ptr<const implementation> &get_default_implementation() {
   return get_active_implementation();
 }
 #endif
