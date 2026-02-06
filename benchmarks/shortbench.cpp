@@ -301,9 +301,9 @@ std::vector<BenchmarkFunc> available_functions = {
     {"find_equal",
      [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() -> size_t {
-         auto it = std::find(input.begin(), input.end(), '=');
-         return (it != input.end()) ? std::distance(input.begin(), it)
-                                    : input.size();
+         auto it =
+             simdutf::find(input.data(), input.data() + input.size(), '=');
+         return it - input.data();
        };
      }},
 };
