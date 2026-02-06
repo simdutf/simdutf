@@ -1,6 +1,4 @@
 #include "simdutf.h"
-#include <iostream>
-#include <array>
 #include <tests/helpers/test.h>
 
 #if SIMDUTF_CPLUSPLUS23
