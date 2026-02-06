@@ -1419,7 +1419,8 @@ simdutf_really_inline const implementation *get_default_implementation() {
   return internal::get_single_implementation();
 }
 #else
-simdutf_really_inline internal::atomic_ptr<const implementation> &get_default_implementation() {
+simdutf_really_inline internal::atomic_ptr<const implementation> &
+get_default_implementation() {
   return get_active_implementation();
 }
 #endif
