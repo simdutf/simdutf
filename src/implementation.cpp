@@ -2,6 +2,7 @@
 #include <initializer_list>
 #include <climits>
 #include <type_traits>
+#include "generic/utf8_validation/utf8_validator.h"
 #if SIMDUTF_ATOMIC_REF
   #include <array>
   #include "simdutf/scalar/atomic_util.h"
@@ -1426,10 +1427,6 @@ get_default_implementation() {
 #endif
 #define SIMDUTF_GET_CURRENT_IMPLEMENTATION
 
-#if SIMDUTF_FEATURE_UTF8
-simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept {
-  return get_default_implementation()->validate_utf8(buf, len);
-}
 simdutf_warn_unused result validate_utf8_with_errors(const char *buf,
                                                      size_t len) noexcept {
   return get_default_implementation()->validate_utf8_with_errors(buf, len);
@@ -2438,5 +2435,16 @@ simdutf_warn_unused size_t trim_partial_utf16(const char16_t *input,
   #endif
 }
 #endif // SIMDUTF_FEATURE_UTF16
+
+
+namespace dispatch {
+
+simdutf_warn_unused bool
+validate_utf8(const char *buf, size_t len) noexcept {
+  return get_default_implementation()->validate_utf8(buf, len);
+}
+
+} // namespace dispatch
+
 
 } // namespace simdutf
