@@ -268,6 +268,15 @@ public:
   simdutf_warn_unused result utf8_length_from_utf16be_with_replacement(
       const char16_t *input, size_t length) const noexcept override;
   ;
+
+  simdutf_warn_unused size_t convert_utf16le_to_utf8_with_replacement(
+      const char16_t *input, size_t length,
+      char *utf8_buffer) const noexcept override;
+
+  simdutf_warn_unused size_t convert_utf16be_to_utf8_with_replacement(
+      const char16_t *input, size_t length,
+      char *utf8_buffer) const noexcept override;
+
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32

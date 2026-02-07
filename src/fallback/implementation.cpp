@@ -492,6 +492,20 @@ implementation::utf8_length_from_utf16be_with_replacement(
       endianness::BIG>(input, length);
 }
 
+simdutf_warn_unused size_t
+implementation::convert_utf16le_to_utf8_with_replacement(
+    const char16_t *input, size_t length, char *utf8_buffer) const noexcept {
+  return scalar::utf16_to_utf8::convert_with_replacement<endianness::LITTLE>(
+      input, length, utf8_buffer);
+}
+
+simdutf_warn_unused size_t
+implementation::convert_utf16be_to_utf8_with_replacement(
+    const char16_t *input, size_t length, char *utf8_buffer) const noexcept {
+  return scalar::utf16_to_utf8::convert_with_replacement<endianness::BIG>(
+      input, length, utf8_buffer);
+}
+
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
