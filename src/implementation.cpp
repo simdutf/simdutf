@@ -2253,14 +2253,14 @@ simdutf_warn_unused size_t convert_utf16_to_utf8_with_replacement(
 
 simdutf_warn_unused size_t convert_utf16le_to_utf8_with_replacement(
     const char16_t *input, size_t length, char *utf8_buffer) noexcept {
-  return get_default_implementation()
-      ->convert_utf16le_to_utf8_with_replacement(input, length, utf8_buffer);
+  return get_default_implementation()->convert_utf16le_to_utf8_with_replacement(
+      input, length, utf8_buffer);
 }
 
 simdutf_warn_unused size_t convert_utf16be_to_utf8_with_replacement(
     const char16_t *input, size_t length, char *utf8_buffer) noexcept {
-  return get_default_implementation()
-      ->convert_utf16be_to_utf8_with_replacement(input, length, utf8_buffer);
+  return get_default_implementation()->convert_utf16be_to_utf8_with_replacement(
+      input, length, utf8_buffer);
 }
 
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16

@@ -2358,7 +2358,7 @@ convert_utf16_to_utf8_with_replacement(
   }
 }
   #endif // SIMDUTF_SPAN
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 /**
@@ -5744,8 +5744,7 @@ public:
    * @param utf8_buffer   the pointer to buffer that can hold conversion result
    * @return number of written code units
    */
-  simdutf_warn_unused virtual size_t
-  convert_utf16le_to_utf8_with_replacement(
+  simdutf_warn_unused virtual size_t convert_utf16le_to_utf8_with_replacement(
       const char16_t *input, size_t length,
       char *utf8_buffer) const noexcept = 0;
 
@@ -5764,8 +5763,7 @@ public:
    * @param utf8_buffer   the pointer to buffer that can hold conversion result
    * @return number of written code units
    */
-  simdutf_warn_unused virtual size_t
-  convert_utf16be_to_utf8_with_replacement(
+  simdutf_warn_unused virtual size_t convert_utf16be_to_utf8_with_replacement(
       const char16_t *input, size_t length,
       char *utf8_buffer) const noexcept = 0;
 
