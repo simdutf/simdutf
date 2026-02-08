@@ -6,6 +6,7 @@
 
 #include <tests/helpers/random_utf16.h>
 #include <tests/helpers/test.h>
+#include <tests/helpers/utf16.h>
 
 // U+FFFD in UTF-8 is 0xEF 0xBF 0xBD
 constexpr char fffd_utf8[] = {char(0xef), char(0xbf), char(0xbd)};
@@ -35,7 +36,8 @@ TEST(valid_utf16le_roundtrip) {
 // Test: valid surrogate pairs should produce correct 4-byte UTF-8
 TEST(valid_surrogate_pair_le) {
   // U+1F600 (grinning face) = D83D DE00
-  std::vector<char16_t> input = {0xD83D, 0xDE00};
+  std::vector<char16_t> input = {to_utf16le(char16_t(0xD83D)),
+                                 to_utf16le(char16_t(0xDE00))};
   std::vector<char> output(8);
   size_t written = implementation.convert_utf16le_to_utf8_with_replacement(
       input.data(), input.size(), output.data());
@@ -50,7 +52,8 @@ TEST(valid_surrogate_pair_le) {
 // Test: unpaired high surrogate should be replaced with U+FFFD
 TEST(unpaired_high_surrogate_le) {
   // D800 followed by a regular character
-  std::vector<char16_t> input = {0xD800, u'A'};
+  std::vector<char16_t> input = {to_utf16le(char16_t(0xD800)),
+                                 to_utf16le(u'A')};
   std::vector<char> output(8);
   size_t written = implementation.convert_utf16le_to_utf8_with_replacement(
       input.data(), input.size(), output.data());
@@ -63,7 +66,9 @@ TEST(unpaired_high_surrogate_le) {
 // Test: unpaired low surrogate should be replaced with U+FFFD
 TEST(unpaired_low_surrogate_le) {
   // DC00 (low surrogate without preceding high surrogate)
-  std::vector<char16_t> input = {u'B', 0xDC00, u'C'};
+  std::vector<char16_t> input = {to_utf16le(u'B'),
+                                 to_utf16le(char16_t(0xDC00)),
+                                 to_utf16le(u'C')};
   std::vector<char> output(16);
   size_t written = implementation.convert_utf16le_to_utf8_with_replacement(
       input.data(), input.size(), output.data());
@@ -76,7 +81,8 @@ TEST(unpaired_low_surrogate_le) {
 
 // Test: high surrogate at end of string
 TEST(high_surrogate_at_end_le) {
-  std::vector<char16_t> input = {u'X', 0xD800};
+  std::vector<char16_t> input = {to_utf16le(u'X'),
+                                 to_utf16le(char16_t(0xD800))};
   std::vector<char> output(8);
   size_t written = implementation.convert_utf16le_to_utf8_with_replacement(
       input.data(), input.size(), output.data());
@@ -88,7 +94,8 @@ TEST(high_surrogate_at_end_le) {
 
 // Test: two consecutive unpaired high surrogates
 TEST(consecutive_unpaired_high_surrogates_le) {
-  std::vector<char16_t> input = {0xD800, 0xD801};
+  std::vector<char16_t> input = {to_utf16le(char16_t(0xD800)),
+                                 to_utf16le(char16_t(0xD801))};
   std::vector<char> output(16);
   size_t written = implementation.convert_utf16le_to_utf8_with_replacement(
       input.data(), input.size(), output.data());
@@ -100,7 +107,8 @@ TEST(consecutive_unpaired_high_surrogates_le) {
 
 // Test: low surrogate followed by high surrogate (reversed pair)
 TEST(reversed_surrogate_pair_le) {
-  std::vector<char16_t> input = {0xDC00, 0xD800};
+  std::vector<char16_t> input = {to_utf16le(char16_t(0xDC00)),
+                                 to_utf16le(char16_t(0xD800))};
   std::vector<char> output(16);
   size_t written = implementation.convert_utf16le_to_utf8_with_replacement(
       input.data(), input.size(), output.data());
@@ -120,7 +128,9 @@ TEST(empty_input_le) {
 
 // Test: pure ASCII
 TEST(pure_ascii_le) {
-  std::vector<char16_t> input = {u'H', u'e', u'l', u'l', u'o'};
+  std::vector<char16_t> input = {to_utf16le(u'H'), to_utf16le(u'e'),
+                                 to_utf16le(u'l'), to_utf16le(u'l'),
+                                 to_utf16le(u'o')};
   std::vector<char> output(8);
   size_t written = implementation.convert_utf16le_to_utf8_with_replacement(
       input.data(), input.size(), output.data());
