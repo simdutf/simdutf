@@ -2256,7 +2256,7 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char16_t * in
 
 /**
  * Compute the binary length from a base64 input.
- * This function is useful for base64 inputs that may contain ASCII spaces
+ * This function is useful for base64 inputs that may contain ASCII whitespaces
  * (such as line breaks). For such inputs, the result is exact, and for any
  * inputs the result can be used to size the output buffer passed to
  * `base64_to_binary`.
@@ -2271,7 +2271,7 @@ simdutf_warn_unused size_t binary_length_from_base64(const char * input, size_t 
 
 /**
  * Compute the binary length from a base64 input.
- * This function is useful for base64 inputs that may contain ASCII spaces
+ * This function is useful for base64 inputs that may contain ASCII whitespaces
  * (such as line breaks). For such inputs, the result is exact, and for any
  * inputs the result can be used to size the output buffer passed to
  * `base64_to_binary`.

@@ -703,14 +703,7 @@ simdutf_warn_unused simdutf_constexpr23 size_t
 binary_length_from_base64(const char_type *input, size_t length) noexcept {
   // Count non-whitespace characters (c > ' ') with loop unrolling
   size_t count = 0;
-  size_t i = 0;
-  for (; i + 4 <= length; i += 4) {
-    count += (input[i + 0] > ' ');
-    count += (input[i + 1] > ' ');
-    count += (input[i + 2] > ' ');
-    count += (input[i + 3] > ' ');
-  }
-  for (; i < length; i++) {
+  for (size_t i; i < length; i++) {
     count += (input[i] > ' ');
   }
 
