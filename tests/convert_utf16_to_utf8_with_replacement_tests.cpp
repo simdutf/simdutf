@@ -66,8 +66,7 @@ TEST(unpaired_high_surrogate_le) {
 // Test: unpaired low surrogate should be replaced with U+FFFD
 TEST(unpaired_low_surrogate_le) {
   // DC00 (low surrogate without preceding high surrogate)
-  std::vector<char16_t> input = {to_utf16le(u'B'),
-                                 to_utf16le(char16_t(0xDC00)),
+  std::vector<char16_t> input = {to_utf16le(u'B'), to_utf16le(char16_t(0xDC00)),
                                  to_utf16le(u'C')};
   std::vector<char> output(16);
   size_t written = implementation.convert_utf16le_to_utf8_with_replacement(
