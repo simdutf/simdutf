@@ -8,6 +8,10 @@
 #include <tests/helpers/test.h>
 #include <tests/helpers/utf16.h>
 
+#if SIMDUTF_CPLUSPLUS23
+#include <tests/helpers/fixed_string.h>
+#endif
+
 // U+FFFD in UTF-8 is 0xEF 0xBF 0xBD
 constexpr char fffd_utf8[] = {char(0xef), char(0xbf), char(0xbd)};
 
@@ -206,5 +210,67 @@ TEST_LOOP(output_is_valid_utf8_le) {
 
   ASSERT_TRUE(simdutf::validate_utf8(output.data(), written));
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+namespace {
+
+// makes a UTF-16 string with an unpaired high surrogate: 'A', 0xD800, 'B'
+template <simdutf::endianness e> constexpr auto make_input_with_unpaired() {
+  simdutf::tests::helpers::CTString<
+      char16_t, 3,
+      e == simdutf::endianness::BIG ? std::endian::big : std::endian::little>
+      data{};
+  data[0] = simdutf::scalar::utf16::swap_if_needed<e>(u'A');
+  data[1] = simdutf::scalar::utf16::swap_if_needed<e>(char16_t(0xD800));
+  data[2] = simdutf::scalar::utf16::swap_if_needed<e>(u'B');
+  return data;
+}
+
+// expected output: 'A' (1 byte) + U+FFFD (3 bytes: EF BF BD) + 'B' (1 byte)
+constexpr auto make_expected_output() {
+  simdutf::tests::helpers::CTString<char, 5> data{};
+  data[0] = 'A';
+  data[1] = char(0xEF);
+  data[2] = char(0xBF);
+  data[3] = char(0xBD);
+  data[4] = 'B';
+  return data;
+}
+
+template <auto input> constexpr auto invoke_convert_with_replacement() {
+  // 'A' = 1 byte, unpaired surrogate = 3 bytes (U+FFFD), 'B' = 1 byte
+  simdutf::tests::helpers::CTString<char, 5> output{};
+  std::size_t written;
+  if constexpr (decltype(input)::endianness == std::endian::little) {
+    written = simdutf::convert_utf16le_to_utf8_with_replacement(input, output);
+  } else {
+    written = simdutf::convert_utf16be_to_utf8_with_replacement(input, output);
+  }
+  if (written != 5) {
+    throw "unexpected length";
+  }
+  return output;
+}
+
+} // namespace
+
+TEST(compile_time_convert_utf16le_to_utf8_with_replacement) {
+  using enum simdutf::endianness;
+  constexpr auto input = make_input_with_unpaired<LITTLE>();
+  constexpr auto result = invoke_convert_with_replacement<input>();
+  constexpr auto expected = make_expected_output();
+  static_assert(result == expected);
+}
+
+TEST(compile_time_convert_utf16be_to_utf8_with_replacement) {
+  using enum simdutf::endianness;
+  constexpr auto input = make_input_with_unpaired<BIG>();
+  constexpr auto result = invoke_convert_with_replacement<input>();
+  constexpr auto expected = make_expected_output();
+  static_assert(result == expected);
+}
+
+#endif // SIMDUTF_CPLUSPLUS23
 
 TEST_MAIN
