@@ -9,7 +9,7 @@
 #include <tests/helpers/utf16.h>
 
 #if SIMDUTF_CPLUSPLUS23
-#include <tests/helpers/fixed_string.h>
+  #include <tests/helpers/fixed_string.h>
 #endif
 
 // U+FFFD in UTF-8 is 0xEF 0xBF 0xBD
