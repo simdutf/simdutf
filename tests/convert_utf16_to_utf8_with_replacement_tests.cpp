@@ -247,7 +247,7 @@ template <auto input> constexpr auto invoke_convert_with_replacement() {
   } else {
     written = simdutf::convert_utf16be_to_utf8_with_replacement(input, output);
   }
-  if (written != 5) {
+  if (written != output.size()) {
     throw "unexpected length";
   }
   return output;
