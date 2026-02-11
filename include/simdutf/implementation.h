@@ -2255,6 +2255,113 @@ convert_utf16be_to_utf8_with_errors(
   #endif // SIMDUTF_SPAN
 
 /**
+ * Convert possibly broken UTF-16LE string into UTF-8 string, replacing
+ * unpaired surrogates with the Unicode replacement character U+FFFD.
+ *
+ * This function always succeeds: unpaired surrogates are replaced with
+ * U+FFFD (3 bytes in UTF-8: 0xEF 0xBF 0xBD).
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-16LE string to convert
+ * @param length        the length of the string in 2-byte code units (char16_t)
+ * @param utf8_buffer   the pointer to buffer that can hold conversion result
+ * @return number of written code units
+ */
+simdutf_warn_unused size_t convert_utf16le_to_utf8_with_replacement(
+    const char16_t *input, size_t length, char *utf8_buffer) noexcept;
+  #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+convert_utf16le_to_utf8_with_replacement(
+    std::span<const char16_t> utf16_input,
+    detail::output_span_of_byte_like auto &&utf8_output) noexcept {
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16_to_utf8::convert_with_replacement<endianness::LITTLE>(
+        utf16_input.data(), utf16_input.size(), utf8_output.data());
+  } else
+    #endif
+  {
+    return convert_utf16le_to_utf8_with_replacement(
+        utf16_input.data(), utf16_input.size(),
+        reinterpret_cast<char *>(utf8_output.data()));
+  }
+}
+  #endif // SIMDUTF_SPAN
+
+/**
+ * Convert possibly broken UTF-16BE string into UTF-8 string, replacing
+ * unpaired surrogates with the Unicode replacement character U+FFFD.
+ *
+ * This function always succeeds: unpaired surrogates are replaced with
+ * U+FFFD (3 bytes in UTF-8: 0xEF 0xBF 0xBD).
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-16BE string to convert
+ * @param length        the length of the string in 2-byte code units (char16_t)
+ * @param utf8_buffer   the pointer to buffer that can hold conversion result
+ * @return number of written code units
+ */
+simdutf_warn_unused size_t convert_utf16be_to_utf8_with_replacement(
+    const char16_t *input, size_t length, char *utf8_buffer) noexcept;
+  #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+convert_utf16be_to_utf8_with_replacement(
+    std::span<const char16_t> utf16_input,
+    detail::output_span_of_byte_like auto &&utf8_output) noexcept {
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16_to_utf8::convert_with_replacement<endianness::BIG>(
+        utf16_input.data(), utf16_input.size(), utf8_output.data());
+  } else
+    #endif
+  {
+    return convert_utf16be_to_utf8_with_replacement(
+        utf16_input.data(), utf16_input.size(),
+        reinterpret_cast<char *>(utf8_output.data()));
+  }
+}
+  #endif // SIMDUTF_SPAN
+
+/**
+ * Convert possibly broken UTF-16 string (native endianness) into UTF-8 string,
+ * replacing unpaired surrogates with the Unicode replacement character U+FFFD.
+ *
+ * This function always succeeds: unpaired surrogates are replaced with
+ * U+FFFD (3 bytes in UTF-8: 0xEF 0xBF 0xBD).
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-16 string to convert
+ * @param length        the length of the string in 2-byte code units (char16_t)
+ * @param utf8_buffer   the pointer to buffer that can hold conversion result
+ * @return number of written code units
+ */
+simdutf_warn_unused size_t convert_utf16_to_utf8_with_replacement(
+    const char16_t *input, size_t length, char *utf8_buffer) noexcept;
+  #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+convert_utf16_to_utf8_with_replacement(
+    std::span<const char16_t> utf16_input,
+    detail::output_span_of_byte_like auto &&utf8_output) noexcept {
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf16_to_utf8::convert_with_replacement<endianness::NATIVE>(
+        utf16_input.data(), utf16_input.size(), utf8_output.data());
+  } else
+    #endif
+  {
+    return convert_utf16_to_utf8_with_replacement(
+        utf16_input.data(), utf16_input.size(),
+        reinterpret_cast<char *>(utf8_output.data()));
+  }
+}
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
+/**
  * Using native endianness, convert valid UTF-16 string into UTF-8 string.
  *
  * This function assumes that the input string is valid UTF-16.
@@ -5621,6 +5728,44 @@ public:
   simdutf_warn_unused virtual result
   convert_utf16be_to_utf8_with_errors(const char16_t *input, size_t length,
                                       char *utf8_buffer) const noexcept = 0;
+
+  /**
+   * Convert possibly broken UTF-16LE string into UTF-8 string, replacing
+   * unpaired surrogates with the Unicode replacement character U+FFFD.
+   *
+   * This function always succeeds: unpaired surrogates are replaced with
+   * U+FFFD (3 bytes in UTF-8: 0xEF 0xBF 0xBD).
+   *
+   * This function is not BOM-aware.
+   *
+   * @param input         the UTF-16LE string to convert
+   * @param length        the length of the string in 2-byte code units
+   * (char16_t)
+   * @param utf8_buffer   the pointer to buffer that can hold conversion result
+   * @return number of written code units
+   */
+  simdutf_warn_unused virtual size_t convert_utf16le_to_utf8_with_replacement(
+      const char16_t *input, size_t length,
+      char *utf8_buffer) const noexcept = 0;
+
+  /**
+   * Convert possibly broken UTF-16BE string into UTF-8 string, replacing
+   * unpaired surrogates with the Unicode replacement character U+FFFD.
+   *
+   * This function always succeeds: unpaired surrogates are replaced with
+   * U+FFFD (3 bytes in UTF-8: 0xEF 0xBF 0xBD).
+   *
+   * This function is not BOM-aware.
+   *
+   * @param input         the UTF-16BE string to convert
+   * @param length        the length of the string in 2-byte code units
+   * (char16_t)
+   * @param utf8_buffer   the pointer to buffer that can hold conversion result
+   * @return number of written code units
+   */
+  simdutf_warn_unused virtual size_t convert_utf16be_to_utf8_with_replacement(
+      const char16_t *input, size_t length,
+      char *utf8_buffer) const noexcept = 0;
 
   /**
    * Convert valid UTF-16LE string into UTF-8 string.
