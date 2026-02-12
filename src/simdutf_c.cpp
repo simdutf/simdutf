@@ -145,6 +145,10 @@ size_t simdutf_utf8_length_from_utf16(const char16_t *input, size_t length) {
   return simdutf::utf8_length_from_utf16(
       reinterpret_cast<const char16_t *>(input), length);
 }
+size_t simdutf_utf8_length_from_utf32(const char32_t *input, size_t length) {
+  return simdutf::utf8_length_from_utf32(
+      reinterpret_cast<const char32_t *>(input), length);
+}
 simdutf_result
 simdutf_utf8_length_from_utf16_with_replacement(const char16_t *input,
                                                 size_t length) {
