@@ -137,6 +137,8 @@ size_t simdutf_convert_latin1_to_utf16le(const char *input, size_t length,
                                          char16_t *output);
 size_t simdutf_convert_latin1_to_utf16be(const char *input, size_t length,
                                          char16_t *output);
+size_t simdutf_convert_latin1_to_utf16(const char *input, size_t length,
+                                       char16_t *output);
 size_t simdutf_convert_latin1_to_utf32(const char *input, size_t length,
                                        char32_t *output);
 
