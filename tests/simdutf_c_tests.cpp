@@ -196,7 +196,6 @@ TEST(base64_utf16_c) {
   ASSERT_TRUE(std::memcmp(binout, "hello", hello_len) == 0);
 }
 
-
 TEST(base64_length_helpers_c) {
   size_t maxbin = simdutf_maximal_binary_length_from_base64("aGVsbG8=", 8);
   ASSERT_TRUE(maxbin >= 5);
@@ -241,6 +240,5 @@ TEST(convert_utf16_c) {
   ASSERT_EQUAL(n, 5);
   ASSERT_TRUE(std::memcmp(out, "hello", 5) == 0);
 }
-
 
 TEST_MAIN

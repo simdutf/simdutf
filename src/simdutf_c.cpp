@@ -135,7 +135,8 @@ size_t simdutf_utf8_length_from_utf32(const char32_t *input, size_t length) {
 simdutf_result
 simdutf_utf8_length_from_utf16_with_replacement(const char16_t *input,
                                                 size_t length) {
-  return to_c_result(simdutf::utf8_length_from_utf16_with_replacement(input, length));
+  return to_c_result(
+      simdutf::utf8_length_from_utf16_with_replacement(input, length));
 }
 size_t simdutf_utf8_length_from_utf16le(const char16_t *input, size_t length) {
   return simdutf::utf8_length_from_utf16le(input, length);
@@ -146,12 +147,14 @@ size_t simdutf_utf8_length_from_utf16be(const char16_t *input, size_t length) {
 simdutf_result
 simdutf_utf8_length_from_utf16le_with_replacement(const char16_t *input,
                                                   size_t length) {
-  return to_c_result(simdutf::utf8_length_from_utf16le_with_replacement(input, length));
+  return to_c_result(
+      simdutf::utf8_length_from_utf16le_with_replacement(input, length));
 }
 simdutf_result
 simdutf_utf8_length_from_utf16be_with_replacement(const char16_t *input,
                                                   size_t length) {
-  return to_c_result(simdutf::utf8_length_from_utf16be_with_replacement(input, length));
+  return to_c_result(
+      simdutf::utf8_length_from_utf16be_with_replacement(input, length));
 }
 
 /* Conversions: latin1 <-> utf8, utf8 <-> utf16/utf32, utf16 <-> utf8, etc. */
@@ -210,22 +213,26 @@ simdutf_result simdutf_convert_utf8_to_latin1_with_errors(const char *input,
 simdutf_result simdutf_convert_utf8_to_utf16_with_errors(const char *input,
                                                          size_t length,
                                                          char16_t *output) {
-  return to_c_result(simdutf::convert_utf8_to_utf16_with_errors(input, length, output));
+  return to_c_result(
+      simdutf::convert_utf8_to_utf16_with_errors(input, length, output));
 }
 simdutf_result simdutf_convert_utf8_to_utf16le_with_errors(const char *input,
                                                            size_t length,
                                                            char16_t *output) {
-  return to_c_result(simdutf::convert_utf8_to_utf16le_with_errors(input, length, output));
+  return to_c_result(
+      simdutf::convert_utf8_to_utf16le_with_errors(input, length, output));
 }
 simdutf_result simdutf_convert_utf8_to_utf16be_with_errors(const char *input,
                                                            size_t length,
                                                            char16_t *output) {
-  return to_c_result(simdutf::convert_utf8_to_utf16be_with_errors(input, length, output));
+  return to_c_result(
+      simdutf::convert_utf8_to_utf16be_with_errors(input, length, output));
 }
 simdutf_result simdutf_convert_utf8_to_utf32_with_errors(const char *input,
                                                          size_t length,
                                                          char32_t *output) {
-  return to_c_result(simdutf::convert_utf8_to_utf32_with_errors(input, length, output));
+  return to_c_result(
+      simdutf::convert_utf8_to_utf32_with_errors(input, length, output));
 }
 
 /* Conversions assuming valid input */
@@ -270,33 +277,39 @@ size_t simdutf_convert_utf16be_to_latin1(const char16_t *input, size_t length,
 simdutf_result
 simdutf_convert_utf16_to_latin1_with_errors(const char16_t *input,
                                             size_t length, char *output) {
-  return to_c_result(simdutf::convert_utf16_to_latin1_with_errors(input, length, output));
+  return to_c_result(
+      simdutf::convert_utf16_to_latin1_with_errors(input, length, output));
 }
 simdutf_result
 simdutf_convert_utf16le_to_latin1_with_errors(const char16_t *input,
                                               size_t length, char *output) {
-  return to_c_result(simdutf::convert_utf16le_to_latin1_with_errors(input, length, output));
+  return to_c_result(
+      simdutf::convert_utf16le_to_latin1_with_errors(input, length, output));
 }
 simdutf_result
 simdutf_convert_utf16be_to_latin1_with_errors(const char16_t *input,
                                               size_t length, char *output) {
-  return to_c_result(simdutf::convert_utf16be_to_latin1_with_errors(input, length, output));
+  return to_c_result(
+      simdutf::convert_utf16be_to_latin1_with_errors(input, length, output));
 }
 
 simdutf_result simdutf_convert_utf16_to_utf8_with_errors(const char16_t *input,
                                                          size_t length,
                                                          char *output) {
-  return to_c_result(simdutf::convert_utf16_to_utf8_with_errors(input, length, output));
+  return to_c_result(
+      simdutf::convert_utf16_to_utf8_with_errors(input, length, output));
 }
 simdutf_result
 simdutf_convert_utf16le_to_utf8_with_errors(const char16_t *input,
                                             size_t length, char *output) {
-  return to_c_result(simdutf::convert_utf16le_to_utf8_with_errors(input, length, output));
+  return to_c_result(
+      simdutf::convert_utf16le_to_utf8_with_errors(input, length, output));
 }
 simdutf_result
 simdutf_convert_utf16be_to_utf8_with_errors(const char16_t *input,
                                             size_t length, char *output) {
-  return to_c_result(simdutf::convert_utf16be_to_utf8_with_errors(input, length, output));
+  return to_c_result(
+      simdutf::convert_utf16be_to_utf8_with_errors(input, length, output));
 }
 
 size_t simdutf_convert_utf16le_to_utf8(const char16_t *input, size_t length,
@@ -350,17 +363,20 @@ size_t simdutf_convert_utf16be_to_utf32(const char16_t *input, size_t length,
 simdutf_result simdutf_convert_utf16_to_utf32_with_errors(const char16_t *input,
                                                           size_t length,
                                                           char32_t *output) {
-  return to_c_result(simdutf::convert_utf16_to_utf32_with_errors(input, length, output));
+  return to_c_result(
+      simdutf::convert_utf16_to_utf32_with_errors(input, length, output));
 }
 simdutf_result
 simdutf_convert_utf16le_to_utf32_with_errors(const char16_t *input,
                                              size_t length, char32_t *output) {
-  return to_c_result(simdutf::convert_utf16le_to_utf32_with_errors(input, length, output));
+  return to_c_result(
+      simdutf::convert_utf16le_to_utf32_with_errors(input, length, output));
 }
 simdutf_result
 simdutf_convert_utf16be_to_utf32_with_errors(const char16_t *input,
                                              size_t length, char32_t *output) {
-  return to_c_result(simdutf::convert_utf16be_to_utf32_with_errors(input, length, output));
+  return to_c_result(
+      simdutf::convert_utf16be_to_utf32_with_errors(input, length, output));
 }
 
 /* Valid UTF-16 conversions */
@@ -385,7 +401,8 @@ size_t simdutf_convert_utf32_to_utf8(const char32_t *input, size_t length,
 simdutf_result simdutf_convert_utf32_to_utf8_with_errors(const char32_t *input,
                                                          size_t length,
                                                          char *output) {
-  return to_c_result(simdutf::convert_utf32_to_utf8_with_errors(input, length, output));
+  return to_c_result(
+      simdutf::convert_utf32_to_utf8_with_errors(input, length, output));
 }
 size_t simdutf_convert_valid_utf32_to_utf8(const char32_t *input, size_t length,
                                            char *output) {
@@ -407,7 +424,8 @@ size_t simdutf_convert_utf32_to_utf16be(const char32_t *input, size_t length,
 simdutf_result
 simdutf_convert_utf32_to_latin1_with_errors(const char32_t *input,
                                             size_t length, char *output) {
-  return to_c_result(simdutf::convert_utf32_to_latin1_with_errors(input, length, output));
+  return to_c_result(
+      simdutf::convert_utf32_to_latin1_with_errors(input, length, output));
 }
 
 /* --- find helpers --- */
