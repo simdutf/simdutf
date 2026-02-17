@@ -1,3 +1,4 @@
+#include <cstdio>
 #include "simdutf/fallback/begin.h"
 
 namespace simdutf {
@@ -12,22 +13,84 @@ implementation::detect_encodings(const char *input,
   if (bom_encoding != encoding_type::unspecified) {
     return bom_encoding;
   }
+
   int out = 0;
-  // todo: reimplement as a one-pass algorithm.
-  if (validate_utf8(input, length)) {
-    out |= encoding_type::UTF8;
-  }
-  if ((length % 2) == 0) {
-    if (validate_utf16le(reinterpret_cast<const char16_t *>(input),
-                         length / 2)) {
-      out |= encoding_type::UTF16_LE;
+  bool utf8_valid = true;
+  bool utf16_valid = (length % 2) == 0;
+  bool utf32_valid = (length % 4) == 0;
+
+  const uint8_t *data = reinterpret_cast<const uint8_t *>(input);
+  size_t pos = 0;
+  bool utf16_high_surrogate = false;
+
+  int pass_count = 0; // DEBUG: count iterations
+
+  while (pos < length) {
+    pass_count++; // DEBUG: increment each iteration
+
+    // --- UTF-32LE check (every 4 bytes) ---
+    if (utf32_valid && (pos % 4 == 0) && (pos + 4 <= length)) {
+      uint32_t word;
+      std::memcpy(&word, data + pos, sizeof(uint32_t));
+      if (word > 0x10FFFF || (word >= 0xD800 && word <= 0xDFFF)) {
+        utf32_valid = false;
+      }
     }
-  }
-  if ((length % 4) == 0) {
-    if (validate_utf32(reinterpret_cast<const char32_t *>(input), length / 4)) {
-      out |= encoding_type::UTF32_LE;
+
+    // --- UTF-16LE check (every 2 bytes) ---
+    if (utf16_valid && (pos % 2 == 0) && (pos + 2 <= length)) {
+      uint16_t word;
+      std::memcpy(&word, data + pos, sizeof(uint16_t));
+      if ((word & 0xF800) == 0xD800) {
+        if ((word & 0x0400) == 0) {
+          if (utf16_high_surrogate) { utf16_valid = false; }
+          utf16_high_surrogate = true;
+        } else {
+          if (!utf16_high_surrogate) { utf16_valid = false; }
+          utf16_high_surrogate = false;
+        }
+      } else {
+        if (utf16_high_surrogate) { utf16_valid = false; }
+        utf16_high_surrogate = false;
+      }
     }
+
+    // --- UTF-8 check (variable width) ---
+    if (utf8_valid) {
+      uint8_t byte = data[pos];
+      if (byte < 0x80) {
+        pos++; continue;
+      } else if ((byte & 0xE0) == 0xC0) {
+        if (pos + 2 > length || (data[pos+1] & 0xC0) != 0x80) { utf8_valid = false; pos++; continue; }
+        uint32_t cp = (byte & 0x1F) << 6 | (data[pos+1] & 0x3F);
+        if (cp < 0x80) { utf8_valid = false; }
+        pos += 2; continue;
+      } else if ((byte & 0xF0) == 0xE0) {
+        if (pos + 3 > length || (data[pos+1] & 0xC0) != 0x80 || (data[pos+2] & 0xC0) != 0x80) { utf8_valid = false; pos++; continue; }
+        uint32_t cp = (byte & 0x0F) << 12 | (data[pos+1] & 0x3F) << 6 | (data[pos+2] & 0x3F);
+        if (cp < 0x800 || (cp >= 0xD800 && cp <= 0xDFFF)) { utf8_valid = false; }
+        pos += 3; continue;
+      } else if ((byte & 0xF8) == 0xF0) {
+        if (pos + 4 > length || (data[pos+1] & 0xC0) != 0x80 || (data[pos+2] & 0xC0) != 0x80 || (data[pos+3] & 0xC0) != 0x80) { utf8_valid = false; pos++; continue; }
+        uint32_t cp = (byte & 0x07) << 18 | (data[pos+1] & 0x3F) << 12 | (data[pos+2] & 0x3F) << 6 | (data[pos+3] & 0x3F);
+        if (cp < 0x10000 || cp > 0x10FFFF) { utf8_valid = false; }
+        pos += 4; continue;
+      } else {
+        utf8_valid = false; pos++; continue;
+      }
+    }
+
+    pos++;
   }
+
+  if (utf16_high_surrogate) { utf16_valid = false; }
+
+  printf("detect_encodings: scanned %zu bytes in %d iterations\n", length, pass_count); // DEBUG
+
+  if (utf8_valid)  { out |= encoding_type::UTF8; }
+  if (utf16_valid) { out |= encoding_type::UTF16_LE; }
+  if (utf32_valid) { out |= encoding_type::UTF32_LE; }
+
   return out;
 }
 #endif // SIMDUTF_FEATURE_DETECT_ENCODING
