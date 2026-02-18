@@ -1942,6 +1942,25 @@ if(r.error) {
 }
 ```
 
+You can calculate the exact output space needed by using
+`binary_length_from_base64` which produces an exact number of output
+bytes if the input is well-formed. Well-formed means it contains
+only valid base64 and ASCII whitespace. Invalid input can be given to
+`binary_length_from_base64`. It will not detect invalid input, but the
+result can be safely used to size the output buffer for `base64_to_binary`,
+which does detect invalid input.
+
+```cpp
+std::vector<char> buffer(simdutf::binary_length_from_base64(base64.data(), base64.size()));
+simdutf::result r = simdutf::base64_to_binary(base64.data(), base64.size(), buffer.data());
+if (r.error != simdutf::SUCCESS) {
+  // handle error
+} else {
+  // buffer is already the exact size, no resize needed
+  assert(buffer.size() == r.count);
+}
+```
+
 Let us consider concrete examples.  Take the following strings:
 `"  A  A  "`, `"  A  A  G  A  /  v  8  "`, `"  A  A  G  A  /  v  8  =  "`, `"  A  A  G  A  /  v  8  =  =  "`.
 They are all valid WHATWG base64 inputs, except for the last one.
@@ -2207,6 +2226,36 @@ simdutf_warn_unused size_t maximal_binary_length_from_base64(const char * input,
  * @return maximal number of binary bytes
  */
 simdutf_warn_unused size_t maximal_binary_length_from_base64(const char16_t * input, size_t length) noexcept;
+
+/**
+ * Compute the binary length from a base64 input.
+ * This function is useful for base64 inputs that may contain ASCII whitespaces
+ * (such as line breaks). For such inputs, the result is exact, and for any
+ * inputs the result can be used to size the output buffer passed to
+ * `base64_to_binary`.
+ *
+ * The function ignores whitespace and does not require padding characters ('=').
+ *
+ * @param input         the base64 input to process
+ * @param length        the length of the base64 input in bytes
+ * @return number of binary bytes
+ */
+simdutf_warn_unused size_t binary_length_from_base64(const char * input, size_t length) noexcept;
+
+/**
+ * Compute the binary length from a base64 input.
+ * This function is useful for base64 inputs that may contain ASCII whitespaces
+ * (such as line breaks). For such inputs, the result is exact, and for any
+ * inputs the result can be used to size the output buffer passed to
+ * `base64_to_binary`.
+ *
+ * The function ignores whitespace and does not require padding characters ('=').
+ *
+ * @param input         the base64 input to process, in ASCII stored as 16-bit units
+ * @param length        the length of the base64 input in 16-bit units
+ * @return number of binary bytes
+ */
+simdutf_warn_unused size_t binary_length_from_base64(const char16_t * input, size_t length) noexcept;
 
 
 /**

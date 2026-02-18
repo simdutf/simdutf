@@ -694,6 +694,35 @@ maximal_binary_length_from_base64(InputPtr input, size_t length) noexcept {
   return actual_length / 4 * 3 + (actual_length % 4) - 1;
 }
 
+// This function computes the binary length by iterating through the input
+// and counting non-whitespace characters (excluding padding characters).
+// We use a simple check (c > ' ') which is easy to parallelize and matches
+// SIMD behavior. Only the last few characters are checked for padding '='.
+template <class char_type>
+simdutf_warn_unused simdutf_constexpr23 size_t
+binary_length_from_base64(const char_type *input, size_t length) noexcept {
+  // Count non-whitespace characters (c > ' ') with loop unrolling
+  size_t count = 0;
+  for (size_t i = 0; i < length; i++) {
+    count += (input[i] > ' ');
+  }
+
+  // Check for padding '=' at the end (at most 2 padding characters)
+  // Scan backwards, skipping whitespace, to find padding
+  size_t padding = 0;
+  size_t pos = length;
+  // Skip trailing whitespace
+  while (pos > 0 && padding < 2) {
+    char_type c = input[--pos];
+    if (c == '=') {
+      padding++;
+    } else if (c > ' ') {
+      break;
+    }
+  }
+  return ((count - padding) * 3) / 4;
+}
+
 template <typename char_type>
 simdutf_warn_unused simdutf_constexpr23 full_result
 base64_to_binary_details_impl(
