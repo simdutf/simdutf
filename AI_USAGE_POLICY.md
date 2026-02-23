@@ -32,6 +32,12 @@ unreviewed output of an LLM to open source project maintainers *extracts* work
 from them in the form of design and code review, so we call this kind of
 contribution an "extractive contribution".
 
+## Transparency
+
+For contributions involving significant AI assistance, we encourage you to disclose 
+its use and explain your process. If a submission appears to rely heavily on AI 
+without disclosure, we may doubt that the **human-in-the-loop** requirement has
+been met. Please show awareness of your use of AI.
 
 ## Copyright
 
