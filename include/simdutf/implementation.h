@@ -236,7 +236,18 @@ detect_encodings(const detail::input_span_of_byte_like auto &input) noexcept {
  * @param len the length of the string in bytes.
  * @return true if and only if the string is valid UTF-8.
  */
-simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept;
+namespace dispatch {
+  simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept;
+}
+
+simdutf_really_inline simdutf_warn_unused bool
+validate_utf8(const char *buf, size_t len) noexcept {
+  if (len < 16) {
+    return scalar::utf8::validate(reinterpret_cast<const uint8_t *>(buf), len);
+  }
+  return dispatch::validate_utf8(buf, len);
+}
+
   #if SIMDUTF_SPAN
 simdutf_constexpr23 simdutf_really_inline simdutf_warn_unused bool
 validate_utf8(const detail::input_span_of_byte_like auto &input) noexcept {
