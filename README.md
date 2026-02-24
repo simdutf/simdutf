@@ -2526,11 +2526,6 @@ If using C++23 or newer, it is possible to use the functions in the public api a
   * `atomic_binary_to_base64`
   * `atomic_base64_to_binary_safe`
 
-The following functions are also not constexpr but expected to be so in a future version:
-
-  * `autodetect_encoding`
-  * `detect_encodings`
-
 Here is an example:
 
 ```cpp
