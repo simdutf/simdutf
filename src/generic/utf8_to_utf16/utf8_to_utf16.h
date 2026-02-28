@@ -158,10 +158,10 @@ struct validating_transcoder {
                 (simd8x64<uint8_t>::NUM_CHUNKS == 4),
             "We support either two or four chunks per 64-byte block.");
         auto zero = simd8<uint8_t>{uint8_t(0)};
-        if (simd8x64<uint8_t>::NUM_CHUNKS == 2) {
+        if constexpr (simd8x64<uint8_t>::NUM_CHUNKS == 2) {
           this->check_utf8_bytes(input.chunks[0], zero);
           this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
-        } else if (simd8x64<uint8_t>::NUM_CHUNKS == 4) {
+        } else if constexpr (simd8x64<uint8_t>::NUM_CHUNKS == 4) {
           this->check_utf8_bytes(input.chunks[0], zero);
           this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
           this->check_utf8_bytes(input.chunks[2], input.chunks[1]);
@@ -246,10 +246,10 @@ struct validating_transcoder {
                 (simd8x64<uint8_t>::NUM_CHUNKS == 4),
             "We support either two or four chunks per 64-byte block.");
         auto zero = simd8<uint8_t>{uint8_t(0)};
-        if (simd8x64<uint8_t>::NUM_CHUNKS == 2) {
+        if constexpr (simd8x64<uint8_t>::NUM_CHUNKS == 2) {
           this->check_utf8_bytes(input.chunks[0], zero);
           this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
-        } else if (simd8x64<uint8_t>::NUM_CHUNKS == 4) {
+        } else if constexpr (simd8x64<uint8_t>::NUM_CHUNKS == 4) {
           this->check_utf8_bytes(input.chunks[0], zero);
           this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
           this->check_utf8_bytes(input.chunks[2], input.chunks[1]);
