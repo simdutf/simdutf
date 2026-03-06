@@ -800,6 +800,16 @@ public:
                        char16_t character) const noexcept override {
     return set_best()->find(start, end, character);
   }
+
+  simdutf_warn_unused size_t binary_length_from_base64(
+      const char *input, size_t length) const noexcept override {
+    return set_best()->binary_length_from_base64(input, length);
+  }
+
+  simdutf_warn_unused size_t binary_length_from_base64(
+      const char16_t *input, size_t length) const noexcept override {
+    return set_best()->binary_length_from_base64(input, length);
+  }
 #endif // SIMDUTF_FEATURE_BASE64
 
   simdutf_really_inline
@@ -1354,6 +1364,14 @@ public:
   const char16_t *find(const char16_t *, const char16_t *,
                        char16_t) const noexcept override {
     return nullptr;
+  }
+  simdutf_warn_unused size_t binary_length_from_base64(
+      const char *, size_t) const noexcept override {
+    return 0;
+  }
+  simdutf_warn_unused size_t binary_length_from_base64(
+      const char16_t *, size_t) const noexcept override {
+    return 0;
   }
 #endif // SIMDUTF_FEATURE_BASE64
 
