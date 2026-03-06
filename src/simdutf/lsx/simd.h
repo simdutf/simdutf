@@ -123,6 +123,10 @@ template <> struct simd8<uint8_t> : base_u8<uint8_t> {
   }
   simdutf_really_inline simd8<bool>
   operator>(const simd8<uint8_t> other) const {
+    return __lsx_vvslt_bu(other, *this);
+  }
+  simdutf_really_inline simd8<bool>
+  operator>(const simd8<uint8_t> other) const {
     return __lsx_vslt_bu(other, *this);
   }
   simdutf_really_inline simd8 &operator-=(const simd8<uint8_t> other) {
