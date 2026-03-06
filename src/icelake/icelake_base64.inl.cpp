@@ -565,8 +565,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   return {SUCCESS, srclen, size_t(dst - dstinit)};
 }
 
-simdutf_warn_unused size_t
-icelake_binary_length_from_base64(const char *input, size_t length) {
+simdutf_warn_unused size_t icelake_binary_length_from_base64(const char *input,
+                                                             size_t length) {
   size_t count = 0;
   const char *ptr = input;
   const char *end = input + length;

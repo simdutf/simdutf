@@ -1365,12 +1365,12 @@ public:
                        char16_t) const noexcept override {
     return nullptr;
   }
-  simdutf_warn_unused size_t binary_length_from_base64(
-      const char *, size_t) const noexcept override {
+  simdutf_warn_unused size_t
+  binary_length_from_base64(const char *, size_t) const noexcept override {
     return 0;
   }
-  simdutf_warn_unused size_t binary_length_from_base64(
-      const char16_t *, size_t) const noexcept override {
+  simdutf_warn_unused size_t
+  binary_length_from_base64(const char16_t *, size_t) const noexcept override {
     return 0;
   }
 #endif // SIMDUTF_FEATURE_BASE64

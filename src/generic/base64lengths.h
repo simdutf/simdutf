@@ -3,8 +3,8 @@ namespace SIMDUTF_IMPLEMENTATION {
 namespace {
 namespace base64_lengths {
 
-simdutf_warn_unused size_t
-binary_length_from_base64(const char *input, size_t length) {
+simdutf_warn_unused size_t binary_length_from_base64(const char *input,
+                                                     size_t length) {
   size_t pos = 0;
   size_t count = 0;
   for (; pos + 64 <= length; pos += 64) {
@@ -30,8 +30,8 @@ binary_length_from_base64(const char *input, size_t length) {
   return ((count - padding) * 3) / 4;
 }
 
-simdutf_warn_unused size_t
-binary_length_from_base64(const char16_t *input, size_t length) {
+simdutf_warn_unused size_t binary_length_from_base64(const char16_t *input,
+                                                     size_t length) {
   size_t pos = 0;
   size_t count = 0;
   for (; pos + 32 <= length; pos += 32) {

@@ -1400,15 +1400,13 @@ const char16_t *implementation::find(const char16_t *start, const char16_t *end,
   return util_find(start, end, character);
 }
 
-simdutf_warn_unused size_t
-implementation::binary_length_from_base64(const char *input,
-                                          size_t length) const noexcept {
+simdutf_warn_unused size_t implementation::binary_length_from_base64(
+    const char *input, size_t length) const noexcept {
   return base64_lengths::binary_length_from_base64(input, length);
 }
 
-simdutf_warn_unused size_t
-implementation::binary_length_from_base64(const char16_t *input,
-                                          size_t length) const noexcept {
+simdutf_warn_unused size_t implementation::binary_length_from_base64(
+    const char16_t *input, size_t length) const noexcept {
   return base64_lengths::binary_length_from_base64(input, length);
 }
 #endif // SIMDUTF_FEATURE_BASE64

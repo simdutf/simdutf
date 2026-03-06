@@ -6595,8 +6595,9 @@ public:
    * @param length        the length of the base64 input in 16-bit units
    * @return number of binary bytes
    */
-  simdutf_warn_unused virtual size_t binary_length_from_base64(
-      const char16_t *input, size_t length) const noexcept;
+  simdutf_warn_unused virtual size_t
+  binary_length_from_base64(const char16_t *input,
+                            size_t length) const noexcept;
 
   /**
    * Convert a base64 input to a binary output.

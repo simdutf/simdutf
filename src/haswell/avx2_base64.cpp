@@ -769,8 +769,8 @@ public:
   }
 };
 
-simdutf_warn_unused size_t
-avx2_binary_length_from_base64(const char *input, size_t length) {
+simdutf_warn_unused size_t avx2_binary_length_from_base64(const char *input,
+                                                          size_t length) {
   size_t count = 0;
   const char *ptr = input;
   const char *end = input + length;
@@ -802,8 +802,8 @@ avx2_binary_length_from_base64(const char *input, size_t length) {
   return ((count - padding) * 3) / 4;
 }
 
-simdutf_warn_unused size_t
-avx2_binary_length_from_base64(const char16_t *input, size_t length) {
+simdutf_warn_unused size_t avx2_binary_length_from_base64(const char16_t *input,
+                                                          size_t length) {
   size_t count = 0;
   const char16_t *ptr = input;
   const char16_t *end = input + length;
