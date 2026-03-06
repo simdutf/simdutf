@@ -693,3 +693,59 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   }
   return {SUCCESS, srclen, size_t(dst - dstinit)};
 }
+
+simdutf_warn_unused size_t
+lasx_binary_length_from_base64(const char *input, size_t length) {
+  size_t pos = 0;
+  size_t count = 0;
+  for (; pos + 32 <= length; pos += 32) {
+    __m256i block = __lasx_xvld(reinterpret_cast<const __m256i *>(input + pos), 0);
+    __m256i mask = __lasx_xvslt_bu(block, __lasx_xvreplgr2vr_b(33));
+    uint32_t maybe_base64 = __lasx_xvpickve2gr_wu(__lasx_xvmsknz_b(mask), 0);
+    count += count_ones(maybe_base64);
+  }
+  while (pos < length) {
+    count += (input[pos] > 0x20) ? 1 : 0;
+    pos++;
+  }
+  // Count padding at the end.
+  size_t padding = 0;
+  pos = length;
+  while (pos > 0 && padding < 2) {
+    char c = input[--pos];
+    if (c == '=') {
+      padding++;
+    } else if (c > ' ') {
+      break;
+    }
+  }
+  return ((count - padding) * 3) / 4;
+}
+
+simdutf_warn_unused size_t
+lasx_binary_length_from_base64(const char16_t *input, size_t length) {
+  size_t pos = 0;
+  size_t count = 0;
+  for (; pos + 16 <= length; pos += 16) {
+    __m256i block = __lasx_xvld(reinterpret_cast<const __m256i *>(input + pos), 0);
+    __m256i mask = __lasx_xvslt_hu(block, __lasx_xvreplgr2vr_h(33));
+    uint16_t maybe_base64 = __lasx_xvpickve2gr_wu(__lasx_xvmsknz_h(mask), 0) & 0xFFFF;
+    count += count_ones(maybe_base64);
+  }
+  while (pos < length) {
+    count += (input[pos] > 0x20) ? 1 : 0;
+    pos++;
+  }
+  // Count padding at the end.
+  size_t padding = 0;
+  pos = length;
+  while (pos > 0 && padding < 2) {
+    char16_t c = input[--pos];
+    if (c == '=') {
+      padding++;
+    } else if (c > ' ') {
+      break;
+    }
+  }
+  return ((count - padding) * 3) / 4;
+}
