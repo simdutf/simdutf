@@ -9,7 +9,7 @@ binary_length_from_base64(const char *input, size_t length) {
   size_t count = 0;
   for (; pos + 64 <= length; pos += 64) {
     simd8x64<uint8_t> block(reinterpret_cast<const uint8_t *>(input + pos));
-    uint64_t maybe_base64 = block.gt(32);
+    uint64_t maybe_base64 = block.gteq(33); // >= 33 which is '!' in ASCII
     count += count_ones(maybe_base64);
   }
   while (pos < length) {
@@ -34,6 +34,11 @@ simdutf_warn_unused size_t
 binary_length_from_base64(const char16_t *input, size_t length) {
   size_t pos = 0;
   size_t count = 0;
+  for (; pos + 32 <= length; pos += 32) {
+    simd16x32<uint16_t> block(reinterpret_cast<const uint16_t *>(input + pos));
+    uint64_t maybe_base64 = block.gteq(33); // >= 33 which is '!' in ASCII
+    count += count_ones(maybe_base64);
+  }
   while (pos < length) {
     count += (input[pos] > 0x20) ? 1 : 0;
     pos++;

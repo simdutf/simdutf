@@ -207,6 +207,12 @@ template <typename T> struct simd16x32 {
     uint64_t r3 = this->chunks[3].to_bitmask();
     return r0 | (r1 << 16) | (r2 << 32) | (r3 << 48);
   }
+  simdutf_really_inline uint64_t gteq(const T m) const {
+    const simd16<T> mask = simd16<T>::splat(m);
+    return simd16x32<bool>(this->chunks[0] >= mask, this->chunks[1] >= mask,
+                           this->chunks[2] >= mask, this->chunks[3] >= mask)
+        .to_bitmask();
+  }
   simdutf_really_inline uint64_t lteq(const T m) const {
     const simd16<T> mask = simd16<T>::splat(m);
     return simd16x32<bool>(this->chunks[0] <= mask, this->chunks[1] <= mask,
