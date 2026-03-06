@@ -19,7 +19,9 @@ jobs:
         sudo apt-get install -y cmake make g++-14-riscv64-linux-gnu qemu-user-static
     - name: Build
       run: |
-        CXX=riscv64-linux-gnu-g++-14 CXXFLAGS=-march=rv64gcv \
+        CXX=riscv64-linux-gnu-g++-14 \
+        CC=riscv64-linux-gnu-gcc-14 \
+        CXXFLAGS=-march=rv64gcv \
         cmake --toolchain=cmake/toolchains-ci/riscv64-linux-gnu.cmake -DCMAKE_BUILD_TYPE=Release -B build -DSIMDUTF_FAST_TESTS=On
         cmake --build build/ -j$(nproc)
     - name: Test VLEN=256

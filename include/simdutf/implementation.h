@@ -860,7 +860,7 @@ convert_latin1_to_utf8_safe(
     #endif
   {
     return convert_latin1_to_utf8_safe(
-        input.data(), input.size(),
+        reinterpret_cast<const char *>(input.data()), input.size(),
         reinterpret_cast<char *>(utf8_output.data()), utf8_output.size());
   }
 }
@@ -4162,12 +4162,14 @@ maximal_binary_length_from_base64(std::span<const char16_t> input) noexcept {
   #endif // SIMDUTF_SPAN
 
 /**
- * Compute the binary length from a base64 input with ASCII spaces.
- * This function is useful for well-formed base64 inputs that may contain
- * ASCII spaces (such as line breaks). For such inputs, the result is exact.
+ * Compute the binary length from a base64 input.
+ * This function is useful for base64 inputs that may contain ASCII whitespaces
+ * (such as line breaks). For such inputs, the result is exact, and for any
+ * inputs the result can be used to size the output buffer passed to
+ * `base64_to_binary`.
  *
- * The function counts non-whitespace characters (ASCII value > 0x20) and
- * subtracts padding characters ('=') found at the end.
+ * The function ignores whitespace and does not require padding characters
+ * ('=').
  *
  * @param input         the base64 input to process
  * @param length        the length of the base64 input in bytes
@@ -4176,20 +4178,31 @@ maximal_binary_length_from_base64(std::span<const char16_t> input) noexcept {
 simdutf_warn_unused size_t binary_length_from_base64(const char *input,
                                                      size_t length) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t binary_length_from_base64(
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+binary_length_from_base64(
     const detail::input_span_of_byte_like auto &input) noexcept {
-  return binary_length_from_base64(reinterpret_cast<const char *>(input.data()),
-                                   input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::base64::binary_length_from_base64(input.data(),
+                                                     input.size());
+  } else
+    #endif
+  {
+    return binary_length_from_base64(
+        reinterpret_cast<const char *>(input.data()), input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 
 /**
- * Compute the binary length from a base64 input with ASCII spaces.
- * This function is useful for well-formed base64 inputs that may contain
- * ASCII spaces (such as line breaks). For such inputs, the result is exact.
+ * Compute the binary length from a base64 input.
+ * This function is useful for base64 inputs that may contain ASCII whitespaces
+ * (such as line breaks). For such inputs, the result is exact, and for any
+ * inputs the result can be used to size the output buffer passed to
+ * `base64_to_binary`.
  *
- * The function counts non-whitespace characters (ASCII value > 0x20) and
- * subtracts padding characters ('=') found at the end.
+ * The function ignores whitespace and does not require padding characters
+ * ('=').
  *
  * @param input         the base64 input to process, in ASCII stored as 16-bit
  * units
@@ -4199,9 +4212,17 @@ simdutf_really_inline simdutf_warn_unused size_t binary_length_from_base64(
 simdutf_warn_unused size_t binary_length_from_base64(const char16_t *input,
                                                      size_t length) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused size_t
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
 binary_length_from_base64(std::span<const char16_t> input) noexcept {
-  return binary_length_from_base64(input.data(), input.size());
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::base64::binary_length_from_base64(input.data(),
+                                                     input.size());
+  } else
+    #endif
+  {
+    return binary_length_from_base64(input.data(), input.size());
+  }
 }
   #endif // SIMDUTF_SPAN
 
@@ -6413,7 +6434,7 @@ public:
    * @param length        the length of the base64 input in bytes
    * @return number of binary bytes
    */
-  simdutf_warn_unused virtual size_t
+  simdutf_warn_unused size_t
   binary_length_from_base64(const char *input, size_t length) const noexcept;
 
   /**
@@ -6429,7 +6450,7 @@ public:
    * @param length        the length of the base64 input in 16-bit units
    * @return number of binary bytes
    */
-  simdutf_warn_unused virtual size_t binary_length_from_base64(
+  simdutf_warn_unused size_t binary_length_from_base64(
       const char16_t *input, size_t length) const noexcept;
 
   /**

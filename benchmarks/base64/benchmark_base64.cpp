@@ -66,7 +66,15 @@ int base64_decode_skip_spaces(const char *src, size_t srclen, char *out,
   return !state.bytes;
 }
 
-enum class BenchmarkMode { roundtrip, decode, encode, bun, roundtripurl, lengths, list };
+enum class BenchmarkMode {
+  roundtrip,
+  decode,
+  encode,
+  bun,
+  roundtripurl,
+  lengths,
+  list
+};
 
 const char *name(BenchmarkMode bm) {
   switch (bm) {
@@ -141,7 +149,8 @@ void show_help() {
          "passed strings\n");
   printf("  -l                 List implementations\n");
   printf("  -b, --bench-bun    Bun benchmark\n");
-  printf("  -L, --lengths      Benchmark only base64 length functions (maximal & exact)\n");
+  printf("  -L, --lengths      Benchmark only base64 length functions (maximal "
+         "& exact)\n");
 
   printf(" See https://github.com/lemire/base64data for test data.\n");
 }
@@ -343,10 +352,8 @@ private:
 
   void list() {
     std::array<BenchmarkMode, 5> modes = {
-        BenchmarkMode::roundtrip,
-        BenchmarkMode::roundtripurl,
-        BenchmarkMode::encode,
-        BenchmarkMode::decode,
+        BenchmarkMode::roundtrip, BenchmarkMode::roundtripurl,
+        BenchmarkMode::encode,    BenchmarkMode::decode,
         BenchmarkMode::lengths,
     };
 
@@ -649,17 +656,21 @@ private:
       simdutf::get_active_implementation() = e;
 
       volatile size_t len = 0;
-      summarize("simdutf::" + e->name() + "_maximal_binary_length_from_base64", [this, &e, &len]() {
-        for (const std::vector<char> &source : data) {
-          len = e->maximal_binary_length_from_base64(source.data(), source.size());
-        }
-      });
+      summarize("simdutf::" + e->name() + "_maximal_binary_length_from_base64",
+                [this, &e, &len]() {
+                  for (const std::vector<char> &source : data) {
+                    len = e->maximal_binary_length_from_base64(source.data(),
+                                                               source.size());
+                  }
+                });
 
-      summarize("simdutf::" + e->name() + "_binary_length_from_base64", [this, &e, &len]() {
-        for (const std::vector<char> &source : data) {
-          len = e->binary_length_from_base64(source.data(), source.size());
-        }
-      });
+      summarize("simdutf::" + e->name() + "_binary_length_from_base64",
+                [this, &e, &len]() {
+                  for (const std::vector<char> &source : data) {
+                    len = e->binary_length_from_base64(source.data(),
+                                                       source.size());
+                  }
+                });
     }
   }
 };
