@@ -564,3 +564,67 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   }
   return {SUCCESS, srclen, size_t(dst - dstinit)};
 }
+
+simdutf_warn_unused size_t icelake_binary_length_from_base64(const char *input,
+                                                             size_t length) {
+  size_t count = 0;
+  const char *ptr = input;
+  const char *end = input + length;
+
+  __m512i spaces = _mm512_set1_epi8(0x20);
+  while (ptr + 64 <= end) {
+    __m512i data = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(ptr));
+    uint64_t mask = _mm512_cmpgt_epi8_mask(data, spaces);
+    count += count_ones(mask);
+    ptr += 64;
+  }
+
+  while (ptr < end) {
+    count += (*ptr > 0x20) ? 1 : 0;
+    ptr++;
+  }
+
+  size_t padding = 0;
+  size_t pos = length;
+  while (pos > 0 && padding < 2) {
+    char c = input[--pos];
+    if (c == '=') {
+      padding++;
+    } else if (c > ' ') {
+      break;
+    }
+  }
+  return ((count - padding) * 3) / 4;
+}
+
+simdutf_warn_unused size_t
+icelake_binary_length_from_base64(const char16_t *input, size_t length) {
+  size_t count = 0;
+  const char16_t *ptr = input;
+  const char16_t *end = input + length;
+
+  __m512i spaces = _mm512_set1_epi16(0x20);
+  while (ptr + 32 <= end) {
+    __m512i data = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(ptr));
+    __mmask32 mask = _mm512_cmpgt_epi16_mask(data, spaces);
+    count += _mm_popcnt_u32(mask);
+    ptr += 32;
+  }
+
+  while (ptr < end) {
+    count += (*ptr > 0x20) ? 1 : 0;
+    ptr++;
+  }
+
+  size_t padding = 0;
+  size_t pos = length;
+  while (pos > 0 && padding < 2) {
+    char16_t c = input[--pos];
+    if (c == '=') {
+      padding++;
+    } else if (c > ' ') {
+      break;
+    }
+  }
+  return ((count - padding) * 3) / 4;
+}
