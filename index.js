@@ -24,10 +24,14 @@ var index =
     ] ],
     [ "The sutf command-line tool", "index.html#autotoc_md20", null ],
     [ "Manual implementation selection", "index.html#autotoc_md21", null ],
-    [ "Thread safety", "index.html#autotoc_md22", null ],
-    [ "References", "index.html#autotoc_md23", null ],
-    [ "Citing this work", "index.html#autotoc_md24", null ],
-    [ "C wrapper (C11 or better)", "index.html#autotoc_md25", null ],
-    [ "Stars", "index.html#autotoc_md26", null ],
-    [ "License", "index.html#autotoc_md27", null ]
+    [ "Benchmarks", "index.html#autotoc_md22", [
+      [ "Base64 benchmarks", "index.html#autotoc_md23", null ],
+      [ "Short input benchmarks", "index.html#autotoc_md24", null ]
+    ] ],
+    [ "Thread safety", "index.html#autotoc_md25", null ],
+    [ "References", "index.html#autotoc_md26", null ],
+    [ "Citing this work", "index.html#autotoc_md27", null ],
+    [ "C wrapper (C11 or better)", "index.html#autotoc_md28", null ],
+    [ "Stars", "index.html#autotoc_md29", null ],
+    [ "License", "index.html#autotoc_md30", null ]
 ];

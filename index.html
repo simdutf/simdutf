@@ -29,7 +29,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">simdutf<span id="projectnumber">&#160;8.0.0</span>
+   <div id="projectname">simdutf<span id="projectnumber">&#160;8.1.0</span>
    </div>
    <div id="projectbrief">Unicode at GB/s.</div>
   </td>
@@ -189,7 +189,7 @@ Quick Start</h2>
 <p>Linux or macOS users might follow the following instructions if they have a recent C++ compiler installed and the standard utilities (<code>wget</code>, <code>unzip</code>, etc.)</p>
 <ol type="1">
 <li><p class="startli">Pull the library in a directory</p>
-<div class="fragment"><div class="line">wget https://github.com/simdutf/simdutf/releases/download/v8.0.0/singleheader.zip</div>
+<div class="fragment"><div class="line">wget https://github.com/simdutf/simdutf/releases/download/v8.1.0/singleheader.zip</div>
 <div class="line"> </div>
 <div class="line">unzip singleheader.zip</div>
 </div><!-- fragment --><p class="startli">You can replace <code>wget</code> by <code>curl -OL <a href="https://..">https://..</a>.</code> if you prefer.</p>
@@ -223,35 +223,15 @@ Usage (CMake)</h2>
 <div class="line"> </div>
 <div class="line">ctest .</div>
 </div><!-- fragment --><p>Visual Studio users must specify whether they want to build the Release or Debug version.</p>
-<p>To run transcoding benchmarks, execute the <code>benchmark</code> command. You can get help on its</p>
-<p>usage by first building it and then calling it with the <code>--help</code> flag.</p>
-<p>E.g., under Linux you may do the following:</p>
-<div class="fragment"><div class="line">cmake -B build -D SIMDUTF_BENCHMARKS=ON</div>
-<div class="line"> </div>
-<div class="line">cmake --build build</div>
-<div class="line"> </div>
-<div class="line">./build/benchmarks/benchmark --help</div>
-<div class="line"> </div>
-<div class="line">./build/benchmarks/base64/benchmark_base64 --help</div>
-</div><!-- fragment --><p>E.g., to run base64 decoding benchmarks on DNS data (short inputs), do</p>
-<div class="fragment"><div class="line">./build/benchmarks/base64/benchmark_base64 -d pathto/base64data/dns/*.txt</div>
-</div><!-- fragment --><p>where pathto/base64data should contain the path to a clone of</p>
-<p>the repository <a href="https://github.com/lemire/base64data">https://github.com/lemire/base64data</a>.</p>
-<p>Instructions are similar for Visual Studio users.</p>
 <p>To use the library as a CMake dependency in your project, please see <code>tests/installation_tests/from_fetch</code> for</p>
 <p>an example.</p>
-<p>Since ICU is so common and popular, we assume that you may have it already on your system. When</p>
-<p>it is not found, it is simply omitted from the benchmarks. Thus, to benchmark against ICU, make</p>
-<p>sure you have ICU installed on your machine and that cmake can find it. For macOS, you may</p>
-<p>install it with brew using <code>brew install icu4c</code>. If you have ICU on your system but cmake cannot</p>
-<p>find it, you may need to provide cmake with a path to ICU, such as <code>ICU_ROOT=/usr/local/opt/icu4c cmake -B build</code>.</p>
 <p>You may also use a package manager. E.g., <a href="https://github.com/simdutf/simdutf-vcpkg">we have a complete example using vcpkg</a>.</p>
 <h1><a class="anchor" id="autotoc_md7"></a>
 Single-header version</h1>
 <p>You can create a single-header version of the library where</p>
 <p>all of the code is put into two files (<code><a class="el" href="simdutf_8h_source.html">simdutf.h</a></code> and <code>simdutf.cpp</code>).</p>
 <p>We publish a zip archive containing these files, e.g., see</p>
-<p><a href="https://github.com/simdutf/simdutf/releases/download/v8.0.0/singleheader.zip">https://github.com/simdutf/simdutf/releases/download/v8.0.0/singleheader.zip</a></p>
+<p><a href="https://github.com/simdutf/simdutf/releases/download/v8.1.0/singleheader.zip">https://github.com/simdutf/simdutf/releases/download/v8.1.0/singleheader.zip</a></p>
 <p>You may generate it on your own using a Python script.</p>
 <div class="fragment"><div class="line">python3 ./singleheader/amalgamate.py</div>
 </div><!-- fragment --><p>We require Python 3 or better.</p>
@@ -1173,6 +1153,28 @@ Base64</h1>
 <div class="line">  buffer.resize(r.count); <span class="comment">// resize the buffer according to actual number of bytes</span></div>
 <div class="line"> </div>
 <div class="line">}</div>
+</div><!-- fragment --><p>You can calculate the exact output space needed by using</p>
+<p><code>binary_length_from_base64</code> which produces an exact number of output</p>
+<p>bytes if the input is well-formed. Well-formed means it contains</p>
+<p>only valid base64 and ASCII whitespace. Invalid input can be given to</p>
+<p><code>binary_length_from_base64</code>. It will not detect invalid input, but the</p>
+<p>result can be safely used to size the output buffer for <code>base64_to_binary</code>,</p>
+<p>which does detect invalid input.</p>
+<div class="fragment"><div class="line">std::vector&lt;char&gt; buffer(simdutf::binary_length_from_base64(base64.data(), base64.size()));</div>
+<div class="line"> </div>
+<div class="line"><a class="code hl_struct" href="structsimdutf_1_1result.html">simdutf::result</a> r = simdutf::base64_to_binary(base64.data(), base64.size(), buffer.data());</div>
+<div class="line"> </div>
+<div class="line"><span class="keywordflow">if</span> (r.error != simdutf::SUCCESS) {</div>
+<div class="line"> </div>
+<div class="line">  <span class="comment">// handle error</span></div>
+<div class="line"> </div>
+<div class="line">} <span class="keywordflow">else</span> {</div>
+<div class="line"> </div>
+<div class="line">  <span class="comment">// buffer is already the exact size, no resize needed</span></div>
+<div class="line"> </div>
+<div class="line">  assert(buffer.size() == r.count);</div>
+<div class="line"> </div>
+<div class="line">}</div>
 </div><!-- fragment --><p>Let us consider concrete examples. Take the following strings:</p>
 <p><code>"  A  A  "</code>, <code>"  A  A  G  A  /  v  8  "</code>, <code>"  A  A  G  A  /  v  8  =  "</code>, <code>"  A  A  G  A  /  v  8  =  =  "</code>.</p>
 <p>They are all valid WHATWG base64 inputs, except for the last one.</p>
@@ -1503,6 +1505,14 @@ Base64</h1>
 <div class="line"> </div>
 <div class="line"> </div>
 <div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> binary_length_from_base64(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> binary_length_from_base64(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"> </div>
 <div class="line"> </div>
 <div class="line"> </div>
 <div class="line">simdutf_warn_unused result</div>
@@ -1738,10 +1748,47 @@ Manual implementation selection</h1>
 <div class="line"> </div>
 <div class="line">}</div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md22"></a>
+Benchmarks</h1>
+<p>To run benchmarks, build the project with benchmarks enabled. Our default benchmarks are in the <code>benchmark</code> command. You can get help on its</p>
+<p>usage by first building it and then calling it with the <code>--help</code> flag.</p>
+<p>E.g., under Linux you may do the following:</p>
+<div class="fragment"><div class="line">cmake -B build -D SIMDUTF_BENCHMARKS=ON</div>
+<div class="line"> </div>
+<div class="line">cmake --build build</div>
+<div class="line"> </div>
+<div class="line">./build/benchmarks/benchmark --help</div>
+</div><!-- fragment --><p>The standard benchmark tool <code>benchmark</code> provides comprehensive transcoding benchmarks between different encodings. It supports various procedures like converting UTF-8 to UTF-16, UTF-16 to UTF-8, and more. You can list available procedures with <code>--procedures</code>, run specific benchmarks, or use filters to select particular tests. For example, to benchmark UTF-8 to UTF-16 conversion on a file, use <code>./build/benchmarks/benchmark --procedure utf8_to_utf16 file.txt</code>. It outputs detailed performance metrics including throughput in GB/s and CPU cycles.</p>
+<p>Since ICU is so common and popular, we assume that you may have it already on your system. When</p>
+<p>it is not found, it is simply omitted from the benchmarks. Thus, to benchmark against ICU, make</p>
+<p>sure you have ICU installed on your machine and that cmake can find it. For macOS, you may</p>
+<p>install it with brew using <code>brew install icu4c</code>. If you have ICU on your system but cmake cannot</p>
+<p>find it, you may need to provide cmake with a path to ICU, such as <code>ICU_ROOT=/usr/local/opt/icu4c cmake -B build</code>.</p>
+<h2><a class="anchor" id="autotoc_md23"></a>
+Base64 benchmarks</h2>
+<p>We also have a base64 benchmark tool (<code>benchmark_base64</code>).</p>
+<div class="fragment"><div class="line">./build/benchmarks/base64/benchmark_base64 --help</div>
+</div><!-- fragment --><p>E.g., to run base64 decoding benchmarks on DNS data (short inputs), do</p>
+<div class="fragment"><div class="line">./build/benchmarks/base64/benchmark_base64 -d pathto/base64data/dns/*.txt</div>
+</div><!-- fragment --><p>where pathto/base64data should contain the path to a clone of</p>
+<p>the repository <a href="https://github.com/lemire/base64data">https://github.com/lemire/base64data</a>.</p>
+<h2><a class="anchor" id="autotoc_md24"></a>
+Short input benchmarks</h2>
+<p>To run short benchmarks on various SIMDUTF functions with incremental input sizes, use <code>shortbench</code>:</p>
+<div class="fragment"><div class="line">./build/benchmarks/shortbench --help</div>
+<div class="line"> </div>
+<div class="line">./build/benchmarks/shortbench --list</div>
+<div class="line"> </div>
+<div class="line">./build/benchmarks/shortbench --function validate_utf8 # validate a zero buffer</div>
+<div class="line"> </div>
+<div class="line">./build/benchmarks/shortbench --function validate_utf8 README.md</div>
+<div class="line"> </div>
+<div class="line">./build/benchmarks/shortbench --function utf8_length_from_latin1 --max-size 256 somefile.txt</div>
+</div><!-- fragment --><p>This will benchmark the selected function on the input file, testing sizes from 1 byte up to the specified max size (default 128), and output a table with timing and performance metrics.</p>
+<h1><a class="anchor" id="autotoc_md25"></a>
 Thread safety</h1>
 <p>We built simdutf with thread safety in mind. The simdutf library is single-threaded throughout.</p>
 <p>The CPU detection, which runs the first time parsing is attempted and switches to the fastest parser for your CPU, is transparent and thread-safe. Our runtime dispatching is based on global objects that are instantiated at the beginning of the main thread and may be discarded at the end of the main thread. If you have multiple threads running and some threads use the library while the main thread is cleaning up resources, you may encounter issues. If you expect such problems, you may consider using <a href="https://en.cppreference.com/w/cpp/utility/program/quick_exit">std::quick_exit</a>.</p>
-<h1><a class="anchor" id="autotoc_md23"></a>
+<h1><a class="anchor" id="autotoc_md26"></a>
 References</h1>
 <ul>
 <li>Robert Clausecker, Daniel Lemire, <a href="https://arxiv.org/abs/2212.05098">Transcoding Unicode Characters with AVX-512 Instructions</a>, Software: Practice and Experience 53 (12), 2023.</li>
@@ -1750,7 +1797,7 @@ References</h1>
 <li>Wojciech Muła, Daniel Lemire, <a href="https://arxiv.org/abs/1910.05109">Base64 encoding and decoding at almost the speed of a memory copy</a>, Software: Practice and Experience 50 (2), 2020.</li>
 <li>Wojciech Muła, Daniel Lemire, <a href="https://arxiv.org/abs/1704.00605">Faster Base64 Encoding and Decoding using AVX2 Instructions</a>, ACM Transactions on the Web 12 (3), 2018.</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md24"></a>
+<h1><a class="anchor" id="autotoc_md27"></a>
 Citing this work</h1>
 <p>If you use this library in your research, please cite our work:</p>
 <div class="fragment"><div class="line">@misc{simdutf,</div>
@@ -1764,7 +1811,7 @@ Citing this work</h1>
 <div class="line">  note={\url{https://github.com/simdutf/simdutf}}</div>
 <div class="line"> </div>
 <div class="line">}</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md25"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md28"></a>
 C wrapper (C11 or better)</h1>
 <p>*This is currently experimental. We are committed to maintaining the C API but there might be issues with</p>
 <p>our implementation.*</p>
@@ -1779,10 +1826,10 @@ C wrapper (C11 or better)</h1>
 <p>Refer to <code>singleheader/README.md</code> for instructions. Note that the simdutf library requires</p>
 <p>a C++ standard library (e.g., libstdc++, libc++) at runtime, either statically or dynamically linked.</p>
 <p>Note: The C API is currently not aware of amalgamation with limited features. It expects the full simdutf library.</p>
-<h1><a class="anchor" id="autotoc_md26"></a>
+<h1><a class="anchor" id="autotoc_md29"></a>
 Stars</h1>
 <p><a href="https://www.star-history.com/#simdutf/simdutf&amp;Date"><img src="https://api.star-history.com/svg?repos=simdutf/simdutf&amp;type=Date" alt="Star History Chart" class="inline"/></a></p>
-<h1><a class="anchor" id="autotoc_md27"></a>
+<h1><a class="anchor" id="autotoc_md30"></a>
 License</h1>
 <p>This code is made available under the <a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache License 2.0</a> as well as the MIT license. As a user, you can pick the license you prefer.</p>
 <p>We include a few competitive solutions under the benchmarks/competition directory. They are provided for</p>
