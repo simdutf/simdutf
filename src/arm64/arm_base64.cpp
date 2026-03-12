@@ -632,7 +632,10 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
   const char *const dstinit = dst;
   const char_type *const srcend = src + srclen;
 
-  constexpr size_t block_size = 10;
+#ifndef SIMDUTF_BASE64_BLOCK_SIZE
+#define SIMDUTF_BASE64_BLOCK_SIZE 10
+#endif
+  constexpr size_t block_size = SIMDUTF_BASE64_BLOCK_SIZE;
   char buffer[block_size * 64];
   char *bufferptr = buffer;
   if (srclen >= 64) {
@@ -663,11 +666,15 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
         // optimization opportunity: check for simple masks like those made of
         // continuous 1s followed by continuous 0s. And masks containing a
         // single bad character.
+#ifndef SIMDUTF_BASE64_DISABLE_SINGLE_OPT
         if (is_power_of_two(badcharmask)) {
           bufferptr += compress_block_single(&b, badcharmask, bufferptr);
         } else {
           bufferptr += compress_block(&b, badcharmask, bufferptr);
         }
+#else
+        bufferptr += compress_block(&b, badcharmask, bufferptr);
+#endif
       } else {
         // optimization opportunity: if bufferptr == buffer and mask == 0, we
         // can avoid the call to compress_block and decode directly.

@@ -57,6 +57,16 @@ if(SIMDUTF_ALWAYS_INCLUDE_FALLBACK)
   target_compile_definitions(simdutf PRIVATE SIMDUTF_IMPLEMENTATION_FALLBACK=1)
 endif()
 
+if(SIMDUTF_BASE64_BLOCK_SIZE)
+  message(STATUS "SIMDUTF_BASE64_BLOCK_SIZE is set to ${SIMDUTF_BASE64_BLOCK_SIZE}")
+  target_compile_definitions(simdutf PRIVATE SIMDUTF_BASE64_BLOCK_SIZE=${SIMDUTF_BASE64_BLOCK_SIZE})
+endif()
+
+if(SIMDUTF_BASE64_DISABLE_SINGLE_OPT)
+  message(STATUS "SIMDUTF_BASE64_DISABLE_SINGLE_OPT is set to ${SIMDUTF_BASE64_DISABLE_SINGLE_OPT}")
+  target_compile_definitions(simdutf PRIVATE SIMDUTF_BASE64_DISABLE_SINGLE_OPT=1)
+endif()
+
 if(SIMDUTF_SANITIZE)
   target_compile_options(simdutf PUBLIC -fsanitize=address  -fno-omit-frame-pointer -fno-sanitize-recover=all)
   target_compile_definitions(simdutf PUBLIC ASAN_OPTIONS=detect_leaks=1)
