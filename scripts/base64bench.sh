@@ -16,6 +16,15 @@ if [ ! -x "$FASTBASE64" ]; then
     exit 1
 fi
 
+# Detect OS for base64 command syntax
+if base64 --help | grep -q GNU; then
+    BASE64_ENCODE="base64"
+    BASE64_DECODE="base64 -d"
+else
+    BASE64_ENCODE="base64 -i"
+    BASE64_DECODE="base64 -d -i"
+fi
+
 echo "Starting fastbase64 vs base64 benchmark..."
 
 # Function to time a command in milliseconds with 0.1ms precision,
@@ -60,10 +69,10 @@ for i in "${!sizes[@]}"; do
     fastbase64_encode_time=$(time_cmd "$FASTBASE64 -e  \"$file\" > \"fastbase64_$size.b64\"")
     
     # Encode with base64 and measure time
-    base64_encode_time=$(time_cmd "base64 \"$file\" > \"base64_$size.b64\"")
+    base64_encode_time=$(time_cmd "$BASE64_ENCODE \"$file\" > \"base64_$size.b64\"")
     
     # Decode base64 encoded file and measure time
-    base64_decode_time=$(time_cmd "base64 -d \"base64_$size.b64\" > \"recovered_base64_$size.bin\"")
+    base64_decode_time=$(time_cmd "$BASE64_DECODE \"base64_$size.b64\" > \"recovered_base64_$size.bin\"")
     
     # Decode fastbase64 encoded file and measure time
     fastbase64_decode_time=$(time_cmd "$FASTBASE64 -d  \"fastbase64_$size.b64\" > \"recovered_fastbase64_$size.bin\"")

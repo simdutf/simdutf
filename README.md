@@ -2632,17 +2632,14 @@ fastbase64 < encoded.txt
 fastbase64 -e -w 76 myfile.txt
 ```
 
-For large files, `fastbase64` can be several times faster than the standard `base64` tool.
-Example:
+It can be several times faster than standard base64 tools. See `scripts/base64bench.sh` for a benchmark. Possible result:
 
 Size     | Encode Base64 | Encode FastBase64 | Decode Base64 | Decode FastBase64
 ---------|---------------|-------------------|---------------|------------------
-1m       | 12.3          | 12.3              | 13.6          | 11.7
-10m      | 26.0          | 17.0              | 38.6          | 17.3
-100m     | 191.3         | 101.3             | 291.8         | 87.2
+1m       | 21.6          | 21.3              | 35.5          | 21.3            
+10m      | 32.3          | 25.6              | 163.6         | 26.2            
+100m     | 119.5         | 49.3              | 1433.5        | 52.7            
 
-
-See `scripts/base64bench.sh` for a benchmarking tool.
 
 ## Manual implementation selection
 
