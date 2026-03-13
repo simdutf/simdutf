@@ -20,7 +20,7 @@
   - [Find](#find)
   - [C++20 and std::span usage in simdutf](#c20-and-stdspan-usage-in-simdutf)
   - [C++23 and constexpr support](#c23-and-constexpr-support)
-  - [The sutf command-line tool](#the-sutf-command-line-tool)
+  - [Command-line tools](#command-line-tools)
   - [Manual implementation selection](#manual-implementation-selection)
   - [Thread safety](#thread-safety)
   - [References](#references)
@@ -2600,18 +2600,36 @@ modifications made to make it usable at constexpr time. Also, when in a constexp
 as during normal dynamic invocation. For this reason, there might have slipped in subtle bugs and the constexpr
 support is considered experimental. Please report any bugs you encounter!
 
-## The sutf command-line tool
+## Command-line tools
 
-We also provide a command-line tool which can be build as follows:
+We provide two command-line tools that can be built as follows:
 ```
-cmake -B build && cmake --build build --target sutf
+cmake -B build && cmake --build build --target sutf fastbase64
 ```
-This command builds the executable in `./build/tool/` under most platforms. The sutf tool enables the user to easily transcode files from one encoding to another directly from the command line.
-The usage is similar to [iconv](https://www.gnu.org/software/libiconv/) (see `sutf --help` for more details). The sutf command-line tool relies on the simdutf library functions for fast transcoding of supported
+This command builds the executables in `./build/tools/` under most platforms.
+
+### sutf: Text encoding converter
+
+The sutf tool enables transcoding files from one encoding to another directly from the command line.
+The usage is similar to [iconv](https://www.gnu.org/software/libiconv/) (see `sutf --help` or `man sutf` for more details). The sutf command-line tool relies on the simdutf library functions for fast transcoding of supported
 formats (UTF-8, UTF-16LE, UTF-16BE and UTF-32). If iconv is found on the system and simdutf does not support a conversion, the sutf tool falls back on iconv: a message lets the user know if iconv is available
 during compilation. The following is an example of transcoding two input files to an output file, from UTF-8 to UTF-16LE:
 ```
 sutf -f UTF-8 -t UTF-16LE -o output_file.txt first_input_file.txt second_input_file.txt
+```
+
+### fastbase64: Base64 encoder/decoder
+
+The fastbase64 tool provides high-performance base64 encoding and decoding, compatible with the standard `base64` command (see `fastbase64 --help` or `man fastbase64` for more details). It supports various options including line wrapping, input/output file specification, and more. By default, it decodes base64 input to binary output. Examples:
+```
+# Encode a file
+fastbase64 -e myfile.txt
+
+# Decode base64 data (default)
+fastbase64 < encoded.txt
+
+# Encode with line wrapping
+fastbase64 -e -w 76 myfile.txt
 ```
 
 ## Manual implementation selection

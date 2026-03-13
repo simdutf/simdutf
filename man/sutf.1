@@ -1,0 +1,49 @@
+.TH SUTF 1 "March 2026" "simdutf" "User Commands"
+.SH NAME
+sutf \- convert encoding of text files
+.SH SYNOPSIS
+.B sutf
+[\fIOPTIONS\fR...] [\fIINPUTFILES\fR...]
+.SH DESCRIPTION
+.B sutf
+converts the encoding of text files from one encoding to another using the
+high-performance simdutf library for supported formats. For unsupported formats,
+it falls back to iconv if available.
+.SH OPTIONS
+.TP
+.B \-f, \-\-from\-code=\fIENCODING\fR
+Encoding of source text (mandatory).
+.TP
+.B \-t, \-\-to\-code=\fIENCODING\fR
+Encoding of output (mandatory).
+.TP
+.B \-o, \-\-output=\fIFILE\fR
+Output file. If not specified, output goes to standard output.
+.TP
+.B \-h, \-\-help
+Display help text and exit.
+.TP
+.B \-u, \-\-usage
+Display short usage message and exit.
+.TP
+.B \-l, \-\-list
+Display supported formats and exit.
+.SH SUPPORTED FORMATS
+Formats supported by simdutf library: UTF-8, UTF-16LE, UTF-16BE, UTF-32LE
+.PP
+If iconv is available, additional formats supported by iconv are also available.
+.SH EXAMPLES
+.TP
+Convert UTF-16LE file to UTF-8:
+.B sutf \-f UTF-16LE \-t UTF-8 input.txt
+.TP
+Convert multiple files and save to output file:
+.B sutf \-f UTF-8 \-t UTF-16BE \-o output.txt file1.txt file2.txt
+.TP
+List supported formats:
+.B sutf \-\-list
+.SH SEE ALSO
+.BR iconv (1),
+.BR uconv (1)
+.SH AUTHOR
+Written by the simdutf development team.
