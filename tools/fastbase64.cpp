@@ -32,7 +32,7 @@ public:
 
 CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[]) {
   CommandLine cmdline;
-  cmdline.decode = true;  // decode is default
+  cmdline.decode = true; // decode is default
   cmdline.input_file = "-";
   cmdline.output_file = "-";
   cmdline.wrap_cols = 0;
@@ -51,7 +51,7 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[]) {
       if (cmdline.wrap_cols < 0) {
         throw std::runtime_error("Break columns must be non-negative");
       }
-      cmdline.decode = false;  // -b implies encode
+      cmdline.decode = false; // -b implies encode
       i += 2;
     } else if (arg == "-w") {
       if (i + 1 >= argc) {
@@ -61,14 +61,14 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[]) {
       if (cmdline.wrap_cols < 0) {
         throw std::runtime_error("Wrap columns must be non-negative");
       }
-      cmdline.decode = false;  // -w implies encode
+      cmdline.decode = false; // -w implies encode
       i += 2;
     } else if (arg.substr(0, 7) == "--wrap=") {
       cmdline.wrap_cols = std::stoi(arg.substr(7));
       if (cmdline.wrap_cols < 0) {
         throw std::runtime_error("Wrap columns must be non-negative");
       }
-      cmdline.decode = false;  // --wrap implies encode
+      cmdline.decode = false; // --wrap implies encode
       i++;
     } else if (arg == "-d" || arg == "-D" || arg == "--decode") {
       cmdline.decode = true;
@@ -127,8 +127,8 @@ bool CommandLine::run() {
   } else {
     current_file = std::fopen(input_file.c_str(), "rb");
     if (current_file == NULL) {
-      throw std::runtime_error("Could not open input file: " + input_file + ": " +
-                               std::string(strerror(errno)));
+      throw std::runtime_error("Could not open input file: " + input_file +
+                               ": " + std::string(strerror(errno)));
     }
   }
 
@@ -141,8 +141,8 @@ bool CommandLine::run() {
     std::FILE *fp = std::fopen(output_file.c_str(), "wb");
     SIMDUTF_POP_DISABLE_WARNINGS
     if (fp == NULL) {
-      fprintf(stderr, "Could not open output file: %s: %s\n", output_file.c_str(),
-              strerror(errno));
+      fprintf(stderr, "Could not open output file: %s: %s\n",
+              output_file.c_str(), strerror(errno));
       return false;
     }
     bool success = run_procedure(fp);
@@ -171,12 +171,14 @@ CommandLine::load_chunk(char *input_data, size_t chunk_size, size_t offset) {
   size_t bytes_read =
       std::fread(input_data + offset, 1, chunk_size - offset, current_file);
   if (std::ferror(current_file)) {
-    if (!is_stdin) std::fclose(current_file);
+    if (!is_stdin)
+      std::fclose(current_file);
     throw std::runtime_error("Error while reading:" +
                              std::string(strerror(errno)));
   }
   if (std::feof(current_file)) { // Check if current_file is done
-    if (!is_stdin) std::fclose(current_file);   // best effort
+    if (!is_stdin)
+      std::fclose(current_file); // best effort
     current_file = NULL;
     return {false, bytes_read};
   }
@@ -196,8 +198,8 @@ bool CommandLine::write_to_file_descriptor(std::FILE *fp, const char *data,
 }
 
 bool CommandLine::write_with_wrapping(std::FILE *fp, const char *data,
-                                     size_t length, int &current_col,
-                                     int wrap_cols) {
+                                      size_t length, int &current_col,
+                                      int wrap_cols) {
   if (fp == NULL) {
     return false;
   }
@@ -205,14 +207,16 @@ bool CommandLine::write_with_wrapping(std::FILE *fp, const char *data,
   while (i < length) {
     if (current_col >= wrap_cols) {
       if (std::fwrite("\n", 1, 1, fp) != 1) {
-        throw std::runtime_error("Failed to write:" + std::string(strerror(errno)));
+        throw std::runtime_error("Failed to write:" +
+                                 std::string(strerror(errno)));
       }
       current_col = 0;
     }
     int remaining = wrap_cols - current_col;
     size_t to_write = std::min((size_t)remaining, length - i);
     if (std::fwrite(data + i, 1, to_write, fp) != to_write) {
-      throw std::runtime_error("Failed to write:" + std::string(strerror(errno)));
+      throw std::runtime_error("Failed to write:" +
+                               std::string(strerror(errno)));
     }
     current_col += to_write;
     i += to_write;
@@ -228,7 +232,8 @@ bool CommandLine::decode_to(std::FILE *fpout) {
       0; // the pos variable keeps track of the position in the input file.
   // Its purpose is to provide a position for error messages.
   size_t offset = 0;
-  simdutf::base64_options options = simdutf::base64_options::base64_default_accept_garbage;
+  simdutf::base64_options options =
+      simdutf::base64_options::base64_default_accept_garbage;
   // load_chunk returns a pair of a boolean and a size_t, the boolean is true
   // until we reach the end of the stream, the size_t is the number of bytes
   // read.
@@ -336,18 +341,21 @@ bool CommandLine::encode_to(std::FILE *fpout) {
 
 void CommandLine::show_help() {
   printf("Usage: fastbase64 [OPTIONS...] [INPUTFILE] [OUTPUTFILE]\n\n");
-  printf("  -b, --break NUM   break encoded output up into lines of length NUM\n");
+  printf(
+      "  -b, --break NUM   break encoded output up into lines of length NUM\n");
   printf("  -w COLS            same as -b\n");
   printf("  --wrap=COLS        same as -b\n");
   printf("  -d, -D, --decode   decode input (default)\n");
   printf("  -e, --encode       encode input\n");
-  printf("  --ignore-garbage   when decoding, ignore non-alphabet characters\n");
+  printf(
+      "  --ignore-garbage   when decoding, ignore non-alphabet characters\n");
   printf("  -h, --help         display this message\n");
   printf("  -i, --input FILE   input file (default: \"-\" for stdin)\n");
   printf("  -o, --output FILE  output file (default: \"-\" for stdout)\n");
   printf("  --version          output version information and exit\n\n");
   printf("With no INPUTFILE, or when INPUTFILE is -, read standard input.\n");
-  printf("If OUTPUTFILE is not specified, the output is redirected to standard output.\n");
+  printf("If OUTPUTFILE is not specified, the output is redirected to standard "
+         "output.\n");
 }
 
 int main(int argc, char *argv[]) {
