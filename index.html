@@ -29,7 +29,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">simdutf<span id="projectnumber">&#160;8.1.0</span>
+   <div id="projectname">simdutf<span id="projectnumber">&#160;8.2.0</span>
    </div>
    <div id="projectbrief">Unicode at GB/s.</div>
   </td>
@@ -173,7 +173,7 @@ How fast is it?</h1>
 Requirements</h1>
 <ul>
 <li>C++11 compatible compiler. We support LLVM clang, GCC, Visual Studio. (Our tests and benchmark tools requires C++17.) Be aware that GCC under Windows is buggy and thus unsupported.</li>
-<li>For high speed, you should have a recent 64-bit system (e.g., ARM, x64, RISC-V with vector extensions, Loongson, POWER).</li>
+<li>For high speed, you should have a recent 64-bit system (e.g., ARM, x64, RISC-V with vector extensions, Loongson, POWER). On Loongson processors, LASX runtime dispatching is only enabled on GCC 15+, not on LLVM or older versions of GCC.</li>
 <li>If you rely on CMake, you should use a recent CMake (at least 3.15); otherwise you may use the single header version. The library is also available from <a href="https://github.com/simdutf/simdutf-vcpkg">Microsoft's vcpkg</a>, from <a href="https://conan.io/center/recipes/simdutf">conan</a>, from <a href="https://cgit.freebsd.org/ports/tree/converters/simdutf">FreeBSD's port</a>, from <a href="https://formulae.brew.sh/formula/simdutf">brew</a>, and many other systems.</li>
 <li>AVX-512 support require a processor with AVX512-VBMI2 (Ice Lake or better, AMD Zen 4 or better) and a recent compiler (GCC 8 or better, Visual Studio 2022 or better, LLVM clang 6 or better). You need a correspondingly recent assembler such as gas (2.30+) or nasm (2.14+): recent compilers usually come with recent assemblers. If you mix a recent compiler with an incompatible/old assembler (e.g., when using a recent compiler with an old Linux distribution), you may get errors at build time because the compiler produces instructions that the assembler does not recognize: you should update your assembler to match your compiler (e.g., upgrade binutils to version 2.30 or better under Linux) or use an older compiler matching the capabilities of your assembler.</li>
 <li>To benefit from RISC-V Vector Extensions on RISC-V systems, you should compile specifically for the desired architecture. E.g., add <code>-march=rv64gcv</code> as a compiler flag when using a version of GCC or LLVM which supports these extensions (such as GCC 14 or better). The command <code>CXXFLAGS=-march=rv64gcv cmake -B build</code> may suffice.</li>
@@ -189,7 +189,7 @@ Quick Start</h2>
 <p>Linux or macOS users might follow the following instructions if they have a recent C++ compiler installed and the standard utilities (<code>wget</code>, <code>unzip</code>, etc.)</p>
 <ol type="1">
 <li><p class="startli">Pull the library in a directory</p>
-<div class="fragment"><div class="line">wget https://github.com/simdutf/simdutf/releases/download/v8.1.0/singleheader.zip</div>
+<div class="fragment"><div class="line">wget https://github.com/simdutf/simdutf/releases/download/v8.2.0/singleheader.zip</div>
 <div class="line"> </div>
 <div class="line">unzip singleheader.zip</div>
 </div><!-- fragment --><p class="startli">You can replace <code>wget</code> by <code>curl -OL <a href="https://..">https://..</a>.</code> if you prefer.</p>
@@ -231,7 +231,7 @@ Single-header version</h1>
 <p>You can create a single-header version of the library where</p>
 <p>all of the code is put into two files (<code><a class="el" href="simdutf_8h_source.html">simdutf.h</a></code> and <code>simdutf.cpp</code>).</p>
 <p>We publish a zip archive containing these files, e.g., see</p>
-<p><a href="https://github.com/simdutf/simdutf/releases/download/v8.1.0/singleheader.zip">https://github.com/simdutf/simdutf/releases/download/v8.1.0/singleheader.zip</a></p>
+<p><a href="https://github.com/simdutf/simdutf/releases/download/v8.2.0/singleheader.zip">https://github.com/simdutf/simdutf/releases/download/v8.2.0/singleheader.zip</a></p>
 <p>You may generate it on your own using a Python script.</p>
 <div class="fragment"><div class="line">python3 ./singleheader/amalgamate.py</div>
 </div><!-- fragment --><p>We require Python 3 or better.</p>
