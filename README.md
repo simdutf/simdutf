@@ -2632,14 +2632,23 @@ fastbase64 < encoded.txt
 fastbase64 -e -w 76 myfile.txt
 ```
 
-It can be several times faster than standard base64 tools. See `scripts/base64bench.sh` for a benchmark. Possible result:
+It can be several times faster than standard base64 tools. See `scripts/base64bench.sh` for a benchmark.
+
+**Apple M4 Max**
 
 Size     | Encode Base64 | Encode FastBase64 | Decode Base64 | Decode FastBase64
 ---------|---------------|-------------------|---------------|------------------
-1m       | 21.6          | 21.3              | 35.5          | 21.3            
-10m      | 32.3          | 25.6              | 163.6         | 26.2            
-100m     | 119.5         | 49.3              | 1433.5        | 52.7            
+1m       | 21.6          | 21.3              | 35.5          | 21.3
+10m      | 32.3          | 25.6              | 163.6         | 26.2
+100m     | 119.5         | 49.3              | 1433.5        | 52.7
 
+**Linux with Xeon Gold 6548N**
+
+Size     | Encode Base64 | Encode FastBase64 | Decode Base64 | Decode FastBase64
+---------|---------------|-------------------|---------------|------------------
+1m       | 13.4          | 15.9              | 13.7          | 12.8
+10m      | 27.8          | 23.0              | 37.3          | 17.8
+100m     | 183.1         | 93.0              | 291.8         | 84.4
 
 ## Manual implementation selection
 
