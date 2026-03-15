@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cerrno>
+#include <cstring>
 #include <vector>
 
 class CommandLine {
@@ -15,6 +16,11 @@ public:
   bool ignore_garbage{false};
 
   CommandLine() = default;
+  ~CommandLine() {
+    if (current_file != NULL && !is_stdin) {
+      fclose(current_file);
+    }
+  }
   static CommandLine parse_and_validate_arguments(int argc, char *argv[]);
   bool run_procedure(std::FILE *fpout);
   bool encode_to(std::FILE *fpout);
@@ -74,7 +80,7 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[]) {
       i++;
     } else if (arg == "-h" || arg == "--help") {
       show_help();
-      exit(0);
+      exit(EXIT_SUCCESS);
     } else if (arg == "-i" || arg == "--input") {
       if (i + 1 >= argc) {
         throw std::runtime_error("Missing value for " + arg);
@@ -89,7 +95,7 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[]) {
       i += 2;
     } else if (arg == "--version") {
       printf("fastbase64 version %s\n", SIMDUTF_VERSION);
-      exit(0);
+      exit(EXIT_SUCCESS);
     } else if (arg[0] == '-' && arg != "-") {
       throw std::runtime_error("Unknown option: " + arg);
     } else {
@@ -164,14 +170,10 @@ CommandLine::load_chunk(char *input_data, size_t chunk_size, size_t offset) {
   size_t bytes_read =
       std::fread(input_data + offset, 1, chunk_size - offset, current_file);
   if (std::ferror(current_file)) {
-    if (!is_stdin)
-      std::fclose(current_file);
     throw std::runtime_error("Error while reading:" +
                              std::string(strerror(errno)));
   }
   if (std::feof(current_file)) { // Check if current_file is done
-    if (!is_stdin)
-      std::fclose(current_file); // best effort
     current_file = NULL;
     return {false, bytes_read};
   }
@@ -195,6 +197,9 @@ bool CommandLine::write_with_wrapping(std::FILE *fp, const char *data,
                                       int wrap_cols) {
   if (fp == NULL) {
     return false;
+  }
+  if (wrap_cols <= 0) { // This should never happen but we want to be safe.
+    return write_to_file_descriptor(fp, data, length);
   }
   size_t i = 0;
   while (i < length) {
@@ -226,7 +231,8 @@ bool CommandLine::decode_to(std::FILE *fpout) {
   // Its purpose is to provide a position for error messages.
   size_t offset = 0;
   simdutf::base64_options options =
-      simdutf::base64_options::base64_default_accept_garbage;
+      ignore_garbage ? simdutf::base64_options::base64_default_accept_garbage
+                     : simdutf::base64_options::base64_default;
   // load_chunk returns a pair of a boolean and a size_t, the boolean is true
   // until we reach the end of the stream, the size_t is the number of bytes
   // read.
@@ -310,7 +316,10 @@ bool CommandLine::encode_to(std::FILE *fpout) {
         write_with_wrapping(fpout, output_buffer.data(), output_size,
                             this->current_col, this->wrap_cols);
       }
-      write_to_file_descriptor(fpout, "\n", 1);
+      if (std::fputc('\n', fpout) == EOF) {
+        throw std::runtime_error("Failed to write:" +
+                                 std::string(strerror(errno)));
+      }
       return true;
     }
     // We want to write the data in chunks of 4 bytes and read blocks of
@@ -334,8 +343,8 @@ bool CommandLine::encode_to(std::FILE *fpout) {
 
 void CommandLine::show_help() {
   printf("Usage: fastbase64 [OPTIONS...] [INPUTFILE] [OUTPUTFILE]\n\n");
-  printf(
-      "  -b, --break NUM   break encoded output up into lines of length NUM (default 0, meaning no breaks)\n");
+  printf("  -b, --break NUM   break encoded output up into lines of length NUM "
+         "(default 0, meaning no breaks)\n");
   printf("  -w NUM            same as -b\n");
   printf("  --wrap=NUM        same as -b\n");
   printf("  -d, -D, --decode   decode input (default)\n");
