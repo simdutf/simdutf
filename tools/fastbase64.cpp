@@ -174,7 +174,7 @@ CommandLine::load_chunk(char *input_data, size_t chunk_size, size_t offset) {
                              std::string(strerror(errno)));
   }
   if (std::feof(current_file)) { // Check if current_file is done
-    current_file = NULL;
+
     return {false, bytes_read};
   }
   return {true, bytes_read};
@@ -238,7 +238,7 @@ bool CommandLine::decode_to(std::FILE *fpout) {
   // read.
   for (auto p = load_chunk(input_data.data(), chunk_size, offset); p.second > 0;
        p = load_chunk(input_data.data(), chunk_size, offset)) {
-    // We convertto base64 the data we have read so far
+    // We convert from base64 the data we have read so far
     simdutf::result r = simdutf::base64_to_binary(
         input_data.data(), p.second + offset, output_buffer.data(), options);
     // If we have encountered an invalid character, we print an error message
@@ -262,7 +262,7 @@ bool CommandLine::decode_to(std::FILE *fpout) {
       return true;
     }
     // We want to write the data in chunks of 3 bytes and read blocks of
-    // 4 bytes. We keep the last 0, 1, 3 or 4 base64 bytes in the input buffer.
+    // 4 bytes. We keep the last 0, 1, 2 or 3 base64 bytes in the input buffer.
     // And we write the output in chunks of 3 bytes.
     offset = 0;
     if (r.error == simdutf::error_code::BASE64_INPUT_REMAINDER) {
@@ -293,7 +293,6 @@ bool CommandLine::encode_to(std::FILE *fpout) {
   const size_t chunk_size = 49152;
   std::array<char, chunk_size> input_data;
   std::array<char, (chunk_size + 2) / 3 * 4> output_buffer;
-  size_t pos = 0;
   size_t offset = 0;
   this->current_col = 0;
   // load_chunk returns a pair of a boolean and a size_t, the boolean is true
