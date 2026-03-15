@@ -2,7 +2,6 @@
 
 #include <array>
 #include <cerrno>
-#include <filesystem>
 #include <vector>
 
 class CommandLine {
@@ -27,17 +26,11 @@ public:
   bool write_with_wrapping(std::FILE *fp, const char *data, size_t length,
                            int &current_col, int wrap_cols);
   static void show_help();
-  bool decode;
+  bool decode = true; // decode is default
 };
 
 CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[]) {
   CommandLine cmdline;
-  cmdline.decode = true; // decode is default
-  cmdline.input_file = "-";
-  cmdline.output_file = "-";
-  cmdline.wrap_cols = 0;
-  cmdline.ignore_garbage = false;
-
   std::vector<std::string> positional;
 
   size_t i = 1;
@@ -342,9 +335,9 @@ bool CommandLine::encode_to(std::FILE *fpout) {
 void CommandLine::show_help() {
   printf("Usage: fastbase64 [OPTIONS...] [INPUTFILE] [OUTPUTFILE]\n\n");
   printf(
-      "  -b, --break NUM   break encoded output up into lines of length NUM\n");
-  printf("  -w COLS            same as -b\n");
-  printf("  --wrap=COLS        same as -b\n");
+      "  -b, --break NUM   break encoded output up into lines of length NUM (default 0, meaning no breaks)\n");
+  printf("  -w NUM            same as -b\n");
+  printf("  --wrap=NUM        same as -b\n");
   printf("  -d, -D, --decode   decode input (default)\n");
   printf("  -e, --encode       encode input\n");
   printf(
