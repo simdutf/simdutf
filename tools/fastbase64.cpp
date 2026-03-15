@@ -199,7 +199,7 @@ bool CommandLine::write_with_wrapping(std::FILE *fp, const char *data,
   size_t i = 0;
   while (i < length) {
     if (current_col >= wrap_cols) {
-      if (std::fwrite("\n", 1, 1, fp) != 1) {
+      if (std::fputc('\n', fp) == EOF) {
         throw std::runtime_error("Failed to write:" +
                                  std::string(strerror(errno)));
       }
