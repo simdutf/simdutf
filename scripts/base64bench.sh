@@ -39,7 +39,7 @@ if [ ! -x "$FASTBASE64" ]; then
 fi
 
 # Detect OS for base64 command syntax
-if base64 --help | grep -q GNU; then
+if base64 --help 2>/dev/null | grep -q GNU; then
     BASE64_ENCODE="base64"
     BASE64_DECODE="base64 -d"
 else
@@ -106,6 +106,8 @@ if [ -n "$SIZE" ]; then
         dd if=/dev/urandom of="test_${SIZE}.bin" bs=1024 count=$count 2>/dev/null
     fi
 else
+    sizes=("1m" "10m" "100m")
+    files=("test_1m.bin" "test_10m.bin" "test_100m.bin")
     echo "Creating test files..."
     for i in "${!sizes[@]}"; do
         file="${files[$i]}"
@@ -120,8 +122,6 @@ else
             esac
         fi
     done
-    sizes=("1m" "10m" "100m")
-    files=("test_1m.bin" "test_10m.bin" "test_100m.bin")
 fi
 
 echo ""
