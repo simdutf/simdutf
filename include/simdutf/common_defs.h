@@ -183,4 +183,8 @@
   #define simdutf_maybe_unused
 #endif
 
+#ifndef SIMDUTF_SHORT_INPUT_THRESH
+  #define SIMDUTF_SHORT_INPUT_THRESH 16
+#endif
+
 #endif // SIMDUTF_COMMON_DEFS_H
