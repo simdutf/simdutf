@@ -359,6 +359,8 @@ void CommandLine::show_help(const std::string& command_name, bool gnumode) {
   } else {
     printf("Encodes or decodes base64 data using the high-performance simdutf library.\n\n");
   }
+  printf("  -b, --break NUM   break encoded output up into lines of length NUM "
+         "(default 0, meaning no breaks)\n");
   printf("  -w NUM            same as -b\n");
   printf("  --wrap=NUM        same as -b\n");
   printf("  -d, -D, --decode   decode input%s\n", gnumode ? "" : " (default)");
