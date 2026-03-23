@@ -96,9 +96,23 @@ install(
    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-install(PROGRAMS $<TARGET_FILE_DIR:fastbase64>/fastbase64.coreutils
-  DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+if(WIN32)
+  # On Windows, install a copy of fastbase64 as fastbase64.coreutils
+  install(PROGRAMS $<TARGET_FILE:fastbase64>
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    RENAME fastbase64.coreutils
+  )
+else()
+  # On non-Windows, create a symlink fastbase64.coreutils -> fastbase64 at install time
+  install(CODE "
+    file(MAKE_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}\")
+    execute_process(
+      COMMAND \"${CMAKE_COMMAND}\" -E create_symlink
+              \"fastbase64\"
+              \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/fastbase64.coreutils\"
+    )
+  ")
+endif()
 
 install(
    FILES
