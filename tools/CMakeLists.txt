@@ -99,15 +99,9 @@ install(
    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-install(CODE "
-  set(destdir \"$ENV{DESTDIR}\")
-  if(destdir)
-    set(install_prefix \"${destdir}${CMAKE_INSTALL_PREFIX}\")
-  else()
-    set(install_prefix \"${CMAKE_INSTALL_PREFIX}\")
-  endif()
-  file(CREATE_LINK \"${install_prefix}/bin/fastbase64\" \"${install_prefix}/bin/fastbase64.coreutils\" COPY_ON_ERROR)
-")
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/fastbase64.coreutils
+  DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
 
 install(
    FILES
