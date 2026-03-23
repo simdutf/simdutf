@@ -96,7 +96,7 @@ install(
    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/fastbase64.coreutils
+install(PROGRAMS $<TARGET_FILE_DIR:fastbase64>/fastbase64.coreutils
   DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
