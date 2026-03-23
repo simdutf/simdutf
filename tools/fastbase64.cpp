@@ -21,7 +21,7 @@ public:
       fclose(current_file);
     }
   }
-  static CommandLine parse_and_validate_arguments(int argc, char *argv[]);
+  static CommandLine parse_and_validate_arguments(int argc, char *argv[], bool gnumode);
   bool run_procedure(std::FILE *fpout);
   bool encode_to(std::FILE *fpout);
   bool decode_to(std::FILE *fpout);
@@ -31,18 +31,15 @@ public:
   bool write_to_file_descriptor(std::FILE *fp, const char *data, size_t length);
   bool write_with_wrapping(std::FILE *fp, const char *data, size_t length,
                            int &current_col, int wrap_cols);
-  static void show_help(const std::string& command_name);
+  static void show_help(const std::string& command_name, bool gnumode);
   bool decode = true; // decode is default
-  static bool gnumode;
 };
 
-bool CommandLine::gnumode = false;
-
-CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[]) {
+CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[], bool gnumode) {
   CommandLine cmdline;
   std::vector<std::string> positional;
   std::string command_name = argv[0];
-  cmdline.gnumode = (command_name.find("fastbase64.coreutils") != std::string::npos);  cmdline.decode = !gnumode; // default: decode for fastbase64, encode for coreutils
+  cmdline.decode = !gnumode; // default: decode for fastbase64, encode for coreutils
   size_t i = 1;
   while (i < argc) {
     std::string arg = argv[i];
@@ -83,10 +80,10 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[]) {
       cmdline.ignore_garbage = true;
       i++;
     } else if (arg == "-h" || arg == "--help") {
-      show_help(command_name);
+      show_help(command_name, gnumode);
       exit(EXIT_SUCCESS);
     } else if (arg == "-i") {
-      if (cmdline.gnumode) {
+      if (gnumode) {
         cmdline.ignore_garbage = true;
         i++;
       } else {
@@ -355,7 +352,7 @@ bool CommandLine::encode_to(std::FILE *fpout) {
   return true;
 }
 
-void CommandLine::show_help(const std::string& command_name) {
+void CommandLine::show_help(const std::string& command_name, bool gnumode) {
   printf("Usage: %s [OPTIONS...] [INPUTFILE] [OUTPUTFILE]\n\n", command_name.c_str());
   if (gnumode) {
     printf("Encodes or decodes base64 data with GNU coreutils compatibility.\n\n");
@@ -382,12 +379,13 @@ void CommandLine::show_help(const std::string& command_name) {
 }
 
 int main(int argc, char *argv[]) {
+  bool gnumode = (std::string(argv[0]).find("fastbase64.coreutils") != std::string::npos);
   try {
-    CommandLine cmdline = CommandLine::parse_and_validate_arguments(argc, argv);
+    CommandLine cmdline = CommandLine::parse_and_validate_arguments(argc, argv, gnumode);
     return cmdline.run() ? EXIT_SUCCESS : EXIT_FAILURE;
   } catch (const std::exception &e) {
     fprintf(stderr, "%s\n", e.what());
-    CommandLine::show_help(argv[0]);
+    CommandLine::show_help(argv[0], gnumode);
     return EXIT_FAILURE;
   }
 }

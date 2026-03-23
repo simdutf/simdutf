@@ -22,10 +22,10 @@ Same as \fB\-b\fR.
 Same as \fB\-b\fR.
 .TP
 .B \-d, \-D, \-\-decode
-Decode input (default).
+Decode input.
 .TP
 .B \-e, \-\-encode
-Encode input.
+Encode input (default).
 .TP
 .B \-\-ignore\-garbage
 When decoding, ignore non-alphabet characters.
@@ -44,8 +44,8 @@ Output version information and exit.
 .SH EXAMPLES
 .TP
 Encode a file:
-.B fastbase64.coreutils \-e myfile.txt
+.B fastbase64.coreutils myfile.txt
 .TP
 Decode base64 data ignoring garbage:
-.B fastbase64.coreutils \-i < encoded.txt
+.B fastbase64.coreutils \-d \-i < encoded.txt
 .TP
