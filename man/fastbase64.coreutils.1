@@ -1,0 +1,51 @@
+.TH FASTBASE64.COREUTILS 1 "March 2026" "simdutf" "User Commands"
+.SH NAME
+fastbase64.coreutils \- base64 encode/decode data and print to standard output (coreutils compatible)
+.SH SYNOPSIS
+.B fastbase64.coreutils
+[\fIOPTIONS\fR...] [\fIINPUTFILE\fR] [\fIOUTPUTFILE\fR]
+.SH DESCRIPTION
+.B fastbase64.coreutils
+encodes or decodes base64 data using the high-performance simdutf library,
+with options compatible with GNU coreutils base64.
+By default, it decodes base64 input to binary output. On large files,
+it can be several times faster than standard base64 tools.
+.SH OPTIONS
+.TP
+.B \-b, \-\-break \fINUM\fR
+Break encoded output into lines of length \fINUM\fR (default 0, meaning no breaks).
+.TP
+.B \-w \fNUM\fR
+Same as \fB\-b\fR.
+.TP
+.B \-\-wrap=\fINUM\fR
+Same as \fB\-b\fR.
+.TP
+.B \-d, \-D, \-\-decode
+Decode input (default).
+.TP
+.B \-e, \-\-encode
+Encode input.
+.TP
+.B \-\-ignore\-garbage
+When decoding, ignore non-alphabet characters.
+.TP
+.B \-i
+When decoding, ignore non-alphabet characters (same as \-\-ignore\-garbage).
+.TP
+.B \-h, \-\-help
+Display help message and exit.
+.TP
+.B \-o, \-\-output \fIFILE\fR
+Output file (default: "-" for stdout).
+.TP
+.B \-\-version
+Output version information and exit.
+.SH EXAMPLES
+.TP
+Encode a file:
+.B fastbase64.coreutils \-e myfile.txt
+.TP
+Decode base64 data ignoring garbage:
+.B fastbase64.coreutils \-i < encoded.txt
+.TP

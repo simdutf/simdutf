@@ -33,11 +33,16 @@ public:
                            int &current_col, int wrap_cols);
   static void show_help();
   bool decode = true; // decode is default
+  static bool gnumode;
 };
+
+bool CommandLine::gnumode = false;
 
 CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[]) {
   CommandLine cmdline;
   std::vector<std::string> positional;
+  std::string command_name = argv[0];
+  cmdline.gnumode = (command_name.find("fastbase64.coreutils") != std::string::npos);
 
   size_t i = 1;
   while (i < argc) {
@@ -81,7 +86,18 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[]) {
     } else if (arg == "-h" || arg == "--help") {
       show_help();
       exit(EXIT_SUCCESS);
-    } else if (arg == "-i" || arg == "--input") {
+    } else if (arg == "-i") {
+      if (cmdline.gnumode) {
+        cmdline.ignore_garbage = true;
+        i++;
+      } else {
+        if (i + 1 >= argc) {
+          throw std::runtime_error("Missing value for " + arg);
+        }
+        cmdline.input_file = argv[i + 1];
+        i += 2;
+      }
+    } else if (arg == "--input") {
       if (i + 1 >= argc) {
         throw std::runtime_error("Missing value for " + arg);
       }
@@ -351,7 +367,11 @@ void CommandLine::show_help() {
   printf(
       "  --ignore-garbage   when decoding, ignore non-alphabet characters\n");
   printf("  -h, --help         display this message\n");
-  printf("  -i, --input FILE   input file (default: \"-\" for stdin)\n");
+  if (gnumode) {
+    printf("  -i                 same as --ignore-garbage\n");
+  } else {
+    printf("  -i, --input FILE   input file (default: \"-\" for stdin)\n");
+  }
   printf("  -o, --output FILE  output file (default: \"-\" for stdout)\n");
   printf("  --version          output version information and exit\n\n");
   printf("With no INPUTFILE, or when INPUTFILE is -, read standard input.\n");

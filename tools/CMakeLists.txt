@@ -3,6 +3,19 @@ cmake_minimum_required(VERSION 3.15)
 add_executable(sutf sutf.cpp)
 add_executable(fastbase64 fastbase64.cpp)
 
+find_program(LN_EXECUTABLE ln)
+if(LN_EXECUTABLE)
+  add_custom_command(TARGET fastbase64 POST_BUILD
+    COMMAND ln fastbase64 fastbase64.coreutils
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  )
+else()
+  add_custom_command(TARGET fastbase64 POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy fastbase64 fastbase64.coreutils
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  )
+endif()
+
 if(SIMDUTF_ICONV)
 find_package(Iconv)
 if(Iconv_FOUND)
@@ -83,6 +96,8 @@ install(
    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+install(CODE "execute_process(COMMAND ln fastbase64 fastbase64.coreutils WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})")
 
 install(
    FILES
