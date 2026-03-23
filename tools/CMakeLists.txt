@@ -4,7 +4,7 @@ add_executable(sutf sutf.cpp)
 add_executable(fastbase64 fastbase64.cpp)
 
 find_program(LN_EXECUTABLE ln)
-if(LN_EXECUTABLE)
+if(LN_EXECUTABLE AND NOT WIN32)
   add_custom_command(TARGET fastbase64 POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E remove -f fastbase64.coreutils
     COMMAND ${LN_EXECUTABLE} fastbase64 fastbase64.coreutils
@@ -106,7 +106,7 @@ install(CODE "
   else()
     set(install_prefix \"${CMAKE_INSTALL_PREFIX}\")
   endif()
-  file(CREATE_LINK \"${install_prefix}/${CMAKE_INSTALL_BINDIR}/fastbase64\" \"${install_prefix}/${CMAKE_INSTALL_BINDIR}/fastbase64.coreutils\" COPY_ON_ERROR)
+  file(CREATE_LINK \"${install_prefix}/bin/fastbase64\" \"${install_prefix}/bin/fastbase64.coreutils\" COPY_ON_ERROR)
 ")
 
 install(
