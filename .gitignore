@@ -1,6 +1,7 @@
 # common build directory
 
 build
+build-*
 *-build-*
 *build
 
