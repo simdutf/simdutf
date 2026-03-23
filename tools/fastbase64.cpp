@@ -31,7 +31,7 @@ public:
   bool write_to_file_descriptor(std::FILE *fp, const char *data, size_t length);
   bool write_with_wrapping(std::FILE *fp, const char *data, size_t length,
                            int &current_col, int wrap_cols);
-  static void show_help();
+  static void show_help(const std::string& command_name);
   bool decode = true; // decode is default
   static bool gnumode;
 };
@@ -42,8 +42,7 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[]) {
   CommandLine cmdline;
   std::vector<std::string> positional;
   std::string command_name = argv[0];
-  cmdline.gnumode = (command_name.find("fastbase64.coreutils") != std::string::npos);
-
+  cmdline.gnumode = (command_name.find("fastbase64.coreutils") != std::string::npos);  cmdline.decode = !gnumode; // default: decode for fastbase64, encode for coreutils
   size_t i = 1;
   while (i < argc) {
     std::string arg = argv[i];
@@ -84,7 +83,7 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[]) {
       cmdline.ignore_garbage = true;
       i++;
     } else if (arg == "-h" || arg == "--help") {
-      show_help();
+      show_help(command_name);
       exit(EXIT_SUCCESS);
     } else if (arg == "-i") {
       if (cmdline.gnumode) {
@@ -356,14 +355,17 @@ bool CommandLine::encode_to(std::FILE *fpout) {
   return true;
 }
 
-void CommandLine::show_help() {
-  printf("Usage: fastbase64 [OPTIONS...] [INPUTFILE] [OUTPUTFILE]\n\n");
-  printf("  -b, --break NUM   break encoded output up into lines of length NUM "
-         "(default 0, meaning no breaks)\n");
+void CommandLine::show_help(const std::string& command_name) {
+  printf("Usage: %s [OPTIONS...] [INPUTFILE] [OUTPUTFILE]\n\n", command_name.c_str());
+  if (gnumode) {
+    printf("Encodes or decodes base64 data with GNU coreutils compatibility.\n\n");
+  } else {
+    printf("Encodes or decodes base64 data using the high-performance simdutf library.\n\n");
+  }
   printf("  -w NUM            same as -b\n");
   printf("  --wrap=NUM        same as -b\n");
-  printf("  -d, -D, --decode   decode input (default)\n");
-  printf("  -e, --encode       encode input\n");
+  printf("  -d, -D, --decode   decode input%s\n", gnumode ? "" : " (default)");
+  printf("  -e, --encode       encode input%s\n", gnumode ? " (default)" : "");
   printf(
       "  --ignore-garbage   when decoding, ignore non-alphabet characters\n");
   printf("  -h, --help         display this message\n");
@@ -385,7 +387,7 @@ int main(int argc, char *argv[]) {
     return cmdline.run() ? EXIT_SUCCESS : EXIT_FAILURE;
   } catch (const std::exception &e) {
     fprintf(stderr, "%s\n", e.what());
-    CommandLine::show_help();
+    CommandLine::show_help(argv[0]);
     return EXIT_FAILURE;
   }
 }

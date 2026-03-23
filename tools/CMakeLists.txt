@@ -6,11 +6,13 @@ add_executable(fastbase64 fastbase64.cpp)
 find_program(LN_EXECUTABLE ln)
 if(LN_EXECUTABLE)
   add_custom_command(TARGET fastbase64 POST_BUILD
-    COMMAND ln fastbase64 fastbase64.coreutils
+    COMMAND ${CMAKE_COMMAND} -E remove -f fastbase64.coreutils
+    COMMAND ${LN_EXECUTABLE} fastbase64 fastbase64.coreutils
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
 else()
   add_custom_command(TARGET fastbase64 POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E remove -f fastbase64.coreutils
     COMMAND ${CMAKE_COMMAND} -E copy fastbase64 fastbase64.coreutils
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
@@ -97,15 +99,25 @@ install(
    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-if(LN_EXECUTABLE)
-    install(CODE "execute_process(COMMAND ln fastbase64 fastbase64.coreutils WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})")
-else()
-    install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/fastbase64 ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/fastbase64.coreutils)")
-endif()
+install(CODE "
+  set(destdir \"$ENV{DESTDIR}\")
+  if(destdir)
+    set(install_prefix \"${destdir}${CMAKE_INSTALL_PREFIX}\")
+  else()
+    set(install_prefix \"${CMAKE_INSTALL_PREFIX}\")
+  endif()
+  file(CREATE_LINK \"${install_prefix}/${CMAKE_INSTALL_BINDIR}/fastbase64\" \"${install_prefix}/${CMAKE_INSTALL_BINDIR}/fastbase64.coreutils\" COPY_ON_ERROR)
+")
 
 install(
    FILES
     ${CMAKE_SOURCE_DIR}/man/fastbase64.1
+   DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
+)
+
+install(
+   FILES
+    ${CMAKE_SOURCE_DIR}/man/fastbase64.coreutils.1
    DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
 )
 
