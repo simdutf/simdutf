@@ -97,7 +97,11 @@ install(
    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-install(CODE "execute_process(COMMAND ln fastbase64 fastbase64.coreutils WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})")
+if(LN_EXECUTABLE)
+    install(CODE "execute_process(COMMAND ln fastbase64 fastbase64.coreutils WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})")
+else()
+    install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/fastbase64 ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/fastbase64.coreutils)")
+endif()
 
 install(
    FILES
