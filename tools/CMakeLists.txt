@@ -3,18 +3,15 @@ cmake_minimum_required(VERSION 3.15)
 add_executable(sutf sutf.cpp)
 add_executable(fastbase64 fastbase64.cpp)
 
-find_program(LN_EXECUTABLE ln)
-if(LN_EXECUTABLE AND NOT WIN32)
+if(NOT WIN32)
   add_custom_command(TARGET fastbase64 POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E remove -f fastbase64.coreutils
-    COMMAND ${LN_EXECUTABLE} fastbase64 fastbase64.coreutils
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${CMAKE_COMMAND} -E remove -f $<TARGET_FILE_DIR:fastbase64>/fastbase64.coreutils
+    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE:fastbase64> $<TARGET_FILE_DIR:fastbase64>/fastbase64.coreutils
   )
 else()
   add_custom_command(TARGET fastbase64 POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E remove -f fastbase64.coreutils
-    COMMAND ${CMAKE_COMMAND} -E copy fastbase64 fastbase64.coreutils
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${CMAKE_COMMAND} -E remove -f $<TARGET_FILE_DIR:fastbase64>/fastbase64.coreutils
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:fastbase64> $<TARGET_FILE_DIR:fastbase64>/fastbase64.coreutils
   )
 endif()
 
