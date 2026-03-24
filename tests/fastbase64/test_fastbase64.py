@@ -660,13 +660,15 @@ def test_adversarial_decoding(fast_path, core_path):
     src = b'adversarial\x00\xff\x01\x02\xab\xcd'
     clean = base64.b64encode(src) + b'\n'
     # garbage in various positions
-    for garbage, pos in [(b'!!!', 20), (b' \t\r\n', 30), (b'@#$', 10)]:
+    for garbage, pos in [(b'!!!', 20), (b'@#$', 10)]:
         dirty = clean[:pos] + garbage + clean[pos:]
         # without ignore -> fail
         for tool, ignore_flag in [(fast_path, '--ignore-garbage'), (core_path, '-i')]:
             rc, _, _ = run([tool, '-d'], input=dirty, expect_failure=True)
             if rc != 0:
                 ok(f'{tool} rejects garbage without ignore')
+            else:
+                fail(f'{tool} rejects garbage without ignore')
             # with ignore -> recover
             dec = must_run([tool, '-d', ignore_flag], input=dirty)
             if dec == src:
@@ -682,6 +684,24 @@ def test_adversarial_decoding(fast_path, core_path):
                 ok(f'{tool} rejects bad padding {bp!r}')
             else:
                 fail(f'{tool} rejects bad padding {bp!r}')
+    # incomplete base64 groups (BASE64_INPUT_REMAINDER)
+    remainder_cases = [b'AAAAA', b'AAAAAA', b'AAAAAAA', b'QUJ']  # 5, 6, 7, 3 chars
+    for rc_input in remainder_cases:
+        for tool in [fast_path, core_path]:
+            rc, _, _ = run([tool, '-d'], input=rc_input, expect_failure=True)
+            if rc != 0:
+                ok(f'{tool} rejects incomplete group {rc_input!r}')
+            else:
+                fail(f'{tool} rejects incomplete group {rc_input!r}')
+    # non-zero padding bits (BASE64_EXTRA_BITS)
+    extra_bits_cases = [b'YWF=', b'ZXhhZh==']  # "aa" with extra bits, "exhf" with extra bits
+    for eb_input in extra_bits_cases:
+        for tool in [fast_path, core_path]:
+            rc, _, _ = run([tool, '-d'], input=eb_input, expect_failure=True)
+            if rc != 0:
+                ok(f'{tool} rejects non-zero padding bits {eb_input!r}')
+            else:
+                fail(f'{tool} rejects non-zero padding bits {eb_input!r}')
     # very long single-line base64
     long_data = generate_deterministic_data(100000)
     long_enc = base64.b64encode(long_data) + b'\n'

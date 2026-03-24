@@ -95,6 +95,9 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[], bo
         i += 2;
       }
     } else if (arg == "--input") {
+      if (gnumode) {
+        throw std::runtime_error("Unknown option: " + arg);
+      }
       if (i + 1 >= argc) {
         throw std::runtime_error("Missing value for " + arg);
       }
@@ -254,12 +257,13 @@ bool CommandLine::decode_to(std::FILE *fpout) {
     size_t total_input = p.second + offset;
     // if p.first is false, we have reached the end of the file.
     if (!p.first) {
-      // Final chunk: use loose mode to handle padding and partial groups.
-      simdutf::result r = simdutf::base64_to_binary(
-          input_data.data(), total_input, output_buffer.data(), options);
+      // Final chunk: use strict mode to reject invalid inputs.
+      simdutf::full_result r = simdutf::get_active_implementation()->base64_to_binary_details(
+          input_data.data(), total_input, output_buffer.data(), options,
+          simdutf::last_chunk_handling_options::strict);
       if (r.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {
-        fprintf(stderr, "Invalid base64 character at position %zu\n.",
-                pos + r.count);
+        fprintf(stderr, "Invalid base64 character at position %zu.\n",
+                pos + r.input_count);
         return false;
       }
       if (r.error == simdutf::error_code::BASE64_INPUT_REMAINDER) {
@@ -267,7 +271,11 @@ bool CommandLine::decode_to(std::FILE *fpout) {
                         "characters or could not be read.");
         return false;
       }
-      write_to_file_descriptor(fpout, output_buffer.data(), r.count);
+      if (r.error == simdutf::error_code::BASE64_EXTRA_BITS) {
+        fprintf(stderr, "The base64 input terminates with non-zero padding bits.");
+        return false;
+      }
+      write_to_file_descriptor(fpout, output_buffer.data(), r.output_count);
       return true;
     }
     // Non-final chunk: use stop_before_partial so incomplete 4-char groups
@@ -281,6 +289,15 @@ bool CommandLine::decode_to(std::FILE *fpout) {
     if (r.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {
       fprintf(stderr, "Invalid base64 character at position %zu\n.",
               pos + r.input_count);
+      return false;
+    }
+    if (r.error == simdutf::error_code::BASE64_INPUT_REMAINDER) {
+      fprintf(stderr, "The base64 input contained an invalid number of "
+                      "characters: remainder of one base64 character.");
+      return false;
+    }
+    if (r.error != simdutf::error_code::SUCCESS) {
+      fprintf(stderr, "There was an unexpected error during base64 decoding.");
       return false;
     }
     write_to_file_descriptor(fpout, output_buffer.data(), r.output_count);

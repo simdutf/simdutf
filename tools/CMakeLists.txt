@@ -105,11 +105,16 @@ if(WIN32)
 else()
   # On non-Windows, create a symlink fastbase64.coreutils -> fastbase64 at install time
   install(CODE "
-    file(MAKE_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}\")
+    if(IS_ABSOLUTE \"${CMAKE_INSTALL_BINDIR}\")
+      set(BINDIR \"${CMAKE_INSTALL_BINDIR}\")
+    else()
+      set(BINDIR \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}\")
+    endif()
+    file(MAKE_DIRECTORY \"\${BINDIR}\")
     execute_process(
       COMMAND \"${CMAKE_COMMAND}\" -E create_symlink
               \"fastbase64\"
-              \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/fastbase64.coreutils\"
+              \"\${BINDIR}/fastbase64.coreutils\"
     )
   ")
 endif()
