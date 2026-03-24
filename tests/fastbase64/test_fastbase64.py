@@ -295,10 +295,10 @@ def test_fastbase64(path, readme):
         fail('fastbase64: --ignore-garbage recovers')
 
 # ---------------------------------------------------------------------------
-# fastbase64.coreutils (GNU-like: default = encode)
+# fastbase64.coreutils (GNU-like)
 # ---------------------------------------------------------------------------
 def test_coreutils(path, readme):
-    print("\n=== fastbase64.coreutils (GNU-like, default-encode) ===")
+    print("\n=== fastbase64.coreutils (GNU-like) ===")
     src = read_binary(readme)
     # --- help / version -------------------------------------------------------
     rc, out, _ = run([path, '--help'])
@@ -317,13 +317,12 @@ def test_coreutils(path, readme):
         ok('unknown option rejected')
     else:
         fail('unknown option rejected')
-    # --- default action is encode ---------------------------------------------
     encoded = must_run([path, readme])
     decoded = must_run([path, '-d'], input=encoded)
     if decoded == src:
-        ok('default action is encode (round-trip)')
+        ok('round-trip')
     else:
-        fail('default action is encode (round-trip)')
+        fail('round-trip')
     # --- explicit -e and -d flags (binary data) --------------------------------
     sample = b'\x00\xff\xfe\x80binary\x01\x02'
     enc = must_run([path, '-e'], input=sample)
@@ -479,7 +478,7 @@ def test_large_roundtrips(fast_path, core_path):
                 fail(f'fastbase64 round-trip {label}')
         finally:
             os.unlink(tf_path)
-        # coreutils (default encode)
+        # coreutils
         with tempfile.NamedTemporaryFile(delete=False) as tf:
             tf.write(data)
             tf_path = tf.name

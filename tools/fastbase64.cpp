@@ -391,6 +391,7 @@ bool CommandLine::encode_to(std::FILE *fpout) {
 void CommandLine::show_help(const std::string &command_name, bool gnumode) {
   // The usage line omits [OUTPUTFILE] even though the tool supports a second
   // positional output filename. It is intentional (for simplicity).
+  printf("Usage: %s [OPTIONS] [INPUTFILE]\n\n", command_name.c_str());
   if (gnumode) {
     printf(
         "Encodes or decodes base64 data with GNU coreutils compatibility.\n\n");
