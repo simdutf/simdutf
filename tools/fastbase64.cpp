@@ -181,7 +181,7 @@ bool CommandLine::run() {
     return run_procedure(stdout);
   } else {
     struct FileDeleter {
-      void operator()(FILE* fp) const {
+      void operator()(FILE *fp) const {
         if (fp) {
           if (fclose(fp) != 0) {
             // Note: We do our best to close the file, but
@@ -199,11 +199,11 @@ bool CommandLine::run() {
     }
     bool result = run_procedure(fp.get());
     if (result) {
-      if (fclose(fp.get()) != 0) {
+      FILE *raw = fp.release();
+      if (fclose(raw) != 0) {
         throw std::runtime_error("Failed to close output file: " + output_file +
                                  ": " + std::string(strerror(errno)));
       }
-      fp.release();
     }
     return result;
   }
@@ -289,7 +289,8 @@ bool CommandLine::decode_to(std::FILE *fpout) {
   // load_chunk returns a pair of a boolean and a size_t, the boolean is true
   // until we reach the end of the stream, the size_t is the number of bytes
   // read.
-  for (auto p = load_chunk(input_data.data(), chunk_size, offset); p.second + offset > 0;
+  for (auto p = load_chunk(input_data.data(), chunk_size, offset);
+       p.second + offset > 0;
        p = load_chunk(input_data.data(), chunk_size, offset)) {
     size_t total_input = p.second + offset;
     // if p.first is false, we have reached the end of the file.
@@ -310,8 +311,7 @@ bool CommandLine::decode_to(std::FILE *fpout) {
         return false;
       }
       if (r.error != simdutf::error_code::SUCCESS) {
-        fprintf(stderr,
-                "Unexpected error during base64 decoding.\n");
+        fprintf(stderr, "Unexpected error during base64 decoding.\n");
         return false;
       }
       write_to_file_descriptor(fpout, output_buffer.data(), r.output_count);
@@ -465,6 +465,10 @@ int main(int argc, char *argv[]) {
     return cmdline.run() ? EXIT_SUCCESS : EXIT_FAILURE;
   } catch (const std::exception &e) {
     fprintf(stderr, "%s\n", e.what());
+    // main() prints the full help text for any thrown exception (including
+    // runtime I/O errors like open/write/close failures). This is deliberate,
+    // as it provides users with immediate guidance on how to use the tool
+    // correctly after an error.
     CommandLine::show_help(argv[0], gnumode);
     return EXIT_FAILURE;
   }

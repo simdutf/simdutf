@@ -110,6 +110,7 @@ else()
     else()
       set(BINDIR \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}\")
     endif()
+    set(BINDIR \"\$ENV{DESTDIR}\${BINDIR}\")
     file(MAKE_DIRECTORY \"\${BINDIR}\")
     # Remove any existing file or symlink so create_symlink will not fail with \"file exists\"
     file(REMOVE \"\${BINDIR}/fastbase64.coreutils\")
