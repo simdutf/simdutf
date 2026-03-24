@@ -197,7 +197,15 @@ bool CommandLine::run() {
               output_file.c_str(), strerror(errno));
       return false;
     }
-    return run_procedure(fp.get());
+    bool result = run_procedure(fp.get());
+    if (result) {
+      if (fclose(fp.get()) != 0) {
+        throw std::runtime_error("Failed to close output file: " + output_file +
+                                 ": " + std::string(strerror(errno)));
+      }
+      fp.release();
+    }
+    return result;
   }
 }
 
