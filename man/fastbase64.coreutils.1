@@ -15,13 +15,13 @@ Otherwise, output goes to standard output.
 .SH OPTIONS
 .TP
 .B \-b, \-\-break \fINUM\fR
-fastbase64 extension (not present in GNU coreutils base64): break encoded output into lines of length \fINUM\fR (default 0, meaning no breaks).
+fastbase64 extension (not present in GNU coreutils base64): break encoded output into lines of length \fINUM\fR (default 76; use 0 to disable wrapping, matching GNU coreutils \fBbase64\fR).
 .TP
 .B \-w \fINUM\fR
-Same as \fB\-b\fR (GNU coreutils-compatible).
+Same as \fB\-b\fR (GNU coreutils-compatible spelling; default wrap column is 76, and 0 disables wrapping).
 .TP
 .B \-\-wrap=\fINUM\fR
-Same as \fB\-b\fR (GNU coreutils-compatible).
+Same as \fB\-b\fR (GNU coreutils-compatible spelling; default wrap column is 76, and 0 disables wrapping).
 .TP
 .B \-d, \-D, \-\-decode
 Decode input.
