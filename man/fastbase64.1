@@ -3,12 +3,14 @@
 fastbase64 \- base64 encode/decode data and print to standard output
 .SH SYNOPSIS
 .B fastbase64
-[\fIOPTIONS\fR...] [\fIINPUTFILE\fR] [\fIOUTPUTFILE\fR]
+[\fIOPTIONS\fR...] [\fIINPUTFILE\fR]
 .SH DESCRIPTION
 .B fastbase64
 encodes or decodes base64 data using the high-performance simdutf library.
 By default, it decodes base64 input to binary output. On large files,
 it can be several times faster than standard base64 tools.
+If a second filename is provided, it is used as the output file.
+Otherwise, output goes to standard output.
 .SH OPTIONS
 .TP
 .B \-b, \-\-break \fINUM\fR

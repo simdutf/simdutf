@@ -3,6 +3,7 @@
 #include <array>
 #include <cerrno>
 #include <cstring>
+#include <filesystem>
 #include <vector>
 
 class CommandLine {
@@ -353,7 +354,7 @@ bool CommandLine::encode_to(std::FILE *fpout) {
 }
 
 void CommandLine::show_help(const std::string& command_name, bool gnumode) {
-  printf("Usage: %s [OPTIONS...] [INPUTFILE] [OUTPUTFILE]\n\n", command_name.c_str());
+  printf("Usage: %s [OPTIONS...] [INPUTFILE]\n\n", command_name.c_str());
   if (gnumode) {
     printf("Encodes or decodes base64 data with GNU coreutils compatibility.\n\n");
   } else {
@@ -376,12 +377,14 @@ void CommandLine::show_help(const std::string& command_name, bool gnumode) {
   printf("  -o, --output FILE  output file (default: \"-\" for stdout)\n");
   printf("  --version          output version information and exit\n\n");
   printf("With no INPUTFILE, or when INPUTFILE is -, read standard input.\n");
-  printf("If OUTPUTFILE is not specified, the output is redirected to standard "
-         "output.\n");
+  printf("If a second filename is specified, it is used as the output file.\n");
+  printf("Otherwise, output is redirected to standard output.\n");
 }
 
 int main(int argc, char *argv[]) {
-  bool gnumode = (std::string(argv[0]).find("fastbase64.coreutils") != std::string::npos);
+  std::filesystem::path p(argv[0]);
+  std::string progname = p.filename().string();
+  bool gnumode = (progname == "fastbase64.coreutils");
   try {
     CommandLine cmdline = CommandLine::parse_and_validate_arguments(argc, argv, gnumode);
     return cmdline.run() ? EXIT_SUCCESS : EXIT_FAILURE;
