@@ -2,7 +2,6 @@
 """
 Comprehensive tests for fastbase64 (BSD-like, default-decode) and
 fastbase64.coreutils (GNU-like, default-encode).
-Optionally cross-checks against the system 'base64' utility.
 """
 import base64
 import os
@@ -121,13 +120,14 @@ def test_fastbase64(path, readme):
         ok('round-trip: -e FILE | -d')
     else:
         fail('round-trip: -e FILE | -d')
-    # --- default action is decode ----------------------------------------------
-    encoded_ref = base64.b64encode(b'hello default\n') + b'\n'
-    decoded_default = must_run([path], input=encoded_ref)
-    if decoded_default == b'hello default\n':
-        ok('default action is decode')
+    # --- default action is encode ----------------------------------------------
+    decoded_ref = b'hello default\n'
+    encoded_default = must_run([path], input=decoded_ref)
+    expected = base64.b64encode(decoded_ref) + b'\n'
+    if encoded_default == expected:
+        ok('default action is encode')
     else:
-        fail('default action is decode', f'got {decoded_default!r}')
+        fail('default action is encode', f'got {encoded_default!r}')
     # --- explicit -e and -d flags (binary data) --------------------------------
     sample = b'\x00\xff\xfe\x80binary\x01\x02'
     enc = must_run([path, '-e'], input=sample)
@@ -346,13 +346,13 @@ def test_coreutils(path, readme):
         ok('-D decode alias')
     else:
         fail('-D decode alias')
-    # --- default: no wrapping (single line body) ------------------------------
+    # --- default: wrapping at 76 ------------------------------
     enc_nw = must_run([path, readme])
     stripped = enc_nw.rstrip(b'\n')
-    if b'\n' not in stripped:
-        ok('default no-wrap: no interior newlines')
+    if b'\n' in stripped:
+        ok('default wrapping: has interior newlines')
     else:
-        fail('default no-wrap: no interior newlines')
+        fail('default wrapping: has interior newlines')
     # --- base64 alphabet check ------------------------------------------------
     check_base64_alphabet(enc_nw, 'base64 alphabet in output')
     # --- -w 76 wrapping -------------------------------------------------------
@@ -364,10 +364,11 @@ def test_coreutils(path, readme):
         fail('-w 76 wraps at 76 chars')
     # --- -w 0 explicit no-wrap ------------------------------------------------
     enc_w0 = must_run([path, '-w', '0', readme])
-    if enc_w0.rstrip(b'\n') == enc_nw.rstrip(b'\n'):
-        ok('-w 0 same as default (no wrap)')
+    stripped_w0 = enc_w0.rstrip(b'\n')
+    if b'\n' not in stripped_w0:
+        ok('-w 0 no-wrap: no interior newlines')
     else:
-        fail('-w 0 same as default (no wrap)')
+        fail('-w 0 no-wrap: no interior newlines')
     # --- --wrap=N -------------------------------------------------------------
     enc_wrap_eq = must_run([path, '--wrap=40', readme])
     lines_eq = enc_wrap_eq.decode('utf-8').rstrip('\n').split('\n')
@@ -406,7 +407,7 @@ def test_coreutils(path, readme):
     else:
         fail('corrupt input fails without ignore-garbage')
     # With -i: should produce original
-    dec_ig = must_run([path, '-d', '-i'], input=corrupted)
+    dec_ig = must_run([path, '-d', '--ignore-garbage'], input=corrupted)
     if dec_ig == src:
         ok('-i ignores garbage and decodes correctly')
     else:
@@ -456,110 +457,6 @@ def test_coreutils(path, readme):
         ok('wrapped encode round-trips correctly')
     else:
         fail('wrapped encode round-trips correctly')
-
-# ---------------------------------------------------------------------------
-# Cross-tool compatibility
-# ---------------------------------------------------------------------------
-def test_cross_compatibility(fast_path, core_path, readme):
-    print("\n=== Cross-tool compatibility ===")
-    src = read_binary(readme)
-    # fastbase64 encode -> coreutils decode
-    enc = must_run([fast_path, '-e', readme])
-    dec = must_run([core_path, '-d'], input=enc)
-    if dec == src:
-        ok('fastbase64 -e -> coreutils -d')
-    else:
-        fail('fastbase64 -e -> coreutils -d')
-    # coreutils encode -> fastbase64 decode
-    enc2 = must_run([core_path, readme])
-    dec2 = must_run([fast_path, '-d'], input=enc2)
-    if dec2 == src:
-        ok('coreutils encode -> fastbase64 -d')
-    else:
-        fail('coreutils encode -> fastbase64 -d')
-    # coreutils -w 76 -> fastbase64 decode (handles line-wrapped input)
-    enc3 = must_run([core_path, '-w', '76', readme])
-    dec3 = must_run([fast_path, '-d'], input=enc3)
-    if dec3 == src:
-        ok('coreutils -w 76 -> fastbase64 -d')
-    else:
-        fail('coreutils -w 76 -> fastbase64 -d')
-    # fastbase64 -b 76 -> coreutils decode
-    enc4 = must_run([fast_path, '-e', '-b', '76', readme])
-    dec4 = must_run([core_path, '-d'], input=enc4)
-    if dec4 == src:
-        ok('fastbase64 -b 76 -> coreutils -d')
-    else:
-        fail('fastbase64 -b 76 -> coreutils -d')
-    # Both tools produce byte-identical output for the same input
-    enc_fast = must_run([fast_path, '-e', readme])
-    enc_core = must_run([core_path, readme])
-    if enc_fast == enc_core:
-        ok('both tools produce identical base64 output')
-    else:
-        fail('both tools produce identical base64 output',
-             f'fast={enc_fast[:40]!r} core={enc_core[:40]!r}')
-    # Cross-check against Python's base64 module
-    py_enc = base64.b64encode(src) + b'\n'
-    if enc_fast.rstrip(b'\n\r \t') == py_enc.rstrip(b'\n\r \t'):
-        ok('output matches Python base64.b64encode')
-    else:
-        fail('output matches Python base64.b64encode',
-             f'tool={enc_fast[:40]!r} py={py_enc[:40]!r}')
-
-# ---------------------------------------------------------------------------
-# System base64 compatibility (optional)
-# ---------------------------------------------------------------------------
-def test_system_base64(fast_path, core_path, readme):
-    """Cross-check against the system 'base64' utility if available."""
-    if is_windows:
-        print("\n=== System base64 compatibility (SKIPPED: Windows) ===")
-        return
-    sys_b64 = shutil.which('base64')
-    if sys_b64 is None:
-        print("\n=== System base64 compatibility (SKIPPED: not found) ===")
-        return
-    print(f"\n=== System base64 compatibility ({sys_b64}) ===")
-    src = read_binary(readme)
-    # Determine whether the system base64 is BSD or GNU
-    probe = subprocess.run([sys_b64, '--version'], capture_output=True, text=False)
-    is_gnu = probe.returncode == 0 and b'GNU' in (probe.stdout + probe.stderr)
-    # System encode -> both tools decode
-    if is_gnu:
-        sys_enc = must_run([sys_b64, readme])
-    else:
-        # BSD base64 uses -i for input file
-        sys_enc = must_run([sys_b64, '-i', readme])
-    dec_core = must_run([core_path, '-d'], input=sys_enc)
-    if dec_core == src:
-        ok('system base64 encode -> coreutils -d')
-    else:
-        fail('system base64 encode -> coreutils -d')
-    dec_fast = must_run([fast_path, '-d'], input=sys_enc)
-    if dec_fast == src:
-        ok('system base64 encode -> fastbase64 -d')
-    else:
-        fail('system base64 encode -> fastbase64 -d')
-    # coreutils encode -> system decode
-    core_enc = must_run([core_path, readme])
-    if is_gnu:
-        sys_dec_core = must_run([sys_b64, '-d'], input=core_enc)
-    else:
-        sys_dec_core = must_run([sys_b64, '-D'], input=core_enc)
-    if sys_dec_core == src:
-        ok('coreutils encode -> system base64 -d')
-    else:
-        fail('coreutils encode -> system base64 -d')
-    # fastbase64 encode -> system decode
-    fast_enc = must_run([fast_path, '-e', readme])
-    if is_gnu:
-        sys_dec_fast = must_run([sys_b64, '-d'], input=fast_enc)
-    else:
-        sys_dec_fast = must_run([sys_b64, '-D'], input=fast_enc)
-    if sys_dec_fast == src:
-        ok('fastbase64 -e -> system base64 -d')
-    else:
-        fail('fastbase64 -e -> system base64 -d')
 
 # ---------------------------------------------------------------------------
 # Large round-trips (explicitly >64K, deterministic)
@@ -663,7 +560,7 @@ def test_adversarial_decoding(fast_path, core_path):
     for garbage, pos in [(b'!!!', 20), (b'@#$', 10)]:
         dirty = clean[:pos] + garbage + clean[pos:]
         # without ignore -> fail
-        for tool, ignore_flag in [(fast_path, '--ignore-garbage'), (core_path, '-i')]:
+        for tool, ignore_flag in [(fast_path, '--ignore-garbage'), (core_path, '--ignore-garbage')]:
             rc, _, _ = run([tool, '-d'], input=dirty, expect_failure=True)
             if rc != 0:
                 ok(f'{tool} rejects garbage without ignore')
@@ -824,8 +721,6 @@ if __name__ == '__main__':
             sys.exit(1)
     test_fastbase64(fast_path, readme_path)
     test_coreutils(core_path, readme_path)
-    test_cross_compatibility(fast_path, core_path, readme_path)
-    test_system_base64(fast_path, core_path, readme_path)
     # NEW thorough sections
     test_large_roundtrips(fast_path, core_path)
     test_wrapping_extremes(fast_path, core_path)

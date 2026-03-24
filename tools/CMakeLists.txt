@@ -111,11 +111,19 @@ else()
       set(BINDIR \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}\")
     endif()
     file(MAKE_DIRECTORY \"\${BINDIR}\")
+    # Remove any existing file or symlink so create_symlink will not fail with \"file exists\"
+    file(REMOVE \"\${BINDIR}/fastbase64.coreutils\")
     execute_process(
       COMMAND \"${CMAKE_COMMAND}\" -E create_symlink
               \"fastbase64\"
               \"\${BINDIR}/fastbase64.coreutils\"
+      RESULT_VARIABLE _fastbase64_symlink_result
+      ERROR_VARIABLE _fastbase64_symlink_error
     )
+    if(NOT _fastbase64_symlink_result EQUAL 0)
+      message(FATAL_ERROR
+        \"Failed to create symlink \${BINDIR}/fastbase64.coreutils -> fastbase64: \${_fastbase64_symlink_error}\")
+    endif()
   ")
 endif()
 

@@ -13,13 +13,10 @@ If a second filename is provided, it is used as the output file.
 Otherwise, output goes to standard output.
 .SH OPTIONS
 .TP
-.B \-b, \-\-break \fINUM\fR
+.B \-b, \-\-break=\fINUM\fR
 Break encoded output into lines of length \fINUM\fR (default 0, meaning no breaks).
 .TP
-.B \-w \fNUM\fR
-Same as \fB\-b\fR.
-.TP
-.B \-\-wrap=\fINUM\fR
+.B \-w, \-\-wrap=\fINUM\fR
 Same as \fB\-b\fR.
 .TP
 .B \-d, \-D, \-\-decode
@@ -34,10 +31,10 @@ When decoding, ignore non-alphabet characters.
 .B \-h, \-\-help
 Display help message and exit.
 .TP
-.B \-i, \-\-input \fIFILE\fR
-fastbase64 extension: input file (default: "-" for stdin).
+.B \-i, \-\-input=\fIFILE\fR
+Input file (default: "-" for stdin; compatible with BSD/macOS base64).
 .TP
-.B \-o, \-\-output \fIFILE\fR
+.B \-o, \-\-output=\fIFILE\fR
 Output file (default: "-" for stdout).
 .TP
 .B \-\-version
