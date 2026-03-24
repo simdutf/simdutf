@@ -31,8 +31,8 @@ public:
   bool run();
   std::pair<bool, size_t> load_chunk(char *input_data, size_t chunk_size,
                                      size_t offset);
-  bool write_to_file_descriptor(std::FILE *fp, const char *data, size_t length);
-  bool write_with_wrapping(std::FILE *fp, const char *data, size_t length,
+  void write_to_file_descriptor(std::FILE *fp, const char *data, size_t length);
+  void write_with_wrapping(std::FILE *fp, const char *data, size_t length,
                            int &current_col, int wrap_cols);
   static void show_help(const std::string &command_name, bool gnumode);
   bool decode = false; // default: encode for both fastbase64 and coreutils
@@ -224,26 +224,26 @@ CommandLine::load_chunk(char *input_data, size_t chunk_size, size_t offset) {
   return {true, bytes_read};
 }
 
-bool CommandLine::write_to_file_descriptor(std::FILE *fp, const char *data,
+void CommandLine::write_to_file_descriptor(std::FILE *fp, const char *data,
                                            size_t length) {
   if (fp == NULL) {
-    return false;
+    throw std::runtime_error("File pointer is NULL");
   }
   size_t bytes_written = std::fwrite(data, 1, length, fp);
   if (bytes_written != length) {
     throw std::runtime_error("Failed to write:" + std::string(strerror(errno)));
   }
-  return true;
 }
 
-bool CommandLine::write_with_wrapping(std::FILE *fp, const char *data,
+void CommandLine::write_with_wrapping(std::FILE *fp, const char *data,
                                       size_t length, int &current_col,
                                       int wrap_cols) {
   if (fp == NULL) {
-    return false;
+    throw std::runtime_error("File pointer is NULL");
   }
   if (wrap_cols <= 0) { // This should never happen but we want to be safe.
-    return write_to_file_descriptor(fp, data, length);
+    write_to_file_descriptor(fp, data, length);
+    return;
   }
   size_t i = 0;
   while (i < length) {
@@ -263,7 +263,6 @@ bool CommandLine::write_with_wrapping(std::FILE *fp, const char *data,
     current_col += to_write;
     i += to_write;
   }
-  return true;
 }
 
 bool CommandLine::decode_to(std::FILE *fpout) {
