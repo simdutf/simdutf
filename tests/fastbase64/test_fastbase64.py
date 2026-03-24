@@ -680,6 +680,8 @@ def test_adversarial_decoding(fast_path, core_path):
             rc, _, _ = run([tool, '-d'], input=bp, expect_failure=True)
             if rc != 0:
                 ok(f'{tool} rejects bad padding {bp!r}')
+            else:
+                fail(f'{tool} rejects bad padding {bp!r}')
     # very long single-line base64
     long_data = generate_deterministic_data(100000)
     long_enc = base64.b64encode(long_data) + b'\n'
