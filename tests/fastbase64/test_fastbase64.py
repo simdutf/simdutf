@@ -776,11 +776,15 @@ def test_error_conditions(fast_path, core_path):
         rc, _, _ = run([tool, '-e', '/nonexistent_fastbase64_test_987654321'], expect_failure=True)
         if rc != 0:
             ok(f'{name}: non-existent input file rejected')
+        else:
+            fail(f'{name}: non-existent input file unexpectedly accepted')
         # bad wrap values
         for bad in ['-1', 'abc', '999999999999999']:
             rc, _, _ = run([tool, '-e', '-w', bad], input=b'test', expect_failure=True)
             if rc != 0:
                 ok(f'{name}: bad -w {bad} rejected')
+            else:
+                fail(f'{name}: bad -w {bad} unexpectedly accepted')
 
 # ---------------------------------------------------------------------------
 # Entry point
