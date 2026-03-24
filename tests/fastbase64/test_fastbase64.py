@@ -405,7 +405,7 @@ def test_coreutils(path, readme):
     else:
         fail('corrupt input fails without ignore-garbage')
     # With -i: should produce original
-    dec_ig = must_run([path, '-d', '--ignore-garbage'], input=corrupted)
+    dec_ig = must_run([path, '-d', '-i'], input=corrupted)
     if dec_ig == src:
         ok('-i ignores garbage and decodes correctly')
     else:
