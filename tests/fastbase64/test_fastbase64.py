@@ -31,18 +31,26 @@ def fail(label, detail=""):
     print(msg)
 
 def run(cmd, input=None, expect_failure=False):
-    """Run a command, return (returncode, stdout_bytes, stderr_bytes)."""
+    """Run a command, return (returncode, stdout_bytes, stderr_bytes).
+    On Windows the C runtime may translate \\n to \\r\\n on stdout,
+    so we strip \\r from the output to get consistent \\n line endings."""
     result = subprocess.run(cmd, input=input, capture_output=True, text=False)
+    stdout = result.stdout.replace(b'\r\n', b'\n')
+    stderr = result.stderr.replace(b'\r\n', b'\n')
     if not expect_failure and result.returncode != 0:
         fail(f"Unexpected failure: {' '.join(str(c) for c in cmd)}",
-             result.stderr.decode('utf-8', errors='replace'))
+             stderr.decode('utf-8', errors='replace'))
         sys.exit(1)
-    return result.returncode, result.stdout, result.stderr
+    return result.returncode, stdout, stderr
 
 def must_run(cmd, input=None):
     """Run a command and return stdout; exit on failure."""
     rc, stdout, stderr = run(cmd, input=input)
     return stdout
+
+def read_binary(path):
+    """Read a file in binary mode, normalizing \\r\\n to \\n (Windows compat)."""
+    return open(path, 'rb').read().replace(b'\r\n', b'\n')
 
 def check_base64_alphabet(data_bytes, label):
     """Verify the output only contains valid base64 chars + newlines."""
@@ -66,7 +74,7 @@ def generate_deterministic_data(size: int) -> bytes:
 # ---------------------------------------------------------------------------
 def test_fastbase64(path, readme):
     print("\n=== fastbase64 (BSD-like, default-decode) ===")
-    src = open(readme, 'rb').read()
+    src = read_binary(readme)
     # --- help / version -------------------------------------------------------
     rc, out, _ = run([path, '--help'])
     if rc == 0 and b'Usage' in out:
@@ -201,7 +209,7 @@ def test_fastbase64(path, readme):
         tf_out_path = tf_out.name
     try:
         rc, _, _ = run([path, '-e', '-o', tf_out_path, readme])
-        enc_o = open(tf_out_path, 'rb').read()
+        enc_o = read_binary(tf_out_path)
         if rc == 0 and must_run([path, '-d'], input=enc_o) == src:
             ok('-o FILE (explicit output file)')
         else:
@@ -213,7 +221,7 @@ def test_fastbase64(path, readme):
         tf_out2_path = tf_out2.name
     try:
         rc, _, _ = run([path, '-e', '--output', tf_out2_path, readme])
-        enc_o2 = open(tf_out2_path, 'rb').read()
+        enc_o2 = read_binary(tf_out2_path)
         if rc == 0 and must_run([path, '-d'], input=enc_o2) == src:
             ok('--output FILE')
         else:
@@ -226,7 +234,7 @@ def test_fastbase64(path, readme):
         tf_pos_path = tf_pos.name
     try:
         rc, _, _ = run([path, '-e', readme, tf_pos_path])
-        enc_pos = open(tf_pos_path, 'rb').read()
+        enc_pos = read_binary(tf_pos_path)
         if rc == 0 and enc_pos == ref_enc:
             ok('second positional arg as output file')
         else:
@@ -269,7 +277,7 @@ def test_fastbase64(path, readme):
 # ---------------------------------------------------------------------------
 def test_coreutils(path, readme):
     print("\n=== fastbase64.coreutils (GNU-like, default-encode) ===")
-    src = open(readme, 'rb').read()
+    src = read_binary(readme)
     # --- help / version -------------------------------------------------------
     rc, out, _ = run([path, '--help'])
     if rc == 0 and b'Usage' in out:
@@ -391,7 +399,7 @@ def test_coreutils(path, readme):
         tf_out_path = tf_out.name
     try:
         rc, _, _ = run([path, '-o', tf_out_path, readme])
-        enc_o = open(tf_out_path, 'rb').read()
+        enc_o = read_binary(tf_out_path)
         if rc == 0 and enc_o == enc_nw:
             ok('-o FILE output')
         else:
@@ -403,7 +411,7 @@ def test_coreutils(path, readme):
         tf_pos_path = tf_pos.name
     try:
         rc, _, _ = run([path, readme, tf_pos_path])
-        enc_pos = open(tf_pos_path, 'rb').read()
+        enc_pos = read_binary(tf_pos_path)
         if rc == 0 and enc_pos == enc_nw:
             ok('second positional arg as output file')
         else:
@@ -429,7 +437,7 @@ def test_coreutils(path, readme):
 # ---------------------------------------------------------------------------
 def test_cross_compatibility(fast_path, core_path, readme):
     print("\n=== Cross-tool compatibility ===")
-    src = open(readme, 'rb').read()
+    src = read_binary(readme)
     # fastbase64 encode -> coreutils decode
     enc = must_run([fast_path, '-e', readme])
     dec = must_run([core_path, '-d'], input=enc)
@@ -484,7 +492,7 @@ def test_system_base64(fast_path, core_path, readme):
         print("\n=== System base64 compatibility (SKIPPED: not found) ===")
         return
     print(f"\n=== System base64 compatibility ({sys_b64}) ===")
-    src = open(readme, 'rb').read()
+    src = read_binary(readme)
     # Determine whether the system base64 is BSD or GNU
     probe = subprocess.run([sys_b64, '--version'], capture_output=True, text=False)
     is_gnu = probe.returncode == 0 and b'GNU' in (probe.stdout + probe.stderr)
