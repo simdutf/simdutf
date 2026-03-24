@@ -4,6 +4,7 @@
 #include <cerrno>
 #include <cstring>
 #include <filesystem>
+#include <memory>
 #include <vector>
 
 class CommandLine {
@@ -179,23 +180,24 @@ bool CommandLine::run() {
   if (output_file == "-") {
     return run_procedure(stdout);
   } else {
-    SIMDUTF_PUSH_DISABLE_WARNINGS
-    SIMDUTF_DISABLE_DEPRECATED_WARNING
-    std::FILE *fp = std::fopen(output_file.c_str(), "wb");
-    SIMDUTF_POP_DISABLE_WARNINGS
-    if (fp == NULL) {
+    struct FileDeleter {
+      void operator()(FILE* fp) const {
+        if (fp) {
+          if (fclose(fp) != 0) {
+            // Note: We do our best to close the file, but
+            // if fclose fails, there's not much we can do. We ignore
+            // the error.
+          }
+        }
+      }
+    };
+    std::unique_ptr<FILE, FileDeleter> fp(fopen(output_file.c_str(), "wb"));
+    if (!fp) {
       fprintf(stderr, "Could not open output file: %s: %s\n",
               output_file.c_str(), strerror(errno));
       return false;
     }
-    bool success = run_procedure(fp);
-    // Let us first try to close the file.
-    if (fclose(fp) != 0) {
-      fprintf(stderr, "Failed to close %s: %s\n", output_file.c_str(),
-              strerror(errno));
-      return false;
-    }
-    return success;
+    return run_procedure(fp.get());
   }
 }
 
@@ -279,7 +281,7 @@ bool CommandLine::decode_to(std::FILE *fpout) {
   // load_chunk returns a pair of a boolean and a size_t, the boolean is true
   // until we reach the end of the stream, the size_t is the number of bytes
   // read.
-  for (auto p = load_chunk(input_data.data(), chunk_size, offset); p.second > 0;
+  for (auto p = load_chunk(input_data.data(), chunk_size, offset); p.second + offset > 0;
        p = load_chunk(input_data.data(), chunk_size, offset)) {
     size_t total_input = p.second + offset;
     // if p.first is false, we have reached the end of the file.
@@ -330,14 +332,29 @@ bool CommandLine::decode_to(std::FILE *fpout) {
               "There was an unexpected error during base64 decoding.\n");
       return false;
     }
-    write_to_file_descriptor(fpout, output_buffer.data(), r.output_count);
-    // Carry over unconsumed input bytes for the next iteration.
-    offset = total_input - r.input_count;
-    if (offset > 0) {
-      std::memmove(input_data.data(), input_data.data() + r.input_count,
-                   offset);
+    if (r.input_count == 0) {
+      // No progress made, compact the buffer by removing all ignorable bytes
+      size_t write_index = 0;
+      for (size_t i = 0; i < total_input; ++i) {
+        char c = input_data[i];
+        if (!simdutf::base64_ignorable(c, options)) {
+          input_data[write_index++] = c;
+        }
+      }
+      size_t removed = total_input - write_index;
+      // Update offset to the compacted length and advance position
+      offset = write_index;
+      pos += removed;
+    } else {
+      write_to_file_descriptor(fpout, output_buffer.data(), r.output_count);
+      // Carry over unconsumed input bytes for the next iteration.
+      offset = total_input - r.input_count;
+      if (offset > 0) {
+        std::memmove(input_data.data(), input_data.data() + r.input_count,
+                     offset);
+      }
+      pos += r.input_count;
     }
-    pos += r.input_count;
   }
   return true;
 }

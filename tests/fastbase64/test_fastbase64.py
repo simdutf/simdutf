@@ -675,7 +675,48 @@ def test_chunk_boundary_whitespace(fast_path, core_path):
                      f'got {len(dec)} bytes, expected {len(src)}')
 
 # ---------------------------------------------------------------------------
-# Error conditions
+# Super sparse base64 decoding (large spans of ignorable chars)
+# ---------------------------------------------------------------------------
+def test_super_sparse_decoding(fast_path, core_path):
+    """Test decoding with very sparse valid base64 chars in large chunks.
+    Creates inputs where 65536-byte spans contain 0, 1, 2, or 3 valid base64 chars,
+    surrounded by ignorable whitespace."""
+    print("\n=== Super sparse base64 decoding ===")
+    CHUNK = 65536
+    # Base payload: small valid base64 string
+    payload = b'SGVsbG8gV29ybGQK'  # "Hello World\n" in base64
+    expected_dec = base64.b64decode(payload)
+
+    def create_sparse_input(num_valid, total_size):
+        """Create a byte string of total_size with num_valid full base64 payloads
+        spaced out, rest ignorable spaces."""
+        if num_valid == 0:
+            return b' ' * total_size
+        # Place payloads evenly spaced
+        spacing = (total_size - num_valid * len(payload)) // (num_valid + 1)
+        result = b' ' * spacing
+        for i in range(num_valid):
+            result += payload + b' ' * spacing
+        result += b' ' * (total_size - len(result))
+        return result[:total_size]
+
+    # Test cases: 0, 1, 2, 3 valid payloads spanning multiple chunks
+    for num_valid in [0, 1, 2, 3]:
+        # Make input span several chunks to test carry-over and compacting across boundaries
+        input_size = 3 * CHUNK + 1000
+        sparse_input = create_sparse_input(num_valid, input_size)
+        expected = expected_dec * num_valid
+        for tool, tool_name, ignore_flag in [
+            (fast_path, "fastbase64", "--ignore-garbage"),
+            (core_path, "coreutils", "--ignore-garbage")
+        ]:
+            dec = must_run([tool, '-d', ignore_flag], input=sparse_input)
+            if dec == expected:
+                ok(f'{tool_name}: {num_valid} valid payloads in {input_size} bytes (spanning {input_size // CHUNK + 1} chunks) decoded correctly')
+            else:
+                fail(f'{tool_name}: {num_valid} valid payloads in {input_size} bytes (spanning {input_size // CHUNK + 1} chunks) decoded correctly',
+                     f'got {len(dec)} bytes, expected {len(expected)}')
+
 # ---------------------------------------------------------------------------
 def test_error_conditions(fast_path, core_path):
     print("\n=== Error conditions ===")
@@ -715,6 +756,7 @@ if __name__ == '__main__':
     test_wrapping_extremes(fast_path, core_path)
     test_adversarial_decoding(fast_path, core_path)
     test_chunk_boundary_whitespace(fast_path, core_path)
+    test_super_sparse_decoding(fast_path, core_path)
     test_error_conditions(fast_path, core_path)
     print(f"\n{'='*60}")
     print(f"Results: {PASS} passed, {FAIL} failed")
