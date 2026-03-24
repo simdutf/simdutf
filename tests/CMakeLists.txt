@@ -483,8 +483,10 @@ if(Python3_FOUND AND GIT_EXECUTABLE)
 endif()
 
 if(SIMDUTF_TOOLS AND Python3_FOUND)
-  add_test(NAME fastbase64_python_test
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/fastbase64/test_fastbase64.py $<TARGET_FILE:fastbase64> $<TARGET_FILE_DIR:fastbase64>/fastbase64.coreutils ${SIMDUTF_SOURCE_DIR}/README.md
-    WORKING_DIRECTORY ${SIMDUTF_SOURCE_DIR}
-  )
+  if(NOT SIMDUTF_FAST_TESTS)
+    add_test(NAME fastbase64_python_test
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/fastbase64/test_fastbase64.py $<TARGET_FILE:fastbase64> $<TARGET_FILE_DIR:fastbase64>/fastbase64.coreutils ${SIMDUTF_SOURCE_DIR}/README.md
+      WORKING_DIRECTORY ${SIMDUTF_SOURCE_DIR}
+    )
+  endif()
 endif()
