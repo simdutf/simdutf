@@ -52,8 +52,8 @@ def must_run(cmd, input=None):
     return stdout
 
 def read_binary(path):
-    """Read a file in binary mode, normalizing \\r\\n to \\n (Windows compat)."""
-    return open(path, 'rb').read().replace(b'\r\n', b'\n')
+    """Read a file in binary mode without altering bytes."""
+    return open(path, 'rb').read()
 
 def check_base64_alphabet(data_bytes, label):
     """Verify the output only contains valid base64 chars + newlines."""
@@ -283,7 +283,8 @@ def test_fastbase64(path, readme):
     else:
         fail('wrapped encode round-trips correctly')
     # --ignore-garbage for BSD-like tool
-    clean = must_run([path, '-e'], input=src)
+    # Build clean data from file input to avoid Windows stdin text-mode CRLF->LF conversion.
+    clean = must_run([path, '-e', readme])
     corrupted = clean[:10] + b'!!!@#$!!!' + clean[10:]
     rc, _, _ = run([path, '-d'], input=corrupted, expect_failure=True)
     if rc != 0:
@@ -442,7 +443,9 @@ def test_coreutils(path, readme):
         os.unlink(tf_pos_path)
     # --- stdin marker '-' for input -------------------------------------------
     enc_stdin = must_run([path, '-'], input=src)
-    if enc_stdin == enc_nw:
+    dec_stdin = must_run([path, '-d'], input=enc_stdin)
+    expected_stdin = src.replace(b'\r\n', b'\n') if is_windows else src
+    if dec_stdin == expected_stdin:
         ok("'-' reads from stdin")
     else:
         fail("'-' reads from stdin")
