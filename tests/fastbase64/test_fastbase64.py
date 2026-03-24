@@ -113,6 +113,12 @@ def test_fastbase64(path, readme):
         ok('unknown option rejected')
     else:
         fail('unknown option rejected')
+    # --- -n rejected in BSD mode -----------------------------------------------
+    rc, _, _ = run([path, '-n'], expect_failure=True)
+    if rc != 0:
+        ok('-n rejected in BSD mode')
+    else:
+        fail('-n rejected in BSD mode')
     # --- encode / decode round-trip (README.md) --------------------------------
     encoded = must_run([path, '-e', readme])
     decoded = must_run([path, '-d'], input=encoded)
@@ -416,6 +422,18 @@ def test_coreutils(path, readme):
         ok('--ignore-garbage long option')
     else:
         fail('--ignore-garbage long option')
+    # --- -n (noerrcheck, alias for -i) ----------------------------------------
+    dec_n = must_run([path, '-d', '-n'], input=corrupted)
+    if dec_n == src:
+        ok('-n ignores garbage and decodes correctly')
+    else:
+        fail('-n ignores garbage and decodes correctly')
+    # --- --noerrcheck long option ---------------------------------------------
+    dec_ne = must_run([path, '-d', '--noerrcheck'], input=corrupted)
+    if dec_ne == src:
+        ok('--noerrcheck long option')
+    else:
+        fail('--noerrcheck long option')
     # --- -o FILE output -------------------------------------------------------
     with tempfile.NamedTemporaryFile(delete=False, suffix='.b64') as tf_out:
         tf_out_path = os.path.normpath(tf_out.name)

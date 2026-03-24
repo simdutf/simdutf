@@ -3,7 +3,7 @@
 fastbase64 \- base64 encode/decode data and print to standard output
 .SH SYNOPSIS
 .B fastbase64
-[\fIOPTIONS\fR...] [\fIINPUTFILE\fR]
+[\fB\-Ddh\fR] [\fB\-b\fR \fInum\fR] [\fB\-i\fR \fIin_file\fR] [\fB\-o\fR \fIout_file\fR]
 .SH DESCRIPTION
 .B fastbase64
 encodes or decodes base64 data using the high-performance simdutf library.
@@ -13,42 +13,42 @@ If a second filename is provided, it is used as the output file.
 Otherwise, output goes to standard output.
 .SH OPTIONS
 .TP
-.B \-b, \-\-break=\fINUM\fR
-Break encoded output into lines of length \fINUM\fR (default 0, meaning no breaks).
+.B \-b, \-\-break \fInum\fR
+break encoded output up into lines of length \fInum\fR (default 0, meaning no breaks)
 .TP
-.B \-w, \-\-wrap=\fINUM\fR
-Same as \fB\-b\fR.
-.TP
-.B \-d, \-D, \-\-decode
-Decode input.
-.TP
-.B \-e, \-\-encode
-Encode input (default).
-.TP
-.B \-\-ignore\-garbage
-When decoding, ignore non-alphabet characters.
+.B \-D, \-d, \-\-decode
+decode input
 .TP
 .B \-h, \-\-help
-Display help message and exit.
+display this message
 .TP
-.B \-i, \-\-input=\fIFILE\fR
-Input file (default: "-" for stdin; compatible with BSD/macOS base64).
+.B \-i, \-\-input \fIin_file\fR
+input file (default: "-" for stdin)
 .TP
-.B \-o, \-\-output=\fIFILE\fR
-Output file (default: "-" for stdout).
+.B \-o, \-\-output \fIout_file\fR
+output file (default: "-" for stdout)
+.TP
+.B \-w, \-\-wrap=\fINUM\fR
+same as \fB\-b\fR
+.TP
+.B \-e, \-\-encode
+encode input (default)
+.TP
+.B \-\-ignore\-garbage
+when decoding, ignore non-alphabet characters
 .TP
 .B \-\-version
-Output version information and exit.
+output version information and exit
 .SH EXAMPLES
 .TP
-Encode a file:
-.B fastbase64 \-e myfile.txt
+Encode a file (default, no wrapping):
+.B fastbase64 \-i myfile.txt
 .TP
 Decode base64 data:
-.B fastbase64 < encoded.txt
+.B fastbase64 \-d \-i encoded.txt
 .TP
-Encode with line wrapping:
-.B fastbase64 \-e \-w 76 myfile.txt
+Encode with custom line wrapping:
+.B fastbase64 \-b 76 \-i myfile.txt
 .SH SEE ALSO
 .BR base64 (1),
 .BR iconv (1)

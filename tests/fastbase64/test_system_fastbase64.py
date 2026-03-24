@@ -609,11 +609,20 @@ def test_adversarial_error_handling(fast_bsd, fast_gnu):
 # System base64 compatibility (runs only when system base64 is present)
 # ---------------------------------------------------------------------------
 
-def _system_is_gnu():
+def identify_system():
     if not shutil.which("base64"):
         return None   # not present
+    # First, check for GNU via --version
     probe = subprocess.run(["base64", "--version"], capture_output=True, text=False)
-    return b"GNU" in (probe.stdout + probe.stderr)
+    if b"GNU" in (probe.stdout + probe.stderr):
+        return "gnu"
+    # Else, check for BSD via --help
+    probe_help = subprocess.run(["base64", "--help"], capture_output=True, text=False)
+    help_text = probe_help.stdout + probe_help.stderr
+    bsd_usage = b"Usage:\tbase64 [-Ddh] [-b num] [-i in_file] [-o out_file]"
+    if bsd_usage in help_text:
+        return "bsd"
+    return None
 
 
 def test_against_system_gnu(fast_gnu, payloads):
@@ -758,12 +767,12 @@ def main():
         test_adversarial_error_handling(fast_bsd, fast_gnu)
 
         # System compatibility tests
-        is_gnu = _system_is_gnu()
-        if is_gnu is None:
-            print("System base64 not found, skipping system compatibility tests.")
-        elif is_gnu:
+        sys_type = identify_system()
+        if sys_type is None:
+            print("System base64 not identified, skipping system compatibility tests.")
+        elif sys_type == "gnu":
             test_against_system_gnu(fast_gnu, payloads)
-        else:
+        elif sys_type == "bsd":
             test_against_system_bsd(fast_bsd, payloads)
 
     print(f"\n{'='*60}")

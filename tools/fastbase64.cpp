@@ -101,6 +101,12 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
     } else if (arg == "--ignore-garbage") {
       cmdline.ignore_garbage = true;
       i++;
+    } else if (arg == "-n" || arg == "--noerrcheck") {
+      if (!gnumode) {
+        throw std::runtime_error("Unknown option: " + arg);
+      }
+      cmdline.ignore_garbage = true;
+      i++;
     } else if (arg == "-h" || arg == "--help") {
       show_help(command_name, gnumode);
       exit(EXIT_SUCCESS);
@@ -409,7 +415,7 @@ void CommandLine::show_help(const std::string &command_name, bool gnumode) {
       "  --ignore-garbage   when decoding, ignore non-alphabet characters\n");
   printf("  -h, --help         display this message\n");
   if (gnumode) {
-    printf("  -i                 same as --ignore-garbage\n");
+    printf("  -i, -n, --noerrcheck  same as --ignore-garbage\n");
   } else {
     printf("  -i, --input=FILE   input file (default: \"-\" for stdin)\n");
   }
