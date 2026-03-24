@@ -251,53 +251,46 @@ bool CommandLine::decode_to(std::FILE *fpout) {
   // read.
   for (auto p = load_chunk(input_data.data(), chunk_size, offset); p.second > 0;
        p = load_chunk(input_data.data(), chunk_size, offset)) {
-    // We convert from base64 the data we have read so far
-    simdutf::result r = simdutf::base64_to_binary(
-        input_data.data(), p.second + offset, output_buffer.data(), options);
-    // If we have encountered an invalid character, we print an error message
-    // and return false.
-    if (r.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {
-      fprintf(stderr, "Invalid base64 character at position %zu\n.",
-              pos + r.count);
-      return false;
-    }
+    size_t total_input = p.second + offset;
     // if p.first is false, we have reached the end of the file.
     if (!p.first) {
-      // At the end of the file, if we are left with one base64 character
-      // leftover, it is a fatal error.
+      // Final chunk: use loose mode to handle padding and partial groups.
+      simdutf::result r = simdutf::base64_to_binary(
+          input_data.data(), total_input, output_buffer.data(), options);
+      if (r.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {
+        fprintf(stderr, "Invalid base64 character at position %zu\n.",
+                pos + r.count);
+        return false;
+      }
       if (r.error == simdutf::error_code::BASE64_INPUT_REMAINDER) {
         fprintf(stderr, "The base64 input contained an invalid number of "
                         "characters or could not be read.");
         return false;
       }
-      // Otherwise, we write the output and return true.
       write_to_file_descriptor(fpout, output_buffer.data(), r.count);
       return true;
     }
-    // We want to write the data in chunks of 3 bytes and read blocks of
-    // 4 bytes. We keep the last 0, 1, 2 or 3 base64 bytes in the input buffer.
-    // And we write the output in chunks of 3 bytes.
-    offset = 0;
-    if (r.error == simdutf::error_code::BASE64_INPUT_REMAINDER) {
-      offset = 1;
-    } else {
-      offset = (r.count % 3) == 0 ? 0 : (r.count % 3) + 1;
+    // Non-final chunk: use stop_before_partial so incomplete 4-char groups
+    // at the end are not decoded and can be carried over to the next chunk.
+    // base64_to_binary_details returns both input_count and output_count,
+    // so we know exactly how many input bytes were consumed.
+    simdutf::full_result r =
+        simdutf::get_active_implementation()->base64_to_binary_details(
+            input_data.data(), total_input, output_buffer.data(), options,
+            simdutf::last_chunk_handling_options::stop_before_partial);
+    if (r.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {
+      fprintf(stderr, "Invalid base64 character at position %zu\n.",
+              pos + r.input_count);
+      return false;
     }
-    // Copy 0, 1, 2 or 3 non-space bytes to the input buffer.
-    size_t copied = 0;
-    for (size_t z = p.second - 1; copied < offset; z--) {
-      if (input_data[z] == ' ' || input_data[z] == '\n' ||
-          input_data[z] == '\r' || input_data[z] == '\t') {
-        continue;
-      }
-      copied++;
-      input_data[offset - copied] = input_data[z];
+    write_to_file_descriptor(fpout, output_buffer.data(), r.output_count);
+    // Carry over unconsumed input bytes for the next iteration.
+    offset = total_input - r.input_count;
+    if (offset > 0) {
+      std::memmove(input_data.data(), input_data.data() + r.input_count,
+                   offset);
     }
-    // We write a multiple of 3 bytes to the output buffer, discarding
-    // the last 0, 1 or 2 bytes.
-    r.count -= (r.count % 3);
-    write_to_file_descriptor(fpout, output_buffer.data(), r.count);
-    pos += p.second;
+    pos += r.input_count;
   }
   return true;
 }
