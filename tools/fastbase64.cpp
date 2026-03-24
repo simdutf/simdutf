@@ -287,7 +287,7 @@ bool CommandLine::decode_to(std::FILE *fpout) {
             input_data.data(), total_input, output_buffer.data(), options,
             simdutf::last_chunk_handling_options::stop_before_partial);
     if (r.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {
-      fprintf(stderr, "Invalid base64 character at position %zu\n.",
+      fprintf(stderr, "Invalid base64 character at position %zu.\n",
               pos + r.input_count);
       return false;
     }
