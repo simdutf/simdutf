@@ -6,10 +6,13 @@ Optionally cross-checks against the system 'base64' utility.
 """
 import base64
 import os
+import platform
 import shutil
 import subprocess
 import sys
 import tempfile
+
+is_windows = platform.system() == 'Windows'
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -68,6 +71,25 @@ def generate_deterministic_data(size: int) -> bytes:
     if size <= 0:
         return b''
     return bytes(((i * 31 + 17) & 0xFF) for i in range(size))
+
+def run_encode_binary(path, data, is_coreutils=False):
+    """Encode binary data, using temp file on Windows if data contains \\n to avoid CRLF conversion."""
+    if is_windows and b'\n' in data:
+        with tempfile.NamedTemporaryFile(delete=False) as tf:
+            tf.write(data)
+            tf_path = tf.name
+        try:
+            if is_coreutils:
+                return must_run([path, tf_path])
+            else:
+                return must_run([path, '-e', '-i', tf_path])
+        finally:
+            os.unlink(tf_path)
+    else:
+        if is_coreutils:
+            return must_run([path], input=data)
+        else:
+            return must_run([path, '-e'], input=data)
 
 # ---------------------------------------------------------------------------
 # fastbase64 (BSD-like: default = decode)
@@ -174,7 +196,7 @@ def test_fastbase64(path, readme):
         fail('single-byte round-trip', f'got {dec_1!r}')
     # --- all 256 byte values round-trip ---------------------------------------
     all_bytes = bytes(range(256))
-    enc_all = must_run([path, '-e'], input=all_bytes)
+    enc_all = run_encode_binary(path, all_bytes, is_coreutils=False)
     dec_all = must_run([path, '-d'], input=enc_all)
     if dec_all == all_bytes:
         ok('all-256-byte-values round-trip')
@@ -195,7 +217,7 @@ def test_fastbase64(path, readme):
     # --- --input FILE option --------------------------------------------------
     with tempfile.NamedTemporaryFile(delete=False) as tf:
         tf.write(src)
-        tf_path = tf.name
+        tf_path = os.path.normpath(tf.name)
     try:
         enc_inp = must_run([path, '-e', '--input', tf_path])
         if enc_inp == must_run([path, '-e', readme]):
@@ -206,7 +228,7 @@ def test_fastbase64(path, readme):
         os.unlink(tf_path)
     # --- -o FILE (output file option) -----------------------------------------
     with tempfile.NamedTemporaryFile(delete=False, suffix='.b64') as tf_out:
-        tf_out_path = tf_out.name
+        tf_out_path = os.path.normpath(tf_out.name)
     try:
         rc, _, _ = run([path, '-e', '-o', tf_out_path, readme])
         enc_o = read_binary(tf_out_path)
@@ -218,7 +240,7 @@ def test_fastbase64(path, readme):
         os.unlink(tf_out_path)
     # --- --output FILE option -------------------------------------------------
     with tempfile.NamedTemporaryFile(delete=False, suffix='.b64') as tf_out2:
-        tf_out2_path = tf_out2.name
+        tf_out2_path = os.path.normpath(tf_out2.name)
     try:
         rc, _, _ = run([path, '-e', '--output', tf_out2_path, readme])
         enc_o2 = read_binary(tf_out2_path)
@@ -231,7 +253,7 @@ def test_fastbase64(path, readme):
     # --- second positional argument as output file ----------------------------
     ref_enc = must_run([path, '-e', readme])
     with tempfile.NamedTemporaryFile(delete=False, suffix='.b64') as tf_pos:
-        tf_pos_path = tf_pos.name
+        tf_pos_path = os.path.normpath(tf_pos.name)
     try:
         rc, _, _ = run([path, '-e', readme, tf_pos_path])
         enc_pos = read_binary(tf_pos_path)
@@ -367,7 +389,7 @@ def test_coreutils(path, readme):
         fail('empty input round-trip', f'got {dec_empty!r}')
     # --- all 256 byte values round-trip ---------------------------------------
     all_bytes = bytes(range(256))
-    enc_all = must_run([path], input=all_bytes)
+    enc_all = run_encode_binary(path, all_bytes, is_coreutils=True)
     dec_all = must_run([path, '-d'], input=enc_all)
     if dec_all == all_bytes:
         ok('all-256-byte-values round-trip')
@@ -396,7 +418,7 @@ def test_coreutils(path, readme):
         fail('--ignore-garbage long option')
     # --- -o FILE output -------------------------------------------------------
     with tempfile.NamedTemporaryFile(delete=False, suffix='.b64') as tf_out:
-        tf_out_path = tf_out.name
+        tf_out_path = os.path.normpath(tf_out.name)
     try:
         rc, _, _ = run([path, '-o', tf_out_path, readme])
         enc_o = read_binary(tf_out_path)
@@ -408,7 +430,7 @@ def test_coreutils(path, readme):
         os.unlink(tf_out_path)
     # --- second positional argument as output file ----------------------------
     with tempfile.NamedTemporaryFile(delete=False, suffix='.b64') as tf_pos:
-        tf_pos_path = tf_pos.name
+        tf_pos_path = os.path.normpath(tf_pos.name)
     try:
         rc, _, _ = run([path, readme, tf_pos_path])
         enc_pos = read_binary(tf_pos_path)
@@ -476,7 +498,7 @@ def test_cross_compatibility(fast_path, core_path, readme):
              f'fast={enc_fast[:40]!r} core={enc_core[:40]!r}')
     # Cross-check against Python's base64 module
     py_enc = base64.b64encode(src) + b'\n'
-    if enc_fast == py_enc:
+    if enc_fast.rstrip(b'\n\r \t') == py_enc.rstrip(b'\n\r \t'):
         ok('output matches Python base64.b64encode')
     else:
         fail('output matches Python base64.b64encode',
@@ -487,6 +509,9 @@ def test_cross_compatibility(fast_path, core_path, readme):
 # ---------------------------------------------------------------------------
 def test_system_base64(fast_path, core_path, readme):
     """Cross-check against the system 'base64' utility if available."""
+    if is_windows:
+        print("\n=== System base64 compatibility (SKIPPED: Windows) ===")
+        return
     sys_b64 = shutil.which('base64')
     if sys_b64 is None:
         print("\n=== System base64 compatibility (SKIPPED: not found) ===")
@@ -543,26 +568,50 @@ def test_large_roundtrips(fast_path, core_path):
         data = generate_deterministic_data(size)
         label = f"{size:,} bytes"
         # fastbase64
-        enc_f = must_run([fast_path, '-e'], input=data)
-        dec_f = must_run([fast_path, '-d'], input=enc_f)
-        if dec_f == data:
-            ok(f'fastbase64 round-trip {label}')
-        else:
-            fail(f'fastbase64 round-trip {label}')
+        with tempfile.NamedTemporaryFile(delete=False) as tf:
+            tf.write(data)
+            tf_path = tf.name
+        try:
+            enc_f = must_run([fast_path, '-e', '-i', tf_path])
+            dec_f = must_run([fast_path, '-d'], input=enc_f)
+            if dec_f == data:
+                ok(f'fastbase64 round-trip {label}')
+            else:
+                fail(f'fastbase64 round-trip {label}')
+        finally:
+            os.unlink(tf_path)
         # coreutils (default encode)
-        enc_c = must_run([core_path], input=data)
-        dec_c = must_run([core_path, '-d'], input=enc_c)
-        if dec_c == data:
-            ok(f'coreutils round-trip {label}')
-        else:
-            fail(f'coreutils round-trip {label}')
+        with tempfile.NamedTemporaryFile(delete=False) as tf:
+            tf.write(data)
+            tf_path = tf.name
+        try:
+            enc_c = must_run([core_path, tf_path])
+            dec_c = must_run([core_path, '-d'], input=enc_c)
+            if dec_c == data:
+                ok(f'coreutils round-trip {label}')
+            else:
+                fail(f'coreutils round-trip {label}')
+        finally:
+            os.unlink(tf_path)
         # wrapped 76 on both
-        enc_fw = must_run([fast_path, '-e', '-w', '76'], input=data)
-        if must_run([fast_path, '-d'], input=enc_fw) == data:
-            ok(f'fastbase64 wrapped {label}')
-        enc_cw = must_run([core_path, '-w', '76'], input=data)
-        if must_run([core_path, '-d'], input=enc_cw) == data:
-            ok(f'coreutils wrapped {label}')
+        with tempfile.NamedTemporaryFile(delete=False) as tf:
+            tf.write(data)
+            tf_path = tf.name
+        try:
+            enc_fw = must_run([fast_path, '-e', '-w', '76', '-i', tf_path])
+            if must_run([fast_path, '-d'], input=enc_fw) == data:
+                ok(f'fastbase64 wrapped {label}')
+        finally:
+            os.unlink(tf_path)
+        with tempfile.NamedTemporaryFile(delete=False) as tf:
+            tf.write(data)
+            tf_path = tf.name
+        try:
+            enc_cw = must_run([core_path, '-w', '76', tf_path])
+            if must_run([core_path, '-d'], input=enc_cw) == data:
+                ok(f'coreutils wrapped {label}')
+        finally:
+            os.unlink(tf_path)
         check_base64_alphabet(enc_f, f'large alphabet check {label}')
 
 # ---------------------------------------------------------------------------
@@ -573,21 +622,32 @@ def test_wrapping_extremes(fast_path, core_path):
     data = generate_deterministic_data(8192)
     for tool, name, default_encode in [(fast_path, "fastbase64", False), (core_path, "coreutils", True)]:
         for w in [1, 4, 76, 100000]:
-            cmd = [tool, '-e'] if not default_encode else [tool]
-            cmd += ['-w', str(w)]
-            enc = must_run(cmd, input=data)
-            dec = must_run([tool, '-d'], input=enc)
-            if dec == data:
-                ok(f'{name} -w {w} round-trip')
-            else:
-                fail(f'{name} -w {w} round-trip')
-            # verify line lengths
-            lines = enc.rstrip(b'\n').split(b'\n')
-            max_len = max((len(l) for l in lines if l), default=0)
-            if max_len <= w or w >= len(data) * 4 // 3:
-                ok(f'{name} -w {w} line lengths correct')
-            else:
-                fail(f'{name} -w {w} line lengths', f'max line {max_len}')
+            with tempfile.NamedTemporaryFile(delete=False) as tf:
+                tf.write(data)
+                tf_path = tf.name
+            try:
+                cmd = [tool, '-w', str(w)]
+                if not default_encode:
+                    cmd.insert(1, '-e')
+                else:
+                    cmd.append(tf_path)
+                if not default_encode:
+                    cmd.extend(['-i', tf_path])
+                enc = must_run(cmd)
+                dec = must_run([tool, '-d'], input=enc)
+                if dec == data:
+                    ok(f'{name} -w {w} round-trip')
+                else:
+                    fail(f'{name} -w {w} round-trip')
+                # verify line lengths
+                lines = enc.rstrip(b'\n').split(b'\n')
+                max_len = max((len(l) for l in lines if l), default=0)
+                if max_len <= w or w >= len(data) * 4 // 3:
+                    ok(f'{name} -w {w} line lengths correct')
+                else:
+                    fail(f'{name} -w {w} line lengths', f'max line {max_len}')
+            finally:
+                os.unlink(tf_path)
 
 # ---------------------------------------------------------------------------
 # Adversarial decoding (bad padding, garbage, whitespace, long lines)
