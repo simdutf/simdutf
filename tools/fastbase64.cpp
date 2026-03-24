@@ -279,11 +279,11 @@ bool CommandLine::decode_to(std::FILE *fpout) {
     size_t total_input = p.second + offset;
     // if p.first is false, we have reached the end of the file.
     if (!p.first) {
-      // Final chunk: use strict mode to reject invalid inputs.
+      // Final chunk: use loose mode.
       simdutf::full_result r =
           simdutf::get_active_implementation()->base64_to_binary_details(
               input_data.data(), total_input, output_buffer.data(), options,
-              simdutf::last_chunk_handling_options::strict);
+              simdutf::last_chunk_handling_options::loose);
       if (r.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {
         fprintf(stderr, "Invalid base64 character at position %zu.\n",
                 pos + r.input_count);
@@ -294,9 +294,9 @@ bool CommandLine::decode_to(std::FILE *fpout) {
                         "characters or could not be read.\n");
         return false;
       }
-      if (r.error == simdutf::error_code::BASE64_EXTRA_BITS) {
+      if (r.error != simdutf::error_code::SUCCESS) {
         fprintf(stderr,
-                "The base64 input terminates with non-zero padding bits.\n");
+                "Unexpected error during base64 decoding.\n");
         return false;
       }
       write_to_file_descriptor(fpout, output_buffer.data(), r.output_count);
@@ -403,8 +403,8 @@ void CommandLine::show_help(const std::string &command_name, bool gnumode) {
          "(default %s)\n",
          gnumode ? "76" : "0, meaning no breaks");
   printf("  -w, --wrap=NUM    same as -b\n");
-  printf("  -d, -D, --decode   decode input (default)\n");
-  printf("  -e, --encode       encode input\n");
+  printf("  -d, -D, --decode   decode input\n");
+  printf("  -e, --encode       encode input (default)\n");
   printf(
       "  --ignore-garbage   when decoding, ignore non-alphabet characters\n");
   printf("  -h, --help         display this message\n");

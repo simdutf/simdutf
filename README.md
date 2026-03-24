@@ -2626,7 +2626,7 @@ The fastbase64 tool provides high-performance base64 encoding and decoding. They
 - `fastbase64`: BSD-like interface.
 - `fastbase64.coreutils`: GNU coreutils-compatible interface, matching GNU base64 behavior.
 
-Both commands have additional specific flags no present in the conventional tools.
+Both commands have additional specific flags not present in the conventional tools.
 
 #### fastbase64: BSD-like Base64 encoder/decoder
 

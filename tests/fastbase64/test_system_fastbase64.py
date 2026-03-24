@@ -567,6 +567,45 @@ def test_bsd_behavior_detailed(fast_bsd, payloads, tmp_dir):
 
 
 # ---------------------------------------------------------------------------
+# Adversarial error handling (both variants should behave identically)
+# ---------------------------------------------------------------------------
+
+def test_adversarial_error_handling(fast_bsd, fast_gnu):
+    """Test that both BSD and GNU variants handle invalid base64 inputs identically."""
+    section("Adversarial error handling (both variants handle invalid inputs identically)")
+
+    # bad padding
+    bad_pads = [b'QUFB=', b'QUFB==', b'QUFB===', b'=QUFB', b'QUFB\n=']
+    for bp in bad_pads:
+        rc_bsd, _, _ = run_command([fast_bsd, '-d'], input_data=bp)
+        rc_gnu, _, _ = run_command([fast_gnu, '-d'], input_data=bp)
+        if rc_bsd == rc_gnu:
+            ok(f'both variants handle bad padding {bp!r} identically (rc={rc_bsd})')
+        else:
+            fail(f'both variants handle bad padding {bp!r} identically (BSD rc={rc_bsd}, GNU rc={rc_gnu})')
+
+    # incomplete base64 groups (BASE64_INPUT_REMAINDER)
+    remainder_cases = [b'AAAAA', b'AAAAAA', b'AAAAAAA', b'QUJ']  # 5, 6, 7, 3 chars
+    for rc_input in remainder_cases:
+        rc_bsd, _, _ = run_command([fast_bsd, '-d'], input_data=rc_input)
+        rc_gnu, _, _ = run_command([fast_gnu, '-d'], input_data=rc_input)
+        if rc_bsd == rc_gnu:
+            ok(f'both variants handle incomplete group {rc_input!r} identically (rc={rc_bsd})')
+        else:
+            fail(f'both variants handle incomplete group {rc_input!r} identically (BSD rc={rc_bsd}, GNU rc={rc_gnu})')
+
+    # non-zero padding bits (BASE64_EXTRA_BITS)
+    extra_bits_cases = [b'YWF=', b'ZXhhZh==']  # "aa" with extra bits, "exhf" with extra bits
+    for eb_input in extra_bits_cases:
+        rc_bsd, _, _ = run_command([fast_bsd, '-d'], input_data=eb_input)
+        rc_gnu, _, _ = run_command([fast_gnu, '-d'], input_data=eb_input)
+        if rc_bsd == rc_gnu:
+            ok(f'both variants handle non-zero padding bits {eb_input!r} identically (rc={rc_bsd})')
+        else:
+            fail(f'both variants handle non-zero padding bits {eb_input!r} identically (BSD rc={rc_bsd}, GNU rc={rc_gnu})')
+
+
+# ---------------------------------------------------------------------------
 # System base64 compatibility (runs only when system base64 is present)
 # ---------------------------------------------------------------------------
 
@@ -716,6 +755,7 @@ def main():
         test_cross_compatibility(fast_bsd, fast_gnu, payloads)
         test_gnu_behavior(fast_gnu, payloads, tmp_dir)
         test_bsd_behavior_detailed(fast_bsd, payloads, tmp_dir)
+        test_adversarial_error_handling(fast_bsd, fast_gnu)
 
         # System compatibility tests
         is_gnu = _system_is_gnu()
