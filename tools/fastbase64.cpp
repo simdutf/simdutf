@@ -393,7 +393,7 @@ void CommandLine::show_help(const std::string& command_name, bool gnumode) {
 
 int main(int argc, char *argv[]) {
   std::filesystem::path p(argv[0]);
-  std::string progname = p.filename().string();
+  std::string progname = p.stem().string();
   bool gnumode = (progname == "fastbase64.coreutils");
   try {
     CommandLine cmdline = CommandLine::parse_and_validate_arguments(argc, argv, gnumode);
