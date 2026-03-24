@@ -2623,7 +2623,7 @@ sutf -f UTF-8 -t UTF-16LE -o output_file.txt first_input_file.txt second_input_f
 The fastbase64 tool provides high-performance base64 encoding and decoding. There are two variants:
 
 - `fastbase64`: BSD-like interface (default decode).
-- `fastbase64.coreutils`: GNU coreutils-compatible interface (default encode), matching GNU base64 behavior.
+- `fastbase64.coreutils`: GNU coreutils-compatible interface (default encode), with option-compatible behavior.
 
 Both support various options including line wrapping, input/output file specification, and more. See `fastbase64 --help`, `fastbase64.coreutils --help`, or `man fastbase64` for more details. By default, fastbase64 decodes base64 input to binary output, while fastbase64.coreutils encodes. Examples:
 ```
