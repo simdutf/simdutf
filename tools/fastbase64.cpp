@@ -5,7 +5,6 @@
 #include <cstring>
 #include <filesystem>
 #include <vector>
-#include <vector>
 
 class CommandLine {
 public:
@@ -24,7 +23,8 @@ public:
       fclose(current_file);
     }
   }
-  static CommandLine parse_and_validate_arguments(int argc, char *argv[], bool gnumode);
+  static CommandLine parse_and_validate_arguments(int argc, char *argv[],
+                                                  bool gnumode);
   bool run_procedure(std::FILE *fpout);
   bool encode_to(std::FILE *fpout);
   bool decode_to(std::FILE *fpout);
@@ -34,16 +34,17 @@ public:
   bool write_to_file_descriptor(std::FILE *fp, const char *data, size_t length);
   bool write_with_wrapping(std::FILE *fp, const char *data, size_t length,
                            int &current_col, int wrap_cols);
-  static void show_help(const std::string& command_name, bool gnumode);
-  bool decode = true; // decode is default
+  static void show_help(const std::string &command_name, bool gnumode);
+  bool decode = false; // default: encode for both fastbase64 and coreutils
 };
 
-CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[], bool gnumode) {
+CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
+                                                      bool gnumode) {
   CommandLine cmdline;
   std::vector<std::string> positional;
   std::string command_name = argv[0];
-  cmdline.decode = false; // default: encode for both fastbase64 and coreutils
-  cmdline.wrap_cols = gnumode ? 76 : 0; // default wrap: 76 for coreutils, 0 for fastbase64
+  cmdline.wrap_cols =
+      gnumode ? 76 : 0; // default wrap: 76 for coreutils, 0 for fastbase64
   size_t i = 1;
   while (i < argc) {
     std::string arg = argv[i];
@@ -279,9 +280,10 @@ bool CommandLine::decode_to(std::FILE *fpout) {
     // if p.first is false, we have reached the end of the file.
     if (!p.first) {
       // Final chunk: use strict mode to reject invalid inputs.
-      simdutf::full_result r = simdutf::get_active_implementation()->base64_to_binary_details(
-          input_data.data(), total_input, output_buffer.data(), options,
-          simdutf::last_chunk_handling_options::strict);
+      simdutf::full_result r =
+          simdutf::get_active_implementation()->base64_to_binary_details(
+              input_data.data(), total_input, output_buffer.data(), options,
+              simdutf::last_chunk_handling_options::strict);
       if (r.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {
         fprintf(stderr, "Invalid base64 character at position %zu.\n",
                 pos + r.input_count);
@@ -289,11 +291,12 @@ bool CommandLine::decode_to(std::FILE *fpout) {
       }
       if (r.error == simdutf::error_code::BASE64_INPUT_REMAINDER) {
         fprintf(stderr, "The base64 input contained an invalid number of "
-                        "characters or could not be read.");
+                        "characters or could not be read.\n");
         return false;
       }
       if (r.error == simdutf::error_code::BASE64_EXTRA_BITS) {
-        fprintf(stderr, "The base64 input terminates with non-zero padding bits.");
+        fprintf(stderr,
+                "The base64 input terminates with non-zero padding bits.\n");
         return false;
       }
       write_to_file_descriptor(fpout, output_buffer.data(), r.output_count);
@@ -314,11 +317,12 @@ bool CommandLine::decode_to(std::FILE *fpout) {
     }
     if (r.error == simdutf::error_code::BASE64_INPUT_REMAINDER) {
       fprintf(stderr, "The base64 input contained an invalid number of "
-                      "characters: remainder of one base64 character.");
+                      "characters: remainder of one base64 character.\n");
       return false;
     }
     if (r.error != simdutf::error_code::SUCCESS) {
-      fprintf(stderr, "There was an unexpected error during base64 decoding.");
+      fprintf(stderr,
+              "There was an unexpected error during base64 decoding.\n");
       return false;
     }
     write_to_file_descriptor(fpout, output_buffer.data(), r.output_count);
@@ -384,18 +388,22 @@ bool CommandLine::encode_to(std::FILE *fpout) {
   return true;
 }
 
-void CommandLine::show_help(const std::string& command_name, bool gnumode) {
-  printf("Usage: %s [OPTIONS...] [INPUTFILE]\n\n", command_name.c_str());
+void CommandLine::show_help(const std::string &command_name, bool gnumode) {
+  // The usage line omits [OUTPUTFILE] even though the tool supports a second
+  // positional output filename. It is intentional (for simplicity).
   if (gnumode) {
-    printf("Encodes or decodes base64 data with GNU coreutils compatibility.\n\n");
+    printf(
+        "Encodes or decodes base64 data with GNU coreutils compatibility.\n\n");
   } else {
-    printf("Encodes or decodes base64 data using the high-performance simdutf library.\n\n");
+    printf("Encodes or decodes base64 data using the high-performance simdutf "
+           "library.\n\n");
   }
   printf("  -b, --break=NUM   break encoded output up into lines of length NUM "
-         "(default %d, meaning no breaks)\n", gnumode ? 76 : 0);
+         "(default %s)\n",
+         gnumode ? "76" : "0, meaning no breaks");
   printf("  -w, --wrap=NUM    same as -b\n");
-  printf("  -d, -D, --decode   decode input\n");
-  printf("  -e, --encode       encode input (default)\n");
+  printf("  -d, -D, --decode   decode input (default)\n");
+  printf("  -e, --encode       encode input\n");
   printf(
       "  --ignore-garbage   when decoding, ignore non-alphabet characters\n");
   printf("  -h, --help         display this message\n");
@@ -413,12 +421,16 @@ void CommandLine::show_help(const std::string& command_name, bool gnumode) {
 
 int main(int argc, char *argv[]) {
   std::string progname = argv[0];
-  // Detect if we are running in GNU mode by checking if the program name contains "coreutils".
-  // Technically, this would allow a program called potatocoreutilsmywife to trigger GNU mode, 
-  // but it is a simple heuristic that should work in practice.
-  bool gnumode = (progname.find("coreutils") != std::string::npos);
+  // Detect if we are running in GNU mode by checking if the program name
+  // contains "coreutils". Technically, this would allow a program called
+  // potatocoreutilsmywife to trigger GNU mode, but it is a simple heuristic
+  // that should work in practice.
+  std::filesystem::path exe_path(progname);
+  std::string exe_name = exe_path.filename().string();
+  bool gnumode = (exe_name.find("coreutils") != std::string::npos);
   try {
-    CommandLine cmdline = CommandLine::parse_and_validate_arguments(argc, argv, gnumode);
+    CommandLine cmdline =
+        CommandLine::parse_and_validate_arguments(argc, argv, gnumode);
     return cmdline.run() ? EXIT_SUCCESS : EXIT_FAILURE;
   } catch (const std::exception &e) {
     fprintf(stderr, "%s\n", e.what());

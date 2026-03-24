@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Comprehensive tests for fastbase64 (BSD-like, default-decode) and
-fastbase64.coreutils (GNU-like, default-encode).
+Comprehensive tests for fastbase64 (BSD-like) and
+fastbase64.coreutils (GNU-like).
 """
 import base64
 import os
@@ -91,10 +91,10 @@ def run_encode_binary(path, data, is_coreutils=False):
             return must_run([path, '-e'], input=data)
 
 # ---------------------------------------------------------------------------
-# fastbase64 (BSD-like: default = decode)
+# fastbase64 (BSD-like)
 # ---------------------------------------------------------------------------
 def test_fastbase64(path, readme):
-    print("\n=== fastbase64 (BSD-like, default-decode) ===")
+    print("\n=== fastbase64 (BSD-like) ===")
     src = read_binary(readme)
     # --- help / version -------------------------------------------------------
     rc, out, _ = run([path, '--help'])
@@ -120,14 +120,13 @@ def test_fastbase64(path, readme):
         ok('round-trip: -e FILE | -d')
     else:
         fail('round-trip: -e FILE | -d')
-    # --- default action is encode ----------------------------------------------
     decoded_ref = b'hello default\n'
     encoded_default = must_run([path], input=decoded_ref)
     expected = base64.b64encode(decoded_ref) + b'\n'
     if encoded_default == expected:
-        ok('default action is encode')
+        ok('encoded matches expected')
     else:
-        fail('default action is encode', f'got {encoded_default!r}')
+        fail('encoded matches expected', f'got {encoded_default!r}')
     # --- explicit -e and -d flags (binary data) --------------------------------
     sample = b'\x00\xff\xfe\x80binary\x01\x02'
     enc = must_run([path, '-e'], input=sample)

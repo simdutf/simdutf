@@ -2621,12 +2621,12 @@ sutf -f UTF-8 -t UTF-16LE -o output_file.txt first_input_file.txt second_input_f
 
 ### fastbase64: Base64 encoder/decoder
 
-The fastbase64 tool provides high-performance base64 encoding and decoding. There are two variants:
+The fastbase64 tool provides high-performance base64 encoding and decoding. They are ideally suited if you need to encode or decode large files. There are two variants that are meant to serve as drop-in replacements:
 
-- `fastbase64`: BSD-like interface (default decode).
-- `fastbase64.coreutils`: GNU coreutils-compatible interface (default encode), matching GNU base64 behavior.
+- `fastbase64`: BSD-like interface.
+- `fastbase64.coreutils`: GNU coreutils-compatible interface, matching GNU base64 behavior.
 
-They are ideally suited if you need to encode or decode large files.
+Both commands have additional specific flags no present in the conventional tools.
 
 #### fastbase64: BSD-like Base64 encoder/decoder
 
