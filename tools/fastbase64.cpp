@@ -75,7 +75,7 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
       i += 2;
     } else if (arg == "-w") {
       if (i + 1 >= argc) {
-        throw std::runtime_error("Missing value for " + arg);
+        throw ArgumentError("Missing value for " + arg);
       }
       std::string val = argv[i + 1];
       size_t pos;
@@ -158,7 +158,7 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
         i++;
       } else {
         if (i + 1 >= argc) {
-          throw std::runtime_error("Missing value for " + arg);
+          throw ArgumentError("Missing value for " + arg);
         }
         cmdline.input_file = argv[i + 1];
         i += 2;
@@ -174,7 +174,7 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
       i += 2;
     } else if (arg == "-o" || arg == "--output") {
       if (i + 1 >= argc) {
-        throw std::runtime_error("Missing value for " + arg);
+        throw ArgumentError("Missing value for " + arg);
       }
       cmdline.output_file = argv[i + 1];
       cmdline.output_specified = true;
