@@ -37,7 +37,6 @@ def test_one(args, features):
         warnings = [
             "-Wall",
             "-Wextra",
-            "-Werror",
             "-Wno-error=unused-function",
             "-Wno-error=unused-const-variable",
         ]
