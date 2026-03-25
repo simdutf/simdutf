@@ -2618,21 +2618,50 @@ during compilation. The following is an example of transcoding two input files t
 sutf -f UTF-8 -t UTF-16LE -o output_file.txt first_input_file.txt second_input_file.txt
 ```
 
+
 ### fastbase64: Base64 encoder/decoder
 
-The fastbase64 tool provides high-performance base64 encoding and decoding, compatible with the standard `base64` command (see `fastbase64 --help` or `man fastbase64` for more details). It supports various options including line wrapping, input/output file specification, and more. By default, it decodes base64 input to binary output. Examples:
+The fastbase64 tools provide high-performance base64 encoding and decoding. They are ideally suited if you need to encode or decode large files. There are two variants that are meant to serve as drop-in replacements:
+
+- `fastbase64`: BSD/macOS-like interface.
+- `fastbase64.coreutils`: GNU coreutils-compatible interface, matching GNU base64 behavior.
+
+Both commands have additional specific flags not present in the conventional tools.
+
+#### fastbase64: BSD-like Base64 encoder/decoder
+
+The `fastbase64` tool provides high-performance base64 encoding and decoding with BSD/macOS-compatible behavior. It defaults to encoding binary input to base64 output with no line wrapping. Examples:
+
 ```
-# Encode a file
-fastbase64 -e myfile.txt
+# Encode a file (default, no wrapping)
+fastbase64 -i myfile.txt
 
-# Decode base64 data (default)
-fastbase64 < encoded.txt
+# Decode base64 data
+fastbase64 -d -i encoded.txt
 
-# Encode with line wrapping
-fastbase64 -e -w 76 myfile.txt
+# Encode with custom line wrapping
+fastbase64 -b 76 -i myfile.txt
 ```
 
-It can be several times faster than standard base64 tools. See `scripts/base64bench.sh` for a benchmark.
+#### fastbase64.coreutils: GNU coreutils-compatible Base64 encoder/decoder
+
+The `fastbase64.coreutils` tool provides high-performance base64 encoding and decoding with GNU coreutils-compatible behavior. It defaults to encoding binary input to base64 output with line wrapping at 76 characters. Examples:
+
+```
+# Encode a file (default, with 76-character line wrapping)
+fastbase64.coreutils myfile.txt
+
+# Decode base64 data
+fastbase64.coreutils -d < encoded.txt
+
+# Encode without line wrapping
+fastbase64.coreutils -w 0 myfile.txt
+```
+
+
+#### Performance
+
+The `fastbase64` tools can be several times faster than standard base64 tools. See `scripts/base64bench.sh` for a benchmark.
 
 **Apple M4 Max**
 

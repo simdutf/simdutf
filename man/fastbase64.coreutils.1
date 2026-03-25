@@ -1,0 +1,53 @@
+.TH FASTBASE64.COREUTILS 1 "March 2026" "simdutf" "User Commands"
+.SH NAME
+fastbase64.coreutils \- base64 encode/decode data and print to standard output (coreutils compatible)
+.SH SYNOPSIS
+.B fastbase64.coreutils
+[\fIOPTIONS\fR...] [\fIINPUTFILE\fR]
+.SH DESCRIPTION
+.B fastbase64.coreutils
+encodes or decodes base64 data using the high-performance simdutf library,
+with options compatible with GNU coreutils base64, plus clearly marked fastbase64-specific extensions.
+By default, it encodes binary input to base64 output. On large files,
+it can be several times faster than standard base64 tools.
+.PP
+.B fastbase64 extension (not present in GNU coreutils base64):
+If a second filename is provided, it is used as the output file.
+Otherwise, output goes to standard output. The \fB\-o\fR option takes precedence over positional output file.
+.SH OPTIONS
+.TP
+.B \-b, \-\-break=\fINUM\fR
+fastbase64 extension (not present in GNU coreutils base64): break encoded output into lines of length \fINUM\fR (default 76, meaning breaks at 76 characters).
+.TP
+.B \-w, \-\-wrap=\fINUM\fR
+Wrap encoded lines after \fINUM\fR characters (default 76). Use 0 to disable line wrapping.
+.TP
+.B \-d, \-D, \-\-decode
+Decode input.
+.TP
+.B \-e, \-\-encode
+Encode input (default).
+.TP
+.B \-\-ignore\-garbage
+When decoding, ignore non-alphabet characters.
+.TP
+.B \-i, \-n, \-\-noerrcheck
+When decoding, ignore non-alphabet characters (same as \-\-ignore\-garbage).
+.TP
+.B \-h, \-\-help
+Display help message and exit.
+.TP
+.B \-o, \-\-output=\fIFILE\fR
+Output file (default: "-" for stdout).
+.TP
+.B \-\-version
+Output version information and exit.
+.SH EXAMPLES
+.TP
+Encode a file:
+.B fastbase64.coreutils myfile.txt
+.TP
+Decode base64 data ignoring garbage:
+.B fastbase64.coreutils \-d \-i < encoded.txt
+.SH AUTHOR
+Written by the simdutf development team.
