@@ -70,11 +70,21 @@ time_cmd() {
     done
     # Sort times expressed in tenths of milliseconds.
     local sorted=($(printf '%s\n' "${times[@]}" | sort -n))
-    # Median: average of 5th and 6th values (indices 4 and 5), or single if num_runs=1
+    # Compute median for arbitrary N (odd/even)
     if [ $num_runs -eq 1 ]; then
         local median_tenths=${times[0]}
     else
-        local median_tenths=$(( (sorted[4] + sorted[5]) / 2 ))
+        local n=$num_runs
+        if [ $((n % 2)) -eq 1 ]; then
+            # Odd number of runs: median is the middle value
+            local mid_index=$(( (n - 1) / 2 ))
+            local median_tenths=${sorted[$mid_index]}
+        else
+            # Even number of runs: median is average of two middle values
+            local mid1_index=$(( n / 2 - 1 ))
+            local mid2_index=$(( n / 2 ))
+            local median_tenths=$(( (sorted[$mid1_index] + sorted[$mid2_index]) / 2 ))
+        fi
     fi
     printf "%d.%d" $((median_tenths / 10)) $((median_tenths % 10))
 }

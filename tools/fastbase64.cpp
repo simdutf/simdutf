@@ -60,7 +60,11 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
       }
       std::string val = argv[i + 1];
       size_t pos;
-      cmdline.wrap_cols = std::stoi(val, &pos);
+      try {
+        cmdline.wrap_cols = std::stoi(val, &pos);
+      } catch (const std::exception&) {
+        throw ArgumentError("Invalid break value: " + val);
+      }
       if (pos != val.length()) {
         throw ArgumentError("Invalid break value: " + val);
       }
@@ -75,7 +79,11 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
       }
       std::string val = argv[i + 1];
       size_t pos;
-      cmdline.wrap_cols = std::stoi(val, &pos);
+      try {
+        cmdline.wrap_cols = std::stoi(val, &pos);
+      } catch (const std::exception&) {
+        throw ArgumentError("Invalid wrap value: " + val);
+      }
       if (pos != val.length()) {
         throw ArgumentError("Invalid wrap value: " + val);
       }
@@ -87,7 +95,11 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
     } else if (arg.substr(0, 7) == "--wrap=") {
       std::string val = arg.substr(7);
       size_t pos;
-      cmdline.wrap_cols = std::stoi(val, &pos);
+      try {
+        cmdline.wrap_cols = std::stoi(val, &pos);
+      } catch (const std::exception&) {
+        throw ArgumentError("Invalid wrap value: " + val);
+      }
       if (pos != val.length()) {
         throw ArgumentError("Invalid wrap value: " + val);
       }
@@ -99,7 +111,11 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
     } else if (arg.substr(0, 8) == "--break=") {
       std::string val = arg.substr(8);
       size_t pos;
-      cmdline.wrap_cols = std::stoi(val, &pos);
+      try {
+        cmdline.wrap_cols = std::stoi(val, &pos);
+      } catch (const std::exception&) {
+        throw ArgumentError("Invalid break value: " + val);
+      }
       if (pos != val.length()) {
         throw ArgumentError("Invalid break value: " + val);
       }
