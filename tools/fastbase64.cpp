@@ -53,7 +53,12 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
       if (i + 1 >= argc) {
         throw std::runtime_error("Missing value for " + arg);
       }
-      cmdline.wrap_cols = std::stoi(argv[i + 1]);
+      std::string val = argv[i + 1];
+      size_t pos;
+      cmdline.wrap_cols = std::stoi(val, &pos);
+      if (pos != val.length()) {
+        throw std::runtime_error("Invalid break value: " + val);
+      }
       if (cmdline.wrap_cols < 0) {
         throw std::runtime_error("Break columns must be non-negative");
       }
@@ -63,21 +68,36 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
       if (i + 1 >= argc) {
         throw std::runtime_error("Missing value for " + arg);
       }
-      cmdline.wrap_cols = std::stoi(argv[i + 1]);
+      std::string val = argv[i + 1];
+      size_t pos;
+      cmdline.wrap_cols = std::stoi(val, &pos);
+      if (pos != val.length()) {
+        throw std::runtime_error("Invalid wrap value: " + val);
+      }
       if (cmdline.wrap_cols < 0) {
         throw std::runtime_error("Wrap columns must be non-negative");
       }
       cmdline.decode = false; // -w implies encode
       i += 2;
     } else if (arg.substr(0, 7) == "--wrap=") {
-      cmdline.wrap_cols = std::stoi(arg.substr(7));
+      std::string val = arg.substr(7);
+      size_t pos;
+      cmdline.wrap_cols = std::stoi(val, &pos);
+      if (pos != val.length()) {
+        throw std::runtime_error("Invalid wrap value: " + val);
+      }
       if (cmdline.wrap_cols < 0) {
         throw std::runtime_error("Wrap columns must be non-negative");
       }
       cmdline.decode = false; // --wrap implies encode
       i++;
     } else if (arg.substr(0, 8) == "--break=") {
-      cmdline.wrap_cols = std::stoi(arg.substr(8));
+      std::string val = arg.substr(8);
+      size_t pos;
+      cmdline.wrap_cols = std::stoi(val, &pos);
+      if (pos != val.length()) {
+        throw std::runtime_error("Invalid break value: " + val);
+      }
       if (cmdline.wrap_cols < 0) {
         throw std::runtime_error("Break columns must be non-negative");
       }
@@ -241,7 +261,7 @@ void CommandLine::write_to_file_descriptor(std::FILE *fp, const char *data,
   }
   size_t bytes_written = std::fwrite(data, 1, length, fp);
   if (bytes_written != length) {
-    throw std::runtime_error("Failed to write:" + std::string(strerror(errno)));
+    throw std::runtime_error("Failed to write: " + std::string(strerror(errno)));
   }
 }
 
@@ -259,7 +279,7 @@ void CommandLine::write_with_wrapping(std::FILE *fp, const char *data,
   while (i < length) {
     if (current_col >= wrap_cols) {
       if (std::fputc('\n', fp) == EOF) {
-        throw std::runtime_error("Failed to write:" +
+        throw std::runtime_error("Failed to write: " +
                                  std::string(strerror(errno)));
       }
       current_col = 0;
@@ -267,7 +287,7 @@ void CommandLine::write_with_wrapping(std::FILE *fp, const char *data,
     int remaining = wrap_cols - current_col;
     size_t to_write = std::min((size_t)remaining, length - i);
     if (std::fwrite(data + i, 1, to_write, fp) != to_write) {
-      throw std::runtime_error("Failed to write:" +
+      throw std::runtime_error("Failed to write: " +
                                std::string(strerror(errno)));
     }
     current_col += to_write;
@@ -394,7 +414,7 @@ bool CommandLine::encode_to(std::FILE *fpout) {
                             this->current_col, this->wrap_cols);
       }
       if (std::fputc('\n', fpout) == EOF) {
-        throw std::runtime_error("Failed to write:" +
+        throw std::runtime_error("Failed to write: " +
                                  std::string(strerror(errno)));
       }
       return true;

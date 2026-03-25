@@ -143,7 +143,7 @@ def make_test_payloads(tmp_dir):
     # Large file (~256 KB) to stress-test throughput / buffering
     p = os.path.join(tmp_dir, "large.bin")
     with open(p, "wb") as f:
-        import random, struct
+        import random
         rng = random.Random(42)
         f.write(bytes(rng.getrandbits(8) for _ in range(256 * 1024)))
     payloads["large_256k"] = p

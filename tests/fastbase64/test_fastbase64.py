@@ -52,7 +52,8 @@ def must_run(cmd, input=None):
 
 def read_binary(path):
     """Read a file in binary mode without altering bytes."""
-    return open(path, 'rb').read()
+    with open(path, 'rb') as f:
+        return f.read()
 
 def check_base64_alphabet(data_bytes, label):
     """Verify the output only contains valid base64 chars + newlines."""
