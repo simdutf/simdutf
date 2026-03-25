@@ -518,6 +518,8 @@ def test_large_roundtrips(fast_path, core_path):
             enc_fw = must_run([fast_path, '-e', '-w', '76', '-i', tf_path])
             if must_run([fast_path, '-d'], input=enc_fw) == data:
                 ok(f'fastbase64 wrapped {label}')
+            else:
+                fail(f'fastbase64 wrapped {label}')
         finally:
             os.unlink(tf_path)
         with tempfile.NamedTemporaryFile(delete=False) as tf:
@@ -527,6 +529,8 @@ def test_large_roundtrips(fast_path, core_path):
             enc_cw = must_run([core_path, '-w', '76', tf_path])
             if must_run([core_path, '-d'], input=enc_cw) == data:
                 ok(f'coreutils wrapped {label}')
+            else:
+                fail(f'coreutils wrapped {label}')
         finally:
             os.unlink(tf_path)
         check_base64_alphabet(enc_f, f'large alphabet check {label}')

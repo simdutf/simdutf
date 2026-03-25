@@ -83,7 +83,8 @@ def make_test_payloads(tmp_dir):
 
     # Empty file
     p = os.path.join(tmp_dir, "empty.bin")
-    open(p, "wb").close()
+    with open(p, "wb"):
+        pass
     payloads["empty"] = p
 
     # Single byte
@@ -632,7 +633,7 @@ def test_against_system_gnu(fast_gnu, payloads):
 
         # System encode → fast_gnu decode
         try:
-            enc = must_run(["base64", "-i", path])
+            enc = must_run(["base64", path])
             dec = must_run([fast_gnu, "-d"], input_data=enc)
             if dec == src:
                 ok(f"[{label}] system GNU encode → fast_gnu -d")

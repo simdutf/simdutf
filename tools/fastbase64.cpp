@@ -7,6 +7,11 @@
 #include <memory>
 #include <vector>
 
+class ArgumentError : public std::runtime_error {
+public:
+    ArgumentError(const std::string& msg) : std::runtime_error(msg) {}
+};
+
 class CommandLine {
 public:
   std::FILE *current_file{NULL};
@@ -51,16 +56,16 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
     std::string arg = argv[i];
     if (arg == "-b" || arg == "--break") {
       if (i + 1 >= argc) {
-        throw std::runtime_error("Missing value for " + arg);
+        throw ArgumentError("Missing value for " + arg);
       }
       std::string val = argv[i + 1];
       size_t pos;
       cmdline.wrap_cols = std::stoi(val, &pos);
       if (pos != val.length()) {
-        throw std::runtime_error("Invalid break value: " + val);
+        throw ArgumentError("Invalid break value: " + val);
       }
       if (cmdline.wrap_cols < 0) {
-        throw std::runtime_error("Break columns must be non-negative");
+        throw ArgumentError("Break columns must be non-negative");
       }
       cmdline.decode = false; // -b implies encode
       i += 2;
@@ -72,10 +77,10 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
       size_t pos;
       cmdline.wrap_cols = std::stoi(val, &pos);
       if (pos != val.length()) {
-        throw std::runtime_error("Invalid wrap value: " + val);
+        throw ArgumentError("Invalid wrap value: " + val);
       }
       if (cmdline.wrap_cols < 0) {
-        throw std::runtime_error("Wrap columns must be non-negative");
+        throw ArgumentError("Wrap columns must be non-negative");
       }
       cmdline.decode = false; // -w implies encode
       i += 2;
@@ -84,10 +89,10 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
       size_t pos;
       cmdline.wrap_cols = std::stoi(val, &pos);
       if (pos != val.length()) {
-        throw std::runtime_error("Invalid wrap value: " + val);
+        throw ArgumentError("Invalid wrap value: " + val);
       }
       if (cmdline.wrap_cols < 0) {
-        throw std::runtime_error("Wrap columns must be non-negative");
+        throw ArgumentError("Wrap columns must be non-negative");
       }
       cmdline.decode = false; // --wrap implies encode
       i++;
@@ -96,16 +101,16 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
       size_t pos;
       cmdline.wrap_cols = std::stoi(val, &pos);
       if (pos != val.length()) {
-        throw std::runtime_error("Invalid break value: " + val);
+        throw ArgumentError("Invalid break value: " + val);
       }
       if (cmdline.wrap_cols < 0) {
-        throw std::runtime_error("Break columns must be non-negative");
+        throw ArgumentError("Break columns must be non-negative");
       }
       cmdline.decode = false; // --break= implies encode
       i++;
     } else if (arg.substr(0, 8) == "--input=") {
       if (gnumode) {
-        throw std::runtime_error("Unknown option: " + arg);
+        throw ArgumentError("Unknown option: " + arg);
       }
       cmdline.input_file = arg.substr(8);
       i++;
@@ -124,7 +129,7 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
       i++;
     } else if (arg == "-n" || arg == "--noerrcheck") {
       if (!gnumode) {
-        throw std::runtime_error("Unknown option: " + arg);
+        throw ArgumentError("Unknown option: " + arg);
       }
       cmdline.ignore_garbage = true;
       i++;
@@ -144,10 +149,10 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
       }
     } else if (arg == "--input") {
       if (gnumode) {
-        throw std::runtime_error("Unknown option: " + arg);
+        throw ArgumentError("Unknown option: " + arg);
       }
       if (i + 1 >= argc) {
-        throw std::runtime_error("Missing value for " + arg);
+        throw ArgumentError("Missing value for " + arg);
       }
       cmdline.input_file = argv[i + 1];
       i += 2;
@@ -162,7 +167,7 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
       printf("fastbase64 version %s\n", SIMDUTF_VERSION);
       exit(EXIT_SUCCESS);
     } else if (arg[0] == '-' && arg != "-") {
-      throw std::runtime_error("Unknown option: " + arg);
+      throw ArgumentError("Unknown option: " + arg);
     } else {
       positional.push_back(arg);
       i++;
@@ -177,7 +182,7 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
     cmdline.output_file = positional[1];
   }
   if (positional.size() > 2) {
-    throw std::runtime_error("Too many positional arguments");
+    throw ArgumentError("Too many positional arguments");
   }
 
   return cmdline;
@@ -361,11 +366,11 @@ bool CommandLine::decode_to(std::FILE *fpout) {
       return false;
     }
     if (r.input_count == 0) {
-      // No progress made, compact the buffer by removing all ignorable bytes
+      // No progress made, compact the buffer by selecting all valid base64 characters
       size_t write_index = 0;
       for (size_t i = 0; i < total_input; ++i) {
         char c = input_data[i];
-        if (!simdutf::base64_ignorable(c, options)) {
+        if (simdutf::base64_valid(c, options)) {
           input_data[write_index++] = c;
         }
       }
@@ -483,13 +488,12 @@ int main(int argc, char *argv[]) {
     CommandLine cmdline =
         CommandLine::parse_and_validate_arguments(argc, argv, gnumode);
     return cmdline.run() ? EXIT_SUCCESS : EXIT_FAILURE;
+  } catch (const ArgumentError &e) {
+    fprintf(stderr, "%s\n", e.what());
+    CommandLine::show_help(argv[0], gnumode);
+    return EXIT_FAILURE;
   } catch (const std::exception &e) {
     fprintf(stderr, "%s\n", e.what());
-    // main() prints the full help text for any thrown exception (including
-    // runtime I/O errors like open/write/close failures). This is deliberate,
-    // as it provides users with immediate guidance on how to use the tool
-    // correctly after an error.
-    CommandLine::show_help(argv[0], gnumode);
     return EXIT_FAILURE;
   }
 }
