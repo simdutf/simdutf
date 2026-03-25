@@ -9,7 +9,7 @@
 
 class ArgumentError : public std::runtime_error {
 public:
-    ArgumentError(const std::string& msg) : std::runtime_error(msg) {}
+  ArgumentError(const std::string &msg) : std::runtime_error(msg) {}
 };
 
 class CommandLine {
@@ -62,7 +62,7 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
       size_t pos;
       try {
         cmdline.wrap_cols = std::stoi(val, &pos);
-      } catch (const std::exception&) {
+      } catch (const std::exception &) {
         throw ArgumentError("Invalid break value: " + val);
       }
       if (pos != val.length()) {
@@ -81,7 +81,7 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
       size_t pos;
       try {
         cmdline.wrap_cols = std::stoi(val, &pos);
-      } catch (const std::exception&) {
+      } catch (const std::exception &) {
         throw ArgumentError("Invalid wrap value: " + val);
       }
       if (pos != val.length()) {
@@ -97,7 +97,7 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
       size_t pos;
       try {
         cmdline.wrap_cols = std::stoi(val, &pos);
-      } catch (const std::exception&) {
+      } catch (const std::exception &) {
         throw ArgumentError("Invalid wrap value: " + val);
       }
       if (pos != val.length()) {
@@ -113,7 +113,7 @@ CommandLine CommandLine::parse_and_validate_arguments(int argc, char *argv[],
       size_t pos;
       try {
         cmdline.wrap_cols = std::stoi(val, &pos);
-      } catch (const std::exception&) {
+      } catch (const std::exception &) {
         throw ArgumentError("Invalid break value: " + val);
       }
       if (pos != val.length()) {
@@ -282,7 +282,8 @@ void CommandLine::write_to_file_descriptor(std::FILE *fp, const char *data,
   }
   size_t bytes_written = std::fwrite(data, 1, length, fp);
   if (bytes_written != length) {
-    throw std::runtime_error("Failed to write: " + std::string(strerror(errno)));
+    throw std::runtime_error("Failed to write: " +
+                             std::string(strerror(errno)));
   }
 }
 
@@ -382,7 +383,8 @@ bool CommandLine::decode_to(std::FILE *fpout) {
       return false;
     }
     if (r.input_count == 0) {
-      // No progress made, compact the buffer by selecting all valid base64 characters
+      // No progress made, compact the buffer by selecting all valid base64
+      // characters
       size_t write_index = 0;
       for (size_t i = 0; i < total_input; ++i) {
         char c = input_data[i];
