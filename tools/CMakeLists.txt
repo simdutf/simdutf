@@ -3,6 +3,18 @@ cmake_minimum_required(VERSION 3.15)
 add_executable(sutf sutf.cpp)
 add_executable(fastbase64 fastbase64.cpp)
 
+if(NOT WIN32)
+  add_custom_command(TARGET fastbase64 POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E remove -f $<TARGET_FILE_DIR:fastbase64>/fastbase64.coreutils$<TARGET_FILE_SUFFIX:fastbase64>
+    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE:fastbase64> $<TARGET_FILE_DIR:fastbase64>/fastbase64.coreutils$<TARGET_FILE_SUFFIX:fastbase64>
+  )
+else()
+  add_custom_command(TARGET fastbase64 POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E remove -f $<TARGET_FILE_DIR:fastbase64>/fastbase64.coreutils$<TARGET_FILE_SUFFIX:fastbase64>
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:fastbase64> $<TARGET_FILE_DIR:fastbase64>/fastbase64.coreutils$<TARGET_FILE_SUFFIX:fastbase64>
+  )
+endif()
+
 if(SIMDUTF_ICONV)
 find_package(Iconv)
 if(Iconv_FOUND)
@@ -82,4 +94,54 @@ install(
    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+if(WIN32)
+  # On Windows, install a copy of fastbase64 as fastbase64.coreutils
+  install(PROGRAMS $<TARGET_FILE:fastbase64>
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    RENAME fastbase64.coreutils
+  )
+else()
+  # On non-Windows, create a symlink fastbase64.coreutils -> fastbase64 at install time
+  install(CODE "
+    if(IS_ABSOLUTE \"${CMAKE_INSTALL_BINDIR}\")
+      set(BINDIR \"${CMAKE_INSTALL_BINDIR}\")
+    else()
+      set(BINDIR \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}\")
+    endif()
+    set(BINDIR \"\$ENV{DESTDIR}\${BINDIR}\")
+    file(MAKE_DIRECTORY \"\${BINDIR}\")
+    # Remove any existing file or symlink so create_symlink will not fail with \"file exists\"
+    file(REMOVE \"\${BINDIR}/fastbase64.coreutils\")
+    execute_process(
+      COMMAND \"${CMAKE_COMMAND}\" -E create_symlink
+              \"fastbase64\"
+              \"\${BINDIR}/fastbase64.coreutils\"
+      RESULT_VARIABLE _fastbase64_symlink_result
+      ERROR_VARIABLE _fastbase64_symlink_error
+    )
+    if(NOT _fastbase64_symlink_result EQUAL 0)
+      message(FATAL_ERROR
+        \"Failed to create symlink \${BINDIR}/fastbase64.coreutils -> fastbase64: \${_fastbase64_symlink_error}\")
+    endif()
+  ")
+endif()
+
+install(
+   FILES
+    ${CMAKE_SOURCE_DIR}/man/fastbase64.1
+   DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
+)
+
+install(
+   FILES
+    ${CMAKE_SOURCE_DIR}/man/fastbase64.coreutils.1
+   DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
+)
+
+install(
+   FILES
+    ${CMAKE_SOURCE_DIR}/man/sutf.1
+   DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
 )
