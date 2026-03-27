@@ -8,7 +8,8 @@
 // 1. All implementations agree on the returned position (differential testing).
 // 2. The returned pointer is within [start, end].
 // 3. If result != end, the character at result equals the searched character.
-// 4. No character before result equals the searched character (first occurrence).
+// 4. No character before result equals the searched character (first
+// occurrence).
 
 #include <cstddef>
 #include <cstdint>
@@ -129,7 +130,8 @@ static void test_find_char16(std::span<const char16_t> input, char16_t needle) {
     // needle not found: no character in [start, end) should equal needle.
     for (const char16_t* p = start; p < end; ++p) {
       if (*p == needle) {
-        std::cerr << "find(char16_t): result is end but needle exists in input\n";
+        std::cerr
+            << "find(char16_t): result is end but needle exists in input\n";
         std::abort();
       }
     }
@@ -157,12 +159,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   switch (action) {
   case 0: {
     const char needle = static_cast<char>(needle_lo);
-    const std::span<const char> chardata{reinterpret_cast<const char*>(data), size};
+    const std::span<const char> chardata{reinterpret_cast<const char*>(data),
+                                         size};
     test_find_char(chardata, needle);
   } break;
   case 1: {
-    const char16_t needle =
-        static_cast<char16_t>(needle_lo | (static_cast<uint16_t>(needle_hi) << 8));
+    const char16_t needle = static_cast<char16_t>(
+        needle_lo | (static_cast<uint16_t>(needle_hi) << 8));
     const std::span<const char16_t> chardata{
         reinterpret_cast<const char16_t*>(data), size / sizeof(char16_t)};
     test_find_char16(chardata, needle);

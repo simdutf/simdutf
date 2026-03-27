@@ -7,7 +7,8 @@
 // replacing them with U+FFFD (0xEF 0xBF 0xBD in UTF-8). They always succeed.
 //
 // Invariants checked:
-// 1. All implementations agree on length function output (count and error field)
+// 1. All implementations agree on length function output (count and error
+// field)
 // 2. All implementations agree on conversion output
 // 3. The length function's count equals the number of bytes written
 // 4. The output is always valid UTF-8
@@ -29,17 +30,19 @@ static void test_utf16le_with_replacement(std::span<const char16_t> input) {
     return;
   }
 
-  // Step 1: Collect length predictions from all implementations and check agreement.
+  // Step 1: Collect length predictions from all implementations and check
+  // agreement.
   std::vector<simdutf::result> len_results;
   len_results.reserve(implementations.size());
   for (auto impl : implementations) {
-    len_results.push_back(
-        impl->utf8_length_from_utf16le_with_replacement(input.data(), input.size()));
+    len_results.push_back(impl->utf8_length_from_utf16le_with_replacement(
+        input.data(), input.size()));
   }
   {
     auto neq = [](const auto& a, const auto& b) { return a != b; };
     if (std::ranges::adjacent_find(len_results, neq) != len_results.end()) {
-      std::cerr << "utf8_length_from_utf16le_with_replacement: implementations disagree\n";
+      std::cerr << "utf8_length_from_utf16le_with_replacement: implementations "
+                   "disagree\n";
       for (std::size_t i = 0; i < implementations.size(); ++i) {
         std::cerr << "  " << implementations[i]->name()
                   << ": count=" << len_results[i].count
@@ -50,10 +53,12 @@ static void test_utf16le_with_replacement(std::span<const char16_t> input) {
   }
 
   const std::size_t expected_len = len_results[0].count;
-  // error == SUCCESS means no surrogates encountered; SURROGATE means at least one.
+  // error == SUCCESS means no surrogates encountered; SURROGATE means at least
+  // one.
   const bool has_surrogates = (len_results[0].error != simdutf::SUCCESS);
 
-  // Step 2: Run conversion across all implementations and verify written == expected_len.
+  // Step 2: Run conversion across all implementations and verify written ==
+  // expected_len.
   std::vector<std::vector<char>> outputs;
   outputs.reserve(implementations.size());
   for (auto impl : implementations) {
@@ -61,9 +66,8 @@ static void test_utf16le_with_replacement(std::span<const char16_t> input) {
     const auto written = impl->convert_utf16le_to_utf8_with_replacement(
         input.data(), input.size(), out.data());
     if (written != expected_len) {
-      std::cerr << "convert_utf16le_to_utf8_with_replacement:"
-                << " written=" << written
-                << " but length predicted=" << expected_len
+      std::cerr << "convert_utf16le_to_utf8_with_replacement:" << " written="
+                << written << " but length predicted=" << expected_len
                 << " impl=" << impl->name() << "\n";
       std::abort();
     }
@@ -74,7 +78,8 @@ static void test_utf16le_with_replacement(std::span<const char16_t> input) {
   {
     auto neq = [](const auto& a, const auto& b) { return a != b; };
     if (std::ranges::adjacent_find(outputs, neq) != outputs.end()) {
-      std::cerr << "convert_utf16le_to_utf8_with_replacement: outputs differ between implementations\n";
+      std::cerr << "convert_utf16le_to_utf8_with_replacement: outputs differ "
+                   "between implementations\n";
       for (std::size_t i = 0; i < implementations.size(); ++i) {
         std::cerr << "  " << implementations[i]->name()
                   << ": hash=" << FNV1A_hash::as_str(outputs[i]) << "\n";
@@ -85,24 +90,27 @@ static void test_utf16le_with_replacement(std::span<const char16_t> input) {
 
   // Step 4: Output must always be valid UTF-8.
   for (std::size_t i = 0; i < implementations.size(); ++i) {
-    if (!implementations[i]->validate_utf8(outputs[i].data(), outputs[i].size())) {
-      std::cerr << "convert_utf16le_to_utf8_with_replacement: output is not valid UTF-8"
+    if (!implementations[i]->validate_utf8(outputs[i].data(),
+                                           outputs[i].size())) {
+      std::cerr << "convert_utf16le_to_utf8_with_replacement: output is not "
+                   "valid UTF-8"
                 << " impl=" << implementations[i]->name() << "\n";
       std::abort();
     }
   }
 
-  // Step 5: When no surrogates were found, match the regular (non-replacement) length.
+  // Step 5: When no surrogates were found, match the regular (non-replacement)
+  // length.
   if (!has_surrogates) {
     for (std::size_t i = 0; i < implementations.size(); ++i) {
       auto impl = implementations[i];
       const auto regular_len =
           impl->utf8_length_from_utf16le(input.data(), input.size());
       if (regular_len != expected_len) {
-        std::cerr << "utf16le_with_replacement: no surrogates but length mismatch:"
-                  << " with_replacement=" << expected_len
-                  << " regular=" << regular_len
-                  << " impl=" << impl->name() << "\n";
+        std::cerr
+            << "utf16le_with_replacement: no surrogates but length mismatch:"
+            << " with_replacement=" << expected_len
+            << " regular=" << regular_len << " impl=" << impl->name() << "\n";
         std::abort();
       }
     }
@@ -115,17 +123,19 @@ static void test_utf16be_with_replacement(std::span<const char16_t> input) {
     return;
   }
 
-  // Step 1: Collect length predictions from all implementations and check agreement.
+  // Step 1: Collect length predictions from all implementations and check
+  // agreement.
   std::vector<simdutf::result> len_results;
   len_results.reserve(implementations.size());
   for (auto impl : implementations) {
-    len_results.push_back(
-        impl->utf8_length_from_utf16be_with_replacement(input.data(), input.size()));
+    len_results.push_back(impl->utf8_length_from_utf16be_with_replacement(
+        input.data(), input.size()));
   }
   {
     auto neq = [](const auto& a, const auto& b) { return a != b; };
     if (std::ranges::adjacent_find(len_results, neq) != len_results.end()) {
-      std::cerr << "utf8_length_from_utf16be_with_replacement: implementations disagree\n";
+      std::cerr << "utf8_length_from_utf16be_with_replacement: implementations "
+                   "disagree\n";
       for (std::size_t i = 0; i < implementations.size(); ++i) {
         std::cerr << "  " << implementations[i]->name()
                   << ": count=" << len_results[i].count
@@ -138,7 +148,8 @@ static void test_utf16be_with_replacement(std::span<const char16_t> input) {
   const std::size_t expected_len = len_results[0].count;
   const bool has_surrogates = (len_results[0].error != simdutf::SUCCESS);
 
-  // Step 2: Run conversion across all implementations and verify written == expected_len.
+  // Step 2: Run conversion across all implementations and verify written ==
+  // expected_len.
   std::vector<std::vector<char>> outputs;
   outputs.reserve(implementations.size());
   for (auto impl : implementations) {
@@ -146,9 +157,8 @@ static void test_utf16be_with_replacement(std::span<const char16_t> input) {
     const auto written = impl->convert_utf16be_to_utf8_with_replacement(
         input.data(), input.size(), out.data());
     if (written != expected_len) {
-      std::cerr << "convert_utf16be_to_utf8_with_replacement:"
-                << " written=" << written
-                << " but length predicted=" << expected_len
+      std::cerr << "convert_utf16be_to_utf8_with_replacement:" << " written="
+                << written << " but length predicted=" << expected_len
                 << " impl=" << impl->name() << "\n";
       std::abort();
     }
@@ -159,7 +169,8 @@ static void test_utf16be_with_replacement(std::span<const char16_t> input) {
   {
     auto neq = [](const auto& a, const auto& b) { return a != b; };
     if (std::ranges::adjacent_find(outputs, neq) != outputs.end()) {
-      std::cerr << "convert_utf16be_to_utf8_with_replacement: outputs differ between implementations\n";
+      std::cerr << "convert_utf16be_to_utf8_with_replacement: outputs differ "
+                   "between implementations\n";
       for (std::size_t i = 0; i < implementations.size(); ++i) {
         std::cerr << "  " << implementations[i]->name()
                   << ": hash=" << FNV1A_hash::as_str(outputs[i]) << "\n";
@@ -170,24 +181,27 @@ static void test_utf16be_with_replacement(std::span<const char16_t> input) {
 
   // Step 4: Output must always be valid UTF-8.
   for (std::size_t i = 0; i < implementations.size(); ++i) {
-    if (!implementations[i]->validate_utf8(outputs[i].data(), outputs[i].size())) {
-      std::cerr << "convert_utf16be_to_utf8_with_replacement: output is not valid UTF-8"
+    if (!implementations[i]->validate_utf8(outputs[i].data(),
+                                           outputs[i].size())) {
+      std::cerr << "convert_utf16be_to_utf8_with_replacement: output is not "
+                   "valid UTF-8"
                 << " impl=" << implementations[i]->name() << "\n";
       std::abort();
     }
   }
 
-  // Step 5: When no surrogates were found, match the regular (non-replacement) length.
+  // Step 5: When no surrogates were found, match the regular (non-replacement)
+  // length.
   if (!has_surrogates) {
     for (std::size_t i = 0; i < implementations.size(); ++i) {
       auto impl = implementations[i];
       const auto regular_len =
           impl->utf8_length_from_utf16be(input.data(), input.size());
       if (regular_len != expected_len) {
-        std::cerr << "utf16be_with_replacement: no surrogates but length mismatch:"
-                  << " with_replacement=" << expected_len
-                  << " regular=" << regular_len
-                  << " impl=" << impl->name() << "\n";
+        std::cerr
+            << "utf16be_with_replacement: no surrogates but length mismatch:"
+            << " with_replacement=" << expected_len
+            << " regular=" << regular_len << " impl=" << impl->name() << "\n";
         std::abort();
       }
     }

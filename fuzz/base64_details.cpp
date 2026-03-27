@@ -45,10 +45,8 @@ struct comparable_full_result {
 };
 
 std::ostream& operator<<(std::ostream& os, const comparable_full_result& r) {
-  os << "[error=" << r.error
-     << " in=" << r.input_count
-     << " out=" << r.output_count
-     << " pad_err=" << r.padding_error
+  os << "[error=" << r.error << " in=" << r.input_count
+     << " out=" << r.output_count << " pad_err=" << r.padding_error
      << " hash=" << r.output_hash << "]";
   return os;
 }
@@ -83,21 +81,23 @@ static void test_details(std::span<const FromChar> input,
     }
     if (fr.output_count > maxbinary) {
       std::cerr << "base64_to_binary_details: output_count=" << fr.output_count
-                << " > maxbinary=" << maxbinary
-                << " impl=" << impl->name() << "\n";
+                << " > maxbinary=" << maxbinary << " impl=" << impl->name()
+                << "\n";
       std::abort();
     }
 
-    // Consistency check: full_result cast to result must equal base64_to_binary.
+    // Consistency check: full_result cast to result must equal
+    // base64_to_binary.
     std::vector<char> out_plain(maxbinary);
-    const simdutf::result r =
-        impl->base64_to_binary(input.data(), input.size(), out_plain.data(), opt, lco);
+    const simdutf::result r = impl->base64_to_binary(
+        input.data(), input.size(), out_plain.data(), opt, lco);
     const simdutf::result r_from_fr = static_cast<simdutf::result>(fr);
 
     if (r != r_from_fr) {
       std::cerr << "base64_to_binary_details vs base64_to_binary inconsistency"
                 << " impl=" << impl->name()
-                << " base64_to_binary=[error=" << r.error << " count=" << r.count << "]"
+                << " base64_to_binary=[error=" << r.error
+                << " count=" << r.count << "]"
                 << " full_result cast=[error=" << r_from_fr.error
                 << " count=" << r_from_fr.count << "]\n";
       std::abort();
@@ -111,10 +111,12 @@ static void test_details(std::span<const FromChar> input,
                   << " impl=" << impl->name() << "\n";
         std::abort();
       }
-      const auto span_details = std::span(out_details).subspan(0, fr.output_count);
+      const auto span_details =
+          std::span(out_details).subspan(0, fr.output_count);
       const auto span_plain = std::span(out_plain).subspan(0, r.count);
       if (!std::ranges::equal(span_details, span_plain)) {
-        std::cerr << "base64_to_binary_details: output bytes differ from base64_to_binary on SUCCESS"
+        std::cerr << "base64_to_binary_details: output bytes differ from "
+                     "base64_to_binary on SUCCESS"
                   << " impl=" << impl->name() << "\n";
         std::abort();
       }
@@ -131,8 +133,8 @@ static void test_details(std::span<const FromChar> input,
     cfr.padding_error = fr.padding_error;
     if (fr.error == simdutf::error_code::SUCCESS) {
       cfr.output_count = fr.output_count;
-      cfr.output_hash =
-          FNV1A_hash::as_str(std::span(out_details).subspan(0, fr.output_count));
+      cfr.output_hash = FNV1A_hash::as_str(
+          std::span(out_details).subspan(0, fr.output_count));
     }
     results.push_back(std::move(cfr));
   }
@@ -142,7 +144,8 @@ static void test_details(std::span<const FromChar> input,
   if (std::ranges::adjacent_find(results, neq) != results.end()) {
     std::cerr << "base64_to_binary_details: implementations disagree\n";
     for (std::size_t i = 0; i < implementations.size(); ++i) {
-      std::cerr << "  " << implementations[i]->name() << ": " << results[i] << "\n";
+      std::cerr << "  " << implementations[i]->name() << ": " << results[i]
+                << "\n";
     }
     std::abort();
   }
@@ -184,7 +187,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
 
   switch (action) {
   case 0: {
-    const std::span<const char> chardata{reinterpret_cast<const char*>(data), size};
+    const std::span<const char> chardata{reinterpret_cast<const char*>(data),
+                                         size};
     test_details(chardata, opt, lco);
   } break;
   case 1: {
