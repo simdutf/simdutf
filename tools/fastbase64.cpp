@@ -5,11 +5,13 @@
 #include <cstring>
 #include <filesystem>
 #include <memory>
+#include <string>
 #include <vector>
+
 
 class ArgumentError : public std::runtime_error {
 public:
-  ArgumentError(const std::string &msg) : std::runtime_error(msg) {}
+  explicit ArgumentError(const std::string &msg) : std::runtime_error(msg) {}
 };
 
 class CommandLine {

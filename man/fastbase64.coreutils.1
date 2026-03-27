@@ -17,7 +17,7 @@ Otherwise, output goes to standard output. The \fB\-o\fR option takes precedence
 .SH OPTIONS
 .TP
 .B \-b, \-\-break=\fINUM\fR
-fastbase64 extension (not present in GNU coreutils base64): break encoded output into lines of length \fINUM\fR (default 76, meaning breaks at 76 characters).
+synonym to \-\-wrap. (not in GNU coreutils base64)
 .TP
 .B \-w, \-\-wrap=\fINUM\fR
 Wrap encoded lines after \fINUM\fR characters (default 76). Use 0 to disable line wrapping.
@@ -32,13 +32,13 @@ Encode input (default).
 When decoding, ignore non-alphabet characters.
 .TP
 .B \-i, \-n, \-\-noerrcheck
-When decoding, ignore non-alphabet characters (same as \-\-ignore\-garbage).
+fastbase64 extension (not present in GNU coreutils base64): when decoding, ignore non-alphabet characters (same as \-\-ignore\-garbage).
 .TP
 .B \-h, \-\-help
 Display help message and exit.
 .TP
 .B \-o, \-\-output=\fIFILE\fR
-Output file (default: "-" for stdout).
+fastbase64 extension (not present in GNU coreutils base64): output file (default: "-" for stdout).
 .TP
 .B \-\-version
 Output version information and exit.
