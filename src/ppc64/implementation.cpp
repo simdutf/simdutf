@@ -101,8 +101,10 @@ enum class ErrorReporting {
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
 
-#if SIMDUTF_FEATURE_UTF8
+#if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_ASCII
   #include "generic/buf_block_reader.h"
+#endif// SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_ASCII
+#if SIMDUTF_FEATURE_UTF8
   #include "generic/utf8_validation/utf8_lookup4_algorithm.h"
   #include "generic/utf8_validation/utf8_validator.h"
 #endif // SIMDUTF_FEATURE_UTF8
