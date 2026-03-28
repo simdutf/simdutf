@@ -123,18 +123,28 @@ static void test_details(std::span<const FromChar> input,
     }
 
     // Store result for cross-implementation comparison.
+    //
     // output_count on error is implementation-defined: SIMD implementations
     // process input in different chunk widths and may write different numbers
     // of output bytes before detecting an invalid character. Only compare
     // output_count (and output_hash) when the conversion succeeds.
+    //
+    // input_count on success is also implementation-defined: with
+    // stop_before_partial and trailing ignored whitespace, some implementations
+    // include the trailing whitespace in input_count and others do not. The
+    // full_result::operator result() cast only uses output_count on success
+    // (input_count is not part of the base contract there). Only compare
+    // input_count when the conversion fails, where it carries the error
+    // position (which must be deterministic).
     comparable_full_result cfr;
     cfr.error = fr.error;
-    cfr.input_count = fr.input_count;
     cfr.padding_error = fr.padding_error;
     if (fr.error == simdutf::error_code::SUCCESS) {
       cfr.output_count = fr.output_count;
       cfr.output_hash = FNV1A_hash::as_str(
           std::span(out_details).subspan(0, fr.output_count));
+    } else {
+      cfr.input_count = fr.input_count;
     }
     results.push_back(std::move(cfr));
   }
