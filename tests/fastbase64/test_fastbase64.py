@@ -358,10 +358,14 @@ def test_coreutils(path, readme):
     # --- default: wrapping at 76 ------------------------------
     enc_nw = must_run([path, readme])
     stripped = enc_nw.rstrip(b'\n')
-    if b'\n' in stripped:
-        ok('default wrapping: has interior newlines')
+    # Only expect interior newlines when encoded output exceeds 76 chars
+    if len(stripped) > 76:
+        if b'\n' in stripped:
+            ok('default wrapping: has interior newlines')
+        else:
+            fail('default wrapping: has interior newlines')
     else:
-        fail('default wrapping: has interior newlines')
+        ok('default wrapping: has interior newlines')
     # --- base64 alphabet check ------------------------------------------------
     check_base64_alphabet(enc_nw, 'base64 alphabet in output')
     # --- -w 76 wrapping -------------------------------------------------------
@@ -757,23 +761,27 @@ if __name__ == '__main__':
         if not os.path.exists(p):
             print(f"Error: {label} not found at {p}")
             sys.exit(1)
-    import random
-    random_data = os.urandom(1024 * 1024)
-    with tempfile.NamedTemporaryFile(delete=False) as tf:
-        tf.write(random_data)
-        random_file_path = tf.name
-    try:
-        test_fastbase64(fast_path, random_file_path)
-        test_coreutils(core_path, random_file_path)
-        # NEW thorough sections
-        test_large_roundtrips(fast_path, core_path)
-        test_wrapping_extremes(fast_path, core_path)
-        test_adversarial_decoding(fast_path, core_path)
-        test_chunk_boundary_whitespace(fast_path, core_path)
-        test_super_sparse_decoding(fast_path, core_path)
-        test_error_conditions(fast_path, core_path)
-    finally:
-        os.unlink(random_file_path)
+    test_sizes = [15, 777, 1024, 55555, 1024 * 1024]
+    for size in test_sizes:
+        random_data = os.urandom(size)
+        with tempfile.NamedTemporaryFile(delete=False) as tf:
+            tf.write(random_data)
+            random_file_path = tf.name
+        try:
+            print(f"\n{'='*60}")
+            print(f"  Testing with random file of {size:,} bytes")
+            print(f"{'='*60}")
+            test_fastbase64(fast_path, random_file_path)
+            test_coreutils(core_path, random_file_path)
+        finally:
+            os.unlink(random_file_path)
+    # Thorough sections (size-independent)
+    test_large_roundtrips(fast_path, core_path)
+    test_wrapping_extremes(fast_path, core_path)
+    test_adversarial_decoding(fast_path, core_path)
+    test_chunk_boundary_whitespace(fast_path, core_path)
+    test_super_sparse_decoding(fast_path, core_path)
+    test_error_conditions(fast_path, core_path)
     print(f"\n{'='*60}")
     print(f"Results: {PASS} passed, {FAIL} failed")
     if FAIL > 0:
