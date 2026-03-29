@@ -37,8 +37,12 @@ def run(cmd, input=None, expect_failure=False):
     On Windows the C runtime may translate \\n to \\r\\n on stdout,
     so we strip \\r from the output to get consistent \\n line endings."""
     result = subprocess.run(cmd, input=input, capture_output=True, text=False)
-    stdout = result.stdout.replace(b'\r\n', b'\n')
-    stderr = result.stderr.replace(b'\r\n', b'\n')
+    if is_windows:
+        stdout = result.stdout.replace(b'\r\n', b'\n')
+        stderr = result.stderr.replace(b'\r\n', b'\n')
+    else:
+        stdout = result.stdout
+        stderr = result.stderr
     if not expect_failure and result.returncode != 0:
         fail(f"Unexpected failure: {' '.join(str(c) for c in cmd)}",
              stderr.decode('utf-8', errors='replace'))
@@ -744,25 +748,32 @@ def test_error_conditions(fast_path, core_path):
 # Entry point
 # ---------------------------------------------------------------------------
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
-        print("Usage: python test_fastbase64.py <fastbase64> <fastbase64.coreutils> <input_file>")
+    if len(sys.argv) != 3:
+        print("Usage: python test_fastbase64.py <fastbase64> <fastbase64.coreutils>")
         sys.exit(1)
-    fast_path, core_path, readme_path = sys.argv[1], sys.argv[2], sys.argv[3]
+    fast_path, core_path = sys.argv[1], sys.argv[2]
     for label, p in [('fastbase64', fast_path),
-                     ('fastbase64.coreutils', core_path),
-                     ('input file', readme_path)]:
+                     ('fastbase64.coreutils', core_path)]:
         if not os.path.exists(p):
             print(f"Error: {label} not found at {p}")
             sys.exit(1)
-    test_fastbase64(fast_path, readme_path)
-    test_coreutils(core_path, readme_path)
-    # NEW thorough sections
-    test_large_roundtrips(fast_path, core_path)
-    test_wrapping_extremes(fast_path, core_path)
-    test_adversarial_decoding(fast_path, core_path)
-    test_chunk_boundary_whitespace(fast_path, core_path)
-    test_super_sparse_decoding(fast_path, core_path)
-    test_error_conditions(fast_path, core_path)
+    import random
+    random_data = os.urandom(1024 * 1024)
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+        tf.write(random_data)
+        random_file_path = tf.name
+    try:
+        test_fastbase64(fast_path, random_file_path)
+        test_coreutils(core_path, random_file_path)
+        # NEW thorough sections
+        test_large_roundtrips(fast_path, core_path)
+        test_wrapping_extremes(fast_path, core_path)
+        test_adversarial_decoding(fast_path, core_path)
+        test_chunk_boundary_whitespace(fast_path, core_path)
+        test_super_sparse_decoding(fast_path, core_path)
+        test_error_conditions(fast_path, core_path)
+    finally:
+        os.unlink(random_file_path)
     print(f"\n{'='*60}")
     print(f"Results: {PASS} passed, {FAIL} failed")
     if FAIL > 0:
