@@ -89,9 +89,9 @@ enum class ErrorReporting {
   #include "ppc64/ppc64_convert_utf32_to_utf16.cpp"
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF16
 
-#if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF32
+#if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF8
   #include "ppc64/ppc64_convert_utf32_to_utf8.cpp"
-#endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF32
+#endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
   #include "ppc64/ppc64_utf8_length_from_latin1.cpp"
