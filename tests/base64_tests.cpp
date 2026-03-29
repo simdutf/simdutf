@@ -3607,6 +3607,74 @@ TEST(binary_length_from_base64_various_remainders) {
   ASSERT_EQUAL(simdutf::binary_length_from_base64("AAAAAAAA", 8), 6);
 }
 
+
+TEST(base64_details_padding_error_consistency) {
+  const char input[] = "www";
+  const size_t input_len = 3;
+
+  const auto opt = simdutf::base64_default;
+  const auto lco = simdutf::last_chunk_handling_options::strict;
+
+  const size_t maxbinary =
+      implementation.maximal_binary_length_from_base64(input, input_len);
+  std::vector<char> output(maxbinary);
+
+  const simdutf::full_result fr = implementation.base64_to_binary_details(
+      input, input_len, output.data(), opt, lco);
+
+  ASSERT_TRUE(fr.error != simdutf::error_code::SUCCESS);
+  ASSERT_TRUE(fr.padding_error);
+}
+
+TEST(base64_details_padding_error_various_inputs) {
+  const char *cases[] = {"w", "ww", "www", "wwww=", "====", "A"};
+  const auto opt = simdutf::base64_default;
+  const auto lco = simdutf::last_chunk_handling_options::strict;
+
+  for (const char *input : cases) {
+    const size_t input_len = std::strlen(input);
+    const size_t maxbinary =
+        implementation.maximal_binary_length_from_base64(input, input_len);
+    std::vector<char> output(maxbinary + 1);
+
+    const simdutf::full_result fr = implementation.base64_to_binary_details(
+        input, input_len, output.data(), opt, lco);
+
+    std::vector<char> output2(maxbinary + 1);
+    const simdutf::result r = implementation.base64_to_binary(
+        input, input_len, output2.data(), opt, lco);
+
+    const simdutf::result r_from_fr = static_cast<simdutf::result>(fr);
+    ASSERT_EQUAL(r.error, r_from_fr.error);
+    ASSERT_EQUAL(r.count, r_from_fr.count);
+
+    // On success, output bytes must match.
+    if (fr.error == simdutf::error_code::SUCCESS) {
+      ASSERT_TRUE(
+          std::equal(output.begin(), output.begin() + fr.output_count,
+                     output2.begin()));
+    }
+  }
+}
+
+TEST(base64_details_padding_error_char16) {
+  const char16_t input[] = u"www";
+  const size_t input_len = 3;
+
+  const auto opt = simdutf::base64_default;
+  const auto lco = simdutf::last_chunk_handling_options::strict;
+
+  const size_t maxbinary =
+      implementation.maximal_binary_length_from_base64(input, input_len);
+  std::vector<char> output(maxbinary);
+
+  const simdutf::full_result fr = implementation.base64_to_binary_details(
+      input, input_len, output.data(), opt, lco);
+
+  ASSERT_TRUE(fr.error != simdutf::error_code::SUCCESS);
+  ASSERT_TRUE(fr.padding_error);
+}
+
 int main(int argc, char *argv[]) {
   const auto cmdline = simdutf::test::CommandLine::parse(argc, argv);
   seed = cmdline.seed;

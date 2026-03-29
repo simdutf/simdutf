@@ -458,7 +458,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         // The partial chunk was at src - idx
         _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
         dst += output_len;
-        return {BASE64_INPUT_REMAINDER, equallocation, size_t(dst - dstinit)};
+        return {BASE64_INPUT_REMAINDER, equallocation, size_t(dst - dstinit),
+                true};
       } else
         // If there is a partial chunk with insufficient padding, with
         // stop_before_partial, we need to just ignore it. In "only full" mode,
