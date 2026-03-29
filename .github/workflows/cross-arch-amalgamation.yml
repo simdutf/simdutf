@@ -1,0 +1,42 @@
+name: Cross-architecture amalgamation tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  amalgamation:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, aarch64, armv7, ppc64le, s390x, riscv64]
+        distro: [ubuntu24.04]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: uraimo/run-on-arch-action@v3
+        name: Test
+        id: runcmd
+        with:
+          arch: ${{ matrix.arch }}
+          githubToken: ${{ github.token }}
+          distro: ${{ matrix.distro }}
+          install: |
+            case "${{ matrix.distro }}" in
+              ubuntu*|bullseye|bookworm)
+                apt-get update -q -y
+                apt-get install -y python3 g++
+                ;;
+              fedora*)
+                dnf install -y python3 gcc-c++
+                ;;
+              alpine*)
+                apk add python3 g++
+                ;;
+            esac
+          run: |
+            ./scripts/amalgamation_tests.py --test-random 0
