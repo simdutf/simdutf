@@ -98,9 +98,9 @@ def check_file(filename: str) -> List[str]:
                         errors.append(
                             f"\033[31mERROR: {filename}:{line_number}: #endif missing comment (expected '{orig_condition}')\033[0m"
                         )
-                    elif not re.match(r'SIMDUTF_FEATURE\w*', condition):
+                    elif 'SIMDUTF_FEATURE' not in condition:
                         errors.append(
-                            f"\033[31mERROR: {filename}:{line_number}: #endif comment '{condition}' does not start with SIMDUTF_FEATURE "
+                            f"\033[31mERROR: {filename}:{line_number}: #endif comment '{condition}' does not contain SIMDUTF_FEATURE "
                             f"(expected '{orig_condition}')\033[0m"
                         )
                     elif condition != orig_condition:
