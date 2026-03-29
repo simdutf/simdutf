@@ -37,13 +37,13 @@ enum class ErrorReporting {
   none,       // no error checking is done, we assume valid inputs
 };
 
-#if SIMDUTF_FEATURE_UTF16
+#if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
   #include "ppc64/ppc64_validate_utf16.cpp"
-#endif // SIMDUTF_FEATURE_UTF16
+#endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
-#if SIMDUTF_FEATURE_UTF8
+#if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_UTF32
   #include "ppc64/ppc64_write_to_utf8.cpp"
-#endif // SIMDUTF_FEATURE_UTF8
+#endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_UTF8
   #include "ppc64/ppc64_convert_latin1_to_utf8.cpp"
@@ -105,13 +105,15 @@ enum class ErrorReporting {
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
 
-#if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_ASCII
+#if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_ASCII ||                           \
+    SIMDUTF_FEATURE_DETECT_ENCODING
   #include "generic/buf_block_reader.h"
-#endif// SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_ASCII
-#if SIMDUTF_FEATURE_UTF8
+#endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_ASCII ||
+       // SIMDUTF_FEATURE_DETECT_ENCODING
+#if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
   #include "generic/utf8_validation/utf8_lookup4_algorithm.h"
   #include "generic/utf8_validation/utf8_validator.h"
-#endif // SIMDUTF_FEATURE_UTF8
+#endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
   #include "generic/utf8_to_utf16/utf8_to_utf16.h"
@@ -123,19 +125,19 @@ enum class ErrorReporting {
   #include "generic/utf8_to_utf32/valid_utf8_to_utf32.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
-#if SIMDUTF_FEATURE_UTF8
+#if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
   #include "generic/utf8.h"
-#endif // SIMDUTF_FEATURE_UTF8
+#endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
-#if SIMDUTF_FEATURE_UTF16
+#if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
   #include "generic/utf16.h"
   #include "generic/validate_utf16.h"
-#endif // SIMDUTF_FEATURE_UTF16
+#endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
-#if SIMDUTF_FEATURE_UTF32
+#if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
   #include "generic/utf32.h"
   #include "generic/validate_utf32.h"
-#endif // SIMDUTF_FEATURE_UTF32
+#endif // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_ASCII
   #include "generic/ascii_validation.h"
