@@ -88,6 +88,8 @@ The simdutf library is used by:
 - [klogg](https://github.com/variar/klogg), a Really fast log explorer,
 - [Pixie](https://github.com/pixie-io/pixie), observability tool for Kubernetes applications,
 - [fluentbit](https://github.com/fluent/fluent-bit), Fast and Lightweight Logs, Metrics and Traces processor for Linux, BSD, OSX and Windows,
+- [ghostty](https://github.com/ghostty-org/ghostty), Fast terminal emulator,
+- [uWebSockets](https://github.com/uNetworking/uWebSockets), web server for the most demanding of applications,
 - [vte](https://gitlab.gnome.org/GNOME/vte) (0.81.0 or better), a virtual terminal widget for GTK applications.
 
 
