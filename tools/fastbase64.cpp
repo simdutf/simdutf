@@ -8,7 +8,6 @@
 #include <string>
 #include <vector>
 
-
 class ArgumentError : public std::runtime_error {
 public:
   explicit ArgumentError(const std::string &msg) : std::runtime_error(msg) {}
