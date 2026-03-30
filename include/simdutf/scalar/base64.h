@@ -739,7 +739,7 @@ base64_to_binary_details_impl(
   size_t full_input_length = ri.full_input_length;
   if (length == 0) {
     if (!ignore_garbage && equalsigns > 0) {
-      return {INVALID_BASE64_CHARACTER, equallocation, 0};
+      return {INVALID_BASE64_CHARACTER, equallocation, 0, true};
     }
     return {SUCCESS, full_input_length, 0};
   }
@@ -752,7 +752,7 @@ base64_to_binary_details_impl(
     // additional checks
     if ((r.output_count % 3 == 0) ||
         ((r.output_count % 3) + 1 + equalsigns != 4)) {
-      return {INVALID_BASE64_CHARACTER, equallocation, r.output_count};
+      return {INVALID_BASE64_CHARACTER, equallocation, r.output_count, true};
     }
   }
   // When is_partial(last_chunk_options) is true, we must either end with

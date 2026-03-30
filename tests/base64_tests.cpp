@@ -4,7 +4,9 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstring>
 #include <iostream>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -3673,6 +3675,52 @@ TEST(base64_details_padding_error_char16) {
 
   ASSERT_TRUE(fr.error != simdutf::error_code::SUCCESS);
   ASSERT_TRUE(fr.padding_error);
+}
+
+
+TEST(base64_details_input_count_on_padding_error) {
+  std::string input(62, 'R');
+  input += '\n';
+  input += '=';
+  const size_t input_len = input.size();
+
+  const auto opt = simdutf::base64_default_no_padding;
+  const auto lco = simdutf::last_chunk_handling_options::loose;
+
+  const size_t maxbinary =
+      implementation.maximal_binary_length_from_base64(input.data(), input_len);
+  std::vector<char> output(maxbinary + 1);
+
+  const simdutf::full_result fr = implementation.base64_to_binary_details(
+      input.data(), input_len, output.data(), opt, lco);
+
+  ASSERT_TRUE(fr.error == simdutf::error_code::INVALID_BASE64_CHARACTER);
+  ASSERT_TRUE(fr.padding_error);
+  ASSERT_EQUAL(fr.input_count, size_t(63));
+}
+
+TEST(base64_details_input_count_padding_error_various_sizes) {
+  const auto opt = simdutf::base64_default_no_padding;
+  const auto lco = simdutf::last_chunk_handling_options::loose;
+
+  for (size_t n_rs = 2; n_rs <= 130; n_rs += 1) {
+    std::string input(n_rs, 'R');
+    input += '\n';
+    input += '=';
+    const size_t input_len = input.size();
+    const size_t equal_pos = n_rs + 1;
+
+    const size_t maxbinary = implementation.maximal_binary_length_from_base64(
+        input.data(), input_len);
+    std::vector<char> output(maxbinary + 1);
+
+    const simdutf::full_result fr = implementation.base64_to_binary_details(
+        input.data(), input_len, output.data(), opt, lco);
+
+    if (fr.padding_error) {
+      ASSERT_EQUAL(fr.input_count, equal_pos);
+    }
+  }
 }
 
 int main(int argc, char *argv[]) {

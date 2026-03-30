@@ -337,7 +337,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   size_t full_input_length = ri.full_input_length;
   if (srclen == 0) {
     if (!ignore_garbage && padding_characters > 0) {
-      return {INVALID_BASE64_CHARACTER, equallocation, 0};
+      return {INVALID_BASE64_CHARACTER, equallocation, 0, true};
     }
     return {SUCCESS, full_input_length, 0};
   }
@@ -435,7 +435,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     // We never should have that the number of base64 characters + the
     // number of padding characters is more than 4.
     if (!ignore_garbage && (idx + padding_characters > 4)) {
-      return {INVALID_BASE64_CHARACTER, size_t(src - srcinit),
+      return {INVALID_BASE64_CHARACTER, equallocation,
               size_t(dst - dstinit), true};
     }
     // The idea here is that in loose mode,
@@ -446,7 +446,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         last_chunk_options == last_chunk_handling_options::loose &&
         (idx >= 2) && padding_characters > 0 &&
         ((idx + padding_characters) & 3) != 0) {
-      return {INVALID_BASE64_CHARACTER, size_t(src - srcinit),
+      return {INVALID_BASE64_CHARACTER, equallocation,
               size_t(dst - dstinit), true};
     } else
       // The idea here is that in strict mode, we do not want to accept
@@ -540,7 +540,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
             _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
             dst += output_len;
             return {INVALID_BASE64_CHARACTER, equallocation,
-                    size_t(dst - dstinit)};
+                    size_t(dst - dstinit), true};
           } else {
             _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
             dst += output_len;
@@ -551,7 +551,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       size_t output_count = size_t(dst - dstinit);
       if ((output_count % 3 == 0) ||
           ((output_count % 3) + 1 + padding_characters != 4)) {
-        return {INVALID_BASE64_CHARACTER, equallocation, output_count};
+        return {INVALID_BASE64_CHARACTER, equallocation, output_count, true};
       }
     }
     return {SUCCESS, full_input_length, size_t(dst - dstinit)};
@@ -560,7 +560,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   if (!ignore_garbage && padding_characters > 0) {
     if ((size_t(dst - dstinit) % 3 == 0) ||
         ((size_t(dst - dstinit) % 3) + 1 + padding_characters != 4)) {
-      return {INVALID_BASE64_CHARACTER, equallocation, size_t(dst - dstinit)};
+      return {INVALID_BASE64_CHARACTER, equallocation, size_t(dst - dstinit),
+              true};
     }
   }
   return {SUCCESS, srclen, size_t(dst - dstinit)};
