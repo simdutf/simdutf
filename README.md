@@ -2015,6 +2015,30 @@ output: error
 
 As you can see, the result is as expected.
 
+The `base64_to_binary` function returns a `simdutf::result` which on success contains
+the number of output bytes in `r.count`. If you need to know both the number of input units
+consumed and the number of output bytes written (e.g., for streaming/chunked decoding), use
+`base64_to_binary_details` which returns a `simdutf::full_result`:
+
+```cpp
+std::vector<char> buffer(simdutf::maximal_binary_length_from_base64(base64.data(), base64.size()));
+simdutf::full_result r = simdutf::base64_to_binary_details(base64.data(), base64.size(), buffer.data());
+if(r.error) {
+  // r.input_count tells you where the error was encountered in the input.
+  // r.output_count tells you how many bytes were written to the output.
+} else {
+  buffer.resize(r.output_count); // resize according to actual output bytes
+  // r.input_count contains the number of input units consumed
+}
+```
+
+You can also check whether a single character is a valid base64 character using `base64_valid`:
+```cpp
+bool is_valid = simdutf::base64_valid('A'); // true
+bool is_valid_url = simdutf::base64_valid('-', simdutf::base64_url); // true
+// Note: padding ('=') and spaces are not considered valid base64 characters.
+```
+
 In some instances, you may want to limit the size of the output further when decoding base64.
 For this purpose, you may use the `base64_to_binary_safe` functions. The functions may also
 be useful if you seek to decode the input into segments having a maximal capacity.
@@ -2506,6 +2530,37 @@ simdutf_warn_unused result base64_to_binary_safe(const char * input, size_t leng
 simdutf_warn_unused result base64_to_binary_safe(const char16_t * input, size_t length, char* output, size_t& outlen, base64_options options = base64_default,
       last_chunk_handling_options last_chunk_options = loose,
       bool decode_up_to_bad_char = false) noexcept;
+
+/**
+ * Convert a base64 input to a binary output while returning more details
+ * than base64_to_binary. Returns a full_result with input_count
+ * and output_count fields.
+ *
+ * @param input         the base64 string to process
+ * @param length        the length of the string in bytes
+ * @param output        the pointer to a buffer that can hold the conversion
+ * result (should be at least maximal_binary_length_from_base64(input, length) bytes long).
+ * @param options       the base64 options to use, is base64_default by default.
+ * @param last_chunk_options the last chunk handling options, loose by default.
+ * @return a full_result struct with error, input_count and output_count.
+ */
+simdutf_warn_unused full_result base64_to_binary_details(const char * input, size_t length, char* output,
+      base64_options options = base64_default,
+      last_chunk_handling_options last_chunk_options = loose) noexcept;
+simdutf_warn_unused full_result base64_to_binary_details(const char16_t * input, size_t length, char* output,
+      base64_options options = base64_default,
+      last_chunk_handling_options last_chunk_options = loose) noexcept;
+
+/**
+ * Check if a character is a valid base64 character.
+ * Note that padding characters ('=') and spaces are not considered valid.
+ *
+ * @param input         the character to check
+ * @param options       the base64 options to use, is base64_default by default.
+ * @return true if the character is a valid base64 character.
+ */
+simdutf_warn_unused bool base64_valid(char input, base64_options options = base64_default) noexcept;
+simdutf_warn_unused bool base64_valid(char16_t input, base64_options options = base64_default) noexcept;
 ```
 
 ## Find

@@ -49,6 +49,12 @@ typedef struct simdutf_result {
   size_t count; /* position of error or number of code units validated */
 } simdutf_result;
 
+typedef struct simdutf_full_result {
+  simdutf_error_code error;
+  size_t input_count;  /* number of input units consumed */
+  size_t output_count; /* number of output bytes written */
+} simdutf_full_result;
+
 typedef enum simdutf_encoding_type {
   SIMDUTF_ENCODING_UNSPECIFIED = 0,
   SIMDUTF_ENCODING_UTF8 = 1,
@@ -334,6 +340,20 @@ simdutf_result simdutf_base64_to_binary_safe_utf16(
     simdutf_base64_options options,
     simdutf_last_chunk_handling_options last_chunk_options,
     bool decode_up_to_bad_char);
+
+/* detailed decoding returning input_count and output_count */
+simdutf_full_result simdutf_base64_to_binary_details(
+    const char *input, size_t length, char *output,
+    simdutf_base64_options options,
+    simdutf_last_chunk_handling_options last_chunk_options);
+simdutf_full_result simdutf_base64_to_binary_details_utf16(
+    const char16_t *input, size_t length, char *output,
+    simdutf_base64_options options,
+    simdutf_last_chunk_handling_options last_chunk_options);
+
+/* single-character base64 validation */
+bool simdutf_base64_valid(char input, simdutf_base64_options options);
+bool simdutf_base64_valid_utf16(char16_t input, simdutf_base64_options options);
 
 #ifdef __cplusplus
 } /* extern "C" */
