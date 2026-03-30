@@ -120,6 +120,149 @@ void utf16_endianness(std::span<const char16_t> data) {
   }
 }
 
+// Checks that validate_utf16le_as_ascii and validate_utf16be_as_ascii agree
+// across all implementations, and that a true result implies valid UTF-16.
+void validate_utf16_as_ascii(std::span<const char16_t> data) {
+  const auto implementations = get_supported_implementations();
+  // use int, not bool to avoid vector<bool>
+  std::vector<int> le_results, be_results;
+  le_results.reserve(implementations.size());
+  be_results.reserve(implementations.size());
+  for (const simdutf::implementation* impl : implementations) {
+    le_results.push_back(
+        +impl->validate_utf16le_as_ascii(data.data(), data.size()));
+    be_results.push_back(
+        +impl->validate_utf16be_as_ascii(data.data(), data.size()));
+  }
+  auto neq = [](const auto& a, const auto& b) { return a != b; };
+  if (std::ranges::adjacent_find(le_results, neq) != le_results.end()) {
+    std::cerr << "validate_utf16le_as_ascii: output differs between "
+                 "implementations\n";
+    for (std::size_t i = 0; i < implementations.size(); ++i) {
+      std::cerr << "  " << implementations[i]->name() << " gave "
+                << le_results[i] << '\n';
+    }
+    std::abort();
+  }
+  if (std::ranges::adjacent_find(be_results, neq) != be_results.end()) {
+    std::cerr << "validate_utf16be_as_ascii: output differs between "
+                 "implementations\n";
+    for (std::size_t i = 0; i < implementations.size(); ++i) {
+      std::cerr << "  " << implementations[i]->name() << " gave "
+                << be_results[i] << '\n';
+    }
+    std::abort();
+  }
+  // If LE validates as ASCII, it must also validate as UTF-16LE (ASCII is a
+  // subset).
+  if (le_results[0]) {
+    for (const simdutf::implementation* impl : implementations) {
+      if (!impl->validate_utf16le(data.data(), data.size())) {
+        std::cerr << "validate_utf16le_as_ascii returned true but "
+                     "validate_utf16le returned false"
+                  << " impl=" << impl->name() << "\n";
+        std::abort();
+      }
+    }
+  }
+  // Same for BE.
+  if (be_results[0]) {
+    for (const simdutf::implementation* impl : implementations) {
+      if (!impl->validate_utf16be(data.data(), data.size())) {
+        std::cerr << "validate_utf16be_as_ascii returned true but "
+                     "validate_utf16be returned false"
+                  << " impl=" << impl->name() << "\n";
+        std::abort();
+      }
+    }
+  }
+}
+
+// Checks that to_well_formed_utf16le / to_well_formed_utf16be:
+// 1. All implementations agree on the output.
+// 2. The output is always valid UTF-16LE / UTF-16BE.
+// 3. When the input is already valid UTF-16, the output equals the input.
+void to_well_formed_utf16(std::span<const char16_t> data) {
+  const auto implementations = get_supported_implementations();
+  if (implementations.empty()) {
+    return;
+  }
+
+  // Check LE variant
+  {
+    std::vector<std::vector<char16_t>> le_outputs;
+    le_outputs.reserve(implementations.size());
+    for (const simdutf::implementation* impl : implementations) {
+      std::vector<char16_t> out(data.size());
+      impl->to_well_formed_utf16le(data.data(), data.size(), out.data());
+      le_outputs.push_back(std::move(out));
+    }
+    auto neq = [](const auto& a, const auto& b) { return a != b; };
+    if (std::ranges::adjacent_find(le_outputs, neq) != le_outputs.end()) {
+      std::cerr
+          << "to_well_formed_utf16le: outputs differ between implementations\n";
+      for (std::size_t i = 0; i < implementations.size(); ++i) {
+        std::cerr << "  " << implementations[i]->name()
+                  << ": hash=" << FNV1A_hash::as_str(le_outputs[i]) << "\n";
+      }
+      std::abort();
+    }
+    // Output must be valid UTF-16LE.
+    for (std::size_t i = 0; i < implementations.size(); ++i) {
+      if (!implementations[i]->validate_utf16le(le_outputs[i].data(),
+                                                le_outputs[i].size())) {
+        std::cerr << "to_well_formed_utf16le: output is not valid UTF-16LE"
+                  << " impl=" << implementations[i]->name() << "\n";
+        std::abort();
+      }
+    }
+    // If input was already valid UTF-16LE, output must equal input.
+    if (implementations[0]->validate_utf16le(data.data(), data.size())) {
+      if (!std::ranges::equal(le_outputs[0], data)) {
+        std::cerr << "to_well_formed_utf16le: valid input was modified\n";
+        std::abort();
+      }
+    }
+  }
+
+  // Check BE variant
+  {
+    std::vector<std::vector<char16_t>> be_outputs;
+    be_outputs.reserve(implementations.size());
+    for (const simdutf::implementation* impl : implementations) {
+      std::vector<char16_t> out(data.size());
+      impl->to_well_formed_utf16be(data.data(), data.size(), out.data());
+      be_outputs.push_back(std::move(out));
+    }
+    auto neq = [](const auto& a, const auto& b) { return a != b; };
+    if (std::ranges::adjacent_find(be_outputs, neq) != be_outputs.end()) {
+      std::cerr
+          << "to_well_formed_utf16be: outputs differ between implementations\n";
+      for (std::size_t i = 0; i < implementations.size(); ++i) {
+        std::cerr << "  " << implementations[i]->name()
+                  << ": hash=" << FNV1A_hash::as_str(be_outputs[i]) << "\n";
+      }
+      std::abort();
+    }
+    // Output must be valid UTF-16BE.
+    for (std::size_t i = 0; i < implementations.size(); ++i) {
+      if (!implementations[i]->validate_utf16be(be_outputs[i].data(),
+                                                be_outputs[i].size())) {
+        std::cerr << "to_well_formed_utf16be: output is not valid UTF-16BE"
+                  << " impl=" << implementations[i]->name() << "\n";
+        std::abort();
+      }
+    }
+    // If input was already valid UTF-16BE, output must equal input.
+    if (implementations[0]->validate_utf16be(data.data(), data.size())) {
+      if (!std::ranges::equal(be_outputs[0], data)) {
+        std::cerr << "to_well_formed_utf16be: valid input was modified\n";
+        std::abort();
+      }
+    }
+  }
+}
+
 void convert_latin1_to_utf8_safe(std::span<const char> chardata,
                                  const std::size_t outputsize) {
   // convert with a limited output buffer
@@ -160,7 +303,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   if (size < 4) {
     return 0;
   }
-  constexpr auto Ncases = 9u;
+  constexpr auto Ncases = 11u;
   constexpr auto actionmask = std::bit_ceil(Ncases) - 1;
   const auto action = data[0] & actionmask;
 
@@ -210,6 +353,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   } break;
   case 8:
     convert_latin1_to_utf8_safe(chardata, u16);
+    break;
+  case 9:
+    validate_utf16_as_ascii(u16data);
+    break;
+  case 10:
+    to_well_formed_utf16(u16data);
     break;
   }
   return 0;
