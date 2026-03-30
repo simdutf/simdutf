@@ -43,7 +43,7 @@ lasx_convert_latin1_to_utf16be(const char *buf, size_t len,
   const char *end = buf + len;
 
   while (((uint64_t)utf16_output & 0x1F) && buf < end) {
-    *utf16_output++ = (uint16_t(*buf++) << 8);
+    *utf16_output++ = char16_t((uint16_t(*buf++) << 8));
   }
 
   __m256i zero = __lasx_xvldi(0);

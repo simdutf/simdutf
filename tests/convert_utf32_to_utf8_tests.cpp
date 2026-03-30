@@ -3,9 +3,10 @@
 #include <array>
 #include <memory>
 
-#include <tests/helpers/transcode_test_base.h>
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
+#include <tests/helpers/transcode_test_base.h>
 
 namespace {
 std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
@@ -148,5 +149,33 @@ TEST(special_cases) {
   }
   ASSERT_EQUAL(utf8size, utf8len);
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+namespace {
+template <auto input> constexpr auto size() {
+  return simdutf::utf8_length_from_utf32(input);
+}
+
+template <auto input> constexpr auto convert() {
+  using namespace simdutf::tests::helpers;
+  CTString<char8_t, size<input>()> tmp;
+  const auto ret = simdutf::convert_utf32_to_utf8(input, tmp);
+  if (ret != tmp.size()) {
+    throw "unexpected write size";
+  }
+  return tmp;
+}
+} // namespace
+
+TEST(compile_time_convert_utf32_to_utf8) {
+  using namespace simdutf::tests::helpers;
+  constexpr auto input = U"köttbulle"_utf32;
+  constexpr auto expected = u8"köttbulle"_utf8;
+  constexpr auto output = convert<input>();
+  static_assert(output == expected);
+}
+
+#endif
 
 TEST_MAIN

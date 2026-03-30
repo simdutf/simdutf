@@ -26,9 +26,9 @@
  * https://www.codeproject.com/Articles/276993/Base-Encoding-on-a-GPU. (2013).
  *
  * AMD XOP specific: http://0x80.pl/notesen/2016-01-12-sse-base64-encoding.html
- * Altivec has capabilites of AMD XOP (or vice versa): shuffle using 2 vectors
+ * Altivec has capabilities of AMD XOP (or vice versa): shuffle using 2 vectors
  * and variable shifts, thus this implementation shares some code solution
- * (modulo intrisic function names).
+ * (modulo intrinsic function names).
  */
 
 constexpr bool with_base64_std = false;

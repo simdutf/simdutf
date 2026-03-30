@@ -337,7 +337,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   size_t full_input_length = ri.full_input_length;
   if (srclen == 0) {
     if (!ignore_garbage && padding_characters > 0) {
-      return {INVALID_BASE64_CHARACTER, equallocation, 0};
+      return {INVALID_BASE64_CHARACTER, equallocation, 0, true};
     }
     return {SUCCESS, full_input_length, 0};
   }
@@ -435,7 +435,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     // We never should have that the number of base64 characters + the
     // number of padding characters is more than 4.
     if (!ignore_garbage && (idx + padding_characters > 4)) {
-      return {INVALID_BASE64_CHARACTER, size_t(src - srcinit),
+      return {INVALID_BASE64_CHARACTER, equallocation,
               size_t(dst - dstinit), true};
     }
     // The idea here is that in loose mode,
@@ -446,7 +446,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         last_chunk_options == last_chunk_handling_options::loose &&
         (idx >= 2) && padding_characters > 0 &&
         ((idx + padding_characters) & 3) != 0) {
-      return {INVALID_BASE64_CHARACTER, size_t(src - srcinit),
+      return {INVALID_BASE64_CHARACTER, equallocation,
               size_t(dst - dstinit), true};
     } else
       // The idea here is that in strict mode, we do not want to accept
@@ -458,7 +458,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         // The partial chunk was at src - idx
         _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
         dst += output_len;
-        return {BASE64_INPUT_REMAINDER, equallocation, size_t(dst - dstinit)};
+        return {BASE64_INPUT_REMAINDER, equallocation, size_t(dst - dstinit),
+                true};
       } else
         // If there is a partial chunk with insufficient padding, with
         // stop_before_partial, we need to just ignore it. In "only full" mode,
@@ -539,7 +540,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
             _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
             dst += output_len;
             return {INVALID_BASE64_CHARACTER, equallocation,
-                    size_t(dst - dstinit)};
+                    size_t(dst - dstinit), true};
           } else {
             _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
             dst += output_len;
@@ -550,7 +551,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       size_t output_count = size_t(dst - dstinit);
       if ((output_count % 3 == 0) ||
           ((output_count % 3) + 1 + padding_characters != 4)) {
-        return {INVALID_BASE64_CHARACTER, equallocation, output_count};
+        return {INVALID_BASE64_CHARACTER, equallocation, output_count, true};
       }
     }
     return {SUCCESS, full_input_length, size_t(dst - dstinit)};
@@ -559,8 +560,73 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   if (!ignore_garbage && padding_characters > 0) {
     if ((size_t(dst - dstinit) % 3 == 0) ||
         ((size_t(dst - dstinit) % 3) + 1 + padding_characters != 4)) {
-      return {INVALID_BASE64_CHARACTER, equallocation, size_t(dst - dstinit)};
+      return {INVALID_BASE64_CHARACTER, equallocation, size_t(dst - dstinit),
+              true};
     }
   }
   return {SUCCESS, srclen, size_t(dst - dstinit)};
+}
+
+simdutf_warn_unused size_t icelake_binary_length_from_base64(const char *input,
+                                                             size_t length) {
+  size_t count = 0;
+  const char *ptr = input;
+  const char *end = input + length;
+
+  __m512i spaces = _mm512_set1_epi8(0x20);
+  while (ptr + 64 <= end) {
+    __m512i data = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(ptr));
+    uint64_t mask = _mm512_cmpgt_epi8_mask(data, spaces);
+    count += count_ones(mask);
+    ptr += 64;
+  }
+
+  while (ptr < end) {
+    count += (*ptr > 0x20) ? 1 : 0;
+    ptr++;
+  }
+
+  size_t padding = 0;
+  size_t pos = length;
+  while (pos > 0 && padding < 2) {
+    char c = input[--pos];
+    if (c == '=') {
+      padding++;
+    } else if (c > ' ') {
+      break;
+    }
+  }
+  return ((count - padding) * 3) / 4;
+}
+
+simdutf_warn_unused size_t
+icelake_binary_length_from_base64(const char16_t *input, size_t length) {
+  size_t count = 0;
+  const char16_t *ptr = input;
+  const char16_t *end = input + length;
+
+  __m512i spaces = _mm512_set1_epi16(0x20);
+  while (ptr + 32 <= end) {
+    __m512i data = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(ptr));
+    __mmask32 mask = _mm512_cmpgt_epi16_mask(data, spaces);
+    count += _mm_popcnt_u32(mask);
+    ptr += 32;
+  }
+
+  while (ptr < end) {
+    count += (*ptr > 0x20) ? 1 : 0;
+    ptr++;
+  }
+
+  size_t padding = 0;
+  size_t pos = length;
+  while (pos > 0 && padding < 2) {
+    char16_t c = input[--pos];
+    if (c == '=') {
+      padding++;
+    } else if (c > ' ') {
+      break;
+    }
+  }
+  return ((count - padding) * 3) / 4;
 }

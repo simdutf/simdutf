@@ -2,9 +2,10 @@
 
 #include <array>
 
-#include <tests/helpers/transcode_test_base.h>
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_int.h>
 #include <tests/helpers/test.h>
+#include <tests/helpers/transcode_test_base.h>
 
 namespace {
 std::array<size_t, 7> input_size{7, 16, 12, 64, 67, 128, 256};
@@ -542,5 +543,37 @@ TEST(issue_446) {
   ASSERT_EQUAL(r.count, 127); // because of the sequence 0xc2, 0xa2
   ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+namespace {
+template <auto input> constexpr auto output_size() {
+  return simdutf::latin1_length_from_utf8(input);
+}
+
+template <auto input> constexpr auto convert() {
+  using namespace simdutf::tests::helpers;
+  CTString<char, output_size<input>()> tmp;
+  auto ret = simdutf::convert_utf8_to_latin1_with_errors(input, tmp);
+  auto N = ret.count;
+  if (N != tmp.size()) {
+    throw "oops";
+  }
+  return tmp;
+}
+
+} // namespace
+
+TEST(compile_time_convert_utf8_to_latin1_with_errors) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto input = u8"köttbulle"_utf8;
+  constexpr auto expected = "k\xF6ttbulle"_latin1;
+  constexpr auto output = convert<input>();
+  static_assert(output.size() == expected.size());
+  static_assert(output == expected);
+}
+
+#endif
 
 TEST_MAIN

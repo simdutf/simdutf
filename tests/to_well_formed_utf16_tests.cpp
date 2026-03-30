@@ -1,9 +1,10 @@
 #include "simdutf.h"
 
 #include <random>
-#include <thread>
 #include <vector>
 
+#include <tests/helpers/compiletime_conversions.h>
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_utf16.h>
 #include <tests/helpers/test.h>
 
@@ -305,5 +306,72 @@ TEST(to_well_formed_utf16be_bad_input_self) {
     ASSERT_EQUAL(utf8_length.count, utf8_length_check);
   }
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+namespace {
+
+// makes a malformed string in the requested endianness
+template <simdutf::endianness e> constexpr auto make_malformed() {
+  simdutf::tests::helpers::CTString<
+      char16_t, 5,
+      e == simdutf::endianness::BIG ? std::endian::big : std::endian::little>
+      data{};
+  data[2] = simdutf::scalar::utf16::swap_if_needed<e>(0xD800);
+  return data;
+}
+
+// makes a wellformed string in the requested endianness
+template <simdutf::endianness e> constexpr auto make_wellformed() {
+  simdutf::tests::helpers::CTString<
+      char16_t, 5,
+      e == simdutf::endianness::BIG ? std::endian::big : std::endian::little>
+      data{};
+  data[2] = simdutf::scalar::utf16::swap_if_needed<e>(0xfffd);
+  return data;
+}
+} // namespace
+
+TEST(compile_time_to_wellformed_big) {
+  using namespace simdutf::tests::helpers;
+  using enum simdutf::endianness;
+
+  constexpr auto malformed = make_malformed<BIG>();
+  constexpr auto replaced = to_wellformed(malformed);
+  constexpr auto expected = make_wellformed<BIG>();
+  static_assert(replaced == expected);
+}
+
+TEST(compile_time_to_wellformed_little) {
+  using namespace simdutf::tests::helpers;
+  using enum simdutf::endianness;
+
+  constexpr auto malformed = make_malformed<LITTLE>();
+  constexpr auto replaced = to_wellformed(malformed);
+  constexpr auto expected = make_wellformed<LITTLE>();
+  static_assert(replaced == expected);
+}
+
+namespace {
+template <auto input> constexpr auto invoke_to_wellformed() {
+  auto output = input;
+  simdutf::to_well_formed_utf16(input, output);
+  return output;
+}
+} // namespace
+
+TEST(compile_time_to_wellformed_native) {
+
+  using namespace simdutf::tests::helpers;
+  using enum simdutf::endianness;
+
+  constexpr auto malformed = make_malformed<NATIVE>();
+  constexpr auto replaced = invoke_to_wellformed<malformed>();
+
+  constexpr auto expected = make_wellformed<NATIVE>();
+  static_assert(replaced == expected);
+}
+
+#endif
 
 TEST_MAIN

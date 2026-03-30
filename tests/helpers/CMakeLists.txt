@@ -1,4 +1,6 @@
 add_library(simdutf_tests_helpers STATIC
+  compiletime_conversions.h
+  fixed_string.h
   test.h
   test.cpp
   random_int.h

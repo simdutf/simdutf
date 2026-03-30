@@ -2,7 +2,7 @@ include(CTest)
 
 set(SIMDUTF_TEST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../)
 if(MSVC)
-  add_compile_options("/Zi" "/EHsc" "/GR")
+  add_compile_options("/Zi" "/EHsc" "/GR" "/source-charset:utf-8")
 endif()
 add_subdirectory(helpers)
 add_subdirectory(reference)
@@ -412,10 +412,27 @@ else()
    target_compile_definitions(base64_tests PRIVATE SIMDUTF_BASE64_TEST_MAXLEN=2048)
 endif()
 
+add_cpp_test(constexpr_base64_tests)
+target_link_libraries(constexpr_base64_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)
+
 add_cpp_test(span_tests)
 target_link_libraries(span_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
+
+# C API tests
+add_cpp_test(simdutf_c_tests)
+target_link_libraries(simdutf_c_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)
+
+add_executable(straight_c_test straight_c_test.c)
+target_include_directories(straight_c_test PUBLIC ${SIMDUTF_TEST_INCLUDE_DIR})
+target_link_libraries(straight_c_test PUBLIC simdutf)
+add_test(NAME straight_c_test COMMAND straight_c_test)
+
 if(SIMDUTF_ATOMIC_BASE64_TESTS)
   add_cpp_test(atomic_base64_tests)
   target_link_libraries(atomic_base64_tests
@@ -435,10 +452,32 @@ target_link_libraries(to_well_formed_utf16_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
 
+add_cpp_test(convert_utf16_to_utf8_with_replacement_tests)
+target_link_libraries(convert_utf16_to_utf8_with_replacement_tests
+  PUBLIC simdutf::tests::helpers)
+
+add_cpp_test(fixed_string_tests)
+target_link_libraries(fixed_string_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)
+
+
+# test C++26 embed, currently only available in gcc 15
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+ if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "15")
+   add_cpp_test(embed_tests)
+   target_link_libraries(embed_tests
+     PUBLIC simdutf::tests::helpers
+            simdutf::tests::reference)
+          target_compile_options(embed_tests PRIVATE --embed-directory ${CMAKE_CURRENT_SOURCE_DIR})
+   endif()
+endif()
+
 find_program(GIT_EXECUTABLE git)
 if(Python3_FOUND AND GIT_EXECUTABLE)
   add_test(NAME check_feature_macros
     COMMAND ${Python3_EXECUTABLE} ${SIMDUTF_SOURCE_DIR}/scripts/check_feature_macros.py
     WORKING_DIRECTORY ${SIMDUTF_SOURCE_DIR}
   )
+  set_tests_properties(check_feature_macros PROPERTIES SKIP_RETURN_CODE 142) # Skip if no relevant files are found
 endif()

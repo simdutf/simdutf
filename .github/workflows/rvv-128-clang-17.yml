@@ -19,8 +19,14 @@ jobs:
         sudo apt-get install -y cmake make g++-riscv64-linux-gnu qemu-user-static clang-17
     - name: Build
       run: |
-        CXX=clang++-17 CXXFLAGS="--target=riscv64-linux-gnu -march=rv64gcv" \
-        cmake --toolchain=cmake/toolchains-ci/riscv64-linux-gnu.cmake -DCMAKE_BUILD_TYPE=Release -B build -DSIMDUTF_FAST_TESTS=On
+        CXX=clang++-17 \
+        CC=clang-17 \
+        CFLAGS="--target=riscv64-linux-gnu -march=rv64gcv" \
+        CXXFLAGS="--target=riscv64-linux-gnu -march=rv64gcv" \
+        cmake --toolchain=cmake/toolchains-ci/riscv64-linux-gnu.cmake \
+        -DCMAKE_BUILD_TYPE=Release \
+        -B build \
+        -DSIMDUTF_FAST_TESTS=On
         cmake --build build/ -j$(nproc)
     - name: Test VLEN=128
       run: |

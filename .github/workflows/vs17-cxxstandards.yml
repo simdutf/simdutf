@@ -1,0 +1,36 @@
+name: VS17 All supported C++ standards
+
+on: [push, pull_request]
+
+jobs:
+  ci:
+    name: windows-vs17
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        cppversion: [11, 14, 17, 20, 23]
+        gen: ["Visual Studio 17 2022"]
+        arch: [x64]
+        shared: [ON]
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+    - name: Configure
+      run: |
+        cmake `
+           -G "${{matrix.gen}}" `
+           -A ${{matrix.arch}} `
+           -DSIMDUTF_CXX_STANDARD=${{matrix.cppversion}} `
+           -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON `
+           -DSIMDUTF_BENCHMARKS=OFF `
+           -DSIMDUTF_FAST_TESTS=On `
+           -DBUILD_SHARED_LIBS=${{matrix.shared}} `
+           -B build `
+           -S .
+    - name: Build Release
+      run: cmake --build build --config Release --verbose
+    - name: Run Release tests
+      run: |
+        cd build
+        ctest -C Release --output-on-failure

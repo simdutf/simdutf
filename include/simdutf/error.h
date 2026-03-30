@@ -78,17 +78,18 @@ struct result {
                 // case of success, indicates the number of code units
                 // validated/written.
 
-  simdutf_really_inline result() noexcept
+  simdutf_really_inline simdutf_constexpr23 result() noexcept
       : error{error_code::SUCCESS}, count{0} {}
 
-  simdutf_really_inline result(error_code err, size_t pos) noexcept
+  simdutf_really_inline simdutf_constexpr23 result(error_code err,
+                                                   size_t pos) noexcept
       : error{err}, count{pos} {}
 
-  simdutf_really_inline bool is_ok() const noexcept {
+  simdutf_really_inline simdutf_constexpr23 bool is_ok() const noexcept {
     return error == error_code::SUCCESS;
   }
 
-  simdutf_really_inline bool is_err() const noexcept {
+  simdutf_really_inline simdutf_constexpr23 bool is_err() const noexcept {
     return error != error_code::SUCCESS;
   }
 };
@@ -100,18 +101,19 @@ struct full_result {
   bool padding_error = false; // true if the error is due to padding, only
                               // meaningful when error is not SUCCESS
 
-  simdutf_really_inline full_result() noexcept
+  simdutf_really_inline simdutf_constexpr23 full_result() noexcept
       : error{error_code::SUCCESS}, input_count{0}, output_count{0} {}
 
-  simdutf_really_inline full_result(error_code err, size_t pos_in,
-                                    size_t pos_out) noexcept
+  simdutf_really_inline simdutf_constexpr23 full_result(error_code err,
+                                                        size_t pos_in,
+                                                        size_t pos_out) noexcept
       : error{err}, input_count{pos_in}, output_count{pos_out} {}
-  simdutf_really_inline full_result(error_code err, size_t pos_in,
-                                    size_t pos_out, bool padding_err) noexcept
+  simdutf_really_inline simdutf_constexpr23 full_result(
+      error_code err, size_t pos_in, size_t pos_out, bool padding_err) noexcept
       : error{err}, input_count{pos_in}, output_count{pos_out},
         padding_error{padding_err} {}
 
-  simdutf_really_inline operator result() const noexcept {
+  simdutf_really_inline simdutf_constexpr23 operator result() const noexcept {
     if (error == error_code::SUCCESS) {
       return result{error, output_count};
     } else {

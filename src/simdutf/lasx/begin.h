@@ -1,2 +1,8 @@
 #define SIMDUTF_IMPLEMENTATION lasx
 #define SIMDUTF_SIMD_HAS_UNSIGNED_CMP 1
+
+#if SIMDUTF_CAN_ALWAYS_RUN_LASX
+// nothing needed.
+#else
+SIMDUTF_TARGET_LASX
+#endif

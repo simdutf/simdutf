@@ -2,6 +2,8 @@
 
 Thank you for your interest in contributing to **simdutf**, a high-performance library for UTF-8, UTF-16, and UTF-32 transcoding as well as other formats such as base64 using SIMD instructions. We welcome contributions to enhance the project’s speed, reliability, and usability. This guide outlines how to contribute effectively.
 
+Please also review our [AI Usage Policy](AI_USAGE_POLICY.md).
+
 ## Table of Contents
 - [Ways to Contribute](#ways-to-contribute)
   - [Reporting Bugs](#reporting-bugs)
@@ -27,6 +29,8 @@ To report a bug, open an issue on the [GitHub Issues page](https://github.com/si
 - Relevant logs or code snippets.
 
 We prefer that you use our bug template.
+
+A compiler or static-analyzer warning is not a bug. It is possible with tools such as Visual Studio to require that rarely enabled warnings are considered errors. Do not report such cases as bugs. We do accept pull requests if you want to silence warnings issued by code analyzers, however.
 
 ### Suggesting Features
 

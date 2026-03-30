@@ -19,6 +19,7 @@ How to verify / test
 
 Please read before contributing:
 - CONTRIBUTING: https://github.com/simdutf/simdutf/blob/master/CONTRIBUTING.md
+- AI Usage Policy: https://github.com/simdutf/simdutf/blob/master/AI_USAGE_POLICY.md
 
 
 

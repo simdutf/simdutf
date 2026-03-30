@@ -416,6 +416,10 @@ template <> struct simd8<uint8_t> : base8_numeric<uint8_t> {
   operator>=(const simd8<uint8_t> other) const {
     return __lasx_xvsle_bu(other, *this);
   }
+  simdutf_really_inline simd8<bool>
+  operator>(const simd8<uint8_t> other) const {
+    return __lasx_xvslt_bu(other, *this);
+  }
   simdutf_really_inline simd8 &operator-=(const simd8<uint8_t> other) {
     value = __lasx_xvsub_b(value, other.value);
     return *this;
@@ -513,6 +517,12 @@ template <typename T> struct simd8x64 {
   simdutf_really_inline uint64_t lt(const T m) const {
     const simd8<T> mask = simd8<T>::splat(m);
     return simd8x64<bool>(this->chunks[0] < mask, this->chunks[1] < mask)
+        .to_bitmask();
+  }
+
+  simdutf_really_inline uint64_t gteq(const T m) const {
+    const simd8<T> mask = simd8<T>::splat(m);
+    return simd8x64<bool>(this->chunks[0] >= mask, this->chunks[1] >= mask)
         .to_bitmask();
   }
 

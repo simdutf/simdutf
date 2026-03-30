@@ -1,0 +1,34 @@
+name: Ubuntu 24.04 All supported C++ standards
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  ubuntu-build:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        compiler: [g++-14, clang++-18]
+        cppversion: [11, 14, 17, 20, 23]
+        cversion: [11,]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test ${{matrix.compiler}} C++ ${{matrix.cppversion}}
+        run: |
+          cmake \
+             -DCMAKE_CXX_COMPILER=${{matrix.compiler}} \
+             -DSIMDUTF_CXX_STANDARD=${{matrix.cppversion}} \
+             -DSIMDUTF_C_STANDARD=${{matrix.cversion}} \
+             -DSIMDUTF_BENCHMARKS=OFF \
+             -DCMAKE_BUILD_TYPE=Release \
+             -DSIMDUTF_FAST_TESTS=On \
+             -GNinja \
+             -B build \
+             -S .
+          cmake --build build
+          ctest -j --output-on-failure --test-dir build

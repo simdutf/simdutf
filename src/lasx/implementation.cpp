@@ -219,6 +219,9 @@ convert_utf8_1_to_2_byte_to_utf16(__m128i in, size_t shufutf8_idx) {
 #if SIMDUTF_FEATURE_UTF32
   #include "generic/utf32.h"
 #endif // SIMDUTF_FEATURE_UTF32
+#if SIMDUTF_FEATURE_BASE64
+  #include "generic/base64lengths.h"
+#endif // SIMDUTF_FEATURE_BASE64
 
 //
 // Implementation-specific overrides
@@ -1315,6 +1318,20 @@ implementation::utf8_length_from_utf16be_with_replacement(
       endianness::BIG>(input, length);
 }
 
+simdutf_warn_unused size_t
+implementation::convert_utf16le_to_utf8_with_replacement(
+    const char16_t *input, size_t length, char *utf8_buffer) const noexcept {
+  return scalar::utf16_to_utf8::convert_with_replacement<endianness::LITTLE>(
+      input, length, utf8_buffer);
+}
+
+simdutf_warn_unused size_t
+implementation::convert_utf16be_to_utf8_with_replacement(
+    const char16_t *input, size_t length, char *utf8_buffer) const noexcept {
+  return scalar::utf16_to_utf8::convert_with_replacement<endianness::BIG>(
+      input, length, utf8_buffer);
+}
+
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
@@ -1495,6 +1512,16 @@ const char *implementation::find(const char *start, const char *end,
 const char16_t *implementation::find(const char16_t *start, const char16_t *end,
                                      char16_t character) const noexcept {
   return util_find(start, end, character);
+}
+
+simdutf_warn_unused size_t implementation::binary_length_from_base64(
+    const char *input, size_t length) const noexcept {
+  return base64_lengths::binary_length_from_base64(input, length);
+}
+
+simdutf_warn_unused size_t implementation::binary_length_from_base64(
+    const char16_t *input, size_t length) const noexcept {
+  return base64_lengths::binary_length_from_base64(input, length);
 }
 #endif // SIMDUTF_FEATURE_BASE64
 

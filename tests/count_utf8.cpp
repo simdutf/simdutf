@@ -2,10 +2,11 @@
 
 #include <array>
 
+#include <tests/helpers/fixed_string.h>
 #include <tests/helpers/random_int.h>
-#include <tests/helpers/transcode_test_base.h>
 #include <tests/helpers/random_utf8.h>
 #include <tests/helpers/test.h>
+#include <tests/helpers/transcode_test_base.h>
 
 namespace {
 std::array<size_t, 10> input_size{7,
@@ -73,5 +74,14 @@ TEST_LOOP(count_1_2_3_or_4_UTF8_bytes) {
         generated.second);
   }
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+TEST(compile_time_count_utf8) {
+  using namespace simdutf::tests::helpers;
+
+  static_assert(simdutf::count_utf8(u8"köttbulle"_utf8) == 9);
+}
+#endif
 
 TEST_MAIN

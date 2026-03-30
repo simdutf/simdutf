@@ -54,7 +54,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   size_t full_input_length = ri.full_input_length;
   if (srclen == 0) {
     if (!ignore_garbage && equalsigns > 0) {
-      return {INVALID_BASE64_CHARACTER, equallocation, 0};
+      return {INVALID_BASE64_CHARACTER, equallocation, 0, true};
     }
     return {SUCCESS, full_input_length, 0};
   }
@@ -221,7 +221,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   if (!ignore_garbage && equalsigns > 0) {
     if ((size_t(dst - dstinit) % 3 == 0) ||
         ((size_t(dst - dstinit) % 3) + 1 + equalsigns != 4)) {
-      return {INVALID_BASE64_CHARACTER, equallocation, size_t(dst - dstinit)};
+      return {INVALID_BASE64_CHARACTER, equallocation, size_t(dst - dstinit),
+              true};
     }
   }
   return {SUCCESS, srclen, size_t(dst - dstinit)};

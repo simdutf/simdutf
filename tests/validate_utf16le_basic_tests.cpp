@@ -4,6 +4,8 @@
 #include <fstream>
 #include <memory>
 
+#include <tests/helpers/fixed_string.h>
+#include <tests/helpers/compiletime_conversions.h>
 #include <tests/helpers/random_utf16.h>
 #include <tests/helpers/test.h>
 #include <tests/helpers/utf16.h>
@@ -225,5 +227,42 @@ TEST(validate_utf16le_extensive_tests) {
     ASSERT_EQUAL(implementation.validate_utf16le(buf, len), valid);
   }
 }
+
+#if SIMDUTF_CPLUSPLUS23
+
+TEST(compile_time_change_endianness) {
+  using namespace simdutf::tests::helpers;
+
+  constexpr auto native = u"hello!"_utf16;
+  constexpr auto little = u"hello!"_utf16le;
+  constexpr auto big = u"hello!"_utf16be;
+  static_assert(to_utf16le(big) == little);
+  static_assert(big == to_utf16be(little));
+  static_assert(native == to_utf16(little));
+  static_assert(native == to_utf16(big));
+}
+
+TEST(compile_time_validation) {
+  using namespace simdutf::tests::helpers;
+
+  static_assert(simdutf::validate_utf16le(u"hello!"_utf16le));
+  static_assert(simdutf::validate_utf16(u"hello!"_utf16));
+
+  // invalid - two high surrogates following each other
+  constexpr auto invalid = u"\xd800\xd800"_utf16;
+  constexpr auto invalid_le = to_utf16le(invalid);
+  static_assert(not simdutf::validate_utf16le(invalid_le));
+  static_assert(not simdutf::validate_utf16(invalid));
+}
+
+TEST(compile_time_ascii_validation_le) {
+  using namespace simdutf::tests::helpers;
+  static_assert(
+      simdutf::validate_utf16_as_ascii(u"I am ascii, I promise!"_utf16le));
+  static_assert(not simdutf::validate_utf16_as_ascii(
+      u"But this isn't: köttbulle"_utf16le));
+}
+
+#endif
 
 TEST_MAIN

@@ -368,7 +368,7 @@ struct Conversion {
         ret.implementations_agree = false;
       } else {
         std::cerr
-            << "impementations are allowed to disagree on invalid input\n";
+            << "implementations are allowed to disagree on invalid input\n";
         ret.implementations_agree = true;
       }
     } else {
@@ -657,7 +657,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   }
 
   if constexpr (use_separate_allocation) {
-    // this is better at excercising null input and catch buffer underflows
+    // this is better at exercising null input and catch buffer underflows
     const std::vector<char> separate{data, data + size};
     fptrs[action](std::span(separate));
   } else {

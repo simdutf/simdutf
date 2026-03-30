@@ -143,9 +143,25 @@
 #elif defined(__loongarch_lp64)
   #if defined(__loongarch_sx) && defined(__loongarch_asx)
     #define SIMDUTF_IS_LSX 1
-    #define SIMDUTF_IS_LASX 1
+    #define SIMDUTF_IS_LASX 1 // We can always run both
   #elif defined(__loongarch_sx)
     #define SIMDUTF_IS_LSX 1
+    // Adjust for runtime dispatching support.
+    #if defined(__GNUC__) && !defined(__clang__) &&                            \
+        !defined(__INTEL_COMPILER) && !defined(__NVCOMPILER)
+      #if __GNUC__ > 15 || (__GNUC__ == 15 && __GNUC_MINOR__ >= 0)
+        // We are ok, we will support runtime dispatch for LASX.
+      #else
+        // We disable runtime dispatch for LASX, which means that we will not be
+        // able to use LASX even if it is supported by the hardware. Loongson
+        // users should update to GCC 15 or better.
+        #define SIMDUTF_IMPLEMENTATION_LASX 0
+      #endif
+    #else
+      // We are not using GCC, so we assume that we can support runtime dispatch
+      // for LASX. https://godbolt.org/z/jcMnrjYhs
+      #define SIMDUTF_IMPLEMENTATION_LASX 0
+    #endif
   #endif
 #else
   // The simdutf library is designed
@@ -193,7 +209,7 @@
 //
 
 // We are going to use runtime dispatch.
-#ifdef SIMDUTF_IS_X86_64
+#if defined(SIMDUTF_IS_X86_64) || defined(SIMDUTF_IS_LSX)
   #ifdef __clang__
     // clang does not have GCC push pop
     // warning: clang attribute push can't be used within a namespace in clang
@@ -210,7 +226,7 @@
     #define SIMDUTF_UNTARGET_REGION _Pragma("GCC pop_options")
   #endif // clang then gcc
 
-#endif // x86
+#endif // defined(SIMDUTF_IS_X86_64) || defined(SIMDUTF_IS_LSX)
 
 // Default target region macros don't do anything.
 #ifndef SIMDUTF_TARGET_REGION
