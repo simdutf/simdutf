@@ -3609,7 +3609,6 @@ TEST(binary_length_from_base64_various_remainders) {
   ASSERT_EQUAL(simdutf::binary_length_from_base64("AAAAAAAA", 8), 6);
 }
 
-
 TEST(base64_details_padding_error_consistency) {
   const char input[] = "www";
   const size_t input_len = 3;
@@ -3652,9 +3651,8 @@ TEST(base64_details_padding_error_various_inputs) {
 
     // On success, output bytes must match.
     if (fr.error == simdutf::error_code::SUCCESS) {
-      ASSERT_TRUE(
-          std::equal(output.begin(), output.begin() + fr.output_count,
-                     output2.begin()));
+      ASSERT_TRUE(std::equal(output.begin(), output.begin() + fr.output_count,
+                             output2.begin()));
     }
   }
 }
@@ -3676,7 +3674,6 @@ TEST(base64_details_padding_error_char16) {
   ASSERT_TRUE(fr.error != simdutf::error_code::SUCCESS);
   ASSERT_TRUE(fr.padding_error);
 }
-
 
 TEST(base64_details_input_count_on_padding_error) {
   std::string input(62, 'R');

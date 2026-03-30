@@ -7,8 +7,8 @@
 #include <vector>
 
 #ifdef __linux__
-#include <sys/mman.h>
-#include <unistd.h>
+  #include <sys/mman.h>
+  #include <unistd.h>
 #endif
 
 #include <tests/helpers/fixed_string.h>
@@ -87,9 +87,8 @@ static std::pair<std::vector<char>, char *> make_aligned_buf(size_t size,
   std::vector<char> backing(size + 128, '\0');
   uintptr_t base = reinterpret_cast<uintptr_t>(backing.data());
   size_t current_mod = base % 64;
-  size_t offset =
-      (align_mod >= current_mod) ? (align_mod - current_mod)
-                                 : (64 - current_mod + align_mod);
+  size_t offset = (align_mod >= current_mod) ? (align_mod - current_mod)
+                                             : (64 - current_mod + align_mod);
   char *ptr = backing.data() + offset;
   return {std::move(backing), ptr};
 }
@@ -140,9 +139,8 @@ static char *alloc_at_page_end(size_t size) {
   const size_t page = static_cast<size_t>(sysconf(_SC_PAGESIZE));
   const size_t pages_needed = (size + page - 1) / page + 1;
   const size_t total = pages_needed * page;
-  char *base = static_cast<char *>(
-      mmap(nullptr, total, PROT_READ | PROT_WRITE,
-           MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+  char *base = static_cast<char *>(mmap(nullptr, total, PROT_READ | PROT_WRITE,
+                                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
   if (base == MAP_FAILED) {
     return nullptr;
   }

@@ -435,8 +435,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     // We never should have that the number of base64 characters + the
     // number of padding characters is more than 4.
     if (!ignore_garbage && (idx + padding_characters > 4)) {
-      return {INVALID_BASE64_CHARACTER, equallocation,
-              size_t(dst - dstinit), true};
+      return {INVALID_BASE64_CHARACTER, equallocation, size_t(dst - dstinit),
+              true};
     }
     // The idea here is that in loose mode,
     // if there is padding at all, it must be used
@@ -446,8 +446,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         last_chunk_options == last_chunk_handling_options::loose &&
         (idx >= 2) && padding_characters > 0 &&
         ((idx + padding_characters) & 3) != 0) {
-      return {INVALID_BASE64_CHARACTER, equallocation,
-              size_t(dst - dstinit), true};
+      return {INVALID_BASE64_CHARACTER, equallocation, size_t(dst - dstinit),
+              true};
     } else
       // The idea here is that in strict mode, we do not want to accept
       // incomplete base64 chunks. So if the chunk was otherwise valid, we

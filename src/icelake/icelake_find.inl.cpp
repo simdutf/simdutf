@@ -17,7 +17,8 @@ simdutf_really_inline const char *util_find(const char *start, const char *end,
     __m512i data = _mm512_maskz_loadu_epi8(
         load_mask, reinterpret_cast<const __m512i *>(start));
     __mmask64 match_mask = _mm512_cmpeq_epi8_mask(data, char_vec);
-    match_mask &= load_mask; // When searching for null terminators, this prevents false positives
+    match_mask &= load_mask; // When searching for null terminators, this
+                             // prevents false positives
 
     if (match_mask != 0) {
       size_t index = _tzcnt_u64(match_mask);
@@ -107,7 +108,8 @@ simdutf_really_inline const char16_t *util_find(const char16_t *start,
     __m512i data = _mm512_maskz_loadu_epi16(
         load_mask, reinterpret_cast<const __m512i *>(start));
     __mmask32 match_mask = _mm512_cmpeq_epi16_mask(data, char_vec);
-    match_mask &= load_mask; // When searching for null terminators, this prevents false positives
+    match_mask &= load_mask; // When searching for null terminators, this
+                             // prevents false positives
 
     if (match_mask != 0) {
       size_t index = _tzcnt_u32(match_mask);
