@@ -20,7 +20,7 @@
   - [Find](#find)
   - [C++20 and std::span usage in simdutf](#c20-and-stdspan-usage-in-simdutf)
   - [C++23 and constexpr support](#c23-and-constexpr-support)
-  - [The sutf command-line tool](#the-sutf-command-line-tool)
+  - [Command-line tools](#command-line-tools)
   - [Manual implementation selection](#manual-implementation-selection)
   - [Thread safety](#thread-safety)
   - [References](#references)
@@ -2658,19 +2658,84 @@ modifications made to make it usable at constexpr time. Also, when in a constexp
 as during normal dynamic invocation. For this reason, there might have slipped in subtle bugs and the constexpr
 support is considered experimental. Please report any bugs you encounter!
 
-## The sutf command-line tool
+## Command-line tools
 
-We also provide a command-line tool which can be build as follows:
+We provide two command-line tools that can be built as follows:
 ```
-cmake -B build && cmake --build build --target sutf
+cmake -B build && cmake --build build --target sutf fastbase64
 ```
-This command builds the executable in `./build/tool/` under most platforms. The sutf tool enables the user to easily transcode files from one encoding to another directly from the command line.
-The usage is similar to [iconv](https://www.gnu.org/software/libiconv/) (see `sutf --help` for more details). The sutf command-line tool relies on the simdutf library functions for fast transcoding of supported
+This command builds the executables in `./build/tools/` under most platforms.
+
+### sutf: Text encoding converter
+
+The sutf tool enables transcoding files from one encoding to another directly from the command line.
+The usage is similar to [iconv](https://www.gnu.org/software/libiconv/) (see `sutf --help` or `man sutf` for more details). The sutf command-line tool relies on the simdutf library functions for fast transcoding of supported
 formats (UTF-8, UTF-16LE, UTF-16BE and UTF-32). If iconv is found on the system and simdutf does not support a conversion, the sutf tool falls back on iconv: a message lets the user know if iconv is available
 during compilation. The following is an example of transcoding two input files to an output file, from UTF-8 to UTF-16LE:
 ```
 sutf -f UTF-8 -t UTF-16LE -o output_file.txt first_input_file.txt second_input_file.txt
 ```
+
+
+### fastbase64: Base64 encoder/decoder
+
+The fastbase64 tools provide high-performance base64 encoding and decoding. They are ideally suited if you need to encode or decode large files. There are two variants that are meant to serve as drop-in replacements:
+
+- `fastbase64`: BSD/macOS-like interface.
+- `fastbase64.coreutils`: GNU coreutils-compatible interface, matching GNU base64 behavior.
+
+Both commands have additional specific flags not present in the conventional tools.
+
+#### fastbase64: BSD-like Base64 encoder/decoder
+
+The `fastbase64` tool provides high-performance base64 encoding and decoding with BSD/macOS-compatible behavior. It defaults to encoding binary input to base64 output with no line wrapping. Examples:
+
+```
+# Encode a file (default, no wrapping)
+fastbase64 -i myfile.txt
+
+# Decode base64 data
+fastbase64 -d -i encoded.txt
+
+# Encode with custom line wrapping
+fastbase64 -b 76 -i myfile.txt
+```
+
+#### fastbase64.coreutils: GNU coreutils-compatible Base64 encoder/decoder
+
+The `fastbase64.coreutils` tool provides high-performance base64 encoding and decoding with GNU coreutils-compatible behavior. It defaults to encoding binary input to base64 output with line wrapping at 76 characters. Examples:
+
+```
+# Encode a file (default, with 76-character line wrapping)
+fastbase64.coreutils myfile.txt
+
+# Decode base64 data
+fastbase64.coreutils -d < encoded.txt
+
+# Encode without line wrapping
+fastbase64.coreutils -w 0 myfile.txt
+```
+
+
+#### Performance
+
+The `fastbase64` tools can be several times faster than standard base64 tools. See `scripts/base64bench.sh` for a benchmark.
+
+**Apple M4 Max**
+
+Size     | Encode Base64 | Encode FastBase64 | Decode Base64 | Decode FastBase64
+---------|---------------|-------------------|---------------|------------------
+1m       | 21.6          | 21.3              | 35.5          | 21.3
+10m      | 32.3          | 25.6              | 163.6         | 26.2
+100m     | 119.5         | 49.3              | 1433.5        | 52.7
+
+**Linux with Xeon Gold 6548N**
+
+Size     | Encode Base64 | Encode FastBase64 | Decode Base64 | Decode FastBase64
+---------|---------------|-------------------|---------------|------------------
+1m       | 13.4          | 15.9              | 13.7          | 12.8
+10m      | 27.8          | 23.0              | 37.3          | 17.8
+100m     | 183.1         | 93.0              | 291.8         | 84.4
 
 ## Manual implementation selection
 
