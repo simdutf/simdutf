@@ -4723,7 +4723,7 @@ base64_to_binary(
 simdutf_warn_unused full_result base64_to_binary_details(
     const char *input, size_t length, char *output,
     base64_options options = base64_default,
-    last_chunk_handling_options last_chunk_options = loose) noexcept;
+    last_chunk_handling_options last_chunk_options = last_chunk_handling_options::loose) noexcept;
 
 /**
  * Convert a base64 input to a binary output while returning more details
