@@ -7078,4 +7078,70 @@ simdutf_really_inline
 
 #endif // SIMDUTF_FEATURE_BASE64
 
+#if SIMDUTF_CPLUSPLUS23 && SIMDUTF_FEATURE_BASE64
+
+namespace simdutf {
+namespace literals {
+
+namespace detail {
+
+template <std::size_t N> struct base64_literal_helper {
+  char storage[N - 1];
+  static constexpr std::size_t size() noexcept { return N - 1; }
+  constexpr base64_literal_helper(const char (&str)[N]) {
+    for (std::size_t i = 0; i < size(); i++) {
+      storage[i] = str[i];
+    }
+  }
+};
+
+template <std::size_t InputLen> struct base64_decode_result {
+  static constexpr std::size_t max_out = (InputLen + 3) / 4 * 3;
+  std::array<char, max_out> buffer{};
+  std::size_t output_count{};
+};
+
+template <std::size_t InputLen>
+constexpr auto base64_decode_literal(const char *str) {
+  base64_decode_result<InputLen> result{};
+  auto r = scalar::base64::base64_to_binary_details_impl(
+      str, InputLen, result.buffer.data(), base64_default, loose);
+  if (r.error != error_code::SUCCESS) {
+    throw "invalid base64 input in _base64 literal";
+  }
+  result.output_count = r.output_count;
+  return result;
+}
+
+template <base64_literal_helper a> constexpr auto base64_make_array() {
+  constexpr auto decoded = base64_decode_literal<a.size()>(a.storage);
+  std::array<char, decoded.output_count> ret{};
+  for (std::size_t i = 0; i < decoded.output_count; i++) {
+    ret[i] = decoded.buffer[i];
+  }
+  return ret;
+}
+
+} // namespace detail
+
+/**
+ * User-defined literal for compile-time base64 decoding.
+ *
+ * Usage:
+ *   using namespace simdutf::literals;
+ *   constexpr auto decoded = "SGVsbG8gV29ybGQh"_base64;
+ *   // decoded is a std::array<char, 12> containing "Hello World!"
+ *
+ * The input must be valid base64. Spaces are allowed and ignored.
+ * A compilation error occurs if the input is invalid.
+ */
+template <detail::base64_literal_helper a> constexpr auto operator""_base64() {
+  return detail::base64_make_array<a>();
+}
+
+} // namespace literals
+} // namespace simdutf
+
+#endif // SIMDUTF_CPLUSPLUS23 && SIMDUTF_FEATURE_BASE64
+
 #endif // SIMDUTF_IMPLEMENTATION_H

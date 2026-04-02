@@ -204,34 +204,11 @@ TEST(compile_time_binary_to_base64_char) {
   static_assert(expected == encoded);
 }
 
-namespace {
-// this is just to demo that it is possible to do _base64 literals.
-template <std::size_t N> struct Base64LiteralHelper {
-  char storage[N - 1];
-
-  static constexpr std::size_t size() noexcept { return N - 1; }
-
-  constexpr Base64LiteralHelper(const char (&str)[N]) {
-    static_assert(N > 1, "weird size");
-    std::copy(str, str + size(), storage);
-  }
-};
-
-template <Base64LiteralHelper a> constexpr auto operator""_base64() {
-  using namespace simdutf::tests::helpers;
-  constexpr auto N = a.size();
-  constexpr std::span data(a.storage);
-  constexpr CTString<char, N> tmp(data);
-  return b64_to_binary<tmp>().template as_array<std::uint8_t>();
-}
-
-} // namespace
-
-TEST(compile_time_base64_literal_demo) {
-  using namespace simdutf::tests::helpers;
+TEST(compile_time_base64_literal) {
+  using namespace simdutf::literals;
 
   constexpr std::array decoded = "QWJyYWNhZGFicmEh"_base64;
-  const auto readable = std::string(begin(decoded), end(decoded));
+  const auto readable = std::string(decoded.data(), decoded.size());
   ASSERT_EQUAL(readable, "Abracadabra!");
 
   static_assert(decoded.size() == 12);
@@ -247,6 +224,22 @@ TEST(compile_time_base64_literal_demo) {
   static_assert(decoded[9] == 'r');
   static_assert(decoded[10] == 'a');
   static_assert(decoded[11] == '!');
+}
+
+TEST(compile_time_base64_literal_with_spaces) {
+  using namespace simdutf::literals;
+
+  constexpr auto decoded = "  QWJy  YWNhZGFicmEh  "_base64;
+  const auto readable = std::string(decoded.data(), decoded.size());
+  ASSERT_EQUAL(readable, "Abracadabra!");
+  static_assert(decoded.size() == 12);
+}
+
+TEST(compile_time_base64_literal_empty) {
+  using namespace simdutf::literals;
+
+  constexpr auto decoded = ""_base64;
+  static_assert(decoded.size() == 0);
 }
 
 namespace {

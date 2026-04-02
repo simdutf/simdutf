@@ -2112,6 +2112,31 @@ file or networking programming. These users should see `tools/fastbase64.cpp`, a
 utility designed for as an example. It reads and writes base64 files using chunks of at most
 a few tens of kilobytes.
 
+### Compile-time base64 decoding (C++23)
+
+If you have C++23 support, you can decode base64 strings at compile time using the
+`_base64` user-defined literal. The result is a `std::array<char, N>` where `N` is
+the decoded size, computed at compile time:
+
+```cpp
+using namespace simdutf::literals;
+
+constexpr auto decoded = "SGVsbG8gV29ybGQh"_base64;
+// decoded is std::array<char, 12> containing "Hello World!"
+
+static_assert(decoded.size() == 12);
+static_assert(decoded[0] == 'H');
+```
+
+Spaces within the base64 string are allowed and ignored, just like the runtime API:
+
+```cpp
+constexpr auto decoded = "  SGVsbG8g  V29ybGQh  "_base64;
+// same result: "Hello World!"
+```
+
+Invalid base64 input causes a compilation error. The literal uses the default
+base64 alphabet (`base64_default`) and loose last-chunk handling.
 
 We support two conventions: `base64_default` and `base64_url`:
 * The default (`base64_default`) includes the characters `+` and `/` as part of its alphabet. It also
