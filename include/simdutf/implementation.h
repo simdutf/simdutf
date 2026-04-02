@@ -7086,7 +7086,7 @@ namespace literals {
 namespace detail {
 
 template <std::size_t N> struct base64_literal_helper {
-  char storage[N - 1];
+  std::array<char, N - 1> storage{};
   static constexpr std::size_t size() noexcept { return N - 1; }
   constexpr base64_literal_helper(const char (&str)[N]) {
     for (std::size_t i = 0; i < size(); i++) {
@@ -7114,7 +7114,7 @@ constexpr auto base64_decode_literal(const char *str) {
 }
 
 template <base64_literal_helper a> constexpr auto base64_make_array() {
-  constexpr auto decoded = base64_decode_literal<a.size()>(a.storage);
+  constexpr auto decoded = base64_decode_literal<a.size()>(a.storage.data());
   std::array<char, decoded.output_count> ret{};
   for (std::size_t i = 0; i < decoded.output_count; i++) {
     ret[i] = decoded.buffer[i];
