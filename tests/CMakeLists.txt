@@ -481,3 +481,16 @@ if(Python3_FOUND AND GIT_EXECUTABLE)
   )
   set_tests_properties(check_feature_macros PROPERTIES SKIP_RETURN_CODE 142) # Skip if no relevant files are found
 endif()
+
+if(SIMDUTF_TOOLS AND Python3_FOUND)
+  if(NOT SIMDUTF_FAST_TESTS)
+    add_test(NAME fastbase64_python_test
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/fastbase64/test_fastbase64.py $<TARGET_FILE:fastbase64> $<TARGET_FILE_DIR:fastbase64>/fastbase64.coreutils$<TARGET_FILE_SUFFIX:fastbase64>
+      WORKING_DIRECTORY ${SIMDUTF_SOURCE_DIR}
+    )
+    add_test(NAME fastbase64_system_test
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/fastbase64/test_system_fastbase64.py $<TARGET_FILE:fastbase64> $<TARGET_FILE_DIR:fastbase64>/fastbase64.coreutils$<TARGET_FILE_SUFFIX:fastbase64>
+      WORKING_DIRECTORY ${SIMDUTF_SOURCE_DIR}
+    )
+  endif()
+endif()
