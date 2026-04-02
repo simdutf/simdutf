@@ -4720,10 +4720,11 @@ base64_to_binary(
  * @return a full_result struct (of type simdutf::full_result containing the
  * three fields error, input_count and output_count).
  */
-simdutf_warn_unused full_result base64_to_binary_details(
-    const char *input, size_t length, char *output,
-    base64_options options = base64_default,
-    last_chunk_handling_options last_chunk_options = last_chunk_handling_options::loose) noexcept;
+simdutf_warn_unused full_result
+base64_to_binary_details(const char *input, size_t length, char *output,
+                         base64_options options = base64_default,
+                         last_chunk_handling_options last_chunk_options =
+                             last_chunk_handling_options::loose) noexcept;
 
 /**
  * Convert a base64 input to a binary output while returning more details
