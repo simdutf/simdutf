@@ -2032,6 +2032,23 @@ if(r.error) {
 }
 ```
 
+There are three cases where `base64_to_binary_details` may not consume the entire input
+(i.e., `r.input_count < length`):
+
+1. **`stop_before_partial`**: When `last_chunk_options` is set to
+   `stop_before_partial`, any incomplete 4-character group at the end
+   of the input is left unconsumed. This is useful for streaming/chunked
+   decoding where you carry over the unconsumed bytes to the next chunk.
+   For example, the input `"QWJy YQ"` contains 5 base64 characters (ignoring the space):
+   only the first complete group of 4 (`QWJy`) is decoded, and `input_count` stops
+   before the trailing `YQ`.
+2. **`INVALID_BASE64_CHARACTER`**: The input contains a character that is not
+   a valid base64 character (e.g., `!`). The `input_count` field indicates
+   where the invalid character was found.
+3. **`BASE64_INPUT_REMAINDER`**: In `loose` mode, the input contains a number
+   of base64 characters that, when divided by 4, leaves a single remainder
+   character (which cannot encode any bytes). This is an unrecoverable error.
+
 You can also check whether a single character is a valid base64 character using `base64_valid`:
 ```cpp
 bool is_valid = simdutf::base64_valid('A'); // true

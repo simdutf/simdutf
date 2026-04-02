@@ -339,10 +339,9 @@ bool CommandLine::decode_to(std::FILE *fpout) {
     // if p.first is false, we have reached the end of the file.
     if (!p.first) {
       // Final chunk: use loose mode.
-      simdutf::full_result r =
-          simdutf::get_active_implementation()->base64_to_binary_details(
-              input_data.data(), total_input, output_buffer.data(), options,
-              simdutf::last_chunk_handling_options::loose);
+      simdutf::full_result r = simdutf::base64_to_binary_details(
+          input_data.data(), total_input, output_buffer.data(), options,
+          simdutf::last_chunk_handling_options::loose);
       if (r.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {
         fprintf(stderr, "Invalid base64 character at position %zu.\n",
                 pos + r.input_count);
@@ -364,10 +363,9 @@ bool CommandLine::decode_to(std::FILE *fpout) {
     // at the end are not decoded and can be carried over to the next chunk.
     // base64_to_binary_details returns both input_count and output_count,
     // so we know exactly how many input bytes were consumed.
-    simdutf::full_result r =
-        simdutf::get_active_implementation()->base64_to_binary_details(
-            input_data.data(), total_input, output_buffer.data(), options,
-            simdutf::last_chunk_handling_options::stop_before_partial);
+    simdutf::full_result r = simdutf::base64_to_binary_details(
+        input_data.data(), total_input, output_buffer.data(), options,
+        simdutf::last_chunk_handling_options::stop_before_partial);
     if (r.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {
       fprintf(stderr, "Invalid base64 character at position %zu.\n",
               pos + r.input_count);

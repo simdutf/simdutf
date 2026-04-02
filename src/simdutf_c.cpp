@@ -519,8 +519,7 @@ simdutf_result simdutf_base64_to_binary_safe_utf16(
   return to_c_result(r);
 }
 
-static simdutf_full_result
-to_c_full_result(const simdutf::full_result &r) {
+static simdutf_full_result to_c_full_result(const simdutf::full_result &r) {
   simdutf_full_result out;
   out.error = static_cast<simdutf_error_code>(r.error);
   out.input_count = r.input_count;
@@ -546,13 +545,13 @@ simdutf_full_result simdutf_base64_to_binary_details_utf16(
 }
 
 bool simdutf_base64_valid(char input, simdutf_base64_options options) {
-  return simdutf::base64_valid(
-      input, static_cast<simdutf::base64_options>(options));
+  return simdutf::base64_valid(input,
+                               static_cast<simdutf::base64_options>(options));
 }
 bool simdutf_base64_valid_utf16(char16_t input,
                                 simdutf_base64_options options) {
-  return simdutf::base64_valid(
-      input, static_cast<simdutf::base64_options>(options));
+  return simdutf::base64_valid(input,
+                               static_cast<simdutf::base64_options>(options));
 }
 
 } // extern "C"
