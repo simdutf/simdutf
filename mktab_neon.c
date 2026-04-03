@@ -23,6 +23,15 @@
  *     0x10 -- the sequence has two bytes
  *     0x0f -- index of the last byte in the sequence decoded for this slot
  *
+ * This gives the following six cases:
+ *
+ *     0x0* -- ASCII
+ *     0x1* -- 2BYTE two-byte sequence
+ *     0x2* -- 3BYTE three-byte sequence
+ *     0x5* -- 4TAIL last two bytes of a four-byte sequence
+ *     0x6* -- 4HEAD first three bytes of a four-byte sequence
+ *     0xf* -- EMPTY empty slot
+ *
  * Up to eight sequences are decoded.  If less sequences are decoded, the
  * remaining slots are filled with 0xff, except for the final slot, which
  * holds the negated number of sequences encoded.  Four byte sequences
