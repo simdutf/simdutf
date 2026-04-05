@@ -13,6 +13,7 @@ SIMDUTF_DISABLE_UNDESIRED_WARNINGS
 // Public API
 #include "simdutf/simdutf_version.h"
 #include "simdutf/implementation.h"
+#include "simdutf/inlineable.h"
 
 // Implementation-internal files (must be included before the implementations
 // themselves, to keep amalgamation working--otherwise, the first time a file is
