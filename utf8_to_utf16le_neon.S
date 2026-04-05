@@ -28,7 +28,7 @@ magic:
 	 * Unused entries are set to 0xffff for easier debugging.
 	 */
 	.short 0x0000, 0x0310, 0xe288, 0xffff, 0xffff, 0x0208, 0xf248, 0xffff
-	.short 0x0007, 0x0337, 0xf207, 0xffff, 0xffff, 0x0307, 0xf647, 0xffff
+	.short 0x0007, 0x0387, 0xf207, 0xffff, 0xffff, 0x0307, 0xf647, 0xffff
 
 	/*
 	 * Tag Bit Removal
@@ -102,21 +102,21 @@ outlen	.req	x3
 
 	sxtl2	v2.8h, v1.16b
 	and	v3.8b, v1.8b, v30.8b		// Tetranacci numbers for low half
-	and	v2.16b, v2.16b, v21.16b		// Tetranacci numbers for high half
+	and	v2.16b, v2.16b, v31.16b		// Tetranacci numbers for high half
 	uaddw	v2.8h, v2.8h, v3.8b		// for both halves
 	uaddlv	s2, v2.8h			// Tetranacci index
-	fmov	w15, s2
+	fmov	w11, s2
 
 	// ensure the input has no more than 3 consecutive follow bytes
 	and	x17, x16, x16, lsr #4		// consecutive pairs of set nibbles?
 //	beq	...				// if none, go to ASCII/2BYTE fast path
 	tst	x17, x17, lsr #8		// consecutive quadruples of set nibbles?
-	bne	.Lerror				// if any, we have an encoding error
+	bne	.Lerror_4follow			// if any, we have an encoding error
 
 	// load from lookup table and determine conversion length
-	ldr	d2, [x5, x15, lsl #3]		// load table entry
-	add	x15, x5, x15, lsl #3
-	ldrsb	w15, [x15, #7]			// last byte of table entry
+	ldr	d2, [x5, x11, lsl #3]		// load table entry
+	add	x11, x5, x11, lsl #3
+	ldrsb	w15, [x11, #7]			// last byte of table entry
 	movi	v3.8b, #0x70
 	bic	v3.8b, v2.8b, v3.8b		// LUT entry without tag bits (but with invalid bit)
 	smaxv	b1, v3.8b			// last index transcoded
@@ -237,9 +237,9 @@ outlen	.req	x3
 
 	// final validation
 1:	orr	v6.16b, v6.16b, v0.16b		// stray surrogate or out of range?
-	umaxv	s6, v6.4s			// anywhere?
-	fmov	w6, s6
-	cbnz	w6, .Lerror			// if yes, encoding error
+	umaxv	s5, v6.4s			// anywhere?
+	fmov	w6, s5
+	cbnz	w6, .Lerror_range_check		// if yes, encoding error
 
 	str	q4, [outbuf]			// write out transcoded data
 	add	inbuf, inbuf, x14		// advance input buffer
@@ -250,10 +250,8 @@ outlen	.req	x3
 	// We leave the main loop with some bytes of input remaining.
 	// Pass these to utf8_to_utf16le_ref for further processing.
 	// TODO: figure out how to process the tail in parallel.
-.Lrunt:
-.Lerror:					// an error occurred
-	add	inlen, inlen, #16		// undo initial subtraction
-	sub	x12, inbuf, x12			// number of bytes processed so far
+.Lrunt:	add	inlen, inlen, #16		// undo initial subtraction
+.Ltail:	sub	x12, inbuf, x12			// number of bytes processed so far
 	sub	x13, outbuf, x13		// number of bytes written out so far
 
 	stp	outlen, lr, [sp, #-16]!
@@ -267,6 +265,30 @@ outlen	.req	x3
 	add	x1, x1, x13, lsr #1		// nuber of halfwords written out in total
 	str	x1, [outlen]
 	ret
+
+	// 4 or more FOLLOW bytes in a row
+.Lerror_4follow:
+	and	x17, x17, x17, lsr #8		// where are the 4 consecutive follow bytes?
+	rbit	x17, x17			// in reverse order
+	clz	x17, x17			// number of bits before the error
+	mov	inlen, #3			// proceed until third follow byte
+	add	inlen, inlen, x17, lsr #4
+	b	.Ltail
+
+	// stray surrogate or range check failed
+	// try again with input until the failing sequence sans its final byte
+.Lerror_range_check:
+	xtn	v6.8b, v6.8h			// compress syndrome to 8 bits per entry
+	fmov	x6, d6
+	rbit	x6, x6
+	clz	x6, x6				// location of first error, in bits
+	lsr	x6, x6, #3			// location of first error, in bytes
+	ldrb	w6, [x11, x6]			// last byte of the errorneous sequence
+	and	inlen, x6, #0xf			// without tags bits
+	and	x6, x6, #0xf0			// just the tag bits
+	cmp	x6, #0x60			// is it 4HEAD?
+	cinc	inlen, inlen, eq		// if yes, remove end of 4TAIL, not 4HEAD
+	b	.Ltail
 	.size	utf8_to_utf16le_neon, .-utf8_to_utf16le_neon
 
 	.type	utf8_to_utf16le_buflen_neon, @function

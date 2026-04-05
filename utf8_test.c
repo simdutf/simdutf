@@ -24,8 +24,8 @@ extern size_t utf8_to_utf16le_buflen_neon(size_t);
 /* all test vectors end in FF to allow embedded NUL characters */
 const char *vectors[] = {
 	"\xff", /* empty string */
-	"Sphinx of black quartz, judge my vows!\n\xff"
-	"#include <stdio.h>\n\nint main(void)\n{\n\tputs(\"hello world\");\n}\n\xff"
+	"Sphinx of black quartz, judge my vows!\n"
+	"#include <stdio.h>\n\nint main(void)\n{\n\tputs(\"hello world\");\n}\n"
 	"3.14159265358979323846264338327950\xff", /* ASCII */
 	"Fix Schwyz quäkt Jürgen blöd vom Paß.\xff", /* ISO-8859-1 */
 	"Falsches Üben von Xylophonmusik quält jeden größeren Zwerg.  Voyez le brick géant que j’examine près du wharf.\xff",
@@ -211,7 +211,7 @@ int test(int i, const char *vector)
 		print_vector(i, vector);
 		printf("length mismatch:\n");
 		printf("	converted: %zu (ref) vs %zu (neon)\n", refxlat, neonxlat);
-		printf("	output length: %zu (ref) vs %zu (neon\n", refout, neonout);
+		printf("	output length: %zu (ref) vs %zu (neon)\n", refout, neonout);
 
 		goto failed;
 	}
