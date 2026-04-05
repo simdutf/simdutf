@@ -4725,6 +4725,28 @@ base64_to_binary_details(const char *input, size_t length, char *output,
                          base64_options options = base64_default,
                          last_chunk_handling_options last_chunk_options =
                              last_chunk_handling_options::loose) noexcept;
+  #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 full_result
+base64_to_binary_details(
+    const detail::input_span_of_byte_like auto &input,
+    detail::output_span_of_byte_like auto &&binary_output,
+    base64_options options = base64_default,
+    last_chunk_handling_options last_chunk_options = loose) noexcept {
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::base64::base64_to_binary_details_impl(
+        input.data(), input.size(), binary_output.data(), options,
+        last_chunk_options);
+  } else
+    #endif
+  {
+    return base64_to_binary_details(
+        reinterpret_cast<const char *>(input.data()), input.size(),
+        reinterpret_cast<char *>(binary_output.data()), options,
+        last_chunk_options);
+  }
+}
+  #endif // SIMDUTF_SPAN
 
 /**
  * Convert a base64 input to a binary output while returning more details
@@ -4780,26 +4802,6 @@ base64_to_binary_details(const char16_t *input, size_t length, char *output,
                          last_chunk_handling_options last_chunk_options =
                              last_chunk_handling_options::loose) noexcept;
   #if SIMDUTF_SPAN
-simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 full_result
-base64_to_binary_details(
-    const detail::input_span_of_byte_like auto &input,
-    detail::output_span_of_byte_like auto &&binary_output,
-    base64_options options = base64_default,
-    last_chunk_handling_options last_chunk_options = loose) noexcept {
-    #if SIMDUTF_CPLUSPLUS23
-  if consteval {
-    return scalar::base64::base64_to_binary_details_impl(
-        input.data(), input.size(), binary_output.data(), options,
-        last_chunk_options);
-  } else
-    #endif
-  {
-    return base64_to_binary_details(
-        reinterpret_cast<const char *>(input.data()), input.size(),
-        reinterpret_cast<char *>(binary_output.data()), options,
-        last_chunk_options);
-  }
-}
 simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 full_result
 base64_to_binary_details(
     std::span<const char16_t> input,
