@@ -7085,10 +7085,12 @@ namespace literals {
 
 namespace detail {
 
+// the detail namespace is not part of the public api
+
 template <std::size_t N> struct base64_literal_helper {
   std::array<char, N - 1> storage{};
   static constexpr std::size_t size() noexcept { return N - 1; }
-  constexpr base64_literal_helper(const char (&str)[N]) {
+  consteval base64_literal_helper(const char (&str)[N]) {
     for (std::size_t i = 0; i < size(); i++) {
       storage[i] = str[i];
     }
@@ -7102,7 +7104,7 @@ template <std::size_t InputLen> struct base64_decode_result {
 };
 
 template <std::size_t InputLen>
-constexpr auto base64_decode_literal(const char *str) {
+consteval auto base64_decode_literal(const char *str) {
   base64_decode_result<InputLen> result{};
   auto r = scalar::base64::base64_to_binary_details_impl(
       str, InputLen, result.buffer.data(), base64_default, loose);
@@ -7113,7 +7115,7 @@ constexpr auto base64_decode_literal(const char *str) {
   return result;
 }
 
-template <base64_literal_helper a> constexpr auto base64_make_array() {
+template <base64_literal_helper a> consteval auto base64_make_array() {
   constexpr auto decoded = base64_decode_literal<a.size()>(a.storage.data());
   std::array<char, decoded.output_count> ret{};
   for (std::size_t i = 0; i < decoded.output_count; i++) {
@@ -7132,10 +7134,10 @@ template <base64_literal_helper a> constexpr auto base64_make_array() {
  *   constexpr auto decoded = "SGVsbG8gV29ybGQh"_base64;
  *   // decoded is a std::array<char, 12> containing "Hello World!"
  *
- * The input must be valid base64. Spaces are allowed and ignored.
+ * The input must be valid base64. Whitepace is allowed and ignored.
  * A compilation error occurs if the input is invalid.
  */
-template <detail::base64_literal_helper a> constexpr auto operator""_base64() {
+template <detail::base64_literal_helper a> consteval auto operator""_base64() {
   return detail::base64_make_array<a>();
 }
 

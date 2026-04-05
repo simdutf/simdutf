@@ -235,6 +235,18 @@ TEST(compile_time_base64_literal_with_spaces) {
   static_assert(decoded.size() == 12);
 }
 
+TEST(compile_time_base64_literal_with_newlines) {
+  using namespace simdutf::literals;
+
+  constexpr auto decoded = R"(  QWJy  YWNhZGFi
+
+
+cmEh  )"_base64;
+  const auto readable = std::string(decoded.data(), decoded.size());
+  ASSERT_EQUAL(readable, "Abracadabra!");
+  static_assert(decoded.size() == 12);
+}
+
 TEST(compile_time_base64_literal_empty) {
   using namespace simdutf::literals;
 
