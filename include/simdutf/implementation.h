@@ -7078,4 +7078,72 @@ simdutf_really_inline
 
 #endif // SIMDUTF_FEATURE_BASE64
 
+#if SIMDUTF_CPLUSPLUS23 && SIMDUTF_FEATURE_BASE64
+
+namespace simdutf {
+namespace literals {
+
+namespace detail {
+
+// the detail namespace is not part of the public api
+
+template <std::size_t N> struct base64_literal_helper {
+  std::array<char, N - 1> storage{};
+  static constexpr std::size_t size() noexcept { return N - 1; }
+  consteval base64_literal_helper(const char (&str)[N]) {
+    for (std::size_t i = 0; i < size(); i++) {
+      storage[i] = str[i];
+    }
+  }
+};
+
+template <std::size_t InputLen> struct base64_decode_result {
+  static constexpr std::size_t max_out = (InputLen + 3) / 4 * 3;
+  std::array<char, max_out> buffer{};
+  std::size_t output_count{};
+};
+
+template <std::size_t InputLen>
+consteval auto base64_decode_literal(const char *str) {
+  base64_decode_result<InputLen> result{};
+  auto r = scalar::base64::base64_to_binary_details_impl(
+      str, InputLen, result.buffer.data(), base64_default, loose);
+  if (r.error != error_code::SUCCESS) {
+    throw "invalid base64 input in _base64 literal";
+  }
+  result.output_count = r.output_count;
+  return result;
+}
+
+template <base64_literal_helper a> consteval auto base64_make_array() {
+  constexpr auto decoded = base64_decode_literal<a.size()>(a.storage.data());
+  std::array<char, decoded.output_count> ret{};
+  for (std::size_t i = 0; i < decoded.output_count; i++) {
+    ret[i] = decoded.buffer[i];
+  }
+  return ret;
+}
+
+} // namespace detail
+
+/**
+ * User-defined literal for compile-time base64 decoding.
+ *
+ * Usage:
+ *   using namespace simdutf::literals;
+ *   constexpr auto decoded = "SGVsbG8gV29ybGQh"_base64;
+ *   // decoded is a std::array<char, 12> containing "Hello World!"
+ *
+ * The input must be valid base64. Whitepace is allowed and ignored.
+ * A compilation error occurs if the input is invalid.
+ */
+template <detail::base64_literal_helper a> consteval auto operator""_base64() {
+  return detail::base64_make_array<a>();
+}
+
+} // namespace literals
+} // namespace simdutf
+
+#endif // SIMDUTF_CPLUSPLUS23 && SIMDUTF_FEATURE_BASE64
+
 #endif // SIMDUTF_IMPLEMENTATION_H
