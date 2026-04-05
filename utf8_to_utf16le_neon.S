@@ -83,6 +83,9 @@ outlen	.req	x3
 	adrp	x5, utf8_to_utf16le_neon_tab	// lookup table for shuffles
 	add	x5, x5, #:lo12:utf8_to_utf16le_neon_tab
 
+	mov	x12, inbuf			// original input pointer
+	mov	x13, outbuf			// original output pointer
+
 	subs	inlen, inlen, #16		// can we process at least 16 bytes?
 	blo	.Lrunt
 
@@ -183,13 +186,13 @@ outlen	.req	x3
 
 	/*
 	 * We now have for each case:
-	 * CASE   V6
-	 * ASCII  000000000GFEDCBA
-	 * 2BYTE  00000LKJHGFEDCBA
-	 * 3BYTE  RQPNMLKJHGFEDCBA
-	 * 4HEAD  00vutsRQPNMLKJHG
-	 * 4TAIL  0000MLKJHGFEDCBA
-	 * EMPTY  0000000000000000
+	 * CASE   V4                V5-(V4>>4)        V6                V7
+	 * ASCII  000000000GFEDCBA  0000000000000000  0000000000000000  0000000000000111
+	 * 2BYTE  00000LKJHGFEDCBA  0000001100001000  0000001100010000  0000001100110111
+	 * 3BYTE  RQPNMLKJHGFEDCBA  1110001000001000  1110001010001000  1111001000000111
+	 * 4HEAD  00vutsRQPNMLKJHG  1111001001001000  1111001001001000  1111011001000111
+	 * 4TAIL  0000MLKJHGFEDCBA  0000001000001000  0000001000001000  0000001100000111
+	 * EMPTY  0000000000000000  0000000000000000  0000000000000000  0000000000000000
 	 */
 
 	// check for bound violations
@@ -244,10 +247,30 @@ outlen	.req	x3
 	subs	inlen, inlen, x14		// deduct processed input from length
 	bhs	.Lloop				// and go again if we can!
 
-.Lrunt:	udf	#0
+	// We leave the main loop with some bytes of input remaining.
+	// Pass these to utf8_to_utf16le_ref for further processing.
+	// TODO: figure out how to process the tail in parallel.
+.Lrunt:
+.Lerror:					// an error occurred
+	add	inlen, inlen, #16		// undo initial subtraction
+	sub	x12, inbuf, x12			// number of bytes processed so far
+	sub	x13, outbuf, x13		// number of bytes written out so far
 
-	// encoding error in parallel code
-.Lerror:
-	udf	#0
+	stp	outlen, lr, [sp, #-16]!
+	stp	x12, x13, [sp, #-16]!		// save context
+	bl	utf8_to_utf16le_ref		// process tail with scalar kernel
+	ldp	x12, x13, [sp], #16		// restore context
+	ldp	outlen, lr, [sp], #16
 
+	add	x0, x0, x12			// number of input bytes processed in total
+	ldr	x1, [outlen]
+	add	x1, x1, x13, lsr #1		// nuber of halfwords written out in total
+	str	x1, [outlen]
+	ret
 	.size	utf8_to_utf16le_neon, .-utf8_to_utf16le_neon
+
+	.type	utf8_to_utf16le_buflen_neon, @function
+	.globl	utf8_to_utf16le_buflen_neon
+utf8_to_utf16le_buflen_neon:
+	ret
+	.size	utf8_to_utf16le_buflen_neon, .-utf8_to_utf16le_buflen_neon

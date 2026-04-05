@@ -48,22 +48,22 @@
  *
  * and hence Tetranacci index
  *
- *     3 + 8 + 15 + 56 + 108 + 208 + 774 + 1490 + 5536 = 8198
+ *     2 + 8 + 15 + 56 + 108 + 208 + 773 + 1490 + 5536 = 8196
  *
- * at which we find entry
+ * at which we find entry (table offset 0x10020)
  *
- *     00 12 25 68 59 2C 1E 0F
+ *     00 12 25 68 59 2C 1E F9
  *
  * representing:
  *
- *     00: 1-byte sequence ending at index 0 (40)
- *     12: 2-byte sequence ending at index 2 (C2 A7)
- *     25: 3-byte sequence ending at index 5 (E2 88 88)
- *     68: first half of 4-byte sequence ending at index 8 (F0 9D 92)
- *     59: second half of 4-byte sequence ending at index 9 (92 AA)
- *     2C: 3-byte sequence ending at index 12 (E2 89 A4)
- *     1E: 2-byte sequence ending at index 14 (C2 B1)
- *     0F: 1-byte sequence ending at index 15 (31)
+ *     00: ASCII ending at index 0 (40)
+ *     12: 2BYTE ending at index 2 (C2 A7)
+ *     25: 3BYTE ending at index 5 (E2 88 88)
+ *     68: 4HEAD ending at index 8 (F0 9D 92)
+ *     59: 4TAIL ending at index 9 (92 AA)
+ *     2C: 3BYTE at index 12 (E2 89 A4)
+ *     1E: 2BYTE at index 14 (C2 B1)
+ *     F9: EMPTY indicating -F9 = 7 halfwords of output
  */
 
 #include <assert.h>

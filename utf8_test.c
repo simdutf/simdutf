@@ -4,21 +4,28 @@
 #include <string.h>
 
 extern size_t utf8_to_utf16le_ref(char16_t out[restrict], const unsigned char in[restrict], size_t len, size_t *outlen);
+#ifdef __amd64__
 extern size_t utf8_to_utf16le_avx512(char16_t out[restrict], const unsigned char in[restrict], size_t len, size_t *outlen);
 extern size_t utf8_to_utf16le_avx512i(char16_t out[restrict], const unsigned char in[restrict], size_t len, size_t *outlen);
+#endif
+#ifdef __aarch64__
+extern size_t utf8_to_utf16le_neon(char16_t out[restrict], const unsigned char in[restrict], size_t len, size_t *outlen);
+#endif
 
 extern size_t utf8_to_utf16le_buflen_ref(size_t);
+#ifdef __amd64__
 extern size_t utf8_to_utf16le_buflen_avx512(size_t);
 extern size_t utf8_to_utf16le_buflen_avx512i(size_t);
-
-//extern size_t utf8_validate_ref(const char16_t in[restrict], size_t len);
-//extern size_t utf18_validate_avx512(const char16_t in[restrict], size_t len);
+#endif
+#ifdef __aarch64__
+extern size_t utf8_to_utf16le_buflen_neon(size_t);
+#endif
 
 /* all test vectors end in FF to allow embedded NUL characters */
 const char *vectors[] = {
 	"\xff", /* empty string */
-	"Sphinx of black quartz, judge my vows!\n"
-	"#include <stdio.h>\n\nint main(void)\n{\n\tputs(\"hello world\");\n}\n"
+	"Sphinx of black quartz, judge my vows!\n\xff"
+	"#include <stdio.h>\n\nint main(void)\n{\n\tputs(\"hello world\");\n}\n\xff"
 	"3.14159265358979323846264338327950\xff", /* ASCII */
 	"Fix Schwyz quäkt Jürgen blöd vom Paß.\xff", /* ISO-8859-1 */
 	"Falsches Üben von Xylophonmusik quält jeden größeren Zwerg.  Voyez le brick géant que j’examine près du wharf.\xff",
@@ -108,18 +115,30 @@ void print_utf16(const char16_t *str, size_t len)
 
 int test(int i, const char *vector)
 {
-	char16_t *refbuf, *avx512buf, *avx512ibuf;
-	size_t reflen, avx512len, avx512ilen, inlen, refvalid, avx512valid;
-	size_t refxlat, avx512xlat, avx512ixlat;
-	size_t refout = -1, avx512out = -1, avx512iout = -1;
+	char16_t *refbuf;
+	size_t reflen, inlen, refvalid, refxlat, refout = -1;
+#ifdef __amd64__
+	char16_t *avx512buf, *avx512ibuf;
+	size_t avx512len, avx512ilen, avx512valid, avx512xlat, avx512ixlat;
+	size_t avx512out = -1, avx512iout = -1;
+#endif
+#ifdef __aarch64__
+	char16_t *neonbuf;
+	size_t neonlen, neonvalid, neonxlat, neonout = -1;
+#endif
 	int result = 0;
 
 	printf("TESTCASE %d\n", i);
 
 	inlen = strlen_ff(vector);
 	reflen = utf8_to_utf16le_buflen_ref(inlen);
+#ifdef __amd64__
 	avx512len = utf8_to_utf16le_buflen_avx512(inlen);
 	avx512ilen = utf8_to_utf16le_buflen_avx512i(inlen);
+#endif
+#ifdef __aarch64__
+	neonlen = utf8_to_utf16le_buflen_neon(inlen);
+#endif
 
 	refbuf = malloc((reflen + 1) * sizeof *refbuf);
 	if (refbuf == NULL) {
@@ -127,6 +146,7 @@ int test(int i, const char *vector)
 		return (1);
 	}
 
+#ifdef __amd64__
 	avx512buf = malloc((avx512len + 1) * sizeof *refbuf);
 	if (avx512buf == NULL) {
 		perror("malloc(avx512buf)");
@@ -140,32 +160,38 @@ int test(int i, const char *vector)
 		free(avx512ibuf);
 		return (1);
 	}
-
-	/* write bullshit to buffers so it's easy to catch uninitialised memory */
-	memset(refbuf, 0xff, reflen * sizeof *refbuf);
-	memset(avx512buf, 0xff, avx512len * sizeof *avx512buf);
-	memset(avx512ibuf, 0xff, avx512ilen * sizeof *avx512ibuf);
-
-	/* add sentinels to catch buffer overruns */
-	refbuf[reflen] = 0xfffe;
-	avx512buf[avx512len] = 0xfffe;
-	avx512ibuf[avx512ilen] = 0xfffe;
-
-#if 0
-	/* check for validation failure */
-	refvalid = utf8_validate_ref(vector, inlen);
-	avx512valid = utf8_validate_avx512(vector, inlen);
-	if (refvalid != avx512valid) {
-		print_vector(i, vector);
-		printf("validation mismatch:\n");
-		printf("	validated: %zu (ref) vs. %zu (avx512)\n", refvalid, avx512valid);
-
-		result = 1;
-		goto end;
+#endif
+#ifdef __aarch64__
+	neonbuf = malloc((neonlen + 1) * sizeof *refbuf);
+	if (neonbuf == NULL) {
+		perror("malloc(neonbuf)");
+		free(neonbuf);
+		return (1);
 	}
 #endif
 
+	/* write bullshit to buffers so it's easy to catch uninitialised memory */
+	memset(refbuf, 0xff, reflen * sizeof *refbuf);
+#ifdef __amd64__
+	memset(avx512buf, 0xff, avx512len * sizeof *avx512buf);
+	memset(avx512ibuf, 0xff, avx512ilen * sizeof *avx512ibuf);
+#endif
+#ifdef __aarch64__
+	memset(neonbuf, 0xff, neonlen * sizeof *neonbuf);
+#endif
+
+	/* add sentinels to catch buffer overruns */
+	refbuf[reflen] = 0xfffe;
+#ifdef __amd64__
+	avx512buf[avx512len] = 0xfffe;
+	avx512ibuf[avx512ilen] = 0xfffe;
+#endif
+#ifdef __aarch64__
+	neonbuf[neonlen] = 0xfffe;
+#endif
+
 	refxlat = utf8_to_utf16le_ref(refbuf, vector, inlen, &refout);
+#ifdef __amd64__
 	avx512xlat = utf8_to_utf16le_avx512(avx512buf, vector, inlen, &avx512out);
 	avx512ixlat = utf8_to_utf16le_avx512i(avx512ibuf, vector, inlen, &avx512iout);
 
@@ -177,6 +203,20 @@ int test(int i, const char *vector)
 
 		goto failed;
 	}
+#endif
+#ifdef __aaarch64__
+	neonxlat = utf8_to_utf16le_neon(neonbuf, vector, inlen, &neonout);
+
+	if (refxlat != neonxlat || refout != neonout) {
+		print_vector(i, vector);
+		printf("length mismatch:\n");
+		printf("	converted: %zu (ref) vs %zu (neon)\n", refxlat, neonxlat);
+		printf("	output length: %zu (ref) vs %zu (neon\n", refout, neonout);
+
+		goto failed;
+	}
+#endif
+
 
 	if (refout > reflen) {
 		print_vector(i, vector);
@@ -184,6 +224,7 @@ int test(int i, const char *vector)
 		goto failed;
 	}
 
+#ifdef __amd64__
 	if (memcmp(refbuf, avx512buf, refout) != 0 || memcmp(refbuf, avx512ibuf, refout) != 0) {
 		print_vector(i, vector);
 		printf("encoding mismatch\n");
@@ -206,15 +247,48 @@ int test(int i, const char *vector)
 
 		result = 1;
 	}
+#endif
+#ifdef __aarch64__
+	if (memcmp(refbuf, neonbuf, refout) != 0) {
+		print_vector(i, vector);
+		printf("encoding mismatch\n");
 
+	failed:	if (refout > reflen)
+			refout = reflen;
+
+		if (neonout > neonlen)
+			neonout = neonlen;
+
+		printf("OUTPUT %d/ref (%zu)\n", i, refout);
+		print_utf16(refbuf, refout);
+		printf("OUTPUT %d/neon (%zu)\n", i, neonout);
+		print_utf16(neonbuf, neonout);
+
+		result = 1;
+	}
+#endif
+
+#ifdef __amd64__
 	if (refbuf[reflen] != 0xfffe || avx512buf[avx512len] != 0xfffe || avx512ibuf[avx512ilen] != 0xfffe) {
 		printf("BUFFER OVERRUN (%d)\n", i);
 		abort();
 	}
+#endif
+#ifdef __aarch64__
+	if (refbuf[reflen] != 0xfffe || neonbuf[neonlen] != 0xfffe) {
+		printf("BUFFER OVERRUN (%d)\n", i);
+		abort();
+	}
+#endif
 
 end:	free(refbuf);
+#ifdef __amd64__
 	free(avx512buf);
 	free(avx512ibuf);
+#endif
+#ifdef __aarch64__
+	free(neonbuf);
+#endif
 
 	return (result);
 }
