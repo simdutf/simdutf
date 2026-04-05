@@ -204,7 +204,7 @@ int test(int i, const char *vector)
 		goto failed;
 	}
 #endif
-#ifdef __aaarch64__
+#ifdef __aarch64__
 	neonxlat = utf8_to_utf16le_neon(neonbuf, vector, inlen, &neonout);
 
 	if (refxlat != neonxlat || refout != neonout) {
