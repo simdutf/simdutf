@@ -519,6 +519,41 @@ simdutf_result simdutf_base64_to_binary_safe_utf16(
   return to_c_result(r);
 }
 
+static simdutf_full_result to_c_full_result(const simdutf::full_result &r) {
+  simdutf_full_result out;
+  out.error = static_cast<simdutf_error_code>(r.error);
+  out.input_count = r.input_count;
+  out.output_count = r.output_count;
+  return out;
+}
+
+simdutf_full_result simdutf_base64_to_binary_details(
+    const char *input, size_t length, char *output,
+    simdutf_base64_options options,
+    simdutf_last_chunk_handling_options last_chunk_options) {
+  return to_c_full_result(simdutf::base64_to_binary_details(
+      input, length, output, static_cast<simdutf::base64_options>(options),
+      static_cast<simdutf::last_chunk_handling_options>(last_chunk_options)));
+}
+simdutf_full_result simdutf_base64_to_binary_details_utf16(
+    const char16_t *input, size_t length, char *output,
+    simdutf_base64_options options,
+    simdutf_last_chunk_handling_options last_chunk_options) {
+  return to_c_full_result(simdutf::base64_to_binary_details(
+      input, length, output, static_cast<simdutf::base64_options>(options),
+      static_cast<simdutf::last_chunk_handling_options>(last_chunk_options)));
+}
+
+bool simdutf_base64_valid(char input, simdutf_base64_options options) {
+  return simdutf::base64_valid(input,
+                               static_cast<simdutf::base64_options>(options));
+}
+bool simdutf_base64_valid_utf16(char16_t input,
+                                simdutf_base64_options options) {
+  return simdutf::base64_valid(input,
+                               static_cast<simdutf::base64_options>(options));
+}
+
 } // extern "C"
 // clang-format off
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_ASCII && SIMDUTF_FEATURE_BASE64 && SIMDUTF_FEATURE_DETECT_ENCODING

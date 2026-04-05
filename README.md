@@ -2015,6 +2015,47 @@ output: error
 
 As you can see, the result is as expected.
 
+The `base64_to_binary` function returns a `simdutf::result` which on success contains
+the number of output bytes in `r.count`. If you need to know both the number of input units
+consumed and the number of output bytes written (e.g., for streaming/chunked decoding), use
+`base64_to_binary_details` which returns a `simdutf::full_result`:
+
+```cpp
+std::vector<char> buffer(simdutf::maximal_binary_length_from_base64(base64.data(), base64.size()));
+simdutf::full_result r = simdutf::base64_to_binary_details(base64.data(), base64.size(), buffer.data());
+if(r.error) {
+  // r.input_count tells you where the error was encountered in the input.
+  // r.output_count tells you how many bytes were written to the output.
+} else {
+  buffer.resize(r.output_count); // resize according to actual output bytes
+  // r.input_count contains the number of input units consumed
+}
+```
+
+There are three cases where `base64_to_binary_details` may not consume the entire input
+(i.e., `r.input_count < length`):
+
+1. **`stop_before_partial`**: When `last_chunk_options` is set to
+   `stop_before_partial`, any incomplete 4-character group at the end
+   of the input is left unconsumed. This is useful for streaming/chunked
+   decoding where you carry over the unconsumed bytes to the next chunk.
+   For example, the input `"QWJy YQ"` contains 5 base64 characters (ignoring the space):
+   only the first complete group of 4 (`QWJy`) is decoded, and `input_count` stops
+   before the trailing `YQ`.
+2. **`INVALID_BASE64_CHARACTER`**: The input contains a character that is not
+   a valid base64 character (e.g., `!`). The `input_count` field indicates
+   where the invalid character was found.
+3. **`BASE64_INPUT_REMAINDER`**: In `loose` mode, the input contains a number
+   of base64 characters that, when divided by 4, leaves a single remainder
+   character (which cannot encode any bytes). This is an unrecoverable error.
+
+You can also check whether a single character is a valid base64 character using `base64_valid`:
+```cpp
+bool is_valid = simdutf::base64_valid('A'); // true
+bool is_valid_url = simdutf::base64_valid('-', simdutf::base64_url); // true
+// Note: padding ('=') and spaces are not considered valid base64 characters.
+```
+
 In some instances, you may want to limit the size of the output further when decoding base64.
 For this purpose, you may use the `base64_to_binary_safe` functions. The functions may also
 be useful if you seek to decode the input into segments having a maximal capacity.
@@ -2531,6 +2572,120 @@ simdutf_warn_unused result base64_to_binary_safe(const char * input, size_t leng
 simdutf_warn_unused result base64_to_binary_safe(const char16_t * input, size_t length, char* output, size_t& outlen, base64_options options = base64_default,
       last_chunk_handling_options last_chunk_options = loose,
       bool decode_up_to_bad_char = false) noexcept;
+
+/**
+ * Convert a base64 input to a binary output while returning more details
+ * than base64_to_binary.
+ *
+ * This function follows the WHATWG forgiving-base64 format, which means that it
+ * will ignore any ASCII spaces in the input. You may provide a padded input
+ * (with one or two equal signs at the end) or an unpadded input (without any
+ * equal signs at the end).
+ *
+ * See https://infra.spec.whatwg.org/#forgiving-base64-decode
+ *
+ * Unlike base64_to_binary, this function returns a full_result with both
+ * input_count and output_count, so you always know how much input was consumed
+ * and how much output was written. There are three cases where the input may
+ * not be fully consumed:
+ *
+ * 1. stop_before_partial: When last_chunk_options is set to
+ *    stop_before_partial, any incomplete 4-character group at the end of the
+ *    input is left unconsumed. This is useful for streaming/chunked decoding
+ *    where you can carry over the unconsumed input to the next chunk.
+ *
+ * 2. INVALID_BASE64_CHARACTER: The input contains a character that is not a
+ *    valid base64 character. In this case, input_count indicates where the
+ *    invalid character was found.
+ *
+ * 3. BASE64_INPUT_REMAINDER: When last_chunk_options is loose, the input
+ *    contains a number of base64 characters that, when divided by 4, leaves
+ *    a single remainder character (which cannot encode any bytes).
+ *
+ * You should call this function with a buffer that is at least
+ * maximal_binary_length_from_base64(input, length) bytes long. If you fail to
+ * provide that much space, the function may cause a buffer overflow.
+ *
+ * @param input         the base64 string to process
+ * @param length        the length of the string in bytes
+ * @param output        the pointer to a buffer that can hold the conversion
+ * result (should be at least maximal_binary_length_from_base64(input, length)
+ * bytes long).
+ * @param options       the base64 options to use, can be base64_default or
+ * base64_url, is base64_default by default.
+ * @param last_chunk_options the last chunk handling options,
+ * last_chunk_handling_options::loose by default
+ * but can also be last_chunk_handling_options::strict or
+ * last_chunk_handling_options::stop_before_partial.
+ * @return a full_result struct (of type simdutf::full_result containing the
+ * three fields error, input_count and output_count).
+ */
+simdutf_warn_unused full_result base64_to_binary_details(const char * input, size_t length, char* output,
+      base64_options options = base64_default,
+      last_chunk_handling_options last_chunk_options = loose) noexcept;
+
+/**
+ * Convert a base64 input to a binary output while returning more details
+ * than base64_to_binary.
+ *
+ * This function follows the WHATWG forgiving-base64 format, which means that it
+ * will ignore any ASCII spaces in the input. You may provide a padded input
+ * (with one or two equal signs at the end) or an unpadded input (without any
+ * equal signs at the end).
+ *
+ * See https://infra.spec.whatwg.org/#forgiving-base64-decode
+ *
+ * Unlike base64_to_binary, this function returns a full_result with both
+ * input_count and output_count, so you always know how much input was consumed
+ * and how much output was written. There are three cases where the input may
+ * not be fully consumed:
+ *
+ * 1. stop_before_partial: When last_chunk_options is set to
+ *    stop_before_partial, any incomplete 4-character group at the end of the
+ *    input is left unconsumed. This is useful for streaming/chunked decoding
+ *    where you can carry over the unconsumed input to the next chunk.
+ *
+ * 2. INVALID_BASE64_CHARACTER: The input contains a character that is not a
+ *    valid base64 character. In this case, input_count indicates where the
+ *    invalid character was found.
+ *
+ * 3. BASE64_INPUT_REMAINDER: When last_chunk_options is loose, the input
+ *    contains a number of base64 characters that, when divided by 4, leaves
+ *    a single remainder character (which cannot encode any bytes).
+ *
+ * You should call this function with a buffer that is at least
+ * maximal_binary_length_from_base64(input, length) bytes long. If you fail to
+ * provide that much space, the function may cause a buffer overflow.
+ *
+ * @param input         the base64 string to process, in ASCII stored as 16-bit
+ * units
+ * @param length        the length of the string in 16-bit units
+ * @param output        the pointer to a buffer that can hold the conversion
+ * result (should be at least maximal_binary_length_from_base64(input, length)
+ * bytes long).
+ * @param options       the base64 options to use, can be base64_default or
+ * base64_url, is base64_default by default.
+ * @param last_chunk_options the last chunk handling options,
+ * last_chunk_handling_options::loose by default
+ * but can also be last_chunk_handling_options::strict or
+ * last_chunk_handling_options::stop_before_partial.
+ * @return a full_result struct (of type simdutf::full_result containing the
+ * three fields error, input_count and output_count).
+ */
+simdutf_warn_unused full_result base64_to_binary_details(const char16_t * input, size_t length, char* output,
+      base64_options options = base64_default,
+      last_chunk_handling_options last_chunk_options = loose) noexcept;
+
+/**
+ * Check if a character is a valid base64 character.
+ * Note that padding characters ('=') and spaces are not considered valid.
+ *
+ * @param input         the character to check
+ * @param options       the base64 options to use, is base64_default by default.
+ * @return true if the character is a valid base64 character.
+ */
+simdutf_warn_unused bool base64_valid(char input, base64_options options = base64_default) noexcept;
+simdutf_warn_unused bool base64_valid(char16_t input, base64_options options = base64_default) noexcept;
 ```
 
 ## Find

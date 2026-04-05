@@ -4674,6 +4674,157 @@ base64_to_binary(
   #endif // SIMDUTF_SPAN
 
 /**
+ * Convert a base64 input to a binary output while returning more details
+ * than base64_to_binary.
+ *
+ * This function follows the WHATWG forgiving-base64 format, which means that it
+ * will ignore any ASCII spaces in the input. You may provide a padded input
+ * (with one or two equal signs at the end) or an unpadded input (without any
+ * equal signs at the end).
+ *
+ * See https://infra.spec.whatwg.org/#forgiving-base64-decode
+ *
+ * Unlike base64_to_binary, this function returns a full_result with both
+ * input_count and output_count, so you always know how much input was consumed
+ * and how much output was written. There are three cases where the input may
+ * not be fully consumed:
+ *
+ * 1. stop_before_partial: When last_chunk_options is set to
+ *    stop_before_partial, any incomplete 4-character group at the end of the
+ *    input is left unconsumed. This is useful for streaming/chunked decoding
+ *    where you can carry over the unconsumed input to the next chunk.
+ *
+ * 2. INVALID_BASE64_CHARACTER: The input contains a character that is not a
+ *    valid base64 character. In this case, input_count indicates where the
+ *    invalid character was found.
+ *
+ * 3. BASE64_INPUT_REMAINDER: When last_chunk_options is loose, the input
+ *    contains a number of base64 characters that, when divided by 4, leaves
+ *    a single remainder character (which cannot encode any bytes).
+ *
+ * You should call this function with a buffer that is at least
+ * maximal_binary_length_from_base64(input, length) bytes long. If you fail to
+ * provide that much space, the function may cause a buffer overflow.
+ *
+ * @param input         the base64 string to process
+ * @param length        the length of the string in bytes
+ * @param output        the pointer to a buffer that can hold the conversion
+ * result (should be at least maximal_binary_length_from_base64(input, length)
+ * bytes long).
+ * @param options       the base64 options to use, can be base64_default or
+ * base64_url, is base64_default by default.
+ * @param last_chunk_options the last chunk handling options,
+ * last_chunk_handling_options::loose by default
+ * but can also be last_chunk_handling_options::strict or
+ * last_chunk_handling_options::stop_before_partial.
+ * @return a full_result struct (of type simdutf::full_result containing the
+ * three fields error, input_count and output_count).
+ */
+simdutf_warn_unused full_result
+base64_to_binary_details(const char *input, size_t length, char *output,
+                         base64_options options = base64_default,
+                         last_chunk_handling_options last_chunk_options =
+                             last_chunk_handling_options::loose) noexcept;
+  #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 full_result
+base64_to_binary_details(
+    const detail::input_span_of_byte_like auto &input,
+    detail::output_span_of_byte_like auto &&binary_output,
+    base64_options options = base64_default,
+    last_chunk_handling_options last_chunk_options = loose) noexcept {
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::base64::base64_to_binary_details_impl(
+        input.data(), input.size(), binary_output.data(), options,
+        last_chunk_options);
+  } else
+    #endif
+  {
+    return base64_to_binary_details(
+        reinterpret_cast<const char *>(input.data()), input.size(),
+        reinterpret_cast<char *>(binary_output.data()), options,
+        last_chunk_options);
+  }
+}
+  #endif // SIMDUTF_SPAN
+
+/**
+ * Convert a base64 input to a binary output while returning more details
+ * than base64_to_binary.
+ *
+ * This function follows the WHATWG forgiving-base64 format, which means that it
+ * will ignore any ASCII spaces in the input. You may provide a padded input
+ * (with one or two equal signs at the end) or an unpadded input (without any
+ * equal signs at the end).
+ *
+ * See https://infra.spec.whatwg.org/#forgiving-base64-decode
+ *
+ * Unlike base64_to_binary, this function returns a full_result with both
+ * input_count and output_count, so you always know how much input was consumed
+ * and how much output was written. There are three cases where the input may
+ * not be fully consumed:
+ *
+ * 1. stop_before_partial: When last_chunk_options is set to
+ *    stop_before_partial, any incomplete 4-character group at the end of the
+ *    input is left unconsumed. This is useful for streaming/chunked decoding
+ *    where you can carry over the unconsumed input to the next chunk.
+ *
+ * 2. INVALID_BASE64_CHARACTER: The input contains a character that is not a
+ *    valid base64 character. In this case, input_count indicates where the
+ *    invalid character was found.
+ *
+ * 3. BASE64_INPUT_REMAINDER: When last_chunk_options is loose, the input
+ *    contains a number of base64 characters that, when divided by 4, leaves
+ *    a single remainder character (which cannot encode any bytes).
+ *
+ * You should call this function with a buffer that is at least
+ * maximal_binary_length_from_base64(input, length) bytes long. If you fail to
+ * provide that much space, the function may cause a buffer overflow.
+ *
+ * @param input         the base64 string to process, in ASCII stored as 16-bit
+ * units
+ * @param length        the length of the string in 16-bit units
+ * @param output        the pointer to a buffer that can hold the conversion
+ * result (should be at least maximal_binary_length_from_base64(input, length)
+ * bytes long).
+ * @param options       the base64 options to use, can be base64_default or
+ * base64_url, is base64_default by default.
+ * @param last_chunk_options the last chunk handling options,
+ * last_chunk_handling_options::loose by default
+ * but can also be last_chunk_handling_options::strict or
+ * last_chunk_handling_options::stop_before_partial.
+ * @return a full_result struct (of type simdutf::full_result containing the
+ * three fields error, input_count and output_count).
+ */
+simdutf_warn_unused full_result
+base64_to_binary_details(const char16_t *input, size_t length, char *output,
+                         base64_options options = base64_default,
+                         last_chunk_handling_options last_chunk_options =
+                             last_chunk_handling_options::loose) noexcept;
+  #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 full_result
+base64_to_binary_details(
+    std::span<const char16_t> input,
+    detail::output_span_of_byte_like auto &&binary_output,
+    base64_options options = base64_default,
+    last_chunk_handling_options last_chunk_options = loose) noexcept {
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::base64::base64_to_binary_details_impl(
+        input.data(), input.size(), binary_output.data(), options,
+        last_chunk_options);
+  } else
+    #endif
+  {
+    return base64_to_binary_details(
+        input.data(), input.size(),
+        reinterpret_cast<char *>(binary_output.data()), options,
+        last_chunk_options);
+  }
+}
+  #endif // SIMDUTF_SPAN
+
+/**
  * Check if a character is an ignorable base64 character.
  * Checking a large input, character by character, is not computationally
  * efficient.

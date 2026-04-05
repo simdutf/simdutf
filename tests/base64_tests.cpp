@@ -3720,6 +3720,194 @@ TEST(base64_details_input_count_padding_error_various_sizes) {
   }
 }
 
+TEST(base64_to_binary_details_basic) {
+  // Test the free function simdutf::base64_to_binary_details
+  const std::string base64_input = "QWJyYWNhZGFicmEh"; // "Abracadabra!"
+  const std::string expected = "Abracadabra!";
+  std::vector<char> output(simdutf::maximal_binary_length_from_base64(
+      base64_input.data(), base64_input.size()));
+  simdutf::full_result r = simdutf::base64_to_binary_details(
+      base64_input.data(), base64_input.size(), output.data());
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.output_count, expected.size());
+  ASSERT_EQUAL(r.input_count, base64_input.size());
+  ASSERT_TRUE(std::string(output.data(), r.output_count) == expected);
+}
+
+TEST(base64_to_binary_details_utf16) {
+  // Test the free function simdutf::base64_to_binary_details with char16_t
+  const std::u16string base64_input = u"QWJyYWNhZGFicmEh"; // "Abracadabra!"
+  const std::string expected = "Abracadabra!";
+  std::vector<char> output(simdutf::maximal_binary_length_from_base64(
+      base64_input.data(), base64_input.size()));
+  simdutf::full_result r = simdutf::base64_to_binary_details(
+      base64_input.data(), base64_input.size(), output.data());
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.output_count, expected.size());
+  ASSERT_EQUAL(r.input_count, base64_input.size());
+  ASSERT_TRUE(std::string(output.data(), r.output_count) == expected);
+}
+
+TEST(base64_to_binary_details_with_spaces) {
+  const std::string base64_input = "  QWJy  YWNh  ZGFi  cmEh  ";
+  const std::string expected = "Abracadabra!";
+  std::vector<char> output(simdutf::maximal_binary_length_from_base64(
+      base64_input.data(), base64_input.size()));
+  simdutf::full_result r = simdutf::base64_to_binary_details(
+      base64_input.data(), base64_input.size(), output.data());
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.output_count, expected.size());
+  ASSERT_TRUE(std::string(output.data(), r.output_count) == expected);
+}
+
+TEST(base64_to_binary_details_stop_before_partial) {
+  // "QWJy" decodes to "Abr", and "YQ" is an incomplete group (2 chars).
+  // With stop_before_partial, only the first complete 4-char group is decoded.
+  const std::string base64_input = "QWJy YQ";
+  const std::string expected = "Abr";
+  std::vector<char> output(simdutf::maximal_binary_length_from_base64(
+      base64_input.data(), base64_input.size()));
+  simdutf::full_result r = simdutf::base64_to_binary_details(
+      base64_input.data(), base64_input.size(), output.data(),
+      simdutf::base64_default,
+      simdutf::last_chunk_handling_options::stop_before_partial);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.output_count, expected.size());
+  // input_count should stop before the incomplete group
+  ASSERT_TRUE(r.input_count < base64_input.size());
+  ASSERT_TRUE(std::string(output.data(), r.output_count) == expected);
+}
+
+TEST(base64_to_binary_details_stop_before_partial_all_consumed) {
+  // When the input is a complete multiple of 4 base64 chars,
+  // stop_before_partial consumes everything.
+  const std::string base64_input = "QWJyYWNhZGFicmEh"; // "Abracadabra!"
+  const std::string expected = "Abracadabra!";
+  std::vector<char> output(simdutf::maximal_binary_length_from_base64(
+      base64_input.data(), base64_input.size()));
+  simdutf::full_result r = simdutf::base64_to_binary_details(
+      base64_input.data(), base64_input.size(), output.data(),
+      simdutf::base64_default,
+      simdutf::last_chunk_handling_options::stop_before_partial);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.output_count, expected.size());
+  ASSERT_EQUAL(r.input_count, base64_input.size());
+  ASSERT_TRUE(std::string(output.data(), r.output_count) == expected);
+}
+
+TEST(base64_to_binary_details_invalid_character) {
+  // '!' at position 4 is not a valid base64 character
+  const std::string base64_input = "QWJy!!!";
+  std::vector<char> output(simdutf::maximal_binary_length_from_base64(
+      base64_input.data(), base64_input.size()));
+  simdutf::full_result r = simdutf::base64_to_binary_details(
+      base64_input.data(), base64_input.size(), output.data());
+  ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+  ASSERT_EQUAL(r.input_count, 4); // position of first '!'
+}
+
+TEST(base64_to_binary_details_input_remainder) {
+  // 5 base64 chars: "QWJyY" -> 4 chars form a group, 1 remainder.
+  // A single remainder character cannot encode anything, so this is an error.
+  const std::string base64_input = "QWJyY";
+  std::vector<char> output(simdutf::maximal_binary_length_from_base64(
+      base64_input.data(), base64_input.size()));
+  simdutf::full_result r = simdutf::base64_to_binary_details(
+      base64_input.data(), base64_input.size(), output.data());
+  ASSERT_EQUAL(r.error, simdutf::error_code::BASE64_INPUT_REMAINDER);
+}
+
+TEST(base64_to_binary_details_with_spaces_utf16) {
+  const std::u16string base64_input = u"  QWJy  YWNh  ZGFi  cmEh  ";
+  const std::string expected = "Abracadabra!";
+  std::vector<char> output(simdutf::maximal_binary_length_from_base64(
+      base64_input.data(), base64_input.size()));
+  simdutf::full_result r = simdutf::base64_to_binary_details(
+      base64_input.data(), base64_input.size(), output.data());
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.output_count, expected.size());
+  ASSERT_TRUE(std::string(output.data(), r.output_count) == expected);
+}
+
+TEST(base64_to_binary_details_stop_before_partial_utf16) {
+  // "QWJy" decodes to "Abr", and "YQ" is an incomplete group (2 chars).
+  // With stop_before_partial, only the first complete 4-char group is decoded.
+  const std::u16string base64_input = u"QWJy YQ";
+  const std::string expected = "Abr";
+  std::vector<char> output(simdutf::maximal_binary_length_from_base64(
+      base64_input.data(), base64_input.size()));
+  simdutf::full_result r = simdutf::base64_to_binary_details(
+      base64_input.data(), base64_input.size(), output.data(),
+      simdutf::base64_default,
+      simdutf::last_chunk_handling_options::stop_before_partial);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.output_count, expected.size());
+  // input_count should stop before the incomplete group
+  ASSERT_TRUE(r.input_count < base64_input.size());
+  ASSERT_TRUE(std::string(output.data(), r.output_count) == expected);
+}
+
+TEST(base64_to_binary_details_stop_before_partial_all_consumed_utf16) {
+  // When the input is a complete multiple of 4 base64 chars,
+  // stop_before_partial consumes everything.
+  const std::u16string base64_input = u"QWJyYWNhZGFicmEh"; // "Abracadabra!"
+  const std::string expected = "Abracadabra!";
+  std::vector<char> output(simdutf::maximal_binary_length_from_base64(
+      base64_input.data(), base64_input.size()));
+  simdutf::full_result r = simdutf::base64_to_binary_details(
+      base64_input.data(), base64_input.size(), output.data(),
+      simdutf::base64_default,
+      simdutf::last_chunk_handling_options::stop_before_partial);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.output_count, expected.size());
+  ASSERT_EQUAL(r.input_count, base64_input.size());
+  ASSERT_TRUE(std::string(output.data(), r.output_count) == expected);
+}
+
+TEST(base64_to_binary_details_invalid_character_utf16) {
+  // '!' at position 4 is not a valid base64 character
+  const std::u16string base64_input = u"QWJy!!!";
+  std::vector<char> output(simdutf::maximal_binary_length_from_base64(
+      base64_input.data(), base64_input.size()));
+  simdutf::full_result r = simdutf::base64_to_binary_details(
+      base64_input.data(), base64_input.size(), output.data());
+  ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+  ASSERT_EQUAL(r.input_count, 4); // position of first '!'
+}
+
+TEST(base64_to_binary_details_input_remainder_utf16) {
+  // 5 base64 chars: "QWJyY" -> 4 chars form a group, 1 remainder.
+  // A single remainder character cannot encode anything, so this is an error.
+  const std::u16string base64_input = u"QWJyY";
+  std::vector<char> output(simdutf::maximal_binary_length_from_base64(
+      base64_input.data(), base64_input.size()));
+  simdutf::full_result r = simdutf::base64_to_binary_details(
+      base64_input.data(), base64_input.size(), output.data());
+  ASSERT_EQUAL(r.error, simdutf::error_code::BASE64_INPUT_REMAINDER);
+}
+
+TEST(base64_valid_runtime) {
+  // Test that base64_valid correctly identifies valid/invalid characters
+  for (char c = 'A'; c <= 'Z'; c++) {
+    ASSERT_TRUE(simdutf::base64_valid(c));
+  }
+  for (char c = 'a'; c <= 'z'; c++) {
+    ASSERT_TRUE(simdutf::base64_valid(c));
+  }
+  for (char c = '0'; c <= '9'; c++) {
+    ASSERT_TRUE(simdutf::base64_valid(c));
+  }
+  ASSERT_TRUE(simdutf::base64_valid('+'));
+  ASSERT_TRUE(simdutf::base64_valid('/'));
+  ASSERT_TRUE(!simdutf::base64_valid(' '));
+  ASSERT_TRUE(!simdutf::base64_valid('='));
+  ASSERT_TRUE(!simdutf::base64_valid('!'));
+
+  // base64url
+  ASSERT_TRUE(simdutf::base64_valid('-', simdutf::base64_url));
+  ASSERT_TRUE(simdutf::base64_valid('_', simdutf::base64_url));
+}
+
 int main(int argc, char *argv[]) {
   const auto cmdline = simdutf::test::CommandLine::parse(argc, argv);
   seed = cmdline.seed;

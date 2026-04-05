@@ -2372,6 +2372,20 @@ simdutf_warn_unused result base64_to_binary(
       input, length, output, options, last_chunk_handling_options);
 }
 
+simdutf_warn_unused full_result base64_to_binary_details(
+    const char *input, size_t length, char *output, base64_options options,
+    last_chunk_handling_options last_chunk_handling_options) noexcept {
+  return get_default_implementation()->base64_to_binary_details(
+      input, length, output, options, last_chunk_handling_options);
+}
+
+simdutf_warn_unused full_result base64_to_binary_details(
+    const char16_t *input, size_t length, char *output, base64_options options,
+    last_chunk_handling_options last_chunk_handling_options) noexcept {
+  return get_default_implementation()->base64_to_binary_details(
+      input, length, output, options, last_chunk_handling_options);
+}
+
 // moved to implementation.h
 // simdutf_warn_unused bool base64_ignorable(char input,
 //                                           base64_options options) noexcept
