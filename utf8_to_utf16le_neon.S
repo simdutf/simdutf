@@ -26,9 +26,17 @@ magic:
 	 *
 	 * The end of each range is inclusive.
 	 * Unused entries are set to 0xffff for easier debugging.
+	 * The upper bound is stored as the difference between the lower and
+	 * the upper bound, allowing us to turn a comparison of the form
+	 *
+	 *     low <= x <= hi
+	 *
+	 * into one of the form
+	 *
+	 *     x - low <= hi
 	 */
 	.short 0x0000, 0x0310, 0xe288, 0xffff, 0xffff, 0x0208, 0xf248, 0xffff
-	.short 0x0007, 0x0387, 0xf207, 0xffff, 0xffff, 0x0307, 0xf647, 0xffff
+	.short 0x0007-0x0000, 0x0387-0x0310, 0xf207-0xe288, 0xffff, 0xffff, 0x0307-0x0208, 0xf647-0xf248, 0xffff
 
 	/*
 	 * Tag Bit Removal
@@ -96,15 +104,15 @@ outlen	.req	x3
 	movi	v1.16b, #2
 	ushr	v2.16b, v0.16b, #6		// inbuf >> 6
 	cmeq	v1.16b, v1.16b, v2.16b		// (inbuf >> 6) == 2, that is 0x80 <= inbuf < 0xc0 (FOLLOW)
-	shrn	v3.8b, v1.8h, #4		// convert to nibble mask
-	fmov	x16, d3
-//	cbz	x16, ...			// all ASCII?
 
 	sxtl2	v2.8h, v1.16b
 	and	v3.8b, v1.8b, v30.8b		// Tetranacci numbers for low half
 	and	v2.16b, v2.16b, v31.16b		// Tetranacci numbers for high half
 	uaddw	v2.8h, v2.8h, v3.8b		// for both halves
 	uaddlv	s2, v2.8h			// Tetranacci index
+	shrn	v6.8b, v1.8h, #4		// convert FOLLOW syndrome to nibble mask
+	fmov	x16, d6
+//	cbz	x16, ...			// all ASCII?
 	fmov	w11, s2
 
 	// ensure the input has no more than 3 consecutive follow bytes
@@ -196,16 +204,14 @@ outlen	.req	x3
 	 */
 
 	// check for bound violations
-	cmhi	v6.8h, v6.8h, v5.8h		// check for lower bound violation
-	cmhi	v7.8h, v5.8h, v7.8h		// check for upper bound violation 
-	orr	v6.16b, v6.16b, v7.16b		// either bound violated?
+	sub	v6.8h, v5.8h, v6.8h		// (char>>4) - lower_bound
+	cmhi	v6.8h, v6.8h, v7.8h		// (char>>4) - lower_bound > upper_bound
 
 	// check for stray surrogates
 	movi	v2.8h, #0xd8, lsl #8		// = 0xd800, high surrogate tag
-	movi	v7.8h, #0xe0, lsl #8		// = 0xe000, end of surrogate area
-	cmhs	v0.8h, v4.8h, v2.8h		// 0xd800 <= v4.8h
-	cmhi	v7.8h, v2.8h, v7.8h		// v4.8h < 0xe000
-	and	v0.16b, v0.16b, v7.16b		// 0xd800 <= v4.8h < 0xe000 (surrogate present)
+	movi	v7.8h, #0x08, lsl #8		// = 0x0800, length of surrogate area
+	sub	v0.8h, v4.8h, v2.8h		// v4.8h - 0xd800
+	cmhi	v0.8h, v7.8h, v0.8h		// v4.8h - 0xd800 < 0x800 -> 0xd800 <= v4.8h < 0xe000
 
 	// post-process 4HEAD/4TAIL and check for stray surrogates
 	tst	x16, x17, lsr #4		// any 4BYTE sequences present?
