@@ -102,21 +102,25 @@ outlen	.req	x3
 	/* main loop */
 .Lloop:	ldr	q0, [inbuf]			// load a chunk of input
 
-	// classify q0 into LEAD and FOLLOW bytes and compute Tetranacci index
+	// classify q0 into LEAD and FOLLOW bytes
+.Lloop1:
 	movi	v1.16b, #2
 	ushr	v2.16b, v0.16b, #6		// inbuf >> 6
 	cmeq	v1.16b, v1.16b, v2.16b		// (inbuf >> 6) == 2, that is 0x80 <= inbuf < 0xc0 (FOLLOW)
 
+	// compute the Tetranacci index
 	sxtl2	v2.8h, v1.16b
 	and	v3.8b, v1.8b, v30.8b		// Tetranacci numbers for low half
 	and	v2.16b, v2.16b, v31.16b		// Tetranacci numbers for high half
 	uaddw	v2.8h, v2.8h, v3.8b		// for both halves
 	uaddlv	s2, v2.8h			// Tetranacci index
+
 	shrn	v6.8b, v1.8h, #4		// convert FOLLOW syndrome to nibble mask
 	fmov	x16, d6
-//	cbz	x16, ...			// all ASCII?
 	fmov	w11, s2
+	cbz	x16, .Lascii			// all ASCII?
 
+.Lnotascii:
 	// ensure the input has no more than 3 consecutive follow bytes
 	and	x17, x16, x16, lsr #4		// consecutive pairs of set nibbles?
 //	beq	...				// if none, go to ASCII/2BYTE fast path
@@ -128,22 +132,24 @@ outlen	.req	x3
 	add	x11, x5, x11, lsl #3
 	ldrsb	w15, [x11, #7]			// last byte of table entry
 //	prfm	pldl1keep, [x11, #16]
+
 	movi	v3.8b, #0x70
 	bic	v3.8b, v2.8b, v3.8b		// LUT entry without tag bits (but with invalid bit)
+
+	// load last three bytes of each sequence (or possibly junk)
+	movi	v1.8b, #1
+	tbl	v4.8b, {v0.16b}, v3.8b		// load last byte of each sequence (C0)
+	sub	v6.8b, v3.8b, v1.8b
+	tbl	v5.8b, {v0.16b}, v6.8b		// load penultimate byte of each sequence (C1)
+	sub	v6.8b, v6.8b, v1.8b
+	tbl	v6.8b, {v0.16b}, v6.8b		// load antepenultimate byte of each sequence (C2)
+
 	smaxv	b1, v3.8b			// last index transcoded
 	fmov	w14, s1
 	add	w14, w14, #1			// number of input bytes transcoded
 	mov	w10, #8				// w15 non-negative -> 8 halfwords of output
 	tst	w15, #0x80			// w15 negative -> -w15 halfwords of output
 	csneg	w15, w10, w15, eq		// w15 = w15 > 0 ? 8 : -w15 -> output size in halfwords
-
-	// load last three bytes of each sequence (or possibly junk)
-	movi	v1.8b, #1
-	tbl	v4.8b, {v0.16b}, v3.8b		// load last byte of each sequence (C0)
-	sub	v3.8b, v3.8b, v1.8b
-	tbl	v5.8b, {v0.16b}, v3.8b		// load penultimate byte of each sequence (C1)
-	sub	v3.8b, v3.8b, v1.8b
-	tbl	v6.8b, {v0.16b}, v3.8b		// load antepenultimate byte of each sequence (C2)
 
 	/*
 	 * We now have for each case:
@@ -273,13 +279,34 @@ outlen	.req	x3
 	str	x1, [outlen]
 	ret
 
+	// ASCII-only fast path
+.Lascii:
+	cmlt	v6.16b, v0.16b, #0		// any non-ASCII characters in the input?
+	shrn	v6.8b, v6.8h, #4		// convert to nibble mask
+	fmov	x17, d6
+	cbnz	x17, .Lnotascii			// if non-ASCII detected, return to normal path
+
+	movi	v1.16b, #0
+1:	add	inbuf, inbuf, #16		// advance to next chunk of input
+	st2	{v0.16b, v1.16b}, [outbuf], #32	// zero-extend and deposit
+	subs	inlen, inlen, #16		// consume next chunk of input
+	blo	.Lrunt				// until end of input encountered
+
+	// assume the following data is ASCII, too
+	ld1	{v0.16b}, [inbuf]		// load next chunk of input
+	cmlt	v6.16b, v0.16b, #0		// any non-ASCII characters in the input?
+	shrn	v6.8b, v6.8h, #4
+	fmov	x17, d6
+	cbnz	x17, .Lloop1			// if not, go back to main path
+	b	1b
+
 	// 4 or more FOLLOW bytes in a row
 .Lerror_4follow:
 	and	x17, x17, x17, lsr #8		// where are the 4 consecutive follow bytes?
 	rbit	x17, x17			// in reverse order
 	clz	x17, x17			// number of bits before the error
 	mov	inlen, #3			// proceed until third follow byte
-	add	inlen, inlen, x17, lsr #4
+	add	inlen, inlen, x17, lsr #2
 	b	.Ltail
 
 	// stray surrogate or range check failed
