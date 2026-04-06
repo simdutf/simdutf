@@ -122,9 +122,9 @@ outlen	.req	x3
 	smaxv	b1, v3.8b			// last index transcoded
 	fmov	w14, s1
 	add	w14, w14, #1			// number of input bytes transcoded
-	mov	w16, #8				// w15 non-negative -> 8 halfwords of output
+	mov	w10, #8				// w15 non-negative -> 8 halfwords of output
 	tst	w15, #0x80			// w15 negative -> -w15 halfwords of output
-	csneg	w15, w16, w15, eq		// w15 = w15 > 0 ? 8 : -w15 -> output size in halfwords
+	csneg	w15, w10, w15, eq		// w15 = w15 > 0 ? 8 : -w15 -> output size in halfwords
 
 	// load last three bytes of each sequence (or possibly junk)
 	movi	v1.8b, #1
@@ -188,7 +188,7 @@ outlen	.req	x3
 	 * We now have for each case:
 	 * CASE   V4                V5-(V4>>4)        V6                V7
 	 * ASCII  000000000GFEDCBA  0000000000000000  0000000000000000  0000000000000111
-	 * 2BYTE  00000LKJHGFEDCBA  0000001100001000  0000001100010000  0000001100110111
+	 * 2BYTE  00000LKJHGFEDCBA  0000001100001000  0000001100010000  0000001110000111
 	 * 3BYTE  RQPNMLKJHGFEDCBA  1110001000001000  1110001010001000  1111001000000111
 	 * 4HEAD  00vutsRQPNMLKJHG  1111001001001000  1111001001001000  1111011001000111
 	 * 4TAIL  0000MLKJHGFEDCBA  0000001000001000  0000001000001000  0000001100000111
@@ -208,8 +208,8 @@ outlen	.req	x3
 	and	v0.16b, v0.16b, v7.16b		// 0xd800 <= v4.8h < 0xe000 (surrogate present)
 
 	// post-process 4HEAD/4TAIL and check for stray surrogates
-//	tst	x17, x16, lsr #8		// any 4BYTE sequences present?
-//	beq	1f				// if none, go to ASCII/2BYTE/3BYTE fast path
+	tst	x16, x17, lsr #4		// any 4BYTE sequences present?
+	beq	1f				// if none, go to ASCII/2BYTE/3BYTE fast path
 
 	movi	v1.16b, #0x08			// surrogate tag bit
 	movi	v7.16b, #0x02			// 2BYTE/4TAIL tag bit
