@@ -49,14 +49,16 @@ magic:
 	 * ASCII  00 00 00  00000
 	 * 2BYTE  00 C0 80  03080
 	 * 3BYTE  E0 80 80  E2080
-	 * 4HEAD  F0 80 80  F2480
+	 * 4HEAD  F0 80 80  FA480
 	 * 4TAIL  00 80 80  02080
 	 *
 	 * In the 4HEAD case, we add 0400 to the mask, which translates the
 	 * codepoint from the Unicode range to the high surrogate range by
-	 * subtracting 10000.
+	 * subtracting 10000.  We also add 0x8000, which corresponds to the
+	 * 0800 bit of the high surrogate mask D800, permitting us to use
+	 * a SRI instruction to insert the rest of the mask.
 	 */
-	.short 0x0000, 0x3080, 0x2080, 0xffff, 0xffff, 0x2080, 0x2480, 0xffff
+	.short 0x0000, 0x3080, 0x2080, 0xffff, 0xffff, 0x2080, 0xa480, 0xffff
 
 	/*
 	 * Tetranacci Indices
@@ -125,6 +127,7 @@ outlen	.req	x3
 	ldr	d2, [x5, x11, lsl #3]		// load table entry
 	add	x11, x5, x11, lsl #3
 	ldrsb	w15, [x11, #7]			// last byte of table entry
+//	prfm	pldl1keep, [x11, #16]
 	movi	v3.8b, #0x70
 	bic	v3.8b, v2.8b, v3.8b		// LUT entry without tag bits (but with invalid bit)
 	smaxv	b1, v3.8b			// last index transcoded
@@ -155,11 +158,11 @@ outlen	.req	x3
 
 	// strip out bytes before the start of each sequence
 	movi	v1.8b, #0x30
+	movi	v7.8b, #0x20
 	cmtst	v1.8b, v1.8b, v2.8b		// 2BYTE, 3BYTE, 4HEAD, 4TAIL
+	cmtst	v7.8b, v7.8b, v2.8b		// 3BYTE, 4HEAD
 	and	v5.8b, v5.8b, v1.8b		// clear penultimate byte in ASCII
-	movi	v1.8b, #0x20
-	cmtst	v1.8b, v1.8b, v2.8b		// 3BYTE, 4HEAD
-	and	v6.8b, v6.8b, v1.8b		// clear antepenultimate byte in ASCII/2BYTE/4TAIL
+	and	v6.8b, v6.8b, v7.8b		// clear antepenultimate byte in ASCII/2BYTE/4TAIL
 
 	/*
 	 * We now have for each case:
@@ -174,10 +177,9 @@ outlen	.req	x3
 
 	// assemble bytes with tag bits intact into v4 and v5 (shifted 4 places right)
 	ushll	v5.8h, v5.8b, #6		// C1 <<  6 as halfword
-	movi	v3.16b, #0
-	zip1	v6.16b, v3.16b, v6.16b		// C2 <<  8 as halfword
-	shl	v7.8h, v6.8h, #4		// C2 << 12 as halfword
+	shll	v6.8h, v6.8b, #8		// C2 <<  8 as halfword
 	uaddw	v4.8h, v5.8h, v4.8b		// C0 + (C1 << 6) as halfwords
+	shl	v7.8h, v6.8h, #4		// C2 << 12 as halfword
 	ushr	v5.8h, v4.8h, #4		// (C0 + (C1 << 6)) >> 4
 	add	v4.8h, v4.8h, v7.8h		// C0 + (C1 << 6) + (C2 << 12)
 	add	v5.8h, v5.8h, v6.8h		// (C0 + (C1 << 6) + (C2 << 12)) >> 4
@@ -198,7 +200,7 @@ outlen	.req	x3
 	 * ASCII  000000000GFEDCBA  0000000000000000  0000000000000000  0000000000000111
 	 * 2BYTE  00000LKJHGFEDCBA  0000001100001000  0000001100010000  0000001110000111
 	 * 3BYTE  RQPNMLKJHGFEDCBA  1110001000001000  1110001010001000  1111001000000111
-	 * 4HEAD  00vutsRQPNMLKJHG  1111001001001000  1111001001001000  1111011001000111
+	 * 4HEAD  10vutsRQPNMLKJHG  1111001001001000  1111001001001000  1111011001000111
 	 * 4TAIL  0000MLKJHGFEDCBA  0000001000001000  0000001000001000  0000001100000111
 	 * EMPTY  0000000000000000  0000000000000000  0000000000000000  0000000000000000
 	 */
@@ -223,11 +225,10 @@ outlen	.req	x3
 	cmtst	v7.16b, v7.16b, v3.16b		// 2BYTE/4TAIL cases in v4
 	bic	v0.16b, v0.16b, v1.16b		// ignore stray surrogates in 4HEAD/4TAIL
 
-	ushr	v3.8h, v4.8h, #4		// 4HEAD: 000000vutsRQPNML
-	mov	v5.16b, v4.16b
-	orr	v3.8h, #0xd8, lsl #8		// 4HEAD: 110110vutsRQPNML
-	orr	v5.8h, #0xdc, lsl #8		// 4TAIL: 110111KJHGFEDCBA
-	bsl	v7.16b, v5.16b, v3.16b		// 4TAIL ? V5 : V3
+	movi	v5.8h, #0xdc, lsl #8
+	orr	v5.16b, v5.16b, v4.16b		// 4TAIL: 110111KJHGFEDCBA
+	sri	v2.8h, v4.8h, #4		// 4HEAD: 110110vutsRQPNML
+	bsl	v7.16b, v5.16b, v2.16b		// 4TAIL ? V5 : V3
 	bit	v4.16b, v7.16b, v1.16b		// insert fixed surrogates into V4
 
 	/*
@@ -243,9 +244,9 @@ outlen	.req	x3
 
 	// final validation
 1:	orr	v6.16b, v6.16b, v0.16b		// stray surrogate or out of range?
-	umaxv	s5, v6.4s			// anywhere?
-	fmov	w6, s5
-	cbnz	w6, .Lerror_range_check		// if yes, encoding error
+	xtn	v6.8b, v6.8h			// compress syndrome to 64 bits
+	fmov	x6, d6
+	cbnz	x6, .Lerror_range_check		// if any, encoding error
 
 	str	q4, [outbuf]			// write out transcoded data
 	add	inbuf, inbuf, x14		// advance input buffer
@@ -284,8 +285,6 @@ outlen	.req	x3
 	// stray surrogate or range check failed
 	// try again with input until the failing sequence sans its final byte
 .Lerror_range_check:
-	xtn	v6.8b, v6.8h			// compress syndrome to 8 bits per entry
-	fmov	x6, d6
 	rbit	x6, x6
 	clz	x6, x6				// location of first error, in bits
 	lsr	x6, x6, #3			// location of first error, in bytes
