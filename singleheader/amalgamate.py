@@ -374,6 +374,29 @@ def filter_features(file):
                 else:
                     yield f'#define {flag} 0'
 
+            elif root_header and line.startswith('#ifndef SIMDUTF_FEATURE'):
+                # Handle the #ifndef / #define / #endif guard pattern:
+                #   #ifndef SIMDUTF_FEATURE_FOO
+                #     #define SIMDUTF_FEATURE_FOO 1
+                #   #endif
+                flag = line.split()[1]
+                assert flag in known_features, f"unknown feature {flag}"
+                # Skip the next two lines (#define and #endif)
+                define_line = lines[lineno]
+                lines[lineno] = None
+                endif_line = lines[lineno + 1]
+                lines[lineno + 1] = None
+
+                assert define_line is not None and 'SIMDUTF_FEATURE' in define_line, \
+                    f"{file}:{lineno+1}: expected #define inside #ifndef block, got: {define_line}"
+                assert endif_line is not None and endif_line.strip() == '#endif', \
+                    f"{file}:{lineno+2}: expected #endif for #ifndef block, got: {endif_line}"
+
+                if flag in context.enabled_features:
+                    yield f'#define {flag} 1'
+                else:
+                    yield f'#define {flag} 0'
+
             elif line.startswith('#if SIMDUTF_FEATURE'):
                 if start_if_line is not None:
                     raise ValueError(f"{file}:{lineno}: feature block already opened at line {start_if_line}")
