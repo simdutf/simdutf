@@ -1,19 +1,20 @@
 /*
  * Lookup-table generator for utf8_to_utf16le_neon.S.
  *
- * This table is indexed by the Tetranacci numbers, and holds 8-byte entries
- * containing information about the transcoding of a 16-byte chunk of input.
+ * The tables are indexed by the Tetranacci numbers, and hold 8-byte entries
+ * containing information about the transcoding of 8-byte chunks of input.
  * The index is as follows: the input bytes are classified.  Those that are
  * FOLLOW bytes (0x80--0xBF) select the entry at the corresponding index of
  * sequence
  *
- *     0, 1, 2, 4, 8, 15, 29, 56, 108, 208, 401, 773, 1490, 2872, 5536, 10671
+ *     1, 2, 4, 8, 15, 29, 56, 108
  *
- * (OEIS A000078 with the first element cleared) and the table index is the
- * sum of the selected indices, for 20569 entries in total.  This scheme
- * indexes all valid UTF-8 inputs, i.e. those that have no more than three
- * consecutive FOLLOW bytes and that start with a LEAD byte.  We'll have to
- * validate that this is the case separately.
+ * (OEIS A000078) and the table index is the sum of the selected indices,
+ * for 208 entries in total.  Then, one table is selected based on how many
+ * consecutive bytes after these 8 bytes are FOLLOW bytes, giving 4 distinct
+ * tables.  The scheme indexes all valid UTF-8 inputs, i.e. those that have
+ * no more than three consecutive FOLLOW bytes and that start with a LEAD
+ * byte.  We'll have to validate that this is the case separately.
  *
  * Each table entry is eight bytes, the bits hold the following information:
  *
@@ -36,23 +37,26 @@
  * remaining slots are filled with 0xff, except for the final slot, which
  * holds the negated number of sequences encoded.  Four byte sequences
  * are decoded into two slots, holding the index of the final and penultimate
- * byte of the sequence respectively.
+ * byte of the sequence respectively.  If the first three bytes are FOLLOW
+ * bytes, we assume that there is a surrogate straddling the end of the
+ * previous 8 bytes and these 8 bytes and start with a 4TAIL case.
  *
  * Here is a sample table entry: for input vector
  *
- *     40 C2 A7 E2 88 88 F0 9D 92 AA E2 89 A4 C2 B1 31
+ *     40 C2 A7 E2 88 88 F0 9D 92 AA E2
  *
  * we get FOLLOW syndrome
  *
- *     00 00 FF 00 FF FF 00 FF FF FF 00 FF FF 00 FF 00
+ *     00 00 FF 00 FF FF 00 FF(FF FF 00)
  *
- * and hence Tetranacci index
+ * followed by two additional FOLLOW bytes (subtable 2),
+ * and Tetranacci index
  *
- *     2 + 8 + 15 + 56 + 108 + 208 + 773 + 1490 + 5536 = 8196
+ *     4 + 15 + 29 + 108 = 156
  *
- * at which we find entry (table offset 0x10020)
+ * at which we find entry (table offset 0x4e0)
  *
- *     00 12 25 68 59 2C 1E F9
+ *     00 12 25 68 59 FF FF FB
  *
  * representing:
  *
@@ -61,9 +65,9 @@
  *     25: 3BYTE ending at index 5 (E2 88 88)
  *     68: 4HEAD ending at index 8 (F0 9D 92)
  *     59: 4TAIL ending at index 9 (92 AA)
- *     2C: 3BYTE at index 12 (E2 89 A4)
- *     1E: 2BYTE at index 14 (C2 B1)
- *     F9: EMPTY indicating -F9 = 7 halfwords of output
+ *     FF: EMPTY
+ *     FF: EMPTY
+ *     FB: EMPTY indicating -FB = 5 halfwords of output
  */
 
 #include <assert.h>
@@ -72,75 +76,83 @@
 #include <stdio.h>
 #include <string.h>
 
-enum { TABLEN = 20569 };
+enum { TABLEN = 208 };
 
-alignas(8) unsigned char utf8_to_utf16le_neon_tab[TABLEN][8];
+alignas(8) unsigned char utf8_to_utf16le_neon_tab[4][TABLEN][8];
 
 static void
-gentab(void)
+gentab(unsigned char tab[TABLEN][8], int suffix)
 {
 	long m, i;
 
-	memset(utf8_to_utf16le_neon_tab, 0xff, sizeof utf8_to_utf16le_neon_tab);
+	memset(tab, 0xff, TABLEN * sizeof *tab);
 
-	for (m = i = 0; m <= 0xffff; m += 2) {
+	for (m = i = 0; m <= 0xff; m ++) {
 		int j, k, start;
 
 		/* four or more consecutive bits set in m? */
 		if (m & m >> 1 & m >> 2 & m >> 3)
 			continue;
 
-		j = 0; /* index into utf8_to_utf16le_neon_tab[i] */
-		start = 0; /* start of current sequence */
+		j = 0; /* tab[i] */
+		k = 0; /* iterates through m */
+
+		/* special case: three initial follow bytes -> starts with 4TAIL */
+		if ((m & 0x7) == 7)
+			tab[i][j++] = 0x52;
+
+		start = __builtin_ctz(~m); /* start of current sequence */
 
 		/* iterate over bits of m, skipping the first bit */
-		for (k = 1; k < 16; k++) {
+		for (k = start + 1; k < 12; k++) {
 			/* follow byte? */
-			if (m & 1 << k)
+			if ((m|suffix) & 1 << k)
 				continue;
 
 			/* else first byte of next sequence */
 			switch (k - start) {
-			case 1:	utf8_to_utf16le_neon_tab[i][j++] = k - 1;
+			case 1:	tab[i][j++] = k - 1;
 				break;
 
-			case 2:	utf8_to_utf16le_neon_tab[i][j++] = k - 1 | 0x10;
+			case 2:	tab[i][j++] = k - 1 | 0x10;
 				break;
 
-			case 3:	utf8_to_utf16le_neon_tab[i][j++] = k - 1 | 0x20;
+			case 3:	tab[i][j++] = k - 1 | 0x20;
 				break;
 
-			case 4:	if (j >= 7)
+			case 4:	tab[i][j++] = k - 2 | 0x60;
+
+				/* special case: 4TAIL handled in next sequence */
+				if (start == 7)
 					goto done;
 
-				utf8_to_utf16le_neon_tab[i][j++] = k - 2 | 0x60;
-				utf8_to_utf16le_neon_tab[i][j++] = k - 1 | 0x50;
+				tab[i][j++] = k - 1 | 0x50;
 				break;
 
 			default:
-				assert(k - start <= 4);
+				/* suffix doesn't make sense with syndrome -- unused entry */
+				if (k >= 8) {
+					memset(tab[i], 0xff, sizeof tab[i]);
+					goto continue_outer;
+				} else
+					assert(k - start <= 4);
 			}
 
 			start = k;
 
-			if (j >= 8)
+			if (start >= 8)
 				goto done;
-		}
 
-		/*
-		 * Special case: if a four byte sequence starts at index 12 and we
-		 * have space for it, put it in.
-		 */
-		if (start == 12 && j < 7) {
-			utf8_to_utf16le_neon_tab[i][j++] = (k - 2) | 0x60;
-			utf8_to_utf16le_neon_tab[i][j++] = (k - 1) | 0x50;
+			assert(j < 8);
 		}
 
 		/* go to next table row */
-	done:	if (j <= 7)
-			utf8_to_utf16le_neon_tab[i][7] = -j;
+	done:	if (j < 8)
+			tab[i][7] = -j;
 
-		i++;	
+	continue_outer:
+		i++;
+
 	}
 
 	assert(i == TABLEN);
@@ -148,34 +160,43 @@ gentab(void)
 
 int main()
 {
-	long i, j, m;
+	int t;
+	long i, m;
 
-	gentab();
+	gentab(utf8_to_utf16le_neon_tab[0], 0x000);
+	gentab(utf8_to_utf16le_neon_tab[1], 0x100);
+	gentab(utf8_to_utf16le_neon_tab[2], 0x300);
+	gentab(utf8_to_utf16le_neon_tab[3], 0x700);
 
 	printf("/* --- GENERATED BY mktab_neon.c DO NOT EDIT --- */\n\n"
 	    "#include <stdalign.h>\n\n"
-	    "alignas(8) unsigned const char utf8_to_utf16le_neon_tab[%d][8] = {\n",
+	    "alignas(8) unsigned const char utf8_to_utf16le_neon_tab[4][%d][8] = {\n\t{\n",
 	    TABLEN);
 
-	for (m = i = 0; m <= 0xffff; m += 2) {
-		int j, k;
+	for (t = 0; t < 4; t++) {
+		for (m = i = 0; m <= 0xff; m ++) {
+			int j;
 
-		/* four or more consecutive bits set in m? */
-		if (m & m >> 1 & m >> 2 & m >> 3)
-			continue;
+			/* four or more consecutive bits set in m? */
+			if (m & m >> 1 & m >> 2 & m >> 3)
+				continue;
 
-		fputs("\t{", stdout);
+			fputs("\t\t{", stdout);
 
-		for (j = 0; j < 8; j++)
-			printf(" 0x%02x,", (unsigned)utf8_to_utf16le_neon_tab[i][j]);
+			for (j = 0; j < 8; j++)
+				printf(" 0x%02x,", (unsigned)utf8_to_utf16le_neon_tab[t][i][j]);
 
-		printf(" }, /* 0x%04x */\n", (unsigned)m);
-		i++;
+			printf(" }, /* %01d/%02x */\n", t, (unsigned)m);
+			i++;
+		}
+
+		assert(i == TABLEN);
+
+		puts(t < 3 ? "\t}, {" : "\t}");
 	}
 
 	puts("};");
 
-	assert(i == TABLEN);
 
 	if (ferror(stdout)) {
 		perror("stdout");
