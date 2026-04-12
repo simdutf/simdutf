@@ -1,5 +1,3 @@
-	.extern	utf8_to_utf16le_neon_tab
-
 	.section .rodata
 	.balign	16
 magic:
@@ -23,7 +21,7 @@ magic:
 	 * 3BYTE  E0 A0 80--EF BF BF  E2880--F207F
 	 * 4HEAD  F0 90 80--F4 8F BF  F2480--F647F (head of 4BYTE sequence)
 	 * 4TAIL  00 80 80--00 BF BF  02080--0307F (tail of 4BYTE sequence)
-	 * 3SURR  ED A0 80--ED BF BF  EF880--F007F (surrogate in 3BYTE)
+	 * 3SURR  ED A0 80--ED BF BF  EF880--F007F (stray surrogate in 3BYTE)
 	 *
 	 * The end of each range is inclusive.
 	 * The 3SURR case is not part of the table; it is checked separately.
@@ -92,10 +90,34 @@ magic:
 	 * to be of LEAD type; if it is not, the sequencing validation will
 	 * fail at a later point.  See mktab_neon.c for more details.
 	 */
-	// high tetranacci numbers
-	.short	108, 208, 401, 773, 1490, 2872, 5536, 10671
-	// low tetranacci numbers
-	.byte	0, 1, 2, 4,  8, 15, 29, 56
+	.byte	1, 2, 4, 8, 15, 29, 56, 108
+
+	/*
+	 * This code uses a look up table comprising four subtables of
+	 * formally 208 entries each.  They are indexed using Tetranacci
+	 * numbers based on whether the each of the 8 input bytes is LEAD
+	 * or FOLLOW, the subtable is selected by how many FOLLOW bytes
+	 * follow after these three bytes.  See mktab_neon.c for details.
+	 *
+	 * All but the first table have a number of unused entries at
+	 * their ends, which we do not store to reduce cache pressure.
+	 * The definitions below describe the length of each sub table.
+	 * The subtable is selected using a sequence of conditional
+	 * move instructions.
+	 *
+	 * The table lengths are: 208, 193, 164, and 108 entries respectively.
+	 *
+	 * We select the table by taking the unsigned minimum of the table
+	 * offset ored with the FOLLOW syndrom (i.e. FOLLOW bytes become
+	 * FFFF which is never the minimum).
+	 */
+	.extern	utf8_to_utf16le_neon_tab
+	.short 0, 208, 401, 565
+
+	.set	tab0len, 208
+	.set	tab1len, 193
+	.set	tab2len, 164
+	.set	tab3len, 108
 
 	.text
 	.type	utf8_to_utf16le_neon, @function
@@ -106,58 +128,89 @@ outbuf	.req	x0
 inbuf	.req	x1
 inlen	.req	x2
 outlen	.req	x3
+inbuf0	.req	x12	// original input pointer
+outbuf0	.req	x13	// original output pointer
+lut	.req	x17
 
 	adrp	x4, magic
 	add	x4, x4, #:lo12:magic
 	ldp	q28, q29, [x4, #0]		// range for bounds checks
-	ldp	q27, q26, [x4, #32]		// tag bit mask, selection mask
-	ldr	q31, [x4, #64]			// high Tetranacci numbers
-	ldr	d30, [x4, #80]			// low Tetranacci numbers
+	ldp	q30, q26, [x4, #32]		// tag bit mask, selection mask
+	ldp	d31, d27, [x4, #64]		// low Tetranacci numbers, subtable starts
 	movi	v25.8h, #0x88, lsl #0		// EF88 -- 3SURR lower bound
 	orr	v25.8h, #0xef, lsl #8
 
-	adrp	x5, utf8_to_utf16le_neon_tab	// lookup table for shuffles
-	add	x5, x5, #:lo12:utf8_to_utf16le_neon_tab
+	/* load sub table addresses */
+	adrp	lut, utf8_to_utf16le_neon_tab	// lookup table for shuffles
+	add	lut, :lo12:utf8_to_utf16le_neon_tab
 
-	mov	x12, inbuf			// original input pointer
-	mov	x13, outbuf			// original output pointer
+	mov	inbuf0, inbuf			// original input pointer
+	mov	outbuf0, outbuf			// original output pointer
 
-	subs	inlen, inlen, #16		// can we process at least 16 bytes?
+	subs	inlen, inlen, #24		// at least 24 bytes left in buffer?
 	blo	.Lrunt
 
 	/* main loop */
-.Lloop:	ldr	q0, [inbuf]			// load a chunk of input
-
-	// classify q0 into LEAD and FOLLOW bytes
+.Lloop:	ldr	q0, [inbuf]			// load low 12 bytes of input
 .Lloop1:
-	movi	v1.16b, #2
+	ldur	q1, [inbuf, #8]			// load high 12 bytes of input
+	add	inbuf, inbuf, #16		// advance to next chunk of input
+
+	// classify q0 and q1 into LEAD and FOLLOW bytes
+	movi	v16.16b, #2
 	ushr	v2.16b, v0.16b, #6		// inbuf >> 6
-	cmeq	v1.16b, v1.16b, v2.16b		// (inbuf >> 6) == 2, that is 0x80 <= inbuf < 0xc0 (FOLLOW)
+	ushr	v3.16b, v1.16b, #6
+	cmeq	v2.16b, v2.16b, v16.16b		// (inbuf >> 6) == 2, that is 0x80 <= inbuf < 0xc0 (FOLLOW)
+	cmeq	v3.16b, v3.16b, v16.16b
 
-	// compute the Tetranacci index
-	sxtl2	v2.8h, v1.16b
-	and	v3.8b, v1.8b, v30.8b		// Tetranacci numbers for low half
-	and	v2.16b, v2.16b, v31.16b		// Tetranacci numbers for high half
-	uaddw	v2.8h, v2.8h, v3.8b		// for both halves
-	uaddlv	s2, v2.8h			// Tetranacci index
-
-	shrn	v6.8b, v1.8h, #4		// convert FOLLOW syndrome to nibble mask
-	fmov	x16, d6
-	fmov	w11, s2
-	cbz	x16, .Lascii			// all ASCII?
+	// move FOLLOW syndrome to scalar registers for further processing
+	// and compute the Tetranacci indices
+	shrn	v4.8b, v2.8h, #4		// convert FOLLOW syndrome to nibble mask
+	shrn	v5.8b, v3.8h, #4
+	and	v2.8b, v2.8b, v31.8b		// Tetranacci numbers
+	and	v3.8b, v3.8b, v31.8b
+	fmov	x4, d4
+	fmov	x5, d5
+	uaddlv	h2, v2.8b			// Tetranacci indices
+	uaddlv	h3, v3.8b
+	fmov	w6, s2
+	fmov	w7, s3
+	cbz	x4, .Lascii			// all ASCII?
 
 .Lnotascii:
+	// determine sub tables
+	tst	x4, #0xf<<(8*4)			// table 0 if no FOLLOW byte at pos. 8
+	csel	x8, tab0, tab1, eq
+	tst	x5, #0xf<<(8*4)
+	csel	x9, tab0, tab1, eq
+
+	tst	x4, #0xf<<(10*4)		// table 2 if no FOLLOW byte at pos. 10
+	csel	x10, tab2, tab3, eq
+	tst	x5, #0xf<<(10*4)
+	csel	x11, tab2, tab3, eq
+
+	mvn	x12, x4				// turn FOLLOW syndrome into LEAD syndrom
+	mvn	x13, x5
+	tst	x12, #0xff<<(8*4)		// table 2/3 if no LEAD byte at pos 8&9
+	csel	x10, x10, x8, eq
+	tst	x13, #0xff<<(8*4)
+	csel	x11, x11, x9, eq
+
 	// ensure the input has no more than 3 consecutive follow bytes
-	and	x17, x16, x16, lsr #4		// consecutive pairs of set nibbles?
-//	beq	...				// if none, go to ASCII/2BYTE fast path
-	tst	x17, x17, lsr #8		// consecutive quadruples of set nibbles?
-	bne	.Lerror_4follow			// if any, we have an encoding error
+	and	x8, x4, x4, lsr #4		// consecutive pairs of set nibbles?
+	and	x9, x5, x5, lsr #4
+	tst	x8, x8, lsr #8			// consecutive quadruples of set nibbles (low)?
+	beq	.Lerror_4follow_lo		// if yes, we have an encoding error
+	tst	x9, x9, lsr #9
+	beq	.Lerror_4follow_hi
 
 	// load from lookup table and determine conversion length
-	ldr	d2, [x5, x11, lsl #3]		// load table entry
-	add	x11, x5, x11, lsl #3
-	ldrsb	w15, [x11, #7]			// last byte of table entry
-//	prfm	pldl1keep, [x11, #16]
+	ldr	d2, [x10, x6, lsl #3]		// load table entries
+	ldr	d3, [x11, x7, lsl #3]
+	add	x10, x6, lsl #3
+	add	x11, x7, lsl #3
+	ldrsb	w10, [w10, #7]			// last byte of table entry
+	ldrsb	w11, [w11, #7]
 
 	movi	v3.8b, #0x70
 	bic	v3.8b, v2.8b, v3.8b		// LUT entry without tag bits (but with invalid bit)
@@ -170,12 +223,11 @@ outlen	.req	x3
 	sub	v6.8b, v6.8b, v1.8b
 	tbl	v6.8b, {v0.16b}, v6.8b		// load antepenultimate byte of each sequence (C2)
 
-	smaxv	b1, v3.8b			// last index transcoded
-	fmov	w14, s1
-	add	w14, w14, #1			// number of input bytes transcoded
-	mov	w10, #8				// w15 non-negative -> 8 halfwords of output
-	tst	w15, #0x80			// w15 negative -> -w15 halfwords of output
-	csneg	w15, w10, w15, eq		// w15 = w15 > 0 ? 8 : -w15 -> output size in halfwords
+	mov	w7, #8				// last byte non-negative -> 8 halfwords of output
+	tst	w10, #0x80			// last byte negative -> negated value is output length
+	csneg	w6, w7, w10, eq			// w6 = w6 > 0 ? 8 : -w6 -> output size in halfwords
+	tst	w7, #0x80
+	csneg	w7, w7, w11, eq
 
 	/*
 	 * We now have for each case:
@@ -303,25 +355,26 @@ outlen	.req	x3
 .Lascii:
 	cmlt	v6.16b, v0.16b, #0		// any non-ASCII characters in the input?
 	shrn	v6.8b, v6.8h, #4		// convert to nibble mask
-	fmov	x17, d6
-	cbnz	x17, .Lnotascii			// if non-ASCII detected, return to normal path
+	fmov	x6, d6
+	cbnz	x6, .Lnotascii			// if non-ASCII detected, return to normal path
 
 	movi	v1.16b, #0
-1:	add	inbuf, inbuf, #16		// advance to next chunk of input
-	st2	{v0.16b, v1.16b}, [outbuf], #32	// zero-extend and deposit
+1:	st2	{v0.16b, v1.16b}, [outbuf], #32	// zero-extend and deposit
 	subs	inlen, inlen, #16		// consume next chunk of input
 	blo	.Lrunt				// until end of input encountered
 
 	// assume the following data is ASCII, too
-	ld1	{v0.16b}, [inbuf]		// load next chunk of input
+	ldr	q0, [inbuf], #16		// load next chunk of input
 	cmlt	v6.16b, v0.16b, #0		// any non-ASCII characters in the input?
 	shrn	v6.8b, v6.8h, #4
-	fmov	x17, d6
-	cbnz	x17, .Lloop1			// if not, go back to main path
+	fmov	x6, d6
+	cbnz	x6, .Lloop1			// if not, go back to main path
 	b	1b
 
 	// 4 or more FOLLOW bytes in a row
-.Lerror_4follow:
+.Lerror_4follow_lo:
+.Lerror_4follow_hi:
+	udf	#0 /* TODO */
 	and	x17, x17, x17, lsr #8		// where are the 4 consecutive follow bytes?
 	rbit	x17, x17			// in reverse order
 	clz	x17, x17			// number of bits before the error
