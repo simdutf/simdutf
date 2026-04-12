@@ -105,8 +105,7 @@ TEST(inlineable_convert_utf8_to_utf16_matches_simdutf) {
 TEST(inlineable_convert_utf16_to_utf8_matches_simdutf) {
   // Build a variety of UTF-16 inputs from UTF-8 source via the library.
   const std::vector<std::string> sources = {
-      "",      "a", "hello", "héllo", "Привет, мир!", "日本語",
-      "emoji:😀 done",
+      "", "a", "hello", "héllo", "Привет, мир!", "日本語", "emoji:😀 done",
   };
 
   for (const auto &src : sources) {
@@ -140,8 +139,7 @@ TEST(inlineable_count_and_length_helpers) {
   const size_t cp_inl = simdutf::inlineable::count_utf8(s.data(), s.size());
   ASSERT_EQUAL(cp_lib, cp_inl);
 
-  const size_t u16_lib =
-      simdutf::utf16_length_from_utf8(s.data(), s.size());
+  const size_t u16_lib = simdutf::utf16_length_from_utf8(s.data(), s.size());
   const size_t u16_inl =
       simdutf::inlineable::utf16_length_from_utf8(s.data(), s.size());
   ASSERT_EQUAL(u16_lib, u16_inl);
@@ -154,8 +152,9 @@ TEST(inlineable_validate_ascii_matches_simdutf) {
                simdutf::inlineable::validate_ascii(ok.data(), ok.size()));
 
   const std::string not_ok = "not ascii: é";
-  ASSERT_EQUAL(simdutf::validate_ascii(not_ok.data(), not_ok.size()),
-               simdutf::inlineable::validate_ascii(not_ok.data(), not_ok.size()));
+  ASSERT_EQUAL(
+      simdutf::validate_ascii(not_ok.data(), not_ok.size()),
+      simdutf::inlineable::validate_ascii(not_ok.data(), not_ok.size()));
 }
 
 TEST_MAIN
