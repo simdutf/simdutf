@@ -49,7 +49,7 @@ simdutf_really_inline simdutf_warn_unused bool
 validate_utf8(const char *buf, size_t len) noexcept {
   return scalar::utf8::validate(reinterpret_cast<const uint8_t *>(buf), len);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF8
 simdutf_really_inline simdutf_warn_unused result
@@ -57,7 +57,7 @@ validate_utf8_with_errors(const char *buf, size_t len) noexcept {
   return scalar::utf8::validate_with_errors(
       reinterpret_cast<const uint8_t *>(buf), len);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF8
 
 // -----------------------------------------------------------------------------
 // ASCII validation
@@ -73,7 +73,7 @@ validate_ascii_with_errors(const char *buf, size_t len) noexcept {
   return scalar::ascii::validate_with_errors(
       reinterpret_cast<const uint8_t *>(buf), len);
 }
-#endif
+#endif // SIMDUTF_FEATURE_ASCII
 
 // -----------------------------------------------------------------------------
 // UTF-16 validation
@@ -93,7 +93,7 @@ simdutf_really_inline simdutf_warn_unused bool
 validate_utf16be(const char16_t *buf, size_t len) noexcept {
   return scalar::utf16::validate<endianness::BIG>(buf, len);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF16
 simdutf_really_inline simdutf_warn_unused result
@@ -128,7 +128,7 @@ simdutf_really_inline void to_well_formed_utf16be(const char16_t *input,
                                                   char16_t *output) noexcept {
   scalar::utf16::to_well_formed_utf16<endianness::BIG>(input, len, output);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF16
 
 // -----------------------------------------------------------------------------
 // UTF-32 validation
@@ -138,14 +138,14 @@ simdutf_really_inline simdutf_warn_unused bool
 validate_utf32(const char32_t *buf, size_t len) noexcept {
   return scalar::utf32::validate(buf, len);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF32
 simdutf_really_inline simdutf_warn_unused result
 validate_utf32_with_errors(const char32_t *buf, size_t len) noexcept {
   return scalar::utf32::validate_with_errors(buf, len);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF32
 
 // -----------------------------------------------------------------------------
 // Latin1 -> UTF-8 / UTF-16 / UTF-32
@@ -155,7 +155,7 @@ simdutf_really_inline simdutf_warn_unused size_t
 convert_latin1_to_utf8(const char *input, size_t len, char *output) noexcept {
   return scalar::latin1_to_utf8::convert(input, len, output);
 }
-#endif
+#endif // SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_UTF16
 simdutf_really_inline simdutf_warn_unused size_t
@@ -177,7 +177,7 @@ convert_latin1_to_utf16be(const char *input, size_t len,
                           char16_t *output) noexcept {
   return scalar::latin1_to_utf16::convert<endianness::BIG>(input, len, output);
 }
-#endif
+#endif // SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_UTF32
 simdutf_really_inline simdutf_warn_unused size_t
@@ -185,7 +185,7 @@ convert_latin1_to_utf32(const char *input, size_t len,
                         char32_t *output) noexcept {
   return scalar::latin1_to_utf32::convert(input, len, output);
 }
-#endif
+#endif // SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_UTF32
 
 // -----------------------------------------------------------------------------
 // UTF-8 -> Latin1 / UTF-16 / UTF-32
@@ -207,7 +207,7 @@ convert_valid_utf8_to_latin1(const char *input, size_t len,
                              char *output) noexcept {
   return scalar::utf8_to_latin1::convert_valid(input, len, output);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 simdutf_really_inline simdutf_warn_unused size_t
@@ -269,7 +269,7 @@ convert_valid_utf8_to_utf16be(const char *input, size_t len,
   return scalar::utf8_to_utf16::convert_valid<endianness::BIG>(input, len,
                                                                output);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 simdutf_really_inline simdutf_warn_unused size_t
@@ -289,7 +289,7 @@ convert_valid_utf8_to_utf32(const char *input, size_t len,
                             char32_t *output) noexcept {
   return scalar::utf8_to_utf32::convert_valid(input, len, output);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 // -----------------------------------------------------------------------------
 // UTF-16 -> UTF-8 / Latin1 / UTF-32
@@ -353,7 +353,7 @@ convert_valid_utf16be_to_utf8(const char16_t *input, size_t len,
   return scalar::utf16_to_utf8::convert_valid<endianness::BIG>(input, len,
                                                                output);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 simdutf_really_inline simdutf_warn_unused size_t
@@ -417,7 +417,7 @@ convert_valid_utf16be_to_latin1(const char16_t *input, size_t len,
   return scalar::utf16_to_latin1::convert_valid<endianness::BIG>(
       input, len, output);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 simdutf_really_inline simdutf_warn_unused size_t
@@ -481,7 +481,7 @@ convert_valid_utf16be_to_utf32(const char16_t *input, size_t len,
   return scalar::utf16_to_utf32::convert_valid<endianness::BIG>(input, len,
                                                                 output);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
 // -----------------------------------------------------------------------------
 // UTF-32 -> UTF-8 / UTF-16 / Latin1
@@ -503,7 +503,7 @@ convert_valid_utf32_to_utf8(const char32_t *input, size_t len,
                             char *output) noexcept {
   return scalar::utf32_to_utf8::convert_valid(input, len, output);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF16
 simdutf_really_inline simdutf_warn_unused size_t
@@ -567,7 +567,7 @@ convert_valid_utf32_to_utf16be(const char32_t *input, size_t len,
   return scalar::utf32_to_utf16::convert_valid<endianness::BIG>(input, len,
                                                                 output);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 simdutf_really_inline simdutf_warn_unused size_t
@@ -587,7 +587,7 @@ convert_valid_utf32_to_latin1(const char32_t *input, size_t len,
                               char *output) noexcept {
   return scalar::utf32_to_latin1::convert_valid(input, len, output);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
 // -----------------------------------------------------------------------------
 // Counting and length-from helpers
@@ -597,7 +597,7 @@ simdutf_really_inline simdutf_warn_unused size_t
 count_utf8(const char *input, size_t len) noexcept {
   return scalar::utf8::count_code_points(input, len);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF16
 simdutf_really_inline simdutf_warn_unused size_t
@@ -614,35 +614,35 @@ simdutf_really_inline simdutf_warn_unused size_t
 count_utf16be(const char16_t *input, size_t len) noexcept {
   return scalar::utf16::count_code_points<endianness::BIG>(input, len);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 simdutf_really_inline simdutf_warn_unused size_t
 utf8_length_from_latin1(const char *input, size_t len) noexcept {
   return scalar::latin1_to_utf8::utf8_length_from_latin1(input, len);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 simdutf_really_inline simdutf_warn_unused size_t
 latin1_length_from_utf8(const char *input, size_t len) noexcept {
   return scalar::utf8::count_code_points(input, len);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 simdutf_really_inline simdutf_warn_unused size_t
 utf16_length_from_utf8(const char *input, size_t len) noexcept {
   return scalar::utf8::utf16_length_from_utf8(input, len);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 simdutf_really_inline simdutf_warn_unused size_t
 utf32_length_from_utf8(const char *input, size_t len) noexcept {
   return scalar::utf8::count_code_points(input, len);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 simdutf_really_inline simdutf_warn_unused size_t
@@ -659,7 +659,7 @@ simdutf_really_inline simdutf_warn_unused size_t
 utf8_length_from_utf16be(const char16_t *input, size_t len) noexcept {
   return scalar::utf16::utf8_length_from_utf16<endianness::BIG>(input, len);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 simdutf_really_inline simdutf_warn_unused size_t
@@ -676,21 +676,21 @@ simdutf_really_inline simdutf_warn_unused size_t
 utf32_length_from_utf16be(const char16_t *input, size_t len) noexcept {
   return scalar::utf16::utf32_length_from_utf16<endianness::BIG>(input, len);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF8
 simdutf_really_inline simdutf_warn_unused size_t
 utf8_length_from_utf32(const char32_t *input, size_t len) noexcept {
   return scalar::utf32::utf8_length_from_utf32(input, len);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF16
 simdutf_really_inline simdutf_warn_unused size_t
 utf16_length_from_utf32(const char32_t *input, size_t len) noexcept {
   return scalar::utf32::utf16_length_from_utf32(input, len);
 }
-#endif
+#endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF16
 
 } // namespace inlineable
 } // namespace simdutf
