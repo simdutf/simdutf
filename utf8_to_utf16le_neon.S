@@ -21,10 +21,12 @@ magic:
 	 * ASCII  00 00 00--00 00 7F  00000--0007F
 	 * 2BYTE  00 C2 80--00 DF BF  03100--0387F
 	 * 3BYTE  E0 A0 80--EF BF BF  E2880--F207F
-	 * 4HEAD  F0 90 80--F4 8F BF  F2480--F647F
-	 * 4TAIL  00 80 80--00 BF BF  02080--0307F
+	 * 4HEAD  F0 90 80--F4 8F BF  F2480--F647F (head of 4BYTE sequence)
+	 * 4TAIL  00 80 80--00 BF BF  02080--0307F (tail of 4BYTE sequence)
+	 * 3SURR  ED A0 80--ED BF BF  EF880--F007F (surrogate in 3BYTE)
 	 *
 	 * The end of each range is inclusive.
+	 * The 3SURR case is not part of the table; it is checked separately.
 	 * Unused entries are set to 0xffff for easier debugging.
 	 * The upper bound is stored as the difference between the lower and
 	 * the upper bound, allowing us to turn a comparison of the form
@@ -111,6 +113,8 @@ outlen	.req	x3
 	ldp	q27, q26, [x4, #32]		// tag bit mask, selection mask
 	ldr	q31, [x4, #64]			// high Tetranacci numbers
 	ldr	d30, [x4, #80]			// low Tetranacci numbers
+	movi	v25.8h, #0x88, lsl #0		// EF88 -- 3SURR lower bound
+	orr	v25.8h, #0xef, lsl #8
 
 	adrp	x5, utf8_to_utf16le_neon_tab	// lookup table for shuffles
 	add	x5, x5, #:lo12:utf8_to_utf16le_neon_tab
@@ -255,21 +259,17 @@ outlen	.req	x3
 	 * 4TAIL  110111KJHGFEDCBA
 	 */
 
+	// check for stray surrogates
+	movi	v2.8h, #0x7f			// F007-EF88 = 7F
+	sub	v0.8h, v5.8h, v25.8h		// (char>>4) - EF88
+	cmls	v0.8h, v0.8h, v2.8h		// (char>>4) - EF88 <= 7F -> 3SURR case
+
 	// check for bound violations
 	sub	v6.8h, v5.8h, v6.8h		// (char>>4) - lower_bound
 	cmhi	v6.8h, v6.8h, v7.8h		// (char>>4) - lower_bound > upper_bound
 
-	// check for stray surrogates
-	movi	v2.8h, #0xd8, lsl #8		// = 0xd800, high surrogate tag
-	movi	v7.8h, #0x08, lsl #8		// = 0x0800, length of surrogate area
-	movi	v1.16b, #0x08
-	sub	v0.8h, v4.8h, v2.8h		// v4.8h - 0xd800
-	cmhi	v0.8h, v7.8h, v0.8h		// v4.8h - 0xd800 < 0x800 -> 0xd800 <= v4.8h < 0xe000
-	cmtst	v1.16b, v1.16b, v3.16b		// FFFF where 4HEAD, 4TAIL, or EMPTY, 0000 otherwise
-	bic	v0.16b, v0.16b, v1.16b		// ignore surrogates where we expect them
-
 	// final validation
-1:	orr	v6.16b, v6.16b, v0.16b		// stray surrogate or out of range?
+	orr	v6.16b, v6.16b, v0.16b		// stray surrogate or out of range?
 	xtn	v6.8b, v6.8h			// compress syndrome to 64 bits
 	fmov	x6, d6
 	cbnz	x6, .Lerror_range_check		// if any, encoding error
