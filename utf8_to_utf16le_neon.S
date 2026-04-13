@@ -128,89 +128,64 @@ outbuf	.req	x0
 inbuf	.req	x1
 inlen	.req	x2
 outlen	.req	x3
+lut	.req	x5
 inbuf0	.req	x12	// original input pointer
 outbuf0	.req	x13	// original output pointer
-lut	.req	x17
 
 	adrp	x4, magic
 	add	x4, x4, #:lo12:magic
 	ldp	q28, q29, [x4, #0]		// range for bounds checks
-	ldp	q30, q26, [x4, #32]		// tag bit mask, selection mask
-	ldp	d31, d27, [x4, #64]		// low Tetranacci numbers, subtable starts
+	ldp	q27, q26, [x4, #32]		// tag bit mask, selection mask
+	ldp	d30, d31, [x4, #64]		// low Tetranacci numbers, subtable starts
 	movi	v25.8h, #0x88, lsl #0		// EF88 -- 3SURR lower bound
 	orr	v25.8h, #0xef, lsl #8
 
 	/* load sub table addresses */
 	adrp	lut, utf8_to_utf16le_neon_tab	// lookup table for shuffles
-	add	lut, :lo12:utf8_to_utf16le_neon_tab
+	add	lut, lut, #:lo12:utf8_to_utf16le_neon_tab
 
 	mov	inbuf0, inbuf			// original input pointer
 	mov	outbuf0, outbuf			// original output pointer
 
-	subs	inlen, inlen, #24		// at least 24 bytes left in buffer?
+	subs	inlen, inlen, #16		// at least 16 bytes left in buffer?
 	blo	.Lrunt
 
+	/* TODO: check for initial FOLLOW byte */
+
 	/* main loop */
-.Lloop:	ldr	q0, [inbuf]			// load low 12 bytes of input
+.Lloop:	ldr	q0, [inbuf], #8			// load 12 bytes of input, advance to next chunk
+
+	// classify q0 into LEAD and FOLLOW bytes
 .Lloop1:
-	ldur	q1, [inbuf, #8]			// load high 12 bytes of input
-	add	inbuf, inbuf, #16		// advance to next chunk of input
-
-	// classify q0 and q1 into LEAD and FOLLOW bytes
-	movi	v16.16b, #2
+	movi	v1.16b, #2
 	ushr	v2.16b, v0.16b, #6		// inbuf >> 6
-	ushr	v3.16b, v1.16b, #6
-	cmeq	v2.16b, v2.16b, v16.16b		// (inbuf >> 6) == 2, that is 0x80 <= inbuf < 0xc0 (FOLLOW)
-	cmeq	v3.16b, v3.16b, v16.16b
+	cmeq	v1.16b, v1.16b, v2.16b		// (inbuf >> 6) == 2, that is 0x80 <= inbuf < 0xc0 (FOLLOW)
 
-	// move FOLLOW syndrome to scalar registers for further processing
-	// and compute the Tetranacci indices
-	shrn	v4.8b, v2.8h, #4		// convert FOLLOW syndrome to nibble mask
-	shrn	v5.8b, v3.8h, #4
-	and	v2.8b, v2.8b, v31.8b		// Tetranacci numbers
-	and	v3.8b, v3.8b, v31.8b
-	fmov	x4, d4
-	fmov	x5, d5
-	uaddlv	h2, v2.8b			// Tetranacci indices
-	uaddlv	h3, v3.8b
-	fmov	w6, s2
-	fmov	w7, s3
-	cbz	x4, .Lascii			// all ASCII?
+	//  compute the Tetranacci indices
+	and	v2.8b, v1.8b, v30.8b		// Tetranacci numbers masked by FOLLOW syndrome
+	sxtl2	v3.8h, v1.16b			// upper syndrome bytes, sign-extended to 16 bits
+	shrn	v6.8b, v1.8h, #4		// convert FOLLOW syndrome to nibble mask
+	uaddlv	h2, v2.8b			// Tetranacci index
+	orr	v3.8b, v3.8b, v31.8b		// subtable start masked by FOLLOW syndrome
+	uminv	h3, v3.4h			// the appropriate subtable
+	fmov	x16, d6
+//	cbz	x16, .Lascii			// all ASCII?
+
+	add	v2.2s, v2.2s, v3.2s		// table index plus subtable start
+	fmov	w11, s2
+		
 
 .Lnotascii:
-	// determine sub tables
-	tst	x4, #0xf<<(8*4)			// table 0 if no FOLLOW byte at pos. 8
-	csel	x8, tab0, tab1, eq
-	tst	x5, #0xf<<(8*4)
-	csel	x9, tab0, tab1, eq
-
-	tst	x4, #0xf<<(10*4)		// table 2 if no FOLLOW byte at pos. 10
-	csel	x10, tab2, tab3, eq
-	tst	x5, #0xf<<(10*4)
-	csel	x11, tab2, tab3, eq
-
-	mvn	x12, x4				// turn FOLLOW syndrome into LEAD syndrom
-	mvn	x13, x5
-	tst	x12, #0xff<<(8*4)		// table 2/3 if no LEAD byte at pos 8&9
-	csel	x10, x10, x8, eq
-	tst	x13, #0xff<<(8*4)
-	csel	x11, x11, x9, eq
-
 	// ensure the input has no more than 3 consecutive follow bytes
-	and	x8, x4, x4, lsr #4		// consecutive pairs of set nibbles?
-	and	x9, x5, x5, lsr #4
-	tst	x8, x8, lsr #8			// consecutive quadruples of set nibbles (low)?
-	beq	.Lerror_4follow_lo		// if yes, we have an encoding error
-	tst	x9, x9, lsr #9
-	beq	.Lerror_4follow_hi
+	and	x17, x16, x16, lsr #4		// consecutive pairs of set nibbles?
+//	beq	...				// if none, go to ASCII/2BYTE fast path
+	tst	x17, x17, lsr #8		// consecutive quadruples of set nibbles
+	bne	.Lerror_4follow			// if yes, we have an encoding error
 
 	// load from lookup table and determine conversion length
-	ldr	d2, [x10, x6, lsl #3]		// load table entries
-	ldr	d3, [x11, x7, lsl #3]
-	add	x10, x6, lsl #3
-	add	x11, x7, lsl #3
-	ldrsb	w10, [w10, #7]			// last byte of table entry
-	ldrsb	w11, [w11, #7]
+	ldr	d2, [lut, x11, lsl #3]		// load table entries
+	add	x11, lut, x11, lsl #3
+	ldrsb	w15, [x11, #7]			// last byte of table entry
 
 	movi	v3.8b, #0x70
 	bic	v3.8b, v2.8b, v3.8b		// LUT entry without tag bits (but with invalid bit)
@@ -223,11 +198,9 @@ lut	.req	x17
 	sub	v6.8b, v6.8b, v1.8b
 	tbl	v6.8b, {v0.16b}, v6.8b		// load antepenultimate byte of each sequence (C2)
 
-	mov	w7, #8				// last byte non-negative -> 8 halfwords of output
-	tst	w10, #0x80			// last byte negative -> negated value is output length
-	csneg	w6, w7, w10, eq			// w6 = w6 > 0 ? 8 : -w6 -> output size in halfwords
-	tst	w7, #0x80
-	csneg	w7, w7, w11, eq
+	mov	w10, #8				// w15 non-negative -> 8 halfwords of output
+	tst	w15, #0x80			// w15 negative -> -w15 halfwords of output
+	csneg	w15, w10, w15, eq		// w15 = w15 > 0 ? 8 : -w15 -> output size in halfwords
 
 	/*
 	 * We now have for each case:
@@ -327,22 +300,21 @@ lut	.req	x17
 	cbnz	x6, .Lerror_range_check		// if any, encoding error
 
 	str	q4, [outbuf]			// write out transcoded data
-	add	inbuf, inbuf, x14		// advance input buffer
 	add	outbuf, outbuf, x15, lsl #1	// advance outbuf buffer
-	subs	inlen, inlen, x14		// deduct processed input from length
+	subs	inlen, inlen, #8		// deduct processed input from length
 	bhs	.Lloop				// and go again if we can!
 
 	// We leave the main loop with some bytes of input remaining.
 	// Pass these to utf8_to_utf16le_ref for further processing.
 	// TODO: figure out how to process the tail in parallel.
 .Lrunt:	add	inlen, inlen, #16		// undo initial subtraction
-.Ltail:	sub	x12, inbuf, x12			// number of bytes processed so far
-	sub	x13, outbuf, x13		// number of bytes written out so far
+.Ltail:	sub	inbuf0, inbuf, inbuf0		// number of bytes processed so far
+	sub	outbuf0, outbuf, outbuf0	// number of bytes written out so far
 
 	stp	outlen, lr, [sp, #-16]!
-	stp	x12, x13, [sp, #-16]!		// save context
+	stp	inbuf0, outbuf0, [sp, #-16]!	// save context
 	bl	utf8_to_utf16le_ref		// process tail with scalar kernel
-	ldp	x12, x13, [sp], #16		// restore context
+	ldp	inbuf0, outbuf0, [sp], #16	// restore context
 	ldp	outlen, lr, [sp], #16
 
 	add	x0, x0, x12			// number of input bytes processed in total
@@ -372,9 +344,7 @@ lut	.req	x17
 	b	1b
 
 	// 4 or more FOLLOW bytes in a row
-.Lerror_4follow_lo:
-.Lerror_4follow_hi:
-	udf	#0 /* TODO */
+.Lerror_4follow:
 	and	x17, x17, x17, lsr #8		// where are the 4 consecutive follow bytes?
 	rbit	x17, x17			// in reverse order
 	clz	x17, x17			// number of bits before the error
