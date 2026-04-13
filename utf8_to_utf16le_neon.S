@@ -49,16 +49,37 @@ magic:
 	 * ASCII  00 00 00  00000
 	 * 2BYTE  00 C0 80  03080
 	 * 3BYTE  E0 80 80  E2080
-	 * 4HEAD  F0 80 80  FA480
+	 * 4HEAD  F0 80 80  FA080
 	 * 4TAIL  00 80 80  02080
 	 *
-	 * In the 4HEAD case, we add 0400 to the mask, which translates the
+	 * In the 4HEAD case, the mask is shifted four places to the right to
+	 * account for the input being shifted.  We add 0040 to the mask, which translates the
 	 * codepoint from the Unicode range to the high surrogate range by
-	 * subtracting 10000.  We also add 0x8000, which corresponds to the
-	 * 0800 bit of the high surrogate mask D800, permitting us to use
-	 * a SRI instruction to insert the rest of the mask.
+	 * subtracting 10000.  We also subtract D800, to apply the high
+	 * surrogate mask.  Likewise, we subtract the low surrogate mask DC00
+	 * in the 4TAIL case.
 	 */
-	.short 0x0000, 0x3080, 0x2080, 0xffff, 0xffff, 0x2080, 0xa480, 0xffff
+	.short 0x0000, 0x3080, 0x2080, 0xffff, 0xffff, 0x2480, 0x1a48, 0xffff
+
+	/*
+	 * Surrogate preprocessing
+	 *
+	 * The 4BYTE cases need two special steps to be done before the tag bit
+	 * removal step can insert the surrogate masks D800 and DC00 (for 4HEAD
+	 * and 4TAIL respectively):
+	 *
+	 *  - 4HEAD entries need to be shifted 4 bytes to the right
+	 *  - 4TAIL entries need to have the M and L bits cleared
+	 *
+	 * We achieve both in one step by selecting from C0+(C1<<6)+(C2<<12) and
+	 * the same shifted to the right by four bits.  For 4HEAD we take the
+	 * shifted-right variant.  For 4TAIL we take the shifted-right variant
+	 * for the top six bits, which will always be zero (thus masking out the
+	 * M and L bits, as well as the tag bits of C1).  For other cases we
+	 * always select the unshifted value.  The following table has the
+	 * appropriate masks.
+	 */
+	.short 0x0000, 0x0000, 0x0000, 0xffff, 0xffff, 0xfc00, 0xffff, 0xffff
 
 	/*
 	 * Tetranacci Indices
@@ -87,8 +108,9 @@ outlen	.req	x3
 	adrp	x4, magic
 	add	x4, x4, #:lo12:magic
 	ldp	q28, q29, [x4, #0]		// range for bounds checks
-	ldp	q27, q31, [x4, #32]		// tag bit mask, high Tetranacci numbers
-	ldr	d30, [x4, #64]			// low Tetranacci numbers
+	ldp	q27, q26, [x4, #32]		// tag bit mask, selection mask
+	ldr	q31, [x4, #64]			// high Tetranacci numbers
+	ldr	d30, [x4, #80]			// low Tetranacci numbers
 
 	adrp	x5, utf8_to_utf16le_neon_tab	// lookup table for shuffles
 	add	x5, x5, #:lo12:utf8_to_utf16le_neon_tab
@@ -190,25 +212,47 @@ outlen	.req	x3
 	add	v4.8h, v4.8h, v7.8h		// C0 + (C1 << 6) + (C2 << 12)
 	add	v5.8h, v5.8h, v6.8h		// (C0 + (C1 << 6) + (C2 << 12)) >> 4
 
+	/*
+	 * We now have for each case:
+	 * CASE   V4                                 V5
+	 * ASCII  000000000GFEDCBA+0000000000000000  0000000000000GFE+0000000000000000
+	 * 2BYTE  00000LKJHGFEDCBA+0011000010000000  000000000LKJHGFE+0000001100001000
+	 * 3BYTE  RQPNMLKJHGFEDCBA+0010000010000000  0000RQPNMLKJHGFE+1110001000001000
+	 * 4HEAD  0WVUTSRQPNMLKJHG+0010000010000000  00000WVUTSRQPNML+1111001000001000
+	 * 4TAIL  0000MLKJHGFEDCBA+0010000010000000  00000000MLKJHGFE+0000001000001000
+	 */
+
 	// compute bounds check and tag masks and strip tag bits
 	sshr	v6.8b, v2.8b, #4		// only the tag bits (incl. the invalid bit)
 	zip1	v6.16b, v6.16b, v6.16b		// each byte doubled up
 	movi	v3.8h, #0x01, lsl #8		// = 0x0100
 	sli	v3.16b, v6.16b, #1		// tag bits as half-word indices
+	tbl	v2.16b, {v26.16b}, v3.16b	// selection mask
 	tbl	v1.16b, {v27.16b}, v3.16b	// UTF-8 tag bit mask
 	tbl	v6.16b, {v28.16b}, v3.16b	// lower bounds check mask
 	tbl	v7.16b, {v29.16b}, v3.16b	// upper bounds check mask
-	sub	v4.8h, v4.8h, v1.8h		// strip tag bits
+	bit	v4.16b, v5.16b, v2.16b		// v4 = v5&v2 | v4&~v2
 
 	/*
 	 * We now have for each case:
-	 * CASE   V4                V5-(V4>>4)        V6                V7
-	 * ASCII  000000000GFEDCBA  0000000000000000  0000000000000000  0000000000000111
-	 * 2BYTE  00000LKJHGFEDCBA  0000001100001000  0000001100010000  0000001110000111
-	 * 3BYTE  RQPNMLKJHGFEDCBA  1110001000001000  1110001010001000  1111001000000111
-	 * 4HEAD  10vutsRQPNMLKJHG  1111001001001000  1111001001001000  1111011001000111
-	 * 4TAIL  0000MLKJHGFEDCBA  0000001000001000  0000001000001000  0000001100000111
-	 * EMPTY  0000000000000000  0000000000000000  0000000000000000  0000000000000000
+	 * CASE   V4
+	 * ASCII  000000000GFEDCBA+0000000000000000
+	 * 2BYTE  00000LKJHGFEDCBA+0011000010000000
+	 * 3BYTE  RQPNMLKJHGFEDCBA+0010000010000000
+	 * 4HEAD  00000WVUTSRQPNML+1111001000001000
+	 * 4TAIL  000000KJHGFEDCBA+0010000010000000
+	 */
+
+	sub	v4.8h, v4.8h, v1.8h		// strip tag bits, apply surrogate masks
+
+	/*
+	 * We now have for each case:
+	 * CASE   V4
+	 * ASCII  000000000GFEDCBA
+	 * 2BYTE  00000LKJHGFEDCBA
+	 * 3BYTE  RQPNMLKJHGFEDCBA
+	 * 4HEAD  110110vutsRQPNML
+	 * 4TAIL  110111KJHGFEDCBA
 	 */
 
 	// check for bound violations
@@ -218,35 +262,11 @@ outlen	.req	x3
 	// check for stray surrogates
 	movi	v2.8h, #0xd8, lsl #8		// = 0xd800, high surrogate tag
 	movi	v7.8h, #0x08, lsl #8		// = 0x0800, length of surrogate area
+	movi	v1.16b, #0x08
 	sub	v0.8h, v4.8h, v2.8h		// v4.8h - 0xd800
 	cmhi	v0.8h, v7.8h, v0.8h		// v4.8h - 0xd800 < 0x800 -> 0xd800 <= v4.8h < 0xe000
-
-	// post-process 4HEAD/4TAIL and check for stray surrogates
-	tst	x16, x17, lsr #4		// any 4BYTE sequences present?
-	beq	1f				// if none, go to ASCII/2BYTE/3BYTE fast path
-
-	movi	v1.16b, #0x08			// surrogate tag bit
-	movi	v7.16b, #0x02			// 2BYTE/4TAIL tag bit
-	cmtst	v1.16b, v1.16b, v3.16b		// 4HEAD/4TAIL cases in v4
-	cmtst	v7.16b, v7.16b, v3.16b		// 2BYTE/4TAIL cases in v4
-	bic	v0.16b, v0.16b, v1.16b		// ignore stray surrogates in 4HEAD/4TAIL
-
-	movi	v5.8h, #0xdc, lsl #8
-	orr	v5.16b, v5.16b, v4.16b		// 4TAIL: 110111KJHGFEDCBA
-	sri	v2.8h, v4.8h, #4		// 4HEAD: 110110vutsRQPNML
-	bsl	v7.16b, v5.16b, v2.16b		// 4TAIL ? V5 : V3
-	bit	v4.16b, v7.16b, v1.16b		// insert fixed surrogates into V4
-
-	/*
-	 * We now have for each case:
-	 * CASE   V6
-	 * ASCII  000000000GFEDCBA
-	 * 2BYTE  00000LKJHGFEDCBA
-	 * 3BYTE  RQPNMLKJHGFEDCBA
-	 * 4HEAD  110110vutsRQPNML
-	 * 4TAIL  110111KJHGFEDCBA
-	 * EMPTY  0000000000000000
-	 */
+	cmtst	v1.16b, v1.16b, v3.16b		// FFFF where 4HEAD, 4TAIL, or EMPTY, 0000 otherwise
+	bic	v0.16b, v0.16b, v1.16b		// ignore surrogates where we expect them
 
 	// final validation
 1:	orr	v6.16b, v6.16b, v0.16b		// stray surrogate or out of range?
