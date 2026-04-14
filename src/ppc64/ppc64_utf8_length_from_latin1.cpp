@@ -1,7 +1,7 @@
 template <typename T> T min(T a, T b) { return a <= b ? a : b; }
 
-std::pair<const char *, size_t> ppc64_utf8_length_from_latin1(const char *input,
-                                                              size_t length) {
+internal::pair<const char *, size_t>
+ppc64_utf8_length_from_latin1(const char *input, size_t length) {
   constexpr size_t N = vector_u8::ELEMENTS;
   length = (length / N);
 
@@ -33,5 +33,5 @@ std::pair<const char *, size_t> ppc64_utf8_length_from_latin1(const char *input,
     }
   }
 
-  return std::make_pair(input, count);
+  return internal::make_pair(input, count);
 }

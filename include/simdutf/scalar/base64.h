@@ -1,11 +1,13 @@
 #ifndef SIMDUTF_BASE64_H
 #define SIMDUTF_BASE64_H
 
-#include <algorithm>
-#include <cstddef>
-#include <cstdint>
-#include <cstring>
-#include <iostream>
+#ifdef SIMDUTF_NO_LIBCXX
+  #include <stddef.h>
+  #include <stdint.h>
+#else
+  #include <cstddef>
+  #include <cstdint>
+#endif
 
 namespace simdutf {
 namespace scalar {

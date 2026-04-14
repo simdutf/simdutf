@@ -1,25 +1,38 @@
 #ifndef SIMDUTF_IMPLEMENTATION_H
 #define SIMDUTF_IMPLEMENTATION_H
+#include "simdutf/common_defs.h"
+#include "simdutf/compiler_check.h"
+
+#if defined(SIMDUTF_INTERNAL_TESTS) && defined(SIMDUTF_NO_LIBCXX)
+  #error "SIMDUTF_INTERNAL_TESTS is unsupported with SIMDUTF_NO_LIBCXX"
+#endif
+
+#include <string.h>
+
 #if !defined(SIMDUTF_NO_THREADS)
   #include <atomic>
 #endif
-#include <string>
+#ifndef SIMDUTF_NO_LIBCXX
+  #include <string>
+#endif
 #ifdef SIMDUTF_INTERNAL_TESTS
   #include <vector>
 #endif
-#include "simdutf/common_defs.h"
-#include "simdutf/compiler_check.h"
 #include "simdutf/encoding_types.h"
 #include "simdutf/error.h"
+#include "simdutf/internal/stl_compat.h"
 #include "simdutf/internal/isadetection.h"
 
-#if SIMDUTF_SPAN
+#if SIMDUTF_CPLUSPLUS20
   #include <concepts>
   #include <type_traits>
+#endif
+
+#if SIMDUTF_SPAN
   #include <span>
   #include <tuple>
 #endif
-#if SIMDUTF_CPLUSPLUS17
+#if SIMDUTF_CPLUSPLUS17 && !defined(SIMDUTF_NO_LIBCXX)
   #include <string_view>
 #endif
 // The following defines are conditionally enabled/disabled during amalgamation.
@@ -53,11 +66,11 @@
   #define SIMDUTF_FEATURE_BASE64 1
 #endif
 
-#if SIMDUTF_CPLUSPLUS23
+#if SIMDUTF_SPAN && SIMDUTF_CPLUSPLUS23
   #include <simdutf/constexpr_ptr.h>
 #endif
 
-#if SIMDUTF_SPAN
+#if SIMDUTF_CPLUSPLUS20
 /// helpers placed in namespace detail are not a part of the public API
 namespace simdutf {
 namespace detail {
@@ -66,11 +79,14 @@ namespace detail {
  * are all distinct types.
  */
 template <typename T>
-concept byte_like = std::is_same_v<T, std::byte> ||     //
-                    std::is_same_v<T, char> ||          //
-                    std::is_same_v<T, signed char> ||   //
-                    std::is_same_v<T, unsigned char> || //
-                    std::is_same_v<T, char8_t>;
+concept byte_like =
+  #ifndef SIMDUTF_NO_LIBCXX
+    std::is_same_v<T, std::byte> || //
+  #endif
+    std::is_same_v<T, char> ||          //
+    std::is_same_v<T, signed char> ||   //
+    std::is_same_v<T, unsigned char> || //
+    std::is_same_v<T, char8_t>;
 
 template <typename T>
 concept is_byte_like = byte_like<std::remove_cvref_t<T>>;
@@ -85,7 +101,7 @@ concept is_pointer = std::is_pointer_v<T>;
  */
 template <typename T>
 concept input_span_of_byte_like = requires(const T &t) {
-  { t.size() } noexcept -> std::convertible_to<std::size_t>;
+  { t.size() } noexcept -> std::convertible_to<size_t>;
   { t.data() } noexcept -> is_pointer;
   { *t.data() } noexcept -> is_byte_like;
 };
@@ -98,7 +114,7 @@ concept is_mutable = !std::is_const_v<std::remove_reference_t<T>>;
  */
 template <typename T>
 concept output_span_of_byte_like = requires(T &t) {
-  { t.size() } noexcept -> std::convertible_to<std::size_t>;
+  { t.size() } noexcept -> std::convertible_to<size_t>;
   { t.data() } noexcept -> is_pointer;
   { *t.data() } noexcept -> is_byte_like;
   { *t.data() } noexcept -> is_mutable;
@@ -137,38 +153,42 @@ concept indexes_into_uint32 = requires(InputPtr p) {
 };
 } // namespace detail
 } // namespace simdutf
-#endif // SIMDUTF_SPAN
+#endif // SIMDUTF_CPLUSPLUS20
 
-// these includes are needed for constexpr support. they are
-// not part of the public api.
-#include <simdutf/scalar/swap_bytes.h>
-#include <simdutf/scalar/ascii.h>
-#include <simdutf/scalar/atomic_util.h>
-#include <simdutf/scalar/latin1.h>
-#include <simdutf/scalar/latin1_to_utf16/latin1_to_utf16.h>
-#include <simdutf/scalar/latin1_to_utf32/latin1_to_utf32.h>
-#include <simdutf/scalar/latin1_to_utf8/latin1_to_utf8.h>
-#include <simdutf/scalar/utf16.h>
-#include <simdutf/scalar/utf16_to_latin1/utf16_to_latin1.h>
-#include <simdutf/scalar/utf16_to_latin1/valid_utf16_to_latin1.h>
-#include <simdutf/scalar/utf16_to_utf32/utf16_to_utf32.h>
-#include <simdutf/scalar/utf16_to_utf32/valid_utf16_to_utf32.h>
-#include <simdutf/scalar/utf16_to_utf8/utf16_to_utf8.h>
-#include <simdutf/scalar/utf16_to_utf8/valid_utf16_to_utf8.h>
-#include <simdutf/scalar/utf32.h>
-#include <simdutf/scalar/utf32_to_latin1/utf32_to_latin1.h>
-#include <simdutf/scalar/utf32_to_latin1/valid_utf32_to_latin1.h>
-#include <simdutf/scalar/utf32_to_utf16/utf32_to_utf16.h>
-#include <simdutf/scalar/utf32_to_utf16/valid_utf32_to_utf16.h>
-#include <simdutf/scalar/utf32_to_utf8/utf32_to_utf8.h>
-#include <simdutf/scalar/utf32_to_utf8/valid_utf32_to_utf8.h>
-#include <simdutf/scalar/utf8.h>
-#include <simdutf/scalar/utf8_to_latin1/utf8_to_latin1.h>
-#include <simdutf/scalar/utf8_to_latin1/valid_utf8_to_latin1.h>
-#include <simdutf/scalar/utf8_to_utf16/utf8_to_utf16.h>
-#include <simdutf/scalar/utf8_to_utf16/valid_utf8_to_utf16.h>
-#include <simdutf/scalar/utf8_to_utf32/utf8_to_utf32.h>
-#include <simdutf/scalar/utf8_to_utf32/valid_utf8_to_utf32.h>
+#if SIMDUTF_SPAN || defined(SIMDUTF_NO_LIBCXX)
+  // These helpers back the span-based constexpr wrappers in the public header
+  // and the reduced no-libcxx amalgamated implementation path.
+  #include <simdutf/scalar/swap_bytes.h>
+  #include <simdutf/scalar/ascii.h>
+  #if SIMDUTF_ATOMIC_REF
+    #include <simdutf/scalar/atomic_util.h>
+  #endif
+  #include <simdutf/scalar/latin1.h>
+  #include <simdutf/scalar/latin1_to_utf16/latin1_to_utf16.h>
+  #include <simdutf/scalar/latin1_to_utf32/latin1_to_utf32.h>
+  #include <simdutf/scalar/latin1_to_utf8/latin1_to_utf8.h>
+  #include <simdutf/scalar/utf16.h>
+  #include <simdutf/scalar/utf16_to_latin1/utf16_to_latin1.h>
+  #include <simdutf/scalar/utf16_to_latin1/valid_utf16_to_latin1.h>
+  #include <simdutf/scalar/utf16_to_utf32/utf16_to_utf32.h>
+  #include <simdutf/scalar/utf16_to_utf32/valid_utf16_to_utf32.h>
+  #include <simdutf/scalar/utf16_to_utf8/utf16_to_utf8.h>
+  #include <simdutf/scalar/utf16_to_utf8/valid_utf16_to_utf8.h>
+  #include <simdutf/scalar/utf32.h>
+  #include <simdutf/scalar/utf32_to_latin1/utf32_to_latin1.h>
+  #include <simdutf/scalar/utf32_to_latin1/valid_utf32_to_latin1.h>
+  #include <simdutf/scalar/utf32_to_utf16/utf32_to_utf16.h>
+  #include <simdutf/scalar/utf32_to_utf16/valid_utf32_to_utf16.h>
+  #include <simdutf/scalar/utf32_to_utf8/utf32_to_utf8.h>
+  #include <simdutf/scalar/utf32_to_utf8/valid_utf32_to_utf8.h>
+  #include <simdutf/scalar/utf8.h>
+  #include <simdutf/scalar/utf8_to_latin1/utf8_to_latin1.h>
+  #include <simdutf/scalar/utf8_to_latin1/valid_utf8_to_latin1.h>
+  #include <simdutf/scalar/utf8_to_utf16/utf8_to_utf16.h>
+  #include <simdutf/scalar/utf8_to_utf16/valid_utf8_to_utf16.h>
+  #include <simdutf/scalar/utf8_to_utf32/utf8_to_utf32.h>
+  #include <simdutf/scalar/utf8_to_utf32/valid_utf8_to_utf32.h>
+#endif
 
 namespace simdutf {
 
@@ -4179,8 +4199,12 @@ find(const char16_t *start, const char16_t *end, char16_t character) noexcept {
 
 namespace simdutf {
 
-  #if SIMDUTF_CPLUSPLUS17
-inline std::string_view to_string(base64_options options) {
+  #if SIMDUTF_CPLUSPLUS17 || defined(SIMDUTF_NO_LIBCXX)
+    #ifdef SIMDUTF_NO_LIBCXX
+inline const char *to_string(base64_options options) noexcept {
+    #else
+inline std::string_view to_string(base64_options options) noexcept {
+    #endif
   switch (options) {
   case base64_default:
     return "base64_default";
@@ -4201,10 +4225,15 @@ inline std::string_view to_string(base64_options options) {
   }
   return "<unknown>";
 }
-  #endif // SIMDUTF_CPLUSPLUS17
+  #endif // SIMDUTF_CPLUSPLUS17 || defined(SIMDUTF_NO_LIBCXX)
 
-  #if SIMDUTF_CPLUSPLUS17
-inline std::string_view to_string(last_chunk_handling_options options) {
+  #if SIMDUTF_CPLUSPLUS17 || defined(SIMDUTF_NO_LIBCXX)
+    #ifdef SIMDUTF_NO_LIBCXX
+inline const char *to_string(last_chunk_handling_options options) noexcept {
+    #else
+inline std::string_view
+to_string(last_chunk_handling_options options) noexcept {
+    #endif
   switch (options) {
   case loose:
     return "loose";
@@ -4217,7 +4246,7 @@ inline std::string_view to_string(last_chunk_handling_options options) {
   }
   return "<unknown>";
 }
-  #endif
+  #endif // SIMDUTF_CPLUSPLUS17 || defined(SIMDUTF_NO_LIBCXX)
 
 /**
  * Provide the maximal binary length in bytes given the base64 input.
@@ -5093,7 +5122,11 @@ public:
    *
    * @return the name of the implementation, e.g. "haswell", "westmere", "arm64"
    */
+#ifdef SIMDUTF_NO_LIBCXX
+  virtual const char *name() const { return _name; }
+#else
   virtual std::string name() const { return std::string(_name); }
+#endif
 
   /**
    * The description of this implementation.
@@ -5104,7 +5137,11 @@ public:
    *
    * @return the name of the implementation, e.g. "haswell", "westmere", "arm64"
    */
+#ifdef SIMDUTF_NO_LIBCXX
+  virtual const char *description() const { return _description; }
+#else
   virtual std::string description() const { return std::string(_description); }
+#endif
 
   /**
    * The instruction sets this implementation is compiled against
@@ -7004,7 +7041,8 @@ public:
   // framework.
   //
   // Regular users should not use it, the tests of the public
-  // API are enough.
+  // API are enough. This developer-only surface intentionally remains
+  // unavailable in Phase 1 SIMDUTF_NO_LIBCXX builds.
 
   struct TestProcedure {
     // display name
@@ -7076,6 +7114,23 @@ public:
    * @param name the implementation to find, e.g. "westmere", "haswell", "arm64"
    * @return the implementation, or nullptr if the parse failed.
    */
+  const implementation *operator[](const char *name) const noexcept {
+    if (name == nullptr) {
+      return nullptr;
+    }
+    for (const implementation *impl : *this) {
+#ifdef SIMDUTF_NO_LIBCXX
+      if (strcmp(impl->name(), name) == 0) {
+#else
+      if (impl->name() == name) {
+#endif
+        return impl;
+      }
+    }
+    return nullptr;
+  }
+
+#ifndef SIMDUTF_NO_LIBCXX
   const implementation *operator[](const std::string &name) const noexcept {
     for (const implementation *impl : *this) {
       if (impl->name() == name) {
@@ -7084,6 +7139,7 @@ public:
     }
     return nullptr;
   }
+#endif
 
   /**
    * Detect the most advanced implementation supported by the current host.
@@ -7253,7 +7309,7 @@ namespace detail {
 // the detail namespace is not part of the public api
 
 template <std::size_t N> struct base64_literal_helper {
-  std::array<char, N - 1> storage{};
+  simdutf::internal::array<char, N - 1> storage{};
   static constexpr std::size_t size() noexcept { return N - 1; }
   consteval base64_literal_helper(const char (&str)[N]) {
     for (std::size_t i = 0; i < size(); i++) {
@@ -7264,7 +7320,7 @@ template <std::size_t N> struct base64_literal_helper {
 
 template <std::size_t InputLen> struct base64_decode_result {
   static constexpr std::size_t max_out = (InputLen + 3) / 4 * 3;
-  std::array<char, max_out> buffer{};
+  simdutf::internal::array<char, max_out> buffer{};
   std::size_t output_count{};
 };
 
@@ -7282,7 +7338,7 @@ consteval auto base64_decode_literal(const char *str) {
 
 template <base64_literal_helper a> consteval auto base64_make_array() {
   constexpr auto decoded = base64_decode_literal<a.size()>(a.storage.data());
-  std::array<char, decoded.output_count> ret{};
+  simdutf::internal::array<char, decoded.output_count> ret{};
   for (std::size_t i = 0; i < decoded.output_count; i++) {
     ret[i] = decoded.buffer[i];
   }
@@ -7297,7 +7353,7 @@ template <base64_literal_helper a> consteval auto base64_make_array() {
  * Usage:
  *   using namespace simdutf::literals;
  *   constexpr auto decoded = "SGVsbG8gV29ybGQh"_base64;
- *   // decoded is a std::array<char, 12> containing "Hello World!"
+ *   // decoded is an array-like object containing "Hello World!"
  *
  * The input must be valid base64. Whitepace is allowed and ignored.
  * A compilation error occurs if the input is invalid.
@@ -7310,5 +7366,4 @@ template <detail::base64_literal_helper a> consteval auto operator""_base64() {
 } // namespace simdutf
 
 #endif // SIMDUTF_CPLUSPLUS23 && SIMDUTF_FEATURE_BASE64
-
 #endif // SIMDUTF_IMPLEMENTATION_H

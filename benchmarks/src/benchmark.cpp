@@ -572,7 +572,8 @@ void Benchmark::run(const std::string &procedure_name, size_t iterations) {
     const std::string name{procedure_name.substr(0, p)};
     const std::string impl{procedure_name.substr(p + 1)};
 
-    auto implementation = simdutf::get_available_implementations()[impl];
+    auto implementation =
+        simdutf::get_available_implementations()[impl.c_str()];
     if (implementation == nullptr) {
       throw std::runtime_error("Wrong implementation " + impl);
     }

@@ -1,4 +1,4 @@
-std::pair<const char32_t *, char *>
+internal::pair<const char32_t *, char *>
 avx2_convert_utf32_to_latin1(const char32_t *buf, size_t len,
                              char *latin1_output) {
   const size_t rounded_len =
@@ -16,7 +16,7 @@ avx2_convert_utf32_to_latin1(const char32_t *buf, size_t len,
         _mm256_or_si256(_mm256_or_si256(a, b), _mm256_or_si256(c, d));
 
     if (!_mm256_testz_si256(check_combined, high_bytes_mask)) {
-      return std::make_pair(nullptr, latin1_output);
+      return internal::pair<const char32_t *, char *>{nullptr, latin1_output};
     }
 
     b = _mm256_slli_epi32(b, 1 * 8);
@@ -54,10 +54,10 @@ avx2_convert_utf32_to_latin1(const char32_t *buf, size_t len,
     buf += 32;
   }
 
-  return std::make_pair(buf, latin1_output);
+  return internal::make_pair(buf, latin1_output);
 }
 
-std::pair<result, char *>
+internal::pair<result, char *>
 avx2_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
                                          char *latin1_output) {
   const size_t rounded_len =
@@ -83,7 +83,7 @@ avx2_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
         if (codepoint <= 0xFF) {
           *latin1_output++ = static_cast<char>(codepoint);
         } else {
-          return std::make_pair(result(error_code::TOO_LARGE, buf - start + k),
+          return internal::make_pair(result(error_code::TOO_LARGE, buf - start + k),
                                 latin1_output);
         }
       }
@@ -111,6 +111,6 @@ avx2_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
     buf += 32;
   }
 
-  return std::make_pair(result(error_code::SUCCESS, buf - start),
+  return internal::make_pair(result(error_code::SUCCESS, buf - start),
                         latin1_output);
 }

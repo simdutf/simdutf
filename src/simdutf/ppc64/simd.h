@@ -3,7 +3,7 @@
 
 #include "simdutf.h"
 #include "simdutf/ppc64/bitmanipulation.h"
-#include <type_traits>
+#include <stdio.h>
 
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
@@ -22,34 +22,50 @@ using vec_i32_t = __vector signed int;
 using vec_u64_t = __vector unsigned long long;
 using vec_i64_t = __vector signed long long;
 
-// clang-format off
 template <typename T> struct vector_u8_type_for_element_aux {
-  using type = typename std::conditional<std::is_same<T, bool>::value,    vec_bool_t,
-               typename std::conditional<std::is_same<T, uint8_t>::value, vec_u8_t,
-               typename std::conditional<std::is_same<T, int8_t>::value,  vec_i8_t, void>::type>::type>::type;
-
-  static_assert(not std::is_same<type, void>::value,
+  using type = void;
+  static_assert(!internal::is_same<T, T>::value,
                 "accepted element types are 8 bit integers or bool");
+};
+template <> struct vector_u8_type_for_element_aux<bool> {
+  using type = vec_bool_t;
+};
+template <> struct vector_u8_type_for_element_aux<uint8_t> {
+  using type = vec_u8_t;
+};
+template <> struct vector_u8_type_for_element_aux<int8_t> {
+  using type = vec_i8_t;
 };
 
 template <typename T> struct vector_u16_type_for_element_aux {
-  using type = typename std::conditional<std::is_same<T, bool>::value,     vec_bool16_t,
-               typename std::conditional<std::is_same<T, uint16_t>::value, vec_u16_t,
-               typename std::conditional<std::is_same<T, int16_t>::value,  vec_i16_t, void>::type>::type>::type;
-
-  static_assert(not std::is_same<type, void>::value,
+  using type = void;
+  static_assert(!internal::is_same<T, T>::value,
                 "accepted element types are 16 bit integers or bool");
+};
+template <> struct vector_u16_type_for_element_aux<bool> {
+  using type = vec_bool16_t;
+};
+template <> struct vector_u16_type_for_element_aux<uint16_t> {
+  using type = vec_u16_t;
+};
+template <> struct vector_u16_type_for_element_aux<int16_t> {
+  using type = vec_i16_t;
 };
 
 template <typename T> struct vector_u32_type_for_element_aux {
-  using type = typename std::conditional<std::is_same<T, bool>::value,     vec_bool32_t,
-               typename std::conditional<std::is_same<T, uint32_t>::value, vec_u32_t,
-               typename std::conditional<std::is_same<T, int32_t>::value,  vec_i32_t, void>::type>::type>::type;
-
-  static_assert(not std::is_same<type, void>::value,
+  using type = void;
+  static_assert(!internal::is_same<T, T>::value,
                 "accepted element types are 32 bit integers or bool");
 };
-// clang-format on
+template <> struct vector_u32_type_for_element_aux<bool> {
+  using type = vec_bool32_t;
+};
+template <> struct vector_u32_type_for_element_aux<uint32_t> {
+  using type = vec_u32_t;
+};
+template <> struct vector_u32_type_for_element_aux<int32_t> {
+  using type = vec_i32_t;
+};
 
 template <typename T>
 using vector_u8_type_for_element =

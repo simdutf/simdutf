@@ -43,7 +43,7 @@ size_t icelake_convert_utf16_to_latin1(const char16_t *buf, size_t len,
 }
 
 template <endianness big_endian>
-std::pair<result, char *>
+simdutf::internal::pair<result, char *>
 icelake_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
                                             char *latin1_output) {
   const char16_t *end = buf + len;
@@ -69,8 +69,8 @@ icelake_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
         *latin1_output++ = uint8_t(word);
         buf++;
       }
-      return std::make_pair(result(error_code::TOO_LARGE, buf - start),
-                            latin1_output);
+      return simdutf::internal::make_pair(
+          result(error_code::TOO_LARGE, buf - start), latin1_output);
     }
     _mm256_storeu_si256(
         (__m256i *)latin1_output,
@@ -92,12 +92,13 @@ icelake_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
         *latin1_output++ = uint8_t(word);
         buf++;
       }
-      return std::make_pair(result(error_code::TOO_LARGE, buf - start),
-                            latin1_output);
+      return simdutf::internal::make_pair(
+          result(error_code::TOO_LARGE, buf - start), latin1_output);
     }
     _mm256_mask_storeu_epi8(
         latin1_output, mask,
         _mm512_castsi512_si256(_mm512_permutexvar_epi8(shufmask, in)));
   }
-  return std::make_pair(result(error_code::SUCCESS, len), latin1_output);
+  return simdutf::internal::make_pair(result(error_code::SUCCESS, len),
+                                      latin1_output);
 }

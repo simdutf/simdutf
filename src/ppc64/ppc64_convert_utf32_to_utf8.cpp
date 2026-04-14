@@ -20,7 +20,7 @@ utf32_to_utf8_t ppc64_convert_utf32_to_utf8(const char32_t *buf, size_t len,
           // https://github.com/simdutf/simdutf/issues/92
 
   while (end - buf >=
-         std::ptrdiff_t(
+         internal::ptrdiff_t(
              16 + safety_margin)) { // buf is a char32_t pointer, each char32_t
                                     // has 4 bytes or 32 bits, thus buf + 16 *
                                     // char_32t = 512 bits = 64 bytes

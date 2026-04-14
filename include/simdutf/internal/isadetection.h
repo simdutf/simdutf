@@ -46,8 +46,13 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef SIMDutf_INTERNAL_ISADETECTION_H
 #define SIMDutf_INTERNAL_ISADETECTION_H
 
-#include <cstdint>
-#include <cstdlib>
+#ifdef SIMDUTF_NO_LIBCXX
+  #include <stdint.h>
+  #include <stdlib.h>
+#else
+  #include <cstdint>
+  #include <cstdlib>
+#endif
 #if defined(_MSC_VER)
   #include <intrin.h>
 #elif defined(HAVE_GCC_GET_CPUID) && defined(USE_GCC_GET_CPUID)

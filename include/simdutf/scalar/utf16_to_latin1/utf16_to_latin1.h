@@ -1,8 +1,6 @@
 #ifndef SIMDUTF_UTF16_TO_LATIN1_H
 #define SIMDUTF_UTF16_TO_LATIN1_H
 
-#include <cstring> // for std::memcpy
-
 namespace simdutf {
 namespace scalar {
 namespace {
@@ -58,10 +56,10 @@ simdutf_constexpr23 result convert_with_errors(InputPtr data, size_t len,
       if (pos + 16 <= len) { // if it is safe to read 32 more bytes, check that
                              // they are Latin1
         uint64_t v1, v2, v3, v4;
-        ::memcpy(&v1, data + pos, sizeof(uint64_t));
-        ::memcpy(&v2, data + pos + 4, sizeof(uint64_t));
-        ::memcpy(&v3, data + pos + 8, sizeof(uint64_t));
-        ::memcpy(&v4, data + pos + 12, sizeof(uint64_t));
+        internal::memcpy(&v1, data + pos, sizeof(uint64_t));
+        internal::memcpy(&v2, data + pos + 4, sizeof(uint64_t));
+        internal::memcpy(&v3, data + pos + 8, sizeof(uint64_t));
+        internal::memcpy(&v4, data + pos + 12, sizeof(uint64_t));
 
         if simdutf_constexpr (!match_system(big_endian)) {
           v1 = (v1 >> 8) | (v1 << (64 - 8));

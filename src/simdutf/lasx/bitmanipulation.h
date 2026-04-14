@@ -2,7 +2,6 @@
 #define SIMDUTF_LASX_BITMANIPULATION_H
 
 #include "simdutf.h"
-#include <limits>
 
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {

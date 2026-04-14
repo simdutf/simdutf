@@ -1,5 +1,5 @@
 template <endianness big_endian>
-std::pair<const char16_t *, char *>
+internal::pair<const char16_t *, char *>
 avx2_convert_utf16_to_latin1(const char16_t *buf, size_t len,
                              char *latin1_output) {
   const char16_t *end = buf + len;
@@ -29,14 +29,15 @@ avx2_convert_utf16_to_latin1(const char16_t *buf, size_t len,
       buf += 32;
       latin1_output += 32;
     } else {
-      return std::make_pair(nullptr, reinterpret_cast<char *>(latin1_output));
+      return internal::pair<const char16_t *, char *>{
+          nullptr, reinterpret_cast<char *>(latin1_output)};
     }
   } // while
-  return std::make_pair(buf, latin1_output);
+  return internal::make_pair(buf, latin1_output);
 }
 
 template <endianness big_endian>
-std::pair<result, char *>
+internal::pair<result, char *>
 avx2_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
                                          char *latin1_output) {
   const char16_t *start = buf;
@@ -70,7 +71,7 @@ avx2_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
         if (word <= 0xff) {
           *latin1_output++ = char(word);
         } else {
-          return std::make_pair(
+          return internal::make_pair(
               result{error_code::TOO_LARGE, (size_t)(buf - start + k)},
               latin1_output);
         }
@@ -78,6 +79,6 @@ avx2_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
       buf += 16;
     }
   } // while
-  return std::make_pair(result{error_code::SUCCESS, (size_t)(buf - start)},
-                        latin1_output);
+  return internal::make_pair(result{error_code::SUCCESS, (size_t)(buf - start)},
+                             latin1_output);
 }

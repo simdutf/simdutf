@@ -22,9 +22,9 @@ simdutf_warn_unused simdutf_constexpr23 bool validate(InputPtr data,
   {
     for (; pos + 16 <= len; pos += 16) {
       uint64_t v1;
-      std::memcpy(&v1, data + pos, sizeof(uint64_t));
+      internal::memcpy(&v1, data + pos, sizeof(uint64_t));
       uint64_t v2;
-      std::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
+      internal::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
       uint64_t v{v1 | v2};
       if ((v & 0x8080808080808080) != 0) {
         return false;
@@ -34,7 +34,7 @@ simdutf_warn_unused simdutf_constexpr23 bool validate(InputPtr data,
 
   // process the tail byte-by-byte
   for (; pos < len; pos++) {
-    if (static_cast<std::uint8_t>(data[pos]) >= 0b10000000) {
+    if (static_cast<uint8_t>(data[pos]) >= 0b10000000) {
       return false;
     }
   }
@@ -55,13 +55,13 @@ validate_with_errors(InputPtr data, size_t len) noexcept {
     // process in blocks of 16 bytes when possible
     for (; pos + 16 <= len; pos += 16) {
       uint64_t v1;
-      std::memcpy(&v1, data + pos, sizeof(uint64_t));
+      internal::memcpy(&v1, data + pos, sizeof(uint64_t));
       uint64_t v2;
-      std::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
+      internal::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
       uint64_t v{v1 | v2};
       if ((v & 0x8080808080808080) != 0) {
         for (; pos < len; pos++) {
-          if (static_cast<std::uint8_t>(data[pos]) >= 0b10000000) {
+          if (static_cast<uint8_t>(data[pos]) >= 0b10000000) {
             return result(error_code::TOO_LARGE, pos);
           }
         }
@@ -71,7 +71,7 @@ validate_with_errors(InputPtr data, size_t len) noexcept {
 
   // process the tail byte-by-byte
   for (; pos < len; pos++) {
-    if (static_cast<std::uint8_t>(data[pos]) >= 0b10000000) {
+    if (static_cast<uint8_t>(data[pos]) >= 0b10000000) {
       return result(error_code::TOO_LARGE, pos);
     }
   }

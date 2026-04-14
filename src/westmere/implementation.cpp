@@ -223,7 +223,7 @@ implementation::detect_encodings(const char *input,
 
   uint8_t block[64]{};
   size_t idx = reader.block_index();
-  std::memcpy(block, &input[idx], length - idx);
+  internal::memcpy(block, &input[idx], length - idx);
   simd::simd8x64<uint8_t> in(block);
   c.check_next_input(in);
 
@@ -438,7 +438,7 @@ simdutf_warn_unused result implementation::validate_utf32_with_errors(
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf8(
     const char *buf, size_t len, char *utf8_output) const noexcept {
 
-  std::pair<const char *, char *> ret =
+  internal::pair<const char *, char *> ret =
       sse_convert_latin1_to_utf8(buf, len, utf8_output);
   size_t converted_chars = ret.second - utf8_output;
 
@@ -455,7 +455,7 @@ simdutf_warn_unused size_t implementation::convert_latin1_to_utf8(
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf16le(
     const char *buf, size_t len, char16_t *utf16_output) const noexcept {
-  std::pair<const char *, char16_t *> ret =
+  internal::pair<const char *, char16_t *> ret =
       sse_convert_latin1_to_utf16<endianness::LITTLE>(buf, len, utf16_output);
   if (ret.first == nullptr) {
     return 0;
@@ -475,7 +475,7 @@ simdutf_warn_unused size_t implementation::convert_latin1_to_utf16le(
 
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf16be(
     const char *buf, size_t len, char16_t *utf16_output) const noexcept {
-  std::pair<const char *, char16_t *> ret =
+  internal::pair<const char *, char16_t *> ret =
       sse_convert_latin1_to_utf16<endianness::BIG>(buf, len, utf16_output);
   if (ret.first == nullptr) {
     return 0;
@@ -497,7 +497,7 @@ simdutf_warn_unused size_t implementation::convert_latin1_to_utf16be(
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::convert_latin1_to_utf32(
     const char *buf, size_t len, char32_t *utf32_output) const noexcept {
-  std::pair<const char *, char32_t *> ret =
+  internal::pair<const char *, char32_t *> ret =
       sse_convert_latin1_to_utf32(buf, len, utf32_output);
   if (ret.first == nullptr) {
     return 0;
@@ -595,7 +595,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::convert_utf16le_to_latin1(
     const char16_t *buf, size_t len, char *latin1_output) const noexcept {
-  std::pair<const char16_t *, char *> ret =
+  internal::pair<const char16_t *, char *> ret =
       sse_convert_utf16_to_latin1<endianness::LITTLE>(buf, len, latin1_output);
   if (ret.first == nullptr) {
     return 0;
@@ -616,7 +616,7 @@ simdutf_warn_unused size_t implementation::convert_utf16le_to_latin1(
 
 simdutf_warn_unused size_t implementation::convert_utf16be_to_latin1(
     const char16_t *buf, size_t len, char *latin1_output) const noexcept {
-  std::pair<const char16_t *, char *> ret =
+  internal::pair<const char16_t *, char *> ret =
       sse_convert_utf16_to_latin1<endianness::BIG>(buf, len, latin1_output);
   if (ret.first == nullptr) {
     return 0;
@@ -638,7 +638,7 @@ simdutf_warn_unused size_t implementation::convert_utf16be_to_latin1(
 simdutf_warn_unused result
 implementation::convert_utf16le_to_latin1_with_errors(
     const char16_t *buf, size_t len, char *latin1_output) const noexcept {
-  std::pair<result, char *> ret =
+  internal::pair<result, char *> ret =
       sse_convert_utf16_to_latin1_with_errors<endianness::LITTLE>(
           buf, len, latin1_output);
   if (ret.first.error) {
@@ -665,7 +665,7 @@ implementation::convert_utf16le_to_latin1_with_errors(
 simdutf_warn_unused result
 implementation::convert_utf16be_to_latin1_with_errors(
     const char16_t *buf, size_t len, char *latin1_output) const noexcept {
-  std::pair<result, char *> ret =
+  internal::pair<result, char *> ret =
       sse_convert_utf16_to_latin1_with_errors<endianness::BIG>(buf, len,
                                                                latin1_output);
   if (ret.first.error) {
@@ -705,7 +705,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16le_to_latin1(
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 simdutf_warn_unused size_t implementation::convert_utf16le_to_utf8(
     const char16_t *buf, size_t len, char *utf8_output) const noexcept {
-  std::pair<const char16_t *, char *> ret =
+  internal::pair<const char16_t *, char *> ret =
       sse_convert_utf16_to_utf8<endianness::LITTLE>(buf, len, utf8_output);
   if (ret.first == nullptr) {
     return 0;
@@ -725,7 +725,7 @@ simdutf_warn_unused size_t implementation::convert_utf16le_to_utf8(
 
 simdutf_warn_unused size_t implementation::convert_utf16be_to_utf8(
     const char16_t *buf, size_t len, char *utf8_output) const noexcept {
-  std::pair<const char16_t *, char *> ret =
+  internal::pair<const char16_t *, char *> ret =
       sse_convert_utf16_to_utf8<endianness::BIG>(buf, len, utf8_output);
   if (ret.first == nullptr) {
     return 0;
@@ -747,7 +747,7 @@ simdutf_warn_unused result implementation::convert_utf16le_to_utf8_with_errors(
     const char16_t *buf, size_t len, char *utf8_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of
   // code units written even if finished
-  std::pair<result, char *> ret =
+  internal::pair<result, char *> ret =
       westmere::sse_convert_utf16_to_utf8_with_errors<endianness::LITTLE>(
           buf, len, utf8_output);
   if (ret.first.error) {
@@ -775,7 +775,7 @@ simdutf_warn_unused result implementation::convert_utf16be_to_utf8_with_errors(
     const char16_t *buf, size_t len, char *utf8_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of
   // code units written even if finished
-  std::pair<result, char *> ret =
+  internal::pair<result, char *> ret =
       westmere::sse_convert_utf16_to_utf8_with_errors<endianness::BIG>(
           buf, len, utf8_output);
   if (ret.first.error) {
@@ -813,7 +813,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_utf8(
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t implementation::convert_utf32_to_latin1(
     const char32_t *buf, size_t len, char *latin1_output) const noexcept {
-  std::pair<const char32_t *, char *> ret =
+  internal::pair<const char32_t *, char *> ret =
       sse_convert_utf32_to_latin1(buf, len, latin1_output);
   if (ret.first == nullptr) {
     return 0;
@@ -835,7 +835,7 @@ simdutf_warn_unused result implementation::convert_utf32_to_latin1_with_errors(
     const char32_t *buf, size_t len, char *latin1_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of
   // code units written even if finished
-  std::pair<result, char *> ret =
+  internal::pair<result, char *> ret =
       westmere::sse_convert_utf32_to_latin1_with_errors(buf, len,
                                                         latin1_output);
   if (ret.first.count != len) {
@@ -864,7 +864,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf32_to_latin1(
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(
     const char32_t *buf, size_t len, char *utf8_output) const noexcept {
-  std::pair<const char32_t *, char *> ret =
+  internal::pair<const char32_t *, char *> ret =
       sse_convert_utf32_to_utf8(buf, len, utf8_output);
   if (ret.first == nullptr) {
     return 0;
@@ -885,7 +885,7 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(
     const char32_t *buf, size_t len, char *utf8_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of
   // code units written even if finished
-  std::pair<result, char *> ret =
+  internal::pair<result, char *> ret =
       westmere::sse_convert_utf32_to_utf8_with_errors(buf, len, utf8_output);
   if (ret.first.count != len) {
     result scalar_res = scalar::utf32_to_utf8::convert_with_errors(
@@ -907,7 +907,7 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::convert_utf16le_to_utf32(
     const char16_t *buf, size_t len, char32_t *utf32_output) const noexcept {
-  std::pair<const char16_t *, char32_t *> ret =
+  internal::pair<const char16_t *, char32_t *> ret =
       sse_convert_utf16_to_utf32<endianness::LITTLE>(buf, len, utf32_output);
   if (ret.first == nullptr) {
     return 0;
@@ -927,7 +927,7 @@ simdutf_warn_unused size_t implementation::convert_utf16le_to_utf32(
 
 simdutf_warn_unused size_t implementation::convert_utf16be_to_utf32(
     const char16_t *buf, size_t len, char32_t *utf32_output) const noexcept {
-  std::pair<const char16_t *, char32_t *> ret =
+  internal::pair<const char16_t *, char32_t *> ret =
       sse_convert_utf16_to_utf32<endianness::BIG>(buf, len, utf32_output);
   if (ret.first == nullptr) {
     return 0;
@@ -949,7 +949,7 @@ simdutf_warn_unused result implementation::convert_utf16le_to_utf32_with_errors(
     const char16_t *buf, size_t len, char32_t *utf32_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of
   // code units written even if finished
-  std::pair<result, char32_t *> ret =
+  internal::pair<result, char32_t *> ret =
       westmere::sse_convert_utf16_to_utf32_with_errors<endianness::LITTLE>(
           buf, len, utf32_output);
   if (ret.first.error) {
@@ -977,7 +977,7 @@ simdutf_warn_unused result implementation::convert_utf16be_to_utf32_with_errors(
     const char16_t *buf, size_t len, char32_t *utf32_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of
   // code units written even if finished
-  std::pair<result, char32_t *> ret =
+  internal::pair<result, char32_t *> ret =
       westmere::sse_convert_utf16_to_utf32_with_errors<endianness::BIG>(
           buf, len, utf32_output);
   if (ret.first.error) {
@@ -1012,7 +1012,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf8(
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf16le(
     const char32_t *buf, size_t len, char16_t *utf16_output) const noexcept {
-  std::pair<const char32_t *, char16_t *> ret =
+  internal::pair<const char32_t *, char16_t *> ret =
       sse_convert_utf32_to_utf16<endianness::LITTLE>(buf, len, utf16_output);
   if (ret.first == nullptr) {
     return 0;
@@ -1032,7 +1032,7 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf16le(
 
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf16be(
     const char32_t *buf, size_t len, char16_t *utf16_output) const noexcept {
-  std::pair<const char32_t *, char16_t *> ret =
+  internal::pair<const char32_t *, char16_t *> ret =
       sse_convert_utf32_to_utf16<endianness::BIG>(buf, len, utf16_output);
   if (ret.first == nullptr) {
     return 0;
@@ -1054,7 +1054,7 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf16le_with_errors(
     const char32_t *buf, size_t len, char16_t *utf16_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of
   // code units written even if finished
-  std::pair<result, char16_t *> ret =
+  internal::pair<result, char16_t *> ret =
       westmere::sse_convert_utf32_to_utf16_with_errors<endianness::LITTLE>(
           buf, len, utf16_output);
   if (ret.first.count != len) {
@@ -1078,7 +1078,7 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf16be_with_errors(
     const char32_t *buf, size_t len, char16_t *utf16_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of
   // code units written even if finished
-  std::pair<result, char16_t *> ret =
+  internal::pair<result, char16_t *> ret =
       westmere::sse_convert_utf32_to_utf16_with_errors<endianness::BIG>(
           buf, len, utf16_output);
   if (ret.first.count != len) {

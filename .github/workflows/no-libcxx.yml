@@ -1,0 +1,68 @@
+name: no-libcxx ABI contract
+
+on:
+  push:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  no-libcxx:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify no-libcxx ABI contract
+        run: ./scripts/check_no_libcxx_abi.sh
+      - name: Verify no-libcxx single-header build with -nostdinc++ and -nostdlib++
+        run: |
+          tmpdir=$(mktemp -d /tmp/simdutf-no-libcxx-amalgam.XXXXXX)
+          python3 singleheader/amalgamate.py \
+            --no-zip \
+            --no-readme \
+            --source-dir=src \
+            --include-dir=include \
+            --output-dir "$tmpdir"
+          c++ -std=c++17 -nostdinc++ \
+            -DSIMDUTF_NO_LIBCXX=1 -fno-exceptions -fno-rtti \
+            -I"$tmpdir" \
+            -c "$tmpdir/simdutf.cpp" \
+            -o "$tmpdir/simdutf-nostdincxx.o"
+          cat > "$tmpdir/amalgam_smoke.cpp" <<'EOF'
+          #include "simdutf.h"
+          #include <string.h>
+
+          int main() {
+            if (simdutf::get_available_implementations().size() < 1) {
+              return 1;
+            }
+            const simdutf::implementation *active_before =
+                simdutf::get_active_implementation();
+            if (active_before == nullptr) {
+              return 2;
+            }
+            if (!simdutf::validate_utf8("abc", 3)) {
+              return 3;
+            }
+            const simdutf::implementation *active_after =
+                simdutf::get_active_implementation();
+            if (active_after == nullptr) {
+              return 4;
+            }
+            if (strlen(active_after->name()) == 0) {
+              return 5;
+            }
+            return 0;
+          }
+          EOF
+          c++ -std=c++17 -nostdinc++ \
+            -DSIMDUTF_NO_LIBCXX=1 -fno-exceptions -fno-rtti \
+            -I"$tmpdir" \
+            -c "$tmpdir/amalgam_smoke.cpp" \
+            -o "$tmpdir/amalgam_smoke.o"
+          c++ -std=c++17 -nostdlib++ \
+            "$tmpdir/amalgam_smoke.o" "$tmpdir/simdutf-nostdincxx.o" \
+            -o "$tmpdir/amalgam_smoke_nostdlibxx"
+          "$tmpdir/amalgam_smoke_nostdlibxx"
+          ldd "$tmpdir/amalgam_smoke_nostdlibxx" > "$tmpdir/amalgam_smoke_nostdlibxx.deps"
+          ! rg -i '(libc\+\+|libc\+\+abi|libstdc\+\+|libsupc\+\+)' \
+            "$tmpdir/amalgam_smoke_nostdlibxx.deps"

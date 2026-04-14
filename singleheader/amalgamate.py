@@ -26,6 +26,7 @@ redefines_simdutf_implementation = re.compile(r'^#define\s+SIMDUTF_IMPLEMENTATIO
 undefines_simdutf_implementation = re.compile(r'^#undef\s+SIMDUTF_IMPLEMENTATION\s*$')
 uses_simdutf_implementation = re.compile(r'SIMDUTF_IMPLEMENTATION([^_a-zA-Z0-9]|$)')
 generic_pattern = re.compile(r'.*generic/.*\.h')
+scalar_pattern = re.compile(r'.*simdutf/scalar/.*\.h')
 begin_pattern = re.compile(r'.*/begin\.h')
 end_pattern = re.compile(r'.*/end\.h')
 
@@ -178,6 +179,11 @@ def doinclude(file, line):
         if os.path.exists(path):
             # generic includes are included multiple times
             if generic_pattern.match(file):
+                dofile(directory, file)
+            # scalar headers may be referenced from both the public header and
+            # src/simdutf.cpp under different preprocessor conditions.
+            # Let the normal header guards decide which copy is active.
+            elif scalar_pattern.match(file):
                 dofile(directory, file)
             # begin/end_implementation are also included multiple times
             elif begin_pattern.match(file):

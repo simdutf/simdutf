@@ -1,4 +1,4 @@
-std::pair<const char *, char16_t *>
+internal::pair<const char *, char16_t *>
 lsx_convert_latin1_to_utf16le(const char *buf, size_t len,
                               char16_t *utf16_output) {
   const char *end = buf + len;
@@ -16,10 +16,10 @@ lsx_convert_latin1_to_utf16le(const char *buf, size_t len,
     buf += 16;
   }
 
-  return std::make_pair(buf, utf16_output);
+  return internal::make_pair(buf, utf16_output);
 }
 
-std::pair<const char *, char16_t *>
+internal::pair<const char *, char16_t *>
 lsx_convert_latin1_to_utf16be(const char *buf, size_t len,
                               char16_t *utf16_output) {
   const char *end = buf + len;
@@ -35,5 +35,5 @@ lsx_convert_latin1_to_utf16be(const char *buf, size_t len,
     buf += 16;
   }
 
-  return std::make_pair(buf, utf16_output);
+  return internal::make_pair(buf, utf16_output);
 }

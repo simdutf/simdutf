@@ -1,6 +1,10 @@
 
 namespace simdutf {
+#ifdef SIMDUTF_NO_LIBCXX
+const char *to_string(encoding_type bom) {
+#else
 std::string to_string(encoding_type bom) {
+#endif
   switch (bom) {
   case UTF16_LE:
     return "UTF16 little-endian";

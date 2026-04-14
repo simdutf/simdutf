@@ -1,5 +1,5 @@
 template <endianness big_endian>
-std::pair<const char *, char16_t *>
+internal::pair<const char *, char16_t *>
 sse_convert_latin1_to_utf16(const char *latin1_input, size_t len,
                             char16_t *utf16_output) {
   size_t rounded_len = len & ~0xF; // Round down to nearest multiple of 16
@@ -17,5 +17,6 @@ sse_convert_latin1_to_utf16(const char *latin1_input, size_t len,
     _mm_storeu_si128(reinterpret_cast<__m128i *>(&utf16_output[i + 8]), out2);
   }
   // return pointers pointing to where we left off
-  return std::make_pair(latin1_input + rounded_len, utf16_output + rounded_len);
+  return internal::make_pair(latin1_input + rounded_len,
+                             utf16_output + rounded_len);
 }

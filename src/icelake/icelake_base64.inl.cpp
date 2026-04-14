@@ -382,8 +382,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
           base64_decode_block(dst, buffer + i * 64);
           dst += 48;
         }
-        std::memcpy(buffer, buffer + (block_size - 1) * 64,
-                    64); // 64 might be too much
+        simdutf::internal::memcpy(buffer, buffer + (block_size - 1) * 64,
+                                  64); // 64 might be too much
         bufferptr -= (block_size - 1) * 64;
       }
     }

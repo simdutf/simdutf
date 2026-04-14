@@ -1,4 +1,4 @@
-std::pair<const char32_t *, char *>
+internal::pair<const char32_t *, char *>
 sse_convert_utf32_to_latin1(const char32_t *buf, size_t len,
                             char *latin1_output) {
   const size_t rounded_len = len & ~0xF; // Round down to nearest multiple of 16
@@ -18,7 +18,7 @@ sse_convert_utf32_to_latin1(const char32_t *buf, size_t len,
     check_combined = _mm_or_si128(check_combined, in4);
 
     if (!_mm_testz_si128(check_combined, high_bytes_mask)) {
-      return std::make_pair(nullptr, latin1_output);
+      return internal::pair<const char32_t *, char *>{nullptr, latin1_output};
     }
     __m128i pack1 = _mm_unpacklo_epi32(_mm_shuffle_epi8(in1, shufmask),
                                        _mm_shuffle_epi8(in2, shufmask));
@@ -30,10 +30,10 @@ sse_convert_utf32_to_latin1(const char32_t *buf, size_t len,
     buf += 16;
   }
 
-  return std::make_pair(buf, latin1_output);
+  return internal::make_pair(buf, latin1_output);
 }
 
-std::pair<result, char *>
+internal::pair<result, char *>
 sse_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
                                         char *latin1_output) {
   const char32_t *start = buf;
@@ -60,8 +60,8 @@ sse_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
         if (codepoint <= 0xff) {
           *latin1_output++ = char(codepoint);
         } else {
-          return std::make_pair(result(error_code::TOO_LARGE, buf - start + k),
-                                latin1_output);
+          return internal::make_pair(
+              result(error_code::TOO_LARGE, buf - start + k), latin1_output);
         }
       }
       buf += 16;
@@ -77,6 +77,6 @@ sse_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
     buf += 16;
   }
 
-  return std::make_pair(result(error_code::SUCCESS, buf - start),
-                        latin1_output);
+  return internal::make_pair(result(error_code::SUCCESS, buf - start),
+                             latin1_output);
 }

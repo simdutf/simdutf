@@ -3,13 +3,44 @@
 
 #include "simdutf/compiler_check.h"
 
-#include <cfloat>
-#include <cstddef>
-#include <cstdint>
-#include <cstdlib>
+#ifdef SIMDUTF_NO_LIBCXX
+  #include <float.h>
+  #include <stddef.h>
+  #include <stdint.h>
+  #include <stdlib.h>
+#else
+  #include <cfloat>
+  #include <cstddef>
+  #include <cstdint>
+  #include <cstdlib>
+#endif
 #ifndef _WIN32
   // strcasecmp, strncasecmp
   #include <strings.h>
+#endif
+
+#ifdef SIMDUTF_NO_LIBCXX
+  #undef SIMDUTF_NO_LIBCXX
+  #define SIMDUTF_NO_LIBCXX 1
+  /**
+   * SIMDUTF_NO_LIBCXX is an all-or-nothing reduced-surface build contract
+   * that forces simdutf to avoid using any libc++ or libc++abi features.
+   *
+   * Every translation unit that compiles simdutf sources or includes simdutf
+   * headers must use the same setting. Public APIs that expose std::* either
+   * change shape or are unavailable in this mode, so it should be treated as a
+   * separate ABI from the normal build.
+   *
+   * To avoid pulling in libc++/libstdc++ or their runtime hooks, this mode
+   * also forces the no-threads/shared-state path and disables the
+   * std::atomic_ref, std::span, and std::text_encoding surfaces so later
+   * headers can rely on the reduced-surface contract.
+   */
+  #undef SIMDUTF_NO_THREADS
+  #define SIMDUTF_NO_THREADS 1
+  #undef SIMDUTF_ATOMIC_REF
+  #define SIMDUTF_SPAN_DISABLED 1
+  #define SIMDUTF_NO_STD_TEXT_ENCODING 1
 #endif
 
 #if defined(__apple_build_version__)
@@ -20,17 +51,27 @@
 #endif
 
 #if SIMDUTF_CPLUSPLUS20
-  #include <version>
-  #if __cpp_concepts >= 201907L && __cpp_lib_span >= 202002L &&                \
-      !defined(SIMDUTF_SPAN_DISABLED)
-    #define SIMDUTF_SPAN 1
-  #endif // __cpp_concepts >= 201907L && __cpp_lib_span >= 202002L
-  #if __cpp_lib_atomic_ref >= 201806L
-    #define SIMDUTF_ATOMIC_REF 1
-  #endif // __cpp_lib_atomic_ref
+  #ifndef SIMDUTF_NO_LIBCXX
+    #include <version>
+    #if __cpp_concepts >= 201907L && __cpp_lib_span >= 202002L &&              \
+        !defined(SIMDUTF_SPAN_DISABLED)
+      #define SIMDUTF_SPAN 1
+    #endif // __cpp_concepts >= 201907L && __cpp_lib_span >= 202002L
+    #if __cpp_lib_atomic_ref >= 201806L
+      #define SIMDUTF_ATOMIC_REF 1
+    #endif // __cpp_lib_atomic_ref
+  #endif   // SIMDUTF_NO_LIBCXX
   #if __has_cpp_attribute(maybe_unused) >= 201603L
     #define SIMDUTF_MAYBE_UNUSED_AVAILABLE 1
   #endif // __has_cpp_attribute(maybe_unused) >= 201603L
+#endif
+
+// Best-effort weak symbol annotation for fallback ABI hooks that should defer
+// to a toolchain-provided definition when one is linked in.
+#if defined(__GNUC__) || defined(__clang__)
+  #define SIMDUTF_WEAK __attribute__((weak))
+#else
+  #define SIMDUTF_WEAK
 #endif
 
 /**

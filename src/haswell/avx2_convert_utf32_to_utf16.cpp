@@ -1,5 +1,5 @@
 template <endianness big_endian>
-std::pair<const char32_t *, char16_t *>
+internal::pair<const char32_t *, char16_t *>
 avx2_convert_utf32_to_utf16(const char32_t *buf, size_t len,
                             char16_t *utf16_output) {
   const char32_t *end = buf + len;
@@ -13,7 +13,7 @@ avx2_convert_utf32_to_utf16(const char32_t *buf, size_t len,
   const __m256i v_f800 = _mm256_set1_epi32((uint32_t)0xf800);
   const __m256i v_d800 = _mm256_set1_epi32((uint32_t)0xd800);
 
-  while (end - buf >= std::ptrdiff_t(8 + safety_margin)) {
+  while (end - buf >= internal::ptrdiff_t(8 + safety_margin)) {
     const __m256i in = _mm256_loadu_si256((__m256i *)buf);
 
     if (simdutf_likely(_mm256_testz_si256(in, v_ffff0000))) {
@@ -44,7 +44,8 @@ avx2_convert_utf32_to_utf16(const char32_t *buf, size_t len,
         if ((word & 0xFFFF0000) == 0) {
           // will not generate a surrogate pair
           if (word >= 0xD800 && word <= 0xDFFF) {
-            return std::make_pair(nullptr, utf16_output);
+            return internal::pair<const char32_t *, char16_t *>{nullptr,
+                                                                utf16_output};
           }
           *utf16_output++ =
               big_endian
@@ -53,7 +54,8 @@ avx2_convert_utf32_to_utf16(const char32_t *buf, size_t len,
         } else {
           // will generate a surrogate pair
           if (word > 0x10FFFF) {
-            return std::make_pair(nullptr, utf16_output);
+            return internal::pair<const char32_t *, char16_t *>{nullptr,
+                                                                utf16_output};
           }
           word -= 0x10000;
           uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
@@ -74,14 +76,14 @@ avx2_convert_utf32_to_utf16(const char32_t *buf, size_t len,
 
   // check for invalid input
   if (static_cast<uint32_t>(_mm256_movemask_epi8(forbidden_bytemask)) != 0) {
-    return std::make_pair(nullptr, utf16_output);
+    return internal::pair<const char32_t *, char16_t *>{nullptr, utf16_output};
   }
 
-  return std::make_pair(buf, utf16_output);
+  return internal::make_pair(buf, utf16_output);
 }
 
 template <endianness big_endian>
-std::pair<result, char16_t *>
+internal::pair<result, char16_t *>
 avx2_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
                                         char16_t *utf16_output) {
   const char32_t *start = buf;
@@ -95,7 +97,7 @@ avx2_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
   const __m256i v_f800 = _mm256_set1_epi32((uint32_t)0xf800);
   const __m256i v_d800 = _mm256_set1_epi32((uint32_t)0xd800);
 
-  while (end - buf >= std::ptrdiff_t(8 + safety_margin)) {
+  while (end - buf >= internal::ptrdiff_t(8 + safety_margin)) {
     const __m256i in = _mm256_loadu_si256((__m256i *)buf);
 
     if (simdutf_likely(_mm256_testz_si256(in, v_ffff0000))) {
@@ -105,8 +107,8 @@ avx2_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
           _mm256_cmpeq_epi32(_mm256_and_si256(in, v_f800), v_d800);
       if (static_cast<uint32_t>(_mm256_movemask_epi8(forbidden_bytemask)) !=
           0x0) {
-        return std::make_pair(result(error_code::SURROGATE, buf - start),
-                              utf16_output);
+        return internal::make_pair(result(error_code::SURROGATE, buf - start),
+                                   utf16_output);
       }
 
       __m128i utf16_packed = _mm_packus_epi32(_mm256_castsi256_si128(in),
@@ -130,7 +132,7 @@ avx2_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
         if ((word & 0xFFFF0000) == 0) {
           // will not generate a surrogate pair
           if (word >= 0xD800 && word <= 0xDFFF) {
-            return std::make_pair(
+            return internal::make_pair(
                 result(error_code::SURROGATE, buf - start + k), utf16_output);
           }
           *utf16_output++ =
@@ -140,7 +142,7 @@ avx2_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
         } else {
           // will generate a surrogate pair
           if (word > 0x10FFFF) {
-            return std::make_pair(
+            return internal::make_pair(
                 result(error_code::TOO_LARGE, buf - start + k), utf16_output);
           }
           word -= 0x10000;
@@ -160,5 +162,6 @@ avx2_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
     }
   }
 
-  return std::make_pair(result(error_code::SUCCESS, buf - start), utf16_output);
+  return internal::make_pair(result(error_code::SUCCESS, buf - start),
+                             utf16_output);
 }

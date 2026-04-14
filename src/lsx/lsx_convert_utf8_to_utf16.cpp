@@ -189,7 +189,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
       }
       // __lsx_vst(composed, reinterpret_cast<uint16_t *>(utf16_output), 0);
       __lsx_vst(composed, reinterpret_cast<uint16_t *>(buffer), 0);
-      std::memcpy(utf16_output, buffer, 12);
+      internal::memcpy(utf16_output, buffer, 12);
       utf16_output += 6; // We 3 32-bit surrogate pairs.
       return 12;         // We consumed 12 bytes.
     }

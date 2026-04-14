@@ -299,7 +299,7 @@ inline result rewind_and_convert_with_errors(size_t prior_bytes,
   bool found_leading_bytes{false};
   // important: it is i <= how_far_back and not 'i < how_far_back'.
   for (size_t i = 0; i <= how_far_back; i++) {
-    unsigned char byte = buf[-static_cast<std::ptrdiff_t>(i)];
+    unsigned char byte = buf[-static_cast<internal::ptrdiff_t>(i)];
     found_leading_bytes = ((byte & 0b11000000) != 0b10000000);
     if (found_leading_bytes) {
       if (i > 0 && byte < 128) {

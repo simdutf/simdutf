@@ -2,10 +2,10 @@
 template <typename Tdst, simdutf_ByteFlip bflip, bool validate = true>
 simdutf_really_inline static size_t rvv_utf8_to_common(char const *src,
                                                        size_t len, Tdst *dst) {
-  static_assert(std::is_same<Tdst, uint16_t>() ||
-                    std::is_same<Tdst, uint32_t>(),
+  static_assert(simdutf::internal::is_same<Tdst, uint16_t>::value ||
+                    simdutf::internal::is_same<Tdst, uint32_t>::value,
                 "invalid type");
-  constexpr bool is16 = std::is_same<Tdst, uint16_t>();
+  constexpr bool is16 = simdutf::internal::is_same<Tdst, uint16_t>::value;
   constexpr endianness endian =
       bflip == simdutf_ByteFlip::NONE ? endianness::LITTLE : endianness::BIG;
   const auto scalar = [](char const *in, size_t count, Tdst *out) {

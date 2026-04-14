@@ -314,7 +314,7 @@ static simdutf_really_inline void base64_decode_block_safe(char *out,
 
   char buffer[16];
   base64_decode(buffer, vector_u8::load(src + 3 * 16));
-  std::memcpy(out + 36, buffer, 12);
+  internal::memcpy(out + 36, buffer, 12);
 }
 
 // ---base64 decoding::block64 class --------------------------
@@ -475,6 +475,6 @@ public:
     base64_decode(out + 12 * 2, b.chunks[2]);
     char buffer[16];
     base64_decode(buffer, b.chunks[3]);
-    std::memcpy(out + 12 * 3, buffer, 12);
+    internal::memcpy(out + 12 * 3, buffer, 12);
   }
 };

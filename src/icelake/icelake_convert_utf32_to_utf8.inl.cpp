@@ -1,7 +1,7 @@
 // file included directly
 
 // Todo: currently, this is just the haswell code, optimize for icelake kernel.
-std::pair<const char32_t *, char *>
+simdutf::internal::pair<const char32_t *, char *>
 avx512_convert_utf32_to_utf8(const char32_t *buf, size_t len,
                              char *utf8_output) {
   const char32_t *end = buf + len;
@@ -18,7 +18,7 @@ avx512_convert_utf32_to_utf8(const char32_t *buf, size_t len,
       12; // to avoid overruns, see issue
           // https://github.com/simdutf/simdutf/issues/92
 
-  while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
+  while (end - buf >= simdutf::internal::ptrdiff_t(16 + safety_margin)) {
     __m256i in = _mm256_loadu_si256((__m256i *)buf);
     __m256i nextin = _mm256_loadu_si256((__m256i *)buf + 1);
     running_max = _mm256_max_epu32(_mm256_max_epu32(in, running_max), nextin);
@@ -251,14 +251,14 @@ avx512_convert_utf32_to_utf8(const char32_t *buf, size_t len,
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else if ((word & 0xFFFF0000) == 0) { // 3-byte
           if (word >= 0xD800 && word <= 0xDFFF) {
-            return std::make_pair(nullptr, utf8_output);
+            return {nullptr, utf8_output};
           }
           *utf8_output++ = char((word >> 12) | 0b11100000);
           *utf8_output++ = char(((word >> 6) & 0b111111) | 0b10000000);
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else { // 4-byte
           if (word > 0x10FFFF) {
-            return std::make_pair(nullptr, utf8_output);
+            return {nullptr, utf8_output};
           }
           *utf8_output++ = char((word >> 18) | 0b11110000);
           *utf8_output++ = char(((word >> 12) & 0b111111) | 0b10000000);
@@ -274,18 +274,18 @@ avx512_convert_utf32_to_utf8(const char32_t *buf, size_t len,
   const __m256i v_10ffff = _mm256_set1_epi32((uint32_t)0x10ffff);
   if (static_cast<uint32_t>(_mm256_movemask_epi8(_mm256_cmpeq_epi32(
           _mm256_max_epu32(running_max, v_10ffff), v_10ffff))) != 0xffffffff) {
-    return std::make_pair(nullptr, utf8_output);
+    return {nullptr, utf8_output};
   }
 
   if (static_cast<uint32_t>(_mm256_movemask_epi8(forbidden_bytemask)) != 0) {
-    return std::make_pair(nullptr, utf8_output);
+    return {nullptr, utf8_output};
   }
 
-  return std::make_pair(buf, utf8_output);
+  return simdutf::internal::make_pair(buf, utf8_output);
 }
 
 // Todo: currently, this is just the haswell code, optimize for icelake kernel.
-std::pair<result, char *>
+simdutf::internal::pair<result, char *>
 avx512_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
                                          char *utf8_output) {
   const char32_t *end = buf + len;
@@ -303,7 +303,7 @@ avx512_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
       12; // to avoid overruns, see issue
           // https://github.com/simdutf/simdutf/issues/92
 
-  while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
+  while (end - buf >= simdutf::internal::ptrdiff_t(16 + safety_margin)) {
     __m256i in = _mm256_loadu_si256((__m256i *)buf);
     __m256i nextin = _mm256_loadu_si256((__m256i *)buf + 1);
     // Check for too large input
@@ -311,8 +311,8 @@ avx512_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
         _mm256_max_epu32(_mm256_max_epu32(in, nextin), v_10ffff);
     if (static_cast<uint32_t>(_mm256_movemask_epi8(
             _mm256_cmpeq_epi32(max_input, v_10ffff))) != 0xffffffff) {
-      return std::make_pair(result(error_code::TOO_LARGE, buf - start),
-                            utf8_output);
+      return simdutf::internal::make_pair(
+          result(error_code::TOO_LARGE, buf - start), utf8_output);
     }
 
     // Pack 32-bit UTF-32 code units to 16-bit UTF-16 code units with unsigned
@@ -411,8 +411,8 @@ avx512_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
           _mm256_cmpeq_epi16(_mm256_and_si256(in_16, v_f800), v_d800);
       if (static_cast<uint32_t>(_mm256_movemask_epi8(forbidden_bytemask)) !=
           0x0) {
-        return std::make_pair(result(error_code::SURROGATE, buf - start),
-                              utf8_output);
+        return simdutf::internal::make_pair(
+            result(error_code::SURROGATE, buf - start), utf8_output);
       }
 
       const __m256i dup_even = _mm256_setr_epi16(
@@ -549,7 +549,7 @@ avx512_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else if ((word & 0xFFFF0000) == 0) { // 3-byte
           if (word >= 0xD800 && word <= 0xDFFF) {
-            return std::make_pair(
+            return simdutf::internal::make_pair(
                 result(error_code::SURROGATE, buf - start + k), utf8_output);
           }
           *utf8_output++ = char((word >> 12) | 0b11100000);
@@ -557,7 +557,7 @@ avx512_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else { // 4-byte
           if (word > 0x10FFFF) {
-            return std::make_pair(
+            return simdutf::internal::make_pair(
                 result(error_code::TOO_LARGE, buf - start + k), utf8_output);
           }
           *utf8_output++ = char((word >> 18) | 0b11110000);
@@ -570,5 +570,6 @@ avx512_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
     }
   } // while
 
-  return std::make_pair(result(error_code::SUCCESS, buf - start), utf8_output);
+  return simdutf::internal::make_pair(result(error_code::SUCCESS, buf - start),
+                                      utf8_output);
 }

@@ -1,4 +1,4 @@
-std::pair<const char32_t *, char *>
+internal::pair<const char32_t *, char *>
 arm_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
   uint8_t *utf8_output = reinterpret_cast<uint8_t *>(utf8_out);
   const char32_t *end = buf + len;
@@ -221,16 +221,16 @@ arm_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else if ((word & 0xFFFF0000) == 0) {
           if (word >= 0xD800 && word <= 0xDFFF) {
-            return std::make_pair(nullptr,
-                                  reinterpret_cast<char *>(utf8_output));
+            return internal::pair<const char32_t *, char *>{
+                nullptr, reinterpret_cast<char *>(utf8_output)};
           }
           *utf8_output++ = char((word >> 12) | 0b11100000);
           *utf8_output++ = char(((word >> 6) & 0b111111) | 0b10000000);
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else {
           if (word > 0x10FFFF) {
-            return std::make_pair(nullptr,
-                                  reinterpret_cast<char *>(utf8_output));
+            return internal::pair<const char32_t *, char *>{
+                nullptr, reinterpret_cast<char *>(utf8_output)};
           }
           *utf8_output++ = char((word >> 18) | 0b11110000);
           *utf8_output++ = char(((word >> 12) & 0b111111) | 0b10000000);
@@ -244,12 +244,13 @@ arm_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
 
   // check for invalid input
   if (vmaxvq_u16(forbidden_bytemask) != 0) {
-    return std::make_pair(nullptr, reinterpret_cast<char *>(utf8_output));
+    return internal::pair<const char32_t *, char *>{
+        nullptr, reinterpret_cast<char *>(utf8_output)};
   }
-  return std::make_pair(buf, reinterpret_cast<char *>(utf8_output));
+  return internal::make_pair(buf, reinterpret_cast<char *>(utf8_output));
 }
 
-std::pair<result, char *>
+internal::pair<result, char *>
 arm_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
                                       char *utf8_out) {
   uint8_t *utf8_output = reinterpret_cast<uint8_t *>(utf8_out);
@@ -335,8 +336,8 @@ arm_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
         const uint16x8_t forbidden_bytemask = vandq_u16(
             vcleq_u16(utf16_packed, v_dfff), vcgeq_u16(utf16_packed, v_d800));
         if (vmaxvq_u16(forbidden_bytemask) != 0) {
-          return std::make_pair(result(error_code::SURROGATE, buf - start),
-                                reinterpret_cast<char *>(utf8_output));
+          return internal::make_pair(result(error_code::SURROGATE, buf - start),
+                                     reinterpret_cast<char *>(utf8_output));
         }
 
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
@@ -477,7 +478,7 @@ arm_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else if ((word & 0xFFFF0000) == 0) {
           if (word >= 0xD800 && word <= 0xDFFF) {
-            return std::make_pair(
+            return internal::make_pair(
                 result(error_code::SURROGATE, buf - start + k),
                 reinterpret_cast<char *>(utf8_output));
           }
@@ -486,7 +487,7 @@ arm_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else {
           if (word > 0x10FFFF) {
-            return std::make_pair(
+            return internal::make_pair(
                 result(error_code::TOO_LARGE, buf - start + k),
                 reinterpret_cast<char *>(utf8_output));
           }
@@ -500,6 +501,6 @@ arm_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
     }
   } // while
 
-  return std::make_pair(result(error_code::SUCCESS, buf - start),
-                        reinterpret_cast<char *>(utf8_output));
+  return internal::make_pair(result(error_code::SUCCESS, buf - start),
+                             reinterpret_cast<char *>(utf8_output));
 }

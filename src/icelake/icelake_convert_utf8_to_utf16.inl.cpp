@@ -28,7 +28,7 @@ fast_avx512_convert_utf8_to_utf16(const char *in, size_t len, char16_t *out) {
   if (!result) {
     out = nullptr;
   }
-  return std::make_pair(in, out);
+  return simdutf::internal::make_pair(in, out);
 }
 
 template <endianness big_endian>

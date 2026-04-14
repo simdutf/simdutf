@@ -1,4 +1,4 @@
-std::pair<const char *, char *>
+internal::pair<const char *, char *>
 avx2_convert_latin1_to_utf8(const char *latin1_input, size_t len,
                             char *utf8_output) {
   const char *end = latin1_input + len;
@@ -7,7 +7,7 @@ avx2_convert_latin1_to_utf8(const char *latin1_input, size_t len,
   const __m256i v_ff80 = _mm256_set1_epi16((int16_t)0xff80);
   const size_t safety_margin = 12;
 
-  while (end - latin1_input >= std::ptrdiff_t(16 + safety_margin)) {
+  while (end - latin1_input >= internal::ptrdiff_t(16 + safety_margin)) {
     __m128i in8 = _mm_loadu_si128((__m128i *)latin1_input);
     // a single 16-bit UTF-16 word can yield 1, 2 or 3 UTF-8 bytes
     const __m128i v_80 = _mm_set1_epi8((char)0x80);
@@ -79,5 +79,5 @@ avx2_convert_latin1_to_utf8(const char *latin1_input, size_t len,
     continue;
 
   } // while
-  return std::make_pair(latin1_input, utf8_output);
+  return internal::make_pair(latin1_input, utf8_output);
 }

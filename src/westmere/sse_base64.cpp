@@ -219,7 +219,7 @@ size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
         _mm_storeu_si128(reinterpret_cast<__m128i *>(buffer + 16), t1);
         _mm_storeu_si128(reinterpret_cast<__m128i *>(buffer + 32), t2);
         _mm_storeu_si128(reinterpret_cast<__m128i *>(buffer + 48), t3);
-        std::memcpy(out, buffer, 64);
+        internal::memcpy(out, buffer, 64);
         size_t out_pos = 0;
         size_t local_offset = offset;
         for (size_t j = 0; j < 64;) {
@@ -287,7 +287,8 @@ size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
         if (offset + 16 > line_length) {
           size_t location_end = line_length - offset;
           size_t to_move = 16 - location_end;
-          std::memmove(out + location_end + 1, out + location_end, to_move);
+          internal::memmove(out + location_end + 1, out + location_end,
+                            to_move);
           out[location_end] = '\n';
           offset = to_move;
           out += 16 + 1;
@@ -399,7 +400,7 @@ static inline void base64_decode_block_safe(char *out, const char *src) {
   char buffer[16];
   base64_decode(buffer,
                 _mm_loadu_si128(reinterpret_cast<const __m128i *>(src + 48)));
-  std::memcpy(out + 36, buffer, 12);
+  internal::memcpy(out + 36, buffer, 12);
 }
 
 // --- decoding - base64 class --------------------------------
@@ -667,6 +668,6 @@ public:
     base64_decode(out + 24, chunks[2]);
     char buffer[16];
     base64_decode(buffer, chunks[3]);
-    std::memcpy(out + 36, buffer, 12);
+    internal::memcpy(out + 36, buffer, 12);
   }
 };

@@ -5,7 +5,7 @@
   A scalar routing should carry on the conversion of the tail.
 */
 template <endianness big_endian>
-std::tuple<const char16_t *, char32_t *, bool>
+simdutf::internal::tuple<const char16_t *, char32_t *, bool>
 convert_utf16_to_utf32(const char16_t *buf, size_t len,
                        char32_t *utf32_output) {
   const char16_t *end = buf + len;
@@ -17,7 +17,7 @@ convert_utf16_to_utf32(const char16_t *buf, size_t len,
       0x0607040502030001, 0x0e0f0c0d0a0b0809, 0x0607040502030001,
       0x0e0f0c0d0a0b0809, 0x0607040502030001, 0x0e0f0c0d0a0b0809,
       0x0607040502030001, 0x0e0f0c0d0a0b0809);
-  while (std::distance(buf, end) >= 32) {
+  while (simdutf::internal::distance(buf, end) >= 32) {
     // Always safe because buf + 32 <= end so that end - buf >= 32 bytes:
     __m512i in = _mm512_loadu_si512((__m512i *)buf);
     if (big_endian) {
@@ -117,7 +117,7 @@ convert_utf16_to_utf32(const char16_t *buf, size_t len,
         carry = (H >> 30) & 0x1;
       } else {
         // invalid case
-        return std::make_tuple(buf + carry, utf32_output, false);
+        return simdutf::internal::make_tuple(buf + carry, utf32_output, false);
       }
     } else {
       // no surrogates
@@ -132,5 +132,5 @@ convert_utf16_to_utf32(const char16_t *buf, size_t len,
       carry = 0;
     }
   } // while
-  return std::make_tuple(buf + carry, utf32_output, true);
+  return simdutf::internal::make_tuple(buf + carry, utf32_output, true);
 }

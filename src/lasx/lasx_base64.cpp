@@ -487,7 +487,7 @@ static inline void base64_decode_block_safe(char *out, const char *src) {
   alignas(32) char buffer[32];
   base64_decode(buffer,
                 __lasx_xvld(reinterpret_cast<const __m256i *>(src), 32));
-  std::memcpy(out + 24, buffer, 24);
+  internal::memcpy(out + 24, buffer, 24);
 }
 
 static inline void base64_decode_block(char *out, block64 *b) {
@@ -498,7 +498,7 @@ static inline void base64_decode_block_safe(char *out, block64 *b) {
   base64_decode(out, b->chunks[0]);
   alignas(32) char buffer[32];
   base64_decode(buffer, b->chunks[1]);
-  std::memcpy(out + 24, buffer, 24);
+  internal::memcpy(out + 24, buffer, 24);
 }
 
 template <bool base64_url, bool ignore_garbage, bool default_or_url,
@@ -579,8 +579,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
           base64_decode_block(dst, buffer + (block_size - 2) * 64);
         }
         dst += 48;
-        std::memcpy(buffer, buffer + (block_size - 1) * 64,
-                    64); // 64 might be too much
+        internal::memcpy(buffer, buffer + (block_size - 1) * 64,
+                         64); // 64 might be too much
         bufferptr -= (block_size - 1) * 64;
       }
     }
@@ -622,7 +622,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                         << 8;
       // lasx is little-endian
       triple = scalar::u32_swap_bytes(triple);
-      std::memcpy(dst, &triple, 4);
+      internal::memcpy(dst, &triple, 4);
 
       dst += 3;
       buffer_start += 4;
@@ -635,7 +635,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
                         << 8;
       // lasx is little-endian
       triple = scalar::u32_swap_bytes(triple);
-      std::memcpy(dst, &triple, 3);
+      internal::memcpy(dst, &triple, 3);
 
       dst += 3;
       buffer_start += 4;

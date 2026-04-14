@@ -183,7 +183,7 @@ utf16_to_utf8_t ppc64_convert_utf16_to_utf8(const char16_t *buf, size_t len,
       12; // to avoid overruns, see issue
           // https://github.com/simdutf/simdutf/issues/92
 
-  while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
+  while (end - buf >= internal::ptrdiff_t(16 + safety_margin)) {
     auto in = vector_u16::load(buf);
     if (not match_system(big_endian)) {
       in = in.swap_bytes();

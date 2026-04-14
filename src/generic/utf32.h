@@ -1,5 +1,3 @@
-#include <limits>
-
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
@@ -35,8 +33,7 @@ simdutf_really_inline size_t utf8_length_from_utf32(const char32_t *input,
   // 1. vectorized loop unrolled 4 times
   {
     // we use vector of uint32 counters, this is why this limit is used
-    const size_t max_iterations =
-        std::numeric_limits<uint32_t>::max() / (max_increment * 4);
+    const size_t max_iterations = size_t(UINT32_MAX) / (max_increment * 4);
     size_t blocks = length / (N * 4);
     length -= blocks * (N * 4);
     while (blocks != 0) {
@@ -91,8 +88,7 @@ simdutf_really_inline size_t utf8_length_from_utf32(const char32_t *input,
 
   // 2. vectorized loop for tail
   {
-    const size_t max_iterations =
-        std::numeric_limits<uint32_t>::max() / max_increment;
+    const size_t max_iterations = size_t(UINT32_MAX) / max_increment;
     size_t blocks = length / N;
     length -= blocks * N;
     while (blocks != 0) {

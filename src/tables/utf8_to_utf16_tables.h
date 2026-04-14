@@ -1,6 +1,10 @@
 #ifndef SIMDUTF_UTF8_TO_UTF16_TABLES_H
 #define SIMDUTF_UTF8_TO_UTF16_TABLES_H
-#include <cstdint>
+#ifdef SIMDUTF_NO_LIBCXX
+  #include <stdint.h>
+#else
+  #include <cstdint>
+#endif
 
 namespace simdutf {
 namespace {

@@ -1,5 +1,5 @@
 template <endianness big_endian>
-std::pair<const char32_t *, char16_t *>
+internal::pair<const char32_t *, char16_t *>
 lasx_convert_utf32_to_utf16(const char32_t *buf, size_t len,
                             char16_t *utf16_out) {
   uint16_t *utf16_output = reinterpret_cast<uint16_t *>(utf16_out);
@@ -11,8 +11,8 @@ lasx_convert_utf32_to_utf16(const char32_t *buf, size_t len,
     if ((word & 0xFFFF0000) == 0) {
       // will not generate a surrogate pair
       if (word >= 0xD800 && word <= 0xDFFF) {
-        return std::make_pair(nullptr,
-                              reinterpret_cast<char16_t *>(utf16_output));
+        return internal::pair<const char32_t *, char16_t *>{
+            nullptr, reinterpret_cast<char16_t *>(utf16_output)};
       }
       *utf16_output++ = !match_system(big_endian)
                             ? char16_t(word >> 8 | word << 8)
@@ -21,8 +21,8 @@ lasx_convert_utf32_to_utf16(const char32_t *buf, size_t len,
     } else {
       // will generate a surrogate pair
       if (word > 0x10FFFF) {
-        return std::make_pair(nullptr,
-                              reinterpret_cast<char16_t *>(utf16_output));
+        return internal::pair<const char32_t *, char16_t *>{
+            nullptr, reinterpret_cast<char16_t *>(utf16_output)};
       }
       word -= 0x10000;
       uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
@@ -71,8 +71,8 @@ lasx_convert_utf32_to_utf16(const char32_t *buf, size_t len,
         if ((word & 0xFFFF0000) == 0) {
           // will not generate a surrogate pair
           if (word >= 0xD800 && word <= 0xDFFF) {
-            return std::make_pair(nullptr,
-                                  reinterpret_cast<char16_t *>(utf16_output));
+            return internal::pair<const char32_t *, char16_t *>{
+                nullptr, reinterpret_cast<char16_t *>(utf16_output)};
           }
           *utf16_output++ = !match_system(big_endian)
                                 ? char16_t(word >> 8 | word << 8)
@@ -80,8 +80,8 @@ lasx_convert_utf32_to_utf16(const char32_t *buf, size_t len,
         } else {
           // will generate a surrogate pair
           if (word > 0x10FFFF) {
-            return std::make_pair(nullptr,
-                                  reinterpret_cast<char16_t *>(utf16_output));
+            return internal::pair<const char32_t *, char16_t *>{
+                nullptr, reinterpret_cast<char16_t *>(utf16_output)};
           }
           word -= 0x10000;
           uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
@@ -101,13 +101,14 @@ lasx_convert_utf32_to_utf16(const char32_t *buf, size_t len,
 
   // check for invalid input
   if (__lasx_xbnz_v(forbidden_bytemask)) {
-    return std::make_pair(nullptr, reinterpret_cast<char16_t *>(utf16_output));
+    return internal::pair<const char32_t *, char16_t *>{
+        nullptr, reinterpret_cast<char16_t *>(utf16_output)};
   }
-  return std::make_pair(buf, reinterpret_cast<char16_t *>(utf16_output));
+  return internal::make_pair(buf, reinterpret_cast<char16_t *>(utf16_output));
 }
 
 template <endianness big_endian>
-std::pair<result, char16_t *>
+internal::pair<result, char16_t *>
 lasx_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
                                         char16_t *utf16_out) {
   uint16_t *utf16_output = reinterpret_cast<uint16_t *>(utf16_out);
@@ -120,8 +121,9 @@ lasx_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
     if ((word & 0xFFFF0000) == 0) {
       // will not generate a surrogate pair
       if (word >= 0xD800 && word <= 0xDFFF) {
-        return std::make_pair(result(error_code::SURROGATE, buf - start - 1),
-                              reinterpret_cast<char16_t *>(utf16_output));
+        return internal::make_pair(
+            result(error_code::SURROGATE, buf - start - 1),
+            reinterpret_cast<char16_t *>(utf16_output));
       }
       *utf16_output++ = !match_system(big_endian)
                             ? char16_t(word >> 8 | word << 8)
@@ -129,8 +131,9 @@ lasx_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
     } else {
       // will generate a surrogate pair
       if (word > 0x10FFFF) {
-        return std::make_pair(result(error_code::TOO_LARGE, buf - start - 1),
-                              reinterpret_cast<char16_t *>(utf16_output));
+        return internal::make_pair(
+            result(error_code::TOO_LARGE, buf - start - 1),
+            reinterpret_cast<char16_t *>(utf16_output));
       }
       word -= 0x10000;
       uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
@@ -161,8 +164,8 @@ lasx_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
               __lasx_xvsle_h(v_d800, utf16_packed)), // utf16_packed >= 0xd800
           forbidden_bytemask);
       if (__lasx_xbnz_v(forbidden_bytemask)) {
-        return std::make_pair(result(error_code::SURROGATE, buf - start),
-                              reinterpret_cast<char16_t *>(utf16_output));
+        return internal::make_pair(result(error_code::SURROGATE, buf - start),
+                                   reinterpret_cast<char16_t *>(utf16_output));
       }
 
       if simdutf_constexpr (!match_system(big_endian)) {
@@ -183,7 +186,7 @@ lasx_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
         if ((word & 0xFFFF0000) == 0) {
           // will not generate a surrogate pair
           if (word >= 0xD800 && word <= 0xDFFF) {
-            return std::make_pair(
+            return internal::make_pair(
                 result(error_code::SURROGATE, buf - start + k),
                 reinterpret_cast<char16_t *>(utf16_output));
           }
@@ -193,7 +196,7 @@ lasx_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
         } else {
           // will generate a surrogate pair
           if (word > 0x10FFFF) {
-            return std::make_pair(
+            return internal::make_pair(
                 result(error_code::TOO_LARGE, buf - start + k),
                 reinterpret_cast<char16_t *>(utf16_output));
           }
@@ -213,6 +216,6 @@ lasx_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
     }
   }
 
-  return std::make_pair(result(error_code::SUCCESS, buf - start),
-                        reinterpret_cast<char16_t *>(utf16_output));
+  return internal::make_pair(result(error_code::SUCCESS, buf - start),
+                             reinterpret_cast<char16_t *>(utf16_output));
 }

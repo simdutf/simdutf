@@ -30,38 +30,38 @@ private:
   size_t idx;
 };
 
+simdutf_unused static char
+    format_input_text_64_buf[sizeof(simd8x64<uint8_t>) + 1];
+simdutf_unused static char format_input_text_buf[sizeof(simd8x64<uint8_t>) + 1];
+simdutf_unused static char format_mask_buf[64 + 1];
+
 // Routines to print masks and text for debugging bitmask operations
 simdutf_unused static char *format_input_text_64(const uint8_t *text) {
-  static char *buf =
-      reinterpret_cast<char *>(malloc(sizeof(simd8x64<uint8_t>) + 1));
   for (size_t i = 0; i < sizeof(simd8x64<uint8_t>); i++) {
-    buf[i] = int8_t(text[i]) < ' ' ? '_' : int8_t(text[i]);
+    format_input_text_64_buf[i] = int8_t(text[i]) < ' ' ? '_' : int8_t(text[i]);
   }
-  buf[sizeof(simd8x64<uint8_t>)] = '\0';
-  return buf;
+  format_input_text_64_buf[sizeof(simd8x64<uint8_t>)] = '\0';
+  return format_input_text_64_buf;
 }
 
 // Routines to print masks and text for debugging bitmask operations
 simdutf_unused static char *format_input_text(const simd8x64<uint8_t> &in) {
-  static char *buf =
-      reinterpret_cast<char *>(malloc(sizeof(simd8x64<uint8_t>) + 1));
-  in.store(reinterpret_cast<uint8_t *>(buf));
+  in.store(reinterpret_cast<uint8_t *>(format_input_text_buf));
   for (size_t i = 0; i < sizeof(simd8x64<uint8_t>); i++) {
-    if (buf[i] < ' ') {
-      buf[i] = '_';
+    if (format_input_text_buf[i] < ' ') {
+      format_input_text_buf[i] = '_';
     }
   }
-  buf[sizeof(simd8x64<uint8_t>)] = '\0';
-  return buf;
+  format_input_text_buf[sizeof(simd8x64<uint8_t>)] = '\0';
+  return format_input_text_buf;
 }
 
 simdutf_unused static char *format_mask(uint64_t mask) {
-  static char *buf = reinterpret_cast<char *>(malloc(64 + 1));
   for (size_t i = 0; i < 64; i++) {
-    buf[i] = (mask & (size_t(1) << i)) ? 'X' : ' ';
+    format_mask_buf[i] = (mask & (size_t(1) << i)) ? 'X' : ' ';
   }
-  buf[64] = '\0';
-  return buf;
+  format_mask_buf[64] = '\0';
+  return format_mask_buf;
 }
 
 template <size_t STEP_SIZE>
@@ -92,10 +92,11 @@ buf_block_reader<STEP_SIZE>::get_remainder(uint8_t *dst) const {
   if (len == idx) {
     return 0;
   } // memcpy(dst, null, 0) will trigger an error with some sanitizers
-  std::memset(dst, 0x20,
-              STEP_SIZE); // std::memset STEP_SIZE because it is more efficient
-                          // to write out 8 or 16 bytes at once.
-  std::memcpy(dst, buf + idx, len - idx);
+  simdutf::internal::memset(
+      dst, 0x20,
+      STEP_SIZE); // memset STEP_SIZE because it is more efficient to write out
+                  // 8 or 16 bytes at once.
+  simdutf::internal::memcpy(dst, buf + idx, len - idx);
   return len - idx;
 }
 
