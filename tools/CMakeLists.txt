@@ -70,8 +70,21 @@ set_property(TARGET sutf PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET fastbase64 PROPERTY CXX_STANDARD 17)
 set_property(TARGET fastbase64 PROPERTY CXX_STANDARD_REQUIRED ON)
 
-target_link_libraries(sutf PUBLIC simdutf)
-target_link_libraries(fastbase64 PUBLIC simdutf)
+target_link_libraries(sutf PUBLIC simdutf-nobase64)
+target_compile_definitions(sutf PRIVATE
+  SIMDUTF_FEATURE_BASE64=0
+  SIMDUTF_FEATURE_DETECT_ENCODING=0
+)
+
+target_link_libraries(fastbase64 PUBLIC simdutf-base64)
+target_compile_definitions(fastbase64 PRIVATE
+  SIMDUTF_FEATURE_UTF8=0
+  SIMDUTF_FEATURE_UTF16=0
+  SIMDUTF_FEATURE_UTF32=0
+  SIMDUTF_FEATURE_ASCII=0
+  SIMDUTF_FEATURE_LATIN1=0
+  SIMDUTF_FEATURE_DETECT_ENCODING=0
+)
 
 if(WIN32 AND BUILD_SHARED_LIBS)
   # Copy the simdutf dll into the directory
