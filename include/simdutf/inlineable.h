@@ -183,7 +183,15 @@ validate_utf32_with_errors(const char32_t *buf, size_t len) noexcept {
 #if SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_UTF8
 simdutf_really_inline simdutf_constexpr23 simdutf_warn_unused size_t
 convert_latin1_to_utf8(const char *input, size_t len, char *output) noexcept {
-  return scalar::latin1_to_utf8::convert(input, len, output);
+  #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::latin1_to_utf8::convert(
+        detail::constexpr_cast_ptr<unsigned char>(input), len, output);
+  } else
+  #endif
+  {
+    return scalar::latin1_to_utf8::convert(input, len, output);
+  }
 }
 #endif // SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_UTF8
 

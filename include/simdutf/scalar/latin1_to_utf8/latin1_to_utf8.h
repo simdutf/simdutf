@@ -60,9 +60,8 @@ simdutf_constexpr23 size_t convert(InputPtr data, size_t len,
   return utf8_pos;
 }
 
-simdutf_really_inline simdutf_constexpr23 size_t convert(const char *buf,
-                                                         size_t len,
-                                                         char *utf8_output) {
+simdutf_really_inline size_t convert(const char *buf, size_t len,
+                                     char *utf8_output) {
   return convert(reinterpret_cast<const unsigned char *>(buf), len,
                  utf8_output);
 }
