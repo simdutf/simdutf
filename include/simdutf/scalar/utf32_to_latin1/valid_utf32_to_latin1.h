@@ -53,10 +53,18 @@ simdutf_constexpr23 size_t convert_valid(ReadPtr data, size_t len,
   return latin1_output - start;
 }
 
-simdutf_really_inline size_t convert_valid(const char32_t *buf, size_t len,
-                                           char *latin1_output) {
-  return convert_valid(reinterpret_cast<const uint32_t *>(buf), len,
-                       latin1_output);
+simdutf_really_inline simdutf_constexpr23 size_t
+convert_valid(const char32_t *buf, size_t len, char *latin1_output) {
+#if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return convert_valid(detail::constexpr_cast_ptr<uint32_t>(buf), len,
+                         latin1_output);
+  } else
+#endif
+  {
+    return convert_valid(reinterpret_cast<const uint32_t *>(buf), len,
+                         latin1_output);
+  }
 }
 
 } // namespace utf32_to_latin1

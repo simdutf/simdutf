@@ -2990,6 +2990,61 @@ To run short benchmarks on various SIMDUTF functions with incremental input size
 This will benchmark the selected function on the input file, testing sizes from 1 byte up to the specified max size (default 128), and output a table with timing and performance metrics.
 
 
+## Handling small inputs
+
+The public simdutf functions such as `simdutf::convert_utf8_to_utf16` or
+`simdutf::validate_utf8` go through a runtime dispatcher that selects the best
+SIMD implementation for the current CPU (AVX-512, NEON, SVE, etc.). Because of
+this indirection, these functions are defined out-of-line in the compiled
+library and cannot be inlined into the caller. For large inputs, the SIMD
+speedup dominates and the cost of the indirect call is negligible, but for
+very small inputs (a few dozen bytes) the dispatch overhead and the missed
+inlining opportunities can dominate the total cost.
+
+To help with this case, simdutf ships a header-only mirror of the public API
+in the `simdutf::inlineable` namespace, declared in
+[`include/simdutf/inlineable.h`](include/simdutf/inlineable.h) and pulled in
+automatically by `<simdutf.h>`. These functions call the same scalar routines
+that power the library's constexpr support path, so they can be fully inlined
+(and in many cases constant-folded) into the caller with no runtime dispatch.
+
+They are slower than the SIMD implementations on large inputs, so the
+recommended pattern is to branch on the input size and route small inputs to
+`simdutf::inlineable::...` while keeping the default `simdutf::...` call for
+larger inputs:
+
+```cpp
+#include <simdutf.h>
+
+size_t convert_utf8_to_utf16(const char *input, size_t length,
+                             char16_t *output) {
+  // Threshold to tune for your workload. Somewhere between 32 and 128 bytes
+  // is usually a good starting point.
+  constexpr size_t small_input_threshold = 64;
+  if (length < small_input_threshold) {
+    return simdutf::inlineable::convert_utf8_to_utf16(input, length, output);
+  }
+  return simdutf::convert_utf8_to_utf16(input, length, output);
+}
+```
+
+The `simdutf::inlineable` namespace mirrors the most commonly used functions
+of the public API: validation (`validate_utf8`, `validate_utf16(le|be)`,
+`validate_utf32`, `validate_ascii`, and their `_with_errors` variants),
+conversion between Latin-1, UTF-8, UTF-16LE/BE and UTF-32 (including
+`_with_errors` and `valid_` variants), `to_well_formed_utf16*`, code-point
+counting (`count_utf8`, `count_utf16*`), and the `*_length_from_*` helpers.
+All functions take the same pointer/length arguments and return the same
+values as their `simdutf::` counterparts.
+
+Some functions are not included such as the base64 functions `binary_to_base64`,  `base64_to_binary`, and  `base64_to_binary_safe`.
+We also don't include `find` as you can just use `std::find`.
+
+Note that because the inlineable variants do not use SIMD, they should not be
+used as a replacement for the main API — only as a fast path for inputs that
+are known to be small.
+
+
 ## Thread safety
 
 We built simdutf with thread safety in mind. The simdutf library is single-threaded throughout.

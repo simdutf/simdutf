@@ -81,7 +81,7 @@ concept is_pointer = std::is_pointer_v<T>;
 /**
  * matches anything that behaves like std::span and points to character-like
  * data such as: std::byte, char, unsigned char, signed char, std::int8_t,
- * std::uint8_t
+ * uint8_t
  */
 template <typename T>
 concept input_span_of_byte_like = requires(const T &t) {
@@ -133,7 +133,7 @@ concept index_assignable_from_char = requires(InputPtr p, char s) {
  */
 template <class InputPtr>
 concept indexes_into_uint32 = requires(InputPtr p) {
-  { std::decay_t<decltype(p[0])>{} } -> std::same_as<std::uint32_t>;
+  { std::decay_t<decltype(p[0])>{} } -> std::same_as<uint32_t>;
 };
 } // namespace detail
 } // namespace simdutf
@@ -318,7 +318,7 @@ validate_ascii(const detail::input_span_of_byte_like auto &input) noexcept {
     #if SIMDUTF_CPLUSPLUS23
   if consteval {
     return scalar::ascii::validate(
-        detail::constexpr_cast_ptr<std::uint8_t>(input.data()), input.size());
+        detail::constexpr_cast_ptr<uint8_t>(input.data()), input.size());
   } else
     #endif
   {
@@ -350,7 +350,7 @@ validate_ascii_with_errors(
     #if SIMDUTF_CPLUSPLUS23
   if consteval {
     return scalar::ascii::validate_with_errors(
-        detail::constexpr_cast_ptr<std::uint8_t>(input.data()), input.size());
+        detail::constexpr_cast_ptr<uint8_t>(input.data()), input.size());
   } else
     #endif
   {
@@ -759,7 +759,7 @@ validate_utf32(std::span<const char32_t> input) noexcept {
     #if SIMDUTF_CPLUSPLUS23
   if consteval {
     return scalar::utf32::validate(
-        detail::constexpr_cast_ptr<std::uint32_t>(input.data()), input.size());
+        detail::constexpr_cast_ptr<uint32_t>(input.data()), input.size());
   } else
     #endif
   {
@@ -794,7 +794,7 @@ validate_utf32_with_errors(std::span<const char32_t> input) noexcept {
     #if SIMDUTF_CPLUSPLUS23
   if consteval {
     return scalar::utf32::validate_with_errors(
-        detail::constexpr_cast_ptr<std::uint32_t>(input.data()), input.size());
+        detail::constexpr_cast_ptr<uint32_t>(input.data()), input.size());
   } else
     #endif
   {

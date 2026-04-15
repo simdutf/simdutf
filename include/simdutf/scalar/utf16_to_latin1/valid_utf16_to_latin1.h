@@ -27,8 +27,8 @@ convert_valid_impl(InputIterator data, size_t len,
 }
 
 template <endianness big_endian>
-simdutf_really_inline size_t convert_valid(const char16_t *buf, size_t len,
-                                           char *latin_output) {
+simdutf_really_inline simdutf_constexpr23 size_t
+convert_valid(const char16_t *buf, size_t len, char *latin_output) {
   return convert_valid_impl<big_endian>(reinterpret_cast<const uint16_t *>(buf),
                                         len, latin_output);
 }
