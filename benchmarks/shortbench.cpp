@@ -33,10 +33,22 @@ std::vector<BenchmarkFunc> available_functions = {
          return simdutf::validate_ascii(input.data(), input.size());
        };
      }},
+    {"inlineable_validate_ascii",
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
+       return [input]() -> size_t {
+         return simdutf::inlineable::validate_ascii(input.data(), input.size());
+       };
+     }},
     {"validate_utf8",
      [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() -> size_t {
          return simdutf::validate_utf8(input.data(), input.size());
+       };
+     }},
+    {"inlineable_validate_utf8",
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
+       return [input]() -> size_t {
+         return simdutf::inlineable::validate_utf8(input.data(), input.size());
        };
      }},
     {"utf8_length_from_latin1",
@@ -44,6 +56,14 @@ std::vector<BenchmarkFunc> available_functions = {
        return [input]() -> size_t {
          size_t len =
              simdutf::utf8_length_from_latin1(input.data(), input.size());
+         return len;
+       };
+     }},
+    {"inlineable_utf8_length_from_latin1",
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
+       return [input]() -> size_t {
+         size_t len = simdutf::inlineable::utf8_length_from_latin1(
+             input.data(), input.size());
          return len;
        };
      }},
@@ -55,11 +75,27 @@ std::vector<BenchmarkFunc> available_functions = {
          return len;
        };
      }},
+    {"inlineable_utf16_length_from_utf8",
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
+       return [input]() -> size_t {
+         size_t len = simdutf::inlineable::utf16_length_from_utf8(input.data(),
+                                                                  input.size());
+         return len;
+       };
+     }},
     {"utf32_length_from_utf8",
      [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() -> size_t {
          size_t len =
              simdutf::utf32_length_from_utf8(input.data(), input.size());
+         return len;
+       };
+     }},
+    {"inlineable_utf32_length_from_utf8",
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
+       return [input]() -> size_t {
+         size_t len = simdutf::inlineable::utf32_length_from_utf8(input.data(),
+                                                                  input.size());
          return len;
        };
      }},
@@ -70,10 +106,27 @@ std::vector<BenchmarkFunc> available_functions = {
          return count;
        };
      }},
+    {"inlineable_count_utf8",
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
+       return [input]() -> size_t {
+         size_t count =
+             simdutf::inlineable::count_utf8(input.data(), input.size());
+         return count;
+       };
+     }},
     {"count_utf16",
      [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() -> size_t {
          size_t count = simdutf::count_utf16(
+             reinterpret_cast<const char16_t *>(input.data()),
+             input.size() / 2);
+         return count;
+       };
+     }},
+    {"inlineable_count_utf16",
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
+       return [input]() -> size_t {
+         size_t count = simdutf::inlineable::count_utf16(
              reinterpret_cast<const char16_t *>(input.data()),
              input.size() / 2);
          return count;
@@ -88,10 +141,28 @@ std::vector<BenchmarkFunc> available_functions = {
          return len;
        };
      }},
+    {"inlineable_utf8_length_from_utf16",
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
+       return [input]() -> size_t {
+         size_t len = simdutf::inlineable::utf8_length_from_utf16(
+             reinterpret_cast<const char16_t *>(input.data()),
+             input.size() / 2);
+         return len;
+       };
+     }},
     {"utf16_length_from_utf32",
      [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() -> size_t {
          size_t len = simdutf::utf16_length_from_utf32(
+             reinterpret_cast<const char32_t *>(input.data()),
+             input.size() / 4);
+         return len;
+       };
+     }},
+    {"inlineable_utf16_length_from_utf32",
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
+       return [input]() -> size_t {
+         size_t len = simdutf::inlineable::utf16_length_from_utf32(
              reinterpret_cast<const char32_t *>(input.data()),
              input.size() / 4);
          return len;
@@ -106,10 +177,28 @@ std::vector<BenchmarkFunc> available_functions = {
          return len;
        };
      }},
+    {"inlineable_utf32_length_from_utf16",
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
+       return [input]() -> size_t {
+         size_t len = simdutf::inlineable::utf32_length_from_utf16(
+             reinterpret_cast<const char16_t *>(input.data()),
+             input.size() / 2);
+         return len;
+       };
+     }},
     {"utf8_length_from_utf32",
      [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
        return [input]() -> size_t {
          size_t len = simdutf::utf8_length_from_utf32(
+             reinterpret_cast<const char32_t *>(input.data()),
+             input.size() / 4);
+         return len;
+       };
+     }},
+    {"inlineable_utf8_length_from_utf32",
+     [](std::span<const char> input, [[maybe_unused]] std::span<char> output) {
+       return [input]() -> size_t {
+         size_t len = simdutf::inlineable::utf8_length_from_utf32(
              reinterpret_cast<const char32_t *>(input.data()),
              input.size() / 4);
          return len;
@@ -123,10 +212,27 @@ std::vector<BenchmarkFunc> available_functions = {
          return len;
        };
      }},
+    {"inlineable_convert_latin1_to_utf8",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::inlineable::convert_latin1_to_utf8(
+             input.data(), input.size(), output.data());
+         return len;
+       };
+     }},
     {"convert_latin1_to_utf16le",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() -> size_t {
          size_t len = simdutf::convert_latin1_to_utf16le(
+             input.data(), input.size(),
+             reinterpret_cast<char16_t *>(output.data()));
+         return len;
+       };
+     }},
+    {"inlineable_convert_latin1_to_utf16le",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::inlineable::convert_latin1_to_utf16le(
              input.data(), input.size(),
              reinterpret_cast<char16_t *>(output.data()));
          return len;
@@ -141,10 +247,28 @@ std::vector<BenchmarkFunc> available_functions = {
          return len;
        };
      }},
+    {"inlineable_convert_latin1_to_utf16be",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::inlineable::convert_latin1_to_utf16be(
+             input.data(), input.size(),
+             reinterpret_cast<char16_t *>(output.data()));
+         return len;
+       };
+     }},
     {"convert_latin1_to_utf32",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() -> size_t {
          size_t len = simdutf::convert_latin1_to_utf32(
+             input.data(), input.size(),
+             reinterpret_cast<char32_t *>(output.data()));
+         return len;
+       };
+     }},
+    {"inlineable_convert_latin1_to_utf32",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::inlineable::convert_latin1_to_utf32(
              input.data(), input.size(),
              reinterpret_cast<char32_t *>(output.data()));
          return len;
@@ -158,10 +282,27 @@ std::vector<BenchmarkFunc> available_functions = {
          return len;
        };
      }},
+    {"inlineable_convert_utf8_to_latin1",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::inlineable::convert_utf8_to_latin1(
+             input.data(), input.size(), output.data());
+         return len;
+       };
+     }},
     {"convert_utf8_to_utf16le",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() -> size_t {
          size_t len = simdutf::convert_utf8_to_utf16le(
+             input.data(), input.size(),
+             reinterpret_cast<char16_t *>(output.data()));
+         return len;
+       };
+     }},
+    {"inlineable_convert_utf8_to_utf16le",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::inlineable::convert_utf8_to_utf16le(
              input.data(), input.size(),
              reinterpret_cast<char16_t *>(output.data()));
          return len;
@@ -176,10 +317,28 @@ std::vector<BenchmarkFunc> available_functions = {
          return len;
        };
      }},
+    {"inlineable_convert_utf8_to_utf16be",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::inlineable::convert_utf8_to_utf16be(
+             input.data(), input.size(),
+             reinterpret_cast<char16_t *>(output.data()));
+         return len;
+       };
+     }},
     {"convert_utf8_to_utf32",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() -> size_t {
          size_t len = simdutf::convert_utf8_to_utf32(
+             input.data(), input.size(),
+             reinterpret_cast<char32_t *>(output.data()));
+         return len;
+       };
+     }},
+    {"inlineable_convert_utf8_to_utf32",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::inlineable::convert_utf8_to_utf32(
              input.data(), input.size(),
              reinterpret_cast<char32_t *>(output.data()));
          return len;
@@ -194,10 +353,28 @@ std::vector<BenchmarkFunc> available_functions = {
          return len;
        };
      }},
+    {"inlineable_convert_utf16le_to_latin1",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::inlineable::convert_utf16le_to_latin1(
+             reinterpret_cast<const char16_t *>(input.data()), input.size() / 2,
+             output.data());
+         return len;
+       };
+     }},
     {"convert_utf16le_to_utf8",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() -> size_t {
          size_t len = simdutf::convert_utf16le_to_utf8(
+             reinterpret_cast<const char16_t *>(input.data()), input.size() / 2,
+             output.data());
+         return len;
+       };
+     }},
+    {"inlineable_convert_utf16le_to_utf8",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::inlineable::convert_utf16le_to_utf8(
              reinterpret_cast<const char16_t *>(input.data()), input.size() / 2,
              output.data());
          return len;
@@ -212,10 +389,28 @@ std::vector<BenchmarkFunc> available_functions = {
          return len;
        };
      }},
+    {"inlineable_convert_utf16le_to_utf32",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::inlineable::convert_utf16le_to_utf32(
+             reinterpret_cast<const char16_t *>(input.data()), input.size() / 2,
+             reinterpret_cast<char32_t *>(output.data()));
+         return len;
+       };
+     }},
     {"convert_utf16be_to_latin1",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() -> size_t {
          size_t len = simdutf::convert_utf16be_to_latin1(
+             reinterpret_cast<const char16_t *>(input.data()), input.size() / 2,
+             output.data());
+         return len;
+       };
+     }},
+    {"inlineable_convert_utf16be_to_latin1",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::inlineable::convert_utf16be_to_latin1(
              reinterpret_cast<const char16_t *>(input.data()), input.size() / 2,
              output.data());
          return len;
@@ -230,10 +425,28 @@ std::vector<BenchmarkFunc> available_functions = {
          return len;
        };
      }},
+    {"inlineable_convert_utf16be_to_utf8",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::inlineable::convert_utf16be_to_utf8(
+             reinterpret_cast<const char16_t *>(input.data()), input.size() / 2,
+             output.data());
+         return len;
+       };
+     }},
     {"convert_utf16be_to_utf32",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() -> size_t {
          size_t len = simdutf::convert_utf16be_to_utf32(
+             reinterpret_cast<const char16_t *>(input.data()), input.size() / 2,
+             reinterpret_cast<char32_t *>(output.data()));
+         return len;
+       };
+     }},
+    {"inlineable_convert_utf16be_to_utf32",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::inlineable::convert_utf16be_to_utf32(
              reinterpret_cast<const char16_t *>(input.data()), input.size() / 2,
              reinterpret_cast<char32_t *>(output.data()));
          return len;
@@ -248,10 +461,28 @@ std::vector<BenchmarkFunc> available_functions = {
          return len;
        };
      }},
+    {"inlineable_convert_utf32_to_latin1",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::inlineable::convert_utf32_to_latin1(
+             reinterpret_cast<const char32_t *>(input.data()), input.size() / 4,
+             output.data());
+         return len;
+       };
+     }},
     {"convert_utf32_to_utf8",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() -> size_t {
          size_t len = simdutf::convert_utf32_to_utf8(
+             reinterpret_cast<const char32_t *>(input.data()), input.size() / 4,
+             output.data());
+         return len;
+       };
+     }},
+    {"inlineable_convert_utf32_to_utf8",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::inlineable::convert_utf32_to_utf8(
              reinterpret_cast<const char32_t *>(input.data()), input.size() / 4,
              output.data());
          return len;
@@ -266,10 +497,28 @@ std::vector<BenchmarkFunc> available_functions = {
          return len;
        };
      }},
+    {"inlineable_convert_utf32_to_utf16le",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::inlineable::convert_utf32_to_utf16le(
+             reinterpret_cast<const char32_t *>(input.data()), input.size() / 4,
+             reinterpret_cast<char16_t *>(output.data()));
+         return len;
+       };
+     }},
     {"convert_utf32_to_utf16be",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() -> size_t {
          size_t len = simdutf::convert_utf32_to_utf16be(
+             reinterpret_cast<const char32_t *>(input.data()), input.size() / 4,
+             reinterpret_cast<char16_t *>(output.data()));
+         return len;
+       };
+     }},
+    {"inlineable_convert_utf32_to_utf16be",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::inlineable::convert_utf32_to_utf16be(
              reinterpret_cast<const char32_t *>(input.data()), input.size() / 4,
              reinterpret_cast<char16_t *>(output.data()));
          return len;

@@ -2861,6 +2861,9 @@ counting (`count_utf8`, `count_utf16*`), and the `*_length_from_*` helpers.
 All functions take the same pointer/length arguments and return the same
 values as their `simdutf::` counterparts.
 
+Some functions are not included such as the base64 functions `binary_to_base64`,  `base64_to_binary`, and  `base64_to_binary_safe`.
+We also don't include `find` as you can just use `std::find`.
+
 Note that because the inlineable variants do not use SIMD, they should not be
 used as a replacement for the main API — only as a fast path for inputs that
 are known to be small.

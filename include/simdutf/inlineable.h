@@ -20,6 +20,9 @@
  * very small inputs (on the order of a few dozen bytes) they can therefore be
  * faster in practice.
  *
+ * We do not include the base64 encoding/decoding functions, nor the find
+ * functions.
+ *
  * Recommended usage pattern:
  * @code
  *   size_t convert(const char *input, size_t len, char16_t *out) {
