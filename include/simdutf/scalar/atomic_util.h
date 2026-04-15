@@ -2,6 +2,7 @@
 #define SIMDUTF_ATOMIC_UTIL_H
 #if SIMDUTF_ATOMIC_REF
   #include <atomic>
+  #include "simdutf/internal/stl_compat.h"
 namespace simdutf {
 namespace scalar {
 
@@ -28,7 +29,7 @@ inline void memcpy_atomic_read(char *dst, const char *src, size_t len) {
   // Handle unaligned start
   size_t offset = reinterpret_cast<std::uintptr_t>(src) % alignment;
   if (offset) {
-    size_t to_align = std::min(len, alignment - offset);
+    size_t to_align = internal::min_value(len, alignment - offset);
     bbb_memcpy_atomic_read(dst, src, to_align);
     src += to_align;
     dst += to_align;
@@ -40,7 +41,7 @@ inline void memcpy_atomic_read(char *dst, const char *src, size_t len) {
     auto *src_aligned = reinterpret_cast<uint64_t *>(const_cast<char *>(src));
     const auto dst_value =
         std::atomic_ref<uint64_t>(*src_aligned).load(std::memory_order_relaxed);
-    std::memcpy(dst, &dst_value, sizeof(uint64_t));
+    internal::memcpy(dst, &dst_value, sizeof(uint64_t));
     src += alignment;
     dst += alignment;
     len -= alignment;
@@ -75,7 +76,7 @@ inline void memcpy_atomic_write(char *dst, const char *src, size_t len) {
   // Handle unaligned start
   size_t offset = reinterpret_cast<std::uintptr_t>(dst) % alignment;
   if (offset) {
-    size_t to_align = std::min(len, alignment - offset);
+    size_t to_align = internal::min_value(len, alignment - offset);
     bbb_memcpy_atomic_write(dst, src, to_align);
     dst += to_align;
     src += to_align;
@@ -86,7 +87,8 @@ inline void memcpy_atomic_write(char *dst, const char *src, size_t len) {
   while (len >= alignment) {
     auto *dst_aligned = reinterpret_cast<uint64_t *>(dst);
     uint64_t src_val;
-    std::memcpy(&src_val, src, sizeof(uint64_t)); // Non-atomic read from src
+    internal::memcpy(&src_val, src,
+                     sizeof(uint64_t)); // Non-atomic read from src
     std::atomic_ref<uint64_t>(*dst_aligned)
         .store(src_val, std::memory_order_relaxed);
     dst += alignment;

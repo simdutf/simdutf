@@ -69,7 +69,7 @@ size_t convert_masked_utf8_to_latin1(const char *input,
   uint64_t buffer[2];
   // __lsx_vst(latin1_packed, reinterpret_cast<uint8_t *>(latin1_output), 0);
   __lsx_vst(latin1_packed, reinterpret_cast<uint8_t *>(buffer), 0);
-  std::memcpy(latin1_output, buffer, 6);
+  internal::memcpy(latin1_output, buffer, 6);
   latin1_output += 6; // We wrote 6 bytes.
   return consumed;
 }

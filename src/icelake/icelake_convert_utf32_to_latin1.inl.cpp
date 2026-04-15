@@ -31,7 +31,7 @@ size_t icelake_convert_utf32_to_latin1(const char32_t *buf, size_t len,
   return len;
 }
 
-std::pair<result, char *>
+simdutf::internal::pair<result, char *>
 icelake_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
                                             char *latin1_output) {
   const char32_t *end = buf + len;
@@ -47,8 +47,8 @@ icelake_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
       while (uint32_t(*buf) <= 0xff) {
         *latin1_output++ = uint8_t(*buf++);
       }
-      return std::make_pair(result(error_code::TOO_LARGE, buf - start),
-                            latin1_output);
+      return simdutf::internal::make_pair(
+          result(error_code::TOO_LARGE, buf - start), latin1_output);
     }
     _mm_storeu_si128(
         (__m128i *)latin1_output,
@@ -63,12 +63,13 @@ icelake_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
       while (uint32_t(*buf) <= 0xff) {
         *latin1_output++ = uint8_t(*buf++);
       }
-      return std::make_pair(result(error_code::TOO_LARGE, buf - start),
-                            latin1_output);
+      return simdutf::internal::make_pair(
+          result(error_code::TOO_LARGE, buf - start), latin1_output);
     }
     _mm_mask_storeu_epi8(
         latin1_output, mask,
         _mm512_castsi512_si128(_mm512_permutexvar_epi8(shufmask, in)));
   }
-  return std::make_pair(result(error_code::SUCCESS, len), latin1_output);
+  return simdutf::internal::make_pair(result(error_code::SUCCESS, len),
+                                      latin1_output);
 }

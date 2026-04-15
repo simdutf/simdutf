@@ -1,5 +1,3 @@
-#include <tuple>
-#include <utility>
 #include "simdutf/icelake/intrinsics.h"
 
 #include "simdutf/icelake/begin.h"
@@ -82,7 +80,11 @@ using namespace simd;
   #include "icelake/icelake_find.inl.cpp"
 #endif // SIMDUTF_FEATURE_BASE64
 
-#include <cstdint>
+#ifndef SIMDUTF_NO_LIBCXX
+  #include <cstdint>
+#else
+  #include <stdint.h>
+#endif
 
 } // namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -875,8 +877,8 @@ simdutf_warn_unused result implementation::convert_utf8_to_utf32_with_errors(
   auto ret = icelake::validating_utf8_to_fixed_length_with_constant_checks<
       endianness::LITTLE, uint32_t>(buf, len, utf32_output);
 
-  if (!std::get<2>(ret)) {
-    size_t pos = std::get<0>(ret) - buf;
+  if (!simdutf::internal::get<2>(ret)) {
+    size_t pos = simdutf::internal::get<0>(ret) - buf;
     // We might have an error that occurs right before  pos.
     // This is only a concern if buf[pos] is not a continuation byte.
     if ((buf[pos] & 0xc0) != 0x80 && pos >= 64) {
@@ -890,7 +892,8 @@ simdutf_warn_unused result implementation::convert_utf8_to_utf32_with_errors(
         return {simdutf::TOO_LONG, pos};
       }
     }
-    // todo: we reset the output to utf32 instead of using std::get<2.(ret) as
+    // todo: we reset the output to utf32 instead of using
+    // simdutf::internal::get<1>(ret) as
     // you'd expect. that is because
     // validating_utf8_to_fixed_length_with_constant_checks may have processed
     // data beyond the error.
@@ -899,9 +902,9 @@ simdutf_warn_unused result implementation::convert_utf8_to_utf32_with_errors(
     res.count += pos;
     return res;
   }
-  size_t saved_bytes = std::get<1>(ret) - utf32_output;
+  size_t saved_bytes = simdutf::internal::get<1>(ret) - utf32_output;
   const char *end = buf + len;
-  if (std::get<0>(ret) == end) {
+  if (simdutf::internal::get<0>(ret) == end) {
     return {simdutf::SUCCESS, saved_bytes};
   }
 
@@ -910,24 +913,26 @@ simdutf_warn_unused result implementation::convert_utf8_to_utf32_with_errors(
   //       continuation bytes lie outside 16-byte window.
   //       It means, we have to skip continuation bytes from
   //       the beginning ret.first, as they were already consumed.
-  while (std::get<0>(ret) != end and
-         ((uint8_t(*std::get<0>(ret)) & 0xc0) == 0x80)) {
-    std::get<0>(ret) += 1;
+  while (simdutf::internal::get<0>(ret) != end and
+         ((uint8_t(*simdutf::internal::get<0>(ret)) & 0xc0) == 0x80)) {
+    simdutf::internal::get<0>(ret) += 1;
   }
 
-  if (std::get<0>(ret) != end) {
+  if (simdutf::internal::get<0>(ret) != end) {
     auto scalar_result = scalar::utf8_to_utf32::convert_with_errors(
-        std::get<0>(ret), len - (std::get<0>(ret) - buf),
+        simdutf::internal::get<0>(ret),
+        len - (simdutf::internal::get<0>(ret) - buf),
         reinterpret_cast<char32_t *>(utf32_output) + saved_bytes);
     if (scalar_result.error != simdutf::SUCCESS) {
-      scalar_result.count += (std::get<0>(ret) - buf);
+      scalar_result.count += (simdutf::internal::get<0>(ret) - buf);
     } else {
       scalar_result.count += saved_bytes;
     }
     return scalar_result;
   }
 
-  return {simdutf::SUCCESS, size_t(std::get<1>(ret) - utf32_output)};
+  return {simdutf::SUCCESS,
+          size_t(simdutf::internal::get<1>(ret) - utf32_output)};
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf32(
@@ -1089,8 +1094,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf32_to_latin1(
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(
     const char32_t *buf, size_t len, char *utf8_output) const noexcept {
-  std::pair<const char32_t *, char *> ret =
-      avx512_convert_utf32_to_utf8(buf, len, utf8_output);
+  auto ret = avx512_convert_utf32_to_utf8(buf, len, utf8_output);
   if (ret.first == nullptr) {
     return 0;
   }
@@ -1110,7 +1114,7 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf8_with_errors(
     const char32_t *buf, size_t len, char *utf8_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of
   // code units written even if finished
-  std::pair<result, char *> ret =
+  auto ret =
       icelake::avx512_convert_utf32_to_utf8_with_errors(buf, len, utf8_output);
   if (ret.first.count != len) {
     result scalar_res = scalar::utf32_to_utf8::convert_with_errors(
@@ -1137,7 +1141,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf8(
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf16le(
     const char32_t *buf, size_t len, char16_t *utf16_output) const noexcept {
-  std::pair<const char32_t *, char16_t *> ret =
+  auto ret =
       avx512_convert_utf32_to_utf16<endianness::LITTLE>(buf, len, utf16_output);
   if (ret.first == nullptr) {
     return 0;
@@ -1148,7 +1152,7 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf16le(
 
 simdutf_warn_unused size_t implementation::convert_utf32_to_utf16be(
     const char32_t *buf, size_t len, char16_t *utf16_output) const noexcept {
-  std::pair<const char32_t *, char16_t *> ret =
+  auto ret =
       avx512_convert_utf32_to_utf16<endianness::BIG>(buf, len, utf16_output);
   if (ret.first == nullptr) {
     return 0;
@@ -1161,9 +1165,8 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf16le_with_errors(
     const char32_t *buf, size_t len, char16_t *utf16_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of
   // code units written even if finished
-  std::pair<result, char16_t *> ret =
-      avx512_convert_utf32_to_utf16_with_errors<endianness::LITTLE>(
-          buf, len, utf16_output);
+  auto ret = avx512_convert_utf32_to_utf16_with_errors<endianness::LITTLE>(
+      buf, len, utf16_output);
   if (ret.first.error) {
     return ret.first;
   }
@@ -1177,9 +1180,8 @@ simdutf_warn_unused result implementation::convert_utf32_to_utf16be_with_errors(
     const char32_t *buf, size_t len, char16_t *utf16_output) const noexcept {
   // ret.first.count is always the position in the buffer, not the number of
   // code units written even if finished
-  std::pair<result, char16_t *> ret =
-      avx512_convert_utf32_to_utf16_with_errors<endianness::BIG>(buf, len,
-                                                                 utf16_output);
+  auto ret = avx512_convert_utf32_to_utf16_with_errors<endianness::BIG>(
+      buf, len, utf16_output);
   if (ret.first.error) {
     return ret.first;
   }
@@ -1201,17 +1203,18 @@ simdutf_warn_unused size_t implementation::convert_valid_utf32_to_utf16be(
 
 simdutf_warn_unused size_t implementation::convert_utf16le_to_utf32(
     const char16_t *buf, size_t len, char32_t *utf32_output) const noexcept {
-  std::tuple<const char16_t *, char32_t *, bool> ret =
-      icelake::convert_utf16_to_utf32<endianness::LITTLE>(buf, len,
-                                                          utf32_output);
-  if (!std::get<2>(ret)) {
+  auto ret = icelake::convert_utf16_to_utf32<endianness::LITTLE>(buf, len,
+                                                                 utf32_output);
+  if (!simdutf::internal::get<2>(ret)) {
     return 0;
   }
-  size_t saved_bytes = std::get<1>(ret) - utf32_output;
-  if (std::get<0>(ret) != buf + len) {
+  size_t saved_bytes = simdutf::internal::get<1>(ret) - utf32_output;
+  if (simdutf::internal::get<0>(ret) != buf + len) {
     const size_t scalar_saved_bytes =
         scalar::utf16_to_utf32::convert<endianness::LITTLE>(
-            std::get<0>(ret), len - (std::get<0>(ret) - buf), std::get<1>(ret));
+            simdutf::internal::get<0>(ret),
+            len - (simdutf::internal::get<0>(ret) - buf),
+            simdutf::internal::get<1>(ret));
     if (scalar_saved_bytes == 0) {
       return 0;
     }
@@ -1222,16 +1225,18 @@ simdutf_warn_unused size_t implementation::convert_utf16le_to_utf32(
 
 simdutf_warn_unused size_t implementation::convert_utf16be_to_utf32(
     const char16_t *buf, size_t len, char32_t *utf32_output) const noexcept {
-  std::tuple<const char16_t *, char32_t *, bool> ret =
+  auto ret =
       icelake::convert_utf16_to_utf32<endianness::BIG>(buf, len, utf32_output);
-  if (!std::get<2>(ret)) {
+  if (!simdutf::internal::get<2>(ret)) {
     return 0;
   }
-  size_t saved_bytes = std::get<1>(ret) - utf32_output;
-  if (std::get<0>(ret) != buf + len) {
+  size_t saved_bytes = simdutf::internal::get<1>(ret) - utf32_output;
+  if (simdutf::internal::get<0>(ret) != buf + len) {
     const size_t scalar_saved_bytes =
         scalar::utf16_to_utf32::convert<endianness::BIG>(
-            std::get<0>(ret), len - (std::get<0>(ret) - buf), std::get<1>(ret));
+            simdutf::internal::get<0>(ret),
+            len - (simdutf::internal::get<0>(ret) - buf),
+            simdutf::internal::get<1>(ret));
     if (scalar_saved_bytes == 0) {
       return 0;
     }
@@ -1242,23 +1247,26 @@ simdutf_warn_unused size_t implementation::convert_utf16be_to_utf32(
 
 simdutf_warn_unused result implementation::convert_utf16le_to_utf32_with_errors(
     const char16_t *buf, size_t len, char32_t *utf32_output) const noexcept {
-  std::tuple<const char16_t *, char32_t *, bool> ret =
-      icelake::convert_utf16_to_utf32<endianness::LITTLE>(buf, len,
-                                                          utf32_output);
-  if (!std::get<2>(ret)) {
+  auto ret = icelake::convert_utf16_to_utf32<endianness::LITTLE>(buf, len,
+                                                                 utf32_output);
+  if (!simdutf::internal::get<2>(ret)) {
     result scalar_res =
         scalar::utf16_to_utf32::convert_with_errors<endianness::LITTLE>(
-            std::get<0>(ret), len - (std::get<0>(ret) - buf), std::get<1>(ret));
-    scalar_res.count += (std::get<0>(ret) - buf);
+            simdutf::internal::get<0>(ret),
+            len - (simdutf::internal::get<0>(ret) - buf),
+            simdutf::internal::get<1>(ret));
+    scalar_res.count += (simdutf::internal::get<0>(ret) - buf);
     return scalar_res;
   }
-  size_t saved_bytes = std::get<1>(ret) - utf32_output;
-  if (std::get<0>(ret) != buf + len) {
+  size_t saved_bytes = simdutf::internal::get<1>(ret) - utf32_output;
+  if (simdutf::internal::get<0>(ret) != buf + len) {
     result scalar_res =
         scalar::utf16_to_utf32::convert_with_errors<endianness::LITTLE>(
-            std::get<0>(ret), len - (std::get<0>(ret) - buf), std::get<1>(ret));
+            simdutf::internal::get<0>(ret),
+            len - (simdutf::internal::get<0>(ret) - buf),
+            simdutf::internal::get<1>(ret));
     if (scalar_res.error) {
-      scalar_res.count += (std::get<0>(ret) - buf);
+      scalar_res.count += (simdutf::internal::get<0>(ret) - buf);
       return scalar_res;
     } else {
       scalar_res.count += saved_bytes;
@@ -1270,22 +1278,26 @@ simdutf_warn_unused result implementation::convert_utf16le_to_utf32_with_errors(
 
 simdutf_warn_unused result implementation::convert_utf16be_to_utf32_with_errors(
     const char16_t *buf, size_t len, char32_t *utf32_output) const noexcept {
-  std::tuple<const char16_t *, char32_t *, bool> ret =
+  auto ret =
       icelake::convert_utf16_to_utf32<endianness::BIG>(buf, len, utf32_output);
-  if (!std::get<2>(ret)) {
+  if (!simdutf::internal::get<2>(ret)) {
     result scalar_res =
         scalar::utf16_to_utf32::convert_with_errors<endianness::BIG>(
-            std::get<0>(ret), len - (std::get<0>(ret) - buf), std::get<1>(ret));
-    scalar_res.count += (std::get<0>(ret) - buf);
+            simdutf::internal::get<0>(ret),
+            len - (simdutf::internal::get<0>(ret) - buf),
+            simdutf::internal::get<1>(ret));
+    scalar_res.count += (simdutf::internal::get<0>(ret) - buf);
     return scalar_res;
   }
-  size_t saved_bytes = std::get<1>(ret) - utf32_output;
-  if (std::get<0>(ret) != buf + len) {
+  size_t saved_bytes = simdutf::internal::get<1>(ret) - utf32_output;
+  if (simdutf::internal::get<0>(ret) != buf + len) {
     result scalar_res =
         scalar::utf16_to_utf32::convert_with_errors<endianness::BIG>(
-            std::get<0>(ret), len - (std::get<0>(ret) - buf), std::get<1>(ret));
+            simdutf::internal::get<0>(ret),
+            len - (simdutf::internal::get<0>(ret) - buf),
+            simdutf::internal::get<1>(ret));
     if (scalar_res.error) {
-      scalar_res.count += (std::get<0>(ret) - buf);
+      scalar_res.count += (simdutf::internal::get<0>(ret) - buf);
       return scalar_res;
     } else {
       scalar_res.count += saved_bytes;
@@ -1297,17 +1309,18 @@ simdutf_warn_unused result implementation::convert_utf16be_to_utf32_with_errors(
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16le_to_utf32(
     const char16_t *buf, size_t len, char32_t *utf32_output) const noexcept {
-  std::tuple<const char16_t *, char32_t *, bool> ret =
-      icelake::convert_utf16_to_utf32<endianness::LITTLE>(buf, len,
-                                                          utf32_output);
-  if (!std::get<2>(ret)) {
+  auto ret = icelake::convert_utf16_to_utf32<endianness::LITTLE>(buf, len,
+                                                                 utf32_output);
+  if (!simdutf::internal::get<2>(ret)) {
     return 0;
   }
-  size_t saved_bytes = std::get<1>(ret) - utf32_output;
-  if (std::get<0>(ret) != buf + len) {
+  size_t saved_bytes = simdutf::internal::get<1>(ret) - utf32_output;
+  if (simdutf::internal::get<0>(ret) != buf + len) {
     const size_t scalar_saved_bytes =
         scalar::utf16_to_utf32::convert<endianness::LITTLE>(
-            std::get<0>(ret), len - (std::get<0>(ret) - buf), std::get<1>(ret));
+            simdutf::internal::get<0>(ret),
+            len - (simdutf::internal::get<0>(ret) - buf),
+            simdutf::internal::get<1>(ret));
     if (scalar_saved_bytes == 0) {
       return 0;
     }
@@ -1318,16 +1331,18 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16le_to_utf32(
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_utf32(
     const char16_t *buf, size_t len, char32_t *utf32_output) const noexcept {
-  std::tuple<const char16_t *, char32_t *, bool> ret =
+  auto ret =
       icelake::convert_utf16_to_utf32<endianness::BIG>(buf, len, utf32_output);
-  if (!std::get<2>(ret)) {
+  if (!simdutf::internal::get<2>(ret)) {
     return 0;
   }
-  size_t saved_bytes = std::get<1>(ret) - utf32_output;
-  if (std::get<0>(ret) != buf + len) {
+  size_t saved_bytes = simdutf::internal::get<1>(ret) - utf32_output;
+  if (simdutf::internal::get<0>(ret) != buf + len) {
     const size_t scalar_saved_bytes =
         scalar::utf16_to_utf32::convert<endianness::BIG>(
-            std::get<0>(ret), len - (std::get<0>(ret) - buf), std::get<1>(ret));
+            simdutf::internal::get<0>(ret),
+            len - (simdutf::internal::get<0>(ret) - buf),
+            simdutf::internal::get<1>(ret));
     if (scalar_saved_bytes == 0) {
       return 0;
     }

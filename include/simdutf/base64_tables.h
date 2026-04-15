@@ -1,6 +1,10 @@
 #ifndef SIMDUTF_BASE64_TABLES_H
 #define SIMDUTF_BASE64_TABLES_H
-#include <cstdint>
+#ifdef SIMDUTF_NO_LIBCXX
+  #include <stdint.h>
+#else
+  #include <cstdint>
+#endif
 
 namespace simdutf {
 namespace {

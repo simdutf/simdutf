@@ -65,7 +65,7 @@ neon_expand_surrogate(const uint32x4_t in) {
 }
 
 template <endianness big_endian>
-std::pair<const char32_t *, char16_t *>
+internal::pair<const char32_t *, char16_t *>
 arm_convert_utf32_to_utf16(const char32_t *buf, size_t len,
                            char16_t *utf16_out) {
   uint16_t *utf16_output = reinterpret_cast<uint16_t *>(utf16_out);
@@ -74,7 +74,7 @@ arm_convert_utf32_to_utf16(const char32_t *buf, size_t len,
   uint16x8_t forbidden_bytemask = vmovq_n_u16(0x0);
   // To avoid buffer overflow while writing compressed_v
   const size_t safety_margin = 4;
-  while (end - buf >= std::ptrdiff_t(8 + safety_margin)) {
+  while (end - buf >= static_cast<internal::ptrdiff_t>(8 + safety_margin)) {
     uint32x4x2_t in = vld1q_u32_x2(reinterpret_cast<const uint32_t *>(buf));
 
     // Check if no bits set above 16th
@@ -98,8 +98,8 @@ arm_convert_utf32_to_utf16(const char32_t *buf, size_t len,
       buf += 8;
     } else {
       if (simdutf_unlikely(fast_invalid_utf32(in) || max_val > 0x10ffff)) {
-        return std::make_pair(nullptr,
-                              reinterpret_cast<char16_t *>(utf16_output));
+        return internal::pair<const char32_t *, char16_t *>{
+            nullptr, reinterpret_cast<char16_t *>(utf16_output)};
       }
       expansion_result_t res = neon_expand_surrogate<big_endian>(in.val[0]);
       vst1q_u8(reinterpret_cast<uint8_t *>(utf16_output), res.compressed_v);
@@ -113,14 +113,15 @@ arm_convert_utf32_to_utf16(const char32_t *buf, size_t len,
 
   // check for invalid input
   if (vmaxvq_u32(vreinterpretq_u32_u16(forbidden_bytemask)) != 0) {
-    return std::make_pair(nullptr, reinterpret_cast<char16_t *>(utf16_output));
+    return internal::pair<const char32_t *, char16_t *>{
+        nullptr, reinterpret_cast<char16_t *>(utf16_output)};
   }
 
-  return std::make_pair(buf, reinterpret_cast<char16_t *>(utf16_output));
+  return internal::make_pair(buf, reinterpret_cast<char16_t *>(utf16_output));
 }
 
 template <endianness big_endian>
-std::pair<result, char16_t *>
+internal::pair<result, char16_t *>
 arm_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
                                        char16_t *utf16_out) {
   uint16_t *utf16_output = reinterpret_cast<uint16_t *>(utf16_out);
@@ -129,7 +130,7 @@ arm_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
 
   // To avoid buffer overflow while writing compressed_v
   const size_t safety_margin = 4;
-  while (end - buf >= std::ptrdiff_t(8 + safety_margin)) {
+  while (end - buf >= static_cast<internal::ptrdiff_t>(8 + safety_margin)) {
     uint32x4x2_t in = vld1q_u32_x2(reinterpret_cast<const uint32_t *>(buf));
 
     // Check if no bits set above 16th
@@ -143,8 +144,8 @@ arm_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
       const uint16x8_t forbidden_bytemask =
           vceqq_u16(vandq_u16(utf16_packed, v_f800), v_d800);
       if (vmaxvq_u16(forbidden_bytemask) != 0) {
-        return std::make_pair(result(error_code::SURROGATE, buf - start),
-                              reinterpret_cast<char16_t *>(utf16_output));
+        return internal::make_pair(result(error_code::SURROGATE, buf - start),
+                                   reinterpret_cast<char16_t *>(utf16_output));
       }
 
       if simdutf_constexpr (!match_system(big_endian)) {
@@ -203,6 +204,6 @@ arm_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
     }
   }
 
-  return std::make_pair(result(error_code::SUCCESS, buf - start),
-                        reinterpret_cast<char16_t *>(utf16_output));
+  return internal::make_pair(result(error_code::SUCCESS, buf - start),
+                             reinterpret_cast<char16_t *>(utf16_output));
 }

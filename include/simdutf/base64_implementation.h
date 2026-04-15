@@ -59,8 +59,8 @@ simdutf_warn_unused simdutf_constexpr23 result base64_to_binary_safe_impl(
     base64_options options,
     last_chunk_handling_options last_chunk_handling_options,
     bool decode_up_to_bad_char) noexcept {
-  static_assert(std::is_same<chartype, char>::value ||
-                    std::is_same<chartype, char16_t>::value,
+  static_assert(internal::is_same<chartype, char>::value ||
+                    internal::is_same<chartype, char16_t>::value,
                 "Only char and char16_t are supported.");
   size_t remaining_input_length = length;
   size_t remaining_output_length = outlen;
@@ -68,7 +68,7 @@ simdutf_warn_unused simdutf_constexpr23 result base64_to_binary_safe_impl(
   size_t output_position = 0;
 
   // We also do a first pass using the fast path to decode as much as possible
-  size_t safe_input = (std::min)(
+  size_t safe_input = internal::min_value(
       remaining_input_length,
       base64_length_from_binary(remaining_output_length / 3 * 3, options));
   bool done_with_partial = (safe_input == remaining_input_length);

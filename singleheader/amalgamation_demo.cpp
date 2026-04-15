@@ -1,4 +1,5 @@
 #include <memory>
+#include <string.h>
 
 #include "simdutf.cpp"
 #include "simdutf.h"
@@ -41,9 +42,8 @@ int main(int, char *[]) {
   size_t utf8words = simdutf::convert_utf16le_to_utf8(
       utf16_output.get(), utf16words, utf8_output.get());
   printf("wrote %zu UTF-8 words.", utf8words);
-  std::string final_string(utf8_output.get(), utf8words);
-  puts(final_string.c_str());
-  if (final_string != source) {
+  printf("%.*s\n", int(utf8words), utf8_output.get());
+  if (utf8words != 4 || memcmp(utf8_output.get(), source, utf8words) != 0) {
     puts("bad conversion");
     return EXIT_FAILURE;
   } else {

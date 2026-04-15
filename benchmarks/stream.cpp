@@ -178,8 +178,9 @@ void run_from_utf16(const std::vector<char> &input_data,
 }
 
 int main(int argc, char **argv) {
-  printf("# current system detected as %s.\n",
-         simdutf::get_active_implementation()->name().c_str());
+  printf(
+      "# current system detected as %s.\n",
+      simdutf::internal::c_str(simdutf::get_active_implementation()->name()));
   if (argc < 2) {
     std::cerr << "Please provide a file argument." << std::endl;
     std::cerr << "The file should contain either UTF-8 or UTF-16 text."
@@ -199,7 +200,7 @@ int main(int argc, char **argv) {
   auto detected_encoding =
       simdutf::autodetect_encoding(input_data.data(), input_data.size());
   printf("# input detected as %s.\n",
-         simdutf::to_string(detected_encoding).c_str());
+         simdutf::internal::c_str(simdutf::to_string(detected_encoding)));
   if (detected_encoding == simdutf::encoding_type::UTF16_LE) {
     run_from_utf16(input_data);
   } else if (detected_encoding == simdutf::encoding_type::UTF8) {

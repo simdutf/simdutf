@@ -2,7 +2,7 @@
   Returns a pair: the first unprocessed byte from buf and utf8_output
   A scalar routing should carry on the conversion of the tail.
 */
-std::pair<const char *, char *>
+internal::pair<const char *, char *>
 arm_convert_latin1_to_utf8(const char *latin1_input, size_t len,
                            char *utf8_out) {
   uint8_t *utf8_output = reinterpret_cast<uint8_t *>(utf8_out);
@@ -66,5 +66,6 @@ arm_convert_latin1_to_utf8(const char *latin1_input, size_t len,
 
   } // while
 
-  return std::make_pair(latin1_input, reinterpret_cast<char *>(utf8_output));
+  return internal::make_pair(latin1_input,
+                             reinterpret_cast<char *>(utf8_output));
 }

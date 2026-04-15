@@ -1,7 +1,7 @@
 // file included directly
 
 template <endianness big_endian>
-std::pair<const char32_t *, char16_t *>
+simdutf::internal::pair<const char32_t *, char16_t *>
 avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
                               char16_t *utf16_output) {
   const char32_t *end = buf + len;
@@ -16,7 +16,7 @@ avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
   const __m512i v_3ff = _mm512_set1_epi32(0x3FF);
   const __m512i v_dc00d800 = _mm512_set1_epi32((int32_t)0xDC00D800);
 
-  while (end - buf >= std::ptrdiff_t(16)) {
+  while (end - buf >= simdutf::internal::ptrdiff_t(16)) {
     __m512i in = _mm512_loadu_si512(buf);
 
     // no bits set above 16th bit <=> can pack to UTF16 without surrogate pairs
@@ -48,7 +48,7 @@ avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
           saturation_bitmask, _mm512_and_si512(in, v_f800), v_d800);
       error |= _mm512_mask_cmpgt_epu32_mask(surrogate_bitmask, in, v_10ffff);
       if (simdutf_unlikely(error)) {
-        return std::make_pair(nullptr, utf16_output);
+        return {nullptr, utf16_output};
       }
       __m512i v1, v2, v;
       // for the bits saturation_bitmask == 0, we need to unpack the 32-bit word
@@ -113,7 +113,7 @@ avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
           saturation_bitmask, _mm512_and_si512(in, v_f800), v_d800);
       error |= _mm512_mask_cmpgt_epu32_mask(surrogate_bitmask, in, v_10ffff);
       if (simdutf_unlikely(error)) {
-        return std::make_pair(nullptr, utf16_output);
+        return {nullptr, utf16_output};
       }
       __m512i v1, v2, v;
       in = _mm512_mask_sub_epi32(in, surrogate_bitmask, in, v_10000);
@@ -145,14 +145,14 @@ avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
 
   // check for invalid input
   if (forbidden_bytemask != 0) {
-    return std::make_pair(nullptr, utf16_output);
+    return {nullptr, utf16_output};
   }
 
-  return std::make_pair(buf, utf16_output);
+  return simdutf::internal::make_pair(buf, utf16_output);
 }
 
 template <endianness big_endian>
-std::pair<result, char16_t *>
+simdutf::internal::pair<result, char16_t *>
 avx512_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
                                           char16_t *utf16_output) {
   const char32_t *start = buf;
@@ -170,7 +170,7 @@ avx512_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
   error_code code = error_code::SUCCESS;
   bool err = false;
 
-  while (end - buf >= std::ptrdiff_t(16)) {
+  while (end - buf >= simdutf::internal::ptrdiff_t(16)) {
     __m512i in = _mm512_loadu_si512(buf);
 
     // no bits set above 16th bit <=> can pack to UTF16 without surrogate pairs
@@ -193,8 +193,9 @@ avx512_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
         _mm256_mask_storeu_epi16(
             utf16_output, __mmask16(_blsmsk_u32(forbidden_bytemask) >> 1),
             utf16_packed);
-        return std::make_pair(result(error_code::SURROGATE, buf - start + idx),
-                              utf16_output + idx);
+        return simdutf::internal::make_pair(
+            result(error_code::SURROGATE, buf - start + idx),
+            utf16_output + idx);
       }
       _mm256_storeu_si256((__m256i *)utf16_output, utf16_packed);
       utf16_output += 16;
@@ -245,8 +246,8 @@ avx512_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
       //_mm512_mask_compressstoreu_epi16(utf16_output, output_mask, in);
       utf16_output += written_out;
       if (simdutf_unlikely(err)) {
-        return std::make_pair(result(code, buf - start + error_idx),
-                              utf16_output);
+        return simdutf::internal::make_pair(
+            result(code, buf - start + error_idx), utf16_output);
       }
     }
     buf += 16;
@@ -274,8 +275,9 @@ avx512_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
         _mm256_mask_storeu_epi16(
             utf16_output, __mmask16(_blsmsk_u32(forbidden_bytemask) >> 1),
             utf16_packed);
-        return std::make_pair(result(error_code::SURROGATE, buf - start + idx),
-                              utf16_output + idx);
+        return simdutf::internal::make_pair(
+            result(error_code::SURROGATE, buf - start + idx),
+            utf16_output + idx);
       }
       _mm256_mask_storeu_epi16(utf16_output, input_mask, utf16_packed);
       utf16_output += remaining_len;
@@ -327,12 +329,13 @@ avx512_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
       //_mm512_mask_compressstoreu_epi16(utf16_output, output_mask, in);
       utf16_output += written_out;
       if (simdutf_unlikely(err)) {
-        return std::make_pair(result(code, buf - start + error_idx),
-                              utf16_output);
+        return simdutf::internal::make_pair(
+            result(code, buf - start + error_idx), utf16_output);
       }
     }
     buf += remaining_len;
   }
 
-  return std::make_pair(result(error_code::SUCCESS, buf - start), utf16_output);
+  return simdutf::internal::make_pair(result(error_code::SUCCESS, buf - start),
+                                      utf16_output);
 }

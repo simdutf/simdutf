@@ -1,13 +1,15 @@
 #ifndef SIMDUTF_ENCODING_TYPES_H
 #define SIMDUTF_ENCODING_TYPES_H
-#include <string>
 #include "simdutf/portability.h"
 #include "simdutf/common_defs.h"
 
-#if !defined(SIMDUTF_NO_STD_TEXT_ENCODING) &&                                  \
-    defined(__cpp_lib_text_encoding) && __cpp_lib_text_encoding >= 202306L
-  #define SIMDUTF_HAS_STD_TEXT_ENCODING 1
-  #include <text_encoding>
+#ifndef SIMDUTF_NO_LIBCXX
+  #include <string>
+  #if !defined(SIMDUTF_NO_STD_TEXT_ENCODING) &&                                \
+      defined(__cpp_lib_text_encoding) && __cpp_lib_text_encoding >= 202306L
+    #define SIMDUTF_HAS_STD_TEXT_ENCODING 1
+    #include <text_encoding>
+  #endif
 #endif
 
 namespace simdutf {
@@ -43,7 +45,11 @@ match_system(endianness e) {
   return e == endianness::NATIVE;
 }
 
+#ifdef SIMDUTF_NO_LIBCXX
+simdutf_warn_unused const char *to_string(encoding_type bom);
+#else
 simdutf_warn_unused std::string to_string(encoding_type bom);
+#endif
 
 // Note that BOM for UTF8 is discouraged.
 namespace BOM {
@@ -67,7 +73,7 @@ simdutf_warn_unused size_t bom_byte_size(encoding_type bom);
 
 } // namespace BOM
 
-#ifdef SIMDUTF_HAS_STD_TEXT_ENCODING
+#if defined(SIMDUTF_HAS_STD_TEXT_ENCODING) && !defined(SIMDUTF_NO_LIBCXX)
 /**
  * Convert a simdutf encoding type to a std::text_encoding.
  *
@@ -183,7 +189,7 @@ from_std_encoding_native(const std::text_encoding &enc) noexcept {
     return unspecified;
   }
 }
-#endif // SIMDUTF_HAS_STD_TEXT_ENCODING
+#endif // defined(SIMDUTF_HAS_STD_TEXT_ENCODING) && !defined(SIMDUTF_NO_LIBCXX)
 
 } // namespace simdutf
 #endif

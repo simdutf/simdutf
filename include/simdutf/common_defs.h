@@ -7,18 +7,36 @@
 // Sometimes logging is useful, but we want it disabled by default
 // and free of any logging code in release builds.
 #ifdef SIMDUTF_LOGGING
-  #include <iostream>
-  #define simdutf_log(msg)                                                     \
-    std::cout << "[" << __FUNCTION__ << "]: " << msg << std::endl              \
-              << "\t" << __FILE__ << ":" << __LINE__ << std::endl;
-  #define simdutf_log_assert(cond, msg)                                        \
-    do {                                                                       \
-      if (!(cond)) {                                                           \
-        std::cerr << "[" << __FUNCTION__ << "]: " << msg << std::endl          \
-                  << "\t" << __FILE__ << ":" << __LINE__ << std::endl;         \
-        std::abort();                                                          \
-      }                                                                        \
-    } while (0)
+  #ifdef SIMDUTF_NO_LIBCXX
+    #include <stdio.h>
+    #define simdutf_log(msg)                                                   \
+      do {                                                                     \
+        printf("[%s]: %s\n\t%s:%d\n", __FUNCTION__, msg, __FILE__, __LINE__);  \
+        fflush(stdout);                                                        \
+      } while (0)
+    #define simdutf_log_assert(cond, msg)                                      \
+      do {                                                                     \
+        if (!(cond)) {                                                         \
+          fprintf(stderr, "[%s]: %s\n\t%s:%d\n", __FUNCTION__, msg, __FILE__,  \
+                  __LINE__);                                                   \
+          fflush(stderr);                                                      \
+          abort();                                                             \
+        }                                                                      \
+      } while (0)
+  #else
+    #include <iostream>
+    #define simdutf_log(msg)                                                   \
+      std::cout << "[" << __FUNCTION__ << "]: " << msg << std::endl            \
+                << "\t" << __FILE__ << ":" << __LINE__ << std::endl;
+    #define simdutf_log_assert(cond, msg)                                      \
+      do {                                                                     \
+        if (!(cond)) {                                                         \
+          std::cerr << "[" << __FUNCTION__ << "]: " << msg << std::endl        \
+                    << "\t" << __FILE__ << ":" << __LINE__ << std::endl;       \
+          std::abort();                                                        \
+        }                                                                      \
+      } while (0)
+  #endif
 #else
   #define simdutf_log(msg)
   #define simdutf_log_assert(cond, msg)

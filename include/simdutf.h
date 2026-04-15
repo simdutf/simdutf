@@ -1,6 +1,5 @@
 #ifndef SIMDUTF_H
 #define SIMDUTF_H
-#include <cstring>
 
 #include "simdutf/compiler_check.h"
 #include "simdutf/common_defs.h"

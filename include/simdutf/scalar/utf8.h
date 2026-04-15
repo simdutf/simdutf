@@ -11,7 +11,7 @@ template <class BytePtr>
 simdutf_constexpr23 simdutf_warn_unused bool validate(BytePtr data,
                                                       size_t len) noexcept {
   static_assert(
-      std::is_same<typename std::decay<decltype(*data)>::type, uint8_t>::value,
+      internal::is_same<internal::decay_t<decltype(*data)>, uint8_t>::value,
       "dereferencing the data pointer must result in a uint8_t");
   uint64_t pos = 0;
   uint32_t code_point = 0;
@@ -25,9 +25,9 @@ simdutf_constexpr23 simdutf_warn_unused bool validate(BytePtr data,
       if (next_pos <= len) { // if it is safe to read 16 more bytes, check
                              // that they are ascii
         uint64_t v1{};
-        std::memcpy(&v1, data + pos, sizeof(uint64_t));
+        internal::memcpy(&v1, data + pos, sizeof(uint64_t));
         uint64_t v2{};
-        std::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
+        internal::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
         uint64_t v{v1 | v2};
         if ((v & 0x8080808080808080) == 0) {
           pos = next_pos;
@@ -116,7 +116,7 @@ template <class BytePtr>
 simdutf_constexpr23 simdutf_warn_unused result
 validate_with_errors(BytePtr data, size_t len) noexcept {
   static_assert(
-      std::is_same<typename std::decay<decltype(*data)>::type, uint8_t>::value,
+      internal::is_same<internal::decay_t<decltype(*data)>, uint8_t>::value,
       "dereferencing the data pointer must result in a uint8_t");
   size_t pos = 0;
   uint32_t code_point = 0;
@@ -126,9 +126,9 @@ validate_with_errors(BytePtr data, size_t len) noexcept {
     if (next_pos <=
         len) { // if it is safe to read 16 more bytes, check that they are ascii
       uint64_t v1;
-      std::memcpy(&v1, data + pos, sizeof(uint64_t));
+      internal::memcpy(&v1, data + pos, sizeof(uint64_t));
       uint64_t v2;
-      std::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
+      internal::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
       uint64_t v{v1 | v2};
       if ((v & 0x8080808080808080) == 0) {
         pos = next_pos;

@@ -1,4 +1,4 @@
-std::pair<const char32_t *, char *>
+internal::pair<const char32_t *, char *>
 lasx_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
   uint8_t *utf8_output = reinterpret_cast<uint8_t *>(utf8_out);
   const char32_t *end = buf + len;
@@ -13,14 +13,16 @@ lasx_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
       *utf8_output++ = char((word & 0b111111) | 0b10000000);
     } else if ((word & 0xFFFF0000) == 0) {
       if (word >= 0xD800 && word <= 0xDFFF) {
-        return std::make_pair(nullptr, reinterpret_cast<char *>(utf8_output));
+        return internal::pair<const char32_t *, char *>{
+            nullptr, reinterpret_cast<char *>(utf8_output)};
       }
       *utf8_output++ = char((word >> 12) | 0b11100000);
       *utf8_output++ = char(((word >> 6) & 0b111111) | 0b10000000);
       *utf8_output++ = char((word & 0b111111) | 0b10000000);
     } else {
       if (word > 0x10FFFF) {
-        return std::make_pair(nullptr, reinterpret_cast<char *>(utf8_output));
+        return internal::pair<const char32_t *, char *>{
+            nullptr, reinterpret_cast<char *>(utf8_output)};
       }
       *utf8_output++ = char((word >> 18) | 0b11110000);
       *utf8_output++ = char(((word >> 12) & 0b111111) | 0b10000000);
@@ -42,7 +44,7 @@ lasx_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
       12; // to avoid overruns, see issue
           // https://github.com/simdutf/simdutf/issues/92
 
-  while (end - buf > std::ptrdiff_t(16 + safety_margin)) {
+  while (end - buf > internal::ptrdiff_t(16 + safety_margin)) {
     __m256i in = __lasx_xvld(reinterpret_cast<const uint32_t *>(buf), 0);
     __m256i nextin = __lasx_xvld(reinterpret_cast<const uint32_t *>(buf), 32);
 
@@ -262,16 +264,16 @@ lasx_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else if ((word & 0xFFFF0000) == 0) {
           if (word >= 0xD800 && word <= 0xDFFF) {
-            return std::make_pair(nullptr,
-                                  reinterpret_cast<char *>(utf8_output));
+            return internal::pair<const char32_t *, char *>{
+                nullptr, reinterpret_cast<char *>(utf8_output)};
           }
           *utf8_output++ = char((word >> 12) | 0b11100000);
           *utf8_output++ = char(((word >> 6) & 0b111111) | 0b10000000);
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else {
           if (word > 0x10FFFF) {
-            return std::make_pair(nullptr,
-                                  reinterpret_cast<char *>(utf8_output));
+            return internal::pair<const char32_t *, char *>{
+                nullptr, reinterpret_cast<char *>(utf8_output)};
           }
           *utf8_output++ = char((word >> 18) | 0b11110000);
           *utf8_output++ = char(((word >> 12) & 0b111111) | 0b10000000);
@@ -285,12 +287,13 @@ lasx_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
 
   // check for invalid input
   if (__lasx_xbnz_v(forbidden_bytemask)) {
-    return std::make_pair(nullptr, reinterpret_cast<char *>(utf8_output));
+    return internal::pair<const char32_t *, char *>{
+        nullptr, reinterpret_cast<char *>(utf8_output)};
   }
-  return std::make_pair(buf, reinterpret_cast<char *>(utf8_output));
+  return internal::make_pair(buf, reinterpret_cast<char *>(utf8_output));
 }
 
-std::pair<result, char *>
+internal::pair<result, char *>
 lasx_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
                                        char *utf8_out) {
   uint8_t *utf8_output = reinterpret_cast<uint8_t *>(utf8_out);
@@ -307,16 +310,16 @@ lasx_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
       *utf8_output++ = char((word & 0b111111) | 0b10000000);
     } else if ((word & 0xFFFF0000) == 0) {
       if (word >= 0xD800 && word <= 0xDFFF) {
-        return std::make_pair(result(error_code::SURROGATE, buf - start),
-                              reinterpret_cast<char *>(utf8_output));
+        return internal::make_pair(result(error_code::SURROGATE, buf - start),
+                                   reinterpret_cast<char *>(utf8_output));
       }
       *utf8_output++ = char((word >> 12) | 0b11100000);
       *utf8_output++ = char(((word >> 6) & 0b111111) | 0b10000000);
       *utf8_output++ = char((word & 0b111111) | 0b10000000);
     } else {
       if (word > 0x10FFFF) {
-        return std::make_pair(result(error_code::TOO_LARGE, buf - start),
-                              reinterpret_cast<char *>(utf8_output));
+        return internal::make_pair(result(error_code::TOO_LARGE, buf - start),
+                                   reinterpret_cast<char *>(utf8_output));
       }
       *utf8_output++ = char((word >> 18) | 0b11110000);
       *utf8_output++ = char(((word >> 12) & 0b111111) | 0b10000000);
@@ -337,7 +340,7 @@ lasx_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
       12; // to avoid overruns, see issue
           // https://github.com/simdutf/simdutf/issues/92
 
-  while (end - buf > std::ptrdiff_t(16 + safety_margin)) {
+  while (end - buf > internal::ptrdiff_t(16 + safety_margin)) {
     __m256i in = __lasx_xvld(reinterpret_cast<const uint32_t *>(buf), 0);
     __m256i nextin = __lasx_xvld(reinterpret_cast<const uint32_t *>(buf), 32);
 
@@ -417,8 +420,8 @@ lasx_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
                 __lasx_xvsle_h(v_d800, utf16_packed)), // utf16_packed >= 0xd800
             forbidden_bytemask);
         if (__lasx_xbnz_v(forbidden_bytemask)) {
-          return std::make_pair(result(error_code::SURROGATE, buf - start),
-                                reinterpret_cast<char *>(utf8_output));
+          return internal::make_pair(result(error_code::SURROGATE, buf - start),
+                                     reinterpret_cast<char *>(utf8_output));
         }
         /* In this branch we handle three cases:
             1. [0000|0000|0ccc|cccc] => [0ccc|cccc]                           -
@@ -561,7 +564,7 @@ lasx_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else if ((word & 0xFFFF0000) == 0) {
           if (word >= 0xD800 && word <= 0xDFFF) {
-            return std::make_pair(
+            return internal::make_pair(
                 result(error_code::SURROGATE, buf - start + k),
                 reinterpret_cast<char *>(utf8_output));
           }
@@ -570,7 +573,7 @@ lasx_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
         } else {
           if (word > 0x10FFFF) {
-            return std::make_pair(
+            return internal::make_pair(
                 result(error_code::TOO_LARGE, buf - start + k),
                 reinterpret_cast<char *>(utf8_output));
           }
@@ -584,6 +587,6 @@ lasx_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
     }
   } // while
 
-  return std::make_pair(result(error_code::SUCCESS, buf - start),
-                        reinterpret_cast<char *>(utf8_output));
+  return internal::make_pair(result(error_code::SUCCESS, buf - start),
+                             reinterpret_cast<char *>(utf8_output));
 }

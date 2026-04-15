@@ -41,7 +41,8 @@ enum error_code {
   OUTPUT_BUFFER_TOO_SMALL,  // The provided buffer is too small.
   OTHER                     // Not related to validation/transcoding.
 };
-#if SIMDUTF_CPLUSPLUS17
+
+#if SIMDUTF_CPLUSPLUS17 && !defined(SIMDUTF_NO_LIBCXX)
 inline std::string_view error_to_string(error_code code) noexcept {
   switch (code) {
   case SUCCESS:

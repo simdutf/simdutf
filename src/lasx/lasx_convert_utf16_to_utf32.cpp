@@ -1,5 +1,5 @@
 template <endianness big_endian>
-std::pair<const char16_t *, char32_t *>
+internal::pair<const char16_t *, char32_t *>
 lasx_convert_utf16_to_utf32(const char16_t *buf, size_t len,
                             char32_t *utf32_out) {
   uint32_t *utf32_output = reinterpret_cast<uint32_t *>(utf32_out);
@@ -13,16 +13,16 @@ lasx_convert_utf16_to_utf32(const char16_t *buf, size_t len,
       buf++;
     } else {
       if (buf + 1 >= end) {
-        return std::make_pair(nullptr,
-                              reinterpret_cast<char32_t *>(utf32_output));
+        return internal::pair<const char16_t *, char32_t *>{
+            nullptr, reinterpret_cast<char32_t *>(utf32_output)};
       }
       // must be a surrogate pair
       uint16_t diff = uint16_t(word - 0xD800);
       uint16_t next_word = scalar::utf16::swap_if_needed<big_endian>(buf[1]);
       uint16_t diff2 = uint16_t(next_word - 0xDC00);
       if ((diff | diff2) > 0x3FF) {
-        return std::make_pair(nullptr,
-                              reinterpret_cast<char32_t *>(utf32_output));
+        return internal::pair<const char16_t *, char32_t *>{
+            nullptr, reinterpret_cast<char32_t *>(utf32_output)};
       }
       uint32_t value = (diff << 10) + diff2 + 0x10000;
       *utf32_output++ = char32_t(value);
@@ -73,8 +73,8 @@ lasx_convert_utf16_to_utf32(const char16_t *buf, size_t len,
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
           if ((diff | diff2) > 0x3FF) {
-            return std::make_pair(nullptr,
-                                  reinterpret_cast<char32_t *>(utf32_output));
+            return internal::pair<const char16_t *, char32_t *>{
+                nullptr, reinterpret_cast<char32_t *>(utf32_output)};
           }
           uint32_t value = (diff << 10) + diff2 + 0x10000;
           *utf32_output++ = char32_t(value);
@@ -83,7 +83,7 @@ lasx_convert_utf16_to_utf32(const char16_t *buf, size_t len,
       buf += k;
     }
   } // while
-  return std::make_pair(buf, reinterpret_cast<char32_t *>(utf32_output));
+  return internal::make_pair(buf, reinterpret_cast<char32_t *>(utf32_output));
 }
 
 /*
@@ -94,7 +94,7 @@ lasx_convert_utf16_to_utf32(const char16_t *buf, size_t len,
   tail if needed.
 */
 template <endianness big_endian>
-std::pair<result, char32_t *>
+internal::pair<result, char32_t *>
 lasx_convert_utf16_to_utf32_with_errors(const char16_t *buf, size_t len,
                                         char32_t *utf32_out) {
   uint32_t *utf32_output = reinterpret_cast<uint32_t *>(utf32_out);
@@ -113,15 +113,15 @@ lasx_convert_utf16_to_utf32_with_errors(const char16_t *buf, size_t len,
       uint16_t next_word = scalar::utf16::swap_if_needed<big_endian>(buf[1]);
       uint16_t diff2 = uint16_t(next_word - 0xDC00);
       if ((diff | diff2) > 0x3FF) {
-        return std::make_pair(result(error_code::SURROGATE, buf - start),
-                              reinterpret_cast<char32_t *>(utf32_output));
+        return internal::make_pair(result(error_code::SURROGATE, buf - start),
+                                   reinterpret_cast<char32_t *>(utf32_output));
       }
       uint32_t value = (diff << 10) + diff2 + 0x10000;
       *utf32_output++ = char32_t(value);
       buf += 2;
     } else {
-      return std::make_pair(result(error_code::SURROGATE, buf - start),
-                            reinterpret_cast<char32_t *>(utf32_output));
+      return internal::make_pair(result(error_code::SURROGATE, buf - start),
+                                 reinterpret_cast<char32_t *>(utf32_output));
     }
   }
 
@@ -167,7 +167,7 @@ lasx_convert_utf16_to_utf32_with_errors(const char16_t *buf, size_t len,
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
           if ((diff | diff2) > 0x3FF) {
-            return std::make_pair(
+            return internal::make_pair(
                 result(error_code::SURROGATE, buf - start + k - 1),
                 reinterpret_cast<char32_t *>(utf32_output));
           }
@@ -178,6 +178,6 @@ lasx_convert_utf16_to_utf32_with_errors(const char16_t *buf, size_t len,
       buf += k;
     }
   } // while
-  return std::make_pair(result(error_code::SUCCESS, buf - start),
-                        reinterpret_cast<char32_t *>(utf32_output));
+  return internal::make_pair(result(error_code::SUCCESS, buf - start),
+                             reinterpret_cast<char32_t *>(utf32_output));
 }

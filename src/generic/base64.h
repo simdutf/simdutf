@@ -110,8 +110,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
           base64_decode_block(dst, buffer + (block_size - 2) * 64);
         }
         dst += 48;
-        std::memcpy(buffer, buffer + (block_size - 1) * 64,
-                    64); // 64 might be too much
+        simdutf::internal::memcpy(buffer, buffer + (block_size - 1) * 64,
+                                  64); // 64 might be too much
         bufferptr -= (block_size - 1) * 64;
       }
     }
@@ -154,7 +154,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
 #if !SIMDUTF_IS_BIG_ENDIAN
       triple = scalar::u32_swap_bytes(triple);
 #endif
-      std::memcpy(dst, &triple, 3);
+      simdutf::internal::memcpy(dst, &triple, 3);
 
       dst += 3;
       buffer_start += 4;
@@ -168,7 +168,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
 #if !SIMDUTF_IS_BIG_ENDIAN
       triple = scalar::u32_swap_bytes(triple);
 #endif
-      std::memcpy(dst, &triple, 3);
+      simdutf::internal::memcpy(dst, &triple, 3);
 
       dst += 3;
       buffer_start += 4;

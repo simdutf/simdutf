@@ -169,7 +169,8 @@ size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
         if (offset + 64 > line_length) {
           size_t location_end = line_length - offset;
           size_t to_move = 64 - location_end;
-          std::memmove(out + location_end + 1, out + location_end, to_move);
+          internal::memmove(out + location_end + 1, out + location_end,
+                            to_move);
           out[location_end] = '\n';
           offset = to_move;
           out += 64 + 1;
@@ -219,7 +220,8 @@ size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
         if (offset + 32 > line_length) {
           size_t location_end = line_length - offset;
           size_t to_move = 32 - location_end;
-          std::memmove(out + location_end + 1, out + location_end, to_move);
+          internal::memmove(out + location_end + 1, out + location_end,
+                            to_move);
           out[location_end] = '\n';
           offset = to_move;
           out += 32 + 1;
@@ -679,8 +681,8 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
           base64_decode_block(dst, buffer + i * 64);
           dst += 48;
         }
-        std::memcpy(buffer, buffer + (block_size - 1) * 64,
-                    64); // 64 might be too much
+        internal::memcpy(buffer, buffer + (block_size - 1) * 64,
+                         64); // 64 might be too much
         bufferptr -= (block_size - 1) * 64;
       }
     }
@@ -717,7 +719,7 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
 #if !SIMDUTF_IS_BIG_ENDIAN
       triple = scalar::u32_swap_bytes(triple);
 #endif
-      std::memcpy(dst, &triple, 4);
+      internal::memcpy(dst, &triple, 4);
 
       dst += 3;
       buffer_start += 4;
@@ -731,7 +733,7 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
 #if !SIMDUTF_IS_BIG_ENDIAN
       triple = scalar::u32_swap_bytes(triple);
 #endif
-      std::memcpy(dst, &triple, 3);
+      internal::memcpy(dst, &triple, 3);
 
       dst += 3;
       buffer_start += 4;

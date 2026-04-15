@@ -1,4 +1,4 @@
-std::pair<const char *, char32_t *>
+internal::pair<const char *, char32_t *>
 ppc64_convert_latin1_to_utf32(const char *buf, size_t len,
                               char32_t *utf32_output) {
   const size_t rounded_len = align_down<vector_u8::ELEMENTS>(len);
@@ -8,5 +8,5 @@ ppc64_convert_latin1_to_utf32(const char *buf, size_t len,
     in.store_bytes_as_utf32(&utf32_output[i]);
   }
 
-  return std::make_pair(buf + rounded_len, utf32_output + rounded_len);
+  return internal::make_pair(buf + rounded_len, utf32_output + rounded_len);
 }

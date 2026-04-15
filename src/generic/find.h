@@ -11,10 +11,9 @@ simdutf_really_inline const char *find(const char *start, const char *end,
   // Align the start pointer to 64 bytes
   uintptr_t misalignment = reinterpret_cast<uintptr_t>(start) % 64;
   if (misalignment != 0) {
-    size_t adjustment = 64 - misalignment;
-    if (size_t(std::distance(start, end)) < adjustment) {
-      adjustment = std::distance(start, end);
-    }
+    size_t remaining = size_t(end - start);
+    size_t adjustment =
+        internal::min_value<size_t>(64 - misalignment, remaining);
     for (size_t i = 0; i < adjustment; i++) {
       if (start[i] == character) {
         return start + i;
@@ -24,7 +23,8 @@ simdutf_really_inline const char *find(const char *start, const char *end,
   }
 
   // Main loop for 64-byte aligned data
-  for (; std::distance(start, end) >= 64; start += 64) {
+  for (size_t remaining = size_t(end - start); remaining >= 64;
+       start += 64, remaining -= 64) {
     simd8x64<uint8_t> input(reinterpret_cast<const uint8_t *>(start));
     uint64_t matches = input.eq(uint8_t(character));
     if (matches != 0) {
@@ -33,7 +33,7 @@ simdutf_really_inline const char *find(const char *start, const char *end,
       return start + index;
     }
   }
-  return std::find(start, end, character);
+  return internal::find(start, end, character);
 }
 
 simdutf_really_inline const char16_t *
@@ -44,10 +44,9 @@ find(const char16_t *start, const char16_t *end, char16_t character) noexcept {
   // Align the start pointer to 64 bytes if misalignment is even
   uintptr_t misalignment = reinterpret_cast<uintptr_t>(start) % 64;
   if (misalignment != 0 && misalignment % 2 == 0) {
-    size_t adjustment = (64 - misalignment) / sizeof(char16_t);
-    if (size_t(std::distance(start, end)) < adjustment) {
-      adjustment = std::distance(start, end);
-    }
+    size_t remaining = size_t(end - start);
+    size_t adjustment = internal::min_value<size_t>(
+        (64 - misalignment) / sizeof(char16_t), remaining);
     for (size_t i = 0; i < adjustment; i++) {
       if (start[i] == character) {
         return start + i;
@@ -57,7 +56,8 @@ find(const char16_t *start, const char16_t *end, char16_t character) noexcept {
   }
 
   // Main loop for 64-byte aligned data
-  for (; std::distance(start, end) >= 32; start += 32) {
+  for (size_t remaining = size_t(end - start); remaining >= 32;
+       start += 32, remaining -= 32) {
     simd16x32<uint16_t> input(reinterpret_cast<const uint16_t *>(start));
     uint64_t matches = input.eq(uint16_t(character));
     if (matches != 0) {
@@ -66,7 +66,7 @@ find(const char16_t *start, const char16_t *end, char16_t character) noexcept {
       return start + index;
     }
   }
-  return std::find(start, end, character);
+  return internal::find(start, end, character);
 }
 
 } // namespace util

@@ -10,7 +10,7 @@ template <typename ReadPtr, typename WritePtr>
 simdutf_constexpr23 size_t convert_valid(ReadPtr data, size_t len,
                                          WritePtr latin1_output) {
   static_assert(
-      std::is_same<typename std::decay<decltype(*data)>::type, uint32_t>::value,
+      internal::is_same<internal::decay_t<decltype(*data)>, uint32_t>::value,
       "dereferencing the data pointer must result in a uint32_t");
   auto start = latin1_output;
   uint32_t utf32_char;
@@ -28,7 +28,7 @@ simdutf_constexpr23 size_t convert_valid(ReadPtr data, size_t len,
       if (pos + 2 <= len) {
         // if it is safe to read 8 more bytes, check that they are Latin1
         uint64_t v;
-        std::memcpy(&v, data + pos, sizeof(uint64_t));
+        internal::memcpy(&v, data + pos, sizeof(uint64_t));
         if ((v & 0xFFFFFF00FFFFFF00) == 0) {
           *latin1_output++ = char(data[pos]);
           *latin1_output++ = char(data[pos + 1]);

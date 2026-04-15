@@ -51,7 +51,7 @@
   A scalar routing should carry on the conversion of the tail.
 */
 template <endianness big_endian>
-std::pair<const char16_t *, char *>
+internal::pair<const char16_t *, char *>
 arm_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
   uint8_t *utf8_output = reinterpret_cast<uint8_t *>(utf8_out);
   const char16_t *end = buf + len;
@@ -62,7 +62,7 @@ arm_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
   const size_t safety_margin =
       12; // to avoid overruns, see issue
           // https://github.com/simdutf/simdutf/issues/92
-  while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
+  while (end - buf >= static_cast<internal::ptrdiff_t>(16 + safety_margin)) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
     if simdutf_constexpr (!match_system(big_endian)) {
       in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in)));
@@ -292,8 +292,8 @@ arm_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
           if ((diff | diff2) > 0x3FF) {
-            return std::make_pair(nullptr,
-                                  reinterpret_cast<char *>(utf8_output));
+            return internal::pair<const char16_t *, char *>{
+                nullptr, reinterpret_cast<char *>(utf8_output)};
           }
           uint32_t value = (diff << 10) + diff2 + 0x10000;
           *utf8_output++ = char((value >> 18) | 0b11110000);
@@ -306,7 +306,7 @@ arm_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
     }
   } // while
 
-  return std::make_pair(buf, reinterpret_cast<char *>(utf8_output));
+  return internal::make_pair(buf, reinterpret_cast<char *>(utf8_output));
 }
 
 /*
@@ -317,7 +317,7 @@ arm_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
   tail if needed.
 */
 template <endianness big_endian>
-std::pair<result, char *>
+internal::pair<result, char *>
 arm_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
                                       char *utf8_out) {
   uint8_t *utf8_output = reinterpret_cast<uint8_t *>(utf8_out);
@@ -331,7 +331,7 @@ arm_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
       12; // to avoid overruns, see issue
           // https://github.com/simdutf/simdutf/issues/92
 
-  while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
+  while (end - buf >= static_cast<internal::ptrdiff_t>(16 + safety_margin)) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
     if simdutf_constexpr (!match_system(big_endian)) {
       in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in)));
@@ -561,7 +561,7 @@ arm_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
           if ((diff | diff2) > 0x3FF) {
-            return std::make_pair(
+            return internal::make_pair(
                 result(error_code::SURROGATE, buf - start + k - 1),
                 reinterpret_cast<char *>(utf8_output));
           }
@@ -576,8 +576,8 @@ arm_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
     }
   } // while
 
-  return std::make_pair(result(error_code::SUCCESS, buf - start),
-                        reinterpret_cast<char *>(utf8_output));
+  return internal::make_pair(result(error_code::SUCCESS, buf - start),
+                             reinterpret_cast<char *>(utf8_output));
 }
 
 template <endianness big_endian>

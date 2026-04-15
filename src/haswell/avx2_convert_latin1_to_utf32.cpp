@@ -1,4 +1,4 @@
-std::pair<const char *, char32_t *>
+internal::pair<const char *, char32_t *>
 avx2_convert_latin1_to_utf32(const char *buf, size_t len,
                              char32_t *utf32_output) {
   size_t rounded_len = ((len | 7) ^ 7); // Round down to nearest multiple of 8
@@ -16,5 +16,5 @@ avx2_convert_latin1_to_utf32(const char *buf, size_t len,
   }
 
   // return pointers pointing to where we left off
-  return std::make_pair(buf + rounded_len, utf32_output + rounded_len);
+  return internal::make_pair(buf + rounded_len, utf32_output + rounded_len);
 }

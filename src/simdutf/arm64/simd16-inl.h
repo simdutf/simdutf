@@ -268,10 +268,12 @@ template <> struct simd16<uint16_t> : base16_numeric<uint16_t> {
   }
 
   void dump() const {
+#ifdef SIMDUTF_LOGGING
     uint16_t temp[8];
     vst1q_u16(temp, *this);
     printf("[%04x, %04x, %04x, %04x, %04x, %04x, %04x, %04x]\n", temp[0],
            temp[1], temp[2], temp[3], temp[4], temp[5], temp[6], temp[7]);
+#endif // SIMDUTF_LOGGING
   }
 
   simdutf_really_inline uint32_t sum() const { return vaddlvq_u16(value); }

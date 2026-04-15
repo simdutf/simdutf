@@ -18,10 +18,10 @@
     - pair.second   - the first unprocessed output word
 */
 template <endianness big_endian, typename OUTPUT>
-std::pair<const char *, OUTPUT *>
+simdutf::internal::pair<const char *, OUTPUT *>
 valid_utf8_to_fixed_length(const char *str, size_t len, OUTPUT *dwords) {
-  constexpr bool UTF32 = std::is_same<OUTPUT, uint32_t>::value;
-  constexpr bool UTF16 = std::is_same<OUTPUT, char16_t>::value;
+  constexpr bool UTF32 = simdutf::internal::is_same<OUTPUT, uint32_t>::value;
+  constexpr bool UTF16 = simdutf::internal::is_same<OUTPUT, char16_t>::value;
   static_assert(
       UTF32 or UTF16,
       "output type has to be uint32_t (for UTF-32) or char16_t (for UTF-16)");
@@ -133,4 +133,4 @@ valid_utf8_to_fixed_length(const char *str, size_t len, OUTPUT *dwords) {
   return {ptr, output};
 }
 
-using utf8_to_utf16_result = std::pair<const char *, char16_t *>;
+using utf8_to_utf16_result = simdutf::internal::pair<const char *, char16_t *>;

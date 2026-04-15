@@ -11,7 +11,7 @@ simdutf_constexpr23 inline size_t
 convert_valid_impl(InputIterator data, size_t len,
                    OutputIterator latin_output) {
   static_assert(
-      std::is_same<typename std::decay<decltype(*data)>::type, uint16_t>::value,
+      internal::is_same<internal::decay_t<decltype(*data)>, uint16_t>::value,
       "must decay to uint16_t");
   size_t pos = 0;
   const auto start = latin_output;

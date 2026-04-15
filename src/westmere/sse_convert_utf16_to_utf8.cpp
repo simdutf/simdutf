@@ -52,7 +52,7 @@
   A scalar routing should carry on the conversion of the tail.
 */
 template <endianness big_endian>
-std::pair<const char16_t *, char *>
+internal::pair<const char16_t *, char *>
 sse_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_output) {
 
   const char16_t *end = buf + len;
@@ -64,7 +64,7 @@ sse_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_output) {
       12; // to avoid overruns, see issue
           // https://github.com/simdutf/simdutf/issues/92
 
-  while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
+  while (end - buf >= internal::ptrdiff_t(16 + safety_margin)) {
     __m128i in = _mm_loadu_si128((__m128i *)buf);
     if (big_endian) {
       const __m128i swap =
@@ -256,7 +256,8 @@ sse_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_output) {
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
           if ((diff | diff2) > 0x3FF) {
-            return std::make_pair(nullptr, utf8_output);
+            return internal::pair<const char16_t *, char *>{nullptr,
+                                                            utf8_output};
           }
           uint32_t value = (diff << 10) + diff2 + 0x10000;
           *utf8_output++ = char((value >> 18) | 0b11110000);
@@ -269,7 +270,7 @@ sse_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_output) {
     }
   } // while
 
-  return std::make_pair(buf, utf8_output);
+  return internal::make_pair(buf, utf8_output);
 }
 
 /*
@@ -280,7 +281,7 @@ sse_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_output) {
   tail if needed.
 */
 template <endianness big_endian>
-std::pair<result, char *>
+internal::pair<result, char *>
 sse_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
                                       char *utf8_output) {
   const char16_t *start = buf;
@@ -293,7 +294,7 @@ sse_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
       12; // to avoid overruns, see issue
           // https://github.com/simdutf/simdutf/issues/92
 
-  while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
+  while (end - buf >= internal::ptrdiff_t(16 + safety_margin)) {
     __m128i in = _mm_loadu_si128((__m128i *)buf);
     if (big_endian) {
       const __m128i swap =
@@ -485,7 +486,7 @@ sse_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
           k++;
           uint16_t diff2 = uint16_t(next_word - 0xDC00);
           if ((diff | diff2) > 0x3FF) {
-            return std::make_pair(
+            return internal::make_pair(
                 result(error_code::SURROGATE, buf - start + k - 1),
                 utf8_output);
           }
@@ -500,5 +501,6 @@ sse_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
     }
   } // while
 
-  return std::make_pair(result(error_code::SUCCESS, buf - start), utf8_output);
+  return internal::make_pair(result(error_code::SUCCESS, buf - start),
+                             utf8_output);
 }

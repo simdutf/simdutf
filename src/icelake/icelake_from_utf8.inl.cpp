@@ -5,10 +5,10 @@
 template <endianness big_endian, typename OUTPUT>
 // todo: replace with the utf-8 to utf-16 routine adapted to utf-32. This code
 // is legacy.
-std::pair<const char *, OUTPUT *>
+simdutf::internal::pair<const char *, OUTPUT *>
 validating_utf8_to_fixed_length(const char *str, size_t len, OUTPUT *dwords) {
-  constexpr bool UTF32 = std::is_same<OUTPUT, uint32_t>::value;
-  constexpr bool UTF16 = std::is_same<OUTPUT, char16_t>::value;
+  constexpr bool UTF32 = simdutf::internal::is_same<OUTPUT, uint32_t>::value;
+  constexpr bool UTF16 = simdutf::internal::is_same<OUTPUT, char16_t>::value;
   static_assert(
       UTF32 or UTF16,
       "output type has to be uint32_t (for UTF-32) or char16_t (for UTF-16)");
@@ -133,12 +133,12 @@ validating_utf8_to_fixed_length(const char *str, size_t len, OUTPUT *dwords) {
 // identified todo: replace with the utf-8 to utf-16 routine adapted to utf-32.
 // This code is legacy.
 template <endianness big_endian, typename OUTPUT>
-std::tuple<const char *, OUTPUT *, bool>
+simdutf::internal::tuple<const char *, OUTPUT *, bool>
 validating_utf8_to_fixed_length_with_constant_checks(const char *str,
                                                      size_t len,
                                                      OUTPUT *dwords) {
-  constexpr bool UTF32 = std::is_same<OUTPUT, uint32_t>::value;
-  constexpr bool UTF16 = std::is_same<OUTPUT, char16_t>::value;
+  constexpr bool UTF32 = simdutf::internal::is_same<OUTPUT, uint32_t>::value;
+  constexpr bool UTF16 = simdutf::internal::is_same<OUTPUT, char16_t>::value;
   static_assert(
       UTF32 or UTF16,
       "output type has to be uint32_t (for UTF-32) or char16_t (for UTF-16)");

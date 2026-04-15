@@ -2,8 +2,8 @@
 // UTF-8.
 enum block_processing_mode { SIMDUTF_FULL, SIMDUTF_TAIL };
 
-using utf8_to_utf16_result = std::pair<const char *, char16_t *>;
-using utf8_to_utf32_result = std::pair<const char *, uint32_t *>;
+using utf8_to_utf16_result = simdutf::internal::pair<const char *, char16_t *>;
+using utf8_to_utf32_result = simdutf::internal::pair<const char *, uint32_t *>;
 
 /*
     process_block_utf8_to_utf16 converts up to 64 bytes from 'in' from UTF-8

@@ -1,4 +1,4 @@
-std::pair<const char *const, char *const>
+internal::pair<const char *, char *>
 ppc64_convert_latin1_to_utf8(const char *latin_input,
                              const size_t latin_input_length,
                              char *utf8_output) {
@@ -72,5 +72,5 @@ ppc64_convert_latin1_to_utf8(const char *latin_input,
     }
   }
 
-  return std::make_pair(latin_input, utf8_output);
+  return internal::make_pair(latin_input, utf8_output);
 }
