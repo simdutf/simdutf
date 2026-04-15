@@ -22,6 +22,7 @@
   - [C++23 and constexpr support](#c23-and-constexpr-support)
   - [Command-line tools](#command-line-tools)
   - [Manual implementation selection](#manual-implementation-selection)
+  - [Benchmarks](#benchmarks)
   - [Thread safety](#thread-safety)
   - [References](#references)
   - [License](#license)
