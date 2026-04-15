@@ -47,14 +47,30 @@ namespace inlineable {
 #if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_really_inline simdutf_constexpr23 simdutf_warn_unused bool
 validate_utf8(const char *buf, size_t len) noexcept {
-  return scalar::utf8::validate(buf, len);
+  #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf8::validate(
+        detail::constexpr_cast_ptr<uint8_t>(input.data()), input.size());
+  } else
+  #endif
+  {
+    return scalar::utf8::validate(buf, len);
+  }
 }
 #endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF8
 simdutf_really_inline simdutf_constexpr23 simdutf_warn_unused result
 validate_utf8_with_errors(const char *buf, size_t len) noexcept {
-  return scalar::utf8::validate_with_errors(buf, len);
+  #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf8::validate(
+        detail::constexpr_cast_ptr<uint8_t>(input.data()), input.size());
+  } else
+  #endif
+  {
+    return scalar::utf8::validate_with_errors(buf, len);
+  }
 }
 #endif // SIMDUTF_FEATURE_UTF8
 
@@ -134,14 +150,30 @@ to_well_formed_utf16be(const char16_t *input, size_t len,
 #if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_really_inline simdutf_constexpr23 simdutf_warn_unused bool
 validate_utf32(const char32_t *buf, size_t len) noexcept {
-  return scalar::utf32::validate(buf, len);
+  #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf32::validate(
+        detail::constexpr_cast_ptr<uint32_t>(input.data()), input.size());
+  } else
+  #endif
+  {
+    return scalar::utf32::validate(buf, len);
+  }
 }
 #endif // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF32
 simdutf_really_inline simdutf_constexpr23 simdutf_warn_unused result
 validate_utf32_with_errors(const char32_t *buf, size_t len) noexcept {
-  return scalar::utf32::validate_with_errors(buf, len);
+  #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf32::validate_with_errors(
+        detail::constexpr_cast_ptr<uint32_t>(input.data()), input.size());
+  } else
+  #endif
+  {
+    return scalar::utf32::validate_with_errors(buf, len);
+  }
 }
 #endif // SIMDUTF_FEATURE_UTF32
 
