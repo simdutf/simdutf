@@ -49,8 +49,8 @@ simdutf_really_inline simdutf_constexpr23 simdutf_warn_unused bool
 validate_utf8(const char *buf, size_t len) noexcept {
   #if SIMDUTF_CPLUSPLUS23
   if consteval {
-    return scalar::utf8::validate(
-        detail::constexpr_cast_ptr<uint8_t>(input.data()), input.size());
+    return scalar::utf8::validate(detail::constexpr_cast_ptr<uint8_t>(buf),
+                                  len);
   } else
   #endif
   {
@@ -64,8 +64,8 @@ simdutf_really_inline simdutf_constexpr23 simdutf_warn_unused result
 validate_utf8_with_errors(const char *buf, size_t len) noexcept {
   #if SIMDUTF_CPLUSPLUS23
   if consteval {
-    return scalar::utf8::validate(
-        detail::constexpr_cast_ptr<uint8_t>(input.data()), input.size());
+    return scalar::utf8::validate_with_errors(
+        detail::constexpr_cast_ptr<uint8_t>(buf), len);
   } else
   #endif
   {
@@ -152,8 +152,8 @@ simdutf_really_inline simdutf_constexpr23 simdutf_warn_unused bool
 validate_utf32(const char32_t *buf, size_t len) noexcept {
   #if SIMDUTF_CPLUSPLUS23
   if consteval {
-    return scalar::utf32::validate(
-        detail::constexpr_cast_ptr<uint32_t>(input.data()), input.size());
+    return scalar::utf32::validate(detail::constexpr_cast_ptr<uint32_t>(buf),
+                                   len);
   } else
   #endif
   {
@@ -168,7 +168,7 @@ validate_utf32_with_errors(const char32_t *buf, size_t len) noexcept {
   #if SIMDUTF_CPLUSPLUS23
   if consteval {
     return scalar::utf32::validate_with_errors(
-        detail::constexpr_cast_ptr<uint32_t>(input.data()), input.size());
+        detail::constexpr_cast_ptr<uint32_t>(buf), len);
   } else
   #endif
   {
