@@ -2916,9 +2916,7 @@ int main() {
 
 ## Benchmarks
 
-To run benchmarks, build the project with benchmarks enabled.  Our default benchmarks are in the  `benchmark` command. You can get help on its
-usage by first building it and then calling it with the `--help` flag.
-E.g., under Linux you may do the following:
+To run the benchmarks, you need a recent C++ compiler and a recent version of cmake.B uild the project with benchmarks enabled.  Our default benchmarks are in the  `benchmark` command. You can get help on its usage by first building it and then calling it with the `--help` flag. E.g., under Linux you may do the following:
 
 ```shell
 cmake -B build -D SIMDUTF_BENCHMARKS=ON
@@ -2926,8 +2924,30 @@ cmake --build build
 ./build/benchmarks/benchmark --help
 ```
 
+It will automatically build the code is release mode, in a way suitable for benchmarking. We require the `SIMDUTF_BENCHMARKS` option because we do not build benchmarks by default (to save time). To speed up the the build you can do `cmake --build build -j 10` on a 10-core system.
 
-The standard benchmark tool `benchmark` provides comprehensive transcoding benchmarks between different encodings. It supports various procedures like converting UTF-8 to UTF-16, UTF-16 to UTF-8, and more. You can list available procedures with `--procedures`, run specific benchmarks, or use filters to select particular tests. For example, to benchmark UTF-8 to UTF-16 conversion on a file, use `./build/benchmarks/benchmark --procedure utf8_to_utf16 file.txt`. It outputs detailed performance metrics including throughput in GB/s and CPU cycles.
+The standard benchmark tool `benchmark` provides comprehensive transcoding benchmarks between different encodings. It supports various procedures like converting UTF-8 to UTF-16, UTF-16 to UTF-8, and more. You can list available procedures with `--procedures`, run specific benchmarks, or use filters to select particular tests. For example, to benchmark UTF-8 to UTF-16 conversion on a file, use `./build/benchmarks/benchmark --procedure utf8_to_utf16  --input-file file.txt`. It outputs detailed performance metrics including throughput in GB/s.
+
+When performance counters are available, we output instructions and cycle counts. To get performance counters (under Linux and macOS), you need privileged access which can sometimes mean that you need to run the benchmark under the `sudo` command. Some systems (e.g., on the cloud) do not give access to the performance counters, check the Linux documentation.
+
+For test files, we recommend that [unicode lipsum dataset](https://github.com/lemire/unicode_lipsum). It contains various files suitable for benchmarking. E.g., the file `lipsum/Arabic-Lipsum.utf8.txt` can be used for benchmarking like so:
+
+```
+ ./build/benchmarks/benchmark --procedure convert_utf8_to_utf16le+ --input-file ul/lipsum/Arabic-Lipsum.utf8.txt
+```
+
+if you have put the unicode lipsum dataset in the `ul` directory. You may prefix the command by `sudo` if you want to get the performance counters. We also have shorter commands if you prefer:
+
+```
+ ./build/benchmarks/benchmark -P convert_utf8_to_utf16le+ -F ../unicode_lipsum/lipsum/Arabic-Lipsum.utf8.txt
+```
+
+You can also run the benchmark over several files at once:
+
+```
+ ./build/benchmarks/benchmark -P convert_utf8_to_utf16le+ -F ../unicode_lipsum/lipsum/*-Lipsum.utf8.txt
+```
+
 
 Since ICU is so common and popular, we assume that you may have it already on your system. When
 it is not found, it is simply omitted from the benchmarks. Thus, to benchmark against ICU, make
