@@ -492,3 +492,12 @@ if(SIMDUTF_TOOLS AND SIMDUTF_TOOL_TESTS AND Python3_FOUND)
     WORKING_DIRECTORY ${SIMDUTF_SOURCE_DIR}
   )
 endif()
+
+# Smoke test: compile a pure-C program against the C API and link it without
+# the C++ standard library, proving libsimdutf-nostdlibcxx.a is self-contained.
+if(TARGET simdutf-nostdlibcxx)
+  add_executable(nostdlibcxx_c_api_test nostdlibcxx_c_api_test.c)
+  target_link_libraries(nostdlibcxx_c_api_test PRIVATE simdutf-nostdlibcxx)
+  target_link_options(nostdlibcxx_c_api_test PRIVATE -nostdlib++)
+  add_test(NAME nostdlibcxx_c_api_test COMMAND nostdlibcxx_c_api_test)
+endif()

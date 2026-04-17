@@ -9,11 +9,10 @@ c++ -o amalgamation_demo amalgamation_demo.cpp -std=c++17 && ./amalgamation_demo
 
 ### C Demo
 
-You may also build a C executable.
+You may also build a C executable without a dependency on the C++ standard library.
 
 ```
-c++ -c simdutf.cpp 
-cc -c ./amalgamation_demo.c
-c++ amalgamation_demo.o simdutf.o -o cdemo
+c++ -c simdutf.cpp  -nostdlib++ -fno-rtti -fno-exceptions
+cc amalgamation_demo.c simdutf.o -o cdemo
 ./cdemo
 ```
