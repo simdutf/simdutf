@@ -41,7 +41,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     const auto hi = in16.shr<2>();
 
     auto composed = select(uint16_t(0x1f00 >> 2), hi, lo);
-    if simdutf_constexpr (!match_system(big_endian)) {
+    if constexpr (!match_system(big_endian)) {
       composed = composed.swap_bytes();
     }
 
@@ -70,7 +70,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
     const auto composed = b2;
     auto packed = vector_u32::pack(composed, composed);
 
-    if simdutf_constexpr (!match_system(big_endian)) {
+    if constexpr (!match_system(big_endian)) {
       packed = packed.swap_bytes();
     }
 
@@ -104,7 +104,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
 
     auto composed = b0 | b1.shr<2>();
 
-    if simdutf_constexpr (!match_system(big_endian)) {
+    if constexpr (!match_system(big_endian)) {
       composed = composed.swap_bytes();
     }
 
@@ -127,7 +127,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
 
     auto packed = vector_u32::pack(composed, composed);
 
-    if simdutf_constexpr (!match_system(big_endian)) {
+    if constexpr (!match_system(big_endian)) {
       packed = packed.swap_bytes();
     }
 

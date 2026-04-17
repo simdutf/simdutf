@@ -25,7 +25,7 @@ simdutf_constexpr23 size_t convert(InputPtr data, size_t len,
                             // they are ascii
         uint64_t v;
         ::memcpy(&v, data + pos, sizeof(uint64_t));
-        if simdutf_constexpr (!match_system(big_endian)) {
+        if constexpr (!match_system(big_endian)) {
           v = (v >> 8) | (v << (64 - 8));
         }
         if ((v & 0xFF80FF80FF80FF80) == 0) {
@@ -115,7 +115,7 @@ simdutf_constexpr23 full_result convert_with_errors(InputPtr data, size_t len,
                             // they are ascii
         uint64_t v;
         ::memcpy(&v, data + pos, sizeof(uint64_t));
-        if simdutf_constexpr (!match_system(big_endian))
+        if constexpr (!match_system(big_endian))
           v = (v >> 8) | (v << (64 - 8));
         if ((v & 0xFF80FF80FF80FF80) == 0) {
           size_t final_pos = pos + 4;
@@ -222,7 +222,7 @@ simdutf_constexpr23 size_t convert_with_replacement(const char16_t *data,
                             // they are ascii
         uint64_t v;
         ::memcpy(&v, data + pos, sizeof(uint64_t));
-        if simdutf_constexpr (!match_system(big_endian)) {
+        if constexpr (!match_system(big_endian)) {
           v = (v >> 8) | (v << (64 - 8));
         }
         if ((v & 0xFF80FF80FF80FF80) == 0) {

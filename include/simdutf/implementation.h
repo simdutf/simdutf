@@ -4176,7 +4176,7 @@ find(const char16_t *start, const char16_t *end, char16_t character) noexcept {
 
 namespace simdutf {
 
-  #if SIMDUTF_CPLUSPLUS17
+
 inline std::string_view to_string(base64_options options) {
   switch (options) {
   case base64_default:
@@ -4198,9 +4198,7 @@ inline std::string_view to_string(base64_options options) {
   }
   return "<unknown>";
 }
-  #endif // SIMDUTF_CPLUSPLUS17
 
-  #if SIMDUTF_CPLUSPLUS17
 inline std::string_view to_string(last_chunk_handling_options options) {
   switch (options) {
   case loose:
@@ -4214,7 +4212,6 @@ inline std::string_view to_string(last_chunk_handling_options options) {
   }
   return "<unknown>";
 }
-  #endif
 
 /**
  * Provide the maximal binary length in bytes given the base64 input.

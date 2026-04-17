@@ -1,8 +1,6 @@
 #include "simdutf.h"
 
-#if SIMDUTF_CPLUSPLUS17
-  #include <string_view>
-#endif
+#include <string_view>
 
 #include <tests/helpers/fixed_string.h>
 #include <tests/helpers/test.h>

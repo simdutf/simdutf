@@ -25,7 +25,7 @@ simdutf_constexpr23 size_t convert_valid(InputPtr data, size_t len,
                             // they are ascii
         uint64_t v;
         ::memcpy(&v, data + pos, sizeof(uint64_t));
-        if simdutf_constexpr (!match_system(big_endian)) {
+        if constexpr (!match_system(big_endian)) {
           v = (v >> 8) | (v << (64 - 8));
         }
         if ((v & 0xFF80FF80FF80FF80) == 0) {

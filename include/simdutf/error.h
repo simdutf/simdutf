@@ -1,8 +1,7 @@
 #ifndef SIMDUTF_ERROR_H
 #define SIMDUTF_ERROR_H
-#if SIMDUTF_CPLUSPLUS17
-  #include <string_view>
-#endif
+#include <string_view>
+
 namespace simdutf {
 
 enum error_code {
@@ -44,7 +43,7 @@ enum error_code {
   OUTPUT_BUFFER_TOO_SMALL,  // The provided buffer is too small.
   OTHER                     // Not related to validation/transcoding.
 };
-#if SIMDUTF_CPLUSPLUS17
+
 inline std::string_view error_to_string(error_code code) noexcept {
   switch (code) {
   case SUCCESS:
@@ -73,7 +72,6 @@ inline std::string_view error_to_string(error_code code) noexcept {
     return "OTHER";
   }
 }
-#endif
 
 struct result {
   error_code error;
