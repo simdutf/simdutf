@@ -6,6 +6,7 @@
 #ifdef SIMDUTF_INTERNAL_TESTS
   #include <vector>
 #endif
+#include <string_view>
 #include "simdutf/common_defs.h"
 #include "simdutf/compiler_check.h"
 #include "simdutf/encoding_types.h"
@@ -17,9 +18,6 @@
   #include <type_traits>
   #include <span>
   #include <tuple>
-#endif
-#if SIMDUTF_CPLUSPLUS17
-  #include <string_view>
 #endif
 // The following defines are conditionally enabled/disabled during amalgamation.
 // By default all features are enabled, regular code shouldn't check them. Only
@@ -5092,7 +5090,7 @@ public:
    *
    * @return the name of the implementation, e.g. "haswell", "westmere", "arm64"
    */
-  virtual const char *name() const noexcept { return _name; }
+  virtual std::string_view name() const noexcept { return _name; }
 
   /**
    * The description of this implementation.
@@ -5103,7 +5101,7 @@ public:
    *
    * @return the name of the implementation, e.g. "haswell", "westmere", "arm64"
    */
-  virtual const char *description() const noexcept { return _description; }
+  virtual std::string_view description() const noexcept { return _description; }
 
   /**
    * The instruction sets this implementation is compiled against
@@ -7007,7 +7005,7 @@ public:
 
   struct TestProcedure {
     // display name
-    const char *name;
+    std::string_view name;
 
     // procedure should return whether given test pass or not
     void (*procedure)(const implementation &);
@@ -7075,15 +7073,9 @@ public:
    * @param name the implementation to find, e.g. "westmere", "haswell", "arm64"
    * @return the implementation, or nullptr if the parse failed.
    */
-  const implementation *operator[](const char *name) const noexcept {
+  const implementation *operator[](std::string_view name) const noexcept {
     for (const implementation *impl : *this) {
-      const char *a = impl->name();
-      const char *b = name;
-      while (*a && *a == *b) {
-        ++a;
-        ++b;
-      }
-      if (*a == '\0' && *b == '\0') {
+      if (impl->name() == name) {
         return impl;
       }
     }

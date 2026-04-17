@@ -110,10 +110,10 @@ void print_architectures(FILE *file) {
       abort();
     }
     if (implementation->supported_by_runtime_system()) {
-      fprintf(file, "- %s\n", implementation->name());
+      fprintf(file, "- %s\n", implementation->name().data());
     } else {
       fprintf(file, "- %s [unsupported by current processor]\n",
-              implementation->name());
+              implementation->name().data());
     }
   }
 }
@@ -123,7 +123,7 @@ void print_architectures() { print_architectures(stdout); }
 void print_tests(FILE *file) {
   fprintf(file, "Available tests:\n");
   for (const auto &test : simdutf::test::test_procedures()) {
-    fprintf(file, "- %s\n", test.name.c_str());
+    fprintf(file, "- %s\n", test.name.data());
   }
 }
 
@@ -169,13 +169,14 @@ void run(const CommandLine &cmdline) {
       continue;
     }
     if (not cmdline.architectures.empty()) {
-      if (cmdline.architectures.count(implementation->name()) == 0) {
+      if (cmdline.architectures.count(std::string(implementation->name())) ==
+          0) {
         continue;
       }
     }
     matching_implementation++;
 
-    printf("Checking implementation %s\n", implementation->name());
+    printf("Checking implementation %s\n", implementation->name().data());
 
     auto filter = [&cmdline](const simdutf::test::test_entry &test) -> bool {
       if (cmdline.tests.empty())

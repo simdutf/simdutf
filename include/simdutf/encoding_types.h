@@ -1,5 +1,6 @@
 #ifndef SIMDUTF_ENCODING_TYPES_H
 #define SIMDUTF_ENCODING_TYPES_H
+#include <string_view>
 #include "simdutf/portability.h"
 #include "simdutf/common_defs.h"
 
@@ -42,7 +43,7 @@ match_system(endianness e) {
   return e == endianness::NATIVE;
 }
 
-simdutf_warn_unused const char *to_string(encoding_type bom);
+simdutf_warn_unused std::string_view to_string(encoding_type bom);
 
 // Note that BOM for UTF8 is discouraged.
 namespace BOM {

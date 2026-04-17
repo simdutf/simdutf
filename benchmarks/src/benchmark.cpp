@@ -79,7 +79,7 @@ void Benchmark::register_function(std::string name, Fn function,
   if (name.find('+') == std::string::npos) {
     // adding simdutf benchmark, populate for all known architectures
     for (const auto &impl : simdutf::get_available_implementations()) {
-      const auto full_name = name + '+' + impl->name();
+      const auto full_name = name + '+' + std::string(impl->name());
       benchmarks.insert({full_name, std::make_pair(function, set)});
     }
   } else {
@@ -572,8 +572,7 @@ void Benchmark::run(const std::string &procedure_name, size_t iterations) {
     const std::string name{procedure_name.substr(0, p)};
     const std::string impl{procedure_name.substr(p + 1)};
 
-    auto implementation =
-        simdutf::get_available_implementations()[impl.c_str()];
+    auto implementation = simdutf::get_available_implementations()[impl];
     if (implementation == nullptr) {
       throw std::runtime_error("Wrong implementation " + impl);
     }

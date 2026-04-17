@@ -210,8 +210,8 @@ simdutf_really_inline static const implementation *get_single_implementation() {
 class detect_best_supported_implementation_on_first_use final
     : public implementation {
 public:
-  const char *name() const noexcept final { return set_best()->name(); }
-  const char *description() const noexcept final {
+  std::string_view name() const noexcept final { return set_best()->name(); }
+  std::string_view description() const noexcept final {
     return set_best()->description();
   }
   uint32_t required_instruction_sets() const noexcept final {
