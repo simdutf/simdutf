@@ -1,10 +1,19 @@
 #include "simdutf.h"
-#include <initializer_list>
 #include <climits>
 #include <type_traits>
 #if SIMDUTF_ATOMIC_REF
   #include <array>
   #include "simdutf/scalar/atomic_util.h"
+#endif
+
+// GCC/Clang: provide a weak stub for __cxa_pure_virtual so that builds without
+// libc++abi (e.g. -nostdlib++) do not fail to link when the compiler emits a
+// reference to it from the abstract implementation vtable. If libc++abi is
+// linked in anyway, its strong definition takes precedence.
+#if (defined(__GNUC__) || defined(__clang__)) && !defined(_WIN32)
+extern "C" __attribute__((weak, noreturn)) void __cxa_pure_virtual() {
+  __builtin_trap();
+}
 #endif
 
 static_assert(sizeof(uint8_t) == sizeof(char),
@@ -15,22 +24,6 @@ static_assert(sizeof(uint32_t) == sizeof(char32_t),
               "simdutf requires that char32_t be 32 bits");
 // next line is redundant, but it is kept to catch defective systems.
 static_assert(CHAR_BIT == 8, "simdutf requires 8-bit bytes");
-
-// Useful for debugging purposes
-namespace simdutf {
-namespace {
-
-template <typename T> std::string toBinaryString(T b) {
-  std::string binary = "";
-  T mask = T(1) << (sizeof(T) * CHAR_BIT - 1);
-  while (mask > 0) {
-    binary += ((b & mask) == 0) ? '0' : '1';
-    mask >>= 1;
-  }
-  return binary;
-}
-} // namespace
-} // namespace simdutf
 
 namespace simdutf {
 bool implementation::supported_by_runtime_system() const {
@@ -125,57 +118,60 @@ namespace internal {
 // Static array of known implementations. We are hoping these get baked into the
 // executable without requiring a static initializer.
 
+// Hoisted to translation-unit scope so that first-use does not emit a
+// thread-safe init guard (`__cxa_guard_*` from libc++abi). The objects are
+// trivial metadata wrappers, so eager static initialization is cheap.
 #if SIMDUTF_IMPLEMENTATION_ICELAKE
+static const icelake::implementation icelake_singleton{};
 static const icelake::implementation *get_icelake_singleton() {
-  static const icelake::implementation icelake_singleton{};
   return &icelake_singleton;
 }
 #endif
 #if SIMDUTF_IMPLEMENTATION_HASWELL
+static const haswell::implementation haswell_singleton{};
 static const haswell::implementation *get_haswell_singleton() {
-  static const haswell::implementation haswell_singleton{};
   return &haswell_singleton;
 }
 #endif
 #if SIMDUTF_IMPLEMENTATION_WESTMERE
+static const westmere::implementation westmere_singleton{};
 static const westmere::implementation *get_westmere_singleton() {
-  static const westmere::implementation westmere_singleton{};
   return &westmere_singleton;
 }
 #endif
 #if SIMDUTF_IMPLEMENTATION_ARM64
+static const arm64::implementation arm64_singleton{};
 static const arm64::implementation *get_arm64_singleton() {
-  static const arm64::implementation arm64_singleton{};
   return &arm64_singleton;
 }
 #endif
 #if SIMDUTF_IMPLEMENTATION_PPC64
+static const ppc64::implementation ppc64_singleton{};
 static const ppc64::implementation *get_ppc64_singleton() {
-  static const ppc64::implementation ppc64_singleton{};
   return &ppc64_singleton;
 }
 #endif
 #if SIMDUTF_IMPLEMENTATION_RVV
+static const rvv::implementation rvv_singleton{};
 static const rvv::implementation *get_rvv_singleton() {
-  static const rvv::implementation rvv_singleton{};
   return &rvv_singleton;
 }
 #endif
 #if SIMDUTF_IMPLEMENTATION_LASX
+static const lasx::implementation lasx_singleton{};
 static const lasx::implementation *get_lasx_singleton() {
-  static const lasx::implementation lasx_singleton{};
   return &lasx_singleton;
 }
 #endif
 #if SIMDUTF_IMPLEMENTATION_LSX
+static const lsx::implementation lsx_singleton{};
 static const lsx::implementation *get_lsx_singleton() {
-  static const lsx::implementation lsx_singleton{};
   return &lsx_singleton;
 }
 #endif
 #if SIMDUTF_IMPLEMENTATION_FALLBACK
+static const fallback::implementation fallback_singleton{};
 static const fallback::implementation *get_fallback_singleton() {
-  static const fallback::implementation fallback_singleton{};
   return &fallback_singleton;
 }
 #endif
@@ -216,8 +212,8 @@ simdutf_really_inline static const implementation *get_single_implementation() {
 class detect_best_supported_implementation_on_first_use final
     : public implementation {
 public:
-  std::string name() const noexcept final { return set_best()->name(); }
-  std::string description() const noexcept final {
+  const char *name() const noexcept final { return set_best()->name(); }
+  const char *description() const noexcept final {
     return set_best()->description();
   }
   uint32_t required_instruction_sets() const noexcept final {
@@ -827,40 +823,38 @@ static_assert(std::is_trivially_destructible<
               "detect_best_supported_implementation_on_first_use should be "
               "trivially destructible");
 
-static const std::initializer_list<const implementation *> &
-get_available_implementation_pointers() {
-  static const std::initializer_list<const implementation *>
-      available_implementation_pointers{
+// TU-scope storage for the pointer array — replaces a function-local static
+// std::initializer_list to avoid `__cxa_guard_*`. The array is used via a
+// pointer+size pair (see available_implementation_list methods).
+static const implementation *const available_implementation_pointers_array[] = {
 #if SIMDUTF_IMPLEMENTATION_ICELAKE
-          get_icelake_singleton(),
+    &icelake_singleton,
 #endif
 #if SIMDUTF_IMPLEMENTATION_HASWELL
-          get_haswell_singleton(),
+    &haswell_singleton,
 #endif
 #if SIMDUTF_IMPLEMENTATION_WESTMERE
-          get_westmere_singleton(),
+    &westmere_singleton,
 #endif
 #if SIMDUTF_IMPLEMENTATION_ARM64
-          get_arm64_singleton(),
+    &arm64_singleton,
 #endif
 #if SIMDUTF_IMPLEMENTATION_PPC64
-          get_ppc64_singleton(),
+    &ppc64_singleton,
 #endif
 #if SIMDUTF_IMPLEMENTATION_RVV
-          get_rvv_singleton(),
+    &rvv_singleton,
 #endif
 #if SIMDUTF_IMPLEMENTATION_LASX
-          get_lasx_singleton(),
+    &lasx_singleton,
 #endif
 #if SIMDUTF_IMPLEMENTATION_LSX
-          get_lsx_singleton(),
+    &lsx_singleton,
 #endif
 #if SIMDUTF_IMPLEMENTATION_FALLBACK
-          get_fallback_singleton(),
+    &fallback_singleton,
 #endif
-      }; // available_implementation_pointers
-  return available_implementation_pointers;
-}
+};
 
 // So we can return UNSUPPORTED_ARCHITECTURE from the parser when there is no
 // support
@@ -1380,23 +1374,25 @@ public:
                        "Unsupported CPU (no detected SIMD instructions)", 0) {}
 };
 
+static const unsupported_implementation unsupported_singleton{};
 const unsupported_implementation *get_unsupported_singleton() {
-  static const unsupported_implementation unsupported_singleton{};
   return &unsupported_singleton;
 }
 static_assert(std::is_trivially_destructible<unsupported_implementation>::value,
               "unsupported_singleton should be trivially destructible");
 
 size_t available_implementation_list::size() const noexcept {
-  return internal::get_available_implementation_pointers().size();
+  return sizeof(internal::available_implementation_pointers_array) /
+         sizeof(internal::available_implementation_pointers_array[0]);
 }
 const implementation *const *
 available_implementation_list::begin() const noexcept {
-  return internal::get_available_implementation_pointers().begin();
+  return internal::available_implementation_pointers_array;
 }
 const implementation *const *
 available_implementation_list::end() const noexcept {
-  return internal::get_available_implementation_pointers().end();
+  return internal::available_implementation_pointers_array +
+         size();
 }
 const implementation *
 available_implementation_list::detect_best_supported() const noexcept {
@@ -1404,7 +1400,7 @@ available_implementation_list::detect_best_supported() const noexcept {
   uint32_t supported_instruction_sets =
       internal::detect_supported_architectures();
   for (const implementation *impl :
-       internal::get_available_implementation_pointers()) {
+       internal::available_implementation_pointers_array) {
     uint32_t required_instruction_sets = impl->required_instruction_sets();
     if ((supported_instruction_sets & required_instruction_sets) ==
         required_instruction_sets) {
@@ -1441,30 +1437,34 @@ detect_best_supported_implementation_on_first_use::set_best() const noexcept {
 /**
  * The list of available implementations compiled into simdutf.
  */
+// TU-scope storage to avoid a function-local static with `__cxa_guard_*`.
+static const internal::available_implementation_list
+    available_implementations_instance{};
+
 SIMDUTF_DLLIMPORTEXPORT const internal::available_implementation_list &
 get_available_implementations() {
-  static const internal::available_implementation_list
-      available_implementations{};
-  return available_implementations;
+  return available_implementations_instance;
 }
+
+#if !SIMDUTF_SINGLE_IMPLEMENTATION
+static const internal::detect_best_supported_implementation_on_first_use
+    detect_best_supported_implementation_on_first_use_singleton;
+#endif
+
+static internal::atomic_ptr<const implementation> active_implementation_instance{
+#if SIMDUTF_SINGLE_IMPLEMENTATION
+    internal::get_single_implementation()
+#else
+    &detect_best_supported_implementation_on_first_use_singleton
+#endif
+};
 
 /**
  * The active implementation.
  */
 SIMDUTF_DLLIMPORTEXPORT internal::atomic_ptr<const implementation> &
 get_active_implementation() {
-#if SIMDUTF_SINGLE_IMPLEMENTATION
-  // skip runtime detection
-  static internal::atomic_ptr<const implementation> active_implementation{
-      internal::get_single_implementation()};
-  return active_implementation;
-#else
-  static const internal::detect_best_supported_implementation_on_first_use
-      detect_best_supported_implementation_on_first_use_singleton;
-  static internal::atomic_ptr<const implementation> active_implementation{
-      &detect_best_supported_implementation_on_first_use_singleton};
-  return active_implementation;
-#endif
+  return active_implementation_instance;
 }
 
 #if SIMDUTF_SINGLE_IMPLEMENTATION
@@ -2503,12 +2503,12 @@ simdutf_warn_unused int detect_encodings(const char *buf,
 }
 #endif // SIMDUTF_FEATURE_DETECT_ENCODING
 
-const implementation *builtin_implementation() {
-  static const implementation *builtin_impl =
-      get_available_implementations()[SIMDUTF_STRINGIFY(
-          SIMDUTF_BUILTIN_IMPLEMENTATION)];
-  return builtin_impl;
-}
+// TU-scope storage to avoid a function-local static with `__cxa_guard_*`.
+static const implementation *const builtin_impl_instance =
+    get_available_implementations()[SIMDUTF_STRINGIFY(
+        SIMDUTF_BUILTIN_IMPLEMENTATION)];
+
+const implementation *builtin_implementation() { return builtin_impl_instance; }
 
 #if SIMDUTF_FEATURE_UTF8
 simdutf_warn_unused size_t trim_partial_utf8(const char *input, size_t length) {

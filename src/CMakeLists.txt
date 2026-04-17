@@ -93,6 +93,31 @@ if(SIMDUTF_ALWAYS_INCLUDE_FALLBACK)
   target_compile_definitions(simdutf PRIVATE SIMDUTF_IMPLEMENTATION_FALLBACK=1)
 endif()
 
+##
+## simdutf-nostdlibcxx: a variant of the library that does not require the C++
+## standard library runtime (libc++ / libc++abi / libstdc++). It is intended to
+## be consumed through the C interface (simdutf_c.h) and only supports GCC and
+## Clang.
+##
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  add_library(simdutf-nostdlibcxx STATIC simdutf.cpp)
+  target_include_directories(simdutf-nostdlibcxx PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+  target_include_directories(simdutf-nostdlibcxx PUBLIC
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>")
+  target_compile_options(simdutf-nostdlibcxx PRIVATE
+    -fno-exceptions -fno-rtti)
+  set_target_properties(simdutf-nostdlibcxx PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+  # Smoke test: compile a pure-C program against the C API and link it without
+  # the C++ standard library, proving libsimdutf-nostdlibcxx.a is self-contained.
+  add_executable(nostdlibcxx_c_api_test
+    ${CMAKE_SOURCE_DIR}/tests/nostdlibcxx_c_api_test.c)
+  target_link_libraries(nostdlibcxx_c_api_test PRIVATE simdutf-nostdlibcxx)
+  target_link_options(nostdlibcxx_c_api_test PRIVATE -nostdlib++)
+  add_test(NAME nostdlibcxx_c_api_test COMMAND nostdlibcxx_c_api_test)
+endif()
+
 if(SIMDUTF_SANITIZE)
   target_compile_options(simdutf PUBLIC -fsanitize=address  -fno-omit-frame-pointer -fno-sanitize-recover=all)
   target_compile_definitions(simdutf PUBLIC ASAN_OPTIONS=detect_leaks=1)

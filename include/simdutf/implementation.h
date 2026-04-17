@@ -3,7 +3,6 @@
 #if !defined(SIMDUTF_NO_THREADS)
   #include <atomic>
 #endif
-#include <string>
 #ifdef SIMDUTF_INTERNAL_TESTS
   #include <vector>
 #endif
@@ -5093,7 +5092,7 @@ public:
    *
    * @return the name of the implementation, e.g. "haswell", "westmere", "arm64"
    */
-  virtual std::string name() const { return std::string(_name); }
+  virtual const char *name() const noexcept { return _name; }
 
   /**
    * The description of this implementation.
@@ -5104,7 +5103,7 @@ public:
    *
    * @return the name of the implementation, e.g. "haswell", "westmere", "arm64"
    */
-  virtual std::string description() const { return std::string(_description); }
+  virtual const char *description() const noexcept { return _description; }
 
   /**
    * The instruction sets this implementation is compiled against
@@ -7008,7 +7007,7 @@ public:
 
   struct TestProcedure {
     // display name
-    std::string name;
+    const char *name;
 
     // procedure should return whether given test pass or not
     void (*procedure)(const implementation &);
@@ -7076,9 +7075,15 @@ public:
    * @param name the implementation to find, e.g. "westmere", "haswell", "arm64"
    * @return the implementation, or nullptr if the parse failed.
    */
-  const implementation *operator[](const std::string &name) const noexcept {
+  const implementation *operator[](const char *name) const noexcept {
     for (const implementation *impl : *this) {
-      if (impl->name() == name) {
+      const char *a = impl->name();
+      const char *b = name;
+      while (*a && *a == *b) {
+        ++a;
+        ++b;
+      }
+      if (*a == '\0' && *b == '\0') {
         return impl;
       }
     }
