@@ -1,5 +1,9 @@
 #include "simdutf/fallback/begin.h"
 
+#if SIMDUTF_FEATURE_BASE64
+  #include <algorithm> // std::find
+#endif                 // SIMDUTF_FEATURE_BASE64
+
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 

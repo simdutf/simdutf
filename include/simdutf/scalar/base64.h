@@ -1,7 +1,6 @@
 #ifndef SIMDUTF_BASE64_H
 #define SIMDUTF_BASE64_H
 
-#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
