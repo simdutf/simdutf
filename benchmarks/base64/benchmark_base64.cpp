@@ -843,7 +843,8 @@ int main(int argc, char **argv) {
     return EXIT_SUCCESS;
   }
 
-  printf("# current system detected as %s.\n",
+  printf("# current system detected as %.*s.\n",
+         int(simdutf::get_active_implementation()->name().size()),
          simdutf::get_active_implementation()->name().data());
 
   std::vector<std::vector<char>> input;

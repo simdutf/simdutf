@@ -69,7 +69,7 @@ To contribute code or documentation:
 To set up your environment:
 
 Requirements:
-- We recommend a C++20-compatible compiler (e.g., GCC, Clang, MSVC). Although the library can be built with a C++11 compatible compiler, some of our tools and functionality requires C++20.
+- We recommend a C++20-compatible compiler (e.g., GCC, Clang, MSVC). Although the library can be built with a C++17 compatible compiler, some of our tools and functionality requires C++20.
 - A recent version of CMake.
 - Git.
 - Optional: SIMD support (SSE, AVX, NEON) for your platform.

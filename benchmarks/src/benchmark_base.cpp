@@ -22,7 +22,9 @@ void BenchmarkBase::run(const input::Testcase &testcase) {
   prepare_input(testcase);
   auto detected_encoding =
       simdutf::autodetect_encoding(input_data.data(), input_data.size());
-  printf("input detected as %s\n", simdutf::to_string(detected_encoding).data());
+  printf("input detected as %.*s\n",
+         int(simdutf::to_string(detected_encoding).size()),
+         simdutf::to_string(detected_encoding).data());
   printf("===========================\n");
 
   const auto &known_procedures = all_procedures();

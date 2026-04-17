@@ -17,7 +17,10 @@ int main() {
     if (!validutf8) {
       return EXIT_FAILURE;
     }
-    printf("%s: %s\n", implementation->name().data(), implementation->description().data());
+    printf("%.*s: %.*s\n", int(implementation->name().size()),
+           implementation->name().data(),
+           int(implementation->description().size()),
+           implementation->description().data());
     chosen_implementation = std::string(implementation->name());
   }
   auto my_implementation =
@@ -36,7 +39,8 @@ int main() {
   if (simdutf::get_active_implementation()->name() != chosen_implementation) {
     return EXIT_FAILURE;
   }
-  printf("Manually selected: %s\n",
+  printf("Manually selected: %.*s\n",
+         int(simdutf::get_active_implementation()->name().size()),
          simdutf::get_active_implementation()->name().data());
   return EXIT_SUCCESS;
 }

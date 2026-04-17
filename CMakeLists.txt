@@ -38,10 +38,6 @@ option(SIMDUTF_INTERNAL_TESTS "Whether to test also internal procedures. Useful 
 option(SIMDUTF_LOGGING "Whether to enable logging (this should never be used in binary releases)." OFF)
 option(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION "Whether to enable unsafe fuzzing mode." OFF)
 
-if(SIMDUTF_LOGGING AND DEFINED CMAKE_CXX_STANDARD AND CMAKE_CXX_STANDARD LESS 17)
-    set(CMAKE_CXX_STANDARD 17)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-endif()
 set(SIMDUTF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(src)

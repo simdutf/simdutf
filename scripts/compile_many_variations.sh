@@ -24,7 +24,7 @@ echo ".PHONY: testall">>$makefile
 echo "testall:">>$makefile
 
 compilers="g++-12 g++-13 g++-14 clang++-19"
-standards="11 14 17 20 23"
+standards="17 20 23"
 buildtypes="Release Debug"
 
 for compiler in $compilers; do

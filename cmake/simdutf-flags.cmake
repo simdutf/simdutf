@@ -18,8 +18,11 @@ endif()
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tools/cmake")
 
-# We compile tools, tests, etc. with C++11 by default.
-set(SIMDUTF_CXX_STANDARD 11 CACHE STRING "the C++ standard to use for simdutf")
+# simdutf requires C++17 or later.
+set(SIMDUTF_CXX_STANDARD 17 CACHE STRING "the C++ standard to use for simdutf")
+if(SIMDUTF_CXX_STANDARD LESS 17)
+  message(FATAL_ERROR "simdutf requires C++17 or later (got ${SIMDUTF_CXX_STANDARD}).")
+endif()
 
 set(CMAKE_CXX_STANDARD ${SIMDUTF_CXX_STANDARD})
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

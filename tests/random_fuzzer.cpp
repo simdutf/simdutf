@@ -20,7 +20,8 @@ static void print_input(const std::string &s,
   }
   printf("\n");
   printf("string length: %zu\n", s.size());
-  printf("implementation->name() = %s", e->name().data());
+  printf("implementation->name() = %.*s", int(e->name().size()),
+         e->name().data());
 }
 
 extern "C" {
@@ -751,7 +752,7 @@ int main(int argc, char *argv[]) {
     if (!e->supported_by_runtime_system()) {
       continue;
     }
-    printf("testing: %s\n", e->name().data());
+    printf("testing: %.*s\n", int(e->name().size()), e->name().data());
   }
 #ifndef SIMDUTF_TEST_FUZZER_TRIALS
   #error "SIMDUTF_TEST_FUZZER_TRIALS not set."

@@ -119,7 +119,8 @@ void run_from_utf8_output(const std::vector<char> &input_data) {
 }
 
 int main(int argc, char **argv) {
-  printf("# current system detected as %s.\n",
+  printf("# current system detected as %.*s.\n",
+         int(simdutf::get_active_implementation()->name().size()),
          simdutf::get_active_implementation()->name().data());
   if (argc < 2) {
     std::cerr << "Please provide a file argument." << std::endl;
@@ -136,7 +137,9 @@ int main(int argc, char **argv) {
                     std::istreambuf_iterator<char>());
   auto detected_encoding =
       simdutf::autodetect_encoding(input_data.data(), input_data.size());
-  printf("# input detected as %s.\n", simdutf::to_string(detected_encoding).data());
+  printf("# input detected as %.*s.\n",
+         int(simdutf::to_string(detected_encoding).size()),
+         simdutf::to_string(detected_encoding).data());
   if (detected_encoding == simdutf::encoding_type::UTF8) {
     run_from_utf8_output(input_data);
     std::cout << "----" << std::endl;

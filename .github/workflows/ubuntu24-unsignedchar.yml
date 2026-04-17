@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         compiler: [g++-14]
-        cppversion: [11, 23]
+        cppversion: [17, 23]
         charflag: [-fsigned-char, -funsigned-char]
     steps:
       - uses: actions/checkout@v4

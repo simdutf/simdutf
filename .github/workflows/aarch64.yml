@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        cxxversion: [11, 17, 20]
+        cxxversion: [17, 20]
         compiler: [g++, clang++-19]
     steps:
       - uses: actions/checkout@v4

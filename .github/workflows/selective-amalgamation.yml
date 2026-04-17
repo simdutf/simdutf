@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        cppversion: [11, 23]
+        cppversion: [17, 23]
         compiler: [g++, clang++]
     steps:
       - uses: actions/checkout@v4
