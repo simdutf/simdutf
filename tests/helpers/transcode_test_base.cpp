@@ -5,10 +5,11 @@
   #error "SIMDUTF_IS_BIG_ENDIAN should be defined."
 #endif
 
+#include <algorithm>
+#include <array>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <array>
 
 #include <tests/reference/encode_utf8.h>
 #include <tests/reference/encode_utf16.h>
@@ -26,16 +27,6 @@
 namespace simdutf {
 namespace tests {
 namespace helpers {
-
-// C++11 does not have mismatch.
-template <class InputIt1, class InputIt2>
-std::pair<InputIt1, InputIt2> our_mismatch(InputIt1 first1, InputIt1 last1,
-                                           InputIt2 first2, InputIt2 last2) {
-  while (first1 != last1 && first2 != last2 && *first1 == *first2) {
-    ++first1, ++first2;
-  }
-  return std::make_pair(first1, first2);
-}
 
 void transcode_test_base::encode_utf8(uint32_t codepoint,
                                       std::vector<char> &target) {
@@ -145,7 +136,7 @@ bool transcode_latin1_to_utf8_test_base::validate(size_t saved_chars) const {
   // At this point, we know that the lengths are the same so std::mismatch is
   // enough to tell us whether the strings are identical.
   auto it =
-      our_mismatch(output_utf8.begin(), output_utf8.begin() + saved_chars,
+      std::mismatch(output_utf8.begin(), output_utf8.begin() + saved_chars,
                    reference_output_utf8.begin(), reference_output_utf8.end());
   if (it.first != output_utf8.begin() + saved_chars) {
     printf("mismatched output at %zu: actual value 0x%02x, expected 0x%02x\n",
@@ -234,7 +225,7 @@ bool transcode_latin1_to_utf16_test_base::validate(size_t saved_chars) const {
 
   // At this point, we know that the lengths are the same so std::mismatch is
   // enough to tell us whether the strings are identical.
-  auto it = our_mismatch(
+  auto it = std::mismatch(
       output_utf16.begin(), output_utf16.begin() + saved_chars,
       reference_output_utf16.begin(), reference_output_utf16.end());
   if (it.first != output_utf16.begin() + saved_chars) {
@@ -316,7 +307,7 @@ bool transcode_latin1_to_utf32_test_base::validate(size_t saved_chars) const {
 
   // At this point, we know that the lengths are the same so std::mismatch is
   // enough to tell us whether the strings are identical.
-  auto it = our_mismatch(
+  auto it = std::mismatch(
       output_utf32.begin(), output_utf32.begin() + saved_chars,
       reference_output_utf32.begin(), reference_output_utf32.end());
   if (it.first != output_utf32.begin() + saved_chars) {
@@ -401,7 +392,7 @@ bool transcode_utf8_to_latin1_test_base::validate(size_t saved_chars) const {
 
   // At this point, we know that the lengths are the same so std::mismatch is
   // enough to tell us whether the strings are identical.
-  auto it = our_mismatch(
+  auto it = std::mismatch(
       output_latin1.begin(), output_latin1.begin() + saved_chars,
       reference_output_latin1.begin(), reference_output_latin1.end());
   if (it.first != output_latin1.begin() + saved_chars) {
@@ -507,7 +498,7 @@ bool transcode_utf16_to_latin1_test_base::validate(size_t saved_chars) const {
 
   // At this point, we know that the lengths are the same so std::mismatch is
   // enough to tell us whether the strings are identical.
-  auto it = our_mismatch(
+  auto it = std::mismatch(
       output_latin1.begin(), output_latin1.begin() + saved_chars,
       reference_output_latin1.begin(), reference_output_latin1.end());
   if (it.first != output_latin1.begin() + saved_chars) {
@@ -583,7 +574,7 @@ bool transcode_utf8_to_utf16_test_base::validate(size_t saved_chars) const {
 
   // At this point, we know that the lengths are the same so std::mismatch is
   // enough to tell us whether the strings are identical.
-  auto it = our_mismatch(
+  auto it = std::mismatch(
       output_utf16.begin(), output_utf16.begin() + saved_chars,
       reference_output_utf16.begin(), reference_output_utf16.end());
   if (it.first != output_utf16.begin() + saved_chars) {
@@ -658,7 +649,7 @@ bool transcode_utf8_to_utf32_test_base::validate(size_t saved_chars) const {
 
   // At this point, we know that the lengths are the same so std::mismatch is
   // enough to tell us whether the strings are identical.
-  auto it = our_mismatch(
+  auto it = std::mismatch(
       output_utf32.begin(), output_utf32.begin() + saved_chars,
       reference_output_utf32.begin(), reference_output_utf32.end());
   if (it.first != output_utf32.begin() + saved_chars) {
@@ -765,7 +756,7 @@ bool transcode_utf16_to_utf8_test_base::validate(size_t saved_chars) const {
   // At this point, we know that the lengths are the same so std::mismatch is
   // enough to tell us whether the strings are identical.
   auto it =
-      our_mismatch(output_utf8.begin(), output_utf8.begin() + saved_chars,
+      std::mismatch(output_utf8.begin(), output_utf8.begin() + saved_chars,
                    reference_output_utf8.begin(), reference_output_utf8.end());
   if (it.first != output_utf8.begin() + saved_chars) {
     printf("mismatched output at %zu: actual value 0x%02x, expected 0x%02x\n",
@@ -873,7 +864,7 @@ bool transcode_utf16_to_utf32_test_base::validate(size_t saved_chars) const {
 
   // At this point, we know that the lengths are the same so std::mismatch is
   // enough to tell us whether the strings are identical.
-  auto it = our_mismatch(
+  auto it = std::mismatch(
       output_utf32.begin(), output_utf32.begin() + saved_chars,
       reference_output_utf32.begin(), reference_output_utf32.end());
   if (it.first != output_utf32.begin() + saved_chars) {
@@ -960,7 +951,7 @@ bool transcode_utf32_to_latin1_test_base::validate(size_t saved_chars) const {
 
   // At this point, we know that the lengths are the same so std::mismatch is
   // enough to tell us whether the strings are identical.
-  auto it = our_mismatch(
+  auto it = std::mismatch(
       output_latin1.begin(), output_latin1.begin() + saved_chars,
       reference_output_latin1.begin(), reference_output_latin1.end());
   if (it.first != output_latin1.begin() + saved_chars) {
@@ -1066,7 +1057,7 @@ bool transcode_utf32_to_utf8_test_base::validate(size_t saved_chars) const {
   // At this point, we know that the lengths are the same so std::mismatch is
   // enough to tell us whether the strings are identical.
   auto it =
-      our_mismatch(output_utf8.begin(), output_utf8.begin() + saved_chars,
+      std::mismatch(output_utf8.begin(), output_utf8.begin() + saved_chars,
                    reference_output_utf8.begin(), reference_output_utf8.end());
   if (it.first != output_utf8.begin() + saved_chars) {
     printf("mismatched output at %zu: actual value 0x%02x, expected 0x%02x\n",
@@ -1154,7 +1145,7 @@ bool transcode_utf32_to_utf16_test_base::validate(size_t saved_chars) const {
 
   // At this point, we know that the lengths are the same so std::mismatch is
   // enough to tell us whether the strings are identical.
-  auto it = our_mismatch(
+  auto it = std::mismatch(
       output_utf16.begin(), output_utf16.begin() + saved_chars,
       reference_output_utf16.begin(), reference_output_utf16.end());
   if (it.first != output_utf16.begin() + saved_chars) {
