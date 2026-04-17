@@ -408,7 +408,8 @@ private:
         continue;
       }
       simdutf::get_active_implementation() = e;
-      summarize(std::string("simdutf::") + std::string(e->name()), [this, &e]() {
+      summarize(std::string("simdutf::") + std::string(e->name()), [this,
+                                                                    &e]() {
         for (const std::vector<char> &source : data) {
           size_t base64_size =
               e->binary_to_base64(source.data(), source.size(), buffer1.data(),
@@ -462,7 +463,8 @@ private:
                         source.data(), source.size(), buffer1.data());
                   }
                 });
-      summarize(std::string("simdutf::") + std::string(e->name()) + "_with_lines",
+      summarize(std::string("simdutf::") + std::string(e->name()) +
+                    "_with_lines",
                 [this, &e, &base64_size]() {
                   for (const std::vector<char> &source : data) {
                     base64_size = e->binary_to_base64_with_lines(
@@ -470,15 +472,15 @@ private:
                   }
                 });
 #if SIMDUTF_COMPILED_CXX_VERSION >= 20
-      summarize(std::string("simdutf::atomic_binary_to_base64_") +
-                    std::string(
-                        (simdutf::get_active_implementation() = e)->name()),
-                [this, &base64_size]() {
-                  for (const std::vector<char> &source : data) {
-                    base64_size = simdutf::atomic_binary_to_base64(
-                        source.data(), source.size(), buffer1.data());
-                  }
-                });
+      summarize(
+          std::string("simdutf::atomic_binary_to_base64_") +
+              std::string((simdutf::get_active_implementation() = e)->name()),
+          [this, &base64_size]() {
+            for (const std::vector<char> &source : data) {
+              base64_size = simdutf::atomic_binary_to_base64(
+                  source.data(), source.size(), buffer1.data());
+            }
+          });
 #endif
     }
   }
@@ -495,7 +497,8 @@ private:
         continue;
       }
       simdutf::get_active_implementation() = e;
-      summarize(std::string("simdutf::") + std::string(e->name()), [this, &e]() {
+      summarize(std::string("simdutf::") + std::string(e->name()), [this,
+                                                                    &e]() {
         for (const std::vector<char> &source : data) {
           size_t base64_size =
               e->binary_to_base64(source.data(), source.size(), buffer1.data(),
@@ -581,7 +584,8 @@ private:
       }
       simdutf::get_active_implementation() = e;
 
-      summarize(std::string("simdutf::") + std::string(e->name()), [this, &e]() {
+      summarize(std::string("simdutf::") + std::string(e->name()), [this,
+                                                                    &e]() {
         for (const std::vector<char> &source : data) {
           auto err =
               e->base64_to_binary(source.data(), source.size(), buffer1.data());
@@ -599,7 +603,8 @@ private:
         }
       });
 
-      summarize(std::string("simdutf::") + std::string(e->name()) + " (accept garbage)",
+      summarize(std::string("simdutf::") + std::string(e->name()) +
+                    " (accept garbage)",
                 [this, &e]() {
                   for (const std::vector<char> &source : data) {
                     auto err = e->base64_to_binary(
@@ -621,28 +626,28 @@ private:
                 });
 
 #if SIMDUTF_COMPILED_CXX_VERSION >= 20
-      summarize(std::string("simdutf::atomic_base64_to_binary_") +
-                    std::string(
-                        (simdutf::get_active_implementation() = e)->name()),
-                [this]() {
-                  for (const std::vector<char> &source : data) {
-                    size_t len = buffer1.size();
-                    auto err = simdutf::atomic_base64_to_binary_safe(
-                        source.data(), source.size(), buffer1.data(), len);
-                    if (err.error) {
-                      std::cerr << "Error: at position " << err.count
-                                << " out of " << source.size() << std::endl;
-                      for (size_t i = err.count; i < source.size(); i++) {
-                        printf("0x%02x (%c) ", uint8_t(source[i]), source[i]);
-                      }
-                      printf("\n");
-                      throw std::runtime_error(
-                          "Error: is input valid base64? " +
-                          std::to_string(err.error) + " at position " +
-                          std::to_string(err.count));
-                    }
-                  }
-                });
+      summarize(
+          std::string("simdutf::atomic_base64_to_binary_") +
+              std::string((simdutf::get_active_implementation() = e)->name()),
+          [this]() {
+            for (const std::vector<char> &source : data) {
+              size_t len = buffer1.size();
+              auto err = simdutf::atomic_base64_to_binary_safe(
+                  source.data(), source.size(), buffer1.data(), len);
+              if (err.error) {
+                std::cerr << "Error: at position " << err.count << " out of "
+                          << source.size() << std::endl;
+                for (size_t i = err.count; i < source.size(); i++) {
+                  printf("0x%02x (%c) ", uint8_t(source[i]), source[i]);
+                }
+                printf("\n");
+                throw std::runtime_error("Error: is input valid base64? " +
+                                         std::to_string(err.error) +
+                                         " at position " +
+                                         std::to_string(err.count));
+              }
+            }
+          });
 #endif
     }
   }
@@ -669,13 +674,14 @@ private:
                   }
                 });
 
-      summarize(
-          std::string("simdutf::") + std::string(e->name()) + "_binary_length_from_base64",
-          [this, &e, &len]() {
-            for (const std::vector<char> &source : data) {
-              len = e->binary_length_from_base64(source.data(), source.size());
-            }
-          });
+      summarize(std::string("simdutf::") + std::string(e->name()) +
+                    "_binary_length_from_base64",
+                [this, &e, &len]() {
+                  for (const std::vector<char> &source : data) {
+                    len = e->binary_length_from_base64(source.data(),
+                                                       source.size());
+                  }
+                });
     }
   }
 };
@@ -728,7 +734,8 @@ void bench_bun() {
         continue;
       }
       simdutf::get_active_implementation() = e;
-      pretty_print(1, source.size(), std::string("simdutf::") + std::string(e->name()),
+      pretty_print(1, source.size(),
+                   std::string("simdutf::") + std::string(e->name()),
                    bench([&source, &buffer1, &e, &base64_size]() {
                      base64_size = e->binary_to_base64(
                          source.data(), source.size(), buffer1.data());

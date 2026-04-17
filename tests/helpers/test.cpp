@@ -178,8 +178,8 @@ void run(const CommandLine &cmdline) {
     }
     matching_implementation++;
 
-    printf("Checking implementation %.*s\n",
-           int(implementation->name().size()), implementation->name().data());
+    printf("Checking implementation %.*s\n", int(implementation->name().size()),
+           implementation->name().data());
 
     auto filter = [&cmdline](const simdutf::test::test_entry &test) -> bool {
       if (cmdline.tests.empty())
