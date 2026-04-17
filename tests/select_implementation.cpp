@@ -17,12 +17,11 @@ int main() {
     if (!validutf8) {
       return EXIT_FAILURE;
     }
-    printf("%s: %s\n", implementation->name().c_str(),
-           implementation->description().c_str());
+    printf("%s: %s\n", implementation->name(), implementation->description());
     chosen_implementation = implementation->name();
   }
   auto my_implementation =
-      simdutf::get_available_implementations()[chosen_implementation];
+      simdutf::get_available_implementations()[chosen_implementation.c_str()];
   if (!my_implementation) {
     return EXIT_FAILURE;
   }
@@ -38,6 +37,6 @@ int main() {
     return EXIT_FAILURE;
   }
   printf("Manually selected: %s\n",
-         simdutf::get_active_implementation()->name().c_str());
+         simdutf::get_active_implementation()->name());
   return EXIT_SUCCESS;
 }

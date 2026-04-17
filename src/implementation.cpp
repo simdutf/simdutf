@@ -1,6 +1,8 @@
 #include "simdutf.h"
+#include <algorithm>
 #include <climits>
 #include <type_traits>
+#include <utility>
 #if SIMDUTF_ATOMIC_REF
   #include <array>
   #include "simdutf/scalar/atomic_util.h"
@@ -153,9 +155,7 @@ static const ppc64::implementation *get_ppc64_singleton() {
 #endif
 #if SIMDUTF_IMPLEMENTATION_RVV
 static const rvv::implementation rvv_singleton{};
-static const rvv::implementation *get_rvv_singleton() {
-  return &rvv_singleton;
-}
+static const rvv::implementation *get_rvv_singleton() { return &rvv_singleton; }
 #endif
 #if SIMDUTF_IMPLEMENTATION_LASX
 static const lasx::implementation lasx_singleton{};
@@ -165,9 +165,7 @@ static const lasx::implementation *get_lasx_singleton() {
 #endif
 #if SIMDUTF_IMPLEMENTATION_LSX
 static const lsx::implementation lsx_singleton{};
-static const lsx::implementation *get_lsx_singleton() {
-  return &lsx_singleton;
-}
+static const lsx::implementation *get_lsx_singleton() { return &lsx_singleton; }
 #endif
 #if SIMDUTF_IMPLEMENTATION_FALLBACK
 static const fallback::implementation fallback_singleton{};
@@ -1391,8 +1389,7 @@ available_implementation_list::begin() const noexcept {
 }
 const implementation *const *
 available_implementation_list::end() const noexcept {
-  return internal::available_implementation_pointers_array +
-         size();
+  return internal::available_implementation_pointers_array + size();
 }
 const implementation *
 available_implementation_list::detect_best_supported() const noexcept {
@@ -1451,13 +1448,14 @@ static const internal::detect_best_supported_implementation_on_first_use
     detect_best_supported_implementation_on_first_use_singleton;
 #endif
 
-static internal::atomic_ptr<const implementation> active_implementation_instance{
+static internal::atomic_ptr<const implementation>
+    active_implementation_instance{
 #if SIMDUTF_SINGLE_IMPLEMENTATION
-    internal::get_single_implementation()
+        internal::get_single_implementation()
 #else
-    &detect_best_supported_implementation_on_first_use_singleton
+        &detect_best_supported_implementation_on_first_use_singleton
 #endif
-};
+    };
 
 /**
  * The active implementation.

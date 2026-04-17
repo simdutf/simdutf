@@ -6,6 +6,7 @@
 #include <cfloat>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #ifndef _WIN32
   // strcasecmp, strncasecmp

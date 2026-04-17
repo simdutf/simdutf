@@ -1,5 +1,8 @@
 #ifndef SIMDUTF_ERROR_H
 #define SIMDUTF_ERROR_H
+#if SIMDUTF_CPLUSPLUS17
+  #include <string_view>
+#endif
 namespace simdutf {
 
 enum error_code {

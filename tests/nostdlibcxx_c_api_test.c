@@ -27,7 +27,8 @@ int main(void) {
   const char bad_utf8[] = "\xff\xfe\xfd";
   EXPECT(!simdutf_validate_utf8(bad_utf8, sizeof(bad_utf8) - 1));
 
-  simdutf_result r = simdutf_validate_utf8_with_errors(ascii, sizeof(ascii) - 1);
+  simdutf_result r =
+      simdutf_validate_utf8_with_errors(ascii, sizeof(ascii) - 1);
   EXPECT(r.error == SIMDUTF_ERROR_SUCCESS);
   EXPECT(r.count == sizeof(ascii) - 1);
 
@@ -41,7 +42,8 @@ int main(void) {
   /* --- UTF-8 -> UTF-16LE transcoding --- */
   const char hello_u8[] = "Hello";
   char16_t u16[16];
-  size_t n = simdutf_convert_utf8_to_utf16le(hello_u8, sizeof(hello_u8) - 1, u16);
+  size_t n =
+      simdutf_convert_utf8_to_utf16le(hello_u8, sizeof(hello_u8) - 1, u16);
   EXPECT(n == 5);
   EXPECT(u16[0] == 'H' && u16[4] == 'o');
 

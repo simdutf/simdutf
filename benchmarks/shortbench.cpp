@@ -511,7 +511,7 @@ int main(int argc, char *argv[]) {
         printf("# Input size: %zu bytes\n", file_size);
         printf("# Max benchmark size: %zu bytes\n", actual_max);
         printf("# Current system: %s\n",
-               simdutf::get_active_implementation()->name().c_str());
+               simdutf::get_active_implementation()->name());
         printf("\n");
 
         print_table_header(has_events);
@@ -532,7 +532,7 @@ int main(int argc, char *argv[]) {
       printf("# Input size: %zu bytes\n", file_size);
       printf("# Max benchmark size: %zu bytes\n", actual_max);
       printf("# Current system: %s\n",
-             simdutf::get_active_implementation()->name().c_str());
+             simdutf::get_active_implementation()->name());
       printf("\n");
 
       print_table_header(has_events);
