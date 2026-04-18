@@ -93,13 +93,20 @@ if(SIMDUTF_ALWAYS_INCLUDE_FALLBACK)
   target_compile_definitions(simdutf PRIVATE SIMDUTF_IMPLEMENTATION_FALLBACK=1)
 endif()
 
+include(CheckCXXCompilerFlag)
+include(CheckCXXLinkerFlag)
+
+check_cxx_compiler_flag("-fno-exceptions" HAVE_CXX_FLAG_NO_EXCEPTIONS)
+check_cxx_compiler_flag("-fno-rtti" HAVE_CXX_FLAG_NO_RTTI)
+check_cxx_linker_flag("-nostdlib++" HAVE_CXX_LINKER_FLAG_NO_STDLIBXX)
+
 ##
 ## simdutf-nostdlibcxx: a variant of the library that does not require the C++
 ## standard library runtime (libc++ / libc++abi / libstdc++). It is intended to
 ## be consumed through the C interface (simdutf_c.h) and only supports GCC and
 ## Clang.
 ##
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+if(HAVE_CXX_FLAG_NO_EXCEPTIONS AND HAVE_CXX_FLAG_NO_RTTI AND HAVE_CXX_LINKER_FLAG_NO_STDLIBXX)
   add_library(simdutf-nostdlibcxx STATIC simdutf.cpp)
   target_include_directories(simdutf-nostdlibcxx PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)

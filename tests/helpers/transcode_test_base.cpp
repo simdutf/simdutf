@@ -137,7 +137,7 @@ bool transcode_latin1_to_utf8_test_base::validate(size_t saved_chars) const {
   // enough to tell us whether the strings are identical.
   auto it =
       std::mismatch(output_utf8.begin(), output_utf8.begin() + saved_chars,
-                   reference_output_utf8.begin(), reference_output_utf8.end());
+                    reference_output_utf8.begin(), reference_output_utf8.end());
   if (it.first != output_utf8.begin() + saved_chars) {
     printf("mismatched output at %zu: actual value 0x%02x, expected 0x%02x\n",
            size_t(std::distance(output_utf8.begin(), it.first)),
@@ -757,7 +757,7 @@ bool transcode_utf16_to_utf8_test_base::validate(size_t saved_chars) const {
   // enough to tell us whether the strings are identical.
   auto it =
       std::mismatch(output_utf8.begin(), output_utf8.begin() + saved_chars,
-                   reference_output_utf8.begin(), reference_output_utf8.end());
+                    reference_output_utf8.begin(), reference_output_utf8.end());
   if (it.first != output_utf8.begin() + saved_chars) {
     printf("mismatched output at %zu: actual value 0x%02x, expected 0x%02x\n",
            size_t(std::distance(output_utf8.begin(), it.first)),
@@ -1058,7 +1058,7 @@ bool transcode_utf32_to_utf8_test_base::validate(size_t saved_chars) const {
   // enough to tell us whether the strings are identical.
   auto it =
       std::mismatch(output_utf8.begin(), output_utf8.begin() + saved_chars,
-                   reference_output_utf8.begin(), reference_output_utf8.end());
+                    reference_output_utf8.begin(), reference_output_utf8.end());
   if (it.first != output_utf8.begin() + saved_chars) {
     printf("mismatched output at %zu: actual value 0x%02x, expected 0x%02x\n",
            size_t(std::distance(output_utf8.begin(), it.first)),

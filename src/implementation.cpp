@@ -117,59 +117,110 @@ namespace internal {
        SIMDUTF_IMPLEMENTATION_LASX + SIMDUTF_IMPLEMENTATION_FALLBACK ==        \
    1)
 
-// Static array of known implementations. We are hoping these get baked into the
-// executable without requiring a static initializer.
-
-// Hoisted to translation-unit scope so that first-use does not emit a
-// thread-safe init guard (`__cxa_guard_*` from libc++abi). The objects are
-// trivial metadata wrappers, so eager static initialization is cheap.
+// Static array of known implementations. We are hoping these get baked into
+// the executable without requiring a static initializer.
+//
+// Under SIMDUTF_NO_LIBCXX the singleton storage is promoted from a
+// function-local static to a translation-unit-scope variable so first-use
+// does not emit a thread-safe init guard (`__cxa_guard_*` from libc++abi).
+// The objects are trivial metadata wrappers so eager TU-scope initialization
+// is cheap. Otherwise we keep the classic function-local static.
 #if SIMDUTF_IMPLEMENTATION_ICELAKE
+  #if SIMDUTF_NO_LIBCXX
 static const icelake::implementation icelake_singleton{};
+  #endif
 static const icelake::implementation *get_icelake_singleton() {
+  #if !SIMDUTF_NO_LIBCXX
+  static const icelake::implementation icelake_singleton{};
+  #endif
   return &icelake_singleton;
 }
 #endif
 #if SIMDUTF_IMPLEMENTATION_HASWELL
+  #if SIMDUTF_NO_LIBCXX
 static const haswell::implementation haswell_singleton{};
+  #endif
 static const haswell::implementation *get_haswell_singleton() {
+  #if !SIMDUTF_NO_LIBCXX
+  static const haswell::implementation haswell_singleton{};
+  #endif
   return &haswell_singleton;
 }
 #endif
 #if SIMDUTF_IMPLEMENTATION_WESTMERE
+  #if SIMDUTF_NO_LIBCXX
 static const westmere::implementation westmere_singleton{};
+  #endif
 static const westmere::implementation *get_westmere_singleton() {
+  #if !SIMDUTF_NO_LIBCXX
+  static const westmere::implementation westmere_singleton{};
+  #endif
   return &westmere_singleton;
 }
 #endif
 #if SIMDUTF_IMPLEMENTATION_ARM64
+  #if SIMDUTF_NO_LIBCXX
 static const arm64::implementation arm64_singleton{};
+  #endif
 static const arm64::implementation *get_arm64_singleton() {
+  #if !SIMDUTF_NO_LIBCXX
+  static const arm64::implementation arm64_singleton{};
+  #endif
   return &arm64_singleton;
 }
 #endif
 #if SIMDUTF_IMPLEMENTATION_PPC64
+  #if SIMDUTF_NO_LIBCXX
 static const ppc64::implementation ppc64_singleton{};
+  #endif
 static const ppc64::implementation *get_ppc64_singleton() {
+  #if !SIMDUTF_NO_LIBCXX
+  static const ppc64::implementation ppc64_singleton{};
+  #endif
   return &ppc64_singleton;
 }
 #endif
 #if SIMDUTF_IMPLEMENTATION_RVV
+  #if SIMDUTF_NO_LIBCXX
 static const rvv::implementation rvv_singleton{};
-static const rvv::implementation *get_rvv_singleton() { return &rvv_singleton; }
+  #endif
+static const rvv::implementation *get_rvv_singleton() {
+  #if !SIMDUTF_NO_LIBCXX
+  static const rvv::implementation rvv_singleton{};
+  #endif
+  return &rvv_singleton;
+}
 #endif
 #if SIMDUTF_IMPLEMENTATION_LASX
+  #if SIMDUTF_NO_LIBCXX
 static const lasx::implementation lasx_singleton{};
+  #endif
 static const lasx::implementation *get_lasx_singleton() {
+  #if !SIMDUTF_NO_LIBCXX
+  static const lasx::implementation lasx_singleton{};
+  #endif
   return &lasx_singleton;
 }
 #endif
 #if SIMDUTF_IMPLEMENTATION_LSX
+  #if SIMDUTF_NO_LIBCXX
 static const lsx::implementation lsx_singleton{};
-static const lsx::implementation *get_lsx_singleton() { return &lsx_singleton; }
+  #endif
+static const lsx::implementation *get_lsx_singleton() {
+  #if !SIMDUTF_NO_LIBCXX
+  static const lsx::implementation lsx_singleton{};
+  #endif
+  return &lsx_singleton;
+}
 #endif
 #if SIMDUTF_IMPLEMENTATION_FALLBACK
+  #if SIMDUTF_NO_LIBCXX
 static const fallback::implementation fallback_singleton{};
+  #endif
 static const fallback::implementation *get_fallback_singleton() {
+  #if !SIMDUTF_NO_LIBCXX
+  static const fallback::implementation fallback_singleton{};
+  #endif
   return &fallback_singleton;
 }
 #endif

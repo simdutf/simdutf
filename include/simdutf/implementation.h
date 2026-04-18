@@ -4176,7 +4176,6 @@ find(const char16_t *start, const char16_t *end, char16_t character) noexcept {
 
 namespace simdutf {
 
-
 inline std::string_view to_string(base64_options options) {
   switch (options) {
   case base64_default:
