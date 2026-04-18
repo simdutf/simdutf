@@ -1465,8 +1465,13 @@ public:
                        "Unsupported CPU (no detected SIMD instructions)", 0) {}
 };
 
+#if SIMDUTF_NO_LIBCXX
 static const unsupported_implementation unsupported_singleton{};
+#endif
 const unsupported_implementation *get_unsupported_singleton() {
+#if !SIMDUTF_NO_LIBCXX
+  static const unsupported_implementation unsupported_singleton{};
+#endif
   return &unsupported_singleton;
 }
 static_assert(std::is_trivially_destructible<unsupported_implementation>::value,
@@ -1526,34 +1531,53 @@ detect_best_supported_implementation_on_first_use::set_best() const noexcept {
 /**
  * The list of available implementations compiled into simdutf.
  */
-// TU-scope storage to avoid a function-local static with `__cxa_guard_*`.
+#if SIMDUTF_NO_LIBCXX
 static const internal::available_implementation_list
     available_implementations_instance{};
-
+#endif
 SIMDUTF_DLLIMPORTEXPORT const internal::available_implementation_list &
 get_available_implementations() {
+#if !SIMDUTF_NO_LIBCXX
+  static const internal::available_implementation_list
+      available_implementations_instance{};
+#endif
   return available_implementations_instance;
 }
 
-#if !SIMDUTF_SINGLE_IMPLEMENTATION
+#if SIMDUTF_NO_LIBCXX && !SIMDUTF_SINGLE_IMPLEMENTATION
 static const internal::detect_best_supported_implementation_on_first_use
     detect_best_supported_implementation_on_first_use_singleton;
 #endif
 
+#if SIMDUTF_NO_LIBCXX
 static internal::atomic_ptr<const implementation>
     active_implementation_instance{
-#if SIMDUTF_SINGLE_IMPLEMENTATION
+  #if SIMDUTF_SINGLE_IMPLEMENTATION
         internal::get_single_implementation()
-#else
+  #else
         &detect_best_supported_implementation_on_first_use_singleton
-#endif
+  #endif
     };
+#endif
 
 /**
  * The active implementation.
  */
 SIMDUTF_DLLIMPORTEXPORT internal::atomic_ptr<const implementation> &
 get_active_implementation() {
+#if !SIMDUTF_NO_LIBCXX
+  #if !SIMDUTF_SINGLE_IMPLEMENTATION
+  static const internal::detect_best_supported_implementation_on_first_use
+      detect_best_supported_implementation_on_first_use_singleton;
+  #endif
+  static internal::atomic_ptr<const implementation> active_implementation_instance{
+  #if SIMDUTF_SINGLE_IMPLEMENTATION
+      internal::get_single_implementation()
+  #else
+      &detect_best_supported_implementation_on_first_use_singleton
+  #endif
+  };
+#endif
   return active_implementation_instance;
 }
 
@@ -2593,12 +2617,19 @@ simdutf_warn_unused int detect_encodings(const char *buf,
 }
 #endif // SIMDUTF_FEATURE_DETECT_ENCODING
 
-// TU-scope storage to avoid a function-local static with `__cxa_guard_*`.
+#if SIMDUTF_NO_LIBCXX
 static const implementation *const builtin_impl_instance =
     get_available_implementations()[SIMDUTF_STRINGIFY(
         SIMDUTF_BUILTIN_IMPLEMENTATION)];
-
-const implementation *builtin_implementation() { return builtin_impl_instance; }
+#endif
+const implementation *builtin_implementation() {
+#if !SIMDUTF_NO_LIBCXX
+  static const implementation *const builtin_impl_instance =
+      get_available_implementations()[SIMDUTF_STRINGIFY(
+          SIMDUTF_BUILTIN_IMPLEMENTATION)];
+#endif
+  return builtin_impl_instance;
+}
 
 #if SIMDUTF_FEATURE_UTF8
 simdutf_warn_unused size_t trim_partial_utf8(const char *input, size_t length) {
