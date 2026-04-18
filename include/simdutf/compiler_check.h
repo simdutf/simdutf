@@ -43,8 +43,8 @@
   #define SIMDUTF_CPLUSPLUS11 1
 #endif
 
-#ifndef SIMDUTF_CPLUSPLUS11
-  #error simdutf requires a compiler compliant with the C++11 standard
+#ifndef SIMDUTF_CPLUSPLUS17
+  #error simdutf requires a compiler compliant with the C++17 standard
 #endif
 
 #endif // SIMDUTF_COMPILER_CHECK_H

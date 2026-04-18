@@ -93,6 +93,38 @@ if(SIMDUTF_ALWAYS_INCLUDE_FALLBACK)
   target_compile_definitions(simdutf PRIVATE SIMDUTF_IMPLEMENTATION_FALLBACK=1)
 endif()
 
+include(CheckCXXCompilerFlag)
+include(CheckCXXSourceCompiles)
+
+check_cxx_compiler_flag("-fno-exceptions" HAVE_CXX_FLAG_NO_EXCEPTIONS)
+check_cxx_compiler_flag("-fno-rtti" HAVE_CXX_FLAG_NO_RTTI)
+
+# CheckCXXLinkerFlag is only available in CMake 3.18+, so we probe the linker
+# flag directly via CheckCXXSourceCompiles + CMAKE_REQUIRED_LINK_OPTIONS.
+set(_simdutf_prev_link_options "${CMAKE_REQUIRED_LINK_OPTIONS}")
+set(CMAKE_REQUIRED_LINK_OPTIONS "-nostdlib++")
+check_cxx_source_compiles("int main() { return 0; }"
+  HAVE_CXX_LINKER_FLAG_NO_STDLIBXX)
+set(CMAKE_REQUIRED_LINK_OPTIONS "${_simdutf_prev_link_options}")
+unset(_simdutf_prev_link_options)
+
+##
+## simdutf-nostdlibcxx: a variant of the library that does not require the C++
+## standard library runtime (libc++ / libc++abi / libstdc++). It is intended to
+## be consumed through the C interface (simdutf_c.h) and only supports GCC and
+## Clang.
+if(HAVE_CXX_FLAG_NO_EXCEPTIONS AND HAVE_CXX_FLAG_NO_RTTI AND HAVE_CXX_LINKER_FLAG_NO_STDLIBXX)
+  add_library(simdutf-nostdlibcxx STATIC simdutf.cpp)
+  target_include_directories(simdutf-nostdlibcxx PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+  target_include_directories(simdutf-nostdlibcxx PUBLIC
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>")
+  target_compile_definitions(simdutf-nostdlibcxx PRIVATE SIMDUTF_NO_LIBCXX=1)
+  target_compile_options(simdutf-nostdlibcxx PRIVATE
+    -fno-exceptions -fno-rtti)
+  set_target_properties(simdutf-nostdlibcxx PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
+
 if(SIMDUTF_SANITIZE)
   target_compile_options(simdutf PUBLIC -fsanitize=address  -fno-omit-frame-pointer -fno-sanitize-recover=all)
   target_compile_definitions(simdutf PUBLIC ASAN_OPTIONS=detect_leaks=1)

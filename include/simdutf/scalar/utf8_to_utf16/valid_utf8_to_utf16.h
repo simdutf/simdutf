@@ -51,7 +51,7 @@ simdutf_constexpr23 size_t convert_valid(InputPtr data, size_t len,
       } // minimal bound checking
       uint16_t code_point = uint16_t(((leading_byte & 0b00011111) << 6) |
                                      (uint8_t(data[pos + 1]) & 0b00111111));
-      if simdutf_constexpr (!match_system(big_endian)) {
+      if constexpr (!match_system(big_endian)) {
         code_point = u16_swap_bytes(uint16_t(code_point));
       }
       *utf16_output++ = char16_t(code_point);
@@ -66,7 +66,7 @@ simdutf_constexpr23 size_t convert_valid(InputPtr data, size_t len,
           uint16_t(((leading_byte & 0b00001111) << 12) |
                    ((uint8_t(data[pos + 1]) & 0b00111111) << 6) |
                    (uint8_t(data[pos + 2]) & 0b00111111));
-      if simdutf_constexpr (!match_system(big_endian)) {
+      if constexpr (!match_system(big_endian)) {
         code_point = u16_swap_bytes(uint16_t(code_point));
       }
       *utf16_output++ = char16_t(code_point);
@@ -83,7 +83,7 @@ simdutf_constexpr23 size_t convert_valid(InputPtr data, size_t len,
       code_point -= 0x10000;
       uint16_t high_surrogate = uint16_t(0xD800 + (code_point >> 10));
       uint16_t low_surrogate = uint16_t(0xDC00 + (code_point & 0x3FF));
-      if simdutf_constexpr (!match_system(big_endian)) {
+      if constexpr (!match_system(big_endian)) {
         high_surrogate = u16_swap_bytes(high_surrogate);
         low_surrogate = u16_swap_bytes(low_surrogate);
       }
