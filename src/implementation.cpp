@@ -872,38 +872,74 @@ static_assert(std::is_trivially_destructible<
               "detect_best_supported_implementation_on_first_use should be "
               "trivially destructible");
 
-// TU-scope storage for the pointer array — replaces a function-local static
-// std::initializer_list to avoid `__cxa_guard_*`. The array is used via a
-// pointer+size pair (see available_implementation_list methods).
-static const implementation *const available_implementation_pointers_array[] = {
-#if SIMDUTF_IMPLEMENTATION_ICELAKE
-    &icelake_singleton,
+#if SIMDUTF_NO_LIBCXX
+static const std::initializer_list<const implementation *>
+    available_implementation_pointers{
+  #if SIMDUTF_IMPLEMENTATION_ICELAKE
+        get_icelake_singleton(),
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_HASWELL
+        get_haswell_singleton(),
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_WESTMERE
+        get_westmere_singleton(),
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_ARM64
+        get_arm64_singleton(),
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_PPC64
+        get_ppc64_singleton(),
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_RVV
+        get_rvv_singleton(),
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_LASX
+        get_lasx_singleton(),
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_LSX
+        get_lsx_singleton(),
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_FALLBACK
+        get_fallback_singleton(),
+  #endif
+    };
 #endif
-#if SIMDUTF_IMPLEMENTATION_HASWELL
-    &haswell_singleton,
+static const std::initializer_list<const implementation *> &
+get_available_implementation_pointers() {
+#if !SIMDUTF_NO_LIBCXX
+  static const std::initializer_list<const implementation *>
+      available_implementation_pointers{
+  #if SIMDUTF_IMPLEMENTATION_ICELAKE
+          get_icelake_singleton(),
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_HASWELL
+          get_haswell_singleton(),
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_WESTMERE
+          get_westmere_singleton(),
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_ARM64
+          get_arm64_singleton(),
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_PPC64
+          get_ppc64_singleton(),
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_RVV
+          get_rvv_singleton(),
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_LASX
+          get_lasx_singleton(),
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_LSX
+          get_lsx_singleton(),
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_FALLBACK
+          get_fallback_singleton(),
+  #endif
+      };
 #endif
-#if SIMDUTF_IMPLEMENTATION_WESTMERE
-    &westmere_singleton,
-#endif
-#if SIMDUTF_IMPLEMENTATION_ARM64
-    &arm64_singleton,
-#endif
-#if SIMDUTF_IMPLEMENTATION_PPC64
-    &ppc64_singleton,
-#endif
-#if SIMDUTF_IMPLEMENTATION_RVV
-    &rvv_singleton,
-#endif
-#if SIMDUTF_IMPLEMENTATION_LASX
-    &lasx_singleton,
-#endif
-#if SIMDUTF_IMPLEMENTATION_LSX
-    &lsx_singleton,
-#endif
-#if SIMDUTF_IMPLEMENTATION_FALLBACK
-    &fallback_singleton,
-#endif
-};
+  return available_implementation_pointers;
+}
 
 // So we can return UNSUPPORTED_ARCHITECTURE from the parser when there is no
 // support
@@ -1431,16 +1467,15 @@ static_assert(std::is_trivially_destructible<unsupported_implementation>::value,
               "unsupported_singleton should be trivially destructible");
 
 size_t available_implementation_list::size() const noexcept {
-  return sizeof(internal::available_implementation_pointers_array) /
-         sizeof(internal::available_implementation_pointers_array[0]);
+  return internal::get_available_implementation_pointers().size();
 }
 const implementation *const *
 available_implementation_list::begin() const noexcept {
-  return internal::available_implementation_pointers_array;
+  return internal::get_available_implementation_pointers().begin();
 }
 const implementation *const *
 available_implementation_list::end() const noexcept {
-  return internal::available_implementation_pointers_array + size();
+  return internal::get_available_implementation_pointers().end();
 }
 const implementation *
 available_implementation_list::detect_best_supported() const noexcept {
@@ -1448,7 +1483,7 @@ available_implementation_list::detect_best_supported() const noexcept {
   uint32_t supported_instruction_sets =
       internal::detect_supported_architectures();
   for (const implementation *impl :
-       internal::available_implementation_pointers_array) {
+       internal::get_available_implementation_pointers()) {
     uint32_t required_instruction_sets = impl->required_instruction_sets();
     if ((supported_instruction_sets & required_instruction_sets) ==
         required_instruction_sets) {

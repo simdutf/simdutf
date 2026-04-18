@@ -94,11 +94,19 @@ if(SIMDUTF_ALWAYS_INCLUDE_FALLBACK)
 endif()
 
 include(CheckCXXCompilerFlag)
-include(CheckCXXLinkerFlag)
+include(CheckCXXSourceCompiles)
 
 check_cxx_compiler_flag("-fno-exceptions" HAVE_CXX_FLAG_NO_EXCEPTIONS)
 check_cxx_compiler_flag("-fno-rtti" HAVE_CXX_FLAG_NO_RTTI)
-check_cxx_linker_flag("-nostdlib++" HAVE_CXX_LINKER_FLAG_NO_STDLIBXX)
+
+# CheckCXXLinkerFlag is only available in CMake 3.18+, so we probe the linker
+# flag directly via CheckCXXSourceCompiles + CMAKE_REQUIRED_LINK_OPTIONS.
+set(_simdutf_prev_link_options "${CMAKE_REQUIRED_LINK_OPTIONS}")
+set(CMAKE_REQUIRED_LINK_OPTIONS "-nostdlib++")
+check_cxx_source_compiles("int main() { return 0; }"
+  HAVE_CXX_LINKER_FLAG_NO_STDLIBXX)
+set(CMAKE_REQUIRED_LINK_OPTIONS "${_simdutf_prev_link_options}")
+unset(_simdutf_prev_link_options)
 
 ##
 ## simdutf-nostdlibcxx: a variant of the library that does not require the C++
