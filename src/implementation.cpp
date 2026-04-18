@@ -1570,13 +1570,14 @@ get_active_implementation() {
   static const internal::detect_best_supported_implementation_on_first_use
       detect_best_supported_implementation_on_first_use_singleton;
   #endif
-  static internal::atomic_ptr<const implementation> active_implementation_instance{
+  static internal::atomic_ptr<const implementation>
+      active_implementation_instance{
   #if SIMDUTF_SINGLE_IMPLEMENTATION
-      internal::get_single_implementation()
+          internal::get_single_implementation()
   #else
-      &detect_best_supported_implementation_on_first_use_singleton
+          &detect_best_supported_implementation_on_first_use_singleton
   #endif
-  };
+      };
 #endif
   return active_implementation_instance;
 }
