@@ -16,6 +16,12 @@
 extern "C" __attribute__((weak, noreturn)) void __cxa_pure_virtual() {
   __builtin_trap();
 }
+namespace std {
+    [[noreturn]] __attribute__((weak))
+    void __glibcxx_assert_fail(const char*, int, const char*, const char*) {
+        __builtin_trap();
+    }
+}
 #endif
 
 static_assert(sizeof(uint8_t) == sizeof(char),
