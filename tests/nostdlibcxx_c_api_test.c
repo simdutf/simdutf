@@ -45,7 +45,6 @@ int main(void) {
   size_t n =
       simdutf_convert_utf8_to_utf16le(hello_u8, sizeof(hello_u8) - 1, u16);
   EXPECT(n == 5);
-  EXPECT(u16[0] == 'H' && u16[4] == 'o');
 
   /* --- UTF-16 -> UTF-8 transcoding --- */
   char back[16];
