@@ -7274,7 +7274,7 @@ consteval auto base64_decode_literal(const char *str) {
   auto r = scalar::base64::base64_to_binary_details_impl(
       str, InputLen, result.buffer.data(), base64_default, loose);
   if (r.error != error_code::SUCCESS) {
-    throw "invalid base64 input in _base64 literal";
+    (void)(1 / 0); // invalid base64 input in _base64 literal
   }
   result.output_count = r.output_count;
   return result;
