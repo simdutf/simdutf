@@ -18,6 +18,7 @@
   #include <type_traits>
   #include <span>
   #include <tuple>
+  #include <utility> // for std::unreachable
 #endif
 // The following defines are conditionally enabled/disabled during amalgamation.
 // By default all features are enabled, regular code shouldn't check them. Only
