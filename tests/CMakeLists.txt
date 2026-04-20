@@ -493,6 +493,7 @@ if(SIMDUTF_TOOLS AND SIMDUTF_TOOL_TESTS AND Python3_FOUND)
   )
 endif()
 
+
 # Smoke test: compile a pure-C program against the C API and link it without
 # the C++ standard library, proving libsimdutf-nostdlibcxx.a is self-contained.
 if(TARGET simdutf-nostdlibcxx AND NOT SIMDUTF_SANITIZE AND NOT SIMDUTF_SANITIZE_UNDEFINED AND NOT SIMDUTF_SANITIZE_THREAD)

@@ -14,6 +14,9 @@ endif()
 if(SIMDUTF_LOGGING)
   target_compile_definitions(simdutf PUBLIC SIMDUTF_LOGGING=1)
 endif()
+if(SIMDUTF_USE_STATIC_INITIALIZATION)
+  target_compile_definitions(simdutf PUBLIC SIMDUTF_USE_STATIC_INITIALIZATION=1)
+endif()
 if(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
   target_compile_definitions(simdutf PUBLIC FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=1)
 endif()
@@ -94,19 +97,11 @@ if(SIMDUTF_ALWAYS_INCLUDE_FALLBACK)
 endif()
 
 include(CheckCXXCompilerFlag)
-include(CheckCXXSourceCompiles)
+include(CheckLinkerFlag)
 
 check_cxx_compiler_flag("-fno-exceptions" HAVE_CXX_FLAG_NO_EXCEPTIONS)
 check_cxx_compiler_flag("-fno-rtti" HAVE_CXX_FLAG_NO_RTTI)
-
-# CheckCXXLinkerFlag is only available in CMake 3.18+, so we probe the linker
-# flag directly via CheckCXXSourceCompiles + CMAKE_REQUIRED_LINK_OPTIONS.
-set(_simdutf_prev_link_options "${CMAKE_REQUIRED_LINK_OPTIONS}")
-set(CMAKE_REQUIRED_LINK_OPTIONS "-nostdlib++")
-check_cxx_source_compiles("int main() { return 0; }"
-  HAVE_CXX_LINKER_FLAG_NO_STDLIBXX)
-set(CMAKE_REQUIRED_LINK_OPTIONS "${_simdutf_prev_link_options}")
-unset(_simdutf_prev_link_options)
+check_linker_flag(CXX "-nostdlib++" HAVE_CXX_LINKER_FLAG_NO_STDLIBXX)
 
 ##
 ## simdutf-nostdlibcxx: a variant of the library that does not require the C++
