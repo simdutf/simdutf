@@ -152,7 +152,7 @@ Linux or macOS users might follow the following instructions if they have a rece
 
 1. Pull the library in a directory
    ```
-   wget https://github.com/simdutf/simdutf/releases/download/v8.2.0/singleheader.zip
+   wget https://github.com/simdutf/simdutf/releases/download/v9.0.0/singleheader.zip
    unzip singleheader.zip
    ```
    You can replace `wget` by `curl -OL https://...` if you prefer.
@@ -198,7 +198,7 @@ You may also use a package manager. E.g.,  [we have a complete example using vcp
 You can create a single-header version of the library where
 all of the code is put into two files (`simdutf.h` and `simdutf.cpp`).
 We publish a zip archive containing these files, e.g., see
-https://github.com/simdutf/simdutf/releases/download/v8.2.0/singleheader.zip
+https://github.com/simdutf/simdutf/releases/download/v9.0.0/singleheader.zip
 
 You may generate it on your own using a Python script.
 
@@ -3026,7 +3026,7 @@ which contains an `error_code` field and additional fields when relevant.
 
 We provide a simple C demo using the C wrapper at `amalgamation_demo.c`.
 It shows validating UTF-8, converting UTF-8 to UTF-16LE and back, and checking the round-trip.
-Refer to `singleheader/README.md` for instructions. 
+Refer to `singleheader/README.md` for instructions.
 
 
 You need the files `simdutf.cpp`, `simdutf_c.h`, `simdutf.h` provided with each release.
