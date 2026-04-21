@@ -398,8 +398,8 @@ private:
 
   /// concatenates two stringlike variables (const char*, string_view or
   /// std::string) into a std::string
-  std::string concatenate(const auto &string_like_1,
-                          const auto &string_like_2) {
+  template <typename T1, typename T2>
+  std::string concatenate(const T1 &string_like_1, const T2 &string_like_2) {
     return std::string(string_like_1) + std::string(string_like_2);
   }
 
@@ -589,7 +589,7 @@ private:
 
       summarize(concatenate("simdutf::", e->name()), [this, &e]() {
         for (const std::vector<char> &source : data) {
-          auto err =
+          concatenate auto err =
               e->base64_to_binary(source.data(), source.size(), buffer1.data());
           if (err.error) {
             std::cerr << "Error: at position " << err.count << " out of "
