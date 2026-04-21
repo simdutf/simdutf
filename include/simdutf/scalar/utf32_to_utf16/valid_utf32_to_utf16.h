@@ -24,7 +24,7 @@ simdutf_constexpr23 size_t convert_valid(const char32_t *data, size_t len,
       word -= 0x10000;
       uint16_t high_surrogate = uint16_t(0xD800 + (word >> 10));
       uint16_t low_surrogate = uint16_t(0xDC00 + (word & 0x3FF));
-      if simdutf_constexpr (!match_system(big_endian)) {
+      if constexpr (!match_system(big_endian)) {
         high_surrogate = u16_swap_bytes(high_surrogate);
         low_surrogate = u16_swap_bytes(low_surrogate);
       }

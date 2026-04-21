@@ -64,11 +64,6 @@ if((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Cl
     target_link_options(fastbase64 PRIVATE "-Wl,--gc-sections")
   endif()
 endif()
-message(STATUS "The tools require C++17. If your system does not support C++17, please set SIMDUTF_TOOLS to OFF.")
-set_property(TARGET sutf PROPERTY CXX_STANDARD 17)
-set_property(TARGET sutf PROPERTY CXX_STANDARD_REQUIRED ON)
-set_property(TARGET fastbase64 PROPERTY CXX_STANDARD 17)
-set_property(TARGET fastbase64 PROPERTY CXX_STANDARD_REQUIRED ON)
 
 target_link_libraries(sutf PUBLIC simdutf-nobase64)
 target_compile_definitions(sutf PRIVATE

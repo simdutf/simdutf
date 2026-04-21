@@ -23,6 +23,9 @@
   - [Command-line tools](#command-line-tools)
   - [Manual implementation selection](#manual-implementation-selection)
   - [Benchmarks](#benchmarks)
+  - [Compiling without the C++ standard library](#compiling-without-the-c-standard-library)
+  - [C API](#c-api-c11-or-better)
+  - [SIMDUTF\_USE\_STATIC\_INITIALIZATION](#simdutf_use_static_initialization)
   - [Thread safety](#thread-safety)
   - [References](#references)
   - [License](#license)
@@ -128,7 +131,7 @@ Please refer to our benchmarking tool for a proper interpretation of the numbers
 
 ## Requirements
 
-- C++11 compatible compiler. We support LLVM clang, GCC, Visual Studio. (Our tests and benchmark tools requires C++17.) Be aware that GCC under Windows is buggy and thus unsupported.
+- C++17 compatible compiler. We support LLVM clang, GCC, Visual Studio. Be aware that GCC under Windows is buggy and thus unsupported.
 - For high speed, you should have a recent 64-bit system (e.g., ARM, x64, RISC-V with vector extensions, Loongson, POWER). On Loongson processors, LASX runtime dispatching is only enabled on GCC 15+, not on LLVM or older versions of GCC.
 - If you rely on CMake, you should use a recent CMake (at least 3.15); otherwise you may use the [single header version](#single-header-version). The library is also available from [Microsoft's vcpkg](https://github.com/simdutf/simdutf-vcpkg), from [conan](https://conan.io/center/recipes/simdutf), from [FreeBSD's port](https://cgit.freebsd.org/ports/tree/converters/simdutf), from [brew](https://formulae.brew.sh/formula/simdutf), and many other systems.
 - AVX-512 support require a processor with AVX512-VBMI2 (Ice Lake or better, AMD Zen 4 or better) and a recent compiler (GCC 8 or better, Visual Studio 2022 or better, LLVM clang 6 or better). You need a correspondingly recent assembler such as gas (2.30+) or nasm (2.14+): recent compilers usually come with recent assemblers. If you mix a recent compiler with an incompatible/old assembler (e.g., when using a recent compiler with an old Linux distribution), you may get errors at build time because the compiler produces instructions that the assembler does not recognize: you should update your assembler to match your compiler (e.g., upgrade binutils to version 2.30 or better under Linux) or use an older compiler matching the capabilities of your assembler.
@@ -335,7 +338,7 @@ also have a span overload. Here is an example:
 
 ```cpp
 std::vector<char> data{1, 2, 3, 4, 5};
-// C++11 API
+// C++17 API
 auto cpp11 = simdutf::autodetect_encoding(data.data(), data.size());
 // C++20 API
 auto cpp20 = simdutf::autodetect_encoding(data);
@@ -2990,11 +2993,117 @@ To run short benchmarks on various SIMDUTF functions with incremental input size
 This will benchmark the selected function on the input file, testing sizes from 1 byte up to the specified max size (default 128), and output a table with timing and performance metrics.
 
 
+## Compiling without the C++ standard library
+
+*This is currently experimental.*
+
+The simdutf library can be compiled without linking against the C++ standard library. This is useful when targeting bare-metal or highly constrained environments where the standard library is unavailable or undesirable. It might be useful when linking against the simdutf library from other languages such as C or Zig.
+
+It is only supported on GCC and LLVM/clang. We do not support this functionality under Visual Studio. When compiling the simdutf library yourself, set the `SIMDUTF_NO_LIBCXX` macro to 1. E.g., you might do:
+
+```
+c++ -c simdutf.cpp  -nostdlib++ -fno-rtti -fno-exceptions -DSIMDUTF_NO_LIBCXX=1 -std=c++17
+```
+
+When `SIMDUTF_NO_LIBCXX` is active:
+
+- `SIMDUTF_USE_STATIC_INITIALIZATION` is automatically set to `1` (see the section on [SIMDUTF\_USE\_STATIC\_INITIALIZATION](#simdutf_use_static_initialization)), since thread-safe function-local statics depend on the standard library. Importantly, it means that you should be careful if you are using the simdutf library in a static context (before the `main()` function is called).
+- Weak stub implementations of `__cxa_pure_virtual` and `__glibcxx_assert_fail` are compiled in so that the abstract-class vtable machinery does not pull in libstdc++/libc++abi. A real definition from the runtime will take priority if one is linked in.
+
+
+## C API (C11 or better)
+
+*This is currently experimental. We are committed to maintaining the C API but there might be issues with
+our implementation.*
+
+We provide a thin C API that wraps the C++ `simdutf` library. It is intended
+for applications that prefer or require a plain C interface. The `simdutf_c.h`
+defines the interface.
+
+The C API exposes functions for validation, transcoding, size estimation, `find` helpers,
+and Base64 encode/decode helpers. Results are returned using the `simdutf_result` struct
+which contains an `error_code` field and additional fields when relevant.
+
+We provide a simple C demo using the C wrapper at `amalgamation_demo.c`.
+It shows validating UTF-8, converting UTF-8 to UTF-16LE and back, and checking the round-trip.
+Refer to `singleheader/README.md` for instructions. 
+
+
+You need the files `simdutf.cpp`, `simdutf_c.h`, `simdutf.h` provided with each release.
+
+As an example, given the following C program in the file `demo.c`...
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "simdutf_c.h"
+
+int main(void) {
+  printf("SIMDUTF C API demo\n");
+  const char *source = "1234";
+  /* validate UTF-8 */
+  if (!simdutf_validate_utf8(source, 4)) {
+    puts("invalid UTF-8");
+    return EXIT_FAILURE;
+  }
+}
+```
+
+You may build it as follows.
+
+```
+c++ -c simdutf.cpp -std=c++17
+cc -c amalgamation_demo.c
+c++  amalgamation_demo.o simdutf.o -o cdemo
+./cdemo
+```
+
+
+
+By default, the simdutf library requires a C++ standard library (e.g., libstdc++, libc++) at runtime, either statically or dynamically linked. If you want to avoid linking against the C++ standard library entirely, you need to set the `DSIMDUTF_NO_LIBCXX` macro to 1, see [Compiling without the C++ standard library](#compiling-without-the-c-standard-library).
+
+
+You might be able to build our small C program like so:
+
+```
+c++ -c simdutf.cpp  -nostdlib++ -fno-rtti -fno-exceptions -DSIMDUTF_NO_LIBCXX=1 -std=c++17
+cc demo.c simdutf.o -o demo
+```
+
+
+The resulting program `demo` does not depend on the C++ standard library. If you opt for this option, be aware that the downside is that you should be careful when using simdutf in the static context (before the `main` function has been called).
+
+
+Note: The C API is currently not aware of amalgamation with limited features. It expects the full simdutf library.
+
+
+## SIMDUTF_USE_STATIC_INITIALIZATION
+
+*This is currently experimental.*
+
+By default, simdutf avoids translation-unit-scope (global) static variables for its implementation singletons. Instead, it relies on function-local statics, which are initialized in a thread-safe manner by the C++ runtime. This means the very first call to the library — even before `main()` starts — is safe and will not cause crashes.
+
+If you need to avoid the small synchronization overhead associated with function-local statics (checked on every call until initialization completes), you can opt in to translation-unit-scope static initialization:
+
+```cmake
+cmake -DSIMDUTF_USE_STATIC_INITIALIZATION=ON ...
+```
+
+Or define the macro directly if you build simdutf yourself (`SIMDUTF_USE_STATIC_INITIALIZATION=1`).
+
+**Trade-off:** with this option enabled, simdutf's implementation objects are initialized as translation-unit-scope globals. The C++ standard does not guarantee a deterministic initialization order across translation units, so if your own global variables call into simdutf during their construction (i.e., before `main()` begins), you may encounter a crash due to the static initialization order fiasco. Do not enable this option if simdutf might be used from another library's global constructor.
+
+When building without the C++ standard library (`SIMDUTF_NO_LIBCXX=1`), static initialization is always used because the C++ runtime's thread-safe function-local static initialization relies on the standard library.
+
+
+*Further reading*: [Static Initialization Order Fiasco](https://en.cppreference.com/cpp/language/siof)
+
 ## Thread safety
 
 We built simdutf with thread safety in mind. The simdutf library is single-threaded throughout.
 The CPU detection, which runs the first time parsing is attempted and switches to the fastest parser for your CPU, is transparent and thread-safe. Our runtime dispatching is based on global objects that are instantiated at the beginning of the main thread and may be discarded at the end of the main thread. If you have multiple threads running and some threads use the library while the main thread is cleaning up resources, you may encounter issues. If you expect such problems, you may consider using [std::quick_exit](https://en.cppreference.com/w/cpp/utility/program/quick_exit).
-
 
 ## References
 
@@ -3017,27 +3126,6 @@ If you use this library in your research, please cite our work:
   note={\url{https://github.com/simdutf/simdutf}}
 }
 ```
-
-## C wrapper (C11 or better)
-
-*This is currently experimental. We are committed to maintaining the C API but there might be issues with
-our implementation.*
-
-We provide a thin C API that wraps the C++ `simdutf` library. It is intended
-for applications that prefer or require a plain C interface. The `simdutf_c.h`
-defines the interface.
-
-The C API exposes functions for validation, transcoding, size estimation, `find` helpers,
-and Base64 encode/decode helpers. Results are returned using the `simdutf_result` struct
-which contains an `error_code` field and additional fields when relevant.
-
-We provide a simple C demo using the C wrapper at `amalgamation_demo.c`.
-It shows validating UTF-8, converting UTF-8 to UTF-16LE and back, and checking the round-trip.
-Refer to `singleheader/README.md` for instructions. Note that the simdutf library requires
-a C++ standard library (e.g., libstdc++, libc++) at runtime, either statically or dynamically linked.
-
-Note: The C API is currently not aware of amalgamation with limited features. It expects the full simdutf library.
-
 
 ## Stars
 

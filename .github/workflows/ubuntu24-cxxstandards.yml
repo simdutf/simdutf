@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         compiler: [g++-14, clang++-18]
-        cppversion: [11, 14, 17, 20, 23]
+        cppversion: [17, 20, 23]
         cversion: [11,]
     steps:
       - uses: actions/checkout@v4

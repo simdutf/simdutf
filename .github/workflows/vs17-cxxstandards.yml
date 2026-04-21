@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cppversion: [11, 14, 17, 20, 23]
+        cppversion: [17, 20, 23]
         gen: ["Visual Studio 17 2022"]
         arch: [x64]
         shared: [ON]

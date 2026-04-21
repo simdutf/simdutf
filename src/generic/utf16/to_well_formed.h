@@ -18,7 +18,7 @@ simdutf_really_inline void utf16fix_block(char16_t *out, const char16_t *in) {
   const char16_t replacement = scalar::utf16::replacement<big_endian>();
 
   using vector_u16 = simd16<uint16_t>;
-  auto swap_if_needed = [](uint16_t x) simdutf_constexpr -> uint16_t {
+  auto swap_if_needed = [](uint16_t x) constexpr -> uint16_t {
     return scalar::utf16::swap_if_needed<big_endian>(x);
   };
 

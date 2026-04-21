@@ -3,7 +3,6 @@
 #if !defined(SIMDUTF_NO_THREADS)
   #include <atomic>
 #endif
-#include <string>
 #ifdef SIMDUTF_INTERNAL_TESTS
   #include <vector>
 #endif
@@ -13,14 +12,13 @@
 #include "simdutf/error.h"
 #include "simdutf/internal/isadetection.h"
 
+#include <string_view>
 #if SIMDUTF_SPAN
   #include <concepts>
   #include <type_traits>
   #include <span>
   #include <tuple>
-#endif
-#if SIMDUTF_CPLUSPLUS17
-  #include <string_view>
+  #include <utility> // for std::unreachable
 #endif
 // The following defines are conditionally enabled/disabled during amalgamation.
 // By default all features are enabled, regular code shouldn't check them. Only
@@ -4179,7 +4177,6 @@ find(const char16_t *start, const char16_t *end, char16_t character) noexcept {
 
 namespace simdutf {
 
-  #if SIMDUTF_CPLUSPLUS17
 inline std::string_view to_string(base64_options options) {
   switch (options) {
   case base64_default:
@@ -4201,9 +4198,7 @@ inline std::string_view to_string(base64_options options) {
   }
   return "<unknown>";
 }
-  #endif // SIMDUTF_CPLUSPLUS17
 
-  #if SIMDUTF_CPLUSPLUS17
 inline std::string_view to_string(last_chunk_handling_options options) {
   switch (options) {
   case loose:
@@ -4217,7 +4212,6 @@ inline std::string_view to_string(last_chunk_handling_options options) {
   }
   return "<unknown>";
 }
-  #endif
 
 /**
  * Provide the maximal binary length in bytes given the base64 input.
@@ -5093,7 +5087,7 @@ public:
    *
    * @return the name of the implementation, e.g. "haswell", "westmere", "arm64"
    */
-  virtual std::string name() const { return std::string(_name); }
+  virtual std::string_view name() const noexcept { return _name; }
 
   /**
    * The description of this implementation.
@@ -5104,7 +5098,7 @@ public:
    *
    * @return the name of the implementation, e.g. "haswell", "westmere", "arm64"
    */
-  virtual std::string description() const { return std::string(_description); }
+  virtual std::string_view description() const noexcept { return _description; }
 
   /**
    * The instruction sets this implementation is compiled against
@@ -7008,7 +7002,7 @@ public:
 
   struct TestProcedure {
     // display name
-    std::string name;
+    std::string_view name;
 
     // procedure should return whether given test pass or not
     void (*procedure)(const implementation &);
@@ -7076,7 +7070,7 @@ public:
    * @param name the implementation to find, e.g. "westmere", "haswell", "arm64"
    * @return the implementation, or nullptr if the parse failed.
    */
-  const implementation *operator[](const std::string &name) const noexcept {
+  const implementation *operator[](std::string_view name) const noexcept {
     for (const implementation *impl : *this) {
       if (impl->name() == name) {
         return impl;
@@ -7274,7 +7268,7 @@ consteval auto base64_decode_literal(const char *str) {
   auto r = scalar::base64::base64_to_binary_details_impl(
       str, InputLen, result.buffer.data(), base64_default, loose);
   if (r.error != error_code::SUCCESS) {
-    throw "invalid base64 input in _base64 literal";
+    std::unreachable(); // invalid base64 input in _base64 literal
   }
   result.output_count = r.output_count;
   return result;

@@ -54,7 +54,7 @@ void utf16fix_block(char16_t *out, const char16_t *in) {
     out[-1] = ill ? replacement : lbc;
 
     /* fix illegal sequencing in the main block */
-    if simdutf_constexpr (!match_system(big_endian)) {
+    if constexpr (!match_system(big_endian)) {
       block.val[1] = vbslq_u8(block_illseq, vdupq_n_u8(0xfd), block.val[1]);
       block.val[0] = vorrq_u8(block_illseq, block.val[0]);
     } else {

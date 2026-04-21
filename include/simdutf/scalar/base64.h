@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <iostream>
 
 namespace simdutf {
 namespace scalar {
@@ -19,7 +18,7 @@ template <class char_type> bool is_ascii_white_space(char_type c) {
 }
 
 template <class char_type> simdutf_constexpr23 bool is_eight_byte(char_type c) {
-  if simdutf_constexpr (sizeof(char_type) == 1) {
+  if constexpr (sizeof(char_type) == 1) {
     return true;
   }
   return uint8_t(c) == c;
@@ -418,7 +417,7 @@ template <bool use_lines = false>
 simdutf_constexpr23 size_t tail_encode_base64_impl(
     char *dst, const char *src, size_t srclen, base64_options options,
     size_t line_length = simdutf::default_line_length, size_t line_offset = 0) {
-  if simdutf_constexpr (use_lines) {
+  if constexpr (use_lines) {
     // sanitize line_length and starting_line_offset.
     // line_length must be greater than 3.
     if (line_length < 4) {
@@ -453,7 +452,7 @@ simdutf_constexpr23 size_t tail_encode_base64_impl(
     t1 = uint8_t(src[i]);
     t2 = uint8_t(src[i + 1]);
     t3 = uint8_t(src[i + 2]);
-    if simdutf_constexpr (use_lines) {
+    if constexpr (use_lines) {
       if (line_offset + 3 >= line_length) {
         if (line_offset == line_length) {
           *out++ = '\n';
@@ -503,7 +502,7 @@ simdutf_constexpr23 size_t tail_encode_base64_impl(
     break;
   case 1:
     t1 = uint8_t(src[i]);
-    if simdutf_constexpr (use_lines) {
+    if constexpr (use_lines) {
       if (use_padding) {
         if (line_offset + 3 >= line_length) {
           if (line_offset == line_length) {
@@ -569,7 +568,7 @@ simdutf_constexpr23 size_t tail_encode_base64_impl(
   default: /* case 2 */
     t1 = uint8_t(src[i]);
     t2 = uint8_t(src[i + 1]);
-    if simdutf_constexpr (use_lines) {
+    if constexpr (use_lines) {
       if (use_padding) {
         if (line_offset + 3 >= line_length) {
           if (line_offset == line_length) {

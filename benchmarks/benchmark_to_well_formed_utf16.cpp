@@ -1,6 +1,7 @@
 #include <vector>
 #include <random>
 #include <stdexcept>
+#include <string>
 #include <functional>
 #include "benchmark_base.h"
 #include "simdutf.h"
@@ -318,7 +319,7 @@ int main(int argc, char *argv[]) {
                            char16_t *output) {
       e->to_well_formed_utf16le(input, length, output);
     };
-    std::string name = e->name();
+    std::string name{e->name()};
     utf16_fixe_implementation fix_implementation{fix, name};
 
     fixers.push_back(fix_implementation);

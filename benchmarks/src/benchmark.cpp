@@ -79,7 +79,7 @@ void Benchmark::register_function(std::string name, Fn function,
   if (name.find('+') == std::string::npos) {
     // adding simdutf benchmark, populate for all known architectures
     for (const auto &impl : simdutf::get_available_implementations()) {
-      const auto full_name = name + '+' + impl->name();
+      const auto full_name = name + '+' + std::string(impl->name());
       benchmarks.insert({full_name, std::make_pair(function, set)});
     }
   } else {
