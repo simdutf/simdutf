@@ -29,7 +29,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">simdutf<span id="projectnumber">&#160;8.2.0</span>
+   <div id="projectname">simdutf<span id="projectnumber">&#160;9.0.0</span>
    </div>
    <div id="projectbrief">Unicode at GB/s.</div>
   </td>
@@ -129,7 +129,7 @@ $(document).ready(function(){initNavTree('valid__utf16__to__utf8_8h_source.html'
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>                            <span class="comment">// they are ascii</span></div>
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        uint64_t v;</div>
 <div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>        ::memcpy(&amp;v, data + pos, <span class="keyword">sizeof</span>(uint64_t));</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>        <span class="keywordflow">if</span> simdutf_constexpr (!match_system(big_endian)) {</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>        <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (!match_system(big_endian)) {</div>
 <div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>          v = (v &gt;&gt; 8) | (v &lt;&lt; (64 - 8));</div>
 <div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>        }</div>
 <div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>        <span class="keywordflow">if</span> ((v &amp; 0xFF80FF80FF80FF80) == 0) {</div>

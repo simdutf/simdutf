@@ -29,7 +29,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">simdutf<span id="projectnumber">&#160;8.2.0</span>
+   <div id="projectname">simdutf<span id="projectnumber">&#160;9.0.0</span>
    </div>
    <div id="projectbrief">Unicode at GB/s.</div>
   </td>
@@ -104,7 +104,7 @@ $(document).ready(function(){initNavTree('encoding__types_8h_source.html',''); i
 <div class="contents">
 <div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#ifndef SIMDUTF_ENCODING_TYPES_H</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#define SIMDUTF_ENCODING_TYPES_H</span></div>
-<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &lt;string_view&gt;</span></div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;simdutf/portability.h&quot;</span></div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &quot;simdutf/common_defs.h&quot;</span></div>
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
@@ -147,7 +147,7 @@ $(document).ready(function(){initNavTree('encoding__types_8h_source.html',''); i
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>  <span class="keywordflow">return</span> e == endianness::NATIVE;</div>
 <div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>}</div>
 <div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>simdutf_warn_unused std::string to_string(encoding_type bom);</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>simdutf_warn_unused std::string_view to_string(encoding_type bom);</div>
 <div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
 <div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="comment">// Note that BOM for UTF8 is discouraged.</span></div>
 <div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><span class="keyword">namespace </span>BOM {</div>

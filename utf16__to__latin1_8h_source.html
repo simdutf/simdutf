@@ -29,7 +29,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">simdutf<span id="projectnumber">&#160;8.2.0</span>
+   <div id="projectname">simdutf<span id="projectnumber">&#160;9.0.0</span>
    </div>
    <div id="projectbrief">Unicode at GB/s.</div>
   </td>
@@ -167,16 +167,16 @@ $(document).ready(function(){initNavTree('utf16__to__latin1_8h_source.html','');
 <div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>        ::memcpy(&amp;v3, data + pos + 8, <span class="keyword">sizeof</span>(uint64_t));</div>
 <div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>        ::memcpy(&amp;v4, data + pos + 12, <span class="keyword">sizeof</span>(uint64_t));</div>
 <div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span> </div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>        <span class="keywordflow">if</span> simdutf_constexpr (!match_system(big_endian)) {</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>        <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (!match_system(big_endian)) {</div>
 <div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>          v1 = (v1 &gt;&gt; 8) | (v1 &lt;&lt; (64 - 8));</div>
 <div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>        }</div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>        <span class="keywordflow">if</span> simdutf_constexpr (!match_system(big_endian)) {</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>        <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (!match_system(big_endian)) {</div>
 <div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>          v2 = (v2 &gt;&gt; 8) | (v2 &lt;&lt; (64 - 8));</div>
 <div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>        }</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>        <span class="keywordflow">if</span> simdutf_constexpr (!match_system(big_endian)) {</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>        <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (!match_system(big_endian)) {</div>
 <div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>          v3 = (v3 &gt;&gt; 8) | (v3 &lt;&lt; (64 - 8));</div>
 <div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>        }</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>        <span class="keywordflow">if</span> simdutf_constexpr (!match_system(big_endian)) {</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>        <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (!match_system(big_endian)) {</div>
 <div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>          v4 = (v4 &gt;&gt; 8) | (v4 &lt;&lt; (64 - 8));</div>
 <div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>        }</div>
 <div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span> </div>

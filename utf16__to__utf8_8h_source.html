@@ -29,7 +29,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">simdutf<span id="projectnumber">&#160;8.2.0</span>
+   <div id="projectname">simdutf<span id="projectnumber">&#160;9.0.0</span>
    </div>
    <div id="projectbrief">Unicode at GB/s.</div>
   </td>
@@ -129,7 +129,7 @@ $(document).ready(function(){initNavTree('utf16__to__utf8_8h_source.html',''); i
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>                            <span class="comment">// they are ascii</span></div>
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        uint64_t v;</div>
 <div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>        ::memcpy(&amp;v, data + pos, <span class="keyword">sizeof</span>(uint64_t));</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>        <span class="keywordflow">if</span> simdutf_constexpr (!match_system(big_endian)) {</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>        <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (!match_system(big_endian)) {</div>
 <div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>          v = (v &gt;&gt; 8) | (v &lt;&lt; (64 - 8));</div>
 <div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>        }</div>
 <div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>        <span class="keywordflow">if</span> ((v &amp; 0xFF80FF80FF80FF80) == 0) {</div>
@@ -219,7 +219,7 @@ $(document).ready(function(){initNavTree('utf16__to__utf8_8h_source.html',''); i
 <div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>                            <span class="comment">// they are ascii</span></div>
 <div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>        uint64_t v;</div>
 <div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>        ::memcpy(&amp;v, data + pos, <span class="keyword">sizeof</span>(uint64_t));</div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>        <span class="keywordflow">if</span> simdutf_constexpr (!match_system(big_endian))</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>        <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (!match_system(big_endian))</div>
 <div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>          v = (v &gt;&gt; 8) | (v &lt;&lt; (64 - 8));</div>
 <div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>        <span class="keywordflow">if</span> ((v &amp; 0xFF80FF80FF80FF80) == 0) {</div>
 <div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>          <span class="keywordtype">size_t</span> final_pos = pos + 4;</div>
@@ -326,7 +326,7 @@ $(document).ready(function(){initNavTree('utf16__to__utf8_8h_source.html',''); i
 <div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>                            <span class="comment">// they are ascii</span></div>
 <div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>        uint64_t v;</div>
 <div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>        ::memcpy(&amp;v, data + pos, <span class="keyword">sizeof</span>(uint64_t));</div>
-<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>        <span class="keywordflow">if</span> simdutf_constexpr (!match_system(big_endian)) {</div>
+<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>        <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (!match_system(big_endian)) {</div>
 <div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>          v = (v &gt;&gt; 8) | (v &lt;&lt; (64 - 8));</div>
 <div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>        }</div>
 <div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>        <span class="keywordflow">if</span> ((v &amp; 0xFF80FF80FF80FF80) == 0) {</div>

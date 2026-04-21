@@ -1,20 +1,13 @@
 var searchData=
 [
-  ['usage_0',['Real-World Usage',['../index.html#autotoc_md1',1,'']]],
-  ['usage_20cmake_1',['Usage (CMake)',['../index.html#autotoc_md6',1,'']]],
-  ['usage_20in_20simdutf_2',['C++20 and std::span usage in simdutf',['../index.html#autotoc_md15',1,'']]],
-  ['usage_20usage_3',['Usage (Usage)',['../index.html#autotoc_md4',1,'']]],
-  ['utf16_5flength_5ffrom_5flatin1_4',['utf16_length_from_latin1',['../classsimdutf_1_1implementation.html#af5253692b2a0e1f15881b1fa393a2f42',1,'simdutf::implementation']]],
-  ['utf16_5flength_5ffrom_5futf32_5',['utf16_length_from_utf32',['../classsimdutf_1_1implementation.html#a3761299ce52ee8b2b480fcadc50b45a5',1,'simdutf::implementation']]],
-  ['utf16_5flength_5ffrom_5futf8_6',['utf16_length_from_utf8',['../classsimdutf_1_1implementation.html#ae01141d4bf774c95e771924caa11efb1',1,'simdutf::implementation']]],
-  ['utf32_5flength_5ffrom_5flatin1_7',['utf32_length_from_latin1',['../classsimdutf_1_1implementation.html#a5e9eb578e05cda0e4cb47d91208dbda9',1,'simdutf::implementation']]],
-  ['utf32_5flength_5ffrom_5futf16be_8',['utf32_length_from_utf16be',['../classsimdutf_1_1implementation.html#a0df5efd699e928178cb569ee2b9b0711',1,'simdutf::implementation']]],
-  ['utf32_5flength_5ffrom_5futf16le_9',['utf32_length_from_utf16le',['../classsimdutf_1_1implementation.html#a83b225db7024f73fdcd6f84fb10ecdfe',1,'simdutf::implementation']]],
-  ['utf32_5flength_5ffrom_5futf8_10',['utf32_length_from_utf8',['../classsimdutf_1_1implementation.html#a39bc047dd50ede9cd33cb7e825eb5b56',1,'simdutf::implementation']]],
-  ['utf8_5flength_5ffrom_5flatin1_11',['utf8_length_from_latin1',['../classsimdutf_1_1implementation.html#aff358bb1f0b909cd1e9a6227656ee5d7',1,'simdutf::implementation']]],
-  ['utf8_5flength_5ffrom_5futf16be_12',['utf8_length_from_utf16be',['../classsimdutf_1_1implementation.html#abce2ef1ff8ab5ffd3999d545f703a2fd',1,'simdutf::implementation']]],
-  ['utf8_5flength_5ffrom_5futf16be_5fwith_5freplacement_13',['utf8_length_from_utf16be_with_replacement',['../classsimdutf_1_1implementation.html#a5b7e749811eecce33c3a2167962ed405',1,'simdutf::implementation']]],
-  ['utf8_5flength_5ffrom_5futf16le_14',['utf8_length_from_utf16le',['../classsimdutf_1_1implementation.html#a446248e71fc872b071d25a27673139f5',1,'simdutf::implementation']]],
-  ['utf8_5flength_5ffrom_5futf16le_5fwith_5freplacement_15',['utf8_length_from_utf16le_with_replacement',['../classsimdutf_1_1implementation.html#a4f362d3ac73b9955d4065b10028cd8d3',1,'simdutf::implementation']]],
-  ['utf8_5flength_5ffrom_5futf32_16',['utf8_length_from_utf32',['../classsimdutf_1_1implementation.html#a2f39ff7d49c8864a9035c626825edad0',1,'simdutf::implementation']]]
+  ['text_20encoding_20converter_0',['sutf: Text encoding converter',['../index.html#autotoc_md22',1,'']]],
+  ['text_20processing_20at_20billions_20of_20characters_20per_20second_1',['simdutf: Text processing at billions of characters per second',['../index.html',1,'']]],
+  ['the_20c_20standard_20library_2',['Compiling without the C++ standard library',['../index.html#autotoc_md31',1,'']]],
+  ['the_20constexpr_20support_20is_20experimental_3',['Note - the constexpr support is experimental!',['../index.html#autotoc_md20',1,'']]],
+  ['this_20work_4',['Citing this work',['../index.html#autotoc_md36',1,'']]],
+  ['thread_20safety_5',['Thread safety',['../index.html#autotoc_md34',1,'']]],
+  ['time_20base64_20decoding_20c_2023_6',['Compile-time base64 decoding (C++23)',['../index.html#autotoc_md14',1,'']]],
+  ['to_5fwell_5fformed_5futf16be_7',['to_well_formed_utf16be',['../classsimdutf_1_1implementation.html#adaf5488b9e07462f004b8aa819b85e73',1,'simdutf::implementation']]],
+  ['to_5fwell_5fformed_5futf16le_8',['to_well_formed_utf16le',['../classsimdutf_1_1implementation.html#a3d8b3a891225e204cb9e98fbea8a7dab',1,'simdutf::implementation']]],
+  ['tools_9',['Command-line tools',['../index.html#autotoc_md21',1,'']]]
 ];

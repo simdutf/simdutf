@@ -29,7 +29,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">simdutf<span id="projectnumber">&#160;8.2.0</span>
+   <div id="projectname">simdutf<span id="projectnumber">&#160;9.0.0</span>
    </div>
    <div id="projectbrief">Unicode at GB/s.</div>
   </td>
@@ -151,6 +151,9 @@ Real-World Usage</h1>
 <li><a href="https://github.com/haskell/text">haskell/text</a>, a library for fast operations over Unicode text,</li>
 <li><a href="https://github.com/variar/klogg">klogg</a>, a Really fast log explorer,</li>
 <li><a href="https://github.com/pixie-io/pixie">Pixie</a>, observability tool for Kubernetes applications,</li>
+<li><a href="https://github.com/fluent/fluent-bit">fluentbit</a>, Fast and Lightweight Logs, Metrics and Traces processor for Linux, BSD, OSX and Windows,</li>
+<li><a href="https://github.com/ghostty-org/ghostty">ghostty</a>, Fast terminal emulator,</li>
+<li><a href="https://github.com/uNetworking/uWebSockets">uWebSockets</a>, web server for the most demanding of applications,</li>
 <li><a href="https://gitlab.gnome.org/GNOME/vte">vte</a> (0.81.0 or better), a virtual terminal widget for GTK applications.</li>
 </ul>
 <h1><a class="anchor" id="autotoc_md2"></a>
@@ -172,7 +175,7 @@ How fast is it?</h1>
 <h1><a class="anchor" id="autotoc_md3"></a>
 Requirements</h1>
 <ul>
-<li>C++11 compatible compiler. We support LLVM clang, GCC, Visual Studio. (Our tests and benchmark tools requires C++17.) Be aware that GCC under Windows is buggy and thus unsupported.</li>
+<li>C++17 compatible compiler. We support LLVM clang, GCC, Visual Studio. Be aware that GCC under Windows is buggy and thus unsupported.</li>
 <li>For high speed, you should have a recent 64-bit system (e.g., ARM, x64, RISC-V with vector extensions, Loongson, POWER). On Loongson processors, LASX runtime dispatching is only enabled on GCC 15+, not on LLVM or older versions of GCC.</li>
 <li>If you rely on CMake, you should use a recent CMake (at least 3.15); otherwise you may use the single header version. The library is also available from <a href="https://github.com/simdutf/simdutf-vcpkg">Microsoft's vcpkg</a>, from <a href="https://conan.io/center/recipes/simdutf">conan</a>, from <a href="https://cgit.freebsd.org/ports/tree/converters/simdutf">FreeBSD's port</a>, from <a href="https://formulae.brew.sh/formula/simdutf">brew</a>, and many other systems.</li>
 <li>AVX-512 support require a processor with AVX512-VBMI2 (Ice Lake or better, AMD Zen 4 or better) and a recent compiler (GCC 8 or better, Visual Studio 2022 or better, LLVM clang 6 or better). You need a correspondingly recent assembler such as gas (2.30+) or nasm (2.14+): recent compilers usually come with recent assemblers. If you mix a recent compiler with an incompatible/old assembler (e.g., when using a recent compiler with an old Linux distribution), you may get errors at build time because the compiler produces instructions that the assembler does not recognize: you should update your assembler to match your compiler (e.g., upgrade binutils to version 2.30 or better under Linux) or use an older compiler matching the capabilities of your assembler.</li>
@@ -189,7 +192,7 @@ Quick Start</h2>
 <p>Linux or macOS users might follow the following instructions if they have a recent C++ compiler installed and the standard utilities (<code>wget</code>, <code>unzip</code>, etc.)</p>
 <ol type="1">
 <li><p class="startli">Pull the library in a directory</p>
-<div class="fragment"><div class="line">wget https://github.com/simdutf/simdutf/releases/download/v8.2.0/singleheader.zip</div>
+<div class="fragment"><div class="line">wget https://github.com/simdutf/simdutf/releases/download/v9.0.0/singleheader.zip</div>
 <div class="line"> </div>
 <div class="line">unzip singleheader.zip</div>
 </div><!-- fragment --><p class="startli">You can replace <code>wget</code> by <code>curl -OL <a href="https://..">https://..</a>.</code> if you prefer.</p>
@@ -231,7 +234,7 @@ Single-header version</h1>
 <p>You can create a single-header version of the library where</p>
 <p>all of the code is put into two files (<code><a class="el" href="simdutf_8h_source.html">simdutf.h</a></code> and <code>simdutf.cpp</code>).</p>
 <p>We publish a zip archive containing these files, e.g., see</p>
-<p><a href="https://github.com/simdutf/simdutf/releases/download/v8.2.0/singleheader.zip">https://github.com/simdutf/simdutf/releases/download/v8.2.0/singleheader.zip</a></p>
+<p><a href="https://github.com/simdutf/simdutf/releases/download/v9.0.0/singleheader.zip">https://github.com/simdutf/simdutf/releases/download/v9.0.0/singleheader.zip</a></p>
 <p>You may generate it on your own using a Python script.</p>
 <div class="fragment"><div class="line">python3 ./singleheader/amalgamate.py</div>
 </div><!-- fragment --><p>We require Python 3 or better.</p>
@@ -399,7 +402,7 @@ API</h1>
 <p>also have a span overload. Here is an example:</p>
 <div class="fragment"><div class="line">std::vector&lt;char&gt; data{1, 2, 3, 4, 5};</div>
 <div class="line"> </div>
-<div class="line"><span class="comment">// C++11 API</span></div>
+<div class="line"><span class="comment">// C++17 API</span></div>
 <div class="line"> </div>
 <div class="line"><span class="keyword">auto</span> cpp11 = simdutf::autodetect_encoding(data.data(), data.size());</div>
 <div class="line"> </div>
@@ -543,7 +546,7 @@ API</h1>
 <div class="line">  std::cerr &lt;&lt; <span class="stringliteral">&quot;error at index &quot;</span> &lt;&lt; res.count &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">}</div>
-<div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00075">error.h:75</a></div></div>
+<div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00076">error.h:76</a></div></div>
 </div><!-- fragment --><p>Or as follows:</p>
 <div class="fragment"><div class="line">std::string bad_utf8 = <span class="stringliteral">&quot;\xc3\xa9\xc3\xa9\x20\xff\xc3\xa9&quot;</span>;</div>
 <div class="line"> </div>
@@ -1245,7 +1248,55 @@ Base64</h1>
 <div class="line"> </div>
 <div class="line">output: error</div>
 </div><!-- fragment --><p>As you can see, the result is as expected.</p>
-<p>In some instances, you may want to limit the size of the output further when decoding base64.</p>
+<p>The <code>base64_to_binary</code> function returns a <code><a class="el" href="structsimdutf_1_1result.html">simdutf::result</a></code> which on success contains</p>
+<p>the number of output bytes in <code>r.count</code>. If you need to know both the number of input units</p>
+<p>consumed and the number of output bytes written (e.g., for streaming/chunked decoding), use</p>
+<p><code>base64_to_binary_details</code> which returns a <code><a class="el" href="structsimdutf_1_1full__result.html">simdutf::full_result</a></code>:</p>
+<div class="fragment"><div class="line">std::vector&lt;char&gt; buffer(simdutf::maximal_binary_length_from_base64(base64.data(), base64.size()));</div>
+<div class="line"> </div>
+<div class="line"><a class="code hl_struct" href="structsimdutf_1_1full__result.html">simdutf::full_result</a> r = simdutf::base64_to_binary_details(base64.data(), base64.size(), buffer.data());</div>
+<div class="line"> </div>
+<div class="line"><span class="keywordflow">if</span>(r.error) {</div>
+<div class="line"> </div>
+<div class="line">  <span class="comment">// r.input_count tells you where the error was encountered in the input.</span></div>
+<div class="line"> </div>
+<div class="line">  <span class="comment">// r.output_count tells you how many bytes were written to the output.</span></div>
+<div class="line"> </div>
+<div class="line">} <span class="keywordflow">else</span> {</div>
+<div class="line"> </div>
+<div class="line">  buffer.resize(r.output_count); <span class="comment">// resize according to actual output bytes</span></div>
+<div class="line"> </div>
+<div class="line">  <span class="comment">// r.input_count contains the number of input units consumed</span></div>
+<div class="line"> </div>
+<div class="line">}</div>
+<div class="ttc" id="astructsimdutf_1_1full__result_html"><div class="ttname"><a href="structsimdutf_1_1full__result.html">simdutf::full_result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00098">error.h:98</a></div></div>
+</div><!-- fragment --><p>There are three cases where <code>base64_to_binary_details</code> may not consume the entire input</p>
+<p>(i.e., <code>r.input_count &lt; length</code>):</p>
+<ol type="1">
+<li><p class="startli">**<code>stop_before_partial</code>**: When <code>last_chunk_options</code> is set to</p>
+<p class="startli"><code>stop_before_partial</code>, any incomplete 4-character group at the end</p>
+<p class="startli">of the input is left unconsumed. This is useful for streaming/chunked</p>
+<p class="startli">decoding where you carry over the unconsumed bytes to the next chunk.</p>
+<p class="startli">For example, the input <code>"QWJy YQ"</code> contains 5 base64 characters (ignoring the space):</p>
+<p class="startli">only the first complete group of 4 (<code>QWJy</code>) is decoded, and <code>input_count</code> stops</p>
+<p class="startli">before the trailing <code>YQ</code>.</p>
+</li>
+<li><p class="startli">**<code>INVALID_BASE64_CHARACTER</code>**: The input contains a character that is not</p>
+<p class="startli">a valid base64 character (e.g., <code>!</code>). The <code>input_count</code> field indicates</p>
+<p class="startli">where the invalid character was found.</p>
+</li>
+<li><p class="startli">**<code>BASE64_INPUT_REMAINDER</code>**: In <code>loose</code> mode, the input contains a number</p>
+<p class="startli">of base64 characters that, when divided by 4, leaves a single remainder</p>
+<p class="startli">character (which cannot encode any bytes). This is an unrecoverable error.</p>
+</li>
+</ol>
+<p>You can also check whether a single character is a valid base64 character using <code>base64_valid</code>:</p>
+<div class="fragment"><div class="line"><span class="keywordtype">bool</span> is_valid = simdutf::base64_valid(<span class="charliteral">&#39;A&#39;</span>); <span class="comment">// true</span></div>
+<div class="line"> </div>
+<div class="line"><span class="keywordtype">bool</span> is_valid_url = simdutf::base64_valid(<span class="charliteral">&#39;-&#39;</span>, simdutf::base64_url); <span class="comment">// true</span></div>
+<div class="line"> </div>
+<div class="line"><span class="comment">// Note: padding (&#39;=&#39;) and spaces are not considered valid base64 characters.</span></div>
+</div><!-- fragment --><p>In some instances, you may want to limit the size of the output further when decoding base64.</p>
 <p>For this purpose, you may use the <code>base64_to_binary_safe</code> functions. The functions may also</p>
 <p>be useful if you seek to decode the input into segments having a maximal capacity.</p>
 <p>Another benefit of the <code>base64_to_binary_safe</code> functions is that they inform you</p>
@@ -1379,6 +1430,30 @@ Base64</h1>
 <p>file or networking programming. These users should see <code>tools/fastbase64.cpp</code>, a command-line</p>
 <p>utility designed for as an example. It reads and writes base64 files using chunks of at most</p>
 <p>a few tens of kilobytes.</p>
+<h2><a class="anchor" id="autotoc_md14"></a>
+Compile-time base64 decoding (C++23)</h2>
+<p>If you have C++23 support, you can decode base64 strings at compile time using the</p>
+<p><code>_base64</code> user-defined literal. The result is a <code>std::array&lt;char, N&gt;</code> where <code>N</code> is</p>
+<p>the decoded size, computed at compile time:</p>
+<div class="fragment"><div class="line"><span class="keyword">using namespace </span>simdutf::literals;</div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"><span class="keyword">constexpr</span> <span class="keyword">auto</span> decoded = <span class="stringliteral">&quot;SGVsbG8gV29ybGQh&quot;</span>_base64;</div>
+<div class="line"> </div>
+<div class="line"><span class="comment">// decoded is std::array&lt;char, 12&gt; containing &quot;Hello World!&quot;</span></div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"><span class="keyword">static_assert</span>(decoded.size() == 12);</div>
+<div class="line"> </div>
+<div class="line"><span class="keyword">static_assert</span>(decoded[0] == <span class="charliteral">&#39;H&#39;</span>);</div>
+</div><!-- fragment --><p>Spaces within the base64 string are allowed and ignored, just like the runtime API:</p>
+<div class="fragment"><div class="line"><span class="keyword">constexpr</span> <span class="keyword">auto</span> decoded = <span class="stringliteral">&quot;  SGVsbG8g  V29ybGQh  &quot;</span>_base64;</div>
+<div class="line"> </div>
+<div class="line"><span class="comment">// same result: &quot;Hello World!&quot;</span></div>
+</div><!-- fragment --><p>Invalid base64 input causes a compilation error. The literal uses the default</p>
+<p>base64 alphabet (<code>base64_default</code>) and loose last-chunk handling.</p>
 <p>We support two conventions: <code>base64_default</code> and <code>base64_url</code>:</p>
 <ul>
 <li><p class="startli">The default (<code>base64_default</code>) includes the characters <code>+</code> and <code>/</code> as part of its alphabet. It also</p>
@@ -1572,7 +1647,29 @@ Base64</h1>
 <div class="line">      last_chunk_handling_options last_chunk_options = loose,</div>
 <div class="line"> </div>
 <div class="line">      <span class="keywordtype">bool</span> decode_up_to_bad_char = false) noexcept;</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md14"></a>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line">simdutf_warn_unused full_result base64_to_binary_details(const <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* output,</div>
+<div class="line"> </div>
+<div class="line">      base64_options options = base64_default,</div>
+<div class="line"> </div>
+<div class="line">      last_chunk_handling_options last_chunk_options = loose) noexcept;</div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line">simdutf_warn_unused full_result base64_to_binary_details(const <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* output,</div>
+<div class="line"> </div>
+<div class="line">      base64_options options = base64_default,</div>
+<div class="line"> </div>
+<div class="line">      last_chunk_handling_options last_chunk_options = loose) noexcept;</div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">bool</span> base64_valid(<span class="keywordtype">char</span> input, base64_options options = base64_default) noexcept;</div>
+<div class="line"> </div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">bool</span> base64_valid(<span class="keywordtype">char16_t</span> input, base64_options options = base64_default) noexcept;</div>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md15"></a>
 Find</h1>
 <p>The C++ standard library provides <code>std::find</code> for locating a character in a string, but its performance can be suboptimal on modern hardware. To address this, we introduce <code>simdutf::find</code>, a high-performance alternative optimized for recent processors using SIMD instructions. It operates on raw pointers (<code>char</code> or <code>char16_t</code>) for maximum efficiency.</p>
 <div class="fragment"><div class="line">std::string input = <span class="stringliteral">&quot;abc&quot;</span>;</div>
@@ -1593,12 +1690,12 @@ Find</h1>
 <div class="line">simdutf_warn_unused <span class="keyword">const</span> <span class="keywordtype">char16_t</span> *find(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *start, <span class="keyword">const</span> <span class="keywordtype">char16_t</span> *end,</div>
 <div class="line"> </div>
 <div class="line">                              <span class="keywordtype">char16_t</span> character) <span class="keyword">noexcept</span>;</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md15"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md16"></a>
 C++20 and std::span usage in simdutf</h1>
 <p>If you are compiling with C++20 or later, span support is enabled. This allows you to use simdutf in a safer and more expressive way, without manually handling pointers and sizes.</p>
 <p>The span interface is easy to use. If you have a container like <code>std::vector</code> or <code>std::array</code>, you can pass the container directly. If you have a pointer and a size, construct a <code>std::span</code> and pass it.</p>
 <p>When dealing with ranges of bytes (like <code>char</code>), anything that has a <code>std::span-like</code> interface (has appropriate <code>data()</code> and <code>size()</code> member functions) is accepted. Ranges of larger types are accepted as <code>std::span</code> arguments.</p>
-<h2><a class="anchor" id="autotoc_md16"></a>
+<h2><a class="anchor" id="autotoc_md17"></a>
 Example</h2>
 <p>Suppose you want to convert a UTF-16 string to UTF-8:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;simdutf.h&gt;</span></div>
@@ -1620,12 +1717,12 @@ Example</h2>
 <div class="line"><span class="comment">// Use std::span for input and output</span></div>
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">size_t</span> written = simdutf::convert_utf16_to_utf8_safe(utf16_input, utf8_output);</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md17"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md18"></a>
 Note</h2>
 <ul>
 <li>You are still responsible for providing a sufficiently large output buffer, just as with the pointer/size API.</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md18"></a>
+<h1><a class="anchor" id="autotoc_md19"></a>
 C++23 and constexpr support</h1>
 <p>If using C++23 or newer, it is possible to use the functions in the public api at compile time, with the following exceptions:</p>
 <ul>
@@ -1647,22 +1744,84 @@ C++23 and constexpr support</h1>
 <div class="line"><span class="keyword">static_assert</span>(s.size() != simdutf::latin1_length_from_utf8(s));</div>
 </div><!-- fragment --><p>To use the constexpr functionality, your have to go through the span overloads.</p>
 <p>The constexpr functionality is tested with <code>static_assert</code> in the unit tests which is handy - if it compiled, the unit tests passed!</p>
-<h2><a class="anchor" id="autotoc_md19"></a>
+<h2><a class="anchor" id="autotoc_md20"></a>
 Note - the constexpr support is experimental!</h2>
 <p>The constexpr support is implemented with functions that are already tested and proven. There were however</p>
 <p>modifications made to make it usable at constexpr time. Also, when in a constexpr context, the functions are not invoked exactly</p>
 <p>as during normal dynamic invocation. For this reason, there might have slipped in subtle bugs and the constexpr</p>
 <p>support is considered experimental. Please report any bugs you encounter!</p>
-<h1><a class="anchor" id="autotoc_md20"></a>
-The sutf command-line tool</h1>
-<p>We also provide a command-line tool which can be build as follows:</p>
-<div class="fragment"><div class="line">cmake -B build &amp;&amp; cmake --build build --target sutf</div>
-</div><!-- fragment --><p>This command builds the executable in <code>./build/tool/</code> under most platforms. The sutf tool enables the user to easily transcode files from one encoding to another directly from the command line.</p>
-<p>The usage is similar to <a href="https://www.gnu.org/software/libiconv/">iconv</a> (see <code>sutf --help</code> for more details). The sutf command-line tool relies on the simdutf library functions for fast transcoding of supported</p>
+<h1><a class="anchor" id="autotoc_md21"></a>
+Command-line tools</h1>
+<p>We provide two command-line tools that can be built as follows:</p>
+<div class="fragment"><div class="line">cmake -B build &amp;&amp; cmake --build build --target sutf fastbase64</div>
+</div><!-- fragment --><p>This command builds the executables in <code>./build/tools/</code> under most platforms.</p>
+<h2><a class="anchor" id="autotoc_md22"></a>
+sutf: Text encoding converter</h2>
+<p>The sutf tool enables transcoding files from one encoding to another directly from the command line.</p>
+<p>The usage is similar to <a href="https://www.gnu.org/software/libiconv/">iconv</a> (see <code>sutf --help</code> or <code>man sutf</code> for more details). The sutf command-line tool relies on the simdutf library functions for fast transcoding of supported</p>
 <p>formats (UTF-8, UTF-16LE, UTF-16BE and UTF-32). If iconv is found on the system and simdutf does not support a conversion, the sutf tool falls back on iconv: a message lets the user know if iconv is available</p>
 <p>during compilation. The following is an example of transcoding two input files to an output file, from UTF-8 to UTF-16LE:</p>
 <div class="fragment"><div class="line">sutf -f UTF-8 -t UTF-16LE -o output_file.txt first_input_file.txt second_input_file.txt</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md21"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md23"></a>
+fastbase64: Base64 encoder/decoder</h2>
+<p>The fastbase64 tools provide high-performance base64 encoding and decoding. They are ideally suited if you need to encode or decode large files. There are two variants that are meant to serve as drop-in replacements:</p>
+<ul>
+<li><code>fastbase64</code>: BSD/macOS-like interface.</li>
+<li><code>fastbase64.coreutils</code>: GNU coreutils-compatible interface, matching GNU base64 behavior.</li>
+</ul>
+<p>Both commands have additional specific flags not present in the conventional tools.</p>
+<h3><a class="anchor" id="autotoc_md24"></a>
+fastbase64: BSD-like Base64 encoder/decoder</h3>
+<p>The <code>fastbase64</code> tool provides high-performance base64 encoding and decoding with BSD/macOS-compatible behavior. It defaults to encoding binary input to base64 output with no line wrapping. Examples:</p>
+<div class="fragment"><div class="line"># Encode a file (default, no wrapping)</div>
+<div class="line"> </div>
+<div class="line">fastbase64 -i myfile.txt</div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"># Decode base64 data</div>
+<div class="line"> </div>
+<div class="line">fastbase64 -d -i encoded.txt</div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"># Encode with custom line wrapping</div>
+<div class="line"> </div>
+<div class="line">fastbase64 -b 76 -i myfile.txt</div>
+</div><!-- fragment --><h3><a class="anchor" id="autotoc_md25"></a>
+fastbase64.coreutils: GNU coreutils-compatible Base64 encoder/decoder</h3>
+<p>The <code>fastbase64.coreutils</code> tool provides high-performance base64 encoding and decoding with GNU coreutils-compatible behavior. It defaults to encoding binary input to base64 output with line wrapping at 76 characters. Examples:</p>
+<div class="fragment"><div class="line"># Encode a file (default, with 76-character line wrapping)</div>
+<div class="line"> </div>
+<div class="line">fastbase64.coreutils myfile.txt</div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"># Decode base64 data</div>
+<div class="line"> </div>
+<div class="line">fastbase64.coreutils -d &lt; encoded.txt</div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"># Encode without line wrapping</div>
+<div class="line"> </div>
+<div class="line">fastbase64.coreutils -w 0 myfile.txt</div>
+</div><!-- fragment --><h3><a class="anchor" id="autotoc_md26"></a>
+Performance</h3>
+<p>The <code>fastbase64</code> tools can be several times faster than standard base64 tools. See <code>scripts/base64bench.sh</code> for a benchmark.</p>
+<p><b>Apple M4 Max</b></p>
+<p>Size | Encode Base64 | Encode FastBase64 | Decode Base64 | Decode FastBase64</p>
+<p>------&mdash;|------------&mdash;|----------------&mdash;|------------&mdash;|---------------&mdash;</p>
+<p>1m | 21.6 | 21.3 | 35.5 | 21.3</p>
+<p>10m | 32.3 | 25.6 | 163.6 | 26.2</p>
+<p>100m | 119.5 | 49.3 | 1433.5 | 52.7</p>
+<p><b>Linux with Xeon Gold 6548N</b></p>
+<p>Size | Encode Base64 | Encode FastBase64 | Decode Base64 | Decode FastBase64</p>
+<p>------&mdash;|------------&mdash;|----------------&mdash;|------------&mdash;|---------------&mdash;</p>
+<p>1m | 13.4 | 15.9 | 13.7 | 12.8</p>
+<p>10m | 27.8 | 23.0 | 37.3 | 17.8</p>
+<p>100m | 183.1 | 93.0 | 291.8 | 84.4</p>
+<h1><a class="anchor" id="autotoc_md27"></a>
 Manual implementation selection</h1>
 <p>When compiling the library for x64 processors, we build several implementations of each functions. At runtime, the best</p>
 <p>implementation is picked automatically. Advanced users may want to pick a particular implementation, thus bypassing our</p>
@@ -1747,23 +1906,29 @@ Manual implementation selection</h1>
 <div class="line">  <span class="keywordflow">return</span> EXIT_SUCCESS;</div>
 <div class="line"> </div>
 <div class="line">}</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md22"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md28"></a>
 Benchmarks</h1>
-<p>To run benchmarks, build the project with benchmarks enabled. Our default benchmarks are in the <code>benchmark</code> command. You can get help on its</p>
-<p>usage by first building it and then calling it with the <code>--help</code> flag.</p>
-<p>E.g., under Linux you may do the following:</p>
+<p>To run the benchmarks, you need a recent C++ compiler and a recent version of cmake.B uild the project with benchmarks enabled. Our default benchmarks are in the <code>benchmark</code> command. You can get help on its usage by first building it and then calling it with the <code>--help</code> flag. E.g., under Linux you may do the following:</p>
 <div class="fragment"><div class="line">cmake -B build -D SIMDUTF_BENCHMARKS=ON</div>
 <div class="line"> </div>
 <div class="line">cmake --build build</div>
 <div class="line"> </div>
 <div class="line">./build/benchmarks/benchmark --help</div>
-</div><!-- fragment --><p>The standard benchmark tool <code>benchmark</code> provides comprehensive transcoding benchmarks between different encodings. It supports various procedures like converting UTF-8 to UTF-16, UTF-16 to UTF-8, and more. You can list available procedures with <code>--procedures</code>, run specific benchmarks, or use filters to select particular tests. For example, to benchmark UTF-8 to UTF-16 conversion on a file, use <code>./build/benchmarks/benchmark --procedure utf8_to_utf16 file.txt</code>. It outputs detailed performance metrics including throughput in GB/s and CPU cycles.</p>
-<p>Since ICU is so common and popular, we assume that you may have it already on your system. When</p>
+</div><!-- fragment --><p>It will automatically build the code is release mode, in a way suitable for benchmarking. We require the <code>SIMDUTF_BENCHMARKS</code> option because we do not build benchmarks by default (to save time). To speed up the the build you can do <code>cmake --build build -j 10</code> on a 10-core system.</p>
+<p>The standard benchmark tool <code>benchmark</code> provides comprehensive transcoding benchmarks between different encodings. It supports various procedures like converting UTF-8 to UTF-16, UTF-16 to UTF-8, and more. You can list available procedures with <code>--procedures</code>, run specific benchmarks, or use filters to select particular tests. For example, to benchmark UTF-8 to UTF-16 conversion on a file, use <code>./build/benchmarks/benchmark --procedure utf8_to_utf16 --input-file file.txt</code>. It outputs detailed performance metrics including throughput in GB/s.</p>
+<p>When performance counters are available, we output instructions and cycle counts. To get performance counters (under Linux and macOS), you need privileged access which can sometimes mean that you need to run the benchmark under the <code>sudo</code> command. Some systems (e.g., on the cloud) do not give access to the performance counters, check the Linux documentation.</p>
+<p>For test files, we recommend that <a href="https://github.com/lemire/unicode_lipsum">unicode lipsum dataset</a>. It contains various files suitable for benchmarking. E.g., the file <code>lipsum/Arabic-Lipsum.utf8.txt</code> can be used for benchmarking like so:</p>
+<div class="fragment"><div class="line">./build/benchmarks/benchmark --procedure convert_utf8_to_utf16le+ --input-file ul/lipsum/Arabic-Lipsum.utf8.txt</div>
+</div><!-- fragment --><p>if you have put the unicode lipsum dataset in the <code>ul</code> directory. You may prefix the command by <code>sudo</code> if you want to get the performance counters. We also have shorter commands if you prefer:</p>
+<div class="fragment"><div class="line">./build/benchmarks/benchmark -P convert_utf8_to_utf16le+ -F ../unicode_lipsum/lipsum/Arabic-Lipsum.utf8.txt</div>
+</div><!-- fragment --><p>You can also run the benchmark over several files at once:</p>
+<div class="fragment"><div class="line">./build/benchmarks/benchmark -P convert_utf8_to_utf16le+ -F ../unicode_lipsum/lipsum/*-Lipsum.utf8.txt</div>
+</div><!-- fragment --><p>Since ICU is so common and popular, we assume that you may have it already on your system. When</p>
 <p>it is not found, it is simply omitted from the benchmarks. Thus, to benchmark against ICU, make</p>
 <p>sure you have ICU installed on your machine and that cmake can find it. For macOS, you may</p>
 <p>install it with brew using <code>brew install icu4c</code>. If you have ICU on your system but cmake cannot</p>
 <p>find it, you may need to provide cmake with a path to ICU, such as <code>ICU_ROOT=/usr/local/opt/icu4c cmake -B build</code>.</p>
-<h2><a class="anchor" id="autotoc_md23"></a>
+<h2><a class="anchor" id="autotoc_md29"></a>
 Base64 benchmarks</h2>
 <p>We also have a base64 benchmark tool (<code>benchmark_base64</code>).</p>
 <div class="fragment"><div class="line">./build/benchmarks/base64/benchmark_base64 --help</div>
@@ -1771,7 +1936,7 @@ Base64 benchmarks</h2>
 <div class="fragment"><div class="line">./build/benchmarks/base64/benchmark_base64 -d pathto/base64data/dns/*.txt</div>
 </div><!-- fragment --><p>where pathto/base64data should contain the path to a clone of</p>
 <p>the repository <a href="https://github.com/lemire/base64data">https://github.com/lemire/base64data</a>.</p>
-<h2><a class="anchor" id="autotoc_md24"></a>
+<h2><a class="anchor" id="autotoc_md30"></a>
 Short input benchmarks</h2>
 <p>To run short benchmarks on various SIMDUTF functions with incremental input sizes, use <code>shortbench</code>:</p>
 <div class="fragment"><div class="line">./build/benchmarks/shortbench --help</div>
@@ -1784,11 +1949,91 @@ Short input benchmarks</h2>
 <div class="line"> </div>
 <div class="line">./build/benchmarks/shortbench --function utf8_length_from_latin1 --max-size 256 somefile.txt</div>
 </div><!-- fragment --><p>This will benchmark the selected function on the input file, testing sizes from 1 byte up to the specified max size (default 128), and output a table with timing and performance metrics.</p>
-<h1><a class="anchor" id="autotoc_md25"></a>
+<h1><a class="anchor" id="autotoc_md31"></a>
+Compiling without the C++ standard library</h1>
+<p><em>This is currently experimental.</em></p>
+<p>The simdutf library can be compiled without linking against the C++ standard library. This is useful when targeting bare-metal or highly constrained environments where the standard library is unavailable or undesirable. It might be useful when linking against the simdutf library from other languages such as C or Zig.</p>
+<p>It is only supported on GCC and LLVM/clang. We do not support this functionality under Visual Studio. When compiling the simdutf library yourself, set the <code>SIMDUTF_NO_LIBCXX</code> macro to 1. E.g., you might do:</p>
+<div class="fragment"><div class="line">c++ -c simdutf.cpp  -nostdlib++ -fno-rtti -fno-exceptions -DSIMDUTF_NO_LIBCXX=1 -std=c++17</div>
+</div><!-- fragment --><p>When <code>SIMDUTF_NO_LIBCXX</code> is active:</p>
+<ul>
+<li><code>SIMDUTF_USE_STATIC_INITIALIZATION</code> is automatically set to <code>1</code> (see the section on SIMDUTF\_USE\_STATIC\_INITIALIZATION), since thread-safe function-local statics depend on the standard library. Importantly, it means that you should be careful if you are using the simdutf library in a static context (before the <code>main()</code> function is called).</li>
+<li>Weak stub implementations of <code>__cxa_pure_virtual</code> and <code>__glibcxx_assert_fail</code> are compiled in so that the abstract-class vtable machinery does not pull in libstdc++/libc++abi. A real definition from the runtime will take priority if one is linked in.</li>
+</ul>
+<h1><a class="anchor" id="autotoc_md32"></a>
+C API (C11 or better)</h1>
+<p>*This is currently experimental. We are committed to maintaining the C API but there might be issues with</p>
+<p>our implementation.*</p>
+<p>We provide a thin C API that wraps the C++ <code>simdutf</code> library. It is intended</p>
+<p>for applications that prefer or require a plain C interface. The <code><a class="el" href="simdutf__c_8h_source.html">simdutf_c.h</a></code></p>
+<p>defines the interface.</p>
+<p>The C API exposes functions for validation, transcoding, size estimation, <code>find</code> helpers,</p>
+<p>and Base64 encode/decode helpers. Results are returned using the <code><a class="el" href="structsimdutf__result.html">simdutf_result</a></code> struct</p>
+<p>which contains an <code>error_code</code> field and additional fields when relevant.</p>
+<p>We provide a simple C demo using the C wrapper at <code>amalgamation_demo.c</code>.</p>
+<p>It shows validating UTF-8, converting UTF-8 to UTF-16LE and back, and checking the round-trip.</p>
+<p>Refer to <code>singleheader/README.md</code> for instructions.</p>
+<p>You need the files <code>simdutf.cpp</code>, <code><a class="el" href="simdutf__c_8h_source.html">simdutf_c.h</a></code>, <code><a class="el" href="simdutf_8h_source.html">simdutf.h</a></code> provided with each release.</p>
+<p>As an example, given the following C program in the file <code>demo.c</code>...</p>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;stdio.h&gt;</span></div>
+<div class="line"> </div>
+<div class="line"><span class="preprocessor">#include &lt;stdlib.h&gt;</span></div>
+<div class="line"> </div>
+<div class="line"><span class="preprocessor">#include &lt;string.h&gt;</span></div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"><span class="preprocessor">#include &quot;simdutf_c.h&quot;</span></div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">void</span>) {</div>
+<div class="line"> </div>
+<div class="line">  printf(<span class="stringliteral">&quot;SIMDUTF C API demo\n&quot;</span>);</div>
+<div class="line"> </div>
+<div class="line">  <span class="keyword">const</span> <span class="keywordtype">char</span> *source = <span class="stringliteral">&quot;1234&quot;</span>;</div>
+<div class="line"> </div>
+<div class="line">  <span class="comment">/* validate UTF-8 */</span></div>
+<div class="line"> </div>
+<div class="line">  <span class="keywordflow">if</span> (!simdutf_validate_utf8(source, 4)) {</div>
+<div class="line"> </div>
+<div class="line">    puts(<span class="stringliteral">&quot;invalid UTF-8&quot;</span>);</div>
+<div class="line"> </div>
+<div class="line">    <span class="keywordflow">return</span> EXIT_FAILURE;</div>
+<div class="line"> </div>
+<div class="line">  }</div>
+<div class="line"> </div>
+<div class="line">}</div>
+</div><!-- fragment --><p>You may build it as follows.</p>
+<div class="fragment"><div class="line">c++ -c simdutf.cpp -std=c++17</div>
+<div class="line"> </div>
+<div class="line">cc -c amalgamation_demo.c</div>
+<div class="line"> </div>
+<div class="line">c++  amalgamation_demo.o simdutf.o -o cdemo</div>
+<div class="line"> </div>
+<div class="line">./cdemo</div>
+</div><!-- fragment --><p>By default, the simdutf library requires a C++ standard library (e.g., libstdc++, libc++) at runtime, either statically or dynamically linked. If you want to avoid linking against the C++ standard library entirely, you need to set the <code>DSIMDUTF_NO_LIBCXX</code> macro to 1, see Compiling without the C++ standard library.</p>
+<p>You might be able to build our small C program like so:</p>
+<div class="fragment"><div class="line">c++ -c simdutf.cpp  -nostdlib++ -fno-rtti -fno-exceptions -DSIMDUTF_NO_LIBCXX=1 -std=c++17</div>
+<div class="line"> </div>
+<div class="line">cc demo.c simdutf.o -o demo</div>
+</div><!-- fragment --><p>The resulting program <code>demo</code> does not depend on the C++ standard library. If you opt for this option, be aware that the downside is that you should be careful when using simdutf in the static context (before the <code>main</code> function has been called).</p>
+<p>Note: The C API is currently not aware of amalgamation with limited features. It expects the full simdutf library.</p>
+<h1><a class="anchor" id="autotoc_md33"></a>
+SIMDUTF_USE_STATIC_INITIALIZATION</h1>
+<p><em>This is currently experimental.</em></p>
+<p>By default, simdutf avoids translation-unit-scope (global) static variables for its implementation singletons. Instead, it relies on function-local statics, which are initialized in a thread-safe manner by the C++ runtime. This means the very first call to the library — even before <code>main()</code> starts — is safe and will not cause crashes.</p>
+<p>If you need to avoid the small synchronization overhead associated with function-local statics (checked on every call until initialization completes), you can opt in to translation-unit-scope static initialization:</p>
+<div class="fragment"><div class="line">cmake -DSIMDUTF_USE_STATIC_INITIALIZATION=ON ...</div>
+</div><!-- fragment --><p>Or define the macro directly if you build simdutf yourself (<code>SIMDUTF_USE_STATIC_INITIALIZATION=1</code>).</p>
+<p><b>Trade-off:</b> with this option enabled, simdutf's implementation objects are initialized as translation-unit-scope globals. The C++ standard does not guarantee a deterministic initialization order across translation units, so if your own global variables call into simdutf during their construction (i.e., before <code>main()</code> begins), you may encounter a crash due to the static initialization order fiasco. Do not enable this option if simdutf might be used from another library's global constructor.</p>
+<p>When building without the C++ standard library (<code>SIMDUTF_NO_LIBCXX=1</code>), static initialization is always used because the C++ runtime's thread-safe function-local static initialization relies on the standard library.</p>
+<p><em>Further reading</em>: <a href="https://en.cppreference.com/cpp/language/siof">Static Initialization Order Fiasco</a></p>
+<h1><a class="anchor" id="autotoc_md34"></a>
 Thread safety</h1>
 <p>We built simdutf with thread safety in mind. The simdutf library is single-threaded throughout.</p>
 <p>The CPU detection, which runs the first time parsing is attempted and switches to the fastest parser for your CPU, is transparent and thread-safe. Our runtime dispatching is based on global objects that are instantiated at the beginning of the main thread and may be discarded at the end of the main thread. If you have multiple threads running and some threads use the library while the main thread is cleaning up resources, you may encounter issues. If you expect such problems, you may consider using <a href="https://en.cppreference.com/w/cpp/utility/program/quick_exit">std::quick_exit</a>.</p>
-<h1><a class="anchor" id="autotoc_md26"></a>
+<h1><a class="anchor" id="autotoc_md35"></a>
 References</h1>
 <ul>
 <li>Robert Clausecker, Daniel Lemire, <a href="https://arxiv.org/abs/2212.05098">Transcoding Unicode Characters with AVX-512 Instructions</a>, Software: Practice and Experience 53 (12), 2023.</li>
@@ -1797,7 +2042,7 @@ References</h1>
 <li>Wojciech Muła, Daniel Lemire, <a href="https://arxiv.org/abs/1910.05109">Base64 encoding and decoding at almost the speed of a memory copy</a>, Software: Practice and Experience 50 (2), 2020.</li>
 <li>Wojciech Muła, Daniel Lemire, <a href="https://arxiv.org/abs/1704.00605">Faster Base64 Encoding and Decoding using AVX2 Instructions</a>, ACM Transactions on the Web 12 (3), 2018.</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md27"></a>
+<h1><a class="anchor" id="autotoc_md36"></a>
 Citing this work</h1>
 <p>If you use this library in your research, please cite our work:</p>
 <div class="fragment"><div class="line">@misc{simdutf,</div>
@@ -1811,25 +2056,10 @@ Citing this work</h1>
 <div class="line">  note={\url{https://github.com/simdutf/simdutf}}</div>
 <div class="line"> </div>
 <div class="line">}</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md28"></a>
-C wrapper (C11 or better)</h1>
-<p>*This is currently experimental. We are committed to maintaining the C API but there might be issues with</p>
-<p>our implementation.*</p>
-<p>We provide a thin C API that wraps the C++ <code>simdutf</code> library. It is intended</p>
-<p>for applications that prefer or require a plain C interface. The <code><a class="el" href="simdutf__c_8h_source.html">simdutf_c.h</a></code></p>
-<p>defines the interface.</p>
-<p>The C API exposes functions for validation, transcoding, size estimation, <code>find</code> helpers,</p>
-<p>and Base64 encode/decode helpers. Results are returned using the <code><a class="el" href="structsimdutf__result.html">simdutf_result</a></code> struct</p>
-<p>which contains an <code>error_code</code> field and additional fields when relevant.</p>
-<p>We provide a simple C demo using the C wrapper at <code>amalgamation_demo.c</code>.</p>
-<p>It shows validating UTF-8, converting UTF-8 to UTF-16LE and back, and checking the round-trip.</p>
-<p>Refer to <code>singleheader/README.md</code> for instructions. Note that the simdutf library requires</p>
-<p>a C++ standard library (e.g., libstdc++, libc++) at runtime, either statically or dynamically linked.</p>
-<p>Note: The C API is currently not aware of amalgamation with limited features. It expects the full simdutf library.</p>
-<h1><a class="anchor" id="autotoc_md29"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md37"></a>
 Stars</h1>
 <p><a href="https://www.star-history.com/#simdutf/simdutf&amp;Date"><img src="https://api.star-history.com/svg?repos=simdutf/simdutf&amp;type=Date" alt="Star History Chart" class="inline"/></a></p>
-<h1><a class="anchor" id="autotoc_md30"></a>
+<h1><a class="anchor" id="autotoc_md38"></a>
 License</h1>
 <p>This code is made available under the <a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache License 2.0</a> as well as the MIT license. As a user, you can pick the license you prefer.</p>
 <p>We include a few competitive solutions under the benchmarks/competition directory. They are provided for</p>

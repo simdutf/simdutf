@@ -29,7 +29,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">simdutf<span id="projectnumber">&#160;8.2.0</span>
+   <div id="projectname">simdutf<span id="projectnumber">&#160;9.0.0</span>
    </div>
    <div id="projectbrief">Unicode at GB/s.</div>
   </td>
@@ -128,7 +128,7 @@ $(document).ready(function(){initNavTree('valid__utf32__to__utf16_8h_source.html
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>      word -= 0x10000;</div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>      uint16_t high_surrogate = uint16_t(0xD800 + (word &gt;&gt; 10));</div>
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>      uint16_t low_surrogate = uint16_t(0xDC00 + (word &amp; 0x3FF));</div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>      <span class="keywordflow">if</span> simdutf_constexpr (!match_system(big_endian)) {</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>      <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (!match_system(big_endian)) {</div>
 <div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>        high_surrogate = u16_swap_bytes(high_surrogate);</div>
 <div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>        low_surrogate = u16_swap_bytes(low_surrogate);</div>
 <div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>      }</div>

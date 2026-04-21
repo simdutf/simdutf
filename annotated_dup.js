@@ -10,5 +10,6 @@ var annotated_dup =
       [ "implementation", "classsimdutf_1_1implementation.html", "classsimdutf_1_1implementation" ],
       [ "result", "structsimdutf_1_1result.html", null ]
     ] ],
+    [ "simdutf_full_result", "structsimdutf__full__result.html", null ],
     [ "simdutf_result", "structsimdutf__result.html", null ]
 ];
