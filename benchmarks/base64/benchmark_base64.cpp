@@ -589,7 +589,7 @@ private:
 
       summarize(concatenate("simdutf::", e->name()), [this, &e]() {
         for (const std::vector<char> &source : data) {
-          concatenate auto err =
+          auto err =
               e->base64_to_binary(source.data(), source.size(), buffer1.data());
           if (err.error) {
             std::cerr << "Error: at position " << err.count << " out of "
