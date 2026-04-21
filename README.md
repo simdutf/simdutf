@@ -2999,7 +2999,7 @@ This will benchmark the selected function on the input file, testing sizes from 
 
 The simdutf library can be compiled without linking against the C++ standard library. This is useful when targeting bare-metal or highly constrained environments where the standard library is unavailable or undesirable. It might be useful when linking against the simdutf library from other languages such as C or Zig.
 
-It is only support on GCC and LLVM/clang. We do not support this functionality under Visual Studio. When compiling the simdutf library yourself, set the `SIMDUTF_NO_LIBCXX` macro to 1. E.g., you might do:
+It is only supported on GCC and LLVM/clang. We do not support this functionality under Visual Studio. When compiling the simdutf library yourself, set the `SIMDUTF_NO_LIBCXX` macro to 1. E.g., you might do:
 
 ```
 c++ -c simdutf.cpp  -nostdlib++ -fno-rtti -fno-exceptions -DSIMDUTF_NO_LIBCXX=1 -std=c++17
@@ -3097,6 +3097,8 @@ Or define the macro directly if you build simdutf yourself (`SIMDUTF_USE_STATIC_
 
 When building without the C++ standard library (`SIMDUTF_NO_LIBCXX=1`), static initialization is always used because the C++ runtime's thread-safe function-local static initialization relies on the standard library.
 
+
+*Further reading*: [Static Initialization Order Fiasco](https://en.cppreference.com/cpp/language/siof)
 
 ## Thread safety
 

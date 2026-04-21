@@ -8,6 +8,6 @@ set -eu
 # this exits with nonzero status if it finds something, which terminates the script
 codespell \
     --skip="./benchmarks/competition,./build,./fuzz/work"  \
-    -L vie,persan,fo,ans,larg,indx,shft,carryin
+    -L vie,persan,fo,ans,larg,indx,shft,carryin,statics
 
 echo "no typos detected!"

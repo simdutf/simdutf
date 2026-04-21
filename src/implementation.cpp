@@ -26,6 +26,8 @@
 // cost on the first call to get_active_implementation(), and a smaller cost on
 // subsequent calls but it is then safe to use the simdutf library in static
 // initialization.
+//
+// Further reading: https://en.cppreference.com/cpp/language/siof
 #ifndef SIMDUTF_USE_STATIC_INITIALIZATION
   #if SIMDUTF_NO_LIBCXX
     #define SIMDUTF_USE_STATIC_INITIALIZATION 1
