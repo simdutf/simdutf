@@ -271,6 +271,13 @@ struct NameMatcher {
 
 void bench_bun();
 
+/// concatenates two stringlike variables (const char*, string_view or
+/// std::string) into a std::string
+template <typename T1, typename T2>
+std::string concatenate(const T1 &string_like_1, const T2 &string_like_2) {
+  return std::string(string_like_1) + std::string(string_like_2);
+}
+
 class Application {
   std::vector<std::vector<char>> data;
   size_t volume;
@@ -394,13 +401,6 @@ private:
     const event_aggregate agg = bench(closure);
 
     pretty_print(data.size(), volume, name, agg);
-  }
-
-  /// concatenates two stringlike variables (const char*, string_view or
-  /// std::string) into a std::string
-  template <typename T1, typename T2>
-  std::string concatenate(const T1 &string_like_1, const T2 &string_like_2) {
-    return std::string(string_like_1) + std::string(string_like_2);
   }
 
   void roundtrip() {
