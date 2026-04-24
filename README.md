@@ -339,7 +339,7 @@ also have a span overload. Here is an example:
 ```cpp
 std::vector<char> data{1, 2, 3, 4, 5};
 // C++17 API
-auto cpp11 = simdutf::autodetect_encoding(data.data(), data.size());
+auto cpp17 = simdutf::autodetect_encoding(data.data(), data.size());
 // C++20 API
 auto cpp20 = simdutf::autodetect_encoding(data);
 ```
@@ -2920,7 +2920,7 @@ int main() {
 
 ## Benchmarks
 
-To run the benchmarks, you need a recent C++ compiler and a recent version of cmake.B uild the project with benchmarks enabled.  Our default benchmarks are in the  `benchmark` command. You can get help on its usage by first building it and then calling it with the `--help` flag. E.g., under Linux you may do the following:
+To run the benchmarks, you need a recent C++ compiler and a recent version of cmake. Build the project with benchmarks enabled.  Our default benchmarks are in the  `benchmark` command. You can get help on its usage by first building it and then calling it with the `--help` flag. E.g., under Linux you may do the following:
 
 ```shell
 cmake -B build -D SIMDUTF_BENCHMARKS=ON
@@ -2928,7 +2928,7 @@ cmake --build build
 ./build/benchmarks/benchmark --help
 ```
 
-It will automatically build the code is release mode, in a way suitable for benchmarking. We require the `SIMDUTF_BENCHMARKS` option because we do not build benchmarks by default (to save time). To speed up the the build you can do `cmake --build build -j 10` on a 10-core system.
+It will automatically build the code in release mode, in a way suitable for benchmarking. We require the `SIMDUTF_BENCHMARKS` option because we do not build benchmarks by default (to save time). To speed up the the build you can do `cmake --build build -j 10` on a 10-core system.
 
 The standard benchmark tool `benchmark` provides comprehensive transcoding benchmarks between different encodings. It supports various procedures like converting UTF-8 to UTF-16, UTF-16 to UTF-8, and more. You can list available procedures with `--procedures`, run specific benchmarks, or use filters to select particular tests. For example, to benchmark UTF-8 to UTF-16 conversion on a file, use `./build/benchmarks/benchmark --procedure utf8_to_utf16  --input-file file.txt`. It outputs detailed performance metrics including throughput in GB/s.
 
