@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.18)
 
 project(test_simdutf_install VERSION 0.1.0 LANGUAGES CXX)
 

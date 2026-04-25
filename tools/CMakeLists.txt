@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.18)
 
 add_executable(sutf sutf.cpp)
 add_executable(fastbase64 fastbase64.cpp)
