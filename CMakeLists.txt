@@ -5,7 +5,7 @@ project(simdutf
   LANGUAGES C CXX
   VERSION 9.0.0
 )
-
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include (TestBigEndian)
 TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
 if(IS_BIG_ENDIAN)
