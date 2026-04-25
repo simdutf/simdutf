@@ -16,7 +16,7 @@ jobs:
         cppversion: [17, 23]
         compiler: [g++, clang++]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: selective amalgamation
         run: |
           scripts/amalgamation_tests.py \

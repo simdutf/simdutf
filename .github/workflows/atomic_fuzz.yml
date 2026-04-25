@@ -15,7 +15,7 @@ jobs:
     ubuntu-build:
         runs-on: ubuntu-24.04
         steps:
-        - uses: actions/checkout@v4
+        - uses: actions/checkout@v6
         - name: install clang
           run: sudo apt install -y clang-18 ccache
         - name: compile and run atomic base64 fuzzer

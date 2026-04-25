@@ -17,7 +17,7 @@ jobs:
         cppversion: [17, 23]
         charflag: [-fsigned-char, -funsigned-char]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Build and test ${{matrix.charflag}} C++ ${{matrix.cppversion}}
         run: |
           cmake \

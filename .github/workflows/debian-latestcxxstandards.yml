@@ -19,7 +19,7 @@ jobs:
         cppversion: [26,]
         cversion: [23,]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: install
         run: |
           apt-get update -q -y

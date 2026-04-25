@@ -12,7 +12,7 @@ jobs:
   cpp_amalgamation:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: C++ amalgamation demo
         run: |
           cd singleheader
@@ -23,7 +23,7 @@ jobs:
   c_amalgamation:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: c amalgamation demo
         run: |
           cd singleheader
