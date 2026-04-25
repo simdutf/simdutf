@@ -19,7 +19,7 @@ jobs:
           - {shared: ON, type : Release}
           - {shared: OFF, type : Release}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Use cmake
         run: |
           mkdir build &&

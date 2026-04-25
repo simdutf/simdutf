@@ -16,7 +16,7 @@ jobs:
         cxxversion: [17, 20]
         compiler: [g++, clang++-19]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: uraimo/run-on-arch-action@v3
         name: Test
         id: runcmd

@@ -16,7 +16,7 @@ jobs:
           - {gen: Visual Studio 17 2022, arch: Win32, shared: OFF}
     steps:
     - name: checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
     - name: Configure
       run: |
         cmake  -DSIMDUTF_CXX_STANDARD=20 -DSIMDUTF_ATOMIC_BASE64_TESTS=ON -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=ON -DSIMDUTF_ALWAYS_INCLUDE_FALLBACK=ON -DSIMDUTF_BENCHMARKS=ON -G "${{matrix.gen}}" -A ${{matrix.arch}} -DBUILD_SHARED_LIBS=${{matrix.shared}} -DSIMDUTF_FAST_TESTS=On -B build
