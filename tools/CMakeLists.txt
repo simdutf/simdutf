@@ -1,7 +1,47 @@
 cmake_minimum_required(VERSION 3.18)
 
+option(SIMDUTF_FASTBASE64_JUMBO "build the fastbase64 program with a unity build (requires python)" On)
+
+if(SIMDUTF_FASTBASE64_JUMBO)
+  find_package (Python3 COMPONENTS Interpreter)
+  # we will generate the source code for the fastbase64 program by concatenating
+  # - the selective amalgamation of the simdutf library (with only base64 functionality)
+  # - the fastbase64 program source code
+  #
+  # this is a jumbo/unity build, which enables the compiler and linnker to leave
+  # out anything it does not use.
+
+  set(jumbo_simdutf_base64_dir ${CMAKE_CURRENT_BINARY_DIR}/base64_amalgamation)
+  add_custom_command(
+    OUTPUT "${jumbo_simdutf_base64_dir}/simdutf.cpp"
+    BYPROCUCTS "${jumbo_simdutf_base64_dir}/simdutf.h"
+    DEPENDS ${PROJECT_SOURCE_DIR}/singleheader/amalgamate.py simdutf
+    COMMAND ${CMAKE_COMMAND} -E env --
+      ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/singleheader/amalgamate.py
+          --with-base64
+          --output-dir "${jumbo_simdutf_base64_dir}"
+          --source-dir "${PROJECT_SOURCE_DIR}/src"
+          --include-dir "${PROJECT_SOURCE_DIR}/include"
+          --no-readme --no-zip
+  )
+  set(jumbo_fastbase64 ${jumbo_simdutf_base64_dir}/jumbo_fastbase64.cpp)
+  add_custom_command(
+    OUTPUT "${jumbo_fastbase64}"
+    DEPENDS "${jumbo_simdutf_base64_dir}/simdutf.h"  "${jumbo_simdutf_base64_dir}/simdutf.cpp"  ${CMAKE_CURRENT_SOURCE_DIR}/fastbase64.cpp
+    COMMAND ${CMAKE_COMMAND} -E cat
+    "${jumbo_simdutf_base64_dir}/simdutf.h"
+    "${jumbo_simdutf_base64_dir}/simdutf.cpp"
+    ${CMAKE_CURRENT_SOURCE_DIR}/fastbase64.cpp > "${jumbo_fastbase64}"
+  )
+endif()
+
 add_executable(sutf sutf.cpp)
-add_executable(fastbase64 fastbase64.cpp)
+if(SIMDUTF_FASTBASE64_JUMBO)
+  add_executable(fastbase64 "${jumbo_fastbase64}")
+  target_include_directories(fastbase64 PRIVATE "${jumbo_simdutf_base64_dir}")
+else()
+  add_executable(fastbase64 fastbase64.cpp)
+endif()
 
 if(NOT WIN32)
   add_custom_command(TARGET fastbase64 POST_BUILD
@@ -71,15 +111,17 @@ target_compile_definitions(sutf PRIVATE
   SIMDUTF_FEATURE_DETECT_ENCODING=0
 )
 
-target_link_libraries(fastbase64 PUBLIC simdutf-base64)
-target_compile_definitions(fastbase64 PRIVATE
-  SIMDUTF_FEATURE_UTF8=0
-  SIMDUTF_FEATURE_UTF16=0
-  SIMDUTF_FEATURE_UTF32=0
-  SIMDUTF_FEATURE_ASCII=0
-  SIMDUTF_FEATURE_LATIN1=0
-  SIMDUTF_FEATURE_DETECT_ENCODING=0
-)
+if(NOT SIMDUTF_FASTBASE64_JUMBO)
+  target_link_libraries(fastbase64 PUBLIC simdutf-base64)
+  target_compile_definitions(fastbase64 PRIVATE
+    SIMDUTF_FEATURE_UTF8=0
+    SIMDUTF_FEATURE_UTF16=0
+    SIMDUTF_FEATURE_UTF32=0
+    SIMDUTF_FEATURE_ASCII=0
+    SIMDUTF_FEATURE_LATIN1=0
+    SIMDUTF_FEATURE_DETECT_ENCODING=0
+  )
+endif()
 
 if(WIN32 AND BUILD_SHARED_LIBS)
   # Copy the simdutf dll into the directory
