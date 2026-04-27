@@ -1,3 +1,5 @@
+#include <algorithm> // std::find
+
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
