@@ -165,6 +165,7 @@ concept indexes_into_uint32 = requires(InputPtr p) {
 #include <simdutf/scalar/utf8_to_latin1/valid_utf8_to_latin1.h>
 #include <simdutf/scalar/utf8_to_utf16/utf8_to_utf16.h>
 #include <simdutf/scalar/utf8_to_utf16/valid_utf8_to_utf16.h>
+#include <simdutf/scalar/utf8_to_utf16/validate_utf8_for_utf16_transcoding.h>
 #include <simdutf/scalar/utf8_to_utf32/utf8_to_utf32.h>
 #include <simdutf/scalar/utf8_to_utf32/valid_utf8_to_utf32.h>
 
