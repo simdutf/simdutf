@@ -266,6 +266,8 @@ public:
       const char16_t *input, size_t length,
       char *utf8_buffer) const noexcept override;
 
+  simdutf_warn_unused full_result validate_utf8_for_utf16_transcoding(
+      const char *buf, size_t len) const noexcept override;
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
