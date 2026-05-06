@@ -138,7 +138,7 @@ def add_to_src_implementation_cpp(repo_root, feature_macro, functions):
     if detect_start != -1:
         existing_if = content.find(f'#if {feature_macro}', detect_start)
         if existing_if != -1:
-            endif_pos = content.find('#endif', existing_if)
+            endif_pos = content.find(f'#endif // {feature_macro}', existing_if)
             insert_pos = endif_pos if endif_pos != -1 else len(content)
         else:
             brace_pos = content.find('{', detect_start)
@@ -163,7 +163,7 @@ def add_to_src_implementation_cpp(repo_root, feature_macro, functions):
     if unsupported_start != -1:
         existing_if = content.find(f'#if {feature_macro}', unsupported_start)
         if existing_if != -1:
-            endif_pos = content.find('#endif', existing_if)
+            endif_pos = content.find(f'#endif // {feature_macro}', existing_if)
             insert_pos_unsup = endif_pos if endif_pos != -1 else len(content)
         else:
             insert_pos_unsup = unsupported_start + len('class unsupported_implementation final : public implementation {')
@@ -184,7 +184,7 @@ def add_to_src_implementation_cpp(repo_root, feature_macro, functions):
     # For standalone functions at end
     existing_if_end = content.rfind(f'#if {feature_macro}')
     if existing_if_end != -1:
-        endif_pos = content.find('#endif', existing_if_end)
+        endif_pos = content.find(f'#endif // {feature_macro}', existing_if_end)
         insert_pos_end = endif_pos if endif_pos != -1 else len(content)
     else:
         insert_pos_end = len(content)
@@ -213,9 +213,6 @@ def add_to_impl_files(file_path, functions, feature_macro):
     impl = ""
     for doc, signature, func_name in functions:
         modified_signature = re.sub(re.escape(func_name), f'implementation::{func_name}', signature)
-        if ' const ' not in modified_signature:
-            modified_signature = modified_signature.replace(' noexcept', ' const noexcept')
-        modified_signature = modified_signature.replace(' const noexcept', ' const noexcept final override')
         impl += f"""{re.sub(r';$', ' {', modified_signature)}
   // TODO: implement
 }}
@@ -252,9 +249,9 @@ def add_declarations_to_impl_h(file_path, functions, feature_macro):
         decl = ""
         for doc, signature, func_name in functions:
             modified_signature = signature
-            if ' const ' not in modified_signature:
-                modified_signature = modified_signature.replace(' noexcept', ' const noexcept')
-            decl += f"{modified_signature};\n"
+            if 'override' not in modified_signature:
+                modified_signature = modified_signature.replace('noexcept', 'noexcept override')
+            decl += f"{modified_signature}\n"
         
         # Wrap with #if
         existing_if_h = h_content.rfind(f'#if {feature_macro}')
@@ -305,8 +302,8 @@ def main():
     # Ensure all signatures have const
     updated_functions = []
     for doc, sig, name in functions:
-        if ' const ' not in sig:
-            sig = sig.replace(' noexcept', ' const noexcept')
+        if 'const noexcept' not in sig:
+            sig = sig.replace('noexcept', 'const noexcept')
         updated_functions.append((doc, sig, name))
     functions = updated_functions
     
@@ -314,9 +311,9 @@ def main():
         print("Error: Could not extract feature macro or functions.")
         sys.exit(1)
     
-    #add_to_implementation_h(repo_root, feature_macro, functions)
-    #add_to_src_implementation_cpp(repo_root, feature_macro, functions)
-    #add_to_all_impl_files(repo_root, feature_macro, functions)
+    add_to_implementation_h(repo_root, feature_macro, functions)
+    add_to_src_implementation_cpp(repo_root, feature_macro, functions)
+    add_to_all_impl_files(repo_root, feature_macro, functions)
     add_declaration_to_all_impl_files(repo_root, feature_macro, functions)
     
     func_names = [name for _, _, name in functions]
