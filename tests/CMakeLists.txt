@@ -71,6 +71,11 @@ target_link_libraries(validate_utf8_brute_force_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
 
+add_cpp_test(validate_utf8_for_utf16_transcoding_brute_force_tests)
+target_link_libraries(validate_utf8_for_utf16_transcoding_brute_force_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)
+
 add_cpp_test(validate_utf8_puzzler_tests)
 target_link_libraries(validate_utf8_puzzler_tests
   PUBLIC simdutf::tests::helpers
@@ -128,7 +133,7 @@ target_link_libraries(find_tests
          simdutf::tests::reference)
 
 add_cpp_test(convert_latin1_to_utf8_tests)
-target_link_libraries(convert_latin1_to_utf8_tests 
+target_link_libraries(convert_latin1_to_utf8_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
 
@@ -143,25 +148,25 @@ target_link_libraries(convert_latin1_to_utf16be_tests
          simdutf::tests::reference)
 
 add_cpp_test(convert_latin1_to_utf32_tests)
-target_link_libraries(convert_latin1_to_utf32_tests 
+target_link_libraries(convert_latin1_to_utf32_tests
     PUBLIC simdutf::tests::helpers
       simdutf::tests::reference)
 
 add_cpp_test(convert_utf8_to_latin1_tests)
-target_link_libraries(convert_utf8_to_latin1_tests 
+target_link_libraries(convert_utf8_to_latin1_tests
   PUBLIC simdutf::tests::helpers
         simdutf::tests::reference)
 
 add_cpp_test(convert_utf8_to_latin1_with_errors_tests)
-target_link_libraries(convert_utf8_to_latin1_with_errors_tests 
+target_link_libraries(convert_utf8_to_latin1_with_errors_tests
   PUBLIC simdutf::tests::helpers
           simdutf::tests::reference)
-        
+
 add_cpp_test(convert_valid_utf8_to_latin1_tests)
-target_link_libraries(convert_valid_utf8_to_latin1_tests 
+target_link_libraries(convert_valid_utf8_to_latin1_tests
   PUBLIC simdutf::tests::helpers
         simdutf::tests::reference)
-         
+
 add_cpp_test(convert_valid_utf8_to_utf16le_tests)
 target_link_libraries(convert_valid_utf8_to_utf16le_tests
   PUBLIC simdutf::tests::helpers
@@ -208,32 +213,32 @@ target_link_libraries(convert_utf8_to_utf32_with_errors_tests
          simdutf::tests::reference)
 
 add_cpp_test(convert_utf16le_to_latin1_tests)
-target_link_libraries(convert_utf16le_to_latin1_tests 
+target_link_libraries(convert_utf16le_to_latin1_tests
   PUBLIC simdutf::tests::helpers
           simdutf::tests::reference)
 
 add_cpp_test(convert_utf16be_to_latin1_tests)
-target_link_libraries(convert_utf16be_to_latin1_tests 
+target_link_libraries(convert_utf16be_to_latin1_tests
   PUBLIC simdutf::tests::helpers
           simdutf::tests::reference)
 
 add_cpp_test(convert_utf16le_to_latin1_tests_with_errors)
-target_link_libraries(convert_utf16le_to_latin1_tests_with_errors 
+target_link_libraries(convert_utf16le_to_latin1_tests_with_errors
   PUBLIC simdutf::tests::helpers
           simdutf::tests::reference)
 
 add_cpp_test(convert_utf16be_to_latin1_tests_with_errors)
-target_link_libraries(convert_utf16be_to_latin1_tests_with_errors 
+target_link_libraries(convert_utf16be_to_latin1_tests_with_errors
   PUBLIC simdutf::tests::helpers
           simdutf::tests::reference)
 
 add_cpp_test(convert_valid_utf16le_to_latin1_tests)
-target_link_libraries(convert_valid_utf16le_to_latin1_tests 
+target_link_libraries(convert_valid_utf16le_to_latin1_tests
   PUBLIC simdutf::tests::helpers
           simdutf::tests::reference)
 
 add_cpp_test(convert_valid_utf16be_to_latin1_tests)
-target_link_libraries(convert_valid_utf16be_to_latin1_tests 
+target_link_libraries(convert_valid_utf16be_to_latin1_tests
   PUBLIC simdutf::tests::helpers
           simdutf::tests::reference)
 
@@ -261,22 +266,22 @@ add_cpp_test(convert_utf16be_to_utf8_with_errors_tests)
 target_link_libraries(convert_utf16be_to_utf8_with_errors_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
-        
+
 add_cpp_test(convert_utf32_to_latin1_tests)
-target_link_libraries(convert_utf32_to_latin1_tests 
+target_link_libraries(convert_utf32_to_latin1_tests
   PUBLIC simdutf::tests::helpers
         simdutf::tests::reference)
 
 add_cpp_test(convert_valid_utf32_to_latin1_tests)
-target_link_libraries(convert_valid_utf32_to_latin1_tests 
+target_link_libraries(convert_valid_utf32_to_latin1_tests
   PUBLIC simdutf::tests::helpers
         simdutf::tests::reference)
 
 add_cpp_test(convert_utf32_to_latin1_with_errors_tests)
-target_link_libraries(convert_utf32_to_latin1_with_errors_tests 
+target_link_libraries(convert_utf32_to_latin1_with_errors_tests
   PUBLIC simdutf::tests::helpers
-        simdutf::tests::reference)         
-          
+        simdutf::tests::reference)
+
 add_cpp_test(convert_utf32_to_utf8_tests)
 target_link_libraries(convert_utf32_to_utf8_tests
   PUBLIC simdutf::tests::helpers
@@ -391,7 +396,7 @@ add_cpp_test(text_encoding_tests)
 target_link_libraries(text_encoding_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
-         
+
 add_cpp_test(basic_fuzzer)
 target_link_libraries(basic_fuzzer
   PUBLIC simdutf::tests::helpers
