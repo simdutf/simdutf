@@ -80,15 +80,22 @@ validate_utf8_for_utf16_transcoding(BytePtr data, size_t len) noexcept {
         return full_result(error_code::TOO_SHORT, pos, utf16_units);
       }
       // range check
-      if (code_point < 0xffff) {
-        return full_result(error_code::TOO_LONG, pos, utf16_units);
+      code_point =
+          (byte & 0b00000111) << 18 | (data[pos + 1] & 0b00111111) << 12 |
+          (data[pos + 2] & 0b00111111) << 6 | (data[pos + 3] & 0b00111111);
+      if (code_point <= 0xffff) {
+        return full_result(error_code::OVERLONG, pos, utf16_units);
       } else if (0x10ffff < code_point) {
         return full_result(error_code::TOO_LARGE, pos, utf16_units);
       }
       utf16_units += 2;
     } else {
       // Continuation byte or invalid header byte
-      return full_result(error_code::HEADER_BITS, pos, utf16_units);
+      if ((byte & 0b11000000) == 0b10000000) {
+        return full_result(error_code::TOO_LONG, pos, utf16_units);
+      } else {
+        return full_result(error_code::HEADER_BITS, pos, utf16_units);
+      }
     }
     pos = next_pos;
   }
