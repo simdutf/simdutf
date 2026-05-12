@@ -165,6 +165,7 @@ concept indexes_into_uint32 = requires(InputPtr p) {
 #include <simdutf/scalar/utf8_to_latin1/valid_utf8_to_latin1.h>
 #include <simdutf/scalar/utf8_to_utf16/utf8_to_utf16.h>
 #include <simdutf/scalar/utf8_to_utf16/valid_utf8_to_utf16.h>
+#include <simdutf/scalar/utf8_to_utf16/validate_utf8_for_utf16_transcoding.h>
 #include <simdutf/scalar/utf8_to_utf32/utf8_to_utf32.h>
 #include <simdutf/scalar/utf8_to_utf32/valid_utf8_to_utf32.h>
 
@@ -1061,6 +1062,24 @@ convert_utf8_to_utf16(const detail::input_span_of_byte_like auto &input,
     return scalar::utf8_to_utf16::convert<endianness::NATIVE>(
         input.data(), input.size(), output.data());
   } else
+    /**
+ * Finds the pointer to the first byte of invalid utf8.
+ * Additionally it determines how much space the text up to that point requires
+ when transcoded to utf16.
+
+ * @param buf the UTF-8 string to validate.
+ * @param len the length of the string in bytes.
+ * @return a result pair struct (of type simdutf::result containing the two
+ fields error and count). We use with an error code and either position of the
+ error (in the input in code units) if any, or the number of code units
+ validated if successful.
+ *
+ * Returns a result
+ */
+
+    simdutf_warn_unused full_result validate_utf8_for_utf16_transcoding(
+        char *buf, size_t len) noexcept;
+
     #endif
   {
     return convert_utf8_to_utf16(reinterpret_cast<const char *>(input.data()),
@@ -5613,6 +5632,23 @@ public:
    */
   virtual simdutf_warn_unused result utf8_length_from_utf16be_with_replacement(
       const char16_t *input, size_t length) const noexcept = 0;
+
+  /**
+   * Finds the pointer to the first byte of invalid utf8.
+   * Additionally it determines how much space the text up to that point
+   requires when transcoded to utf16.
+
+   * @param buf the UTF-8 string to validate.
+   * @param len the length of the string in bytes.
+   * @return a result pair struct (of type simdutf::result containing the two
+   fields error and count). We use with an error code and either position of the
+   error (in the input in code units) if any, or the number of code units
+   validated if successful.
+   *
+   * Returns a result
+   */
+  virtual simdutf_warn_unused full_result validate_utf8_for_utf16_transcoding(
+      const char *buf, size_t len) const noexcept = 0;
 
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
