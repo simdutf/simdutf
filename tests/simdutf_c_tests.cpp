@@ -184,6 +184,40 @@ TEST(invalid_utf8_c) {
   ASSERT_EQUAL(r.error, SIMDUTF_ERROR_HEADER_BITS);
 }
 
+TEST(invalid_utf8_conversion_results_c) {
+  const char *invalid = "\xff";
+
+  char16_t out16[4] = {0};
+  simdutf_result r16 =
+      simdutf_convert_utf8_to_utf16_with_errors(invalid, 1, out16);
+  ASSERT_EQUAL(r16.error, SIMDUTF_ERROR_HEADER_BITS);
+  ASSERT_EQUAL(r16.count, size_t(0));
+
+  char32_t out32[4] = {0};
+  simdutf_result r32 =
+      simdutf_convert_utf8_to_utf32_with_errors(invalid, 1, out32);
+  ASSERT_EQUAL(r32.error, SIMDUTF_ERROR_HEADER_BITS);
+  ASSERT_EQUAL(r32.count, size_t(0));
+}
+
+TEST(invalid_utf16_conversion_result_c) {
+  const char16_t invalid[] = {u'A', char16_t(0xD800), u'B'};
+  char out[16] = {0};
+  simdutf_result r =
+      simdutf_convert_utf16_to_utf8_with_errors(invalid, 3, out);
+  ASSERT_EQUAL(r.error, SIMDUTF_ERROR_SURROGATE);
+  ASSERT_EQUAL(r.count, size_t(1));
+}
+
+TEST(invalid_utf32_conversion_result_c) {
+  const char32_t invalid[] = {U'A', char32_t(0x110000), U'B'};
+  char out[16] = {0};
+  simdutf_result r =
+      simdutf_convert_utf32_to_utf8_with_errors(invalid, 3, out);
+  ASSERT_EQUAL(r.error, SIMDUTF_ERROR_TOO_LARGE);
+  ASSERT_EQUAL(r.count, size_t(1));
+}
+
 TEST(base64_utf16_c) {
   const char16_t *b64_u16 = u"aGVsbG8="; // "hello" in base64, as UTF-16
   char binout[16] = {0};
