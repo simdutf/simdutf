@@ -203,8 +203,7 @@ TEST(invalid_utf8_conversion_results_c) {
 TEST(invalid_utf16_conversion_result_c) {
   const char16_t invalid[] = {u'A', char16_t(0xD800), u'B'};
   char out[16] = {0};
-  simdutf_result r =
-      simdutf_convert_utf16_to_utf8_with_errors(invalid, 3, out);
+  simdutf_result r = simdutf_convert_utf16_to_utf8_with_errors(invalid, 3, out);
   ASSERT_EQUAL(r.error, SIMDUTF_ERROR_SURROGATE);
   ASSERT_EQUAL(r.count, size_t(1));
 }
@@ -212,8 +211,7 @@ TEST(invalid_utf16_conversion_result_c) {
 TEST(invalid_utf32_conversion_result_c) {
   const char32_t invalid[] = {U'A', char32_t(0x110000), U'B'};
   char out[16] = {0};
-  simdutf_result r =
-      simdutf_convert_utf32_to_utf8_with_errors(invalid, 3, out);
+  simdutf_result r = simdutf_convert_utf32_to_utf8_with_errors(invalid, 3, out);
   ASSERT_EQUAL(r.error, SIMDUTF_ERROR_TOO_LARGE);
   ASSERT_EQUAL(r.count, size_t(1));
 }

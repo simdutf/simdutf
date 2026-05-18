@@ -142,12 +142,10 @@ TEST(pure_ascii_le) {
 }
 
 TEST(valid_utf16be_roundtrip) {
-  std::vector<char16_t> input = {to_utf16be(u'H'), to_utf16be(u'e'),
-                                 to_utf16be(u'l'), to_utf16be(u'l'),
-                                 to_utf16be(u'o'), to_utf16be(u' '),
-                                 to_utf16be(u'\u00e9'),
-                                 to_utf16be(u'\u4e16'),
-                                 to_utf16be(u'\u754c')};
+  std::vector<char16_t> input = {
+      to_utf16be(u'H'),      to_utf16be(u'e'),      to_utf16be(u'l'),
+      to_utf16be(u'l'),      to_utf16be(u'o'),      to_utf16be(u' '),
+      to_utf16be(u'\u00e9'), to_utf16be(u'\u4e16'), to_utf16be(u'\u754c')};
   size_t expected_len =
       simdutf::utf8_length_from_utf16be(input.data(), input.size());
   std::vector<char> expected(expected_len);
@@ -188,8 +186,7 @@ TEST(unpaired_high_surrogate_be) {
 }
 
 TEST(unpaired_low_surrogate_be) {
-  std::vector<char16_t> input = {to_utf16be(u'B'),
-                                 to_utf16be(char16_t(0xDC00)),
+  std::vector<char16_t> input = {to_utf16be(u'B'), to_utf16be(char16_t(0xDC00)),
                                  to_utf16be(u'C')};
   std::vector<char> output(16);
   size_t written = implementation.convert_utf16be_to_utf8_with_replacement(
@@ -212,12 +209,15 @@ TEST(reversed_surrogate_pair_be) {
 }
 
 TEST(length_consistency_be) {
-  std::vector<char16_t> input = {
-      to_utf16be(u'A'),                 to_utf16be(char16_t(0xD83D)),
-      to_utf16be(char16_t(0xDE00)),     to_utf16be(char16_t(0xD800)),
-      to_utf16be(u'B'),                 to_utf16be(char16_t(0xDC00)),
-      to_utf16be(char16_t(0xDC00)),     to_utf16be(char16_t(0xD800)),
-      to_utf16be(u'\u4e16')};
+  std::vector<char16_t> input = {to_utf16be(u'A'),
+                                 to_utf16be(char16_t(0xD83D)),
+                                 to_utf16be(char16_t(0xDE00)),
+                                 to_utf16be(char16_t(0xD800)),
+                                 to_utf16be(u'B'),
+                                 to_utf16be(char16_t(0xDC00)),
+                                 to_utf16be(char16_t(0xDC00)),
+                                 to_utf16be(char16_t(0xD800)),
+                                 to_utf16be(u'\u4e16')};
 
   simdutf::result len_result =
       simdutf::utf8_length_from_utf16be_with_replacement(input.data(),
@@ -231,11 +231,14 @@ TEST(length_consistency_be) {
 }
 
 TEST(matches_well_formed_approach_be) {
-  std::vector<char16_t> input = {
-      to_utf16be(u'A'),                 to_utf16be(char16_t(0xD800)),
-      to_utf16be(u'B'),                 to_utf16be(char16_t(0xDC00)),
-      to_utf16be(char16_t(0xDC00)),     to_utf16be(char16_t(0xD800)),
-      to_utf16be(char16_t(0xD83D)),     to_utf16be(char16_t(0xDE00))};
+  std::vector<char16_t> input = {to_utf16be(u'A'),
+                                 to_utf16be(char16_t(0xD800)),
+                                 to_utf16be(u'B'),
+                                 to_utf16be(char16_t(0xDC00)),
+                                 to_utf16be(char16_t(0xDC00)),
+                                 to_utf16be(char16_t(0xD800)),
+                                 to_utf16be(char16_t(0xD83D)),
+                                 to_utf16be(char16_t(0xDE00))};
 
   std::vector<char16_t> well_formed(input.size());
   simdutf::to_well_formed_utf16be(input.data(), input.size(),
@@ -256,11 +259,13 @@ TEST(matches_well_formed_approach_be) {
 }
 
 TEST(output_is_valid_utf8_be) {
-  std::vector<char16_t> input = {
-      to_utf16be(u'A'),                 to_utf16be(char16_t(0xD83D)),
-      to_utf16be(char16_t(0xDE00)),     to_utf16be(char16_t(0xD800)),
-      to_utf16be(u'B'),                 to_utf16be(char16_t(0xDC00)),
-      to_utf16be(u'\u4e16')};
+  std::vector<char16_t> input = {to_utf16be(u'A'),
+                                 to_utf16be(char16_t(0xD83D)),
+                                 to_utf16be(char16_t(0xDE00)),
+                                 to_utf16be(char16_t(0xD800)),
+                                 to_utf16be(u'B'),
+                                 to_utf16be(char16_t(0xDC00)),
+                                 to_utf16be(u'\u4e16')};
 
   std::vector<char> output(input.size() * 3 + 4);
   size_t written = implementation.convert_utf16be_to_utf8_with_replacement(
