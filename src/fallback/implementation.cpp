@@ -506,12 +506,6 @@ implementation::convert_utf16be_to_utf8_with_replacement(
       input, length, utf8_buffer);
 }
 
-simdutf_warn_unused full_result
-implementation::validate_utf8_for_utf16_transcoding(const char *buf,
-                                                    size_t len) const noexcept {
-  // TODO: implement
-}
-
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
