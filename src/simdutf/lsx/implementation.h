@@ -266,6 +266,8 @@ public:
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
   simdutf_warn_unused size_t utf8_length_from_latin1(
       const char *input, size_t length) const noexcept override;
+  simdutf_warn_unused utf8_result validate_utf8_with_counts(
+      const char *buf, size_t len) const noexcept override;
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 #if SIMDUTF_FEATURE_BASE64
   simdutf_warn_unused result base64_to_binary(
