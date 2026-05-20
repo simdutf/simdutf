@@ -248,6 +248,120 @@ inline simdutf_warn_unused result rewind_and_validate_with_errors(
   return res;
 }
 
+// credit: based on code from Google Fuchsia (Apache Licensed)
+// TODO: upon finalizing, figure out constexpr23 stuff?
+// TODO: also only-ascii optimization?
+template <class BytePtr>
+simdutf_constexpr23 simdutf_warn_unused utf8_result
+validate_utf8_with_counts(BytePtr data, size_t len) noexcept {
+  static_assert(
+      std::is_same<typename std::decay<decltype(*data)>::type, uint8_t>::value,
+      "dereferencing the data pointer must result in a uint8_t");
+  uint64_t pos = 0;
+  uint32_t code_point = 0;
+  uint64_t continuations = 0;
+  uint64_t four_byte = 0;
+  while (pos < len) {
+    uint64_t next_pos;
+    unsigned char byte = data[pos];
+
+    while (byte < 0b10000000) {
+      if (++pos == len) {
+        return utf8_result(error_code::SUCCESS, pos, continuations, four_byte);
+      }
+      byte = data[pos];
+    }
+
+    if ((byte & 0b11100000) == 0b11000000) {
+      next_pos = pos + 2;
+      if (next_pos > len) {
+        return utf8_result(error_code::TOO_SHORT, pos, continuations,
+                           four_byte);
+      }
+      if ((data[pos + 1] & 0b11000000) != 0b10000000) {
+        return utf8_result(error_code::TOO_SHORT, pos, continuations,
+                           four_byte);
+      }
+      // range check
+      code_point = (byte & 0b00011111) << 6 | (data[pos + 1] & 0b00111111);
+      if (code_point < 0x80) {
+        return utf8_result(error_code::OVERLONG, pos, continuations, four_byte);
+      }
+      continuations += 1;
+    } else if ((byte & 0b11110000) == 0b11100000) {
+      next_pos = pos + 3;
+      if (next_pos > len) {
+        return utf8_result(error_code::TOO_SHORT, pos, continuations,
+                           four_byte);
+      }
+      if ((data[pos + 1] & 0b11000000) != 0b10000000) {
+        return utf8_result(error_code::TOO_SHORT, pos, continuations,
+                           four_byte);
+      }
+      if ((data[pos + 2] & 0b11000000) != 0b10000000) {
+        return utf8_result(error_code::TOO_SHORT, pos, continuations,
+                           four_byte);
+      }
+      // range check
+      code_point = (byte & 0b00001111) << 12 |
+                   (data[pos + 1] & 0b00111111) << 6 |
+                   (data[pos + 2] & 0b00111111);
+      if (code_point < 0x800) {
+        return utf8_result(error_code::OVERLONG, pos, continuations, four_byte);
+      } else if (0xd7ff < code_point && code_point < 0xe000) {
+        return utf8_result(error_code::SURROGATE, pos, continuations,
+                           four_byte);
+      }
+      continuations += 2;
+    } else if ((byte & 0b11111000) == 0b11110000) { // 0b11110000
+      next_pos = pos + 4;
+      if (next_pos > len) {
+        return utf8_result(error_code::TOO_SHORT, pos, continuations,
+                           four_byte);
+      }
+      if ((data[pos + 1] & 0b11000000) != 0b10000000) {
+        return utf8_result(error_code::TOO_SHORT, pos, continuations,
+                           four_byte);
+      }
+      if ((data[pos + 2] & 0b11000000) != 0b10000000) {
+        return utf8_result(error_code::TOO_SHORT, pos, continuations,
+                           four_byte);
+      }
+      if ((data[pos + 3] & 0b11000000) != 0b10000000) {
+        return utf8_result(error_code::TOO_SHORT, pos, continuations,
+                           four_byte);
+      }
+      // range check
+      code_point =
+          (byte & 0b00000111) << 18 | (data[pos + 1] & 0b00111111) << 12 |
+          (data[pos + 2] & 0b00111111) << 6 | (data[pos + 3] & 0b00111111);
+      if (code_point <= 0xffff) {
+        return utf8_result(error_code::OVERLONG, pos, continuations, four_byte);
+      } else if (0x10ffff < code_point) {
+        return utf8_result(error_code::TOO_LARGE, pos, continuations,
+                           four_byte);
+      }
+      continuations += 3;
+      four_byte += 1;
+    } else {
+      // Continuation byte or invalid header byte
+      if ((byte & 0b11000000) == 0b10000000) {
+        return utf8_result(error_code::TOO_LONG, pos, continuations, four_byte);
+      } else {
+        return utf8_result(error_code::HEADER_BITS, pos, continuations,
+                           four_byte);
+      }
+    }
+    pos = next_pos;
+  }
+  return utf8_result(error_code::SUCCESS, pos, continuations, four_byte);
+}
+
+simdutf_really_inline simdutf_warn_unused utf8_result
+validate_utf8_with_counts(const char *buf, size_t len) noexcept {
+  return validate_utf8_with_counts(reinterpret_cast<const uint8_t *>(buf), len);
+}
+
 template <typename InputPtr>
 #if SIMDUTF_CPLUSPLUS20
   requires simdutf::detail::indexes_into_byte_like<InputPtr>
