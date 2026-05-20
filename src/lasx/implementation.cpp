@@ -1335,7 +1335,7 @@ implementation::convert_utf16be_to_utf8_with_replacement(
 simdutf_warn_unused full_result
 implementation::validate_utf8_for_utf16_transcoding(const char *buf,
                                                     size_t len) const noexcept {
-  return scalar::utf8_to_utf16::validate_utf8_for_utf16_transcoding(buf, len);
+  // TODO: implement
 }
 
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
