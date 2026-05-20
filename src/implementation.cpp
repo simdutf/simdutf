@@ -307,6 +307,11 @@ public:
   validate_utf8(const char *buf, size_t len) const noexcept final override {
     return set_best()->validate_utf8(buf, len);
   }
+  simdutf_warn_unused utf8_result validate_utf8_with_counts(
+      const char *buf, size_t len) const noexcept final override {
+    return set_best()->validate_utf8_with_counts(buf, len);
+  }
+
 #endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF8
@@ -993,6 +998,11 @@ public:
     // provide the fallback, it implies that the programmer would need a
     // fallback for our fallback.
   }
+  simdutf_warn_unused utf8_result validate_utf8_with_counts(
+      const char *, size_t) const noexcept final override {
+    return utf8_result(error_code::OTHER, 0, 0, 0); // Not supported
+  }
+
 #endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF8
@@ -2656,6 +2666,11 @@ const implementation *builtin_implementation() {
 simdutf_warn_unused size_t trim_partial_utf8(const char *input, size_t length) {
   return scalar::utf8::trim_partial_utf8(input, length);
 }
+simdutf_warn_unused utf8_result validate_utf8_with_counts(const char *buf,
+                                                          size_t len) noexcept {
+  return get_default_implementation()->validate_utf8_with_counts(buf, len);
+}
+
 #endif // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF16
