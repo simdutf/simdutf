@@ -502,11 +502,6 @@ public:
                                                                 utf8_buffer);
   }
 
-  simdutf_warn_unused full_result validate_utf8_for_utf16_transcoding(
-      const char *buf, size_t len) const noexcept final override {
-    return set_best()->validate_utf8_for_utf16_transcoding(buf, len);
-  }
-
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
@@ -1166,11 +1161,6 @@ public:
   simdutf_warn_unused size_t convert_utf16be_to_utf8_with_replacement(
       const char16_t *, size_t, char *) const noexcept final override {
     return 0; // Not supported
-  }
-
-  simdutf_warn_unused full_result validate_utf8_for_utf16_transcoding(
-      const char *, size_t) const noexcept final override {
-    return full_result(error_code::OTHER, 0, 0); // Not supported
   }
 
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
@@ -2435,12 +2425,6 @@ simdutf_warn_unused size_t convert_utf16be_to_utf8_with_replacement(
     const char16_t *input, size_t length, char *utf8_buffer) noexcept {
   return get_default_implementation()->convert_utf16be_to_utf8_with_replacement(
       input, length, utf8_buffer);
-}
-
-simdutf_warn_unused full_result
-validate_utf8_for_utf16_transcoding(const char *buf, size_t len) noexcept {
-  return get_default_implementation()->validate_utf8_for_utf16_transcoding(buf,
-                                                                           len);
 }
 
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
