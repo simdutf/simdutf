@@ -19,13 +19,14 @@ static void test_corrupt(T &implementation, uint32_t seed,
       UTF8[corrupt] = uint8_t(gen());
       simdutf::result res_ref = implementation.validate_utf8_with_errors(
           (const char *)UTF8.data(), UTF8.size());
-      size_t utf16_length = implementation.utf16_length_from_utf8(
+      size_t expected_utf16_length = implementation.utf16_length_from_utf8(
           (const char *)UTF8.data(), res_ref.count);
-      simdutf::full_result res =
-          implementation.validate_utf8_for_utf16_transcoding(
-              (const char *)UTF8.data(), UTF8.size());
+      simdutf::utf8_result res = implementation.validate_utf8_with_counts(
+          (const char *)UTF8.data(), UTF8.size());
+      size_t utf16_length =
+          res.input_count - res.continuation_count + res.four_byte_count;
       ASSERT_EQUAL(res.input_count, res_ref.count);
-      ASSERT_EQUAL(res.output_count, utf16_length);
+      ASSERT_EQUAL(utf16_length, expected_utf16_length);
       ASSERT_EQUAL(res.error, res_ref.error);
       UTF8[corrupt] = restore;
     }
@@ -71,13 +72,14 @@ TEST(brute_force) {
       UTF8[rand() % UTF8.size()] = uint8_t(bitflip); // we flip exactly one bit
       simdutf::result res_ref = implementation.validate_utf8_with_errors(
           (const char *)UTF8.data(), UTF8.size());
-      size_t utf16_length = implementation.utf16_length_from_utf8(
+      size_t expected_utf16_length = implementation.utf16_length_from_utf8(
           (const char *)UTF8.data(), res_ref.count);
-      simdutf::full_result res =
-          implementation.validate_utf8_for_utf16_transcoding(
-              (const char *)UTF8.data(), UTF8.size());
+      simdutf::utf8_result res = implementation.validate_utf8_with_counts(
+          (const char *)UTF8.data(), UTF8.size());
+      size_t utf16_length =
+          res.input_count - res.continuation_count + res.four_byte_count;
       ASSERT_EQUAL(res.input_count, res_ref.count);
-      ASSERT_EQUAL(res.output_count, utf16_length);
+      ASSERT_EQUAL(utf16_length, expected_utf16_length);
       ASSERT_EQUAL(res.error, res_ref.error);
     }
   }
