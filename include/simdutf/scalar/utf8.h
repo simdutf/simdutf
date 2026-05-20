@@ -362,6 +362,43 @@ validate_utf8_with_counts(const char *buf, size_t len) noexcept {
   return validate_utf8_with_counts(reinterpret_cast<const uint8_t *>(buf), len);
 }
 
+// Finds the previous leading byte starting backward from buf and validates from
+// there on out while counting continuation bytes and 4-byte leads. Used to
+// pinpoint the location of an error when an invalid chunk is detected. We check
+// that the stream starts with a leading byte with the passed pointer to the
+// start of the stream (start).
+inline simdutf_warn_unused utf8_result rewind_and_validate_with_counts(
+    const char *start, const char *buf, size_t len) noexcept {
+  // First check that we start with a leading byte
+  if ((*start & 0b11000000) == 0b10000000) {
+    return utf8_result(error_code::TOO_LONG, 0, 0, 0);
+  }
+  size_t extra_len{0};
+  size_t extra_continuations{0};
+  size_t extra_four_bytes{0};
+  // A leading byte cannot be further than 4 bytes away
+  for (int i = 0; i < 5; i++) {
+    unsigned char byte = *buf;
+    if ((byte & 0b11000000) != 0b10000000) {
+      break;
+    } else {
+      buf--;
+      extra_len++;
+      if (byte >= 0b11110000) {
+        extra_four_bytes += 1;
+      } else if ((char)byte < -65 + 1) {
+        extra_continuations += 1;
+      }
+    }
+  }
+
+  utf8_result res = validate_utf8_with_counts(buf, len + extra_len);
+  res.input_count -= extra_len;
+  res.continuation_count -= extra_continuations;
+  res.four_byte_count -= extra_four_bytes;
+  return res;
+}
+
 template <typename InputPtr>
 #if SIMDUTF_CPLUSPLUS20
   requires simdutf::detail::indexes_into_byte_like<InputPtr>
