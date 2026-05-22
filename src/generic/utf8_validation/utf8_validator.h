@@ -83,7 +83,7 @@ result generic_validate_utf8_with_errors(const char *input, size_t length) {
  * Tracks the amount of continuation and 4-byte leads.
  */
 template <class checker>
-utf8_result generic_validate_utf8_with_errors(const uint8_t *input,
+utf8_result generic_validate_utf8_with_counts(const uint8_t *input,
                                               size_t length) {
   checker c{};
   buf_block_reader<64> reader(input, length);
@@ -98,12 +98,12 @@ utf8_result generic_validate_utf8_with_errors(const uint8_t *input,
         count--;
       } // Sometimes the error is only detected in the next chunk
       */
-      result res = scalar::utf8::rewind_and_validate_with_counts(
+      utf8_result res = scalar::utf8::rewind_and_validate_with_counts(
           reinterpret_cast<const char *>(input),
           reinterpret_cast<const char *>(input + count), length - count);
       res.input_count += count;
-      res.continuations += c.continuation_count();
-      res.four_byte += c.four_byte_count();
+      res.continuation_count += c.continuation_count();
+      res.four_byte_count += c.four_byte_count();
       return res;
     }
     reader.advance();
@@ -122,21 +122,22 @@ utf8_result generic_validate_utf8_with_errors(const uint8_t *input,
     count--;
   } // Sometimes the error is only detected in the next chunk
   */
-    result res = scalar::utf8::rewind_and_validate_with_counts(
+    utf8_result res = scalar::utf8::rewind_and_validate_with_counts(
         reinterpret_cast<const char *>(input),
         reinterpret_cast<const char *>(input) + count, length - count);
-    res.count += count;
-    res.continuations += c.continuation_count();
-    res.four_byte += c.continuation_count();
+    res.input_count += count;
+    res.continuation_count += c.continuation_count();
+    res.four_byte_count += c.four_byte_count();
     return res;
   } else {
-    return result(error_code::SUCCESS, length, c.continuation_count(),
-                  c.four_byte_count());
+    return utf8_result(error_code::SUCCESS, length, c.continuation_count(),
+                       c.four_byte_count());
   }
 }
 
-result generic_validate_utf8_with_errors(const char *input, size_t length) {
-  return generic_validate_utf8_with_errors<utf8_checker>(
+utf8_result generic_validate_utf8_with_counts(const char *input,
+                                              size_t length) {
+  return generic_validate_utf8_with_counts<utf8_segmenter>(
       reinterpret_cast<const uint8_t *>(input), length);
 
 } // namespace utf8_validation

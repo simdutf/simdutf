@@ -71,8 +71,8 @@ target_link_libraries(validate_utf8_brute_force_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
 
-add_cpp_test(validate_utf8_for_utf16_transcoding_brute_force_tests)
-target_link_libraries(validate_utf8_for_utf16_transcoding_brute_force_tests
+add_cpp_test(validate_utf8_with_counts_brute_force_tests)
+target_link_libraries(validate_utf8_with_counts_brute_force_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
 
