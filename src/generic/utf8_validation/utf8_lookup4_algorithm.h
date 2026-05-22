@@ -158,10 +158,13 @@ count_cont_4byte(const simd8<uint8_t> input) {
   // The SimdUnicode implementation uses a SIMD function to extract the most
   // significant bits. In the generic code we don't have that functionality, so
   // we make due with more comparison.
-  uint64_t utf8_continuation_mask = input.lt(-65 + 1);
-  size_t continuations = count_ones(utf8_continuation_mask);
-  int64_t utf8_4byte = input.gteq_unsigned(0b11110000);
-  size_t four_byte = count_ones(utf8_4byte);
+  simd8<int8_t> mask_lt = simd8<int8_t>::splat(-65 + 1);
+  uint64_t continuation_mask = ((simd8<int8_t>)input < mask_lt).to_bitmask();
+
+  size_t continuations = count_ones(continuation_mask);
+  simd8<uint8_t> mask_gte = simd8<uint8_t>::splat(0b11110000);
+  int64_t four_byte_mask = (input >= mask_gte).to_bitmask();
+  size_t four_byte = count_ones(four_byte_mask);
   return std::make_pair(continuations, four_byte);
 }
 
@@ -238,13 +241,12 @@ struct utf8_segmenter {
   // Check whether the current bytes are valid UTF-8 and update continuation and
   // 4-byte lead counts.
   //
-  simdutf_really_inline void
-  check_utf8_bytes_with_counts(const simd8<uint8_t> input,
-                               const simd8<uint8_t> prev_input) {
+  simdutf_really_inline void check_utf8_bytes(const simd8<uint8_t> input,
+                                              const simd8<uint8_t> prev_input) {
     std::pair<size_t, size_t> cont_4byte = count_cont_4byte(input);
     this->continuations += cont_4byte.first;
     this->four_byte += cont_4byte.second;
-    this->checker.check_utf8_bytes(input, prev_input)
+    this->checker.check_utf8_bytes(input, prev_input);
   }
 
   simdutf_really_inline void check_eof() { this->checker.check_eof(); }
@@ -252,7 +254,7 @@ struct utf8_segmenter {
   simdutf_really_inline std::pair<size_t, size_t>
   check_next_input_with_counts(const simd8x64<uint8_t> &input) {
     if (simdutf_likely(is_ascii(input))) {
-      this->error |= this->prev_incomplete;
+      this->checker.error |= this->checker.prev_incomplete;
       return std::make_pair(0, 0);
     } else {
       size_t prev_continuations = this->continuations;
@@ -263,19 +265,20 @@ struct utf8_segmenter {
                         (simd8x64<uint8_t>::NUM_CHUNKS == 4),
                     "We support either two or four chunks per 64-byte block.");
       if (simd8x64<uint8_t>::NUM_CHUNKS == 2) {
-        this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
+        this->check_utf8_bytes(input.chunks[0], this->checker.prev_input_block);
         this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
       } else if (simd8x64<uint8_t>::NUM_CHUNKS == 4) {
-        this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
+        this->check_utf8_bytes(input.chunks[0], this->checker.prev_input_block);
         this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
         this->check_utf8_bytes(input.chunks[2], input.chunks[1]);
         this->check_utf8_bytes(input.chunks[3], input.chunks[2]);
       }
-      this->prev_incomplete =
+      this->checker.prev_incomplete =
           is_incomplete(input.chunks[simd8x64<uint8_t>::NUM_CHUNKS - 1]);
-      this->prev_input_block = input.chunks[simd8x64<uint8_t>::NUM_CHUNKS - 1];
+      this->checker.prev_input_block =
+          input.chunks[simd8x64<uint8_t>::NUM_CHUNKS - 1];
       return std::make_pair(this->continuations - prev_continuations,
-                            this->four_byte - prev_4_byte)
+                            this->four_byte - prev_four_byte);
     }
   }
 
