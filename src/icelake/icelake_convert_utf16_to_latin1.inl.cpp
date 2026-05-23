@@ -27,7 +27,7 @@ size_t icelake_convert_utf16_to_latin1(const char16_t *buf, size_t len,
     buf += 32;
   }
   if (buf < end) {
-    uint32_t mask(uint32_t(1 << (end - buf)) - 1);
+    uint32_t mask((1U << (end - buf)) - 1);
     __m512i in = _mm512_maskz_loadu_epi16(mask, buf);
     if (big_endian) {
       in = _mm512_shuffle_epi8(in, byteflip);
@@ -79,7 +79,7 @@ icelake_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
     buf += 32;
   }
   if (buf < end) {
-    uint32_t mask(uint32_t(1 << (end - buf)) - 1);
+    uint32_t mask((1U << (end - buf)) - 1);
     __m512i in = _mm512_maskz_loadu_epi16(mask, buf);
     if (big_endian) {
       in = _mm512_shuffle_epi8(in, byteflip);
