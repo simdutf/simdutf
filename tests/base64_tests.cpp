@@ -3569,6 +3569,15 @@ TEST(binary_length_from_base64_char16) {
   ASSERT_EQUAL(simdutf::binary_length_from_base64(input16_spaces.data(),
                                                   input16_spaces.size()),
                1);
+
+  // Long input that exercises the vectorized path; "YWJj" decodes to "abc".
+  std::u16string input16_long;
+  for (int i = 0; i < 16; i++) {
+    input16_long += u"YWJj";
+  }
+  ASSERT_EQUAL(implementation.binary_length_from_base64(input16_long.data(),
+                                                        input16_long.size()),
+               48);
 }
 
 TEST(binary_length_from_base64_url_variant) {

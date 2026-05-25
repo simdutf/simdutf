@@ -39,6 +39,9 @@ simdutf_warn_unused size_t binary_length_from_base64(const char16_t *input,
     uint64_t maybe_base64 = block.gteq(33); // >= 33 which is '!' in ASCII
     count += count_ones(maybe_base64);
   }
+  // simd16x32::to_bitmask sets two bits per matching 16-bit lane, so the
+  // vectorized loop counted each unit twice.
+  count /= 2;
   while (pos < length) {
     count += (input[pos] > 0x20) ? 1 : 0;
     pos++;
