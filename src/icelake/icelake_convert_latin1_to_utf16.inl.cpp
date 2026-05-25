@@ -20,7 +20,7 @@ size_t icelake_convert_latin1_to_utf16(const char *latin1_input, size_t len,
     _mm512_storeu_si512((__m512i *)&utf16_output[i], out);
   }
   if (rounded_len != len) {
-    uint32_t mask = uint32_t(1 << (len - rounded_len)) - 1;
+    uint32_t mask = (1U << (len - rounded_len)) - 1;
     __m256i in = _mm256_maskz_loadu_epi8(mask, latin1_input + rounded_len);
 
     // Zero extend each set of 8 Latin1 characters to 32 16-bit integers
