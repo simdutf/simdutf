@@ -3745,33 +3745,38 @@ $(document).ready(function(){initNavTree('implementation_8h_source.html',''); in
 <div class="line"><a id="l07268" name="l07268"></a><span class="lineno"> 7268</span>  <span class="keyword">auto</span> r = scalar::base64::base64_to_binary_details_impl(</div>
 <div class="line"><a id="l07269" name="l07269"></a><span class="lineno"> 7269</span>      str, InputLen, result.buffer.data(), base64_default, loose);</div>
 <div class="line"><a id="l07270" name="l07270"></a><span class="lineno"> 7270</span>  <span class="keywordflow">if</span> (r.error != error_code::SUCCESS) {</div>
-<div class="line"><a id="l07271" name="l07271"></a><span class="lineno"> 7271</span>    std::unreachable(); <span class="comment">// invalid base64 input in _base64 literal</span></div>
-<div class="line"><a id="l07272" name="l07272"></a><span class="lineno"> 7272</span>  }</div>
-<div class="line"><a id="l07273" name="l07273"></a><span class="lineno"> 7273</span>  result.output_count = r.output_count;</div>
-<div class="line"><a id="l07274" name="l07274"></a><span class="lineno"> 7274</span>  <span class="keywordflow">return</span> result;</div>
-<div class="line"><a id="l07275" name="l07275"></a><span class="lineno"> 7275</span>}</div>
-<div class="line"><a id="l07276" name="l07276"></a><span class="lineno"> 7276</span> </div>
-<div class="line"><a id="l07277" name="l07277"></a><span class="lineno"> 7277</span><span class="keyword">template</span> &lt;base64_literal_helper a&gt; <span class="keyword">consteval</span> <span class="keyword">auto</span> base64_make_array() {</div>
-<div class="line"><a id="l07278" name="l07278"></a><span class="lineno"> 7278</span>  <span class="keyword">constexpr</span> <span class="keyword">auto</span> decoded = base64_decode_literal&lt;a.size()&gt;(a.storage.data());</div>
-<div class="line"><a id="l07279" name="l07279"></a><span class="lineno"> 7279</span>  std::array&lt;char, decoded.output_count&gt; ret{};</div>
-<div class="line"><a id="l07280" name="l07280"></a><span class="lineno"> 7280</span>  <span class="keywordflow">for</span> (std::size_t i = 0; i &lt; decoded.output_count; i++) {</div>
-<div class="line"><a id="l07281" name="l07281"></a><span class="lineno"> 7281</span>    ret[i] = decoded.buffer[i];</div>
-<div class="line"><a id="l07282" name="l07282"></a><span class="lineno"> 7282</span>  }</div>
-<div class="line"><a id="l07283" name="l07283"></a><span class="lineno"> 7283</span>  <span class="keywordflow">return</span> ret;</div>
-<div class="line"><a id="l07284" name="l07284"></a><span class="lineno"> 7284</span>}</div>
-<div class="line"><a id="l07285" name="l07285"></a><span class="lineno"> 7285</span> </div>
-<div class="line"><a id="l07286" name="l07286"></a><span class="lineno"> 7286</span>} <span class="comment">// namespace detail</span></div>
-<div class="line"><a id="l07287" name="l07287"></a><span class="lineno"> 7287</span> </div>
-<div class="line"><a id="l07299" name="l07299"></a><span class="lineno"> 7299</span><span class="keyword">template</span> &lt;detail::base64_literal_helper a&gt; <span class="keyword">consteval</span> <span class="keyword">auto</span> <span class="keyword">operator</span><span class="stringliteral">&quot;&quot;</span>_base64() {</div>
-<div class="line"><a id="l07300" name="l07300"></a><span class="lineno"> 7300</span>  <span class="keywordflow">return</span> detail::base64_make_array&lt;a&gt;();</div>
-<div class="line"><a id="l07301" name="l07301"></a><span class="lineno"> 7301</span>}</div>
-<div class="line"><a id="l07302" name="l07302"></a><span class="lineno"> 7302</span> </div>
-<div class="line"><a id="l07303" name="l07303"></a><span class="lineno"> 7303</span>} <span class="comment">// namespace literals</span></div>
-<div class="line"><a id="l07304" name="l07304"></a><span class="lineno"> 7304</span>} <span class="comment">// namespace simdutf</span></div>
-<div class="line"><a id="l07305" name="l07305"></a><span class="lineno"> 7305</span> </div>
-<div class="line"><a id="l07306" name="l07306"></a><span class="lineno"> 7306</span><span class="preprocessor">#endif </span><span class="comment">// SIMDUTF_CPLUSPLUS23 &amp;&amp; SIMDUTF_FEATURE_BASE64</span></div>
+<div class="line"><a id="l07271" name="l07271"></a><span class="lineno"> 7271</span><span class="preprocessor">  #if __cpp_lib_unreachable &gt;= 202202L</span></div>
+<div class="line"><a id="l07272" name="l07272"></a><span class="lineno"> 7272</span>    std::unreachable(); <span class="comment">// invalid base64 input in _base64 literal</span></div>
+<div class="line"><a id="l07273" name="l07273"></a><span class="lineno"> 7273</span><span class="preprocessor">  #else</span></div>
+<div class="line"><a id="l07274" name="l07274"></a><span class="lineno"> 7274</span>    <span class="comment">// workaround for older stdlib</span></div>
+<div class="line"><a id="l07275" name="l07275"></a><span class="lineno"> 7275</span>    <span class="keywordflow">throw</span> <span class="stringliteral">&quot;invalid base64 input in _base64 literal&quot;</span>;</div>
+<div class="line"><a id="l07276" name="l07276"></a><span class="lineno"> 7276</span><span class="preprocessor">  #endif</span></div>
+<div class="line"><a id="l07277" name="l07277"></a><span class="lineno"> 7277</span>  }</div>
+<div class="line"><a id="l07278" name="l07278"></a><span class="lineno"> 7278</span>  result.output_count = r.output_count;</div>
+<div class="line"><a id="l07279" name="l07279"></a><span class="lineno"> 7279</span>  <span class="keywordflow">return</span> result;</div>
+<div class="line"><a id="l07280" name="l07280"></a><span class="lineno"> 7280</span>}</div>
+<div class="line"><a id="l07281" name="l07281"></a><span class="lineno"> 7281</span> </div>
+<div class="line"><a id="l07282" name="l07282"></a><span class="lineno"> 7282</span><span class="keyword">template</span> &lt;base64_literal_helper a&gt; <span class="keyword">consteval</span> <span class="keyword">auto</span> base64_make_array() {</div>
+<div class="line"><a id="l07283" name="l07283"></a><span class="lineno"> 7283</span>  <span class="keyword">constexpr</span> <span class="keyword">auto</span> decoded = base64_decode_literal&lt;a.size()&gt;(a.storage.data());</div>
+<div class="line"><a id="l07284" name="l07284"></a><span class="lineno"> 7284</span>  std::array&lt;char, decoded.output_count&gt; ret{};</div>
+<div class="line"><a id="l07285" name="l07285"></a><span class="lineno"> 7285</span>  <span class="keywordflow">for</span> (std::size_t i = 0; i &lt; decoded.output_count; i++) {</div>
+<div class="line"><a id="l07286" name="l07286"></a><span class="lineno"> 7286</span>    ret[i] = decoded.buffer[i];</div>
+<div class="line"><a id="l07287" name="l07287"></a><span class="lineno"> 7287</span>  }</div>
+<div class="line"><a id="l07288" name="l07288"></a><span class="lineno"> 7288</span>  <span class="keywordflow">return</span> ret;</div>
+<div class="line"><a id="l07289" name="l07289"></a><span class="lineno"> 7289</span>}</div>
+<div class="line"><a id="l07290" name="l07290"></a><span class="lineno"> 7290</span> </div>
+<div class="line"><a id="l07291" name="l07291"></a><span class="lineno"> 7291</span>} <span class="comment">// namespace detail</span></div>
+<div class="line"><a id="l07292" name="l07292"></a><span class="lineno"> 7292</span> </div>
+<div class="line"><a id="l07304" name="l07304"></a><span class="lineno"> 7304</span><span class="keyword">template</span> &lt;detail::base64_literal_helper a&gt; <span class="keyword">consteval</span> <span class="keyword">auto</span> <span class="keyword">operator</span><span class="stringliteral">&quot;&quot;</span>_base64() {</div>
+<div class="line"><a id="l07305" name="l07305"></a><span class="lineno"> 7305</span>  <span class="keywordflow">return</span> detail::base64_make_array&lt;a&gt;();</div>
+<div class="line"><a id="l07306" name="l07306"></a><span class="lineno"> 7306</span>}</div>
 <div class="line"><a id="l07307" name="l07307"></a><span class="lineno"> 7307</span> </div>
-<div class="line"><a id="l07308" name="l07308"></a><span class="lineno"> 7308</span><span class="preprocessor">#endif </span><span class="comment">// SIMDUTF_IMPLEMENTATION_H</span></div>
+<div class="line"><a id="l07308" name="l07308"></a><span class="lineno"> 7308</span>} <span class="comment">// namespace literals</span></div>
+<div class="line"><a id="l07309" name="l07309"></a><span class="lineno"> 7309</span>} <span class="comment">// namespace simdutf</span></div>
+<div class="line"><a id="l07310" name="l07310"></a><span class="lineno"> 7310</span> </div>
+<div class="line"><a id="l07311" name="l07311"></a><span class="lineno"> 7311</span><span class="preprocessor">#endif </span><span class="comment">// SIMDUTF_CPLUSPLUS23 &amp;&amp; SIMDUTF_FEATURE_BASE64</span></div>
+<div class="line"><a id="l07312" name="l07312"></a><span class="lineno"> 7312</span> </div>
+<div class="line"><a id="l07313" name="l07313"></a><span class="lineno"> 7313</span><span class="preprocessor">#endif </span><span class="comment">// SIMDUTF_IMPLEMENTATION_H</span></div>
 <div class="ttc" id="aclasssimdutf_1_1implementation_html"><div class="ttname"><a href="classsimdutf_1_1implementation.html">simdutf::implementation</a></div><div class="ttdoc">An implementation of simdutf for a particular CPU architecture.</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l05079">implementation.h:5079</a></div></div>
 <div class="ttc" id="aclasssimdutf_1_1implementation_html_a00b1ec570f19982c826e2b04b501a1ac"><div class="ttname"><a href="classsimdutf_1_1implementation.html#a00b1ec570f19982c826e2b04b501a1ac">simdutf::implementation::convert_valid_utf32_to_latin1</a></div><div class="ttdeci">virtual simdutf_warn_unused size_t convert_valid_utf32_to_latin1(const char32_t *input, size_t length, char *latin1_buffer) const noexcept=0</div><div class="ttdoc">Convert valid UTF-32 string into Latin1 string.</div></div>
 <div class="ttc" id="aclasssimdutf_1_1implementation_html_a01295db8b3a29527b3e9975838b66aa8"><div class="ttname"><a href="classsimdutf_1_1implementation.html#a01295db8b3a29527b3e9975838b66aa8">simdutf::implementation::binary_length_from_base64</a></div><div class="ttdeci">virtual simdutf_warn_unused size_t binary_length_from_base64(const char *input, size_t length) const noexcept</div><div class="ttdoc">Compute the binary length from a base64 input with ASCII spaces.</div></div>
