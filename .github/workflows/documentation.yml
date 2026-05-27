@@ -1,4 +1,4 @@
-name: Doxygen GitHub Pages
+name: GitHub Pages site + Doxygen API
 
 on:
   release:
@@ -9,6 +9,8 @@ on:
   push:
     tags:
       - "v*"  # common release tag pattern like v1.2.3
+    branches:
+      - master
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -29,8 +31,20 @@ jobs:
         run: sudo apt-get install doxygen graphviz python3 -y
       - name: Generate Doxygen Documentation
         run: ./doxygen.py
+      - name: Assemble Pages site
+        run: |
+          # Landing page lives at /
+          # Doxygen API reference lives at /api/
+          mkdir -p _site
+          cp -r site/. _site/
+          mkdir -p _site/api
+          cp -r doc/api/html/. _site/api/
+          # Make sure the static landing page wins at the root.
+          ls -la _site
+          ls -la _site/api | head
       - name: Deploy to GitHub Pages
+        id: deployment
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: doc/api/html
+          publish_dir: _site
