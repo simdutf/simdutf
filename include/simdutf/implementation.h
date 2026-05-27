@@ -257,22 +257,6 @@ validate_utf8(const detail::input_span_of_byte_like auto &input) noexcept {
     return scalar::utf8::validate(
         detail::constexpr_cast_ptr<uint8_t>(input.data()), input.size());
   } else
-    /**
- * Finds the pointer to the first byte of invalid utf8 while counting
- continuation bytes and four-byte sequences.
-
- * @param buf the UTF-8 string to validate.
- * @param len the length of the string in bytes.
- * @return a utf8_result struct. It contains the length of the valid utf8
- segment, the error code and the count of continuation bytes and four-byte
- sequences.
- *
- * Returns a utf8_result
- */
-
-    simdutf_warn_unused utf8_result validate_utf8_with_counts(
-        char *buf, size_t len) noexcept;
-
     #endif
   {
     return validate_utf8(reinterpret_cast<const char *>(input.data()),
@@ -5170,21 +5154,6 @@ public:
    */
   simdutf_warn_unused virtual bool validate_utf8(const char *buf,
                                                  size_t len) const noexcept = 0;
-  /**
-   * Finds the pointer to the first byte of invalid utf8 while counting
-   continuation bytes and four-byte sequences.
-
-   * @param buf the UTF-8 string to validate.
-   * @param len the length of the string in bytes.
-   * @return a utf8_result struct. It contains the length of the valid utf8
-   segment, the error code and the count of continuation bytes and four-byte
-   sequences.
-   *
-   * Returns a utf8_result
-   */
-  virtual simdutf_warn_unused utf8_result
-  validate_utf8_with_counts(const char *buf, size_t len) const noexcept = 0;
-
 #endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF8
