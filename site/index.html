@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>simdutf — Unicode at GB/s</title>
+<meta name="description" content="simdutf is a fast Unicode library. Validate and transcode UTF-8, UTF-16, UTF-32, Latin1 and base64 at billions of characters per second using SIMD instructions. Used by Node.js, Bun, WebKit, Chromium, Cloudflare workerd and more." />
+<meta name="theme-color" content="#0a0e1a" />
+
+<meta property="og:title" content="simdutf — Unicode at GB/s" />
+<meta property="og:description" content="Fast Unicode validation and transcoding using SIMD. Used by Node.js, Bun, WebKit, Chromium, Cloudflare workerd and more." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://simdutf.github.io/simdutf/" />
+
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230520ff'/%3E%3Cpath d='M14 22 L32 14 L50 22 L50 42 L32 50 L14 42 Z' fill='none' stroke='white' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M22 28 L32 24 L42 28 L42 38 L32 42 L22 38 Z' fill='white'/%3E%3C/svg%3E" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" />
+
+<style>
+:root {
+  --bg: #0a0e1a;
+  --bg-elevated: #111729;
+  --bg-card: #141b30;
+  --bg-code: #0c1224;
+  --border: #1f2942;
+  --border-strong: #2a3656;
+  --fg: #e6ecff;
+  --fg-muted: #9aa6cc;
+  --fg-dim: #6b7799;
+  --brand: #4f7cff;
+  --brand-bright: #6b91ff;
+  --brand-glow: rgba(79, 124, 255, 0.35);
+  --accent: #00d4ff;
+  --accent-2: #7c5cff;
+  --success: #3ddc97;
+  --shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.6);
+  --shadow-strong: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
+  --radius: 14px;
+  --radius-sm: 8px;
+  --gradient-hero: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(79, 124, 255, 0.18), transparent 60%),
+                   radial-gradient(ellipse 60% 50% at 100% 30%, rgba(124, 92, 255, 0.12), transparent 60%),
+                   radial-gradient(ellipse 50% 40% at 0% 40%, rgba(0, 212, 255, 0.08), transparent 60%);
+}
+
+[data-theme="light"] {
+  --bg: #f7f9ff;
+  --bg-elevated: #ffffff;
+  --bg-card: #ffffff;
+  --bg-code: #0c1224;
+  --border: #e2e8f5;
+  --border-strong: #c8d2ea;
+  --fg: #0a1024;
+  --fg-muted: #4a5478;
+  --fg-dim: #6b7799;
+  --brand: #0520ff;
+  --brand-bright: #1e3aff;
+  --brand-glow: rgba(5, 32, 255, 0.18);
+  --accent: #0099cc;
+  --accent-2: #5b3fff;
+  --success: #18a878;
+  --shadow: 0 20px 60px -20px rgba(15, 23, 50, 0.12);
+  --shadow-strong: 0 30px 80px -20px rgba(15, 23, 50, 0.18);
+  --gradient-hero: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(5, 32, 255, 0.08), transparent 60%),
+                   radial-gradient(ellipse 60% 50% at 100% 30%, rgba(91, 63, 255, 0.05), transparent 60%);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'cv11', 'ss01';
+}
+
+code, pre, .mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+a { color: var(--brand-bright); text-decoration: none; transition: color .15s; }
+a:hover { color: var(--accent); }
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ============ NAV ============ */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+nav .inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+.logo-mark {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--accent-2) 100%);
+  display: grid; place-items: center;
+  box-shadow: 0 6px 18px -4px var(--brand-glow);
+}
+.logo-mark svg { width: 18px; height: 18px; }
+.nav-links {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  align-items: center;
+}
+.nav-links a {
+  color: var(--fg-muted);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 8px;
+  transition: all .15s;
+}
+.nav-links a:hover { color: var(--fg); background: var(--bg-elevated); }
+.nav-links .gh-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--fg); background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+}
+.nav-links .gh-btn:hover { border-color: var(--brand); }
+.theme-toggle {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: grid; place-items: center;
+  color: var(--fg-muted);
+  transition: all .15s;
+}
+.theme-toggle:hover { color: var(--fg); border-color: var(--border-strong); }
+.theme-toggle .moon { display: none; }
+[data-theme="dark"] .theme-toggle .moon { display: block; }
+[data-theme="dark"] .theme-toggle .sun { display: none; }
+
+/* ============ HERO ============ */
+.hero {
+  position: relative;
+  padding: 100px 0 80px;
+  background: var(--gradient-hero);
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 0%, transparent 70%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+.hero .container { position: relative; z-index: 1; }
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--fg-muted);
+  margin-bottom: 28px;
+}
+.hero-eyebrow .pulse {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--success) 25%, transparent);
+}
+
+.hero h1 {
+  font-size: clamp(40px, 7vw, 76px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin: 0 0 24px;
+  max-width: 900px;
+}
+.hero h1 .gradient-text {
+  background: linear-gradient(135deg, var(--brand-bright) 0%, var(--accent-2) 50%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero .lede {
+  font-size: clamp(18px, 2vw, 22px);
+  color: var(--fg-muted);
+  max-width: 720px;
+  margin: 0 0 40px;
+  line-height: 1.5;
+}
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 22px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all .15s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--brand) 0%, var(--accent-2) 100%);
+  color: white;
+  box-shadow: 0 10px 30px -10px var(--brand-glow);
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 36px -8px var(--brand-glow);
+  color: white;
+}
+.btn-secondary {
+  background: var(--bg-elevated);
+  color: var(--fg);
+  border-color: var(--border-strong);
+}
+.btn-secondary:hover { border-color: var(--brand); color: var(--fg); }
+
+/* Stats strip */
+.stats {
+  margin-top: 80px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.stat {
+  background: var(--bg-elevated);
+  padding: 28px 24px;
+}
+.stat .num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--brand-bright), var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  line-height: 1;
+}
+.stat .label {
+  color: var(--fg-muted);
+  font-size: 13px;
+  margin-top: 8px;
+  letter-spacing: 0.01em;
+}
+
+/* ============ SECTIONS ============ */
+section { padding: 100px 0; }
+section.compact { padding: 60px 0; }
+
+.eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--brand-bright);
+  margin-bottom: 16px;
+}
+h2 {
+  font-size: clamp(30px, 4vw, 44px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0 0 16px;
+}
+.section-lede {
+  font-size: 18px;
+  color: var(--fg-muted);
+  max-width: 680px;
+  margin: 0 0 56px;
+}
+.section-header { max-width: 800px; }
+
+/* ============ ADOPTERS ============ */
+.adopters {
+  padding: 56px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elevated);
+}
+.adopters .label {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--fg-dim);
+  margin-bottom: 32px;
+}
+.adopters-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px 28px;
+  align-items: center;
+}
+.adopter {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--fg-muted);
+  padding: 8px 4px;
+  letter-spacing: -0.01em;
+  opacity: .8;
+  transition: all .2s;
+  text-decoration: none;
+}
+.adopter:hover { opacity: 1; color: var(--fg); }
+.adopter .v { color: var(--fg-dim); font-weight: 500; font-size: 14px; margin-left: 2px; }
+
+/* ============ FEATURES ============ */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+.feature {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  transition: all .2s;
+  position: relative;
+  overflow: hidden;
+}
+.feature:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+.feature .icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--brand) 20%, transparent), color-mix(in srgb, var(--accent-2) 20%, transparent));
+  display: grid; place-items: center;
+  margin-bottom: 18px;
+  color: var(--brand-bright);
+}
+.feature h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+}
+.feature p {
+  color: var(--fg-muted);
+  font-size: 14.5px;
+  margin: 0;
+  line-height: 1.55;
+}
+
+/* ============ CODE / EXAMPLE ============ */
+.code-section {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 48px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .code-section { grid-template-columns: 1fr; }
+}
+
+.code-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0 8px;
+  background: color-mix(in srgb, var(--bg-code) 90%, black);
+  border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
+}
+.code-tab {
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'JetBrains Mono', monospace;
+  background: transparent;
+  border: none;
+  color: var(--fg-dim);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all .15s;
+}
+.code-tab:hover { color: var(--fg-muted); }
+.code-tab.active {
+  color: var(--brand-bright);
+  border-bottom-color: var(--brand);
+}
+
+.code-block {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-bottom-left-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+}
+.code-block pre {
+  margin: 0;
+  padding: 24px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  overflow-x: auto;
+  background: transparent !important;
+}
+.code-block.no-tabs {
+  border-top: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.code-panel { display: none; }
+.code-panel.active { display: block; }
+
+.copy-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--fg-muted);
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: all .15s;
+  z-index: 2;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+.copy-btn.copied { background: var(--success); color: white; border-color: var(--success); }
+
+/* ============ PERFORMANCE ============ */
+.perf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+.perf-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.perf-card .chart-wrap {
+  background: white;
+  padding: 16px;
+  display: grid; place-items: center;
+}
+.perf-card img {
+  width: 100%; height: auto; display: block;
+  max-height: 280px;
+  object-fit: contain;
+}
+.perf-card .perf-meta {
+  padding: 18px 22px;
+  border-top: 1px solid var(--border);
+}
+.perf-card h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.perf-card p {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 13.5px;
+}
+
+.perf-callout {
+  margin-top: 48px;
+  padding: 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--brand);
+  border-radius: var(--radius);
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--fg-muted);
+  position: relative;
+}
+.perf-callout::before {
+  content: '“';
+  position: absolute;
+  top: -20px; left: 16px;
+  font-family: Georgia, serif;
+  font-size: 80px;
+  color: var(--brand);
+  opacity: .3;
+  line-height: 1;
+}
+.perf-callout cite {
+  display: block;
+  margin-top: 16px;
+  font-style: normal;
+  font-size: 14px;
+  color: var(--fg-dim);
+}
+
+/* ============ ARCHITECTURES ============ */
+.arch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 32px;
+}
+.arch {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 18px 20px;
+  text-align: left;
+}
+.arch .name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--brand-bright);
+  letter-spacing: -0.01em;
+}
+.arch .extensions {
+  font-size: 12.5px;
+  color: var(--fg-muted);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+/* ============ INSTALL ============ */
+.install-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.install-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 0;
+  background: color-mix(in srgb, var(--bg-elevated) 80%, black);
+  border-bottom: 1px solid var(--border);
+}
+.install-tab {
+  padding: 14px 22px;
+  font-size: 14px;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  color: var(--fg-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all .15s;
+}
+.install-tab:hover { color: var(--fg); }
+.install-tab.active {
+  color: var(--brand-bright);
+  border-bottom-color: var(--brand);
+  background: var(--bg-card);
+}
+.install-panel { display: none; padding: 28px; }
+.install-panel.active { display: block; }
+.install-panel pre {
+  background: var(--bg-code) !important;
+  border: 1px solid var(--border);
+  padding: 18px 22px !important;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  margin: 0 0 16px;
+  position: relative;
+}
+.install-panel pre:last-child { margin-bottom: 0; }
+.install-panel .note {
+  color: var(--fg-muted);
+  font-size: 14px;
+  margin: 0 0 16px;
+}
+.install-panel .note:last-child { margin-bottom: 0; }
+
+/* ============ FOOTER ============ */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 64px 0 40px;
+  background: var(--bg-elevated);
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.5fr repeat(3, 1fr);
+  gap: 48px;
+  margin-bottom: 48px;
+}
+@media (max-width: 720px) {
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+}
+.footer-brand { max-width: 320px; }
+.footer-brand p {
+  color: var(--fg-muted);
+  font-size: 14px;
+  margin: 16px 0 0;
+}
+.footer-col h5 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-dim);
+}
+.footer-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.footer-col a {
+  color: var(--fg-muted);
+  font-size: 14px;
+}
+.footer-col a:hover { color: var(--fg); }
+.footer-bottom {
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--fg-dim);
+}
+
+/* ============ MISC ============ */
+.kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  color: var(--fg);
+}
+
+/* Prism overrides for our theme */
+.code-block code[class*="language-"],
+.install-panel code[class*="language-"] {
+  font-family: 'JetBrains Mono', monospace;
+  text-shadow: none !important;
+}
+.code-block .token.comment { color: #7a89b8; font-style: italic; }
+.code-block .token.keyword { color: #c792ea; }
+.code-block .token.string { color: #ecc48d; }
+.code-block .token.function { color: #82aaff; }
+.code-block .token.number { color: #f78c6c; }
+.code-block .token.operator { color: #89ddff; background: transparent; }
+.code-block .token.class-name { color: #ffcb6b; }
+.code-block .token.namespace { opacity: 1; color: #82aaff; }
+
+/* light theme code block stays dark for contrast - that's fine */
+
+@media (max-width: 720px) {
+  .nav-links a:not(.gh-btn) { display: none; }
+  .hero { padding: 60px 0 40px; }
+  .stats { margin-top: 48px; }
+  section { padding: 64px 0; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="inner">
+    <a href="#" class="logo">
+      <span class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M4 7 L12 3 L20 7 L20 17 L12 21 L4 17 Z" stroke="white" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M8 10 L12 8 L16 10 L16 14 L12 16 L8 14 Z" fill="white"/>
+        </svg>
+      </span>
+      simdutf
+    </a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#performance">Performance</a>
+      <a href="#install">Install</a>
+      <a href="api/">API Docs</a>
+      <a href="https://github.com/simdutf/simdutf" class="gh-btn">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+      <button class="theme-toggle" aria-label="Toggle theme" onclick="toggleTheme()">
+        <svg class="sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        <svg class="moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-eyebrow">
+      <span class="pulse"></span>
+      v9.0.0 · Apache 2.0 / MIT
+    </div>
+    <h1>Unicode at <span class="gradient-text">GB/s</span>.<br/>For everyone.</h1>
+    <p class="lede">
+      simdutf is a high-performance C++ library for Unicode validation, transcoding and base64 — accelerated with SIMD on every modern CPU. It powers Node.js, Bun, WebKit, Chromium, Cloudflare workerd and many more.
+    </p>
+    <div class="hero-actions">
+      <a href="#install" class="btn btn-primary">
+        Get Started
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a href="https://github.com/simdutf/simdutf" class="btn btn-secondary">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        Star on GitHub
+      </a>
+      <a href="api/" class="btn btn-secondary">
+        Browse the API
+      </a>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="num">10 GB/s</div>
+        <div class="label">Peak transcoding throughput</div>
+      </div>
+      <div class="stat">
+        <div class="num">3–10×</div>
+        <div class="label">Faster than ICU</div>
+      </div>
+      <div class="stat">
+        <div class="num">8+</div>
+        <div class="label">CPU architectures supported</div>
+      </div>
+      <div class="stat">
+        <div class="num">0</div>
+        <div class="label">Allocations · Exceptions</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ADOPTERS ============ -->
+<div class="adopters">
+  <div class="container">
+    <div class="label">Powering production at</div>
+    <div class="adopters-grid">
+      <a class="adopter" href="https://nodejs.org/" target="_blank" rel="noopener">Node.js</a>
+      <a class="adopter" href="https://bun.sh" target="_blank" rel="noopener">Bun</a>
+      <a class="adopter" href="https://github.com/WebKit/WebKit" target="_blank" rel="noopener">WebKit</a>
+      <a class="adopter" href="https://www.chromium.org/" target="_blank" rel="noopener">Chromium</a>
+      <a class="adopter" href="https://github.com/cloudflare/workerd" target="_blank" rel="noopener">Cloudflare workerd</a>
+      <a class="adopter" href="https://github.com/oracle/graaljs" target="_blank" rel="noopener">Oracle GraalJS</a>
+      <a class="adopter" href="https://www.couchbase.com" target="_blank" rel="noopener">Couchbase</a>
+      <a class="adopter" href="https://ladybird.org" target="_blank" rel="noopener">Ladybird</a>
+      <a class="adopter" href="https://github.com/ghostty-org/ghostty" target="_blank" rel="noopener">Ghostty</a>
+      <a class="adopter" href="https://www.starrocks.io" target="_blank" rel="noopener">StarRocks</a>
+      <a class="adopter" href="https://github.com/fluent/fluent-bit" target="_blank" rel="noopener">Fluent Bit</a>
+      <a class="adopter" href="https://github.com/haskell/text" target="_blank" rel="noopener">haskell/text</a>
+      <a class="adopter" href="https://github.com/uNetworking/uWebSockets" target="_blank" rel="noopener">uWebSockets</a>
+      <a class="adopter" href="https://gitlab.gnome.org/GNOME/vte" target="_blank" rel="noopener">GNOME VTE</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ FEATURES ============ -->
+<section id="features">
+  <div class="container">
+    <div class="section-header">
+      <span class="eyebrow">Why simdutf</span>
+      <h2>One library. Every encoding. Every CPU.</h2>
+      <p class="section-lede">
+        Validate and transcode between UTF-8, UTF-16, UTF-32, Latin1 and ASCII. Decode and encode WHATWG base64. Do it all at the speed of memory.
+      </p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature">
+        <div class="icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h3>Validation</h3>
+        <p>Verify ASCII, UTF-8, UTF-16LE/BE and UTF-32 with optional error positions. Refuse malformed input before it reaches your code.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        </div>
+        <h3>Transcoding</h3>
+        <p>Convert losslessly between every pair of UTF-8, UTF-16, UTF-32 and Latin1. With or without validation, with or without error reporting.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        </div>
+        <h3>Base64</h3>
+        <p>WHATWG-compliant <code>forgiving-base64</code> decode and encode, both standard and URL-safe. Multi-gigabyte-per-second throughput.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <h3>SIMD everywhere</h3>
+        <p>ARM NEON, SSE, AVX2, AVX-512, RISC-V Vector, LoongArch LASX, POWER VSX, s390x. Best kernel dispatched at runtime.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        </div>
+        <h3>Small &amp; safe</h3>
+        <p>A few hundred kilobytes compiled. No allocations. No exceptions. <code>noexcept</code> across the public API. Drop into any codebase.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3>Battle-tested</h3>
+        <p>Years in production at Node.js, WebKit, Chromium and Cloudflare. Continuously fuzzed. Exhaustive test suite. Apache 2.0 / MIT.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CODE EXAMPLE ============ -->
+<section style="background: var(--bg-elevated); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="container">
+    <div class="code-section">
+      <div>
+        <span class="eyebrow">Show me the code</span>
+        <h2>A minimal API, by design.</h2>
+        <p class="section-lede" style="margin-bottom: 24px;">
+          Every function takes a pointer and a length (or a <code>std::span</code>) and returns either a count or a structured result. You allocate; we transcode.
+        </p>
+        <p style="color: var(--fg-muted); margin: 0 0 16px;">
+          <strong style="color: var(--fg);">No globals. No allocations. No exceptions.</strong>
+        </p>
+        <p style="color: var(--fg-muted); margin: 0;">
+          C++17, C++20 <code>std::span</code> overloads, and experimental <code>constexpr</code> in C++23. A separate C11 API is also available.
+        </p>
+      </div>
+      <div>
+        <div class="code-tabs">
+          <button class="code-tab active" data-tab="transcode">transcode.cpp</button>
+          <button class="code-tab" data-tab="validate">validate.cpp</button>
+          <button class="code-tab" data-tab="base64">base64.cpp</button>
+        </div>
+        <div class="code-block">
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          <div class="code-panel active" data-tab="transcode">
+<pre><code class="language-cpp">#include &lt;simdutf.h&gt;
+#include &lt;memory&gt;
+
+const char* utf8 = "Hello, 世界! 🌍";
+size_t len = std::strlen(utf8);
+
+// Validate first — never trust input.
+if (!simdutf::validate_utf8(utf8, len)) return -1;
+
+// Allocate just enough room for the UTF-16 output.
+size_t need = simdutf::utf16_length_from_utf8(utf8, len);
+std::unique_ptr&lt;char16_t[]&gt; utf16{new char16_t[need]};
+
+// Transcode at GB/s.
+size_t written = simdutf::convert_utf8_to_utf16le(
+    utf8, len, utf16.get());
+
+// Round-trip back to UTF-8.
+size_t back_need = simdutf::utf8_length_from_utf16le(
+    utf16.get(), written);
+std::unique_ptr&lt;char[]&gt; round{new char[back_need]};
+simdutf::convert_utf16le_to_utf8(
+    utf16.get(), written, round.get());</code></pre>
+          </div>
+          <div class="code-panel" data-tab="validate">
+<pre><code class="language-cpp">#include &lt;simdutf.h&gt;
+
+// Quick check: valid UTF-8?
+bool ok = simdutf::validate_utf8(buffer, length);
+
+// Detailed check: where did it fail?
+auto r = simdutf::validate_utf8_with_errors(buffer, length);
+if (r.error != simdutf::error_code::SUCCESS) {
+    // r.count is the byte index of the error
+    std::cerr &lt;&lt; "bad UTF-8 at byte " &lt;&lt; r.count &lt;&lt; '\n';
+}
+
+// Auto-detect the encoding of arbitrary bytes.
+auto enc = simdutf::autodetect_encoding(data, size);
+// enc is a bitmask of possible encodings
+// (UTF8 | UTF16_LE | UTF16_BE | UTF32_LE | Latin1)
+
+// Count Unicode code points without converting.
+size_t chars = simdutf::count_utf8(buffer, length);</code></pre>
+          </div>
+          <div class="code-panel" data-tab="base64">
+<pre><code class="language-cpp">#include &lt;simdutf.h&gt;
+#include &lt;vector&gt;
+
+// --- Encode ---
+std::vector&lt;char&gt; out(
+    simdutf::base64_length_from_binary(source.size()));
+size_t n = simdutf::binary_to_base64(
+    source.data(), source.size(), out.data());
+
+// --- Decode (WHATWG forgiving-base64) ---
+std::vector&lt;char&gt; bin(
+    simdutf::maximal_binary_length_from_base64(
+        b64.data(), b64.size()));
+auto r = simdutf::base64_to_binary(
+    b64.data(), b64.size(), bin.data());
+if (r.error != simdutf::error_code::SUCCESS) {
+    // r.count is the offset of the offending character
+}
+
+// URL-safe variant too:
+simdutf::binary_to_base64(
+    src, n, dst, simdutf::base64_url);</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PERFORMANCE ============ -->
+<section id="performance">
+  <div class="container">
+    <div class="section-header">
+      <span class="eyebrow">Benchmarks</span>
+      <h2>Built for the throughput era.</h2>
+      <p class="section-lede">
+        Over realistic data — English, Chinese, Japanese, Arabic, emoji — simdutf transcodes at a billion characters per second or more. On AVX-512 hardware, multiple GB/s.
+      </p>
+    </div>
+
+    <div class="perf-grid">
+      <div class="perf-card">
+        <div class="chart-wrap">
+          <img src="assets/utf8utf16.png" alt="UTF-8 to UTF-16 throughput comparison" loading="lazy" />
+        </div>
+        <div class="perf-meta">
+          <h4>UTF-8 → UTF-16</h4>
+          <p>Billions of characters per second across diverse scripts.</p>
+        </div>
+      </div>
+      <div class="perf-card">
+        <div class="chart-wrap">
+          <img src="assets/utf16utf8.png" alt="UTF-16 to UTF-8 throughput comparison" loading="lazy" />
+        </div>
+        <div class="perf-meta">
+          <h4>UTF-16 → UTF-8</h4>
+          <p>Symmetric performance the other way round.</p>
+        </div>
+      </div>
+      <div class="perf-card">
+        <div class="chart-wrap">
+          <img src="assets/avx512.png" alt="AVX-512 throughput on Ice Lake" loading="lazy" />
+        </div>
+        <div class="perf-meta">
+          <h4>AVX-512 on Ice Lake</h4>
+          <p>The fastest path lights up on modern Intel and AMD Zen 4+.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="perf-callout">
+      Decoding and Encoding becomes considerably faster than in Node.js 18. With the addition of simdutf for UTF-8 parsing, the observed benchmark results improved by <strong style="color: var(--fg);">364%</strong> when decoding in comparison to Node.js 16.
+      <cite>— State of Node.js Performance 2023</cite>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ARCHITECTURES ============ -->
+<section class="compact" style="background: var(--bg-elevated); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="container">
+    <div class="section-header">
+      <span class="eyebrow">Hardware support</span>
+      <h2>Best path, every CPU.</h2>
+      <p class="section-lede">
+        simdutf picks the fastest kernel for the running CPU at startup. One binary, every uarch.
+      </p>
+    </div>
+    <div class="arch-grid">
+      <div class="arch"><div class="name">x86-64</div><div class="extensions">Westmere · Haswell · Ice Lake (AVX-512)</div></div>
+      <div class="arch"><div class="name">ARM64</div><div class="extensions">NEON (Apple Silicon, AWS Graviton, …)</div></div>
+      <div class="arch"><div class="name">ARMv7</div><div class="extensions">NEON</div></div>
+      <div class="arch"><div class="name">RISC-V</div><div class="extensions">RVV (rv64gcv and friends)</div></div>
+      <div class="arch"><div class="name">POWER</div><div class="extensions">ppc64le · VSX</div></div>
+      <div class="arch"><div class="name">LoongArch</div><div class="extensions">LSX · LASX</div></div>
+      <div class="arch"><div class="name">s390x</div><div class="extensions">z/Architecture vector facility</div></div>
+      <div class="arch"><div class="name">Fallback</div><div class="extensions">Portable scalar — runs anywhere</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ INSTALL ============ -->
+<section id="install">
+  <div class="container">
+    <div class="section-header">
+      <span class="eyebrow">Get started</span>
+      <h2>Drop it in. Ship faster.</h2>
+      <p class="section-lede">
+        Single-header amalgamation, CMake target, or your favorite package manager. Pick one and you're done.
+      </p>
+    </div>
+
+    <div class="install-card">
+      <div class="install-tabs">
+        <button class="install-tab active" data-install="single">Single header</button>
+        <button class="install-tab" data-install="cmake">CMake</button>
+        <button class="install-tab" data-install="vcpkg">vcpkg</button>
+        <button class="install-tab" data-install="conan">Conan</button>
+        <button class="install-tab" data-install="brew">Homebrew</button>
+        <button class="install-tab" data-install="apt">apt / dnf</button>
+      </div>
+
+      <div class="install-panel active" data-install="single">
+        <p class="note">Download the amalgamation from the releases page and compile against two files. Nothing else.</p>
+<pre><code class="language-bash">wget https://github.com/simdutf/simdutf/releases/download/v9.0.0/singleheader.zip
+unzip singleheader.zip
+c++ -std=c++17 -O3 -o demo amalgamation_demo.cpp
+./demo</code></pre>
+      </div>
+
+      <div class="install-panel" data-install="cmake">
+        <p class="note">Use simdutf as a CMake dependency via <code>FetchContent</code>:</p>
+<pre><code class="language-cmake">include(FetchContent)
+FetchContent_Declare(simdutf
+  GIT_REPOSITORY https://github.com/simdutf/simdutf.git
+  GIT_TAG        v9.0.0
+)
+FetchContent_MakeAvailable(simdutf)
+
+target_link_libraries(your_target PRIVATE simdutf::simdutf)</code></pre>
+        <p class="note">Or build and install locally:</p>
+<pre><code class="language-bash">git clone https://github.com/simdutf/simdutf.git
+cmake -S simdutf -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+ctest --test-dir build</code></pre>
+      </div>
+
+      <div class="install-panel" data-install="vcpkg">
+<pre><code class="language-bash">vcpkg install simdutf</code></pre>
+        <p class="note">A complete example project lives at <a href="https://github.com/simdutf/simdutf-vcpkg">simdutf/simdutf-vcpkg</a>.</p>
+      </div>
+
+      <div class="install-panel" data-install="conan">
+<pre><code class="language-bash">conan install --requires=simdutf/9.0.0</code></pre>
+        <p class="note">Recipe details on <a href="https://conan.io/center/recipes/simdutf">Conan Center</a>.</p>
+      </div>
+
+      <div class="install-panel" data-install="brew">
+<pre><code class="language-bash">brew install simdutf</code></pre>
+        <p class="note">Includes headers and the <code>sutf</code> and <code>fastbase64</code> command-line tools.</p>
+      </div>
+
+      <div class="install-panel" data-install="apt">
+        <p class="note">simdutf is packaged on Debian, Ubuntu, Fedora, Arch, Alpine, FreeBSD and more — see <a href="https://repology.org/project/simdutf/versions">repology</a> for the full matrix.</p>
+<pre><code class="language-bash">apt install libsimdutf-dev        # Debian / Ubuntu
+dnf install simdutf-devel         # Fedora
+pacman -S simdutf                 # Arch
+apk add simdutf-dev               # Alpine</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section class="compact" style="text-align: center;">
+  <div class="container" style="max-width: 720px;">
+    <h2 style="margin-bottom: 20px;">Ready to make Unicode disappear?</h2>
+    <p style="font-size: 18px; color: var(--fg-muted); margin: 0 0 36px;">
+      Read the full API, browse the source, file an issue, or join the discussion on GitHub.
+    </p>
+    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+      <a href="api/" class="btn btn-primary">Read the API docs</a>
+      <a href="https://github.com/simdutf/simdutf" class="btn btn-secondary">View on GitHub</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#" class="logo">
+          <span class="logo-mark">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M4 7 L12 3 L20 7 L20 17 L12 21 L4 17 Z" stroke="white" stroke-width="1.8" stroke-linejoin="round"/>
+              <path d="M8 10 L12 8 L16 10 L16 14 L12 16 L8 14 Z" fill="white"/>
+            </svg>
+          </span>
+          simdutf
+        </a>
+        <p>Fast Unicode validation and transcoding. Used in production by Node.js, WebKit, Chromium and many more.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Project</h5>
+        <ul>
+          <li><a href="https://github.com/simdutf/simdutf">GitHub</a></li>
+          <li><a href="https://github.com/simdutf/simdutf/releases">Releases</a></li>
+          <li><a href="https://github.com/simdutf/simdutf/blob/master/CONTRIBUTING.md">Contributing</a></li>
+          <li><a href="https://github.com/simdutf/simdutf/blob/master/SECURITY.md">Security</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Docs</h5>
+        <ul>
+          <li><a href="api/">API Reference</a></li>
+          <li><a href="#install">Installation</a></li>
+          <li><a href="#performance">Benchmarks</a></li>
+          <li><a href="https://github.com/simdutf/simdutf#readme">README</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Cite</h5>
+        <ul>
+          <li><a href="https://onlinelibrary.wiley.com/doi/full/10.1002/spe.3296">SP&amp;E 2023 paper</a></li>
+          <li><a href="https://onlinelibrary.wiley.com/doi/10.1002/spe.3367">SP&amp;E 2025 paper</a></li>
+          <li><a href="https://github.com/simdutf/simdutf/blob/master/LICENSE-APACHE">Apache 2.0</a></li>
+          <li><a href="https://github.com/simdutf/simdutf/blob/master/LICENSE-MIT">MIT</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© simdutf contributors. Released under Apache 2.0 / MIT.</div>
+      <div>Made with care for fast software.</div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-clike.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-c.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-cpp.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-cmake.min.js"></script>
+
+<script>
+// ---- Theme toggle (persisted) ----
+const stored = localStorage.getItem('simdutf-theme');
+const prefers = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+document.documentElement.dataset.theme = stored || prefers;
+
+function toggleTheme() {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem('simdutf-theme', next);
+}
+
+// ---- Code tabs ----
+document.querySelectorAll('.code-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.tab;
+    const group = tab.closest('div').parentElement;
+    group.querySelectorAll('.code-tab').forEach(t => t.classList.toggle('active', t === tab));
+    group.querySelectorAll('.code-panel').forEach(p => p.classList.toggle('active', p.dataset.tab === target));
+  });
+});
+
+// ---- Install tabs ----
+document.querySelectorAll('.install-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.install;
+    const card = tab.closest('.install-card');
+    card.querySelectorAll('.install-tab').forEach(t => t.classList.toggle('active', t === tab));
+    card.querySelectorAll('.install-panel').forEach(p => p.classList.toggle('active', p.dataset.install === target));
+  });
+});
+
+// ---- Copy button ----
+function copyCode(btn) {
+  const block = btn.parentElement.querySelector('.code-panel.active code') || btn.parentElement.querySelector('code');
+  if (!block) return;
+  navigator.clipboard.writeText(block.innerText).then(() => {
+    const old = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = old; btn.classList.remove('copied'); }, 1500);
+  });
+}
+</script>
+
+</body>
+</html>
