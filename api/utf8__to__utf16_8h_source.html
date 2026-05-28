@@ -372,7 +372,22 @@ $(document).ready(function(){initNavTree('utf8__to__utf16_8h_source.html',''); i
 <div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>  }</div>
 <div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>  <span class="keywordflow">return</span> result(error_code::SUCCESS, utf16_output - start);</div>
 <div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>}</div>
-<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span> </div>
+<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span><span class="comment"></span> </div>
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span><span class="comment"> * When rewind_and_convert_with_errors is called, we are pointing at &#39;buf&#39; and</span></div>
+<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span><span class="comment"> * we have up to len input bytes left, and we encountered some error. It is</span></div>
+<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span><span class="comment"> * possible that the error is at &#39;buf&#39; exactly, but it could also be in the</span></div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span><span class="comment"> * previous bytes  (up to 3 bytes back).</span></div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span><span class="comment"> * prior_bytes indicates how many bytes, prior to &#39;buf&#39; may belong to the</span></div>
+<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span><span class="comment"> * current memory section and can be safely accessed. We prior_bytes to access</span></div>
+<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span><span class="comment"> * safely up to three bytes before &#39;buf&#39;.</span></div>
+<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span><span class="comment"> * The caller is responsible to ensure that len &gt; 0.</span></div>
+<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span><span class="comment"> * If the error is believed to have occurred prior to &#39;buf&#39;, the count value</span></div>
+<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span><span class="comment"> * contain in the result will be SIZE_T - 1, SIZE_T - 2, or SIZE_T - 3.</span></div>
+<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span><span class="comment"> */</span></div>
 <div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span><span class="keyword">template</span> &lt;endianness endian&gt;</div>
 <div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span><span class="keyword">inline</span> result rewind_and_convert_with_errors(<span class="keywordtype">size_t</span> prior_bytes,</div>
 <div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span>                                             <span class="keyword">const</span> <span class="keywordtype">char</span> *buf, <span class="keywordtype">size_t</span> len,</div>

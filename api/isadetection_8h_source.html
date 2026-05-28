@@ -263,12 +263,12 @@ $(document).ready(function(){initNavTree('isadetection_8h_source.html',''); init
 <div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span> </div>
 <div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span><span class="comment">// EAX = 0x01</span></div>
 <div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span><span class="keyword">constexpr</span> uint32_t pclmulqdq = uint32_t(1)</div>
-<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>                               &lt;&lt; 1; </div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>                               &lt;&lt; 1; <span class="comment">///&lt; @private bit  1 of ECX for EAX=0x1</span></div>
 <div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span><span class="keyword">constexpr</span> uint32_t sse42 = uint32_t(1)</div>
-<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>                           &lt;&lt; 20; </div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>                           &lt;&lt; 20; <span class="comment">///&lt; @private bit 20 of ECX for EAX=0x1</span></div>
 <div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span><span class="keyword">constexpr</span> uint32_t osxsave =</div>
 <div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>    (uint32_t(1) &lt;&lt; 26) |</div>
-<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>    (uint32_t(1) &lt;&lt; 27); </div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>    (uint32_t(1) &lt;&lt; 27); <span class="comment">///&lt; @private bits 26+27 of ECX for EAX=0x1</span></div>
 <div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span> </div>
 <div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span><span class="comment">// EAX = 0x7f (Structured Extended Feature Flags), ECX = 0x00 (Sub-leaf)</span></div>
 <div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span><span class="comment">// See: &quot;Table 3-8. Information Returned by CPUID Instruction&quot;</span></div>
@@ -295,9 +295,9 @@ $(document).ready(function(){initNavTree('isadetection_8h_source.html',''); init
 <div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span><span class="keyword">constexpr</span> uint32_t avx512vp2intersect = uint32_t(1) &lt;&lt; 8;</div>
 <div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>}</div>
 <div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span><span class="keyword">namespace </span>xcr0_bit {</div>
-<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span><span class="keyword">constexpr</span> uint64_t avx256_saved = uint64_t(1) &lt;&lt; 2; </div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span><span class="keyword">constexpr</span> uint64_t avx256_saved = uint64_t(1) &lt;&lt; 2; <span class="comment">///&lt; @private bit 2 = AVX</span></div>
 <div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span><span class="keyword">constexpr</span> uint64_t avx512_saved =</div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>    uint64_t(7) &lt;&lt; 5; </div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>    uint64_t(7) &lt;&lt; 5; <span class="comment">///&lt; @private bits 5,6,7 = opmask, ZMM_hi256, hi16_ZMM</span></div>
 <div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>} <span class="comment">// namespace xcr0_bit</span></div>
 <div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>} <span class="comment">// namespace cpuid_bit</span></div>
 <div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>} <span class="comment">// namespace</span></div>

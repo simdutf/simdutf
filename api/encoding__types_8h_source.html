@@ -151,14 +151,34 @@ $(document).ready(function(){initNavTree('encoding__types_8h_source.html',''); i
 <div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
 <div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="comment">// Note that BOM for UTF8 is discouraged.</span></div>
 <div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><span class="keyword">namespace </span>BOM {</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span> </div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="comment"></span> </div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="comment"> * Checks for a BOM. If not, returns unspecified</span></div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="comment"> * @param input         the string to process</span></div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="comment"> * @param length        the length of the string in code units</span></div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="comment"> * @return the corresponding encoding</span></div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
 <div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>simdutf_warn_unused encoding_type check_bom(<span class="keyword">const</span> uint8_t *<span class="keywordtype">byte</span>, <span class="keywordtype">size_t</span> length);</div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>simdutf_warn_unused encoding_type check_bom(<span class="keyword">const</span> <span class="keywordtype">char</span> *<span class="keywordtype">byte</span>, <span class="keywordtype">size_t</span> length);</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>simdutf_warn_unused encoding_type check_bom(<span class="keyword">const</span> <span class="keywordtype">char</span> *<span class="keywordtype">byte</span>, <span class="keywordtype">size_t</span> length);<span class="comment"></span></div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="comment"> * Returns the size, in bytes, of the BOM for a given encoding type.</span></div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span><span class="comment"> * Note that UTF8 BOM are discouraged.</span></div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="comment"> * @param bom         the encoding type</span></div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span><span class="comment"> * @return the size in bytes of the corresponding BOM</span></div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span><span class="comment"> */</span></div>
 <div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>simdutf_warn_unused <span class="keywordtype">size_t</span> bom_byte_size(encoding_type bom);</div>
 <div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span> </div>
 <div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>} <span class="comment">// namespace BOM</span></div>
 <div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="preprocessor">#ifdef SIMDUTF_HAS_STD_TEXT_ENCODING</span></div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="preprocessor">#ifdef SIMDUTF_HAS_STD_TEXT_ENCODING</span><span class="comment"></span></div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="comment"> * Convert a simdutf encoding type to a std::text_encoding.</span></div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="comment"> * @param enc  the simdutf encoding type</span></div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="comment"> * @return     the corresponding std::text_encoding, or</span></div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="comment"> *             std::text_encoding::id::unknown for unspecified/unsupported</span></div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="comment"> */</span><span class="preprocessor"></span></div>
 <div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>simdutf_warn_unused <span class="keyword">constexpr</span> std::text_encoding</div>
 <div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>to_std_encoding(encoding_type enc) <span class="keyword">noexcept</span> {</div>
 <div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>  <span class="keywordflow">switch</span> (enc) {</div>
@@ -179,7 +199,14 @@ $(document).ready(function(){initNavTree('encoding__types_8h_source.html',''); i
 <div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    <span class="keywordflow">return</span> std::text_encoding(std::text_encoding::id::unknown);</div>
 <div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>  }</div>
 <div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>}</div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span> </div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span><span class="comment"></span> </div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span><span class="comment"> * Convert a std::text_encoding to a simdutf encoding type.</span></div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="comment"> * @param enc  the std::text_encoding</span></div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="comment"> * @return     the corresponding simdutf encoding type, or</span></div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span><span class="comment"> *             encoding_type::unspecified if the encoding is not supported</span></div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><span class="comment"> */</span></div>
 <div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>simdutf_warn_unused <span class="keyword">constexpr</span> encoding_type</div>
 <div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>from_std_encoding(<span class="keyword">const</span> std::text_encoding &amp;enc) <span class="keyword">noexcept</span> {</div>
 <div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>  <span class="keywordflow">switch</span> (enc.mib()) {</div>
@@ -199,7 +226,12 @@ $(document).ready(function(){initNavTree('encoding__types_8h_source.html',''); i
 <div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>    <span class="keywordflow">return</span> unspecified;</div>
 <div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>  }</div>
 <div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>}</div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span> </div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span><span class="comment"></span> </div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span><span class="comment"> * Get the native-endian UTF-16 encoding type for this system.</span></div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span><span class="comment"> * @return UTF16_LE on little-endian systems, UTF16_BE on big-endian systems</span></div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span><span class="comment"> */</span></div>
 <div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>simdutf_warn_unused <span class="keyword">constexpr</span> encoding_type native_utf16_encoding() noexcept {</div>
 <div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span><span class="preprocessor">  #if SIMDUTF_IS_BIG_ENDIAN</span></div>
 <div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>  <span class="keywordflow">return</span> UTF16_BE;</div>
@@ -207,7 +239,12 @@ $(document).ready(function(){initNavTree('encoding__types_8h_source.html',''); i
 <div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>  <span class="keywordflow">return</span> UTF16_LE;</div>
 <div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span><span class="preprocessor">  #endif</span></div>
 <div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>}</div>
-<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span> </div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span><span class="comment"></span> </div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span><span class="comment"> * Get the native-endian UTF-32 encoding type for this system.</span></div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span><span class="comment"> * @return UTF32_LE on little-endian systems, UTF32_BE on big-endian systems</span></div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span><span class="comment"> */</span></div>
 <div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>simdutf_warn_unused <span class="keyword">constexpr</span> encoding_type native_utf32_encoding() noexcept {</div>
 <div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span><span class="preprocessor">  #if SIMDUTF_IS_BIG_ENDIAN</span></div>
 <div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>  <span class="keywordflow">return</span> UTF32_BE;</div>
@@ -215,7 +252,18 @@ $(document).ready(function(){initNavTree('encoding__types_8h_source.html',''); i
 <div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>  <span class="keywordflow">return</span> UTF32_LE;</div>
 <div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span><span class="preprocessor">  #endif</span></div>
 <div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>}</div>
-<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span> </div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span><span class="comment"></span> </div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span><span class="comment"> * Convert a std::text_encoding to a simdutf encoding type,</span></div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span><span class="comment"> * using native endianness for UTF-16/UTF-32 without explicit endianness.</span></div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span><span class="comment"> * When the input is std::text_encoding::id::UTF16 or UTF32 (without LE/BE</span></div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span><span class="comment"> * suffix), this returns the native-endian simdutf variant.</span></div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span><span class="comment"> * @param enc  the std::text_encoding</span></div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span><span class="comment"> * @return     the corresponding simdutf encoding type, or</span></div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span><span class="comment"> *             encoding_type::unspecified if the encoding is not supported</span></div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span><span class="comment"> */</span></div>
 <div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>simdutf_warn_unused <span class="keyword">constexpr</span> encoding_type</div>
 <div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>from_std_encoding_native(<span class="keyword">const</span> std::text_encoding &amp;enc) <span class="keyword">noexcept</span> {</div>
 <div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>  <span class="keywordflow">switch</span> (enc.mib()) {</div>
