@@ -992,7 +992,7 @@ API</h1>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> * @param input         the Latin1 string to convert</span></div>
 <div class="line"><span class="comment"> * @param length        the length of the string in bytes</span></div>
-<div class="line"><span class="comment"> * @param utf16_buffer  the pointer to buffer that can hold conversion result</span></div>
+<div class="line"><span class="comment"> * @param utf16_output  the pointer to buffer that can hold conversion result</span></div>
 <div class="line"><span class="comment"> * @return the number of written char16_t.</span></div>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_latin1_to_utf16(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char16_t</span>* utf16_output) <span class="keyword">noexcept</span>;</div>
@@ -1003,7 +1003,7 @@ API</h1>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> * @param input         the Latin1 string to convert</span></div>
 <div class="line"><span class="comment"> * @param length        the length of the string in bytes</span></div>
-<div class="line"><span class="comment"> * @param utf16_buffer  the pointer to buffer that can hold conversion result</span></div>
+<div class="line"><span class="comment"> * @param utf16_output  the pointer to buffer that can hold conversion result</span></div>
 <div class="line"><span class="comment"> * @return the number of written char16_t; 0 if conversion is not possible</span></div>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_latin1_to_utf16le(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char16_t</span>* utf16_output) <span class="keyword">noexcept</span>;</div>
@@ -1014,7 +1014,7 @@ API</h1>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> * @param input         the Latin1 string to convert</span></div>
 <div class="line"><span class="comment"> * @param length        the length of the string in bytes</span></div>
-<div class="line"><span class="comment"> * @param utf16_buffer  the pointer to buffer that can hold conversion result</span></div>
+<div class="line"><span class="comment"> * @param utf16_output  the pointer to buffer that can hold conversion result</span></div>
 <div class="line"><span class="comment"> * @return the number of written char16_t; 0 if conversion is not possible</span></div>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_latin1_to_utf16be(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char16_t</span>* utf16_output) <span class="keyword">noexcept</span>;</div>
@@ -1051,7 +1051,7 @@ API</h1>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> * @param input         the UTF-8 string to convert</span></div>
 <div class="line"><span class="comment"> * @param length        the length of the string in bytes</span></div>
-<div class="line"><span class="comment"> * @param utf16_buffer  the pointer to buffer that can hold conversion result</span></div>
+<div class="line"><span class="comment"> * @param utf16_output  the pointer to buffer that can hold conversion result</span></div>
 <div class="line"><span class="comment"> * @return the number of written char16_t; 0 if the input was not valid UTF-8 string</span></div>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf8_to_utf16(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char16_t</span>* utf16_output) <span class="keyword">noexcept</span>;</div>
@@ -1063,7 +1063,7 @@ API</h1>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> * @param input         the UTF-8 string to convert</span></div>
 <div class="line"><span class="comment"> * @param length        the length of the string in bytes</span></div>
-<div class="line"><span class="comment"> * @param utf16_buffer  the pointer to buffer that can hold conversion result</span></div>
+<div class="line"><span class="comment"> * @param utf16_output  the pointer to buffer that can hold conversion result</span></div>
 <div class="line"><span class="comment"> * @return the number of written char16_t; 0 if the input was not valid UTF-8 string</span></div>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf8_to_utf16le(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char16_t</span>* utf16_output) <span class="keyword">noexcept</span>;</div>
@@ -1075,7 +1075,7 @@ API</h1>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> * @param input         the UTF-8 string to convert</span></div>
 <div class="line"><span class="comment"> * @param length        the length of the string in bytes</span></div>
-<div class="line"><span class="comment"> * @param utf16_buffer  the pointer to buffer that can hold conversion result</span></div>
+<div class="line"><span class="comment"> * @param utf16_output  the pointer to buffer that can hold conversion result</span></div>
 <div class="line"><span class="comment"> * @return the number of written char16_t; 0 if the input was not valid UTF-8 string</span></div>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf8_to_utf16be(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char16_t</span>* utf16_output) <span class="keyword">noexcept</span>;</div>
@@ -1087,7 +1087,7 @@ API</h1>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> * @param input         the UTF-8 string to convert</span></div>
 <div class="line"><span class="comment"> * @param length        the length of the string in bytes</span></div>
-<div class="line"><span class="comment"> * @param utf32_buffer  the pointer to buffer that can hold conversion result</span></div>
+<div class="line"><span class="comment"> * @param utf32_output  the pointer to buffer that can hold conversion result</span></div>
 <div class="line"><span class="comment"> * @return the number of written char32_t; 0 if the input was not valid UTF-8 string</span></div>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf8_to_utf32(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char32_t</span>* utf32_output) <span class="keyword">noexcept</span>;</div>
@@ -1505,7 +1505,7 @@ API</h1>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> * @param input         the UTF-8 string to convert</span></div>
 <div class="line"><span class="comment"> * @param length        the length of the string in bytes</span></div>
-<div class="line"><span class="comment"> * @param utf16_buffer  the pointer to buffer that can hold conversion result</span></div>
+<div class="line"><span class="comment"> * @param utf16_output  the pointer to buffer that can hold conversion result</span></div>
 <div class="line"><span class="comment"> * @return a result pair struct (of type simdutf::result containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char16_t written if successful.</span></div>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line">simdutf_warn_unused result convert_utf8_to_utf16_with_errors(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char16_t</span>* utf16_output) <span class="keyword">noexcept</span>;</div>
@@ -1517,7 +1517,7 @@ API</h1>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> * @param input         the UTF-8 string to convert</span></div>
 <div class="line"><span class="comment"> * @param length        the length of the string in bytes</span></div>
-<div class="line"><span class="comment"> * @param utf16_buffer  the pointer to buffer that can hold conversion result</span></div>
+<div class="line"><span class="comment"> * @param utf16_output  the pointer to buffer that can hold conversion result</span></div>
 <div class="line"><span class="comment"> * @return a result pair struct (of type simdutf::result containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char16_t written if successful.</span></div>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line">simdutf_warn_unused result convert_utf8_to_utf16le_with_errors(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char16_t</span>* utf16_output) <span class="keyword">noexcept</span>;</div>
@@ -1529,7 +1529,7 @@ API</h1>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> * @param input         the UTF-8 string to convert</span></div>
 <div class="line"><span class="comment"> * @param length        the length of the string in bytes</span></div>
-<div class="line"><span class="comment"> * @param utf16_buffer  the pointer to buffer that can hold conversion result</span></div>
+<div class="line"><span class="comment"> * @param utf16_output  the pointer to buffer that can hold conversion result</span></div>
 <div class="line"><span class="comment"> * @return a result pair struct (of type simdutf::result containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char16_t written if successful.</span></div>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line">simdutf_warn_unused result convert_utf8_to_utf16be_with_errors(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char16_t</span>* utf16_output) <span class="keyword">noexcept</span>;</div>
@@ -1541,7 +1541,7 @@ API</h1>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> * @param input         the UTF-8 string to convert</span></div>
 <div class="line"><span class="comment"> * @param length        the length of the string in bytes</span></div>
-<div class="line"><span class="comment"> * @param utf32_buffer  the pointer to buffer that can hold conversion result</span></div>
+<div class="line"><span class="comment"> * @param utf32_output  the pointer to buffer that can hold conversion result</span></div>
 <div class="line"><span class="comment"> * @return a result pair struct (of type simdutf::result containing the two fields error and count) with an error code and either position of the error (in the input in code units) if any, or the number of char32_t written if successful.</span></div>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line">simdutf_warn_unused result convert_utf8_to_utf32_with_errors(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char32_t</span>* utf32_output) <span class="keyword">noexcept</span>;</div>

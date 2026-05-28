@@ -414,7 +414,7 @@ virtual const char16_t *&#160;</td><td class="memItemRight" valign="bottom"><b>f
 <div class="textblock"><p>An implementation of simdutf for a particular CPU architecture. </p>
 <p>Also used to maintain the currently active implementation. The active implementation is automatically initialized on first use to the most advanced implementation supported by the host. </p>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05079">5079</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05081">5081</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="afd306a0bc3e221964af3f31a64784b12" name="afd306a0bc3e221964af3f31a64784b12"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afd306a0bc3e221964af3f31a64784b12">&#9670;&#160;</a></span>autodetect_encoding()</h2>
@@ -571,6 +571,7 @@ virtual const char16_t *&#160;</td><td class="memItemRight" valign="bottom"><b>f
     <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
     <tr><td class="paramname">output</td><td>the pointer to a buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long). </td></tr>
     <tr><td class="paramname">options</td><td>the base64 options to use, can be base64_default or base64_url, is base64_default by default. </td></tr>
+    <tr><td class="paramname">last_chunk_options</td><td>the handling of the last chunk (default: loose) </td></tr>
   </table>
   </dd>
 </dl>
@@ -641,6 +642,7 @@ virtual const char16_t *&#160;</td><td class="memItemRight" valign="bottom"><b>f
     <tr><td class="paramname">length</td><td>the length of the string in 16-bit units </td></tr>
     <tr><td class="paramname">output</td><td>the pointer to a buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long). </td></tr>
     <tr><td class="paramname">options</td><td>the base64 options to use, can be base64_default or base64_url, is base64_default by default. </td></tr>
+    <tr><td class="paramname">last_chunk_options</td><td>the handling of the last chunk (default: loose) </td></tr>
   </table>
   </dd>
 </dl>
@@ -711,6 +713,7 @@ virtual const char16_t *&#160;</td><td class="memItemRight" valign="bottom"><b>f
     <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
     <tr><td class="paramname">output</td><td>the pointer to a buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long). </td></tr>
     <tr><td class="paramname">options</td><td>the base64 options to use, can be base64_default or base64_url, is base64_default by default. </td></tr>
+    <tr><td class="paramname">last_chunk_options</td><td>the handling of the last chunk (default: loose) </td></tr>
   </table>
   </dd>
 </dl>
@@ -781,6 +784,7 @@ virtual const char16_t *&#160;</td><td class="memItemRight" valign="bottom"><b>f
     <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
     <tr><td class="paramname">output</td><td>the pointer to a buffer that can hold the conversion result (should be at least maximal_binary_length_from_base64(input, length) bytes long). </td></tr>
     <tr><td class="paramname">options</td><td>the base64 options to use, can be base64_default or base64_url, is base64_default by default. </td></tr>
+    <tr><td class="paramname">last_chunk_options</td><td>the handling of the last chunk (default: loose) </td></tr>
   </table>
   </dd>
 </dl>
@@ -1120,7 +1124,7 @@ options, line_length) bytes long) </td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the Latin1 string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
-    <tr><td class="paramname">utf16_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+    <tr><td class="paramname">utf16_output</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -1174,7 +1178,7 @@ options, line_length) bytes long) </td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the Latin1 string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
-    <tr><td class="paramname">utf16_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+    <tr><td class="paramname">utf16_output</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -2656,7 +2660,7 @@ options, line_length) bytes long) </td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-8 string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
-    <tr><td class="paramname">utf16_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+    <tr><td class="paramname">utf16_output</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -2710,7 +2714,7 @@ options, line_length) bytes long) </td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-8 string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
-    <tr><td class="paramname">utf16_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+    <tr><td class="paramname">utf16_output</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -2764,7 +2768,7 @@ options, line_length) bytes long) </td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-8 string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
-    <tr><td class="paramname">utf16_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+    <tr><td class="paramname">utf16_output</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -2818,7 +2822,7 @@ options, line_length) bytes long) </td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-8 string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
-    <tr><td class="paramname">utf16_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+    <tr><td class="paramname">utf16_output</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -2872,7 +2876,7 @@ options, line_length) bytes long) </td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-8 string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
-    <tr><td class="paramname">utf32_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+    <tr><td class="paramname">utf32_output</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -2926,7 +2930,7 @@ options, line_length) bytes long) </td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-8 string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
-    <tr><td class="paramname">utf32_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+    <tr><td class="paramname">utf32_output</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -3697,7 +3701,7 @@ options, line_length) bytes long) </td></tr>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-8 string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in bytes </td></tr>
-    <tr><td class="paramname">utf16_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
+    <tr><td class="paramname">utf32_buffer</td><td>the pointer to buffer that can hold conversion result </td></tr>
   </table>
   </dd>
 </dl>
@@ -3877,7 +3881,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </pre><p> impl-&gt;<a class="el" href="classsimdutf_1_1implementation.html#a5fd0fb7f897b97624a8a4a4079f276ef" title="The description of this implementation.">description()</a> &lt;&lt; ")" &lt;&lt; endl;</p>
 <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05101">5101</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05103">5103</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -4009,7 +4013,6 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 <p>This function is not BOM-aware.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">input</td><td>the UTF-16LE string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
   </table>
   </dd>
@@ -4054,7 +4057,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-32 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06520">6520</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06521">6521</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -4230,7 +4233,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </pre><p> impl-&gt;<a class="el" href="classsimdutf_1_1implementation.html#a5fd0fb7f897b97624a8a4a4079f276ef" title="The description of this implementation.">description()</a> &lt;&lt; ")" &lt;&lt; endl;</p>
 <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05090">5090</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05092">5092</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -4390,14 +4393,13 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 <p>Return the number of bytes that this UTF-16 string would require in Latin1 format. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">input</td><td>the UTF-16 string to convert </td></tr>
     <tr><td class="paramname">length</td><td>the length of the string in 2-byte code units (char16_t) </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-16 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06332">6332</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06333">6333</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
