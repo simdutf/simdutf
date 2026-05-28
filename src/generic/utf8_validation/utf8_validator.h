@@ -90,7 +90,7 @@ utf8_result generic_validate_utf8_with_counts(const uint8_t *input,
   size_t count{0};
   while (reader.has_full_block()) {
     simd::simd8x64<uint8_t> in(reader.full_block());
-    c.check_next_input_with_counts(in);
+    std::pair<size_t, size_t> last_counts = c.check_next_input_with_counts(in);
     if (c.errors()) {
       /*
        * Why was this done?
@@ -102,8 +102,8 @@ utf8_result generic_validate_utf8_with_counts(const uint8_t *input,
           reinterpret_cast<const char *>(input),
           reinterpret_cast<const char *>(input + count), length - count);
       res.input_count += count;
-      res.continuation_count += c.continuation_count();
-      res.four_byte_count += c.four_byte_count();
+      res.continuation_count += c.continuation_count() - last_counts.first;
+      res.four_byte_count += c.four_byte_count() - last_counts.second;
       return res;
     }
     reader.advance();
@@ -112,7 +112,7 @@ utf8_result generic_validate_utf8_with_counts(const uint8_t *input,
   uint8_t block[64]{};
   reader.get_remainder(block);
   simd::simd8x64<uint8_t> in(block);
-  c.check_next_input_with_counts(in);
+  std::pair<size_t, size_t> last_counts = c.check_next_input_with_counts(in);
   reader.advance();
   c.check_eof();
   if (c.errors()) {
@@ -126,8 +126,8 @@ utf8_result generic_validate_utf8_with_counts(const uint8_t *input,
         reinterpret_cast<const char *>(input),
         reinterpret_cast<const char *>(input) + count, length - count);
     res.input_count += count;
-    res.continuation_count += c.continuation_count();
-    res.four_byte_count += c.four_byte_count();
+    res.continuation_count += c.continuation_count() - last_counts.first;
+    res.four_byte_count += c.four_byte_count() - last_counts.second;
     return res;
   } else {
     return utf8_result(error_code::SUCCESS, length, c.continuation_count(),
