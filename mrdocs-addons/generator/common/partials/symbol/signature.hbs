@@ -1,0 +1,14 @@
+{{!--
+    Render a symbol object as a C++ code signature.
+
+    The signature for each symbol type is ultimately defined in
+    symbol/signature/<kind>.hbs.
+
+    Expected Context: {Symbol Object}
+
+    Example:
+        {{> symbol/signature symbol }}
+
+    See: https://mrdocs.com/docs/mrdocs/develop/generators.html#dom_reference
+--}}
+{{> (concat 'symbol/signature/' kind) }}

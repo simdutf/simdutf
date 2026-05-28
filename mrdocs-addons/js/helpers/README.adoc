@@ -1,0 +1,3 @@
+= Addons/JS/Helpers
+
+This directory holds JavaScript helpers used by Handlebars.

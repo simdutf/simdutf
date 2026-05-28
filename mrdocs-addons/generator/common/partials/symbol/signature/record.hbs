@@ -1,0 +1,28 @@
+{{#if template}}{{>template/head template}}
+{{/if~}}
+{{#if isFriend}}friend {{/if~}}
+{{~tag}} {{#if (contains (arr "explicit" "partial") template.kind)~}}
+    {{!~ If the last part is a template specialization, we include links to primary template and the arguments. ~}}
+    {{!~ If the primary template wasn't correctly extracted for some reason, we just print the name as usual. ~}}
+    {{#if template.primary }}{{~>symbol/name template.primary ~}}{{else}}{{ name }}{{/if}}{{>template/args args=template.args ~}}
+{{~else~}}
+    {{>symbol/name-text symbol ~}}
+{{~/if}}
+{{~#if isFinal}} final{{/if~}}
+{{#if bases}}
+
+{{#each bases~}}
+    {{#if @first}}
+    :{{else}}
+    ,{{/if~}}
+    {{#unless (eq access ../defaultAccess)}} {{access}}{{/unless~}}
+    {{#if isVirtual}} virtual{{/if}} {{>type/declarator type~}}
+{{/each~}}
+{{/if}}
+{{!-- Unless we are going to show a class body ("{ ... }"), don't add a
+      semicolon if the record is final, because something like `class A
+      final;` is ill-formed (`final` can't be used on a non-defining
+      declaration). Similarly, don't show a semicolon if there are base
+      classes. --}}
+{{~#isSeeBelow}} { /* see-below */ }{{/isSeeBelow~}}
+{{#if (or isSeeBelow (and (not isFinal) (eq (len bases) 0)))}};{{/if}}

@@ -1,0 +1,27 @@
+{{!--
+    Renders a template parameter with links to any named components.
+
+    If the template parameter is a type, the templated type name is rendered.
+    If the template parameter is a constant, the declarator of the type is rendered.
+    If the template parameter is a template, the template head is rendered.
+
+    Expected Context: {TParam}
+
+    Example:
+        {{> template/param tparam }}
+
+    See: https://mrdocs.com/docs/mrdocs/develop/generators.html#dom_reference
+--}}
+{{#if (eq kind "type")~}}
+    {{#if constraint}}{{>type/name-info constraint link-components-impl=link-components-impl }}{{else}}{{key}}{{/if~}}
+    {{#if is-pack}}{{ str "..." }}{{/if~}}
+    {{#if name}} {{name}}{{/if~}}
+    {{#if default}} = {{>template/arg default link-components-impl=link-components-impl ~}}{{/if~}}
+{{else if (eq kind "constant")~}}
+    {{>type/declarator type decl-name=name link-components-impl=link-components-impl }}{{#if is-pack}}{{ str "..." }}{{/if~}}
+    {{#if default}} = {{>template/arg default link-components-impl=link-components-impl~}}{{/if~}}
+{{else if (eq kind "template")~}}
+    {{>template/head}} typename{{#if is-pack}}{{ str "..." }}{{/if~}}
+    {{#if name}} {{name}}{{/if~}}
+    {{#if default}} = {{>template/arg default link-components-impl=link-components-impl~}}{{/if~}}
+{{/if}}

@@ -1,0 +1,5 @@
+using {{#if (contains (arr "typename" "enum") usingClass)}} {{usingClass}}
+{{~/if~}}
+{{~#if qualifier~}}
+    {{>type/name-info qualifier }}
+{{~/if}};

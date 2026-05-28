@@ -1,0 +1,24 @@
+{{!--
+    Renders a Type Info Object as a declaration with links to any named components.
+
+    Expected Context: {Type Info}
+
+    Optional parameters:
+        decl-name: The symbol name for the declaration.
+        decl-name-targs: The symbol template arguments for the declaration.
+
+    Example:
+        {{> declarator type }}
+
+    See: https://mrdocs.com/docs/mrdocs/develop/generators.html#dom_reference
+--}}
+{{! Render the prefix of the declaration. ~}}
+{{>type/declarator-prefix link-components-impl=link-components-impl~}}
+{{! Render the symbol name between the prefix and suffix. ~}}
+{{~#if decl-name}} {{decl-name~}}
+    {{~#if decl-name-targs~}}
+        {{>template/args args=decl-name-targs link-components-impl=link-components-impl}}
+    {{~/if~}}
+{{~/if~}}
+{{! Render the suffix of the declaration. ~}}
+{{~>type/declarator-suffix link-components-impl=link-components-impl}}

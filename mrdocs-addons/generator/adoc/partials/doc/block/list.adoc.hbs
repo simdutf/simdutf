@@ -1,0 +1,9 @@
+{{#each items}}
+* {{#each blocks}}{{#unless @first}}
+
++
+{{/unless}}
+{{#if (eq kind "paragraph")}}{{> doc/inline-container }}{{else}}{{> doc/block }}{{/if}}
+{{/each}}
+{{/each}}
+

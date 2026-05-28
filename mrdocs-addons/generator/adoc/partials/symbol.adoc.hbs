@@ -1,0 +1,247 @@
+{{!--
+    Renders the documentation for a symbol in a format that is coherent for all symbol kinds.
+
+    This partial conditionally checks if each documentation section exists and if a symbol kind
+    does not provide a specific kind of documentation section, that section is not rendered.
+
+    Expected Context: {Root Context Object}
+
+    Example:
+        {{> symbol }}
+
+    See: https://mrdocs.com/docs/mrdocs/develop/generators.html#dom_reference
+--}}
+{{#unless @root.config.multipage }}
+{{! Single page documentation: symbol is not available to the wrapper but it's available here }}
+{{! Include the symbol title at a higher level }}
+{{#> markup/h level=1 id=symbol.anchor }}{{> symbol/qualified-name-title symbol }}{{/markup/h}}
+{{~/unless}}
+{{! Brief }}
+{{#if symbol.doc.brief}}
+{{> doc/block/brief symbol.doc.brief }}
+{{/if}}
+{{! Synopsis }}
+{{#unless (eq symbol.kind "namespace")}}
+{{#> markup/dynamic-level-h }}{{#if (ne symbol.kind "overloads")}}Synopsis{{else}}Synopses{{/if}}{{/markup/dynamic-level-h~}}
+{{>location/source dcl=(primary_location symbol)}}
+
+
+{{> symbol/signatures symbol }}
+{{/unless}}
+{{! Base classes }}
+{{#if (any_of_by symbol.bases "isPublic")}}
+{{#> markup/dynamic-level-h }}Base Classes{{/markup/dynamic-level-h~}}
+[cols=2]
+|===
+| Name
+| Description
+{{#each (filter_by symbol.bases "isPublic")}}
+| {{#>markup/code}}{{> type/declarator type }}{{/markup/code}}
+| {{> doc/block/inline-brief type.name.symbol.doc.brief }}
+{{/each}}
+|===
+
+{{/if}}
+{{! Protected Base classes }}
+{{#if (any_of_by symbol.bases "isProtected")}}
+{{#> markup/dynamic-level-h }}Protected Base Classes{{/markup/dynamic-level-h~}}
+[cols=2]
+|===
+| Name
+| Description
+{{#each (filter_by symbol.bases "isProtected")}}
+| {{#>markup/code}}{{> type/declarator type }}{{/markup/code}}
+| {{> doc/block/inline-brief type.name.symbol.doc.brief }}
+{{/each}}
+|===
+
+{{/if}}
+{{! Members }}
+{{! Record interface }}
+{{#if (eq symbol.kind "record")}}
+{{#with symbol.interface}}
+{{>symbol/tranche tranche=public label="" is-namespace=false}}
+{{>symbol/tranche tranche=protected label="Protected" is-namespace=false}}
+{{>symbol/tranche tranche=private label="Private" is-namespace=false}}
+{{/with}}
+{{! Namespace members }}
+{{else if (eq symbol.kind "namespace")}}
+{{>symbol/tranche tranche=symbol.members label="" is-namespace=true}}
+{{! Enum members }}
+{{else if (eq symbol.kind "enum")}}
+{{>symbol/members-table members=symbol.constants title="Members"}}
+{{/if}}
+{{! Friends }}
+{{#if symbol.friends}}
+{{#> markup/dynamic-level-h }}Friends{{/markup/dynamic-level-h~}}
+[cols=2]
+|===
+| Name
+| Description
+{{#each symbol.friends }}
+{{#if symbol}}
+| {{#>markup/code}}{{> symbol/qualified-name symbol }}{{/markup/code}}
+| {{> doc/block/inline-brief symbol.doc.brief }}
+{{else}}
+| {{#>markup/code}}{{> type/declarator type }}{{/markup/code}}
+|
+{{/if}}
+{{/each}}
+|===
+
+{{/if}}
+{{! Using directives }}
+{{#if symbol.usingDirectives}}
+{{>symbol/members-table members=symbol.usingDirectives title="Using Namespace Directives"}}
+
+{{/if}}
+{{! Related symbols }}
+{{#if symbol.doc.related}}
+{{#> markup/dynamic-level-h }}Non-Member Functions{{/markup/dynamic-level-h~}}
+[cols=2]
+|===
+| Name
+| Description
+{{#each symbol.doc.related}}
+| {{> doc/inline/reference }}
+| {{> doc/block/inline-brief symbol.doc.brief }}
+{{/each}}
+|===
+
+{{/if}}
+{{! Derived classes }}
+{{#if symbol.derived}}
+{{#> markup/dynamic-level-h }}Derived Classes{{/markup/dynamic-level-h~}}
+[cols=2]
+|===
+| Name
+| Description
+{{#each symbol.derived}}
+| {{#if url~}}
+{{#>markup/a href=url}}{{#>markup/code}}{{> type/name-info-text . }}{{/markup/code}}{{/markup/a}}
+{{else~}}
+{{> type/name-info-text . }}
+{{/if}}
+| {{> doc/block/inline-brief doc.brief }}
+{{/each}}
+|===
+
+{{/if}}
+{{! Description }}
+{{#if symbol.doc.description}}
+{{#unless traversing-global-namespace}}
+{{#unless (eq (lookup (first symbol.doc.description) "kind") "heading") }}
+{{#> markup/dynamic-level-h }}Description{{/markup/dynamic-level-h~}}
+{{~/unless}}
+{{> doc/block/document symbol.doc.description }}
+{{/unless}}
+{{/if}}
+{{! Using symbols }}
+{{#if symbol.shadows}}
+{{#> markup/dynamic-level-h }}Introduced Symbols{{/markup/dynamic-level-h~}}
+{{#if (any_of_by symbol.shadows "doc")}}
+[cols=2]
+|===
+| Name
+| Description
+{{#each symbol.shadows}}
+| {{> symbol/qualified-name . }}
+| {{> doc/block/inline-brief doc.brief }}
+{{/each}}
+|===
+{{else}}
+[cols=1]
+|===
+| Name
+{{#each symbol.shadows}}
+| {{> symbol/qualified-name . }}
+{{/each}}
+|===
+{{/if}}
+{{/if}}
+{{! Exceptions }}
+{{#if symbol.doc.exceptions}}
+{{#> markup/dynamic-level-h }}Exceptions{{/markup/dynamic-level-h~}}
+[cols=2]
+|===
+| Name
+| Thrown on
+{{#each symbol.doc.exceptions}}
+| {{> doc/inline/reference exception}}
+| {{>doc/block .}}
+{{/each}}
+|===
+
+{{/if}}
+{{! Return value }}
+{{#if symbol.doc.returns}}
+{{#> markup/dynamic-level-h }}Return Value{{/markup/dynamic-level-h~}}
+{{~#if (eq (size symbol.doc.returns) 1)}}
+{{> doc/block/returns symbol.doc.returns.[0]}}
+
+
+{{else}}
+{{#each symbol.doc.returns}}
+* {{> doc/block/returns .}}
+{{/each}}
+
+{{/if}}
+{{/if}}
+{{! Template Parameters }}
+{{#if symbol.doc.tparams}}
+{{#> markup/dynamic-level-h }}Template Parameters{{/markup/dynamic-level-h~}}
+[cols=2]
+|===
+| Name
+| Description
+{{#each symbol.doc.tparams}}
+| *{{name}}*
+| {{>doc/block .}}
+{{/each}}
+|===
+
+{{/if}}
+{{! Parameters }}
+{{#if symbol.doc.params}}
+{{#> markup/dynamic-level-h }}Parameters{{/markup/dynamic-level-h~}}
+[cols=2]
+|===
+| Name
+| Description
+{{#each symbol.doc.params}}
+| *{{name}}*{{#if direction}} [{{direction}}]{{/if}}
+| {{>doc/block .}}
+{{/each}}
+|===
+
+{{/if}}
+{{! Preconditions }}
+{{#if symbol.doc.preconditions}}
+{{#> markup/dynamic-level-h }}Preconditions{{/markup/dynamic-level-h~}}
+{{#each symbol.doc.preconditions}}* {{>doc/block .}}
+{{/each}}
+
+{{/if}}
+{{! Postconditions }}
+{{#if symbol.doc.postconditions}}
+{{#> markup/dynamic-level-h }}Postconditions{{/markup/dynamic-level-h~}}
+{{#each symbol.doc.postconditions}}* {{>doc/block .}}
+{{/each}}
+
+{{/if}}
+{{! See Also }}
+{{#if symbol.doc.sees}}
+{{#> markup/dynamic-level-h }}See Also{{/markup/dynamic-level-h~}}
+{{#each symbol.doc.sees}}
+{{>doc/block/see .}}
+{{/each}}
+{{/if}}
+{{! Recursive index for multipage global namespace }}
+{{#if (and (eq symbol.kind "namespace") @root.config.multipage @root.config.global-namespace-index (eq @root.symbol.kind "namespace") (not @root.symbol.name) (not @root.symbol.parent)) }}
+{{#each symbol.members.namespaces}}
+{{#if isRegular}}
+{{#> markup/dynamic-level-h id=null }}{{> symbol/qualified-name . }} namespace{{/markup/dynamic-level-h~}}
+{{> symbol symbol=. id=null traversing-global-namespace=true }}
+{{/if}}
+{{/each}}
+{{/if}}

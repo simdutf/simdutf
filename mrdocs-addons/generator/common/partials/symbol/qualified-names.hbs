@@ -1,0 +1,18 @@
+{{!--
+    Renders the qualified symbol name with a link to each component
+
+    This partial renders the symbol name in a format where each component
+    is linked to their documentation.
+
+    Expected Context: {Symbol Object}
+
+    Example:
+        {{> symbol/qualified-name symbol }}
+
+    See: https://mrdocs.com/docs/mrdocs/develop/generators.html#dom_reference
+--}}
+{{! We remove whitespace between all tag so the result is in a single line ~}}
+{{~#if (and parent parent.parent)~}}
+{{~> symbol/qualified-names parent ~}}::
+{{~/if~}}
+{{~> symbol/name . ~}}

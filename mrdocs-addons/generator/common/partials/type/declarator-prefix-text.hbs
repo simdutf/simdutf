@@ -1,0 +1,14 @@
+{{!--
+    Renders declaration prefix of a Type Info Object as text.
+
+    The prefix is the part of the declaration that comes before the type name.
+    It includes the pointer, array, and function declarators.
+
+    Expected Context: {Type Info}
+
+    Example:
+        {{> declarator-prefix type }}
+
+    See: https://mrdocs.com/docs/mrdocs/develop/generators.html#dom_reference
+--}}
+{{~>type/declarator-prefix . link-components-impl=false ~}}

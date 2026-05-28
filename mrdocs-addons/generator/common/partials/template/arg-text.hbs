@@ -1,0 +1,13 @@
+{{!--
+    Renders a template argument as text.
+
+    This partial renders a template argument for a template instantiation.
+
+    Expected Context: {TArg}
+
+    Example:
+        {{> template/arg symbol.template.args[0] }}
+
+    See: https://mrdocs.com/docs/mrdocs/develop/generators.html#dom_reference
+--}}
+{{~>template/arg . link-components-impl=false ~}}

@@ -1,0 +1,18 @@
+{{!--
+    Renders the qualified symbol name as text only
+
+    This partial renders the qualified symbol name as text only.
+
+    Expected Context: {Symbol Object}
+
+    Example:
+        {{> symbol/qualified-name symbol }}
+
+    See: https://mrdocs.com/docs/mrdocs/develop/generators.html#dom_reference
+--}}
+{{~#if (and parent parent.parent)~}}
+{{~> symbol/qualified-name-text parent ~}}::
+{{~/if~}}
+{{~#if name ~}}
+{{~> symbol/name-text . ~}}
+{{~/if~}}

@@ -1,0 +1,65 @@
+{{!--
+    Renders declaration prefix of a Type Info Object with links to any named components.
+
+    The prefix is the part of the declaration that comes before the type name.
+    It includes the pointer, array, and function declarators.
+
+    Expected Context: {Type Info}
+
+    Example:
+        {{> declarator-prefix type }}
+
+    See: https://mrdocs.com/docs/mrdocs/develop/generators.html#dom_reference
+--}}
+{{#if pointee-type~}}
+    {{! Pointee type is array or function ~}}
+    {{~>type/declarator-prefix pointee-type link-components-impl=link-components-impl~}}
+    {{#if (contains (arr "array" "function") pointee-type.kind)~}}
+        {{! Open the function parenthesis for the declarator suffix ~}}
+        {{! The symbol name will be rendered between the prefix and suffix ~}}
+        (
+    {{~/if~}}
+{{~/if~}}
+{{#if element-type~}}
+    {{! Array type declarator prefix includes prefix of element type ~}}
+    {{~>type/declarator-prefix element-type link-components-impl=link-components-impl~}}
+{{/if~}}
+{{#if return-type~}}
+    {{! Function prefix includes prefix of return type ~}}
+    {{~>type/declarator-prefix return-type link-components-impl=link-components-impl~}}
+{{/if~}}
+{{#if (eq kind "named")~}}
+    {{! Named type declarator prefix includes the name ~}}
+    {{>type/name-info name link-components-impl=link-components-impl }}
+{{~else if (eq kind "auto")~}}
+    {{! Auto type declarator prefix includes the keyword ~}}
+    {{#if constraint~}}
+        {{>type/name-info constraint link-components-impl=link-components-impl }} {{/if~}}
+    {{keyword~}}
+{{~/if~}}
+{{#if is-const~}}
+    {{! cv-qualifiers as literal strings ~}}
+    {{ str ' ' }}const
+{{~/if~}}
+{{#if is-volatile~}}
+    {{! cv-qualifiers as literal strings ~}}
+    {{ str ' ' }}volatile
+{{~/if~}}
+{{#if (eq kind "lvalue-reference")~}}
+    {{! Refqualifiers as "&" or "&&" ~}}
+    &
+{{~ else if (eq kind "rvalue-reference") ~}}
+    &&
+{{~ else if (eq kind "pointer")~}}
+    *
+{{~ else if (eq kind "member-pointer")~}}
+    {{! Member pointer declarator prefix includes the class name ~}}
+    {{>type/declarator parent-type link-components-impl=link-components-impl}}::*
+{{~ else if (eq kind "decltype")~}}
+    {{! Decltype declarator prefix includes the expression ~}}
+    decltype({{operand}})
+{{~/if~}}
+{{#if is-pack~}}
+    {{! Pack declarator prefix includes the ellipsis ~}}
+    {{ str "..." }}
+{{~/if}}

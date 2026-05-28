@@ -1,0 +1,16 @@
+{{!--
+    Renders a Type Info Object as a declaration as text.
+
+    Expected Context: {Type Info}
+
+    Optional parameters:
+        decl-name: The symbol name for the declaration.
+        decl-name-targs: The symbol template arguments for the declaration.
+
+    Example:
+        {{> declarator type }}
+
+    See: https://mrdocs.com/docs/mrdocs/develop/generators.html#dom_reference
+--}}
+{{! Render the prefix of the declaration. ~}}
+{{>type/declarator link-components-impl=false decl-name=decl-name decl-name-targs=decl-name-targs~}}

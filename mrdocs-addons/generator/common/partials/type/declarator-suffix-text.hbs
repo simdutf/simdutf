@@ -1,0 +1,15 @@
+{{!--
+    Renders declaration suffix of a Type Info Object as text.
+
+    The suffix is the part of the declaration that comes after the type name.
+    It might include the suffix for pointee types, array element types,
+    or function parameters with specifiers.
+
+    Expected Context: {Type Info}
+
+    Example:
+        {{> declarator-suffix type }}
+
+    See: https://mrdocs.com/docs/mrdocs/develop/generators.html#dom_reference
+--}}
+{{~>type/declarator-suffix . link-components-impl=false~}}

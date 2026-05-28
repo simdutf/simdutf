@@ -1,0 +1,4 @@
+= Addons/JS
+
+This directory holds shared JavaScript scripts and
+subdirectories.

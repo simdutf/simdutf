@@ -1,0 +1,41 @@
+# $schema: https://mrdocs.com/docs/mrdocs/develop/_attachments/mrdocs.schema.json
+#
+# Experimental MrDocs configuration (alternative to Doxygen).
+# Generate with:  mrdocs mrdocs.yml
+# Output lands in doc/mrdocs-html so it does not clobber the Doxygen
+# output in doc/api/html.
+
+source-root: .
+compilation-database: build_mrdocs/compile_commands.json
+output: doc/mrdocs-html
+
+generator: html
+multipage: true
+
+# Custom addons: the stock html generator emits unstyled HTML, so we override
+# the wrapper template (mrdocs-addons/generator/html/layouts/wrapper.html.hbs)
+# to inject a stylesheet.
+addons: mrdocs-addons
+
+# Only document the public API declared under include/.
+input:
+  - include
+
+# Restrict to the public simdutf namespace; drop internal machinery.
+include-symbols:
+  - 'simdutf::**'
+exclude-symbols:
+  - 'simdutf::internal::**'
+  - 'simdutf::scalar::**'
+  - 'simdutf::detail'
+  - 'simdutf::detail::**'
+  - 'simdutf::tables'
+  - 'simdutf::tables::**'
+
+extract-all: true
+warn-if-undocumented: false
+
+# NOTE: on macOS the bundled Clang has no default sysroot and cannot find
+# system libc headers such as <strings.h>. scripts/build_api_docs.sh passes
+# `--libc-includes=$(xcrun --show-sdk-path)/usr/include` on macOS. On Linux
+# (CI) the system headers are found automatically, so nothing extra is needed.

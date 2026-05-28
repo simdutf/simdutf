@@ -1,0 +1,44 @@
+{{!--
+    Renders declaration suffix of a Type Info Object with links to any named components.
+
+    The suffix is the part of the declaration that comes after the type name.
+    It might include the suffix for pointee types, array element types,
+    or function parameters with specifiers.
+
+    Expected Context: {Type Info}
+
+    Example:
+        {{> declarator-suffix type }}
+
+    See: https://mrdocs.com/docs/mrdocs/develop/generators.html#dom_reference
+--}}
+{{#if pointee-type~}}
+    {{! Pointee type is array or function ~}}
+    {{#if (contains (arr "array" "function") pointee-type.kind)~}}
+        {{! Close the function parenthesis from the declarator prefix ~}}
+        {{! The symbol name will be rendered between the prefix and suffix ~}}
+        )
+    {{~/if~}}
+    {{! Declarator suffix of the pointee type ~}}
+    {{~>type/declarator-suffix pointee-type link-components-impl=link-components-impl~}}
+{{else if (eq kind "array")~}}
+    {{! Array declarator suffix includes bounds and array element suffix ~}}
+    [{{bounds-value}}]
+    {{~>type/declarator-suffix element-type link-components-impl=link-components-impl~}}
+{{else if (eq kind "function")~}}
+    {{! Function declarator suffix includes parameter types and cv-qualifiers ~}}
+    ({{#each param-types~}}
+        {{~>type/declarator link-components-impl=link-components-impl~}}
+        {{~#unless @last}}, {{/unless~}}
+    {{/each~}}
+    {{! Include final "..." for variadic functions ~}}
+    {{#if is-variadic}}{{#if param-types}}, {{/if}}{{ str "..." }}{{/if}}){{!~}}
+    {{! cv-qualifiers as literal strings ~}}
+    {{~#if cv-qualifiers}} {{cv-qualifiers}}{{/if~}}
+    {{! Refqualifiers as "&" or "&&" ~}}
+    {{#if (eq ref-qualifier "lvalue")}} &{{else if (eq ref-qualifier "rvalue")}} &&{{/if~}}
+    {{! Exception spec as literal string ~}}
+    {{#if exception-spec}} {{exception-spec}}{{/if~}}
+    {{! Declarator suffix of the return type ~}}
+    {{~>type/declarator-suffix return-type link-components-impl=link-components-impl~}}
+{{/if}}

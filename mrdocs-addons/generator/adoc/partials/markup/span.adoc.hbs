@@ -1,0 +1,5 @@
+{{#unless class~}}
+{{> @partial-block }}
+{{~else~}}
+[.{{class}}]#{{> @partial-block }}#
+{{~/unless}}

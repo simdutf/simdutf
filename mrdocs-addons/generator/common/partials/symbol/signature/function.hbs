@@ -1,0 +1,43 @@
+{{#if template}}{{>template/head template}}
+{{/if~}}
+{{#if isFriend}}friend
+{{/if~}}
+{{#if attributes}}{{#unless isFriend}}{{ str "[[" }}{{join ", " attributes}}{{ str "]]" }}
+{{/unless}}{{/if~}}
+{{#if constexprKind}}{{constexprKind}}
+{{/if~}}
+{{#if storageClass}}{{storageClass}}
+{{/if~}}
+{{#if isVirtual}}virtual
+{{/if~}}
+{{#if explicitSpec}}{{explicitSpec}}
+{{/if~}}
+{{#if (eq functionClass "normal")}}{{>type/declarator-prefix return}}
+{{/if~}}
+{{~#if force-link~}}
+{{>symbol/name symbol }}
+{{~else if (eq functionClass "conversion")~}}
+{{>symbol/name symbol }}
+{{~else if (contains (arr "explicit" "partial") template.kind)~}}
+{{>symbol/name template.primary ~}}{{>template/args-text args=template.args ~}}
+{{~else~}}
+{{>symbol/name-text symbol }}
+{{~/if~}}
+({{#if isExplicitObjectMemberFunction}}this {{/if}}{{#each params}}{{#unless (and @first @last)}}
+    {{/unless}}{{>type/declarator type decl-name=name~}}
+    {{#if default}} = {{default}}{{/if~}}
+    {{#unless @last}},{{/unless~}}
+{{/each~}}{{#if isVariadic}}{{#if params}}, {{/if}}{{ str "..." }}{{/if}})
+{{~#if isConst}} const{{/if~}}
+{{#if isVolatile}} volatile{{/if~}}
+{{#if refQualifier}} {{refQualifier}}{{/if~}}
+{{#if exceptionSpec}} {{exceptionSpec}}{{/if~}}
+{{#if (eq functionClass "normal")}}{{>type/declarator-suffix return}}{{/if~}}
+{{#if requires}}
+
+requires {{requires}}{{/if~}}
+{{#if hasOverrideAttr}} override{{/if~}}
+{{#if isFinal}} final{{/if~}}
+{{#if isPure}} = 0{{/if~}}
+{{#if isDeleted}} = delete{{/if~}}
+{{#if isDefaulted}} = default{{/if}};

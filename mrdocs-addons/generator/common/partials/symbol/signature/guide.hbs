@@ -1,0 +1,8 @@
+{{#if template}}{{>template/head template}}
+{{/if~}}
+{{>symbol/name symbol}}
+({{#each params}}{{#unless (and @first @last)}}
+    {{/unless}}{{>type/declarator type decl-name=name~}}
+    {{#if default}} = {{default}}{{/if~}}
+    {{#unless @last}},{{/unless~}}
+{{/each~}}) -> {{>type/declarator deduced}};

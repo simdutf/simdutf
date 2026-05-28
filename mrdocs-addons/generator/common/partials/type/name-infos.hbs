@@ -1,0 +1,34 @@
+{{!--
+    Renders a Name Info object with links to any named components.
+
+    Name Info objects are fields of a Type Object when
+    they carry information about the Symbol the type
+    refers to, including its name.
+
+    Expected Context: {Name Info Object}
+
+    Example:
+        {{> type/name-info name }}
+
+    See: https://mrdocs.com/docs/mrdocs/develop/generators.html#dom_reference
+--}}
+{{#if symbol.isImplementationDefined~}}
+    {{! The name refers to a symbol that's implementation defined. These are special names that should not be linked. ~}}
+    {{ str '/* '}}implementation-defined{{ str ' */'~}}
+{{else~}}
+    {{#if prefix~}}
+        {{> type/name-info prefix link-components-impl=link-components-impl~}}::
+    {{~/if~}}
+    {{! Render the name of the symbol. ~}}
+    {{#if (and symbol.url (or link-components-impl (is_undefined link-components-impl)))~}}
+        {{! Link to the symbol's documentation. ~}}
+        {{#>markup/a href=symbol.url}}{{name}}{{/markup/a~}}
+    {{else~}}
+        {{! No link, just the name. ~}}
+        {{name~}}
+    {{/if~}}
+    {{#if args~}}
+        {{! Render the template arguments of the symbol. ~}}
+        {{>template/args args=args link-components-impl=link-components-impl~}}
+    {{/if~}}
+{{/if~}}

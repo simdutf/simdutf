@@ -1,0 +1,15 @@
+{{!--
+    Renders a Name Info object as text.
+
+    Name Info objects are fields of a Type Object when
+    they carry information about the Symbol the type
+    refers to, including its name.
+
+    Expected Context: {Name Info Object}
+
+    Example:
+        {{> type/name-info name }}
+
+    See: https://mrdocs.com/docs/mrdocs/develop/generators.html#dom_reference
+--}}
+{{~> type/name-infos .  link-components-impl=false ~}}

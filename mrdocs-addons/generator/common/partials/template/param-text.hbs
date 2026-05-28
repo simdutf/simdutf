@@ -1,0 +1,15 @@
+{{!--
+    Renders a template parameter as text.
+
+    If the template parameter is a type, the templated type name is rendered.
+    If the template parameter is a constant, the declarator of the type is rendered.
+    If the template parameter is a template, the template head is rendered.
+
+    Expected Context: {TParam}
+
+    Example:
+        {{> template/param tparam }}
+
+    See: https://mrdocs.com/docs/mrdocs/develop/generators.html#dom_reference
+--}}
+{{~> template/param . link-components-impl=false ~}}

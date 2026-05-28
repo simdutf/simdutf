@@ -1,0 +1,21 @@
+{{#>markup/table cols=(select includeBrief 2 1)}}
+{{#>markup/thead}}
+{{#>markup/tr~}}
+{{#>markup/th}}Name{{/markup/th}}
+{{#if includeBrief}}
+{{#>markup/th}}Description{{/markup/th}}
+{{/if}}
+{{/markup/tr}}
+{{/markup/thead}}
+{{#>markup/tbody}}
+{{#if isName}}
+{{#each members}}
+{{> symbol/detail/members-table-row . includeBrief=false isName=true}}
+{{/each}}
+{{ else }}
+{{#each (filter_by members "isRegular" "isSeeBelow")}}
+{{> symbol/detail/members-table-row . includeBrief=../includeBrief isName=false}}
+{{/each}}
+{{/if}}
+{{/markup/tbody}}
+{{/markup/table}}
