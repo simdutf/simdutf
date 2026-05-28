@@ -373,15 +373,21 @@ inline simdutf_warn_unused utf8_result rewind_and_validate_with_counts(
   if ((*start & 0b11000000) == 0b10000000) {
     return utf8_result(error_code::TOO_LONG, 0, 0, 0);
   }
-  // As we backtrack and start from an earlier point, we need to counteract
-  // double-counting.
+  // If this is the start of the buffer, we don't need to rewind to check the
+  // previous chunk.
+  if (start == buf) {
+    return validate_utf8_with_counts(buf, len);
+  }
+  // As this isn't the start of the buffer, the error might be in the previous
+  // chunk. So we backtrack and also need to avoid double counting.
   size_t extra_len{0};
   size_t extra_continuations{0};
   size_t extra_four_bytes{0};
   // A leading byte cannot be further than 4 bytes away
-  // TODO: Wouldn't 5 suffice?
-  for (int i = 0; i < 4; i++) {
-    // We rewind at least one byte to find the previous leading byte.
+  // TODO: Wouldn't `i < 4` suffice? Maybe actually no difference behavior-wise
+  // (Changed to 4 in a previous commit to try)
+  for (int i = 0; i < 5; i++) {
+    // We rewind at least one byte to find the actual previous leading byte.
     // We do so to backtrack into the last chunk in case the utf8 error happened
     // there already.
     buf--;
