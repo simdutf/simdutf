@@ -17,11 +17,15 @@ CMAKE_ARGS="-DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DSIMDUTF_TESTS=OFF \
 MRDOCS_ARGS=""
 
 # MrDocs ships its own Clang. On macOS that Clang has no default sysroot, so we
-# point it at the active SDK; on Linux the system headers are found by default.
+# point it at the active SDK. On Linux the bundled Clang's libc search path
+# does not always match the host (e.g. Fedora's /usr/include layout), so ask
+# MrDocs to fall back to the system libc headers.
 if [ "$(uname)" = "Darwin" ]; then
   SDK=$(xcrun --show-sdk-path)
   CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_OSX_SYSROOT=$SDK"
   MRDOCS_ARGS="--libc-includes=$SDK/usr/include"
+else
+  MRDOCS_ARGS="--use-system-libc"
 fi
 
 echo "==> Configuring (compile_commands.json) in build_mrdocs/"

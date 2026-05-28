@@ -35,7 +35,8 @@ exclude-symbols:
 extract-all: true
 warn-if-undocumented: false
 
-# NOTE: on macOS the bundled Clang has no default sysroot and cannot find
-# system libc headers such as <strings.h>. scripts/build_api_docs.sh passes
-# `--libc-includes=$(xcrun --show-sdk-path)/usr/include` on macOS. On Linux
-# (CI) the system headers are found automatically, so nothing extra is needed.
+# NOTE: the bundled Clang has no default sysroot and may fail to find libc
+# headers such as <strings.h>. scripts/build_api_docs.sh handles this:
+# `--libc-includes=$(xcrun --show-sdk-path)/usr/include` on macOS, and
+# `--use-system-libc` on Linux (needed on distros like Fedora whose include
+# layout the bundled Clang does not probe out of the box).
