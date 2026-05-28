@@ -1,0 +1,36 @@
+name: README reflow check
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  reflow:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: run reflow script
+        run: |
+          python3 scripts/reflow_readme.py README.md
+      - name: check for differences
+        run: |
+          git diff -- README.md >reflow.patch
+          if [ $(wc -c <reflow.patch) -ne 0 ] ; then
+             echo "README.md is not in reflowed canonical form."
+             echo "Run scripts/reflow_readme.py and commit the result."
+             cat reflow.patch
+             exit 1
+          else
+             rm reflow.patch
+          fi
+      - name: store patch as artifact if there is one
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reflow.patch
+          path: reflow.patch
+          if-no-files-found: ignore

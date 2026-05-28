@@ -1249,7 +1249,8 @@ HTML_STYLESHEET        =
 
 HTML_EXTRA_STYLESHEET  = theme/doxygen-awesome.css \
                          theme/doxygen-awesome-sidebar-only.css \
-                         theme/doxygen-awesome-sidebar-only-darkmode-toggle.css
+                         theme/doxygen-awesome-sidebar-only-darkmode-toggle.css \
+                         doc/simdutf-overrides.css
 
 # The HTML_EXTRA_FILES tag can be used to specify one or more extra images or
 # other source files which should be copied to the HTML output directory. Note

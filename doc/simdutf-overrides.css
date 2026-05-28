@@ -1,0 +1,28 @@
+/* simdutf overrides for doxygen-awesome.
+ * Loaded last via HTML_EXTRA_STYLESHEET so these win over upstream defaults. */
+
+:root {
+    /* Upstream defaults to 27px on 15.6px text (~1.73 line-height), which
+     * reads as double-spaced. Tighten to ~1.55 for normal prose. */
+    --content-line-height: 24px;
+}
+
+/* Trim the gap between consecutive paragraphs in the API content area.
+ * Doxygen sometimes emits multiple <p> blocks where a single paragraph is
+ * intended; a smaller margin keeps the flow readable in either case. */
+div.contents p {
+    margin-top: 0;
+    margin-bottom: var(--spacing-medium);
+}
+
+/* doxygen.css injects a literal newline at the end of every code line via
+ * `div.line:after { content: "\A"; white-space: pre }`. Each .line is already
+ * its own block, so the injected newline produces a second line break and
+ * doubles the apparent line spacing. Drop it (both selector syntaxes for
+ * maximum compatibility, and !important to win the cascade). */
+div.line:after,
+div.line::after {
+    content: "" !important;
+    display: none !important;
+}
+

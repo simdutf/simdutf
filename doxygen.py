@@ -36,6 +36,62 @@ def generate_readme():
                 print(line, file=output)
 
 
+def strip_fragment_spacers():
+    """Remove the empty <div class="line"> </div> spacers doxygen inserts
+    between every pair of code lines in markdown fenced blocks (cause: that
+    pattern renders as double-spaced since each .line is itself a block).
+
+    Source-view files (*_source.html) carry one .line per source line with no
+    spacers AND use span.lineno markup; we skip any fragment that contains a
+    span.lineno so source listings stay intact.
+    """
+    # Spacer .line divs may be a plain `<div class="line"> </div>` or, inside a
+    # syntax-highlighted /** comment block, `<div class="line"><span class="…"></span> </div>`.
+    # Match any .line whose content is only whitespace and empty span tags.
+    spacer_re = re.compile(
+        r'<div class="line">\s*(?:<span class="[^"]*"></span>\s*)*</div>\n?'
+    )
+    fragment_re = re.compile(
+        r'(<div class="fragment">)(.*?)(</div><!-- fragment -->)',
+        re.DOTALL,
+    )
+
+    def fix_fragment(match):
+        body = match.group(2)
+        if 'span class="lineno"' in body:
+            return match.group(0)
+        return match.group(1) + spacer_re.sub('', body) + match.group(3)
+
+    for path in pathlib.Path('doc/api/html').glob('*.html'):
+        if path.name.endswith('_source.html'):
+            continue
+        text = path.read_text()
+        new_text = fragment_re.sub(fix_fragment, text)
+        if new_text != text:
+            path.write_text(new_text)
+
+
+def patch_doxygen_css():
+    """Strip the `div.line:after { content: "\\000A" }` rule from doxygen.css.
+
+    Each .line is already a block-level element so the injected newline makes
+    every code line two visual lines tall. Pure CSS overrides in
+    simdutf-overrides.css were unreliable across browser/cache combinations,
+    so we just rewrite the rule at build time.
+    """
+    path = pathlib.Path('doc/api/html/doxygen.css')
+    if not path.exists():
+        return
+    text = path.read_text()
+    new_text = re.sub(
+        r'div\.line:after\s*\{[^}]*\}',
+        'div.line:after { content: none; }',
+        text,
+    )
+    if new_text != text:
+        path.write_text(new_text)
+
+
 def main():
     subprocess.run(['./scripts/prepare_doxygen.sh',])
     generate_readme()
@@ -44,6 +100,8 @@ def main():
     for file in glob.glob('doc/*png'):
         print(f"copying {file}")
         shutil.copy(file, 'doc/api/html/doc')
+    strip_fragment_spacers()
+    patch_doxygen_css()
 
 
 if __name__ == "__main__":
