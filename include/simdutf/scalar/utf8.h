@@ -373,22 +373,27 @@ inline simdutf_warn_unused utf8_result rewind_and_validate_with_counts(
   if ((*start & 0b11000000) == 0b10000000) {
     return utf8_result(error_code::TOO_LONG, 0, 0, 0);
   }
+  // As we backtrack and start from an earlier point, we need to counteract
+  // double-counting.
   size_t extra_len{0};
   size_t extra_continuations{0};
   size_t extra_four_bytes{0};
   // A leading byte cannot be further than 4 bytes away
-  for (int i = 0; i < 5; i++) {
+  // TODO: Wouldn't 5 suffice?
+  for (int i = 0; i < 4; i++) {
+    // We rewind at least one byte to find the previous leading byte.
+    // We do so to backtrack into the last chunk in case the utf8 error happened
+    // there already.
+    buf--;
     unsigned char byte = *buf;
+    extra_len++;
+    if (byte >= 0b11110000) {
+      extra_four_bytes += 1;
+    } else if ((char)byte < -65 + 1) {
+      extra_continuations += 1;
+    }
     if ((byte & 0b11000000) != 0b10000000) {
       break;
-    } else {
-      buf--;
-      extra_len++;
-      if (byte >= 0b11110000) {
-        extra_four_bytes += 1;
-      } else if ((char)byte < -65 + 1) {
-        extra_continuations += 1;
-      }
     }
   }
 
