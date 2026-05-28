@@ -232,6 +232,8 @@ public:
 #if SIMDUTF_FEATURE_UTF8
   simdutf_warn_unused size_t count_utf8(const char *buf,
                                         size_t length) const noexcept override;
+  simdutf_warn_unused utf8_result validate_utf8_with_counts(
+      const char *buf, size_t len) const noexcept override;
 #endif // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
