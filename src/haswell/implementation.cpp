@@ -1115,6 +1115,11 @@ simdutf_warn_unused size_t
 implementation::count_utf8(const char *in, size_t size) const noexcept {
   return utf8::count_code_points_bytemask(in, size);
 }
+simdutf_warn_unused utf8_result implementation::validate_utf8_with_counts(
+    const char *buf, size_t len) const noexcept {
+  return scalar::utf8::validate_utf8_with_counts(buf, len);
+}
+
 #endif // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
