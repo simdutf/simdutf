@@ -50,7 +50,7 @@ namespace BOM {
 
 /**
  * Checks for a BOM. If not, returns unspecified
- * @param input         the string to process
+ * @param byte          the string to process
  * @param length        the length of the string in code units
  * @return the corresponding encoding
  */
