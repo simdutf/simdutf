@@ -12,10 +12,14 @@ output: doc/mrdocs-html
 generator: html
 multipage: true
 
-# Custom addons: the stock html generator emits unstyled HTML, so we override
-# the wrapper template (mrdocs-addons/generator/html/layouts/wrapper.html.hbs)
-# to inject a stylesheet.
-addons: mrdocs-addons
+# Custom addons: the stock html generator emits unstyled HTML, so we overlay a
+# single template (mrdocs-addons/generator/html/layouts/wrapper.html.hbs) to
+# inject the header/sidebar/stylesheet. `addons-supplemental` layers our addon
+# on top of the bundled defaults (last-wins), so we only ship the one file we
+# override -- everything else is inherited. Requires MrDocs >= the develop build
+# (the addons-supplemental overlay is not in the 0.8.0 release).
+addons-supplemental:
+  - mrdocs-addons
 
 # Only document the public API declared under include/.
 input:

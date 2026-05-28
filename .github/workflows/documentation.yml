@@ -20,7 +20,10 @@ permissions:
   id-token: write
 
 env:
-  MRDOCS_VERSION: "0.8.0"
+  # MrDocs build to install. We track "develop-release" because the
+  # `addons-supplemental` template overlay (mrdocs.yml) used to ship only our
+  # single customized wrapper is not yet in a tagged release (>0.8.0).
+  MRDOCS_RELEASE: "develop-release"
 
 jobs:
   deploy:
@@ -35,7 +38,7 @@ jobs:
       - name: Install MrDocs
         run: |
           curl -fsSL \
-            "https://github.com/cppalliance/mrdocs/releases/download/v${MRDOCS_VERSION}/MrDocs-${MRDOCS_VERSION}-Linux.tar.gz" \
+            "https://github.com/cppalliance/mrdocs/releases/download/${MRDOCS_RELEASE}/MrDocs-develop-Linux.tar.gz" \
             -o mrdocs.tar.gz
           mkdir -p "$HOME/mrdocs"
           tar -xzf mrdocs.tar.gz -C "$HOME/mrdocs" --strip-components=1

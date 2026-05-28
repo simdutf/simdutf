@@ -1,4 +1,0 @@
-= Plugins
-
-This directory holds DLLs or shared libraries
-which are loaded when mrdocs is launched.
