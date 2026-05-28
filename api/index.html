@@ -4808,17 +4808,17 @@ fastbase64.coreutils: GNU coreutils-compatible Base64 encoder/decoder</h3>
 Performance</h3>
 <p>The <code>fastbase64</code> tools can be several times faster than standard base64 tools. See <code>scripts/base64bench.sh</code> for a benchmark.</p>
 <p><b>Apple M4 Max</b></p>
-<p>Size | Encode Base64 | Encode FastBase64 | Decode Base64 | Decode FastBase64</p>
-<p>------&mdash;|------------&mdash;|----------------&mdash;|------------&mdash;|---------------&mdash;</p>
-<p>1m | 21.6 | 21.3 | 35.5 | 21.3</p>
-<p>10m | 32.3 | 25.6 | 163.6 | 26.2</p>
-<p>100m | 119.5 | 49.3 | 1433.5 | 52.7</p>
+<p>| Size | Encode Base64 | Encode FastBase64 | Decode Base64 | Decode FastBase64 |</p>
+<p>|---&mdash;|------------&mdash;|----------------&mdash;|------------&mdash;|----------------&mdash;|</p>
+<p>| 1m | 21.6 | 21.3 | 35.5 | 21.3 |</p>
+<p>| 10m | 32.3 | 25.6 | 163.6 | 26.2 |</p>
+<p>| 100m | 119.5 | 49.3 | 1433.5 | 52.7 |</p>
 <p><b>Linux with Xeon Gold 6548N</b></p>
-<p>Size | Encode Base64 | Encode FastBase64 | Decode Base64 | Decode FastBase64</p>
-<p>------&mdash;|------------&mdash;|----------------&mdash;|------------&mdash;|---------------&mdash;</p>
-<p>1m | 13.4 | 15.9 | 13.7 | 12.8</p>
-<p>10m | 27.8 | 23.0 | 37.3 | 17.8</p>
-<p>100m | 183.1 | 93.0 | 291.8 | 84.4</p>
+<p>| Size | Encode Base64 | Encode FastBase64 | Decode Base64 | Decode FastBase64 |</p>
+<p>|---&mdash;|------------&mdash;|----------------&mdash;|------------&mdash;|----------------&mdash;|</p>
+<p>| 1m | 13.4 | 15.9 | 13.7 | 12.8 |</p>
+<p>| 10m | 27.8 | 23.0 | 37.3 | 17.8 |</p>
+<p>| 100m | 183.1 | 93.0 | 291.8 | 84.4 |</p>
 <h1><a class="anchor" id="autotoc_md27"></a>
 Manual implementation selection</h1>
 <p>When compiling the library for x64 processors, we build several implementations of each functions. At runtime, the best</p>
