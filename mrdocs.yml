@@ -13,13 +13,20 @@ generator: html
 multipage: true
 
 # Custom addons: the stock html generator emits unstyled HTML, so we overlay a
-# single template (mrdocs-addons/generator/html/layouts/wrapper.html.hbs) to
-# inject the header/sidebar/stylesheet. `addons-supplemental` layers our addon
-# on top of the bundled defaults (last-wins), so we only ship the one file we
+# single template (mrdocs-addons/generator/html/layouts/wrapper.html.hbs) for
+# the header/sidebar/nav structure. `addons-supplemental` layers our addon on
+# top of the bundled defaults (last-wins), so we only ship the one file we
 # override -- everything else is inherited. Requires MrDocs >= the develop build
 # (the addons-supplemental overlay is not in the 0.8.0 release).
 addons-supplemental:
   - mrdocs-addons
+
+# Styling lives in an external stylesheet rather than inlined in the wrapper
+# template. With linkcss the file is copied to <output>/css/ and referenced
+# from each page via a <link> tag (cached across pages, smaller HTML).
+stylesheets:
+  - doc/mrdocs.css
+linkcss: true
 
 # Only document the public API declared under include/.
 input:
@@ -28,11 +35,27 @@ input:
 # Restrict to the public simdutf namespace; drop internal machinery.
 include-symbols:
   - 'simdutf::**'
-exclude-symbols:
-  - 'simdutf::internal::**'
-  - 'simdutf::scalar::**'
+
+# simdutf::detail and simdutf::internal leak into public-API signatures, so they
+# cannot simply be excluded: detail::input_span_of_byte_like appears as a
+# parameter concept on many free functions, and internal::available_implementation_list
+# / internal::atomic_ptr are the return types of get_available_implementations()
+# and get_active_implementation(). `implementation-defined` keeps these symbols
+# in the corpus -- so the references from those signatures resolve and render as
+# /* implementation-defined */ -- while giving them no page of their own.
+# exclude-symbols would drop them entirely, leaving every signature that names
+# one with a dangling reference.
+implementation-defined:
   - 'simdutf::detail'
   - 'simdutf::detail::**'
+  - 'simdutf::internal'
+  - 'simdutf::internal::**'
+
+# scalar and tables only appear inside inline function bodies (which MrDocs does
+# not extract), never in a public signature, so excluding them outright leaves
+# no dangling references behind.
+exclude-symbols:
+  - 'simdutf::scalar::**'
   - 'simdutf::tables'
   - 'simdutf::tables::**'
 

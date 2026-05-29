@@ -12,131 +12,21 @@
 {{else}}
 <title>simdutf: Text processing at billions of characters per second</title>
 {{/if}}
+{{! Styling comes from the external stylesheet(s) configured in mrdocs.yml. }}
+{{! With linkcss off they arrive as page.inlineStyles; with linkcss on they }}
+{{! arrive as page.stylesheets <link> tags -- we emit both so either mode works. }}
+{{#if page.inlineStyles}}
+{{#each page.inlineStyles}}
 <style>
-:root {
-  --primary-color: #1779c4; --primary-dark-color: #335c80; --primary-light-color: #70b1e9;
-  --page-background-color: #ffffff; --page-foreground-color: #2f4153;
-  --page-secondary-foreground-color: #6f7e8e; --separator-color: #dedede;
-  --border-radius-large: 8px; --border-radius-small: 4px; --border-radius-medium: 6px;
-  --box-shadow: 0 2px 8px 0 rgba(0,0,0,.075); --odd-color: rgba(0,0,0,.028);
-  --tablehead-background: #f1f1f1; --blockquote-background: #f8f9fa;
-  --sidebar-background: #fafafa; --sidebar-width: 270px;
-  --content-maxwidth: 1050px;
-  --font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif;
-  --font-family-monospace: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --primary-color: #1982d2; --primary-dark-color: #86a9c4; --primary-light-color: #4779ac;
-    --page-background-color: #1C1D1F; --page-foreground-color: #d2dbde;
-    --page-secondary-foreground-color: #859399; --separator-color: #38393b;
-    --box-shadow: 0 2px 8px 0 rgba(0,0,0,.35); --odd-color: rgba(100,100,100,.06);
-    --tablehead-background: #2a2c2f; --blockquote-background: #222325;
-    --sidebar-background: #181a1c;
-  }
-}
-* { box-sizing: border-box; }
-html { font-size: 15.6px; }
-body {
-  margin: 0; color: var(--page-foreground-color); background: var(--page-background-color);
-  font-family: var(--font-family); line-height: 1.55; -webkit-font-smoothing: antialiased;
-}
-/* --- Header banner (mirrors the simdutf doxygen #titlearea) --- */
-header.site {
-  border-bottom: 1px solid var(--separator-color); background: var(--page-background-color);
-  position: sticky; top: 0; z-index: 20;
-}
-header.site .inner {
-  max-width: var(--content-maxwidth); margin: 0 auto; padding: 12px 24px;
-  display: flex; align-items: center; gap: 16px;
-}
-header.site img { height: 48px; width: auto; }
-header.site .titles { display: flex; flex-direction: column; }
-header.site .projectname { font-size: 22px; font-weight: 600; color: var(--primary-dark-color); line-height: 1.1; }
-header.site .projectnumber { font-size: 15px; font-weight: 400; color: var(--page-secondary-foreground-color); margin-left: 6px; }
-header.site .projectbrief { font-size: 14px; color: var(--page-secondary-foreground-color); margin-top: 2px; }
-header.site a { text-decoration: none; color: inherit; }
-/* --- Sidebar + content layout --- */
-.layout { display: flex; align-items: flex-start; }
-aside.sidebar {
-  width: var(--sidebar-width); flex: 0 0 var(--sidebar-width);
-  position: sticky; top: 73px; height: calc(100vh - 73px); overflow-y: auto;
-  background: var(--sidebar-background); border-right: 1px solid var(--separator-color);
-  padding: 12px;
-}
-aside.sidebar .search { position: sticky; top: 0; background: var(--sidebar-background); padding-bottom: 10px; z-index: 1; }
-#nav-search {
-  width: 100%; padding: 7px 10px; font-size: 14px; font-family: var(--font-family);
-  color: var(--page-foreground-color); background: var(--page-background-color);
-  border: 1px solid var(--separator-color); border-radius: var(--border-radius-medium); outline: none;
-}
-#nav-search:focus { border-color: var(--primary-color); }
-#nav-tree { font-size: 13.6px; }
-#nav-tree details { margin: 0; }
-#nav-tree summary {
-  cursor: pointer; padding: 3px 4px; border-radius: var(--border-radius-small);
-  font-weight: 600; color: var(--primary-dark-color); list-style-position: inside;
-}
-#nav-tree summary:hover { background: var(--odd-color); }
-#nav-tree .group-label {
-  font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em;
-  color: var(--page-secondary-foreground-color); margin: 8px 0 2px 14px; font-weight: 600;
-}
-#nav-tree ul { list-style: none; margin: 0; padding: 0 0 0 14px; }
-#nav-tree li a {
-  display: block; padding: 2.5px 8px; color: var(--page-foreground-color);
-  text-decoration: none; border-radius: var(--border-radius-small);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  font-family: var(--font-family-monospace); font-size: 12.8px;
-}
-#nav-tree li a:hover { background: var(--odd-color); }
-#nav-tree li a.current { background: var(--primary-color); color: #fff; }
-#search-results li a .qual { color: var(--page-secondary-foreground-color); font-size: 11.5px; }
-#search-empty { color: var(--page-secondary-foreground-color); padding: 8px; font-size: 13px; }
-/* --- Content column --- */
-.content-col { flex: 1 1 auto; min-width: 0; }
-main { max-width: var(--content-maxwidth); margin: 0 auto; padding: 8px 32px 64px; }
-h1, h2, h3, h4 { line-height: 1.25; font-weight: 600; color: var(--page-foreground-color); }
-h1 { font-size: 22px; margin: 1.4rem 0 1rem; padding-bottom: .3rem; border-bottom: 1px solid var(--separator-color); }
-h2 { font-size: 18px; margin: 2rem 0 .7rem; padding-bottom: .25rem; border-bottom: 1px solid var(--separator-color); }
-h3 { font-size: 16px; margin: 1.5rem 0 .5rem; }
-h4 { font-size: 15px; margin: 1.2rem 0 .4rem; }
-a { color: var(--primary-color); text-decoration: none; }
-a:hover { text-decoration: underline; }
-p { margin: 0 0 var(--border-radius-large); }
-code, pre, tt { font-family: var(--font-family-monospace); font-size: 14px; color: var(--page-foreground-color); }
-code { background: var(--odd-color); padding: .12em .35em; border-radius: var(--border-radius-small); }
-pre, .fragment {
-  background: var(--odd-color); border: 1px solid var(--separator-color);
-  border-radius: var(--border-radius-medium); padding: 1rem; overflow-x: auto; line-height: 1.4;
-}
-pre code { background: none; padding: 0; }
-table {
-  border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 14.5px;
-  border: 1px solid var(--separator-color); border-radius: var(--border-radius-medium); overflow: hidden;
-}
-th, td { border: 1px solid var(--separator-color); padding: .5rem .75rem; text-align: left; vertical-align: top; }
-th { background: var(--tablehead-background); font-weight: 600; }
-tr:nth-child(even) td { background: var(--odd-color); }
-hr { border: none; border-top: 1px solid var(--separator-color); margin: 2rem 0; }
-blockquote {
-  margin: 1rem 0; padding: .5rem 1rem; background: var(--blockquote-background);
-  border-left: 4px solid var(--primary-light-color); border-radius: var(--border-radius-small);
-  color: var(--page-secondary-foreground-color);
-}
-footer.site {
-  max-width: var(--content-maxwidth); margin: 0 auto; padding: 1.2rem 32px 2rem;
-  color: var(--page-secondary-foreground-color); font-size: 13px; border-top: 1px solid var(--separator-color);
-}
-footer.site h4 { font-weight: 400; margin: 0; font-size: 13px; color: var(--page-secondary-foreground-color); }
-@media (max-width: 900px) {
-  .layout { flex-direction: column; }
-  aside.sidebar {
-    width: 100%; flex-basis: auto; position: static; height: auto; max-height: 320px;
-    border-right: none; border-bottom: 1px solid var(--separator-color);
-  }
-}
+{{{this}}}
 </style>
+{{/each}}
+{{/if}}
+{{#if page.stylesheets}}
+{{#each page.stylesheets }}
+<link rel="stylesheet" href="{{#if external}}{{path}}{{else}}{{#if @root.config.multipage}}{{relativize (concat "/" path)}}{{else}}{{path}}{{/if}}{{/if}}">
+{{/each}}
+{{/if}}
 </head>
 <body>
 <header class="site">

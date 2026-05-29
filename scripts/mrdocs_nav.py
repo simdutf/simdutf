@@ -15,11 +15,13 @@ import xml.etree.ElementTree as ET
 OUT_DIR = pathlib.Path("doc/mrdocs-html")
 TAGFILE = OUT_DIR / "reference.tag.xml"
 
-# Namespaces to omit from the sidebar/search. MrDocs still emits pages for some
-# of these (their types are pulled in as dependencies of the public API and so
-# bypass mrdocs.yml's exclude-symbols), but they are not part of the public API
-# surface, so we drop them from navigation.
-EXCLUDE_NS_PREFIXES = ("simdutf::detail", "simdutf::tables")
+# Namespaces to omit from the sidebar/search. simdutf::detail and
+# simdutf::internal are tagged implementation-defined in mrdocs.yml (they leak
+# into public signatures), so they stay in the corpus -- references to them
+# resolve -- but they are not public API, so we drop them from navigation.
+# simdutf::tables is fully excluded but listed defensively in case a dependency
+# pulls a stray compound into the tagfile.
+EXCLUDE_NS_PREFIXES = ("simdutf::detail", "simdutf::internal", "simdutf::tables")
 
 
 def is_excluded(qual):
