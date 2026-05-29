@@ -574,12 +574,22 @@ size_t implementation::binary_to_base64_with_lines(
 
 const char *implementation::find(const char *start, const char *end,
                                  char character) const noexcept {
-  return std::find(start, end, character);
+  for (; start < end; ++start) {
+    if (*start == character) {
+      return start;
+    }
+  }
+  return end;
 }
 
 const char16_t *implementation::find(const char16_t *start, const char16_t *end,
                                      char16_t character) const noexcept {
-  return std::find(start, end, character);
+  for (; start < end; ++start) {
+    if (*start == character) {
+      return start;
+    }
+  }
+  return end;
 }
 #endif // SIMDUTF_FEATURE_BASE64
 
