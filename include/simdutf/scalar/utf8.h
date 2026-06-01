@@ -395,7 +395,7 @@ inline simdutf_warn_unused utf8_result rewind_and_validate_with_counts(
     extra_len++;
     if (byte >= 0b11110000) {
       extra_four_bytes += 1;
-    } else if ((signed char)byte < -65 + 1) {
+    } else if ((int8_t)byte < -65 + 1) {
       extra_continuations += 1;
     }
     if ((byte & 0b11000000) != 0b10000000) {
