@@ -12,8 +12,12 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+# Build against C++23 so the documentation captures every public function,
+# including the std::span overloads (gated on __cpp_lib_span, C++20+) and the
+# std::text_encoding-based API (gated on __cpp_lib_text_encoding, C++23). A
+# lower standard would silently drop those declarations from the corpus.
 CMAKE_ARGS="-DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DSIMDUTF_TESTS=OFF \
-  -DSIMDUTF_BENCHMARKS=OFF -DCMAKE_BUILD_TYPE=Release"
+  -DSIMDUTF_BENCHMARKS=OFF -DCMAKE_BUILD_TYPE=Release -DSIMDUTF_CXX_STANDARD=23"
 MRDOCS_ARGS=""
 
 # MrDocs ships its own Clang. On macOS that Clang has no default sysroot, so we
