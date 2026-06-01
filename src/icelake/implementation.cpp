@@ -1478,6 +1478,11 @@ implementation::count_utf8(const char *input, size_t length) const noexcept {
   return answer + scalar::utf8::count_code_points(
                       reinterpret_cast<const char *>(str + i), length - i);
 }
+simdutf_warn_unused utf8_result implementation::validate_utf8_with_counts(
+    const char *buf, size_t len) const noexcept {
+  return scalar::utf8::validate_utf8_with_counts(buf, len);
+}
+
 #endif // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
