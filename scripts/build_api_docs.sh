@@ -36,6 +36,15 @@ echo "==> Configuring (compile_commands.json) in build_mrdocs/"
 # shellcheck disable=SC2086
 cmake -S . -B build_mrdocs $CMAKE_ARGS
 
+# Wipe any previous output before regenerating. MrDocs derives each page's
+# filename from a symbol-ID hash, so when the set of declarations changes
+# (e.g. switching C++ standard adds/removes the std::span overloads) the old
+# pages are not overwritten -- they linger as orphans. A stale single-overload
+# binary_to_base64.html surviving a C++23 rebuild is exactly how an obsolete
+# page (missing the span overload) ends up published. Start from a clean slate.
+echo "==> Cleaning previous output (doc/mrdocs-html)"
+rm -rf doc/mrdocs-html
+
 echo "==> Running MrDocs"
 # shellcheck disable=SC2086
 mrdocs mrdocs.yml $MRDOCS_ARGS
