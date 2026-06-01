@@ -72,10 +72,10 @@ def add_to_implementation_h(repo_root, feature_macro, functions):
     if ns_start == -1:
         raise ValueError("Could not find namespace in implementation.h")
     
-    existing_if = content.find(f'#if {feature_macro}', ns_start)
+    existing_if = content.find(f'#if {feature_macro}\n', ns_start)
     if existing_if != -1:
         # Find the corresponding #endif
-        endif_pos = content.find('#endif', existing_if)
+        endif_pos = content.find(f'#endif // {feature_macro}\n', existing_if)
         if endif_pos != -1:
             insert_pos = endif_pos
         else:
@@ -101,9 +101,9 @@ def add_to_implementation_h(repo_root, feature_macro, functions):
     if public_start == -1:
         raise ValueError("Could not find public section in implementation class")
     
-    existing_if_class = content.find(f'#if {feature_macro}', public_start)
+    existing_if_class = content.find(f'#if {feature_macro}\n', public_start)
     if existing_if_class != -1:
-        endif_pos_class = content.find('#endif', existing_if_class)
+        endif_pos_class = content.find(f'#endif // {feature_macro}\n', existing_if_class)
         if endif_pos_class != -1:
             insert_pos_class = endif_pos_class
         else:
@@ -136,9 +136,9 @@ def add_to_src_implementation_cpp(repo_root, feature_macro, functions):
     # For detect class
     detect_start = content.find('class detect_best_supported_implementation_on_first_use')
     if detect_start != -1:
-        existing_if = content.find(f'#if {feature_macro}', detect_start)
+        existing_if = content.find(f'#if {feature_macro}\n', detect_start)
         if existing_if != -1:
-            endif_pos = content.find(f'#endif // {feature_macro}', existing_if)
+            endif_pos = content.find(f'#endif // {feature_macro}\n', existing_if)
             insert_pos = endif_pos if endif_pos != -1 else len(content)
         else:
             brace_pos = content.find('{', detect_start)
@@ -161,9 +161,9 @@ def add_to_src_implementation_cpp(repo_root, feature_macro, functions):
     # For unsupported class
     unsupported_start = content.find('class unsupported_implementation final : public implementation {')
     if unsupported_start != -1:
-        existing_if = content.find(f'#if {feature_macro}', unsupported_start)
+        existing_if = content.find(f'#if {feature_macro}\n', unsupported_start)
         if existing_if != -1:
-            endif_pos = content.find(f'#endif // {feature_macro}', existing_if)
+            endif_pos = content.find(f'#endif // {feature_macro}\n', existing_if)
             insert_pos_unsup = endif_pos if endif_pos != -1 else len(content)
         else:
             insert_pos_unsup = unsupported_start + len('class unsupported_implementation final : public implementation {')
@@ -182,9 +182,9 @@ def add_to_src_implementation_cpp(repo_root, feature_macro, functions):
     content = content[:insert_pos_unsup] + unsupported_impl + content[insert_pos_unsup:]
     
     # For standalone functions at end
-    existing_if_end = content.rfind(f'#if {feature_macro}')
+    existing_if_end = content.rfind(f'#if {feature_macro}\n')
     if existing_if_end != -1:
-        endif_pos = content.find(f'#endif // {feature_macro}', existing_if_end)
+        endif_pos = content.find(f'#endif // {feature_macro}\n', existing_if_end)
         insert_pos_end = endif_pos if endif_pos != -1 else len(content)
     else:
         insert_pos_end = len(content)
@@ -220,9 +220,9 @@ def add_to_impl_files(file_path, functions, feature_macro):
 
 """
     
-    existing_if = content.rfind(f'#if {feature_macro}')
+    existing_if = content.rfind(f'#if {feature_macro}\n')
     if existing_if != -1:
-        endif_pos = content.find('#endif', existing_if)
+        endif_pos = content.find(f'#endif // {feature_macro}\n', existing_if)
         insert_pos = endif_pos if endif_pos != -1 else len(content)
         content = content[:insert_pos] + impl + content[insert_pos:]
     else:
@@ -254,9 +254,9 @@ def add_declarations_to_impl_h(file_path, functions, feature_macro):
             decl += f"{modified_signature}\n"
         
         # Wrap with #if
-        existing_if_h = h_content.rfind(f'#if {feature_macro}')
+        existing_if_h = h_content.rfind(f'#if {feature_macro}\n')
         if existing_if_h != -1:
-            endif_pos_h = h_content.find('#endif', existing_if_h)
+            endif_pos_h = h_content.find(f'#endif // {feature_macro}\n', existing_if_h)
             insert_pos_h = endif_pos_h if endif_pos_h != -1 else insert_pos
             h_content = h_content[:insert_pos_h] + decl + h_content[insert_pos_h:]
         else:
