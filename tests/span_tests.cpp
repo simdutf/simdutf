@@ -397,5 +397,141 @@ TEST(convert_valid_utf32_to_latin1) {
   auto r1b =
       simdutf::convert_valid_utf32_to_latin1(std::as_const(input), output);
 }
+
+// ---------------------------------------------------------------------------
+// Tests for the short-input scalar fast path in the convert_utf8_to_utf16le/be
+// span overloads (PR #986).  The overloads are simdutf_really_inline in
+// implementation.h; for inputs <= 16 bytes they call the scalar path directly
+// instead of going through the SIMD dispatcher.
+// ---------------------------------------------------------------------------
+
+// Helpers: compare span result against the C-style reference.
+namespace {
+std::vector<char16_t> ref_le(const char *u8, size_t n) {
+  std::vector<char16_t> out(n + 1);
+  out.resize(simdutf::convert_utf8_to_utf16le(u8, n, out.data()));
+  return out;
+}
+std::vector<char16_t> span_le(const char *u8, size_t n) {
+  std::vector<char16_t> out(n + 1);
+  std::span<char16_t> sp{out.data(), out.size()};
+  out.resize(simdutf::convert_utf8_to_utf16le(
+      std::span<const char>{u8, n}, sp));
+  return out;
+}
+std::vector<char16_t> ref_be(const char *u8, size_t n) {
+  std::vector<char16_t> out(n + 1);
+  out.resize(simdutf::convert_utf8_to_utf16be(u8, n, out.data()));
+  return out;
+}
+std::vector<char16_t> span_be(const char *u8, size_t n) {
+  std::vector<char16_t> out(n + 1);
+  std::span<char16_t> sp{out.data(), out.size()};
+  out.resize(simdutf::convert_utf8_to_utf16be(
+      std::span<const char>{u8, n}, sp));
+  return out;
+}
+} // namespace
+
+// All ASCII sizes 0..32 — exercises the scalar branch (<=16) and the
+// dispatch fallback (>16) to verify both paths produce identical output.
+TEST(span_convert_utf8_to_utf16le_ascii_matches_cstyle) {
+  const std::string s(32, 'a');
+  for (size_t n = 0; n <= 32; ++n) {
+    ASSERT_EQUAL(ref_le(s.data(), n), span_le(s.data(), n));
+  }
+}
+
+TEST(span_convert_utf8_to_utf16be_ascii_matches_cstyle) {
+  const std::string s(32, 'z');
+  for (size_t n = 0; n <= 32; ++n) {
+    ASSERT_EQUAL(ref_be(s.data(), n), span_be(s.data(), n));
+  }
+}
+
+// 2-byte UTF-8 sequences (é U+00E9 = 0xC3 0xA9).
+TEST(span_convert_utf8_to_utf16le_two_byte_matches_cstyle) {
+  std::string s;
+  for (int i = 0; i < 10; ++i) s += "\xc3\xa9"; // 20 bytes
+  for (size_t n = 0; n <= s.size(); n += 2) {
+    ASSERT_EQUAL(ref_le(s.data(), n), span_le(s.data(), n));
+  }
+}
+
+// 3-byte UTF-8 sequences (漢 U+6F22 = 0xE6 0xBC 0xA2).
+TEST(span_convert_utf8_to_utf16le_three_byte_matches_cstyle) {
+  std::string s;
+  for (int i = 0; i < 7; ++i) s += "\xe6\xbc\xa2"; // 21 bytes, straddles threshold
+  for (size_t n = 0; n <= s.size(); n += 3) {
+    ASSERT_EQUAL(ref_le(s.data(), n), span_le(s.data(), n));
+  }
+}
+
+// 4-byte UTF-8 sequences (😀 U+1F600 = 0xF0 0x9F 0x98 0x80).
+TEST(span_convert_utf8_to_utf16le_four_byte_matches_cstyle) {
+  std::string s;
+  for (int i = 0; i < 5; ++i) s += "\xf0\x9f\x98\x80"; // 20 bytes
+  for (size_t n = 0; n <= s.size(); n += 4) {
+    ASSERT_EQUAL(ref_le(s.data(), n), span_le(s.data(), n));
+  }
+}
+
+// Threshold boundary: 14, 15, 16 → scalar branch; 17, 18 → dispatch.
+TEST(span_convert_utf8_to_utf16le_threshold_boundary) {
+  const std::string s(32, 'B');
+  for (size_t n = 14; n <= 18; ++n) {
+    ASSERT_EQUAL(ref_le(s.data(), n), span_le(s.data(), n));
+  }
+}
+
+// Exactly 16 bytes of 2-byte sequences (8 × é): must be in scalar branch.
+TEST(span_convert_utf8_to_utf16le_exactly_16_bytes_two_byte_seq) {
+  std::string s;
+  for (int i = 0; i < 8; ++i) s += "\xc3\xa9";
+  ASSERT_EQUAL(size_t{16}, s.size());
+  ASSERT_EQUAL(ref_le(s.data(), 16), span_le(s.data(), 16));
+}
+
+// 17 bytes must fall through to the SIMD dispatcher and still be correct.
+TEST(span_convert_utf8_to_utf16le_17_bytes_falls_through_to_dispatch) {
+  const std::string s(17, 'C');
+  ASSERT_EQUAL(ref_le(s.data(), 17), span_le(s.data(), 17));
+}
+
+// _with_errors variants: invalid UTF-8 must return the same error code
+// and position via span as via C-style.
+TEST(span_convert_utf8_to_utf16le_with_errors_bad_continuation) {
+  const char bad[] = "hi\x80ok";
+  size_t len = sizeof(bad) - 1;
+  std::vector<char16_t> out_c(len + 1), out_s(len + 1);
+  auto rc = simdutf::convert_utf8_to_utf16le_with_errors(bad, len, out_c.data());
+  auto rs = simdutf::convert_utf8_to_utf16le_with_errors(
+      std::span<const char>{bad, len},
+      std::span<char16_t>{out_s.data(), out_s.size()});
+  ASSERT_EQUAL(rc.error, rs.error);
+  ASSERT_EQUAL(rc.count, rs.count);
+}
+
+TEST(span_convert_utf8_to_utf16be_with_errors_bad_continuation) {
+  const char bad[] = "AB\x80" "CD"; // split to stop hex escape at \x80
+  size_t len = sizeof(bad) - 1;
+  std::vector<char16_t> out_c(len + 1), out_s(len + 1);
+  auto rc = simdutf::convert_utf8_to_utf16be_with_errors(bad, len, out_c.data());
+  auto rs = simdutf::convert_utf8_to_utf16be_with_errors(
+      std::span<const char>{bad, len},
+      std::span<char16_t>{out_s.data(), out_s.size()});
+  ASSERT_EQUAL(rc.error, rs.error);
+  ASSERT_EQUAL(rc.count, rs.count);
+}
+
+// LE and BE must differ in byte order for non-ASCII output.
+TEST(span_convert_utf8_to_utf16le_and_be_byte_order_distinct) {
+  // é U+00E9: LE stores 0xE9 0x00, BE stores 0x00 0xE9.
+  auto le = span_le("\xc3\xa9", 2);
+  auto be = span_be("\xc3\xa9", 2);
+  ASSERT_EQUAL(size_t{1}, le.size());
+  ASSERT_EQUAL(size_t{1}, be.size());
+  ASSERT_TRUE(le[0] != be[0]);
+}
 #endif
 TEST_MAIN
