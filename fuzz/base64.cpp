@@ -19,6 +19,7 @@ constexpr std::array last_chunk = {
 
 struct decoderesult {
   std::size_t maxbinarylength{};
+  std::size_t binarylength{};
   simdutf::result convertresult{};
   auto operator<=>(const decoderesult&) const = default;
 };
@@ -34,10 +35,27 @@ void decode(std::span<const FromChar> base64_, const auto selected_option,
     auto& r = results.emplace_back();
     r.maxbinarylength =
         impl->maximal_binary_length_from_base64(base64.data(), base64.size());
+    r.binarylength =
+        impl->binary_length_from_base64(base64.data(), base64.size());
+    // binary_length_from_base64 must never exceed the maximal upper bound.
+    if (r.binarylength > r.maxbinarylength) {
+      std::cerr << "binary_length_from_base64 (" << r.binarylength
+                << ") > maximal_binary_length_from_base64 ("
+                << r.maxbinarylength << ") for impl " << impl->name() << "\n";
+      std::abort();
+    }
     std::vector<char> output(r.maxbinarylength);
     r.convertresult =
         impl->base64_to_binary(base64.data(), base64.size(), output.data(),
                                selected_option, last_chunk_option);
+    // On success, binary_length_from_base64 must match the actual decoded size.
+    if (r.convertresult.error == simdutf::error_code::SUCCESS &&
+        r.binarylength != r.convertresult.count) {
+      std::cerr << "binary_length_from_base64 (" << r.binarylength
+                << ") != decoded count (" << r.convertresult.count
+                << ") for impl " << impl->name() << "\n";
+      std::abort();
+    }
   }
   auto neq = [](const auto& a, const auto& b) { return a != b; };
   if (std::ranges::adjacent_find(results, neq) != results.end()) {
@@ -47,6 +65,7 @@ void decode(std::span<const FromChar> base64_, const auto selected_option,
     for (const auto& r : results) {
       std::cerr << "impl " << implementations[i]->name()
                 << " got maxbinarylength=" << r.maxbinarylength
+                << " binarylength=" << r.binarylength
                 << " convertresult=" << r.convertresult << "\n";
       ++i;
     }
