@@ -167,16 +167,14 @@ std::vector<BenchmarkFunc> available_functions = {
          return len;
        };
      }},
-    // Span-overload variant: calls the simdutf_really_inline span path in
-    // implementation.h which, for short inputs (<=16 bytes), calls the scalar
-    // implementation directly without going through the SIMD dispatcher.
-    // Compare against convert_utf8_to_utf16le to see the short-input benefit.
     {"convert_utf8_to_utf16le_span",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() -> size_t {
-         std::span<char16_t> out16{reinterpret_cast<char16_t *>(output.data()),
-                                   output.size() / sizeof(char16_t)};
-         return simdutf::convert_utf8_to_utf16le(input, out16);
+         size_t len = simdutf::convert_utf8_to_utf16le(
+             input,
+             std::span<char16_t>(reinterpret_cast<char16_t *>(output.data()),
+                                 output.size() / sizeof(char16_t)));
+         return len;
        };
      }},
     {"convert_utf8_to_utf16be",
@@ -188,32 +186,52 @@ std::vector<BenchmarkFunc> available_functions = {
          return len;
        };
      }},
-    // Span-overload variant: same short-input optimisation as
-    // convert_utf8_to_utf16le_span but for big-endian output.
     {"convert_utf8_to_utf16be_span",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() -> size_t {
-         std::span<char16_t> out16{reinterpret_cast<char16_t *>(output.data()),
-                                   output.size() / sizeof(char16_t)};
-         return simdutf::convert_utf8_to_utf16be(input, out16);
+         size_t len = simdutf::convert_utf8_to_utf16be(
+             input,
+             std::span<char16_t>(reinterpret_cast<char16_t *>(output.data()),
+                                 output.size() / sizeof(char16_t)));
+         return len;
        };
      }},
-    // Span-overload variant with error position for LE output.
+    {"convert_utf8_to_utf16le_with_errors",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         simdutf::result result = simdutf::convert_utf8_to_utf16le_with_errors(
+             input.data(), input.size(),
+             reinterpret_cast<char16_t *>(output.data()));
+         return result.count;
+       };
+     }},
     {"convert_utf8_to_utf16le_with_errors_span",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() -> size_t {
-         std::span<char16_t> out16{reinterpret_cast<char16_t *>(output.data()),
-                                   output.size() / sizeof(char16_t)};
-         return simdutf::convert_utf8_to_utf16le_with_errors(input, out16).count;
+         simdutf::result result = simdutf::convert_utf8_to_utf16le_with_errors(
+             input,
+             std::span<char16_t>(reinterpret_cast<char16_t *>(output.data()),
+                                 output.size() / sizeof(char16_t)));
+         return result.count;
        };
      }},
-    // Span-overload variant with error position for BE output.
+    {"convert_utf8_to_utf16be_with_errors",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         simdutf::result result = simdutf::convert_utf8_to_utf16be_with_errors(
+             input.data(), input.size(),
+             reinterpret_cast<char16_t *>(output.data()));
+         return result.count;
+       };
+     }},
     {"convert_utf8_to_utf16be_with_errors_span",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() -> size_t {
-         std::span<char16_t> out16{reinterpret_cast<char16_t *>(output.data()),
-                                   output.size() / sizeof(char16_t)};
-         return simdutf::convert_utf8_to_utf16be_with_errors(input, out16).count;
+         simdutf::result result = simdutf::convert_utf8_to_utf16be_with_errors(
+             input,
+             std::span<char16_t>(reinterpret_cast<char16_t *>(output.data()),
+                                 output.size() / sizeof(char16_t)));
+         return result.count;
        };
      }},
     {"convert_utf8_to_utf32",
