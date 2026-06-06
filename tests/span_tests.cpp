@@ -239,11 +239,14 @@ TEST(convert_utf8_to_utf16) {
   auto r1b = simdutf::convert_utf8_to_utf16(std::as_const(input), output);
 }
 
-static void assert_equal_utf16_output(const std::array<char16_t, 64> &lhs,
-                                      const std::array<char16_t, 64> &rhs,
+static void assert_equal_utf16_output(const std::array<char16_t, 64> &expected,
+                                      const std::array<char16_t, 64> &actual,
                                       size_t length) {
+  // Parameters must not be named lhs/rhs: the ASSERT_EQUAL macro declares
+  // internal `lhs`/`rhs` variables, so `ASSERT_EQUAL(lhs[i], rhs[i])` would
+  // expand to `const auto lhs = (lhs[i])`, which MSVC rejects (C3536).
   for (size_t i = 0; i < length; i++) {
-    ASSERT_EQUAL(lhs[i], rhs[i]);
+    ASSERT_EQUAL(expected[i], actual[i]);
   }
 }
 
