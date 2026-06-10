@@ -48,8 +48,14 @@ void decode(std::span<const FromChar> base64_, const auto selected_option,
     r.convertresult =
         impl->base64_to_binary(base64.data(), base64.size(), output.data(),
                                selected_option, last_chunk_option);
-    // On success, binary_length_from_base64 must match the actual decoded size.
-    if (r.convertresult.error == simdutf::error_code::SUCCESS &&
+    // binary_length_from_base64 takes no last_chunk_handling option, so its
+    // estimate only equals the decoded size under loose handling. Under strict
+    // and stop_before_partial a partial final chunk is dropped, so a SUCCESS
+    // can legitimately write fewer bytes than the estimate (e.g. "QQQ" with
+    // stop_before_partial reports 2 but decodes 0). Only assert equality for
+    // loose to avoid false positives.
+    if (last_chunk_option == simdutf::last_chunk_handling_options::loose &&
+        r.convertresult.error == simdutf::error_code::SUCCESS &&
         r.binarylength != r.convertresult.count) {
       std::cerr << "binary_length_from_base64 (" << r.binarylength
                 << ") != decoded count (" << r.convertresult.count
