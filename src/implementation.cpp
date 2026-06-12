@@ -2322,12 +2322,12 @@ simdutf_warn_unused size_t count_utf16be(const char16_t *input,
 }
 #endif // SIMDUTF_FEATURE_UTF16
 
-#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
+#if SIMDUTF_FEATURE_UTF8
 simdutf_warn_unused size_t count_utf8(const char *input,
                                       size_t length) noexcept {
   return get_default_implementation()->count_utf8(input, length);
 }
-#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
+#endif // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 simdutf_warn_unused size_t latin1_length_from_utf8(const char *buf,
