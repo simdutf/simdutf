@@ -1,17 +1,17 @@
-name: VS17-ARM-CI
+name: VS18-ARM-CI
 
 on: [push, pull_request]
 
 jobs:
   ci:
-    name: windows-vs17
+    name: windows-vs18
     runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - {gen: Visual Studio 17 2022, arch: ARM64}
-          - {gen: Visual Studio 17 2022, arch: ARM64EC}
+          - {gen: Visual Studio 18 2026, arch: ARM64}
+          - {gen: Visual Studio 18 2026, arch: ARM64EC}
     steps:
       - name: checkout
         uses: actions/checkout@v6
