@@ -144,8 +144,7 @@ template <endianness big_endian> constexpr bool is_low_surrogate(char16_t c) {
   return (0xdc00 <= c && c <= 0xdfff);
 }
 
-simdutf_unused simdutf_really_inline constexpr bool
-high_surrogate(char16_t c) {
+simdutf_unused simdutf_really_inline constexpr bool high_surrogate(char16_t c) {
   return (0xd800 <= c && c <= 0xdbff);
 }
 

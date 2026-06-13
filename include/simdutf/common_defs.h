@@ -25,18 +25,8 @@
 #endif
 
 #if SIMDUTF_CPLUSPLUS17
-#define simdutf_unused [[maybe_unused]]
+  #define simdutf_unused [[maybe_unused]]
 #endif // SIMDUTF_CPLUSPLUS17
-
-#if SIMDUTF_CPLUSPLUS20
-#if defined(__has_cpp_attribute)
-  #if __has_cpp_attribute(likely) >= 201803L && __has_cpp_attribute(unlikely) >= 201803L
-    #define simdutf_likely [[likely]]
-    #define simdutf_unlikely [[unlikely]]
-  #endif // __has_cpp_attribute(likely)
-#endif // __has_cpp_attribute
-#endif // SIMDUTF_CPLUSPLUS20
-
 
 #if defined(SIMDUTF_REGULAR_VISUAL_STUDIO)
   #define SIMDUTF_DEPRECATED __declspec(deprecated)
@@ -46,7 +36,7 @@
   #define simdutf_never_inline __declspec(noinline)
 
   #ifndef simdutf_unused
-  #define simdutf_unused
+    #define simdutf_unused
   #endif // simdutf_unused
   #define simdutf_warn_unused
 
@@ -91,7 +81,7 @@
   #define SIMDUTF_DEPRECATED __attribute__((deprecated))
   #define simdutf_never_inline inline __attribute__((noinline))
   #ifndef simdutf_unused
-  #define simdutf_unused __attribute__((unused))
+    #define simdutf_unused __attribute__((unused))
   #endif // simdutf_unused
   #define simdutf_warn_unused __attribute__((warn_unused_result))
 
