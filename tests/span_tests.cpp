@@ -250,8 +250,8 @@ static void assert_equal_utf16_output(const std::array<char16_t, 64> &expected,
   }
 }
 
-static void assert_convert_utf8_to_utf16le_span_matches_pointer(
-    const std::string &input) {
+static void
+assert_convert_utf8_to_utf16le_span_matches_pointer(const std::string &input) {
   std::array<char16_t, 64> pointer_output{};
   std::array<char16_t, 64> span_output{};
 
@@ -265,8 +265,8 @@ static void assert_convert_utf8_to_utf16le_span_matches_pointer(
   assert_equal_utf16_output(pointer_output, span_output, pointer_count);
 }
 
-static void assert_convert_utf8_to_utf16be_span_matches_pointer(
-    const std::string &input) {
+static void
+assert_convert_utf8_to_utf16be_span_matches_pointer(const std::string &input) {
   std::array<char16_t, 64> pointer_output{};
   std::array<char16_t, 64> span_output{};
 
@@ -280,15 +280,14 @@ static void assert_convert_utf8_to_utf16be_span_matches_pointer(
   assert_equal_utf16_output(pointer_output, span_output, pointer_count);
 }
 
-static void
-assert_convert_utf8_to_utf16le_with_errors_span_matches_pointer(
+static void assert_convert_utf8_to_utf16le_with_errors_span_matches_pointer(
     const std::string &input) {
   std::array<char16_t, 64> pointer_output{};
   std::array<char16_t, 64> span_output{};
 
   const simdutf::result pointer_result =
-      simdutf::convert_utf8_to_utf16le_with_errors(
-          input.data(), input.size(), pointer_output.data());
+      simdutf::convert_utf8_to_utf16le_with_errors(input.data(), input.size(),
+                                                   pointer_output.data());
   const simdutf::result span_result =
       simdutf::convert_utf8_to_utf16le_with_errors(
           std::span<const char>(input.data(), input.size()),
@@ -301,15 +300,14 @@ assert_convert_utf8_to_utf16le_with_errors_span_matches_pointer(
   }
 }
 
-static void
-assert_convert_utf8_to_utf16be_with_errors_span_matches_pointer(
+static void assert_convert_utf8_to_utf16be_with_errors_span_matches_pointer(
     const std::string &input) {
   std::array<char16_t, 64> pointer_output{};
   std::array<char16_t, 64> span_output{};
 
   const simdutf::result pointer_result =
-      simdutf::convert_utf8_to_utf16be_with_errors(
-          input.data(), input.size(), pointer_output.data());
+      simdutf::convert_utf8_to_utf16be_with_errors(input.data(), input.size(),
+                                                   pointer_output.data());
   const simdutf::result span_result =
       simdutf::convert_utf8_to_utf16be_with_errors(
           std::span<const char>(input.data(), input.size()),
@@ -354,10 +352,8 @@ TEST(convert_utf8_to_utf16_span_threshold_boundary_matches_pointer_api) {
 
 TEST(convert_utf8_to_utf16_span_rejects_invalid_utf8_like_pointer_api) {
   const std::array<std::string, 5> inputs = {
-      std::string("\xFF\xFF", 2),
-      std::string("\xC3", 1),
-      std::string("\xC0\xAF", 2),
-      std::string("\xED\xA0\x80", 3),
+      std::string("\xFF\xFF", 2), std::string("\xC3", 1),
+      std::string("\xC0\xAF", 2), std::string("\xED\xA0\x80", 3),
       std::string("\xF4\x90\x80\x80", 4)};
 
   for (const std::string &input : inputs) {
