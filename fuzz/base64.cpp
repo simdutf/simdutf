@@ -34,10 +34,36 @@ void decode(std::span<const FromChar> base64_, const auto selected_option,
     auto& r = results.emplace_back();
     r.maxbinarylength =
         impl->maximal_binary_length_from_base64(base64.data(), base64.size());
+    // binary_length_from_base64 is not compared across implementations: for
+    // invalid input the implementations may legitimately return different
+    // estimates, so keep it as a local rather than a field of decoderesult.
+    const std::size_t binarylength =
+        impl->binary_length_from_base64(base64.data(), base64.size());
+    // binary_length_from_base64 must never exceed the maximal upper bound.
+    if (binarylength > r.maxbinarylength) {
+      std::cerr << "binary_length_from_base64 (" << binarylength
+                << ") > maximal_binary_length_from_base64 ("
+                << r.maxbinarylength << ") for impl " << impl->name() << "\n";
+      std::abort();
+    }
     std::vector<char> output(r.maxbinarylength);
     r.convertresult =
         impl->base64_to_binary(base64.data(), base64.size(), output.data(),
                                selected_option, last_chunk_option);
+    // binary_length_from_base64 takes no last_chunk_handling option, so its
+    // estimate only equals the decoded size under loose handling. Under strict
+    // and stop_before_partial a partial final chunk is dropped, so a SUCCESS
+    // can legitimately write fewer bytes than the estimate (e.g. "QQQ" with
+    // stop_before_partial reports 2 but decodes 0). Only assert equality for
+    // loose to avoid false positives.
+    if (last_chunk_option == simdutf::last_chunk_handling_options::loose &&
+        r.convertresult.error == simdutf::error_code::SUCCESS &&
+        binarylength != r.convertresult.count) {
+      std::cerr << "binary_length_from_base64 (" << binarylength
+                << ") != decoded count (" << r.convertresult.count
+                << ") for impl " << impl->name() << "\n";
+      std::abort();
+    }
   }
   auto neq = [](const auto& a, const auto& b) { return a != b; };
   if (std::ranges::adjacent_find(results, neq) != results.end()) {
