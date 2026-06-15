@@ -19,7 +19,6 @@ constexpr std::array last_chunk = {
 
 struct decoderesult {
   std::size_t maxbinarylength{};
-  std::size_t binarylength{};
   simdutf::result convertresult{};
   auto operator<=>(const decoderesult&) const = default;
 };
@@ -35,11 +34,14 @@ void decode(std::span<const FromChar> base64_, const auto selected_option,
     auto& r = results.emplace_back();
     r.maxbinarylength =
         impl->maximal_binary_length_from_base64(base64.data(), base64.size());
-    r.binarylength =
+    // binary_length_from_base64 is not compared across implementations: for
+    // invalid input the implementations may legitimately return different
+    // estimates, so keep it as a local rather than a field of decoderesult.
+    const std::size_t binarylength =
         impl->binary_length_from_base64(base64.data(), base64.size());
     // binary_length_from_base64 must never exceed the maximal upper bound.
-    if (r.binarylength > r.maxbinarylength) {
-      std::cerr << "binary_length_from_base64 (" << r.binarylength
+    if (binarylength > r.maxbinarylength) {
+      std::cerr << "binary_length_from_base64 (" << binarylength
                 << ") > maximal_binary_length_from_base64 ("
                 << r.maxbinarylength << ") for impl " << impl->name() << "\n";
       std::abort();
@@ -56,8 +58,8 @@ void decode(std::span<const FromChar> base64_, const auto selected_option,
     // loose to avoid false positives.
     if (last_chunk_option == simdutf::last_chunk_handling_options::loose &&
         r.convertresult.error == simdutf::error_code::SUCCESS &&
-        r.binarylength != r.convertresult.count) {
-      std::cerr << "binary_length_from_base64 (" << r.binarylength
+        binarylength != r.convertresult.count) {
+      std::cerr << "binary_length_from_base64 (" << binarylength
                 << ") != decoded count (" << r.convertresult.count
                 << ") for impl " << impl->name() << "\n";
       std::abort();
@@ -71,7 +73,6 @@ void decode(std::span<const FromChar> base64_, const auto selected_option,
     for (const auto& r : results) {
       std::cerr << "impl " << implementations[i]->name()
                 << " got maxbinarylength=" << r.maxbinarylength
-                << " binarylength=" << r.binarylength
                 << " convertresult=" << r.convertresult << "\n";
       ++i;
     }
