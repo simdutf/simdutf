@@ -17,8 +17,8 @@ simdutf_really_inline size_t count_code_points(const char *in, size_t size) {
 }
 
 #ifdef SIMDUTF_SIMD_HAS_BYTEMASK
-simdutf_really_inline size_t count_code_points_bytemask(const char *in,
-                                                        size_t size) {
+simdutf_unused simdutf_really_inline size_t
+count_code_points_bytemask(const char *in, size_t size) {
   using vector_i8 = simd8<int8_t>;
   using vector_u8 = simd8<uint8_t>;
   using vector_u64 = simd64<uint64_t>;

@@ -644,9 +644,8 @@ simdutf_constexpr23 size_t tail_encode_base64_impl(
 
 // Returns the number of bytes written. The destination buffer must be large
 // enough. It will add padding (=) if needed.
-inline simdutf_constexpr23 size_t tail_encode_base64(char *dst, const char *src,
-                                                     size_t srclen,
-                                                     base64_options options) {
+simdutf_unused inline simdutf_constexpr23 size_t tail_encode_base64(
+    char *dst, const char *src, size_t srclen, base64_options options) {
   return tail_encode_base64_impl(dst, src, srclen, options);
 }
 
