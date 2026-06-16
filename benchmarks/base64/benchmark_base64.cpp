@@ -15,6 +15,8 @@
 
 #include "simdutf.h"
 
+#include "arm_base64_spaces.h"
+
 #include "event_counter.h"
 
 bool is_space(char c) {
@@ -564,6 +566,24 @@ private:
         }
       }
     });
+
+#if SIMDUTF_IS_ARM64
+    // NEON: copy input into buffer2, compact whitespace in-place, then decode
+    // the cleaned base64 with a whitespace-unaware decoder (libbase64).
+    summarize("arm_neon_strip+libbase64", [this]() {
+      for (const std::vector<char> &source : data) {
+        size_t outlen;
+        bool ok = arm_base64_spaces::space_decode_inplace(
+            source.data(), source.size(), buffer2.data(), buffer1.data(),
+            &outlen);
+        if (!ok) {
+          std::cerr << "Error: "
+                    << " failed to decode base64 " << std::endl;
+          throw std::runtime_error("Error: failed to decode base64 ");
+        }
+      }
+    });
+#endif
 
     summarize("openssl3.3.x", [this]() {
       for (const std::vector<char> &source : data) {
