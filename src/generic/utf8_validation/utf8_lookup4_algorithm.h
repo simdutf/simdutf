@@ -193,10 +193,10 @@ struct utf8_checker {
       static_assert((simd8x64<uint8_t>::NUM_CHUNKS == 2) ||
                         (simd8x64<uint8_t>::NUM_CHUNKS == 4),
                     "We support either two or four chunks per 64-byte block.");
-      if (simd8x64<uint8_t>::NUM_CHUNKS == 2) {
+      if constexpr (simd8x64<uint8_t>::NUM_CHUNKS == 2) {
         this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
         this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
-      } else if (simd8x64<uint8_t>::NUM_CHUNKS == 4) {
+      } else if constexpr (simd8x64<uint8_t>::NUM_CHUNKS == 4) {
         this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
         this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
         this->check_utf8_bytes(input.chunks[2], input.chunks[1]);
