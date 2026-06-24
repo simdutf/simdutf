@@ -1198,6 +1198,14 @@ convert_utf8_to_utf16le(const detail::input_span_of_byte_like auto &utf8_input,
   } else
     #endif
   {
+    // For short inputs the scalar path (which this function can inline) is
+    // faster than paying the non-inlineable dispatch overhead.  The threshold
+    // of 16 matches the scalar fast-path block size.
+    if (utf8_input.size() <= 16) {
+      return scalar::utf8_to_utf16::convert<endianness::LITTLE>(
+          reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
+          utf16_output.data());
+    }
     return convert_utf8_to_utf16le(
         reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
         utf16_output.data());
@@ -1231,6 +1239,11 @@ convert_utf8_to_utf16be(const detail::input_span_of_byte_like auto &utf8_input,
   } else
     #endif
   {
+    if (utf8_input.size() <= 16) {
+      return scalar::utf8_to_utf16::convert<endianness::BIG>(
+          reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
+          utf16_output.data());
+    }
     return convert_utf8_to_utf16be(
         reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
         utf16_output.data());
@@ -1343,6 +1356,11 @@ convert_utf8_to_utf16le_with_errors(
   } else
     #endif
   {
+    if (utf8_input.size() <= 16) {
+      return scalar::utf8_to_utf16::convert_with_errors<endianness::LITTLE>(
+          reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
+          utf16_output.data());
+    }
     return convert_utf8_to_utf16le_with_errors(
         reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
         utf16_output.data());
@@ -1378,6 +1396,11 @@ convert_utf8_to_utf16be_with_errors(
   } else
     #endif
   {
+    if (utf8_input.size() <= 16) {
+      return scalar::utf8_to_utf16::convert_with_errors<endianness::BIG>(
+          reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
+          utf16_output.data());
+    }
     return convert_utf8_to_utf16be_with_errors(
         reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
         utf16_output.data());
