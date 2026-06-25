@@ -1007,7 +1007,7 @@ public:
   }
   simdutf_warn_unused utf8_result validate_utf8_with_counts(
       const char *, size_t) const noexcept final override {
-    return utf8_result(error_code::OTHER, 0, 0, 0); // Not supported
+    return utf8_result(error_code::OTHER, 0, 0, 0, 0); // Not supported
   }
 
 #endif // SIMDUTF_FEATURE_UTF8

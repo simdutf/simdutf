@@ -261,13 +261,15 @@ validate_utf8_with_counts(BytePtr data, size_t len) noexcept {
   uint32_t code_point = 0;
   uint64_t continuations = 0;
   uint64_t four_byte = 0;
+  uint64_t non_ascii = 0;
   while (pos < len) {
     uint64_t next_pos;
     unsigned char byte = data[pos];
 
     while (byte < 0b10000000) {
       if (++pos == len) {
-        return utf8_result(error_code::SUCCESS, pos, continuations, four_byte);
+        return utf8_result(error_code::SUCCESS, pos, continuations, four_byte,
+                           non_ascii);
       }
       byte = data[pos];
     }
@@ -275,86 +277,92 @@ validate_utf8_with_counts(BytePtr data, size_t len) noexcept {
     if ((byte & 0b11100000) == 0b11000000) {
       next_pos = pos + 2;
       if (next_pos > len) {
-        return utf8_result(error_code::TOO_SHORT, pos, continuations,
-                           four_byte);
+        return utf8_result(error_code::TOO_SHORT, pos, continuations, four_byte,
+                           non_ascii);
       }
       if ((data[pos + 1] & 0b11000000) != 0b10000000) {
-        return utf8_result(error_code::TOO_SHORT, pos, continuations,
-                           four_byte);
+        return utf8_result(error_code::TOO_SHORT, pos, continuations, four_byte,
+                           non_ascii);
       }
       // range check
       code_point = (byte & 0b00011111) << 6 | (data[pos + 1] & 0b00111111);
       if (code_point < 0x80) {
-        return utf8_result(error_code::OVERLONG, pos, continuations, four_byte);
+        return utf8_result(error_code::OVERLONG, pos, continuations, four_byte,
+                           non_ascii);
       }
       continuations += 1;
     } else if ((byte & 0b11110000) == 0b11100000) {
       next_pos = pos + 3;
       if (next_pos > len) {
-        return utf8_result(error_code::TOO_SHORT, pos, continuations,
-                           four_byte);
+        return utf8_result(error_code::TOO_SHORT, pos, continuations, four_byte,
+                           non_ascii);
       }
       if ((data[pos + 1] & 0b11000000) != 0b10000000) {
-        return utf8_result(error_code::TOO_SHORT, pos, continuations,
-                           four_byte);
+        return utf8_result(error_code::TOO_SHORT, pos, continuations, four_byte,
+                           non_ascii);
       }
       if ((data[pos + 2] & 0b11000000) != 0b10000000) {
-        return utf8_result(error_code::TOO_SHORT, pos, continuations,
-                           four_byte);
+        return utf8_result(error_code::TOO_SHORT, pos, continuations, four_byte,
+                           non_ascii);
       }
       // range check
       code_point = (byte & 0b00001111) << 12 |
                    (data[pos + 1] & 0b00111111) << 6 |
                    (data[pos + 2] & 0b00111111);
       if (code_point < 0x800) {
-        return utf8_result(error_code::OVERLONG, pos, continuations, four_byte);
+        return utf8_result(error_code::OVERLONG, pos, continuations, four_byte,
+                           non_ascii);
       } else if (0xd7ff < code_point && code_point < 0xe000) {
-        return utf8_result(error_code::SURROGATE, pos, continuations,
-                           four_byte);
+        return utf8_result(error_code::SURROGATE, pos, continuations, four_byte,
+                           non_ascii);
       }
       continuations += 2;
     } else if ((byte & 0b11111000) == 0b11110000) { // 0b11110000
       next_pos = pos + 4;
       if (next_pos > len) {
-        return utf8_result(error_code::TOO_SHORT, pos, continuations,
-                           four_byte);
+        return utf8_result(error_code::TOO_SHORT, pos, continuations, four_byte,
+                           non_ascii);
       }
       if ((data[pos + 1] & 0b11000000) != 0b10000000) {
-        return utf8_result(error_code::TOO_SHORT, pos, continuations,
-                           four_byte);
+        return utf8_result(error_code::TOO_SHORT, pos, continuations, four_byte,
+                           non_ascii);
       }
       if ((data[pos + 2] & 0b11000000) != 0b10000000) {
-        return utf8_result(error_code::TOO_SHORT, pos, continuations,
-                           four_byte);
+        return utf8_result(error_code::TOO_SHORT, pos, continuations, four_byte,
+                           non_ascii);
       }
       if ((data[pos + 3] & 0b11000000) != 0b10000000) {
-        return utf8_result(error_code::TOO_SHORT, pos, continuations,
-                           four_byte);
+        return utf8_result(error_code::TOO_SHORT, pos, continuations, four_byte,
+                           non_ascii);
       }
       // range check
       code_point =
           (byte & 0b00000111) << 18 | (data[pos + 1] & 0b00111111) << 12 |
           (data[pos + 2] & 0b00111111) << 6 | (data[pos + 3] & 0b00111111);
       if (code_point <= 0xffff) {
-        return utf8_result(error_code::OVERLONG, pos, continuations, four_byte);
+        return utf8_result(error_code::OVERLONG, pos, continuations, four_byte,
+                           non_ascii);
       } else if (0x10ffff < code_point) {
-        return utf8_result(error_code::TOO_LARGE, pos, continuations,
-                           four_byte);
+        return utf8_result(error_code::TOO_LARGE, pos, continuations, four_byte,
+                           non_ascii);
       }
       continuations += 3;
       four_byte += 1;
     } else {
       // Continuation byte or invalid header byte
       if ((byte & 0b11000000) == 0b10000000) {
-        return utf8_result(error_code::TOO_LONG, pos, continuations, four_byte);
+        return utf8_result(error_code::TOO_LONG, pos, continuations, four_byte,
+                           non_ascii);
       } else {
         return utf8_result(error_code::HEADER_BITS, pos, continuations,
-                           four_byte);
+                           four_byte, non_ascii);
       }
     }
+    non_ascii += 1;
     pos = next_pos;
   }
-  return utf8_result(error_code::SUCCESS, pos, continuations, four_byte);
+  return utf8_result(error_code::SUCCESS, pos, continuations, four_byte,
+                     non_ascii);
 }
 
 simdutf_really_inline simdutf_warn_unused utf8_result
@@ -371,7 +379,7 @@ inline simdutf_warn_unused utf8_result rewind_and_validate_with_counts(
     const char *start, const char *buf, size_t len) noexcept {
   // First check that we start with a leading byte
   if ((*start & 0b11000000) == 0b10000000) {
-    return utf8_result(error_code::TOO_LONG, 0, 0, 0);
+    return utf8_result(error_code::TOO_LONG, 0, 0, 0, 0);
   }
   // If this is the start of the buffer, we don't need to rewind to check the
   // previous chunk.
