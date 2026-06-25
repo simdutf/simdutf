@@ -140,6 +140,10 @@ struct utf8_result {
       : error{err}, input_count{pos_in},
         continuation_count{continuation_count_},
         four_byte_count{four_byte_count_}, non_ascii_count{non_ascii_count_} {}
+
+  simdutf_really_inline simdutf_constexpr23 size_t utf16_length() noexcept {
+    return input_count - continuation_count + four_byte_count;
+  }
 };
 
 } // namespace simdutf

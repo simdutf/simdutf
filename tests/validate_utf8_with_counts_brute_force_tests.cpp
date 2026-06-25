@@ -23,10 +23,8 @@ static void test_corrupt(T &implementation, uint32_t seed,
           (const char *)UTF8.data(), res_ref.count);
       simdutf::utf8_result res = implementation.validate_utf8_with_counts(
           (const char *)UTF8.data(), UTF8.size());
-      size_t utf16_length =
-          res.input_count - res.continuation_count + res.four_byte_count;
       ASSERT_EQUAL(res.input_count, res_ref.count);
-      ASSERT_EQUAL(utf16_length, expected_utf16_length);
+      ASSERT_EQUAL(res.utf16_length(), expected_utf16_length);
       ASSERT_EQUAL(res.error, res_ref.error);
       UTF8[corrupt] = restore;
     }
@@ -76,10 +74,8 @@ TEST(brute_force) {
           (const char *)UTF8.data(), res_ref.count);
       simdutf::utf8_result res = implementation.validate_utf8_with_counts(
           (const char *)UTF8.data(), UTF8.size());
-      size_t utf16_length =
-          res.input_count - res.continuation_count + res.four_byte_count;
       ASSERT_EQUAL(res.input_count, res_ref.count);
-      ASSERT_EQUAL(utf16_length, expected_utf16_length);
+      ASSERT_EQUAL(res.utf16_length(), expected_utf16_length);
       ASSERT_EQUAL(res.error, res_ref.error);
     }
   }
