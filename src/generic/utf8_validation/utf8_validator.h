@@ -90,8 +90,7 @@ utf8_result generic_validate_utf8_with_counts(const uint8_t *input,
   size_t count{0};
   while (reader.has_full_block()) {
     simd::simd8x64<uint8_t> in(reader.full_block());
-    std::tuple<size_t, size_t, size_t> last_counts =
-        c.check_next_input_with_counts(in);
+    block_counts last_counts = c.check_next_input_with_counts(in);
     if (c.errors()) {
       /*
        * Why was this done?
@@ -104,9 +103,9 @@ utf8_result generic_validate_utf8_with_counts(const uint8_t *input,
           reinterpret_cast<const char *>(input + count), length - count);
       res.input_count += count;
       res.continuation_count +=
-          c.continuation_count() - std::get<0>(last_counts);
-      res.four_byte_count += c.four_byte_count() - std::get<1>(last_counts);
-      res.non_ascii_count += c.non_ascii_count() - std::get<2>(last_counts);
+          c.continuation_count() - last_counts.continuations;
+      res.four_byte_count += c.four_byte_count() - last_counts.four_byte;
+      res.non_ascii_count += c.non_ascii_count() - last_counts.non_ascii;
       return res;
     }
     reader.advance();
@@ -115,8 +114,7 @@ utf8_result generic_validate_utf8_with_counts(const uint8_t *input,
   uint8_t block[64]{};
   reader.get_remainder(block);
   simd::simd8x64<uint8_t> in(block);
-  std::tuple<size_t, size_t, size_t> last_counts =
-      c.check_next_input_with_counts(in);
+  block_counts last_counts = c.check_next_input_with_counts(in);
   reader.advance();
   c.check_eof();
   if (c.errors()) {
@@ -130,9 +128,10 @@ utf8_result generic_validate_utf8_with_counts(const uint8_t *input,
         reinterpret_cast<const char *>(input),
         reinterpret_cast<const char *>(input) + count, length - count);
     res.input_count += count;
-    res.continuation_count += c.continuation_count() - std::get<0>(last_counts);
-    res.four_byte_count += c.four_byte_count() - std::get<1>(last_counts);
-    res.non_ascii_count += c.non_ascii_count() - std::get<2>(last_counts);
+    res.continuation_count +=
+        c.continuation_count() - last_counts.continuations;
+    res.four_byte_count += c.four_byte_count() - last_counts.four_byte;
+    res.non_ascii_count += c.non_ascii_count() - last_counts.non_ascii;
     return res;
   } else {
     return utf8_result(error_code::SUCCESS, length, c.continuation_count(),

@@ -141,7 +141,8 @@ struct utf8_result {
         continuation_count{continuation_count_},
         four_byte_count{four_byte_count_}, non_ascii_count{non_ascii_count_} {}
 
-  simdutf_really_inline simdutf_constexpr23 size_t utf16_length() noexcept {
+  simdutf_really_inline simdutf_constexpr23 size_t
+  utf16_length() const noexcept {
     return input_count - continuation_count + four_byte_count;
   }
 };
