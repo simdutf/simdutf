@@ -291,6 +291,7 @@ validate_utf8_with_counts(BytePtr data, size_t len) noexcept {
                            non_ascii);
       }
       continuations += 1;
+      non_ascii += 2;
     } else if ((byte & 0b11110000) == 0b11100000) {
       next_pos = pos + 3;
       if (next_pos > len) {
@@ -317,6 +318,7 @@ validate_utf8_with_counts(BytePtr data, size_t len) noexcept {
                            non_ascii);
       }
       continuations += 2;
+      non_ascii += 3;
     } else if ((byte & 0b11111000) == 0b11110000) { // 0b11110000
       next_pos = pos + 4;
       if (next_pos > len) {
@@ -347,6 +349,7 @@ validate_utf8_with_counts(BytePtr data, size_t len) noexcept {
                            non_ascii);
       }
       continuations += 3;
+      non_ascii += 4;
       four_byte += 1;
     } else {
       // Continuation byte or invalid header byte
@@ -358,7 +361,6 @@ validate_utf8_with_counts(BytePtr data, size_t len) noexcept {
                            four_byte, non_ascii);
       }
     }
-    non_ascii += 1;
     pos = next_pos;
   }
   return utf8_result(error_code::SUCCESS, pos, continuations, four_byte,
@@ -391,6 +393,7 @@ inline simdutf_warn_unused utf8_result rewind_and_validate_with_counts(
   size_t extra_len{0};
   size_t extra_continuations{0};
   size_t extra_four_bytes{0};
+  size_t extra_non_ascii{0};
   // A leading byte cannot be further than 4 bytes away
   // TODO: Wouldn't `i < 4` suffice? Maybe actually no difference behavior-wise
   // (Changed to 4 in a previous commit to try)
@@ -401,10 +404,14 @@ inline simdutf_warn_unused utf8_result rewind_and_validate_with_counts(
     buf--;
     unsigned char byte = *buf;
     extra_len++;
-    if (byte >= 0b11110000) {
-      extra_four_bytes += 1;
-    } else if ((int8_t)byte < -65 + 1) {
-      extra_continuations += 1;
+
+    if (byte >= 0b10000000) {
+      extra_non_ascii += 1;
+      if (byte >= 0b11110000) {
+        extra_four_bytes += 1;
+      } else if ((int8_t)byte < -65 + 1) {
+        extra_continuations += 1;
+      }
     }
     if ((byte & 0b11000000) != 0b10000000) {
       break;
@@ -415,6 +422,7 @@ inline simdutf_warn_unused utf8_result rewind_and_validate_with_counts(
   res.input_count -= extra_len;
   res.continuation_count -= extra_continuations;
   res.four_byte_count -= extra_four_bytes;
+  res.non_ascii_count -= extra_non_ascii;
   return res;
 }
 
