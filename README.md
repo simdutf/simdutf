@@ -3015,10 +3015,6 @@ If you use this library in your research, please cite our work:
 }
 ```
 
-## Stars
-
-[![Star History Chart](https://api.star-history.com/svg?repos=simdutf/simdutf&type=Date)](https://www.star-history.com/#simdutf/simdutf&Date)
-
 ## License
 
 This code is made available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html) as well as the MIT license. As a user, you can pick the license you prefer.
