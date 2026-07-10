@@ -12,11 +12,10 @@ var searchData=
   ['single_20header_20version_9',['Single-header version',['../index.html#autotoc_md7',1,'']]],
   ['single_20header_20version_20with_20limited_20features_10',['Single-header version with limited features',['../index.html#autotoc_md8',1,'']]],
   ['standard_20library_11',['Compiling without the C++ standard library',['../index.html#autotoc_md31',1,'']]],
-  ['stars_12',['Stars',['../index.html#autotoc_md37',1,'']]],
-  ['start_13',['Quick Start',['../index.html#autotoc_md5',1,'']]],
-  ['std_3a_3aspan_20usage_20in_20simdutf_14',['C++20 and std::span usage in simdutf',['../index.html#autotoc_md16',1,'']]],
-  ['support_15',['C++23 and constexpr support',['../index.html#autotoc_md19',1,'']]],
-  ['support_20is_20experimental_16',['Note - the constexpr support is experimental!',['../index.html#autotoc_md20',1,'']]],
-  ['supported_5fby_5fruntime_5fsystem_17',['supported_by_runtime_system',['../classsimdutf_1_1implementation.html#a6cd8f7d8787c76e690ed9c4151abb7a9',1,'simdutf::implementation']]],
-  ['sutf_3a_20text_20encoding_20converter_18',['sutf: Text encoding converter',['../index.html#autotoc_md22',1,'']]]
+  ['start_12',['Quick Start',['../index.html#autotoc_md5',1,'']]],
+  ['std_3a_3aspan_20usage_20in_20simdutf_13',['C++20 and std::span usage in simdutf',['../index.html#autotoc_md16',1,'']]],
+  ['support_14',['C++23 and constexpr support',['../index.html#autotoc_md19',1,'']]],
+  ['support_20is_20experimental_15',['Note - the constexpr support is experimental!',['../index.html#autotoc_md20',1,'']]],
+  ['supported_5fby_5fruntime_5fsystem_16',['supported_by_runtime_system',['../classsimdutf_1_1implementation.html#a6cd8f7d8787c76e690ed9c4151abb7a9',1,'simdutf::implementation']]],
+  ['sutf_3a_20text_20encoding_20converter_17',['sutf: Text encoding converter',['../index.html#autotoc_md22',1,'']]]
 ];

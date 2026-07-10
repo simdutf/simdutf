@@ -43,6 +43,5 @@ var index =
     [ "Thread safety", "index.html#autotoc_md34", null ],
     [ "References", "index.html#autotoc_md35", null ],
     [ "Citing this work", "index.html#autotoc_md36", null ],
-    [ "Stars", "index.html#autotoc_md37", null ],
-    [ "License", "index.html#autotoc_md38", null ]
+    [ "License", "index.html#autotoc_md37", null ]
 ];
