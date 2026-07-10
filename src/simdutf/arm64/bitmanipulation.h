@@ -7,7 +7,14 @@ namespace {
 
 /* result might be undefined when input_num is zero */
 simdutf_really_inline int count_ones(uint64_t input_num) {
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
   return vaddv_u8(vcnt_u8(vcreate_u8(input_num)));
+#else
+  // if the system supports SVE or CSSC, __builtin_popcountll
+  // might be compiled to fewer single instructions. For CSSC,
+  // __builtin_popcountll is compiled to a single instruction.
+  return __builtin_popcountll(input_num);
+#endif
 }
 
 #if SIMDUTF_NEED_TRAILING_ZEROES
