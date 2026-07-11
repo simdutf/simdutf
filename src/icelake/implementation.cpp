@@ -273,10 +273,17 @@ simdutf_warn_unused utf8_result implementation::validate_utf8_with_counts(
     non_ascii += utf8_count_non_ascii(utf8);
     count += 64;
   }
-  const __m512i utf8 = _mm512_maskz_loadu_epi8(
-      ~UINT64_C(0) >> (64 - (end - ptr)), (const __m512i *)ptr);
+  // These counts are discarded in case of an error.
+  size_t final_continuations = continuations;
+  size_t final_four_byte_leads = four_byte_leads;
+  size_t final_non_ascii = non_ascii;
   if (end != ptr) {
+    const __m512i utf8 = _mm512_maskz_loadu_epi8(
+        ~UINT64_C(0) >> (64 - (end - ptr)), (const __m512i *)ptr);
     checker.check_next_input(utf8);
+    final_continuations += utf8_count_continuations(utf8);
+    final_four_byte_leads += utf8_count_4_byte_leads(utf8);
+    final_non_ascii += utf8_count_non_ascii(utf8);
   }
   checker.check_eof();
   if (checker.errors()) {
@@ -288,13 +295,9 @@ simdutf_warn_unused utf8_result implementation::validate_utf8_with_counts(
     res.four_byte_count += four_byte_leads;
     res.non_ascii_count += non_ascii;
     return res;
-  } else {
-    continuations += utf8_count_continuations(utf8);
-    four_byte_leads += utf8_count_4_byte_leads(utf8);
-    non_ascii += utf8_count_non_ascii(utf8);
   }
-  return utf8_result(error_code::SUCCESS, len, continuations, four_byte_leads,
-                     non_ascii);
+  return utf8_result(error_code::SUCCESS, len, final_continuations,
+                     final_four_byte_leads, final_non_ascii);
 }
 #endif // SIMDUTF_FEATURE_UTF8
 
