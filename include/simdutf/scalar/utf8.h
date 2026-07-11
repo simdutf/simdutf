@@ -257,13 +257,13 @@ validate_utf8_with_counts(BytePtr data, size_t len) noexcept {
   static_assert(
       std::is_same<typename std::decay<decltype(*data)>::type, uint8_t>::value,
       "dereferencing the data pointer must result in a uint8_t");
-  uint64_t pos = 0;
+  size_t pos = 0;
   uint32_t code_point = 0;
-  uint64_t continuations = 0;
-  uint64_t four_byte = 0;
-  uint64_t non_ascii = 0;
+  size_t continuations = 0;
+  size_t four_byte = 0;
+  size_t non_ascii = 0;
   while (pos < len) {
-    uint64_t next_pos;
+    size_t next_pos;
     unsigned char byte = data[pos];
 
     while (byte < 0b10000000) {
