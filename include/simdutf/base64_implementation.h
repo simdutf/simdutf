@@ -3,6 +3,8 @@
 
 // this is not part of the public api
 
+#include <algorithm> // for std::min
+
 namespace simdutf {
 
 template <typename chartype>
