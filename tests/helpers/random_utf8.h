@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <random>
+#include <utility>
 #include <vector>
 
 namespace simdutf {
