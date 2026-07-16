@@ -313,6 +313,9 @@ private:
 #else
   bool supports_zvbb() const { return false; }
 #endif
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
+simdutf_warn_unused size_t normalize_utf8_to_nfd(const char *input, size_t length, char* output) const noexcept override;
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
 };
 
 } // namespace rvv

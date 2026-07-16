@@ -319,6 +319,71 @@ trim_partial_utf8(InputPtr input, size_t length) {
   return length;
 }
 
+size_t code_point_size(uint32_t code_point) {
+  if (code_point <= 0x7F) {
+    return 1;
+  } else if (code_point <= 0x7FF) {
+    return 2;
+  } else if (code_point <= 0xFFFF) {
+    return 3;
+  } else if (code_point <= 0x10FFFF) {
+    return 4;
+  } else {
+    return 0;
+  }
+}
+
+size_t write_code_point(uint32_t code_point, char *utf8_output) {
+  if ((code_point & 0xFFFFFF80) == 0) {
+    *utf8_output++ = char(code_point);
+    return 1;
+  } else if ((code_point & 0xFFFFF800) == 0) {
+    *utf8_output++ = char((code_point >> 6) | 0b11000000);
+    *utf8_output++ = char((code_point & 0b111111) | 0b10000000);
+    return 2;
+  } else if ((code_point & 0xFFFF0000) == 0) {
+    *utf8_output++ = char((code_point >> 12) | 0b11100000);
+    *utf8_output++ = char(((code_point >> 6) & 0b111111) | 0b10000000);
+    *utf8_output++ = char((code_point & 0b111111) | 0b10000000);
+    return 3;
+  } else {
+    *utf8_output++ = char((code_point >> 18) | 0b11110000);
+    *utf8_output++ = char(((code_point >> 12) & 0b111111) | 0b10000000);
+    *utf8_output++ = char(((code_point >> 6) & 0b111111) | 0b10000000);
+    *utf8_output++ = char((code_point & 0b111111) | 0b10000000);
+    return 4;
+  }
+}
+
+void write_3_byte_code_point(uint16_t code_point, char *utf8_output) {
+  utf8_output[0] = 0xE0 | (code_point >> 12);
+  utf8_output[1] = 0x80 | ((code_point >> 6) & 0x3F);
+  utf8_output[2] = 0x80 | (code_point & 0x3F);
+}
+
+uint32_t parse_code_point(const char *input, uint8_t *size) {
+  uint8_t leading = *input;
+  if (leading < 0b10000000) {
+    *size = 1;
+    return leading;
+  } else if ((leading & 0b11100000) == 0b11000000) {
+    *size = 2;
+    return (leading & 0b00011111) << 6 | (input[1] & 0b00111111);
+  } else if ((leading & 0b11110000) == 0b11100000) {
+    *size = 3;
+    return (leading & 0b00001111) << 12 | (input[1] & 0b00111111) << 6 |
+           (input[2] & 0b00111111);
+  } else if ((leading & 0b11111000) == 0b11110000) {
+    *size = 4;
+    return (leading & 0b00000111) << 18 | (input[1] & 0b00111111) << 12 |
+           (input[2] & 0b00111111) << 6 | (input[3] & 0b00111111);
+  } else {
+    *size = 0;
+    // This should be an error, but we don't handle errors
+    return 0;
+  }
+}
+
 } // namespace utf8
 } // unnamed namespace
 } // namespace scalar

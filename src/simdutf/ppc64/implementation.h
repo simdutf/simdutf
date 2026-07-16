@@ -341,6 +341,9 @@ public:
   void to_well_formed_utf16le(const char16_t *input, size_t len,
                               char16_t *output) const noexcept final;
 #endif // SIMDUTF_FEATURE_UTF16
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
+simdutf_warn_unused size_t normalize_utf8_to_nfd(const char *input, size_t length, char* output) const noexcept override;
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
 };
 
 } // namespace ppc64

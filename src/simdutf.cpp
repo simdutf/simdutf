@@ -7,6 +7,9 @@
 #include "tables/utf8_to_utf16_tables.h"
 #include "tables/utf16_to_utf8_tables.h"
 #include "tables/utf32_to_utf16_tables.h"
+#include "tables/utf8_to_decomposed_tables.h"
+#include "tables/utf8_to_composed_tables.h"
+#include "tables/normalization_tables.h"
 // End of tables.
 
 // Implementations: they need to be setup before including
@@ -114,6 +117,22 @@ SIMDUTF_POP_DISABLE_WARNINGS
 #if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
   #include "simdutf/scalar/utf32_to_latin1/valid_utf32_to_latin1.h"
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
+
+#if SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD || SIMDUTF_FEATURE_NFC ||      \
+    SIMDUTF_FEATURE_NFKC
+  #include "simdutf/scalar/normalization.h"
+#endif // SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD || SIMDUTF_FEATURE_NFC ||
+       // SIMDUTF_FEATURE_NFKC
+
+#if SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD ||    \
+                             SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
+  #include "simdutf/scalar/utf8_to_decomposed/utf8_to_decomposed.h"
+#endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD
+       // || SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
+
+#if SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
+  #include "simdutf/scalar/utf8_to_composed/utf8_to_composed.h"
+#endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
 
 #include "implementation.cpp"
 

@@ -25,6 +25,7 @@
   #include <unicode/platform.h>
   #include <unicode/unistr.h>
   #include <unicode/ucnv.h>
+  #include <unicode/normalizer2.h>
 #endif
 
 #if ICONV_AVAILABLE
@@ -222,6 +223,16 @@ private:
       const simdutf::implementation &implementation, size_t iterations);
   void run_detect_encodings(const simdutf::implementation &implementation,
                             size_t iterations);
+
+  void run_normalize_utf8_to_nfc(const simdutf::implementation &implementation,
+                                 size_t iterations);
+  void run_normalize_utf8_to_nfd(const simdutf::implementation &implementation,
+                                 size_t iterations);
+  void run_normalize_utf8_to_nfkc(const simdutf::implementation &implementation,
+                                  size_t iterations);
+  void run_normalize_utf8_to_nfkd(const simdutf::implementation &implementation,
+                                  size_t iterations);
+
   void run_utf8_length_from_latin1_node(size_t iterations);
 #if ICU_AVAILABLE
   void run_convert_latin1_to_utf8_icu(size_t iterations);
@@ -232,6 +243,13 @@ private:
   void run_convert_utf16_to_utf8_icu(size_t iterations);
   void run_convert_utf16_to_latin1_icu(size_t iterations);
   void run_convert_utf32_to_latin1_icu(size_t iterations);
+
+  void run_normalize_utf8_icu(const U_ICU_NAMESPACE::Normalizer2 *normalizer,
+                              size_t iterations);
+  void run_normalize_utf8_to_nfc_icu(size_t iterations);
+  void run_normalize_utf8_to_nfd_icu(size_t iterations);
+  void run_normalize_utf8_to_nfkc_icu(size_t iterations);
+  void run_normalize_utf8_to_nfkd_icu(size_t iterations);
 #endif
 #if ICONV_AVAILABLE
   void run_convert_latin1_to_utf8_iconv(size_t iterations);

@@ -883,6 +883,62 @@ public:
   }
 #endif // SIMDUTF_FEATURE_BASE64
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
+  simdutf_warn_unused size_t normalize_utf8_to_nfd(
+      const char *input, size_t length, char *output) const noexcept override {
+    return set_best()->normalize_utf8_to_nfd(input, length, output);
+  }
+
+  simdutf_warn_unused bool
+  normalize_utf8_to_nfd_check(const char *input, size_t length,
+                              size_t *output_length) const noexcept override {
+    return set_best()->normalize_utf8_to_nfd_check(input, length,
+                                                   output_length);
+  }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKD
+  simdutf_warn_unused size_t normalize_utf8_to_nfkd(
+      const char *input, size_t length, char *output) const noexcept override {
+    return set_best()->normalize_utf8_to_nfkd(input, length, output);
+  }
+
+  simdutf_warn_unused bool
+  normalize_utf8_to_nfkd_check(const char *input, size_t length,
+                               size_t *output_length) const noexcept override {
+    return set_best()->normalize_utf8_to_nfkd_check(input, length,
+                                                    output_length);
+  }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKD
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFC
+  simdutf_warn_unused size_t normalize_utf8_to_nfc(
+      const char *input, size_t length, char *output) const noexcept override {
+    return set_best()->normalize_utf8_to_nfc(input, length, output);
+  }
+
+  simdutf_warn_unused bool
+  normalize_utf8_to_nfc_check(const char *input, size_t length,
+                              size_t *output_length) const noexcept override {
+    return set_best()->normalize_utf8_to_nfc_check(input, length,
+                                                   output_length);
+  }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFC
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKC
+  simdutf_warn_unused size_t normalize_utf8_to_nfkc(
+      const char *input, size_t length, char *output) const noexcept override {
+    return set_best()->normalize_utf8_to_nfkc(input, length, output);
+  }
+
+  simdutf_warn_unused bool
+  normalize_utf8_to_nfkc_check(const char *input, size_t length,
+                               size_t *output_length) const noexcept override {
+    return set_best()->normalize_utf8_to_nfkc_check(input, length,
+                                                    output_length);
+  }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKC
+
   simdutf_really_inline
   detect_best_supported_implementation_on_first_use() noexcept
       : implementation("best_supported_detector",
@@ -1479,6 +1535,58 @@ public:
     return 0;
   }
 #endif // SIMDUTF_FEATURE_BASE64
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
+  simdutf_warn_unused size_t normalize_utf8_to_nfd(
+      const char *, size_t, char *) const noexcept final override {
+    return 0;
+  }
+
+  simdutf_warn_unused bool
+  normalize_utf8_to_nfd_check(const char *, size_t,
+                              size_t *) const noexcept final override {
+    return 0;
+  }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKD
+  simdutf_warn_unused size_t normalize_utf8_to_nfkd(
+      const char *, size_t, char *) const noexcept final override {
+    return 0;
+  }
+
+  simdutf_warn_unused bool
+  normalize_utf8_to_nfkd_check(const char *, size_t,
+                               size_t *) const noexcept final override {
+    return 0;
+  }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKD
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFC
+  simdutf_warn_unused size_t normalize_utf8_to_nfc(
+      const char *, size_t, char *) const noexcept final override {
+    return 0;
+  }
+
+  simdutf_warn_unused bool
+  normalize_utf8_to_nfc_check(const char *, size_t,
+                              size_t *) const noexcept final override {
+    return 0;
+  }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFC
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKC
+  simdutf_warn_unused size_t normalize_utf8_to_nfkc(
+      const char *, size_t, char *) const noexcept final override {
+    return 0;
+  }
+
+  simdutf_warn_unused bool
+  normalize_utf8_to_nfkc_check(const char *, size_t,
+                               size_t *) const noexcept final override {
+    return 0;
+  }
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKC
 
   unsupported_implementation()
       : implementation("unsupported",
@@ -2678,5 +2786,69 @@ simdutf_warn_unused size_t trim_partial_utf16(const char16_t *input,
   #endif
 }
 #endif // SIMDUTF_FEATURE_UTF16
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
+simdutf_warn_unused size_t normalize_utf8_to_nfd(const char *input,
+                                                 size_t length,
+                                                 char *output) noexcept {
+  return get_default_implementation()->normalize_utf8_to_nfd(input, length,
+                                                             output);
+}
+
+simdutf_warn_unused bool
+normalize_utf8_to_nfd_check(const char *input, size_t length,
+                            size_t *output_length) noexcept {
+  return get_default_implementation()->normalize_utf8_to_nfd_check(
+      input, length, output_length);
+}
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKD
+simdutf_warn_unused size_t normalize_utf8_to_nfkd(const char *input,
+                                                  size_t length,
+                                                  char *output) noexcept {
+  return get_default_implementation()->normalize_utf8_to_nfkd(input, length,
+                                                              output);
+}
+
+simdutf_warn_unused bool
+normalize_utf8_to_nfkd_check(const char *input, size_t length,
+                             size_t *output_length) noexcept {
+  return get_default_implementation()->normalize_utf8_to_nfkd_check(
+      input, length, output_length);
+}
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKD
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFC
+simdutf_warn_unused size_t normalize_utf8_to_nfc(const char *input,
+                                                 size_t length,
+                                                 char *output) noexcept {
+  return get_default_implementation()->normalize_utf8_to_nfc(input, length,
+                                                             output);
+}
+
+simdutf_warn_unused bool
+normalize_utf8_to_nfc_check(const char *input, size_t length,
+                            size_t *output_length) noexcept {
+  return get_default_implementation()->normalize_utf8_to_nfc_check(
+      input, length, output_length);
+}
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFC
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKC
+simdutf_warn_unused size_t normalize_utf8_to_nfkc(const char *input,
+                                                  size_t length,
+                                                  char *output) noexcept {
+  return get_default_implementation()->normalize_utf8_to_nfkc(input, length,
+                                                              output);
+}
+
+simdutf_warn_unused bool
+normalize_utf8_to_nfkc_check(const char *input, size_t length,
+                             size_t *output_length) noexcept {
+  return get_default_implementation()->normalize_utf8_to_nfkc_check(
+      input, length, output_length);
+}
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKC
 
 } // namespace simdutf

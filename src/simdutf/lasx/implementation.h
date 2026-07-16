@@ -302,6 +302,9 @@ public:
   simdutf_warn_unused size_t binary_length_from_base64(
       const char16_t *input, size_t length) const noexcept override;
 #endif // SIMDUTF_FEATURE_BASE64
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
+simdutf_warn_unused size_t normalize_utf8_to_nfd(const char *input, size_t length, char* output) const noexcept override;
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
 };
 
 } // namespace lasx

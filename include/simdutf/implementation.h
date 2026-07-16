@@ -50,6 +50,18 @@
 #ifndef SIMDUTF_FEATURE_BASE64
   #define SIMDUTF_FEATURE_BASE64 1
 #endif
+#ifndef SIMDUTF_FEATURE_NFD
+  #define SIMDUTF_FEATURE_NFD 1
+#endif
+#ifndef SIMDUTF_FEATURE_NFKD
+  #define SIMDUTF_FEATURE_NFKD 1
+#endif
+#ifndef SIMDUTF_FEATURE_NFC
+  #define SIMDUTF_FEATURE_NFC 1
+#endif
+#ifndef SIMDUTF_FEATURE_NFKC
+  #define SIMDUTF_FEATURE_NFKC 1
+#endif
 
 #if SIMDUTF_CPLUSPLUS23
   #include <simdutf/constexpr_ptr.h>
@@ -5071,6 +5083,42 @@ atomic_base64_to_binary_safe(
 
 #endif // SIMDUTF_FEATURE_BASE64
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
+simdutf_warn_unused size_t normalize_utf8_to_nfd(const char *input,
+                                                 size_t length,
+                                                 char *output) noexcept;
+simdutf_warn_unused bool
+normalize_utf8_to_nfd_check(const char *input, size_t length,
+                            size_t *output_length) noexcept;
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKD
+simdutf_warn_unused size_t normalize_utf8_to_nfkd(const char *input,
+                                                  size_t length,
+                                                  char *output) noexcept;
+simdutf_warn_unused bool
+normalize_utf8_to_nfkd_check(const char *input, size_t length,
+                             size_t *output_length) noexcept;
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKD
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFC
+simdutf_warn_unused size_t normalize_utf8_to_nfc(const char *input,
+                                                 size_t length,
+                                                 char *output) noexcept;
+simdutf_warn_unused bool
+normalize_utf8_to_nfc_check(const char *input, size_t length,
+                            size_t *output_length) noexcept;
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFC
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKC
+simdutf_warn_unused size_t normalize_utf8_to_nfkc(const char *input,
+                                                  size_t length,
+                                                  char *output) noexcept;
+simdutf_warn_unused bool
+normalize_utf8_to_nfkc_check(const char *input, size_t length,
+                             size_t *output_length) noexcept;
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKC
+
 /**
  * An implementation of simdutf for a particular CPU architecture.
  *
@@ -6994,6 +7042,38 @@ public:
   virtual const char16_t *find(const char16_t *start, const char16_t *end,
                                char16_t character) const noexcept = 0;
 #endif // SIMDUTF_FEATURE_BASE64
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
+  virtual simdutf_warn_unused size_t normalize_utf8_to_nfd(
+      const char *input, size_t length, char *output) const noexcept = 0;
+  virtual simdutf_warn_unused bool
+  normalize_utf8_to_nfd_check(const char *input, size_t length,
+                              size_t *output_length) const noexcept = 0;
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKD
+  virtual simdutf_warn_unused size_t normalize_utf8_to_nfkd(
+      const char *input, size_t length, char *output) const noexcept = 0;
+  virtual simdutf_warn_unused bool
+  normalize_utf8_to_nfkd_check(const char *input, size_t length,
+                               size_t *output_length) const noexcept = 0;
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKD
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFC
+  virtual simdutf_warn_unused size_t normalize_utf8_to_nfc(
+      const char *input, size_t length, char *output) const noexcept = 0;
+  virtual simdutf_warn_unused bool
+  normalize_utf8_to_nfc_check(const char *input, size_t length,
+                              size_t *output_length) const noexcept = 0;
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFC
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKC
+  virtual simdutf_warn_unused size_t normalize_utf8_to_nfkc(
+      const char *input, size_t length, char *output) const noexcept = 0;
+  virtual simdutf_warn_unused bool
+  normalize_utf8_to_nfkc_check(const char *input, size_t length,
+                               size_t *output_length) const noexcept = 0;
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKC
 
 #ifdef SIMDUTF_INTERNAL_TESTS
   // This method is exported only in developer mode, its purpose
