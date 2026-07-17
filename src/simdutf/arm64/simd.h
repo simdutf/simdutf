@@ -47,6 +47,13 @@ namespace {
         return vld1_s8(array);                                                 \
       }())
   #endif
+  #ifndef simdutf_make_uint16x4_t
+    #define simdutf_make_uint16x4_t(x1, x2, x3, x4)                             \
+      ([=]() {                                                                  \
+        uint16_t array[4] = {x1, x2, x3, x4};                                   \
+        return vld1_u16(array);                                                 \
+      }())
+  #endif
   #ifndef simdutf_make_uint16x8_t
     #define simdutf_make_uint16x8_t(x1, x2, x3, x4, x5, x6, x7, x8)            \
       ([=]() {                                                                 \

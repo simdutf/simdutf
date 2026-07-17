@@ -43,6 +43,12 @@ void arm_write_no_comp_utf8(uint16x8_t values, uint16x8_t code_points,
                             const uint8_t *input, uint8_t *last_ccc) {
   constexpr auto dform = to_decomposed_form(form);
   uint8_t *start = *out;
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+  uint16_t values_buf[8];
+  uint16_t code_points_buf[8];
+  vst1q_u16(values_buf, values);
+  vst1q_u16(code_points_buf, code_points);
+#endif
 
   for (size_t i = 0; i < nchars; i++) {
     uint8_t leading = input[0];
@@ -52,7 +58,11 @@ void arm_write_no_comp_utf8(uint16x8_t values, uint16x8_t code_points,
       *last_ccc = 0;
       continue;
     }
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+    uint16_t value = values_buf[i];
+#else
     uint16_t value = values[i];
+#endif
     uint8_t size = utf8_size[leading];
     if (value == 0) {
       vst1_u8(*out, vld1_u8(input));
@@ -61,8 +71,12 @@ void arm_write_no_comp_utf8(uint16x8_t values, uint16x8_t code_points,
       *last_ccc = 0;
       continue;
     }
-    // Decompose the code point like we would in NF(K)D.
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+    uint16_t code_point = code_points_buf[i];
+#else
     uint16_t code_point = code_points[i];
+#endif
+    // Decompose the code point like we would in NF(K)D.
     uint32_t decomp_value =
         scalar::utf8_to_decomposed::lookup_full_trie<dform>(code_point);
     const uint8_t *decomp_offset =

@@ -13,7 +13,12 @@ const uint8_t utf8_size[256] = {
     4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0};
 
 uint16x4_t arm_parse_3_byte_utf8(uint8x16_t in) {
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+  const uint8x16_t sh = simdutf_make_uint8x16_t(0, 2, 3, 5, 6, 8, 9, 11, 1, 1,
+                                                4, 4, 7, 7, 10, 10);
+#else
   const uint8x16_t sh = {0, 2, 3, 5, 6, 8, 9, 11, 1, 1, 4, 4, 7, 7, 10, 10};
+#endif
   uint8x16_t perm = vqtbl1q_u8(in, sh);
   // Split into half vectors.
   // 10cccccc|1110aaaa

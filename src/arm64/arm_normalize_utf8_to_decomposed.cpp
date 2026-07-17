@@ -1,6 +1,10 @@
 namespace internal {
 simdutf_really_inline uint8_t arm_movemask_u16(uint16x4_t v) {
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+  const uint16x4_t mask = simdutf_make_uint16x4_t(0x1, 0x2, 0x4, 0x8);
+#else
   const uint16x4_t mask = {0x1, 0x2, 0x4, 0x8};
+#endif
   uint16x4_t mv = vand_u16(v, mask);
   return (uint8_t)(vaddv_u16(mv) & 0xF);
 }
@@ -169,6 +173,19 @@ static void arm_decompose_hangul_utf8(uint16x4_t chars, uint16x4_t relevant,
   // and then only write the relevant ones.
   uint16x4x3_t lvt = arm_compute_hangul_jamo(chars);
 
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+  uint16_t relevant_buf[4];
+  uint16_t values_buf[4];
+  uint16_t l_buf[4];
+  uint16_t v_buf[4];
+  uint16_t t_buf[4];
+  vst1_u16(relevant_buf, relevant);
+  vst1_u16(values_buf, values);
+  vst1_u16(l_buf, lvt.val[0]);
+  vst1_u16(v_buf, lvt.val[1]);
+  vst1_u16(t_buf, lvt.val[2]);
+#endif
+
   for (size_t i = 0; i < 4; i++) {
     // ASCII fast path
     if (input[0] <= 0x7F) {
@@ -176,9 +193,15 @@ static void arm_decompose_hangul_utf8(uint16x4_t chars, uint16x4_t relevant,
       input++;
       continue;
     }
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+    if (relevant_buf[i] == 0) {
+      // Not a Hangul syllable, just copy the input.
+      uint16_t value = values_buf[i];
+#else
     if (relevant[i] == 0) {
       // Not a Hangul syllable, just copy the input.
       uint16_t value = values[i];
+#endif
       size_t size = value & 0b11;
       for (size_t j = 0; j < size; j++) {
         *(*out)++ = input[j];
@@ -187,9 +210,15 @@ static void arm_decompose_hangul_utf8(uint16x4_t chars, uint16x4_t relevant,
       continue;
     }
 
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+    uint16_t l = l_buf[i];
+    uint16_t v = v_buf[i];
+    uint16_t t = t_buf[i];
+#else
     uint16_t l = lvt.val[0][i];
     uint16_t v = lvt.val[1][i];
     uint16_t t = lvt.val[2][i];
+#endif
 
     scalar::utf8::write_3_byte_code_point(l, reinterpret_cast<char *>(*out));
     *out += 3;
@@ -249,6 +278,13 @@ void arm_write_non_hangul_fallback(uint16x8_t values, uint16x8_t chars,
                                    uint8_t *last_ccc) {
   uint8_t *start = *out;
 
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+  uint16_t values_buf[8];
+  uint16_t chars_buf[8];
+  vst1q_u16(values_buf, values);
+  vst1q_u16(chars_buf, chars);
+#endif
+
   for (size_t i = 0; i < n_chars; i++) {
     uint8_t leading = input[0];
     // ASCII code point, no decomposition needed.
@@ -259,7 +295,11 @@ void arm_write_non_hangul_fallback(uint16x8_t values, uint16x8_t chars,
       continue;
     }
 
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+    uint16_t value = values_buf[i];
+#else
     uint16_t value = values[i];
+#endif
     uint8_t size = value & 0b11;
     if (value <= 3) {
       vst1_u8(*out, vld1_u8(input));
@@ -274,8 +314,13 @@ void arm_write_non_hangul_fallback(uint16x8_t values, uint16x8_t chars,
     // the character.
     uint8_t ccc = uint8_t((value >> 2) & 0xFF);
 
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+    uint32_t data =
+        scalar::utf8_to_decomposed::lookup_full_trie<form>(chars_buf[i]);
+#else
     uint32_t data =
         scalar::utf8_to_decomposed::lookup_full_trie<form>(chars[i]);
+#endif
     uint16_t offset = data & 0x7FFF;
     uint8_t length = (data >> 15) & 0x3F;
     uint8_t first_ccc_delta = uint8_t(data >> 29);
@@ -321,9 +366,24 @@ arm_write_non_hangul_simple_utf8(uint8x16_t in, uint16x8_t chars,
   int8x16_t shift = vdupq_n_s8(0);
   // Each 8-byte block corresponds to one decomposition in the input. It is
   // only possible to have a maximum of six code points.
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+  int8x16_t iota = simdutf_make_int8x16_t(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+                                          12, 13, 14, 15);
+#else
   int8x16_t iota = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+#endif
   // Table of decomposition bytes for every code point with a decomposition.
   uint8_t tbls[6 * 8];
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+  int16_t delta_buf[8];
+  uint16_t length_buf[8];
+  uint16_t length_psum_buf[8];
+  uint16_t chars_buf[8];
+  vst1q_s16(delta_buf, delta);
+  vst1q_u16(length_buf, length);
+  vst1q_u16(length_psum_buf, length_psum);
+  vst1q_u16(chars_buf, chars);
+#endif
   uint16x8_t decomps = vcgtq_u16(values, vdupq_n_u16(0x3FF));
   // We can iterate through this bitmask to get the positions of all code
   // points we should decompose.
@@ -344,10 +404,17 @@ arm_write_non_hangul_simple_utf8(uint8x16_t in, uint16x8_t chars,
     // We have 7 redundant bits per useful 1 bit (masked out above, but still
     // present), so divide them out here.
     uint32_t i = trailing_zeroes(bitmask8) >> 3;
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+    int8_t dlt = int8_t(delta_buf[i]);
+    // The end of each code point before displacement.
+    int8_t size = int8_t(length_buf[i]);
+    int8_t end = int8_t(length_psum_buf[i]);
+#else
     int8_t dlt = int8_t(delta[i]);
     // The end of each code point before displacement.
     int8_t size = int8_t(length[i]);
     int8_t end = int8_t(length_psum[i]);
+#endif
     // The start of each code point after displacement. To decompose the
     // code point at `i`, we need to shift the bytes in the buffer by the
     // amount the original code point expands during decomposition. This
@@ -368,7 +435,11 @@ arm_write_non_hangul_simple_utf8(uint8x16_t in, uint16x8_t chars,
     int8x16_t tbl_offset = vdupq_n_s8(offset_diff);
     // For our decomposition, select from `tbl_offset`, not the shift.
     shift = vbslq_s8(decomp_mask, tbl_offset, vaddq_s8(shift, contrib));
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+    uint16_t code_point = chars_buf[i];
+#else
     uint16_t code_point = chars[i];
+#endif
     uint32_t value =
         scalar::utf8_to_decomposed::lookup_full_trie<form>(code_point);
     vst1_u8(
