@@ -25,8 +25,8 @@ bool is_hangul_syllable(uint32_t code_point) {
 // tables
 uint32_t phash(uint32_t key, uint32_t salt, uint64_t size) {
   uint32_t salt_key = key + salt;
-  uint32_t y1 = salt_key * 2654435769;
-  uint32_t y2 = key * 0x31415926;
+  uint32_t y1 = salt_key * 2654435769u;
+  uint32_t y2 = key * 0x31415926u;
   uint32_t y = y1 ^ y2;
   uint64_t mh = (uint64_t)y * size;
   return uint32_t(mh >> 32);
