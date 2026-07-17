@@ -849,6 +849,9 @@ def main() -> None:
                 for c in nfd_value.decomps:
                     decomp_bytes_utf8.extend(chr(c).encode("UTF-8"))
                 offsets_nfd[x] = nfd_offset
+    # Add 16 bytes of padding to make it safe to do oversized loads from the tail of the decomposition
+    # bytes, which is reasonable to do in vectorized versions of decomposition.
+    decomp_bytes_utf8.extend([0] * 16)
 
     utf8_nfd_trie, utf8_nfd_data_trie = create_decomp_trie_utf8(
         nfd_map, decomp_bytes_utf8, offsets_nfd, decomp_bound=16
