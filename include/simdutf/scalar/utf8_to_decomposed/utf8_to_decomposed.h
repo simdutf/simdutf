@@ -38,7 +38,7 @@ uint8_t sort_combining(char *output, size_t len) {
   uint8_t last_ccc = 255;
   bool needs_sort = false;
   output--;
-  while ((size_t)(start - output) <= len) {
+  while (true) {
     // Backwards until leading UTF-8 byte
     while ((*output & 0b11000000) == 0b10000000) {
       output--;
@@ -52,8 +52,8 @@ uint8_t sort_combining(char *output, size_t len) {
     if (last_ccc < ccc) {
       needs_sort = true;
     }
-    // If we found a starter, then we're done
-    if (ccc == 0) {
+    // If we found a starter or reached the start of the buffer, then we're done
+    if (ccc == 0 || size_t(start - output) == len) {
       break;
     }
     output--;
