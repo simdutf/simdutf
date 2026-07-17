@@ -161,7 +161,7 @@ static void arm_decompose_hangul_utf8(uint16x4_t chars, uint16x4_t relevant,
                                       uint16x4_t values, uint8_t **out,
                                       const uint8_t *input, uint8_t *last_ccc) {
   *last_ccc = 0;
-  // Decompose everthing (assuming they're all Hangul syllables). This
+  // Decompose everything (assuming they're all Hangul syllables). This
   // assumption is made because, empirically, most of the time this function is
   // called, it is because there is a single ASCII space in the input vector,
   // which causes a branch miss for the pure Hangul code path, and puts is in

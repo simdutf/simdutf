@@ -815,7 +815,7 @@ def main() -> None:
             #       of zero, yet decompose solely into code points with ccc values > 0. This
             #       amends those characters so that they can be properly detected as combining
             #       marks. Obviously, patching over the Unicode character database is suboptimal,
-            #       but this presently causes no issues with the decompositon process.
+            #       but this presently causes no issues with the decomposition process.
             #       See https://corp.unicode.org/pipermail/unicode/2025-July/011511.html for the
             #       relevant discussion on this. It might also be a more convincing argument
             #       for why this operation doesn't mess with the canonical decomposition process

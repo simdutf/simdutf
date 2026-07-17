@@ -241,7 +241,7 @@ size_t normalize(InputPtr input, size_t length, OutputPtr out) {
 
     // Set the out pointer to the end of the normalized buffer
     out = normalized_out + normalized_length;
-    // Set the input offset to the next starter that is garuanteed to not be
+    // Set the input offset to the next starter that is guaranteed to not be
     // relevant to NF(K)C
     p = next_irrelevant_starter_pos;
   }
