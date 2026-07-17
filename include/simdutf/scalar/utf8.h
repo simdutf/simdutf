@@ -356,9 +356,9 @@ size_t write_code_point(uint32_t code_point, char *utf8_output) {
 }
 
 void write_3_byte_code_point(uint16_t code_point, char *utf8_output) {
-  utf8_output[0] = 0xE0 | (code_point >> 12);
-  utf8_output[1] = 0x80 | ((code_point >> 6) & 0x3F);
-  utf8_output[2] = 0x80 | (code_point & 0x3F);
+  utf8_output[0] = char(0xE0 | (code_point >> 12));
+  utf8_output[1] = char(0x80 | ((code_point >> 6) & 0x3F));
+  utf8_output[2] = char(0x80 | (code_point & 0x3F));
 }
 
 uint32_t parse_code_point(const char *input, uint8_t *size) {

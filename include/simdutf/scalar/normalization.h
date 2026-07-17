@@ -29,7 +29,7 @@ uint32_t phash(uint32_t key, uint32_t salt, uint64_t size) {
   uint32_t y2 = key * 0x31415926;
   uint32_t y = y1 ^ y2;
   uint64_t mh = (uint64_t)y * size;
-  return mh >> 32;
+  return uint32_t(mh >> 32);
 }
 
 // Get combining character class of code point

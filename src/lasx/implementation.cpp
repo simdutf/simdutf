@@ -1525,14 +1525,6 @@ simdutf_warn_unused size_t implementation::binary_length_from_base64(
 }
 #endif // SIMDUTF_FEATURE_BASE64
 
-} // namespace SIMDUTF_IMPLEMENTATION
-} // namespace simdutf
-
-#include "simdutf/lasx/end.h"
-
-namespace simdutf {
-namespace SIMDUTF_IMPLEMENTATION {
-
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
 simdutf_warn_unused size_t implementation::normalize_utf8_to_nfd(
     const char *input, size_t length, char *output) const noexcept {
@@ -1542,8 +1534,8 @@ simdutf_warn_unused size_t implementation::normalize_utf8_to_nfd(
 
 simdutf_warn_unused bool implementation::normalize_utf8_to_nfd_check(
     const char *input, size_t length, size_t *output_length) const noexcept {
-  return scalar::utf8_to_decomposed::check<DecomposedForm::NFD>(
-      input, length, output_length);
+  return scalar::utf8_to_decomposed::check<DecomposedForm::NFD>(input, length,
+                                                                output_length);
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
 
@@ -1556,8 +1548,8 @@ simdutf_warn_unused size_t implementation::normalize_utf8_to_nfkd(
 
 simdutf_warn_unused bool implementation::normalize_utf8_to_nfkd_check(
     const char *input, size_t length, size_t *output_length) const noexcept {
-  return scalar::utf8_to_decomposed::check<DecomposedForm::NFKD>(
-      input, length, output_length);
+  return scalar::utf8_to_decomposed::check<DecomposedForm::NFKD>(input, length,
+                                                                 output_length);
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKD
 
@@ -1571,23 +1563,25 @@ simdutf_warn_unused size_t implementation::normalize_utf8_to_nfc(
 simdutf_warn_unused bool implementation::normalize_utf8_to_nfc_check(
     const char *input, size_t length, size_t *output_length) const noexcept {
   return scalar::utf8_to_composed::check<ComposedForm::NFC>(input, length,
-                                                             output_length);
+                                                            output_length);
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFC
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKC
 simdutf_warn_unused size_t implementation::normalize_utf8_to_nfkc(
     const char *input, size_t length, char *output) const noexcept {
-  return scalar::utf8_to_composed::normalize<ComposedForm::NFKC>(
-      input, length, output);
+  return scalar::utf8_to_composed::normalize<ComposedForm::NFKC>(input, length,
+                                                                 output);
 }
 
 simdutf_warn_unused bool implementation::normalize_utf8_to_nfkc_check(
     const char *input, size_t length, size_t *output_length) const noexcept {
   return scalar::utf8_to_composed::check<ComposedForm::NFKC>(input, length,
-                                                              output_length);
+                                                             output_length);
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKC
 
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
+
+#include "simdutf/lasx/end.h"

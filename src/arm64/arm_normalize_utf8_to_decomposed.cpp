@@ -272,13 +272,13 @@ void arm_write_non_hangul_fallback(uint16x8_t values, uint16x8_t chars,
     // `ccc` represents the combining class of the last character in the
     // decomposition of the character we're on, not the actual ccc value of
     // the character.
-    uint8_t ccc = (value >> 2) & 0xFF;
+    uint8_t ccc = uint8_t((value >> 2) & 0xFF);
 
     uint32_t data =
         scalar::utf8_to_decomposed::lookup_full_trie<form>(chars[i]);
     uint16_t offset = data & 0x7FFF;
     uint8_t length = (data >> 15) & 0x3F;
-    uint8_t first_ccc_delta = data >> 29;
+    uint8_t first_ccc_delta = uint8_t(data >> 29);
 
     const uint8_t *decomp_offset =
         &tables::utf8_to_decomposed::decompositions[offset];
@@ -318,7 +318,7 @@ arm_write_non_hangul_simple_utf8(uint8x16_t in, uint16x8_t chars,
   // UTF-8 lengths of each code point in the input.
   uint16x8_t length = vandq_u16(values, vdupq_n_u16(0b11));
   uint16x8_t length_psum = arm_prefix_sum_uint16x8(length);
-  int8x16_t shift = vdupq_n_u8(0);
+  int8x16_t shift = vdupq_n_s8(0);
   // Each 8-byte block corresponds to one decomposition in the input. It is
   // only possible to have a maximum of six code points.
   int8x16_t iota = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
@@ -352,14 +352,16 @@ arm_write_non_hangul_simple_utf8(uint8x16_t in, uint16x8_t chars,
     // code point at `i`, we need to shift the bytes in the buffer by the
     // amount the original code point expands during decomposition. This
     // mask tells us which bytes to shift.
-    int8_t dlt_start = (end - size) + displacement;
-    uint8x16_t shift_mask = vcgeq_s8(iota, vdupq_n_s8(dlt_start + size + dlt));
+    int8_t dlt_start = int8_t((end - size) + displacement);
+    uint8x16_t shift_mask =
+        vcgeq_s8(iota, vdupq_n_s8(int8_t(dlt_start + size + dlt)));
     uint8x16_t upper_mask =
-        vcltq_s8(iota, vdupq_n_s8(end + displacement + dlt));
+        vcltq_s8(iota, vdupq_n_s8(int8_t(end + displacement + dlt)));
     uint8x16_t lower_mask = vcgeq_s8(iota, vdupq_n_s8(dlt_start));
     // Shift by `dlt`.
     uint8x16_t decomp_mask = vandq_u8(upper_mask, lower_mask);
-    int8x16_t contrib = vandq_s8(shift_mask, vdupq_n_s8(dlt));
+    int8x16_t contrib =
+        vandq_s8(vreinterpretq_s8_u8(shift_mask), vdupq_n_s8(dlt));
     // Performing `iota - tbl_offset` should get us an index into the
     // appropriate section of `tbls`, given by the formula below.
     int8_t offset_diff = int8_t(-((int16_t)((j + 2) * 8) - dlt_start));
@@ -449,7 +451,7 @@ arm_decompose_code_points_utf8(uint8x16_t in, uint16x4_t chars, size_t n_bytes,
     *last_ccc = uint8_t(vget_lane_u16(ccc_values, 3));
     arm_write_non_hangul_simple_utf8<form>(
         in, vcombine_u16(chars, vdup_n_u16(0)),
-        vcombine_s16(delta, vdup_n_u16(0)), vcombine_u16(values, vdup_n_u16(0)),
+        vcombine_s16(delta, vdup_n_s16(0)), vcombine_u16(values, vdup_n_u16(0)),
         *out);
     *out += total;
   } else if (!hangul_result) {

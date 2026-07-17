@@ -31,7 +31,7 @@ template <ComposedForm form> bool is_relevant(uint32_t code_point) {
       utf8_to_decomposed::lookup_supplementary_code_point<dform>(code_point);
   uint32_t k = kv & 0x1FFFFF;
   if (k == code_point) {
-    uint8_t qc = kv >> 56;
+    uint8_t qc = uint8_t(kv >> 56);
     return qc != 0;
   }
   return false;
@@ -330,7 +330,7 @@ bool check_code_point_bmp(uint16_t code_point, size_t *out_length,
                           uint8_t *ccc) {
   uint16_t value = lookup_check_trie<form>(code_point);
   *out_length += value & 0x3F;
-  *ccc = (value >> 6) & 0xFF;
+  *ccc = uint8_t((value >> 6) & 0xFF);
   return !(value >> 15);
 }
 
@@ -342,7 +342,7 @@ static bool check_code_point_supplementary(uint32_t code_point,
       utf8_to_decomposed::lookup_supplementary_code_point<dform>(code_point);
   uint32_t k = kv & 0x1FFFFF;
   if (k == code_point) {
-    uint8_t length = 0;
+    size_t length = 0;
     uint16_t offset = (kv >> 21) & 0xFFFF;
     uint32_t const *chars;
     if constexpr (form == ComposedForm::NFC) {
@@ -356,7 +356,7 @@ static bool check_code_point_supplementary(uint32_t code_point,
     }
     *out_length += length;
     *ccc = (kv >> 45) & 0xFF;
-    uint8_t qc = kv >> 56;
+    uint8_t qc = uint8_t(kv >> 56);
     return qc == 0;
   } else {
     *out_length += 4;
