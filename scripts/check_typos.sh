@@ -7,7 +7,7 @@ set -eu
 
 # this exits with nonzero status if it finds something, which terminates the script
 codespell \
-    --skip="./benchmarks/competition,./build,./fuzz/work"  \
+    --skip="./benchmarks/competition,./build,./fuzz/work,./scripts/ucd,./tests/normalization_test_data/NormalizationTest.txt"  \
     -L vie,persan,fo,ans,larg,indx,shft,carryin,statics
 
 echo "no typos detected!"
