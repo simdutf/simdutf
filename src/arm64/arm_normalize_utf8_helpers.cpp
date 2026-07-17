@@ -119,28 +119,3 @@ simdutf_really_inline void arm_memcpy_small(uint8_t *dst, const uint8_t *src) {
   vst1q_u8(dst + 32, vld1q_u8(src + 32));
   vst1q_u8(dst + 48, vld1q_u8(src + 48));
 }
-
-simdutf_really_inline uint8x16_t arm_get_utf8_code_point_starts(uint8x16_t in) {
-  int8x16_t sgn = vreinterpretq_s8_u8(in);
-  return vcltq_s8(sgn, vdupq_n_s8(-65 + 1));
-}
-
-simdutf_really_inline uint64_t
-arm_make_utf8_code_point_mask(const uint8_t *input) {
-  uint8x16_t bit_mask = {0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
-                         0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80};
-  uint8x16_t c0 = arm_get_utf8_code_point_starts(vld1q_u8(input));
-  uint8x16_t c1 = arm_get_utf8_code_point_starts(vld1q_u8(input + 16));
-  uint8x16_t c2 = arm_get_utf8_code_point_starts(vld1q_u8(input + 32));
-  uint8x16_t c3 = arm_get_utf8_code_point_starts(vld1q_u8(input + 48));
-  // Compute the 64-bit movemask
-  uint8x16_t sum0 = vpaddq_u8(vandq_u8(c0, bit_mask), vandq_u8(c1, bit_mask));
-  uint8x16_t sum1 = vpaddq_u8(vandq_u8(c2, bit_mask), vandq_u8(c3, bit_mask));
-  sum0 = vpaddq_u8(sum0, sum1);
-  sum0 = vpaddq_u8(sum0, sum0);
-  uint64_t mask = vgetq_lane_u64(vreinterpretq_u64_u8(sum0), 0);
-  mask = ~mask;
-  // Shift right to get the end of each code point
-  mask >>= 1;
-  return mask;
-}
