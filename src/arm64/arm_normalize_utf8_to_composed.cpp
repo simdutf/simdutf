@@ -2,13 +2,13 @@ namespace internal {
 template <ComposedForm form>
 simdutf_really_inline uint16x4_t arm_comp_trie_lookup(uint16x4_t code_points) {
   uint16_t buf[4];
-  buf[0] = scalar::utf8_to_composed::lookup_comp_trie<form>(
+  buf[0] = scalar::normalization::lookup_comp_trie<form>(
       vget_lane_u16(code_points, 0));
-  buf[1] = scalar::utf8_to_composed::lookup_comp_trie<form>(
+  buf[1] = scalar::normalization::lookup_comp_trie<form>(
       vget_lane_u16(code_points, 1));
-  buf[2] = scalar::utf8_to_composed::lookup_comp_trie<form>(
+  buf[2] = scalar::normalization::lookup_comp_trie<form>(
       vget_lane_u16(code_points, 2));
-  buf[3] = scalar::utf8_to_composed::lookup_comp_trie<form>(
+  buf[3] = scalar::normalization::lookup_comp_trie<form>(
       vget_lane_u16(code_points, 3));
   return vld1_u16(buf);
 }
@@ -17,17 +17,17 @@ template <ComposedForm form>
 simdutf_really_inline uint16x8_t
 arm_comp_trie_lookup_wide(uint16x8_t code_points) {
   uint16_t buf[8];
-  buf[0] = scalar::utf8_to_composed::lookup_comp_trie<form>(
+  buf[0] = scalar::normalization::lookup_comp_trie<form>(
       vgetq_lane_u16(code_points, 0));
-  buf[1] = scalar::utf8_to_composed::lookup_comp_trie<form>(
+  buf[1] = scalar::normalization::lookup_comp_trie<form>(
       vgetq_lane_u16(code_points, 1));
-  buf[2] = scalar::utf8_to_composed::lookup_comp_trie<form>(
+  buf[2] = scalar::normalization::lookup_comp_trie<form>(
       vgetq_lane_u16(code_points, 2));
-  buf[3] = scalar::utf8_to_composed::lookup_comp_trie<form>(
+  buf[3] = scalar::normalization::lookup_comp_trie<form>(
       vgetq_lane_u16(code_points, 3));
-  buf[4] = scalar::utf8_to_composed::lookup_comp_trie<form>(
+  buf[4] = scalar::normalization::lookup_comp_trie<form>(
       vgetq_lane_u16(code_points, 4));
-  buf[5] = scalar::utf8_to_composed::lookup_comp_trie<form>(
+  buf[5] = scalar::normalization::lookup_comp_trie<form>(
       vgetq_lane_u16(code_points, 5));
   buf[6] = 0;
   buf[7] = 0;

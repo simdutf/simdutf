@@ -6,24 +6,6 @@ namespace scalar {
 namespace {
 namespace utf8_to_decomposed {
 
-// Reverse a subsection of an array.
-void reverse(char *array, size_t start, size_t end) {
-  while (start < end) {
-    char tmp = array[start];
-    array[start] = array[end];
-    array[end] = tmp;
-    start++;
-    end--;
-  }
-}
-
-// Rotate a subsection of an array to the right by k positions.
-void rotate(char *array, size_t size, size_t k) {
-  reverse(array, 0, size - 1);
-  reverse(array, 0, k - 1);
-  reverse(array, k, size - 1);
-}
-
 // In-place canonical ordering as defined by the specification.
 uint8_t sort_combining(char *output, size_t len) {
   if (len == 0) {
@@ -91,7 +73,7 @@ uint8_t sort_combining(char *output, size_t len) {
       if (ccc1 > ccc2) {
         // Swapping two adjacent, variably sized UTF-8 encoded code points can
         // be done with a right rotation by the size of the right code point.
-        rotate(output + j, size1 + size2, size2);
+        normalization::rotate(output + j, size1 + size2, size2);
         last_size = size2;
         did_swap = true;
         if (j + size1 + size2 == n) {
@@ -168,37 +150,13 @@ size_t decompose_bmp(uint16_t code_point, char *output, uint8_t *first_ccc,
   return output - start;
 }
 
-template <DecomposedForm form>
-uint64_t lookup_supplementary_code_point(uint32_t code_point) {
-  constexpr const uint64_t table_size =
-      form == DecomposedForm::NFD
-          ? sizeof(simdutf::tables::normalization::nfd::lookup_kv) /
-                sizeof(uint64_t)
-          : sizeof(simdutf::tables::normalization::nfkd::lookup_kv) /
-                sizeof(uint64_t);
-  uint32_t salt_hash = normalization::phash(code_point, 0, table_size);
-  uint32_t salt;
-  if constexpr (form == DecomposedForm::NFD) {
-    salt = simdutf::tables::normalization::nfd::lookup_salt[salt_hash];
-  } else {
-    salt = simdutf::tables::normalization::nfkd::lookup_salt[salt_hash];
-  }
-  uint32_t key_hash = normalization::phash(code_point, salt, table_size);
-  uint64_t kv;
-  if constexpr (form == DecomposedForm::NFD) {
-    kv = simdutf::tables::normalization::nfd::lookup_kv[key_hash];
-  } else {
-    kv = simdutf::tables::normalization::nfkd::lookup_kv[key_hash];
-  }
-  return kv;
-}
-
 // Decompose character in supplementary plane
 template <DecomposedForm form>
 size_t decompose_supplementary(uint32_t code_point, char *output,
                                uint8_t *first_ccc, uint8_t *ccc) {
   char *start{output};
-  uint64_t kv = lookup_supplementary_code_point<form>(code_point);
+  uint64_t kv =
+      normalization::lookup_supplementary_code_point<form>(code_point);
   uint32_t k = kv & 0x1FFFFF;
   if (k == code_point) {
     uint32_t const *chars;
@@ -366,7 +324,8 @@ bool check_code_point_bmp(uint16_t code_point, size_t *out_length,
 template <DecomposedForm form>
 static bool check_code_point_supplementary(uint32_t code_point,
                                            size_t *out_length, uint8_t *ccc) {
-  uint64_t kv = lookup_supplementary_code_point<form>(code_point);
+  uint64_t kv =
+      normalization::lookup_supplementary_code_point<form>(code_point);
   uint32_t k = kv & 0x1FFFFF;
   if (k == code_point) {
     size_t length = 0;

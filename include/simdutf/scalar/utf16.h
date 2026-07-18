@@ -213,6 +213,46 @@ simdutf_constexpr23 void to_well_formed_utf16(const char16_t *input, size_t len,
   }
 }
 
+template <endianness big_endian>
+uint32_t parse_code_point(const char16_t *input, uint8_t *size) {
+  char16_t word = input[0];
+  if (is_high_surrogate<big_endian>(word)) {
+    char16_t w1 = scalar::utf16::swap_if_needed<big_endian>(word);
+    uint16_t w2 = scalar::utf16::swap_if_needed<big_endian>(input[1]);
+    uint32_t cp =
+        ((uint32_t(w1 - 0xD800) << 10) | (uint32_t(w2 - 0xDC00))) + 0x10000u;
+    *size = 2;
+    return cp;
+  }
+  *size = 1;
+  return scalar::utf16::swap_if_needed<big_endian>(word);
+}
+
+template <endianness big_endian>
+size_t write_code_point(uint32_t code_point, char16_t *utf16_words) {
+  if (code_point <= 0xffff) {
+    utf16_words[0] =
+        scalar::utf16::swap_if_needed<big_endian>(char16_t(code_point));
+    return 1;
+  }
+  code_point -= 0x10000;
+  uint16_t high_surrogate = uint16_t(0xD800 + (code_point >> 10));
+  uint16_t low_surrogate = uint16_t(0xDC00 + (code_point & 0x3FF));
+  if constexpr (!match_system(big_endian)) {
+    high_surrogate = u16_swap_bytes(high_surrogate);
+    low_surrogate = u16_swap_bytes(low_surrogate);
+  }
+  utf16_words[0] = char16_t(high_surrogate);
+  utf16_words[1] = char16_t(low_surrogate);
+  return 2;
+}
+
+// We add an endianness parameter here to prevent a duplicate symbol error
+template <endianness big_endian = endianness::LITTLE>
+size_t code_point_size(uint32_t code_point) {
+  return code_point > 0xFFFF ? 2 : 1;
+}
+
 } // namespace utf16
 } // namespace scalar
 } // namespace simdutf

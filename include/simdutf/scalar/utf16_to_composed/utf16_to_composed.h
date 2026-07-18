@@ -1,36 +1,35 @@
-#ifndef SIMDUTF_UTF8_TO_COMPOSED_H
-#define SIMDUTF_UTF8_TO_COMPOSED_H
+#ifndef SIMDUTF_UTF16_TO_COMPOSED_H
+#define SIMDUTF_UTF16_TO_COMPOSED_H
 
 namespace simdutf {
 namespace scalar {
 namespace {
-namespace utf8_to_composed {
+namespace utf16_to_composed {
 
-std::pair<size_t, bool> rfind_starter(const char *input, size_t length) {
+template <endianness big_endian>
+std::pair<size_t, bool> rfind_starter(const char16_t *input, size_t length) {
   size_t p = 0;
   while (p < length) {
-    // Go back until leading UTF-8 byte
-    while ((input[length - p - 1] & 0b11000000) == 0b10000000) {
-      p++;
-    }
-    uint8_t size;
-    uint32_t c = utf8::parse_code_point(input + (length - p - 1), &size);
+    uint32_t c = utf16_to_decomposed::parse_code_point_reverse<big_endian>(
+        input + length - p - 1);
+    size_t size = utf16::code_point_size(c);
     uint8_t ccc = normalization::lookup_ccc(c);
     // If we found a starter, then we're done
     if (ccc == 0) {
-      return std::make_pair(length - p - 1, true);
+      return std::make_pair(length - p - size, true);
     }
-    p++;
+    p += size;
   }
   return std::make_pair(0, false);
 }
 
-template <ComposedForm form>
-std::pair<size_t, bool> find_first_stable(const char *input, size_t length) {
+template <endianness big_endian, ComposedForm form>
+std::pair<size_t, bool> find_first_stable(const char16_t *input,
+                                          size_t length) {
   uint32_t p = 0;
   while (p < length) {
     uint8_t size;
-    uint32_t c = utf8::parse_code_point(input + p, &size);
+    uint32_t c = utf16::parse_code_point<big_endian>(input + p, &size);
     uint8_t ccc = normalization::lookup_ccc(c);
     if (ccc == 0 && !normalization::is_relevant<form>(c)) {
       return std::make_pair(p, true);
@@ -40,17 +39,17 @@ std::pair<size_t, bool> find_first_stable(const char *input, size_t length) {
   return std::make_pair(0, false);
 }
 
-template <ComposedForm form>
-std::pair<size_t, bool> find_last_stable(const char *input, size_t length) {
+template <endianness big_endian, ComposedForm form>
+std::pair<size_t, bool> find_last_stable(const char16_t *input, size_t length) {
   size_t cutoff = length;
   while (cutoff > 0) {
-    auto result = rfind_starter(input, cutoff);
+    auto result = rfind_starter<big_endian>(input, cutoff);
     if (!result.second) {
       return std::make_pair(0, false);
     }
     cutoff = result.first;
     uint8_t size;
-    uint32_t c = utf8::parse_code_point(input + cutoff, &size);
+    uint32_t c = utf16::parse_code_point<big_endian>(input + cutoff, &size);
     if (!normalization::is_relevant<form>(c)) {
       return std::make_pair(cutoff, true);
     }
@@ -58,23 +57,19 @@ std::pair<size_t, bool> find_last_stable(const char *input, size_t length) {
   return std::make_pair(0, false);
 }
 
-template <ComposedForm form, typename InputPtr, typename OutputPtr>
-#if SIMDUTF_CPLUSPLUS20
-  requires(simdutf::detail::indexes_into_byte_like<InputPtr> &&
-           simdutf::detail::index_assignable_from_char<OutputPtr>)
-#endif
-size_t normalize(InputPtr input, size_t length, OutputPtr out) {
-  char *start{out};
+template <endianness big_endian, ComposedForm form>
+size_t normalize(const char16_t *input, size_t length, char16_t *out) {
+  char16_t *start{out};
   size_t p = 0;
   uint8_t last_ccc = 0;
 
   while (p < length) {
     uint8_t size;
-    uint32_t c = utf8::parse_code_point(input + p, &size);
+    uint32_t c = utf16::parse_code_point<big_endian>(input + p, &size);
 
     // ASCII fast path to skip ccc lookup
     if (c <= 0x7F) {
-      *out++ = (uint8_t)c;
+      *out++ = input[p];
       p++;
       last_ccc = 0;
       continue;
@@ -96,7 +91,7 @@ size_t normalize(InputPtr input, size_t length, OutputPtr out) {
     last_ccc = ccc;
 
     // This starter should be NF(K)C irrelevant
-    auto previous_starter_pos_result = rfind_starter(input, p);
+    auto previous_starter_pos_result = rfind_starter<big_endian>(input, p);
     size_t previous_starter_pos = previous_starter_pos_result.first;
     // If we couldn't find a starter, use index 0
     if (!previous_starter_pos_result.second) {
@@ -104,7 +99,8 @@ size_t normalize(InputPtr input, size_t length, OutputPtr out) {
     }
 
     auto next_irrelevant_starter_pos_result =
-        find_first_stable<form>(input + p + size, length - p - size);
+        find_first_stable<big_endian, form>(input + p + size,
+                                            length - p - size);
     size_t next_irrelevant_starter_pos =
         next_irrelevant_starter_pos_result.first;
     if (!next_irrelevant_starter_pos_result.second) {
@@ -117,7 +113,7 @@ size_t normalize(InputPtr input, size_t length, OutputPtr out) {
     // everything in between two stable code points should have a 1:1 mapping
     // between input and output for NF(K)C. So we can use the distance traveled
     // in the input to get distance traveled from the output.
-    char *normalized_out = out - (p - previous_starter_pos);
+    char16_t *normalized_out = out - (p - previous_starter_pos);
     // NF(K)D normalize a localized region in between the two starters that are
     // NF(K)C irrelevant. This guarantees that, if we NF(K)C normalize this
     // range, no characters after the end of the range in the input will
@@ -126,9 +122,10 @@ size_t normalize(InputPtr input, size_t length, OutputPtr out) {
     // not) have to do with the NF(K)C relevant character `c`  that we initially
     // detected.
     constexpr auto dform = to_decomposed_form(form);
-    size_t normalized_length = utf8_to_decomposed::normalize<dform>(
-        input + previous_starter_pos,
-        next_irrelevant_starter_pos - previous_starter_pos, normalized_out);
+    size_t normalized_length =
+        utf16_to_decomposed::normalize<big_endian, dform>(
+            input + previous_starter_pos,
+            next_irrelevant_starter_pos - previous_starter_pos, normalized_out);
 
     size_t normalized_pos = 0;
     uint8_t normalized_last_ccc = 255;
@@ -138,13 +135,14 @@ size_t normalize(InputPtr input, size_t length, OutputPtr out) {
     // https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-3/#G49614
     while (normalized_pos < normalized_length) {
       uint8_t normalized_size;
-      uint32_t normalized_c = utf8::parse_code_point(
+      uint32_t normalized_c = utf16::parse_code_point<big_endian>(
           normalized_out + normalized_pos, &normalized_size);
       uint8_t normalized_ccc = normalization::lookup_ccc(normalized_c);
 
       // Find the preceding starter. It should be composition irrelevant
       // NOTE: we can cache this if it shows up in a profile
-      auto starter_pos_result = rfind_starter(normalized_out, normalized_pos);
+      auto starter_pos_result =
+          rfind_starter<big_endian>(normalized_out, normalized_pos);
       size_t starter_pos = starter_pos_result.first;
       // Skip if we don't have a starter before this
       if (!starter_pos_result.second) {
@@ -154,8 +152,8 @@ size_t normalize(InputPtr input, size_t length, OutputPtr out) {
       }
 
       uint8_t starter_size;
-      uint32_t starter =
-          utf8::parse_code_point(normalized_out + starter_pos, &starter_size);
+      uint32_t starter = utf16::parse_code_point<big_endian>(
+          normalized_out + starter_pos, &starter_size);
       // Skip if we're blocked from the starter
       if (normalized_ccc <= normalized_last_ccc &&
           starter_pos + starter_size != normalized_pos) {
@@ -178,7 +176,7 @@ size_t normalize(InputPtr input, size_t length, OutputPtr out) {
         normalized_last_ccc = normalized_ccc;
         continue;
       }
-      size_t composed_size = utf8::code_point_size(composed);
+      size_t composed_size = utf16::code_point_size(composed);
 
       // Shift left to delete the combining character
       normalization::shift_left(normalized_out + normalized_pos,
@@ -192,7 +190,8 @@ size_t normalize(InputPtr input, size_t length, OutputPtr out) {
                                  normalized_length - starter_pos - starter_size,
                                  composed_size - starter_size);
       // Overwrite the starter with the new composed code point
-      (void)utf8::write_code_point(composed, normalized_out + starter_pos);
+      (void)utf16::write_code_point<big_endian>(composed,
+                                                normalized_out + starter_pos);
       normalized_length += composed_size - starter_size;
       normalized_pos += composed_size - starter_size;
     }
@@ -207,8 +206,9 @@ size_t normalize(InputPtr input, size_t length, OutputPtr out) {
   return out - start;
 }
 
-// Get the byte position of the nth code point going backwards from buf.
-simdutf_really_inline size_t get_code_point_pos_reverse(const char *buf,
+// Get the code unit position of the nth code point going backwards from buf.
+template <endianness big_endian>
+simdutf_really_inline size_t get_code_point_pos_reverse(const char16_t *buf,
                                                         size_t n) {
   if (n == 0) {
     return 0;
@@ -216,7 +216,7 @@ simdutf_really_inline size_t get_code_point_pos_reverse(const char *buf,
   size_t count = n;
   size_t p = 0;
   while (true) {
-    while ((*((buf - p) - 1) & 0b11000000) == 0b10000000) {
+    if (utf16::is_low_surrogate<big_endian>(*(buf - p - 1))) {
       p++;
     }
     count--;
@@ -227,39 +227,36 @@ simdutf_really_inline size_t get_code_point_pos_reverse(const char *buf,
   }
 }
 
-template <ComposedForm form, typename InputPtr, typename OutputPtr>
-#if SIMDUTF_CPLUSPLUS20
-  requires(simdutf::detail::indexes_into_byte_like<InputPtr> &&
-           simdutf::detail::index_assignable_from_char<OutputPtr>)
-#endif
-size_t normalize_with_context(InputPtr input, InputPtr input_base,
-                              size_t input_length, OutputPtr *out,
+template <endianness big_endian, ComposedForm form>
+size_t normalize_with_context(const char16_t *input, const char16_t *input_base,
+                              size_t input_length, char16_t **out,
                               size_t length) {
   size_t offset = input - input_base;
   // Get the region that we will NF(K)C normalize.
   uint8_t first_size;
-  utf8::parse_code_point(input, &first_size);
+  utf16::parse_code_point<big_endian>(input, &first_size);
   auto prev_starter_result =
-      find_last_stable<form>(input_base, offset + first_size);
+      find_last_stable<big_endian, form>(input_base, offset + first_size);
   size_t prev_starter =
       prev_starter_result.second ? prev_starter_result.first : 0;
-  auto next_starter_result = find_first_stable<form>(
+  auto next_starter_result = find_first_stable<big_endian, form>(
       input_base + offset + length, input_length - offset - length);
   size_t next_starter = next_starter_result.second
                             ? next_starter_result.first + offset + length
                             : input_length;
   size_t region_size = next_starter - prev_starter;
-  size_t code_point_dist =
-      utf8::count_code_points(input_base + prev_starter, offset - prev_starter);
+  size_t code_point_dist = utf16::count_code_points<big_endian>(
+      input_base + prev_starter, offset - prev_starter);
   // This is the position we will write to. It is the same number of code
   // points away that the tail of the input is from the previous starter
   // code point. This property being true is an important invariant in the
   // algorithm, because we need to know where the left boundary of the
   // region we found is in the output buffer.
-  size_t prev_out_offset = get_code_point_pos_reverse(*out, code_point_dist);
-  char *prev_out = *out - prev_out_offset;
-  size_t nwritten =
-      normalize<form>(input_base + prev_starter, region_size, prev_out);
+  size_t prev_out_offset =
+      get_code_point_pos_reverse<big_endian>(*out, code_point_dist);
+  char16_t *prev_out = *out - prev_out_offset;
+  size_t nwritten = normalize<big_endian, form>(input_base + prev_starter,
+                                                region_size, prev_out);
   *out = prev_out + nwritten;
 
   return next_starter - offset;
@@ -272,13 +269,13 @@ simdutf_really_inline uint16_t lookup_check_trie(uint16_t code_point) {
   uint16_t index;
   uint16_t value;
   if constexpr (form == ComposedForm::NFC) {
-    index = simdutf::tables::utf8_to_composed::nfc::check_trie_index[shift];
-    value =
-        simdutf::tables::utf8_to_composed::nfc::check_trie_data[index + masked];
-  } else {
-    index = simdutf::tables::utf8_to_composed::nfkc::check_trie_index[shift];
-    value = simdutf::tables::utf8_to_composed::nfkc::check_trie_data[index +
+    index = simdutf::tables::utf16_to_composed::nfc::check_trie_index[shift];
+    value = simdutf::tables::utf16_to_composed::nfc::check_trie_data[index +
                                                                      masked];
+  } else {
+    index = simdutf::tables::utf16_to_composed::nfkc::check_trie_index[shift];
+    value = simdutf::tables::utf16_to_composed::nfkc::check_trie_data[index +
+                                                                      masked];
   }
   return value;
 }
@@ -310,55 +307,36 @@ static bool check_code_point_supplementary(uint32_t code_point,
     }
     uint8_t len = (kv >> 53) & 0b11;
     for (size_t j = 0; j < len; j++) {
-      length += utf8::code_point_size(chars[j]);
+      length += utf16::code_point_size(chars[j]);
     }
     *out_length += length;
     *ccc = (kv >> 45) & 0xFF;
     uint8_t qc = uint8_t(kv >> 56);
     return qc == 0;
   } else {
-    *out_length += 4;
+    *out_length += 2;
     *ccc = 0;
     return true;
   }
 }
 
-template <ComposedForm form, typename InputPtr>
-#if SIMDUTF_CPLUSPLUS20
-  requires(simdutf::detail::indexes_into_byte_like<InputPtr>)
-#endif
-bool check_with_context(InputPtr input, size_t length, size_t *out_length,
-                        uint8_t *last_ccc) {
+template <endianness big_endian, ComposedForm form>
+bool check_with_context(const char16_t *input, size_t length,
+                        size_t *out_length, uint8_t *last_ccc) {
   bool is_qc = true;
   size_t p = 0;
   while (p < length) {
-    uint8_t leading = input[p];
+    uint8_t size;
+    uint32_t code_point = utf16::parse_code_point<big_endian>(input + p, &size);
     uint8_t ccc;
-    if (leading < 0b10000000) {
-      (*out_length)++;
-      p++;
-      ccc = 0;
-    } else if ((leading & 0b11100000) == 0b11000000) {
-      uint32_t code_point =
-          (leading & 0b00011111) << 6 | (input[p + 1] & 0b00111111);
+    if (size == 1) {
       is_qc &=
           check_code_point_bmp<form>(uint16_t(code_point), out_length, &ccc);
-      p += 2;
-    } else if ((leading & 0b11110000) == 0b11100000) {
-      uint32_t code_point = (leading & 0b00001111) << 12 |
-                            (input[p + 1] & 0b00111111) << 6 |
-                            (input[p + 2] & 0b00111111);
-      is_qc &=
-          check_code_point_bmp<form>(uint16_t(code_point), out_length, &ccc);
-      p += 3;
     } else {
-      uint32_t code_point =
-          (leading & 0b00000111) << 18 | (input[p + 1] & 0b00111111) << 12 |
-          (input[p + 2] & 0b00111111) << 6 | (input[p + 3] & 0b00111111);
       is_qc &=
           check_code_point_supplementary<form>(code_point, out_length, &ccc);
-      p += 4;
     }
+    p += size;
     if (*last_ccc > ccc && ccc != 0) {
       is_qc = false;
     }
@@ -367,19 +345,17 @@ bool check_with_context(InputPtr input, size_t length, size_t *out_length,
   return is_qc;
 }
 
-template <ComposedForm form, typename InputPtr>
-#if SIMDUTF_CPLUSPLUS20
-  requires(simdutf::detail::indexes_into_byte_like<InputPtr>)
-#endif
-bool check(InputPtr input, size_t length, size_t *out_length) {
+template <endianness big_endian, ComposedForm form>
+bool check(const char16_t *input, size_t length, size_t *out_length) {
   *out_length = 0;
   uint8_t last_ccc = 0;
-  return check_with_context<form>(input, length, out_length, &last_ccc);
+  return check_with_context<big_endian, form>(input, length, out_length,
+                                              &last_ccc);
 }
 
-} // namespace utf8_to_composed
+} // namespace utf16_to_composed
 } // unnamed namespace
 } // namespace scalar
 } // namespace simdutf
 
-#endif // SIMDUTF_UTF8_TO_COMPOSED_H
+#endif // SIMDUTF_UTF16_TO_COMPOSED_H

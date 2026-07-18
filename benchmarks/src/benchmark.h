@@ -233,6 +233,31 @@ private:
   void run_normalize_utf8_to_nfkd(const simdutf::implementation &implementation,
                                   size_t iterations);
 
+  void
+  run_normalize_utf16le_to_nfc(const simdutf::implementation &implementation,
+                               size_t iterations);
+  void
+  run_normalize_utf16be_to_nfc(const simdutf::implementation &implementation,
+                               size_t iterations);
+  void
+  run_normalize_utf16le_to_nfd(const simdutf::implementation &implementation,
+                               size_t iterations);
+  void
+  run_normalize_utf16be_to_nfd(const simdutf::implementation &implementation,
+                               size_t iterations);
+  void
+  run_normalize_utf16le_to_nfkc(const simdutf::implementation &implementation,
+                                size_t iterations);
+  void
+  run_normalize_utf16be_to_nfkc(const simdutf::implementation &implementation,
+                                size_t iterations);
+  void
+  run_normalize_utf16le_to_nfkd(const simdutf::implementation &implementation,
+                                size_t iterations);
+  void
+  run_normalize_utf16be_to_nfkd(const simdutf::implementation &implementation,
+                                size_t iterations);
+
   void run_utf8_length_from_latin1_node(size_t iterations);
 #if ICU_AVAILABLE
   void run_convert_latin1_to_utf8_icu(size_t iterations);
@@ -250,6 +275,13 @@ private:
   void run_normalize_utf8_to_nfd_icu(size_t iterations);
   void run_normalize_utf8_to_nfkc_icu(size_t iterations);
   void run_normalize_utf8_to_nfkd_icu(size_t iterations);
+
+  void run_normalize_utf16le_icu(const U_ICU_NAMESPACE::Normalizer2 *normalizer,
+                                 size_t iterations);
+  void run_normalize_utf16le_to_nfc_icu(size_t iterations);
+  void run_normalize_utf16le_to_nfd_icu(size_t iterations);
+  void run_normalize_utf16le_to_nfkc_icu(size_t iterations);
+  void run_normalize_utf16le_to_nfkd_icu(size_t iterations);
 #endif
 #if ICONV_AVAILABLE
   void run_convert_latin1_to_utf8_iconv(size_t iterations);

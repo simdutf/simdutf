@@ -9,6 +9,8 @@
 #include "tables/utf32_to_utf16_tables.h"
 #include "tables/utf8_to_decomposed_tables.h"
 #include "tables/utf8_to_composed_tables.h"
+#include "tables/utf16_to_decomposed_tables.h"
+#include "tables/utf16_to_composed_tables.h"
 #include "tables/normalization_tables.h"
 // End of tables.
 
@@ -130,9 +132,24 @@ SIMDUTF_POP_DISABLE_WARNINGS
 #endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD
        // || SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
 
+// Depends on scalar/utf8_to_decomposed/utf8_to_decomposed.h for
+// supplementary-plane decomposition lookups, so must be included after it.
+#if SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD)
+  #include "simdutf/scalar/utf16_to_decomposed/utf16_to_decomposed.h"
+#endif // SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFD ||
+       // SIMDUTF_FEATURE_NFKD)
+
 #if SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
   #include "simdutf/scalar/utf8_to_composed/utf8_to_composed.h"
 #endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
+
+// Depends on scalar/utf8_to_composed/utf8_to_composed.h (is_relevant) and
+// scalar/utf16_to_decomposed/utf16_to_decomposed.h (parse_code_point_reverse,
+// normalize), so must be included after both.
+#if SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
+  #include "simdutf/scalar/utf16_to_composed/utf16_to_composed.h"
+#endif // SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFC ||
+       // SIMDUTF_FEATURE_NFKC)
 
 #include "implementation.cpp"
 

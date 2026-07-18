@@ -338,6 +338,38 @@ public:
   normalize_utf8_to_nfkd_check(const char *input, size_t length,
                                size_t *output_length) const noexcept override;
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKD
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFD
+  simdutf_warn_unused size_t
+  normalize_utf16le_to_nfd(const char16_t *input, size_t length,
+                           char16_t *output) const noexcept override;
+  simdutf_warn_unused bool
+  normalize_utf16le_to_nfd_check(const char16_t *input, size_t length,
+                                 size_t *output_length) const
+      noexcept override;
+  simdutf_warn_unused size_t
+  normalize_utf16be_to_nfd(const char16_t *input, size_t length,
+                           char16_t *output) const noexcept override;
+  simdutf_warn_unused bool
+  normalize_utf16be_to_nfd_check(const char16_t *input, size_t length,
+                                 size_t *output_length) const
+      noexcept override;
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFD
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFKD
+  simdutf_warn_unused size_t
+  normalize_utf16le_to_nfkd(const char16_t *input, size_t length,
+                            char16_t *output) const noexcept override;
+  simdutf_warn_unused bool
+  normalize_utf16le_to_nfkd_check(const char16_t *input, size_t length,
+                                  size_t *output_length) const
+      noexcept override;
+  simdutf_warn_unused size_t
+  normalize_utf16be_to_nfkd(const char16_t *input, size_t length,
+                            char16_t *output) const noexcept override;
+  simdutf_warn_unused bool
+  normalize_utf16be_to_nfkd_check(const char16_t *input, size_t length,
+                                  size_t *output_length) const
+      noexcept override;
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFKD
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFC
   simdutf_warn_unused size_t normalize_utf8_to_nfc(
       const char *input, size_t length, char *output) const noexcept override;
@@ -352,6 +384,38 @@ public:
   normalize_utf8_to_nfkc_check(const char *input, size_t length,
                                size_t *output_length) const noexcept override;
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKC
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFC
+  simdutf_warn_unused size_t
+  normalize_utf16le_to_nfc(const char16_t *input, size_t length,
+                           char16_t *output) const noexcept override;
+  simdutf_warn_unused bool
+  normalize_utf16le_to_nfc_check(const char16_t *input, size_t length,
+                                 size_t *output_length) const
+      noexcept override;
+  simdutf_warn_unused size_t
+  normalize_utf16be_to_nfc(const char16_t *input, size_t length,
+                           char16_t *output) const noexcept override;
+  simdutf_warn_unused bool
+  normalize_utf16be_to_nfc_check(const char16_t *input, size_t length,
+                                 size_t *output_length) const
+      noexcept override;
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFC
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFKC
+  simdutf_warn_unused size_t
+  normalize_utf16le_to_nfkc(const char16_t *input, size_t length,
+                            char16_t *output) const noexcept override;
+  simdutf_warn_unused bool
+  normalize_utf16le_to_nfkc_check(const char16_t *input, size_t length,
+                                  size_t *output_length) const
+      noexcept override;
+  simdutf_warn_unused size_t
+  normalize_utf16be_to_nfkc(const char16_t *input, size_t length,
+                            char16_t *output) const noexcept override;
+  simdutf_warn_unused bool
+  normalize_utf16be_to_nfkc_check(const char16_t *input, size_t length,
+                                  size_t *output_length) const
+      noexcept override;
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFKC
 };
 } // namespace fallback
 } // namespace simdutf
