@@ -583,7 +583,6 @@ def load_decomp_maps() -> tuple[DecompMap, DecompMap]:
 
 def create_decomp_trie_utf8(
     decomp_map: DecompMap,
-    utf8_bytes: list[int],
     offsets: dict[int, int],
     decomp_bound: int,
 ) -> tuple[Trie, Trie]:
@@ -648,23 +647,22 @@ def create_decomp_trie_utf8(
 
 
 def create_decomp_trie_utf16(
-    decomp_map: DecompMap, decomp_bound: int
-) -> tuple[Trie, list[int]]:
+    decomp_map: DecompMap, offsets: dict[int, int], decomp_bound: int
+) -> Trie:
     trie = Trie()
-    data: list[int] = [0]
     for x in range(0x10000):
         if x not in decomp_map:
             trie.set(x, 0)
             continue
         decomp = decomp_map[x]
-        offset = len(data)
+        offset = offsets[x]
         # We use the lower 14 bits for the offset into the data table
         assert offset <= 0x3FFF
+        length = 0
         for c in decomp.decomps:
-            data.extend(chr(c).encode("UTF-16LE"))
-        length = len(data) - offset
+            length += len(chr(c).encode("UTF-16LE")) // 2
         assert length <= decomp_bound
-        delta = length - 2
+        delta = length - 1
         assert delta >= 0
         first_ccc = 0
         last_ccc = 0
@@ -691,7 +689,7 @@ def create_decomp_trie_utf16(
         )
         trie.set(x, packed.to_int(32))
     trie.compact()
-    return trie, data
+    return trie
 
 
 def create_decomp_check_trie(decomp_map: DecompMap, encoding: str) -> Trie:
@@ -783,6 +781,50 @@ def create_comp_check_trie(
         trie.set(x, packed.to_int(16))
     trie.compact()
     return trie
+
+
+def create_decomp_words_bmp(
+    nfd_map: DecompMap, nfkd_map: DecompMap, encoding: str
+) -> tuple[list[int], dict[int, int], dict[int, int]]:
+    width: int
+    if encoding == "UTF-8":
+        width = 1
+    elif encoding == "UTF-16LE":
+        width = 2
+    else:
+        print(f"unknown encoding: {encoding}")
+        exit(1)
+    decomp_bytes = [0] * width
+    offsets_nfd: dict[int, int] = {}
+    offsets_nfkd: dict[int, int] = {}
+    for x, value in nfkd_map.items():
+        if x >= BMP_LIMIT:
+            continue
+        offset = len(decomp_bytes)
+        for c in value.decomps:
+            decomp_bytes.extend(chr(c).encode(encoding))
+        offsets_nfkd[x] = offset // width
+        if x in nfd_map:
+            nfd_value = nfd_map[x]
+            if nfd_value.decomps == value.decomps:
+                offsets_nfd[x] = offset // width
+            else:
+                nfd_offset = len(decomp_bytes)
+                for c in nfd_value.decomps:
+                    decomp_bytes.extend(chr(c).encode(encoding))
+                offsets_nfd[x] = nfd_offset // width
+    # Add 16 bytes of padding to make it safe to do oversized loads from the tail of the decomposition
+    # bytes, which is reasonable to do in vectorized versions of decomposition.
+    decomp_bytes.extend([0] * 16)
+    words: list[int]
+    if encoding == "UTF-8":
+        words = decomp_bytes
+    elif encoding == "UTF-16LE":
+        words = [
+            decomp_bytes[i] | (decomp_bytes[i + 1] << 8)
+            for i in range(0, len(decomp_bytes), 2)
+        ]
+    return words, offsets_nfd, offsets_nfkd
 
 
 @dataclass
@@ -916,38 +958,24 @@ def main() -> None:
             if x in nfd_map:
                 nfd_map[x].ccc = 1
 
-    decomp_bytes_utf8 = [0]
-    offsets_nfd = {}
-    offsets_nfkd = {}
-    for x, value in nfkd_map.items():
-        if x >= BMP_LIMIT:
-            continue
-        offset = len(decomp_bytes_utf8)
-        for c in value.decomps:
-            decomp_bytes_utf8.extend(chr(c).encode("UTF-8"))
-        offsets_nfkd[x] = offset
-        if x in nfd_map:
-            nfd_value = nfd_map[x]
-            if nfd_value.decomps == value.decomps:
-                offsets_nfd[x] = offset
-            else:
-                nfd_offset = len(decomp_bytes_utf8)
-                for c in nfd_value.decomps:
-                    decomp_bytes_utf8.extend(chr(c).encode("UTF-8"))
-                offsets_nfd[x] = nfd_offset
-    # Add 16 bytes of padding to make it safe to do oversized loads from the tail of the decomposition
-    # bytes, which is reasonable to do in vectorized versions of decomposition.
-    decomp_bytes_utf8.extend([0] * 16)
+    decomp_bytes_utf8, offsets_nfd_utf8, offsets_nfkd_utf8 = create_decomp_words_bmp(
+        nfd_map, nfkd_map, "UTF-8"
+    )
+    decomp_bytes_utf16, offsets_nfd_utf16, offsets_nfkd_utf16 = create_decomp_words_bmp(
+        nfd_map, nfkd_map, "UTF-16LE"
+    )
 
     utf8_nfd_trie, utf8_nfd_data_trie = create_decomp_trie_utf8(
-        nfd_map, decomp_bytes_utf8, offsets_nfd, decomp_bound=16
+        nfd_map, offsets_nfd_utf8, decomp_bound=16
     )
     utf8_nfkd_trie, utf8_nfkd_data_trie = create_decomp_trie_utf8(
-        nfkd_map, decomp_bytes_utf8, offsets_nfkd, decomp_bound=48
+        nfkd_map, offsets_nfkd_utf8, decomp_bound=48
     )
-    utf16_nfd_trie, utf16_nfd_data = create_decomp_trie_utf16(nfd_map, decomp_bound=16)
-    utf16_nfkd_trie, utf16_nfkd_data = create_decomp_trie_utf16(
-        nfkd_map, decomp_bound=48
+    utf16_nfd_trie = create_decomp_trie_utf16(
+        nfd_map, offsets_nfd_utf16, decomp_bound=16
+    )
+    utf16_nfkd_trie = create_decomp_trie_utf16(
+        nfkd_map, offsets_nfkd_utf16, decomp_bound=48
     )
     ccc_trie = Trie()
     for x in range(BMP_LIMIT):
@@ -1014,18 +1042,17 @@ def main() -> None:
     utf16_nfkd_headers: list[HeaderDef] = []
     with open("utf16_to_decomposed_tables.h", "w") as f:
         f.write(UTF16_TO_DECOMPOSED_PREAMBLE)
+        other_headers.append(
+            generate_array(f, "decompositions", decomp_bytes_utf16, 16)
+        )
         f.write("namespace nfd {\n")
         utf16_nfd_headers.extend(generate_trie(f, "trie", utf16_nfd_trie, 16, 32))
-        utf16_nfd_headers.append(generate_array(f, "decompositions", utf16_nfd_data, 8))
         utf16_nfd_headers.extend(
             generate_trie(f, "check_trie", utf16_nfd_check_trie, 16, 16)
         )
         f.write("} // namespace nfd\n")
         f.write("namespace nfkd {\n")
         utf16_nfkd_headers.extend(generate_trie(f, "trie", utf16_nfkd_trie, 16, 32))
-        utf16_nfkd_headers.append(
-            generate_array(f, "decompositions", utf16_nfkd_data, 8)
-        )
         utf16_nfkd_headers.extend(
             generate_trie(f, "check_trie", utf16_nfkd_check_trie, 16, 16)
         )

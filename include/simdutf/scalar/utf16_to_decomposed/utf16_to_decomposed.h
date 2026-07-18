@@ -169,19 +169,12 @@ simdutf_really_inline size_t decompose_bmp(uint16_t code_point,
   }
   *ccc = uint8_t(value >> 24);
   uint8_t delta = (value >> 14) & 0x3F;
-  uint8_t length = delta + 2;
+  uint8_t length = delta + 1;
   uint16_t offset = value & 0x3FFF;
-  const uint8_t *bytes;
-  if constexpr (form == DecomposedForm::NFD) {
-    bytes = &simdutf::tables::utf16_to_decomposed::nfd::decompositions[offset];
-  } else {
-    bytes = &simdutf::tables::utf16_to_decomposed::nfkd::decompositions[offset];
-  }
-  for (size_t k = 0; k < length; k += 2) {
-    // The table stores each decomposed code unit as two little-endian
-    // bytes. TODO: store instead as char16_t
-    uint16_t unit = uint16_t(bytes[k]) | uint16_t(uint16_t(bytes[k + 1]) << 8);
-    *output++ = char16_t(scalar::utf16::swap_if_needed<big_endian>(unit));
+  const uint16_t *words =
+      &simdutf::tables::utf16_to_decomposed::decompositions[offset];
+  for (size_t k = 0; k < length; k++) {
+    *output++ = char16_t(scalar::utf16::swap_if_needed<big_endian>(words[k]));
   }
   uint8_t ccc_delta = (value >> 20) & 0b111;
   *first_ccc = ccc_delta == 0 ? 0 : *ccc - ccc_delta;
