@@ -3,6 +3,7 @@
 import sys
 from dataclasses import dataclass
 from itertools import batched
+from collections import defaultdict
 from typing import Collection
 
 BMP_LIMIT = 0x10000
@@ -232,11 +233,12 @@ class HeaderDef:
         return product
 
 
-def prefix(headers: list[HeaderDef], prefix: str) -> list[HeaderDef]:
-    return [
-        HeaderDef(f"{prefix}::{header.name}", header.type_, header.array_sizes)
-        for header in headers
-    ]
+def prefix(s: str, header: HeaderDef) -> HeaderDef:
+    return HeaderDef(f"{s}::{header.name}", header.type_, header.array_sizes)
+
+
+def prefix_all(s: str, headers: list[HeaderDef]) -> list[HeaderDef]:
+    return [prefix(s, header) for header in headers]
 
 
 def generate_array(writer, name: str, data: list[int], data_width: int) -> HeaderDef:
@@ -407,7 +409,7 @@ def generate_comp_hash_table(writer, comp_map: CompMap) -> list[HeaderDef]:
     ]
 
 
-def generate_pack_hangul(writer) -> list[HeaderDef]:
+def generate_pack_hangul(writer) -> HeaderDef:
     writer.write(f"\nconst HangulShuf pack_hangul[16] = {{\n")
     for x in range(1 << 4):
         exclude = []
@@ -424,7 +426,7 @@ def generate_pack_hangul(writer) -> list[HeaderDef]:
         tbl.extend([255] * (24 - len(tbl)))
         writer.write(f"  {{{total_size}, {{{", ".join(map(str, tbl))}}}}},\n")
     writer.write("};\n")
-    return [HeaderDef.array("pack_hangul", "HangulShuf", 16)]
+    return HeaderDef.array("pack_hangul", "HangulShuf", 16)
 
 
 def generate_trie(
@@ -889,7 +891,7 @@ def align_key_value_lines(lines: list[tuple[str, str]]) -> list[str]:
 
 
 def print_header_summary(title: str, headers: list[HeaderDef]) -> None:
-    lines: list[str] = []
+    lines: list[tuple[str, str]] = []
     KILOBYTE = 1024
     total = 0
     for header in headers:
@@ -900,7 +902,7 @@ def print_header_summary(title: str, headers: list[HeaderDef]) -> None:
         total += size
     lines.append(("TOTAL", f"{total / KILOBYTE:.1f}KiB"))
     aligned = align_key_value_lines(lines)
-    print(f"{title}:")
+    print(title, file=sys.stderr)
     for line in aligned:
         print(line, file=sys.stderr)
 
@@ -997,128 +999,201 @@ def main() -> None:
         derived.nfkc_qc, nfkd_map, "UTF-16LE"
     )
 
-    other_headers: list[HeaderDef] = []
-    utf8_nfd_headers: list[HeaderDef] = []
-    utf8_nfkd_headers: list[HeaderDef] = []
+    headers: defaultdict[str, list[HeaderDef]] = defaultdict(list[HeaderDef])
     with open("utf8_to_decomposed_tables.h", "w") as f:
         f.write(UTF8_TO_DECOMPOSED_PREAMBLE)
-        other_headers.extend(generate_pack_hangul(f))
-        other_headers.append(generate_array(f, "decompositions", decomp_bytes_utf8, 8))
-        f.write("namespace nfd {\n")
-        utf8_nfd_headers.extend(generate_trie(f, "trie", utf8_nfd_trie, 16, 16))
-        utf8_nfd_headers.extend(
-            generate_trie(f, "full_trie", utf8_nfd_data_trie, 16, 32)
+        headers["utf8_to_decomposed_tables.h"].append(generate_pack_hangul(f))
+        headers["utf8_to_decomposed_tables.h"].append(
+            generate_array(f, "decompositions", decomp_bytes_utf8, data_width=8)
         )
-        utf8_nfd_headers.extend(
-            generate_trie(f, "check_trie", utf8_nfd_check_trie, 16, 16)
+        f.write("namespace nfd {\n")
+        headers["utf8_to_decomposed_tables.h"].extend(
+            prefix_all(
+                "nfd",
+                generate_trie(f, "trie", utf8_nfd_trie, index_width=16, data_width=16),
+            )
+        )
+        headers["utf8_to_decomposed_tables.h"].extend(
+            prefix_all(
+                "nfd",
+                generate_trie(
+                    f, "full_trie", utf8_nfd_data_trie, index_width=16, data_width=32
+                ),
+            )
+        )
+        headers["utf8_to_decomposed_tables.h"].extend(
+            prefix_all(
+                "nfd",
+                generate_trie(
+                    f, "check_trie", utf8_nfd_check_trie, index_width=16, data_width=16
+                ),
+            )
         )
         f.write("} // namespace nfd\n")
         f.write("namespace nfkd {\n")
-        utf8_nfkd_headers.extend(generate_trie(f, "trie", utf8_nfkd_trie, 16, 16))
-        utf8_nfkd_headers.extend(
-            generate_trie(f, "full_trie", utf8_nfkd_data_trie, 16, 32)
+        headers["utf8_to_decomposed_tables.h"].extend(
+            prefix_all(
+                "nfkd",
+                generate_trie(f, "trie", utf8_nfkd_trie, index_width=16, data_width=16),
+            )
         )
-        utf8_nfkd_headers.extend(
-            generate_trie(f, "check_trie", utf8_nfkd_check_trie, 16, 16)
+        headers["utf8_to_decomposed_tables.h"].extend(
+            prefix_all(
+                "nfkd",
+                generate_trie(
+                    f, "full_trie", utf8_nfkd_data_trie, index_width=16, data_width=32
+                ),
+            )
+        )
+        headers["utf8_to_decomposed_tables.h"].extend(
+            prefix_all(
+                "nfkd",
+                generate_trie(
+                    f, "check_trie", utf8_nfkd_check_trie, index_width=16, data_width=16
+                ),
+            )
         )
         f.write("} // namespace nfkd\n")
         f.write(UTF8_TO_DECOMPOSED_POSTAMBLE)
-    utf8_nfc_headers: list[HeaderDef] = []
-    utf8_nfkc_headers: list[HeaderDef] = []
     with open("utf8_to_composed_tables.h", "w") as f:
         f.write(UTF8_TO_COMPOSED_PREAMBLE)
         f.write("namespace nfc {\n")
-        utf8_nfc_headers.extend(
-            generate_trie(f, "check_trie", utf8_nfc_check_trie, 16, 16)
+        headers["utf8_to_composed_tables.h"].extend(
+            prefix_all(
+                "nfc",
+                generate_trie(
+                    f, "check_trie", utf8_nfc_check_trie, index_width=16, data_width=16
+                ),
+            )
         )
         f.write("} // namespace nfc\n")
         f.write("namespace nfkc {\n")
-        utf8_nfkc_headers.extend(
-            generate_trie(f, "check_trie", utf8_nfkc_check_trie, 16, 16)
+        headers["utf8_to_composed_tables.h"].extend(
+            prefix_all(
+                "nfkc",
+                generate_trie(
+                    f, "check_trie", utf8_nfkc_check_trie, index_width=16, data_width=16
+                ),
+            )
         )
         f.write("} // namespace nfkc\n")
         f.write(UTF8_TO_COMPOSED_POSTAMBLE)
-    utf16_nfd_headers: list[HeaderDef] = []
-    utf16_nfkd_headers: list[HeaderDef] = []
     with open("utf16_to_decomposed_tables.h", "w") as f:
         f.write(UTF16_TO_DECOMPOSED_PREAMBLE)
-        other_headers.append(
-            generate_array(f, "decompositions", decomp_bytes_utf16, 16)
+        headers["utf16_to_decomposed_tables.h"].append(
+            generate_array(f, "decompositions", decomp_bytes_utf16, data_width=16)
         )
         f.write("namespace nfd {\n")
-        utf16_nfd_headers.extend(generate_trie(f, "trie", utf16_nfd_trie, 16, 32))
-        utf16_nfd_headers.extend(
-            generate_trie(f, "check_trie", utf16_nfd_check_trie, 16, 16)
+        headers["utf16_to_decomposed_tables.h"].extend(
+            prefix_all(
+                "nfd",
+                generate_trie(f, "trie", utf16_nfd_trie, index_width=16, data_width=32),
+            )
+        )
+        headers["utf16_to_decomposed_tables.h"].extend(
+            prefix_all(
+                "nfd",
+                generate_trie(
+                    f, "check_trie", utf16_nfd_check_trie, index_width=16, data_width=16
+                ),
+            )
         )
         f.write("} // namespace nfd\n")
         f.write("namespace nfkd {\n")
-        utf16_nfkd_headers.extend(generate_trie(f, "trie", utf16_nfkd_trie, 16, 32))
-        utf16_nfkd_headers.extend(
-            generate_trie(f, "check_trie", utf16_nfkd_check_trie, 16, 16)
+        headers["utf16_to_decomposed_tables.h"].extend(
+            prefix_all(
+                "nfkd",
+                generate_trie(
+                    f, "trie", utf16_nfkd_trie, index_width=16, data_width=32
+                ),
+            )
+        )
+        headers["utf16_to_decomposed_tables.h"].extend(
+            prefix_all(
+                "nfkd",
+                generate_trie(
+                    f,
+                    "check_trie",
+                    utf16_nfkd_check_trie,
+                    index_width=16,
+                    data_width=16,
+                ),
+            )
         )
         f.write("} // namespace nfkd\n")
         f.write(UTF16_TO_DECOMPOSED_POSTAMBLE)
-    utf16_nfc_headers: list[HeaderDef] = []
-    utf16_nfkc_headers: list[HeaderDef] = []
     with open("utf16_to_composed_tables.h", "w") as f:
         f.write(UTF16_TO_COMPOSED_PREAMBLE)
         f.write("namespace nfc {\n")
-        utf16_nfc_headers.extend(
-            generate_trie(f, "check_trie", utf16_nfc_check_trie, 16, 16)
+        headers["utf16_to_composed_tables.h"].extend(
+            prefix_all(
+                "nfc",
+                generate_trie(
+                    f, "check_trie", utf16_nfc_check_trie, index_width=16, data_width=16
+                ),
+            )
         )
         f.write("} // namespace nfc\n")
         f.write("namespace nfkc {\n")
-        utf16_nfkc_headers.extend(
-            generate_trie(f, "check_trie", utf16_nfkc_check_trie, 16, 16)
+        headers["utf16_to_composed_tables.h"].extend(
+            prefix_all(
+                "nfkc",
+                generate_trie(
+                    f,
+                    "check_trie",
+                    utf16_nfkc_check_trie,
+                    index_width=16,
+                    data_width=16,
+                ),
+            )
         )
         f.write("} // namespace nfkc\n")
         f.write(UTF16_TO_COMPOSED_POSTAMBLE)
     # Tables agnostic of encoding
     with open("normalization_tables.h", "w") as f:
         f.write(NORMALIZATION_PREAMBLE)
-        other_headers.extend(generate_trie(f, "ccc_trie", ccc_trie, 16, 8))
-        other_headers.extend(generate_supplementary_ccc_hash_table(f, nfd_map))
-        other_headers.extend(generate_comp_hash_table(f, comp_map))
+        headers["normalization_tables.h"].extend(
+            generate_trie(f, "ccc_trie", ccc_trie, index_width=16, data_width=8)
+        )
+        headers["normalization_tables.h"].extend(
+            generate_supplementary_ccc_hash_table(f, nfd_map)
+        )
+        headers["normalization_tables.h"].extend(generate_comp_hash_table(f, comp_map))
         f.write("namespace nfd {\n")
-        other_headers.extend(
-            prefix(
-                generate_decomp_hash_table(f, nfd_map, derived.nfc_qc, "lookup"), "nfd"
+        headers["normalization_tables.h"].extend(
+            prefix_all(
+                "nfd", generate_decomp_hash_table(f, nfd_map, derived.nfc_qc, "lookup")
             )
         )
         f.write("} // namespace nfd\n")
         f.write("namespace nfkd {\n")
-        other_headers.extend(
-            prefix(
-                generate_decomp_hash_table(f, nfkd_map, derived.nfkc_qc, "lookup"),
+        headers["normalization_tables.h"].extend(
+            prefix_all(
                 "nfkd",
+                generate_decomp_hash_table(f, nfkd_map, derived.nfkc_qc, "lookup"),
             )
         )
         f.write("} // namespace nfkd\n")
         f.write("namespace nfc {\n")
-        other_headers.extend(prefix(generate_trie(f, "trie", nfc_trie, 16, 8), "nfc"))
+        headers["normalization_tables.h"].extend(
+            prefix_all(
+                "nfc", generate_trie(f, "trie", nfc_trie, index_width=16, data_width=8)
+            )
+        )
         f.write("} // namespace nfc\n")
         f.write("namespace nfkc {\n")
-        other_headers.extend(prefix(generate_trie(f, "trie", nfkc_trie, 16, 8), "nfkc"))
+        headers["normalization_tables.h"].extend(
+            prefix_all(
+                "nfkc",
+                generate_trie(f, "trie", nfkc_trie, index_width=16, data_width=8),
+            )
+        )
         f.write("} // namespace nfkc\n")
         f.write(NORMALIZATION_POSTAMBLE)
 
-    print_header_summary("UTF-8 NFD", utf8_nfd_headers)
-    print()
-    print_header_summary("UTF-8 NFKD", utf8_nfkd_headers)
-    print()
-    print_header_summary("UTF-8 NFC", utf8_nfc_headers)
-    print()
-    print_header_summary("UTF-8 NFKC", utf8_nfkc_headers)
-    print()
-    print_header_summary("UTF-16 NFD", utf16_nfd_headers)
-    print()
-    print_header_summary("UTF-16 NFKD", utf16_nfkd_headers)
-    print()
-    print_header_summary("UTF-16 NFC", utf16_nfc_headers)
-    print()
-    print_header_summary("UTF-16 NFKC", utf16_nfkc_headers)
-    print()
-    print_header_summary("OTHER", other_headers)
+    for file, h in headers.items():
+        print_header_summary(file, h)
+        print()
 
 
 if __name__ == "__main__":
