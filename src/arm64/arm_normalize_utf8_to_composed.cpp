@@ -188,7 +188,7 @@ size_t normalize_masked_utf8_to_composed(const uint8_t *input,
         last_ccc);
   }
   if (sml_mask == 0xAAA) {
-    uint16x8_t code_points = arm_parse_2_byte_utf8_wide(in);
+    uint16x8_t code_points = arm_parse_2_byte_utf8(in);
     return internal::arm_normalize_code_points_utf8_wide<form>(
         in, code_points, input, input_base, input_length, 12, out, out_length,
         last_ccc);
@@ -197,13 +197,13 @@ size_t normalize_masked_utf8_to_composed(const uint8_t *input,
   uint8_t idx = simdutf::tables::utf8_to_utf16::utf8bigindex[sml_mask][0];
   uint8_t n_bytes = simdutf::tables::utf8_to_utf16::utf8bigindex[sml_mask][1];
   if (idx < 64) {
-    uint16x8_t code_points = arm_parse_4_12_utf8_wide(in, idx);
+    uint16x8_t code_points = arm_parse_6_12_utf8(in, idx);
     return internal::arm_normalize_code_points_utf8_wide<form>(
         in, code_points, input, input_base, input_length, n_bytes, out,
         out_length, last_ccc);
   }
   if (idx < 145) {
-    uint16x4_t code_points = arm_parse_4_123_utf8_wide(in, idx);
+    uint16x4_t code_points = arm_parse_4_123_utf8(in, idx);
     return internal::arm_normalize_code_points_utf8<form>(
         in, code_points, input, input_base, input_length, n_bytes, out,
         out_length, last_ccc);
@@ -310,7 +310,7 @@ size_t normalize_masked_utf8_to_composed_check(const uint8_t *input,
     return 12;
   }
   if (sml_mask == 0xAAA) {
-    uint16x8_t code_points = arm_parse_2_byte_utf8_wide(in);
+    uint16x8_t code_points = arm_parse_2_byte_utf8(in);
     internal::arm_comp_check_code_points_utf8_wide<form>(
         code_points, out_length, is_qc, last_ccc);
     return 12;
@@ -319,13 +319,13 @@ size_t normalize_masked_utf8_to_composed_check(const uint8_t *input,
   uint8_t idx = simdutf::tables::utf8_to_utf16::utf8bigindex[sml_mask][0];
   uint8_t n_bytes = simdutf::tables::utf8_to_utf16::utf8bigindex[sml_mask][1];
   if (idx < 64) {
-    uint16x8_t code_points = arm_parse_4_12_utf8_wide(in, idx);
+    uint16x8_t code_points = arm_parse_6_12_utf8(in, idx);
     internal::arm_comp_check_code_points_utf8_wide<form>(
         code_points, out_length, is_qc, last_ccc);
     return n_bytes;
   }
   if (idx < 145) {
-    uint16x4_t code_points = arm_parse_4_123_utf8_wide(in, idx);
+    uint16x4_t code_points = arm_parse_4_123_utf8(in, idx);
     internal::arm_comp_check_code_points_utf8<form>(code_points, out_length,
                                                     is_qc, last_ccc);
     return n_bytes;

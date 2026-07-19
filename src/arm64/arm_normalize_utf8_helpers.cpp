@@ -41,7 +41,7 @@ uint16x4_t arm_parse_3_byte_utf8(uint8x16_t in) {
   return composed;
 }
 
-uint16x8_t arm_parse_2_byte_utf8_wide(uint8x16_t in) {
+uint16x8_t arm_parse_2_byte_utf8(uint8x16_t in) {
   // 10bbbbbb 110aaaaa
   uint16x8_t upper = vreinterpretq_u16_u8(in);
   // (in << 8) | (in >> 8)
@@ -55,7 +55,7 @@ uint16x8_t arm_parse_2_byte_utf8_wide(uint8x16_t in) {
   return composed;
 }
 
-uint16x8_t arm_parse_4_12_utf8_wide(uint8x16_t in, size_t idx) {
+uint16x8_t arm_parse_6_12_utf8(uint8x16_t in, size_t idx) {
   uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t *>(
       simdutf::tables::utf8_to_utf16::shufutf8[idx]));
   // Shuffle
@@ -76,7 +76,7 @@ uint16x8_t arm_parse_4_12_utf8_wide(uint8x16_t in, size_t idx) {
   return composed;
 }
 
-uint16x4_t arm_parse_4_123_utf8_wide(uint8x16_t in, size_t idx) {
+uint16x4_t arm_parse_4_123_utf8(uint8x16_t in, size_t idx) {
   // UTF-16 and UTF-32 use similar algorithms, but UTF-32 skips the narrowing.
   uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t *>(
       simdutf::tables::utf8_to_utf16::shufutf8[idx]));

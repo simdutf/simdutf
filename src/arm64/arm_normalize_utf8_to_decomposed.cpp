@@ -114,9 +114,9 @@ simdutf_really_inline bool arm_is_ccc_sorted(uint16x4_t ccc_values,
   return vmaxv_u16(ccc_lt) == 0;
 }
 
-static void arm_decompose_hangul_utf8(uint16x4_t chars, uint16x4_t relevant,
-                                      uint16x4_t values, uint8_t **out,
-                                      const uint8_t *input, uint8_t *last_ccc) {
+void arm_decompose_hangul_utf8(uint16x4_t chars, uint16x4_t relevant,
+                               uint16x4_t values, uint8_t **out,
+                               const uint8_t *input, uint8_t *last_ccc) {
   *last_ccc = 0;
   // Decompose everything (assuming they're all Hangul syllables). This
   // assumption is made because, empirically, most of the time this function is
@@ -453,9 +453,9 @@ arm_decompose_non_hangul_utf8(uint8x16_t in, uint16x8_t chars, size_t n_bytes,
 // function is available if Hangul cannot be present.
 template <DecomposedForm form>
 simdutf_really_inline void
-arm_decompose_code_points_utf8(uint8x16_t in, uint16x4_t chars, size_t n_bytes,
-                               const uint8_t *input, uint8_t **out,
-                               size_t out_length, uint8_t *last_ccc) {
+arm_decompose_utf8(uint8x16_t in, uint16x4_t chars, size_t n_bytes,
+                   const uint8_t *input, uint8_t **out, size_t out_length,
+                   uint8_t *last_ccc) {
   uint16x4_t hangul_mask = arm_hangul_mask(chars);
   bool hangul_result = vmaxv_u16(hangul_mask) > 0;
   uint16x4_t values = arm_trie_lookup<form>(chars);
@@ -491,6 +491,71 @@ arm_decompose_code_points_utf8(uint8x16_t in, uint16x4_t chars, size_t n_bytes,
     *out += scalar::utf8_to_decomposed::normalize_with_context<form>(
         reinterpret_cast<const char *>(input), n_bytes,
         reinterpret_cast<char *>(*out), out_length, last_ccc);
+  }
+}
+
+// Decompose six non-Hangul BMP code points into their UTF-8 representations.
+// This function is specially optimized for inputs where the total number of
+// bytes spanned by `chars` is small (we currently use <= 8). It functions
+// exactly the same as `arm_decompose_non_hangul_utf8`. But note that this
+// function is slower when the input is not primarily comprised of ASCII.
+template <DecomposedForm form>
+simdutf_really_inline void
+arm_decompose_small_utf8(uint16x8_t chars, const uint8_t *input, uint8_t **out,
+                         size_t out_length, uint8_t *last_ccc) {
+  uint8_t *start = *out;
+#if SIMDUTF_REGULAR_VISUAL_STUDIO
+  uint16_t chars_buf[8];
+  vst1q_u16(chars_buf, chars);
+#endif
+  for (uint8_t i = 0; i < 6; i++) {
+    uint8_t leading = input[0];
+    if (simdutf_likely(leading <= 0x7F)) {
+      *(*out)++ = leading;
+      input++;
+      *last_ccc = 0;
+      continue;
+    }
+
+#if SIMDUTF_REGULAR_VISUAL_STUDIO
+    uint16_t c = chars_buf[i];
+#else
+    uint16_t c = chars[i];
+#endif
+    uint32_t value = scalar::utf8_to_decomposed::lookup_full_trie<form>(c);
+    if (value == 0) {
+      *(*out)++ = leading;
+      *(*out)++ = input[1];
+      // Non-ASCII code points are guaranteed to be 2-byte in this function
+      input += 2;
+      *last_ccc = 0;
+      continue;
+    }
+
+    uint16_t offset = value & 0x7FFF;
+    uint8_t length = (value >> 15) & 0x3F;
+    uint8_t ccc = (value >> 21) & 0xFF;
+    uint8_t first_ccc_delta = uint8_t(value >> 29);
+
+    const uint8_t *decomp_offset =
+        &simdutf::tables::utf8_to_decomposed::decompositions[offset];
+    vst1q_u8(*out, vld1q_u8(decomp_offset));
+    if constexpr (form == DecomposedForm::NFKD) {
+      if (simdutf_unlikely(length > 16)) {
+        vst1q_u8(*out + 16, vld1q_u8(decomp_offset + 16));
+        for (size_t j = 32; j < length; j++) {
+          (*out)[j] = decomp_offset[j];
+        }
+      }
+    }
+    *out += length;
+    uint8_t cmp_ccc = first_ccc_delta > 0 ? ccc - first_ccc_delta : ccc;
+    if (cmp_ccc != 0 && *last_ccc > cmp_ccc) {
+      ccc = scalar::utf8_to_decomposed::sort_combining(
+          reinterpret_cast<char *>(*out), out_length + (*out - start));
+    }
+    input += 2;
+    *last_ccc = ccc;
   }
 }
 } // namespace internal
@@ -539,15 +604,15 @@ size_t normalize_masked_utf8_to_decomposed(const uint8_t *input, uint64_t mask,
     }
 
     // Fallback path for four 3-byte characters.
-    internal::arm_decompose_code_points_utf8<form>(in, chars, 12, input, out,
-                                                   out_length, last_ccc);
+    internal::arm_decompose_utf8<form>(in, chars, 12, input, out, out_length,
+                                       last_ccc);
     return 12;
   }
 
   // Six two-byte code points.
   if (sml_mask == 0xAAA) {
     // Precomposed Hangul syllables are not possible in 2-byte code points.
-    uint16x8_t chars = arm_parse_2_byte_utf8_wide(in);
+    uint16x8_t chars = arm_parse_2_byte_utf8(in);
     internal::arm_decompose_non_hangul_utf8<form>(in, chars, 12, input, out,
                                                   out_length, last_ccc);
     return 12;
@@ -556,23 +621,22 @@ size_t normalize_masked_utf8_to_decomposed(const uint8_t *input, uint64_t mask,
   uint8_t idx = simdutf::tables::utf8_to_utf16::utf8bigindex[sml_mask][0];
   uint8_t n_bytes = simdutf::tables::utf8_to_utf16::utf8bigindex[sml_mask][1];
 
-  // TODO: one optimization not yet ported over from the xxUTF code base:
-  // another idx value can tell us that the majority of bytes are ASCII, with
-  // just a few bytes of two-byte code points. This is common in languages like
-  // Spanish. In such cases, we should do a scalar fast path that is weighted
-  // towards ASCII in a simdutf_likely branch. This gives a nice performance
-  // speedup on Latin languages that aren't fully ASCII.
-  if (idx < 64) {
+  if (idx < 22) {
+    // Six one to two byte code points totaling <= 8 bytes in size
+    uint16x8_t chars = arm_parse_6_12_utf8(in, idx);
+    internal::arm_decompose_small_utf8<form>(chars, input, out, out_length,
+                                             last_ccc);
+  } else if (idx < 64) {
     // Six one to two byte code points. Precomposed Hangul syllables are
     // not possible in one to two byte code points.
-    uint16x8_t chars = arm_parse_4_12_utf8_wide(in, idx);
+    uint16x8_t chars = arm_parse_6_12_utf8(in, idx);
     internal::arm_decompose_non_hangul_utf8<form>(in, chars, n_bytes, input,
                                                   out, out_length, last_ccc);
   } else if (idx < 145) {
     // Four code points.
-    uint16x4_t chars = arm_parse_4_123_utf8_wide(in, idx);
-    internal::arm_decompose_code_points_utf8<form>(in, chars, n_bytes, input,
-                                                   out, out_length, last_ccc);
+    uint16x4_t chars = arm_parse_4_123_utf8(in, idx);
+    internal::arm_decompose_utf8<form>(in, chars, n_bytes, input, out,
+                                       out_length, last_ccc);
   } else if (idx < 209) {
     // NOTE: right now, anytime we have three 1..4-byte code points, we
     // just fall back to scalar. We should not do this.
@@ -677,7 +741,7 @@ normalize_masked_utf8_to_decomposed_check(const uint8_t *input, uint64_t mask,
   }
   // Six two-byte code points.
   if (sml_mask == 0xAAA) {
-    uint16x8_t code_points = arm_parse_2_byte_utf8_wide(in);
+    uint16x8_t code_points = arm_parse_2_byte_utf8(in);
     internal::arm_check_code_points_utf8_wide<form>(code_points, out_length,
                                                     is_qc, last_ccc);
     return 12;
@@ -687,14 +751,14 @@ normalize_masked_utf8_to_decomposed_check(const uint8_t *input, uint64_t mask,
   uint8_t n_bytes = simdutf::tables::utf8_to_utf16::utf8bigindex[sml_mask][1];
   if (idx < 64) {
     // Six one to two byte code points.
-    uint16x8_t code_points = arm_parse_4_12_utf8_wide(in, idx);
+    uint16x8_t code_points = arm_parse_6_12_utf8(in, idx);
     internal::arm_check_code_points_utf8_wide<form>(code_points, out_length,
                                                     is_qc, last_ccc);
     return n_bytes;
   }
   if (idx < 145) {
     // Four code points.
-    uint16x4_t code_points = arm_parse_4_123_utf8_wide(in, idx);
+    uint16x4_t code_points = arm_parse_4_123_utf8(in, idx);
     internal::arm_check_code_points_utf8<form>(code_points, out_length, is_qc,
                                                last_ccc);
     return n_bytes;
