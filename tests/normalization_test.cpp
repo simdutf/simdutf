@@ -5,14 +5,25 @@
 
 namespace {
 
-template <typename T>
+template <simdutf::encoding_type encoding, typename T>
 std::basic_string<T> splat(std::basic_string_view<T> sv, int n) {
   std::basic_string<T> result;
   std::basic_string_view<T> combining_grapheme_joiner;
-  if constexpr (sizeof(T) == 2) {
-    combining_grapheme_joiner = u"\u034f";
+  if constexpr (encoding == simdutf::encoding_type::UTF16_LE) {
+    if constexpr (match_system(simdutf::endianness::LITTLE)) {
+      combining_grapheme_joiner = u"\u034f";
+    } else {
+      combining_grapheme_joiner = u"\u4f03";
+    }
   }
-  if constexpr (sizeof(T) == 1) {
+  if constexpr (encoding == simdutf::encoding_type::UTF16_BE) {
+    if constexpr (match_system(simdutf::endianness::BIG)) {
+      combining_grapheme_joiner = u"\u034f";
+    } else {
+      combining_grapheme_joiner = u"\u4f03";
+    }
+  }
+  if constexpr (encoding == simdutf::encoding_type::UTF8) {
     combining_grapheme_joiner = "\u034f";
   }
   result.reserve((sv.size() + combining_grapheme_joiner.size()) * n);
@@ -97,9 +108,9 @@ void report_mismatch(const char *what, std::basic_string_view<T> expected,
   printf("normalization conformance failure on line %zu: check "
          "%s\n",
          line, what);
-  printf("  expected (%zu bytes): ", expected.size());
+  printf("  expected (%zu words): ", expected.size());
   dump_hex_string(expected);
-  printf("  actual   (%zu bytes): ", actual.size());
+  printf("  actual   (%zu words): ", actual.size());
   dump_hex_string(actual);
   exit(1);
 }
@@ -197,11 +208,11 @@ TEST(conformance_utf8) {
 // normalization tests that scalar has to go through.
 TEST(conformance_vectorized_utf8) {
   for (const auto &tc : simdutf::test::normalization_test_cases) {
-    const std::string c1 = splat(tc.c1, 128);
-    const std::string c2 = splat(tc.c2, 128);
-    const std::string c3 = splat(tc.c3, 128);
-    const std::string c4 = splat(tc.c4, 128);
-    const std::string c5 = splat(tc.c5, 128);
+    const std::string c1 = splat<simdutf::encoding_type::UTF8>(tc.c1, 128);
+    const std::string c2 = splat<simdutf::encoding_type::UTF8>(tc.c2, 128);
+    const std::string c3 = splat<simdutf::encoding_type::UTF8>(tc.c3, 128);
+    const std::string c4 = splat<simdutf::encoding_type::UTF8>(tc.c4, 128);
+    const std::string c5 = splat<simdutf::encoding_type::UTF8>(tc.c5, 128);
 
     check_norm("NFC(splat(c1)) == splat(c2)", std::string_view(c2),
                std::string_view(c1), to_nfc_utf8(implementation, c1), tc.line);
@@ -256,85 +267,6 @@ TEST(conformance_utf16le) {
     const std::u16string c3 = to_utf16le(implementation, tc.c3);
     const std::u16string c4 = to_utf16le(implementation, tc.c4);
     const std::u16string c5 = to_utf16le(implementation, tc.c5);
-
-    // check_norm("NFC(utf16le(c1)) == utf16le(c2)", std::u16string_view(c2),
-    //            std::u16string_view(c1), to_nfc_utf16le(implementation, c1),
-    //            tc.line);
-    // check_norm("NFC(utf16le(c2)) == utf16le(c2)", std::u16string_view(c2),
-    //            std::u16string_view(c2), to_nfc_utf16le(implementation, c2),
-    //            tc.line);
-    // check_norm("NFC(utf16le(c3)) == utf16le(c2)", std::u16string_view(c2),
-    //            std::u16string_view(c3), to_nfc_utf16le(implementation, c3),
-    //            tc.line);
-    // check_norm("NFC(utf16le(c4)) == utf16le(c4)", std::u16string_view(c4),
-    //            std::u16string_view(c4), to_nfc_utf16le(implementation, c4),
-    //            tc.line);
-    // check_norm("NFC(utf16le(c5)) == utf16le(c4)", std::u16string_view(c4),
-    //            std::u16string_view(c5), to_nfc_utf16le(implementation, c5),
-    //            tc.line);
-
-    check_norm("NFD(utf16le(c1)) == utf16le(c3)", std::u16string_view(c3),
-               std::u16string_view(c1), to_nfd_utf16le(implementation, c1),
-               tc.line);
-    check_norm("NFD(utf16le(c2)) == utf16le(c3)", std::u16string_view(c3),
-               std::u16string_view(c2), to_nfd_utf16le(implementation, c2),
-               tc.line);
-    check_norm("NFD(utf16le(c3)) == utf16le(c3)", std::u16string_view(c3),
-               std::u16string_view(c3), to_nfd_utf16le(implementation, c3),
-               tc.line);
-    check_norm("NFD(utf16le(c4)) == utf16le(c5)", std::u16string_view(c5),
-               std::u16string_view(c4), to_nfd_utf16le(implementation, c4),
-               tc.line);
-    check_norm("NFD(utf16le(c5)) == utf16le(c5)", std::u16string_view(c5),
-               std::u16string_view(c5), to_nfd_utf16le(implementation, c5),
-               tc.line);
-
-    check_norm("NFKC(utf16le(c1)) == utf16le(c4)", std::u16string_view(c4),
-               std::u16string_view(c1), to_nfkc_utf16le(implementation, c1),
-               tc.line);
-    check_norm("NFKC(utf16le(c2)) == utf16le(c4)", std::u16string_view(c4),
-               std::u16string_view(c2), to_nfkc_utf16le(implementation, c2),
-               tc.line);
-    check_norm("NFKC(utf16le(c3)) == utf16le(c4)", std::u16string_view(c4),
-               std::u16string_view(c3), to_nfkc_utf16le(implementation, c3),
-               tc.line);
-    check_norm("NFKC(utf16le(c4)) == utf16le(c4)", std::u16string_view(c4),
-               std::u16string_view(c4), to_nfkc_utf16le(implementation, c4),
-               tc.line);
-    check_norm("NFKC(utf16le(c5)) == utf16le(c4)", std::u16string_view(c4),
-               std::u16string_view(c5), to_nfkc_utf16le(implementation, c5),
-               tc.line);
-
-    check_norm("NFKD(utf16le(c1)) == utf16le(c5)", std::u16string_view(c5),
-               std::u16string_view(c1), to_nfkd_utf16le(implementation, c1),
-               tc.line);
-    check_norm("NFKD(utf16le(c2)) == utf16le(c5)", std::u16string_view(c5),
-               std::u16string_view(c2), to_nfkd_utf16le(implementation, c2),
-               tc.line);
-    check_norm("NFKD(utf16le(c3)) == utf16le(c5)", std::u16string_view(c5),
-               std::u16string_view(c3), to_nfkd_utf16le(implementation, c3),
-               tc.line);
-    check_norm("NFKD(utf16le(c4)) == utf16le(c5)", std::u16string_view(c5),
-               std::u16string_view(c4), to_nfkd_utf16le(implementation, c4),
-               tc.line);
-    check_norm("NFKD(utf16le(c5)) == utf16le(c5)", std::u16string_view(c5),
-               std::u16string_view(c5), to_nfkd_utf16le(implementation, c5),
-               tc.line);
-  }
-}
-
-TEST(conformance_utf16le_vectorized) {
-  for (const auto &tc : simdutf::test::normalization_test_cases) {
-    const std::u16string c1 =
-        splat(std::u16string_view(to_utf16le(implementation, tc.c1)), 128);
-    const std::u16string c2 =
-        splat(std::u16string_view(to_utf16le(implementation, tc.c2)), 128);
-    const std::u16string c3 =
-        splat(std::u16string_view(to_utf16le(implementation, tc.c3)), 128);
-    const std::u16string c4 =
-        splat(std::u16string_view(to_utf16le(implementation, tc.c4)), 128);
-    const std::u16string c5 =
-        splat(std::u16string_view(to_utf16le(implementation, tc.c5)), 128);
 
     check_norm("NFC(utf16le(c1)) == utf16le(c2)", std::u16string_view(c2),
                std::u16string_view(c1), to_nfc_utf16le(implementation, c1),
@@ -399,6 +331,238 @@ TEST(conformance_utf16le_vectorized) {
     check_norm("NFKD(utf16le(c5)) == utf16le(c5)", std::u16string_view(c5),
                std::u16string_view(c5), to_nfkd_utf16le(implementation, c5),
                tc.line);
+  }
+}
+
+TEST(conformance_utf16le_vectorized) {
+  for (const auto &tc : simdutf::test::normalization_test_cases) {
+    const std::u16string c1 = splat<simdutf::encoding_type::UTF16_LE>(
+        std::u16string_view(to_utf16le(implementation, tc.c1)), 128);
+    const std::u16string c2 = splat<simdutf::encoding_type::UTF16_LE>(
+        std::u16string_view(to_utf16le(implementation, tc.c2)), 128);
+    const std::u16string c3 = splat<simdutf::encoding_type::UTF16_LE>(
+        std::u16string_view(to_utf16le(implementation, tc.c3)), 128);
+    const std::u16string c4 = splat<simdutf::encoding_type::UTF16_LE>(
+        std::u16string_view(to_utf16le(implementation, tc.c4)), 128);
+    const std::u16string c5 = splat<simdutf::encoding_type::UTF16_LE>(
+        std::u16string_view(to_utf16le(implementation, tc.c5)), 128);
+
+    check_norm("NFC(splat(utf16le(c1))) == splat(utf16le(c2))",
+               std::u16string_view(c2), std::u16string_view(c1),
+               to_nfc_utf16le(implementation, c1), tc.line);
+    check_norm("NFC(splat(utf16le(c2))) == splat(utf16le(c2))",
+               std::u16string_view(c2), std::u16string_view(c2),
+               to_nfc_utf16le(implementation, c2), tc.line);
+    check_norm("NFC(splat(utf16le(c3))) == splat(utf16le(c2))",
+               std::u16string_view(c2), std::u16string_view(c3),
+               to_nfc_utf16le(implementation, c3), tc.line);
+    check_norm("NFC(splat(utf16le(c4))) == splat(utf16le(c4))",
+               std::u16string_view(c4), std::u16string_view(c4),
+               to_nfc_utf16le(implementation, c4), tc.line);
+    check_norm("NFC(splat(utf16le(c5))) == splat(utf16le(c4))",
+               std::u16string_view(c4), std::u16string_view(c5),
+               to_nfc_utf16le(implementation, c5), tc.line);
+
+    check_norm("NFD(splat(utf16le(c1))) == splat(utf16le(c3))",
+               std::u16string_view(c3), std::u16string_view(c1),
+               to_nfd_utf16le(implementation, c1), tc.line);
+    check_norm("NFD(splat(utf16le(c2))) == splat(utf16le(c3))",
+               std::u16string_view(c3), std::u16string_view(c2),
+               to_nfd_utf16le(implementation, c2), tc.line);
+    check_norm("NFD(splat(utf16le(c3))) == splat(utf16le(c3))",
+               std::u16string_view(c3), std::u16string_view(c3),
+               to_nfd_utf16le(implementation, c3), tc.line);
+    check_norm("NFD(splat(utf16le(c4))) == splat(utf16le(c5))",
+               std::u16string_view(c5), std::u16string_view(c4),
+               to_nfd_utf16le(implementation, c4), tc.line);
+    check_norm("NFD(splat(utf16le(c5))) == splat(utf16le(c5))",
+               std::u16string_view(c5), std::u16string_view(c5),
+               to_nfd_utf16le(implementation, c5), tc.line);
+
+    check_norm("NFKC(splat(utf16le(c1))) == splat(utf16le(c4))",
+               std::u16string_view(c4), std::u16string_view(c1),
+               to_nfkc_utf16le(implementation, c1), tc.line);
+    check_norm("NFKC(splat(utf16le(c2))) == splat(utf16le(c4))",
+               std::u16string_view(c4), std::u16string_view(c2),
+               to_nfkc_utf16le(implementation, c2), tc.line);
+    check_norm("NFKC(splat(utf16le(c3))) == splat(utf16le(c4))",
+               std::u16string_view(c4), std::u16string_view(c3),
+               to_nfkc_utf16le(implementation, c3), tc.line);
+    check_norm("NFKC(splat(utf16le(c4))) == splat(utf16le(c4))",
+               std::u16string_view(c4), std::u16string_view(c4),
+               to_nfkc_utf16le(implementation, c4), tc.line);
+    check_norm("NFKC(splat(utf16le(c5))) == splat(utf16le(c4))",
+               std::u16string_view(c4), std::u16string_view(c5),
+               to_nfkc_utf16le(implementation, c5), tc.line);
+
+    check_norm("NFKD(splat(utf16le(c1))) == splat(utf16le(c5))",
+               std::u16string_view(c5), std::u16string_view(c1),
+               to_nfkd_utf16le(implementation, c1), tc.line);
+    check_norm("NFKD(splat(utf16le(c2))) == splat(utf16le(c5))",
+               std::u16string_view(c5), std::u16string_view(c2),
+               to_nfkd_utf16le(implementation, c2), tc.line);
+    check_norm("NFKD(splat(utf16le(c3))) == splat(utf16le(c5))",
+               std::u16string_view(c5), std::u16string_view(c3),
+               to_nfkd_utf16le(implementation, c3), tc.line);
+    check_norm("NFKD(splat(utf16le(c4))) == splat(utf16le(c5))",
+               std::u16string_view(c5), std::u16string_view(c4),
+               to_nfkd_utf16le(implementation, c4), tc.line);
+    check_norm("NFKD(splat(utf16le(c5))) == splat(utf16le(c5))",
+               std::u16string_view(c5), std::u16string_view(c5),
+               to_nfkd_utf16le(implementation, c5), tc.line);
+  }
+}
+
+TEST(conformance_utf16be) {
+  for (const auto &tc : simdutf::test::normalization_test_cases) {
+    const std::u16string c1 = to_utf16be(implementation, tc.c1);
+    const std::u16string c2 = to_utf16be(implementation, tc.c2);
+    const std::u16string c3 = to_utf16be(implementation, tc.c3);
+    const std::u16string c4 = to_utf16be(implementation, tc.c4);
+    const std::u16string c5 = to_utf16be(implementation, tc.c5);
+
+    check_norm("NFC(utf16be(c1)) == utf16be(c2)", std::u16string_view(c2),
+               std::u16string_view(c1), to_nfc_utf16be(implementation, c1),
+               tc.line);
+    check_norm("NFC(utf16be(c2)) == utf16be(c2)", std::u16string_view(c2),
+               std::u16string_view(c2), to_nfc_utf16be(implementation, c2),
+               tc.line);
+    check_norm("NFC(utf16be(c3)) == utf16be(c2)", std::u16string_view(c2),
+               std::u16string_view(c3), to_nfc_utf16be(implementation, c3),
+               tc.line);
+    check_norm("NFC(utf16be(c4)) == utf16be(c4)", std::u16string_view(c4),
+               std::u16string_view(c4), to_nfc_utf16be(implementation, c4),
+               tc.line);
+    check_norm("NFC(utf16be(c5)) == utf16be(c4)", std::u16string_view(c4),
+               std::u16string_view(c5), to_nfc_utf16be(implementation, c5),
+               tc.line);
+
+    check_norm("NFD(utf16be(c1)) == utf16be(c3)", std::u16string_view(c3),
+               std::u16string_view(c1), to_nfd_utf16be(implementation, c1),
+               tc.line);
+    check_norm("NFD(utf16be(c2)) == utf16be(c3)", std::u16string_view(c3),
+               std::u16string_view(c2), to_nfd_utf16be(implementation, c2),
+               tc.line);
+    check_norm("NFD(utf16be(c3)) == utf16be(c3)", std::u16string_view(c3),
+               std::u16string_view(c3), to_nfd_utf16be(implementation, c3),
+               tc.line);
+    check_norm("NFD(utf16be(c4)) == utf16be(c5)", std::u16string_view(c5),
+               std::u16string_view(c4), to_nfd_utf16be(implementation, c4),
+               tc.line);
+    check_norm("NFD(utf16be(c5)) == utf16be(c5)", std::u16string_view(c5),
+               std::u16string_view(c5), to_nfd_utf16be(implementation, c5),
+               tc.line);
+
+    check_norm("NFKC(utf16be(c1)) == utf16be(c4)", std::u16string_view(c4),
+               std::u16string_view(c1), to_nfkc_utf16be(implementation, c1),
+               tc.line);
+    check_norm("NFKC(utf16be(c2)) == utf16be(c4)", std::u16string_view(c4),
+               std::u16string_view(c2), to_nfkc_utf16be(implementation, c2),
+               tc.line);
+    check_norm("NFKC(utf16be(c3)) == utf16be(c4)", std::u16string_view(c4),
+               std::u16string_view(c3), to_nfkc_utf16be(implementation, c3),
+               tc.line);
+    check_norm("NFKC(utf16be(c4)) == utf16be(c4)", std::u16string_view(c4),
+               std::u16string_view(c4), to_nfkc_utf16be(implementation, c4),
+               tc.line);
+    check_norm("NFKC(utf16be(c5)) == utf16be(c4)", std::u16string_view(c4),
+               std::u16string_view(c5), to_nfkc_utf16be(implementation, c5),
+               tc.line);
+
+    check_norm("NFKD(utf16be(c1)) == utf16be(c5)", std::u16string_view(c5),
+               std::u16string_view(c1), to_nfkd_utf16be(implementation, c1),
+               tc.line);
+    check_norm("NFKD(utf16be(c2)) == utf16be(c5)", std::u16string_view(c5),
+               std::u16string_view(c2), to_nfkd_utf16be(implementation, c2),
+               tc.line);
+    check_norm("NFKD(utf16be(c3)) == utf16be(c5)", std::u16string_view(c5),
+               std::u16string_view(c3), to_nfkd_utf16be(implementation, c3),
+               tc.line);
+    check_norm("NFKD(utf16be(c4)) == utf16be(c5)", std::u16string_view(c5),
+               std::u16string_view(c4), to_nfkd_utf16be(implementation, c4),
+               tc.line);
+    check_norm("NFKD(utf16be(c5)) == utf16be(c5)", std::u16string_view(c5),
+               std::u16string_view(c5), to_nfkd_utf16be(implementation, c5),
+               tc.line);
+  }
+}
+
+TEST(conformance_utf16be_vectorized) {
+  for (const auto &tc : simdutf::test::normalization_test_cases) {
+    const std::u16string c1 = splat<simdutf::encoding_type::UTF16_BE>(
+        std::u16string_view(to_utf16be(implementation, tc.c1)), 128);
+    const std::u16string c2 = splat<simdutf::encoding_type::UTF16_BE>(
+        std::u16string_view(to_utf16be(implementation, tc.c2)), 128);
+    const std::u16string c3 = splat<simdutf::encoding_type::UTF16_BE>(
+        std::u16string_view(to_utf16be(implementation, tc.c3)), 128);
+    const std::u16string c4 = splat<simdutf::encoding_type::UTF16_BE>(
+        std::u16string_view(to_utf16be(implementation, tc.c4)), 128);
+    const std::u16string c5 = splat<simdutf::encoding_type::UTF16_BE>(
+        std::u16string_view(to_utf16be(implementation, tc.c5)), 128);
+
+    check_norm("NFC(splat(utf16be(c1))) == splat(utf16be(c2))",
+               std::u16string_view(c2), std::u16string_view(c1),
+               to_nfc_utf16be(implementation, c1), tc.line);
+    check_norm("NFC(splat(utf16be(c2))) == splat(utf16be(c2))",
+               std::u16string_view(c2), std::u16string_view(c2),
+               to_nfc_utf16be(implementation, c2), tc.line);
+    check_norm("NFC(splat(utf16be(c3))) == splat(utf16be(c2))",
+               std::u16string_view(c2), std::u16string_view(c3),
+               to_nfc_utf16be(implementation, c3), tc.line);
+    check_norm("NFC(splat(utf16be(c4))) == splat(utf16be(c4))",
+               std::u16string_view(c4), std::u16string_view(c4),
+               to_nfc_utf16be(implementation, c4), tc.line);
+    check_norm("NFC(splat(utf16be(c5))) == splat(utf16be(c4))",
+               std::u16string_view(c4), std::u16string_view(c5),
+               to_nfc_utf16be(implementation, c5), tc.line);
+
+    check_norm("NFD(splat(utf16be(c1))) == splat(utf16be(c3))",
+               std::u16string_view(c3), std::u16string_view(c1),
+               to_nfd_utf16be(implementation, c1), tc.line);
+    check_norm("NFD(splat(utf16be(c2))) == splat(utf16be(c3))",
+               std::u16string_view(c3), std::u16string_view(c2),
+               to_nfd_utf16be(implementation, c2), tc.line);
+    check_norm("NFD(splat(utf16be(c3))) == splat(utf16be(c3))",
+               std::u16string_view(c3), std::u16string_view(c3),
+               to_nfd_utf16be(implementation, c3), tc.line);
+    check_norm("NFD(splat(utf16be(c4))) == splat(utf16be(c5))",
+               std::u16string_view(c5), std::u16string_view(c4),
+               to_nfd_utf16be(implementation, c4), tc.line);
+    check_norm("NFD(splat(utf16be(c5))) == splat(utf16be(c5))",
+               std::u16string_view(c5), std::u16string_view(c5),
+               to_nfd_utf16be(implementation, c5), tc.line);
+
+    check_norm("NFKC(splat(utf16be(c1))) == splat(utf16be(c4))",
+               std::u16string_view(c4), std::u16string_view(c1),
+               to_nfkc_utf16be(implementation, c1), tc.line);
+    check_norm("NFKC(splat(utf16be(c2))) == splat(utf16be(c4))",
+               std::u16string_view(c4), std::u16string_view(c2),
+               to_nfkc_utf16be(implementation, c2), tc.line);
+    check_norm("NFKC(splat(utf16be(c3))) == splat(utf16be(c4))",
+               std::u16string_view(c4), std::u16string_view(c3),
+               to_nfkc_utf16be(implementation, c3), tc.line);
+    check_norm("NFKC(splat(utf16be(c4))) == splat(utf16be(c4))",
+               std::u16string_view(c4), std::u16string_view(c4),
+               to_nfkc_utf16be(implementation, c4), tc.line);
+    check_norm("NFKC(splat(utf16be(c5))) == splat(utf16be(c4))",
+               std::u16string_view(c4), std::u16string_view(c5),
+               to_nfkc_utf16be(implementation, c5), tc.line);
+
+    check_norm("NFKD(splat(utf16be(c1))) == splat(utf16be(c5))",
+               std::u16string_view(c5), std::u16string_view(c1),
+               to_nfkd_utf16be(implementation, c1), tc.line);
+    check_norm("NFKD(splat(utf16be(c2))) == splat(utf16be(c5))",
+               std::u16string_view(c5), std::u16string_view(c2),
+               to_nfkd_utf16be(implementation, c2), tc.line);
+    check_norm("NFKD(splat(utf16be(c3))) == splat(utf16be(c5))",
+               std::u16string_view(c5), std::u16string_view(c3),
+               to_nfkd_utf16be(implementation, c3), tc.line);
+    check_norm("NFKD(splat(utf16be(c4))) == splat(utf16be(c5))",
+               std::u16string_view(c5), std::u16string_view(c4),
+               to_nfkd_utf16be(implementation, c4), tc.line);
+    check_norm("NFKD(splat(utf16be(c5))) == splat(utf16be(c5))",
+               std::u16string_view(c5), std::u16string_view(c5),
+               to_nfkd_utf16be(implementation, c5), tc.line);
   }
 }
 

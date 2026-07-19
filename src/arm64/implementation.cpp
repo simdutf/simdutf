@@ -161,6 +161,10 @@ convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in, size_t shufutf8_idx) {
   #include "arm64/arm_convert_utf32_to_utf8.cpp"
 #endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_UTF8
 
+#if SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD || SIMDUTF_FEATURE_NFC ||      \
+    SIMDUTF_FEATURE_NFKC
+  #include "arm64/arm_normalize_helpers.cpp"
+#endif
 #if SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD ||    \
                              SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
   #include "arm64/arm_normalize_utf8_helpers.cpp"
@@ -174,6 +178,14 @@ convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in, size_t shufutf8_idx) {
   #include "arm64/arm_normalize_utf8_to_composed.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFC ||
        // SIMDUTF_FEATURE_NFKC)
+#if SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD)
+  #include "arm64/arm_normalize_utf16_to_decomposed.cpp"
+#endif // SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFD ||
+       // SIMDUTF_FEATURE_NFKD)
+#if SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
+  #include "arm64/arm_normalize_utf16_to_composed.cpp"
+#endif // SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFD ||
+       // SIMDUTF_FEATURE_NFKD)
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
@@ -1488,9 +1500,9 @@ simdutf_warn_unused bool implementation::normalize_utf8_to_nfkd_check(
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFD
 simdutf_warn_unused size_t implementation::normalize_utf16le_to_nfd(
     const char16_t *input, size_t length, char16_t *output) const noexcept {
-  return scalar::utf16_to_decomposed::normalize<endianness::LITTLE,
-                                                DecomposedForm::NFD>(
-      input, length, output);
+  return arm_normalize_utf16_to_decomposed<endianness::LITTLE,
+                                           DecomposedForm::NFD>(input, length,
+                                                                output);
 }
 
 simdutf_warn_unused bool implementation::normalize_utf16le_to_nfd_check(
@@ -1503,9 +1515,9 @@ simdutf_warn_unused bool implementation::normalize_utf16le_to_nfd_check(
 
 simdutf_warn_unused size_t implementation::normalize_utf16be_to_nfd(
     const char16_t *input, size_t length, char16_t *output) const noexcept {
-  return scalar::utf16_to_decomposed::normalize<endianness::BIG,
-                                                DecomposedForm::NFD>(
-      input, length, output);
+  return arm_normalize_utf16_to_decomposed<endianness::BIG,
+                                           DecomposedForm::NFD>(input, length,
+                                                                output);
 }
 
 simdutf_warn_unused bool implementation::normalize_utf16be_to_nfd_check(
@@ -1520,31 +1532,31 @@ simdutf_warn_unused bool implementation::normalize_utf16be_to_nfd_check(
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFKD
 simdutf_warn_unused size_t implementation::normalize_utf16le_to_nfkd(
     const char16_t *input, size_t length, char16_t *output) const noexcept {
-  return scalar::utf16_to_decomposed::normalize<endianness::LITTLE,
-                                                DecomposedForm::NFKD>(
-      input, length, output);
+  return arm_normalize_utf16_to_decomposed<endianness::LITTLE,
+                                           DecomposedForm::NFKD>(input, length,
+                                                                 output);
 }
 
 simdutf_warn_unused bool implementation::normalize_utf16le_to_nfkd_check(
     const char16_t *input, size_t length,
     size_t *output_length) const noexcept {
-  return scalar::utf16_to_decomposed::check<endianness::LITTLE,
-                                            DecomposedForm::NFKD>(
+  return arm_normalize_utf16_to_decomposed_check<endianness::LITTLE,
+                                                 DecomposedForm::NFKD>(
       input, length, output_length);
 }
 
 simdutf_warn_unused size_t implementation::normalize_utf16be_to_nfkd(
     const char16_t *input, size_t length, char16_t *output) const noexcept {
-  return scalar::utf16_to_decomposed::normalize<endianness::BIG,
-                                                DecomposedForm::NFKD>(
-      input, length, output);
+  return arm_normalize_utf16_to_decomposed<endianness::BIG,
+                                           DecomposedForm::NFKD>(input, length,
+                                                                 output);
 }
 
 simdutf_warn_unused bool implementation::normalize_utf16be_to_nfkd_check(
     const char16_t *input, size_t length,
     size_t *output_length) const noexcept {
-  return scalar::utf16_to_decomposed::check<endianness::BIG,
-                                            DecomposedForm::NFKD>(
+  return arm_normalize_utf16_to_decomposed_check<endianness::BIG,
+                                                 DecomposedForm::NFKD>(
       input, length, output_length);
 }
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFKD
@@ -1578,30 +1590,29 @@ simdutf_warn_unused bool implementation::normalize_utf8_to_nfkc_check(
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFC
 simdutf_warn_unused size_t implementation::normalize_utf16le_to_nfc(
     const char16_t *input, size_t length, char16_t *output) const noexcept {
-  return scalar::utf16_to_composed::normalize<endianness::LITTLE,
-                                              ComposedForm::NFC>(input, length,
-                                                                 output);
+  return arm_normalize_utf16_to_composed<endianness::LITTLE, ComposedForm::NFC>(
+      input, length, output);
 }
 
 simdutf_warn_unused bool implementation::normalize_utf16le_to_nfc_check(
     const char16_t *input, size_t length,
     size_t *output_length) const noexcept {
-  return scalar::utf16_to_composed::check<endianness::LITTLE,
-                                          ComposedForm::NFC>(input, length,
-                                                             output_length);
+  return arm_normalize_utf16_to_composed_check<endianness::LITTLE,
+                                               ComposedForm::NFC>(
+      input, length, output_length);
 }
 
 simdutf_warn_unused size_t implementation::normalize_utf16be_to_nfc(
     const char16_t *input, size_t length, char16_t *output) const noexcept {
-  return scalar::utf16_to_composed::normalize<endianness::BIG,
-                                              ComposedForm::NFC>(input, length,
-                                                                 output);
+  return arm_normalize_utf16_to_composed<endianness::BIG, ComposedForm::NFC>(
+      input, length, output);
 }
 
 simdutf_warn_unused bool implementation::normalize_utf16be_to_nfc_check(
     const char16_t *input, size_t length,
     size_t *output_length) const noexcept {
-  return scalar::utf16_to_composed::check<endianness::BIG, ComposedForm::NFC>(
+  return arm_normalize_utf16_to_composed_check<endianness::BIG,
+                                               ComposedForm::NFC>(
       input, length, output_length);
 }
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFC
@@ -1609,30 +1620,30 @@ simdutf_warn_unused bool implementation::normalize_utf16be_to_nfc_check(
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFKC
 simdutf_warn_unused size_t implementation::normalize_utf16le_to_nfkc(
     const char16_t *input, size_t length, char16_t *output) const noexcept {
-  return scalar::utf16_to_composed::normalize<endianness::LITTLE,
-                                              ComposedForm::NFKC>(input, length,
-                                                                  output);
+  return arm_normalize_utf16_to_composed<endianness::LITTLE,
+                                         ComposedForm::NFKC>(input, length,
+                                                             output);
 }
 
 simdutf_warn_unused bool implementation::normalize_utf16le_to_nfkc_check(
     const char16_t *input, size_t length,
     size_t *output_length) const noexcept {
-  return scalar::utf16_to_composed::check<endianness::LITTLE,
-                                          ComposedForm::NFKC>(input, length,
-                                                              output_length);
+  return arm_normalize_utf16_to_composed_check<endianness::LITTLE,
+                                               ComposedForm::NFKC>(
+      input, length, output_length);
 }
 
 simdutf_warn_unused size_t implementation::normalize_utf16be_to_nfkc(
     const char16_t *input, size_t length, char16_t *output) const noexcept {
-  return scalar::utf16_to_composed::normalize<endianness::BIG,
-                                              ComposedForm::NFKC>(input, length,
-                                                                  output);
+  return arm_normalize_utf16_to_composed<endianness::BIG, ComposedForm::NFKC>(
+      input, length, output);
 }
 
 simdutf_warn_unused bool implementation::normalize_utf16be_to_nfkc_check(
     const char16_t *input, size_t length,
     size_t *output_length) const noexcept {
-  return scalar::utf16_to_composed::check<endianness::BIG, ComposedForm::NFKC>(
+  return arm_normalize_utf16_to_composed_check<endianness::BIG,
+                                               ComposedForm::NFKC>(
       input, length, output_length);
 }
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFKC

@@ -48,10 +48,10 @@ namespace {
       }())
   #endif
   #ifndef simdutf_make_uint16x4_t
-    #define simdutf_make_uint16x4_t(x1, x2, x3, x4)                             \
-      ([=]() {                                                                  \
-        uint16_t array[4] = {x1, x2, x3, x4};                                   \
-        return vld1_u16(array);                                                 \
+    #define simdutf_make_uint16x4_t(x1, x2, x3, x4)                            \
+      ([=]() {                                                                 \
+        uint16_t array[4] = {x1, x2, x3, x4};                                  \
+        return vld1_u16(array);                                                \
       }())
   #endif
   #ifndef simdutf_make_uint16x8_t
@@ -66,6 +66,13 @@ namespace {
       ([=]() {                                                                 \
         int16_t array[8] = {x1, x2, x3, x4, x5, x6, x7, x8};                   \
         return vld1q_s16(array);                                               \
+      }())
+  #endif
+  #ifndef simdutf_make_int32x4_t
+    #define simdutf_make_int32x4_t(x1, x2, x3, x4)                             \
+      ([=]() {                                                                 \
+        int32_t array[4] = {x1, x2, x3, x4};                                   \
+        return vld1q_s32(array);                                               \
       }())
   #endif
 

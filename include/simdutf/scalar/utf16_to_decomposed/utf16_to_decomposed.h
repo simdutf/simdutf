@@ -143,12 +143,8 @@ simdutf_really_inline size_t decompose_supplementary(uint32_t code_point,
   return output - start;
 }
 
-// Decompose character in BMP
-template <endianness big_endian, DecomposedForm form>
-simdutf_really_inline size_t decompose_bmp(uint16_t code_point,
-                                           char16_t *output, uint8_t *first_ccc,
-                                           uint8_t *ccc) {
-  char16_t *start{output};
+template <DecomposedForm form>
+simdutf_really_inline uint32_t lookup_full_trie(uint16_t code_point) {
   uint16_t shift = code_point >> 6;
   uint16_t masked = code_point & 63;
   uint32_t value;
@@ -163,6 +159,16 @@ simdutf_really_inline size_t decompose_bmp(uint16_t code_point,
     value =
         simdutf::tables::utf16_to_decomposed::nfkd::trie_data[index + masked];
   }
+  return value;
+}
+
+// Decompose character in BMP
+template <endianness big_endian, DecomposedForm form>
+simdutf_really_inline size_t decompose_bmp(uint16_t code_point,
+                                           char16_t *output, uint8_t *first_ccc,
+                                           uint8_t *ccc) {
+  char16_t *start{output};
+  uint32_t value = lookup_full_trie<form>(code_point);
   if (value == 0) {
     *ccc = 0;
     return 0;
@@ -199,7 +205,7 @@ size_t normalize_with_context(const char16_t *data, size_t len,
         size_t nwritten = decompose_bmp<big_endian, form>(code_point, output,
                                                           &first_ccc, &ccc);
         if (nwritten == 0) {
-          *output++ = code_point;
+          *output++ = scalar::utf16::swap_if_needed<big_endian>(code_point);
         } else {
           output += nwritten;
         }

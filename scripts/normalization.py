@@ -429,6 +429,38 @@ def generate_pack_hangul(writer) -> HeaderDef:
     return HeaderDef.array("pack_hangul", "HangulShuf", 16)
 
 
+def generate_shuf_utf16(writer) -> HeaderDef:
+    writer.write(f"\nconst uint8_t shuf_utf16[256][16] = {{\n")
+    for x in range(1 << 8):
+        tbl = list(range(16))
+        s = f"{x:08b}"
+        pairs = [int(s[i : i + 2], 2) for i in range(0, len(s), 2)]
+        pairs.reverse()
+        # In this case, we can't fit the decomposition into 16 bytes
+        if sum(x % 3 for x in pairs) > 4:
+            tbl = [255] * 16
+            writer.write(f"  {{{", ".join(map(str, tbl))}}},\n")
+            continue
+        displacement = 0
+        for i, delta in enumerate(pairs):
+            if delta == 0b11:
+                continue
+            lookup_base = 16 + (i * 8)
+            decomp_size = 2 + (delta * 2)
+            tbl_pos = (i * 2) + displacement
+            tbl[tbl_pos : tbl_pos + decomp_size] = list(
+                range(lookup_base, lookup_base + decomp_size)
+            )
+            tbl[tbl_pos + decomp_size : 16] = [
+                j - (delta * 2) for j in tbl[tbl_pos + decomp_size :]
+            ]
+            displacement += delta * 2
+        assert len(tbl) == 16
+        writer.write(f"  {{{", ".join(map(str, tbl))}}},\n")
+    writer.write("};\n")
+    return HeaderDef.multi_array("shuf_utf16", "uint8_t", [256, 16])
+
+
 def generate_trie(
     writer, name: str, trie: Trie, index_width: int, data_width: int
 ) -> list[HeaderDef]:
@@ -1083,6 +1115,7 @@ def main() -> None:
         headers["utf16_to_decomposed_tables.h"].append(
             generate_array(f, "decompositions", decomp_bytes_utf16, data_width=16)
         )
+        headers["utf16_to_decomposed_tables.h"].append(generate_shuf_utf16(f))
         f.write("namespace nfd {\n")
         headers["utf16_to_decomposed_tables.h"].extend(
             prefix_all(
