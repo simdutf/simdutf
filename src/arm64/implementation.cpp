@@ -164,7 +164,8 @@ convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in, size_t shufutf8_idx) {
 #if SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD || SIMDUTF_FEATURE_NFC ||      \
     SIMDUTF_FEATURE_NFKC
   #include "arm64/arm_normalize_helpers.cpp"
-#endif
+#endif // SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD || SIMDUTF_FEATURE_NFC ||
+       // SIMDUTF_FEATURE_NFKC
 #if SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD ||    \
                              SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
   #include "arm64/arm_normalize_utf8_helpers.cpp"
@@ -184,8 +185,8 @@ convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in, size_t shufutf8_idx) {
        // SIMDUTF_FEATURE_NFKD)
 #if SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
   #include "arm64/arm_normalize_utf16_to_composed.cpp"
-#endif // SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFD ||
-       // SIMDUTF_FEATURE_NFKD)
+#endif // SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFC ||
+       // SIMDUTF_FEATURE_NFKC)
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
