@@ -63,8 +63,9 @@ void arm_write_no_comp_utf8(uint16x8_t values, uint16x8_t code_points,
 #else
     uint16_t value = values[i];
 #endif
+    uint16_t indicator = value & 0b11;
     uint8_t size = utf8_size[leading];
-    if (value == 0) {
+    if (indicator == 0) {
       vst1_u8(*out, vld1_u8(input));
       *out += size;
       input += size;
@@ -109,7 +110,8 @@ simdutf_really_inline size_t arm_normalize_code_points_utf8(
     const uint8_t *input_base, size_t input_length, size_t n_bytes,
     uint8_t **out, size_t out_length, uint8_t *last_ccc) {
   uint16x4_t values = arm_comp_trie_lookup<form>(code_points);
-  uint16_t max = vmaxv_u16(values);
+  uint16x4_t indicators = vand_u16(values, vdup_n_u16(0b11));
+  uint16_t max = vmaxv_u16(indicators);
   // No composition-relevant characters.
   if (max == 0) {
     vst1q_u8(*out, in);
@@ -143,7 +145,8 @@ simdutf_really_inline size_t arm_normalize_code_points_utf8_wide(
     const uint8_t *input_base, size_t input_length, size_t n_bytes,
     uint8_t **out, size_t out_length, uint8_t *last_ccc) {
   uint16x8_t values = arm_comp_trie_lookup_wide<form>(code_points);
-  uint16_t max = vmaxvq_u16(values);
+  uint16x8_t indicators = vandq_u16(values, vdupq_n_u16(0b11));
+  uint16_t max = vmaxvq_u16(indicators);
   if (max == 0) {
     vst1q_u8(*out, in);
     *out += n_bytes;

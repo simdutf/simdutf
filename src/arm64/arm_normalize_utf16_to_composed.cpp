@@ -43,7 +43,8 @@ void arm_write_no_comp_utf16(uint16x8_t values, uint16x8_t code_points,
 #else
     uint16_t value = values[i];
 #endif
-    if (value == 0) {
+    uint16_t indicator = value & 0b11;
+    if (indicator == 0) {
       *(*out)++ = input[0];
       input++;
       *last_ccc = 0;
@@ -134,7 +135,8 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
     // Check if we have no surrogate pairs.
     if (vmaxvq_u16(surrogates_mask) == 0) {
       uint16x8_t values = internal::arm_comp_trie_lookup_utf16<form>(in);
-      uint16_t max = vmaxvq_u16(values);
+      uint16x8_t indicators = vandq_u16(values, vdupq_n_u16(0b11));
+      uint16_t max = vmaxvq_u16(indicators);
       // No composition-relevant characters.
       if (max == 0) {
         vst1q_u16(reinterpret_cast<uint16_t *>(*out_ptr), raw_in);

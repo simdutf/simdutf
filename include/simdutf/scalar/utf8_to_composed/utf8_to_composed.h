@@ -17,28 +17,47 @@ size_t normalize(InputPtr input, size_t length, OutputPtr out) {
   uint8_t last_ccc = 0;
 
   while (p < length) {
-    uint8_t size;
-    uint32_t c = utf8::parse_code_point(input + p, &size);
-
-    // ASCII fast path to skip ccc lookup
-    if (c <= 0x7F) {
-      *out++ = (uint8_t)c;
+    uint8_t leading = input[p];
+    if (leading < 0b10000000) {
+      *out++ = input[p];
       p++;
       last_ccc = 0;
       continue;
     }
-
-    uint8_t ccc = normalization::lookup_ccc(c);
-
-    // We can skip this character if it the combining classes are in the right
-    // order and if it is irrelevant
-    if (ccc <= last_ccc && !normalization::is_relevant<form>(c)) {
-      for (size_t i = 0; i < size; i++) {
-        *out++ = input[p + i];
+    uint8_t size;
+    uint32_t c = utf8::parse_code_point(input + p, &size);
+    uint8_t ccc;
+    if (c <= 0xFFFF) {
+      uint16_t value = normalization::lookup_comp_trie<form>(uint16_t(c));
+      ccc = uint8_t(value >> 2);
+      bool is_relevant = (value & 0b11) > 0;
+      if (ccc <= last_ccc && !is_relevant) {
+        for (size_t i = 0; i < size; i++) {
+          *out++ = input[p + i];
+        }
+        p += size;
+        last_ccc = ccc;
+        continue;
       }
-      p += size;
-      last_ccc = ccc;
-      continue;
+    } else {
+      constexpr auto dform = to_decomposed_form(form);
+      uint64_t kv = normalization::lookup_supplementary_code_point<dform>(c);
+      uint32_t k = kv & 0x1FFFFF;
+      bool is_relevant = false;
+      ccc = 0;
+      if (k == c) {
+        uint8_t qc = uint8_t(kv >> 56);
+        is_relevant = qc != 0;
+        ccc = (kv >> 45) & 0xFF;
+      }
+      if (ccc <= last_ccc && !is_relevant) {
+        for (size_t i = 0; i < size; i++) {
+          *out++ = input[p + i];
+        }
+        p += size;
+        last_ccc = ccc;
+        continue;
+      }
     }
 
     last_ccc = ccc;

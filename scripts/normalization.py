@@ -783,12 +783,17 @@ def create_comp_trie(
                 and len(decomp_map[x].decomps) == 1
                 and decomp_map[x].decomps[0] not in composables
             ):
-                value = 1
+                indicator = 1
             else:
-                value = 2
+                indicator = 2
         else:
-            value = 0
-        trie.set(x, value)
+            indicator = 0
+        if x in decomp_map:
+            ccc = decomp_map[x].ccc
+        else:
+            ccc = 0
+        packed = Packed((indicator, 2), (ccc, 8))
+        trie.set(x, packed.to_int(16))
     trie.compact()
     return trie
 
@@ -1210,7 +1215,7 @@ def main() -> None:
         f.write("namespace nfc {\n")
         headers["normalization_tables.h"].extend(
             prefix_all(
-                "nfc", generate_trie(f, "trie", nfc_trie, index_width=16, data_width=8)
+                "nfc", generate_trie(f, "trie", nfc_trie, index_width=16, data_width=16)
             )
         )
         f.write("} // namespace nfc\n")
@@ -1218,7 +1223,7 @@ def main() -> None:
         headers["normalization_tables.h"].extend(
             prefix_all(
                 "nfkc",
-                generate_trie(f, "trie", nfkc_trie, index_width=16, data_width=8),
+                generate_trie(f, "trie", nfkc_trie, index_width=16, data_width=16),
             )
         )
         f.write("} // namespace nfkc\n")

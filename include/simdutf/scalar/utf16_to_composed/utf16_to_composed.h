@@ -13,28 +13,43 @@ size_t normalize(const char16_t *input, size_t length, char16_t *out) {
   uint8_t last_ccc = 0;
 
   while (p < length) {
+    uint16_t leading = scalar::utf16::swap_if_needed<big_endian>(input[p]);
+    uint8_t ccc;
     uint8_t size;
-    uint32_t c = utf16::parse_code_point<big_endian>(input + p, &size);
-
-    // ASCII fast path to skip ccc lookup
-    if (c <= 0x7F) {
-      *out++ = input[p];
-      p++;
-      last_ccc = 0;
-      continue;
-    }
-
-    uint8_t ccc = normalization::lookup_ccc(c);
-
-    // We can skip this character if it the combining classes are in the right
-    // order and if it is irrelevant
-    if (ccc <= last_ccc && !normalization::is_relevant<form>(c)) {
-      for (size_t i = 0; i < size; i++) {
-        *out++ = input[p + i];
+    if (simdutf_likely(!utf16::high_surrogate(leading))) {
+      uint16_t code_point = leading;
+      uint16_t value =
+          normalization::lookup_comp_trie<form>(uint16_t(code_point));
+      ccc = uint8_t(value >> 2);
+      bool is_relevant = (value & 0b11) > 0;
+      if (simdutf_likely(ccc <= last_ccc && !is_relevant)) {
+        *out++ = input[p];
+        p++;
+        last_ccc = ccc;
+        continue;
       }
-      p += size;
-      last_ccc = ccc;
-      continue;
+      size = 1;
+    } else {
+      uint32_t code_point =
+          utf16::parse_code_point<big_endian>(input + p, &size);
+      constexpr auto dform = to_decomposed_form(form);
+      uint64_t kv =
+          normalization::lookup_supplementary_code_point<dform>(code_point);
+      uint32_t k = kv & 0x1FFFFF;
+      bool is_relevant = false;
+      ccc = 0;
+      if (k == code_point) {
+        uint8_t qc = uint8_t(kv >> 56);
+        is_relevant = qc != 0;
+        ccc = (kv >> 45) & 0xFF;
+      }
+      if (ccc <= last_ccc && !is_relevant) {
+        *out++ = input[p];
+        *out++ = input[p + 1];
+        p += 2;
+        last_ccc = ccc;
+        continue;
+      }
     }
 
     last_ccc = ccc;
