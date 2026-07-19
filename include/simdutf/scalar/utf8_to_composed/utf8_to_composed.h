@@ -6,58 +6,6 @@ namespace scalar {
 namespace {
 namespace utf8_to_composed {
 
-std::pair<size_t, bool> rfind_starter(const char *input, size_t length) {
-  size_t p = 0;
-  while (p < length) {
-    // Go back until leading UTF-8 byte
-    while ((input[length - p - 1] & 0b11000000) == 0b10000000) {
-      p++;
-    }
-    uint8_t size;
-    uint32_t c = utf8::parse_code_point(input + (length - p - 1), &size);
-    uint8_t ccc = normalization::lookup_ccc(c);
-    // If we found a starter, then we're done
-    if (ccc == 0) {
-      return std::make_pair(length - p - 1, true);
-    }
-    p++;
-  }
-  return std::make_pair(0, false);
-}
-
-template <ComposedForm form>
-std::pair<size_t, bool> find_first_stable(const char *input, size_t length) {
-  uint32_t p = 0;
-  while (p < length) {
-    uint8_t size;
-    uint32_t c = utf8::parse_code_point(input + p, &size);
-    uint8_t ccc = normalization::lookup_ccc(c);
-    if (ccc == 0 && !normalization::is_relevant<form>(c)) {
-      return std::make_pair(p, true);
-    }
-    p += size;
-  }
-  return std::make_pair(0, false);
-}
-
-template <ComposedForm form>
-std::pair<size_t, bool> find_last_stable(const char *input, size_t length) {
-  size_t cutoff = length;
-  while (cutoff > 0) {
-    auto result = rfind_starter(input, cutoff);
-    if (!result.second) {
-      return std::make_pair(0, false);
-    }
-    cutoff = result.first;
-    uint8_t size;
-    uint32_t c = utf8::parse_code_point(input + cutoff, &size);
-    if (!normalization::is_relevant<form>(c)) {
-      return std::make_pair(cutoff, true);
-    }
-  }
-  return std::make_pair(0, false);
-}
-
 template <ComposedForm form, typename InputPtr, typename OutputPtr>
 #if SIMDUTF_CPLUSPLUS20
   requires(simdutf::detail::indexes_into_byte_like<InputPtr> &&
@@ -96,15 +44,18 @@ size_t normalize(InputPtr input, size_t length, OutputPtr out) {
     last_ccc = ccc;
 
     // This starter should be NF(K)C irrelevant
-    auto previous_starter_pos_result = rfind_starter(input, p);
+    auto previous_starter_pos_result =
+        normalization::rfind_starter<normalization::utf8_normalization_traits>(
+            input, p);
     size_t previous_starter_pos = previous_starter_pos_result.first;
     // If we couldn't find a starter, use index 0
     if (!previous_starter_pos_result.second) {
       previous_starter_pos = 0;
     }
 
-    auto next_irrelevant_starter_pos_result =
-        find_first_stable<form>(input + p + size, length - p - size);
+    auto next_irrelevant_starter_pos_result = normalization::find_first_stable<
+        normalization::utf8_normalization_traits, form>(input + p + size,
+                                                        length - p - size);
     size_t next_irrelevant_starter_pos =
         next_irrelevant_starter_pos_result.first;
     if (!next_irrelevant_starter_pos_result.second) {
@@ -130,75 +81,11 @@ size_t normalize(InputPtr input, size_t length, OutputPtr out) {
         input + previous_starter_pos,
         next_irrelevant_starter_pos - previous_starter_pos, normalized_out);
 
-    size_t normalized_pos = 0;
-    uint8_t normalized_last_ccc = 255;
-    // Iterate through each code point, seeking back until a starter is found
-    // and trying to combine with that. This part of the algorithm closely
-    // matches up with the spec. See:
-    // https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-3/#G49614
-    while (normalized_pos < normalized_length) {
-      uint8_t normalized_size;
-      uint32_t normalized_c = utf8::parse_code_point(
-          normalized_out + normalized_pos, &normalized_size);
-      uint8_t normalized_ccc = normalization::lookup_ccc(normalized_c);
-
-      // Find the preceding starter. It should be composition irrelevant
-      // NOTE: we can cache this if it shows up in a profile
-      auto starter_pos_result = rfind_starter(normalized_out, normalized_pos);
-      size_t starter_pos = starter_pos_result.first;
-      // Skip if we don't have a starter before this
-      if (!starter_pos_result.second) {
-        normalized_pos += normalized_size;
-        normalized_last_ccc = normalized_ccc;
-        continue;
-      }
-
-      uint8_t starter_size;
-      uint32_t starter =
-          utf8::parse_code_point(normalized_out + starter_pos, &starter_size);
-      // Skip if we're blocked from the starter
-      if (normalized_ccc <= normalized_last_ccc &&
-          starter_pos + starter_size != normalized_pos) {
-        normalized_pos += normalized_size;
-        normalized_last_ccc = normalized_ccc;
-        continue;
-      }
-
-      uint32_t composed;
-      if (starter <= 0xFFFF && normalized_c <= 0xFFFF) {
-        composed = normalization::compose_bmp(uint16_t(starter),
-                                              uint16_t(normalized_c));
-      } else {
-        composed = simdutf::tables::normalization::compose_supplementary(
-            starter, normalized_c);
-      }
-      // Skip if no composed character
-      if (composed == 0) {
-        normalized_pos += normalized_size;
-        normalized_last_ccc = normalized_ccc;
-        continue;
-      }
-      size_t composed_size = utf8::code_point_size(composed);
-
-      // Shift left to delete the combining character
-      normalization::shift_left(normalized_out + normalized_pos,
-                                normalized_length - normalized_pos,
-                                normalized_size);
-      // Account for combining character deletion
-      normalized_length -= normalized_size;
-
-      // Shift everything right to make room for new composed code point
-      normalization::shift_right(normalized_out + starter_pos + starter_size,
-                                 normalized_length - starter_pos - starter_size,
-                                 composed_size - starter_size);
-      // Overwrite the starter with the new composed code point
-      (void)utf8::write_code_point(composed, normalized_out + starter_pos);
-      normalized_length += composed_size - starter_size;
-      normalized_pos += composed_size - starter_size;
-    }
-
+    size_t new_length = normalization::compose_canonical<
+        normalization::utf8_normalization_traits, form>(normalized_out,
+                                                        normalized_length);
     // Set the out pointer to the end of the normalized buffer
-    out = normalized_out + normalized_length;
+    out = normalized_out + new_length;
     // Set the input offset to the next starter that is guaranteed to not be
     // relevant to NF(K)C
     p = next_irrelevant_starter_pos;
@@ -240,11 +127,14 @@ size_t normalize_with_context(InputPtr input, InputPtr input_base,
   uint8_t first_size;
   utf8::parse_code_point(input, &first_size);
   auto prev_starter_result =
-      find_last_stable<form>(input_base, offset + first_size);
+      normalization::find_last_stable<normalization::utf8_normalization_traits,
+                                      form>(input_base, offset + first_size);
   size_t prev_starter =
       prev_starter_result.second ? prev_starter_result.first : 0;
-  auto next_starter_result = find_first_stable<form>(
-      input_base + offset + length, input_length - offset - length);
+  auto next_starter_result =
+      normalization::find_first_stable<normalization::utf8_normalization_traits,
+                                       form>(input_base + offset + length,
+                                             input_length - offset - length);
   size_t next_starter = next_starter_result.second
                             ? next_starter_result.first + offset + length
                             : input_length;

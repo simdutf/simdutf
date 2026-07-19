@@ -42,75 +42,6 @@ uint32_t parse_code_point_reverse(const char16_t *input) {
   return code_point;
 }
 
-template <endianness big_endian>
-uint8_t sort_combining(char16_t *out, size_t length) {
-  if (length == 0) {
-    return 0;
-  }
-
-  char16_t *start = out;
-  uint8_t final_ccc = 255;
-
-  uint8_t last_ccc = 255;
-  bool needs_sort = false;
-  out--;
-  while (true) {
-    uint32_t code_point = parse_code_point_reverse<big_endian>(out);
-    if (code_point > 0xFFFF) {
-      out--;
-    }
-    uint8_t ccc = normalization::lookup_ccc(code_point);
-    if (final_ccc == 255) {
-      final_ccc = ccc;
-    }
-    if (last_ccc < ccc) {
-      needs_sort = true;
-    }
-    // Walk back until we have found the last starter
-    if (ccc == 0 || size_t(start - out) == length) {
-      break;
-    }
-    out--;
-    last_ccc = ccc;
-  }
-
-  // Fast path for when the buffer is already sorted
-  if (!needs_sort) {
-    return final_ccc;
-  }
-
-  size_t n = start - out;
-  while (true) {
-    bool did_swap = false;
-    uint8_t last_size;
-    for (size_t j = 0; j < n; j += last_size) {
-      uint8_t size1;
-      uint8_t size2;
-      uint32_t c1 = utf16::parse_code_point<big_endian>(out + j, &size1);
-      if (j + size1 >= n) {
-        break;
-      }
-      uint32_t c2 =
-          utf16::parse_code_point<big_endian>(out + j + size1, &size2);
-      uint8_t ccc1 = normalization::lookup_ccc(c1);
-      uint8_t ccc2 = normalization::lookup_ccc(c2);
-      last_size = size1;
-      if (ccc1 > ccc2) {
-        normalization::rotate(out + j, size1 + size2, size2);
-        last_size = size2;
-        did_swap = true;
-        if (j + size1 + size2 == n) {
-          final_ccc = ccc1;
-        }
-      }
-    }
-    if (!did_swap) {
-      break;
-    }
-  }
-  return final_ccc;
-}
-
 template <endianness big_endian, DecomposedForm form>
 simdutf_really_inline size_t decompose_supplementary(uint32_t code_point,
                                                      char16_t *output,
@@ -227,7 +158,9 @@ size_t normalize_with_context(const char16_t *data, size_t len,
     }
     uint8_t cmp_ccc = first_ccc > 0 ? first_ccc : ccc;
     if (cmp_ccc != 0 && *last_ccc > cmp_ccc) {
-      ccc = sort_combining<big_endian>(output, (output - start) + out_offset);
+      ccc = normalization::sort_combining<
+          normalization::utf16_normalization_traits<big_endian>>(
+          output, (output - start) + out_offset);
     }
     *last_ccc = ccc;
   }

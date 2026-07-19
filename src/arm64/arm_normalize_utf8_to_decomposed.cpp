@@ -294,7 +294,8 @@ void arm_write_non_hangul_fallback(uint16x8_t values, uint16x8_t chars,
 
     uint8_t cmp_ccc = first_ccc_delta > 0 ? ccc - first_ccc_delta : ccc;
     if (cmp_ccc != 0 && *last_ccc > cmp_ccc) {
-      ccc = scalar::utf8_to_decomposed::sort_combining(
+      ccc = scalar::normalization::sort_combining<
+          scalar::normalization::utf8_normalization_traits>(
           reinterpret_cast<char *>(*out), out_length + (*out - start));
     }
     input += size;
@@ -551,7 +552,8 @@ arm_decompose_small_utf8(uint16x8_t chars, const uint8_t *input, uint8_t **out,
     *out += length;
     uint8_t cmp_ccc = first_ccc_delta > 0 ? ccc - first_ccc_delta : ccc;
     if (cmp_ccc != 0 && *last_ccc > cmp_ccc) {
-      ccc = scalar::utf8_to_decomposed::sort_combining(
+      ccc = scalar::normalization::sort_combining<
+          scalar::normalization::utf8_normalization_traits>(
           reinterpret_cast<char *>(*out), out_length + (*out - start));
     }
     input += 2;

@@ -158,8 +158,9 @@ void arm_write_non_hangul_utf16_fallback(uint32x4_t values, char16_t **out,
 
     uint8_t cmp_ccc = ccc_delta > 0 ? uint8_t(ccc - ccc_delta) : ccc;
     if (cmp_ccc != 0 && *last_ccc > cmp_ccc) {
-      ccc = scalar::utf16_to_decomposed::sort_combining<big_endian>(*out,
-                                                                    out_length);
+      ccc = scalar::normalization::sort_combining<
+          scalar::normalization::utf16_normalization_traits<big_endian>>(
+          *out, out_length);
     }
     input += 1;
     *last_ccc = ccc;

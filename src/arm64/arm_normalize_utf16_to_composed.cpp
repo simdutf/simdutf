@@ -74,8 +74,9 @@ void arm_write_no_comp_utf16(uint16x8_t values, uint16x8_t code_points,
 
     uint8_t ccc = uint8_t(decomp_value >> 24);
     if (simdutf_unlikely(ccc != 0 && *last_ccc > ccc)) {
-      ccc = scalar::utf16_to_decomposed::sort_combining<big_endian>(*out,
-                                                                    out_length);
+      ccc = scalar::normalization::sort_combining<
+          scalar::normalization::utf16_normalization_traits<big_endian>>(
+          *out, out_length);
     }
     input += 1;
     *last_ccc = ccc;

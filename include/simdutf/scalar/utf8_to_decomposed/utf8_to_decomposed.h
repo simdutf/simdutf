@@ -6,91 +6,6 @@ namespace scalar {
 namespace {
 namespace utf8_to_decomposed {
 
-// In-place canonical ordering as defined by the specification.
-uint8_t sort_combining(char *output, size_t len) {
-  if (len == 0) {
-    return 0;
-  }
-
-  char *start{output};
-  // Tracks the ccc of the final character in the sorting range.
-  uint8_t final_ccc = 255;
-
-  // We need to walk backwards until we find a starter character.
-  uint8_t last_ccc = 255;
-  bool needs_sort = false;
-  output--;
-  while (true) {
-    // Backwards until leading UTF-8 byte
-    while ((*output & 0b11000000) == 0b10000000) {
-      output--;
-    }
-    uint8_t size;
-    uint32_t code_point = utf8::parse_code_point(output, &size);
-    uint8_t ccc = normalization::lookup_ccc(code_point);
-    if (final_ccc == 255) {
-      final_ccc = ccc;
-    }
-    if (last_ccc < ccc) {
-      needs_sort = true;
-    }
-    // If we found a starter or reached the start of the buffer, then we're done
-    if (ccc == 0 || size_t(start - output) == len) {
-      break;
-    }
-    output--;
-    last_ccc = ccc;
-  }
-
-  // Fast path if the combining characters are already sorted
-  if (!needs_sort) {
-    return final_ccc;
-  }
-
-  // We do bubble sort on starting at the starter code point, up until the next
-  // starter. The implementation supports sorting any number of combining
-  // characters with no memory allocation. Sorting is thus done entirely
-  // in-place and still while all code points are in UTF-8-encoded form. In
-  // practice, n will be small.
-  size_t n = start - output;
-  // This loop will run until we detect no more swaps, in which case we will
-  // have sorted the buffer.
-  while (true) {
-    bool did_swap = false;
-    uint8_t last_size;
-    for (size_t j = 0; j < n; j += last_size) {
-      uint8_t size1;
-      uint8_t size2;
-      uint32_t c1 = utf8::parse_code_point(output + j, &size1);
-      // Going past the buffer is also a stop condition
-      if (j + size1 >= n) {
-        break;
-      }
-      uint32_t c2 = utf8::parse_code_point(output + j + size1, &size2);
-      uint8_t ccc1 = normalization::lookup_ccc(c1);
-      uint8_t ccc2 = normalization::lookup_ccc(c2);
-      last_size = size1;
-      if (ccc1 > ccc2) {
-        // Swapping two adjacent, variably sized UTF-8 encoded code points can
-        // be done with a right rotation by the size of the right code point.
-        normalization::rotate(output + j, size1 + size2, size2);
-        last_size = size2;
-        did_swap = true;
-        if (j + size1 + size2 == n) {
-          // Swapped the last character in the sorting range, so update
-          // `final_ccc`
-          final_ccc = ccc1;
-        }
-      }
-    }
-    if (!did_swap) {
-      break;
-    }
-  }
-
-  return final_ccc;
-}
-
 template <DecomposedForm form>
 simdutf_really_inline uint16_t lookup_narrow_trie(uint16_t code_point) {
   uint16_t shift = code_point >> 6;
@@ -275,7 +190,9 @@ simdutf_constexpr23 size_t normalize_with_context(InputPtr data, size_t len,
     }
     uint8_t cmp_ccc = first_ccc > 0 ? first_ccc : ccc;
     if (cmp_ccc != 0 && *last_ccc > cmp_ccc) {
-      ccc = sort_combining(output, (output - start) + out_offset);
+      ccc = normalization::sort_combining<
+          normalization::utf8_normalization_traits>(output, (output - start) +
+                                                                out_offset);
     }
     *last_ccc = ccc;
   }

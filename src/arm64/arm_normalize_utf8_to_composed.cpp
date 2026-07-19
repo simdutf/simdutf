@@ -94,7 +94,8 @@ void arm_write_no_comp_utf8(uint16x8_t values, uint16x8_t code_points,
 
     uint8_t ccc = (decomp_value >> 21) & 0xFF;
     if (simdutf_unlikely(ccc != 0 && *last_ccc > ccc)) {
-      ccc = scalar::utf8_to_decomposed::sort_combining(
+      ccc = scalar::normalization::sort_combining<
+          scalar::normalization::utf8_normalization_traits>(
           reinterpret_cast<char *>(*out), out_length + (*out - start));
     }
     input += size;
