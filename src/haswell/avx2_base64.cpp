@@ -55,6 +55,17 @@ simdutf_really_inline __m256i lookup_pshufb_improved(const __m256i input) {
   return _mm256_add_epi8(result, input);
 }
 
+// Equivalent to _mm256_insert_epi8(input, value, lane * 16 + 15), but spelled
+// with vpinsrb + vinserti128 because _mm256_insert_epi8 is not available under
+// Visual Studio.
+template <int lane>
+simdutf_really_inline __m256i insert_last_byte_of_lane(__m256i input,
+                                                       char value) {
+  __m128i part = _mm256_extracti128_si256(input, lane);
+  part = _mm_insert_epi8(part, value, 15);
+  return _mm256_inserti128_si256(input, part, lane);
+}
+
 simdutf_really_inline __m256i insert_line_feed32(__m256i input, int K) {
 
   static const uint8_t low_table[16][32] = {
@@ -127,7 +138,7 @@ simdutf_really_inline __m256i insert_line_feed32(__m256i input, int K) {
   if (K >= 16) {
     __m256i mask = _mm256_loadu_si256((const __m256i *)high_table[K - 16]);
     __m256i result =
-        _mm256_shuffle_epi8(_mm256_insert_epi8(input, '\n', 31), mask);
+        _mm256_shuffle_epi8(insert_last_byte_of_lane<1>(input, '\n'), mask);
     return result;
   }
   // Shift input right by 1 byte
@@ -136,7 +147,7 @@ simdutf_really_inline __m256i insert_line_feed32(__m256i input, int K) {
 
   input = _mm256_blend_epi32(input, shift, 0xF0);
 
-  input = _mm256_insert_epi8(input, '\n', 15);
+  input = insert_last_byte_of_lane<0>(input, '\n');
 
   __m256i mask = _mm256_loadu_si256((const __m256i *)low_table[K]);
 
