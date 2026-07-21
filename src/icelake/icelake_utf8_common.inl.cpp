@@ -33,7 +33,7 @@ process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap) {
       0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf,
       0xdfdfdfdfdfdfdfdf, 0xdfdfdfdfdfdfdfdf);
   __m512i mask_c2c2c2c2 = _mm512_set1_epi32(0xc2c2c2c2);
-  __m512i mask_ffffffff = _mm512_set1_epi32(0xffffffff);
+  __m512i mask_ffffffff = _mm512_set1_epi16(int16_t(-1));
   __m512i mask_d7c0d7c0 = _mm512_set1_epi32(0xd7c0d7c0);
   __m512i mask_dc00dc00 = _mm512_set1_epi32(0xdc00dc00);
   __m512i byteflip = _mm512_setr_epi64(0x0607040502030001, 0x0e0f0c0d0a0b0809,
