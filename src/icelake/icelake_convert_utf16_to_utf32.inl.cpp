@@ -108,7 +108,7 @@ convert_utf16_to_utf32(const char16_t *buf, size_t len,
         // The following could be unsafe in some cases?
         //_mm512_storeu_epi32((__m512i *) utf32_output, compressed_second);
         _mm512_mask_storeu_epi32((__m512i *)utf32_output,
-                                 __mmask16((1 << howmany2) - 1),
+                                 __mmask16((1U << howmany2) - 1),
                                  compressed_second);
         utf32_output += howmany2;
         // Only process 31 code units, but keep track if the 31st word is a high

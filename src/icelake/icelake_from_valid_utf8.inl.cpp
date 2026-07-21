@@ -62,7 +62,7 @@ valid_utf8_to_fixed_length(const char *str, size_t len, OUTPUT *dwords) {
     __m512i vec1 = expand_and_identify(lane1, lane2, valid_count1);
     if (valid_count0 + valid_count1 <= 16) {
       vec0 = _mm512_mask_expand_epi32(
-          vec0, __mmask16(((1 << valid_count1) - 1) << valid_count0), vec1);
+          vec0, __mmask16(((1U << valid_count1) - 1) << valid_count0), vec1);
       valid_count0 += valid_count1;
       vec0 = expand_utf8_to_utf32(vec0);
       SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec0, valid_count0, true)
@@ -82,7 +82,7 @@ valid_utf8_to_fixed_length(const char *str, size_t len, OUTPUT *dwords) {
     __m512i vec3 = expand_and_identify(lane3, lane4, valid_count3);
     if (valid_count2 + valid_count3 <= 16) {
       vec2 = _mm512_mask_expand_epi32(
-          vec2, __mmask16(((1 << valid_count3) - 1) << valid_count2), vec3);
+          vec2, __mmask16(((1U << valid_count3) - 1) << valid_count2), vec3);
       valid_count2 += valid_count3;
       vec2 = expand_utf8_to_utf32(vec2);
       SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec2, valid_count2, true)
@@ -113,7 +113,7 @@ valid_utf8_to_fixed_length(const char *str, size_t len, OUTPUT *dwords) {
       __m512i vec1 = expand_and_identify(lane1, lane2, valid_count1);
       if (valid_count0 + valid_count1 <= 16) {
         vec0 = _mm512_mask_expand_epi32(
-            vec0, __mmask16(((1 << valid_count1) - 1) << valid_count0), vec1);
+            vec0, __mmask16(((1U << valid_count1) - 1) << valid_count0), vec1);
         valid_count0 += valid_count1;
         vec0 = expand_utf8_to_utf32(vec0);
         SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(vec0, valid_count0, true)

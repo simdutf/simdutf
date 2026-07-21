@@ -456,7 +456,7 @@ simdutf_really_inline size_t utf32_to_utf16_masked(const __m512i byteflip,
                                                    unsigned int count,
                                                    char16_t *output) {
 
-  const __mmask16 valid = uint16_t((1 << count) - 1);
+  const __mmask16 valid = uint16_t((1U << count) - 1);
   // 1. check if we have any surrogate pairs
   const __m512i v_0000_ffff = _mm512_set1_epi32(0x0000ffff);
   const __mmask16 sp_mask =
@@ -599,7 +599,9 @@ simdutf_really_inline size_t utf32_to_utf16(const __m512i byteflip,
     __m512i compressed = _mm512_maskz_compress_epi16(nonzero, t5);
     _mm512_mask_storeu_epi16(
         output,
-        (1 << (count + static_cast<unsigned int>(count_ones(sp_mask)))) - 1,
+        __mmask32((uint64_t(1) << (count + static_cast<unsigned int>(
+                                               count_ones(sp_mask)))) -
+                  1),
         compressed);
     //_mm512_mask_compressstoreu_epi16(output, nonzero, t5);
   }

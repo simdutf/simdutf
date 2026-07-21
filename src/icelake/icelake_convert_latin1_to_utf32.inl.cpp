@@ -16,7 +16,7 @@ void avx512_convert_latin1_to_utf32(const char *buf, size_t len,
     utf32_output += 16;
   }
 
-  __mmask16 mask = __mmask16((1 << len) - 1);
+  __mmask16 mask = __mmask16((1U << len) - 1);
   __m128i in = _mm_maskz_loadu_epi8(mask, buf);
   __m512i out = _mm512_cvtepu8_epi32(in);
   _mm512_mask_storeu_epi32((__m512i *)utf32_output, mask, out);

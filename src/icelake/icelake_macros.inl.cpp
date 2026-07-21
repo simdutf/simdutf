@@ -70,7 +70,7 @@
                                                                                \
     if (UTF32) {                                                               \
       if (MASKED) {                                                            \
-        const __mmask16 valid = uint16_t((1 << valid_count) - 1);              \
+        const __mmask16 valid = uint16_t((1U << valid_count) - 1);             \
         _mm512_mask_storeu_epi32((__m512i *)output, valid, out);               \
       } else {                                                                 \
         _mm512_storeu_si512((__m512i *)output, out);                           \
@@ -91,7 +91,7 @@
   {                                                                            \
     if (UTF32) {                                                               \
       if (MASKED) {                                                            \
-        const __mmask16 valid_mask = uint16_t((1 << VALID_COUNT) - 1);         \
+        const __mmask16 valid_mask = uint16_t((1U << VALID_COUNT) - 1);        \
         _mm512_mask_storeu_epi32((__m512i *)output, valid_mask, INPUT);        \
       } else {                                                                 \
         _mm512_storeu_si512((__m512i *)output, INPUT);                         \

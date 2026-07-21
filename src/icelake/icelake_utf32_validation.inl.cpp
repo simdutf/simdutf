@@ -40,7 +40,7 @@ bool validate_utf32(const char32_t *buf, size_t len) {
   // Handle remaining 0-15 values with masked load
   if (buf < end) {
     __m512i utf32 =
-        _mm512_maskz_loadu_epi32(__mmask16((1 << (end - buf)) - 1), buf);
+        _mm512_maskz_loadu_epi32(__mmask16((1U << (end - buf)) - 1), buf);
     currentoffsetmax =
         _mm512_max_epu32(_mm512_add_epi32(utf32, offset), currentoffsetmax);
     currentmax = _mm512_max_epu32(utf32, currentmax);

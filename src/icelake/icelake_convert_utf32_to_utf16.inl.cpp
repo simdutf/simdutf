@@ -84,7 +84,7 @@ avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
 
   size_t remaining_len = size_t(end - buf);
   if (remaining_len) {
-    __mmask16 input_mask = __mmask16((1 << remaining_len) - 1);
+    __mmask16 input_mask = __mmask16((1U << remaining_len) - 1);
     __m512i in = _mm512_maskz_loadu_epi32(input_mask, buf);
     const __mmask16 saturation_bitmask =
         _mm512_cmpeq_epi32_mask(_mm512_and_si512(in, v_ffff0000), v_00000000) &
@@ -104,7 +104,8 @@ avx512_convert_utf32_to_utf16(const char32_t *buf, size_t len,
       utf16_output += remaining_len;
       buf += remaining_len;
     } else {
-      const __mmask32 output_max_mask = (1 << (remaining_len * 2)) - 1;
+      const __mmask32 output_max_mask =
+          __mmask32((uint64_t(1) << (remaining_len * 2)) - 1);
       const __mmask32 output_mask =
           (~_pdep_u32(saturation_bitmask, 0xAAAAAAAA)) & output_max_mask;
       const __mmask16 surrogate_bitmask =
@@ -218,7 +219,7 @@ avx512_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
           code = error_code::SURROGATE;
           error_idx = surrogate_idx;
         }
-        output_mask &= ((1 << (2 * error_idx)) - 1);
+        output_mask &= __mmask32((uint64_t(1) << (2 * error_idx)) - 1);
       }
       __m512i v1, v2, v;
       in = _mm512_mask_sub_epi32(in, surrogate_bitmask, in, v_10000);
@@ -254,7 +255,7 @@ avx512_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
 
   size_t remaining_len = size_t(end - buf);
   if (remaining_len) {
-    __mmask16 input_mask = __mmask16((1 << remaining_len) - 1);
+    __mmask16 input_mask = __mmask16((1U << remaining_len) - 1);
     __m512i in = _mm512_maskz_loadu_epi32(input_mask, buf);
     const __mmask16 saturation_bitmask =
         _mm512_cmpeq_epi32_mask(_mm512_and_si512(in, v_ffff0000), v_00000000) &
@@ -280,7 +281,8 @@ avx512_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
       _mm256_mask_storeu_epi16(utf16_output, input_mask, utf16_packed);
       utf16_output += remaining_len;
     } else {
-      const __mmask32 output_max_mask = (1 << (remaining_len * 2)) - 1;
+      const __mmask32 output_max_mask =
+          __mmask32((uint64_t(1) << (remaining_len * 2)) - 1);
       __mmask32 output_mask =
           (~_pdep_u32(saturation_bitmask, 0xAAAAAAAA)) & output_max_mask;
       const __mmask16 surrogate_bitmask =
@@ -300,7 +302,7 @@ avx512_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
           code = error_code::SURROGATE;
           error_idx = surrogate_idx;
         }
-        output_mask &= ((1 << (2 * error_idx)) - 1);
+        output_mask &= __mmask32((uint64_t(1) << (2 * error_idx)) - 1);
       }
       __m512i v1, v2, v;
       in = _mm512_mask_sub_epi32(in, surrogate_bitmask, in, v_10000);
