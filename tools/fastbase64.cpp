@@ -313,7 +313,7 @@ void CommandLine::write_with_wrapping(std::FILE *fp, const char *data,
       throw std::runtime_error("Failed to write: " +
                                std::string(strerror(errno)));
     }
-    current_col += to_write;
+    current_col += static_cast<int>(to_write);
     i += to_write;
   }
 }
