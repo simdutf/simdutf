@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <array>
+#include <cstdlib>
 
 #include "helpers/common.h"
 #include "simdutf.h"

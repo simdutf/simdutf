@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 namespace openssl3 {
 struct evp_Encode_Ctx_st {
   /* number saved in a partial encode/decode */

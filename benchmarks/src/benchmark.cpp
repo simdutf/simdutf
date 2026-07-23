@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <array>
+#include <cstdlib>
 #include <iostream>
 #include <chrono>
 #include <thread>

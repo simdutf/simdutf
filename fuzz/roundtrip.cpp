@@ -1,6 +1,7 @@
 #include <cstring>
 #include <fuzzer/FuzzedDataProvider.h>
 #include <memory>
+#include <cstdlib>
 #include <string>
 #include <iostream>
 

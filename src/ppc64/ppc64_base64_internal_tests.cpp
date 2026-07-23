@@ -1,3 +1,5 @@
+#include <cstdlib>
+
 namespace base64tests {
 const char *base64_std =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
