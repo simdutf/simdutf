@@ -2,6 +2,7 @@
 #include "simdutf.h"
 #include "../reference/encode_utf16.h"
 
+#include <cstdlib>
 #include <stdexcept>
 #include <vector>
 
