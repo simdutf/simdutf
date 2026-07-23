@@ -754,11 +754,6 @@ simdutf_really_inline __m512i expand_utf8_to_utf32(__m512i input) {
   return expanded_utf8_to_utf32(char_class, input);
 }
 
-simdutf_really_inline size_t utf8_count_non_ascii(__m512i input) {
-  __mmask64 most_significant_bit_mask = _mm512_movepi8_mask(input);
-  return count_ones(most_significant_bit_mask);
-}
-
 simdutf_really_inline size_t utf8_count_continuations(__m512i input) {
   __m512i mask_c0c0_c0c0 = _mm512_set1_epi32(0xc0c0c0c0);
   __mmask64 continuation_mask = _mm512_cmplt_epi8_mask(input, mask_c0c0_c0c0);

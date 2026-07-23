@@ -99,7 +99,6 @@ utf8_result generic_validate_utf8_with_counts(const uint8_t *input,
       res.continuation_count +=
           c.continuation_count() - last_counts.continuations;
       res.four_byte_count += c.four_byte_count() - last_counts.four_byte;
-      res.non_ascii_count += c.non_ascii_count() - last_counts.non_ascii;
       return res;
     }
     reader.advance();
@@ -119,11 +118,10 @@ utf8_result generic_validate_utf8_with_counts(const uint8_t *input,
     res.continuation_count +=
         c.continuation_count() - last_counts.continuations;
     res.four_byte_count += c.four_byte_count() - last_counts.four_byte;
-    res.non_ascii_count += c.non_ascii_count() - last_counts.non_ascii;
     return res;
   } else {
     return utf8_result(error_code::SUCCESS, length, c.continuation_count(),
-                       c.four_byte_count(), c.non_ascii_count());
+                       c.four_byte_count());
   }
 }
 

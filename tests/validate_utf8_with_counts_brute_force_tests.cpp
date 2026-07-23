@@ -22,7 +22,6 @@ void debugPrintRes(const simdutf::utf8_result &res) {
   printf("utf8 result:\n");
   printf("    length: %zu\n", res.input_count);
   printf("    continuations: %zu\n", res.continuation_count);
-  printf("    non_ascii: %zu\n", res.non_ascii_count);
   printf("    four_byte: %zu\n", res.four_byte_count);
   printf("    error: %u\n", res.error);
 }
@@ -31,7 +30,6 @@ void debugCompareResults(const simdutf::utf8_result &res,
                          const simdutf::utf8_result &res_scalar,
                          const unsigned char *buf, size_t len) {
   if (res.input_count != res_scalar.input_count ||
-      res.non_ascii_count != res_scalar.non_ascii_count ||
       res.continuation_count != res_scalar.continuation_count ||
       res.four_byte_count != res_scalar.four_byte_count ||
       res.error != res_scalar.error) {
@@ -51,7 +49,6 @@ void debugCompareResults(const simdutf::utf8_result &res,
     printf("\n");
   }
   ASSERT_EQUAL(res.input_count, res_scalar.input_count);
-  ASSERT_EQUAL(res.non_ascii_count, res_scalar.non_ascii_count);
   ASSERT_EQUAL(res.continuation_count, res_scalar.continuation_count);
   ASSERT_EQUAL(res.four_byte_count, res_scalar.four_byte_count);
   ASSERT_EQUAL(res.error, res_scalar.error);

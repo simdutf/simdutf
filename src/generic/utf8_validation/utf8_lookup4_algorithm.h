@@ -153,14 +153,15 @@ simdutf_really_inline simd8<uint8_t> is_incomplete(const simd8<uint8_t> input) {
   return input.gt_bits(max_value);
 }
 
-// Counts gathered over a single input block: the number of continuation bytes,
-// of four-byte lead bytes and of non-ASCII bytes. We use a small dedicated
-// struct rather than a std::tuple: it is easier to read, avoids the header
-// dependency and some compilers generate noticeably better code for it.
+// Counts gathered over a single input block: the number of continuation bytes
+// and of four-byte lead bytes. These two counts are all we need to derive both
+// the UTF-16 length (input - continuations + four_byte) and the code-point
+// count (input - continuations). We use a small dedicated struct rather than a
+// std::tuple: it is easier to read, avoids the header dependency and some
+// compilers generate noticeably better code for it.
 struct block_counts {
   size_t continuations;
   size_t four_byte;
-  size_t non_ascii;
 };
 
 simdutf_really_inline block_counts utf8_counters(const simd8<uint8_t> input) {
@@ -173,10 +174,7 @@ simdutf_really_inline block_counts utf8_counters(const simd8<uint8_t> input) {
   simd8<uint8_t> mask_gte = simd8<uint8_t>::splat(0b11110000);
   int64_t four_byte_mask = (input >= mask_gte).to_bitmask();
   size_t four_byte = count_ones(four_byte_mask);
-  simd8<uint8_t> mask_ascii = simd8<uint8_t>::splat(0b10000000);
-  uint64_t non_ascii_masked = (input >= mask_ascii).to_bitmask();
-  size_t non_ascii = count_ones(non_ascii_masked);
-  return block_counts{continuations, four_byte, non_ascii};
+  return block_counts{continuations, four_byte};
 }
 
 struct utf8_checker {
@@ -247,8 +245,6 @@ struct utf8_segmenter {
   size_t continuations;
   // Counter for 4-byte leads
   size_t four_byte;
-  // Counter for non-ascii bytes
-  size_t non_ascii;
 
   //
   // Check whether the current bytes are valid UTF-8 and update continuation and
@@ -259,7 +255,6 @@ struct utf8_segmenter {
     block_counts counters = utf8_counters(input);
     this->continuations += counters.continuations;
     this->four_byte += counters.four_byte;
-    this->non_ascii += counters.non_ascii;
     this->checker.check_utf8_bytes(input, prev_input);
   }
 
@@ -269,11 +264,10 @@ struct utf8_segmenter {
   check_next_input_with_counts(const simd8x64<uint8_t> &input) {
     if (simdutf_likely(is_ascii(input))) {
       this->checker.error |= this->checker.prev_incomplete;
-      return block_counts{0, 0, 0};
+      return block_counts{0, 0};
     } else {
       size_t prev_continuations = this->continuations;
       size_t prev_four_byte = this->four_byte;
-      size_t prev_non_ascii = this->non_ascii;
       // you might think that a for-loop would work, but under Visual Studio, it
       // is not good enough.
       static_assert((simd8x64<uint8_t>::NUM_CHUNKS == 2) ||
@@ -293,8 +287,7 @@ struct utf8_segmenter {
       this->checker.prev_input_block =
           input.chunks[simd8x64<uint8_t>::NUM_CHUNKS - 1];
       return block_counts{this->continuations - prev_continuations,
-                          this->four_byte - prev_four_byte,
-                          this->non_ascii - prev_non_ascii};
+                          this->four_byte - prev_four_byte};
     }
   }
 
@@ -307,10 +300,6 @@ struct utf8_segmenter {
 
   simdutf_really_inline size_t four_byte_count() const {
     return this->four_byte;
-  }
-
-  simdutf_really_inline size_t non_ascii_count() const {
-    return this->non_ascii;
   }
 
 }; // struct utf8_segmenter
