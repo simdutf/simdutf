@@ -221,9 +221,13 @@ struct utf8_checker {
     this->error |= this->prev_incomplete;
   }
 
-  simdutf_really_inline void check_next_input(const simd8x64<uint8_t> &input) {
+  // Returns true if the whole 64-byte block was ASCII (like the icelake
+  // checker). Callers that only validate can ignore the return value.
+  simdutf_really_inline bool
+  check_next_input(const simd8x64<uint8_t> &input) {
     if (simdutf_likely(is_ascii(input))) {
       this->error |= this->prev_incomplete;
+      return true;
     } else {
       // you might think that a for-loop would work, but under Visual Studio, it
       // is not good enough.
@@ -242,6 +246,7 @@ struct utf8_checker {
       this->prev_incomplete =
           is_incomplete(input.chunks[simd8x64<uint8_t>::NUM_CHUNKS - 1]);
       this->prev_input_block = input.chunks[simd8x64<uint8_t>::NUM_CHUNKS - 1];
+      return false;
     }
   }
 

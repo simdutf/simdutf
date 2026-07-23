@@ -184,7 +184,7 @@ utf8_result neon_validate_utf8_with_counts(const uint8_t *input,
   size_t count{0};
   while (reader.has_full_block()) {
     simd::simd8x64<uint8_t> in(reader.full_block());
-    c.check_next_input(in);
+    const bool ascii = c.check_next_input(in);
     if (simdutf_unlikely(c.errors())) {
       // Counts accumulated so far exclude this failing block (we only
       // accumulate below, after the error check), so no adjustment is needed.
@@ -197,7 +197,7 @@ utf8_result neon_validate_utf8_with_counts(const uint8_t *input,
       res.four_byte_count += counter.four_byte;
       return res;
     }
-    if (!is_ascii(in)) {
+    if (!ascii) {
       counter.accumulate(in);
     }
     reader.advance();
@@ -210,9 +210,9 @@ utf8_result neon_validate_utf8_with_counts(const uint8_t *input,
   uint8_t block[64]{};
   reader.get_remainder(block);
   simd::simd8x64<uint8_t> in(block);
-  c.check_next_input(in);
+  const bool tail_ascii = c.check_next_input(in);
   neon_counter tail{};
-  if (!is_ascii(in)) {
+  if (!tail_ascii) {
     tail.accumulate(in);
   }
   tail.reduce();
