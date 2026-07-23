@@ -1,5 +1,6 @@
 #include "random_utf32.h"
 
+#include <cstdlib>
 #include <vector>
 
 namespace simdutf {

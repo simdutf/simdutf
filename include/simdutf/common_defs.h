@@ -1,6 +1,8 @@
 #ifndef SIMDUTF_COMMON_DEFS_H
 #define SIMDUTF_COMMON_DEFS_H
 
+#include <cstdlib>
+
 #include "simdutf/portability.h"
 #include "simdutf/avx512.h"
 
