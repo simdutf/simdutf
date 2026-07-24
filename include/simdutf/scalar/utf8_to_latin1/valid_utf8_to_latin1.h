@@ -1,6 +1,8 @@
 #ifndef SIMDUTF_VALID_UTF8_TO_LATIN1_H
 #define SIMDUTF_VALID_UTF8_TO_LATIN1_H
 
+#include <cstring>
+
 namespace simdutf {
 namespace scalar {
 namespace {

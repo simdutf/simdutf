@@ -2,6 +2,7 @@
 #define SIMDUTF_ATOMIC_UTIL_H
 #if SIMDUTF_ATOMIC_REF
   #include <atomic>
+  #include <cstring>
 namespace simdutf {
 namespace scalar {
 
