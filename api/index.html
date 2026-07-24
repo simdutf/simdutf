@@ -270,7 +270,7 @@ Example</h2>
 <div class="line">  <span class="keyword">const</span> <span class="keywordtype">char</span> *source = <span class="stringliteral">&quot;1234&quot;</span>;</div>
 <div class="line">  <span class="keyword">const</span> <span class="keywordtype">size_t</span> source_length = 4; <span class="comment">// == strlen(source)</span></div>
 <div class="line">  <span class="comment">// Step 1: Validate that the input is valid UTF-8</span></div>
-<div class="line">  <span class="keywordtype">bool</span> validutf8 = simdutf::validate_utf8(source, source_length);</div>
+<div class="line">  <span class="keywordtype">bool</span> validutf8 = <a class="code hl_function" href="namespacesimdutf.html#a5d3088077c0230659012b58fd3b783c1">simdutf::validate_utf8</a>(source, source_length);</div>
 <div class="line">  <span class="keywordflow">if</span> (validutf8) {</div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Input is valid UTF-8&quot;</span> &lt;&lt; std::endl;</div>
 <div class="line">  } <span class="keywordflow">else</span> {</div>
@@ -280,17 +280,17 @@ Example</h2>
 <div class="line">  <span class="comment">// Step 2: Compute the required buffer size for UTF-16LE output.</span></div>
 <div class="line">  <span class="comment">// This function returns the number of char16_t (UTF-16 code units) needed.</span></div>
 <div class="line">  <span class="keywordtype">size_t</span> expected_utf16words =</div>
-<div class="line">      simdutf::utf16_length_from_utf8(source, source_length);</div>
+<div class="line">      <a class="code hl_function" href="namespacesimdutf.html#a997011ac59fd9c3667280d566599c2cb">simdutf::utf16_length_from_utf8</a>(source, source_length);</div>
 <div class="line">  <span class="comment">// Allocate buffer using smart pointer for automatic memory management.</span></div>
 <div class="line">  std::unique_ptr&lt;char16_t[]&gt; utf16_output{<span class="keyword">new</span> <span class="keywordtype">char16_t</span>[expected_utf16words]};</div>
 <div class="line">  <span class="comment">// Step 3: Convert UTF-8 to UTF-16LE.</span></div>
-<div class="line">  <span class="keywordtype">size_t</span> utf16words = simdutf::convert_utf8_to_utf16le(</div>
+<div class="line">  <span class="keywordtype">size_t</span> utf16words = <a class="code hl_function" href="namespacesimdutf.html#a2b4b9db9d1c9f4093fb3564b5991f51a">simdutf::convert_utf8_to_utf16le</a>(</div>
 <div class="line">      source, source_length, utf16_output.get());</div>
 <div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;Converted to UTF-16LE: wrote &quot;</span> &lt;&lt; utf16words</div>
 <div class="line">            &lt;&lt; <span class="stringliteral">&quot; code units (&quot;</span> &lt;&lt; utf16words * <span class="keyword">sizeof</span>(char16_t)</div>
 <div class="line">            &lt;&lt; <span class="stringliteral">&quot; bytes)&quot;</span> &lt;&lt; std::endl;</div>
 <div class="line">  <span class="comment">// Step 4: Validate the resulting UTF-16LE string.</span></div>
-<div class="line">  <span class="keywordtype">bool</span> validutf16 = simdutf::validate_utf16le(utf16_output.get(), utf16words);</div>
+<div class="line">  <span class="keywordtype">bool</span> validutf16 = <a class="code hl_function" href="namespacesimdutf.html#a0edbc803d79993e0a1aa8a1dd9cb587f">simdutf::validate_utf16le</a>(utf16_output.get(), utf16words);</div>
 <div class="line">  <span class="keywordflow">if</span> (validutf16) {</div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Converted UTF-16LE is valid&quot;</span> &lt;&lt; std::endl;</div>
 <div class="line">  } <span class="keywordflow">else</span> {</div>
@@ -300,11 +300,11 @@ Example</h2>
 <div class="line">  <span class="comment">// Step 5: Convert back from UTF-16LE to UTF-8 (round-trip test).</span></div>
 <div class="line">  <span class="comment">// Compute required buffer size for the UTF-8 output.</span></div>
 <div class="line">  <span class="keywordtype">size_t</span> expected_utf8bytes =</div>
-<div class="line">      simdutf::utf8_length_from_utf16le(utf16_output.get(), utf16words);</div>
+<div class="line">      <a class="code hl_function" href="namespacesimdutf.html#a60198c318e878c68771e2af4c60fb0ab">simdutf::utf8_length_from_utf16le</a>(utf16_output.get(), utf16words);</div>
 <div class="line">  <span class="comment">// Allocate output buffer.</span></div>
 <div class="line">  std::unique_ptr&lt;char[]&gt; utf8_output{<span class="keyword">new</span> <span class="keywordtype">char</span>[expected_utf8bytes]};</div>
 <div class="line">  <span class="comment">// Perform the conversion back to UTF-8.</span></div>
-<div class="line">  <span class="keywordtype">size_t</span> utf8bytes = simdutf::convert_utf16le_to_utf8(</div>
+<div class="line">  <span class="keywordtype">size_t</span> utf8bytes = <a class="code hl_function" href="namespacesimdutf.html#a27fd1fed686c3b5c5bba2727d73c8785">simdutf::convert_utf16le_to_utf8</a>(</div>
 <div class="line">      utf16_output.get(), utf16words, utf8_output.get());</div>
 <div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;Converted back to UTF-8: wrote &quot;</span> &lt;&lt; utf8bytes</div>
 <div class="line">            &lt;&lt; <span class="stringliteral">&quot; bytes&quot;</span> &lt;&lt; std::endl;</div>
@@ -321,6 +321,12 @@ Example</h2>
 <div class="line">  }</div>
 <div class="line">  <span class="keywordflow">return</span> EXIT_SUCCESS;</div>
 <div class="line">}</div>
+<div class="ttc" id="anamespacesimdutf_html_a0edbc803d79993e0a1aa8a1dd9cb587f"><div class="ttname"><a href="namespacesimdutf.html#a0edbc803d79993e0a1aa8a1dd9cb587f">simdutf::validate_utf16le</a></div><div class="ttdeci">simdutf_warn_unused bool validate_utf16le(const char16_t *buf, size_t len) noexcept</div><div class="ttdoc">Validate the UTF-16LE string.</div></div>
+<div class="ttc" id="anamespacesimdutf_html_a27fd1fed686c3b5c5bba2727d73c8785"><div class="ttname"><a href="namespacesimdutf.html#a27fd1fed686c3b5c5bba2727d73c8785">simdutf::convert_utf16le_to_utf8</a></div><div class="ttdeci">simdutf_warn_unused size_t convert_utf16le_to_utf8(const char16_t *input, size_t length, char *utf8_buffer) noexcept</div><div class="ttdoc">Convert possibly broken UTF-16LE string into UTF-8 string.</div></div>
+<div class="ttc" id="anamespacesimdutf_html_a2b4b9db9d1c9f4093fb3564b5991f51a"><div class="ttname"><a href="namespacesimdutf.html#a2b4b9db9d1c9f4093fb3564b5991f51a">simdutf::convert_utf8_to_utf16le</a></div><div class="ttdeci">simdutf_warn_unused size_t convert_utf8_to_utf16le(const char *input, size_t length, char16_t *utf16_output) noexcept</div><div class="ttdoc">Convert possibly broken UTF-8 string into UTF-16LE string.</div></div>
+<div class="ttc" id="anamespacesimdutf_html_a5d3088077c0230659012b58fd3b783c1"><div class="ttname"><a href="namespacesimdutf.html#a5d3088077c0230659012b58fd3b783c1">simdutf::validate_utf8</a></div><div class="ttdeci">simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept</div><div class="ttdoc">Validate the UTF-8 string.</div></div>
+<div class="ttc" id="anamespacesimdutf_html_a60198c318e878c68771e2af4c60fb0ab"><div class="ttname"><a href="namespacesimdutf.html#a60198c318e878c68771e2af4c60fb0ab">simdutf::utf8_length_from_utf16le</a></div><div class="ttdeci">simdutf_warn_unused size_t utf8_length_from_utf16le(const char16_t *input, size_t length) noexcept</div><div class="ttdoc">Compute the number of bytes that this UTF-16LE string would require in UTF-8 format.</div></div>
+<div class="ttc" id="anamespacesimdutf_html_a997011ac59fd9c3667280d566599c2cb"><div class="ttname"><a href="namespacesimdutf.html#a997011ac59fd9c3667280d566599c2cb">simdutf::utf16_length_from_utf8</a></div><div class="ttdeci">simdutf_warn_unused size_t utf16_length_from_utf8(const char *input, size_t length) noexcept</div><div class="ttdoc">Compute the number of 2-byte code units that this UTF-8 string would require in UTF-16LE format.</div></div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md12"></a>
 API</h1>
 <p>Our API is made of a few non-allocating functions. They typically take a pointer and a length as a parameter, and they sometimes take a pointer to an output buffer. Users are responsible for memory allocation.</p>
@@ -334,9 +340,10 @@ API</h1>
 <p>If using C++20, all functions which take a pointer and a size (which is almost all of them) also have a span overload. Here is an example:</p>
 <div class="fragment"><div class="line">std::vector&lt;char&gt; data{1, 2, 3, 4, 5};</div>
 <div class="line"><span class="comment">// C++17 API</span></div>
-<div class="line"><span class="keyword">auto</span> cpp17 = simdutf::autodetect_encoding(data.data(), data.size());</div>
+<div class="line"><span class="keyword">auto</span> cpp17 = <a class="code hl_function" href="namespacesimdutf.html#afc62d1eaa359b0cf19dddb5ed9130b6a">simdutf::autodetect_encoding</a>(data.data(), data.size());</div>
 <div class="line"><span class="comment">// C++20 API</span></div>
-<div class="line"><span class="keyword">auto</span> cpp20 = simdutf::autodetect_encoding(data);</div>
+<div class="line"><span class="keyword">auto</span> cpp20 = <a class="code hl_function" href="namespacesimdutf.html#afc62d1eaa359b0cf19dddb5ed9130b6a">simdutf::autodetect_encoding</a>(data);</div>
+<div class="ttc" id="anamespacesimdutf_html_afc62d1eaa359b0cf19dddb5ed9130b6a"><div class="ttname"><a href="namespacesimdutf.html#afc62d1eaa359b0cf19dddb5ed9130b6a">simdutf::autodetect_encoding</a></div><div class="ttdeci">simdutf_warn_unused simdutf::encoding_type autodetect_encoding(const char *input, size_t length) noexcept</div><div class="ttdoc">Autodetect the encoding of the input, a single encoding is recommended.</div></div>
 </div><!-- fragment --><p>The span overloads use std::span for UTF-16 and UTF-32. For latin1, UTF-8, "binary" (used by the base64 functions) anything that has a <code>.size()</code> and <code>.data()</code> that returns a pointer to a byte-like type will be accepted as a span. This makes it possible to directly pass std::string, std::string_view, std::vector, std::array and std::span to the functions. The reason for allowing all byte-like types in the api (as opposed to only <code>std::span&lt;char&gt;</code>) is to make it easy to interface with whatever data the user may have, without having to resort to casting.</p>
 <p>We have basic functions to detect the type of an input. They return an integer defined by the following <code>enum</code>.</p>
 <div class="fragment"><div class="line"><span class="keyword">enum</span> encoding_type {</div>
@@ -1383,25 +1390,26 @@ API</h1>
 <div class="line"><span class="comment">// Picking 10 bytes is problematic because we might end up in the middle of</span></div>
 <div class="line"><span class="comment">// a multi-byte UTF-8 code point. This could cause a validation or</span></div>
 <div class="line"><span class="comment">// conversion error. We can rewind to the previous code point.</span></div>
-<div class="line">length = simdutf::trim_partial_utf8(unicode, length);</div>
+<div class="line">length = <a class="code hl_function" href="namespacesimdutf.html#aee93cbcf7cf2f323d85233a4be0ad690">simdutf::trim_partial_utf8</a>(unicode, length);</div>
 <div class="line"><span class="comment">// After trimming, &#39;length&#39; now points to a clean boundary containing only</span></div>
 <div class="line"><span class="comment">// complete UTF-8 characters. We can now safely transcode this prefix.</span></div>
-<div class="line"><span class="keywordtype">size_t</span> budget_utf16 = simdutf::utf16_length_from_utf8(unicode, length);</div>
+<div class="line"><span class="keywordtype">size_t</span> budget_utf16 = <a class="code hl_function" href="namespacesimdutf.html#a997011ac59fd9c3667280d566599c2cb">simdutf::utf16_length_from_utf8</a>(unicode, length);</div>
 <div class="line">std::unique_ptr&lt;char16_t[]&gt; utf16{<span class="keyword">new</span> <span class="keywordtype">char16_t</span>[budget_utf16]};</div>
 <div class="line"><span class="keywordtype">size_t</span> utf16words =</div>
-<div class="line">    simdutf::convert_utf8_to_utf16le(unicode, length, utf16.get());</div>
+<div class="line">    <a class="code hl_function" href="namespacesimdutf.html#a2b4b9db9d1c9f4093fb3564b5991f51a">simdutf::convert_utf8_to_utf16le</a>(unicode, length, utf16.get());</div>
 <div class="line">std::cout &lt;&lt; <span class="stringliteral">&quot;Converted first chunk: &quot;</span> &lt;&lt; utf16words</div>
 <div class="line">          &lt;&lt; <span class="stringliteral">&quot; UTF-16LE code units.&quot;</span> &lt;&lt; std::endl;</div>
 <div class="line"><span class="comment">// We can then process the next batch (remaining data).</span></div>
 <div class="line"><span class="keyword">const</span> <span class="keywordtype">char</span> *next = unicode + length;</div>
 <div class="line"><span class="comment">// -1 to exclude the trailing null terminator from sizeof(unicode).</span></div>
 <div class="line"><span class="keywordtype">size_t</span> next_length = <span class="keyword">sizeof</span>(unicode) - length - 1;</div>
-<div class="line"><span class="keywordtype">size_t</span> next_budget_utf16 = simdutf::utf16_length_from_utf8(next, next_length);</div>
+<div class="line"><span class="keywordtype">size_t</span> next_budget_utf16 = <a class="code hl_function" href="namespacesimdutf.html#a997011ac59fd9c3667280d566599c2cb">simdutf::utf16_length_from_utf8</a>(next, next_length);</div>
 <div class="line">std::unique_ptr&lt;char16_t[]&gt; next_utf16{<span class="keyword">new</span> <span class="keywordtype">char16_t</span>[next_budget_utf16]};</div>
 <div class="line"><span class="keywordtype">size_t</span> next_utf16words =</div>
-<div class="line">    simdutf::convert_utf8_to_utf16le(next, next_length, next_utf16.get());</div>
+<div class="line">    <a class="code hl_function" href="namespacesimdutf.html#a2b4b9db9d1c9f4093fb3564b5991f51a">simdutf::convert_utf8_to_utf16le</a>(next, next_length, next_utf16.get());</div>
 <div class="line">std::cout &lt;&lt; <span class="stringliteral">&quot;Converted remaining chunk: &quot;</span> &lt;&lt; next_utf16words</div>
 <div class="line">          &lt;&lt; <span class="stringliteral">&quot; UTF-16LE code units.&quot;</span> &lt;&lt; std::endl;</div>
+<div class="ttc" id="anamespacesimdutf_html_aee93cbcf7cf2f323d85233a4be0ad690"><div class="ttname"><a href="namespacesimdutf.html#aee93cbcf7cf2f323d85233a4be0ad690">simdutf::trim_partial_utf8</a></div><div class="ttdeci">simdutf_warn_unused size_t trim_partial_utf8(const char *input, size_t length)</div><div class="ttdoc">Given a valid UTF-8 string having a possibly truncated last character, this function checks the end o...</div></div>
 </div><!-- fragment --><p>You can use the same approach with UTF-16:</p>
 <div class="fragment"><div class="line"><span class="comment">// We have three sequences of surrogate pairs (UTF-16).</span></div>
 <div class="line"> <span class="keyword">const</span> <span class="keywordtype">char16_t</span> unicode[] = u<span class="stringliteral">&quot;\x3cd8\x10df\x3cd8\x10df\x3cd8\x10df&quot;</span>;</div>
@@ -1409,33 +1417,37 @@ API</h1>
 <div class="line"> <span class="keywordtype">size_t</span> length = 3;</div>
 <div class="line"> <span class="comment">// Picking 3 units is problematic because we might end up in the middle of a</span></div>
 <div class="line"> <span class="comment">// surrogate pair. But we can rewind to the previous code point.</span></div>
-<div class="line"> length = simdutf::trim_partial_utf16(unicode, length);</div>
+<div class="line"> length = <a class="code hl_function" href="namespacesimdutf.html#a776121f0f161fb2be1f7b6bc1dbbfb7b">simdutf::trim_partial_utf16</a>(unicode, length);</div>
 <div class="line"> <span class="comment">// Now we can transcode safely</span></div>
-<div class="line"> <span class="keywordtype">size_t</span> budget_utf8 = simdutf::utf8_length_from_utf16(unicode, length);</div>
+<div class="line"> <span class="keywordtype">size_t</span> budget_utf8 = <a class="code hl_function" href="namespacesimdutf.html#af94bd238016344ff84fc64dd59c11db8">simdutf::utf8_length_from_utf16</a>(unicode, length);</div>
 <div class="line"> std::unique_ptr&lt;char[]&gt; utf8{<span class="keyword">new</span> <span class="keywordtype">char</span>[budget_utf8]};</div>
 <div class="line"> <span class="keywordtype">size_t</span> utf8words =</div>
-<div class="line">     simdutf::convert_utf16_to_utf8(unicode, length, utf8.get());</div>
+<div class="line">     <a class="code hl_function" href="namespacesimdutf.html#a31b05b8b10ce64a07b275a7f7e88a899">simdutf::convert_utf16_to_utf8</a>(unicode, length, utf8.get());</div>
 <div class="line"> <span class="comment">// We can then transcode the next batch</span></div>
 <div class="line"> <span class="keyword">const</span> <span class="keywordtype">char16_t</span> * next = unicode + length;</div>
 <div class="line"> <span class="keywordtype">size_t</span> next_length = 6 - length;</div>
-<div class="line"> <span class="keywordtype">size_t</span> next_budget_utf8 = simdutf::utf8_length_from_utf16(next, next_length);</div>
+<div class="line"> <span class="keywordtype">size_t</span> next_budget_utf8 = <a class="code hl_function" href="namespacesimdutf.html#af94bd238016344ff84fc64dd59c11db8">simdutf::utf8_length_from_utf16</a>(next, next_length);</div>
 <div class="line"> std::unique_ptr&lt;char[]&gt; next_utf8{<span class="keyword">new</span> <span class="keywordtype">char</span>[next_budget_utf8]};</div>
 <div class="line"> <span class="keywordtype">size_t</span> next_utf8words =</div>
-<div class="line">     simdutf::convert_utf16_to_utf8(next, next_length, next_utf8.get());</div>
+<div class="line">     <a class="code hl_function" href="namespacesimdutf.html#a31b05b8b10ce64a07b275a7f7e88a899">simdutf::convert_utf16_to_utf8</a>(next, next_length, next_utf8.get());</div>
+<div class="ttc" id="anamespacesimdutf_html_a31b05b8b10ce64a07b275a7f7e88a899"><div class="ttname"><a href="namespacesimdutf.html#a31b05b8b10ce64a07b275a7f7e88a899">simdutf::convert_utf16_to_utf8</a></div><div class="ttdeci">simdutf_warn_unused size_t convert_utf16_to_utf8(const char16_t *input, size_t length, char *utf8_buffer) noexcept</div><div class="ttdoc">Using native endianness, convert possibly broken UTF-16 string into UTF-8 string.</div></div>
+<div class="ttc" id="anamespacesimdutf_html_a776121f0f161fb2be1f7b6bc1dbbfb7b"><div class="ttname"><a href="namespacesimdutf.html#a776121f0f161fb2be1f7b6bc1dbbfb7b">simdutf::trim_partial_utf16</a></div><div class="ttdeci">simdutf_warn_unused size_t trim_partial_utf16(const char16_t *input, size_t length)</div><div class="ttdoc">Given a valid UTF-16 string having a possibly truncated last character, this function checks the end ...</div></div>
+<div class="ttc" id="anamespacesimdutf_html_af94bd238016344ff84fc64dd59c11db8"><div class="ttname"><a href="namespacesimdutf.html#af94bd238016344ff84fc64dd59c11db8">simdutf::utf8_length_from_utf16</a></div><div class="ttdeci">simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t *input, size_t length) noexcept</div><div class="ttdoc">Using native endianness; Compute the number of bytes that this UTF-16 string would require in UTF-8 f...</div></div>
 </div><!-- fragment --><p>We have more advanced conversion functions which output a <code><a class="el" href="structsimdutf_1_1result.html">simdutf::result</a></code> structure with an indication of the error type and a <code>count</code> entry (e.g., <code>convert_utf8_to_utf16le_with_errors</code>). They are well suited when you expect that there might be errors in the input that require further investigation. The <code>count</code> field contains the location of the error in the input in code units, if there is an error, or otherwise the number of code units written. You may use these functions as follows:</p>
 <div class="fragment"><div class="line"><span class="comment">// this UTF-8 string has a bad byte at index 5</span></div>
 <div class="line">std::string bad_utf8 = <span class="stringliteral">&quot;\xc3\xa9\xc3\xa9\x20\xff\xc3\xa9&quot;</span>;</div>
-<div class="line"><span class="keywordtype">size_t</span> budget_utf16 = simdutf::utf16_length_from_utf8(bad_utf8.data(), bad_utf8.size());</div>
+<div class="line"><span class="keywordtype">size_t</span> budget_utf16 = <a class="code hl_function" href="namespacesimdutf.html#a997011ac59fd9c3667280d566599c2cb">simdutf::utf16_length_from_utf8</a>(bad_utf8.data(), bad_utf8.size());</div>
 <div class="line">std::unique_ptr&lt;char16_t[]&gt; utf16{<span class="keyword">new</span> <span class="keywordtype">char16_t</span>[budget_utf16]};</div>
-<div class="line"><a class="code hl_struct" href="structsimdutf_1_1result.html">simdutf::result</a> res = simdutf::convert_utf8_to_utf16_with_errors(bad_utf8.data(), bad_utf8.size(), utf16.get());</div>
+<div class="line"><a class="code hl_struct" href="structsimdutf_1_1result.html">simdutf::result</a> res = <a class="code hl_function" href="namespacesimdutf.html#a830e4736fb947da8630fd5789de02821">simdutf::convert_utf8_to_utf16_with_errors</a>(bad_utf8.data(), bad_utf8.size(), utf16.get());</div>
 <div class="line"><span class="keywordflow">if</span>(res.error != simdutf::error_code::SUCCESS) {</div>
 <div class="line">  std::cerr &lt;&lt; <span class="stringliteral">&quot;error at index &quot;</span> &lt;&lt; res.count &lt;&lt; std::endl;</div>
 <div class="line">}</div>
 <div class="line"><span class="comment">// the following will be successful</span></div>
-<div class="line">res = simdutf::convert_utf8_to_utf16_with_errors(bad_utf8.data(), res.count, utf16.get());</div>
+<div class="line">res = <a class="code hl_function" href="namespacesimdutf.html#a830e4736fb947da8630fd5789de02821">simdutf::convert_utf8_to_utf16_with_errors</a>(bad_utf8.data(), res.count, utf16.get());</div>
 <div class="line"><span class="keywordflow">if</span>(res.error == simdutf::error_code::SUCCESS) {</div>
 <div class="line">  std::cerr &lt;&lt; <span class="stringliteral">&quot;we have transcoded &quot;</span> &lt;&lt; res.count &lt;&lt; <span class="stringliteral">&quot; characters&quot;</span> &lt;&lt; std::endl;</div>
 <div class="line">}</div>
+<div class="ttc" id="anamespacesimdutf_html_a830e4736fb947da8630fd5789de02821"><div class="ttname"><a href="namespacesimdutf.html#a830e4736fb947da8630fd5789de02821">simdutf::convert_utf8_to_utf16_with_errors</a></div><div class="ttdeci">simdutf_warn_unused result convert_utf8_to_utf16_with_errors(const char *input, size_t length, char16_t *utf16_output) noexcept</div><div class="ttdoc">Using native endianness, convert possibly broken UTF-8 string into UTF-16 string and stop on error.</div></div>
 </div><!-- fragment --><p>We have several transcoding functions that return a <code><a class="el" href="structsimdutf_1_1result.html">simdutf::result</a></code> struct instead of a simple integer. These functions combine validation and conversion in a single pass and stop at the first error encountered. They are particularly useful when processing data from untrusted sources, as they provide detailed error information (error type and position) while still returning the number of successfully processed code units when no error occurs.</p>
 <div class="fragment"><div class="line"><span class="comment">/**</span></div>
 <div class="line"><span class="comment"> * Convert possibly broken UTF-8 string into Latin1 string with errors.</span></div>
@@ -1717,11 +1729,13 @@ Base64</h1>
 </ul>
 <p>This forgiving approach makes base64 decoding robust for web use, but it enforces rules to avoid data corruption.</p>
 <p>The conversion of binary data to base64 always succeeds and is relatively simple. Suppose that you have an original input of binary data <code>source</code> (e.g., <code>std::vector&lt;char&gt;</code>).</p>
-<div class="fragment"><div class="line">std::vector&lt;char&gt; buffer(simdutf::base64_length_from_binary(source.size()));</div>
-<div class="line">simdutf::binary_to_base64(source.data(), source.size(), buffer.data());</div>
+<div class="fragment"><div class="line">std::vector&lt;char&gt; buffer(<a class="code hl_function" href="namespacesimdutf.html#a0840933d2a92a1f74fc6626af5ec76ef">simdutf::base64_length_from_binary</a>(source.size()));</div>
+<div class="line"><a class="code hl_function" href="namespacesimdutf.html#a1d21cd751b76c2d65f1d6b1c359533dd">simdutf::binary_to_base64</a>(source.data(), source.size(), buffer.data());</div>
+<div class="ttc" id="anamespacesimdutf_html_a0840933d2a92a1f74fc6626af5ec76ef"><div class="ttname"><a href="namespacesimdutf.html#a0840933d2a92a1f74fc6626af5ec76ef">simdutf::base64_length_from_binary</a></div><div class="ttdeci">simdutf_warn_unused simdutf_constexpr23 size_t base64_length_from_binary(size_t length, base64_options options=base64_default) noexcept</div><div class="ttdoc">Provide the base64 length in bytes given the length of a binary input.</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l04446">implementation.h:4446</a></div></div>
+<div class="ttc" id="anamespacesimdutf_html_a1d21cd751b76c2d65f1d6b1c359533dd"><div class="ttname"><a href="namespacesimdutf.html#a1d21cd751b76c2d65f1d6b1c359533dd">simdutf::binary_to_base64</a></div><div class="ttdeci">size_t binary_to_base64(const char *input, size_t length, char *output, base64_options options=base64_default) noexcept</div><div class="ttdoc">Convert a binary input to a base64 output.</div></div>
 </div><!-- fragment --><p>Decoding base64 requires validation and, thus, error handling. Furthermore, because we prune ASCII spaces, we may need to adjust the result size afterward.</p>
-<div class="fragment"><div class="line">std::vector&lt;char&gt; buffer(simdutf::maximal_binary_length_from_base64(base64.data(), base64.size()));</div>
-<div class="line"><a class="code hl_struct" href="structsimdutf_1_1result.html">simdutf::result</a> r = simdutf::base64_to_binary(base64.data(), base64.size(), buffer.data());</div>
+<div class="fragment"><div class="line">std::vector&lt;char&gt; buffer(<a class="code hl_function" href="namespacesimdutf.html#a810eb628099188ef9309276a8226ca27">simdutf::maximal_binary_length_from_base64</a>(base64.data(), base64.size()));</div>
+<div class="line"><a class="code hl_struct" href="structsimdutf_1_1result.html">simdutf::result</a> r = <a class="code hl_function" href="namespacesimdutf.html#a265be7ef73a67ecc9567225a6d9250de">simdutf::base64_to_binary</a>(base64.data(), base64.size(), buffer.data());</div>
 <div class="line"><span class="keywordflow">if</span>(r.error) {</div>
 <div class="line">  <span class="comment">// We have some error, r.count tells you where the error was encountered in the input if</span></div>
 <div class="line">  <span class="comment">// the error is INVALID_BASE64_CHARACTER. If the error is BASE64_INPUT_REMAINDER, then</span></div>
@@ -1729,15 +1743,18 @@ Base64</h1>
 <div class="line">} <span class="keywordflow">else</span> {</div>
 <div class="line">  buffer.resize(r.count); <span class="comment">// resize the buffer according to actual number of bytes</span></div>
 <div class="line">}</div>
+<div class="ttc" id="anamespacesimdutf_html_a265be7ef73a67ecc9567225a6d9250de"><div class="ttname"><a href="namespacesimdutf.html#a265be7ef73a67ecc9567225a6d9250de">simdutf::base64_to_binary</a></div><div class="ttdeci">simdutf_warn_unused result base64_to_binary(const char *input, size_t length, char *output, base64_options options=base64_default, last_chunk_handling_options last_chunk_options=loose) noexcept</div><div class="ttdoc">Convert a base64 input to a binary output.</div></div>
+<div class="ttc" id="anamespacesimdutf_html_a810eb628099188ef9309276a8226ca27"><div class="ttname"><a href="namespacesimdutf.html#a810eb628099188ef9309276a8226ca27">simdutf::maximal_binary_length_from_base64</a></div><div class="ttdeci">simdutf_warn_unused size_t maximal_binary_length_from_base64(const char *input, size_t length) noexcept</div><div class="ttdoc">Provide the maximal binary length in bytes given the base64 input.</div></div>
 </div><!-- fragment --><p>You can calculate the exact output space needed by using <code>binary_length_from_base64</code> which produces an exact number of output bytes if the input is well-formed. Well-formed means it contains only valid base64 and ASCII whitespace. Invalid input can be given to <code>binary_length_from_base64</code>. It will not detect invalid input, but the result can be safely used to size the output buffer for <code>base64_to_binary</code>, which does detect invalid input.</p>
-<div class="fragment"><div class="line">std::vector&lt;char&gt; buffer(simdutf::binary_length_from_base64(base64.data(), base64.size()));</div>
-<div class="line"><a class="code hl_struct" href="structsimdutf_1_1result.html">simdutf::result</a> r = simdutf::base64_to_binary(base64.data(), base64.size(), buffer.data());</div>
+<div class="fragment"><div class="line">std::vector&lt;char&gt; buffer(<a class="code hl_function" href="namespacesimdutf.html#ac42465da44ee0a5c60140c7e1edd5e8c">simdutf::binary_length_from_base64</a>(base64.data(), base64.size()));</div>
+<div class="line"><a class="code hl_struct" href="structsimdutf_1_1result.html">simdutf::result</a> r = <a class="code hl_function" href="namespacesimdutf.html#a265be7ef73a67ecc9567225a6d9250de">simdutf::base64_to_binary</a>(base64.data(), base64.size(), buffer.data());</div>
 <div class="line"><span class="keywordflow">if</span> (r.error != simdutf::SUCCESS) {</div>
 <div class="line">  <span class="comment">// handle error</span></div>
 <div class="line">} <span class="keywordflow">else</span> {</div>
 <div class="line">  <span class="comment">// buffer is already the exact size, no resize needed</span></div>
 <div class="line">  assert(buffer.size() == r.count);</div>
 <div class="line">}</div>
+<div class="ttc" id="anamespacesimdutf_html_ac42465da44ee0a5c60140c7e1edd5e8c"><div class="ttname"><a href="namespacesimdutf.html#ac42465da44ee0a5c60140c7e1edd5e8c">simdutf::binary_length_from_base64</a></div><div class="ttdeci">simdutf_warn_unused size_t binary_length_from_base64(const char *input, size_t length) noexcept</div><div class="ttdoc">Compute the binary length from a base64 input.</div></div>
 </div><!-- fragment --><p>Let us consider concrete examples. Take the following strings: <code>"  A  A  "</code>, <code>"  A  A  G  A  /  v  8  "</code>, <code>"  A  A  G  A  /  v  8  =  "</code>, <code>"  A  A  G  A  /  v  8  =  =  "</code>. They are all valid WHATWG base64 inputs, except for the last one.</p>
 <ul>
 <li>The first string, <code>"  A  A  "</code>, becomes "AA" after whitespace removal. Its length is 2, and 2 % 4 = 2 (not 1), so it's valid. Decoding: 'A' is 000000 and 'A' is 000000, giving 12 bits (000000000000). Form one byte from the first 8 bits (00000000 = 0x00) and discard the last 4 bits (0000). Result: a single byte value of 0.</li>
@@ -1754,10 +1771,10 @@ Base64</h1>
 <div class="line">  <span class="keyword">const</span> std::string &amp;source = sources[i];</div>
 <div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;source: &#39;&quot;</span> &lt;&lt; source &lt;&lt; <span class="stringliteral">&quot;&#39;&quot;</span> &lt;&lt; std::endl;</div>
 <div class="line">  <span class="comment">// allocate enough memory for the maximal binary length</span></div>
-<div class="line">  std::vector&lt;uint8_t&gt; buffer(simdutf::maximal_binary_length_from_base64(</div>
+<div class="line">  std::vector&lt;uint8_t&gt; buffer(<a class="code hl_function" href="namespacesimdutf.html#a810eb628099188ef9309276a8226ca27">simdutf::maximal_binary_length_from_base64</a>(</div>
 <div class="line">     source.data(), source.size()));</div>
 <div class="line">  <span class="comment">// convert to binary and check for errors</span></div>
-<div class="line">  <a class="code hl_struct" href="structsimdutf_1_1result.html">simdutf::result</a> r = simdutf::base64_to_binary(</div>
+<div class="line">  <a class="code hl_struct" href="structsimdutf_1_1result.html">simdutf::result</a> r = <a class="code hl_function" href="namespacesimdutf.html#a265be7ef73a67ecc9567225a6d9250de">simdutf::base64_to_binary</a>(</div>
 <div class="line">      source.data(), source.size(), (<span class="keywordtype">char</span>*)buffer.data());</div>
 <div class="line">  <span class="keywordflow">if</span>(r.error != simdutf::error_code::SUCCESS) {</div>
 <div class="line">    <span class="comment">// We have that expected[i].empty().</span></div>
@@ -1779,8 +1796,8 @@ Base64</h1>
 <div class="line">output: error</div>
 </div><!-- fragment --><p>As you can see, the result is as expected.</p>
 <p>The <code>base64_to_binary</code> function returns a <code><a class="el" href="structsimdutf_1_1result.html">simdutf::result</a></code> which on success contains the number of output bytes in <code>r.count</code>. If you need to know both the number of input units consumed and the number of output bytes written (e.g., for streaming/chunked decoding), use <code>base64_to_binary_details</code> which returns a <code><a class="el" href="structsimdutf_1_1full__result.html">simdutf::full_result</a></code>:</p>
-<div class="fragment"><div class="line">std::vector&lt;char&gt; buffer(simdutf::maximal_binary_length_from_base64(base64.data(), base64.size()));</div>
-<div class="line"><a class="code hl_struct" href="structsimdutf_1_1full__result.html">simdutf::full_result</a> r = simdutf::base64_to_binary_details(base64.data(), base64.size(), buffer.data());</div>
+<div class="fragment"><div class="line">std::vector&lt;char&gt; buffer(<a class="code hl_function" href="namespacesimdutf.html#a810eb628099188ef9309276a8226ca27">simdutf::maximal_binary_length_from_base64</a>(base64.data(), base64.size()));</div>
+<div class="line"><a class="code hl_struct" href="structsimdutf_1_1full__result.html">simdutf::full_result</a> r = <a class="code hl_function" href="namespacesimdutf.html#a4dbf6c59200b2afa82d7414fc2bf26c8">simdutf::base64_to_binary_details</a>(base64.data(), base64.size(), buffer.data());</div>
 <div class="line"><span class="keywordflow">if</span>(r.error) {</div>
 <div class="line">  <span class="comment">// r.input_count tells you where the error was encountered in the input.</span></div>
 <div class="line">  <span class="comment">// r.output_count tells you how many bytes were written to the output.</span></div>
@@ -1788,6 +1805,7 @@ Base64</h1>
 <div class="line">  buffer.resize(r.output_count); <span class="comment">// resize according to actual output bytes</span></div>
 <div class="line">  <span class="comment">// r.input_count contains the number of input units consumed</span></div>
 <div class="line">}</div>
+<div class="ttc" id="anamespacesimdutf_html_a4dbf6c59200b2afa82d7414fc2bf26c8"><div class="ttname"><a href="namespacesimdutf.html#a4dbf6c59200b2afa82d7414fc2bf26c8">simdutf::base64_to_binary_details</a></div><div class="ttdeci">simdutf_warn_unused full_result base64_to_binary_details(const char *input, size_t length, char *output, base64_options options=base64_default, last_chunk_handling_options last_chunk_options=last_chunk_handling_options::loose) noexcept</div><div class="ttdoc">Convert a base64 input to a binary output while returning more details than base64_to_binary.</div></div>
 <div class="ttc" id="astructsimdutf_1_1full__result_html"><div class="ttname"><a href="structsimdutf_1_1full__result.html">simdutf::full_result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00098">error.h:98</a></div></div>
 </div><!-- fragment --><p>There are three cases where <code>base64_to_binary_details</code> may not consume the entire input (i.e., <code>r.input_count &lt; length</code>):</p>
 <ol type="1">
@@ -1796,16 +1814,17 @@ Base64</h1>
 <li>**<code>BASE64_INPUT_REMAINDER</code>**: In <code>loose</code> mode, the input contains a number of base64 characters that, when divided by 4, leaves a single remainder character (which cannot encode any bytes). This is an unrecoverable error.</li>
 </ol>
 <p>You can also check whether a single character is a valid base64 character using <code>base64_valid</code>:</p>
-<div class="fragment"><div class="line"><span class="keywordtype">bool</span> is_valid = simdutf::base64_valid(<span class="charliteral">&#39;A&#39;</span>); <span class="comment">// true</span></div>
-<div class="line"><span class="keywordtype">bool</span> is_valid_url = simdutf::base64_valid(<span class="charliteral">&#39;-&#39;</span>, simdutf::base64_url); <span class="comment">// true</span></div>
+<div class="fragment"><div class="line"><span class="keywordtype">bool</span> is_valid = <a class="code hl_function" href="namespacesimdutf.html#ad67f6d47426c06190de8fef5cec7c0bf">simdutf::base64_valid</a>(<span class="charliteral">&#39;A&#39;</span>); <span class="comment">// true</span></div>
+<div class="line"><span class="keywordtype">bool</span> is_valid_url = <a class="code hl_function" href="namespacesimdutf.html#ad67f6d47426c06190de8fef5cec7c0bf">simdutf::base64_valid</a>(<span class="charliteral">&#39;-&#39;</span>, simdutf::base64_url); <span class="comment">// true</span></div>
 <div class="line"><span class="comment">// Note: padding (&#39;=&#39;) and spaces are not considered valid base64 characters.</span></div>
+<div class="ttc" id="anamespacesimdutf_html_ad67f6d47426c06190de8fef5cec7c0bf"><div class="ttname"><a href="namespacesimdutf.html#ad67f6d47426c06190de8fef5cec7c0bf">simdutf::base64_valid</a></div><div class="ttdeci">simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 bool base64_valid(char input, base64_options options=base64_default) noexcept</div><div class="ttdoc">Check if a character is a valid base64 character.</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l04883">implementation.h:4883</a></div></div>
 </div><!-- fragment --><p>In some instances, you may want to limit the size of the output further when decoding base64. For this purpose, you may use the <code>base64_to_binary_safe</code> functions. The functions may also be useful if you seek to decode the input into segments having a maximal capacity. Another benefit of the <code>base64_to_binary_safe</code> functions is that they inform you about how much data was written to the output buffer, even when there is a fatal error. This number might not be 'maximal': our fast functions may leave some data that could have been decoded prior to a bad character undecoded. With the <code>base64_to_binary_safe</code> function, you also have the option of requesting that as much of the data as possible is decoded despite the error by setting the <code>decode_up_to_bad_char</code> parameter to true (it defaults to false for best performance).</p>
 <div class="fragment"><div class="line"><span class="keywordtype">size_t</span> len = 72; <span class="comment">// for simplicity we chose len divisible by 3</span></div>
 <div class="line">std::vector&lt;char&gt; base64(len, <span class="charliteral">&#39;a&#39;</span>); <span class="comment">// we want to decode &#39;aaaaa....&#39;</span></div>
 <div class="line">std::vector&lt;char&gt; back((len + 3) / 4 * 3);</div>
 <div class="line"><span class="keywordtype">size_t</span> limited_length = back.size() / 2; <span class="comment">// Intentionally too small</span></div>
 <div class="line"><span class="comment">// We proceed to decode half:</span></div>
-<div class="line"><a class="code hl_struct" href="structsimdutf_1_1result.html">simdutf::result</a> r = simdutf::base64_to_binary_safe(</div>
+<div class="line"><a class="code hl_struct" href="structsimdutf_1_1result.html">simdutf::result</a> r = <a class="code hl_function" href="namespacesimdutf.html#a138332a1070d8013c80cd627e66c660d">simdutf::base64_to_binary_safe</a>(</div>
 <div class="line">          base64.data(), base64.size(), back.data(), limited_length);</div>
 <div class="line">assert(r.error == simdutf::error_code::OUTPUT_BUFFER_TOO_SMALL);</div>
 <div class="line"><span class="comment">// We decoded r.count base64 8-bit units to limited_length bytes</span></div>
@@ -1816,13 +1835,14 @@ Base64</h1>
 <div class="line"><span class="comment">//</span></div>
 <div class="line"><span class="keywordtype">size_t</span> input_index = r.count;</div>
 <div class="line"><span class="keywordtype">size_t</span> limited_length2 = back.size();</div>
-<div class="line">r = simdutf::base64_to_binary_safe(base64.data() + input_index,</div>
+<div class="line">r = <a class="code hl_function" href="namespacesimdutf.html#a138332a1070d8013c80cd627e66c660d">simdutf::base64_to_binary_safe</a>(base64.data() + input_index,</div>
 <div class="line">                                         base64.size() - input_index,</div>
 <div class="line">                                         back.data(), limited_length2);</div>
 <div class="line">assert(r.error == simdutf::error_code::SUCCESS);</div>
 <div class="line"><span class="comment">// We decoded r.count base64 8-bit units to limited_length2 bytes</span></div>
 <div class="line"><span class="comment">// We are done</span></div>
 <div class="line">assert(limited_length2 + limited_length == (len + 3) / 4 * 3);</div>
+<div class="ttc" id="anamespacesimdutf_html_a138332a1070d8013c80cd627e66c660d"><div class="ttname"><a href="namespacesimdutf.html#a138332a1070d8013c80cd627e66c660d">simdutf::base64_to_binary_safe</a></div><div class="ttdeci">simdutf_warn_unused result base64_to_binary_safe(const char *input, size_t length, char *output, size_t &amp;outlen, base64_options options=base64_default, last_chunk_handling_options last_chunk_options=last_chunk_handling_options::loose, bool decode_up_to_bad_char=false) noexcept</div><div class="ttdoc">Convert a base64 input to a binary output.</div></div>
 </div><!-- fragment --><p>We can repeat our previous examples with the various spaced strings using <code>base64_to_binary_safe</code>. It works much the same except that the convention for the content of <code>result.count</code> differs. The output size is stored by reference in the output length parameter.</p>
 <div class="fragment"><div class="line">std::vector&lt;std::string&gt; sources = {</div>
 <div class="line">     <span class="stringliteral">&quot;  A  A  &quot;</span>, <span class="stringliteral">&quot;  A  A  G  A  /  v  8  &quot;</span>, <span class="stringliteral">&quot;  A  A  G  A  /  v  8  =  &quot;</span>, <span class="stringliteral">&quot;  A  A  G  A  /  v  8  =  =  &quot;</span>};</div>
@@ -1832,11 +1852,11 @@ Base64</h1>
 <div class="line">   <span class="keyword">const</span> std::string &amp;source = sources[i];</div>
 <div class="line">   std::cout &lt;&lt; <span class="stringliteral">&quot;source: &#39;&quot;</span> &lt;&lt; source &lt;&lt; <span class="stringliteral">&quot;&#39;&quot;</span> &lt;&lt; std::endl;</div>
 <div class="line">   <span class="comment">// allocate enough memory for the maximal binary length</span></div>
-<div class="line">   std::vector&lt;uint8_t&gt; buffer(simdutf::maximal_binary_length_from_base64(</div>
+<div class="line">   std::vector&lt;uint8_t&gt; buffer(<a class="code hl_function" href="namespacesimdutf.html#a810eb628099188ef9309276a8226ca27">simdutf::maximal_binary_length_from_base64</a>(</div>
 <div class="line">      source.data(), source.size()));</div>
 <div class="line">   <span class="comment">// convert to binary and check for errors</span></div>
 <div class="line">   <span class="keywordtype">size_t</span> output_length = buffer.size();</div>
-<div class="line">   <a class="code hl_struct" href="structsimdutf_1_1result.html">simdutf::result</a> r = simdutf::base64_to_binary_safe(</div>
+<div class="line">   <a class="code hl_struct" href="structsimdutf_1_1result.html">simdutf::result</a> r = <a class="code hl_function" href="namespacesimdutf.html#a138332a1070d8013c80cd627e66c660d">simdutf::base64_to_binary_safe</a>(</div>
 <div class="line">       source.data(), source.size(), (<span class="keywordtype">char</span>*)buffer.data(), output_length);</div>
 <div class="line">   <span class="keywordflow">if</span>(r.error != simdutf::error_code::SUCCESS) {</div>
 <div class="line">     <span class="comment">// We have expected[i].empty()</span></div>
@@ -1876,7 +1896,7 @@ Compile-time base64 decoding (C++23)</h2>
 </div><!-- fragment --><p>Invalid base64 input causes a compilation error. The literal uses the default base64 alphabet (<code>base64_default</code>) and loose last-chunk handling.</p>
 <p>We support two conventions: <code>base64_default</code> and <code>base64_url</code>:</p>
 <ul>
-<li>The default (<code>base64_default</code>) includes the characters <code>+</code> and <code>/</code> as part of its alphabet. It also pads the output with the padding character (<code>=</code>) so that the output is divisible by 4. Thus, we have that the string <code>"Hello, World!"</code> is encoded to <code>"SGVsbG8sIFdvcmxkIQ=="</code> with an expression such as <code>simdutf::binary_to_base64(source, size, out, simdutf::base64_default)</code>. When using the default, you can omit the option parameter for simplicity: <code>simdutf::binary_to_base64(source, size, out, buffer.data())</code>. When decoding, white space characters are omitted as per the <a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">WHATWG forgiving-base64</a> standard. Further, if padding characters are present at the end of the stream, there must be no more than two, and if there are any, the total number of characters (excluding ASCII spaces ' ', '\t', '<br  />
+<li>The default (<code>base64_default</code>) includes the characters <code>+</code> and <code>/</code> as part of its alphabet. It also pads the output with the padding character (<code>=</code>) so that the output is divisible by 4. Thus, we have that the string <code>"Hello, World!"</code> is encoded to <code>"SGVsbG8sIFdvcmxkIQ=="</code> with an expression such as <code>simdutf::binary_to_base64(source, size, out, simdutf::base64_default)</code>. When using the default, you can omit the option parameter for simplicity: <code><a class="el" href="namespacesimdutf.html#a1d21cd751b76c2d65f1d6b1c359533dd" title="Convert a binary input to a base64 output.">simdutf::binary_to_base64</a>(source, size, out, buffer.data())</code>. When decoding, white space characters are omitted as per the <a href="https://infra.spec.whatwg.org/#forgiving-base64-decode">WHATWG forgiving-base64</a> standard. Further, if padding characters are present at the end of the stream, there must be no more than two, and if there are any, the total number of characters (excluding ASCII spaces ' ', '\t', '<br  />
 ', '\r', '\f' but including padding characters) must be divisible by four.</li>
 <li>The URL convention (<code>base64_url</code>) uses the characters <code>-</code> and <code>_</code> as part of its alphabet. It does not pad its output. Thus, we have that the string <code>"Hello, World!"</code> is encoded to <code>"SGVsbG8sIFdvcmxkIQ"</code> instead of <code>"SGVsbG8sIFdvcmxkIQ=="</code>. To specify the URL convention, you can pass the appropriate option to our decoding and encoding functions: e.g., <code>simdutf::base64_to_binary(source, size, out, simdutf::base64_url)</code>.</li>
 </ul>
@@ -1938,7 +1958,7 @@ Compile-time base64 decoding (C++23)</h2>
 <div class="line"><span class="comment"> * @param length        the length of the base64 input in bytes</span></div>
 <div class="line"><span class="comment"> * @return maximal number of binary bytes</span></div>
 <div class="line"><span class="comment"> */</span></div>
-<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> maximal_binary_length_from_base64(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> <a class="code hl_function" href="namespacesimdutf.html#a810eb628099188ef9309276a8226ca27">maximal_binary_length_from_base64</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
 <div class="line"><span class="comment">/**</span></div>
 <div class="line"><span class="comment"> * Provide the maximal binary length in bytes given the base64 input.</span></div>
 <div class="line"><span class="comment"> * As long as the input does not contain ignorable characters (e.g., ASCII spaces</span></div>
@@ -1952,7 +1972,7 @@ Compile-time base64 decoding (C++23)</h2>
 <div class="line"><span class="comment"> * @param length        the length of the base64 input in 16-bit units</span></div>
 <div class="line"><span class="comment"> * @return maximal number of binary bytes</span></div>
 <div class="line"><span class="comment"> */</span></div>
-<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> maximal_binary_length_from_base64(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> <a class="code hl_function" href="namespacesimdutf.html#a810eb628099188ef9309276a8226ca27">maximal_binary_length_from_base64</a>(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
 <div class="line"><span class="comment">/**</span></div>
 <div class="line"><span class="comment"> * Compute the binary length from a base64 input.</span></div>
 <div class="line"><span class="comment"> * This function is useful for base64 inputs that may contain ASCII whitespaces</span></div>
@@ -1966,7 +1986,7 @@ Compile-time base64 decoding (C++23)</h2>
 <div class="line"><span class="comment"> * @param length        the length of the base64 input in bytes</span></div>
 <div class="line"><span class="comment"> * @return number of binary bytes</span></div>
 <div class="line"><span class="comment"> */</span></div>
-<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> binary_length_from_base64(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> <a class="code hl_function" href="namespacesimdutf.html#ac42465da44ee0a5c60140c7e1edd5e8c">binary_length_from_base64</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
 <div class="line"><span class="comment">/**</span></div>
 <div class="line"><span class="comment"> * Compute the binary length from a base64 input.</span></div>
 <div class="line"><span class="comment"> * This function is useful for base64 inputs that may contain ASCII whitespaces</span></div>
@@ -1980,7 +2000,7 @@ Compile-time base64 decoding (C++23)</h2>
 <div class="line"><span class="comment"> * @param length        the length of the base64 input in 16-bit units</span></div>
 <div class="line"><span class="comment"> * @return number of binary bytes</span></div>
 <div class="line"><span class="comment"> */</span></div>
-<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> binary_length_from_base64(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> <a class="code hl_function" href="namespacesimdutf.html#ac42465da44ee0a5c60140c7e1edd5e8c">binary_length_from_base64</a>(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span>;</div>
 <div class="line"><span class="comment">/**</span></div>
 <div class="line"><span class="comment"> * Convert a base64 input to a binary output.</span></div>
 <div class="line"><span class="comment"> *</span></div>
@@ -2036,7 +2056,7 @@ Compile-time base64 decoding (C++23)</h2>
 <div class="line"><span class="comment"> * (in the input in bytes) if any, or the number of bytes written if successful.</span></div>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line">simdutf_warn_unused result</div>
-<div class="line">base64_to_binary(<span class="keyword">const</span> <span class="keywordtype">char</span> *input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span> *output,</div>
+<div class="line"><a class="code hl_function" href="namespacesimdutf.html#a265be7ef73a67ecc9567225a6d9250de">base64_to_binary</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span> *output,</div>
 <div class="line">                 base64_options options = base64_default,</div>
 <div class="line">                 last_chunk_handling_options last_chunk_options = loose) <span class="keyword">noexcept</span>;</div>
 <div class="line"><span class="comment">/**</span></div>
@@ -2046,7 +2066,7 @@ Compile-time base64 decoding (C++23)</h2>
 <div class="line"><span class="comment"> * @param options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.</span></div>
 <div class="line"><span class="comment"> * @return number of base64 bytes</span></div>
 <div class="line"><span class="comment"> */</span></div>
-<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> base64_length_from_binary(<span class="keywordtype">size_t</span> length, base64_options options = base64_default) <span class="keyword">noexcept</span>;</div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> <a class="code hl_function" href="namespacesimdutf.html#a0840933d2a92a1f74fc6626af5ec76ef">base64_length_from_binary</a>(<span class="keywordtype">size_t</span> length, base64_options options = base64_default) <span class="keyword">noexcept</span>;</div>
 <div class="line"><span class="comment">/**</span></div>
 <div class="line"><span class="comment"> * Provide the base64 length in bytes given the length of a binary input,</span></div>
 <div class="line"><span class="comment"> * taking into account line breaks.</span></div>
@@ -2057,7 +2077,7 @@ Compile-time base64 decoding (C++23)</h2>
 <div class="line"><span class="comment"> * @return number of base64 bytes</span></div>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span></div>
-<div class="line">base64_length_from_binary_with_lines(<span class="keywordtype">size_t</span> length, base64_options options, <span class="keywordtype">size_t</span> line_length) <span class="keyword">noexcept</span>;</div>
+<div class="line"><a class="code hl_function" href="namespacesimdutf.html#acf55e4fb906e835413896c4ef2883cbd">base64_length_from_binary_with_lines</a>(<span class="keywordtype">size_t</span> length, base64_options options, <span class="keywordtype">size_t</span> line_length) <span class="keyword">noexcept</span>;</div>
 <div class="line"><span class="comment">/**</span></div>
 <div class="line"><span class="comment"> * Convert a binary input to a base64 output.</span></div>
 <div class="line"><span class="comment"> *</span></div>
@@ -2075,7 +2095,7 @@ Compile-time base64 decoding (C++23)</h2>
 <div class="line"><span class="comment"> * @param options       the base64 options to use, can be base64_default or base64_url, is base64_default by default.</span></div>
 <div class="line"><span class="comment"> * @return number of written bytes, will be equal to base64_length_from_binary(length, options)</span></div>
 <div class="line"><span class="comment"> */</span></div>
-<div class="line"><span class="keywordtype">size_t</span> binary_to_base64(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* output, base64_options options = base64_default) <span class="keyword">noexcept</span>;</div>
+<div class="line"><span class="keywordtype">size_t</span> <a class="code hl_function" href="namespacesimdutf.html#a1d21cd751b76c2d65f1d6b1c359533dd">binary_to_base64</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* output, base64_options options = base64_default) <span class="keyword">noexcept</span>;</div>
 <div class="line"><span class="comment">/**</span></div>
 <div class="line"><span class="comment"> * Convert a binary input to a base64 output with line breaks.</span></div>
 <div class="line"><span class="comment"> *</span></div>
@@ -2100,8 +2120,8 @@ Compile-time base64 decoding (C++23)</h2>
 <div class="line"><span class="comment"> * @return number of written bytes, will be equal to</span></div>
 <div class="line"><span class="comment"> * base64_length_from_binary_with_lines(length, options)</span></div>
 <div class="line"><span class="comment"> */</span></div>
-<div class="line"><span class="keywordtype">size_t</span> binary_to_base64_with_lines(<span class="keyword">const</span> <span class="keywordtype">char</span> *input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span> *output,</div>
-<div class="line">                        <span class="keywordtype">size_t</span> line_length = simdutf::default_line_length,</div>
+<div class="line"><span class="keywordtype">size_t</span> <a class="code hl_function" href="namespacesimdutf.html#acbbaee6f387c682fd6ebb6802102dfdf">binary_to_base64_with_lines</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span> *output,</div>
+<div class="line">                        <span class="keywordtype">size_t</span> line_length = <a class="code hl_variable" href="namespacesimdutf.html#a19e7448b6d4db59b856018f1f13960c0">simdutf::default_line_length</a>,</div>
 <div class="line">                        base64_options options = base64_default) <span class="keyword">noexcept</span>;</div>
 <div class="line"><span class="comment">/**</span></div>
 <div class="line"><span class="comment"> * Convert a base64 input to a binary output.</span></div>
@@ -2141,7 +2161,7 @@ Compile-time base64 decoding (C++23)</h2>
 <div class="line"><span class="comment"> * last_chunk_handling_options::stop_before_partial.</span></div>
 <div class="line"><span class="comment"> * @return a result pair struct (of type simdutf::result containing the two fields error and count) with an error code and either position of the INVALID_BASE64_CHARACTER error (in the input in units) if any, or the number of bytes written if successful.</span></div>
 <div class="line"><span class="comment"> */</span></div>
-<div class="line">simdutf_warn_unused result base64_to_binary(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* output, base64_options options = base64_default, last_chunk_handling_options last_chunk_options =</div>
+<div class="line">simdutf_warn_unused result <a class="code hl_function" href="namespacesimdutf.html#a265be7ef73a67ecc9567225a6d9250de">base64_to_binary</a>(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* output, base64_options options = base64_default, last_chunk_handling_options last_chunk_options =</div>
 <div class="line">                     last_chunk_handling_options::loose)  <span class="keyword">noexcept</span>;</div>
 <div class="line"><span class="comment">/**</span></div>
 <div class="line"><span class="comment"> * Convert a base64 input to a binary output.</span></div>
@@ -2210,7 +2230,7 @@ Compile-time base64 decoding (C++23)</h2>
 <div class="line"><span class="comment"> * INVALID_BASE64_CHARACTER error (in the input in units) if any, or the number</span></div>
 <div class="line"><span class="comment"> * of units processed if successful.</span></div>
 <div class="line"><span class="comment"> */</span></div>
-<div class="line">simdutf_warn_unused result base64_to_binary_safe(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* output, <span class="keywordtype">size_t</span>&amp; outlen, base64_options options = base64_default,</div>
+<div class="line">simdutf_warn_unused result <a class="code hl_function" href="namespacesimdutf.html#a138332a1070d8013c80cd627e66c660d">base64_to_binary_safe</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* output, <span class="keywordtype">size_t</span>&amp; outlen, base64_options options = base64_default,</div>
 <div class="line">      last_chunk_handling_options last_chunk_options = loose,</div>
 <div class="line">      <span class="keywordtype">bool</span> decode_up_to_bad_char = <span class="keyword">false</span>) noexcept;</div>
 <div class="line">simdutf_warn_unused result base64_to_binary_safe(const <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* output, <span class="keywordtype">size_t</span>&amp; outlen, base64_options options = base64_default,</div>
@@ -2327,14 +2347,18 @@ Compile-time base64 decoding (C++23)</h2>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">bool</span> base64_valid(<span class="keywordtype">char</span> input, base64_options options = base64_default) noexcept;</div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">bool</span> base64_valid(<span class="keywordtype">char16_t</span> input, base64_options options = base64_default) noexcept;</div>
+<div class="ttc" id="anamespacesimdutf_html_a19e7448b6d4db59b856018f1f13960c0"><div class="ttname"><a href="namespacesimdutf.html#a19e7448b6d4db59b856018f1f13960c0">simdutf::default_line_length</a></div><div class="ttdeci">constexpr size_t default_line_length</div><div class="ttdoc">default line length for base64 encoding with lines</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l00187">implementation.h:187</a></div></div>
+<div class="ttc" id="anamespacesimdutf_html_acbbaee6f387c682fd6ebb6802102dfdf"><div class="ttname"><a href="namespacesimdutf.html#acbbaee6f387c682fd6ebb6802102dfdf">simdutf::binary_to_base64_with_lines</a></div><div class="ttdeci">size_t binary_to_base64_with_lines(const char *input, size_t length, char *output, size_t line_length=simdutf::default_line_length, base64_options options=base64_default) noexcept</div><div class="ttdoc">Convert a binary input to a base64 output with line breaks.</div></div>
+<div class="ttc" id="anamespacesimdutf_html_acf55e4fb906e835413896c4ef2883cbd"><div class="ttname"><a href="namespacesimdutf.html#acf55e4fb906e835413896c4ef2883cbd">simdutf::base64_length_from_binary_with_lines</a></div><div class="ttdeci">simdutf_warn_unused simdutf_constexpr23 size_t base64_length_from_binary_with_lines(size_t length, base64_options options=base64_default, size_t line_length=default_line_length) noexcept</div><div class="ttdoc">Provide the base64 length in bytes given the length of a binary input, taking into account line break...</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l04462">implementation.h:4462</a></div></div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md15"></a>
 Find</h1>
-<p>The C++ standard library provides <code>std::find</code> for locating a character in a string, but its performance can be suboptimal on modern hardware. To address this, we introduce <code>simdutf::find</code>, a high-performance alternative optimized for recent processors using SIMD instructions. It operates on raw pointers (<code>char</code> or <code>char16_t</code>) for maximum efficiency.</p>
+<p>The C++ standard library provides <code>std::find</code> for locating a character in a string, but its performance can be suboptimal on modern hardware. To address this, we introduce <code><a class="el" href="namespacesimdutf.html#a112c60be200a3c38c2d0ead5c22d3f3f" title="Find the first occurrence of a character in a string.">simdutf::find</a></code>, a high-performance alternative optimized for recent processors using SIMD instructions. It operates on raw pointers (<code>char</code> or <code>char16_t</code>) for maximum efficiency.</p>
 <div class="fragment"><div class="line">std::string input = <span class="stringliteral">&quot;abc&quot;</span>;</div>
 <div class="line"><span class="keyword">const</span> <span class="keywordtype">char</span>* result =</div>
-<div class="line">    simdutf::find(input.data(), input.data() + input.size(), <span class="charliteral">&#39;c&#39;</span>);</div>
+<div class="line">    <a class="code hl_function" href="namespacesimdutf.html#a112c60be200a3c38c2d0ead5c22d3f3f">simdutf::find</a>(input.data(), input.data() + input.size(), <span class="charliteral">&#39;c&#39;</span>);</div>
 <div class="line"><span class="comment">// result should point at the letter &#39;c&#39;</span></div>
-</div><!-- fragment --><p>The <code>simdutf::find</code> interface is straightforward and efficient.</p>
+<div class="ttc" id="anamespacesimdutf_html_a112c60be200a3c38c2d0ead5c22d3f3f"><div class="ttname"><a href="namespacesimdutf.html#a112c60be200a3c38c2d0ead5c22d3f3f">simdutf::find</a></div><div class="ttdeci">simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 const char * find(const char *start, const char *end, char character) noexcept</div><div class="ttdoc">Find the first occurrence of a character in a string.</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l04158">implementation.h:4158</a></div></div>
+</div><!-- fragment --><p>The <code><a class="el" href="namespacesimdutf.html#a112c60be200a3c38c2d0ead5c22d3f3f" title="Find the first occurrence of a character in a string.">simdutf::find</a></code> interface is straightforward and efficient.</p>
 <div class="fragment"><div class="line"><span class="comment">/**</span></div>
 <div class="line"><span class="comment">  * Find the first occurrence of a character in a string. If the character is</span></div>
 <div class="line"><span class="comment">  * not found, return a pointer to the end of the string.</span></div>
@@ -2363,7 +2387,8 @@ Example</h2>
 <div class="line">std::u16string utf16_input = u<span class="stringliteral">&quot;Bonjour le monde&quot;</span>;</div>
 <div class="line">std::vector&lt;char&gt; utf8_output(64); <span class="comment">// ensure sufficient size</span></div>
 <div class="line"><span class="comment">// Use std::span for input and output</span></div>
-<div class="line"><span class="keywordtype">size_t</span> written = simdutf::convert_utf16_to_utf8_safe(utf16_input, utf8_output);</div>
+<div class="line"><span class="keywordtype">size_t</span> written = <a class="code hl_function" href="namespacesimdutf.html#ad839a9abdc10cab58be208a81b8c5cf9">simdutf::convert_utf16_to_utf8_safe</a>(utf16_input, utf8_output);</div>
+<div class="ttc" id="anamespacesimdutf_html_ad839a9abdc10cab58be208a81b8c5cf9"><div class="ttname"><a href="namespacesimdutf.html#ad839a9abdc10cab58be208a81b8c5cf9">simdutf::convert_utf16_to_utf8_safe</a></div><div class="ttdeci">simdutf_warn_unused size_t convert_utf16_to_utf8_safe(const char16_t *input, size_t length, char *utf8_output, size_t utf8_len) noexcept</div><div class="ttdoc">Using native endianness, convert possibly broken UTF-16 string into UTF-8 string with output limit.</div></div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md18"></a>
 Note</h2>
 <ul>
@@ -2383,9 +2408,11 @@ C++23 and constexpr support</h1>
 </ul>
 <p>Here is an example:</p>
 <div class="fragment"><div class="line"><span class="keyword">constexpr</span> std::span s(u8<span class="stringliteral">&quot;My favourite dish is köttbullar!&quot;</span>);</div>
-<div class="line"><span class="keyword">static_assert</span>(!simdutf::validate_ascii(s));</div>
-<div class="line"><span class="keyword">static_assert</span>(simdutf::validate_utf8(s));</div>
-<div class="line"><span class="keyword">static_assert</span>(s.size() != simdutf::latin1_length_from_utf8(s));</div>
+<div class="line"><span class="keyword">static_assert</span>(!<a class="code hl_function" href="namespacesimdutf.html#af69c6eef367452f03ae298a6b4a4772d">simdutf::validate_ascii</a>(s));</div>
+<div class="line"><span class="keyword">static_assert</span>(<a class="code hl_function" href="namespacesimdutf.html#a5d3088077c0230659012b58fd3b783c1">simdutf::validate_utf8</a>(s));</div>
+<div class="line"><span class="keyword">static_assert</span>(s.size() != <a class="code hl_function" href="namespacesimdutf.html#a91512b8041b7a768f4aef4aeb237e9b8">simdutf::latin1_length_from_utf8</a>(s));</div>
+<div class="ttc" id="anamespacesimdutf_html_a91512b8041b7a768f4aef4aeb237e9b8"><div class="ttname"><a href="namespacesimdutf.html#a91512b8041b7a768f4aef4aeb237e9b8">simdutf::latin1_length_from_utf8</a></div><div class="ttdeci">simdutf_warn_unused size_t latin1_length_from_utf8(const char *input, size_t length) noexcept</div><div class="ttdoc">Compute the number of bytes that this UTF-8 string would require in Latin1 format.</div></div>
+<div class="ttc" id="anamespacesimdutf_html_af69c6eef367452f03ae298a6b4a4772d"><div class="ttname"><a href="namespacesimdutf.html#af69c6eef367452f03ae298a6b4a4772d">simdutf::validate_ascii</a></div><div class="ttdeci">simdutf_warn_unused bool validate_ascii(const char *buf, size_t len) noexcept</div><div class="ttdoc">Validate the ASCII string.</div></div>
 </div><!-- fragment --><p>To use the constexpr functionality, your have to go through the span overloads.</p>
 <p>The constexpr functionality is tested with <code>static_assert</code> in the unit tests which is handy - if it compiled, the unit tests passed!</p>
 <h2><a class="anchor" id="autotoc_md20"></a>
@@ -2452,7 +2479,7 @@ Manual implementation selection</h1>
 <div class="line">  <span class="comment">// This is just a demonstration, not actual testing required.</span></div>
 <div class="line">  std::string source = <span class="stringliteral">&quot;La vie est belle.&quot;</span>;</div>
 <div class="line">  std::string chosen_implementation;</div>
-<div class="line">  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;implementation : simdutf::get_available_implementations()) {</div>
+<div class="line">  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;implementation : <a class="code hl_namespace" href="namespacesimdutf.html">simdutf</a>::get_available_implementations()) {</div>
 <div class="line">    <span class="keywordflow">if</span> (!implementation-&gt;supported_by_runtime_system()) {</div>
 <div class="line">      <span class="keywordflow">continue</span>;</div>
 <div class="line">    }</div>
@@ -2465,24 +2492,27 @@ Manual implementation selection</h1>
 <div class="line">    chosen_implementation = implementation-&gt;name();</div>
 <div class="line">  }</div>
 <div class="line">  <span class="keyword">auto</span> my_implementation =</div>
-<div class="line">      simdutf::get_available_implementations()[chosen_implementation];</div>
+<div class="line">      <a class="code hl_function" href="namespacesimdutf.html#a447e9efa7338521159ba175edab76759">simdutf::get_available_implementations</a>()[chosen_implementation];</div>
 <div class="line">  <span class="keywordflow">if</span> (!my_implementation) {</div>
 <div class="line">    <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">  }</div>
 <div class="line">  <span class="keywordflow">if</span> (!my_implementation-&gt;supported_by_runtime_system()) {</div>
 <div class="line">    <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">  }</div>
-<div class="line">  simdutf::get_active_implementation() = my_implementation;</div>
-<div class="line">  <span class="keywordtype">bool</span> validutf8 = simdutf::validate_utf8(source.c_str(), source.size());</div>
+<div class="line">  <a class="code hl_function" href="namespacesimdutf.html#a26f77c56a51f2c53ddaf5d29d7995483">simdutf::get_active_implementation</a>() = my_implementation;</div>
+<div class="line">  <span class="keywordtype">bool</span> validutf8 = <a class="code hl_function" href="namespacesimdutf.html#a5d3088077c0230659012b58fd3b783c1">simdutf::validate_utf8</a>(source.c_str(), source.size());</div>
 <div class="line">  <span class="keywordflow">if</span> (!validutf8) {</div>
 <div class="line">    <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">  }</div>
-<div class="line">  <span class="keywordflow">if</span> (simdutf::get_active_implementation()-&gt;name() != chosen_implementation) {</div>
+<div class="line">  <span class="keywordflow">if</span> (<a class="code hl_function" href="namespacesimdutf.html#a26f77c56a51f2c53ddaf5d29d7995483">simdutf::get_active_implementation</a>()-&gt;name() != chosen_implementation) {</div>
 <div class="line">    <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">  }</div>
-<div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;I have manually selected: &quot;</span> &lt;&lt; simdutf::get_active_implementation()-&gt;name() &lt;&lt; std::endl;</div>
+<div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;I have manually selected: &quot;</span> &lt;&lt; <a class="code hl_function" href="namespacesimdutf.html#a26f77c56a51f2c53ddaf5d29d7995483">simdutf::get_active_implementation</a>()-&gt;name() &lt;&lt; std::endl;</div>
 <div class="line">  <span class="keywordflow">return</span> EXIT_SUCCESS;</div>
 <div class="line">}</div>
+<div class="ttc" id="anamespacesimdutf_html"><div class="ttname"><a href="namespacesimdutf.html">simdutf</a></div><div class="ttdoc">helpers placed in namespace detail are not a part of the public API</div><div class="ttdef"><b>Definition</b> <a href="base64__implementation_8h_source.html#l00008">base64_implementation.h:8</a></div></div>
+<div class="ttc" id="anamespacesimdutf_html_a26f77c56a51f2c53ddaf5d29d7995483"><div class="ttname"><a href="namespacesimdutf.html#a26f77c56a51f2c53ddaf5d29d7995483">simdutf::get_active_implementation</a></div><div class="ttdeci">SIMDUTF_DLLIMPORTEXPORT internal::atomic_ptr&lt; const implementation &gt; &amp; get_active_implementation()</div><div class="ttdoc">The active implementation.</div></div>
+<div class="ttc" id="anamespacesimdutf_html_a447e9efa7338521159ba175edab76759"><div class="ttname"><a href="namespacesimdutf.html#a447e9efa7338521159ba175edab76759">simdutf::get_available_implementations</a></div><div class="ttdeci">SIMDUTF_DLLIMPORTEXPORT const internal::available_implementation_list &amp; get_available_implementations()</div><div class="ttdoc">The list of available implementations compiled into simdutf.</div></div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md28"></a>
 Benchmarks</h1>
 <p>To run the benchmarks, you need a recent C++ compiler and a recent version of cmake. Build the project with benchmarks enabled. Our default benchmarks are in the <code>benchmark</code> command. You can get help on its usage by first building it and then calling it with the <code>--help</code> flag. E.g., under Linux you may do the following:</p>

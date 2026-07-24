@@ -108,12 +108,13 @@ $(document).ready(function(){initNavTree('base64__implementation_8h_source.html'
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment">// this is not part of the public api</span></div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span> </div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;algorithm&gt;</span> <span class="comment">// for std::min</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;type_traits&gt;</span> <span class="comment">// for is_same</span></div>
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="keyword">namespace </span>simdutf {</div>
+<div class="foldopen" id="foldopen00008" data-start="{" data-end="}">
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno"><a class="line" href="namespacesimdutf.html">    8</a></span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacesimdutf.html">simdutf</a> {</div>
 <div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
 <div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> <span class="keywordtype">char</span>type&gt;</div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>simdutf_warn_unused simdutf_constexpr23 result slow_base64_to_binary_safe_impl(</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>simdutf_warn_unused simdutf_constexpr23 <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a> slow_base64_to_binary_safe_impl(</div>
 <div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>    <span class="keyword">const</span> chartype *input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span> *output, <span class="keywordtype">size_t</span> &amp;outlen,</div>
 <div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    base64_options options,</div>
 <div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    last_chunk_handling_options last_chunk_options) <span class="keyword">noexcept</span> {</div>
@@ -144,7 +145,7 @@ $(document).ready(function(){initNavTree('base64__implementation_8h_source.html'
 <div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>  <span class="comment">// and the number of bytes read from the input buffer.</span></div>
 <div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>  <span class="comment">// The function will also return an error code if the input buffer is not</span></div>
 <div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>  <span class="comment">// valid base64.</span></div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>  full_result r = scalar::base64::base64_tail_decode_safe(</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>  <a class="code hl_struct" href="structsimdutf_1_1full__result.html">full_result</a> r = scalar::base64::base64_tail_decode_safe(</div>
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>      output, outlen, input, length, equalsigns, options, last_chunk_options);</div>
 <div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>  r = scalar::base64::patch_tail_result(r, 0, 0, equallocation,</div>
 <div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>                                        full_input_length, last_chunk_options);</div>
@@ -161,7 +162,7 @@ $(document).ready(function(){initNavTree('base64__implementation_8h_source.html'
 <div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>}</div>
 <div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
 <div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> <span class="keywordtype">char</span>type&gt;</div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>simdutf_warn_unused simdutf_constexpr23 result base64_to_binary_safe_impl(</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>simdutf_warn_unused simdutf_constexpr23 <a class="code hl_struct" href="structsimdutf_1_1result.html">result</a> base64_to_binary_safe_impl(</div>
 <div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    <span class="keyword">const</span> chartype *input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span> *output, <span class="keywordtype">size_t</span> &amp;outlen,</div>
 <div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    base64_options options,</div>
 <div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    last_chunk_handling_options last_chunk_handling_options,</div>
@@ -175,9 +176,9 @@ $(document).ready(function(){initNavTree('base64__implementation_8h_source.html'
 <div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>  <span class="keywordtype">size_t</span> output_position = 0;</div>
 <div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span> </div>
 <div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>  <span class="comment">// We also do a first pass using the fast path to decode as much as possible</span></div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>  <span class="keywordtype">size_t</span> safe_input = (std::min)(</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>  <span class="keywordtype">size_t</span> safe_input = detail::min(</div>
 <div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>      remaining_input_length,</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>      base64_length_from_binary(remaining_output_length / 3 * 3, options));</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>      <a class="code hl_function" href="namespacesimdutf.html#a0840933d2a92a1f74fc6626af5ec76ef">base64_length_from_binary</a>(remaining_output_length / 3 * 3, options));</div>
 <div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>  <span class="keywordtype">bool</span> done_with_partial = (safe_input == remaining_input_length);</div>
 <div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>  <a class="code hl_struct" href="structsimdutf_1_1full__result.html">simdutf::full_result</a> r;</div>
 <div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span> </div>
@@ -191,7 +192,7 @@ $(document).ready(function(){initNavTree('base64__implementation_8h_source.html'
 <div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>  } <span class="keywordflow">else</span></div>
 <div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="preprocessor">#endif</span></div>
 <div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>  {</div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    r = get_active_implementation()-&gt;base64_to_binary_details(</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    r = <a class="code hl_function" href="namespacesimdutf.html#a26f77c56a51f2c53ddaf5d29d7995483">get_active_implementation</a>()-&gt;base64_to_binary_details(</div>
 <div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>        input + input_position, safe_input, output + output_position, options,</div>
 <div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>        done_with_partial</div>
 <div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>            ? last_chunk_handling_options</div>
@@ -253,7 +254,7 @@ $(document).ready(function(){initNavTree('base64__implementation_8h_source.html'
 <div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>    <span class="comment">// no character. See</span></div>
 <div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>    <span class="comment">// https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64</span></div>
 <div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>    <span class="keywordflow">while</span> (input_position &gt; 0 &amp;&amp;</div>
-<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>           base64_ignorable(input[input_position - 1], options)) {</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>           <a class="code hl_function" href="namespacesimdutf.html#a0bd2c80917b6adbf5b692c148711a035">base64_ignorable</a>(input[input_position - 1], options)) {</div>
 <div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>      input_position--;</div>
 <div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>    }</div>
 <div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>  }</div>
@@ -262,8 +263,14 @@ $(document).ready(function(){initNavTree('base64__implementation_8h_source.html'
 <div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>}</div>
 <div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span> </div>
 <div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>} <span class="comment">// namespace simdutf</span></div>
+</div>
 <div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span><span class="preprocessor">#endif </span><span class="comment">// SIMDUTF_BASE64_IMPLEMENTATION_H</span></div>
+<div class="ttc" id="anamespacesimdutf_html"><div class="ttname"><a href="namespacesimdutf.html">simdutf</a></div><div class="ttdoc">helpers placed in namespace detail are not a part of the public API</div><div class="ttdef"><b>Definition</b> <a href="base64__implementation_8h_source.html#l00008">base64_implementation.h:8</a></div></div>
+<div class="ttc" id="anamespacesimdutf_html_a0840933d2a92a1f74fc6626af5ec76ef"><div class="ttname"><a href="namespacesimdutf.html#a0840933d2a92a1f74fc6626af5ec76ef">simdutf::base64_length_from_binary</a></div><div class="ttdeci">simdutf_warn_unused simdutf_constexpr23 size_t base64_length_from_binary(size_t length, base64_options options=base64_default) noexcept</div><div class="ttdoc">Provide the base64 length in bytes given the length of a binary input.</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l04446">implementation.h:4446</a></div></div>
+<div class="ttc" id="anamespacesimdutf_html_a0bd2c80917b6adbf5b692c148711a035"><div class="ttname"><a href="namespacesimdutf.html#a0bd2c80917b6adbf5b692c148711a035">simdutf::base64_ignorable</a></div><div class="ttdeci">simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 bool base64_ignorable(char input, base64_options options=base64_default) noexcept</div><div class="ttdoc">Check if a character is an ignorable base64 character.</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l04862">implementation.h:4862</a></div></div>
+<div class="ttc" id="anamespacesimdutf_html_a26f77c56a51f2c53ddaf5d29d7995483"><div class="ttname"><a href="namespacesimdutf.html#a26f77c56a51f2c53ddaf5d29d7995483">simdutf::get_active_implementation</a></div><div class="ttdeci">SIMDUTF_DLLIMPORTEXPORT internal::atomic_ptr&lt; const implementation &gt; &amp; get_active_implementation()</div><div class="ttdoc">The active implementation.</div></div>
 <div class="ttc" id="astructsimdutf_1_1full__result_html"><div class="ttname"><a href="structsimdutf_1_1full__result.html">simdutf::full_result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00098">error.h:98</a></div></div>
+<div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00076">error.h:76</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

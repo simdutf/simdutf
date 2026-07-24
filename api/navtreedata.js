@@ -26,6 +26,15 @@ var NAVTREE =
 [
   [ "simdutf", "index.html", [
     [ "simdutf: Text processing at billions of characters per second", "index.html", "index" ],
+    [ "Namespaces", "namespaces.html", [
+      [ "Namespace List", "namespaces.html", "namespaces_dup" ],
+      [ "Namespace Members", "namespacemembers.html", [
+        [ "All", "namespacemembers.html", null ],
+        [ "Functions", "namespacemembers_func.html", null ],
+        [ "Variables", "namespacemembers_vars.html", null ],
+        [ "Enumerator", "namespacemembers_eval.html", null ]
+      ] ]
+    ] ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
       [ "Class Index", "classes.html", null ],
@@ -42,7 +51,8 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"annotated.html"
+"annotated.html",
+"index.html#autotoc_md24"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

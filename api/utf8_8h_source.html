@@ -108,7 +108,7 @@ $(document).ready(function(){initNavTree('utf8_8h_source.html',''); initResizabl
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;cstring&gt;</span></div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span> </div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="keyword">namespace </span>simdutf {</div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacesimdutf.html">simdutf</a> {</div>
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="keyword">namespace </span>scalar {</div>
 <div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="keyword">namespace </span>{</div>
 <div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="keyword">namespace </span>utf8 {</div>
@@ -376,7 +376,7 @@ $(document).ready(function(){initNavTree('utf8_8h_source.html',''); initResizabl
 <div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span><span class="preprocessor">#if SIMDUTF_CPLUSPLUS20</span></div>
 <div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>  <span class="keyword">requires</span> simdutf::detail::indexes_into_byte_like&lt;InputPtr&gt;</div>
 <div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>simdutf_constexpr23 <span class="keywordtype">size_t</span> utf16_length_from_utf8(InputPtr data, <span class="keywordtype">size_t</span> len) {</div>
+<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>simdutf_constexpr23 <span class="keywordtype">size_t</span> <a class="code hl_function" href="namespacesimdutf.html#a997011ac59fd9c3667280d566599c2cb">utf16_length_from_utf8</a>(InputPtr data, <span class="keywordtype">size_t</span> len) {</div>
 <div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>  <span class="keywordtype">size_t</span> counter{0};</div>
 <div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; len; i++) {</div>
 <div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>    <span class="keywordflow">if</span> (int8_t(data[i]) &gt; -65) {</div>
@@ -394,7 +394,7 @@ $(document).ready(function(){initNavTree('utf8_8h_source.html',''); initResizabl
 <div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span>  <span class="keyword">requires</span> simdutf::detail::indexes_into_byte_like&lt;InputPtr&gt;</div>
 <div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span><span class="preprocessor">#endif</span></div>
 <div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span>simdutf_warn_unused simdutf_constexpr23 <span class="keywordtype">size_t</span></div>
-<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>trim_partial_utf8(InputPtr input, <span class="keywordtype">size_t</span> length) {</div>
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span><a class="code hl_function" href="namespacesimdutf.html#aee93cbcf7cf2f323d85233a4be0ad690">trim_partial_utf8</a>(InputPtr input, <span class="keywordtype">size_t</span> length) {</div>
 <div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span>  <span class="keywordflow">if</span> (length &lt; 3) {</div>
 <div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span>    <span class="keywordflow">switch</span> (length) {</div>
 <div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>    <span class="keywordflow">case</span> 2:</div>
@@ -432,6 +432,9 @@ $(document).ready(function(){initNavTree('utf8_8h_source.html',''); initResizabl
 <div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span>} <span class="comment">// namespace simdutf</span></div>
 <div class="line"><a id="l00328" name="l00328"></a><span class="lineno">  328</span> </div>
 <div class="line"><a id="l00329" name="l00329"></a><span class="lineno">  329</span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="anamespacesimdutf_html"><div class="ttname"><a href="namespacesimdutf.html">simdutf</a></div><div class="ttdoc">helpers placed in namespace detail are not a part of the public API</div><div class="ttdef"><b>Definition</b> <a href="base64__implementation_8h_source.html#l00008">base64_implementation.h:8</a></div></div>
+<div class="ttc" id="anamespacesimdutf_html_a997011ac59fd9c3667280d566599c2cb"><div class="ttname"><a href="namespacesimdutf.html#a997011ac59fd9c3667280d566599c2cb">simdutf::utf16_length_from_utf8</a></div><div class="ttdeci">simdutf_warn_unused size_t utf16_length_from_utf8(const char *input, size_t length) noexcept</div><div class="ttdoc">Compute the number of 2-byte code units that this UTF-8 string would require in UTF-16LE format.</div></div>
+<div class="ttc" id="anamespacesimdutf_html_aee93cbcf7cf2f323d85233a4be0ad690"><div class="ttname"><a href="namespacesimdutf.html#aee93cbcf7cf2f323d85233a4be0ad690">simdutf::trim_partial_utf8</a></div><div class="ttdeci">simdutf_warn_unused size_t trim_partial_utf8(const char *input, size_t length)</div><div class="ttdoc">Given a valid UTF-8 string having a possibly truncated last character, this function checks the end o...</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

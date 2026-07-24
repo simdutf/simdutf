@@ -1,6 +1,6 @@
 var annotated_dup =
 [
-    [ "simdutf", null, [
+    [ "simdutf", "namespacesimdutf.html", [
       [ "detail", null, [
         [ "constexpr_ptr", "structsimdutf_1_1detail_1_1constexpr__ptr.html", null ],
         [ "constexpr_write_ptr", "structsimdutf_1_1detail_1_1constexpr__write__ptr.html", null ],

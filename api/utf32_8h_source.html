@@ -106,7 +106,7 @@ $(document).ready(function(){initNavTree('utf32_8h_source.html',''); initResizab
 <div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#ifndef SIMDUTF_UTF32_H</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#define SIMDUTF_UTF32_H</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="keyword">namespace </span>simdutf {</div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacesimdutf.html">simdutf</a> {</div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="keyword">namespace </span>scalar {</div>
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="keyword">namespace </span>utf32 {</div>
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
@@ -155,7 +155,7 @@ $(document).ready(function(){initNavTree('utf32_8h_source.html',''); initResizab
 <div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>  <span class="keywordflow">return</span> validate_with_errors(<span class="keyword">reinterpret_cast&lt;</span><span class="keyword">const </span>uint32_t *<span class="keyword">&gt;</span>(buf), len);</div>
 <div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>}</div>
 <div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span> </div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="keyword">inline</span> simdutf_constexpr23 <span class="keywordtype">size_t</span> utf8_length_from_utf32(<span class="keyword">const</span> <span class="keywordtype">char32_t</span> *p,</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="keyword">inline</span> simdutf_constexpr23 <span class="keywordtype">size_t</span> <a class="code hl_function" href="namespacesimdutf.html#a10f3924e36387a861736ae870ebf8721">utf8_length_from_utf32</a>(<span class="keyword">const</span> <span class="keywordtype">char32_t</span> *p,</div>
 <div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>                                                         <span class="keywordtype">size_t</span> len) {</div>
 <div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>  <span class="comment">// We are not BOM aware.</span></div>
 <div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>  <span class="keywordtype">size_t</span> counter{0};</div>
@@ -170,7 +170,7 @@ $(document).ready(function(){initNavTree('utf32_8h_source.html',''); initResizab
 <div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>}</div>
 <div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span> </div>
 <div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="keyword">inline</span> simdutf_warn_unused simdutf_constexpr23 <span class="keywordtype">size_t</span></div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>utf16_length_from_utf32(<span class="keyword">const</span> <span class="keywordtype">char32_t</span> *p, <span class="keywordtype">size_t</span> len) {</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span><a class="code hl_function" href="namespacesimdutf.html#afe94e2686b242e2b818e8f33a8f3a9cb">utf16_length_from_utf32</a>(<span class="keyword">const</span> <span class="keywordtype">char32_t</span> *p, <span class="keywordtype">size_t</span> len) {</div>
 <div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>  <span class="comment">// We are not BOM aware.</span></div>
 <div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>  <span class="keywordtype">size_t</span> counter{0};</div>
 <div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; len; i++) {</div>
@@ -185,6 +185,9 @@ $(document).ready(function(){initNavTree('utf32_8h_source.html',''); initResizab
 <div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>} <span class="comment">// namespace simdutf</span></div>
 <div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span> </div>
 <div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="anamespacesimdutf_html"><div class="ttname"><a href="namespacesimdutf.html">simdutf</a></div><div class="ttdoc">helpers placed in namespace detail are not a part of the public API</div><div class="ttdef"><b>Definition</b> <a href="base64__implementation_8h_source.html#l00008">base64_implementation.h:8</a></div></div>
+<div class="ttc" id="anamespacesimdutf_html_a10f3924e36387a861736ae870ebf8721"><div class="ttname"><a href="namespacesimdutf.html#a10f3924e36387a861736ae870ebf8721">simdutf::utf8_length_from_utf32</a></div><div class="ttdeci">simdutf_warn_unused size_t utf8_length_from_utf32(const char32_t *input, size_t length) noexcept</div><div class="ttdoc">Compute the number of bytes that this UTF-32 string would require in UTF-8 format.</div></div>
+<div class="ttc" id="anamespacesimdutf_html_afe94e2686b242e2b818e8f33a8f3a9cb"><div class="ttname"><a href="namespacesimdutf.html#afe94e2686b242e2b818e8f33a8f3a9cb">simdutf::utf16_length_from_utf32</a></div><div class="ttdeci">simdutf_warn_unused size_t utf16_length_from_utf32(const char32_t *input, size_t length) noexcept</div><div class="ttdoc">Compute the number of two-byte code units that this UTF-32 string would require in UTF-16 format.</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

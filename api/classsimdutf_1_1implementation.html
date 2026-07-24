@@ -400,7 +400,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a5823f6a86315f4404a4f437977abf9df" id="r_a5823f6a86315f4404a4f437977abf9df"><td class="memItemLeft" align="right" valign="top">virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a5823f6a86315f4404a4f437977abf9df">binary_to_base64</a> (const char *input, size_t length, char *output, base64_options options=base64_default) const noexcept=0</td></tr>
 <tr class="memdesc:a5823f6a86315f4404a4f437977abf9df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a binary input to a base64 output.  <br /></td></tr>
 <tr class="separator:a5823f6a86315f4404a4f437977abf9df"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a45298a7e235830b11082489c9e57ec25" id="r_a45298a7e235830b11082489c9e57ec25"><td class="memItemLeft" align="right" valign="top">virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a45298a7e235830b11082489c9e57ec25">binary_to_base64_with_lines</a> (const char *input, size_t length, char *output, size_t line_length=simdutf::default_line_length, base64_options options=base64_default) const noexcept=0</td></tr>
+<tr class="memitem:a45298a7e235830b11082489c9e57ec25" id="r_a45298a7e235830b11082489c9e57ec25"><td class="memItemLeft" align="right" valign="top">virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a45298a7e235830b11082489c9e57ec25">binary_to_base64_with_lines</a> (const char *input, size_t length, char *output, size_t line_length=<a class="el" href="namespacesimdutf.html#a19e7448b6d4db59b856018f1f13960c0">simdutf::default_line_length</a>, base64_options options=base64_default) const noexcept=0</td></tr>
 <tr class="memdesc:a45298a7e235830b11082489c9e57ec25"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a binary input to a base64 output with lines of given length.  <br /></td></tr>
 <tr class="separator:a45298a7e235830b11082489c9e57ec25"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0383b9c8c879508752e083a34b6bae5d" id="r_a0383b9c8c879508752e083a34b6bae5d"><td class="memItemLeft" align="right" valign="top">virtual const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a0383b9c8c879508752e083a34b6bae5d">find</a> (const char *start, const char *end, char character) const noexcept=0</td></tr>
@@ -414,7 +414,7 @@ virtual const char16_t *&#160;</td><td class="memItemRight" valign="bottom"><b>f
 <div class="textblock"><p>An implementation of simdutf for a particular CPU architecture. </p>
 <p>Also used to maintain the currently active implementation. The active implementation is automatically initialized on first use to the most advanced implementation supported by the host. </p>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05081">5081</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05095">5095</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="afd306a0bc3e221964af3f31a64784b12" name="afd306a0bc3e221964af3f31a64784b12"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afd306a0bc3e221964af3f31a64784b12">&#9670;&#160;</a></span>autodetect_encoding()</h2>
@@ -982,7 +982,7 @@ virtual const char16_t *&#160;</td><td class="memItemRight" valign="bottom"><b>f
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>line_length</em> = <code>simdutf::default_line_length</code>, </td>
+          <td class="paramname"><em>line_length</em> = <code><a class="el" href="namespacesimdutf.html#a19e7448b6d4db59b856018f1f13960c0">simdutf::default_line_length</a></code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -3881,7 +3881,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </pre><p> impl-&gt;<a class="el" href="classsimdutf_1_1implementation.html#a5fd0fb7f897b97624a8a4a4079f276ef" title="The description of this implementation.">description()</a> &lt;&lt; ")" &lt;&lt; endl;</p>
 <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05103">5103</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05117">5117</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -4019,7 +4019,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-16LE string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06558">6558</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06572">6572</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -4057,7 +4057,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-32 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06521">6521</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06535">6535</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -4233,7 +4233,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </pre><p> impl-&gt;<a class="el" href="classsimdutf_1_1implementation.html#a5fd0fb7f897b97624a8a4a4079f276ef" title="The description of this implementation.">description()</a> &lt;&lt; ")" &lt;&lt; endl;</p>
 <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05092">5092</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05106">5106</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -4399,7 +4399,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-16 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06333">6333</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06347">6347</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -4530,7 +4530,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-32 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06591">6591</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06605">6605</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -5545,7 +5545,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><b>simdutf</b></li><li class="navelem"><a class="el" href="classsimdutf_1_1implementation.html">implementation</a></li>
+    <li class="navelem"><a class="el" href="namespacesimdutf.html">simdutf</a></li><li class="navelem"><a class="el" href="classsimdutf_1_1implementation.html">implementation</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>

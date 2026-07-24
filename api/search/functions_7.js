@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['name_0',['name',['../classsimdutf_1_1implementation.html#a1bab43c0547d95152158114fbe9ae74c',1,'simdutf::implementation']]]
+  ['maximal_5fbinary_5flength_5ffrom_5fbase64_0',['maximal_binary_length_from_base64',['../classsimdutf_1_1implementation.html#a98579327df6c99c6bfab0394174363ee',1,'simdutf::implementation::maximal_binary_length_from_base64(const char *input, size_t length) const noexcept'],['../classsimdutf_1_1implementation.html#ab3185b3c751048d78d91df45523deeef',1,'simdutf::implementation::maximal_binary_length_from_base64(const char16_t *input, size_t length) const noexcept'],['../namespacesimdutf.html#a810eb628099188ef9309276a8226ca27',1,'simdutf::maximal_binary_length_from_base64(const char *input, size_t length) noexcept'],['../namespacesimdutf.html#aa2aae58e9930c489147f6e3d462c712c',1,'simdutf::maximal_binary_length_from_base64(const char16_t *input, size_t length) noexcept']]]
 ];

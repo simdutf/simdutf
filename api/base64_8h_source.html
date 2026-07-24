@@ -110,7 +110,7 @@ $(document).ready(function(){initNavTree('base64_8h_source.html',''); initResiza
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;cstdint&gt;</span></div>
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;cstring&gt;</span></div>
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="keyword">namespace </span>simdutf {</div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacesimdutf.html">simdutf</a> {</div>
 <div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="keyword">namespace </span>scalar {</div>
 <div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="keyword">namespace </span>{</div>
 <div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="keyword">namespace </span>base64 {</div>
@@ -228,7 +228,7 @@ $(document).ready(function(){initNavTree('base64_8h_source.html',''); initResiza
 <div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>  <span class="keywordflow">if</span> (ignore_garbage) {</div>
 <div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    <span class="comment">// Technically, we don&#39;t need to find the first padding character, we can</span></div>
 <div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    <span class="comment">// just change our algorithms, but it adds substantial complexity.</span></div>
-<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>    <span class="keyword">auto</span> it = simdutf::find(src, src + srclen, <span class="charliteral">&#39;=&#39;</span>);</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>    <span class="keyword">auto</span> it = <a class="code hl_function" href="namespacesimdutf.html#a112c60be200a3c38c2d0ead5c22d3f3f">simdutf::find</a>(src, src + srclen, <span class="charliteral">&#39;=&#39;</span>);</div>
 <div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    <span class="keywordflow">if</span> (it != src + srclen) {</div>
 <div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>      equallocation = it - src;</div>
 <div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>      equalsigns = 1;</div>
@@ -520,7 +520,7 @@ $(document).ready(function(){initNavTree('base64_8h_source.html',''); initResiza
 <div class="line"><a id="l00415" name="l00415"></a><span class="lineno">  415</span><span class="keyword">template</span> &lt;<span class="keywordtype">bool</span> use_lines = false&gt;</div>
 <div class="line"><a id="l00416" name="l00416"></a><span class="lineno">  416</span>simdutf_constexpr23 <span class="keywordtype">size_t</span> tail_encode_base64_impl(</div>
 <div class="line"><a id="l00417" name="l00417"></a><span class="lineno">  417</span>    <span class="keywordtype">char</span> *dst, <span class="keyword">const</span> <span class="keywordtype">char</span> *src, <span class="keywordtype">size_t</span> srclen, base64_options options,</div>
-<div class="line"><a id="l00418" name="l00418"></a><span class="lineno">  418</span>    <span class="keywordtype">size_t</span> line_length = simdutf::default_line_length, <span class="keywordtype">size_t</span> line_offset = 0) {</div>
+<div class="line"><a id="l00418" name="l00418"></a><span class="lineno">  418</span>    <span class="keywordtype">size_t</span> line_length = <a class="code hl_variable" href="namespacesimdutf.html#a19e7448b6d4db59b856018f1f13960c0">simdutf::default_line_length</a>, <span class="keywordtype">size_t</span> line_offset = 0) {</div>
 <div class="line"><a id="l00419" name="l00419"></a><span class="lineno">  419</span>  <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (use_lines) {</div>
 <div class="line"><a id="l00420" name="l00420"></a><span class="lineno">  420</span>    <span class="comment">// sanitize line_length and starting_line_offset.</span></div>
 <div class="line"><a id="l00421" name="l00421"></a><span class="lineno">  421</span>    <span class="comment">// line_length must be greater than 3.</span></div>
@@ -756,7 +756,7 @@ $(document).ready(function(){initNavTree('base64_8h_source.html',''); initResiza
 <div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span> </div>
 <div class="line"><a id="l00652" name="l00652"></a><span class="lineno">  652</span><span class="keyword">template</span> &lt;<span class="keyword">class</span> InputPtr&gt;</div>
 <div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span>simdutf_warn_unused simdutf_constexpr23 <span class="keywordtype">size_t</span></div>
-<div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span>maximal_binary_length_from_base64(InputPtr input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span> {</div>
+<div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span><a class="code hl_function" href="namespacesimdutf.html#a810eb628099188ef9309276a8226ca27">maximal_binary_length_from_base64</a>(InputPtr input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span> {</div>
 <div class="line"><a id="l00655" name="l00655"></a><span class="lineno">  655</span>  <span class="comment">// We process the padding characters (&#39;=&#39;) at the end to make sure</span></div>
 <div class="line"><a id="l00656" name="l00656"></a><span class="lineno">  656</span>  <span class="comment">// that we return an exact result when the input has no ignorable characters</span></div>
 <div class="line"><a id="l00657" name="l00657"></a><span class="lineno">  657</span>  <span class="comment">// (e.g., spaces).</span></div>
@@ -802,7 +802,7 @@ $(document).ready(function(){initNavTree('base64_8h_source.html',''); initResiza
 <div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span><span class="comment">// SIMD behavior. Only the last few characters are checked for padding &#39;=&#39;.</span></div>
 <div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span><span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="keywordtype">char</span>_type&gt;</div>
 <div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span>simdutf_warn_unused simdutf_constexpr23 <span class="keywordtype">size_t</span></div>
-<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span>binary_length_from_base64(<span class="keyword">const</span> char_type *input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span> {</div>
+<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span><a class="code hl_function" href="namespacesimdutf.html#ac42465da44ee0a5c60140c7e1edd5e8c">binary_length_from_base64</a>(<span class="keyword">const</span> char_type *input, <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span> {</div>
 <div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span>  <span class="comment">// Count non-whitespace characters (c &gt; &#39; &#39;) with loop unrolling</span></div>
 <div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span>  <span class="keywordtype">size_t</span> count = 0;</div>
 <div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span>  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; length; i++) {</div>
@@ -865,14 +865,14 @@ $(document).ready(function(){initNavTree('base64_8h_source.html',''); initResiza
 <div class="line"><a id="l00760" name="l00760"></a><span class="lineno">  760</span>      r.input_count &lt; full_input_length) {</div>
 <div class="line"><a id="l00761" name="l00761"></a><span class="lineno">  761</span>    <span class="comment">// First check if we can extend the input to the end of the stream</span></div>
 <div class="line"><a id="l00762" name="l00762"></a><span class="lineno">  762</span>    <span class="keywordflow">while</span> (r.input_count &lt; full_input_length &amp;&amp;</div>
-<div class="line"><a id="l00763" name="l00763"></a><span class="lineno">  763</span>           base64_ignorable(*(input + r.input_count), options)) {</div>
+<div class="line"><a id="l00763" name="l00763"></a><span class="lineno">  763</span>           <a class="code hl_function" href="namespacesimdutf.html#a0bd2c80917b6adbf5b692c148711a035">base64_ignorable</a>(*(input + r.input_count), options)) {</div>
 <div class="line"><a id="l00764" name="l00764"></a><span class="lineno">  764</span>      r.input_count++;</div>
 <div class="line"><a id="l00765" name="l00765"></a><span class="lineno">  765</span>    }</div>
 <div class="line"><a id="l00766" name="l00766"></a><span class="lineno">  766</span>    <span class="comment">// If we are still not at the end of the stream, then we must backtrack</span></div>
 <div class="line"><a id="l00767" name="l00767"></a><span class="lineno">  767</span>    <span class="comment">// to the last non-ignorable character.</span></div>
 <div class="line"><a id="l00768" name="l00768"></a><span class="lineno">  768</span>    <span class="keywordflow">if</span> (r.input_count &lt; full_input_length) {</div>
 <div class="line"><a id="l00769" name="l00769"></a><span class="lineno">  769</span>      <span class="keywordflow">while</span> (r.input_count &gt; 0 &amp;&amp;</div>
-<div class="line"><a id="l00770" name="l00770"></a><span class="lineno">  770</span>             base64_ignorable(*(input + r.input_count - 1), options)) {</div>
+<div class="line"><a id="l00770" name="l00770"></a><span class="lineno">  770</span>             <a class="code hl_function" href="namespacesimdutf.html#a0bd2c80917b6adbf5b692c148711a035">base64_ignorable</a>(*(input + r.input_count - 1), options)) {</div>
 <div class="line"><a id="l00771" name="l00771"></a><span class="lineno">  771</span>        r.input_count--;</div>
 <div class="line"><a id="l00772" name="l00772"></a><span class="lineno">  772</span>      }</div>
 <div class="line"><a id="l00773" name="l00773"></a><span class="lineno">  773</span>    }</div>
@@ -922,14 +922,14 @@ $(document).ready(function(){initNavTree('base64_8h_source.html',''); initResiza
 <div class="line"><a id="l00817" name="l00817"></a><span class="lineno">  817</span>      r.input_count &lt; full_input_length) {</div>
 <div class="line"><a id="l00818" name="l00818"></a><span class="lineno">  818</span>    <span class="comment">// First check if we can extend the input to the end of the stream</span></div>
 <div class="line"><a id="l00819" name="l00819"></a><span class="lineno">  819</span>    <span class="keywordflow">while</span> (r.input_count &lt; full_input_length &amp;&amp;</div>
-<div class="line"><a id="l00820" name="l00820"></a><span class="lineno">  820</span>           base64_ignorable(*(input + r.input_count), options)) {</div>
+<div class="line"><a id="l00820" name="l00820"></a><span class="lineno">  820</span>           <a class="code hl_function" href="namespacesimdutf.html#a0bd2c80917b6adbf5b692c148711a035">base64_ignorable</a>(*(input + r.input_count), options)) {</div>
 <div class="line"><a id="l00821" name="l00821"></a><span class="lineno">  821</span>      r.input_count++;</div>
 <div class="line"><a id="l00822" name="l00822"></a><span class="lineno">  822</span>    }</div>
 <div class="line"><a id="l00823" name="l00823"></a><span class="lineno">  823</span>    <span class="comment">// If we are still not at the end of the stream, then we must backtrack</span></div>
 <div class="line"><a id="l00824" name="l00824"></a><span class="lineno">  824</span>    <span class="comment">// to the last non-ignorable character.</span></div>
 <div class="line"><a id="l00825" name="l00825"></a><span class="lineno">  825</span>    <span class="keywordflow">if</span> (r.input_count &lt; full_input_length) {</div>
 <div class="line"><a id="l00826" name="l00826"></a><span class="lineno">  826</span>      <span class="keywordflow">while</span> (r.input_count &gt; 0 &amp;&amp;</div>
-<div class="line"><a id="l00827" name="l00827"></a><span class="lineno">  827</span>             base64_ignorable(*(input + r.input_count - 1), options)) {</div>
+<div class="line"><a id="l00827" name="l00827"></a><span class="lineno">  827</span>             <a class="code hl_function" href="namespacesimdutf.html#a0bd2c80917b6adbf5b692c148711a035">base64_ignorable</a>(*(input + r.input_count - 1), options)) {</div>
 <div class="line"><a id="l00828" name="l00828"></a><span class="lineno">  828</span>        r.input_count--;</div>
 <div class="line"><a id="l00829" name="l00829"></a><span class="lineno">  829</span>      }</div>
 <div class="line"><a id="l00830" name="l00830"></a><span class="lineno">  830</span>    }</div>
@@ -938,7 +938,7 @@ $(document).ready(function(){initNavTree('base64_8h_source.html',''); initResiza
 <div class="line"><a id="l00833" name="l00833"></a><span class="lineno">  833</span>}</div>
 <div class="line"><a id="l00834" name="l00834"></a><span class="lineno">  834</span> </div>
 <div class="line"><a id="l00835" name="l00835"></a><span class="lineno">  835</span>simdutf_warn_unused simdutf_constexpr23 <span class="keywordtype">size_t</span></div>
-<div class="line"><a id="l00836" name="l00836"></a><span class="lineno">  836</span>base64_length_from_binary(<span class="keywordtype">size_t</span> length, base64_options options) <span class="keyword">noexcept</span> {</div>
+<div class="line"><a id="l00836" name="l00836"></a><span class="lineno">  836</span><a class="code hl_function" href="namespacesimdutf.html#a0840933d2a92a1f74fc6626af5ec76ef">base64_length_from_binary</a>(<span class="keywordtype">size_t</span> length, base64_options options) <span class="keyword">noexcept</span> {</div>
 <div class="line"><a id="l00837" name="l00837"></a><span class="lineno">  837</span>  <span class="comment">// By default, we use padding if we are not using the URL variant.</span></div>
 <div class="line"><a id="l00838" name="l00838"></a><span class="lineno">  838</span>  <span class="comment">// This is check with ((options &amp; base64_url) == 0) which returns true if we</span></div>
 <div class="line"><a id="l00839" name="l00839"></a><span class="lineno">  839</span>  <span class="comment">// are not using the URL variant. However, we also allow &#39;inversion&#39; of the</span></div>
@@ -958,7 +958,7 @@ $(document).ready(function(){initNavTree('base64_8h_source.html',''); initResiza
 <div class="line"><a id="l00853" name="l00853"></a><span class="lineno">  853</span>}</div>
 <div class="line"><a id="l00854" name="l00854"></a><span class="lineno">  854</span> </div>
 <div class="line"><a id="l00855" name="l00855"></a><span class="lineno">  855</span>simdutf_warn_unused simdutf_constexpr23 <span class="keywordtype">size_t</span></div>
-<div class="line"><a id="l00856" name="l00856"></a><span class="lineno">  856</span>base64_length_from_binary_with_lines(<span class="keywordtype">size_t</span> length, base64_options options,</div>
+<div class="line"><a id="l00856" name="l00856"></a><span class="lineno">  856</span><a class="code hl_function" href="namespacesimdutf.html#acf55e4fb906e835413896c4ef2883cbd">base64_length_from_binary_with_lines</a>(<span class="keywordtype">size_t</span> length, base64_options options,</div>
 <div class="line"><a id="l00857" name="l00857"></a><span class="lineno">  857</span>                                     <span class="keywordtype">size_t</span> line_length) <span class="keyword">noexcept</span> {</div>
 <div class="line"><a id="l00858" name="l00858"></a><span class="lineno">  858</span>  <span class="keywordflow">if</span> (length == 0) {</div>
 <div class="line"><a id="l00859" name="l00859"></a><span class="lineno">  859</span>    <span class="keywordflow">return</span> 0;</div>
@@ -1011,6 +1011,14 @@ $(document).ready(function(){initNavTree('base64_8h_source.html',''); initResiza
 <div class="line"><a id="l00906" name="l00906"></a><span class="lineno">  906</span>} <span class="comment">// namespace simdutf</span></div>
 <div class="line"><a id="l00907" name="l00907"></a><span class="lineno">  907</span> </div>
 <div class="line"><a id="l00908" name="l00908"></a><span class="lineno">  908</span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="anamespacesimdutf_html"><div class="ttname"><a href="namespacesimdutf.html">simdutf</a></div><div class="ttdoc">helpers placed in namespace detail are not a part of the public API</div><div class="ttdef"><b>Definition</b> <a href="base64__implementation_8h_source.html#l00008">base64_implementation.h:8</a></div></div>
+<div class="ttc" id="anamespacesimdutf_html_a0840933d2a92a1f74fc6626af5ec76ef"><div class="ttname"><a href="namespacesimdutf.html#a0840933d2a92a1f74fc6626af5ec76ef">simdutf::base64_length_from_binary</a></div><div class="ttdeci">simdutf_warn_unused simdutf_constexpr23 size_t base64_length_from_binary(size_t length, base64_options options=base64_default) noexcept</div><div class="ttdoc">Provide the base64 length in bytes given the length of a binary input.</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l04446">implementation.h:4446</a></div></div>
+<div class="ttc" id="anamespacesimdutf_html_a0bd2c80917b6adbf5b692c148711a035"><div class="ttname"><a href="namespacesimdutf.html#a0bd2c80917b6adbf5b692c148711a035">simdutf::base64_ignorable</a></div><div class="ttdeci">simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 bool base64_ignorable(char input, base64_options options=base64_default) noexcept</div><div class="ttdoc">Check if a character is an ignorable base64 character.</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l04862">implementation.h:4862</a></div></div>
+<div class="ttc" id="anamespacesimdutf_html_a112c60be200a3c38c2d0ead5c22d3f3f"><div class="ttname"><a href="namespacesimdutf.html#a112c60be200a3c38c2d0ead5c22d3f3f">simdutf::find</a></div><div class="ttdeci">simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 const char * find(const char *start, const char *end, char character) noexcept</div><div class="ttdoc">Find the first occurrence of a character in a string.</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l04158">implementation.h:4158</a></div></div>
+<div class="ttc" id="anamespacesimdutf_html_a19e7448b6d4db59b856018f1f13960c0"><div class="ttname"><a href="namespacesimdutf.html#a19e7448b6d4db59b856018f1f13960c0">simdutf::default_line_length</a></div><div class="ttdeci">constexpr size_t default_line_length</div><div class="ttdoc">default line length for base64 encoding with lines</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l00187">implementation.h:187</a></div></div>
+<div class="ttc" id="anamespacesimdutf_html_a810eb628099188ef9309276a8226ca27"><div class="ttname"><a href="namespacesimdutf.html#a810eb628099188ef9309276a8226ca27">simdutf::maximal_binary_length_from_base64</a></div><div class="ttdeci">simdutf_warn_unused size_t maximal_binary_length_from_base64(const char *input, size_t length) noexcept</div><div class="ttdoc">Provide the maximal binary length in bytes given the base64 input.</div></div>
+<div class="ttc" id="anamespacesimdutf_html_ac42465da44ee0a5c60140c7e1edd5e8c"><div class="ttname"><a href="namespacesimdutf.html#ac42465da44ee0a5c60140c7e1edd5e8c">simdutf::binary_length_from_base64</a></div><div class="ttdeci">simdutf_warn_unused size_t binary_length_from_base64(const char *input, size_t length) noexcept</div><div class="ttdoc">Compute the binary length from a base64 input.</div></div>
+<div class="ttc" id="anamespacesimdutf_html_acf55e4fb906e835413896c4ef2883cbd"><div class="ttname"><a href="namespacesimdutf.html#acf55e4fb906e835413896c4ef2883cbd">simdutf::base64_length_from_binary_with_lines</a></div><div class="ttdeci">simdutf_warn_unused simdutf_constexpr23 size_t base64_length_from_binary_with_lines(size_t length, base64_options options=base64_default, size_t line_length=default_line_length) noexcept</div><div class="ttdoc">Provide the base64 length in bytes given the length of a binary input, taking into account line break...</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l04462">implementation.h:4462</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

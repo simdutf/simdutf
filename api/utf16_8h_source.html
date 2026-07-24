@@ -106,7 +106,7 @@ $(document).ready(function(){initNavTree('utf16_8h_source.html',''); initResizab
 <div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#ifndef SIMDUTF_UTF16_H</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#define SIMDUTF_UTF16_H</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="keyword">namespace </span>simdutf {</div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacesimdutf.html">simdutf</a> {</div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="keyword">namespace </span>scalar {</div>
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="keyword">namespace </span>utf16 {</div>
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
@@ -192,7 +192,7 @@ $(document).ready(function(){initNavTree('utf16_8h_source.html',''); initResizab
 <div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>}</div>
 <div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span> </div>
 <div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span><span class="keyword">template</span> &lt;endianness big_endian&gt;</div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>simdutf_constexpr23 <span class="keywordtype">size_t</span> utf8_length_from_utf16(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *p,</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>simdutf_constexpr23 <span class="keywordtype">size_t</span> <a class="code hl_function" href="namespacesimdutf.html#af94bd238016344ff84fc64dd59c11db8">utf8_length_from_utf16</a>(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *p,</div>
 <div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>                                                  <span class="keywordtype">size_t</span> len) {</div>
 <div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>  <span class="comment">// We are not BOM aware.</span></div>
 <div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>  <span class="keywordtype">size_t</span> counter{0};</div>
@@ -209,7 +209,7 @@ $(document).ready(function(){initNavTree('utf16_8h_source.html',''); initResizab
 <div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>}</div>
 <div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
 <div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span><span class="keyword">template</span> &lt;endianness big_endian&gt;</div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>simdutf_constexpr23 <span class="keywordtype">size_t</span> utf32_length_from_utf16(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *p,</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>simdutf_constexpr23 <span class="keywordtype">size_t</span> <a class="code hl_function" href="namespacesimdutf.html#ae4457c6b706f3ef3cd37702582874640">utf32_length_from_utf16</a>(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *p,</div>
 <div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>                                                   <span class="keywordtype">size_t</span> len) {</div>
 <div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>  <span class="comment">// We are not BOM aware.</span></div>
 <div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>  <span class="keywordtype">size_t</span> counter{0};</div>
@@ -221,7 +221,7 @@ $(document).ready(function(){initNavTree('utf16_8h_source.html',''); initResizab
 <div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>}</div>
 <div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span> </div>
 <div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>simdutf_really_inline simdutf_constexpr23 <span class="keywordtype">void</span></div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>change_endianness_utf16(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input, <span class="keywordtype">size_t</span> size, <span class="keywordtype">char16_t</span> *output) {</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span><a class="code hl_function" href="namespacesimdutf.html#a469ead7666feebbe482f2af34aeb9746">change_endianness_utf16</a>(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input, <span class="keywordtype">size_t</span> size, <span class="keywordtype">char16_t</span> *output) {</div>
 <div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; size; i++) {</div>
 <div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>    *output++ = char16_t(input[i] &gt;&gt; 8 | input[i] &lt;&lt; 8);</div>
 <div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>  }</div>
@@ -229,7 +229,7 @@ $(document).ready(function(){initNavTree('utf16_8h_source.html',''); initResizab
 <div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span> </div>
 <div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span><span class="keyword">template</span> &lt;endianness big_endian&gt;</div>
 <div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>simdutf_warn_unused simdutf_constexpr23 <span class="keywordtype">size_t</span></div>
-<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>trim_partial_utf16(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input, <span class="keywordtype">size_t</span> length) {</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span><a class="code hl_function" href="namespacesimdutf.html#a776121f0f161fb2be1f7b6bc1dbbfb7b">trim_partial_utf16</a>(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input, <span class="keywordtype">size_t</span> length) {</div>
 <div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>  <span class="keywordflow">if</span> (length == 0) {</div>
 <div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>    <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>  }</div>
@@ -255,7 +255,7 @@ $(document).ready(function(){initNavTree('utf16_8h_source.html',''); initResizab
 <div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span> </div>
 <div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span><span class="keyword">template</span> &lt;endianness big_endian&gt;</div>
 <div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>simdutf_constexpr23 result</div>
-<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>utf8_length_from_utf16_with_replacement(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *p, <span class="keywordtype">size_t</span> len) {</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span><a class="code hl_function" href="namespacesimdutf.html#a477fc442ecc7c0de526ccacff409b911">utf8_length_from_utf16_with_replacement</a>(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *p, <span class="keywordtype">size_t</span> len) {</div>
 <div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>  <span class="keywordtype">bool</span> any_surrogates = <span class="keyword">false</span>;</div>
 <div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>  <span class="comment">// We are not BOM aware.</span></div>
 <div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>  <span class="keywordtype">size_t</span> counter{0};</div>
@@ -291,7 +291,7 @@ $(document).ready(function(){initNavTree('utf16_8h_source.html',''); initResizab
 <div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>}</div>
 <div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span> </div>
 <div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span><span class="keyword">template</span> &lt;endianness big_endian&gt;</div>
-<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>simdutf_constexpr23 <span class="keywordtype">void</span> to_well_formed_utf16(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input, <span class="keywordtype">size_t</span> len,</div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>simdutf_constexpr23 <span class="keywordtype">void</span> <a class="code hl_function" href="namespacesimdutf.html#af99654aaf30af57654c8e472a0ddfca7">to_well_formed_utf16</a>(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input, <span class="keywordtype">size_t</span> len,</div>
 <div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>                                              <span class="keywordtype">char16_t</span> *output) {</div>
 <div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>  <span class="keyword">const</span> <span class="keywordtype">char16_t</span> replacement = utf16::replacement&lt;big_endian&gt;();</div>
 <div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>  <span class="keywordtype">bool</span> high_surrogate_prev = <span class="keyword">false</span>, high_surrogate, low_surrogate;</div>
@@ -323,6 +323,13 @@ $(document).ready(function(){initNavTree('utf16_8h_source.html',''); initResizab
 <div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>} <span class="comment">// namespace simdutf</span></div>
 <div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span> </div>
 <div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="anamespacesimdutf_html"><div class="ttname"><a href="namespacesimdutf.html">simdutf</a></div><div class="ttdoc">helpers placed in namespace detail are not a part of the public API</div><div class="ttdef"><b>Definition</b> <a href="base64__implementation_8h_source.html#l00008">base64_implementation.h:8</a></div></div>
+<div class="ttc" id="anamespacesimdutf_html_a469ead7666feebbe482f2af34aeb9746"><div class="ttname"><a href="namespacesimdutf.html#a469ead7666feebbe482f2af34aeb9746">simdutf::change_endianness_utf16</a></div><div class="ttdeci">void change_endianness_utf16(const char16_t *input, size_t length, char16_t *output) noexcept</div><div class="ttdoc">Change the endianness of the input.</div></div>
+<div class="ttc" id="anamespacesimdutf_html_a477fc442ecc7c0de526ccacff409b911"><div class="ttname"><a href="namespacesimdutf.html#a477fc442ecc7c0de526ccacff409b911">simdutf::utf8_length_from_utf16_with_replacement</a></div><div class="ttdeci">simdutf_warn_unused result utf8_length_from_utf16_with_replacement(const char16_t *input, size_t length) noexcept</div><div class="ttdoc">Using native endianness; compute the number of bytes that this UTF-16 string would require in UTF-8 f...</div></div>
+<div class="ttc" id="anamespacesimdutf_html_a776121f0f161fb2be1f7b6bc1dbbfb7b"><div class="ttname"><a href="namespacesimdutf.html#a776121f0f161fb2be1f7b6bc1dbbfb7b">simdutf::trim_partial_utf16</a></div><div class="ttdeci">simdutf_warn_unused size_t trim_partial_utf16(const char16_t *input, size_t length)</div><div class="ttdoc">Given a valid UTF-16 string having a possibly truncated last character, this function checks the end ...</div></div>
+<div class="ttc" id="anamespacesimdutf_html_ae4457c6b706f3ef3cd37702582874640"><div class="ttname"><a href="namespacesimdutf.html#ae4457c6b706f3ef3cd37702582874640">simdutf::utf32_length_from_utf16</a></div><div class="ttdeci">simdutf_warn_unused size_t utf32_length_from_utf16(const char16_t *input, size_t length) noexcept</div><div class="ttdoc">Using native endianness; Compute the number of bytes that this UTF-16 string would require in UTF-32 ...</div></div>
+<div class="ttc" id="anamespacesimdutf_html_af94bd238016344ff84fc64dd59c11db8"><div class="ttname"><a href="namespacesimdutf.html#af94bd238016344ff84fc64dd59c11db8">simdutf::utf8_length_from_utf16</a></div><div class="ttdeci">simdutf_warn_unused size_t utf8_length_from_utf16(const char16_t *input, size_t length) noexcept</div><div class="ttdoc">Using native endianness; Compute the number of bytes that this UTF-16 string would require in UTF-8 f...</div></div>
+<div class="ttc" id="anamespacesimdutf_html_af99654aaf30af57654c8e472a0ddfca7"><div class="ttname"><a href="namespacesimdutf.html#af99654aaf30af57654c8e472a0ddfca7">simdutf::to_well_formed_utf16</a></div><div class="ttdeci">void to_well_formed_utf16(const char16_t *input, size_t len, char16_t *output) noexcept</div><div class="ttdoc">Fixes an ill-formed UTF-16 string by replacing mismatched surrogates with the Unicode replacement cha...</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
