@@ -319,7 +319,7 @@ trim_partial_utf8(InputPtr input, size_t length) {
   return length;
 }
 
-size_t code_point_size(uint32_t code_point) {
+simdutf_unused size_t code_point_size(uint32_t code_point) {
   if (code_point <= 0x7F) {
     return 1;
   } else if (code_point <= 0x7FF) {
@@ -333,7 +333,7 @@ size_t code_point_size(uint32_t code_point) {
   }
 }
 
-size_t write_code_point(uint32_t code_point, char *utf8_output) {
+simdutf_unused size_t write_code_point(uint32_t code_point, char *utf8_output) {
   if ((code_point & 0xFFFFFF80) == 0) {
     *utf8_output++ = char(code_point);
     return 1;
@@ -355,13 +355,14 @@ size_t write_code_point(uint32_t code_point, char *utf8_output) {
   }
 }
 
-void write_3_byte_code_point(uint16_t code_point, char *utf8_output) {
+simdutf_unused void write_3_byte_code_point(uint16_t code_point,
+                                            char *utf8_output) {
   utf8_output[0] = char(0xE0 | (code_point >> 12));
   utf8_output[1] = char(0x80 | ((code_point >> 6) & 0x3F));
   utf8_output[2] = char(0x80 | (code_point & 0x3F));
 }
 
-uint32_t parse_code_point(const char *input, uint8_t *size) {
+simdutf_unused uint32_t parse_code_point(const char *input, uint8_t *size) {
   uint8_t leading = *input;
   if (leading < 0b10000000) {
     *size = 1;
