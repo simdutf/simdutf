@@ -59,6 +59,8 @@ namespace {
 constexpr std::size_t min(std::size_t a, std::size_t b) {
   return a < b ? a : b;
 }
+template <typename T, typename U>
+constexpr std::size_t min(const T &a, const U &b) = delete;
 } // namespace
 } // namespace detail
 } // namespace simdutf
