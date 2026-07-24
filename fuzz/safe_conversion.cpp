@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cassert>
 #include <cstdlib>
 #include <vector>
@@ -47,7 +48,8 @@ void test_utf16_to_utf8(std::span<const char16_t> input,
       simdutf::convert_utf16_to_utf8(input, reference);
 
   // ensure output is equal to the beginning of reference
-  const auto Ncompare = std::min(written_bytes_safe, written_bytes_unsafe);
+  const auto Ncompare =
+      simdutf::detail::min(written_bytes_safe, written_bytes_unsafe);
   const auto matches =
       std::ranges::equal(std::span(output).subspan(0, Ncompare),
                          std::span(reference).subspan(0, Ncompare));

@@ -3,7 +3,6 @@
 
 // this is not part of the public api
 
-#include <algorithm>   // for std::min
 #include <type_traits> // for is_same
 
 namespace simdutf {
@@ -71,7 +70,7 @@ simdutf_warn_unused simdutf_constexpr23 result base64_to_binary_safe_impl(
   size_t output_position = 0;
 
   // We also do a first pass using the fast path to decode as much as possible
-  size_t safe_input = (std::min)(
+  size_t safe_input = detail::min(
       remaining_input_length,
       base64_length_from_binary(remaining_output_length / 3 * 3, options));
   bool done_with_partial = (safe_input == remaining_input_length);

@@ -1,5 +1,4 @@
 #include "simdutf.h"
-#include <algorithm>
 #include <climits>
 #include <type_traits>
 #include <utility>
@@ -1817,7 +1816,7 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
   result r;
   while (!last_chunk) {
     last_chunk |= (temp_buffer.size() >= outlen - actual_out);
-    size_t temp_outlen = (std::min)(temp_buffer.size(), outlen - actual_out);
+    size_t temp_outlen = (detail::min)(temp_buffer.size(), outlen - actual_out);
     r = base64_to_binary_safe(input, length, temp_buffer.data(), temp_outlen,
                               options, last_chunk_handling_options,
                               decode_up_to_bad_char);
@@ -1972,7 +1971,7 @@ convert_utf16_to_utf8_safe(const char16_t *buf, size_t len, char *utf8_output,
     // The worst case for convert_utf16_to_utf8 is when you go from 1 char16_t
     // to 3 characters of UTF-8. So we can read at most utf8_len / 3 char16_t
     // characters.
-    auto read_len = std::min(len, utf8_len / 3);
+    auto read_len = detail::min(len, utf8_len / 3);
     if (read_len <= 16) {
       break;
     }
@@ -2551,7 +2550,7 @@ size_t atomic_binary_to_base64(const char *input, size_t length, char *output,
     #endif
   std::array<char, input_block_size> inbuf;
   for (size_t i = 0; i < length; i += input_block_size) {
-    const size_t current_block_size = std::min(input_block_size, length - i);
+    const size_t current_block_size = detail::min(input_block_size, length - i);
     simdutf::scalar::memcpy_atomic_read(inbuf.data(), input + i,
                                         current_block_size);
     const size_t written = binary_to_base64(inbuf.data(), current_block_size,
@@ -2571,7 +2570,7 @@ simdutf_warn_unused size_t convert_latin1_to_utf8_safe(
 
   while (true) {
     // convert_latin1_to_utf8 will never write more than input length * 2
-    auto read_len = std::min(len, utf8_len >> 1);
+    auto read_len = detail::min(len, utf8_len >> 1);
     if (read_len <= 16) {
       break;
     }

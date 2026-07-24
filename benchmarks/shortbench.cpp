@@ -498,7 +498,7 @@ int main(int argc, char *argv[]) {
     } else {
       data = read_file(filename);
       file_size = data.size();
-      actual_max = std::min(max_size, file_size);
+      actual_max = simdutf::detail::min(max_size, file_size);
       input_desc = std::string("file: ") + filename;
     }
 
