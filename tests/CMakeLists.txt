@@ -76,6 +76,11 @@ target_link_libraries(validate_utf8_with_counts_brute_force_tests
   PUBLIC simdutf::tests::helpers
          simdutf::tests::reference)
 
+add_cpp_test(validate_utf8_with_counts_boundary_tests)
+target_link_libraries(validate_utf8_with_counts_boundary_tests
+  PUBLIC simdutf::tests::helpers
+         simdutf::tests::reference)
+
 add_cpp_test(validate_utf8_puzzler_tests)
 target_link_libraries(validate_utf8_puzzler_tests
   PUBLIC simdutf::tests::helpers
