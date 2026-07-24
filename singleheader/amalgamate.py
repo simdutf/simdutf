@@ -77,6 +77,12 @@ known_features = {
     'SIMDUTF_FEATURE_UTF8',
     'SIMDUTF_FEATURE_UTF16',
     'SIMDUTF_FEATURE_UTF32',
+    # Meta feature: the four normalization forms below default to its value.
+    'SIMDUTF_FEATURE_NORMALIZATION',
+    'SIMDUTF_FEATURE_NFD',
+    'SIMDUTF_FEATURE_NFKD',
+    'SIMDUTF_FEATURE_NFC',
+    'SIMDUTF_FEATURE_NFKC',
 }
 
 
