@@ -39,6 +39,24 @@ option(SIMDUTF_LOGGING "Whether to enable logging (this should never be used in 
 option(SIMDUTF_USE_STATIC_INITIALIZATION "Whether to use translation-unit-scope static variables for implementation singletons (faster, but unsafe before main() when used in a library)." OFF)
 option(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION "Whether to enable unsafe fuzzing mode." OFF)
 
+##
+## Unicode normalization. OFF by default: the generated tables add roughly
+## 430 kB to the binary. SIMDUTF_NORMALIZATION turns on all four forms; the
+## per-form options below enable them individually.
+##
+option(SIMDUTF_NORMALIZATION "Whether to enable all Unicode normalization forms (NFD, NFKD, NFC, NFKC). Adds ~430kB to the binary." OFF)
+option(SIMDUTF_NFD "Whether to enable NFD normalization." OFF)
+option(SIMDUTF_NFKD "Whether to enable NFKD normalization." OFF)
+option(SIMDUTF_NFC "Whether to enable NFC normalization." OFF)
+option(SIMDUTF_NFKC "Whether to enable NFKC normalization." OFF)
+# True when at least one normalization form is enabled. Used to decide whether
+# the normalization tests/benchmarks can be built at all.
+if(SIMDUTF_NORMALIZATION OR SIMDUTF_NFD OR SIMDUTF_NFKD OR SIMDUTF_NFC OR SIMDUTF_NFKC)
+  set(SIMDUTF_ANY_NORMALIZATION ON)
+else()
+  set(SIMDUTF_ANY_NORMALIZATION OFF)
+endif()
+
 set(SIMDUTF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(src)
