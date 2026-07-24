@@ -313,6 +313,29 @@ validate_utf8_with_errors(
   #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF8
 
+#if SIMDUTF_FEATURE_UTF8
+/**
+ * Validate the UTF-8 string and stop on error, while counting the number of
+ * continuation bytes and of four-byte sequences in the valid prefix.
+ *
+ * Overridden by each implementation.
+ *
+ * These two counts are enough to derive, without a second pass over the input,
+ * both the number of code points (input_count - continuation_count) and the
+ * number of UTF-16 code units (input_count - continuation_count +
+ * four_byte_count) of the valid prefix. The utf16_length() helper returns the
+ * latter.
+ *
+ * @param buf the UTF-8 string to validate.
+ * @param len the length of the string in bytes.
+ * @return a utf8_result struct with an error code, the number of bytes in the
+ * valid prefix (input_count), and the counts of continuation bytes and of
+ * four-byte sequences within it.
+ */
+simdutf_warn_unused utf8_result validate_utf8_with_counts(const char *buf,
+                                                          size_t len) noexcept;
+#endif // SIMDUTF_FEATURE_UTF8
+
 #if SIMDUTF_FEATURE_ASCII
 /**
  * Validate the ASCII string.

@@ -550,6 +550,24 @@ simdutf_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept;
 simdutf_warn_unused result validate_utf8_with_errors(const char *buf, size_t len) noexcept;
 
 /**
+ * Validate the UTF-8 string and stop on error, while counting the number of
+ * continuation bytes and of four-byte sequences in the valid prefix.
+ *
+ * These two counts are enough to derive, without a second pass over the input,
+ * both the number of code points (input_count - continuation_count) and the
+ * number of UTF-16 code units (input_count - continuation_count +
+ * four_byte_count) of the valid prefix. The utf16_length() helper returns the
+ * latter.
+ *
+ * @param buf the UTF-8 string to validate.
+ * @param len the length of the string in bytes.
+ * @return a utf8_result struct with an error code, the number of bytes in the
+ * valid prefix (input_count), and the counts of continuation bytes and of
+ * four-byte sequences within it.
+ */
+simdutf_warn_unused utf8_result validate_utf8_with_counts(const char *buf, size_t len) noexcept;
+
+/**
  * Using native endianness; Validate the UTF-16 string.
  * This function may be best when you expect the input to be almost always valid.
  * Otherwise, consider using validate_utf16_with_errors.
@@ -648,7 +666,43 @@ simdutf_warn_unused result validate_utf32_with_errors(const char32_t *buf, size_
 
 ```
 
-Given a potentially invalid UTF-16 input, you may want to make it correct, by using a replacement character whenever needed. We have fast functions for this purpose (`to_well_formed_utf16`, `to_well_formed_utf16le`, and `to_well_formed_utf16be`). They can either copy the string while fixing it, or they can be used to fix a string in-place.
+The `validate_utf8_with_counts` function returns a `simdutf::utf8_result`
+instead of a `simdutf::result`:
+
+```cpp
+struct utf8_result {
+  error_code error;
+  size_t input_count;        // number of bytes in the valid prefix
+  size_t continuation_count; // continuation bytes within the valid prefix
+  size_t four_byte_count;    // four-byte sequences within the valid prefix
+
+  // input_count - continuation_count + four_byte_count
+  size_t utf16_length() const noexcept;
+};
+```
+
+On success, `input_count` is the length of the whole input; otherwise it is the
+number of bytes preceding the first invalid byte. Because every byte is either a
+leading byte or a continuation byte, these counts give you the size of the
+corresponding UTF-16 output and the number of code points directly, without a
+second pass over the input:
+
+```cpp
+  std::string utf8 = "cœur 😀";
+  simdutf::utf8_result res = simdutf::validate_utf8_with_counts(utf8.data(), utf8.size());
+  if (res.error == simdutf::error_code::SUCCESS) {
+    size_t utf16_words = res.utf16_length();                        // UTF-16 code units
+    size_t code_points = res.input_count - res.continuation_count;  // Unicode code points
+  } else {
+    std::cerr << "invalid UTF-8 after " << res.input_count << " bytes" << std::endl;
+  }
+```
+
+Given a potentially invalid UTF-16 input, you may want to make it correct, by using
+a replacement character whenever needed. We have fast functions for this purpose
+(`to_well_formed_utf16`, `to_well_formed_utf16le`, and `to_well_formed_utf16be`).
+They can either copy the string while fixing it, or they can be used to fix
+a string in-place.
 
 ```cpp
 
