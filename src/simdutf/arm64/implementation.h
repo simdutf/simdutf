@@ -361,31 +361,27 @@ public:
                            char16_t *output) const noexcept override;
   simdutf_warn_unused bool
   normalize_utf16le_to_nfc_check(const char16_t *input, size_t length,
-                                 size_t *output_length) const
-      noexcept override;
+                                 size_t *output_length) const noexcept override;
   simdutf_warn_unused size_t
   normalize_utf16be_to_nfc(const char16_t *input, size_t length,
                            char16_t *output) const noexcept override;
   simdutf_warn_unused bool
   normalize_utf16be_to_nfc_check(const char16_t *input, size_t length,
-                                 size_t *output_length) const
-      noexcept override;
+                                 size_t *output_length) const noexcept override;
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFC
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFKC
   simdutf_warn_unused size_t
   normalize_utf16le_to_nfkc(const char16_t *input, size_t length,
                             char16_t *output) const noexcept override;
-  simdutf_warn_unused bool
-  normalize_utf16le_to_nfkc_check(const char16_t *input, size_t length,
-                                  size_t *output_length) const
-      noexcept override;
+  simdutf_warn_unused bool normalize_utf16le_to_nfkc_check(
+      const char16_t *input, size_t length,
+      size_t *output_length) const noexcept override;
   simdutf_warn_unused size_t
   normalize_utf16be_to_nfkc(const char16_t *input, size_t length,
                             char16_t *output) const noexcept override;
-  simdutf_warn_unused bool
-  normalize_utf16be_to_nfkc_check(const char16_t *input, size_t length,
-                                  size_t *output_length) const
-      noexcept override;
+  simdutf_warn_unused bool normalize_utf16be_to_nfkc_check(
+      const char16_t *input, size_t length,
+      size_t *output_length) const noexcept override;
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFKC
 };
 

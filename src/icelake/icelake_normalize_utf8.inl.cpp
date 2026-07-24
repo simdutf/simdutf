@@ -112,10 +112,10 @@ size_t normalize_masked_utf8_to_decomposed(const uint8_t *input, uint64_t mask,
 
 // NF(K)D quick check + output-length estimate for a 12-byte window.
 template <DecomposedForm form>
-size_t normalize_masked_utf8_to_decomposed_check(const uint8_t *input,
-                                                 uint64_t mask,
-                                                 size_t *out_length, bool *is_qc,
-                                                 uint8_t *last_ccc) {
+size_t
+normalize_masked_utf8_to_decomposed_check(const uint8_t *input, uint64_t mask,
+                                          size_t *out_length, bool *is_qc,
+                                          uint8_t *last_ccc) {
   int t1 = int(_tzcnt_u64(~mask));
   if (t1 > 0) {
     size_t min = t1 > 52 ? 52 : size_t(t1);
@@ -150,8 +150,9 @@ size_t normalize_masked_utf8_to_decomposed_check(const uint8_t *input,
                             (uint32_t(uint8_t(data[pos + 1]) & 0x3F) << 12) |
                             (uint32_t(uint8_t(data[pos + 2]) & 0x3F) << 6) |
                             (uint8_t(data[pos + 3]) & 0x3F);
-      *is_qc &= scalar::utf8_to_decomposed::check_code_point_supplementary<form>(
-          code_point, out_length, &ccc);
+      *is_qc &=
+          scalar::utf8_to_decomposed::check_code_point_supplementary<form>(
+              code_point, out_length, &ccc);
       pos += 4;
     }
     if (*last_ccc > ccc && ccc != 0) {
@@ -165,9 +166,10 @@ size_t normalize_masked_utf8_to_decomposed_check(const uint8_t *input,
 
 // Compose (NF(K)C) up to a 12-byte window of UTF-8. Returns bytes consumed.
 // Stable (composition-irrelevant, canonically-ordered) code points are copied
-// verbatim; on the first relevant/combining code point we delegate the enclosing
-// canonical region to the shared scalar composer, which expands to the true
-// stable-starter boundaries and returns how many input bytes it consumed.
+// verbatim; on the first relevant/combining code point we delegate the
+// enclosing canonical region to the shared scalar composer, which expands to
+// the true stable-starter boundaries and returns how many input bytes it
+// consumed.
 template <ComposedForm form>
 size_t normalize_masked_utf8_to_composed(const uint8_t *input,
                                          const uint8_t *input_base,
@@ -213,7 +215,8 @@ size_t normalize_masked_utf8_to_composed(const uint8_t *input,
           (uint8_t(data[pos + 3]) & 0x3F);
     }
     if (c <= 0xFFFF) {
-      uint16_t value = scalar::normalization::lookup_comp_trie<form>(uint16_t(c));
+      uint16_t value =
+          scalar::normalization::lookup_comp_trie<form>(uint16_t(c));
       ccc = uint8_t(value >> 2);
       is_relevant = (value & 0b11) > 0;
     } else {
@@ -258,8 +261,9 @@ size_t normalize_masked_utf8_to_composed(const uint8_t *input,
 // NF(K)C quick check + output-length estimate for a 12-byte window.
 template <ComposedForm form>
 size_t normalize_masked_utf8_to_composed_check(const uint8_t *input,
-                                               uint64_t mask, size_t *out_length,
-                                               bool *is_qc, uint8_t *last_ccc) {
+                                               uint64_t mask,
+                                               size_t *out_length, bool *is_qc,
+                                               uint8_t *last_ccc) {
   int t1 = int(_tzcnt_u64(~mask));
   if (t1 > 0) {
     size_t min = t1 > 52 ? 52 : size_t(t1);
@@ -381,8 +385,8 @@ bool icelake_normalize_utf8_to_decomposed_check(const char *in, size_t length,
     size_t pmax = (p + 64) - 12;
     while (p < pmax) {
       size_t consumed = normalize_masked_utf8_to_decomposed_check<form>(
-          reinterpret_cast<const uint8_t *>(in + p), mask, output_length, &is_qc,
-          &last_ccc);
+          reinterpret_cast<const uint8_t *>(in + p), mask, output_length,
+          &is_qc, &last_ccc);
       p += consumed;
       mask >>= consumed;
     }
@@ -452,8 +456,8 @@ bool icelake_normalize_utf8_to_composed_check(const char *in, size_t length,
     size_t pmax = (p + 64) - 12;
     while (p < pmax) {
       size_t consumed = normalize_masked_utf8_to_composed_check<form>(
-          reinterpret_cast<const uint8_t *>(in + p), mask, output_length, &is_qc,
-          &last_ccc);
+          reinterpret_cast<const uint8_t *>(in + p), mask, output_length,
+          &is_qc, &last_ccc);
       p += consumed;
       mask >>= consumed;
     }
