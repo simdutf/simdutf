@@ -1,7 +1,7 @@
 #include "simdutf.h"
 #include <climits>
+#include <initializer_list>
 #include <type_traits>
-#include <utility>
 #if SIMDUTF_ATOMIC_REF
   #include <array>
   #include "simdutf/scalar/atomic_util.h"

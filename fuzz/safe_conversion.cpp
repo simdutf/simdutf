@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
+#include <type_traits>
 #include <vector>
 
 #include "simdutf.h"

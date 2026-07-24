@@ -5,7 +5,9 @@
 #include <cstring>
 #include <filesystem>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 class ArgumentError : public std::runtime_error {
