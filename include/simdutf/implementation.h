@@ -51,6 +51,18 @@
   #define SIMDUTF_FEATURE_BASE64 1
 #endif
 
+/// helpers placed in namespace detail are not a part of the public API
+namespace simdutf {
+namespace detail {
+namespace {
+// this is to avoid including <algorithm> just for min
+constexpr std::size_t min(std::size_t a, std::size_t b) {
+  return a < b ? a : b;
+}
+} // namespace
+} // namespace detail
+} // namespace simdutf
+
 #if SIMDUTF_CPLUSPLUS23
   #include <simdutf/constexpr_ptr.h>
 #endif
