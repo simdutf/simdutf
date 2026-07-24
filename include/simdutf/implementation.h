@@ -50,17 +50,29 @@
 #ifndef SIMDUTF_FEATURE_BASE64
   #define SIMDUTF_FEATURE_BASE64 1
 #endif
+// Unlike the features above, Unicode normalization is OFF by default: its
+// generated tables add roughly 430 kB to the binary (they more than double the
+// size of the library), which is a poor default for the many users that never
+// normalize. Enable all four forms at once with SIMDUTF_FEATURE_NORMALIZATION,
+// or select individual forms with the macros below. With CMake, use
+// -DSIMDUTF_NORMALIZATION=ON (or -DSIMDUTF_NFD=ON, ...).
+//
+// Note that NF(K)C is implemented as NF(K)D followed by canonical composition,
+// so enabling only NFC still pulls in the decomposition tables.
+#ifndef SIMDUTF_FEATURE_NORMALIZATION
+  #define SIMDUTF_FEATURE_NORMALIZATION 0
+#endif
 #ifndef SIMDUTF_FEATURE_NFD
-  #define SIMDUTF_FEATURE_NFD 1
+  #define SIMDUTF_FEATURE_NFD SIMDUTF_FEATURE_NORMALIZATION
 #endif
 #ifndef SIMDUTF_FEATURE_NFKD
-  #define SIMDUTF_FEATURE_NFKD 1
+  #define SIMDUTF_FEATURE_NFKD SIMDUTF_FEATURE_NORMALIZATION
 #endif
 #ifndef SIMDUTF_FEATURE_NFC
-  #define SIMDUTF_FEATURE_NFC 1
+  #define SIMDUTF_FEATURE_NFC SIMDUTF_FEATURE_NORMALIZATION
 #endif
 #ifndef SIMDUTF_FEATURE_NFKC
-  #define SIMDUTF_FEATURE_NFKC 1
+  #define SIMDUTF_FEATURE_NFKC SIMDUTF_FEATURE_NORMALIZATION
 #endif
 
 #if SIMDUTF_CPLUSPLUS23

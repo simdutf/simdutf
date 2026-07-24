@@ -412,9 +412,13 @@ else()
    target_compile_definitions(base64_tests PRIVATE SIMDUTF_BASE64_TEST_MAXLEN=2048)
 endif()
 
-add_cpp_test(normalization_test)
-target_link_libraries(normalization_test
-  PUBLIC simdutf::tests::helpers)
+# Normalization is opt-in (see SIMDUTF_NORMALIZATION); the test exercises an API
+# that does not exist unless at least one form is enabled.
+if(SIMDUTF_ANY_NORMALIZATION)
+  add_cpp_test(normalization_test)
+  target_link_libraries(normalization_test
+    PUBLIC simdutf::tests::helpers)
+endif()
 
 add_cpp_test(constexpr_base64_tests)
 target_link_libraries(constexpr_base64_tests

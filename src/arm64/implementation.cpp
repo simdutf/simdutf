@@ -171,18 +171,22 @@ convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in, size_t shufutf8_idx) {
   #include "arm64/arm_normalize_utf8_helpers.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFD ||
        // SIMDUTF_FEATURE_NFKD || SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
-#if SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD)
+// NF(K)C is implemented as NF(K)D followed by canonical composition, so the
+// decomposition kernels are required whenever any normalization form is on.
+#if SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD ||    \
+                             SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
   #include "arm64/arm_normalize_utf8_to_decomposed.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFD ||
-       // SIMDUTF_FEATURE_NFKD)
+       // SIMDUTF_FEATURE_NFKD || SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
 #if SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
   #include "arm64/arm_normalize_utf8_to_composed.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFC ||
        // SIMDUTF_FEATURE_NFKC)
-#if SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD)
+#if SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD ||   \
+                              SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
   #include "arm64/arm_normalize_utf16_to_decomposed.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFD ||
-       // SIMDUTF_FEATURE_NFKD)
+       // SIMDUTF_FEATURE_NFKD || SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
 #if SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
   #include "arm64/arm_normalize_utf16_to_composed.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFC ||
@@ -226,9 +230,11 @@ convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in, size_t shufutf8_idx) {
 #if SIMDUTF_FEATURE_BASE64
   #include "generic/base64lengths.h"
 #endif // SIMDUTF_FEATURE_BASE64
-#if SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFC)
+#if SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD ||    \
+                             SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
   #include "generic/utf8_to_decomposed/utf8_to_decomposed.h"
-#endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFC)
+#endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFD ||
+       // SIMDUTF_FEATURE_NFKD || SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
 #if SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
   #include "generic/utf8_to_composed/utf8_to_composed.h"
 #endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFC ||

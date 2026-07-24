@@ -7,11 +7,20 @@
 #include "tables/utf8_to_utf16_tables.h"
 #include "tables/utf16_to_utf8_tables.h"
 #include "tables/utf32_to_utf16_tables.h"
-#include "tables/utf8_to_decomposed_tables.h"
-#include "tables/utf8_to_composed_tables.h"
-#include "tables/utf16_to_decomposed_tables.h"
-#include "tables/utf16_to_composed_tables.h"
-#include "tables/normalization_tables.h"
+// The normalization tables are large (~18k lines). Only compile them in when a
+// normalization form is actually enabled. NF(K)C runs NF(K)D first, so the
+// decomposition tables are needed by the composed forms too.
+#if SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD || SIMDUTF_FEATURE_NFC ||      \
+    SIMDUTF_FEATURE_NFKC
+  #include "tables/utf8_to_decomposed_tables.h"
+  #include "tables/utf16_to_decomposed_tables.h"
+  #include "tables/normalization_tables.h"
+  #if SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC
+    #include "tables/utf8_to_composed_tables.h"
+    #include "tables/utf16_to_composed_tables.h"
+  #endif // SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC
+#endif   // SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD || SIMDUTF_FEATURE_NFC
+         // || SIMDUTF_FEATURE_NFKC
 // End of tables.
 
 // Implementations: they need to be setup before including
@@ -134,10 +143,12 @@ SIMDUTF_POP_DISABLE_WARNINGS
 
 // Depends on scalar/utf8_to_decomposed/utf8_to_decomposed.h for
 // supplementary-plane decomposition lookups, so must be included after it.
-#if SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD)
+// NF(K)C runs NF(K)D first, so this is also required by the composed forms.
+#if SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD ||   \
+                              SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
   #include "simdutf/scalar/utf16_to_decomposed/utf16_to_decomposed.h"
 #endif // SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFD ||
-       // SIMDUTF_FEATURE_NFKD)
+       // SIMDUTF_FEATURE_NFKD || SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
 
 #if SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC)
   #include "simdutf/scalar/utf8_to_composed/utf8_to_composed.h"

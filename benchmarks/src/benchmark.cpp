@@ -308,6 +308,7 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
                     simdutf::encoding_type::UTF16_LE,
                     simdutf::encoding_type::UTF32_LE);
 
+#if SIMDUTF_BENCH_NORMALIZATION
   register_function("normalize_utf8_to_nfc",
                     &Benchmark::run_normalize_utf8_to_nfc,
                     simdutf::encoding_type::UTF8);
@@ -345,6 +346,7 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
   register_function("normalize_utf16be_to_nfkd",
                     &Benchmark::run_normalize_utf16be_to_nfkd,
                     simdutf::encoding_type::UTF16_BE);
+#endif // SIMDUTF_BENCH_NORMALIZATION
 
 #ifdef ICU_AVAILABLE
   register_function("convert_latin1_to_utf8+icu",
@@ -3664,6 +3666,7 @@ void Benchmark::run_detect_encodings(
   print_summary(result, size, char_count);
 }
 
+#if SIMDUTF_BENCH_NORMALIZATION
 void Benchmark::run_normalize_utf8_to_nfc(
     const simdutf::implementation &implementation, size_t iterations) {
   const char *data = reinterpret_cast<const char *>(input_data.data());
@@ -3943,6 +3946,8 @@ void Benchmark::run_normalize_utf16be_to_nfkd(
   size_t char_count = get_active_implementation()->count_utf16be(data, size);
   print_summary(result, input_data.size(), char_count);
 }
+
+#endif // SIMDUTF_BENCH_NORMALIZATION
 
 const std::set<std::string> Benchmark::all_procedures() const {
   std::set<std::string> result;

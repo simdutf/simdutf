@@ -6,6 +6,16 @@
 #include <cstddef>
 
 /**
+ * Unicode normalization is an opt-in simdutf feature (see SIMDUTF_NORMALIZATION
+ * in CMake). The benchmarks that call the simdutf normalization API can only be
+ * compiled when at least one form is enabled. The ICU normalization benchmarks
+ * are unaffected: they only use ICU.
+ */
+#define SIMDUTF_BENCH_NORMALIZATION                                            \
+  (SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD || SIMDUTF_FEATURE_NFC ||       \
+   SIMDUTF_FEATURE_NFKC)
+
+/**
  * ICU is a standard library that is often already present on the system.
  */
 #if defined __has_include
@@ -224,6 +234,7 @@ private:
   void run_detect_encodings(const simdutf::implementation &implementation,
                             size_t iterations);
 
+#if SIMDUTF_BENCH_NORMALIZATION
   void run_normalize_utf8_to_nfc(const simdutf::implementation &implementation,
                                  size_t iterations);
   void run_normalize_utf8_to_nfd(const simdutf::implementation &implementation,
@@ -257,6 +268,7 @@ private:
   void
   run_normalize_utf16be_to_nfkd(const simdutf::implementation &implementation,
                                 size_t iterations);
+#endif // SIMDUTF_BENCH_NORMALIZATION
 
   void run_utf8_length_from_latin1_node(size_t iterations);
 #if ICU_AVAILABLE
