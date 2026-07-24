@@ -3,7 +3,8 @@
 
 // this is not part of the public api
 
-#include <algorithm> // for std::min
+#include <algorithm>   // for std::min
+#include <type_traits> // for is_same
 
 namespace simdutf {
 
