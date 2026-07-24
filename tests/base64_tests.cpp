@@ -3369,7 +3369,7 @@ TEST(streaming_base64_roundtrip) {
     size_t outpos = 0;
     size_t pos = 0;
     for (; pos < buffer.size();) {
-      size_t count = std::min(window, buffer.size() - pos);
+      size_t count = simdutf::detail::min(window, buffer.size() - pos);
 
       simdutf::full_result r = implementation.base64_to_binary_details(
           buffer.data() + pos, count, back.data() + outpos,
@@ -3411,7 +3411,7 @@ TEST(readme_test) {
   size_t window = 512;
   for (size_t pos = 0; pos < base64.size(); pos += window) {
     // how many base64 characters we can process in this iteration
-    size_t count = std::min(window, base64.size() - pos);
+    size_t count = simdutf::detail::min(window, base64.size() - pos);
     simdutf::result r = simdutf::base64_to_binary(base64.data() + pos, count,
                                                   back.data() + outpos);
     if (r.error == simdutf::error_code::INVALID_BASE64_CHARACTER) {

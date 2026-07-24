@@ -5,7 +5,9 @@
 #include <cstring>
 #include <filesystem>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 class ArgumentError : public std::runtime_error {
@@ -308,7 +310,7 @@ void CommandLine::write_with_wrapping(std::FILE *fp, const char *data,
       current_col = 0;
     }
     int remaining = wrap_cols - current_col;
-    size_t to_write = std::min((size_t)remaining, length - i);
+    size_t to_write = simdutf::detail::min((size_t)remaining, length - i);
     if (std::fwrite(data + i, 1, to_write, fp) != to_write) {
       throw std::runtime_error("Failed to write: " +
                                std::string(strerror(errno)));

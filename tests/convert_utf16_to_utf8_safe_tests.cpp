@@ -194,7 +194,7 @@ TEST(compile_time_check_of_issue_911) {
   constexpr auto input = u"\u00E9A"_utf16;
   constexpr auto expected = u8"\u00E9A"_utf8;
   constexpr auto actual = convert_insufficient_buf<input, 2>();
-  constexpr auto N = std::min(actual.size(), expected.size());
+  constexpr auto N = simdutf::detail::min(actual.size(), expected.size());
   static_assert(expected.shrink<N>() == actual.shrink<N>());
 }
 

@@ -3,16 +3,16 @@
 // You can process the result with the script at scripts/shortinputplots.py
 // to generate plots. See the instructions in that script for more details.
 #include <algorithm>
-#include <array>
 #include <atomic>
 #include <cmath>
 #include <cstddef>
 #include <cstring>
+#include <exception>
 #include <fstream>
 #include <functional>
 #include <iostream>
 #include <span>
-#include <stdexcept>
+#include <string>
 #include <vector>
 
 #include "simdutf.h"
@@ -498,7 +498,7 @@ int main(int argc, char *argv[]) {
     } else {
       data = read_file(filename);
       file_size = data.size();
-      actual_max = std::min(max_size, file_size);
+      actual_max = simdutf::detail::min(max_size, file_size);
       input_desc = std::string("file: ") + filename;
     }
 
