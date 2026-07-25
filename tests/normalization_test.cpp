@@ -679,4 +679,52 @@ TEST(utf16_agrees_with_utf8) {
 
 #undef CHECK_AGREEMENT
 
+// When the vectorized NF(K)C path meets a 12-byte chunk holding three
+// 1..4-byte code points, it hands the chunk to
+// scalar::utf8_to_composed::normalize_with_context, which normalizes the whole
+// surrounding combining sequence and returns how many input bytes it swallowed.
+// That count is bounded only by the distance to the next stable starter, so it
+// can reach past the end of the current 64-byte block, and the caller's
+// `mask >>= consumed` then shifts a uint64_t by >= 64: undefined behaviour.
+// (On x86-64 and AArch64 a shift by exactly 64 is a no-op rather than zero.)
+//
+// Each input below is three U+1D15E (4 bytes each, and none of them stable for
+// NF(K)C) followed by `marks` combining acute accents (2 bytes each) and ASCII
+// filler, so the fallback consumes 12 + 2 * marks bytes: marks == 26 lands on
+// consumed == 64 exactly, and the loop above sweeps consumed from 52 to 92.
+//
+// The normalized output is correct either way -- the shifted mask is dead, as
+// the inner loop always exits after such a chunk -- so this test is here for
+// the sanitizer builds: it fails under -fsanitize=undefined until the shift is
+// guarded.
+TEST(composed_scalar_fallback_consumes_past_block) {
+  for (int marks = 20; marks <= 40; marks++) {
+    std::string input;
+    std::string expected;
+    for (int i = 0; i < 3; i++) {
+      input += "\U0001D15E";               // MUSICAL SYMBOL HALF NOTE
+      expected += "\U0001D157\U0001D165";  // stays decomposed: excluded from
+                                           // composition
+    }
+    for (int i = 0; i < marks; i++) {
+      input += "\u0300"; // COMBINING GRAVE ACCENT, ccc 230
+      expected += "\u0300";
+    }
+    // The vectorized loop only runs while 64 + 64 bytes remain, so keep the
+    // interesting region well inside it.
+    input.append(256, 'a');
+    expected.append(256, 'a');
+
+    char what[96];
+    snprintf(what, sizeof(what), "NFC, %d marks (fallback consumes %d bytes)",
+             marks, 12 + 2 * marks);
+    check_norm(what, std::string_view(expected), std::string_view(input),
+               to_nfc_utf8(implementation, input), size_t(__LINE__));
+    snprintf(what, sizeof(what), "NFKC, %d marks (fallback consumes %d bytes)",
+             marks, 12 + 2 * marks);
+    check_norm(what, std::string_view(expected), std::string_view(input),
+               to_nfkc_utf8(implementation, input), size_t(__LINE__));
+  }
+}
+
 TEST_MAIN
