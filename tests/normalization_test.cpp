@@ -101,7 +101,7 @@ NORMALIZATION_FUNCTION(nfkc, utf16be, std::u16string, std::u16string_view);
 NORMALIZATION_FUNCTION(nfkd, utf16be, std::u16string, std::u16string_view);
 
 template <typename T> void dump_hex_string(std::basic_string_view<T> s) {
-  for (auto b : s) {
+  for (uint8_t b : s) {
     if constexpr (sizeof(T) == 1) {
       printf("%02x ", b);
     }
@@ -197,6 +197,60 @@ void check_agreement(const char *what, uint32_t seed,
     report_disagreement(what, seed, input.size(), input,
                         std::basic_string_view<T>(actual.first));
   }
+}
+
+std::string combining_run_utf8(size_t n) {
+  std::string result;
+  result.reserve(n * 2);
+  for (size_t i = 0; i < n; i++) {
+    result += "\u0301";
+  }
+  return result;
+}
+
+using find_first_utf8_fn = const char *(*)(const char *, size_t);
+using find_last_utf8_fn = const char *(*)(const char *, size_t);
+void check_find_stable_utf8(find_first_utf8_fn find_first,
+                            find_last_utf8_fn find_last) {
+  const std::string prefix = combining_run_utf8(5);
+  const std::string s = prefix + "A" + combining_run_utf8(5);
+  ASSERT_EQUAL(find_first(s.data(), s.size()), s.data() + prefix.size());
+
+  const std::string all_combining = combining_run_utf8(50);
+  ASSERT_EQUAL(find_first(all_combining.data(), all_combining.size()),
+               all_combining.data() + all_combining.size());
+  ASSERT_EQUAL(find_last(all_combining.data(), all_combining.size()),
+               all_combining.data() + all_combining.size());
+
+  const std::string starts_stable = "A" + combining_run_utf8(5);
+  ASSERT_EQUAL(find_last(starts_stable.data(), starts_stable.size()),
+               starts_stable.data());
+}
+
+using to_utf16_fn = std::u16string (*)(const simdutf::implementation &,
+                                       std::string_view);
+using find_first_utf16_fn = const char16_t *(*)(const char16_t *, size_t);
+using find_last_utf16_fn = const char16_t *(*)(const char16_t *, size_t);
+void check_find_stable_utf16(const simdutf::implementation &impl,
+                             to_utf16_fn to_utf16,
+                             find_first_utf16_fn find_first,
+                             find_last_utf16_fn find_last) {
+  const std::string prefix_u8 = combining_run_utf8(5);
+  const std::u16string prefix = to_utf16(impl, prefix_u8);
+  const std::u16string s =
+      to_utf16(impl, prefix_u8 + "A" + combining_run_utf8(5));
+  ASSERT_EQUAL(find_first(s.data(), s.size()), s.data() + prefix.size());
+
+  const std::u16string all_combining = to_utf16(impl, combining_run_utf8(50));
+  ASSERT_EQUAL(find_first(all_combining.data(), all_combining.size()),
+               all_combining.data() + all_combining.size());
+  ASSERT_EQUAL(find_last(all_combining.data(), all_combining.size()),
+               all_combining.data() + all_combining.size());
+
+  const std::u16string starts_stable =
+      to_utf16(impl, "A" + combining_run_utf8(5));
+  ASSERT_EQUAL(find_last(starts_stable.data(), starts_stable.size()),
+               starts_stable.data());
 }
 
 } // namespace
@@ -679,24 +733,6 @@ TEST(utf16_agrees_with_utf8) {
 
 #undef CHECK_AGREEMENT
 
-// When the vectorized NF(K)C path meets a 12-byte chunk holding three
-// 1..4-byte code points, it hands the chunk to
-// scalar::utf8_to_composed::normalize_with_context, which normalizes the whole
-// surrounding combining sequence and returns how many input bytes it swallowed.
-// That count is bounded only by the distance to the next stable starter, so it
-// can reach past the end of the current 64-byte block, and the caller's
-// `mask >>= consumed` then shifts a uint64_t by >= 64: undefined behaviour.
-// (On x86-64 and AArch64 a shift by exactly 64 is a no-op rather than zero.)
-//
-// Each input below is three U+1D15E (4 bytes each, and none of them stable for
-// NF(K)C) followed by `marks` combining acute accents (2 bytes each) and ASCII
-// filler, so the fallback consumes 12 + 2 * marks bytes: marks == 26 lands on
-// consumed == 64 exactly, and the loop above sweeps consumed from 52 to 92.
-//
-// The normalized output is correct either way -- the shifted mask is dead, as
-// the inner loop always exits after such a chunk -- so this test is here for
-// the sanitizer builds: it fails under -fsanitize=undefined until the shift is
-// guarded.
 TEST(composed_scalar_fallback_consumes_past_block) {
   for (int marks = 20; marks <= 40; marks++) {
     std::string input;
@@ -725,6 +761,90 @@ TEST(composed_scalar_fallback_consumes_past_block) {
     check_norm(what, std::string_view(expected), std::string_view(input),
                to_nfkc_utf8(implementation, input), size_t(__LINE__));
   }
+}
+  
+TEST(find_stable_utf8_nfd) {
+  check_find_stable_utf8(simdutf::find_first_stable_utf8_nfd,
+                         simdutf::find_last_stable_utf8_nfd);
+}
+
+TEST(find_stable_utf8_nfkd) {
+  check_find_stable_utf8(simdutf::find_first_stable_utf8_nfkd,
+                         simdutf::find_last_stable_utf8_nfkd);
+}
+
+TEST(find_stable_utf16le_nfd) {
+  check_find_stable_utf16(implementation, to_utf16le,
+                          simdutf::find_first_stable_utf16le_nfd,
+                          simdutf::find_last_stable_utf16le_nfd);
+}
+
+TEST(find_stable_utf16be_nfd) {
+  check_find_stable_utf16(implementation, to_utf16be,
+                          simdutf::find_first_stable_utf16be_nfd,
+                          simdutf::find_last_stable_utf16be_nfd);
+}
+
+TEST(find_stable_utf16le_nfkd) {
+  check_find_stable_utf16(implementation, to_utf16le,
+                          simdutf::find_first_stable_utf16le_nfkd,
+                          simdutf::find_last_stable_utf16le_nfkd);
+}
+
+TEST(find_stable_utf16be_nfkd) {
+  check_find_stable_utf16(implementation, to_utf16be,
+                          simdutf::find_first_stable_utf16be_nfkd,
+                          simdutf::find_last_stable_utf16be_nfkd);
+}
+
+TEST(find_stable_utf8_nfc) {
+  check_find_stable_utf8(simdutf::find_first_stable_utf8_nfc,
+                         simdutf::find_last_stable_utf8_nfc);
+}
+
+TEST(find_stable_utf8_nfkc) {
+  check_find_stable_utf8(simdutf::find_first_stable_utf8_nfkc,
+                         simdutf::find_last_stable_utf8_nfkc);
+}
+
+TEST(find_stable_utf16le_nfc) {
+  check_find_stable_utf16(implementation, to_utf16le,
+                          simdutf::find_first_stable_utf16le_nfc,
+                          simdutf::find_last_stable_utf16le_nfc);
+}
+
+TEST(find_stable_utf16be_nfc) {
+  check_find_stable_utf16(implementation, to_utf16be,
+                          simdutf::find_first_stable_utf16be_nfc,
+                          simdutf::find_last_stable_utf16be_nfc);
+}
+
+TEST(find_stable_utf16le_nfkc) {
+  check_find_stable_utf16(implementation, to_utf16le,
+                          simdutf::find_first_stable_utf16le_nfkc,
+                          simdutf::find_last_stable_utf16le_nfkc);
+}
+
+TEST(find_stable_utf16be_nfkc) {
+  check_find_stable_utf16(implementation, to_utf16be,
+                          simdutf::find_first_stable_utf16be_nfkc,
+                          simdutf::find_last_stable_utf16be_nfkc);
+}
+
+TEST(find_stable_utf16_le_be_agree) {
+  const std::string s_u8 = combining_run_utf8(5) + "A" + combining_run_utf8(5);
+  const std::u16string le = to_utf16le(implementation, s_u8);
+  const std::u16string be = to_utf16be(implementation, s_u8);
+  const char16_t *first_le_nfc =
+      simdutf::find_first_stable_utf16le_nfc(le.data(), le.size());
+  const char16_t *first_be_nfc =
+      simdutf::find_first_stable_utf16be_nfc(be.data(), be.size());
+  ASSERT_EQUAL((first_le_nfc - le.data()), (first_be_nfc - be.data()));
+  const char16_t *first_le_nfd =
+      simdutf::find_first_stable_utf16le_nfd(le.data(), le.size());
+  const char16_t *first_be_nfd =
+      simdutf::find_first_stable_utf16be_nfd(be.data(), be.size());
+  ASSERT_EQUAL((first_le_nfd - le.data()), (first_be_nfd - be.data()));
 }
 
 TEST_MAIN

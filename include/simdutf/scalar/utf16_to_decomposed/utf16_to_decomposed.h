@@ -93,6 +93,60 @@ simdutf_really_inline uint32_t lookup_full_trie(uint16_t code_point) {
   return value;
 }
 
+template <endianness big_endian, DecomposedForm form>
+const char16_t *find_first_stable(const char16_t *input, size_t length) {
+  size_t p = 0;
+  while (p < length) {
+    uint8_t size;
+    uint32_t c = utf16::parse_code_point<big_endian>(input + p, &size);
+    uint8_t ccc = normalization::lookup_ccc(c);
+    bool relevant;
+    if (c <= 0xFFFF) {
+      uint32_t value = lookup_full_trie<form>(uint16_t(c));
+      relevant = value > 0;
+    } else {
+      uint64_t kv = normalization::lookup_supplementary_code_point<form>(c);
+      uint32_t k = kv & 0x1FFFFF;
+      relevant = k == c;
+    }
+    if (ccc == 0 && !relevant) {
+      return input + p;
+    }
+    p += size;
+  }
+  return input + length;
+}
+
+// Find the last stable code point boundary at or before `input + length`.
+// Returns `input + length` if no such position exists.
+template <endianness big_endian, DecomposedForm form>
+const char16_t *find_last_stable(const char16_t *input, size_t length) {
+  size_t cutoff = length;
+  while (cutoff > 0) {
+    auto result = normalization::rfind_starter<
+        normalization::utf16_normalization_traits<big_endian>>(input, cutoff);
+    if (!result.second) {
+      return input + length;
+    }
+    cutoff = result.first;
+    uint8_t size;
+    uint32_t c = utf16::parse_code_point<big_endian>(input + cutoff, &size);
+    bool relevant;
+    if (c <= 0xFFFF) {
+      uint32_t value = lookup_full_trie<form>(uint16_t(c));
+      relevant = value > 0;
+    } else {
+      uint64_t kv = normalization::lookup_supplementary_code_point<form>(c);
+      uint32_t k = kv & 0x1FFFFF;
+      relevant = k == c;
+    }
+    if (!relevant) {
+      return input + cutoff;
+    }
+  }
+  return input + length;
+}
+
 // Decompose character in BMP
 template <endianness big_endian, DecomposedForm form>
 simdutf_really_inline size_t decompose_bmp(uint16_t code_point,
