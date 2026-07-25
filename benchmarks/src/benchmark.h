@@ -179,6 +179,8 @@ private:
                                  size_t iterations);
   void run_convert_utf16le_to_utf8_with_errors(
       const simdutf::implementation &implementation, size_t iterations);
+  void run_convert_utf16le_to_utf8_with_replacement(
+      const simdutf::implementation &implementation, size_t iterations);
   void
   run_convert_utf16le_to_utf32(const simdutf::implementation &implementation,
                                size_t iterations);

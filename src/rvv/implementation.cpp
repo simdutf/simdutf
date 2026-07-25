@@ -10,6 +10,12 @@ namespace {
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
+  // transcoding from UTF-16 to UTF-8 (self-wrapping generic header, must be
+  // included at namespace scope zero)
+  #include "generic/utf16_to_utf8/utf16_to_utf8_with_replacement.h"
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
+
 //
 // Implementation-specific overrides
 //
@@ -119,14 +125,26 @@ implementation::utf8_length_from_utf16be_with_replacement(
 simdutf_warn_unused size_t
 implementation::convert_utf16le_to_utf8_with_replacement(
     const char16_t *input, size_t length, char *utf8_buffer) const noexcept {
-  return scalar::utf16_to_utf8::convert_with_replacement<endianness::LITTLE>(
+  return utf16_to_utf8::convert_with_replacement_via(
+      [this](const char16_t *b, size_t l, char *o) {
+        return this->convert_utf16le_to_utf8_with_errors(b, l, o);
+      },
+      [this](const char16_t *b, size_t l) {
+        return this->utf8_length_from_utf16le(b, l);
+      },
       input, length, utf8_buffer);
 }
 
 simdutf_warn_unused size_t
 implementation::convert_utf16be_to_utf8_with_replacement(
     const char16_t *input, size_t length, char *utf8_buffer) const noexcept {
-  return scalar::utf16_to_utf8::convert_with_replacement<endianness::BIG>(
+  return utf16_to_utf8::convert_with_replacement_via(
+      [this](const char16_t *b, size_t l, char *o) {
+        return this->convert_utf16be_to_utf8_with_errors(b, l, o);
+      },
+      [this](const char16_t *b, size_t l) {
+        return this->utf8_length_from_utf16be(b, l);
+      },
       input, length, utf8_buffer);
 }
 
