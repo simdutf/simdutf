@@ -3,6 +3,8 @@
 #include <tests/helpers/test.h>
 #include <tests/normalization_test_data/normalization_test_data.h>
 
+#include <random>
+
 namespace {
 
 template <simdutf::encoding_type encoding, typename T>
@@ -73,6 +75,14 @@ std::u16string to_utf16be(const simdutf::implementation &impl,
     string_type output(output_length, 0);                                      \
     size_t written = impl.normalize_##encoding##_to_##form(                    \
         input.data(), input.size(), output.data());                            \
+    /* The buffer is sized to the bound and not one unit more, so that a       \
+       sanitizer build catches an overrun. */                                  \
+    if (written > output_length) {                                             \
+      printf("normalize_" #encoding "_to_" #form " wrote %zu units, but the "  \
+             "_check function promised at most %zu\n",                         \
+             written, output_length);                                          \
+      exit(1);                                                                 \
+    }                                                                          \
     output.resize(written);                                                    \
     return std::make_pair(output, qc);                                         \
   }
@@ -125,6 +135,68 @@ void report_bad_qc(const char *what, std::basic_string_view<T> input,
   printf("  output: (size %zu): ", output.size());
   dump_hex_string(output);
   exit(1);
+}
+
+// Builds a pseudo-random UTF-8 input out of the conformance corpus, with ASCII
+// runs of random length in between so that every fragment lands at a different
+// offset from one trial to the next.
+std::string random_corpus(uint32_t seed, size_t target_bytes) {
+  std::mt19937 gen(seed);
+  std::uniform_int_distribution<size_t> pick(
+      0, simdutf::test::normalization_test_cases.size() - 1);
+  std::uniform_int_distribution<int> column(0, 4);
+  std::uniform_int_distribution<int> ascii_run(0, 48);
+  std::uniform_int_distribution<int> ascii_char(0x20, 0x7e);
+
+  std::string out;
+  out.reserve(target_bytes + 128);
+  while (out.size() < target_bytes) {
+    const auto &tc = simdutf::test::normalization_test_cases[pick(gen)];
+    const std::string_view fragments[] = {tc.c1, tc.c2, tc.c3, tc.c4, tc.c5};
+    out += fragments[column(gen)];
+    const int run = ascii_run(gen);
+    for (int i = 0; i < run; i++) {
+      out += char(ascii_char(gen));
+    }
+  }
+  return out;
+}
+
+// The inputs here reach tens of kilobytes, so we print a window around the
+// first differing code unit rather than the whole string.
+template <typename T>
+void report_disagreement(const char *what, uint32_t seed, size_t input_units,
+                         std::basic_string_view<T> expected,
+                         std::basic_string_view<T> actual) {
+  size_t at = 0;
+  while (at < expected.size() && at < actual.size() &&
+         expected[at] == actual[at]) {
+    at++;
+  }
+  const size_t from = (at > 8) ? at - 8 : 0;
+  printf("UTF-16 normalization disagrees with UTF-8: %s\n", what);
+  printf("  seed %u, %zu input units, first difference at index %zu\n", seed,
+         input_units, at);
+  printf("  expected (%zu units, from index %zu): ", expected.size(), from);
+  dump_hex_string(expected.substr(from, 24));
+  printf("  actual   (%zu units, from index %zu): ", actual.size(), from);
+  dump_hex_string(actual.substr(from, 24));
+  exit(1);
+}
+
+template <typename T>
+void check_agreement(const char *what, uint32_t seed,
+                     std::basic_string_view<T> expected,
+                     std::basic_string_view<T> input,
+                     const std::pair<std::basic_string<T>, bool> &actual) {
+  if (expected != actual.first) {
+    report_disagreement(what, seed, input.size(), expected,
+                        std::basic_string_view<T>(actual.first));
+  }
+  if (actual.second && (input != actual.first)) {
+    report_disagreement(what, seed, input.size(), input,
+                        std::basic_string_view<T>(actual.first));
+  }
 }
 
 } // namespace
@@ -565,5 +637,46 @@ TEST(conformance_utf16be_vectorized) {
                to_nfkd_utf16be(implementation, c5), tc.line);
   }
 }
+
+#define CHECK_AGREEMENT(form)                                                  \
+  {                                                                            \
+    const std::string expected_utf8 =                                          \
+        to_##form##_utf8(implementation, utf8).first;                          \
+    check_agreement(                                                           \
+        #form "(utf16le(x)) == utf16le(" #form "(x))", seed,                   \
+        std::u16string_view(to_utf16le(implementation, expected_utf8)),        \
+        std::u16string_view(le), to_##form##_utf16le(implementation, le));     \
+    check_agreement(                                                           \
+        #form "(utf16be(x)) == utf16be(" #form "(x))", seed,                   \
+        std::u16string_view(to_utf16be(implementation, expected_utf8)),        \
+        std::u16string_view(be), to_##form##_utf16be(implementation, be));     \
+  }
+
+// The conformance tests above pin the UTF-8 code path to NormalizationTest.txt.
+// This one makes the UTF-16 paths ride on that guarantee: for the same text,
+// normalizing in UTF-16 must give exactly the transcoding of the UTF-8 answer.
+// Unlike the conformance tests, the inputs are long and their interesting
+// characters sit at arbitrary offsets, so the vectorized kernels' block
+// boundaries and scalar tails are exercised at every alignment.
+TEST(utf16_agrees_with_utf8) {
+  const size_t sizes[] = {0,   1,   2,   3,   7,    16,   31,  32,
+                          33,  63,  64,  65,  127,  128,  129, 255,
+                          256, 511, 512, 997, 4096, 20011};
+  uint32_t seed = 0;
+  for (const size_t target : sizes) {
+    for (int trial = 0; trial < 8; trial++, seed++) {
+      const std::string utf8 = random_corpus(seed, target);
+      const std::u16string le = to_utf16le(implementation, utf8);
+      const std::u16string be = to_utf16be(implementation, utf8);
+
+      CHECK_AGREEMENT(nfc);
+      CHECK_AGREEMENT(nfd);
+      CHECK_AGREEMENT(nfkc);
+      CHECK_AGREEMENT(nfkd);
+    }
+  }
+}
+
+#undef CHECK_AGREEMENT
 
 TEST_MAIN

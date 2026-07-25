@@ -266,13 +266,18 @@ arm_decompose_utf16(uint16x4_t chars, const char16_t *input, char16_t **out,
   uint32_t total = 4 + vaddvq_u32(delta);
   uint32x4_t ccc_values = vshrq_n_u32(values, 24);
   bool is_sorted = arm_is_ccc_sorted_u32(ccc_values, *last_ccc);
-  // There are three conditions in which we enter the slow path: we have a
-  // precomposed Hangul character, the total number of code units needed to
-  // write the decomposition of the input would be greater than 8, or we've
-  // detected that combining characters are out-of-order. All of these
-  // conditions are rather uncommon in practice, except for the first one when
-  // dealing with Korean text.
-  if (simdutf_likely(!hangul_result && total <= 8 && is_sorted)) {
+  // arm_write_non_hangul_simple_utf16 packs each delta into two bits, where
+  // 0b11 means "copy the original code unit", so a delta of 3 or more cannot
+  // be represented and must take the slow path.
+  bool short_deltas = vmaxvq_u32(delta) <= 2;
+  // There are four conditions in which we enter the slow path: we have a
+  // precomposed Hangul character, a delta that cannot be packed, the total
+  // number of code units needed to write the decomposition of the input would
+  // be greater than 8, or we've detected that combining characters are
+  // out-of-order. All of these conditions are rather uncommon in practice,
+  // except for the first one when dealing with Korean text.
+  if (simdutf_likely(!hangul_result && short_deltas && total <= 8 &&
+                     is_sorted)) {
     *last_ccc = uint8_t(vgetq_lane_u32(ccc_values, 3));
     arm_write_non_hangul_simple_utf16<big_endian, form>(chars, delta, values,
                                                         *out);
@@ -310,6 +315,13 @@ size_t arm_normalize_utf16_to_decomposed(const char16_t *input, size_t length,
     }
     // ASCII fast path
     if (vmaxvq_u16(in) <= 0x7F) {
+      // The loop only guarantees nine code units, so we may load a second
+      // vector only when sixteen are really available.
+      if (p + 16 > length) {
+        internal::arm_skip_decomp_utf16<big_endian>(in, 8, out_ptr, &last_ccc);
+        p += 8;
+        continue;
+      }
       // Get the next 8 bytes and check if they are also ASCII
       uint16x8_t nextin =
           vld1q_u16(reinterpret_cast<const uint16_t *>(input + p) + 8);
@@ -423,6 +435,13 @@ bool arm_normalize_utf16_to_decomposed_check(const char16_t *input,
       in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in)));
     }
     if (vmaxvq_u16(in) <= 0x7F) {
+      // Only load a second vector when sixteen code units are available.
+      if (p + 16 > length) {
+        *out_length += 8;
+        p += 8;
+        last_ccc = 0;
+        continue;
+      }
       // Get the next 8 bytes and check if they are also ASCII
       uint16x8_t nextin =
           vld1q_u16(reinterpret_cast<const uint16_t *>(input + p) + 8);
