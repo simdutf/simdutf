@@ -16,6 +16,7 @@
   - [Packages](#packages)
   - [Example](#example)
   - [API](#api)
+  - [Unicode normalization](#unicode-normalization)
   - [Base64](#base64)
   - [Find](#find)
   - [C++20 and std::span usage in simdutf](#c20-and-stdspan-usage-in-simdutf)
