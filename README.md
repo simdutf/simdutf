@@ -1943,6 +1943,29 @@ if (!simdutf::normalize_utf8_to_nfc_check(input, length, &output_length)) {
 
 These functions assume that the input is valid UTF-8 (respectively valid UTF-16). They perform no validation and report no errors: validate untrusted input first, e.g. with `simdutf::validate_utf8`.
 
+### Streaming normalization
+
+Normalizing text in a streaming manner requires some care. The problem is that normalization forms are not closed under string concatenation. In other words:
+
+```
+normalize(x) + normalize(y) = normalize(x + y)
+```
+
+**does not** hold for all Unicode strings `x` and `y`.
+
+simdutf provides dedicated functions so that normalized string concatenation (and therefore streaming normalization) can be implemented in an efficient way.
+
+The relevant UTF-8 APIs are of the form:
+
+```c
+const char *find_last_stable_utf8_FORM(const char *input, size_t length);
+const char *find_first_stable_utf8_FORM(const char *input, size_t length);
+```
+
+These functions return pointers to the first and last "stable" code points in a string under a given normalization form. When two normalized strings are concatenated, it is guaranteed that normalization is preserved if the second string starts with a stable code point. Thus, using either function will find the boundary at which concatenation is okay.
+
+If a stable code point could not be found in either direction, these functions return a pointer to the end of the string. The corresponding UTF-16 functions (`find_last_stable_utf16le_FORM`, `find_last_stable_utf16be_FORM`, etc.) are available like normal.
+
 ## Base64
 
 The WHATWG (Web Hypertext Application Technology Working Group) defines a "forgiving" base64 decoding algorithm in its Infra Standard, which is used in web contexts like the JavaScript atob() function. This algorithm is more lenient than strict RFC 4648 base64, primarily to handle common web data variations. It ignores all ASCII whitespace (spaces, tabs, newlines, etc.), allows omitting padding characters (=), and decodes inputs as long as they meet certain length and character validity rules. However, it still rejects inputs that could lead to ambiguous or incomplete byte formation.

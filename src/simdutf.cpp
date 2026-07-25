@@ -162,6 +162,8 @@ SIMDUTF_POP_DISABLE_WARNINGS
 #endif // SIMDUTF_FEATURE_UTF16 && (SIMDUTF_FEATURE_NFC ||
        // SIMDUTF_FEATURE_NFKC)
 
+#include "scalar_normalization.cpp"
+
 #include "implementation.cpp"
 
 SIMDUTF_PUSH_DISABLE_WARNINGS
