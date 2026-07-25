@@ -239,6 +239,9 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
   register_function("convert_utf16le_to_utf8_with_errors",
                     &Benchmark::run_convert_utf16le_to_utf8_with_errors,
                     simdutf::encoding_type::UTF16_LE);
+  register_function("convert_utf16le_to_utf8_with_replacement",
+                    &Benchmark::run_convert_utf16le_to_utf8_with_replacement,
+                    simdutf::encoding_type::UTF16_LE);
   register_function(
       "convert_utf16le_to_utf8_with_dynamic_allocation",
       &Benchmark::run_convert_utf16le_to_utf8_with_dynamic_allocation,
@@ -2802,6 +2805,40 @@ void Benchmark::run_convert_utf16le_to_utf8(
   auto proc = [&implementation, data, size, &output_buffer, &sink]() {
     sink =
         implementation.convert_utf16le_to_utf8(data, size, output_buffer.get());
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  if ((sink == 0) && (size != 0) && (iterations > 0)) {
+    std::cerr << "The output is zero which might indicate an error.\n";
+  }
+  size_t char_count = get_active_implementation()->count_utf16le(data, size);
+  print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_convert_utf16le_to_utf8_with_replacement(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const simdutf::encoding_type bom =
+      BOM::check_bom(input_data.data(), input_data.size());
+  const char16_t *data = reinterpret_cast<const char16_t *>(
+      input_data.data() + BOM::bom_byte_size(bom));
+  size_t size = input_data.size() - BOM::bom_byte_size(bom);
+  if (size % 2 != 0) {
+    printf("# The input size is not divisible by two (it is %zu + %zu for BOM)",
+           size_t(input_data.size()), size_t(BOM::bom_byte_size(bom)));
+    printf(" Running function on truncated input.\n");
+  }
+
+  size /= 2;
+
+  // Unpaired surrogates are replaced by U+FFFD (3 bytes); as with the plain
+  // converter, four bytes per 16-bit word is a safe over-allocation.
+  std::unique_ptr<char[]> output_buffer{new char[size * 4]};
+
+  volatile size_t sink{0};
+
+  auto proc = [&implementation, data, size, &output_buffer, &sink]() {
+    sink = implementation.convert_utf16le_to_utf8_with_replacement(
+        data, size, output_buffer.get());
   };
   count_events(proc, iterations); // warming up!
   const auto result = count_events(proc, iterations);

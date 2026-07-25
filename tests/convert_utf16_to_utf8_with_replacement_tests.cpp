@@ -344,6 +344,50 @@ TEST_LOOP(output_is_valid_utf8_le) {
   ASSERT_TRUE(simdutf::validate_utf8(output.data(), written));
 }
 
+// Stress the SIMD block boundaries: slide an unpaired high surrogate, an
+// unpaired low surrogate, and a valid surrogate pair through every offset of a
+// multi-block buffer, comparing the with_replacement output byte-for-byte
+// against the independent to_well_formed + convert oracle. This is the case a
+// naive SIMD implementation is most likely to get wrong (a valid pair or a lone
+// surrogate landing on a 16-unit lane boundary).
+TEST(surrogate_sweep_across_boundaries_le) {
+  const size_t length = 200; // spans many 16-unit SIMD lanes
+  for (size_t p = 0; p + 1 < length; p++) {
+    for (int mode = 0; mode < 3; mode++) {
+      std::vector<char16_t> input(length);
+      for (size_t i = 0; i < length; i++) {
+        // valid, non-surrogate BMP content (mix of 1-, 2- and 3-byte forms)
+        input[i] = to_utf16le(char16_t(0x0041 + (i % 0x0500)));
+      }
+      if (mode == 0) {
+        input[p] = to_utf16le(char16_t(0xD800)); // unpaired high
+      } else if (mode == 1) {
+        input[p] = to_utf16le(char16_t(0xDC00)); // unpaired low
+      } else {
+        input[p] = to_utf16le(char16_t(0xD800)); // valid pair straddling p/p+1
+        input[p + 1] = to_utf16le(char16_t(0xDC00));
+      }
+
+      // Oracle: replace unpaired surrogates, then convert as valid UTF-16.
+      std::vector<char16_t> well_formed(length);
+      simdutf::to_well_formed_utf16le(input.data(), length, well_formed.data());
+      const size_t utf8_len =
+          simdutf::utf8_length_from_utf16le(well_formed.data(), length);
+      std::vector<char> expected(utf8_len + 1);
+      const size_t nexp = simdutf::convert_utf16le_to_utf8(
+          well_formed.data(), length, expected.data());
+
+      std::vector<char> actual(utf8_len + 1);
+      const size_t nact =
+          implementation.convert_utf16le_to_utf8_with_replacement(
+              input.data(), length, actual.data());
+
+      ASSERT_EQUAL(nexp, nact);
+      ASSERT_TRUE(std::memcmp(expected.data(), actual.data(), nact) == 0);
+    }
+  }
+}
+
 #if SIMDUTF_CPLUSPLUS23
 
 namespace {
