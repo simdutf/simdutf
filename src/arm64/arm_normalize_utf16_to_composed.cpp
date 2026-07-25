@@ -105,6 +105,15 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
     }
     // ASCII fast path.
     if (vmaxvq_u16(in) <= 0x7F) {
+      // The loop only guarantees nine code units, so we may load a second
+      // vector only when sixteen are really available.
+      if (p + 16 > length) {
+        vst1q_u16(reinterpret_cast<uint16_t *>(*out_ptr), raw_in);
+        *out_ptr += 8;
+        p += 8;
+        last_ccc = 0;
+        continue;
+      }
       // Get the next eight code units and check if they are also ASCII.
       uint16x8_t raw_nextin =
           vld1q_u16(reinterpret_cast<const uint16_t *>(input + p) + 8);
@@ -235,6 +244,13 @@ bool arm_normalize_utf16_to_composed_check(const char16_t *input, size_t length,
       in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in)));
     }
     if (vmaxvq_u16(in) <= 0x7F) {
+      // Only load a second vector when sixteen code units are available.
+      if (p + 16 > length) {
+        *out_length += 8;
+        p += 8;
+        last_ccc = 0;
+        continue;
+      }
       // Get the next eight code units and check if they are also ASCII.
       uint16x8_t nextin =
           vld1q_u16(reinterpret_cast<const uint16_t *>(input + p) + 8);
