@@ -426,7 +426,7 @@ size_t icelake_normalize_utf8_to_composed(const char *in, size_t length,
           reinterpret_cast<const uint8_t *>(in), length, mask,
           reinterpret_cast<uint8_t **>(out_ptr), *out_ptr - start, &last_ccc);
       p += consumed;
-      mask >>= consumed;
+      mask = consumed >= 64 ? 0 : mask >> consumed;
     }
   }
   if (p < length) {
