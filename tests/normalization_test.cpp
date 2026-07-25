@@ -733,6 +733,36 @@ TEST(utf16_agrees_with_utf8) {
 
 #undef CHECK_AGREEMENT
 
+TEST(composed_scalar_fallback_consumes_past_block) {
+  for (int marks = 20; marks <= 40; marks++) {
+    std::string input;
+    std::string expected;
+    for (int i = 0; i < 3; i++) {
+      input += "\U0001D15E";               // MUSICAL SYMBOL HALF NOTE
+      expected += "\U0001D157\U0001D165";  // stays decomposed: excluded from
+                                           // composition
+    }
+    for (int i = 0; i < marks; i++) {
+      input += "\u0300"; // COMBINING GRAVE ACCENT, ccc 230
+      expected += "\u0300";
+    }
+    // The vectorized loop only runs while 64 + 64 bytes remain, so keep the
+    // interesting region well inside it.
+    input.append(256, 'a');
+    expected.append(256, 'a');
+
+    char what[96];
+    snprintf(what, sizeof(what), "NFC, %d marks (fallback consumes %d bytes)",
+             marks, 12 + 2 * marks);
+    check_norm(what, std::string_view(expected), std::string_view(input),
+               to_nfc_utf8(implementation, input), size_t(__LINE__));
+    snprintf(what, sizeof(what), "NFKC, %d marks (fallback consumes %d bytes)",
+             marks, 12 + 2 * marks);
+    check_norm(what, std::string_view(expected), std::string_view(input),
+               to_nfkc_utf8(implementation, input), size_t(__LINE__));
+  }
+}
+  
 TEST(find_stable_utf8_nfd) {
   check_find_stable_utf8(simdutf::find_first_stable_utf8_nfd,
                          simdutf::find_last_stable_utf8_nfd);
