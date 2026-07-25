@@ -397,6 +397,18 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
   register_function("normalize_utf16le_to_nfkd+icu",
                     &Benchmark::run_normalize_utf16le_to_nfkd_icu,
                     simdutf::encoding_type::UTF16_LE);
+  register_function("normalize_utf16be_to_nfc+icu",
+                    &Benchmark::run_normalize_utf16be_to_nfc_icu,
+                    simdutf::encoding_type::UTF16_BE);
+  register_function("normalize_utf16be_to_nfd+icu",
+                    &Benchmark::run_normalize_utf16be_to_nfd_icu,
+                    simdutf::encoding_type::UTF16_BE);
+  register_function("normalize_utf16be_to_nfkc+icu",
+                    &Benchmark::run_normalize_utf16be_to_nfkc_icu,
+                    simdutf::encoding_type::UTF16_BE);
+  register_function("normalize_utf16be_to_nfkd+icu",
+                    &Benchmark::run_normalize_utf16be_to_nfkd_icu,
+                    simdutf::encoding_type::UTF16_BE);
 #endif
 #ifdef ICONV_AVAILABLE
   register_function("convert_latin1_to_utf8+iconv",
@@ -1910,6 +1922,75 @@ void Benchmark::run_normalize_utf16le_to_nfkd_icu(size_t iterations) {
       U_ICU_NAMESPACE::Normalizer2::getNFKDInstance(status);
   assert(U_SUCCESS(status));
   run_normalize_utf16le_icu(normalizer, iterations);
+}
+
+void Benchmark::run_normalize_utf16be_icu(
+    const U_ICU_NAMESPACE::Normalizer2 *normalizer, size_t iterations) {
+  const char16_t *data = reinterpret_cast<const char16_t *>(input_data.data());
+  const size_t size = input_data.size() / 2;
+  // ICU has no big-endian normalizer: UnicodeString always holds host-native
+  // UChar. The byte swap is part of the measurement, since simdutf reads
+  // big-endian input directly. The result is left in host order, so these
+  // numbers flatter ICU slightly.
+  const bool needs_swap = !simdutf::match_system(simdutf::endianness::BIG);
+  std::unique_ptr<char16_t[]> swapped{new char16_t[needs_swap ? size : 0]};
+  U_ICU_NAMESPACE::UnicodeString dest;
+  volatile size_t sink{0};
+
+  auto proc = [&normalizer, &dest, &sink, &size, &data, needs_swap,
+               &swapped]() {
+    const char16_t *host = data;
+    if (needs_swap) {
+      get_active_implementation()->change_endianness_utf16(data, size,
+                                                           swapped.get());
+      host = swapped.get();
+    }
+    const U_ICU_NAMESPACE::UnicodeString src(host, size);
+    UErrorCode status = U_ZERO_ERROR;
+    normalizer->normalize(src, dest, status);
+    assert(U_SUCCESS(status));
+    sink = dest.length();
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  if ((sink == 0) && (size != 0) && (iterations > 0)) {
+    std::cerr
+        << "The output is zero which might indicate a misconfiguration.\n";
+  }
+  size_t char_count = get_active_implementation()->count_utf16be(data, size);
+  print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_normalize_utf16be_to_nfc_icu(size_t iterations) {
+  UErrorCode status = U_ZERO_ERROR;
+  const U_ICU_NAMESPACE::Normalizer2 *normalizer =
+      U_ICU_NAMESPACE::Normalizer2::getNFCInstance(status);
+  assert(U_SUCCESS(status));
+  run_normalize_utf16be_icu(normalizer, iterations);
+}
+
+void Benchmark::run_normalize_utf16be_to_nfd_icu(size_t iterations) {
+  UErrorCode status = U_ZERO_ERROR;
+  const U_ICU_NAMESPACE::Normalizer2 *normalizer =
+      U_ICU_NAMESPACE::Normalizer2::getNFDInstance(status);
+  assert(U_SUCCESS(status));
+  run_normalize_utf16be_icu(normalizer, iterations);
+}
+
+void Benchmark::run_normalize_utf16be_to_nfkc_icu(size_t iterations) {
+  UErrorCode status = U_ZERO_ERROR;
+  const U_ICU_NAMESPACE::Normalizer2 *normalizer =
+      U_ICU_NAMESPACE::Normalizer2::getNFKCInstance(status);
+  assert(U_SUCCESS(status));
+  run_normalize_utf16be_icu(normalizer, iterations);
+}
+
+void Benchmark::run_normalize_utf16be_to_nfkd_icu(size_t iterations) {
+  UErrorCode status = U_ZERO_ERROR;
+  const U_ICU_NAMESPACE::Normalizer2 *normalizer =
+      U_ICU_NAMESPACE::Normalizer2::getNFKDInstance(status);
+  assert(U_SUCCESS(status));
+  run_normalize_utf16be_icu(normalizer, iterations);
 }
 
 #endif

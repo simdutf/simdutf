@@ -294,6 +294,13 @@ private:
   void run_normalize_utf16le_to_nfd_icu(size_t iterations);
   void run_normalize_utf16le_to_nfkc_icu(size_t iterations);
   void run_normalize_utf16le_to_nfkd_icu(size_t iterations);
+
+  void run_normalize_utf16be_icu(const U_ICU_NAMESPACE::Normalizer2 *normalizer,
+                                 size_t iterations);
+  void run_normalize_utf16be_to_nfc_icu(size_t iterations);
+  void run_normalize_utf16be_to_nfd_icu(size_t iterations);
+  void run_normalize_utf16be_to_nfkc_icu(size_t iterations);
+  void run_normalize_utf16be_to_nfkd_icu(size_t iterations);
 #endif
 #if ICONV_AVAILABLE
   void run_convert_latin1_to_utf8_iconv(size_t iterations);
