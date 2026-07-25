@@ -35,7 +35,7 @@ size_t normalize(const char *in, size_t length, char *out) {
           reinterpret_cast<const uint8_t *>(in), length, mask,
           reinterpret_cast<uint8_t **>(out_ptr), *out_ptr - start, &last_ccc);
       p += consumed;
-      mask >>= consumed;
+      mask = consumed >= 64 ? 0 : mask >> consumed;
     }
   }
 
