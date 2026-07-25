@@ -272,8 +272,13 @@ std::pair<size_t, bool> rfind_starter(const typename Traits::char_type *input,
   return std::make_pair(0, false);
 }
 
+// Find the first stable code point boundary at or after `input`. A position
+// is stable for `form` if the code point there has a canonical combining
+// class of zero and is not itself relevant to NF(K)C composition. Returns
+// `input + length` (the end of the scanned range) if no such position
+// exists.
 template <typename Traits, ComposedForm form>
-std::pair<size_t, bool>
+const typename Traits::char_type *
 find_first_stable(const typename Traits::char_type *input, size_t length) {
   size_t p = 0;
   while (p < length) {
@@ -281,30 +286,32 @@ find_first_stable(const typename Traits::char_type *input, size_t length) {
     uint32_t c = Traits::parse_code_point(input + p, &size);
     uint8_t ccc = lookup_ccc(c);
     if (ccc == 0 && !is_relevant<form>(c)) {
-      return std::make_pair(p, true);
+      return input + p;
     }
     p += size;
   }
-  return std::make_pair(0, false);
+  return input + length;
 }
 
+// Find the last stable code point boundary at or before `input + length`.
+// Returns `input + length` if no such position exists.
 template <typename Traits, ComposedForm form>
-std::pair<size_t, bool>
+const typename Traits::char_type *
 find_last_stable(const typename Traits::char_type *input, size_t length) {
   size_t cutoff = length;
   while (cutoff > 0) {
     auto result = rfind_starter<Traits>(input, cutoff);
     if (!result.second) {
-      return std::make_pair(0, false);
+      return input + length;
     }
     cutoff = result.first;
     uint8_t size;
     uint32_t c = Traits::parse_code_point(input + cutoff, &size);
     if (!is_relevant<form>(c)) {
-      return std::make_pair(cutoff, true);
+      return input + cutoff;
     }
   }
-  return std::make_pair(0, false);
+  return input + length;
 }
 
 // In-place canonical ordering as defined by the specification.

@@ -72,16 +72,11 @@ size_t normalize(InputPtr input, size_t length, OutputPtr out) {
       previous_starter_pos = 0;
     }
 
-    auto next_irrelevant_starter_pos_result = normalization::find_first_stable<
+    const char *next_irrelevant_starter_ptr = normalization::find_first_stable<
         normalization::utf8_normalization_traits, form>(input + p + size,
                                                         length - p - size);
     size_t next_irrelevant_starter_pos =
-        next_irrelevant_starter_pos_result.first;
-    if (!next_irrelevant_starter_pos_result.second) {
-      next_irrelevant_starter_pos = length;
-    } else {
-      next_irrelevant_starter_pos += p + size;
-    }
+        size_t(next_irrelevant_starter_ptr - input);
 
     // Jump to the previous starter in the output. This is valid because
     // everything in between two stable code points should have a 1:1 mapping
@@ -145,18 +140,18 @@ size_t normalize_with_context(InputPtr input, InputPtr input_base,
   // Get the region that we will NF(K)C normalize.
   uint8_t first_size;
   utf8::parse_code_point(input, &first_size);
-  auto prev_starter_result =
+  size_t scanned_length = offset + first_size;
+  const char *prev_starter_ptr =
       normalization::find_last_stable<normalization::utf8_normalization_traits,
-                                      form>(input_base, offset + first_size);
-  size_t prev_starter =
-      prev_starter_result.second ? prev_starter_result.first : 0;
-  auto next_starter_result =
+                                      form>(input_base, scanned_length);
+  size_t prev_starter = (prev_starter_ptr == input_base + scanned_length)
+                            ? 0
+                            : size_t(prev_starter_ptr - input_base);
+  const char *next_starter_ptr =
       normalization::find_first_stable<normalization::utf8_normalization_traits,
                                        form>(input_base + offset + length,
                                              input_length - offset - length);
-  size_t next_starter = next_starter_result.second
-                            ? next_starter_result.first + offset + length
-                            : input_length;
+  size_t next_starter = size_t(next_starter_ptr - input_base);
   size_t region_size = next_starter - prev_starter;
   size_t code_point_dist =
       utf8::count_code_points(input_base + prev_starter, offset - prev_starter);

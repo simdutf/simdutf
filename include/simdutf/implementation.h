@@ -5191,6 +5191,78 @@ normalize_utf16be_to_nfkc_check(const char16_t *input, size_t length,
                                 size_t *output_length) noexcept;
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFKC
 
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
+simdutf_warn_unused const char *
+find_first_stable_utf8_nfd(const char *input, size_t length) noexcept;
+simdutf_warn_unused const char *
+find_last_stable_utf8_nfd(const char *input, size_t length) noexcept;
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFD
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKD
+simdutf_warn_unused const char *
+find_first_stable_utf8_nfkd(const char *input, size_t length) noexcept;
+simdutf_warn_unused const char *
+find_last_stable_utf8_nfkd(const char *input, size_t length) noexcept;
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKD
+
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFD
+simdutf_warn_unused const char16_t *
+find_first_stable_utf16le_nfd(const char16_t *input, size_t length) noexcept;
+simdutf_warn_unused const char16_t *
+find_last_stable_utf16le_nfd(const char16_t *input, size_t length) noexcept;
+simdutf_warn_unused const char16_t *
+find_first_stable_utf16be_nfd(const char16_t *input, size_t length) noexcept;
+simdutf_warn_unused const char16_t *
+find_last_stable_utf16be_nfd(const char16_t *input, size_t length) noexcept;
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFD
+
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFKD
+simdutf_warn_unused const char16_t *
+find_first_stable_utf16le_nfkd(const char16_t *input, size_t length) noexcept;
+simdutf_warn_unused const char16_t *
+find_last_stable_utf16le_nfkd(const char16_t *input, size_t length) noexcept;
+simdutf_warn_unused const char16_t *
+find_first_stable_utf16be_nfkd(const char16_t *input, size_t length) noexcept;
+simdutf_warn_unused const char16_t *
+find_last_stable_utf16be_nfkd(const char16_t *input, size_t length) noexcept;
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFKD
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFC
+simdutf_warn_unused const char *
+find_first_stable_utf8_nfc(const char *input, size_t length) noexcept;
+simdutf_warn_unused const char *
+find_last_stable_utf8_nfc(const char *input, size_t length) noexcept;
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFC
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKC
+simdutf_warn_unused const char *
+find_first_stable_utf8_nfkc(const char *input, size_t length) noexcept;
+simdutf_warn_unused const char *
+find_last_stable_utf8_nfkc(const char *input, size_t length) noexcept;
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_NFKC
+
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFC
+simdutf_warn_unused const char16_t *
+find_first_stable_utf16le_nfc(const char16_t *input, size_t length) noexcept;
+simdutf_warn_unused const char16_t *
+find_last_stable_utf16le_nfc(const char16_t *input, size_t length) noexcept;
+simdutf_warn_unused const char16_t *
+find_first_stable_utf16be_nfc(const char16_t *input, size_t length) noexcept;
+simdutf_warn_unused const char16_t *
+find_last_stable_utf16be_nfc(const char16_t *input, size_t length) noexcept;
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFC
+
+#if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFKC
+simdutf_warn_unused const char16_t *
+find_first_stable_utf16le_nfkc(const char16_t *input, size_t length) noexcept;
+simdutf_warn_unused const char16_t *
+find_last_stable_utf16le_nfkc(const char16_t *input, size_t length) noexcept;
+simdutf_warn_unused const char16_t *
+find_first_stable_utf16be_nfkc(const char16_t *input, size_t length) noexcept;
+simdutf_warn_unused const char16_t *
+find_last_stable_utf16be_nfkc(const char16_t *input, size_t length) noexcept;
+#endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_NFKC
+
 /**
  * An implementation of simdutf for a particular CPU architecture.
  *
