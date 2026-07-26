@@ -268,6 +268,34 @@ private:
   void
   run_normalize_utf16be_to_nfkd(const simdutf::implementation &implementation,
                                 size_t iterations);
+
+  void
+  run_normalize_utf8_to_nfc_check(const simdutf::implementation &implementation,
+                                  size_t iterations);
+  void
+  run_normalize_utf8_to_nfd_check(const simdutf::implementation &implementation,
+                                  size_t iterations);
+  void run_normalize_utf8_to_nfkc_check(
+      const simdutf::implementation &implementation, size_t iterations);
+  void run_normalize_utf8_to_nfkd_check(
+      const simdutf::implementation &implementation, size_t iterations);
+
+  void run_normalize_utf16le_to_nfc_check(
+      const simdutf::implementation &implementation, size_t iterations);
+  void run_normalize_utf16be_to_nfc_check(
+      const simdutf::implementation &implementation, size_t iterations);
+  void run_normalize_utf16le_to_nfd_check(
+      const simdutf::implementation &implementation, size_t iterations);
+  void run_normalize_utf16be_to_nfd_check(
+      const simdutf::implementation &implementation, size_t iterations);
+  void run_normalize_utf16le_to_nfkc_check(
+      const simdutf::implementation &implementation, size_t iterations);
+  void run_normalize_utf16be_to_nfkc_check(
+      const simdutf::implementation &implementation, size_t iterations);
+  void run_normalize_utf16le_to_nfkd_check(
+      const simdutf::implementation &implementation, size_t iterations);
+  void run_normalize_utf16be_to_nfkd_check(
+      const simdutf::implementation &implementation, size_t iterations);
 #endif // SIMDUTF_BENCH_NORMALIZATION
 
   void run_utf8_length_from_latin1_node(size_t iterations);
