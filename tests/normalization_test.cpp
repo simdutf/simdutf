@@ -101,7 +101,7 @@ NORMALIZATION_FUNCTION(nfkc, utf16be, std::u16string, std::u16string_view);
 NORMALIZATION_FUNCTION(nfkd, utf16be, std::u16string, std::u16string_view);
 
 template <typename T> void dump_hex_string(std::basic_string_view<T> s) {
-  for (uint8_t b : s) {
+  for (T b : s) {
     if constexpr (sizeof(T) == 1) {
       printf("%02x ", b);
     }
@@ -863,6 +863,217 @@ TEST(find_stable_utf16_le_be_agree) {
   const char16_t *first_be_nfd =
       simdutf::find_first_stable_utf16be_nfd(be.data(), be.size());
   ASSERT_EQUAL((first_le_nfd - le.data()), (first_be_nfd - be.data()));
+}
+
+// The vectorized NF(K)C kernels skip the composition trie entirely for code
+// points below a hard-coded bound (`scalar::normalization::min_relevant_cp`),
+// on the premise that every such code point has NF(K)C_QC=Yes and a combining
+// class of zero. If a Unicode update ever moved that bound down, the kernel
+// would silently emit unnormalized text, so pin it here.
+//
+// A string made of every code point below the bound must normalize to itself:
+// a QC!=Yes code point would be rewritten, and a ccc!=0 one could be reordered.
+// The string is far longer than one SIMD block, so it exercises the fast path.
+static void check_min_relevant_cp(
+    const simdutf::implementation &impl, char16_t bound,
+    std::pair<std::u16string, bool> (*nf)(const simdutf::implementation &,
+                                          std::u16string_view)) {
+  std::u16string below;
+  for (char16_t cp = 0; cp < bound; cp++) {
+    below.push_back(cp);
+  }
+  const auto result = nf(impl, below);
+  ASSERT_TRUE(result.second);
+  ASSERT_TRUE(result.first == below);
+
+  // The bound should also be tight: the code point at the bound must actually
+  // be composition-relevant, otherwise the fast path is leaving work behind.
+  const std::u16string at_bound = std::u16string(u"a") + bound;
+  ASSERT_FALSE(nf(impl, at_bound).second);
+}
+
+TEST(comp_min_relevant_cp_nfc) {
+  check_min_relevant_cp(implementation, 0x0300, to_nfc_utf16le);
+}
+
+TEST(comp_min_relevant_cp_nfkc) {
+  check_min_relevant_cp(implementation, 0x00A0, to_nfkc_utf16le);
+}
+
+// Hangul composition is arithmetic rather than table-driven, so it has its own
+// code path in the composer that NormalizationTest.txt barely exercises: Part 1
+// does not enumerate the 11172 syllables, and only a handful of lines mention
+// jamo at all. These tests cover that path directly.
+namespace hangul {
+constexpr char16_t s_base = 0xAC00;
+constexpr char16_t l_base = 0x1100;
+constexpr char16_t v_base = 0x1161;
+// Off by one by design, so that the algorithmic decomposition arithmetic comes
+// out clean; the first real T jamo is t_base + 1.
+constexpr char16_t t_base = 0x11A7;
+constexpr int l_count = 19;
+constexpr int v_count = 21;
+constexpr int t_count = 28;
+constexpr int s_count = l_count * v_count * t_count;
+
+std::u16string syllable(int l, int v, int t) {
+  return std::u16string(1, char16_t(s_base + (l * v_count + v) * t_count + t));
+}
+
+std::u16string jamo(int l, int v, int t) {
+  std::u16string out;
+  out.push_back(char16_t(l_base + l));
+  out.push_back(char16_t(v_base + v));
+  if (t != 0) {
+    out.push_back(char16_t(t_base + t));
+  }
+  return out;
+}
+
+// Drives one case through NFC and NFKC, in UTF-16 LE and BE. Composition is
+// identical under both forms for jamo, and going through the
+// NORMALIZATION_FUNCTION wrappers means the `_check` output-length bound is
+// validated alongside the result.
+void check(const simdutf::implementation &impl, const char *what,
+           std::u16string_view expected, std::u16string_view input,
+           size_t line) {
+  check_norm(what, expected, input, to_nfc_utf16le(impl, input), line);
+  check_norm(what, expected, input, to_nfkc_utf16le(impl, input), line);
+
+  std::u16string be_input(input);
+  std::u16string be_expected(expected);
+  for (char16_t &c : be_input) {
+    c = char16_t((c << 8) | (c >> 8));
+  }
+  for (char16_t &c : be_expected) {
+    c = char16_t((c << 8) | (c >> 8));
+  }
+  check_norm(what, std::u16string_view(be_expected),
+             std::u16string_view(be_input), to_nfc_utf16be(impl, be_input),
+             line);
+  check_norm(what, std::u16string_view(be_expected),
+             std::u16string_view(be_input), to_nfkc_utf16be(impl, be_input),
+             line);
+}
+} // namespace hangul
+
+// Every L V and L V T combination must compose to the right syllable, and every
+// syllable must survive NFC unchanged and round-trip through NFD. The strings
+// are padded so the interesting region lands past the vectorized loop's safety
+// margin as well as inside it.
+TEST(hangul_compose_all_jamo_triples) {
+  using namespace hangul;
+  for (int l = 0; l < l_count; l++) {
+    for (int v = 0; v < v_count; v++) {
+      for (int t = 0; t < t_count; t++) {
+        const std::u16string decomposed = jamo(l, v, t);
+        const std::u16string composed = syllable(l, v, t);
+
+        char what[96];
+        snprintf(what, sizeof(what), "compose L=%d V=%d T=%d", l, v, t);
+        check(implementation, what, composed, decomposed, size_t(__LINE__));
+
+        // Same triple with enough leading text to push it out of the first
+        // block, and trailing text so it is not the tail of the buffer.
+        const std::u16string padded_in =
+            std::u16string(19, u'a') + decomposed + std::u16string(19, u'z');
+        const std::u16string padded_out =
+            std::u16string(19, u'a') + composed + std::u16string(19, u'z');
+        snprintf(what, sizeof(what), "compose padded L=%d V=%d T=%d", l, v, t);
+        check(implementation, what, padded_out, padded_in, size_t(__LINE__));
+      }
+    }
+  }
+}
+
+TEST(hangul_syllables_are_already_nfc) {
+  using namespace hangul;
+  std::u16string all;
+  for (int i = 0; i < s_count; i++) {
+    all.push_back(char16_t(s_base + i));
+  }
+  const auto nfc = to_nfc_utf16le(implementation, all);
+  ASSERT_TRUE(nfc.first == all);
+  ASSERT_TRUE(nfc.second);
+
+  // Round trip: decomposing then composing the whole block must be the
+  // identity.
+  const auto nfd = to_nfd_utf16le(implementation, all);
+  const auto back = to_nfc_utf16le(implementation, nfd.first);
+  ASSERT_TRUE(back.first == all);
+}
+
+// A Jamo T composes with a preceding *LV* syllable, which is a separate branch
+// from the L + V + T one. An LVT syllable is complete and must absorb nothing
+// further.
+TEST(hangul_compose_lv_plus_t) {
+  using namespace hangul;
+  for (int l = 0; l < l_count; l++) {
+    for (int v = 0; v < v_count; v++) {
+      for (int t = 1; t < t_count; t++) {
+        std::u16string input = syllable(l, v, 0);
+        input.push_back(char16_t(t_base + t));
+
+        char what[96];
+        snprintf(what, sizeof(what), "LV + T, L=%d V=%d T=%d", l, v, t);
+        check(implementation, what, syllable(l, v, t), input, size_t(__LINE__));
+
+        // A second T must not be absorbed by the now-complete LVT syllable.
+        std::u16string twice = input;
+        twice.push_back(char16_t(t_base + t));
+        std::u16string expected = syllable(l, v, t);
+        expected.push_back(char16_t(t_base + t));
+        snprintf(what, sizeof(what), "LV + T + T, L=%d V=%d T=%d", l, v, t);
+        check(implementation, what, expected, twice, size_t(__LINE__));
+      }
+    }
+  }
+}
+
+// The vectorized kernel hands eight code units at a time to the scalar
+// composer, so a syllable that straddles a block boundary exercises the
+// backwards walk and the output rewind in `normalize_with_context`. Sweep the
+// syllable across every offset.
+TEST(hangul_syllables_straddling_simd_blocks) {
+  using namespace hangul;
+  for (size_t lead = 0; lead < 40; lead++) {
+    for (int t = 0; t < t_count; t += 9) {
+      std::u16string input(lead, u'a');
+      std::u16string expected(lead, u'a');
+      // Several syllables in a row, so the run itself spans blocks too.
+      for (int i = 0; i < 7; i++) {
+        input += jamo(i % l_count, i % v_count, t);
+        expected += syllable(i % l_count, i % v_count, t);
+      }
+      input.append(40, u'z');
+      expected.append(40, u'z');
+
+      char what[96];
+      snprintf(what, sizeof(what), "straddle lead=%zu T=%d", lead, t);
+      check(implementation, what, expected, input, size_t(__LINE__));
+    }
+  }
+}
+
+// A long uninterrupted jamo run, and one broken up by ASCII the way real Korean
+// text is, so the composer is exercised both while it stays in the fallback and
+// while it bounces between the fallback and the vectorized loop.
+TEST(hangul_long_runs) {
+  using namespace hangul;
+  for (bool spaced : {false, true}) {
+    std::u16string input;
+    std::u16string expected;
+    for (int i = 0; i < 400; i++) {
+      input += jamo(i % l_count, i % v_count, i % t_count);
+      expected += syllable(i % l_count, i % v_count, i % t_count);
+      if (spaced && (i % 3) == 2) {
+        input.push_back(u' ');
+        expected.push_back(u' ');
+      }
+    }
+    check(implementation, spaced ? "long spaced jamo run" : "long jamo run",
+          expected, input, size_t(__LINE__));
+  }
 }
 
 TEST_MAIN

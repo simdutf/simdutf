@@ -175,14 +175,18 @@ size_t normalize_masked_utf8_to_composed(const uint8_t *input,
                                          const uint8_t *input_base,
                                          size_t input_length, uint64_t mask,
                                          uint8_t **out, size_t out_length,
-                                         uint8_t *last_ccc) {
+                                         uint8_t *last_ccc,
+                                         size_t *prev_boundary) {
   (void)out_length;
+  const size_t offset = size_t(input - input_base);
   int t1 = int(_tzcnt_u64(~mask));
   if (t1 > 2) {
     size_t min = t1 > 52 ? 52 : size_t(t1);
     internal::icelake_copy64(*out, input);
     *out += min;
     *last_ccc = 0;
+    // ASCII is stable, so the last byte we just copied is a boundary.
+    *prev_boundary = offset + min - 1;
     return min;
   }
 
@@ -192,6 +196,7 @@ size_t normalize_masked_utf8_to_composed(const uint8_t *input,
   do {
     uint8_t leading = uint8_t(data[pos]);
     if (leading < 0x80) {
+      *prev_boundary = offset + pos;
       *output++ = char(leading);
       pos++;
       *last_ccc = 0;
@@ -200,8 +205,6 @@ size_t normalize_masked_utf8_to_composed(const uint8_t *input,
     // leading >= 0x80 here; valid UTF-8 leading byte encodes its length.
     uint8_t size = leading < 0xE0 ? 2 : (leading < 0xF0 ? 3 : 4);
     uint32_t c;
-    uint8_t ccc;
-    bool is_relevant;
     if (size == 2) {
       c = (uint32_t(leading & 0x1F) << 6) | (uint8_t(data[pos + 1]) & 0x3F);
     } else if (size == 3) {
@@ -214,26 +217,13 @@ size_t normalize_masked_utf8_to_composed(const uint8_t *input,
           (uint32_t(uint8_t(data[pos + 2]) & 0x3F) << 6) |
           (uint8_t(data[pos + 3]) & 0x3F);
     }
-    if (c <= 0xFFFF) {
-      uint16_t value =
-          scalar::normalization::lookup_comp_trie<form>(uint16_t(c));
-      ccc = uint8_t(value >> 2);
-      is_relevant = (value & 0b11) > 0;
-    } else {
-      constexpr auto dform = to_decomposed_form(form);
-      uint64_t kv =
-          scalar::normalization::lookup_supplementary_code_point<dform>(c);
-      uint32_t k = kv & 0x1FFFFF;
-      is_relevant = false;
-      ccc = 0;
-      if (k == c) {
-        uint8_t qc = uint8_t(kv >> 56);
-        is_relevant = qc != 0;
-        ccc = (kv >> 45) & 0xFF;
-      }
-    }
-
+    uint16_t value = scalar::normalization::lookup_comp_trie<form>(c);
+    uint8_t ccc = uint8_t((value >> 2) & 0xFF);
+    bool is_relevant = (value & 0b11) > 0;
     if (ccc <= *last_ccc && !is_relevant) {
+      // A composition-irrelevant code point has combining class zero, so this
+      // position is a boundary.
+      *prev_boundary = offset + pos;
       for (uint8_t i = 0; i < size; i++) {
         *output++ = data[pos + i];
       }
@@ -249,7 +239,10 @@ size_t normalize_masked_utf8_to_composed(const uint8_t *input,
     *out = reinterpret_cast<uint8_t *>(output);
     size_t consumed = scalar::utf8_to_composed::normalize_with_context<form>(
         data + pos, reinterpret_cast<const char *>(input_base), input_length,
-        reinterpret_cast<char **>(out), size);
+        reinterpret_cast<char **>(out), size, *prev_boundary);
+    // The fallback consumes up to the next stable position, so wherever it
+    // stopped is a boundary.
+    *prev_boundary = offset + pos + consumed;
     *last_ccc = 0;
     return pos + consumed;
   } while (pos < 12);
@@ -407,6 +400,13 @@ size_t icelake_normalize_utf8_to_composed(const char *in, size_t length,
   constexpr const size_t SAFETY_MARGIN = 64;
   uint8_t last_ccc = 0;
   size_t p = 0;
+  // The most recent input offset proven to be a composition boundary, in the
+  // sense of ICU's `prevBoundary`. Nothing before it can interact with anything
+  // at or after it, so the scalar fallback never has to look further back than
+  // this. Offset zero is trivially a boundary. Every position between this and
+  // `p` maps one input code point to exactly one output code point, which is
+  // what lets `normalize_with_context` rewind the output pointer.
+  size_t prev_boundary = 0;
   while (p + 64 + SAFETY_MARGIN <= length) {
     uint64_t mask = internal::icelake_codepoint_mask(
         reinterpret_cast<const uint8_t *>(in) + p);
@@ -414,6 +414,8 @@ size_t icelake_normalize_utf8_to_composed(const char *in, size_t length,
       _mm512_storeu_si512(
           reinterpret_cast<void *>(*out_ptr),
           _mm512_loadu_si512(reinterpret_cast<const void *>(in + p)));
+      // The 63 bytes we consume are all ASCII, hence all stable.
+      prev_boundary = p + 62;
       p += 63;
       *out_ptr += 63;
       last_ccc = 0;
@@ -424,14 +426,15 @@ size_t icelake_normalize_utf8_to_composed(const char *in, size_t length,
       size_t consumed = normalize_masked_utf8_to_composed<form>(
           reinterpret_cast<const uint8_t *>(in + p),
           reinterpret_cast<const uint8_t *>(in), length, mask,
-          reinterpret_cast<uint8_t **>(out_ptr), *out_ptr - start, &last_ccc);
+          reinterpret_cast<uint8_t **>(out_ptr), *out_ptr - start, &last_ccc,
+          &prev_boundary);
       p += consumed;
       mask = consumed >= 64 ? 0 : mask >> consumed;
     }
   }
   if (p < length) {
     (void)scalar::utf8_to_composed::normalize_with_context<form>(
-        in + p, in, length, out_ptr, length - p);
+        in + p, in, length, out_ptr, length - p, prev_boundary);
   }
   return *out_ptr - start;
 }

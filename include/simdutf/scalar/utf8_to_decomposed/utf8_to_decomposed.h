@@ -25,7 +25,7 @@ simdutf_really_inline uint16_t lookup_narrow_trie(uint16_t code_point) {
 }
 
 template <DecomposedForm form>
-simdutf_really_inline uint32_t lookup_full_trie(uint16_t code_point) {
+simdutf_really_inline uint32_t lookup_full_trie_bmp(uint16_t code_point) {
   uint16_t shift = code_point >> 6;
   uint16_t masked = code_point & 63;
   uint32_t value;
@@ -44,22 +44,44 @@ simdutf_really_inline uint32_t lookup_full_trie(uint16_t code_point) {
 }
 
 template <DecomposedForm form>
+simdutf_really_inline uint32_t
+lookup_full_trie_supplementary(uint32_t code_point) {
+  uint32_t supplementary = code_point - 0x10000;
+  if constexpr (form == DecomposedForm::NFD) {
+    uint16_t index1 = simdutf::tables::utf8_to_decomposed::nfd::full_trie_index1
+        [supplementary >> 11];
+    uint16_t index2 = simdutf::tables::utf8_to_decomposed::nfd::full_trie_index2
+        [index1 + ((supplementary >> 6) & 31)];
+    return simdutf::tables::utf8_to_decomposed::nfd::full_trie_data
+        [index2 + (code_point & 63)];
+  } else {
+    uint16_t index1 = simdutf::tables::utf8_to_decomposed::nfkd::
+        full_trie_index1[supplementary >> 11];
+    uint16_t index2 = simdutf::tables::utf8_to_decomposed::nfkd::
+        full_trie_index2[index1 + ((supplementary >> 6) & 31)];
+    return simdutf::tables::utf8_to_decomposed::nfkd::full_trie_data
+        [index2 + (code_point & 63)];
+  }
+}
+
+template <DecomposedForm form>
+simdutf_really_inline uint32_t lookup_full_trie(uint32_t code_point) {
+  if (code_point <= 0xFFFF) {
+    return lookup_full_trie_bmp<form>(uint16_t(code_point));
+  } else {
+    return lookup_full_trie_supplementary<form>(code_point);
+  }
+}
+
+template <DecomposedForm form>
 const char *find_first_stable(const char *input, size_t length) {
   size_t p = 0;
   while (p < length) {
     uint8_t size;
     uint32_t c = utf8::parse_code_point(input + p, &size);
     uint8_t ccc = normalization::lookup_ccc(c);
-    bool relevant;
-    if (c <= 0xFFFF) {
-      uint16_t value = lookup_narrow_trie<form>(uint16_t(c));
-      relevant = value > 3;
-    } else {
-      uint64_t kv = normalization::lookup_supplementary_code_point<form>(c);
-      uint32_t k = kv & 0x1FFFFF;
-      relevant = k == c;
-    }
-    if (ccc == 0 && !relevant) {
+    uint32_t value = lookup_full_trie<form>(c);
+    if (ccc == 0 && value == 0) {
       return input + p;
     }
     p += size;
@@ -82,31 +104,18 @@ const char *find_last_stable(const char *input, size_t length) {
     cutoff = result.first;
     uint8_t size;
     uint32_t c = utf8::parse_code_point(input + cutoff, &size);
-    bool relevant;
-    if (c <= 0xFFFF) {
-      uint16_t value = lookup_narrow_trie<form>(uint16_t(c));
-      relevant = value > 3;
-    } else {
-      uint64_t kv = normalization::lookup_supplementary_code_point<form>(c);
-      uint32_t k = kv & 0x1FFFFF;
-      relevant = k == c;
-    }
-    if (!relevant) {
+    uint32_t value = lookup_full_trie<form>(c);
+    if (value == 0) {
       return input + cutoff;
     }
   }
   return input + length;
 }
 
-// Decompose character in BMP
-template <DecomposedForm form>
-size_t decompose_bmp(uint16_t code_point, char *output, uint8_t *first_ccc,
-                     uint8_t *ccc) {
+simdutf_really_inline size_t write_decomposition(uint32_t value, char *output,
+                                                 uint8_t *first_ccc,
+                                                 uint8_t *ccc) {
   char *start{output};
-  uint32_t value = lookup_full_trie<form>(code_point);
-  if (value == 0) {
-    return 0;
-  }
   *ccc = (value >> 21) & 0xFF;
   uint16_t offset = value & 0x7FFF;
   uint8_t length = (value >> 15) & 0x3F;
@@ -120,35 +129,26 @@ size_t decompose_bmp(uint16_t code_point, char *output, uint8_t *first_ccc,
   return output - start;
 }
 
+// Decompose character in BMP
+template <DecomposedForm form>
+size_t decompose_bmp(uint16_t code_point, char *output, uint8_t *first_ccc,
+                     uint8_t *ccc) {
+  uint32_t value = lookup_full_trie_bmp<form>(code_point);
+  if (value == 0) {
+    return 0;
+  }
+  return write_decomposition(value, output, first_ccc, ccc);
+}
+
 // Decompose character in supplementary plane
 template <DecomposedForm form>
 size_t decompose_supplementary(uint32_t code_point, char *output,
                                uint8_t *first_ccc, uint8_t *ccc) {
-  char *start{output};
-  uint64_t kv =
-      normalization::lookup_supplementary_code_point<form>(code_point);
-  uint32_t k = kv & 0x1FFFFF;
-  if (k == code_point) {
-    uint32_t const *chars;
-    uint16_t offset = (kv >> 21) & 0xFFFF;
-    if constexpr (form == DecomposedForm::NFD) {
-      chars = &simdutf::tables::normalization::nfd::lookup_chars[offset];
-    } else {
-      chars = &simdutf::tables::normalization::nfkd::lookup_chars[offset];
-    }
-    uint8_t len = (kv >> 53) & 0b11;
-    for (size_t j = 0; j < len; j++) {
-      output += utf8::write_code_point(chars[j], output);
-    }
-    uint8_t last_ccc = (kv >> 37) & 0xFF;
-    *ccc = last_ccc;
-  } else {
-    *ccc = 0;
+  uint32_t value = lookup_full_trie_supplementary<form>(code_point);
+  if (value == 0) {
+    return 0;
   }
-  // first_ccc doesn't exist for any code points in the supplementary plane, for
-  // now
-  *first_ccc = 0;
-  return output - start;
+  return write_decomposition(value, output, first_ccc, ccc);
 }
 
 // Hangul syllables can be decomposed algorithmically
@@ -266,7 +266,7 @@ simdutf_constexpr23 size_t normalize(InputPtr data, size_t len,
 }
 
 template <DecomposedForm form>
-simdutf_really_inline uint16_t lookup_check_trie(uint16_t code_point) {
+simdutf_really_inline uint16_t lookup_check_trie_bmp(uint16_t code_point) {
   uint16_t shift = code_point >> 6;
   uint16_t masked = code_point & 63;
   uint16_t value;
@@ -285,9 +285,39 @@ simdutf_really_inline uint16_t lookup_check_trie(uint16_t code_point) {
 }
 
 template <DecomposedForm form>
+simdutf_really_inline uint16_t
+lookup_check_trie_supplementary(uint32_t code_point) {
+  uint32_t supplementary = code_point - 0x10000;
+  if constexpr (form == DecomposedForm::NFD) {
+    uint16_t index1 = simdutf::tables::utf8_to_decomposed::nfd::
+        check_trie_index1[supplementary >> 11];
+    uint16_t index2 = simdutf::tables::utf8_to_decomposed::nfd::
+        check_trie_index2[index1 + ((supplementary >> 6) & 31)];
+    return simdutf::tables::utf8_to_decomposed::nfd::check_trie_data
+        [index2 + (code_point & 63)];
+  } else {
+    uint16_t index1 = simdutf::tables::utf8_to_decomposed::nfkd::
+        check_trie_index1[supplementary >> 11];
+    uint16_t index2 = simdutf::tables::utf8_to_decomposed::nfkd::
+        check_trie_index2[index1 + ((supplementary >> 6) & 31)];
+    return simdutf::tables::utf8_to_decomposed::nfkd::check_trie_data
+        [index2 + (code_point & 63)];
+  }
+}
+
+template <DecomposedForm form>
+simdutf_really_inline uint16_t lookup_check_trie(uint32_t code_point) {
+  if (code_point <= 0xFFFF) {
+    return lookup_check_trie_bmp<form>(uint16_t(code_point));
+  } else {
+    return lookup_check_trie_supplementary<form>(code_point);
+  }
+}
+
+template <DecomposedForm form>
 bool check_code_point_bmp(uint16_t code_point, size_t *out_length,
                           uint8_t *ccc) {
-  uint16_t value = lookup_check_trie<form>(code_point);
+  uint16_t value = lookup_check_trie_bmp<form>(code_point);
   *out_length += value & 0x3F;
   *ccc = uint8_t((value >> 6) & 0xFF);
   return !(value >> 15);
@@ -296,33 +326,10 @@ bool check_code_point_bmp(uint16_t code_point, size_t *out_length,
 template <DecomposedForm form>
 static bool check_code_point_supplementary(uint32_t code_point,
                                            size_t *out_length, uint8_t *ccc) {
-  uint64_t kv =
-      normalization::lookup_supplementary_code_point<form>(code_point);
-  uint32_t k = kv & 0x1FFFFF;
-  if (k == code_point) {
-    size_t length = 0;
-    uint16_t offset = (kv >> 21) & 0xFFFF;
-    uint32_t const *chars;
-    if constexpr (form == DecomposedForm::NFD) {
-      chars = &simdutf::tables::normalization::nfd::lookup_chars[offset];
-    } else {
-      chars = &simdutf::tables::normalization::nfkd::lookup_chars[offset];
-    }
-    uint8_t len = (kv >> 53) & 0b11;
-    for (size_t j = 0; j < len; j++) {
-      length += utf8::code_point_size(chars[j]);
-    }
-    *out_length += length;
-    *ccc = (kv >> 45) & 0xFF;
-    uint8_t qc = (kv >> 55) & 1;
-    // Check 0th bit in kv.qc. If this bit is set, then we fail the NF(K)D quick
-    // check
-    return qc == 0;
-  } else {
-    *out_length += 4;
-    *ccc = 0;
-    return true;
-  }
+  uint16_t value = lookup_check_trie_supplementary<form>(code_point);
+  *out_length += value & 0x3F;
+  *ccc = uint8_t((value >> 6) & 0xFF);
+  return !(value >> 15);
 }
 
 template <DecomposedForm form, typename InputPtr>

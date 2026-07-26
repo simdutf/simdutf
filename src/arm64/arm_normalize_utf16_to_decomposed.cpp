@@ -2,13 +2,13 @@ namespace internal {
 template <DecomposedForm form>
 simdutf_really_inline uint32x4_t arm_trie_lookup_utf16(uint16x4_t code_points) {
   uint32_t buf[4];
-  buf[0] = scalar::utf16_to_decomposed::lookup_full_trie<form>(
+  buf[0] = scalar::utf16_to_decomposed::lookup_full_trie_bmp<form>(
       vget_lane_u16(code_points, 0));
-  buf[1] = scalar::utf16_to_decomposed::lookup_full_trie<form>(
+  buf[1] = scalar::utf16_to_decomposed::lookup_full_trie_bmp<form>(
       vget_lane_u16(code_points, 1));
-  buf[2] = scalar::utf16_to_decomposed::lookup_full_trie<form>(
+  buf[2] = scalar::utf16_to_decomposed::lookup_full_trie_bmp<form>(
       vget_lane_u16(code_points, 2));
-  buf[3] = scalar::utf16_to_decomposed::lookup_full_trie<form>(
+  buf[3] = scalar::utf16_to_decomposed::lookup_full_trie_bmp<form>(
       vget_lane_u16(code_points, 3));
   return vld1q_u32(buf);
 }
@@ -39,7 +39,7 @@ simdutf_really_inline void arm_skip_decomp_utf16(uint16x8_t in, size_t length,
   if constexpr (!match_system(big_endian)) {
     in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in)));
   }
-  vst1q_u8(reinterpret_cast<uint8_t *>(*out), vreinterpretq_u8_u16(in));
+  vst1q_u16(reinterpret_cast<uint16_t *>(*out), in);
   *out += length;
 }
 
@@ -305,7 +305,7 @@ size_t arm_normalize_utf16_to_decomposed(const char16_t *input, size_t length,
   char16_t **out_ptr = &output;
   char16_t *start = output;
 
-  const size_t SAFETY_MARGIN = 8;
+  const size_t SAFETY_MARGIN = 16;
   uint8_t last_ccc = 0;
   size_t p = 0;
   while (p + SAFETY_MARGIN < length) {
@@ -384,39 +384,23 @@ template <DecomposedForm form>
 simdutf_really_inline uint16x8_t
 arm_check_trie_lookup_utf16(uint16x8_t code_points) {
   uint16_t buf[8];
-  buf[0] = scalar::utf16_to_decomposed::lookup_check_trie<form>(
+  buf[0] = scalar::utf16_to_decomposed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 0));
-  buf[1] = scalar::utf16_to_decomposed::lookup_check_trie<form>(
+  buf[1] = scalar::utf16_to_decomposed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 1));
-  buf[2] = scalar::utf16_to_decomposed::lookup_check_trie<form>(
+  buf[2] = scalar::utf16_to_decomposed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 2));
-  buf[3] = scalar::utf16_to_decomposed::lookup_check_trie<form>(
+  buf[3] = scalar::utf16_to_decomposed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 3));
-  buf[4] = scalar::utf16_to_decomposed::lookup_check_trie<form>(
+  buf[4] = scalar::utf16_to_decomposed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 4));
-  buf[5] = scalar::utf16_to_decomposed::lookup_check_trie<form>(
+  buf[5] = scalar::utf16_to_decomposed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 5));
-  buf[6] = scalar::utf16_to_decomposed::lookup_check_trie<form>(
+  buf[6] = scalar::utf16_to_decomposed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 6));
-  buf[7] = scalar::utf16_to_decomposed::lookup_check_trie<form>(
+  buf[7] = scalar::utf16_to_decomposed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 7));
   return vld1q_u16(buf);
-}
-
-template <DecomposedForm form>
-simdutf_really_inline void
-arm_check_code_points_utf16(uint16x8_t code_points, size_t *out_length,
-                            bool *is_qc, uint8_t *last_ccc) {
-  uint16x8_t values = arm_check_trie_lookup_utf16<form>(code_points);
-  *out_length += vaddvq_u16(vandq_u16(values, vdupq_n_u16(0x3F)));
-  uint16x8_t ccc_values = vandq_u16(vshrq_n_u16(values, 6), vdupq_n_u16(0xFF));
-  if (*is_qc) {
-    // Checking combining classes is expensive, so we only do it if we
-    // haven't already failed the quick check.
-    *is_qc &= !vmaxvq_u16(vshrq_n_u16(values, 15)) &&
-              arm_is_ccc_sorted_full(ccc_values, *last_ccc);
-  }
-  *last_ccc = uint8_t(vgetq_lane_u16(ccc_values, 7));
 }
 } // namespace internal
 
@@ -462,19 +446,43 @@ bool arm_normalize_utf16_to_decomposed_check(const char16_t *input,
     }
     uint16x8_t surrogates_mask = internal::arm_make_utf16_surrogates_mask(in);
     if (vmaxvq_u16(surrogates_mask) == 0) {
-      internal::arm_check_code_points_utf16<form>(in, out_length, &is_qc,
-                                                  &last_ccc);
-    } else {
-      size_t normalize_range = 8;
-      if (vgetq_lane_u16(surrogates_mask, 7) == 0xFFFF) {
-        normalize_range += 1;
+      uint16x8_t values = internal::arm_check_trie_lookup_utf16<form>(in);
+      *out_length += vaddvq_u16(vandq_u16(values, vdupq_n_u16(0x3F)));
+      if (vmaxvq_u16(vandq_u16(values, vdupq_n_u16(0x4000))) == 0) {
+        p += 8;
+        last_ccc = 0;
+        continue;
       }
-      is_qc &=
-          scalar::utf16_to_decomposed::check_with_context<big_endian, form>(
-              input + p, normalize_range, out_length, &last_ccc);
-      p += normalize_range - 8;
+      uint16x8_t ccc_values =
+          vandq_u16(vshrq_n_u16(values, 6), vdupq_n_u16(0xFF));
+      if (is_qc) {
+        // Checking combining classes is expensive, so we only do it if we
+        // haven't already failed the quick check.
+        is_qc &= !vmaxvq_u16(vshrq_n_u16(values, 15)) &&
+                 internal::arm_is_ccc_sorted_full(ccc_values, last_ccc);
+      }
+      last_ccc = uint8_t(vgetq_lane_u16(ccc_values, 7));
+      p += 8;
+    } else {
+      size_t total = 0;
+      // Scalar quick check in the supplementary plane
+      while (total < 8) {
+        uint8_t sz;
+        uint32_t code_point =
+            scalar::utf16::parse_code_point<big_endian>(input + p + total, &sz);
+        uint16_t value =
+            scalar::utf16_to_decomposed::lookup_check_trie<form>(code_point);
+        *out_length += value & 0x3F;
+        uint8_t ccc = uint8_t((value >> 6) & 0xFF);
+        if (simdutf_unlikely(last_ccc > ccc && ccc != 0)) {
+          is_qc = false;
+        }
+        is_qc &= !(value >> 15);
+        total += sz;
+        last_ccc = ccc;
+      }
+      p += total;
     }
-    p += 8;
   }
   if (p < length) {
     is_qc &= scalar::utf16_to_decomposed::check_with_context<big_endian, form>(

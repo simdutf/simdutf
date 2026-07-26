@@ -14,6 +14,13 @@ size_t normalize(const char *in, size_t length, char *out) {
   constexpr const size_t SAFETY_MARGIN = 64;
   uint8_t last_ccc = 0;
   size_t p = 0;
+  // The most recent input offset proven to be a composition boundary, in the
+  // sense of ICU's `prevBoundary`. Nothing before it can interact with anything
+  // at or after it, so the scalar fallback never has to look further back than
+  // this. Offset zero is trivially a boundary. Every position between this and
+  // `p` maps one input code point to exactly one output code point, which is
+  // what lets `normalize_with_context` rewind the output pointer.
+  size_t prev_boundary = 0;
   while (p + 64 + SAFETY_MARGIN <= length) {
     simd8x64<int8_t> input(reinterpret_cast<const int8_t *>(in + p));
     uint64_t utf8_continuation_mask = input.lt(-65 + 1);
@@ -23,6 +30,8 @@ size_t normalize(const char *in, size_t length, char *out) {
     // method of simd8x64.
     if (mask == 0x7FFFFFFFFFFFFFFF) {
       input.store(reinterpret_cast<int8_t *>(*out_ptr));
+      // The 63 bytes we consume are all ASCII, hence all stable.
+      prev_boundary = p + 62;
       p += 63;
       *out_ptr += 63;
       last_ccc = 0;
@@ -33,7 +42,8 @@ size_t normalize(const char *in, size_t length, char *out) {
       size_t consumed = normalize_masked_utf8_to_composed<form>(
           reinterpret_cast<const uint8_t *>(in + p),
           reinterpret_cast<const uint8_t *>(in), length, mask,
-          reinterpret_cast<uint8_t **>(out_ptr), *out_ptr - start, &last_ccc);
+          reinterpret_cast<uint8_t **>(out_ptr), *out_ptr - start, &last_ccc,
+          &prev_boundary);
       p += consumed;
       mask = consumed >= 64 ? 0 : mask >> consumed;
     }
@@ -41,7 +51,7 @@ size_t normalize(const char *in, size_t length, char *out) {
 
   if (p < length) {
     (void)scalar::utf8_to_composed::normalize_with_context<form>(
-        in + p, in, length, out_ptr, length - p);
+        in + p, in, length, out_ptr, length - p, prev_boundary);
   }
 
   return *out_ptr - start;

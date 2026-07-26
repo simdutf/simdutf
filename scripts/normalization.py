@@ -5,7 +5,10 @@ from dataclasses import dataclass
 from itertools import batched
 from collections import defaultdict
 from typing import Collection
+from ucptrie import UCPTrie, build_ucptrie
 
+# Max Unicode code point
+SUPPLEMENTARY_LIMIT = 0x110000
 BMP_LIMIT = 0x10000
 
 SHIFT = 6
@@ -247,7 +250,9 @@ def generate_array(writer, name: str, data: list[int], data_width: int) -> Heade
         writer.write(" ")
         for x in row:
             assert x < 2**data_width
-            if data_width == 32:
+            if data_width == 64:
+                writer.write(f" 0x{x:016X},")
+            elif data_width == 32:
                 writer.write(f" 0x{x:08X},")
             elif data_width == 16:
                 writer.write(f" 0x{x:04X},")
@@ -341,74 +346,6 @@ def generate_decomp_hash_table(
     ]
 
 
-def generate_supplementary_ccc_hash_table(
-    writer, decomp_map: DecompMap
-) -> list[HeaderDef]:
-    supplementary_ccc_map: DecompMap = {
-        k: v for k, v in decomp_map.items() if k > 0xFFFF and v.ccc > 0
-    }
-
-    salt, keys = minimal_perfect_hash(supplementary_ccc_map)
-    writer.write(f"\nconst uint16_t ccc_salt[{len(salt)}] = {{\n")
-    for salts in batched(salt, 14):
-        writer.write(" ")
-        for s in salts:
-            writer.write(f" 0x{s:04X},")
-        writer.write("\n")
-    writer.write("};\n")
-
-    writer.write(f"\nconst uint32_t ccc_kv[{len(keys)}] = {{\n")
-    for batch in batched(keys, 13):
-        writer.write(" ")
-        for k in batch:
-            packed = Packed((k, 21), (supplementary_ccc_map[k].ccc, 8))
-            writer.write(f" {packed.to_int(32)},")
-        writer.write("\n")
-    writer.write("};\n")
-
-    return [
-        HeaderDef.array("ccc_salt", "uint16_t", len(salt)),
-        HeaderDef.array("ccc_kv", "uint32_t", len(keys)),
-    ]
-
-
-def generate_comp_hash_table(writer, comp_map: CompMap) -> list[HeaderDef]:
-    comp_table = {}
-    for (c1, c2), x in comp_map.items():
-        if c1 <= 0xFFFF and c2 <= 0xFFFF:
-            comp_table[(c1 << 16) | c2] = x
-    comp_salt, comp_keys = minimal_perfect_hash(comp_table)
-    writer.write(f"\nconst uint16_t compose_salt[{len(comp_salt)}] = {{\n")
-    for salts in batched(comp_salt, 14):
-        writer.write(" ")
-        for s in salts:
-            writer.write(f" 0x{s:04X},")
-        writer.write("\n")
-    writer.write("};\n")
-    writer.write(f"\nconst uint32_t compose_kv[{len(comp_keys)}][2] = {{\n")
-    for batch in batched(comp_keys, 8):
-        writer.write(" ")
-        for k in batch:
-            comp = comp_table[k]
-            writer.write(f" {{0x{comp:05X}, 0x{k:08X}}},")
-        writer.write("\n")
-    writer.write("};\n")
-
-    # Composition for code points in the supplementary plane. There are very few of these,
-    # so we can just create a branch for all of them.
-    writer.write("\nuint32_t compose_supplementary(uint32_t c1, uint32_t c2) {\n")
-    for (c1, c2), x in comp_map.items():
-        if c1 <= 0xFFFF and c2 <= 0xFFFF:
-            continue
-        writer.write(f"  if (c1 == 0x{c1:08X} && c2 == 0x{c2:08X}) return 0x{x:08X};\n")
-    writer.write("  return 0;\n}\n")
-
-    return [
-        HeaderDef.array("compose_salt", "uint16_t", len(comp_salt)),
-        HeaderDef.multi_array("compose_kv", "uint32_t", [len(comp_keys), 2]),
-    ]
-
-
 def generate_pack_hangul(writer) -> HeaderDef:
     writer.write(f"\nconst HangulShuf pack_hangul[16] = {{\n")
     for x in range(1 << 4):
@@ -459,6 +396,23 @@ def generate_shuf_utf16(writer) -> HeaderDef:
         writer.write(f"  {{{", ".join(map(str, tbl))}}},\n")
     writer.write("};\n")
     return HeaderDef.multi_array("shuf_utf16", "uint8_t", [256, 16])
+
+
+def generate_ucptrie(
+    writer,
+    name: str,
+    trie: UCPTrie,
+    index_width: int,
+    index1_width: int,
+    index2_width: int,
+    data_width: int,
+) -> list[HeaderDef]:
+    return [
+        generate_array(writer, name + "_index", trie.index, index_width),
+        generate_array(writer, name + "_index1", trie.index1, index1_width),
+        generate_array(writer, name + "_index2", trie.index2, index2_width),
+        generate_array(writer, name + "_data", trie.data, data_width),
+    ]
 
 
 def generate_trie(
@@ -581,6 +535,11 @@ UTF16_TO_COMPOSED_POSTAMBLE = """} // namespace utf16_to_composed
 #endif // SIMDUTF_UTF16_TO_COMPOSED_TABLES_H
 """
 
+ENCODING_WIDTHS = {
+    "UTF-8": 1,
+    "UTF-16LE": 2,
+}
+
 
 # Load NFD and NFKD decomposition maps from `UnicodeData.txt`.
 def load_decomp_maps() -> tuple[DecompMap, DecompMap]:
@@ -619,17 +578,17 @@ def create_decomp_trie_utf8(
     decomp_map: DecompMap,
     offsets: dict[int, int],
     decomp_bound: int,
-) -> tuple[Trie, Trie]:
-    trie = Trie()
-    decomp_trie = Trie()
-    for x in range(BMP_LIMIT):
+) -> tuple[UCPTrie, UCPTrie]:
+    trie_data = [0] * SUPPLEMENTARY_LIMIT
+    decomp_trie_data = [0] * SUPPLEMENTARY_LIMIT
+    for x in range(SUPPLEMENTARY_LIMIT):
         try:
             size = len(chr(x).encode("UTF-8"))
         except UnicodeEncodeError:
             continue
         if x not in decomp_map:
-            trie.set(x, size)
-            decomp_trie.set(x, 0)
+            trie_data[x] = size - 1
+            decomp_trie_data[x] = 0
             continue
         decomp = decomp_map[x]
         offset = offsets[x]
@@ -663,30 +622,30 @@ def create_decomp_trie_utf8(
         if length > 8:
             final_decomp = 15
         packed = Packed(
-            (size, 2),
+            (size - 1, 2),
             (last_ccc, 8),
             (int(decomp.decomps[0] != x), 1),
             (final_decomp & 0x1F, 5),
         )
-        trie.set(x, packed.to_int(16))
+        trie_data[x] = packed.to_int(16)
         assert length <= 0x3F
         assert offset <= 0x7FFF
         ccc_delta = 0 if first_ccc == 0 else last_ccc - first_ccc
         assert ccc_delta <= 0b111
         packed = Packed((offset, 15), (length, 6), (last_ccc, 8), (ccc_delta, 3))
-        decomp_trie.set(x, packed.to_int(32))
-    trie.compact()
-    decomp_trie.compact()
+        decomp_trie_data[x] = packed.to_int(32)
+    trie = build_ucptrie(trie_data)
+    decomp_trie = build_ucptrie(decomp_trie_data)
     return trie, decomp_trie
 
 
 def create_decomp_trie_utf16(
     decomp_map: DecompMap, offsets: dict[int, int], decomp_bound: int
-) -> Trie:
-    trie = Trie()
-    for x in range(0x10000):
+) -> UCPTrie:
+    trie_data = [0] * SUPPLEMENTARY_LIMIT
+    for x in range(SUPPLEMENTARY_LIMIT):
         if x not in decomp_map:
-            trie.set(x, 0)
+            trie_data[x] = 0
             continue
         decomp = decomp_map[x]
         offset = offsets[x]
@@ -721,25 +680,26 @@ def create_decomp_trie_utf16(
             (int(decomp.decomps[0] != x), 1),
             (last_ccc, 8),
         )
-        trie.set(x, packed.to_int(32))
-    trie.compact()
-    return trie
+        trie_data[x] = packed.to_int(32)
+    return build_ucptrie(trie_data)
 
 
-def create_decomp_check_trie(decomp_map: DecompMap, encoding: str) -> Trie:
-    trie = Trie()
-    for x in range(BMP_LIMIT):
+def create_decomp_check_trie(decomp_map: DecompMap, encoding: str) -> UCPTrie:
+    trie_data = [0] * SUPPLEMENTARY_LIMIT
+    for x in range(SUPPLEMENTARY_LIMIT):
         if x not in decomp_map:
             has_decomp = False
             if x >= S_BASE and x < S_BASE + S_COUNT:
                 # Handle Hangul syllables
                 s_index = x - S_BASE
-                jamo_size = len(chr(L_BASE).encode(encoding))
+                jamo_size = (
+                    len(chr(L_BASE).encode(encoding)) // ENCODING_WIDTHS[encoding]
+                )
                 length = 2 * jamo_size if s_index % T_COUNT == 0 else 3 * jamo_size
                 has_decomp = True
             else:
                 try:
-                    length = len(chr(x).encode(encoding))
+                    length = len(chr(x).encode(encoding)) // ENCODING_WIDTHS[encoding]
                 except UnicodeEncodeError:
                     # Python throws an error if we try to encode a surrogate
                     # in UTF-8
@@ -748,25 +708,37 @@ def create_decomp_check_trie(decomp_map: DecompMap, encoding: str) -> Trie:
             length = 0
             decomp = decomp_map[x]
             for c in decomp.decomps:
-                length += len(chr(c).encode(encoding))
+                length += len(chr(c).encode(encoding)) // ENCODING_WIDTHS[encoding]
             has_decomp = decomp.decomps[0] != x
         ccc = decomp_map.get(x, DecompValue([], 0)).ccc
-        packed = Packed((length, 6), (ccc, 8), (0, 1), (int(has_decomp), 1))
-        trie.set(x, packed.to_int(16))
-    trie.compact()
-    return trie
+        packed = Packed(
+            (length, 6),
+            (ccc, 8),
+            (int(x in decomp_map or has_decomp), 1),
+            (int(has_decomp), 1),
+        )
+        trie_data[x] = packed.to_int(16)
+    return build_ucptrie(trie_data)
 
 
 # NOTE: if we could compress one more bit, we could merge this with comp_check_trie to save
 # one trie of space. This trie is pretty small, though.
 def create_comp_trie(
     qc: dict[int, str],
+    comp_map: CompMap,
     decomp_map: DecompMap,
     non_starters: list[int],
     composables: list[int],
-) -> Trie:
-    trie = Trie()
-    for x in range(BMP_LIMIT):
+) -> tuple[UCPTrie, list[int]]:
+    trie_data = [0] * SUPPLEMENTARY_LIMIT
+    compositions: list[int] = [0]
+    forward_comps: dict[int, list[tuple[int, int]]] = defaultdict(list)
+    for (starter, trail), composite in comp_map.items():
+        forward_comps[starter].append((trail, composite))
+    for v in forward_comps.values():
+        # Sort by trailing character
+        v.sort(key=lambda x: x[0])
+    for x in range(SUPPLEMENTARY_LIMIT):
         if x in qc or x in non_starters:
             # This identifies a special but common class of characters that:
             # 1. Do not compose with anything
@@ -789,37 +761,77 @@ def create_comp_trie(
         else:
             indicator = 0
         if x in decomp_map:
-            ccc = decomp_map[x].ccc
+            if indicator == 1 and decomp_map[x].decomps[-1] in decomp_map:
+                # For indicator 1, we should use the decomposition's ccc
+                ccc = decomp_map[decomp_map[x].decomps[-1]].ccc
+            else:
+                ccc = decomp_map[x].ccc
         else:
             ccc = 0
-        packed = Packed((indicator, 2), (ccc, 8))
-        trie.set(x, packed.to_int(16))
-    trie.compact()
-    return trie
+        if x not in forward_comps:
+            offset = 0
+        else:
+            offset = len(compositions)
+        for i, (trail, composite) in enumerate(forward_comps[x]):
+            packed = Packed(
+                (trail, 21),
+                (composite, 21),
+                (int(composite in forward_comps), 1),
+                (int(i == len(forward_comps[x]) - 1), 1),
+            )
+            compositions.append(packed.to_int(64))
+        # Whether the code point actually decomposes
+        if S_BASE <= x < S_BASE + S_COUNT:
+            has_decomp = 1
+        elif x in decomp_map and decomp_map[x].decomps[0] != x:
+            has_decomp = 1
+        else:
+            has_decomp = 0
+        # `has_decomp` sits at bit 12 in both layouts so it can be read without
+        # first testing the composes-forward flag.
+        if offset > 0:
+            assert ccc == 0
+            # Ten bits is enough because there are far fewer than 1024
+            # composition list entries; the bits freed up pay for `has_decomp`.
+            assert offset <= 0x3FF
+            packed = Packed(
+                (indicator, 2), (offset, 10), (has_decomp, 1), (0, 2), (1, 1)
+            )
+        else:
+            packed = Packed((indicator, 2), (ccc, 8), (0, 2), (has_decomp, 1), (0, 3))
+        trie_data[x] = packed.to_int(16)
+    return build_ucptrie(trie_data), compositions
 
 
 def create_comp_check_trie(
-    qc: dict[int, str], decomp_map: DecompMap, encoding: str
-) -> Trie:
-    trie = Trie()
-    for x in range(BMP_LIMIT):
+    qc: dict[int, str], decomp_map: DecompMap, non_starters: list[int], encoding: str
+) -> UCPTrie:
+    trie_data = [0] * SUPPLEMENTARY_LIMIT
+    for x in range(SUPPLEMENTARY_LIMIT):
         if x >= S_BASE and x < S_BASE + S_COUNT:
             # Handle Hangul syllables
             s_index = x - S_BASE
-            jamo_size = len(chr(L_BASE).encode(encoding))
+            jamo_size = len(chr(L_BASE).encode(encoding)) // ENCODING_WIDTHS[encoding]
             length = 2 * jamo_size if s_index % T_COUNT == 0 else 3 * jamo_size
         elif x in decomp_map:
-            length = sum(len(chr(c).encode(encoding)) for c in decomp_map[x].decomps)
+            length = sum(
+                len(chr(c).encode(encoding)) // ENCODING_WIDTHS[encoding]
+                for c in decomp_map[x].decomps
+            )
         else:
             try:
-                length = len(chr(x).encode(encoding))
+                length = len(chr(x).encode(encoding)) // ENCODING_WIDTHS[encoding]
             except UnicodeEncodeError:
                 continue
         ccc = decomp_map.get(x, DecompValue([], 0)).ccc
-        packed = Packed((length, 6), (ccc, 8), (0, 1), (int(x in qc), 1))
-        trie.set(x, packed.to_int(16))
-    trie.compact()
-    return trie
+        packed = Packed(
+            (length, 6),
+            (ccc, 8),
+            (int(x in qc or x in non_starters), 1),
+            (int(x in qc), 1),
+        )
+        trie_data[x] = packed.to_int(16)
+    return build_ucptrie(trie_data)
 
 
 def create_decomp_words_bmp(
@@ -837,8 +849,6 @@ def create_decomp_words_bmp(
     offsets_nfd: dict[int, int] = {}
     offsets_nfkd: dict[int, int] = {}
     for x, value in nfkd_map.items():
-        if x >= BMP_LIMIT:
-            continue
         offset = len(decomp_bytes)
         for c in value.decomps:
             decomp_bytes.extend(chr(c).encode(encoding))
@@ -1016,24 +1026,31 @@ def main() -> None:
     utf16_nfkd_trie = create_decomp_trie_utf16(
         nfkd_map, offsets_nfkd_utf16, decomp_bound=48
     )
-    ccc_trie = Trie()
-    for x in range(BMP_LIMIT):
-        if x in nfd_map:
-            ccc_trie.set(x, nfd_map[x].ccc)
-        else:
-            ccc_trie.set(x, 0)
-    ccc_trie.compact()
-    nfc_trie = create_comp_trie(derived.nfc_qc, nfd_map, non_starters, composables)
-    nfkc_trie = create_comp_trie(derived.nfkc_qc, nfkd_map, non_starters, composables)
+    ccc_values = [
+        nfkd_map[x].ccc if x in nfkd_map else 0 for x in range(SUPPLEMENTARY_LIMIT)
+    ]
+    ccc_trie = build_ucptrie(ccc_values)
+    nfc_trie, nfc_compositions = create_comp_trie(
+        derived.nfc_qc, comp_map, nfd_map, non_starters, composables
+    )
+    nfkc_trie, nfkc_compositions = create_comp_trie(
+        derived.nfkc_qc, comp_map, nfkd_map, non_starters, composables
+    )
     utf8_nfd_check_trie = create_decomp_check_trie(nfd_map, "UTF-8")
     utf8_nfkd_check_trie = create_decomp_check_trie(nfkd_map, "UTF-8")
-    utf8_nfc_check_trie = create_comp_check_trie(derived.nfc_qc, nfd_map, "UTF-8")
-    utf8_nfkc_check_trie = create_comp_check_trie(derived.nfkc_qc, nfkd_map, "UTF-8")
+    utf8_nfc_check_trie = create_comp_check_trie(
+        derived.nfc_qc, nfd_map, non_starters, "UTF-8"
+    )
+    utf8_nfkc_check_trie = create_comp_check_trie(
+        derived.nfkc_qc, nfkd_map, non_starters, "UTF-8"
+    )
     utf16_nfd_check_trie = create_decomp_check_trie(nfd_map, "UTF-16LE")
     utf16_nfkd_check_trie = create_decomp_check_trie(nfkd_map, "UTF-16LE")
-    utf16_nfc_check_trie = create_comp_check_trie(derived.nfc_qc, nfd_map, "UTF-16LE")
+    utf16_nfc_check_trie = create_comp_check_trie(
+        derived.nfc_qc, nfd_map, non_starters, "UTF-16LE"
+    )
     utf16_nfkc_check_trie = create_comp_check_trie(
-        derived.nfkc_qc, nfkd_map, "UTF-16LE"
+        derived.nfkc_qc, nfkd_map, non_starters, "UTF-16LE"
     )
 
     headers: defaultdict[str, list[HeaderDef]] = defaultdict(list[HeaderDef])
@@ -1047,22 +1064,42 @@ def main() -> None:
         headers["utf8_to_decomposed_tables.h"].extend(
             prefix_all(
                 "nfd",
-                generate_trie(f, "trie", utf8_nfd_trie, index_width=16, data_width=16),
-            )
-        )
-        headers["utf8_to_decomposed_tables.h"].extend(
-            prefix_all(
-                "nfd",
-                generate_trie(
-                    f, "full_trie", utf8_nfd_data_trie, index_width=16, data_width=32
+                generate_ucptrie(
+                    f,
+                    "trie",
+                    utf8_nfd_trie,
+                    index_width=16,
+                    index1_width=16,
+                    index2_width=16,
+                    data_width=16,
                 ),
             )
         )
         headers["utf8_to_decomposed_tables.h"].extend(
             prefix_all(
                 "nfd",
-                generate_trie(
-                    f, "check_trie", utf8_nfd_check_trie, index_width=16, data_width=16
+                generate_ucptrie(
+                    f,
+                    "full_trie",
+                    utf8_nfd_data_trie,
+                    index_width=16,
+                    index1_width=16,
+                    index2_width=16,
+                    data_width=32,
+                ),
+            )
+        )
+        headers["utf8_to_decomposed_tables.h"].extend(
+            prefix_all(
+                "nfd",
+                generate_ucptrie(
+                    f,
+                    "check_trie",
+                    utf8_nfd_check_trie,
+                    index_width=16,
+                    index1_width=16,
+                    index2_width=16,
+                    data_width=16,
                 ),
             )
         )
@@ -1071,22 +1108,42 @@ def main() -> None:
         headers["utf8_to_decomposed_tables.h"].extend(
             prefix_all(
                 "nfkd",
-                generate_trie(f, "trie", utf8_nfkd_trie, index_width=16, data_width=16),
-            )
-        )
-        headers["utf8_to_decomposed_tables.h"].extend(
-            prefix_all(
-                "nfkd",
-                generate_trie(
-                    f, "full_trie", utf8_nfkd_data_trie, index_width=16, data_width=32
+                generate_ucptrie(
+                    f,
+                    "trie",
+                    utf8_nfkd_trie,
+                    index_width=16,
+                    index1_width=16,
+                    index2_width=16,
+                    data_width=16,
                 ),
             )
         )
         headers["utf8_to_decomposed_tables.h"].extend(
             prefix_all(
                 "nfkd",
-                generate_trie(
-                    f, "check_trie", utf8_nfkd_check_trie, index_width=16, data_width=16
+                generate_ucptrie(
+                    f,
+                    "full_trie",
+                    utf8_nfkd_data_trie,
+                    index_width=16,
+                    index1_width=16,
+                    index2_width=16,
+                    data_width=32,
+                ),
+            )
+        )
+        headers["utf8_to_decomposed_tables.h"].extend(
+            prefix_all(
+                "nfkd",
+                generate_ucptrie(
+                    f,
+                    "check_trie",
+                    utf8_nfkd_check_trie,
+                    index_width=16,
+                    index1_width=16,
+                    index2_width=16,
+                    data_width=16,
                 ),
             )
         )
@@ -1098,8 +1155,14 @@ def main() -> None:
         headers["utf8_to_composed_tables.h"].extend(
             prefix_all(
                 "nfc",
-                generate_trie(
-                    f, "check_trie", utf8_nfc_check_trie, index_width=16, data_width=16
+                generate_ucptrie(
+                    f,
+                    "check_trie",
+                    utf8_nfc_check_trie,
+                    index_width=16,
+                    index1_width=16,
+                    index2_width=16,
+                    data_width=16,
                 ),
             )
         )
@@ -1108,8 +1171,14 @@ def main() -> None:
         headers["utf8_to_composed_tables.h"].extend(
             prefix_all(
                 "nfkc",
-                generate_trie(
-                    f, "check_trie", utf8_nfkc_check_trie, index_width=16, data_width=16
+                generate_ucptrie(
+                    f,
+                    "check_trie",
+                    utf8_nfkc_check_trie,
+                    index_width=16,
+                    index1_width=16,
+                    index2_width=16,
+                    data_width=16,
                 ),
             )
         )
@@ -1125,14 +1194,28 @@ def main() -> None:
         headers["utf16_to_decomposed_tables.h"].extend(
             prefix_all(
                 "nfd",
-                generate_trie(f, "trie", utf16_nfd_trie, index_width=16, data_width=32),
+                generate_ucptrie(
+                    f,
+                    "trie",
+                    utf16_nfd_trie,
+                    index_width=16,
+                    index1_width=16,
+                    index2_width=16,
+                    data_width=32,
+                ),
             )
         )
         headers["utf16_to_decomposed_tables.h"].extend(
             prefix_all(
                 "nfd",
-                generate_trie(
-                    f, "check_trie", utf16_nfd_check_trie, index_width=16, data_width=16
+                generate_ucptrie(
+                    f,
+                    "check_trie",
+                    utf16_nfd_check_trie,
+                    index_width=16,
+                    index1_width=16,
+                    index2_width=16,
+                    data_width=16,
                 ),
             )
         )
@@ -1141,19 +1224,27 @@ def main() -> None:
         headers["utf16_to_decomposed_tables.h"].extend(
             prefix_all(
                 "nfkd",
-                generate_trie(
-                    f, "trie", utf16_nfkd_trie, index_width=16, data_width=32
+                generate_ucptrie(
+                    f,
+                    "trie",
+                    utf16_nfkd_trie,
+                    index_width=16,
+                    index1_width=16,
+                    index2_width=16,
+                    data_width=32,
                 ),
             )
         )
         headers["utf16_to_decomposed_tables.h"].extend(
             prefix_all(
                 "nfkd",
-                generate_trie(
+                generate_ucptrie(
                     f,
                     "check_trie",
                     utf16_nfkd_check_trie,
                     index_width=16,
+                    index1_width=16,
+                    index2_width=16,
                     data_width=16,
                 ),
             )
@@ -1166,8 +1257,14 @@ def main() -> None:
         headers["utf16_to_composed_tables.h"].extend(
             prefix_all(
                 "nfc",
-                generate_trie(
-                    f, "check_trie", utf16_nfc_check_trie, index_width=16, data_width=16
+                generate_ucptrie(
+                    f,
+                    "check_trie",
+                    utf16_nfc_check_trie,
+                    index_width=16,
+                    index1_width=16,
+                    index2_width=16,
+                    data_width=16,
                 ),
             )
         )
@@ -1176,11 +1273,13 @@ def main() -> None:
         headers["utf16_to_composed_tables.h"].extend(
             prefix_all(
                 "nfkc",
-                generate_trie(
+                generate_ucptrie(
                     f,
                     "check_trie",
                     utf16_nfkc_check_trie,
                     index_width=16,
+                    index1_width=16,
+                    index2_width=16,
                     data_width=16,
                 ),
             )
@@ -1191,40 +1290,52 @@ def main() -> None:
     with open("normalization_tables.h", "w") as f:
         f.write(NORMALIZATION_PREAMBLE)
         headers["normalization_tables.h"].extend(
-            generate_trie(f, "ccc_trie", ccc_trie, index_width=16, data_width=8)
-        )
-        headers["normalization_tables.h"].extend(
-            generate_supplementary_ccc_hash_table(f, nfd_map)
-        )
-        headers["normalization_tables.h"].extend(generate_comp_hash_table(f, comp_map))
-        f.write("namespace nfd {\n")
-        headers["normalization_tables.h"].extend(
-            prefix_all(
-                "nfd", generate_decomp_hash_table(f, nfd_map, derived.nfc_qc, "lookup")
+            generate_ucptrie(
+                f,
+                "ccc_trie",
+                ccc_trie,
+                index_width=16,
+                index1_width=16,
+                index2_width=16,
+                data_width=8,
             )
         )
-        f.write("} // namespace nfd\n")
-        f.write("namespace nfkd {\n")
-        headers["normalization_tables.h"].extend(
-            prefix_all(
-                "nfkd",
-                generate_decomp_hash_table(f, nfkd_map, derived.nfkc_qc, "lookup"),
-            )
-        )
-        f.write("} // namespace nfkd\n")
         f.write("namespace nfc {\n")
         headers["normalization_tables.h"].extend(
             prefix_all(
-                "nfc", generate_trie(f, "trie", nfc_trie, index_width=16, data_width=16)
+                "nfc",
+                generate_ucptrie(
+                    f,
+                    "trie",
+                    nfc_trie,
+                    index_width=16,
+                    index1_width=16,
+                    index2_width=16,
+                    data_width=16,
+                ),
             )
+        )
+        headers["normalization_tables.h"].append(
+            prefix("nfc", generate_array(f, "compositions", nfc_compositions, 64))
         )
         f.write("} // namespace nfc\n")
         f.write("namespace nfkc {\n")
         headers["normalization_tables.h"].extend(
             prefix_all(
                 "nfkc",
-                generate_trie(f, "trie", nfkc_trie, index_width=16, data_width=16),
+                generate_ucptrie(
+                    f,
+                    "trie",
+                    nfkc_trie,
+                    index_width=16,
+                    index1_width=16,
+                    index2_width=16,
+                    data_width=16,
+                ),
             )
+        )
+        headers["normalization_tables.h"].append(
+            prefix("nfkc", generate_array(f, "compositions", nfkc_compositions, 64))
         )
         f.write("} // namespace nfkc\n")
         f.write(NORMALIZATION_POSTAMBLE)

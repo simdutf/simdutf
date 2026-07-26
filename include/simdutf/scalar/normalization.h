@@ -21,17 +21,6 @@ bool is_hangul_syllable(uint32_t code_point) {
   return code_point >= s_base && code_point < s_base + s_count;
 }
 
-// Must be kept in sync with the hash function that generates the corresponding
-// tables
-uint32_t phash(uint32_t key, uint32_t salt, uint64_t size) {
-  uint32_t salt_key = key + salt;
-  uint32_t y1 = salt_key * 2654435769u;
-  uint32_t y2 = key * 0x31415926u;
-  uint32_t y = y1 ^ y2;
-  uint64_t mh = (uint64_t)y * size;
-  return uint32_t(mh >> 32);
-}
-
 // Get combining character class of code point
 uint8_t lookup_ccc(uint32_t code_point) {
   if (code_point <= 0xFFFF) {
@@ -42,89 +31,17 @@ uint8_t lookup_ccc(uint32_t code_point) {
         simdutf::tables::normalization::ccc_trie_data[index + masked];
     return value;
   }
-  constexpr const size_t table_size =
-      sizeof(simdutf::tables::normalization::ccc_kv) / sizeof(uint32_t);
-  uint32_t salt_hash = phash(code_point, 0, table_size);
-  uint32_t salt = simdutf::tables::normalization::ccc_salt[salt_hash];
-  uint32_t key_hash = phash(code_point, salt, table_size);
-  uint32_t kv = simdutf::tables::normalization::ccc_kv[key_hash];
-  uint32_t k = kv & 0x1FFFFF;
-  if (k == code_point) {
-    uint8_t ccc = uint8_t(kv >> 21);
-    return ccc;
-  }
-  return 0;
-}
-
-// Try to compose two BMP code points into a single code point. Returns the
-// composed code point if the composition is valid, or zero if the composition
-// is not valid.
-uint32_t compose_bmp(uint16_t c1, uint16_t c2) {
-  if (c1 >= l_base && c1 < l_base + l_count && c2 >= v_base &&
-      c2 < v_base + v_count) {
-    uint32_t l_index = c1 - l_base;
-    uint32_t v_index = c2 - v_base;
-    uint32_t lv_index = l_index * n_count + v_index * t_count;
-    return s_base + lv_index;
-  }
-  // Check if we have an LV syllable and a T jamo. Note that we check c2 >
-  // UNIDATA_T_BASE, not c2 >= UNIDATA_T_BASE for a good reason: the first
-  // valid T jamo is UNIDATA_T_BASE + 1! The spec defines the T base constant
-  // to be off by one in order to make the math for algorithmic decomposition
-  // cleaner.
-  //
-  // See:
-  // https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-3/#G59434
-  if (c1 >= s_base && c1 < s_base + s_count && (c1 - s_base) % t_count == 0 &&
-      c2 > t_base && c2 < t_base + t_count) {
-    return c1 + (c2 - t_base);
-  }
-
-  uint32_t wide = c1;
-  uint32_t key = (wide << 16) | c2;
-  constexpr size_t table_size =
-      sizeof(simdutf::tables::normalization::compose_kv) /
-      (sizeof(uint32_t) * 2);
-  uint32_t salt_hash = phash(key, 0, table_size);
-  uint32_t salt = simdutf::tables::normalization::compose_salt[salt_hash];
-  uint32_t key_hash = phash(key, salt, table_size);
-  uint32_t k = simdutf::tables::normalization::compose_kv[key_hash][1];
-  uint32_t comp = simdutf::tables::normalization::compose_kv[key_hash][0];
-  if (k == key) {
-    // The composition is valid, return the composed code point
-    return comp;
-  } else {
-    return 0;
-  }
-}
-
-template <DecomposedForm form>
-uint64_t lookup_supplementary_code_point(uint32_t code_point) {
-  constexpr const uint64_t table_size =
-      form == DecomposedForm::NFD
-          ? sizeof(simdutf::tables::normalization::nfd::lookup_kv) /
-                sizeof(uint64_t)
-          : sizeof(simdutf::tables::normalization::nfkd::lookup_kv) /
-                sizeof(uint64_t);
-  uint32_t salt_hash = phash(code_point, 0, table_size);
-  uint32_t salt;
-  if constexpr (form == DecomposedForm::NFD) {
-    salt = simdutf::tables::normalization::nfd::lookup_salt[salt_hash];
-  } else {
-    salt = simdutf::tables::normalization::nfkd::lookup_salt[salt_hash];
-  }
-  uint32_t key_hash = phash(code_point, salt, table_size);
-  uint64_t kv;
-  if constexpr (form == DecomposedForm::NFD) {
-    kv = simdutf::tables::normalization::nfd::lookup_kv[key_hash];
-  } else {
-    kv = simdutf::tables::normalization::nfkd::lookup_kv[key_hash];
-  }
-  return kv;
+  uint32_t supplementary = code_point - 0x10000;
+  uint16_t index1 =
+      simdutf::tables::normalization::ccc_trie_index1[supplementary >> 11];
+  uint16_t index2 = simdutf::tables::normalization::ccc_trie_index2
+      [index1 + ((supplementary >> 6) & 31)];
+  return simdutf::tables::normalization::ccc_trie_data[index2 +
+                                                       (code_point & 63)];
 }
 
 template <ComposedForm form>
-simdutf_really_inline uint16_t lookup_comp_trie(uint16_t code_point) {
+simdutf_really_inline uint16_t lookup_comp_trie_bmp(uint16_t code_point) {
   uint16_t shift = code_point >> 6;
   uint16_t masked = code_point & 63;
   uint16_t index;
@@ -139,19 +56,44 @@ simdutf_really_inline uint16_t lookup_comp_trie(uint16_t code_point) {
   return value;
 }
 
-template <ComposedForm form> bool is_relevant(uint32_t code_point) {
-  if (code_point <= 0xFFFF) {
-    return lookup_comp_trie<form>(uint16_t(code_point)) > 0;
+template <ComposedForm form>
+simdutf_really_inline uint16_t
+lookup_comp_trie_supplementary(uint32_t code_point) {
+  uint32_t supplementary = code_point - 0x10000;
+  if constexpr (form == ComposedForm::NFC) {
+    uint16_t index1 =
+        simdutf::tables::normalization::nfc::trie_index1[supplementary >> 11];
+    uint16_t index2 = simdutf::tables::normalization::nfc::trie_index2
+        [index1 + ((supplementary >> 6) & 31)];
+    return simdutf::tables::normalization::nfc::trie_data[index2 +
+                                                          (code_point & 63)];
+  } else {
+    uint16_t index1 =
+        simdutf::tables::normalization::nfkc::trie_index1[supplementary >> 11];
+    uint16_t index2 = simdutf::tables::normalization::nfkc::trie_index2
+        [index1 + ((supplementary >> 6) & 31)];
+    return simdutf::tables::normalization::nfkc::trie_data[index2 +
+                                                           (code_point & 63)];
   }
-  constexpr auto dform = to_decomposed_form(form);
-  uint64_t kv = lookup_supplementary_code_point<dform>(code_point);
-  uint32_t k = kv & 0x1FFFFF;
-  if (k == code_point) {
-    uint8_t qc = uint8_t(kv >> 56);
-    return qc != 0;
-  }
-  return false;
 }
+
+template <ComposedForm form>
+simdutf_really_inline uint16_t lookup_comp_trie(uint32_t code_point) {
+  if (code_point <= 0xFFFF) {
+    return lookup_comp_trie_bmp<form>(uint16_t(code_point));
+  } else {
+    return lookup_comp_trie_supplementary<form>(code_point);
+  }
+}
+
+template <ComposedForm form>
+simdutf_really_inline bool is_stable(uint32_t code_point) {
+  return (lookup_comp_trie<form>(code_point) & 0b11) == 0;
+}
+
+template <ComposedForm form>
+constexpr uint16_t min_relevant_cp =
+    form == ComposedForm::NFC ? 0x0300 : 0x00A0;
 
 // Reverse a subsection of an array.
 template <typename T> void reverse(T *array, size_t start, size_t end) {
@@ -284,8 +226,7 @@ find_first_stable(const typename Traits::char_type *input, size_t length) {
   while (p < length) {
     uint8_t size;
     uint32_t c = Traits::parse_code_point(input + p, &size);
-    uint8_t ccc = lookup_ccc(c);
-    if (ccc == 0 && !is_relevant<form>(c)) {
+    if (is_stable<form>(c)) {
       return input + p;
     }
     p += size;
@@ -298,18 +239,15 @@ find_first_stable(const typename Traits::char_type *input, size_t length) {
 template <typename Traits, ComposedForm form>
 const typename Traits::char_type *
 find_last_stable(const typename Traits::char_type *input, size_t length) {
-  size_t cutoff = length;
-  while (cutoff > 0) {
-    auto result = rfind_starter<Traits>(input, cutoff);
-    if (!result.second) {
-      return input + length;
-    }
-    cutoff = result.first;
+  size_t p = length;
+  while (p > 0) {
+    auto start = find_code_point_start_reverse<Traits>(input + p - 1);
     uint8_t size;
-    uint32_t c = Traits::parse_code_point(input + cutoff, &size);
-    if (!is_relevant<form>(c)) {
-      return input + cutoff;
+    uint32_t c = Traits::parse_code_point(start, &size);
+    if (is_stable<form>(c)) {
+      return start;
     }
+    p = size_t(start - input);
   }
   return input + length;
 }
@@ -399,69 +337,157 @@ uint8_t sort_combining(typename Traits::char_type *output, size_t len) {
   return final_ccc;
 }
 
-// Canonically compose buf in place: repeatedly find, for each
-// composition-relevant code point, its preceding starter and try to combine the
-// two into a single code point. This closely follows the specification. See:
-// https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-3/#G49614
-template <typename Traits, ComposedForm form>
-size_t compose_canonical(typename Traits::char_type *buf, size_t length) {
-  size_t pos = 0;
-  uint8_t last_ccc = 255;
-  while (pos < length) {
-    uint8_t size;
-    uint32_t c = Traits::parse_code_point(buf + pos, &size);
-    uint8_t ccc = lookup_ccc(c);
-
-    // Find the preceding starter. It should be composition irrelevant
-    // NOTE: we can cache this if it shows up in a profile
-    auto starter_pos_result = rfind_starter<Traits>(buf, pos);
-    size_t starter_pos = starter_pos_result.first;
-    // Skip if we don't have a starter before this
-    if (!starter_pos_result.second) {
-      pos += size;
-      last_ccc = ccc;
-      continue;
-    }
-
-    uint8_t starter_size;
-    uint32_t starter =
-        Traits::parse_code_point(buf + starter_pos, &starter_size);
-    // Skip if we're blocked from the starter
-    if (ccc <= last_ccc && starter_pos + starter_size != pos) {
-      pos += size;
-      last_ccc = ccc;
-      continue;
-    }
-
-    uint32_t composed;
-    if (starter <= 0xFFFF && c <= 0xFFFF) {
-      composed = compose_bmp(uint16_t(starter), uint16_t(c));
-    } else {
-      composed =
-          simdutf::tables::normalization::compose_supplementary(starter, c);
-    }
-    // Skip if no composed character
-    if (composed == 0) {
-      pos += size;
-      last_ccc = ccc;
-      continue;
-    }
-    size_t composed_size = Traits::code_point_size(composed);
-
-    // Shift left to delete the combining character
-    shift_left(buf + pos, length - pos, size);
-    // Account for combining character deletion
-    length -= size;
-
-    // Shift everything right to make room for new composed code point
-    shift_right(buf + starter_pos + starter_size,
-                length - starter_pos - starter_size,
-                composed_size - starter_size);
-    // Overwrite the starter with the new composed code point
-    (void)Traits::write_code_point(composed, buf + starter_pos);
-    length += composed_size - starter_size;
-    pos += composed_size - starter_size;
+// Get the composition list of a starter that combines forward, or null if it
+// has none
+template <ComposedForm form>
+simdutf_really_inline const uint64_t *forward_compositions(uint16_t value) {
+  if ((value & 0x8000) == 0) {
+    return nullptr;
   }
+  uint16_t offset = (value >> 2) & 0x3FF;
+  if constexpr (form == ComposedForm::NFC) {
+    return &simdutf::tables::normalization::nfc::compositions[offset];
+  } else {
+    return &simdutf::tables::normalization::nfkc::compositions[offset];
+  }
+}
+
+// Search a starter's composition list for `trail`, returning the composed code
+// point or zero if the pair does not compose. `*combines_forward` is set when
+// the composite may itself compose with a following character.
+//
+// Entries for one starter are contiguous and sorted by ascending trailing code
+// point, and the run is terminated by a flag bit, so the scan can stop as soon
+// as it overshoots.
+uint32_t combine(const uint64_t *list, uint32_t trail, bool *combines_forward) {
+  for (;;) {
+    uint64_t entry = *list;
+    uint32_t entry_trail = uint32_t(entry & 0x1FFFFF);
+    if (entry_trail == trail) {
+      *combines_forward = ((entry >> 42) & 1) != 0;
+      return uint32_t((entry >> 21) & 0x1FFFFF);
+    }
+    if (entry_trail > trail || ((entry >> 43) & 1) != 0) {
+      return 0;
+    }
+    list++;
+  }
+}
+
+// Canonically compose `buf` in place. The buffer must already be in NF(K)D.
+template <typename Traits, ComposedForm form>
+size_t recompose(typename Traits::char_type *buf, size_t length) {
+  using char_type = typename Traits::char_type;
+
+  char_type *p = buf;
+  // Non-null once we have seen a starter that may compose forward.
+  char_type *starter = nullptr;
+  uint8_t starter_size = 0;
+  // Null when that starter has no composition list. A Hangul L jamo composes
+  // forward arithmetically, so it sets `starter` but leaves this null.
+  const uint64_t *compositions = nullptr;
+  uint8_t prev_ccc = 0;
+
+  while (p < buf + length) {
+    uint8_t size;
+    uint32_t c = Traits::parse_code_point(p, &size);
+    char_type *c_start = p;
+    p += size;
+
+    uint16_t value = lookup_comp_trie<form>(c);
+    uint8_t ccc = (value & 0x8000) > 0 ? 0 : uint8_t(value >> 2);
+
+    // Compose if:
+    // 1. The starter composes forward
+    // 2. The code point composes backwar
+    // 3. The code point is not blocked
+    if (starter != nullptr && (value & 0b11) == 2 &&
+        (prev_ccc < ccc || prev_ccc == 0)) {
+      uint32_t composite = 0;
+      bool combines_forward = false;
+
+      if (c >= v_base && c < v_base + v_count) {
+        // Hangul composes arithmetically and has no table entry. In NF(K)D a
+        // syllable appears as L + V (+ T), so a Jamo V composes with the
+        // preceding Jamo L and absorbs a following Jamo T in the same step.
+        // That leaves no LV syllable for a lone Jamo T to combine with, which
+        // is why there is no Jamo T case here.
+        uint8_t l_size;
+        uint32_t l = Traits::parse_code_point(starter, &l_size) - l_base;
+        if (l < l_count) {
+          composite = s_base + (l * v_count + (c - v_base)) * t_count;
+          if (p < buf + length) {
+            uint8_t t_size;
+            uint32_t t = Traits::parse_code_point(p, &t_size);
+            // Note that this checks `t > t_base`, not `t >= t_base`, for a
+            // good reason: the first valid T jamo is `t_base + 1`. The spec
+            // defines the T base constant to be off by one in order to make
+            // the math for algorithmic decomposition cleaner. See:
+            // https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-3/#G59434
+            if (t > t_base && t < t_base + t_count) {
+              composite += t - t_base;
+              p += t_size;
+            }
+          }
+        }
+      } else if (compositions != nullptr) {
+        composite = combine(compositions, c, &combines_forward);
+      }
+
+      if (composite != 0) {
+        // Delete everything consumed after the starter.
+        size_t consumed = size_t(p - c_start);
+        shift_left(c_start, size_t((buf + length) - c_start), consumed);
+        length -= consumed;
+
+        // Resize the starter in place so it can hold the composite. Note that
+        // this can never overflow the buffer: the composite is at most one
+        // code unit longer than the starter, and we just removed a code point
+        // of at least that size.
+        size_t composed_size = Traits::code_point_size(composite);
+        size_t tail_length = size_t((buf + length) - (starter + starter_size));
+        if (composed_size > starter_size) {
+          size_t grow = composed_size - starter_size;
+          shift_right(starter + starter_size, tail_length, grow);
+        } else if (composed_size < starter_size) {
+          size_t shrink = starter_size - composed_size;
+          shift_left(starter + composed_size, tail_length + shrink, shrink);
+        }
+        (void)Traits::write_code_point(composite, starter);
+        length = length - starter_size + composed_size;
+
+        // Resume after the starter's following text, which the resize moved.
+        p = c_start + (ptrdiff_t(composed_size) - ptrdiff_t(starter_size));
+        starter_size = uint8_t(composed_size);
+        if (combines_forward) {
+          compositions =
+              forward_compositions<form>(lookup_comp_trie<form>(composite));
+        } else {
+          starter = nullptr;
+          compositions = nullptr;
+        }
+        continue;
+      }
+    }
+
+    prev_ccc = ccc;
+    if (ccc == 0) {
+      // A new starter. Check if it can combine forward
+      if ((value & 0x8000) > 0) {
+        compositions = forward_compositions<form>(value);
+        starter = c_start;
+        starter_size = size;
+      } else if (c >= l_base && c < l_base + l_count) {
+        compositions = nullptr;
+        starter = c_start;
+        starter_size = size;
+      } else {
+        starter = nullptr;
+        compositions = nullptr;
+      }
+    }
+  }
+
   return length;
 }
 

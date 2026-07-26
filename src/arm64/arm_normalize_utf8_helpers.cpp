@@ -55,6 +55,75 @@ uint16x8_t arm_parse_2_byte_utf8(uint8x16_t in) {
   return composed;
 }
 
+uint32x4_t arm_parse_4_byte_utf8(uint8x16_t in) {
+  // We want to take 3 4-byte UTF-8 code units and turn them into 3 4-byte
+  // UTF-32 code units. This uses the same method as the fixed 3 byte
+  // version, reversing and shift left insert. However, there is no need for
+  // a shuffle mask now, just rev16 and rev32.
+  //
+  // This version does not use the LUT, but 4 byte sequences are less common
+  // and the overhead of the extra memory access is less important than the
+  // early branch overhead in shorter sequences, so it comes last.
+
+  // Swap pairs of bytes
+  // 10dddddd|10cccccc|10bbbbbb|11110aaa
+  // 10cccccc 10dddddd|11110aaa 10bbbbbb
+  uint16x8_t swap1 = vreinterpretq_u16_u8(vrev16q_u8(in));
+  // Shift left and insert
+  // xxxxcccc ccdddddd|xxxxxxxa aabbbbbb
+  uint16x8_t merge1 = vsliq_n_u16(swap1, vreinterpretq_u16_u8(in), 6);
+  // Swap 16-bit lanes
+  // xxxxcccc ccdddddd xxxxxxxa aabbbbbb
+  // xxxxxxxa aabbbbbb xxxxcccc ccdddddd
+  uint32x4_t swap2 = vreinterpretq_u32_u16(vrev32q_u16(merge1));
+  // Shift insert again
+  // xxxxxxxx xxxaaabb bbbbcccc ccdddddd
+  uint32x4_t merge2 = vsliq_n_u32(swap2, vreinterpretq_u32_u16(merge1), 12);
+  // Clear the garbage
+  // 00000000 000aaabb bbbbcccc ccdddddd
+  uint32x4_t composed = vandq_u32(merge2, vmovq_n_u32(0x1FFFFF));
+  return composed;
+}
+
+uint32x4_t arm_parse_3_1234_utf8(uint8x16_t in, size_t idx) {
+  // Unlike UTF-16, doing a fast codepath doesn't have nearly as much benefit
+  // due to surrogates no longer being involved.
+  uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t *>(
+      simdutf::tables::utf8_to_utf16::shufutf8[idx]));
+  // 1 byte: 00000000 00000000 00000000 0ddddddd
+  // 2 byte: 00000000 00000000 110ccccc 10dddddd
+  // 3 byte: 00000000 1110bbbb 10cccccc 10dddddd
+  // 4 byte: 11110aaa 10bbbbbb 10cccccc 10dddddd
+  uint32x4_t perm = vreinterpretq_u32_u8(vqtbl1q_u8(in, sh));
+  // Ascii
+  uint32x4_t ascii = vandq_u32(perm, vmovq_n_u32(0x7F));
+  uint32x4_t middle = vandq_u32(perm, vmovq_n_u32(0x3f00));
+  // When converting the way we do, the 3 byte prefix will be interpreted as
+  // the 18th bit being set, since the code would interpret the lead byte
+  // (0b1110bbbb) as a continuation byte (0b10bbbbbb). To fix this, we can
+  // either xor or do an 8 bit add of the 6th bit shifted right by 1. Since
+  // NEON has shift right accumulate, we use that.
+  //  4 byte   3 byte
+  // 10bbbbbb 1110bbbb
+  // 00000000 01000000 6th bit
+  // 00000000 00100000 shift right
+  // 10bbbbbb 0000bbbb add
+  // 00bbbbbb 0000bbbb mask
+  uint8x16_t correction =
+      vreinterpretq_u8_u32(vandq_u32(perm, vmovq_n_u32(0x00400000)));
+  uint32x4_t corrected = vreinterpretq_u32_u8(
+      vsraq_n_u8(vreinterpretq_u8_u32(perm), correction, 1));
+  // 00000000 00000000 0000cccc ccdddddd
+  uint32x4_t cd = vsraq_n_u32(ascii, middle, 2);
+  // Insert twice
+  // xxxxxxxx xxxaaabb bbbbxxxx xxxxxxxx
+  uint32x4_t ab = vbslq_u32(vmovq_n_u32(0x01C0000), vshrq_n_u32(corrected, 6),
+                            vshrq_n_u32(corrected, 4));
+  // 00000000 000aaabb bbbbcccc ccdddddd
+  uint32x4_t composed = vbslq_u32(vmovq_n_u32(0xFFE00FFF), cd, ab);
+  return composed;
+}
+
 uint16x8_t arm_parse_6_12_utf8(uint8x16_t in, size_t idx) {
   uint8x16_t sh = vld1q_u8(reinterpret_cast<const uint8_t *>(
       simdutf::tables::utf8_to_utf16::shufutf8[idx]));

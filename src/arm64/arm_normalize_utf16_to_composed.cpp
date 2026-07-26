@@ -3,21 +3,21 @@ template <ComposedForm form>
 simdutf_really_inline uint16x8_t
 arm_comp_trie_lookup_utf16(uint16x8_t code_points) {
   uint16_t buf[8];
-  buf[0] = scalar::normalization::lookup_comp_trie<form>(
+  buf[0] = scalar::normalization::lookup_comp_trie_bmp<form>(
       vgetq_lane_u16(code_points, 0));
-  buf[1] = scalar::normalization::lookup_comp_trie<form>(
+  buf[1] = scalar::normalization::lookup_comp_trie_bmp<form>(
       vgetq_lane_u16(code_points, 1));
-  buf[2] = scalar::normalization::lookup_comp_trie<form>(
+  buf[2] = scalar::normalization::lookup_comp_trie_bmp<form>(
       vgetq_lane_u16(code_points, 2));
-  buf[3] = scalar::normalization::lookup_comp_trie<form>(
+  buf[3] = scalar::normalization::lookup_comp_trie_bmp<form>(
       vgetq_lane_u16(code_points, 3));
-  buf[4] = scalar::normalization::lookup_comp_trie<form>(
+  buf[4] = scalar::normalization::lookup_comp_trie_bmp<form>(
       vgetq_lane_u16(code_points, 4));
-  buf[5] = scalar::normalization::lookup_comp_trie<form>(
+  buf[5] = scalar::normalization::lookup_comp_trie_bmp<form>(
       vgetq_lane_u16(code_points, 5));
-  buf[6] = scalar::normalization::lookup_comp_trie<form>(
+  buf[6] = scalar::normalization::lookup_comp_trie_bmp<form>(
       vgetq_lane_u16(code_points, 6));
-  buf[7] = scalar::normalization::lookup_comp_trie<form>(
+  buf[7] = scalar::normalization::lookup_comp_trie_bmp<form>(
       vgetq_lane_u16(code_points, 7));
   return vld1q_u16(buf);
 }
@@ -26,63 +26,50 @@ arm_comp_trie_lookup_utf16(uint16x8_t code_points) {
 // This means that they do not compose with anything, so this function
 // essentially performs NF(K)D on the given code points.
 template <endianness big_endian, ComposedForm form>
-void arm_write_no_comp_utf16(uint16x8_t values, uint16x8_t code_points,
-                             char16_t **out, size_t out_length,
-                             const char16_t *input, uint8_t *last_ccc) {
+void arm_write_no_comp_utf16(uint16x8_t indicators, uint16x8_t code_points,
+                             char16_t **out, const char16_t *input) {
   constexpr auto dform = to_decomposed_form(form);
-#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-  uint16_t values_buf[8];
-  uint16_t code_points_buf[8];
-  vst1q_u16(values_buf, values);
-  vst1q_u16(code_points_buf, code_points);
-#endif
-
-  for (size_t i = 0; i < 8; i++) {
-#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-    uint16_t value = values_buf[i];
-#else
-    uint16_t value = values[i];
-#endif
-    uint16_t indicator = value & 0b11;
-    if (indicator == 0) {
-      *(*out)++ = input[0];
-      input++;
-      *last_ccc = 0;
-      continue;
-    }
-    // Decompose the code point like we would in NF(K)D. Note that this can
-    // never trigger a resort or exceed a few code units, since composition-
-    // relevance-trie value 1 code points are guaranteed to decompose into a
-    // single code point.
-#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
-    uint16_t code_point = code_points_buf[i];
-#else
-    uint16_t code_point = code_points[i];
-#endif
-    uint32_t decomp_value =
-        scalar::utf16_to_decomposed::lookup_full_trie<dform>(code_point);
-    uint16_t offset = decomp_value & 0x3FFF;
-    uint8_t length = uint8_t(((decomp_value >> 14) & 0x3F) + 1);
-    uint16x4_t words =
-        vld1_u16(&tables::utf16_to_decomposed::decompositions[offset]);
-    if (big_endian == endianness::BIG) {
-      // Table words are stored in little endian, so swap them if necessary
-      words = vreinterpret_u16_u8(vrev16_u8(vreinterpret_u8_u16(words)));
-    }
-    vst1_u16(reinterpret_cast<uint16_t *>(*out), words);
-    *out += length;
-    out_length += length;
-
-    uint8_t ccc = uint8_t(decomp_value >> 24);
-    if (simdutf_unlikely(ccc != 0 && *last_ccc > ccc)) {
-      ccc = scalar::normalization::sort_combining<
-          scalar::normalization::utf16_normalization_traits<big_endian>>(
-          *out, out_length);
-    }
-    input += 1;
-    *last_ccc = ccc;
+  if constexpr (!match_system(big_endian)) {
+    vst1q_u16(
+        reinterpret_cast<uint16_t *>(*out),
+        vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(code_points))));
+  } else {
+    vst1q_u16(reinterpret_cast<uint16_t *>(*out), code_points);
   }
+  size_t displacement = 0;
+  uint16x8_t indicator1 = vceqq_u16(indicators, vdupq_n_u16(1));
+  uint64_t bitmask8 =
+      arm_bitmask4(vreinterpretq_u8_u16(indicator1)) & 0x8080808080808080ULL;
+  for (; bitmask8 > 0; bitmask8 &= bitmask8 - 1) {
+    uint32_t i = trailing_zeroes(bitmask8) >> 3;
+    uint16_t code_point = code_points[i];
+    uint32_t value =
+        scalar::utf16_to_decomposed::lookup_full_trie_bmp<dform>(code_point);
+    const uint16_t *words =
+        &simdutf::tables::utf16_to_decomposed::decompositions[value & 0x3FFF];
+    size_t delta = (value >> 14) & 0x3F;
+    if (simdutf_unlikely(delta == 1)) {
+      scalar::normalization::shift_right(*out + i + displacement + 1,
+                                         (8 + displacement) - (i + 1), 1);
+      if constexpr (big_endian == endianness::BIG) {
+        (*out)[i + displacement] = scalar::u16_swap_bytes(words[0]);
+        (*out)[i + displacement + 1] = scalar::u16_swap_bytes(words[1]);
+      } else {
+        (*out)[i + displacement] = words[0];
+        (*out)[i + displacement + 1] = words[1];
+      }
+      displacement++;
+    } else {
+      if constexpr (big_endian == endianness::BIG) {
+        (*out)[i + displacement] = scalar::u16_swap_bytes(words[0]);
+      } else {
+        (*out)[i + displacement] = words[0];
+      }
+    }
+  }
+  *out += 8 + displacement;
 }
+
 } // namespace internal
 
 template <endianness big_endian, ComposedForm form>
@@ -94,6 +81,13 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
   const size_t SAFETY_MARGIN = 8;
   uint8_t last_ccc = 0;
   size_t p = 0;
+  // The most recent input offset proven to be a composition boundary, in the
+  // sense of ICU's `prevBoundary`. Nothing before it can interact with anything
+  // at or after it, so the scalar fallback never has to look further back than
+  // this. Offset zero is trivially a boundary. Every position between this and
+  // `p` maps one input code point to exactly one output code point, which is
+  // what lets `normalize_with_context` rewind the output pointer.
+  size_t prev_boundary = 0;
   while (p + SAFETY_MARGIN < length) {
     uint16x8_t raw_in =
         vld1q_u16(reinterpret_cast<const uint16_t *>(input + p));
@@ -103,18 +97,17 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
     } else {
       in = raw_in;
     }
-    // ASCII fast path.
-    if (vmaxvq_u16(in) <= 0x7F) {
-      // The loop only guarantees nine code units, so we may load a second
-      // vector only when sixteen are really available.
+    // Fast path for code points that are irrelevant to NF(K)C.
+    if (vmaxvq_u16(in) < scalar::normalization::min_relevant_cp<form>) {
       if (p + 16 > length) {
         vst1q_u16(reinterpret_cast<uint16_t *>(*out_ptr), raw_in);
         *out_ptr += 8;
+        prev_boundary = p + 7;
         p += 8;
         last_ccc = 0;
         continue;
       }
-      // Get the next eight code units and check if they are also ASCII.
+      // Get the next eight code units and check if they are also irrelevant.
       uint16x8_t raw_nextin =
           vld1q_u16(reinterpret_cast<const uint16_t *>(input + p) + 8);
       uint16x8_t nextin;
@@ -124,9 +117,10 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
       } else {
         nextin = raw_nextin;
       }
-      if (vmaxvq_u16(nextin) > 0x7F) {
+      if (vmaxvq_u16(nextin) >= scalar::normalization::min_relevant_cp<form>) {
         vst1q_u16(reinterpret_cast<uint16_t *>(*out_ptr), raw_in);
         *out_ptr += 8;
+        prev_boundary = p + 7;
         p += 8;
         last_ccc = 0;
         raw_in = raw_nextin;
@@ -135,6 +129,7 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
         vst1q_u16(reinterpret_cast<uint16_t *>(*out_ptr), raw_in);
         vst1q_u16(reinterpret_cast<uint16_t *>(*out_ptr) + 8, raw_nextin);
         *out_ptr += 16;
+        prev_boundary = p + 15;
         p += 16;
         last_ccc = 0;
         continue;
@@ -143,6 +138,23 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
     uint16x8_t surrogates_mask = internal::arm_make_utf16_surrogates_mask(in);
     // Check if we have no surrogate pairs.
     if (vmaxvq_u16(surrogates_mask) == 0) {
+      // We use this to compose normalize a larger window using scalar if we
+      // detect Jamo. Note that this means inputs that sparsely put Jamo
+      // randomly throughout the input can be slower. This doesn't seem very
+      // common in real-world inputs, though.
+      uint16x8_t jamo_vt =
+          vcltq_u16(vsubq_u16(in, vdupq_n_u16(scalar::normalization::v_base)),
+                    vdupq_n_u16(scalar::normalization::t_base +
+                                scalar::normalization::t_count -
+                                scalar::normalization::v_base));
+      if (vmaxvq_u16(jamo_vt) != 0) {
+        p +=
+            scalar::utf16_to_composed::normalize_with_context<big_endian, form>(
+                input + p, input, length, out_ptr, 32, prev_boundary);
+        prev_boundary = p;
+        last_ccc = 0;
+        continue;
+      }
       uint16x8_t values = internal::arm_comp_trie_lookup_utf16<form>(in);
       uint16x8_t indicators = vandq_u16(values, vdupq_n_u16(0b11));
       uint16_t max = vmaxvq_u16(indicators);
@@ -150,6 +162,7 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
       if (max == 0) {
         vst1q_u16(reinterpret_cast<uint16_t *>(*out_ptr), raw_in);
         *out_ptr += 8;
+        prev_boundary = p + 7;
         p += 8;
         last_ccc = 0;
         continue;
@@ -160,13 +173,32 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
       // do). This allows us to cut out a large portion of work, especially
       // for compatibility composition.
       if (max == 1) {
-        internal::arm_write_no_comp_utf16<big_endian, form>(
-            values, in, out_ptr, *out_ptr - start, input + p, &last_ccc);
+        uint16x8_t forward_starter =
+            vcgtq_u16(vandq_u16(values, vdupq_n_u16(0x8000)), vdupq_n_u16(0));
+        uint16x8_t raw_ccc_values =
+            vandq_u16(vshrq_n_u16(values, 2), vdupq_n_u16(0xFF));
+        uint16x8_t ccc_values =
+            vbslq_u16(forward_starter, vdupq_n_u16(0), raw_ccc_values);
+        if (simdutf_unlikely(
+                !internal::arm_is_ccc_sorted_full(ccc_values, last_ccc))) {
+          p += scalar::utf16_to_composed::normalize_with_context<big_endian,
+                                                                 form>(
+              input + p, input, length, out_ptr, 8, prev_boundary);
+          prev_boundary = p;
+          last_ccc = 0;
+          continue;
+        }
+        internal::arm_write_no_comp_utf16<big_endian, form>(indicators, in,
+                                                            out_ptr, input + p);
         p += 8;
+        last_ccc = uint8_t(vgetq_lane_u16(ccc_values, 7));
         continue;
       }
       p += scalar::utf16_to_composed::normalize_with_context<big_endian, form>(
-          input + p, input, length, out_ptr, 8);
+          input + p, input, length, out_ptr, 8, prev_boundary);
+      // The fallback consumes up to the next stable position, so wherever it
+      // stopped is a boundary.
+      prev_boundary = p;
       last_ccc = 0;
     } else {
       // With surrogate pairs, we fall back to the scalar implementation.
@@ -176,14 +208,15 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
         normalize_range += 1;
       }
       p += scalar::utf16_to_composed::normalize_with_context<big_endian, form>(
-          input + p, input, length, out_ptr, normalize_range);
+          input + p, input, length, out_ptr, normalize_range, prev_boundary);
+      prev_boundary = p;
       last_ccc = 0;
     }
   }
 
   if (p < length) {
     (void)scalar::utf16_to_composed::normalize_with_context<big_endian, form>(
-        input + p, input, length, out_ptr, length - p);
+        input + p, input, length, out_ptr, length - p, prev_boundary);
   }
 
   return *out_ptr - start;
@@ -194,39 +227,23 @@ template <ComposedForm form>
 simdutf_really_inline uint16x8_t
 arm_comp_check_trie_lookup_utf16(uint16x8_t code_points) {
   uint16_t buf[8];
-  buf[0] = scalar::utf16_to_composed::lookup_check_trie<form>(
+  buf[0] = scalar::utf16_to_composed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 0));
-  buf[1] = scalar::utf16_to_composed::lookup_check_trie<form>(
+  buf[1] = scalar::utf16_to_composed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 1));
-  buf[2] = scalar::utf16_to_composed::lookup_check_trie<form>(
+  buf[2] = scalar::utf16_to_composed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 2));
-  buf[3] = scalar::utf16_to_composed::lookup_check_trie<form>(
+  buf[3] = scalar::utf16_to_composed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 3));
-  buf[4] = scalar::utf16_to_composed::lookup_check_trie<form>(
+  buf[4] = scalar::utf16_to_composed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 4));
-  buf[5] = scalar::utf16_to_composed::lookup_check_trie<form>(
+  buf[5] = scalar::utf16_to_composed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 5));
-  buf[6] = scalar::utf16_to_composed::lookup_check_trie<form>(
+  buf[6] = scalar::utf16_to_composed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 6));
-  buf[7] = scalar::utf16_to_composed::lookup_check_trie<form>(
+  buf[7] = scalar::utf16_to_composed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 7));
   return vld1q_u16(buf);
-}
-
-template <ComposedForm form>
-simdutf_really_inline void
-arm_comp_check_code_points_utf16(uint16x8_t code_points, size_t *out_length,
-                                 bool *is_qc, uint8_t *last_ccc) {
-  uint16x8_t values = arm_comp_check_trie_lookup_utf16<form>(code_points);
-  *out_length += vaddvq_u16(vandq_u16(values, vdupq_n_u16(0x3F)));
-  uint16x8_t ccc_values = vandq_u16(vshrq_n_u16(values, 6), vdupq_n_u16(0xFF));
-  if (*is_qc) {
-    // Checking combining classes is expensive, so we only do it if we
-    // haven't already failed the quick check.
-    *is_qc &= !vmaxvq_u16(vshrq_n_u16(values, 15)) &&
-              arm_is_ccc_sorted_full(ccc_values, *last_ccc);
-  }
-  *last_ccc = uint8_t(vgetq_lane_u16(ccc_values, 7));
 }
 } // namespace internal
 
@@ -243,7 +260,10 @@ bool arm_normalize_utf16_to_composed_check(const char16_t *input, size_t length,
     if constexpr (!match_system(big_endian)) {
       in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in)));
     }
-    if (vmaxvq_u16(in) <= 0x7F) {
+    // Code points below `min_relevant_cp` are NF(K)C_QC=Yes with ccc zero, so
+    // the block passes the quick check and contributes its own length. See the
+    // note on `min_relevant_cp` for why this is a valid output-length bound.
+    if (vmaxvq_u16(in) < scalar::normalization::min_relevant_cp<form>) {
       // Only load a second vector when sixteen code units are available.
       if (p + 16 > length) {
         *out_length += 8;
@@ -251,13 +271,13 @@ bool arm_normalize_utf16_to_composed_check(const char16_t *input, size_t length,
         last_ccc = 0;
         continue;
       }
-      // Get the next eight code units and check if they are also ASCII.
+      // Get the next eight code units and check if they are also irrelevant.
       uint16x8_t nextin =
           vld1q_u16(reinterpret_cast<const uint16_t *>(input + p) + 8);
       if constexpr (!match_system(big_endian)) {
         nextin = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(nextin)));
       }
-      if (vmaxvq_u16(nextin) > 0x7F) {
+      if (vmaxvq_u16(nextin) >= scalar::normalization::min_relevant_cp<form>) {
         *out_length += 8;
         p += 8;
         in = nextin;
@@ -271,18 +291,48 @@ bool arm_normalize_utf16_to_composed_check(const char16_t *input, size_t length,
     }
     uint16x8_t surrogates_mask = internal::arm_make_utf16_surrogates_mask(in);
     if (vmaxvq_u16(surrogates_mask) == 0) {
-      internal::arm_comp_check_code_points_utf16<form>(in, out_length, &is_qc,
-                                                       &last_ccc);
-    } else {
-      size_t normalize_range = 8;
-      if (vgetq_lane_u16(surrogates_mask, 7) == 0xFFFF) {
-        normalize_range += 1;
+      uint16x8_t values = internal::arm_comp_check_trie_lookup_utf16<form>(in);
+      *out_length += vaddvq_u16(vandq_u16(values, vdupq_n_u16(0x3F)));
+      if (vmaxvq_u16(vandq_u16(values, vdupq_n_u16(0x4000))) == 0) {
+        last_ccc = 0;
+        p += 8;
+        continue;
       }
-      is_qc &= scalar::utf16_to_composed::check_with_context<big_endian, form>(
-          input + p, normalize_range, out_length, &last_ccc);
-      p += normalize_range - 8;
+      uint16x8_t ccc_values =
+          vandq_u16(vshrq_n_u16(values, 6), vdupq_n_u16(0xFF));
+      if (is_qc) {
+        // Checking combining classes is expensive, so we only do it if we
+        // haven't already failed the quick check.
+        is_qc &= !vmaxvq_u16(vshrq_n_u16(values, 15)) &&
+                 internal::arm_is_ccc_sorted_full(ccc_values, last_ccc);
+      }
+      last_ccc = uint8_t(vgetq_lane_u16(ccc_values, 7));
+      p += 8;
+    } else {
+      size_t total = 0;
+      // Scalar quick check in the supplementary plane
+      while (total < 8) {
+        uint8_t sz;
+        uint32_t code_point =
+            scalar::utf16::parse_code_point<big_endian>(input + p + total, &sz);
+        uint16_t value =
+            scalar::utf16_to_composed::lookup_check_trie<form>(code_point);
+        *out_length += value & 0x3F;
+        if (simdutf_likely((value & 0x4000) == 0)) {
+          last_ccc = 0;
+          total += sz;
+          continue;
+        }
+        uint8_t ccc = uint8_t((value >> 6) & 0xFF);
+        if (last_ccc > ccc && ccc != 0) {
+          is_qc = false;
+        }
+        is_qc &= !(value >> 15);
+        total += sz;
+        last_ccc = ccc;
+      }
+      p += total;
     }
-    p += 8;
   }
   if (p < length) {
     is_qc &= scalar::utf16_to_composed::check_with_context<big_endian, form>(

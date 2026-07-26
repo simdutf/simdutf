@@ -114,6 +114,7 @@ simdutf_really_inline bool arm_is_ccc_sorted(uint16x4_t ccc_values,
   return vmaxv_u16(ccc_lt) == 0;
 }
 
+template <size_t nchars>
 void arm_decompose_hangul_utf8(uint16x4_t chars, uint16x4_t relevant,
                                uint16x4_t values, uint8_t **out,
                                const uint8_t *input, uint8_t *last_ccc) {
@@ -139,7 +140,7 @@ void arm_decompose_hangul_utf8(uint16x4_t chars, uint16x4_t relevant,
   vst1_u16(t_buf, lvt.val[2]);
 #endif
 
-  for (size_t i = 0; i < 4; i++) {
+  for (size_t i = 0; i < nchars; i++) {
     // ASCII fast path
     if (input[0] <= 0x7F) {
       *(*out)++ = input[0];
@@ -155,7 +156,7 @@ void arm_decompose_hangul_utf8(uint16x4_t chars, uint16x4_t relevant,
       // Not a Hangul syllable, just copy the input.
       uint16_t value = values[i];
 #endif
-      size_t size = value & 0b11;
+      size_t size = (value & 0b11) + 1;
       for (size_t j = 0; j < size; j++) {
         *(*out)++ = input[j];
       }
@@ -222,6 +223,36 @@ simdutf_really_inline uint16x8_t arm_trie_lookup_wide(uint16x8_t code_points) {
   return vld1q_u16(buf);
 }
 
+template <DecomposedForm form, size_t nchars>
+simdutf_really_inline uint32x4_t arm_full_trie_lookup(uint32x4_t code_points) {
+  uint32_t buf[4];
+  if constexpr (nchars > 0) {
+    buf[0] = scalar::utf8_to_decomposed::lookup_full_trie<form>(
+        vgetq_lane_u32(code_points, 0));
+  } else {
+    buf[0] = 0;
+  }
+  if constexpr (nchars > 1) {
+    buf[1] = scalar::utf8_to_decomposed::lookup_full_trie<form>(
+        vgetq_lane_u32(code_points, 1));
+  } else {
+    buf[1] = 0;
+  }
+  if constexpr (nchars > 2) {
+    buf[2] = scalar::utf8_to_decomposed::lookup_full_trie<form>(
+        vgetq_lane_u32(code_points, 2));
+  } else {
+    buf[2] = 0;
+  }
+  if constexpr (nchars > 3) {
+    buf[3] = scalar::utf8_to_decomposed::lookup_full_trie<form>(
+        vgetq_lane_u32(code_points, 3));
+  } else {
+    buf[3] = 0;
+  }
+  return vld1q_u32(buf);
+}
+
 // Decompose up to eight code points into their UTF-8 representations. This
 // function assumes that the input code points are not Hangul syllables.
 template <DecomposedForm form>
@@ -253,7 +284,7 @@ void arm_write_non_hangul_fallback(uint16x8_t values, uint16x8_t chars,
 #else
     uint16_t value = values[i];
 #endif
-    uint8_t size = value & 0b11;
+    uint8_t size = (value & 0b11) + 1;
     if (value <= 3) {
       vst1_u8(*out, vld1_u8(input));
       *out += size;
@@ -361,13 +392,13 @@ arm_write_non_hangul_simple_utf8(uint8x16_t in, uint16x8_t chars,
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
     int8_t dlt = int8_t(delta_buf[i]);
     // The end of each code point before displacement.
-    int8_t size = int8_t(length_buf[i]);
-    int8_t end = int8_t(length_psum_buf[i]);
+    int8_t size = int8_t(length_buf[i] + 1);
+    int8_t end = int8_t(length_psum_buf[i] + i + 1);
 #else
     int8_t dlt = int8_t(delta[i]);
     // The end of each code point before displacement.
-    int8_t size = int8_t(length[i]);
-    int8_t end = int8_t(length_psum[i]);
+    int8_t size = int8_t(length[i] + 1);
+    int8_t end = int8_t(length_psum[i] + i + 1);
 #endif
     // The start of each code point after displacement. To decompose the
     // code point at `i`, we need to shift the bytes in the buffer by the
@@ -395,7 +426,7 @@ arm_write_non_hangul_simple_utf8(uint8x16_t in, uint16x8_t chars,
     uint16_t code_point = chars[i];
 #endif
     uint32_t value =
-        scalar::utf8_to_decomposed::lookup_full_trie<form>(code_point);
+        scalar::utf8_to_decomposed::lookup_full_trie_bmp<form>(code_point);
     vst1_u8(
         &tbls[j * 8],
         vld1_u8(&tables::utf8_to_decomposed::decompositions[value & 0x7FFF]));
@@ -460,8 +491,8 @@ arm_decompose_utf8(uint8x16_t in, uint16x4_t chars, size_t n_bytes,
   uint16x4_t hangul_mask = arm_hangul_mask(chars);
   bool hangul_result = vmaxv_u16(hangul_mask) > 0;
   uint16x4_t values = arm_trie_lookup<form>(chars);
-  // Case where we have no Hangul syllables and no relevant characters.
   bool decomp_result = vmaxv_u16(values) > 3;
+  // Case where we have no Hangul syllables and no relevant characters.
   if (!hangul_result && !decomp_result) {
     *last_ccc = 0;
     vst1q_u8(*out, in);
@@ -484,7 +515,8 @@ arm_decompose_utf8(uint8x16_t in, uint16x4_t chars, size_t n_bytes,
                                         vcombine_u16(chars, vdup_n_u16(0)), 4,
                                         out, out_length, input, last_ccc);
   } else if (hangul_result && !decomp_result) {
-    arm_decompose_hangul_utf8(chars, hangul_mask, values, out, input, last_ccc);
+    arm_decompose_hangul_utf8<4>(chars, hangul_mask, values, out, input,
+                                 last_ccc);
   } else {
     // Case where we have both precomposed characters and Hangul syllables.
     // Very rare in practice, so we just fall back to the scalar
@@ -493,6 +525,28 @@ arm_decompose_utf8(uint8x16_t in, uint16x4_t chars, size_t n_bytes,
         reinterpret_cast<const char *>(input), n_bytes,
         reinterpret_cast<char *>(*out), out_length, last_ccc);
   }
+}
+
+template <DecomposedForm form>
+simdutf_really_inline void arm_decompose_supplementary_utf8(
+    uint8x16_t in, uint32x4_t chars, size_t n_bytes, const uint8_t *input,
+    uint8_t **out, size_t out_length, uint8_t *last_ccc) {
+  uint32x4_t ge = vcgeq_u32(chars, vdupq_n_u32(scalar::normalization::s_base));
+  uint32x4_t lt = vcltq_u32(chars, vdupq_n_u32(scalar::normalization::s_base +
+                                               scalar::normalization::s_count));
+  uint32x4_t hangul_mask = vandq_u32(lt, ge);
+  bool hangul_result = vmaxvq_u32(hangul_mask) > 0;
+  uint32x4_t values = arm_full_trie_lookup<form, 3>(chars);
+  bool decomp_result = vmaxvq_u32(values) > 0;
+  if (!hangul_result && !decomp_result) {
+    *last_ccc = 0;
+    vst1q_u8(*out, in);
+    *out += n_bytes;
+    return;
+  }
+  *out += scalar::utf8_to_decomposed::normalize_with_context<form>(
+      reinterpret_cast<const char *>(input), n_bytes,
+      reinterpret_cast<char *>(*out), out_length, last_ccc);
 }
 
 // Decompose six non-Hangul BMP code points into their UTF-8 representations.
@@ -523,7 +577,7 @@ arm_decompose_small_utf8(uint16x8_t chars, const uint8_t *input, uint8_t **out,
 #else
     uint16_t c = chars[i];
 #endif
-    uint32_t value = scalar::utf8_to_decomposed::lookup_full_trie<form>(c);
+    uint32_t value = scalar::utf8_to_decomposed::lookup_full_trie_bmp<form>(c);
     if (value == 0) {
       *(*out)++ = leading;
       *(*out)++ = input[1];
@@ -640,11 +694,14 @@ size_t normalize_masked_utf8_to_decomposed(const uint8_t *input, uint64_t mask,
     internal::arm_decompose_utf8<form>(in, chars, n_bytes, input, out,
                                        out_length, last_ccc);
   } else if (idx < 209) {
-    // NOTE: right now, anytime we have three 1..4-byte code points, we
-    // just fall back to scalar. We should not do this.
-    *out += scalar::utf8_to_decomposed::normalize_with_context<form>(
-        reinterpret_cast<const char *>(input), n_bytes,
-        reinterpret_cast<char *>(*out), out_length, last_ccc);
+    uint32x4_t chars;
+    if (sml_mask == 0x888) {
+      chars = arm_parse_4_byte_utf8(in);
+    } else {
+      chars = arm_parse_3_1234_utf8(in, idx);
+    }
+    internal::arm_decompose_supplementary_utf8<form>(in, chars, n_bytes, input,
+                                                     out, out_length, last_ccc);
   }
 
   return n_bytes;
@@ -654,13 +711,13 @@ namespace internal {
 template <DecomposedForm form>
 simdutf_really_inline uint16x4_t arm_check_trie_lookup(uint16x4_t code_points) {
   uint16_t buf[4];
-  buf[0] = scalar::utf8_to_decomposed::lookup_check_trie<form>(
+  buf[0] = scalar::utf8_to_decomposed::lookup_check_trie_bmp<form>(
       vget_lane_u16(code_points, 0));
-  buf[1] = scalar::utf8_to_decomposed::lookup_check_trie<form>(
+  buf[1] = scalar::utf8_to_decomposed::lookup_check_trie_bmp<form>(
       vget_lane_u16(code_points, 1));
-  buf[2] = scalar::utf8_to_decomposed::lookup_check_trie<form>(
+  buf[2] = scalar::utf8_to_decomposed::lookup_check_trie_bmp<form>(
       vget_lane_u16(code_points, 2));
-  buf[3] = scalar::utf8_to_decomposed::lookup_check_trie<form>(
+  buf[3] = scalar::utf8_to_decomposed::lookup_check_trie_bmp<form>(
       vget_lane_u16(code_points, 3));
   return vld1_u16(buf);
 }
@@ -669,17 +726,17 @@ template <DecomposedForm form>
 simdutf_really_inline uint16x8_t
 arm_check_trie_lookup_wide(uint16x8_t code_points) {
   uint16_t buf[8];
-  buf[0] = scalar::utf8_to_decomposed::lookup_check_trie<form>(
+  buf[0] = scalar::utf8_to_decomposed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 0));
-  buf[1] = scalar::utf8_to_decomposed::lookup_check_trie<form>(
+  buf[1] = scalar::utf8_to_decomposed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 1));
-  buf[2] = scalar::utf8_to_decomposed::lookup_check_trie<form>(
+  buf[2] = scalar::utf8_to_decomposed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 2));
-  buf[3] = scalar::utf8_to_decomposed::lookup_check_trie<form>(
+  buf[3] = scalar::utf8_to_decomposed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 3));
-  buf[4] = scalar::utf8_to_decomposed::lookup_check_trie<form>(
+  buf[4] = scalar::utf8_to_decomposed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 4));
-  buf[5] = scalar::utf8_to_decomposed::lookup_check_trie<form>(
+  buf[5] = scalar::utf8_to_decomposed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 5));
   buf[6] = 0;
   buf[7] = 0;
@@ -714,6 +771,35 @@ arm_check_code_points_utf8_wide(uint16x8_t code_points, size_t *out_length,
               arm_is_ccc_sorted_full(ccc_values, *last_ccc);
   }
   *last_ccc = uint8_t(vgetq_lane_u16(ccc_values, 5));
+}
+
+template <DecomposedForm form>
+simdutf_really_inline uint16x4_t
+arm_check_trie_lookup_supplementary(uint32x4_t code_points) {
+  uint16_t buf[4];
+  buf[0] = scalar::utf8_to_decomposed::lookup_check_trie<form>(
+      vgetq_lane_u32(code_points, 0));
+  buf[1] = scalar::utf8_to_decomposed::lookup_check_trie<form>(
+      vgetq_lane_u32(code_points, 1));
+  buf[2] = scalar::utf8_to_decomposed::lookup_check_trie<form>(
+      vgetq_lane_u32(code_points, 2));
+  buf[3] = 0;
+  return vld1_u16(buf);
+}
+
+template <DecomposedForm form>
+simdutf_really_inline void
+arm_check_code_points_supplementary_utf8(uint32x4_t code_points,
+                                         size_t *out_length, bool *is_qc,
+                                         uint8_t *last_ccc) {
+  uint16x4_t values = arm_check_trie_lookup_supplementary<form>(code_points);
+  *out_length += vaddv_u16(vand_u16(values, vdup_n_u16(0x3F)));
+  uint16x4_t ccc_values = vand_u16(vshr_n_u16(values, 6), vdup_n_u16(0xFF));
+  if (*is_qc) {
+    *is_qc &= !vmaxv_u16(vshr_n_u16(values, 15)) &&
+              arm_is_ccc_sorted(ccc_values, *last_ccc);
+  }
+  *last_ccc = uint8_t(vget_lane_u16(ccc_values, 2));
 }
 } // namespace internal
 
@@ -767,11 +853,14 @@ normalize_masked_utf8_to_decomposed_check(const uint8_t *input, uint64_t mask,
   }
   if (idx < 209) {
     // Three 1..4-byte code points.
-    // It might be safe to call arm_check_code_points_utf8 and subtract 1 byte
-    // from out_length after, since we can put a null code point in the last
-    // position. NOTE: last_ccc would also have to be adjusted.
-    *is_qc &= scalar::utf8_to_decomposed::check_with_context<form>(
-        reinterpret_cast<const char *>(input), n_bytes, out_length, last_ccc);
+    uint32x4_t code_points;
+    if (sml_mask == 0x888) {
+      code_points = arm_parse_4_byte_utf8(in);
+    } else {
+      code_points = arm_parse_3_1234_utf8(in, idx);
+    }
+    internal::arm_check_code_points_supplementary_utf8<form>(
+        code_points, out_length, is_qc, last_ccc);
   }
   return n_bytes;
 }

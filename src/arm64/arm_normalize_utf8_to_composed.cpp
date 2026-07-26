@@ -1,37 +1,51 @@
 namespace internal {
 template <ComposedForm form>
-simdutf_really_inline uint16x4_t arm_comp_trie_lookup(uint16x4_t code_points) {
+simdutf_really_inline uint16x4_t
+arm_comp_trie_lookup_bmp(uint16x4_t code_points) {
   uint16_t buf[4];
-  buf[0] = scalar::normalization::lookup_comp_trie<form>(
+  buf[0] = scalar::normalization::lookup_comp_trie_bmp<form>(
       vget_lane_u16(code_points, 0));
-  buf[1] = scalar::normalization::lookup_comp_trie<form>(
+  buf[1] = scalar::normalization::lookup_comp_trie_bmp<form>(
       vget_lane_u16(code_points, 1));
-  buf[2] = scalar::normalization::lookup_comp_trie<form>(
+  buf[2] = scalar::normalization::lookup_comp_trie_bmp<form>(
       vget_lane_u16(code_points, 2));
-  buf[3] = scalar::normalization::lookup_comp_trie<form>(
+  buf[3] = scalar::normalization::lookup_comp_trie_bmp<form>(
       vget_lane_u16(code_points, 3));
   return vld1_u16(buf);
 }
 
 template <ComposedForm form>
 simdutf_really_inline uint16x8_t
-arm_comp_trie_lookup_wide(uint16x8_t code_points) {
+arm_comp_trie_lookup_bmp_wide(uint16x8_t code_points) {
   uint16_t buf[8];
-  buf[0] = scalar::normalization::lookup_comp_trie<form>(
+  buf[0] = scalar::normalization::lookup_comp_trie_bmp<form>(
       vgetq_lane_u16(code_points, 0));
-  buf[1] = scalar::normalization::lookup_comp_trie<form>(
+  buf[1] = scalar::normalization::lookup_comp_trie_bmp<form>(
       vgetq_lane_u16(code_points, 1));
-  buf[2] = scalar::normalization::lookup_comp_trie<form>(
+  buf[2] = scalar::normalization::lookup_comp_trie_bmp<form>(
       vgetq_lane_u16(code_points, 2));
-  buf[3] = scalar::normalization::lookup_comp_trie<form>(
+  buf[3] = scalar::normalization::lookup_comp_trie_bmp<form>(
       vgetq_lane_u16(code_points, 3));
-  buf[4] = scalar::normalization::lookup_comp_trie<form>(
+  buf[4] = scalar::normalization::lookup_comp_trie_bmp<form>(
       vgetq_lane_u16(code_points, 4));
-  buf[5] = scalar::normalization::lookup_comp_trie<form>(
+  buf[5] = scalar::normalization::lookup_comp_trie_bmp<form>(
       vgetq_lane_u16(code_points, 5));
   buf[6] = 0;
   buf[7] = 0;
   return vld1q_u16(buf);
+}
+
+template <ComposedForm form>
+simdutf_really_inline uint16x4_t arm_comp_trie_lookup(uint32x4_t code_points) {
+  uint16_t buf[4];
+  buf[0] = scalar::normalization::lookup_comp_trie<form>(
+      vgetq_lane_u32(code_points, 0));
+  buf[1] = scalar::normalization::lookup_comp_trie<form>(
+      vgetq_lane_u32(code_points, 1));
+  buf[2] = scalar::normalization::lookup_comp_trie<form>(
+      vgetq_lane_u32(code_points, 2));
+  buf[3] = 0;
+  return vld1_u16(buf);
 }
 
 // Write four BMP code points that have value 0 or 1 from the NF(K)C trie. This
@@ -79,7 +93,7 @@ void arm_write_no_comp_utf8(uint16x8_t values, uint16x8_t code_points,
 #endif
     // Decompose the code point like we would in NF(K)D.
     uint32_t decomp_value =
-        scalar::utf8_to_decomposed::lookup_full_trie<dform>(code_point);
+        scalar::utf8_to_decomposed::lookup_full_trie_bmp<dform>(code_point);
     const uint8_t *decomp_offset =
         &tables::utf8_to_decomposed::decompositions[decomp_value & 0x7FFF];
     uint8_t length = (decomp_value >> 15) & 0x3F;
@@ -108,8 +122,9 @@ template <ComposedForm form>
 simdutf_really_inline size_t arm_normalize_code_points_utf8(
     uint8x16_t in, uint16x4_t code_points, const uint8_t *input,
     const uint8_t *input_base, size_t input_length, size_t n_bytes,
-    uint8_t **out, size_t out_length, uint8_t *last_ccc) {
-  uint16x4_t values = arm_comp_trie_lookup<form>(code_points);
+    uint8_t **out, size_t out_length, uint8_t *last_ccc,
+    size_t *prev_boundary) {
+  uint16x4_t values = arm_comp_trie_lookup_bmp<form>(code_points);
   uint16x4_t indicators = vand_u16(values, vdup_n_u16(0b11));
   uint16_t max = vmaxv_u16(indicators);
   // No composition-relevant characters.
@@ -117,6 +132,9 @@ simdutf_really_inline size_t arm_normalize_code_points_utf8(
     vst1q_u8(*out, in);
     *out += n_bytes;
     *last_ccc = 0;
+    // Every code point in the window is stable, so the one starting here is a
+    // composition boundary.
+    *prev_boundary = size_t(input - input_base);
     return n_bytes;
   }
   // If the max value is 1, then we have only characters affected by
@@ -133,24 +151,30 @@ simdutf_really_inline size_t arm_normalize_code_points_utf8(
     return n_bytes;
   }
   *last_ccc = 0;
-  return scalar::utf8_to_composed::normalize_with_context<form>(
+  size_t consumed = scalar::utf8_to_composed::normalize_with_context<form>(
       reinterpret_cast<const char *>(input),
       reinterpret_cast<const char *>(input_base), input_length,
-      reinterpret_cast<char **>(out), n_bytes);
+      reinterpret_cast<char **>(out), n_bytes, *prev_boundary);
+  // The fallback consumes up to the next stable position, so wherever it
+  // stopped is a boundary.
+  *prev_boundary = size_t(input - input_base) + consumed;
+  return consumed;
 }
 
 template <ComposedForm form>
 simdutf_really_inline size_t arm_normalize_code_points_utf8_wide(
     uint8x16_t in, uint16x8_t code_points, const uint8_t *input,
     const uint8_t *input_base, size_t input_length, size_t n_bytes,
-    uint8_t **out, size_t out_length, uint8_t *last_ccc) {
-  uint16x8_t values = arm_comp_trie_lookup_wide<form>(code_points);
+    uint8_t **out, size_t out_length, uint8_t *last_ccc,
+    size_t *prev_boundary) {
+  uint16x8_t values = arm_comp_trie_lookup_bmp_wide<form>(code_points);
   uint16x8_t indicators = vandq_u16(values, vdupq_n_u16(0b11));
   uint16_t max = vmaxvq_u16(indicators);
   if (max == 0) {
     vst1q_u8(*out, in);
     *out += n_bytes;
     *last_ccc = 0;
+    *prev_boundary = size_t(input - input_base);
     return n_bytes;
   }
   if (max == 1) {
@@ -159,10 +183,37 @@ simdutf_really_inline size_t arm_normalize_code_points_utf8_wide(
     return n_bytes;
   }
   *last_ccc = 0;
-  return scalar::utf8_to_composed::normalize_with_context<form>(
+  size_t consumed = scalar::utf8_to_composed::normalize_with_context<form>(
       reinterpret_cast<const char *>(input),
       reinterpret_cast<const char *>(input_base), input_length,
-      reinterpret_cast<char **>(out), n_bytes);
+      reinterpret_cast<char **>(out), n_bytes, *prev_boundary);
+  *prev_boundary = size_t(input - input_base) + consumed;
+  return consumed;
+}
+
+template <ComposedForm form>
+simdutf_really_inline size_t arm_normalize_code_points_supplementary_utf8(
+    uint8x16_t in, uint32x4_t code_points, const uint8_t *input,
+    const uint8_t *input_base, size_t input_length, size_t n_bytes,
+    uint8_t **out, uint8_t *last_ccc, size_t *prev_boundary) {
+  uint16x4_t values = arm_comp_trie_lookup<form>(code_points);
+  uint16x4_t indicators = vand_u16(values, vdup_n_u16(0b11));
+  uint16_t max = vmaxv_u16(indicators);
+  // No composition-relevant characters.
+  if (max == 0) {
+    vst1q_u8(*out, in);
+    *out += n_bytes;
+    *last_ccc = 0;
+    *prev_boundary = size_t(input - input_base);
+    return n_bytes;
+  }
+  *last_ccc = 0;
+  size_t consumed = scalar::utf8_to_composed::normalize_with_context<form>(
+      reinterpret_cast<const char *>(input),
+      reinterpret_cast<const char *>(input_base), input_length,
+      reinterpret_cast<char **>(out), n_bytes, *prev_boundary);
+  *prev_boundary = size_t(input - input_base) + consumed;
+  return consumed;
 }
 } // namespace internal
 
@@ -171,7 +222,8 @@ size_t normalize_masked_utf8_to_composed(const uint8_t *input,
                                          const uint8_t *input_base,
                                          size_t input_length, uint64_t mask,
                                          uint8_t **out, size_t out_length,
-                                         uint8_t *last_ccc) {
+                                         uint8_t *last_ccc,
+                                         size_t *prev_boundary) {
   // Eagerly skip ASCII, similar to NF(K)D.
   int t1 = trailing_zeroes(~mask);
   if (t1 > 2) {
@@ -179,6 +231,8 @@ size_t normalize_masked_utf8_to_composed(const uint8_t *input,
     arm_memcpy_small(*out, input);
     *out += min;
     *last_ccc = 0;
+    // ASCII is stable, so the last byte we just copied is a boundary.
+    *prev_boundary = size_t(input - input_base) + min - 1;
     return min;
   }
 
@@ -189,13 +243,13 @@ size_t normalize_masked_utf8_to_composed(const uint8_t *input,
     uint16x4_t code_points = arm_parse_3_byte_utf8(in);
     return internal::arm_normalize_code_points_utf8<form>(
         in, code_points, input, input_base, input_length, 12, out, out_length,
-        last_ccc);
+        last_ccc, prev_boundary);
   }
   if (sml_mask == 0xAAA) {
     uint16x8_t code_points = arm_parse_2_byte_utf8(in);
     return internal::arm_normalize_code_points_utf8_wide<form>(
         in, code_points, input, input_base, input_length, 12, out, out_length,
-        last_ccc);
+        last_ccc, prev_boundary);
   }
 
   uint8_t idx = simdutf::tables::utf8_to_utf16::utf8bigindex[sml_mask][0];
@@ -204,22 +258,25 @@ size_t normalize_masked_utf8_to_composed(const uint8_t *input,
     uint16x8_t code_points = arm_parse_6_12_utf8(in, idx);
     return internal::arm_normalize_code_points_utf8_wide<form>(
         in, code_points, input, input_base, input_length, n_bytes, out,
-        out_length, last_ccc);
+        out_length, last_ccc, prev_boundary);
   }
   if (idx < 145) {
     uint16x4_t code_points = arm_parse_4_123_utf8(in, idx);
     return internal::arm_normalize_code_points_utf8<form>(
         in, code_points, input, input_base, input_length, n_bytes, out,
-        out_length, last_ccc);
+        out_length, last_ccc, prev_boundary);
   }
 
-  // idx < 209: three 1..4-byte code points. Always fall back for this
-  // case.
-  *last_ccc = 0;
-  return scalar::utf8_to_composed::normalize_with_context<form>(
-      reinterpret_cast<const char *>(input),
-      reinterpret_cast<const char *>(input_base), input_length,
-      reinterpret_cast<char **>(out), n_bytes);
+  // 3 code points that can be 1-4 bytes
+  uint32x4_t code_points;
+  if (sml_mask == 0x888) {
+    code_points = arm_parse_4_byte_utf8(in);
+  } else {
+    code_points = arm_parse_3_1234_utf8(in, idx);
+  }
+  return internal::arm_normalize_code_points_supplementary_utf8<form>(
+      in, code_points, input, input_base, input_length, n_bytes, out, last_ccc,
+      prev_boundary);
 }
 
 namespace internal {
@@ -227,13 +284,13 @@ template <ComposedForm form>
 simdutf_really_inline uint16x4_t
 arm_comp_check_trie_lookup(uint16x4_t code_points) {
   uint16_t buf[4];
-  buf[0] = scalar::utf8_to_composed::lookup_check_trie<form>(
+  buf[0] = scalar::utf8_to_composed::lookup_check_trie_bmp<form>(
       vget_lane_u16(code_points, 0));
-  buf[1] = scalar::utf8_to_composed::lookup_check_trie<form>(
+  buf[1] = scalar::utf8_to_composed::lookup_check_trie_bmp<form>(
       vget_lane_u16(code_points, 1));
-  buf[2] = scalar::utf8_to_composed::lookup_check_trie<form>(
+  buf[2] = scalar::utf8_to_composed::lookup_check_trie_bmp<form>(
       vget_lane_u16(code_points, 2));
-  buf[3] = scalar::utf8_to_composed::lookup_check_trie<form>(
+  buf[3] = scalar::utf8_to_composed::lookup_check_trie_bmp<form>(
       vget_lane_u16(code_points, 3));
   return vld1_u16(buf);
 }
@@ -242,17 +299,17 @@ template <ComposedForm form>
 simdutf_really_inline uint16x8_t
 arm_comp_check_trie_lookup_wide(uint16x8_t code_points) {
   uint16_t buf[8];
-  buf[0] = scalar::utf8_to_composed::lookup_check_trie<form>(
+  buf[0] = scalar::utf8_to_composed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 0));
-  buf[1] = scalar::utf8_to_composed::lookup_check_trie<form>(
+  buf[1] = scalar::utf8_to_composed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 1));
-  buf[2] = scalar::utf8_to_composed::lookup_check_trie<form>(
+  buf[2] = scalar::utf8_to_composed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 2));
-  buf[3] = scalar::utf8_to_composed::lookup_check_trie<form>(
+  buf[3] = scalar::utf8_to_composed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 3));
-  buf[4] = scalar::utf8_to_composed::lookup_check_trie<form>(
+  buf[4] = scalar::utf8_to_composed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 4));
-  buf[5] = scalar::utf8_to_composed::lookup_check_trie<form>(
+  buf[5] = scalar::utf8_to_composed::lookup_check_trie_bmp<form>(
       vgetq_lane_u16(code_points, 5));
   buf[6] = 0;
   buf[7] = 0;
@@ -287,6 +344,39 @@ arm_comp_check_code_points_utf8_wide(uint16x8_t code_points, size_t *out_length,
               arm_is_ccc_sorted_full(ccc_values, *last_ccc);
   }
   *last_ccc = uint8_t(vgetq_lane_u16(ccc_values, 5));
+}
+
+// Check trie lookup over up to three 1-4 byte code points (the fourth lane
+// belongs to a code point that will be reprocessed on the next call, so it is
+// zeroed out here, matching arm_comp_trie_lookup).
+template <ComposedForm form>
+simdutf_really_inline uint16x4_t
+arm_comp_check_trie_lookup_supplementary(uint32x4_t code_points) {
+  uint16_t buf[4];
+  buf[0] = scalar::utf8_to_composed::lookup_check_trie<form>(
+      vgetq_lane_u32(code_points, 0));
+  buf[1] = scalar::utf8_to_composed::lookup_check_trie<form>(
+      vgetq_lane_u32(code_points, 1));
+  buf[2] = scalar::utf8_to_composed::lookup_check_trie<form>(
+      vgetq_lane_u32(code_points, 2));
+  buf[3] = 0;
+  return vld1_u16(buf);
+}
+
+template <ComposedForm form>
+simdutf_really_inline void
+arm_comp_check_code_points_supplementary_utf8(uint32x4_t code_points,
+                                              size_t *out_length, bool *is_qc,
+                                              uint8_t *last_ccc) {
+  uint16x4_t values =
+      arm_comp_check_trie_lookup_supplementary<form>(code_points);
+  *out_length += vaddv_u16(vand_u16(values, vdup_n_u16(0x3F)));
+  uint16x4_t ccc_values = vand_u16(vshr_n_u16(values, 6), vdup_n_u16(0xFF));
+  if (*is_qc) {
+    *is_qc &= !vmaxv_u16(vshr_n_u16(values, 15)) &&
+              arm_is_ccc_sorted(ccc_values, *last_ccc);
+  }
+  *last_ccc = uint8_t(vget_lane_u16(ccc_values, 2));
 }
 } // namespace internal
 
@@ -335,9 +425,14 @@ size_t normalize_masked_utf8_to_composed_check(const uint8_t *input,
     return n_bytes;
   }
 
-  // idx < 209: three 1..4-byte code points. Always fall back for this
-  // case.
-  *is_qc &= scalar::utf8_to_composed::check_with_context<form>(
-      reinterpret_cast<const char *>(input), n_bytes, out_length, last_ccc);
+  // idx < 209: three 1..4-byte code points.
+  uint32x4_t code_points;
+  if (sml_mask == 0x888) {
+    code_points = arm_parse_4_byte_utf8(in);
+  } else {
+    code_points = arm_parse_3_1234_utf8(in, idx);
+  }
+  internal::arm_comp_check_code_points_supplementary_utf8<form>(
+      code_points, out_length, is_qc, last_ccc);
   return n_bytes;
 }
