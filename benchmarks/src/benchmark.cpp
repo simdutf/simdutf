@@ -346,6 +346,44 @@ Benchmark::Benchmark(std::vector<input::Testcase> &&testcases)
   register_function("normalize_utf16be_to_nfkd",
                     &Benchmark::run_normalize_utf16be_to_nfkd,
                     simdutf::encoding_type::UTF16_BE);
+
+  register_function("normalize_utf8_to_nfc_check",
+                    &Benchmark::run_normalize_utf8_to_nfc_check,
+                    simdutf::encoding_type::UTF8);
+  register_function("normalize_utf8_to_nfd_check",
+                    &Benchmark::run_normalize_utf8_to_nfd_check,
+                    simdutf::encoding_type::UTF8);
+  register_function("normalize_utf8_to_nfkc_check",
+                    &Benchmark::run_normalize_utf8_to_nfkc_check,
+                    simdutf::encoding_type::UTF8);
+  register_function("normalize_utf8_to_nfkd_check",
+                    &Benchmark::run_normalize_utf8_to_nfkd_check,
+                    simdutf::encoding_type::UTF8);
+
+  register_function("normalize_utf16le_to_nfc_check",
+                    &Benchmark::run_normalize_utf16le_to_nfc_check,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("normalize_utf16be_to_nfc_check",
+                    &Benchmark::run_normalize_utf16be_to_nfc_check,
+                    simdutf::encoding_type::UTF16_BE);
+  register_function("normalize_utf16le_to_nfd_check",
+                    &Benchmark::run_normalize_utf16le_to_nfd_check,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("normalize_utf16be_to_nfd_check",
+                    &Benchmark::run_normalize_utf16be_to_nfd_check,
+                    simdutf::encoding_type::UTF16_BE);
+  register_function("normalize_utf16le_to_nfkc_check",
+                    &Benchmark::run_normalize_utf16le_to_nfkc_check,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("normalize_utf16be_to_nfkc_check",
+                    &Benchmark::run_normalize_utf16be_to_nfkc_check,
+                    simdutf::encoding_type::UTF16_BE);
+  register_function("normalize_utf16le_to_nfkd_check",
+                    &Benchmark::run_normalize_utf16le_to_nfkd_check,
+                    simdutf::encoding_type::UTF16_LE);
+  register_function("normalize_utf16be_to_nfkd_check",
+                    &Benchmark::run_normalize_utf16be_to_nfkd_check,
+                    simdutf::encoding_type::UTF16_BE);
 #endif // SIMDUTF_BENCH_NORMALIZATION
 
 #ifdef ICU_AVAILABLE
@@ -4015,6 +4053,210 @@ void Benchmark::run_normalize_utf16be_to_nfkd(
   if ((sink == 0) && (size != 0) && (iterations > 0)) {
     std::cerr << "The output is zero which might indicate an error.\n";
   }
+  size_t char_count = get_active_implementation()->count_utf16be(data, size);
+  print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_normalize_utf8_to_nfc_check(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char *data = reinterpret_cast<const char *>(input_data.data());
+  const size_t size = input_data.size();
+  volatile bool sink{false};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    size_t output_length = 0;
+    sink =
+        implementation.normalize_utf8_to_nfc_check(data, size, &output_length);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  size_t char_count = get_active_implementation()->count_utf8(data, size);
+  print_summary(result, size, char_count);
+}
+
+void Benchmark::run_normalize_utf8_to_nfd_check(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char *data = reinterpret_cast<const char *>(input_data.data());
+  const size_t size = input_data.size();
+  volatile bool sink{false};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    size_t output_length = 0;
+    sink =
+        implementation.normalize_utf8_to_nfd_check(data, size, &output_length);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  size_t char_count = get_active_implementation()->count_utf8(data, size);
+  print_summary(result, size, char_count);
+}
+
+void Benchmark::run_normalize_utf8_to_nfkc_check(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char *data = reinterpret_cast<const char *>(input_data.data());
+  const size_t size = input_data.size();
+  volatile bool sink{false};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    size_t output_length = 0;
+    sink = implementation.normalize_utf8_to_nfkc_check(data, size,
+                                                        &output_length);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  size_t char_count = get_active_implementation()->count_utf8(data, size);
+  print_summary(result, size, char_count);
+}
+
+void Benchmark::run_normalize_utf8_to_nfkd_check(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char *data = reinterpret_cast<const char *>(input_data.data());
+  const size_t size = input_data.size();
+  volatile bool sink{false};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    size_t output_length = 0;
+    sink = implementation.normalize_utf8_to_nfkd_check(data, size,
+                                                        &output_length);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  size_t char_count = get_active_implementation()->count_utf8(data, size);
+  print_summary(result, size, char_count);
+}
+
+void Benchmark::run_normalize_utf16le_to_nfc_check(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char16_t *data = reinterpret_cast<const char16_t *>(input_data.data());
+  const size_t size = input_data.size() / 2;
+  volatile bool sink{false};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    size_t output_length = 0;
+    sink = implementation.normalize_utf16le_to_nfc_check(data, size,
+                                                          &output_length);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  size_t char_count = get_active_implementation()->count_utf16le(data, size);
+  print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_normalize_utf16be_to_nfc_check(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char16_t *data = reinterpret_cast<const char16_t *>(input_data.data());
+  const size_t size = input_data.size() / 2;
+  volatile bool sink{false};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    size_t output_length = 0;
+    sink = implementation.normalize_utf16be_to_nfc_check(data, size,
+                                                          &output_length);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  size_t char_count = get_active_implementation()->count_utf16be(data, size);
+  print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_normalize_utf16le_to_nfd_check(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char16_t *data = reinterpret_cast<const char16_t *>(input_data.data());
+  const size_t size = input_data.size() / 2;
+  volatile bool sink{false};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    size_t output_length = 0;
+    sink = implementation.normalize_utf16le_to_nfd_check(data, size,
+                                                          &output_length);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  size_t char_count = get_active_implementation()->count_utf16le(data, size);
+  print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_normalize_utf16be_to_nfd_check(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char16_t *data = reinterpret_cast<const char16_t *>(input_data.data());
+  const size_t size = input_data.size() / 2;
+  volatile bool sink{false};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    size_t output_length = 0;
+    sink = implementation.normalize_utf16be_to_nfd_check(data, size,
+                                                          &output_length);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  size_t char_count = get_active_implementation()->count_utf16be(data, size);
+  print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_normalize_utf16le_to_nfkc_check(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char16_t *data = reinterpret_cast<const char16_t *>(input_data.data());
+  const size_t size = input_data.size() / 2;
+  volatile bool sink{false};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    size_t output_length = 0;
+    sink = implementation.normalize_utf16le_to_nfkc_check(data, size,
+                                                           &output_length);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  size_t char_count = get_active_implementation()->count_utf16le(data, size);
+  print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_normalize_utf16be_to_nfkc_check(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char16_t *data = reinterpret_cast<const char16_t *>(input_data.data());
+  const size_t size = input_data.size() / 2;
+  volatile bool sink{false};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    size_t output_length = 0;
+    sink = implementation.normalize_utf16be_to_nfkc_check(data, size,
+                                                           &output_length);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  size_t char_count = get_active_implementation()->count_utf16be(data, size);
+  print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_normalize_utf16le_to_nfkd_check(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char16_t *data = reinterpret_cast<const char16_t *>(input_data.data());
+  const size_t size = input_data.size() / 2;
+  volatile bool sink{false};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    size_t output_length = 0;
+    sink = implementation.normalize_utf16le_to_nfkd_check(data, size,
+                                                           &output_length);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
+  size_t char_count = get_active_implementation()->count_utf16le(data, size);
+  print_summary(result, input_data.size(), char_count);
+}
+
+void Benchmark::run_normalize_utf16be_to_nfkd_check(
+    const simdutf::implementation &implementation, size_t iterations) {
+  const char16_t *data = reinterpret_cast<const char16_t *>(input_data.data());
+  const size_t size = input_data.size() / 2;
+  volatile bool sink{false};
+
+  auto proc = [&implementation, data, size, &sink]() {
+    size_t output_length = 0;
+    sink = implementation.normalize_utf16be_to_nfkd_check(data, size,
+                                                           &output_length);
+  };
+  count_events(proc, iterations); // warming up!
+  const auto result = count_events(proc, iterations);
   size_t char_count = get_active_implementation()->count_utf16be(data, size);
   print_summary(result, input_data.size(), char_count);
 }
