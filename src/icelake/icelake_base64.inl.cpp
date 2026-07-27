@@ -31,6 +31,68 @@ struct block64 {
   __m512i chunks[1];
 };
 
+static inline size_t write_multi_lf_m256i(__m256i chunk, uint8_t *out,
+                                          size_t output_len, size_t line_length,
+                                          size_t &offset) {
+  if (line_length >= 32) {
+    if (offset + output_len > line_length) {
+      __m512i expanded = _mm512_mask_expand_epi8(
+          _mm512_set1_epi8('\n'), ~(1ULL << (line_length - offset)),
+          _mm512_castsi256_si512(chunk));
+      _mm512_mask_storeu_epi8(reinterpret_cast<__m512i *>(out),
+                              (1ULL << (output_len + 1)) - 1, expanded);
+      offset = output_len - (line_length - offset);
+      return output_len + 1;
+    } else {
+      __mmask32 write_mask =
+          output_len == 32 ? 0xffffffff : ((__mmask32)1 << output_len) - 1;
+      _mm256_mask_storeu_epi8(reinterpret_cast<__m256i *>(out), write_mask,
+                              chunk);
+      offset += output_len;
+      return output_len;
+    }
+  } else {
+    // minimum line_length starts from 4
+    static const uint64_t masks[28] = {
+        0x2700000842108421, 0x2600001041041041, 0x2500000810204081,
+        0x2400000101010101, 0x2300000008040201, 0x2300000040100401,
+        0x2300000200400801, 0x2200000001001001, 0x2200000004002001,
+        0x2200000010004001, 0x2200000040008001, 0x2200000100010001,
+        0x2100000000020001, 0x2100000000040001, 0x2100000000080001,
+        0x2100000000100001, 0x2100000000200001, 0x2100000000400001,
+        0x2100000000800001, 0x2100000001000001, 0x2100000002000001,
+        0x2100000004000001, 0x2100000008000001, 0x2100000010000001,
+        0x2100000020000001, 0x2100000040000001, 0x2100000080000001,
+        0x2100000100000001,
+    };
+    uint64_t mask = masks[line_length - 4];
+    uint64_t max_width;
+    uint64_t num_lf;
+    if (output_len == 32) {
+      // use pre-computed width to avoid integer division in main loop
+      max_width = mask >> 56;
+      mask = (mask << (line_length - offset)) & ((1ULL << max_width) - 1);
+      num_lf = _mm_popcnt_u64(mask);
+    } else {
+      if (output_len <= line_length - offset) {
+        num_lf = 0;
+      } else {
+        num_lf = 1 + (output_len - (line_length - offset) - 1) / line_length;
+      }
+      max_width = num_lf + output_len;
+      mask = (mask << (line_length - offset)) & ((1ULL << max_width) - 1);
+    }
+    __mmask64 write_mask = (1ULL << (num_lf + output_len)) - 1;
+    __m512i expanded =
+        _mm512_mask_expand_epi8(_mm512_set1_epi8('\n'), ~((uint64_t)mask),
+                                _mm512_castsi256_si512(chunk));
+    _mm512_mask_storeu_epi8(reinterpret_cast<__m512i *>(out), write_mask,
+                            expanded);
+    offset = _lzcnt_u64(mask) - _lzcnt_u64(write_mask);
+    return num_lf + output_len;
+  }
+}
+
 template <bool base64_url, bool use_lines>
 size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
                           base64_options options,
@@ -79,21 +141,10 @@ size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
           out += 65;
           offset = 64 - (line_length - offset);
         } else { // slow path
-          alignas(64) uint8_t local_buffer[64];
-          _mm512_storeu_si512(reinterpret_cast<__m512i *>(local_buffer),
-                              result);
-          size_t out_pos = 0;
-          size_t local_offset = offset;
-          for (size_t j = 0; j < 64;) {
-            if (local_offset == line_length) {
-              out[out_pos++] = '\n';
-              local_offset = 0;
-            }
-            out[out_pos++] = local_buffer[j++];
-            local_offset++;
-          }
-          offset = local_offset;
-          out += out_pos;
+          __m256i lo = _mm512_extracti64x4_epi64(result, 0);
+          __m256i hi = _mm512_extracti64x4_epi64(result, 1);
+          out += write_multi_lf_m256i(lo, out, 32, line_length, offset);
+          out += write_multi_lf_m256i(hi, out, 32, line_length, offset);
         }
       } else {
         _mm512_storeu_si512(reinterpret_cast<__m512i *>(out), result);
@@ -149,20 +200,16 @@ size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
           out += output_len + 1;
         }
       } else {
-        alignas(64) uint8_t local_buffer[64];
-        _mm512_storeu_si512(reinterpret_cast<__m512i *>(local_buffer), result);
-        size_t out_pos = 0;
-        size_t local_offset = offset;
-        for (size_t j = 0; j < output_len;) {
-          if (local_offset == line_length) {
-            out[out_pos++] = '\n';
-            local_offset = 0;
-          }
-          out[out_pos++] = local_buffer[j++];
-          local_offset++;
+        if (output_len > 32) {
+          __m256i lo = _mm512_extracti64x4_epi64(result, 0);
+          __m256i hi = _mm512_extracti64x4_epi64(result, 1);
+          out += write_multi_lf_m256i(lo, out, 32, line_length, offset);
+          out += write_multi_lf_m256i(hi, out, output_len - 32, line_length,
+                                      offset);
+        } else {
+          __m256i lo = _mm512_extracti64x4_epi64(result, 0);
+          out += write_multi_lf_m256i(lo, out, output_len, line_length, offset);
         }
-        offset = local_offset;
-        out += out_pos;
       }
     } else {
       _mm512_mask_storeu_epi8(reinterpret_cast<__m512i *>(out), output_mask,
