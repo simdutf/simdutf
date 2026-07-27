@@ -147,7 +147,7 @@ arm_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
         vceqq_u16(vandq_u16(in, v_f800), v_d800);
     // It might seem like checking for surrogates_bitmask == 0xc000 could help.
     // However, it is likely an uncommon occurrence.
-    if (vmaxvq_u16(surrogates_bytemask) == 0) {
+    if (!any_lane_set(surrogates_bytemask)) {
       // case: code units from register produce either 1, 2 or 3 UTF-8 bytes
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
       const uint16x8_t dup_even = simdutf_make_uint16x8_t(
@@ -416,7 +416,7 @@ arm_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
         vceqq_u16(vandq_u16(in, v_f800), v_d800);
     // It might seem like checking for surrogates_bitmask == 0xc000 could help.
     // However, it is likely an uncommon occurrence.
-    if (vmaxvq_u16(surrogates_bytemask) == 0) {
+    if (!any_lane_set(surrogates_bytemask)) {
       // case: code units from register produce either 1, 2 or 3 UTF-8 bytes
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
       const uint16x8_t dup_even = simdutf_make_uint16x8_t(
@@ -693,7 +693,7 @@ arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
     auto is_surrogate = vcleq_u8(
         vsubq_u8(base_input.val[idx], vdupq_n_u8(0xd8)), vdupq_n_u8(7));
     // We count on the fact that most inputs do not have surrogates.
-    if (vmaxvq_u32(vreinterpretq_u32_u8(is_surrogate)) ||
+    if (any_lane_set(vreinterpretq_u16_u8(is_surrogate)) ||
         scalar::utf16::is_low_surrogate<big_endian>(in[pos + N])) {
       any_surrogates = true;
       // there is at least one surrogate in the block

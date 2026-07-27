@@ -66,6 +66,32 @@ namespace {
 } // namespace
 #endif // SIMDUTF_REGULAR_VISUAL_STUDIO
 
+// Returns true if any lane of `mask` is set. The argument *must* be the result
+// of a lane-wise comparison, i.e. each byte must be either 0x00 or 0xff. The
+// lane width of the comparison is irrelevant: byte and 32-bit masks should be
+// reinterpreted with vreinterpretq_u16_u8 / vreinterpretq_u16_u32 by the
+// caller.
+//
+// This compiles to two instructions (shrn + fcmp) and, unlike a reduction such
+// as vmaxvq_u8, it never moves the value to a general-purpose register. Such a
+// transfer has a latency of about 3 cycles on Apple hardware, on top of the 3
+// cycles of the reduction itself.
+//
+// Both steps rely on the input being a comparison mask. The narrowing shift
+// keeps bits 4..11 of each 16-bit lane, so it only preserves 'is non-zero' when
+// every byte is 0x00 or 0xff. The floating-point comparison is safe for the
+// same reason: the only non-zero bit pattern that compares equal to 0.0 is -0.0
+// (0x8000000000000000), and the most significant byte of the narrowed value can
+// only be 0x00, 0x0f, 0xf0 or 0xff.
+//
+// There is deliberately a single overload: Visual Studio defines every 128-bit
+// NEON type as the same union type, so overloading on uint8x16_t, uint16x8_t
+// and uint32x4_t does not compile there.
+simdutf_really_inline bool any_lane_set(const uint16x8_t mask) {
+  const uint8x8_t narrowed = vshrn_n_u16(mask, 4);
+  return vget_lane_f64(vreinterpret_f64_u8(narrowed), 0) != 0.0;
+}
+
 template <typename T> struct simd8;
 
 //

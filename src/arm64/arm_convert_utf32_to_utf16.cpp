@@ -112,7 +112,7 @@ arm_convert_utf32_to_utf16(const char32_t *buf, size_t len,
   }
 
   // check for invalid input
-  if (vmaxvq_u32(vreinterpretq_u32_u16(forbidden_bytemask)) != 0) {
+  if (any_lane_set(forbidden_bytemask)) {
     return std::make_pair(nullptr, reinterpret_cast<char16_t *>(utf16_output));
   }
 
@@ -142,7 +142,7 @@ arm_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
       const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
       const uint16x8_t forbidden_bytemask =
           vceqq_u16(vandq_u16(utf16_packed, v_f800), v_d800);
-      if (vmaxvq_u16(forbidden_bytemask) != 0) {
+      if (any_lane_set(forbidden_bytemask)) {
         return std::make_pair(result(error_code::SURROGATE, buf - start),
                               reinterpret_cast<char16_t *>(utf16_output));
       }

@@ -15,15 +15,9 @@ const char32_t *arm_validate_utf32le(const char32_t *input, size_t size) {
     input += 4;
   }
 
-  uint32x4_t is_zero =
-      veorq_u32(vmaxq_u32(currentmax, standardmax), standardmax);
-  if (vmaxvq_u32(is_zero) != 0) {
-    return nullptr;
-  }
-
-  is_zero = veorq_u32(vmaxq_u32(currentoffsetmax, standardoffsetmax),
-                      standardoffsetmax);
-  if (vmaxvq_u32(is_zero) != 0) {
+  const uint32x4_t too_large = vcgtq_u32(currentmax, standardmax);
+  const uint32x4_t surrogate = vcgtq_u32(currentoffsetmax, standardoffsetmax);
+  if (any_lane_set(vreinterpretq_u16_u32(vorrq_u32(too_large, surrogate)))) {
     return nullptr;
   }
 
@@ -46,15 +40,16 @@ const result arm_validate_utf32le_with_errors(const char32_t *input,
     currentmax = vmaxq_u32(in, currentmax);
     currentoffsetmax = vmaxq_u32(vaddq_u32(in, offset), currentoffsetmax);
 
-    uint32x4_t is_zero =
-        veorq_u32(vmaxq_u32(currentmax, standardmax), standardmax);
-    if (vmaxvq_u32(is_zero) != 0) {
-      return result(error_code::TOO_LARGE, input - start);
-    }
-
-    is_zero = veorq_u32(vmaxq_u32(currentoffsetmax, standardoffsetmax),
-                        standardoffsetmax);
-    if (vmaxvq_u32(is_zero) != 0) {
+    // Both accumulators are running maxima, so a single test per iteration is
+    // enough: we only need to tell the two error kinds apart once we know that
+    // one of them occurred.
+    const uint32x4_t too_large = vcgtq_u32(currentmax, standardmax);
+    const uint32x4_t surrogate = vcgtq_u32(currentoffsetmax, standardoffsetmax);
+    if (simdutf_unlikely(any_lane_set(
+            vreinterpretq_u16_u32(vorrq_u32(too_large, surrogate))))) {
+      if (any_lane_set(vreinterpretq_u16_u32(too_large))) {
+        return result(error_code::TOO_LARGE, input - start);
+      }
       return result(error_code::SURROGATE, input - start);
     }
 
