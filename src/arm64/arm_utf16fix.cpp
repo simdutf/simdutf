@@ -1,15 +1,12 @@
 
 /*
- * Returns if a vector of type uint8x16_t is all zero.
+ * Returns whether a vector of type uint8x16_t is not all zero. The input is
+ * always a combination of comparison masks (bytes equal to 0x00 or 0xff), so we
+ * can use the two-instruction test (shrn + fcmp) instead of a reduction
+ * followed by a costly move to a general-purpose register.
  */
-simdutf_really_inline int veq_non_zero(uint8x16_t v) {
-  // might compile to two instructions:
-  //	umaxv   s0, v0.4s
-  //	fmov	w0, s0
-  // On Apple hardware, they both have a latency of 3 cycles, with a throughput
-  // of four instructions per cycle. So that's 6 cycles of latency (!!!) for the
-  // two instructions. A narrowing shift has the same latency and throughput.
-  return vmaxvq_u32(vreinterpretq_u32_u8(v));
+simdutf_really_inline bool veq_non_zero(uint8x16_t v) {
+  return any_lane_set(vreinterpretq_u16_u8(v));
 }
 
 /*

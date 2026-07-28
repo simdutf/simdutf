@@ -243,7 +243,7 @@ arm_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
   } // while
 
   // check for invalid input
-  if (vmaxvq_u16(forbidden_bytemask) != 0) {
+  if (any_lane_set(forbidden_bytemask)) {
     return std::make_pair(nullptr, reinterpret_cast<char *>(utf8_output));
   }
   return std::make_pair(buf, reinterpret_cast<char *>(utf8_output));
@@ -334,7 +334,7 @@ arm_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
         const uint16x8_t v_dfff = vmovq_n_u16((uint16_t)0xdfff);
         const uint16x8_t forbidden_bytemask = vandq_u16(
             vcleq_u16(utf16_packed, v_dfff), vcgeq_u16(utf16_packed, v_d800));
-        if (vmaxvq_u16(forbidden_bytemask) != 0) {
+        if (any_lane_set(forbidden_bytemask)) {
           return std::make_pair(result(error_code::SURROGATE, buf - start),
                                 reinterpret_cast<char *>(utf8_output));
         }

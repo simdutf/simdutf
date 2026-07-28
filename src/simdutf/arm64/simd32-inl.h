@@ -57,7 +57,11 @@ template <> struct simd32<bool> {
 
   simdutf_really_inline simd32(const uint32x4_t v) : value(v) {}
 
-  simdutf_really_inline bool any() const { return vmaxvq_u32(value) != 0; }
+  // simd32<bool> is only ever produced by lane-wise comparisons (and bitwise
+  // combinations thereof), so the cheap any_lane_set is always applicable.
+  simdutf_really_inline bool any() const {
+    return any_lane_set(vreinterpretq_u16_u32(value));
+  }
 };
 
 //----------------------------------------------------------------------
