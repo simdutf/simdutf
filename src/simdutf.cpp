@@ -15,12 +15,8 @@
   #include "tables/utf8_to_decomposed_tables.h"
   #include "tables/utf16_to_decomposed_tables.h"
   #include "tables/normalization_tables.h"
-  #if SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC
-    #include "tables/utf8_to_composed_tables.h"
-    #include "tables/utf16_to_composed_tables.h"
-  #endif // SIMDUTF_FEATURE_NFC || SIMDUTF_FEATURE_NFKC
-#endif   // SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD || SIMDUTF_FEATURE_NFC
-         // || SIMDUTF_FEATURE_NFKC
+#endif // SIMDUTF_FEATURE_NFD || SIMDUTF_FEATURE_NFKD || SIMDUTF_FEATURE_NFC
+       // || SIMDUTF_FEATURE_NFKC
 // End of tables.
 
 // Implementations: they need to be setup before including

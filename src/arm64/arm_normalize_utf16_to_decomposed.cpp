@@ -454,7 +454,7 @@ bool arm_normalize_utf16_to_decomposed_check(const char16_t *input,
         continue;
       }
       uint16x8_t ccc_values =
-          vandq_u16(vshrq_n_u16(values, 6), vdupq_n_u16(0xFF));
+          vandq_u16(vshrq_n_u16(values, 6), vdupq_n_u16(0x3F));
       if (is_qc) {
         // Checking combining classes is expensive, so we only do it if we
         // haven't already failed the quick check.
@@ -473,7 +473,7 @@ bool arm_normalize_utf16_to_decomposed_check(const char16_t *input,
         uint16_t value =
             scalar::utf16_to_decomposed::lookup_check_trie<form>(code_point);
         *out_length += value & 0x3F;
-        uint8_t ccc = uint8_t((value >> 6) & 0xFF);
+        uint8_t ccc = uint8_t((value >> 6) & 0x3F);
         if (simdutf_unlikely(last_ccc > ccc && ccc != 0)) {
           is_qc = false;
         }

@@ -293,17 +293,19 @@ bool arm_normalize_utf16_to_composed_check(const char16_t *input, size_t length,
     if (vmaxvq_u16(surrogates_mask) == 0) {
       uint16x8_t values = internal::arm_comp_check_trie_lookup_utf16<form>(in);
       *out_length += vaddvq_u16(vandq_u16(values, vdupq_n_u16(0x3F)));
-      if (vmaxvq_u16(vandq_u16(values, vdupq_n_u16(0x4000))) == 0) {
+      uint16x8_t indicators = vandq_u16(values, vdupq_n_u16(0x3000));
+      uint16_t max = vmaxvq_u16(indicators);
+      if (max == 0) {
         last_ccc = 0;
         p += 8;
         continue;
       }
       uint16x8_t ccc_values =
-          vandq_u16(vshrq_n_u16(values, 6), vdupq_n_u16(0xFF));
+          vandq_u16(vshrq_n_u16(values, 6), vdupq_n_u16(0x3F));
       if (is_qc) {
         // Checking combining classes is expensive, so we only do it if we
         // haven't already failed the quick check.
-        is_qc &= !vmaxvq_u16(vshrq_n_u16(values, 15)) &&
+        is_qc &= max < 0x2000 &&
                  internal::arm_is_ccc_sorted_full(ccc_values, last_ccc);
       }
       last_ccc = uint8_t(vgetq_lane_u16(ccc_values, 7));
@@ -318,16 +320,16 @@ bool arm_normalize_utf16_to_composed_check(const char16_t *input, size_t length,
         uint16_t value =
             scalar::utf16_to_composed::lookup_check_trie<form>(code_point);
         *out_length += value & 0x3F;
-        if (simdutf_likely((value & 0x4000) == 0)) {
+        if (simdutf_likely((value & 0x1000) == 0)) {
           last_ccc = 0;
           total += sz;
           continue;
         }
-        uint8_t ccc = uint8_t((value >> 6) & 0xFF);
+        uint8_t ccc = uint8_t((value >> 6) & 0x3F);
         if (last_ccc > ccc && ccc != 0) {
           is_qc = false;
         }
-        is_qc &= !(value >> 15);
+        is_qc &= !(value & 0x2000);
         total += sz;
         last_ccc = ccc;
       }

@@ -51,12 +51,12 @@ simdutf_really_inline uint32_t lookup_full_trie_bmp(uint16_t code_point) {
     uint16_t index =
         simdutf::tables::utf16_to_decomposed::nfd::trie_index[shift];
     value =
-        simdutf::tables::utf16_to_decomposed::nfd::trie_data[index + masked];
+        simdutf::tables::utf16_to_decomposed::trie_data[index + masked];
   } else {
     uint16_t index =
         simdutf::tables::utf16_to_decomposed::nfkd::trie_index[shift];
     value =
-        simdutf::tables::utf16_to_decomposed::nfkd::trie_data[index + masked];
+        simdutf::tables::utf16_to_decomposed::trie_data[index + masked];
   }
   return value;
 }
@@ -71,7 +71,7 @@ lookup_full_trie_supplementary(uint32_t code_point) {
                                                                11];
     uint16_t index2 = simdutf::tables::utf16_to_decomposed::nfd::trie_index2
         [index1 + ((supplementary >> 6) & 31)];
-    return simdutf::tables::utf16_to_decomposed::nfd::trie_data[index2 +
+    return simdutf::tables::utf16_to_decomposed::trie_data[index2 +
                                                                 (code_point &
                                                                  63)];
   } else {
@@ -80,7 +80,7 @@ lookup_full_trie_supplementary(uint32_t code_point) {
                                                                 11];
     uint16_t index2 = simdutf::tables::utf16_to_decomposed::nfkd::trie_index2
         [index1 + ((supplementary >> 6) & 31)];
-    return simdutf::tables::utf16_to_decomposed::nfkd::trie_data[index2 +
+    return simdutf::tables::utf16_to_decomposed::trie_data[index2 +
                                                                  (code_point &
                                                                   63)];
   }
@@ -245,12 +245,12 @@ simdutf_really_inline uint16_t lookup_check_trie_bmp(uint16_t code_point) {
   if constexpr (form == DecomposedForm::NFD) {
     uint16_t index =
         simdutf::tables::utf16_to_decomposed::nfd::check_trie_index[shift];
-    value = simdutf::tables::utf16_to_decomposed::nfd::check_trie_data[index +
+    value = simdutf::tables::utf16_to_decomposed::check_trie_data[index +
                                                                        masked];
   } else {
     uint16_t index =
         simdutf::tables::utf16_to_decomposed::nfkd::check_trie_index[shift];
-    value = simdutf::tables::utf16_to_decomposed::nfkd::check_trie_data[index +
+    value = simdutf::tables::utf16_to_decomposed::check_trie_data[index +
                                                                         masked];
   }
   return value;
@@ -265,14 +265,14 @@ lookup_check_trie_supplementary(uint32_t code_point) {
         check_trie_index1[supplementary >> 11];
     uint16_t index2 = simdutf::tables::utf16_to_decomposed::nfd::
         check_trie_index2[index1 + ((supplementary >> 6) & 31)];
-    return simdutf::tables::utf16_to_decomposed::nfd::check_trie_data
+    return simdutf::tables::utf16_to_decomposed::check_trie_data
         [index2 + (code_point & 63)];
   } else {
     uint16_t index1 = simdutf::tables::utf16_to_decomposed::nfkd::
         check_trie_index1[supplementary >> 11];
     uint16_t index2 = simdutf::tables::utf16_to_decomposed::nfkd::
         check_trie_index2[index1 + ((supplementary >> 6) & 31)];
-    return simdutf::tables::utf16_to_decomposed::nfkd::check_trie_data
+    return simdutf::tables::utf16_to_decomposed::check_trie_data
         [index2 + (code_point & 63)];
   }
 }
@@ -305,7 +305,7 @@ bool check_with_context(const char16_t *input, size_t length,
       p += 2;
     }
     *out_length += value & 0x3F;
-    uint8_t ccc = uint8_t((value >> 6) & 0xFF);
+    uint8_t ccc = uint8_t((value >> 6) & 0x3F);
     is_qc &= !(value >> 15);
     if (*last_ccc > ccc && ccc != 0) {
       is_qc = false;

@@ -14,12 +14,12 @@ simdutf_really_inline uint16_t lookup_narrow_trie(uint16_t code_point) {
   if constexpr (form == DecomposedForm::NFD) {
     uint16_t index =
         simdutf::tables::utf8_to_decomposed::nfd::trie_index[shift];
-    value = simdutf::tables::utf8_to_decomposed::nfd::trie_data[index + masked];
+    value = simdutf::tables::utf8_to_decomposed::trie_data[index + masked];
   } else {
     uint16_t index =
         simdutf::tables::utf8_to_decomposed::nfkd::trie_index[shift];
     value =
-        simdutf::tables::utf8_to_decomposed::nfkd::trie_data[index + masked];
+        simdutf::tables::utf8_to_decomposed::trie_data[index + masked];
   }
   return value;
 }
@@ -32,12 +32,12 @@ simdutf_really_inline uint32_t lookup_full_trie_bmp(uint16_t code_point) {
   if constexpr (form == DecomposedForm::NFD) {
     uint16_t index =
         simdutf::tables::utf8_to_decomposed::nfd::full_trie_index[shift];
-    value = simdutf::tables::utf8_to_decomposed::nfd::full_trie_data[index +
+    value = simdutf::tables::utf8_to_decomposed::full_trie_data[index +
                                                                      masked];
   } else {
     uint16_t index =
         simdutf::tables::utf8_to_decomposed::nfkd::full_trie_index[shift];
-    value = simdutf::tables::utf8_to_decomposed::nfkd::full_trie_data[index +
+    value = simdutf::tables::utf8_to_decomposed::full_trie_data[index +
                                                                       masked];
   }
   return value;
@@ -52,14 +52,14 @@ lookup_full_trie_supplementary(uint32_t code_point) {
         [supplementary >> 11];
     uint16_t index2 = simdutf::tables::utf8_to_decomposed::nfd::full_trie_index2
         [index1 + ((supplementary >> 6) & 31)];
-    return simdutf::tables::utf8_to_decomposed::nfd::full_trie_data
+    return simdutf::tables::utf8_to_decomposed::full_trie_data
         [index2 + (code_point & 63)];
   } else {
     uint16_t index1 = simdutf::tables::utf8_to_decomposed::nfkd::
         full_trie_index1[supplementary >> 11];
     uint16_t index2 = simdutf::tables::utf8_to_decomposed::nfkd::
         full_trie_index2[index1 + ((supplementary >> 6) & 31)];
-    return simdutf::tables::utf8_to_decomposed::nfkd::full_trie_data
+    return simdutf::tables::utf8_to_decomposed::full_trie_data
         [index2 + (code_point & 63)];
   }
 }
@@ -273,12 +273,12 @@ simdutf_really_inline uint16_t lookup_check_trie_bmp(uint16_t code_point) {
   if constexpr (form == DecomposedForm::NFD) {
     uint16_t index =
         simdutf::tables::utf8_to_decomposed::nfd::check_trie_index[shift];
-    value = simdutf::tables::utf8_to_decomposed::nfd::check_trie_data[index +
+    value = simdutf::tables::utf8_to_decomposed::check_trie_data[index +
                                                                       masked];
   } else {
     uint16_t index =
         simdutf::tables::utf8_to_decomposed::nfkd::check_trie_index[shift];
-    value = simdutf::tables::utf8_to_decomposed::nfkd::check_trie_data[index +
+    value = simdutf::tables::utf8_to_decomposed::check_trie_data[index +
                                                                        masked];
   }
   return value;
@@ -293,14 +293,14 @@ lookup_check_trie_supplementary(uint32_t code_point) {
         check_trie_index1[supplementary >> 11];
     uint16_t index2 = simdutf::tables::utf8_to_decomposed::nfd::
         check_trie_index2[index1 + ((supplementary >> 6) & 31)];
-    return simdutf::tables::utf8_to_decomposed::nfd::check_trie_data
+    return simdutf::tables::utf8_to_decomposed::check_trie_data
         [index2 + (code_point & 63)];
   } else {
     uint16_t index1 = simdutf::tables::utf8_to_decomposed::nfkd::
         check_trie_index1[supplementary >> 11];
     uint16_t index2 = simdutf::tables::utf8_to_decomposed::nfkd::
         check_trie_index2[index1 + ((supplementary >> 6) & 31)];
-    return simdutf::tables::utf8_to_decomposed::nfkd::check_trie_data
+    return simdutf::tables::utf8_to_decomposed::check_trie_data
         [index2 + (code_point & 63)];
   }
 }
@@ -319,7 +319,7 @@ bool check_code_point_bmp(uint16_t code_point, size_t *out_length,
                           uint8_t *ccc) {
   uint16_t value = lookup_check_trie_bmp<form>(code_point);
   *out_length += value & 0x3F;
-  *ccc = uint8_t((value >> 6) & 0xFF);
+  *ccc = uint8_t((value >> 6) & 0x3F);
   return !(value >> 15);
 }
 
@@ -328,7 +328,7 @@ static bool check_code_point_supplementary(uint32_t code_point,
                                            size_t *out_length, uint8_t *ccc) {
   uint16_t value = lookup_check_trie_supplementary<form>(code_point);
   *out_length += value & 0x3F;
-  *ccc = uint8_t((value >> 6) & 0xFF);
+  *ccc = uint8_t((value >> 6) & 0x3F);
   return !(value >> 15);
 }
 

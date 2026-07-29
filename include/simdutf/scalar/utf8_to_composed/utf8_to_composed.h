@@ -317,44 +317,21 @@ size_t normalize_with_context(InputPtr input, InputPtr input_base,
   return (prev_starter + consumed) - offset;
 }
 
+// NF(K)C and NF(K)D share one quick-check trie. Both need the same two fields --
+// the decomposed length and the combining class -- and consult different flag
+// bits, so the table lives in the decomposed namespace and NF(K)C reads its own
+// bits out of it. See `create_check_values` in scripts/normalization.py.
 template <ComposedForm form>
 simdutf_really_inline uint16_t lookup_check_trie_bmp(uint16_t code_point) {
-  uint16_t shift = code_point >> 6;
-  uint16_t masked = code_point & 63;
-  uint16_t index;
-  uint16_t value;
-  if constexpr (form == ComposedForm::NFC) {
-    index = simdutf::tables::utf8_to_composed::nfc::check_trie_index[shift];
-    value =
-        simdutf::tables::utf8_to_composed::nfc::check_trie_data[index + masked];
-  } else {
-    index = simdutf::tables::utf8_to_composed::nfkc::check_trie_index[shift];
-    value = simdutf::tables::utf8_to_composed::nfkc::check_trie_data[index +
-                                                                     masked];
-  }
-  return value;
+  return utf8_to_decomposed::lookup_check_trie_bmp<to_decomposed_form(form)>(
+      code_point);
 }
 
 template <ComposedForm form>
 simdutf_really_inline uint16_t
 lookup_check_trie_supplementary(uint32_t code_point) {
-  uint32_t supplementary = code_point - 0x10000;
-  if constexpr (form == ComposedForm::NFC) {
-    uint16_t index1 = simdutf::tables::utf8_to_composed::nfc::check_trie_index1
-        [supplementary >> 11];
-    uint16_t index2 = simdutf::tables::utf8_to_composed::nfc::check_trie_index2
-        [index1 + ((supplementary >> 6) & 31)];
-    return simdutf::tables::utf8_to_composed::nfc::check_trie_data[index2 +
-                                                                   (code_point &
-                                                                    63)];
-  } else {
-    uint16_t index1 = simdutf::tables::utf8_to_composed::nfkc::check_trie_index1
-        [supplementary >> 11];
-    uint16_t index2 = simdutf::tables::utf8_to_composed::nfkc::check_trie_index2
-        [index1 + ((supplementary >> 6) & 31)];
-    return simdutf::tables::utf8_to_composed::nfkc::check_trie_data
-        [index2 + (code_point & 63)];
-  }
+  return utf8_to_decomposed::lookup_check_trie_supplementary<
+      to_decomposed_form(form)>(code_point);
 }
 
 template <ComposedForm form>
@@ -371,8 +348,8 @@ bool check_code_point_bmp(uint16_t code_point, size_t *out_length,
                           uint8_t *ccc) {
   uint16_t value = lookup_check_trie_bmp<form>(code_point);
   *out_length += value & 0x3F;
-  *ccc = uint8_t((value >> 6) & 0xFF);
-  return !(value >> 15);
+  *ccc = uint8_t((value >> 6) & 0x3F);
+  return !(value & 0x2000);
 }
 
 template <ComposedForm form>
@@ -380,8 +357,8 @@ static bool check_code_point_supplementary(uint32_t code_point,
                                            size_t *out_length, uint8_t *ccc) {
   uint16_t value = lookup_check_trie_supplementary<form>(code_point);
   *out_length += value & 0x3F;
-  *ccc = uint8_t((value >> 6) & 0xFF);
-  return !(value >> 15);
+  *ccc = uint8_t((value >> 6) & 0x3F);
+  return !(value & 0x2000);
 }
 
 template <ComposedForm form, typename InputPtr>

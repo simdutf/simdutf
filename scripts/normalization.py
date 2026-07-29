@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from itertools import batched
 from collections import defaultdict
 from typing import Collection
-from ucptrie import UCPTrie, build_ucptrie
+from ucptrie import UCPTrie, UCPTrieGroup, build_ucptrie, build_ucptries
 
 # Max Unicode code point
 SUPPLEMENTARY_LIMIT = 0x110000
@@ -19,10 +19,6 @@ FLAG_UNSEEN = 0
 FLAG_SEEN = 1
 
 
-# Simple trie for 16-bit code points. We use perfect hash tables for code points in the
-# supplementary plane. If better compression or faster lookups are possible using a more
-# complex trie (like what ICU uses), we should consider that instead for the supplementary
-# plane. We could even try compressed bitmap?
 class Trie:
     def __init__(self) -> None:
         self.index: list[int] = [0] * (BMP_LIMIT >> SHIFT)
@@ -120,64 +116,6 @@ def expand(c: int, map: DecompMap) -> list[int]:
     return expansion
 
 
-# Credit: unicode-rs/unicode-normalization
-def my_hash(x: int, salt: int, n: int) -> int:
-    # This is hash based on the theory that multiplication is efficient
-    mask_32 = 0xFFFFFFFF
-    y = ((x + salt) * 2654435769) & mask_32
-    y ^= (x * 0x31415926) & mask_32
-    return (y * n) >> 32
-
-
-# Credit: unicode-rs/unicode-normalization
-def minimal_perfect_hash(d: Collection[int]) -> tuple[list[int], list[int]]:
-    n = len(d)
-    buckets: dict[int, list[int]] = dict((h, []) for h in range(n))
-    for key in d:
-        h = my_hash(key, 0, n)
-        buckets[h].append(key)
-    bsorted = [(len(buckets[h]), h) for h in range(n)]
-    bsorted.sort(reverse=True)
-    claimed = [False] * n
-    salts = [0] * n
-    keys = [0] * n
-    for bucket_size, h in bsorted:
-        # Note: the traditional perfect hashing approach would also special-case
-        # bucket_size == 1 here and assign any empty slot, rather than iterating
-        # until rehash finds an empty slot. But we're not doing that so we can
-        # avoid the branch.
-        if bucket_size == 0:
-            break
-        else:
-            for salt in range(1, 32768):
-                rehashes = [my_hash(key, salt, n) for key in buckets[h]]
-                # Make sure there are no rehash collisions within this bucket.
-                if all(not claimed[hash] for hash in rehashes):
-                    if len(set(rehashes)) < bucket_size:
-                        continue
-                    salts[h] = salt
-                    for key in buckets[h]:
-                        rehash = my_hash(key, salt, n)
-                        claimed[rehash] = True
-                        keys[rehash] = key
-                    break
-            if salts[h] == 0:
-                print("minimal perfect hashing failed")
-                # Note: if this happens (because of unfortunate data), then there are
-                # a few things that could be done. First, the hash function could be
-                # tweaked. Second, the bucket order could be scrambled (especially the
-                # singletons). Right now, the buckets are sorted, which has the advantage
-                # of being deterministic.
-                #
-                # As a more extreme approach, the singleton bucket optimization could be
-                # applied (give the direct address for singleton buckets, rather than
-                # relying on a rehash). That is definitely the more standard approach in
-                # the minimal perfect hashing literature, but in testing the branch was a
-                # significant slowdown.
-                exit(1)
-    return salts, keys
-
-
 ELEMENT_SIZES = {
     "uint8_t": 1,
     "uint16_t": 2,
@@ -265,87 +203,6 @@ def generate_array(writer, name: str, data: list[int], data_width: int) -> Heade
     return HeaderDef.array(name, f"uint{data_width}_t", len(data))
 
 
-def generate_decomp_hash_table(
-    writer, decomp_map: DecompMap, qc: dict[int, str], name: str
-) -> list[HeaderDef]:
-    supplementary_map: DecompMap = {k: v for k, v in decomp_map.items() if k > 0xFFFF}
-    # Right now, we are putting all qc elements in the map. This is because we want to use this
-    # table to check if a certain character is relevant to NF(K)C
-    for x in qc:
-        if x not in supplementary_map and x > 0xFFFF:
-            supplementary_map[x] = DecompValue([x], 0)
-
-    offsets = {}
-    lengths = {}
-    offset = 0
-    all_decomps = []
-    for k, decomp in supplementary_map.items():
-        offsets[k] = offset
-        all_decomps.extend(decomp.decomps)
-        lengths[k] = len(decomp.decomps)
-        offset += len(decomp.decomps)
-    assert offset <= 2**16 - 1
-
-    writer.write(f"const uint32_t {name}_chars[{len(all_decomps)}] = {{\n")
-    for row in batched(all_decomps, 13):
-        writer.write(" ")
-        for b in row:
-            writer.write(f" 0x{b:08X},")
-        writer.write("\n")
-    writer.write("};\n")
-
-    decomp_salt, decomp_keys = minimal_perfect_hash(supplementary_map)
-    writer.write(f"\nconst uint16_t {name}_salt[{len(decomp_salt)}] = {{\n")
-    for salts in batched(decomp_salt, 14):
-        writer.write(" ")
-        for s in salts:
-            writer.write(f" 0x{s:04X},")
-        writer.write("\n")
-    writer.write("};\n")
-
-    writer.write(f"\nconst uint64_t {name}_kv[{len(decomp_keys)}] = {{\n")
-    for batch in batched(decomp_keys, 8):
-        writer.write(" ")
-        for k in batch:
-            decomp = supplementary_map[k]
-            ccc_vals = [
-                decomp_map.get(a, DecompValue([], 0)).ccc for a in decomp.decomps
-            ]
-            last_ccc = ccc_vals[-1]
-            if (
-                len(decomp.decomps) > 1
-                and any(ccc < last_ccc and ccc != 0 for ccc in ccc_vals)
-                and ccc_vals[0] != 0
-            ):
-                print("Detected complex ccc decomposition!")
-                sys.exit(1)
-            ccc = supplementary_map[k].ccc
-            qc_value = 0
-            if supplementary_map[k].decomps[0] != k:
-                qc_value |= 0b01
-            if k in qc:
-                qc_value |= 0b10
-            assert lengths[k] < 4
-            packed = Packed(
-                (k, 21),
-                (offsets[k], 16),
-                (last_ccc, 8),
-                (ccc, 8),
-                (lengths[k], 2),
-                (int(supplementary_map[k].decomps[0] != k), 1),
-                (int(k in qc), 1),
-            )
-            writer.write(f"  {packed.to_int(64)},")
-        writer.write("\n")
-    writer.write("};\n")
-
-    return [
-        HeaderDef.array(f"{name}_chars", "uint32_t", len(all_decomps)),
-        HeaderDef.array(f"{name}_salt", "uint16_t", len(decomp_salt)),
-        HeaderDef.array(f"{name}_kv", "uint64_t", len(decomp_keys)),
-    ]
-
-
 def generate_pack_hangul(writer) -> HeaderDef:
     writer.write(f"\nconst HangulShuf pack_hangul[16] = {{\n")
     for x in range(1 << 4):
@@ -415,6 +272,31 @@ def generate_ucptrie(
     ]
 
 
+def generate_ucptrie_group(
+    writer,
+    name: str,
+    group: UCPTrieGroup,
+    namespaces: list[str],
+    data_width: int,
+) -> list[HeaderDef]:
+    assert len(namespaces) == len(group.tries)
+    defs = [generate_array(writer, name + "_data", group.data, data_width)]
+    for ns, trie in zip(namespaces, group.tries):
+        writer.write(f"\nnamespace {ns} {{\n")
+        defs.extend(
+            prefix_all(
+                ns,
+                [
+                    generate_array(writer, name + "_index", trie.index, 16),
+                    generate_array(writer, name + "_index1", trie.index1, 16),
+                    generate_array(writer, name + "_index2", trie.index2, 16),
+                ],
+            )
+        )
+        writer.write(f"}} // namespace {ns}\n")
+    return defs
+
+
 def generate_trie(
     writer, name: str, trie: Trie, index_width: int, data_width: int
 ) -> list[HeaderDef]:
@@ -423,6 +305,10 @@ def generate_trie(
         generate_array(writer, name + "_data", trie.data, data_width),
     ]
 
+
+# Namespace names for the two tries in each shared-data group, in build order.
+DECOMPOSED_FORMS = ["nfd", "nfkd"]
+COMPOSED_FORMS = ["nfc", "nfkc"]
 
 S_BASE = 0xAC00
 L_BASE = 0x1100
@@ -477,25 +363,6 @@ UTF8_TO_DECOMPOSED_POSTAMBLE = """} // namespace utf8_to_decomposed
 #endif // SIMDUTF_UTF8_TO_DECOMPOSED_TABLES_H
 """
 
-UTF8_TO_COMPOSED_PREAMBLE = """// This file was generated by scripts/normalization.py
-#ifndef SIMDUTF_UTF8_TO_COMPOSED_TABLES_H
-#define SIMDUTF_UTF8_TO_COMPOSED_TABLES_H
-
-namespace simdutf {
-namespace {
-namespace tables {
-namespace utf8_to_composed {
-
-"""
-
-UTF8_TO_COMPOSED_POSTAMBLE = """} // namespace utf8_to_composed
-} // namespace tables
-} // unnamed namespace
-} // namespace simdutf
-
-#endif // SIMDUTF_UTF8_TO_COMPOSED_TABLES_H
-"""
-
 UTF16_TO_DECOMPOSED_PREAMBLE = """// This file was generated by scripts/normalization.py
 #ifndef SIMDUTF_UTF16_TO_DECOMPOSED_TABLES_H
 #define SIMDUTF_UTF16_TO_DECOMPOSED_TABLES_H
@@ -515,25 +382,6 @@ UTF16_TO_DECOMPOSED_POSTAMBLE = """} // namespace utf16_to_decomposed
 #endif // SIMDUTF_UTF16_TO_DECOMPOSED_TABLES_H
 """
 
-
-UTF16_TO_COMPOSED_PREAMBLE = """// This file was generated by scripts/normalization.py
-#ifndef SIMDUTF_UTF16_TO_COMPOSED_TABLES_H
-#define SIMDUTF_UTF16_TO_COMPOSED_TABLES_H
-
-namespace simdutf {
-namespace {
-namespace tables {
-namespace utf16_to_composed {
-
-"""
-
-UTF16_TO_COMPOSED_POSTAMBLE = """} // namespace utf16_to_composed
-} // namespace tables
-} // unnamed namespace
-} // namespace simdutf
-
-#endif // SIMDUTF_UTF16_TO_COMPOSED_TABLES_H
-"""
 
 ENCODING_WIDTHS = {
     "UTF-8": 1,
@@ -574,11 +422,23 @@ def load_decomp_maps() -> tuple[DecompMap, DecompMap]:
     return nfd_map, nfkd_map
 
 
-def create_decomp_trie_utf8(
+def rank_ccc_values(*maps: DecompMap) -> None:
+    values = sorted({d.ccc for m in maps for d in m.values()} | {0})
+    # This guarantees we can fit ccc values in 6 bits
+    assert len(values) <= 64
+    ranks = {c: i for i, c in enumerate(values)}
+    # We 1 as a special value (see HACK)
+    assert ranks[1] == 1
+    for map in maps:
+        for decomp in map.values():
+            decomp.ccc = ranks[decomp.ccc]
+
+
+def create_decomp_values_utf8(
     decomp_map: DecompMap,
     offsets: dict[int, int],
     decomp_bound: int,
-) -> tuple[UCPTrie, UCPTrie]:
+) -> tuple[list[int], list[int]]:
     trie_data = [0] * SUPPLEMENTARY_LIMIT
     decomp_trie_data = [0] * SUPPLEMENTARY_LIMIT
     for x in range(SUPPLEMENTARY_LIMIT):
@@ -634,14 +494,12 @@ def create_decomp_trie_utf8(
         assert ccc_delta <= 0b111
         packed = Packed((offset, 15), (length, 6), (last_ccc, 8), (ccc_delta, 3))
         decomp_trie_data[x] = packed.to_int(32)
-    trie = build_ucptrie(trie_data)
-    decomp_trie = build_ucptrie(decomp_trie_data)
-    return trie, decomp_trie
+    return trie_data, decomp_trie_data
 
 
-def create_decomp_trie_utf16(
+def create_decomp_values_utf16(
     decomp_map: DecompMap, offsets: dict[int, int], decomp_bound: int
-) -> UCPTrie:
+) -> list[int]:
     trie_data = [0] * SUPPLEMENTARY_LIMIT
     for x in range(SUPPLEMENTARY_LIMIT):
         if x not in decomp_map:
@@ -681,55 +539,57 @@ def create_decomp_trie_utf16(
             (last_ccc, 8),
         )
         trie_data[x] = packed.to_int(32)
-    return build_ucptrie(trie_data)
+    return trie_data
 
 
-def create_decomp_check_trie(decomp_map: DecompMap, encoding: str) -> UCPTrie:
+def create_check_values(
+    decomp_map: DecompMap,
+    qc: dict[int, str],
+    non_starters: list[int],
+    encoding: str,
+) -> list[int]:
     trie_data = [0] * SUPPLEMENTARY_LIMIT
+    jamo_size = len(chr(L_BASE).encode(encoding)) // ENCODING_WIDTHS[encoding]
     for x in range(SUPPLEMENTARY_LIMIT):
-        if x not in decomp_map:
-            has_decomp = False
-            if x >= S_BASE and x < S_BASE + S_COUNT:
-                # Handle Hangul syllables
-                s_index = x - S_BASE
-                jamo_size = (
-                    len(chr(L_BASE).encode(encoding)) // ENCODING_WIDTHS[encoding]
-                )
-                length = 2 * jamo_size if s_index % T_COUNT == 0 else 3 * jamo_size
-                has_decomp = True
-            else:
-                try:
-                    length = len(chr(x).encode(encoding)) // ENCODING_WIDTHS[encoding]
-                except UnicodeEncodeError:
-                    # Python throws an error if we try to encode a surrogate
-                    # in UTF-8
-                    continue
-        else:
+        has_decomp = False
+        if x in decomp_map:
             length = 0
             decomp = decomp_map[x]
             for c in decomp.decomps:
                 length += len(chr(c).encode(encoding)) // ENCODING_WIDTHS[encoding]
             has_decomp = decomp.decomps[0] != x
+        elif x >= S_BASE and x < S_BASE + S_COUNT:
+            # Hangul syllables decompose algorithmically, so they have no entry in
+            # `decomp_map`, but they do have a decomposition.
+            s_index = x - S_BASE
+            length = 2 * jamo_size if s_index % T_COUNT == 0 else 3 * jamo_size
+            has_decomp = True
+        else:
+            try:
+                length = len(chr(x).encode(encoding)) // ENCODING_WIDTHS[encoding]
+            except UnicodeEncodeError:
+                # Python throws an error if we try to encode a surrogate in UTF-8
+                continue
         ccc = decomp_map.get(x, DecompValue([], 0)).ccc
         packed = Packed(
             (length, 6),
-            (ccc, 8),
+            (ccc, 6),
+            (int(x in qc or x in non_starters), 1),
+            (int(x in qc), 1),
             (int(x in decomp_map or has_decomp), 1),
             (int(has_decomp), 1),
         )
         trie_data[x] = packed.to_int(16)
-    return build_ucptrie(trie_data)
+    return trie_data
 
 
-# NOTE: if we could compress one more bit, we could merge this with comp_check_trie to save
-# one trie of space. This trie is pretty small, though.
-def create_comp_trie(
+def create_comp_values(
     qc: dict[int, str],
     comp_map: CompMap,
     decomp_map: DecompMap,
     non_starters: list[int],
     composables: list[int],
-) -> tuple[UCPTrie, list[int]]:
+) -> tuple[list[int], list[int]]:
     trie_data = [0] * SUPPLEMENTARY_LIMIT
     compositions: list[int] = [0]
     forward_comps: dict[int, list[tuple[int, int]]] = defaultdict(list)
@@ -800,38 +660,7 @@ def create_comp_trie(
         else:
             packed = Packed((indicator, 2), (ccc, 8), (0, 2), (has_decomp, 1), (0, 3))
         trie_data[x] = packed.to_int(16)
-    return build_ucptrie(trie_data), compositions
-
-
-def create_comp_check_trie(
-    qc: dict[int, str], decomp_map: DecompMap, non_starters: list[int], encoding: str
-) -> UCPTrie:
-    trie_data = [0] * SUPPLEMENTARY_LIMIT
-    for x in range(SUPPLEMENTARY_LIMIT):
-        if x >= S_BASE and x < S_BASE + S_COUNT:
-            # Handle Hangul syllables
-            s_index = x - S_BASE
-            jamo_size = len(chr(L_BASE).encode(encoding)) // ENCODING_WIDTHS[encoding]
-            length = 2 * jamo_size if s_index % T_COUNT == 0 else 3 * jamo_size
-        elif x in decomp_map:
-            length = sum(
-                len(chr(c).encode(encoding)) // ENCODING_WIDTHS[encoding]
-                for c in decomp_map[x].decomps
-            )
-        else:
-            try:
-                length = len(chr(x).encode(encoding)) // ENCODING_WIDTHS[encoding]
-            except UnicodeEncodeError:
-                continue
-        ccc = decomp_map.get(x, DecompValue([], 0)).ccc
-        packed = Packed(
-            (length, 6),
-            (ccc, 8),
-            (int(x in qc or x in non_starters), 1),
-            (int(x in qc), 1),
-        )
-        trie_data[x] = packed.to_int(16)
-    return build_ucptrie(trie_data)
+    return trie_data, compositions
 
 
 def create_decomp_words_bmp(
@@ -956,6 +785,7 @@ def print_header_summary(title: str, headers: list[HeaderDef]) -> None:
 
 def main() -> None:
     nfd_map, nfkd_map = load_decomp_maps()
+    rank_ccc_values(nfd_map, nfkd_map)
     derived = load_derived_props()
 
     non_starters = [x for x, decomp in nfd_map.items() if decomp.ccc > 0]
@@ -1014,282 +844,82 @@ def main() -> None:
         nfd_map, nfkd_map, "UTF-16LE"
     )
 
-    utf8_nfd_trie, utf8_nfd_data_trie = create_decomp_trie_utf8(
+    utf8_nfd_values, utf8_nfd_full_values = create_decomp_values_utf8(
         nfd_map, offsets_nfd_utf8, decomp_bound=16
     )
-    utf8_nfkd_trie, utf8_nfkd_data_trie = create_decomp_trie_utf8(
+    utf8_nfkd_values, utf8_nfkd_full_values = create_decomp_values_utf8(
         nfkd_map, offsets_nfkd_utf8, decomp_bound=48
     )
-    utf16_nfd_trie = create_decomp_trie_utf16(
+    utf16_nfd_values = create_decomp_values_utf16(
         nfd_map, offsets_nfd_utf16, decomp_bound=16
     )
-    utf16_nfkd_trie = create_decomp_trie_utf16(
+    utf16_nfkd_values = create_decomp_values_utf16(
         nfkd_map, offsets_nfkd_utf16, decomp_bound=48
     )
+    nfc_values, compositions = create_comp_values(
+        derived.nfc_qc, comp_map, nfd_map, non_starters, composables
+    )
+    nfkc_values, nfkc_compositions = create_comp_values(
+        derived.nfkc_qc, comp_map, nfkd_map, non_starters, composables
+    )
+    # Compatibility decompositions never compose, so NFC and NFKC recompose from
+    # the identical canonical composition table. Emit it once.
+    assert compositions == nfkc_compositions
     ccc_values = [
         nfkd_map[x].ccc if x in nfkd_map else 0 for x in range(SUPPLEMENTARY_LIMIT)
     ]
+
     ccc_trie = build_ucptrie(ccc_values)
-    nfc_trie, nfc_compositions = create_comp_trie(
-        derived.nfc_qc, comp_map, nfd_map, non_starters, composables
+    utf8_decomp_group = build_ucptries([utf8_nfd_values, utf8_nfkd_values])
+    utf8_full_group = build_ucptries([utf8_nfd_full_values, utf8_nfkd_full_values])
+    utf16_decomp_group = build_ucptries([utf16_nfd_values, utf16_nfkd_values])
+    comp_group = build_ucptries([nfc_values, nfkc_values])
+    utf8_check_group = build_ucptries(
+        [
+            create_check_values(nfd_map, derived.nfc_qc, non_starters, "UTF-8"),
+            create_check_values(nfkd_map, derived.nfkc_qc, non_starters, "UTF-8"),
+        ]
     )
-    nfkc_trie, nfkc_compositions = create_comp_trie(
-        derived.nfkc_qc, comp_map, nfkd_map, non_starters, composables
-    )
-    utf8_nfd_check_trie = create_decomp_check_trie(nfd_map, "UTF-8")
-    utf8_nfkd_check_trie = create_decomp_check_trie(nfkd_map, "UTF-8")
-    utf8_nfc_check_trie = create_comp_check_trie(
-        derived.nfc_qc, nfd_map, non_starters, "UTF-8"
-    )
-    utf8_nfkc_check_trie = create_comp_check_trie(
-        derived.nfkc_qc, nfkd_map, non_starters, "UTF-8"
-    )
-    utf16_nfd_check_trie = create_decomp_check_trie(nfd_map, "UTF-16LE")
-    utf16_nfkd_check_trie = create_decomp_check_trie(nfkd_map, "UTF-16LE")
-    utf16_nfc_check_trie = create_comp_check_trie(
-        derived.nfc_qc, nfd_map, non_starters, "UTF-16LE"
-    )
-    utf16_nfkc_check_trie = create_comp_check_trie(
-        derived.nfkc_qc, nfkd_map, non_starters, "UTF-16LE"
+    utf16_check_group = build_ucptries(
+        [
+            create_check_values(nfd_map, derived.nfc_qc, non_starters, "UTF-16LE"),
+            create_check_values(nfkd_map, derived.nfkc_qc, non_starters, "UTF-16LE"),
+        ]
     )
 
     headers: defaultdict[str, list[HeaderDef]] = defaultdict(list[HeaderDef])
+
+    def emit_group(file: str, writer, name: str, group, data_width: int) -> None:
+        headers[file].extend(
+            generate_ucptrie_group(writer, name, group, DECOMPOSED_FORMS, data_width)
+        )
+
     with open("utf8_to_decomposed_tables.h", "w") as f:
         f.write(UTF8_TO_DECOMPOSED_PREAMBLE)
-        headers["utf8_to_decomposed_tables.h"].append(generate_pack_hangul(f))
-        headers["utf8_to_decomposed_tables.h"].append(
+        file = "utf8_to_decomposed_tables.h"
+        headers[file].append(generate_pack_hangul(f))
+        headers[file].append(
             generate_array(f, "decompositions", decomp_bytes_utf8, data_width=8)
         )
-        f.write("namespace nfd {\n")
-        headers["utf8_to_decomposed_tables.h"].extend(
-            prefix_all(
-                "nfd",
-                generate_ucptrie(
-                    f,
-                    "trie",
-                    utf8_nfd_trie,
-                    index_width=16,
-                    index1_width=16,
-                    index2_width=16,
-                    data_width=16,
-                ),
-            )
-        )
-        headers["utf8_to_decomposed_tables.h"].extend(
-            prefix_all(
-                "nfd",
-                generate_ucptrie(
-                    f,
-                    "full_trie",
-                    utf8_nfd_data_trie,
-                    index_width=16,
-                    index1_width=16,
-                    index2_width=16,
-                    data_width=32,
-                ),
-            )
-        )
-        headers["utf8_to_decomposed_tables.h"].extend(
-            prefix_all(
-                "nfd",
-                generate_ucptrie(
-                    f,
-                    "check_trie",
-                    utf8_nfd_check_trie,
-                    index_width=16,
-                    index1_width=16,
-                    index2_width=16,
-                    data_width=16,
-                ),
-            )
-        )
-        f.write("} // namespace nfd\n")
-        f.write("namespace nfkd {\n")
-        headers["utf8_to_decomposed_tables.h"].extend(
-            prefix_all(
-                "nfkd",
-                generate_ucptrie(
-                    f,
-                    "trie",
-                    utf8_nfkd_trie,
-                    index_width=16,
-                    index1_width=16,
-                    index2_width=16,
-                    data_width=16,
-                ),
-            )
-        )
-        headers["utf8_to_decomposed_tables.h"].extend(
-            prefix_all(
-                "nfkd",
-                generate_ucptrie(
-                    f,
-                    "full_trie",
-                    utf8_nfkd_data_trie,
-                    index_width=16,
-                    index1_width=16,
-                    index2_width=16,
-                    data_width=32,
-                ),
-            )
-        )
-        headers["utf8_to_decomposed_tables.h"].extend(
-            prefix_all(
-                "nfkd",
-                generate_ucptrie(
-                    f,
-                    "check_trie",
-                    utf8_nfkd_check_trie,
-                    index_width=16,
-                    index1_width=16,
-                    index2_width=16,
-                    data_width=16,
-                ),
-            )
-        )
-        f.write("} // namespace nfkd\n")
+        emit_group(file, f, "trie", utf8_decomp_group, data_width=16)
+        emit_group(file, f, "full_trie", utf8_full_group, data_width=32)
+        emit_group(file, f, "check_trie", utf8_check_group, data_width=16)
         f.write(UTF8_TO_DECOMPOSED_POSTAMBLE)
-    with open("utf8_to_composed_tables.h", "w") as f:
-        f.write(UTF8_TO_COMPOSED_PREAMBLE)
-        f.write("namespace nfc {\n")
-        headers["utf8_to_composed_tables.h"].extend(
-            prefix_all(
-                "nfc",
-                generate_ucptrie(
-                    f,
-                    "check_trie",
-                    utf8_nfc_check_trie,
-                    index_width=16,
-                    index1_width=16,
-                    index2_width=16,
-                    data_width=16,
-                ),
-            )
-        )
-        f.write("} // namespace nfc\n")
-        f.write("namespace nfkc {\n")
-        headers["utf8_to_composed_tables.h"].extend(
-            prefix_all(
-                "nfkc",
-                generate_ucptrie(
-                    f,
-                    "check_trie",
-                    utf8_nfkc_check_trie,
-                    index_width=16,
-                    index1_width=16,
-                    index2_width=16,
-                    data_width=16,
-                ),
-            )
-        )
-        f.write("} // namespace nfkc\n")
-        f.write(UTF8_TO_COMPOSED_POSTAMBLE)
     with open("utf16_to_decomposed_tables.h", "w") as f:
         f.write(UTF16_TO_DECOMPOSED_PREAMBLE)
-        headers["utf16_to_decomposed_tables.h"].append(
+        file = "utf16_to_decomposed_tables.h"
+        headers[file].append(
             generate_array(f, "decompositions", decomp_bytes_utf16, data_width=16)
         )
-        headers["utf16_to_decomposed_tables.h"].append(generate_shuf_utf16(f))
-        f.write("namespace nfd {\n")
-        headers["utf16_to_decomposed_tables.h"].extend(
-            prefix_all(
-                "nfd",
-                generate_ucptrie(
-                    f,
-                    "trie",
-                    utf16_nfd_trie,
-                    index_width=16,
-                    index1_width=16,
-                    index2_width=16,
-                    data_width=32,
-                ),
-            )
-        )
-        headers["utf16_to_decomposed_tables.h"].extend(
-            prefix_all(
-                "nfd",
-                generate_ucptrie(
-                    f,
-                    "check_trie",
-                    utf16_nfd_check_trie,
-                    index_width=16,
-                    index1_width=16,
-                    index2_width=16,
-                    data_width=16,
-                ),
-            )
-        )
-        f.write("} // namespace nfd\n")
-        f.write("namespace nfkd {\n")
-        headers["utf16_to_decomposed_tables.h"].extend(
-            prefix_all(
-                "nfkd",
-                generate_ucptrie(
-                    f,
-                    "trie",
-                    utf16_nfkd_trie,
-                    index_width=16,
-                    index1_width=16,
-                    index2_width=16,
-                    data_width=32,
-                ),
-            )
-        )
-        headers["utf16_to_decomposed_tables.h"].extend(
-            prefix_all(
-                "nfkd",
-                generate_ucptrie(
-                    f,
-                    "check_trie",
-                    utf16_nfkd_check_trie,
-                    index_width=16,
-                    index1_width=16,
-                    index2_width=16,
-                    data_width=16,
-                ),
-            )
-        )
-        f.write("} // namespace nfkd\n")
+        headers[file].append(generate_shuf_utf16(f))
+        emit_group(file, f, "trie", utf16_decomp_group, data_width=32)
+        emit_group(file, f, "check_trie", utf16_check_group, data_width=16)
         f.write(UTF16_TO_DECOMPOSED_POSTAMBLE)
-    with open("utf16_to_composed_tables.h", "w") as f:
-        f.write(UTF16_TO_COMPOSED_PREAMBLE)
-        f.write("namespace nfc {\n")
-        headers["utf16_to_composed_tables.h"].extend(
-            prefix_all(
-                "nfc",
-                generate_ucptrie(
-                    f,
-                    "check_trie",
-                    utf16_nfc_check_trie,
-                    index_width=16,
-                    index1_width=16,
-                    index2_width=16,
-                    data_width=16,
-                ),
-            )
-        )
-        f.write("} // namespace nfc\n")
-        f.write("namespace nfkc {\n")
-        headers["utf16_to_composed_tables.h"].extend(
-            prefix_all(
-                "nfkc",
-                generate_ucptrie(
-                    f,
-                    "check_trie",
-                    utf16_nfkc_check_trie,
-                    index_width=16,
-                    index1_width=16,
-                    index2_width=16,
-                    data_width=16,
-                ),
-            )
-        )
-        f.write("} // namespace nfkc\n")
-        f.write(UTF16_TO_COMPOSED_POSTAMBLE)
     # Tables agnostic of encoding
     with open("normalization_tables.h", "w") as f:
         f.write(NORMALIZATION_PREAMBLE)
-        headers["normalization_tables.h"].extend(
+        file = "normalization_tables.h"
+        headers[file].extend(
             generate_ucptrie(
                 f,
                 "ccc_trie",
@@ -1300,44 +930,10 @@ def main() -> None:
                 data_width=8,
             )
         )
-        f.write("namespace nfc {\n")
-        headers["normalization_tables.h"].extend(
-            prefix_all(
-                "nfc",
-                generate_ucptrie(
-                    f,
-                    "trie",
-                    nfc_trie,
-                    index_width=16,
-                    index1_width=16,
-                    index2_width=16,
-                    data_width=16,
-                ),
-            )
+        headers[file].append(generate_array(f, "compositions", compositions, 64))
+        headers[file].extend(
+            generate_ucptrie_group(f, "trie", comp_group, COMPOSED_FORMS, data_width=16)
         )
-        headers["normalization_tables.h"].append(
-            prefix("nfc", generate_array(f, "compositions", nfc_compositions, 64))
-        )
-        f.write("} // namespace nfc\n")
-        f.write("namespace nfkc {\n")
-        headers["normalization_tables.h"].extend(
-            prefix_all(
-                "nfkc",
-                generate_ucptrie(
-                    f,
-                    "trie",
-                    nfkc_trie,
-                    index_width=16,
-                    index1_width=16,
-                    index2_width=16,
-                    data_width=16,
-                ),
-            )
-        )
-        headers["normalization_tables.h"].append(
-            prefix("nfkc", generate_array(f, "compositions", nfkc_compositions, 64))
-        )
-        f.write("} // namespace nfkc\n")
         f.write(NORMALIZATION_POSTAMBLE)
 
     for file, h in headers.items():

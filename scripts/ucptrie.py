@@ -109,31 +109,84 @@ class UCPTrie:
         return self.data[i2 + (cp & (cfg.block_size - 1))]
 
 
-def build_ucptrie(values: list[int], config: TrieConfig = TrieConfig()) -> UCPTrie:
+@dataclass
+class UCPTrieIndex:
+    """The index stages of one trie in a `UCPTrieGroup`. Holds no data of its
+    own; offsets point into the group's shared data array."""
+
+    config: TrieConfig
+    index: array  # fast range: block index -> offset into the shared data
+    index1: array  # supplementary stage 1: group index -> offset into index2
+    index2: array  # supplementary stage 2: block index -> offset into the shared data
+
+
+@dataclass
+class UCPTrieGroup:
+    """Several tries sharing one data array. Tries whose value arrays agree over
+    a whole block (NFD vs NFKD differ in only 110 of 17408 blocks) then store
+    that block once for the entire group."""
+
+    config: TrieConfig
+    tries: list[UCPTrieIndex]
+    data: array
+
+    def lookup(self, which: int, cp: int) -> int:
+        cfg = self.config
+        trie = self.tries[which]
+        if cp < cfg.fast_limit:
+            block = trie.index[cp >> cfg.block_shift]
+            return self.data[block + (cp & (cfg.block_size - 1))]
+        shift2 = cfg.block_shift + cfg.i1_block_shift
+        scp = cp - cfg.fast_limit
+        i1 = trie.index1[scp >> shift2]
+        i2 = trie.index2[i1 + ((scp >> cfg.block_shift) & (cfg.i1_group - 1))]
+        return self.data[i2 + (cp & (cfg.block_size - 1))]
+
+
+def build_ucptries(
+    value_lists: list[list[int]], config: TrieConfig = TrieConfig()
+) -> UCPTrieGroup:
+    """Build one trie per entry of `value_lists`, all sharing a single data
+    array. Each trie keeps its own index stages."""
     cfg = config
-    n_keys = 1 << cfg.key_bits
-
-    fast_values = values[: cfg.fast_limit]
-    supp_values = values[cfg.fast_limit :]
-
     compactor = BlockCompactor(cfg.overlap, cfg.overlap_window)
+    tries: list[UCPTrieIndex] = []
 
-    # Fast range: single-stage index -> data
-    fast_blocks = _chunk(fast_values, cfg.block_size)
-    index = [compactor.add(b) for b in fast_blocks]
+    for values in value_lists:
+        # Fast range: single-stage index -> data
+        fast_blocks = _chunk(values[: cfg.fast_limit], cfg.block_size)
+        index = [compactor.add(b) for b in fast_blocks]
 
-    # Supplementary range: two-stage index -> index2 -> data
-    supp_blocks = _chunk(supp_values, cfg.block_size)
-    index2_raw = [compactor.add(b) for b in supp_blocks]
+        # Supplementary range: two-stage index -> index2 -> data
+        supp_blocks = _chunk(values[cfg.fast_limit :], cfg.block_size)
+        index2_raw = [compactor.add(b) for b in supp_blocks]
 
-    index2_compactor = BlockCompactor(cfg.overlap, cfg.overlap_window)
-    index2_chunks = _chunk(index2_raw, cfg.i1_group)
-    index1 = [index2_compactor.add(c) for c in index2_chunks]
+        # index2 is per-trie: it holds offsets into the shared data array, which
+        # differ between tries, so there is nothing to share here.
+        index2_compactor = BlockCompactor(cfg.overlap, cfg.overlap_window)
+        index1 = [index2_compactor.add(c) for c in _chunk(index2_raw, cfg.i1_group)]
 
+        tries.append(
+            UCPTrieIndex(
+                config=cfg,
+                index=array("I", index),
+                index1=array("I", index1),
+                index2=array("I", index2_compactor.data),
+            )
+        )
+
+    assert len(compactor.data) <= 0xFFFF
+
+    return UCPTrieGroup(config=cfg, tries=tries, data=array("I", compactor.data))
+
+
+def build_ucptrie(values: list[int], config: TrieConfig = TrieConfig()) -> UCPTrie:
+    group = build_ucptries([values], config)
+    trie = group.tries[0]
     return UCPTrie(
-        config=cfg,
-        index=array("I", index),
-        index1=array("I", index1),
-        index2=array("I", index2_compactor.data),
-        data=array("I", compactor.data),
+        config=group.config,
+        index=trie.index,
+        index1=trie.index1,
+        index2=trie.index2,
+        data=group.data,
     )

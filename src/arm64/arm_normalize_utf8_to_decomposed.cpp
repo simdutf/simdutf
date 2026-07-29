@@ -749,7 +749,7 @@ arm_check_code_points_utf8(uint16x4_t code_points, size_t *out_length,
                            bool *is_qc, uint8_t *last_ccc) {
   uint16x4_t values = arm_check_trie_lookup<form>(code_points);
   *out_length += vaddv_u16(vand_u16(values, vdup_n_u16(0x3F)));
-  uint16x4_t ccc_values = vand_u16(vshr_n_u16(values, 6), vdup_n_u16(0xFF));
+  uint16x4_t ccc_values = vand_u16(vshr_n_u16(values, 6), vdup_n_u16(0x3F));
   if (*is_qc) {
     // Checking combining classes is expensive, so we only do it if we
     // haven't already failed the quick check.
@@ -765,7 +765,7 @@ arm_check_code_points_utf8_wide(uint16x8_t code_points, size_t *out_length,
                                 bool *is_qc, uint8_t *last_ccc) {
   uint16x8_t values = arm_check_trie_lookup_wide<form>(code_points);
   *out_length += vaddvq_u16(vandq_u16(values, vdupq_n_u16(0x3F)));
-  uint16x8_t ccc_values = vandq_u16(vshrq_n_u16(values, 6), vdupq_n_u16(0xFF));
+  uint16x8_t ccc_values = vandq_u16(vshrq_n_u16(values, 6), vdupq_n_u16(0x3F));
   if (*is_qc) {
     *is_qc &= !vmaxvq_u16(vshrq_n_u16(values, 15)) &&
               arm_is_ccc_sorted_full(ccc_values, *last_ccc);
@@ -794,7 +794,7 @@ arm_check_code_points_supplementary_utf8(uint32x4_t code_points,
                                          uint8_t *last_ccc) {
   uint16x4_t values = arm_check_trie_lookup_supplementary<form>(code_points);
   *out_length += vaddv_u16(vand_u16(values, vdup_n_u16(0x3F)));
-  uint16x4_t ccc_values = vand_u16(vshr_n_u16(values, 6), vdup_n_u16(0xFF));
+  uint16x4_t ccc_values = vand_u16(vshr_n_u16(values, 6), vdup_n_u16(0x3F));
   if (*is_qc) {
     *is_qc &= !vmaxv_u16(vshr_n_u16(values, 15)) &&
               arm_is_ccc_sorted(ccc_values, *last_ccc);

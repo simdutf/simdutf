@@ -48,10 +48,10 @@ simdutf_really_inline uint16_t lookup_comp_trie_bmp(uint16_t code_point) {
   uint16_t value;
   if constexpr (form == ComposedForm::NFC) {
     index = simdutf::tables::normalization::nfc::trie_index[shift];
-    value = simdutf::tables::normalization::nfc::trie_data[index + masked];
+    value = simdutf::tables::normalization::trie_data[index + masked];
   } else {
     index = simdutf::tables::normalization::nfkc::trie_index[shift];
-    value = simdutf::tables::normalization::nfkc::trie_data[index + masked];
+    value = simdutf::tables::normalization::trie_data[index + masked];
   }
   return value;
 }
@@ -65,14 +65,14 @@ lookup_comp_trie_supplementary(uint32_t code_point) {
         simdutf::tables::normalization::nfc::trie_index1[supplementary >> 11];
     uint16_t index2 = simdutf::tables::normalization::nfc::trie_index2
         [index1 + ((supplementary >> 6) & 31)];
-    return simdutf::tables::normalization::nfc::trie_data[index2 +
+    return simdutf::tables::normalization::trie_data[index2 +
                                                           (code_point & 63)];
   } else {
     uint16_t index1 =
         simdutf::tables::normalization::nfkc::trie_index1[supplementary >> 11];
     uint16_t index2 = simdutf::tables::normalization::nfkc::trie_index2
         [index1 + ((supplementary >> 6) & 31)];
-    return simdutf::tables::normalization::nfkc::trie_data[index2 +
+    return simdutf::tables::normalization::trie_data[index2 +
                                                            (code_point & 63)];
   }
 }
@@ -346,9 +346,9 @@ simdutf_really_inline const uint64_t *forward_compositions(uint16_t value) {
   }
   uint16_t offset = (value >> 2) & 0x3FF;
   if constexpr (form == ComposedForm::NFC) {
-    return &simdutf::tables::normalization::nfc::compositions[offset];
+    return &simdutf::tables::normalization::compositions[offset];
   } else {
-    return &simdutf::tables::normalization::nfkc::compositions[offset];
+    return &simdutf::tables::normalization::compositions[offset];
   }
 }
 
