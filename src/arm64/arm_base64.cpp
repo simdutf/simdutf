@@ -29,7 +29,7 @@
 /**
  * Insert a line feed character in the 16-byte input at index K in [0,16).
  */
-inline uint8x16_t insert_line_feed16(uint8x16_t input, size_t K) {
+static inline uint8x16_t insert_line_feed16(uint8x16_t input, size_t K) {
   static const uint8_t shuffle_masks[16][16] = {
       {15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
       {0, 15, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
@@ -63,8 +63,8 @@ inline uint8x16_t insert_line_feed16(uint8x16_t input, size_t K) {
 // It can range from 0 to line_length (inclusive).
 // If offset == line_length, we need to insert a line feed before writing
 // anything.
-size_t write_output_with_line_feeds(uint8_t *dst, uint8x16_t src,
-                                    size_t line_length, size_t &offset) {
+static size_t write_output_with_line_feeds(uint8_t *dst, uint8x16_t src,
+                                           size_t line_length, size_t &offset) {
   // Fast path: no need to insert line feeds
   // If we are at offset, we would write from [offset, offset + 16).
   // We need that line_length >= offset + 16.
@@ -93,20 +93,65 @@ size_t write_output_with_line_feeds(uint8_t *dst, uint8x16_t src,
   // Uncommon case where line_length < 16
   // This is going to be SLOW.
   else {
-    uint8_t buffer[16];
-    vst1q_u8(buffer, src);
-    size_t out_pos = 0;
-    size_t local_offset = offset;
-    for (size_t i = 0; i < 16;) {
-      if (local_offset == line_length) {
-        dst[out_pos++] = '\n';
-        local_offset = 0;
+    uint8x16_t zero_reg = vdupq_n_u8(0);
+    uint8x16_t lo = vcombine_u8(vget_low_u8(src), vget_low_u8(zero_reg));
+    uint8x16_t hi = vextq_u8(src, zero_reg, 8);
+    if (line_length >= 8) {
+      // maximum one newline per 8 byte chunk
+      if (offset + 8 <= line_length) {
+        vst1_u8(dst, vget_low_u8(lo));
+        hi = insert_line_feed16(hi, line_length - offset - 8);
+        lo = vextq_u8(zero_reg, lo, 8);
+        uint8x16_t res = vextq_u8(lo, hi, 9);
+        vst1q_u8(dst + 1, res);
+        offset = 16 - (line_length - offset);
+        return 17;
+      } else {
+        lo = insert_line_feed16(lo, line_length - offset);
+        vst1q_u8(dst, lo);
+        offset = 8 - (line_length - offset);
+        if (offset + 8 <= line_length) {
+          vst1_u8(dst + 9, vget_low_u8(hi));
+          offset += 8;
+          return 17;
+        } else {
+          lo = vextq_u8(zero_reg, lo, 9);
+          hi = insert_line_feed16(hi, line_length - offset);
+          offset = 8 - (line_length - offset);
+          uint8x16_t res = vextq_u8(lo, hi, 9);
+          vst1q_u8(dst + 2, res);
+          return 18;
+        }
       }
-      dst[out_pos++] = buffer[i++];
-      local_offset++;
+    } else {
+      // maximum two newline per 8 byte chunk
+      lo = insert_line_feed16(lo, line_length - offset);
+      offset = 8 - (line_length - offset);
+      size_t lo_lf = 1;
+      if (offset > line_length) {
+        lo = insert_line_feed16(lo, 8 - offset + line_length + 1);
+        offset -= line_length;
+        vst1q_u8(dst, lo);
+        lo = vextq_u8(zero_reg, lo, 10);
+        lo_lf += 1;
+      } else {
+        vst1q_u8(dst, lo);
+        lo = vextq_u8(zero_reg, lo, 9);
+      }
+      hi = insert_line_feed16(hi, line_length - offset);
+      offset = 8 - (line_length - offset);
+      if (offset > line_length) {
+        hi = insert_line_feed16(hi, 8 - offset + line_length + 1);
+        offset -= line_length;
+        uint8x16_t res = vextq_u8(lo, hi, 10);
+        vst1q_u8(dst + lo_lf + 2, res);
+        return 16 + lo_lf + 2;
+      } else {
+        uint8x16_t res = vextq_u8(lo, hi, 9);
+        vst1q_u8(dst + lo_lf + 1, res);
+        return 16 + lo_lf + 1;
+      }
     }
-    offset = local_offset;
-    return out_pos;
   }
 }
 
