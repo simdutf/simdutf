@@ -107,7 +107,7 @@ void arm_write_no_comp_utf8(uint16x8_t values, uint16x8_t code_points,
     vst1_u8(*out, vld1_u8(decomp_offset));
     *out += length;
 
-    uint8_t ccc = (decomp_value >> 21) & 0xFF;
+    uint8_t ccc = (decomp_value >> 21) & 0x3F;
     if (simdutf_unlikely(ccc != 0 && *last_ccc > ccc)) {
       ccc = scalar::normalization::sort_combining<
           scalar::normalization::utf8_normalization_traits>(

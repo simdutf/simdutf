@@ -11,83 +11,6 @@ from ucptrie import UCPTrie, UCPTrieGroup, build_ucptrie, build_ucptries
 SUPPLEMENTARY_LIMIT = 0x110000
 BMP_LIMIT = 0x10000
 
-SHIFT = 6
-BLOCK_LENGTH = 1 << SHIFT
-MASK = BLOCK_LENGTH - 1
-
-FLAG_UNSEEN = 0
-FLAG_SEEN = 1
-
-
-class Trie:
-    def __init__(self) -> None:
-        self.index: list[int] = [0] * (BMP_LIMIT >> SHIFT)
-        self.data: list[int] = []
-        self._flags: list[int] = [FLAG_UNSEEN] * (BMP_LIMIT >> SHIFT)
-
-    def get(self, c: int) -> int:
-        i = c >> SHIFT
-        return self.data[self.index[i] + (c & MASK)]
-
-    def set(self, c: int, value: int) -> None:
-        assert c < BMP_LIMIT
-        i = c >> SHIFT
-        block: int
-        # Already exists as an index
-        if self._flags[i] == FLAG_SEEN:
-            block = self.index[i]
-        else:
-            block = self._alloc_new_block(i)
-        self.data[block + (c & MASK)] = value
-
-    def compact(self) -> None:
-        compressed: list[int] = []
-
-        # Keeps track of blocks that we've seen before
-        blocks: dict[tuple, int] = {}
-        for i in range(len(self.index)):
-            block_index = self.index[i]
-            block_slice = self.data[block_index : block_index + BLOCK_LENGTH]
-            block = tuple(block_slice)
-            # Check if we can fully deduplicate this block
-            if block in blocks:
-                self.index[i] = blocks[block]
-                continue
-
-            # If we can't deduplicate the block, then see if we can merge it
-            # partially with the previous block
-            overlap = longest_overlap(compressed, block_slice, BLOCK_LENGTH)
-            if overlap > 0:
-                index = len(compressed) - overlap
-                compressed.extend(block_slice[overlap:])
-                self.index[i] = index
-                blocks[block] = index
-                continue
-
-            # If we can't do either of the above compaction operations, we
-            # should allocate the new data
-            self.index[i] = len(compressed)
-            blocks[block] = len(compressed)
-            compressed.extend(block)
-
-        self.data = compressed
-
-    def _alloc_new_block(self, i: int) -> int:
-        new_block = len(self.data)
-        self.data.extend([0] * BLOCK_LENGTH)
-        self.index[i] = new_block
-        self._flags[i] = FLAG_SEEN
-        return new_block
-
-
-def longest_overlap(lst1: list, lst2: list, max_overlap: int) -> int:
-    overlap = max_overlap - 1
-    if overlap > len(lst1):
-        return 0
-    while overlap > 0 and lst1[-overlap:] != lst2[:overlap]:
-        overlap -= 1
-    return overlap
-
 
 @dataclass
 class DecompValue:
@@ -422,7 +345,9 @@ def load_decomp_maps() -> tuple[DecompMap, DecompMap]:
     return nfd_map, nfkd_map
 
 
-def rank_ccc_values(*maps: DecompMap) -> None:
+# It is more efficient to rank CCC values instead of using their raw byte value. We can do this
+# successfully because CCC values are only used for comparison
+def rank_ccc_values(maps: list[DecompMap]) -> None:
     values = sorted({d.ccc for m in maps for d in m.values()} | {0})
     # This guarantees we can fit ccc values in 6 bits
     assert len(values) <= 64
@@ -483,7 +408,8 @@ def create_decomp_values_utf8(
             final_decomp = 15
         packed = Packed(
             (size - 1, 2),
-            (last_ccc, 8),
+            (last_ccc, 6),
+            (0, 2),
             (int(decomp.decomps[0] != x), 1),
             (final_decomp & 0x1F, 5),
         )
@@ -491,8 +417,9 @@ def create_decomp_values_utf8(
         assert length <= 0x3F
         assert offset <= 0x7FFF
         ccc_delta = 0 if first_ccc == 0 else last_ccc - first_ccc
-        assert ccc_delta <= 0b111
-        packed = Packed((offset, 15), (length, 6), (last_ccc, 8), (ccc_delta, 3))
+        packed = Packed(
+            (offset, 15), (length, 6), (last_ccc, 6), (ccc_delta, 2), (0, 3)
+        )
         decomp_trie_data[x] = packed.to_int(32)
     return trie_data, decomp_trie_data
 
@@ -530,13 +457,13 @@ def create_decomp_values_utf16(
                 first_ccc = ccc_vals[0]
                 assert last_ccc - first_ccc in range(0, 8)
         ccc_delta = 0 if first_ccc == 0 else last_ccc - first_ccc
-        assert ccc_delta <= 0b111
         packed = Packed(
             (offset, 14),
             (delta, 6),
-            (ccc_delta, 3),
+            (ccc_delta, 2),
+            (0, 1),
             (int(decomp.decomps[0] != x), 1),
-            (last_ccc, 8),
+            (last_ccc, 6),
         )
         trie_data[x] = packed.to_int(32)
     return trie_data
@@ -658,7 +585,7 @@ def create_comp_values(
                 (indicator, 2), (offset, 10), (has_decomp, 1), (0, 2), (1, 1)
             )
         else:
-            packed = Packed((indicator, 2), (ccc, 8), (0, 2), (has_decomp, 1), (0, 3))
+            packed = Packed((indicator, 2), (ccc, 6), (0, 4), (has_decomp, 1), (0, 3))
         trie_data[x] = packed.to_int(16)
     return trie_data, compositions
 
@@ -785,7 +712,7 @@ def print_header_summary(title: str, headers: list[HeaderDef]) -> None:
 
 def main() -> None:
     nfd_map, nfkd_map = load_decomp_maps()
-    rank_ccc_values(nfd_map, nfkd_map)
+    rank_ccc_values([nfd_map, nfkd_map])
     derived = load_derived_props()
 
     non_starters = [x for x, decomp in nfd_map.items() if decomp.ccc > 0]

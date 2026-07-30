@@ -218,7 +218,7 @@ size_t normalize_masked_utf8_to_composed(const uint8_t *input,
           (uint8_t(data[pos + 3]) & 0x3F);
     }
     uint16_t value = scalar::normalization::lookup_comp_trie<form>(c);
-    uint8_t ccc = uint8_t((value >> 2) & 0xFF);
+    uint8_t ccc = uint8_t((value >> 2) & 0x3F);
     bool is_relevant = (value & 0b11) > 0;
     if (ccc <= *last_ccc && !is_relevant) {
       // A composition-irrelevant code point has combining class zero, so this

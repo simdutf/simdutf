@@ -296,7 +296,7 @@ void arm_write_non_hangul_fallback(uint16x8_t values, uint16x8_t chars,
     // `ccc` represents the combining class of the last character in the
     // decomposition of the character we're on, not the actual ccc value of
     // the character.
-    uint8_t ccc = uint8_t((value >> 2) & 0xFF);
+    uint8_t ccc = uint8_t((value >> 2) & 0x3F);
 
 #ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
     uint32_t data =
@@ -307,7 +307,7 @@ void arm_write_non_hangul_fallback(uint16x8_t values, uint16x8_t chars,
 #endif
     uint16_t offset = data & 0x7FFF;
     uint8_t length = (data >> 15) & 0x3F;
-    uint8_t first_ccc_delta = uint8_t(data >> 29);
+    uint8_t first_ccc_delta = uint8_t(data >> 27);
 
     const uint8_t *decomp_offset =
         &tables::utf8_to_decomposed::decompositions[offset];
@@ -460,7 +460,7 @@ arm_decompose_non_hangul_utf8(uint8x16_t in, uint16x8_t chars, size_t n_bytes,
   }
   int16x8_t delta = vshrq_n_s16(vreinterpretq_s16_u16(values), 11);
   int16_t total = (int16_t)n_bytes + vaddvq_s16(delta);
-  uint16x8_t ccc_values = vandq_u16(vshrq_n_u16(values, 2), vdupq_n_u16(0xFF));
+  uint16x8_t ccc_values = vandq_u16(vshrq_n_u16(values, 2), vdupq_n_u16(0x3F));
   bool is_sorted = arm_is_ccc_sorted_full(ccc_values, *last_ccc);
   // There are two conditions in which we enter the slow path: the total
   // number of bytes needed to write the decomposition of the input would be
@@ -501,7 +501,7 @@ arm_decompose_utf8(uint8x16_t in, uint16x4_t chars, size_t n_bytes,
   }
   int16x4_t delta = vshr_n_s16(vreinterpret_s16_u16(values), 11);
   int16_t total = (int16_t)n_bytes + vaddv_s16(delta);
-  uint16x4_t ccc_values = vand_u16(vshr_n_u16(values, 2), vdup_n_u16(0xFF));
+  uint16x4_t ccc_values = vand_u16(vshr_n_u16(values, 2), vdup_n_u16(0x3F));
   bool is_sorted = arm_is_ccc_sorted(ccc_values, *last_ccc);
   if (!hangul_result && total <= 16 && is_sorted) {
     *last_ccc = uint8_t(vget_lane_u16(ccc_values, 3));
@@ -589,8 +589,8 @@ arm_decompose_small_utf8(uint16x8_t chars, const uint8_t *input, uint8_t **out,
 
     uint16_t offset = value & 0x7FFF;
     uint8_t length = (value >> 15) & 0x3F;
-    uint8_t ccc = (value >> 21) & 0xFF;
-    uint8_t first_ccc_delta = uint8_t(value >> 29);
+    uint8_t ccc = (value >> 21) & 0x3F;
+    uint8_t first_ccc_delta = uint8_t(value >> 27);
 
     const uint8_t *decomp_offset =
         &simdutf::tables::utf8_to_decomposed::decompositions[offset];

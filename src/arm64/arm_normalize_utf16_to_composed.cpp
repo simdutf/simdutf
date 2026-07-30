@@ -27,7 +27,7 @@ arm_comp_trie_lookup_utf16(uint16x8_t code_points) {
 // essentially performs NF(K)D on the given code points.
 template <endianness big_endian, ComposedForm form>
 void arm_write_no_comp_utf16(uint16x8_t indicators, uint16x8_t code_points,
-                             char16_t **out, const char16_t *input) {
+                             char16_t **out) {
   constexpr auto dform = to_decomposed_form(form);
   if constexpr (!match_system(big_endian)) {
     vst1q_u16(
@@ -176,7 +176,7 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
         uint16x8_t forward_starter =
             vcgtq_u16(vandq_u16(values, vdupq_n_u16(0x8000)), vdupq_n_u16(0));
         uint16x8_t raw_ccc_values =
-            vandq_u16(vshrq_n_u16(values, 2), vdupq_n_u16(0xFF));
+            vandq_u16(vshrq_n_u16(values, 2), vdupq_n_u16(0x3F));
         uint16x8_t ccc_values =
             vbslq_u16(forward_starter, vdupq_n_u16(0), raw_ccc_values);
         if (simdutf_unlikely(
@@ -189,7 +189,7 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
           continue;
         }
         internal::arm_write_no_comp_utf16<big_endian, form>(indicators, in,
-                                                            out_ptr, input + p);
+                                                            out_ptr);
         p += 8;
         last_ccc = uint8_t(vgetq_lane_u16(ccc_values, 7));
         continue;

@@ -87,7 +87,7 @@ size_t normalize_impl(const char *input, size_t length, char *out,
         for (uint8_t i = 0; i < size; i++) {
           *out++ = input[p + i];
         }
-        ccc = (value & 0x8000) > 0 ? 0 : uint8_t(value >> 2);
+        ccc = (value & 0x8000) > 0 ? 0 : uint8_t((value >> 2) & 0x3F);
       }
 
       p += size;
@@ -173,7 +173,7 @@ size_t normalize_impl(const char *input, size_t length, char *out,
     }
 
     // Slow path. Normalize the region from the last starter to the next stable.
-    uint8_t ccc = (value & 0x8000) > 0 ? 0 : uint8_t(value >> 2);
+    uint8_t ccc = (value & 0x8000) > 0 ? 0 : uint8_t((value >> 2) & 0x3F);
     bool needs_decomposition = span_has_decomposition || !span_ordered ||
                                (value & 0x1000) > 0 ||
                                (ccc != 0 && last_ccc > ccc);
@@ -193,7 +193,7 @@ size_t normalize_impl(const char *input, size_t length, char *out,
         break;
       }
       uint8_t scan_ccc =
-          (scan_value & 0x8000) > 0 ? 0 : uint8_t(scan_value >> 2);
+          (scan_value & 0x8000) > 0 ? 0 : uint8_t((scan_value >> 2) & 0x3F);
       needs_decomposition |=
           (scan_value & 0x1000) > 0 || (scan_ccc != 0 && prev_ccc > scan_ccc);
       prev_ccc = scan_ccc;
@@ -317,10 +317,11 @@ size_t normalize_with_context(InputPtr input, InputPtr input_base,
   return (prev_starter + consumed) - offset;
 }
 
-// NF(K)C and NF(K)D share one quick-check trie. Both need the same two fields --
-// the decomposed length and the combining class -- and consult different flag
-// bits, so the table lives in the decomposed namespace and NF(K)C reads its own
-// bits out of it. See `create_check_values` in scripts/normalization.py.
+// NF(K)C and NF(K)D share one quick-check trie. Both need the same two fields
+// -- the decomposed length and the combining class -- and consult different
+// flag bits, so the table lives in the decomposed namespace and NF(K)C reads
+// its own bits out of it. See `create_check_values` in
+// scripts/normalization.py.
 template <ComposedForm form>
 simdutf_really_inline uint16_t lookup_check_trie_bmp(uint16_t code_point) {
   return utf8_to_decomposed::lookup_check_trie_bmp<to_decomposed_form(form)>(
@@ -330,8 +331,8 @@ simdutf_really_inline uint16_t lookup_check_trie_bmp(uint16_t code_point) {
 template <ComposedForm form>
 simdutf_really_inline uint16_t
 lookup_check_trie_supplementary(uint32_t code_point) {
-  return utf8_to_decomposed::lookup_check_trie_supplementary<
-      to_decomposed_form(form)>(code_point);
+  return utf8_to_decomposed::lookup_check_trie_supplementary<to_decomposed_form(
+      form)>(code_point);
 }
 
 template <ComposedForm form>

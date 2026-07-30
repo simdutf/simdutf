@@ -129,7 +129,7 @@ void arm_write_non_hangul_utf16_fallback(uint32x4_t values, char16_t **out,
     }
 
     uint8_t ccc = uint8_t(value >> 24);
-    uint8_t ccc_delta = uint8_t((value >> 20) & 0b111);
+    uint8_t ccc_delta = uint8_t((value >> 20) & 0b11);
     uint8_t delta = uint8_t((value >> 14) & 0x3F);
     uint8_t length = uint8_t(delta + 1);
     uint16_t offset = value & 0x3FFF;
@@ -255,14 +255,14 @@ arm_decompose_utf16(uint16x4_t chars, const char16_t *input, char16_t **out,
     arm_skip_decomp_utf16<big_endian>(in_dummy, 4, out, last_ccc);
     return;
   }
-  // Note: we mask 9 bits here, even though the delta only needs 6. This is an
+  // Note: we mask 8 bits here, even though the delta only needs 6. This is an
   // optimization that takes advantage of the fact that the ccc_delta bits are
-  // right next to the delta. In the event of a non-zero ccc_delta, this 9-bit
+  // right next to the delta. In the event of a non-zero ccc_delta, this 8-bit
   // value will be very large and will cause the total <= 8 check below to
   // fail, putting us in the slow path, which is what we want because non-zero
   // ccc_deltas should put us in the slow path. This means we can avoid
   // explicitly checking ccc_delta bits.
-  uint32x4_t delta = vandq_u32(vshrq_n_u32(values, 14), vdupq_n_u32(0x1FF));
+  uint32x4_t delta = vandq_u32(vshrq_n_u32(values, 14), vdupq_n_u32(0xFF));
   uint32_t total = 4 + vaddvq_u32(delta);
   uint32x4_t ccc_values = vshrq_n_u32(values, 24);
   bool is_sorted = arm_is_ccc_sorted_u32(ccc_values, *last_ccc);
