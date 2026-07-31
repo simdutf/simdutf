@@ -98,4 +98,33 @@ add_executable(shortbench shortbench.cpp)
 target_link_libraries(shortbench PUBLIC simdutf::benchmarks::benchmark)
 target_compile_features(shortbench PRIVATE cxx_std_20)
 
+if(SIMDUTF_CXX_STANDARD GREATER_EQUAL 23)
+  include(CheckCXXSourceCompiles)
+  check_cxx_source_compiles(
+    "#include <cstddef>
+     #include <string>
+     int main() {
+       std::string output;
+       output.resize_and_overwrite(1, [](char *, std::size_t) {
+         return std::size_t{0};
+       });
+       return 0;
+     }"
+    SIMDUTF_HAS_STRING_RESIZE_AND_OVERWRITE)
+  if(SIMDUTF_HAS_STRING_RESIZE_AND_OVERWRITE)
+    add_executable(latin1_to_utf8_materialization_benchmark
+      latin1_to_utf8_materialization.cpp)
+    target_link_libraries(latin1_to_utf8_materialization_benchmark PRIVATE simdutf)
+    set_property(TARGET latin1_to_utf8_materialization_benchmark
+      PROPERTY CXX_STANDARD ${SIMDUTF_CXX_STANDARD})
+    set_property(TARGET latin1_to_utf8_materialization_benchmark
+      PROPERTY CXX_STANDARD_REQUIRED ON)
+    if(WIN32)
+      target_link_libraries(latin1_to_utf8_materialization_benchmark PRIVATE psapi)
+    endif()
+  else()
+    message(STATUS "Not building the Latin-1 materialization benchmark: std::string::resize_and_overwrite is unavailable.")
+  endif()
+endif()
+
 add_subdirectory(find)
