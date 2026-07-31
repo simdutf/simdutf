@@ -34,6 +34,12 @@
   #endif // __has_cpp_attribute(maybe_unused) >= 201603L
 #endif
 
+#if SIMDUTF_CPLUSPLUS23 && !defined(SIMDUTF_NO_LIBCXX) && \
+    defined(__cpp_lib_string_resize_and_overwrite) && \
+    __cpp_lib_string_resize_and_overwrite >= 202110L
+  #define SIMDUTF_STRING_RESIZE_AND_OVERWRITE 1
+#endif
+
 /**
  * We want to check that it is actually a little endian system at
  * compile-time.

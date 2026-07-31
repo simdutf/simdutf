@@ -200,18 +200,10 @@ std::string latin1_to_utf8_oracle(std::string_view input) {
   return expected;
 }
 
-// The baseline performs the existing exact-size materialization protocol. The
-// resize_and_overwrite call makes its storage uninitialized too, so the paired
-// comparison isolates the sizing traversal rather than string initialization.
+// The C++23 resizable-string overload obtains a checked 2x bound, calls the
+// dispatched converter once, and commits the converter's exact result length.
 std::size_t materialize(std::string_view input, output_string &output) {
-  const auto exact_size =
-      simdutf::utf8_length_from_latin1(input.data(), input.size());
-  output.resize_and_overwrite(exact_size, [input](char *utf8_output,
-                                                   std::size_t) {
-    return simdutf::convert_latin1_to_utf8(input.data(), input.size(),
-                                           utf8_output);
-  });
-  return output.size();
+  return simdutf::convert_latin1_to_utf8(input.data(), input.size(), output);
 }
 
 void verify_materialization(std::string_view input, std::string_view expected,

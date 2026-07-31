@@ -2,6 +2,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <type_traits>
+#include <string>
 #include <vector>
 
 #include "simdutf.h"
@@ -14,10 +15,20 @@ void test_latin1_to_utf8(std::span<const uint8_t> input_bytes,
   if (written_bytes_safe > output_size) {
     std::abort();
   }
+  #if SIMDUTF_STRING_RESIZE_AND_OVERWRITE
+  // Exercise the resizable one-pass materialization path when C++23 provides
+  // std::string::resize_and_overwrite.
+  std::string reference;
+  const auto written_bytes_unsafe = simdutf::convert_latin1_to_utf8(
+      reinterpret_cast<const char *>(input_bytes.data()), input_bytes.size(),
+      reference);
+  const auto needed_size = reference.size();
+  #else
   const auto needed_size = simdutf::utf8_length_from_latin1(input_bytes);
   std::vector<char> reference(needed_size);
   const auto written_bytes_unsafe =
       simdutf::convert_latin1_to_utf8(input_bytes, reference);
+  #endif
   if (written_bytes_unsafe != needed_size) {
     std::abort();
   }

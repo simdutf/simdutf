@@ -19,6 +19,7 @@
   - [Base64](#base64)
   - [Find](#find)
   - [C++20 and std::span usage in simdutf](#c20-and-stdspan-usage-in-simdutf)
+  - [C++23 resizable Latin1-to-UTF-8 output](#c23-resizable-latin1-to-utf-8-output)
   - [C++23 and constexpr support](#c23-and-constexpr-support)
   - [Command-line tools](#command-line-tools)
   - [Manual implementation selection](#manual-implementation-selection)
@@ -67,7 +68,7 @@ This library provide fast Unicode functions such as
 
 The functions are accelerated using SIMD instructions (e.g., ARM NEON, SSE, AVX, AVX-512, RISC-V Vector Extension, LoongSon, POWER, etc.). When your strings contain hundreds of characters, we can often transcode them at speeds exceeding a billion characters per second. You should expect high speeds not only with English strings (ASCII) but also Chinese, Japanese, Arabic, and so forth. We handle the full character range (including, for example, emojis).
 
-The library compiles down to a small library of a few hundred kilobytes. Our functions are exception-free and non allocating. We have extensive tests and extensive benchmarks.
+The library compiles down to a small library of a few hundred kilobytes. Its core pointer and span functions are exception-free and non allocating. The C++23 resizable-string materialization overload may allocate through its caller-provided string. We have extensive tests and extensive benchmarks.
 
 We have exhaustive tests, including an elaborate fuzzing setup. The library has been used in production systems for years.
 
@@ -2664,6 +2665,37 @@ size_t written = simdutf::convert_utf16_to_utf8_safe(utf16_input, utf8_output);
 ### Note
 
 - You are still responsible for providing a sufficiently large output buffer, just as with the pointer/size API.
+
+## C++23 resizable Latin1-to-UTF-8 output
+
+With C++23 and a standard library that provides
+`std::basic_string::resize_and_overwrite`, simdutf provides a resizable-output
+overload for Latin1-to-UTF-8 materialization:
+
+```cpp
+#include <simdutf.h>
+#include <string>
+
+std::string latin1 = get_latin1_input();
+std::string utf8;
+const size_t written = simdutf::convert_latin1_to_utf8(
+    latin1.data(), latin1.size(), utf8);
+```
+
+The overload requests capacity for the proven maximum of two UTF-8 bytes per
+Latin1 byte, invokes the normal dispatched conversion once, and sets `utf8` to
+the exact number of bytes written. `resize_and_overwrite` can reuse `utf8`'s
+existing allocation and avoids initializing the maximum-sized output before the
+conversion writes it. This avoids a separate
+`utf8_length_from_latin1` preflight when the caller is materializing a
+resizable string.
+
+The input range must not overlap `utf8`, because growing the destination can
+invalidate input pointers. If twice the input length exceeds `utf8.max_size()`,
+the function returns zero and leaves `utf8` unchanged. Allocation failures
+propagate from the string. Use `utf8_length_from_latin1` with a fixed-capacity
+output buffer when exact allocation, a lower memory limit, or compile-time
+sizing is required.
 
 ## C++23 and constexpr support
 

@@ -13,6 +13,9 @@
 #include "simdutf/internal/isadetection.h"
 
 #include <string_view>
+#if SIMDUTF_STRING_RESIZE_AND_OVERWRITE
+  #include <string>
+#endif
 #if SIMDUTF_SPAN
   #include <concepts>
   #include <type_traits>
@@ -830,6 +833,44 @@ validate_utf32_with_errors(std::span<const char32_t> input) noexcept {
 simdutf_warn_unused size_t convert_latin1_to_utf8(const char *input,
                                                   size_t length,
                                                   char *utf8_output) noexcept;
+  #if SIMDUTF_STRING_RESIZE_AND_OVERWRITE
+/**
+ * Convert a Latin1 string into a resizable UTF-8 string in one conversion pass.
+ *
+ * The output has capacity for the maximum of two UTF-8 bytes per Latin1 input
+ * byte. `std::basic_string::resize_and_overwrite` supplies either reusable or
+ * uninitialized writable storage, then the dispatched conversion publishes the
+ * exact output length.
+ *
+ * This overload is available with C++23 and a standard library that provides
+ * `std::basic_string::resize_and_overwrite`.
+ *
+ * @pre the input range does not overlap `utf8_output`; growing the output can
+ * invalidate input pointers.
+ * @param input         the Latin1 string to convert
+ * @param length        the length of the string in bytes
+ * @param utf8_output   the resizable string that receives the UTF-8 result
+ * @return the number of written chars; 0 without changing `utf8_output` when
+ * `2 * length` exceeds `utf8_output.max_size()`
+ *
+ * Allocation failures from `utf8_output` propagate to the caller. Use
+ * `utf8_length_from_latin1` with a fixed-capacity output buffer when exact
+ * allocation or a smaller memory bound is required.
+ */
+template <typename Traits, typename Allocator>
+simdutf_warn_unused size_t convert_latin1_to_utf8(
+    const char *input, size_t length,
+    std::basic_string<char, Traits, Allocator> &utf8_output) {
+  if (length > utf8_output.max_size() / 2) {
+    return 0;
+  }
+  utf8_output.resize_and_overwrite(
+      length * 2, [input, length](char *output, size_t) {
+        return convert_latin1_to_utf8(input, length, output);
+      });
+  return utf8_output.size();
+}
+  #endif // SIMDUTF_STRING_RESIZE_AND_OVERWRITE
   #if SIMDUTF_SPAN
 simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
 convert_latin1_to_utf8(

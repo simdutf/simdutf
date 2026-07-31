@@ -1,5 +1,10 @@
 #include "simdutf.h"
 
+#include <algorithm>
+#include <cstddef>
+#include <iterator>
+#include <memory>
+#include <string>
 #include <vector>
 
 #include <tests/helpers/compiletime_conversions.h>
@@ -55,6 +60,126 @@ TEST(convert_all_latin1_safe) {
     }
   }
 }
+
+#if SIMDUTF_STRING_RESIZE_AND_OVERWRITE
+
+namespace {
+template <typename T> class limited_allocator {
+public:
+  using value_type = T;
+
+  explicit limited_allocator(std::size_t maximum_size,
+                             std::size_t *allocation_count = nullptr) noexcept
+      : maximum_size_(maximum_size), allocation_count_(allocation_count) {}
+
+  template <typename U>
+  limited_allocator(const limited_allocator<U> &other) noexcept
+      : maximum_size_(other.maximum_size_),
+        allocation_count_(other.allocation_count_) {}
+
+  T *allocate(std::size_t count) {
+    if (count > maximum_size_) {
+      throw std::bad_alloc();
+    }
+    if (allocation_count_ != nullptr) {
+      ++*allocation_count_;
+    }
+    return std::allocator<T>{}.allocate(count);
+  }
+
+  void deallocate(T *pointer, std::size_t count) noexcept {
+    std::allocator<T>{}.deallocate(pointer, count);
+  }
+
+  std::size_t max_size() const noexcept { return maximum_size_; }
+
+  template <typename U>
+  bool operator==(const limited_allocator<U> &other) const noexcept {
+    return maximum_size_ == other.maximum_size_;
+  }
+
+  template <typename U>
+  bool operator!=(const limited_allocator<U> &other) const noexcept {
+    return !(*this == other);
+  }
+
+  template <typename> friend class limited_allocator;
+
+private:
+  std::size_t maximum_size_;
+  std::size_t *allocation_count_;
+};
+} // namespace
+
+TEST(convert_latin1_to_utf8_string) {
+  const char latin1[] = {'A', static_cast<char>(0x80),
+                         static_cast<char>(0xe9), static_cast<char>(0xff), 'z'};
+  const char expected[] = {'A', static_cast<char>(0xc2),
+                           static_cast<char>(0x80), static_cast<char>(0xc3),
+                           static_cast<char>(0xa9), static_cast<char>(0xc3),
+                           static_cast<char>(0xbf), 'z'};
+
+  std::string output("previous output");
+  const auto written =
+      simdutf::convert_latin1_to_utf8(latin1, sizeof(latin1), output);
+  ASSERT_EQUAL(written, sizeof(expected));
+  ASSERT_EQUAL(output.size(), sizeof(expected));
+  ASSERT_TRUE(std::equal(output.begin(), output.end(), std::begin(expected)));
+
+  const auto written_again =
+      simdutf::convert_latin1_to_utf8(latin1, sizeof(latin1), output);
+  ASSERT_EQUAL(written_again, sizeof(expected));
+  ASSERT_EQUAL(output.size(), sizeof(expected));
+  ASSERT_TRUE(std::equal(output.begin(), output.end(), std::begin(expected)));
+}
+
+TEST(convert_latin1_to_utf8_string_reuses_capacity) {
+  using limited_string =
+      std::basic_string<char, std::char_traits<char>, limited_allocator<char>>;
+
+  std::size_t allocation_count = 0;
+  limited_allocator<char> allocator(4096, &allocation_count);
+  limited_string output(allocator);
+  const std::string latin1(512, static_cast<char>(0xe9));
+
+  ASSERT_EQUAL(simdutf::convert_latin1_to_utf8(latin1.data(), latin1.size(),
+                                                output),
+               latin1.size() * 2);
+  const auto allocations_after_first_conversion = allocation_count;
+  ASSERT_TRUE(allocations_after_first_conversion > 0);
+
+  ASSERT_EQUAL(simdutf::convert_latin1_to_utf8(latin1.data(), latin1.size(),
+                                                output),
+               latin1.size() * 2);
+  ASSERT_EQUAL(allocation_count, allocations_after_first_conversion);
+}
+
+TEST(convert_latin1_to_utf8_string_empty) {
+  std::string output("previous output");
+  const auto written = simdutf::convert_latin1_to_utf8("", 0, output);
+  ASSERT_EQUAL(written, 0);
+  ASSERT_TRUE(output.empty());
+}
+
+TEST(convert_latin1_to_utf8_string_respects_max_size) {
+  using limited_string =
+      std::basic_string<char, std::char_traits<char>, limited_allocator<char>>;
+
+  limited_allocator<char> allocator(128);
+  limited_string output("unchanged", allocator);
+  const std::string previous(output.data(), output.size());
+  const std::size_t input_length = output.max_size() / 2 + 1;
+  const std::string latin1(input_length, 'x');
+
+  ASSERT_TRUE(input_length > output.max_size() / 2);
+  const auto written = simdutf::convert_latin1_to_utf8(
+      latin1.data(), latin1.size(), output);
+  ASSERT_EQUAL(written, 0);
+  ASSERT_EQUAL(output.size(), previous.size());
+  ASSERT_TRUE(std::equal(output.begin(), output.end(), previous.begin()));
+}
+
+#endif // SIMDUTF_STRING_RESIZE_AND_OVERWRITE
 
 #if SIMDUTF_CPLUSPLUS23
 
