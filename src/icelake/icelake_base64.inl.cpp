@@ -644,9 +644,14 @@ simdutf_warn_unused size_t icelake_binary_length_from_base64(const char *input,
     ptr += 64;
   }
 
-  while (ptr < end) {
-    count += (*ptr > 0x20) ? 1 : 0;
-    ptr++;
+  if (ptr < end) {
+    size_t len = end - ptr;
+    __mmask64 input_mask = ((__mmask64)1 << len) - 1;
+    __m512i data = _mm512_maskz_loadu_epi8(
+        input_mask, reinterpret_cast<const __m512i *>(ptr));
+    uint64_t mask = _mm512_cmpgt_epi8_mask(data, spaces);
+    count += count_ones(mask);
+    ptr += len;
   }
 
   size_t padding = 0;
@@ -676,9 +681,14 @@ icelake_binary_length_from_base64(const char16_t *input, size_t length) {
     ptr += 32;
   }
 
-  while (ptr < end) {
-    count += (*ptr > 0x20) ? 1 : 0;
-    ptr++;
+  if (ptr < end) {
+    size_t len = end - ptr;
+    __mmask32 input_mask = ((__mmask32)1 << len) - 1;
+    __m512i data = _mm512_maskz_loadu_epi16(
+        input_mask, reinterpret_cast<const __m512i *>(ptr));
+    uint32_t mask = _mm512_cmpgt_epi16_mask(data, spaces);
+    count += _mm_popcnt_u32(mask);
+    ptr += len;
   }
 
   size_t padding = 0;
