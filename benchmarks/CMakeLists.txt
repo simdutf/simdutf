@@ -98,4 +98,9 @@ add_executable(shortbench shortbench.cpp)
 target_link_libraries(shortbench PUBLIC simdutf::benchmarks::benchmark)
 target_compile_features(shortbench PRIVATE cxx_std_20)
 
+add_executable(benchmark_safe_utf16_to_utf8 benchmark_safe_utf16_to_utf8.cpp)
+target_link_libraries(benchmark_safe_utf16_to_utf8 PRIVATE simdutf)
+set_property(TARGET benchmark_safe_utf16_to_utf8 PROPERTY CXX_STANDARD 17)
+set_property(TARGET benchmark_safe_utf16_to_utf8 PROPERTY CXX_STANDARD_REQUIRED ON)
+
 add_subdirectory(find)
