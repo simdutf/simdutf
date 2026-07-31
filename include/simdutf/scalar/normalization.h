@@ -66,14 +66,14 @@ lookup_comp_trie_supplementary(uint32_t code_point) {
     uint16_t index2 = simdutf::tables::normalization::nfc::trie_index2
         [index1 + ((supplementary >> 6) & 31)];
     return simdutf::tables::normalization::trie_data[index2 +
-                                                          (code_point & 63)];
+                                                     (code_point & 63)];
   } else {
     uint16_t index1 =
         simdutf::tables::normalization::nfkc::trie_index1[supplementary >> 11];
     uint16_t index2 = simdutf::tables::normalization::nfkc::trie_index2
         [index1 + ((supplementary >> 6) & 31)];
     return simdutf::tables::normalization::trie_data[index2 +
-                                                           (code_point & 63)];
+                                                     (code_point & 63)];
   }
 }
 
@@ -401,7 +401,7 @@ size_t recompose(typename Traits::char_type *buf, size_t length) {
     // 1. The starter composes forward
     // 2. The code point composes backwar
     // 3. The code point is not blocked
-    if (starter != nullptr && (value & 0b11) == 2 &&
+    if (starter != nullptr && (value & 0b11) == 3 &&
         (prev_ccc < ccc || prev_ccc == 0)) {
       uint32_t composite = 0;
       bool combines_forward = false;

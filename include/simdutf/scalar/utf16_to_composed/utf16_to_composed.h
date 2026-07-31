@@ -60,7 +60,7 @@ size_t normalize_impl(const char16_t *input, size_t length, char16_t *out,
 
     // An indicator of one means the code point composes with nothing and maps
     // to exactly one code point, so it can be decomposed or copied on the spot
-    if (indicator == 1) {
+    if (indicator <= 2) {
       char16_t *code_point_out = out;
       uint8_t ccc;
       if ((value & 0x1000) > 0) {

@@ -137,12 +137,13 @@ simdutf_really_inline size_t arm_normalize_code_points_utf8(
     *prev_boundary = size_t(input - input_base);
     return n_bytes;
   }
-  // If the max value is 1, then we have only characters affected by
+  // If the max value is <=2, then we have only characters affected by
   // NF(K)D, not anything actually to compose (the first step of NF(K)C is
   // to run NF(K)D, and this guarantees that is the only thing we must do).
   // This allows us to cut out a large portion of work, especially for
-  // compatibility composition.
-  if (max == 1) {
+  // compatibility composition. If max value is 1, then we know that we only
+  // need to check combining character order, nothing more.
+  if (max <= 2) {
     // Special writing function that essentially runs NF(K)D on `code_points`.
     // This is the only place we use last_ccc information.
     arm_write_no_comp_utf8<form>(vcombine_u16(values, vdup_n_u16(0)),
@@ -177,7 +178,7 @@ simdutf_really_inline size_t arm_normalize_code_points_utf8_wide(
     *prev_boundary = size_t(input - input_base);
     return n_bytes;
   }
-  if (max == 1) {
+  if (max <= 2) {
     arm_write_no_comp_utf8<form>(values, code_points, 6, out, out_length, input,
                                  last_ccc);
     return n_bytes;

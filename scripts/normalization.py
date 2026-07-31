@@ -525,6 +525,7 @@ def create_comp_values(
     for v in forward_comps.values():
         # Sort by trailing character
         v.sort(key=lambda x: x[0])
+
     for x in range(SUPPLEMENTARY_LIMIT):
         if x in qc or x in non_starters:
             # This identifies a special but common class of characters that:
@@ -542,9 +543,12 @@ def create_comp_values(
                 and len(decomp_map[x].decomps) == 1
                 and decomp_map[x].decomps[0] not in composables
             ):
-                indicator = 1
+                if decomp_map[x].decomps[0] == x:
+                    indicator = 1
+                else:
+                    indicator = 2
             else:
-                indicator = 2
+                indicator = 3
         else:
             indicator = 0
         if x in decomp_map:

@@ -37,9 +37,9 @@ void arm_write_no_comp_utf16(uint16x8_t indicators, uint16x8_t code_points,
     vst1q_u16(reinterpret_cast<uint16_t *>(*out), code_points);
   }
   size_t displacement = 0;
-  uint16x8_t indicator1 = vceqq_u16(indicators, vdupq_n_u16(1));
+  uint16x8_t indicator2 = vceqq_u16(indicators, vdupq_n_u16(2));
   uint64_t bitmask8 =
-      arm_bitmask4(vreinterpretq_u8_u16(indicator1)) & 0x8080808080808080ULL;
+      arm_bitmask4(vreinterpretq_u8_u16(indicator2)) & 0x8080808080808080ULL;
   for (; bitmask8 > 0; bitmask8 &= bitmask8 - 1) {
     uint32_t i = trailing_zeroes(bitmask8) >> 3;
     uint16_t code_point = code_points[i];
@@ -148,6 +148,8 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
                                 scalar::normalization::t_count -
                                 scalar::normalization::v_base));
       if (vmaxvq_u16(jamo_vt) != 0) {
+        // We give the scalar impl 32 bytes because it is likely there are more
+        // Hangul syllables to come...
         p +=
             scalar::utf16_to_composed::normalize_with_context<big_endian, form>(
                 input + p, input, length, out_ptr, 32, prev_boundary);
@@ -167,12 +169,13 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
         last_ccc = 0;
         continue;
       }
-      // If the max value is 1, then we have only characters affected by
+      // If the max value is <=2, then we have only characters affected by
       // NF(K)D, not anything actually to compose (the first step of NF(K)C is
       // to run NF(K)D, and this guarantees that is the only thing we must
       // do). This allows us to cut out a large portion of work, especially
-      // for compatibility composition.
-      if (max == 1) {
+      // for compatibility composition. If max value is 1, then we know that
+      // we only need to check combining character order, nothing more.
+      if (max <= 2) {
         uint16x8_t forward_starter =
             vcgtq_u16(vandq_u16(values, vdupq_n_u16(0x8000)), vdupq_n_u16(0));
         uint16x8_t raw_ccc_values =
@@ -188,8 +191,13 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
           last_ccc = 0;
           continue;
         }
-        internal::arm_write_no_comp_utf16<big_endian, form>(indicators, in,
-                                                            out_ptr);
+        if (max == 2) {
+          internal::arm_write_no_comp_utf16<big_endian, form>(indicators, in,
+                                                              out_ptr);
+        } else {
+          vst1q_u16(reinterpret_cast<uint16_t *>(*out_ptr), raw_in);
+          *out_ptr += 8;
+        }
         p += 8;
         last_ccc = uint8_t(vgetq_lane_u16(ccc_values, 7));
         continue;
