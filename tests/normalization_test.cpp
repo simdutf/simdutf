@@ -975,10 +975,16 @@ TEST(hangul_compose_all_jamo_triples) {
 
         // Same triple with enough leading text to push it out of the first
         // block, and trailing text so it is not the tail of the buffer.
-        const std::u16string padded_in =
-            std::u16string(19, u'a') + decomposed + std::u16string(19, u'z');
-        const std::u16string padded_out =
-            std::u16string(19, u'a') + composed + std::u16string(19, u'z');
+        std::u16string padded_in;
+        padded_in.reserve(38 + decomposed.size());
+        padded_in.append(19, u'a');
+        padded_in.append(decomposed);
+        padded_in.append(19, u'z');
+        std::u16string padded_out;
+        padded_out.reserve(38 + composed.size());
+        padded_out.append(19, u'a');
+        padded_out.append(composed);
+        padded_out.append(19, u'z');
         snprintf(what, sizeof(what), "compose padded L=%d V=%d T=%d", l, v, t);
         check(implementation, what, padded_out, padded_in, size_t(__LINE__));
       }
