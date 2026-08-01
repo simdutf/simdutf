@@ -409,10 +409,13 @@ bool arm_normalize_utf16_to_decomposed_check(const char16_t *input,
                                              size_t length,
                                              size_t *out_length) {
   *out_length = 0;
-  uint8_t last_ccc = 0;
-  bool is_qc = true;
   const size_t SAFETY_MARGIN = 8;
   size_t p = 0;
+  uint16x8_t prev_ccc = vdupq_n_u16(0);
+  // Accumulated across the input
+  uint16x8_t values_max = vdupq_n_u16(0);
+  uint16x8_t bad_ccc = vdupq_n_u16(0);
+  bool is_qc = true;
   while (p + SAFETY_MARGIN < length) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(input + p));
     if constexpr (!match_system(big_endian)) {
@@ -423,7 +426,7 @@ bool arm_normalize_utf16_to_decomposed_check(const char16_t *input,
       if (p + 16 > length) {
         *out_length += 8;
         p += 8;
-        last_ccc = 0;
+        prev_ccc = vdupq_n_u16(0);
         continue;
       }
       // Get the next 8 bytes and check if they are also ASCII
@@ -436,35 +439,18 @@ bool arm_normalize_utf16_to_decomposed_check(const char16_t *input,
         *out_length += 8;
         p += 8;
         in = nextin;
-        last_ccc = 0;
+        prev_ccc = vdupq_n_u16(0);
       } else {
         *out_length += 16;
         p += 16;
-        last_ccc = 0;
+        prev_ccc = vdupq_n_u16(0);
         continue;
       }
     }
     uint16x8_t surrogates_mask = internal::arm_make_utf16_surrogates_mask(in);
-    if (vmaxvq_u16(surrogates_mask) == 0) {
-      uint16x8_t values = internal::arm_check_trie_lookup_utf16<form>(in);
-      *out_length += vaddvq_u16(vandq_u16(values, vdupq_n_u16(0x3F)));
-      if (vmaxvq_u16(vandq_u16(values, vdupq_n_u16(0x4000))) == 0) {
-        p += 8;
-        last_ccc = 0;
-        continue;
-      }
-      uint16x8_t ccc_values =
-          vandq_u16(vshrq_n_u16(values, 6), vdupq_n_u16(0x3F));
-      if (is_qc) {
-        // Checking combining classes is expensive, so we only do it if we
-        // haven't already failed the quick check.
-        is_qc &= !vmaxvq_u16(vshrq_n_u16(values, 15)) &&
-                 internal::arm_is_ccc_sorted_full(ccc_values, last_ccc);
-      }
-      last_ccc = uint8_t(vgetq_lane_u16(ccc_values, 7));
-      p += 8;
-    } else {
+    if (vmaxvq_u16(surrogates_mask) > 0) {
       size_t total = 0;
+      uint8_t last_ccc = uint8_t(vgetq_lane_u16(prev_ccc, 7));
       // Scalar quick check in the supplementary plane
       while (total < 8) {
         uint8_t sz;
@@ -481,10 +467,27 @@ bool arm_normalize_utf16_to_decomposed_check(const char16_t *input,
         total += sz;
         last_ccc = ccc;
       }
+      prev_ccc = vdupq_n_u16(last_ccc);
       p += total;
+      continue;
     }
+    uint16x8_t values = internal::arm_check_trie_lookup_utf16<form>(in);
+    *out_length += vaddvq_u16(vandq_u16(values, vdupq_n_u16(0x3F)));
+    values_max = vmaxq_u16(values_max, values);
+    uint16x8_t ccc_values =
+        vandq_u16(vshrq_n_u16(values, 6), vdupq_n_u16(0x3F));
+    uint16x8_t shifted_ccc = vextq_u16(prev_ccc, ccc_values, 7);
+    uint16x8_t starters = vceqq_u16(ccc_values, vdupq_n_u16(0));
+    // We can use the special ccc value 255 for starters
+    uint16x8_t ccc_fixup = vbslq_u16(starters, vdupq_n_u16(255), ccc_values);
+    uint16x8_t ccc_lt = vcltq_u16(ccc_fixup, shifted_ccc);
+    bad_ccc = vorrq_u16(bad_ccc, ccc_lt);
+    prev_ccc = ccc_values;
+    p += 8;
   }
+  is_qc &= vmaxvq_u16(values_max) < 0x8000 && vmaxvq_u16(bad_ccc) == 0;
   if (p < length) {
+    uint8_t last_ccc = uint8_t(vgetq_lane_u16(prev_ccc, 7));
     is_qc &= scalar::utf16_to_decomposed::check_with_context<big_endian, form>(
         input + p, length - p, out_length, &last_ccc);
   }

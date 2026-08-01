@@ -264,7 +264,6 @@ template <endianness big_endian, ComposedForm form>
 bool arm_normalize_utf16_to_composed_check(const char16_t *input, size_t length,
                                            size_t *out_length) {
   *out_length = 0;
-  uint8_t last_ccc = 0;
   const size_t SAFETY_MARGIN = 8;
   size_t p = 0;
   uint16x8_t prev_ccc = vdupq_n_u16(0);
@@ -306,6 +305,7 @@ bool arm_normalize_utf16_to_composed_check(const char16_t *input, size_t length,
     }
     uint16x8_t surrogates_mask = internal::arm_make_utf16_surrogates_mask(in);
     if (vmaxvq_u16(surrogates_mask) > 0) {
+      uint8_t last_ccc = uint8_t(vgetq_lane_u16(prev_ccc, 7));
       size_t total = 0;
       // Scalar quick check in the supplementary plane
       while (total < 8) {
@@ -329,6 +329,7 @@ bool arm_normalize_utf16_to_composed_check(const char16_t *input, size_t length,
         last_ccc = ccc;
       }
       p += total;
+      prev_ccc = vdupq_n_u16(last_ccc);
       continue;
     }
     uint16x8_t values = internal::arm_comp_check_trie_lookup_utf16<form>(in);
@@ -347,6 +348,7 @@ bool arm_normalize_utf16_to_composed_check(const char16_t *input, size_t length,
   }
   is_qc &= vmaxvq_u16(relevant) < 0x2000 && vmaxvq_u16(bad_ccc) == 0;
   if (p < length) {
+    uint8_t last_ccc = uint8_t(vgetq_lane_u16(prev_ccc, 7));
     is_qc &= scalar::utf16_to_composed::check_with_context<big_endian, form>(
         input + p, length - p, out_length, &last_ccc);
   }
