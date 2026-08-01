@@ -22,6 +22,16 @@ arm_comp_trie_lookup_utf16(uint16x8_t code_points) {
   return vld1q_u16(buf);
 }
 
+simdutf_really_inline bool arm_is_ccc_sorted_full_v(uint16x8_t ccc_values,
+                                                    uint16x8_t prev_ccc) {
+  uint16x8_t shifted_ccc = vextq_u16(prev_ccc, ccc_values, 7);
+  uint16x8_t starters = vceqq_u16(ccc_values, vdupq_n_u16(0));
+  // We can use the special ccc value 255 for starters
+  uint16x8_t ccc_fixup = vbslq_u16(starters, vdupq_n_u16(255), ccc_values);
+  uint16x8_t ccc_lt = vcltq_u16(ccc_fixup, shifted_ccc);
+  return vmaxvq_u16(ccc_lt) == 0;
+}
+
 // Write eight BMP code points that have value 0 or 1 from the NF(K)C trie.
 // This means that they do not compose with anything, so this function
 // essentially performs NF(K)D on the given code points.
@@ -79,7 +89,10 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
   char16_t *start = output;
 
   const size_t SAFETY_MARGIN = 8;
-  uint8_t last_ccc = 0;
+  // The combining classes of the previous block. Only lane 7 is ever read, but
+  // keeping it in a vector avoids a NEON->GPR->NEON round trip per block; see
+  // `arm_is_ccc_sorted_full_v`.
+  uint16x8_t last_ccc = vdupq_n_u16(0);
   size_t p = 0;
   // The most recent input offset proven to be a composition boundary, in the
   // sense of ICU's `prevBoundary`. Nothing before it can interact with anything
@@ -104,7 +117,7 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
         *out_ptr += 8;
         prev_boundary = p + 7;
         p += 8;
-        last_ccc = 0;
+        last_ccc = vdupq_n_u16(0);
         continue;
       }
       // Get the next eight code units and check if they are also irrelevant.
@@ -122,7 +135,7 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
         *out_ptr += 8;
         prev_boundary = p + 7;
         p += 8;
-        last_ccc = 0;
+        last_ccc = vdupq_n_u16(0);
         raw_in = raw_nextin;
         in = nextin;
       } else {
@@ -131,32 +144,17 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
         *out_ptr += 16;
         prev_boundary = p + 15;
         p += 16;
-        last_ccc = 0;
+        last_ccc = vdupq_n_u16(0);
         continue;
       }
     }
     uint16x8_t surrogates_mask = internal::arm_make_utf16_surrogates_mask(in);
-    // Check if we have no surrogate pairs.
-    if (vmaxvq_u16(surrogates_mask) == 0) {
-      // We use this to compose normalize a larger window using scalar if we
-      // detect Jamo. Note that this means inputs that sparsely put Jamo
-      // randomly throughout the input can be slower. This doesn't seem very
-      // common in real-world inputs, though.
-      uint16x8_t jamo_vt =
-          vcltq_u16(vsubq_u16(in, vdupq_n_u16(scalar::normalization::v_base)),
-                    vdupq_n_u16(scalar::normalization::t_base +
-                                scalar::normalization::t_count -
-                                scalar::normalization::v_base));
-      if (vmaxvq_u16(jamo_vt) != 0) {
-        // We give the scalar impl 32 bytes because it is likely there are more
-        // Hangul syllables to come...
-        p +=
-            scalar::utf16_to_composed::normalize_with_context<big_endian, form>(
-                input + p, input, length, out_ptr, 32, prev_boundary);
-        prev_boundary = p;
-        last_ccc = 0;
-        continue;
-      }
+    uint16x8_t jamo_vt =
+        vcltq_u16(vsubq_u16(in, vdupq_n_u16(scalar::normalization::v_base)),
+                  vdupq_n_u16(scalar::normalization::t_base +
+                              scalar::normalization::t_count -
+                              scalar::normalization::v_base));
+    if (simdutf_likely(vmaxvq_u16(vorrq_u16(surrogates_mask, jamo_vt)) == 0)) {
       uint16x8_t values = internal::arm_comp_trie_lookup_utf16<form>(in);
       uint16x8_t indicators = vandq_u16(values, vdupq_n_u16(0b11));
       uint16_t max = vmaxvq_u16(indicators);
@@ -166,7 +164,7 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
         *out_ptr += 8;
         prev_boundary = p + 7;
         p += 8;
-        last_ccc = 0;
+        last_ccc = vdupq_n_u16(0);
         continue;
       }
       // If the max value is <=2, then we have only characters affected by
@@ -183,12 +181,12 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
         uint16x8_t ccc_values =
             vbslq_u16(forward_starter, vdupq_n_u16(0), raw_ccc_values);
         if (simdutf_unlikely(
-                !internal::arm_is_ccc_sorted_full(ccc_values, last_ccc))) {
+                !internal::arm_is_ccc_sorted_full_v(ccc_values, last_ccc))) {
           p += scalar::utf16_to_composed::normalize_with_context<big_endian,
                                                                  form>(
               input + p, input, length, out_ptr, 8, prev_boundary);
           prev_boundary = p;
-          last_ccc = 0;
+          last_ccc = vdupq_n_u16(0);
           continue;
         }
         if (max == 2) {
@@ -199,7 +197,7 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
           *out_ptr += 8;
         }
         p += 8;
-        last_ccc = uint8_t(vgetq_lane_u16(ccc_values, 7));
+        last_ccc = ccc_values;
         continue;
       }
       p += scalar::utf16_to_composed::normalize_with_context<big_endian, form>(
@@ -207,7 +205,14 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
       // The fallback consumes up to the next stable position, so wherever it
       // stopped is a boundary.
       prev_boundary = p;
-      last_ccc = 0;
+      last_ccc = vdupq_n_u16(0);
+    } else if (vmaxvq_u16(surrogates_mask) == 0) {
+      // Hangul Jamo, no surrogates. We give the scalar impl 32 bytes because
+      // it is likely there are more Hangul syllables to come...
+      p += scalar::utf16_to_composed::normalize_with_context<big_endian, form>(
+          input + p, input, length, out_ptr, 32, prev_boundary);
+      prev_boundary = p;
+      last_ccc = vdupq_n_u16(0);
     } else {
       // With surrogate pairs, we fall back to the scalar implementation.
       size_t normalize_range = 8;
@@ -218,7 +223,7 @@ size_t arm_normalize_utf16_to_composed(const char16_t *input, size_t length,
       p += scalar::utf16_to_composed::normalize_with_context<big_endian, form>(
           input + p, input, length, out_ptr, normalize_range, prev_boundary);
       prev_boundary = p;
-      last_ccc = 0;
+      last_ccc = vdupq_n_u16(0);
     }
   }
 
