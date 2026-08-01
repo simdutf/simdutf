@@ -138,7 +138,7 @@ bool verify_conversion(const simdutf::implementation *implementation,
                        const std::vector<char> &expected, char *output) {
   const simdutf::result result =
       implementation->convert_utf32_to_utf8_with_errors(input.data(),
-                                                         input.size(), output);
+                                                        input.size(), output);
   return result.error == simdutf::error_code::SUCCESS &&
          result.count == expected.size() &&
          std::equal(expected.begin(), expected.end(), output);
@@ -150,7 +150,7 @@ int main(int argc, char *argv[]) {
   options options;
   if (!parse_options(argc, argv, options)) {
     return argc > 1 && std::string_view(argv[1]) == "--help" ? EXIT_SUCCESS
-                                                                : EXIT_FAILURE;
+                                                             : EXIT_FAILURE;
   }
 
   const simdutf::implementation *implementation =
@@ -189,9 +189,8 @@ int main(int argc, char *argv[]) {
   const auto start = std::chrono::steady_clock::now();
   for (size_t iteration = 0; iteration < options.iterations; iteration++) {
     const simdutf::result result =
-        implementation->convert_utf32_to_utf8_with_errors(input.data(),
-                                                           input.size(),
-                                                           output.get());
+        implementation->convert_utf32_to_utf8_with_errors(
+            input.data(), input.size(), output.get());
     sink += result.count;
   }
   const auto finish = std::chrono::steady_clock::now();
@@ -209,7 +208,7 @@ int main(int argc, char *argv[]) {
   std::cout << std::fixed << std::setprecision(9)
             << "{\"metric\":\"ns/input_scalar\",\"value\":"
             << ns_per_input_scalar << "}" << '\n'
-            << "{\"metric\":\"ns/call\",\"value\":" << ns_per_call
-            << "}" << '\n';
+            << "{\"metric\":\"ns/call\",\"value\":" << ns_per_call << "}"
+            << '\n';
   return EXIT_SUCCESS;
 }
