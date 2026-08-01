@@ -449,25 +449,30 @@ bool arm_normalize_utf16_to_decomposed_check(const char16_t *input,
     }
     uint16x8_t surrogates_mask = internal::arm_make_utf16_surrogates_mask(in);
     if (vmaxvq_u16(surrogates_mask) > 0) {
+      uint16_t buf[8];
       size_t total = 0;
-      uint8_t last_ccc = uint8_t(vgetq_lane_u16(prev_ccc, 7));
-      // Scalar quick check in the supplementary plane
-      while (total < 8) {
+      // Go scalar for parsing
+      for (size_t i = 0; i < 8; i++) {
         uint8_t sz;
         uint32_t code_point =
             scalar::utf16::parse_code_point<big_endian>(input + p + total, &sz);
         uint16_t value =
             scalar::utf16_to_decomposed::lookup_check_trie<form>(code_point);
+        buf[i] = value;
         *out_length += value & 0x3F;
-        uint8_t ccc = uint8_t((value >> 6) & 0x3F);
-        if (simdutf_unlikely(last_ccc > ccc && ccc != 0)) {
-          is_qc = false;
-        }
-        is_qc &= !(value >> 15);
-        total += sz;
-        last_ccc = ccc;
+        total += code_point <= 0xFFFF ? 1 : 2;
       }
-      prev_ccc = vdupq_n_u16(last_ccc);
+      uint16x8_t values = vld1q_u16(buf);
+      values_max = vmaxq_u16(values_max, values);
+      uint16x8_t ccc_values =
+          vandq_u16(vshrq_n_u16(values, 6), vdupq_n_u16(0x3F));
+      uint16x8_t shifted_ccc = vextq_u16(prev_ccc, ccc_values, 7);
+      uint16x8_t starters = vceqq_u16(ccc_values, vdupq_n_u16(0));
+      // We can use the special ccc value 255 for starters
+      uint16x8_t ccc_fixup = vbslq_u16(starters, vdupq_n_u16(255), ccc_values);
+      uint16x8_t ccc_lt = vcltq_u16(ccc_fixup, shifted_ccc);
+      bad_ccc = vorrq_u16(bad_ccc, ccc_lt);
+      prev_ccc = ccc_values;
       p += total;
       continue;
     }
