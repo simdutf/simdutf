@@ -265,23 +265,25 @@ bool arm_normalize_utf16_to_composed_check(const char16_t *input, size_t length,
                                            size_t *out_length) {
   *out_length = 0;
   uint8_t last_ccc = 0;
-  bool is_qc = true;
   const size_t SAFETY_MARGIN = 8;
   size_t p = 0;
+  uint16x8_t prev_ccc = vdupq_n_u16(0);
+  // Accumulated across the input
+  uint16x8_t relevant = vdupq_n_u16(0);
+  uint16x8_t bad_ccc = vdupq_n_u16(0);
+  bool is_qc = true;
   while (p + SAFETY_MARGIN < length) {
-    uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(input + p));
+    const uint16_t *block_input = reinterpret_cast<const uint16_t *>(input + p);
+    uint16x8_t in = vld1q_u16(block_input);
     if constexpr (!match_system(big_endian)) {
       in = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(in)));
     }
-    // Code points below `min_relevant_cp` are NF(K)C_QC=Yes with ccc zero, so
-    // the block passes the quick check and contributes its own length. See the
-    // note on `min_relevant_cp` for why this is a valid output-length bound.
     if (vmaxvq_u16(in) < scalar::normalization::min_relevant_cp<form>) {
       // Only load a second vector when sixteen code units are available.
       if (p + 16 > length) {
         *out_length += 8;
         p += 8;
-        last_ccc = 0;
+        prev_ccc = vdupq_n_u16(0);
         continue;
       }
       // Get the next eight code units and check if they are also irrelevant.
@@ -294,36 +296,16 @@ bool arm_normalize_utf16_to_composed_check(const char16_t *input, size_t length,
         *out_length += 8;
         p += 8;
         in = nextin;
-        last_ccc = 0;
+        prev_ccc = vdupq_n_u16(0);
       } else {
         *out_length += 16;
         p += 16;
-        last_ccc = 0;
+        prev_ccc = vdupq_n_u16(0);
         continue;
       }
     }
     uint16x8_t surrogates_mask = internal::arm_make_utf16_surrogates_mask(in);
-    if (vmaxvq_u16(surrogates_mask) == 0) {
-      uint16x8_t values = internal::arm_comp_check_trie_lookup_utf16<form>(in);
-      *out_length += vaddvq_u16(vandq_u16(values, vdupq_n_u16(0x3F)));
-      uint16x8_t indicators = vandq_u16(values, vdupq_n_u16(0x3000));
-      uint16_t max = vmaxvq_u16(indicators);
-      if (max == 0) {
-        last_ccc = 0;
-        p += 8;
-        continue;
-      }
-      uint16x8_t ccc_values =
-          vandq_u16(vshrq_n_u16(values, 6), vdupq_n_u16(0x3F));
-      if (is_qc) {
-        // Checking combining classes is expensive, so we only do it if we
-        // haven't already failed the quick check.
-        is_qc &= max < 0x2000 &&
-                 internal::arm_is_ccc_sorted_full(ccc_values, last_ccc);
-      }
-      last_ccc = uint8_t(vgetq_lane_u16(ccc_values, 7));
-      p += 8;
-    } else {
+    if (vmaxvq_u16(surrogates_mask) > 0) {
       size_t total = 0;
       // Scalar quick check in the supplementary plane
       while (total < 8) {
@@ -347,8 +329,23 @@ bool arm_normalize_utf16_to_composed_check(const char16_t *input, size_t length,
         last_ccc = ccc;
       }
       p += total;
+      continue;
     }
+    uint16x8_t values = internal::arm_comp_check_trie_lookup_utf16<form>(in);
+    *out_length += vaddvq_u16(vandq_u16(values, vdupq_n_u16(0x3F)));
+    uint16x8_t indicators = vandq_u16(values, vdupq_n_u16(0x3000));
+    relevant = vmaxq_u16(relevant, indicators);
+    uint16x8_t ccc_values =
+        vandq_u16(vshrq_n_u16(values, 6), vdupq_n_u16(0x3F));
+    uint16x8_t shifted_ccc = vextq_u16(prev_ccc, ccc_values, 7);
+    uint16x8_t starters = vceqq_u16(ccc_values, vdupq_n_u16(0));
+    uint16x8_t ccc_fixup = vbslq_u16(starters, vdupq_n_u16(255), ccc_values);
+    uint16x8_t ccc_lt = vcltq_u16(ccc_fixup, shifted_ccc);
+    bad_ccc = vorrq_u16(bad_ccc, ccc_lt);
+    prev_ccc = ccc_values;
+    p += 8;
   }
+  is_qc &= vmaxvq_u16(relevant) < 0x2000 && vmaxvq_u16(bad_ccc) == 0;
   if (p < length) {
     is_qc &= scalar::utf16_to_composed::check_with_context<big_endian, form>(
         input + p, length - p, out_length, &last_ccc);
