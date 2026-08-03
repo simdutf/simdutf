@@ -124,6 +124,7 @@ def buildshuf1234_fourbytes(sizes):
 
 
 def main():
+  easycase12_small = set()
   easycase12 = set()
   easycase123 = set()
   easycase1234 = set()
@@ -131,13 +132,18 @@ def main():
     sizes = compute_code_point_size(x)
     if(easy_case12(sizes)):
         z1 = grab_easy_case12_code_point_size(sizes)
-        easycase12.add(tuple(z1))
+        if(sum(z1) <= 8):
+            easycase12_small.add(tuple(z1))
+        else:
+            easycase12.add(tuple(z1))
     elif(easy_case123(sizes)):
         z1 = grab_easy_case123_code_point_size(sizes)
         easycase123.add(tuple(z1))
     elif(easy_case1234(sizes)):
         z1 = grab_easy_case1234_code_point_size(sizes)
         easycase1234.add(tuple(z1))
+  easycase12smallsorted = [x for x in easycase12_small]
+  easycase12smallsorted.sort()
   easycase12sorted = [x for x in easycase12]
   easycase12sorted.sort()
   easycase123sorted = [x for x in easycase123]
@@ -146,15 +152,16 @@ def main():
   easycase1234sorted.sort()
 
   print("#include <cstdint>")
-  allshuf = [buildshuf12_twobytes(z) for z in  easycase12sorted] + [buildshuf123_threebytes(z) for z in  easycase123sorted] + [buildshuf1234_fourbytes(z) for z in  easycase1234sorted]
-  print("const uint8_t shufutf8["+str(len(easycase12sorted+easycase123sorted+easycase1234sorted))+"][16] = ")
+  allshuf = [buildshuf12_twobytes(z) for z in easycase12smallsorted] + [buildshuf12_twobytes(z) for z in  easycase12sorted] + [buildshuf123_threebytes(z) for z in  easycase123sorted] + [buildshuf1234_fourbytes(z) for z in  easycase1234sorted]
+  print("const uint8_t shufutf8["+str(len(easycase12smallsorted+easycase12sorted+easycase123sorted+easycase1234sorted))+"][16] = ")
   print(cpp_arrayarray_initializer(allshuf), end=";\n")
-  print("/* number of two bytes : "+ str(len(easycase12sorted))+ " */")
-  print("/* number of two + three bytes : "+ str(len(easycase12sorted+easycase123sorted))+ " */")
-  print("/* number of two + three + four bytes : "+ str(len(easycase12sorted+easycase123sorted+easycase1234sorted))+ " */")
+  print("/* number of two bytes (small) : "+ str(len(easycase12smallsorted))+ " */")
+  print("/* number of two bytes : "+ str(len(easycase12smallsorted+easycase12sorted))+ " */")
+  print("/* number of two + three bytes : "+ str(len(easycase12smallsorted+easycase12sorted+easycase123sorted))+ " */")
+  print("/* number of two + three + four bytes : "+ str(len(easycase12smallsorted+easycase12sorted+easycase123sorted+easycase1234sorted))+ " */")
   c = 0
   index = {}
-  for t in easycase12sorted + easycase123sorted + easycase1234sorted:
+  for t in easycase12smallsorted + easycase12sorted + easycase123sorted + easycase1234sorted:
       index[t] = c
       c = c + 1
   arrg=[]

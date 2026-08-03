@@ -20,6 +20,27 @@ endif()
 if(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
   target_compile_definitions(simdutf PUBLIC FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=1)
 endif()
+##
+## Unicode normalization is opt-in (see SIMDUTF_NORMALIZATION in the top-level
+## CMakeLists.txt). These must be PUBLIC: the declarations in
+## simdutf/implementation.h are guarded by the same macros, so consumers have to
+## see the exact same values as the library was built with.
+##
+if(SIMDUTF_NORMALIZATION)
+  target_compile_definitions(simdutf PUBLIC SIMDUTF_FEATURE_NORMALIZATION=1)
+endif()
+if(SIMDUTF_NFD)
+  target_compile_definitions(simdutf PUBLIC SIMDUTF_FEATURE_NFD=1)
+endif()
+if(SIMDUTF_NFKD)
+  target_compile_definitions(simdutf PUBLIC SIMDUTF_FEATURE_NFKD=1)
+endif()
+if(SIMDUTF_NFC)
+  target_compile_definitions(simdutf PUBLIC SIMDUTF_FEATURE_NFC=1)
+endif()
+if(SIMDUTF_NFKC)
+  target_compile_definitions(simdutf PUBLIC SIMDUTF_FEATURE_NFKC=1)
+endif()
 target_include_directories(simdutf PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> )
 target_include_directories(simdutf PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>")
 if(NOT DEFINED CMAKE_POSITION_INDEPENDENT_CODE)

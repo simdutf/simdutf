@@ -16,6 +16,7 @@
   - [Packages](#packages)
   - [Example](#example)
   - [API](#api)
+  - [Unicode normalization](#unicode-normalization)
   - [Base64](#base64)
   - [Find](#find)
   - [C++20 and std::span usage in simdutf](#c20-and-stdspan-usage-in-simdutf)
@@ -232,6 +233,8 @@ The amalgamated sources set to 1 the following preprocessor defines:
 * `SIMDUTF_FEATURE_LATIN1`,
 * `SIMDUTF_FEATURE_BASE64`,
 * `SIMDUTF_FEATURE_DETECT_ENCODING`.
+
+The Unicode normalization features are the exception: `SIMDUTF_FEATURE_NORMALIZATION` and the per-form `SIMDUTF_FEATURE_NFD`, `SIMDUTF_FEATURE_NFKD`, `SIMDUTF_FEATURE_NFC` and `SIMDUTF_FEATURE_NFKC` macros default to 0, because the normalization tables add roughly 430 kB to the binary. A default amalgamation leaves these macros overridable, so single-header users can turn normalization on by compiling with `-DSIMDUTF_FEATURE_NORMALIZATION=1` (or one of the per-form macros). See [Unicode normalization](#unicode-normalization).
 
 Thus, when it is needed to make sure the correct set of features are enabled, we may test it using preprocessor:
 
@@ -1890,6 +1893,78 @@ If you have a UTF-16 input, you may change its endianness with a fast function.
 void change_endianness_utf16(const char16_t * input, size_t length, char16_t * output) noexcept;
 
 ```
+
+## Unicode normalization
+
+Unicode often lets the same text be written in more than one way: the character "é" may be a single code point (U+00E9), or the letter "e" followed by a combining acute accent (U+0065 U+0301). The two are visually identical but compare differently byte for byte. Normalization rewrites text into one of four canonical forms so that equivalent strings become identical:
+
+* NFD — canonical decomposition;
+* NFC — canonical decomposition followed by canonical composition;
+* NFKD — compatibility decomposition;
+* NFKC — compatibility decomposition followed by canonical composition.
+
+### Enabling normalization
+
+Normalization is **disabled by default**: its lookup tables add roughly 430 kB to the binary, which is a poor trade for the many users who never normalize. Enable all four forms with CMake:
+
+```shell
+cmake -B build -DSIMDUTF_NORMALIZATION=ON
+```
+
+Individual forms can be selected with `-DSIMDUTF_NFD=ON`, `-DSIMDUTF_NFKD=ON`, `-DSIMDUTF_NFC=ON` and `-DSIMDUTF_NFKC=ON`. If you compile simdutf directly (for example from the single-header version), define `SIMDUTF_FEATURE_NORMALIZATION=1` to get all four forms, or set the individual `SIMDUTF_FEATURE_NFD`, `SIMDUTF_FEATURE_NFKD`, `SIMDUTF_FEATURE_NFC` and `SIMDUTF_FEATURE_NFKC` macros.
+
+Note that NF(K)C is computed as NF(K)D followed by canonical composition, so enabling only NFC still brings in the decomposition tables: it is not cheaper than NFD.
+
+The declarations in `simdutf.h` are themselves guarded by these macros, so your own code must see the same values as the library was built with. When you consume simdutf through CMake this happens automatically, as the definitions are attached to the target as `PUBLIC`. If you compile and link by hand, pass the same `-DSIMDUTF_FEATURE_NORMALIZATION=1` when building your own translation units, otherwise the normalization functions will appear to be missing from the `simdutf` namespace.
+
+### API
+
+For UTF-8, where `FORM` is one of `nfd`, `nfc`, `nfkd` or `nfkc`:
+
+```cpp
+size_t normalize_utf8_to_FORM(const char *input, size_t length, char *output);
+bool normalize_utf8_to_FORM_check(const char *input, size_t length, size_t *output_length);
+```
+
+The matching UTF-16 functions are `normalize_utf16le_to_FORM` and `normalize_utf16be_to_FORM` (and their `_check` counterparts), taking `const char16_t *` and `char16_t *`.
+
+The `_check` function returns true when the input is already in the requested form, meaning normalization can be skipped entirely. Whatever it returns, it always writes to `output_length` an upper bound on the number of bytes (or code units) the output buffer needs.
+
+Most text encountered in practice is already in NFC, so the expected pattern is to call the check function first and normalize only when it fails:
+
+```cpp
+size_t output_length;
+if (!simdutf::normalize_utf8_to_nfc_check(input, length, &output_length)) {
+  std::unique_ptr<char[]> output(new char[output_length]);
+  size_t written = simdutf::normalize_utf8_to_nfc(input, length, output.get());
+  // use output.get(), written bytes
+}
+```
+
+These functions assume that the input is valid UTF-8 (respectively valid UTF-16). They perform no validation and report no errors: validate untrusted input first, e.g. with `simdutf::validate_utf8`.
+
+### Streaming normalization
+
+Normalizing text in a streaming manner requires some care. The problem is that normalization forms are not closed under string concatenation. In other words:
+
+```
+normalize(x) + normalize(y) = normalize(x + y)
+```
+
+**does not** hold for all Unicode strings `x` and `y`.
+
+simdutf provides dedicated functions so that normalized string concatenation (and therefore streaming normalization) can be implemented in an efficient way.
+
+The relevant UTF-8 APIs are of the form:
+
+```c
+const char *find_last_stable_utf8_FORM(const char *input, size_t length);
+const char *find_first_stable_utf8_FORM(const char *input, size_t length);
+```
+
+These functions return pointers to the first and last "stable" code points in a string under a given normalization form. When two normalized strings are concatenated, it is guaranteed that normalization is preserved if the second string starts with a stable code point. Thus, using either function will find the boundary at which concatenation is okay.
+
+If a stable code point could not be found in either direction, these functions return a pointer to the end of the string. The corresponding UTF-16 functions (`find_last_stable_utf16le_FORM`, `find_last_stable_utf16be_FORM`, etc.) are available like normal.
 
 ## Base64
 

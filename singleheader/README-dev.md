@@ -13,6 +13,10 @@ We use the following macros:
 * `SIMDUTF_FEATURE_ASCII`
 * `SIMDUTF_FEATURE_LATIN1`
 * `SIMDUTF_FEATURE_DETECT_ENCODING`
+* `SIMDUTF_FEATURE_NFD`
+* `SIMDUTF_FEATURE_NFKD`
+* `SIMDUTF_FEATURE_NFC`
+* `SIMDUTF_FEATURE_NFKC`
 
 The macros have by default value 1. Only during amalgamation
 their values can be altered to 0.
