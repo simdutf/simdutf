@@ -666,8 +666,7 @@ simdutf_warn_unused result validate_utf32_with_errors(const char32_t *buf, size_
 
 ```
 
-The `validate_utf8_with_counts` function returns a `simdutf::utf8_result`
-instead of a `simdutf::result`:
+The `validate_utf8_with_counts` function returns a `simdutf::utf8_result` instead of a `simdutf::result`:
 
 ```cpp
 struct utf8_result {
@@ -681,11 +680,7 @@ struct utf8_result {
 };
 ```
 
-On success, `input_count` is the length of the whole input; otherwise it is the
-number of bytes preceding the first invalid byte. Because every byte is either a
-leading byte or a continuation byte, these counts give you the size of the
-corresponding UTF-16 output and the number of code points directly, without a
-second pass over the input:
+On success, `input_count` is the length of the whole input; otherwise it is the number of bytes preceding the first invalid byte. Because every byte is either a leading byte or a continuation byte, these counts give you the size of the corresponding UTF-16 output and the number of code points directly, without a second pass over the input:
 
 ```cpp
   std::string utf8 = "cœur 😀";
@@ -698,11 +693,7 @@ second pass over the input:
   }
 ```
 
-Given a potentially invalid UTF-16 input, you may want to make it correct, by using
-a replacement character whenever needed. We have fast functions for this purpose
-(`to_well_formed_utf16`, `to_well_formed_utf16le`, and `to_well_formed_utf16be`).
-They can either copy the string while fixing it, or they can be used to fix
-a string in-place.
+Given a potentially invalid UTF-16 input, you may want to make it correct, by using a replacement character whenever needed. We have fast functions for this purpose (`to_well_formed_utf16`, `to_well_formed_utf16le`, and `to_well_formed_utf16be`). They can either copy the string while fixing it, or they can be used to fix a string in-place.
 
 ```cpp
 
