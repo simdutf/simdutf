@@ -154,12 +154,10 @@ struct neon_counter {
   simdutf_really_inline void accumulate_chunk(const simd8<uint8_t> chunk) {
     const uint8x16_t raw = chunk;
     // Continuation byte 0b10xxxxxx == signed int8 <= -65.
-    contv = vaddq_s8(
-        contv, vreinterpretq_s8_u8(vcleq_s8(vreinterpretq_s8_u8(raw),
-                                            vdupq_n_s8(-65))));
+    contv = vaddq_s8(contv, vreinterpretq_s8_u8(vcleq_s8(
+                                vreinterpretq_s8_u8(raw), vdupq_n_s8(-65))));
     // Four-byte lead >= 0xF0, i.e. unsigned > 0xEF.
-    n4v = vaddq_s8(n4v,
-                   vreinterpretq_s8_u8(vcgtq_u8(raw, vdupq_n_u8(0xEF))));
+    n4v = vaddq_s8(n4v, vreinterpretq_s8_u8(vcgtq_u8(raw, vdupq_n_u8(0xEF))));
   }
 
   simdutf_really_inline void accumulate(const simd::simd8x64<uint8_t> &in) {

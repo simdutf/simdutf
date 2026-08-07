@@ -223,8 +223,7 @@ struct utf8_checker {
 
   // Returns true if the whole 64-byte block was ASCII (like the icelake
   // checker). Callers that only validate can ignore the return value.
-  simdutf_really_inline bool
-  check_next_input(const simd8x64<uint8_t> &input) {
+  simdutf_really_inline bool check_next_input(const simd8x64<uint8_t> &input) {
     if (simdutf_likely(is_ascii(input))) {
       this->error |= this->prev_incomplete;
       return true;
