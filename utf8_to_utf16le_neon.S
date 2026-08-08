@@ -150,7 +150,11 @@ outbuf0	.req	x13	// original output pointer
 	subs	inlen, inlen, #16		// at least 16 bytes left in buffer?
 	blo	.Lrunt
 
-	/* TODO: check for initial FOLLOW byte */
+	// ensure input begins with a LEAD byte
+	ldrb	w6, [inbuf]			// load first input byte
+	sub	w6, w6, #0x80
+	cmp	w6, #0xc0-0x80			// 0x80 <= inbuf[0] < 0xc0 (FOLLOW)?
+	blo	.Lfollow_at_start
 
 	/* main loop */
 .Lloop:	ldr	q0, [inbuf], #8			// load 12 bytes of input, advance to next chunk
@@ -306,9 +310,36 @@ outbuf0	.req	x13	// original output pointer
 
 	// We leave the main loop with some bytes of input remaining.
 	// Pass these to utf8_to_utf16le_ref for further processing.
-	// TODO: figure out how to process the tail in parallel.
-.Lrunt:	add	inlen, inlen, #16		// undo initial subtraction
-.Ltail:	sub	inbuf0, inbuf, inbuf0		// number of bytes processed so far
+	// We know that there at least 4 bytes of input left at this point.
+	add	inlen, inlen, #16		// undo initial subtraction
+
+.Ltail:
+	ldr	s0, [inbuf]			// load four bytes of input
+	movi	v1.8b, #2
+	ushr	v2.8b, v0.8b, #6		// inbuf >> 6
+	cmeq	v1.8b, v1.8b, v2.8b		// (inbuf >> 6) == 2, that is 0x80 <= inbuf < 0xc0 (LEAD)
+	fmov	w16, s1
+	mvn	w16, w16			// complemented
+	rev	w16, w16			// in reverse order
+	clz	w16, w16			// number of leading FOLLOW bytes times 8
+	add	inbuf, inbuf, x16, lsr #3	// advance past FOLLOW bytes
+	sub	inlen, inlen, x16, lsr #3
+	cmp	w16, #24
+	blo	1f
+
+	// three or more leading FOLLOW bytes, decode low surrogate
+	fmov	w15, s0				// buffer tail
+	sub	x16, x16, #24			// deduct 3 FOLLOW bytes worth of bits
+	sub	inbuf, inbuf, x16, lsr #3	// and undo advancement of what remains
+	add	inlen, inlen, x16, lsr #3
+
+	ubfx	w15, w15, #8, #4		// extract bits GHJK
+	ubfx	w10, w15, #16, #6		// extract bits FEDCBA
+	add	w15, w15, #0xdc00>>6		// apply tag bits
+	add	w10, w10, w15, lsl #6		// insert GHJK bits
+	strh	w10, [outbuf], #2		// and store in outbuf
+
+1:	sub	inbuf0, inbuf, inbuf0		// number of bytes processed so far
 	sub	outbuf0, outbuf, outbuf0	// number of bytes written out so far
 
 	stp	outlen, lr, [sp, #-16]!
@@ -321,6 +352,15 @@ outbuf0	.req	x13	// original output pointer
 	ldr	x1, [outlen]
 	add	x1, x1, x13, lsr #1		// nuber of halfwords written out in total
 	str	x1, [outlen]
+	ret
+
+	// too little input for one run of the kernel
+.Lrunt:	add	inlen, inlen, #16		// restore inlen
+	b	utf8_to_utf16le_ref		// use scalar kernel
+
+.Lfollow_at_start:
+	str	xzr, [outlen]			// 0 halfwords of output produced
+	mov	x0, #0				// 0 bytes of input consumed
 	ret
 
 	// ASCII-only fast path
