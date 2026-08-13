@@ -252,8 +252,6 @@ inline simdutf_warn_unused result rewind_and_validate_with_errors(
 }
 
 // credit: based on code from Google Fuchsia (Apache Licensed)
-// TODO: upon finalizing, figure out constexpr23 stuff?
-// TODO: also only-ascii optimization?
 template <class BytePtr>
 simdutf_constexpr23 simdutf_warn_unused utf8_result
 validate_utf8_with_counts(BytePtr data, size_t len) noexcept {
@@ -265,6 +263,21 @@ validate_utf8_with_counts(BytePtr data, size_t len) noexcept {
   size_t continuations = 0;
   size_t four_byte = 0;
   while (pos < len) {
+    // check of the next 16 bytes are ascii.
+    size_t next_ascii_pos = pos + 16;
+    if (next_ascii_pos <=
+        len) { // if it is safe to read 16 more bytes, check that they are ascii
+      uint64_t v1;
+      std::memcpy(&v1, data + pos, sizeof(uint64_t));
+      uint64_t v2;
+      std::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
+      uint64_t v{v1 | v2};
+      if ((v & 0x8080808080808080) == 0) {
+        pos = next_ascii_pos;
+        continue;
+      }
+    }
+
     size_t next_pos;
     unsigned char byte = data[pos];
 
