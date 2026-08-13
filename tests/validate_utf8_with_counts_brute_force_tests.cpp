@@ -75,8 +75,8 @@ static void test_corrupt(T &implementation, uint32_t seed,
        Plain comparison with scalar implementation for debugging:
        */
       simdutf::utf8_result res_scalar =
-          simdutf::scalar::utf8::validate_utf8_with_counts(
-              (const char *)UTF8.data(), UTF8.size());
+          simdutf::scalar::utf8::validate_with_counts((const char *)UTF8.data(),
+                                                      UTF8.size());
       debugCompareResults(res, res_scalar, UTF8.data(), UTF8.size());
 
       simdutf::result res_ref = implementation.validate_utf8_with_errors(

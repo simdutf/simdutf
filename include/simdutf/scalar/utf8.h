@@ -254,7 +254,7 @@ inline simdutf_warn_unused result rewind_and_validate_with_errors(
 // credit: based on code from Google Fuchsia (Apache Licensed)
 template <class BytePtr>
 simdutf_constexpr23 simdutf_warn_unused utf8_result
-validate_utf8_with_counts(BytePtr data, size_t len) noexcept {
+validate_with_counts(BytePtr data, size_t len) noexcept {
   static_assert(
       std::is_same<typename std::decay<decltype(*data)>::type, uint8_t>::value,
       "dereferencing the data pointer must result in a uint8_t");
@@ -374,8 +374,8 @@ validate_utf8_with_counts(BytePtr data, size_t len) noexcept {
 }
 
 simdutf_really_inline simdutf_warn_unused utf8_result
-validate_utf8_with_counts(const char *buf, size_t len) noexcept {
-  return validate_utf8_with_counts(reinterpret_cast<const uint8_t *>(buf), len);
+validate_with_counts(const char *buf, size_t len) noexcept {
+  return validate_with_counts(reinterpret_cast<const uint8_t *>(buf), len);
 }
 
 // Finds the previous leading byte starting backward from buf and validates from
@@ -392,7 +392,7 @@ inline simdutf_warn_unused utf8_result rewind_and_validate_with_counts(
   // If this is the start of the buffer, we don't need to rewind to check the
   // previous chunk.
   if (start == buf) {
-    return validate_utf8_with_counts(buf, len);
+    return validate_with_counts(buf, len);
   }
   // As this isn't the start of the buffer, the error might be in the previous
   // chunk. So we backtrack and also need to avoid double counting.
@@ -422,7 +422,7 @@ inline simdutf_warn_unused utf8_result rewind_and_validate_with_counts(
     }
   }
 
-  utf8_result res = validate_utf8_with_counts(buf, len + extra_len);
+  utf8_result res = validate_with_counts(buf, len + extra_len);
   res.input_count -= extra_len;
   res.continuation_count -= extra_continuations;
   res.four_byte_count -= extra_four_bytes;

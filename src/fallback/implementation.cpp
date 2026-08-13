@@ -433,7 +433,7 @@ implementation::count_utf8(const char *input, size_t length) const noexcept {
 }
 simdutf_warn_unused utf8_result implementation::validate_utf8_with_counts(
     const char *buf, size_t len) const noexcept {
-  return scalar::utf8::validate_utf8_with_counts(buf, len);
+  return scalar::utf8::validate_with_counts(buf, len);
 }
 
 #endif // SIMDUTF_FEATURE_UTF8

@@ -29,7 +29,7 @@ void compare_with_scalar(T &implementation, const uint8_t *data, size_t len) {
   const simdutf::utf8_result res =
       implementation.validate_utf8_with_counts((const char *)data, len);
   const simdutf::utf8_result ref =
-      simdutf::scalar::utf8::validate_utf8_with_counts((const char *)data, len);
+      simdutf::scalar::utf8::validate_with_counts((const char *)data, len);
 
   ASSERT_EQUAL(res.error, ref.error);
   ASSERT_EQUAL(res.input_count, ref.input_count);
