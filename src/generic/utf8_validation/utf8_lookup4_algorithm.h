@@ -184,7 +184,7 @@ simdutf_really_inline block_counts utf8_counters(const simd8<uint8_t> input) {
   // On x86 a movemask + popcount is the cheapest way to count matching lanes.
   uint64_t continuation_mask = ((simd8<int8_t>)input < mask_lt).to_bitmask();
   size_t continuations = count_ones(continuation_mask);
-  int64_t four_byte_mask = (input >= mask_gte).to_bitmask();
+  uint64_t four_byte_mask = (input >= mask_gte).to_bitmask();
   size_t four_byte = count_ones(four_byte_mask);
   return block_counts{continuations, four_byte};
 #endif
