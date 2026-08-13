@@ -334,7 +334,23 @@ validate_utf8_with_errors(
  */
 simdutf_warn_unused utf8_result validate_utf8_with_counts(const char *buf,
                                                           size_t len) noexcept;
-#endif // SIMDUTF_FEATURE_UTF8
+  #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_constexpr23 simdutf_warn_unused utf8_result
+validate_utf8_with_counts(
+    const detail::input_span_of_byte_like auto &input) noexcept {
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf8::validate_with_counts(
+        detail::constexpr_cast_ptr<uint8_t>(input.data()), input.size());
+  } else
+    #endif
+  {
+    return validate_utf8_with_counts(
+        reinterpret_cast<const char *>(input.data()), input.size());
+  }
+}
+  #endif // SIMDUTF_SPAN
+#endif   // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_ASCII
 /**
