@@ -153,7 +153,7 @@ implementation::convert_utf16be_to_utf8_with_replacement(
 #if SIMDUTF_FEATURE_UTF8
 simdutf_warn_unused utf8_result implementation::validate_utf8_with_counts(
     const char *buf, size_t len) const noexcept {
-  return scalar::utf8::validate_utf8_with_counts(buf, len);
+  return scalar::utf8::validate_with_counts(buf, len);
 }
 #endif // SIMDUTF_FEATURE_UTF8
 
