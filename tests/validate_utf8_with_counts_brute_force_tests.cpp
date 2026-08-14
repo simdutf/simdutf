@@ -83,9 +83,12 @@ static void test_corrupt(T &implementation, uint32_t seed,
           (const char *)UTF8.data(), UTF8.size());
       size_t expected_utf16_length = implementation.utf16_length_from_utf8(
           (const char *)UTF8.data(), res_ref.count);
+      size_t expected_utf32_length = implementation.utf32_length_from_utf8(
+          (const char *)UTF8.data(), res_ref.count);
       ASSERT_EQUAL(res.input_count, res_ref.count);
       ASSERT_EQUAL(res.error, res_ref.error);
       ASSERT_EQUAL(res.utf16_length(), expected_utf16_length);
+      ASSERT_EQUAL(res.utf32_length(), expected_utf32_length);
       UTF8[corrupt] = restore;
     }
   }
@@ -132,10 +135,13 @@ TEST(brute_force) {
           (const char *)UTF8.data(), UTF8.size());
       size_t expected_utf16_length = implementation.utf16_length_from_utf8(
           (const char *)UTF8.data(), res_ref.count);
+      size_t expected_utf32_length = implementation.utf32_length_from_utf8(
+          (const char *)UTF8.data(), res_ref.count);
       simdutf::utf8_result res = implementation.validate_utf8_with_counts(
           (const char *)UTF8.data(), UTF8.size());
       ASSERT_EQUAL(res.input_count, res_ref.count);
       ASSERT_EQUAL(res.utf16_length(), expected_utf16_length);
+      ASSERT_EQUAL(res.utf32_length(), expected_utf32_length);
       ASSERT_EQUAL(res.error, res_ref.error);
     }
   }

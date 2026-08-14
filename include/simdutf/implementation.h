@@ -323,8 +323,8 @@ validate_utf8_with_errors(
  * These two counts are enough to derive, without a second pass over the input,
  * both the number of code points (input_count - continuation_count) and the
  * number of UTF-16 code units (input_count - continuation_count +
- * four_byte_count) of the valid prefix. The utf16_length() helper returns the
- * latter.
+ * four_byte_count) of the valid prefix. The utf32_length() and utf16_length()
+ * helpers return them.
  *
  * @param buf the UTF-8 string to validate.
  * @param len the length of the string in bytes.

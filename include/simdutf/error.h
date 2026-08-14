@@ -144,6 +144,13 @@ struct utf8_result {
   utf16_length() const noexcept {
     return input_count - continuation_count + four_byte_count;
   }
+
+  // The number of code points in the valid prefix, which is also the number of
+  // UTF-32 code units.
+  simdutf_really_inline simdutf_constexpr23 size_t
+  utf32_length() const noexcept {
+    return input_count - continuation_count;
+  }
 };
 
 } // namespace simdutf

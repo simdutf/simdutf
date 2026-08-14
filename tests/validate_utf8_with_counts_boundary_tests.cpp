@@ -39,12 +39,14 @@ void compare_with_scalar(T &implementation, const uint8_t *data, size_t len) {
   ASSERT_EQUAL(res.four_byte_count, ref.four_byte_count);
 
   // Cross-check against the plain validation entry point and against the
-  // independent UTF-16 length routine.
+  // independent UTF-16 and UTF-32 length routines.
   const simdutf::result errors =
       implementation.validate_utf8_with_errors((const char *)data, len);
   ASSERT_EQUAL(res.error, errors.error);
   ASSERT_EQUAL(res.input_count, errors.count);
   ASSERT_EQUAL(res.utf16_length(), implementation.utf16_length_from_utf8(
+                                       (const char *)data, errors.count));
+  ASSERT_EQUAL(res.utf32_length(), implementation.utf32_length_from_utf8(
                                        (const char *)data, errors.count));
 }
 
@@ -172,6 +174,7 @@ TEST(counts_constexpr) {
   static_assert(r1.input_count == ascii.size());
   static_assert(r1.continuation_count == 0);
   static_assert(r1.four_byte_count == 0);
+  static_assert(r1.utf32_length() == ascii.size());
   static_assert(r1.utf16_length() == ascii.size());
 
   // A long ASCII run followed by 2-, 3- and 4-byte sequences.
@@ -182,6 +185,7 @@ TEST(counts_constexpr) {
   static_assert(r2.input_count == mixed.size());
   static_assert(r2.continuation_count == 6);
   static_assert(r2.four_byte_count == 1);
+  static_assert(r2.utf32_length() == mixed.size() - 6);
   static_assert(r2.utf16_length() == mixed.size() - 6 + 1);
 
   // An invalid byte past the first fast-path block.
@@ -190,8 +194,30 @@ TEST(counts_constexpr) {
   constexpr auto r3 = simdutf::validate_utf8_with_counts(bad);
   static_assert(r3.error == simdutf::error_code::HEADER_BITS);
   static_assert(r3.input_count == 20);
+  static_assert(r3.utf32_length() == 20);
   static_assert(r3.utf16_length() == 20);
 }
 #endif // SIMDUTF_CPLUSPLUS23 && SIMDUTF_SPAN
+// Hand-checked lengths, on a valid input and on a truncated one.
+TEST(counts_lengths_by_hand) {
+  // 'a' | U+00E9 | U+65E5 | U+1F600: 4 code points, 5 UTF-16 code units.
+  const uint8_t data[10] = {'a',  0xc3, 0xa9, 0xe6, 0x97,
+                            0xa5, 0xf0, 0x9f, 0x98, 0x80};
+  const simdutf::utf8_result res =
+      implementation.validate_utf8_with_counts((const char *)data, 10);
+  ASSERT_EQUAL(res.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(res.input_count, 10);
+  ASSERT_EQUAL(res.utf32_length(), 4);
+  ASSERT_EQUAL(res.utf16_length(), 5);
+
+  // Cutting the trailing emoji in half: the valid prefix has 3 code points and
+  // 3 UTF-16 code units. The partial sequence must not be counted.
+  const simdutf::utf8_result cut =
+      implementation.validate_utf8_with_counts((const char *)data, 8);
+  ASSERT_EQUAL(cut.error, simdutf::error_code::TOO_SHORT);
+  ASSERT_EQUAL(cut.input_count, 6);
+  ASSERT_EQUAL(cut.utf32_length(), 3);
+  ASSERT_EQUAL(cut.utf16_length(), 3);
+}
 
 TEST_MAIN

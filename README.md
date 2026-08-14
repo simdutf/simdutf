@@ -556,8 +556,8 @@ simdutf_warn_unused result validate_utf8_with_errors(const char *buf, size_t len
  * These two counts are enough to derive, without a second pass over the input,
  * both the number of code points (input_count - continuation_count) and the
  * number of UTF-16 code units (input_count - continuation_count +
- * four_byte_count) of the valid prefix. The utf16_length() helper returns the
- * latter.
+ * four_byte_count) of the valid prefix. The utf32_length() and utf16_length()
+ * helpers return them.
  *
  * @param buf the UTF-8 string to validate.
  * @param len the length of the string in bytes.
@@ -677,6 +677,9 @@ struct utf8_result {
 
   // input_count - continuation_count + four_byte_count
   size_t utf16_length() const noexcept;
+
+  // input_count - continuation_count (the number of code points)
+  size_t utf32_length() const noexcept;
 };
 ```
 
@@ -686,8 +689,8 @@ On success, `input_count` is the length of the whole input; otherwise it is the 
   std::string utf8 = "cœur 😀";
   simdutf::utf8_result res = simdutf::validate_utf8_with_counts(utf8.data(), utf8.size());
   if (res.error == simdutf::error_code::SUCCESS) {
-    size_t utf16_words = res.utf16_length();                        // UTF-16 code units
-    size_t code_points = res.input_count - res.continuation_count;  // Unicode code points
+    size_t utf16_words = res.utf16_length();  // UTF-16 code units
+    size_t code_points = res.utf32_length();  // Unicode code points (UTF-32 code units)
   } else {
     std::cerr << "invalid UTF-8 after " << res.input_count << " bytes" << std::endl;
   }
