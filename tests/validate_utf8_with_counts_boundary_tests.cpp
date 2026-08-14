@@ -14,6 +14,7 @@
 #include <tests/helpers/random_utf8.h>
 #include <tests/helpers/test.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <vector>
 
@@ -90,6 +91,47 @@ TEST(counts_error_at_every_offset) {
     }
     utf8[offset] = restore;
   }
+}
+
+// The deepest rewind: an error just past a block boundary, with a four-byte
+// sequence ending exactly on that boundary. The scalar code has to step back
+// four bytes to reach its leading byte, which is what pins the loop bound in
+// rewind_and_validate_with_counts.
+TEST(counts_rewind_full_depth) {
+  std::vector<uint8_t> utf8(128, 'x');
+  // U+1F600 occupies bytes 60..63, ending exactly on the 64-byte boundary.
+  const uint8_t emoji[4] = {0xf0, 0x9f, 0x98, 0x80};
+  std::copy(emoji, emoji + 4, utf8.begin() + 60);
+  utf8[64] = 0x80; // a stray continuation byte, right after the boundary
+
+  const simdutf::utf8_result res = implementation.validate_utf8_with_counts(
+      (const char *)utf8.data(), utf8.size());
+  ASSERT_EQUAL(res.error, simdutf::error_code::TOO_LONG);
+  ASSERT_EQUAL(res.input_count, 64);
+  ASSERT_EQUAL(res.continuation_count, 3);
+  ASSERT_EQUAL(res.four_byte_count, 1);
+  ASSERT_EQUAL(res.utf16_length(), 62); // 60 ASCII plus a surrogate pair
+  compare_with_scalar(implementation, utf8.data(), utf8.size());
+}
+
+// The error lies before the boundary, inside the region the scalar code rewinds
+// over: the counts returned for the rewound bytes then underflow, and only the
+// caller's additions bring them back.
+TEST(counts_rewind_error_before_boundary) {
+  std::vector<uint8_t> utf8(128, 'x');
+  // A four-byte sequence cut short by the boundary: its leading byte is at 61
+  // and byte 64 is not a continuation byte, so the error sits at 61.
+  const uint8_t truncated[3] = {0xf0, 0x9f, 0x98};
+  std::copy(truncated, truncated + 3, utf8.begin() + 61);
+
+  const simdutf::utf8_result res = implementation.validate_utf8_with_counts(
+      (const char *)utf8.data(), utf8.size());
+  ASSERT_EQUAL(res.error, simdutf::error_code::TOO_SHORT);
+  ASSERT_EQUAL(res.input_count, 61);
+  ASSERT_EQUAL(res.continuation_count, 0);
+  ASSERT_EQUAL(res.four_byte_count, 0);
+  ASSERT_EQUAL(res.utf16_length(), 61);
+  compare_with_scalar(implementation, utf8.data(), utf8.size());
 }
 
 // Every truncation: exercises the tail block and incomplete sequences at EOF.
