@@ -15,6 +15,7 @@
 #include <tests/helpers/test.h>
 
 #include <cstdint>
+#include <string_view>
 #include <vector>
 
 namespace {
@@ -112,5 +113,43 @@ TEST(counts_valid_all_lengths) {
     compare_with_scalar(implementation, utf8.data(), utf8.size());
   }
 }
+
+// simdutf::validate_utf8_with_counts dispatches to the scalar reference during
+// constant evaluation. Inputs of 16 bytes or more reach the block-wise ASCII
+// fast path there, which uses std::memcpy and is therefore restricted to run
+// time; without that restriction these assertions fail to compile.
+#if SIMDUTF_CPLUSPLUS23 && SIMDUTF_SPAN
+TEST(counts_constexpr) {
+  using namespace std::string_view_literals;
+
+  // 25 ASCII bytes, i.e. more than one 16-byte fast-path block.
+  constexpr auto ascii = "the quick brown fox jumps"sv;
+  static_assert(ascii.size() >= 16);
+  constexpr auto r1 = simdutf::validate_utf8_with_counts(ascii);
+  static_assert(r1.error == simdutf::error_code::SUCCESS);
+  static_assert(r1.input_count == ascii.size());
+  static_assert(r1.continuation_count == 0);
+  static_assert(r1.four_byte_count == 0);
+  static_assert(r1.utf16_length() == ascii.size());
+
+  // A long ASCII run followed by 2-, 3- and 4-byte sequences.
+  constexpr auto mixed =
+      "0123456789abcdefgh \xc3\xa9 \xe6\x97\xa5 \xf0\x9f\x98\x80"sv;
+  constexpr auto r2 = simdutf::validate_utf8_with_counts(mixed);
+  static_assert(r2.error == simdutf::error_code::SUCCESS);
+  static_assert(r2.input_count == mixed.size());
+  static_assert(r2.continuation_count == 6);
+  static_assert(r2.four_byte_count == 1);
+  static_assert(r2.utf16_length() == mixed.size() - 6 + 1);
+
+  // An invalid byte past the first fast-path block.
+  constexpr auto bad = "0123456789abcdefghij\xff"
+                       "z"sv;
+  constexpr auto r3 = simdutf::validate_utf8_with_counts(bad);
+  static_assert(r3.error == simdutf::error_code::HEADER_BITS);
+  static_assert(r3.input_count == 20);
+  static_assert(r3.utf16_length() == 20);
+}
+#endif // SIMDUTF_CPLUSPLUS23 && SIMDUTF_SPAN
 
 TEST_MAIN
