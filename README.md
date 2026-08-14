@@ -16,6 +16,7 @@
   - [Packages](#packages)
   - [Example](#example)
   - [API](#api)
+  - [Cost of the safe conversion functions](#cost-of-the-safe-conversion-functions)
   - [Base64](#base64)
   - [Find](#find)
   - [C++20 and std::span usage in simdutf](#c20-and-stdspan-usage-in-simdutf)
@@ -1088,6 +1089,12 @@ simdutf_warn_unused size_t convert_latin1_to_utf8(const char * input, size_t len
  *
  * This function is suitable to work with inputs from untrusted sources.
  *
+ * Using convert_latin1_to_utf8_safe instead of convert_latin1_to_utf8 comes
+ * with a significant penalty in some cases, being up to four times slower,
+ * especially on short inputs. If you have allocated the output buffer so that
+ * it contains utf8_length_from_latin1(input, length) bytes, then prefer
+ * convert_latin1_to_utf8.
+ *
  * @param input         the Latin1 string to convert
  * @param length        the length of the string in bytes
  * @param utf8_output  	the pointer to buffer that can hold conversion result
@@ -1240,6 +1247,11 @@ simdutf_warn_unused size_t convert_utf16_to_utf8(const char16_t *input,
  *
  * This function is not BOM-aware.
  *
+ * Using convert_utf16_to_utf8_safe instead of convert_utf16_to_utf8 comes with
+ * a significant penalty in some cases, being up to three times slower,
+ * especially on short inputs. If you have allocated the output buffer so that
+ * it contains utf8_length_from_utf16(input, length) bytes, then prefer
+ * convert_utf16_to_utf8.
  *
  * @param input         the UTF-16 string to convert
  * @param length        the length of the string in 16-bit code units (char16_t)
@@ -1891,6 +1903,13 @@ void change_endianness_utf16(const char16_t * input, size_t length, char16_t * o
 
 ```
 
+## Cost of the safe conversion functions
+
+The `_safe` conversion variants (`convert_latin1_to_utf8_safe` and `convert_utf16_to_utf8_safe`) never write past the output capacity you give them. Because these functions cannot assume that there is enough output buffer space, they cannot proceed in the most efficient manner. For example, they may be forced to split the work into chunks. If the inputs span megabytes, this overhead is negligible. Unfortunately, for small inputs, it can be significant. For example, the `convert_utf16_to_utf8_safe` function is up to 3 times slower than `convert_utf16_to_utf8` on ASCII inputs of a few hundred code units in some tests. For optimal performance, you should allocate at least as much memory as the `utf8_length_from_latin1` or `utf8_length_from_utf16` functions indicate and directly call the `convert_latin1_to_utf8` and `convert_utf16_to_utf8` functions, especially if you expect to have short inputs.
+
+The base64 decoding functions have their own safe variant, `base64_to_binary_safe`, which takes the output capacity as an in-out parameter. It does not need to split the work into chunks: it determines in a single step how much of the input fits in the output buffer, decodes that part with the fast function, and leaves only the remainder to a scalar decoder. Its overhead is therefore normally negligible, and we measure it to be as fast as `base64_to_binary` on clean base64 inputs at all sizes. The exception is base64 containing ASCII whitespace, because whitespace breaks the relationship between the input length and the output length: a short input of a few dozen characters with 5% whitespace can be nearly 3 times slower, although the difference largely disappears for inputs spanning a kilobyte or more. The `atomic_base64_to_binary_safe` function is more expensive: it decodes into a small temporary buffer and then copies the result to the output with relaxed atomic writes, so that other threads never observe partially written data. Every output byte is thus written twice, and this cost does not go away with larger inputs: we measure it to be 1.5 to 1.8 times slower than `base64_to_binary` on inputs of a kilobyte or more, including inputs spanning megabytes. You should only use it when the output buffer might be accessed concurrently.
+
+
 ## Base64
 
 The WHATWG (Web Hypertext Application Technology Working Group) defines a "forgiving" base64 decoding algorithm in its Infra Standard, which is used in web contexts like the JavaScript atob() function. This algorithm is more lenient than strict RFC 4648 base64, primarily to handle common web data variations. It ignores all ASCII whitespace (spaces, tabs, newlines, etc.), allows omitting padding characters (=), and decodes inputs as long as they meet certain length and character validity rules. However, it still rejects inputs that could lead to ambiguous or incomplete byte formation.
@@ -2458,6 +2477,10 @@ simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t lengt
  * as well as a stop_before_partial approach, as per the following proposal:
  *
  * https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
+ *
+ * The base64_to_binary_safe function has negligible overhead compared with
+ * base64_to_binary in the absence of ignorable characters; however, on short
+ * inputs containing ignorable characters, it can be up to three times slower.
  *
  * @param input         the base64 string to process, in ASCII stored as 8-bit
  * or 16-bit units
