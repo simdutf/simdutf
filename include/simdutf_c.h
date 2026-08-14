@@ -55,6 +55,13 @@ typedef struct simdutf_full_result {
   size_t output_count; /* number of output bytes written */
 } simdutf_full_result;
 
+typedef struct simdutf_utf8_result {
+  simdutf_error_code error;
+  size_t input_count;        /* number of bytes in the valid prefix */
+  size_t continuation_count; /* continuation bytes within the valid prefix */
+  size_t four_byte_count;    /* four-byte sequences within the valid prefix */
+} simdutf_utf8_result;
+
 typedef enum simdutf_encoding_type {
   SIMDUTF_ENCODING_UNSPECIFIED = 0,
   SIMDUTF_ENCODING_UTF8 = 1,
@@ -69,6 +76,18 @@ bool simdutf_validate_utf8(const char *buf, size_t len);
 
 /* Validate UTF-8 with detailed result */
 simdutf_result simdutf_validate_utf8_with_errors(const char *buf, size_t len);
+
+/* Validate UTF-8, stopping on error, while counting the continuation bytes and
+   the four-byte sequences of the valid prefix. These two counts give both the
+   number of code points (input_count - continuation_count) and the number of
+   UTF-16 code units (input_count - continuation_count + four_byte_count) of
+   the valid prefix, without a second pass over the input. */
+simdutf_utf8_result simdutf_validate_utf8_with_counts(const char *buf,
+                                                      size_t len);
+
+/* Number of UTF-16 code units the valid prefix described by r transcodes to,
+   i.e. r.input_count - r.continuation_count + r.four_byte_count. */
+size_t simdutf_utf8_result_utf16_length(simdutf_utf8_result r);
 
 /* Encoding detection */
 simdutf_encoding_type simdutf_autodetect_encoding(const char *input,
