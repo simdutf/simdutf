@@ -858,6 +858,12 @@ convert_latin1_to_utf8(
  *
  * We write as many characters as possible.
  *
+ * Using convert_latin1_to_utf8_safe instead of convert_latin1_to_utf8 comes
+ * with a significant penalty in some cases, being up to four times slower,
+ * especially on short inputs. If you have allocated the output buffer so that
+ * it contains utf8_length_from_latin1(input, length) bytes, then prefer
+ * convert_latin1_to_utf8.
+ *
  * @param input         the Latin1 string to convert
  * @param length        the length of the string in bytes
  * @param utf8_output  	the pointer to buffer that can hold conversion result
@@ -1826,6 +1832,11 @@ convert_utf16_to_utf8(
  *
  * This function is not BOM-aware.
  *
+ * Using convert_utf16_to_utf8_safe instead of convert_utf16_to_utf8 comes with
+ * a significant penalty in some cases, being up to three times slower,
+ * especially on short inputs. If you have allocated the output buffer so that
+ * it contains utf8_length_from_utf16(input, length) bytes, then prefer
+ * convert_utf16_to_utf8.
  *
  * @param input         the UTF-16 string to convert
  * @param length        the length of the string in 16-bit code units (char16_t)
@@ -4952,6 +4963,10 @@ base64_valid_or_padding(char16_t input,
  * as well as a stop_before_partial approach, as per the following proposal:
  *
  * https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
+ *
+ * The base64_to_binary_safe function has negligible overhead compared with
+ * base64_to_binary in the absence of ignorable characters; however, on short
+ * inputs containing ignorable characters, it can be up to three times slower.
  *
  * @param input         the base64 string to process, in ASCII stored as 8-bit
  * or 16-bit units
