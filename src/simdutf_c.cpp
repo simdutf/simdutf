@@ -321,6 +321,24 @@ size_t simdutf_convert_utf16be_to_utf8(const char16_t *input, size_t length,
   return simdutf::convert_utf16be_to_utf8(input, length, output);
 }
 
+size_t simdutf_convert_utf16_to_utf8_with_replacement(const char16_t *input,
+                                                      size_t length,
+                                                      char *output) {
+  return simdutf::convert_utf16_to_utf8_with_replacement(input, length, output);
+}
+size_t simdutf_convert_utf16le_to_utf8_with_replacement(const char16_t *input,
+                                                        size_t length,
+                                                        char *output) {
+  return simdutf::convert_utf16le_to_utf8_with_replacement(input, length,
+                                                           output);
+}
+size_t simdutf_convert_utf16be_to_utf8_with_replacement(const char16_t *input,
+                                                        size_t length,
+                                                        char *output) {
+  return simdutf::convert_utf16be_to_utf8_with_replacement(input, length,
+                                                           output);
+}
+
 size_t simdutf_convert_valid_utf16_to_utf8(const char16_t *input, size_t length,
                                            char *output) {
   return simdutf::convert_valid_utf16_to_utf8(input, length, output);
