@@ -1,4 +1,5 @@
 #include <tests/helpers/test.h>
+#include <tests/helpers/utf16.h>
 #include <cstring>
 #include "simdutf_c.h"
 
@@ -276,19 +277,16 @@ TEST(convert_utf16_c) {
 // U+FFFD encoded in UTF-8.
 static const char fffd[3] = {char(0xEF), char(0xBF), char(0xBD)};
 
-static char16_t byteswap16(char16_t value) {
-  return char16_t(uint16_t((uint16_t(value) >> 8) | (uint16_t(value) << 8)));
-}
-
 TEST(convert_utf16le_to_utf8_with_replacement_c) {
   // 'A', unpaired high surrogate, 'B', unpaired low surrogate, valid pair
-  // (U+1F600).
-  const char16_t input[] = {u'A',
-                            char16_t(0xD800),
-                            u'B',
-                            char16_t(0xDC00),
-                            char16_t(0xD83D),
-                            char16_t(0xDE00)};
+  // (U+1F600). to_utf16le stores the code units little-endian whatever the
+  // host byte order is.
+  const char16_t input[] = {to_utf16le(u'A'),
+                            to_utf16le(char16_t(0xD800)),
+                            to_utf16le(u'B'),
+                            to_utf16le(char16_t(0xDC00)),
+                            to_utf16le(char16_t(0xD83D)),
+                            to_utf16le(char16_t(0xDE00))};
   const size_t length = sizeof(input) / sizeof(input[0]);
 
   char out[32] = {0};
@@ -313,17 +311,13 @@ TEST(convert_utf16le_to_utf8_with_replacement_c) {
 }
 
 TEST(convert_utf16be_to_utf8_with_replacement_c) {
-  const char16_t native[] = {u'A',
-                             char16_t(0xD800),
-                             u'B',
-                             char16_t(0xDC00),
-                             char16_t(0xD83D),
-                             char16_t(0xDE00)};
-  constexpr size_t length = sizeof(native) / sizeof(native[0]);
-  char16_t input[length] = {0};
-  for (size_t i = 0; i < length; i++) {
-    input[i] = byteswap16(native[i]);
-  }
+  const char16_t input[] = {to_utf16be(u'A'),
+                            to_utf16be(char16_t(0xD800)),
+                            to_utf16be(u'B'),
+                            to_utf16be(char16_t(0xDC00)),
+                            to_utf16be(char16_t(0xD83D)),
+                            to_utf16be(char16_t(0xDE00))};
+  const size_t length = sizeof(input) / sizeof(input[0]);
 
   char out[32] = {0};
   size_t n =
