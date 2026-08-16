@@ -13,35 +13,36 @@ var index =
       [ "Example", "index.html#autotoc_md11", null ]
     ] ],
     [ "API", "index.html#autotoc_md12", null ],
-    [ "Base64", "index.html#autotoc_md13", [
-      [ "Compile-time base64 decoding (C++23)", "index.html#autotoc_md14", null ]
+    [ "Cost of the safe conversion functions", "index.html#autotoc_md13", null ],
+    [ "Base64", "index.html#autotoc_md14", [
+      [ "Compile-time base64 decoding (C++23)", "index.html#autotoc_md15", null ]
     ] ],
-    [ "Find", "index.html#autotoc_md15", null ],
-    [ "C++20 and std::span usage in simdutf", "index.html#autotoc_md16", [
-      [ "Example", "index.html#autotoc_md17", null ],
-      [ "Note", "index.html#autotoc_md18", null ]
+    [ "Find", "index.html#autotoc_md16", null ],
+    [ "C++20 and std::span usage in simdutf", "index.html#autotoc_md17", [
+      [ "Example", "index.html#autotoc_md18", null ],
+      [ "Note", "index.html#autotoc_md19", null ]
     ] ],
-    [ "C++23 and constexpr support", "index.html#autotoc_md19", [
-      [ "Note - the constexpr support is experimental!", "index.html#autotoc_md20", null ]
+    [ "C++23 and constexpr support", "index.html#autotoc_md20", [
+      [ "Note - the constexpr support is experimental!", "index.html#autotoc_md21", null ]
     ] ],
-    [ "Command-line tools", "index.html#autotoc_md21", [
-      [ "sutf: Text encoding converter", "index.html#autotoc_md22", null ],
-      [ "fastbase64: Base64 encoder/decoder", "index.html#autotoc_md23", [
-        [ "fastbase64: BSD-like Base64 encoder/decoder", "index.html#autotoc_md24", null ],
-        [ "fastbase64.coreutils: GNU coreutils-compatible Base64 encoder/decoder", "index.html#autotoc_md25", null ],
-        [ "Performance", "index.html#autotoc_md26", null ]
+    [ "Command-line tools", "index.html#autotoc_md22", [
+      [ "sutf: Text encoding converter", "index.html#autotoc_md23", null ],
+      [ "fastbase64: Base64 encoder/decoder", "index.html#autotoc_md24", [
+        [ "fastbase64: BSD-like Base64 encoder/decoder", "index.html#autotoc_md25", null ],
+        [ "fastbase64.coreutils: GNU coreutils-compatible Base64 encoder/decoder", "index.html#autotoc_md26", null ],
+        [ "Performance", "index.html#autotoc_md27", null ]
       ] ]
     ] ],
-    [ "Manual implementation selection", "index.html#autotoc_md27", null ],
-    [ "Benchmarks", "index.html#autotoc_md28", [
-      [ "Base64 benchmarks", "index.html#autotoc_md29", null ],
-      [ "Short input benchmarks", "index.html#autotoc_md30", null ]
+    [ "Manual implementation selection", "index.html#autotoc_md28", null ],
+    [ "Benchmarks", "index.html#autotoc_md29", [
+      [ "Base64 benchmarks", "index.html#autotoc_md30", null ],
+      [ "Short input benchmarks", "index.html#autotoc_md31", null ]
     ] ],
-    [ "Compiling without the C++ standard library", "index.html#autotoc_md31", null ],
-    [ "C API (C11 or better)", "index.html#autotoc_md32", null ],
-    [ "SIMDUTF_USE_STATIC_INITIALIZATION", "index.html#autotoc_md33", null ],
-    [ "Thread safety", "index.html#autotoc_md34", null ],
-    [ "References", "index.html#autotoc_md35", null ],
-    [ "Citing this work", "index.html#autotoc_md36", null ],
-    [ "License", "index.html#autotoc_md37", null ]
+    [ "Compiling without the C++ standard library", "index.html#autotoc_md32", null ],
+    [ "C API (C11 or better)", "index.html#autotoc_md33", null ],
+    [ "SIMDUTF_USE_STATIC_INITIALIZATION", "index.html#autotoc_md34", null ],
+    [ "Thread safety", "index.html#autotoc_md35", null ],
+    [ "References", "index.html#autotoc_md36", null ],
+    [ "Citing this work", "index.html#autotoc_md37", null ],
+    [ "License", "index.html#autotoc_md38", null ]
 ];

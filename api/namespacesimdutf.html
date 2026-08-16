@@ -666,7 +666,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04100">4100</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04111">4111</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -730,7 +730,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04125">4125</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04136">4136</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -865,7 +865,7 @@ Variables</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the character is an ignorable base64 character, false otherwise. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04862">4862</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04873">4873</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -903,7 +903,7 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04866">4866</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04877">4877</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -951,7 +951,7 @@ Variables</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>number of base64 bytes </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04446">4446</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04457">4457</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -1006,7 +1006,7 @@ Variables</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>number of base64 bytes </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04462">4462</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04473">4473</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -1389,6 +1389,7 @@ Variables</h2></td></tr>
 <p>The INVALID_BASE64_CHARACTER cases are considered fatal and you are expected to discard the output unless the parameter decode_up_to_bad_char is set to true. In that case, the function will decode up to the first invalid character. Extra padding characters ('=') are considered invalid characters.</p>
 <p>Advanced users may want to tailor how the last chunk is handled. By default, we use a loose (forgiving) approach but we also support a strict approach as well as a stop_before_partial approach, as per the following proposal:</p>
 <p><a href="https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64">https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64</a></p>
+<p>The base64_to_binary_safe function has negligible overhead compared with base64_to_binary in the absence of ignorable characters; however, on short inputs containing ignorable characters, it can be up to three times slower.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the base64 string to process, in ASCII stored as 8-bit or 16-bit units </td></tr>
@@ -1520,7 +1521,7 @@ template&lt;typename chartype &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the character is a base64 character, false otherwise. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04883">4883</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04894">4894</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -1558,7 +1559,7 @@ template&lt;typename chartype &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04887">4887</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04898">4898</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -1607,7 +1608,7 @@ template&lt;typename chartype &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the character is a base64 character, false otherwise. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04901">4901</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04912">4912</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -1645,7 +1646,7 @@ template&lt;typename chartype &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04906">4906</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04917">4917</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -2252,6 +2253,7 @@ options, line_length) bytes long) </td></tr>
 <p>Convert Latin1 string into UTF-8 string with output limit. </p>
 <p>This function is suitable to work with inputs from untrusted sources.</p>
 <p>We write as many characters as possible.</p>
+<p>Using convert_latin1_to_utf8_safe instead of convert_latin1_to_utf8 comes with a significant penalty in some cases, being up to four times slower, especially on short inputs. If you have allocated the output buffer so that it contains utf8_length_from_latin1(input, length) bytes, then prefer convert_latin1_to_utf8.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the Latin1 string to convert </td></tr>
@@ -2589,6 +2591,7 @@ options, line_length) bytes long) </td></tr>
 <p>We write as many characters as possible into the output buffer,</p>
 <p>During the conversion also validation of the input string is done. This function is suitable to work with inputs from untrusted sources.</p>
 <p>This function is not BOM-aware.</p>
+<p>Using convert_utf16_to_utf8_safe instead of convert_utf16_to_utf8 comes with a significant penalty in some cases, being up to three times slower, especially on short inputs. If you have allocated the output buffer so that it contains utf8_length_from_utf16(input, length) bytes, then prefer convert_utf16_to_utf8.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-16 string to convert </td></tr>
@@ -5976,7 +5979,7 @@ options, line_length) bytes long) </td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>a pointer to the first occurrence of the character in the string, or a pointer to the end of the string if the character is not found. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04158">4158</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04169">4169</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -6020,7 +6023,7 @@ options, line_length) bytes long) </td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04172">4172</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04183">4183</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -6076,7 +6079,7 @@ options, line_length) bytes long) </td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04136">4136</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04147">4147</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -6113,7 +6116,7 @@ options, line_length) bytes long) </td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the length of the string in Latin1 code units (char) required to encode the UTF-16 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l00966">966</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l00972">972</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -6152,7 +6155,7 @@ options, line_length) bytes long) </td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-32 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03367">3367</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03378">3378</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -6416,7 +6419,7 @@ template&lt;typename chartype &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04194">4194</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04205">4205</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -6444,7 +6447,7 @@ template&lt;typename chartype &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04216">4216</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04227">4227</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -6800,7 +6803,7 @@ template&lt;typename chartype &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the length of the string in 2-byte code units (char16_t) required to encode the Latin1 string as UTF-16 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l00979">979</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l00985">985</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -6932,7 +6935,7 @@ template&lt;typename chartype &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the length of the string in 4-byte code units (char32_t) required to encode the Latin1 string as UTF-32 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03380">3380</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03391">3391</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -8253,7 +8256,7 @@ template&lt;typename chartype &gt; </div>
 <b>Initial value:</b><div class="fragment"><div class="line">=</div>
 <div class="line">    2</div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04098">4098</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04109">4109</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>

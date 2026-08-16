@@ -1,9 +1,9 @@
 var searchData=
 [
-  ['base64_0',['Base64',['../index.html#autotoc_md13',1,'']]],
-  ['base64_20benchmarks_1',['Base64 benchmarks',['../index.html#autotoc_md29',1,'']]],
-  ['base64_20decoding_20c_2023_2',['Compile-time base64 decoding (C++23)',['../index.html#autotoc_md14',1,'']]],
-  ['base64_20encoder_20decoder_3',['base64 encoder decoder',['../index.html#autotoc_md25',1,'fastbase64.coreutils: GNU coreutils-compatible Base64 encoder/decoder'],['../index.html#autotoc_md23',1,'fastbase64: Base64 encoder/decoder'],['../index.html#autotoc_md24',1,'fastbase64: BSD-like Base64 encoder/decoder']]],
+  ['base64_0',['Base64',['../index.html#autotoc_md14',1,'']]],
+  ['base64_20benchmarks_1',['Base64 benchmarks',['../index.html#autotoc_md30',1,'']]],
+  ['base64_20decoding_20c_2023_2',['Compile-time base64 decoding (C++23)',['../index.html#autotoc_md15',1,'']]],
+  ['base64_20encoder_20decoder_3',['base64 encoder decoder',['../index.html#autotoc_md26',1,'fastbase64.coreutils: GNU coreutils-compatible Base64 encoder/decoder'],['../index.html#autotoc_md24',1,'fastbase64: Base64 encoder/decoder'],['../index.html#autotoc_md25',1,'fastbase64: BSD-like Base64 encoder/decoder']]],
   ['base64_5fignorable_4',['base64_ignorable',['../namespacesimdutf.html#a0bd2c80917b6adbf5b692c148711a035',1,'simdutf']]],
   ['base64_5flength_5ffrom_5fbinary_5',['base64_length_from_binary',['../namespacesimdutf.html#a0840933d2a92a1f74fc6626af5ec76ef',1,'simdutf::base64_length_from_binary()'],['../classsimdutf_1_1implementation.html#ad29569bd4700b3e7bedce1d0c5eec236',1,'simdutf::implementation::base64_length_from_binary()']]],
   ['base64_5flength_5ffrom_5fbinary_5fwith_5flines_6',['base64_length_from_binary_with_lines',['../namespacesimdutf.html#acf55e4fb906e835413896c4ef2883cbd',1,'simdutf']]],
@@ -12,11 +12,11 @@ var searchData=
   ['base64_5fto_5fbinary_5fsafe_9',['base64_to_binary_safe',['../namespacesimdutf.html#a138332a1070d8013c80cd627e66c660d',1,'simdutf']]],
   ['base64_5fvalid_10',['base64_valid',['../namespacesimdutf.html#ad67f6d47426c06190de8fef5cec7c0bf',1,'simdutf']]],
   ['base64_5fvalid_5for_5fpadding_11',['base64_valid_or_padding',['../namespacesimdutf.html#a450a75db4951cc55cd03372f48a70c60',1,'simdutf']]],
-  ['benchmarks_12',['benchmarks',['../index.html#autotoc_md29',1,'Base64 benchmarks'],['../index.html#autotoc_md28',1,'Benchmarks'],['../index.html#autotoc_md30',1,'Short input benchmarks']]],
-  ['better_13',['C API (C11 or better)',['../index.html#autotoc_md32',1,'']]],
+  ['benchmarks_12',['benchmarks',['../index.html#autotoc_md30',1,'Base64 benchmarks'],['../index.html#autotoc_md29',1,'Benchmarks'],['../index.html#autotoc_md31',1,'Short input benchmarks']]],
+  ['better_13',['C API (C11 or better)',['../index.html#autotoc_md33',1,'']]],
   ['billions_20of_20characters_20per_20second_14',['simdutf: Text processing at billions of characters per second',['../index.html',1,'']]],
   ['binary_5flength_5ffrom_5fbase64_15',['binary_length_from_base64',['../namespacesimdutf.html#af1625f9021e2b14df297334d29d92b1c',1,'simdutf::binary_length_from_base64(const char16_t *input, size_t length) noexcept'],['../namespacesimdutf.html#ac42465da44ee0a5c60140c7e1edd5e8c',1,'simdutf::binary_length_from_base64(const char *input, size_t length) noexcept'],['../classsimdutf_1_1implementation.html#a0dc53d7f02a5aecbef1578be1e035841',1,'simdutf::implementation::binary_length_from_base64(const char16_t *input, size_t length) const noexcept'],['../classsimdutf_1_1implementation.html#a01295db8b3a29527b3e9975838b66aa8',1,'simdutf::implementation::binary_length_from_base64(const char *input, size_t length) const noexcept']]],
   ['binary_5fto_5fbase64_16',['binary_to_base64',['../namespacesimdutf.html#a1d21cd751b76c2d65f1d6b1c359533dd',1,'simdutf::binary_to_base64()'],['../classsimdutf_1_1implementation.html#a5823f6a86315f4404a4f437977abf9df',1,'simdutf::implementation::binary_to_base64()']]],
   ['binary_5fto_5fbase64_5fwith_5flines_17',['binary_to_base64_with_lines',['../namespacesimdutf.html#acbbaee6f387c682fd6ebb6802102dfdf',1,'simdutf::binary_to_base64_with_lines()'],['../classsimdutf_1_1implementation.html#a45298a7e235830b11082489c9e57ec25',1,'simdutf::implementation::binary_to_base64_with_lines()']]],
-  ['bsd_20like_20base64_20encoder_20decoder_18',['fastbase64: BSD-like Base64 encoder/decoder',['../index.html#autotoc_md24',1,'']]]
+  ['bsd_20like_20base64_20encoder_20decoder_18',['fastbase64: BSD-like Base64 encoder/decoder',['../index.html#autotoc_md25',1,'']]]
 ];

@@ -2,7 +2,7 @@ var searchData=
 [
   ['usage_0',['Real-World Usage',['../index.html#autotoc_md1',1,'']]],
   ['usage_20cmake_1',['Usage (CMake)',['../index.html#autotoc_md6',1,'']]],
-  ['usage_20in_20simdutf_2',['C++20 and std::span usage in simdutf',['../index.html#autotoc_md16',1,'']]],
+  ['usage_20in_20simdutf_2',['C++20 and std::span usage in simdutf',['../index.html#autotoc_md17',1,'']]],
   ['usage_20usage_3',['Usage (Usage)',['../index.html#autotoc_md4',1,'']]],
   ['utf16_5flength_5ffrom_5flatin1_4',['utf16_length_from_latin1',['../classsimdutf_1_1implementation.html#af5253692b2a0e1f15881b1fa393a2f42',1,'simdutf::implementation::utf16_length_from_latin1()'],['../namespacesimdutf.html#a44f2efe96f17999d59a444c62e451511',1,'simdutf::utf16_length_from_latin1()']]],
   ['utf16_5flength_5ffrom_5futf32_5',['utf16_length_from_utf32',['../classsimdutf_1_1implementation.html#a3761299ce52ee8b2b480fcadc50b45a5',1,'simdutf::implementation::utf16_length_from_utf32()'],['../namespacesimdutf.html#afe94e2686b242e2b818e8f33a8f3a9cb',1,'simdutf::utf16_length_from_utf32()']]],
