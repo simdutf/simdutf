@@ -70,8 +70,8 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_latin1(
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 template <simdutf_ByteFlip bflip>
-simdutf_really_inline static result
-rvv_utf16_to_utf8_with_errors(const char16_t *src, size_t len, char *dst) {
+simdutf_really_inline static full_result
+rvv_utf16_to_utf8_with_details(const char16_t *src, size_t len, char *dst) {
   size_t n = len;
   const char16_t *srcBeg = src;
   const char *dstBeg = dst;
@@ -187,13 +187,16 @@ rvv_utf16_to_utf8_with_errors(const char16_t *src, size_t len, char *dst) {
         } else {
           // must be a surrogate pair
           if (n <= 1)
-            return result(error_code::SURROGATE, src - srcBeg);
+            return full_result(error_code::SURROGATE, size_t(src - srcBeg),
+                               size_t(dst - dstBeg));
           uint16_t diff = word - 0xD800;
           if (diff > 0x3FF)
-            return result(error_code::SURROGATE, src - srcBeg);
+            return full_result(error_code::SURROGATE, size_t(src - srcBeg),
+                               size_t(dst - dstBeg));
           uint16_t diff2 = simdutf_byteflip<bflip>(src[1]) - 0xDC00;
           if (diff2 > 0x3FF)
-            return result(error_code::SURROGATE, src - srcBeg);
+            return full_result(error_code::SURROGATE, size_t(src - srcBeg),
+                               size_t(dst - dstBeg));
 
           uint32_t value = ((diff + 0x40) << 10) + diff2;
 
@@ -209,7 +212,8 @@ rvv_utf16_to_utf8_with_errors(const char16_t *src, size_t len, char *dst) {
       }
   }
 
-  return result(error_code::SUCCESS, dst - dstBeg);
+  return full_result(error_code::SUCCESS, size_t(src - srcBeg),
+                     size_t(dst - dstBeg));
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16le_to_utf8(
@@ -226,15 +230,16 @@ simdutf_warn_unused size_t implementation::convert_utf16be_to_utf8(
 
 simdutf_warn_unused result implementation::convert_utf16le_to_utf8_with_errors(
     const char16_t *src, size_t len, char *dst) const noexcept {
-  return rvv_utf16_to_utf8_with_errors<simdutf_ByteFlip::NONE>(src, len, dst);
+  return rvv_utf16_to_utf8_with_details<simdutf_ByteFlip::NONE>(src, len, dst);
 }
 
 simdutf_warn_unused result implementation::convert_utf16be_to_utf8_with_errors(
     const char16_t *src, size_t len, char *dst) const noexcept {
   if (supports_zvbb())
-    return rvv_utf16_to_utf8_with_errors<simdutf_ByteFlip::ZVBB>(src, len, dst);
+    return rvv_utf16_to_utf8_with_details<simdutf_ByteFlip::ZVBB>(src, len,
+                                                                  dst);
   else
-    return rvv_utf16_to_utf8_with_errors<simdutf_ByteFlip::V>(src, len, dst);
+    return rvv_utf16_to_utf8_with_details<simdutf_ByteFlip::V>(src, len, dst);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16le_to_utf8(
