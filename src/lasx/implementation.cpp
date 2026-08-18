@@ -813,60 +813,36 @@ simdutf_warn_unused size_t implementation::convert_utf16be_to_utf8(
   return saved_bytes;
 }
 
+template <endianness big_endian>
+simdutf_really_inline full_result convert_utf16_to_utf8_with_details(
+    const char16_t *buf, size_t len, char *utf8_output) {
+  std::pair<result, char *> ret =
+      lasx_convert_utf16_to_utf8_with_errors<big_endian>(buf, len, utf8_output);
+  if (ret.first.error) {
+    return full_result(ret.first.error, ret.first.count,
+                       size_t(ret.second - utf8_output));
+  }
+  if (ret.first.count != len) {
+    full_result sres =
+        scalar::utf16_to_utf8::convert_with_errors<big_endian, false>(
+            buf + ret.first.count, len - ret.first.count, ret.second, 0);
+    return full_result(sres.error, ret.first.count + sres.input_count,
+                       size_t(ret.second - utf8_output) + sres.output_count);
+  }
+  return full_result(error_code::SUCCESS, len,
+                     size_t(ret.second - utf8_output));
+}
+
 simdutf_warn_unused result implementation::convert_utf16le_to_utf8_with_errors(
     const char16_t *buf, size_t len, char *utf8_output) const noexcept {
-  // ret.first.count is always the position in the buffer, not the number of
-  // code units written even if finished
-  std::pair<result, char *> ret =
-      lasx_convert_utf16_to_utf8_with_errors<endianness::LITTLE>(buf, len,
-                                                                 utf8_output);
-  if (ret.first.error) {
-    return ret.first;
-  } // Can return directly since scalar fallback already found correct
-    // ret.first.count
-  if (ret.first.count != len) { // All good so far, but not finished
-    result scalar_res =
-        scalar::utf16_to_utf8::convert_with_errors<endianness::LITTLE>(
-            buf + ret.first.count, len - ret.first.count, ret.second);
-    if (scalar_res.error) {
-      scalar_res.count += ret.first.count;
-      return scalar_res;
-    } else {
-      ret.second += scalar_res.count;
-    }
-  }
-  ret.first.count =
-      ret.second -
-      utf8_output; // Set count to the number of 8-bit code units written
-  return ret.first;
+  return convert_utf16_to_utf8_with_details<endianness::LITTLE>(buf, len,
+                                                                utf8_output);
 }
 
 simdutf_warn_unused result implementation::convert_utf16be_to_utf8_with_errors(
     const char16_t *buf, size_t len, char *utf8_output) const noexcept {
-  // ret.first.count is always the position in the buffer, not the number of
-  // code units written even if finished
-  std::pair<result, char *> ret =
-      lasx_convert_utf16_to_utf8_with_errors<endianness::BIG>(buf, len,
-                                                              utf8_output);
-  if (ret.first.error) {
-    return ret.first;
-  } // Can return directly since scalar fallback already found correct
-    // ret.first.count
-  if (ret.first.count != len) { // All good so far, but not finished
-    result scalar_res =
-        scalar::utf16_to_utf8::convert_with_errors<endianness::BIG>(
-            buf + ret.first.count, len - ret.first.count, ret.second);
-    if (scalar_res.error) {
-      scalar_res.count += ret.first.count;
-      return scalar_res;
-    } else {
-      ret.second += scalar_res.count;
-    }
-  }
-  ret.first.count =
-      ret.second -
-      utf8_output; // Set count to the number of 8-bit code units written
-  return ret.first;
+  return convert_utf16_to_utf8_with_details<endianness::BIG>(buf, len,
+                                                             utf8_output);
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16le_to_utf8(
@@ -1324,11 +1300,8 @@ simdutf_warn_unused size_t
 implementation::convert_utf16le_to_utf8_with_replacement(
     const char16_t *input, size_t length, char *utf8_buffer) const noexcept {
   return utf16_to_utf8::convert_with_replacement_via(
-      [this](const char16_t *b, size_t l, char *o) {
-        return this->convert_utf16le_to_utf8_with_errors(b, l, o);
-      },
-      [this](const char16_t *b, size_t l) {
-        return this->utf8_length_from_utf16le(b, l);
+      [](const char16_t *b, size_t l, char *o) {
+        return convert_utf16_to_utf8_with_details<endianness::LITTLE>(b, l, o);
       },
       input, length, utf8_buffer);
 }
@@ -1337,11 +1310,8 @@ simdutf_warn_unused size_t
 implementation::convert_utf16be_to_utf8_with_replacement(
     const char16_t *input, size_t length, char *utf8_buffer) const noexcept {
   return utf16_to_utf8::convert_with_replacement_via(
-      [this](const char16_t *b, size_t l, char *o) {
-        return this->convert_utf16be_to_utf8_with_errors(b, l, o);
-      },
-      [this](const char16_t *b, size_t l) {
-        return this->utf8_length_from_utf16be(b, l);
+      [](const char16_t *b, size_t l, char *o) {
+        return convert_utf16_to_utf8_with_details<endianness::BIG>(b, l, o);
       },
       input, length, utf8_buffer);
 }
