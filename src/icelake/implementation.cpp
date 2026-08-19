@@ -835,6 +835,52 @@ simdutf_warn_unused result implementation::validate_utf32_with_errors(
   const char32_t *buf_orig = buf;
   if (len >= 16) {
     const char32_t *end = buf + len - 16;
+    // One full block first, exactly as before, so that inputs whose first bad
+    // code point is near the start still return just as quickly. Once it is
+    // known to be clean we may jump to the 64-byte boundary; re-reading the
+    // values in between is harmless because no state crosses blocks.
+    {
+      __m512i utf32 = _mm512_loadu_si512((const __m512i *)buf);
+      __mmask16 outside_range = _mm512_cmp_epu32_mask(
+          utf32, _mm512_set1_epi32(0x10ffff), _MM_CMPINT_GT);
+      __m512i utf32_off =
+          _mm512_add_epi32(utf32, _mm512_set1_epi32(0xffff2000));
+      __mmask16 surrogate_range = _mm512_cmp_epu32_mask(
+          utf32_off, _mm512_set1_epi32(0xfffff7ff), _MM_CMPINT_GT);
+      if ((outside_range | surrogate_range)) {
+        auto outside_idx = _tzcnt_u32(outside_range);
+        auto surrogate_idx = _tzcnt_u32(surrogate_range);
+        if (outside_idx < surrogate_idx) {
+          return result(error_code::TOO_LARGE, buf - buf_orig + outside_idx);
+        }
+        return result(error_code::SURROGATE, buf - buf_orig + surrogate_idx);
+      }
+      const uintptr_t misalignment = reinterpret_cast<uintptr_t>(buf) % 64;
+      buf += (misalignment == 0) ? 16 : (64 - misalignment) / sizeof(char32_t);
+    }
+    // Screen four vectors per compare-and-branch; the 16-value loop below
+    // pinpoints the offending code point.
+    const __m512i toolarge = _mm512_set1_epi32(0x10ffff);
+    const __m512i offset = _mm512_set1_epi32(0xffff2000);
+    const __m512i surrmax = _mm512_set1_epi32(0xfffff7ff);
+    while (buf + 48 <= end) {
+      __m512i a = _mm512_loadu_si512((const __m512i *)buf);
+      __m512i b = _mm512_loadu_si512((const __m512i *)(buf + 16));
+      __m512i c = _mm512_loadu_si512((const __m512i *)(buf + 32));
+      __m512i d = _mm512_loadu_si512((const __m512i *)(buf + 48));
+      __m512i mx =
+          _mm512_max_epu32(_mm512_max_epu32(a, b), _mm512_max_epu32(c, d));
+      __m512i ox =
+          _mm512_max_epu32(_mm512_max_epu32(_mm512_add_epi32(a, offset),
+                                            _mm512_add_epi32(b, offset)),
+                           _mm512_max_epu32(_mm512_add_epi32(c, offset),
+                                            _mm512_add_epi32(d, offset)));
+      if (_mm512_cmp_epu32_mask(mx, toolarge, _MM_CMPINT_GT) |
+          _mm512_cmp_epu32_mask(ox, surrmax, _MM_CMPINT_GT)) {
+        break;
+      }
+      buf += 64;
+    }
     while (buf <= end) {
       __m512i utf32 = _mm512_loadu_si512((const __m512i *)buf);
       __mmask16 outside_range = _mm512_cmp_epu32_mask(
