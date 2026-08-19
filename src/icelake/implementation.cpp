@@ -261,6 +261,37 @@ simdutf_warn_unused result implementation::validate_ascii_with_errors(
   const char *buf_orig = buf;
   const char *end = buf + len;
   const __m512i ascii = _mm512_set1_epi8((uint8_t)0x80);
+  // Reach the next 64-byte boundary first: a 512-bit load whose address
+  // straddles a cache line costs two accesses, and this loop does nothing but
+  // load and compare. There is no cross-block state, so the head is simply a
+  // shorter first block handled with a masked load.
+  if (len >= 64) {
+    // A full first block, exactly as before, so that inputs whose first
+    // non-ASCII byte is near the start still return just as quickly. Once it
+    // is known to be ASCII we may jump to the boundary; re-reading the bytes
+    // in between is harmless because there is no cross-block state.
+    const __m512i head = _mm512_loadu_si512((const __m512i *)buf);
+    __mmask64 notascii = _mm512_cmp_epu8_mask(head, ascii, _MM_CMPINT_NLT);
+    if (notascii) {
+      return result(error_code::TOO_LARGE,
+                    buf - buf_orig + _tzcnt_u64(notascii));
+    }
+    const uintptr_t misalignment = reinterpret_cast<uintptr_t>(buf) % 64;
+    buf += (misalignment == 0) ? 64 : (64 - misalignment);
+  }
+  // Four vectors per compare-and-branch: the loads then issue back to back
+  // instead of being serialized by one branch per 64 bytes.
+  for (; end - buf >= 256; buf += 256) {
+    const __m512i b0 = _mm512_loadu_si512((const __m512i *)buf);
+    const __m512i b1 = _mm512_loadu_si512((const __m512i *)(buf + 64));
+    const __m512i b2 = _mm512_loadu_si512((const __m512i *)(buf + 128));
+    const __m512i b3 = _mm512_loadu_si512((const __m512i *)(buf + 192));
+    const __m512i any =
+        _mm512_or_si512(_mm512_or_si512(b0, b1), _mm512_or_si512(b2, b3));
+    if (_mm512_cmp_epu8_mask(any, ascii, _MM_CMPINT_NLT)) {
+      break; // the 64-byte loop below pinpoints it
+    }
+  }
   for (; end - buf >= 64; buf += 64) {
     const __m512i input = _mm512_loadu_si512((const __m512i *)buf);
     __mmask64 notascii = _mm512_cmp_epu8_mask(input, ascii, _MM_CMPINT_NLT);
