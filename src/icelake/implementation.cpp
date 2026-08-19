@@ -287,6 +287,21 @@ implementation::validate_utf16le_as_ascii(const char16_t *buf,
                                           size_t len) const noexcept {
   const char16_t *end = buf + len;
   __m512i limit = _mm512_set1_epi16(uint16_t(0x007F));
+  // Reach a 64-byte boundary; a 512-bit load that straddles a cache line costs
+  // two accesses. Nothing crosses a block boundary here, so the head is simply
+  // a shorter first block, and the zero fill of a masked load is itself ASCII.
+  if (len >= 32) {
+    const uintptr_t misalignment = reinterpret_cast<uintptr_t>(buf) % 64;
+    if (misalignment != 0) {
+      const size_t adjustment = (64 - misalignment) / sizeof(char16_t);
+      const __m512i head = _mm512_maskz_loadu_epi16(
+          __mmask32((1U << adjustment) - 1), (const __m512i *)buf);
+      if (_mm512_cmpgt_epu16_mask(head, limit)) {
+        return false;
+      }
+      buf += adjustment;
+    }
+  }
   for (; end - buf >= 32;) {
     __m512i in = _mm512_loadu_si512((__m512i *)buf);
     auto mask = _mm512_cmpgt_epu16_mask(in, limit);
@@ -315,6 +330,23 @@ implementation::validate_utf16be_as_ascii(const char16_t *buf,
       0x0e0f0c0d0a0b0809, 0x0607040502030001, 0x0e0f0c0d0a0b0809,
       0x0607040502030001, 0x0e0f0c0d0a0b0809);
   __m512i limit = _mm512_set1_epi16(uint16_t(0x007F));
+  // Reach a 64-byte boundary; a 512-bit load that straddles a cache line costs
+  // two accesses. Nothing crosses a block boundary here, so the head is simply
+  // a shorter first block, and the zero fill of a masked load is itself ASCII.
+  if (len >= 32) {
+    const uintptr_t misalignment = reinterpret_cast<uintptr_t>(buf) % 64;
+    if (misalignment != 0) {
+      const size_t adjustment = (64 - misalignment) / sizeof(char16_t);
+      const __m512i head = _mm512_shuffle_epi8(
+          _mm512_maskz_loadu_epi16(__mmask32((1U << adjustment) - 1),
+                                   (const __m512i *)buf),
+          byteflip);
+      if (_mm512_cmpgt_epu16_mask(head, limit)) {
+        return false;
+      }
+      buf += adjustment;
+    }
+  }
   for (; end - buf >= 32;) {
     __m512i in = _mm512_loadu_si512((__m512i *)buf);
     in = _mm512_shuffle_epi8(in, byteflip);
@@ -347,6 +379,26 @@ implementation::validate_utf16le(const char16_t *buf,
   const __m512i surr_range = _mm512_set1_epi16(uint16_t(0x0800));
   const __m512i high_range = _mm512_set1_epi16(uint16_t(0x0400));
 
+  // Reach a 64-byte boundary: a 512-bit load whose address straddles a cache
+  // line costs two accesses, and this loop is load-bound. The only state that
+  // crosses a block boundary here is a surrogate pair, so we may skip over the
+  // head only when it holds no surrogate at all -- which also makes the head
+  // valid, so nothing else about it needs checking. Input whose first code
+  // units are surrogates simply keeps to the unaligned path.
+  if (len >= 32) {
+    const uintptr_t misalignment = reinterpret_cast<uintptr_t>(buf) % 64;
+    if (misalignment != 0) {
+      const size_t adjustment = (64 - misalignment) / sizeof(char16_t);
+      const __m512i head = _mm512_maskz_loadu_epi16(
+          __mmask32((1U << adjustment) - 1), (const __m512i *)buf);
+      const __m512i headdiff =
+          _mm512_sub_epi16(head, _mm512_set1_epi16(uint16_t(0xD800)));
+      if (_mm512_cmplt_epu16_mask(headdiff,
+                                  _mm512_set1_epi16(uint16_t(0x0800))) == 0) {
+        buf += adjustment;
+      }
+    }
+  }
   for (; end - buf >= 64;) {
     __m512i in_1 = _mm512_loadu_si512((__m512i *)buf);
     __m512i in_2 = _mm512_loadu_si512((__m512i *)(buf + 32));
@@ -445,6 +497,28 @@ implementation::validate_utf16be(const char16_t *buf,
                                  size_t len) const noexcept {
   const char16_t *end = buf + len;
 
+  // Reach a 64-byte boundary: a 512-bit load whose address straddles a cache
+  // line costs two accesses, and this loop is load-bound. The only state that
+  // crosses a block boundary here is a surrogate pair, so we may skip over the
+  // head only when it holds no surrogate at all -- which also makes the head
+  // valid, so nothing else about it needs checking. Input whose first code
+  // units are surrogates simply keeps to the unaligned path.
+  if (len >= 32) {
+    const uintptr_t misalignment = reinterpret_cast<uintptr_t>(buf) % 64;
+    if (misalignment != 0) {
+      const size_t adjustment = (64 - misalignment) / sizeof(char16_t);
+      const __m512i head = _mm512_slli_epi16(
+          _mm512_maskz_loadu_epi16(__mmask32((1U << adjustment) - 1),
+                                   (const __m512i *)buf),
+          8);
+      const __m512i headdiff =
+          _mm512_sub_epi16(head, _mm512_set1_epi16(uint16_t(0xD800)));
+      if (_mm512_cmplt_epu16_mask(headdiff,
+                                  _mm512_set1_epi16(uint16_t(0x0800))) == 0) {
+        buf += adjustment;
+      }
+    }
+  }
   for (; end - buf >= 32;) {
     __m512i in = _mm512_slli_epi32(_mm512_loadu_si512((__m512i *)buf), 8);
     __m512i diff = _mm512_sub_epi16(in, _mm512_set1_epi16(uint16_t(0xD800)));
@@ -492,6 +566,26 @@ simdutf_warn_unused result implementation::validate_utf16le_with_errors(
     const char16_t *buf, size_t len) const noexcept {
   const char16_t *start_buf = buf;
   const char16_t *end = buf + len;
+  // Reach a 64-byte boundary: a 512-bit load whose address straddles a cache
+  // line costs two accesses, and this loop is load-bound. The only state that
+  // crosses a block boundary here is a surrogate pair, so we may skip over the
+  // head only when it holds no surrogate at all -- which also makes the head
+  // valid, so nothing else about it needs checking. Input whose first code
+  // units are surrogates simply keeps to the unaligned path.
+  if (len >= 32) {
+    const uintptr_t misalignment = reinterpret_cast<uintptr_t>(buf) % 64;
+    if (misalignment != 0) {
+      const size_t adjustment = (64 - misalignment) / sizeof(char16_t);
+      const __m512i head = _mm512_maskz_loadu_epi16(
+          __mmask32((1U << adjustment) - 1), (const __m512i *)buf);
+      const __m512i headdiff =
+          _mm512_sub_epi16(head, _mm512_set1_epi16(uint16_t(0xD800)));
+      if (_mm512_cmplt_epu16_mask(headdiff,
+                                  _mm512_set1_epi16(uint16_t(0x0800))) == 0) {
+        buf += adjustment;
+      }
+    }
+  }
   for (; end - buf >= 32;) {
     __m512i in = _mm512_loadu_si512((__m512i *)buf);
     __m512i diff = _mm512_sub_epi16(in, _mm512_set1_epi16(uint16_t(0xD800)));
@@ -550,6 +644,28 @@ simdutf_warn_unused result implementation::validate_utf16be_with_errors(
   const char16_t *start_buf = buf;
   const char16_t *end = buf + len;
 
+  // Reach a 64-byte boundary: a 512-bit load whose address straddles a cache
+  // line costs two accesses, and this loop is load-bound. The only state that
+  // crosses a block boundary here is a surrogate pair, so we may skip over the
+  // head only when it holds no surrogate at all -- which also makes the head
+  // valid, so nothing else about it needs checking. Input whose first code
+  // units are surrogates simply keeps to the unaligned path.
+  if (len >= 32) {
+    const uintptr_t misalignment = reinterpret_cast<uintptr_t>(buf) % 64;
+    if (misalignment != 0) {
+      const size_t adjustment = (64 - misalignment) / sizeof(char16_t);
+      const __m512i head = _mm512_slli_epi16(
+          _mm512_maskz_loadu_epi16(__mmask32((1U << adjustment) - 1),
+                                   (const __m512i *)buf),
+          8);
+      const __m512i headdiff =
+          _mm512_sub_epi16(head, _mm512_set1_epi16(uint16_t(0xD800)));
+      if (_mm512_cmplt_epu16_mask(headdiff,
+                                  _mm512_set1_epi16(uint16_t(0x0800))) == 0) {
+        buf += adjustment;
+      }
+    }
+  }
   for (; end - buf >= 32;) {
     __m512i in = _mm512_slli_epi16(_mm512_loadu_si512((__m512i *)buf), 8);
     __m512i diff = _mm512_sub_epi16(in, _mm512_set1_epi16(uint16_t(0xD800)));
