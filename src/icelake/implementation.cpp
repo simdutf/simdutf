@@ -191,6 +191,32 @@ implementation::validate_utf8(const char *buf, size_t len) const noexcept {
   avx512_utf8_checker checker{};
   const char *ptr = buf;
   const char *end = ptr + len;
+  // Get the 512-bit reads onto a 64-byte boundary. A load whose address
+  // straddles a cache line costs two accesses, and callers rarely hand us an
+  // aligned buffer.
+  //
+  // We cannot simply mask-load a short head block to reach the boundary: the
+  // checker carries state from one block to the next, and zero padding in the
+  // middle of a character would read as a truncated sequence. Instead we
+  // consume one full (unaligned) block and re-seed the cross-block state from
+  // the three bytes preceding the aligned start. Those three bytes must lie
+  // inside the buffer, hence the requirement that the adjustment be at least
+  // three. Below a couple of kilobytes the fixed cost of the prologue is not
+  // repaid.
+  if (len >= 2048) {
+    const uintptr_t misalignment = reinterpret_cast<uintptr_t>(ptr) % 64;
+    if (misalignment != 0 && misalignment <= 61) {
+      const size_t adjustment = 64 - misalignment;
+      checker.check_next_input(_mm512_loadu_si512((const __m512i *)ptr));
+      ptr += adjustment;
+      // Only the top three lanes are read. Masked-out lanes never fault, so
+      // this is safe even though ptr - 64 may point before buf.
+      const __m512i prev3 = _mm512_maskz_loadu_epi8(
+          UINT64_C(0xE000000000000000), (const __m512i *)(ptr - 64));
+      checker.prev_input_block = prev3;
+      checker.prev_incomplete = is_incomplete(prev3);
+    }
+  }
   for (; end - ptr >= 64; ptr += 64) {
     const __m512i utf8 = _mm512_loadu_si512((const __m512i *)ptr);
     checker.check_next_input(utf8);
