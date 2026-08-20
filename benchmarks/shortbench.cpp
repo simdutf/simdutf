@@ -167,6 +167,16 @@ std::vector<BenchmarkFunc> available_functions = {
          return len;
        };
      }},
+    {"convert_utf8_to_utf16le_span",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::convert_utf8_to_utf16le(
+             input,
+             std::span<char16_t>(reinterpret_cast<char16_t *>(output.data()),
+                                 output.size() / sizeof(char16_t)));
+         return len;
+       };
+     }},
     {"convert_utf8_to_utf16be",
      [](std::span<const char> input, std::span<char> output) {
        return [input, output]() -> size_t {
@@ -174,6 +184,54 @@ std::vector<BenchmarkFunc> available_functions = {
              input.data(), input.size(),
              reinterpret_cast<char16_t *>(output.data()));
          return len;
+       };
+     }},
+    {"convert_utf8_to_utf16be_span",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         size_t len = simdutf::convert_utf8_to_utf16be(
+             input,
+             std::span<char16_t>(reinterpret_cast<char16_t *>(output.data()),
+                                 output.size() / sizeof(char16_t)));
+         return len;
+       };
+     }},
+    {"convert_utf8_to_utf16le_with_errors",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         simdutf::result result = simdutf::convert_utf8_to_utf16le_with_errors(
+             input.data(), input.size(),
+             reinterpret_cast<char16_t *>(output.data()));
+         return result.count;
+       };
+     }},
+    {"convert_utf8_to_utf16le_with_errors_span",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         simdutf::result result = simdutf::convert_utf8_to_utf16le_with_errors(
+             input,
+             std::span<char16_t>(reinterpret_cast<char16_t *>(output.data()),
+                                 output.size() / sizeof(char16_t)));
+         return result.count;
+       };
+     }},
+    {"convert_utf8_to_utf16be_with_errors",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         simdutf::result result = simdutf::convert_utf8_to_utf16be_with_errors(
+             input.data(), input.size(),
+             reinterpret_cast<char16_t *>(output.data()));
+         return result.count;
+       };
+     }},
+    {"convert_utf8_to_utf16be_with_errors_span",
+     [](std::span<const char> input, std::span<char> output) {
+       return [input, output]() -> size_t {
+         simdutf::result result = simdutf::convert_utf8_to_utf16be_with_errors(
+             input,
+             std::span<char16_t>(reinterpret_cast<char16_t *>(output.data()),
+                                 output.size() / sizeof(char16_t)));
+         return result.count;
        };
      }},
     {"convert_utf8_to_utf32",
