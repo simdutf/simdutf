@@ -309,6 +309,65 @@ simdutf_warn_unused result implementation::validate_utf8_with_errors(
   }
   return result(error_code::SUCCESS, len);
 }
+
+simdutf_warn_unused utf8_result implementation::validate_utf8_with_counts(
+    const char *buf, size_t len) const noexcept {
+  if (simdutf_unlikely(len == 0)) {
+    return utf8_result(error_code::SUCCESS, len, 0, 0);
+  }
+  avx512_utf8_checker checker{};
+  const char *ptr = buf;
+  const char *end = ptr + len;
+  size_t count{0};
+  size_t continuations{0};
+  size_t four_byte_leads{0};
+  for (; end - ptr >= 64; ptr += 64) {
+    const __m512i utf8 = _mm512_loadu_si512((const __m512i *)ptr);
+    // check_next_input returns true for a pure-ASCII block. ASCII bytes are
+    // neither continuations nor 4-byte leads, so we can skip the (comparatively
+    // expensive) popcount-based counting entirely on such blocks. This is the
+    // common case for real-world text and matches the ASCII fast path used by
+    // SimdUnicode.
+    const bool ascii = checker.check_next_input(utf8);
+    if (simdutf_unlikely(checker.errors())) {
+      utf8_result res = scalar::utf8::rewind_and_validate_with_counts(
+          reinterpret_cast<const char *>(buf),
+          reinterpret_cast<const char *>(buf + count), len - count);
+      res.input_count += count;
+      res.continuation_count += continuations;
+      res.four_byte_count += four_byte_leads;
+      return res;
+    }
+    if (!ascii) {
+      continuations += utf8_count_continuations(utf8);
+      four_byte_leads += utf8_count_4_byte_leads(utf8);
+    }
+    count += 64;
+  }
+  // These counts are discarded in case of an error.
+  size_t final_continuations = continuations;
+  size_t final_four_byte_leads = four_byte_leads;
+  if (end != ptr) {
+    const __m512i utf8 = _mm512_maskz_loadu_epi8(
+        ~UINT64_C(0) >> (64 - (end - ptr)), (const __m512i *)ptr);
+    if (!checker.check_next_input(utf8)) {
+      final_continuations += utf8_count_continuations(utf8);
+      final_four_byte_leads += utf8_count_4_byte_leads(utf8);
+    }
+  }
+  checker.check_eof();
+  if (simdutf_unlikely(checker.errors())) {
+    utf8_result res = scalar::utf8::rewind_and_validate_with_counts(
+        reinterpret_cast<const char *>(buf),
+        reinterpret_cast<const char *>(buf + count), len - count);
+    res.input_count += count;
+    res.continuation_count += continuations;
+    res.four_byte_count += four_byte_leads;
+    return res;
+  }
+  return utf8_result(error_code::SUCCESS, len, final_continuations,
+                     final_four_byte_leads);
+}
 #endif // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_ASCII
@@ -1738,6 +1797,7 @@ implementation::count_utf8(const char *input, size_t length) const noexcept {
   return answer + scalar::utf8::count_code_points(
                       reinterpret_cast<const char *>(str + i), length - i);
 }
+
 #endif // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1

@@ -153,6 +153,43 @@ simdutf_really_inline simd8<uint8_t> is_incomplete(const simd8<uint8_t> input) {
   return input.gt_bits(max_value);
 }
 
+// Counts gathered over a single input block: the number of continuation bytes
+// and of four-byte lead bytes. These two counts are all we need to derive both
+// the UTF-16 length (input - continuations + four_byte) and the code-point
+// count (input - continuations). We use a small dedicated struct rather than a
+// std::tuple: it is easier to read, avoids the header dependency and some
+// compilers generate noticeably better code for it.
+struct block_counts {
+  size_t continuations;
+  size_t four_byte;
+};
+
+simdutf_really_inline block_counts utf8_counters(const simd8<uint8_t> input) {
+  // A continuation byte is 0b10xxxxxx, i.e. a signed int8 strictly below -64.
+  // A four-byte lead is >= 0b11110000. We turn each into a per-lane 0x00/0xFF
+  // mask and count the set lanes.
+  const simd8<int8_t> mask_lt = simd8<int8_t>::splat(-65 + 1);
+  const simd8<uint8_t> mask_gte = simd8<uint8_t>::splat(0b11110000);
+#if SIMDUTF_IMPLEMENTATION_ARM64
+  // NEON has no movemask instruction, so building a bitmask and popcounting it
+  // (as we do below for x86) is comparatively expensive. Instead we reduce the
+  // comparison masks directly: (mask & 1) has 0/1 lanes whose horizontal byte
+  // sum is the number of matching bytes, one cheap instruction per counter.
+  const simd8<uint8_t> one = simd8<uint8_t>::splat(1);
+  size_t continuations =
+      (simd8<uint8_t>((simd8<int8_t>)input < mask_lt) & one).sum_bytes();
+  size_t four_byte = (simd8<uint8_t>(input >= mask_gte) & one).sum_bytes();
+  return block_counts{continuations, four_byte};
+#else
+  // On x86 a movemask + popcount is the cheapest way to count matching lanes.
+  uint64_t continuation_mask = ((simd8<int8_t>)input < mask_lt).to_bitmask();
+  size_t continuations = count_ones(continuation_mask);
+  uint64_t four_byte_mask = (input >= mask_gte).to_bitmask();
+  size_t four_byte = count_ones(four_byte_mask);
+  return block_counts{continuations, four_byte};
+#endif
+}
+
 struct utf8_checker {
   // If this is nonzero, there has been a UTF-8 error.
   simd8<uint8_t> error;
@@ -184,9 +221,12 @@ struct utf8_checker {
     this->error |= this->prev_incomplete;
   }
 
-  simdutf_really_inline void check_next_input(const simd8x64<uint8_t> &input) {
+  // Returns true if the whole 64-byte block was ASCII (like the icelake
+  // checker). Callers that only validate can ignore the return value.
+  simdutf_really_inline bool check_next_input(const simd8x64<uint8_t> &input) {
     if (simdutf_likely(is_ascii(input))) {
       this->error |= this->prev_incomplete;
+      return true;
     } else {
       // you might think that a for-loop would work, but under Visual Studio, it
       // is not good enough.
@@ -205,6 +245,7 @@ struct utf8_checker {
       this->prev_incomplete =
           is_incomplete(input.chunks[simd8x64<uint8_t>::NUM_CHUNKS - 1]);
       this->prev_input_block = input.chunks[simd8x64<uint8_t>::NUM_CHUNKS - 1];
+      return false;
     }
   }
 
@@ -214,9 +255,76 @@ struct utf8_checker {
   }
 
 }; // struct utf8_checker
+
+struct utf8_segmenter {
+  utf8_checker checker;
+  // Counter for continuations
+  size_t continuations;
+  // Counter for 4-byte leads
+  size_t four_byte;
+
+  //
+  // Check whether the current bytes are valid UTF-8 and update continuation and
+  // 4-byte lead counts.
+  //
+  simdutf_really_inline void check_utf8_bytes(const simd8<uint8_t> input,
+                                              const simd8<uint8_t> prev_input) {
+    block_counts counters = utf8_counters(input);
+    this->continuations += counters.continuations;
+    this->four_byte += counters.four_byte;
+    this->checker.check_utf8_bytes(input, prev_input);
+  }
+
+  simdutf_really_inline void check_eof() { this->checker.check_eof(); }
+
+  simdutf_really_inline block_counts
+  check_next_input_with_counts(const simd8x64<uint8_t> &input) {
+    if (simdutf_likely(is_ascii(input))) {
+      this->checker.error |= this->checker.prev_incomplete;
+      return block_counts{0, 0};
+    } else {
+      size_t prev_continuations = this->continuations;
+      size_t prev_four_byte = this->four_byte;
+      // you might think that a for-loop would work, but under Visual Studio, it
+      // is not good enough.
+      static_assert((simd8x64<uint8_t>::NUM_CHUNKS == 2) ||
+                        (simd8x64<uint8_t>::NUM_CHUNKS == 4),
+                    "We support either two or four chunks per 64-byte block.");
+      if constexpr (simd8x64<uint8_t>::NUM_CHUNKS == 2) {
+        this->check_utf8_bytes(input.chunks[0], this->checker.prev_input_block);
+        this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
+      } else if constexpr (simd8x64<uint8_t>::NUM_CHUNKS == 4) {
+        this->check_utf8_bytes(input.chunks[0], this->checker.prev_input_block);
+        this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
+        this->check_utf8_bytes(input.chunks[2], input.chunks[1]);
+        this->check_utf8_bytes(input.chunks[3], input.chunks[2]);
+      }
+      this->checker.prev_incomplete =
+          is_incomplete(input.chunks[simd8x64<uint8_t>::NUM_CHUNKS - 1]);
+      this->checker.prev_input_block =
+          input.chunks[simd8x64<uint8_t>::NUM_CHUNKS - 1];
+      return block_counts{this->continuations - prev_continuations,
+                          this->four_byte - prev_four_byte};
+    }
+  }
+
+  // do not forget to call check_eof!
+  simdutf_really_inline bool errors() const { return this->checker.errors(); }
+
+  simdutf_really_inline size_t continuation_count() const {
+    return this->continuations;
+  }
+
+  simdutf_really_inline size_t four_byte_count() const {
+    return this->four_byte;
+  }
+
+}; // struct utf8_segmenter
+
 } // namespace utf8_validation
 
 using utf8_validation::utf8_checker;
+using utf8_validation::utf8_segmenter;
 
 } // unnamed namespace
 } // namespace SIMDUTF_IMPLEMENTATION
