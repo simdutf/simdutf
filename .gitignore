@@ -25,3 +25,5 @@ corpus/
 
 # generated documentation
 README.generated.md
+build_mrdocs
+doc/mrdocs-html
