@@ -53,6 +53,7 @@ static int test_validate_utf8_with_counts_c(void) {
   ASSERT_EQUAL_SIZE_T(r.input_count, hello_len);
   ASSERT_EQUAL_SIZE_T(r.continuation_count, 0);
   ASSERT_EQUAL_SIZE_T(r.four_byte_count, 0);
+  ASSERT_EQUAL_SIZE_T(simdutf_utf8_result_utf32_length(r), hello_len);
   ASSERT_EQUAL_SIZE_T(simdutf_utf8_result_utf16_length(r), hello_len);
 
   /* Mixed 1-, 2-, 3- and 4-byte sequences. */
@@ -63,7 +64,7 @@ static int test_validate_utf8_with_counts_c(void) {
   ASSERT_EQUAL_SIZE_T(r.continuation_count, 6);
   ASSERT_EQUAL_SIZE_T(r.four_byte_count, 1);
   /* The two counts must agree with the dedicated length routines. */
-  ASSERT_EQUAL_SIZE_T(r.input_count - r.continuation_count,
+  ASSERT_EQUAL_SIZE_T(simdutf_utf8_result_utf32_length(r),
                       simdutf_count_utf8(mixed_utf8, mixed_utf8_len));
   ASSERT_EQUAL_SIZE_T(
       simdutf_utf8_result_utf16_length(r),
@@ -77,6 +78,7 @@ static int test_validate_utf8_with_counts_c(void) {
   ASSERT_EQUAL_SIZE_T(r.input_count, 5);
   ASSERT_EQUAL_SIZE_T(r.continuation_count, 1);
   ASSERT_EQUAL_SIZE_T(r.four_byte_count, 0);
+  ASSERT_EQUAL_SIZE_T(simdutf_utf8_result_utf32_length(r), 4);
   ASSERT_EQUAL_SIZE_T(simdutf_utf8_result_utf16_length(r), 4);
   /* The position must match the plain error-reporting entry point. */
   simdutf_result e = simdutf_validate_utf8_with_errors(bad, sizeof(bad) - 1);
@@ -90,11 +92,14 @@ static int test_validate_utf8_with_counts_c(void) {
   ASSERT_EQUAL_SIZE_T(r.input_count, 2);
   ASSERT_EQUAL_SIZE_T(r.continuation_count, 0);
   ASSERT_EQUAL_SIZE_T(r.four_byte_count, 0);
+  ASSERT_EQUAL_SIZE_T(simdutf_utf8_result_utf32_length(r), 2);
+  ASSERT_EQUAL_SIZE_T(simdutf_utf8_result_utf16_length(r), 2);
 
   /* Empty input. */
   r = simdutf_validate_utf8_with_counts(hello, 0);
   ASSERT_EQUAL_INT(r.error, SIMDUTF_ERROR_SUCCESS);
   ASSERT_EQUAL_SIZE_T(r.input_count, 0);
+  ASSERT_EQUAL_SIZE_T(simdutf_utf8_result_utf32_length(r), 0);
   ASSERT_EQUAL_SIZE_T(simdutf_utf8_result_utf16_length(r), 0);
 
   /* A buffer long enough to exercise the SIMD block loop rather than only the
@@ -109,6 +114,7 @@ static int test_validate_utf8_with_counts_c(void) {
   ASSERT_EQUAL_SIZE_T(r.input_count, sizeof(big));
   ASSERT_EQUAL_SIZE_T(r.continuation_count, sizeof(big) / 2);
   ASSERT_EQUAL_SIZE_T(r.four_byte_count, 0);
+  ASSERT_EQUAL_SIZE_T(simdutf_utf8_result_utf32_length(r), sizeof(big) / 2);
   ASSERT_EQUAL_SIZE_T(simdutf_utf8_result_utf16_length(r), sizeof(big) / 2);
   return 0;
 }

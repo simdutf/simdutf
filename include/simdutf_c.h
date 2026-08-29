@@ -89,6 +89,10 @@ simdutf_utf8_result simdutf_validate_utf8_with_counts(const char *buf,
    i.e. r.input_count - r.continuation_count + r.four_byte_count. */
 size_t simdutf_utf8_result_utf16_length(simdutf_utf8_result r);
 
+/* Number of code points in the valid prefix described by r, which is also the
+   number of UTF-32 code units, i.e. r.input_count - r.continuation_count. */
+size_t simdutf_utf8_result_utf32_length(simdutf_utf8_result r);
+
 /* Encoding detection */
 simdutf_encoding_type simdutf_autodetect_encoding(const char *input,
                                                   size_t length);
