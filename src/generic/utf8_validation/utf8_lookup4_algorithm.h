@@ -166,28 +166,17 @@ struct block_counts {
 
 simdutf_really_inline block_counts utf8_counters(const simd8<uint8_t> input) {
   // A continuation byte is 0b10xxxxxx, i.e. a signed int8 strictly below -64.
-  // A four-byte lead is >= 0b11110000. We turn each into a per-lane 0x00/0xFF
-  // mask and count the set lanes.
+  // A four-byte lead is >= 0b11110000. We turn each into a bitmask and count
+  // the set lanes. The arm64 kernel does not use this path: it has its own
+  // counting loop in arm_validate_utf8_with_counts.cpp, which avoids one
+  // cross-lane reduction per chunk.
   const simd8<int8_t> mask_lt = simd8<int8_t>::splat(-65 + 1);
   const simd8<uint8_t> mask_gte = simd8<uint8_t>::splat(0b11110000);
-#if SIMDUTF_IMPLEMENTATION_ARM64
-  // NEON has no movemask instruction, so building a bitmask and popcounting it
-  // (as we do below for x86) is comparatively expensive. Instead we reduce the
-  // comparison masks directly: (mask & 1) has 0/1 lanes whose horizontal byte
-  // sum is the number of matching bytes, one cheap instruction per counter.
-  const simd8<uint8_t> one = simd8<uint8_t>::splat(1);
-  size_t continuations =
-      (simd8<uint8_t>((simd8<int8_t>)input < mask_lt) & one).sum_bytes();
-  size_t four_byte = (simd8<uint8_t>(input >= mask_gte) & one).sum_bytes();
-  return block_counts{continuations, four_byte};
-#else
-  // On x86 a movemask + popcount is the cheapest way to count matching lanes.
   uint64_t continuation_mask = ((simd8<int8_t>)input < mask_lt).to_bitmask();
   size_t continuations = count_ones(continuation_mask);
   uint64_t four_byte_mask = (input >= mask_gte).to_bitmask();
   size_t four_byte = count_ones(four_byte_mask);
   return block_counts{continuations, four_byte};
-#endif
 }
 
 struct utf8_checker {
