@@ -263,18 +263,24 @@ validate_with_counts(BytePtr data, size_t len) noexcept {
   size_t continuations = 0;
   size_t four_byte = 0;
   while (pos < len) {
-    // check of the next 16 bytes are ascii.
-    size_t next_ascii_pos = pos + 16;
-    if (next_ascii_pos <=
-        len) { // if it is safe to read 16 more bytes, check that they are ascii
-      uint64_t v1;
-      std::memcpy(&v1, data + pos, sizeof(uint64_t));
-      uint64_t v2;
-      std::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
-      uint64_t v{v1 | v2};
-      if ((v & 0x8080808080808080) == 0) {
-        pos = next_ascii_pos;
-        continue;
+    // std::memcpy is not usable during constant evaluation, so the block-wise
+    // ASCII fast path is restricted to run time, like in validate() above.
+#if SIMDUTF_CPLUSPLUS23
+    if !consteval
+#endif
+    { // check if the next 16 bytes are ascii.
+      const size_t next_ascii_pos = pos + 16;
+      if (next_ascii_pos <= len) { // if it is safe to read 16 more bytes, check
+                                   // that they are ascii
+        uint64_t v1{};
+        std::memcpy(&v1, data + pos, sizeof(uint64_t));
+        uint64_t v2{};
+        std::memcpy(&v2, data + pos + sizeof(uint64_t), sizeof(uint64_t));
+        uint64_t v{v1 | v2};
+        if ((v & 0x8080808080808080) == 0) {
+          pos = next_ascii_pos;
+          continue;
+        }
       }
     }
 
