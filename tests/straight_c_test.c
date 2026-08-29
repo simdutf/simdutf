@@ -41,6 +41,78 @@ static int test_validate_utf8_c(void) {
   return 0;
 }
 
+/* "cafe" + U+00E9 + ' ' + U+65E5 + U+1F600: 14 bytes, 8 code points, and 9
+   UTF-16 code units because the emoji needs a surrogate pair. */
+static const char mixed_utf8[] = "cafe\xc3\xa9 \xe6\x97\xa5\xf0\x9f\x98\x80";
+static const size_t mixed_utf8_len = sizeof(mixed_utf8) - 1;
+
+static int test_validate_utf8_with_counts_c(void) {
+  /* Pure ASCII: no continuation bytes, no four-byte sequences. */
+  simdutf_utf8_result r = simdutf_validate_utf8_with_counts(hello, hello_len);
+  ASSERT_EQUAL_INT(r.error, SIMDUTF_ERROR_SUCCESS);
+  ASSERT_EQUAL_SIZE_T(r.input_count, hello_len);
+  ASSERT_EQUAL_SIZE_T(r.continuation_count, 0);
+  ASSERT_EQUAL_SIZE_T(r.four_byte_count, 0);
+  ASSERT_EQUAL_SIZE_T(simdutf_utf8_result_utf16_length(r), hello_len);
+
+  /* Mixed 1-, 2-, 3- and 4-byte sequences. */
+  ASSERT_EQUAL_SIZE_T(mixed_utf8_len, 14);
+  r = simdutf_validate_utf8_with_counts(mixed_utf8, mixed_utf8_len);
+  ASSERT_EQUAL_INT(r.error, SIMDUTF_ERROR_SUCCESS);
+  ASSERT_EQUAL_SIZE_T(r.input_count, mixed_utf8_len);
+  ASSERT_EQUAL_SIZE_T(r.continuation_count, 6);
+  ASSERT_EQUAL_SIZE_T(r.four_byte_count, 1);
+  /* The two counts must agree with the dedicated length routines. */
+  ASSERT_EQUAL_SIZE_T(r.input_count - r.continuation_count,
+                      simdutf_count_utf8(mixed_utf8, mixed_utf8_len));
+  ASSERT_EQUAL_SIZE_T(
+      simdutf_utf8_result_utf16_length(r),
+      simdutf_utf16_length_from_utf8(mixed_utf8, mixed_utf8_len));
+
+  /* Invalid lead byte: the counts describe the valid prefix only. */
+  const char bad[] = "caf\xc3\xa9\xff"
+                     "xyz";
+  r = simdutf_validate_utf8_with_counts(bad, sizeof(bad) - 1);
+  ASSERT_EQUAL_INT(r.error, SIMDUTF_ERROR_HEADER_BITS);
+  ASSERT_EQUAL_SIZE_T(r.input_count, 5);
+  ASSERT_EQUAL_SIZE_T(r.continuation_count, 1);
+  ASSERT_EQUAL_SIZE_T(r.four_byte_count, 0);
+  ASSERT_EQUAL_SIZE_T(simdutf_utf8_result_utf16_length(r), 4);
+  /* The position must match the plain error-reporting entry point. */
+  simdutf_result e = simdutf_validate_utf8_with_errors(bad, sizeof(bad) - 1);
+  ASSERT_EQUAL_INT(r.error, e.error);
+  ASSERT_EQUAL_SIZE_T(r.input_count, e.count);
+
+  /* Truncated four-byte sequence at the very end of the input. */
+  const char truncated[] = "ab\xf0\x9f\x98";
+  r = simdutf_validate_utf8_with_counts(truncated, sizeof(truncated) - 1);
+  ASSERT_EQUAL_INT(r.error, SIMDUTF_ERROR_TOO_SHORT);
+  ASSERT_EQUAL_SIZE_T(r.input_count, 2);
+  ASSERT_EQUAL_SIZE_T(r.continuation_count, 0);
+  ASSERT_EQUAL_SIZE_T(r.four_byte_count, 0);
+
+  /* Empty input. */
+  r = simdutf_validate_utf8_with_counts(hello, 0);
+  ASSERT_EQUAL_INT(r.error, SIMDUTF_ERROR_SUCCESS);
+  ASSERT_EQUAL_SIZE_T(r.input_count, 0);
+  ASSERT_EQUAL_SIZE_T(simdutf_utf8_result_utf16_length(r), 0);
+
+  /* A buffer long enough to exercise the SIMD block loop rather than only the
+     scalar tail. */
+  char big[1024];
+  for (size_t i = 0; i < sizeof(big); i += 2) {
+    big[i] = (char)0xc3; /* U+00E9 repeated: one lead + one continuation */
+    big[i + 1] = (char)0xa9;
+  }
+  r = simdutf_validate_utf8_with_counts(big, sizeof(big));
+  ASSERT_EQUAL_INT(r.error, SIMDUTF_ERROR_SUCCESS);
+  ASSERT_EQUAL_SIZE_T(r.input_count, sizeof(big));
+  ASSERT_EQUAL_SIZE_T(r.continuation_count, sizeof(big) / 2);
+  ASSERT_EQUAL_SIZE_T(r.four_byte_count, 0);
+  ASSERT_EQUAL_SIZE_T(simdutf_utf8_result_utf16_length(r), sizeof(big) / 2);
+  return 0;
+}
+
 static int test_convert_utf8_to_utf16_c(void) {
   char16_t out[16];
   size_t n = simdutf_convert_utf8_to_utf16(hello, hello_len, out);
@@ -159,17 +231,19 @@ int main(void) {
   struct {
     const char *name;
     int (*fn)(void);
-  } tests[] = {{"validate_utf8_c", test_validate_utf8_c},
-               {"convert_utf8_to_utf16_c", test_convert_utf8_to_utf16_c},
-               {"convert_utf8_to_utf32_c", test_convert_utf8_to_utf32_c},
-               {"count_utf8_c", test_count_utf8_c},
-               {"find_c", test_find_c},
-               {"base64_c", test_base64_c},
-               {"ascii_and_detect_c", test_ascii_and_detect_c},
-               {"lengths_and_conversions_c", test_lengths_and_conversions_c},
-               {"counts_and_find_utf16_c", test_counts_and_find_utf16_c},
-               {"base64_length_helpers_c", test_base64_length_helpers_c},
-               {NULL, NULL}};
+  } tests[] = {
+      {"validate_utf8_c", test_validate_utf8_c},
+      {"validate_utf8_with_counts_c", test_validate_utf8_with_counts_c},
+      {"convert_utf8_to_utf16_c", test_convert_utf8_to_utf16_c},
+      {"convert_utf8_to_utf32_c", test_convert_utf8_to_utf32_c},
+      {"count_utf8_c", test_count_utf8_c},
+      {"find_c", test_find_c},
+      {"base64_c", test_base64_c},
+      {"ascii_and_detect_c", test_ascii_and_detect_c},
+      {"lengths_and_conversions_c", test_lengths_and_conversions_c},
+      {"counts_and_find_utf16_c", test_counts_and_find_utf16_c},
+      {"base64_length_helpers_c", test_base64_length_helpers_c},
+      {NULL, NULL}};
 
   for (int i = 0; tests[i].name != NULL; i++) {
     printf("%s... ", tests[i].name);
