@@ -383,6 +383,14 @@ validate_with_counts(const char *buf, size_t len) noexcept {
 // pinpoint the location of an error when an invalid chunk is detected. We check
 // that the stream starts with a leading byte with the passed pointer to the
 // start of the stream (start).
+//
+// All three fields of the result are relative to buf. The bytes we rewind over
+// sit in a block the caller has already counted, so their contribution is
+// subtracted back out at the end. When the error lies inside the rewound
+// region, those three subtractions underflow. That is intended, not an
+// oversight: the caller adds the offset of buf and the counts of the preceding
+// blocks, which include the rewound bytes, and the unsigned wraparound cancels
+// exactly, leaving the correct absolute values.
 inline simdutf_warn_unused utf8_result rewind_and_validate_with_counts(
     const char *start, const char *buf, size_t len) noexcept {
   // First check that we start with a leading byte
@@ -399,10 +407,14 @@ inline simdutf_warn_unused utf8_result rewind_and_validate_with_counts(
   size_t extra_len{0};
   size_t extra_continuations{0};
   size_t extra_four_bytes{0};
-  // A leading byte cannot be further than 4 bytes away
-  // TODO: Wouldn't `i < 4` suffice? Maybe actually no difference behavior-wise
-  // (Changed to 4 in a previous commit to try)
-  for (int i = 0; i < 5; i++) {
+  // Four steps are enough. Everything before buf has already validated, so at
+  // most three continuation bytes can precede it, from a four-byte sequence
+  // ending exactly on the boundary; the fourth step then lands on its leading
+  // byte. Note that the sibling rewind_and_validate_with_errors needs five
+  // steps only because it tests the byte before stepping back, whereas we step
+  // back first. Callers pass a block boundary at least 64 bytes into the
+  // stream, so stepping back four bytes stays in bounds.
+  for (int i = 0; i < 4; i++) {
     // We rewind at least one byte to find the actual previous leading byte.
     // We do so to backtrack into the last chunk in case the utf8 error happened
     // there already.
