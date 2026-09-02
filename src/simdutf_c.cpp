@@ -43,6 +43,10 @@ size_t simdutf_utf8_result_utf16_length(simdutf_utf8_result r) {
   return r.input_count - r.continuation_count + r.four_byte_count;
 }
 
+size_t simdutf_utf8_result_utf32_length(simdutf_utf8_result r) {
+  return r.input_count - r.continuation_count;
+}
+
 simdutf_encoding_type simdutf_autodetect_encoding(const char *input,
                                                   size_t length) {
   return static_cast<simdutf_encoding_type>(

@@ -40,7 +40,7 @@ int main(void) {
   EXPECT(cr.input_count == sizeof(counted) - 1);
   EXPECT(cr.continuation_count == 4);
   EXPECT(cr.four_byte_count == 1);
-  EXPECT(cr.input_count - cr.continuation_count == 2);
+  EXPECT(simdutf_utf8_result_utf32_length(cr) == 2);
   EXPECT(simdutf_utf8_result_utf16_length(cr) == 3);
 
   simdutf_utf8_result br =
