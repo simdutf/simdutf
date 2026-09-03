@@ -123,5 +123,35 @@ struct full_result {
   }
 };
 
+struct utf8_result {
+  error_code error;
+  size_t input_count;
+  size_t continuation_count;
+  size_t four_byte_count;
+
+  simdutf_really_inline simdutf_constexpr23 utf8_result() noexcept
+      : error{error_code::SUCCESS}, input_count{0}, continuation_count{0},
+        four_byte_count{0} {}
+
+  simdutf_really_inline simdutf_constexpr23
+  utf8_result(error_code err, size_t pos_in, size_t continuation_count_,
+              size_t four_byte_count_) noexcept
+      : error{err}, input_count{pos_in},
+        continuation_count{continuation_count_},
+        four_byte_count{four_byte_count_} {}
+
+  simdutf_really_inline simdutf_constexpr23 size_t
+  utf16_length() const noexcept {
+    return input_count - continuation_count + four_byte_count;
+  }
+
+  // The number of code points in the valid prefix, which is also the number of
+  // UTF-32 code units.
+  simdutf_really_inline simdutf_constexpr23 size_t
+  utf32_length() const noexcept {
+    return input_count - continuation_count;
+  }
+};
+
 } // namespace simdutf
 #endif
