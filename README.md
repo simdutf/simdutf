@@ -3018,7 +3018,8 @@ We built simdutf with thread safety in mind. The simdutf library is single-threa
 
 ## References
 
-* Robert Clausecker, Daniel Lemire, [Transcoding Unicode Characters with AVX-512 Instructions](https://arxiv.org/abs/2212.05098),  Software: Practice and Experience 53 (12), 2023.
+* Robert Clausecker, Daniel Lemire, [Fixing ill-formed UTF-16 strings with SIMD instructions](https://arxiv.org/abs/2601.06349),  Software: Practice and Experience to appear, 2026.
+* * Robert Clausecker, Daniel Lemire, [Transcoding Unicode Characters with AVX-512 Instructions](https://arxiv.org/abs/2212.05098),  Software: Practice and Experience 53 (12), 2023.
 * Daniel Lemire, Wojciech Muła,  [Transcoding Billions of Unicode Characters per Second with SIMD Instructions](https://arxiv.org/abs/2109.10433), Software: Practice and Experience 52 (2), 2022.
 * John Keiser, Daniel Lemire, [Validating UTF-8 In Less Than One Instruction Per Byte](https://arxiv.org/abs/2010.03090), Software: Practice and Experience 51 (5), 2021.
 * Wojciech Muła, Daniel Lemire, [Base64 encoding and decoding at almost the speed of a memory copy](https://arxiv.org/abs/1910.05109), Software: Practice and Experience 50 (2), 2020.
