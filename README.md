@@ -1658,26 +1658,6 @@ We have more advanced conversion functions which output a `simdutf::result` stru
 ```
 
 
-If, instead of failing on invalid input, you would rather replace unpaired surrogates with the Unicode replacement character (`U+FFFD`), you can use the `_with_replacement` conversions before sizing the output with the corresponding `_with_replacement` length function. These functions always succeed. For example, to go from UTF-16 to UTF-8 while replacing any unpaired surrogates:
-
-```cpp
-  // this UTF-16 string contains an unpaired surrogate (U+D800)
-  const char16_t source[] = u"A \xd800 B";
-  size_t length = 5;
-  // The length function always returns the correct byte count and sets the
-  // error field to SURROGATE when a surrogate (matched or not) is present.
-  simdutf::result res = simdutf::utf8_length_from_utf16_with_replacement(source, length);
-  std::unique_ptr<char[]> utf8{new char[res.count]};
-  // The conversion function replaces the unpaired surrogate with U+FFFD and
-  // always succeeds.
-  size_t written = simdutf::convert_utf16_to_utf8_with_replacement(
-      source, length, utf8.get());
-  if(res.error == simdutf::error_code::SURROGATE) {
-    std::cerr << "an unpaired surrogate was replaced with U+FFFD" << std::endl;
-  }
-```
-
-
 We have several transcoding functions that return a `simdutf::result` struct instead of a simple integer. These functions combine validation and conversion in a single pass and stop at the first error encountered. They are particularly useful when processing data from untrusted sources, as they provide detailed error information (error type and position) while still returning the number of successfully processed code units when no error occurs.
 
 ```cpp
@@ -1974,6 +1954,30 @@ If you have a UTF-16 input, you may change its endianness with a fast function.
 void change_endianness_utf16(const char16_t * input, size_t length, char16_t * output) noexcept;
 
 ```
+
+
+
+
+
+If, instead of failing on invalid input, you would rather replace unpaired surrogates with the Unicode replacement character (`U+FFFD`), you can use the `_with_replacement` conversions before sizing the output with the corresponding `_with_replacement` length function. These functions always succeed. For example, to go from UTF-16 to UTF-8 while replacing any unpaired surrogates:
+
+```cpp
+  // this UTF-16 string contains an unpaired surrogate (U+D800)
+  const char16_t source[] = u"A \xd800 B";
+  size_t length = 5;
+  // The length function always returns the correct byte count and sets the
+  // error field to SURROGATE when a surrogate (matched or not) is present.
+  simdutf::result res = simdutf::utf8_length_from_utf16_with_replacement(source, length);
+  std::unique_ptr<char[]> utf8{new char[res.count]};
+  // The conversion function replaces the unpaired surrogate with U+FFFD and
+  // always succeeds.
+  size_t written = simdutf::convert_utf16_to_utf8_with_replacement(
+      source, length, utf8.get());
+  if(res.error == simdutf::error_code::SURROGATE) {
+    std::cerr << "an unpaired surrogate was replaced with U+FFFD" << std::endl;
+  }
+```
+
 
 ## Cost of the safe conversion functions
 
