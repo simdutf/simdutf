@@ -1264,6 +1264,24 @@ convert_utf16_to_utf8_safe(const char16_t *input, size_t length, char *utf8_outp
                             size_t utf8_len) noexcept;
 
 /**
+ * Using native endianness, convert possibly broken UTF-16 string into UTF-8
+ * string, replacing unpaired surrogates with the Unicode replacement character
+ * U+FFFD.
+ *
+ * This function always succeeds: unpaired surrogates are replaced with U+FFFD
+ * (3 bytes in UTF-8: 0xEF 0xBF 0xBD).
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-16 string to convert
+ * @param length        the length of the string in 2-byte code units (char16_t)
+ * @param utf8_buffer   the pointer to buffer that can hold conversion result
+ * @return number of written code units
+ */
+simdutf_warn_unused size_t convert_utf16_to_utf8_with_replacement(
+    const char16_t *input, size_t length, char *utf8_buffer) noexcept;
+
+/**
  * Using native endianness, convert possibly broken UTF-16 string into Latin1 string.
  * If the string cannot be represented as Latin1, an error
  * is returned.
@@ -1328,6 +1346,23 @@ simdutf_warn_unused size_t convert_utf16be_to_latin1(const char16_t * input, siz
 simdutf_warn_unused size_t convert_utf16le_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) noexcept;
 
 /**
+ * Convert possibly broken UTF-16LE string into UTF-8 string, replacing
+ * unpaired surrogates with the Unicode replacement character U+FFFD.
+ *
+ * This function always succeeds: unpaired surrogates are replaced with U+FFFD
+ * (3 bytes in UTF-8: 0xEF 0xBF 0xBD).
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-16LE string to convert
+ * @param length        the length of the string in 2-byte code units (char16_t)
+ * @param utf8_buffer   the pointer to buffer that can hold conversion result
+ * @return number of written code units
+ */
+simdutf_warn_unused size_t convert_utf16le_to_utf8_with_replacement(
+    const char16_t *input, size_t length, char *utf8_buffer) noexcept;
+
+/**
  * Convert possibly broken UTF-16BE string into UTF-8 string.
  *
  * During the conversion also validation of the input string is done.
@@ -1341,6 +1376,23 @@ simdutf_warn_unused size_t convert_utf16le_to_utf8(const char16_t * input, size_
  * @return number of written code units; 0 if input is not a valid UTF-16LE string
  */
 simdutf_warn_unused size_t convert_utf16be_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) noexcept;
+
+/**
+ * Convert possibly broken UTF-16BE string into UTF-8 string, replacing
+ * unpaired surrogates with the Unicode replacement character U+FFFD.
+ *
+ * This function always succeeds: unpaired surrogates are replaced with U+FFFD
+ * (3 bytes in UTF-8: 0xEF 0xBF 0xBD).
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-16BE string to convert
+ * @param length        the length of the string in 2-byte code units (char16_t)
+ * @param utf8_buffer   the pointer to buffer that can hold conversion result
+ * @return number of written code units
+ */
+simdutf_warn_unused size_t convert_utf16be_to_utf8_with_replacement(
+    const char16_t *input, size_t length, char *utf8_buffer) noexcept;
 
 
 /**
@@ -1602,6 +1654,26 @@ We have more advanced conversion functions which output a `simdutf::result` stru
   res = simdutf::convert_utf8_to_utf16_with_errors(bad_utf8.data(), res.count, utf16.get());
   if(res.error == simdutf::error_code::SUCCESS) {
     std::cerr << "we have transcoded " << res.count << " characters" << std::endl;
+  }
+```
+
+
+If, instead of failing on invalid input, you would rather replace unpaired surrogates with the Unicode replacement character (`U+FFFD`), you can use the `_with_replacement` conversions before sizing the output with the corresponding `_with_replacement` length function. These functions always succeed. For example, to go from UTF-16 to UTF-8 while replacing any unpaired surrogates:
+
+```cpp
+  // this UTF-16 string contains an unpaired surrogate (U+D800)
+  const char16_t source[] = u"A \xd800 B";
+  size_t length = 5;
+  // The length function always returns the correct byte count and sets the
+  // error field to SURROGATE when a surrogate (matched or not) is present.
+  simdutf::result res = simdutf::utf8_length_from_utf16_with_replacement(source, length);
+  std::unique_ptr<char[]> utf8{new char[res.count]};
+  // The conversion function replaces the unpaired surrogate with U+FFFD and
+  // always succeeds.
+  size_t written = simdutf::convert_utf16_to_utf8_with_replacement(
+      source, length, utf8.get());
+  if(res.error == simdutf::error_code::SURROGATE) {
+    std::cerr << "an unpaired surrogate was replaced with U+FFFD" << std::endl;
   }
 ```
 
