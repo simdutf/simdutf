@@ -1149,6 +1149,23 @@ API</h1>
 <div class="line">convert_utf16_to_utf8_safe(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span> *utf8_output,</div>
 <div class="line">                            <span class="keywordtype">size_t</span> utf8_len) <span class="keyword">noexcept</span>;</div>
 <div class="line"><span class="comment">/**</span></div>
+<div class="line"><span class="comment"> * Using native endianness, convert possibly broken UTF-16 string into UTF-8</span></div>
+<div class="line"><span class="comment"> * string, replacing unpaired surrogates with the Unicode replacement character</span></div>
+<div class="line"><span class="comment"> * U+FFFD.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * This function always succeeds: unpaired surrogates are replaced with U+FFFD</span></div>
+<div class="line"><span class="comment"> * (3 bytes in UTF-8: 0xEF 0xBF 0xBD).</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * This function is not BOM-aware.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * @param input         the UTF-16 string to convert</span></div>
+<div class="line"><span class="comment"> * @param length        the length of the string in 2-byte code units (char16_t)</span></div>
+<div class="line"><span class="comment"> * @param utf8_buffer   the pointer to buffer that can hold conversion result</span></div>
+<div class="line"><span class="comment"> * @return number of written code units</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf16_to_utf8_with_replacement(</div>
+<div class="line">    <span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span> *utf8_buffer) <span class="keyword">noexcept</span>;</div>
+<div class="line"><span class="comment">/**</span></div>
 <div class="line"><span class="comment"> * Using native endianness, convert possibly broken UTF-16 string into Latin1 string.</span></div>
 <div class="line"><span class="comment"> * If the string cannot be represented as Latin1, an error</span></div>
 <div class="line"><span class="comment"> * is returned.</span></div>
@@ -1209,6 +1226,22 @@ API</h1>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf16le_to_utf8(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* utf8_buffer) <span class="keyword">noexcept</span>;</div>
 <div class="line"><span class="comment">/**</span></div>
+<div class="line"><span class="comment"> * Convert possibly broken UTF-16LE string into UTF-8 string, replacing</span></div>
+<div class="line"><span class="comment"> * unpaired surrogates with the Unicode replacement character U+FFFD.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * This function always succeeds: unpaired surrogates are replaced with U+FFFD</span></div>
+<div class="line"><span class="comment"> * (3 bytes in UTF-8: 0xEF 0xBF 0xBD).</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * This function is not BOM-aware.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * @param input         the UTF-16LE string to convert</span></div>
+<div class="line"><span class="comment"> * @param length        the length of the string in 2-byte code units (char16_t)</span></div>
+<div class="line"><span class="comment"> * @param utf8_buffer   the pointer to buffer that can hold conversion result</span></div>
+<div class="line"><span class="comment"> * @return number of written code units</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf16le_to_utf8_with_replacement(</div>
+<div class="line">    <span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span> *utf8_buffer) <span class="keyword">noexcept</span>;</div>
+<div class="line"><span class="comment">/**</span></div>
 <div class="line"><span class="comment"> * Convert possibly broken UTF-16BE string into UTF-8 string.</span></div>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> * During the conversion also validation of the input string is done.</span></div>
@@ -1222,6 +1255,22 @@ API</h1>
 <div class="line"><span class="comment"> * @return number of written code units; 0 if input is not a valid UTF-16LE string</span></div>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf16be_to_utf8(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* utf8_buffer) <span class="keyword">noexcept</span>;</div>
+<div class="line"><span class="comment">/**</span></div>
+<div class="line"><span class="comment"> * Convert possibly broken UTF-16BE string into UTF-8 string, replacing</span></div>
+<div class="line"><span class="comment"> * unpaired surrogates with the Unicode replacement character U+FFFD.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * This function always succeeds: unpaired surrogates are replaced with U+FFFD</span></div>
+<div class="line"><span class="comment"> * (3 bytes in UTF-8: 0xEF 0xBF 0xBD).</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * This function is not BOM-aware.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * @param input         the UTF-16BE string to convert</span></div>
+<div class="line"><span class="comment"> * @param length        the length of the string in 2-byte code units (char16_t)</span></div>
+<div class="line"><span class="comment"> * @param utf8_buffer   the pointer to buffer that can hold conversion result</span></div>
+<div class="line"><span class="comment"> * @return number of written code units</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf16be_to_utf8_with_replacement(</div>
+<div class="line">    <span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span> *utf8_buffer) <span class="keyword">noexcept</span>;</div>
 <div class="line"><span class="comment">/**</span></div>
 <div class="line"><span class="comment"> * Convert possibly broken UTF-32 string into Latin1 string.</span></div>
 <div class="line"><span class="comment"> *</span></div>
@@ -1725,6 +1774,23 @@ API</h1>
 <div class="line"><span class="comment"> * @param output        the pointer to a buffer that can hold the conversion result</span></div>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line"><span class="keywordtype">void</span> change_endianness_utf16(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char16_t</span> * output) <span class="keyword">noexcept</span>;</div>
+</div><!-- fragment --><p>If, instead of failing on invalid input, you would rather replace unpaired surrogates with the Unicode replacement character (<code>U+FFFD</code>), you can use the <code>_with_replacement</code> conversions before sizing the output with the corresponding <code>_with_replacement</code> length function. These functions always succeed. For example, to go from UTF-16 to UTF-8 while replacing any unpaired surrogates:</p>
+<div class="fragment"><div class="line"><span class="comment">// this UTF-16 string contains an unpaired surrogate (U+D800)</span></div>
+<div class="line"><span class="keyword">const</span> <span class="keywordtype">char16_t</span> source[] = u<span class="stringliteral">&quot;A \xd800 B&quot;</span>;</div>
+<div class="line"><span class="keywordtype">size_t</span> length = 5;</div>
+<div class="line"><span class="comment">// The length function always returns the correct byte count and sets the</span></div>
+<div class="line"><span class="comment">// error field to SURROGATE when a surrogate (matched or not) is present.</span></div>
+<div class="line"><a class="code hl_struct" href="structsimdutf_1_1result.html">simdutf::result</a> res = <a class="code hl_function" href="namespacesimdutf.html#a477fc442ecc7c0de526ccacff409b911">simdutf::utf8_length_from_utf16_with_replacement</a>(source, length);</div>
+<div class="line">std::unique_ptr&lt;char[]&gt; utf8{<span class="keyword">new</span> <span class="keywordtype">char</span>[res.count]};</div>
+<div class="line"><span class="comment">// The conversion function replaces the unpaired surrogate with U+FFFD and</span></div>
+<div class="line"><span class="comment">// always succeeds.</span></div>
+<div class="line"><span class="keywordtype">size_t</span> written = <a class="code hl_function" href="namespacesimdutf.html#a419363ca2ced0a398f8864742fa418c6">simdutf::convert_utf16_to_utf8_with_replacement</a>(</div>
+<div class="line">    source, length, utf8.get());</div>
+<div class="line"><span class="keywordflow">if</span>(res.error == simdutf::error_code::SURROGATE) {</div>
+<div class="line">  std::cerr &lt;&lt; <span class="stringliteral">&quot;an unpaired surrogate was replaced with U+FFFD&quot;</span> &lt;&lt; std::endl;</div>
+<div class="line">}</div>
+<div class="ttc" id="anamespacesimdutf_html_a419363ca2ced0a398f8864742fa418c6"><div class="ttname"><a href="namespacesimdutf.html#a419363ca2ced0a398f8864742fa418c6">simdutf::convert_utf16_to_utf8_with_replacement</a></div><div class="ttdeci">simdutf_warn_unused size_t convert_utf16_to_utf8_with_replacement(const char16_t *input, size_t length, char *utf8_buffer) noexcept</div><div class="ttdoc">Convert possibly broken UTF-16 string (native endianness) into UTF-8 string, replacing unpaired surro...</div></div>
+<div class="ttc" id="anamespacesimdutf_html_a477fc442ecc7c0de526ccacff409b911"><div class="ttname"><a href="namespacesimdutf.html#a477fc442ecc7c0de526ccacff409b911">simdutf::utf8_length_from_utf16_with_replacement</a></div><div class="ttdeci">simdutf_warn_unused result utf8_length_from_utf16_with_replacement(const char16_t *input, size_t length) noexcept</div><div class="ttdoc">Using native endianness; compute the number of bytes that this UTF-16 string would require in UTF-8 f...</div></div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md13"></a>
 Cost of the safe conversion functions</h1>
 <p>The <code>_safe</code> conversion variants (<code>convert_latin1_to_utf8_safe</code> and <code>convert_utf16_to_utf8_safe</code>) never write past the output capacity you give them. Because these functions cannot assume that there is enough output buffer space, they cannot proceed in the most efficient manner. For example, they may be forced to split the work into chunks. If the inputs span megabytes, this overhead is negligible. Unfortunately, for small inputs, it can be significant. For example, the <code>convert_utf16_to_utf8_safe</code> function is up to 3 times slower than <code>convert_utf16_to_utf8</code> on ASCII inputs of a few hundred code units in some tests. For optimal performance, you should allocate at least as much memory as the <code>utf8_length_from_latin1</code> or <code>utf8_length_from_utf16</code> functions indicate and directly call the <code>convert_latin1_to_utf8</code> and <code>convert_utf16_to_utf8</code> functions, especially if you expect to have short inputs.</p>
