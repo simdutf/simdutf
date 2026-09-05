@@ -215,7 +215,7 @@ $(document).ready(function(){initNavTree('portability_8h_source.html',''); initR
 <div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span><span class="preprocessor">#elif defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC)</span></div>
 <div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span><span class="preprocessor">  #define SIMDUTF_IS_ARM64 1</span></div>
 <div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span><span class="preprocessor">#elif defined(__PPC64__) || defined(_M_PPC64)</span></div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span><span class="preprocessor">  #if defined(__VEC__) &amp;&amp; defined(__ALTIVEC__)</span></div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span><span class="preprocessor">  #if defined(__VEC__) &amp;&amp; defined(__ALTIVEC__) &amp;&amp; defined(__POWER8_VECTOR__)</span></div>
 <div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span><span class="preprocessor">    #define SIMDUTF_IS_PPC64 1</span></div>
 <div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span><span class="preprocessor">  #endif</span></div>
 <div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span><span class="preprocessor">#elif defined(__s390__)</span></div>
