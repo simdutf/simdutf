@@ -470,11 +470,12 @@ static inline void base64_decode(char *out, __m256i str) {
   __m256i pack_shuffle = ____m256i(
       (__m128i)v16u8{3, 2, 1, 7, 6, 5, 11, 10, 9, 15, 14, 13, 0, 0, 0, 0});
   t3 = __lasx_xvshuf_b(t3, t3, (__m256i)pack_shuffle);
-  t3 = __lasx_xvinsgr2vr_w(t3, 0, 7);
 
   // Store the output:
   __lsx_vst(lasx_extracti128_lo(t3), out, 0);
-  __lsx_vst(lasx_extracti128_hi(t3), out, 12);
+  __m128i hi = lasx_extracti128_hi(t3);
+  __lsx_vstelm_d(hi, out + 12, 0, 0);
+  __lsx_vstelm_w(hi, out + 20, 0, 2);
 }
 // decode 64 bytes and output 48 bytes
 static inline void base64_decode_block(char *out, const char *src) {
