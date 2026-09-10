@@ -315,7 +315,8 @@ static inline __m512i base64_pack(__m512i str) {
 }
 
 // Write 64 bytes: 48 valid plus 16 that the next store (at out+48) overwrites.
-// Callers must only use this while dst is below end_of_safe_64byte_zone.
+// Callers must only use this when at least 16 more bytes of real output
+// follow, so that a later store overwrites the 16 extra bytes.
 static inline void base64_decode(char *out, __m512i str) {
   _mm512_storeu_si512(reinterpret_cast<__m512i *>(out), base64_pack(str));
 }
@@ -407,11 +408,12 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   const char *const dstinit = dst;
   const chartype *const srcend = src + srclen;
 
-  const size_t max_output = (srclen + 3) / 4 * 3;
-  // A 64-byte store writes 16 bytes past the 48 valid bytes. The bulk loop
-  // may do that only while dst is below this pointer; see LASX/LSX.
-  char *end_of_safe_64byte_zone =
-      max_output >= 64 ? dst + max_output - 64 : dst;
+  // A 64-byte store writes 16 bytes past the 48 valid bytes it produces, so it
+  // is only allowed when at least 16 more bytes of real output follow it. We
+  // establish that locally, by always closing a run of wide stores with a
+  // masked 48-byte store. Bounding it from srclen instead would be wrong:
+  // srclen still counts ignorable characters, so a whitespace-bearing input
+  // inflates the bound past the end of a correctly sized output buffer.
 
   __m512i lookup0, lookup1;
   load_base64_lookups<base64_url, default_or_url>(lookup0, lookup1);
@@ -426,8 +428,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     // DNS messages are ~350 bytes so they never enter; a whitespace hit in
     // the first group would throw the work away.
     constexpr size_t unroll = 8;
-    while (bufferptr == buffer && size_t(srcend - src) >= unroll * 64 &&
-           size_t(dst - dstinit) + unroll * 48 + 16 <= max_output) {
+    while (bufferptr == buffer && size_t(srcend - src) >= unroll * 64) {
       block64 b0, b1, b2, b3, b4, b5, b6, b7;
       load_block(&b0, src);
       load_block(&b1, src + 64);
@@ -494,8 +495,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     }
     // One leftover 256-byte group on large clean inputs (bing is 1808 B).
     // DNS messages are ~350 B so they skip this probe.
-    if (srclen >= 1024 && bufferptr == buffer && size_t(srcend - src) >= 256 &&
-        size_t(dst - dstinit) + 256 / 4 * 3 + 16 <= max_output) {
+    if (srclen >= 1024 && bufferptr == buffer && size_t(srcend - src) >= 256) {
       block64 b0, b1, b2, b3;
       load_block(&b0, src);
       load_block(&b1, src + 64);
@@ -559,11 +559,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
           base64_decode_block(dst, buffer + i * 64);
           dst += 48;
         }
-        if (dst >= end_of_safe_64byte_zone) {
-          base64_decode_block_safe(dst, buffer + (block_size - 2) * 64);
-        } else {
-          base64_decode_block(dst, buffer + (block_size - 2) * 64);
-        }
+        base64_decode_block_safe(dst, buffer + (block_size - 2) * 64);
         dst += 48;
         std::memcpy(buffer, buffer + (block_size - 1) * 64,
                     64); // 64 might be too much
@@ -591,10 +587,10 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
 
   char *buffer_start = buffer;
   for (; buffer_start + 64 <= bufferptr; buffer_start += 64) {
-    if (dst >= end_of_safe_64byte_zone) {
-      base64_decode_block_safe(dst, buffer_start);
-    } else {
+    if (buffer_start + 128 <= bufferptr) {
       base64_decode_block(dst, buffer_start);
+    } else {
+      base64_decode_block_safe(dst, buffer_start);
     }
     dst += 48;
   }
@@ -776,7 +772,7 @@ simdutf_warn_unused size_t icelake_binary_length_from_base64(const char *input,
   const char *end = input + length;
 
   __m512i spaces = _mm512_set1_epi8(0x20);
-  while (ptr + 64 <= end) {
+  while (size_t(end - ptr) >= 64) {
     __m512i data = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(ptr));
     uint64_t mask = _mm512_cmpgt_epi8_mask(data, spaces);
     count += count_ones(mask);
@@ -813,7 +809,7 @@ icelake_binary_length_from_base64(const char16_t *input, size_t length) {
   const char16_t *end = input + length;
 
   __m512i spaces = _mm512_set1_epi16(0x20);
-  while (ptr + 32 <= end) {
+  while (size_t(end - ptr) >= 32) {
     __m512i data = _mm512_loadu_si512(reinterpret_cast<const __m512i *>(ptr));
     __mmask32 mask = _mm512_cmpgt_epi16_mask(data, spaces);
     count += _mm_popcnt_u32(mask);
