@@ -230,57 +230,15 @@ size_t encode_base64(char *dst, const char *src, size_t srclen,
   return encode_base64_impl<base64_url, false>(dst, src, srclen, options);
 }
 
-template <bool base64_url, bool ignore_garbage, bool default_or_url>
-static inline uint64_t to_base64_mask(block64 *b, uint64_t *error,
-                                      uint64_t input_mask = UINT64_MAX) {
+template <bool ignore_garbage>
+static inline uint64_t
+to_base64_mask(block64 *b, uint64_t *error, const __m512i lookup0,
+               const __m512i lookup1, uint64_t input_mask = UINT64_MAX) {
   __m512i input = b->chunks[0];
   const __m512i ascii_space_tbl = _mm512_set_epi8(
       0, 0, 13, 12, 0, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 13, 12, 0, 10,
       9, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 13, 12, 0, 10, 9, 0, 0, 0, 0, 0, 0,
       0, 0, 32, 0, 0, 13, 12, 0, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0, 32);
-  __m512i lookup0;
-  if (default_or_url) {
-    lookup0 = _mm512_set_epi8(
-        -128, -128, -128, -128, -128, -128, 61, 60, 59, 58, 57, 56, 55, 54, 53,
-        52, 63, -128, 62, -128, 62, -128, -128, -128, -128, -128, -128, -128,
-        -128, -128, -128, -1, -128, -128, -128, -128, -128, -128, -128, -128,
-        -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -1, -128,
-        -128, -1, -1, -128, -128, -128, -128, -128, -128, -128, -128, -1);
-  } else if (base64_url) {
-    lookup0 = _mm512_set_epi8(
-        -128, -128, -128, -128, -128, -128, 61, 60, 59, 58, 57, 56, 55, 54, 53,
-        52, -128, -128, 62, -128, -128, -128, -128, -128, -128, -128, -128,
-        -128, -128, -128, -128, -1, -128, -128, -128, -128, -128, -128, -128,
-        -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -1,
-        -128, -128, -1, -1, -128, -128, -128, -128, -128, -128, -128, -128, -1);
-  } else {
-    lookup0 = _mm512_set_epi8(
-        -128, -128, -128, -128, -128, -128, 61, 60, 59, 58, 57, 56, 55, 54, 53,
-        52, 63, -128, -128, -128, 62, -128, -128, -128, -128, -128, -128, -128,
-        -128, -128, -128, -1, -128, -128, -128, -128, -128, -128, -128, -128,
-        -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -1, -128,
-        -128, -1, -1, -128, -128, -128, -128, -128, -128, -128, -128, -128);
-  }
-  __m512i lookup1;
-  if (default_or_url) {
-    lookup1 = _mm512_set_epi8(
-        -128, -128, -128, -128, -128, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42,
-        41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, -128,
-        63, -128, -128, -128, -128, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15,
-        14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -128);
-  } else if (base64_url) {
-    lookup1 = _mm512_set_epi8(
-        -128, -128, -128, -128, -128, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42,
-        41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, -128,
-        63, -128, -128, -128, -128, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15,
-        14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -128);
-  } else {
-    lookup1 = _mm512_set_epi8(
-        -128, -128, -128, -128, -128, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42,
-        41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, -128,
-        -128, -128, -128, -128, -128, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16,
-        15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -128);
-  }
 
   const __m512i translated = _mm512_permutex2var_epi8(lookup0, input, lookup1);
   const __m512i combined = _mm512_or_si512(translated, input);
@@ -342,7 +300,8 @@ static inline void load_block_partial(block64 *b, const char16_t *src,
       _mm512_permutexvar_epi64(_mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7), p);
 }
 
-static inline void base64_decode(char *out, __m512i str) {
+// Pack 64 6-bit values into 48 output bytes (16 trailing bytes unused).
+static inline __m512i base64_pack(__m512i str) {
   const __m512i merge_ab_and_bc =
       _mm512_maddubs_epi16(str, _mm512_set1_epi32(0x01400140));
   const __m512i merged =
@@ -352,18 +311,74 @@ static inline void base64_decode(char *out, __m512i str) {
       52, 53, 54, 48, 49, 50, 44, 45, 46, 40, 41, 42, 36, 37, 38, 32, 33, 34,
       28, 29, 30, 24, 25, 26, 20, 21, 22, 16, 17, 18, 12, 13, 14, 8, 9, 10, 4,
       5, 6, 0, 1, 2);
-  const __m512i shuffled = _mm512_permutexvar_epi8(pack, merged);
-  _mm512_mask_storeu_epi8(
-      (__m512i *)out, 0xffffffffffff,
-      shuffled); // mask would be 0xffffffffffff since we write 48 bytes.
+  return _mm512_permutexvar_epi8(pack, merged);
 }
+
+// Write 64 bytes: 48 valid plus 16 that the next store (at out+48) overwrites.
+// Callers must only use this while dst is below end_of_safe_64byte_zone.
+static inline void base64_decode(char *out, __m512i str) {
+  _mm512_storeu_si512(reinterpret_cast<__m512i *>(out), base64_pack(str));
+}
+
+static inline void base64_decode_safe(char *out, __m512i str) {
+  _mm512_mask_storeu_epi8((__m512i *)out, 0xffffffffffff, base64_pack(str));
+}
+
 // decode 64 bytes and output 48 bytes
 static inline void base64_decode_block(char *out, const char *src) {
   base64_decode(out,
                 _mm512_loadu_si512(reinterpret_cast<const __m512i *>(src)));
 }
+static inline void base64_decode_block_safe(char *out, const char *src) {
+  base64_decode_safe(
+      out, _mm512_loadu_si512(reinterpret_cast<const __m512i *>(src)));
+}
 static inline void base64_decode_block(char *out, block64 *b) {
   base64_decode(out, b->chunks[0]);
+}
+static inline void base64_decode_block_safe(char *out, block64 *b) {
+  base64_decode_safe(out, b->chunks[0]);
+}
+
+template <bool base64_url, bool default_or_url>
+static inline void load_base64_lookups(__m512i &lookup0, __m512i &lookup1) {
+  if (default_or_url) {
+    lookup0 = _mm512_set_epi8(
+        -128, -128, -128, -128, -128, -128, 61, 60, 59, 58, 57, 56, 55, 54, 53,
+        52, 63, -128, 62, -128, 62, -128, -128, -128, -128, -128, -128, -128,
+        -128, -128, -128, -1, -128, -128, -128, -128, -128, -128, -128, -128,
+        -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -1, -128,
+        -128, -1, -1, -128, -128, -128, -128, -128, -128, -128, -128, -1);
+    lookup1 = _mm512_set_epi8(
+        -128, -128, -128, -128, -128, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42,
+        41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, -128,
+        63, -128, -128, -128, -128, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15,
+        14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -128);
+  } else if (base64_url) {
+    lookup0 = _mm512_set_epi8(
+        -128, -128, -128, -128, -128, -128, 61, 60, 59, 58, 57, 56, 55, 54, 53,
+        52, -128, -128, 62, -128, -128, -128, -128, -128, -128, -128, -128,
+        -128, -128, -128, -128, -1, -128, -128, -128, -128, -128, -128, -128,
+        -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -1,
+        -128, -128, -1, -1, -128, -128, -128, -128, -128, -128, -128, -128, -1);
+    lookup1 = _mm512_set_epi8(
+        -128, -128, -128, -128, -128, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42,
+        41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, -128,
+        63, -128, -128, -128, -128, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15,
+        14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -128);
+  } else {
+    lookup0 = _mm512_set_epi8(
+        -128, -128, -128, -128, -128, -128, 61, 60, 59, 58, 57, 56, 55, 54, 53,
+        52, 63, -128, -128, -128, 62, -128, -128, -128, -128, -128, -128, -128,
+        -128, -128, -128, -1, -128, -128, -128, -128, -128, -128, -128, -128,
+        -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -1, -128,
+        -128, -1, -1, -128, -128, -128, -128, -128, -128, -128, -128, -128);
+    lookup1 = _mm512_set_epi8(
+        -128, -128, -128, -128, -128, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42,
+        41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, -128,
+        -128, -128, -128, -128, -128, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16,
+        15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -128);
+  }
 }
 
 template <bool base64_url, bool ignore_garbage, bool default_or_url,
@@ -392,20 +407,133 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   const char *const dstinit = dst;
   const chartype *const srcend = src + srclen;
 
+  const size_t max_output = (srclen + 3) / 4 * 3;
+  // A 64-byte store writes 16 bytes past the 48 valid bytes. The bulk loop
+  // may do that only while dst is below this pointer; see LASX/LSX.
+  char *end_of_safe_64byte_zone =
+      max_output >= 64 ? dst + max_output - 64 : dst;
+
+  __m512i lookup0, lookup1;
+  load_base64_lookups<base64_url, default_or_url>(lookup0, lookup1);
+
   // figure out why block_size == 2 is sometimes best???
   constexpr size_t block_size = 6;
   char buffer[block_size * 64];
   char *bufferptr = buffer;
   if (srclen >= 64) {
     const chartype *const srcend64 = src + srclen - 64;
+    // 512 input bytes / iteration, matching Turbo's DS256×2 inner loop.
+    // DNS messages are ~350 bytes so they never enter; a whitespace hit in
+    // the first group would throw the work away.
+    constexpr size_t unroll = 8;
+    while (bufferptr == buffer && size_t(srcend - src) >= unroll * 64 &&
+           size_t(dst - dstinit) + unroll * 48 + 16 <= max_output) {
+      block64 b0, b1, b2, b3, b4, b5, b6, b7;
+      load_block(&b0, src);
+      load_block(&b1, src + 64);
+      const __m512i t0 =
+          _mm512_permutex2var_epi8(lookup0, b0.chunks[0], lookup1);
+      const __m512i t1 =
+          _mm512_permutex2var_epi8(lookup0, b1.chunks[0], lookup1);
+      load_block(&b2, src + 128);
+      load_block(&b3, src + 192);
+      const __m512i t2 =
+          _mm512_permutex2var_epi8(lookup0, b2.chunks[0], lookup1);
+      const __m512i t3 =
+          _mm512_permutex2var_epi8(lookup0, b3.chunks[0], lookup1);
+      const __m512i c0 = _mm512_or_si512(t0, b0.chunks[0]);
+      const __m512i c1 = _mm512_or_si512(t1, b1.chunks[0]);
+      const __m512i c2 = _mm512_or_si512(t2, b2.chunks[0]);
+      const __m512i c3 = _mm512_or_si512(t3, b3.chunks[0]);
+      __m512i any =
+          _mm512_or_si512(_mm512_ternarylogic_epi32(c0, c1, c2, 0xfe), c3);
+      const __m512i p0 = base64_pack(t0);
+      const __m512i p1 = base64_pack(t1);
+      const __m512i p2 = base64_pack(t2);
+      const __m512i p3 = base64_pack(t3);
+      load_block(&b4, src + 256);
+      load_block(&b5, src + 320);
+      const __m512i t4 =
+          _mm512_permutex2var_epi8(lookup0, b4.chunks[0], lookup1);
+      const __m512i t5 =
+          _mm512_permutex2var_epi8(lookup0, b5.chunks[0], lookup1);
+      load_block(&b6, src + 384);
+      load_block(&b7, src + 448);
+      const __m512i t6 =
+          _mm512_permutex2var_epi8(lookup0, b6.chunks[0], lookup1);
+      const __m512i t7 =
+          _mm512_permutex2var_epi8(lookup0, b7.chunks[0], lookup1);
+      const __m512i c4 = _mm512_or_si512(t4, b4.chunks[0]);
+      const __m512i c5 = _mm512_or_si512(t5, b5.chunks[0]);
+      const __m512i c6 = _mm512_or_si512(t6, b6.chunks[0]);
+      const __m512i c7 = _mm512_or_si512(t7, b7.chunks[0]);
+      any = _mm512_or_si512(
+          any,
+          _mm512_or_si512(_mm512_ternarylogic_epi32(c4, c5, c6, 0xfe), c7));
+      const __m512i p4 = base64_pack(t4);
+      const __m512i p5 = base64_pack(t5);
+      const __m512i p6 = base64_pack(t6);
+      const __m512i p7 = base64_pack(t7);
+      if (simdutf_unlikely(_mm512_movepi8_mask(any) != 0)) {
+        break;
+      }
+      // Overlapping 64-byte stores for all but the last of the group: a later
+      // store overwrites the extra 16. The last is masked so we do not write
+      // past the 384 valid bytes (error paths and base64_to_binary_safe
+      // require no garbage past the logical output).
+      _mm512_storeu_si512(reinterpret_cast<__m512i *>(dst), p0);
+      _mm512_storeu_si512(reinterpret_cast<__m512i *>(dst + 48), p1);
+      _mm512_storeu_si512(reinterpret_cast<__m512i *>(dst + 96), p2);
+      _mm512_storeu_si512(reinterpret_cast<__m512i *>(dst + 144), p3);
+      _mm512_storeu_si512(reinterpret_cast<__m512i *>(dst + 192), p4);
+      _mm512_storeu_si512(reinterpret_cast<__m512i *>(dst + 240), p5);
+      _mm512_storeu_si512(reinterpret_cast<__m512i *>(dst + 288), p6);
+      _mm512_mask_storeu_epi8(dst + 336, 0xffffffffffff, p7);
+      src += unroll * 64;
+      dst += unroll * 48;
+    }
+    // One leftover 256-byte group on large clean inputs (bing is 1808 B).
+    // DNS messages are ~350 B so they skip this probe.
+    if (srclen >= 1024 && bufferptr == buffer && size_t(srcend - src) >= 256 &&
+        size_t(dst - dstinit) + 256 / 4 * 3 + 16 <= max_output) {
+      block64 b0, b1, b2, b3;
+      load_block(&b0, src);
+      load_block(&b1, src + 64);
+      const __m512i t0 =
+          _mm512_permutex2var_epi8(lookup0, b0.chunks[0], lookup1);
+      const __m512i t1 =
+          _mm512_permutex2var_epi8(lookup0, b1.chunks[0], lookup1);
+      load_block(&b2, src + 128);
+      load_block(&b3, src + 192);
+      const __m512i t2 =
+          _mm512_permutex2var_epi8(lookup0, b2.chunks[0], lookup1);
+      const __m512i t3 =
+          _mm512_permutex2var_epi8(lookup0, b3.chunks[0], lookup1);
+      const __m512i any = _mm512_or_si512(
+          _mm512_ternarylogic_epi32(_mm512_or_si512(t0, b0.chunks[0]),
+                                    _mm512_or_si512(t1, b1.chunks[0]),
+                                    _mm512_or_si512(t2, b2.chunks[0]), 0xfe),
+          _mm512_or_si512(t3, b3.chunks[0]));
+      const __m512i p0 = base64_pack(t0);
+      const __m512i p1 = base64_pack(t1);
+      const __m512i p2 = base64_pack(t2);
+      const __m512i p3 = base64_pack(t3);
+      if (simdutf_likely(_mm512_movepi8_mask(any) == 0)) {
+        _mm512_storeu_si512(reinterpret_cast<__m512i *>(dst), p0);
+        _mm512_storeu_si512(reinterpret_cast<__m512i *>(dst + 48), p1);
+        _mm512_storeu_si512(reinterpret_cast<__m512i *>(dst + 96), p2);
+        _mm512_mask_storeu_epi8(dst + 144, 0xffffffffffff, p3);
+        src += 256;
+        dst += 192;
+      }
+    }
     while (src <= srcend64) {
       block64 b;
       load_block(&b, src);
       src += 64;
       uint64_t error = 0;
       uint64_t badcharmask =
-          to_base64_mask<base64_url, ignore_garbage, default_or_url>(&b,
-                                                                     &error);
+          to_base64_mask<ignore_garbage>(&b, &error, lookup0, lookup1);
       if (!ignore_garbage && error) {
         src -= 64;
         size_t error_offset = _tzcnt_u64(error);
@@ -421,14 +549,22 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         copy_block(&b, bufferptr);
         bufferptr += 64;
       } else {
-        base64_decode_block(dst, &b);
+        // Always a masked 48-byte store on the 1-block path: a later invalid
+        // character must not leave the 16-byte overlap past outlen.
+        base64_decode_block_safe(dst, &b);
         dst += 48;
       }
       if (bufferptr >= (block_size - 1) * 64 + buffer) {
-        for (size_t i = 0; i < (block_size - 1); i++) {
+        for (size_t i = 0; i < (block_size - 2); i++) {
           base64_decode_block(dst, buffer + i * 64);
           dst += 48;
         }
+        if (dst >= end_of_safe_64byte_zone) {
+          base64_decode_block_safe(dst, buffer + (block_size - 2) * 64);
+        } else {
+          base64_decode_block(dst, buffer + (block_size - 2) * 64);
+        }
+        dst += 48;
         std::memcpy(buffer, buffer + (block_size - 1) * 64,
                     64); // 64 might be too much
         bufferptr -= (block_size - 1) * 64;
@@ -442,9 +578,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     block64 b;
     load_block_partial(&b, src, input_mask);
     uint64_t error = 0;
-    uint64_t badcharmask =
-        to_base64_mask<base64_url, ignore_garbage, default_or_url>(&b, &error,
-                                                                   input_mask);
+    uint64_t badcharmask = to_base64_mask<ignore_garbage>(&b, &error, lookup0,
+                                                          lookup1, input_mask);
     if (!ignore_garbage && error) {
       size_t error_offset = _tzcnt_u64(error);
       return {error_code::INVALID_BASE64_CHARACTER,
@@ -456,7 +591,11 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
 
   char *buffer_start = buffer;
   for (; buffer_start + 64 <= bufferptr; buffer_start += 64) {
-    base64_decode_block(dst, buffer_start);
+    if (dst >= end_of_safe_64byte_zone) {
+      base64_decode_block_safe(dst, buffer_start);
+    } else {
+      base64_decode_block(dst, buffer_start);
+    }
     dst += 48;
   }
   if ((bufferptr - buffer_start) != 0) {
