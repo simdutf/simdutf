@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.18)
 project(simdutf
   DESCRIPTION "Fast Unicode validation, transcoding and processing"
   LANGUAGES C CXX
-  VERSION 9.1.1
+  VERSION 9.1.2
 )
 
 include (TestBigEndian)
