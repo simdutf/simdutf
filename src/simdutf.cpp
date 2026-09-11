@@ -6,6 +6,7 @@
 // should not depend on a kernel.
 #include "tables/utf8_to_utf16_tables.h"
 #include "tables/utf16_to_utf8_tables.h"
+#include "tables/utf32_to_utf8_tables.h"
 #include "tables/utf32_to_utf16_tables.h"
 // End of tables.
 
@@ -147,6 +148,11 @@ SIMDUTF_DISABLE_UNDESIRED_WARNINGS
 #if SIMDUTF_IMPLEMENTATION_LSX
   #include "lsx/implementation.cpp"
 #endif
+#if SIMDUTF_IMPLEMENTATION_HASWELL
+  #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
+    #include "haswell/avx2_convert_utf32_to_utf8_mixed.cpp"
+  #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
+#endif   // SIMDUTF_IMPLEMENTATION_HASWELL
 
 #include "simdutf_c.cpp"
 SIMDUTF_POP_DISABLE_WARNINGS
