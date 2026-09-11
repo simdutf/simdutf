@@ -261,10 +261,13 @@ static simdutf_really_inline vector_u8 decoding_pack(vector_u8 input) {
 
   const auto tmp = as_vector_u8(t4);
 
+  // The last four lanes are padding: pull them from a zero vector rather
+  // than from tmp, as the 16-byte store in base64_decode would otherwise
+  // write garbage past the 12 bytes we produce.
   const auto shuffle =
-      vector_u8(1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15, 0, 0, 0, 0);
+      vector_u8(1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15, 16, 16, 16, 16);
 
-  const auto t = shuffle.lookup_16(tmp);
+  const auto t = shuffle.lookup_32(tmp, vector_u8::zero());
 
   return t;
 #else
@@ -285,10 +288,13 @@ static simdutf_really_inline vector_u8 decoding_pack(vector_u8 input) {
 
   const auto tmp = as_vector_u8(t4);
 
+  // The last four lanes are padding: pull them from a zero vector rather
+  // than from tmp, as the 16-byte store in base64_decode would otherwise
+  // write garbage past the 12 bytes we produce.
   const auto shuffle =
-      vector_u8(2, 1, 0, 6, 5, 4, 10, 9, 8, 14, 13, 12, 0, 0, 0, 0);
+      vector_u8(2, 1, 0, 6, 5, 4, 10, 9, 8, 14, 13, 12, 16, 16, 16, 16);
 
-  const auto t = shuffle.lookup_16(tmp);
+  const auto t = shuffle.lookup_32(tmp, vector_u8::zero());
 
   return t;
 #endif // SIMDUTF_IS_BIG_ENDIAN
