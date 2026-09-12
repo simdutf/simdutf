@@ -107,6 +107,11 @@ static int test_lengths_and_conversions_c(void) {
   char latin_out[8] = {0};
   size_t latin_to_utf8 = simdutf_convert_latin1_to_utf8("abc", 3, latin_out);
   ASSERT_EQUAL_SIZE_T(latin_to_utf8, 3);
+  simdutf_full_result latin_details =
+      simdutf_convert_latin1_to_utf8_safe_with_details("abc", 3, latin_out, 2);
+  ASSERT_EQUAL_INT(latin_details.error, SIMDUTF_ERROR_OUTPUT_BUFFER_TOO_SMALL);
+  ASSERT_EQUAL_SIZE_T(latin_details.input_count, 2);
+  ASSERT_EQUAL_SIZE_T(latin_details.output_count, 2);
 
   /* prepare a UTF-16 sample */
   char16_t u16[5] = {(char16_t)'h', (char16_t)'e', (char16_t)'l', (char16_t)'l',
@@ -118,6 +123,20 @@ static int test_lengths_and_conversions_c(void) {
   size_t safelen =
       simdutf_convert_utf16_to_utf8_safe(u16, 5, out8, sizeof(out8));
   ASSERT_EQUAL_SIZE_T(safelen, u16len);
+  simdutf_full_result utf16_details =
+      simdutf_convert_utf16_to_utf8_safe_with_details(u16, 5, out8, 3);
+  ASSERT_EQUAL_INT(utf16_details.error, SIMDUTF_ERROR_OUTPUT_BUFFER_TOO_SMALL);
+  ASSERT_EQUAL_SIZE_T(utf16_details.input_count, 3);
+  ASSERT_EQUAL_SIZE_T(utf16_details.output_count, 3);
+
+  char16_t broken_u16[2] = {(char16_t)0xd800, (char16_t)'A'};
+  simdutf_full_result replacement_details =
+      simdutf_convert_utf16_to_utf8_with_replacement_safe(broken_u16, 2, out8,
+                                                          3);
+  ASSERT_EQUAL_INT(replacement_details.error,
+                   SIMDUTF_ERROR_OUTPUT_BUFFER_TOO_SMALL);
+  ASSERT_EQUAL_SIZE_T(replacement_details.input_count, 1);
+  ASSERT_EQUAL_SIZE_T(replacement_details.output_count, 3);
 
   /* convert with errors */
   simdutf_result cr = simdutf_convert_utf16_to_utf8_with_errors(u16, 5, out8);
