@@ -15,6 +15,66 @@
 // U+FFFD in UTF-8 is 0xEF 0xBF 0xBD
 constexpr char fffd_utf8[] = {char(0xef), char(0xbf), char(0xbd)};
 
+TEST(replacement_safe_reports_input_and_output_counts) {
+  std::vector<char16_t> input(32, u'A');
+  const std::vector<char16_t> suffix{char16_t(0x00e9), char16_t(0x20ac),
+                                     char16_t(0xd83d), char16_t(0xde00),
+                                     char16_t(0xd800), u'B',
+                                     char16_t(0xdc00), u'C'};
+  input.insert(input.end(), suffix.begin(), suffix.end());
+  input.insert(input.end(), 32, u'Z');
+
+  const simdutf::result length_result =
+      simdutf::utf8_length_from_utf16_with_replacement(input.data(),
+                                                       input.size());
+  std::vector<char> expected(length_result.count);
+  ASSERT_EQUAL(simdutf::convert_utf16_to_utf8_with_replacement(
+                   input.data(), input.size(), expected.data()),
+               expected.size());
+
+  for (size_t output_size = 0; output_size <= expected.size(); output_size++) {
+    std::vector<char> output(output_size);
+    const simdutf::full_result result =
+        simdutf::convert_utf16_to_utf8_with_replacement_safe(
+            input.data(), input.size(), output.data(), output.size());
+
+    size_t expected_input_count = 0;
+    size_t expected_output_count = 0;
+    while (expected_input_count < input.size()) {
+      const uint16_t word = input[expected_input_count];
+      size_t input_width = 1;
+      size_t output_width;
+      if (word < 0x80) {
+        output_width = 1;
+      } else if (word < 0x800) {
+        output_width = 2;
+      } else if (word >= 0xd800 && word <= 0xdbff &&
+                 expected_input_count + 1 < input.size() &&
+                 input[expected_input_count + 1] >= 0xdc00 &&
+                 input[expected_input_count + 1] <= 0xdfff) {
+        input_width = 2;
+        output_width = 4;
+      } else {
+        output_width = 3;
+      }
+      if (expected_output_count + output_width > output_size) {
+        break;
+      }
+      expected_input_count += input_width;
+      expected_output_count += output_width;
+    }
+
+    ASSERT_EQUAL(result.input_count, expected_input_count);
+    ASSERT_EQUAL(result.output_count, expected_output_count);
+    ASSERT_EQUAL(result.error,
+                 expected_input_count == input.size()
+                     ? simdutf::error_code::SUCCESS
+                     : simdutf::error_code::OUTPUT_BUFFER_TOO_SMALL);
+    ASSERT_TRUE(std::equal(output.begin(), output.begin() + result.output_count,
+                           expected.begin()));
+  }
+}
+
 // Test: valid UTF-16 should produce the same output as convert_utf16_to_utf8
 TEST(valid_utf16le_roundtrip) {
   // ASCII + BMP characters
@@ -446,6 +506,18 @@ TEST(compile_time_convert_utf16be_to_utf8_with_replacement) {
   constexpr auto result = invoke_convert_with_replacement<input>();
   constexpr auto expected = make_expected_output();
   static_assert(result == expected);
+}
+
+TEST(compile_time_convert_utf16_to_utf8_with_replacement_safe) {
+  using enum simdutf::endianness;
+  constexpr auto result = []() {
+    constexpr auto input = make_input_with_unpaired<NATIVE>();
+    simdutf::tests::helpers::CTString<char, 4> output{};
+    return simdutf::convert_utf16_to_utf8_with_replacement_safe(input, output);
+  }();
+  static_assert(result.error == simdutf::OUTPUT_BUFFER_TOO_SMALL);
+  static_assert(result.input_count == 2);
+  static_assert(result.output_count == 4);
 }
 
 #endif // SIMDUTF_CPLUSPLUS23

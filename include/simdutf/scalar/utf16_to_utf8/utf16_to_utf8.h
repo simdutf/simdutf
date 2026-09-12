@@ -289,6 +289,71 @@ simdutf_constexpr23 size_t convert_with_replacement(const char16_t *data,
   return utf8_output - start;
 }
 
+template <endianness big_endian, typename InputPtr, typename OutputPtr>
+#if SIMDUTF_CPLUSPLUS20
+  requires(simdutf::detail::indexes_into_utf16<InputPtr> &&
+           simdutf::detail::index_assignable_from_char<OutputPtr>)
+#endif
+simdutf_constexpr23 full_result convert_with_replacement_safe(
+    InputPtr data, size_t len, OutputPtr utf8_output, size_t utf8_len) {
+  if (len == 0) {
+    return full_result(error_code::SUCCESS, 0, 0);
+  }
+  if (utf8_len == 0) {
+    return full_result(error_code::OUTPUT_BUFFER_TOO_SMALL, 0, 0);
+  }
+
+  size_t input_count = 0;
+  size_t output_count = 0;
+  while (input_count < len) {
+    full_result r = convert_with_errors<big_endian, true>(
+        data + input_count, len - input_count, utf8_output + output_count,
+        utf8_len - output_count);
+    input_count += r.input_count;
+    output_count += r.output_count;
+
+    if (r.error == error_code::SUCCESS) {
+      return full_result(error_code::SUCCESS, input_count, output_count);
+    }
+
+    if (r.error == error_code::OUTPUT_BUFFER_TOO_SMALL) {
+      if (utf8_len - output_count < 3) {
+        return full_result(r.error, input_count, output_count);
+      }
+
+      uint16_t word = !match_system(big_endian)
+                          ? u16_swap_bytes(data[input_count])
+                          : data[input_count];
+      bool unpaired = (word & 0xfc00) == 0xdc00;
+      if ((word & 0xfc00) == 0xd800) {
+        if (input_count + 1 == len) {
+          unpaired = true;
+        } else {
+          const uint16_t next_word = !match_system(big_endian)
+                                         ? u16_swap_bytes(data[input_count + 1])
+                                         : data[input_count + 1];
+          unpaired = (next_word & 0xfc00) != 0xdc00;
+        }
+      }
+      if (!unpaired) {
+        return full_result(r.error, input_count, output_count);
+      }
+    } else if (r.error != error_code::SURROGATE) {
+      return full_result(r.error, input_count, output_count);
+    }
+
+    if (utf8_len - output_count < 3) {
+      return full_result(error_code::OUTPUT_BUFFER_TOO_SMALL, input_count,
+                         output_count);
+    }
+    utf8_output[output_count++] = char(0xef);
+    utf8_output[output_count++] = char(0xbf);
+    utf8_output[output_count++] = char(0xbd);
+    input_count++;
+  }
+  return full_result(error_code::SUCCESS, input_count, output_count);
+}
+
 } // namespace utf16_to_utf8
 } // unnamed namespace
 } // namespace scalar

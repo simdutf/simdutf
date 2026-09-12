@@ -52,6 +52,27 @@ int main(void) {
   EXPECT(m == 5);
   EXPECT(memcmp(back, hello_u8, 5) == 0);
 
+  /* --- Size-limited transcoding with input/output counts --- */
+  simdutf_full_result latin1_details =
+      simdutf_convert_latin1_to_utf8_safe_with_details(ascii, 5, back, 3);
+  EXPECT(latin1_details.error == SIMDUTF_ERROR_OUTPUT_BUFFER_TOO_SMALL);
+  EXPECT(latin1_details.input_count == 3);
+  EXPECT(latin1_details.output_count == 3);
+
+  simdutf_full_result utf16_details =
+      simdutf_convert_utf16_to_utf8_safe_with_details(u16, n, back, 3);
+  EXPECT(utf16_details.error == SIMDUTF_ERROR_OUTPUT_BUFFER_TOO_SMALL);
+  EXPECT(utf16_details.input_count == 3);
+  EXPECT(utf16_details.output_count == 3);
+
+  char16_t broken_u16[2] = {(char16_t)0xd800, (char16_t)'A'};
+  simdutf_full_result replacement_details =
+      simdutf_convert_utf16_to_utf8_with_replacement_safe(broken_u16, 2, back,
+                                                          3);
+  EXPECT(replacement_details.error == SIMDUTF_ERROR_OUTPUT_BUFFER_TOO_SMALL);
+  EXPECT(replacement_details.input_count == 1);
+  EXPECT(replacement_details.output_count == 3);
+
   /* --- Base64 round-trip --- */
   const char binary_in[] = "simdutf rocks!";
   char b64[64];

@@ -205,6 +205,16 @@ TEST(convert_latin1_to_utf8_safe) {
                                                          std::vector<char>>);
 }
 
+TEST(convert_latin1_to_utf8_safe_with_details) {
+  const std::vector<char> input{'a', char(0xe9)};
+  std::array<char, 2> output{};
+  const simdutf::full_result result =
+      simdutf::convert_latin1_to_utf8_safe_with_details(input, output);
+  ASSERT_EQUAL(result.error, simdutf::OUTPUT_BUFFER_TOO_SMALL);
+  ASSERT_EQUAL(result.input_count, 1);
+  ASSERT_EQUAL(result.output_count, 1);
+}
+
 TEST(validate_utf32_with_errors) {
   std::array<char32_t, 3> data{1, 2, 3};
   auto r1a = simdutf::validate_utf32_with_errors(data);
@@ -243,6 +253,26 @@ TEST(convert_utf16_to_utf8) {
   std::string output;
   auto r1a = simdutf::convert_utf16_to_utf8(input, output);
   auto r1b = simdutf::convert_utf16_to_utf8(std::as_const(input), output);
+}
+
+TEST(convert_utf16_to_utf8_safe_with_details) {
+  const std::array<char16_t, 2> input{u'A', char16_t(0x00e9)};
+  std::array<char, 2> output{};
+  const simdutf::full_result result =
+      simdutf::convert_utf16_to_utf8_safe_with_details(input, output);
+  ASSERT_EQUAL(result.error, simdutf::OUTPUT_BUFFER_TOO_SMALL);
+  ASSERT_EQUAL(result.input_count, 1);
+  ASSERT_EQUAL(result.output_count, 1);
+}
+
+TEST(convert_utf16_to_utf8_with_replacement_safe) {
+  const std::array<char16_t, 3> input{u'A', char16_t(0xd800), u'B'};
+  std::array<char, 4> output{};
+  const simdutf::full_result result =
+      simdutf::convert_utf16_to_utf8_with_replacement_safe(input, output);
+  ASSERT_EQUAL(result.error, simdutf::OUTPUT_BUFFER_TOO_SMALL);
+  ASSERT_EQUAL(result.input_count, 2);
+  ASSERT_EQUAL(result.output_count, 4);
 }
 
 TEST(convert_utf16_to_latin1) {
