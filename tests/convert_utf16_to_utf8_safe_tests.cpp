@@ -64,6 +64,99 @@ TEST(issue911) {
   ASSERT_TRUE(written <= 2);
 }
 
+TEST(safe_with_details_mixed_width) {
+  const std::vector<char16_t> input{u'A',
+                                    char16_t(0x00e9),
+                                    char16_t(0x20ac),
+                                    char16_t(0xd83d),
+                                    char16_t(0xde00),
+                                    u'B'};
+  const size_t utf8_length =
+      simdutf::utf8_length_from_utf16(input.data(), input.size());
+  std::vector<char> expected(utf8_length);
+  ASSERT_EQUAL(simdutf::convert_utf16_to_utf8(input.data(), input.size(),
+                                              expected.data()),
+               utf8_length);
+
+  for (size_t output_size = 0; output_size <= utf8_length; output_size++) {
+    std::vector<char> output(output_size);
+    std::vector<char> legacy_output(output_size);
+    const simdutf::full_result result =
+        simdutf::convert_utf16_to_utf8_safe_with_details(
+            input.data(), input.size(), output.data(), output.size());
+    const size_t legacy_result = simdutf::convert_utf16_to_utf8_safe(
+        input.data(), input.size(), legacy_output.data(), legacy_output.size());
+
+    size_t expected_input_count = 0;
+    size_t expected_output_count = 0;
+    while (expected_input_count < input.size()) {
+      const uint16_t word = input[expected_input_count];
+      size_t input_width = 1;
+      size_t output_width;
+      if (word < 0x80) {
+        output_width = 1;
+      } else if (word < 0x800) {
+        output_width = 2;
+      } else if (word < 0xd800 || word > 0xdfff) {
+        output_width = 3;
+      } else {
+        input_width = 2;
+        output_width = 4;
+      }
+      if (expected_output_count + output_width > output_size) {
+        break;
+      }
+      expected_input_count += input_width;
+      expected_output_count += output_width;
+    }
+
+    ASSERT_EQUAL(result.input_count, expected_input_count);
+    ASSERT_EQUAL(result.output_count, expected_output_count);
+    ASSERT_EQUAL(legacy_result, result.output_count);
+    ASSERT_EQUAL(result.error,
+                 expected_input_count == input.size()
+                     ? simdutf::error_code::SUCCESS
+                     : simdutf::error_code::OUTPUT_BUFFER_TOO_SMALL);
+    ASSERT_TRUE(std::equal(output.begin(), output.begin() + result.output_count,
+                           expected.begin()));
+    ASSERT_TRUE(std::equal(legacy_output.begin(),
+                           legacy_output.begin() + legacy_result,
+                           output.begin()));
+  }
+}
+
+TEST(safe_with_details_unpaired_surrogate) {
+  std::vector<char16_t> input(64, u'A');
+  input.push_back(char16_t(0xdc00));
+  input.push_back(u'B');
+  std::vector<char> output(128);
+
+  const simdutf::full_result result =
+      simdutf::convert_utf16_to_utf8_safe_with_details(
+          input.data(), input.size(), output.data(), output.size());
+  ASSERT_EQUAL(result.error, simdutf::error_code::SURROGATE);
+  ASSERT_EQUAL(result.input_count, 64);
+  ASSERT_EQUAL(result.output_count, 64);
+  ASSERT_EQUAL(simdutf::convert_utf16_to_utf8_safe(
+                   input.data(), input.size(), output.data(), output.size()),
+               0);
+
+  const simdutf::full_result full_output =
+      simdutf::convert_utf16_to_utf8_safe_with_details(
+          input.data(), input.size(), output.data(), 64);
+  ASSERT_EQUAL(full_output.error, simdutf::error_code::OUTPUT_BUFFER_TOO_SMALL);
+  ASSERT_EQUAL(full_output.input_count, 64);
+  ASSERT_EQUAL(full_output.output_count, 64);
+}
+
+TEST(safe_with_details_empty) {
+  const simdutf::full_result result =
+      simdutf::convert_utf16_to_utf8_safe_with_details(nullptr, 0, nullptr, 0);
+  ASSERT_EQUAL(result.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(result.input_count, 0);
+  ASSERT_EQUAL(result.output_count, 0);
+}
+
 TEST(convert_pure_ASCII) {
   size_t counter = 0;
   auto generator = [&counter]() -> uint32_t { return counter++ & 0x7f; };
@@ -196,6 +289,18 @@ TEST(compile_time_check_of_issue_911) {
   constexpr auto actual = convert_insufficient_buf<input, 2>();
   constexpr auto N = simdutf::detail::min(actual.size(), expected.size());
   static_assert(expected.shrink<N>() == actual.shrink<N>());
+}
+
+TEST(compile_time_convert_utf16_to_utf8_safe_with_details) {
+  using namespace simdutf::tests::helpers;
+  constexpr auto result = []() {
+    constexpr auto input = u"\u00E9A"_utf16;
+    CTString<char8_t, 2> output{};
+    return simdutf::convert_utf16_to_utf8_safe_with_details(input, output);
+  }();
+  static_assert(result.error == simdutf::OUTPUT_BUFFER_TOO_SMALL);
+  static_assert(result.input_count == 1);
+  static_assert(result.output_count == 2);
 }
 
 #endif

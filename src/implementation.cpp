@@ -2014,6 +2014,69 @@ convert_utf16_to_utf8_safe(const char16_t *buf, size_t len, char *utf8_output,
   }
   return r.output_count + (utf8_output - start);
 }
+
+simdutf_warn_unused full_result convert_utf16_to_utf8_safe_with_details(
+    const char16_t *buf, size_t len, char *utf8_output,
+    size_t utf8_len) noexcept {
+  if (len == 0) {
+    return full_result(error_code::SUCCESS, 0, 0);
+  }
+  size_t input_count = 0;
+  size_t output_count = 0;
+  // We might be able to go faster by first scanning the input buffer to
+  // determine how many char16_t characters we can read without exceeding the
+  // utf8_len. This is a one-pass algorithm that has the benefit of not
+  // requiring a first pass to determine the length.
+  while (true) {
+    // The worst case for convert_utf16_to_utf8 is when you go from 1 char16_t
+    // to 3 characters of UTF-8. So we can read at most utf8_len / 3 char16_t
+    // characters.
+    auto read_len = detail::min(len, utf8_len / 3);
+    if (read_len <= 16) {
+      break;
+    }
+    if (read_len < len) {
+      //  If we have a high surrogate at the end of the buffer, we need to
+      //  either read one more char16_t or backtrack.
+      if (scalar::utf16::high_surrogate(buf[read_len - 1])) {
+        read_len--;
+      }
+    }
+    if (read_len == 0) {
+      // If we cannot read anything, we are done.
+      break;
+    }
+    const result conversion_result =
+        simdutf::convert_utf16_to_utf8_with_errors(buf, read_len, utf8_output);
+    if (conversion_result.error != error_code::SUCCESS) {
+      const size_t valid_output_count =
+          simdutf::utf8_length_from_utf16(buf, conversion_result.count);
+      return full_result(conversion_result.error,
+                         input_count + conversion_result.count,
+                         output_count + valid_output_count);
+    }
+
+    const size_t write_len = conversion_result.count;
+    utf8_output += write_len;
+    utf8_len -= write_len;
+    buf += read_len;
+    len -= read_len;
+    input_count += read_len;
+    output_count += write_len;
+  }
+  #if SIMDUTF_IS_BIG_ENDIAN
+  full_result r =
+      scalar::utf16_to_utf8::convert_with_errors<endianness::BIG, true>(
+          buf, len, utf8_output, utf8_len);
+  #else
+  full_result r =
+      scalar::utf16_to_utf8::convert_with_errors<endianness::LITTLE, true>(
+          buf, len, utf8_output, utf8_len);
+  #endif
+  r.input_count += input_count;
+  r.output_count += output_count;
+  return r;
+}
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_LATIN1
@@ -2414,6 +2477,53 @@ simdutf_warn_unused size_t convert_utf16_to_utf8_with_replacement(
   #endif
 }
 
+simdutf_warn_unused full_result convert_utf16_to_utf8_with_replacement_safe(
+    const char16_t *input, size_t length, char *utf8_output,
+    size_t utf8_len) noexcept {
+  size_t input_count = 0;
+  size_t output_count = 0;
+  while (input_count < length) {
+    const full_result r = convert_utf16_to_utf8_safe_with_details(
+        input + input_count, length - input_count, utf8_output + output_count,
+        utf8_len - output_count);
+    input_count += r.input_count;
+    output_count += r.output_count;
+
+    if (r.error == error_code::SUCCESS) {
+      return full_result(error_code::SUCCESS, input_count, output_count);
+    }
+    if (r.error == error_code::OUTPUT_BUFFER_TOO_SMALL) {
+  #if SIMDUTF_IS_BIG_ENDIAN
+      full_result tail =
+          scalar::utf16_to_utf8::convert_with_replacement_safe<endianness::BIG>(
+              input + input_count, length - input_count,
+              utf8_output + output_count, utf8_len - output_count);
+  #else
+      full_result tail = scalar::utf16_to_utf8::convert_with_replacement_safe<
+          endianness::LITTLE>(input + input_count, length - input_count,
+                              utf8_output + output_count,
+                              utf8_len - output_count);
+  #endif
+      tail.input_count += input_count;
+      tail.output_count += output_count;
+      return tail;
+    }
+    if (r.error != error_code::SURROGATE) {
+      return full_result(r.error, input_count, output_count);
+    }
+
+    if (utf8_len - output_count < 3) {
+      return full_result(error_code::OUTPUT_BUFFER_TOO_SMALL, input_count,
+                         output_count);
+    }
+    utf8_output[output_count++] = char(0xef);
+    utf8_output[output_count++] = char(0xbf);
+    utf8_output[output_count++] = char(0xbd);
+    input_count++;
+  }
+  return full_result(error_code::SUCCESS, input_count, output_count);
+}
+
 simdutf_warn_unused size_t convert_utf16le_to_utf8_with_replacement(
     const char16_t *input, size_t length, char *utf8_buffer) noexcept {
   return get_default_implementation()->convert_utf16le_to_utf8_with_replacement(
@@ -2522,9 +2632,11 @@ simdutf_warn_unused full_result base64_to_binary_details(
 
 // moved to implementation.h
 // simdutf_warn_unused bool base64_ignorable(char input,
-//                                           base64_options options) noexcept
+//                                           base64_options options)
+//                                           noexcept
 // simdutf_warn_unused bool base64_ignorable(char16_t input,
-//                                           base64_options options) noexcept
+//                                           base64_options options)
+//                                           noexcept
 // simdutf_warn_unused bool base64_valid(char input,
 //                                       base64_options options) noexcept
 // simdutf_warn_unused bool base64_valid(char16_t input,
@@ -2588,6 +2700,36 @@ simdutf_warn_unused size_t convert_latin1_to_utf8_safe(
       scalar::latin1_to_utf8::convert_safe(buf, len, utf8_output, utf8_len);
 
   return utf8_output - start;
+}
+
+simdutf_warn_unused full_result convert_latin1_to_utf8_safe_with_details(
+    const char *buf, size_t len, char *utf8_output, size_t utf8_len) noexcept {
+  size_t input_count = 0;
+  size_t output_count = 0;
+
+  while (true) {
+    // convert_latin1_to_utf8 will never write more than input length * 2
+    auto read_len = detail::min(len, utf8_len >> 1);
+    if (read_len <= 16) {
+      break;
+    }
+
+    const auto write_len =
+        simdutf::convert_latin1_to_utf8(buf, read_len, utf8_output);
+
+    utf8_output += write_len;
+    utf8_len -= write_len;
+    buf += read_len;
+    len -= read_len;
+    input_count += read_len;
+    output_count += write_len;
+  }
+
+  full_result r = scalar::latin1_to_utf8::convert_safe_with_details(
+      buf, len, utf8_output, utf8_len);
+  r.input_count += input_count;
+  r.output_count += output_count;
+  return r;
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
