@@ -37,6 +37,7 @@ option(SIMDUTF_COVERAGE "Enable code coverage collection during tests (only GCC 
 option(SIMDUTF_INTERNAL_TESTS "Whether to test also internal procedures. Useful mostly for developers, not users." OFF)
 option(SIMDUTF_LOGGING "Whether to enable logging (this should never be used in binary releases)." OFF)
 option(SIMDUTF_USE_STATIC_INITIALIZATION "Whether to use translation-unit-scope static variables for implementation singletons (faster, but unsafe before main() when used in a library)." OFF)
+option(SIMDUTF_ARM64_SAFE_ZERO_CHECK "Test SIMD comparison masks with an integer reduction instead of a floating-point compare. Safer when flush-to-zero is enabled, but slower." OFF)
 option(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION "Whether to enable unsafe fuzzing mode." OFF)
 
 set(SIMDUTF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
