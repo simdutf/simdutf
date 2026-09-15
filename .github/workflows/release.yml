@@ -1,0 +1,136 @@
+name: release
+
+# Manually triggered release: bumps the version (patch, minor or major),
+# regenerates the amalgamated single-header files, commits and tags on
+# master, then publishes a GitHub release with the single-header files
+# attached (simdutf.h, simdutf.cpp, singleheader.zip).
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: "Which part of the version to bump"
+        required: true
+        type: choice
+        default: patch
+        options:
+          - patch
+          - minor
+          - major
+      dry_run:
+        description: "Do everything except pushing the commit/tag and creating the release"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: master
+          fetch-depth: 0 # release.py needs the tags to find the last version
+
+      - name: Compute the next version
+        id: version
+        env:
+          RELEASE_TYPE: ${{ inputs.release_type }}
+        run: |
+          set -euo pipefail
+          last=$(git describe --tags --abbrev=0 --match 'v[0-9]*')
+          echo "last tag: $last"
+          IFS=. read -r major minor patch <<< "${last#v}"
+          case "$RELEASE_TYPE" in
+            major) major=$((major + 1)); minor=0; patch=0 ;;
+            minor) minor=$((minor + 1)); patch=0 ;;
+            patch) patch=$((patch + 1)) ;;
+            *) echo "unknown release type: $RELEASE_TYPE" >&2; exit 1 ;;
+          esac
+          version="$major.$minor.$patch"
+          echo "next version: $version"
+          if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            echo "tag v$version already exists" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "previous=${last}" >> "$GITHUB_OUTPUT"
+
+      - name: Bump the version and regenerate the single-header files
+        run: |
+          set -euo pipefail
+          python3 scripts/release.py "${{ steps.version.outputs.version }}"
+          rm -f CMakeLists.txt.bak Doxyfile.bak README.md.bak
+          git --no-pager diff --stat
+          ls -l singleheader/simdutf.h singleheader/simdutf.cpp singleheader/singleheader.zip
+
+      - name: Check that the single-header files compile and run
+        run: |
+          set -euo pipefail
+          cd singleheader
+          c++ -o amalgamation_demo amalgamation_demo.cpp -std=c++17
+          ./amalgamation_demo
+          c++ -c simdutf.cpp -std=c++17
+          cc -c amalgamation_demo.c
+          c++ amalgamation_demo.o simdutf.o -o cdemo
+          ./cdemo
+
+      - name: Commit and tag
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CMakeLists.txt Doxyfile README.md include/simdutf/simdutf_version.h
+          git commit -m "Release v$VERSION"
+          git tag -a "v$VERSION" -m "version $VERSION"
+          git --no-pager show --stat HEAD
+
+      - name: Push the commit and tag
+        if: ${{ !inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          git push origin master
+          git push origin "v${{ steps.version.outputs.version }}"
+
+      - name: Create the GitHub release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          PREVIOUS: ${{ steps.version.outputs.previous }}
+        run: |
+          set -euo pipefail
+          gh release create "v$VERSION" \
+            --title "Version $VERSION" \
+            --generate-notes \
+            --notes-start-tag "$PREVIOUS" \
+            singleheader/simdutf.h \
+            singleheader/simdutf.cpp \
+            singleheader/singleheader.zip
+
+      # Releases created with GITHUB_TOKEN do not fire the `release`/`push` events
+      # that documentation.yml listens to, so dispatch it explicitly.
+      - name: Publish the API documentation
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run documentation.yml --ref "v${{ steps.version.outputs.version }}"
+
+      - name: Upload the release files as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: singleheader-v${{ steps.version.outputs.version }}
+          path: |
+            singleheader/simdutf.h
+            singleheader/simdutf.cpp
+            singleheader/singleheader.zip
