@@ -1001,6 +1001,22 @@ API</h1>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_latin1_to_utf8_safe(<span class="keyword">const</span> <span class="keywordtype">char</span> * input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span>* utf8_output, <span class="keywordtype">size_t</span> utf8_len) <span class="keyword">noexcept</span>;</div>
 <div class="line"><span class="comment">/**</span></div>
+<div class="line"><span class="comment"> * Convert a Latin1 string into a size-limited UTF-8 buffer and report how much</span></div>
+<div class="line"><span class="comment"> * input was consumed and output was written.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * We write as many complete characters as possible. The returned error is</span></div>
+<div class="line"><span class="comment"> * SUCCESS if all input was consumed, or OUTPUT_BUFFER_TOO_SMALL otherwise.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * @param input         the Latin1 string to convert</span></div>
+<div class="line"><span class="comment"> * @param length        the length of the string in bytes</span></div>
+<div class="line"><span class="comment"> * @param utf8_output   the pointer to the output buffer</span></div>
+<div class="line"><span class="comment"> * @param utf8_len      the maximum output length</span></div>
+<div class="line"><span class="comment"> * @return a full_result with error, input_count and output_count</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line">simdutf_warn_unused full_result convert_latin1_to_utf8_safe_with_details(</div>
+<div class="line">    <span class="keyword">const</span> <span class="keywordtype">char</span> *input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span> *utf8_output,</div>
+<div class="line">    <span class="keywordtype">size_t</span> utf8_len) <span class="keyword">noexcept</span>;</div>
+<div class="line"><span class="comment">/**</span></div>
 <div class="line"><span class="comment"> * Using native endianness, convert a Latin1 string into a UTF-16 string.</span></div>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> * @param input         the Latin1 string to convert</span></div>
@@ -1149,6 +1165,24 @@ API</h1>
 <div class="line">convert_utf16_to_utf8_safe(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span> *utf8_output,</div>
 <div class="line">                            <span class="keywordtype">size_t</span> utf8_len) <span class="keyword">noexcept</span>;</div>
 <div class="line"><span class="comment">/**</span></div>
+<div class="line"><span class="comment"> * Convert a possibly broken UTF-16 string into a size-limited UTF-8 buffer and</span></div>
+<div class="line"><span class="comment"> * report how much input was consumed and output was written.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * We write as many complete characters as possible while validating the input.</span></div>
+<div class="line"><span class="comment"> * The returned error is SUCCESS if all input was consumed,</span></div>
+<div class="line"><span class="comment"> * OUTPUT_BUFFER_TOO_SMALL if the next character does not fit, or SURROGATE if</span></div>
+<div class="line"><span class="comment"> * an unpaired surrogate was found.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * @param input         the UTF-16 string to convert</span></div>
+<div class="line"><span class="comment"> * @param length        the length in 16-bit code units</span></div>
+<div class="line"><span class="comment"> * @param utf8_output   the pointer to the output buffer</span></div>
+<div class="line"><span class="comment"> * @param utf8_len      the maximum output length</span></div>
+<div class="line"><span class="comment"> * @return a full_result with error, input_count and output_count</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line">simdutf_warn_unused full_result convert_utf16_to_utf8_safe_with_details(</div>
+<div class="line">    <span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span> *utf8_output,</div>
+<div class="line">    <span class="keywordtype">size_t</span> utf8_len) <span class="keyword">noexcept</span>;</div>
+<div class="line"><span class="comment">/**</span></div>
 <div class="line"><span class="comment"> * Using native endianness, convert possibly broken UTF-16 string into UTF-8</span></div>
 <div class="line"><span class="comment"> * string, replacing unpaired surrogates with the Unicode replacement character</span></div>
 <div class="line"><span class="comment"> * U+FFFD.</span></div>
@@ -1165,6 +1199,25 @@ API</h1>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line">simdutf_warn_unused <span class="keywordtype">size_t</span> convert_utf16_to_utf8_with_replacement(</div>
 <div class="line">    <span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input, <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span> *utf8_buffer) <span class="keyword">noexcept</span>;</div>
+<div class="line"><span class="comment">/**</span></div>
+<div class="line"><span class="comment"> * Convert a possibly broken UTF-16 string into a size-limited UTF-8 buffer,</span></div>
+<div class="line"><span class="comment"> * replacing unpaired surrogates with U+FFFD and reporting how much input was</span></div>
+<div class="line"><span class="comment"> * consumed and output was written.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * We write as many complete characters as possible. The returned error is</span></div>
+<div class="line"><span class="comment"> * SUCCESS if all input was consumed, or OUTPUT_BUFFER_TOO_SMALL if the next</span></div>
+<div class="line"><span class="comment"> * character or replacement does not fit.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * @param input         the UTF-16 string to convert</span></div>
+<div class="line"><span class="comment"> * @param length        the length in 16-bit code units</span></div>
+<div class="line"><span class="comment"> * @param utf8_output   the pointer to the output buffer</span></div>
+<div class="line"><span class="comment"> * @param utf8_len      the maximum output length</span></div>
+<div class="line"><span class="comment"> * @return a full_result with error, input_count and output_count</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line">simdutf_warn_unused full_result</div>
+<div class="line">convert_utf16_to_utf8_with_replacement_safe(<span class="keyword">const</span> <span class="keywordtype">char16_t</span> *input,</div>
+<div class="line">                                            <span class="keywordtype">size_t</span> length, <span class="keywordtype">char</span> *utf8_output,</div>
+<div class="line">                                            <span class="keywordtype">size_t</span> utf8_len) <span class="keyword">noexcept</span>;</div>
 <div class="line"><span class="comment">/**</span></div>
 <div class="line"><span class="comment"> * Using native endianness, convert possibly broken UTF-16 string into Latin1 string.</span></div>
 <div class="line"><span class="comment"> * If the string cannot be represented as Latin1, an error</span></div>
@@ -1793,7 +1846,7 @@ API</h1>
 <div class="ttc" id="anamespacesimdutf_html_a477fc442ecc7c0de526ccacff409b911"><div class="ttname"><a href="namespacesimdutf.html#a477fc442ecc7c0de526ccacff409b911">simdutf::utf8_length_from_utf16_with_replacement</a></div><div class="ttdeci">simdutf_warn_unused result utf8_length_from_utf16_with_replacement(const char16_t *input, size_t length) noexcept</div><div class="ttdoc">Using native endianness; compute the number of bytes that this UTF-16 string would require in UTF-8 f...</div></div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md13"></a>
 Cost of the safe conversion functions</h1>
-<p>The <code>_safe</code> conversion variants (<code>convert_latin1_to_utf8_safe</code> and <code>convert_utf16_to_utf8_safe</code>) never write past the output capacity you give them. Because these functions cannot assume that there is enough output buffer space, they cannot proceed in the most efficient manner. For example, they may be forced to split the work into chunks. If the inputs span megabytes, this overhead is negligible. Unfortunately, for small inputs, it can be significant. For example, the <code>convert_utf16_to_utf8_safe</code> function is up to 3 times slower than <code>convert_utf16_to_utf8</code> on ASCII inputs of a few hundred code units in some tests. For optimal performance, you should allocate at least as much memory as the <code>utf8_length_from_latin1</code> or <code>utf8_length_from_utf16</code> functions indicate and directly call the <code>convert_latin1_to_utf8</code> and <code>convert_utf16_to_utf8</code> functions, especially if you expect to have short inputs.</p>
+<p>The <code>_safe</code> conversion variants (<code>convert_latin1_to_utf8_safe</code> and <code>convert_utf16_to_utf8_safe</code>) never write past the output capacity you give them. The corresponding <code>_safe_with_details</code> variants additionally return the number of input code units consumed and output bytes written. Because these functions cannot assume that there is enough output buffer space, they cannot proceed in the most efficient manner. For example, they may be forced to split the work into chunks. If the inputs span megabytes, this overhead is negligible. Unfortunately, for small inputs, it can be significant. For example, the <code>convert_utf16_to_utf8_safe</code> function is up to 3 times slower than <code>convert_utf16_to_utf8</code> on ASCII inputs of a few hundred code units in some tests. For optimal performance, you should allocate at least as much memory as the <code>utf8_length_from_latin1</code> or <code>utf8_length_from_utf16</code> functions indicate and directly call the <code>convert_latin1_to_utf8</code> and <code>convert_utf16_to_utf8</code> functions, especially if you expect to have short inputs.</p>
 <p>The base64 decoding functions have their own safe variant, <code>base64_to_binary_safe</code>, which takes the output capacity as an in-out parameter. It does not need to split the work into chunks: it determines in a single step how much of the input fits in the output buffer, decodes that part with the fast function, and leaves only the remainder to a scalar decoder. Its overhead is therefore normally negligible, and we measure it to be as fast as <code>base64_to_binary</code> on clean base64 inputs at all sizes. The exception is base64 containing ASCII whitespace, because whitespace breaks the relationship between the input length and the output length: a short input of a few dozen characters with 5% whitespace can be nearly 3 times slower, although the difference largely disappears for inputs spanning a kilobyte or more. The <code>atomic_base64_to_binary_safe</code> function is more expensive: it decodes into a small temporary buffer and then copies the result to the output with relaxed atomic writes, so that other threads never observe partially written data. Every output byte is thus written twice, and this cost does not go away with larger inputs: we measure it to be 1.5 to 1.8 times slower than <code>base64_to_binary</code> on inputs of a kilobyte or more, including inputs spanning megabytes. You should only use it when the output buffer might be accessed concurrently.</p>
 <h1><a class="anchor" id="autotoc_md14"></a>
 Base64</h1>
@@ -1812,7 +1865,7 @@ Base64</h1>
 <p>The conversion of binary data to base64 always succeeds and is relatively simple. Suppose that you have an original input of binary data <code>source</code> (e.g., <code>std::vector&lt;char&gt;</code>).</p>
 <div class="fragment"><div class="line">std::vector&lt;char&gt; buffer(<a class="code hl_function" href="namespacesimdutf.html#a0840933d2a92a1f74fc6626af5ec76ef">simdutf::base64_length_from_binary</a>(source.size()));</div>
 <div class="line"><a class="code hl_function" href="namespacesimdutf.html#a1d21cd751b76c2d65f1d6b1c359533dd">simdutf::binary_to_base64</a>(source.data(), source.size(), buffer.data());</div>
-<div class="ttc" id="anamespacesimdutf_html_a0840933d2a92a1f74fc6626af5ec76ef"><div class="ttname"><a href="namespacesimdutf.html#a0840933d2a92a1f74fc6626af5ec76ef">simdutf::base64_length_from_binary</a></div><div class="ttdeci">simdutf_warn_unused simdutf_constexpr23 size_t base64_length_from_binary(size_t length, base64_options options=base64_default) noexcept</div><div class="ttdoc">Provide the base64 length in bytes given the length of a binary input.</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l04457">implementation.h:4457</a></div></div>
+<div class="ttc" id="anamespacesimdutf_html_a0840933d2a92a1f74fc6626af5ec76ef"><div class="ttname"><a href="namespacesimdutf.html#a0840933d2a92a1f74fc6626af5ec76ef">simdutf::base64_length_from_binary</a></div><div class="ttdeci">simdutf_warn_unused simdutf_constexpr23 size_t base64_length_from_binary(size_t length, base64_options options=base64_default) noexcept</div><div class="ttdoc">Provide the base64 length in bytes given the length of a binary input.</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l04571">implementation.h:4571</a></div></div>
 <div class="ttc" id="anamespacesimdutf_html_a1d21cd751b76c2d65f1d6b1c359533dd"><div class="ttname"><a href="namespacesimdutf.html#a1d21cd751b76c2d65f1d6b1c359533dd">simdutf::binary_to_base64</a></div><div class="ttdeci">size_t binary_to_base64(const char *input, size_t length, char *output, base64_options options=base64_default) noexcept</div><div class="ttdoc">Convert a binary input to a base64 output.</div></div>
 </div><!-- fragment --><p>Decoding base64 requires validation and, thus, error handling. Furthermore, because we prune ASCII spaces, we may need to adjust the result size afterward.</p>
 <div class="fragment"><div class="line">std::vector&lt;char&gt; buffer(<a class="code hl_function" href="namespacesimdutf.html#a810eb628099188ef9309276a8226ca27">simdutf::maximal_binary_length_from_base64</a>(base64.data(), base64.size()));</div>
@@ -1898,7 +1951,7 @@ Base64</h1>
 <div class="fragment"><div class="line"><span class="keywordtype">bool</span> is_valid = <a class="code hl_function" href="namespacesimdutf.html#ad67f6d47426c06190de8fef5cec7c0bf">simdutf::base64_valid</a>(<span class="charliteral">&#39;A&#39;</span>); <span class="comment">// true</span></div>
 <div class="line"><span class="keywordtype">bool</span> is_valid_url = <a class="code hl_function" href="namespacesimdutf.html#ad67f6d47426c06190de8fef5cec7c0bf">simdutf::base64_valid</a>(<span class="charliteral">&#39;-&#39;</span>, simdutf::base64_url); <span class="comment">// true</span></div>
 <div class="line"><span class="comment">// Note: padding (&#39;=&#39;) and spaces are not considered valid base64 characters.</span></div>
-<div class="ttc" id="anamespacesimdutf_html_ad67f6d47426c06190de8fef5cec7c0bf"><div class="ttname"><a href="namespacesimdutf.html#ad67f6d47426c06190de8fef5cec7c0bf">simdutf::base64_valid</a></div><div class="ttdeci">simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 bool base64_valid(char input, base64_options options=base64_default) noexcept</div><div class="ttdoc">Check if a character is a valid base64 character.</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l04894">implementation.h:4894</a></div></div>
+<div class="ttc" id="anamespacesimdutf_html_ad67f6d47426c06190de8fef5cec7c0bf"><div class="ttname"><a href="namespacesimdutf.html#ad67f6d47426c06190de8fef5cec7c0bf">simdutf::base64_valid</a></div><div class="ttdeci">simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 bool base64_valid(char input, base64_options options=base64_default) noexcept</div><div class="ttdoc">Check if a character is a valid base64 character.</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l05008">implementation.h:5008</a></div></div>
 </div><!-- fragment --><p>In some instances, you may want to limit the size of the output further when decoding base64. For this purpose, you may use the <code>base64_to_binary_safe</code> functions. The functions may also be useful if you seek to decode the input into segments having a maximal capacity. Another benefit of the <code>base64_to_binary_safe</code> functions is that they inform you about how much data was written to the output buffer, even when there is a fatal error. This number might not be 'maximal': our fast functions may leave some data that could have been decoded prior to a bad character undecoded. With the <code>base64_to_binary_safe</code> function, you also have the option of requesting that as much of the data as possible is decoded despite the error by setting the <code>decode_up_to_bad_char</code> parameter to true (it defaults to false for best performance).</p>
 <div class="fragment"><div class="line"><span class="keywordtype">size_t</span> len = 72; <span class="comment">// for simplicity we chose len divisible by 3</span></div>
 <div class="line">std::vector&lt;char&gt; base64(len, <span class="charliteral">&#39;a&#39;</span>); <span class="comment">// we want to decode &#39;aaaaa....&#39;</span></div>
@@ -2434,7 +2487,7 @@ Compile-time base64 decoding (C++23)</h2>
 <div class="line">simdutf_warn_unused <span class="keywordtype">bool</span> base64_valid(<span class="keywordtype">char16_t</span> input, base64_options options = base64_default) noexcept;</div>
 <div class="ttc" id="anamespacesimdutf_html_a19e7448b6d4db59b856018f1f13960c0"><div class="ttname"><a href="namespacesimdutf.html#a19e7448b6d4db59b856018f1f13960c0">simdutf::default_line_length</a></div><div class="ttdeci">constexpr size_t default_line_length</div><div class="ttdoc">default line length for base64 encoding with lines</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l00187">implementation.h:187</a></div></div>
 <div class="ttc" id="anamespacesimdutf_html_acbbaee6f387c682fd6ebb6802102dfdf"><div class="ttname"><a href="namespacesimdutf.html#acbbaee6f387c682fd6ebb6802102dfdf">simdutf::binary_to_base64_with_lines</a></div><div class="ttdeci">size_t binary_to_base64_with_lines(const char *input, size_t length, char *output, size_t line_length=simdutf::default_line_length, base64_options options=base64_default) noexcept</div><div class="ttdoc">Convert a binary input to a base64 output with line breaks.</div></div>
-<div class="ttc" id="anamespacesimdutf_html_acf55e4fb906e835413896c4ef2883cbd"><div class="ttname"><a href="namespacesimdutf.html#acf55e4fb906e835413896c4ef2883cbd">simdutf::base64_length_from_binary_with_lines</a></div><div class="ttdeci">simdutf_warn_unused simdutf_constexpr23 size_t base64_length_from_binary_with_lines(size_t length, base64_options options=base64_default, size_t line_length=default_line_length) noexcept</div><div class="ttdoc">Provide the base64 length in bytes given the length of a binary input, taking into account line break...</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l04473">implementation.h:4473</a></div></div>
+<div class="ttc" id="anamespacesimdutf_html_acf55e4fb906e835413896c4ef2883cbd"><div class="ttname"><a href="namespacesimdutf.html#acf55e4fb906e835413896c4ef2883cbd">simdutf::base64_length_from_binary_with_lines</a></div><div class="ttdeci">simdutf_warn_unused simdutf_constexpr23 size_t base64_length_from_binary_with_lines(size_t length, base64_options options=base64_default, size_t line_length=default_line_length) noexcept</div><div class="ttdoc">Provide the base64 length in bytes given the length of a binary input, taking into account line break...</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l04587">implementation.h:4587</a></div></div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md16"></a>
 Find</h1>
 <p>The C++ standard library provides <code>std::find</code> for locating a character in a string, but its performance can be suboptimal on modern hardware. To address this, we introduce <code><a class="el" href="namespacesimdutf.html#a112c60be200a3c38c2d0ead5c22d3f3f" title="Find the first occurrence of a character in a string.">simdutf::find</a></code>, a high-performance alternative optimized for recent processors using SIMD instructions. It operates on raw pointers (<code>char</code> or <code>char16_t</code>) for maximum efficiency.</p>
@@ -2442,7 +2495,7 @@ Find</h1>
 <div class="line"><span class="keyword">const</span> <span class="keywordtype">char</span>* result =</div>
 <div class="line">    <a class="code hl_function" href="namespacesimdutf.html#a112c60be200a3c38c2d0ead5c22d3f3f">simdutf::find</a>(input.data(), input.data() + input.size(), <span class="charliteral">&#39;c&#39;</span>);</div>
 <div class="line"><span class="comment">// result should point at the letter &#39;c&#39;</span></div>
-<div class="ttc" id="anamespacesimdutf_html_a112c60be200a3c38c2d0ead5c22d3f3f"><div class="ttname"><a href="namespacesimdutf.html#a112c60be200a3c38c2d0ead5c22d3f3f">simdutf::find</a></div><div class="ttdeci">simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 const char * find(const char *start, const char *end, char character) noexcept</div><div class="ttdoc">Find the first occurrence of a character in a string.</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l04169">implementation.h:4169</a></div></div>
+<div class="ttc" id="anamespacesimdutf_html_a112c60be200a3c38c2d0ead5c22d3f3f"><div class="ttname"><a href="namespacesimdutf.html#a112c60be200a3c38c2d0ead5c22d3f3f">simdutf::find</a></div><div class="ttdeci">simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 const char * find(const char *start, const char *end, char character) noexcept</div><div class="ttdoc">Find the first occurrence of a character in a string.</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l04283">implementation.h:4283</a></div></div>
 </div><!-- fragment --><p>The <code><a class="el" href="namespacesimdutf.html#a112c60be200a3c38c2d0ead5c22d3f3f" title="Find the first occurrence of a character in a string.">simdutf::find</a></code> interface is straightforward and efficient.</p>
 <div class="fragment"><div class="line"><span class="comment">/**</span></div>
 <div class="line"><span class="comment">  * Find the first occurrence of a character in a string. If the character is</span></div>

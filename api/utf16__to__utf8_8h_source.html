@@ -394,12 +394,77 @@ $(document).ready(function(){initNavTree('utf16__to__utf8_8h_source.html',''); i
 <div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span>  <span class="keywordflow">return</span> utf8_output - start;</div>
 <div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span>}</div>
 <div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span> </div>
-<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>} <span class="comment">// namespace utf16_to_utf8</span></div>
-<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span>} <span class="comment">// unnamed namespace</span></div>
-<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span>} <span class="comment">// namespace scalar</span></div>
-<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>} <span class="comment">// namespace simdutf</span></div>
-<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span> </div>
-<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span><span class="keyword">template</span> &lt;endianness big_endian, <span class="keyword">typename</span> InputPtr, <span class="keyword">typename</span> OutputPtr&gt;</div>
+<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span><span class="preprocessor">#if SIMDUTF_CPLUSPLUS20</span></div>
+<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span>  <span class="keyword">requires</span>(simdutf::detail::indexes_into_utf16&lt;InputPtr&gt; &amp;&amp;</div>
+<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>           simdutf::detail::index_assignable_from_char&lt;OutputPtr&gt;)</div>
+<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span>#endif</div>
+<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span>simdutf_constexpr23 full_result convert_with_replacement_safe(</div>
+<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>    InputPtr data, <span class="keywordtype">size_t</span> len, OutputPtr utf8_output, <span class="keywordtype">size_t</span> utf8_len) {</div>
+<div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span>  <span class="keywordflow">if</span> (len == 0) {</div>
+<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span>    <span class="keywordflow">return</span> full_result(error_code::SUCCESS, 0, 0);</div>
+<div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span>  }</div>
+<div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span>  <span class="keywordflow">if</span> (utf8_len == 0) {</div>
+<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span>    <span class="keywordflow">return</span> full_result(error_code::OUTPUT_BUFFER_TOO_SMALL, 0, 0);</div>
+<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span>  }</div>
+<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span> </div>
+<div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span>  <span class="keywordtype">size_t</span> input_count = 0;</div>
+<div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span>  <span class="keywordtype">size_t</span> output_count = 0;</div>
+<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span>  <span class="keywordflow">while</span> (input_count &lt; len) {</div>
+<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span>    full_result r = convert_with_errors&lt;big_endian, true&gt;(</div>
+<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span>        data + input_count, len - input_count, utf8_output + output_count,</div>
+<div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span>        utf8_len - output_count);</div>
+<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span>    input_count += r.input_count;</div>
+<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span>    output_count += r.output_count;</div>
+<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span> </div>
+<div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span>    <span class="keywordflow">if</span> (r.error == error_code::SUCCESS) {</div>
+<div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span>      <span class="keywordflow">return</span> full_result(error_code::SUCCESS, input_count, output_count);</div>
+<div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span>    }</div>
+<div class="line"><a id="l00318" name="l00318"></a><span class="lineno">  318</span> </div>
+<div class="line"><a id="l00319" name="l00319"></a><span class="lineno">  319</span>    <span class="keywordflow">if</span> (r.error == error_code::OUTPUT_BUFFER_TOO_SMALL) {</div>
+<div class="line"><a id="l00320" name="l00320"></a><span class="lineno">  320</span>      <span class="keywordflow">if</span> (utf8_len - output_count &lt; 3) {</div>
+<div class="line"><a id="l00321" name="l00321"></a><span class="lineno">  321</span>        <span class="keywordflow">return</span> full_result(r.error, input_count, output_count);</div>
+<div class="line"><a id="l00322" name="l00322"></a><span class="lineno">  322</span>      }</div>
+<div class="line"><a id="l00323" name="l00323"></a><span class="lineno">  323</span> </div>
+<div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span>      uint16_t word = !match_system(big_endian)</div>
+<div class="line"><a id="l00325" name="l00325"></a><span class="lineno">  325</span>                          ? u16_swap_bytes(data[input_count])</div>
+<div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span>                          : data[input_count];</div>
+<div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span>      <span class="keywordtype">bool</span> unpaired = (word &amp; 0xfc00) == 0xdc00;</div>
+<div class="line"><a id="l00328" name="l00328"></a><span class="lineno">  328</span>      <span class="keywordflow">if</span> ((word &amp; 0xfc00) == 0xd800) {</div>
+<div class="line"><a id="l00329" name="l00329"></a><span class="lineno">  329</span>        <span class="keywordflow">if</span> (input_count + 1 == len) {</div>
+<div class="line"><a id="l00330" name="l00330"></a><span class="lineno">  330</span>          unpaired = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00331" name="l00331"></a><span class="lineno">  331</span>        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00332" name="l00332"></a><span class="lineno">  332</span>          <span class="keyword">const</span> uint16_t next_word = !match_system(big_endian)</div>
+<div class="line"><a id="l00333" name="l00333"></a><span class="lineno">  333</span>                                         ? u16_swap_bytes(data[input_count + 1])</div>
+<div class="line"><a id="l00334" name="l00334"></a><span class="lineno">  334</span>                                         : data[input_count + 1];</div>
+<div class="line"><a id="l00335" name="l00335"></a><span class="lineno">  335</span>          unpaired = (next_word &amp; 0xfc00) != 0xdc00;</div>
+<div class="line"><a id="l00336" name="l00336"></a><span class="lineno">  336</span>        }</div>
+<div class="line"><a id="l00337" name="l00337"></a><span class="lineno">  337</span>      }</div>
+<div class="line"><a id="l00338" name="l00338"></a><span class="lineno">  338</span>      <span class="keywordflow">if</span> (!unpaired) {</div>
+<div class="line"><a id="l00339" name="l00339"></a><span class="lineno">  339</span>        <span class="keywordflow">return</span> full_result(r.error, input_count, output_count);</div>
+<div class="line"><a id="l00340" name="l00340"></a><span class="lineno">  340</span>      }</div>
+<div class="line"><a id="l00341" name="l00341"></a><span class="lineno">  341</span>    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (r.error != error_code::SURROGATE) {</div>
+<div class="line"><a id="l00342" name="l00342"></a><span class="lineno">  342</span>      <span class="keywordflow">return</span> full_result(r.error, input_count, output_count);</div>
+<div class="line"><a id="l00343" name="l00343"></a><span class="lineno">  343</span>    }</div>
+<div class="line"><a id="l00344" name="l00344"></a><span class="lineno">  344</span> </div>
+<div class="line"><a id="l00345" name="l00345"></a><span class="lineno">  345</span>    <span class="keywordflow">if</span> (utf8_len - output_count &lt; 3) {</div>
+<div class="line"><a id="l00346" name="l00346"></a><span class="lineno">  346</span>      <span class="keywordflow">return</span> full_result(error_code::OUTPUT_BUFFER_TOO_SMALL, input_count,</div>
+<div class="line"><a id="l00347" name="l00347"></a><span class="lineno">  347</span>                         output_count);</div>
+<div class="line"><a id="l00348" name="l00348"></a><span class="lineno">  348</span>    }</div>
+<div class="line"><a id="l00349" name="l00349"></a><span class="lineno">  349</span>    utf8_output[output_count++] = char(0xef);</div>
+<div class="line"><a id="l00350" name="l00350"></a><span class="lineno">  350</span>    utf8_output[output_count++] = char(0xbf);</div>
+<div class="line"><a id="l00351" name="l00351"></a><span class="lineno">  351</span>    utf8_output[output_count++] = char(0xbd);</div>
+<div class="line"><a id="l00352" name="l00352"></a><span class="lineno">  352</span>    input_count++;</div>
+<div class="line"><a id="l00353" name="l00353"></a><span class="lineno">  353</span>  }</div>
+<div class="line"><a id="l00354" name="l00354"></a><span class="lineno">  354</span>  <span class="keywordflow">return</span> full_result(error_code::SUCCESS, input_count, output_count);</div>
+<div class="line"><a id="l00355" name="l00355"></a><span class="lineno">  355</span>}</div>
+<div class="line"><a id="l00356" name="l00356"></a><span class="lineno">  356</span> </div>
+<div class="line"><a id="l00357" name="l00357"></a><span class="lineno">  357</span>} <span class="comment">// namespace utf16_to_utf8</span></div>
+<div class="line"><a id="l00358" name="l00358"></a><span class="lineno">  358</span>} <span class="comment">// unnamed namespace</span></div>
+<div class="line"><a id="l00359" name="l00359"></a><span class="lineno">  359</span>} <span class="comment">// namespace scalar</span></div>
+<div class="line"><a id="l00360" name="l00360"></a><span class="lineno">  360</span>} <span class="comment">// namespace simdutf</span></div>
+<div class="line"><a id="l00361" name="l00361"></a><span class="lineno">  361</span> </div>
+<div class="line"><a id="l00362" name="l00362"></a><span class="lineno">  362</span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="anamespacesimdutf_html"><div class="ttname"><a href="namespacesimdutf.html">simdutf</a></div><div class="ttdoc">helpers placed in namespace detail are not a part of the public API</div><div class="ttdef"><b>Definition</b> <a href="base64__implementation_8h_source.html#l00008">base64_implementation.h:8</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
