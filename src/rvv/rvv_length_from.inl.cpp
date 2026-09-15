@@ -162,3 +162,83 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf32(
   return count;
 }
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
+
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
+template <simdutf_ByteFlip bflip>
+simdutf_really_inline static result
+rvv_utf8_length_from_utf16_with_replacement(const char16_t *src, size_t len) {
+  size_t count = 0;
+  uint16_t last = 0; // last UTF-16 code unit from previous chunk
+  bool any_surrogates = false;
+  size_t sub_count = 0;
+
+  for (size_t vl; len > 0; len -= vl, src += vl) {
+    vl = __riscv_vsetvl_e16m8(len);
+    vuint16m8_t v = __riscv_vle16_v_u16m8((uint16_t *)src, vl);
+    v = simdutf_byteflip<bflip>(v, vl);
+    vbool2_t m234 = __riscv_vmsgtu_vx_u16m8_b2(v, 0x7F, vl);
+    vbool2_t m34 = __riscv_vmsgtu_vx_u16m8_b2(v, 0x7FF, vl);
+    vbool2_t notSur =
+        __riscv_vmor_mm_b2(__riscv_vmsltu_vx_u16m8_b2(v, 0xD800, vl),
+                           __riscv_vmsgtu_vx_u16m8_b2(v, 0xDFFF, vl), vl);
+    vbool2_t m3 = __riscv_vmand_mm_b2(m34, notSur, vl);
+    count += vl + __riscv_vcpop_m_b2(m234, vl) + __riscv_vcpop_m_b2(m3, vl);
+
+    vbool2_t isHiSur =
+        __riscv_vmand_mm_b2(__riscv_vmsgeu_vx_u16m8_b2(v, 0xD800, vl),
+                            __riscv_vmsleu_vx_u16m8_b2(v, 0xDBFF, vl), vl);
+    vbool2_t isLoSur =
+        __riscv_vmand_mm_b2(__riscv_vmsgeu_vx_u16m8_b2(v, 0xDC00, vl),
+                            __riscv_vmsleu_vx_u16m8_b2(v, 0xDFFF, vl), vl);
+
+    vuint16m8_t vPrev = __riscv_vslide1down_vx_u16m8(v, 0, vl);
+    vuint16m8_t vNext = __riscv_vslide1up_vx_u16m8(v, last, vl);
+
+    vbool2_t prevLo =
+        __riscv_vmand_mm_b2(__riscv_vmsgeu_vx_u16m8_b2(vPrev, 0xDC00, vl),
+                            __riscv_vmsleu_vx_u16m8_b2(vPrev, 0xDFFF, vl), vl);
+    vbool2_t nextHi =
+        __riscv_vmand_mm_b2(__riscv_vmsgeu_vx_u16m8_b2(vNext, 0xD800, vl),
+                            __riscv_vmsleu_vx_u16m8_b2(vNext, 0xDBFF, vl), vl);
+
+    vbool2_t validLo = __riscv_vmand_mm_b2(nextHi, isLoSur, vl);
+    vbool2_t validHi = __riscv_vmand_mm_b2(isHiSur, prevLo, vl);
+
+    vbool2_t isSur = __riscv_vmor_mm_b2(isHiSur, isLoSur, vl);
+    vbool2_t validSur = __riscv_vmor_mm_b2(validHi, validLo, vl);
+    vbool2_t invalid =
+        __riscv_vmand_mm_b2(isSur, __riscv_vmnot_m_b2(validSur, vl), vl);
+
+    // each invalid surrogate needs +1 byte
+    count += __riscv_vcpop_m_b2(invalid, vl);
+
+    uint16_t first = __riscv_vmv_x_s_u16m8_u16(v);
+    sub_count += (last <= 0xDBFF && last >= 0xD800) &&
+                 (first <= 0xDFFF && first >= 0xDC00);
+    vuint16m8_t v_last = __riscv_vslidedown_vx_u16m8(v, vl - 1, 1);
+    last = __riscv_vmv_x_s_u16m8_u16(v_last);
+    any_surrogates |= __riscv_vcpop_m_b2(isSur, vl);
+  }
+
+  count -= sub_count;
+  return {any_surrogates ? SURROGATE : SUCCESS, count};
+}
+
+simdutf_warn_unused result
+implementation::utf8_length_from_utf16le_with_replacement(
+    const char16_t *src, size_t len) const noexcept {
+  return rvv_utf8_length_from_utf16_with_replacement<simdutf_ByteFlip::NONE>(
+      src, len);
+}
+
+simdutf_warn_unused result
+implementation::utf8_length_from_utf16be_with_replacement(
+    const char16_t *src, size_t len) const noexcept {
+  if (supports_zvbb())
+    return rvv_utf8_length_from_utf16_with_replacement<simdutf_ByteFlip::ZVBB>(
+        src, len);
+  else
+    return rvv_utf8_length_from_utf16_with_replacement<simdutf_ByteFlip::V>(
+        src, len);
+}
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
