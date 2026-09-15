@@ -139,6 +139,8 @@ size_t simdutf_convert_latin1_to_utf8(const char *input, size_t length,
                                       char *output);
 size_t simdutf_convert_latin1_to_utf8_safe(const char *input, size_t length,
                                            char *output, size_t utf8_len);
+simdutf_full_result simdutf_convert_latin1_to_utf8_safe_with_details(
+    const char *input, size_t length, char *output, size_t utf8_len);
 size_t simdutf_convert_latin1_to_utf16le(const char *input, size_t length,
                                          char16_t *output);
 size_t simdutf_convert_latin1_to_utf16be(const char *input, size_t length,
@@ -194,6 +196,8 @@ size_t simdutf_convert_utf16be_to_utf8(const char16_t *input, size_t length,
                                        char *output);
 size_t simdutf_convert_utf16_to_utf8_safe(const char16_t *input, size_t length,
                                           char *output, size_t utf8_len);
+simdutf_full_result simdutf_convert_utf16_to_utf8_safe_with_details(
+    const char16_t *input, size_t length, char *output, size_t utf8_len);
 size_t simdutf_convert_utf16_to_latin1(const char16_t *input, size_t length,
                                        char *output);
 size_t simdutf_convert_utf16le_to_latin1(const char16_t *input, size_t length,
@@ -227,6 +231,8 @@ simdutf_convert_utf16be_to_utf8_with_errors(const char16_t *input,
 size_t simdutf_convert_utf16_to_utf8_with_replacement(const char16_t *input,
                                                       size_t length,
                                                       char *output);
+simdutf_full_result simdutf_convert_utf16_to_utf8_with_replacement_safe(
+    const char16_t *input, size_t length, char *output, size_t utf8_len);
 size_t simdutf_convert_utf16le_to_utf8_with_replacement(const char16_t *input,
                                                         size_t length,
                                                         char *output);

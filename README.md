@@ -1104,6 +1104,23 @@ simdutf_warn_unused size_t convert_latin1_to_utf8(const char * input, size_t len
 simdutf_warn_unused size_t convert_latin1_to_utf8_safe(const char * input, size_t length, char* utf8_output, size_t utf8_len) noexcept;
 
 /**
+ * Convert a Latin1 string into a size-limited UTF-8 buffer and report how much
+ * input was consumed and output was written.
+ *
+ * We write as many complete characters as possible. The returned error is
+ * SUCCESS if all input was consumed, or OUTPUT_BUFFER_TOO_SMALL otherwise.
+ *
+ * @param input         the Latin1 string to convert
+ * @param length        the length of the string in bytes
+ * @param utf8_output   the pointer to the output buffer
+ * @param utf8_len      the maximum output length
+ * @return a full_result with error, input_count and output_count
+ */
+simdutf_warn_unused full_result convert_latin1_to_utf8_safe_with_details(
+    const char *input, size_t length, char *utf8_output,
+    size_t utf8_len) noexcept;
+
+/**
  * Using native endianness, convert a Latin1 string into a UTF-16 string.
  *
  * @param input         the Latin1 string to convert
@@ -1264,6 +1281,25 @@ convert_utf16_to_utf8_safe(const char16_t *input, size_t length, char *utf8_outp
                             size_t utf8_len) noexcept;
 
 /**
+ * Convert a possibly broken UTF-16 string into a size-limited UTF-8 buffer and
+ * report how much input was consumed and output was written.
+ *
+ * We write as many complete characters as possible while validating the input.
+ * The returned error is SUCCESS if all input was consumed,
+ * OUTPUT_BUFFER_TOO_SMALL if the next character does not fit, or SURROGATE if
+ * an unpaired surrogate was found.
+ *
+ * @param input         the UTF-16 string to convert
+ * @param length        the length in 16-bit code units
+ * @param utf8_output   the pointer to the output buffer
+ * @param utf8_len      the maximum output length
+ * @return a full_result with error, input_count and output_count
+ */
+simdutf_warn_unused full_result convert_utf16_to_utf8_safe_with_details(
+    const char16_t *input, size_t length, char *utf8_output,
+    size_t utf8_len) noexcept;
+
+/**
  * Using native endianness, convert possibly broken UTF-16 string into UTF-8
  * string, replacing unpaired surrogates with the Unicode replacement character
  * U+FFFD.
@@ -1280,6 +1316,26 @@ convert_utf16_to_utf8_safe(const char16_t *input, size_t length, char *utf8_outp
  */
 simdutf_warn_unused size_t convert_utf16_to_utf8_with_replacement(
     const char16_t *input, size_t length, char *utf8_buffer) noexcept;
+
+/**
+ * Convert a possibly broken UTF-16 string into a size-limited UTF-8 buffer,
+ * replacing unpaired surrogates with U+FFFD and reporting how much input was
+ * consumed and output was written.
+ *
+ * We write as many complete characters as possible. The returned error is
+ * SUCCESS if all input was consumed, or OUTPUT_BUFFER_TOO_SMALL if the next
+ * character or replacement does not fit.
+ *
+ * @param input         the UTF-16 string to convert
+ * @param length        the length in 16-bit code units
+ * @param utf8_output   the pointer to the output buffer
+ * @param utf8_len      the maximum output length
+ * @return a full_result with error, input_count and output_count
+ */
+simdutf_warn_unused full_result
+convert_utf16_to_utf8_with_replacement_safe(const char16_t *input,
+                                            size_t length, char *utf8_output,
+                                            size_t utf8_len) noexcept;
 
 /**
  * Using native endianness, convert possibly broken UTF-16 string into Latin1 string.
@@ -1981,7 +2037,7 @@ If, instead of failing on invalid input, you would rather replace unpaired surro
 
 ## Cost of the safe conversion functions
 
-The `_safe` conversion variants (`convert_latin1_to_utf8_safe` and `convert_utf16_to_utf8_safe`) never write past the output capacity you give them. Because these functions cannot assume that there is enough output buffer space, they cannot proceed in the most efficient manner. For example, they may be forced to split the work into chunks. If the inputs span megabytes, this overhead is negligible. Unfortunately, for small inputs, it can be significant. For example, the `convert_utf16_to_utf8_safe` function is up to 3 times slower than `convert_utf16_to_utf8` on ASCII inputs of a few hundred code units in some tests. For optimal performance, you should allocate at least as much memory as the `utf8_length_from_latin1` or `utf8_length_from_utf16` functions indicate and directly call the `convert_latin1_to_utf8` and `convert_utf16_to_utf8` functions, especially if you expect to have short inputs.
+The `_safe` conversion variants (`convert_latin1_to_utf8_safe` and `convert_utf16_to_utf8_safe`) never write past the output capacity you give them. The corresponding `_safe_with_details` variants additionally return the number of input code units consumed and output bytes written. Because these functions cannot assume that there is enough output buffer space, they cannot proceed in the most efficient manner. For example, they may be forced to split the work into chunks. If the inputs span megabytes, this overhead is negligible. Unfortunately, for small inputs, it can be significant. For example, the `convert_utf16_to_utf8_safe` function is up to 3 times slower than `convert_utf16_to_utf8` on ASCII inputs of a few hundred code units in some tests. For optimal performance, you should allocate at least as much memory as the `utf8_length_from_latin1` or `utf8_length_from_utf16` functions indicate and directly call the `convert_latin1_to_utf8` and `convert_utf16_to_utf8` functions, especially if you expect to have short inputs.
 
 The base64 decoding functions have their own safe variant, `base64_to_binary_safe`, which takes the output capacity as an in-out parameter. It does not need to split the work into chunks: it determines in a single step how much of the input fits in the output buffer, decodes that part with the fast function, and leaves only the remainder to a scalar decoder. Its overhead is therefore normally negligible, and we measure it to be as fast as `base64_to_binary` on clean base64 inputs at all sizes. The exception is base64 containing ASCII whitespace, because whitespace breaks the relationship between the input length and the output length: a short input of a few dozen characters with 5% whitespace can be nearly 3 times slower, although the difference largely disappears for inputs spanning a kilobyte or more. The `atomic_base64_to_binary_safe` function is more expensive: it decodes into a small temporary buffer and then copies the result to the output with relaxed atomic writes, so that other threads never observe partially written data. Every output byte is thus written twice, and this cost does not go away with larger inputs: we measure it to be 1.5 to 1.8 times slower than `base64_to_binary` on inputs of a kilobyte or more, including inputs spanning megabytes. You should only use it when the output buffer might be accessed concurrently.
 
