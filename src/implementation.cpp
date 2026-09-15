@@ -1963,6 +1963,41 @@ simdutf_warn_unused size_t
 convert_utf16_to_utf8_safe(const char16_t *buf, size_t len, char *utf8_output,
                            size_t utf8_len) noexcept {
   const auto start{utf8_output};
+  #if SIMDUTF_FEATURE_ASCII
+  // ASCII has one output byte per input code unit. When the caller provides
+  // exactly that much output space, avoid repeatedly shrinking a conservative
+  // three-byte slice. The haswell converter can process the whole ASCII prefix
+  // in one entry and retains its usual scalar tail. Restrict this extra scan to
+  // the short-input range where it costs less than the avoided re-entries.
+  constexpr size_t ascii_preflight_min_length = 32;
+  constexpr size_t ascii_preflight_max_length = 4096;
+  // Avoid a full preflight for common non-ASCII insufficient-buffer inputs.
+  if (utf8_len == len && len >= ascii_preflight_min_length &&
+      len <= ascii_preflight_max_length && buf[0] <= 0x7f &&
+      buf[len / 2] <= 0x7f && buf[len - 1] <= 0x7f) {
+    const implementation *active_implementation = get_default_implementation();
+    if (active_implementation->name() == "haswell") {
+      // Refresh the pointer after first-use implementation detection.
+      active_implementation = get_default_implementation();
+      #if SIMDUTF_IS_BIG_ENDIAN
+      const bool is_ascii =
+          active_implementation->validate_utf16be_as_ascii(buf, len);
+      #else
+      const bool is_ascii =
+          active_implementation->validate_utf16le_as_ascii(buf, len);
+      #endif // SIMDUTF_IS_BIG_ENDIAN
+      if (is_ascii) {
+        #if SIMDUTF_IS_BIG_ENDIAN
+        return active_implementation->convert_utf16be_to_utf8(buf, len,
+                                                               utf8_output);
+        #else
+        return active_implementation->convert_utf16le_to_utf8(buf, len,
+                                                               utf8_output);
+        #endif // SIMDUTF_IS_BIG_ENDIAN
+      }
+    }
+  }
+  #endif // SIMDUTF_FEATURE_ASCII
   // We might be able to go faster by first scanning the input buffer to
   // determine how many char16_t characters we can read without exceeding the
   // utf8_len. This is a one-pass algorithm that has the benefit of not

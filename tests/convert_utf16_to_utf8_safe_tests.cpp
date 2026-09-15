@@ -64,6 +64,85 @@ TEST(issue911) {
   ASSERT_TRUE(written <= 2);
 }
 
+TEST(ascii_exact_capacity_preserves_output_bounds) {
+  constexpr size_t max_input_length = 4096;
+  constexpr size_t guard_length = 32;
+  constexpr char marker = char(0xa5);
+  std::array<char16_t, max_input_length> input{};
+  for (size_t i = 0; i < input.size(); ++i) {
+    input[i] = char16_t(i & 0x7f);
+  }
+
+  std::vector<char> output(max_input_length + 2 * guard_length, marker);
+  char *const destination = output.data() + guard_length;
+  for (const size_t input_length : {size_t(32), size_t(33), size_t(1024),
+                                    max_input_length}) {
+    const size_t written = simdutf::convert_utf16_to_utf8_safe(
+        input.data(), input_length, destination, input_length);
+    ASSERT_EQUAL(written, input_length);
+    for (size_t i = 0; i < input_length; ++i) {
+      ASSERT_EQUAL(destination[i], char(i & 0x7f));
+    }
+    for (size_t i = 0; i < guard_length; ++i) {
+      ASSERT_EQUAL(output[i], marker);
+    }
+    for (size_t i = guard_length + input_length; i < output.size(); ++i) {
+      ASSERT_EQUAL(output[i], marker);
+    }
+
+    for (size_t i = 0; i < output.size(); ++i) {
+      output[i] = marker;
+    }
+    const size_t limited_written = simdutf::convert_utf16_to_utf8_safe(
+        input.data(), input_length, destination, input_length - 1);
+    ASSERT_EQUAL(limited_written, input_length - 1);
+    for (size_t i = 0; i < limited_written; ++i) {
+      ASSERT_EQUAL(destination[i], char(i & 0x7f));
+    }
+    for (size_t i = guard_length + input_length - 1; i < output.size(); ++i) {
+      ASSERT_EQUAL(output[i], marker);
+    }
+  }
+}
+
+TEST(safe_utf16_to_utf8_preserves_surrogate_prefixes) {
+  constexpr size_t input_length = 64;
+  constexpr size_t guard_length = 16;
+  constexpr char marker = char(0xa5);
+  std::array<char16_t, input_length> input{};
+  input.fill(u'A');
+  input[31] = char16_t(0xd800);
+  std::vector<char> output(input_length + guard_length, marker);
+  const size_t malformed_written = simdutf::convert_utf16_to_utf8_safe(
+      input.data(), input.size(), output.data(), input.size());
+  ASSERT_EQUAL(malformed_written, size_t(0));
+  for (size_t i = 0; i < 31; ++i) {
+    ASSERT_EQUAL(output[i], 'A');
+  }
+  for (size_t i = input.size(); i < output.size(); ++i) {
+    ASSERT_EQUAL(output[i], marker);
+  }
+
+  input.fill(u'A');
+  input[20] = char16_t(0xd800);
+  input[21] = char16_t(0xdc00);
+  std::vector<char> expected(input.size() * 3);
+  const size_t expected_written =
+      simdutf::convert_utf16_to_utf8(input.data(), input.size(), expected.data());
+  ASSERT_EQUAL(expected_written, input.size() + 2);
+
+  for (size_t i = 0; i < output.size(); ++i) {
+    output[i] = marker;
+  }
+  const size_t limited_written = simdutf::convert_utf16_to_utf8_safe(
+      input.data(), input.size(), output.data(), input.size());
+  ASSERT_EQUAL(limited_written, input.size());
+  ASSERT_BYTES_EQUAL(output, expected, limited_written);
+  for (size_t i = limited_written; i < output.size(); ++i) {
+    ASSERT_EQUAL(output[i], marker);
+  }
+}
+
 TEST(convert_pure_ASCII) {
   size_t counter = 0;
   auto generator = [&counter]() -> uint32_t { return counter++ & 0x7f; };
