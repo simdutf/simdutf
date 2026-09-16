@@ -23,7 +23,7 @@ jobs:
       - name: install
         run: |
           apt-get update -q -y
-          apt-get install -y cmake make g++-15 clang-21 ninja-build
+          apt-get install -y cmake make g++ g++-15 clang-21 ninja-build
       - name: Build and test ${{matrix.compiler}} C++ ${{matrix.cppversion}}
         run: |
           cmake \

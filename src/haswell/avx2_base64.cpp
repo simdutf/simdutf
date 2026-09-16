@@ -719,7 +719,7 @@ simdutf_warn_unused size_t avx2_binary_length_from_base64(const char *input,
   const char *end = input + length;
 
   __m256i spaces = _mm256_set1_epi8(0x20);
-  while (ptr + 32 <= end) {
+  while (size_t(end - ptr) >= 32) {
     __m256i data = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(ptr));
     __m256i gt_space = _mm256_cmpgt_epi8(data, spaces);
     uint32_t mask = static_cast<uint32_t>(_mm256_movemask_epi8(gt_space));
@@ -752,7 +752,7 @@ simdutf_warn_unused size_t avx2_binary_length_from_base64(const char16_t *input,
   const char16_t *end = input + length;
 
   __m256i spaces = _mm256_set1_epi16(0x20);
-  while (ptr + 16 <= end) {
+  while (size_t(end - ptr) >= 16) {
     __m256i data = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(ptr));
     __m256i gt_space = _mm256_cmpgt_epi16(data, spaces);
     uint32_t mask = static_cast<uint32_t>(_mm256_movemask_epi8(gt_space));

@@ -17,6 +17,14 @@ static simdutf_utf8_result to_c_utf8_result(const simdutf::utf8_result &r) {
   return out;
 }
 
+static simdutf_full_result to_c_full_result(const simdutf::full_result &r) {
+  simdutf_full_result out;
+  out.error = static_cast<simdutf_error_code>(r.error);
+  out.input_count = r.input_count;
+  out.output_count = r.output_count;
+  return out;
+}
+
 /* The C wrapper depends on the library features. Only expose the C API
    when all relevant feature is enabled. This helps the
    single-header generator to omit the C wrapper when features are
@@ -189,6 +197,11 @@ size_t simdutf_convert_latin1_to_utf8_safe(const char *input, size_t length,
                                            char *output, size_t utf8_len) {
   return simdutf::convert_latin1_to_utf8_safe(input, length, output, utf8_len);
 }
+simdutf_full_result simdutf_convert_latin1_to_utf8_safe_with_details(
+    const char *input, size_t length, char *output, size_t utf8_len) {
+  return to_c_full_result(simdutf::convert_latin1_to_utf8_safe_with_details(
+      input, length, output, utf8_len));
+}
 size_t simdutf_convert_latin1_to_utf16le(const char *input, size_t length,
                                          char16_t *output) {
   return simdutf::convert_latin1_to_utf16le(input, length, output);
@@ -284,6 +297,11 @@ size_t simdutf_convert_utf16_to_utf8_safe(const char16_t *input, size_t length,
                                           char *output, size_t utf8_len) {
   return simdutf::convert_utf16_to_utf8_safe(input, length, output, utf8_len);
 }
+simdutf_full_result simdutf_convert_utf16_to_utf8_safe_with_details(
+    const char16_t *input, size_t length, char *output, size_t utf8_len) {
+  return to_c_full_result(simdutf::convert_utf16_to_utf8_safe_with_details(
+      input, length, output, utf8_len));
+}
 size_t simdutf_convert_utf16_to_latin1(const char16_t *input, size_t length,
                                        char *output) {
   return simdutf::convert_utf16_to_latin1(input, length, output);
@@ -341,6 +359,29 @@ size_t simdutf_convert_utf16le_to_utf8(const char16_t *input, size_t length,
 size_t simdutf_convert_utf16be_to_utf8(const char16_t *input, size_t length,
                                        char *output) {
   return simdutf::convert_utf16be_to_utf8(input, length, output);
+}
+
+size_t simdutf_convert_utf16_to_utf8_with_replacement(const char16_t *input,
+                                                      size_t length,
+                                                      char *output) {
+  return simdutf::convert_utf16_to_utf8_with_replacement(input, length, output);
+}
+simdutf_full_result simdutf_convert_utf16_to_utf8_with_replacement_safe(
+    const char16_t *input, size_t length, char *output, size_t utf8_len) {
+  return to_c_full_result(simdutf::convert_utf16_to_utf8_with_replacement_safe(
+      input, length, output, utf8_len));
+}
+size_t simdutf_convert_utf16le_to_utf8_with_replacement(const char16_t *input,
+                                                        size_t length,
+                                                        char *output) {
+  return simdutf::convert_utf16le_to_utf8_with_replacement(input, length,
+                                                           output);
+}
+size_t simdutf_convert_utf16be_to_utf8_with_replacement(const char16_t *input,
+                                                        size_t length,
+                                                        char *output) {
+  return simdutf::convert_utf16be_to_utf8_with_replacement(input, length,
+                                                           output);
 }
 
 size_t simdutf_convert_valid_utf16_to_utf8(const char16_t *input, size_t length,
@@ -539,14 +580,6 @@ simdutf_result simdutf_base64_to_binary_safe_utf16(
   if (outlen)
     *outlen = local_out;
   return to_c_result(r);
-}
-
-static simdutf_full_result to_c_full_result(const simdutf::full_result &r) {
-  simdutf_full_result out;
-  out.error = static_cast<simdutf_error_code>(r.error);
-  out.input_count = r.input_count;
-  out.output_count = r.output_count;
-  return out;
 }
 
 simdutf_full_result simdutf_base64_to_binary_details(

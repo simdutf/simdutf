@@ -116,6 +116,28 @@ inline size_t convert_safe(const char *buf, size_t len, char *utf8_output,
   return utf8_pos;
 }
 
+inline full_result convert_safe_with_details(const char *buf, size_t len,
+                                             char *utf8_output,
+                                             size_t utf8_len) {
+  const size_t output_count = convert_safe(buf, len, utf8_output, utf8_len);
+  // Recover the consumed input count from the completed output. The runtime
+  // safe converter uses this helper only for its short scalar tail.
+  size_t input_count = 0;
+  size_t counted_output = 0;
+  while (input_count < len) {
+    const size_t width =
+        uint8_t(buf[input_count]) < uint8_t(0x80) ? size_t(1) : size_t(2);
+    if (counted_output + width > output_count) {
+      break;
+    }
+    input_count++;
+    counted_output += width;
+  }
+  return full_result(input_count == len ? error_code::SUCCESS
+                                        : error_code::OUTPUT_BUFFER_TOO_SMALL,
+                     input_count, output_count);
+}
+
 template <typename InputPtr, typename OutputPtr>
 #if SIMDUTF_CPLUSPLUS20
   requires(simdutf::detail::indexes_into_byte_like<InputPtr> &&
@@ -142,6 +164,31 @@ simdutf_constexpr23 size_t convert_safe_constexpr(InputPtr data, size_t len,
     }
   }
   return utf8_pos;
+}
+
+template <typename InputPtr, typename OutputPtr>
+#if SIMDUTF_CPLUSPLUS20
+  requires(simdutf::detail::indexes_into_byte_like<InputPtr> &&
+           simdutf::detail::index_assignable_from_char<OutputPtr>)
+#endif
+simdutf_constexpr23 full_result convert_safe_with_details_constexpr(
+    InputPtr data, size_t len, OutputPtr utf8_output, size_t utf8_len) {
+  const size_t output_count =
+      convert_safe_constexpr(data, len, utf8_output, utf8_len);
+  size_t input_count = 0;
+  size_t counted_output = 0;
+  while (input_count < len) {
+    const size_t width =
+        uint8_t(data[input_count]) < uint8_t(0x80) ? size_t(1) : size_t(2);
+    if (counted_output + width > output_count) {
+      break;
+    }
+    input_count++;
+    counted_output += width;
+  }
+  return full_result(input_count == len ? error_code::SUCCESS
+                                        : error_code::OUTPUT_BUFFER_TOO_SMALL,
+                     input_count, output_count);
 }
 
 template <typename InputPtr>

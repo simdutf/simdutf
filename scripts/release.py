@@ -159,10 +159,12 @@ if(cp.returncode != 0):
     print("Failed to run amalgamate")
 
 print("running doxygen")
-cp = subprocess.run(["doxygen"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=maindir)  # doesn't capture output
-
-if(cp.returncode != 0):
-    print("Failed to run doxygen")
+try:
+    cp = subprocess.run(["doxygen"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=maindir)  # doesn't capture output
+    if(cp.returncode != 0):
+        print("Failed to run doxygen")
+except FileNotFoundError:
+    print("doxygen is not installed, skipping (the documentation workflow regenerates it)")
 
 
 readmefile = maindir + os.sep + "README.md"

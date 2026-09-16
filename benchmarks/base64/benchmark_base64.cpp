@@ -110,14 +110,32 @@ event_aggregate bench(const function_type &function, size_t min_repeat = 10,
   if (N == 0) {
     N = 1;
   }
+  // Reading the performance counters costs tens of nanoseconds. On a small
+  // input, one call is itself that short, so the counters would dominate what
+  // we report. Time a batch of `inner` calls instead, and divide.
+  size_t inner = 1;
+  {
+    const auto t0 = std::chrono::steady_clock::now();
+    function();
+    const double ns = std::chrono::duration<double, std::nano>(
+                          std::chrono::steady_clock::now() - t0)
+                          .count();
+    if (ns < 100000) {
+      inner = 1 + size_t(100000 / (ns > 1 ? ns : 1));
+    }
+  }
   for (size_t i = 0; i < N; i++) {
     std::atomic_thread_fence(std::memory_order_acquire);
     collector.start();
-    function();
+    for (size_t j = 0; j < inner; j++) {
+      function();
+    }
     std::atomic_thread_fence(std::memory_order_release);
-    event_count allocate_count = collector.end();
+    event_count allocate_count = collector.end() / inner;
     aggregate << allocate_count;
-    if ((i + 1 == N) && (aggregate.total_elapsed_ns() < min_time_ns) &&
+    // total_elapsed_ns() is per call now, so scale it back to wall time to
+    // keep the same one-second budget.
+    if ((i + 1 == N) && (aggregate.total_elapsed_ns() * inner < min_time_ns) &&
         (N < max_repeat)) {
       N *= 10;
     }

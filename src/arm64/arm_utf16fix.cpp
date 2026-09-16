@@ -1,9 +1,6 @@
 
 /*
- * Returns whether a vector of type uint8x16_t is not all zero. The input is
- * always a combination of comparison masks (bytes equal to 0x00 or 0xff), so we
- * can use the two-instruction test (shrn + fcmp) instead of a reduction
- * followed by a costly move to a general-purpose register.
+ * Returns whether a vector of type uint8x16_t is not all zero.
  */
 simdutf_really_inline bool veq_non_zero(uint8x16_t v) {
   return any_lane_set(vreinterpretq_u16_u8(v));

@@ -470,8 +470,12 @@ static inline void base64_decode(char *out, __m256i str) {
   __m256i pack_shuffle = ____m256i(
       (__m128i)v16u8{3, 2, 1, 7, 6, 5, 11, 10, 9, 15, 14, 13, 0, 0, 0, 0});
   t3 = __lasx_xvshuf_b(t3, t3, (__m256i)pack_shuffle);
+  t3 = __lasx_xvinsgr2vr_w(t3, 0, 7);
 
-  // Store the output:
+  // Two 16-byte stores write 28 bytes: the 24 bytes of output followed by four
+  // zero bytes. Callers that cannot spare those four bytes must go through
+  // base64_decode_block_safe. The bulk loop can: it only takes this path while
+  // dst is below end_of_safe_64byte_zone, which leaves 63 bytes of room.
   __lsx_vst(lasx_extracti128_lo(t3), out, 0);
   __lsx_vst(lasx_extracti128_hi(t3), out, 12);
 }
@@ -483,11 +487,9 @@ static inline void base64_decode_block(char *out, const char *src) {
 }
 
 static inline void base64_decode_block_safe(char *out, const char *src) {
-  base64_decode(out, __lasx_xvld(reinterpret_cast<const __m256i *>(src), 0));
-  alignas(32) char buffer[32];
-  base64_decode(buffer,
-                __lasx_xvld(reinterpret_cast<const __m256i *>(src), 32));
-  std::memcpy(out + 24, buffer, 24);
+  alignas(32) char buffer[64];
+  base64_decode_block(buffer, src);
+  std::memcpy(out, buffer, 48);
 }
 
 static inline void base64_decode_block(char *out, block64 *b) {
@@ -495,10 +497,9 @@ static inline void base64_decode_block(char *out, block64 *b) {
   base64_decode(out + 24, b->chunks[1]);
 }
 static inline void base64_decode_block_safe(char *out, block64 *b) {
-  base64_decode(out, b->chunks[0]);
-  alignas(32) char buffer[32];
-  base64_decode(buffer, b->chunks[1]);
-  std::memcpy(out + 24, buffer, 24);
+  alignas(32) char buffer[64];
+  base64_decode_block(buffer, b);
+  std::memcpy(out, buffer, 48);
 }
 
 template <bool base64_url, bool ignore_garbage, bool default_or_url,
@@ -518,7 +519,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   size_t full_input_length = ri.full_input_length;
   if (srclen == 0) {
     if (!ignore_garbage && equalsigns > 0) {
-      return {INVALID_BASE64_CHARACTER, equallocation, 0};
+      return {INVALID_BASE64_CHARACTER, equallocation, 0, true};
     }
     return {SUCCESS, full_input_length, 0};
   }
@@ -688,7 +689,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   if (equalsigns > 0 && !ignore_garbage) {
     if ((size_t(dst - dstinit) % 3 == 0) ||
         ((size_t(dst - dstinit) % 3) + 1 + equalsigns != 4)) {
-      return {INVALID_BASE64_CHARACTER, equallocation, size_t(dst - dstinit)};
+      return {INVALID_BASE64_CHARACTER, equallocation, size_t(dst - dstinit),
+              true};
     }
   }
   return {SUCCESS, srclen, size_t(dst - dstinit)};

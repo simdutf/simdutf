@@ -3917,6 +3917,33 @@ TEST(base64_valid_runtime) {
   ASSERT_TRUE(simdutf::base64_valid('_', simdutf::base64_url));
 }
 
+TEST(base64_to_binary_safe_no_garbage_past_output) {
+  for (bool decode_up_to_bad_char : {false, true}) {
+    for (size_t len = 64; len <= 512; len += 64) {
+      for (size_t bad = 1; bad < len; bad++) {
+        std::string input(len, 'y');
+        input[bad] = '*';
+        std::vector<char> output(len, 0);
+        size_t outlen = output.size();
+        const simdutf::result r = simdutf::base64_to_binary_safe(
+            input.data(), input.size(), output.data(), outlen,
+            simdutf::base64_default,
+            simdutf::last_chunk_handling_options::strict,
+            decode_up_to_bad_char);
+        ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+        for (size_t i = outlen; i < output.size(); i++) {
+          if (uint8_t(output[i]) != 0) {
+            printf("garbage at %zu (outlen = %zu), input length %zu, bad "
+                   "character at %zu\n",
+                   i, outlen, len, bad);
+          }
+          ASSERT_EQUAL(uint8_t(output[i]), 0);
+        }
+      }
+    }
+  }
+}
+
 int main(int argc, char *argv[]) {
   const auto cmdline = simdutf::test::CommandLine::parse(argc, argv);
   seed = cmdline.seed;

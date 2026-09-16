@@ -16,6 +16,7 @@
   - [Packages](#packages)
   - [Example](#example)
   - [API](#api)
+  - [Cost of the safe conversion functions](#cost-of-the-safe-conversion-functions)
   - [Base64](#base64)
   - [Find](#find)
   - [C++20 and std::span usage in simdutf](#c20-and-stdspan-usage-in-simdutf)
@@ -148,7 +149,7 @@ Linux or macOS users might follow the following instructions if they have a rece
 
 1. Pull the library in a directory
    ```
-   wget https://github.com/simdutf/simdutf/releases/download/v9.0.0/singleheader.zip
+   wget https://github.com/simdutf/simdutf/releases/download/v9.2.0/singleheader.zip
    unzip singleheader.zip
    ```
    You can replace `wget` by `curl -OL https://...` if you prefer.
@@ -189,7 +190,7 @@ You may also use a package manager. E.g.,  [we have a complete example using vcp
 
 ## Single-header version
 
-You can create a single-header version of the library where all of the code is put into two files (`simdutf.h` and `simdutf.cpp`). We publish a zip archive containing these files, e.g., see https://github.com/simdutf/simdutf/releases/download/v9.0.0/singleheader.zip
+You can create a single-header version of the library where all of the code is put into two files (`simdutf.h` and `simdutf.cpp`). We publish a zip archive containing these files, e.g., see https://github.com/simdutf/simdutf/releases/download/v9.2.0/singleheader.zip
 
 You may generate it on your own using a Python script.
 
@@ -1136,6 +1137,12 @@ simdutf_warn_unused size_t convert_latin1_to_utf8(const char * input, size_t len
  *
  * This function is suitable to work with inputs from untrusted sources.
  *
+ * Using convert_latin1_to_utf8_safe instead of convert_latin1_to_utf8 comes
+ * with a significant penalty in some cases, being up to four times slower,
+ * especially on short inputs. If you have allocated the output buffer so that
+ * it contains utf8_length_from_latin1(input, length) bytes, then prefer
+ * convert_latin1_to_utf8.
+ *
  * @param input         the Latin1 string to convert
  * @param length        the length of the string in bytes
  * @param utf8_output  	the pointer to buffer that can hold conversion result
@@ -1143,6 +1150,23 @@ simdutf_warn_unused size_t convert_latin1_to_utf8(const char * input, size_t len
  * @return the number of written char; 0 if conversion is not possible
  */
 simdutf_warn_unused size_t convert_latin1_to_utf8_safe(const char * input, size_t length, char* utf8_output, size_t utf8_len) noexcept;
+
+/**
+ * Convert a Latin1 string into a size-limited UTF-8 buffer and report how much
+ * input was consumed and output was written.
+ *
+ * We write as many complete characters as possible. The returned error is
+ * SUCCESS if all input was consumed, or OUTPUT_BUFFER_TOO_SMALL otherwise.
+ *
+ * @param input         the Latin1 string to convert
+ * @param length        the length of the string in bytes
+ * @param utf8_output   the pointer to the output buffer
+ * @param utf8_len      the maximum output length
+ * @return a full_result with error, input_count and output_count
+ */
+simdutf_warn_unused full_result convert_latin1_to_utf8_safe_with_details(
+    const char *input, size_t length, char *utf8_output,
+    size_t utf8_len) noexcept;
 
 /**
  * Using native endianness, convert a Latin1 string into a UTF-16 string.
@@ -1288,6 +1312,11 @@ simdutf_warn_unused size_t convert_utf16_to_utf8(const char16_t *input,
  *
  * This function is not BOM-aware.
  *
+ * Using convert_utf16_to_utf8_safe instead of convert_utf16_to_utf8 comes with
+ * a significant penalty in some cases, being up to three times slower,
+ * especially on short inputs. If you have allocated the output buffer so that
+ * it contains utf8_length_from_utf16(input, length) bytes, then prefer
+ * convert_utf16_to_utf8.
  *
  * @param input         the UTF-16 string to convert
  * @param length        the length of the string in 16-bit code units (char16_t)
@@ -1298,6 +1327,63 @@ simdutf_warn_unused size_t convert_utf16_to_utf8(const char16_t *input,
 simdutf_warn_unused size_t
 convert_utf16_to_utf8_safe(const char16_t *input, size_t length, char *utf8_output,
                             size_t utf8_len) noexcept;
+
+/**
+ * Convert a possibly broken UTF-16 string into a size-limited UTF-8 buffer and
+ * report how much input was consumed and output was written.
+ *
+ * We write as many complete characters as possible while validating the input.
+ * The returned error is SUCCESS if all input was consumed,
+ * OUTPUT_BUFFER_TOO_SMALL if the next character does not fit, or SURROGATE if
+ * an unpaired surrogate was found.
+ *
+ * @param input         the UTF-16 string to convert
+ * @param length        the length in 16-bit code units
+ * @param utf8_output   the pointer to the output buffer
+ * @param utf8_len      the maximum output length
+ * @return a full_result with error, input_count and output_count
+ */
+simdutf_warn_unused full_result convert_utf16_to_utf8_safe_with_details(
+    const char16_t *input, size_t length, char *utf8_output,
+    size_t utf8_len) noexcept;
+
+/**
+ * Using native endianness, convert possibly broken UTF-16 string into UTF-8
+ * string, replacing unpaired surrogates with the Unicode replacement character
+ * U+FFFD.
+ *
+ * This function always succeeds: unpaired surrogates are replaced with U+FFFD
+ * (3 bytes in UTF-8: 0xEF 0xBF 0xBD).
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-16 string to convert
+ * @param length        the length of the string in 2-byte code units (char16_t)
+ * @param utf8_buffer   the pointer to buffer that can hold conversion result
+ * @return number of written code units
+ */
+simdutf_warn_unused size_t convert_utf16_to_utf8_with_replacement(
+    const char16_t *input, size_t length, char *utf8_buffer) noexcept;
+
+/**
+ * Convert a possibly broken UTF-16 string into a size-limited UTF-8 buffer,
+ * replacing unpaired surrogates with U+FFFD and reporting how much input was
+ * consumed and output was written.
+ *
+ * We write as many complete characters as possible. The returned error is
+ * SUCCESS if all input was consumed, or OUTPUT_BUFFER_TOO_SMALL if the next
+ * character or replacement does not fit.
+ *
+ * @param input         the UTF-16 string to convert
+ * @param length        the length in 16-bit code units
+ * @param utf8_output   the pointer to the output buffer
+ * @param utf8_len      the maximum output length
+ * @return a full_result with error, input_count and output_count
+ */
+simdutf_warn_unused full_result
+convert_utf16_to_utf8_with_replacement_safe(const char16_t *input,
+                                            size_t length, char *utf8_output,
+                                            size_t utf8_len) noexcept;
 
 /**
  * Using native endianness, convert possibly broken UTF-16 string into Latin1 string.
@@ -1364,6 +1450,23 @@ simdutf_warn_unused size_t convert_utf16be_to_latin1(const char16_t * input, siz
 simdutf_warn_unused size_t convert_utf16le_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) noexcept;
 
 /**
+ * Convert possibly broken UTF-16LE string into UTF-8 string, replacing
+ * unpaired surrogates with the Unicode replacement character U+FFFD.
+ *
+ * This function always succeeds: unpaired surrogates are replaced with U+FFFD
+ * (3 bytes in UTF-8: 0xEF 0xBF 0xBD).
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-16LE string to convert
+ * @param length        the length of the string in 2-byte code units (char16_t)
+ * @param utf8_buffer   the pointer to buffer that can hold conversion result
+ * @return number of written code units
+ */
+simdutf_warn_unused size_t convert_utf16le_to_utf8_with_replacement(
+    const char16_t *input, size_t length, char *utf8_buffer) noexcept;
+
+/**
  * Convert possibly broken UTF-16BE string into UTF-8 string.
  *
  * During the conversion also validation of the input string is done.
@@ -1377,6 +1480,23 @@ simdutf_warn_unused size_t convert_utf16le_to_utf8(const char16_t * input, size_
  * @return number of written code units; 0 if input is not a valid UTF-16LE string
  */
 simdutf_warn_unused size_t convert_utf16be_to_utf8(const char16_t * input, size_t length, char* utf8_buffer) noexcept;
+
+/**
+ * Convert possibly broken UTF-16BE string into UTF-8 string, replacing
+ * unpaired surrogates with the Unicode replacement character U+FFFD.
+ *
+ * This function always succeeds: unpaired surrogates are replaced with U+FFFD
+ * (3 bytes in UTF-8: 0xEF 0xBF 0xBD).
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-16BE string to convert
+ * @param length        the length of the string in 2-byte code units (char16_t)
+ * @param utf8_buffer   the pointer to buffer that can hold conversion result
+ * @return number of written code units
+ */
+simdutf_warn_unused size_t convert_utf16be_to_utf8_with_replacement(
+    const char16_t *input, size_t length, char *utf8_buffer) noexcept;
 
 
 /**
@@ -1938,6 +2058,37 @@ If you have a UTF-16 input, you may change its endianness with a fast function.
 void change_endianness_utf16(const char16_t * input, size_t length, char16_t * output) noexcept;
 
 ```
+
+
+
+
+
+If, instead of failing on invalid input, you would rather replace unpaired surrogates with the Unicode replacement character (`U+FFFD`), you can use the `_with_replacement` conversions before sizing the output with the corresponding `_with_replacement` length function. These functions always succeed. For example, to go from UTF-16 to UTF-8 while replacing any unpaired surrogates:
+
+```cpp
+  // this UTF-16 string contains an unpaired surrogate (U+D800)
+  const char16_t source[] = u"A \xd800 B";
+  size_t length = 5;
+  // The length function always returns the correct byte count and sets the
+  // error field to SURROGATE when a surrogate (matched or not) is present.
+  simdutf::result res = simdutf::utf8_length_from_utf16_with_replacement(source, length);
+  std::unique_ptr<char[]> utf8{new char[res.count]};
+  // The conversion function replaces the unpaired surrogate with U+FFFD and
+  // always succeeds.
+  size_t written = simdutf::convert_utf16_to_utf8_with_replacement(
+      source, length, utf8.get());
+  if(res.error == simdutf::error_code::SURROGATE) {
+    std::cerr << "an unpaired surrogate was replaced with U+FFFD" << std::endl;
+  }
+```
+
+
+## Cost of the safe conversion functions
+
+The `_safe` conversion variants (`convert_latin1_to_utf8_safe` and `convert_utf16_to_utf8_safe`) never write past the output capacity you give them. The corresponding `_safe_with_details` variants additionally return the number of input code units consumed and output bytes written. Because these functions cannot assume that there is enough output buffer space, they cannot proceed in the most efficient manner. For example, they may be forced to split the work into chunks. If the inputs span megabytes, this overhead is negligible. Unfortunately, for small inputs, it can be significant. For example, the `convert_utf16_to_utf8_safe` function is up to 3 times slower than `convert_utf16_to_utf8` on ASCII inputs of a few hundred code units in some tests. For optimal performance, you should allocate at least as much memory as the `utf8_length_from_latin1` or `utf8_length_from_utf16` functions indicate and directly call the `convert_latin1_to_utf8` and `convert_utf16_to_utf8` functions, especially if you expect to have short inputs.
+
+The base64 decoding functions have their own safe variant, `base64_to_binary_safe`, which takes the output capacity as an in-out parameter. It does not need to split the work into chunks: it determines in a single step how much of the input fits in the output buffer, decodes that part with the fast function, and leaves only the remainder to a scalar decoder. Its overhead is therefore normally negligible, and we measure it to be as fast as `base64_to_binary` on clean base64 inputs at all sizes. The exception is base64 containing ASCII whitespace, because whitespace breaks the relationship between the input length and the output length: a short input of a few dozen characters with 5% whitespace can be nearly 3 times slower, although the difference largely disappears for inputs spanning a kilobyte or more. The `atomic_base64_to_binary_safe` function is more expensive: it decodes into a small temporary buffer and then copies the result to the output with relaxed atomic writes, so that other threads never observe partially written data. Every output byte is thus written twice, and this cost does not go away with larger inputs: we measure it to be 1.5 to 1.8 times slower than `base64_to_binary` on inputs of a kilobyte or more, including inputs spanning megabytes. You should only use it when the output buffer might be accessed concurrently.
+
 
 ## Base64
 
@@ -2507,6 +2658,10 @@ simdutf_warn_unused result base64_to_binary(const char16_t * input, size_t lengt
  *
  * https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
  *
+ * The base64_to_binary_safe function has negligible overhead compared with
+ * base64_to_binary in the absence of ignorable characters; however, on short
+ * inputs containing ignorable characters, it can be up to three times slower.
+ *
  * @param input         the base64 string to process, in ASCII stored as 8-bit
  * or 16-bit units
  * @param length        the length of the string in 8-bit or 16-bit units.
@@ -3043,7 +3198,8 @@ We built simdutf with thread safety in mind. The simdutf library is single-threa
 
 ## References
 
-* Robert Clausecker, Daniel Lemire, [Transcoding Unicode Characters with AVX-512 Instructions](https://arxiv.org/abs/2212.05098),  Software: Practice and Experience 53 (12), 2023.
+* Robert Clausecker, Daniel Lemire, [Fixing ill-formed UTF-16 strings with SIMD instructions](https://arxiv.org/abs/2601.06349),  Software: Practice and Experience to appear, 2026.
+* * Robert Clausecker, Daniel Lemire, [Transcoding Unicode Characters with AVX-512 Instructions](https://arxiv.org/abs/2212.05098),  Software: Practice and Experience 53 (12), 2023.
 * Daniel Lemire, Wojciech Muła,  [Transcoding Billions of Unicode Characters per Second with SIMD Instructions](https://arxiv.org/abs/2109.10433), Software: Practice and Experience 52 (2), 2022.
 * John Keiser, Daniel Lemire, [Validating UTF-8 In Less Than One Instruction Per Byte](https://arxiv.org/abs/2010.03090), Software: Practice and Experience 51 (5), 2021.
 * Wojciech Muła, Daniel Lemire, [Base64 encoding and decoding at almost the speed of a memory copy](https://arxiv.org/abs/1910.05109), Software: Practice and Experience 50 (2), 2020.
