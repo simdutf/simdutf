@@ -26,9 +26,70 @@
  * https://www.codeproject.com/Articles/276993/Base-Encoding-on-a-GPU. (2013).
  */
 
-template <bool isbase64url>
-size_t encode_base64(char *dst, const char *src, size_t srclen,
-                     base64_options options) {
+// Translate 6-bit values (0..63) to the base64 alphabet using two 32-entry
+// (per 128-bit lane) shuffles and a select. xvshuf.b only uses the low five
+// bits of each index, so values 32..63 pick the right entry from
+// (tbl2, tbl3) without any adjustment.
+simdutf_really_inline __m256i lookup_base64(__m256i indices, __m256i tbl0,
+                                            __m256i tbl1, __m256i tbl2,
+                                            __m256i tbl3) {
+  const __m256i lo = __lasx_xvshuf_b(tbl1, tbl0, indices);
+  const __m256i hi = __lasx_xvshuf_b(tbl3, tbl2, indices);
+  const __m256i is_lo = __lasx_xvslei_bu(indices, 31);
+  return __lasx_xvbitsel_v(hi, lo, is_lo);
+}
+
+// Returns input with a line feed inserted at position K (0..15); the last
+// byte of the input is dropped and must be stored separately.
+simdutf_really_inline __m128i insert_line_feed16(__m128i input, size_t K) {
+  static const uint8_t shuffle_masks[16][16] = {
+      {15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 15, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 15, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 15, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 15, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 15, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 15, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 15, 7, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 15, 8, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 15, 9, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 15, 10, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 11, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 12, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 13, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 14},
+      {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}};
+  input = __lsx_vinsgr2vr_b(input, '\n', 15);
+  const __m128i mask = __lsx_vld(shuffle_masks[K], 0);
+  return __lsx_vshuf_b(input, input, mask);
+}
+
+// Stores the 32 bytes of `data` at `out` with a line feed inserted at
+// position K (0..31), writing 33 bytes in total.
+simdutf_really_inline void store_with_line_feed32(uint8_t *out, __m256i data,
+                                                  size_t K) {
+  // out[1..32] receives data[0..31]; we then overwrite the 128-bit half
+  // that contains the line feed (and, when the line feed is in the upper
+  // half, restore the lower half).
+  __lasx_xvst(data, out, 1);
+  const __m128i lo = lasx_extracti128_lo(data);
+  if (K < 16) {
+    __lsx_vst(insert_line_feed16(lo, K), out, 0);
+  } else {
+    const __m128i hi = lasx_extracti128_hi(data);
+    __lsx_vst(lo, out, 0);
+    __lsx_vst(insert_line_feed16(hi, K - 16), out, 16);
+  }
+}
+
+template <bool isbase64url, bool use_lines>
+size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
+                          base64_options options,
+                          size_t line_length = simdutf::default_line_length) {
+  size_t offset = 0;
+  if (line_length < 4) {
+    line_length = 4; // We do not support line_length less than 4
+  }
   // credit: Wojciech Muła
   // SSE (lookup: pshufb improved unrolled)
   const uint8_t *input = (const uint8_t *)src;
@@ -38,12 +99,19 @@ size_t encode_base64(char *dst, const char *src, size_t srclen,
           : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   uint8_t *out = (uint8_t *)dst;
 
-  v32u8 shuf;
+  v32u8 shuf, shuf_overlap;
   __m256i v_fc0fc00, v_3f03f0, shift_r, shift_l, base64_tbl0, base64_tbl1,
       base64_tbl2, base64_tbl3;
   if (srclen >= 28) {
     shuf = v32u8{1, 0, 2, 1, 4, 3, 5, 4, 7, 6, 8, 7, 10, 9, 11, 10,
                  1, 0, 2, 1, 4, 3, 5, 4, 7, 6, 8, 7, 10, 9, 11, 10};
+    // Same as shuf, but for a 32-byte block loaded 4 bytes before the
+    // start of a 24-byte group: the low 128-bit lane then holds bytes
+    // 0..11 of the group at positions 4..15 and the high lane holds bytes
+    // 12..23 at positions 0..11.
+    shuf_overlap =
+        v32u8{5, 4, 6, 5, 8, 7, 9, 8, 11, 10, 12, 11, 14, 13, 15, 14,
+              1, 0, 2, 1, 4, 3, 5, 4, 7,  6,  8,  7,  10, 9,  11, 10};
 
     v_fc0fc00 = __lasx_xvreplgr2vr_w(uint32_t(0x0fc0fc00));
     v_3f03f0 = __lasx_xvreplgr2vr_w(uint32_t(0x003f03f0));
@@ -56,32 +124,26 @@ size_t encode_base64(char *dst, const char *src, size_t srclen,
   }
   size_t i = 0;
   for (; i + 100 <= srclen; i += 96) {
+    // The first 24-byte group cannot be loaded 4 bytes early (it might
+    // read before the start of the buffer), so it uses two 16-byte loads.
+    // The next three groups use a single overlapping 32-byte load each; the
+    // last one ends at input + i + 100 <= input + srclen.
     __m128i in0_lo =
         __lsx_vld(reinterpret_cast<const __m128i *>(input + i), 4 * 3 * 0);
     __m128i in0_hi =
         __lsx_vld(reinterpret_cast<const __m128i *>(input + i), 4 * 3 * 1);
-    __m128i in1_lo =
-        __lsx_vld(reinterpret_cast<const __m128i *>(input + i), 4 * 3 * 2);
-    __m128i in1_hi =
-        __lsx_vld(reinterpret_cast<const __m128i *>(input + i), 4 * 3 * 3);
-    __m128i in2_lo =
-        __lsx_vld(reinterpret_cast<const __m128i *>(input + i), 4 * 3 * 4);
-    __m128i in2_hi =
-        __lsx_vld(reinterpret_cast<const __m128i *>(input + i), 4 * 3 * 5);
-    __m128i in3_lo =
-        __lsx_vld(reinterpret_cast<const __m128i *>(input + i), 4 * 3 * 6);
-    __m128i in3_hi =
-        __lsx_vld(reinterpret_cast<const __m128i *>(input + i), 4 * 3 * 7);
-
     __m256i in0 = lasx_set_q(in0_hi, in0_lo);
-    __m256i in1 = lasx_set_q(in1_hi, in1_lo);
-    __m256i in2 = lasx_set_q(in2_hi, in2_lo);
-    __m256i in3 = lasx_set_q(in3_hi, in3_lo);
+    __m256i in1 =
+        __lasx_xvld(reinterpret_cast<const __m256i *>(input + i), 24 - 4);
+    __m256i in2 =
+        __lasx_xvld(reinterpret_cast<const __m256i *>(input + i), 48 - 4);
+    __m256i in3 =
+        __lasx_xvld(reinterpret_cast<const __m256i *>(input + i), 72 - 4);
 
     in0 = __lasx_xvshuf_b(in0, in0, (__m256i)shuf);
-    in1 = __lasx_xvshuf_b(in1, in1, (__m256i)shuf);
-    in2 = __lasx_xvshuf_b(in2, in2, (__m256i)shuf);
-    in3 = __lasx_xvshuf_b(in3, in3, (__m256i)shuf);
+    in1 = __lasx_xvshuf_b(in1, in1, (__m256i)shuf_overlap);
+    in2 = __lasx_xvshuf_b(in2, in2, (__m256i)shuf_overlap);
+    in3 = __lasx_xvshuf_b(in3, in3, (__m256i)shuf_overlap);
 
     __m256i t0_0 = __lasx_xvand_v(in0, v_fc0fc00);
     __m256i t0_1 = __lasx_xvand_v(in1, v_fc0fc00);
@@ -104,44 +166,88 @@ size_t encode_base64(char *dst, const char *src, size_t srclen,
     __m256i t3_3 = __lasx_xvsll_h(t2_3, shift_l);
 
     __m256i input0 = __lasx_xvor_v(t1_0, t3_0);
-    __m256i input0_shuf0 = __lasx_xvshuf_b(base64_tbl1, base64_tbl0, input0);
-    __m256i input0_shuf1 = __lasx_xvshuf_b(
-        base64_tbl3, base64_tbl2, __lasx_xvsub_b(input0, __lasx_xvldi(32)));
-    __m256i input0_mask = __lasx_xvslei_bu(input0, 31);
-    __m256i input0_result =
-        __lasx_xvbitsel_v(input0_shuf1, input0_shuf0, input0_mask);
-    __lasx_xvst(input0_result, reinterpret_cast<__m256i *>(out), 0);
-    out += 32;
-
     __m256i input1 = __lasx_xvor_v(t1_1, t3_1);
-    __m256i input1_shuf0 = __lasx_xvshuf_b(base64_tbl1, base64_tbl0, input1);
-    __m256i input1_shuf1 = __lasx_xvshuf_b(
-        base64_tbl3, base64_tbl2, __lasx_xvsub_b(input1, __lasx_xvldi(32)));
-    __m256i input1_mask = __lasx_xvslei_bu(input1, 31);
-    __m256i input1_result =
-        __lasx_xvbitsel_v(input1_shuf1, input1_shuf0, input1_mask);
-    __lasx_xvst(input1_result, reinterpret_cast<__m256i *>(out), 0);
-    out += 32;
-
     __m256i input2 = __lasx_xvor_v(t1_2, t3_2);
-    __m256i input2_shuf0 = __lasx_xvshuf_b(base64_tbl1, base64_tbl0, input2);
-    __m256i input2_shuf1 = __lasx_xvshuf_b(
-        base64_tbl3, base64_tbl2, __lasx_xvsub_b(input2, __lasx_xvldi(32)));
-    __m256i input2_mask = __lasx_xvslei_bu(input2, 31);
-    __m256i input2_result =
-        __lasx_xvbitsel_v(input2_shuf1, input2_shuf0, input2_mask);
-    __lasx_xvst(input2_result, reinterpret_cast<__m256i *>(out), 0);
-    out += 32;
-
     __m256i input3 = __lasx_xvor_v(t1_3, t3_3);
-    __m256i input3_shuf0 = __lasx_xvshuf_b(base64_tbl1, base64_tbl0, input3);
-    __m256i input3_shuf1 = __lasx_xvshuf_b(
-        base64_tbl3, base64_tbl2, __lasx_xvsub_b(input3, __lasx_xvldi(32)));
-    __m256i input3_mask = __lasx_xvslei_bu(input3, 31);
-    __m256i input3_result =
-        __lasx_xvbitsel_v(input3_shuf1, input3_shuf0, input3_mask);
-    __lasx_xvst(input3_result, reinterpret_cast<__m256i *>(out), 0);
-    out += 32;
+
+    const __m256i r0 = lookup_base64(input0, base64_tbl0, base64_tbl1,
+                                     base64_tbl2, base64_tbl3);
+    const __m256i r1 = lookup_base64(input1, base64_tbl0, base64_tbl1,
+                                     base64_tbl2, base64_tbl3);
+    const __m256i r2 = lookup_base64(input2, base64_tbl0, base64_tbl1,
+                                     base64_tbl2, base64_tbl3);
+    const __m256i r3 = lookup_base64(input3, base64_tbl0, base64_tbl1,
+                                     base64_tbl2, base64_tbl3);
+
+    if (use_lines) {
+      if (line_length >= 32) { // fast path
+        if (offset + 32 > line_length) {
+          size_t location_end = line_length - offset;
+          store_with_line_feed32(out, r0, location_end);
+          offset = 32 - location_end;
+          out += 32 + 1;
+        } else {
+          __lasx_xvst(r0, out, 0);
+          offset += 32;
+          out += 32;
+        }
+        if (offset + 32 > line_length) {
+          size_t location_end = line_length - offset;
+          store_with_line_feed32(out, r1, location_end);
+          offset = 32 - location_end;
+          out += 32 + 1;
+        } else {
+          __lasx_xvst(r1, out, 0);
+          offset += 32;
+          out += 32;
+        }
+        if (offset + 32 > line_length) {
+          size_t location_end = line_length - offset;
+          store_with_line_feed32(out, r2, location_end);
+          offset = 32 - location_end;
+          out += 32 + 1;
+        } else {
+          __lasx_xvst(r2, out, 0);
+          offset += 32;
+          out += 32;
+        }
+        if (offset + 32 > line_length) {
+          size_t location_end = line_length - offset;
+          store_with_line_feed32(out, r3, location_end);
+          offset = 32 - location_end;
+          out += 32 + 1;
+        } else {
+          __lasx_xvst(r3, out, 0);
+          offset += 32;
+          out += 32;
+        }
+      } else { // slow path
+        // could be optimized
+        alignas(32) uint8_t buffer[128];
+        __lasx_xvst(r0, buffer, 0);
+        __lasx_xvst(r1, buffer, 32);
+        __lasx_xvst(r2, buffer, 64);
+        __lasx_xvst(r3, buffer, 96);
+        size_t out_pos = 0;
+        size_t local_offset = offset;
+        for (size_t j = 0; j < 128;) {
+          if (local_offset == line_length) {
+            out[out_pos++] = '\n';
+            local_offset = 0;
+          }
+          out[out_pos++] = buffer[j++];
+          local_offset++;
+        }
+        offset = local_offset;
+        out += out_pos;
+      }
+    } else {
+      __lasx_xvst(r0, out, 0);
+      __lasx_xvst(r1, out, 32);
+      __lasx_xvst(r2, out, 64);
+      __lasx_xvst(r3, out, 96);
+      out += 128;
+    }
   }
   for (; i + 28 <= srclen; i += 24) {
 
@@ -181,18 +287,53 @@ size_t encode_base64(char *dst, const char *src, size_t srclen,
     // res   = [00dddddd|00cccccc|00bbbbbb|00aaaaaa] = t1 | t3
     __m256i indices = __lasx_xvor_v(t1, t3);
 
-    __m256i indices_shuf0 = __lasx_xvshuf_b(base64_tbl1, base64_tbl0, indices);
-    __m256i indices_shuf1 = __lasx_xvshuf_b(
-        base64_tbl3, base64_tbl2, __lasx_xvsub_b(indices, __lasx_xvldi(32)));
-    __m256i indices_mask = __lasx_xvslei_bu(indices, 31);
-    __m256i indices_result =
-        __lasx_xvbitsel_v(indices_shuf1, indices_shuf0, indices_mask);
-    __lasx_xvst(indices_result, reinterpret_cast<__m256i *>(out), 0);
-    out += 32;
+    const __m256i result = lookup_base64(indices, base64_tbl0, base64_tbl1,
+                                         base64_tbl2, base64_tbl3);
+
+    if (use_lines) {
+      if (line_length >= 32) { // fast path
+        if (offset + 32 > line_length) {
+          size_t location_end = line_length - offset;
+          store_with_line_feed32(out, result, location_end);
+          offset = 32 - location_end;
+          out += 32 + 1;
+        } else {
+          __lasx_xvst(result, out, 0);
+          offset += 32;
+          out += 32;
+        }
+      } else { // slow path
+        // could be optimized
+        alignas(32) uint8_t buffer[32];
+        __lasx_xvst(result, buffer, 0);
+        size_t out_pos = 0;
+        size_t local_offset = offset;
+        for (size_t j = 0; j < 32;) {
+          if (local_offset == line_length) {
+            out[out_pos++] = '\n';
+            local_offset = 0;
+          }
+          out[out_pos++] = buffer[j++];
+          local_offset++;
+        }
+        offset = local_offset;
+        out += out_pos;
+      }
+    } else {
+      __lasx_xvst(result, out, 0);
+      out += 32;
+    }
   }
 
-  return i / 3 * 4 + scalar::base64::tail_encode_base64((char *)out, src + i,
-                                                        srclen - i, options);
+  return ((char *)out - (char *)dst) +
+         scalar::base64::tail_encode_base64_impl<use_lines>(
+             (char *)out, src + i, srclen - i, options, line_length, offset);
+}
+
+template <bool isbase64url>
+size_t encode_base64(char *dst, const char *src, size_t srclen,
+                     base64_options options) {
+  return encode_base64_impl<isbase64url, false>(dst, src, srclen, options);
 }
 
 static inline void compress(__m128i data, uint16_t mask, char *output) {
