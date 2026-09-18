@@ -35,21 +35,24 @@ template <bool base64_url> __m128i lookup_pshufb_improved(const __m128i input) {
   //            63 -> 12
   __m128i result = _mm_subs_epu8(input, _mm_set1_epi8(51));
 
-  // distinguish between ranges 0..25 and 26..51:
+  // distinguish between ranges 0..25 and 26..51 by adding 1 (the
+  // comparison yields -1) to every value greater than 25:
   //         0 .. 25 -> remains 0
-  //        26 .. 51 -> becomes 13
-  const __m128i less = _mm_cmpgt_epi8(_mm_set1_epi8(26), input);
-  result = _mm_or_si128(result, _mm_and_si128(less, _mm_set1_epi8(13)));
+  //        26 .. 51 -> becomes 1
+  //        52 .. 61 -> 2 .. 11
+  //            62 -> 12
+  //            63 -> 13
+  result = _mm_sub_epi8(result, _mm_cmpgt_epi8(input, _mm_set1_epi8(25)));
 
   __m128i shift_LUT;
   if (base64_url) {
-    shift_LUT = _mm_setr_epi8('a' - 26, '0' - 52, '0' - 52, '0' - 52, '0' - 52,
+    shift_LUT = _mm_setr_epi8('A', 'a' - 26, '0' - 52, '0' - 52, '0' - 52,
                               '0' - 52, '0' - 52, '0' - 52, '0' - 52, '0' - 52,
-                              '0' - 52, '-' - 62, '_' - 63, 'A', 0, 0);
+                              '0' - 52, '0' - 52, '-' - 62, '_' - 63, 0, 0);
   } else {
-    shift_LUT = _mm_setr_epi8('a' - 26, '0' - 52, '0' - 52, '0' - 52, '0' - 52,
+    shift_LUT = _mm_setr_epi8('A', 'a' - 26, '0' - 52, '0' - 52, '0' - 52,
                               '0' - 52, '0' - 52, '0' - 52, '0' - 52, '0' - 52,
-                              '0' - 52, '+' - 62, '/' - 63, 'A', 0, 0);
+                              '0' - 52, '0' - 52, '+' - 62, '/' - 63, 0, 0);
   }
 
   // read shift
