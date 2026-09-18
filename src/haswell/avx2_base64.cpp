@@ -31,24 +31,23 @@ simdutf_really_inline __m256i lookup_pshufb_improved(const __m256i input) {
   // Precomputed shuffle masks for K = 1 to 16
   // credit: Wojciech Muła
   __m256i result = _mm256_subs_epu8(input, _mm256_set1_epi8(51));
-  const __m256i less = _mm256_cmpgt_epi8(_mm256_set1_epi8(26), input);
-  result =
-      _mm256_or_si256(result, _mm256_and_si256(less, _mm256_set1_epi8(13)));
+  result = _mm256_sub_epi8(
+      result, _mm256_cmpgt_epi8(input, _mm256_set1_epi8(25)));
   __m256i shift_LUT;
   if (base64_url) {
     shift_LUT = _mm256_setr_epi8(
-        'a' - 26, '0' - 52, '0' - 52, '0' - 52, '0' - 52, '0' - 52, '0' - 52,
-        '0' - 52, '0' - 52, '0' - 52, '0' - 52, '-' - 62, '_' - 63, 'A', 0, 0,
-
-        'a' - 26, '0' - 52, '0' - 52, '0' - 52, '0' - 52, '0' - 52, '0' - 52,
-        '0' - 52, '0' - 52, '0' - 52, '0' - 52, '-' - 62, '_' - 63, 'A', 0, 0);
+        'A', 'a' - 26, '0' - 52, '0' - 52, '0' - 52, '0' - 52, '0' - 52,
+        '0' - 52, '0' - 52, '0' - 52, '0' - 52, '0' - 52, '-' - 62, '_' - 63,
+        0, 0, 'A', 'a' - 26, '0' - 52, '0' - 52, '0' - 52, '0' - 52,
+        '0' - 52, '0' - 52, '0' - 52, '0' - 52, '0' - 52, '0' - 52, '-' - 62,
+        '_' - 63, 0, 0);
   } else {
     shift_LUT = _mm256_setr_epi8(
-        'a' - 26, '0' - 52, '0' - 52, '0' - 52, '0' - 52, '0' - 52, '0' - 52,
-        '0' - 52, '0' - 52, '0' - 52, '0' - 52, '+' - 62, '/' - 63, 'A', 0, 0,
-
-        'a' - 26, '0' - 52, '0' - 52, '0' - 52, '0' - 52, '0' - 52, '0' - 52,
-        '0' - 52, '0' - 52, '0' - 52, '0' - 52, '+' - 62, '/' - 63, 'A', 0, 0);
+        'A', 'a' - 26, '0' - 52, '0' - 52, '0' - 52, '0' - 52, '0' - 52,
+        '0' - 52, '0' - 52, '0' - 52, '0' - 52, '0' - 52, '+' - 62, '/' - 63,
+        0, 0, 'A', 'a' - 26, '0' - 52, '0' - 52, '0' - 52, '0' - 52,
+        '0' - 52, '0' - 52, '0' - 52, '0' - 52, '0' - 52, '0' - 52, '+' - 62,
+        '/' - 63, 0, 0);
   }
 
   result = _mm256_shuffle_epi8(shift_LUT, result);
@@ -110,29 +109,28 @@ avx2_encode_base64_impl(char *dst, const char *src, size_t srclen,
       _mm256_set_epi8(10, 11, 9, 10, 7, 8, 6, 7, 4, 5, 3, 4, 1, 2, 0, 1,
 
                       10, 11, 9, 10, 7, 8, 6, 7, 4, 5, 3, 4, 1, 2, 0, 1);
+  const __m256i shuf_overlap = _mm256_setr_epi8(
+      5, 4, 6, 5, 8, 7, 9, 8, 11, 10, 12, 11, 14, 13, 15, 14, 1, 0, 2, 1, 4,
+      3, 5, 4, 7, 6, 8, 7, 10, 9, 11, 10);
   size_t i = 0;
   for (; i + 100 <= srclen; i += 96) {
     const __m128i lo0 = _mm_loadu_si128(
         reinterpret_cast<const __m128i *>(input + i + 4 * 3 * 0));
     const __m128i hi0 = _mm_loadu_si128(
         reinterpret_cast<const __m128i *>(input + i + 4 * 3 * 1));
-    const __m128i lo1 = _mm_loadu_si128(
-        reinterpret_cast<const __m128i *>(input + i + 4 * 3 * 2));
-    const __m128i hi1 = _mm_loadu_si128(
-        reinterpret_cast<const __m128i *>(input + i + 4 * 3 * 3));
-    const __m128i lo2 = _mm_loadu_si128(
-        reinterpret_cast<const __m128i *>(input + i + 4 * 3 * 4));
-    const __m128i hi2 = _mm_loadu_si128(
-        reinterpret_cast<const __m128i *>(input + i + 4 * 3 * 5));
-    const __m128i lo3 = _mm_loadu_si128(
-        reinterpret_cast<const __m128i *>(input + i + 4 * 3 * 6));
-    const __m128i hi3 = _mm_loadu_si128(
-        reinterpret_cast<const __m128i *>(input + i + 4 * 3 * 7));
-
     __m256i in0 = _mm256_shuffle_epi8(_mm256_set_m128i(hi0, lo0), shuf);
-    __m256i in1 = _mm256_shuffle_epi8(_mm256_set_m128i(hi1, lo1), shuf);
-    __m256i in2 = _mm256_shuffle_epi8(_mm256_set_m128i(hi2, lo2), shuf);
-    __m256i in3 = _mm256_shuffle_epi8(_mm256_set_m128i(hi3, lo3), shuf);
+    __m256i in1 = _mm256_shuffle_epi8(
+        _mm256_loadu_si256(
+            reinterpret_cast<const __m256i *>(input + i + 24 - 4)),
+        shuf_overlap);
+    __m256i in2 = _mm256_shuffle_epi8(
+        _mm256_loadu_si256(
+            reinterpret_cast<const __m256i *>(input + i + 48 - 4)),
+        shuf_overlap);
+    __m256i in3 = _mm256_shuffle_epi8(
+        _mm256_loadu_si256(
+            reinterpret_cast<const __m256i *>(input + i + 72 - 4)),
+        shuf_overlap);
 
     const __m256i t0_0 = _mm256_and_si256(in0, _mm256_set1_epi32(0x0fc0fc00));
     const __m256i t0_1 = _mm256_and_si256(in1, _mm256_set1_epi32(0x0fc0fc00));
