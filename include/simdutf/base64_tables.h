@@ -1,5 +1,6 @@
 #ifndef SIMDUTF_BASE64_TABLES_H
 #define SIMDUTF_BASE64_TABLES_H
+#include <array>
 #include <cstdint>
 
 namespace simdutf {
@@ -67,6 +68,18 @@ constexpr char e2[256] = {
     'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
     'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+',
     '/'};
+
+constexpr std::array<std::array<char, 2>, 4096> make_encode_pairs() {
+  // Map two six-bit values to the corresponding two output characters.
+  std::array<std::array<char, 2>, 4096> pairs{};
+  for (size_t i = 0; i < pairs.size(); i++) {
+    pairs[i][0] = e1[i >> 6];
+    pairs[i][1] = e1[i & 63];
+  }
+  return pairs;
+}
+
+constexpr auto encode_pairs = make_encode_pairs();
 
 constexpr uint32_t d0[256] = {
     0x01ffffff, 0x01ffffff, 0x01ffffff, 0x01ffffff, 0x01ffffff, 0x01ffffff,
@@ -310,6 +323,18 @@ constexpr char e2[256] = {
     'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
     'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-',
     '_'};
+
+constexpr std::array<std::array<char, 2>, 4096> make_encode_pairs() {
+  // Map two six-bit values to the corresponding two output characters.
+  std::array<std::array<char, 2>, 4096> pairs{};
+  for (size_t i = 0; i < pairs.size(); i++) {
+    pairs[i][0] = e1[i >> 6];
+    pairs[i][1] = e1[i & 63];
+  }
+  return pairs;
+}
+
+constexpr auto encode_pairs = make_encode_pairs();
 
 constexpr uint32_t d0[256] = {
     0x01ffffff, 0x01ffffff, 0x01ffffff, 0x01ffffff, 0x01ffffff, 0x01ffffff,
