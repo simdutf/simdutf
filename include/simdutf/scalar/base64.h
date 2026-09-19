@@ -475,6 +475,104 @@ patch_tail_result(full_result r, size_t previous_input, size_t previous_output,
   return r;
 }
 
+simdutf_really_inline simdutf_constexpr23 void
+tail_encode_base64_quantum(char *dst, const char *src,
+                           const std::array<char, 2> *pairs) {
+  const uint32_t value = (uint32_t(uint8_t(src[0])) << 16) |
+                         (uint32_t(uint8_t(src[1])) << 8) | uint8_t(src[2]);
+  copy_encode_pair(dst, pairs[value >> 12]);
+  copy_encode_pair(dst + 2, pairs[value & 0xFFF]);
+}
+
+simdutf_really_inline simdutf_constexpr23 size_t tail_encode_base64_short_impl(
+    char *dst, const char *src, size_t srclen, base64_options options) {
+  const auto *pairs = (options & base64_url)
+                          ? tables::base64::base64_url::encode_pairs.data()
+                          : tables::base64::base64_default::encode_pairs.data();
+  const bool use_padding =
+      ((options & base64_url) == 0) ^
+      ((options & base64_reverse_padding) == base64_reverse_padding);
+
+#define SIMDUTF_BASE64_ENCODE_QUANTUM(index)                                   \
+  tail_encode_base64_quantum(dst + (index) * 4, src + (index) * 3, pairs)
+#define SIMDUTF_BASE64_ENCODE_TAIL1(index)                                     \
+  do {                                                                         \
+    const uint32_t value = uint32_t(uint8_t(src[(index) * 3])) << 16;          \
+    copy_encode_pair(dst + (index) * 4, pairs[value >> 12]);                   \
+    if (use_padding) {                                                         \
+      dst[(index) * 4 + 2] = '=';                                              \
+      dst[(index) * 4 + 3] = '=';                                              \
+    }                                                                          \
+  } while (false)
+#define SIMDUTF_BASE64_ENCODE_TAIL2(index)                                     \
+  do {                                                                         \
+    const uint32_t value = (uint32_t(uint8_t(src[(index) * 3])) << 16) |       \
+                           (uint32_t(uint8_t(src[(index) * 3 + 1])) << 8);     \
+    copy_encode_pair(dst + (index) * 4, pairs[value >> 12]);                   \
+    dst[(index) * 4 + 2] = pairs[value & 0xFFF][0];                            \
+    if (use_padding) {                                                         \
+      dst[(index) * 4 + 3] = '=';                                              \
+    }                                                                          \
+  } while (false)
+
+  switch (srclen) {
+  case 11:
+    SIMDUTF_BASE64_ENCODE_QUANTUM(0);
+    SIMDUTF_BASE64_ENCODE_QUANTUM(1);
+    SIMDUTF_BASE64_ENCODE_QUANTUM(2);
+    SIMDUTF_BASE64_ENCODE_TAIL2(3);
+    return 15 + size_t(use_padding);
+  case 10:
+    SIMDUTF_BASE64_ENCODE_QUANTUM(0);
+    SIMDUTF_BASE64_ENCODE_QUANTUM(1);
+    SIMDUTF_BASE64_ENCODE_QUANTUM(2);
+    SIMDUTF_BASE64_ENCODE_TAIL1(3);
+    return 14 + 2 * size_t(use_padding);
+  case 9:
+    SIMDUTF_BASE64_ENCODE_QUANTUM(0);
+    SIMDUTF_BASE64_ENCODE_QUANTUM(1);
+    SIMDUTF_BASE64_ENCODE_QUANTUM(2);
+    return 12;
+  case 8:
+    SIMDUTF_BASE64_ENCODE_QUANTUM(0);
+    SIMDUTF_BASE64_ENCODE_QUANTUM(1);
+    SIMDUTF_BASE64_ENCODE_TAIL2(2);
+    return 11 + size_t(use_padding);
+  case 7:
+    SIMDUTF_BASE64_ENCODE_QUANTUM(0);
+    SIMDUTF_BASE64_ENCODE_QUANTUM(1);
+    SIMDUTF_BASE64_ENCODE_TAIL1(2);
+    return 10 + 2 * size_t(use_padding);
+  case 6:
+    SIMDUTF_BASE64_ENCODE_QUANTUM(0);
+    SIMDUTF_BASE64_ENCODE_QUANTUM(1);
+    return 8;
+  case 5:
+    SIMDUTF_BASE64_ENCODE_QUANTUM(0);
+    SIMDUTF_BASE64_ENCODE_TAIL2(1);
+    return 7 + size_t(use_padding);
+  case 4:
+    SIMDUTF_BASE64_ENCODE_QUANTUM(0);
+    SIMDUTF_BASE64_ENCODE_TAIL1(1);
+    return 6 + 2 * size_t(use_padding);
+  case 3:
+    SIMDUTF_BASE64_ENCODE_QUANTUM(0);
+    return 4;
+  case 2:
+    SIMDUTF_BASE64_ENCODE_TAIL2(0);
+    return 3 + size_t(use_padding);
+  case 1:
+    SIMDUTF_BASE64_ENCODE_TAIL1(0);
+    return 2 + 2 * size_t(use_padding);
+  default:
+    return 0;
+  }
+
+#undef SIMDUTF_BASE64_ENCODE_TAIL2
+#undef SIMDUTF_BASE64_ENCODE_TAIL1
+#undef SIMDUTF_BASE64_ENCODE_QUANTUM
+}
+
 simdutf_constexpr23 size_t tail_encode_base64_long_impl(char *dst,
                                                         const char *src,
                                                         size_t srclen,
@@ -518,10 +616,13 @@ simdutf_constexpr23 size_t tail_encode_base64_impl(
   size_t i = 0;
   uint8_t t1, t2, t3;
   if constexpr (!use_lines) {
-    if (srclen >= 12) {
-      i = srclen - srclen % 12;
-      out += tail_encode_base64_long_impl(dst, src, i, options);
+    if (srclen < 12) {
+      return tail_encode_base64_short_impl(dst, src, srclen, options);
     }
+    i = srclen - srclen % 12;
+    out += tail_encode_base64_long_impl(dst, src, i, options);
+    return size_t(out - dst) +
+           tail_encode_base64_short_impl(out, src + i, srclen - i, options);
   }
   for (; i + 2 < srclen; i += 3) {
     t1 = uint8_t(src[i]);
