@@ -13,7 +13,7 @@ namespace base64 {
 
 simdutf_really_inline simdutf_constexpr23 void
 copy_encode_pair(char *dst, const std::array<char, 2> &pair) {
-#if SIMDUTF_CPLUSPLUS20
+#if SIMDUTF_CPLUSPLUS23
   if (std::is_constant_evaluated()) {
     dst[0] = pair[0];
     dst[1] = pair[1];
@@ -249,7 +249,7 @@ simdutf_constexpr23 full_result base64_tail_decode_impl(
       const uint64_t word = uint64_t(x0 & 0x00FFFFFF) |
                             (uint64_t(x1 & 0x00FFFFFF) << 24) |
                             (uint64_t(x2 & 0xFFFF) << 48);
-  #if SIMDUTF_CPLUSPLUS20
+  #if SIMDUTF_CPLUSPLUS23
       if (std::is_constant_evaluated()) {
         dst[0] = static_cast<char>(x0);
         dst[1] = static_cast<char>(x0 >> 8);
