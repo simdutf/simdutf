@@ -102,6 +102,9 @@ private:
   void
   run_validate_utf8_with_errors(const simdutf::implementation &implementation,
                                 size_t iterations);
+  void
+  run_validate_utf8_with_counts(const simdutf::implementation &implementation,
+                                size_t iterations);
   void run_validate_utf16le(const simdutf::implementation &implementation,
                             size_t iterations);
   void run_validate_utf16le_with_errors(
