@@ -11,8 +11,8 @@ namespace scalar {
 namespace {
 namespace base64 {
 
-simdutf_really_inline simdutf_constexpr23 void copy_encode_pair(
-    char *dst, const std::array<char, 2> &pair) {
+simdutf_really_inline simdutf_constexpr23 void
+copy_encode_pair(char *dst, const std::array<char, 2> &pair) {
 #if SIMDUTF_CPLUSPLUS20
   if (std::is_constant_evaluated()) {
     dst[0] = pair[0];
@@ -219,8 +219,7 @@ simdutf_constexpr23 full_result base64_tail_decode_impl(
   while (true) {
     // Decode three clean quartets together. On exceptional input, leave the
     // complete block to the policy-aware path below.
-    while (srcend - src >= 12 &&
-           (!check_capacity || dstend - dst >= 9) &&
+    while (srcend - src >= 12 && (!check_capacity || dstend - dst >= 9) &&
            is_eight_byte(src[0]) && is_eight_byte(src[1]) &&
            is_eight_byte(src[2]) && is_eight_byte(src[3]) &&
            is_eight_byte(src[4]) && is_eight_byte(src[5]) &&
@@ -250,7 +249,7 @@ simdutf_constexpr23 full_result base64_tail_decode_impl(
       const uint64_t word = uint64_t(x0 & 0x00FFFFFF) |
                             (uint64_t(x1 & 0x00FFFFFF) << 24) |
                             (uint64_t(x2 & 0xFFFF) << 48);
-#if SIMDUTF_CPLUSPLUS20
+  #if SIMDUTF_CPLUSPLUS20
       if (std::is_constant_evaluated()) {
         dst[0] = static_cast<char>(x0);
         dst[1] = static_cast<char>(x0 >> 8);
@@ -261,9 +260,9 @@ simdutf_constexpr23 full_result base64_tail_decode_impl(
         dst[6] = static_cast<char>(x2);
         dst[7] = static_cast<char>(x2 >> 8);
       } else
-#endif
+  #endif
       {
-      std::memcpy(dst, &word, sizeof(word));
+        std::memcpy(dst, &word, sizeof(word));
       }
       dst[8] = static_cast<char>(x2 >> 16);
 #endif
