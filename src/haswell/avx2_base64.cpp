@@ -54,6 +54,41 @@ simdutf_really_inline __m256i lookup_pshufb_improved(const __m256i input) {
   return _mm256_add_epi8(result, input);
 }
 
+simdutf_really_inline __m128i load_12_bytes(const uint8_t *input) {
+  __m128i value = _mm_loadl_epi64(reinterpret_cast<const __m128i *>(input));
+  uint32_t tail;
+  std::memcpy(&tail, input + 8, sizeof(tail));
+  return _mm_insert_epi32(value, int(tail), 2);
+}
+
+template <bool base64_url>
+simdutf_never_inline size_t encode_base64_tail_12_or_24(uint8_t *output,
+                                                        const uint8_t *input,
+                                                        size_t length) {
+  const size_t consumed = length >= 24 ? 24 : 12;
+  const __m128i lo = load_12_bytes(input);
+  const __m128i hi =
+      consumed == 24 ? load_12_bytes(input + 12) : _mm_setzero_si128();
+  const __m256i shuf =
+      _mm256_set_epi8(10, 11, 9, 10, 7, 8, 6, 7, 4, 5, 3, 4, 1, 2, 0, 1,
+
+                      10, 11, 9, 10, 7, 8, 6, 7, 4, 5, 3, 4, 1, 2, 0, 1);
+  const __m256i in = _mm256_shuffle_epi8(_mm256_set_m128i(hi, lo), shuf);
+  const __m256i t0 = _mm256_and_si256(in, _mm256_set1_epi32(0x0fc0fc00));
+  const __m256i t1 = _mm256_mulhi_epu16(t0, _mm256_set1_epi32(0x04000040));
+  const __m256i t2 = _mm256_and_si256(in, _mm256_set1_epi32(0x003f03f0));
+  const __m256i t3 = _mm256_mullo_epi16(t2, _mm256_set1_epi32(0x01000010));
+  const __m256i encoded =
+      lookup_pshufb_improved<base64_url>(_mm256_or_si256(t1, t3));
+  if (consumed == 24) {
+    _mm256_storeu_si256(reinterpret_cast<__m256i *>(output), encoded);
+  } else {
+    _mm_storeu_si128(reinterpret_cast<__m128i *>(output),
+                     _mm256_castsi256_si128(encoded));
+  }
+  return consumed;
+}
+
 simdutf_really_inline __m128i insert_line_feed16(__m128i input, int K) {
   static const uint8_t shuffle_masks[16][16] = {
       {15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
@@ -343,6 +378,14 @@ avx2_encode_base64_impl(char *dst, const char *src, size_t srclen,
                           lookup_pshufb_improved<isbase64url>(indices));
 
       out += 32;
+    }
+  }
+  if constexpr (!use_lines) {
+    if (i + 12 <= srclen) {
+      const size_t consumed =
+          encode_base64_tail_12_or_24<isbase64url>(out, input + i, srclen - i);
+      i += consumed;
+      out += consumed / 3 * 4;
     }
   }
   return ((char *)out - (char *)dst) +
