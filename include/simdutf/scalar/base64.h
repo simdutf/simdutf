@@ -475,6 +475,11 @@ patch_tail_result(full_result r, size_t previous_input, size_t previous_output,
   return r;
 }
 
+simdutf_constexpr23 size_t tail_encode_base64_long_impl(char *dst,
+                                                        const char *src,
+                                                        size_t srclen,
+                                                        base64_options options);
+
 // Returns the number of bytes written. The destination buffer must be large
 // enough. It will add padding (=) if needed.
 template <bool use_lines = false>
@@ -513,34 +518,9 @@ simdutf_constexpr23 size_t tail_encode_base64_impl(
   size_t i = 0;
   uint8_t t1, t2, t3;
   if constexpr (!use_lines) {
-    // Two 12-bit lookups encode each three-byte quantum. Processing four
-    // independent quanta per iteration reduces lookup and loop overhead.
-    const auto *pairs =
-        (options & base64_url)
-            ? tables::base64::base64_url::encode_pairs.data()
-            : tables::base64::base64_default::encode_pairs.data();
-    for (; i + 11 < srclen; i += 12) {
-      const uint32_t v0 = (uint32_t(uint8_t(src[i])) << 16) |
-                          (uint32_t(uint8_t(src[i + 1])) << 8) |
-                          uint8_t(src[i + 2]);
-      const uint32_t v1 = (uint32_t(uint8_t(src[i + 3])) << 16) |
-                          (uint32_t(uint8_t(src[i + 4])) << 8) |
-                          uint8_t(src[i + 5]);
-      const uint32_t v2 = (uint32_t(uint8_t(src[i + 6])) << 16) |
-                          (uint32_t(uint8_t(src[i + 7])) << 8) |
-                          uint8_t(src[i + 8]);
-      const uint32_t v3 = (uint32_t(uint8_t(src[i + 9])) << 16) |
-                          (uint32_t(uint8_t(src[i + 10])) << 8) |
-                          uint8_t(src[i + 11]);
-      copy_encode_pair(out, pairs[v0 >> 12]);
-      copy_encode_pair(out + 2, pairs[v0 & 0xFFF]);
-      copy_encode_pair(out + 4, pairs[v1 >> 12]);
-      copy_encode_pair(out + 6, pairs[v1 & 0xFFF]);
-      copy_encode_pair(out + 8, pairs[v2 >> 12]);
-      copy_encode_pair(out + 10, pairs[v2 & 0xFFF]);
-      copy_encode_pair(out + 12, pairs[v3 >> 12]);
-      copy_encode_pair(out + 14, pairs[v3 & 0xFFF]);
-      out += 16;
+    if (srclen >= 12) {
+      i = srclen - srclen % 12;
+      out += tail_encode_base64_long_impl(dst, src, i, options);
     }
   }
   for (; i + 2 < srclen; i += 3) {
@@ -736,6 +716,43 @@ simdutf_constexpr23 size_t tail_encode_base64_impl(
     }
   }
   return (size_t)(out - dst);
+}
+
+simdutf_never_inline simdutf_constexpr23 size_t tail_encode_base64_long_impl(
+    char *dst, const char *src, size_t srclen, base64_options options) {
+  // Keep this loop out of tail_encode_base64_impl so short tails retain the
+  // smaller register set and stack frame. srclen is a nonzero multiple of 12.
+  // Two 12-bit lookups encode each three-byte quantum. Processing four
+  // independent quanta per iteration reduces lookup and loop overhead.
+  const auto *pairs = (options & base64_url)
+                          ? tables::base64::base64_url::encode_pairs.data()
+                          : tables::base64::base64_default::encode_pairs.data();
+  char *out = dst;
+  size_t i = 0;
+  for (; i + 11 < srclen; i += 12) {
+    const uint32_t v0 = (uint32_t(uint8_t(src[i])) << 16) |
+                        (uint32_t(uint8_t(src[i + 1])) << 8) |
+                        uint8_t(src[i + 2]);
+    const uint32_t v1 = (uint32_t(uint8_t(src[i + 3])) << 16) |
+                        (uint32_t(uint8_t(src[i + 4])) << 8) |
+                        uint8_t(src[i + 5]);
+    const uint32_t v2 = (uint32_t(uint8_t(src[i + 6])) << 16) |
+                        (uint32_t(uint8_t(src[i + 7])) << 8) |
+                        uint8_t(src[i + 8]);
+    const uint32_t v3 = (uint32_t(uint8_t(src[i + 9])) << 16) |
+                        (uint32_t(uint8_t(src[i + 10])) << 8) |
+                        uint8_t(src[i + 11]);
+    copy_encode_pair(out, pairs[v0 >> 12]);
+    copy_encode_pair(out + 2, pairs[v0 & 0xFFF]);
+    copy_encode_pair(out + 4, pairs[v1 >> 12]);
+    copy_encode_pair(out + 6, pairs[v1 & 0xFFF]);
+    copy_encode_pair(out + 8, pairs[v2 >> 12]);
+    copy_encode_pair(out + 10, pairs[v2 & 0xFFF]);
+    copy_encode_pair(out + 12, pairs[v3 >> 12]);
+    copy_encode_pair(out + 14, pairs[v3 & 0xFFF]);
+    out += 16;
+  }
+  return size_t(out - dst);
 }
 
 // Returns the number of bytes written. The destination buffer must be large
