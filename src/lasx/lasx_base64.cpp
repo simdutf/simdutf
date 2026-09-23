@@ -600,6 +600,8 @@ static inline void load_block(block64 *b, const char16_t *src) {
   b->chunks[1] = __lasx_xvpermi_d(__lasx_xvssrlni_bu_h(m4, m3, 0), 0b11011000);
 }
 
+// exact_tail stores 12 bytes from the high lane so a block ends at byte 48.
+template <bool exact_tail = false>
 static inline void base64_decode(char *out, __m256i str) {
   __m256i t0 = __lasx_xvor_v(
       __lasx_xvslli_w(str, 26),
@@ -613,34 +615,29 @@ static inline void base64_decode(char *out, __m256i str) {
   t3 = __lasx_xvshuf_b(t3, t3, (__m256i)pack_shuffle);
   t3 = __lasx_xvinsgr2vr_w(t3, 0, 7);
 
-  // Two 16-byte stores write 28 bytes: the 24 bytes of output followed by four
-  // zero bytes. Callers that cannot spare those four bytes must go through
-  // base64_decode_block_safe. The bulk loop can: it only takes this path while
-  // dst is below end_of_safe_64byte_zone, which leaves 63 bytes of room.
+  // The low store is 16 bytes for 12 of payload; the next store overlaps it.
+  // The high store is 16 bytes unless exact_tail, which writes 12.
   __lsx_vst(lasx_extracti128_lo(t3), out, 0);
-  __lsx_vst(lasx_extracti128_hi(t3), out, 12);
+  const __m128i hi = lasx_extracti128_hi(t3);
+  if constexpr (exact_tail) {
+    __lsx_vstelm_d(hi, out + 12, 0, 0);
+    __lsx_vstelm_w(hi, out + 20, 0, 2);
+  } else {
+    __lsx_vst(hi, out, 12);
+  }
 }
 // decode 64 bytes and output 48 bytes
+template <bool exact_tail = false>
 static inline void base64_decode_block(char *out, const char *src) {
   base64_decode(out, __lasx_xvld(reinterpret_cast<const __m256i *>(src), 0));
-  base64_decode(out + 24,
-                __lasx_xvld(reinterpret_cast<const __m256i *>(src), 32));
+  base64_decode<exact_tail>(
+      out + 24, __lasx_xvld(reinterpret_cast<const __m256i *>(src), 32));
 }
 
-static inline void base64_decode_block_safe(char *out, const char *src) {
-  alignas(32) char buffer[64];
-  base64_decode_block(buffer, src);
-  std::memcpy(out, buffer, 48);
-}
-
+template <bool exact_tail = false>
 static inline void base64_decode_block(char *out, block64 *b) {
   base64_decode(out, b->chunks[0]);
-  base64_decode(out + 24, b->chunks[1]);
-}
-static inline void base64_decode_block_safe(char *out, block64 *b) {
-  alignas(32) char buffer[64];
-  base64_decode_block(buffer, b);
-  std::memcpy(out, buffer, 48);
+  base64_decode<exact_tail>(out + 24, b->chunks[1]);
 }
 
 template <bool base64_url, bool ignore_garbage, bool default_or_url,
@@ -664,9 +661,6 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     }
     return {SUCCESS, full_input_length, 0};
   }
-  char *end_of_safe_64byte_zone =
-      (srclen + 3) / 4 * 3 >= 63 ? dst + (srclen + 3) / 4 * 3 - 63 : dst;
-
   const chartype *const srcinit = src;
   const char *const dstinit = dst;
   const chartype *const srcend = src + srclen;
@@ -675,8 +669,46 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   static_assert(block_size >= 2, "block_size must be at least two");
   char buffer[block_size * 64];
   char *bufferptr = buffer;
+  // See src/generic/base64.h: wide stores inside a group of four clean
+  // blocks, exact tail on the fourth.
+  if (srclen >= 256) {
+    const chartype *const srcend256 = src + srclen - 256;
+    while (bufferptr == buffer && src <= srcend256) {
+      block64 b0, b1, b2, b3;
+      load_block(&b0, src);
+      bool e0 = false;
+      const uint64_t m0 = to_base64_mask<base64_url, default_or_url>(&b0, &e0);
+      if ((!ignore_garbage && e0) || m0 != 0) {
+        break;
+      }
+      load_block(&b1, src + 64);
+      bool e1 = false;
+      const uint64_t m1 = to_base64_mask<base64_url, default_or_url>(&b1, &e1);
+      if ((!ignore_garbage && e1) || m1 != 0) {
+        break;
+      }
+      load_block(&b2, src + 128);
+      bool e2 = false;
+      const uint64_t m2 = to_base64_mask<base64_url, default_or_url>(&b2, &e2);
+      if ((!ignore_garbage && e2) || m2 != 0) {
+        break;
+      }
+      load_block(&b3, src + 192);
+      bool e3 = false;
+      const uint64_t m3 = to_base64_mask<base64_url, default_or_url>(&b3, &e3);
+      if ((!ignore_garbage && e3) || m3 != 0) {
+        break;
+      }
+      base64_decode_block(dst, &b0);
+      base64_decode_block(dst + 48, &b1);
+      base64_decode_block(dst + 96, &b2);
+      base64_decode_block<true>(dst + 144, &b3);
+      src += 256;
+      dst += 192;
+    }
+  }
   if (srclen >= 64) {
-    const chartype *const srcend64 = src + srclen - 64;
+    const chartype *const srcend64 = srcinit + srclen - 64;
     while (src <= srcend64) {
       block64 b;
       load_block(&b, src);
@@ -703,11 +735,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         copy_block(&b, bufferptr);
         bufferptr += 64;
       } else {
-        if (dst >= end_of_safe_64byte_zone) {
-          base64_decode_block_safe(dst, &b);
-        } else {
-          base64_decode_block(dst, &b);
-        }
+        base64_decode_block<true>(dst, &b);
         dst += 48;
       }
       if (bufferptr >= (block_size - 1) * 64 + buffer) {
@@ -715,11 +743,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
           base64_decode_block(dst, buffer + i * 64);
           dst += 48;
         }
-        if (dst >= end_of_safe_64byte_zone) {
-          base64_decode_block_safe(dst, buffer + (block_size - 2) * 64);
-        } else {
-          base64_decode_block(dst, buffer + (block_size - 2) * 64);
-        }
+        base64_decode_block<true>(dst, buffer + (block_size - 2) * 64);
         dst += 48;
         std::memcpy(buffer, buffer + (block_size - 1) * 64,
                     64); // 64 might be too much
@@ -748,10 +772,10 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   }
 
   for (; buffer_start + 64 <= bufferptr; buffer_start += 64) {
-    if (dst >= end_of_safe_64byte_zone) {
-      base64_decode_block_safe(dst, buffer_start);
-    } else {
+    if (buffer_start + 128 <= bufferptr) {
       base64_decode_block(dst, buffer_start);
+    } else {
+      base64_decode_block<true>(dst, buffer_start);
     }
     dst += 48;
   }

@@ -403,7 +403,11 @@ simdutf_really_inline void compress(__m256i data, uint32_t mask, char *output) {
            output + count_ones(~mask & 0xFFFF));
 }
 
-template <typename = void>
+// exact_tail: the high 16-byte store would write 4 bytes past the 24 bytes
+// this call produces. The second half of a 64-byte block passes true so the
+// block ends on byte 48. The first half keeps the overlapping store; the
+// next call overwrites those 4 bytes.
+template <bool exact_tail = false>
 simdutf_really_inline void base64_decode(char *out, __m256i str) {
   // credit: aqrit
   const __m256i pack_shuffle =
@@ -415,26 +419,23 @@ simdutf_really_inline void base64_decode(char *out, __m256i str) {
 
   // Store the output:
   _mm_storeu_si128((__m128i *)out, _mm256_castsi256_si128(t2));
-  _mm_storeu_si128((__m128i *)(out + 12), _mm256_extracti128_si256(t2, 1));
+  const __m128i hi = _mm256_extracti128_si256(t2, 1);
+  if constexpr (exact_tail) {
+    _mm_storel_epi64((__m128i *)(out + 12), hi);
+    const int32_t last = _mm_extract_epi32(hi, 2);
+    std::memcpy(out + 20, &last, sizeof(last));
+  } else {
+    _mm_storeu_si128((__m128i *)(out + 12), hi);
+  }
 }
 
-template <typename = void>
+template <bool exact_tail = false>
 simdutf_really_inline void base64_decode_block(char *out, const char *src) {
   base64_decode(out,
                 _mm256_loadu_si256(reinterpret_cast<const __m256i *>(src)));
-  base64_decode(out + 24, _mm256_loadu_si256(
-                              reinterpret_cast<const __m256i *>(src + 32)));
-}
-
-template <typename = void>
-simdutf_really_inline void base64_decode_block_safe(char *out,
-                                                    const char *src) {
-  base64_decode(out,
-                _mm256_loadu_si256(reinterpret_cast<const __m256i *>(src)));
-  alignas(32) char buffer[32]; // We enforce safety with a buffer.
-  base64_decode(
-      buffer, _mm256_loadu_si256(reinterpret_cast<const __m256i *>(src + 32)));
-  std::memcpy(out + 24, buffer, 24);
+  base64_decode<exact_tail>(
+      out + 24,
+      _mm256_loadu_si256(reinterpret_cast<const __m256i *>(src + 32)));
 }
 
 // --- decoding - base64 class --------------------------------
@@ -476,16 +477,10 @@ public:
   }
 
   // decode 64 bytes and output 48 bytes
+  template <bool exact_tail = false>
   simdutf_really_inline void base64_decode_block(char *out) {
     base64_decode(out, chunks[0]);
-    base64_decode(out + 24, chunks[1]);
-  }
-
-  simdutf_really_inline void base64_decode_block_safe(char *out) {
-    base64_decode(out, chunks[0]);
-    alignas(32) char buffer[32]; // We enforce safety with a buffer.
-    base64_decode(buffer, chunks[1]);
-    std::memcpy(out + 24, buffer, 24);
+    base64_decode<exact_tail>(out + 24, chunks[1]);
   }
 
   template <bool base64_url, bool ignore_garbage, bool default_or_url>

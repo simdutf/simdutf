@@ -299,28 +299,27 @@ static simdutf_really_inline vector_u8 decoding_pack(vector_u8 input) {
   return t;
 #endif // SIMDUTF_IS_BIG_ENDIAN
 }
+// exact: store 12 bytes. Otherwise store 16 and let the next lane cover the
+// extra 4. Only the last lane of a block passes true.
+template <bool exact = false>
 static simdutf_really_inline void base64_decode(char *out, vector_u8 input) {
   const auto expanded = decoding_pack(input);
-  expanded.store(out);
+  if constexpr (exact) {
+    alignas(16) char tmp[16];
+    expanded.store(tmp);
+    std::memcpy(out, tmp, 12);
+  } else {
+    expanded.store(out);
+  }
 }
 
+template <bool exact = false>
 static simdutf_really_inline void base64_decode_block(char *out,
                                                       const char *src) {
   base64_decode(out + 12 * 0, vector_u8::load(src + 0 * 16));
   base64_decode(out + 12 * 1, vector_u8::load(src + 1 * 16));
   base64_decode(out + 12 * 2, vector_u8::load(src + 2 * 16));
-  base64_decode(out + 12 * 3, vector_u8::load(src + 3 * 16));
-}
-
-static simdutf_really_inline void base64_decode_block_safe(char *out,
-                                                           const char *src) {
-  base64_decode(out + 12 * 0, vector_u8::load(src + 0 * 16));
-  base64_decode(out + 12 * 1, vector_u8::load(src + 1 * 16));
-  base64_decode(out + 12 * 2, vector_u8::load(src + 2 * 16));
-
-  char buffer[16];
-  base64_decode(buffer, vector_u8::load(src + 3 * 16));
-  std::memcpy(out + 36, buffer, 12);
+  base64_decode<exact>(out + 12 * 3, vector_u8::load(src + 3 * 16));
 }
 
 // ---base64 decoding::block64 class --------------------------
@@ -468,19 +467,11 @@ public:
     return count_ones(nmask);
   }
 
+  template <bool exact = false>
   simdutf_really_inline void base64_decode_block(char *out) {
     base64_decode(out + 12 * 0, b.chunks[0]);
     base64_decode(out + 12 * 1, b.chunks[1]);
     base64_decode(out + 12 * 2, b.chunks[2]);
-    base64_decode(out + 12 * 3, b.chunks[3]);
-  }
-
-  simdutf_really_inline void base64_decode_block_safe(char *out) {
-    base64_decode(out + 12 * 0, b.chunks[0]);
-    base64_decode(out + 12 * 1, b.chunks[1]);
-    base64_decode(out + 12 * 2, b.chunks[2]);
-    char buffer[16];
-    base64_decode(buffer, b.chunks[3]);
-    std::memcpy(out + 12 * 3, buffer, 12);
+    base64_decode<exact>(out + 12 * 3, b.chunks[3]);
   }
 };
