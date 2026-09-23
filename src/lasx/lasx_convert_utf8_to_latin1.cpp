@@ -63,10 +63,13 @@ size_t convert_masked_utf8_to_latin1(const char *input,
   __m128i mask = __lsx_vor_v(utf8_mask, ascii_mask);
 
   __m128i composed = __lsx_vbitsel_v(__lsx_vsrli_h(perm, 2), perm, mask);
-  // writing 8 bytes even though we only care about the first 6 bytes.
   __m128i latin1_packed = __lsx_vpickev_b(__lsx_vldi(0), composed);
 
-  __lsx_vst(latin1_packed, reinterpret_cast<uint8_t *>(latin1_output), 0);
+  // Only 6 bytes are meaningful; a direct 16-byte store could write past the
+  // end of an exactly-sized output buffer.
+  uint64_t buffer[2];
+  __lsx_vst(latin1_packed, reinterpret_cast<uint8_t *>(buffer), 0);
+  std::memcpy(latin1_output, buffer, 6);
   latin1_output += 6; // We wrote 6 bytes.
   return consumed;
 }
