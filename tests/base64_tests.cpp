@@ -3944,6 +3944,149 @@ TEST(base64_to_binary_safe_no_garbage_past_output) {
   }
 }
 
+// Decode into a buffer of exactly binary_length_from_base64 bytes. A wide
+// store that sticks past that size shows up in the canary. Payload is 'A',
+// so every output byte is zero.
+bool base64_accepts_garbage(simdutf::base64_options options) {
+  return options == simdutf::base64_default_accept_garbage ||
+         options == simdutf::base64_url_accept_garbage ||
+         options == simdutf::base64_default_or_url_accept_garbage;
+}
+
+// `expected` is the number of output bytes. The buffer is sized with
+// binary_length_from_base64, which counts a garbage character as payload.
+template <class char_type>
+void check_exact_base64_buffer(const std::basic_string<char_type> &input,
+                               simdutf::base64_options options,
+                               size_t expected) {
+  const size_t need =
+      simdutf::binary_length_from_base64(input.data(), input.size());
+  ASSERT_TRUE(expected <= need);
+  std::vector<char> exact(need + 8, char(0xA5));
+  const simdutf::result r = simdutf::base64_to_binary(
+      input.data(), input.size(), exact.data(), options);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.count, expected);
+  for (size_t i = 0; i < expected; i++) {
+    ASSERT_EQUAL(exact[i], 0);
+  }
+  for (size_t i = expected; i < exact.size(); i++) {
+    ASSERT_EQUAL(uint8_t(exact[i]), 0xA5);
+  }
+}
+
+template <class char_type>
+void check_exact_base64_buffer(const std::basic_string<char_type> &input,
+                               simdutf::base64_options options) {
+  const size_t need =
+      simdutf::binary_length_from_base64(input.data(), input.size());
+  check_exact_base64_buffer(input, options, need);
+}
+
+TEST(base64_exact_output_buffer_with_whitespace) {
+  const simdutf::base64_options options[] = {
+      simdutf::base64_default, simdutf::base64_url,
+      simdutf::base64_default_accept_garbage,
+      simdutf::base64_url_accept_garbage,
+      simdutf::base64_default_or_url_accept_garbage};
+  for (simdutf::base64_options option : options) {
+    check_exact_base64_buffer<char>(
+        std::string(64, 'A') + std::string(64, ' ') + std::string(64, 'A'),
+        option);
+    check_exact_base64_buffer<char>(
+        std::string(64, 'A') + std::string(1000, ' ') + "AAAA", option);
+    check_exact_base64_buffer<char16_t>(std::u16string(64, u'A') +
+                                            std::u16string(64, u' ') +
+                                            std::u16string(64, u'A'),
+                                        option);
+    check_exact_base64_buffer<char16_t>(
+        std::u16string(64, u'A') + std::u16string(1000, u' ') + u"AAAA",
+        option);
+
+    // Six 56-character runs and a final "AAAAAA==", with newlines inside one
+    // run. Still valid base64.
+    std::string runs;
+    for (int g = 0; g < 6; g++) {
+      if (g == 2) {
+        runs += std::string(52, 'A');
+        runs += "\n\n\n\n";
+      } else {
+        runs += std::string(56, 'A');
+      }
+      runs += ' ';
+    }
+    runs += "AAAAAA==";
+    check_exact_base64_buffer<char>(runs, option);
+    check_exact_base64_buffer<char16_t>(
+        std::u16string(runs.begin(), runs.end()), option);
+
+    // Clean runs of several lengths, one ignorable between them.
+    const int run_lens[] = {32, 36, 40, 48, 52, 56, 60};
+    const char run_gaps[] = {' ', '\n', '\t', '\r'};
+    std::string mixed;
+    for (int i = 0; i < 7; i++) {
+      mixed += std::string(run_lens[i], 'A');
+      mixed += run_gaps[i % 4];
+    }
+    mixed += "AAAA";
+    check_exact_base64_buffer<char>(mixed, option);
+    check_exact_base64_buffer<char16_t>(
+        std::u16string(mixed.begin(), mixed.end()), option);
+
+    const std::string kinds[] = {" ", "\n", "\r\n", " \n\r"};
+    const size_t widths[] = {0, 1, 3, 4, 8, 15, 16, 32, 63, 64, 65, 100, 200};
+    for (size_t a = 0; a <= 128; a += 4) {
+      for (size_t b = 0; b <= 128; b += 4) {
+        if (a + b == 0) {
+          continue;
+        }
+        for (size_t w : widths) {
+          for (const std::string &kind : kinds) {
+            std::string ws;
+            while (ws.size() < w) {
+              ws += kind;
+            }
+            ws.resize(w);
+            const std::string input =
+                std::string(a, 'A') + ws + std::string(b, 'A');
+            check_exact_base64_buffer<char>(input, option);
+            check_exact_base64_buffer<char16_t>(
+                std::u16string(input.begin(), input.end()), option);
+          }
+        }
+      }
+    }
+
+    // 67 'A's is 50 bytes. One extra non-alphabet character makes
+    // binary_length_from_base64 report 51. accept_garbage skips it.
+    const std::string with_garbage =
+        std::string(60, 'A') + "#" + std::string(32, ' ') + std::string(7, 'A');
+    const std::u16string with_garbage16(with_garbage.begin(),
+                                        with_garbage.end());
+    if (base64_accepts_garbage(option)) {
+      check_exact_base64_buffer<char>(with_garbage, option, 50);
+      check_exact_base64_buffer<char16_t>(with_garbage16, option, 50);
+    } else {
+      const size_t need = simdutf::binary_length_from_base64(
+          with_garbage.data(), with_garbage.size());
+      std::vector<char> exact(need + 8, char(0xA5));
+      const simdutf::result r = simdutf::base64_to_binary(
+          with_garbage.data(), with_garbage.size(), exact.data(), option);
+      ASSERT_TRUE(r.error != simdutf::error_code::SUCCESS);
+      for (size_t i = need; i < exact.size(); i++) {
+        ASSERT_EQUAL(uint8_t(exact[i]), 0xA5);
+      }
+      std::vector<char> exact16(need + 8, char(0xA5));
+      const simdutf::result r16 = simdutf::base64_to_binary(
+          with_garbage16.data(), with_garbage16.size(), exact16.data(), option);
+      ASSERT_TRUE(r16.error != simdutf::error_code::SUCCESS);
+      for (size_t i = need; i < exact16.size(); i++) {
+        ASSERT_EQUAL(uint8_t(exact16[i]), 0xA5);
+      }
+    }
+  }
+}
+
 int main(int argc, char *argv[]) {
   const auto cmdline = simdutf::test::CommandLine::parse(argc, argv);
   seed = cmdline.seed;
