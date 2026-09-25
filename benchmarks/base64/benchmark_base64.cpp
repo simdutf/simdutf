@@ -496,7 +496,7 @@ private:
                         source.data(), source.size(), buffer3.data());
                   }
                 });
-#if SIMDUTF_COMPILED_CXX_VERSION >= 20
+#if SIMDUTF_ATOMIC_REF && SIMDUTF_COMPILED_CXX_VERSION >= 20
       summarize(concatenate("simdutf::atomic_binary_to_base64_",
                             simdutf::get_active_implementation()->name()),
                 [this, &base64_size]() {
@@ -664,7 +664,7 @@ private:
                   }
                 });
 
-#if SIMDUTF_COMPILED_CXX_VERSION >= 20
+#if SIMDUTF_ATOMIC_REF && SIMDUTF_COMPILED_CXX_VERSION >= 20
       summarize(concatenate("simdutf::atomic_base64_to_binary_",
                             simdutf::get_active_implementation()->name()),
                 [this]() {
