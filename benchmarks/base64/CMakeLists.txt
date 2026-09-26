@@ -21,7 +21,9 @@ if((CMAKE_CXX_COMPILER_ID MATCHES "MSVC" AND MSVC_CXX20_SUPPORTED) OR
   target_link_libraries(benchmark_base64 PUBLIC base64)
   target_link_libraries(benchmark_base64 PUBLIC simdutf::benchmarks::benchmark)
 
-  # check if simdutf was built with c++ 20 - otherwise atomic base64 operations are not available
+  # The library exports atomic base64 only when it is built as C++20.
+  # The benchmark also checks SIMDUTF_ATOMIC_REF: C++20 does not imply
+  # std::atomic_ref (for example Apple Clang 15 on macOS 13).
   get_property(SIMDUTF_COMPILED_CXX_VERSION TARGET simdutf PROPERTY CXX_STANDARD)
   message(VERBOSE "simdutf version is ${SIMDUTF_COMPILED_CXX_VERSION}")
   target_compile_definitions(benchmark_base64 PRIVATE SIMDUTF_COMPILED_CXX_VERSION=${SIMDUTF_COMPILED_CXX_VERSION})
