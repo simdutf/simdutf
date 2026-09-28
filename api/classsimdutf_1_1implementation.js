@@ -98,5 +98,6 @@ var classsimdutf_1_1implementation =
     [ "validate_utf32", "classsimdutf_1_1implementation.html#ab35c6765b2e4b97cc97ab9f3af52c9a9", null ],
     [ "validate_utf32_with_errors", "classsimdutf_1_1implementation.html#a825ad7513447a16cd12f5425e2e88431", null ],
     [ "validate_utf8", "classsimdutf_1_1implementation.html#aaae969eb20db2099f92a504eb7db0bcf", null ],
+    [ "validate_utf8_with_counts", "classsimdutf_1_1implementation.html#afc88635eaed1de0d04c1fc546d93595b", null ],
     [ "validate_utf8_with_errors", "classsimdutf_1_1implementation.html#a42f53d3a9e9112a7ad4dfe67cfeccf07", null ]
 ];

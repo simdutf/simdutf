@@ -116,6 +116,8 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsimdutf_1_1result.html">result</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsimdutf_1_1utf8__result.html">utf8_result</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
 Enumerations</h2></td></tr>
@@ -210,6 +212,9 @@ simdutf_warn_unused std::string_view&#160;</td><td class="memItemRight" valign="
 <tr class="memitem:a909de1285ace38031be40fce13465509" id="r_a909de1285ace38031be40fce13465509"><td class="memItemLeft" align="right" valign="top">simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesimdutf.html#a909de1285ace38031be40fce13465509">validate_utf8_with_errors</a> (const char *buf, size_t len) noexcept</td></tr>
 <tr class="memdesc:a909de1285ace38031be40fce13465509"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validate the UTF-8 string and stop on error.  <br /></td></tr>
 <tr class="separator:a909de1285ace38031be40fce13465509"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7700ae9f598be3ed7308d89f4f363903" id="r_a7700ae9f598be3ed7308d89f4f363903"><td class="memItemLeft" align="right" valign="top">simdutf_warn_unused <a class="el" href="structsimdutf_1_1utf8__result.html">utf8_result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesimdutf.html#a7700ae9f598be3ed7308d89f4f363903">validate_utf8_with_counts</a> (const char *buf, size_t len) noexcept</td></tr>
+<tr class="memdesc:a7700ae9f598be3ed7308d89f4f363903"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validate the UTF-8 string and stop on error, while counting the number of continuation bytes and of four-byte sequences in the valid prefix.  <br /></td></tr>
+<tr class="separator:a7700ae9f598be3ed7308d89f4f363903"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af69c6eef367452f03ae298a6b4a4772d" id="r_af69c6eef367452f03ae298a6b4a4772d"><td class="memItemLeft" align="right" valign="top">simdutf_warn_unused bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesimdutf.html#af69c6eef367452f03ae298a6b4a4772d">validate_ascii</a> (const char *buf, size_t len) noexcept</td></tr>
 <tr class="memdesc:af69c6eef367452f03ae298a6b4a4772d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validate the ASCII string.  <br /></td></tr>
 <tr class="separator:af69c6eef367452f03ae298a6b4a4772d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -675,7 +680,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04225">4225</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04264">4264</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -739,7 +744,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04250">4250</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04289">4289</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -874,7 +879,7 @@ Variables</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the character is an ignorable base64 character, false otherwise. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04987">4987</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05026">5026</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -912,7 +917,7 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04991">4991</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05030">5030</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -960,7 +965,7 @@ Variables</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>number of base64 bytes </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04571">4571</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04610">4610</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -1015,7 +1020,7 @@ Variables</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>number of base64 bytes </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04587">4587</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04626">4626</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -1530,7 +1535,7 @@ template&lt;typename chartype &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the character is a base64 character, false otherwise. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05008">5008</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05047">5047</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -1568,7 +1573,7 @@ template&lt;typename chartype &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05012">5012</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05051">5051</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -1617,7 +1622,7 @@ template&lt;typename chartype &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the character is a base64 character, false otherwise. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05026">5026</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05065">5065</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -1655,7 +1660,7 @@ template&lt;typename chartype &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05031">5031</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05070">5070</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -6171,7 +6176,7 @@ options, line_length) bytes long) </td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>a pointer to the first occurrence of the character in the string, or a pointer to the end of the string if the character is not found. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04283">4283</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04322">4322</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -6215,7 +6220,7 @@ options, line_length) bytes long) </td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04297">4297</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04336">4336</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -6271,7 +6276,7 @@ options, line_length) bytes long) </td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04261">4261</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04300">4300</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -6308,7 +6313,7 @@ options, line_length) bytes long) </td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the length of the string in Latin1 code units (char) required to encode the UTF-16 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01007">1007</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01046">1046</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -6347,7 +6352,7 @@ options, line_length) bytes long) </td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-32 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03492">3492</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03531">3531</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -6611,7 +6616,7 @@ template&lt;typename chartype &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04319">4319</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04358">4358</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -6639,7 +6644,7 @@ template&lt;typename chartype &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04341">4341</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04380">4380</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -6995,7 +7000,7 @@ template&lt;typename chartype &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the length of the string in 2-byte code units (char16_t) required to encode the Latin1 string as UTF-16 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01020">1020</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l01059">1059</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -7127,7 +7132,7 @@ template&lt;typename chartype &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the length of the string in 4-byte code units (char32_t) required to encode the Latin1 string as UTF-32 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03505">3505</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l03544">3544</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -8378,6 +8383,54 @@ template&lt;typename chartype &gt; </div>
 
 </div>
 </div>
+<a id="a7700ae9f598be3ed7308d89f4f363903" name="a7700ae9f598be3ed7308d89f4f363903"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7700ae9f598be3ed7308d89f4f363903">&#9670;&#160;</a></span>validate_utf8_with_counts()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">simdutf_warn_unused <a class="el" href="structsimdutf_1_1utf8__result.html">utf8_result</a> simdutf::validate_utf8_with_counts </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>len</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Validate the UTF-8 string and stop on error, while counting the number of continuation bytes and of four-byte sequences in the valid prefix. </p>
+<p>Overridden by each implementation.</p>
+<p>These two counts are enough to derive, without a second pass over the input, both the number of code points (input_count - continuation_count) and the number of UTF-16 code units (input_count - continuation_count + four_byte_count) of the valid prefix. The utf32_length() and utf16_length() helpers return them.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">buf</td><td>the UTF-8 string to validate. </td></tr>
+    <tr><td class="paramname">len</td><td>the length of the string in bytes. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a <a class="el" href="structsimdutf_1_1utf8__result.html">utf8_result</a> struct with an error code, the number of bytes in the valid prefix (input_count), and the counts of continuation bytes and of four-byte sequences within it. </dd></dl>
+
+</div>
+</div>
 <a id="a909de1285ace38031be40fce13465509" name="a909de1285ace38031be40fce13465509"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a909de1285ace38031be40fce13465509">&#9670;&#160;</a></span>validate_utf8_with_errors()</h2>
 
@@ -8448,7 +8501,7 @@ template&lt;typename chartype &gt; </div>
 <b>Initial value:</b><div class="fragment"><div class="line">=</div>
 <div class="line">    2</div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04223">4223</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l04262">4262</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>

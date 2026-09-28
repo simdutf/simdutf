@@ -3,6 +3,7 @@ var namespacesimdutf =
     [ "full_result", "structsimdutf_1_1full__result.html", null ],
     [ "implementation", "classsimdutf_1_1implementation.html", "classsimdutf_1_1implementation" ],
     [ "result", "structsimdutf_1_1result.html", null ],
+    [ "utf8_result", "structsimdutf_1_1utf8__result.html", null ],
     [ "autodetect_encoding", "namespacesimdutf.html#afc62d1eaa359b0cf19dddb5ed9130b6a", null ],
     [ "base64_ignorable", "namespacesimdutf.html#a0bd2c80917b6adbf5b692c148711a035", null ],
     [ "base64_length_from_binary", "namespacesimdutf.html#a0840933d2a92a1f74fc6626af5ec76ef", null ],
@@ -139,6 +140,7 @@ var namespacesimdutf =
     [ "validate_utf32", "namespacesimdutf.html#a6a6f5318d1bbaa51e60d8975848f2a99", null ],
     [ "validate_utf32_with_errors", "namespacesimdutf.html#ad40f34e563a1c9989b876ff087eaacd8", null ],
     [ "validate_utf8", "namespacesimdutf.html#a5d3088077c0230659012b58fd3b783c1", null ],
+    [ "validate_utf8_with_counts", "namespacesimdutf.html#a7700ae9f598be3ed7308d89f4f363903", null ],
     [ "validate_utf8_with_errors", "namespacesimdutf.html#a909de1285ace38031be40fce13465509", null ],
     [ "default_line_length", "namespacesimdutf.html#a19e7448b6d4db59b856018f1f13960c0", null ]
 ];

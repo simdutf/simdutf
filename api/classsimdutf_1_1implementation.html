@@ -130,6 +130,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a42f53d3a9e9112a7ad4dfe67cfeccf07" id="r_a42f53d3a9e9112a7ad4dfe67cfeccf07"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1result.html">result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#a42f53d3a9e9112a7ad4dfe67cfeccf07">validate_utf8_with_errors</a> (const char *buf, size_t len) const noexcept=0</td></tr>
 <tr class="memdesc:a42f53d3a9e9112a7ad4dfe67cfeccf07"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validate the UTF-8 string and stop on errors.  <br /></td></tr>
 <tr class="separator:a42f53d3a9e9112a7ad4dfe67cfeccf07"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc88635eaed1de0d04c1fc546d93595b" id="r_afc88635eaed1de0d04c1fc546d93595b"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1utf8__result.html">utf8_result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#afc88635eaed1de0d04c1fc546d93595b">validate_utf8_with_counts</a> (const char *buf, size_t len) const noexcept=0</td></tr>
+<tr class="memdesc:afc88635eaed1de0d04c1fc546d93595b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finds the pointer to the first byte of invalid utf8 while counting continuation bytes and four-byte sequences.  <br /></td></tr>
+<tr class="separator:afc88635eaed1de0d04c1fc546d93595b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adde94939db547675113aa71ec979d2ce" id="r_adde94939db547675113aa71ec979d2ce"><td class="memItemLeft" align="right" valign="top">virtual simdutf_warn_unused bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsimdutf_1_1implementation.html#adde94939db547675113aa71ec979d2ce">validate_ascii</a> (const char *buf, size_t len) const noexcept=0</td></tr>
 <tr class="memdesc:adde94939db547675113aa71ec979d2ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validate the ASCII string.  <br /></td></tr>
 <tr class="separator:adde94939db547675113aa71ec979d2ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -414,7 +417,7 @@ virtual const char16_t *&#160;</td><td class="memItemRight" valign="bottom"><b>f
 <div class="textblock"><p>An implementation of simdutf for a particular CPU architecture. </p>
 <p>Also used to maintain the currently active implementation. The active implementation is automatically initialized on first use to the most advanced implementation supported by the host. </p>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05224">5224</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05263">5263</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="afd306a0bc3e221964af3f31a64784b12" name="afd306a0bc3e221964af3f31a64784b12"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afd306a0bc3e221964af3f31a64784b12">&#9670;&#160;</a></span>autodetect_encoding()</h2>
@@ -3881,7 +3884,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </pre><p> impl-&gt;<a class="el" href="classsimdutf_1_1implementation.html#a5fd0fb7f897b97624a8a4a4079f276ef" title="The description of this implementation.">description()</a> &lt;&lt; ")" &lt;&lt; endl;</p>
 <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05246">5246</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05285">5285</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -4019,7 +4022,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-16LE string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06701">6701</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06755">6755</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -4057,7 +4060,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-32 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06664">6664</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06718">6718</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -4233,7 +4236,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </pre><p> impl-&gt;<a class="el" href="classsimdutf_1_1implementation.html#a5fd0fb7f897b97624a8a4a4079f276ef" title="The description of this implementation.">description()</a> &lt;&lt; ")" &lt;&lt; endl;</p>
 <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05235">5235</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05274">5274</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -4399,7 +4402,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-16 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06476">6476</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06530">6530</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -4530,7 +4533,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-32 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06734">6734</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06788">6788</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -5487,6 +5490,53 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if and only if the string is valid UTF-8. </dd></dl>
+
+</div>
+</div>
+<a id="afc88635eaed1de0d04c1fc546d93595b" name="afc88635eaed1de0d04c1fc546d93595b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afc88635eaed1de0d04c1fc546d93595b">&#9670;&#160;</a></span>validate_utf8_with_counts()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual simdutf_warn_unused <a class="el" href="structsimdutf_1_1utf8__result.html">utf8_result</a> simdutf::implementation::validate_utf8_with_counts </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>len</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Finds the pointer to the first byte of invalid utf8 while counting continuation bytes and four-byte sequences. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">buf</td><td>the UTF-8 string to validate. </td></tr>
+    <tr><td class="paramname">len</td><td>the length of the string in bytes. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a <a class="el" href="structsimdutf_1_1utf8__result.html">utf8_result</a> struct. It contains the length of the valid utf8 segment, the error code and the count of continuation bytes and four-byte sequences.</dd></dl>
+<p>Returns a <a class="el" href="structsimdutf_1_1utf8__result.html">utf8_result</a> </p>
 
 </div>
 </div>
