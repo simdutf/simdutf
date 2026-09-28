@@ -170,6 +170,11 @@ convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in, size_t shufutf8_idx) {
   #include "generic/utf8_validation/utf8_lookup4_algorithm.h"
   #include "generic/utf8_validation/utf8_validator.h"
 #endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
+#if SIMDUTF_FEATURE_UTF8
+  // needs utf8_checker and buf_block_reader, hence included after the generic
+  // validator
+  #include "arm64/arm_validate_utf8_with_counts.cpp"
+#endif // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_ASCII
   #include "generic/ascii_validation.h"
@@ -1091,6 +1096,11 @@ simdutf_warn_unused size_t
 implementation::count_utf8(const char *input, size_t length) const noexcept {
   return utf8::count_code_points(input, length);
 }
+simdutf_warn_unused utf8_result implementation::validate_utf8_with_counts(
+    const char *buf, size_t len) const noexcept {
+  return arm64::utf8_validation::arm_validate_utf8_with_counts(buf, len);
+}
+
 #endif // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1

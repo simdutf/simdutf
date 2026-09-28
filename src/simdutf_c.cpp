@@ -8,6 +8,15 @@ static simdutf_result to_c_result(const simdutf::result &r) {
   return out;
 }
 
+static simdutf_utf8_result to_c_utf8_result(const simdutf::utf8_result &r) {
+  simdutf_utf8_result out;
+  out.error = static_cast<simdutf_error_code>(r.error);
+  out.input_count = r.input_count;
+  out.continuation_count = r.continuation_count;
+  out.four_byte_count = r.four_byte_count;
+  return out;
+}
+
 static simdutf_full_result to_c_full_result(const simdutf::full_result &r) {
   simdutf_full_result out;
   out.error = static_cast<simdutf_error_code>(r.error);
@@ -31,6 +40,19 @@ bool simdutf_validate_utf8(const char *buf, size_t len) {
 
 simdutf_result simdutf_validate_utf8_with_errors(const char *buf, size_t len) {
   return to_c_result(simdutf::validate_utf8_with_errors(buf, len));
+}
+
+simdutf_utf8_result simdutf_validate_utf8_with_counts(const char *buf,
+                                                      size_t len) {
+  return to_c_utf8_result(simdutf::validate_utf8_with_counts(buf, len));
+}
+
+size_t simdutf_utf8_result_utf16_length(simdutf_utf8_result r) {
+  return r.input_count - r.continuation_count + r.four_byte_count;
+}
+
+size_t simdutf_utf8_result_utf32_length(simdutf_utf8_result r) {
+  return r.input_count - r.continuation_count;
 }
 
 simdutf_encoding_type simdutf_autodetect_encoding(const char *input,
