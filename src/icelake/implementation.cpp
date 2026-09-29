@@ -1140,8 +1140,6 @@ simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16le(
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16be(
     const char *buf, size_t len, char16_t *utf16_output) const noexcept {
-  // Same kernel as convert_utf8_to_utf16be, with the checks compiled out. It
-  // is faster than valid_utf8_to_fixed_length, which goes through UTF-32.
   utf8_to_utf16_result ret =
       fast_avx512_convert_utf8_to_utf16<endianness::BIG, false>(buf, len,
                                                                 utf16_output);
