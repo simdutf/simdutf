@@ -19,7 +19,8 @@ constexpr bool is_utf8_validation_error(error_code code) noexcept {
 
 // Valid prefixes shorter than this are cheaper to finish in the scalar decoder
 // than to rediscover with another validating scan. Two in a row means the tail
-// is dense.
+// is dense. An empty prefix is an adjacent error and does not count: one
+// broken multibyte character is several maximal subparts.
 constexpr size_t dense_prefix_limit = 512;
 
 template <endianness endian>
@@ -92,39 +93,57 @@ simdutf_really_inline result transcode_utf8_to_utf16_with_replacement(
   size_t written = 0;
   error_code first = error_code::SUCCESS;
   int short_prefixes = 0;
-  // One validating pass, the same kernel as convert_utf8_to_utf16. A separate
-  // validate-then-convert_valid scan is a second trip over the input.
-  if constexpr (write) {
-    if (length > kernel_overflow_tail + 64) {
-      const size_t prefix =
-          utf8_boundary_before(input, length - kernel_overflow_tail);
-      if (prefix >= 64) {
-        const result bulk =
-            convert_with_errors_prefix<endian>(input, prefix, utf16_output);
-        if (bulk.error == error_code::SUCCESS) {
-          written = bulk.count;
-          pos = prefix;
-        } else if (is_utf8_validation_error(bulk.error) &&
-                   bulk.count < prefix) {
-          const size_t valid_bytes = bulk.count;
-          if (valid_bytes != 0) {
-            written = utf16_length_from_utf8(input, valid_bytes);
-          }
-          utf16_output[written] = scalar::utf16::replacement<endian>();
-          written += 1;
-          first = bulk.error;
-          const size_t skip = scalar::utf8_to_utf16::maximal_subpart(
-              input + valid_bytes, length - valid_bytes);
-          pos = valid_bytes + skip;
-          short_prefixes = valid_bytes < dense_prefix_limit ? 1 : 0;
-        }
-      }
-    }
-  }
   while (pos < length) {
     if (short_prefixes >= 2) {
       return finish_with_scalar<endian, write>(input, length, pos, written,
                                                first, utf16_output);
+    }
+    // Same validating kernel as convert_utf8_to_utf16, including after an
+    // error. The last 32 bytes stay out of this call: a kernel that stores
+    // past a failing block must not pass the end of an exact-sized buffer.
+    // On error, count is an input position, so the output length is counted
+    // again over the valid prefix.
+    if constexpr (write) {
+      const size_t remaining = length - pos;
+      if (remaining > kernel_overflow_tail + 64) {
+        const size_t window =
+            utf8_boundary_before(input + pos, remaining - kernel_overflow_tail);
+        if (window >= 64) {
+          const result bulk = convert_with_errors_prefix<endian>(
+              input + pos, window, utf16_output + written);
+          if (bulk.error == error_code::SUCCESS) {
+            written += bulk.count;
+            pos += window;
+            short_prefixes = 0;
+            continue;
+          }
+          if (is_utf8_validation_error(bulk.error) && bulk.count < window) {
+            const size_t valid_bytes = bulk.count;
+            if (valid_bytes != 0) {
+              written += utf16_length_from_utf8(input + pos, valid_bytes);
+            }
+            utf16_output[written] = scalar::utf16::replacement<endian>();
+            written += 1;
+            if (first == error_code::SUCCESS) {
+              first = bulk.error;
+            }
+            const size_t skip = scalar::utf8_to_utf16::maximal_subpart(
+                input + pos + valid_bytes, length - pos - valid_bytes);
+            pos += valid_bytes + skip;
+            // A broken character is several adjacent errors, each with an
+            // empty valid prefix. Those must not send the rest of the input
+            // down the scalar path. Only a short run of valid bytes counts.
+            if (valid_bytes >= dense_prefix_limit) {
+              short_prefixes = 0;
+            } else if (valid_bytes != 0) {
+              short_prefixes += 1;
+            }
+            continue;
+          }
+          return finish_with_scalar<endian, write>(input, length, pos, written,
+                                                   first, utf16_output);
+        }
+      }
     }
     const size_t remaining = length - pos;
     const utf8_result validation =
@@ -156,10 +175,10 @@ simdutf_really_inline result transcode_utf8_to_utf16_with_replacement(
     if (first == error_code::SUCCESS) {
       first = validation.error;
     }
-    if (validation.input_count < dense_prefix_limit) {
-      short_prefixes += 1;
-    } else {
+    if (validation.input_count >= dense_prefix_limit) {
       short_prefixes = 0;
+    } else if (validation.input_count != 0) {
+      short_prefixes += 1;
     }
     pos += skip;
   }
