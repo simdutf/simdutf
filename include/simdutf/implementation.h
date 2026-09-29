@@ -178,6 +178,7 @@ concept indexes_into_uint32 = requires(InputPtr p) {
 #include <simdutf/scalar/utf8_to_latin1/utf8_to_latin1.h>
 #include <simdutf/scalar/utf8_to_latin1/valid_utf8_to_latin1.h>
 #include <simdutf/scalar/utf8_to_utf16/utf8_to_utf16.h>
+#include <simdutf/scalar/utf8_to_utf16/utf8_to_utf16_with_replacement.h>
 #include <simdutf/scalar/utf8_to_utf16/valid_utf8_to_utf16.h>
 #include <simdutf/scalar/utf8_to_utf32/utf8_to_utf32.h>
 #include <simdutf/scalar/utf8_to_utf32/valid_utf8_to_utf32.h>
@@ -1478,6 +1479,123 @@ convert_utf8_to_utf16be_with_errors(
   }
 }
   #endif // SIMDUTF_SPAN
+
+/**
+ * Convert a possibly ill-formed UTF-8 string into a UTF-16 string (native
+ * endianness), replacing each ill-formed subsequence with U+FFFD.
+ *
+ * Substitution follows Unicode maximal subparts (the WHATWG rule): each
+ * maximal subpart of an ill-formed sequence becomes one U+FFFD code unit.
+ * The function always succeeds. The output buffer must hold the number of
+ * char16_t returned by utf16_length_from_utf8_with_replacement. A buffer of
+ * `length` char16_t is always large enough.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-8 string to convert
+ * @param length        the length of the string in bytes
+ * @param utf16_output  the pointer to buffer that can hold the conversion
+ * result
+ * @return the number of written char16_t
+ */
+simdutf_warn_unused size_t convert_utf8_to_utf16_with_replacement(
+    const char *input, size_t length, char16_t *utf16_output) noexcept;
+  #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+convert_utf8_to_utf16_with_replacement(
+    const detail::input_span_of_byte_like auto &utf8_input,
+    std::span<char16_t> utf16_output) noexcept {
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf8_to_utf16::convert_with_replacement<endianness::NATIVE>(
+        utf8_input.data(), utf8_input.size(), utf16_output.data());
+  } else
+    #endif
+  {
+    return convert_utf8_to_utf16_with_replacement(
+        reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
+        utf16_output.data());
+  }
+}
+  #endif // SIMDUTF_SPAN
+
+/**
+ * Convert a possibly ill-formed UTF-8 string into a UTF-16LE string, replacing
+ * each ill-formed subsequence with U+FFFD.
+ *
+ * Substitution follows Unicode maximal subparts (the WHATWG rule): each
+ * maximal subpart of an ill-formed sequence becomes one U+FFFD code unit.
+ * The function always succeeds. The output buffer must hold the number of
+ * char16_t returned by utf16_length_from_utf8_with_replacement. A buffer of
+ * `length` char16_t is always large enough.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-8 string to convert
+ * @param length        the length of the string in bytes
+ * @param utf16_output  the pointer to buffer that can hold the conversion
+ * result
+ * @return the number of written char16_t
+ */
+simdutf_warn_unused size_t convert_utf8_to_utf16le_with_replacement(
+    const char *input, size_t length, char16_t *utf16_output) noexcept;
+  #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+convert_utf8_to_utf16le_with_replacement(
+    const detail::input_span_of_byte_like auto &utf8_input,
+    std::span<char16_t> utf16_output) noexcept {
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf8_to_utf16::convert_with_replacement<endianness::LITTLE>(
+        utf8_input.data(), utf8_input.size(), utf16_output.data());
+  } else
+    #endif
+  {
+    return convert_utf8_to_utf16le_with_replacement(
+        reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
+        utf16_output.data());
+  }
+}
+  #endif // SIMDUTF_SPAN
+
+/**
+ * Convert a possibly ill-formed UTF-8 string into a UTF-16BE string, replacing
+ * each ill-formed subsequence with U+FFFD.
+ *
+ * Substitution follows Unicode maximal subparts (the WHATWG rule): each
+ * maximal subpart of an ill-formed sequence becomes one U+FFFD code unit.
+ * The function always succeeds. The output buffer must hold the number of
+ * char16_t returned by utf16_length_from_utf8_with_replacement. A buffer of
+ * `length` char16_t is always large enough.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-8 string to convert
+ * @param length        the length of the string in bytes
+ * @param utf16_output  the pointer to buffer that can hold the conversion
+ * result
+ * @return the number of written char16_t
+ */
+simdutf_warn_unused size_t convert_utf8_to_utf16be_with_replacement(
+    const char *input, size_t length, char16_t *utf16_output) noexcept;
+  #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 size_t
+convert_utf8_to_utf16be_with_replacement(
+    const detail::input_span_of_byte_like auto &utf8_input,
+    std::span<char16_t> utf16_output) noexcept {
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf8_to_utf16::convert_with_replacement<endianness::BIG>(
+        utf8_input.data(), utf8_input.size(), utf16_output.data());
+  } else
+    #endif
+  {
+    return convert_utf8_to_utf16be_with_replacement(
+        reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size(),
+        utf16_output.data());
+  }
+}
+  #endif // SIMDUTF_SPAN
 #endif   // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
@@ -1814,6 +1932,49 @@ utf16_length_from_utf8(
     return utf16_length_from_utf8(
         reinterpret_cast<const char *>(valid_utf8_input.data()),
         valid_utf8_input.size());
+  }
+}
+  #endif // SIMDUTF_SPAN
+
+/**
+ * Compute the number of char16_t that this UTF-8 string requires in UTF-16
+ * when ill-formed subsequences are replaced by U+FFFD.
+ *
+ * Substitution follows Unicode maximal subparts (the WHATWG rule): each
+ * maximal subpart becomes one U+FFFD. The count is always the number of
+ * char16_t that convert_utf8_to_utf16_with_replacement writes, and it is at
+ * most `length`. The count does not depend on endianness.
+ *
+ * The error field is SUCCESS when the input is valid UTF-8. Otherwise it is
+ * the error code of the first ill-formed sequence (HEADER_BITS, TOO_SHORT,
+ * TOO_LONG, OVERLONG, TOO_LARGE, or SURROGATE). The count stays correct
+ * either way.
+ *
+ * When the input is known to be valid, utf16_length_from_utf8 is the faster
+ * length function: it only counts, whereas this one validates.
+ *
+ * This function is not BOM-aware.
+ *
+ * @param input         the UTF-8 string to process
+ * @param length        the length of the string in bytes
+ * @return a result pair struct (of type simdutf::result containing the two
+ * fields error and count) where count is the number of char16_t required
+ */
+simdutf_warn_unused result utf16_length_from_utf8_with_replacement(
+    const char *input, size_t length) noexcept;
+  #if SIMDUTF_SPAN
+simdutf_really_inline simdutf_warn_unused simdutf_constexpr23 result
+utf16_length_from_utf8_with_replacement(
+    const detail::input_span_of_byte_like auto &utf8_input) noexcept {
+    #if SIMDUTF_CPLUSPLUS23
+  if consteval {
+    return scalar::utf8_to_utf16::utf16_length_from_utf8_with_replacement(
+        utf8_input.data(), utf8_input.size());
+  } else
+    #endif
+  {
+    return utf16_length_from_utf8_with_replacement(
+        reinterpret_cast<const char *>(utf8_input.data()), utf8_input.size());
   }
 }
   #endif // SIMDUTF_SPAN

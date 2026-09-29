@@ -338,6 +338,46 @@ TEST(convert_utf16be_to_utf8_with_replacement_c) {
   ASSERT_EQUAL(len.count, n);
 }
 
+TEST(convert_utf8_to_utf16_with_replacement_c) {
+  const char bad[] = {'A', char(0xFF), 'B'};
+  simdutf_result length =
+      simdutf_utf16_length_from_utf8_with_replacement(bad, 3);
+  ASSERT_EQUAL(length.count, size_t(3));
+  ASSERT_EQUAL(length.error, SIMDUTF_ERROR_HEADER_BITS);
+
+  char16_t out[8] = {};
+  size_t n = simdutf_convert_utf8_to_utf16_with_replacement(bad, 3, out);
+  ASSERT_EQUAL(n, size_t(3));
+  ASSERT_EQUAL(out[0], u'A');
+  ASSERT_EQUAL(out[1], char16_t(0xFFFD));
+  ASSERT_EQUAL(out[2], u'B');
+
+  char16_t le[4] = {};
+  char16_t be[4] = {};
+  ASSERT_EQUAL(simdutf_convert_utf8_to_utf16le_with_replacement(bad, 3, le),
+               size_t(3));
+  ASSERT_EQUAL(simdutf_convert_utf8_to_utf16be_with_replacement(bad, 3, be),
+               size_t(3));
+  ASSERT_EQUAL(le[0], u'A');
+  ASSERT_EQUAL(be[0], char16_t(0x4100));
+  ASSERT_EQUAL(be[1], char16_t(0xFDFF));
+
+  const char valid[] = "hello";
+  char16_t hello[8] = {};
+  size_t hello_n =
+      simdutf_convert_utf8_to_utf16_with_replacement(valid, 5, hello);
+  ASSERT_EQUAL(hello_n, size_t(5));
+  ASSERT_TRUE(std::memcmp(hello, u"hello", 5 * sizeof(char16_t)) == 0);
+  simdutf_result valid_length =
+      simdutf_utf16_length_from_utf8_with_replacement(valid, 5);
+  ASSERT_EQUAL(valid_length.error, SIMDUTF_ERROR_SUCCESS);
+  ASSERT_EQUAL(valid_length.count, size_t(5));
+
+  ASSERT_EQUAL(
+      simdutf_convert_utf8_to_utf16_with_replacement(nullptr, 0, hello),
+      size_t(0));
+}
+
 TEST(convert_utf16_to_utf8_with_replacement_c) {
   // Native endianness: agrees with the plain converter on valid input.
   char16_t valid[5] = {u'h', u'e', u'l', u'l', u'o'};

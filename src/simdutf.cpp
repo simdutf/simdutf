@@ -77,6 +77,7 @@ SIMDUTF_POP_DISABLE_WARNINGS
     (SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_LATIN1)
   #include "simdutf/scalar/utf8_to_utf16/valid_utf8_to_utf16.h"
   #include "simdutf/scalar/utf8_to_utf16/utf8_to_utf16.h"
+  #include "simdutf/scalar/utf8_to_utf16/utf8_to_utf16_with_replacement.h"
 #endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_UTF16 ||
        // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_LATIN1)
 
