@@ -186,33 +186,138 @@ simdutf_really_inline result transcode_utf8_to_utf16_with_replacement(
 }
 } // namespace
 
-simdutf_warn_unused result utf16_length_from_utf8_with_replacement(
-    const char *input, size_t length) noexcept {
-  return transcode_utf8_to_utf16_with_replacement<endianness::LITTLE, false>(
-      input, length, nullptr);
+// Recorded errors are absolute byte indexes. The gaps between them are valid
+// UTF-8, so conversion can use the unchecked kernel there. A tail past the
+// stored errors, when more_errors is set, still has to be discovered.
+template <endianness endian>
+simdutf_really_inline size_t convert_using_locations(
+    const char *input, size_t length, char16_t *utf16_output,
+    const utf8_to_utf16_result &locations) noexcept {
+  size_t recorded = locations.error_count;
+  bool more = locations.more_errors;
+  if (recorded > utf8_to_utf16_result::max_errors) {
+    recorded = utf8_to_utf16_result::max_errors;
+    more = true;
+  }
+  size_t pos = 0;
+  size_t written = 0;
+  for (size_t i = 0; i < recorded; i++) {
+    const size_t err = locations.error_offset[i];
+    if (err < pos || err >= length) {
+      return written + transcode_utf8_to_utf16_with_replacement<endian, true>(
+                           input + pos, length - pos, utf16_output + written)
+                           .count;
+    }
+    if (err > pos) {
+      written += convert_valid_prefix<endian>(input + pos, err - pos,
+                                              utf16_output + written);
+    }
+    utf16_output[written] = scalar::utf16::replacement<endian>();
+    written += 1;
+    const size_t skip =
+        scalar::utf8_to_utf16::maximal_subpart(input + err, length - err);
+    pos = err + skip;
+  }
+  if (pos > length) {
+    return written;
+  }
+  if (!more) {
+    if (pos < length) {
+      written += convert_valid_prefix<endian>(input + pos, length - pos,
+                                              utf16_output + written);
+    }
+    return written;
+  }
+  return written + transcode_utf8_to_utf16_with_replacement<endian, true>(
+                       input + pos, length - pos, utf16_output + written)
+                       .count;
+}
+
+simdutf_warn_unused utf8_to_utf16_result
+utf16_length_from_utf8_with_replacement(const char *input,
+                                        size_t length) noexcept {
+  utf8_to_utf16_result out;
+  size_t pos = 0;
+  while (pos < length) {
+    const utf8_result validation =
+        validate_utf8_with_counts(input + pos, length - pos);
+    if (validation.error == error_code::SUCCESS) {
+      out.count += validation.utf16_length();
+      return out;
+    }
+    if (!is_utf8_validation_error(validation.error) ||
+        validation.input_count >= length - pos) {
+      out.count += scalar::utf8_to_utf16::count_with_replacement(input + pos,
+                                                                 length - pos);
+      out.more_errors = true;
+      if (out.error == error_code::SUCCESS) {
+        out.error = validation.error;
+      }
+      return out;
+    }
+    out.count += validation.utf16_length() + 1;
+    if (out.error == error_code::SUCCESS) {
+      out.error = validation.error;
+    }
+    const size_t err = pos + validation.input_count;
+    const size_t skip =
+        scalar::utf8_to_utf16::maximal_subpart(input + err, length - err);
+    if (out.error_count < utf8_to_utf16_result::max_errors) {
+      out.error_offset[out.error_count] = err;
+      out.error_count += 1;
+    } else {
+      out.more_errors = true;
+    }
+    pos = err + skip;
+  }
+  return out;
+}
+
+simdutf_warn_unused size_t convert_utf8_to_utf16le_with_replacement(
+    const char *input, size_t length, char16_t *utf16_output,
+    const utf8_to_utf16_result &locations) noexcept {
+  return convert_using_locations<endianness::LITTLE>(input, length,
+                                                     utf16_output, locations);
 }
 
 simdutf_warn_unused size_t convert_utf8_to_utf16le_with_replacement(
     const char *input, size_t length, char16_t *utf16_output) noexcept {
-  return transcode_utf8_to_utf16_with_replacement<endianness::LITTLE, true>(
-             input, length, utf16_output)
-      .count;
+  return convert_utf8_to_utf16le_with_replacement(
+      input, length, utf16_output,
+      utf16_length_from_utf8_with_replacement(input, length));
+}
+
+simdutf_warn_unused size_t convert_utf8_to_utf16be_with_replacement(
+    const char *input, size_t length, char16_t *utf16_output,
+    const utf8_to_utf16_result &locations) noexcept {
+  return convert_using_locations<endianness::BIG>(input, length, utf16_output,
+                                                  locations);
 }
 
 simdutf_warn_unused size_t convert_utf8_to_utf16be_with_replacement(
     const char *input, size_t length, char16_t *utf16_output) noexcept {
-  return transcode_utf8_to_utf16_with_replacement<endianness::BIG, true>(
-             input, length, utf16_output)
-      .count;
+  return convert_utf8_to_utf16be_with_replacement(
+      input, length, utf16_output,
+      utf16_length_from_utf8_with_replacement(input, length));
+}
+
+simdutf_warn_unused size_t convert_utf8_to_utf16_with_replacement(
+    const char *input, size_t length, char16_t *utf16_output,
+    const utf8_to_utf16_result &locations) noexcept {
+#if SIMDUTF_IS_BIG_ENDIAN
+  return convert_utf8_to_utf16be_with_replacement(input, length, utf16_output,
+                                                  locations);
+#else
+  return convert_utf8_to_utf16le_with_replacement(input, length, utf16_output,
+                                                  locations);
+#endif
 }
 
 simdutf_warn_unused size_t convert_utf8_to_utf16_with_replacement(
     const char *input, size_t length, char16_t *utf16_output) noexcept {
-#if SIMDUTF_IS_BIG_ENDIAN
-  return convert_utf8_to_utf16be_with_replacement(input, length, utf16_output);
-#else
-  return convert_utf8_to_utf16le_with_replacement(input, length, utf16_output);
-#endif
+  return convert_utf8_to_utf16_with_replacement(
+      input, length, utf16_output,
+      utf16_length_from_utf8_with_replacement(input, length));
 }
 
 #endif // SIMDUTF_UTF8_TO_UTF16_WITH_REPLACEMENT_INL_H

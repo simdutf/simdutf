@@ -97,11 +97,11 @@ char16_t swapped(char16_t unit) {
 }
 
 using convert_fn = size_t (*)(const char *, size_t, char16_t *);
+using convert_with_locations_fn = size_t (*)(
+    const char *, size_t, char16_t *, const simdutf::utf8_to_utf16_result &);
 
-void check_convert(convert_fn convert, const char *input, size_t length,
-                   const std::vector<char16_t> &oracle, bool swap) {
-  std::vector<char16_t> out(oracle.size() + 32, char16_t(0xCDCD));
-  const size_t written = convert(input, length, out.data());
+void check_units(const std::vector<char16_t> &out, size_t written,
+                 const std::vector<char16_t> &oracle, bool swap) {
   ASSERT_EQUAL(written, oracle.size());
   for (size_t i = 0; i < oracle.size(); i++) {
     const char16_t expect = swap ? swapped(oracle[i]) : oracle[i];
@@ -112,17 +112,57 @@ void check_convert(convert_fn convert, const char *input, size_t length,
   }
 }
 
+void check_convert(convert_fn convert, const char *input, size_t length,
+                   const std::vector<char16_t> &oracle, bool swap) {
+  std::vector<char16_t> out(oracle.size() + 32, char16_t(0xCDCD));
+  const size_t written = convert(input, length, out.data());
+  check_units(out, written, oracle, swap);
+}
+
+void check_convert_with_locations(
+    convert_with_locations_fn convert, const char *input, size_t length,
+    const std::vector<char16_t> &oracle, bool swap,
+    const simdutf::utf8_to_utf16_result &locations) {
+  std::vector<char16_t> out(oracle.size() + 32, char16_t(0xCDCD));
+  const size_t written = convert(input, length, out.data(), locations);
+  check_units(out, written, oracle, swap);
+}
+
+void check_locations(const char *input, size_t length,
+                     const simdutf::utf8_to_utf16_result &length_result,
+                     const simdutf::result &validation) {
+  ASSERT_TRUE(length_result.error_count <=
+              simdutf::utf8_to_utf16_result::max_errors);
+  if (length_result.error == simdutf::error_code::SUCCESS) {
+    ASSERT_EQUAL(length_result.error_count, size_t(0));
+    ASSERT_FALSE(length_result.more_errors);
+  } else if (length_result.error_count >= 1) {
+    ASSERT_EQUAL(length_result.error_offset[0], validation.count);
+  }
+  if (length_result.error_count < simdutf::utf8_to_utf16_result::max_errors) {
+    ASSERT_FALSE(length_result.more_errors);
+  }
+  for (size_t i = 0; i < length_result.error_count; i++) {
+    ASSERT_TRUE(length_result.error_offset[i] < length);
+    if (i > 0) {
+      ASSERT_TRUE(length_result.error_offset[i] >
+                  length_result.error_offset[i - 1]);
+    }
+  }
+}
+
 void check(const char *input, size_t length) {
   std::vector<char16_t> oracle(length + 1);
   const size_t oracle_n = oracle_whatwg(input, length, oracle.data());
   oracle.resize(oracle_n);
 
-  const simdutf::result length_result =
+  const simdutf::utf8_to_utf16_result length_result =
       simdutf::utf16_length_from_utf8_with_replacement(input, length);
   ASSERT_EQUAL(length_result.count, oracle_n);
   const simdutf::result validation =
       simdutf::validate_utf8_with_errors(input, length);
   ASSERT_EQUAL(length_result.error, validation.error);
+  check_locations(input, length, length_result, validation);
 
 #if SIMDUTF_IS_BIG_ENDIAN
   check_convert(simdutf::convert_utf8_to_utf16le_with_replacement, input,
@@ -131,6 +171,14 @@ void check(const char *input, size_t length) {
                 length, oracle, false);
   check_convert(simdutf::convert_utf8_to_utf16_with_replacement, input, length,
                 oracle, false);
+  check_convert_with_locations(
+      simdutf::convert_utf8_to_utf16le_with_replacement, input, length, oracle,
+      true, length_result);
+  check_convert_with_locations(
+      simdutf::convert_utf8_to_utf16be_with_replacement, input, length, oracle,
+      false, length_result);
+  check_convert_with_locations(simdutf::convert_utf8_to_utf16_with_replacement,
+                               input, length, oracle, false, length_result);
 #else
   check_convert(simdutf::convert_utf8_to_utf16le_with_replacement, input,
                 length, oracle, false);
@@ -138,6 +186,14 @@ void check(const char *input, size_t length) {
                 length, oracle, true);
   check_convert(simdutf::convert_utf8_to_utf16_with_replacement, input, length,
                 oracle, false);
+  check_convert_with_locations(
+      simdutf::convert_utf8_to_utf16le_with_replacement, input, length, oracle,
+      false, length_result);
+  check_convert_with_locations(
+      simdutf::convert_utf8_to_utf16be_with_replacement, input, length, oracle,
+      true, length_result);
+  check_convert_with_locations(simdutf::convert_utf8_to_utf16_with_replacement,
+                               input, length, oracle, false, length_result);
 #endif
 
   if (length_result.error == simdutf::error_code::SUCCESS) {
@@ -157,7 +213,7 @@ void check(const std::string &input) { check(input.data(), input.size()); }
 void expect(const std::string &input, const std::vector<char16_t> &units,
             simdutf::error_code error) {
   check(input);
-  const simdutf::result length_result =
+  const simdutf::utf8_to_utf16_result length_result =
       simdutf::utf16_length_from_utf8_with_replacement(input.data(),
                                                        input.size());
   ASSERT_EQUAL(length_result.error, error);
@@ -177,10 +233,12 @@ const char16_t FFFD = 0xFFFD;
 
 TEST(empty_input) {
   check("", 0);
-  const simdutf::result length_result =
+  const simdutf::utf8_to_utf16_result length_result =
       simdutf::utf16_length_from_utf8_with_replacement("", 0);
   ASSERT_EQUAL(length_result.error, simdutf::error_code::SUCCESS);
   ASSERT_EQUAL(length_result.count, size_t(0));
+  ASSERT_EQUAL(length_result.error_count, size_t(0));
+  ASSERT_FALSE(length_result.more_errors);
   ASSERT_EQUAL(simdutf::convert_utf8_to_utf16_with_replacement("", 0, nullptr),
                size_t(0));
 }
@@ -250,7 +308,17 @@ TEST(long_valid_and_sparse_and_dense) {
   }
   check(every_64);
 
-  check(std::string(3000, char(0xFF)));
+  const std::string many_ff(3000, char(0xFF));
+  check(many_ff);
+  const simdutf::utf8_to_utf16_result many =
+      simdutf::utf16_length_from_utf8_with_replacement(many_ff.data(),
+                                                       many_ff.size());
+  ASSERT_EQUAL(many.error_count, simdutf::utf8_to_utf16_result::max_errors);
+  ASSERT_TRUE(many.more_errors);
+  ASSERT_EQUAL(many.count, many_ff.size());
+  for (size_t i = 0; i < many.error_count; i++) {
+    ASSERT_EQUAL(many.error_offset[i], i);
+  }
   check(std::string(100, '\x80'));
 }
 
@@ -292,13 +360,28 @@ constexpr converted3 convert_bad_be() {
   return result;
 }
 
+constexpr converted3 convert_bad_native_with_locations() {
+  constexpr std::array<char, 3> bad{'A', char(0xFF), 'B'};
+  constexpr simdutf::utf8_to_utf16_result locations =
+      simdutf::utf16_length_from_utf8_with_replacement(
+          std::span<const char>(bad.data(), bad.size()));
+  converted3 result{};
+  result.n = simdutf::convert_utf8_to_utf16_with_replacement(
+      std::span<const char>(bad.data(), bad.size()),
+      std::span<char16_t>(result.out), locations);
+  return result;
+}
+
 TEST(constexpr_length_and_convert) {
   constexpr std::array<char, 3> bad{'A', char(0xFF), 'B'};
-  constexpr simdutf::result bad_length =
+  constexpr simdutf::utf8_to_utf16_result bad_length =
       simdutf::utf16_length_from_utf8_with_replacement(
           std::span<const char>(bad.data(), bad.size()));
   static_assert(bad_length.count == 3);
   static_assert(bad_length.error == simdutf::error_code::HEADER_BITS);
+  static_assert(bad_length.error_count == 1);
+  static_assert(bad_length.error_offset[0] == 1);
+  static_assert(!bad_length.more_errors);
 
   constexpr converted3 converted = convert_bad_native();
   static_assert(converted.n == 3);
@@ -314,21 +397,34 @@ TEST(constexpr_length_and_convert) {
 
   constexpr std::array<char, 4> emoji{char(0xF0), char(0x9F), char(0x98),
                                       char(0x80)};
-  constexpr simdutf::result emoji_length =
+  constexpr simdutf::utf8_to_utf16_result emoji_length =
       simdutf::utf16_length_from_utf8_with_replacement(
           std::span<const char>(emoji.data(), emoji.size()));
   static_assert(emoji_length.count == 2);
   static_assert(emoji_length.error == simdutf::error_code::SUCCESS);
+  static_assert(emoji_length.error_count == 0);
+  static_assert(!emoji_length.more_errors);
 
-  constexpr simdutf::result empty_length =
+  constexpr simdutf::utf8_to_utf16_result empty_length =
       simdutf::utf16_length_from_utf8_with_replacement(std::span<const char>{});
   static_assert(empty_length.count == 0);
   static_assert(empty_length.error == simdutf::error_code::SUCCESS);
+  static_assert(empty_length.error_count == 0);
 
-  const simdutf::result runtime =
+  constexpr converted3 converted_with_locations =
+      convert_bad_native_with_locations();
+  static_assert(converted_with_locations.n == 3);
+  static_assert(converted_with_locations.out[0] == u'A');
+  static_assert(converted_with_locations.out[1] == char16_t(0xFFFD));
+  static_assert(converted_with_locations.out[2] == u'B');
+
+  const simdutf::utf8_to_utf16_result runtime =
       simdutf::utf16_length_from_utf8_with_replacement(bad.data(), bad.size());
   ASSERT_EQUAL(runtime.count, bad_length.count);
   ASSERT_EQUAL(runtime.error, bad_length.error);
+  ASSERT_EQUAL(runtime.error_count, bad_length.error_count);
+  ASSERT_EQUAL(runtime.error_offset[0], bad_length.error_offset[0]);
+  ASSERT_EQUAL(runtime.more_errors, bad_length.more_errors);
 }
 
 #endif

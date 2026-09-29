@@ -207,26 +207,49 @@ template <typename InputPtr>
 #if SIMDUTF_CPLUSPLUS20
   requires simdutf::detail::indexes_into_byte_like<InputPtr>
 #endif
-simdutf_constexpr23 result
+simdutf_constexpr23 utf8_to_utf16_result
 utf16_length_from_utf8_with_replacement(InputPtr data, size_t len) noexcept {
-  if (len == 0) {
-    return result(error_code::SUCCESS, 0);
-  }
-  utf8_result validation;
+  utf8_to_utf16_result out;
+  size_t pos = 0;
+  while (pos < len) {
+    utf8_result validation;
 #if SIMDUTF_CPLUSPLUS23
-  if consteval {
-    validation = scalar::utf8::validate_with_counts(
-        utf8_byte_pointer<InputPtr>{data}, len);
-  } else
+    if consteval {
+      validation = scalar::utf8::validate_with_counts(
+          utf8_byte_pointer<InputPtr>{data + pos}, len - pos);
+    } else
 #endif
-  {
-    validation = scalar::utf8::validate_with_counts(
-        reinterpret_cast<const uint8_t *>(data), len);
+    {
+      validation = scalar::utf8::validate_with_counts(
+          reinterpret_cast<const uint8_t *>(data + pos), len - pos);
+    }
+    if (validation.error == error_code::SUCCESS) {
+      out.count += validation.utf16_length();
+      return out;
+    }
+    if (validation.input_count >= len - pos) {
+      out.count += count_with_replacement(data + pos, len - pos);
+      out.more_errors = true;
+      if (out.error == error_code::SUCCESS) {
+        out.error = validation.error;
+      }
+      return out;
+    }
+    out.count += validation.utf16_length() + 1;
+    if (out.error == error_code::SUCCESS) {
+      out.error = validation.error;
+    }
+    const size_t err = pos + validation.input_count;
+    const size_t skip = maximal_subpart(data + err, len - err);
+    if (out.error_count < utf8_to_utf16_result::max_errors) {
+      out.error_offset[out.error_count] = err;
+      out.error_count += 1;
+    } else {
+      out.more_errors = true;
+    }
+    pos = err + skip;
   }
-  if (validation.error == error_code::SUCCESS) {
-    return result(error_code::SUCCESS, validation.utf16_length());
-  }
-  return result(validation.error, count_with_replacement(data, len));
+  return out;
 }
 
 } // namespace utf8_to_utf16
