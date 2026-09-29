@@ -62,6 +62,20 @@ typedef struct simdutf_utf8_result {
   size_t four_byte_count;    /* four-byte sequences within the valid prefix */
 } simdutf_utf8_result;
 
+/* Byte indexes of the first ill-formed UTF-8 subsequences, for conversion to
+   UTF-16 with U+FFFD. error_offset[i] is an index into the same input passed
+   to simdutf_utf16_length_from_utf8_with_replacement. count is always the full
+   number of char16_t. more_errors is true when the input has ill-formed
+   subsequences past the stored ones. */
+#define SIMDUTF_UTF8_TO_UTF16_MAX_ERRORS 16
+typedef struct simdutf_utf8_to_utf16_result {
+  simdutf_error_code error;
+  size_t count;
+  size_t error_count;
+  bool more_errors;
+  size_t error_offset[SIMDUTF_UTF8_TO_UTF16_MAX_ERRORS];
+} simdutf_utf8_to_utf16_result;
+
 typedef enum simdutf_encoding_type {
   SIMDUTF_ENCODING_UNSPECIFIED = 0,
   SIMDUTF_ENCODING_UTF8 = 1,
@@ -142,6 +156,15 @@ size_t simdutf_latin1_length_from_utf8(const char *input, size_t length);
 size_t simdutf_latin1_length_from_utf16(size_t length);
 size_t simdutf_latin1_length_from_utf32(size_t length);
 size_t simdutf_utf16_length_from_utf8(const char *input, size_t length);
+/* UTF-16 length of a possibly ill-formed UTF-8 string, plus the byte index of
+   up to SIMDUTF_UTF8_TO_UTF16_MAX_ERRORS ill-formed subsequences. count is
+   always the number of char16_t, at most `length`. error is SIMDUTF_SUCCESS
+   when the input is valid, otherwise the first UTF-8 error. Endian-independent.
+   Pass the result to simdutf_convert_utf8_to_utf16_with_replacement_with_result
+   (or the le/be variant) on the same bytes. */
+simdutf_utf8_to_utf16_result
+simdutf_utf16_length_from_utf8_with_replacement(const char *input,
+                                                size_t length);
 size_t simdutf_utf32_length_from_utf8(const char *input, size_t length);
 size_t simdutf_utf8_length_from_utf16(const char16_t *input, size_t length);
 size_t simdutf_utf8_length_from_utf32(const char32_t *input, size_t length);
@@ -181,6 +204,32 @@ size_t simdutf_convert_utf8_to_utf16be(const char *input, size_t length,
                                        char16_t *output);
 size_t simdutf_convert_utf8_to_utf16(const char *input, size_t length,
                                      char16_t *output);
+/* Convert possibly ill-formed UTF-8 to UTF-16, replacing each maximal
+   ill-formed subsequence with U+FFFD. These always succeed and return the
+   number of char16_t written. Size the output with
+   simdutf_utf16_length_from_utf8_with_replacement. `length` char16_t is
+   always enough. */
+size_t simdutf_convert_utf8_to_utf16_with_replacement(const char *input,
+                                                      size_t length,
+                                                      char16_t *output);
+size_t simdutf_convert_utf8_to_utf16le_with_replacement(const char *input,
+                                                        size_t length,
+                                                        char16_t *output);
+size_t simdutf_convert_utf8_to_utf16be_with_replacement(const char *input,
+                                                        size_t length,
+                                                        char16_t *output);
+/* Same conversions, using locations from
+   simdutf_utf16_length_from_utf8_with_replacement on this input. locations
+   must not be null. */
+size_t simdutf_convert_utf8_to_utf16_with_replacement_with_result(
+    const char *input, size_t length, char16_t *output,
+    const simdutf_utf8_to_utf16_result *locations);
+size_t simdutf_convert_utf8_to_utf16le_with_replacement_with_result(
+    const char *input, size_t length, char16_t *output,
+    const simdutf_utf8_to_utf16_result *locations);
+size_t simdutf_convert_utf8_to_utf16be_with_replacement_with_result(
+    const char *input, size_t length, char16_t *output,
+    const simdutf_utf8_to_utf16_result *locations);
 
 size_t simdutf_convert_utf8_to_utf32(const char *input, size_t length,
                                      char32_t *output);
