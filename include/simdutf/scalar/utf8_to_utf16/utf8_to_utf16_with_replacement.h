@@ -86,7 +86,10 @@ simdutf_constexpr23 size_t transcode_with_replacement(
   auto store = [&](uint32_t c) {
     if (c >= 0x10000) {
       c -= 0x10000;
-      const uint16_t high = uint16_t(0xD800 + (c >> 10));
+      // The mask is a no-op (c < 0x100000). It stops clang 18's SLP
+      // vectorizer on RISC-V V from narrowing c to 16 bits before
+      // the shift, which drops bits 16-19 of the code point.
+      const uint16_t high = uint16_t(0xD800 + ((c >> 10) & 0x3FF));
       const uint16_t low = uint16_t(0xDC00 + (c & 0x3FF));
       if constexpr (write) {
         utf16_output[written] =

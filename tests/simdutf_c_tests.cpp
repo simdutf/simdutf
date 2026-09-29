@@ -371,9 +371,10 @@ TEST(convert_utf8_to_utf16_with_replacement_c) {
                size_t(3));
   ASSERT_EQUAL(simdutf_convert_utf8_to_utf16be_with_replacement(bad, 3, be),
                size_t(3));
-  ASSERT_EQUAL(le[0], u'A');
-  ASSERT_EQUAL(be[0], char16_t(0x4100));
-  ASSERT_EQUAL(be[1], char16_t(0xFDFF));
+  ASSERT_EQUAL(le[0], to_utf16le(u'A'));
+  ASSERT_EQUAL(le[1], to_utf16le(char16_t(0xFFFD)));
+  ASSERT_EQUAL(be[0], to_utf16be(u'A'));
+  ASSERT_EQUAL(be[1], to_utf16be(char16_t(0xFFFD)));
 
   const char valid[] = "hello";
   char16_t hello[8] = {};

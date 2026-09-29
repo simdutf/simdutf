@@ -391,9 +391,15 @@ TEST(constexpr_length_and_convert) {
 
   constexpr converted3 converted_be = convert_bad_be();
   static_assert(converted_be.n == 3);
+  #if SIMDUTF_IS_BIG_ENDIAN
+  static_assert(converted_be.out[0] == u'A');
+  static_assert(converted_be.out[1] == char16_t(0xFFFD));
+  static_assert(converted_be.out[2] == u'B');
+  #else
   static_assert(converted_be.out[0] == char16_t(0x4100));
   static_assert(converted_be.out[1] == char16_t(0xFDFF));
   static_assert(converted_be.out[2] == char16_t(0x4200));
+  #endif
 
   constexpr std::array<char, 4> emoji{char(0xF0), char(0x9F), char(0x98),
                                       char(0x80)};
