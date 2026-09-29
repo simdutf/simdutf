@@ -1129,68 +1129,28 @@ simdutf_warn_unused result implementation::convert_utf8_to_utf16be_with_errors(
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16le(
     const char *buf, size_t len, char16_t *utf16_output) const noexcept {
+  // Same kernel as convert_utf8_to_utf16le, with the checks compiled out. It
+  // is faster than valid_utf8_to_fixed_length, which goes through UTF-32.
   utf8_to_utf16_result ret =
-      icelake::valid_utf8_to_fixed_length<endianness::LITTLE, char16_t>(
+      fast_avx512_convert_utf8_to_utf16<endianness::LITTLE, false>(
           buf, len, utf16_output);
-  size_t saved_bytes = ret.second - utf16_output;
-  const char *end = buf + len;
-  if (ret.first == end) {
-    return saved_bytes;
+  if (ret.second == nullptr) {
+    return 0; // only invalid input can get here
   }
-
-  // Note: AVX512 procedure looks up 4 bytes forward, and
-  //       correctly converts multi-byte chars even if their
-  //       continuation bytes lie outsiede 16-byte window.
-  //       It meas, we have to skip continuation bytes from
-  //       the beginning ret.first, as they were already consumed.
-  while (ret.first != end && ((uint8_t(*ret.first) & 0xc0) == 0x80)) {
-    ret.first += 1;
-  }
-
-  if (ret.first != end) {
-    const size_t scalar_saved_bytes =
-        scalar::utf8_to_utf16::convert_valid<endianness::LITTLE>(
-            ret.first, len - (ret.first - buf), ret.second);
-    if (scalar_saved_bytes == 0) {
-      return 0;
-    }
-    saved_bytes += scalar_saved_bytes;
-  }
-
-  return saved_bytes;
+  return ret.second - utf16_output;
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf8_to_utf16be(
     const char *buf, size_t len, char16_t *utf16_output) const noexcept {
+  // Same kernel as convert_utf8_to_utf16be, with the checks compiled out. It
+  // is faster than valid_utf8_to_fixed_length, which goes through UTF-32.
   utf8_to_utf16_result ret =
-      icelake::valid_utf8_to_fixed_length<endianness::BIG, char16_t>(
-          buf, len, utf16_output);
-  size_t saved_bytes = ret.second - utf16_output;
-  const char *end = buf + len;
-  if (ret.first == end) {
-    return saved_bytes;
+      fast_avx512_convert_utf8_to_utf16<endianness::BIG, false>(buf, len,
+                                                                utf16_output);
+  if (ret.second == nullptr) {
+    return 0; // only invalid input can get here
   }
-
-  // Note: AVX512 procedure looks up 4 bytes forward, and
-  //       correctly converts multi-byte chars even if their
-  //       continuation bytes lie outsiede 16-byte window.
-  //       It meas, we have to skip continuation bytes from
-  //       the beginning ret.first, as they were already consumed.
-  while (ret.first != end && ((uint8_t(*ret.first) & 0xc0) == 0x80)) {
-    ret.first += 1;
-  }
-
-  if (ret.first != end) {
-    const size_t scalar_saved_bytes =
-        scalar::utf8_to_utf16::convert_valid<endianness::BIG>(
-            ret.first, len - (ret.first - buf), ret.second);
-    if (scalar_saved_bytes == 0) {
-      return 0;
-    }
-    saved_bytes += scalar_saved_bytes;
-  }
-
-  return saved_bytes;
+  return ret.second - utf16_output;
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 

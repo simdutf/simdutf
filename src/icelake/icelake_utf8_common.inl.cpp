@@ -15,8 +15,12 @@ using utf8_to_utf32_result = std::pair<const char *, uint32_t *>;
 
     The provided in and out pointers are advanced according to how many input
     bytes have been processed, upon success.
+
+    When validate = false, the input must be valid UTF-8: the checks are
+    compiled out and the function always returns true.
 */
-template <block_processing_mode tail, endianness big_endian>
+template <block_processing_mode tail, endianness big_endian,
+          bool validate = true>
 simdutf_really_inline bool
 process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap) {
   // constants
@@ -109,7 +113,7 @@ process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap) {
       m234, input, mask_c2c2c2c2,
       _MM_CMPINT_LT); // 0xc0 <= input < 0xc2 (illegal two byte sequence)
                       // Overlong 2-byte sequence
-  if (_ktestz_mask64_u8(milltwobytes, milltwobytes) == 0) {
+  if (validate && _ktestz_mask64_u8(milltwobytes, milltwobytes) == 0) {
     // Overlong 2-byte sequence
     return false;
   }
@@ -143,12 +147,12 @@ process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap) {
         // the presence of a 1 bit indicates that they overlap.
         // _kortestz_mask64_u8: compute the bitwise OR of 64-bit masksand return
         // 1 if all zeroes.
-        if (!_kortestz_mask64_u8(xnormcm1234, xnormcm1234)) {
+        if (validate && !_kortestz_mask64_u8(xnormcm1234, xnormcm1234)) {
           return false;
         }
       } else {
         __mmask64 bxorm1234 = _kxor_mask64(b, m1234);
-        if (mc != bxorm1234) {
+        if (validate && mc != bxorm1234) {
           return false;
         }
       }
@@ -222,7 +226,7 @@ process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap) {
         __m512i Moutminusd800 = _mm512_sub_epi16(Wout, mask_d800d800);
         __mmask32 M3s =
             _mm512_mask_cmplt_epu16_mask(M3, Moutminusd800, mask_08000800);
-        if (_kor_mask32(Msmall800, M3s)) {
+        if (validate && _kor_mask32(Msmall800, M3s)) {
           return false;
         }
       }
@@ -321,12 +325,12 @@ process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap) {
       // the presence of a 1 bit indicates that they overlap.
       // _kortestz_mask64_u8: compute the bitwise OR of 64-bit masksand return 1
       // if all zeroes.
-      if (!_kortestz_mask64_u8(xnormcm1234, xnormcm1234)) {
+      if (validate && !_kortestz_mask64_u8(xnormcm1234, xnormcm1234)) {
         return false;
       }
     } else {
       __mmask64 bxorm1234 = _kxor_mask64(b, m1234);
-      if (mc != bxorm1234) {
+      if (validate && mc != bxorm1234) {
         return false;
       }
     }
@@ -346,7 +350,7 @@ process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap) {
       __m512i mask_04000400 = _mm512_set1_epi32(0x04000400);
       __mmask32 M4s =
           _mm512_mask_cmpge_epu16_mask(Mhi, Moutminusd800, mask_04000400);
-      if (!_kortestz_mask32_u8(M4s, _kor_mask32(Msmall800, M3s))) {
+      if (validate && !_kortestz_mask32_u8(M4s, _kor_mask32(Msmall800, M3s))) {
         return false;
       }
     }
@@ -373,12 +377,12 @@ process_block_utf8_to_utf16(const char *&in, char16_t *&out, size_t gap) {
   if (tail == SIMDUTF_FULL) {
     __mmask64 xnor234leading =
         _kxnor_mask64(_kshiftli_mask64(m234, 1), leading);
-    if (!_kortestz_mask64_u8(xnor234leading, xnor234leading)) {
+    if (validate && !_kortestz_mask64_u8(xnor234leading, xnor234leading)) {
       return false;
     }
   } else {
     __mmask64 bxorleading = _kxor_mask64(b, leading);
-    if (_kshiftli_mask64(m234, 1) != bxorleading) {
+    if (validate && _kshiftli_mask64(m234, 1) != bxorleading) {
       return false;
     }
   }
