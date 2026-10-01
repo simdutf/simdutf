@@ -1,4 +1,4 @@
-name: GitHub Pages site + Doxygen API
+name: GitHub Pages site + MrDocs API
 
 on:
   release:
@@ -19,6 +19,12 @@ permissions:
   pages: write
   id-token: write
 
+env:
+  # MrDocs build to install. We track "develop-release" because the
+  # `addons-supplemental` template overlay (mrdocs.yml) used to ship only our
+  # single customized wrapper is not yet in a tagged release (>0.8.0).
+  MRDOCS_RELEASE: "develop-release"
+
 jobs:
   deploy:
     environment:
@@ -27,19 +33,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Install Doxygen
-        run: sudo apt-get install doxygen graphviz python3 -y
-      - name: Generate Doxygen Documentation
-        run: ./doxygen.py
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y cmake g++ python3
+      - name: Install MrDocs
+        run: |
+          curl -fsSL \
+            "https://github.com/cppalliance/mrdocs/releases/download/${MRDOCS_RELEASE}/MrDocs-develop-Linux.tar.gz" \
+            -o mrdocs.tar.gz
+          mkdir -p "$HOME/mrdocs"
+          tar -xzf mrdocs.tar.gz -C "$HOME/mrdocs" --strip-components=1
+          echo "$HOME/mrdocs/bin" >> "$GITHUB_PATH"
+      - name: Generate API reference with MrDocs
+        run: ./scripts/build_api_docs.sh
       - name: Assemble Pages site
         run: |
-          # Landing page lives at /
-          # Doxygen API reference lives at /api/
+          # Static landing page lives at /
+          # MrDocs API reference lives at /api/
           mkdir -p _site
           cp -r site/. _site/
           mkdir -p _site/api
-          cp -r doc/api/html/. _site/api/
-          # Make sure the static landing page wins at the root.
+          cp -r doc/mrdocs-html/. _site/api/
           ls -la _site
           ls -la _site/api | head
       - name: Deploy to GitHub Pages

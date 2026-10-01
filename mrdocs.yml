@@ -1,0 +1,69 @@
+# $schema: https://mrdocs.com/docs/mrdocs/develop/_attachments/mrdocs.schema.json
+#
+# Experimental MrDocs configuration (alternative to Doxygen).
+# Generate with:  mrdocs mrdocs.yml
+# Output lands in doc/mrdocs-html so it does not clobber the Doxygen
+# output in doc/api/html.
+
+source-root: .
+compilation-database: build_mrdocs/compile_commands.json
+output: doc/mrdocs-html
+
+generator: html
+multipage: true
+
+# Custom addons: the stock html generator emits unstyled HTML, so we overlay a
+# single template (mrdocs-addons/generator/html/layouts/wrapper.html.hbs) for
+# the header/sidebar/nav structure. `addons-supplemental` layers our addon on
+# top of the bundled defaults (last-wins), so we only ship the one file we
+# override -- everything else is inherited. Requires MrDocs >= the develop build
+# (the addons-supplemental overlay is not in the 0.8.0 release).
+addons-supplemental:
+  - mrdocs-addons
+
+# Styling lives in an external stylesheet rather than inlined in the wrapper
+# template. With linkcss the file is copied to <output>/css/ and referenced
+# from each page via a <link> tag (cached across pages, smaller HTML).
+stylesheets:
+  - doc/mrdocs.css
+linkcss: true
+
+# Only document the public API declared under include/.
+input:
+  - include
+
+# Restrict to the public simdutf namespace; drop internal machinery.
+include-symbols:
+  - 'simdutf::**'
+
+# simdutf::detail and simdutf::internal leak into public-API signatures, so they
+# cannot simply be excluded: detail::input_span_of_byte_like appears as a
+# parameter concept on many free functions, and internal::available_implementation_list
+# / internal::atomic_ptr are the return types of get_available_implementations()
+# and get_active_implementation(). `implementation-defined` keeps these symbols
+# in the corpus -- so the references from those signatures resolve and render as
+# /* implementation-defined */ -- while giving them no page of their own.
+# exclude-symbols would drop them entirely, leaving every signature that names
+# one with a dangling reference.
+implementation-defined:
+  - 'simdutf::detail'
+  - 'simdutf::detail::**'
+  - 'simdutf::internal'
+  - 'simdutf::internal::**'
+
+# scalar and tables only appear inside inline function bodies (which MrDocs does
+# not extract), never in a public signature, so excluding them outright leaves
+# no dangling references behind.
+exclude-symbols:
+  - 'simdutf::scalar::**'
+  - 'simdutf::tables'
+  - 'simdutf::tables::**'
+
+extract-all: true
+warn-if-undocumented: false
+
+# NOTE: the bundled Clang has no default sysroot and may fail to find libc
+# headers such as <strings.h>. scripts/build_api_docs.sh handles this:
+# `--libc-includes=$(xcrun --show-sdk-path)/usr/include` on macOS, and
+# `--use-system-libc` on Linux (needed on distros like Fedora whose include
+# layout the bundled Clang does not probe out of the box).
