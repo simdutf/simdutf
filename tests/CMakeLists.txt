@@ -466,6 +466,10 @@ add_cpp_test(convert_utf16_to_utf8_with_replacement_tests)
 target_link_libraries(convert_utf16_to_utf8_with_replacement_tests
   PUBLIC simdutf::tests::helpers)
 
+add_cpp_test(convert_utf8_to_utf16_with_replacement_tests)
+target_link_libraries(convert_utf8_to_utf16_with_replacement_tests
+  PUBLIC simdutf::tests::helpers)
+
 add_cpp_test(fixed_string_tests)
 target_link_libraries(fixed_string_tests
   PUBLIC simdutf::tests::helpers

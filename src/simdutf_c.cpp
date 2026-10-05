@@ -25,6 +25,40 @@ static simdutf_full_result to_c_full_result(const simdutf::full_result &r) {
   return out;
 }
 
+static_assert(simdutf::utf8_to_utf16_result::max_errors ==
+                  SIMDUTF_UTF8_TO_UTF16_MAX_ERRORS,
+              "C and C++ UTF-8 to UTF-16 error caps differ");
+
+static simdutf_utf8_to_utf16_result
+to_c_utf8_to_utf16_result(const simdutf::utf8_to_utf16_result &r) {
+  simdutf_utf8_to_utf16_result out;
+  out.error = static_cast<simdutf_error_code>(r.error);
+  out.count = r.count;
+  out.error_count = r.error_count;
+  out.more_errors = r.more_errors;
+  for (size_t i = 0; i < SIMDUTF_UTF8_TO_UTF16_MAX_ERRORS; i++) {
+    out.error_offset[i] = r.error_offset[i];
+  }
+  return out;
+}
+
+static simdutf::utf8_to_utf16_result
+from_c_utf8_to_utf16_result(const simdutf_utf8_to_utf16_result *r) {
+  simdutf::utf8_to_utf16_result out;
+  out.error = static_cast<simdutf::error_code>(r->error);
+  out.count = r->count;
+  out.error_count = r->error_count;
+  out.more_errors = r->more_errors;
+  if (out.error_count > simdutf::utf8_to_utf16_result::max_errors) {
+    out.error_count = simdutf::utf8_to_utf16_result::max_errors;
+    out.more_errors = true;
+  }
+  for (size_t i = 0; i < out.error_count; i++) {
+    out.error_offset[i] = r->error_offset[i];
+  }
+  return out;
+}
+
 /* The C wrapper depends on the library features. Only expose the C API
    when all relevant feature is enabled. This helps the
    single-header generator to omit the C wrapper when features are
@@ -153,6 +187,12 @@ size_t simdutf_latin1_length_from_utf32(size_t length) {
 size_t simdutf_utf16_length_from_utf8(const char *input, size_t length) {
   return simdutf::utf16_length_from_utf8(input, length);
 }
+simdutf_utf8_to_utf16_result
+simdutf_utf16_length_from_utf8_with_replacement(const char *input,
+                                                size_t length) {
+  return to_c_utf8_to_utf16_result(
+      simdutf::utf16_length_from_utf8_with_replacement(input, length));
+}
 size_t simdutf_utf32_length_from_utf8(const char *input, size_t length) {
   return simdutf::utf32_length_from_utf8(input, length);
 }
@@ -230,6 +270,47 @@ size_t simdutf_convert_utf8_to_utf16le(const char *input, size_t length,
 size_t simdutf_convert_utf8_to_utf16(const char *input, size_t length,
                                      char16_t *output) {
   return simdutf::convert_utf8_to_utf16(input, length, output);
+}
+size_t simdutf_convert_utf8_to_utf16_with_replacement(const char *input,
+                                                      size_t length,
+                                                      char16_t *output) {
+  return simdutf::convert_utf8_to_utf16_with_replacement(input, length, output);
+}
+size_t simdutf_convert_utf8_to_utf16le_with_replacement(const char *input,
+                                                        size_t length,
+                                                        char16_t *output) {
+  return simdutf::convert_utf8_to_utf16le_with_replacement(input, length,
+                                                           output);
+}
+size_t simdutf_convert_utf8_to_utf16be_with_replacement(const char *input,
+                                                        size_t length,
+                                                        char16_t *output) {
+  return simdutf::convert_utf8_to_utf16be_with_replacement(input, length,
+                                                           output);
+}
+size_t simdutf_convert_utf8_to_utf16_with_replacement_with_result(
+    const char *input, size_t length, char16_t *output,
+    const simdutf_utf8_to_utf16_result *locations) {
+  const simdutf::utf8_to_utf16_result plan =
+      from_c_utf8_to_utf16_result(locations);
+  return simdutf::convert_utf8_to_utf16_with_replacement(input, length, output,
+                                                         plan);
+}
+size_t simdutf_convert_utf8_to_utf16le_with_replacement_with_result(
+    const char *input, size_t length, char16_t *output,
+    const simdutf_utf8_to_utf16_result *locations) {
+  const simdutf::utf8_to_utf16_result plan =
+      from_c_utf8_to_utf16_result(locations);
+  return simdutf::convert_utf8_to_utf16le_with_replacement(input, length,
+                                                           output, plan);
+}
+size_t simdutf_convert_utf8_to_utf16be_with_replacement_with_result(
+    const char *input, size_t length, char16_t *output,
+    const simdutf_utf8_to_utf16_result *locations) {
+  const simdutf::utf8_to_utf16_result plan =
+      from_c_utf8_to_utf16_result(locations);
+  return simdutf::convert_utf8_to_utf16be_with_replacement(input, length,
+                                                           output, plan);
 }
 size_t simdutf_convert_utf8_to_utf16be(const char *input, size_t length,
                                        char16_t *output) {

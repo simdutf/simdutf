@@ -2469,6 +2469,7 @@ simdutf_warn_unused size_t utf16_length_from_utf8(const char *input,
                                                   size_t length) noexcept {
   return get_default_implementation()->utf16_length_from_utf8(input, length);
 }
+  #include "utf8_to_utf16_with_replacement.inl.h"
 simdutf_warn_unused result utf8_length_from_utf16le_with_replacement(
     const char16_t *input, size_t length) noexcept {
   return get_default_implementation()

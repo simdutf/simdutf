@@ -814,7 +814,7 @@ simdutf_warn_unused size_t count_utf8(const char * input, size_t length) noexcep
 
 ```
 
-Prior to transcoding an input, you need to allocate enough memory to receive the result. We have fast function that scan the input and compute the size of the output. These include `utf8_length_from_latin1`, `latin1_length_from_utf8`, `utf16_length_from_utf8`, `utf32_length_from_utf8`, `utf8_length_from_utf16` (and LE/BE variants), `utf16_length_from_utf32`, `utf32_length_from_utf16` (LE/BE), and several others. Most functions do not validate the input and may return implementation-defined results for invalid strings. Special `_with_replacement` variants for UTF-16 to UTF-8 length computation return a `simdutf::result` struct containing both the required byte count and a `SURROGATE` flag when the input contains surrogates (matched or not), allowing safe handling with the replacement character `U+FFFD` while still providing the correct output length. These helper functions are designed to be called before actual transcoding to pre-allocate properly sized output buffers.
+Prior to transcoding an input, you need to allocate enough memory to receive the result. We have fast function that scan the input and compute the size of the output. These include `utf8_length_from_latin1`, `latin1_length_from_utf8`, `utf16_length_from_utf8`, `utf32_length_from_utf8`, `utf8_length_from_utf16` (and LE/BE variants), `utf16_length_from_utf32`, `utf32_length_from_utf16` (LE/BE), and several others. Most functions do not validate the input and may return implementation-defined results for invalid strings. Special `_with_replacement` variants for UTF-16 to UTF-8 length computation return a `simdutf::result` struct containing both the required byte count and a `SURROGATE` flag when the input contains surrogates (matched or not), allowing safe handling with the replacement character `U+FFFD` while still providing the correct output length. `utf16_length_from_utf8_with_replacement` returns a `simdutf::utf8_to_utf16_result`: `count` is the exact UTF-16 length, `error` is the first UTF-8 error code (or `SUCCESS`), and `error_offset` stores the byte index of up to 16 ill-formed subsequences. Pass that value to `convert_utf8_to_utf16_with_replacement`. These helper functions are designed to be called before actual transcoding to pre-allocate properly sized output buffers.
 
 
 
@@ -2082,6 +2082,24 @@ If, instead of failing on invalid input, you would rather replace unpaired surro
   }
 ```
 
+Ill-formed UTF-8 is handled the same way, one maximal subpart at a time (the Unicode / WHATWG rule). Each subpart becomes a single U+FFFD, so the UTF-16 output is never longer than the input: `length` char16_t is always enough. The length does not depend on endianness. The length result records the byte offset of up to 16 ill-formed subsequences. Passing it to the conversion uses those offsets instead of locating the same subsequences again. `convert_utf8_to_utf16le_with_replacement` and `convert_utf8_to_utf16be_with_replacement` select the endianness explicitly.
+
+```cpp
+  const char source[] = {'c', 'a', 'f', '\xff'};
+  size_t length = 4;
+  simdutf::utf8_to_utf16_result res =
+      simdutf::utf16_length_from_utf8_with_replacement(source, length);
+  std::unique_ptr<char16_t[]> utf16{new char16_t[res.count]};
+  size_t written = simdutf::convert_utf8_to_utf16_with_replacement(
+      source, length, utf16.get(), res);
+  if (res.error != simdutf::error_code::SUCCESS) {
+    std::cerr << "invalid UTF-8 was replaced with U+FFFD" << std::endl;
+  }
+  // written == res.count. res.error is HEADER_BITS for this input.
+  // res.error_count is 1 and res.error_offset[0] is 3.
+```
+
+When the UTF-8 is known to be valid, `utf16_length_from_utf8` and `convert_utf8_to_utf16` remain the right functions. The replacement length pass validates the whole input, which is extra work on valid non-ASCII text.
 
 ## Cost of the safe conversion functions
 
