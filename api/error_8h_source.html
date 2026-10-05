@@ -264,12 +264,33 @@ $(document).ready(function(){initNavTree('error_8h_source.html',''); initResizab
 <div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>};</div>
 </div>
 <div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span> </div>
-<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>} <span class="comment">// namespace simdutf</span></div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span><span class="comment">// UTF-16 size of a possibly ill-formed UTF-8 string, plus the first few</span></div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span><span class="comment">// ill-formed subsequences. Pass this to convert_utf8_to_utf16_with_replacement</span></div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span><span class="comment">// on the same bytes. error_offset entries are byte indexes from the start of</span></div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span><span class="comment">// that input. count is always the full number of char16_t. more_errors is</span></div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span><span class="comment">// true when the input has ill-formed subsequences past the stored ones.</span></div>
+<div class="foldopen" id="foldopen00161" data-start="{" data-end="};">
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno"><a class="line" href="structsimdutf_1_1utf8__to__utf16__result.html">  161</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structsimdutf_1_1utf8__to__utf16__result.html">utf8_to_utf16_result</a> {</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>  <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">size_t</span> max_errors = 16;</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>  error_code error;</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>  <span class="keywordtype">size_t</span> count;</div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>  <span class="keywordtype">size_t</span> error_count;</div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>  <span class="keywordtype">bool</span> more_errors;</div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>  <span class="keywordtype">size_t</span> error_offset[max_errors];</div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span> </div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>  simdutf_really_inline simdutf_constexpr23 <a class="code hl_struct" href="structsimdutf_1_1utf8__to__utf16__result.html">utf8_to_utf16_result</a>() noexcept</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>      : error{error_code::SUCCESS}, count{0}, error_count{0},</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>        more_errors{<span class="keyword">false</span>}, error_offset{} {}</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>};</div>
+</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span> </div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>} <span class="comment">// namespace simdutf</span></div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="anamespacesimdutf_html"><div class="ttname"><a href="namespacesimdutf.html">simdutf</a></div><div class="ttdoc">helpers placed in namespace detail are not a part of the public API</div><div class="ttdef"><b>Definition</b> <a href="base64__implementation_8h_source.html#l00008">base64_implementation.h:8</a></div></div>
 <div class="ttc" id="astructsimdutf_1_1full__result_html"><div class="ttname"><a href="structsimdutf_1_1full__result.html">simdutf::full_result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00098">error.h:98</a></div></div>
 <div class="ttc" id="astructsimdutf_1_1result_html"><div class="ttname"><a href="structsimdutf_1_1result.html">simdutf::result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00076">error.h:76</a></div></div>
 <div class="ttc" id="astructsimdutf_1_1utf8__result_html"><div class="ttname"><a href="structsimdutf_1_1utf8__result.html">simdutf::utf8_result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00126">error.h:126</a></div></div>
+<div class="ttc" id="astructsimdutf_1_1utf8__to__utf16__result_html"><div class="ttname"><a href="structsimdutf_1_1utf8__to__utf16__result.html">simdutf::utf8_to_utf16_result</a></div><div class="ttdef"><b>Definition</b> <a href="error_8h_source.html#l00161">error.h:161</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

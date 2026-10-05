@@ -188,29 +188,32 @@ $(document).ready(function(){initNavTree('valid__utf8__to__utf16_8h_source.html'
 <div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>                            ((uint8_t(data[pos + 2]) &amp; 0b00111111) &lt;&lt; 6) |</div>
 <div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>                            (uint8_t(data[pos + 3]) &amp; 0b00111111);</div>
 <div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>      code_point -= 0x10000;</div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>      uint16_t high_surrogate = uint16_t(0xD800 + (code_point &gt;&gt; 10));</div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>      uint16_t low_surrogate = uint16_t(0xDC00 + (code_point &amp; 0x3FF));</div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>      <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (!match_system(big_endian)) {</div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>        high_surrogate = u16_swap_bytes(high_surrogate);</div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>        low_surrogate = u16_swap_bytes(low_surrogate);</div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>      }</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>      *utf16_output++ = char16_t(high_surrogate);</div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>      *utf16_output++ = char16_t(low_surrogate);</div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>      pos += 4;</div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>      <span class="comment">// we may have a continuation but we do not do error checking</span></div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>      <span class="keywordflow">return</span> 0;</div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    }</div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>  }</div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>  <span class="keywordflow">return</span> utf16_output - start;</div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>}</div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span> </div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>} <span class="comment">// namespace utf8_to_utf16</span></div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>} <span class="comment">// unnamed namespace</span></div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>} <span class="comment">// namespace scalar</span></div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>} <span class="comment">// namespace simdutf</span></div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span> </div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>      <span class="comment">// The mask is a no-op (code_point &lt; 0x100000). It stops clang 18&#39;s SLP</span></div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>      <span class="comment">// vectorizer on RISC-V V from narrowing code_point to 16 bits before</span></div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>      <span class="comment">// the shift, which drops bits 16-19 of the code point.</span></div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>      uint16_t high_surrogate = uint16_t(0xD800 + ((code_point &gt;&gt; 10) &amp; 0x3FF));</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>      uint16_t low_surrogate = uint16_t(0xDC00 + (code_point &amp; 0x3FF));</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>      <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (!match_system(big_endian)) {</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>        high_surrogate = u16_swap_bytes(high_surrogate);</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>        low_surrogate = u16_swap_bytes(low_surrogate);</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>      }</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>      *utf16_output++ = char16_t(high_surrogate);</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>      *utf16_output++ = char16_t(low_surrogate);</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>      pos += 4;</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>      <span class="comment">// we may have a continuation but we do not do error checking</span></div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>      <span class="keywordflow">return</span> 0;</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    }</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>  }</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>  <span class="keywordflow">return</span> utf16_output - start;</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>}</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>} <span class="comment">// namespace utf8_to_utf16</span></div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>} <span class="comment">// unnamed namespace</span></div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>} <span class="comment">// namespace scalar</span></div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>} <span class="comment">// namespace simdutf</span></div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span> </div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="anamespacesimdutf_html"><div class="ttname"><a href="namespacesimdutf.html">simdutf</a></div><div class="ttdoc">helpers placed in namespace detail are not a part of the public API</div><div class="ttdef"><b>Definition</b> <a href="base64__implementation_8h_source.html#l00008">base64_implementation.h:8</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
