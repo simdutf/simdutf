@@ -9,6 +9,7 @@ result generic_validate_ascii_with_errors(const char *input, size_t length) {
   while (reader.has_full_block()) {
     simd::simd8x64<uint8_t> in(reader.full_block());
     if (!in.is_ascii()) {
+      SIMDUTF_VZEROUPPER();
       result res = scalar::ascii::validate_with_errors(
           reinterpret_cast<const char *>(input + count), length - count);
       return result(res.error, count + res.count);
@@ -21,6 +22,7 @@ result generic_validate_ascii_with_errors(const char *input, size_t length) {
   reader.get_remainder(block);
   simd::simd8x64<uint8_t> in(block);
   if (!in.is_ascii()) {
+    SIMDUTF_VZEROUPPER();
     result res = scalar::ascii::validate_with_errors(
         reinterpret_cast<const char *>(input + count), length - count);
     return result(res.error, count + res.count);

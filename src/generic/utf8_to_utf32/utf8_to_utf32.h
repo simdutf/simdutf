@@ -202,6 +202,7 @@ struct validating_transcoder {
       return 0;
     }
     if (pos < size) {
+      SIMDUTF_VZEROUPPER();
       size_t howmany =
           scalar::utf8_to_utf32::convert(in + pos, size - pos, utf32_output);
       if (howmany == 0) {
@@ -255,6 +256,7 @@ struct validating_transcoder {
         }
         uint64_t utf8_continuation_mask = input.lt(-65 + 1);
         if (errors() || (utf8_continuation_mask & 1)) {
+          SIMDUTF_VZEROUPPER();
           result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(
               pos, in + pos, size - pos, utf32_output);
           res.count += pos;
@@ -289,12 +291,14 @@ struct validating_transcoder {
       }
     }
     if (errors()) {
+      SIMDUTF_VZEROUPPER();
       result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(
           pos, in + pos, size - pos, utf32_output);
       res.count += pos;
       return res;
     }
     if (pos < size) {
+      SIMDUTF_VZEROUPPER();
       result res = scalar::utf8_to_utf32::rewind_and_convert_with_errors(
           pos, in + pos, size - pos, utf32_output);
       if (res.error) { // In case of error, we want the error position
