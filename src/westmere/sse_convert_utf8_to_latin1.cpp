@@ -4,9 +4,9 @@
 // end of the code points. Only the least significant 12 bits of the mask
 // are accessed.
 // It returns how many bytes were consumed (up to 12).
-size_t convert_masked_utf8_to_latin1(const char *input,
-                                     uint64_t utf8_end_of_code_point_mask,
-                                     char *&latin1_output) {
+simdutf_really_inline size_t convert_masked_utf8_to_latin1(
+    const char *input, uint64_t utf8_end_of_code_point_mask,
+    char *&latin1_output) {
   // we use an approach where we try to process up to 12 input bytes.
   // Why 12 input bytes and not 16? Because we are concerned with the size of
   // the lookup tables. Also 12 is nicely divisible by two and three.
