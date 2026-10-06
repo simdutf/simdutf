@@ -191,6 +191,7 @@ struct validating_transcoder {
       return 0;
     }
     if (pos < size) {
+      SIMDUTF_VZEROUPPER();
       size_t howmany =
           scalar::utf8_to_latin1::convert(in + pos, size - pos, latin1_output);
       if (howmany == 0) {
@@ -243,6 +244,7 @@ struct validating_transcoder {
           this->check_utf8_bytes(input.chunks[3], input.chunks[2]);
         }
         if (errors()) {
+          SIMDUTF_VZEROUPPER();
           // rewind_and_convert_with_errors will seek a potential error from
           // in+pos onward, with the ability to go back up to pos bytes, and
           // read size-pos bytes forward.
@@ -281,6 +283,7 @@ struct validating_transcoder {
       }
     }
     if (errors()) {
+      SIMDUTF_VZEROUPPER();
       // rewind_and_convert_with_errors will seek a potential error from in+pos
       // onward, with the ability to go back up to pos bytes, and read size-pos
       // bytes forward.
@@ -290,6 +293,7 @@ struct validating_transcoder {
       return res;
     }
     if (pos < size) {
+      SIMDUTF_VZEROUPPER();
       // rewind_and_convert_with_errors will seek a potential error from in+pos
       // onward, with the ability to go back up to pos bytes, and read size-pos
       // bytes forward.
