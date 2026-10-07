@@ -1527,17 +1527,7 @@ simdutf_warn_unused size_t implementation::convert_utf16le_to_utf32(
   if (!std::get<2>(ret)) {
     return 0;
   }
-  size_t saved_bytes = std::get<1>(ret) - utf32_output;
-  if (std::get<0>(ret) != buf + len) {
-    const size_t scalar_saved_bytes =
-        scalar::utf16_to_utf32::convert<endianness::LITTLE>(
-            std::get<0>(ret), len - (std::get<0>(ret) - buf), std::get<1>(ret));
-    if (scalar_saved_bytes == 0) {
-      return 0;
-    }
-    saved_bytes += scalar_saved_bytes;
-  }
-  return saved_bytes;
+  return std::get<1>(ret) - utf32_output;
 }
 
 simdutf_warn_unused size_t implementation::convert_utf16be_to_utf32(
@@ -1547,17 +1537,7 @@ simdutf_warn_unused size_t implementation::convert_utf16be_to_utf32(
   if (!std::get<2>(ret)) {
     return 0;
   }
-  size_t saved_bytes = std::get<1>(ret) - utf32_output;
-  if (std::get<0>(ret) != buf + len) {
-    const size_t scalar_saved_bytes =
-        scalar::utf16_to_utf32::convert<endianness::BIG>(
-            std::get<0>(ret), len - (std::get<0>(ret) - buf), std::get<1>(ret));
-    if (scalar_saved_bytes == 0) {
-      return 0;
-    }
-    saved_bytes += scalar_saved_bytes;
-  }
-  return saved_bytes;
+  return std::get<1>(ret) - utf32_output;
 }
 
 simdutf_warn_unused result implementation::convert_utf16le_to_utf32_with_errors(
@@ -1572,20 +1552,8 @@ simdutf_warn_unused result implementation::convert_utf16le_to_utf32_with_errors(
     scalar_res.count += (std::get<0>(ret) - buf);
     return scalar_res;
   }
-  size_t saved_bytes = std::get<1>(ret) - utf32_output;
-  if (std::get<0>(ret) != buf + len) {
-    result scalar_res =
-        scalar::utf16_to_utf32::convert_with_errors<endianness::LITTLE>(
-            std::get<0>(ret), len - (std::get<0>(ret) - buf), std::get<1>(ret));
-    if (scalar_res.error) {
-      scalar_res.count += (std::get<0>(ret) - buf);
-      return scalar_res;
-    } else {
-      scalar_res.count += saved_bytes;
-      return scalar_res;
-    }
-  }
-  return simdutf::result(simdutf::SUCCESS, saved_bytes);
+  return simdutf::result(simdutf::SUCCESS,
+                         size_t(std::get<1>(ret) - utf32_output));
 }
 
 simdutf_warn_unused result implementation::convert_utf16be_to_utf32_with_errors(
@@ -1599,20 +1567,8 @@ simdutf_warn_unused result implementation::convert_utf16be_to_utf32_with_errors(
     scalar_res.count += (std::get<0>(ret) - buf);
     return scalar_res;
   }
-  size_t saved_bytes = std::get<1>(ret) - utf32_output;
-  if (std::get<0>(ret) != buf + len) {
-    result scalar_res =
-        scalar::utf16_to_utf32::convert_with_errors<endianness::BIG>(
-            std::get<0>(ret), len - (std::get<0>(ret) - buf), std::get<1>(ret));
-    if (scalar_res.error) {
-      scalar_res.count += (std::get<0>(ret) - buf);
-      return scalar_res;
-    } else {
-      scalar_res.count += saved_bytes;
-      return scalar_res;
-    }
-  }
-  return simdutf::result(simdutf::SUCCESS, saved_bytes);
+  return simdutf::result(simdutf::SUCCESS,
+                         size_t(std::get<1>(ret) - utf32_output));
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16le_to_utf32(
@@ -1623,17 +1579,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16le_to_utf32(
   if (!std::get<2>(ret)) {
     return 0;
   }
-  size_t saved_bytes = std::get<1>(ret) - utf32_output;
-  if (std::get<0>(ret) != buf + len) {
-    const size_t scalar_saved_bytes =
-        scalar::utf16_to_utf32::convert<endianness::LITTLE>(
-            std::get<0>(ret), len - (std::get<0>(ret) - buf), std::get<1>(ret));
-    if (scalar_saved_bytes == 0) {
-      return 0;
-    }
-    saved_bytes += scalar_saved_bytes;
-  }
-  return saved_bytes;
+  return std::get<1>(ret) - utf32_output;
 }
 
 simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_utf32(
@@ -1643,17 +1589,7 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16be_to_utf32(
   if (!std::get<2>(ret)) {
     return 0;
   }
-  size_t saved_bytes = std::get<1>(ret) - utf32_output;
-  if (std::get<0>(ret) != buf + len) {
-    const size_t scalar_saved_bytes =
-        scalar::utf16_to_utf32::convert<endianness::BIG>(
-            std::get<0>(ret), len - (std::get<0>(ret) - buf), std::get<1>(ret));
-    if (scalar_saved_bytes == 0) {
-      return 0;
-    }
-    saved_bytes += scalar_saved_bytes;
-  }
-  return saved_bytes;
+  return std::get<1>(ret) - utf32_output;
 }
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
