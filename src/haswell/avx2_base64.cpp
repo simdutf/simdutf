@@ -61,32 +61,23 @@ simdutf_really_inline __m128i load_12_bytes(const uint8_t *input) {
   return _mm_insert_epi32(value, int(tail), 2);
 }
 
+// Encodes exactly 12 input bytes into 16 output bytes, without reading
+// past input + 12.
 template <bool base64_url>
-simdutf_never_inline size_t encode_base64_tail_12_or_24(uint8_t *output,
-                                                        const uint8_t *input,
-                                                        size_t length) {
-  const size_t consumed = length >= 24 ? 24 : 12;
-  const __m128i lo = load_12_bytes(input);
-  const __m128i hi =
-      consumed == 24 ? load_12_bytes(input + 12) : _mm_setzero_si128();
-  const __m256i shuf =
-      _mm256_set_epi8(10, 11, 9, 10, 7, 8, 6, 7, 4, 5, 3, 4, 1, 2, 0, 1,
-
-                      10, 11, 9, 10, 7, 8, 6, 7, 4, 5, 3, 4, 1, 2, 0, 1);
-  const __m256i in = _mm256_shuffle_epi8(_mm256_set_m128i(hi, lo), shuf);
-  const __m256i t0 = _mm256_and_si256(in, _mm256_set1_epi32(0x0fc0fc00));
+simdutf_never_inline void encode_base64_12(uint8_t *output,
+                                           const uint8_t *input) {
+  const __m128i shuf =
+      _mm_set_epi8(10, 11, 9, 10, 7, 8, 6, 7, 4, 5, 3, 4, 1, 2, 0, 1);
+  const __m128i in = _mm_shuffle_epi8(load_12_bytes(input), shuf);
+  const __m256i in256 = _mm256_castsi128_si256(in);
+  const __m256i t0 = _mm256_and_si256(in256, _mm256_set1_epi32(0x0fc0fc00));
   const __m256i t1 = _mm256_mulhi_epu16(t0, _mm256_set1_epi32(0x04000040));
-  const __m256i t2 = _mm256_and_si256(in, _mm256_set1_epi32(0x003f03f0));
+  const __m256i t2 = _mm256_and_si256(in256, _mm256_set1_epi32(0x003f03f0));
   const __m256i t3 = _mm256_mullo_epi16(t2, _mm256_set1_epi32(0x01000010));
   const __m256i encoded =
       lookup_pshufb_improved<base64_url>(_mm256_or_si256(t1, t3));
-  if (consumed == 24) {
-    _mm256_storeu_si256(reinterpret_cast<__m256i *>(output), encoded);
-  } else {
-    _mm_storeu_si128(reinterpret_cast<__m128i *>(output),
-                     _mm256_castsi256_si128(encoded));
-  }
-  return consumed;
+  _mm_storeu_si128(reinterpret_cast<__m128i *>(output),
+                   _mm256_castsi256_si128(encoded));
 }
 
 simdutf_really_inline __m128i insert_line_feed16(__m128i input, int K) {
@@ -318,17 +309,23 @@ avx2_encode_base64_impl(char *dst, const char *src, size_t srclen,
       out += 128;
     }
   }
-  for (; i + 28 <= srclen; i += 24) {
+  // The high half is loaded 4 bytes early so that we never read past
+  // input + i + 24: its shuffle indices are offset by 4.
+  const __m256i shuf_hi_shifted =
+      _mm256_set_epi8(14, 15, 13, 14, 11, 12, 10, 11, 8, 9, 7, 8, 5, 6, 4, 5,
+
+                      10, 11, 9, 10, 7, 8, 6, 7, 4, 5, 3, 4, 1, 2, 0, 1);
+  for (; i + 24 <= srclen; i += 24) {
     // lo = [xxxx|DDDC|CCBB|BAAA]
-    // hi = [xxxx|HHHG|GGFF|FEEE]
+    // hi = [HHHG|GGFF|FEEE|xxxx]
     const __m128i lo =
         _mm_loadu_si128(reinterpret_cast<const __m128i *>(input + i));
     const __m128i hi =
-        _mm_loadu_si128(reinterpret_cast<const __m128i *>(input + i + 4 * 3));
+        _mm_loadu_si128(reinterpret_cast<const __m128i *>(input + i + 8));
 
     // bytes from groups A, B and C are needed in separate 32-bit lanes
     // in = [0HHH|0GGG|0FFF|0EEE[0DDD|0CCC|0BBB|0AAA]
-    __m256i in = _mm256_shuffle_epi8(_mm256_set_m128i(hi, lo), shuf);
+    __m256i in = _mm256_shuffle_epi8(_mm256_set_m128i(hi, lo), shuf_hi_shifted);
 
     // this part is well commented in encode.sse.cpp
 
@@ -382,10 +379,9 @@ avx2_encode_base64_impl(char *dst, const char *src, size_t srclen,
   }
   if constexpr (!use_lines) {
     if (i + 12 <= srclen) {
-      const size_t consumed =
-          encode_base64_tail_12_or_24<isbase64url>(out, input + i, srclen - i);
-      i += consumed;
-      out += consumed / 3 * 4;
+      encode_base64_12<isbase64url>(out, input + i);
+      i += 12;
+      out += 16;
     }
   }
   return ((char *)out - (char *)dst) +
