@@ -705,24 +705,87 @@ public:
   }
 };
 
+// One bit per byte of the 32 bytes at p: set if the byte is > 0x20 (signed,
+// like the scalar code). spaces holds 0x20 in every byte.
+simdutf_really_inline uint32_t avx2_above_space_mask(const char *p,
+                                                     __m256i spaces) {
+  __m256i data = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(p));
+  return static_cast<uint32_t>(
+      _mm256_movemask_epi8(_mm256_cmpgt_epi8(data, spaces)));
+}
+
 simdutf_warn_unused size_t avx2_binary_length_from_base64(const char *input,
                                                           size_t length) {
+  // Inputs this long count four blocks per step in the vector domain.
+  constexpr size_t vector_count_threshold = 128;
+  // Inputs this long (well past what stays hot in L1 between calls) are
+  // first aligned to 32 bytes: an unaligned 32-byte load straddles two cache
+  // lines every other block, and once the data comes from L2 or beyond these
+  // split loads cost more than the counting.
+  constexpr size_t align_threshold = 1024;
+
   size_t count = 0;
   const char *ptr = input;
   const char *end = input + length;
 
-  __m256i spaces = _mm256_set1_epi8(0x20);
+  const __m256i spaces = _mm256_set1_epi8(0x20);
+
+  // The hint keeps the short-input path straight-line; it costs the long
+  // path one taken jump per call.
+  if (simdutf_unlikely(length >= vector_count_threshold)) {
+    if (length >= align_threshold) {
+      // Bytes up to the next 32-byte boundary, 0..31.
+      const size_t head = (32 - (reinterpret_cast<uintptr_t>(ptr) & 31)) & 31;
+      if (head != 0) {
+        count += count_ones(avx2_above_space_mask(ptr, spaces) &
+                            ((uint32_t(1) << head) - 1));
+        ptr += head;
+      }
+    }
+    // Count four blocks per step; at least 128 bytes remain, so the loop
+    // runs at least once. Each compare yields 0 or -1 per byte; the sum of
+    // four is at least -4, so negating it gives per-byte counts of 0..4 that
+    // vpsadbw adds into 64-bit lanes. This replaces a vpmovmskb, a popcnt
+    // and an add per block.
+    const __m256i zero = _mm256_setzero_si256();
+    __m256i sums = zero;
+    do {
+      const __m256i *p = reinterpret_cast<const __m256i *>(ptr);
+      __m256i neg = _mm256_cmpgt_epi8(_mm256_loadu_si256(p), spaces);
+      neg = _mm256_add_epi8(
+          neg, _mm256_cmpgt_epi8(_mm256_loadu_si256(p + 1), spaces));
+      neg = _mm256_add_epi8(
+          neg, _mm256_cmpgt_epi8(_mm256_loadu_si256(p + 2), spaces));
+      neg = _mm256_add_epi8(
+          neg, _mm256_cmpgt_epi8(_mm256_loadu_si256(p + 3), spaces));
+      sums = _mm256_add_epi64(
+          sums, _mm256_sad_epu8(_mm256_sub_epi8(zero, neg), zero));
+      ptr += 128;
+    } while (size_t(end - ptr) >= 128);
+    const __m128i s = _mm_add_epi64(_mm256_castsi256_si128(sums),
+                                    _mm256_extracti128_si256(sums, 1));
+    count += size_t(_mm_cvtsi128_si64(s)) + size_t(_mm_extract_epi64(s, 1));
+  }
+
+  // Whole blocks left over: at most three after the loop above, or up to
+  // three for a short input.
   while (size_t(end - ptr) >= 32) {
-    __m256i data = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(ptr));
-    __m256i gt_space = _mm256_cmpgt_epi8(data, spaces);
-    uint32_t mask = static_cast<uint32_t>(_mm256_movemask_epi8(gt_space));
-    count += count_ones(mask);
+    count += count_ones(avx2_above_space_mask(ptr, spaces));
     ptr += 32;
   }
 
-  while (ptr < end) {
-    count += (*ptr > 0x20) ? 1 : 0;
-    ptr++;
+  if (ptr != end) {
+    if (length >= 32) {
+      // Fewer than 32 bytes remain: count them in the last 32 bytes of the
+      // input, which end at the same place.
+      const size_t rest = size_t(end - ptr);
+      count +=
+          count_ones(avx2_above_space_mask(end - 32, spaces) >> (32 - rest));
+    } else {
+      do {
+        count += (*ptr > 0x20) ? 1 : 0;
+      } while (++ptr != end);
+    }
   }
 
   size_t padding = 0;
