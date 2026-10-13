@@ -3618,6 +3618,55 @@ TEST(binary_length_from_base64_various_remainders) {
   ASSERT_EQUAL(simdutf::binary_length_from_base64("AAAAAAAA", 8), 6);
 }
 
+TEST(binary_length_from_base64_lengths_and_offsets) {
+  // Exercises every path of the SIMD kernels: short inputs, whole blocks,
+  // the multi-block loops, the alignment head of long inputs and the tail,
+  // with the input at every offset from a 32-byte boundary.
+  const auto reference = [](const char *input, size_t length) {
+    size_t count = 0;
+    for (size_t i = 0; i < length; i++) {
+      count += (input[i] > ' ') ? 1 : 0;
+    }
+    size_t padding = 0;
+    size_t pos = length;
+    while (pos > 0 && padding < 2) {
+      const char c = input[--pos];
+      if (c == '=') {
+        padding++;
+      } else if (c > ' ') {
+        break;
+      }
+    }
+    return ((count - padding) * 3) / 4;
+  };
+  // ASCII only: how bytes >= 0x80 are counted is unspecified, and the
+  // kernels differ there (they are not base64 and produce no output).
+  const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+                          "0123456789+/= \t\n\r\x7f";
+  std::mt19937 gen(seed);
+  std::vector<size_t> lengths;
+  for (size_t len = 0; len <= 300; len++) {
+    lengths.push_back(len);
+  }
+  lengths.insert(lengths.end(),
+                 {511, 512, 513, 1023, 1024, 1025, 1100, 2047, 2048, 4113});
+  for (size_t len : lengths) {
+    std::vector<char> buffer(len + 64);
+    for (size_t offset = 0; offset < 32; offset++) {
+      char *input = buffer.data() + offset;
+      for (size_t i = 0; i < len; i++) {
+        input[i] = alphabet[gen() % (sizeof(alphabet) - 1)];
+      }
+      if (len >= 2 && gen() % 2 == 0) {
+        input[len - 1] = '=';
+        input[len - 2] = '=';
+      }
+      ASSERT_EQUAL(implementation.binary_length_from_base64(input, len),
+                   reference(input, len));
+    }
+  }
+}
+
 TEST(base64_details_padding_error_consistency) {
   const char input[] = "www";
   const size_t input_len = 3;
