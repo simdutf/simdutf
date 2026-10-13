@@ -1,12 +1,5 @@
 // file included directly
 
-// Converts the code units from buf to end (fewer than 32, at least one) with
-// a masked block, like the main loop of convert_utf16_to_utf32 does for full
-// blocks. Returns the number of code points written, or 0 if the code units
-// are invalid. carry tells whether the code unit before buf is a high
-// surrogate. It is not inlined, so that the main loop is unaffected, and it
-// takes no reference: passing the pointers by reference made GCC keep them
-// on the stack in the main loop.
 template <endianness big_endian>
 simdutf_never_inline size_t
 convert_utf16_to_utf32_masked(const char16_t *buf, const char16_t *end,
@@ -263,8 +256,6 @@ convert_utf16_to_utf32(const char16_t *buf, size_t len,
       carry = 0;
     }
   } // while
-  // Fewer than 32 code units remain. A few code units are faster to convert
-  // with scalar code than with a masked block.
   const char16_t *const rest = buf + carry;
   const size_t remaining = size_t(end - rest);
   if (remaining == 0) {
