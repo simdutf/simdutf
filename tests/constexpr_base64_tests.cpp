@@ -3,7 +3,10 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <span>
+#include <string_view>
 #include <tuple>
+#include <vector>
 
 #include <tests/helpers/fixed_string.h>
 #include <tests/helpers/test.h>
@@ -499,6 +502,164 @@ TEST(compile_time_base64_to_binary_details_input_remainder) {
     static_assert(std::get<0>(r) ==
                   simdutf::error_code::BASE64_INPUT_REMAINDER);
   }
+}
+
+namespace {
+
+// The bytes include 0x00, 0x7f, 0x80 and up, and the encoding includes + and /.
+constexpr std::array<unsigned char, 12> byte_like_binary = {
+    0x41, 0x62, 0x72, 0x61, 0x00, 0x7f, 0x80, 0xbf, 0xc0, 0xfb, 0xfe, 0xff};
+constexpr std::string_view byte_like_base64 = "QWJyYQB/gL/A+/7/";
+
+template <typename T, typename Container>
+constexpr void fill_from(const auto &from, Container &to) {
+  std::ranges::transform(from, to.begin(),
+                         [](auto c) { return static_cast<T>(c); });
+}
+
+template <typename T> void check_byte_like_spans_at_run_time() {
+  const auto &bin = byte_like_binary;
+  const auto &b64 = byte_like_base64;
+  std::vector<T> binary(bin.size());
+  fill_from<T>(bin, binary);
+  std::vector<T> encoded(b64.size());
+  fill_from<T>(b64, encoded);
+  std::vector<char16_t> encoded16(b64.size());
+  fill_from<char16_t>(b64, encoded16);
+
+  std::vector<T> out(64);
+  ASSERT_EQUAL(simdutf::binary_to_base64(binary, out), b64.size());
+  ASSERT_TRUE(std::ranges::equal(std::span(out).first(b64.size()), encoded));
+
+  std::ranges::fill(out, T{});
+  ASSERT_EQUAL(simdutf::binary_to_base64_with_lines(binary, out), b64.size());
+  ASSERT_TRUE(std::ranges::equal(std::span(out).first(b64.size()), encoded));
+
+  ASSERT_EQUAL(simdutf::binary_length_from_base64(encoded), bin.size());
+
+  std::ranges::fill(out, T{});
+  const auto r1 = simdutf::base64_to_binary(encoded, out);
+  ASSERT_EQUAL(r1.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r1.count, bin.size());
+  ASSERT_TRUE(std::ranges::equal(std::span(out).first(bin.size()), binary));
+
+  std::ranges::fill(out, T{});
+  const auto r2 = simdutf::base64_to_binary_details(encoded, out);
+  ASSERT_EQUAL(r2.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r2.output_count, bin.size());
+  ASSERT_TRUE(std::ranges::equal(std::span(out).first(bin.size()), binary));
+
+  std::ranges::fill(out, T{});
+  const auto [r3, outlen] = simdutf::base64_to_binary_safe(encoded, out);
+  ASSERT_EQUAL(r3.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(outlen, bin.size());
+  ASSERT_TRUE(std::ranges::equal(std::span(out).first(bin.size()), binary));
+
+  std::ranges::fill(out, T{});
+  const auto r4 =
+      simdutf::base64_to_binary(std::span<const char16_t>(encoded16), out);
+  ASSERT_EQUAL(r4.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r4.count, bin.size());
+  ASSERT_TRUE(std::ranges::equal(std::span(out).first(bin.size()), binary));
+
+  std::ranges::fill(out, T{});
+  const auto r5 = simdutf::base64_to_binary_details(
+      std::span<const char16_t>(encoded16), out);
+  ASSERT_EQUAL(r5.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r5.output_count, bin.size());
+  ASSERT_TRUE(std::ranges::equal(std::span(out).first(bin.size()), binary));
+
+  std::ranges::fill(out, T{});
+  const auto [r6, outlen6] =
+      simdutf::base64_to_binary_safe(std::span<const char16_t>(encoded16), out);
+  ASSERT_EQUAL(r6.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(outlen6, bin.size());
+  ASSERT_TRUE(std::ranges::equal(std::span(out).first(bin.size()), binary));
+}
+
+template <typename T> constexpr bool check_byte_like_spans_at_compile_time() {
+  constexpr auto &bin = byte_like_binary;
+  constexpr auto &b64 = byte_like_base64;
+  std::array<T, bin.size()> binary{};
+  fill_from<T>(bin, binary);
+  std::array<T, b64.size()> encoded{};
+  fill_from<T>(b64, encoded);
+  std::array<char16_t, b64.size()> encoded16{};
+  fill_from<char16_t>(b64, encoded16);
+
+  std::array<T, b64.size()> enc_out{};
+  if (simdutf::binary_to_base64(binary, enc_out) != b64.size() ||
+      enc_out != encoded) {
+    return false;
+  }
+  enc_out = {};
+  if (simdutf::binary_to_base64_with_lines(binary, enc_out) != b64.size() ||
+      enc_out != encoded) {
+    return false;
+  }
+  if (simdutf::binary_length_from_base64(encoded) != bin.size()) {
+    return false;
+  }
+
+  std::array<T, bin.size()> out{};
+  const auto r1 = simdutf::base64_to_binary(encoded, out);
+  if (r1.error != simdutf::error_code::SUCCESS || r1.count != bin.size() ||
+      out != binary) {
+    return false;
+  }
+  out = {};
+  const auto r2 = simdutf::base64_to_binary_details(encoded, out);
+  if (r2.error != simdutf::error_code::SUCCESS ||
+      r2.output_count != bin.size() || out != binary) {
+    return false;
+  }
+  out = {};
+  const auto [r3, outlen] = simdutf::base64_to_binary_safe(encoded, out);
+  if (r3.error != simdutf::error_code::SUCCESS || outlen != bin.size() ||
+      out != binary) {
+    return false;
+  }
+
+  out = {};
+  const auto r4 =
+      simdutf::base64_to_binary(std::span<const char16_t>(encoded16), out);
+  if (r4.error != simdutf::error_code::SUCCESS || r4.count != bin.size() ||
+      out != binary) {
+    return false;
+  }
+  out = {};
+  const auto r5 = simdutf::base64_to_binary_details(
+      std::span<const char16_t>(encoded16), out);
+  if (r5.error != simdutf::error_code::SUCCESS ||
+      r5.output_count != bin.size() || out != binary) {
+    return false;
+  }
+  out = {};
+  const auto [r6, outlen6] =
+      simdutf::base64_to_binary_safe(std::span<const char16_t>(encoded16), out);
+  if (r6.error != simdutf::error_code::SUCCESS || outlen6 != bin.size() ||
+      out != binary) {
+    return false;
+  }
+  return true;
+}
+
+} // namespace
+
+TEST(run_time_base64_byte_like_spans) {
+  check_byte_like_spans_at_run_time<char>();
+  check_byte_like_spans_at_run_time<unsigned char>();
+  check_byte_like_spans_at_run_time<signed char>();
+  check_byte_like_spans_at_run_time<char8_t>();
+  check_byte_like_spans_at_run_time<std::byte>();
+}
+
+TEST(compile_time_base64_byte_like_spans) {
+  static_assert(check_byte_like_spans_at_compile_time<char>());
+  static_assert(check_byte_like_spans_at_compile_time<unsigned char>());
+  static_assert(check_byte_like_spans_at_compile_time<signed char>());
+  static_assert(check_byte_like_spans_at_compile_time<char8_t>());
+  static_assert(check_byte_like_spans_at_compile_time<std::byte>());
 }
 
 #else
