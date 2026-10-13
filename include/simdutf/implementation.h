@@ -116,6 +116,42 @@ concept output_span_of_byte_like = requires(T &t) {
   { *t.data() } noexcept -> is_mutable;
 };
 
+  #if SIMDUTF_CPLUSPLUS23
+// Give the scalar base64 code a char copy of a non-char span (constexpr only).
+template <typename F> constexpr auto with_char_input(const auto &input, F &&f) {
+  using T = std::remove_cvref_t<decltype(*input.data())>;
+  if constexpr (std::is_same_v<T, char>) {
+    return f(input.data());
+  } else {
+    char *copy = new char[input.size()];
+    for (std::size_t i = 0; i < input.size(); i++) {
+      copy[i] = static_cast<char>(input.data()[i]);
+    }
+    auto r = f(static_cast<const char *>(copy));
+    delete[] copy;
+    return r;
+  }
+}
+
+template <typename F> constexpr auto with_char_output(auto &&output, F &&f) {
+  using T = std::remove_cvref_t<decltype(*output.data())>;
+  if constexpr (std::is_same_v<T, char>) {
+    return f(output.data());
+  } else {
+    char *copy = new char[output.size()];
+    for (std::size_t i = 0; i < output.size(); i++) {
+      copy[i] = static_cast<char>(output.data()[i]);
+    }
+    auto r = f(copy);
+    for (std::size_t i = 0; i < output.size(); i++) {
+      output.data()[i] = static_cast<T>(copy[i]);
+    }
+    delete[] copy;
+    return r;
+  }
+}
+  #endif // SIMDUTF_CPLUSPLUS23
+
 /**
  * a pointer like object, when indexed, results in a byte like result.
  * valid examples: char*, const char*, std::array<char,10>
@@ -4437,8 +4473,9 @@ binary_length_from_base64(
     const detail::input_span_of_byte_like auto &input) noexcept {
     #if SIMDUTF_CPLUSPLUS23
   if consteval {
-    return scalar::base64::binary_length_from_base64(input.data(),
-                                                     input.size());
+    return detail::with_char_input(input, [&](auto in) {
+      return scalar::base64::binary_length_from_base64(in, input.size());
+    });
   } else
     #endif
   {
@@ -4547,9 +4584,12 @@ base64_to_binary(
     last_chunk_handling_options last_chunk_options = loose) noexcept {
     #if SIMDUTF_CPLUSPLUS23
   if consteval {
-    return scalar::base64::base64_to_binary_details_impl(
-        input.data(), input.size(), binary_output.data(), options,
-        last_chunk_options);
+    return detail::with_char_input(input, [&](auto in) {
+      return detail::with_char_output(binary_output, [&](char *out) {
+        return scalar::base64::base64_to_binary_details_impl(
+            in, input.size(), out, options, last_chunk_options);
+      });
+    });
   } else
     #endif
   {
@@ -4621,8 +4661,12 @@ binary_to_base64(const detail::input_span_of_byte_like auto &input,
                  base64_options options = base64_default) noexcept {
     #if SIMDUTF_CPLUSPLUS23
   if consteval {
-    return scalar::base64::tail_encode_base64(
-        binary_output.data(), input.data(), input.size(), options);
+    return detail::with_char_input(input, [&](const char *in) {
+      return detail::with_char_output(binary_output, [&](char *out) {
+        return scalar::base64::tail_encode_base64(out, in, input.size(),
+                                                  options);
+      });
+    });
   } else
     #endif
   {
@@ -4670,8 +4714,12 @@ binary_to_base64_with_lines(
     base64_options options = base64_default) noexcept {
     #if SIMDUTF_CPLUSPLUS23
   if consteval {
-    return scalar::base64::tail_encode_base64_impl<true>(
-        binary_output.data(), input.data(), input.size(), options, line_length);
+    return detail::with_char_input(input, [&](const char *in) {
+      return detail::with_char_output(binary_output, [&](char *out) {
+        return scalar::base64::tail_encode_base64_impl<true>(
+            out, in, input.size(), options, line_length);
+      });
+    });
   } else
     #endif
   {
@@ -4809,9 +4857,10 @@ base64_to_binary(
     last_chunk_handling_options last_chunk_options = loose) noexcept {
     #if SIMDUTF_CPLUSPLUS23
   if consteval {
-    return scalar::base64::base64_to_binary_details_impl(
-        input.data(), input.size(), binary_output.data(), options,
-        last_chunk_options);
+    return detail::with_char_output(binary_output, [&](auto out) {
+      return scalar::base64::base64_to_binary_details_impl(
+          input.data(), input.size(), out, options, last_chunk_options);
+    });
   } else
     #endif
   {
@@ -4883,9 +4932,12 @@ base64_to_binary_details(
     last_chunk_handling_options last_chunk_options = loose) noexcept {
     #if SIMDUTF_CPLUSPLUS23
   if consteval {
-    return scalar::base64::base64_to_binary_details_impl(
-        input.data(), input.size(), binary_output.data(), options,
-        last_chunk_options);
+    return detail::with_char_input(input, [&](auto in) {
+      return detail::with_char_output(binary_output, [&](char *out) {
+        return scalar::base64::base64_to_binary_details_impl(
+            in, input.size(), out, options, last_chunk_options);
+      });
+    });
   } else
     #endif
   {
@@ -4959,9 +5011,10 @@ base64_to_binary_details(
     last_chunk_handling_options last_chunk_options = loose) noexcept {
     #if SIMDUTF_CPLUSPLUS23
   if consteval {
-    return scalar::base64::base64_to_binary_details_impl(
-        input.data(), input.size(), binary_output.data(), options,
-        last_chunk_options);
+    return detail::with_char_output(binary_output, [&](auto out) {
+      return scalar::base64::base64_to_binary_details_impl(
+          input.data(), input.size(), out, options, last_chunk_options);
+    });
   } else
     #endif
   {
@@ -7329,17 +7382,13 @@ simdutf_really_inline
   size_t outlen = binary_output.size();
     #if SIMDUTF_CPLUSPLUS23
   if consteval {
-    using CInput = std::decay_t<decltype(*input.data())>;
-    static_assert(std::is_same_v<CInput, char>,
-                  "sorry, the constexpr implementation is for now limited to "
-                  "input of type char");
-    using COutput = std::decay_t<decltype(*binary_output.data())>;
-    static_assert(std::is_same_v<COutput, char>,
-                  "sorry, the constexpr implementation is for now limited to "
-                  "output of type char");
-    auto r = base64_to_binary_safe_impl(
-        input.data(), input.size(), binary_output.data(), outlen, options,
-        last_chunk_options, decode_up_to_bad_char);
+    auto r = detail::with_char_input(input, [&](auto in) {
+      return detail::with_char_output(binary_output, [&](char *out) {
+        return base64_to_binary_safe_impl(in, input.size(), out, outlen,
+                                          options, last_chunk_options,
+                                          decode_up_to_bad_char);
+      });
+    });
     return {r, outlen};
   } else
     #endif
@@ -7368,9 +7417,11 @@ simdutf_really_inline
   size_t outlen = binary_output.size();
       #if SIMDUTF_CPLUSPLUS23
   if consteval {
-    auto r = base64_to_binary_safe_impl(
-        input.data(), input.size(), binary_output.data(), outlen, options,
-        last_chunk_options, decode_up_to_bad_char);
+    auto r = detail::with_char_output(binary_output, [&](auto out) {
+      return base64_to_binary_safe_impl(input.data(), input.size(), out, outlen,
+                                        options, last_chunk_options,
+                                        decode_up_to_bad_char);
+    });
     return {r, outlen};
   } else
       #endif
