@@ -1,15 +1,17 @@
 // file included directly
 
-// Converts the last (fewer than 32) code units with a masked block, like the
-// main loop of convert_utf16_to_utf32 does for full blocks, advancing buf to
-// end and utf32_output. Returns false (leaving buf and utf32_output
-// unchanged) if the code units are invalid. carry tells whether the code unit
-// before buf is a high surrogate. It is not inlined, so that the main loop
-// is unaffected.
+// Converts the code units from buf to end (fewer than 32, at least one) with
+// a masked block, like the main loop of convert_utf16_to_utf32 does for full
+// blocks. Returns the number of code points written, or 0 if the code units
+// are invalid. carry tells whether the code unit before buf is a high
+// surrogate. It is not inlined, so that the main loop is unaffected, and it
+// takes no reference: passing the pointers by reference made GCC keep them
+// on the stack in the main loop.
 template <endianness big_endian>
-simdutf_never_inline bool
-convert_utf16_to_utf32_masked(const char16_t *&buf, const char16_t *end,
-                              char32_t *&utf32_output, __mmask32 carry) {
+simdutf_never_inline size_t
+convert_utf16_to_utf32_masked(const char16_t *buf, const char16_t *end,
+                              char32_t *utf32_output, __mmask32 carry) {
+  char32_t *const start = utf32_output;
   const __m512i v_fc00 = _mm512_set1_epi16((uint16_t)0xfc00);
   const __m512i v_d800 = _mm512_set1_epi16((uint16_t)0xd800);
   const __m512i v_dc00 = _mm512_set1_epi16((uint16_t)0xdc00);
@@ -111,10 +113,9 @@ convert_utf16_to_utf32_masked(const char16_t *&buf, const char16_t *end,
                                __mmask16((1U << howmany2) - 1),
                                compressed_second);
       utf32_output += howmany2;
-      buf = end;
     } else {
       // invalid case
-      return false;
+      return 0;
     }
   } else {
     // no surrogates
@@ -126,9 +127,8 @@ convert_utf16_to_utf32_masked(const char16_t *&buf, const char16_t *end,
     _mm512_mask_storeu_epi32((__m512i *)(utf32_output) + 1,
                              __mmask16(todo >> 16), second);
     utf32_output += end - buf;
-    buf = end;
   }
-  return true;
+  return size_t(utf32_output - start);
 }
 
 /*
@@ -136,7 +136,7 @@ convert_utf16_to_utf32_masked(const char16_t *&buf, const char16_t *end,
   whether the input is valid. The whole input is processed if it is valid.
 */
 template <endianness big_endian>
-std::tuple<const char16_t *, char32_t *, bool>
+simdutf_really_inline std::tuple<const char16_t *, char32_t *, bool>
 convert_utf16_to_utf32(const char16_t *buf, size_t len,
                        char32_t *utf32_output) {
   const char16_t *end = buf + len;
@@ -278,9 +278,10 @@ convert_utf16_to_utf32(const char16_t *buf, size_t len,
     }
     return std::make_tuple(end, utf32_output + written, true);
   }
-  if (!convert_utf16_to_utf32_masked<big_endian>(buf, end, utf32_output,
-                                                 carry)) {
-    return std::make_tuple(buf + carry, utf32_output, false);
+  const size_t written =
+      convert_utf16_to_utf32_masked<big_endian>(buf, end, utf32_output, carry);
+  if (written == 0) {
+    return std::make_tuple(rest, utf32_output, false);
   }
-  return std::make_tuple(end, utf32_output, true);
+  return std::make_tuple(end, utf32_output + written, true);
 }
