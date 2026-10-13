@@ -235,6 +235,41 @@ size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
     }
     i += 24;
   }
+
+  if (i + 12 <= srclen) {
+    // Load exactly 12 bytes, then deinterleave them like vld3_u8 would:
+    // only the first four lanes of each vector matter.
+    uint32_t last4;
+    std::memcpy(&last4, src + i + 8, sizeof(last4));
+    const uint8x16_t raw = vcombine_u8(vld1_u8((const uint8_t *)src + i),
+                                       vreinterpret_u8_u32(vdup_n_u32(last4)));
+    const uint8x8_t in0 = vqtbl1_u8(raw, vcreate_u8(0x0906030009060300));
+    const uint8x8_t in1 = vqtbl1_u8(raw, vcreate_u8(0x0a0704010a070401));
+    const uint8x8_t in2 = vqtbl1_u8(raw, vcreate_u8(0x0b0805020b080502));
+    const uint8x8_t v3f_d = vdup_n_u8(0x3f);
+    uint8x8x4_t result;
+    result.val[0] = vshr_n_u8(in0, 2);
+    result.val[1] = vand_u8(vsli_n_u8(vshr_n_u8(in1, 4), in0, 4), v3f_d);
+    result.val[2] = vand_u8(vsli_n_u8(vshr_n_u8(in2, 6), in1, 2), v3f_d);
+    result.val[3] = vand_u8(in2, v3f_d);
+    result.val[0] = vqtbl4_u8(table, result.val[0]);
+    result.val[1] = vqtbl4_u8(table, result.val[1]);
+    result.val[2] = vqtbl4_u8(table, result.val[2]);
+    result.val[3] = vqtbl4_u8(table, result.val[3]);
+    const uint8x8_t Z0 = vzip1_u8(result.val[0], result.val[1]);
+    const uint8x8_t Z1 = vzip1_u8(result.val[2], result.val[3]);
+    const uint16x4x2_t Z2 =
+        vzip_u16(vreinterpret_u16_u8(Z0), vreinterpret_u16_u8(Z1));
+    const uint8x16_t encoded = vcombine_u8(vreinterpret_u8_u16(Z2.val[0]),
+                                           vreinterpret_u8_u16(Z2.val[1]));
+    if (insert_line_feeds) {
+      out += write_output_with_line_feeds(out, encoded, line_length, offset);
+    } else {
+      vst1q_u8(out, encoded);
+      out += 16;
+    }
+    i += 12;
+  }
   out += scalar::base64::tail_encode_base64_impl<insert_line_feeds>(
       (char *)out, src + i, srclen - i, options, line_length, offset);
   return size_t((char *)out - dst);

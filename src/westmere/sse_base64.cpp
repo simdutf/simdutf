@@ -656,3 +656,107 @@ public:
     base64_decode<exact>(out + 36, chunks[3]);
   }
 };
+
+// One bit per byte of the 16 bytes at p: set if the byte is > 0x20 (signed,
+// like the scalar code). spaces holds 0x20 in every byte.
+simdutf_really_inline uint16_t sse_above_space_mask(const char *p,
+                                                    __m128i spaces) {
+  __m128i data = _mm_loadu_si128(reinterpret_cast<const __m128i *>(p));
+  return static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpgt_epi8(data, spaces)));
+}
+
+simdutf_warn_unused size_t sse_binary_length_from_base64(const char *input,
+                                                         size_t length) {
+  // Inputs this long count eight blocks per step in the vector domain.
+  constexpr size_t vector_count_threshold = 128;
+  // Inputs this long are first aligned to 16 bytes. An unaligned 16-byte
+  // load straddles two cache lines every fourth block; that costs nothing
+  // measurable while the data is in L1 or L2, but about 5% once it comes
+  // from further out. The head costs one masked block, so the threshold
+  // only needs to keep it off short inputs; it matches haswell.
+  constexpr size_t align_threshold = 1024;
+
+  size_t count = 0;
+  const char *ptr = input;
+  const char *end = input + length;
+
+  const __m128i spaces = _mm_set1_epi8(0x20);
+  // The hint keeps the short-input path straight-line; it costs the long
+  // path one taken jump per call.
+  if (simdutf_unlikely(length >= vector_count_threshold)) {
+    if (length >= align_threshold) {
+      // Bytes up to the next 16-byte boundary, 0..15.
+      const size_t head = (16 - (reinterpret_cast<uintptr_t>(ptr) & 15)) & 15;
+      if (head != 0) {
+        count += count_ones(sse_above_space_mask(ptr, spaces) &
+                            ((uint32_t(1) << head) - 1));
+        ptr += head;
+      }
+    }
+    // Count eight blocks per step; at least 128 bytes remain, so the loop
+    // runs at least once. Each compare yields 0 or -1 per byte; the sum of
+    // eight is at least -8, so negating it gives per-byte counts of 0..8
+    // that psadbw adds into 64-bit lanes. This replaces a pmovmskb, a popcnt
+    // and an add per block.
+    const __m128i zero = _mm_setzero_si128();
+    __m128i sums = zero;
+    do {
+      const __m128i *p = reinterpret_cast<const __m128i *>(ptr);
+      __m128i neg = _mm_cmpgt_epi8(_mm_loadu_si128(p), spaces);
+      for (size_t i = 1; i < 8; i++) {
+        neg = _mm_add_epi8(neg, _mm_cmpgt_epi8(_mm_loadu_si128(p + i), spaces));
+      }
+      sums = _mm_add_epi64(sums, _mm_sad_epu8(_mm_sub_epi8(zero, neg), zero));
+      ptr += 128;
+    } while (size_t(end - ptr) >= 128);
+    count +=
+        size_t(_mm_extract_epi64(sums, 0)) + size_t(_mm_extract_epi64(sums, 1));
+  }
+
+  // Whole blocks left over: at most seven after the loop above, or up to
+  // seven for a short input. Four of them are counted together, with one
+  // popcount, as the generic code does.
+  if (size_t(end - ptr) >= 64) {
+    const uint64_t mask =
+        uint64_t(sse_above_space_mask(ptr, spaces)) |
+        (uint64_t(sse_above_space_mask(ptr + 16, spaces)) << 16) |
+        (uint64_t(sse_above_space_mask(ptr + 32, spaces)) << 32) |
+        (uint64_t(sse_above_space_mask(ptr + 48, spaces)) << 48);
+    count += count_ones(mask);
+    ptr += 64;
+  }
+  // When nothing is left (for example, for an input of exactly 64 bytes),
+  // skip the block loop and the tail checks.
+  if (ptr != end) {
+    while (size_t(end - ptr) >= 16) {
+      count += count_ones(sse_above_space_mask(ptr, spaces));
+      ptr += 16;
+    }
+
+    if (ptr != end) {
+      if (length >= 16) {
+        // Fewer than 16 bytes remain: count them in the last 16 bytes of the
+        // input, which end at the same place.
+        const size_t rest = size_t(end - ptr);
+        count += count_ones(uint32_t(sse_above_space_mask(end - 16, spaces)) >>
+                            (16 - rest));
+      } else {
+        do {
+          count += (*ptr > 0x20) ? 1 : 0;
+        } while (++ptr != end);
+      }
+    }
+  }
+
+  size_t padding = 0;
+  size_t pos = length;
+  while (pos > 0 && padding < 2) {
+    char c = input[--pos];
+    if (c == '=') {
+      padding++;
+    } else if (c > ' ') {
+      break;
+    }
+  }
+  return ((count - padding) * 3) / 4;
+}
