@@ -261,6 +261,7 @@ simdutf_warn_unused result implementation::validate_utf8_with_errors(
       const size_t adjustment = 64 - misalignment;
       checker.check_next_input(_mm512_loadu_si512((const __m512i *)ptr));
       if (simdutf_unlikely(checker.errors())) {
+        SIMDUTF_VZEROUPPER();
         return scalar::utf8::rewind_and_validate_with_errors(buf, buf, len);
       }
       ptr += adjustment;
@@ -301,6 +302,7 @@ simdutf_warn_unused result implementation::validate_utf8_with_errors(
     if (safe != 0) {
       safe--;
     } // Sometimes the error is only detected in the next chunk
+    SIMDUTF_VZEROUPPER();
     result res = scalar::utf8::rewind_and_validate_with_errors(
         reinterpret_cast<const char *>(buf),
         reinterpret_cast<const char *>(buf + safe), len - safe);
@@ -329,6 +331,7 @@ simdutf_warn_unused utf8_result implementation::validate_utf8_with_counts(
                                                    (const __m512i *)aligned);
       const bool ascii = checker.check_next_input(head);
       if (simdutf_unlikely(checker.errors())) {
+        SIMDUTF_VZEROUPPER();
         return scalar::utf8::rewind_and_validate_with_counts(buf, buf, len);
       }
       if (!ascii) {
@@ -348,6 +351,7 @@ simdutf_warn_unused utf8_result implementation::validate_utf8_with_counts(
     // SimdUnicode.
     const bool ascii = checker.check_next_input(utf8);
     if (simdutf_unlikely(checker.errors())) {
+      SIMDUTF_VZEROUPPER();
       utf8_result res = scalar::utf8::rewind_and_validate_with_counts(
           reinterpret_cast<const char *>(buf),
           reinterpret_cast<const char *>(buf + count), len - count);
@@ -402,6 +406,7 @@ simdutf_warn_unused utf8_result implementation::validate_utf8_with_counts(
   }
   checker.check_eof();
   if (simdutf_unlikely(checker.errors())) {
+    SIMDUTF_VZEROUPPER();
     utf8_result res = scalar::utf8::rewind_and_validate_with_counts(
         reinterpret_cast<const char *>(buf),
         reinterpret_cast<const char *>(buf + count), len - count);
@@ -1081,6 +1086,7 @@ simdutf_warn_unused result implementation::convert_utf8_to_latin1_with_errors(
     return {simdutf::SUCCESS, written};
   }
   size_t pos = obuf - buf;
+  SIMDUTF_VZEROUPPER();
   result res = scalar::utf8_to_latin1::rewind_and_convert_with_errors(
       pos, buf + pos, len - pos, latin1_output);
   res.count += pos;
@@ -1175,6 +1181,7 @@ simdutf_warn_unused size_t implementation::convert_utf8_to_utf32(
     ret.first += 1;
   }
   if (ret.first != end) {
+    SIMDUTF_VZEROUPPER();
     const size_t scalar_saved_bytes = scalar::utf8_to_utf32::convert(
         ret.first, len - (ret.first - buf), utf32_out + saved_bytes);
     if (scalar_saved_bytes == 0) {
@@ -1210,6 +1217,7 @@ simdutf_warn_unused result implementation::convert_utf8_to_utf32_with_errors(
         return {simdutf::TOO_LONG, pos};
       }
     }
+    SIMDUTF_VZEROUPPER();
     // todo: we reset the output to utf32 instead of using std::get<2.(ret) as
     // you'd expect. that is because
     // validating_utf8_to_fixed_length_with_constant_checks may have processed
@@ -1236,6 +1244,7 @@ simdutf_warn_unused result implementation::convert_utf8_to_utf32_with_errors(
   }
 
   if (std::get<0>(ret) != end) {
+    SIMDUTF_VZEROUPPER();
     auto scalar_result = scalar::utf8_to_utf32::convert_with_errors(
         std::get<0>(ret), len - (std::get<0>(ret) - buf),
         reinterpret_cast<char32_t *>(utf32_output) + saved_bytes);
@@ -1416,6 +1425,7 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(
   }
   size_t saved_bytes = ret.second - utf8_output;
   if (ret.first != buf + len) {
+    SIMDUTF_VZEROUPPER();
     const size_t scalar_saved_bytes = scalar::utf32_to_utf8::convert(
         ret.first, len - (ret.first - buf), ret.second);
     if (scalar_saved_bytes == 0) {

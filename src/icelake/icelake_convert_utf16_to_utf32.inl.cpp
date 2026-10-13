@@ -262,6 +262,7 @@ convert_utf16_to_utf32(const char16_t *buf, size_t len,
     return std::make_tuple(rest, utf32_output, true);
   }
   if (remaining < 8) {
+    SIMDUTF_VZEROUPPER();
     const size_t written = scalar::utf16_to_utf32::convert<big_endian>(
         rest, remaining, utf32_output);
     if (written == 0) {

@@ -771,6 +771,7 @@ simdutf_warn_unused size_t implementation::convert_utf32_to_utf8(
   }
   size_t saved_bytes = ret.second - utf8_output;
   if (ret.first != buf + len) {
+    SIMDUTF_VZEROUPPER();
     const size_t scalar_saved_bytes = scalar::utf32_to_utf8::convert(
         ret.first, len - (ret.first - buf), ret.second);
     if (scalar_saved_bytes == 0) {

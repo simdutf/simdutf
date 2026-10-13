@@ -1,4 +1,7 @@
 #include "simdutf.h"
+// Overridden by kernels that must clear the upper vector state before calling
+// scalar code (see simdutf/haswell/begin.h).
+#define SIMDUTF_VZEROUPPER() (void)0
 
 #include "encoding_types.cpp"
 #include "error.cpp"

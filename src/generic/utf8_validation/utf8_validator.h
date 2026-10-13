@@ -44,6 +44,7 @@ result generic_validate_utf8_with_errors(const uint8_t *input, size_t length) {
       if (count != 0) {
         count--;
       } // Sometimes the error is only detected in the next chunk
+      SIMDUTF_VZEROUPPER();
       result res = scalar::utf8::rewind_and_validate_with_errors(
           reinterpret_cast<const char *>(input),
           reinterpret_cast<const char *>(input + count), length - count);
@@ -63,6 +64,7 @@ result generic_validate_utf8_with_errors(const uint8_t *input, size_t length) {
     if (count != 0) {
       count--;
     } // Sometimes the error is only detected in the next chunk
+    SIMDUTF_VZEROUPPER();
     result res = scalar::utf8::rewind_and_validate_with_errors(
         reinterpret_cast<const char *>(input),
         reinterpret_cast<const char *>(input) + count, length - count);
@@ -92,6 +94,7 @@ utf8_result generic_validate_utf8_with_counts(const uint8_t *input,
     simd::simd8x64<uint8_t> in(reader.full_block());
     block_counts last_counts = c.check_next_input_with_counts(in);
     if (c.errors()) {
+      SIMDUTF_VZEROUPPER();
       utf8_result res = scalar::utf8::rewind_and_validate_with_counts(
           reinterpret_cast<const char *>(input),
           reinterpret_cast<const char *>(input + count), length - count);
@@ -111,6 +114,7 @@ utf8_result generic_validate_utf8_with_counts(const uint8_t *input,
   reader.advance();
   c.check_eof();
   if (c.errors()) {
+    SIMDUTF_VZEROUPPER();
     utf8_result res = scalar::utf8::rewind_and_validate_with_counts(
         reinterpret_cast<const char *>(input),
         reinterpret_cast<const char *>(input) + count, length - count);

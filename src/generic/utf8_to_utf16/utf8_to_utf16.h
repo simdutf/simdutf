@@ -246,6 +246,7 @@ struct validating_transcoder {
     if (pos == size) {
       return utf16_output - start;
     }
+    SIMDUTF_VZEROUPPER();
     size_t howmany = scalar::utf8_to_utf16::convert<endian>(
         in + pos, size - pos, utf16_output);
     if (howmany == 0) {
@@ -305,6 +306,7 @@ struct validating_transcoder {
           // rewind_and_convert_with_errors will seek a potential error from
           // in+pos onward, with the ability to go back up to pos bytes, and
           // read size-pos bytes forward.
+          SIMDUTF_VZEROUPPER();
           result res =
               scalar::utf8_to_utf16::rewind_and_convert_with_errors<endian>(
                   pos, in + pos, size - pos, utf16_output);
@@ -349,6 +351,7 @@ struct validating_transcoder {
     // rewind_and_convert_with_errors will seek a potential error from in+pos
     // onward, with the ability to go back up to pos bytes, and read size-pos
     // bytes forward.
+    SIMDUTF_VZEROUPPER();
     result res = scalar::utf8_to_utf16::rewind_and_convert_with_errors<endian>(
         pos, in + pos, size - pos, utf16_output);
     if (res.error) { // In case of error, we want the error position

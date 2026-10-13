@@ -11,3 +11,6 @@ SIMDUTF_UNTARGET_REGION
                         // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105593
 SIMDUTF_POP_DISABLE_WARNINGS
 #endif // end of workaround
+
+#undef SIMDUTF_VZEROUPPER
+#define SIMDUTF_VZEROUPPER() (void)0

@@ -231,6 +231,7 @@ struct validating_transcoder {
     if (pos == size) {
       return latin1_output - start;
     }
+    SIMDUTF_VZEROUPPER();
     size_t howmany =
         scalar::utf8_to_latin1::convert(in + pos, size - pos, latin1_output);
     if (howmany == 0) {
@@ -288,6 +289,7 @@ struct validating_transcoder {
           // rewind_and_convert_with_errors will seek a potential error from
           // in+pos onward, with the ability to go back up to pos bytes, and
           // read size-pos bytes forward.
+          SIMDUTF_VZEROUPPER();
           result res = scalar::utf8_to_latin1::rewind_and_convert_with_errors(
               pos, in + pos, size - pos, latin1_output);
           res.count += pos;
@@ -331,6 +333,7 @@ struct validating_transcoder {
     // rewind_and_convert_with_errors will seek a potential error from in+pos
     // onward, with the ability to go back up to pos bytes, and read size-pos
     // bytes forward.
+    SIMDUTF_VZEROUPPER();
     result res = scalar::utf8_to_latin1::rewind_and_convert_with_errors(
         pos, in + pos, size - pos, latin1_output);
     if (res.error) { // In case of error, we want the error position

@@ -69,6 +69,7 @@ simdutf::result fast_avx512_convert_utf8_to_utf16_with_errors(const char *in,
         return {simdutf::TOO_LONG, pos};
       }
     }
+    SIMDUTF_VZEROUPPER();
     // rewind_and_convert_with_errors will seek a potential error from in
     // onward, with the ability to go back up to in - init_in bytes, and read
     // final_in - in bytes forward.
