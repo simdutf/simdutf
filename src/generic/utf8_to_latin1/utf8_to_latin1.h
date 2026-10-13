@@ -111,15 +111,6 @@ struct validating_transcoder {
     this->error |= check_special_cases(input, prev1);
   }
 
-  // An all-ASCII block reads 64 bytes and writes 64 code units, so it is safe
-  // right up to the end of the input: we convert such blocks while we can.
-  // When fewer than 64 bytes remain and the last 64 bytes of the input are
-  // ASCII, we convert these last 64 bytes. The ones before pos have already
-  // been converted one-to-one (pos is at a code point boundary), so we merely
-  // rewrite the same code units. Returns how many bytes were converted, each
-  // into one code unit. The caller must have checked that no error was found
-  // so far. It takes no reference: passing the position and the output
-  // pointer by reference made some compilers generate a slower main loop.
   simdutf_really_inline size_t convert_ascii_tail(const char *in, size_t pos,
                                                   size_t size, char *output) {
     // A cheap test on the first bytes avoids any SIMD work for most non-ASCII
