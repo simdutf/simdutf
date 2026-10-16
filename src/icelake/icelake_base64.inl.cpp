@@ -120,9 +120,16 @@ size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
   __mmask64 input_mask = 0xffffffffffff; // (1 << 48) - 1
   // We want that input == end_input means that we must stop.
   const uint8_t *end_input = input + (size - (size % 48));
+  // Masked loads are noticeably slower than plain loads once the data no
+  // longer fits in L1. We use plain 64-byte loads as long as at least 64
+  // bytes remain readable, and fall back on masked loads near the end.
+  const uint8_t *const input_end = input + size;
   while (input != end_input) {
-    const __m512i v = _mm512_maskz_loadu_epi8(
-        input_mask, reinterpret_cast<const __m512i *>(input));
+    const __m512i v =
+        (size_t(input_end - input) >= 64)
+            ? _mm512_loadu_si512(reinterpret_cast<const __m512i *>(input))
+            : _mm512_maskz_loadu_epi8(input_mask,
+                                      reinterpret_cast<const __m512i *>(input));
     const __m512i in = _mm512_permutexvar_epi8(shuffle_input, v);
     const __m512i indices = _mm512_multishift_epi64_epi8(multi_shifts, in);
     const __m512i result = _mm512_permutexvar_epi8(indices, lookup);
