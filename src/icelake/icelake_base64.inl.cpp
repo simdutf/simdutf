@@ -93,6 +93,19 @@ static inline size_t write_multi_lf_m256i(__m256i chunk, uint8_t *out,
   }
 }
 
+// Encodes 48 bytes (loaded with a plain 64-byte load) into 64 bytes.
+static inline void encode_block(const uint8_t *input, uint8_t *out,
+                                const __m512i shuffle_input,
+                                const __m512i multi_shifts,
+                                const __m512i lookup) {
+  const __m512i v =
+      _mm512_loadu_si512(reinterpret_cast<const __m512i *>(input));
+  const __m512i in = _mm512_permutexvar_epi8(shuffle_input, v);
+  const __m512i indices = _mm512_multishift_epi64_epi8(multi_shifts, in);
+  _mm512_storeu_si512(reinterpret_cast<__m512i *>(out),
+                      _mm512_permutexvar_epi8(indices, lookup));
+}
+
 template <bool base64_url, bool use_lines>
 size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
                           base64_options options,
@@ -124,6 +137,26 @@ size_t encode_base64_impl(char *dst, const char *src, size_t srclen,
   // longer fits in L1. We use plain 64-byte loads as long as at least 64
   // bytes remain readable, and fall back on masked loads near the end.
   const uint8_t *const input_end = input + size;
+  if (!use_lines) {
+    // Most of the input: blocks that can use plain 64-byte loads, several
+    // blocks per iteration, without a bound check per block. The loop below
+    // handles the remaining full block, if any.
+    constexpr size_t unroll = 8;
+    size_t plain_blocks = size >= 64 ? (size - 16) / 48 : 0;
+    for (; plain_blocks >= unroll; plain_blocks -= unroll) {
+      for (size_t k = 0; k < unroll; k++) {
+        encode_block(input + 48 * k, out + 64 * k, shuffle_input, multi_shifts,
+                     lookup);
+      }
+      input += 48 * unroll;
+      out += 64 * unroll;
+    }
+    for (; plain_blocks > 0; plain_blocks--) {
+      encode_block(input, out, shuffle_input, multi_shifts, lookup);
+      input += 48;
+      out += 64;
+    }
+  }
   while (input != end_input) {
     const __m512i v =
         (size_t(input_end - input) >= 64)
