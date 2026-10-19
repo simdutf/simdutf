@@ -238,6 +238,16 @@ struct utf8_checker {
     }
   }
 
+  // Checks a block that may overlap bytes already checked, given the register
+  // of input just before it. Each byte is checked against the same preceding
+  // bytes as before, so the overlapping bytes give the same result.
+  simdutf_really_inline void
+  check_overlapping_input(const simd8x64<uint8_t> &input,
+                          const simd8<uint8_t> prev_input) {
+    this->prev_input_block = prev_input;
+    this->check_next_input(input);
+  }
+
   // do not forget to call check_eof!
   simdutf_really_inline bool errors() const {
     return this->error.any_bits_set_anywhere();

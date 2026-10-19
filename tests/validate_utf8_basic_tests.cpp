@@ -1,6 +1,10 @@
 #include "simdutf.h"
 
+#include <algorithm>
+#include <cstdio>
+#include <string>
 #include <string_view>
+#include <vector>
 
 #include <tests/helpers/fixed_string.h>
 #include <tests/helpers/test.h>
@@ -172,5 +176,104 @@ TEST(compile_time_validation_casts_of_bad) {
 }
 
 #endif
+
+namespace {
+// The validators handle the bytes after the last full 64-byte block
+// separately. These tests check every length of that tail against the scalar
+// code. Each input is copied to a buffer of exactly its length, so that the
+// address sanitizer reports a read past either end.
+constexpr size_t tail_max_len = 200;
+
+// Bytes that end an ASCII prefix: invalid bytes, complete characters and
+// characters cut off by the end of the input.
+constexpr std::string_view tail_patterns[] = {
+    "\x80",         "\xff",     "\xc3\xa9",     "\xc3",
+    "\xe4\xb8\xad", "\xe4\xb8", "\xed\xa0\x80", "\xf0\x9f\x98\x80",
+    "\xf0\x9f\x98"};
+
+void check_tail(const simdutf::implementation &implementation,
+                const std::string &input) {
+  const std::vector<char> buffer(input.begin(), input.end());
+  const char *p = buffer.data();
+  const size_t len = buffer.size();
+  const bool valid = implementation.validate_utf8(p, len);
+  const simdutf::result with_errors =
+      implementation.validate_utf8_with_errors(p, len);
+  const simdutf::result expected =
+      simdutf::scalar::utf8::validate_with_errors(p, len);
+  if (valid != (expected.error == simdutf::error_code::SUCCESS) ||
+      with_errors.error != expected.error ||
+      with_errors.count != expected.count) {
+    std::printf("failing input, %zu bytes:", len);
+    for (size_t i = 0; i < len; i++) {
+      std::printf(" %02x", static_cast<unsigned char>(p[i]));
+    }
+    std::printf("\n");
+  }
+  ASSERT_EQUAL(valid, simdutf::scalar::utf8::validate(p, len));
+  ASSERT_EQUAL(with_errors.error, expected.error);
+  ASSERT_EQUAL(with_errors.count, expected.count);
+}
+
+// Repeats character to fill len bytes, cutting off the last one if needed.
+std::string repeat(std::string_view character, size_t len) {
+  std::string s;
+  while (s.size() < len) {
+    s += character;
+  }
+  s.resize(len);
+  return s;
+}
+} // namespace
+
+TEST(tail_ascii_every_length) {
+  for (size_t len = 0; len <= tail_max_len; len++) {
+    check_tail(implementation, std::string(len, 'a'));
+  }
+}
+
+TEST(tail_non_ascii_at_every_position) {
+  for (size_t len = 1; len <= tail_max_len; len++) {
+    for (std::string_view pattern : tail_patterns) {
+      for (size_t pos = 0; pos < len; pos++) {
+        std::string s(len, 'a');
+        s.replace(pos, std::min(pattern.size(), len - pos), pattern.data(),
+                  std::min(pattern.size(), len - pos));
+        check_tail(implementation, s);
+      }
+    }
+  }
+}
+
+TEST(tail_multibyte_text_with_ascii_tail) {
+  for (size_t len = 0; len <= tail_max_len; len++) {
+    for (size_t tail = 0; tail <= len && tail <= 70; tail++) {
+      const size_t text = (len - tail) / 3 * 3;
+      check_tail(implementation,
+                 repeat("\xe4\xb8\xad", text) + std::string(len - text, 'b'));
+    }
+  }
+}
+
+// Long inputs check their last 64 bytes in place, which overlaps the last full
+// block. Multibyte text of each width makes the last full block end inside a
+// character at every offset, and the patterns put an error or a cut-off
+// character at every position.
+TEST(tail_non_ascii_in_multibyte_text) {
+  constexpr std::string_view characters[] = {"\xc3\xa9", "\xe4\xb8\xad",
+                                             "\xf0\x9f\x98\x80"};
+  for (size_t len = 64; len <= 160; len++) {
+    for (std::string_view character : characters) {
+      for (std::string_view pattern : tail_patterns) {
+        for (size_t pos = 0; pos < len; pos++) {
+          std::string s = repeat(character, len);
+          s.replace(pos, std::min(pattern.size(), len - pos), pattern.data(),
+                    std::min(pattern.size(), len - pos));
+          check_tail(implementation, s);
+        }
+      }
+    }
+  }
+}
 
 TEST_MAIN
