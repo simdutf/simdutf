@@ -1,5 +1,11 @@
 #include "simdutf.h"
 
+#include <algorithm>
+#include <cstdio>
+#include <string>
+#include <string_view>
+#include <vector>
+
 #include <tests/helpers/test.h>
 #include <tests/helpers/fixed_string.h>
 
@@ -162,4 +168,56 @@ TEST(compile_time_invalid) {
       }));
 }
 #endif
+namespace {
+// The validators handle the bytes after the last full 64-byte block
+// separately. These tests check every length of that tail against the scalar
+// code. Each input is copied to a buffer of exactly its length, so that the
+// address sanitizer reports a read past either end.
+constexpr size_t tail_max_len = 200;
+
+void check_tail(const simdutf::implementation &implementation,
+                const std::string &input) {
+  const std::vector<char> buffer(input.begin(), input.end());
+  const char *p = buffer.data();
+  const size_t len = buffer.size();
+  const bool valid = implementation.validate_ascii(p, len);
+  const simdutf::result with_errors =
+      implementation.validate_ascii_with_errors(p, len);
+  const simdutf::result expected =
+      simdutf::scalar::ascii::validate_with_errors(p, len);
+  if (valid != (expected.error == simdutf::error_code::SUCCESS) ||
+      with_errors.error != expected.error ||
+      with_errors.count != expected.count) {
+    std::printf("failing input, %zu bytes:", len);
+    for (size_t i = 0; i < len; i++) {
+      std::printf(" %02x", static_cast<unsigned char>(p[i]));
+    }
+    std::printf("\n");
+  }
+  ASSERT_EQUAL(valid, simdutf::scalar::ascii::validate(p, len));
+  ASSERT_EQUAL(with_errors.error, expected.error);
+  ASSERT_EQUAL(with_errors.count, expected.count);
+}
+} // namespace
+
+TEST(tail_ascii_every_length) {
+  for (size_t len = 0; len <= tail_max_len; len++) {
+    check_tail(implementation, std::string(len, 'a'));
+  }
+}
+
+TEST(tail_non_ascii_at_every_position) {
+  constexpr std::string_view patterns[] = {"\x80", "\xff", "\xc3\xa9"};
+  for (size_t len = 1; len <= tail_max_len; len++) {
+    for (std::string_view pattern : patterns) {
+      for (size_t pos = 0; pos < len; pos++) {
+        std::string s(len, 'a');
+        s.replace(pos, std::min(pattern.size(), len - pos), pattern.data(),
+                  std::min(pattern.size(), len - pos));
+        check_tail(implementation, s);
+      }
+    }
+  }
+}
+
 TEST_MAIN

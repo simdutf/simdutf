@@ -18,17 +18,14 @@ result generic_validate_ascii_with_errors(const char *input, size_t length) {
 
     count += 64;
   }
-  uint8_t block[64]{};
-  reader.get_remainder(block);
-  simd::simd8x64<uint8_t> in(block);
-  if (!in.is_ascii()) {
-    SIMDUTF_VZEROUPPER();
-    result res = scalar::ascii::validate_with_errors(
-        reinterpret_cast<const char *>(input + count), length - count);
-    return result(res.error, count + res.count);
-  } else {
+  if (remainder_is_ascii(reinterpret_cast<const uint8_t *>(input), length,
+                         reader.block_index())) {
     return result(error_code::SUCCESS, length);
   }
+  SIMDUTF_VZEROUPPER();
+  result res = scalar::ascii::validate_with_errors(
+      reinterpret_cast<const char *>(input + count), length - count);
+  return result(res.error, count + res.count);
 }
 
 bool generic_validate_ascii(const char *input, size_t length) {
@@ -40,10 +37,8 @@ bool generic_validate_ascii(const char *input, size_t length) {
     }
     reader.advance();
   }
-  uint8_t block[64]{};
-  reader.get_remainder(block);
-  simd::simd8x64<uint8_t> in(block);
-  return in.is_ascii();
+  return remainder_is_ascii(reinterpret_cast<const uint8_t *>(input), length,
+                            reader.block_index());
 }
 
 } // namespace ascii_validation
