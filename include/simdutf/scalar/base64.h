@@ -863,8 +863,12 @@ base64_length_from_binary_with_lines(size_t length, base64_options options,
   if (line_length < 4) {
     line_length = 4;
   }
-  size_t lines =
-      (base64_length + line_length - 1) / line_length; // number of lines
+  // number of lines, rounded up without computing base64_length + line_length,
+  // which wraps around when line_length is close to SIZE_MAX
+  size_t lines = base64_length / line_length;
+  if (base64_length % line_length != 0) {
+    lines++;
+  }
   return base64_length + lines - 1;
 }
 

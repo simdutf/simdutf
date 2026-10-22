@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstring>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -633,6 +634,24 @@ TEST(with_lines) {
                                source.begin()));
         ASSERT_EQUAL(r.input_count, expected_input_length);
       }
+    }
+  }
+}
+
+// A line length close to SIZE_MAX used to make the line count wrap around,
+// so base64_length_from_binary_with_lines returned one byte less than
+// binary_to_base64_with_lines writes.
+TEST(with_lines_huge_line_length) {
+  const size_t max_size = std::numeric_limits<size_t>::max();
+  std::vector<char> source(200, 'f');
+  for (size_t line_length : {max_size, max_size - 1, max_size - 100}) {
+    for (size_t len = 1; len < source.size(); len++) {
+      std::vector<char> buffer(simdutf::base64_length_from_binary_with_lines(
+          len, simdutf::base64_default, line_length));
+      ASSERT_EQUAL(buffer.size(), simdutf::base64_length_from_binary(len));
+      size_t size = implementation.binary_to_base64_with_lines(
+          source.data(), len, buffer.data(), line_length);
+      ASSERT_EQUAL(size, buffer.size());
     }
   }
 }
