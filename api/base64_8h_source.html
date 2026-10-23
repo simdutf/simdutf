@@ -968,49 +968,53 @@ $(document).ready(function(){initNavTree('base64_8h_source.html',''); initResiza
 <div class="line"><a id="l00863" name="l00863"></a><span class="lineno">  863</span>  <span class="keywordflow">if</span> (line_length &lt; 4) {</div>
 <div class="line"><a id="l00864" name="l00864"></a><span class="lineno">  864</span>    line_length = 4;</div>
 <div class="line"><a id="l00865" name="l00865"></a><span class="lineno">  865</span>  }</div>
-<div class="line"><a id="l00866" name="l00866"></a><span class="lineno">  866</span>  <span class="keywordtype">size_t</span> lines =</div>
-<div class="line"><a id="l00867" name="l00867"></a><span class="lineno">  867</span>      (base64_length + line_length - 1) / line_length; <span class="comment">// number of lines</span></div>
-<div class="line"><a id="l00868" name="l00868"></a><span class="lineno">  868</span>  <span class="keywordflow">return</span> base64_length + lines - 1;</div>
-<div class="line"><a id="l00869" name="l00869"></a><span class="lineno">  869</span>}</div>
-<div class="line"><a id="l00870" name="l00870"></a><span class="lineno">  870</span> </div>
-<div class="line"><a id="l00871" name="l00871"></a><span class="lineno">  871</span><span class="comment">// Return the length of the prefix that contains count base64 characters.</span></div>
-<div class="line"><a id="l00872" name="l00872"></a><span class="lineno">  872</span><span class="comment">// Thus, if count is 3, the function returns the length of the prefix</span></div>
-<div class="line"><a id="l00873" name="l00873"></a><span class="lineno">  873</span><span class="comment">// that contains 3 base64 characters.</span></div>
-<div class="line"><a id="l00874" name="l00874"></a><span class="lineno">  874</span><span class="comment">// The function returns (size_t)-1 if there is not enough base64 characters in</span></div>
-<div class="line"><a id="l00875" name="l00875"></a><span class="lineno">  875</span><span class="comment">// the input.</span></div>
-<div class="line"><a id="l00876" name="l00876"></a><span class="lineno">  876</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> <span class="keywordtype">char</span>_type&gt;</div>
-<div class="line"><a id="l00877" name="l00877"></a><span class="lineno">  877</span>simdutf_warn_unused <span class="keywordtype">size_t</span> prefix_length(<span class="keywordtype">size_t</span> count,</div>
-<div class="line"><a id="l00878" name="l00878"></a><span class="lineno">  878</span>                                         simdutf::base64_options options,</div>
-<div class="line"><a id="l00879" name="l00879"></a><span class="lineno">  879</span>                                         <span class="keyword">const</span> char_type *input,</div>
-<div class="line"><a id="l00880" name="l00880"></a><span class="lineno">  880</span>                                         <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span> {</div>
-<div class="line"><a id="l00881" name="l00881"></a><span class="lineno">  881</span>  <span class="keywordtype">size_t</span> i = 0;</div>
-<div class="line"><a id="l00882" name="l00882"></a><span class="lineno">  882</span>  <span class="keywordflow">while</span> (i &lt; length &amp;&amp; is_ignorable(input[i], options)) {</div>
-<div class="line"><a id="l00883" name="l00883"></a><span class="lineno">  883</span>    i++;</div>
-<div class="line"><a id="l00884" name="l00884"></a><span class="lineno">  884</span>  }</div>
-<div class="line"><a id="l00885" name="l00885"></a><span class="lineno">  885</span>  <span class="keywordflow">if</span> (count == 0) {</div>
-<div class="line"><a id="l00886" name="l00886"></a><span class="lineno">  886</span>    <span class="keywordflow">return</span> i; <span class="comment">// duh!</span></div>
-<div class="line"><a id="l00887" name="l00887"></a><span class="lineno">  887</span>  }</div>
-<div class="line"><a id="l00888" name="l00888"></a><span class="lineno">  888</span>  <span class="keywordflow">for</span> (; i &lt; length; i++) {</div>
-<div class="line"><a id="l00889" name="l00889"></a><span class="lineno">  889</span>    <span class="keywordflow">if</span> (is_ignorable(input[i], options)) {</div>
-<div class="line"><a id="l00890" name="l00890"></a><span class="lineno">  890</span>      <span class="keywordflow">continue</span>;</div>
-<div class="line"><a id="l00891" name="l00891"></a><span class="lineno">  891</span>    }</div>
-<div class="line"><a id="l00892" name="l00892"></a><span class="lineno">  892</span>    <span class="comment">// We have a base64 character or a padding character.</span></div>
-<div class="line"><a id="l00893" name="l00893"></a><span class="lineno">  893</span>    count--;</div>
-<div class="line"><a id="l00894" name="l00894"></a><span class="lineno">  894</span>    <span class="keywordflow">if</span> (count == 0) {</div>
-<div class="line"><a id="l00895" name="l00895"></a><span class="lineno">  895</span>      <span class="keywordflow">return</span> i + 1;</div>
-<div class="line"><a id="l00896" name="l00896"></a><span class="lineno">  896</span>    }</div>
-<div class="line"><a id="l00897" name="l00897"></a><span class="lineno">  897</span>  }</div>
-<div class="line"><a id="l00898" name="l00898"></a><span class="lineno">  898</span>  simdutf_log_assert(<span class="keyword">false</span>, <span class="stringliteral">&quot;You never get here&quot;</span>);</div>
-<div class="line"><a id="l00899" name="l00899"></a><span class="lineno">  899</span> </div>
-<div class="line"><a id="l00900" name="l00900"></a><span class="lineno">  900</span>  <span class="keywordflow">return</span> -1; <span class="comment">// should never happen</span></div>
-<div class="line"><a id="l00901" name="l00901"></a><span class="lineno">  901</span>}</div>
-<div class="line"><a id="l00902" name="l00902"></a><span class="lineno">  902</span> </div>
-<div class="line"><a id="l00903" name="l00903"></a><span class="lineno">  903</span>} <span class="comment">// namespace base64</span></div>
-<div class="line"><a id="l00904" name="l00904"></a><span class="lineno">  904</span>} <span class="comment">// unnamed namespace</span></div>
-<div class="line"><a id="l00905" name="l00905"></a><span class="lineno">  905</span>} <span class="comment">// namespace scalar</span></div>
-<div class="line"><a id="l00906" name="l00906"></a><span class="lineno">  906</span>} <span class="comment">// namespace simdutf</span></div>
-<div class="line"><a id="l00907" name="l00907"></a><span class="lineno">  907</span> </div>
-<div class="line"><a id="l00908" name="l00908"></a><span class="lineno">  908</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00866" name="l00866"></a><span class="lineno">  866</span>  <span class="comment">// number of lines, rounded up without computing base64_length + line_length,</span></div>
+<div class="line"><a id="l00867" name="l00867"></a><span class="lineno">  867</span>  <span class="comment">// which wraps around when line_length is close to SIZE_MAX</span></div>
+<div class="line"><a id="l00868" name="l00868"></a><span class="lineno">  868</span>  <span class="keywordtype">size_t</span> lines = base64_length / line_length;</div>
+<div class="line"><a id="l00869" name="l00869"></a><span class="lineno">  869</span>  <span class="keywordflow">if</span> (base64_length % line_length != 0) {</div>
+<div class="line"><a id="l00870" name="l00870"></a><span class="lineno">  870</span>    lines++;</div>
+<div class="line"><a id="l00871" name="l00871"></a><span class="lineno">  871</span>  }</div>
+<div class="line"><a id="l00872" name="l00872"></a><span class="lineno">  872</span>  <span class="keywordflow">return</span> base64_length + lines - 1;</div>
+<div class="line"><a id="l00873" name="l00873"></a><span class="lineno">  873</span>}</div>
+<div class="line"><a id="l00874" name="l00874"></a><span class="lineno">  874</span> </div>
+<div class="line"><a id="l00875" name="l00875"></a><span class="lineno">  875</span><span class="comment">// Return the length of the prefix that contains count base64 characters.</span></div>
+<div class="line"><a id="l00876" name="l00876"></a><span class="lineno">  876</span><span class="comment">// Thus, if count is 3, the function returns the length of the prefix</span></div>
+<div class="line"><a id="l00877" name="l00877"></a><span class="lineno">  877</span><span class="comment">// that contains 3 base64 characters.</span></div>
+<div class="line"><a id="l00878" name="l00878"></a><span class="lineno">  878</span><span class="comment">// The function returns (size_t)-1 if there is not enough base64 characters in</span></div>
+<div class="line"><a id="l00879" name="l00879"></a><span class="lineno">  879</span><span class="comment">// the input.</span></div>
+<div class="line"><a id="l00880" name="l00880"></a><span class="lineno">  880</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> <span class="keywordtype">char</span>_type&gt;</div>
+<div class="line"><a id="l00881" name="l00881"></a><span class="lineno">  881</span>simdutf_warn_unused <span class="keywordtype">size_t</span> prefix_length(<span class="keywordtype">size_t</span> count,</div>
+<div class="line"><a id="l00882" name="l00882"></a><span class="lineno">  882</span>                                         simdutf::base64_options options,</div>
+<div class="line"><a id="l00883" name="l00883"></a><span class="lineno">  883</span>                                         <span class="keyword">const</span> char_type *input,</div>
+<div class="line"><a id="l00884" name="l00884"></a><span class="lineno">  884</span>                                         <span class="keywordtype">size_t</span> length) <span class="keyword">noexcept</span> {</div>
+<div class="line"><a id="l00885" name="l00885"></a><span class="lineno">  885</span>  <span class="keywordtype">size_t</span> i = 0;</div>
+<div class="line"><a id="l00886" name="l00886"></a><span class="lineno">  886</span>  <span class="keywordflow">while</span> (i &lt; length &amp;&amp; is_ignorable(input[i], options)) {</div>
+<div class="line"><a id="l00887" name="l00887"></a><span class="lineno">  887</span>    i++;</div>
+<div class="line"><a id="l00888" name="l00888"></a><span class="lineno">  888</span>  }</div>
+<div class="line"><a id="l00889" name="l00889"></a><span class="lineno">  889</span>  <span class="keywordflow">if</span> (count == 0) {</div>
+<div class="line"><a id="l00890" name="l00890"></a><span class="lineno">  890</span>    <span class="keywordflow">return</span> i; <span class="comment">// duh!</span></div>
+<div class="line"><a id="l00891" name="l00891"></a><span class="lineno">  891</span>  }</div>
+<div class="line"><a id="l00892" name="l00892"></a><span class="lineno">  892</span>  <span class="keywordflow">for</span> (; i &lt; length; i++) {</div>
+<div class="line"><a id="l00893" name="l00893"></a><span class="lineno">  893</span>    <span class="keywordflow">if</span> (is_ignorable(input[i], options)) {</div>
+<div class="line"><a id="l00894" name="l00894"></a><span class="lineno">  894</span>      <span class="keywordflow">continue</span>;</div>
+<div class="line"><a id="l00895" name="l00895"></a><span class="lineno">  895</span>    }</div>
+<div class="line"><a id="l00896" name="l00896"></a><span class="lineno">  896</span>    <span class="comment">// We have a base64 character or a padding character.</span></div>
+<div class="line"><a id="l00897" name="l00897"></a><span class="lineno">  897</span>    count--;</div>
+<div class="line"><a id="l00898" name="l00898"></a><span class="lineno">  898</span>    <span class="keywordflow">if</span> (count == 0) {</div>
+<div class="line"><a id="l00899" name="l00899"></a><span class="lineno">  899</span>      <span class="keywordflow">return</span> i + 1;</div>
+<div class="line"><a id="l00900" name="l00900"></a><span class="lineno">  900</span>    }</div>
+<div class="line"><a id="l00901" name="l00901"></a><span class="lineno">  901</span>  }</div>
+<div class="line"><a id="l00902" name="l00902"></a><span class="lineno">  902</span>  simdutf_log_assert(<span class="keyword">false</span>, <span class="stringliteral">&quot;You never get here&quot;</span>);</div>
+<div class="line"><a id="l00903" name="l00903"></a><span class="lineno">  903</span> </div>
+<div class="line"><a id="l00904" name="l00904"></a><span class="lineno">  904</span>  <span class="keywordflow">return</span> -1; <span class="comment">// should never happen</span></div>
+<div class="line"><a id="l00905" name="l00905"></a><span class="lineno">  905</span>}</div>
+<div class="line"><a id="l00906" name="l00906"></a><span class="lineno">  906</span> </div>
+<div class="line"><a id="l00907" name="l00907"></a><span class="lineno">  907</span>} <span class="comment">// namespace base64</span></div>
+<div class="line"><a id="l00908" name="l00908"></a><span class="lineno">  908</span>} <span class="comment">// unnamed namespace</span></div>
+<div class="line"><a id="l00909" name="l00909"></a><span class="lineno">  909</span>} <span class="comment">// namespace scalar</span></div>
+<div class="line"><a id="l00910" name="l00910"></a><span class="lineno">  910</span>} <span class="comment">// namespace simdutf</span></div>
+<div class="line"><a id="l00911" name="l00911"></a><span class="lineno">  911</span> </div>
+<div class="line"><a id="l00912" name="l00912"></a><span class="lineno">  912</span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="anamespacesimdutf_html"><div class="ttname"><a href="namespacesimdutf.html">simdutf</a></div><div class="ttdoc">helpers placed in namespace detail are not a part of the public API</div><div class="ttdef"><b>Definition</b> <a href="base64__implementation_8h_source.html#l00008">base64_implementation.h:8</a></div></div>
 <div class="ttc" id="anamespacesimdutf_html_a0840933d2a92a1f74fc6626af5ec76ef"><div class="ttname"><a href="namespacesimdutf.html#a0840933d2a92a1f74fc6626af5ec76ef">simdutf::base64_length_from_binary</a></div><div class="ttdeci">simdutf_warn_unused simdutf_constexpr23 size_t base64_length_from_binary(size_t length, base64_options options=base64_default) noexcept</div><div class="ttdoc">Provide the base64 length in bytes given the length of a binary input.</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l04898">implementation.h:4898</a></div></div>
 <div class="ttc" id="anamespacesimdutf_html_a0bd2c80917b6adbf5b692c148711a035"><div class="ttname"><a href="namespacesimdutf.html#a0bd2c80917b6adbf5b692c148711a035">simdutf::base64_ignorable</a></div><div class="ttdeci">simdutf_warn_unused simdutf_really_inline simdutf_constexpr23 bool base64_ignorable(char input, base64_options options=base64_default) noexcept</div><div class="ttdoc">Check if a character is an ignorable base64 character.</div><div class="ttdef"><b>Definition</b> <a href="implementation_8h_source.html#l05314">implementation.h:5314</a></div></div>
