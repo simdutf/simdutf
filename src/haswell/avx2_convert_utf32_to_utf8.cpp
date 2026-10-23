@@ -1,3 +1,17 @@
+// The cold mixed-width packer reports only completed input and output. It
+// leaves the first invalid block for the existing scalar error path.
+struct avx2_utf32_progress {
+  size_t input;
+  size_t output;
+};
+
+#if !defined(SIMDUTF_REGULAR_VISUAL_STUDIO)
+__attribute__((cold))
+#endif
+avx2_utf32_progress
+avx2_pack_mixed_utf32_to_utf8(const char32_t *buf, size_t len,
+                              char *utf8_output);
+
 std::pair<const char32_t *, char *>
 avx2_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_output) {
   const char32_t *end = buf + len;
@@ -286,6 +300,41 @@ avx2_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
   const char32_t *end = buf + len;
   const char32_t *start = buf;
 
+  // Keep the common all-ASCII stream independent of the mixed-width
+  // continuation below. Four AVX2 loads make two exact 16-byte stores and
+  // avoid the width-plan handoff entirely.
+  const __m256i ascii_mask = _mm256_set1_epi32(-128);
+  while (end - buf >= std::ptrdiff_t(32)) {
+    const __m256i in0 =
+        _mm256_loadu_si256(reinterpret_cast<const __m256i *>(buf));
+    const __m256i in1 =
+        _mm256_loadu_si256(reinterpret_cast<const __m256i *>(buf) + 1);
+    const __m256i in2 =
+        _mm256_loadu_si256(reinterpret_cast<const __m256i *>(buf) + 2);
+    const __m256i in3 =
+        _mm256_loadu_si256(reinterpret_cast<const __m256i *>(buf) + 3);
+    const __m256i any_non_ascii =
+        _mm256_or_si256(_mm256_or_si256(in0, in1), _mm256_or_si256(in2, in3));
+    if (!_mm256_testz_si256(any_non_ascii, ascii_mask)) {
+      break;
+    }
+
+    const __m256i packed01 =
+        _mm256_permute4x64_epi64(_mm256_packus_epi32(in0, in1), 0b11011000);
+    const __m256i packed23 =
+        _mm256_permute4x64_epi64(_mm256_packus_epi32(in2, in3), 0b11011000);
+    const __m128i utf8_01 =
+        _mm_packus_epi16(_mm256_castsi256_si128(packed01),
+                         _mm256_extractf128_si256(packed01, 1));
+    const __m128i utf8_23 =
+        _mm_packus_epi16(_mm256_castsi256_si128(packed23),
+                         _mm256_extractf128_si256(packed23, 1));
+    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf8_output), utf8_01);
+    _mm_storeu_si128(reinterpret_cast<__m128i *>(utf8_output + 16), utf8_23);
+    buf += 32;
+    utf8_output += 32;
+  }
+
   const __m256i v_0000 = _mm256_setzero_si256();
   const __m256i v_ffff0000 = _mm256_set1_epi32((uint32_t)0xffff0000);
   const __m256i v_ff80 = _mm256_set1_epi16((uint16_t)0xff80);
@@ -526,42 +575,37 @@ avx2_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
       utf8_output += row3[0];
       buf += 16;
     } else {
-      // case: at least one 32-bit word is larger than 0xFFFF <=> it will
-      // produce four UTF-8 bytes. Let us do a scalar fallback. It may seem
-      // wasteful to use scalar code, but being efficient with SIMD may require
-      // large, non-trivial tables?
-      size_t forward = 15;
+      // Preserve only the BMP prefix of the first wide block. The packer takes
+      // over at its first four-byte or otherwise invalid scalar and leaves a
+      // failing block for the established scalar error path.
       size_t k = 0;
-      if (size_t(end - buf) < forward + 1) {
-        forward = size_t(end - buf - 1);
-      }
-      for (; k < forward; k++) {
-        uint32_t word = buf[k];
-        if ((word & 0xFFFFFF80) == 0) { // 1-byte (ASCII)
+      for (; k < 16; k++) {
+        const uint32_t word = buf[k];
+        if ((word & 0xffff0000) != 0) {
+          break;
+        }
+        if ((word & 0xffffff80) == 0) { // 1-byte (ASCII)
           *utf8_output++ = char(word);
-        } else if ((word & 0xFFFFF800) == 0) { // 2-byte
+        } else if ((word & 0xfffff800) == 0) { // 2-byte
           *utf8_output++ = char((word >> 6) | 0b11000000);
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
-        } else if ((word & 0xFFFF0000) == 0) { // 3-byte
-          if (word >= 0xD800 && word <= 0xDFFF) {
+        } else { // 3-byte
+          if (word >= 0xd800 && word <= 0xdfff) {
             return std::make_pair(
                 result(error_code::SURROGATE, buf - start + k), utf8_output);
           }
           *utf8_output++ = char((word >> 12) | 0b11100000);
           *utf8_output++ = char(((word >> 6) & 0b111111) | 0b10000000);
           *utf8_output++ = char((word & 0b111111) | 0b10000000);
-        } else { // 4-byte
-          if (word > 0x10FFFF) {
-            return std::make_pair(
-                result(error_code::TOO_LARGE, buf - start + k), utf8_output);
-          }
-          *utf8_output++ = char((word >> 18) | 0b11110000);
-          *utf8_output++ = char(((word >> 12) & 0b111111) | 0b10000000);
-          *utf8_output++ = char(((word >> 6) & 0b111111) | 0b10000000);
-          *utf8_output++ = char((word & 0b111111) | 0b10000000);
         }
       }
       buf += k;
+      const avx2_utf32_progress packed =
+          avx2_pack_mixed_utf32_to_utf8(buf, size_t(end - buf), utf8_output);
+      buf += packed.input;
+      utf8_output += packed.output;
+      return std::make_pair(result(error_code::SUCCESS, buf - start),
+                            utf8_output);
     }
   } // while
 
