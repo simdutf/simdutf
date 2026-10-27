@@ -600,6 +600,17 @@ static inline void load_block(block64 *b, const char16_t *src) {
   b->chunks[1] = __lasx_xvpermi_d(__lasx_xvssrlni_bu_h(m4, m3, 0), 0b11011000);
 }
 
+static inline uint64_t equal_sign_mask(const block64 &b) {
+  const __m256i equal = __lasx_xvrepli_b('=');
+  const __m256i t0 = __lasx_xvmskltz_b(__lasx_xvseq_b(b.chunks[0], equal));
+  const __m256i t1 = __lasx_xvmskltz_b(__lasx_xvseq_b(b.chunks[1], equal));
+  const uint64_t m0 = __lasx_xvpickve2gr_wu(t0, 0) |
+                      (__lsx_vpickve2gr_hu(lasx_extracti128_hi(t0), 0) << 16);
+  const uint64_t m1 = __lasx_xvpickve2gr_wu(t1, 0) |
+                      (__lsx_vpickve2gr_hu(lasx_extracti128_hi(t1), 0) << 16);
+  return m0 | (m1 << 32);
+}
+
 // exact_tail stores 12 bytes from the high lane so a block ends at byte 48.
 template <bool exact_tail = false>
 static inline void base64_decode(char *out, __m256i str) {
@@ -650,7 +661,10 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       default_or_url ? tables::base64::to_base64_default_or_url_value
                      : (base64_url ? tables::base64::to_base64_url_value
                                    : tables::base64::to_base64_value);
-  auto ri = simdutf::scalar::base64::find_end(src, srclen, options);
+  auto ri =
+      ignore_garbage
+          ? simdutf::scalar::base64::reduced_input{0, srclen, srclen, srclen}
+          : simdutf::scalar::base64::find_end(src, srclen, options);
   size_t equallocation = ri.equallocation;
   size_t equalsigns = ri.equalsigns;
   srclen = ri.srclen;
@@ -663,7 +677,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   }
   const chartype *const srcinit = src;
   const char *const dstinit = dst;
-  const chartype *const srcend = src + srclen;
+  const chartype *srcend = src + srclen;
 
   constexpr size_t block_size = 6;
   static_assert(block_size >= 2, "block_size must be at least two");
@@ -712,6 +726,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     while (src <= srcend64) {
       block64 b;
       load_block(&b, src);
+      const block64 raw = b;
       src += 64;
       bool error = false;
       uint64_t badcharmask =
@@ -724,6 +739,24 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         }
         return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit),
                 size_t(dst - dstinit)};
+      }
+      if (ignore_garbage && badcharmask != 0) {
+        const uint64_t equals = equal_sign_mask(raw);
+        if (equals != 0) {
+          const size_t offset = trailing_zeroes(equals);
+          equallocation = size_t(src - 64 - srcinit) + offset;
+          equalsigns = 1;
+          srclen = equallocation;
+          full_input_length = equallocation + 1;
+          if (srclen == 0) {
+            return {SUCCESS, full_input_length, 0};
+          }
+          srcend = srcinit + srclen;
+          src = srcend;
+          bufferptr += compress_block(
+              &b, badcharmask | (~uint64_t(0) << offset), bufferptr);
+          break;
+        }
       }
       if (badcharmask != 0) {
         if (is_power_of_two(badcharmask)) {
@@ -752,6 +785,22 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     }
   }
 
+  if (ignore_garbage && equalsigns == 0) {
+    const chartype *equal = src;
+    while (equal < srcend && *equal != '=') {
+      equal++;
+    }
+    if (equal < srcend) {
+      equallocation = size_t(equal - srcinit);
+      equalsigns = 1;
+      srclen = equallocation;
+      full_input_length = equallocation + 1;
+      if (srclen == 0) {
+        return {SUCCESS, full_input_length, 0};
+      }
+      srcend = equal;
+    }
+  }
   char *buffer_start = buffer;
   // Optimization note: if this is almost full, then it is worth our
   // time, otherwise, we should just decode directly.

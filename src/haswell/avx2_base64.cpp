@@ -510,6 +510,15 @@ public:
     chunks[1] = _mm256_packus_epi16(m3p, m4p);
   }
 
+  simdutf_really_inline uint64_t equal_sign_mask() const {
+    const __m256i equal = _mm256_set1_epi8('=');
+    const uint64_t m0 =
+        uint32_t(_mm256_movemask_epi8(_mm256_cmpeq_epi8(chunks[0], equal)));
+    const uint64_t m1 =
+        uint32_t(_mm256_movemask_epi8(_mm256_cmpeq_epi8(chunks[1], equal)));
+    return m0 | (m1 << 32);
+  }
+
   simdutf_really_inline void copy_block(char *output) {
     _mm256_storeu_si256(reinterpret_cast<__m256i *>(output), chunks[0]);
     _mm256_storeu_si256(reinterpret_cast<__m256i *>(output + 32), chunks[1]);

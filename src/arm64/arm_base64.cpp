@@ -543,6 +543,33 @@ void load_block(block64 *b, const char16_t *src) {
   b->chunks[3] = load_satured(reinterpret_cast<const uint16_t *>(src) + 48);
 }
 
+uint64_t equal_sign_mask(const block64 &b) {
+  const uint8x16_t equal = vdupq_n_u8('=');
+  uint8x16_t test0 = vceqq_u8(b.chunks[0], equal);
+  uint8x16_t test1 = vceqq_u8(b.chunks[1], equal);
+  uint8x16_t test2 = vceqq_u8(b.chunks[2], equal);
+  uint8x16_t test3 = vceqq_u8(b.chunks[3], equal);
+  if (vmaxvq_u8(vorrq_u8(vorrq_u8(test0, test1), vorrq_u8(test2, test3))) ==
+      0) {
+    return 0;
+  }
+#ifdef SIMDUTF_REGULAR_VISUAL_STUDIO
+  const uint8x16_t bit_mask =
+      simdutf_make_uint8x16_t(0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
+                              0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80);
+#else
+  const uint8x16_t bit_mask = {0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
+                               0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80};
+#endif
+  uint8x16_t sum0 =
+      vpaddq_u8(vandq_u8(test0, bit_mask), vandq_u8(test1, bit_mask));
+  uint8x16_t sum1 =
+      vpaddq_u8(vandq_u8(test2, bit_mask), vandq_u8(test3, bit_mask));
+  sum0 = vpaddq_u8(sum0, sum1);
+  sum0 = vpaddq_u8(sum0, sum0);
+  return vgetq_lane_u64(vreinterpretq_u64_u8(sum0), 0);
+}
+
 // decode 64 bytes and output 48 bytes
 void base64_decode_block(char *out, const char *src) {
   uint8x16x4_t str = vld4q_u8((uint8_t *)src);
@@ -638,7 +665,10 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
       default_or_url ? tables::base64::to_base64_default_or_url_value
                      : (base64_url ? tables::base64::to_base64_url_value
                                    : tables::base64::to_base64_value);
-  auto ri = simdutf::scalar::base64::find_end(src, srclen, options);
+  auto ri =
+      ignore_garbage
+          ? simdutf::scalar::base64::reduced_input{0, srclen, srclen, srclen}
+          : simdutf::scalar::base64::find_end(src, srclen, options);
   size_t equallocation = ri.equallocation;
   size_t equalsigns = ri.equalsigns;
   srclen = ri.srclen;
@@ -651,7 +681,7 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
   }
   const char_type *const srcinit = src;
   const char *const dstinit = dst;
-  const char_type *const srcend = src + srclen;
+  const char_type *srcend = src + srclen;
 
   constexpr size_t block_size = 10;
   char buffer[block_size * 64];
@@ -661,6 +691,7 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
     while (src <= srcend64) {
       block64 b;
       load_block(&b, src);
+      const block64 raw = b;
       src += 64;
       bool error = false;
       uint64_t badcharmask =
@@ -680,6 +711,24 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
         }
       }
 
+      if (ignore_garbage && badcharmask != 0) {
+        const uint64_t equals = equal_sign_mask(raw);
+        if (equals != 0) {
+          const size_t offset = trailing_zeroes(equals);
+          equallocation = size_t(src - 64 - srcinit) + offset;
+          equalsigns = 1;
+          srclen = equallocation;
+          full_input_length = equallocation + 1;
+          if (srclen == 0) {
+            return {SUCCESS, full_input_length, 0};
+          }
+          srcend = srcinit + srclen;
+          src = srcend;
+          bufferptr += compress_block(
+              &b, badcharmask | (~uint64_t(0) << offset), bufferptr);
+          break;
+        }
+      }
       if (badcharmask != 0) {
         // optimization opportunity: check for simple masks like those made of
         // continuous 1s followed by continuous 0s. And masks containing a
@@ -704,6 +753,22 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
                     64); // 64 might be too much
         bufferptr -= (block_size - 1) * 64;
       }
+    }
+  }
+  if (ignore_garbage && equalsigns == 0) {
+    const char_type *equal = src;
+    while (equal < srcend && *equal != '=') {
+      equal++;
+    }
+    if (equal < srcend) {
+      equallocation = size_t(equal - srcinit);
+      equalsigns = 1;
+      srclen = equallocation;
+      full_input_length = equallocation + 1;
+      if (srclen == 0) {
+        return {SUCCESS, full_input_length, 0};
+      }
+      srcend = equal;
     }
   }
   char *buffer_start = buffer;
