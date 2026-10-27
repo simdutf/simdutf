@@ -815,7 +815,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         return {error_code::INVALID_BASE64_CHARACTER, size_t(src - srcinit),
                 size_t(dst - dstinit)};
       }
-      bufferptr += (val <= 63);
+      bufferptr += (val <= 63 && scalar::base64::is_eight_byte(*src));
       src++;
     }
   }
@@ -864,7 +864,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
           src--;
         }
       } else {
-        while (to_base64[uint8_t(*(src - 1))] >= 64) {
+        while (!scalar::base64::is_eight_byte(*(src - 1)) ||
+               to_base64[uint8_t(*(src - 1))] >= 64) {
           src--;
         }
       }

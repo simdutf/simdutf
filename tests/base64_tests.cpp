@@ -398,6 +398,29 @@ TEST(base64_default_or_url_only_garbage) {
   ASSERT_EQUAL(r.count, 0);
 }
 
+TEST(base64_garbage_char16_with_valid_low_byte) {
+  for (simdutf::base64_options option :
+       {simdutf::base64_default_accept_garbage,
+        simdutf::base64_url_accept_garbage,
+        simdutf::base64_default_or_url_accept_garbage}) {
+    std::u16string input(64, u'A');
+    input[22] = u'\r';
+    input[63] = char16_t(0x3333);
+    std::vector<char> out(48);
+    simdutf::result r = implementation.base64_to_binary(
+        input.data(), input.size(), out.data(), option);
+    ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+    ASSERT_EQUAL(r.count, 46);
+
+    input = std::u16string(63, u'A') + u' ' + char16_t(0x3333) + u"AAAA";
+    out.resize(51);
+    r = implementation.base64_to_binary(input.data(), input.size(), out.data(),
+                                        option);
+    ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+    ASSERT_EQUAL(r.count, 50);
+  }
+}
+
 TEST(issue_dash) {
   const std::string input = "Iw==";
   std::vector<char> back(1);
